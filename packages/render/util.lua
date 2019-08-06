@@ -1,7 +1,8 @@
 -- luacheck: globals log
 local log = log or print
 
-local assetmgr = import_package "ant.asset"
+local assetpkg = import_package "ant.asset"
+local assetmgr = assetpkg.mgr
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack

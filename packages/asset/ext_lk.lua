@@ -1,5 +1,7 @@
 local assetmgr = require "asset"
 
-return function(filename)
-	return assetmgr.get_depiction(filename)
-end
+return {
+	loader = function(filename)
+		return assetmgr.get_depiction(filename)
+	end
+}

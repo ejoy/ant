@@ -9,6 +9,7 @@ local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local rhwi = renderpkg.hardware_interface
 local bgfx = require "bgfx"
+local fs = require "filesystem"
 
 local imgui = require "imgui"
 local platform = require "platform"
@@ -48,13 +49,13 @@ function callback.init(nwh, context, w, h)
 		height = height,
 	}
 	
-	local ocornut_imgui = assetutil.shader_loader {
-		vs = "/pkg/ant.imgui/shader/vs_ocornut_imgui",
-		fs = "/pkg/ant.imgui/shader/fs_ocornut_imgui",
+	local ocornut_imgui = assetutil.load_shader_program {
+		vs = fs.path "/pkg/ant.imgui/shader/vs_ocornut_imgui",
+		fs = fs.path "/pkg/ant.imgui/shader/fs_ocornut_imgui",
 	}
-	local imgui_image = assetutil.shader_loader {
-		vs = "/pkg/ant.imgui/shader/vs_imgui_image",
-		fs = "/pkg/ant.imgui/shader/fs_imgui_image",
+	local imgui_image = assetutil.load_shader_program {
+		vs = fs.path "/pkg/ant.imgui/shader/vs_imgui_image",
+		fs = fs.path "/pkg/ant.imgui/shader/fs_imgui_image",
 	}
 
 	imgui.viewid(ui_viewid);

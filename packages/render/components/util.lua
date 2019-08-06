@@ -410,9 +410,8 @@ function util.create_mesh(rendermesh, mesh)
 	check_rendermesh_lod(rendermesh)
 end
 
-function util.scene_index(rendermesh)
-	local meshscene = rendermesh.handle
-	local lodlevel = rendermesh.lodidx or meshscene.sceneidx
+function util.scene_index(lodidx, meshscene)
+	local lodlevel = lodidx or meshscene.sceneidx
 	return meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
 end
 
@@ -420,7 +419,7 @@ function util.entity_bounding(entity)
 	if util.is_entity_visible(entity) then
 		local rm = entity.rendermesh
 		local meshscene = rm.handle
-		local sceneidx = util.scene_index(rm)
+		local sceneidx = util.scene_index(rm.lodidx, meshscene)
 
 		local worldmat = ms:srtmat(entity.transform)
 

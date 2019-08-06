@@ -17,15 +17,15 @@ end
 
 function shader_mgr.create_render_program(vs, fs)
     local prog = bgfx.create_program(assert(vs.handle), assert(fs.handle), true)
-
     if prog then
         local proguniforms = {}
-        uniform_info(proguniforms, vs.unifroms)
+        uniform_info(proguniforms, vs.uniforms)
         uniform_info(proguniforms, fs.uniforms)
+
+        return prog, proguniforms
     else
         error(string.format("create program failed, vs:%d, fs:%d", vs.handle, fs.handle))
     end
-    return prog
 end
 
 function shader_mgr.create_compute_program(cs)

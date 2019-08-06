@@ -9,6 +9,8 @@ local computil = render.components
 
 local filterutil = require "filter.util"
 
+local assetmgr = import_package "ant.asset"
+
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
@@ -63,14 +65,14 @@ local function reset_results(results)
 	end
 end
 
-local function get_material(prim, primidx, materialcontent, material_refs)
+local function get_material(prim, primidx, materialcomp, material_refs)
 	if material_refs then
 		local idx = material_refs[primidx] or 1
-		return materialcontent[idx-1]
+		return materialcomp[idx-1]
 	end
 
 	local materialidx = prim.material or primidx
-	return materialcontent[materialidx] or materialcontent[0]
+	return materialcomp[materialidx] or materialcomp[0]
 end
 
 local function is_visible(meshname, submesh_refs)
@@ -100,9 +102,17 @@ local function get_scale_mat(worldmat, scenescale)
 	return worldmat
 end
 
-local function filter_mesh(eid, meshcomp, worldmat, materialcontent, filter)
-	local meshscene = meshcomp.handle
-	local sceneidx = computil.scene_index(meshcomp)
+local function filter_element(eid, meshcomp, worldmat, materialcomp, filter)
+	local meshrefkey = meshcomp.refkey
+	local meshscene
+	-- TODO: mesh info create from code need merge into assetmgr
+	if meshrefkey == nil then
+		meshscene = meshcomp.handle
+	else
+		meshscene = assetmgr.get_mesh(meshrefkey)
+	end
+	
+	local sceneidx = computil.scene_index(meshcomp.lodidx, meshscene)
 
 	local scenes = meshscene.scenes[sceneidx]
 	local submesh_refs = meshcomp.submesh_refs
@@ -117,7 +127,7 @@ local function filter_mesh(eid, meshcomp, worldmat, materialcontent, filter)
 			local material_refs = get_material_refs(name, submesh_refs)
 
 			for groupidx, group in ipairs(meshnode) do
-				local material = get_material(group, groupidx, materialcontent, material_refs)
+				local material = get_material(group, groupidx, materialcomp, material_refs)
 				ru.insert_primitive(eid, group, material, trans, filter)
 			end
 		end
@@ -147,7 +157,7 @@ function primitive_filter_sys:update()
 			local ft = ce[filtertag]
 			if vt and ft then
 				if is_entity_prepared(ce) then
-					filter_mesh(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
+					filter_element(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
 				end
 			end
 		end

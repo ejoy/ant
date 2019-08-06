@@ -1,33 +1,52 @@
 local fs = require "filesystem"
 
 local resources = {
-	shader = {},
-	mesh = {},
-	state = {},
-	material = {},
+	sc		= {},
+	mesh 	= {},
+	state 	= {},
+	material= {},
 	texture = {},
-	hierarchy = {},
-	lk = {},
-	ozz = {},
-	sm = {},
+	hierarchy = {},--scene hierarchy info, using ozz-animation runtime struct
+	lk 		= {},
+	ozz 	= {},
+	sm 		= {},	--animation state machine
 	terrain = {},
 }
 
-local loaders = {}
+local accessors = {}
+
 local assetmgr = {}
 assetmgr.__index = assetmgr
-
-function assetmgr.get_loader(name)	
-	local loader = loaders[assert(name)]
-	if loader == nil then
-		if resources[name] then
-			loader = require ("ext_" .. name)
-			loaders[name] = loader
-		else
-			error("Unsupport assetmgr type " .. name)
+assetmgr.__gc = function()
+	for name, subres in pairs(resources) do
+		if next(subres) then
+			print("sub resource not remove:", name)
+			for reskey in pairs(subres) do
+				print("resource:", reskey)
+			end
 		end
 	end
-	return loader
+end
+
+local function get_accessor(name)
+	local accessor = accessors[name]
+	if accessor == nil then
+		if resources[name] then
+			accessor 		= require ("ext_" .. name)
+			accessors[name] = accessor
+		else
+			error("Unsupport asset type: " .. name)
+		end
+	end
+	return accessor
+end
+
+function assetmgr.get_loader(name)
+	return get_accessor(name).loader
+end
+
+function assetmgr.get_unloader(name)
+	return get_accessor(name).unloader
 end
 
 local function rawtable(filepath)
@@ -115,17 +134,37 @@ function assetmgr.unload(filename)
 	end
 
 	res.ref_count = res.ref_count - 1
+	if res.ref_count == 0 then
+		subres[reskey] = nil
+		local unloader = assetmgr.get_unloader(modulename)
+		if unloader then
+			unloader(res, filename)
+		end
+	end
 end
 
-function assetmgr.get_resource(name)
-	return resources[name]
+local function get_resource(subres, key)
+	assert(type(key) ~= "string")
+	local reskey = res_key(key)
+	local res = subres[reskey]
+	if res then
+		assert(res.ref_count > 0)
+		return res.handle
+	end
 end
 
 for _, subname in ipairs {"texture", "mesh", "material"} do
 	local subres = resources[subname]
-	assetmgr["get" .. subname] = function (key)
-		return subres[key].handle
+	assetmgr["get_" .. subname] = function (key)
+		return get_resource(subres, key)
 	end
+end
+
+function assetmgr.get_resource(key)
+	local modulename = module_name(res_key(key))
+
+	local subres = resources[modulename]
+	return get_resource(subres, key)
 end
 
 function assetmgr.save(tree, filename)	

@@ -1,7 +1,6 @@
 local assetutil = require "util"
 local assetmgr 	= require "asset"
 local fs 		= require "filesystem"
-local bgfx		= require "bgfx"
 
 local function find_subres_path(originpath, subrespath)
 	if not subrespath:is_absolute() then
@@ -29,9 +28,14 @@ end
 
 local function load_state(originpath, state)
 	if type(state) == "string" then
-		local s = asset.load(find_subres_path(originpath, state))
-		assert(s.ref_path == nil)
-		s.ref_path = state
+		local refpath = fs.path(state)
+		local s = assetmgr.load(find_subres_path(originpath, refpath))
+		if s.ref_path then
+			assert(s.ref_path == refpath)
+		else
+			s.ref_path = refpath
+		end
+		
 		return s
 	end
 
@@ -40,13 +44,17 @@ local function load_state(originpath, state)
 end
 
 local function load_properties(originpath, properties)
-	local textures = properties.textures
-	for _, tex in pairs(textures)do
-		assert(type(tex.ref_path) == "string")
-		tex.ref_path = find_subres_path(originpath, fs.path(tex.ref_path))
-		assetmgr.load(tex.ref_path)
+	if properties then
+		local textures = properties.textures
+		if textures then
+			for _, tex in pairs(textures)do
+				assert(type(tex.ref_path) == "string")
+				tex.ref_path = find_subres_path(originpath, fs.path(tex.ref_path))
+				assetmgr.load(tex.ref_path)
+			end
+		end
+		return properties
 	end
-	return properties
 end
 
 local function def_surface_type()
@@ -74,19 +82,6 @@ local function load_surface_type(_, surfacetype)
 	return surfacetype
 end
 
-local function unload_shader(shader)
-	
-	for _, name in ipairs {"vs", "fs", "cs"} do
-		local shaderpath = shader[name]
-		if shaderpath then
-			assert(type(shaderpath) == "userdata")
-			local res = assetmgr.get_resource(shaderpath)
-			assetmgr.unload(res, shaderpath)
-			shader[name] = nil
-		end
-	end
-end
-
 return {
 	loader = function(filename)
 		local material = assetmgr.get_depiction(filename)
@@ -99,7 +94,7 @@ return {
 	end,
 	unloader = function(res)
 		local handle = res.handle
-		unload_shader(handle.shader)
+		assetutil.unload_shader_program(assert(handle.shader))
 		handle.shader = nil
 
 		if handle.state.ref_path then
@@ -116,5 +111,6 @@ return {
 		end
 
 		handle.surface_type = nil
+		res.handle = nil
 	end
 }

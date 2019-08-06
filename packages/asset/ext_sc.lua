@@ -1,16 +1,16 @@
-local fs = require "filesystem"
+local fs 	= require "filesystem"
+local bgfx 	= require "bgfx"
 
 local function gen_shader_filepath(filename)
     filename = fs.path(filename)
-	assert(filename:equal_extension(''))
-	local shadername_withext = filename .. ".sc"
-	if fs.exists(shadername_withext) then
-		return shadername_withext 
+	assert(filename:equal_extension('sc'))
+	if fs.exists(filename) then
+		return filename 
     end
-    local pkgdir = fs.path("/pkg") / shadername_withext:package_name()
-	shadername_withext = pkgdir / "shaders" / "src" / fs.relative(shadername_withext, pkgdir)
-	if fs.exists(shadername_withext) then
-		return shadername_withext 
+    local pkgdir = fs.path("/pkg") / filename:package_name()
+	local newfilename = pkgdir / "shaders" / "src" / fs.relative(filename, pkgdir)
+	if fs.exists(newfilename) then
+		return newfilename
     end
 end
 
@@ -28,7 +28,7 @@ local function load_shader(filename)
 	local data = f:read "a"
 	f:close()
 	local h = bgfx.create_shader(data)
-	bgfx.set_name(h, filename)
+	bgfx.set_name(h, filename:string())
 	return h
 end
 
