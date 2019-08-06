@@ -19,7 +19,13 @@ end
 local function on_receive_script(str)
     log.trace(str)
     local env = setmetatable( {ecs=ecs,world=world},{__index = _ENV} )
-    local status,ret_val = xpcall(run_script, debug.traceback, str, env)
+    local status,ret_val 
+    if debug.getregistry()["lua-debug"] then
+        ret_val =  run_script(str, env)
+        status = true
+    else
+        status,ret_val = xpcall(run_script, debug.traceback, str, env)
+    end
     if status then
         log.trace("Run script successed.\tReturn:",ret_val)
     else

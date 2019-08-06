@@ -4,17 +4,16 @@ shader = {
 }
 
 state = {
-	WRITE_MASK = "RGBA",
+	WRITE_MASK = "RGBAZ",
 	ALPHA_REF = 0,
-	CULL = "CW",	-- only render back face
+	CULL = "CCW",
 	MSAA = true,
-
 	DEPTH_TEST = "LESS",
 }
 
 properties = {
 	uniforms = {
-		u_outlinescale	= {name="outline scale", type="v4", value={0.005, 0.0, 0.0, 0.0}},
+		u_outlinescale	= {name="outline scale", type="v4", value={0.01, 0.0, 0.0, 0.0}},
 		u_outlinecolor = {name="outline color", type="v4", value={0.8, 0.8, 0, 1}},
 	}
 }

@@ -309,7 +309,7 @@ ref_ancestor(lua_State *L, struct write_block *b, int index) {
 		return 0;
 	int i;
 	const void * obj = lua_topointer(L, index);
-	for (i=0;i<n;i++) {
+	for (i=n-1;i>=0;i--) {
 		const void * ancestor = lua_topointer(L, s->ancestor[i]);
 		if (ancestor == obj) {
 			uint8_t n = COMBINE_TYPE(TYPE_REF, i);

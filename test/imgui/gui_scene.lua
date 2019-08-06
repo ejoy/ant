@@ -90,7 +90,10 @@ function  GuiScene:_scene_menu()
             self:set_fps(fps[1])
         end
     end
-    widget.Text(string.format("real frame time:%f/(%.2f)",self.cur_frame_time,1/self.cur_frame_time))
+    widget.Text(string.format("Frametime(editor):%f FPS:(%.2f)",self.cur_frame_time,1/self.cur_frame_time))
+    if self.scene_cost then
+        widget.Text(string.format("Frametime(raw):%f FPS:(%.2f)",self.scene_cost,1/self.scene_cost))
+    end
 end
 
 function GuiScene:_recent_scene_menu()

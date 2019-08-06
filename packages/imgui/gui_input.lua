@@ -1,7 +1,7 @@
 local inputmgr = import_package "ant.inputmgr"
 
 local gui_input = {}
-gui_input.key_state = {}
+gui_input.key_state = {CTRL=false,SHIFT=false,SYS=false,ALT = false}
 
 local mouse_last = {x=0,y=0}
 local mouse_delta = {x=0, y=0}

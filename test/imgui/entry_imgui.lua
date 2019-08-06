@@ -6,6 +6,7 @@ local GuiPropertyView = import_package "ant.imgui".editor.gui_property_view
 local GuiComponentStyle = import_package "ant.imgui".editor.gui_component_style
 local GuiComponentStyle = import_package "ant.imgui".editor.gui_component_style
 local GuiScriptRunner = import_package "ant.imgui".editor.gui_script_runner
+local GuiShaderWatch = import_package "ant.imgui".editor.gui_shader_watch
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local args = {
     sceen_width = 1024,
@@ -32,11 +33,13 @@ function main.init()
     gui_mgr.register(TestGuiBase.GuiName,testgui)
 
     gui_mgr.register(GuiScriptRunner.GuiName,GuiScriptRunner.new())
+    gui_mgr.register(GuiShaderWatch.GuiName,GuiShaderWatch.new())
 
 end
 
 pm = require "antpm"
 log.info_a(pm.get_entry_pkg())
+
 
 
 gui_main.run(main,args)
