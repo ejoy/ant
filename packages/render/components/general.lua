@@ -96,7 +96,12 @@ function mesh:postinit(e)
 end
 
 function mesh:delete(e)
-
+	local rm = e.rendermesh
+	local m = asset.get_mesh(self.ref_path)
+	if m then
+		assert(rm.handle == nil)
+		asset.unload(self.ref_path)
+	end
 end
 
 --DO NOT define init/delete function to manager texture resource

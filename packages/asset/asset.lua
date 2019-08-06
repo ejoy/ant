@@ -120,26 +120,26 @@ function assetmgr.unload(filename)
 	local subres = resources[modulename]
 
 	if subres == nil then
-		error(string.format("not found sub resource from file:%s", filename:string()))
+		log.error("not found sub resource from file:", filename:string())
 	end
 
 	local res = subres[reskey]
 
-	if res == nil then
-		error(string.format("unload a not reference resource:%s", filename:string()))
-	end
-
-	if res.ref_count <= 0 then
-		print("unload a resource which ref count low or equal to 0", filename:string())
-	end
-
-	res.ref_count = res.ref_count - 1
-	if res.ref_count == 0 then
-		subres[reskey] = nil
-		local unloader = assetmgr.get_unloader(modulename)
-		if unloader then
-			unloader(res, filename)
+	if res then
+		if res.ref_count <= 0 then
+			log.error("unload a resource which ref count low or equal to 0", filename:string())
 		end
+	
+		res.ref_count = res.ref_count - 1
+		if res.ref_count == 0 then
+			subres[reskey] = nil
+			local unloader = assetmgr.get_unloader(modulename)
+			if unloader then
+				unloader(res, filename)
+			end
+		end
+	else
+		log.warn("unload a not reference resource:", filename:string(), "resource maybe loading from asyn_asset_loader")
 	end
 end
 
@@ -161,7 +161,7 @@ for _, subname in ipairs {"texture", "mesh", "material"} do
 end
 
 function assetmgr.get_resource(key)
-	local modulename = module_name(res_key(key))
+	local modulename = module_name(key)
 
 	local subres = resources[modulename]
 	return get_resource(subres, key)

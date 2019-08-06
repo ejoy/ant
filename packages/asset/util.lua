@@ -22,15 +22,15 @@ function util.load_shader_program(shader)
 end
 
 function util.unload_shader_program(shader)
-    shader_mgr.destroy_program()
+    shader_mgr.destroy_program(shader)
 
     for _, name in ipairs {"vs", "fs", "cs"} do
 		local shaderpath = check_add_shader_file_extension(shader[name])
 		if shaderpath then
-            assert(type(shaderpath) == "userdata")
+            assert(type(shaderpath) ~= "string")
             
 			local res = assetmgr.get_resource(shaderpath)
-			assetmgr.unload(res, shaderpath)
+			assetmgr.unload(shaderpath)
 			shader[name] = nil
 		end
 	end

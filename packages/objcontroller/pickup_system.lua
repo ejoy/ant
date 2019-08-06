@@ -68,6 +68,9 @@ local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
 			item.material = material.materialinfo
+			if item.properties == nil then
+				item.properties = {}
+			end
 			if item.properties.uniforms == nil then
 				item.properties.uniforms = {}
 			end
