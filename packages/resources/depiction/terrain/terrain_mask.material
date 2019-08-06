@@ -5,9 +5,9 @@ shader = {
 
 state = "mask.state"
 
-properties = {
-	textures = {
-		s_baseTexture = { name = "base texture", type = "texture", stage = 0, },
-		s_maskTexture = { name = "mask texture", type = "texture", stage = 1, },
-	}
-}
+-- properties = {
+-- 	textures = {
+-- 		s_baseTexture = { name = "base texture", type = "texture", stage = 0, },
+-- 		s_maskTexture = { name = "mask texture", type = "texture", stage = 1, },
+-- 	}
+-- }

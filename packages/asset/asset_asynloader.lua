@@ -42,18 +42,34 @@ local function start_load_asset(e)
     e.asyn_load = "loading"
 end
 
-local function is_mesh_loaded(mesh)
-    return mesh.handle ~= nil
+local function is_mesh_loaded(mesh, rm)
+    local m = assetmgr.get_mesh(mesh.ref_path)
+    if m then
+        return m.handle == rm.handle
+    end
+    return false
 end
 
-local function is_textures_loaded(tp)
-    if tp then
-        for _, tex in pairs(tp) do
-            if tex.handle == nil then
+local function each_texture(material_properties)
+    if properties then
+        local textures = properties.textures
+        if textures then
+            return pairs(textures)
+        end
+    end
+    return next, {}, nil
+end
+
+local function is_properties_ready(properties)
+    for _, tex in each_texture(properties) do
+        if tex.ref_path then
+            local t = assetmgr.get_texture(tex.ref_path)
+            if t == nil then
                 return false
             end
         end
     end
+
     return true
 end
 
@@ -61,19 +77,14 @@ local function is_material_loaded(material)
     --material index start from 0
     for i=0, #material do
         local m = material[i]
-        local mi = m.materialinfo
+        local mi = assetmgr.get_material(m.ref_path)
+
         if mi == nil then
             return false
         end
 
-        if mi.shader.prog == nil then
-            return false
-        end
-
-        if mi.propertiecs and not is_textures_loaded(mi.propertiecs.textures) then
-            return false
-        end
-        if m.propertiecs and not is_textures_loaded(m.propertiecs.textures) then
+        if not (is_properties_ready(mi.properties) 
+            and is_properties_ready(m.properties)) then
             return false
         end
     end
@@ -82,7 +93,7 @@ local function is_material_loaded(material)
 end
 
 local function is_asset_loaded(e)
-    if not is_mesh_loaded(e.rendermesh) then
+    if not is_mesh_loaded(e.mesh, e.rendermesh) then
         return false
     end
 
