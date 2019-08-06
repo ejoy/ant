@@ -1,14 +1,19 @@
 -- luacheck: globals log
 local log = log or print
 
-local bgfx 		= require "bgfx"
-local viewidmgr = require "viewid_mgr"
-local default_comp = require "components.default"
-local computil = require "components.util"
-local fs = require "filesystem"
-local mathbaselib = require "math3d.baselib"
+local assetmgr = import_package "ant.asset"
+
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
+
+local bgfx 			= require "bgfx"
+local viewidmgr 	= require "viewid_mgr"
+local default_comp 	= require "components.default"
+local computil 		= require "components.util"
+
+local fs 			= require "filesystem"
+local mathbaselib 	= require "math3d.baselib"
+
 
 local util = {}
 util.__index = util
@@ -32,7 +37,12 @@ local function update_properties(shader, properties, render_properties)
 				end
 			end
 			local textures = properties.textures
-			return textures and textures[name] or nil
+			if textures then
+				local tex = textures[name]
+				local texkey = assert(tex.ref_path)
+				tex.handle = assetmgr.get_texture(texkey)	--set texture handle every time
+				return tex
+			end
 		end
 
 		local p = find_property(name, properties)
@@ -49,7 +59,7 @@ local function update_properties(shader, properties, render_properties)
 			assert(property_types[p.type] == u.type)
 			if p.type == "texture" then
 				bgfx.set_texture(assert(p.stage), u.handle, p.handle)
-			else				
+			else
 				bgfx.set_uniform(u.handle, p.value)
 			end
 		else
@@ -99,17 +109,17 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 	local r = result[idx]
 	if r == nil then
 		r = {
-			mgroup 	= group,
+			mgroup 		= group,
 			material 	= materialinfo,
-			properties = properties,
+			properties 	= properties,
 			worldmat 	= worldmat,
-			eid = eid,
+			eid 		= eid,
 		}
 		result[idx] = r
 	else
 		r.mgroup 	= group
 		r.material 	= materialinfo
-		r.properties = properties
+		r.properties= properties
 		r.worldmat 	= worldmat
 		r.eid 		= eid
 	end
@@ -120,7 +130,8 @@ local function add_result(eid, group, materialinfo, properties, worldmat, result
 end
 
 function util.insert_primitive(eid, group, material, worldmat, filter)
-	local mi = material.materialinfo
+	local refkey = material.ref_path
+	local mi = assetmgr.get_material(refkey)
 	local resulttarget = assert(filter.result[mi.surface_type.transparency])
 	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end
@@ -273,18 +284,6 @@ function util.generate_sampler_flag(sampler)
 	end
 
 	return flag
-end
-
-function util.default_surface_type()
-	return {
-		lighting = "on",			-- "on"/"off"
-		transparency = "opaticy",	-- "opaticy"/"transparent"
-		shadow	= {
-			cast = "on",			-- "on"/"off"
-			receive = "on",			-- "on"/"off"
-		},
-		subsurface = "off",			-- "on"/"off"? maybe has other setting
-	}
 end
 
 -- function util.create_frame_buffer(world,hwnd,w,h,viewid)
