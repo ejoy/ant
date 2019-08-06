@@ -47,14 +47,13 @@ local function load_properties(originpath, properties)
 	if properties then
 		local textures = properties.textures
 		if textures then
-			for _, tex in pairs(textures)do
-				assert(type(tex.ref_path) == "string")
+			for _, tex in pairs(textures) do
 				tex.ref_path = find_subres_path(originpath, fs.path(tex.ref_path))
-				assetmgr.load(tex.ref_path)
 			end
 		end
-		return properties
 	end
+
+	return assetutil.load_material_properties(properties)
 end
 
 local function def_surface_type()
@@ -102,13 +101,8 @@ return {
 			handle.state = nil
 		end
 
-		if handle.properties then
-			local textures = handle.properties.textures
-			for _, tex in pairs(textures) do
-				assetmgr.unload(tex, tex.ref_path)
-			end
-			handle.properties = nil
-		end
+		assetutil.unload_material_properties(handle.properties)
+		handle.properties = nil
 
 		handle.surface_type = nil
 		res.handle = nil

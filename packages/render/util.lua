@@ -26,10 +26,14 @@ local property_types = {
     texture = "s",
 }
 
-local function update_properties(shader, properties, render_properties)
-	local su = shader.uniforms	
+local function update_properties(material, properties, render_properties)
+	local su = material.shader.uniforms
 	for name, u in pairs(su) do
 		local function find_property(name, properties)
+			if properties == nil then
+				return nil
+			end
+
 			local uniforms = properties.uniforms
 			if uniforms then
 				local p = uniforms[name]
@@ -40,18 +44,28 @@ local function update_properties(shader, properties, render_properties)
 			local textures = properties.textures
 			if textures then
 				local tex = textures[name]
-				local texkey = assert(tex.ref_path)
-				tex.handle = assetmgr.get_texture(texkey)	--set texture handle every time
+				if tex then
+					if tex.ref_path then
+						local texkey = assert(tex.ref_path)
+						tex.handle = assetmgr.get_texture(texkey).handle	--set texture handle every time
+					else
+						assert(tex.handle)
+					end
+				end
 				return tex
 			end
 		end
 
 		local p = find_property(name, properties)
 		if p == nil then
-			for _, v in pairs(render_properties) do
-				p = find_property(name, v)
-				if p then
-					break
+			p = find_property(name, material.properties)
+
+			if p == nil then
+				for _, rp in pairs(render_properties) do
+					p = find_property(name, rp)
+					if p then
+						break
+					end
 				end
 			end
 		end
@@ -74,7 +88,7 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 
 	local material = primgroup.material
 	bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
-	update_properties(material.shader, primgroup.properties, render_properties)
+	update_properties(material, primgroup.properties, render_properties)
 
 	local prog = material.shader.prog
 

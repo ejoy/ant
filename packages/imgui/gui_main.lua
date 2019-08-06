@@ -2,7 +2,8 @@ local native    = require "window.native"
 local window    = require "window"
 local imgui     = require "imgui_wrap"
 local bgfx      = require "bgfx"
-local platform = require "platform"
+local platform  = require "platform"
+local fs        = require "filesystem"
 local renderpkg = import_package "ant.render"
 local rhwi      = renderpkg.hardware_interface
 local viewidmgr = renderpkg.viewidmgr
@@ -29,13 +30,13 @@ function gui_main.init(nwh, context, width, height)
         height = height,
 	}
     imgui.create(nwh)
-    local ocornut_imgui = assetutil.shader_loader {
-        vs = "/pkg/ant.imgui/shader/vs_ocornut_imgui",
-        fs = "/pkg/ant.imgui/shader/fs_ocornut_imgui",
+    local ocornut_imgui = assetutil.load_shader_program {
+        vs = fs.path "/pkg/ant.imgui/shader/vs_ocornut_imgui",
+        fs = fs.path "/pkg/ant.imgui/shader/fs_ocornut_imgui",
     }
-    local imgui_image = assetutil.shader_loader {
-        vs = "/pkg/ant.imgui/shader/vs_imgui_image",
-        fs = "/pkg/ant.imgui/shader/fs_imgui_image",
+    local imgui_image = assetutil.load_shader_program {
+        vs = fs.path "/pkg/ant.imgui/shader/vs_imgui_image",
+        fs = fs.path "/pkg/ant.imgui/shader/fs_imgui_image",
     }
     imgui.setDockEnable(true)
     imgui.viewid(viewidmgr.generate("ui"));

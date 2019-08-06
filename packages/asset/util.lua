@@ -36,4 +36,27 @@ function util.unload_shader_program(shader)
 	end
 end
 
+function util.load_material_properties(properties)
+	if properties then
+		local textures = properties.textures
+		if textures then
+			for _, tex in pairs(textures) do
+				assetmgr.load(tex.ref_path)
+			end
+		end
+		return properties
+	end
+end
+
+function util.unload_material_properties(properties)
+    if properties then
+        local textures = properties.textures
+        if textures then
+            for _, tex in pairs(textures) do
+                assetmgr.unload(tex.ref_path)
+            end
+        end
+    end
+end
+
 return util

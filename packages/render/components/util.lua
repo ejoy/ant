@@ -6,7 +6,9 @@ local bgfx 		= require "bgfx"
 local declmgr 	= require "vertexdecl_mgr"
 local mathbaselib = require "math3d.baselib"
 
-local asset 	= import_package "ant.asset".mgr
+local assetpkg 	= import_package "ant.asset"
+local assetmgr 	= assetpkg.mgr
+local assetutil	= assetpkg.util
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
@@ -27,7 +29,7 @@ end
 
 function util.load_texture(name, stage, filename)	
 	assert(type(filename) == "table", "texture type's default value should be path to texture file")
-	local assetinfo = asset.load(filename)
+	local assetinfo = assetmgr.load(filename)
 	return {name=name, type="texture", stage=stage, ref_path=filename, handle=assetinfo.handle}
 end
 
@@ -39,50 +41,17 @@ function util.add_material(material, filename)
     material[#material + 1] = item
 end
 
-local function update_properties(dst_properties, src_properties)
-	local srctextures = src_properties.textures
-	if srctextures then
-		local dsttextures = dst_properties.textures or {}
-		for k, v in pairs(srctextures) do
-			local tex = dsttextures[k]
-			if tex == nil then
-				tex = {name=v.name, type=v.type, stage=v.stage, ref_path=fs.path(v.ref_path)}
-				dsttextures[k] = tex
-			end
-
-			local refpath = tex.ref_path
-			if refpath then
-				tex.handle = asset.load(refpath).handle
-			end
-		end
-		dst_properties.textures = dsttextures
-	end
-
-	local srcuniforms = src_properties.uniforms
-	if srcuniforms then
-		local dstuniforms = dst_properties.uniforms or {}
-		for k, v in pairs(srcuniforms) do			
-			if dstuniforms[k] == nil then
-				assert(type(v.default) == "table")			
-				local value = deep_copy(v.default)
-				dstuniforms[k] = {name=v.name, type=v.type, value=value}
-			end
-		end
-		dst_properties.uniforms = dstuniforms
-	end
+function util.create_material(material)
+	assetmgr.load(material.ref_path)
+	assetutil.load_material_properties(material.properties)
 end
 
-function util.create_material(material)
-	local materialinfo = asset.load(material.ref_path)
-	if not material.properties then
-		material.properties = {}
-	end
-	local mproperties = materialinfo.properties 
-	local properties = material.properties
-	if mproperties then
-		update_properties(properties, mproperties)
-	end
-	material.materialinfo = materialinfo	
+function util.remove_material(material)
+	assetmgr.unload(material.ref_path)
+	material.ref_path = nil
+
+	assetutil.unload_material_properties(material.properties)
+	material.properties = nil
 end
 
 function util.assign_material(filepath, properties, asyn_load)
@@ -405,7 +374,7 @@ local function check_rendermesh_lod(rm)
 end
 
 function util.create_mesh(rendermesh, mesh)
-	rendermesh.handle = asset.load(mesh.ref_path).handle
+	rendermesh.handle = assetmgr.load(mesh.ref_path).handle
 	mesh.rendermesh = rendermesh
 	check_rendermesh_lod(rendermesh)
 end

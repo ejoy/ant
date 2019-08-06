@@ -84,34 +84,6 @@ function rendermesh:init()
 	return self
 end
 
--- TODO: need a new resource manager
--- function rendermesh:delete()
--- 	local meshscene = self.handle
--- 	if meshscene then
--- 		local handles = {}
--- 		for _, scene in ipairs(meshscene.scenes) do
--- 			for _, node in ipairs(scene) do
--- 				for _, group in ipairs(node) do
--- 					for _, vh in ipairs(group.vb.handles) do
--- 						handles[vh] = true
--- 					end
-
--- 					if group.ib then
--- 						handles[group.ib.handle] = true
--- 					end
--- 				end
--- 			end
--- 		end
-
--- 		for handle in pairs(handles) do
--- 			if handle then
--- 				bgfx.destroy(handle)
--- 			end
--- 		end
--- 		self.handle = nil
--- 	end
--- end
-
 local mesh = ecs.component_alias("mesh", "resource") {depend="rendermesh"}
 function mesh:init()
 	return self
@@ -123,19 +95,17 @@ function mesh:postinit(e)
 	end
 end
 
-local tex = ecs.component "texture"
+function mesh:delete(e)
+
+end
+
+--DO NOT define init/delete function to manager texture resource
+--texture should only create/remove from material component, see material component definition
+ecs.component "texture"
 	.name "string"
 	.type "string"
 	.stage "int"
 	.ref_path "respath"
-
--- TODO: need a new resource manager
--- function tex:delete()
--- 	if tex.handle then
--- 		bgfx.destroy(tex.handle)
--- 		tex.handle = nil
--- 	end
--- end
 
 local uniformdata = ecs.component_alias("uniformdata", "real[]")
 
@@ -179,6 +149,10 @@ function material:init()
 		component_util.create_material(self)
 	end
 	return self
+end
+
+function material:delete()
+	component_util.remove_material(self)
 end
 
 ecs.component_alias("can_render", "boolean", true) {depend={"transform", "rendermesh", "material"}}
