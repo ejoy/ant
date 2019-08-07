@@ -58,11 +58,15 @@ end
 local function update_transform(world, pe, psrt)
 	local mapper = pe.hierarchy_name_mapper
 	if mapper then
-		local hie = pe.hierarchy
-		local refpath = hie.ref_path		
-		hie.assetinfo = assetmgr.load(refpath)
-		for _, node in ipairs(hie.assetinfo.handle) do
-			local rot = ms(ms:quaternion(node.r), 'eP')			
+		local hiecomp = pe.hierarchy
+        local refpath = hiecomp.ref_path
+        local hieres = assetmgr.get_hierarchy(refpath)
+        if hieres == nil then
+            hieres = assetmgr.load(refpath)
+        end
+		
+		for _, node in ipairs(hieres.handle) do
+			local rot = ms(ms:quaternion(node.r), 'eP')
 			local csrt = ms(psrt, ms:srtmat(node.s, rot, node.t), '*P')
 			local s, r, t = ms(csrt, '~PPP')
 			local ceid = mapper[node.name]

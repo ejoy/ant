@@ -166,15 +166,7 @@ local function update_duration_text(cursorpos)
 	if sample == nil then
 		return 
 	end
-	local anicomp = sample.animation
-	if anicomp then
-		local ani_assetinfo = anicomp.assetinfo
-		if ani_assetinfo then
-			local ani_handle = ani_assetinfo.handle
-			local duration_pos = ani_handle:duration() * cursorpos
-			duration_value.VALUE = string.format("%2f", duration_pos)
-		end
-	end
+	asset(false, "animation need rewrite!")
 end
 
 local function slider_value_chaged(slider)
@@ -235,43 +227,6 @@ local function init_paths_ctrl()
 	change_cb()
 end
 
-local function init_playitme_ctrl()
-	local dlg = main_dialog()
-
-	local slider = iup.GetDialogChild(dlg, "ANITIME_SLIDER")
-
-	update_static_duration_value()
-
-	local duration_value = iup.GetDialogChild(dlg, "DURATION")
-	function duration_value:killfocus_cb()
-		local duration = tonumber(self.VALUE)
-
-		if sample_eid then
-			local e = world[sample_eid]
-			local anicomp = e.animation
-			if anicomp then
-				local anihandle = anicomp.assetinfo.handle
-				local aniduration = anihandle:duration()
-				local ratio = math.min(math.max(0, duration / aniduration), 1)
-				anicomp.ratio = ratio
-			end
-		end
-	end
-	
-	function slider:valuechanged_cb()
-		slider_value_chaged(self)
-	end
-
-	slider_value_chaged(slider)
-
-	local autoplay = iup.GetDialogChild(dlg, "AUTO_PLAY")
-	function autoplay:action()
-		local active = self.VALUE == "OFF" and "ON" or "OFF"
-		duration_value.ACTIVE = active
-		slider.ACTIVE = active
-	end
-end
-
 local function init_check_shower()
 	local checkers = {
 		SHOWBONES=enable_bones_visible,
@@ -300,117 +255,6 @@ local function init_blend_ctrl()
 	end)
 end
 
-local function find_child(container, name)
-	local child_count = iup.GetChildCount(container)
-	if child_count == nil then
-		return 
-	end
-
-	for ii=0, child_count - 1 do
-		local c = iup.GetChild(container, ii)
-		if c.NAME == name then
-			return c
-		end
-
-		local cc = find_child(c, name)
-		if cc then
-			return cc
-		end
-	end				
-end
-
-local function update_ik_ctrl()
-	local sample = sample_entity()
-	if sample then
-		local ik = sample.ik
-		if ik then			
-			local ikview = dlg_item("IKVIEW")
-			local function update_vec_ctrl(ctrlname, ref)
-				local ctrl = find_child(ikview, ctrlname).owner
-				local v = ms(ref, "T")
-				ctrl:x(v[1])
-				ctrl:y(v[2])
-				ctrl:z(v[3])
-			end
-
-			update_vec_ctrl("TARGET", ik.target)
-			update_vec_ctrl("MID_AXIS", ik.mid_axis)
-			update_vec_ctrl("POLE_VECTOR", ik.pole_vector)
-
-			local weight = find_child(ikview, "WEIGHT")
-			weight.VALUE = tostring(ik.weight)
-
-			local soften = find_child(ikview, "SOFTEN")
-			soften.VALUE = tostring(ik.soften)
-
-			local twist_angle = find_child(ikview, "TWIST_ANGLE")
-			twist_angle.VALUE = tostring(ik.twist_angle)
-
-			local startjoint = find_child(ikview, "START_JOINT")
-			startjoint.VALUE = tostring(ik.start_joint)
-
-			local midjoint = find_child(ikview, "MID_JOINT")
-			midjoint.VALUE = tostring(ik.mid_joint)
-
-			local endjoint = find_child(ikview, "END_JOINT")
-			endjoint.VALUE = tostring(ik.end_joint)
-		end
-	end
-end
-
-local function init_ik_ctrl()	
-	local ikview = dlg_item("IKVIEW")
-
-	local applybtn = iup.GetChild(ikview, 4)
-	assert(applybtn.NAME=="APPLY")	
-	function applybtn:action()
-		local sample = sample_entity()
-		if sample then
-			local ik = sample.ik
-			if ik then
-				local function update_vec(name, ispoint, ref)					
-					local ctrl = find_child(ikview, name).owner
-					local tv = ctrl:get_vec()
-					assert(#tv == 3)
-					tv[4] = ispoint and 1 or 0
-					ms(ref, tv, "=")
-				end
-
-				update_vec("TARGET", true, ik.target)
-				update_vec("POLE_VECTOR", false, ik.pole_vector)
-				update_vec("MID_AXIS", true, ik.mid_axis)
-
-				local weight = find_child(ikview, "WEIGHT")
-				ik.weight = tonumber(weight.VALUE)
-
-				local soften = find_child(ikview, "SOFTEN")
-				ik.soften = tonumber(soften.VALUE)
-
-				local twist_angle = find_child(ikview, "TWIST_ANGLE")
-				ik.twist_angle = tonumber(twist_angle.VALUE)
-
-				local startjoint = find_child(ikview, "START_JOINT")
-				ik.start_joint = tonumber(startjoint.VALUE)
-
-				local midjoint = find_child(ikview, "MID_JOINT")
-				ik.mid_joint = tonumber(midjoint.VALUE)
-
-				local endjoint = find_child(ikview, "END_JOINT")
-				ik.end_joint = tonumber(endjoint.VALUE)
-			end
-		end
-	end
-end
-
-local function init_control()
-	init_paths_ctrl()
-	init_playitme_ctrl()
-	init_check_shower()	
-	init_blend_ctrl()
-	init_ik_ctrl()
-	iup.Map(main_dialog())
-end
-
 local function init_lighting()
 	local lu = renderpkg.light
 	lu.create_directional_light_entity(world, nil, {1,1,1,1}, 2, {123.4, -34.22,-28.2})
@@ -431,27 +275,26 @@ local function init_ik()
 	if sample then
 		assert(sample.ik == nil)
 		local ske = assert(sample.skeleton)
-		world:add_component(sample_eid, "ik")
-		if sample.animation == nil then
-			world:add_component(sample_eid, "animation")
-			local aniutil = require "animation.util"
-			aniutil.init_animation(sample.animation, ske)
-		end
-	
+
+		assert(sample.animation)
+
+		local skehandle = assetmgr.get_skeleton(ske.ref_path).handle
+
+		world:add_component(sample_eid, "ik", {
+			target = {1, 2, 0, 1},
+			pole_vector = {0, 1, 0, 0},
+			mid_axis = {0, 0, 1, 0},
+			weight = 1.0,
+			soften = 0.5,
+			twist_angle = 0,
+
+			start_joint = skehandle:joint_index("shoulder")
+			mid_joint = skehandle:joint_index("forearm")
+			end_joint = skehandle:joint_index("wrist")
+		})
+
 		local ik = sample.ik
 		ik.enable = true
-		ms(ik.target, {1, 2, 0, 1}, "=")
-		ms(ik.pole_vector, {0, 1, 0, 0}, "=")
-		ms(ik.mid_axis, {0, 0, 1, 0}, "=")
-		ik.weight = 1.0
-		ik.soften = 0.5
-		ik.twist_angle = 0
-
-		
-		local skehandle = ske.assetinfo.handle
-		ik.start_joint = skehandle:joint_index("shoulder")
-		ik.mid_joint = skehandle:joint_index("forearm")
-		ik.end_joint = skehandle:joint_index("wrist")
 	end
 end
 
@@ -464,13 +307,11 @@ end
 
 -- luacheck: ignore self
 function model_ed_sys:init()	
-	renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "nT"), {1, 1, -1}, "main_view")
+	renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "nT"), {1, 1, -1})
 
-	init_control()
 	init_lighting()
 
-	-- init_ik()
-	-- update_ik_ctrl()
+	--init_ik()
 
 	init_scene()
 	focus_sample()

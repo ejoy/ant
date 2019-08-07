@@ -173,12 +173,15 @@ local function get_resource(subres, key)
 	end
 end
 
-for _, subname in ipairs {"texture", "mesh", "material"} do
+for subname in pairs(resources) do
 	local subres = resources[subname]
 	assetmgr["get_" .. subname] = function (key)
 		return get_resource(subres, key)
 	end
 end
+assetmgr.get_skeleton 	= assetmgr.get_ozz
+assetmgr.get_animation 	= assetmgr.get_ozz
+assetmgr.get_skinning_mesh=assetmgr.get_ozz
 
 function assetmgr.get_resource(key)
 	local modulename = module_name(key)

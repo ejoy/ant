@@ -28,12 +28,6 @@ local function deep_copy(t)
 	return t
 end
 
-function util.load_texture(name, stage, filename)	
-	assert(type(filename) == "table", "texture type's default value should be path to texture file")
-	local assetinfo = assetmgr.load(filename)
-	return {name=name, type="texture", stage=stage, ref_path=filename, handle=assetinfo.handle}
-end
-
 function util.add_material(material, filename)
 	local item = {
 		ref_path = filename,
@@ -65,25 +59,16 @@ function util.create_submesh_item(material_refs)
 	return {material_refs=material_refs, visible=true}
 end
 
--- content:material_content
--- texture_tbl:{
---  s_basecolor = {type="texture", name="base color", stage=0, ref_path={"ant.resources", "PVPScene/siegeweapon_d.texture"}},
---  s_normal = {type="texture", name="normal", stage=1, ref_path={"ant.resources", "PVPScene/siegeweapon_n.texture"}},
--- },
 function util.change_textures(content, texture_tbl)
-    content.properties = content.properties or {}
-    local textures = content.properties.textures or {}
-    for name, tex in pairs(texture_tbl) do
-        textures[name] = util.load_texture(
-            tex.name,
-            tex.stage,
-            tex.ref_path
-        )
-    end
-    content.properties.textures = textures
-    -- todo:modify materialinfo ?
-    -- if content.materialinfo.properties and content.materialinfo.properties.texture then
-    --  content.materialinfo = deep_copy(content.materialinfo)
+	if content.properties then
+		if content.properties.textures then
+			assetutil.unload_material_textures(content.properties)
+		end
+	else
+		content.properties = {}
+	end
+	content.properties.textures = texture_tbl
+	assetutil.load_material_textures(content.properties)
 end
 
 function util.is_entity_visible(entity)
@@ -392,6 +377,7 @@ function util.remove_mesh(rendermesh, mesh)
 		rendermesh.reskey = nil
 		assetmgr.unload(mesh.ref_path)
 		mesh.ref_path = nil
+		mesh.debug_rendermesh = nil
 	end
 end
 

@@ -17,7 +17,7 @@ local function draw_skeleton(sample)
 		local desc = {vb={}, ib = {}}
 		local worldtrans = nil
 		local anicomp = sample.animation
-		geodrawer.draw_skeleton(assert(ske.assetinfo.handle), anicomp and anicomp.aniresult or nil, 0xfff0f0f0, worldtrans, desc)
+		geodrawer.draw_skeleton(assetmgr.get_skeleton(ske.ref_path).handle, anicomp and anicomp.aniresult or nil, 0xfff0f0f0, worldtrans, desc)
 		return desc
 	end
 end

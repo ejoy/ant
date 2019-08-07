@@ -3,7 +3,7 @@ local ecs = ...
 ecs.import "ant.math"
 
 local fs = require "filesystem"
-local bgfx = require "bgfx"
+
 local component_util = require "components.util"
 local asset = import_package "ant.asset".mgr
 local mathpkg = import_package "ant.math"
@@ -65,10 +65,21 @@ local resource = ecs.component "resource"
 	["opt"].asyn_load "boolean" (false)
 
 function resource:init()
-	if self.ref_path and not self.asyn_load then
-		self.assetinfo = asset.load(self.ref_path)
+	if not self.asyn_load then
+		asset.load(self.ref_path)
 	end
 	return self
+end
+
+function resource:postinit(e)
+	if not self.asyn_load then
+		assert(e.asyn_load == nil)
+	end
+end
+
+function resource:delete()
+	asset.unload(self.ref_path)
+	self.ref_path = nil
 end
 
 ecs.component "submesh_ref"
@@ -84,7 +95,10 @@ function rendermesh:init()
 	return self
 end
 
-local mesh = ecs.component_alias("mesh", "resource") {depend="rendermesh"}
+local mesh = ecs.component "mesh" {depend="rendermesh"}
+	.ref_path "respath" ()
+	["opt"].asyn_load "boolean" (false)
+
 function mesh:init()
 	return self
 end

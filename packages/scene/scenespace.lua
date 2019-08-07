@@ -3,15 +3,17 @@ local world = ecs.world
 
 ecs.import "ant.event"
 
-local su = require "util"
+local su 		= require "util"
 
-local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-local math3d = require "math3d"
+local mathpkg 	= import_package "ant.math"
+local ms 		= mathpkg.stack
+local math3d 	= require "math3d"
+
+local hie_util 	= import_package "ant.scene".hierarchy
+local assetpkg 	= import_package "ant.asset"
+local assetmgr 	= assetpkg.mgr
 
 local animodule = require "hierarchy.animation"
-
-local hie_util = import_package "ant.scene".hierarchy
 
 ecs.tag "hierarchy_tag"
 
@@ -131,9 +133,9 @@ local function mark_cache(eid, cache_result)
 	local cachemat = update_world(t)
 	assert(type(cachemat) == 'userdata')
 
-	local hie = t.hierarchy
-	if hie then
-		local hiehandle = hie.assetinfo.handle
+	local hiecomp = t.hierarchy
+	if hiecomp then
+		local hiehandle = assetmgr.get_hierarchy(hiecomp.ref_path).handle
 		if t.hierarchy_result == nil then
 			local bpresult = animodule.new_bind_pose_result(#hiehandle)
 			hiehandle:bindpose_result(bpresult)

@@ -6,22 +6,6 @@ local geo = geometry.geometry
 local fs = require "filesystem"
 local bgfx = require "bgfx"
 
-function util.create_aabb_mesh_info(mesh)
-	local descs = {}
-	local _, ib = geo.box_from_aabb(nil, true, true)
-	for _, g in ipairs(mesh.assetinfo.handle.groups) do
-		local bounding = g.bounding
-		local aabb = assert(bounding.aabb)
-		
-		local vb = geo.box_from_aabb(aabb)
-		table.insert(descs, {
-			vb = vb,
-			ib = ib,			
-		})
-	end
-	return descs
-end
-
 function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 	local eid = world:create_entity {
 		transform = {			
@@ -41,8 +25,8 @@ function util.create_sample_entity(world, skepath, anipaths, skinning_meshpath)
 			ref_path = fs.path "/pkg/ant.resources/simple_animation.sm",
 		},
 		name = "animation_sample",
-		main_view = true,
-		sampleobj = true,
+		main_view 	= true,
+		sampleobj 	= true,
 
 		can_render 	= true,
 		can_select 	= true,

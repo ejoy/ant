@@ -19,7 +19,7 @@ local bgfx 		= require "bgfx"
 local sm = ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation"}}
 
 local function gen_mesh_assetinfo(sm)
-	local smhandle = sm.assetinfo.handle
+	local smhandle = assetmgr.get_skinning_mesh(sm.ref_path).handle
 
 	local num_vertices, num_indices = smhandle:num_vertices(), smhandle:num_indices()
 
@@ -65,7 +65,7 @@ function skinning_sys:update()
 
 		local meshscene = assetmgr.get_mesh(assert(e.rendermesh.reskey))
 
-		local sm 		= e.skinning_mesh.assetinfo.handle
+		local sm 		= assetmgr.get_skinning_mesh(e.skinning_mesh.ref_path).handle
 		local aniresult = e.animation.aniresult
 		
 		-- update data include : position, normal, tangent

@@ -1,7 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
-local assetmgr = require "asset"
+local assetmgr  = require "asset"
+local assetutil = require "util"
 
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
@@ -52,18 +53,8 @@ local function is_mesh_loaded(rm)
     end
 end
 
-local function each_texture(material_properties)
-    if material_properties then
-        local textures = material_properties.textures
-        if textures then
-            return pairs(textures)
-        end
-    end
-    return next, {}, nil
-end
-
 local function is_properties_ready(properties)
-    for _, tex in each_texture(properties) do
+    for _, tex in assetutil.each_texture(properties) do
         if tex.ref_path then
             local t = assetmgr.get_texture(tex.ref_path)
             if t == nil then

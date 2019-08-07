@@ -30,16 +30,14 @@ function util.unload_shader_program(shader)
 		local shaderpath = check_add_shader_file_extension(shader[name])
 		if shaderpath then
             assert(type(shaderpath) ~= "string")
-            
-			local res = assetmgr.get_resource(shaderpath)
             assetmgr.unload(shaderpath)
 			shader[name] = nil
 		end
 	end
 end
 
-function util.mpairs(t)
-    local function mnext(tbl, index)
+local function mnext(tbl, index)
+    if tbl then
         local k, v
         while true do
             k, v = next(tbl, index)
@@ -49,34 +47,45 @@ function util.mpairs(t)
             end
             index = k
         end
-    
+
         return k, v
     end
+end
 
+function util.mpairs(t)
     return mnext, t, nil
 end
 
-function util.load_material_properties(properties)
-	if properties then
-		local textures = properties.textures
-		if textures then
-            for _, tex in util.mpairs(textures) do
-				assetmgr.load(tex.ref_path)
-            end
-		end
-		return properties
-	end
-end
-
-function util.unload_material_properties(properties)
+function util.each_texture(properties)
     if properties then
         local textures = properties.textures
         if textures then
-            for _, tex in pairs(textures) do
-                assetmgr.unload(tex.ref_path)
-            end
+            return util.mpairs(textures)
         end
     end
+    return mnext, nil, nil
+end
+
+function util.load_material_textures(properties)
+    for _, tex in util.each_texture(properties) do
+        assetmgr.load(tex.ref_path)
+    end
+
+	return properties
+end
+
+function util.unload_material_textures(properties)
+    for _, tex in util.each_texture(properties) do
+        assetmgr.unload(tex.ref_path)
+    end
+end
+
+function util.load_material_properties(properties)
+    util.load_material_textures(properties)
+end
+
+function util.unload_material_properties(properties)
+    util.unload_material_textures(properties)
 end
 
 return util

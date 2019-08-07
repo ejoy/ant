@@ -1,6 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
+local assetpkg = import_package "ant.asset"
+local assetmgr = assetpkg.mgr
+
 ecs.component "state"
 	.name "string"
 	.pose "pose"
@@ -15,8 +18,8 @@ ecs.component "transmit"
 local state_chain = ecs.component_alias("state_chain", "resource")
 
 function state_chain:init()
-	local statecfg = self.assetinfo
-	self.target = statecfg.main_entry
+	local res = assetmgr.load(self.ref_path)
+	self.target = res.main_entry
 	return self
 end
 
@@ -25,10 +28,6 @@ local aniutil = require "util"
 
 local sm = ecs.system "state_machine"
 sm.dependby "animation_system"
-
-function sm:init()
-
-end
 
 local function get_pose(chain, name)
 	for _, s in ipairs(chain) do
@@ -62,7 +61,7 @@ end
 function sm:update()
 	for _, eid in world:each "state_chain" do
 		local e = world[eid]
-		local statecfg = e.state_chain.assetinfo
+		local statecfg = assetmgr.load(e.state_chain.ref_path)
 		local anicomp = assert(e.animation)
 		local anipose = anicomp.pose
 

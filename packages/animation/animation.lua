@@ -8,11 +8,11 @@ local animodule = require "hierarchy.animation"
 local animation_content = ecs.component "animation_content"		
 	.ref_path "respath" ()
 	.name "string"
-	.scale "real" (1)	
-	.looptimes "int" (0)	
+	.scale "real" (1)
+	.looptimes "int" (0)
 
 local function calc_ratio(current_counter, ani)
-	local handle = assert(ani.handle)
+	local handle = asset.get_animation(ani.ref_path).handle
 	local duration = handle:duration() * 1000
 	local localtime = timer.from_counter(current_counter - ani.start_counter) * ani.scale
 	local frametime
@@ -27,16 +27,20 @@ local function calc_ratio(current_counter, ani)
 end
 
 function animation_content:init()
-	if self.ref_path then
-		self.handle = asset.load(self.ref_path).handle
-	end	
+	asset.load(self.ref_path)
+
 	self.start_counter = 0
 	self.ratio = 0
 	return self
 end
 
+function animation_content:delete()
+	asset.unload(self.ref_path)
+	self.ref_path = nil
+end
+
 ecs.component "aniref"
-	.idx "int"	-- TODO: need use name to referent which animation
+	.idx "int"	-- TODO: need use name to reference which animation
 	.weight "real"
 
 ecs.component "pose"
@@ -53,9 +57,11 @@ local animation = ecs.component "animation"  { depend = "skeleton" }
 
 function animation:postinit(e)
 	local ske = e.skeleton
-	local numjoints = #ske.assetinfo.handle
+
+	local skehandle = asset.get_skeleton(ske.ref_path).handle
+	local numjoints = #skehandle
 	self.aniresult = animodule.new_bind_pose_result(numjoints)
-	for _, ani in ipairs(self.anilist) do			
+	for _, ani in ipairs(self.anilist) do
 		ani.sampling_cache = animodule.new_sampling_cache(numjoints)
 	end
 end
@@ -94,9 +100,9 @@ function anisystem:update()
 
 	for _, eid in world:each("animation") do
 		local e = world[eid]
-		local skecomp = assert(e.skeleton)
+		
+		local ske = asset.get_skeleton(e.skeleton.ref_path).handle
 
-		local ske = assert(skecomp.assetinfo).handle
 		local anicomp = assert(e.animation)
 
 		local fix_root = false
@@ -115,12 +121,13 @@ function anisystem:update()
 			local transmit = pose_state.transmit
 
 			local anilist = anicomp.anilist
-			local function fetch_anilist(pose)				
+			local function fetch_anilist(pose)
 				local anis = {}
 				for _, aniref in ipairs(pose.anirefs) do
 					local ani = assert(anilist[aniref.idx])
 					ani.ratio = calc_ratio(current_counter, ani)
 					ani.weight = aniref.weight
+					ani.handle = asset.get_animation(ani.ref_path).handle
 					anis[#anis+1] = ani
 				end
 				return anis
