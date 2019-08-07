@@ -44,17 +44,17 @@ local function start_load_asset(e)
     e.asyn_load = "loading"
 end
 
-local function is_mesh_loaded(mesh, rm)
-    local m = assetmgr.get_mesh(mesh.ref_path)
-    if m then
-        return m.handle == rm.handle
+local function is_mesh_loaded(rm)
+    if rm.reskey then
+        return assetmgr.get_mesh(rm.reskey) ~= nil
+    else
+        return rm.handle ~= nil
     end
-    return false
 end
 
 local function each_texture(material_properties)
-    if properties then
-        local textures = properties.textures
+    if material_properties then
+        local textures = material_properties.textures
         if textures then
             return pairs(textures)
         end
@@ -95,7 +95,7 @@ local function is_material_loaded(material)
 end
 
 local function is_asset_loaded(e)
-    if not is_mesh_loaded(e.mesh, e.rendermesh) then
+    if not is_mesh_loaded(e.rendermesh) then
         return false
     end
 

@@ -38,13 +38,31 @@ function util.unload_shader_program(shader)
 	end
 end
 
+function util.mpairs(t)
+    local function mnext(tbl, index)
+        local k, v
+        while true do
+            k, v = next(tbl, index)
+            local tt = type(k)
+            if tt == "string" or tt == "nil" then
+                break
+            end
+            index = k
+        end
+    
+        return k, v
+    end
+
+    return mnext, t, nil
+end
+
 function util.load_material_properties(properties)
 	if properties then
 		local textures = properties.textures
 		if textures then
-			for _, tex in pairs(textures) do
+            for _, tex in util.mpairs(textures) do
 				assetmgr.load(tex.ref_path)
-			end
+            end
 		end
 		return properties
 	end

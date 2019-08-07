@@ -9,7 +9,8 @@ local computil = render.components
 
 local filterutil = require "filter.util"
 
-local assetmgr = import_package "ant.asset"
+local assetpkg = import_package "ant.asset"
+local assetmgr = assetpkg.mgr
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
@@ -102,20 +103,20 @@ local function get_scale_mat(worldmat, scenescale)
 	return worldmat
 end
 
-local function filter_element(eid, meshcomp, worldmat, materialcomp, filter)
-	local meshrefkey = meshcomp.refkey
+local function filter_element(eid, rendermesh, worldmat, materialcomp, filter)
+	local meshrefkey = rendermesh.reskey
 	local meshscene
 	-- TODO: mesh info create from code need merge into assetmgr
 	if meshrefkey == nil then
-		meshscene = meshcomp.handle
+		meshscene = rendermesh.handle
 	else
-		meshscene = assetmgr.get_mesh(meshrefkey)
+		meshscene = assetmgr.get_mesh(meshrefkey).handle
 	end
 	
-	local sceneidx = computil.scene_index(meshcomp.lodidx, meshscene)
+	local sceneidx = computil.scene_index(rendermesh.lodidx, meshscene)
 
 	local scenes = meshscene.scenes[sceneidx]
-	local submesh_refs = meshcomp.submesh_refs
+	local submesh_refs = rendermesh.submesh_refs
 	for _, meshnode in ipairs(scenes) do
 		local name = meshnode.name
 		if is_visible(name, submesh_refs) then

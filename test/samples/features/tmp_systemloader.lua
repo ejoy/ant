@@ -33,6 +33,7 @@ local lu = renderpkg.light
 local PVPScenLoader = require 'PVPSceneLoader'
 
 local init_loader = ecs.system 'init_loader'
+init_loader.singleton "asyn_load_list"
 
 init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"
@@ -111,23 +112,7 @@ local function create_animation_test()
     aniutil.play_animation(e.animation, anicomp.pose_state.pose)
 end
 
-function init_loader:init()
-    renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
-    renderutil.create_blit_queue(world, {x=0, y=0, w=world.args.fb_size.w, h=world.args.fb_size.h})
-	-- renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
-    do
-        lu.create_directional_light_entity(world, 'directional_light')
-        lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
-    end
-
-    do
-        PVPScenLoader.create_entitices(world)
-    end
-
-    computil.create_grid_entity(world, 'grid', 64, 64, 1)
-
-    create_animation_test()
-
+local function test_serialize(delfile_aftertest)
 	--local eid = world:first_entity_id "main_queue"
 	--local watch = import_package "ant.serialize".watch
 	--local res1 = watch.query(world, nil, eid.."/camera")
@@ -152,4 +137,39 @@ function init_loader:init()
     save_file('serialize_entity.txt', s)
     world:remove_entity(eid)
     serialize.load_entity(world, s)
+
+    if delfile_aftertest then
+        local lfs = require "filesystem.local"
+        lfs.remove(lfs.path 'serialize_world.txt')
+        lfs.remove(lfs.path 'serialize_entity.txt')
+    end
+end
+
+function init_loader:init()
+    renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+    renderutil.create_blit_queue(world, {x=0, y=0, w=world.args.fb_size.w, h=world.args.fb_size.h})
+	-- renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
+    do
+        lu.create_directional_light_entity(world, 'directional_light')
+        lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
+    end
+
+    do
+        PVPScenLoader.create_entitices(world)
+    end
+
+    computil.create_grid_entity(world, 'grid', 64, 64, 1)
+    create_animation_test()
+end
+
+function init_loader:asset_loaded()
+    local ll = self.asyn_load_list
+    -- scene finish
+    if ll.i >= ll.n then
+        if  not __ANT_RUNTIME__ and 
+            not _RUN_TEST_SERIALIZE_ then
+            test_serialize(true)
+            _RUN_TEST_SERIALIZE_ = true
+        end
+    end
 end

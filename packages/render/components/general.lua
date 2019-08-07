@@ -91,17 +91,12 @@ end
 function mesh:postinit(e)
 	if not self.asyn_load then
 		assert(e.asyn_load == nil)
-		component_util.create_mesh(e.rendermesh, e.mesh)
+		component_util.create_mesh(e.rendermesh, self)
 	end
 end
 
 function mesh:delete(e)
-	local rm = e.rendermesh
-	local m = asset.get_mesh(self.ref_path)
-	if m then
-		assert(rm.handle == nil)
-		asset.unload(self.ref_path)
-	end
+	component_util.remove_mesh(e.rendermesh, self)
 end
 
 --DO NOT define init/delete function to manager texture resource

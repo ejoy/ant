@@ -358,25 +358,40 @@ function util.create_skybox(world, material)
     return eid
 end
 
-local function check_rendermesh_lod(rm)
-	local scene = rm.handle
-	if scene.scenelods then
-		assert(1 <= scene.sceneidx and scene.sceneidx <= #scene.scenelods)
-		if rm.lodidx < 1 or rm.lodidx > #scene.scenelods then
-			print("invalid lod:", rm.lodidx, "max lod:", scene.scenelods)
-			rm.lodidx = 1
+local function check_rendermesh_lod(meshscene, lodidx)
+	if meshscene.scenelods then
+		assert(1 <= meshscene.sceneidx and meshscene.sceneidx <= #meshscene.scenelods)
+		if lodidx < 1 or lodidx > #meshscene.scenelods then
+			log.warn("invalid lod:", lodidx, "max lod:", meshscene.scenelods)
 		end
 	else
-		if scene.sceneidx ~= rm.lodidx then
-			print("default lod scene is not equal to lodidx")
+		if meshscene.sceneidx ~= lodidx then
+			log.warn("default lod scene is not equal to lodidx")
 		end
 	end
 end
 
 function util.create_mesh(rendermesh, mesh)
-	rendermesh.handle = assetmgr.load(mesh.ref_path).handle
-	mesh.rendermesh = rendermesh
-	check_rendermesh_lod(rendermesh)
+	local res = assetmgr.load(mesh.ref_path)
+	check_rendermesh_lod(res.handle)
+	rendermesh.reskey = mesh.ref_path
+	-- just for debug
+	mesh.debug_rendermesh = rendermesh
+end
+
+function util.check_mesh_valid(rendermesh, mesh)
+	if rendermesh.reskey then
+		return mesh.debug_rendermesh == rendermesh
+	end
+	return rendermesh.handle ~= nil
+end
+
+function util.remove_mesh(rendermesh, mesh)
+	if util.check_mesh_valid(rendermesh, mesh) then
+		rendermesh.reskey = nil
+		assetmgr.unload(mesh.ref_path)
+		mesh.ref_path = nil
+	end
 end
 
 function util.scene_index(lodidx, meshscene)
