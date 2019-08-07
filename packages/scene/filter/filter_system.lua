@@ -104,15 +104,8 @@ local function get_scale_mat(worldmat, scenescale)
 end
 
 local function filter_element(eid, rendermesh, worldmat, materialcomp, filter)
-	local meshrefkey = rendermesh.reskey
-	local meshscene
-	-- TODO: mesh info create from code need merge into assetmgr
-	if meshrefkey == nil then
-		meshscene = rendermesh.handle
-	else
-		meshscene = assetmgr.get_mesh(meshrefkey).handle
-	end
-	
+	local meshscene = assetmgr.get_mesh(assert(rendermesh.reskey))
+
 	local sceneidx = computil.scene_index(rendermesh.lodidx, meshscene)
 
 	local scenes = meshscene.scenes[sceneidx]

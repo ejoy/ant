@@ -2,11 +2,16 @@ local ecs = ...
 local world = ecs.world
 
 local renderpkg = import_package "ant.render"
-local declmgr = renderpkg.declmgr
-local computil = renderpkg.components
+local declmgr 	= renderpkg.declmgr
+local computil 	= renderpkg.components
+
+local assetpkg 	= import_package "ant.asset"
+local assetmgr 	= assetpkg.mgr
+
+local fs 		= require "filesystem"
 
 local animodule = require "hierarchy.animation"
-local bgfx = require "bgfx"
+local bgfx 		= require "bgfx"
 
 -- skinning_mesh component is different from mesh component.
 -- mesh component is used for render purpose.
@@ -27,7 +32,7 @@ local function gen_mesh_assetinfo(sm)
 		vbhandles[#vbhandles+1] = create_buffer_op[buffertype]({"!", buffer, size}, declmgr.get(layout).handle)
 	end
 
-	local idxbuffer, indices_sizebyte = smhandle:index_buffer()	
+	local idxbuffer, indices_sizebyte = smhandle:index_buffer()
 	return computil.assign_group_as_mesh {
 		vb = {
 			handles = vbhandles,
@@ -44,7 +49,9 @@ end
 
 function sm:postinit(e)
 	local rm = e.rendermesh
-	rm.handle = gen_mesh_assetinfo(self)
+	
+	local reskey = fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh")
+	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(self))
 end
 
 -- skinning system
@@ -56,7 +63,8 @@ function skinning_sys:update()
 	for _, eid in world:each("skinning_mesh") do
 		local e = world[eid]
 
-		local meshscene = e.rendermesh.handle
+		local meshscene = assetmgr.get_mesh(assert(e.rendermesh.reskey))
+
 		local sm 		= e.skinning_mesh.assetinfo.handle
 		local aniresult = e.animation.aniresult
 		

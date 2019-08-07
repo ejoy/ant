@@ -85,26 +85,36 @@ local function module_name(filepath)
 	return filepath:extension():string():match "%.(.+)$"
 end
 
-function assetmgr.load(filename, param)	
+local function get_subres(filename)
 	assert(type(filename) ~= "string")
 
-	local reskey = res_key(filename)
 	local modulename = module_name(filename)
-	local subres = resources[modulename]
+	return resources[modulename]	
+end
+
+local function insert_resource(subres, reskey, content)
+	local res = {
+		handle 		= content,
+		lastframe 	= -1,
+		ref_count	= 1,
+	}
+	subres[reskey] = res
+	return res
+end
+
+function assetmgr.load(filename, param)	
+	local subres = get_subres(filename)
 	if subres == nil then
-		error(string.format("not found ext from file:%s", filename:string()))
+		log.error(string.format("not found ext from file:%s", filename:string()))
 	end
+
+	local reskey = res_key(filename)
 
 	local res = subres[reskey]
 	if res == nil then
-		local loader = assetmgr.get_loader(assert(modulename))
+		local loader = assetmgr.get_loader(module_name(filename))
 		local handle = loader(filename, param)
-		res = {
-			handle 		= handle,
-			lastframe 	= -1,
-			ref_count	= 1,
-		}
-		subres[reskey] = res
+		res = insert_resource(subres, reskey, handle)
 	else
 		res.ref_count = res.ref_count + 1
 	end
@@ -113,16 +123,12 @@ function assetmgr.load(filename, param)
 end
 
 function assetmgr.unload(filename)
-	assert(type(filename) ~= "string")
-	local reskey = res_key(filename)
-	
-	local modulename = module_name(filename)
-	local subres = resources[modulename]
-
+	local subres = get_subres(filename)
 	if subres == nil then
 		log.error("not found sub resource from file:", filename:string())
 	end
 
+	local reskey = res_key(filename)
 	local res = subres[reskey]
 
 	if res then
@@ -133,7 +139,7 @@ function assetmgr.unload(filename)
 		res.ref_count = res.ref_count - 1
 		if res.ref_count == 0 then
 			subres[reskey] = nil
-			local unloader = assetmgr.get_unloader(modulename)
+			local unloader = assetmgr.get_unloader(module_name(filename))
 			if unloader then
 				unloader(res, filename)
 			end
@@ -141,6 +147,20 @@ function assetmgr.unload(filename)
 	else
 		log.warn("unload a not reference resource:", filename:string(), "resource maybe loading from asyn_asset_loader")
 	end
+end
+
+function assetmgr.register_resource(reffile, content)
+	local subres = get_subres(reffile)
+	if subres == nil then
+		log.error("try register resource, but not found subres from reference filename:", reffile:string())
+	end
+
+	local reskey = res_key(reffile)
+	if subres[reskey] then
+		log.error("register duplicate resource:", reffile:string())
+	end
+	insert_resource(subres, res_key(reffile), content)
+	return reffile
 end
 
 local function get_resource(subres, key)

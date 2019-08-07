@@ -9,15 +9,13 @@ return {
 		local mesh = assetmgr.get_depiction(filename)
 		local meshpath =  fs.path(mesh.mesh_path)
 		if fs.exists(meshpath) then
-			mesh.handle = mesh_loader.load(meshpath)
+			return mesh_loader.load(meshpath)
 		else
 			log.warn(string.format("load mesh path failed, mesh file:[%s], .mesh file:[%s],", meshpath, filename))
 		end 
-		return mesh
 	end,
 	unloader = function(res)
-		local reshandle = res.handle
-		local meshscene = reshandle.handle
+		local meshscene = res.handle
 		for _, scene in ipairs(meshscene.scenes) do
 			for _, node in ipairs(scene) do
 				for _, prim in ipairs(node) do

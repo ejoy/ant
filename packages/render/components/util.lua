@@ -9,6 +9,7 @@ local mathbaselib = require "math3d.baselib"
 local assetpkg 	= import_package "ant.asset"
 local assetmgr 	= assetpkg.mgr
 local assetutil	= assetpkg.util
+
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
@@ -175,7 +176,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	grid.rendermesh.handle = util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)
+	grid.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/grid.mesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -188,7 +189,7 @@ function util.create_plane_entity(world, color, size, pos, name)
 		},
 		rendermesh = {},
 		mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"},
-		material = computil.assign_material(
+		material = util.assign_material(
 				fs.path "/pkg/ant.resources/depiction/shadow/mesh_receive_shadow.material",
 				{uniforms = {u_color = {type="color", name="color", value=color}},}),
 		can_render = true,
@@ -226,7 +227,7 @@ function util.create_quad_entity(world, rect, materialpath, properties, name, vi
 	}
 
 	local e = world[eid]
-	e.rendermesh.handle = util.quad_mesh(rect)
+	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/quad.mesh", util.quad_mesh(rect))
 	return eid
 end
 
@@ -254,8 +255,8 @@ function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
 		-3, -3, 0, 0, 1,
 		 3, -3, 0, 1, 1,
 	}
-    
-    quad.rendermesh.handle = quad_mesh(vb)
+	
+	quad.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/quad_scale3.mesh", quad_mesh(vb))
     return quadid
 end
 
@@ -373,7 +374,7 @@ end
 
 function util.create_mesh(rendermesh, mesh)
 	local res = assetmgr.load(mesh.ref_path)
-	check_rendermesh_lod(res.handle)
+	check_rendermesh_lod(res)
 	rendermesh.reskey = mesh.ref_path
 	-- just for debug
 	mesh.debug_rendermesh = rendermesh

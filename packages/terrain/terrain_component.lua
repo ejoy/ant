@@ -1,15 +1,22 @@
 local ecs = ...
 local world = ecs.world
-local bgfx = require "bgfx"
+local Physics = assert(world.args.Physics)
+
+local assetpkg 	= import_package "ant.asset"
+local assetmgr	= assetpkg.mgr
 
 local renderpkg = import_package 'ant.render'
-local declmgr = renderpkg.declmgr
-local computil = renderpkg.components
+local declmgr 	= renderpkg.declmgr
+local computil 	= renderpkg.components
 
-local ms = import_package "ant.math".stack
+local ms 		= import_package "ant.math".stack
 local colliderutil = import_package "ant.bullet".util
 
-local Physics = assert(world.args.Physics)
+local fs 		= require "filesystem"
+
+local bgfx 		= require "bgfx"
+
+
 local terrainshape = ecs.component "terrain_shape"
 	.up_axis 	"int" (0)
 	.flip_quad_edges "boolean" (false)
@@ -98,12 +105,13 @@ function terraincomp:postinit(e)
 		}
 	}
 
-	rm.handle = computil.assign_group_as_mesh()
+	local meshscene = computil.assign_group_as_mesh()	
 	-- using indirect draw can optimize this
 	local groups = {}
 	for _=1, numlayers do
 		groups[#groups+1] = group
 	end
 
-	rm.handle.scenes[1][1] = groups
+	meshscene.scenes[1][1] = groups
+	rm.reskey = assetmgr.register_resource(fs.path "//meshres/terrain.mesh", meshscene)
 end

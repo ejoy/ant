@@ -3,18 +3,21 @@ local world = ecs.world
 
 ecs.import "ant.scene"
 
-local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-local mu = mathpkg.util
-
-local mathbaselib = require "math3d.baselib"
-
 local viewidmgr = require "viewid_mgr"
-local renderutil = require "util"
-local computil = require "components.util"
-local fs = require "filesystem"
+local renderutil= require "util"
+local computil 	= require "components.util"
+
 local geodrawer = import_package "ant.geometry".drawer
-local bgfx = require "bgfx"
+
+local assetpkg 	= import_package "ant.asset"
+local assetmgr 	= assetpkg.mgr
+
+local mathpkg 	= import_package "ant.math"
+local ms 		= mathpkg.stack
+
+local fs 		= require "filesystem"
+local bgfx 		= require "bgfx"
+local mathbaselib = require "math3d.baselib"
 
 ecs.component "shadow"
 	.material "material"
@@ -178,7 +181,7 @@ local function update_bounding_mesh()
 	for _, eid in world:each "can_render" do
 		local e = world[eid]
 		if e.can_render and e.can_cast then
-			local meshhandle = e.rendermesh.handle
+			local meshhandle = assetmgr.get_mesh(e.rendermesh.reskey).handle
 
 			local startvb = #desc.vb - 1
 			local startib = #desc.ib
@@ -192,8 +195,8 @@ local function update_bounding_mesh()
 			}
 		end
 	end
-
-	local meshhandle = boundingdebug.rendermesh.handle
+	
+	local meshhandle = assetmgr.get_mesh(boundingdebug.rendermesh.reskey).handle
 	local group = meshhandle.groups[1]
 	group.primitives = desc.primitives
 	bgfx.update(group.vb.handles[1], 0, desc.vb)
