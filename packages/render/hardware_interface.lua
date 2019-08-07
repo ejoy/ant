@@ -168,7 +168,7 @@ function hw.shutdown()
 end
 
 function hw.identity()
-	return platform.OS .. "-" .. assert(hw.shader_type())
+	return "." .. platform.OS:lower() .. "_" .. assert(hw.shader_type())
 end
 
 hw.frames = nil

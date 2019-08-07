@@ -93,7 +93,6 @@ end
 
 return function (identity, sourcefile, param, outfile)
 	local plat, renderer = util.identify_info(identity)
-	plat, renderer = plat:lower(), renderer:lower()
 	local ext = assert(outfile_extension(renderer))
 	local tmpoutfile = lfs.path(outfile):replace_extension(ext)
 

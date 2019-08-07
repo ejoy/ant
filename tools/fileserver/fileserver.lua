@@ -22,6 +22,7 @@ local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
 
 local WORKDIR = lfs.current_path()
+local ROOTDIR = lfs.path(arg[0]):remove_filename()
 
 local watch = {}
 local repos = {}
@@ -78,7 +79,7 @@ local function repo_add(reponame)
 	end
 	local repopath = lfs.path(reponame)
 	LOG ("Open repo : ", repopath)
-	local repo = assert(repo_new(repopath))
+	local repo = assert(repo_new(repopath, ROOTDIR / ".cache"))
 	LOG ("Rebuild repo")
 	if lfs.is_regular_file(repopath / ".repo" / "root") then
 		repo:index()
@@ -182,14 +183,14 @@ function message:GET(hash)
 	f:close()
 end
 
-function message:LINK(hash, identity, path)
+function message:LINK(identity, path, hash)
 	local repo = self._repo
-	local binhash, cache = repo:link(hash, identity, path)
-	LOG("LINK", hash, identity, path, binhash, cache)
-	if cache then
-		response(self, "LINK", hash, binhash, cache)
+	local binhash, buildhash = repo:link(identity, path, hash)
+	LOG("LINK", identity, path, hash, buildhash, binhash)
+	if binhash then
+		response(self, "LINK", path, buildhash, binhash)
 	else
-		response(self, "LINK", hash)
+		response(self, "LINK", path)
 	end
 end
 

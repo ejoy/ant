@@ -168,58 +168,150 @@ function access.sha1_from_file(filename)
 	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
-local function checkcache(repo, linkfile)
-	local f = lfs.open(linkfile, "rb")
-	if f then
-		local binhash = f:read "l"
-		for line in f:lines() do
-			local hash, name = line:match "([%da-f]+) (.*)"
-			local realhash = access.hash(repo, name)
-			if realhash ~= hash then
-				f:close()
-				return
-			end
-		end
-		f:seek('set', 0)
-		local cache = f:read "a"
-		f:close()
-		return binhash, cache
-	end
+local function readfile(filename)
+	local f = assert(lfs.open(filename))
+	local str = f:read "a"
+	f:close()
+	return str
 end
 
-function access.build_from_file(repo, hash, identity, source_path)
-	local linkfile = access.repopath(repo, hash, ".link")
-	local binhash, cache = checkcache(repo, linkfile)
-	if binhash then
-		return binhash, cache
+local function writefile(filename, str)
+	lfs.create_directories(filename:parent_path())
+	local f = assert(lfs.open(filename, "wb"))
+	f:write(str)
+	f:close()
+end
+
+local function rawtable(filename)
+	local env = {}
+	local r = assert(lfs.loadfile(filename, "t", env))
+	r()
+	return env
+end
+
+local function prebuild(plat, sourcefile, buildfile, binhash, depends)
+	local lkfile = sourcefile .. ".lk"
+	local w = {}
+	w[#w+1] = ("identity = %q"):format(plat)
+	w[#w+1] = ("binhash = %q"):format(binhash)
+	w[#w+1] = "depends = {"
+	for _, dep in ipairs(depends) do
+		w[#w+1] = ("  {%q, %q},"):format(dep[1], dep[2])
 	end
-	local dstfile = linkfile .. ".bin"
-	local build = import_package "ant.fileconvert"
-	local deps = build(identity, access.realpath(repo, source_path), dstfile)
-	if not deps then
+	w[#w+1] = "}"
+	w[#w+1] = readfile(lkfile)
+	writefile(buildfile, table.concat(w, "\n"))
+end
+
+local function add_ref(repo, file, hash)
+	local vfile = ".cache" .. file:string():sub(#repo._cache:string()+1)
+	local timestamp = lfs.last_write_time(file)
+	local info = ("f %s %d"):format(vfile, timestamp)
+
+	local reffile = access.repopath(repo, hash) .. ".ref"
+	if not lfs.exists(reffile) then
+		local f = assert(lfs.open(reffile, "wb"))
+		f:write(info)
+		f:close()
 		return
 	end
-	local binhash = access.sha1_from_file(dstfile)
-	local binhash_path = access.repopath(repo, binhash)
-	if not pcall(lfs.remove, binhash_path) then
-		return
-	end
-	if not pcall(lfs.rename, dstfile, binhash_path) then
-		return
-	end
-	local s = {}
-	s[#s+1] = binhash
-	for _, depfile in ipairs(deps) do
-		local vpath = access.virtualpath(repo, depfile)
-		if vpath then
-			s[#s+1] = ("%s %s"):format(access.sha1_from_file(depfile), vpath)
+	
+	local w = {}
+	for line in lfs.lines(reffile) do
+		local name, ts = line:match "^[df] (.-) ?(%d*)$"
+		if name == vfile and tonumber(ts) == timestamp then
+			return
+		else
+			w[#w+1] = line
 		end
 	end
-	local cache = table.concat(s, "\n")
-	local lf = assert(lfs.open(linkfile, "wb"))
-	lf:write(cache)
-	lf:close()
-	return binhash, cache
+	w[#w+1] = info
+	local f = lfs.open(reffile, "wb")
+	f:write(table.concat(w, "\n"))
+	f:close()
+end
+
+local function link(repo, srcfile, identity, buildfile)
+	local param
+	if lfs.exists(buildfile) then
+		param = rawtable(buildfile)
+		local cpath = repo._cache / param.binhash:sub(1,2) / param.binhash
+		if lfs.exists(cpath) then
+			return cpath, param.binhash
+		end
+		identity = param.identity
+		srcfile = lfs.path(param.depends[1][2])
+	else
+		param = rawtable(srcfile .. ".lk")
+	end
+
+	local fs = import_package "ant.fileconvert"
+	local dstfile, binhash, deps = fs.link(param, srcfile, identity, repo._repo)
+	if not dstfile then
+		return
+	end
+	if deps then
+		local depends = {}
+		for _, name in ipairs(deps) do
+			local vname = access.virtualpath(repo, lfs.relative(name, lfs.current_path()))
+			if vname then
+				depends[#depends+1] = {access.sha1_from_file(name), vname}
+			else
+				print("MISSING DEPEND", name)
+			end
+		end
+		prebuild(identity, srcfile, buildfile, binhash, depends)
+		local cpath = repo._cache / binhash:sub(1,2) / binhash
+		if not pcall(lfs.remove, cpath) then
+			pcall(lfs.remove, dstfile)
+			return
+		end
+		if not pcall(lfs.rename, dstfile, cpath) then
+			pcall(lfs.remove, dstfile)
+			return
+		end
+		dstfile = cpath
+	end
+	add_ref(repo, dstfile, binhash)
+	return dstfile, binhash
+end
+
+function access.link_loc(repo, identity, path)
+	local srcfile = access.realpath(repo, path)
+	local pathhash = access.sha1(path)
+	local buildfile = repo._build / pathhash / srcfile:filename() .. identity
+	return link(repo, srcfile, identity, buildfile)
+end
+
+function access.link(repo, identity, path, buildhash)
+	local srcfile = access.realpath(repo, path)
+	local buildfile
+	if buildhash then
+		buildfile = repo:hash(buildhash)
+	end
+	if not buildfile then
+		local pathhash = access.sha1(path)
+		buildfile = repo._build / pathhash / srcfile:filename() .. identity
+	end
+	local dstfile, binhash = link(repo, srcfile, identity, buildfile)
+	if not dstfile then
+		return
+	end
+	if not buildhash then
+		buildhash = access.sha1_from_file(buildfile)
+	end
+	return binhash, buildhash
+end
+
+function access.checkbuild(repo, buildfile)
+	for _, dep in ipairs(rawtable(buildfile).depends) do
+		local hash, filename = dep[1], dep[2]
+		if hash ~= access.sha1_from_file(access.realpath(repo, filename)) then
+			return false
+		end
+	end
+	return true
+	
 end
 
 return access

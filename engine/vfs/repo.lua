@@ -30,7 +30,7 @@ end
 		xxx = mountxxx,
 	}
 ]]
-local function init(rootpath, repopath)
+local function init(rootpath, repopath, cachepath)
 	assert(lfs.is_directory(rootpath), "Not a dir")
 	local mountpath = rootpath / ".mount"
 	if lfs.is_regular_file(mountpath) then
@@ -46,27 +46,33 @@ local function init(rootpath, repopath)
 		assert(lfs.create_directories(rootpath / "pkg"))
 	end
 
-	-- mkdir dirs
 	for i=0,0xff do
 		local path = repopath / string.format("%02x", i)
 		if not lfs.is_directory(path) then
 			assert(lfs.create_directories(path))
 		end
+		if cachepath then
+			local path = cachepath / string.format("%02x", i)
+			if not lfs.is_directory(path) then
+				assert(lfs.create_directories(path))
+			end
+		end
 	end
 end
 
-function repo.new(rootpath, LOC)
-	local repopath = rootpath / (LOC and ".repo-loc" or ".repo")
-	init(rootpath, repopath)
+function repo.new(rootpath, cachepath)
+	local repopath = rootpath / ".repo"
+	init(rootpath, repopath, cachepath)
 	local mountpoint = access.readmount(rootpath / ".mount")
 	rootpath = mountpoint[''] or rootpath
 	local mountname = access.mountname(mountpoint)
 	local r = setmetatable({
-		_loc = LOC,
 		_mountname = mountname,
 		_mountpoint = mountpoint,
 		_root = rootpath,
 		_repo = repopath,
+		_build = rootpath / "_build",
+		_cache = cachepath,
 		_namecache = {},
 		_lock = filelock(repopath),	-- lock repo
 	}, repo)
@@ -78,6 +84,13 @@ local sha1 = access.sha1
 
 -- map path in repo to realpath (replace mountpoint)
 function repo:realpath(filepath)
+	return access.realpath(self, filepath)
+end
+
+function repo:realpathEx(filepath)
+	if filepath:match "^%.cache/" then
+		return self._cache / filepath:sub(8)
+	end
 	return access.realpath(self, filepath)
 end
 
@@ -194,7 +207,22 @@ function repo:rebuild()
 	return self:build()
 end
 
+local function cleanbuild(self)
+	if not lfs.exists(self._build) then
+		return
+	end
+	for hash in self._build:list_directory() do
+		for file in hash:list_directory() do
+			if not access.checkbuild(self, file) then
+				lfs.remove(file)
+			end
+		end
+	end
+end
+
 function repo:build()
+	cleanbuild(self)
+
 	local cache = {}
 	self._namecache[''] = undef
 	local roothash = repo_build_dir(self, "", cache, self._namecache)
@@ -281,7 +309,7 @@ local function read_ref(self, hash)
 			local timestamp = tonumber(ts)
 			if timestamp then
 				-- It's a file
-				local realname = self:realpath(name)
+				local realname = self:realpathEx(name)
 				if lfs.is_regular_file(realname) and lfs.last_write_time(realname) == timestamp then
 					cache[name] = { hash = hash , timestamp = timestamp }
 					table.insert(items, line)
@@ -343,7 +371,7 @@ function repo:hash(hash)
 		local name, timestamp = line:match "f (.-) ?(%d*)$"
 		if timestamp then
 			timestamp = tonumber(timestamp)
-			local realpath = self:realpath(name)
+			local realpath = self:realpathEx(name)
 			if lfs.last_write_time(realpath) == timestamp then
 				f:close()
 				return realpath
@@ -377,13 +405,13 @@ function repo:dir(hash)
 	return { dir = dir, file = file }
 end
 
-function repo:link(hash, identity, path)
-	local binhash, cache = access.build_from_file(self, hash, identity, path)
-	if not cache then
-		if _DEBUG then print ("BUILDFAIL", identity, path) end
+function repo:link(identity, path, hash)
+	local binhash, buildhash = access.link(self, identity, path, hash)
+	if not binhash then
+		if _DEBUG then print ("LINKFAIL", identity, path, hash) end
 		return
 	end
-	return binhash, cache
+	return binhash, buildhash
 end
 
 return repo
