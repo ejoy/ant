@@ -149,9 +149,7 @@ function anisystem:update()
 				}, anicomp.blendtype, finalbindpose)
 				ani_module.transform(ske, finalbindpose, anicomp.aniresult, fix_root)
 			else
-				if srcanilist then
-					ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult, nil, fix_root)
-				end
+				ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult, nil, fix_root)
 			end
 		end
 

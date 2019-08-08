@@ -145,6 +145,14 @@ local function stringify_component_children(c, v)
 	return stringify_component_value(c.type, v)
 end
 
+local function is_empty_table(t)
+    if t[0] then
+        return next(t, 0) == nil
+    end
+    
+    return next(t) == nil
+end
+
 function stringify_component_ref(c, v, lv)
     if c.type then
         return stringify_component_ref(typeinfo[c.type], v, lv)
@@ -154,8 +162,15 @@ function stringify_component_ref(c, v, lv)
             goto continue
         end
         if cv.ref and (cv.array or cv.map) then
-            out[#out+1] = ('  '):rep(lv) .. ('%s:'):format(cv.name)
-            stringify_component_children(cv, v[cv.name])
+            local thisline = ('  '):rep(lv) .. ('%s:'):format(cv.name)
+            
+            local vv = v[cv.name]
+            if cv.map and is_empty_table(vv) then
+                out[#out+1] = thisline .. '{}'
+            else
+                out[#out+1] = thisline
+                stringify_component_children(cv, vv)
+            end
         else
             out[#out+1] = ('  '):rep(lv) .. ('%s:%s'):format(cv.name, stringify_component_children(cv, v[cv.name]))
         end
