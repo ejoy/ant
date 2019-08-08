@@ -129,6 +129,7 @@ local function test_serialize(delfile_aftertest)
     for _, eid in world:each 'serialize' do
         world:remove_entity(eid)
     end
+    world:clear_removed()
     serialize.load_world(world, s)
 
     --test serialize entity
