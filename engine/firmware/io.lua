@@ -183,7 +183,7 @@ end
 
 local function getbuilddir(fullpath)
 	local hash = sha1(fullpath)
-	return "build/" .. hash
+	return "_build/" .. hash
 end
 
 local function cache_bin(buildhash, binhash)
@@ -251,17 +251,20 @@ function offline.GET(id, fullpath)
 	response_id(id, nil)
 end
 
+function offline.EXIT(id)
+	response_id(id, nil)
+	error "EXIT"
+end
+
+function offline.SEND(_, ...)
+	print(...)
+end
+
 do
 	local function noresponse_function() end
 	offline.FETCHALL = noresponse_function
 	offline.PREFETCH = noresponse_function
 	offline.SUBSCIBE = noresponse_function
-	offline.SEND = noresponse_function
-end
-
-function offline.EXIT(id)
-	response_id(id, nil)
-	error "EXIT"
 end
 
 local function offline_dispatch(cmd, id, ...)
@@ -806,7 +809,6 @@ local function main()
 	if config.address then
 		connection.fd = wait_server()
 		if connection.fd then
-			_G.print = _print
 			work_online()
 			-- socket error or closed
 		end
@@ -820,6 +822,7 @@ local function main()
 	end
 
 	print("Working offline")
+	_G.print = _print
 	work_offline()
 end
 
