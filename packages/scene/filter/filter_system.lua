@@ -67,12 +67,14 @@ local function reset_results(results)
 end
 
 local function get_material(prim, primidx, materialcomp, material_refs)
+	local materialidx
 	if material_refs then
 		local idx = material_refs[primidx] or 1
-		return materialcomp[idx-1]
+		materialidx = idx - 1
+	else
+		materialidx = prim.material or primidx - 1
 	end
 
-	local materialidx = prim.material or primidx - 1
 	return materialcomp[materialidx] or materialcomp[0]
 end
 
