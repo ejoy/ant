@@ -1,12 +1,15 @@
 local util = {}; util.__index = {}
 
 local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
+local computil 	= renderpkg.components
 
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
+local mathpkg 	= import_package "ant.math"
+local mu 		= mathpkg.util
 
-local fs = require "filesystem"
+local assetpkg	= import_package "ant.asset"
+local assetmgr	= assetpkg.mgr
+
+local fs 		= require "filesystem"
 
 local function fill_procedural_sky_mesh(skyentity)
 	local skycomp = skyentity.procedural_sky
@@ -41,7 +44,7 @@ local function fill_procedural_sky_mesh(skyentity)
 	end
 
 	local meshcomp = skyentity.rendermesh
-	meshcomp.handle = computil.create_simple_mesh("p2", vb, w * h, ib, #ib)
+	meshcomp.reskey = assetmgr.register_resource(fs.path "//meshres/procedural_sky.mesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib))
 end
 
 function util.create_procedural_sky(world, whichhour, whichmonth, whichlatitude, turbidity, follow_by_directional_light)
