@@ -54,6 +54,10 @@ function sm:postinit(e)
 	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(self))
 end
 
+function sm:delete(e)
+	assetmgr.unload(assert(e.rendermesh.reskey))
+end
+
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
 

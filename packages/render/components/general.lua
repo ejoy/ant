@@ -95,6 +95,10 @@ function rendermesh:init()
 	return self
 end
 
+function rendermesh:delete()
+	self.reskey = nil
+end
+
 local mesh = ecs.component "mesh" {depend="rendermesh"}
 	.ref_path "respath" ()
 	["opt"].asyn_load "boolean" (false)
