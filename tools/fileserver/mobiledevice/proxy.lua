@@ -60,7 +60,7 @@ local function update_event()
             info.sn = event.Properties.SerialNumber
             info.status = 'idle'
         elseif event.MessageType == 'Detached' then
-            LOG('device add', devices[event.DeviceID].sn)
+            LOG('device del', devices[event.DeviceID].sn)
             devices[event.DeviceID].status = 'closed'
         elseif event.MessageType == 'Paired' then
             LOG('device paired', devices[event.DeviceID].sn)
@@ -105,14 +105,14 @@ local function update_devices()
             device.status = 'ok'
         elseif device.status == 'ok' then
             if is_closed(device.cfd) then
-                LOG('disconnect device')
+                LOG('reconnect device')
                 network.close(device.sfd)
                 try_connect(device)
                 device.status = 'wait'
                 goto continue
             end
             if is_closed(device.sfd) then
-                LOG('disconnect server')
+                LOG('reconnect server')
                 network.close(device.cfd)
                 try_connect(device)
                 device.status = 'wait'
@@ -140,7 +140,7 @@ local function update_devices()
         end
         ::continue::
     end
-    for _, id in pairs(delete) do
+    for id in pairs(delete) do
         devices[id] = nil
     end
 end
