@@ -115,3 +115,7 @@ function terraincomp:postinit(e)
 	meshscene.scenes[1][1] = groups
 	rm.reskey = assetmgr.register_resource(fs.path "//meshres/terrain.mesh", meshscene)
 end
+
+function terraincomp:delete(e)
+	assetmgr.unload(e.rendermesh.reskey)
+end

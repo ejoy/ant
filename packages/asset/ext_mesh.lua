@@ -16,18 +16,23 @@ return {
 	end,
 	unloader = function(res)
 		local meshscene = res.handle
+		local handles = {}
 		for _, scene in ipairs(meshscene.scenes) do
 			for _, node in ipairs(scene) do
 				for _, prim in ipairs(node) do
 					for _, h in ipairs(assert(prim.vb.handles)) do
-						bgfx.destroy(h)
+						handles[h] = true
 					end
 
 					if prim.ib then
-						bgfx.destroy(assert(prim.ib.handle))
+						handles[prim.ib.handle] = true
 					end
 				end
 			end
+		end
+
+		for h in pairs(handles) do
+			bgfx.destroy(h)
 		end
 
 		res.handle = nil
