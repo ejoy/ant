@@ -44,15 +44,9 @@ local function load_state(originpath, state)
 end
 
 local function load_properties(originpath, properties)
-	if properties then
-		local textures = properties.textures
-		if textures then
-			for _, tex in pairs(textures) do
-				tex.ref_path = find_subres_path(originpath, fs.path(tex.ref_path))
-			end
-		end
+	for _, tex in assetutil.each_texture(properties) do
+		tex.ref_path = find_subres_path(originpath, fs.path(tex.ref_path))
 	end
-
 	return assetutil.load_material_properties(properties)
 end
 

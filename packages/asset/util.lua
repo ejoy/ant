@@ -81,7 +81,7 @@ function util.unload_material_textures(properties)
 end
 
 function util.load_material_properties(properties)
-    util.load_material_textures(properties)
+    return util.load_material_textures(properties)
 end
 
 function util.unload_material_properties(properties)
