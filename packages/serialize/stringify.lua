@@ -146,11 +146,12 @@ local function stringify_component_children(c, v)
 end
 
 local function is_empty_table(t)
-    if t[0] then
-        return next(t, 0) == nil
+    local k = next(t)
+    if k then
+        return next(t, k) == nil
     end
     
-    return next(t) == nil
+    return true
 end
 
 function stringify_component_ref(c, v, lv)

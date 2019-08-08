@@ -77,7 +77,7 @@ local function init_hw(nwh, context, w, h)
 		VULKAN     = "spirv",
 	}
 	local vfs = require "vfs"
-	vfs.identity(plat_module.OS .. "-" .. assert(shadertypes[bgfx.get_caps().rendererType]))
+	vfs.identity("."..plat_module.OS:lower() .. "_" .. assert(shadertypes[bgfx.get_caps().rendererType]))
 end
 
 local function program_load(vspath, fspath)

@@ -10,14 +10,14 @@ function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
 	local lk = lfs.path(rp:string() .. ".lk")
 	if lfs.exists(lk) then
-		local hash = access.sha1(self.identity .. pathname)
-		local binhash = access.build_from_file(self, hash, self.identity, pathname)
-		if binhash == nil then
+		pathname = pathname:match "^/?(.-)/?$"
+		local realpath = access.link_loc(self, self.identity, pathname)
+		if realpath == nil then
 			error(string.format("build from path failed, pathname:%s, log file can found in log folder", pathname))
 		end
-		return access.repopath(self, binhash):string()
+		return realpath:string()
 	end
-	return rp:string(), pathname:match "^/?(.-)/?$"
+	return rp:string()
 end
 
 function localvfs.list(path)
@@ -47,7 +47,7 @@ function localvfs.identity(identity)
 end
 
 function localvfs.new(path)
-	self = assert(repo.new(path, true))
+	self = assert(repo.new(path, lfs.path "tools/fileserver/.cache"))
 end
 
 function localvfs.add_mount(name, mountpath)

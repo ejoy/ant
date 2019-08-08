@@ -62,20 +62,29 @@ local function sha1_from_file(filename)
 	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
-return function (plat, sourcefile, dstfile)
-	local lkfile = sourcefile .. ".lk"
-	local lkcontent = util.rawtable(lkfile)
-	local ctype = assert(lkcontent.type)
+local function link(param, srcfile, plat, tmpdir)
+	local dstfile = tmpdir / "tmp.bin"
+	local ctype = assert(param.type)
 	local converter_name = assert(converter_names[ctype])
 	local c = require(converter_name)
-	log_info(string.format("plat:%s, src:%s, lk:%s, dst:%s, cvt type:%s", plat, sourcefile, lkfile, dstfile, ctype))
-	local success, err, depends = c(plat, sourcefile, lkcontent, dstfile)
+	log_info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ctype))
+	local success, err, deps = c(plat, srcfile, param, dstfile)
 	if not success and err then
-		log_err(sourcefile, lkfile, err)
+		log_err(srcfile, err)
 		return
 	end
-	depends = depends or {}
-	table.insert(depends, 1, sourcefile)
-	table.insert(depends, 2, sourcefile..".lk")
-	return depends
+	local binhash = sha1_from_file(dstfile)
+	if deps then
+		table.insert(deps, 1, srcfile)
+		table.insert(deps, 2, srcfile..".lk")
+		return dstfile, binhash, deps
+	end
+	return dstfile, binhash, {
+		srcfile,
+		srcfile..".lk",
+	}
 end
+
+return {
+	link = link,
+}

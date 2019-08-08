@@ -30,7 +30,7 @@ function util.rawtable(filepath)
 end
 
 function util.identify_info(identity)
-    return identity:match("([^-]+)-(.+)$")
+    return identity:match("%.([^-]+)_(.+)$")
 end
 
 function util.to_execute_path(pathname)
