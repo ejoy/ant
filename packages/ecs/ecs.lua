@@ -260,6 +260,16 @@ function world:each_new(component_type)
 	return new_component_next, s
 end
 
+local function remove_component(w, ti, c, e)
+	if not ti.type and ti.multiple then
+		for ii=0, #c do
+			component_delete(w, ti, c[ii], e)
+		end
+	else
+		component_delete(w, ti, c, e)
+	end
+end
+
 function world:clear_removed()
 	local set = self._removed
 
@@ -271,12 +281,12 @@ function world:clear_removed()
 		if component_type ~= nil then
 			-- delete component
 			local ti = assert(self._components[component_type], component_type)
-			component_delete(self, ti, e[component_type], e)
+			remove_component(self, ti, e[component_type], e)
 		else
 			-- delete entity
 			for component_type, c in sortcomponent(self, e, true) do
 				local ti = assert(self._components[component_type], component_type)
-				component_delete(self, ti, c, e)
+				remove_component(self, ti, c, e)
 			end
 		end
 	end

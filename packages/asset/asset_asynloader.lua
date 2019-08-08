@@ -25,18 +25,12 @@ asyn_asset_loader.singleton "asyn_load_list"
 
 local function load_asset(e)
     local rm = e.rendermesh
-    if rm.handle == nil then
-        computil.create_mesh(rm, e.mesh)
-    end
+    computil.create_mesh(rm, e.mesh)
 
     local material = e.material
     for i=0, #material do
         local m = material[i]
-        local key = m.ref_path
-        local mi = assetmgr.get_material(key)
-        if mi == nil then
-            computil.create_material(m)
-        end
+        computil.create_material(m)
     end
 end
 
