@@ -72,8 +72,8 @@ local function get_material(prim, primidx, materialcomp, material_refs)
 		return materialcomp[idx-1]
 	end
 
-	local materialidx = prim.material or primidx
-	return materialcomp[materialidx-1] or materialcomp[0]
+	local materialidx = prim.material or primidx - 1
+	return materialcomp[materialidx] or materialcomp[0]
 end
 
 local function is_visible(meshname, submesh_refs)
