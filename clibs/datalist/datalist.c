@@ -485,12 +485,12 @@ push_key(lua_State *L, struct lex_state *LS) {
 	lua_pushlstring(L, LS->source + LS->c.from, LS->c.to - LS->c.from);
 }
 
-static void
+static inline void
 new_table_0(lua_State *L) {
 	lua_newtable(L);
 	// index 0 refer self
-	lua_pushvalue(L, -1);
-	lua_rawseti(L, -2, 0);
+	// lua_pushvalue(L, -1);
+	// lua_rawseti(L, -2, 0);
 }
 
 static void
