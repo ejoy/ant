@@ -225,7 +225,7 @@ function unityScene.create(world, scenepath)
 
 			-- try to recreate material content and setup material_refs for mesh component
 			local submesh_refs = {}
-			local meshscene = assetmgr.load(meshpath).handle
+			local meshscene = assetmgr.load(meshpath)
 			local material_paths = {}
 			for submeshidx, mesh in ipairs(submeshlist) do
 				local material_indices = mesh.material_indices
