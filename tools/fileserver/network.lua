@@ -65,6 +65,7 @@ end
 function network.send(obj, data)
 	local sending = obj._write
 	if #sending == 0 then
+		remove_fd(writefds, obj._fd)
 		table.insert(writefds, obj._fd)
 	end
 	table.insert(sending, 1, data)
