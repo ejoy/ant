@@ -114,10 +114,16 @@ local function clients_remove(id)
 end
 
 
+local _origin = os.time() - os.clock()
+local function os_date(fmt)
+    local ti, tf = math.modf(_origin + os.clock())
+    return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
+end
+
 local function logger_finish(id)
 	local logfile = WORKDIR / 'log' / ('runtime-%d.log'):format(id)
 	if lfs.exists(logfile) then
-		lfs.rename(logfile, WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os.date('%Y_%m_%d_%H_%M_%S')))
+		lfs.rename(logfile, WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}')))
 	end
 end
 

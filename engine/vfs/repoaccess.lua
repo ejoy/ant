@@ -196,7 +196,7 @@ local function prebuild(plat, sourcefile, buildfile, binhash, depends)
 	w[#w+1] = ("binhash = %q"):format(binhash)
 	w[#w+1] = "depends = {"
 	for _, dep in ipairs(depends) do
-		w[#w+1] = ("  {%q, %q},"):format(dep[1], dep[2])
+		w[#w+1] = ("  {%q, %d, %q},"):format(dep[1], dep[2], dep[3])
 	end
 	w[#w+1] = "}"
 	w[#w+1] = readfile(lkfile)
@@ -255,7 +255,7 @@ local function link(repo, srcfile, identity, buildfile)
 		for _, name in ipairs(deps) do
 			local vname = access.virtualpath(repo, lfs.relative(name, lfs.current_path()))
 			if vname then
-				depends[#depends+1] = {access.sha1_from_file(name), vname}
+				depends[#depends+1] = {access.sha1_from_file(name), lfs.last_write_time(name), vname}
 			else
 				print("MISSING DEPEND", name)
 			end
@@ -305,8 +305,8 @@ end
 
 function access.checkbuild(repo, buildfile)
 	for _, dep in ipairs(rawtable(buildfile).depends) do
-		local hash, filename = dep[1], dep[2]
-		if hash ~= access.sha1_from_file(access.realpath(repo, filename)) then
+		local timestamp, filename = dep[2], dep[3]
+		if timestamp ~= lfs.last_write_time(access.realpath(repo, filename)) then
 			return false
 		end
 	end
