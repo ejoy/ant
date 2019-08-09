@@ -20,6 +20,7 @@ end
 
 local config = {}
 local channel = {}
+local logqueue = {}
 local repo = {
 	repo = nil,
 	uncomplete = {},
@@ -59,15 +60,31 @@ local function init_channels()
 		return c
 	end
 
-	local err = thread.channel_produce "errlog"
-	_print  = _G.print
-	function _G.print(...)
-		local t = table.pack( "[IO]", ... )
-		for i= 1, t.n do
-			t[i] = tostring(t[i])
+	local origin = os.time() - os.clock()
+	local function os_date(fmt)
+		local ti, tf = math.modf(origin + os.clock())
+		return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
+	end
+	local function round(x, increment)
+		increment = increment or 1
+		x = x / increment
+		return (x > 0 and math.floor(x + 0.5) or math.ceil(x - 0.5)) * increment
+	end
+	local function packstring(...)
+		local t = {}
+		for i = 1, select('#', ...) do
+			local x = select(i, ...)
+			if math.type(x) == 'float' then
+				x = round(x, 0.01)
+			end
+			t[#t + 1] = tostring(x)
 		end
-		local str = table.concat( t , "\t" )
-		err(str)
+		return table.concat(t, '\t')
+	end
+	_print = _G.print
+	function _G.print(...)
+		local info = debug.getinfo(2, 'Sl')
+		logqueue[#logqueue+1] = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
 	end
 end
 
@@ -142,6 +159,13 @@ end
 local function response_id(id, ...)
 	if id then
 		channel.resp[id](...)
+	end
+end
+
+local function logger_dispatch(t)
+	for i = 1, #logqueue do
+		t.SEND("LOG", logqueue[i])
+		logqueue[i] = nil
 	end
 end
 
@@ -257,7 +281,7 @@ function offline.EXIT(id)
 end
 
 function offline.SEND(_, ...)
-	print(...)
+	_print(...)
 end
 
 do
@@ -280,6 +304,7 @@ local function work_offline()
 	local c = channel.req
 	while true do
 		offline_dispatch(c())
+		logger_dispatch(offline)
 	end
 end
 
@@ -783,6 +808,7 @@ local function work_online()
 	local timeout = 0
 	while true do
 		while online_dispatch(c:pop(timeout)) do end
+		logger_dispatch(online)
 		local ok, err = connection_dispose(0)
 		if ok then
 			while protocol.readmessage(reading, result) do
@@ -822,7 +848,6 @@ local function main()
 	end
 
 	print("Working offline")
-	_G.print = _print
 	work_offline()
 end
 

@@ -118,7 +118,7 @@ function objcontroller.init(msg)
 			add_event {name = "keyboard", mouse=mousestate, value=1, ...}
 		end,
 		touch = function (...)
-			error "not implement"
+			--error "not implement"
 		end,
 	}
 

@@ -20,6 +20,8 @@ _build
 
 /clibs/shadercrelease
 /clibs/shadercdebug
+/clibs/texturecrelease
+/clibs/texturecrdebug
 /log
 
 /projects/msvc/vs_bin

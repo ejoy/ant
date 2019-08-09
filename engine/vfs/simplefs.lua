@@ -1,7 +1,7 @@
 local vfs = require "vfs"
 
 local function join(dir, file)
-    if file:sub(1, 1) == '/' then
+    if file:sub(1, 1) == '/' or dir == '' then
         return file
     end
     return dir:gsub("(.-)/?$", "%1") .. '/' .. file

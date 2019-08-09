@@ -31,7 +31,7 @@ local function packstring(...)
         end
         t[#t + 1] = tostring(x)
     end
-    return table.concat(t, ' ')
+    return table.concat(t, '\t')
 end
 
 local m = {}
@@ -46,16 +46,7 @@ for i, name in ipairs(modes) do
         end
         local info = debug.getinfo(m.skip or 2, 'Sl')
         m.skip = nil
-        if info.short_src:sub(-12) == 'debugger.lua' then
-            info = debug.getinfo(3, 'Sl')
-        end
-        if info.short_src:sub(1, 18) == 'vfs://engine/' then
-            info.short_src = info.short_src:sub(19)
-        end
-        if info.short_src:sub(1, 6) == 'vfs://' then
-            info.short_src = info.short_src:sub(7)
-        end
-	    local data = ('[%s][%-5s](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), name:upper(), info.short_src, info.currentline, packstring(...))
+        local data = ('[%s][%-5s](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), name:upper(), info.short_src, info.currentline, packstring(...))
         IO("SEND", "LOG", data)
     end
 end

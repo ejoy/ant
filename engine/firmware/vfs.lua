@@ -68,6 +68,9 @@ function vfs:list(path)
 	if path == "" then
 		hash = self.root
 	else
+		if not self.root then
+			return false
+		end
 		local ok, h = fetch_file(self, self.root, path)
 		if not ok then
 			return false, h
