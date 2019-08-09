@@ -64,12 +64,12 @@ else
 endif
 
 ifneq "$(PLAT)" "msvc"
-BGFX_TARGET = bgfx bimg bx
+BGFX_TARGET = bimg bx
 ifneq "$(BGFX_CPRC_CMD)" ""
 BGFX_TARGET += shaderc texturec
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
-BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(MODE)64 -j8 $(BGFX_TARGET) DEFINES=-DBGFX_CONFIG_DEBUG=1
+BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(MODE)64 -j8
 endif
 
 CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF
@@ -118,7 +118,7 @@ $(BUILD_PATH):
 bgfx_init : | $(BUILD_PATH)
 	cd bgfx && $(BGFX_INIT_CMD)
 bgfx_make : | $(BUILD_PATH)
-	cd bgfx && $(BGFX_MAKE_CMD)
+	cd bgfx && $(BGFX_MAKE_CMD) bgfx  CFLAGS=-DBGFX_CONFIG_DEBUG=1 && $(BGFX_MAKE_CMD) $(BGFX_TARGET)
 	$(BGFX_CPRC_CMD)
 bgfx_clean :
 	cd bgfx && make clean
