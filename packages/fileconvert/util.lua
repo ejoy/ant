@@ -118,9 +118,13 @@ function util.spaw_process(commands, checkmsg)
 					std.info = std.info .. fd:read(num)
 				end
 			end
-		end
-
-		return success, msg
+        end
+        
+        local errcode = prog:wait()
+        if errcode == 0 then
+            return success, msg
+        end
+		return false, string.format("subprocess failed, error code:%d", errcode)
     end
     
     return false, "Create process failed."
