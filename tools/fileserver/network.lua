@@ -1,4 +1,4 @@
-local log = log and log.info(...) or print
+local log = function(fmt, ...) print(fmt:format(...)) end
 
 local undef = nil
 local lsocket = require "lsocket"
