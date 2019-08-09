@@ -189,11 +189,30 @@ local function rawtable(filename)
 	return env
 end
 
-local function prebuild(plat, sourcefile, buildfile, binhash, depends)
+local function calchash(depends)
+	sha1_encoder:init()
+	for _, dep in ipairs(depends) do
+		sha1_encoder:update(dep[1])
+	end
+	return sha1_encoder:final():gsub(".", byte2hex)
+end
+
+local function prebuild(repo, plat, sourcefile, buildfile, deps)
+	local depends = {}
+	for _, name in ipairs(deps) do
+		local vname = access.virtualpath(repo, lfs.relative(name, lfs.current_path()))
+		if vname then
+			depends[#depends+1] = {access.sha1_from_file(name), lfs.last_write_time(name), vname}
+		else
+			print("MISSING DEPEND", name)
+		end
+	end
+
 	local lkfile = sourcefile .. ".lk"
 	local w = {}
+	local dephash = calchash(depends)
 	w[#w+1] = ("identity = %q"):format(plat)
-	w[#w+1] = ("binhash = %q"):format(binhash)
+	w[#w+1] = ("dephash = %q"):format(dephash)
 	w[#w+1] = "depends = {"
 	for _, dep in ipairs(depends) do
 		w[#w+1] = ("  {%q, %d, %q},"):format(dep[1], dep[2], dep[3])
@@ -201,6 +220,7 @@ local function prebuild(plat, sourcefile, buildfile, binhash, depends)
 	w[#w+1] = "}"
 	w[#w+1] = readfile(lkfile)
 	writefile(buildfile, table.concat(w, "\n"))
+	return dephash
 end
 
 local function add_ref(repo, file, hash)
@@ -235,7 +255,7 @@ local function link(repo, srcfile, identity, buildfile)
 	local param
 	if lfs.exists(buildfile) then
 		param = rawtable(buildfile)
-		local cpath = repo._cache / param.binhash:sub(1,2) / param.binhash
+		local cpath = repo._cache / param.dephash:sub(1,2) / param.dephash
 		if lfs.exists(cpath) then
 			return cpath, param.binhash
 		end
@@ -245,35 +265,55 @@ local function link(repo, srcfile, identity, buildfile)
 		param = rawtable(srcfile .. ".lk")
 	end
 
-	local fs = import_package "ant.fileconvert"
-	local dstfile, binhash, deps = fs.link(param, srcfile, identity, repo._repo)
-	if not dstfile then
-		return
-	end
-	if deps then
-		local depends = {}
-		for _, name in ipairs(deps) do
-			local vname = access.virtualpath(repo, lfs.relative(name, lfs.current_path()))
-			if vname then
-				depends[#depends+1] = {access.sha1_from_file(name), lfs.last_write_time(name), vname}
-			else
-				print("MISSING DEPEND", name)
+	if param.type ~= "shader" then
+		local deps = {
+			srcfile,
+			srcfile..".lk",
+		}
+		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
+		local cpath = repo._cache / dephash:sub(1,2) / dephash
+		if lfs.exists(cpath) then
+			local binhash = access.sha1_from_file(cpath)--TODO
+			add_ref(repo, cpath, binhash)
+			return cpath, binhash
+		end
+		local fs = import_package "ant.fileconvert"
+		local dstfile, binhash, deps = fs.link(param, srcfile, identity, repo._repo)
+		if not dstfile then
+			return
+		end
+		if deps then
+			if not pcall(lfs.rename, dstfile, cpath) then
+				pcall(lfs.remove, dstfile)
+				return
 			end
+		else
+			cpath = dstfile
 		end
-		prebuild(identity, srcfile, buildfile, binhash, depends)
-		local cpath = repo._cache / binhash:sub(1,2) / binhash
-		if not pcall(lfs.remove, cpath) then
-			pcall(lfs.remove, dstfile)
+		add_ref(repo, cpath, binhash)
+		return cpath, binhash
+	else
+		local fs = import_package "ant.fileconvert"
+		local dstfile, binhash, deps = fs.link(param, srcfile, identity, repo._repo)
+		if not dstfile then
 			return
 		end
-		if not pcall(lfs.rename, dstfile, cpath) then
-			pcall(lfs.remove, dstfile)
-			return
+		if deps then
+			local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
+			local cpath = repo._cache / dephash:sub(1,2) / dephash
+			if not pcall(lfs.remove, cpath) then
+				pcall(lfs.remove, dstfile)
+				return
+			end
+			if not pcall(lfs.rename, dstfile, cpath) then
+				pcall(lfs.remove, dstfile)
+				return
+			end
+			dstfile = cpath
 		end
-		dstfile = cpath
+		add_ref(repo, dstfile, binhash)
+		return dstfile, binhash
 	end
-	add_ref(repo, dstfile, binhash)
-	return dstfile, binhash
 end
 
 function access.link_loc(repo, identity, path)

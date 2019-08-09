@@ -250,7 +250,6 @@ local function fileserver_update(obj)
 	if obj._status == "CONNECTING" then
 		--LOG("New", obj._peer, obj._ref)
 	elseif obj._status == "CLOSED" then
-		LOG("LOGOFF", obj._peer)
 		if obj._id then
 			clients_remove(obj._id)
 			logger_finish(obj._id)
@@ -289,7 +288,6 @@ local function dbgserver_update(obj)
 			dbg.client = obj
 		end
 	elseif obj._status == "CLOSED" then
-		LOG("LOGOFF", obj._peer)
 		if dbg.client == obj then
 			dbg.client = nil
 		end
