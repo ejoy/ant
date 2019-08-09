@@ -3,12 +3,6 @@ BGFXSRC = $(BGFXROOT)/bgfx
 BXSRC 	= $(BGFXROOT)/bx
 BIMGSRC = $(BGFXROOT)/bimg
 
-ifeq ("$(PLAT)","ios")
-BGFX_BUILD_MODE=Release
-else
-BGFX_BUILD_MODE=Debug
-endif
-
 ifeq ("$(BGFXROOT)","")
 $(error BGFXROOT NOT define)
 endif
@@ -17,9 +11,9 @@ endif
 BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/$(PLAT) -I$(BXSRC)/include -I$(BGFXSRC)/src -I$(BIMGSRC)/include
 BGFX3RDINC = -I$(BGFXSRC)/3rdparty -I$(BGFXSRC)/examples/common
 
-BXLIB = -lbx$(BGFX_BUILD_MODE)
-BIMG_DECODELIB = -lbimg_decode$(BGFX_BUILD_MODE)
-BIMGLIB = -lbimg$(BGFX_BUILD_MODE)
+BXLIB = -lbx$(MODE)
+BIMG_DECODELIB = -lbimg_decode$(MODE)
+BIMGLIB = -lbimg$(MODE)
 
 IB_COMPRESSROOT:= $(ANT3RD)/ib-compress
 IB_COMPRESSINC:= -I$(IB_COMPRESSROOT)
@@ -27,15 +21,15 @@ IB_COMPRESSLIB:= -L$(IB_COMPRESSROOT) -lib-compress-$(PLAT)
 
 ifeq "$(PLAT)" "mingw"
 BGFXLIBDIR = $(BGFXSRC)/.build/win64_mingw-gcc/bin
-BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(BGFX_BUILD_MODE) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -lpsapi -luuid
+BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -lpsapi -luuid
 else ifeq "$(PLAT)" "osx"
 BGFXLIBDIR = -L$(BGFXSRC)/.build/osx64_clang/bin
-BGFXLIB = $(BGFXLIBDIR) -lbgfx$(BGFX_BUILD_MODE) $(BIMGLIB) $(BXLIB) -lstdc++
+BGFXLIB = $(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
 BGFXLIB += -framework Foundation -framework Metal -framework QuartzCore -framework Cocoa
 else ifeq "$(PLAT)" "ios"
 BGFXLIBDIR = $(BGFXSRC)/.build/ios-arm64/bin
-BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(BGFX_BUILD_MODE) $(BIMGLIB) $(BXLIB) -lstdc++
+BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
 BGFXLIB += -framework CoreFoundation -framework Foundation -framework OpenGLES -framework UIKit -framework QuartzCore -weak_framework Metal
 endif
 
-BGFXUTILLIB = -lexample-common$(BGFX_BUILD_MODE)
+BGFXUTILLIB = -lexample-common$(MODE)
