@@ -96,7 +96,7 @@ end
 local function recover_filter(filter)
 	local result = filter.result
 	recover_material(result.opaticy)
-	recover_material(filter.translucent)
+	recover_material(result.translucent)
 end
 
 function pickup_material_sys:update()
@@ -107,7 +107,7 @@ function pickup_material_sys:update()
 		local material = e.pickup.material
 		local result = filter.result
 		replace_material(result.opaticy, material[0])
-		replace_material(filter.translucent, material[1])
+		replace_material(result.translucent, material[1])
 	end
 end
 
