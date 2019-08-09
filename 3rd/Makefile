@@ -10,19 +10,10 @@ ifeq "$(PLAT)" ""
 	endif
 endif
 
-ifeq "$(MODE)" ""
-  ifeq "$(PLAT)" "ios"
-    BGFX_BUILD_MODE = release
-  else
-    BGFX_BUILD_MODE = debug
-  endif
-  CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Release
-else ifeq "$(MODE)" "release"
-  BGFX_BUILD_MODE = release
-  CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Release
-else
-  BGFX_BUILD_MODE = debug
+ifeq "$(MODE)" "debug"
   CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Debug
+else
+  CMAKE_BUILD = -DCMAKE_BUILD_TYPE=Release
 endif
 
 MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat=msvc' instead
@@ -37,7 +28,7 @@ CMAKE_OPT =
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-osx
-  BGFX_CPRC_CMD = cd bgfx/.build/osx64_clang/bin/ && cp shaderc$(BGFX_BUILD_MODE) ../../../../../clibs/ && cp texturec$(BGFX_BUILD_MODE) ../../../../../clibs/
+  BGFX_CPRC_CMD = cd bgfx/.build/osx64_clang/bin/ && cp shaderc$(MODE) ../../../../../clibs/ && cp texturec$(MODE) ../../../../../clibs/
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -66,7 +57,7 @@ else ifeq "$(PLAT)" "msvc"
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-mingw-gcc
-  BGFX_CPRC_CMD = cd bgfx/.build/win64_mingw-gcc/bin/ && cp shaderc$(BGFX_BUILD_MODE) ../../../../../clibs/ && cp texturec$(BGFX_BUILD_MODE) ../../../../../clibs/
+  BGFX_CPRC_CMD = cd bgfx/.build/win64_mingw-gcc/bin/ && cp shaderc$(MODE) ../../../../../clibs/ && cp texturec$(MODE) ../../../../../clibs/
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -78,7 +69,7 @@ ifneq "$(BGFX_CPRC_CMD)" ""
 BGFX_TARGET += shaderc texturec
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
-BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(BGFX_BUILD_MODE)64 -j8 $(BGFX_TARGET)
+BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(MODE)64 -j8 $(BGFX_TARGET) DEFINES=-DBGFX_CONFIG_DEBUG=1
 endif
 
 CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF
