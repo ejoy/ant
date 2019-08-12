@@ -8,6 +8,9 @@ local Evt ={
     ModifyComponent ="Editor_ModifyComponent",
     ResponseWorldInfo ="Editor_ResponseWorldInfo",
     RequestWorldInfo ="Editor_RequestWorldInfo",
+    EntityOperate ="Editor_EntityOperate",
+    --Delete,{eid,...}
+
     --tool
     RunScript = "Editor_RunScript",
 }
