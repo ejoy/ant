@@ -34,6 +34,12 @@ function trans:init()
 	return self
 end
 
+function trans:delete()
+	if self.world then
+		self.world(nil)
+	end
+end
+
 ecs.tag "editor"
 
 ecs.component "frustum"
