@@ -257,10 +257,12 @@ local function link(repo, srcfile, identity, buildfile)
 		param = rawtable(buildfile)
 		local cpath = repo._cache / param.dephash:sub(1,2) / param.dephash
 		if lfs.exists(cpath) then
-			return cpath, param.binhash
+			local binhash = access.sha1_from_file(cpath)--TODO
+			add_ref(repo, cpath, binhash)
+			return cpath, binhash
 		end
 		identity = param.identity
-		srcfile = lfs.path(param.depends[1][2])
+		srcfile = lfs.path(param.depends[1][3])
 	else
 		param = rawtable(srcfile .. ".lk")
 	end
