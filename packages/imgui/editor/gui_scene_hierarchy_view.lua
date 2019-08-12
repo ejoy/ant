@@ -6,6 +6,7 @@ local util = imgui.util
 local cursor = imgui.cursor
 local enum = imgui.enum
 local IO = imgui.IO
+local gui_input = require "gui_input"
 
 local GuiBase = require "gui_base"
 local GuiHierarchyView = GuiBase.derive("GuiHierarchyView")
@@ -37,6 +38,10 @@ end
 
 function GuiHierarchyView:publish_selected_entity(eid,focus)
     hub.publish(Event.WatchEntity, eid, focus)
+end
+
+function GuiHierarchyView:publish_operate_event(event,args)
+    hub.publish(Event.EntityOperate, event, args)
 end
 -------hub end
 
@@ -92,8 +97,14 @@ function GuiHierarchyView:_render_entity(id,entity)
         windows.SetScrollHereY()
         self._scroll_flag = false
     end
+    self:_show_selected_entity_menu(id,entity)
+
     if util.IsItemClicked() then
-        self.selected_map = {[id]=true}
+        if gui_input.key_state.CTRL then
+            self.selected_map[id]=true
+        else
+            self.selected_map = {[id]=true}
+        end
         self:publish_selected_entity(id,util.IsMouseDoubleClicked(0))
     end
     if util.IsItemHovered() then
@@ -112,6 +123,34 @@ function GuiHierarchyView:_render_entity(id,entity)
         end
         widget.TreePop()
     end
+end
+
+function GuiHierarchyView:_show_selected_entity_menu(id,entity)
+    local open = windows.BeginPopupContextItem("Selected_Menu###"..id,1)
+    if open then
+        if widget.Button("Select children") then
+            local select_children = nil
+            select_children = function(children)
+                for i,c in pairs(children) do
+                    self.selected_map[i]=true
+                    if c.children then
+                        select_children(c.children)
+                    end
+                end
+            end
+            self.selected_map[id]=true
+            select_children(entity.children)
+        end
+        if widget.Button("Delete") then
+            local id_list = {}
+            for id,_ in pairs(self.selected_map) do
+                table.insert(id_list,id)
+            end
+            self:publish_operate_event( "Delete",id_list )
+        end
+        windows.EndPopup()
+    end
+    return open
 end
 
 return GuiHierarchyView

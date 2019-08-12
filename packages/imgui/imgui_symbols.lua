@@ -155,7 +155,7 @@ function windows.SetNextWindowSize(x,y,ImGuiCond) end
 function windows.SetNextWindowSizeConstraints() end
 function windows.SetNextWindowContentSize() end
 function windows.SetNextWindowCollapsed() end
-function windows.SetNextWindowFocus() end
+function windows.SetNextWindowFocus(nil) end
 function windows.SetNextWindowBgAlpha() end
 function windows.GetContentRegionMax() end
 function windows.GetContentRegionAvail() end

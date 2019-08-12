@@ -6,11 +6,19 @@ local fs = require "filesystem"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
+local assetmgr = import_package "ant.asset".mgr
+
+local OperateFunc = require "system.editor_operate_func"
 
 ecs.tag "editor_watching"
 ecs.tag "outline_entity"
 
+ecs.component_alias("target_entity","entityid")
+
 local editor_watcher_system = ecs.system "editor_watcher_system"
+editor_watcher_system.depend "editor_operate_gizmo_system"
+
+editor_watcher_system.depend "before_render_system"
 
 local function send_hierarchy()
     local temp = {}
@@ -89,17 +97,21 @@ local last_tbl = nil
 local function send_entity(eid,typ)
     local hub = world.args.hub
     local entity_info = {type = typ}
-    local setialize_result = {}
-    setialize_result[eid] = serialize.entity2tbl(world,eid)
-    if last_eid == eid then
-        if compare_values(last_tbl,setialize_result[eid]) then
-            return 
+    if eid == nil then
+        hub.publish(WatcherEvent.EntityInfo,entity_info)
+    else
+        local setialize_result = {}
+        setialize_result[eid] = serialize.entity2tbl(world,eid)
+        if last_eid == eid then
+            if compare_values(last_tbl,setialize_result[eid]) then
+                return 
+            end
         end
+        last_eid = eid
+        last_tbl = setialize_result[eid]
+        entity_info.entities = setialize_result 
+        hub.publish(WatcherEvent.EntityInfo,entity_info)
     end
-    last_eid = eid
-    last_tbl = setialize_result[eid]
-    entity_info.entities = setialize_result 
-    hub.publish(WatcherEvent.EntityInfo,entity_info)
 end
 
 local function remove_all_outline()
@@ -124,15 +136,31 @@ local function create_outline(seleid)
         can_render = true,
         main_view = true,
         outline_entity = true,
-        name = "outline_object"
+        target_entity = seleid,
+        -- name = "outline_object"
     }
     local oe = world[outlineeid]
-    oe.rendermesh = se.rendermesh
+    oe.rendermesh.reskey = se.rendermesh.reskey
+    assetmgr.load(se.rendermesh.reskey)
 end
 
 
 local function start_watch_entitiy(eid,focus,is_pick)
+    local hub = world.args.hub
+    local old_eids = {}
+    for _, id in world:each("editor_watching") do
+        table.insert(old_eids,id)
+    end
+    for _,id in ipairs(old_eids) do
+        world:remove_component(id,"editor_watching")
+        log.trace(">>remove_component [editor_watching] from:",id)
+        world:remove_component(id,"show_operate_gizmo")
+        log.trace(">>remove_component [show_operate_gizmo] from:",id)
+    end
+    remove_all_outline()
+    ------------------------------------------------
     if (not eid) or (not world[eid]) then
+        send_entity(nil,( is_pick and "pick" or "editor"))
         return
     end
     if eid and focus then
@@ -144,33 +172,32 @@ local function start_watch_entitiy(eid,focus,is_pick)
             end
         end
     end
-    local hub = world.args.hub
-    local old_eids = {}
-    for _, id in world:each("editor_watching") do
-        table.insert(old_eids,id)
-    end
-    
-    for _,id in ipairs(old_eids) do
-        world:remove_component(id,"editor_watching")
-        log.trace(">>remove_component [editor_watching] from:",id)
-    end
-    remove_all_outline()
-    if world[eid] then
-        if is_pick or world[eid].can_select then
+    local target_ent = world[eid]
+    if target_ent then
+        if is_pick and target_ent.can_select then
             create_outline(eid)
         end
         world:add_component(eid,"editor_watching",true)
+        world:add_component(eid,"show_operate_gizmo",true)
         log.trace(">>add_component [editor_watching] to:",eid)
         send_entity(eid,( is_pick and "pick" or "editor"))
     end
 end
 
 local function on_editor_select_entity(eid,focus)
-    start_watch_entitiy(eid,focus,false)
+    if world[eid] and (not world[eid].gizmo_object) then
+        start_watch_entitiy(eid,focus,false)
+    end
 end
 
 local function on_pick_entity(eid)
-    start_watch_entitiy(eid,false,true)
+    if eid then
+        if world[eid] and (not world[eid].gizmo_object) then
+            start_watch_entitiy(eid,false,true)
+        end
+    else
+        start_watch_entitiy(nil,false,true)
+    end
 end
 
 
@@ -209,11 +236,17 @@ end
 --     hub.publish(WatcherEvent.ResponseWorldInfo,{schemas = schemas})
 -- end
 
+local function on_entity_operate( event,args )
+    log.info_a(event,args)
+    OperateFunc(world,event,args)
+end
+
 
 function editor_watcher_system:init()
     local hub = world.args.hub
     hub.subscribe(WatcherEvent.WatchEntity,on_editor_select_entity)
     hub.subscribe(WatcherEvent.ModifyComponent,on_component_modified)
+    hub.subscribe(WatcherEvent.EntityOperate,on_entity_operate)
     -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
 end
@@ -223,12 +256,35 @@ function editor_watcher_system:pickup()
     if pickupentity then
         local pickupcomp = pickupentity.pickup
         local eid = pickupcomp.pickup_cache.last_pick
-        if world[eid] then
-            local hub = world.args.hub
-            hub.publish(WatcherEvent.EntityPick,{eid})
-            on_pick_entity(eid)
+        local hub = world.args.hub
+        if eid and world[eid] then
+            if not world[eid].gizmo_object then
+                hub.publish(WatcherEvent.EntityPick,{eid})
+                on_pick_entity(eid)
+            end
+        else
+            hub.publish(WatcherEvent.EntityPick,{})
+            on_pick_entity(nil)
         end
     end
+end
+
+function editor_watcher_system:before_render()
+    for _,eid in world:each("outline_entity") do
+        local outline_entity = world[eid]
+        local target_eid = outline_entity.target_entity
+        local target_entity = world[target_eid]
+        if target_entity then
+            local trans = target_entity.transform or target_entity.hierarchy_transform
+            assert(trans and trans.world,"trans and trans.world is nil,trans is "..tostring(trans))
+            local s,r,t = ms(trans.world,"~TTT")
+
+            world:add_component_child(outline_entity.transform,"s","vector",s)
+            world:add_component_child(outline_entity.transform,"r","vector",r)
+            world:add_component_child(outline_entity.transform,"t","vector",t)
+        end
+    end
+    
 end
 
 function editor_watcher_system:after_update()
