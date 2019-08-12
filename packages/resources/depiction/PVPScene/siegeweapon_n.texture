@@ -1,4 +1,4 @@
-path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-SiegeWeapons-01-N.dds"
+path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-SiegeWeapons-01-N.tga"
 
 sampler = {
 	U = "MIRROR",

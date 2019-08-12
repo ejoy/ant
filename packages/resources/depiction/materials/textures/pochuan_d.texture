@@ -1,4 +1,4 @@
-path = "/pkg/ant.resources.binary/textures/BH-ChiBi-Chuan-04-D.dds"
+path = "/pkg/ant.resources.binary/textures/BH-ChiBi-Chuan-04-D.tga"
 
 sampler = {
 	U = "CLAMP",
