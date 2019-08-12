@@ -28,48 +28,35 @@ local watch = {}
 local repos = {}
 local clients = {1}
 
+local function split(path)
+	local r = {}
+	path:string():gsub("[^/\\]+", function(s)
+		r[#r+1] = s
+	end)
+	return r
+end
+
 local function watch_add_path(path, repo, url)
-	path = path:string()
-	if watch[path] then
-		local info = watch[path].info
-		info[#info+1] = {
-			repo = repo,
-			url = url,
-		}
-	else
-		watch[path] = {
-			id = assert(fw.add(path)),
-			info = {{
-				repo = repo,
-				url = url,
-			}}
-		}
+	local tree = watch
+	for _, e in ipairs(split(lfs.absolute(path))) do
+		if not tree[e] then
+			tree[e] = {}
+		end
+		tree = tree[e]
 	end
+	if not tree[".id"] then
+		tree[".id"] = assert(fw.add(path:string()))
+	end
+	tree[#tree+1] = {
+		repo = repo,
+		url = url,
+	}
 end
 
 local function watch_add(repo, repopath)
 	watch_add_path(repopath, repo, '')
 	for k, v in pairs(repo._mountpoint) do
 		watch_add_path(v, repo, k)
-	end
-end
-
-local function watch_remove(repo)
-	local del = {}
-	for path, w in pairs(watch) do
-		for i, v in ipairs(w.info) do
-			if v.repo == repo then
-				table.remove(w.info, i)
-				break
-			end
-		end
-		if #w.info == 0 then
-			fw.remove(w.id)
-			del[path] = true
-		end
-	end
-	for _, path in pairs(del) do
-		watch[path] = nil
 	end
 end
 
@@ -89,13 +76,6 @@ local function repo_add(reponame)
 	watch_add(repo, repopath)
 	repos[reponame] = repo
 	return repo
-end
-
-local function repo_remove(reponame)
-	local repo = repos[reponame]
-	if repo then
-		watch_remove(repo)
-	end
 end
 
 local function clients_add()
@@ -305,12 +285,18 @@ local function filewatch()
 			print(path)
 			goto continue
 		end
-		for rpath, w in pairs(watch) do
-			local rel_path = lfs.relative(lfs.path(path), lfs.path(rpath)):string()
-			if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
-				for _, v in ipairs(w.info) do
-					local newpath = vfs.join(v.url, rel_path)
-					if newpath:sub(1, 5) ~= '.repo' then
+		local tree = watch
+		local elems = split(lfs.absolute(lfs.path(path)))
+		for i, e in ipairs(elems) do
+			tree = tree[e]
+			if not tree then
+				break
+			end
+			if tree[".id"] then
+				local rel_path = table.concat(elems, "/", i+1, #elems)
+				if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
+					for _, v in ipairs(tree) do
+						local newpath = vfs.join(v.url, rel_path)
 						print('[FileWatch]', type, newpath)
 						v.repo:touch(newpath)
 					end
