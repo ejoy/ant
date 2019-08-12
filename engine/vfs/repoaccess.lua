@@ -257,62 +257,58 @@ local function link(repo, srcfile, identity, buildfile)
 		param = rawtable(buildfile)
 		local cpath = repo._cache / param.dephash:sub(1,2) / param.dephash
 		if lfs.exists(cpath) then
-			return cpath, param.binhash
-		end
-		identity = param.identity
-		srcfile = lfs.path(param.depends[1][2])
-	else
-		param = rawtable(srcfile .. ".lk")
-	end
-
-	if param.type ~= "shader" then
-		local deps = {
-			srcfile,
-			srcfile..".lk",
-		}
-		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
-		local cpath = repo._cache / dephash:sub(1,2) / dephash
-		if lfs.exists(cpath) then
-			local binhash = access.sha1_from_file(cpath)--TODO
+			local binhash = readfile(cpath..".hash")
 			add_ref(repo, cpath, binhash)
 			return cpath, binhash
 		end
-		local fs = import_package "ant.fileconvert"
-		local dstfile, binhash, deps = fs.link(param, srcfile, identity, repo._repo)
-		if not dstfile then
+		identity = param.identity
+		srcfile = lfs.path(param.depends[1][3])
+	else
+		param = rawtable(srcfile .. ".lk")
+	end
+	local fs = import_package "ant.fileconvert"
+	local deps = fs.prelink(param, srcfile)
+	if deps then
+		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
+		local cpath = repo._cache / dephash:sub(1,2) / dephash
+		if lfs.exists(cpath) then
+			local binhash = readfile(cpath..".hash")
+			add_ref(repo, cpath, binhash)
+			return cpath, binhash
+		end
+		local dstfile = repo._repo / "tmp.bin"
+		local ok = fs.link(param, identity, srcfile, dstfile)
+		if not ok then
 			return
 		end
-		if deps then
-			if not pcall(lfs.rename, dstfile, cpath) then
-				pcall(lfs.remove, dstfile)
-				return
-			end
-		else
-			cpath = dstfile
+		if not pcall(lfs.rename, dstfile, cpath) then
+			pcall(lfs.remove, dstfile)
+			return
 		end
+		local binhash = access.sha1_from_file(cpath)
+		writefile(cpath..".hash", binhash)
 		add_ref(repo, cpath, binhash)
 		return cpath, binhash
 	else
-		local fs = import_package "ant.fileconvert"
-		local dstfile, binhash, deps = fs.link(param, srcfile, identity, repo._repo)
-		if not dstfile then
+		local dstfile = repo._repo / "tmp.bin"
+		local deps = fs.link(param, identity, srcfile, dstfile)
+		if not deps then
 			return
 		end
-		if deps then
-			local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
-			local cpath = repo._cache / dephash:sub(1,2) / dephash
-			if not pcall(lfs.remove, cpath) then
-				pcall(lfs.remove, dstfile)
-				return
-			end
-			if not pcall(lfs.rename, dstfile, cpath) then
-				pcall(lfs.remove, dstfile)
-				return
-			end
-			dstfile = cpath
+		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
+		local cpath = repo._cache / dephash:sub(1,2) / dephash
+		if not pcall(lfs.remove, cpath) then
+			pcall(lfs.remove, dstfile)
+			return
 		end
-		add_ref(repo, dstfile, binhash)
-		return dstfile, binhash
+		if not pcall(lfs.rename, dstfile, cpath) then
+			pcall(lfs.remove, dstfile)
+			return
+		end
+		local binhash = access.sha1_from_file(cpath)
+		writefile(cpath..".hash", binhash)
+		add_ref(repo, cpath, binhash)
+		return cpath, binhash
 	end
 end
 
