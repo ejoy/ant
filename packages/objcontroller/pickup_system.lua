@@ -4,7 +4,7 @@ local world = ecs.world
 
 ecs.import "ant.inputmgr"
 ecs.import "ant.scene"
-
+local lua_math = math
 local mathpkg 	= import_package "ant.math"
 local point2d 	= mathpkg.point2d
 local ms 		= mathpkg.stack
@@ -15,12 +15,10 @@ local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
 local renderutil = renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
-
 local assetmgr = import_package "ant.asset".mgr
 
 local bgfx 		= require "bgfx"
 local fs 		= require "filesystem"
-
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
             ((eid & 0x0000ff00) >> 8) / 0xff,
@@ -28,25 +26,55 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-local function which_entity_hitted(blitdata, viewrect)    
-	local w, h = viewrect.w, viewrect.h
-	
-	local cw, ch = 2, 2	
-	local startidx = ((h - ch) * w + (w - cw)) * 0.5
+function traverse_from_center( blitdata,w,h )
+	assert(w==h)
+    local function incr(v2a,v2b)
+        for i = 1,#v2a do
+            v2a[i] =  v2a[i] +   v2b[i]
+        end
+    end
+    -- local function dosth(v2)
+    --     log.info_a("trav:",v2)
+    -- end
+    local start_move = {1,-1}
+    local move_count=nil
+    local step_incr = 2
+    local step = {
+        {-1,0},
+        {0,1},
+        {1,0},
+        {0,-1}
+    }
+    if w%2==0 then
+        move_count = 1
+    else
+        move_count = 0
+    end
+    local  cur_pos = {lua_math.floor(w/2)-1,lua_math.floor(w/2)}
+    log.trace_a(cur_pos)
+    local found_eid = nil
+    while true do
+        incr(cur_pos,start_move)
+        if cur_pos[2]<0 then
+            break
+        end
+        if move_count >0 then
+            for i = 1,4 do
+                for j = 1,move_count do
+                    incr(cur_pos,step[i])
+                    found_eid = blitdata[cur_pos[1]*w+cur_pos[2]]
+                    if found_eid ~= 0 then
+                        return found_eid
+                    end
+                end
+            end
+        end
+        move_count = move_count + step_incr
+    end
+end
 
-	local found_eid = nil
-	for ix = 1, cw do		
-		for iy = 1, ch do 
-			local cidx = startidx + (ix - 1) + (iy - 1) * w
-			local rgba = blitdata[cidx]
-			if rgba ~= 0 then
-				found_eid = rgba
-				break
-			end
-		end
-	end
-
-    return found_eid
+local function which_entity_hitted(blitdata, viewrect)
+	return traverse_from_center(blitdata,viewrect.w,viewrect.h)
 end
 
 local function update_viewinfo(e, clickpt) 
@@ -289,12 +317,16 @@ end
 local function select_obj(pickup_com,blit_buffer, viewrect)
 	local selecteid = which_entity_hitted(blit_buffer.raw_buffer.handle, viewrect)
 	if selecteid then
+		log.info("selecteid",selecteid)
 		pickup_com.pickup_cache.last_pick = selecteid
 		pickup_com.pickup_cache.pick_ids = {selecteid}
 		local name = assert(world[selecteid]).name
 		print("pick entity id : ", selecteid, ", name : ", name)
 		world:update_func("pickup")()
 	else
+		pickup_com.pickup_cache.last_pick = nil
+		pickup_com.pickup_cache.pick_ids = {}
+		world:update_func("pickup")()
 		print("not found any eid")
 	end
 end

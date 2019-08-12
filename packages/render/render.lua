@@ -136,6 +136,8 @@ ecs.component "camera" {depend = "viewid"}
 
 ecs.component_alias("visible", "boolean", true) 
 
+
+
 local rendersys = ecs.system "render_system"
 rendersys.depend "primitive_filter_system"
 rendersys.depend "filter_properties"
@@ -215,6 +217,13 @@ function rendersys:update()
 		end
 		
 	end
+end
+
+local before_render_system = ecs.system "before_render_system"
+before_render_system.dependby "render_system"
+
+function before_render_system:update()
+	world:update_func("before_render")()
 end
 
 local mathadapter_util = import_package "ant.math.adapter"

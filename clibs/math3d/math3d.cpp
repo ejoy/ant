@@ -1160,9 +1160,7 @@ matrix_decompose(const glm::mat4x4 &m, glm::vec4 &scale, glm::vec4 &rot, glm::ve
 	for (int ii = 0; ii < 3; ++ii) {
 		rotMat[ii] /= scale[ii];		
 	}
-
-
-	rot = glm::vec4(glm::degrees(glm::eulerAngles(glm::quat_cast(rotMat))), 0);
+	rot = glm::vec4(glm::eulerAngles(glm::quat_cast(rotMat)), 0);
 }
 
 static inline void

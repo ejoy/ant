@@ -53,7 +53,7 @@ end
 local function def_surface_type()
 	return {
 		lighting = "on",			-- "on"/"off"
-		transparency = "opaticy",	-- "opaticy"/"transparent"
+		transparency = "opaticy",	-- "opaticy"/"translucent"
 		shadow	= {
 			cast = "on",			-- "on"/"off"
 			receive = "on",			-- "on"/"off"

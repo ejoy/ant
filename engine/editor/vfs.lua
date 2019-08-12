@@ -47,7 +47,7 @@ function localvfs.identity(identity)
 end
 
 function localvfs.new(path)
-	self = assert(repo.new(path, lfs.path "tools/fileserver/.cache"))
+	self = assert(repo.new(path))
 end
 
 function localvfs.add_mount(name, mountpath)

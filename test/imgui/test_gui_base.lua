@@ -27,7 +27,7 @@ function TestGuiBase:_init(default_collapsed)
     f:close()
     self.texhandle1 = bgfx.create_texture(imgdata1, "")
 
-    local texrefpath2 = fs.path("/pkg/ant.resources.binary/textures/brickwall.dds")
+    local texrefpath2 = fs.path("/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga")
     local f2 = assert(fs.open(texrefpath2, "rb"))
     local imgdata2 = f2:read "a"
     f2:close()
@@ -166,11 +166,11 @@ function TestGuiBase:create_textbox()
 end
 local editbox_dynamic = nil
 function TestGuiBase:tab1_update()
-    -- windows.PushStyleVar(enum.StyleVar.FrameBorderSize,2.0)
-    -- windows.PushStyleVar(enum.StyleVar.WindowBorderSize,2.0)
-    local dds_path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds"
+    windows.PushStyleVar(enum.StyleVar.FrameBorderSize,2.0)
+    windows.PushStyleVar(enum.StyleVar.WindowBorderSize,2.0)
+    local dds_path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga"
     widget.Image(dds_path,200,200,{border_col={1.0,0.0,1.0,1.0},tint_col={0.0,1.0,1.0,0.5}})
-    local dds_path2 = "/pkg/ant.resources.binary/textures/brickwall.dds"
+    local dds_path2 = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga"
     widget.Image(dds_path2,200,200,{border_col={1.0,1.0,1.0,1.0},tint_col={1.0,1.0,1.0,0.5}})
     if  widget.ImageButton(self.texhandle1,50,50,
             {uv0={0.5,0.5},
@@ -179,7 +179,7 @@ function TestGuiBase:tab1_update()
             frame_padding=10}) then
         log("clicked")
     end
-    -- windows.PopStyleVar(2)
+    windows.PopStyleVar(2)
     windows.PushStyleColor(enum.StyleCol.Button,1,1,1,1)
     if widget.Button "Test" then
         log("test1")

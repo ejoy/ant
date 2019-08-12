@@ -22,7 +22,6 @@ local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
 
 local WORKDIR = lfs.current_path()
-local ROOTDIR = lfs.path(arg[0]):remove_filename()
 
 local watch = {}
 local repos = {}
@@ -66,7 +65,7 @@ local function repo_add(reponame)
 	end
 	local repopath = lfs.path(reponame)
 	LOG ("Open repo : ", repopath)
-	local repo = assert(repo_new(repopath, ROOTDIR / ".cache"))
+	local repo = assert(repo_new(repopath))
 	LOG ("Rebuild repo")
 	if lfs.is_regular_file(repopath / ".repo" / "root") then
 		repo:index()

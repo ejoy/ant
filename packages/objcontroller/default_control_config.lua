@@ -8,7 +8,7 @@ local keyvalid_mousestate = {"RIGHT",}
 return {
 	tigger = {
 		rotate = {
-			{name='mouse', "LEFT", 	"MOVE",},
+			-- {name='mouse', "LEFT", 	"MOVE",},
 			{name='mouse', "RIGHT", "MOVE",},
 		},
 		hitstart = {
