@@ -266,12 +266,9 @@ local function link(repo, srcfile, identity, buildfile)
 	else
 		param = rawtable(srcfile .. ".lk")
 	end
-
-	if param.type ~= "shader" then
-		local deps = {
-			srcfile,
-			srcfile..".lk",
-		}
+	local fs = import_package "ant.fileconvert"
+	local deps = fs.prelink(param, srcfile)
+	if deps then
 		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
 		local cpath = repo._cache / dephash:sub(1,2) / dephash
 		if lfs.exists(cpath) then
@@ -279,10 +276,9 @@ local function link(repo, srcfile, identity, buildfile)
 			add_ref(repo, cpath, binhash)
 			return cpath, binhash
 		end
-		local fs = import_package "ant.fileconvert"
 		local dstfile = repo._repo / "tmp.bin"
-		local deps = fs.link(srcfile, identity, param, dstfile)
-		if not deps then
+		local ok = fs.link(param, identity, srcfile, dstfile)
+		if not ok then
 			return
 		end
 		if not pcall(lfs.rename, dstfile, cpath) then
@@ -294,9 +290,8 @@ local function link(repo, srcfile, identity, buildfile)
 		add_ref(repo, cpath, binhash)
 		return cpath, binhash
 	else
-		local fs = import_package "ant.fileconvert"
 		local dstfile = repo._repo / "tmp.bin"
-		local deps = fs.link(srcfile, identity, param, dstfile)
+		local deps = fs.link(param, identity, srcfile, dstfile)
 		if not deps then
 			return
 		end

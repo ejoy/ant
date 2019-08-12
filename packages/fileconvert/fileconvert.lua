@@ -40,7 +40,7 @@ local function log_info(info)
 	log:flush()
 end
 
-local function link(plat, srcfile, param, dstfile)
+local function link(param, plat, srcfile, dstfile)
 	local ctype = assert(param.type)
 	local converter_name = assert(converter_names[ctype])
 	local c = require(converter_name)
@@ -61,6 +61,16 @@ local function link(plat, srcfile, param, dstfile)
 	}
 end
 
+local function prelink(param, srcfile)
+	if param.type ~= "shader" then
+		return {
+			srcfile,
+			srcfile..".lk",
+		}
+	end
+end
+
 return {
+	prelink = prelink,
 	link = link,
 }
