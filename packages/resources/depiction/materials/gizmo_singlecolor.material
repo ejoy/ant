@@ -1,0 +1,22 @@
+shader = {
+    vs = "/pkg/ant.resources/mesh/vs_singlecolor",
+    fs = "/pkg/ant.resources/mesh/fs_singlecolor",
+}
+
+state = {
+    WRITE_MASK = "RGBAZ",
+    ALPHA_REF = 1,
+    CULL = "CCW",
+    MSAA = true,
+    DEPTH_TEST = "ALWAYS",
+}
+
+properties = {
+	uniforms = {
+		u_color = {name="u_color", type="v4", default={1, 1, 1, 1}},
+	}	
+}
+
+surface_type= {
+    transparency = "translucent",   -- "opaticy"/"transparent"
+}
