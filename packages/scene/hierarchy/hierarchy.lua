@@ -11,9 +11,8 @@ local math3d_adapter 	= require "math3d.adapter"
 
 local hiecomp = ecs.component "hierarchy"
 	["opt"].ref_path "respath"
-	["opt"].visible "boolean"
+
 function hiecomp:init()
-	self.visible = self.visible or true
 	if self.ref_path then
 		assetmgr.load(self.ref_path)
 	end

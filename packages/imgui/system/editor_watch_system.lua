@@ -31,8 +31,6 @@ local function send_hierarchy()
         local pid = e.parent
         if not pid and e.transform then
             pid = e.transform.parent
-        elseif not pid and e.hierarchy_transform then
-            pid = e.hierarchy_transform.parent
         end
         if pid and temp[pid] then
             local parent = temp[pid]
@@ -166,7 +164,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
     if eid and focus then
         local camerautil = import_package "ant.render".camera
         if not camerautil.focus_obj(world, eid) then
-            local transform = world[eid].transform or world[eid].hierarchy_transform
+            local transform = world[eid].transform
             if transform then
                 camerautil.focus_point(world, transform.t)
             end
@@ -275,7 +273,7 @@ function editor_watcher_system:before_render()
         local target_eid = outline_entity.target_entity
         local target_entity = world[target_eid]
         if target_entity then
-            local trans = target_entity.transform or target_entity.hierarchy_transform
+            local trans = target_entity.transform
             assert(trans and trans.world,"trans and trans.world is nil,trans is "..tostring(trans))
             local s,r,t = ms(trans.world,"~TTT")
 

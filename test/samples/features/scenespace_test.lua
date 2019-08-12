@@ -63,7 +63,7 @@ local function create_scene_node_test()
             t = {2, 0, 0, 1},
         },
         name = 'level1_1',
-        hierarchy = {visible = true,},
+        hierarchy = {},
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -77,9 +77,7 @@ local function create_scene_node_test()
             r = {0, 0, 0, 0},
             t = {2, 0, 4, 1},
         },
-        hierarchy = {
-            visible = true,
-        },
+        hierarchy = {},
         name = 'level1_2',
         hierarchy_tag = true,
         main_view = true,
@@ -96,7 +94,6 @@ local function create_scene_node_test()
             t = {-2, 0, 0, 1},
         },
         hierarchy = {
-            visible = true,
             ref_path = hie_refpath,
         },
         name = 'level2_1',
