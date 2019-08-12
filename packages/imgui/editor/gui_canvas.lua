@@ -37,6 +37,7 @@ function GuiCanvas:_init()
     self.vp_dirty = false
     self.time_count = 0
     self.cur_frame_time = 0.0
+    self.need_focus_next_frame = false
     self:set_fps(DefaultFPS)
 end
 
@@ -63,6 +64,10 @@ end
 function GuiCanvas:before_update()
     windows.SetNextWindowSize(self.rect.w,self.rect.h, "f")
     windows.PushStyleVar(enum.StyleVar.WindowPadding,0,0)
+    if self.need_focus_next_frame  then
+        windows.SetNextWindowFocus()
+        self.need_focus_next_frame = false
+    end
 end
 
 local focus_flag = flags.Focused {"ChildWindows"}
@@ -148,14 +153,21 @@ function GuiCanvas:on_dispatch_msg()
 
     local msgqueue = self.world.args.mq
 
-    if focus then
+    if focus or ( hovered and self:check_is_click_inside(rx,ry)) then
+        if not focus then
+            self.need_focus_next_frame = true
+        end
         local num_mouse_btn = 3
         for what=1, num_mouse_btn do
             if called[what] then
                 local state = in_mouse[what]
-                msgqueue:push("mouse", rx, ry,
-                inputmgr.translate_mouse_button(what),
-                inputmgr.translate_mouse_state(state))
+                local btn = inputmgr.translate_mouse_button(what)
+                local state = inputmgr.translate_mouse_state(state)
+                if not self:check_is_left_click_outside(btn,state,rx,ry) then
+                    msgqueue:push("mouse", rx, ry,
+                    btn,
+                    state)
+                end
             end
         end
     end
@@ -175,6 +187,43 @@ function GuiCanvas:on_dispatch_msg()
         msgqueue:push("resize", rect.w, rect.h)
     end
 end
+
+function GuiCanvas:check_is_click_inside(rx,ry)
+    local gui_input = gui_input
+    local called    = gui_input.called
+    local in_mouse  = gui_input.mouse_state
+    local rect = self.rect
+    local num_mouse_btn = 3
+    for what=1, num_mouse_btn do
+        if called[what] then
+            local state = in_mouse[what]
+            state = inputmgr.translate_mouse_state(state)
+            if state == "DOWN" then
+                if rx >= 0 and rx <= rect.w then
+                    if ry >= 0 and ry <= rect.h then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+function GuiCanvas:check_is_left_click_outside(btn,state,rx,ry)
+    local rect = self.rect
+    if btn == "LEFT" and state == "DOWN" then
+        if rx >= 0 and rx <= rect.w then
+            if ry >= 0 and ry <= rect.h then
+                return false
+            end
+        end
+        return true
+    end
+    return false
+end
+
+
 function GuiCanvas:after_update()
     windows.PopStyleVar()
 end
