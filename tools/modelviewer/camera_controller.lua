@@ -22,6 +22,7 @@ camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
 camera_controller_system.depend "message_system"
+camera_controller_system.depend "imgui_runtime_system"
 
 local function camera_move(forward_axis, position, dx, dy, dz)
 	local right_axis, up_axis = ms:base_axes(forward_axis)
@@ -88,8 +89,8 @@ function camera_controller_system:init()
 					ms(camera.eyepos, camera.eyepos, right_axis, {dx}, "*+", up_axis, {dy}, "*+", t, "-=")
 					ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
 				elseif what == "LEFT" then
-					local delta = convertxy(xy - last_xy) * rotation_speed
-					rotate_round_point(camera, target, distance, delta.x, delta.y)
+					-- local delta = convertxy(xy - last_xy) * rotation_speed
+					-- rotate_round_point(camera, target, distance, delta.x, delta.y)
 				end
 			end
 			last_xy = xy
@@ -221,15 +222,16 @@ local function memory_info()
     return table.concat(s, "\n")
 end
 
-
-function camera_controller_system:update()
+function camera_controller_system:on_gui()
 	local windows = imgui.windows
 	local widget = imgui.widget
 	local flags = imgui.flags
-	imgui.begin_frame(1/60)
 	windows.SetNextWindowSizeConstraints(300, 300, 500, 500)
 	windows.Begin("Test", flags.Window { "MenuBar" })
 	widget.Text(memory_info())
 	windows.End()
-	imgui.end_frame()
+end
+
+function camera_controller_system:update()
+	
 end
