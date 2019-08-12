@@ -1,7 +1,4 @@
 local lfs = require "filesystem.local"
-local util = require "util"
-local crypt = require "crypt"
-local sha1_encoder = crypt.sha1_encoder()
 local g_log = log
 local converter_names = {
 	shader = "shader.compile",
@@ -43,27 +40,7 @@ local function log_info(info)
 	log:flush()
 end
 
-local function byte2hex(c)
-	return ("%02x"):format(c:byte())
-end
-
-local function sha1_from_file(filename)
-	sha1_encoder:init()
-	local ff = assert(lfs.open(filename, "rb"))
-	while true do
-		local content = ff:read(1024)
-		if content then
-			sha1_encoder:update(content)
-		else
-			break
-		end
-	end
-	ff:close()
-	return sha1_encoder:final():gsub(".", byte2hex)
-end
-
-local function link(param, srcfile, plat, tmpdir)
-	local dstfile = tmpdir / "tmp.bin"
+local function link(plat, srcfile, param, dstfile)
 	local ctype = assert(param.type)
 	local converter_name = assert(converter_names[ctype])
 	local c = require(converter_name)
@@ -73,13 +50,12 @@ local function link(param, srcfile, plat, tmpdir)
 		log_err(srcfile, err)
 		return
 	end
-	local binhash = sha1_from_file(dstfile)
 	if deps then
 		table.insert(deps, 1, srcfile)
 		table.insert(deps, 2, srcfile..".lk")
-		return dstfile, binhash, deps
+		return deps
 	end
-	return dstfile, binhash, {
+	return {
 		srcfile,
 		srcfile..".lk",
 	}
