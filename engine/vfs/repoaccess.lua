@@ -262,7 +262,7 @@ local function link(repo, srcfile, identity, buildfile)
 			return cpath, binhash
 		end
 		identity = param.identity
-		srcfile = lfs.path(param.depends[1][3])
+		srcfile = access.realpath(repo, param.depends[1][3])
 	else
 		param = rawtable(srcfile .. ".lk")
 	end

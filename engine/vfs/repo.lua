@@ -60,7 +60,8 @@ local function init(rootpath, repopath, cachepath)
 	end
 end
 
-function repo.new(rootpath, cachepath)
+function repo.new(rootpath)
+	local cachepath = lfs.mydocs_path() / "ant" / "cache"
 	local repopath = rootpath / ".repo"
 	init(rootpath, repopath, cachepath)
 	local mountpoint = access.readmount(rootpath / ".mount")
