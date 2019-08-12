@@ -39,7 +39,7 @@ local function add_option(commands, name, value)
 	end
 end
 
-local function gen_arm_astc_commands(plat, param, sourcefile, outfile, commands)
+local function gen_arm_commands(plat, param, sourcefile, outfile, commands)
 	add_option(commands, "-f", sourcefile:string())
 	add_option(commands, "-o", outfile:string())
 	add_option(commands, "-t", which_format(plat, param))
@@ -107,7 +107,7 @@ return function (identity, sourcefile, param, outfile)
 		hideWindow  = true,
 	}
 
-	gen_arm_astc_commands(plat, param, sourcefile, tmpoutfile, commands)
+	gen_arm_commands(plat, param, sourcefile, tmpoutfile, commands)
 
 	local success, msg = util.spaw_process(commands, function (info)
 		local success, msg = true, ""

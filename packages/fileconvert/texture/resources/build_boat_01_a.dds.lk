@@ -9,7 +9,7 @@ mipmap = 0  -- 0 mean full mipmap, any number large than 0, mean skip to this mi
 maxsize = "1024x1024"
 
 compress = {
-    window = "BC1",
+    windows = "BC1",
     ios = "ASTC4x4",
     android = "ASTC4x4",
 }
