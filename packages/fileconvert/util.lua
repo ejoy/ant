@@ -124,7 +124,7 @@ function util.spaw_process(commands, checkmsg)
         if errcode == 0 then
             return success, msg
         end
-		return false, string.format("subprocess failed, error code:%x", errcode)
+		return false, msg .. string.format("\nsubprocess failed, error code:%x", errcode)
     end
     
     return false, "Create process failed."
