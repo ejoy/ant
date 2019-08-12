@@ -41,7 +41,7 @@ local function combine_and_return_visible(eid,updated_visible)
         updated_visible[eid] = false
         return false
     else--visible is true or nil
-        local t = entity.transform or entity.hierarchy_transform
+        local t = entity.transform
         local pid = t and t.parent
         if pid then
             local parent_visible = combine_and_return_visible(pid,updated_visible)

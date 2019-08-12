@@ -1,11 +1,29 @@
 local ecs = ...
 
-local hiemodule = require "hierarchy"
-local math3d_adapter = require "math3d.adapter"
-local ms = import_package "ant.math".stack
+local mathpkg			= import_package "ant.math"
+local ms				= mathpkg.stack
 
-ecs.component_alias("hierarchy", "resource")
-ecs.component_alias("hierarchy_name_mapper", "entityid{}")
+local assetpkg			= import_package "ant.asset"
+local assetmgr			= assetpkg.mgr
+
+local hiemodule 		= require "hierarchy"
+local math3d_adapter 	= require "math3d.adapter"
+
+local hiecomp = ecs.component "hierarchy"
+	["opt"].ref_path "respath"
+	["opt"].visible "boolean"
+function hiecomp:init()
+	self.visible = self.visible or true
+	if self.ref_path then
+		assetmgr.load(self.ref_path)
+	end
+end
+
+function hiecomp:delete()
+	if self.ref_path then
+		assetmgr.unload(self.ref_path)
+	end
+end
 
 local mathadapter_util = import_package "ant.math.adapter"
 

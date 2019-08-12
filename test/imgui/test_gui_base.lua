@@ -21,7 +21,7 @@ function TestGuiBase:_init(default_collapsed)
     self.win_flags = flags.Window { "MenuBar" }
     self._is_opened = true
     local fs = require "filesystem"
-    local texrefpath1 = fs.path("/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.dds")
+    local texrefpath1 = fs.path("/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga")
     local f = assert(fs.open(texrefpath1, "rb"))
     local imgdata1 = f:read "a"
     f:close()

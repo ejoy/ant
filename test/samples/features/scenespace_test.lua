@@ -1,13 +1,15 @@
 local ecs = ...
 local world = ecs.world
 
+local mathpkg       = import_package "ant.math"
+local ms            = mathpkg.stack
+local mu            = mathpkg.util
 
-local ms = import_package "ant.math".stack
-local fs = require "filesystem"
+local seriazlizeutil= import_package "ant.serialize"
+local renderpkg     = import_package "ant.render"
+local computil      = renderpkg.components
 
-local seriazlizeutil = import_package "ant.serialize"
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
+local fs            = require "filesystem"
 
 local scenespace_test = ecs.system "scenespace_test"
 scenespace_test.singleton 'event'
@@ -44,13 +46,9 @@ local function create_scene_node_test()
     local hie_root =
         world:create_entity {
         hierarchy_visible = true,
-        hierarchy_transform = {
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
-        },
+        transform = mu.srt(),
+        hierarchy = {},
         name = 'root',
-        hierarchy_tag = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -58,14 +56,14 @@ local function create_scene_node_test()
     local hie_level1_1 =
         world:create_entity {
         hierarchy_visible = true,
-        hierarchy_transform = {
+        transform = {
             parent = hie_root,
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {2, 0, 0, 1},
         },
         name = 'level1_1',
-        hierarchy_tag = true,
+        hierarchy = {visible = true,},
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -73,11 +71,14 @@ local function create_scene_node_test()
     local hie_level1_2 =
         world:create_entity {
         hierarchy_visible = true,
-        hierarchy_transform = {
+        transform = {
             parent = hie_root,
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {2, 0, 4, 1},
+        },
+        hierarchy = {
+            visible = true,
         },
         name = 'level1_2',
         hierarchy_tag = true,
@@ -88,17 +89,17 @@ local function create_scene_node_test()
     local hie_level2_1 =
         world:create_entity {
         hierarchy_visible = true,
-        hierarchy_transform = {
+        transform = {
             parent = hie_level1_2,
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {-2, 0, 0, 1},
-            hierarchy = {
-                ref_path = hie_refpath,
-            }
+        },
+        hierarchy = {
+            visible = true,
+            ref_path = hie_refpath,
         },
         name = 'level2_1',
-        hierarchy_tag = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -197,13 +198,13 @@ local function create_scene_node_test()
 
     local hie_root2 =
         world:create_entity {
-        hierarchy_transform = {
+        transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {3, 0, -3, 1},
         },
         name = 'hie_root2',
-        hierarchy_tag = true,
+        hierarchy = {},
         main_view = true,
         serialize = seriazlizeutil.create(),
         hierarchy_visible = true,
@@ -211,14 +212,14 @@ local function create_scene_node_test()
 
     local hie2_level1_1 =
         world:create_entity {
-        hierarchy_transform = {
+        transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {0, 5, 0, 1},
             parent = hie_root2,
         },
+        hierarchy = {},
         name = 'hie2_level1_1',
-        hierarchy_tag = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
         hierarchy_visible = true,
@@ -294,15 +295,15 @@ end
 local onetime = nil
 local function change_scene_node_test()
     if onetime == nil then
-        local level1_2_eid = find_entity_by_name('level1_2', 'hierarchy_transform')
+        local level1_2_eid = find_entity_by_name('level1_2', 'hierarchy')
         if level1_2_eid then
             local level1_2 = world[level1_2_eid]
-            local level1_2_trans = level1_2.hierarchy_transform
+            local level1_2_trans = level1_2.transform
         
-            local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy_transform')
+            local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy')
 
             local level1_1 = world[level1_1_eid]
-            local level1_1_trans = level1_1.hierarchy_transform
+            local level1_1_trans = level1_1.transform
             assert(level1_1_trans.parent == level1_2_trans.parent)
 
             level1_2_trans.watcher.parent = level1_1_eid
@@ -326,29 +327,29 @@ local function print_scene_nodes()
         end
     end
 
-    local function add_node(tree, eid, transformtype)
+    local function add_node(tree, eid)
         local node = find_node(tree, eid)
         if node then
             return node
         end
-        local peid = world[eid][transformtype].parent
+        local peid = world[eid].transform.parent
         node = {}
         if peid == nil then
             tree[eid] = node
         else
-            local parent = add_node(tree, peid, transformtype)
+            local parent = add_node(tree, peid)
             parent[eid] = node
         end
 
         return node
     end
 
-    for _, eid in world:each "hierarchy_transform" do
-        add_node(rooteids, eid, "hierarchy_transform")
+    for _, eid in world:each "hierarchy" do
+        add_node(rooteids, eid)
     end
 
-    for _, eid in world:each "transform" do
-        add_node(rooteids, eid, "transform")
+    for _, eid in world:each "can_render" do
+        add_node(rooteids, eid)
     end
 
     local function remove_no_child_tree(tree)
@@ -389,8 +390,6 @@ local function print_tree()
             local pid = e.parent
             if not pid and e.transform then
                 pid = e.transform.parent
-            elseif not pid and e.hierarchy_transform then
-                pid = e.hierarchy_transform.parent
             end
             if pid then
                 hi[pid] = hi[pid] or {}
@@ -405,14 +404,15 @@ local function print_tree()
             if hi[id] then
                 local next_tab = tab.."    "
                 
-                for i,v in ipairs(hi[id]) do
+                for _,v in ipairs(hi[id]) do
                     local o = ""
                     o = o .. next_tab..v..":"..(world[v].name or "nil")
-                    if world[v].hierarchy_transform then
-                        o = o .. " hierarchy_transform"
-                    end
                     if world[v].transform then
-                        o = o .. " transform"
+                        if world[v].hierarchy then
+                            o = o .. "transform[hierarchy]"
+                        else
+                            o = o .. " transform"
+                        end
                     end
                     print(o)
                     bfs(v,next_tab)
@@ -428,9 +428,9 @@ end
 
 
 local function move_root_node(rootnodename)
-    local eid = find_entity_by_name(rootnodename, 'hierarchy_transform')
+    local eid = find_entity_by_name(rootnodename, 'hierarchy')
     local e = world[eid]
-    e.hierarchy_transform.watcher.t = {10, 0, 0, 1}
+    e.transform.watcher.t = {10, 0, 0, 1}
 end
 
 local whichframe
@@ -445,7 +445,7 @@ function scenespace_test:event_changed()
         print_scene_nodes()
         print_tree()
     elseif self.frame_stat.frame_num == whichframe + 2 then 
-        local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy_transform')
+        local level1_1_eid = find_entity_by_name('level1_1', 'transform')
         world:remove_entity(level1_1_eid)
     elseif self.frame_stat.frame_num == whichframe + 3 then
         print_scene_nodes()

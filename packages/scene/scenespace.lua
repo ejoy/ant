@@ -7,22 +7,11 @@ local su 		= require "util"
 
 local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack
-local math3d 	= require "math3d"
 
-local hie_util 	= import_package "ant.scene".hierarchy
 local assetpkg 	= import_package "ant.asset"
 local assetmgr 	= assetpkg.mgr
 
 local animodule = require "hierarchy.animation"
-
-ecs.tag "hierarchy_tag"
-
-ecs.component "hierarchy_transform"
-	.s "vector"
-	.r "vector"
-	.t "vector"
-	['opt'].parent "parent"
-	['opt'].hierarchy "hierarchy"
 
 ecs.component_alias("attach", "entityid")
 
@@ -50,12 +39,48 @@ local function find_children(marked, eid, componenttype)
 	return false
 end
 
-local mark_mt = { __index = function(marked, eid) return find_children(marked, eid, "hierarchy_transform") end }
+local mark_mt = { 
+	__index = function(marked, eid) 
+		if eid == pseudoroot_eid then
+			marked[pseudoroot_eid] = false
+			return false
+		end
+		local e = world[eid]
+		
+		local pid = e.transform.parent
+		if pid and marked[pid] then
+			marked[eid] = pid
+			return true
+		end
 
-local render_mark_mt = {__index = function(marked, eid) return find_children(marked, eid, "transform") end}
+		marked[eid] = false
+		return false
+	end 
+}
+
+-- local render_mark_mt = {
+-- 	__index = function(marked, eid) 
+-- 		if eid == pseudoroot_eid then
+-- 			marked[pseudoroot_eid] = false
+-- 			return false
+-- 		end
+-- 		local e = world[eid]
+-- 		if e.hierarchy == nil then
+-- 			local pid = e.transform.parent
+-- 			if pid and marked[pid] then
+-- 				marked[eid] = pid
+-- 				return true
+-- 			end
+-- 		end
+
+-- 		marked[eid] = false
+-- 		return false
+-- 	end
+-- }
 
 local function mark_tree(tree, componenttype)
 	for _, eid in world:each(componenttype) do
+		assert(world[eid].transform)
 		local _ = tree[eid]
 	end
 end
@@ -113,7 +138,7 @@ local function update_world(trans)
 	local peid = trans.parent
 	if peid then
 		local parent = world[peid]
-		local pt = parent.hierarchy_transform
+		local pt = parent.transform
 		ms(worldmat, pt.world, srt, "*=")
 	else
 		ms(worldmat, srt, "=")
@@ -121,20 +146,29 @@ local function update_world(trans)
 	return worldmat
 end
 
-local function fetch_sort_tree_result(tree, mark_mt, componenttype)	
+local function fetch_sort_tree_result(tree, componenttype)
 	setmetatable(tree, mark_mt)
-	mark_tree(tree, componenttype)	
+	mark_tree(tree, componenttype)
 	return tree_sort(tree)
+end
+
+local function fetch_hirarchy_tree(tree)
+	return fetch_sort_tree_result(tree, "hierarchy")
+end
+
+local function fetch_render_entity_tree(tree)
+	return fetch_sort_tree_result(tree, "can_render")
 end
 
 local function mark_cache(eid, cache_result)
 	local e = world[eid]
-	local t = e.hierarchy_transform
+	local t = e.transform
+	
 	local cachemat = update_world(t)
 	assert(type(cachemat) == 'userdata')
 
-	local hiecomp = t.hierarchy
-	if hiecomp then
+	local hiecomp = assert(e.hierarchy)
+	if hiecomp.ref_path then
 		local hiehandle = assetmgr.get_hierarchy(hiecomp.ref_path).handle
 		if t.hierarchy_result == nil then
 			local bpresult = animodule.new_bind_pose_result(#hiehandle)
@@ -152,7 +186,7 @@ end
 
 local function update_scene_tree(tree, cache_result)
 	if next(tree) then
-		local sort_result = fetch_sort_tree_result(tree, mark_mt, "hierarchy_transform")
+		local sort_result = fetch_hirarchy_tree(tree)
 		for i = #sort_result, 1, -1 do
 			local eid = sort_result[i]
 			mark_cache(eid, cache_result)
@@ -162,12 +196,12 @@ end
 
 local function notify_render_child_changed(tree, tell)
 	if next(tree) then
-		local sort_result = fetch_sort_tree_result(tree, render_mark_mt, "transform")
+		local sort_result = fetch_render_entity_tree(tree)
 		for i = 1, #sort_result do
 			local eid = sort_result[i]
 			local e = world[eid]
-			if e.hierarchy_transform then
-				-- mean all the render child have been updatedupdated
+			if e.hierarchy then
+				-- mean all the render child have been updated
 				break
 			end
 
@@ -176,28 +210,21 @@ local function notify_render_child_changed(tree, tell)
 	end
 end
 
-function scene_space:post_init()	
-	for eid in world:each_new("hierarchy_transform") do
-		local e = world[eid]
-		local trans = e.hierarchy_transform		
-		trans.world = math3d.ref "matrix"
-		self.event:new(eid, "hierarchy_transform")
-	end
-end
-
 function scene_space:delete()
 	local hierarchy_cache = self.hierarchy_transform_result	
 	local removed_eids = {}
-	for eid in world:each_removed "hierarchy_transform" do		
-		hierarchy_cache[eid] = nil
-		removed_eids[eid] = true
+	for eid in world:each_removed "transform" do
+		if world[eid].hierarchy then
+			hierarchy_cache[eid] = nil
+			removed_eids[eid] = true
+		end
 	end
 
 	if next(removed_eids) then
 		local tree = {}
 		for eid in pairs(hierarchy_cache) do
 			local e = world[eid]
-			local trans = e.hierarchy_transform
+			local trans = e.transform
 			local peid = trans.parent
 			-- parent have been remove but this child do not attach to new parent
 			-- make it as new tree root
@@ -209,9 +236,9 @@ function scene_space:delete()
 			end
 		end
 		update_scene_tree(tree, hierarchy_cache)
-		local function update_render_child()		
+		local function update_render_child()
 			local cache = {}
-			for _, eid in world:each "transform" do
+			for _, eid in world:each "hierarchy" do
 				local parent = world[eid].transform.parent
 				if parent then 
 					if cache[parent] == nil then
@@ -238,20 +265,24 @@ function scene_space:delete()
 end
 
 function scene_space:event_changed()	
-	local trees = {}	
-	for eid, events in self.event:each("hierarchy_transform") do
+	local trees = {}
+	-- could not use "hierarchy" component to each, because modified component is 'transform' component
+	for eid, events in self.event:each "transform" do
 		local e = world[eid]
-		local trans = e.hierarchy_transform
-		local oldparent = trans.parent
-		su.handle_transform(events, trans)
 
-		local newparent = trans.parent
-		if newparent ~= oldparent then
-			local parentparent = world[newparent].hierarchy_transform.parent
-			trees[newparent] = parentparent
+		if e.hierarchy then
+			local trans = e.transform
+			local oldparent = trans.parent
+			su.handle_transform(events, trans)
+
+			local newparent = trans.parent
+			if newparent ~= oldparent then
+				local parentparent = world[newparent].transform.parent
+				trees[newparent] = parentparent
+			end
+			
+			trees[eid] = newparent or pseudoroot_eid
 		end
-		
-		trees[eid] = newparent or pseudoroot_eid
 	end
 
 	update_scene_tree(trees, self.hierarchy_transform_result)
