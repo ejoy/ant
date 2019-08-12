@@ -142,19 +142,12 @@ function GuiScene:save_path_to_recent(path)
     end
 end
 
-function GuiScene:mark_setting_dirty()
-    self._dirty_flag = true
-end
-
 --override if needed
 --return tbl
 function GuiScene:save_setting_to_memory(clear_dirty_flag)
-    if clear_dirty_flag then
-        self._dirty_flag = false
-    end
-    return {
-        recent_scenes = self.recent_scenes
-    }
+    local setting = GuiCanvas.save_setting_to_memory(self,clear_dirty_flag)
+    setting.recent_scenes = self.recent_scenes
+    return setting
 end
 
 --override if needed
@@ -165,10 +158,7 @@ function GuiScene:load_setting_from_memory(setting_tbl)
         local box = self:_get_editpath()
         box.text = self.recent_scenes[recent_size]
     end
+    GuiCanvas.load_setting_from_memory(self,setting_tbl)
 end
 
---override if needed
-function GuiScene:is_setting_dirty()
-    return self._dirty_flag
-end
 return GuiScene
