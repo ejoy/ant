@@ -22,22 +22,13 @@ scene_space.dependby "primitive_filter_system"
 scene_space.singleton "event"
 scene_space.singleton "hierarchy_transform_result"
 
-local pseudoroot_eid = -1
-
-local function find_children(marked, eid, componenttype)
-	if eid == pseudoroot_eid then
-		marked[pseudoroot_eid] = false
-		return false
+function scene_space:post_init()
+	for eid in world:each_new("transform") do
+		self.event:new(eid, "transform")
 	end
-	local e = world[eid]
-	local pid = e[componenttype].parent
-	if pid and marked[pid] then
-		marked[eid] = pid
-		return true
-	end
-	marked[eid] = false
-	return false
 end
+
+local pseudoroot_eid = -1
 
 local mark_mt = { 
 	__index = function(marked, eid) 
@@ -213,10 +204,10 @@ end
 function scene_space:delete()
 	local hierarchy_cache = self.hierarchy_transform_result	
 	local removed_eids = {}
-	for eid in world:each_removed "transform" do
-		if world[eid].hierarchy then
+	for eid, entity in world:each_removed "transform" do
+		if entity.hierarchy then
 			hierarchy_cache[eid] = nil
-			removed_eids[eid] = true
+			removed_eids[eid] = entity
 		end
 	end
 
@@ -264,10 +255,33 @@ function scene_space:delete()
 	end
 end
 
+local function update_render_entity_transform(transform, hierarchy_cache)
+	local peid = transform.parent
+	local localmat = ms:srtmat(transform)
+	if peid then
+		local parentresult = hierarchy_cache[peid]
+		local parentmat = parentresult.world
+		if parentmat then
+			local hie_result = parentresult.hierarchy
+			local slotname = transform.slotname
+			if hie_result and slotname then
+				local hiemat = ms:matrix(hie_result[slotname])
+				localmat = ms(parentmat, hiemat, localmat, "**P")
+			else
+				localmat = ms(parentmat, localmat, "*P")
+			end
+		end
+	end
+
+	local w = transform.world
+	ms(w, localmat, "=")
+	return w
+end
+
 function scene_space:event_changed()	
 	local trees = {}
-	-- could not use "hierarchy" component to each, because modified component is 'transform' component
-	for eid, events in self.event:each "transform" do
+	local renderentities = {}
+	for eid, events, init in self.event:each "transform" do
 		local e = world[eid]
 
 		if e.hierarchy then
@@ -282,6 +296,8 @@ function scene_space:event_changed()
 			end
 			
 			trees[eid] = newparent or pseudoroot_eid
+		else
+			renderentities[eid] = {events, init}
 		end
 	end
 
@@ -291,4 +307,28 @@ function scene_space:event_changed()
 		trans.watcher._marked_init = true 
 	end)
 
+	local hierarchy_cache = self.hierarchy_transform_result
+	for eid, re in pairs(renderentities) do
+		local events, init = re[1], re[2]
+		local e = world[eid]
+		local trans = e.transform
+
+		if init then
+			assert(not next(events))
+			update_render_entity_transform(e.transform, hierarchy_cache)
+		else
+			for k, v in pairs(events) do
+				if k == 's' or k == 'r' or k == 't' then
+					ms(trans[k], v, "=")
+					update_render_entity_transform(e.transform, hierarchy_cache)
+				elseif k == 'parent' then
+					trans.parent = v
+					update_render_entity_transform(e.transform, hierarchy_cache)
+				elseif k == 'base' then
+					ms(trans.base, v, "=")
+					update_render_entity_transform(e.transform, hierarchy_cache)
+				end
+			end
+		end
+	end
 end

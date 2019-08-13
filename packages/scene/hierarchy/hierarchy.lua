@@ -9,13 +9,14 @@ local assetmgr			= assetpkg.mgr
 local hiemodule 		= require "hierarchy"
 local math3d_adapter 	= require "math3d.adapter"
 
-local hiecomp = ecs.component "hierarchy"
+local hiecomp = ecs.component "hierarchy" {depend = "transform"}
 	["opt"].ref_path "respath"
 
 function hiecomp:init()
 	if self.ref_path then
 		assetmgr.load(self.ref_path)
 	end
+	return self
 end
 
 function hiecomp:delete()

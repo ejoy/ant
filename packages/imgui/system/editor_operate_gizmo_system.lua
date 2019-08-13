@@ -59,7 +59,7 @@ local function update_world(trans)
     local peid = trans.parent
     if peid then
         local parent = world[peid]
-        local pt = parent.hierarchy_transform
+        local pt = parent.transform
         ms(worldmat, pt.world, srt, "*=")
     else
         ms(worldmat, srt, "=")
@@ -81,7 +81,7 @@ local function gizmo_on_drag(cache,picked_type,mouse_delta)
         local camera = maincamera.camera
         -- log.info_a("maincamera",maincamera)
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
-        local trans = target_entity.transform or target_entity.hierarchy_transform
+        local trans = target_entity.transform
         r_axis_unit = convert_to_model_axis(trans,axis_unit)
         log.info_a("axis_unit:",r_axis_unit)
         local cur_pos = ms(trans.t,"T")
@@ -185,7 +185,7 @@ local function scale_gizmo_to_normal(gizmo)
     local maincamera = world:first_entity("main_queue")
     local camera = maincamera.camera
     local _, _, vp = ms:view_proj(camera, camera.frustum, true)
-    local et = gizmo.hierarchy_transform
+    local et = gizmo.transform
     local _,_,t = ms(et.world,"~TTT")
     local tvp  = ms(vp,t,"*T")
     local scale = math.abs(tvp[4]/7)
@@ -200,13 +200,13 @@ function gizmo_sys:update()
     local gizmo_entity = world[gizmo_eid]
     if target_entity then
         
-        local trans = target_entity.transform or target_entity.hierarchy_transform
+        local trans = target_entity.transform
         assert(trans and trans.world,"trans and trans.world is nil,trans is "..tostring(trans))
         local s,r,t = ms(trans.world,"~TTT")
         
         -- world: gizmo_entity
-        world:add_component_child(gizmo_entity.hierarchy_transform,"t","vector",t)
-        world:add_component_child(gizmo_entity.hierarchy_transform,"r","vector",r)
+        world:add_component_child(gizmo_entity.transform,"t","vector",t)
+        world:add_component_child(gizmo_entity.transform,"r","vector",r)
         scale_gizmo_to_normal(gizmo_entity)
 
         if target_entity_id ~= self.operate_gizmo_cache.last_target_eid then

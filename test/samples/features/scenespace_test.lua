@@ -79,7 +79,6 @@ local function create_scene_node_test()
         },
         hierarchy = {},
         name = 'level1_2',
-        hierarchy_tag = true,
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -341,11 +340,7 @@ local function print_scene_nodes()
         return node
     end
 
-    for _, eid in world:each "hierarchy" do
-        add_node(rooteids, eid)
-    end
-
-    for _, eid in world:each "can_render" do
+    for _, eid in world:each "transform" do
         add_node(rooteids, eid)
     end
 

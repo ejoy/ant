@@ -3,8 +3,8 @@ return {
 	--map
     systems = {
       "init_loader",
-	  "scenespace_test",
-	  "terrain_test",
+	    "scenespace_test",
+	    --"terrain_test",
       "visible_system",
     },
     entry = "entry"

@@ -126,13 +126,9 @@ end
 function Util.create_position_gizmo(world)
     local seriazlizeutil = import_package "ant.serialize"
     local parent = world:create_entity {
-            hierarchy_transform = {
-                s = {1, 1, 1, 0},
-                r = {0, 0, 0, 0},
-                t = {0, 0, 0, 1},
-            },
+            transform = mu.srt(),
             name = 'scale_axis',
-            hierarchy_tag = true,
+            hierarchy = {},
             main_view = true,
             -- serialize = seriazlizeutil.create(),
             hierarchy_visible = true,
