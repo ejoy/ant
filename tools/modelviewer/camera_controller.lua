@@ -89,8 +89,8 @@ function camera_controller_system:init()
 					ms(camera.eyepos, camera.eyepos, right_axis, {dx}, "*+", up_axis, {dy}, "*+", t, "-=")
 					ms(target, camera.eyepos, camera.viewdir, {distance}, '*+=')
 				elseif what == "LEFT" then
-					-- local delta = convertxy(xy - last_xy) * rotation_speed
-					-- rotate_round_point(camera, target, distance, delta.x, delta.y)
+					local delta = convertxy(xy - last_xy) * rotation_speed
+					rotate_round_point(camera, target, distance, delta.x, delta.y)
 				end
 			end
 			last_xy = xy
