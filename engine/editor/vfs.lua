@@ -48,6 +48,7 @@ end
 
 function localvfs.new(path)
 	self = assert(repo.new(path))
+	self:clean()
 end
 
 function localvfs.add_mount(name, mountpath)

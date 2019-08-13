@@ -208,7 +208,7 @@ function repo:rebuild()
 	return self:build()
 end
 
-local function cleanbuild(self)
+function repo:clean()
 	if not lfs.exists(self._build) then
 		return
 	end
@@ -222,7 +222,7 @@ local function cleanbuild(self)
 end
 
 function repo:build()
-	cleanbuild(self)
+	self:clean()
 
 	local cache = {}
 	self._namecache[''] = undef
