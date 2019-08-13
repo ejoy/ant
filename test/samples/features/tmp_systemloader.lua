@@ -129,8 +129,12 @@ local function test_serialize(delfile_aftertest)
     for _, eid in world:each 'serialize' do
         world:remove_entity(eid)
     end
+    world:update_func "delete"()
     world:clear_removed()
     serialize.load_world(world, s)
+    -- DO NOT call update_func "init", if you donot close the world
+    -- in this test, just call "post_init" is enougth
+    world:update_func "post_init"()
 
     --test serialize entity
     local eid = world:first_entity_id 'serialize'
@@ -164,13 +168,13 @@ function init_loader:init()
 end
 
 function init_loader:asset_loaded()
-    local ll = self.asyn_load_list
-    -- scene finish
-    if ll.i >= ll.n then
-        if  not __ANT_RUNTIME__ and 
-            not _RUN_TEST_SERIALIZE_ then
-            test_serialize(true)
-            _RUN_TEST_SERIALIZE_ = true
-        end
-    end
+    -- local ll = self.asyn_load_list
+    -- -- scene finish
+    -- if ll.i >= ll.n then
+    --     if  not __ANT_RUNTIME__ and 
+    --         not _RUN_TEST_SERIALIZE_ then
+    --         test_serialize(true)
+    --         _RUN_TEST_SERIALIZE_ = true
+    --     end
+    -- end
 end

@@ -39,7 +39,7 @@ scene_space.singleton "hierarchy_transform_result"
 scene_space.singleton "hierarchy_update_result"
 
 function scene_space:post_init()
-	for eid in world:each_new("transform") do
+	for eid in world:each_new "transform" do
 		self.event:new(eid, "transform")
 	end
 end
@@ -339,7 +339,9 @@ function scene_space:event_changed()
 		end
 	end
 
-	world:update_func "update_hirarchy_tree" ()
+	if next(trees) or next(renderentities) then
+		world:update_func "update_hirarchy_tree" ()
+	end
 end
 
 local update_hirarchy_result_system = ecs.system "update_hirarchy_result_system"
