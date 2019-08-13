@@ -55,57 +55,33 @@ init(lua_State *L) {
 	window_init(cb);
 }
 
-static int
-window_keymap(int whatkey) {
-	static const int keymap[ANT_KEYMAP_COUNT] = {
-		VK_TAB,
-		VK_LEFT,
-		VK_RIGHT,
-		VK_UP,
-		VK_DOWN,
-		VK_PRIOR,
-		VK_NEXT,
-		VK_HOME,
-		VK_END,
-		VK_INSERT,
-		VK_DELETE,
-		VK_BACK,
-		VK_SPACE,
-		VK_RETURN,
-		VK_ESCAPE,
-	};
-	if (whatkey < 0 || whatkey >= ANT_KEYMAP_COUNT)
-		return -1;
-	return keymap[whatkey];
-}
-
 static void
 init_keymap(lua_State *L) {
-	static const char * name[ANT_KEYMAP_COUNT] = {
-		"Tab",
-		"Left",
-		"Right",
-		"Up",
-		"Down",
-		"PageUp",
-		"PageDown",
-		"Home",
-		"End",
-		"Insert",
-		"Delete",
-		"Backspace",
-		"Space",
-		"Enter",
-		"Escape",
+	typedef struct {
+		int code;
+		const char* name;
+	} keymap_t;
+	static keymap_t keymap[] = {
+		{VK_TAB, "Tab"},
+		{VK_LEFT, "Left"},
+		{VK_RIGHT, "Right"},
+		{VK_UP, "Up"},
+		{VK_DOWN, "Down"},
+		{VK_PRIOR, "PageUp"},
+		{VK_NEXT, "PageDown"},
+		{VK_HOME, "Home"},
+		{VK_END, "End"},
+		{VK_INSERT, "Insert"},
+		{VK_DELETE, "Delete"},
+		{VK_BACK, "Backspace"},
+		{VK_SPACE, "Space"},
+		{VK_RETURN, "Enter"},
+		{VK_ESCAPE, "Escape"},
 	};
-	lua_createtable(L, 0, ANT_KEYMAP_COUNT);
-	int i;
-	for (i=0;i<ANT_KEYMAP_COUNT;i++) {
-		int c = window_keymap(i);
-		if (c >= 0) {
-			lua_pushinteger(L, c);
-			lua_setfield(L, -2, name[i]);
-		}
+	lua_createtable(L, 0, sizeof(keymap) / sizeof(keymap[0]));
+	for (size_t i = 0; i < sizeof(keymap) / sizeof(keymap[0]); ++i) {
+		lua_pushinteger(L, keymap[i].code);
+		lua_setfield(L, -2, keymap[i].name);
 	}
 }
 

@@ -36,6 +36,8 @@ static uint8_t get_keystate(LPARAM lParam) {
 		;
 }
 
+int g_surrogate = 0;
+
 static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -148,12 +150,22 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		cb->message(cb->ud, &msg);
 		break;
-	case WM_CHAR:
+	case WM_CHAR: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_CHAR_UTF16;
-		msg.u.unichar.code = (int)wParam;
-		cb->message(cb->ud, &msg);
+		int code = (int)wParam;
+		if (code >= 0xD800 && code <= 0xDBFF) {
+			g_surrogate = code;
+		} else {
+			if (code >= 0xDC00 && code <= 0xDFFF) {
+				code = ((g_surrogate - 0xD800) << 10) + (code - 0xDC00) + 0x10000;
+				g_surrogate = 0;
+			}
+			msg.type = ANT_WINDOW_CHAR;
+			msg.u.unichar.code = code;
+			cb->message(cb->ud, &msg);
+		}
 		break;
+	}
 	}
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
