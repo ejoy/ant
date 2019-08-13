@@ -1,20 +1,22 @@
 local ecs = ...
+local world = ecs.world
 
 ecs.import "ant.math"
 
-local fs = require "filesystem"
+local asset 	= import_package "ant.asset".mgr
+local mathpkg 	= import_package "ant.math"
+local ms 		= mathpkg.stack
 
 local component_util = require "components.util"
-local asset = import_package "ant.asset".mgr
-local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-local math3d = require "math3d"
 
+local fs 		= require "filesystem"
+local math3d 	= require "math3d"
 
-ecs.component_alias("point", "vector")
+ecs.component_alias("parent", 	"entityid")
+ecs.component_alias("point", 	"vector")
 ecs.component_alias("position", "vector")
 ecs.component_alias("rotation", "vector")
-ecs.component_alias("scale", "vector")
+ecs.component_alias("scale", 	"vector")
 
 ecs.component "srt"
 	.s "vector"
@@ -29,6 +31,17 @@ local trans = ecs.component "transform"
 	['opt'].parent "parent"
 
 function trans:init()
+	if self.parent then
+		local pe = world[self.parent]
+		if pe == nil then
+			error(string.format("tranform specified parent eid, but parent eid is not exist : %d", self.parent))
+		else
+			if pe.hierarchy == nil then
+				error(string.format("transform specified parent eid, but parent entity is not a hierarchy entity, parent eid: %d", self.parent))
+			end
+		end
+	end
+
 	self.world = math3d.ref "matrix"
 	ms(self.world, ms:srtmat(self), "=")
 	return self
@@ -207,7 +220,6 @@ function control_state:init()
 	return ""
 end
 
-ecs.component_alias("parent", "entityid")
 ecs.component_alias("color", "real[4]", {1,1,1,1})
 
 

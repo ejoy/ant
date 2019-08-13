@@ -1,40 +1,11 @@
+local log = log and log.info(...) or print
+
 local util = {}; util.__index = util
 
-local ms = import_package "ant.math" .stack
-local log = log and log.info(...) or print
-local ecs = import_package "ant.ecs"
-local mathadapter = import_package "ant.math.adapter"
+local ecs 			= import_package "ant.ecs"
+local mathadapter 	= import_package "ant.math.adapter"
 
-local handlers = {	
-	parent = function (comp, value)
-		comp.parent = value
-	end,
-	s = function (comp, value)
-		ms(comp.s, value, "=")
-	end,
-	r = function (comp, value)
-		ms(comp.r, value, "=")
-	end,
-	t = function (comp, value)
-		ms(comp.t, value, "=")
-	end,
-	base = function (comp, value)
-		ms(comp.base, value, "=")
-	end,
-}
-
-function util.handle_transform(events, comp)
-	for event, value in pairs(events) do
-		local handler = handlers[event]
-		if handler then
-			handler(comp, value)
-		else
-			print('handler is not default in transform:', event)
-		end
-	end
-end
-
-local bullet_world = import_package "ant.bullet".bulletworld
+local bullet_world 	= import_package "ant.bullet".bulletworld
 
 function util.start_new_world(input_queue, fbw, fbh, packages, systems,other_args)
 	if input_queue == nil then

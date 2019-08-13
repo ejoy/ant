@@ -17,10 +17,24 @@ ecs.component_alias("attach", "entityid")
 
 ecs.singleton "hierarchy_transform_result"
 
+local rm_result = ecs.singleton "hierarchy_remove_result"
+local function reset_remove_result(rr)
+	rr.removed_eids = {}
+	rr.hierarchy_tree = {}
+end
+function rm_result.init()
+	local rr = {}
+	reset_remove_result(rr)
+	return rr
+end
+
 local scene_space = ecs.system "scene_space"
 scene_space.dependby "primitive_filter_system"
+scene_space.dependby "delete_hirarchy_system"
+
 scene_space.singleton "event"
 scene_space.singleton "hierarchy_transform_result"
+scene_space.singleton "hierarchy_remove_result"
 
 function scene_space:post_init()
 	for eid in world:each_new("transform") do
@@ -118,7 +132,7 @@ local function tree_sort(tree)
 	return r
 end
 
-local function update_world(trans)
+local function update_hirarchy_entity_world(trans)
 	local srt = ms:srtmat(trans)
 	local base = trans.base
 	local worldmat = trans.world
@@ -137,125 +151,7 @@ local function update_world(trans)
 	return worldmat
 end
 
-local function fetch_sort_tree_result(tree, componenttype)
-	setmetatable(tree, mark_mt)
-	mark_tree(tree, componenttype)
-	return tree_sort(tree)
-end
-
-local function fetch_hirarchy_tree(tree)
-	return fetch_sort_tree_result(tree, "hierarchy")
-end
-
-local function fetch_render_entity_tree(tree)
-	return fetch_sort_tree_result(tree, "can_render")
-end
-
-local function mark_cache(eid, cache_result)
-	local e = world[eid]
-	local t = e.transform
-	
-	local cachemat = update_world(t)
-	assert(type(cachemat) == 'userdata')
-
-	local hiecomp = assert(e.hierarchy)
-	if hiecomp.ref_path then
-		local hiehandle = assetmgr.get_hierarchy(hiecomp.ref_path).handle
-		if t.hierarchy_result == nil then
-			local bpresult = animodule.new_bind_pose_result(#hiehandle)
-			hiehandle:bindpose_result(bpresult)
-			t.hierarchy_result = setmetatable({}, {__index=function(t, key)
-				local jointidx = hiehandle:joint_index(key)
-				local j = bpresult:joint(jointidx)
-				t[key] = j
-				return j
-			end})
-		end
-	end
-	cache_result[eid] = {world=cachemat, hierarchy=t.hierarchy_result}
-end
-
-local function update_scene_tree(tree, cache_result)
-	if next(tree) then
-		local sort_result = fetch_hirarchy_tree(tree)
-		for i = #sort_result, 1, -1 do
-			local eid = sort_result[i]
-			mark_cache(eid, cache_result)
-		end
-	end
-end
-
-local function notify_render_child_changed(tree, tell)
-	if next(tree) then
-		local sort_result = fetch_render_entity_tree(tree)
-		for i = 1, #sort_result do
-			local eid = sort_result[i]
-			local e = world[eid]
-			if e.hierarchy then
-				-- mean all the render child have been updated
-				break
-			end
-
-			tell(e.transform)
-		end
-	end
-end
-
-function scene_space:delete()
-	local hierarchy_cache = self.hierarchy_transform_result	
-	local removed_eids = {}
-	for eid, entity in world:each_removed "transform" do
-		if entity.hierarchy then
-			hierarchy_cache[eid] = nil
-			removed_eids[eid] = entity
-		end
-	end
-
-	if next(removed_eids) then
-		local tree = {}
-		for eid in pairs(hierarchy_cache) do
-			local e = world[eid]
-			local trans = e.transform
-			local peid = trans.parent
-			-- parent have been remove but this child do not attach to new parent
-			-- make it as new tree root
-			if removed_eids[peid] then
-				trans.parent = nil
-				update_world(trans)
-			else
-				tree[eid] = peid
-			end
-		end
-		update_scene_tree(tree, hierarchy_cache)
-		local function update_render_child()
-			local cache = {}
-			for _, eid in world:each "hierarchy" do
-				local parent = world[eid].transform.parent
-				if parent then 
-					if cache[parent] == nil then
-						cache[parent] = {}
-					end 
-					table.insert(cache[parent], eid)
-				end
-			end
-
-			for remove_eid in pairs(removed_eids) do 
-				local children = cache[remove_eid] 
-				if children then
-					for _, ceid in ipairs(children) do 
-						local e = world[ceid]
-						e.transform.parent = nil	-- could not use watcher.parent, because nil will not add notification to watcher
-						e.transform.watcher._marked_init = true
-					end
-				end
-			end
-		end
-
-		update_render_child()
-	end
-end
-
-local function update_render_entity_transform(transform, hierarchy_cache)
+local function update_render_entity_world(transform, hierarchy_cache)
 	local peid = transform.parent
 	local localmat = ms:srtmat(transform)
 	if peid then
@@ -278,6 +174,135 @@ local function update_render_entity_transform(transform, hierarchy_cache)
 	return w
 end
 
+local function fetch_sort_tree_result(tree, componenttype)
+	setmetatable(tree, mark_mt)
+	mark_tree(tree, componenttype)
+	return tree_sort(tree)
+end
+
+local function fetch_hirarchy_tree(tree)
+	return fetch_sort_tree_result(tree, "hierarchy")
+end
+
+local function fetch_render_entity_tree(tree)
+	return fetch_sort_tree_result(tree, "can_render")
+end
+
+local function mark_cache(eid, cache_result)
+	local e = world[eid]
+	local t = e.transform
+	
+	local cachemat = update_hirarchy_entity_world(t)
+	assert(type(cachemat) == 'userdata')
+
+	local hiecomp = assert(e.hierarchy)
+	if hiecomp.ref_path then
+		local hiehandle = assetmgr.get_hierarchy(hiecomp.ref_path).handle
+		if t.hierarchy_result == nil then
+			local bpresult = animodule.new_bind_pose_result(#hiehandle)
+			hiehandle:bindpose_result(bpresult)
+			t.hierarchy_result = setmetatable({}, {__index=function(t, key)
+				local jointidx = hiehandle:joint_index(key)
+				local j = bpresult:joint(jointidx)
+				t[key] = j
+				return j
+			end})
+		end
+	end
+	cache_result[eid] = {world=cachemat, hierarchy=t.hierarchy_result}
+end
+
+local function update_hierarchy_tree(tree, cache_result)
+	if next(tree) then
+		local sort_result = fetch_hirarchy_tree(tree)
+		for i = #sort_result, 1, -1 do
+			local eid = sort_result[i]
+			mark_cache(eid, cache_result)
+		end
+	end
+end
+
+local function which_render_entities_changed(tree, renderentities)
+	if next(tree) then
+		local sort_result = fetch_render_entity_tree(tree)
+		for i=1, #sort_result do
+			local eid = sort_result[i]
+			local e = assert(world[eid])
+			if e.hierarchy then
+				-- mean all the render child have been updated
+				break
+			end
+
+			if renderentities[eid] == nil then
+				renderentities[eid] = {nil, true}
+			end
+		end
+	end
+end
+
+local function update_transform_field(trans, events, init)
+	if init then
+		assert(events == nil or (not next(events)))
+		return true
+	end
+
+	local changed
+	for k, v in pairs(events) do
+		changed = true
+		if k == 's' or k == 'r' or k == 't' then
+			ms(trans[k], v, "=")
+		elseif k == 'parent' then
+			trans.parent = v
+		else
+			changed = changed or nil
+		end
+	end
+
+	return changed
+end
+
+local function update_render_entities_world(renderentities, hierarchy_cache)
+	for eid, re in pairs(renderentities) do
+		local events, init = re[1], re[2]
+		local e = world[eid]
+		local trans = e.transform
+		if update_transform_field(trans, events, init) then
+			update_render_entity_world(trans, hierarchy_cache)
+		end
+	end
+end
+
+function scene_space:delete()
+	local hierarchy_cache = self.hierarchy_transform_result	
+	local removed_eids = {}
+	for eid, entity in world:each_removed "hierarchy" do
+		hierarchy_cache[eid] = nil
+		removed_eids[eid] = entity
+	end
+
+	if next(removed_eids) then
+		local tree = {}
+		for _, eid in world:each "transform" do
+			local e = world[eid]
+			local trans = e.transform
+			
+			-- parent have been remove but this child do not attach to new parent
+			-- make it as new tree root
+			if removed_eids[trans.parent] then
+				trans.parent = nil
+			end
+
+			if e.hierarchy then
+				tree[eid] = trans.parent or pseudoroot_eid
+			end
+		end
+
+		self.hierarchy_remove_result.removed_eids = removed_eids
+		self.hierarchy_remove_result.hierarchy_tree = tree
+		world:update_func "update_hirarchy_tree" ()
+	end
+end
+
 function scene_space:event_changed()	
 	local trees = {}
 	local renderentities = {}
@@ -287,7 +312,7 @@ function scene_space:event_changed()
 		if e.hierarchy then
 			local trans = e.transform
 			local oldparent = trans.parent
-			su.handle_transform(events, trans)
+			update_transform_field(trans, events, init)
 
 			local newparent = trans.parent
 			if newparent ~= oldparent then
@@ -301,34 +326,23 @@ function scene_space:event_changed()
 		end
 	end
 
-	update_scene_tree(trees, self.hierarchy_transform_result)
-	
-	notify_render_child_changed(trees, function (trans) 
-		trans.watcher._marked_init = true 
-	end)
-
 	local hierarchy_cache = self.hierarchy_transform_result
-	for eid, re in pairs(renderentities) do
-		local events, init = re[1], re[2]
-		local e = world[eid]
-		local trans = e.transform
+	update_hierarchy_tree(trees, hierarchy_cache)
+	
+	which_render_entities_changed(trees, renderentities)
+	update_render_entities_world(renderentities, hierarchy_cache)
+end
 
-		if init then
-			assert(not next(events))
-			update_render_entity_transform(e.transform, hierarchy_cache)
-		else
-			for k, v in pairs(events) do
-				if k == 's' or k == 'r' or k == 't' then
-					ms(trans[k], v, "=")
-					update_render_entity_transform(e.transform, hierarchy_cache)
-				elseif k == 'parent' then
-					trans.parent = v
-					update_render_entity_transform(e.transform, hierarchy_cache)
-				elseif k == 'base' then
-					ms(trans.base, v, "=")
-					update_render_entity_transform(e.transform, hierarchy_cache)
-				end
-			end
-		end
-	end
+local delete_hirarchy_system = ecs.system "delete_hirarchy_system"
+delete_hirarchy_system.singleton "hierarchy_remove_result"
+delete_hirarchy_system.singleton "hierarchy_transform_result"
+
+function delete_hirarchy_system:update_hirarchy_tree()
+	local rr = self.hierarchy_remove_result
+	local hiecache = self.hierarchy_transform_result
+
+	update_hierarchy_tree(rr.hierarchy_tree, hiecache)
+	local renderentities = {}
+	which_render_entities_changed(rr.hierarchy_tree, renderentities)
+	update_render_entities_world(renderentities, hiecache)
 end

@@ -288,27 +288,6 @@ local function find_entity_by_name(name, componenttype)
     end
 end
 
-local onetime = nil
-local function change_scene_node_test()
-    if onetime == nil then
-        local level1_2_eid = find_entity_by_name('level1_2', 'hierarchy')
-        if level1_2_eid then
-            local level1_2 = world[level1_2_eid]
-            local level1_2_trans = level1_2.transform
-        
-            local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy')
-
-            local level1_1 = world[level1_1_eid]
-            local level1_1_trans = level1_1.transform
-            assert(level1_1_trans.parent == level1_2_trans.parent)
-
-            level1_2_trans.watcher.parent = level1_1_eid
-        end
-
-        onetime = true
-    end
-end
-
 local function print_scene_nodes()  
     local rooteids = {}
     local function find_node(tree, eid)
@@ -425,25 +404,75 @@ local function move_root_node(rootnodename)
     e.transform.watcher.t = {10, 0, 0, 1}
 end
 
-local whichframe
-function scenespace_test:event_changed()
-    change_scene_node_test()
-
-    if whichframe == nil then
+local test_queue = {
+    idx=1,
+    function ()
+        local level1_2_eid = find_entity_by_name('level1_2', 'hierarchy')
+        if level1_2_eid then
+            local level1_2 = world[level1_2_eid]
+            local level1_2_trans = level1_2.transform
+        
+            local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy')
+    
+            local level1_1 = world[level1_1_eid]
+            local level1_1_trans = level1_1.transform
+            assert(level1_1_trans.parent == level1_2_trans.parent)
+    
+            level1_2_trans.watcher.parent = level1_1_eid
+        end
+    end,
+    function ()
         print_scene_nodes()
         print_tree()
-        whichframe = self.frame_stat.frame_num
-    elseif self.frame_stat.frame_num == whichframe + 1 then
+    end,
+    function ()
         print_scene_nodes()
         print_tree()
-    elseif self.frame_stat.frame_num == whichframe + 2 then 
+    end,
+    function ()
         local level1_1_eid = find_entity_by_name('level1_1', 'transform')
         world:remove_entity(level1_1_eid)
-    elseif self.frame_stat.frame_num == whichframe + 3 then
+    end,
+    function ()
         print_scene_nodes()
         print_tree()
-    elseif self.frame_stat.frame_num == whichframe + 4 then
+    end,
+    function ()
         move_root_node('hie_root2')
+    end,
+    function ()
+        local eid = find_entity_by_name("render2_rootchild", 'can_render')
+        world:add_component(eid, 'hierarchy', {})
+        local e = world[eid]
+        local tr = e.transform
+        local s, r, t = ms(tr.s, tr.r, tr.t, "TTT")
+        world:create_entity {
+            transform = {
+                s=s, r=r, t=t,
+                parent=eid,
+            },
+            rendermesh = {},
+            material = {
+                {
+                    ref_path = fs.path "/pkg/ant.resources/depition/materials/singlecolor.material",
+                    properties = {
+                        unitforms = {u_color = {type="v4", name="color", value={0, 0.8, 0.8, 1}}}
+                    }
+                }
+            },
+            mesh = {ref_path = fs.path '/pkg/ant.resources/meshes/cone.mesh'},
+            can_render = true,
+            main_view = true,
+            name = 'test attach entity',
+        }
+    end,
+}
+
+function scenespace_test:event_changed()
+    if test_queue.idx < #test_queue then
+        local op = test_queue[test_queue.idx]
+        op()
+        test_queue.idx = test_queue.idx + 1
     end
 end
 
