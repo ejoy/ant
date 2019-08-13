@@ -38,6 +38,8 @@ function GuiCanvas:_init()
     self.time_count = 0
     self.cur_frame_time = 0.0
     self.need_focus_next_frame = false
+    self.pause_on_error = true
+    self.is_pausing = false
     self:set_fps(DefaultFPS)
 end
 
@@ -70,9 +72,24 @@ function GuiCanvas:before_update()
     end
 end
 
+function GuiCanvas:_update_title_btns()
+    local btn_name = self.is_pausing and "Run###Pause" or "Pause###Pause"
+    if widget.Button(btn_name) then
+        self.is_pausing = not self.is_pausing
+    end
+    cursor.SameLine()
+    cursor.SetNextItemWidth(-1)
+    local change
+    change,self.pause_on_error = widget.Checkbox("PauseOnError",self.pause_on_error)
+    if change then
+        self:mark_setting_dirty()
+    end
+end
+
 local focus_flag = flags.Focused {"ChildWindows"}
 function GuiCanvas:on_update(delta)
     self.editor_frame = self.editor_frame + 1
+    self:_update_title_btns()
     local w,h = windows.GetContentRegionAvail()
     local x,y = cursor.GetCursorScreenPos()
     local r = self.rect
@@ -89,12 +106,14 @@ function GuiCanvas:on_update(delta)
             widget.ImageButton(world_tex,w,h,{frame_padding=0,bg_col={0,0,0,1}})
         end
     end
-    if IO.WantCaptureMouse then
-        --todo:split mouse and keyboard
-        self:on_dispatch_msg()
-    end
-    if self.world_update then
-        self:_update_world(delta)
+    if not self.is_pausing then
+        if IO.WantCaptureMouse then
+            --todo:split mouse and keyboard
+            self:on_dispatch_msg()
+        end
+        if self.world_update then
+            self:_update_world(delta)
+        end
     end
 end
 
@@ -122,7 +141,10 @@ function GuiCanvas:_update_world(delta)
             self.last_update = now
             --update world
             local now_clock = os.clock()
-            dbgutil.try(self.world_update)
+            local success = dbgutil.try(self.world_update)
+            if not success and self.pause_on_error then
+                self.is_pausing = true
+            end
             self.scene_cost = os.clock() - now_clock
             self.editor_frame = 0
             self.last_world_update_limit = 1.2 * self.scene_cost + self.last_update
@@ -226,6 +248,32 @@ end
 
 function GuiCanvas:after_update()
     windows.PopStyleVar()
+end
+
+----setting 
+function GuiCanvas:mark_setting_dirty()
+    self._dirty_flag = true
+end
+
+--override if needed
+function GuiCanvas:is_setting_dirty()
+    return self._dirty_flag
+end
+
+--override if needed
+--return tbl
+function GuiCanvas:save_setting_to_memory(clear_dirty_flag)
+    if clear_dirty_flag then
+        self._dirty_flag = false
+    end
+    return {
+        pause_on_error = self.pause_on_error
+    }
+end
+
+--override if needed
+function GuiCanvas:load_setting_from_memory(setting_tbl)
+    self.pause_on_error = setting_tbl.pause_on_error or true
 end
 
 
