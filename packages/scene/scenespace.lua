@@ -17,24 +17,26 @@ ecs.component_alias("attach", "entityid")
 
 ecs.singleton "hierarchy_transform_result"
 
-local rm_result = ecs.singleton "hierarchy_remove_result"
-local function reset_remove_result(rr)
+local ur = ecs.singleton "hierarchy_update_result"
+local function reset_hierarchy_update_result(rr)
 	rr.removed_eids = {}
-	rr.hierarchy_tree = {}
+	rr.hierarchy_trees = {}
+	rr.render_entities = {}
 end
-function rm_result.init()
+
+function ur.init()
 	local rr = {}
-	reset_remove_result(rr)
+	reset_hierarchy_update_result(rr)
 	return rr
 end
 
 local scene_space = ecs.system "scene_space"
 scene_space.dependby "primitive_filter_system"
-scene_space.dependby "delete_hirarchy_system"
+scene_space.dependby "update_hirarchy_result_system"
 
 scene_space.singleton "event"
 scene_space.singleton "hierarchy_transform_result"
-scene_space.singleton "hierarchy_remove_result"
+scene_space.singleton "hierarchy_update_result"
 
 function scene_space:post_init()
 	for eid in world:each_new("transform") do
@@ -297,52 +299,60 @@ function scene_space:delete()
 			end
 		end
 
-		self.hierarchy_remove_result.removed_eids = removed_eids
-		self.hierarchy_remove_result.hierarchy_tree = tree
+		self.hierarchy_update_result.removed_eids = removed_eids
+		self.hierarchy_update_result.hierarchy_trees = tree
 		world:update_func "update_hirarchy_tree" ()
 	end
 end
 
-function scene_space:event_changed()	
-	local trees = {}
-	local renderentities = {}
+local function add_hierarchy_tree_item(eid, events, init, trees)
+	local trans = world[eid].transform
+	local oldparent = trans.parent
+	if events then
+		update_transform_field(trans, events, init)
+	end
+
+	local newparent = trans.parent
+	if newparent ~= oldparent then
+		local parentparent = world[newparent].transform.parent
+		trees[newparent] = parentparent
+	end
+	
+	trees[eid] = newparent or pseudoroot_eid
+end
+
+function scene_space:event_changed()
+	local updateresult 		= self.hierarchy_update_result
+	local trees 			= updateresult.hierarchy_trees
+	local renderentities 	= updateresult.render_entities
+
+	for eid in world:each_new "hierarchy" do
+		add_hierarchy_tree_item(eid, nil, true, trees)
+	end
+	
 	for eid, events, init in self.event:each "transform" do
 		local e = world[eid]
-
 		if e.hierarchy then
-			local trans = e.transform
-			local oldparent = trans.parent
-			update_transform_field(trans, events, init)
-
-			local newparent = trans.parent
-			if newparent ~= oldparent then
-				local parentparent = world[newparent].transform.parent
-				trees[newparent] = parentparent
-			end
-			
-			trees[eid] = newparent or pseudoroot_eid
+			add_hierarchy_tree_item(eid, events, init, trees)
 		else
 			renderentities[eid] = {events, init}
 		end
 	end
 
-	local hierarchy_cache = self.hierarchy_transform_result
-	update_hierarchy_tree(trees, hierarchy_cache)
-	
-	which_render_entities_changed(trees, renderentities)
-	update_render_entities_world(renderentities, hierarchy_cache)
+	world:update_func "update_hirarchy_tree" ()
 end
 
-local delete_hirarchy_system = ecs.system "delete_hirarchy_system"
-delete_hirarchy_system.singleton "hierarchy_remove_result"
-delete_hirarchy_system.singleton "hierarchy_transform_result"
+local update_hirarchy_result_system = ecs.system "update_hirarchy_result_system"
+update_hirarchy_result_system.singleton "hierarchy_update_result"
+update_hirarchy_result_system.singleton "hierarchy_transform_result"
 
-function delete_hirarchy_system:update_hirarchy_tree()
-	local rr = self.hierarchy_remove_result
+function update_hirarchy_result_system:update_hirarchy_tree()
+	local rr = self.hierarchy_update_result
 	local hiecache = self.hierarchy_transform_result
 
-	update_hierarchy_tree(rr.hierarchy_tree, hiecache)
-	local renderentities = {}
-	which_render_entities_changed(rr.hierarchy_tree, renderentities)
-	update_render_entities_world(renderentities, hiecache)
+	update_hierarchy_tree(rr.hierarchy_trees, hiecache)
+	which_render_entities_changed(rr.hierarchy_trees, rr.render_entities)
+	update_render_entities_world(rr.render_entities, hiecache)
+
+	reset_hierarchy_update_result(rr)
 end

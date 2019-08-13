@@ -118,7 +118,7 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level1_1, 
-            s = {100, 100, 100, 0},
+            s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {0, 0, 0, 1},
         },
@@ -140,7 +140,7 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level1_2, 
-            s = {100, 100, 100, 0},
+            s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {0, 0, 0, 1},
         },
@@ -161,7 +161,7 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_level2_1, 
-            s = {100, 100, 100, 0},
+            s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {0, 2, 0, 1},
             --slotname = "h1_h1",
@@ -234,7 +234,7 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie_root2, 
-            s = {0.01, 0.01, 0.01, 0},
+            s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {0, 0, -3, 1},
         },
@@ -255,7 +255,7 @@ local function create_scene_node_test()
         world:create_entity {
         transform = {
             parent = hie2_level1_1, 
-            s = {0.01, 0.01, 0.01, 0},
+            s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {0, 0, 0, 1},
         },
@@ -443,20 +443,20 @@ local test_queue = {
     function ()
         local eid = find_entity_by_name("render2_rootchild", 'can_render')
         world:add_component(eid, 'hierarchy', {})
-        local e = world[eid]
-        local tr = e.transform
-        local s, r, t = ms(tr.s, tr.r, tr.t, "TTT")
+
         world:create_entity {
             transform = {
-                s=s, r=r, t=t,
+                s = {1, 1, 1, 0},
+                r = {0, 0, 0, 0},
+                t = {1, 2, 3, 1},
                 parent=eid,
             },
             rendermesh = {},
             material = {
                 {
-                    ref_path = fs.path "/pkg/ant.resources/depition/materials/singlecolor.material",
+                    ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
                     properties = {
-                        unitforms = {u_color = {type="v4", name="color", value={0, 0.8, 0.8, 1}}}
+                        uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
                     }
                 }
             },
@@ -469,7 +469,7 @@ local test_queue = {
 }
 
 function scenespace_test:event_changed()
-    if test_queue.idx < #test_queue then
+    if test_queue.idx <= #test_queue then
         local op = test_queue[test_queue.idx]
         op()
         test_queue.idx = test_queue.idx + 1
