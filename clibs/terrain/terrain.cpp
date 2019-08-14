@@ -103,7 +103,7 @@ struct terrain_data {
 	heightmapdata heightmap;
 
 	struct streambuffer {
-		bgfx::VertexDecl * 	vdecl;
+		bgfx::VertexLayout* layout;
 		uint8_t *			vertices;
 		uint32_t			vertex_count;
 		uint32_t *			indices;
@@ -170,7 +170,7 @@ lterrain_attrib(lua_State *L)
 //	if (terrain->vertices)
 //		return luaL_error(L, "vertices already exist.");
 //
-//	bgfx::VertexDecl *vd = terrain->vdecl;
+//	bgfx::VertexLayout *vd = terrain->layout;
 //	uint32_t num = terrain->gridWidth * terrain->gridLength;
 //
 //#ifdef MY_DEBUG	
@@ -242,9 +242,9 @@ get_scale(terrain_data *terrain, const char* which) {
 template<typename ElemType>
 static ElemType&
 get_elem(const terrain_data::streambuffer &buffer, bgfx::Attrib::Enum type, uint32_t idx) {
-	const auto decl = buffer.vdecl;
-	const auto stride = decl->getStride();
-	const auto offset = decl->getOffset(type);
+	const auto layout = buffer.layout;
+	const auto stride = layout->getStride();
+	const auto offset = layout->getOffset(type);
 
 	return *(ElemType*)(buffer.vertices + (idx * stride + offset));
 }
@@ -407,7 +407,7 @@ static int
 lterraindata_buffersize(lua_State *L) {
 	terrain_data *terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");
 	const auto& buffer = terrain->buffer;
-	lua_pushinteger(L, buffer.vertex_count * buffer.vdecl->getStride());
+	lua_pushinteger(L, buffer.vertex_count * buffer.layout->getStride());
 	lua_pushinteger(L, buffer.index_count * sizeof(buffer.indices[0]));
 	return 2;
 }
@@ -528,7 +528,7 @@ lterrain_del(lua_State *L) {
 		terrain->buffer.vertex_count = 0;
 	}
 
-	terrain->buffer.vdecl = NULL;
+	terrain->buffer.layout = NULL;
 	return 0;
 }
 
@@ -554,11 +554,11 @@ init_terrain_mesh(terrain_data* terrain) {
 
 	for (uint32_t y = 0; y < terrain->grid_length; ++y) {
 		for (uint32_t x = 0; x < terrain->grid_width; ++x) {
-			auto decl = terrain->buffer.vdecl;			
+			auto layout = terrain->buffer.layout;
 
 			const uint32_t vertexidx = terrain->grid_width * y + x;
 
-			if (decl->has(bgfx::Attrib::Position)) {
+			if (layout->has(bgfx::Attrib::Position)) {
 				auto &v = get_vertex(terrain->buffer, vertexidx);
 				auto hm = &terrain->heightmap.data[vertexidx * elemsize];
 				v = vertexscale * glm::vec3(float(x), get_height(hm), float(y));
@@ -566,22 +566,22 @@ init_terrain_mesh(terrain_data* terrain) {
 				terrain->bounding.aabb.Append(v);
 			}
 			
-			if (decl->has(bgfx::Attrib::TexCoord0)) {
+			if (layout->has(bgfx::Attrib::TexCoord0)) {
 				auto &t0 = get_elem<glm::vec2>(terrain->buffer, bgfx::Attrib::TexCoord0, vertexidx);
 				t0 = calc_uv(glm::vec2(x, y), invsize, terrain->uv0Scale, 0.5f);
 			}
 			
-			if (decl->has(bgfx::Attrib::TexCoord1)) {
+			if (layout->has(bgfx::Attrib::TexCoord1)) {
 				auto &t1 = get_elem<glm::vec2>(terrain->buffer, bgfx::Attrib::TexCoord1, vertexidx);
 				t1 = calc_uv(glm::vec2(x, y), invsize, terrain->uv1Scale, 0.01f);
 			}
 			
-			if (decl->has(bgfx::Attrib::Normal)) {
+			if (layout->has(bgfx::Attrib::Normal)) {
 				auto& normal = get_normal(buffer, vertexidx);
 				normal = glm::vec3(0.f, 1.f, 0.f);
 			}
 			
-			if (decl->has(bgfx::Attrib::Tangent)) {
+			if (layout->has(bgfx::Attrib::Tangent)) {
 				auto & t = get_elem<glm::vec3>(terrain->buffer, bgfx::Attrib::Tangent, vertexidx);				
 				t = glm::vec3(1.f, 0.f, 0.f);
 			}
@@ -608,13 +608,13 @@ init_terrain_mesh(terrain_data* terrain) {
 
 static inline bool
 init_stream_buffer(terrain_data::streambuffer &buffer, uint32_t width, uint32_t length) {
-	assert(buffer.vdecl);
+	assert(buffer.layout);
 
 	if (width < 2 || length < 2) {
 		return false;
 	}
 
-	const auto stride = buffer.vdecl->getStride();
+	const auto stride = buffer.layout->getStride();
 	buffer.vertex_count = width * length;
 	buffer.vertices = new uint8_t[buffer.vertex_count * stride];
 
@@ -949,9 +949,9 @@ bool check_height_of_triangle(float x, float z, float *height,
 // get terrain height at x,z position
 static bool 
 terrain_get_height(terrain_data* terrain, float x, float z, float *height) {
-	const auto decl = terrain->buffer.vdecl;
-	const uint16_t stride = decl->getStride();
-	const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
+	const auto layout = terrain->buffer.layout;
+	const uint16_t stride = layout->getStride();
+	const uint16_t offset = layout->getOffset(bgfx::Attrib::Position);
 	uint8_t* verts = terrain->buffer.vertices;
 
 	const int    xindex = (int)(x / get_scale(terrain, "width"));
@@ -996,9 +996,9 @@ terrain_get_height(terrain_data* terrain, float x, float z, float *height) {
 
 static float 
 terrain_get_raw_height(terrain_data* terrain, int x, int z) {
-	const auto decl = terrain->buffer.vdecl;	
-	const uint16_t stride = decl->getStride();
-	const uint16_t offset = decl->getOffset(bgfx::Attrib::Position);
+	const auto layout = terrain->buffer.layout;
+	const uint16_t stride = layout->getStride();
+	const uint16_t offset = layout->getOffset(bgfx::Attrib::Position);
 
 	if (!in_terrain_bounds(terrain, z, x))
 		return std::numeric_limits<float>::lowest();
@@ -1017,7 +1017,7 @@ terrain_get_raw_height(terrain_data* terrain, int x, int z) {
 static int
 lterraindata_height(lua_State *L) {
 	terrain_data *terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");
-	if (terrain->buffer.vdecl == NULL) {
+	if (terrain->buffer.layout == NULL) {
 		return luaL_error(L, "vertex buffer is not valid");
 	}
 
@@ -1037,7 +1037,7 @@ static int
 lterraindata_raw_height(lua_State *L) {
 	terrain_data *terrain = (terrain_data*) luaL_checkudata(L, 1, "TERRAIN_DATA");
 
-	if (terrain->buffer.vdecl == NULL) {
+	if (terrain->buffer.layout == NULL) {
 		return luaL_error(L, "vertex buffer is not valid");
 	}
 
@@ -1178,15 +1178,15 @@ init_terrain_data(terrain_data *terrain) {
 
 static int
 lterrain_create(lua_State *L) {
-	const bool hasdecl = lua_isnoneornil(L, 2);
+	const bool haslayout = lua_isnoneornil(L, 2);
 	terrain_data* terrain = (terrain_data*)lua_newuserdata(L, sizeof(terrain_data));
 	luaL_getmetatable(L, "TERRAIN_DATA");
 	lua_setmetatable(L, -2);
 
 	init_terrain_data(terrain);
 	if (fetch_terrain_data(L, 1, terrain)) {
-		if (!hasdecl) {
-			terrain->buffer.vdecl = (bgfx::VertexDecl *)lua_touserdata(L, 2);
+		if (!haslayout) {
+			terrain->buffer.layout = (bgfx::VertexLayout *)lua_touserdata(L, 2);
 
 			init_stream_buffer(terrain->buffer, terrain->grid_width, terrain->grid_length);
 			init_terrain_mesh(terrain);
@@ -1216,7 +1216,7 @@ lterrain_create(lua_State *L) {
 // 如果 Vertex Decalre 由lua创建,内容访问 c lua bgfx 是否存在方法解析vertex attrib offset ？
 //      已学习查阅,皆可实现
 
-// Vertex Declare 由外部 lua 层提供，产生 vdecl 的userdata
+// Vertex Declare 由外部 lua 层提供，产生 layout 的userdata
 //   c terrain 提供最大的需要的属性支持，根据 lua 指定的 attrib 进行必要的计算
 //   根据 lua attrib 的属性定义的不同，实现不同的渲染特点，允许用户重写自己的 shader
 
