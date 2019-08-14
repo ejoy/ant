@@ -53,14 +53,14 @@ struct context {
 			uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
 			uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
 
-			if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &m_decl)
+			if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &m_layout)
 				|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices)) {
 				break;
 			}
 
 			bgfx_transient_vertex_buffer_t tvb;
 			bgfx_transient_index_buffer_t tib;
-			BGFX(alloc_transient_vertex_buffer)(&tvb, numVertices, &m_decl);
+			BGFX(alloc_transient_vertex_buffer)(&tvb, numVertices, &m_layout);
 			BGFX(alloc_transient_index_buffer)(&tib, numIndices);
 			ImDrawVert* verts = (ImDrawVert*)tvb.data;
 			memcpy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert));
@@ -120,15 +120,15 @@ struct context {
 	}
 
 	void create() {
-		BGFX(vertex_decl_begin)(&m_decl, BGFX_RENDERER_TYPE_NOOP);
-		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
-		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
-		BGFX(vertex_decl_add)(&m_decl, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
-		BGFX(vertex_decl_end)(&m_decl);
+		BGFX(vertex_layout_begin)(&m_layout, BGFX_RENDERER_TYPE_NOOP);
+		BGFX(vertex_layout_add)(&m_layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+		BGFX(vertex_layout_add)(&m_layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+		BGFX(vertex_layout_add)(&m_layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
+		BGFX(vertex_layout_end)(&m_layout);
 	}
 
 	bgfx_view_id_t        m_viewId;
-	bgfx_vertex_decl_t    m_decl;
+	bgfx_vertex_layout_t  m_layout;
 	bgfx_program_handle_t m_program;
 	bgfx_program_handle_t m_imageProgram;
 	bgfx_uniform_handle_t s_tex;
