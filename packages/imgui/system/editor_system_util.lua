@@ -60,16 +60,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,view_tag,
     local num_indices = #ib
 
     local reskey = fs.path(string.format("//meshres/%s.mesh",name))
-
-    local rendermesh = assetmgr.get_resource(reskey)
-
-    if rendermesh then
-        assetmgr.load(reskey)
-        grid.rendermesh.reskey = reskey
-    else
-        grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
-    end
-
+    grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
