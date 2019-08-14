@@ -38,12 +38,6 @@ scene_space.singleton "event"
 scene_space.singleton "hierarchy_transform_result"
 scene_space.singleton "hierarchy_update_result"
 
-function scene_space:post_init()
-	for eid in world:each_new "transform" do
-		self.event:new(eid, "transform")
-	end
-end
-
 local pseudoroot_eid = -1
 
 local mark_mt = { 
@@ -321,14 +315,21 @@ local function add_hierarchy_tree_item(eid, events, init, trees)
 	trees[eid] = newparent or pseudoroot_eid
 end
 
+function scene_space:post_init()
+	for eid in world:each_new "transform" do
+		self.event:new(eid, "transform")
+	end
+	
+	local trees = self.hierarchy_update_result.hierarchy_trees
+	for eid in world:each_new "hierarchy" do
+		add_hierarchy_tree_item(eid, nil, true, trees)
+	end
+end
+
 function scene_space:event_changed()
 	local updateresult 		= self.hierarchy_update_result
 	local trees 			= updateresult.hierarchy_trees
 	local renderentities 	= updateresult.render_entities
-
-	for eid in world:each_new "hierarchy" do
-		add_hierarchy_tree_item(eid, nil, true, trees)
-	end
 	
 	for eid, events, init in self.event:each "transform" do
 		local e = world[eid]
