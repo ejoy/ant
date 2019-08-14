@@ -132,7 +132,7 @@ function pickup_material_sys:update()
 	if e then
 		local filter = e.primitive_filter
 
-		local material = e.pickup.material
+		local material = e.material
 		local result = filter.result
 		replace_material(result.opaticy, material[0])
 		replace_material(result.translucent, material[1])
@@ -163,7 +163,6 @@ ecs.component "pickup_cache"
 	.pick_ids "int[]"
 
 ecs.component "pickup"
-	.material "material"
 	.blit_buffer "blit_buffer"
 	.blit_viewid "blit_viewid"
 	.pickup_cache "pickup_cache"
@@ -177,7 +176,7 @@ pickup_sys.depend "pickup_material_system"
 pickup_sys.dependby "end_frame"
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
-local pickupviewid = viewidmgr.get("pickup")
+local pickupviewid = viewidmgr.get "pickup"
 
 local function add_pick_entity()
 	local fb_renderbuffer_flag = renderutil.generate_sampler_flag {
@@ -189,11 +188,11 @@ local function add_pick_entity()
 	}
 
 	return world:create_entity {
+		material = {
+			{ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'},
+			{ref_path = fs.path '/pkg/ant.resources/materials/pickup_transparent.material'},
+		},
 		pickup = {
-			material = {
-				{ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'},
-				{ref_path = fs.path '/pkg/ant.resources/materials/pickup_transparent.material'},
-			},
 			blit_buffer = {
 				raw_buffer = {
 					w = pickup_buffer_w,
