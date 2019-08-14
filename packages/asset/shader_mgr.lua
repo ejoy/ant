@@ -1,6 +1,3 @@
---luacheck: globals log
-local log = log or print
-
 local bgfx = require "bgfx"
 
 local shader_mgr = {}

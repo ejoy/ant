@@ -1,6 +1,3 @@
--- luacheck: globals log
-local log = log or print
-
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
 
@@ -78,7 +75,7 @@ local function update_properties(material, properties, render_properties)
 				bgfx.set_uniform(u.handle, p.value)
 			end
 		else
-			--log(string.format("uniform : %s, not privided, but shader program needed", name))
+			--log,info(string.format("uniform : %s, not privided, but shader program needed", name))
 		end
 	end
 end
