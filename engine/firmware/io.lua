@@ -280,8 +280,10 @@ function offline.EXIT(id)
 	error "EXIT"
 end
 
-function offline.SEND(_, ...)
-	_print(...)
+function offline.SEND(msg, ...)
+	if msg == "LOG" then
+		_print(...)
+	end
 end
 
 do
