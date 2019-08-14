@@ -49,4 +49,8 @@ return {
 		error("not support type")
 		return nil
 	end,
+
+	unloader = function(res)
+		res.handle = nil
+	end
 }

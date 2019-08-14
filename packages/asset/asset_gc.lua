@@ -4,6 +4,8 @@ local world = ecs.world
 local assetmgr = require "asset"
 local assetutil = require "util"
 
+local fs = require "filesystem"
+
 local resref_counter = ecs.singleton "resource_reference_counter"
 function resref_counter.init()
     return {
@@ -35,16 +37,22 @@ function assetwatcher:update()
         local e = world[eid]
         local m = e.mesh
         local reskey = m.ref_path
-        assert(assetmgr.get_resource(reskey))
-        mark_used(reskey)
+        local res = assetmgr.get_resource(reskey)
+        if res then
+            mark_used(reskey)
+        else
+            assert(m.asyn_load)
+            assert(e.asyn_load ~= "loaded")
+        end
     end
 
     for _, eid in world:each "rendermesh" do
         local e = world[eid]
         local rm = e.rendermesh
         local reskey = rm.reskey
-        assert(assetmgr.get_resource(reskey))
-        mark_used(reskey)
+        if reskey and assetmgr.get_resource(reskey) then
+            mark_used(reskey)
+        end
     end
 
     for _, eid in world:each "material" do
@@ -54,30 +62,41 @@ function assetwatcher:update()
         for i=0, #m do
             local mm = m[i]
             local reskey = mm.ref_path
-            local matres = assert(assetmgr.get_resource(reskey))
-
-            local shader = matres.shader
-            for _, name in ipairs {"vs", "fs", "cs"} do
-                local reskey = shader[name]
-                if reskey then
-                    mark_used(reskey)
+            local matres = assetmgr.get_resource(reskey)
+            if matres then
+                local shader = matres.shader
+                for _, name in ipairs {"vs", "fs", "cs"} do
+                    local reskey = shader[name]
+                    if reskey and assetmgr.get_resource(reskey) then
+                        mark_used(reskey)
+                    end
                 end
-            end
-
-            local state = matres.state
-            if state.ref_path then
-                mark_used(state.ref_path)
-            end
-
-            for _, pp in ipairs {matres.properties, mm.properties} do
-                for _, tex in assetutil.each_texture(pp) do
-                    local reskey = tex.ref_path
-                    assert(assetmgr.get_resource(reskey))
-                    mark_used(reskey)
+    
+                local state = matres.state
+                if state.ref_path then
+                    local res = assetmgr.get_resource(reskey)
+                    if res then
+                        mark_used(state.ref_path)
+                    end
                 end
-            end
+    
+                local function check_texture_ref(properties)
+                    for _, tex in assetutil.each_texture(properties) do
+                        local reskey = tex.ref_path
+                        
+                        if assetmgr.get_resource(reskey) then
+                            mark_used(reskey)
+                        end
+                    end
+                end
+                check_texture_ref(matres.properties)
+                check_texture_ref(mm.properties)
 
-            mark_used(reskey)
+                mark_used(reskey)
+            else
+                assert(m.asyn_load)
+                assert(e.asyn_load ~= "loaded")
+            end
         end
     end
 
@@ -86,9 +105,9 @@ function assetwatcher:update()
         local hie = e.hierarchy
         local reskey = hie.ref_path
         if reskey then
-            assert(assetmgr.get_resource(reskey))
-
-            mark_used(reskey)
+            if assetmgr.get_resource(reskey) then
+                mark_used(reskey)
+            end
         end
     end
 
@@ -99,21 +118,32 @@ function assetwatcher:update()
         for i=1, #anilist do
             local anielem = anilist[i]
             local reskey = anielem.ref_path
-            assert(assetmgr.get_resource(reskey))
-            mark_used(reskey)
+            if assetmgr.get_resource(reskey) then
+                mark_used(reskey)
+            end
         end
     end
 
     for _, eid in world:each "skeleton" do
         local ske = world[eid].skeleton
         local reskey = ske.ref_path
-        assert(assetmgr.get_resource(reskey))
-        mark_used(reskey)
+        if assetmgr.get_resource(reskey) then
+            mark_used(reskey)
+        end
     end
 
     for _, eid in world:each "terrain" do
         local terr = world[eid].terrain
-        mark_used(terr.ref_path)
+        if assetmgr.get_resource(terr.ref_path) then
+            mark_used(terr.ref_path)
+        end
+    end
+
+    for _, eid in world:each "skinning_mesh" do
+        local sm = world[eid].skinning_mesh
+        if assetmgr.get_resource(sm.ref_path) then
+            mark_used(sm.ref_path)
+        end
     end
 
     local function mark_unref(reskey)
@@ -141,8 +171,8 @@ assetgc.singleton "resource_reference_counter"
 function assetgc:update()
     local unref_resource = self.resource_reference_counter.unref_resource
 
-    for i=1, #unref_resource do
-        local reskey = unref_resource[i]
-        assetmgr.unload(reskey)
+    for reskey, v in pairs(unref_resource) do
+        print("unload resource:", reskey)
+        assetmgr.unload(fs.path(reskey))
     end
 end

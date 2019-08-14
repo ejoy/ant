@@ -8,7 +8,9 @@ local renderpkg = import_package "ant.render"
 local rhwi      = renderpkg.hardware_interface
 local viewidmgr = renderpkg.viewidmgr
 
-local assetutil = import_package "ant.asset".util
+local assetpkg  = import_package "ant.asset"
+local assetutil = assetpkg.util
+local assetmgr  = assetpkg.mgr
 local editor    = import_package "ant.editor"
 
 local task      = editor.task
@@ -30,11 +32,11 @@ function gui_main.init(nwh, context, width, height)
         height = height,
 	}
     imgui.create(nwh)
-    local ocornut_imgui = assetutil.load_shader_program {
+    local ocornut_imgui = assetutil.create_shader_program_from_file {
         vs = fs.path "/pkg/ant.imgui/shader/vs_ocornut_imgui.sc",
         fs = fs.path "/pkg/ant.imgui/shader/fs_ocornut_imgui.sc",
     }
-    local imgui_image = assetutil.load_shader_program {
+    local imgui_image = assetutil.create_shader_program_from_file {
         vs = fs.path "/pkg/ant.imgui/shader/vs_imgui_image.sc",
         fs = fs.path "/pkg/ant.imgui/shader/fs_imgui_image.sc",
     }

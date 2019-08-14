@@ -4,6 +4,20 @@ local shader_mgr = require "shader_mgr"
 local assetmgr = require "asset"
 local fs = require "filesystem"
 
+function util.create_shader_program_from_file(shader)
+    local shader_loader = require "ext_sc".loader
+    if shader.cs == nil then
+        local vs = shader_loader(shader.vs)
+        local fs = shader_loader(shader.fs)
+        
+        shader.prog, shader.uniforms = shader_mgr.create_render_program(vs, fs)
+    else
+        local cs = assetmgr.load(shader.cs)
+        shader.prog, shader.uniforms = shader_mgr.create_compute_program(cs)
+    end
+    return shader
+end
+
 function util.load_shader_program(shader)
     if shader.cs == nil then
         local vs = assetmgr.load(shader.vs)

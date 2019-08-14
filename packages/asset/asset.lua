@@ -101,7 +101,9 @@ function assetmgr.unload(filename)
 	local res = resources[reskey]
 	if res then
 		local unloader = assetmgr.get_unloader(module_name(filename))
-		unloader(res)
+		if unloader then
+			unloader(res)
+		end
 		resources[reskey] = nil
 	else
 		log.error("not found resource:", filename:string())

@@ -28,9 +28,7 @@ return {
 		return {handle=handle, sampler=ru.fill_default_sampler(sampler), path=texrefpath}
 	end,
 	unloader = function (res)
-		local tex = res.handle
-		bgfx.destroy(assert(tex.handle))
-		tex.handle = nil
+		bgfx.destroy(assert(res.handle))
 		res.handle = nil
 	end
 }

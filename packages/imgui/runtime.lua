@@ -49,11 +49,11 @@ function callback.init(nwh, context, w, h)
 		height = height,
 	}
 	
-	local ocornut_imgui = assetutil.load_shader_program {
+	local ocornut_imgui = assetutil.create_shader_program_from_file {
 		vs = fs.path "/pkg/ant.imgui/shader/vs_ocornut_imgui.sc",
 		fs = fs.path "/pkg/ant.imgui/shader/fs_ocornut_imgui.sc",
 	}
-	local imgui_image = assetutil.load_shader_program {
+	local imgui_image = assetutil.create_shader_program_from_file {
 		vs = fs.path "/pkg/ant.imgui/shader/vs_imgui_image.sc",
 		fs = fs.path "/pkg/ant.imgui/shader/fs_imgui_image.sc",
 	}

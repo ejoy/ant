@@ -18,6 +18,9 @@ return {
 		terrain.handle = terrain_module.create(terrain, declmgr.get(terrain.declname).handle)
 		return terrain
 	end,
-	unloader = function(res)
+	unloader = function(terraincomp)
+		terraincomp.declname = nil
+		terraincomp.handle = nil
+		terraincomp.heightmap = nil
 	end
 }

@@ -15,7 +15,7 @@ return {
 		end 
 	end,
 	unloader = function(res)
-		local meshscene = res.handle
+		local meshscene = res
 		local handles = {}
 		for _, scene in ipairs(meshscene.scenes) do
 			for _, node in ipairs(scene) do
@@ -34,8 +34,6 @@ return {
 		for h in pairs(handles) do
 			bgfx.destroy(h)
 		end
-
-		res.handle = nil
 	end,
 }
 
