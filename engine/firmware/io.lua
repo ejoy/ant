@@ -132,7 +132,7 @@ local function listen_server(address, port)
 		print("bind:", err)
 		return
 	end
-	local rd,wt = lsocket.select({fd})
+	local rd,wt = lsocket.select({fd}, 1.0)
 	if not rd then
 		print("select:", wt)	-- select error
 		fd:close()
