@@ -8,8 +8,10 @@ endif
 
 ifeq "$(PLAT)" "mingw"
 OBJS = $(ODIR)/lsocket.o $(ODIR)/win_compat.o
+LIBS = -lws2_32
 else
 OBJS = $(ODIR)/lsocket.o
+LIBS = 
 endif
 
 $(ODIR)/lsocket.o : lsocket.c win_compat.h | $(ODIR)
@@ -19,7 +21,7 @@ $(ODIR)/win_compat.o : win_compat.c win_compat.h | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 $(ODIR)/lsocket.dll : $(OBJS)
-	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) -lws2_32
+	$(CXX) $(LD_SHARED) $(CFLAGS) -o $@ $^ $(LUALIB) $(LIBS)
 
 $(ODIR)/liblsocket.a : $(OBJS)
 	ar rsv $@ $^
