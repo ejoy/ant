@@ -2738,16 +2738,16 @@ uGetItemRectMin(lua_State *L) {
 static int
 uGetItemRectMax(lua_State *L) {
 	ImVec2 v = ImGui::GetItemRectMax();
-	lua_pushnumber(L, (lua_Integer)v.x);
-	lua_pushnumber(L, (lua_Integer)v.y);
+	lua_pushnumber(L, (lua_Number)v.x);
+	lua_pushnumber(L, (lua_Number)v.y);
 	return 2;
 }
 
 static int
 uGetItemRectSize(lua_State *L) {
 	ImVec2 v = ImGui::GetItemRectSize();
-	lua_pushnumber(L, (lua_Integer)v.x);
-	lua_pushnumber(L, (lua_Integer)v.y);
+	lua_pushnumber(L, (lua_Number)v.x);
+	lua_pushnumber(L, (lua_Number)v.y);
 	return 2;
 }
 
