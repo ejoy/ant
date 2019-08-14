@@ -437,6 +437,11 @@ namespace ant::lua_filesystem {
         LUA_TRY_END;
     }
 
+    template <class DestClock, class SourceClock, class Duration>
+    auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& t) {
+        return DestClock::now() + (t - SourceClock::now());
+    }
+
     static int last_write_time(lua_State* L)
     {
         // TODO: need file_clock http://wg21.link/p0355r7
@@ -444,13 +449,12 @@ namespace ant::lua_filesystem {
         LUA_TRY;
         const fs::path& p = path::to(L, 1);
         if (lua_gettop(L) == 1) {
-            fs::file_time_type time = fs::last_write_time(p);
-            auto system_time = system_clock::now() + duration_cast<seconds>(time - fs::file_time_type::clock::now());
+            auto const system_time = clock_cast<system_clock>(fs::last_write_time(p));
             lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
             return 1;
         }
-        auto system_duration = system_clock::time_point() + seconds(luaL_checkinteger(L, 2)) - system_clock::now();
-        fs::last_write_time(p, fs::file_time_type::clock::now() + duration_cast<fs::file_time_type::duration>(system_duration));
+        auto const file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + seconds(luaL_checkinteger(L, 2)));
+        fs::last_write_time(p, file_time);
         return 0;
         LUA_TRY_END;
     }
