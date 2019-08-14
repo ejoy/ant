@@ -1,8 +1,8 @@
 shader = {
-   vs = "/pkg/ant.resources/shadow/vs_shadowmaps_unpackdepth",
-   fs = "/pkg/ant.resources/shadow/fs_shadowmaps_unpackdepth",
-   --vs = "/pkg/ant.resources/line/vs_line.sc",
-   --fs = "/pkg/ant.resources/line/fs_line.sc",
+   vs = "/pkg/ant.resources/shadow/vs_shadowmaps_unpackdepth.sc",
+   fs = "/pkg/ant.resources/shadow/fs_shadowmaps_unpackdepth.sc",
+   --vs = "/pkg/ant.resources/line/vs_line.sc.sc",
+   --fs = "/pkg/ant.resources/line/fs_line.sc.sc",
 }
 
 state = {

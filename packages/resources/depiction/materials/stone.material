@@ -1,8 +1,8 @@
 shader = {
-    vs = "/pkg/ant.resources/mesh/vs_mesh_bump",
-	fs = "/pkg/ant.resources/mesh/fs_mesh_bump",
-	-- vs = "/pkg/ant.resources/mesh/vs_mesh",
-    -- fs = "/pkg/ant.resources/mesh/fs_mesh",
+    vs = "/pkg/ant.resources/mesh/vs_mesh_bump.sc",
+	fs = "/pkg/ant.resources/mesh/fs_mesh_bump.sc",
+	-- vs = "/pkg/ant.resources/mesh/vs_mesh.sc",
+    -- fs = "/pkg/ant.resources/mesh/fs_mesh.sc",
 }
 
 state = {

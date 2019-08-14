@@ -1,6 +1,6 @@
 shader = {
-    vs = "//unity_demo/assets/shader/vs_colormesh",  -- 新的shader 修改了，但没有对应的传递颜色
-    fs = "//unity_demo/assets/shader/fs_colormesh",  
+    vs = "//unity_demo/assets/shader/vs_colormesh.sc",  -- 新的shader 修改了，但没有对应的传递颜色
+    fs = "//unity_demo/assets/shader/fs_colormesh.sc",  
 }
 
 --state = "default.state"

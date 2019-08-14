@@ -42,9 +42,8 @@ return {
         }
     end,
 	unloader = function (res)
-		local tex = res.handle
-		bgfx.destroy(assert(tex.handle))
-		tex.handle = nil
+		bgfx.destroy(assert(res.handle))
 		res.handle = nil
+		res.uniforms = nil
     end,
 }

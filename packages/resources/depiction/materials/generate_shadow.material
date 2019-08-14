@@ -1,6 +1,6 @@
 shader = {
-    vs = "/pkg/ant.resources/picking/vs_picking.sc",
-    fs = "/pkg/ant.resources/picking/fs_picking.sc",
+    vs = "/pkg/ant.resources/picking/vs_picking.sc.sc",
+    fs = "/pkg/ant.resources/picking/fs_picking.sc.sc",
 }
 
 state = "materials/states/default.state"

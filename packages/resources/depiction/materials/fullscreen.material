@@ -1,6 +1,6 @@
 shader = {
-	vs = "/pkg/ant.resources/simple/quad/vs_texquad",
-	fs = "/pkg/ant.resources/simple/quad/fs_mainview",
+	vs = "/pkg/ant.resources/simple/quad/vs_texquad.sc",
+	fs = "/pkg/ant.resources/simple/quad/fs_mainview.sc",
 }
 
 state = "states/quad.state"

@@ -1,7 +1,7 @@
 shader = {
-	vs = "/pkg/ant.resources/mesh_shadow/vs_shadowmaps_color_lighting_csm",
-	--fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_hard_csm.sc",
-	fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",
+	vs = "/pkg/ant.resources/mesh_shadow/vs_shadowmaps_color_lighting_csm.sc",
+	--fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_hard_csm.sc.sc",
+	fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm.sc",
 } 
     
 state = "materials/states/default.state"

@@ -1,6 +1,6 @@
 shader = {
-    vs = "/pkg/ant.resources/shaders/src/outline/vs_scaleoutline",
-    fs = "/pkg/ant.resources/shaders/src/outline/fs_scaleoutline",
+    vs = "/pkg/ant.resources/shaders/src/outline/vs_scaleoutline.sc",
+    fs = "/pkg/ant.resources/shaders/src/outline/fs_scaleoutline.sc",
 }
 
 state = {

@@ -1,6 +1,6 @@
 shader = {
-    vs = "/pkg/ant.resources/line/vs_line",
-    fs = "/pkg/ant.resources/line/fs_line",
+    vs = "/pkg/ant.resources/line/vs_line.sc",
+    fs = "/pkg/ant.resources/line/fs_line.sc",
 }
 
 state = {

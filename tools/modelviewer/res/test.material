@@ -1,6 +1,6 @@
 shader = {
-    vs = "/pkg/ant.modelviewer/res/vs_test",
-    fs = "/pkg/ant.modelviewer/res/fs_test",
+    vs = "/pkg/ant.modelviewer/res/vs_test.sc",
+    fs = "/pkg/ant.modelviewer/res/fs_test.sc",
 }
 
 state = "/pkg/ant.resources/depiction/materials/states/default.state"

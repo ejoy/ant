@@ -1,5 +1,5 @@
 shader = {
-    vs = "skybox/vs_skybox",
+    vs = "skybox/vs_skybox.sc",
     fs = "skybox/fs_skybox"
 }
 

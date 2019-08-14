@@ -28,12 +28,12 @@ end
 
 local function load_state(originpath, state)
 	if type(state) == "string" then
-		local refpath = fs.path(state)
-		local s = assetmgr.load(find_subres_path(originpath, refpath))
+		local fullpath = find_subres_path(originpath, fs.path(state))
+		local s = assetmgr.load(fullpath)
 		if s.ref_path then
-			assert(s.ref_path == refpath)
+			assert(s.ref_path == fullpath)
 		else
-			s.ref_path = refpath
+			s.ref_path = fullpath
 		end
 		
 		return s

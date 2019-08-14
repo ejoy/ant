@@ -31,12 +31,12 @@ function gui_main.init(nwh, context, width, height)
 	}
     imgui.create(nwh)
     local ocornut_imgui = assetutil.load_shader_program {
-        vs = fs.path "/pkg/ant.imgui/shader/vs_ocornut_imgui",
-        fs = fs.path "/pkg/ant.imgui/shader/fs_ocornut_imgui",
+        vs = fs.path "/pkg/ant.imgui/shader/vs_ocornut_imgui.sc",
+        fs = fs.path "/pkg/ant.imgui/shader/fs_ocornut_imgui.sc",
     }
     local imgui_image = assetutil.load_shader_program {
-        vs = fs.path "/pkg/ant.imgui/shader/vs_imgui_image",
-        fs = fs.path "/pkg/ant.imgui/shader/fs_imgui_image",
+        vs = fs.path "/pkg/ant.imgui/shader/vs_imgui_image.sc",
+        fs = fs.path "/pkg/ant.imgui/shader/fs_imgui_image.sc",
     }
     imgui.setDockEnable(true)
     imgui.viewid(viewidmgr.generate("ui"));

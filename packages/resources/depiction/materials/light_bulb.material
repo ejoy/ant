@@ -1,6 +1,6 @@
 shader = {
-	vs = "/pkg/ant.resources/simple/mesh/vs_mesh",
-	fs = "/pkg/ant.resources/simple/mesh/fs_mesh",
+	vs = "/pkg/ant.resources/simple/mesh/vs_mesh.sc",
+	fs = "/pkg/ant.resources/simple/mesh/fs_mesh.sc",
 }
 state = "materials/states/default.state"
 properties = {

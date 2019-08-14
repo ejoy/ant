@@ -4,20 +4,14 @@ local shader_mgr = require "shader_mgr"
 local assetmgr = require "asset"
 local fs = require "filesystem"
 
-local function check_add_shader_file_extension(filepath)
-    if filepath then
-        return fs.path(filepath):replace_extension ".sc"
-    end
-end
-
 function util.load_shader_program(shader)
     if shader.cs == nil then
-        local vs = assetmgr.load(check_add_shader_file_extension(shader.vs))
-        local fs = assetmgr.load(check_add_shader_file_extension(shader.fs))
+        local vs = assetmgr.load(shader.vs)
+        local fs = assetmgr.load(shader.fs)
         
         shader.prog, shader.uniforms = shader_mgr.create_render_program(vs, fs)
     else
-        local cs = assetmgr.load(check_add_shader_file_extension(shader.cs))
+        local cs = assetmgr.load(shader.cs)
         shader.prog, shader.uniforms = shader_mgr.create_compute_program(cs)
     end
     return shader
@@ -27,7 +21,7 @@ function util.unload_shader_program(shader)
     shader_mgr.destroy_program(shader)
 
     for _, name in ipairs {"vs", "fs", "cs"} do
-		local shaderpath = check_add_shader_file_extension(shader[name])
+		local shaderpath = shader[name]
 		if shaderpath then
             assert(type(shaderpath) ~= "string")
             assetmgr.unload(shaderpath)

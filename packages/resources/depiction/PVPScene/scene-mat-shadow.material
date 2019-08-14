@@ -1,9 +1,9 @@
 shader = {
-	 vs = "/pkg/ant.resources/mesh/vs_mesh_bump_shadow",
-	 fs = "/pkg/ant.resources/mesh/fs_mesh_bumpex_shadow",
+	 vs = "/pkg/ant.resources/mesh/vs_mesh_bump_shadow.sc",
+	 fs = "/pkg/ant.resources/mesh/fs_mesh_bumpex_shadow.sc",
 
-	 --vs = "/pkg/ant.resources/mesh_shadow/vs_shadowmaps_color_lighting_csm",
-	 --fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm",
+	 --vs = "/pkg/ant.resources/mesh_shadow/vs_shadowmaps_color_lighting_csm.sc",
+	 --fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm.sc",
 }
 
 state = "materials/states/default.state"

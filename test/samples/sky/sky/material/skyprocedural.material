@@ -1,5 +1,5 @@
 shader = {
-    vs = "skyprocedural/vs_sky",
+    vs = "skyprocedural/vs_sky.sc",
     fs = "skyprocedural/fs_sky"
 }
 
