@@ -51,6 +51,14 @@ function localvfs.new(path)
 	self:clean()
 end
 
+function localvfs.clean_build(srcpath)
+	if srcpath == nil then
+		self:clean()
+		return
+	end
+	access.clean_build(self, self.identity, srcpath)
+end
+
 function localvfs.add_mount(name, mountpath)
 	local mnames = self._mountname
 	for _, n in ipairs(mnames) do

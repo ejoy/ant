@@ -214,9 +214,7 @@ function repo:clean()
 	end
 	for hash in self._build:list_directory() do
 		for file in hash:list_directory() do
-			if not access.checkbuild(self, file) then
-				lfs.remove(file)
-			end
+			access.check_build(self, file)
 		end
 	end
 end
