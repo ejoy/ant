@@ -19,12 +19,6 @@ function hiecomp:init()
 	return self
 end
 
-function hiecomp:delete()
-	if self.ref_path then
-		assetmgr.unload(self.ref_path)
-	end
-end
-
 local mathadapter_util = import_package "ant.math.adapter"
 
 mathadapter_util.bind("hierarchy", function ()

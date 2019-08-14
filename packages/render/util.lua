@@ -47,7 +47,7 @@ local function update_properties(material, properties, render_properties)
 				if tex then
 					if tex.ref_path then
 						local texkey = assert(tex.ref_path)
-						tex.handle = assetmgr.get_texture(texkey).handle	--set texture handle every time
+						tex.handle = assetmgr.get_resource(texkey).handle	--set texture handle every time
 					else
 						assert(tex.handle)
 					end
@@ -146,7 +146,7 @@ end
 
 function util.insert_primitive(eid, group, material, worldmat, filter)
 	local refkey = material.ref_path
-	local mi = assert(assetmgr.get_material(refkey))
+	local mi = assert(assetmgr.get_resource(refkey))
 	local resulttarget = assert(filter.result[mi.surface_type.transparency])
 	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end

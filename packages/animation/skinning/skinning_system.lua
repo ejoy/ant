@@ -19,7 +19,7 @@ local bgfx 		= require "bgfx"
 local sm = ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation"}}
 
 local function gen_mesh_assetinfo(sm)
-	local smhandle = assetmgr.get_skinning_mesh(sm.ref_path).handle
+	local smhandle = assetmgr.get_resource(sm.ref_path).handle
 
 	local num_vertices, num_indices = smhandle:num_vertices(), smhandle:num_indices()
 
@@ -54,10 +54,6 @@ function sm:postinit(e)
 	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(self))
 end
 
-function sm:delete(e)
-	assetmgr.unload(assert(e.rendermesh.reskey))
-end
-
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
 
@@ -67,9 +63,9 @@ function skinning_sys:update()
 	for _, eid in world:each("skinning_mesh") do
 		local e = world[eid]
 
-		local meshscene = assetmgr.get_mesh(assert(e.rendermesh.reskey))
+		local meshscene = assetmgr.get_resource(assert(e.rendermesh.reskey))
 
-		local sm 		= assetmgr.get_skinning_mesh(e.skinning_mesh.ref_path).handle
+		local sm 		= assetmgr.get_resource(e.skinning_mesh.ref_path).handle
 		local aniresult = e.animation.aniresult
 		
 		-- update data include : position, normal, tangent

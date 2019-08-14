@@ -96,11 +96,6 @@ function resource:postinit(e)
 	end
 end
 
-function resource:delete()
-	asset.unload(self.ref_path)
-	self.ref_path = nil
-end
-
 ecs.component "submesh_ref"
 	.material_refs "int[]"
 	.visible "boolean"
@@ -112,10 +107,6 @@ local rendermesh = ecs.component "rendermesh"
 function rendermesh:init()
 	self.lodidx = self.lodidx or 1
 	return self
-end
-
-function rendermesh:delete()
-	self.reskey = nil
 end
 
 local mesh = ecs.component "mesh" {depend="rendermesh"}
@@ -130,10 +121,6 @@ function mesh:postinit(e)
 		assert(e.asyn_load == nil)
 		component_util.create_mesh(e.rendermesh, self)
 	end
-end
-
-function mesh:delete(e)
-	component_util.remove_mesh(e.rendermesh, self)
 end
 
 --DO NOT define init/delete function to manager texture resource
@@ -186,10 +173,6 @@ function material:init()
 		component_util.create_material(self)
 	end
 	return self
-end
-
-function material:delete()
-	component_util.remove_material(self)
 end
 
 ecs.component_alias("can_render", "boolean", true) {depend={"transform", "rendermesh", "material"}}

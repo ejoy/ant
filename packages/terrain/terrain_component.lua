@@ -33,7 +33,7 @@ local terrain_collider = ecs.component "terrain_collider" {depend = {"transform"
 	.collider "collider"
 
 local function create_terrain_shape(shape, terraincomp)
-	local terraininfo = assetmgr.get_terrain(terraincomp.ref_path)
+	local terraininfo = assetmgr.get_resource(terraincomp.ref_path)
 	local terrain = terraininfo.handle
 	local heightmap = terrain:heightmap_data()	
 	local bounding = terrain:bounding()
@@ -69,7 +69,7 @@ local terraincomp =
 function terraincomp:postinit(e)
 	local rm = e.rendermesh
 	assert(self.asyn_load == nil)
-    local terraininfo = assetmgr.get_terrain(self.ref_path)
+    local terraininfo = assetmgr.get_resource(self.ref_path)
     local terrainhandle = terraininfo.handle
 
     local numlayers = terraininfo.num_layers
@@ -114,8 +114,4 @@ function terraincomp:postinit(e)
 
 	meshscene.scenes[1][1] = groups
 	rm.reskey = assetmgr.register_resource(fs.path "//meshres/terrain.mesh", meshscene)
-end
-
-function terraincomp:delete(e)
-	assetmgr.unload(e.rendermesh.reskey)
 end

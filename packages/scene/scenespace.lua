@@ -194,7 +194,7 @@ local function mark_cache(eid, cache_result)
 
 	local hiecomp = assert(e.hierarchy)
 	if hiecomp.ref_path then
-		local hiehandle = assetmgr.get_hierarchy(hiecomp.ref_path).handle
+		local hiehandle = assetmgr.get_resource(hiecomp.ref_path).handle
 		if t.hierarchy_result == nil then
 			local bpresult = animodule.new_bind_pose_result(#hiehandle)
 			hiehandle:bindpose_result(bpresult)

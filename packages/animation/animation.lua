@@ -12,7 +12,7 @@ local animation_content = ecs.component "animation_content"
 	.looptimes "int" (0)
 
 local function calc_ratio(current_counter, ani)
-	local handle = asset.get_animation(ani.ref_path).handle
+	local handle = asset.get_resource(ani.ref_path).handle
 	local duration = handle:duration() * 1000
 	local localtime = timer.from_counter(current_counter - ani.start_counter) * ani.scale
 	local frametime
@@ -34,11 +34,6 @@ function animation_content:init()
 	return self
 end
 
-function animation_content:delete()
-	asset.unload(self.ref_path)
-	self.ref_path = nil
-end
-
 ecs.component "aniref"
 	.idx "int"	-- TODO: need use name to reference which animation
 	.weight "real"
@@ -58,7 +53,7 @@ local animation = ecs.component "animation"  { depend = "skeleton" }
 function animation:postinit(e)
 	local ske = e.skeleton
 
-	local skehandle = asset.get_skeleton(ske.ref_path).handle
+	local skehandle = asset.get_resource(ske.ref_path).handle
 	local numjoints = #skehandle
 	self.aniresult = animodule.new_bind_pose_result(numjoints)
 	for _, ani in ipairs(self.anilist) do
@@ -101,7 +96,7 @@ function anisystem:update()
 	for _, eid in world:each("animation") do
 		local e = world[eid]
 		
-		local ske = asset.get_skeleton(e.skeleton.ref_path).handle
+		local ske = asset.get_resource(e.skeleton.ref_path).handle
 
 		local anicomp = assert(e.animation)
 
@@ -127,7 +122,7 @@ function anisystem:update()
 					local ani = assert(anilist[aniref.idx])
 					ani.ratio = calc_ratio(current_counter, ani)
 					ani.weight = aniref.weight
-					ani.handle = asset.get_animation(ani.ref_path).handle
+					ani.handle = asset.get_resource(ani.ref_path).handle
 					anis[#anis+1] = ani
 				end
 				return anis

@@ -41,7 +41,7 @@ end
 
 local function is_mesh_loaded(rm)
     if rm.reskey then
-        return assetmgr.get_mesh(rm.reskey) ~= nil
+        return assetmgr.get_resource(rm.reskey) ~= nil
     else
         return rm.handle ~= nil
     end
@@ -50,7 +50,7 @@ end
 local function is_properties_ready(properties)
     for _, tex in assetutil.each_texture(properties) do
         if tex.ref_path then
-            local t = assetmgr.get_texture(tex.ref_path)
+            local t = assetmgr.get_resource(tex.ref_path)
             if t == nil then
                 return false
             end
@@ -64,7 +64,7 @@ local function is_material_loaded(material)
     --material index start from 0
     for i=0, #material do
         local m = material[i]
-        local mi = assetmgr.get_material(m.ref_path)
+        local mi = assetmgr.get_resource(m.ref_path)
 
         if mi == nil then
             return false

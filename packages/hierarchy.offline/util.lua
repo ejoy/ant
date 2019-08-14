@@ -60,7 +60,7 @@ local function update_transform(world, pe, psrt)
 	if mapper then
 		local hiecomp = pe.hierarchy
         local refpath = hiecomp.ref_path
-        local hieres = assetmgr.get_hierarchy(refpath)
+        local hieres = assetmgr.get_resource(refpath)
         if hieres == nil then
             hieres = assetmgr.load(refpath)
         end

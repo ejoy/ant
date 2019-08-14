@@ -83,7 +83,7 @@ local function get_scale_mat(worldmat, scenescale)
 end
 
 local function filter_element(eid, rendermesh, worldmat, materialcomp, filter)
-	local meshscene = assetmgr.get_mesh(assert(rendermesh.reskey))
+	local meshscene = assetmgr.get_resource(assert(rendermesh.reskey))
 
 	local sceneidx = computil.scene_index(rendermesh.lodidx, meshscene)
 

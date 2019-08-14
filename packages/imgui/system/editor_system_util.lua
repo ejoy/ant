@@ -61,7 +61,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,view_tag,
 
     local reskey = fs.path(string.format("//meshres/%s.mesh",name))
 
-    local rendermesh = assetmgr.get_mesh(reskey)
+    local rendermesh = assetmgr.get_resource(reskey)
 
     if rendermesh then
         assetmgr.load(reskey)

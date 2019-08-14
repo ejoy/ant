@@ -98,7 +98,7 @@ pickup_material_sys.dependby "render_system"
 local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
-			local mi = assetmgr.get_material(material.ref_path)
+			local mi = assetmgr.get_resource(material.ref_path)
 			item.material = mi
 			if item.properties == nil then
 				item.properties = {}

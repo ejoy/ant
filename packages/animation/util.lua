@@ -29,7 +29,7 @@ function util.remove_animation(comp, aniidx)
 end
 
 function util.init_animation(comp, skeleton)
-	local skehandle = asset.get_skeleton(skeleton.ref_path).handle
+	local skehandle = asset.get_resource(skeleton.ref_path).handle
 	local numjoints = #skehandle
 	comp.aniresult = animodule.new_bind_pose_result(numjoints)
 	comp.anilist = {}
