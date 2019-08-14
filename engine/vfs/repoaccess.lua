@@ -342,7 +342,8 @@ end
 function access.check_build(repo, buildfile)
 	for _, dep in ipairs(rawtable(buildfile).depends) do
 		local timestamp, filename = dep[2], dep[3]
-		if timestamp ~= lfs.last_write_time(access.realpath(repo, filename)) then
+		local realpath = access.realpath(repo, filename)
+		if not realpath or not lfs.exists(realpath)  or timestamp ~= lfs.last_write_time(realpath) then
 			lfs.remove(buildfile)
 			return false
 		end
