@@ -86,20 +86,18 @@ return {
 		}
 	end,
 	unloader = function(res)
-		local handle = res.handle
-		assetutil.unload_shader_program(assert(handle.shader))
-		handle.shader = nil
+		assetutil.unload_shader_program(assert(res.shader))
+		res.shader = nil
 
-		local statekey = assert(handle.state).ref_path
+		local statekey = assert(res.state).ref_path
 		if statekey then
 			assetmgr.unload(statekey)
 		end
-		handle.state = nil
+		res.state = nil
 
-		assetutil.unload_material_properties(handle.properties)
-		handle.properties = nil
+		assetutil.unload_material_properties(res.properties)
+		res.properties = nil
 
-		handle.surface_type = nil
-		res.handle = nil
+		res.surface_type = nil
 	end
 }
