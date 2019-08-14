@@ -1,5 +1,3 @@
-local log = log and log.info(...) or print
-
 local createschema = require "schema"
 
 local function sourceinfo()
@@ -66,7 +64,7 @@ return function(world, import, class)
 		class_register[what] = function(name)
 			local r = class_set[name]
 			if r == nil then
-				log("Register %s %s", what, name)
+				log.info("Register", what, name)
 				local c = { name = name, method = {}, source = {}, defined = sourceinfo() }
 				class_data[name] = c
 				r = {}

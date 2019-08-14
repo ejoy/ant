@@ -1,6 +1,3 @@
---luacheck: globals log
-local log = log and log.info or print
-
 -- load systems
 local solve_depend = require "solve_depend"
 local system = {}	-- module system
@@ -15,7 +12,7 @@ local function get_singleton(sys, c)
 					error( singleton_name .. " is not defined")
 				end
 				if s[singleton_name] == nil then
-					log("New singleton %s", singleton_name)
+					log.info("New singleton", singleton_name)
 					local init = singleton_typeobject.method.init
 					s[singleton_name] = init and init() or {}
 				end

@@ -1,5 +1,3 @@
-local log = log and log.info(...) or print
-
 local util = {}; util.__index = util
 
 local ecs 			= import_package "ant.ecs"
@@ -9,7 +7,7 @@ local bullet_world 	= import_package "ant.bullet".bulletworld
 
 function util.start_new_world(input_queue, fbw, fbh, packages, systems,other_args)
 	if input_queue == nil then
-		log("input queue is not privided, no input event will be received!")
+		log.info("input queue is not privided, no input event will be received!")
 	end
 
 	local args =  { 
