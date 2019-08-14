@@ -13,6 +13,9 @@ else
 default : $(ODIR)/libbgfx.a
 endif
 
+bgfx.dll : $(ODIR)/bgfx.dll
+	cp $< $@
+
 $(ODIR)/baselib.o : baselib.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 

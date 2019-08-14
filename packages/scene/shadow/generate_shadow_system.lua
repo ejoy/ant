@@ -12,25 +12,25 @@ local fs = require "filesystem"
 
 local SHADOWMAP_SIZE = 1024
 local NEAR = 0.3125
-local FAR  = 450 
+local FAR  = 450
 local SPLIT_WEIGHT = 0.7
 local NUM_SPLITS = 4
 
 local VIEWID_SHADOW          = 10
 
 local VIEWID_SHADOW_START    = 11
-local VIEWID_SHADOW_END      = 14 
+local VIEWID_SHADOW_END      = 14
 
 local VIEWID_DRAWSCENE = 200
 
 local VIEWID_DRAWDEPTH_START = 205
 local VIEWID_DRAWDEPTH_END   = 208
 
--- tested helper 
+-- tested helper
 local ctx = {}
-ctx.width  = 1280  -- default 
+ctx.width  = 1280  -- default
 ctx.height = 720
-ctx.projHeight  =  math.tan(math.rad(60)*0.5) 
+ctx.projHeight  =  math.tan(math.rad(60)*0.5)
 ctx.projWidth   =  ctx.projHeight*(ctx.width/ctx.height)
 
 ctx.timeLight = 0
@@ -39,7 +39,7 @@ ctx.directionLight = {}
 ctx.shadowMapMtx = {}
 ctx.s_rtShadowMap = {}
 ctx.shadowMapSize = SHADOWMAP_SIZE
-ctx.shadowMapTexelSize = 1/SHADOWMAP_SIZE 
+ctx.shadowMapTexelSize = 1/SHADOWMAP_SIZE
 ctx.s_flipV = false       -- d3d or ogl
 
 local shadow_config = ecs.component "shadow_config"
@@ -48,25 +48,25 @@ local shadow_rt = ecs.component "shadow_rt"
 function shadow_config:init()
     -- should be read from config, and material asset
     self.shadowMapSize = SHADOWMAP_SIZE
-    self.near = NEAR 
-    self.far  = FAR         
+    self.near = NEAR
+    self.far  = FAR
     self.numSplits =  NUM_SPLITS
-    self.splitDistribution = SPLIT_WEIGHT 
-    self.stabilize = true  
+    self.splitDistribution = SPLIT_WEIGHT
+    self.stabilize = true
 
     -- for params2
     self.depthValuePow   = 10
-    self.showSmCoverage = true     
-    self.shadowMapTexelSize = 1/self.shadowMapSize 
+    self.showSmCoverage = true
+    self.shadowMapTexelSize = 1/self.shadowMapSize
     self.ss_offsetx = 1
     self.ss_offsety = 1
 
     -- for params1
-    self.shadowMapBias   = 0.0000015*FAR    
-    self.shadowMapOffset = 0.5  --0.2    
-    self.shadowMapParam0 = 0         
-    self.shadowMapParam1 = 0                                             
-                                     -- hard = none,none 
+    self.shadowMapBias   = 0.0000015*FAR
+    self.shadowMapOffset = 0.5  --0.2
+    self.shadowMapParam0 = 0
+    self.shadowMapParam1 = 0
+                                     -- hard = none,none
                                      -- pcf = u_shadowMapPcfMode,u_shadowMapNoiseAmount
                                      -- vsm = u_shadowMapMinVariance,u_shadowMapDepthMultiplier
                                      -- esm = u_shadowMapHardness,u_shadowMapDepthMultiplier
@@ -77,31 +77,31 @@ function shadow_config:init()
     self.depthImpl  = "InvZ"
     self.shadowImpl = "PCF"
 
-    self.debug_drawShadow = false 
-    self.debug_drawLightView = false 
+    self.debug_drawShadow = false
+    self.debug_drawLightView = false
     self.debug_virtualCamera = false
-    self.debug_virtualLight = false       
-    self.debug_drawScene = false        
+    self.debug_virtualLight = false
+    self.debug_drawScene = false
                                                    -- depth generate method
-    self.progShadow   = "packDepth_InvZ_RGBA"      -- inverse z depth method    
-    --self.progShadow = "packDepth_Linear_RGBA"   
-    --self.progShadow = "drawDepth_RGBA"   
+    self.progShadow   = "packDepth_InvZ_RGBA"      -- inverse z depth method
+    --self.progShadow = "packDepth_Linear_RGBA"
+    --self.progShadow = "drawDepth_RGBA"
     return self
 end
 
 -- 使用结果集
 function shadow_rt:init()
     return self
-end 
+end
 
--- or combine mode 
+-- or combine mode
 local shadow = ecs.component "shadow_maker"
 
 function shadow:init()
     self.config = {}
     self.shadow = {}
     return self
-end 
+end
 
 local lightView = {}
 local lightProj = {}
@@ -110,9 +110,9 @@ local frustumCorners = {}
 local uniforms = {}
 
 local function var_def(tbl,name,...)
-    local vec = math3d.ref "vector"  
-    ms(vec,{...},"=")             
-    tbl[name] = vec                  
+    local vec = math3d.ref "vector"
+    ms(vec,{...},"=")
+    tbl[name] = vec
 end
 
 
@@ -121,8 +121,8 @@ local function init_uniforms()
     uniforms.ambientPass  = 1
     uniforms.lightingPass = 1
 
-    uniforms.shadowMapBias   = 0.0000015*FAR  
-    uniforms.shadowMapOffset = 0.20        
+    uniforms.shadowMapBias   = 0.0000015*FAR
+    uniforms.shadowMapOffset = 0.20
     uniforms.shadowMapParam0 = 0.5
     uniforms.shadowMapParam1 = 1
 
@@ -132,20 +132,20 @@ local function init_uniforms()
     uniforms.shadowMapSize = SHADOWMAP_SIZE
 
     uniforms.ss_offsetx = 1
-    uniforms.ss_offsety = 1 
-     
-    uniforms.s_shadowMap0 = false 
-    uniforms.s_shadowMap1 = false 
+    uniforms.ss_offsety = 1
+
+    uniforms.s_shadowMap0 = false
+    uniforms.s_shadowMap1 = false
 
     uniforms.csmFarDistances = { 30,90,180,1000 }
 
-    uniforms.activeLight = false                       -- current active light 
+    uniforms.activeLight = false                       -- current active light
 
-    -- def(uniforms,"params0",1,1,0,0)                 -- ambientPass,lightingPass not used now 
+    -- def(uniforms,"params0",1,1,0,0)                 -- ambientPass,lightingPass not used now
     -- def(uniforms,"params1",0.003,0,0.5,1)           -- bias,offset, shadowMapParam0，shadowMapParam1
     -- def(uniforms,"params2",1,1,1/SHADOWMAP_SIZE,0)  -- depthPow,SmCoverage,smTexelSize
     -- def(uniforms,"csmFarDistances",30,90,180,1000)  -- csm split distances
-end 
+end
 
 local function screenSpaceQuad( textureWidth,textureHeight, originBottomLeft)
     local width = 1
@@ -178,18 +178,18 @@ local function screenSpaceQuad( textureWidth,textureHeight, originBottomLeft)
 	ctx.color_tb:packV(2, maxx, maxy, zz, 0xffffffff, maxu, maxv)
 
 	ctx.color_tb:set()
-end 
+end
 
 -----------------------------------------------
 -- shadow maker util
 local shadow_maker = {}
-shadow_maker.__index = shadow_maker 
+shadow_maker.__index = shadow_maker
 
--- shadow_maker init 
+-- shadow_maker init
 function  shadow_maker:init( shadow_maker_entity )
-	local function load_material(name)		
+	local function load_material(name)
 		local material = asset.load(fs.path "/pkg/ant.resources" / name)
-		material.name = name 
+		material.name = name
 		return material
 	end
 
@@ -212,18 +212,18 @@ function  shadow_maker:init( shadow_maker_entity )
 		bgfx.create_uniform("s_shadowMap2", "s"),
 		bgfx.create_uniform("s_shadowMap3", "s"),
     }
-    
+
     uniforms.shadowMapMtx0 = ctx.shadowMapMtx[1]
     uniforms.shadowMapMtx1 = ctx.shadowMapMtx[2]
     uniforms.shadowMapMtx2 = ctx.shadowMapMtx[3]
 	uniforms.shadowMapMtx3 = ctx.shadowMapMtx[4]
-	
+
     ctx.state_rgba = bgfx.make_state {
         WRITE_MASK = "RGBA",
         CULL = "CCW",
         DEPTH_TEST = "ALWAYS"
 	}
-	ctx.PosColorTexCoord0Vertex = bgfx.vertex_decl {
+	ctx.PosColorTexCoord0Vertex = bgfx.vertex_layout {
 		{ "POSITION", 3, "FLOAT" },
 		{ "COLOR0", 4, "UINT8", true },
 		{ "TEXCOORD0", 2, "FLOAT" },
@@ -238,70 +238,70 @@ function  shadow_maker:init( shadow_maker_entity )
     -- create shadow targets
     local shadowMapSize = comp_config.shadowMapSize;
     uniforms.shadowMapTexelSize = 1/ comp_config.shadowMapSize;
-    uniforms.shadowMapSize = shadowMapSize 
+    uniforms.shadowMapSize = shadowMapSize
 
-    ctx.shadowMapSize = shadowMapSize 
-    ctx.shadowMapTexelSize = uniforms.shadowMapTexelSize 
+    ctx.shadowMapSize = shadowMapSize
+    ctx.shadowMapTexelSize = uniforms.shadowMapTexelSize
 
-    comp_rt.uniforms = uniforms    
-    comp_rt.shadowMapSize = shadowMapSize 
-    comp_rt.shadowMapTexelSize = uniforms.shadowMapTexelSize 
-    comp_rt.s_rtShadowMap = {}   
-    comp_rt.shadowMapMtx = {}    
-    comp_rt.s_shadowMap = {}     
-    
+    comp_rt.uniforms = uniforms
+    comp_rt.shadowMapSize = shadowMapSize
+    comp_rt.shadowMapTexelSize = uniforms.shadowMapTexelSize
+    comp_rt.s_rtShadowMap = {}
+    comp_rt.shadowMapMtx = {}
+    comp_rt.s_shadowMap = {}
+
     local fbTextures = {}
-    for i = 1, comp_config.numSplits do 
+    for i = 1, comp_config.numSplits do
         fbTextures[1] = bgfx.create_texture2d(shadowMapSize,shadowMapSize,false,1,"BGRA8","rt")
         fbTextures[2] = bgfx.create_texture2d(shadowMapSize,shadowMapSize,false,1,"D24S8","rt")
         ctx.s_rtShadowMap[i] = bgfx.create_frame_buffer( fbTextures,true)
-        comp_rt.s_rtShadowMap[i] = ctx.s_rtShadowMap[i]    
+        comp_rt.s_rtShadowMap[i] = ctx.s_rtShadowMap[i]
         comp_rt.shadowMapMtx[i] = ctx.shadowMapMtx[i]
-    end 
+    end
 
-    uniforms.s_shadowMap0 = bgfx.get_texture( ctx.s_rtShadowMap[1] ) 
+    uniforms.s_shadowMap0 = bgfx.get_texture( ctx.s_rtShadowMap[1] )
     uniforms.s_shadowMap1 = bgfx.get_texture( ctx.s_rtShadowMap[2] )
     uniforms.s_shadowMap2 = bgfx.get_texture( ctx.s_rtShadowMap[3] )
     uniforms.s_shadowMap3 = bgfx.get_texture( ctx.s_rtShadowMap[4] )
-    
-    -- if shadow maker entity exist ,could do shadow system ,cast shadow 
-    self.is_require = true     
-end 
+
+    -- if shadow maker entity exist ,could do shadow system ,cast shadow
+    self.is_require = true
+end
 
 
--- shadow_maker utils 
+-- shadow_maker utils
 local function splitFrustum(numSplits,near,far,splitWeight)
-    local sw = splitWeight 
-    local ratio = far/near 
+    local sw = splitWeight
+    local ratio = far/near
     local numSlices = numSplits*2
     local splits = {}
 
     splits[1] = near
     local ff = 1
-    for nn =3,numSlices,2 do 
-        local si = ff/numSlices 
+    for nn =3,numSlices,2 do
+        local si = ff/numSlices
         local nearp = sw* near*(ratio^si) + (1-sw)*(near +(far-near)*si)
         splits[ff+1] = nearp*1.005
         splits[nn] = nearp
         ff = ff+2
-    end 
-    splits[numSlices] = far 
-	return splits 
-end 
+    end
+    splits[numSlices] = far
+	return splits
+end
 
 local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invViewMatrix)
-    local tmp_c = {}  
+    local tmp_c = {}
     local nw = near *projW
-    local nh = near *projH 
+    local nh = near *projH
     local fw = far *projW
     local fh = far *projH
-    
+
     local numCorners = 8
 
-    --local temp = {}  -- opt 
+    --local temp = {}  -- opt
     local function make_vertex(idx,w,h,d)
-        -- ref mode 
-        -- local vec  = math3d.ref "vector"        -- ? ref  内存是否可以自动释放，当不再引用时 ? 
+        -- ref mode
+        -- local vec  = math3d.ref "vector"        -- ? ref  内存是否可以自动释放，当不再引用时 ?
         -- ms(vec,{w,h,d,1},"=")                --  已查阅源代码，是一个可以自动 gc 的 userdata,但内部idx不释放则会一直存在并增加
                                                    --  ref mark 没释放连续使用是危险的,可使用 unref, vec(nil) 两种方法释放
         -- temp[1] = w                             --  不建议使用 ref，若用必须知道ref/unref 配对释放 index
@@ -310,9 +310,9 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
         -- temp[4] = 1
         -- local vec = ms(temp,"P")
 
-        local vec = ms( {w,h,d,1},"P" )         -- remommend，temporal index 
-        tmp_c[idx] = vec                        
-    end 
+        local vec = ms( {w,h,d,1},"P" )         -- remommend，temporal index
+        tmp_c[idx] = vec
+    end
 
     make_vertex(1,-nw, nh, near)
     make_vertex(2, nw, nh, near)
@@ -324,31 +324,31 @@ local function worldSpaceFrustumCorners( corners, near, far, projW, projH, invVi
     make_vertex(7, fw,-fh, far)
     make_vertex(8,-fw,-fh, far )
 
-    -- convert to world space 
-    for i= 1,numCorners do 
-        local t_vec = ms(invViewMatrix, tmp_c[i], "*P")           
+    -- convert to world space
+    for i= 1,numCorners do
+        local t_vec = ms(invViewMatrix, tmp_c[i], "*P")
         corners[i] = t_vec
-        --// local t = ms(t_vec,"T")                                 
+        --// local t = ms(t_vec,"T")
         --// local vec = math3d.ref "vector"
-        --// ms(vec,{t[1],t[2],t[3],t[4]},"=")     -- debug view                     
-        --// corners[i] = vec 
+        --// ms(vec,{t[1],t[2],t[3],t[4]},"=")     -- debug view
+        --// corners[i] = vec
         -- tmp_c[i](nil)                            --  unref
         -- ref mode
         -- math3d.unref( tmp_c[i] )                    --  or assign(nil) it's work
-    end 
-    temp_c = nil 
-end 
+    end
+    temp_c = nil
+end
 
 local function computeViewSpaceComponents(light,mtx)
-     local rv = ms( mtx, light.position, "*P")                 
-     ms( light.position_ViewSpace,rv,"=")                     
-end 
+     local rv = ms( mtx, light.position, "*P")
+     ms( light.position_ViewSpace,rv,"=")
+end
 
--- tested control variables 
+-- tested control variables
 local frame = 1
 local dir = 1
 local function debug_lightView(lightView,lightProj,shadowMapSize)
-    -- use main camera framebuffer 0 to view effect 
+    -- use main camera framebuffer 0 to view effect
     local idx = 1
     local step = 60
     frame = frame + 1
@@ -356,68 +356,68 @@ local function debug_lightView(lightView,lightProj,shadowMapSize)
     elseif frame >= step   and frame <2*step  then   idx = 2
     elseif frame >= 2*step and frame <3*step  then   idx = 3
     elseif frame >= 3*step and frame <4*step  then   idx = 4
-    else   frame =  0   end 
+    else   frame =  0   end
     --idx = 1
     bgfx.set_view_rect(0,0,0,shadowMapSize,shadowMapSize)
-    bgfx.set_view_transform(0, lightView, ms(lightProj[idx],"m") ) 
+    bgfx.set_view_transform(0, lightView, ms(lightProj[idx],"m") )
 end
 
 local function debug_use_virtual_camera()
     local camera_eye = { 40, 10, 0 }
-    if(frame>20 and dir == 1 ) then dir = -1 end 
-    if(frame<-60 and dir == -1 ) then dir = 1 end 
-    frame = frame + 1.0*dir 
+    if(frame>20 and dir == 1 ) then dir = -1 end
+    if(frame<-60 and dir == -1 ) then dir = 1 end
+    frame = frame + 1.0*dir
     camera_eye[3] = camera_eye[3] + frame + 40
     local camera_at = {-40,10,0}
     camera_proj = ms( { type = "mat",n = 0.1,  f = 2000 , fov = 60, aspect = ctx.width/ctx.height } , "P")
-    camera_view = ms( camera_eye,camera_at,"lP")   
+    camera_view = ms( camera_eye,camera_at,"lP")
     print("virtual camera pos ",camera_eye[1],camera_eye[2],camera_eye[3])
-    return camera_view,camera_proj 
-end 
+    return camera_view,camera_proj
+end
 
 local function debug_use_virtual_light( moveable, delta )
     local deltaTime = 0.01
-    ctx.timeLight = ctx.timeLight + deltaTime 
+    ctx.timeLight = ctx.timeLight + deltaTime
 
     local light_eye = {}
-    
+
     light_eye[1]  = 100
 	light_eye[2]  = 100
-    light_eye[3]  = 100 
-    
-    if moveable then 
+    light_eye[3]  = 100
+
+    if moveable then
         light_eye[1]  = light_eye[1] + math.cos(ctx.timeLight) * delta
-        light_eye[3]  = light_eye[3] + math.sin(ctx.timeLight) * delta 
-    end 
+        light_eye[3]  = light_eye[3] + math.sin(ctx.timeLight) * delta
+    end
 
     local  light_at = {0,0,0}
-    return light_eye,light_at 
-end 
+    return light_eye,light_at
+end
 
 local function collectSubmitUniforms(ctx,config)
     uniforms.activeLight = ctx.directionLight
 
     -- all uniforms & parameters for draw scene with shadowmap
     -- params2  - for drawDepth
-    uniforms.shadowMapSize = shadowMapSize 
-    uniforms.depthValuePow = config.depthValuePow                     
+    uniforms.shadowMapSize = shadowMapSize
+    uniforms.depthValuePow = config.depthValuePow
     uniforms.showSmCoverage = config.shadowSmCoverage and 1 or 0      -- y
     uniforms.shadowMapTexelSize = 1/ config.shadowMapSize;            -- z,texelSize
 
     -- params2
     uniforms.shadowMapBias   = config.shadowMapBias
-    uniforms.shadowMapOffset = config.shadowMapOffset 
-    uniforms.shadowMapParam0 = config.shadowMapParam0   
-    uniforms.shadowMapParam1 = config.shadowMapParam1   
+    uniforms.shadowMapOffset = config.shadowMapOffset
+    uniforms.shadowMapParam0 = config.shadowMapParam0
+    uniforms.shadowMapParam1 = config.shadowMapParam1
 
     -- PCF Sampler
-    uniforms.ss_offsetx = config.ss_offsetx 
-    uniforms.ss_offsety = config.ss_offsety 
+    uniforms.ss_offsetx = config.ss_offsetx
+    uniforms.ss_offsety = config.ss_offsety
 
-    -- params0  - for light info 
-    uniforms.u_lightPosition = uniforms.activeLight.position_ViewSpace   -- light Position in view space 
+    -- params0  - for light info
+    uniforms.u_lightPosition = uniforms.activeLight.position_ViewSpace   -- light Position in view space
     uniforms.u_csmFarDistances =  uniforms.csmFarDistances
-end 
+end
 
 -----------------------------------------
 -- 测试 culling 是否同步，有没有滞后的
@@ -426,7 +426,7 @@ local function insert_shadow_primitive(eid, result)
 	local entity = world[eid]
 
 	local mesh = assert(entity.mesh.assetinfo)
-	
+
 	local materialcontent = entity.material
 	assert(#materialcontent >= 1)
 
@@ -449,22 +449,22 @@ local function insert_shadow_primitive(eid, result)
 end
 
 local function culling_shadow_cast_filter(shadowcast_filter)
-	local result = {}    
+	local result = {}
     for _,eid in world:each("can_render") do              -- can_cast, mesh 需要新增 can_cast 属性
-        if render_cu.is_entity_visible(world[eid]) then   -- vis culling 
+        if render_cu.is_entity_visible(world[eid]) then   -- vis culling
             insert_shadow_primitive(eid, result)
-        end 
-	end 
+        end
+	end
 	shadowcast_filter.result = result
-end 
+end
 
-function shadow_maker:generate_shadow( shadow_entid, select_filter )    
+function shadow_maker:generate_shadow( shadow_entid, select_filter )
     -- shadow_maker entity
     local entity = world[ shadow_entid ]
-    local config = entity.shadow_config 
-    local shadow = entity.shadow_rt 
+    local config = entity.shadow_config
+    local shadow = entity.shadow_rt
 
-    shadow.ready = false     
+    shadow.ready = false
 
     -- direction light entity  get light position  from light entity
     local d_light = world:first_entity("directional_light")
@@ -476,42 +476,42 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
 
     -- main camera entity, get main camera's position,direction
     local camera = world:first_entity("main_queue")
-    local camera_view_rc = camera.view_rect 
+    local camera_view_rc = camera.view_rect
     local camera_view, camera_proj = math_util.view_proj_matrix(camera)
-    
-    -- 测试指定一个相机位置
-    if config.debug_virtualCamera  then 
-        camera_view, camera_proj = debug_use_virtual_camera()
-    end 
 
-    -- update common 
-    ctx.width   = camera_view_rc.w 
+    -- 测试指定一个相机位置
+    if config.debug_virtualCamera  then
+        camera_view, camera_proj = debug_use_virtual_camera()
+    end
+
+    -- update common
+    ctx.width   = camera_view_rc.w
     ctx.height  = camera_view_rc.h
-    ctx.projHeight  =  math.tan(math.rad(60)*0.5) 
+    ctx.projHeight  =  math.tan(math.rad(60)*0.5)
     ctx.projWidth   =  ctx.projHeight*(ctx.width /ctx.height)
 
-    -- submit uniforms 
+    -- submit uniforms
     local shadowMapSize = config.shadowMapSize;
     collectSubmitUniforms(ctx,config)
 
     computeViewSpaceComponents(ctx.directionLight, camera_view )
 
     local  numSplits = 1
-    if config.lightType == "DirectionLight" then 
+    if config.lightType == "DirectionLight" then
         numSplits = config.numSplits
-    end     
+    end
 
     local mtx_CameraViewInv = ms(camera_view,"iP")
 
-    -- h = false => 0,1; -- h = true  => -1,1 
+    -- h = false => 0,1; -- h = true  => -1,1
     -- 原来使用的
     -- local mtxProj  = ms( { type = "ortho", l=1, r=-1, b=1, t=-1, n= -config.far  , f= config.far ,h = false     },"P") -- true 距离较远，精度较低
     -- 转换成新的API
     local mtxProj = ms({type="mat", l=1, r=-1, t=-1, b=1, n=-config.far, f= config.far, ortho = true }, "P")	-- make a ortho mat
-    if config.lightType == "DirectionLight" then 
+    if config.lightType == "DirectionLight" then
         local light_eye = { 100,100,100,1}
-        local light_at  = { 0,0,0,1}  
-        if config.debug_virtualLight then 
+        local light_at  = { 0,0,0,1}
+        if config.debug_virtualLight then
             light_eye , light_at = debug_use_virtual_light( true  ,200  )
             d_light_dir[1] = light_at[1] - light_eye[1]
             d_light_dir[2] = light_at[2] - light_eye[2]
@@ -521,115 +521,115 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
             --print(t[1],t[2],t[3],t[4])
             ms(d_light.rotation,rot,"=")
         else
-            -- get from directinal light entity 
+            -- get from directinal light entity
             light_eye[1] = light_at[1] + d_light_dir[1]*100
             light_eye[2] = light_at[2] + d_light_dir[2]*100
             light_eye[3] = light_at[3] + d_light_dir[3]*100
-            -- position,direction etc  
-        end 
+            -- position,direction etc
+        end
 
         -- 这个是赋值，还是新内存对象替代原来的 lightView[1],需要查源码对照求证?!!
-        lightView[1] = ms( light_eye,light_at,"lP")    
+        lightView[1] = ms( light_eye,light_at,"lP")
 
         local splitSlices = splitFrustum( numSplits ,
                                           config.near,
                                           config.far,
-                                          config.splitDistribution )          
+                                          config.splitDistribution )
         -- make frustum corners
         local numCorners = 8
         local nn = -1
         local ff = 0
-        for i= 1,numSplits do 
+        for i= 1,numSplits do
             nn = nn + 2
-            ff = ff + 2 
+            ff = ff + 2
             local fc = frustumCorners[i]
-            if not fc then 
+            if not fc then
                 fc  = {}
-                frustumCorners[i]  = fc 
-            end 
+                frustumCorners[i]  = fc
+            end
 
-            worldSpaceFrustumCorners(fc,splitSlices[nn],splitSlices[ff],ctx.projWidth,ctx.projHeight, mtx_CameraViewInv )   
+            worldSpaceFrustumCorners(fc,splitSlices[nn],splitSlices[ff],ctx.projWidth,ctx.projHeight, mtx_CameraViewInv )
             local min = { 9999,9999,9999}
             local max = { -9999,-9999,-9999}
 
-            for j = 1, numCorners do 
+            for j = 1, numCorners do
                 local lightSpaceCorner = ms(lightView[1], fc[j],"*P")
-                local t = ms(lightSpaceCorner,"T")  
-                local v1,v2,v3 = t[1],t[2],t[3] 
+                local t = ms(lightSpaceCorner,"T")
+                local v1,v2,v3 = t[1],t[2],t[3]
                 min[1] = math.min(min[1],v1)
                 max[1] = math.max(max[1],v1)
                 min[2] = math.min(min[2],v2)
                 max[2] = math.max(max[2],v2)
                 min[3] = math.min(min[3],v3)
                 max[3] = math.max(max[3],v3)
-            end 
+            end
 
-            local min_proj_id = ms(mtxProj, min, "*P")    
+            local min_proj_id = ms(mtxProj, min, "*P")
             local max_proj_id = ms(mtxProj, max, "*P")
-            local min_proj = ms(min_proj_id,"T")         
+            local min_proj = ms(min_proj_id,"T")
             local max_proj = ms(max_proj_id,"T")
 
             -- 另一种方案
-            -- local quant = 1/config.shadowMapSize 
+            -- local quant = 1/config.shadowMapSize
             -- local qx = math.fmod( min_proj[1],quant)
             -- local qy = math.fmod( min_proj[2],quant)
-            -- min_proj[1] = min_proj[1]-qx 
-            -- min_proj[2] = min_proj[2]-qy 
-            -- max_proj[1] = max_proj[1]-qx 
-            -- max_proj[2] = max_proj[2]-qy 
+            -- min_proj[1] = min_proj[1]-qx
+            -- min_proj[2] = min_proj[2]-qy
+            -- max_proj[1] = max_proj[1]-qx
+            -- max_proj[2] = max_proj[2]-qy
 
             -- local scalez  = 1/(max_proj[3] - max_proj[3]);  -- could be work
-            -- local offsetz = min_proj[3]*scalez; 
+            -- local offsetz = min_proj[3]*scalez;
             local scalex = 2.0/( max_proj[1] - min_proj[1] )
-            local scaley = 2.0/( max_proj[2] - min_proj[2] )           
+            local scaley = 2.0/( max_proj[2] - min_proj[2] )
 
-            if config.stabilize then 
-                local quantizer = config.shadowMapSize   
+            if config.stabilize then
+                local quantizer = config.shadowMapSize
                 scalex = quantizer/ math.ceil( quantizer/scalex )
                 scaley = quantizer/ math.ceil( quantizer/scaley )
-            end 
+            end
 
-            local offsetx = 0.5 * ( max_proj[1] + min_proj[1] )* scalex 
+            local offsetx = 0.5 * ( max_proj[1] + min_proj[1] )* scalex
             local offsety = 0.5 * ( max_proj[2] + min_proj[2] )* scaley
-            if config.stabilize then     
-                local halfSize = ctx.shadowMapSize * 0.5   
+            if config.stabilize then
+                local halfSize = ctx.shadowMapSize * 0.5
                 offsetx = math.ceil(offsetx * halfSize) / halfSize
-                offsety = math.ceil(offsety * halfSize) / halfSize 
-            end 
+                offsety = math.ceil(offsety * halfSize) / halfSize
+            end
             -- 只完成移动方向的snap,旋转上仍旧会抖动
             -- 尽管pcf 可以很大消除这种抖动，但理论上不带pcf 的锯齿图也可以稳定
-            -- 精度的差异，offset 的差别会影响投影器的稳定性 
+            -- 精度的差异，offset 的差别会影响投影器的稳定性
             local mtxCrop = ms( {
-                scalex,  0,      0,   0, 
+                scalex,  0,      0,   0,
                 0,       scaley, 0,   0,
                 0,       0,      1,   0,
                 offsetx, offsety,0,   1 }, "P" )
 
-            lightProj[i] = ms( mtxProj, mtxCrop, "*P")   
+            lightProj[i] = ms( mtxProj, mtxCrop, "*P")
 
-            -- 替换合适算法或可以使得旋转也稳定 
-            -- 另一种方案 
+            -- 替换合适算法或可以使得旋转也稳定
+            -- 另一种方案
             -- local lightProjection = ms({ type = "ortho",
             --                                 l = min_proj[1],r= max_proj[1],
             --                                 t = min_proj[2],b= max_proj[2],
             --                                 n = min_proj[3],f= max_proj[3], h = fasle },"P")
             -- lightProj[i] = lightProjection;
-        end 
-    end 
+        end
+    end
 
     ----------------------------------------------------------
-    -- reset render shadowmap targets 
+    -- reset render shadowmap targets
     for  i = 1 , VIEWID_SHADOW_END do
         bgfx.set_view_frame_buffer(i)
-    end 
+    end
 
     for  i = VIEWID_DRAWSCENE , VIEWID_DRAWDEPTH_END do
         bgfx.set_view_frame_buffer(i)
-    end 
+    end
 
-    local lightViewPtr  = ms(lightView[1],"m")                         -- id to pointer for bgfx 
+    local lightViewPtr  = ms(lightView[1],"m")                         -- id to pointer for bgfx
 
-    if config.lightType == "DirectionLight" then 
+    if config.lightType == "DirectionLight" then
         bgfx.set_view_rect( VIEWID_SHADOW_START+0, 0,0,shadowMapSize,shadowMapSize)
         bgfx.set_view_rect( VIEWID_SHADOW_START+1, 0,0,shadowMapSize,shadowMapSize)
         bgfx.set_view_rect( VIEWID_SHADOW_START+2, 0,0,shadowMapSize,shadowMapSize)
@@ -644,32 +644,32 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
         bgfx.set_view_frame_buffer( VIEWID_SHADOW_START+1, ctx.s_rtShadowMap[2])
         bgfx.set_view_frame_buffer( VIEWID_SHADOW_START+2, ctx.s_rtShadowMap[3])
         bgfx.set_view_frame_buffer( VIEWID_SHADOW_START+3, ctx.s_rtShadowMap[4])
-    end 
+    end
 
 
-    if config.debug_drawLightView then 
+    if config.debug_drawLightView then
         debug_lightView( lightViewPtr,lightProj,shadowMapSize )
-    end 
+    end
 
     -- -- Clear backbuffer at beginning.
     bgfx.set_view_clear(0, "CD", 0x000099ff, 1, 0)
     bgfx.touch(0)
-    
+
     -- Clear shadowmap rendertarget at beginning.
-    local flags = config.lightType == "DirectionLight" and "CD" or ""  
-    for i = 1, numSplits do 
+    local flags = config.lightType == "DirectionLight" and "CD" or ""
+    for i = 1, numSplits do
         local viewId = VIEWID_SHADOW_START + i - 1
         bgfx.set_view_clear( viewId , flags , 0xfefefeff  , 1 , 0 )
         bgfx.touch( viewId )
-    end 
+    end
 
     for i = 1,numSplits do
-        local viewId = VIEWID_SHADOW_START + i - 1        
+        local viewId = VIEWID_SHADOW_START + i - 1
         culling_shadow_cast_filter(select_filter)
         self:render_to_texture( entity, select_filter, viewId, self.materials.generate_shadowmap )
-    end 
+    end
 
-    -- bias matrix 
+    -- bias matrix
     local ymul = ctx.s_flipV and 0.5 or -0.5
     local zadd = config.depthImpl == "Linear" and 0 or 0.5
     local mtxBias = ms(  {
@@ -679,15 +679,15 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
                 0.5, 0.5, zadd, 1.0 },"P"
             )
 
-    for i = 1,numSplits do 
+    for i = 1,numSplits do
         local mtxTemp = ms( mtxBias, lightProj[i], "*P")
         ctx.shadowMapMtx[i] = ms(mtxTemp, lightView[1], "*m")
-        -- ctx & comp_rt references 
+        -- ctx & comp_rt references
         shadow.shadowMapMtx[i] = ctx.shadowMapMtx[i]
-    end  
+    end
 
     uniforms.shadowMapMtx0 = ctx.shadowMapMtx[1]
-    uniforms.shadowMapMtx1 = ctx.shadowMapMtx[2] 
+    uniforms.shadowMapMtx1 = ctx.shadowMapMtx[2]
     uniforms.shadowMapMtx2 = ctx.shadowMapMtx[3]
     uniforms.shadowMapMtx3 = ctx.shadowMapMtx[4]
 
@@ -696,57 +696,57 @@ function shadow_maker:generate_shadow( shadow_entid, select_filter )
     uniforms.s_shadowMap2 = bgfx.get_texture( ctx.s_rtShadowMap[3] )
     uniforms.s_shadowMap3 = bgfx.get_texture( ctx.s_rtShadowMap[4] )
 
-    -- draw depth texture 
-    if config.debug_drawShadow then 
+    -- draw depth texture
+    if config.debug_drawShadow then
         -- local screenProj = ms( { type = "ortho",l=0, r=1, b=1, t=0, n=0,f=100}, "m")
-        -- convert to new api 
+        -- convert to new api
         local screenProj = ms({type="mat", l=0, r=1, t=0, b=1, n=0, f= 100, ortho=true }, "m")	-- make a ortho mat
         local screenView = ms( {
-            1,  0, 0, 0, 
+            1,  0, 0, 0,
             0,  1, 0, 0,
             0,  0, 1, 0,
-            0,  0, 0, 1 }, "m" )   
+            0,  0, 0, 1 }, "m" )
         -- determine on-screen rectangle where depth texture will be drawn for debug
         local depthRectHeight = math.floor(ctx.height/3 )
         local depthRectWidth = depthRectHeight
         local depthRectX = 0
         local depthRectY = ctx.height - depthRectHeight     -- bottom - height = start y
-       
-        -- for debug shadow 
+
+        -- for debug shadow
         bgfx.set_view_rect( VIEWID_DRAWDEPTH_START+0, depthRectX+(0*depthRectWidth), depthRectY, depthRectWidth, depthRectHeight)
         bgfx.set_view_rect( VIEWID_DRAWDEPTH_START+1, depthRectX+(1*depthRectWidth), depthRectY, depthRectWidth, depthRectHeight)
         bgfx.set_view_rect( VIEWID_DRAWDEPTH_START+2, depthRectX+(2*depthRectWidth), depthRectY, depthRectWidth, depthRectHeight)
         bgfx.set_view_rect( VIEWID_DRAWDEPTH_START+3, depthRectX+(3*depthRectWidth), depthRectY, depthRectWidth, depthRectHeight)
 
-        bgfx.set_view_transform( VIEWID_DRAWDEPTH_START + 0, screenView, screenProj  )        
-        bgfx.set_view_transform( VIEWID_DRAWDEPTH_START + 1, screenView, screenProj  )        
-        bgfx.set_view_transform( VIEWID_DRAWDEPTH_START + 2, screenView, screenProj  )        
-        bgfx.set_view_transform( VIEWID_DRAWDEPTH_START + 3, screenView, screenProj  )        
+        bgfx.set_view_transform( VIEWID_DRAWDEPTH_START + 0, screenView, screenProj  )
+        bgfx.set_view_transform( VIEWID_DRAWDEPTH_START + 1, screenView, screenProj  )
+        bgfx.set_view_transform( VIEWID_DRAWDEPTH_START + 2, screenView, screenProj  )
+        bgfx.set_view_transform( VIEWID_DRAWDEPTH_START + 3, screenView, screenProj  )
 
-        for i = 1, numSplits do 
+        for i = 1, numSplits do
             local viewId = VIEWID_DRAWDEPTH_START + i -1
             bgfx.touch( viewId )
             bgfx.set_texture( 4, ctx.u_shadowMap[1],  bgfx.get_texture( ctx.s_rtShadowMap[i] ) )
             bgfx.set_state( ctx.state_rgba )
             screenSpaceQuad( shadowMapSize,shadowMapSize, ctx.s_flipV)
-            bgfx.submit( viewId, self.materials.debug_drawDepth.shader.prog )  
-        end 
-    end 
- 
-    -- render scene with shadow 
+            bgfx.submit( viewId, self.materials.debug_drawDepth.shader.prog )
+        end
+    end
+
+    -- render scene with shadow
     if config.debug_drawScene then
         bgfx.set_view_rect(VIEWID_DRAWSCENE,0,0,ctx.width,ctx.height)
-        bgfx.set_view_transform(VIEWID_DRAWSCENE,ms(camera_view,"m"),ms(camera_proj,"m") )   -- (id->pointer) bgfx need pointer     
+        bgfx.set_view_transform(VIEWID_DRAWSCENE,ms(camera_view,"m"),ms(camera_proj,"m") )   -- (id->pointer) bgfx need pointer
         self:render_debug_with_shadow(select_filter, self.materials.debug_drawScene)
-	end 
-	
+	end
+
 	shadow.ready = true
-end 
+end
 
 local function get_shadow_properties()
-    local properties = {} 
+    local properties = {}
 
-    for _,l_eid in world:each("shadow_maker") do 
+    for _,l_eid in world:each("shadow_maker") do
         local  sm_ent   = world[l_eid]
         local  uniforms = sm_ent.shadow_rt.uniforms
 
@@ -759,42 +759,42 @@ local function get_shadow_properties()
                                    type="v4",
                                    value = { 0, 0, uniforms.ss_offsetx, uniforms.ss_offsety } }
 
-        -- shadow matrices 
+        -- shadow matrices
         properties["u_shadowMapMtx0"] = { name  = "u_shadowMapMtx0", type  = "m4", value = uniforms.shadowMapMtx0 }
         properties["u_shadowMapMtx1"] = { name  = "u_shadowMapMtx1", type  = "m4", value = uniforms.shadowMapMtx1 }
         properties["u_shadowMapMtx2"] = { name  = "u_shadowMapMtx2", type  = "m4", value = uniforms.shadowMapMtx2 }
         properties["u_shadowMapMtx3"] = { name  = "u_shadowMapMtx3", type  = "m4", value = uniforms.shadowMapMtx3 }
-        -- shadow textures 
+        -- shadow textures
         properties["s_shadowMap0"] = {name = "s_shadowMap0", type = "texture", stage = 4, value = uniforms.s_shadowMap0}
         properties["s_shadowMap1"] = {name = "s_shadowMap1", type = "texture", stage = 5, value = uniforms.s_shadowMap1}
         properties["s_shadowMap2"] = {name = "s_shadowMap2", type = "texture", stage = 6, value = uniforms.s_shadowMap2}
         properties["s_shadowMap3"] = {name = "s_shadowMap3", type = "texture", stage = 7, value = uniforms.s_shadowMap3}
-    end 
+    end
 
-    return properties 
-end 
+    return properties
+end
 
 
 function shadow_maker:render_debug_with_shadow(select_filter, material)
     bgfx.touch( VIEWID_DRAWSCENE )
 	bgfx.set_view_mode(VIEWID_DRAWSCENE, '')
 	for _,prim in ipairs( select_filter.result) do
-		prim.material 	= material              
-		prim.properties =  get_shadow_properties()		
+		prim.material 	= material
+		prim.properties =  get_shadow_properties()
 		local mat = ms(ms:srtmat(prim.srt), "m")
 		render_util.draw_primitive(VIEWID_DRAWSCENE, prim, mat)
 	end
-end 
+end
 
 
-function shadow_maker:render_debug(select_filter)    
+function shadow_maker:render_debug(select_filter)
     bgfx.touch(VIEWID_DRAWSCENE)
 	bgfx.set_view_mode(VIEWID_DRAWSCENE, '')
 	for _,prim in ipairs(select_filter.result) do
 		local mat = ms(ms:srtmat(prim.srt), "m")
 		render_util.draw_primitive( VIEWID_DRAWSCENE, prim, mat)
 	end
-end 
+end
 
 function shadow_maker:render_to_texture(select_filter, viewId, shadow_material)
     bgfx.touch( viewId )                   -- test
@@ -803,24 +803,24 @@ function shadow_maker:render_to_texture(select_filter, viewId, shadow_material)
 		local surface_type = prim.material.surface_type
 		if surface_type.shadow.cast == "on" then
 			local cast_prim = {}
-			for k,v in pairs(prim) do 
-				cast_prim[k] = v 
-			end 
+			for k,v in pairs(prim) do
+				cast_prim[k] = v
+			end
 			cast_prim.material = shadow_material
 			cast_prim.properties = {}
-			
-			render_util.draw_primitive( viewId, cast_prim, cast_prim.srt)
-		end 
-	end 
 
-end     
+			render_util.draw_primitive( viewId, cast_prim, cast_prim.srt)
+		end
+	end
+
+end
 
 function shadow_maker:debug_drawshadow()
 
-end 
+end
 
 --------------------------------------------------------
--- filter component & system 
+-- filter component & system
 --    声明一个 shadow_cast_filter 组件类型
 --    定义组件初始化函数，初始化组件内部结构-剪裁结果表
 -- shadow_cast_filter
@@ -830,14 +830,14 @@ function shadow_cast_filter:init()
     return {
         result = {}
     }
-end 
+end
 
 local gen_shadow_system = ecs.system "generate_shadow_system"
 
 gen_shadow_system.singleton "shadow_cast_filter"
---gen_shadow_system.depend   "view_system"       
+--gen_shadow_system.depend   "view_system"
 --gen_shadow_system.dependby "lighting_primitive_filter_system"
---gen_shadow_system.dependby "entity_rendering" 
+--gen_shadow_system.dependby "entity_rendering"
 
 function gen_shadow_system:init()
 	local function add_shadow_maker_entity()
@@ -845,12 +845,12 @@ function gen_shadow_system:init()
             shadow_maker = {},
 			shadow_config = {},
 			shadow_rt = {},
-			viewid = VIEWID_SHADOW, 
+			viewid = VIEWID_SHADOW,
 			view_rect = {
 				x = 0, y = 0,
 				w = SHADOWMAP_SIZE,
 				h = SHADOWMAP_SIZE,
-			}, 
+			},
 			frustum = {type="mat", n = 0.1, f = 1000, fov = 1, aspect = 1},
             clear_component = {
 				color = 0,
@@ -862,21 +862,21 @@ function gen_shadow_system:init()
 			name = "shadowmap_maker",
 		}
         return assert( world[eid] )
-    end 
+    end
 
     local entity = add_shadow_maker_entity()
-    shadow_maker:init( entity )   
+    shadow_maker:init( entity )
 end
 
--- shadow_maker 
+-- shadow_maker
 --  可以扩充 shadow_maker 功能，使用不同的剪裁系统
 --  独立成辅助函数类
 function gen_shadow_system:update()
-    -- if shadow_maker.is_require then 
+    -- if shadow_maker.is_require then
     --     -- local shadow_entid = world:first_entity("shadow_rt")
     --     local shadow_entid = world:first_entity_id("shadow_maker")
-    --     shadow_maker:generate_shadow(shadow_entid, self.shadow_cast_filter ) 
-    -- end 
+    --     shadow_maker:generate_shadow(shadow_entid, self.shadow_cast_filter )
+    -- end
     -- shadow_maker:debug_drawshadow()
 end
 
@@ -892,8 +892,8 @@ end
 -- 生成阴影
 -- submitShadow(viewId,matrix,mesh,material,state)                    -- 阴影生成的替代好修改,新的shader
 -- 渲染网格
--- submitShadow(viewId,matrix,mesh,native material,state,withshadow)  -- 修改原来的shader，支持shadow 
+-- submitShadow(viewId,matrix,mesh,native material,state,withshadow)  -- 修改原来的shader，支持shadow
 
 
 -- system 不是加载顺序执行的，以不确定的顺序
--- 如果两个system 想明确的前后次序执行，必须明确指定 depend 
+-- 如果两个system 想明确的前后次序执行，必须明确指定 depend

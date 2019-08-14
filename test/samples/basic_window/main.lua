@@ -89,10 +89,10 @@ local function program_load(vspath, fspath)
 		if fh == nil then
 			error(string.format("not found path:", filepath))
 		end
-	
+
 		local content = fh:read "a"
 		fh:close()
-	
+
 		local h = bgfx.create_shader(content)
 		if h == nil then
 			error("create vertex shader failed")
@@ -100,18 +100,18 @@ local function program_load(vspath, fspath)
 		bgfx.set_name(h, filepath)
 		return h
 	end
-	
+
 	local vh = createshader(vspath)
 	local fh = createshader(fspath)
 
-	return bgfx.create_program(vh, fh)	
+	return bgfx.create_program(vh, fh)
 end
 
 local function init_cube()
 	cube.prog = program_load(shaderpath .. "/cubes/vs_cubes.sc", shaderpath .. "/cubes/fs_cubes.sc")
-	
+
 	cube.state = bgfx.make_state({ PT = "TRISTRIP" } , nil)	-- from BGFX_STATE_DEFAULT
-	cube.vdecl = bgfx.vertex_decl {
+	cube.vdecl = bgfx.vertex_layout {
 		{ "POSITION", 3, "FLOAT" },
 		{ "COLOR0", 4, "UINT8", true },
 	}
@@ -133,7 +133,7 @@ local function init_cube()
 	}
 end
 
-local function init_view()	
+local function init_view()
 	assert(width); assert(height)
 	bgfx.set_view_rect(0, 0, 0,width, height)
 	local viewmat = ms({0, 0, -5, 1}, {0, 0, 0, 0}, "lm")
@@ -179,7 +179,7 @@ function callback.update()
 	bgfx.set_view_clear(0, "CD", 0xffff0000, 1, 0)
 
 	bgfx.set_state(cube.state)
-	
+
 	bgfx.set_vertex_buffer(cube.vb)
 	bgfx.set_index_buffer(cube.ib)
 	bgfx.set_state(cube.state)

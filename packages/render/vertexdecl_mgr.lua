@@ -39,7 +39,7 @@ local function get_attrib(e)
 	return attrib
 end
 
-local shortname_mapper = {	
+local shortname_mapper = {
 	u = "UINT8", U = "UINT10", i = "INT16",
 	h = "HALF",	f = "FLOAT",
 }
@@ -64,20 +64,20 @@ local function create_decl(vb_layout)
 		decl[#decl+1] = decl_name(e)
 	end
 
-	local d, stride = bgfx.vertex_decl(decl)
+	local d, stride = bgfx.vertex_layout(decl)
 	return {handle=d, stride=stride}
 end
 
 local default_vbelem = "_30NIf"
 function mgr.correct_elem(elem)
 	local len = #elem
-	return len == #default_vbelem and 
-			elem or 
+	return len == #default_vbelem and
+			elem or
 			elem .. default_vbelem:sub(len+1)
 end
 
 function mgr.correct_layout(layout)
-	local t = {}	
+	local t = {}
 	for e in layout:gmatch("%w+") do
 		t[#t+1] = mgr.correct_elem(e)
 	end
@@ -85,8 +85,8 @@ function mgr.correct_layout(layout)
 	return table.concat(t, "|")
 end
 
-function mgr.get(layout)	
-	local decl = declmapper[layout]	
+function mgr.get(layout)
+	local decl = declmapper[layout]
 	if decl then
 		return decl
 	end

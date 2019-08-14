@@ -46,13 +46,13 @@ local UI_VIEW = 0
 
 local nkatlas = {}
 local nkbtn = {}
-local nkimage = {} 
+local nkimage = {}
 local nkb_images = { button = {} }
 local ir_images = { button = {} }
 
 local joy_image = {}
 local joy_base = {}
-local joy_attack = { button= {} } 
+local joy_attack = { button= {} }
 
 local function save_ppm(filename, data, width, height, pitch)
 	local f = assert(io.open(filename, "wb"))
@@ -91,7 +91,7 @@ local message = {}
 
 local btn_func = {
 	LABEL    = 1,  BUTTON = 2, IMAGE = 3,    WIDGET = 4,   EDIT = 5,
-	PROGRESS = 6,  SLIDER = 7, CHECKBOX = 8, COMBOBOX = 9, PROPERTY = 10, 
+	PROGRESS = 6,  SLIDER = 7, CHECKBOX = 8, COMBOBOX = 9, PROPERTY = 10,
 	RADIO =11,     SKIN = 12,  AREA = 13,    IRREGULAR=14, JOYSTICK = 15,
 }
 
@@ -100,92 +100,92 @@ local btn_ac = 0
 local function nk_samples()
     nk.setFont(1)
 	if nk.windowBegin( "Test","Test Window 汉字 ui 特性展示", 0, 0, 720, 460,
-					   "border", "movable", "title", "scalable",'scrollbar') then 
+					   "border", "movable", "title", "scalable",'scrollbar') then
 		-- layout row 1
-		nk.layoutRow('static',30,{120,120,32,140,120,140} ) 
+		nk.layoutRow('static',30,{120,120,32,140,120,140} )
 		nk.setFont(2)
 		if nk.button("label","triangle left") then
-			btn_ac  = btn_func.LABEL 
-		end 
+			btn_ac  = btn_func.LABEL
+		end
 		if nk.button( "button","triangle right" ) then
-			btn_ac = btn_func.BUTTON 
-		end 
-		--image 
-		if nk.button(nil, nk.subImage(nkbtn,0,0,69,52)   ) then 
-			btn_ac = btn_func.IMAGE 
-		end 
-		if nk.button( "widget") then 
-			btn_ac = btn_func.WIDGET			
-		end 
+			btn_ac = btn_func.BUTTON
+		end
+		--image
+		if nk.button(nil, nk.subImage(nkbtn,0,0,69,52)   ) then
+			btn_ac = btn_func.IMAGE
+		end
+		if nk.button( "widget") then
+			btn_ac = btn_func.WIDGET
+		end
 		if nk.button("edit",nk.subImageId(nkbtn.handle,nkbtn.w,nkbtn.h,0,0,69,52)) then
-			btn_ac = btn_func.EDIT 
-		end 
+			btn_ac = btn_func.EDIT
+		end
 		if nk.button("progress","rect solid") then
 			btn_ac = btn_func.PROGRESS
-		end 
+		end
 
-		-- layout row 2 
-		nk.layoutRow('static',30,{120,120,32,140,140,120} )  
+		-- layout row 2
+		nk.layoutRow('static',30,{120,120,32,140,140,120} )
 		if nk.button("slider","rect solid") then
 			btn_ac = btn_func.SLIDER
-		end 
+		end
 		if nk.button("radio","circle solid") then
-			btn_ac = btn_func.RADIO 
-		end 
+			btn_ac = btn_func.RADIO
+		end
 		if nk.button("o","circle outline") then
 			nk.defaultStyle()
-		end 
+		end
 		if nk.button("checkbox","rect outline") then
-			btn_ac = btn_func.CHECKBOX 
-		end 
+			btn_ac = btn_func.CHECKBOX
+		end
 		if nk.button("combobox","triangle down") then
 			btn_ac = btn_func.COMBOBOX
-		end 
-		if nk.button("property","plus") then 
-			btn_ac = btn_func.PROPERTY 
-		end 
+		end
+		if nk.button("property","plus") then
+			btn_ac = btn_func.PROPERTY
+		end
 
 		---- layout row 3
-		nk.layoutRow("dynamic",32,{0.05,0.05,0.05,0.05,0.05,0.18,0.18,0.1,0.1}) 
+		nk.layoutRow("dynamic",32,{0.05,0.05,0.05,0.05,0.05,0.18,0.18,0.1,0.1})
 		if nk.button(nil,"#ff0000") then
 			nk.themeStyle("theme red")
-		end 
+		end
 		if nk.button(nil,"#00ff00") then
 			colorStyle()
-		end 
+		end
 		if nk.button(nil,"#0000ff") then
 			nk.themeStyle("theme blue")
-		end 
+		end
 		if nk.button(nil,"#ffffff") then
 			nk.themeStyle("theme white")
-		end 
+		end
 		if nk.button(nil,"#1d1d1d") then
 			nk.themeStyle("theme dark")
-		end 
+		end
 
-		if nk.button("skinning","plus") then 
+		if nk.button("skinning","plus") then
 			btn_ac = btn_func.SKIN
-		end 
-		if nk.button("area","plus") then 
+		end
+		if nk.button("area","plus") then
 			btn_ac = btn_func.AREA
-		end 
+		end
 		if nk.button("irrbtn") then
 			btn_ac = btn_func.IRREGULAR
-		end 
-		if nk.button("joystick")  then 
+		end
+		if nk.button("joystick")  then
 			btn_ac = btn_func.JOYSTICK
-		end 
-		
+		end
+
 		-- nk.layoutRow('dynamic',30,{1/6,1/6,1/6,1/6,1/6,1/6} )
 		-- nk.layoutRow("dynamic",30,1)
 		-- print("---id("..nkimage.handle..")"..' w'..nkimage.w..' h'..nkimage.h)
 
-		-- do action 
-		if btn_ac == btn_func.LABEL  then 
-			label() 
+		-- do action
+		if btn_ac == btn_func.LABEL  then
+			label()
 		elseif btn_ac == btn_func.BUTTON then
 			button( nkbtn )
-		elseif btn_ac == btn_func.IMAGE then 
+		elseif btn_ac == btn_func.IMAGE then
 			image( nkimage )
 		elseif btn_ac == btn_func.WIDGET then
 			widget( nkbtn )
@@ -211,12 +211,12 @@ local function nk_samples()
 			irr_btn( ir_images )
 		elseif btn_ac == btn_func.JOYSTICK then
 			joystick( joy_image,joy_base,joy_attack )
-		end 
-	end 
+		end
+	end
 
-	nk.windowEnd()	
+	nk.windowEnd()
 
-end 
+end
 
 local function mainloop()
 	save_screenshot "screenshot.ppm"
@@ -224,7 +224,7 @@ local function mainloop()
 		nkmsg.push(message, msg, x,y,z,w,u)
 	end
 	nk.input(message)
- 
+
 	nk_samples();
 
 	nk.update()
@@ -234,7 +234,7 @@ end
 function loadfonts(font,size,charset)
 	print("charset length ="..#charset[2])
 	return loadfile(font),size,charset
-end 
+end
 
 --staging ,not finished
 function loadatlas(texname,cfg)
@@ -242,14 +242,14 @@ function loadatlas(texname,cfg)
 	atlas.name = texname
 	for _,v in pairs(cfg) do
 		atlas[v] = { name,x,x,w,h }
-	end 
-end 
--- 从 nkimage 按 atlas 找到 subimage 
+	end
+end
+-- 从 nkimage 按 atlas 找到 subimage
 function subimage(name,nkimage,atlas)
 	local si = atlas[ name ]
 	print(si.id,si.w,si.h,si.x0,si.y0,si.x1,si.y1)
-end 
---staging end 
+end
+--staging end
 
 function loadtexture(texname,info)
 	--local f = assert(io.open(texname, "rb"))
@@ -260,18 +260,18 @@ function loadtexture(texname,info)
 	--bgfx.set_name(h, texname)
 
 	local image = nk.loadImage( texname );
-	--bgfx.set_name(image.handle,texname)    -- TEXTURE<<16|image.handle 
+	--bgfx.set_name(image.handle,texname)    -- TEXTURE<<16|image.handle
 
 	return image
-end 
+end
 
 function loadTestedTextures()
-	-- tested load images 	
+	-- tested load images
 	--nkb_images.n =
 	nkb_images.button.n =  loadtexture("assets/build/textures/button.png")
 	nkb_images.button.h =  loadtexture("assets/build/textures/button_hover.png")
 	nkb_images.button.c =  loadtexture("assets/build/textures/button_active.png")
-	--irregular button 
+	--irregular button
 	ir_images.button.n = loadtexture("assets/build/textures/irbtn_normal.png")
 	ir_images.button.h = loadtexture("assets/build/textures/irbtn_hover.png")
 	ir_images.button.c = loadtexture("assets/build/textures/irbtn_active.png")
@@ -288,10 +288,10 @@ function loadTestedTextures()
 	-- makeImage from memory
 	nkatlas = nk.loadImageFromMemory(raw_data.data,raw_data.w,raw_data.h,raw_data.c)
 	-- return image directly
-	nkatlas = loadtexture( "assets/build/textures/gwen.png") 
-	nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h 
+	nkatlas = loadtexture( "assets/build/textures/gwen.png")
+	nkimage = nk.makeImage( nkatlas.handle,nkatlas.w,nkatlas.h)  -- make from outside id ,w,h
 	nkbtn = loadtexture( "assets/build/textures/button_active.png" )
-    -- tested load images	
+    -- tested load images
 end
 
 local function init(canvas, fbw, fbh)
@@ -302,7 +302,7 @@ local function init(canvas, fbw, fbh)
 		view = UI_VIEW,
 		width = fbw,
 		height = fbh,
-		decl = bgfx.vertex_decl {
+		decl = bgfx.vertex_layout {
 			{ "POSITION", 2, "FLOAT" },
 			{ "TEXCOORD0", 2, "FLOAT" },
 			{ "COLOR0", 4, "UINT8", true },
