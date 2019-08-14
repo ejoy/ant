@@ -16,6 +16,7 @@ OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_wid
 ifeq "$(PLAT)" "mingw"
 CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
 OBJS += $(ODIR)/imgui_win32.o
+LIBS = -limm32
 
 $(ODIR)/imgui_win32.o : imgui_win32.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
@@ -49,7 +50,7 @@ $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_inte
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 
 $(ODIR)/imgui.dll : $(OBJS)
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++ -limm32
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++ $(LIBS)
 
 $(ODIR)/libimgui.a : $(OBJS)
 	ar rsv $@ $^

@@ -339,15 +339,26 @@ function access.link(repo, identity, path, buildhash)
 	return binhash, buildhash
 end
 
-function access.checkbuild(repo, buildfile)
+function access.check_build(repo, buildfile)
 	for _, dep in ipairs(rawtable(buildfile).depends) do
 		local timestamp, filename = dep[2], dep[3]
-		if timestamp ~= lfs.last_write_time(access.realpath(repo, filename)) then
+		local realpath = access.realpath(repo, filename)
+		if not realpath or not lfs.exists(realpath)  or timestamp ~= lfs.last_write_time(realpath) then
+			lfs.remove(buildfile)
 			return false
 		end
 	end
 	return true
-	
+end
+
+function access.clean_build(repo, identity, srcpath)
+	local srcfile = access.realpath(repo, srcpath)
+	if not srcfile then
+		return
+	end
+	local pathhash = access.sha1(srcpath)
+	local buildfile = repo._build / pathhash / srcfile:filename() .. identity
+	lfs.remove(buildfile)
 end
 
 return access

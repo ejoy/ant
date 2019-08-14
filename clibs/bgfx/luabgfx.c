@@ -15,7 +15,7 @@
 #include "simplelock.h"
 #include "bgfx_interface.h"
 
-#if BGFX_API_VERSION != 99
+#if BGFX_API_VERSION != 100
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -700,7 +700,7 @@ push_limits(lua_State *L, const bgfx_caps_limits_t *lim) {
 	PUSH_LIMIT(maxTextures)
 	PUSH_LIMIT(maxTextureSamplers)
 	PUSH_LIMIT(maxComputeBindings)
-	PUSH_LIMIT(maxVertexDecls)
+	PUSH_LIMIT(maxVertexLayouts)
 	PUSH_LIMIT(maxVertexStreams)
 	PUSH_LIMIT(maxIndexBuffers)
 	PUSH_LIMIT(maxVertexBuffers)
@@ -794,7 +794,7 @@ lgetStats(lua_State *L) {
 		PUSHSTAT(numTextures);
 		PUSHSTAT(numUniforms);
 		PUSHSTAT(numVertexBuffers);
-		PUSHSTAT(numVertexDecls);
+		PUSHSTAT(numVertexLayouts);
 	case 'm': // memories
 		PUSHSTAT(textureMemoryUsed);
 		PUSHSTAT(rtMemoryUsed);
@@ -1459,22 +1459,22 @@ static struct AttribTypeNamePairs attrib_type_name_pairs[BGFX_ATTRIB_TYPE_COUNT]
 
 
 static int
-lexportVertexDecl(lua_State *L) {
-	bgfx_vertex_decl_t *decl = (bgfx_vertex_decl_t *)lua_touserdata(L, 1);
+lexportVertexLayout(lua_State *L) {
+	bgfx_vertex_layout_t *decl = (bgfx_vertex_layout_t *)lua_touserdata(L, 1);
 
 	if (decl == NULL)
-		luaL_error(L, "Invalid decl data!");
+		luaL_error(L, "Invalid layout data!");
 
 	lua_newtable(L);
 	int num_attrib = 1;
 	for (int attrib = BGFX_ATTRIB_POSITION; attrib < BGFX_ATTRIB_COUNT; ++attrib) {
-		if (BGFX(vertex_decl_has)(decl, (bgfx_attrib_t)attrib)) {
+		if (BGFX(vertex_layout_has)(decl, (bgfx_attrib_t)attrib)) {
 			lua_newtable(L);
 
 			uint8_t num;
 			bool nomalized, as_int;
 			bgfx_attrib_type_t attrib_type;
-			BGFX(vertex_decl_decode)(decl, (bgfx_attrib_t)attrib, &num, &attrib_type, &nomalized, &as_int);
+			BGFX(vertex_layout_decode)(decl, (bgfx_attrib_t)attrib, &num, &attrib_type, &nomalized, &as_int);
 			assert(attrib_type < BGFX_ATTRIB_TYPE_COUNT);
 
 			lua_pushstring(L, attrib_name_pairs[attrib].name);
@@ -1501,17 +1501,17 @@ lexportVertexDecl(lua_State *L) {
 	return 1;
 }
 static inline int
-lvertexDeclStride(lua_State *L) {
+lvertexLayoutStride(lua_State *L) {
 	int type = lua_type(L, 1);
 	if (type != LUA_TUSERDATA) {
-		luaL_error(L, "lvertexDeclStride : invalid input data");
+		luaL_error(L, "lvertexLayoutStride : invalid input data");
 	}
 	size_t si = lua_rawlen(L, 1);
-	if (sizeof(bgfx_vertex_decl_t) != si) {
-		luaL_error(L, "bad vertex decl input");
+	if (sizeof(bgfx_vertex_layout_t) != si) {
+		luaL_error(L, "bad vertex layout input");
 	}
 
-	bgfx_vertex_decl_t *decl = (bgfx_vertex_decl_t*)lua_touserdata(L, 1);
+	bgfx_vertex_layout_t *decl = (bgfx_vertex_layout_t*)lua_touserdata(L, 1);
 	lua_pushnumber(L, decl->stride);
 	return 1;
 }
@@ -1535,7 +1535,7 @@ static inline bgfx_attrib_type_t find_attrib_type(const char* what) {
 }
 
 static void
-vertex_decl_add(lua_State *L, bgfx_vertex_decl_t *vd) {
+vertex_layout_add(lua_State *L, bgfx_vertex_layout_t *vd) {
 	if (lua_geti(L, -1, 1) != LUA_TSTRING) {
 		luaL_error(L, "Invalid attrib enum");
 	}
@@ -1603,7 +1603,7 @@ vertex_decl_add(lua_State *L, bgfx_vertex_decl_t *vd) {
 	int asint = lua_toboolean(L, -1);
 	lua_pop(L, 1);
 
-	BGFX(vertex_decl_add)(vd, attrib, num, attrib_type, normalized, asint);
+	BGFX(vertex_layout_add)(vd, attrib, num, attrib_type, normalized, asint);
 }
 
 struct string_reader {
@@ -1693,11 +1693,11 @@ idToAttribType(uint16_t id) {
 
 static size_t
 new_vdecl_from_string(lua_State *L, const char *vdecl, size_t sz) {
-	bgfx_vertex_decl_t * vd = lua_newuserdata(L, sizeof(*vd));
+	bgfx_vertex_layout_t * vd = lua_newuserdata(L, sizeof(*vd));
 	struct string_reader rd = { L, vdecl, sz, 0 };
 	uint8_t numAttrs = read_int(&rd, 1);
 	uint16_t stride = read_int(&rd, 2);
-	BGFX(vertex_decl_begin)(vd, BGFX_RENDERER_TYPE_NOOP);
+	BGFX(vertex_layout_begin)(vd, BGFX_RENDERER_TYPE_NOOP);
 	int i;
 	for (i=0;i<numAttrs;i++) {
 		uint16_t offset = read_int(&rd, 2);
@@ -1709,11 +1709,11 @@ new_vdecl_from_string(lua_State *L, const char *vdecl, size_t sz) {
 		bgfx_attrib_t attr = idToAttrib(attribId);
 		bgfx_attrib_type_t type = idToAttribType(attribTypeId);
 		if (attr != BGFX_ATTRIB_COUNT && type != BGFX_ATTRIB_TYPE_COUNT) {
-			BGFX(vertex_decl_add)(vd, attr, num, type, normalized, asInt);
+			BGFX(vertex_layout_add)(vd, attr, num, type, normalized, asInt);
 			vd->offset[attr] = offset;
 		}
 	}
-	BGFX(vertex_decl_end)(vd);
+	BGFX(vertex_layout_end)(vd);
 	vd->stride = stride;
 	lua_pushinteger(L, stride);
 	return rd.total;
@@ -1727,13 +1727,13 @@ new_vdecl_from_string(lua_State *L, const char *vdecl, size_t sz) {
 	}
  */
 static int
-lnewVertexDecl(lua_State *L) {
+lnewVertexLayout(lua_State *L) {
 	if (lua_isstring(L, 1)) {
 		int offset = luaL_optinteger(L, 2, 1) - 1;
 		size_t sz;
 		const char * vdecl = luaL_checklstring(L, 1, &sz);
 		if (offset >= sz) {
-			return luaL_error(L, "Invalid vertex decl");
+			return luaL_error(L, "Invalid vertex layout");
 		}
 		size_t s = new_vdecl_from_string(L, vdecl+offset, sz-offset);
 		lua_pushinteger(L, s + offset + 1);
@@ -1744,30 +1744,30 @@ lnewVertexDecl(lua_State *L) {
 	if (!lua_isnoneornil(L, 2)) {
 		id = renderer_type_id(L, 2);
 	}
-	bgfx_vertex_decl_t * vd = lua_newuserdata(L, sizeof(*vd));
-	BGFX(vertex_decl_begin)(vd, id);
+	bgfx_vertex_layout_t * vd = lua_newuserdata(L, sizeof(*vd));
+	BGFX(vertex_layout_begin)(vd, id);
 	int i, type;
 	for (i=1; (type = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
 		switch (type) {
 		case LUA_TNUMBER:
-			BGFX(vertex_decl_skip)(vd, lua_tointeger(L, -1));
+			BGFX(vertex_layout_skip)(vd, lua_tointeger(L, -1));
 			break;
 		case LUA_TTABLE:
-			vertex_decl_add(L, vd);
+			vertex_layout_add(L, vd);
 			break;
 		default:
-			return luaL_error(L, "Invalid vertex decl %s", lua_typename(L, type));
+			return luaL_error(L, "Invalid vertex layout %s", lua_typename(L, type));
 		}
 		lua_pop(L, 1);
 	}
 	lua_pop(L, 1);
-	BGFX(vertex_decl_end)(vd);
+	BGFX(vertex_layout_end)(vd);
 	lua_pushinteger(L, vd->stride);
 	return 2;
 }
 
 static const bgfx_memory_t *
-convert_by_decl(const void * data, size_t sz, bgfx_vertex_decl_t *src_vd, bgfx_vertex_decl_t *desc_vd) {
+convert_by_decl(const void * data, size_t sz, bgfx_vertex_layout_t *src_vd, bgfx_vertex_layout_t *desc_vd) {
 	int n = sz / src_vd->stride;
 	const bgfx_memory_t *mem = BGFX(alloc)(n * desc_vd->stride);
 	BGFX(vertex_convert)(desc_vd, mem->data, src_vd, data, n);
@@ -1845,7 +1845,7 @@ extract_buffer_stream(lua_State* L, int idx, int n, struct BufferDataStream *str
 }
 
 static const bgfx_memory_t *
-create_mem_from_table(lua_State *L, int idx, int n, bgfx_vertex_decl_t *src_vd, bgfx_vertex_decl_t *desc_vd) {
+create_mem_from_table(lua_State *L, int idx, int n, bgfx_vertex_layout_t *src_vd, bgfx_vertex_layout_t *desc_vd) {
 	// binary data
 	int t = lua_geti(L, idx, n);
 	if (t == LUA_TLIGHTUSERDATA || t == LUA_TUSERDATA) {
@@ -1916,12 +1916,12 @@ get_stride(lua_State *L, const char *format) {
 	b : uint8
  */
 static const bgfx_memory_t *
-create_from_table_decl(lua_State *L, int idx, bgfx_vertex_decl_t *vd) {
+create_from_table_decl(lua_State *L, int idx, bgfx_vertex_layout_t *vd) {
 	luaL_checktype(L, idx, LUA_TTABLE);
 	const int elemtype = lua_geti(L, idx, 1);
 	if (elemtype == LUA_TUSERDATA) {
 		// it's vd
-		bgfx_vertex_decl_t *src_vd = lua_touserdata(L, -1);
+		bgfx_vertex_layout_t *src_vd = lua_touserdata(L, -1);
 		if (vd == NULL || memcmp(src_vd, vd, sizeof(*vd)) == 0) {
 			return create_mem_from_table(L, idx, 2, NULL, NULL);
 		} else {
@@ -2050,7 +2050,7 @@ NORMALIZE(float v[3]) {
 }
 
 static void
-calc_tangent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_decl_t *vd, int index) {
+calc_tangent_vb(lua_State *L, const bgfx_memory_t *mem, bgfx_vertex_layout_t *vd, int index) {
 	void *vertices = mem->data;
 	uint32_t numVertices = mem->size / vd->stride;
 	const uint16_t *indices;
@@ -2185,9 +2185,9 @@ copy_mem_from_userdata(lua_State *L, int idx) {
  */
 static int
 lcreateVertexBuffer(lua_State *L) {
-	bgfx_vertex_decl_t *vd = lua_touserdata(L, 2);
+	bgfx_vertex_layout_t *vd = lua_touserdata(L, 2);
 	if (vd == NULL)
-		return luaL_error(L, "Invalid vertex decl");
+		return luaL_error(L, "Invalid vertex layout");
 	
 	const bgfx_memory_t *mem = (lua_type(L, 1) == LUA_TUSERDATA) ?
 		copy_mem_from_userdata(L, 1) :
@@ -2227,9 +2227,9 @@ lcreateVertexBuffer(lua_State *L) {
 
 static int
 lcreateDynamicVertexBuffer(lua_State *L) {
-	bgfx_vertex_decl_t *vd = lua_touserdata(L, 2);
+	bgfx_vertex_layout_t *vd = lua_touserdata(L, 2);
 	if (vd == NULL)
-		return luaL_error(L, "Invalid vertex decl");
+		return luaL_error(L, "Invalid vertex layout");
 	uint16_t flags = BGFX_BUFFER_NONE;
 	if (lua_isstring(L, 3)) {
 		const char *f = lua_tostring(L, 3);
@@ -2522,11 +2522,11 @@ lallocTB(lua_State *L) {
 		max_i = lua_tointeger(L, 3);
 		vd_index = 4;
 	}
-	bgfx_vertex_decl_t *vd = NULL;
+	bgfx_vertex_layout_t *vd = NULL;
 	if (max_v) {
 		vd = lua_touserdata(L, vd_index);
 		if (vd == NULL) {
-			return luaL_error(L, "Need vertex decl");
+			return luaL_error(L, "Need vertex layout");
 		}
 	}
 
@@ -4199,7 +4199,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "submit", lsubmit },
 		{ "make_state", lmakeState },
 		{ "set_state", lsetState },
-		{ "vertex_decl", lnewVertexDecl },
+		{ "vertex_layout", lnewVertexLayout },
 		{ "create_vertex_buffer", lcreateVertexBuffer },
 		{ "create_dynamic_vertex_buffer", lcreateDynamicVertexBuffer },
 		{ "create_index_buffer", lcreateIndexBuffer },
@@ -4251,8 +4251,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_image", lsetImage },
 		{ "request_screenshot", lrequestScreenshot },
 		{ "get_screenshot", lgetScreenshot },
-		{ "export_vertex_decl", lexportVertexDecl },
-		{ "vertex_decl_stride", lvertexDeclStride },
+		{ "export_vertex_layout", lexportVertexLayout },
+		{ "vertex_layout_stride", lvertexLayoutStride },
 		{ "get_log", lgetLog },
 
 		{ NULL, NULL },

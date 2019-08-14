@@ -14,6 +14,9 @@ CLIBS = -I..
 $(ODIR)/terrain.o : terrain.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC) $(CLIBS) $(GLM_DIR)
 
+terrain.dll: $(ODIR)/terrain.dll | $(ODIR)
+	cp $^ $@
+
 $(ODIR)/terrain.dll : $(ODIR)/terrain.o 
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB)
 
