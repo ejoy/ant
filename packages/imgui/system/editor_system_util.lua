@@ -6,6 +6,8 @@ local geopkg    = import_package "ant.geometry"
 local fs        = require "filesystem"
 local assetmgr = import_package "ant.asset".mgr
 
+local RES_IDX = 1
+
 local function line(start_pos, end_pos, color)  
     local vb, ib = {}, {}       
     local function add_vertex(pos, clr)
@@ -59,7 +61,8 @@ local function create_line_entity(world, name, start_pos,end_pos,color,view_tag,
     local num_vertices = #vb
     local num_indices = #ib
 
-    local reskey = fs.path(string.format("//meshres/%s.mesh",name))
+    local reskey = fs.path(string.format("//meshres/line_%s.mesh",RES_IDX))
+    RES_IDX = RES_IDX + 1
     grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
