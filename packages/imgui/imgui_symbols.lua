@@ -47,7 +47,8 @@ function widget.LabelText() end
 function widget.BulletText() end
 function widget.BeginCombo() end
 function widget.EndCombo() end
-function widget.Selectable() end
+function widget.Selectable(name,selected,  x,y,flags,disable) end
+--widget.Selectable(name,{[1]=select_name,item_flags=?,width=?,height=?},disable)
 function widget.TreeNode() end
 function widget.TreePop() end
 function widget.CollapsingHeader() end
@@ -427,3 +428,4 @@ function IO.MetricsRenderIndices()      -- Indices output during last call to Re
 function IO.MetricsRenderWindows()      -- Number of visible windows
 function IO.MetricsActiveWindows()      -- Number of active windows
 function IO.MetricsActiveAllocations()  -- Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
+

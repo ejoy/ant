@@ -97,6 +97,8 @@ local function send_entity(eid,typ)
     local entity_info = {type = typ}
     if eid == nil then
         hub.publish(WatcherEvent.EntityInfo,entity_info)
+        last_eid = nil
+        last_tbl = nil
     else
         local setialize_result = {}
         setialize_result[eid] = serialize.entity2tbl(world,eid)
@@ -125,21 +127,28 @@ end
 
 local function create_outline(seleid)
     local se = world[seleid]
-    local trans = se.transform
-    local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
-    local outlineeid = world:create_entity {
-        transform = mu.srt(s, r, t),
-        rendermesh = {},
-        material = {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"}},
-        can_render = true,
-        main_view = true,
-        outline_entity = true,
-        target_entity = seleid,
-        -- name = "outline_object"
-    }
-    local oe = world[outlineeid]
-    oe.rendermesh.reskey = se.rendermesh.reskey
-    assetmgr.load(se.rendermesh.reskey)
+    if se then
+        if not se.hierarchy then
+            world:add_component(seleid,"hierarchy",{})
+        end
+        -- local trans = se.transform
+        -- local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
+        local t = mu.identity_transform()
+        t.parent = seleid
+        local outlineeid = world:create_entity {
+            transform = t,
+            rendermesh = {},
+            material = {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"}},
+            can_render = true,
+            main_view = true,
+            outline_entity = true,
+            target_entity = seleid,
+            -- name = "outline_object"
+        }
+        local oe = world[outlineeid]
+        oe.rendermesh.reskey = se.rendermesh.reskey
+        assetmgr.load(se.rendermesh.reskey)
+    end
 end
 
 
@@ -267,23 +276,6 @@ function editor_watcher_system:pickup()
     end
 end
 
-function editor_watcher_system:before_render()
-    for _,eid in world:each("outline_entity") do
-        local outline_entity = world[eid]
-        local target_eid = outline_entity.target_entity
-        local target_entity = world[target_eid]
-        if target_entity then
-            local trans = target_entity.transform
-            assert(trans and trans.world,"trans and trans.world is nil,trans is "..tostring(trans))
-            local s,r,t = ms(trans.world,"~TTT")
-
-            world:add_component_child(outline_entity.transform,"s","vector",s)
-            world:add_component_child(outline_entity.transform,"r","vector",r)
-            world:add_component_child(outline_entity.transform,"t","vector",t)
-        end
-    end
-    
-end
 
 function editor_watcher_system:after_update()
     local hierarchy_dirty = false

@@ -7,6 +7,7 @@ local cursor    = imgui.cursor
 local enum      = imgui.enum
 local IO      = imgui.IO
 local hub       = import_package "ant.editor".hub
+local Event = require "hub_event"
 
 local inputmgr = import_package "ant.inputmgr"
 
@@ -41,6 +42,8 @@ function GuiCanvas:_init()
     self.pause_on_error = true
     self.is_pausing = false
     self:set_fps(DefaultFPS)
+    self.gizmo_type = {"position","rotation","scale"}
+    self.gizmo_select = {"position",width=50}
 end
 
 function GuiCanvas:set_fps(fps)
@@ -57,6 +60,7 @@ function GuiCanvas:bind_world( world, world_update)
     self.next_frame_time = 0
     self.time_count = 0
     self.last_update = nil
+    self.last_world_update_limit = nil
 end
 
 function GuiCanvas:on_close_click()
@@ -73,12 +77,20 @@ function GuiCanvas:before_update()
 end
 
 function GuiCanvas:_update_title_btns()
+    windows.PushStyleVar(enum.StyleVar.SelectableTextAlign,0.5,0.5)
+    for i,str in ipairs(self.gizmo_type) do
+        local change = widget.Selectable(str,self.gizmo_select,str=="rotation")
+        cursor.SameLine()
+        if change then
+            hub.publish(Event.GizmoType,self.gizmo_select[1])
+        end
+    end
+    windows.PopStyleVar()
     local btn_name = self.is_pausing and "Run###Pause" or "Pause###Pause"
     if widget.Button(btn_name) then
         self.is_pausing = not self.is_pausing
     end
     cursor.SameLine()
-    cursor.SetNextItemWidth(-1)
     local change
     change,self.pause_on_error = widget.Checkbox("PauseOnError",self.pause_on_error)
     if change then
