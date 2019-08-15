@@ -159,7 +159,7 @@ function GuiCanvas:_update_world(delta)
             end
             self.scene_cost = os.clock() - now_clock
             self.editor_frame = 0
-            self.last_world_update_limit = 1.2 * self.scene_cost + self.last_update
+            self.last_world_update_limit = 1.2 * math.min(self.scene_cost,1) + self.last_update
         end
 
     end
