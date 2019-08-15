@@ -1,6 +1,7 @@
 local assetutil = require "util"
 local assetmgr 	= require "asset"
 local fs 		= require "filesystem"
+local bgfx		= require "bgfx"
 
 local function find_subres_path(originpath, subrespath)
 	if not subrespath:is_absolute() then
@@ -86,18 +87,10 @@ return {
 		}
 	end,
 	unloader = function(res)
-		assetutil.unload_shader_program(assert(res.shader))
+		bgfx.destroy(res.shader.prog)
 		res.shader = nil
-
-		local statekey = assert(res.state).ref_path
-		if statekey then
-			assetmgr.unload(statekey)
-		end
 		res.state = nil
-
-		assetutil.unload_material_properties(res.properties)
 		res.properties = nil
-
 		res.surface_type = nil
 	end
 }
