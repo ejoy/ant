@@ -85,9 +85,9 @@ function util.load_shadow_properties(world, filter)
 		local textures = shadow_properties.textures
 		local sm_stage = 4
 		for idx, rb in ipairs(shadow_queue.render_target.frame_buffer.render_buffers) do
-			local shadowmap = rb.handle			
-			local samplername = "s_shadowmap" .. (idx - 1)
-			textures[samplername] = {type="texture", stage=sm_stage+idx-1, name="shadowmap0", handle=shadowmap}
+			local numidx = idx-1
+			local samplername = "s_shadowmap" .. numidx
+			textures[samplername] = {type="texture", stage=sm_stage+numidx, name=samplername, handle=rb.handle}
 		end
 
 		--TODO, view proj matrix calucalate two times, one is here, the other in render_system:update_view_proj function
@@ -100,7 +100,7 @@ function util.load_shadow_properties(world, filter)
 			name = "Directional Light View proj", type = "m4",
 			value = {
 				n = 1,
-				ms:ref "matrix" (vp)
+				vp,
 			}
 		}
 	end

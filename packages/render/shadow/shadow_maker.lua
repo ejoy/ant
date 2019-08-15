@@ -16,9 +16,17 @@ local ms 		= mathpkg.stack
 local fs 		= require "filesystem"
 local mathbaselib = require "math3d.baselib"
 
+ecs.component "csm"
+	.split_ratios "real[]"
+
+ecs.component "omni"	-- for point/spot light
+
 ecs.component "shadow"
-	.shadowmap_with "int" (1024)
+	.shadowmap_width "int" (1024)
 	.shadowmap_height "int" (1024)
+	.bias "real"	(0.003)
+	.depth_type "string" ("linear")	-- "inv_z" / "linear"
+	["opt"].csm "csm"
 
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.depend "primitive_filter_system"

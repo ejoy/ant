@@ -22,7 +22,7 @@ function filter_properties:update()
 		local e = world[prim_eid]
 		local filter = e.primitive_filter
 		filterutil.load_lighting_properties(world, filter)
-		if e.shadow == nil then
+		if e.shadow then
 			filterutil.load_shadow_properties(world, filter)
 		end
 
@@ -31,10 +31,10 @@ function filter_properties:update()
 end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
-primitive_filter_sys.dependby "filter_properties"
-primitive_filter_sys.depend "asyn_asset_loader"
-primitive_filter_sys.singleton "hierarchy_transform_result"
-primitive_filter_sys.singleton "event"
+primitive_filter_sys.dependby 	"filter_properties"
+primitive_filter_sys.depend 	"asyn_asset_loader"
+primitive_filter_sys.singleton 	"hierarchy_transform_result"
+primitive_filter_sys.singleton 	"event"
 
 --luacheck: ignore self
 local function reset_results(results)
