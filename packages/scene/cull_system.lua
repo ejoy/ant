@@ -13,7 +13,7 @@ local cull_sys = ecs.system "cull_system"
 cull_sys.depend "primitive_filter_system"
 
 function cull_sys:update()
-	for _, tag in ipairs {"main_queue", "shadow"} do
+	for _, tag in ipairs {"main_queue", "shadow", "pickup"} do
 		local e = world:first_entity(tag)
 		if e then
 			local filter = e.primitive_filter

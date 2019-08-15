@@ -228,7 +228,7 @@ local function add_pick_entity()
 			updir = {0, 1, 0, 0},
 			eyepos = {0, 0, 0, 1},
 			frustum = {
-				type="mat", n=0.1, f=1000, fov=3, aspect=pickup_buffer_w / pickup_buffer_h
+				type="mat", n=0.1, f=1000, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
 			},
 		},
 		render_target = {
@@ -350,6 +350,7 @@ function pickup_sys:update()
 		elseif nextstep	== "select_obj" then
 			recover_filter(pickupentity.primitive_filter)
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
+			print_raw_buffer(pickupcomp.blit_buffer.raw_buffer)
 			enable_pickup(false)
 		end
 
