@@ -350,7 +350,7 @@ function pickup_sys:update()
 		elseif nextstep	== "select_obj" then
 			recover_filter(pickupentity.primitive_filter)
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
-			print_raw_buffer(pickupcomp.blit_buffer.raw_buffer)
+			--print_raw_buffer(pickupcomp.blit_buffer.raw_buffer)
 			enable_pickup(false)
 		end
 
