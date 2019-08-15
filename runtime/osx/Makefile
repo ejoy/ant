@@ -19,8 +19,7 @@ libant-$(PLAT).a :
 	cd $(ANT)/clibs/ant/ && $(MAKE) "PLAT=$(PLAT)"
 
 ant.exe : main.o libant-$(PLAT).a
-	gcc -o $@ main.o $(ANT)/clibs/ant/libant-$(PLAT).a $(LINKLIBANT)
-	$(STRIP) $@ 
+	gcc -o $@ main.o $(ANT)/clibs/ant/libant-$(PLAT).a $(LINKLIBANT) && $(STRIP) $@
 
 clean :
 	rm -f *.o && rm -f ant.exe

@@ -37,8 +37,7 @@ libant.a : $(ODIR)/libant.a
 	cp $(ODIR)/$@ $@
 
 ant.exe : $(ODIR)/main.o $(ODIR)/libant.a
-	$(CC) -o $@ $^ $(LINKLIBANT)
-	$(STRIP) $@ 
+	$(CC) -o $@ $^ $(LINKLIBANT) && $(STRIP) $@
 
 $(ODIR) :
 	mkdir -p $@

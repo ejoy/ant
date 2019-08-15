@@ -28,12 +28,21 @@ $(eval $(call build_lua,lua.o))
 $(ODIR)/liblua.a : $(foreach v, $(BASE_O), $(ODIR)/$(v))
 	ar rsv $@ $^
 
+
+ifeq "$(PLAT)" "mingw"
+
 $(ODIR)/lua53.dll : $(foreach v, $(BASE_O), $(ODIR)/$(v))
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^
 
 $(ODIR)/lua.exe : $(ODIR)/lua.o | $(ODIR)/lua53.dll
-	$(CC) -o $@ $^ $(LUALIB)
-	$(STRIP) $@ 
+	$(CC) -o $@ $^ $(LUALIB) && $(STRIP) $@
+
+else
+
+$(ODIR)/lua.exe : $(ODIR)/lua.o $(foreach v, $(BASE_O), $(ODIR)/$(v))
+	$(CC) -o $@ $^ -lreadline && $(STRIP) $@
+
+endif
 
 $(ODIR) :
 	mkdir -p $@
