@@ -19,6 +19,7 @@ else
             tree = require "controls.tree",
             combobox = require "controls.combobox",
             scroll_list = require "controls.scroll_list",
+            simple_plotline = require "controls.simple_plotline",
         },
         editor = {
             gui_canvas = require "editor.gui_canvas",
