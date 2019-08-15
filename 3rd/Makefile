@@ -29,6 +29,7 @@ ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-osx
   BGFX_CPRC_CMD = cd .build/osx64_clang/bin/
+  BGFX_SHARED_LIB = libbgfx-shared-lib$(MODE).dylib
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -58,6 +59,7 @@ else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-mingw-gcc
   BGFX_CPRC_CMD = cd .build/win64_mingw-gcc/bin/
+  BGFX_SHARED_LIB = bgfx-shared-lib$(MODE).dll
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -71,9 +73,7 @@ BGFX_TARGET_A += bgfx-shared-lib
 BGFX_TARGET_B += shaderc texturec
 BGFX_CPRC_CMD += && cp shaderc$(MODE) ../../../../../clibs/
 BGFX_CPRC_CMD += && cp texturec$(MODE) ../../../../../clibs/
-ifeq "$(PLAT)" "osx"
-BGFX_CPRC_CMD += && cp libbgfx-shared-lib$(MODE).dylib ../../../../../clibs/bgfx-core.dll
-endif
+BGFX_CPRC_CMD += && cp $(BGFX_SHARED_LIB) ../../../../../clibs/bgfx-core.dll
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
 BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(MODE)64 -j8

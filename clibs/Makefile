@@ -3,7 +3,7 @@ LIBS := math3d lsocket bgfx filesystem remotedebug \
  crypt meshconverter hierarchy thread protocol bullet \
  window filewatch platform subprocess datalist imgui terrain
 
-ALL_LIBS := $(LIBS) lua bgfx_core
+ALL_LIBS := $(LIBS) lua
 
 include common.mk
 
@@ -24,13 +24,6 @@ build_lua:
 	$(MAKE) -C lua $(LUA_TARGETS)
 clean_lua:
 	$(MAKE) -C lua clean
-
-copy_bgfx_core: build_bgfx
-	cp bgfx/$(ODIR)/bgfx-core.dll $(BIN)
-
-build_bgfx_core: build_bgfx
-
-clean_bgfx_core: clean_bgfx
 
 define TARG_func
 $(1): build_$(1) copy_$(1)
