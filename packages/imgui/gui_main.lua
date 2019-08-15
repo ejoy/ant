@@ -167,7 +167,7 @@ local function run(m,args)
     main = m
     window.register(gui_main)
     native.create(args.screen_width or 1024, 
-        args.screen_width or 728, 
+        args.screen_height or 728, 
         args.name or "Ant")
     native.mainloop()
 end

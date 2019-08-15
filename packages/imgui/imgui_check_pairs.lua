@@ -27,7 +27,8 @@ local function find_topest(item)
 end
 --================simple stack end===================
 
-local style_dict = {}
+local cur_style_dict_index = 1
+local style_dict = {{}}
 
 
 --wait for init
@@ -45,12 +46,13 @@ local ReturnType = {
 local pairs_map_imgui = {
     {ReturnType.NoReturn,"begin_frame", "end_frame"}, -- 100 --type 0
 }
---id from 201
+--id from 201 
+--{type,check_push_and_pop,...}
 local pairs_map_windows = {
-    {ReturnType.IgnoreReturn,"Begin","End",}, -- 201 --type 2
-    {ReturnType.IgnoreReturn,"BeginChild","EndChild",},-- 202 type 2
-    {ReturnType.WhenReturnTrue,"BeginTabBar","EndTabBar",}, -- --type1
-    {ReturnType.WhenReturnTrue,"BeginTabItem","EndTabItem",}, -- type1
+    {ReturnType.IgnoreReturn,true,"Begin","End",}, -- 201 --type 2
+    {ReturnType.IgnoreReturn,false,"BeginChild","EndChild",},-- 202 type 2
+    {ReturnType.WhenReturnTrue,false,"BeginTabBar","EndTabBar",}, -- --type1
+    {ReturnType.WhenReturnTrue,false,"BeginTabItem","EndTabItem",}, -- type1
     {
         ReturnType.WhenReturnTrue,
         "BeginPopup",
@@ -61,18 +63,20 @@ local pairs_map_windows = {
         "EndPopup",
     }, --type1
 }
+
 --id from 301
+--{type,check_push_and_pop,...}
 local pairs_map_widget = {
-    {ReturnType.WhenReturnTrue,"BeginCombo","EndCombo"}, -- 301 --type1
-    {ReturnType.NoReturn,"BeginTooltip","EndTooltip"}, --302  --type 0
-    {ReturnType.WhenReturnTrue,"BeginMainMenuBar","EndMainMenuBar"}, --type 1
-    {ReturnType.WhenReturnTrue,"BeginMenu","EndMenu"}, --type1
-    {ReturnType.WhenReturnTrue,"BeginListBox","BeginListBoxN","EndListBox",}, --type1
-    {ReturnType.NoReturn,"BeginGroup","EndGroup",}, --type 0
-    {ReturnType.WhenReturnTrue,"BeginMenuBar","EndMenuBar"}, --type1
-    {ReturnType.WhenReturnTrue,"TreeNode","TreePop"}, --type1
-    {ReturnType.WhenReturnTrue,"BeginDragDropSource","EndDragDropSource"}, --type1
-    {ReturnType.WhenReturnTrue,"BeginDragDropTarget","EndDragDropTarget"}, --type1
+    {ReturnType.WhenReturnTrue,false,"BeginCombo","EndCombo"}, -- 301 --type1
+    {ReturnType.NoReturn,false,"BeginTooltip","EndTooltip"}, --302  --type 0
+    {ReturnType.WhenReturnTrue,false,"BeginMainMenuBar","EndMainMenuBar"}, --type 1
+    {ReturnType.WhenReturnTrue,false,"BeginMenu","EndMenu"}, --type1
+    {ReturnType.WhenReturnTrue,false,"BeginListBox","BeginListBoxN","EndListBox",}, --type1
+    {ReturnType.NoReturn,false,"BeginGroup","EndGroup",}, --type 0
+    {ReturnType.WhenReturnTrue,false,"BeginMenuBar","EndMenuBar"}, --type1
+    {ReturnType.WhenReturnTrue,false,"TreeNode","TreePop"}, --type1
+    {ReturnType.WhenReturnTrue,false,"BeginDragDropSource","EndDragDropSource"}, --type1
+    {ReturnType.WhenReturnTrue,false,"BeginDragDropTarget","EndDragDropTarget"}, --type1
 }
 
 --id from 401
@@ -97,13 +101,14 @@ local function pop_until_idx(idx)
 end
 
 local check_and_pop_style = function()
-    for style_id,num in pairs(style_dict) do
+    local cur_style_dict = style_dict[cur_style_dict_index]
+    for style_id,num in pairs(cur_style_dict) do
         if num > 0 then
             local ef_name = EndFunNameTbl[style_id]
             local temp_ef =  PureEndFunTbl[style_id]
             log.error(string.format("Forget to %s,call it automaticly,stack size:%d",ef_name,num))
             temp_ef(num)
-            style_dict[style_id] = 0
+            cur_style_dict[style_id] = 0
         end
     end
 end
@@ -114,6 +119,7 @@ local function wrap_begin_frame(bf,idx)
     return function(...)
         if stack_top ~= 0 then
             log.error("call begin_frame twice before end_frame! stack_top:"..stack_top)
+            cur_style_dict_index = 1
             check_and_pop_style()
             pop_until_idx(-1) -- pop to empty
         end
@@ -125,6 +131,7 @@ end
 
 local function wrap_end_frame(ef,idx)
     return function(...)
+        cur_style_dict_index = 1
         check_and_pop_style()
         if is_top(idx) then
             pop(idx)
@@ -143,7 +150,8 @@ end
 
 local function wrap_push_style(bf,idx)
     return function(...)
-        style_dict[idx] = style_dict[idx] + 1
+        local cur_style_dict = style_dict[cur_style_dict_index]
+        cur_style_dict[idx] = cur_style_dict[idx] and (cur_style_dict[idx] + 1) or 1
         -- log("push",401,style_dict[401],402,style_dict[402])
         return bf(...)
     end
@@ -151,10 +159,11 @@ end
 
 local function wrap_pop_style(ef,idx)
     return function(num)
+        local cur_style_dict = style_dict[cur_style_dict_index]
         num = num or 1
-        style_dict[idx] = style_dict[idx] - num
-        -- log("pop",401,style_dict[401],402,style_dict[402])
-        if style_dict[idx] < 0 then
+        cur_style_dict[idx] = (cur_style_dict[idx] or 0) - num
+        -- log("pop",401,cur_style_dict[401],402,cur_style_dict[402])
+        if cur_style_dict[idx] < 0 then
             local name = EndFunNameTbl[idx]
             log.error("call style function mismatch stack size<0:",name)
         end
@@ -162,37 +171,60 @@ local function wrap_pop_style(ef,idx)
     end
 end
 
+local push_style_dict = function()
+    cur_style_dict_index = cur_style_dict_index + 1
+    style_dict[cur_style_dict_index] = {}
+end
 
 --common
-local wrap_begin_type_no_return = function(bf,idx)
+local wrap_begin_type_no_return = function(bf,idx,is_style_region)
     return function(...)
+        if is_style_region then
+            push_style_dict()
+        end 
         push(idx)
         return bf(...)
     end
 end
-local wrap_begin_type_when_return_true = function(bf,idx)
+local wrap_begin_type_when_return_true = function(bf,idx,is_style_region)
     return function(...)
+
         local ret = table.pack(bf(...))
         if ret[1] then
+            if is_style_region then
+                push_style_dict()
+            end 
             push(idx)
         end
         return table.unpack(ret)
     end
 end
-local wrap_begin_type_ignore_return = function(bf,idx)
+local wrap_begin_type_ignore_return = function(bf,idx,is_style_region)
     return function(...)
+        if is_style_region then
+            push_style_dict()
+        end 
         push(idx)
         return bf(...)
     end
 end
-local wrap_end = function(ef,idx)
+local wrap_end = function(ef,idx,is_style_region)
     return function(...)
+        
         if is_top(idx) then
+            if is_style_region then
+                check_and_pop_style()
+                cur_style_dict_index = cur_style_dict_index - 1
+            end
             pop(idx)
             return ef(...)
         else
             if find_topest(idx) then
                 pop_until_idx(idx)
+                if is_style_region then
+                    check_and_pop_style()
+                    cur_style_dict_index = cur_style_dict_index - 1
+                end
                 return ef(...)
             else
                 local fname = EndFunNameTbl[idx]
@@ -250,12 +282,13 @@ local function wrap_pairs(imgui)
         for i,pair in ipairs(pairs_map) do
             local idx = start_idx + i
             local return_type = pair[1]
+            local is_style_region = pair[2]
             local begin_fun_wrap = begin_fun_map[return_type]
             local pair_size = #pair
-            for i = 2,pair_size - 1 do
-                fun_head[pair[i]] = begin_fun_wrap(fun_head[pair[i]],idx)
+            for i = 3,pair_size - 1 do
+                fun_head[pair[i]] = begin_fun_wrap(fun_head[pair[i]],idx,is_style_region)
             end
-            fun_head[pair[pair_size]] = wrap_end(fun_head[pair[pair_size]],idx)
+            fun_head[pair[pair_size]] = wrap_end(fun_head[pair[pair_size]],idx,is_style_region)
         end
     end
     --------push/pop style
@@ -267,7 +300,7 @@ local function wrap_pairs(imgui)
         local pairs_map =  cfg[2]
         for i,ps in ipairs(pairs_map) do
             local idx = i + start_idx
-            style_dict[idx] = 0
+            -- style_dict[idx] = 0
             fun_head[ps[2]] = wrap_push_style(fun_head[ps[2]],idx)
             fun_head[ps[3]] = wrap_pop_style(fun_head[ps[3]],idx)
         end

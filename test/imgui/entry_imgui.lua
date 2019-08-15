@@ -9,8 +9,8 @@ local GuiScriptRunner = import_package "ant.imgui".editor.gui_script_runner
 local GuiShaderWatch = import_package "ant.imgui".editor.gui_shader_watch
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local args = {
-    sceen_width = 1024,
-    sceen_height = 768,
+    screen_width = 1680,
+    screen_height = 960,
 }
 local main = {}
 function main.init()

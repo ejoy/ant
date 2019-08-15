@@ -4,31 +4,50 @@ local mathpkg   = import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
 local util = require "system.editor_system_util"
+local WatcherEvent = require "hub_event"
 
 local show_operate_gizmo = ecs.tag "show_operate_gizmo"
-local gizmo_object = ecs.tag "gizmo_object"
+local gizmo_object = ecs.component "gizmo_object"
+    ["opt"].type "string"   --"position"/"rotation"/"scale"
+    ["opt"].dir "string"    --"x"/"y"/"z"  *"xy"/"yz"/"xz"
 
+local GizmoType = {"position","rotation","scale"}
+local GizmoDirection = {"x","y","z"}
 local operate_gizmo_cache = ecs.singleton "operate_gizmo_cache"
 function operate_gizmo_cache:init()
     local self = {}
-    self.gizmo_eid = nil
     self.last_target_eid = nil
-    self.key_map = nil
-    self.picked_type = nil -- "x"/"y","z", not supported yet:("xy","xz","yz")
+    self.picked_dir = nil -- "x"/"y","z", not supported yet:("xy","xz","yz")
+    self.picked_type = nil -- "position"/"ratation","scale", not supported yet:("xy","xz","yz")
     self.last_mouse_pos = nil
     self.mouse_delta = nil
+    self.gizmo_type = "position"
+    self.gizmo = nil
+    self.cur_mouse_state = "UP"
+    self.is_scale_draging = false
     -- self.count = {0,0}
     -- self.move_count = {0,0,0}
     return self
 end
 
--- local function gizmo_pick_and_move(gizmo_cache,picked_type,mouse_x,mouse_y,state)
---     if state == "DOWN" then
---         gizmo_cache.last_mouse = {mouse_x,mouse_y}
---     elseif state == "MOVE" then
---         --todo
---     end
--- end
+local function scale_gizmo_to_normal(gizmo)
+    local maincamera = world:first_entity("main_queue")
+    local camera = maincamera.camera
+    local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+    local et = gizmo.transform
+    if et.world then
+        local _,_,t = ms(et.world,"~TTT")
+        local tvp  = ms(vp,t,"*T")
+        local scale = math.abs(tvp[4]/7)
+        local parent_trans = world[et.parent].transform.world
+        local ps,_,_ = ms(parent_trans,"~TTT")
+        local ps_lua = ms(ps,"T")
+        world:add_component_child(et,"s","vector",
+            {scale/ps_lua[1],scale/ps_lua[2],scale/ps_lua[3],0})
+    end
+end
+
+
 
 local function pos_to_screen(pos,trans,viewproj,w,h)
     local scale = ms(trans.s,"T")
@@ -67,7 +86,7 @@ local function update_world(trans)
     return worldmat
 end
 
-local function gizmo_on_drag(cache,picked_type,mouse_delta)
+local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
     local target_entity_id = world:first_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     --assert(target_entity)
@@ -75,7 +94,7 @@ local function gizmo_on_drag(cache,picked_type,mouse_delta)
         local typ = picked_type --"x","y","z"
         local axis_unit = cache.axis_map[typ] -- {1,0,0} or {0,1,0} or {0,0,1}
         local dx,dy = mouse_delta[1],mouse_delta[2]
-        log("dxdy",dx,dy)
+        -- log("dxdy",dx,dy)
         --calc part1
         local maincamera = world:first_entity("main_queue")
         local camera = maincamera.camera
@@ -83,7 +102,7 @@ local function gizmo_on_drag(cache,picked_type,mouse_delta)
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
         local trans = target_entity.transform
         r_axis_unit = convert_to_model_axis(trans,axis_unit)
-        log.info_a("axis_unit:",r_axis_unit)
+        -- log.info_a("axis_unit:",r_axis_unit)
         local cur_pos = ms(trans.t,"T")
         local viewport = maincamera.render_target.viewport
         -- log.info_a("viewport",viewport.rect)
@@ -91,7 +110,7 @@ local function gizmo_on_drag(cache,picked_type,mouse_delta)
         local screen_pos0 = pos_to_screen({0,0,0},trans,viewproj,w,h)
         local screen_pos1= pos_to_screen(axis_unit,trans,viewproj,w,h)
         local sceen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
-        log.info_a("sceen_unit:",sceen_unit)
+        -- log.info_a("sceen_unit:",sceen_unit)
         local normalize_sceen_unit =  ms(sceen_unit,"nT")
         local sceen_unit_dis = nil
         if normalize_sceen_unit[1]~=0 then
@@ -109,13 +128,100 @@ local function gizmo_on_drag(cache,picked_type,mouse_delta)
         -- log.info_a("new_pos",new_pos)
         -- ms(trans.t,new_pos,"=")
         world:add_component_child(trans,"t","vector",new_pos)
-        update_world(trans)
+        -- update_world(trans)
+    end
+end
 
+local function add_gizmo_scale_length(scale_object,picked_dir,add_length)
+    local scale_box_id = scale_object["box_"..picked_dir]
+    local scale_box = world[scale_box_id]
+    local scale_line_id = scale_object["line_"..picked_dir]
+    local scale_line= world[scale_line_id]
+    local pos = ms(scale_box.transform.t,add_length,"+T")
+    -- log.info_a("add_gizmo_scale_length",add_length,pos)
+    world:add_component_child(scale_box.transform,"t","vector",pos)
+    local line_length = scale_object.line_length
+    world:add_component_child(scale_line.transform,"s","vector",
+        {pos[1]/line_length,pos[2]/line_length,pos[3]/line_length})
+    return pos
+end
+
+local function gizmo_scale_on_release(cache)
+    local picked_dir = cache.is_scale_draging
+    assert(picked_dir)
+    local scale_object = cache.gizmo.scale
+    local line_length = scale_object.line_length
+    local scale_box_id = scale_object["box_"..picked_dir]
+    local axis_unit = cache.axis_map[picked_dir]
+    local scale_box = world[scale_box_id]
+    local pos = {axis_unit[1]*line_length,axis_unit[2]*line_length,axis_unit[3]*line_length}
+    -- log.info_a("scale_box.transform.t",pos)
+    world:add_component_child(scale_box.transform,"t","vector",pos)
+    local scale_line_id = scale_object["line_"..picked_dir]
+    local scale_line= world[scale_line_id]
+    world:add_component_child(scale_line.transform,"s","vector",axis_unit)
+end
+
+local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
+    local scale_object = cache.gizmo.scale
+    local target_entity_id = world:first_entity_id("show_operate_gizmo")
+    local target_entity = target_entity_id and world[target_entity_id]
+    --assert(target_entity)
+    if target_entity then
+        -- log.info_a("mouse_delta:",mouse_delta)
+        local dx,dy = mouse_delta[1],mouse_delta[2]
+        local scale_box_id = scale_object["box_"..picked_dir]
+        local scale_box = world[scale_box_id]
+        local scale_box_trans =  scale_box.transform
+        local axis_unit = cache.axis_map[picked_dir] -- {1,0,0} or {0,1,0} or {0,0,1}
+        local maincamera = world:first_entity("main_queue")
+        local camera = maincamera.camera
+        local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
+        local viewport = maincamera.render_target.viewport
+        local w,h = viewport.rect.w,viewport.rect.h
+        local screen_pos0 = pos_to_screen({0,0,0},scale_box_trans,viewproj,w,h)
+        local screen_pos1= pos_to_screen(axis_unit,scale_box_trans,viewproj,w,h)
+        local sceen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
+        local normalize_sceen_unit =  ms(sceen_unit,"nT")
+        local sceen_unit_dis = nil
+        if normalize_sceen_unit[1]~=0 then
+            sceen_unit_dis = sceen_unit[1]/normalize_sceen_unit[1]
+        else
+            sceen_unit_dis = sceen_unit[2]/normalize_sceen_unit[2]
+        end
+        local effect_dis = dx*normalize_sceen_unit[1]+dy*normalize_sceen_unit[2]
+        local t = effect_dis/sceen_unit_dis
+        local tvec3 = {axis_unit[1]*t,axis_unit[2]*t,axis_unit[3]*t}
+        add_gizmo_scale_length(scale_object,picked_dir,tvec3)
+        local line_length = scale_object.line_length
+        local scale_add = {tvec3[1]/line_length,tvec3[2]/line_length,tvec3[3]/line_length}
+        local trans = target_entity.transform
+        local old_scale = ms(trans.s,"T")
+        local new_scale = {}
+        for i = 1,3 do
+            new_scale[i] = old_scale[i]*(scale_add[i] + 1)
+        end
+        world:add_component_child(trans,"s","vector",new_scale)
+        world:update_func("event_changed")()
+        local gizmo_eid =  cache.gizmo.eid
+        local gizmo_entity = world[gizmo_eid]
+        scale_gizmo_to_normal(gizmo_entity)
+        world:update_func("event_changed")()
+
+    end
+end
+
+local function on_gizmo_type_change(self,typ)
+    local operate_gizmo_cache = self.operate_gizmo_cache
+    if typ ~= operate_gizmo_cache.gizmo_type then
+        local gizmo = operate_gizmo_cache.gizmo
+        local old_typ = operate_gizmo_cache.gizmo_type
+        world:add_component(gizmo[old_typ].eid,"hierarchy_visible",false)
+        world:add_component(gizmo[typ].eid,"hierarchy_visible",true)
+        operate_gizmo_cache.gizmo_type = typ
     end
 
 end
-
-
 
 local gizmo_sys =  ecs.system "editor_operate_gizmo_system"
 gizmo_sys.singleton "operate_gizmo_cache"
@@ -124,15 +230,12 @@ function gizmo_sys:init()
     --create gizmo
     local operate_gizmo_cache = self.operate_gizmo_cache
     assert(not operate_gizmo_cache.gizmo_eid)
-    operate_gizmo_cache.gizmo = util.create_position_gizmo(world)
-    operate_gizmo_cache.key_map = {
-        line_x = "x",
-        cone_x = "x",
-        line_y = "y",
-        cone_y = "y",
-        line_z = "z",
-        cone_z = "z",
-    }
+    local gizmo = util.create_gizmo(world)
+    for i,typ in ipairs(GizmoType) do
+        local eid = gizmo[typ].eid
+        world:add_component(eid,"hierarchy_visible",typ ==operate_gizmo_cache.gizmo_type)
+    end
+    operate_gizmo_cache.gizmo = gizmo
     operate_gizmo_cache.axis_map = {
         x = {1,0,0},
         y = {0,1,0},
@@ -140,23 +243,30 @@ function gizmo_sys:init()
     }
     operate_gizmo_cache.mouse_delta = {}
     local mouse_delta = operate_gizmo_cache.mouse_delta
-    for k,_ in pairs(operate_gizmo_cache.axis_map) do
-        mouse_delta[k] = {0,0}
+    for _,typ in ipairs(GizmoType) do
+        mouse_delta[typ] = {}
+        for k,_ in pairs(operate_gizmo_cache.axis_map) do
+            mouse_delta[typ][k] = {0,0}
+        end
     end
+    -------------------
+    local hub = world.args.hub
+    hub.subscribe(WatcherEvent.GizmoType,on_gizmo_type_change,self)
     --------------
     self.message.observers:add({
         mouse = function (_, x, y, what, state)
             if what == "LEFT" then
                 -- local count = operate_gizmo_cache.count
-
+                operate_gizmo_cache.cur_mouse_state = state
                 if  ( state == "MOVE" or state == "DOWN" ) then
                     if state == "MOVE" and operate_gizmo_cache.last_mouse_pos then
-                        local picked_type = operate_gizmo_cache.picked_type
-                        if operate_gizmo_cache.picked_type then
+                        local gizmo_type = operate_gizmo_cache.gizmo_type
+                        local picked_dir = operate_gizmo_cache.picked_dir
+                        if picked_dir then
                             local last_mouse_pos = operate_gizmo_cache.last_mouse_pos
                             local dx,dy = x-last_mouse_pos[1],(y-last_mouse_pos[2])*-1
                             -- 
-                            local mouse_delta = operate_gizmo_cache.mouse_delta[picked_type]
+                            local mouse_delta = operate_gizmo_cache.mouse_delta[gizmo_type][picked_dir]
                             mouse_delta[1] = mouse_delta[1] + dx
                             mouse_delta[2] = mouse_delta[2] + dy
                         end
@@ -181,73 +291,71 @@ function gizmo_sys:init()
 
 end
 
-local function scale_gizmo_to_normal(gizmo)
-    local maincamera = world:first_entity("main_queue")
-    local camera = maincamera.camera
-    local _, _, vp = ms:view_proj(camera, camera.frustum, true)
-    local et = gizmo.transform
-    local _,_,t = ms(et.world,"~TTT")
-    local tvp  = ms(vp,t,"*T")
-    local scale = math.abs(tvp[4]/7)
-    world:add_component_child(et,"s","vector",{scale,scale,scale,0})
-end
 
 function gizmo_sys:update()
     local target_entity_id = world:first_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     --sync transform gizmo
-    local gizmo_eid =  self.operate_gizmo_cache.gizmo.eid
+    local operate_gizmo_cache = self.operate_gizmo_cache
+    local gizmo_eid =  operate_gizmo_cache.gizmo.eid
     local gizmo_entity = world[gizmo_eid]
     if target_entity then
-        
-        local trans = target_entity.transform
-        assert(trans and trans.world,"trans and trans.world is nil,trans is "..tostring(trans))
-        local s,r,t = ms(trans.world,"~TTT")
+        if operate_gizmo_cache.last_target_eid ~= target_entity_id then
+            gizmo_entity.transform.parent = target_entity_id
+        end
+        -- local trans = target_entity.transform
+        -- assert(trans and trans.world,"trans and trans.world is nil,trans is "..tostring(trans))
+        -- local s,r,t = ms(trans.world,"~TTT")
         
         -- world: gizmo_entity
-        world:add_component_child(gizmo_entity.transform,"t","vector",t)
-        world:add_component_child(gizmo_entity.transform,"r","vector",r)
+        -- world:add_component_child(gizmo_entity.transform,"t","vector",t)
+        -- world:add_component_child(gizmo_entity.transform,"r","vector",r)
         scale_gizmo_to_normal(gizmo_entity)
 
-        if target_entity_id ~= self.operate_gizmo_cache.last_target_eid then
+        if target_entity_id ~= operate_gizmo_cache.last_target_eid then
             world:add_component(gizmo_eid,"hierarchy_visible",false)
-            self.operate_gizmo_cache.last_target_eid = target_entity_id
+            operate_gizmo_cache.last_target_eid = target_entity_id
         elseif not gizmo_entity.hierarchy_visible then
             world:add_component(gizmo_eid,"hierarchy_visible",true)
         end
     else
-        if self.operate_gizmo_cache.last_target_eid then
+        if operate_gizmo_cache.last_target_eid then
             world:add_component(gizmo_eid,"hierarchy_visible",false)
-            self.operate_gizmo_cache.last_target_eid = nil
+            operate_gizmo_cache.last_target_eid = nil
         end
     end
     --drag gizmo
-    local mouse_delta = self.operate_gizmo_cache.mouse_delta
-    for t,v in pairs(mouse_delta) do
-        if v[1] ~=0 or v[2]~=0 then
-            gizmo_on_drag(self.operate_gizmo_cache,t,v)
-            v[1],v[2] = 0,0
+    local mouse_delta = operate_gizmo_cache.mouse_delta
+    for typ,dir_dic in pairs(mouse_delta) do
+        for dir,v in pairs(dir_dic) do
+            if v[1] ~=0 or v[2]~=0 then
+                if typ == "position" then
+                    gizmo_position_on_drag(operate_gizmo_cache,dir,v)
+                elseif typ == "scale" then
+                    gizmo_scale_on_drag(operate_gizmo_cache,dir,v)
+                    operate_gizmo_cache.is_scale_draging = dir
+                end
+                v[1],v[2] = 0,0
+            end
         end
+
+    end
+    if operate_gizmo_cache.is_scale_draging and operate_gizmo_cache.cur_mouse_state == "UP" then
+        gizmo_scale_on_release(operate_gizmo_cache)
+        operate_gizmo_cache.is_scale_draging = nil
     end
 end
 
 function gizmo_sys:pickup()
     local pickup_entity = world:first_entity "pickup"
     if pickup_entity then
-        local picked_type = nil
+        local picked_dir = nil
         local pickup_comp = pickup_entity.pickup
         local eid = pickup_comp.pickup_cache.last_pick
         if eid and world[eid] and world[eid].gizmo_object then
-            local key_map = self.operate_gizmo_cache.key_map
-            local gizmo = self.operate_gizmo_cache.gizmo
-            for k,v in pairs(key_map) do
-                if eid == gizmo[k] then
-                    picked_type = v
-                    break
-                end
-            end
+            picked_dir = world[eid].gizmo_object.dir
         end
-        self.operate_gizmo_cache.picked_type = picked_type
+        self.operate_gizmo_cache.picked_dir = picked_dir
     end
 end
 

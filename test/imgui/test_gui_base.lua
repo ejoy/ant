@@ -300,9 +300,12 @@ end
 local Tree = import_package "ant.imgui".controls.tree
 local List = import_package "ant.imgui".controls.list
 local ComboBox = import_package "ant.imgui".controls.combobox
+local SimplePlotline = import_package "ant.imgui".controls.simple_plotline
 local offset_2 = nil
 local g_change = false
+local frame_count = 0
 function TestGuiBase:tab3_update()
+    frame_count = frame_count + 1
     if not self.tree then
         local root = Tree.Node.new( "Root",nil,{"this is root's data"},true)
         local node1 = Tree.Node.new( "Node1",root,{"this is Node1's data"},true)
@@ -341,6 +344,14 @@ function TestGuiBase:tab3_update()
         self.list = list
     end
     self.list:update()
+
+    if not self.simple_plotline then
+        self.simple_plotline  = SimplePlotline.new("SimplePlotline",100)
+    end
+    if frame_count%50== 0 then
+        self.simple_plotline:add_value(math.sin(frame_count/200))
+    end
+    self.simple_plotline:update()
     
     if not self.combo then
         local combo = ComboBox.new("ComboBox Example")
