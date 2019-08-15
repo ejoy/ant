@@ -82,7 +82,7 @@ return {
 			shader 		= load_shader(filename, material.shader),
 			state 		= load_state(filename, material.state),
 			properties 	= load_properties(filename, material.properties),
-			surface_type= load_surface_type(filename, material.surface),
+			surface_type= load_surface_type(filename, material.surface_type),
 		}
 	end,
 	unloader = function(res)
