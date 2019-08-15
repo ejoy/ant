@@ -172,7 +172,7 @@ function assetgc:update()
     local unref_resource = self.resource_reference_counter.unref_resource
 
     for reskey, v in pairs(unref_resource) do
-        print("unload resource:", reskey)
         assetmgr.unload(fs.path(reskey))
+        unref_resource[reskey] = nil
     end
 end
