@@ -13,6 +13,7 @@ ecs.tag "main_queue"
 ecs.component_alias("view_tag", "string")
 
 ecs.component_alias("viewid", "int", 0)
+ecs.component_alias("view_mode", "string", "")
 
 local function delete_handle(self)
 	if self.handle then
@@ -183,11 +184,11 @@ function rendersys:update()
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
 		if rq.visible ~= false then
-			local viewid = rq.viewid		
+			local viewid = rq.viewid
 			local rt = rq.render_target
 			-- TODO, only call after bgfx.reset has been call?
 			update_frame_buffer_view(viewid, rt)
-
+			
 			update_viewport(viewid, rt.viewport)
 			update_view_proj(viewid, rq.camera)
 
@@ -211,6 +212,8 @@ function rendersys:update()
 					end
 				end
 			end
+
+			bgfx.set_view_mode(viewid, rq.view_mode)
 
 			draw_primitives(results.opaticy)
 			draw_primitives(results.translucent)

@@ -192,6 +192,7 @@ local function add_pick_entity()
 			{ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'},
 			{ref_path = fs.path '/pkg/ant.resources/materials/pickup_transparent.material'},
 		},
+		view_mode = "s",
 		pickup = {
 			blit_buffer = {
 				raw_buffer = {
