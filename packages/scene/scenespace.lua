@@ -14,7 +14,7 @@ local assetmgr 	= assetpkg.mgr
 local animodule = require "hierarchy.animation"
 
 ecs.component_alias("attach", "entityid")
-ecs.component_alias("ignore_parent_transform_scale", "boolean") {depend = "hierarchy"}
+ecs.component_alias("ignore_parent_scale", "boolean") {depend = "hierarchy"}
 
 ecs.singleton "hierarchy_transform_result"
 
@@ -187,7 +187,7 @@ local function mark_cache(eid, cache_result)
 	local e = world[eid]
 	local t = e.transform
 	
-	local cachemat = update_hirarchy_entity_world(t, t.ignore_parent_transform_scale)
+	local cachemat = update_hirarchy_entity_world(t, t.ignore_parent_scale)
 	assert(type(cachemat) == 'userdata')
 
 	local hiecomp = assert(e.hierarchy)
@@ -334,11 +334,6 @@ function scene_space:post_init()
 	for eid in world:each_new "transform" do
 		self.event:new(eid, "transform")
 	end
-
-	local trees = self.hierarchy_update_result.hierarchy_trees
-	for eid in world:each_new "hierarchy" do
-		add_hierarchy_tree_item(eid, nil, true, trees)
-	end
 end
 
 local function update_scene_tree(hierarchy_cache, update_result)
@@ -348,6 +343,8 @@ local function update_scene_tree(hierarchy_cache, update_result)
 
 	reset_hierarchy_update_result(update_result)
 end
+
+local need_check_components_changed = {"hierarchy", "ignore_parent_scale"}
 
 function scene_space:event_changed()
 	local updateresult 		= self.hierarchy_update_result
@@ -360,6 +357,20 @@ function scene_space:event_changed()
 			add_hierarchy_tree_item(eid, events, init, trees)
 		else
 			renderentities[eid] = {events, init}
+		end
+	end
+
+	for i=1, #need_check_components_changed do
+		local compname = need_check_components_changed[i]
+		for eid in world:each_new(compname) do
+			add_hierarchy_tree_item(eid, nil, true, trees)
+		end
+	end
+
+	-- remove 'ignore_parent_scale' need update hierarchy tree
+	for eid in world:each_removed "ignore_parent_scale" do
+		if world[eid] then
+			add_hierarchy_tree_item(eid, nil, true, trees)
 		end
 	end
 

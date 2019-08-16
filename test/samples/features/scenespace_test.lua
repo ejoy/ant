@@ -92,9 +92,8 @@ local function create_scene_node_test()
             r = {0, 0, 0, 0},
             t = {-2, 0, 0, 1},
         },
-        hierarchy = {
-            ref_path = hie_refpath,
-        },
+        hierarchy = {ref_path = hie_refpath,},
+        ignore_parent_scale = true,
         name = 'level2_1',
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -164,7 +163,6 @@ local function create_scene_node_test()
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {0, 2, 0, 1},
-            --slotname = "h1_h1",
         },
         name = 'render_child2_1',
         rendermesh = {},
@@ -443,6 +441,7 @@ local test_queue = {
     function ()
         local eid = find_entity_by_name("render2_rootchild", 'can_render')
         world:add_component(eid, 'hierarchy', {})
+        world:add_component(eid, 'ignore_parent_scale', true)
 
         world:create_entity {
             transform = {
@@ -465,6 +464,9 @@ local test_queue = {
             main_view = true,
             name = 'test attach entity',
         }
+    end,
+    function ()
+
     end,
 }
 
