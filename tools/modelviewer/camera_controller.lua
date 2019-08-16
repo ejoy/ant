@@ -12,6 +12,9 @@ local point2d = mathpkg.point2d
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
+local renderpkg = import_package "ant.render"
+local camerautil= renderpkg.camera
+
 local memmgr = import_package "ant.memory_stat"
 
 local rhwi = import_package "ant.render".hardware_interface
@@ -56,10 +59,10 @@ local function rotate_round_point(camera, point, distance, dx, dy)
 end
 
 function camera_controller_system:init()	
-	local camera_entity = world:first_entity("main_queue")
+	local mq = world:first_entity "main_queue"
 
 	local target = math3d.ref "vector"
-	local camera = camera_entity.camera
+	local camera = camerautil.get_camera(world, mq.camera_tag)
 	camera_reset(camera, target)
 
 	local move_speed = 10

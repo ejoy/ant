@@ -72,8 +72,8 @@ function scene_walker:update()
     -- local deltaTime =  timer.deltatime
     -- print("deltaTime",deltaTime)
 
-	-- local camera_entity = world:first_entity("main_queue")
-	-- local camera = camera_entity.camera
+	-- local mq = world:first_entity "main_queue"
+	-- local camera = camerautil.get_camera(world, mq.camera_tag)
 
     -- local pos = ms(camera.eyepos,"T")
     -- print("camera :",string.format("%08.4f",pos[1]), string.format("%08.4f",pos[2]),string.format("%08.4f",pos[3]) )

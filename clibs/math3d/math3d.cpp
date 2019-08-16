@@ -2313,7 +2313,7 @@ lmul_srtmat(lua_State* L) {
 			if (is_zero(s))
 				s = 1;
 
-			m[ii] *= glm::vec4(glm::vec3(1 / s), 1);
+			m[ii] *= 1 / s;
 		}
 	}
 

@@ -4,8 +4,6 @@ local math3d = import_package "ant.math"
 local ms = math3d.stack
 
 local geo = require "geometry"
-local hie_util = import_package "ant.scene".hierarchy
-
 
 local function gen_color_vertex(pt, color, transform)
 	assert(#pt == 3)
@@ -81,6 +79,8 @@ local function generate_bones(ske)
 end
 
 function draw.draw_skeleton(ske, ani, color, transform, desc)	
+	local hie_util = import_package "ant.scene".hierarchy
+	
 	local bones = generate_bones(ske)
 
 	local joints = ani and ani:joints() or hie_util.generate_joints_worldpos(ske)

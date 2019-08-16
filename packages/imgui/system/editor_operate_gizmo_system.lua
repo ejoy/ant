@@ -1,8 +1,10 @@
 local ecs = ...
 local world = ecs.world
 local mathpkg   = import_package "ant.math"
-local mu = mathpkg.util
-local ms = mathpkg.stack
+local ms        = mathpkg.stack
+local renderpkg = import_package "ant.render"
+local camerautil= renderpkg.camera
+
 local util = require "system.editor_system_util"
 local WatcherEvent = require "hub_event"
 
@@ -31,8 +33,8 @@ function operate_gizmo_cache:init()
 end
 
 local function scale_gizmo_to_normal(gizmo)
-    local maincamera = world:first_entity("main_queue")
-    local camera = maincamera.camera
+    local mq = world:first_entity "main_queue"
+    local camera = camerautil.get_camera(world, mq.camera_tag)
     local _, _, vp = ms:view_proj(camera, camera.frustum, true)
     local et = gizmo.transform
     if et.world then
@@ -96,15 +98,16 @@ local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
         local dx,dy = mouse_delta[1],mouse_delta[2]
         -- log("dxdy",dx,dy)
         --calc part1
-        local maincamera = world:first_entity("main_queue")
-        local camera = maincamera.camera
-        -- log.info_a("maincamera",maincamera)
+        local mq = world:first_entity "main_queue"
+        
+        local camera = camerautil.get_camera(world, mq.camera_tag)
+        -- log.info_a("mq",mq)
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
         local trans = target_entity.transform
         r_axis_unit = convert_to_model_axis(trans,axis_unit)
         -- log.info_a("axis_unit:",r_axis_unit)
         local cur_pos = ms(trans.t,"T")
-        local viewport = maincamera.render_target.viewport
+        local viewport = mq.render_target.viewport
         -- log.info_a("viewport",viewport.rect)
         local w,h = viewport.rect.w,viewport.rect.h
         local screen_pos0 = pos_to_screen({0,0,0},trans,viewproj,w,h)
@@ -174,10 +177,10 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
         local scale_box = world[scale_box_id]
         local scale_box_trans =  scale_box.transform
         local axis_unit = cache.axis_map[picked_dir] -- {1,0,0} or {0,1,0} or {0,0,1}
-        local maincamera = world:first_entity("main_queue")
-        local camera = maincamera.camera
+        local mq = world:first_entity("main_queue")
+        local camera = camerautil.get_camera(world, mq.camera_tag)
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
-        local viewport = maincamera.render_target.viewport
+        local viewport = mq.render_target.viewport
         local w,h = viewport.rect.w,viewport.rect.h
         local screen_pos0 = pos_to_screen({0,0,0},scale_box_trans,viewproj,w,h)
         local screen_pos1= pos_to_screen(axis_unit,scale_box_trans,viewproj,w,h)

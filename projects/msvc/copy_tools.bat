@@ -5,3 +5,6 @@ copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\texturecRelease.exe   ..\..\bi
 copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\shadercDebug.exe      .\vs_bin\x64\Debug\shadercDebug.exe
 copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\shadercRelease.exe    .\vs_bin\x64\Release\shadercRelease.exe
 copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\shadercRelease.exe    ..\..\bin\shaderc.exe
+
+copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\bgfx-shared-libDebug.dll      .\vs_bin\x64\Debug\bgfx-core.dll
+copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\bgfx-shared-libRelease.dll    .\vs_bin\x64\Release\bgfx-core.dll

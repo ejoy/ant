@@ -1,15 +1,14 @@
 local util = {}; util.__index = util
 
-local math = import_package "ant.math"
-local ms = math.stack
+local mathpkg 	= import_package "ant.math"
+local ms 		= mathpkg.stack
 
-local mathbaselib = require "math3d.baselib"
-
-local cu = require "components.util"
+local cu 		= require "components.util"
+local mathbaselib 	= require "math3d.baselib"
 
 function util.focus_point(world, pt)
-	local maincamera = world:first_entity("main_queue")
-	local camera = maincamera.camera
+	local mq = world:first_entity "main_queue"
+	local camera = util.get_camera(world, mq.camera_tag)
 	ms(camera.viewdir, pt, camera.eyepos, "-n=")
 end
 
@@ -41,8 +40,8 @@ function util.focus_obj(world, eid)
 	if bounding then
 		local sphere = bounding:get "sphere"
 
-		local mq = world:first_entity("main_queue")
-		local camera = mq.camera
+		local mq = world:first_entity "main_queue"
+		local camera = util.get_camera(world, mq.camera_tag)
 		local center = ms({sphere[1], sphere[2], sphere[3], 1.0}, "P")
 		ms(camera.viewdir, center, camera.eyepos, "-n=")
 	
@@ -53,6 +52,38 @@ function util.focus_obj(world, eid)
 		--print(ms(camera.eyepos, "V"))
 		return true		
 	end
+end
+
+function util.create_camera_mgr_entity(world, main_camera)
+	return world:create_entity {
+		name = "camera_manager",
+		camera_mgr = {
+			cameras = {
+				main_view = main_camera,
+			}
+		}
+	}
+end
+
+function util.bind_camera(world, name, camera)
+	local entity = assert(world:first_entity "camera_mgr")
+	local cameras = entity.camera_mgr.cameras
+	if cameras[name] then
+		log.error("already bind camera:", name)
+	end
+
+	cameras[name] = camera
+end
+
+function util.unbind_camera(cameramgr_entity, name)
+	local mgr = cameramgr_entity.camera_mgr
+	mgr.cameras[name] = nil
+end
+
+function util.get_camera(world, name)
+	local cameramgr_entity = world:first_entity "camera_mgr"
+	local mgr = cameramgr_entity.camera_mgr
+	return mgr.cameras[name]
 end
 
 return util

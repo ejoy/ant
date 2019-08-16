@@ -12,9 +12,11 @@ local ms 		= mathpkg.stack
 local filterutil = import_package "ant.scene".filterutil
 
 local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
-local renderutil = renderpkg.util
+local computil 	= renderpkg.components
+local renderutil= renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
+local camerautil= renderpkg.camera
+local compdefault=renderpkg.default
 local assetmgr = import_package "ant.asset".mgr
 
 local bgfx 		= require "bgfx"
@@ -78,14 +80,14 @@ local function which_entity_hitted(blitdata, viewrect)
 end
 
 local function update_viewinfo(e, clickpt) 
-	local maincamera = world:first_entity "main_queue"
-	local cameracomp = maincamera.camera
+	local mq = world:first_entity "main_queue"
+	local cameracomp = camerautil.get_camera(world, mq.camera_tag)
 	local eye, at = ms:screenpt_to_3d(
-		cameracomp, maincamera.render_target.viewport.rect,
+		cameracomp, mq.render_target.viewport.rect,
 		{clickpt.x, clickpt.y, 0,},
 		{clickpt.x, clickpt.y, 1,})
 
-	local pickupcamera = e.camera
+	local pickupcamera = camerautil.get_camera(world, e.camera_tag)
 	pickupcamera.eyepos(eye)
 	pickupcamera.viewdir(ms(at, eye, "-nP"))
 end
@@ -187,6 +189,19 @@ local function add_pick_entity()
 		V="CLAMP"
 	}
 
+	local pickupcamera = camerautil.get_camera(world, "pickup")
+	if pickupcamera == nil then
+		camerautil.bind_camera(world, "pickup", {
+			type = "pickup",
+			viewdir = {0, 0, 1, 0},
+			updir = {0, 1, 0, 0},
+			eyepos = {0, 0, 0, 1},
+			frustum = {
+				type="mat", n=0.1, f=1000, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
+			},
+		})
+	end
+
 	return world:create_entity {
 		material = {
 			{ref_path = fs.path '/pkg/ant.resources/materials/pickup_opacity.material'},
@@ -220,17 +235,8 @@ local function add_pick_entity()
 				last_pick = -1,
 				pick_ids = {},
 			},
-
 		},
-		camera = {
-			type = "pickup",
-			viewdir = {0, 0, 1, 0},
-			updir = {0, 1, 0, 0},
-			eyepos = {0, 0, 0, 1},
-			frustum = {
-				type="mat", n=0.1, f=1000, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
-			},
-		},
+		camera_tag = "pickup", 
 		render_target = {
 			viewport = {
 				rect = {

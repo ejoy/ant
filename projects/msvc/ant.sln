@@ -66,9 +66,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thread", "thread.vcxproj", 
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ant", "ant.vcxproj", "{CAE93060-FEBE-40D9-898F-D1AB52956B0D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770} = {5DE848F5-6BFB-4F23-8F23-071DD7C5F770}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "protocol", "protocol.vcxproj", "{CF016076-47E5-40CF-875D-DCADE7C9055E}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -137,8 +134,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ALL_BUILD", "ALL_BUILD.vcxp
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "imgui", "imgui.vcxproj", "{04B09448-A2A0-40A6-BE06-9C80F30B1681}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bgfx-core", "bgfx-core.vcxproj", "{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snapshot", "snapshot.vcxproj", "{A9DE4AF9-A0FF-40D4-ACA8-379DAC447AEC}"
 EndProject
@@ -252,10 +247,6 @@ Global
 		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Debug|x64.Build.0 = Debug|x64
 		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Release|x64.ActiveCfg = Release|x64
 		{04B09448-A2A0-40A6-BE06-9C80F30B1681}.Release|x64.Build.0 = Release|x64
-		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Debug|x64.ActiveCfg = Debug|x64
-		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Debug|x64.Build.0 = Debug|x64
-		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x64.ActiveCfg = Release|x64
-		{5DE848F5-6BFB-4F23-8F23-071DD7C5F770}.Release|x64.Build.0 = Release|x64
 		{A9DE4AF9-A0FF-40D4-ACA8-379DAC447AEC}.Debug|x64.ActiveCfg = Debug|x64
 		{A9DE4AF9-A0FF-40D4-ACA8-379DAC447AEC}.Debug|x64.Build.0 = Debug|x64
 		{A9DE4AF9-A0FF-40D4-ACA8-379DAC447AEC}.Release|x64.ActiveCfg = Release|x64

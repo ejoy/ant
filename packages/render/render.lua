@@ -3,11 +3,17 @@ local world = ecs.world
 
 ecs.import "ant.scene"
 
-local bgfx = require "bgfx"
-local fbmgr = require "framebuffer_mgr"
+local mathpkg 	= import_package "ant.math"
+local ms 		= mathpkg.stack
 
-local ms = import_package "ant.math".stack
-local ru = require "util"
+local fbmgr 	= require "framebuffer_mgr"
+local camerautil= require "camera.util"
+
+local bgfx 		= require "bgfx"
+
+
+
+local ru 		= require "util"
 
 ecs.tag "main_queue"
 ecs.component_alias("view_tag", "string")
@@ -128,16 +134,18 @@ ecs.component "viewport"
 	.clear_state "clear_state"
 	.rect "rect"
 
-ecs.component "camera" {depend = "viewid"}
+ecs.component "camera"
 	.type "string" ("free")
 	.eyepos	"vector"
 	.viewdir "vector"
 	.updir "vector"
-	.frustum"frustum"	
+	.frustum"frustum"
 
+ecs.component "camera_mgr"
+    .cameras "camera{}"
+
+ecs.component_alias("camera_tag", "string") {depend = "viewid"}
 ecs.component_alias("visible", "boolean", true) 
-
-
 
 local rendersys = ecs.system "render_system"
 rendersys.depend "primitive_filter_system"
@@ -190,7 +198,7 @@ function rendersys:update()
 			update_frame_buffer_view(viewid, rt)
 			
 			update_viewport(viewid, rt.viewport)
-			update_view_proj(viewid, rq.camera)
+			update_view_proj(viewid, camerautil.get_camera(world, rq.camera_tag))
 
 			local filter = rq.primitive_filter
 			local render_properties = filter.render_properties

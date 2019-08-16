@@ -3,9 +3,11 @@ local world = ecs.world
 
 ecs.import "ant.inputmgr"
 
-local rhwi = require "hardware_interface"
-local fbmgr = require "framebuffer_mgr"
-local util = require "util"
+local rhwi 		= require "hardware_interface"
+local fbmgr 	= require "framebuffer_mgr"
+local util 		= require "util"
+local camerautil= require "camera.util"
+
 local bgfx = require "bgfx"
 
 local vp_detect = ecs.system "viewport_detect_system"
@@ -51,7 +53,9 @@ function vp_detect:init()
 		end
 		local vp = mq.render_target.viewport
 		vp.rect.w, vp.rect.h = w, h
-		mq.camera.frustum.aspect = w / h
+
+		local camera = camerautil.get_camera(world, mq.camera_tag)
+		camera.frustum.aspect = w / h
 		
 		resize_framebuffer(w, h, mq.render_target.frame_buffer, mq.viewid)
     end

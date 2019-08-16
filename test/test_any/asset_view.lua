@@ -216,10 +216,12 @@ function asset_view:_on_canvas_map()
 				view_tag = viewtag,
 				filter_tag = "can_render",
 			}
-		end
+        end
+        
+        camera_util.bind_camera(world, "camera3d", default_camera())
 
 		local camera_eid_3d = self.world:create_entity {
-			camera = default_camera(),
+			camera_tag = "camera3d",
 			render_target = {
 				viewport = default_viewport(),
 				wnd_frame_buffer = {
@@ -245,9 +247,11 @@ function asset_view:_on_canvas_map()
         --     {w=fb_width, h=fb_height},
         --     "asset_viewtag_2d",
         --     self.view_id
-		-- )
+        -- )
+
+        camera_util.bind_camera(world, "camera2d", default_camera())
 		local camera_eid_2d = self.world:create_entity {
-			camera = default_camera(),
+			camera_tag = "camera2d",
 			render_target = {
 				viewport = default_viewport(),
 			},
@@ -271,7 +275,7 @@ function asset_view:_on_canvas_map()
         -- -- camera_2d.camera_control.move = false
         local camera_2d = self.world[camera_eid_2d]
         camera_reset(
-            camera_2d.camera,
+            camerautil.get_camera(world, camera_2d.camera_tag),
             camera_init_config["2d"]
         )
 
@@ -367,7 +371,7 @@ function asset_view:show_camera(value)
         CAM_CONTROL_CONFIG[value]
     )
     new_camera.visible = true
-    camera_reset(new_camera.camera, camera_init_config[value])
+    camera_reset(camerautil.get_camera(world, new_camera.camera_tag), camera_init_config[value])
     self:_on_canvas_resize()
 end
 

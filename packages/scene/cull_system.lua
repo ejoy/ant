@@ -8,6 +8,9 @@ local math = import_package "ant.math"
 local mu = math.util
 local ms = math.stack
 
+local renderpkg = import_package "ant.render"
+local camerautil= renderpkg.camera
+
 local cull_sys = ecs.system "cull_system"
 
 cull_sys.depend "primitive_filter_system"
@@ -17,7 +20,8 @@ function cull_sys:update()
 		local e = world:first_entity(tag)
 		if e then
 			local filter = e.primitive_filter
-			local camera = e.camera
+
+			local camera = camerautil.get_camera(world, e.camera_tag)
 			local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
 			local frustum = mathbaselib.new_frustum(ms, viewproj)
 			

@@ -5,8 +5,8 @@ local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
 local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
-local camerautil = renderpkg.camera
+local computil 	= renderpkg.components
+local camerautil= renderpkg.camera
 
 local fs = require "filesystem"
 

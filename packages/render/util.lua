@@ -6,6 +6,7 @@ local ms = mathpkg.stack
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
+local camerautil	= require "camera.util"
 local default_comp 	= require "components.default"
 local computil 		= require "components.util"
 
@@ -148,10 +149,14 @@ function util.insert_primitive(eid, group, material, worldmat, filter)
 	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end
 
-function util.create_render_queue_entity(world, view_rect, viewdir, eyepos, view_tag, viewid)	
+function util.create_render_queue_entity(world, view_rect, eyepos, viewdir, view_tag, viewid)
+	camerautil.bind_camera(world, 
+		view_tag, 
+		default_comp.camera(eyepos, viewdir, 
+			default_comp.frustum(view_rect.w, view_rect.h)))
+
 	return world:create_entity {
-		camera = default_comp.camera(eyepos, viewdir, 
-				default_comp.frustum(view_rect.w, view_rect.h)),
+		camera_tag = view_tag,
 		viewid = viewid or viewidmgr.get(view_tag),
 		render_target = {
 			viewport = default_comp.viewport(view_rect),
@@ -174,9 +179,14 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 		V="CLAMP"
 	}
 
+	assert(world:first_entity "camera_mgr" == nil, "camera_mgr entity have been created")
+
+	camerautil.create_camera_mgr_entity(world, 
+		default_comp.camera(eyepos, viewdir, 
+			default_comp.frustum(view_rect.w, view_rect.h)))
+
 	return world:create_entity {
-		camera = default_comp.camera(eyepos, viewdir, 
-				default_comp.frustum(view_rect.w, view_rect.h)),
+		camera_tag = "main_view",
 		viewid = viewidmgr.get "main_view",
 		render_target = {
 			viewport = default_comp.viewport(view_rect),

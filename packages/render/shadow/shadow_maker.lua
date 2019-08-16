@@ -6,6 +6,7 @@ ecs.import "ant.scene"
 local viewidmgr = require "viewid_mgr"
 local renderutil= require "util"
 local computil 	= require "components.util"
+local camerautil= require "camera.util"
 
 local assetpkg 	= import_package "ant.asset"
 local assetmgr 	= assetpkg.mgr
@@ -49,7 +50,7 @@ end
 function maker_camera:update()
 	local sm = world:first_entity "shadow"
 	local dl = world:first_entity "directional_light"
-	local camera = sm.camera
+	local camera = camerautil.get_camera(world, sm.camera_tag)
 	local scenebounding = calc_scene_bounding()
 	
 	local sphere = scenebounding.sphere
@@ -79,6 +80,20 @@ sm.dependby "render_system"
 
 function sm:init()	
 	local sm_width, sm_height = 1024, 1024
+
+	camerautil.bind_camera(world, "shadow", {
+		type = "shadow",
+		eyepos = {0, 0, 0, 1},
+		viewdir = {0, 0, 1, 0},
+		updir = {0, 1, 0, 0},
+		frustum = {
+			ortho = true,
+			l = -2, r = 2,
+			t = 2, b = -2,
+			n = -100, f = 100,
+		},
+	})
+
 	--local half_sm_width, half_sm_height = sm_width * 0.5, sm_height * 0.5
 	world:create_entity {
 		material = {
@@ -94,18 +109,7 @@ function sm:init()
 			view_tag = "main_view",
 			filter_tag = "can_cast",
 		},
-		camera = {
-			type = "shadow",
-			eyepos = {0, 0, 0, 1},
-			viewdir = {0, 0, 1, 0},
-			updir = {0, 1, 0, 0},
-			frustum = {
-				ortho = true,
-				l = -2, r = 2,
-				t = 2, b = -2,
-				n = -100, f = 100,
-			},
-		},
+		camera_tag = "shadow",
 		render_target = {
 			viewport = {
 				rect = {x=0, y=0, w=sm_width, h=sm_height},
@@ -161,7 +165,8 @@ function sm:update()
 	replace_material(results.opaque, 		shadowmat)
 	replace_material(results.translucent, 	shadowmat)
 
-	update_shadow_camera(sm.camera, world:first_entity "directional_light", sm.shadow.distance)
+	local camera = camerautil.get_camera(world, sm.camera_tag)
+	update_shadow_camera(camera, world:first_entity "directional_light", sm.shadow.distance)
 end
 
 local debug_sm = ecs.system "debug_shadow_maker"
@@ -173,7 +178,8 @@ function debug_sm:init()
 	computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
 	
 	local shadow_entity = world:first_entity "shadow"
-	local _, _, vp = ms:view_proj(shadow_entity.camera, shadow_entity.camera.frustum)
+	local camera = camerautil.get_camera(world, shadow_entity.camera_tag)
+	local _, _, vp = ms:view_proj(camera, camera.frustum)
 	local frustum = mathbaselib.new_frustum(ms, vp)
 	computil.create_frustum_entity(world, frustum, "shadow frustum")
 end

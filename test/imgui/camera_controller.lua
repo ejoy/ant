@@ -1,13 +1,16 @@
 local ecs = ...
 local world = ecs.world
 
-
-
 ecs.import "ant.inputmgr"
 
-local point2d = import_package "ant.math".point2d
-local math3d = require "math3d"
-local ms = import_package "ant.math".stack
+
+local math3d    = require "math3d"
+local mathpkg   = import_package "ant.math"
+local ms        = mathpkg.stack
+local point2d   = mathpkg.point2d
+
+local renderpkg = import_package "ant.render"
+local camerautil= renderpkg.camera
 
 local camera_controller_system = ecs.system "editor_camera_controller"
 
@@ -37,9 +40,9 @@ end
 
 local function add_msg_callback(self)
     function get_camera()
-        local camera_entity = world:first_entity("main_queue")
-        -- local camera = camera_entity.camera
-        return camera_entity
+        local mq = world:first_entity "main_queue"
+
+        return camerautil.get_camera(world, mq.camera_tag)
     end
 
     local target = math3d.ref "vector"
@@ -57,7 +60,7 @@ local function add_msg_callback(self)
             if not mq then
                 return
             end
-            local camera = mq.camera
+            local camera = camerautil.get_camera(world, mq.camera_tag)
             local xy = point2d(x, y)
             if last_xy then
                 if what == "RIGHT" then
@@ -83,7 +86,7 @@ local function add_msg_callback(self)
         if not mq then
             return
         end
-        local camera = mq.camera
+        local camera = camerautil.get_camera(world, mq.camera_tag)
         camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
     end
 
@@ -108,9 +111,9 @@ end
 
 function camera_controller_system:update()
     -- for eid in world:each_new("main_queue") do
-    --     local camera_entity = world[eid]
+    --     local mq = world[eid]
     --     local target = math3d.ref "vector"
-    --     local camera = camera_entity.camera
+    --     local camera = camerautil.get_camera(world, mq.camera_tag)
     --     -- camera_reset(camera, target)
     -- end
 end 

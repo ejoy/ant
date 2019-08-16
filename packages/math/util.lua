@@ -38,14 +38,6 @@ function util.print_srt(e, numtab)
 	print(tab .. "position : ", t_str)
 end
 
-function util.view_proj_matrix(e)
-	local camera = assert(e.camera)
-	local vr = e.view_rect
-	local frustum = camera.frustum
-	frustum.aspect = vr.w / vr.h
-	return ms:view_proj(camera, camera.frustum)
-end
-
 function util.srt(s, r, t)
 	return {
 		s = s or {1, 1, 1, 0},

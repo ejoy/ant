@@ -1,6 +1,8 @@
 local util = {}; util.__index = util
 
 local ms = import_package "ant.math".stack
+local renderpkg = import_package "ant.render"
+local camerautil= renderpkg.camera
 
 local function update_uniforms(uniforms, properties)
 	for k, v in pairs(properties) do
@@ -73,7 +75,8 @@ function util.load_lighting_properties(world, filter)
 
 	local mq = world:first_entity "main_queue"
 	if mq then
-		lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=mq.camera.eyepos}
+		local camera = camerautil.get_camera(world, mq.camera_tag)
+		lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=camera.eyepos}
 	end
 end
 
