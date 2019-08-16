@@ -2297,6 +2297,33 @@ lsrt_matrix(lua_State *L) {
 }
 
 static int
+lmul_srtmat(lua_State* L) {
+	struct lastack* LS = getLS(L, 1);
+
+	const glm::mat4x4 parent_mat = get_mat_value(L, LS, 2);
+	const glm::mat4x4 mat = get_mat_value(L, LS, 3);
+
+	const bool ignore_parentscale = lua_isnoneornil(L, 4) ? false : lua_toboolean(L, 4);
+
+	auto m = parent_mat * mat;
+
+	if (ignore_parentscale) {
+		for (int ii = 0; ii < 3; ++ii) {
+			auto s = glm::length(parent_mat[ii]);
+			if (is_zero(s))
+				s = 1;
+
+			m[ii] *= glm::vec4(glm::vec3(1 / s), 1);
+		}
+	}
+
+	lastack_pushmatrix(LS, &m[0].x);
+	pushid(L, pop(L, LS));
+	
+	return 1;
+}
+
+static int
 lview_proj(lua_State *L) {
 	const int numarg = lua_gettop(L);
 	if (numarg < 2) {
@@ -2805,6 +2832,7 @@ register_linalg_mt(lua_State *L) {
 			{ "euler", new_temp_euler},
 			{ "base_axes", lbase_axes_from_forward_vector},
 			{ "srtmat", lsrt_matrix },
+			{ "mul_srtmat", lmul_srtmat},
 			{ "view_proj", lview_proj},
 			{ "length", llength},
 			{ "dot", ldot},

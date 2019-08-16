@@ -14,6 +14,7 @@ local assetmgr 	= assetpkg.mgr
 local animodule = require "hierarchy.animation"
 
 ecs.component_alias("attach", "entityid")
+ecs.component_alias("ignore_parent_transform_scale", "boolean") {depend = "hierarchy"}
 
 ecs.singleton "hierarchy_transform_result"
 
@@ -129,19 +130,16 @@ local function tree_sort(tree)
 	return r
 end
 
-local function update_hirarchy_entity_world(trans)
+local function update_hirarchy_entity_world(trans, ignore_parentscale)
 	local srt = ms:srtmat(trans)
-	local base = trans.base
 	local worldmat = trans.world
-	if base then
-		srt = ms(trans.base, srt, "*P")	
-	end
-
 	local peid = trans.parent
 	if peid then
 		local parent = world[peid]
 		local pt = parent.transform
-		ms(worldmat, pt.world, srt, "*=")
+
+		local finalmat = ms:mul_srtmat(pt.world, srt, ignore_parentscale)
+		ms(worldmat, finalmat, "=")
 	else
 		ms(worldmat, srt, "=")
 	end
@@ -189,7 +187,7 @@ local function mark_cache(eid, cache_result)
 	local e = world[eid]
 	local t = e.transform
 	
-	local cachemat = update_hirarchy_entity_world(t)
+	local cachemat = update_hirarchy_entity_world(t, t.ignore_parent_transform_scale)
 	assert(type(cachemat) == 'userdata')
 
 	local hiecomp = assert(e.hierarchy)
