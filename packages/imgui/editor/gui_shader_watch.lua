@@ -33,9 +33,13 @@ function GuiShaderWatch:_init()
     self.last_time = 0
     self.watch = {}
     self.watch_num = 0
+    self.time_count = 0
 end
 
-function GuiShaderWatch:on_gui()
+function GuiShaderWatch:on_gui(delta)
+    self.time_count = self.time_count + delta
+    if self.time_count < 2 then return end
+    self.time_count = 0
     local packages = pm.get_pkg_list()
     if #packages ~= self.watch_num then
         local cb = function(typ,pkgpath)
