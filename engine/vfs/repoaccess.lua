@@ -356,6 +356,7 @@ function access.clean_build(repo, identity, srcpath)
 	if not srcfile then
 		return
 	end
+	srcpath = srcpath:match "^/?(.-)/?$"
 	local pathhash = access.sha1(srcpath)
 	local buildfile = repo._build / pathhash / srcfile:filename() .. identity
 	lfs.remove(buildfile)
