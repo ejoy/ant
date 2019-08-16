@@ -11,7 +11,7 @@ ifeq "$(PLAT)" "mingw"
 PLAT_LIB = -lgdi32 -lstdc++
 PLAT_CXX = cpp
 else ifeq "$(PLAT)" "osx"
-PLAT_LIB =
+PLAT_LIB = -framework AppKit
 PLAT_CXX = mm
 else ifeq "$(PLAT)" "ios"
 PLAT_LIB =

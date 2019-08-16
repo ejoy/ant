@@ -28,7 +28,8 @@ CMAKE_OPT =
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-osx
-  BGFX_CPRC_CMD = cd bgfx/.build/osx64_clang/bin/ && cp shaderc$(MODE) ../../../../../clibs/ && cp texturec$(MODE) ../../../../../clibs/
+  BGFX_CPRC_CMD = cd .build/osx64_clang/bin/
+  BGFX_SHARED_LIB = libbgfx-shared-lib$(MODE).dylib
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
@@ -57,16 +58,22 @@ else ifeq "$(PLAT)" "msvc"
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-mingw-gcc
-  BGFX_CPRC_CMD = cd bgfx/.build/win64_mingw-gcc/bin/ && cp shaderc$(MODE) ../../../../../clibs/ && cp texturec$(MODE) ../../../../../clibs/
+  BGFX_CPRC_CMD = cd .build/win64_mingw-gcc/bin/
+  BGFX_SHARED_LIB = bgfx-shared-lib$(MODE).dll
 
   CMAKE_PROJ_MAKE = make
   CMAKE_PROJ_CLEAN = make clean
 endif
 
 ifneq "$(PLAT)" "msvc"
-BGFX_TARGET = bimg bx
+BGFX_TARGET_A = bgfx
+BGFX_TARGET_B = bimg bx
 ifneq "$(BGFX_CPRC_CMD)" ""
-BGFX_TARGET += shaderc texturec
+BGFX_TARGET_A += bgfx-shared-lib
+BGFX_TARGET_B += shaderc texturec
+BGFX_CPRC_CMD += && cp shaderc$(MODE) ../../../../../clibs/
+BGFX_CPRC_CMD += && cp texturec$(MODE) ../../../../../clibs/
+BGFX_CPRC_CMD += && cp $(BGFX_SHARED_LIB) ../../../../../clibs/bgfx-core.dll
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
 BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(MODE)64 -j8
@@ -118,8 +125,7 @@ $(BUILD_PATH):
 bgfx_init : | $(BUILD_PATH)
 	cd bgfx && $(BGFX_INIT_CMD)
 bgfx_make : | $(BUILD_PATH)
-	cd bgfx && $(BGFX_MAKE_CMD) bgfx  CFLAGS=-DBGFX_CONFIG_DEBUG=1 && $(BGFX_MAKE_CMD) $(BGFX_TARGET)
-	$(BGFX_CPRC_CMD)
+	cd bgfx && $(BGFX_MAKE_CMD) $(BGFX_TARGET_A) CFLAGS=-DBGFX_CONFIG_DEBUG=1 && $(BGFX_MAKE_CMD) $(BGFX_TARGET_B) && $(BGFX_CPRC_CMD)
 bgfx_clean :
 	cd bgfx && make clean
 

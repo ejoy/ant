@@ -15,8 +15,7 @@ $(ODIR)/libant.a :
 	cd $(ANT)/clibs/ant/ && $(MAKE) $@
 
 ant.exe : main.o $(ODIR)/libant.a
-	$(CC) -o $@ main.o $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) -lshlwapi
-	$(STRIP) $@ 
+	$(CC) -o $@ main.o $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) -lshlwapi && $(STRIP) $@
 
 clean :
 	rm -f *.o

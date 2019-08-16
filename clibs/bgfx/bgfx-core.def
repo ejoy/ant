@@ -1,3 +1,0 @@
-LIBRARY bgfx-core.dll
-EXPORTS  
-   bgfx_get_interface
