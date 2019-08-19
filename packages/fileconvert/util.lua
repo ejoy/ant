@@ -54,10 +54,10 @@ local function tool_paths(toolbasename)
 
     if plattype == "msvc" then
         return {
-            vspath .. "/x64/Release/" .. toolnameRelease,
-            vspath .. "/x64/Debug/" .. toolnameDebug,
-            vspath .. "/x64/Release/" .. toolbasename,
-            vspath .. "/x64/Debug/" .. toolbasename,
+            vspath .. "/Release/" .. toolnameRelease,
+            vspath .. "/Debug/" .. toolnameDebug,
+            vspath .. "/Release/" .. toolbasename,
+            vspath .. "/Debug/" .. toolbasename,
             to_binpath(toolbasename),
         }
     end
