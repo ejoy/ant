@@ -109,7 +109,7 @@ return function (identity, sourcefile, param, outfile)
 
 	gen_arm_commands(plat, param, sourcefile, tmpoutfile, commands)
 
-	local success, msg = util.spaw_process(commands, function (info)
+	local success, msg = util.spawn_process(commands, function (info)
 		local success, msg = true, ""
 		if info ~= "" then
 			local INFO = info:upper()

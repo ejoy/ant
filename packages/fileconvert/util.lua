@@ -99,7 +99,7 @@ function util.to_cmdline(commands)
     return s
 end
 
-function util.spaw_process(commands, checkmsg)
+function util.spawn_process(commands, checkmsg)
     local prog = subprocess.spawn(commands)
 	print(util.to_cmdline(commands))
 

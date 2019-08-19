@@ -1,9 +1,10 @@
- path = "/pkg/unity_viking/Assets/textures/Terrain/terrain_01_o.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "ANISOTROPIC",
-   MAG = "ANISOTROPIC",
- }
- sRGB 		= true
- normalmap 	= false
+
+normalmap = false
+path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/Terrain/terrain_01_o.png"
+sRGB = true
+sampler = {
+  MAG = "ANISOTROPIC",
+  MIN = "ANISOTROPIC",
+  U = "MIRROR",
+  V = "MIRROR"
+}

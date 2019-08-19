@@ -1,11 +1,10 @@
-path = "/pkg/unity_viking/Assets/textures/pbr/gold/albedo.dds"
 
+normalmap = false
+path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/pbr/gold/albedo.dds"
+sRGB = true
 sampler = {
-	U = "MIRROR",
-	V = "MIRROR",
-	MIN = "LINEAR",
-	MAG = "LINEAR",	
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  U = "MIRROR",
+  V = "MIRROR"
 }
-
-sRGB 		= true
-normalmap 	= false

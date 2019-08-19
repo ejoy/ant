@@ -115,7 +115,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	add_optimizelevel(config.optimizelevel, default_level(shadertype, stagetype))
 
-	local ok, msg = util.spaw_process(commands, function (info)
+	local ok, msg = util.spawn_process(commands, function (info)
 		local success, msg = true, ""
 		if info ~= "" then
 			local INFO = info:upper()

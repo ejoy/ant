@@ -1,9 +1,10 @@
- path = "/pkg/unity_viking/Assets/textures/Props/prop_bucket_01_a.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "ANISOTROPIC",
-   MAG = "ANISOTROPIC",
- }
- sRGB 		= true
- normalmap 	= false
+
+normalmap = false
+path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/Props/prop_bucket_01_a.png"
+sRGB = true
+sampler = {
+  MAG = "ANISOTROPIC",
+  MIN = "ANISOTROPIC",
+  U = "MIRROR",
+  V = "MIRROR"
+}

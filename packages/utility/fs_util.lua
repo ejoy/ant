@@ -38,4 +38,11 @@ function util.list_files(subpath, filter, excludes)
     return files
 end
 
+function util.raw_table(filepath)
+	local env = {}
+	local r = assert(fs.loadfile(filepath, "t", env))
+	r()
+	return env
+end
+
 return util

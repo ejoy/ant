@@ -1,9 +1,10 @@
- path = "/pkg/unity_viking/Assets/textures/Terrain/terrain_far_01_sg.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false
+
+normalmap = false
+path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/Terrain/terrain_far_01_sg.png"
+sRGB = true
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  U = "MIRROR",
+  V = "MIRROR"
+}
