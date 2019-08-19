@@ -147,7 +147,6 @@ local function get_entry_pkg()
 end
 
 return {
-    find = find,
     import = import,
     test = test,
     loadfile = pm_loadfile,

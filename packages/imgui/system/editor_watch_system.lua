@@ -181,7 +181,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
     end
     local target_ent = world[eid]
     if target_ent then
-        if is_pick and target_ent.can_select then
+        if target_ent.can_select then
             create_outline(eid)
         end
         world:add_component(eid,"editor_watching",true)
