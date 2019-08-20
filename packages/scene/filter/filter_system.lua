@@ -122,10 +122,6 @@ local function update_entity_transform(hierarchy_cache, eid)
 	end
 	local transform = e.transform
 	local peid = transform.parent
-	if _DEBUG then
-		local localmat = ms:srtmat(transform)
-		assert(ms:equal(localmat, transform.world))
-	end
 	
 	if peid then
 		local parentresult = hierarchy_cache[peid]
