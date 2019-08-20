@@ -14,8 +14,6 @@
 .vscode
 .vs
 .repo
-.repo-loc
-.cache
 _build
 
 /clibs/shadercrelease
