@@ -31,6 +31,7 @@ else
             gui_util = require "editor.gui_util",
             gui_script_runner = require "editor.gui_script_runner",
             gui_shader_watch = require "editor.gui_shader_watch",
+            gui_system_profiler = require "editor.gui_system_profiler",
         },
     }
     return editor

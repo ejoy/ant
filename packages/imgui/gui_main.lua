@@ -162,9 +162,21 @@ function gui_main.exit()
     end
 end
 
+local dispatch_traceback = debug.traceback
+local dispatch_error = gui_main.error or print
+local function dispatch(CMD, ...)
+	local f = gui_main[CMD]
+	if f then
+		local ok, err = xpcall(f, dispatch_traceback, ...)
+		if not ok then
+			dispatch_error(err)
+		end
+	end
+end
+
 local function run(m,args)
     main = m
-    window.create(gui_main, args.screen_width or 1024, 
+    window.create(dispatch, args.screen_width or 1024, 
         args.screen_height or 728, 
         args.name or "Ant")
     window.mainloop()

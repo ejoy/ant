@@ -32,7 +32,8 @@ function scene_control.test_new_world(raw_path)
         "editor_watcher_system",
         "editor_operate_gizmo_system",
         "editor_tool_system",
-        "visible_system"
+        "visible_system",
+        "world_profile_system"
         -- "editor_system"
     }
 

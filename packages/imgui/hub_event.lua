@@ -11,6 +11,7 @@ local Evt ={
     EntityOperate ="Editor_EntityOperate",
     --Delete,{eid,...}
     GizmoType = "Editor_GizmoType",--"position"/"rotation"/"scale"
+    SystemProfile = "Editor_SystemProfile",
 
     --tool
     RunScript = "Editor_RunScript",

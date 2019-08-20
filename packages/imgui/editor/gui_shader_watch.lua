@@ -79,7 +79,4 @@ function GuiShaderWatch:on_shader_change(typ,pkgpath)
     end
 end
 
-
-
-
 return GuiShaderWatch
