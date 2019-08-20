@@ -193,7 +193,7 @@ local function create_scene_node_test()
     local hie_root2 =
         world:create_entity {
         transform = {
-            s = {1, 1, 1, 0},
+            s = {2, 1, 1, 0},
             r = {0, 0, 0, 0},
             t = {3, 0, -3, 1},
         },

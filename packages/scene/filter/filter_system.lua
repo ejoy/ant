@@ -119,7 +119,11 @@ local function update_entity_transform(hierarchy_cache, eid)
 	local e = world[eid]
 	local transform = e.transform
 	local peid = transform.parent
-	local localmat = ms:srtmat(transform)
+	if _DEBUG then
+		local localmat = ms:srtmat(transform)
+		assert(ms:equal(localmat, transform.world))
+	end
+	
 	if peid then
 		local parentresult = hierarchy_cache[peid]
 		if parentresult then
@@ -127,18 +131,17 @@ local function update_entity_transform(hierarchy_cache, eid)
 			if parentmat then
 				local hie_result = parentresult.hierarchy
 				local slotname = transform.slotname
+
+				local w = transform.world
 				if hie_result and slotname then
 					local hiemat = ms:matrix(hie_result[slotname])
-					localmat = ms(parentmat, hiemat, localmat, "**P")
+					ms(w, parentmat, hiemat, w, "**=")
 				else
-					localmat = ms(parentmat, localmat, "*P")
+					ms(w, parentmat, w, "*=")
 				end
 			end
 		end
 	end
-
-	local w = transform.world
-	ms(w, localmat, "=")
 	return w
 end
 

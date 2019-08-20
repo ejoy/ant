@@ -75,7 +75,7 @@ function terrain_test:init()
 			},
 		},
         rendermesh = {},
-        name = "pvp",
+        name = "pvp terrain test",
         can_render = true,
         can_select = true,
 		main_view = true,

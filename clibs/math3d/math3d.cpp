@@ -2683,6 +2683,74 @@ llerp(lua_State* L) {
 }
 
 static int
+lequal(lua_State* L) {
+	struct lastack* LS = getLS(L, 1);
+
+	const int lhstype = lua_type(L, 2);
+	const int rhstype = lua_type(L, 3);
+	if (lhstype != rhstype) {
+		lua_pushboolean(L, false);
+		return 1;
+	}
+
+	if (lhstype == LUA_TNUMBER || lhstype == LUA_TUSERDATA) {
+		int type1;
+		const float* lhs = lastack_value(LS, get_ref_id(L, LS, 2), &type1);
+		int type2;
+		const float* rhs = lastack_value(LS, get_ref_id(L, LS, 3), &type2);
+
+		if (type1 != type2) {
+			lua_pushboolean(L, false);
+			return 1;
+		}
+
+		const int num = type1 == LINEAR_CONSTANT_IMAT ? 16 : 4;
+		for (int ii = 0; ii < num; ++ii) {
+			if (!is_zero(lhs[ii] - rhs[ii])) {
+				lua_pushboolean(L, false);
+				return 1;
+			}
+		}
+
+		lua_pushboolean(L, true);
+		return 1;
+	} else if (lhstype == LUA_TTABLE){
+		const int len1 = (int)lua_rawlen(L, 2);
+		const int len2 = (int)lua_rawlen(L, 3);
+
+		if (len1 != len2) {
+			lua_pushboolean(L, false);
+			return 1;
+		}
+
+		float v1[16], v2[16];
+		for (int ii = 0; ii < len1; ++ii) {
+			lua_geti(L, 2, ii + 1);
+			v1[ii] = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+
+			lua_geti(L, 3, ii + 1);
+			v2[ii] = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+		}
+		
+		for (int ii = 0; ii < len1; ++ii) {
+			if (!is_zero(v1[ii] - v2[ii])) {
+				lua_pushboolean(L, false);
+				return 1;
+			}
+		}
+
+		lua_pushboolean(L, true);
+		return 1;
+	} else {
+		luaL_error(L, "not support type:%d", lhstype);
+	}
+
+	return 0;
+}
+
+static int
 lbase_axes_from_forward_vector(lua_State *L) {
 	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack* LS = bp->LS;
@@ -2840,7 +2908,8 @@ register_linalg_mt(lua_State *L) {
 			{ "screenpt_to_3d", lscreen_point_to_3d},
 			{ "lhs_rotation", llhs_rotation},
 			{ "lhs_mat", llhs_matrix},
-			{ "lerp", llerp},			
+			{ "lerp", llerp},
+			{ "equal", lequal},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

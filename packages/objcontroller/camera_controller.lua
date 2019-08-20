@@ -20,7 +20,7 @@ camera_controller_system.depend "objcontroller_system"
 function camera_controller_system:init()
 	local mq = world:first_entity "main_queue"
 	local cameracomp = camerautil.get_camera(world, mq.camera_tag)
-	local speed_persecond = 30
+	local speed_persecond = 5
 	local function calc_step(speed, delta)
 		return speed * delta
 	end

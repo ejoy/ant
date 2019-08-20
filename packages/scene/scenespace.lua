@@ -184,7 +184,7 @@ local function mark_cache(eid, cache_result)
 	local e = world[eid]
 	local t = e.transform
 	
-	local cachemat = update_hirarchy_entity_world(t, t.ignore_parent_scale)
+	local cachemat = update_hirarchy_entity_world(t, e.ignore_parent_scale)
 	assert(type(cachemat) == 'userdata')
 
 	local hiecomp = assert(e.hierarchy)
