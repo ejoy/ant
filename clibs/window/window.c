@@ -15,11 +15,12 @@ struct callback_context {
 
 static int
 push_callback_function(struct callback_context * context, int id) {
-	lua_pushvalue(context->functions, id);
-	lua_xmove(context->functions, context->callback, 1);
-	int ret = lua_type(context->callback, 2) == LUA_TFUNCTION;
+	lua_pushvalue(context->functions, 1);
+	lua_pushvalue(context->functions, id + 1);
+	lua_xmove(context->functions, context->callback, 2);
+	int ret = lua_type(context->callback, 3) == LUA_TSTRING;
 	if (!ret) {
-		lua_pop(context->callback, 1);
+		lua_pop(context->callback, 2);
 	}
 	return ret;
 }
@@ -83,50 +84,6 @@ push_char_arg(lua_State *L, struct ant_window_char *c) {
 }
 
 static int
-lraise_error_string(lua_State *L) {
-	const char * msg = (const char *)lua_touserdata(L, 2);
-	if (lua_type(L, 1) != LUA_TFUNCTION) {
-		// no error handle
-		printf("Error: %s\n", msg);
-	} else {
-		lua_pop(L, 1);
-		lua_pushstring(L, msg);
-		lua_call(L, 1, 0);
-	}
-	return 0;
-}
-
-static void
-raise_error_string(struct callback_context *context, const char *errmsg) {
-	lua_State *L = context->callback;
-	lua_pushcfunction(L, lraise_error_string);
-	lua_pushvalue(context->functions, ANT_WINDOW_ERROR);
-	lua_xmove(context->functions, L, 1);
-	lua_pushlightuserdata(L, (void *)errmsg);
-	if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
-		printf("Error in error handle : %s\n", lua_tostring(L, -1));
-		lua_pop(L, 1);
-	}
-}
-
-static void
-raise_error(struct callback_context *context) {
-	lua_State *L = context->callback;
-	lua_pushvalue(context->functions, ANT_WINDOW_ERROR);
-	lua_xmove(context->functions, L, 1);
-	if (lua_type(L, -1) == LUA_TFUNCTION) {
-		lua_insert(L, -2);	// error_handler, error_string
-		if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
-			printf("Error in error handle : %s\n", lua_tostring(L, -1));
-			lua_pop(L, 1);
-		}
-	} else {
-		printf("Error: %s\n", lua_tostring(L, -1));
-		lua_pop(L, 2);
-	}
-}
-
-static int
 push_arg(lua_State *L, struct ant_window_message *msg) {
 	switch(msg->type) {
 	case ANT_WINDOW_UPDATE:
@@ -163,46 +120,48 @@ push_arg(lua_State *L, struct ant_window_message *msg) {
 }
 
 static void
-callback(void *ud, struct ant_window_message *msg) {
+message_callback(void *ud, struct ant_window_message *msg) {
 	if (!ud) {
 		return;
 	}
 	struct callback_context * context = (struct callback_context *)ud;
 	lua_State *L = context->callback;
 	if (!push_callback_function(context, msg->type) || !push_arg(L, msg)) {
-		raise_error_string(context, "Unknown callback");
 		return;
 	}
 	int nargs = lua_gettop(L) - 2;
 	if (lua_pcall(L, nargs, 0, 1) != LUA_OK) {
-		raise_error(context);
+		printf("Error: %s\n", lua_tostring(L, -1));
+		lua_pop(L, 1);
 	}
 }
 
 static void
-register_function(lua_State *L, int index, const char *name, lua_State *fL, int id) {
-	lua_getfield(L, index, name);
+register_function(lua_State *L, const char *name, lua_State *fL, int id) {
+	lua_pushstring(L, name);
 	lua_xmove(L, fL, 1);
-	lua_replace(fL, id);
+	lua_replace(fL, id + 1);
 }
 
 static void
 register_functions(lua_State *L, int index, lua_State *fL) {
-	int i;
+	lua_pushvalue(L, index);
+	lua_xmove(L, fL, 1);
+
 	luaL_checkstack(fL, ANT_WINDOW_COUNT+2, NULL);	// 2 for temp
-	for (i=0;i<ANT_WINDOW_COUNT;i++) {
+	for (int i = 0; i < ANT_WINDOW_COUNT; ++i) {
 		lua_pushnil(fL);
 	}
-	register_function(L, index, "error", fL, ANT_WINDOW_ERROR);
-	register_function(L, index, "update", fL, ANT_WINDOW_UPDATE);
-	register_function(L, index, "init", fL, ANT_WINDOW_INIT);
-	register_function(L, index, "exit", fL, ANT_WINDOW_EXIT);
-	register_function(L, index, "touch", fL, ANT_WINDOW_TOUCH);
-	register_function(L, index, "keyboard", fL, ANT_WINDOW_KEYBOARD);
-	register_function(L, index, "mouse_wheel", fL, ANT_WINDOW_MOUSE_WHEEL);
-	register_function(L, index, "mouse", fL, ANT_WINDOW_MOUSE);
-	register_function(L, index, "size", fL, ANT_WINDOW_SIZE);
-	register_function(L, index, "char", fL, ANT_WINDOW_CHAR);
+	register_function(L, "error", fL, ANT_WINDOW_ERROR);
+	register_function(L, "update", fL, ANT_WINDOW_UPDATE);
+	register_function(L, "init", fL, ANT_WINDOW_INIT);
+	register_function(L, "exit", fL, ANT_WINDOW_EXIT);
+	register_function(L, "touch", fL, ANT_WINDOW_TOUCH);
+	register_function(L, "keyboard", fL, ANT_WINDOW_KEYBOARD);
+	register_function(L, "mouse_wheel", fL, ANT_WINDOW_MOUSE_WHEEL);
+	register_function(L, "mouse", fL, ANT_WINDOW_MOUSE);
+	register_function(L, "size", fL, ANT_WINDOW_SIZE);
+	register_function(L, "char", fL, ANT_WINDOW_CHAR);
 }
 
 static int
@@ -234,7 +193,7 @@ get_callback(lua_State *L) {
 
 static int
 lregistercallback(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
+	luaL_checktype(L, 1, LUA_TFUNCTION);
 
 	if (lua_getfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK) != LUA_TUSERDATA) {
 		return luaL_error(L, "Create native window first");
@@ -255,7 +214,7 @@ lregistercallback(lua_State *L) {
 
 	register_functions(L, 1, context->functions);
 
-	cb->message = callback;
+	cb->message = message_callback;
 	cb->ud = context;
 	return 0;
 }
@@ -285,7 +244,7 @@ static void
 init(lua_State *L) {
 	struct ant_window_callback* cb = lua_newuserdata(L, sizeof(*cb));
 	cb->ud = NULL;
-	cb->message = callback;
+	cb->message = message_callback;
 	lua_setfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK);
 	window_init(cb);
 }

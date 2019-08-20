@@ -192,11 +192,17 @@ function callback.exit()
 	bgfx.shutdown()
 end
 
-local function init()
-
+local dispatch_traceback = debug.traceback
+local dispatch_error = callback.error or print
+local function dispatch(CMD, ...)
+	local f = callback[CMD]
+	if f then
+		local ok, err = xpcall(f, dispatch_traceback, ...)
+		if not ok then
+			dispatch_error(err)
+		end
+	end
 end
 
-init()
-
-window.create(callback, 1024, 768, "Hello")
+window.create(dispatch, 1024, 768, "Hello")
 window.mainloop()
