@@ -192,13 +192,11 @@ function callback.exit()
 	bgfx.shutdown()
 end
 
-window.register(callback)
-
 local function init()
 
 end
 
 init()
 
-window.create(1024, 768, "Hello")
+window.create(callback, 1024, 768, "Hello")
 window.mainloop()

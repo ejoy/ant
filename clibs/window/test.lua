@@ -73,8 +73,6 @@ function callback.exit()
 	bgfx.shutdown()
 end
 
-window.register(callback)
-
 local function init()
 	s_logo = "\z
 	\xdc\x03\xdc\x03\xdc\x03\xdc\x03\x20\x0f\x20\x0f\x20\x0f\x20\x0f\z
@@ -332,5 +330,5 @@ end
 
 init()
 
-window.create(1024, 768, "Hello")
+window.create(callback, 1024, 768, "Hello")
 window.mainloop()

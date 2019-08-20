@@ -164,8 +164,7 @@ end
 
 local function run(m,args)
     main = m
-    window.register(gui_main)
-    window.create(args.screen_width or 1024, 
+    window.create(gui_main, args.screen_width or 1024, 
         args.screen_height or 728, 
         args.name or "Ant")
     window.mainloop()

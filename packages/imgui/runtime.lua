@@ -154,8 +154,7 @@ end
 
 local function start(m1, m2)
 	packages, systems = m1, m2
-	window.register(callback)
-	window.create(1024, 768, "Hello")
+	window.create(callback, 1024, 768, "Hello")
     window.mainloop()
 end
 

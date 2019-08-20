@@ -270,7 +270,5 @@ function callback.exit()
     hw.shutdown()
 end
 
-window.register(callback)
-
-window.create(1024, 768, "Hello")
+window.create(callback, 1024, 768, "Hello")
 window.mainloop()
