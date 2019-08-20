@@ -32,9 +32,6 @@
     <ClCompile Include="..\..\clibs\window\window.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\window\window_native.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\clibs\window\mingw\mingw_window.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -29,7 +29,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\window\mingw\mingw_window.c" />
     <ClCompile Include="..\..\clibs\window\window.c" />
-    <ClCompile Include="..\..\clibs\window\window_native.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="luadll.vcxproj">

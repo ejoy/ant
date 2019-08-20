@@ -129,18 +129,17 @@ end
 
 local function update_hirarchy_entity_world(trans, ignore_parentscale)
 	local srt = ms:srtmat(trans)
-	local worldmat = trans.world
 	local peid = trans.parent
 	if peid then
 		local parent = world[peid]
 		local pt = parent.transform
 
 		local finalmat = ms:mul_srtmat(pt.world, srt, ignore_parentscale)
-		ms(worldmat, finalmat, "=")
+		ms(trans.world, finalmat, "=")
 	else
-		ms(worldmat, srt, "=")
+		ms(trans.world, srt, "=")
 	end
-	return worldmat
+	return trans.world
 end
 
 local function update_render_entity_world(transform, hierarchy_cache)
