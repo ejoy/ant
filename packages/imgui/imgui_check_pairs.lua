@@ -44,16 +44,17 @@ local ReturnType = {
 
 --id 101~
 local pairs_map_imgui = {
-    {ReturnType.NoReturn,"begin_frame", "end_frame"}, -- 100 --type 0
+    {101,ReturnType.NoReturn,"begin_frame", "end_frame"}, -- 100 --type 0
 }
 --id from 201 
 --{type,check_push_and_pop,...}
 local pairs_map_windows = {
-    {ReturnType.IgnoreReturn,true,"Begin","End",}, -- 201 --type 2
-    {ReturnType.IgnoreReturn,false,"BeginChild","EndChild",},-- 202 type 2
-    {ReturnType.WhenReturnTrue,false,"BeginTabBar","EndTabBar",}, -- --type1
-    {ReturnType.WhenReturnTrue,false,"BeginTabItem","EndTabItem",}, -- type1
+    {201,ReturnType.IgnoreReturn,true,"Begin","End",}, -- 201 --type 2
+    {202,ReturnType.IgnoreReturn,false,"BeginChild","EndChild",},-- 202 type 2
+    {203,ReturnType.WhenReturnTrue,false,"BeginTabBar","EndTabBar",}, -- --type1
+    {204,ReturnType.WhenReturnTrue,false,"BeginTabItem","EndTabItem",}, -- type1
     {
+        205,
         ReturnType.WhenReturnTrue,
         "BeginPopup",
         "BeginPopupContextItem",
@@ -67,22 +68,23 @@ local pairs_map_windows = {
 --id from 301
 --{type,check_push_and_pop,...}
 local pairs_map_widget = {
-    {ReturnType.WhenReturnTrue,false,"BeginCombo","EndCombo"}, -- 301 --type1
-    {ReturnType.NoReturn,false,"BeginTooltip","EndTooltip"}, --302  --type 0
-    {ReturnType.WhenReturnTrue,false,"BeginMainMenuBar","EndMainMenuBar"}, --type 1
-    {ReturnType.WhenReturnTrue,false,"BeginMenu","EndMenu"}, --type1
-    {ReturnType.WhenReturnTrue,false,"BeginListBox","BeginListBoxN","EndListBox",}, --type1
-    {ReturnType.NoReturn,false,"BeginGroup","EndGroup",}, --type 0
-    {ReturnType.WhenReturnTrue,false,"BeginMenuBar","EndMenuBar"}, --type1
-    {ReturnType.WhenReturnTrue,false,"TreeNode","TreePop"}, --type1
-    {ReturnType.WhenReturnTrue,false,"BeginDragDropSource","EndDragDropSource"}, --type1
-    {ReturnType.WhenReturnTrue,false,"BeginDragDropTarget","EndDragDropTarget"}, --type1
+    {301,ReturnType.WhenReturnTrue,false,"BeginCombo","EndCombo"}, -- 301 --type1
+    {302,ReturnType.NoReturn,false,"BeginTooltip","EndTooltip"}, --302  --type 0
+    {303,ReturnType.WhenReturnTrue,false,"BeginMainMenuBar","EndMainMenuBar"}, --type 1
+    {304,ReturnType.WhenReturnTrue,false,"BeginMenu","EndMenu"}, --type1
+    {305,ReturnType.WhenReturnTrue,false,"BeginListBox","BeginListBoxN","EndListBox",}, --type1
+    {306,ReturnType.NoReturn,false,"BeginGroup","EndGroup",}, --type 0
+    {307,ReturnType.WhenReturnTrue,false,"BeginMenuBar","EndMenuBar"}, --type1
+    {308,ReturnType.WhenReturnTrue,false,"TreeNode","TreePop"}, --type1
+    {308,ReturnType.NoReturn,false,"TreePush","TreePop"}, --type1
+    {309,ReturnType.WhenReturnTrue,false,"BeginDragDropSource","EndDragDropSource"}, --type1
+    {310,ReturnType.WhenReturnTrue,false,"BeginDragDropTarget","EndDragDropTarget"}, --type1
 }
 
 --id from 401
 local pairs_map_style = {
-    {ReturnType.Dummy,"PushStyleColor","PopStyleColor"},
-    {ReturnType.Dummy,"PushStyleVar","PopStyleVar"},
+    {401,ReturnType.Dummy,"PushStyleColor","PopStyleColor"},
+    {402,ReturnType.Dummy,"PushStyleVar","PopStyleVar"},
 }
 
 local function pop_until_idx(idx)
@@ -244,11 +246,11 @@ local function init(imgui)
         [300] = {imgui.widget,pairs_map_widget,},
         [400] = {imgui.windows,pairs_map_style,},
     }
-    for start_idx,cfg in pairs(cfgs) do
+    for _,cfg in pairs(cfgs) do
         local fun_head =  cfg[1]
         local pairs_map =  cfg[2]
         for i,pair in ipairs(pairs_map) do
-            local idx = start_idx + i
+            local idx = pair[1]
             local ef_name = pair[#pair]
             EndFunNameTbl[idx] = ef_name
             PureEndFunTbl[idx] = fun_head[ef_name]
@@ -261,10 +263,10 @@ local function wrap_pairs(imgui)
     --cache EndFunNameTbl and PureEndFunTbl
     init(imgui)
     -----------begin/end frame
-    local cur_idx = 101
     local cur_item = pairs_map_imgui[1]
-    imgui[cur_item[2]] = wrap_begin_frame(imgui[cur_item[2]],cur_idx)
-    imgui[cur_item[3]] = wrap_end_frame(imgui[cur_item[3]],cur_idx)
+    local cur_idx = cur_item[1]
+    imgui[cur_item[3]] = wrap_begin_frame(imgui[cur_item[3]],cur_idx)
+    imgui[cur_item[4]] = wrap_end_frame(imgui[cur_item[4]],cur_idx)
     -------------normal beginxxx/endxxx
     local cfgs ={
         [200] = {imgui.windows,pairs_map_windows,},
@@ -276,33 +278,40 @@ local function wrap_pairs(imgui)
         [ReturnType.IgnoreReturn] = wrap_begin_type_ignore_return,
 
     }
-    for start_idx,cfg in pairs(cfgs) do
+    local wraped = {}
+    for _,cfg in pairs(cfgs) do
         local fun_head =  cfg[1]
         local pairs_map =  cfg[2]
         for i,pair in ipairs(pairs_map) do
-            local idx = start_idx + i
-            local return_type = pair[1]
-            local is_style_region = pair[2]
+            local idx = pair[1]
+            local return_type = pair[2]
+            local is_style_region = pair[3]
             local begin_fun_wrap = begin_fun_map[return_type]
             local pair_size = #pair
-            for i = 3,pair_size - 1 do
-                fun_head[pair[i]] = begin_fun_wrap(fun_head[pair[i]],idx,is_style_region)
+            for i = 4,pair_size - 1 do
+                if not wraped[pair[i]] then
+                    fun_head[pair[i]] = begin_fun_wrap(fun_head[pair[i]],idx,is_style_region)
+                    wraped[pair[i]] = true
+                end
             end
-            fun_head[pair[pair_size]] = wrap_end(fun_head[pair[pair_size]],idx,is_style_region)
+            if not wraped[pair[pair_size]] then
+                fun_head[pair[pair_size]] = wrap_end(fun_head[pair[pair_size]],idx,is_style_region)
+                wraped[pair[pair_size]] = true
+            end
         end
     end
     --------push/pop style
     local style_cfg = {
         [400] =  {imgui.windows,pairs_map_style},
     }
-    for start_idx,cfg in pairs(style_cfg) do
+    for _,cfg in pairs(style_cfg) do
         local fun_head =  cfg[1]
         local pairs_map =  cfg[2]
         for i,ps in ipairs(pairs_map) do
-            local idx = i + start_idx
+            local idx = ps[1]
             -- style_dict[idx] = 0
-            fun_head[ps[2]] = wrap_push_style(fun_head[ps[2]],idx)
-            fun_head[ps[3]] = wrap_pop_style(fun_head[ps[3]],idx)
+            fun_head[ps[3]] = wrap_push_style(fun_head[ps[3]],idx)
+            fun_head[ps[4]] = wrap_pop_style(fun_head[ps[4]],idx)
         end
     end
 end

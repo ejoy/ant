@@ -1506,6 +1506,13 @@ wTreeNode(lua_State *L) {
 }
 
 static int
+wTreePush(lua_State* L) {
+	const char* label = luaL_checkstring(L, INDEX_ID);
+	ImGui::TreePush(label);
+	return 0;
+}
+
+static int
 wTreePop(lua_State *L) {
 	ImGui::TreePop();
 	return 0;
@@ -3418,6 +3425,7 @@ luaopen_imgui(lua_State *L) {
 		{ "EndCombo", wEndCombo },
 		{ "Selectable", wSelectable },
 		{ "TreeNode", wTreeNode },
+		{ "TreePush", wTreePush },
 		{ "TreePop", wTreePop },
 		{ "CollapsingHeader", wCollapsingHeader },
 		{ "SetNextItemOpen", wSetNextItemOpen },

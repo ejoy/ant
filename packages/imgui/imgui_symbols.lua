@@ -24,7 +24,7 @@ function widget.InvisibleButton() end
 function widget.ArrowButton() end
 --return change,new_value
 function widget.Checkbox(field,value) end 
-function widget.RadioButton() end
+function widget.RadioButton(name,selected) end
 function widget.ProgressBar() end
 function widget.Bullet() end
 function widget.DragFloat() end
@@ -49,7 +49,8 @@ function widget.BeginCombo() end
 function widget.EndCombo() end
 function widget.Selectable(name,selected,  x,y,flags,disable) end
 --widget.Selectable(name,{[1]=select_name,item_flags=?,width=?,height=?},disable)
-function widget.TreeNode() end
+function widget.TreeNode(name,flags) end
+function widget.TreePush(name) end
 function widget.TreePop() end
 function widget.CollapsingHeader() end
 function widget.SetNextItemOpen(is_open,ImGuiCond) end
