@@ -20,4 +20,8 @@ function timer.get_sys_counter()
 	return baselib.HP_counter()
 end
 
+function timer.cur_time()
+    return timer.from_counter(timer.get_sys_counter())
+end
+
 return timer

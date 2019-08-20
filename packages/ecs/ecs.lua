@@ -73,6 +73,7 @@ end
 function world:add_component_child(parent_com,child_name,child_type,child_value)
 	local child_com = self:create_component(child_type, child_value)
 	if parent_com.watcher then
+		-- assert(parent_com.watcher[child_name]==nil,"watched value can't set twice in a frame:"..child_name,parent_com.watcher[child_name])
         parent_com.watcher[child_name] =  child_com
     else
         parent_com[child_name] = child_com
@@ -428,6 +429,34 @@ function world:update_func(what, order)
 	local switch = system.list_switch(list)
 	self._switchs[what] = switch
 	local proxy = self._singleton_proxy
+	local system_begin_f = self:raw_update_func("system_begin")
+	local system_end_f = self:raw_update_func("system_end")
+	return function()
+		switch:update()
+		self._cur_system[2] = what
+		
+		for _, v in ipairs(list) do
+			local name, f = v[1], v[2]
+			self._cur_system[1] = name
+			system_begin_f()
+			f(proxy[name])
+			system_end_f()
+		end
+	end
+end
+
+function world:raw_update_func(what, order)
+	local list = self._systems[what]
+	if not list then
+		return function() end
+	end
+	if order then
+		list = system.order_list(list, order)
+	end
+	local switch = system.list_switch(list)
+	self._switchs[what] = switch
+	local proxy = self._singleton_proxy
+
 	return function()
 		switch:update()
 		for _, v in ipairs(list) do
@@ -471,6 +500,11 @@ function world:slove_comonpent()
 	component.solve(self)
 end
 
+--return 
+function world:get_cur_system()
+	return self._cur_system[1],self._cur_system[2]
+end
+
 -- config.packages
 -- config.systems
 -- config.update_order
@@ -488,6 +522,7 @@ function ecs.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_serialize_to_eid = {},
+		_cur_system = {"",""},
 	}, world)
 
 	-- load systems and components from modules

@@ -23,7 +23,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems,other_arg
 
 	local world = ecs.new_world {
 		packages = packages,
-		systems = systems,		
+		systems = systems,
 		args = args,
 	}
 	
@@ -56,6 +56,7 @@ function util.loop(world, arg)
 		"update", 
 		"after_update", 
 		"delete",
+		"end_frame"
 	} do
 		queue[#queue+1] = world:update_func(updatetype, arg[updatetype])
 	end
