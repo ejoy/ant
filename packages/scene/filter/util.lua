@@ -146,4 +146,28 @@ function util.create_primitve_filter(viewtag, filtertag)
 	}
 end
 
+function util.update_render_entity_transform(world, eid, hierarchy_cache)
+	local e = world[eid]
+	local transform = e.transform
+	local peid = transform.parent
+	local localmat = ms:srtmat(transform)
+	if peid then
+		local parentresult = hierarchy_cache[peid]
+		local parentmat = parentresult.world
+		if parentmat then
+			local hie_result = parentresult.hierarchy
+			local slotname = transform.slotname
+			if hie_result and slotname then
+				local hiemat = ms:matrix(hie_result[slotname])
+				localmat = ms(parentmat, hiemat, localmat, "**P")
+			else
+				localmat = ms(parentmat, localmat, "*P")
+			end
+		end
+	end
+
+	local w = transform.world
+	ms(w, localmat, "=")
+	return w
+end
 return util

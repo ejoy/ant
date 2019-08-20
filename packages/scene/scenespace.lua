@@ -3,8 +3,6 @@ local world = ecs.world
 
 ecs.import "ant.event"
 
-local su 		= require "util"
-
 local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack
 
@@ -20,10 +18,9 @@ ecs.singleton "hierarchy_transform_result"
 
 local ur = ecs.singleton "hierarchy_update_result"
 local function reset_hierarchy_update_result(rr)
-	rr.removed_eids = {}
-	rr.hierarchy_trees = {}
-	rr.remove_trees = {}
-	rr.render_entities = {}
+	rr.removed_eids 	= {}
+	rr.hierarchy_trees 	= {}
+	rr.remove_trees 	= {}
 end
 
 function ur.init()
@@ -292,22 +289,6 @@ function scene_space:delete()
 			end
 		end
 
-		-- for _, eid in world:each "transform" do
-		-- 	local e = world[eid]
-		-- 	local trans = e.transform
-			
-		-- 	-- parent have been remove but this child do not attach to new parent
-		-- 	-- make it as new tree root
-		-- 	if removed_eids[trans.parent] then
-		-- 		trans.parent = nil
-		-- 	end
-
-		-- 	if e.hierarchy then
-		-- 		trees[eid] = trans.parent or pseudoroot_eid
-		-- 	end
-		-- end
-
-
 		self.hierarchy_update_result.remove_trees = trees
 		self.hierarchy_update_result.removed_eids = removed_eids
 		world:update_func "handle_removed_hierarchy" ()
@@ -338,9 +319,6 @@ end
 
 local function update_scene_tree(hierarchy_cache, update_result)
 	update_hierarchy_tree(update_result.hierarchy_trees, hierarchy_cache)
-	which_render_entities_changed(update_result.hierarchy_trees, update_result.render_entities)
-	update_render_entities_world(update_result.render_entities, hierarchy_cache)
-
 	reset_hierarchy_update_result(update_result)
 end
 
@@ -349,14 +327,13 @@ local need_check_components_changed = {"hierarchy", "ignore_parent_scale"}
 function scene_space:event_changed()
 	local updateresult 		= self.hierarchy_update_result
 	local trees 			= updateresult.hierarchy_trees
-	local renderentities 	= updateresult.render_entities
 	
 	for eid, events, init in self.event:each "transform" do
 		local e = world[eid]
 		if e.hierarchy then
 			add_hierarchy_tree_item(eid, events, init, trees)
 		else
-			renderentities[eid] = {events, init}
+			update_transform_field(e.transform, events, init)
 		end
 	end
 
@@ -374,7 +351,7 @@ function scene_space:event_changed()
 		end
 	end
 
-	if next(trees) or next(renderentities) then
+	if next(trees) then
 		update_scene_tree(self.hierarchy_transform_result, updateresult)
 	end
 end
