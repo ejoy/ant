@@ -11,6 +11,7 @@
 *.xcbkptlist
 *.o.d
 
+.cache
 .vscode
 .vs
 .repo
