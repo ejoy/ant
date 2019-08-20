@@ -1,1 +1,2 @@
-mesh_path="/pkg/unity_viking/Assets/Standard Assets/Water (Pro Only)/Water4/Sources/Objects/ocean_plane.glb"
+
+mesh_path = "/pkg/ant.resources.binary/test/unity_viking/Assets/Standard Assets/Water (Pro Only)/Water4/Sources/Objects/ocean_plane.glb"

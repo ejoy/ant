@@ -1,1 +1,2 @@
-mesh_path="/pkg/unity_viking/Assets/Models/Props/prop_plankpile_02.glb"
+
+mesh_path = "/pkg/ant.resources.binary/test/unity_viking/Assets/Models/Props/prop_plankpile_02.glb"

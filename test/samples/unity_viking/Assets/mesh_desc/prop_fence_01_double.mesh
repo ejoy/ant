@@ -1,1 +1,2 @@
-mesh_path="/pkg/unity_viking/Assets/Models/Props/prop_fence_01_double.glb"
+
+mesh_path = "/pkg/ant.resources.binary/test/unity_viking/Assets/Models/Props/prop_fence_01_double.glb"
