@@ -1,5 +1,5 @@
 #include <Cocoa/Cocoa.h>
-#include "../window_native.h"
+#include "../window.h"
 #include "../virtual_keys.h"
 
 static uint8_t keyboard_state(NSEvent* event) {

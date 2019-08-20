@@ -23,5 +23,4 @@ int luaopen_remotedebug_stdio(lua_State* L);
 int luaopen_remotedebug_visitor(lua_State* L);
 int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
-int luaopen_window_native(lua_State* L);
 int luaopen_terrain(lua_State *L);

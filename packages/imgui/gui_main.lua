@@ -1,4 +1,3 @@
-local native    = require "window.native"
 local window    = require "window"
 local imgui     = require "imgui_wrap"
 local bgfx      = require "bgfx"
@@ -50,7 +49,7 @@ function gui_main.init(nwh, context, width, height)
     )
     imgui.resize(width, height)
     gui_input.size(width,height)
-    imgui.keymap(native.keymap)
+    imgui.keymap(window.keymap)
 
     bgfx.set_view_rect(uieditor_viewid, 0, 0, width, height)
     bgfx.set_view_clear(uieditor_viewid, "CD", 0x303030ff, 1, 0)
@@ -166,10 +165,10 @@ end
 local function run(m,args)
     main = m
     window.register(gui_main)
-    native.create(args.screen_width or 1024, 
+    window.create(args.screen_width or 1024, 
         args.screen_height or 728, 
         args.name or "Ant")
-    native.mainloop()
+    window.mainloop()
 end
 
 return {run = run}

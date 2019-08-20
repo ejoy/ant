@@ -20,16 +20,13 @@ endif
 $(ODIR)/window.o : window.c window.h | $(ODIR)
 	$(CC) -g $(CFLAGS) -c -o $@ $< $(LUAINC)
 
-$(ODIR)/window_native.o : window_native.c window_native.h window.h | $(ODIR)
-	$(CC) -g $(CFLAGS) -c -o $@ $< $(LUAINC)
-
-$(ODIR)/$(PLAT)_window.o : $(PLAT)/$(PLAT)_window.$(PLAT_C) window_native.h | $(ODIR)
+$(ODIR)/$(PLAT)_window.o : $(PLAT)/$(PLAT)_window.$(PLAT_C) window.h | $(ODIR)
 	$(CC) -g $(CFLAGS) -c -o $@ $<
 
-$(ODIR)/window.dll : $(ODIR)/window.o $(ODIR)/window_native.o $(ODIR)/$(PLAT)_window.o
+$(ODIR)/window.dll : $(ODIR)/window.o $(ODIR)/$(PLAT)_window.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(PLAT_LIB) $(LUALIB)
 
-$(ODIR)/libwindow.a : $(ODIR)/window.o $(ODIR)/window_native.o $(ODIR)/$(PLAT)_window.o
+$(ODIR)/libwindow.a : $(ODIR)/window.o $(ODIR)/$(PLAT)_window.o
 	ar rsv $@ $^
 
 window.dll: $(ODIR)/window.dll | $(ODIR)

@@ -1,5 +1,4 @@
 --dofile "libs/editor.lua"
-local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local s_logo
@@ -333,5 +332,5 @@ end
 
 init()
 
-native.create(1024, 768, "Hello")
-native.mainloop()
+window.create(1024, 768, "Hello")
+window.mainloop()
