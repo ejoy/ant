@@ -189,8 +189,9 @@ local function rawtable(filename)
 	return env
 end
 
-local function calchash(depends)
+local function calchash(plat, depends)
 	sha1_encoder:init()
+	sha1_encoder:update(plat)
 	for _, dep in ipairs(depends) do
 		sha1_encoder:update(dep[1])
 	end
@@ -210,7 +211,7 @@ local function prebuild(repo, plat, sourcefile, buildfile, deps)
 
 	local lkfile = sourcefile .. ".lk"
 	local w = {}
-	local dephash = calchash(depends)
+	local dephash = calchash(plat, depends)
 	w[#w+1] = ("identity = %q"):format(plat)
 	w[#w+1] = ("dephash = %q"):format(dephash)
 	w[#w+1] = "depends = {"
