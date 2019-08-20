@@ -72,7 +72,7 @@ function util.bind_camera(world, name, camera)
 		log.error("already bind camera:", name)
 	end
 
-	cameras[name] = camera
+	cameras[name] = world:create_component("camera", camera)
 end
 
 function util.unbind_camera(cameramgr_entity, name)
