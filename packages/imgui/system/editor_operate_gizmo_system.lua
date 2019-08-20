@@ -49,8 +49,6 @@ local function scale_gizmo_to_normal(gizmo)
     end
 end
 
-
-
 local function pos_to_screen(pos,trans,viewproj,w,h)
     local scale = ms(trans.s,"T")
     local vec4 = { pos[1]/scale[1],pos[2]/scale[2],pos[3]/scale[3],1}
@@ -205,11 +203,11 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
             new_scale[i] = old_scale[i]*(scale_add[i] + 1)
         end
         world:add_component_child(trans,"s","vector",new_scale)
-        world:update_func("event_changed")()
-        local gizmo_eid =  cache.gizmo.eid
-        local gizmo_entity = world[gizmo_eid]
-        scale_gizmo_to_normal(gizmo_entity)
-        world:update_func("event_changed")()
+        -- world:update_func("event_changed")()
+        -- local gizmo_eid =  cache.gizmo.eid
+        -- local gizmo_entity = world[gizmo_eid]
+        -- scale_gizmo_to_normal(gizmo_entity)
+        -- world:update_func("event_changed")()
 
     end
 end

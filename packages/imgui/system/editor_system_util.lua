@@ -135,10 +135,10 @@ end
 -- }
 function Util.create_gizmo(world)
     local seriazlizeutil = import_package "ant.serialize"
-    local function create_gizmo_object(name,parent)
+    local function create_gizmo_object(name,parent,ignore_scale)
         local trans = mu.srt()
         trans.parent = parent
-        local eid = world:create_entity {
+        local args = {
             transform = trans,
             name = name,
             hierarchy = {},
@@ -148,6 +148,10 @@ function Util.create_gizmo(world)
             gizmo_object = {},
             -- can_select = true,
         }
+        if ignore_scale then
+            args.ignore_parent_scale = true
+        end
+        local eid = world:create_entity(args)
         return eid
     end
     local root = create_gizmo_object("gizmo",nil)
