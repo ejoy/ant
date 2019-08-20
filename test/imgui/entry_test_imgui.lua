@@ -1,4 +1,3 @@
-local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local platform = require "platform"
@@ -57,7 +56,7 @@ function callback.init(nwh, context, width, height)
         imgui_image.uniforms.u_imageLodEnabled.handle
     )
     imgui.resize(width, height)
-    imgui.keymap(native.keymap)
+    imgui.keymap(window.keymap)
 
     bgfx.set_view_rect(0, 0, 0, width, height)
     bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)
@@ -271,7 +270,5 @@ function callback.exit()
     hw.shutdown()
 end
 
-window.register(callback)
-
-native.create(1024, 768, "Hello")
-native.mainloop()
+window.create(callback, 1024, 768, "Hello")
+window.mainloop()

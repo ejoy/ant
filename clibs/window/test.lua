@@ -1,5 +1,4 @@
 --dofile "libs/editor.lua"
-local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local s_logo
@@ -73,8 +72,6 @@ function callback.exit()
 	print("Exit")
 	bgfx.shutdown()
 end
-
-window.register(callback)
 
 local function init()
 	s_logo = "\z
@@ -333,5 +330,5 @@ end
 
 init()
 
-native.create(1024, 768, "Hello")
-native.mainloop()
+window.create(callback, 1024, 768, "Hello")
+window.mainloop()

@@ -8,7 +8,6 @@ require 'runtime.vfs'
 require 'runtime.errlog'
 require "filesystem"
 
-local native = require "window.native"
 local window = require "window"
 local bgfx = require "bgfx"
 local plat_module = require "platform"
@@ -193,13 +192,11 @@ function callback.exit()
 	bgfx.shutdown()
 end
 
-window.register(callback)
-
 local function init()
 
 end
 
 init()
 
-native.create(1024, 768, "Hello")
-native.mainloop()
+window.create(callback, 1024, 768, "Hello")
+window.mainloop()

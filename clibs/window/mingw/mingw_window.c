@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <stdint.h>
-#include "../window_native.h"
+#include "../window.h"
 
 // project path in my documents
 #define CLASSNAME L"ANTCLIENT"

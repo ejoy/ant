@@ -1,4 +1,3 @@
-local native = require "window.native"
 local window = require "window"
 
 local inputmgr = import_package "ant.inputmgr"
@@ -66,7 +65,7 @@ function callback.init(nwh, context, w, h)
 		imgui_image.uniforms.u_imageLodEnabled.handle
 	)
 	imgui_resize(width, height)
-	imgui.keymap(native.keymap)
+	imgui.keymap(window.keymap)
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
 		font.Create { { Font "黑体" ,     18, "\x20\x00\xFF\xFF\x00"} }
@@ -155,9 +154,8 @@ end
 
 local function start(m1, m2)
 	packages, systems = m1, m2
-	window.register(callback)
-	native.create(1024, 768, "Hello")
-    native.mainloop()
+	window.create(callback, 1024, 768, "Hello")
+    window.mainloop()
 end
 
 return {
