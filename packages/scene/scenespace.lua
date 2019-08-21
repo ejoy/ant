@@ -142,29 +142,6 @@ local function update_hirarchy_entity_world(trans, ignore_parentscale)
 	return trans.world
 end
 
-local function update_render_entity_world(transform, hierarchy_cache)
-	local peid = transform.parent
-	local localmat = ms:srtmat(transform)
-	if peid then
-		local parentresult = hierarchy_cache[peid]
-		local parentmat = parentresult.world
-		if parentmat then
-			local hie_result = parentresult.hierarchy
-			local slotname = transform.slotname
-			if hie_result and slotname then
-				local hiemat = ms:matrix(hie_result[slotname])
-				localmat = ms(parentmat, hiemat, localmat, "**P")
-			else
-				localmat = ms(parentmat, localmat, "*P")
-			end
-		end
-	end
-
-	local w = transform.world
-	ms(w, localmat, "=")
-	return w
-end
-
 local function fetch_sort_tree_result(tree, componenttype)
 	setmetatable(tree, mark_mt)
 	mark_tree(tree, componenttype)
@@ -173,10 +150,6 @@ end
 
 local function fetch_hirarchy_tree(tree)
 	return fetch_sort_tree_result(tree, "hierarchy")
-end
-
-local function fetch_render_entity_tree(tree)
-	return fetch_sort_tree_result(tree, "can_render")
 end
 
 local function mark_cache(eid, cache_result)
@@ -213,24 +186,6 @@ local function update_hierarchy_tree(tree, cache_result)
 	end
 end
 
-local function which_render_entities_changed(tree, renderentities)
-	if next(tree) then
-		local sort_result = fetch_render_entity_tree(tree)
-		for i=1, #sort_result do
-			local eid = sort_result[i]
-			local e = assert(world[eid])
-			if e.hierarchy then
-				-- mean all the render child have been updated
-				break
-			end
-
-			if renderentities[eid] == nil then
-				renderentities[eid] = {nil, true}
-			end
-		end
-	end
-end
-
 local function update_transform_field(trans, events, init)
 	if init then
 		assert(events == nil or (not next(events)))
@@ -250,17 +205,6 @@ local function update_transform_field(trans, events, init)
 	end
 
 	return changed
-end
-
-local function update_render_entities_world(renderentities, hierarchy_cache)
-	for eid, re in pairs(renderentities) do
-		local events, init = re[1], re[2]
-		local e = world[eid]
-		local trans = e.transform
-		if update_transform_field(trans, events, init) then
-			update_render_entity_world(trans, hierarchy_cache)
-		end
-	end
 end
 
 function scene_space:delete()
@@ -333,6 +277,13 @@ function scene_space:event_changed()
 			add_hierarchy_tree_item(eid, events, init, trees)
 		else
 			update_transform_field(e.transform, events, init)
+			local trans = e.transform
+			--TODO: mark parent to cache, if no other hirarchy node change, we can only call 'mark_cache' function here
+			local peid = trans.parent
+			if peid then
+				assert(world[peid].hierarchy)
+				add_hierarchy_tree_item(peid, nil, true, trees)
+			end
 		end
 	end
 
