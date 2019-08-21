@@ -154,7 +154,7 @@ local function init_scene(gltfscene, bindata)
 			local meshidx = node.mesh
 			if meshidx then
 				local meshnode = {
-					name = node.name,
+					nodename = node.name,
 					transform = ms:ref "matrix" (nodetrans),
 				}
 

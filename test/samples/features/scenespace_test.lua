@@ -269,6 +269,54 @@ local function create_scene_node_test()
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
+
+    local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
+
+    local function create_material_item(filepath, color)
+        return {
+            ref_path = filepath,
+            properties = {
+                uniforms = {
+                    u_color = {type = "color", name = "Color", value = color},
+                }
+            },
+        }
+    end
+
+    local submesh_child = world:create_entity {
+        transform = {
+            parent = hie2_level1_1, 
+            s = {0.1, 0.1, 0.1, 0},
+            r = {0, 0, 0, 0},
+            t = {0, 0, 0, 1},
+        },
+        name = 'submesh_child',
+        rendermesh = {
+            submesh_refs = {
+                build_big_storage_01_pillars_01     = computil.create_submesh_item {1},
+                build_big_storage_01_fence_02       = computil.create_submesh_item {2},
+                build_big_storage_01_walls_up       = computil.create_submesh_item {3},
+                build_big_storage_01_walls_down     = computil.create_submesh_item {4},
+                build_big_storage_01_straw_roof_002 = computil.create_submesh_item {5},
+            },
+        },
+        mesh = {
+            ref_path = fs.path '/pkg/ant.resources/meshes/build_big_storage_01.mesh',
+        },
+        material = {
+            create_material_item(singlecolor_material, {1, 0, 0, 0}),
+            create_material_item(singlecolor_material, {0, 1, 0, 0}),
+            create_material_item(singlecolor_material, {1, 0, 1, 0}),
+            create_material_item(singlecolor_material, {1, 1, 0, 0}),
+            create_material_item(singlecolor_material, {1, 1, 1, 0}),
+        },
+        can_render = true,
+        hierarchy_visible = true,
+        can_select = true,
+        main_view = true,
+        serialize = seriazlizeutil.create(),
+    }
+
 end
 
 function scenespace_test:init()

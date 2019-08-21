@@ -46,7 +46,7 @@ end
 local function get_material(prim, primidx, materialcomp, material_refs)
 	local materialidx
 	if material_refs then
-		local idx = material_refs[primidx] or 1
+		local idx = material_refs[primidx] or material_refs[1]
 		materialidx = idx - 1
 	else
 		materialidx = prim.material or primidx - 1
@@ -90,7 +90,7 @@ local function filter_element(eid, rendermesh, worldmat, materialcomp, filter)
 	local scenes = meshscene.scenes[sceneidx]
 	local submesh_refs = rendermesh.submesh_refs
 	for _, meshnode in ipairs(scenes) do
-		local name = meshnode.name
+		local name = meshnode.meshname
 		if is_visible(name, submesh_refs) then
 			local trans = get_scale_mat(worldmat, meshscene.scenescale)
 			if meshnode.transform then
