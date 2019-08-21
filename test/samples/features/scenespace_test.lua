@@ -462,6 +462,7 @@ local test_queue = {
             mesh = {ref_path = fs.path '/pkg/ant.resources/meshes/cone.mesh'},
             can_render = true,
             main_view = true,
+            can_select = true,
             name = 'test attach entity',
         }
     end,
