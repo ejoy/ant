@@ -2,30 +2,21 @@ local thread = require "thread"
 thread.newchannel "WNDMSG"
 local channel = thread.channel_consume "WNDMSG"
 
-local createThread
-
-if not __ANT_RUNTIME__ then
-	function createThread(name, code)
-		thread.thread(([=[
---%s
-package.cpath = [[%s]]
-%s]=]):format(name, package.cpath, code)
-		)
-	end
-else
-	function createThread(name, code)
-		thread.thread(([=[
---%s
-package.searchers[3] = ...
-package.searchers[4] = nil
-%s]=]):format(name, code)
-			, package.searchers[3]
-		)
-	end
-end
-
 local function create(w, h, name)
-	createThread('wndmsg', ([[
+	local csearcher = package.searchers[3]
+	if csearcher then
+		if debug.getupvalue(csearcher, 1) then
+			csearcher = nil
+		end
+	end
+	thread.thread(([[
+--wndmsg
+package.cpath = %q
+local csearcher = ...
+if csearcher then
+	package.searchers[3] = csearcher
+	package.searchers[4] = nil
+end
 local window = require "window"
 local thread = require "thread"
 local channel = thread.channel_produce "WNDMSG"
@@ -34,7 +25,7 @@ local function dispatch(...)
 end
 window.create(dispatch, %d, %d, %q)
 window.mainloop()
-]]):format(w, h, name))
+]]):format(package.cpath, w, h, name), csearcher)
 end
 
 local function recvmsg()
