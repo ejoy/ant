@@ -1,4 +1,19 @@
 local thread = require "thread"
+
+if not __ANT_RUNTIME__ then
+	local function createThread(name, code)
+		thread.thread(([=[
+--%s
+package.path = [[%s]]
+package.cpath = [[%s]]
+%s]=]):format(name, package.path, package.cpath, code)
+		)
+	end
+	return {
+		createThread = createThread,
+	}
+end
+
 require 'runtime.vfs'
 require 'runtime.log'
 

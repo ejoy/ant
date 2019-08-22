@@ -1,6 +1,6 @@
-local ru = require 'runtime.util'
+local ct = require 'common.thread'
 
-ru.createThread('errlog', [[
+ct.createThread('errlog', [[
 	local thread = require "thread"
 	local err = thread.channel_consume "errlog"
 	while true do

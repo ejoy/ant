@@ -152,7 +152,6 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	for (int i = 0; i < ANT_WINDOW_COUNT; ++i) {
 		lua_pushnil(fL);
 	}
-	register_function(L, "error", fL, ANT_WINDOW_ERROR);
 	register_function(L, "update", fL, ANT_WINDOW_UPDATE);
 	register_function(L, "init", fL, ANT_WINDOW_INIT);
 	register_function(L, "exit", fL, ANT_WINDOW_EXIT);

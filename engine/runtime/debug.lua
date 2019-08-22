@@ -1,4 +1,4 @@
-local ru = require 'runtime.util'
+local ct = require 'common.thread'
 
 local dbg = import_package 'ant.debugger'
 
@@ -9,7 +9,7 @@ local io_req = thread.channel_produce "IOreq"
 io_req("SUBSCIBE", "DdgNet", "DBG")
 io_req("SEND", "DBG", "")
 
-ru.createThread('debug', [[
+ct.createThread('debug', [[
     local thread = require "thread"
     local io_req  = thread.channel_produce "IOreq"
     local dbg_net = thread.channel_consume "DdgNet"

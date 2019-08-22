@@ -20,10 +20,12 @@ local Font = platform.font
 local gui_main  = {}
 local attribs   = {}
 local main = nil
+local initialized = false
 
 local uieditor_viewid = viewidmgr.generate("uieditor")
 
 function gui_main.init(nwh, context, width, height)
+    initialized = true
     rhwi.init {
         nwh = nwh,
         context = context,
@@ -127,6 +129,9 @@ local last_update = os.clock()
 local FRAME_TIME = 1/60
 local next_update = last_update + FRAME_TIME
 function gui_main.update()
+    if not initialized then
+        return
+    end
     local now = os.clock()
     local delta = now - last_update
     last_update = now
@@ -162,24 +167,32 @@ function gui_main.exit()
     end
 end
 
-local dispatch_traceback = debug.traceback
-local dispatch_error = gui_main.error or print
-local function dispatch(CMD, ...)
+local function dispatch(ok, CMD, ...)
+	if not ok then
+		local ok, err = xpcall(gui_main.update, debug.traceback)
+		if not ok then
+			gui_main.error(err)
+		end
+		thread.sleep(0)
+		return true
+	end
 	local f = gui_main[CMD]
 	if f then
-		local ok, err = xpcall(f, dispatch_traceback, ...)
+		local ok, err = xpcall(f, debug.traceback, ...)
 		if not ok then
-			dispatch_error(err)
+			gui_main.error(err)
 		end
 	end
+	return CMD ~= 'exit'
 end
 
 local function run(m,args)
     main = m
-    window.create(dispatch, args.screen_width or 1024, 
-        args.screen_height or 728, 
-        args.name or "Ant")
-    window.mainloop()
+
+	local window = require "common.window"
+	window.create(args.screen_width or 1024,  args.screen_height or 728, args.name or "Ant")
+	while dispatch(window.recvmsg()) do
+	end
 end
 
 return {run = run}
