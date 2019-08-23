@@ -13,7 +13,7 @@ LIBS= lua bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol rem
 
 define MakeLibs
 
-$(ODIR)/lib$(1).a : ../$(1)/$(ODIR)/lib$(1).a | $(ODIR)
+$(ODIR)/lib$(1).a : | $(ODIR)
 	@$(MAKE) --no-print-directory -C ../$(1) $(ODIR)/lib$(1).a && cp ../$(1)/$(ODIR)/lib$(1).a $(ODIR)/lib$(1).a && cd $(ODIR) && ar x lib$(1).a && rm -f lib$(1).a
 
 unpack_lib$(1).a : $(ODIR)/lib$(1).a | $(ODIR)

@@ -68,7 +68,9 @@ endif
 ifneq "$(PLAT)" "msvc"
 BGFX_TARGET_A = bgfx
 BGFX_TARGET_B = bimg bx
-ifneq "$(BGFX_CPRC_CMD)" ""
+ifeq "$(BGFX_CPRC_CMD)" ""
+BGFX_CPRC_CMD += echo ok
+else
 BGFX_TARGET_A += bgfx-shared-lib
 BGFX_TARGET_B += shaderc texturec
 BGFX_CPRC_CMD += && cp shaderc$(MODE) ../../../../../clibs/
