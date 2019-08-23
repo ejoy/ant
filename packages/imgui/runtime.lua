@@ -169,13 +169,17 @@ local function dispatch(ok, CMD, ...)
 	return CMD ~= 'exit'
 end
 
+local function run()
+	local window = require "common.window"
+	while dispatch(window.recvmsg()) do
+	end
+end
+
 local function start(m1, m2)
 	packages, systems = m1, m2
 
 	local window = require "common.window"
-	window.create(1024, 768, "Hello")
-	while dispatch(window.recvmsg()) do
-	end
+	window.create(run, 1024, 768, "Hello")
 end
 
 return {

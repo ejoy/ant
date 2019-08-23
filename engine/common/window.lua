@@ -2,14 +2,14 @@ local thread = require "thread"
 thread.newchannel "WNDMSG"
 local channel = thread.channel_consume "WNDMSG"
 
-local function create(w, h, name)
+local function create(run, w, h, name)
 	local csearcher = package.searchers[3]
 	if csearcher then
 		if debug.getupvalue(csearcher, 1) then
 			csearcher = nil
 		end
 	end
-	thread.thread(([[
+	thread.fork(run, ([[
 --wndmsg
 package.cpath = %q
 local csearcher = ...

@@ -186,15 +186,19 @@ local function dispatch(ok, CMD, ...)
 	return CMD ~= 'exit'
 end
 
-local function run(m,args)
-    main = m
-
+local function run()
 	local window = require "common.window"
-	window.create(args.screen_width or 1024,  args.screen_height or 728, args.name or "Ant")
 	while dispatch(window.recvmsg()) do
 	end
 end
 
-return {run = run}
+local function create(m,args)
+    main = m
+
+	local window = require "common.window"
+	window.create(run, args.screen_width or 1024,  args.screen_height or 728, args.name or "Ant")
+end
+
+return {run = create}
 
 
