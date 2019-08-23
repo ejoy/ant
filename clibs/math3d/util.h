@@ -32,4 +32,15 @@ get_table_value(lua_State* L, int tblidx, int num, glm::mat4x4& v);
 
 #define tov3(v4)	((const glm::vec3*)(&(v4.x)))
 
+template<typename T>
+inline bool
+is_zero(const T& a, const T& e = T(glm::epsilon<float>())) {
+	return glm::all(glm::equal(a, glm::zero<T>(), e));
+}
+
+inline bool
+is_zero(const float& a, float e = glm::epsilon<float>()) {
+	return glm::equal(a, glm::zero<float>(), e);
+}
+
 #endif //math3d_util_h

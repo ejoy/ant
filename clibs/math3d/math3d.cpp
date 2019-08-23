@@ -890,17 +890,6 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	}
 }
 
-template<typename T>
-inline bool
-is_zero(const T &a, const T &e = T(glm::epsilon<float>())) {
-	return glm::all(glm::equal(a, glm::zero<T>(), e));
-}
-
-inline bool 
-is_zero(const float &a, float e = glm::epsilon<float>()) {
-	return glm::equal(a, glm::zero<float>(), e);
-}
-
 static void mulH_2values(lua_State *L, struct lastack *LS){
 	int64_t v1 = pop(L, LS);
 	int64_t v0 = pop(L, LS);
