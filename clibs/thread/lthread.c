@@ -295,6 +295,28 @@ thread_main(void *ud) {
 	return NULL;
 }
 
+static struct thread_args *
+thread_args_new(lua_State *L, int idx) {
+	size_t sz;
+	const char * source = luaL_checklstring(L, idx, &sz);
+	lua_CFunction f;
+	if (lua_isnoneornil(L, idx+1)) {
+		f = NULL;
+	} else {
+		if (!lua_iscfunction(L,idx+1) || lua_getupvalue(L,idx+1,1) != NULL) {
+			luaL_error(L, "2nd param should be a C function without upvalue");
+			return NULL;
+		}
+		f = lua_tocfunction(L, idx+1);
+	}
+	struct thread_args *args = (struct thread_args *)malloc(sizeof(*args));
+	args->source = (char *)malloc(sz + 1);
+	memcpy(args->source, source, sz + 1);
+	args->sz = sz;
+	args->param = f;
+	return args;
+}
+
 /*
 	string source code
 	cfunction param
@@ -303,22 +325,7 @@ thread_main(void *ud) {
  */
 static int
 lthread(lua_State *L) {
-	size_t sz;
-	const char * source = luaL_checklstring(L, 1, &sz);
-	lua_CFunction f;
-	if (lua_isnoneornil(L, 2)) {
-		f = NULL;
-	} else {
-		if (!lua_iscfunction(L,2) || lua_getupvalue(L,2,1) != NULL) {
-			return luaL_error(L, "2nd param should be a C function without upvalue");
-		}
-		f = lua_tocfunction(L, 2);
-	}
-	struct thread_args * args = (struct thread_args *)malloc(sizeof(*args));
-	args->source = (char *)malloc(sz + 1);
-	memcpy(args->source, source, sz + 1);
-	args->sz = sz;
-	args->param = f;
+	struct thread_args * args = thread_args_new(L, 1);
 	struct thread th = { thread_main, args };
 	if (thread_create(&th)) {
 		thread_args_free(args);
@@ -326,6 +333,57 @@ lthread(lua_State *L) {
 	}
 	lua_pushlightuserdata(L, th.id);
 	return 1;
+}
+
+static void *
+thread_fork(void *ud) {
+	lua_State *L = (lua_State *)ud;
+	lua_pushcfunction(L, msghandler);
+	lua_insert(L, 1);
+	// stack : msghandler func
+	if (lua_pcall(L, 0, LUA_MULTRET, 1) != LUA_OK) {
+		lua_replace(L, 1);
+		// return error string
+	}
+	// return multi values
+
+	return NULL;
+}
+
+/*
+	function run this function in a new thread
+	string source code , load into a new vm and run in current vm
+	cfunction param
+
+	return ... ( return values from fork function)
+ */
+static int
+lfork(lua_State *L) {
+	// save args
+	struct thread_args *args = thread_args_new(L, 2);
+	luaL_checktype(L, 1, LUA_TFUNCTION);
+	lua_settop(L, 1);
+
+	// run function in a new thread
+	struct thread th = { thread_fork, L };
+	if (thread_create(&th)) {
+		thread_args_free(args);
+		return luaL_error(L, "Fork failed");
+	}
+
+	// run source in current thread
+
+	thread_main(args);
+
+	// wait for fork function end
+	thread_wait(th.id);
+
+	if (lua_type(L, 1) == LUA_TSTRING) {
+		lua_settop(L, 1);
+		lua_error(L);
+	}
+
+	return lua_gettop(L) - 1;
 }
 
 static int
@@ -384,6 +442,7 @@ luaopen_thread_worker(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "sleep", lsleep },
 		{ "thread", lthread },
+		{ "fork", lfork },
 		{ "wait", lwait },
 		{ "newchannel", lnewchannel },
 		{ "channel_consume", lcchannel },

@@ -97,8 +97,7 @@ int main(int argc, char * argv[]) {
             lua_close(L);
             return 1;
         }
-        int res = UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
         lua_close(L);
-        return res;
+        return 1;
     }
 }

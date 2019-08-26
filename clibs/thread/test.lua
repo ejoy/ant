@@ -6,7 +6,7 @@ local err = thread.channel_consume "errlog"
 local data = thread.channel_consume "channel"
 
 local thread1 = thread.thread ( [[
-	local print = print
+	local print = (...)
 	local thread = require "thread"
 	print ("Hello World in thread" , thread.id)
 	local c = thread.channel_produce "channel"
@@ -71,3 +71,21 @@ while true do
 		break
 	end
 end
+
+-- test fork
+
+local function fork()
+	print "Fork : run (Sleep 1)"
+	thread.sleep(1)
+	print "Fork : end"
+	return "Return to main thread"
+end
+
+local run_in_main = [[
+	local thread = require "thread"
+	print("Main : run (Sleep 2)")
+	thread.sleep(2)
+	print("Main : end")
+]]
+
+print(thread.fork(fork, run_in_main))

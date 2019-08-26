@@ -1,20 +1,22 @@
 local window = require "window"
 
 local inputmgr = import_package "ant.inputmgr"
-local keymap = inputmgr.keymap
-
 local assetutil = import_package "ant.asset".util
 local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
-local rhwi = renderpkg.hardware_interface
 local bgfx = require "bgfx"
 local fs = require "filesystem"
-
+local thread = require "thread"
 local imgui = require "imgui"
 local platform = require "platform"
+
+local keymap = inputmgr.keymap
+local viewidmgr = renderpkg.viewidmgr
+local rhwi = renderpkg.hardware_interface
 local font = imgui.font
 local Font = platform.font
 local imguiIO = imgui.IO
+local debug_traceback = debug.traceback
+local thread_sleep = thread.sleep
 
 local LOGERROR = __ANT_RUNTIME__ and log.error or print
 local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
@@ -82,10 +84,6 @@ function callback.init(nwh, context, w, h)
 	})
 end
 
-function callback.error(err)
-	LOGERROR(err)
-end
-
 function callback.mouse_wheel(x, y, delta)
 	imgui.mouse_wheel(x, y, delta)
 	if not imguiIO.WantCaptureMouse then
@@ -144,7 +142,7 @@ function callback.exit()
     print "exit"
 end
 
-function callback.update()
+local function update()
 	if debug_update then debug_update() end
 	if world_update then
 		world_update()
@@ -152,24 +150,38 @@ function callback.update()
 	end
 end
 
-local dispatch_traceback = debug.traceback
-local dispatch_error = callback.error or print
-local function dispatch(CMD, ...)
+local function dispatch(ok, CMD, ...)
+	if not ok then
+		local ok, err = xpcall(update, debug_traceback)
+		if not ok then
+			LOGERROR(err)
+		end
+		thread_sleep(0)
+		return true
+	end
 	local f = callback[CMD]
 	if f then
-		local ok, err = xpcall(f, dispatch_traceback, ...)
+		local ok, err = xpcall(f, debug_traceback, ...)
 		if not ok then
-			dispatch_error(err)
+			LOGERROR(err)
 		end
+	end
+	return CMD ~= 'exit'
+end
+
+local function run()
+	local window = require "common.window"
+	while dispatch(window.recvmsg()) do
 	end
 end
 
 local function start(m1, m2)
 	packages, systems = m1, m2
-	window.create(dispatch, 1024, 768, "Hello")
-    window.mainloop()
+
+	local window = require "common.window"
+	window.create(run, 1024, 768, "Hello")
 end
 
 return {
-    start = start
+	start = start,
 }

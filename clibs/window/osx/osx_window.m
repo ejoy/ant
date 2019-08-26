@@ -347,8 +347,6 @@ void window_mainloop(struct ant_window_callback* cb) {
     if (!g_wd) {
         return;
     }
-	struct ant_window_message update_msg;
-	update_msg.type = ANT_WINDOW_UPDATE;
 	@autoreleasepool {
         [NSApplication sharedApplication];
         id dg = [AppDelegate new];
@@ -357,7 +355,6 @@ void window_mainloop(struct ant_window_callback* cb) {
         [NSApp activateIgnoringOtherApps:YES];
         [NSApp finishLaunching];
         while (![dg applicationHasTerminated]) {
-            cb->message(cb->ud, &update_msg);
             while (dispatch_event(cb, peek_event())) { }
         }
     }

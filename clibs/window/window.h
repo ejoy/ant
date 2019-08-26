@@ -5,8 +5,7 @@
 #include <stddef.h>
 
 typedef enum {
-	ANT_WINDOW_ERROR = 1,
-	ANT_WINDOW_UPDATE,
+	ANT_WINDOW_UPDATE = 1,
 	ANT_WINDOW_INIT,
 	ANT_WINDOW_EXIT,
 	ANT_WINDOW_TOUCH,
