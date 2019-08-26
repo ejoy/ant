@@ -65,7 +65,10 @@ local function repo_add(reponame)
 	end
 	local repopath = lfs.path(reponame)
 	LOG ("Open repo : ", repopath)
-	local repo = assert(repo_new(repopath))
+	local repo = repo_new(repopath)
+	if not repo then
+		return
+	end
 	LOG ("Rebuild repo")
 	if lfs.is_regular_file(repopath / ".repo" / "root") then
 		repo:index()
@@ -122,19 +125,21 @@ local debug = {}
 local message = {}
 
 function message:ROOT(reponame)
-	local reponame = assert(reponame or default_reponame,  "Need repo name")
-	local repo = repo_add(reponame)
-	self._repo = repo
-
 	if not self._id then
 		self._id = clients_add()
 	end
+	logger_init(self._id)
 
+	local reponame = assert(reponame or default_reponame,  "Need repo name")
+	local repo = repo_add(reponame)
+	if repo == nil then
+		response(self, "ROOT", "")
+		return
+	end
+	self._repo = repo
 	repo:build()
 	local roothash = repo:root()
 	response(self, "ROOT", roothash)
-
-	logger_init(self._id)
 end
 
 function message:GET(hash)
