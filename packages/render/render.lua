@@ -198,6 +198,9 @@ end
 
 local function update_view_proj(viewid, camera)
 	local view, proj = ms:view_proj(camera, camera.frustum)
+	if camera.crop_matrix then
+		proj = ms(camera.crop_matrix, proj, "*P")
+	end
 	bgfx.set_view_transform(viewid, view, proj)
 end
 
