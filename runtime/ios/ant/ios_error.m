@@ -26,6 +26,7 @@ const char* errmsg = 0;
     labelView.text = @(errmsg);
     labelView.textColor = [UIColor whiteColor];
     labelView.numberOfLines = 0;
+    labelView.frame = rect;
     [labelView sizeToFit];
     [self.m_view addSubview:labelView];
     [self.m_window addSubview: self.m_view];
@@ -35,7 +36,7 @@ const char* errmsg = 0;
     [self.m_window setRootViewController: mvc];
     [self.m_window makeKeyAndVisible];
     float scaleFactor = [[UIScreen mainScreen] scale];
-    [self.m_view setContentScaleFactor: scaleFactor ];
+    [self.m_view setContentScaleFactor: scaleFactor];
     return YES;
 }
 @end
