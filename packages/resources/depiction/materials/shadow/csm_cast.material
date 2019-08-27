@@ -1,0 +1,6 @@
+shader = {
+    vs = "/pkg/ant.resources/shadow/csm/vs_main.sc",
+    fs = "/pkg/ant.resources/shadow/csm/fs_main.sc",
+ }
+ 
+state = "/pkg/ant.resources/depiction/materials/default.state"

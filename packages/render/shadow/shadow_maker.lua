@@ -15,104 +15,201 @@ local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack
 
 local fs 		= require "filesystem"
-local mathbaselib = require "math3d.baselib"
+local mathbaselib= require "math3d.baselib"
 
-ecs.component "csm"
-	.split_ratios "real[]"
+local csm_comp = ecs.component "csm"
+	.split_ratios "real[2]"
+	.index "int" (0)
+	["opt"].stabilize "boolean" (true)
+
+function csm_comp:init()
+	self.stabilize = self.stabilize or true
+	self.near = 1
+	self.far = 0
+	return self
+end
 
 ecs.component "omni"	-- for point/spot light
 
-ecs.component "shadow"
-	.shadowmap_width "int" (1024)
-	.shadowmap_height "int" (1024)
-	.bias "real"	(0.003)
-	.depth_type "string" ("linear")	-- "inv_z" / "linear"
-	["opt"].csm "csm"
+local s = ecs.component "shadow" {depend = "material"}
+	.shadowmap_size "int" 	(1024)
+	.bias 			"real"	(0.003)
+	.normal_offset 	"vector"(0, 0, 0, 0)
+	.depth_type 	"string"("linear")	-- "inv_z" / "linear"
+	["opt"].csm 	"csm"
+
+local function init_shadow_material_properties(material, shadow)
+	local properties = material.properties
+	if properties == nil then
+		properties = {}
+		material.properties = properties
+	end
+	local uniforms = properties.uniforms
+	if uniforms == nil then
+		uniforms = {}
+		properties.uniforms = uniforms
+	end
+
+	uniforms.u_normaloffset = {type="v4", name = "shadowmap normal offset", value = shadow.normal_offset}
+
+	local textures = properties.textures
+	if textures == nil then
+		textures = {}
+		properties.textures = textures
+	end
+
+	local csm = assert(shadow.csm)
+	csm.crop_matrix = {}
+end
+
+function s:postinit(e)
+	init_shadow_material_properties(e.material, self)
+
+end
 
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.depend "primitive_filter_system"
 maker_camera.dependby "filter_properties"
 	
---TODO, this "update" function can be changed as "postinit" function
--- just only listening new/delete/modify any objects boundings
+local function split_new_frustum(view_frustum, ratios)
+	assert(view_frustum.ortho == nil or view_frustum.ortho == false)
 
-local function calc_scene_bounding()
-	local sb = mathbaselib.new_bounding(ms)
-	local transformed_boundings = {}
-	computil.calc_transform_boundings(world, transformed_boundings)
-	for i=1, transformed_boundings do
-		local tb = transformed_boundings[i]
-		sb:merge(tb)
+	local near_ratio, far_ratio = ratios[1], ratios[2]
+	local frustum = {}
+	for k, v in pairs(view_frustum) do
+		frustum[k] = v
 	end
-	return sb
+
+	local z_len = view_frustum.f - view_frustum.n
+	frustum.n = view_frustum.n + near_ratio * z_len
+	frustum.f = view_frustum.f + far_ratio * z_len
+
+	assert(frustum.fov)
+	return frustum
+end
+
+local function calc_csm_camera_bounding(view_camera, view_frustum, ratios)
+	local frustum_desc = split_new_frustum(view_frustum, ratios)
+	
+	local _, _, vp = ms:view_proj(view_camera, frustum_desc, true)
+
+	local frustum = mathbaselib.new_frustum(ms, vp)
+	local points = frustum:points()	
+	local bb = mathbaselib.new_bounding(ms)
+	for _, v in pairs(points) do
+		bb:append(v)
+	end
+
+	return bb
+end
+
+local function calc_csm_camera(view_camera, lightdir, ratios, camera_far)
+	local bb = calc_csm_camera_bounding(view_camera, view_camera.frustum, ratios)
+	local eyepos = bb:get "sphere".center
+	return {
+		type = "csm_shadow",
+		eyepos = eyepos,
+		viewdir = lightdir,
+		updir = {0, 1, 0, 0},
+		frustum = {
+			ortho = true,
+			l = -1, r = 1,
+			b = -1, t = 1,
+			n = -camera_far, f = camera_far,
+		},
+	}
+end
+
+local function create_crop_matrix(shadow)
+	local view_camera = camerautil.get_camera(world, "main_view")
+	local bb = calc_csm_camera_bounding(nil, view_camera.frustum, shadow.csm.split_ratios)
+	local aabb = bb.get "aabb"
+	local min, max = aabb.min, aabb.max
+	local csm = shadow.csm
+	local csmindex = csm.index
+	local shadowcamera = camerautil.get_camera(world, "csm" .. csmindex)
+	local _, proj = ms:view_proj(nil, shadowcamera.frustum)
+	local minproj, maxproj = ms(min, proj, "%", max, proj, "%TT")
+
+	local scalex, scaley = 2 / (maxproj.x - minproj.x), 2 / (maxproj.y - minproj.y)
+	if csm.stabilize then
+		local quantizer = csm.shadowmap_size
+		scalex = quantizer / math.ceil(quantizer / scalex);
+		scaley = quantizer / math.ceil(quantizer / scaley);
+	end
+
+	local function calc_offset(a, b, scale)
+		return (a + b) * 0.5 * scale
+	end
+
+	local offsetx, offsety = 
+		calc_offset(maxproj.x, minproj.x, scalex), 
+		calc_offset(maxproj.y, minproj.y, scaley)
+
+	if csm.stabilize then
+		local half_size = shadow.shadowmap_size * 0.5;
+		offsetx = math.ceil(offsetx * half_size) / half_size;
+		offsety = math.ceil(offsety * half_size) / half_size;
+	end
+	
+	return ms({
+		scalex, 0, 0, 0,
+		0, scaley, 0, 0,
+		0, 0, 1, 0,
+		offsetx, offsety, 0, 1,
+	},"P")
 end
 
 function maker_camera:update()
-	local sm = world:first_entity "shadow"
 	local dl = world:first_entity "directional_light"
-	local camera = camerautil.get_camera(world, sm.camera_tag)
-	local scenebounding = calc_scene_bounding()
+	local lightdir = ms(dl.rotation, "dnP")
 	
-	local sphere = scenebounding.sphere
+	local maincamera = camerautil.get_camera(world, "main_view")
 
-	ms(camera.viewdir, dl.rotation, "dn=")	
-	ms(camera.eyepos, sphere.center, {sphere.radius}, camera.viewdir, "i*+=")
-	
-	local viewmat = ms(camera.eyepos, camera.viewdir, camera.updir, ms.lookfrom3, "P")
-	scenebounding:transform(viewmat)
+	for _, eid in world:each "shadow" do
+		local shadowentity = world[eid]
 
-	local aabb = scenebounding:get "aabb"
-
-	local lengthaxis = ms({0.5}, aabb.max, aabb.min, "-*T")
-	local frustum = camera.frustum
-	--assert(frustum.ortho)
-
-	local half_w, half_h = lengthaxis[1], lengthaxis[2]
-	frustum.l, frustum.r = -half_w, half_w
-	frustum.t, frustum.b = half_h, -half_h
+		local shadowcamera = camerautil.get_camera(world, shadowentity.camera_tag)
+		shadowcamera.viewdir(lightdir)
+		local bb = calc_csm_camera_bounding(maincamera, maincamera.frustum, shadowentity.shadow.csm.split_ratios)
+		shadowcamera.eyepos(bb.sphere.center)
+		shadowcamera.crop_matrix = create_crop_matrix(shadowentity.shadow)
+	end
 end
-	
 
 local sm = ecs.system "shadow_maker11"
 sm.depend "primitive_filter_system"
 sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
 
-function sm:init()	
-	local sm_width, sm_height = 1024, 1024
-
-	camerautil.bind_camera(world, "shadow", {
-		type = "shadow",
-		eyepos = {0, 0, 0, 1},
-		viewdir = {0, 0, 1, 0},
-		updir = {0, 1, 0, 0},
-		frustum = {
-			ortho = true,
-			l = -2, r = 2,
-			t = 2, b = -2,
-			n = -100, f = 100,
-		},
-	})
-
-	--local half_sm_width, half_sm_height = sm_width * 0.5, sm_height * 0.5
-	world:create_entity {
+local function create_csm_entity(view_camera, lightdir, index, ratios, shadowmap_size, camera_far)
+	camera_far = camera_far or 10000
+	local camera_tag = "csm" .. index
+	camerautil.bind_camera(world, camera_tag, calc_csm_camera(view_camera, lightdir, ratios, camera_far))
+	return world:create_entity {
 		material = {
-			ref_path = fs.path "/pkg/ant.resources/depiction/shadow/mesh_cast_shadow.material"
+			{ref_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"},
 		},
 		shadow = {
-			shaodwmap_width = sm_width,
-			shadowmap_height = sm_height,
-			shadow_distance = 10,
+			shadowmap_size = shadowmap_size,
+			bias = 0.003,
+			depth_type = "linear",
+			normal_offset = {0, 0, 0, 0},
+			csm = {
+				split_ratios = ratios,
+				index = index,
+				stabilize = true,
+			}
 		},
 		viewid = viewidmgr.get "shadow_maker",
 		primitive_filter = {
 			view_tag = "main_view",
 			filter_tag = "can_cast",
 		},
-		camera_tag = "shadow",
+		camera_tag = camera_tag,
 		render_target = {
 			viewport = {
-				rect = {x=0, y=0, w=sm_width, h=sm_height},
+				rect = {x=0, y=0, w=shadowmap_size, h=shadowmap_size},
 				clear_state = {
 					color = 0,
 					depth = 1,
@@ -124,8 +221,8 @@ function sm:init()
 				render_buffers = {
 					{
 						format = "D16F",
-						w=sm_width,
-						h=sm_height,
+						w=shadowmap_size,
+						h=shadowmap_size,
 						layers=1,
 						flags=renderutil.generate_sampler_flag{
 							RT="RT_ON",
@@ -140,13 +237,24 @@ function sm:init()
 				}
 			}
 		},
-		name = "direction light shadow maker",		
+		name = "direction light shadow maker",
 	}
 end
 
-local function update_shadow_camera(camera, directionallight, distance)
-	ms(camera.viewdir, directionallight.rotation, "din=")
-	ms(camera.eyepos, {0, 0, 0, 1}, camera.viewdir, {distance}, "*+=")
+function sm:init()
+	local camera = camerautil.get_camera(world, "main_view")
+	local d_light = world:first_entity "directional_light"
+	local lightdir = ms(d_light.rotation, "dnP")
+	local ratios = {
+		{0, 0.15},
+		{0.15, 0.35},
+		{0.35, 0.65},
+		{0.65, 1},
+	}
+	for ii=1, #ratios do
+		local ratio = ratios[ii]
+		create_csm_entity(camera, lightdir, ii, ratio, 1024, 1000)
+	end
 end
 
 function sm:update()
@@ -164,22 +272,11 @@ function sm:update()
 	local shadowmat = sm.shadow.material
 	replace_material(results.opaque, 		shadowmat)
 	replace_material(results.translucent, 	shadowmat)
-
-	local camera = camerautil.get_camera(world, sm.camera_tag)
-	update_shadow_camera(camera, world:first_entity "directional_light", sm.shadow.distance)
 end
 
 local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.depend "shadow_maker11"
-debug_sm.dependby "frustum_bounding_update"
 
 function debug_sm:init()
-	local qw, qh = 128,128
-	computil.create_shadow_quad_entity(world, {x=0, y=0, w=qw, h=qh})
-	
-	local shadow_entity = world:first_entity "shadow"
-	local camera = camerautil.get_camera(world, shadow_entity.camera_tag)
-	local _, _, vp = ms:view_proj(camera, camera.frustum)
-	local frustum = mathbaselib.new_frustum(ms, vp)
-	computil.create_frustum_entity(world, frustum, "shadow frustum")
+
 end

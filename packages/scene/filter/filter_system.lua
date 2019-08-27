@@ -17,17 +17,13 @@ local ms = mathpkg.stack
 local mu = mathpkg.util
 
 local filter_properties = ecs.system "filter_properties"
-function filter_properties:update()
-	for _, prim_eid in world:each("primitive_filter") do
-		local e = world[prim_eid]
-		local filter = e.primitive_filter
-		filterutil.load_lighting_properties(world, filter)
-		if e.shadow then
-			filterutil.load_shadow_properties(world, filter)
-		end
+filter_properties.singleton "render_properties"
 
-		filterutil.load_postprocess_properties(world, filter)
-	end
+function filter_properties:update()
+	local render_properties = self.render_properties
+	filterutil.load_lighting_properties(world, render_properties)
+	filterutil.load_shadow_properties(world, render_properties)
+	filterutil.load_postprocess_properties(world, render_properties)
 end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"

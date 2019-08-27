@@ -125,7 +125,7 @@ function model_review_system:init()
 	}
 
 	world:create_entity {
-		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
+		transform = mu.srt({1, 1, 1}, nil,  {0, 0, 10}),
 		can_render = true,
 		rendermesh = {
 			-- submesh_refs = {

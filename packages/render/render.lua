@@ -147,7 +147,28 @@ ecs.component "camera_mgr"
 ecs.component_alias("camera_tag", "string") {depend = "viewid"}
 ecs.component_alias("visible", "boolean", true) 
 
+local render_props = ecs.singleton "render_properties"
+function render_props.init()
+	return {
+		lighting = {
+			uniforms = {},
+			textures = {},
+		},
+		shadow = {
+			uniforms = {},
+			textures = {},
+		},
+		postprocess = {
+			uniforms = {},
+			textures = {},
+		}
+	}
+end
+
 local rendersys = ecs.system "render_system"
+
+rendersys.singleton "render_properties"
+
 rendersys.depend "primitive_filter_system"
 rendersys.depend "filter_properties"
 rendersys.dependby "end_frame"
@@ -189,6 +210,7 @@ local function update_frame_buffer_view(viewid, rt)
 end
 
 function rendersys:update()
+	local render_properties = self.render_properties
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
 		if rq.visible ~= false then
@@ -201,7 +223,6 @@ function rendersys:update()
 			update_view_proj(viewid, camerautil.get_camera(world, rq.camera_tag))
 
 			local filter = rq.primitive_filter
-			local render_properties = filter.render_properties
 			local results = filter.result
 
 			local function draw_primitives(result)
