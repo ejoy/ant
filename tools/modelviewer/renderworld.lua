@@ -100,7 +100,9 @@ function model_review_system:init()
 	-- 	can_render = true,
 	-- }
 
-	cu.create_grid_entity(world, "grid")
+	--cu.create_grid_entity(world, "grid")
+	cu.create_plane_entity(world, {20, 20, 20, 0})
+
 	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},

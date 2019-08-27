@@ -1,6 +1,15 @@
 shader = {
-	vs = "/pkg/ant.resources/shadow/simple/vs_simple.sc",
-	fs = "/pkg/ant.resources/shadow/simple/fs_simple.sc",
+	vs = "/pkg/ant.resources/shaders/src/shadow/simple/vs_simple.sc",
+	fs = "/pkg/ant.resources/shaders/src/shadow/simple/fs_simple.sc",
 }
 
-state = "materials/states/default.state"
+state = {
+	WRITE_MASK = "RGBAZ",
+ALPHA_REF = 0,
+CULL = "CCW",
+MSAA = true,
+
+DEPTH_TEST = "LESS",
+
+PT = "TRISTRIP"
+}
