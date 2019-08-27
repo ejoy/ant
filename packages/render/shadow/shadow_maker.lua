@@ -177,7 +177,7 @@ function maker_camera:update()
 	end
 end
 
-local sm = ecs.system "shadow_maker11"
+local sm = ecs.system "shadow_maker"
 sm.depend "primitive_filter_system"
 sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
@@ -275,7 +275,7 @@ function sm:update()
 end
 
 local debug_sm = ecs.system "debug_shadow_maker"
-debug_sm.depend "shadow_maker11"
+debug_sm.depend "shadow_maker"
 
 function debug_sm:init()
 
