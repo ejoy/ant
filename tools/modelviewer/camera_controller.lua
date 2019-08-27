@@ -222,6 +222,9 @@ local function memory_info()
         s[#s+1] = "\t" .. k .. ":" .. v
     end
 
+	local platform = require "platform"
+	s[#s+1] = ("\tmemory:%.1fMB"):format(platform.info "memory"/1024.0/1024.0)
+
     return table.concat(s, "\n")
 end
 

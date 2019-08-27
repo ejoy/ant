@@ -20,11 +20,12 @@ const char* errmsg = 0;
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     CGRect rect = [[UIScreen mainScreen] bounds];
     self.m_window = [[UIWindow alloc] initWithFrame: rect];
-    self.m_view = [ [UIView alloc] initWithFrame: rect];
+    self.m_view = [[UIView alloc] initWithFrame: rect];
     self.m_view.backgroundColor = [UIColor blueColor];
     UILabel *labelView = [[UILabel alloc] initWithFrame:CGRectMake(1,1,0,0)];
     labelView.text = @(errmsg);
     labelView.textColor = [UIColor whiteColor];
+    
     labelView.numberOfLines = 0;
     labelView.frame = rect;
     [labelView sizeToFit];

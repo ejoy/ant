@@ -20,7 +20,14 @@ endif
 
 OBJS = $(ODIR)/lplatform.o $(ODIR)/platform_$(PLAT).o
 
+ifneq "$(PLAT)" "mingw"
+OBJS += $(ODIR)/info_osx.o
+endif
+
 $(ODIR)/platform_$(PLAT).o : platform_$(PLAT).$(PLAT_CXX) | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
+
+$(ODIR)/info_osx.o : info_osx.mm | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 $(ODIR)/lplatform.o : lplatform.cpp | $(ODIR)
