@@ -129,7 +129,7 @@ end
 local function update_hirarchy_entity_world(trans, ignore_parentscale)
 	local srt = ms:srtmat(trans)
 	local peid = trans.parent
-	if peid then
+	if peid and world[peid] then
 		local parent = world[peid]
 		local pt = parent.transform
 
@@ -191,9 +191,8 @@ local function update_transform_field(trans, events, init)
 		return true
 	end
 
-	local changed
+	local changed = true
 	for k, v in pairs(events) do
-		changed = true
 		if k == 's' or k == 'r' or k == 't' then
 			ms(trans[k], v, "=")
 		elseif k == 'parent' then
@@ -245,12 +244,16 @@ local function add_hierarchy_tree_item(eid, events, init, trees)
 	end
 
 	local newparent = trans.parent
-	if newparent ~= oldparent then
-		local parentparent = world[newparent].transform.parent
-		trees[newparent] = parentparent
+	if newparent and world[newparent] then
+		if newparent ~= oldparent then
+			local parentparent = world[newparent].transform.parent
+			trees[newparent] = parentparent
+		end
+
+		trees[eid] = newparent or pseudoroot_eid
+	else
+		trees[eid] = pseudoroot_eid
 	end
-	
-	trees[eid] = newparent or pseudoroot_eid
 end
 
 function scene_space:post_init()
