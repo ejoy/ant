@@ -19,7 +19,6 @@ ecs.singleton "hierarchy_transform_result"
 local ur = ecs.singleton "hierarchy_update_result"
 local function reset_hierarchy_update_result(rr)
 	rr.removed_eids 	= {}
-	rr.hierarchy_trees 	= {}
 	rr.remove_trees 	= {}
 end
 
@@ -260,16 +259,10 @@ function scene_space:post_init()
 	end
 end
 
-local function update_scene_tree(hierarchy_cache, update_result)
-	update_hierarchy_tree(update_result.hierarchy_trees, hierarchy_cache)
-	reset_hierarchy_update_result(update_result)
-end
-
 local need_check_components_changed = {"hierarchy", "ignore_parent_scale"}
 
 function scene_space:event_changed()
-	local updateresult 		= self.hierarchy_update_result
-	local trees 			= updateresult.hierarchy_trees
+	local trees = {}
 	
 	for eid, events, init in self.event:each "transform" do
 		local e = world[eid]
@@ -302,7 +295,7 @@ function scene_space:event_changed()
 	end
 
 	if next(trees) then
-		update_scene_tree(self.hierarchy_transform_result, updateresult)
+		update_hierarchy_tree(trees, self.hierarchy_update_result)
 	end
 end
 
