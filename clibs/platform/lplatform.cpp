@@ -7,6 +7,7 @@ int linit_dpi(lua_State* L);
 #endif
 int ldpi(lua_State* L);
 int lfont(lua_State* L);
+int linfo(lua_State* L);
 
 extern "C"
 #if defined(_WIN32)
@@ -17,6 +18,7 @@ int luaopen_platform(lua_State* L) {
 #if defined(_WIN32)
         { "init_dpi", linit_dpi },
 #endif
+        { "info", linfo },
         { "font", lfont },
         { "dpi", ldpi },
         { NULL, NULL },
