@@ -519,16 +519,12 @@ local test_queue = {
     end,
 }
 
-function scenespace_test:event_changed()
+function scenespace_test:data_changed()
     if test_queue.idx <= #test_queue then
         local op = test_queue[test_queue.idx]
         op()
         test_queue.idx = test_queue.idx + 1
     end
-end
-
-function scenespace_test:post_init()
-
 end
 
 function scenespace_test:update()

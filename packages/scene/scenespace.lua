@@ -256,15 +256,13 @@ local function add_hierarchy_tree_item(eid, events, init, trees)
 	end
 end
 
-function scene_space:post_init()
+local need_check_components_changed = {"hierarchy", "ignore_parent_scale"}
+
+function scene_space:data_changed()
 	for eid in world:each_new "transform" do
 		self.event:new(eid, "transform")
 	end
-end
-
-local need_check_components_changed = {"hierarchy", "ignore_parent_scale"}
-
-function scene_space:event_changed()
+	
 	local trees = {}
 	
 	for eid, events, init in self.event:each "transform" do

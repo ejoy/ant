@@ -31,6 +31,7 @@ model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 model_review_system.depend "procedural_sky_system"
 model_review_system.depend "cull_system"
+--model_review_system.depend "shadow_maker"
 --model_review_system.depend "render_mesh_bounding"
 model_review_system.dependby "camera_controller"
 
@@ -63,9 +64,6 @@ local function create_material_item(filepath, color)
 end
 
 function model_review_system:init()
-	local fbsize = world.args.fb_size	
-	renderutil.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5})
-	renderutil.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 	create_light()
 	skyutil.create_procedural_sky(world)
 

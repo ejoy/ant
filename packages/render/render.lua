@@ -10,9 +10,6 @@ local fbmgr 	= require "framebuffer_mgr"
 local camerautil= require "camera.util"
 
 local bgfx 		= require "bgfx"
-
-
-
 local ru 		= require "util"
 
 ecs.tag "main_queue"
@@ -210,6 +207,12 @@ local function update_frame_buffer_view(viewid, rt)
 		local handle = fb.handle
 		bgfx.set_view_frame_buffer(viewid, handle)
 	end
+end
+
+function rendersys:init()
+	local fbsize = world.args.fb_size	
+	ru.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5})
+	ru.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 end
 
 function rendersys:update()

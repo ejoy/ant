@@ -1,3 +1,5 @@
+-- TODO: should move to scene package
+
 local ecs = ...
 local world = ecs.world
 
@@ -105,7 +107,8 @@ end
 
 local function calc_csm_camera(view_camera, lightdir, ratios, camera_far)
 	local bb = calc_csm_camera_bounding(view_camera, view_camera.frustum, ratios)
-	local eyepos = bb:get "sphere".center
+	local eyepos = bb:get "sphere"
+	eyepos[4] = 1
 	return {
 		type = "csm_shadow",
 		eyepos = eyepos,
@@ -241,10 +244,10 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, shadowmap
 	}
 end
 
-function sm:init()
+function sm:post_init()
 	local camera = camerautil.get_camera(world, "main_view")
 	local d_light = world:first_entity "directional_light"
-	local lightdir = ms(d_light.rotation, "dnP")
+	local lightdir = ms(d_light.rotation, "dnT")
 	local ratios = {
 		{0, 0.15},
 		{0.15, 0.35},
