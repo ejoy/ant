@@ -26,6 +26,53 @@ extern "C" {
 extern bool default_homogeneous_depth();
 extern glm::vec3 to_viewdir(const glm::vec3 &e);
 
+#ifndef _STAT_MEMORY_
+#	ifdef _DEBUG
+#	define _STAT_MEMORY_
+#	endif //_DEBUG
+#endif //!_STAT_MEMORY_
+
+#ifdef _STAT_MEMORY_
+struct memory_stat {
+	enum MEMORY_RECORD_TYPE{
+		MRT_Bounding = 0,
+		MRT_Frusutm,
+		
+		MRT_Count,
+	};
+
+	uint32_t bounding_sizebytes;
+	uint32_t frustum_sizebytes;
+
+	uint32_t total_sizebytes;
+};
+
+memory_stat g_memory_stat = { 0 };
+
+static inline void
+check_memory_stat_valid(){
+	assert(g_memory_stat.bounding_sizebytes + g_memory_stat.frustum_sizebytes == g_memory_stat.total_sizebytes);
+}
+
+static void
+record_memory_used(int32_t size_bytes, memory_stat::MEMORY_RECORD_TYPE mrt){
+	g_memory_stat.total_sizebytes += size_bytes;
+
+	switch (mrt) {
+	case memory_stat::MEMORY_RECORD_TYPE::MRT_Bounding:
+		g_memory_stat.bounding_sizebytes += size_bytes;
+		break;
+	case memory_stat::MEMORY_RECORD_TYPE::MRT_Frusutm:
+		g_memory_stat.frustum_sizebytes += size_bytes;
+		break;
+	default:
+		break;
+	}
+
+	check_memory_stat_valid();
+}
+#endif //_STAT_MEMORY_
+
 static inline struct lastack*
 fetch_LS(lua_State* L, int index) {
 	lua_getuservalue(L, index);
@@ -431,6 +478,9 @@ push_frustum(lua_State* L, const Frustum& f, int BS_index) {
 	lua_pushvalue(L, BS_index);
 	lua_setuservalue(L, -2);
 
+#ifdef _STAT_MEMORY_
+	record_memory_used(sizeof(Frustum), memory_stat::MRT_Frusutm);
+#endif //_STAT_MEMORY_
 	return 1;
 }
 
@@ -441,7 +491,7 @@ push_frustum(lua_State* L, const Frustum& f, int BS_index) {
 static int
 lfrustum_calc_near_far(lua_State* L) {
 	auto f = fetch_frustum(L, 1);
-	auto LS = getLS(L, 1);
+	auto LS = fetch_LS(L, 1);
 
 	glm::vec3 light_camera_orthographic_min = get_vec_value(L, LS, 2),
 		light_camera_orthographic_max = get_vec_value(L, LS, 3);
@@ -680,6 +730,14 @@ lfrustum_calc_near_far(lua_State* L) {
 	return 2;
 }
 
+#ifdef _STAT_MEMORY_
+static int
+lfrustum_delete(lua_State *L){
+	record_memory_used(-int32_t(sizeof(Frustum)), memory_stat::MRT_Frusutm);
+	return 0;
+}
+#endif //_STAT_MEMORY_
+
 static int
 lfrustum_new(lua_State* L) {
 	auto LS = getLS(L, 1);
@@ -704,6 +762,9 @@ push_bounding(lua_State *L, const Bounding &bounding, int BS_index) {
 	lua_pushvalue(L, BS_index);
 	lua_setuservalue(L, -2);
 
+#ifdef _STAT_MEMORY_
+	record_memory_used(sizeof(Frustum), memory_stat::MRT_Bounding);
+#endif //_STAT_MEMORY_
 	return 1;
 }
 
@@ -785,6 +846,13 @@ lbounding_append_point(lua_State* L) {
 	b->AppendPoint(*tov3(pt));
 	return 0;
 }
+#ifdef _STAT_MEMORY_
+static int
+lbounding_delete(lua_State *L){
+	record_memory_used(-int32_t(sizeof(Bounding)), memory_stat::MRT_Bounding);
+	return 0;
+}
+#endif //_STAT_MEMORY_
 
 static int
 lbounding_new(lua_State* L) {
@@ -921,6 +989,9 @@ register_bounding_mt(lua_State* L) {
 			{ "get",		lbounding_get},
 			{ "aabb_points",lbounding_aabb_points},
 			{ "__tostring", lbounding_string},
+			#ifdef _STAT_MEMORY_
+			{ "__gc",		lbounding_delete},
+			#endif _STAT_MEMORY_
 
 			{nullptr, nullptr}
 		};
@@ -935,11 +1006,14 @@ static void
 register_frustum_mt(lua_State *L){
 	if (luaL_newmetatable(L, "FRUSTUM_MT")) {
 		luaL_Reg l[] = {
-			{ "intersect",	lfrustum_intersect},
+			{ "intersect",		lfrustum_intersect},
 			{ "intersect_list", lfrustum_intersect_list},
-			{ "points", lfrustum_points},
+			{ "points", 		lfrustum_points},
 			{ "calc_near_far",  lfrustum_calc_near_far},
-			{ "__tostring", lfrustum_string},
+			{ "__tostring", 	lfrustum_string},
+			#ifdef _STAT_MEMORY_
+			{"__gc", 			lfrustum_delete},
+			#endif //_STAT_MEMORY_
 
 			{nullptr, nullptr}
 		};
@@ -959,6 +1033,37 @@ lplane_intersect(lua_State *L){
 	return 1;
 }
 
+#ifdef _STAT_MEMORY_
+static int
+lmemory_stat(lua_State *L){
+	int numarg = lua_gettop(L);
+	if (numarg == 1){
+		const char* which = lua_tostring(L, 1);
+		if (strcmp(which, "frustum")){
+			lua_pushinteger(L, g_memory_stat.frustum_sizebytes);
+			return 1;
+		}
+
+		if (strcmp(which, "bounding")){
+			lua_pushinteger(L, g_memory_stat.bounding_sizebytes);
+			return 1;
+		}
+
+		luaL_error(L, "not support memory stat type:%s", which);
+		return 0;
+	} 
+
+	lua_createtable(L, 0, 2);
+	lua_pushinteger(L, g_memory_stat.bounding_sizebytes);
+	lua_setfield(L, -2, "bounding");
+
+	lua_pushinteger(L, g_memory_stat.frustum_sizebytes);
+	lua_setfield(L, -2, "frustum");
+	
+	return 1;
+}
+#endif // _STAT_MEMORY_
+
 extern "C"{
 	LUAMOD_API int
 	luaopen_math3d_baselib(lua_State *L){
@@ -969,6 +1074,9 @@ extern "C"{
 			{ "new_bounding",	lbounding_new},
 			{ "new_frustum",	lfrustum_new},			
 			{ "plane_interset",	lplane_intersect},
+#ifdef _STAT_MEMORY_
+			{ "memory_stat", 	lmemory_stat},
+#endif // _STAT_MEMORY_
 			{ NULL, NULL },
 		};
 
