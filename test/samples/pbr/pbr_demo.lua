@@ -63,8 +63,6 @@ local function to_angle(rad)
 end 
 
 function pbr_demo:init()
-	renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 25, 5})
-    --renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
         local rotation = to_radian({45,-90,0,0})
         lu.create_directional_light_entity(world, 'directional_light',{1,1,1,0}, 1, rotation )

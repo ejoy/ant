@@ -3,7 +3,7 @@
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
-#include "../common/common.sh"
+#include "common.sh"
 
 float linstep(float _edge0, float _edge1, float _x)
 {

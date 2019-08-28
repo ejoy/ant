@@ -9,7 +9,7 @@ uniform vec4 u_parameters; // x - sun size, y - sun bloom, z - exposition, w - t
 uniform vec4 u_sunDirection;
 uniform vec4 u_sunLuminance;
 
-#include "../common/common.sh"
+#include "common.sh"
 
 void main()
 {

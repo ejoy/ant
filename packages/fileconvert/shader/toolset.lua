@@ -1,20 +1,11 @@
 local lfs = require "filesystem.local"
 local platform = require "platform"
 local OS = platform.OS
-local CWD = lfs.current_path()
+
 local util = require "util"
 
-local function init_config()
-	return {
-		lua 	= util.to_execute_path "bin/lua",
-		shaderc = util.valid_tool_exe_path "shaderc",
-		shaderinc = CWD / "3rd" / "bgfx" / "src",
-	}
-end
-
-local toolset = {
-	config = init_config()
-}
+local shaderc = util.valid_tool_exe_path "shaderc"
+local toolset = {}
 
 local stage_types = {
 	f = "fragment",
@@ -47,33 +38,14 @@ end
 function toolset.compile(filepath, outfilepath, shadertype, config)
 	assert(lfs.exists(filepath), filepath:string())
 	
-	local shaderc = toolset.config.shaderc
 	local srcfilename = filepath:string()
 	local outfilename = outfilepath:string()
 
-	local shaderinc_path = toolset.config.shaderinc
-
-	if not lfs.exists(shaderinc_path) then
-		error(string.format("bgfx shader include path is needed, \
-							but path is not exist! path have been set : %s", config.shaderinc))
-	end
-	
 	local includes = {}
 	local function add_inc(includes, p)
 		table.insert(includes, "-i")
 		assert(p:is_absolute(), p:string())
 		table.insert(includes, p:string())
-	end
-
-	add_inc(includes, shaderinc_path)
-
-	if config.not_include_examples_common == nil then
-		local incexamplepath = shaderinc_path:parent_path() / "examples/common"
-		if not lfs.exists(incexamplepath) then
-			error(string.format("example is needed, but not exist, path is : %s", incexamplepath))
-		end
-
-		add_inc(includes, incexamplepath)
 	end
 
 	if config.includes then

@@ -125,16 +125,16 @@ function model_review_system:init()
 	}
 
 	world:create_entity {
-		transform = mu.srt({1, 1, 1}, nil,  {0, 0, 10}),
+		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
 		can_render = true,
 		rendermesh = {
-			-- submesh_refs = {
-			-- 	["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
-			-- 	["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
-			-- 	["build_big_storage_01_straw_roof_002"] = cu.create_submesh_item {4, 5, 6, 7},
-			-- 	["build_big_storage_01_walls_down"] 	= cu.create_submesh_item {2},
-			-- 	["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
-			-- },
+			submesh_refs = {
+				["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
+				["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
+				["build_big_storage_01_straw_roof_002"] = cu.create_submesh_item {4, 5, 6, 7},
+				["build_big_storage_01_walls_down"] 	= cu.create_submesh_item {2},
+				["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
+			},
 		},
 		mesh = {
 			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",

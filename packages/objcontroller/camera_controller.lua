@@ -17,7 +17,7 @@ local camera_controller_system = ecs.system "camera_controller"
 camera_controller_system.singleton "control_state"
 camera_controller_system.depend "objcontroller_system"
 
-function camera_controller_system:init()
+function camera_controller_system:post_init()
 	local mq = world:first_entity "main_queue"
 	local cameracomp = camerautil.get_camera(world, mq.camera_tag)
 	local speed_persecond = 5

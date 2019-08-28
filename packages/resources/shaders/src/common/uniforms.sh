@@ -16,12 +16,18 @@ uniform vec4 u_eyepos;
 uniform vec4 u_lightPos;
 
 // shadow
-// lightmap - shadow
-uniform mat4 directional_viewproj[1];
+
+uniform vec4 u_shadow_param1;
+//#define u_shadowMapOffset u_shadowparam1.y
+uniform mat4 directional_viewproj[4];
+
+// need move these shadowmaps to single shadowmap
 SAMPLER2DSHADOW(s_shadowmap0, 4);
 SAMPLER2DSHADOW(s_shadowmap1, 5);
 SAMPLER2DSHADOW(s_shadowmap2, 6);
 SAMPLER2DSHADOW(s_shadowmap3, 7);
+
+// lightmap - shadow
 
 //postprocess
 SAMPLER2D(s_mianview, 0);
