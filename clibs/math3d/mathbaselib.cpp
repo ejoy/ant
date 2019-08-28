@@ -434,6 +434,252 @@ push_frustum(lua_State* L, const Frustum& f, int BS_index) {
 	return 1;
 }
 
+// At a high level: 
+// 1. Iterate over all 12 triangles of the AABB.  
+// 2. Clip the triangles against each plane. Create new triangles as needed.
+// 3. Find the min and max z values as the near and far plane.
+static int
+lfrustum_calc_near_far(lua_State* L) {
+	auto f = fetch_frustum(L, 1);
+	auto LS = getLS(L, 1);
+
+	glm::vec3 light_camera_orthographic_min = get_vec_value(L, LS, 2),
+		light_camera_orthographic_max = get_vec_value(L, LS, 3);
+
+	Frustum::Points corners;
+	f->frustum_planes_intersection_points(corners);
+
+	std::array<glm::vec3, 8> corner_points;
+
+	int ipoint = 0;
+	for (auto it : corners) {
+		corner_points[ipoint++] = it.second;
+	}
+
+	// Initialize the near and far planes
+	float near_plane = FLT_MAX;
+	float far_plane = -FLT_MAX;
+
+	struct triangle {
+		glm::vec3 pt[3];
+		bool culled;
+	};
+	triangle triangles[16];
+	int triangle_count = 1;
+
+	triangles[0].pt[0] = corner_points[0];
+	triangles[0].pt[1] = corner_points[1];
+	triangles[0].pt[2] = corner_points[2];
+	triangles[0].culled = false;
+
+	// These are the indices used to tesselate an AABB into a list of triangles.
+	static const int aabb_triangle_indices[] =
+	{
+		0,1,2,  1,2,3,
+		4,5,6,  5,6,7,
+		0,2,4,  2,4,6,
+		1,3,5,  3,5,7,
+		0,1,4,  1,4,5,
+		2,3,6,  3,6,7
+	};
+
+	int point_passed[3];
+
+	float light_camera_orthographic_min_X = light_camera_orthographic_min.x;
+	float light_camera_orthographic_max_X = light_camera_orthographic_max.x;
+	float light_camera_orthographic_min_Y = light_camera_orthographic_min.y;
+	float light_camera_orthographic_max_Y = light_camera_orthographic_max.y;
+
+	for (int AABB_triangle_idx = 0; AABB_triangle_idx < 12; ++AABB_triangle_idx) {
+
+		triangles[0].pt[0] = corner_points[aabb_triangle_indices[AABB_triangle_idx * 3 + 0]];
+		triangles[0].pt[1] = corner_points[aabb_triangle_indices[AABB_triangle_idx * 3 + 1]];
+		triangles[0].pt[2] = corner_points[aabb_triangle_indices[AABB_triangle_idx * 3 + 2]];
+		triangle_count = 1;
+		triangles[0].culled = false;
+
+		// Clip each invidual triangle against the 4 frustums.  When ever a triangle is clipped into new triangles, 
+		//add them to the list.
+		for (int frustum_plane_idx = 0; frustum_plane_idx < 4; ++frustum_plane_idx) {
+
+			float edge;
+			int component;
+
+			if (frustum_plane_idx == 0) {
+				edge = light_camera_orthographic_min_X; // todo make float temp
+				component = 0;
+			} else if (frustum_plane_idx == 1) {
+				edge = light_camera_orthographic_max_X;
+				component = 0;
+			} else if (frustum_plane_idx == 2) {
+				edge = light_camera_orthographic_min_Y;
+				component = 1;
+			} else {
+				edge = light_camera_orthographic_max_Y;
+				component = 1;
+			}
+
+			for (int tri_idx = 0; tri_idx < triangle_count; ++tri_idx) {
+				// We don't delete triangles, so we skip those that have been culled.
+				if (!triangles[tri_idx].culled) {
+					int vertex_inside_count = 0;
+					glm::vec3 tempOrder;
+					// Test against the correct frustum plane.
+					// This could be written more compactly, but it would be harder to understand.
+
+					if (frustum_plane_idx == 0) {
+						for (int pt_idx = 0; pt_idx < 3; ++pt_idx) {
+							if (triangles[tri_idx].pt[pt_idx].x >
+								light_camera_orthographic_min_X) {
+								point_passed[pt_idx] = 1;
+							} else {
+								point_passed[pt_idx] = 0;
+							}
+							vertex_inside_count += point_passed[pt_idx];
+						}
+					} else if (frustum_plane_idx == 1) {
+						for (int pt_idx = 0; pt_idx < 3; ++pt_idx) {
+							if (triangles[tri_idx].pt[pt_idx].x <
+								light_camera_orthographic_max_X) {
+								point_passed[pt_idx] = 1;
+							} else {
+								point_passed[pt_idx] = 0;
+							}
+							vertex_inside_count += point_passed[pt_idx];
+						}
+					} else if (frustum_plane_idx == 2) {
+						for (int pt_idx = 0; pt_idx < 3; ++pt_idx) {
+							if (triangles[tri_idx].pt[pt_idx].y >
+								light_camera_orthographic_min_Y) {
+								point_passed[pt_idx] = 1;
+							} else {
+								point_passed[pt_idx] = 0;
+							}
+							vertex_inside_count += point_passed[pt_idx];
+						}
+					} else {
+						for (int pt_idx = 0; pt_idx < 3; ++pt_idx) {
+							if (triangles[tri_idx].pt[pt_idx].y <
+								light_camera_orthographic_max_Y) {
+								point_passed[pt_idx] = 1;
+							} else {
+								point_passed[pt_idx] = 0;
+							}
+							vertex_inside_count += point_passed[pt_idx];
+						}
+					}
+
+					// Move the points that pass the frustum test to the begining of the array.
+					if (point_passed[1] && !point_passed[0]) {
+						tempOrder = triangles[tri_idx].pt[0];
+						triangles[tri_idx].pt[0] = triangles[tri_idx].pt[1];
+						triangles[tri_idx].pt[1] = tempOrder;
+						point_passed[0] = true;
+						point_passed[1] = false;
+					}
+					if (point_passed[2] && !point_passed[1]) {
+						tempOrder = triangles[tri_idx].pt[1];
+						triangles[tri_idx].pt[1] = triangles[tri_idx].pt[2];
+						triangles[tri_idx].pt[2] = tempOrder;
+						point_passed[1] = true;
+						point_passed[2] = false;
+					}
+					if (point_passed[1] && !point_passed[0]) {
+						tempOrder = triangles[tri_idx].pt[0];
+						triangles[tri_idx].pt[0] = triangles[tri_idx].pt[1];
+						triangles[tri_idx].pt[1] = tempOrder;
+						point_passed[0] = true;
+						point_passed[1] = false;
+					}
+
+					if (vertex_inside_count == 0) { // All points failed. We're done,  
+						triangles[tri_idx].culled = true;
+					} else if (vertex_inside_count == 1) {// One point passed. Clip the triangle against the Frustum plane
+						triangles[tri_idx].culled = false;
+
+						// 
+						glm::vec3 v0v1 = triangles[tri_idx].pt[1] - triangles[tri_idx].pt[0];
+						glm::vec3 v0v2 = triangles[tri_idx].pt[2] - triangles[tri_idx].pt[0];
+
+						// Find the collision ratio.
+						float ratio = edge - triangles[tri_idx].pt[0][component];
+						// Calculate the distance along the vector as ratio of the hit ratio to the component.
+						float distance0 = ratio / v0v1[component];
+						float distance1 = ratio / v0v2[component];
+						// Add the point plus a percentage of the vector.
+						v0v1 *= distance0;
+						v0v1 += triangles[tri_idx].pt[0];
+						v0v2 *= distance1;
+						v0v2 += triangles[tri_idx].pt[0];
+
+						triangles[tri_idx].pt[1] = v0v2;
+						triangles[tri_idx].pt[2] = v0v1;
+
+					} else if (vertex_inside_count == 2) { // 2 in  // tesselate into 2 triangles
+
+
+						// Copy the triangle\(if it exists) after the current triangle out of
+						// the way so we can override it with the new triangle we're inserting.
+						triangles[triangle_count] = triangles[tri_idx + 1];
+
+						triangles[tri_idx].culled = false;
+						triangles[tri_idx + 1].culled = false;
+
+						// Get the vector from the outside point into the 2 inside points.
+						glm::vec3 v2v0 = triangles[tri_idx].pt[0] - triangles[tri_idx].pt[2];
+						glm::vec3 v2v1 = triangles[tri_idx].pt[1] - triangles[tri_idx].pt[2];
+
+						// Get the hit point ratio.
+						float ratio = edge - triangles[tri_idx].pt[2][component];
+						float distance = ratio / v2v0[component];
+						// Calcaulte the new vert by adding the percentage of the vector plus point 2.
+						v2v0 *= distance;
+						v2v0 += triangles[tri_idx].pt[2];
+
+						// Add a new triangle.
+						triangles[tri_idx + 1].pt[0] = triangles[tri_idx].pt[0];
+						triangles[tri_idx + 1].pt[1] = triangles[tri_idx].pt[1];
+						triangles[tri_idx + 1].pt[2] = v2v0;
+
+						//Get the hit point ratio.
+						float ratio1 = edge - triangles[tri_idx].pt[2][component];
+						float distance1 = ratio1 / v2v1[component];
+						v2v1 *= distance1;
+						v2v1 += triangles[tri_idx].pt[2];
+						triangles[tri_idx].pt[0] = triangles[tri_idx + 1].pt[1];
+						triangles[tri_idx].pt[1] = triangles[tri_idx + 1].pt[2];
+						triangles[tri_idx].pt[2] = v2v1;
+						// increment triangle count and skip the triangle we just inserted.
+						++triangle_count;
+						++tri_idx;
+
+
+					} else { // all in
+						triangles[tri_idx].culled = false;
+
+					}
+				}// end if !culled loop            
+			}
+		}
+		for (int index = 0; index < triangle_count; ++index) {
+			if (!triangles[index].culled) {
+				// Set the near and far plan and the min and max z values respectivly.
+				for (int vertind = 0; vertind < 3; ++vertind) {
+					float z_coord = triangles[index].pt[vertind].z;
+					if (near_plane > z_coord) {
+						near_plane = z_coord;
+					}
+					if (far_plane < z_coord) {
+						far_plane = z_coord;
+					}
+				}
+			}
+		}
+	}
+
+	return 2;
+}
+
 static int
 lfrustum_new(lua_State* L) {
 	auto LS = getLS(L, 1);
@@ -692,6 +938,7 @@ register_frustum_mt(lua_State *L){
 			{ "intersect",	lfrustum_intersect},
 			{ "intersect_list", lfrustum_intersect_list},
 			{ "points", lfrustum_points},
+			{ "calc_near_far",  lfrustum_calc_near_far},
 			{ "__tostring", lfrustum_string},
 
 			{nullptr, nullptr}
@@ -720,7 +967,7 @@ extern "C"{
 
 		luaL_Reg l[] = {			
 			{ "new_bounding",	lbounding_new},
-			{ "new_frustum",	lfrustum_new},
+			{ "new_frustum",	lfrustum_new},			
 			{ "plane_interset",	lplane_intersect},
 			{ NULL, NULL },
 		};
