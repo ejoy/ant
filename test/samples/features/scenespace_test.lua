@@ -46,7 +46,7 @@ local function create_scene_node_test()
     local hie_root =
         world:create_entity {
         hierarchy_visible = true,
-        transform = mu.srt(),
+        transform = mu.translate_mat {0, 5, 0},
         hierarchy = {},
         name = 'root',
         main_view = true,
@@ -192,11 +192,7 @@ local function create_scene_node_test()
 
     local hie_root2 =
         world:create_entity {
-        transform = {
-            s = {2, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {3, 0, -3, 1},
-        },
+        transform = mu.srt({2, 1, 1, 0}, nil, {3, 2, -3, 1}),
         name = 'hie_root2',
         hierarchy = {},
         main_view = true,
@@ -234,7 +230,7 @@ local function create_scene_node_test()
             parent = hie_root2, 
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
-            t = {0, 0, -3, 1},
+            t = {0, 2, -3, 1},
         },
         name = 'render2_rootchild',
         rendermesh = {},

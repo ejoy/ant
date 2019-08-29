@@ -22,11 +22,11 @@ ecs.import 'ant.objcontroller'
 local serialize = import_package 'ant.serialize'
 
 local renderpkg = import_package 'ant.render'
-local computil = renderpkg.components
-local renderutil=renderpkg.util
-local aniutil = import_package 'ant.animation'.util
+local computil  = renderpkg.components
+local aniutil   = import_package 'ant.animation'.util
 
-local ms = import_package 'ant.math'.stack
+local mathpkg   = import_package "ant.math"
+local mu        = mathpkg.util
 
 local lu = renderpkg.light
 
@@ -160,7 +160,7 @@ function init_loader:init()
         PVPScenLoader.create_entitices(world)
     end
 
-    computil.create_grid_entity(world, 'grid', 64, 64, 1)
+    computil.create_grid_entity(world, 'grid', 64, 64, 1, nil, mu.translate_mat {0, 0, 0})
     create_animation_test()
 end
 

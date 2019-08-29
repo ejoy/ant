@@ -133,12 +133,12 @@ function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 	}
 end
 
-function util.create_grid_entity(world, name, w, h, unit, view_tag)
+function util.create_grid_entity(world, name, w, h, unit, view_tag, transform)
     local geopkg = import_package "ant.geometry"
     local geolib = geopkg.geometry
 
 	local gridid = world:create_entity {
-		transform = mu.identity_transform(),
+		transform = transform or mu.identity_transform(),
         rendermesh = {},
         material = util.assign_material(fs.path "/pkg/ant.resources" / "materials" / "line.material"),
 		name = name,
