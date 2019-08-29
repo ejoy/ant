@@ -1061,7 +1061,6 @@ convert_to_euler(lua_State *L, struct lastack*LS) {
 			luaL_error(L, "not support for converting to euler, type is : %d", type);
 			break;
 	}
-	e = glm::degrees(e);
 	lastack_pusheuler(LS, &e.x);
 }
 
