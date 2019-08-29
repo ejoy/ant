@@ -472,10 +472,6 @@ local test_queue = {
         print_tree()
     end,
     function ()
-        print_scene_nodes()
-        print_tree()
-    end,
-    function ()
         local level1_1_eid = find_entity_by_name('level1_1', 'transform')
         world:remove_entity(level1_1_eid)
     end,

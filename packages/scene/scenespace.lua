@@ -296,7 +296,7 @@ function scene_space:data_changed()
 	end
 
 	if next(trees) then
-		update_hierarchy_tree(trees, self.hierarchy_update_result)
+		update_hierarchy_tree(trees, self.hierarchy_transform_result)
 	end
 end
 
