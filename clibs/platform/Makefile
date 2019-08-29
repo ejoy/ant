@@ -8,7 +8,7 @@ default : $(ODIR)/libplatform.a
 endif
 
 ifeq "$(PLAT)" "mingw"
-PLAT_LIB = -lgdi32 -lstdc++
+PLAT_LIB = -lgdi32 -lstdc++ -lole32 -loleaut32 -lwbemuuid
 PLAT_CXX = cpp
 else ifeq "$(PLAT)" "osx"
 PLAT_LIB = -framework AppKit
@@ -20,14 +20,17 @@ endif
 
 OBJS = $(ODIR)/lplatform.o $(ODIR)/platform_$(PLAT).o
 
-ifneq "$(PLAT)" "mingw"
-OBJS += $(ODIR)/info_osx.o
+ifeq "$(PLAT)" "mingw"
+$(ODIR)/win32_wmi.o : win32/wmi.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
+OBJS += $(ODIR)/win32_wmi.o
+else
+$(ODIR)/osx_task_info.o : osx/task_info.mm | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
+OBJS += $(ODIR)/osx_task_info.o
 endif
 
 $(ODIR)/platform_$(PLAT).o : platform_$(PLAT).$(PLAT_CXX) | $(ODIR)
-	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
-
-$(ODIR)/info_osx.o : info_osx.mm | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 
 $(ODIR)/lplatform.o : lplatform.cpp | $(ODIR)
@@ -38,6 +41,9 @@ $(ODIR)/platform.dll : $(OBJS)
 
 $(ODIR)/libplatform.a : $(OBJS)
 	ar rsv $@ $^
+
+platform.dll : $(ODIR)/platform.dll | $(ODIR)
+	cp $^ $@
 
 $(ODIR) :
 	mkdir -p $@
