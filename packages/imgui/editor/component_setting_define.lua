@@ -31,4 +31,9 @@ define.IndexFormat = {
     type = "string",
 }
 
+define.RealDragSpeed ={
+    defaultValue = 1.0,
+    type = "float",
+}
+
 return define

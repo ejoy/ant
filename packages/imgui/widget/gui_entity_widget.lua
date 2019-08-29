@@ -157,7 +157,8 @@ function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_dat
         display_name = cfg.DisplayName
     end
 
-    local change,new_value =  base_widget(ui_cache,display_name,value)
+    local change,new_value,editing =  base_widget(ui_cache,display_name,value,cfg)
+    self.is_editing = self.is_editing or editing
         --todo something
     if change then
         log.trace_a("base_component",display_name,new_value)
@@ -330,6 +331,7 @@ function GuiEntityWidget:update(eid,entity,base_component_cache)
     if self._last_entity ~= entity then
         self:_refresh_sorted_entity(entity)
     end
+    self.is_editing = false
     factory.BeginProperty(base_component_cache)
     for i,data in ipairs(self._sorted_entity) do
         local com_name = data.com_name 
