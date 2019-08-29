@@ -53,7 +53,7 @@ function gui_mgr.update(delta)
     gui_mgr.check_can_save()
     local setting_can_save = gui_mgr.setting_status.can_save
     imgui.begin_frame(delta)
-    gui_mgr._update_mainmenu()
+    gui_mgr._update_mainmenu(delta)
     imgui.showDockSpace()
     time_stack:Pop("editor")
 
@@ -95,7 +95,7 @@ function gui_mgr._update_list(delta)
     end
 end
 
-function gui_mgr._update_mainmenu()
+function gui_mgr._update_mainmenu(delta)
     local function render_list(lst)
         for _,item in ipairs(lst) do
             if item.type == "node" then
@@ -107,7 +107,7 @@ function gui_mgr._update_mainmenu()
                 local target = item.target
                 local fun = item.fun
                 --todo pcall
-                fun(target)
+                fun(target,delta)
             end
 
         end
