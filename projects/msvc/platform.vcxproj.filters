@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\win32">
+      <UniqueIdentifier>{bff7cd7e-5a6f-4330-bb4c-ee206e345ea0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\platform\lplatform.cpp">
@@ -21,9 +24,17 @@
     <ClCompile Include="..\..\clibs\platform\platform_mingw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\platform\win32\wmi.cpp">
+      <Filter>Source Files\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\clibs\platform\platform_ios.mm" />
     <None Include="..\..\clibs\platform\platform_osx.mm" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\clibs\platform\win32\wmi.h">
+      <Filter>Source Files\win32</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
