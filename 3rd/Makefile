@@ -20,7 +20,7 @@ MSVC_MAKE_INFO := @echo msvc not support make single project, use 'make all plat
 
 BUILD_PATH := build
 
-WIN_SDK = 10.0.17763.0
+WIN_SDK = 10.0
 MSVC_VERSION = vs2019
 
 CMAKE_OPT = 
@@ -54,7 +54,7 @@ else ifeq "$(PLAT)" "msvc"
   BGFX_MAKE_CMD = $(MSVC_MAKE_INFO)
 
   CMAKE_PROJ_MAKE = $(MSVC_MAKE_INFO)
-  CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO) 
+  CMAKE_PROJ_CLEAN = $(MSVC_MAKE_INFO)
 else
   CMAKE_PROJ_TYPE = MSYS Makefiles
   BGFX_MAKEFILE = .build/projects/gmake-mingw-gcc
@@ -65,17 +65,24 @@ else
   CMAKE_PROJ_CLEAN = make clean
 endif
 
+SHADER_SRC_PATH = ../../packages/resources/shaders/src
+
+COPY_SHADER_FILES_CMD = cp -f src/bgfx_shader.sh $(SHADER_SRC_PATH)
+COPY_SHADER_FILES_CMD +=cp -f src/bgfx_compute.sh $(SHADER_SRC_PATH)
+COPY_SHADER_FILES_CMD +=cp -f examples/common/common.sh $(SHADER_SRC_PATH)
+COPY_SHADER_FILES_CMD +=cp -f examples/common/shaderlib.sh $(SHADER_SRC_PATH)
+
 ifneq "$(PLAT)" "msvc"
 BGFX_TARGET_A = bgfx
 BGFX_TARGET_B = bimg bx
 ifeq "$(BGFX_CPRC_CMD)" ""
-BGFX_CPRC_CMD += echo ok
+  BGFX_CPRC_CMD += echo ok
 else
-BGFX_TARGET_A += bgfx-shared-lib
-BGFX_TARGET_B += shaderc texturec
-BGFX_CPRC_CMD += && cp shaderc$(MODE) ../../../../../clibs/
-BGFX_CPRC_CMD += && cp texturec$(MODE) ../../../../../clibs/
-BGFX_CPRC_CMD += && cp $(BGFX_SHARED_LIB) ../../../../../clibs/bgfx-core.dll
+  BGFX_TARGET_A += bgfx-shared-lib
+  BGFX_TARGET_B += shaderc texturec
+  BGFX_CPRC_CMD += && cp shaderc$(MODE) ../../../../../clibs/
+  BGFX_CPRC_CMD += && cp texturec$(MODE) ../../../../../clibs/
+  BGFX_CPRC_CMD += && cp $(BGFX_SHARED_LIB) ../../../../../clibs/bgfx-core.dll
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
 BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(MODE)64 -j8
@@ -125,7 +132,7 @@ $(BUILD_PATH):
 	mkdir $@
 
 bgfx_init : | $(BUILD_PATH)
-	cd bgfx && $(BGFX_INIT_CMD)
+	cd bgfx && $(BGFX_INIT_CMD) && $(COPY_SHADER_FILES_CMD)
 bgfx_make : | $(BUILD_PATH)
 	cd bgfx && $(BGFX_MAKE_CMD) $(BGFX_TARGET_A) CFLAGS=-DBGFX_CONFIG_DEBUG=1 && $(BGFX_MAKE_CMD) $(BGFX_TARGET_B) && $(BGFX_CPRC_CMD)
 bgfx_clean :
