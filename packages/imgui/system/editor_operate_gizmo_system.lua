@@ -27,6 +27,7 @@ function operate_gizmo_cache:init()
     self.gizmo = nil
     self.cur_mouse_state = "UP"
     self.is_scale_draging = false
+    self.is_rotation_draging = false
     -- self.count = {0,0}
     -- self.move_count = {0,0,0}
     return self
@@ -102,7 +103,7 @@ local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
         -- log.info_a("mq",mq)
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
         local trans = target_entity.transform
-        r_axis_unit = convert_to_model_axis(trans,axis_unit)
+        local r_axis_unit = convert_to_model_axis(trans,axis_unit)
         -- log.info_a("axis_unit:",r_axis_unit)
         local cur_pos = ms(trans.t,"T")
         local viewport = mq.render_target.viewport
@@ -212,6 +213,124 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
     end
 end
 
+local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
+    --旋转轴被自己的矩阵变化了
+    local function world_to_model(point,model_srt)
+        local t = point[4]
+        point[4] = 1
+        local mp = ms(point,model_srt,"iS*T")
+        point[4] = t
+        return mp
+    end
+    local target_entity_id = world:first_entity_id("show_operate_gizmo")
+    local target_entity = target_entity_id and world[target_entity_id]
+    if target_entity then
+        local trans = target_entity.transform
+        local normalize_sceen_unit = nil
+        local sceen_unit_dis = nil
+        local dx,dy = mouse_delta[1],mouse_delta[2]
+        local r_axis_unit = nil
+        if cache.last_rotation then
+            -- log.info("last_rotation",cache.last_rotation)
+            normalize_sceen_unit = cache.last_rotation.normalize_sceen_unit
+            sceen_unit_dis = cache.last_rotation.sceen_unit_dis
+            r_axis_unit = cache.last_rotation.r_axis_unit
+        else
+            -- log.info("picked_type",picked_type)
+            local typ = picked_type
+            local axis_unit = cache.axis_map[typ]
+            local rot_unit = cache.rot_axis_map[typ]
+            local mq = world:first_entity "main_queue"
+
+            local camera = camerautil.get_camera(world, mq.camera_tag)
+            local _,_,viewproj = ms:view_proj(camera,camera.frustum,true)
+            r_axis_unit = convert_to_model_axis(trans,axis_unit)
+            rotat_unit_quat = ms({type="quat",axis=r_axis_unit,radian={0.02}},"T")
+
+            ------------------------
+            local inject_pos_world
+            do 
+                local gizmo_eid = cache.gizmo.eid
+                local gizmo_trans = world[gizmo_eid].transform
+                local gizmo_world = gizmo_trans.world
+                local _,_,point_world = ms(gizmo_world,"~TTT")
+                local axis_unit_p = {axis_unit[1],axis_unit[2],axis_unit[3],1}
+                local normal_world = ms(point_world,gizmo_trans.world,axis_unit_p,"*-nT")
+                assert(cache.mouse_pos)
+                local click_pos = util.mouse_project_onto_plane(world,cache.mouse_pos,point_world,normal_world)
+                inject_pos_world = ms( point_world,click_pos,point_world,"-n+T" )
+            end
+            ------------------------
+            local click_in_model = world_to_model(inject_pos_world,trans.world)
+            local click_in_model_roted = ms(click_in_model,rot_unit,"qS*T")
+            local viewport = mq.render_target.viewport
+            local w,h = viewport.rect.w,viewport.rect.h
+            local screen_pos0 = pos_to_screen(click_in_model,trans,viewproj,w,h)
+            local screen_pos1= pos_to_screen(click_in_model_roted,trans,viewproj,w,h)
+            local screen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
+            normalize_sceen_unit =  ms(screen_unit,"nT")
+            -- log.info_a("inject_pos_world",inject_pos_world,
+            --     "click_in_model:",click_in_model,
+            --     "click_in_model_roted",click_in_model_roted,
+            --     "w,h",w,h,
+            --     "screen_pos0",screen_pos0,
+            --     "screen_pos1",screen_pos1,
+            --     "screen_unit",screen_unit,
+            --     "normalize_sceen_unit",normalize_sceen_unit
+            --     )
+            if normalize_sceen_unit[1]~=0 then
+                sceen_unit_dis = screen_unit[1]/normalize_sceen_unit[1]
+            else
+                sceen_unit_dis = screen_unit[2]/normalize_sceen_unit[2]
+            end
+            cache.last_rotation = {
+                normalize_sceen_unit = normalize_sceen_unit,
+                sceen_unit_dis = sceen_unit_dis,
+                r_axis_unit = r_axis_unit,
+            }
+
+
+            -- local viewport = mq.render_target.viewport
+            -- local w,h = viewport.rect.w,viewport.rect.h
+            -- local screen_pos0 = pos_to_screen({0,0,0},trans,viewproj,w,h)
+            -- local screen_pos1= pos_to_screen(axis_unit,trans,viewproj,w,h)
+            -- local screen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
+            ----------------------
+            -- local eyepos = camera.eyepos
+            -- local eyepos_in_model = ms(eyepos,trans.world,"i*nT")
+            -- local eyepos_in_model_roted = ms(eyepos_in_model,rot_unit,"qS*T")
+            -- local viewport = mq.render_target.viewport
+            -- local w,h = viewport.rect.w,viewport.rect.h
+            -- local screen_pos0 = pos_to_screen(eyepos_in_model,trans,viewproj,w,h)
+            -- local screen_pos1= pos_to_screen(eyepos_in_model_roted,trans,viewproj,w,h)
+            -- local screen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
+            -- normalize_sceen_unit =  ms(screen_unit,"nT")
+            -- if normalize_sceen_unit[1]~=0 then
+            --     sceen_unit_dis = screen_unit[1]/normalize_sceen_unit[1]
+            -- else
+            --     sceen_unit_dis = screen_unit[2]/normalize_sceen_unit[2]
+            -- end
+            -- cache.last_rotation = {
+            --     normalize_sceen_unit = normalize_sceen_unit,
+            --     sceen_unit_dis = sceen_unit_dis,
+            --     r_axis_unit = r_axis_unit,
+            -- }
+        end
+        local effect_dis = dx*normalize_sceen_unit[1]+dy*normalize_sceen_unit[2]
+        local t = effect_dis/sceen_unit_dis
+        local rotat_t_quat = ms({type="quat",axis=r_axis_unit,radian={0.01*t}},"T")
+        local cur_rot = ms(trans.r,"qT")
+        local new_rot = ms(rotat_t_quat,cur_rot,"*eT")
+        -- local new_rot =  {cur_rot[1]+rotat_e[1]*t,cur_rot[2]+rotat_e[2]*t,cur_rot[3]+rotat_e[3]*t}
+        world:add_component_child(trans,"r","vector",new_rot)
+    end
+end
+
+local function gizmo_rotation_on_release(cache)
+    -- log.info("gizmo_rotation_on_release",cache.last_rotation)
+    cache.last_rotation = nil
+end
+
 local function on_gizmo_type_change(self,typ)
     local operate_gizmo_cache = self.operate_gizmo_cache
     if typ ~= operate_gizmo_cache.gizmo_type then
@@ -241,6 +360,11 @@ function gizmo_sys:init()
         x = {1,0,0},
         y = {0,1,0},
         z = {0,0,1},
+    }
+    operate_gizmo_cache.rot_axis_map = {
+        x = {0.01,0,0},
+        y = {0,0.01,0},
+        z = {0,0,0.01},
     }
     operate_gizmo_cache.mouse_delta = {}
     local mouse_delta = operate_gizmo_cache.mouse_delta
@@ -274,7 +398,7 @@ function gizmo_sys:init()
                         -- count[1] = count[1] + (x-operate_gizmo_cache.last_mouse_pos[1])
                         -- count[2] = count[2] + (y-operate_gizmo_cache.last_mouse_pos[2])
                     else
-                        
+                        operate_gizmo_cache.mouse_pos = {x, y}
                     end
                     operate_gizmo_cache.last_mouse_pos = {x,y}
                 else
@@ -335,15 +459,24 @@ function gizmo_sys:update()
                 elseif typ == "scale" then
                     gizmo_scale_on_drag(operate_gizmo_cache,dir,v)
                     operate_gizmo_cache.is_scale_draging = dir
+                elseif typ == "rotation" then
+                    gizmo_rotation_on_drag(operate_gizmo_cache,dir,v)
+                    operate_gizmo_cache.is_rotation_draging = dir
                 end
                 v[1],v[2] = 0,0
             end
         end
 
     end
-    if operate_gizmo_cache.is_scale_draging and operate_gizmo_cache.cur_mouse_state == "UP" then
-        gizmo_scale_on_release(operate_gizmo_cache)
-        operate_gizmo_cache.is_scale_draging = nil
+    if operate_gizmo_cache.cur_mouse_state == "UP" then
+        if operate_gizmo_cache.is_scale_draging then
+            gizmo_scale_on_release(operate_gizmo_cache)
+            operate_gizmo_cache.is_scale_draging = nil
+        elseif operate_gizmo_cache.is_rotation_draging then
+            gizmo_rotation_on_release(operate_gizmo_cache)
+            operate_gizmo_cache.is_rotation_draging = nil
+        end
+        operate_gizmo_cache.picked_dir = nil
     end
 end
 
