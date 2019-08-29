@@ -15,7 +15,8 @@ SAMPLER2D(s_normal, 1);
 uniform vec4 u_specularColor;
 uniform vec4 u_specularLight;
 
- 
+
+
 void main()
 {
 	vec2 tc = vec2(v_texcoord0.x, v_texcoord0.y);

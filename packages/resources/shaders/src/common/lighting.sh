@@ -57,3 +57,25 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 	//return vec4(specular,1.0);
 	return vec4(diffuse + specular, 1.0);
 }
+
+vec4 calc_fog(vec4 color, float density, float LOG2, float distanceVS)
+{
+	return saturate(1.0/exp2(density*density*distanceVS*distanceVS*LOG2));
+}
+
+vec3 unproject_noraml(vec2 normalTS)
+{
+	vec3 normal = vec3(normalTS, 0.0);
+	normal.xy = normal.xy * 2.0 - 1.0;
+	normal.z = sqrt((1.0 - dot(normal.xy, normal.xy)));
+
+	// projection back
+	float pX = normal.x/(1.0 + normal.z);
+	float pY = normal.y/(1.0 + normal.z);
+	float denom = 2.0/(1.0 +pX*pX + pY*pY);
+	normal.x = pX * denom;
+	normal.y = pX * denom;
+	normal.z = denom -1.0; 
+
+	return normal;
+}
