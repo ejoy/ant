@@ -139,7 +139,9 @@ function GuiHierarchyView:_show_selected_entity_menu(id,entity)
                 end
             end
             self.selected_map[id]=true
-            select_children(entity.children)
+            if entity.children then
+                select_children(entity.children)
+            end
         end
         if widget.Button("Delete") then
             local id_list = {}
