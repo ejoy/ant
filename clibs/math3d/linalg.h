@@ -1,6 +1,7 @@
 #ifndef linear_algebra_h
 #define linear_algebra_h
 
+#include <stddef.h>
 #include <stdint.h>
 
 enum LinearConstType {
