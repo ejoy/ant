@@ -42,10 +42,11 @@ local function EndColunms()
     windows.PopStyleColor()
 end
 
-local function real(ui_cache,name,value)
+local function real(ui_cache,name,value,cfg)
     local vt = ui_cache[name]
     if not vt then
-        vt = {value}
+        local speed = cfg.RealDragSpeed or 1.0
+        vt = {value,speed=speed}
         ui_cache[name] = vt
     end
     BeginColunms()
@@ -53,8 +54,9 @@ local function real(ui_cache,name,value)
     cursor.NextColumn()
     cursor.SetNextItemWidth(-1)
     local change = widget.DragFloat("###"..name,vt)
+    local active = util.IsItemActive()
     EndColunms()
-    return change,vt[1]
+    return change,vt[1],active
 end
 
 local function boolean(ui_cache,name,value)
@@ -68,8 +70,9 @@ local function boolean(ui_cache,name,value)
     cursor.NextColumn()
     cursor.SetNextItemWidth(-1)
     local change = widget.Checkbox("###"..name, vt)
+    local active = util.IsItemActive()
     EndColunms()
-    return change,vt[1]
+    return change,vt[1],active
 end
 
 local function string(ui_cache,name,value)
@@ -83,8 +86,9 @@ local function string(ui_cache,name,value)
     cursor.NextColumn()
     cursor.SetNextItemWidth(-1)
     local change = widget.InputText("###"..name, vt)
+    local active = util.IsItemActive()
     EndColunms()
-    return change,vt.text
+    return change,vt.text,active
 end
 
 local function int(ui_cache,name,value)
@@ -98,14 +102,16 @@ local function int(ui_cache,name,value)
     cursor.NextColumn()
     cursor.SetNextItemWidth(-1)
     local change = widget.DragInt("###"..name,vt)
+    local active = util.IsItemActive()
     EndColunms()
-    return change,vt[1]
+    return change,vt[1],active
 end
 
-local function vector(ui_cache,name,value)
+local function vector(ui_cache,name,value,cfg)
     local vt = ui_cache[name]
     if not vt then
-        vt = {value[1],value[2],value[3],value[4]}
+        local speed = cfg.RealDragSpeed or 1.0
+        vt = {value[1],value[2],value[3],value[4],speed=speed}
         ui_cache[name] = vt
     end
     BeginColunms()
@@ -113,8 +119,9 @@ local function vector(ui_cache,name,value)
     cursor.NextColumn()
     cursor.SetNextItemWidth(-1)
     local change = widget.DragFloat("###DragFloat"..name,vt)
+    local active = util.IsItemActive()
     EndColunms()
-    return change,{vt[1],vt[2],vt[3],vt[4]}
+    return change,{vt[1],vt[2],vt[3],vt[4]},active
 end
 
 local function matrix(ui_cache,name,value)
@@ -129,6 +136,7 @@ local function matrix(ui_cache,name,value)
     BeginColunms()
     cursor.NextColumn()
     local change = false
+    local active = false
     if widget.TreeNode(name) then
         for i = 1,4 do
             local this_vt = vt[i]
@@ -139,11 +147,12 @@ local function matrix(ui_cache,name,value)
                     value[start+j] = this_vt[j]
                 end
             end
+            active = active or util.IsItemActive()
         end
         widget.TreePop()
     end
     EndColunms()
-    return change,value
+    return change,value,active
 end
 
 local function entityid(ui_cache,name,value)

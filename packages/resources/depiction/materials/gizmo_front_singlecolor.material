@@ -1,5 +1,5 @@
 shader = {
-    vs = "/pkg/ant.resources/mesh/vs_singlecolor.sc",
+    vs = "/pkg/ant.resources/gizmo/vs_front_singlecolor.sc",
     fs = "/pkg/ant.resources/mesh/fs_singlecolor.sc",
 }
 

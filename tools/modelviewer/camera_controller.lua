@@ -210,17 +210,34 @@ end
 
 
 local function memory_info()
+	local function bytestr(n)
+		if n < 1024 then
+			return ("%dB"):format(n)
+		end
+		n = n / 1024.0
+		if n < 1024 then
+			return ("%.1fKB"):format(n)
+		end
+		n = n / 1024.0
+		return ("%.1fMB"):format(n)
+	end
+
 	local s = {}
 	local platform = require "platform"
 	local bgfx = require "bgfx"
-	s[#s+1] = ("\tsys memory:%.1fMB"):format(platform.info "memory" / 1024.0 / 1024.0)
-	s[#s+1] = ("\tlua memory:%.1fMB"):format(collectgarbage "count" / 1024.0)
+	s[#s+1] = ""
+	s[#s+1] = ("sys  memory:%s"):format(bytestr(platform.info "memory"))
+	s[#s+1] = ("lua  memory:%s"):format(bytestr(collectgarbage "count" * 1024.0))
+	s[#s+1] = ("bgfx memory:%s"):format(bytestr(bgfx.get_stats "a"))
+	s[#s+1] = ("math memory:%s"):format(bytestr(ms:stacksize()))
 
-	local bgfx_memory = bgfx.get_stats "m"
-	s[#s+1] = ("\trt  memory:%.1fMB"):format(bgfx_memory.rtMemoryUsed / 1024.0 / 1024.0)
-	s[#s+1] = ("\ttex memory:%.1fMB"):format(bgfx_memory.textureMemoryUsed / 1024.0 / 1024.0)
+	s[#s+1] = "-------------------"
 
-	return table.concat(s, "\n")
+	local data = bgfx.get_stats "m"
+	s[#s+1] = ("rt   memory:%.1fMB"):format(data.rtMemoryUsed / 1024.0 / 1024.0)
+	s[#s+1] = ("tex  memory:%.1fMB"):format(data.textureMemoryUsed / 1024.0 / 1024.0)
+
+	return table.concat(s, "\n\t")
 end
 
 function camera_controller_system:on_gui()

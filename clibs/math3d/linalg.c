@@ -83,6 +83,7 @@ struct lastack {
 	struct blob * per_mat;
 	struct oldpage *old;
 	union stackid *stack;
+	size_t oldpage_size;
 };
 
 #define TAG_FREE 0
@@ -107,6 +108,7 @@ struct blob {
 	char * buffer;
 	struct slot *s;
 	struct oldpage *old;
+	size_t oldpage_size;
 };
 
 static inline void
@@ -131,7 +133,13 @@ blob_new(int size, int cap) {
 	B->s = malloc(cap * sizeof(*B->s));
 	init_blob_slots(B, 0, cap);
 	B->old = NULL;
+	B->oldpage_size = 0;
 	return B;
+}
+
+static size_t
+blob_size(struct blob *B) {
+	return sizeof(*B) + (B->size + sizeof(*B->s)) * B->cap + B->oldpage_size;
 }
 
 static void
@@ -156,6 +164,8 @@ blob_alloc(struct blob *B, int version) {
 		B->old = p;
 
 		int cap = B->cap;	
+		B->oldpage_size += sizeof(*p) + B->size * cap;
+
 		B->cap *= 2;
 		B->buffer = malloc(B->size * B->cap);
 		memcpy(B->buffer, p->page, B->size * cap);
@@ -163,9 +173,7 @@ blob_alloc(struct blob *B, int version) {
 		static int alloc_count = 0;
 		alloc_count ++;
 		init_blob_slots(B, cap, B->cap);
-//		printf("...... alloc new blob %d,s = %d,c = %d, freeslot = %d .......\n",alloc_count,B->size,B->cap,B->freeslot);
 	}
-	//printf("freeslot = %d \n",B->freeslot);
 	int ret = SLOT_INDEX(B->freeslot);
 	struct slot *s = &B->s[ret];
 	B->freeslot = s->id;	// next free slot
@@ -208,6 +216,7 @@ blob_flush(struct blob *B) {
 	}
 	free_oldpage(B->old);
 	B->old = NULL;
+	B->oldpage_size = 0;
 }
 
 static void
@@ -285,7 +294,18 @@ lastack_new() {
 	LS->per_mat = blob_new(MATRIX * sizeof(float), MINCAP);
 	LS->old = NULL;
 	LS->stack = malloc(LS->stack_cap * sizeof(*LS->stack));
+	LS->oldpage_size = 0;
 	return LS;
+}
+
+size_t
+lastack_size(struct lastack *LS) {
+	return sizeof(*LS)
+		+ LS->temp_vector_cap * VECTOR4 * sizeof(float)
+		+ LS->temp_matrix_cap * MATRIX * sizeof(float)
+		+ LS->stack_cap * sizeof(*LS->stack)
+		+ blob_size(LS->per_vec)
+		+ blob_size(LS->per_mat);
 }
 
 void
@@ -310,11 +330,12 @@ push_id(struct lastack *LS, union stackid id) {
 }
 
 static void *
-new_page(struct lastack *LS, void *page) {
+new_page(struct lastack *LS, void *page, size_t page_size) {
 	struct oldpage * p = malloc(sizeof(*p));
 	p->next = LS->old;
 	p->page = page;
 	LS->old = p;
+	LS->oldpage_size += page_size + sizeof(*p);
 	return page;
 }
 
@@ -328,9 +349,10 @@ get_type_size(int type) {
 void
 lastack_pushmatrix(struct lastack *LS, const float *mat) {
 	if (LS->temp_matrix_top >= LS->temp_matrix_cap) {
-		void * p = new_page(LS, LS->temp_mat);
-		LS->temp_mat = malloc(LS->temp_matrix_cap * 2 * sizeof(float) * MATRIX);
-		memcpy(LS->temp_mat, p, LS->temp_matrix_cap * sizeof(float) * MATRIX);
+		size_t sz = LS->temp_matrix_cap * sizeof(float) * MATRIX;
+		void * p = new_page(LS, LS->temp_mat, sz);
+		LS->temp_mat = malloc(sz * 2);
+		memcpy(LS->temp_mat, p, sz);
 		LS->temp_matrix_cap *= 2;
 	}
 	memcpy(LS->temp_mat + LS->temp_matrix_top * MATRIX, mat, sizeof(float) * MATRIX);
@@ -351,9 +373,10 @@ lastack_pushobject(struct lastack *LS, const float *v, int type) {
 	}
 	const int size = get_type_size(type);
 	if (LS->temp_vector_top >= LS->temp_vector_cap) {
-		void * p = new_page(LS, LS->temp_vec);
-		LS->temp_vec = malloc(LS->temp_vector_cap * 2 * sizeof(float) * VECTOR4);
-		memcpy(LS->temp_vec, p, LS->temp_vector_cap * sizeof(float) * VECTOR4);
+		size_t sz = LS->temp_vector_cap * sizeof(float) * VECTOR4;
+		void * p = new_page(LS, LS->temp_vec, sz);
+		LS->temp_vec = malloc(sz * 2);
+		memcpy(LS->temp_vec, p, sz);
 		LS->temp_vector_cap *= 2;
 	}
 	memcpy(LS->temp_vec + LS->temp_vector_top * VECTOR4, v, sizeof(float) * size);
@@ -563,6 +586,7 @@ lastack_reset(struct lastack *LS) {
 	LS->stack_top = 0;
 	free_oldpage(LS->old);
 	LS->old = NULL;
+	LS->oldpage_size = 0;
 	blob_flush(LS->per_vec);
 	blob_flush(LS->per_mat);
 	LS->temp_vector_top = 0;

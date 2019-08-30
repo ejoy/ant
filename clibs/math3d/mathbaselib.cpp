@@ -991,7 +991,7 @@ register_bounding_mt(lua_State* L) {
 			{ "__tostring", lbounding_string},
 			#ifdef _STAT_MEMORY_
 			{ "__gc",		lbounding_delete},
-			#endif _STAT_MEMORY_
+			#endif	// _STAT_MEMORY_
 
 			{nullptr, nullptr}
 		};

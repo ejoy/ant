@@ -1061,7 +1061,6 @@ convert_to_euler(lua_State *L, struct lastack*LS) {
 			luaL_error(L, "not support for converting to euler, type is : %d", type);
 			break;
 	}
-	e = glm::degrees(e);
 	lastack_pusheuler(LS, &e.x);
 }
 
@@ -2869,6 +2868,14 @@ lhomogeneous_depth(lua_State *L){
 	return 1;
 }
 
+static int
+lstacksize(lua_State *L) {
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
+	struct lastack* LS = bp->LS;
+	lua_pushinteger(L, lastack_size(LS));
+	return 1;
+}
+
 static void
 register_linalg_mt(lua_State *L) {
 	if (luaL_newmetatable(L, LINALG)) {
@@ -2881,6 +2888,7 @@ register_linalg_mt(lua_State *L) {
 			{ MFUNCTION(toquaternion)},
 			{ MFUNCTION(lookfrom3)},
 			{ MFUNCTION(length)},
+			{ "stacksize", lstacksize },
 			{ "ref", lstackrefobject },
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
