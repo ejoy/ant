@@ -234,6 +234,42 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
+function world:mark(eid, markname)
+	local ml = self._marks[markname]
+	if ml == nil then
+		ml = {}
+		self._marks[markname] = ml
+	end
+
+	ml[#ml+1] = eid
+end
+
+function world:each_mark(markname)
+	local ml = self._marks[markname]
+	if ml then
+		local idx = 0
+		local function mark_next()
+			idx = idx + 1
+			return ml[idx]
+		end
+
+		return mark_next, ml
+	end
+end
+
+function world:clear_all_marks()
+	self._marks = {}
+end
+
+function world:update_marks()
+	for cn, list in pairs(self._marks) do
+		local handlers = assert(self._mark_handlers[cn])
+		if #list > 0 then
+			handlers()
+		end
+	end
+end
+
 local function new_component_next(set)
 	local n = #set
 	while n >= 0 do
@@ -515,6 +551,7 @@ function ecs.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_serialize_to_eid = {},
 		_cur_system = {"",""},
+		_marks = {},
 	}, world)
 
 	-- load systems and components from modules
@@ -526,6 +563,12 @@ function ecs.new_world(config)
 	w._systems = system.lists(class.system)
 	w._singleton_proxy = system.proxy(class.system, class.singleton)
 
+	local handlers = {}
+	for cn, handlername in pairs(class.mark_handlers) do
+		handlers[cn] = w:update_func(handlername)
+	end
+
+	w._mark_handlers = handlers
 	return w
 end
 
