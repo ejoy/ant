@@ -1,5 +1,7 @@
-$input v_posVS, v_normalVS, v_lightdirTS, v_viewdirTS, v_texcoord0, v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3
+$input v_lightdirTS, v_viewdirTS, v_packed_info, v_texcoord0, v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3
 
+#define v_normal_Y_angle	v_packed_info.x
+#define v_distanceVS		v_packed_info.y
 /*
  * Copyright 2013-2014 Dario Manesku. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
@@ -43,10 +45,6 @@ SAMPLE2D(s_normal, 1);
 uniform vec4 u_fog_color;
 uniform vec4 u_specularColor;
 uniform vec4 u_specularLight;
-
-uniform vec4 u_packed_info;
-#define v_normal_Y_angle	u_packed_info.x
-#define v_distanceVS		u_packed_info.y
 
 void main()
 {
