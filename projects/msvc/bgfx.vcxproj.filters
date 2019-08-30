@@ -24,9 +24,15 @@
     <ClCompile Include="..\..\clibs\bgfx\baselib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\bgfx\bgfx_alloc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\bgfx\bgfx_alloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

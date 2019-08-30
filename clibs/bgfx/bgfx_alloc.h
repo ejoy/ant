@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-int luabgfx_getalloc(bgfx_allocator_interface_t** interface);
+int luabgfx_getalloc(bgfx_allocator_interface_t** interface_t);
 int luabgfx_info(int64_t* psize);
 
 #if defined(__cplusplus)
