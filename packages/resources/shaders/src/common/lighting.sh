@@ -24,17 +24,11 @@ vec3 calc_directional_light(vec3 normal, vec3 lightdir, vec3 viewdir, float shin
 	return vec3(result, result, result);
 }
 
-vec4 calc_ambient_color(float ambientMode,vec3 normalWS) 
+vec4 calc_ambient_color(float ambientMode, float factor) 
 {
 	// gradient mode 
 	if(ambientMode == 2.0) {
-		float angle = normalWS.y;
-		if(angle>0.0)
-			return (ambient_skycolor*angle) + (ambient_midcolor*(1.0-angle));
-		else {
-			angle = - angle;
-		    return (ambient_groundcolor*angle) + (ambient_midcolor*(1.0-angle));
-		}	    
+		return mix(ambient_midcolor, ambient_skycolor, abs(factor));
 	}
 	// default classic mode 
 	return ambient_skycolor;

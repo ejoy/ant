@@ -1,4 +1,4 @@
-$input
+$input v_posVS, v_normalVS, v_lightdirTS, v_viewdirTS, v_texcoord0, v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3
 
 /*
  * Copyright 2013-2014 Dario Manesku. All rights reserved.
@@ -37,6 +37,17 @@ float compute_csm_visible(ivec4 selections)
 	}
 }
 
+SAMPLE2D(s_basecolor, 0);
+SAMPLE2D(s_normal, 1);
+
+uniform vec4 u_fog_color;
+uniform vec4 u_specularColor;
+uniform vec4 u_specularLight;
+
+uniform vec4 u_packed_info;
+#define v_normal_Y_angle	u_packed_info.x
+#define v_distanceVS		u_packed_info.y
+
 void main()
 {
 	vec3 colorCoverage = vec3_splat(0.0);
@@ -48,10 +59,21 @@ void main()
 		is_proj_texcoord_in_range(v_sm_coord2, 0.01, 0.99),
 		is_proj_texcoord_in_range(v_sm_coord3, 0.01, 0.99));
 
-	float visible = compute_csm_visible(selections);
+	float visible 	= compute_csm_visible(selections);
 
-	vec3 fogColor = vec3_splat(0.0);
-	float fog_factor = calc_fog(fogColor, 0.0035, 1.442695, length(v_posVS))
+	vec4 ntexdata 	= texture2D(s_normal, v_texcoord0.xy);
+	float gloss 	= ntexdata.z;
+	vec3 normal 	= unproject_noraml(ntexdata.xy);
+
+	vec4 basecolor  = texture2D(s_basecolor, v_texcoord0.xy);
+	vec4 lightcolor = directional_color[0] * directional_intensity[0].x;
+	
+	vec4 ambientcolor = calc_ambient_color(ambient_mode.x, v_normal_Y_angle) * basecolor;
+
+	float fog_factor= calc_fog(u_fog_color, 0.0035, 1.442695, v_distanceVS);
+    
+	gl_FragColor 	= saturate(ambientcolor + calc_lighting_BH(normal, v_lightdir, v_viewdir, lightcolor, 
+															basecolor, u_specularColor, gloss, u_specularLight.x));
 
 	gl_FragColor.xyz = mix(fogColor, u_shadow_color, fog_factor);
 	gl_FragColor.w = 1.0;

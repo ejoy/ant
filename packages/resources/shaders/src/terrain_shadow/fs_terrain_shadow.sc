@@ -56,7 +56,7 @@ void main()
 	} 
  
 	float ambientMode = ambient_mode.x;
-	vec4  ambientColor = calc_ambient_color(ambientMode,v_normal.xyz);
+	vec4  ambientColor = calc_ambient_color(ambientMode,v_normal.y);
 		  ambientColor.a = 0.0;      				 		// notice
 		  ambientColor = ambientColor*textureColor;  		// *0.25;   // divide four pass 
 	vec4  diffuseColor = lightColor*textureColor*maskColor;

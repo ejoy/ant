@@ -22,12 +22,10 @@ void main()
 	v_posVS  	= mul(u_modelView, vec4(a_position, 1.0)).xyz;
 
 	// tbn from world space to tangent space
-	mat3 tbn = calc_tbn_lh_ex(a_normal.xyz, a_tangent.xyz, a_tangent.w, u_model[0]);
+	mat3 tbn 	= calc_tbn_lh_ex(a_normal.xyz, a_tangent.xyz, a_tangent.w, u_model[0]);
 
-	v_lightdir 	= mul(directional_lightdir[0].xyz , tbn);
-	v_viewdir 	= mul(normalize(u_eyepos - wpos).xyz, tbn);	
-
-	v_position = mul(u_modelView, offset_pos);
+	v_lightdirTS= mul(directional_lightdir[0].xyz , tbn);
+	v_viewdirTS = mul(normalize(u_eyepos - wpos).xyz, tbn);	
 
 	v_sm_coord0 = mul(directional_viewproj[0], wpos);
 	v_sm_coord1 = mul(directional_viewproj[1], wpos);

@@ -43,7 +43,7 @@ void main()
 	   
 	float ambientMode   = ambient_mode.x;
 	float ambientFactor = ambient_mode.y;   // Factor not use
-	vec4  ambientColor  = calc_ambient_color( ambientMode, v_normal  ) ;
+	vec4  ambientColor  = calc_ambient_color( ambientMode, v_normal.y  ) ;
 	ambientColor = ambientColor*basecolor;
 
 	#include "mesh_shadow/fs_ext_shadowmaps_color_lighting_main.sh" 
