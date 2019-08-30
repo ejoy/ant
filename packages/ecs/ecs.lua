@@ -294,7 +294,7 @@ local function dummy_iter() end
 
 --component_type ~= nil, return pairs<eid,component_data>
 --component_type == nil, return pairs<eid,entity_data>
-function world:each_removed(component_type, includeentity)
+function world:each_removed(component_type)
 	local removed_set
 	local set = self._removed
 	if not component_type then
@@ -316,22 +316,14 @@ function world:each_removed(component_type, includeentity)
 				local ctype = item[2]
 				if ctype == component_type then
 					removed_set = removed_set or {}
-					if includeentity then
-						removed_set[eid] = {c, world[eid], false}	-- just remove component
-					else
-						removed_set[eid] = c -- true
-					end
+					removed_set[eid] = {c, world[eid]}	-- just remove componen
 				end
 			else
 				local e = item[2]
 				c = e[component_type]
 				if c ~= nil then
 					removed_set = removed_set or {}
-					if includeentity then
-						removed_set[eid] = {c, e, true}	-- remove entity
-					else
-						removed_set[eid] = c --true
-					end
+					removed_set[eid] = {c, e}	-- remove entity
 				end
 			end
 		end

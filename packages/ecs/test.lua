@@ -54,7 +54,8 @@ function mods.dummy(...)
 		local eid = world:create_entity {
 			foobar = {
 				x = 0, y = 0,
-			}
+			},
+			name = "foobar_name"
 		}
 	end
 
@@ -93,8 +94,10 @@ function mods.dummy(...)
 	local delete = ecs.system "delete"
 
 	function delete:delete()
-		for eid, c in world:each_removed "foobar" do
-			print("Delete foobar", eid, "foobar", c.x, c.y)
+		for eid, info in world:each_removed "foobar" do
+			local c = info[1]
+			local e = info[2]
+			print("Delete foobar", eid, "foobar", c.x, c.y, "name:", e.name or "")
 		end
 	end
 end

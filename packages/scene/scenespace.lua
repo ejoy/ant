@@ -208,10 +208,11 @@ end
 function scene_space:delete()
 	local hierarchy_cache = self.hierarchy_transform_result	
 	local removed_eids = {}
-	for eid, result in world:each_removed("hierarchy", true) do
+	for eid, result in world:each_removed "hierarchy" do
 		hierarchy_cache[eid] = nil
-		removed_eids[eid] = result
+		removed_eids[eid] = result[2]
 	end
+	--world.componentlist.bind(function () end)
 
 	if next(removed_eids) then
 		local trees = {}
@@ -311,9 +312,7 @@ function remove_hierarchy_system:handle_removed_hierarchy()
 	local removeeids 		= self.hierarchy_update_result.removed_eids
 
 	-- move removed hirarchy entity transform to children
-	for hie_eid, remove_result in pairs(removeeids) do
-		local hie_entity = remove_result[2]
-
+	for hie_eid, hie_entity in pairs(removeeids) do
 		local subtree = remove_trees[hie_eid]
 		if subtree then
 			assert(hie_entity.transform, "remove 'hierarchy' component should not remove transform component at the mean time")
