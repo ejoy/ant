@@ -234,14 +234,14 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
-function world:mark(eid, markname)
+function world:mark(eid, markname, arg)
 	local ml = self._marks[markname]
 	if ml == nil then
 		ml = {}
 		self._marks[markname] = ml
 	end
 
-	ml[#ml+1] = eid
+	ml[#ml+1] = {eid, arg}
 end
 
 function world:each_mark(markname)
@@ -250,7 +250,8 @@ function world:each_mark(markname)
 		local idx = 0
 		local function mark_next()
 			idx = idx + 1
-			return ml[idx]
+			local t = ml[idx]
+			return t[1], t[2]
 		end
 
 		return mark_next, ml

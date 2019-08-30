@@ -77,7 +77,7 @@ function mods.dummy(...)
 			}
 		}
 
-		world:mark(newid, "test_mark2")
+		world:mark(newid, "test_mark2", "test arg111")
 		print("Create foobar", newid)
 		for _, eid in world:each "foobar" do
 			print("2. Dummy foobar", eid)
@@ -86,10 +86,10 @@ function mods.dummy(...)
 
 	function dummy:mark_handler()
 		print("handle 'mark_handler', list number:")
-		for eid in world:each_mark "test_mark2" do
+		for eid, arg in world:each_mark "test_mark2" do
 			local e = world[eid]
 			if e then
-				print("[dummy], eid:", eid)
+				print("[dummy], eid:", eid, arg)
 			else
 				print("[dummy], eid:", eid, "has been removed")
 			end
