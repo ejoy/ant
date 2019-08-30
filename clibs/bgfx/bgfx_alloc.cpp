@@ -7,44 +7,6 @@
 #    define BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT 8
 #endif
 
-#if BX_COMPILER_MSVC
-namespace bx {
-    struct DefaultAllocator {
-        void* realloc(void* _ptr, size_t _size, size_t _align) {
-            if (0 == _size) {
-                if (NULL != _ptr) {
-                    _aligned_free(_ptr);
-                }
-                return NULL;
-            }
-            if (NULL == _ptr) {
-                return _aligned_malloc(_size, _align);
-            }
-            return _aligned_realloc(_ptr, _size, _align);
-        }
-        void* realloc(void* _ptr, size_t _size) {
-            if (0 == _size) {
-                if (NULL != _ptr) {
-                    ::free(_ptr);
-                }
-                return NULL;
-            }
-            if (NULL == _ptr) {
-                return ::malloc(_size);
-            }
-            return ::realloc(_ptr, _size);
-        }
-
-        void* realloc(void* _ptr, size_t _size, size_t _align, const char* /*_file*/, uint32_t /*_line*/) {
-            if (BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT >= _align) {
-                return realloc(_ptr, _size);
-            }
-            return realloc(_ptr, _size, _align);
-        }
-    }
-}
-#endif
-
 static bx::DefaultAllocator bx_alloc;
 static std::atomic<int64_t> allocator_memory = 0;
 
