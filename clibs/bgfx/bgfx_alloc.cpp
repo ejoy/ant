@@ -1,7 +1,7 @@
 #include "bgfx_alloc.h"
 #include <bx/allocator.h>
 #include <atomic>
-#include <stdio.h>
+#include <malloc.h>
 
 #ifndef BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT
 #	define BX_CONFIG_ALLOCATOR_NATURAL_ALIGNMENT 8
