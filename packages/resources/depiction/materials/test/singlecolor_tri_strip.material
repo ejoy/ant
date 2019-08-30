@@ -1,0 +1,21 @@
+shader = {
+    vs = "/pkg/ant.resources/shaders/src/test/singlecolor/vs.sc",
+    fs = "/pkg/ant.resources/shaders/src/test/singlecolor/fs.sc",
+}
+
+state = {
+	WRITE_MASK = "RGBAZ",
+	ALPHA_REF = 0,
+	CULL = "CCW",
+	MSAA = true,
+
+	DEPTH_TEST = "LESS",
+
+	PT = "TRISTRIP",
+}
+
+properties = {
+	uniforms = {
+		u_color = {name="u_color", type="v4", value={1, 1, 1, 1}},
+	}	
+}

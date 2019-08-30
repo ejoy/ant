@@ -175,7 +175,7 @@ function util.create_plane_entity(world, size, pos, color, name)
 		},
 		rendermesh = {},
 		material = util.assign_material(
-				fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
+				fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
 				{uniforms = {u_color = {type="color", name="color", value=color}},}),
 		can_render = true,
 		main_view = true,

@@ -58,7 +58,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 		end
 	end
 
-	local st = config.stagetype or srcfilename:match "[/\\]([fvc])s_[^/\\]+.sc$"
+	local st = config.stagetype or srcfilename:match "([fvc])s[%w_]*%.sc$"
 	local shader_opt = config.shader_opt or assert(shader_options[shadertype .. "_" .. st], shadertype .. "_" .. st)
 
 	local stagetype = stage_types[st]
