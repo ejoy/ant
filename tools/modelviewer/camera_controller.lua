@@ -213,14 +213,20 @@ local function memory_info()
 	local s = {}
 	local platform = require "platform"
 	local bgfx = require "bgfx"
-	s[#s+1] = ("\tsys memory:%.1fMB"):format(platform.info "memory" / 1024.0 / 1024.0)
-	s[#s+1] = ("\tlua memory:%.1fMB"):format(collectgarbage "count" / 1024.0)
+	s[#s+1] = ""
+	s[#s+1] = ("sys  memory:%.1fMB"):format(platform.info "memory" / 1024.0 / 1024.0)
+	s[#s+1] = ("lua  memory:%.1fMB"):format(collectgarbage "count" / 1024.0)
 
-	local bgfx_memory = bgfx.get_stats "m"
-	s[#s+1] = ("\trt  memory:%.1fMB"):format(bgfx_memory.rtMemoryUsed / 1024.0 / 1024.0)
-	s[#s+1] = ("\ttex memory:%.1fMB"):format(bgfx_memory.textureMemoryUsed / 1024.0 / 1024.0)
+	local memory = bgfx.get_stats "a"
+	s[#s+1] = ("bgfx memory:%.1fMB"):format(memory / 1024.0 / 1024.0)
 
-	return table.concat(s, "\n")
+	s[#s+1] = "-------------------"
+
+	local data = bgfx.get_stats "m"
+	s[#s+1] = ("rt   memory:%.1fMB"):format(data.rtMemoryUsed / 1024.0 / 1024.0)
+	s[#s+1] = ("tex  memory:%.1fMB"):format(data.textureMemoryUsed / 1024.0 / 1024.0)
+
+	return table.concat(s, "\n\t")
 end
 
 function camera_controller_system:on_gui()
