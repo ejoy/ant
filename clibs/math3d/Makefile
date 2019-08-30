@@ -3,10 +3,13 @@ include ../common.mk
 GLM_INC = -I $(ANT3RD)/glm
 CLIBS_INC = -I..
 ifeq "$(PLAT)" "mingw"
-default : $(ODIR)/math3d.dll
+default : math3d.dll
 else
 default : $(ODIR)/libmath3d.a
 endif
+
+math3d.dll : $(ODIR)/math3d.dll
+	cp $< $@
 
 $(ODIR)/linalg.o : linalg.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)

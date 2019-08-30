@@ -155,7 +155,7 @@ stack(vec0, {1, 2, 3, 4}, "=")	-- assign value to vec0
 
 math3d.reset(stack)
 print(vec, ~vec)	-- string and lightuserdata
-mat()	-- clear mat
+mat(nil)	-- clear mat
 
 local t = stack(vec, "P")
 print(math3d.type(t))	-- vector true
@@ -217,3 +217,4 @@ do
 	print(stack(x, y, z, "VVV"))
 end
 
+print("Memory = ", stackobj:stacksize())
