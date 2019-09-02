@@ -1,5 +1,5 @@
 $input a_position, a_normal, a_tangent, a_bitangent, a_texcoord0
-$output v_packed_info, v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3
+$output v_packed_info, v_lightdirTS, v_viewdirTS, v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3
 
 /*
  * Copyright 2013-2014 Dario Manesku. All rights reserved.
@@ -11,7 +11,7 @@ $output v_packed_info, v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
 
-#include "shadow_common.sh"
+#include "common/shadow.sh"
 
 void main()
 {
@@ -34,8 +34,5 @@ void main()
 
 	v_texcoord0 = a_texcoord0;
 
-	v_sm_coord0 = mul(directional_viewproj[0], wpos);
-	v_sm_coord1 = mul(directional_viewproj[1], wpos);
-	v_sm_coord2 = mul(directional_viewproj[2], wpos);
-	v_sm_coord3 = mul(directional_viewproj[3], wpos);
+	CALC_SHADOW_TEXCOORD(wpos);
 }

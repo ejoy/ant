@@ -27,6 +27,11 @@ SAMPLER2DSHADOW(s_shadowmap2, 6);
 SAMPLER2DSHADOW(s_shadowmap3, 7);
 #endif
 
+#define CALC_SHADOW_TEXCOORD(_wpos)	v_sm_coord0 = mul(directional_viewproj[0], _wpos);\
+	v_sm_coord1 = mul(directional_viewproj[1], _wpos);\
+	v_sm_coord2 = mul(directional_viewproj[2], _wpos);\
+	v_sm_coord3 = mul(directional_viewproj[3], _wpos);
+
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
 {
 	return 	all(greaterThan(_texcoord, vec2_splat(minv))) && 
