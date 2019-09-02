@@ -284,6 +284,7 @@ function scene_space:data_changed()
 		else
 			update_transform_field(e.transform, events, init)
 			local trans = e.transform
+			trans.world(ms:srtmat(trans))
 			--TODO: mark parent to cache, if no other hirarchy node change, we can only call 'mark_cache' function here
 			local peid = trans.parent
 			if peid then

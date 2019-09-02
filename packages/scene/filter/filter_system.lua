@@ -113,30 +113,30 @@ end
 
 local function update_entity_transform(hierarchy_cache, eid)
 	local e = world[eid]
-	if e.hierarchy then
-		return 
-	end
+
 	local transform = e.transform
-	local peid = transform.parent
-	
-	if peid then
-		local parentresult = hierarchy_cache[peid]
-		if parentresult then
-			local parentmat = parentresult.world
-			if parentmat then
+	local worldmat = transform.world
+	if e.hierarchy == nil then
+		local peid = transform.parent
+		
+		if peid then
+			local parentresult = hierarchy_cache[peid]
+			if parentresult then
+				local parentmat = parentresult.world
 				local hie_result = parentresult.hierarchy
 				local slotname = transform.slotname
 
-				local localmat = ms:srtmat(transform)
 				if hie_result and slotname then
 					local hiemat = ms:matrix(hie_result[slotname])
-					ms(transform.world, parentmat, hiemat, localmat, "**=")
+					ms(worldmat, parentmat, hiemat, worldmat, "**=")
 				else
-					ms(transform.world, parentmat, localmat, "*=")
+					ms(worldmat, parentmat, worldmat, "*=")
 				end
 			end
 		end
 	end
+
+	return worldmat
 end
 
 local function reset_hierarchy_transform_result(hierarchy_cache)
@@ -160,8 +160,8 @@ function primitive_filter_sys:update()
 			local ft = ce[filtertag]
 			if vt and ft then
 				if is_entity_prepared(ce) then
-					update_entity_transform(hierarchy_cache, eid)
-					filter_element(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
+					local worldmat = update_entity_transform(hierarchy_cache, eid)
+					filter_element(eid, ce.rendermesh, worldmat, ce.material, filter)
 				end
 			end
 		end

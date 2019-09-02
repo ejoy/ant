@@ -43,12 +43,28 @@ end
 local function create_scene_node_test()
     local materialpath = fs.path '/pkg/ant.resources/materials/bunny.material'
 
+    --[[
+                                 hie_root
+                                /        \
+                               /          \
+                              /            \
+                             /              \
+                        hie_level1_1    hie_level1_2
+                            /                /  \
+                           /                /    \
+                          /                /      \
+                render_child1_1 render_child1_2 hie_level2_1
+                                                   /
+                                                  /
+                                           render_child2_1
+    ]]
+
     local hie_root =
         world:create_entity {
         hierarchy_visible = true,
         transform = mu.translate_mat {0, 5, 0},
         hierarchy = {},
-        name = 'root',
+        name = 'hie_root',
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -62,7 +78,7 @@ local function create_scene_node_test()
             r = {0, 0, 0, 0},
             t = {2, 0, 0, 1},
         },
-        name = 'level1_1',
+        name = 'hie_level1_1',
         hierarchy = {},
         main_view = true,
         serialize = seriazlizeutil.create(),
@@ -78,7 +94,7 @@ local function create_scene_node_test()
             t = {2, 0, 4, 1},
         },
         hierarchy = {},
-        name = 'level1_2',
+        name = 'hie_level1_2',
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
@@ -94,25 +110,10 @@ local function create_scene_node_test()
         },
         hierarchy = {ref_path = hie_refpath,},
         ignore_parent_scale = true,
-        name = 'level2_1',
+        name = 'hie_level2_1',
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
-    --[[
-                                hie_root
-                                /       \
-                               /         \
-                              /           \
-                             /             \
-                        hie_level1_1    hie_level1_2
-                            /                \
-                           /                  \
-                          /                    \
-                        render_child1       hie_level2_1
-                                                /
-                                               /
-                                        render_child2_1
-    ]]
     local render_child1_1 =
         world:create_entity {
         transform = {
@@ -133,7 +134,6 @@ local function create_scene_node_test()
         main_view = true,
         serialize = seriazlizeutil.create(),
     }
-    
     
     local render_child1_2 =
         world:create_entity {
@@ -449,12 +449,12 @@ end
 local test_queue = {
     idx=1,
     function ()
-        local level1_2_eid = find_entity_by_name('level1_2', 'hierarchy')
+        local level1_2_eid = find_entity_by_name('hie_level1_2', 'hierarchy')
         if level1_2_eid then
             local level1_2 = world[level1_2_eid]
             local level1_2_trans = level1_2.transform
         
-            local level1_1_eid = find_entity_by_name('level1_1', 'hierarchy')
+            local level1_1_eid = find_entity_by_name('hie_level1_1', 'hierarchy')
     
             local level1_1 = world[level1_1_eid]
             local level1_1_trans = level1_1.transform
@@ -468,7 +468,7 @@ local test_queue = {
         print_tree()
     end,
     function ()
-        local level1_1_eid = find_entity_by_name('level1_1', 'transform')
+        local level1_1_eid = find_entity_by_name('hie_level1_1', 'transform')
         world:remove_entity(level1_1_eid)
         world:mark(level1_1_eid, "hierarchy_delete")
     end,
