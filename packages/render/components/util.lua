@@ -221,7 +221,12 @@ function util.create_quad_entity(world, rect, materialpath, properties, name, vi
 	}
 
 	local e = world[eid]
-	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/quad.mesh", util.quad_mesh(rect))
+	local reskey = fs.path "//meshres/quad.mesh"
+	local res = assetmgr.get_resource(reskey)
+	if res == nil then
+		assetmgr.register_resource(reskey, util.quad_mesh(rect))
+	end
+	e.rendermesh.reskey = reskey
 	return eid
 end
 

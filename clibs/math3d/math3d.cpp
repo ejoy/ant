@@ -2359,24 +2359,34 @@ lview_proj(lua_State *L) {
 	if (hasviewmat) {
 		lastack_pushmatrix(LS, &viewmat[0][0]);
 		pushid(L, pop(L, LS));
-		++numresult;
+	} else {
+		lua_pushnil(L);
 	}
+	++numresult;
 
 	if (hasprojmat) {
 		lastack_pushmatrix(LS, &projmat[0][0]);
 		pushid(L, pop(L, LS));
-		++numresult;
+	} else {
+		lua_pushnil(L);
 	}
+	++numresult;
 
 	if (combine) {
-		if (hasviewmat && hasprojmat) {
-			auto viewproj = projmat * viewmat;
-			lastack_pushmatrix(LS, &viewproj[0][0]);
-			pushid(L, pop(L, LS));
-			return 3;
+		if (!hasviewmat && !hasprojmat) {
+			luaL_error(L, "view/proj matrix need provided one of them");
 		}
 
-		luaL_error(L, "one of view or proj matrix is not provided, matrix are not enough to combine");
+		if (hasviewmat && !hasprojmat) {
+			lastack_pushmatrix(LS, &viewmat[0][0]);
+		} else if (!hasviewmat && hasprojmat) {
+			lastack_pushmatrix(LS, &projmat[0][0]);
+		} else {
+			auto viewproj = projmat * viewmat;
+			lastack_pushmatrix(LS, &viewproj[0][0]);
+		}
+		pushid(L, pop(L, LS));
+		++numresult;
 	}
 
 	assert(numresult >= 1);

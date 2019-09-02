@@ -126,17 +126,19 @@ end
 local function create_crop_matrix(shadow)
 	local view_camera = camerautil.get_camera(world, "main_view")
 	local bb = calc_csm_camera_bounding(nil, view_camera.frustum, shadow.csm.split_ratios)
-	local aabb = bb.get "aabb"
+	local aabb = bb:get "aabb"
 	local min, max = aabb.min, aabb.max
+	min[4], max[4] = 1, 1	-- as point
+
 	local csm = shadow.csm
 	local csmindex = csm.index
 	local shadowcamera = camerautil.get_camera(world, "csm" .. csmindex)
 	local _, proj = ms:view_proj(nil, shadowcamera.frustum)
 	local minproj, maxproj = ms(min, proj, "%", max, proj, "%TT")
 
-	local scalex, scaley = 2 / (maxproj.x - minproj.x), 2 / (maxproj.y - minproj.y)
+	local scalex, scaley = 2 / (maxproj[1] - minproj[1]), 2 / (maxproj[2] - minproj[2])
 	if csm.stabilize then
-		local quantizer = csm.shadowmap_size
+		local quantizer = shadow.shadowmap_size
 		scalex = quantizer / math.ceil(quantizer / scalex);
 		scaley = quantizer / math.ceil(quantizer / scaley);
 	end
@@ -146,8 +148,8 @@ local function create_crop_matrix(shadow)
 	end
 
 	local offsetx, offsety = 
-		calc_offset(maxproj.x, minproj.x, scalex), 
-		calc_offset(maxproj.y, minproj.y, scaley)
+		calc_offset(maxproj[1], minproj[1], scalex), 
+		calc_offset(maxproj[2], minproj[2], scaley)
 
 	if csm.stabilize then
 		local half_size = shadow.shadowmap_size * 0.5;
@@ -155,12 +157,12 @@ local function create_crop_matrix(shadow)
 		offsety = math.ceil(offsety * half_size) / half_size;
 	end
 	
-	return ms({
+	return {
 		scalex, 0, 0, 0,
 		0, scaley, 0, 0,
 		0, 0, 1, 0,
 		offsetx, offsety, 0, 1,
-	},"P")
+	}
 end
 
 function maker_camera:update()
@@ -175,7 +177,9 @@ function maker_camera:update()
 		local shadowcamera = camerautil.get_camera(world, shadowentity.camera_tag)
 		shadowcamera.viewdir(lightdir)
 		local bb = calc_csm_camera_bounding(maincamera, maincamera.frustum, shadowentity.shadow.csm.split_ratios)
-		shadowcamera.eyepos(bb.sphere.center)
+		local eyepos = bb:get "sphere"
+		eyepos[4] = 1
+		shadowcamera.eyepos(eyepos)
 		shadowcamera.crop_matrix = create_crop_matrix(shadowentity.shadow)
 	end
 end
@@ -261,20 +265,22 @@ function sm:post_init()
 end
 
 function sm:update()
-	local sm = world:first_entity "shadow"
-
-	local filter = sm.primitive_filter
-	local results = filter.result
-	local function replace_material(result, material)
-		local mi = assetmgr.get_resource(material.ref_path)	-- must only one material content
-		for _, p in ipairs(result) do
-			p.material = mi
+	for _, eid in world:each "shadow" do
+		local sm = world[eid]
+		local filter = sm.primitive_filter
+		local results = filter.result
+		local function replace_material(result, material)
+			local mi = assetmgr.get_resource(material.ref_path)	-- must only one material content
+			for i=1, result.cacheidx - 1 do
+				local r = result[i]
+				r.material = mi
+			end
 		end
+	
+		local shadowmat = sm.material
+		replace_material(results.opaticy, 		shadowmat)
+		replace_material(results.translucent, 	shadowmat)
 	end
-
-	local shadowmat = sm.shadow.material
-	replace_material(results.opaque, 		shadowmat)
-	replace_material(results.translucent, 	shadowmat)
 end
 
 local debug_sm = ecs.system "debug_shadow_maker"

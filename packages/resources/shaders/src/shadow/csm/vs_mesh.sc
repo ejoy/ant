@@ -1,5 +1,6 @@
 $input a_position, a_normal, a_tangent, a_bitangent, a_texcoord0
-$output v_packed_info, v_lightdirTS, v_viewdirTS, v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3
+
+$output v_texcoord0, v_lightdirTS, v_viewdirTS, v_packed_info, v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3
 
 /*
  * Copyright 2013-2014 Dario Manesku. All rights reserved.
@@ -10,6 +11,7 @@ $output v_packed_info, v_lightdirTS, v_viewdirTS, v_sm_coord0, v_sm_coord1, v_sm
 
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
+#include "common/transform.sh"
 
 #include "common/shadow.sh"
 
@@ -17,7 +19,7 @@ void main()
 {
 	gl_Position = mul(u_modelViewProj, vec4(a_position, 1.0) );
 
-	vec3 offset_pos = vec4(a_position.xyz + a_normal.xyz * u_normaloffset, 1.0);
+	vec4 offset_pos = vec4(a_position + a_normal.xyz * u_normaloffset, 1.0);
 	vec4 wpos 	= mul(u_model[0], offset_pos);
 
 	vec3 normalWS = normalize(mul(u_model[0], vec4(a_normal.xyz, 0.0)).xyz);

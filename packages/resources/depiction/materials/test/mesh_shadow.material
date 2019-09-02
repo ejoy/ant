@@ -19,7 +19,7 @@ properties = {
         u_specularLight = {type="v4",       name = "specular info",    value = {1, 0, 0, 1}},
     },
     textures = {
-        s_basecolor = {type="texture", name = "base color", ref_path = "/pkg/ant.resources.binary/test/1x1_gray.png"},
-        s_normal    = {type="texture", name = "normal map", ref_path = "/pkg/ant.resources.binary/test/1x1_normal.png"},
+        s_basecolor = {type="texture", name = "base color", stage=0, ref_path = "/pkg/ant.resources/depiction/textures/test/1x1_gray.texture"},
+        s_normal    = {type="texture", name = "normal map", stage=1, ref_path = "/pkg/ant.resources/depiction/textures/test/1x1_normal.texture"},
     },
 }
