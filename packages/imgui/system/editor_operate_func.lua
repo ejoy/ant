@@ -1,6 +1,6 @@
 local t = {}
 
-function t.handle_event(world,event,args)
+function t.handle_event(_,world,event,args)
     local handle_func = t.handler[event]
     assert(handle_func,"event not exist:"..event)
     if handle_func then
