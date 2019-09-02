@@ -251,7 +251,9 @@ function world:each_mark(markname)
 		local function mark_next()
 			idx = idx + 1
 			local t = ml[idx]
-			return t[1], t[2]
+			if t then
+				return t[1], t[2]
+			end
 		end
 
 		return mark_next, ml
