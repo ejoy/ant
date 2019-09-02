@@ -236,20 +236,15 @@ local function memory_info()
 	local data = bgfx.get_stats "m"
 	s[#s+1] = ("rt   memory:%.1fMB"):format(data.rtMemoryUsed / 1024.0 / 1024.0)
 	s[#s+1] = ("tex  memory:%.1fMB"):format(data.textureMemoryUsed / 1024.0 / 1024.0)
+	s[#s+1] = ""
 
-	return table.concat(s, "\n\t")
+	return table.concat(s, "\t\n\t")
 end
 
 function camera_controller_system:on_gui()
 	local windows = imgui.windows
 	local widget = imgui.widget
-	local flags = imgui.flags
-	windows.SetNextWindowSizeConstraints(300, 300, 500, 500)
-	windows.Begin("Test", flags.Window { "MenuBar" })
+	windows.Begin("Test")
 	widget.Text(memory_info())
 	windows.End()
-end
-
-function camera_controller_system:update()
-	
 end
