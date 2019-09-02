@@ -165,7 +165,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag, transform)
     return gridid
 end
 
-function util.create_plane_entity(world, size, pos, color, name)
+function util.create_plane_entity(world, size, pos, materialpath, color, name)
 	color = color or {0.8, 0.8, 0.8, 1}	
 	local eid = world:create_entity {
 		transform = {
@@ -175,7 +175,7 @@ function util.create_plane_entity(world, size, pos, color, name)
 		},
 		rendermesh = {},
 		material = util.assign_material(
-				fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+				materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
 				{uniforms = {u_color = {type="color", name="color", value=color}},}),
 		can_render = true,
 		main_view = true,

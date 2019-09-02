@@ -1,0 +1,25 @@
+shader = {
+    vs = "/pkg/ant.resources/shaders/src/shadow/csm/vs_mesh.sc",
+    fs = "/pkg/ant.resources/shaders/src/shadow/csm/fs_mesh.sc",
+}
+
+state = {
+    WRITE_MASK = "RGBAZ",
+    ALPHA_REF = 0,
+    CULL = "CCW",
+    MSAA = true,
+    DEPTH_TEST = "LESS",
+    PT = "TRISTRIP",
+}
+
+properties = {
+    uniforms = {
+        u_fog_color     = {type="color",    name = "fog color",        value = {0.8, 0.8, 0.8, 1}},
+        u_specularColor = {type="color",    name = "sepcular color",   value = {0.1, 0.1, 0.1, 1}},
+        u_specularLight = {type="v4",       name = "specular info",    value = {1, 0, 0, 1}},
+    },
+    textures = {
+        s_basecolor = {type="texture", name = "base color", ref_path = "/pkg/ant.resources.binary/test/1x1_gray.png"},
+        s_normal    = {type="texture", name = "normal map", ref_path = "/pkg/ant.resources.binary/test/1x1_normal.png"},
+    },
+}
