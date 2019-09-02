@@ -54,6 +54,7 @@ function util.loop(world, arg)
 		"update", 
 		"after_update", 
 		"update_marks",
+		"clear_marks",
 		"delete",
 		"end_frame",
 	} do

@@ -265,11 +265,9 @@ function world:clear_all_marks()
 end
 
 function world:update_marks()
-	for cn, list in pairs(self._marks) do
+	for cn in pairs(self._marks) do
 		local handlers = assert(self._mark_handlers[cn])
-		if #list > 0 then
-			handlers()
-		end
+		handlers()
 	end
 end
 
