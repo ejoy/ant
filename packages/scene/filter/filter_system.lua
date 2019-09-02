@@ -126,11 +126,18 @@ local function update_entity_transform(hierarchy_cache, eid)
 				local hie_result = parentresult.hierarchy
 				local slotname = transform.slotname
 
+				-- TODO: why need calculate one more time here.
+				-- when delete a hierarchy node, it's children will not know parent has gone
+				-- no update for 'transform.world', here will always calculate one more time
+				-- if we want cache this result, we need to find all the children when hierarchy
+				-- node deleted, and update it's children at that moment, then we can save 
+				-- this calculation.
+				local localmat = ms:srtmat(transform)
 				if hie_result and slotname then
 					local hiemat = ms:matrix(hie_result[slotname])
-					ms(worldmat, parentmat, hiemat, worldmat, "**=")
+					ms(worldmat, parentmat, hiemat, localmat, "**=")
 				else
-					ms(worldmat, parentmat, worldmat, "*=")
+					ms(worldmat, parentmat, localmat, "*=")
 				end
 			end
 		end

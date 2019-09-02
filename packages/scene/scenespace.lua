@@ -206,14 +206,23 @@ local function update_transform_field(trans, events, init)
 	return changed
 end
 
-local function update_remove_subtree(remove_trees)
+local function update_remove_subtree(remove_trees, cache_result)
 	-- move removed hirarchy entity transform to children
+	local hierarchy_trees = {}
 	for _, subtree in pairs(remove_trees) do
 		for _, subeid in ipairs(subtree) do
 			local subentity = assert(world[subeid])
+
 			local trans = subentity.transform
 			trans.world(ms:srtmat(trans))
+			if subentity.hierarchy then
+				hierarchy_trees[subeid] = pseudoroot_eid
+			end
 		end
+	end
+
+	if next(hierarchy_trees) then
+		update_hierarchy_tree(hierarchy_trees, cache_result)
 	end
 end
 
@@ -244,7 +253,7 @@ function scene_space:hierarchy_del_handle()
 			end
 		end
 
-		update_remove_subtree(trees)
+		update_remove_subtree(trees, self.hierarchy_transform_result)
 	end
 end
 
