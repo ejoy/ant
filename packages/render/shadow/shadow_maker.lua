@@ -209,7 +209,7 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, shadowmap
 				stabilize = true,
 			}
 		},
-		viewid = viewidmgr.get "shadow_maker",
+		viewid = viewidmgr.get(camera_tag),
 		primitive_filter = {
 			view_tag = "main_view",
 			filter_tag = "can_cast",
