@@ -46,11 +46,12 @@ local mark_mt = {
 			return false
 		end
 		local e = world[eid]
-		
-		local pid = e.transform.parent
-		if pid and marked[pid] then
-			marked[eid] = pid
-			return true
+		if e then
+			local pid = e.transform.parent
+			if pid and marked[pid] then
+				marked[eid] = pid
+				return true
+			end
 		end
 
 		marked[eid] = false

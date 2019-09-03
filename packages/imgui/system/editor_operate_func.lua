@@ -11,7 +11,12 @@ end
 t.handler = {}
 function t.handler.Delete(world,args)
     for _,id in ipairs(args) do
+        local e = world[id]
         world:remove_entity(id)
+
+        if e.hierarchy then
+            world:mark(id, "hierarchy_delete")
+        end
     end
 end
 
