@@ -20,13 +20,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\clibs\bgfx\bgfx-core.def">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\clibs\bgfx\bgfx-core-msvc-dump.cpp">
+    <ClCompile Include="tools\dump.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="tools\bgfx-core.def">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

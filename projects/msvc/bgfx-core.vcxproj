@@ -22,10 +22,10 @@
     <ClInclude Include="..\..\clibs\bgfx\bgfx_interface.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\clibs\bgfx\bgfx-core.def" />
+    <ClCompile Include="tools\dump.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\bgfx\bgfx-core-msvc-dump.cpp" />
+    <None Include="tools\bgfx-core.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -114,7 +114,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/bgfx/.build/win64_vs2019/bin</AdditionalLibraryDirectories>
       <AdditionalDependencies>bgfx$(Configuration).lib;bx$(Configuration).lib;bimg$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>../../clibs/bgfx/bgfx-core.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>tools/bgfx-core.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
