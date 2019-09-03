@@ -99,13 +99,13 @@ function model_review_system:init()
 	-- 	can_render = true,
 	-- }
 
-	--cu.create_grid_entity(world, "grid")
-	cu.create_plane_entity(world, 
-		{20, 1, 20, 0}, nil, 
-		fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material", 
-		{0.8, 0.8, 0.8, 1},
-		"test shadow plane")
-		
+	cu.create_grid_entity(world, "grid")
+	-- cu.create_plane_entity(world, 
+	-- 	{20, 1, 20, 0}, nil, 
+	-- 	fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material", 
+	-- 	{0.8, 0.8, 0.8, 1},
+	-- 	"test shadow plane")
+
 	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},
