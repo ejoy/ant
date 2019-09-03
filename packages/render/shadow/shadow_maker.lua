@@ -261,7 +261,7 @@ function sm:post_init()
 	}
 	for ii=1, #ratios do
 		local ratio = ratios[ii]
-		create_csm_entity(camera, lightdir, ii, ratio, 1024, 1000)
+		create_csm_entity(camera, lightdir, ii, ratio, 1024, 500)
 	end
 end
 
@@ -278,9 +278,9 @@ function sm:update()
 			end
 		end
 	
-		local shadowmat = sm.material
-		replace_material(results.opaticy, 		shadowmat)
-		replace_material(results.translucent, 	shadowmat)
+		local shadowmaterial = sm.material
+		replace_material(results.opaticy, 		shadowmaterial)
+		replace_material(results.translucent, 	shadowmaterial)
 	end
 end
 
