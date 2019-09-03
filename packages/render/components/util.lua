@@ -221,18 +221,13 @@ function util.create_quad_entity(world, rect, materialpath, properties, name, vi
 	}
 
 	local e = world[eid]
-	local reskey = fs.path "//meshres/quad.mesh"
-	local res = assetmgr.get_resource(reskey)
-	if res == nil then
-		assetmgr.register_resource(reskey, util.quad_mesh(rect))
-	end
-	e.rendermesh.reskey = reskey
+	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/quad.mesh", util.quad_mesh(rect))
 	return eid
 end
 
 function util.create_shadow_quad_entity(world, rect, name)
 	return util.create_quad_entity(world, rect, 
-		fs.path "/pkg/ant.resources/depiction/shadowmap_quad.material", nil, name)
+		fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material", nil, name)
 end
 
 function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)

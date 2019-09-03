@@ -188,6 +188,7 @@ local sm = ecs.system "shadow_maker"
 sm.depend "primitive_filter_system"
 sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
+sm.dependby "debug_shadow_maker"
 
 local function create_csm_entity(view_camera, lightdir, index, ratios, shadowmap_size, camera_far)
 	camera_far = camera_far or 10000
@@ -284,8 +285,42 @@ function sm:update()
 end
 
 local debug_sm = ecs.system "debug_shadow_maker"
-debug_sm.depend "shadow_maker"
 
-function debug_sm:init()
+local function csm_shadow_quad_test()
+	local fbsize = world.args.fb_size
+	local fbheight = fbsize.h
 
+	local quadsize = 192
+	local off_y = 0 --fbheight - 192
+	local quadmaterial = fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"
+	for _, eid in world:each "shadow" do
+		local se = world[eid]
+		local csm = se.shadow.csm
+		local idx = csm.index
+		local off_x = (idx-1) * quadsize
+
+		local rect = {x=off_x, y=off_y, w=quadsize, h=quadsize}
+		local q_eid = computil.create_quad_entity(world, rect, quadmaterial, nil, "csm_quad"..idx)
+		local qe = world[q_eid]
+		local quad_material = qe.material[0]
+		local properties = quad_material.properties 
+		if properties == nil then
+			properties = {}
+			quad_material.properties = properties
+		end
+		local textures = properties.textures
+		if textures == nil then
+			textures = {}
+			properties.textures = textures
+		end
+
+		textures["s_shadowmap"] = {
+			type = "texture", name = "csm render buffer", stage = 0,
+			handle = se.render_target.frame_buffer.render_buffers[1].handle,
+		}
+	end
+end
+
+function debug_sm:post_init()
+	csm_shadow_quad_test()
 end

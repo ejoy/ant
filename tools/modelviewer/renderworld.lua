@@ -64,28 +64,6 @@ local function create_material_item(filepath, color)
 	}
 end
 
-local function csm_shadow_quad_test()
-	local fbsize = world.args.fb_size
-	local fbheight = fbsize.h
-
-	local quadsize = 192
-	local off_y = fbheight - 192
-	for _, eid in world:each "shadow" do
-		local se = world[eid]
-		local csm = se.shadow.csm
-		local idx = csm.index
-		local off_x = idx * quadsize
-
-		local rect = {x=off_x, y=off_y, w=quadsize, h=quadsize}
-		local shadowquad_eid = cu.create_shadow_quad_entity(world, rect, "csm"..idx)
-		local shadowquad = world[shadowquad_eid]
-		shadowquad.material[0].properties.textures["s_shadowmap"] = {
-			type="texture", name = "csm renderbuffer", stage = 0,
-			handle = se.frame_buffer.renderbuffers[1].handle
-		}
-	end
-end
-
 function model_review_system:init()
 	create_light()
 	skyutil.create_procedural_sky(world)
@@ -127,9 +105,7 @@ function model_review_system:init()
 		fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material", 
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane")
-
-	csm_shadow_quad_test()
-
+		
 	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},
