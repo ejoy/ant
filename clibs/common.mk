@@ -9,6 +9,7 @@ endif
 OROOT = o
 ODIR = $(OROOT)/$(PLAT)/$(MODE)
 ANT3RD = ../../3rd
+ANTCLIBS = ../../clibs
 
 LUAINC = -I../lua
 
