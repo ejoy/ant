@@ -326,8 +326,7 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 		2, 6, 3, 7,
 	}
 	
-	
-	m.handle = util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib)
+	m.reskey = assetmgr.register_resource(fs.path "//meshres/frustum.mesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
 	return eid
 end
 

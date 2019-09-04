@@ -84,7 +84,7 @@ local function split_new_frustum(view_frustum, ratios)
 
 	local z_len = view_frustum.f - view_frustum.n
 	frustum.n = view_frustum.n + near_ratio * z_len
-	frustum.f = view_frustum.f + far_ratio * z_len
+	frustum.f = view_frustum.n + far_ratio * z_len
 
 	assert(frustum.fov)
 	return frustum
@@ -285,8 +285,9 @@ function sm:update()
 end
 
 local debug_sm = ecs.system "debug_shadow_maker"
+debug_sm.depend "shadowmaker_camera"
 
-local function csm_shadow_quad_test()
+local function csm_shadow_debug_quad()
 	local fbsize = world.args.fb_size
 	local fbheight = fbsize.h
 
@@ -321,6 +322,42 @@ local function csm_shadow_quad_test()
 	end
 end
 
+local function create_frustum_debug(queue, name, color)
+	local camera = camerautil.get_camera(world, queue.camera_tag)
+	local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+	local frustum = mathbaselib.new_frustum(ms, vp)
+	computil.create_frustum_entity(world, frustum, name, nil, color)
+end
+
+local function	csm_shadow_debug_frustum()
+	for _, seid in world:each "shadow" do
+		local e = world[seid]
+		create_frustum_debug(e, "csm frustum" .. e.shadow.csm.index, 0xff8f8f8f)
+	end
+end
+
+local function main_view_debug_frustum()
+	local mq = world:first_entity "main_queue"
+	--create_frustum_debug(mq, "main view frustum", 0xff0000ff)
+	local camera = camerautil.get_camera(world, mq.camera_tag)
+
+	local colors = {
+		0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
+	}
+
+	for _, seid in world:each "shadow" do
+		local s = world[seid]
+
+		local csm = s.shadow.csm
+		local frustum_desc = split_new_frustum(camera.frustum, csm.split_ratios)
+		local _, _, vp = ms:view_proj(camera, frustum_desc, true)
+		local frustum = mathbaselib.new_frustum(ms, vp)
+		computil.create_frustum_entity(world, frustum, "main view part" .. csm.index, nil, colors[csm.index])
+	end
+end
+
 function debug_sm:post_init()
-	csm_shadow_quad_test()
+	main_view_debug_frustum()
+	csm_shadow_debug_quad()
+	csm_shadow_debug_frustum()
 end

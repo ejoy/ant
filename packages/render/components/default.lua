@@ -17,12 +17,14 @@ function default.viewport(vr)
 	}
 end
 
+local default_far_distance = 1000
+local default_near_distance = 0.1
 function default.frustum(w, h)
 	w = w or 800
 	h = h or 600
 	return {
 		type = "mat",
-		n = 0.1, f = 10000,
+		n = default_near_distance, f = default_far_distance,
 		fov = 60, aspect = w / h,
 	}
 end
@@ -30,7 +32,7 @@ end
 function default.ortho_frustum(n, f, l, r, t, b)
 	return {
 		type = "mat",
-		n = n or 0.1, f = f or 100000,
+		n = n or default_near_distance, f = f or default_far_distance,
 		l = l or -1, r = r or 1,
 		t = t or -1, b = b or 1,
 		ortho = true,
