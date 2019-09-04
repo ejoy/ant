@@ -28,6 +28,26 @@ for i,v in ipairs(levels) do
     log[v] = gen_log(v)
     log[v.."_a"] = gen_log_a(v)
 end
+local log_error = log.error
+local log_error_a = log.error_a
+log.error = function(...)
+    log_error(...,"\n",debug.traceback())
+end
+log.error_a = function(...)
+    log_error_a(...,"\n",debug.traceback())
+end
+
+-- local log_trace = log.trace
+-- local log_trace_a = log.trace_a
+-- log.trace = function(...)
+--     log_trace(...,"\n",debug.traceback())
+-- end
+-- log.trace_a = function(...)
+--     log_trace_a(...,"\n",debug.traceback())
+-- end
+
+
+
 
 local function tconcat(...)
     local num = select("#",...)
