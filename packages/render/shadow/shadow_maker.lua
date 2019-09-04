@@ -245,7 +245,7 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, shadowmap
 				}
 			}
 		},
-		name = "direction light shadow maker",
+		name = "direction light shadow maker:" .. index,
 	}
 end
 

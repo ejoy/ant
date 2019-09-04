@@ -17,8 +17,8 @@ cull_sys.depend "primitive_filter_system"
 
 function cull_sys:update()
 	for _, tag in ipairs {"main_queue", "shadow", "pickup"} do
-		local e = world:first_entity(tag)
-		if e then
+		for _, queue_eid in world:each(tag) do
+			local e = world[queue_eid]
 			local filter = e.primitive_filter
 
 			local camera = camerautil.get_camera(world, e.camera_tag)
