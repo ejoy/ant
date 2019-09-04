@@ -27,7 +27,9 @@ OBJS += $(ODIR)/win32_wmi.o
 else
 $(ODIR)/osx_task_info.o : osx/task_info.mm | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
-OBJS += $(ODIR)/osx_task_info.o
+$(ODIR)/osx_font_info.o : osx/font_info.mm | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
+OBJS += $(ODIR)/osx_task_info.o $(ODIR)/osx_font_info.o
 endif
 
 $(ODIR)/platform_$(PLAT).o : platform_$(PLAT).$(PLAT_CXX) | $(ODIR)
