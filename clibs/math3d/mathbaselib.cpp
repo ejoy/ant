@@ -177,11 +177,13 @@ struct Frustum {
 		frustum_planes_intersection_points(Points& points) {
 		auto invmat = glm::inverse(this->mat);
 
+		const float ndc_n = default_homogeneous_depth() ? -1.f : 0.f;
+
 		const std::tuple<const char*, glm::vec4> pp[] = {
-			{"lbn", glm::vec4(-1.f,-1.f,-1.f, 1.f)},
-			{"ltn", glm::vec4(-1.f,1.f, -1.f, 1.f)},
-			{"rbn", glm::vec4(1.f, -1.f,-1.f, 1.f)},
-			{"rtn", glm::vec4(1.f, 1.f, -1.f, 1.f)},
+			{"lbn", glm::vec4(-1.f,-1.f,ndc_n, 1.f)},
+			{"ltn", glm::vec4(-1.f,1.f, ndc_n, 1.f)},
+			{"rbn", glm::vec4(1.f, -1.f,ndc_n, 1.f)},
+			{"rtn", glm::vec4(1.f, 1.f, ndc_n, 1.f)},
 
 			{"lbf", glm::vec4(-1.f,-1.f, 1.f, 1.f)},
 			{"ltf", glm::vec4(-1.f,1.f,  1.f, 1.f)},
@@ -189,6 +191,28 @@ struct Frustum {
 			{"rtf", glm::vec4(1.f, 1.f,  1.f, 1.f)},
 		};
 
+		{
+			// left	-0.769800365	float
+			// bottom	-0.577350259	float
+			// right	0.769800365	float
+			// top	0.577350259	float
+			// near	1.00000000	float
+			// far	10.0000000	float
+
+			//glm::mat4x4 mm = glm::frustumLH_ZO(-0.769800365f, 0.769800365f, -0.577350259f, 0.577350259f, 1.f, 10.f);
+			glm::mat4x4 mm = glm::frustumLH_ZO(-1.f, 1.f, -1.f, 1.f, 1.f, 10.f);
+			
+			auto invmat11 = glm::inverse(mm);
+
+			Points ppp;
+			for (auto p : pp) {
+				auto v = invmat11 * std::get<1>(p);
+				ppp[std::get<0>(p)] = v / v.w;
+			}
+
+			int debug = 0;
+		}
+	
 		for (const auto p : pp){
 			auto t = invmat * std::get<1>(p);
 			t /= t.w;			
