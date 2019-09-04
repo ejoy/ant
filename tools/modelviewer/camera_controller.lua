@@ -234,8 +234,10 @@ local function memory_info()
 	s[#s+1] = "-------------------"
 
 	local data = bgfx.get_stats "m"
-	s[#s+1] = ("rt   memory:%.1fMB"):format(data.rtMemoryUsed / 1024.0 / 1024.0)
-	s[#s+1] = ("tex  memory:%.1fMB"):format(data.textureMemoryUsed / 1024.0 / 1024.0)
+	s[#s+1] = ("rt   memory:%s"):format(bytestr(data.rtMemoryUsed))
+	s[#s+1] = ("tex  memory:%s"):format(bytestr(data.textureMemoryUsed))
+	s[#s+1] = ("vb   memory:%s"):format(bytestr(data.transientVbUsed))
+	s[#s+1] = ("ib   memory:%s"):format(bytestr(data.transientIbUsed))
 	s[#s+1] = ""
 
 	return table.concat(s, "\t\n\t")
