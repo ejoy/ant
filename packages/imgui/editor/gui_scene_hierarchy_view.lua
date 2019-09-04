@@ -20,6 +20,7 @@ local ParentFlag = flags.TreeNode.OpenOnDoubleClick
 
 function GuiHierarchyView:_init()
     GuiBase._init(self)
+    self.win_flags = flags.Window { "MenuBar" }
     self.hierarchy_data = {}
     self.sorted_map = {}
     self.default_size = {250,600}
@@ -60,7 +61,17 @@ function GuiHierarchyView:_on_refresh_hierarchy(tbl)
 end
 
 function GuiHierarchyView:on_update()
+    self:_update_menu_bar()
     self:_render_children(self.hierarchy_data)
+end
+
+function GuiHierarchyView:_update_menu_bar()
+    if widget.BeginMenuBar() then
+        if widget.MenuItem("Sync") then
+            hub.publish(Event.RequestHierarchy)
+        end
+        widget.EndMenuBar()
+    end
 end
 
 function GuiHierarchyView:_render_children(children)

@@ -290,10 +290,14 @@ function GuiLogView:on_update()
     widget.InvisibleButton("vsplitter",winw,7)
     windows.PopStyleVar()
     if util.IsItemActive() then
+        cursor.SetMouseCursor(enum.MouseCursor.ResizeNS)
         local new_up_h = up_h + gui_input.get_mouse_delta().y
         self.up_precent = new_up_h/h
         self.up_precent = math.min(0.9,self.up_precent)
         self.up_precent = math.max(0.1,self.up_precent)
+    end
+    if util.IsItemHovered() then
+        cursor.SetMouseCursor(enum.MouseCursor.ResizeNS)
     end
     -------------------------------
     if windows.BeginChild("down_content",winw,0,false,0) then
