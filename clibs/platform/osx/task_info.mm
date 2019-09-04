@@ -13,7 +13,7 @@ int linfo(lua_State* L) {
         task_vm_info_data_t data = {};
         kern_return_t error = task_info(mach_task_self(), TASK_VM_INFO, (task_info_t)&data, &count);
         if (error != KERN_SUCCESS) {
-            return luaL_error(L, "task_info error = %d", (int)error);
+            return luaL_error(L, "task_info error = %s", mach_error_string(error));
         }
         lua_pushinteger(L, (lua_Integer)data.phys_footprint);
         return 1;
