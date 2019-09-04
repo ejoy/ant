@@ -23,7 +23,7 @@ function ComboBox:set_flags( title_flags,item_flags )
     self.item_flags = item_flags or self.item_flags
 end
 
-function ComboBox:set_data(datalist,select_index,title)
+function ComboBox:set_data(datalist,select_index)
     self.current = select_index
     self.datalist = datalist
     local ext_tbl = self.ext_tbl

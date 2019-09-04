@@ -12,7 +12,7 @@ local function line(start_pos, end_pos, color)
     local vb, ib = {}, {}       
     local function add_vertex(pos, clr)
         local x,y,z = table.unpack(pos)
-        log.trace(x,y,z,clr)
+        -- log.trace(x,y,z,clr)
         table.insert(vb, {x,y,z, clr})          
     end
 
@@ -36,7 +36,7 @@ local function circle(color)
     local radius = 1 
     local function add_vertex(pos, clr)
         local x,y,z = table.unpack(pos)
-        log.trace(x,y,z,clr)
+        -- log.trace(x,y,z,clr)
         table.insert(vb, {x,y,z, clr})          
     end
     local function add_line(p1, p2, color)
@@ -60,6 +60,7 @@ end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
     local computil  = import_package "ant.render".components
+    color[4] = 0.6
     return world:create_entity {
         transform = {
             s = size or {1, 1, 1},
