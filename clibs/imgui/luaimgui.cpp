@@ -1458,6 +1458,7 @@ wSelectable(lua_State *L) {
 	ImVec2 size(0, 0);
 	int t = lua_type(L, INDEX_ARGS);
 	switch (t) {
+	case LUA_TNIL:
 	case LUA_TBOOLEAN:
 		selected = lua_toboolean(L, INDEX_ARGS);
 		size.x = (float)luaL_optnumber(L, 3, 0.0f);
