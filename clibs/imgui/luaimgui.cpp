@@ -2891,7 +2891,7 @@ fCreate(lua_State *L) {
 	uint8_t* data;
 	int32_t width;
 	int32_t height;
-	atlas->GetTexDataAsRGBA32(&data, &width, &height);
+	atlas->GetTexDataAsAlpha8(&data, &width, &height);
 
 	union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture;
 	texture.s.handle = BGFX(create_texture_2d)(
@@ -2899,9 +2899,9 @@ fCreate(lua_State *L) {
 		, (uint16_t)height
 		, false
 		, 1
-		, BGFX_TEXTURE_FORMAT_BGRA8
+		, BGFX_TEXTURE_FORMAT_A8
 		, 0
-		, BGFX(copy)(data, width*height * 4)
+		, BGFX(copy)(data, width*height)
 		);
 	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
 	texture.s.mip = 0;
