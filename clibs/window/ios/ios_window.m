@@ -43,8 +43,8 @@ static void push_message(struct ant_window_message* msg) {
     int h = (int)(self.contentScaleFactor * self.frame.size.height);
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_INIT;
-    msg.u.init.window = (void*)self.layer;
-    msg.u.init.context = (void*)g_device;
+    msg.u.init.window = (__bridge void*)self.layer;
+    msg.u.init.context = (__bridge void*)g_device;
     msg.u.init.w = w;
     msg.u.init.h = h;
     push_message(&msg);
