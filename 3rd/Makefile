@@ -141,17 +141,17 @@ bgfx_clean :
 	cd bgfx && make clean
 
 define CMAKE_TEMP
-  $(BUILD_PATH)/$(1)/$(PLAT) : | $(BUILD_PATH)
+  $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) : | $(BUILD_PATH)
 	mkdir -p $$@
 
-  $(1)_init : | $(BUILD_PATH)/$(1)/$(PLAT)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" $(CMAKE_OPT) ../../../$(1)
+  $(1)_init : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" $(CMAKE_OPT) ../../../../$(1)
 
-  $(1)_make : | $(BUILD_PATH)/$(1)/$(PLAT)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT) && make $(MP)
+  $(1)_make : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && make $(MP)
 
-  $(1)_clean : | $(BUILD_PATH)/$(1)/$(PLAT)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT) && make clean
+  $(1)_clean : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && make clean
 endef
 
 $(foreach v, $(CMAKE_PROJ), $(eval $(call CMAKE_TEMP,$(v))))

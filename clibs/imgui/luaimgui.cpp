@@ -12,6 +12,7 @@ extern "C" {
 #include <glm/ext/matrix_clip_space.hpp>
 #include <cstring>
 #include <cstdlib>
+#include <malloc.h>
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 
