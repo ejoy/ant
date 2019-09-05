@@ -2905,6 +2905,8 @@ fCreate(lua_State *L) {
 	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
 	texture.s.mip = 0;
 	atlas->TexID = texture.ptr;
+	atlas->ClearTexData();
+
 	return 0;
 }
 
