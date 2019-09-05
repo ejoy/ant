@@ -226,11 +226,12 @@ local function memory_info()
 	local platform = require "platform"
 	local bgfx = require "bgfx"
 	s[#s+1] = ""
-	s[#s+1] = ("sys  memory:%s"):format(bytestr(platform.info "memory"))
-	s[#s+1] = ("lua  memory:%s"):format(bytestr(collectgarbage "count" * 1024.0))
-	s[#s+1] = ("bgfx memory:%s"):format(bytestr(bgfx.get_stats "a"))
-	s[#s+1] = ("math memory:%s"):format(bytestr(ms:stacksize()))
-
+	s[#s+1] = ("sys   memory:%s"):format(bytestr(platform.info "memory"))
+	s[#s+1] = ("lua   memory:%s"):format(bytestr(collectgarbage "count" * 1024.0))
+	s[#s+1] = ("bgfx  memory:%s"):format(bytestr(bgfx.get_stats "a"))
+	s[#s+1] = ("math  memory:%s"):format(bytestr(ms:stacksize()))
+	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui.get_stats()))
+	
 	s[#s+1] = "-------------------"
 
 	local data = bgfx.get_stats "m"
