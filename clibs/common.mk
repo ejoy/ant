@@ -57,6 +57,6 @@ LUALIB = -L../lua
 LUABIN = ../lua/lua
 LD_SHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
 STRIP = echo # -u -r -x
-CFLAGS= $(DEBUG_INFO) -Wall -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk -miphoneos-version-min=11.0 -fembed-bitcode
+CFLAGS= $(DEBUG_INFO) -Wall -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk -miphoneos-version-min=11.0 -fembed-bitcode -fobjc-arc
 
 endif
