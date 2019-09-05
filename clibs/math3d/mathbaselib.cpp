@@ -81,7 +81,15 @@ fetch_LS(lua_State* L, int index) {
 }
 
 struct Frustum {
-	using Points = std::unordered_map<std::string, glm::vec3>;
+
+	enum CornerName : uint8_t {
+		lbn = 0, ltn, rbn, rtn,
+
+		lbf, ltf, rbf, rtf,
+
+		count,
+	};
+	using Points = std::array<glm::vec4, CornerName::count>;
 	using Planes = std::array<glm::vec4, 6>;
 
 	glm::mat4x4 mat;
@@ -92,11 +100,6 @@ struct Frustum {
 		top, bottom,
 		near, far,
 	};
-
-	struct Corner {
-		PlaneName pnames[3];
-	};
-
 
 	Frustum(const glm::mat4x4& m)
 		: mat(m) {
@@ -159,64 +162,27 @@ struct Frustum {
 		}
 	}
 
-	static inline std::string
-		get_coner_name(const Frustum::Corner& c) {
-		std::string name;
-		const char* planenames[] = {
-			"l", "r", "t", "b", "n", "f"
-		};
-
-		for (auto pn : c.pnames) {
-			name += planenames[pn];
-		}
-
-		return name;
-	}
-
 	inline void
 		frustum_planes_intersection_points(Points& points) {
 		auto invmat = glm::inverse(this->mat);
 
 		const float ndc_n = default_homogeneous_depth() ? -1.f : 0.f;
 
-		const std::tuple<const char*, glm::vec4> pp[] = {
-			{"lbn", glm::vec4(-1.f,-1.f,ndc_n, 1.f)},
-			{"ltn", glm::vec4(-1.f,1.f, ndc_n, 1.f)},
-			{"rbn", glm::vec4(1.f, -1.f,ndc_n, 1.f)},
-			{"rtn", glm::vec4(1.f, 1.f, ndc_n, 1.f)},
+		points = {
+			glm::vec4(-1.f,-1.f,ndc_n, 1.f),
+			glm::vec4(-1.f,1.f, ndc_n, 1.f),
+			glm::vec4(1.f, -1.f,ndc_n, 1.f),
+			glm::vec4(1.f, 1.f, ndc_n, 1.f),
 
-			{"lbf", glm::vec4(-1.f,-1.f, 1.f, 1.f)},
-			{"ltf", glm::vec4(-1.f,1.f,  1.f, 1.f)},
-			{"rbf", glm::vec4(1.f, -1.f, 1.f, 1.f)},
-			{"rtf", glm::vec4(1.f, 1.f,  1.f, 1.f)},
+			glm::vec4(-1.f,-1.f, 1.f, 1.f),
+			glm::vec4(-1.f,1.f,  1.f, 1.f),
+			glm::vec4(1.f, -1.f, 1.f, 1.f),
+			glm::vec4(1.f, 1.f,  1.f, 1.f),
 		};
 
-		{
-			// left	-0.769800365	float
-			// bottom	-0.577350259	float
-			// right	0.769800365	float
-			// top	0.577350259	float
-			// near	1.00000000	float
-			// far	10.0000000	float
-
-			//glm::mat4x4 mm = glm::frustumLH_ZO(-0.769800365f, 0.769800365f, -0.577350259f, 0.577350259f, 1.f, 10.f);
-			glm::mat4x4 mm = glm::frustumLH_ZO(-1.f, 1.f, -1.f, 1.f, 1.f, 10.f);
-			
-			auto invmat11 = glm::inverse(mm);
-
-			Points ppp;
-			for (auto p : pp) {
-				auto v = invmat11 * std::get<1>(p);
-				ppp[std::get<0>(p)] = v / v.w;
-			}
-
-			int debug = 0;
-		}
-	
-		for (const auto p : pp){
-			auto t = invmat * std::get<1>(p);
-			t /= t.w;			
-			points[std::get<0>(p)] = t;
+		for (auto &p : points){
+			p = invmat * p;
+			p /= p.w;
 		}
 	}
 };
@@ -244,16 +210,16 @@ calc_extreme_value(float v, float min, float max, float &tmin, float &tmax) {
 
 static void
 get_aabb_points(const AABB& aabb, Frustum::Points& points) {
-	points["ltn"] = glm::vec4(aabb.min.x, aabb.max.y, aabb.min.z, 1.f);
-	points["lbn"] = glm::vec4(aabb.min, 1.f);
-	points["rtn"] = glm::vec4(aabb.max.x, aabb.max.y, aabb.min.z, 1.f);
-	points["rbn"] = glm::vec4(aabb.max.x, aabb.min.y, aabb.min.z, 1.f);
+	using CN = Frustum::CornerName;
+	points[CN::ltn] = glm::vec4(aabb.min.x, aabb.max.y, aabb.min.z, 1.f);
+	points[CN::lbn] = glm::vec4(aabb.min, 1.f);
+	points[CN::rtn] = glm::vec4(aabb.max.x, aabb.max.y, aabb.min.z, 1.f);
+	points[CN::rbn] = glm::vec4(aabb.max.x, aabb.min.y, aabb.min.z, 1.f);
 
-	points["ltf"] = glm::vec4(aabb.min.x, aabb.max.y, aabb.max.z, 1.f);
-	points["rtf"] = glm::vec4(aabb.max, 1.f);
-
-	points["lbf"] = glm::vec4(aabb.min.x, aabb.min.y, aabb.max.z, 1.f);
-	points["rbf"] = glm::vec4(aabb.max.x, aabb.min.y, aabb.max.z, 1.f);
+	points[CN::ltf] = glm::vec4(aabb.min.x, aabb.max.y, aabb.max.z, 1.f);
+	points[CN::rtf] = glm::vec4(aabb.max, 1.f);
+	points[CN::lbf] = glm::vec4(aabb.min.x, aabb.min.y, aabb.max.z, 1.f);
+	points[CN::rbf] = glm::vec4(aabb.max.x, aabb.min.y, aabb.max.z, 1.f);
 }
 
 
@@ -374,14 +340,14 @@ transform_aabb(const glm::mat4x4 &trans, AABB &aabb) {
 static int
 push_box_points(lua_State *L, const Frustum::Points &points){
 	lua_createtable(L, 0, 8);
-	for (const auto& p : points) {
+	for (int jj = 0; jj < Frustum::CornerName::count; ++jj) {
+		const auto& p = points[jj];
 		lua_createtable(L, 3, 0);
-		const auto& point = p.second;
 		for (int ii = 0; ii < 3; ++ii) {
-			lua_pushnumber(L, point[ii]);
+			lua_pushnumber(L, p[ii]);
 			lua_seti(L, -2, ii + 1);
 		}
-		lua_setfield(L, -2, p.first.c_str());
+		lua_seti(L, -2, jj + 1);
 	}
 	return 1;
 }
@@ -389,10 +355,10 @@ push_box_points(lua_State *L, const Frustum::Points &points){
 static int
 lfrustum_points(lua_State *L) {
 	auto f = fetch_frustum(L, 1);
-	
+	auto LS = fetch_LS(L, 1);
+
 	Frustum::Points points;
 	f->frustum_planes_intersection_points(points);
-
 	return push_box_points(L, points);
 }
 
@@ -520,15 +486,8 @@ lfrustum_calc_near_far(lua_State* L) {
 	glm::vec3 light_camera_orthographic_min = get_vec_value(L, LS, 2),
 		light_camera_orthographic_max = get_vec_value(L, LS, 3);
 
-	Frustum::Points corners;
-	f->frustum_planes_intersection_points(corners);
-
-	std::array<glm::vec3, 8> corner_points;
-
-	int ipoint = 0;
-	for (auto it : corners) {
-		corner_points[ipoint++] = it.second;
-	}
+	Frustum::Points corner_points;
+	f->frustum_planes_intersection_points(corner_points);
 
 	// Initialize the near and far planes
 	float near_plane = FLT_MAX;
@@ -861,13 +820,19 @@ lbounding_merge_list(lua_State *L){
 }
 
 static int
-lbounding_append_point(lua_State* L) {	
+lbounding_append_points(lua_State* L) {	
+	const int num_args = lua_gettop(L);
+
 	Bounding* b = fetch_bounding(L, 1);
 	auto LS = fetch_LS(L, 1);
 
-	auto pt = get_vec_value(L, LS, 2);
+	const int num_points = num_args - 1;
+	for (int ii = 0; ii < num_points; ++ii) {
+		auto pt = get_vec_value(L, LS, 2);
 
-	b->AppendPoint(*tov3(pt));
+		b->AppendPoint(*tov3(pt));
+	}
+
 	return 0;
 }
 #ifdef _STAT_MEMORY_
@@ -1007,7 +972,7 @@ register_bounding_mt(lua_State* L) {
 			{ "transform",	lbounding_transform},
 			{ "merge",		lbounding_merge},
 			{ "merge_list", lbounding_merge_list},
-			{ "append",		lbounding_append_point},
+			{ "append",		lbounding_append_points},
 			{ "isvalid",	lbounding_isvalid},
 			{ "reset",		lbounding_reset},
 			{ "get",		lbounding_get},

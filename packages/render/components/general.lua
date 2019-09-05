@@ -216,15 +216,7 @@ local constant = ecs.singleton "constant"
 function constant.init()
 	return {
 		tcolors = {
-			red = {1, 0, 0, 1},
-			green = {0, 1, 0, 1},
-			blue = {0, 0, 1, 1},
-			black = {0, 0, 0, 1},
-			white = {1, 1, 1, 1},
-			yellow = {1, 1, 0, 1},
-			gray = {0.5, 0.5, 0.5, 1},
+
 		}
 	}
 end
-
-local mqdata = ecs.singleton "mian_queue_data"

@@ -72,7 +72,9 @@ function util.bind_camera(world, name, camera)
 		log.error("already bind camera:", name)
 	end
 
-	cameras[name] = world:create_component("camera", camera)
+	local comp = world:create_component("camera", camera)
+	cameras[name] = comp
+	return comp
 end
 
 function util.unbind_camera(cameramgr_entity, name)

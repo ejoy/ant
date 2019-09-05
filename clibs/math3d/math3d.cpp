@@ -2327,7 +2327,7 @@ lview_proj(lua_State *L) {
 	lastack *LS = bp->LS;
 
 	glm::mat4x4 viewmat;
-	const bool hasviewmat = !lua_isnil(L, 2);
+	const bool hasviewmat = !lua_isnoneornil(L, 2);
 	if (hasviewmat) {
 		luaL_checktype(L, 2, LUA_TTABLE);	// view matrix
 
@@ -2346,7 +2346,7 @@ lview_proj(lua_State *L) {
 	}
 
 	glm::mat4x4 projmat;
-	const bool hasprojmat = !lua_isnil(L, 3);
+	const bool hasprojmat = !lua_isnoneornil(L, 3);
 	if (hasprojmat) {
 		luaL_checktype(L, 3, LUA_TTABLE);
 		projmat = create_proj_mat(L, LS, 3);

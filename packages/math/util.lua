@@ -84,23 +84,23 @@ function util.to_angle(radians) return list_op(radians, math.deg) end
 
 function util.AXIS(name)
 	if name == "X" then
-		return {1, 0, 0, 0}
+		return util.XAXIS
 	end
 
 	if name == "Y" then
-		return {0, 1, 0, 0}
+		return util.YAXIS
 	end
 
 	if name == "Z" then
-		return {0, 0, 1, 0}
+		return util.ZAXIS
 	end
 end
 
-util.XAXIS = ms:ref "vector" {1, 0, 0, 0}
-util.NXAXIS = ms:ref "vector" {-1, 0, 0, 0}
-util.YAXIS = ms:ref "vector" {0, 1, 0, 0}
-util.NYAXIS = ms:ref "vector" {0, -1, 0, 0}
-util.ZAXIS = ms:ref "vector" {0, 0, 1, 0}
-util.NZAXIS = ms:ref "vector" {0, 0, -1, 0}
+util.XAXIS 	= ms:ref "vector" {1, 0, 0, 0}
+util.NXAXIS = ms:ref "vector" {-1,0, 0, 0}
+util.YAXIS 	= ms:ref "vector" {0, 1, 0, 0}
+util.NYAXIS = ms:ref "vector" {0, -1,0, 0}
+util.ZAXIS 	= ms:ref "vector" {0, 0, 1, 0}
+util.NZAXIS = ms:ref "vector" {0, 0,-1, 0}
 
 return util

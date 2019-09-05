@@ -299,14 +299,9 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	local e = world[eid]
 	local m = e.rendermesh
 	local vb = {"fffd",}
-	local cornernames = {
-		"ltn", "lbn", "rtn", "rbn",
-		"ltf", "lbf", "rtf", "rbf",
-	}
-
 	color = color or 0xff00000f
-	for _, n in ipairs(cornernames) do
-		local p = points[n]
+	for i=1, #points do
+		local p = points[i]
 		table.move(p, 1, 3, #vb+1, vb)
 		vb[#vb+1] = color
 	end
