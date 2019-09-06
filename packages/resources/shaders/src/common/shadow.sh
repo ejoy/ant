@@ -90,7 +90,7 @@ float hardShadow(
 	return step(receiver, occluder);
 #else
 	vec4 coord = _shadowCoord;
-	coord.z += _bias * _shadowCoord.w;
-	return bgfxShadow2DProj(_sampler, _shadowCoord);
+	//coord.z -= _bias;
+	return bgfxShadow2DProj(_sampler, coord);
 #endif
 }

@@ -85,6 +85,13 @@ for ii=1, 4 do
 	shadowmap_sampler_names[ii] = "s_shadowmap" .. ii - 1
 end
 
+local shadow_crop_matrix = ms:ref "matrix" {
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0,
+}
+
 function util.load_shadow_properties(world, render_properties)
 	local shadow_properties = render_properties.shadow
 	local uniforms, textures = shadow_properties.uniforms, shadow_properties.textures
@@ -103,6 +110,7 @@ function util.load_shadow_properties(world, render_properties)
 							handle = se.render_target.frame_buffer.render_buffers[1].handle}
 
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+		vp = ms(shadow_crop_matrix, vp, "*P")
 		csm_matrixs[csm.index] = vp
 	end
 

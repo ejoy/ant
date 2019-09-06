@@ -211,7 +211,7 @@ local function create_csm_entity(lightdir, index, ratios, shadowmap_size, camera
 		},
 		shadow = {
 			shadowmap_size = shadowmap_size,
-			bias = 0.003,
+			bias = 0.03,
 			depth_type = "linear",
 			normal_offset = 0,
 			csm = {
@@ -264,14 +264,14 @@ function sm:post_init()
 	local d_light = world:first_entity "directional_light"
 	local lightdir = ms(d_light.rotation, "dnT")
 	local ratios = {
-		{0, 0.05},
-		{0.05, 0.15},
-		{0.15, 0.45},
-		{0.45, 1},
+		{0, 0.15},
+		{0.15, 0.35},
+		{0.35, 0.5},
+		{0.5, 1},
 	}
 	for ii=1, #ratios do
 		local ratio = ratios[ii]
-		create_csm_entity(lightdir, ii, ratio, 1024, 20)
+		create_csm_entity(lightdir, ii, ratio, 512, 20)
 	end
 end
 
@@ -364,7 +364,7 @@ local function main_view_debug_frustum()
 end
 
 function debug_sm:post_init()
-	main_view_debug_frustum()
+	-- main_view_debug_frustum()
+	-- csm_shadow_debug_frustum()
 	csm_shadow_debug_quad()
-	csm_shadow_debug_frustum()
 end

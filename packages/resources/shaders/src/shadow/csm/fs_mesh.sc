@@ -20,7 +20,14 @@ uniform vec4 u_fog_color;
 uniform vec4 u_specularColor;
 uniform vec4 u_specularLight;
 
-vec4 compute_csm_visible(vec4 sm_coord0, vec4 sm_coord1, vec4 sm_coord2, vec4 sm_coord3, out vec3 color_coverage)
+float has_negative_number(vec4 v)
+{
+	if (v.x < 0 || v.y < 0 || v.z < 0 || v.w < 0)
+		return 0;
+	return 1;
+}
+
+float compute_csm_visible(vec4 sm_coord0, vec4 sm_coord1, vec4 sm_coord2, vec4 sm_coord3, out vec3 color_coverage)
 {
 	ivec4 selections = ivec4(
 		is_proj_texcoord_in_range(sm_coord0, 0.01, 0.99),
@@ -28,49 +35,36 @@ vec4 compute_csm_visible(vec4 sm_coord0, vec4 sm_coord1, vec4 sm_coord2, vec4 sm
 		is_proj_texcoord_in_range(sm_coord2, 0.01, 0.99),
 		is_proj_texcoord_in_range(sm_coord3, 0.01, 0.99));
 
+	float coverage = 0.4;
 	if (selections[0])
 	{
-		float coverage = float(selections[0]) * 0.4;
-		color_coverage = vec3(-coverage, coverage, -coverage);
-		//return hardShadow(s_shadowmap0, sm_coord0, u_shadowmap_bias);
-		return vec4(1.0, 0.0, 0.0, 1.0);
+		color_coverage = vec3(coverage, 0.0, 0.0);
+		return hardShadow(s_shadowmap0, sm_coord0, u_shadowmap_bias);
 	}
 	else if (selections[1])
 	{
-		float coverage = float(selections[1]) * 0.4;
-		color_coverage = vec3(coverage, coverage, -coverage);
-		//return hardShadow(s_shadowmap1, sm_coord1, u_shadowmap_bias);
-		return vec4(0.0, 1.0, 0.0, 1.0);
+		color_coverage = vec3(0.0, coverage, 0.0);
+		return hardShadow(s_shadowmap1, sm_coord1, u_shadowmap_bias);
 	}
 	else if (selections[2])
 	{
-		float coverage = float(selections[2]) * 0.4;
-		color_coverage = vec3(-coverage, -coverage, coverage);
-		//return hardShadow(s_shadowmap2, sm_coord2, u_shadowmap_bias);
-		return vec4(0.0, 0.0, 1.0, 1.0);
+		color_coverage = vec3(0.0, 0.0, coverage);
+		return hardShadow(s_shadowmap2, sm_coord2, u_shadowmap_bias);
 	}
-	else if (selections[3])
+	else
 	{
-		float coverage = float(selections[3]) * 0.4;
-		color_coverage = vec3(coverage, -coverage, -coverage);
-		//return hardShadow(s_shadowmap3, sm_coord3, u_shadowmap_bias);
-		return vec4(1.0, 1.0, 1.0, 1.0);
-	}
-	else 
-	{
-		if (sm_coord0[0] < 0 || sm_coord0[1] < 0 || sm_coord0[2] < 0 || sm_coord0[3] < 0)
-			return vec4(1.0, 0.0, 0.0, 1.0);
-		return vec4(1.0, 1.0, 1.0, 1.0);
+		color_coverage = vec3(coverage, coverage, 0.0);
+		return hardShadow(s_shadowmap3, sm_coord3, u_shadowmap_bias);
 	}
 }
 
 void main()
 {
 	vec3 color_coverage = vec3_splat(0.0);
-	vec4 visibility	= compute_csm_visible(v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3, color_coverage);
+	float visibility	= compute_csm_visible(v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3, color_coverage);
 
-	gl_FragColor = visibility;//vec4(visibility, visibility, visibility, 1);
-
+	gl_FragColor.xyz = vec3_splat(visibility);//vec4(visibility, visibility, visibility, 1);
+	gl_FragColor.w = 1.0;
 	// vec4 ntexdata 	= texture2D(s_normal, v_texcoord0.xy);
 	// float gloss 	= ntexdata.z;
 	// vec3 normal 	= unproject_noraml(ntexdata.xy);
