@@ -826,9 +826,8 @@ lbounding_append_points(lua_State* L) {
 	Bounding* b = fetch_bounding(L, 1);
 	auto LS = fetch_LS(L, 1);
 
-	const int num_points = num_args - 1;
-	for (int ii = 0; ii < num_points; ++ii) {
-		auto pt = get_vec_value(L, LS, 2);
+	for (int ii = 1; ii < num_args; ++ii) {
+		auto pt = get_vec_value(L, LS, ii+1);
 
 		b->AppendPoint(*tov3(pt));
 	}

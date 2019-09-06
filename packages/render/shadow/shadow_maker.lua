@@ -90,28 +90,17 @@ local function calc_csm_camera_bounding(view_camera, view_frustum, transform, ra
 	local frustum_desc = split_new_frustum(view_frustum, ratios)
 	
 	local _, _, vp = ms:view_proj(view_camera, frustum_desc, true)
-	vp = ms(transform, vp, "*P")
+
+	-- we need point in light space, so the ndc to light space order is:
+	-- inv(proj) -> inv(view) -> light matrix
+	-- so the construct matrix should be reversed order:
+	-- inv(light matrix)-> view -> proj
+	vp = ms(vp, transform, "i*P")
 	local frustum = mathbaselib.new_frustum(ms, vp)
 	local points = frustum:points()
 	local bb = mathbaselib.new_bounding(ms)
 	bb:append(table.unpack(points))
 	return bb
-end
-
-local function calc_csm_camera(lightdir, camera_far)
-	return {
-		type = "csm_shadow",
-		eyepos = mc.ZERO_PT,
-		viewdir = lightdir,
-		updir = {0, 1, 0, 0},
-		frustum = {
-			ortho = true,
-			-- we calculate width/height value in crop_matrix
-			l = -1, r = 1,
-			b = -1, t = 1,
-			n = -camera_far, f = camera_far,
-		},
-	}
 end
 
 local function create_crop_matrix(shadow)
@@ -159,6 +148,49 @@ local function create_crop_matrix(shadow)
 	}
 end
 
+local function calc_shadow_frustum(shadow)
+	local view_camera = camerautil.get_camera(world, "main_view")
+
+	local csm = shadow.csm
+	local csmindex = csm.index
+	local shadowcamera = camerautil.get_camera(world, "csm" .. csmindex)
+	local shadowview_mat = ms:view_proj(shadowcamera)
+
+	local bb_LS = calc_csm_camera_bounding(view_camera, view_camera.frustum, shadowview_mat, shadow.csm.split_ratios)
+
+	local aabb = bb_LS:get "aabb"
+	local min, max = aabb.min, aabb.max
+	min[4], max[4] = 1, 1	-- as point
+
+	if false then--csm.stabilize then
+		local texsize = 1 / shadow.shadowmap_size
+
+		local worldunit = ms(max, min, {texsize, texsize, 1, 1}, "-*P")
+		local invworldunit = ms(worldunit, "rP")
+
+		-- min /= worldunit;
+		-- min = XMVectorFloor( min );
+		-- min *= worldunit;
+		
+		-- max /= worldunit;
+		-- max = XMVectorFloor( max );
+		-- max *= worldunit;
+
+		local newmin = ms(min, invworldunit, "*f", worldunit, "*T")
+		local newmax = ms(max, invworldunit, "*f", worldunit, "*T")
+		
+		min[1], min[2] = newmin[1], newmin[2]
+		max[1], max[2] = newmax[1], newmax[2]
+	end
+
+	return {
+		ortho = true,
+		l = min[1], r = max[1],
+		b = min[2], t = max[2],
+		n = min[3], f = max[3],
+	}
+end
+
 function maker_camera:update()
 	local dl = world:first_entity "directional_light"
 	local lightdir = ms(dl.rotation, "dnP")
@@ -169,7 +201,9 @@ function maker_camera:update()
 		local shadowcamera = camerautil.get_camera(world, shadowentity.camera_tag)
 		shadowcamera.viewdir(lightdir)
 		shadowcamera.eyepos(mc.ZERO_PT)
-		shadowcamera.crop_matrix = create_crop_matrix(shadowentity.shadow)
+
+		shadowcamera.frustum = calc_shadow_frustum(shadowentity.shadow)
+		--shadowcamera.crop_matrix = create_crop_matrix(shadowentity.shadow)
 	end
 end
 
@@ -182,7 +216,20 @@ sm.dependby "debug_shadow_maker"
 local function create_csm_entity(lightdir, index, ratios, shadowmap_size, camera_far)
 	camera_far = camera_far or 10000
 	local camera_tag = "csm" .. index
-	local camera = camerautil.bind_camera(world, camera_tag, calc_csm_camera(lightdir, camera_far))
+	local camera = camerautil.bind_camera(world, camera_tag, {
+		type = "csm_shadow",
+		eyepos = mc.ZERO_PT,
+		viewdir = lightdir,
+		updir = {0, 1, 0, 0},
+		frustum = {
+			ortho = true,
+			-- we calculate width/height value in crop_matrix
+			l = -1, r = 1,
+			b = -1, t = 1,
+			n = -camera_far, f = camera_far,
+		},
+	})
+
 	camera.crop_matrix = mc.mat_identity
 	return world:create_entity {
 		material = {
@@ -243,10 +290,10 @@ function sm:post_init()
 	local d_light = world:first_entity "directional_light"
 	local lightdir = ms(d_light.rotation, "dnT")
 	local ratios = {
-		{0, 0.15},
-		{0.15, 0.35},
-		{0.35, 0.65},
-		{0.65, 1},
+		{0, 0.05},
+		{0.05, 0.15},
+		{0.15, 0.45},
+		{0.45, 1},
 	}
 	for ii=1, #ratios do
 		local ratio = ratios[ii]
@@ -317,10 +364,7 @@ local function	csm_shadow_debug_frustum()
 		local camera = camerautil.get_camera(world, e.camera_tag)
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
 
-		local crop_matrix = assert(camera.crop_matrix)
-		local final_mat = ms(crop_matrix, vp, "*P")
-
-		local frustum = mathbaselib.new_frustum(ms, final_mat)
+		local frustum = mathbaselib.new_frustum(ms, vp)
 		computil.create_frustum_entity(world, frustum, "csm frusutm part" .. e.shadow.csm.index, nil, 0xff0f0f0f)
 	end
 end

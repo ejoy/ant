@@ -885,6 +885,12 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		break;
 	}
 
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_VEC4):{
+		const auto v = *((glm::vec4*)val0) * *((glm::vec4*)val1);
+		lastack_pushvec4(LS, &v.x);
+		break;
+	}
+
 	default:
 		luaL_error(L, "Need support type %s * type %s", get_typename(t0),get_typename(t1));
 	}
@@ -934,6 +940,13 @@ inverted_value(lua_State *L, struct lastack *LS) {
 	case LINEAR_TYPE_VEC4: {
 		glm::vec4 r(-value[0], -value[1], -value[2], value[3]);
 		lastack_pushvec4(LS, &r.x);
+		break;
+	}
+
+	case LINEAR_TYPE_QUAT:	{
+		glm::quat q = *((glm::quat*)value);
+		glm::inverse(q);
+		lastack_pushvec4(LS, &q.x);
 		break;
 	}
 	default:
@@ -1062,6 +1075,31 @@ convert_to_euler(lua_State *L, struct lastack*LS) {
 			break;
 	}
 	lastack_pusheuler(LS, &e.x);
+}
+
+static inline void
+reciprocal(lua_State* L, struct lastack* LS) {
+	int64_t id = pop(L, LS);
+	int type;
+	const float* value = lastack_value(LS, id, &type);
+	switch (type) {
+		case LINEAR_TYPE_NUM: {
+			const float vv = is_zero(*value) ? 0 : 1 / *value;
+			lastack_pushnumber(LS, vv);
+		}
+			break;
+		case LINEAR_TYPE_VEC4:{
+			glm::vec4 vv = *(glm::vec4*)value;
+			vv = 1.f / vv;
+			vv[3] = value[3];
+			lastack_pushvec4(LS, &vv.x);
+		}
+			break;
+
+		default:
+			luaL_error(L, "not support in [reciprocal] function:%d", type);
+			break;
+	}
 }
 
 static inline void
@@ -1480,6 +1518,52 @@ static FASTMATH(string)
 	return 1;
 }
 
+static FASTMATH(floor)
+	int64_t id = pop(L, LS);
+	int t;
+	const float * v = lastack_value(LS, id, &t);
+	switch (t) {
+		case LINEAR_TYPE_VEC4:{
+
+			glm::vec4 vv = glm::floor(*(glm::vec4*)v);
+			lastack_pushvec4(LS, &vv.x);
+		}
+			break;
+		case LINEAR_TYPE_NUM:{
+			float vv = glm::floor(*v);
+			lastack_pushnumber(LS, vv);
+		}
+			break;
+		default:
+			luaL_error(L, "not support type:%d", t);
+			break;
+	}
+	return 0;
+}
+
+static FASTMATH(ceil)
+	int64_t id = pop(L, LS);
+	int t;
+	const float* v = lastack_value(LS, id, &t);
+	switch (t) {
+		case LINEAR_TYPE_VEC4:{
+			glm::vec4 vv = glm::ceil(*(glm::vec4*)v);
+			lastack_pushvec4(LS, &vv.x);
+		}
+		break;
+		case LINEAR_TYPE_NUM:
+		{
+			float vv = glm::ceil(*v);
+			lastack_pushnumber(LS, vv);
+		}
+		break;
+		default:
+			luaL_error(L, "not support type:%d", t);
+			break;
+	}
+	return 0;
+}
+
 static FASTMATH(assign)
 	int64_t id = pop(L, LS);
 	refstack_pop(RS);
@@ -1691,6 +1775,12 @@ static FASTMATH(toquaternion)
 	return 0;
 }
 
+static FASTMATH(reciprocal)
+	reciprocal(L, LS);
+	refstack_1_1(RS);
+	return 0;
+}
+
 static FASTMATH(torotation)
 	convert_viewdir_to_rotation(L, LS);
 	refstack_1_1(RS);
@@ -1858,10 +1948,10 @@ static struct fastmath_function s_fastmath[256] = {
 	{ NULL, NULL }, //`
 	{ NULL, NULL }, //a
 	{ m_tobase, "split matrix as x, y, z axis" }, //b
-	{ NULL, NULL }, //c
+	{ m_ceil, "ceil" }, //c
 	{ m_todirection, "to direction" }, //d
 	{ m_toeuler, "to euler" }, //e
-	{ NULL, NULL }, //f
+	{ m_floor, "floor"}, //f
 	{ NULL, NULL }, //g
 	{ NULL, NULL }, //h
 	{ m_inverted, "inverted" }, //i
@@ -1873,7 +1963,7 @@ static struct fastmath_function s_fastmath[256] = {
 	{ NULL, NULL }, //o
 	{ NULL, NULL }, //p
 	{ m_toquaternion, "to quaternion" }, //q
-	{ NULL, NULL }, //r
+	{ m_reciprocal, "reciprocal number/vec4" }, //r
 	{ NULL, NULL }, //s
 	{ m_transposed, "transposed" }, //t
 	{ NULL, NULL }, //u
