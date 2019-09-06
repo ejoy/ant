@@ -162,22 +162,21 @@ local function calc_shadow_frustum(shadow)
 	local min, max = aabb.min, aabb.max
 	min[4], max[4] = 1, 1	-- as point
 
-	if false then--csm.stabilize then
+	if csm.stabilize then
 		local texsize = 1 / shadow.shadowmap_size
 
-		local worldunit = ms(max, min, {texsize, texsize, 1, 1}, "-*P")
-		local invworldunit = ms(worldunit, "rP")
+		local worldunit_pretexel = ms(max, min, "-", {texsize, texsize, 0, 0}, "*P")
+		local invworldunit_pretexel = ms(worldunit_pretexel, "rP")
 
-		-- min /= worldunit;
-		-- min = XMVectorFloor( min );
-		-- min *= worldunit;
-		
-		-- max /= worldunit;
-		-- max = XMVectorFloor( max );
-		-- max *= worldunit;
+		local function limit_move_in_one_texel(value)
+			-- value /= worldunit_pretexel;
+			-- value = floor( value );
+			-- value *= worldunit_pretexel;
+			return ms(value, invworldunit_pretexel, "*f", worldunit_pretexel, "*T")
+		end
 
-		local newmin = ms(min, invworldunit, "*f", worldunit, "*T")
-		local newmax = ms(max, invworldunit, "*f", worldunit, "*T")
+		local newmin = limit_move_in_one_texel(min)
+		local newmax = limit_move_in_one_texel(max)
 		
 		min[1], min[2] = newmin[1], newmin[2]
 		max[1], max[2] = newmax[1], newmax[2]
