@@ -3397,7 +3397,7 @@ static void ImGuiFree(void* ptr, void* /*user_data*/) {
 }
 
 static int
-lgetStats(lua_State *L) {
+lgetMemory(lua_State *L) {
 	lua_pushinteger(L, allocator_memory);
 	return 1;
 }
@@ -3427,7 +3427,7 @@ luaopen_imgui(lua_State *L) {
 		{ "ime_handle", limeHandle },
 		{ "setDockEnable", lsetDockEnable },
 		{ "showDockSpace", lshowDockSpace },
-		{ "get_stats", lgetStats },
+		{ "get_memory", lgetMemory },
 		{ NULL, NULL },
 	};
 
