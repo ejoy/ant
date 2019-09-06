@@ -33,37 +33,12 @@ end
 
 ecs.component "omni"	-- for point/spot light
 
-local s = ecs.component "shadow" {depend = "material"}
+ecs.component "shadow" {depend = "material"}
 	.shadowmap_size "int" 	(1024)
 	.bias 			"real"	(0.003)
-	.normal_offset 	"vector"(0, 0, 0, 0)
+	.normal_offset 	"real" (0)
 	.depth_type 	"string"("linear")	-- "inv_z" / "linear"
 	["opt"].csm 	"csm"
-
-local function init_shadow_material_properties(material, shadow)
-	local properties = material.properties
-	if properties == nil then
-		properties = {}
-		material.properties = properties
-	end
-	local uniforms = properties.uniforms
-	if uniforms == nil then
-		uniforms = {}
-		properties.uniforms = uniforms
-	end
-
-	uniforms.u_normaloffset = {type="v4", name = "shadowmap normal offset", value = shadow.normal_offset}
-
-	local textures = properties.textures
-	if textures == nil then
-		textures = {}
-		properties.textures = textures
-	end
-end
-
-function s:postinit(e)
-	init_shadow_material_properties(e.material, self)
-end
 
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.depend "primitive_filter_system"
@@ -103,50 +78,50 @@ local function calc_csm_camera_bounding(view_camera, view_frustum, transform, ra
 	return bb
 end
 
-local function create_crop_matrix(shadow)
-	local view_camera = camerautil.get_camera(world, "main_view")
+-- local function create_crop_matrix(shadow)
+-- 	local view_camera = camerautil.get_camera(world, "main_view")
 
-	local csm = shadow.csm
-	local csmindex = csm.index
-	local shadowcamera = camerautil.get_camera(world, "csm" .. csmindex)
-	local shadowview_mat = ms:view_proj(shadowcamera)
+-- 	local csm = shadow.csm
+-- 	local csmindex = csm.index
+-- 	local shadowcamera = camerautil.get_camera(world, "csm" .. csmindex)
+-- 	local shadowview_mat = ms:view_proj(shadowcamera)
 
-	local bb_LS = calc_csm_camera_bounding(view_camera, view_camera.frustum, shadowview_mat, shadow.csm.split_ratios)
-	local aabb = bb_LS:get "aabb"
-	local min, max = aabb.min, aabb.max
-	min[4], max[4] = 1, 1	-- as point
+-- 	local bb_LS = calc_csm_camera_bounding(view_camera, view_camera.frustum, shadowview_mat, shadow.csm.split_ratios)
+-- 	local aabb = bb_LS:get "aabb"
+-- 	local min, max = aabb.min, aabb.max
+-- 	min[4], max[4] = 1, 1	-- as point
 
-	local _, proj = ms:view_proj(nil, shadowcamera.frustum)
-	local minproj, maxproj = ms(min, proj, "%", max, proj, "%TT")
+-- 	local _, proj = ms:view_proj(nil, shadowcamera.frustum)
+-- 	local minproj, maxproj = ms(min, proj, "%", max, proj, "%TT")
 
-	local scalex, scaley = 2 / (maxproj[1] - minproj[1]), 2 / (maxproj[2] - minproj[2])
-	if csm.stabilize then
-		local quantizer = shadow.shadowmap_size
-		scalex = quantizer / math.ceil(quantizer / scalex);
-		scaley = quantizer / math.ceil(quantizer / scaley);
-	end
+-- 	local scalex, scaley = 2 / (maxproj[1] - minproj[1]), 2 / (maxproj[2] - minproj[2])
+-- 	if csm.stabilize then
+-- 		local quantizer = shadow.shadowmap_size
+-- 		scalex = quantizer / math.ceil(quantizer / scalex);
+-- 		scaley = quantizer / math.ceil(quantizer / scaley);
+-- 	end
 
-	local function calc_offset(a, b, scale)
-		return (a + b) * 0.5 * scale
-	end
+-- 	local function calc_offset(a, b, scale)
+-- 		return (a + b) * 0.5 * scale
+-- 	end
 
-	local offsetx, offsety = 
-		calc_offset(maxproj[1], minproj[1], scalex), 
-		calc_offset(maxproj[2], minproj[2], scaley)
+-- 	local offsetx, offsety = 
+-- 		calc_offset(maxproj[1], minproj[1], scalex), 
+-- 		calc_offset(maxproj[2], minproj[2], scaley)
 
-	if csm.stabilize then
-		local half_size = shadow.shadowmap_size * 0.5;
-		offsetx = math.ceil(offsetx * half_size) / half_size;
-		offsety = math.ceil(offsety * half_size) / half_size;
-	end
+-- 	if csm.stabilize then
+-- 		local half_size = shadow.shadowmap_size * 0.5;
+-- 		offsetx = math.ceil(offsetx * half_size) / half_size;
+-- 		offsety = math.ceil(offsety * half_size) / half_size;
+-- 	end
 	
-	return {
-		scalex, 0, 0, 0,
-		0, scaley, 0, 0,
-		0, 0, 1, 0,
-		offsetx, offsety, 0, 1,
-	}
-end
+-- 	return {
+-- 		scalex, 0, 0, 0,
+-- 		0, scaley, 0, 0,
+-- 		0, 0, 1, 0,
+-- 		offsetx, offsety, 0, 1,
+-- 	}
+-- end
 
 local function calc_shadow_frustum(shadow)
 	local view_camera = camerautil.get_camera(world, "main_view")
@@ -238,7 +213,7 @@ local function create_csm_entity(lightdir, index, ratios, shadowmap_size, camera
 			shadowmap_size = shadowmap_size,
 			bias = 0.003,
 			depth_type = "linear",
-			normal_offset = {0, 0, 0, 0},
+			normal_offset = 0,
 			csm = {
 				split_ratios = ratios,
 				index = index,

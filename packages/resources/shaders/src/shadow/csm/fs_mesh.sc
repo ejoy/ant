@@ -20,7 +20,7 @@ uniform vec4 u_fog_color;
 uniform vec4 u_specularColor;
 uniform vec4 u_specularLight;
 
-float compute_csm_visible(vec4 sm_coord0, vec4 sm_coord1, vec4 sm_coord2, vec4 sm_coord3, out vec3 color_coverage)
+vec4 compute_csm_visible(vec4 sm_coord0, vec4 sm_coord1, vec4 sm_coord2, vec4 sm_coord3, out vec3 color_coverage)
 {
 	ivec4 selections = ivec4(
 		is_proj_texcoord_in_range(sm_coord0, 0.01, 0.99),
@@ -32,47 +32,59 @@ float compute_csm_visible(vec4 sm_coord0, vec4 sm_coord1, vec4 sm_coord2, vec4 s
 	{
 		float coverage = float(selections[0]) * 0.4;
 		color_coverage = vec3(-coverage, coverage, -coverage);
-		return hardShadow(s_shadowmap0, sm_coord0, u_shadowmap_bias);
+		//return hardShadow(s_shadowmap0, sm_coord0, u_shadowmap_bias);
+		return vec4(1.0, 0.0, 0.0, 1.0);
 	}
 	else if (selections[1])
 	{
 		float coverage = float(selections[1]) * 0.4;
 		color_coverage = vec3(coverage, coverage, -coverage);
-		return hardShadow(s_shadowmap1, sm_coord1, u_shadowmap_bias);
+		//return hardShadow(s_shadowmap1, sm_coord1, u_shadowmap_bias);
+		return vec4(0.0, 1.0, 0.0, 1.0);
 	}
 	else if (selections[2])
 	{
 		float coverage = float(selections[2]) * 0.4;
 		color_coverage = vec3(-coverage, -coverage, coverage);
-		return hardShadow(s_shadowmap2, sm_coord2, u_shadowmap_bias);
+		//return hardShadow(s_shadowmap2, sm_coord2, u_shadowmap_bias);
+		return vec4(0.0, 0.0, 1.0, 1.0);
 	}
-	else
+	else if (selections[3])
 	{
 		float coverage = float(selections[3]) * 0.4;
 		color_coverage = vec3(coverage, -coverage, -coverage);
-		return hardShadow(s_shadowmap3, sm_coord3, u_shadowmap_bias);
+		//return hardShadow(s_shadowmap3, sm_coord3, u_shadowmap_bias);
+		return vec4(1.0, 1.0, 1.0, 1.0);
+	}
+	else 
+	{
+		if (sm_coord0[0] < 0 || sm_coord0[1] < 0 || sm_coord0[2] < 0 || sm_coord0[3] < 0)
+			return vec4(1.0, 0.0, 0.0, 1.0);
+		return vec4(1.0, 1.0, 1.0, 1.0);
 	}
 }
 
 void main()
 {
 	vec3 color_coverage = vec3_splat(0.0);
-	float visibility	= compute_csm_visible(v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3, color_coverage);
+	vec4 visibility	= compute_csm_visible(v_sm_coord0, v_sm_coord1, v_sm_coord2, v_sm_coord3, color_coverage);
 
-	vec4 ntexdata 	= texture2D(s_normal, v_texcoord0.xy);
-	float gloss 	= ntexdata.z;
-	vec3 normal 	= unproject_noraml(ntexdata.xy);
+	gl_FragColor = visibility;//vec4(visibility, visibility, visibility, 1);
 
-	vec4 basecolor  = texture2D(s_basecolor, v_texcoord0.xy);
-	vec4 lightcolor = directional_color[0] * directional_intensity[0].x;
+	// vec4 ntexdata 	= texture2D(s_normal, v_texcoord0.xy);
+	// float gloss 	= ntexdata.z;
+	// vec3 normal 	= unproject_noraml(ntexdata.xy);
+
+	// vec4 basecolor  = texture2D(s_basecolor, v_texcoord0.xy);
+	// vec4 lightcolor = directional_color[0] * directional_intensity[0].x;
 	
-	vec4 ambientcolor = calc_ambient_color(ambient_mode.x, v_normal_Y_angle) * basecolor;
+	// vec4 ambientcolor = calc_ambient_color(ambient_mode.x, v_normal_Y_angle) * basecolor;
 
-	vec4 fog_factor= calc_fog(u_fog_color, 0.0035, 1.442695, v_distanceVS);
+	// vec4 fog_factor= calc_fog(u_fog_color, 0.0035, 1.442695, v_distanceVS);
     
-	vec4 scenecolor	= saturate(ambientcolor + calc_lighting_BH(normal, v_lightdirTS, v_viewdirTS, lightcolor, 
-															basecolor, u_specularColor, gloss, u_specularLight.x));
-	vec4 finalcolor = vec4(mix(u_shadow_color.rgb, scenecolor.rgb, visibility), scenecolor.a);
+	// vec4 scenecolor	= saturate(ambientcolor + calc_lighting_BH(normal, v_lightdirTS, v_viewdirTS, lightcolor, 
+	// 														basecolor, u_specularColor, gloss, u_specularLight.x));
+	// vec4 finalcolor = vec4(mix(u_shadow_color.rgb, scenecolor.rgb, visibility), scenecolor.a);
 
-	gl_FragColor = mix(u_fog_color, finalcolor, fog_factor);
+	// gl_FragColor = mix(u_fog_color, finalcolor, fog_factor);
 }

@@ -5,7 +5,7 @@
 
 #include "common.sh"
 
-uniform mat4 directional_viewproj[4];
+uniform mat4 u_csm_matrix[4];
 
 uniform vec4 u_shadow_param1;
 uniform vec4 u_shadow_param2;
@@ -27,10 +27,10 @@ SAMPLER2DSHADOW(s_shadowmap2, 6);
 SAMPLER2DSHADOW(s_shadowmap3, 7);
 #endif
 
-#define CALC_SHADOW_TEXCOORD(_wpos)	v_sm_coord0 = mul(directional_viewproj[0], _wpos);\
-	v_sm_coord1 = mul(directional_viewproj[1], _wpos);\
-	v_sm_coord2 = mul(directional_viewproj[2], _wpos);\
-	v_sm_coord3 = mul(directional_viewproj[3], _wpos);
+#define CALC_SHADOW_TEXCOORD(_wpos)	v_sm_coord0 = mul(u_csm_matrix[0], _wpos);\
+	v_sm_coord1 = mul(u_csm_matrix[1], _wpos);\
+	v_sm_coord2 = mul(u_csm_matrix[2], _wpos);\
+	v_sm_coord3 = mul(u_csm_matrix[3], _wpos)
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
 {

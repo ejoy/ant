@@ -80,29 +80,44 @@ function util.load_lighting_properties(world, render_properties)
 	end
 end
 
-local shadow_property_names = {}
-for ii=0, 3 do
-	shadow_property_names[ii*2] = "s_shadowmap" ..ii
-	shadow_property_names[ii*2+1] = "u_shadowmatrix" ..ii
+local shadowmap_sampler_names = {}
+for ii=1, 4 do
+	shadowmap_sampler_names[ii] = "s_shadowmap" .. ii - 1
 end
 
 function util.load_shadow_properties(world, render_properties)
 	local shadow_properties = render_properties.shadow
-	
+	local uniforms, textures = shadow_properties.uniforms, shadow_properties.textures
+	local csm_stage_start_idx = 4
+	local csm_matrixs = {n=nil, nil, nil, nil, nil}
 	for _, eid in world:each "shadow" do
 		local se = world[eid]
 		local shadow = se.shadow
 		local csm = shadow.csm
-		if csm then
-			local idx = csm.index
-			local sm_name = shadow_property_names[idx*2]
-			local s_mat = shadow_property_names[idx*2+1]
 
-			
-		end
+		local camera = camerautil.get_camera(world, se.camera_tag)
+
+		local idx = csm.index
+		local sm_name = shadowmap_sampler_names[idx]
+		textures[sm_name] = {type="texture", stage = csm_stage_start_idx+idx-1, name = sm_name, 
+							handle = se.render_target.frame_buffer.render_buffers[1].handle}
+
+		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+		csm_matrixs[csm.index] = vp
 	end
 
+	csm_matrixs.n = #csm_matrixs
+	uniforms["u_csm_matrix"] = {type="m4", name="csm matrix", value=csm_matrixs}
 
+	--TODO: currently, all the shadow entity have the samle shadow config
+	-- we should move shadow config to a single entity using unique tag to reference it.
+	local shadowentity = world:first_entity "shadow"
+	local shadow = shadowentity.shadow
+	uniforms["u_shadow_param1"] = {type="v4", name="x=[shadow bias],y=[normal offset],z=[texel size],w=[not use]", 
+		value={shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}}
+	local shadowcolor = shadow.color or {0, 0, 0}
+	uniforms["u_shadow_param2"] = {type="v4", name="xyz=[shadow color],w=[not use]", 
+		value={shadowcolor[1], shadowcolor[2], shadowcolor[3], 0}}
 end
 
 function util.load_postprocess_properties(world, render_properties)
