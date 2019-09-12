@@ -29,6 +29,7 @@ enum LinearType {
 struct lastack;
 
 int64_t lastack_constant(int cons);
+int lastack_isconstant(int64_t id);
 int lastack_marked(int64_t id, int *type);
 int lastack_sametype(int64_t id1, int64_t id2);
 char * lastack_idstring(int64_t id, char tmp[64]);	// for debug

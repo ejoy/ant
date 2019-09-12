@@ -1414,8 +1414,9 @@ lref(lua_State *L) {
 
 static int 
 lunref(lua_State *L) {
-	if(!lua_isuserdata(L,1))
-		return luaL_error(L, "unref not userdata. ");
+	if (!is_ref_obj(L)){
+		luaL_error(L, "arg 1 is not a math3d refobject!");
+	}
 	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
 	release_ref(L, ref);
 	return 0;
@@ -2886,6 +2887,24 @@ lstacksize(lua_State *L) {
 	return 1;
 }
 
+// reg key for ref leak table
+static int REFLEAK = 0;
+
+static int
+lleaks(lua_State *L) {
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
+	struct lastack* LS = bp->LS;
+
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
+		luaL_error(L, "No ref leak table");
+	}
+
+	if (lua_rawgetp(L, -1, LS) != LUA_TTABLE) {
+		return 0;
+	}
+	return 1;
+}
+
 static void
 register_linalg_mt(lua_State *L) {
 	if (luaL_newmetatable(L, LINALG)) {
@@ -2917,12 +2936,36 @@ register_linalg_mt(lua_State *L) {
 			{ "lhs_mat", llhs_matrix},
 			{ "lerp", llerp},
 			{ "equal", lequal},
+			{ "leaks", lleaks },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 	}
+}
+
+static int
+lrefleak(lua_State *L) {
+	struct refobject *ref = (struct refobject *)lua_touserdata(L, 1);
+	if (!lastack_isconstant(ref->id)) {
+		const void *p = ref->LS;
+		if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
+			luaL_error(L, "No ref leak table");
+		}
+
+		if (lua_rawgetp(L, -1, p) != LUA_TTABLE) {
+			lua_pop(L, 1);
+			lua_newtable(L);
+			lua_pushvalue(L, -1);
+			lua_rawsetp(L, -3, p);
+		}
+
+		size_t n = lua_rawlen(L, -1);
+		lua_pushinteger(L, ref->id);
+		lua_rawseti(L, -2, n+1);
+	}
+	return 0;
 }
 
 extern "C" {
@@ -2943,8 +2986,15 @@ extern "C" {
 		luaL_setfuncs(L, ref, 0);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
-		lua_pop(L, 1);
 
+		lua_newtable(L);
+		lua_rawsetp(L, LUA_REGISTRYINDEX, &REFLEAK);
+
+		if (lua_getglobal(L, "_DEBUG") != LUA_TNIL) {
+			lua_pushcfunction(L, lrefleak);
+			lua_setfield(L, -3, "__gc");
+		}
+		lua_pop(L, 2);
 
 		register_linalg_mt(L);
 
