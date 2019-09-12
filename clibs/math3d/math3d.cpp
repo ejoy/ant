@@ -33,6 +33,7 @@ extern "C" {
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <vector>
 
@@ -2891,6 +2892,23 @@ lstacksize(lua_State *L) {
 static int REFLEAK = 0;
 
 static int
+lref_debug(lua_State *L) {
+	int r = lref(L);
+	void * v = lua_touserdata(L, -1);
+
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
+		luaL_error(L, "No ref leak table");
+	}
+
+	luaL_traceback(L, L, NULL, 1);
+	lua_rawsetp(L, -2, v);
+	lua_pop(L, 1);
+
+	return r;
+}
+
+
+static int
 lleaks(lua_State *L) {
 	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack* LS = bp->LS;
@@ -2951,7 +2969,8 @@ lrefleak(lua_State *L) {
 	if (!lastack_isconstant(ref->id)) {
 		const void *p = ref->LS;
 		if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
-			luaL_error(L, "No ref leak table");
+			// __gc can't raise error
+			return 0;
 		}
 
 		if (lua_rawgetp(L, -1, p) != LUA_TTABLE) {
@@ -2968,9 +2987,34 @@ lrefleak(lua_State *L) {
 	return 0;
 }
 
+static int
+lrefleak_debug(lua_State *L) {
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
+		// __gc can't raise error
+		return 0;
+	}
+	struct refobject *ref = (struct refobject *)lua_touserdata(L, 1);
+	if (!lastack_isconstant(ref->id)) {
+		const char * traceback = NULL;
+		if (lua_rawgetp(L, -1, ref) != LUA_TSTRING) {
+			traceback = "Unknown ref object";
+		} else {
+			traceback = lua_tostring(L, -1);
+		}
+		printf("Ref object leak : %s\n", traceback);
+		lua_pop(L, 2);
+	} else {
+		lua_pushnil(L);
+		lua_rawsetp(L, -2, ref);
+		lua_pop(L, 1);
+	}
+	return lrefleak(L);
+}
+
 extern "C" {
 	LUAMOD_API int
 	luaopen_math3d(lua_State *L) {
+		int debug_level = 0;
 		luaL_checkversion(L);
 		luaL_Reg ref[] = {
 			{ "__tostring", lreftostring },
@@ -2991,7 +3035,12 @@ extern "C" {
 		lua_rawsetp(L, LUA_REGISTRYINDEX, &REFLEAK);
 
 		if (lua_getglobal(L, "_DEBUG") != LUA_TNIL) {
-			lua_pushcfunction(L, lrefleak);
+			debug_level = (int)lua_tointeger(L, -1);
+			if (debug_level >= 100) {
+				lua_pushcfunction(L, lrefleak_debug);
+			} else {
+				lua_pushcfunction(L, lrefleak);
+			}
 			lua_setfield(L, -3, "__gc");
 		}
 		lua_pop(L, 2);
@@ -3012,6 +3061,11 @@ extern "C" {
 			{ NULL, NULL },
 		};
 		luaL_newlib(L, l);
+
+		if (debug_level >= 100) {
+			lua_pushcfunction(L, lref_debug);
+			lua_setfield(L, -2, "ref");
+		}
 		return 1;
 	}
 }

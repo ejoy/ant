@@ -1,4 +1,4 @@
-_DEBUG = true -- dectect memory leak
+_DEBUG = 100 -- dectect memory leak
 
 local math3d = require "math3d"
 --[[
