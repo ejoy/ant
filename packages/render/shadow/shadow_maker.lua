@@ -168,7 +168,25 @@ end
 function maker_camera:update()
 	local dl = world:first_entity "directional_light"
 	local lightdir = ms(dl.rotation, "dnP")
-	
+
+	-- local viewcamera = camerautil.get_camera(world, "main_view")
+	-- local _, _, vp = ms:view_proj(viewcamera, viewcamera.frustum, true)
+
+	-- local origin = {0, 0, 0, 1}
+
+	-- local function to_ndc(pos_WS, viewproj)
+	-- 	local pos_CS = ms(viewproj, pos_WS, "*T")
+	-- 	local h_coord = pos_CS[4]
+	-- 	local pos_NDC = {pos_CS[1] / h_coord, pos_CS[2]/h_coord, pos_CS[3]/h_coord, h_coord}
+	-- 	return pos_NDC
+	-- end
+
+	-- local origin_NDC_VIEW = to_ndc(origin, vp)
+	-- local t0 = to_ndc({1, 1, 2, 1}, vp)
+	-- local t1 = to_ndc({2, 1, 1, 1}, vp)
+	-- print(string.format("origin point view camera ndc:(%f, %f, %f, %f)", 
+	-- 	origin_NDC_VIEW[1], origin_NDC_VIEW[2], origin_NDC_VIEW[3], origin_NDC_VIEW[4]))
+
 	for _, eid in world:each "shadow" do
 		local shadowentity = world[eid]
 
@@ -177,6 +195,11 @@ function maker_camera:update()
 		shadowcamera.eyepos(mc.ZERO_PT)
 
 		shadowcamera.frustum = calc_shadow_frustum(shadowentity.shadow)
+
+		-- local _, _, light_vp = ms:view_proj(shadowcamera, shadowcamera.frustum, true)
+		-- local origin_NDC_LIGHT = to_ndc(origin, light_vp)
+		-- print(string.format("origin in light ndc[%d]:(%f, %f, %f, %f)", shadowentity.shadow.csm.index, 
+		-- 	origin_NDC_LIGHT[1], origin_NDC_LIGHT[2], origin_NDC_LIGHT[3], origin_NDC_LIGHT[4]))
 		--shadowcamera.crop_matrix = create_crop_matrix(shadowentity.shadow)
 	end
 end
@@ -190,21 +213,19 @@ sm.dependby "debug_shadow_maker"
 local function create_csm_entity(lightdir, index, ratios, shadowmap_size, camera_far)
 	camera_far = camera_far or 10000
 	local camera_tag = "csm" .. index
-	local camera = camerautil.bind_camera(world, camera_tag, {
+	camerautil.bind_camera(world, camera_tag, {
 		type = "csm_shadow",
 		eyepos = mc.ZERO_PT,
 		viewdir = lightdir,
 		updir = {0, 1, 0, 0},
 		frustum = {
 			ortho = true,
-			-- we calculate width/height value in crop_matrix
 			l = -1, r = 1,
 			b = -1, t = 1,
 			n = -camera_far, f = camera_far,
 		},
 	})
 
-	camera.crop_matrix = mc.mat_identity
 	return world:create_entity {
 		material = {
 			{ref_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"},
@@ -297,6 +318,8 @@ end
 local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.depend "shadowmaker_camera"
 
+ecs.tag "shadow_quad"
+
 local function csm_shadow_debug_quad()
 	local fbsize = world.args.fb_size
 	local fbheight = fbsize.h
@@ -312,6 +335,7 @@ local function csm_shadow_debug_quad()
 
 		local rect = {x=off_x, y=off_y, w=quadsize, h=quadsize}
 		local q_eid = computil.create_quad_entity(world, rect, quadmaterial, nil, "csm_quad"..idx)
+		world:add_component(q_eid, "shadow_quad", true)
 		local qe = world[q_eid]
 		local quad_material = qe.material[0]
 		local properties = quad_material.properties 
@@ -332,6 +356,13 @@ local function csm_shadow_debug_quad()
 	end
 end
 
+ecs.tag "shadow_frustum"
+ecs.tag "view_frustum"
+
+local frustum_colors = {
+	0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
+}
+
 local function	csm_shadow_debug_frustum()
 	for _, seid in world:each "shadow" do
 		local e = world[seid]
@@ -339,7 +370,10 @@ local function	csm_shadow_debug_frustum()
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
 
 		local frustum = mathbaselib.new_frustum(ms, vp)
-		computil.create_frustum_entity(world, frustum, "csm frusutm part" .. e.shadow.csm.index, nil, 0xff0f0f0f)
+		local f_eid = computil.create_frustum_entity(world, 
+			frustum, "csm frusutm part" .. e.shadow.csm.index, nil, 
+			frustum_colors[e.shadow.csm.index])
+		world:add_component(f_eid, "shadow_frustum", true)
 	end
 end
 
@@ -348,10 +382,6 @@ local function main_view_debug_frustum()
 	--create_frustum_debug(mq, "main view frustum", 0xff0000ff)
 	local camera = camerautil.get_camera(world, mq.camera_tag)
 
-	local colors = {
-		0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
-	}
-
 	for _, seid in world:each "shadow" do
 		local s = world[seid]
 
@@ -359,12 +389,44 @@ local function main_view_debug_frustum()
 		local frustum_desc = split_new_frustum(camera.frustum, csm.split_ratios)
 		local _, _, vp = ms:view_proj(camera, frustum_desc, true)
 		local frustum = mathbaselib.new_frustum(ms, vp)
-		computil.create_frustum_entity(world, frustum, "main view part" .. csm.index, nil, colors[csm.index])
+		local f_eid = computil.create_frustum_entity(world, frustum, "main view part" .. csm.index, nil, frustum_colors[csm.index])
+		world:add_component(f_eid, "view_frustum", true)
 	end
 end
 
 function debug_sm:post_init()
-	-- main_view_debug_frustum()
-	-- csm_shadow_debug_frustum()
+	main_view_debug_frustum()
+	csm_shadow_debug_frustum()
 	csm_shadow_debug_quad()
+end
+
+ecs.mark("record_camera_state", "camera_state_handler")
+function debug_sm:camera_state_handler()
+	for eid in world:each_mark "record_camera_state" do
+		local e = assert(world[eid])
+		assert(e.main_queue)
+
+		local function remove_eids(eids)
+			for _, eid in ipairs(eids)do
+				world:remove_entity(eid)
+			end
+		end
+
+		local shadow_frustum_eids = {}
+		for _, seid in world:each "shadow_frustum" do
+			shadow_frustum_eids[#shadow_frustum_eids+1] = seid
+		end
+
+		remove_eids(shadow_frustum_eids)
+
+		local view_frustum_eids = {}
+		for _, veid in world:each "view_frustum" do
+			view_frustum_eids[#view_frustum_eids+1] = veid
+		end
+		
+		remove_eids(view_frustum_eids)
+
+		main_view_debug_frustum()
+		csm_shadow_debug_frustum()
+	end
 end
