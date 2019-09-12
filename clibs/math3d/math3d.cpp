@@ -37,6 +37,8 @@ extern "C" {
 
 #include <vector>
 
+#define DEBUG_INFO 100
+
 //#define __CLOCKWISE 1
 
 #define MAT_PERSPECTIVE 0
@@ -2907,6 +2909,12 @@ lref_debug(lua_State *L) {
 	return r;
 }
 
+static int
+lstackrefobject_debug(lua_State *L) {
+	lua_settop(L, 2);
+	lua_insert(L, 1);	// type stack
+	return lref_debug(L);
+}
 
 static int
 lleaks(lua_State *L) {
@@ -2924,7 +2932,7 @@ lleaks(lua_State *L) {
 }
 
 static void
-register_linalg_mt(lua_State *L) {
+register_linalg_mt(lua_State *L, int debug_level) {
 	if (luaL_newmetatable(L, LINALG)) {
 		luaL_Reg l[] = {
 			{ "__gc", delLS },
@@ -2958,6 +2966,10 @@ register_linalg_mt(lua_State *L) {
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
+		if (debug_level >= DEBUG_INFO) {
+			lua_pushcfunction(L, lstackrefobject_debug);
+			lua_setfield(L, -2, "ref");
+		}
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 	}
@@ -2995,13 +3007,11 @@ lrefleak_debug(lua_State *L) {
 	}
 	struct refobject *ref = (struct refobject *)lua_touserdata(L, 1);
 	if (!lastack_isconstant(ref->id)) {
-		const char * traceback = NULL;
 		if (lua_rawgetp(L, -1, ref) != LUA_TSTRING) {
-			traceback = "Unknown ref object";
+			printf("Unknown Ref object leak : %p\n", ref);
 		} else {
-			traceback = lua_tostring(L, -1);
+			printf("Ref object leak : %s\n", lua_tostring(L, -1));
 		}
-		printf("Ref object leak : %s\n", traceback);
 		lua_pop(L, 2);
 	} else {
 		lua_pushnil(L);
@@ -3036,7 +3046,7 @@ extern "C" {
 
 		if (lua_getglobal(L, "_DEBUG") != LUA_TNIL) {
 			debug_level = (int)lua_tointeger(L, -1);
-			if (debug_level >= 100) {
+			if (debug_level >= DEBUG_INFO) {
 				lua_pushcfunction(L, lrefleak_debug);
 			} else {
 				lua_pushcfunction(L, lrefleak);
@@ -3045,7 +3055,7 @@ extern "C" {
 		}
 		lua_pop(L, 2);
 
-		register_linalg_mt(L);
+		register_linalg_mt(L, debug_level);
 
 		luaL_Reg l[] = {
 			{ "new", lnew },
@@ -3062,7 +3072,7 @@ extern "C" {
 		};
 		luaL_newlib(L, l);
 
-		if (debug_level >= 100) {
+		if (debug_level >= DEBUG_INFO) {
 			lua_pushcfunction(L, lref_debug);
 			lua_setfield(L, -2, "ref");
 		}
