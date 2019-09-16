@@ -1,0 +1,10 @@
+
+normalmap = false
+path = "/pkg/ant.resources.binary/test/pbr/gold/albedo.dds"
+sRGB = true
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  U = "MIRROR",
+  V = "MIRROR"
+}

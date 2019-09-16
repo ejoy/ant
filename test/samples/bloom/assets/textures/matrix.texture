@@ -1,0 +1,11 @@
+path = "/pkg/bloom/assets/textures/matrix.dds"
+
+sampler = {
+	U = "MIRROR",
+	V = "MIRROR",
+	MIN = "ANISOTROPIC",
+	MAG = "ANISOTROPIC",	
+}
+
+sRGB 		= true
+normalmap 	= false

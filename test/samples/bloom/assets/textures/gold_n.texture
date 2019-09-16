@@ -1,0 +1,10 @@
+
+normalmap = true
+path = "/pkg/ant.resources.binary/test/pbr/gold/normal.dds"
+sRGB = true
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  U = "MIRROR",
+  V = "MIRROR"
+}

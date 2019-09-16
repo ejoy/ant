@@ -1,0 +1,10 @@
+
+normalmap = false
+path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/pbr/bolonga_irr.dds"
+sRGB = true
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  U = "MIRROR",
+  V = "MIRROR"
+}

@@ -1,0 +1,10 @@
+
+normalmap = true
+path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/pbr/Cerberus_N.dds"
+sRGB = true
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  U = "MIRROR",
+  V = "MIRROR"
+}

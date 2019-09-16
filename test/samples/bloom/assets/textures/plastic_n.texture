@@ -1,0 +1,11 @@
+path = "/pkg/ant.resources.binary/test/pbr/plastic/normal.dds"
+
+sampler = {
+	U = "MIRROR",
+	V = "MIRROR",
+	MIN = "LINEAR",
+	MAG = "LINEAR",	
+}
+
+sRGB 		= true
+normalmap 	= true 
