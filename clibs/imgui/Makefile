@@ -11,6 +11,8 @@ IMGUI_INC=-I$(ANT3RD)/imgui
 IMGUI_SRC=$(ANT3RD)/imgui
 IMGUI_MACRO=-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
+WINDOW_INC=-I$(ANTCLIBS)/window
+
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
 
 ifeq "$(PLAT)" "mingw"
@@ -19,7 +21,7 @@ OBJS += $(ODIR)/imgui_win32.o
 LIBS = -limm32
 
 $(ODIR)/imgui_win32.o : imgui_win32.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(WINDOW_INC) $(IMGUI_MACRO)
 endif
 
 ifeq "$(PLAT)" "osx"

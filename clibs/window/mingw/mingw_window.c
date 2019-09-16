@@ -1,10 +1,13 @@
 #include <Windows.h>
 #include <stdint.h>
 #include "../window.h"
+#include "mingw_window.h"
+
 
 // project path in my documents
 #define CLASSNAME L"ANTCLIENT"
 #define WINDOWSTYLE (WS_OVERLAPPEDWINDOW)
+
 
 static void
 get_xy(LPARAM lParam, int *x, int *y) {
@@ -166,6 +169,14 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
+	case WM_USER_WINDOW_SETCURSOR:
+	{
+		LPTSTR cursor = (LPTSTR)lParam;
+		HCURSOR hcursor = LoadCursor(NULL, cursor);
+		SetCursor(hcursor);
+		break;
+	}
+
 	}
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
@@ -180,7 +191,7 @@ register_class()
 	wndclass.lpfnWndProc = WndProc;
 	wndclass.hInstance = GetModuleHandleW(0);
 	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	//wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.lpszClassName = CLASSNAME;
 	wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 

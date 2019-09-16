@@ -440,7 +440,7 @@ rearrange_indices_buffer(primitive &prim, uint32_t binaryoffset, data_buffer &in
 	auto& acc = prim.accessors[prim.indices];
 	acc.bufferView = (uint32_t)new_bvs.size();
 
-	const uint32_t numbytes = acc.count * 2;
+	const uint32_t numbytes = acc.count * component_size(acc.componentType);
 	new_bvs.push_back(create_bufferview(numbytes, 0, binaryoffset, target_type::ELEMENT_ARRAY_BUFFER));
 	newbuffers.push_back(std::move(indexbuffer));
 

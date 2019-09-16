@@ -31,6 +31,8 @@ model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 model_review_system.depend "procedural_sky_system"
 model_review_system.depend "cull_system"
+model_review_system.depend "luagc_system"
+--model_review_system.depend "shadow_maker"
 --model_review_system.depend "render_mesh_bounding"
 model_review_system.dependby "camera_controller"
 
@@ -63,9 +65,6 @@ local function create_material_item(filepath, color)
 end
 
 function model_review_system:init()
-	local fbsize = world.args.fb_size	
-	renderutil.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5})
-	renderutil.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 	create_light()
 	skyutil.create_procedural_sky(world)
 
@@ -101,6 +100,12 @@ function model_review_system:init()
 	-- }
 
 	cu.create_grid_entity(world, "grid")
+	-- cu.create_plane_entity(world, 
+	-- 	{20, 1, 20, 0}, nil, 
+	-- 	fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material", 
+	-- 	{0.8, 0.8, 0.8, 1},
+	-- 	"test shadow plane")
+
 	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},
@@ -128,13 +133,13 @@ function model_review_system:init()
 		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
 		can_render = true,
 		rendermesh = {
-			-- submesh_refs = {
-			-- 	["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
-			-- 	["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
-			-- 	["build_big_storage_01_straw_roof_002"] = cu.create_submesh_item {4, 5, 6, 7},
-			-- 	["build_big_storage_01_walls_down"] 	= cu.create_submesh_item {2},
-			-- 	["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
-			-- },
+			submesh_refs = {
+				["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
+				["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
+				["build_big_storage_01_straw_roof_002"] = cu.create_submesh_item {4, 5, 6, 7},
+				["build_big_storage_01_walls_down"] 	= cu.create_submesh_item {2},
+				["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
+			},
 		},
 		mesh = {
 			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",

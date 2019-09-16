@@ -1,8 +1,8 @@
 -- test solve_depend
 
 TEST = true
-
-function log(name)
+log = {}
+function log.info(name)
 	local tag = "[" .. name .. "] "
 	local write = io.write
 	return function(fmt, ...)
@@ -44,6 +44,11 @@ function mods.dummy(...)
 	local ecs = ...
 	local world = ecs.world
 
+	ecs.component_alias("name", "string")
+
+	ecs.mark("test_mark", "mark_handler")
+	ecs.mark("test_mark2", "mark_handler2")
+
 	local dummy = ecs.system "dummy"
 
 	dummy.singleton "init"
@@ -54,8 +59,11 @@ function mods.dummy(...)
 		local eid = world:create_entity {
 			foobar = {
 				x = 0, y = 0,
-			}
+			},
+			name = "foobar_name"
 		}
+
+		world:mark(eid, "test_mark")
 	end
 
 	function dummy:update()
@@ -68,9 +76,23 @@ function mods.dummy(...)
 				x = 1, y = 1,
 			}
 		}
+
+		world:mark(newid, "test_mark2", "test arg111")
 		print("Create foobar", newid)
 		for _, eid in world:each "foobar" do
 			print("2. Dummy foobar", eid)
+		end
+	end
+
+	function dummy:mark_handler()
+		print("handle 'mark_handler', list number:")
+		for eid, arg in world:each_mark "test_mark2" do
+			local e = world[eid]
+			if e then
+				print("[dummy], eid:", eid, arg)
+			else
+				print("[dummy], eid:", eid, "has been removed")
+			end
 		end
 	end
 
@@ -90,11 +112,35 @@ function mods.dummy(...)
 		end
 	end
 
+	function newdummy:mark_handler()
+		print("handle 'mark_handler'")
+		for eid in world:each_mark "test_mark" do
+			if world[eid] then
+				print("test_mark:", eid, world[eid].name or "[..]")
+			else
+				print("test_mark:", eid, "has been removed")
+			end
+		end
+	end
+
+	function newdummy:mark_handler2()
+		print("handle 'mark_handler2'")
+		for eid in world:each_mark "test_mark2" do
+			if world[eid] then
+				print("test_mark2:", eid, world[eid].name or "[..]")
+			else
+				print("test_mark2:", eid, "has been removed")
+			end
+		end
+	end
+
 	local delete = ecs.system "delete"
 
 	function delete:delete()
-		for eid, c in world:each_removed "foobar" do
-			print("Delete foobar", eid, "foobar", c.x, c.y)
+		for eid, info in world:each_removed "foobar" do
+			local c = info[1]
+			local e = info[2]
+			print("Delete foobar", eid, "foobar", c.x, c.y, "name:", e.name or "")
 		end
 	end
 end
@@ -152,6 +198,8 @@ local delete = w:update_func "delete"
 
 local function update_all()
 	update()
+	w:update_marks()
+	w:clear_all_marks()
 	delete()
 	w:clear_removed()
 end

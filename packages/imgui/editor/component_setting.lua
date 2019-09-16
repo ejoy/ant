@@ -12,7 +12,8 @@ local NormalCfgList = {
     "DisplayName",
     "HideHeader",
     "ArrayAsVector",
-    "IndexFormat"
+    "IndexFormat",
+    "RealDragSpeed",
 }
 
 local ArrayCfgList = {

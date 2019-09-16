@@ -15,7 +15,8 @@ SAMPLER2D(s_normal, 1);
 uniform vec4 u_specularColor;
 uniform vec4 u_specularLight;
 
- 
+
+
 void main()
 {
 	vec2 tc = vec2(v_texcoord0.x, v_texcoord0.y);
@@ -42,7 +43,7 @@ void main()
 	   
 	float ambientMode   = ambient_mode.x;
 	float ambientFactor = ambient_mode.y;   // Factor not use
-	vec4  ambientColor  = calc_ambient_color( ambientMode, v_normal  ) ;
+	vec4  ambientColor  = calc_ambient_color( ambientMode, v_normal.y  ) ;
 	ambientColor = ambientColor*basecolor;
 
 	#include "mesh_shadow/fs_ext_shadowmaps_color_lighting_main.sh" 

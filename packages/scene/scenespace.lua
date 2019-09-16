@@ -11,6 +11,8 @@ local assetmgr 	= assetpkg.mgr
 
 local animodule = require "hierarchy.animation"
 
+ecs.mark("hierarchy_delete", "hierarchy_del_handle")
+
 ecs.component_alias("attach", "entityid")
 ecs.component_alias("ignore_parent_scale", "boolean") {depend = "hierarchy"}
 
@@ -19,7 +21,6 @@ ecs.singleton "hierarchy_transform_result"
 local ur = ecs.singleton "hierarchy_update_result"
 local function reset_hierarchy_update_result(rr)
 	rr.removed_eids 	= {}
-	rr.hierarchy_trees 	= {}
 	rr.remove_trees 	= {}
 end
 
@@ -31,7 +32,6 @@ end
 
 local scene_space = ecs.system "scene_space"
 scene_space.dependby "primitive_filter_system"
-scene_space.dependby "remove_hierarchy_system"
 
 scene_space.singleton "event"
 scene_space.singleton "hierarchy_transform_result"
@@ -46,11 +46,12 @@ local mark_mt = {
 			return false
 		end
 		local e = world[eid]
-		
-		local pid = e.transform.parent
-		if pid and marked[pid] then
-			marked[eid] = pid
-			return true
+		if e then
+			local pid = e.transform.parent
+			if pid and marked[pid] then
+				marked[eid] = pid
+				return true
+			end
 		end
 
 		marked[eid] = false
@@ -130,7 +131,7 @@ end
 local function update_hirarchy_entity_world(trans, ignore_parentscale)
 	local srt = ms:srtmat(trans)
 	local peid = trans.parent
-	if peid then
+	if peid and world[peid] then
 		local parent = world[peid]
 		local pt = parent.transform
 
@@ -192,9 +193,8 @@ local function update_transform_field(trans, events, init)
 		return true
 	end
 
-	local changed
+	local changed = true
 	for k, v in pairs(events) do
-		changed = true
 		if k == 's' or k == 'r' or k == 't' then
 			ms(trans[k], v, "=")
 		elseif k == 'parent' then
@@ -207,12 +207,32 @@ local function update_transform_field(trans, events, init)
 	return changed
 end
 
-function scene_space:delete()
+local function update_remove_subtree(remove_trees, cache_result)
+	-- move removed hirarchy entity transform to children
+	local hierarchy_trees = {}
+	for _, subtree in pairs(remove_trees) do
+		for _, subeid in ipairs(subtree) do
+			local subentity = assert(world[subeid])
+
+			local trans = subentity.transform
+			trans.world(ms:srtmat(trans))
+			if subentity.hierarchy then
+				hierarchy_trees[subeid] = pseudoroot_eid
+			end
+		end
+	end
+
+	if next(hierarchy_trees) then
+		update_hierarchy_tree(hierarchy_trees, cache_result)
+	end
+end
+
+function scene_space:hierarchy_del_handle()
 	local hierarchy_cache = self.hierarchy_transform_result	
 	local removed_eids = {}
-	for eid, result in world:each_removed("hierarchy", true) do
+	for eid in world:each_mark "hierarchy_delete" do
 		hierarchy_cache[eid] = nil
-		removed_eids[eid] = result
+		removed_eids[eid] = true
 	end
 
 	if next(removed_eids) then
@@ -221,8 +241,10 @@ function scene_space:delete()
 			assert(removed_eids[eid] == nil)
 
 			local e = world[eid]
-			local peid = e.transform.parent
+			local trans = e.transform
+			local peid = trans.parent
 			if removed_eids[peid] then
+				e.transform.parent = nil
 				local subtree = trees[peid]
 				if subtree == nil then
 					subtree = {}
@@ -232,9 +254,7 @@ function scene_space:delete()
 			end
 		end
 
-		self.hierarchy_update_result.remove_trees = trees
-		self.hierarchy_update_result.removed_eids = removed_eids
-		world:update_func "handle_removed_hierarchy" ()
+		update_remove_subtree(trees, self.hierarchy_transform_result)
 	end
 end
 
@@ -246,30 +266,26 @@ local function add_hierarchy_tree_item(eid, events, init, trees)
 	end
 
 	local newparent = trans.parent
-	if newparent ~= oldparent then
-		local parentparent = world[newparent].transform.parent
-		trees[newparent] = parentparent
-	end
-	
-	trees[eid] = newparent or pseudoroot_eid
-end
+	if newparent and world[newparent] then
+		if newparent ~= oldparent then
+			local parentparent = world[newparent].transform.parent
+			trees[newparent] = parentparent
+		end
 
-function scene_space:post_init()
-	for eid in world:each_new "transform" do
-		self.event:new(eid, "transform")
+		trees[eid] = newparent or pseudoroot_eid
+	else
+		trees[eid] = pseudoroot_eid
 	end
-end
-
-local function update_scene_tree(hierarchy_cache, update_result)
-	update_hierarchy_tree(update_result.hierarchy_trees, hierarchy_cache)
-	reset_hierarchy_update_result(update_result)
 end
 
 local need_check_components_changed = {"hierarchy", "ignore_parent_scale"}
 
-function scene_space:event_changed()
-	local updateresult 		= self.hierarchy_update_result
-	local trees 			= updateresult.hierarchy_trees
+function scene_space:data_changed()
+	for eid in world:each_new "transform" do
+		self.event:new(eid, "transform")
+	end
+	
+	local trees = {}
 	
 	for eid, events, init in self.event:each "transform" do
 		local e = world[eid]
@@ -278,6 +294,7 @@ function scene_space:event_changed()
 		else
 			update_transform_field(e.transform, events, init)
 			local trans = e.transform
+			trans.world(ms:srtmat(trans))
 			--TODO: mark parent to cache, if no other hirarchy node change, we can only call 'mark_cache' function here
 			local peid = trans.parent
 			if peid then
@@ -302,43 +319,6 @@ function scene_space:event_changed()
 	end
 
 	if next(trees) then
-		update_scene_tree(self.hierarchy_transform_result, updateresult)
+		update_hierarchy_tree(trees, self.hierarchy_transform_result)
 	end
-end
-
-local remove_hierarchy_system = ecs.system "remove_hierarchy_system"
-remove_hierarchy_system.singleton "hierarchy_update_result"
-remove_hierarchy_system.singleton "hierarchy_transform_result"
-
-function remove_hierarchy_system:handle_removed_hierarchy()
-	local updateresult 		= self.hierarchy_update_result
-	local remove_trees 		= updateresult.remove_trees
-
-	local removeeids 		= self.hierarchy_update_result.removed_eids
-
-	-- move removed hirarchy entity transform to children
-	for hie_eid, remove_result in pairs(removeeids) do
-		local hie_entity = remove_result[2]
-
-		local subtree = remove_trees[hie_eid]
-		if subtree then
-			assert(hie_entity.transform, "remove 'hierarchy' component should not remove transform component at the mean time")
-			local hie_srt = ms:srtmat(hie_entity.transform)
-			for _, subeid in ipairs(subtree) do
-				local subentity = assert(world[subeid])
-				local trans = subentity.transform
-
-				assert(trans.parent == hie_eid)
-				trans.parent = nil
-
-				local localsrt = ms:srtmat(trans)
-				ms(trans.world, hie_srt, localsrt, "*=")
-
-				local s, r, t = ms(trans.world, "~PPP")
-				ms(trans.s, s, "=", trans.r, r, "=", trans.t, t, "=")
-			end
-		end
-	end
-
-	reset_hierarchy_update_result(self.hierarchy_update_result)
 end

@@ -133,12 +133,12 @@ function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 	}
 end
 
-function util.create_grid_entity(world, name, w, h, unit, view_tag)
+function util.create_grid_entity(world, name, w, h, unit, view_tag, transform)
     local geopkg = import_package "ant.geometry"
     local geolib = geopkg.geometry
 
 	local gridid = world:create_entity {
-		transform = mu.identity_transform(),
+		transform = transform or mu.identity_transform(),
         rendermesh = {},
         material = util.assign_material(fs.path "/pkg/ant.resources" / "materials" / "line.material"),
 		name = name,
@@ -165,23 +165,32 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag)
     return gridid
 end
 
-function util.create_plane_entity(world, color, size, pos, name)
-	return world:create_entity {
+function util.create_plane_entity(world, size, pos, materialpath, color, name)
+	color = color or {0.8, 0.8, 0.8, 1}	
+	local eid = world:create_entity {
 		transform = {
-			s = size or {0.08, 0.005, 0.08},
+			s = size or {1, 1, 1, 0},
 			r = {0, 0, 0, 0},
 			t = pos or {0, 0, 0, 1}
 		},
 		rendermesh = {},
-		mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/cube.mesh"},
 		material = util.assign_material(
-				fs.path "/pkg/ant.resources/depiction/shadow/mesh_receive_shadow.material",
+				materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
 				{uniforms = {u_color = {type="color", name="color", value=color}},}),
 		can_render = true,
-		--can_cast = true,
 		main_view = true,
 		name = name or "Plane",
 	}
+
+	local e = world[eid]
+	local vb = {
+		"fff",
+		-0.5, 0, 0.5,
+		0.5,  0, 0.5,
+		-0.5, 0,-0.5,
+		0.5,  0,-0.5,
+	}
+	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/plane.mesh", util.create_simple_mesh("p3", vb, 4))
 end
 
 local function quad_mesh(vb)	
@@ -218,7 +227,7 @@ end
 
 function util.create_shadow_quad_entity(world, rect, name)
 	return util.create_quad_entity(world, rect, 
-		fs.path "/pkg/ant.resources/depiction/shadowmap_quad.material", nil, name)
+		fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material", nil, name)
 end
 
 function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)

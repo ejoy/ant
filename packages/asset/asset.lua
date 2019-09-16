@@ -110,10 +110,36 @@ function assetmgr.unload(filename)
 	end
 end
 
+local function generate_resname_operation()
+	local stem_namemapper = {}
+	return function (resname)
+		local ss = resname:string()
+		assert(ss:sub(1, 2) == "//")
+		
+		local stem = resname:stem()
+		
+		local stemname = stem:string()
+		local idx = stem_namemapper[stemname] or 0
+		idx = idx + 1
+		stem_namemapper[stemname] = idx
+		
+		return resname:parent_path() / stemname .. "_" .. idx .. resname:extension():string()
+	end
+end
+
+local generate_resname = generate_resname_operation()
+
 function assetmgr.register_resource(reffile, content)
 	local res = get_resource(reffile)
 	if res then
-		log.error("ref key have been used:", reffile:String())
+		local newreffile = generate_resname(reffile)
+		res = get_resource(newreffile)
+		if res then
+			log.error("ref key have been used:", reffile:string(), ", regenerate resname still used:", newreffile:string())
+		else
+			log.info("duplicate resname : ", reffile:string(), ", using new resname:", newreffile:string())
+		end
+		reffile = newreffile
 	end
 
 	resources[res_key(reffile)] = content

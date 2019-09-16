@@ -142,6 +142,7 @@ function world:create_entity(t)
 	self[eid] = {}
 	self._entity[eid] = true
 	self:set_entity(eid, t)
+	self:mark(eid, "entity_create")
 	return eid
 end
 
@@ -152,6 +153,8 @@ function world:remove_entity(eid)
 
 	local removed = self._removed
 	removed[#removed+1] = { eid, e }
+	self:mark(eid, "entity_delete",e)
+
 	-- defer delete , see world:remove_reset
 end
 
@@ -234,6 +237,43 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
+function world:mark(eid, markname, arg)
+	local ml = self._marks[markname]
+	if ml == nil then
+		ml = {}
+		self._marks[markname] = ml
+	end
+
+	ml[#ml+1] = {eid, arg}
+end
+
+function world:each_mark(markname)
+	local ml = self._marks[markname]
+	if ml then
+		local idx = 0
+		local function mark_next()
+			idx = idx + 1
+			local t = ml[idx]
+			if t then
+				return t[1], t[2]
+			end
+		end
+
+		return mark_next, ml
+	end
+end
+
+function world:clear_all_marks()
+	self._marks = {}
+end
+
+function world:update_marks()
+	for cn in pairs(self._marks) do
+		local handlers = assert(self._mark_handlers[cn])
+		handlers()
+	end
+end
+
 local function new_component_next(set)
 	local n = #set
 	while n >= 0 do
@@ -294,7 +334,7 @@ local function dummy_iter() end
 
 --component_type ~= nil, return pairs<eid,component_data>
 --component_type == nil, return pairs<eid,entity_data>
-function world:each_removed(component_type, includeentity)
+function world:each_removed(component_type)
 	local removed_set
 	local set = self._removed
 	if not component_type then
@@ -316,22 +356,14 @@ function world:each_removed(component_type, includeentity)
 				local ctype = item[2]
 				if ctype == component_type then
 					removed_set = removed_set or {}
-					if includeentity then
-						removed_set[eid] = {c, world[eid], false}	-- just remove component
-					else
-						removed_set[eid] = c -- true
-					end
+					removed_set[eid] = {c, world[eid]}	-- just remove componen
 				end
 			else
 				local e = item[2]
 				c = e[component_type]
 				if c ~= nil then
 					removed_set = removed_set or {}
-					if includeentity then
-						removed_set[eid] = {c, e, true}	-- remove entity
-					else
-						removed_set[eid] = c --true
-					end
+					removed_set[eid] = {c, e}	-- remove entity
 				end
 			end
 		end
@@ -523,6 +555,7 @@ function ecs.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_serialize_to_eid = {},
 		_cur_system = {"",""},
+		_marks = {},
 	}, world)
 
 	-- load systems and components from modules
@@ -534,6 +567,12 @@ function ecs.new_world(config)
 	w._systems = system.lists(class.system)
 	w._singleton_proxy = system.proxy(class.system, class.singleton)
 
+	local handlers = {}
+	for cn, handlername in pairs(class.mark_handlers) do
+		handlers[cn] = w:update_func(handlername)
+	end
+
+	w._mark_handlers = handlers
 	return w
 end
 

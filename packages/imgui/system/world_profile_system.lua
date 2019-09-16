@@ -6,9 +6,9 @@ local timer = import_package "ant.timer"
 
 local profile_cache = ecs.singleton "profile_cache"
 function profile_cache.init()
-    self = {}
-    self.list = {}
-    return self
+    return {
+        list = {}
+    }
 end
 
 local world_profile_system =  ecs.system "world_profile_system"

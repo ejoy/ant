@@ -67,8 +67,8 @@ local function add_ambient_light_propertices(world, uniform_properties)
 	update_uniforms(uniform_properties, ambient_data)
 end 
 
-function util.load_lighting_properties(world, filter)
-	local lighting_properties = assert(filter.render_properties.lighting.uniforms)
+function util.load_lighting_properties(world, render_properties)
+	local lighting_properties = assert(render_properties.lighting.uniforms)
 
 	add_directional_light_properties(world, lighting_properties)
 	add_ambient_light_propertices(world, lighting_properties)
@@ -80,47 +80,41 @@ function util.load_lighting_properties(world, filter)
 	end
 end
 
-function util.load_shadow_properties(world, filter)
-	local shadow_properties = filter.render_properties.shadow
-	local shadow_queue = world:first_entity "shadow"
-
-	if shadow_queue then
-		local textures = shadow_properties.textures
-		local sm_stage = 4
-		for idx, rb in ipairs(shadow_queue.render_target.frame_buffer.render_buffers) do
-			local numidx = idx-1
-			local samplername = "s_shadowmap" .. numidx
-			textures[samplername] = {type="texture", stage=sm_stage+numidx, name=samplername, handle=rb.handle}
-		end
-
-		--TODO, view proj matrix calucalate two times, one is here, the other in render_system:update_view_proj function
-		-- we can share this calculation
-		local camera = shadow_queue.camera
-		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
-		
-		local uniforms = shadow_properties.uniforms
-		uniforms["directional_viewproj"] = {
-			name = "Directional Light View proj", type = "m4",
-			value = {
-				n = 1,
-				vp,
-			}
-		}
-	end
+local shadow_property_names = {}
+for ii=0, 3 do
+	shadow_property_names[ii*2] = "s_shadowmap" ..ii
+	shadow_property_names[ii*2+1] = "u_shadowmatrix" ..ii
 end
 
-function util.load_postprocess_properties(world, filter)
-	local mq = world:first_entity("main_queue")
-	if mq then
-		local postprocess = filter.render_properties.postprocess
-		local fb = mq.render_target.frame_buffer
-		if fb then
-			local rendertex = fb.render_buffers[1].handle
-			postprocess.textures["s_mianview"] = {
-				name = "Main view render texture", type = "texture",
-				stage = 0, handle = rendertex,
-			}
+function util.load_shadow_properties(world, render_properties)
+	local shadow_properties = render_properties.shadow
+	
+	for _, eid in world:each "shadow" do
+		local se = world[eid]
+		local shadow = se.shadow
+		local csm = shadow.csm
+		if csm then
+			local idx = csm.index
+			local sm_name = shadow_property_names[idx*2]
+			local s_mat = shadow_property_names[idx*2+1]
+
+			
 		end
+	end
+
+
+end
+
+function util.load_postprocess_properties(world, render_properties)
+	local mq = assert(world:first_entity("main_queue"))
+	local postprocess = render_properties.postprocess
+	local fb = mq.render_target.frame_buffer
+	if fb then
+		local rendertex = fb.render_buffers[1].handle
+		postprocess.textures["s_mianview"] = {
+			name = "Main view render texture", type = "texture",
+			stage = 0, handle = rendertex,
+		}
 	end
 end
 
@@ -128,21 +122,6 @@ function util.create_primitve_filter(viewtag, filtertag)
 	return {
 		view_tag = viewtag,
 		filter_tag = filtertag,
-		-- result = {
-		-- 	case_shadow = {},
-		-- 	translcuent = {},
-		-- 	opaque = {}
-		-- },
-		-- render_properties = {
-		-- 	lighting = {
-		-- 		uniforms = {},
-		-- 		textures = {},
-		-- 	},
-		-- 	shadow = {
-		-- 		uniforms = {},
-		-- 		textures = {},
-		-- 	}
-		-- }
 	}
 end
 

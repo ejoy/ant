@@ -79,7 +79,7 @@ end
 function GuiCanvas:_update_title_btns()
     windows.PushStyleVar(enum.StyleVar.SelectableTextAlign,0.5,0.5)
     for i,str in ipairs(self.gizmo_type) do
-        local change = widget.Selectable(str,self.gizmo_select,str=="rotation")
+        local change = widget.Selectable(str,self.gizmo_select)
         cursor.SameLine()
         if change then
             hub.publish(Event.GizmoType,self.gizmo_select[1])

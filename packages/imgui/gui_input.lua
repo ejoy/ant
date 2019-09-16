@@ -20,18 +20,23 @@ gui_input.MouseMiddle = 3
 gui_input.MouseButton4 = 4
 gui_input.MouseButton5 = 5
 
+gui_input.KeyCtrl = "CTRL"
+gui_input.KeyShift = "SHIFT"
+gui_input.KeyAlt = "ALT"
+gui_input.KeySys = "SYS"
+
 local function update_mouse_pos(x, y)
+
     if mouse_state.last then
         mouse_last.x, mouse_last.y = mouse_state.x, mouse_state.y
-        mouse_delta.x = x-mouse_last.x
-        mouse_delta.y = y-mouse_last.y
+        mouse_delta.x = mouse_delta.x + x-mouse_last.x
+        mouse_delta.y = mouse_delta.y + y-mouse_last.y
     else
         mouse_last.x, mouse_last.y = x, y
         mouse_state.last = mouse_last
 
         mouse_delta.x, mouse_delta.y = 0, 0
     end
-    
     mouse_state.x, mouse_state.y = x, y
 end
 
@@ -54,14 +59,13 @@ function gui_input.keyboard( key, press, state )
     table.insert(gui_input.key_down,{key,press})
 end
 
-
-
 function gui_input.clean()
     called = {}
     gui_input.called = called
 
     key_down = {}
     gui_input.key_down = key_down
+    mouse_delta.x,mouse_delta.y = 0,0
 end
 
 function gui_input.size(w,h,t)
@@ -80,6 +84,16 @@ function gui_input.is_mouse_pressed(what)
     local s = gui_input.mouse_state[what]
     return ( s == 1 ) or ( s == 2 )
 end
------------------------------------------------------
+
+function gui_input.is_mouse_pressed(what)
+    local s = gui_input.mouse_state[what]
+    return ( s == 1 ) or ( s == 2 )
+end
+
+--gui_input.KeyXXX
+function gui_input.get_ctrl_state(what)
+    return gui_input.key_state[what]
+end
 
 return gui_input
+-----------------------------------------------------

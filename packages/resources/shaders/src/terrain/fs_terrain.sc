@@ -1,7 +1,7 @@
 // terrain shader sample
 $input v_normal, v_texcoord0, v_texcoord1
 
-#include "../common/common.sh"
+#include "common.sh"
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
 
@@ -19,7 +19,7 @@ void main()
 	vec4 maskColor    	= vec4(1.0, 1.0, 1.0, texture2D(s_maskTexture,v_texcoord1).r);
 	//vec4 mask 			= vec4(v_position.y/20.0, v_position.y/20.0, v_position.y/20.0 , 1.0);
 
-	vec4  ambientColor = vec4(calc_ambient_color(ambient_mode.x, v_normal.xyz).rgb, 0.0) * textureColor;
+	vec4  ambientColor = vec4(calc_ambient_color(ambient_mode.x, v_normal.y).rgb, 0.0) * textureColor;
 	vec4  diffuseColor = lightColor * textureColor * maskColor;
 	
 	gl_FragColor 		= saturate((ambientColor + diffuseColor));

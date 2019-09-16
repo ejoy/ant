@@ -36,10 +36,10 @@ return {
 		},
 		
 		move_up = {
-			{name = 'keyboard', scale=1,  mouse=keyvalid_mousestate, 'Q'},
-			{name = 'keyboard', scale=1,  mouse=keyvalid_mousestate, 'q'},
-			{name = 'keyboard', scale=-1, mouse=keyvalid_mousestate, 'E'},
-			{name = 'keyboard', scale=-1, mouse=keyvalid_mousestate, 'e'},
+			{name = 'keyboard', scale=1,  mouse=keyvalid_mousestate, 'E'},
+			{name = 'keyboard', scale=1,  mouse=keyvalid_mousestate, 'e'},
+			{name = 'keyboard', scale=-1, mouse=keyvalid_mousestate, 'Q'},
+			{name = 'keyboard', scale=-1, mouse=keyvalid_mousestate, 'q'},
 		},
 	}
 

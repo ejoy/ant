@@ -1,0 +1,22 @@
+shader = {
+    vs = "/pkg/ant.resources/gizmo/vs_front_line.sc",
+    fs = "/pkg/ant.resources/line/fs_line.sc",
+}
+
+state = {
+    WRITE_MASK = "RGBAZ",
+    ALPHA_REF = 1,
+    CULL = "CCW",
+	MSAA = true,
+	LINEAA = true,
+    DEPTH_TEST = "ALWAYS",
+    PT = "LINES"
+}
+
+-- surface_type = {
+--     transparency = "opaticy",
+--     shadow = {
+--         cast = "off",
+--         receive = "off",
+--     },	
+-- }

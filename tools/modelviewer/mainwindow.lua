@@ -3,7 +3,6 @@ local packages = {
 }
 local systems = {
 	"model_review_system",
-	"camera_controller",
 }
 
 local runtime = import_package "ant.imgui".runtime

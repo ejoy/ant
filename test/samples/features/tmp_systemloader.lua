@@ -22,11 +22,11 @@ ecs.import 'ant.objcontroller'
 local serialize = import_package 'ant.serialize'
 
 local renderpkg = import_package 'ant.render'
-local computil = renderpkg.components
-local renderutil=renderpkg.util
-local aniutil = import_package 'ant.animation'.util
+local computil  = renderpkg.components
+local aniutil   = import_package 'ant.animation'.util
 
-local ms = import_package 'ant.math'.stack
+local mathpkg   = import_package "ant.math"
+local mu        = mathpkg.util
 
 local lu = renderpkg.light
 
@@ -151,9 +151,6 @@ local function test_serialize(delfile_aftertest)
 end
 
 function init_loader:init()
-    renderutil.create_main_queue(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
-    renderutil.create_blit_queue(world, {x=0, y=0, w=world.args.fb_size.w, h=world.args.fb_size.h})
-	-- renderutil.create_render_queue_entity(world, world.args.fb_size, ms({1, 1, -1}, "inT"), {5, 5, -5}, "main_view")
     do
         lu.create_directional_light_entity(world, 'directional_light')
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
@@ -163,7 +160,7 @@ function init_loader:init()
         PVPScenLoader.create_entitices(world)
     end
 
-    computil.create_grid_entity(world, 'grid', 64, 64, 1)
+    computil.create_grid_entity(world, 'grid', 64, 64, 1, nil, mu.translate_mat {0, 0, 0})
     create_animation_test()
 end
 

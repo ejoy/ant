@@ -14,6 +14,7 @@
 #include "luabgfx.h"
 #include "simplelock.h"
 #include "bgfx_interface.h"
+#include "bgfx_alloc.h"
 
 #if BGFX_API_VERSION != 100
 #   error BGFX_API_VERSION mismatch
@@ -446,6 +447,10 @@ linit(lua_State *L) {
 		init.platformData.context = getfield(L, "context");
 		init.platformData.backBuffer = getfield(L, "backBuffer");
 		init.platformData.backBufferDS = getfield(L, "backBufferDS");
+
+		//if (init.debug) {
+			luabgfx_getalloc(&init.allocator);
+		//}
 	}
 
 	if (!BGFX(init)(&init)) {
@@ -845,6 +850,14 @@ lgetStats(lua_State *L) {
 	default:
 		return luaL_error(L, "Unkown stat format %c", what[i]);
 	}}
+	return 1;
+}
+
+static int
+lgetMemory(lua_State *L) {
+	int64_t memory = 0;
+	luabgfx_info(&memory);
+	lua_pushinteger(L, memory);
 	return 1;
 }
 
@@ -4182,6 +4195,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "init", linit },
 		{ "get_caps", lgetCaps },
 		{ "get_stats", lgetStats },
+		{ "get_memory", lgetMemory },
 		{ "reset", lreset },
 		{ "shutdown", lshutdown },
 		{ "set_view_clear", lsetViewClear },

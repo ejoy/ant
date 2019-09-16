@@ -87,7 +87,7 @@ local function is_asset_loaded(e)
     return is_material_loaded(e.material)
 end
 
-function asyn_asset_loader:post_init()
+function asyn_asset_loader:data_changed()
     local loadlist = self.asyn_load_list
     local loaded_assets = {}
     local max_entity = 5

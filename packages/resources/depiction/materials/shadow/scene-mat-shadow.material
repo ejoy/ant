@@ -1,0 +1,14 @@
+shader = {
+	vs = "/pkg/ant.resources/mesh_shadow/vs_shadowmaps_color_lighting_csm.sc",
+	--fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_hard_csm.sc.sc",
+	fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm.sc",
+} 
+    
+state = "materials/states/default.state"
+
+properties = { 
+	--s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/ant.resources/PVPScene/siegeweapon_d.texture"},
+	--s_normal = {type="texture", name="normal", stage=1, ref_path="/pkg/ant.resources/PVPScene/siegeweapon_n.texture"},
+	--u_specularColor = {type="v4", name="specular color", value= {200/255, 200/255, 200/255, 0.08}},
+	--u_specularLight = {type="v4", name="specular light factor", value={2, 0, 0,0}},
+}

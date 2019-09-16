@@ -1,0 +1,10 @@
+normalmap = false
+path = "/pkg/ant.resources.binary/test/1x1_normal.png"
+sRGB = true
+sampler = {
+  MAG   = "LINEAR",
+  MIN   = "LINEAR",
+  MIP   = "LINEAR",
+  U     = "CLAMP",
+  V     = "CLAMP"
+}

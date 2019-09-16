@@ -107,6 +107,12 @@ return function(world, import, class)
 		class_register.component_alias(name, "tag")
 	end
 
+	class.mark_handlers = {}
+	class_register.mark = function(name, handler)
+		--class_register.tag(name)
+		class.mark_handlers[name] = handler
+	end
+
 	class_register.component_alias("tag", "boolean", true)
 	class_register.component_base("entityid", -1)
 

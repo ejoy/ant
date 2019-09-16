@@ -12,6 +12,7 @@ extern "C" {
 #include <glm/ext/matrix_clip_space.hpp>
 #include <cstring>
 #include <cstdlib>
+#include <malloc.h>
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 
@@ -1458,6 +1459,7 @@ wSelectable(lua_State *L) {
 	ImVec2 size(0, 0);
 	int t = lua_type(L, INDEX_ARGS);
 	switch (t) {
+	case LUA_TNIL:
 	case LUA_TBOOLEAN:
 		selected = lua_toboolean(L, INDEX_ARGS);
 		size.x = (float)luaL_optnumber(L, 3, 0.0f);
@@ -2889,7 +2891,7 @@ fCreate(lua_State *L) {
 	uint8_t* data;
 	int32_t width;
 	int32_t height;
-	atlas->GetTexDataAsRGBA32(&data, &width, &height);
+	atlas->GetTexDataAsAlpha8(&data, &width, &height);
 
 	union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture;
 	texture.s.handle = BGFX(create_texture_2d)(
@@ -2897,13 +2899,16 @@ fCreate(lua_State *L) {
 		, (uint16_t)height
 		, false
 		, 1
-		, BGFX_TEXTURE_FORMAT_BGRA8
+		, BGFX_TEXTURE_FORMAT_A8
 		, 0
-		, BGFX(copy)(data, width*height * 4)
+		, BGFX(copy)(data, width*height)
 		);
 	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
 	texture.s.mip = 0;
 	atlas->TexID = texture.ptr;
+	atlas->ClearInputData();
+	atlas->ClearTexData();
+
 	return 0;
 }
 
@@ -3362,6 +3367,41 @@ push_beginframe( lua_State * L ){
 	lua_pushcclosure(L, lbeginFrame, 2);
 }
 
+#if BX_PLATFORM_WINDOWS
+#define bx_malloc_size _msize
+#elif BX_PLATFORM_LINUX
+#define bx_malloc_size malloc_usable_size
+#elif BX_PLATFORM_OSX
+#define bx_malloc_size malloc_size
+#elif BX_PLATFORM_IOS
+#define bx_malloc_size malloc_size
+#else
+#    error "Unknown PLATFORM!"
+#endif
+
+int64_t allocator_memory = 0;
+
+static void* ImGuiAlloc(size_t sz, void* /*user_data*/) {
+	void* ptr = malloc(sz);
+	if (ptr) {
+		allocator_memory += bx_malloc_size(ptr);
+	}
+	return ptr;
+}
+
+static void ImGuiFree(void* ptr, void* /*user_data*/) {
+	if (ptr) {
+		allocator_memory -= bx_malloc_size(ptr);
+	}
+	free(ptr);
+}
+
+static int
+lgetMemory(lua_State *L) {
+	lua_pushinteger(L, allocator_memory);
+	return 1;
+}
+
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -3370,6 +3410,7 @@ int
 luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
 	init_interface(L);
+	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
 	luaL_Reg l[] = {
 		{ "create", lcreate },
@@ -3386,6 +3427,7 @@ luaopen_imgui(lua_State *L) {
 		{ "ime_handle", limeHandle },
 		{ "setDockEnable", lsetDockEnable },
 		{ "showDockSpace", lshowDockSpace },
+		{ "get_memory", lgetMemory },
 		{ NULL, NULL },
 	};
 

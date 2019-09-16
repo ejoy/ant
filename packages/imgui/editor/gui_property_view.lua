@@ -29,7 +29,6 @@ function GuiPropertyView:_init()
     self._dirty_flag = false
     self.base_component_cfg = {offset_2 = 200}
     ---
-    
     self:_init_subcribe()
 end
 
@@ -59,7 +58,12 @@ function GuiPropertyView:_on_refresh_entity(tbl)
     if tbl.type ~= "auto" then 
         log.info_a(tbl)
     end
-    self.entity_tbl = tbl.entities
+    if self.widget_entity and self.widget_entity.is_editing then
+        self.temp_entity_tbl = tbl.entities
+    else
+        self.temp_entity_tbl = nil
+        self.entity_tbl = tbl.entities
+    end
 end
 
 function GuiPropertyView:reset_com_setting()
@@ -102,7 +106,14 @@ function GuiPropertyView:on_update()
 
         local eid,entity = next(self.entity_tbl)
         if eid then
+            local is_editing = self.widget_entity.is_editing
             self.widget_entity:update(eid,entity,self.base_component_cfg)
+            if (not is_editing) and (self.widget_entity.is_editing) then
+                if self.temp_entity_tbl then
+                    self.entity_tbl = self.temp_entity_tbl
+                    self.temp_entity_tbl = nil
+                end
+            end
         end
     else
         widget.Text("Not Entity")

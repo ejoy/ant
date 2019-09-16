@@ -1,0 +1,15 @@
+shader = {
+   vs = "/pkg/ant.resources/shadow/vs_shadowmaps_packdepth_linear.sc",
+   fs = "/pkg/ant.resources/shadow/fs_shadowmaps_packdepth_linear.sc",
+   --vs = "/pkg/ant.resources/line/vs_line.sc.sc",
+   --fs = "/pkg/ant.resources/line/fs_line.sc.sc",
+}
+
+state = {
+    WRITE_MASK = "RGBAZ",
+    DEPTH_TEST = "LESS",
+    CULL = "CCW",
+    MSAA = true,
+    -- PT = "LINES"
+}
+

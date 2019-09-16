@@ -31,7 +31,6 @@ end
 	}
 ]]
 local function init(rootpath, repopath, cachepath)
-	assert(lfs.is_directory(rootpath), "Not a dir")
 	local mountpath = rootpath / ".mount"
 	if lfs.is_regular_file(mountpath) then
 		for name, path in pairs(access.readmount(mountpath)) do
@@ -61,6 +60,9 @@ local function init(rootpath, repopath, cachepath)
 end
 
 function repo.new(rootpath)
+	if not lfs.is_directory(rootpath) then
+		return nil, "Not a dir"
+	end
 	local cachepath = lfs.mydocs_path() / "ant" / "cache"
 	local repopath = rootpath / ".repo"
 	init(rootpath, repopath, cachepath)

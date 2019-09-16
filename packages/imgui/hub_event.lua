@@ -8,6 +8,7 @@ local Evt ={
     ModifyComponent ="Editor_ModifyComponent",
     ResponseWorldInfo ="Editor_ResponseWorldInfo",
     RequestWorldInfo ="Editor_RequestWorldInfo",
+    RequestHierarchy = "RequestHierarchy",
     EntityOperate ="Editor_EntityOperate",
     --Delete,{eid,...}
     GizmoType = "Editor_GizmoType",--"position"/"rotation"/"scale"

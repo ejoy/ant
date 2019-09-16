@@ -15,13 +15,7 @@ uniform vec4 ambient_groundcolor;
 uniform vec4 u_eyepos;
 uniform vec4 u_lightPos;
 
-// shadow
 // lightmap - shadow
-uniform mat4 directional_viewproj[1];
-SAMPLER2DSHADOW(s_shadowmap0, 4);
-SAMPLER2DSHADOW(s_shadowmap1, 5);
-SAMPLER2DSHADOW(s_shadowmap2, 6);
-SAMPLER2DSHADOW(s_shadowmap3, 7);
 
 //postprocess
 SAMPLER2D(s_mianview, 0);

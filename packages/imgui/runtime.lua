@@ -146,7 +146,7 @@ local function update()
 	if debug_update then debug_update() end
 	if world_update then
 		world_update()
-		bgfx.frame()
+		rhwi.frame()
 	end
 end
 

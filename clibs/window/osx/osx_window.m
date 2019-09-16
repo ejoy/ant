@@ -347,14 +347,14 @@ void window_mainloop(struct ant_window_callback* cb) {
     if (!g_wd) {
         return;
     }
-	@autoreleasepool {
-        [NSApplication sharedApplication];
-        id dg = [AppDelegate new];
-        [NSApp setDelegate:dg];
-        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-        [NSApp activateIgnoringOtherApps:YES];
-        [NSApp finishLaunching];
-        while (![dg applicationHasTerminated]) {
+    [NSApplication sharedApplication];
+    id dg = [AppDelegate new];
+    [NSApp setDelegate:dg];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [NSApp activateIgnoringOtherApps:YES];
+    [NSApp finishLaunching];
+    while (![dg applicationHasTerminated]) {
+        @autoreleasepool {
             while (dispatch_event(cb, peek_event())) { }
         }
     }

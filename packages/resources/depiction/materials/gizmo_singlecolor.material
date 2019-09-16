@@ -6,7 +6,7 @@ shader = {
 state = {
     WRITE_MASK = "RGBAZ",
     ALPHA_REF = 1,
-    CULL = "CCW",
+    CULL = "CW",
     MSAA = true,
     DEPTH_TEST = "ALWAYS",
 }

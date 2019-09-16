@@ -1,26 +1,35 @@
 #include <imgui.h>
 #include <Windows.h>
+#include <mingw/mingw_window.h>
 
 void init_cursor() {
     ImGuiIO& io = ImGui::GetIO();
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 }
 
-void set_cursor(ImGuiMouseCursor cursor) {
-    switch (cursor) {
-    default: [[fallthrough]];
-    case ImGuiMouseCursor_Arrow:      ::SetCursor(::LoadCursor(NULL, IDC_ARROW));    break;
-    case ImGuiMouseCursor_TextInput:  ::SetCursor(::LoadCursor(NULL, IDC_IBEAM));    break;
-    case ImGuiMouseCursor_ResizeAll:  ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL));  break;
-    case ImGuiMouseCursor_ResizeEW:   ::SetCursor(::LoadCursor(NULL, IDC_SIZEWE));   break;
-    case ImGuiMouseCursor_ResizeNS:   ::SetCursor(::LoadCursor(NULL, IDC_SIZENS));   break;
-    case ImGuiMouseCursor_ResizeNESW: ::SetCursor(::LoadCursor(NULL, IDC_SIZENESW)); break;
-    case ImGuiMouseCursor_ResizeNWSE: ::SetCursor(::LoadCursor(NULL, IDC_SIZENWSE)); break;
-    case ImGuiMouseCursor_Hand:       ::SetCursor(::LoadCursor(NULL, IDC_HAND));     break;
-    case ImGuiMouseCursor_None:       ::SetCursor(NULL); break;
-    }
+void set_cursor(ImGuiMouseCursor im_cursor) {
+	LPTSTR cursor = NULL;
+	switch (im_cursor) {
+	default: [[fallthrough]] ;
+	case ImGuiMouseCursor_Arrow:      cursor = IDC_ARROW;    break;
+	case ImGuiMouseCursor_TextInput:  cursor = IDC_IBEAM;    break;
+	case ImGuiMouseCursor_ResizeAll:  cursor = IDC_SIZEALL;  break;
+	case ImGuiMouseCursor_ResizeEW:   cursor = IDC_SIZEWE;   break;
+	case ImGuiMouseCursor_ResizeNS:   cursor = IDC_SIZENS;   break;
+	case ImGuiMouseCursor_ResizeNESW: cursor = IDC_SIZENESW; break;
+	case ImGuiMouseCursor_ResizeNWSE: cursor = IDC_SIZENWSE; break;
+	case ImGuiMouseCursor_Hand:       cursor = IDC_HAND;     break;
+	case ImGuiMouseCursor_None:      cursor = NULL; break;
+	}
+	ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+	HWND  window = (HWND)(main_viewport->PlatformHandle);
+	if (window != NULL)
+		PostMessage(window, WM_USER_WINDOW_SETCURSOR, NULL, (LPARAM)cursor);
+	else if (cursor != NULL)
+		::SetCursor(::LoadCursor(NULL, cursor));
+	else
+		::SetCursor(NULL);
 }
-
 #if defined(__MINGW32__)
 
 #include <Windows.h>

@@ -210,31 +210,50 @@ end
 
 
 local function memory_info()
-    local memstat = memmgr.bgfx_stat("m")
-    local s = {"memory:"}
-    local keys = {}
-    for k in pairs(memstat) do
-        keys[#keys+1] = k
-    end
-    table.sort(keys, function(lhs, rhs) return lhs < rhs end)
-    for _, k in ipairs(keys) do
-        local v = memstat[k]
-        s[#s+1] = "\t" .. k .. ":" .. v
-    end
+	local function bytestr(n)
+		if n < 1024 then
+			return ("%dB"):format(n)
+		end
+		n = n / 1024.0
+		if n < 1024 then
+			return ("%.1fKB"):format(n)
+		end
+		n = n / 1024.0
+		return ("%.1fMB"):format(n)
+	end
 
-    return table.concat(s, "\n")
+	local s = {}
+	local platform = require "platform"
+	local bgfx = require "bgfx"
+	s[#s+1] = ""
+	s[#s+1] = ("sys   memory:%s"):format(bytestr(platform.info "memory"))
+	s[#s+1] = ("lua   memory:%s"):format(bytestr(collectgarbage "count" * 1024.0))
+	s[#s+1] = ("bgfx  memory:%s"):format(bytestr(bgfx.get_memory()))
+	s[#s+1] = ("math  memory:%s"):format(bytestr(ms:stacksize()))
+	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui.get_memory()))
+	
+	s[#s+1] = "-------------------"
+
+	local data = bgfx.get_stats "m"
+	s[#s+1] = ("rt   memory:%s"):format(bytestr(data.rtMemoryUsed))
+	s[#s+1] = ("tex  memory:%s"):format(bytestr(data.textureMemoryUsed))
+	s[#s+1] = ("vb   memory:%s"):format(bytestr(data.transientVbUsed))
+	s[#s+1] = ("ib   memory:%s"):format(bytestr(data.transientIbUsed))
+	s[#s+1] = ""
+
+	local leaks = ms:leaks()
+	if leaks and #leaks >= 0 then
+		s[#s+1] = "-------------------"
+		s[#s+1] = ("math3d leaks: %d"):format(#leaks)
+	end
+	
+	return table.concat(s, "\t\n\t")
 end
 
 function camera_controller_system:on_gui()
 	local windows = imgui.windows
 	local widget = imgui.widget
-	local flags = imgui.flags
-	windows.SetNextWindowSizeConstraints(300, 300, 500, 500)
-	windows.Begin("Test", flags.Window { "MenuBar" })
+	windows.Begin("Test")
 	widget.Text(memory_info())
 	windows.End()
-end
-
-function camera_controller_system:update()
-	
 end

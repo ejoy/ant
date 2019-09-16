@@ -25,19 +25,24 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	return wolrdMat;
 }
 
+mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
+{
+	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
+	vec3 tangent = normalize(mul(worldMat, vec4(t.xyz, 0.0)).xyz);
+	vec3 bitangent = cross(normal, tangent) * b_sign;
+
+	mat3 tbn = mat3(tangent, bitangent, normal);
+#if BGFX_SHADER_LANGUAGE_HLSL
+	return tbn;
+#else
+	return transpose(tbn);
+#endif
+}
+
 // left handside
 mat3 calc_tbn_lh(vec3 n, vec3 t, mat4 worldMat)
 {
-	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
-	vec3 tangent = normalize(mul(worldMat, vec4(t, 0.0)).xyz);
-	vec3 bitangent = cross(normal, tangent);
-
- 	return transpose(
-			mat3_from_columns(
-			tangent,
-			bitangent,
-			normal)
-		);
+	return calc_tbn_lh_ex(n, t, 1.0, worldMat);
 }
 
 // mat3 calc_tbn_rh(vec3 n, vec3 t, mat4 worldMat)

@@ -434,6 +434,11 @@ end
 local response = {}
 
 function response.ROOT(hash)
+	if hash == '' then
+		_print("INVALID ROOT", name)
+		os.exit(-1, true)
+		return
+	end
 	print("CHANGEROOT", hash)
 	repo.repo:changeroot(hash)
 end

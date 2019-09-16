@@ -1,6 +1,6 @@
 local t = {}
 
-function t.handle_event(world,event,args)
+function t.handle_event(_,world,event,args)
     local handle_func = t.handler[event]
     assert(handle_func,"event not exist:"..event)
     if handle_func then
@@ -11,7 +11,12 @@ end
 t.handler = {}
 function t.handler.Delete(world,args)
     for _,id in ipairs(args) do
+        local e = world[id]
         world:remove_entity(id)
+
+        if e.hierarchy then
+            world:mark(id, "hierarchy_delete")
+        end
     end
 end
 

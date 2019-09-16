@@ -24,17 +24,11 @@ vec3 calc_directional_light(vec3 normal, vec3 lightdir, vec3 viewdir, float shin
 	return vec3(result, result, result);
 }
 
-vec4 calc_ambient_color(float ambientMode,vec3 normalWS) 
+vec4 calc_ambient_color(float ambientMode, float factor) 
 {
 	// gradient mode 
 	if(ambientMode == 2.0) {
-		float angle = normalWS.y;
-		if(angle>0.0)
-			return (ambient_skycolor*angle) + (ambient_midcolor*(1.0-angle));
-		else {
-			angle = - angle;
-		    return (ambient_groundcolor*angle) + (ambient_midcolor*(1.0-angle));
-		}	    
+		return mix(ambient_midcolor, ambient_skycolor, abs(factor));
 	}
 	// default classic mode 
 	return ambient_skycolor;
@@ -56,4 +50,26 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 	//return vec4(specularFactor * gloss, specularFactor * gloss, specularFactor * gloss, 1.0);
 	//return vec4(specular,1.0);
 	return vec4(diffuse + specular, 1.0);
+}
+
+vec4 calc_fog(vec4 color, float density, float LOG2, float distanceVS)
+{
+	return saturate(1.0/exp2(density*density*distanceVS*distanceVS*LOG2));
+}
+
+vec3 unproject_noraml(vec2 normalTS)
+{
+	vec3 normal = vec3(normalTS, 0.0);
+	normal.xy = normal.xy * 2.0 - 1.0;
+	normal.z = sqrt((1.0 - dot(normal.xy, normal.xy)));
+
+	// projection back
+	float pX = normal.x/(1.0 + normal.z);
+	float pY = normal.y/(1.0 + normal.z);
+	float denom = 2.0/(1.0 +pX*pX + pY*pY);
+	normal.x = pX * denom;
+	normal.y = pX * denom;
+	normal.z = denom -1.0; 
+
+	return normal;
 }

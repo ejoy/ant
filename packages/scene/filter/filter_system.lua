@@ -17,17 +17,13 @@ local ms = mathpkg.stack
 local mu = mathpkg.util
 
 local filter_properties = ecs.system "filter_properties"
-function filter_properties:update()
-	for _, prim_eid in world:each("primitive_filter") do
-		local e = world[prim_eid]
-		local filter = e.primitive_filter
-		filterutil.load_lighting_properties(world, filter)
-		if e.shadow then
-			filterutil.load_shadow_properties(world, filter)
-		end
+filter_properties.singleton "render_properties"
 
-		filterutil.load_postprocess_properties(world, filter)
-	end
+function filter_properties:update()
+	local render_properties = self.render_properties
+	filterutil.load_lighting_properties(world, render_properties)
+	filterutil.load_shadow_properties(world, render_properties)
+	filterutil.load_postprocess_properties(world, render_properties)
 end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
@@ -117,30 +113,37 @@ end
 
 local function update_entity_transform(hierarchy_cache, eid)
 	local e = world[eid]
-	if e.hierarchy then
-		return 
-	end
+
 	local transform = e.transform
-	local peid = transform.parent
-	
-	if peid then
-		local parentresult = hierarchy_cache[peid]
-		if parentresult then
-			local parentmat = parentresult.world
-			if parentmat then
+	local worldmat = transform.world
+	if e.hierarchy == nil then
+		local peid = transform.parent
+		
+		if peid then
+			local parentresult = hierarchy_cache[peid]
+			if parentresult then
+				local parentmat = parentresult.world
 				local hie_result = parentresult.hierarchy
 				local slotname = transform.slotname
 
+				-- TODO: why need calculate one more time here.
+				-- when delete a hierarchy node, it's children will not know parent has gone
+				-- no update for 'transform.world', here will always calculate one more time
+				-- if we want cache this result, we need to find all the children when hierarchy
+				-- node deleted, and update it's children at that moment, then we can save 
+				-- this calculation.
 				local localmat = ms:srtmat(transform)
 				if hie_result and slotname then
 					local hiemat = ms:matrix(hie_result[slotname])
-					ms(transform.world, parentmat, hiemat, localmat, "**=")
+					ms(worldmat, parentmat, hiemat, localmat, "**=")
 				else
-					ms(transform.world, parentmat, localmat, "*=")
+					ms(worldmat, parentmat, localmat, "*=")
 				end
 			end
 		end
 	end
+
+	return worldmat
 end
 
 local function reset_hierarchy_transform_result(hierarchy_cache)
@@ -164,8 +167,8 @@ function primitive_filter_sys:update()
 			local ft = ce[filtertag]
 			if vt and ft then
 				if is_entity_prepared(ce) then
-					update_entity_transform(hierarchy_cache, eid)
-					filter_element(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
+					local worldmat = update_entity_transform(hierarchy_cache, eid)
+					filter_element(eid, ce.rendermesh, worldmat, ce.material, filter)
 				end
 			end
 		end

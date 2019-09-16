@@ -33,8 +33,11 @@ extern "C" {
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <vector>
+
+#define DEBUG_INFO 100
 
 //#define __CLOCKWISE 1
 
@@ -1061,7 +1064,6 @@ convert_to_euler(lua_State *L, struct lastack*LS) {
 			luaL_error(L, "not support for converting to euler, type is : %d", type);
 			break;
 	}
-	e = glm::degrees(e);
 	lastack_pusheuler(LS, &e.x);
 }
 
@@ -1415,8 +1417,9 @@ lref(lua_State *L) {
 
 static int 
 lunref(lua_State *L) {
-	if(!lua_isuserdata(L,1))
-		return luaL_error(L, "unref not userdata. ");
+	if (!is_ref_obj(L)){
+		luaL_error(L, "arg 1 is not a math3d refobject!");
+	}
 	struct refobject * ref = (struct refobject *)lua_touserdata(L, 1);
 	release_ref(L, ref);
 	return 0;
@@ -2360,24 +2363,34 @@ lview_proj(lua_State *L) {
 	if (hasviewmat) {
 		lastack_pushmatrix(LS, &viewmat[0][0]);
 		pushid(L, pop(L, LS));
-		++numresult;
+	} else {
+		lua_pushnil(L);
 	}
+	++numresult;
 
 	if (hasprojmat) {
 		lastack_pushmatrix(LS, &projmat[0][0]);
 		pushid(L, pop(L, LS));
-		++numresult;
+	} else {
+		lua_pushnil(L);
 	}
+	++numresult;
 
 	if (combine) {
-		if (hasviewmat && hasprojmat) {
-			auto viewproj = projmat * viewmat;
-			lastack_pushmatrix(LS, &viewproj[0][0]);
-			pushid(L, pop(L, LS));
-			return 3;
+		if (!hasviewmat && !hasprojmat) {
+			luaL_error(L, "view/proj matrix need provided one of them");
 		}
 
-		luaL_error(L, "one of view or proj matrix is not provided, matrix are not enough to combine");
+		if (hasviewmat && !hasprojmat) {
+			lastack_pushmatrix(LS, &viewmat[0][0]);
+		} else if (!hasviewmat && hasprojmat) {
+			lastack_pushmatrix(LS, &projmat[0][0]);
+		} else {
+			auto viewproj = projmat * viewmat;
+			lastack_pushmatrix(LS, &viewproj[0][0]);
+		}
+		pushid(L, pop(L, LS));
+		++numresult;
 	}
 
 	assert(numresult >= 1);
@@ -2869,8 +2882,57 @@ lhomogeneous_depth(lua_State *L){
 	return 1;
 }
 
+static int
+lstacksize(lua_State *L) {
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
+	struct lastack* LS = bp->LS;
+	lua_pushinteger(L, lastack_size(LS));
+	return 1;
+}
+
+// reg key for ref leak table
+static int REFLEAK = 0;
+
+static int
+lref_debug(lua_State *L) {
+	int r = lref(L);
+	void * v = lua_touserdata(L, -1);
+
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
+		luaL_error(L, "No ref leak table");
+	}
+
+	luaL_traceback(L, L, NULL, 1);
+	lua_rawsetp(L, -2, v);
+	lua_pop(L, 1);
+
+	return r;
+}
+
+static int
+lstackrefobject_debug(lua_State *L) {
+	lua_settop(L, 2);
+	lua_insert(L, 1);	// type stack
+	return lref_debug(L);
+}
+
+static int
+lleaks(lua_State *L) {
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
+	struct lastack* LS = bp->LS;
+
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
+		luaL_error(L, "No ref leak table");
+	}
+
+	if (lua_rawgetp(L, -1, LS) != LUA_TTABLE) {
+		return 0;
+	}
+	return 1;
+}
+
 static void
-register_linalg_mt(lua_State *L) {
+register_linalg_mt(lua_State *L, int debug_level) {
 	if (luaL_newmetatable(L, LINALG)) {
 		luaL_Reg l[] = {
 			{ "__gc", delLS },
@@ -2881,6 +2943,7 @@ register_linalg_mt(lua_State *L) {
 			{ MFUNCTION(toquaternion)},
 			{ MFUNCTION(lookfrom3)},
 			{ MFUNCTION(length)},
+			{ "stacksize", lstacksize },
 			{ "ref", lstackrefobject },
 			{ "command", gencommand },
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
@@ -2899,17 +2962,69 @@ register_linalg_mt(lua_State *L) {
 			{ "lhs_mat", llhs_matrix},
 			{ "lerp", llerp},
 			{ "equal", lequal},
+			{ "leaks", lleaks },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
+		if (debug_level >= DEBUG_INFO) {
+			lua_pushcfunction(L, lstackrefobject_debug);
+			lua_setfield(L, -2, "ref");
+		}
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 	}
 }
 
+static int
+lrefleak(lua_State *L) {
+	struct refobject *ref = (struct refobject *)lua_touserdata(L, 1);
+	if (!lastack_isconstant(ref->id)) {
+		const void *p = ref->LS;
+		if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
+			// __gc can't raise error
+			return 0;
+		}
+
+		if (lua_rawgetp(L, -1, p) != LUA_TTABLE) {
+			lua_pop(L, 1);
+			lua_newtable(L);
+			lua_pushvalue(L, -1);
+			lua_rawsetp(L, -3, p);
+		}
+
+		size_t n = lua_rawlen(L, -1);
+		lua_pushinteger(L, ref->id);
+		lua_rawseti(L, -2, n+1);
+	}
+	return 0;
+}
+
+static int
+lrefleak_debug(lua_State *L) {
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, &REFLEAK) != LUA_TTABLE) {
+		// __gc can't raise error
+		return 0;
+	}
+	struct refobject *ref = (struct refobject *)lua_touserdata(L, 1);
+	if (!lastack_isconstant(ref->id)) {
+		if (lua_rawgetp(L, -1, ref) != LUA_TSTRING) {
+			printf("Unknown Ref object leak : %p\n", ref);
+		} else {
+			printf("Ref object leak : %s\n", lua_tostring(L, -1));
+		}
+		lua_pop(L, 2);
+	} else {
+		lua_pushnil(L);
+		lua_rawsetp(L, -2, ref);
+		lua_pop(L, 1);
+	}
+	return lrefleak(L);
+}
+
 extern "C" {
 	LUAMOD_API int
 	luaopen_math3d(lua_State *L) {
+		int debug_level = 0;
 		luaL_checkversion(L);
 		luaL_Reg ref[] = {
 			{ "__tostring", lreftostring },
@@ -2925,10 +3040,22 @@ extern "C" {
 		luaL_setfuncs(L, ref, 0);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
-		lua_pop(L, 1);
 
+		lua_newtable(L);
+		lua_rawsetp(L, LUA_REGISTRYINDEX, &REFLEAK);
 
-		register_linalg_mt(L);
+		if (lua_getglobal(L, "_DEBUG") != LUA_TNIL) {
+			debug_level = (int)lua_tointeger(L, -1);
+			if (debug_level >= DEBUG_INFO) {
+				lua_pushcfunction(L, lrefleak_debug);
+			} else {
+				lua_pushcfunction(L, lrefleak);
+			}
+			lua_setfield(L, -3, "__gc");
+		}
+		lua_pop(L, 2);
+
+		register_linalg_mt(L, debug_level);
 
 		luaL_Reg l[] = {
 			{ "new", lnew },
@@ -2944,6 +3071,11 @@ extern "C" {
 			{ NULL, NULL },
 		};
 		luaL_newlib(L, l);
+
+		if (debug_level >= DEBUG_INFO) {
+			lua_pushcfunction(L, lref_debug);
+			lua_setfield(L, -2, "ref");
+		}
 		return 1;
 	}
 }

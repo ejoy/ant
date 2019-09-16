@@ -58,7 +58,7 @@ function terrain_test:init()
         transform = {
             s = {1, 1, 1, 0},
             r = {0, 0, 0, 0},
-            t = {-147,0.25,-225,1},
+            t = {-147, 0.1,-225,1},
         },
         terrain = {
             ref_path = terrainfolder / 'pvp.terrain'

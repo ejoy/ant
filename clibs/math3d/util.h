@@ -6,6 +6,10 @@ extern "C"{
 };
 
 #include "glm/glm.hpp"
+#include "glm/gtc/constants.hpp"
+#include "glm/ext/scalar_constants.hpp"
+#include "glm/ext/scalar_relational.hpp"
+#include "glm/ext/vector_relational.hpp"
 
 glm::vec4
 get_vec_value(lua_State* L, struct lastack* LS, int index);
