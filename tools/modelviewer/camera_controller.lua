@@ -241,6 +241,12 @@ local function memory_info()
 	s[#s+1] = ("ib   memory:%s"):format(bytestr(data.transientIbUsed))
 	s[#s+1] = ""
 
+	local leaks = ms:leaks()
+	if leaks and #leaks >= 0 then
+		s[#s+1] = "-------------------"
+		s[#s+1] = ("math3d leaks: %d"):format(#leaks)
+	end
+	
 	return table.concat(s, "\t\n\t")
 end
 
