@@ -168,20 +168,22 @@ function gui_main.exit()
 end
 
 local function dispatch(ok, CMD, ...)
-	if not ok then
-		local ok, err = xpcall(gui_main.update, debug.traceback)
-		if not ok then
-			gui_main.error(err)
-		end
+    if not ok then
+        gui_main.update()
+		-- local ok, err = xpcall(gui_main.update, debug.traceback)
+		-- if not ok then
+		-- 	gui_main.error(err)
+		-- end
 		thread.sleep(0)
 		return true
 	end
 	local f = gui_main[CMD]
-	if f then
-		local ok, err = xpcall(f, debug.traceback, ...)
-		if not ok then
-			gui_main.error(err)
-		end
+    if f then
+        f(...)
+		-- local ok, err = xpcall(f, debug.traceback, ...)
+		-- if not ok then
+		-- 	gui_main.error(err)
+		-- end
 	end
 	return CMD ~= 'exit'
 end

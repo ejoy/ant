@@ -18,7 +18,7 @@ properties = {
   },
   uniforms = {
     u_params = { type="v4",name="u_params",value={0,1,0,1-0.134}},
-    u_diffuseColor = { type="v4",name="u_diffuseColor",value={0.7867647,0.7867647,0.7867647,1}},
+    u_diffuseColor = { type="v4",name="u_diffuseColor",value={0.7867647+0.2,0.7867647+0.2,0.7867647+0.2,1}},
     u_specularColor = { type="v4",name="u_specularColor",value={0.2,0.2,0.2,1}},
     u_tiling = { type="v4",name="u_tiling",value={1,1,0,0}},
   },

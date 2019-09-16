@@ -11,7 +11,10 @@ $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texc
 // fence does not provide specular,can not process it like specular texture,notice
 // need special process 
 // uniform.x = 0 must set to 0
-            
+
+//#define _DETAIL 1
+#define _ALPHATEST_ON 1
+#define _BLOOM_EFFECT 1
 // for shadow  
 #define SM_PCF 1     
 #define SM_CSM 1 
@@ -23,8 +26,9 @@ $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texc
 // step optimize: remove or combine texture 
 // pbr could only have 3-4 textures
 // usage: basemap,normalmap
-//        metal map or metal params ,or combine map
+//        metal map or metal params,roughness ,or combine map
 //        cubemap
+// future: metallic,roughness,ao could combine into one texture by artist       
 SAMPLER2D(s_basecolor, 0);
 SAMPLER2D(s_normal, 1); 
 SAMPLER2D(s_metallic, 2);
@@ -44,19 +48,22 @@ uniform vec4 u_emissionColor;
 uniform vec4 u_FogColor;
 uniform vec4 u_FogParams;
 
-vec4  _Color;                       // u_diffuseColor;
-vec4  _SpecColor;                   // u_specularColor;
-float _Cutoff;
-float _DetailNormalMapScale;
-vec4  _EmissionColor;
-vec2  _DetailTiling;
+static vec4  _Color                = u_diffuseColor;                       // u_diffuseColor;
+static vec4  _SpecColor            = u_specularColor;                      // u_specularColor;
+static vec4  _EmissionColor        = vec4(0, 0, 0, 0);
 
-float _Metallic;
-float _Roughness;
+static float _Cutoff               = u_misc.x;
+static float _DetailNormalMapScale = u_misc.y;
+static vec2  _DetailTiling         = u_tiling.wz;
+
+static float _Metallic             = u_params.z;
+static float _Roughness            = u_params.w;
  
-vec4 _FogColor;
-vec4 _FogParams;                    // .xy reserve, .z = start, .w = end, for Linear mode
+static vec4 _FogColor              = vec4(0.5,0.5,0.5,0);
+static vec4 _FogParams             = vec4(1,1,20,1000);                    // .xy reserve, .z = start, .w = end, for Linear mode
 
+static float _BrightThresohd       = 0.9f;
+static float _GlowExpouse         = 2.0f;
 
 #define _MainTex            s_basecolor 
 #define _NormalMap          s_normal 
@@ -73,9 +80,7 @@ vec4 _FogParams;                    // .xy reserve, .z = start, .w = end, for Li
 #define _METALLICGLOSSMAP 1     // use metalness map 
 #define _SPECGLOSSMAP 1         // use specular map 
 #define _SPECULAR_COMPATIBLE 1
-//#define _DETAIL 1
 #define _DETAIL_MULX2 1
-#define _ALPHATEST_ON 1
 //#define _BRDFMAP 1
 #include "pbr_protocol.sh"   
 
@@ -90,7 +95,7 @@ vec4 _FogParams;                    // .xy reserve, .z = start, .w = end, for Li
 #define LinearColorSpace_Double vec4(2.0, 2.0, 2.0, 2.0)
 #define SPECULAR_SCALE 1.58 
 #define ALBEDO_SCALE 1
-
+#define ADAPT_BRIGHTMAX 1.0
 //utils
 inline float GammaToLinearSpaceExact (float value)
 {
@@ -261,24 +266,24 @@ inline AntLight AddtiveLight(vec3 worldPos)
 
 void ParamsSetup()
 {
-    _Cutoff                 = u_misc.x;
-    _DetailNormalMapScale   = u_misc.y;
-    _DetailTiling           = u_tiling.wz;
-    _Color                  = u_diffuseColor;
-    _SpecColor              = u_specularColor;
-    _EmissionColor          = vec4(0,0,0,0);
+     _Cutoff                 = u_misc.x;
+     _DetailNormalMapScale   = u_misc.y;
+     _DetailTiling           = u_tiling.wz;
+     _Color                  = u_diffuseColor;
+     _SpecColor              = u_specularColor;
+     _EmissionColor          = vec4(0,0,0,0);
 
-    _Metallic               = u_params.z;
-    _Roughness              = u_params.w;
+     _Metallic               = u_params.z;
+     _Roughness              = u_params.w;
 
-    //_Glossiness           = 1- u_params.w;  
-    //_GlossMapScale        = 1.0f;
+     //_Glossiness           = 1- u_params.w;  
+     //_GlossMapScale        = 1.0f;
 
-    // get from application later 
-    //_FogColor  = u_FogColor;
-    //_FogParams = u_FogParams;
-    _FogColor = vec4(0.5,0.5,0.5,0);
-    _FogParams = vec4(1,1,20,1000);
+     // get from application later 
+     //_FogColor  = u_FogColor;
+     //_FogParams = u_FogParams;
+     _FogColor = vec4(0.5,0.5,0.5,0);
+     _FogParams = vec4(1,1,20,1000);
 }  
 
 vec3 Albedo(vec2 i_tex)
@@ -312,7 +317,7 @@ vec3 Albedo(vec2 i_tex)
 // need optimize read,cache it 
 float Alpha(vec2 uv)
 {
-    return texture2D(_MainTex, uv).a; // * _Color.a;
+    return texture2D(_MainTex, uv).a * _Color.a;
 }
 
 inline vec3 PreMultiplyAlpha (vec3 diffColor, float alpha, float oneMinusReflectivity, out float outModifiedAlpha)
@@ -523,7 +528,7 @@ vec3 FragmentPBR( AntEnv env, AntLight light, vec3 albedo, vec3 specColor, float
         vec3 kD = vec3_c(1.0)- kS;
         kD *= 1.0 - metallic;
 
-        vec3 color = kD*albedo/PI;     //unity does not div PI, no accurate but seems ok 
+        vec3 color = kD*albedo/PI;     //unity does not div PI, unity is no accurate but seems ok 
 
         color  = (color + specular)*radiance*NdotL;
         return color;        
@@ -579,7 +584,56 @@ inline FragmentCommonData FragmentSetup (vec2 i_tex, vec3 i_eyeVec,  vec3 i_norm
 
     return o;
 }
+// Tone brightness 
+vec3 GlowToneMark(vec3 color,float exposure) 
+{
+   return vec3(1.0,1.0,1.0) - exp(-color * exposure);
+}
 
+//main quality
+// newLum=lastLum+(currentLum–lastLum)∗(1.0–0.9830∗frameTime )
+// brightMax empirical value =1.0
+//           exposuse 1.6
+// or calculate fullscreen brightMax (need more pass)
+vec3 ToneMapping(vec3 color,float exposure,float brightMax)
+{
+    float Yd = exposure * (exposure/brightMax + 1.0) / (exposure + 1.0);
+    color *= Yd;
+    return color;
+}
+
+//single pass simulate
+vec3 ToneMappingSimulateHdr(vec3 color,float exposure)
+{
+    float exposure2 = exposure; 
+    float lum = dot(color,vec3(0.2126,0.7152,0.0722));
+    float mapLum = (lum*(1+lum/(exposure2*exposure2)))/(1.0+lum);
+    return (mapLum/lum)*color;
+}
+
+
+float GrayLumiance(vec3 color)
+{
+    return max(color.x,max(color.y,color.z));
+    //return dot(color, vec3(0.2126, 0.7152, 0.0722));
+}
+
+//color = color*Vignette(v_texcoord0.xy*2.0-1.0,0.55,1.5);
+//screen vignette 
+float Vignette(vec2 pos, float inner, float outer)
+{
+  float r = length(pos);
+  r = 1.0 - smoothstep(inner, outer, r);
+  return r;
+}
+
+vec3 LightGlow(vec3 color,AntEnv env,float brightness,float strength)
+{
+    float lightAliggnment = dot(-env.viewdir,  env.refvm);
+    float alignmentFactor = clamp(lightAliggnment, 0.0, 1.0);
+    color += color * brightness * alignmentFactor * strength;
+    return color;
+}
 
 
 //-------------------------------------   
@@ -602,14 +656,28 @@ void main()
 	//#include "mesh_shadow/fs_ext_shadowmaps_color_lighting_main.sh" 
 	//visibility -= 0.25f;	
     //color = vec4(color*visibility ,1.0); 
-        
-    // Rheinhardt space, too cheap,too simple 
-    // color = toneMapping(color,1.0f);
 
-    color = toGammaAcc(color);
+#ifdef _BLOOM_EFFECT
+    vec3  glow = GlowToneMark(color,_GlowExpouse);
+    float lum  = GrayLumiance(color);    
+    if( lum>_BrightThresohd ) {
+        gl_FragData[1] = vec4(glow,1);
+    }else {
+        //gl_FragData[1] = vec4(0,0,0,1);  
+        gl_FragData[1] = vec4(color,1);
+    }      
+#endif 
+
     color = FogLinear(vec4(color,1),v_camPos,v_worldPos,_FogColor,_FogParams);
-
-    gl_FragColor = vec4(color,s.alpha); 
+    color = ToneMapping(color,0.90,1);
+    //color = ToneMappingSimulateHdr(color,1);
+    //color += LightGlow(color,env,lum,2.8);            
+    // bgfx impl Rheinhardt space, too cheap,too simple 
+    // color = toneMapping(color,1.0f);
+    
+    color = toGammaAcc(color);
+    
+    gl_FragData[0] = vec4(color,s.alpha); 
 } 
 
  

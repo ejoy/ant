@@ -21,6 +21,7 @@ ecs.import 'ant.objcontroller'
 ecs.import 'ant.math.adapter'
 ecs.import 'ant.sky'
 ecs.import 'ant.asset'
+ecs.import "ant.image_effect"
 
 local renderpkg = import_package 'ant.render'
 local renderutil=renderpkg.util
@@ -43,9 +44,15 @@ scene_walker.dependby 	'camera_controller'
 
 
 function scene_walker:init()
+    local fbsize = world.args.fb_size
+    renderutil.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 50, 5})
+    --if __ANT_RUNTIME__ then
+        renderutil.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
+    --end
+    
     do
         -- 255,209,172
-        lu.create_directional_light_entity(world, 'directional_light',{1,0.81,0.67,0}, 1.5, mu.to_radian {-220,-235,0,0} )     --{1,0.81,0.67,0}
+        lu.create_directional_light_entity(world, 'directional_light',{1,0.81,0.67,0}, 1.8, mu.to_radian {-220,-235,0,0} )     --{1,0.81,0.67,0}
         --lu.create_directional_light_entity(world, 'directional_light',{1,0.81*0.70,0.67*0.6,0}, 5.5, mu.to_radian {-220,-235,0,0} )     --{1,0.81,0.67,0}
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end

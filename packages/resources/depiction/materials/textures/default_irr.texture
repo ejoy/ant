@@ -3,8 +3,8 @@ path = "/pkg/ant.resources.binary/textures/pbr/bolonga_irr.dds"
 sampler = {
 	U = "MIRROR",
 	V = "MIRROR",
-	MIN = "LINEAR",
-	MAG = "LINEAR",
+	MIN = "ANISOTROPIC",
+	MAG = "ANISOTROPIC",
 }
 
 sRGB 		= false

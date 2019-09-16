@@ -3,5 +3,6 @@ return {
     entry = "entry",
     systems = {
         "scene_walker",
+        "bloom_sys",
     },
 }
