@@ -194,6 +194,7 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 				render_buffers = {
 					default_comp.render_buffer(view_rect.w, view_rect.h, "RGBA8", fb_renderbuffer_flag),
 					default_comp.render_buffer(view_rect.w, view_rect.h, "D24S8", fb_renderbuffer_flag),
+					default_comp.render_buffer(view_rect.w, view_rect.h, "RGBA16F", fb_renderbuffer_flag),
 				},
 			},
 		},

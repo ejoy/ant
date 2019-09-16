@@ -7,7 +7,10 @@ local bindings = {
 	shadow_maker = 5,
 	main_view = 30,
 	pickup = 31,
-	pickup_blit = 32
+	pickup_blit = 32,
+	pingpong_view_s = 35,
+	pingpong_view_e = 85,
+	bloom_view = 87,
 }
 local freeidx = 100
 
