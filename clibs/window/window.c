@@ -26,10 +26,6 @@ push_callback_function(struct callback_context * context, int id) {
 }
 
 static void
-push_update_args(lua_State *L, struct ant_window_update *update) {
-}
-
-static void
 push_init_args(lua_State *L, struct ant_window_init *init) {
 	lua_pushlightuserdata(L, init->window);
 	lua_pushlightuserdata(L, init->context);
@@ -86,9 +82,6 @@ push_char_arg(lua_State *L, struct ant_window_char *c) {
 static int
 push_arg(lua_State *L, struct ant_window_message *msg) {
 	switch(msg->type) {
-	case ANT_WINDOW_UPDATE:
-		push_update_args(L, &msg->u.update);
-		break;
 	case ANT_WINDOW_INIT:
 		push_init_args(L, &msg->u.init);
 		break;
@@ -152,7 +145,6 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	for (int i = 0; i < ANT_WINDOW_COUNT; ++i) {
 		lua_pushnil(fL);
 	}
-	register_function(L, "update", fL, ANT_WINDOW_UPDATE);
 	register_function(L, "init", fL, ANT_WINDOW_INIT);
 	register_function(L, "exit", fL, ANT_WINDOW_EXIT);
 	register_function(L, "touch", fL, ANT_WINDOW_TOUCH);
