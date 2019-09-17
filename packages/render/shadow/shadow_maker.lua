@@ -16,6 +16,7 @@ local assetmgr 	= assetpkg.mgr
 local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack
 local mc 		= mathpkg.constant
+local mu		= mathpkg.util
 local fs 		= require "filesystem"
 local mathbaselib= require "math3d.baselib"
 
@@ -133,11 +134,11 @@ local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 	local eyepos_WS = calc_shadow_camera_eye_pos(corner_WS, lightdir)
 	shadowcamera.eyepos(eyepos_WS)
 	
-	local shadow_viewmatrix = ms(shadowcamera.eyepos, shadowcamera.viewdir, "LP")
+	local shadow_viewmatrix = ms(eyepos_WS, lightdir, "LP")
 
 	local corner_LS = {}
-	for _, p in ipairs(corner_WS) do
-		corner_LS[#corner_LS+1] = ms(shadow_viewmatrix, p, "*P")
+	for _, c in ipairs(corner_WS) do
+		corner_LS[#corner_LS+1] = ms(shadow_viewmatrix, c, "*P")
 	end
 
 	local aabbmin, aabbmax = ms:minmax(table.unpack(corner_LS))
@@ -167,7 +168,7 @@ local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 		ortho = true,
 		l = min[1], r = max[1],
 		b = min[2], t = max[2],
-		n = min[3], f = max[3],
+		n = 0, f = max[3] - min[1],
 	}
 end
 
@@ -359,8 +360,7 @@ local function csm_shadow_debug_quad()
 	end
 end
 
-ecs.tag "shadow_frustum"
-ecs.tag "view_frustum"
+ecs.tag "shadow_debug"
 
 local frustum_colors = {
 	0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
@@ -372,11 +372,14 @@ local function	csm_shadow_debug_frustum()
 		local camera = camerautil.get_camera(world, e.camera_tag)
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
 
+		local color = frustum_colors[e.shadow.csm.index]
 		local frustum = mathbaselib.new_frustum(ms, vp)
 		local f_eid = computil.create_frustum_entity(world, 
-			frustum, "csm frusutm part" .. e.shadow.csm.index, nil, 
-			frustum_colors[e.shadow.csm.index])
-		world:add_component(f_eid, "shadow_frustum", true)
+			frustum, "csm frusutm part" .. e.shadow.csm.index, nil, color)
+		world:add_component(f_eid, "shadow_debug", true)
+
+		local a_eid = computil.create_axis_entity(world, mu.srt(nil, ms(camera.viewdir, "DT"), ms(camera.eyepos, "T")), color)
+		world:add_component(a_eid, "shadow_debug", true)
 	end
 end
 
@@ -393,7 +396,7 @@ local function main_view_debug_frustum()
 		local _, _, vp = ms:view_proj(camera, frustum_desc, true)
 		local frustum = mathbaselib.new_frustum(ms, vp)
 		local f_eid = computil.create_frustum_entity(world, frustum, "main view part" .. csm.index, nil, frustum_colors[csm.index])
-		world:add_component(f_eid, "view_frustum", true)
+		world:add_component(f_eid, "shadow_debug", true)
 	end
 end
 
@@ -413,19 +416,12 @@ function debug_sm:camera_state_handler()
 			end
 		end
 
-		local shadow_frustum_eids = {}
-		for _, seid in world:each "shadow_frustum" do
-			shadow_frustum_eids[#shadow_frustum_eids+1] = seid
+		local debug_shadow_eids = {}
+		for _, seid in world:each "shadow_debug" do
+			debug_shadow_eids[#debug_shadow_eids+1] = seid
 		end
 
-		remove_eids(shadow_frustum_eids)
-
-		local view_frustum_eids = {}
-		for _, veid in world:each "view_frustum" do
-			view_frustum_eids[#view_frustum_eids+1] = veid
-		end
-		
-		remove_eids(view_frustum_eids)
+		remove_eids(debug_shadow_eids)
 
 		main_view_debug_frustum()
 		csm_shadow_debug_frustum()

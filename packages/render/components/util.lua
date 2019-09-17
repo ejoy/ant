@@ -325,6 +325,34 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	return eid
 end
 
+function util.create_axis_entity(world, transform, color, name)
+	local eid = world:create_entity {
+		transform = transform or mu.srt(),
+		rendermesh = {},
+		material = {
+			{ref_path = fs.path "/pkg/ant.resources/depiction/materials/line.material"},
+		},
+		name = name or "axis",
+		can_render = true,
+		main_view = true,
+	}
+
+	local vb = {
+		"fffd",
+		0, 0, 0, color or 0xffffffff,
+		1, 0, 0, color or 0xff0000ff,
+		0, 1, 0, color or 0xff00ff00,
+		0, 0, 1, color or 0xffff0000,
+	}
+	local ib = {
+		0, 1,
+		0, 2, 
+		0, 3,
+	}
+	world[eid].rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/axis.mesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
+	return eid
+end
+
 function util.create_skybox(world, material)
     local eid = world:create_entity {
         transform = mu.srt(),
