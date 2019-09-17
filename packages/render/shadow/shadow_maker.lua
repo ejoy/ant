@@ -44,6 +44,16 @@ ecs.component "shadow" {depend = "material"}
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.depend "primitive_filter_system"
 maker_camera.dependby "filter_properties"
+
+local function get_directional_light_dir()
+	local d_light = world:first_entity "directional_light"
+	return ms(d_light.rotation, "dniP")
+end
+
+local function get_directional_light_dir_T()
+	local ld = get_directional_light_dir()
+	return ms(ld, "T")
+end
 	
 local function split_new_frustum(view_frustum, ratios)
 	assert(view_frustum.ortho == nil or view_frustum.ortho == false)
@@ -124,6 +134,26 @@ local function calc_shadow_camera_eye_pos(corners_WS, lightdir)
 	return ms(s, {-radius}, lightdir, "*+P")
 end
 
+local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_size)
+	local texsize = 1 / shadowmap_size
+
+	local unit_pretexel = ms(maxextent, minextent, "-", {texsize, texsize, 0, 0}, "*P")
+	local invunit_pretexel = ms(unit_pretexel, "rP")
+
+	local function limit_move_in_one_texel(value)
+		-- value /= unit_pretexel;
+		-- value = floor( value );
+		-- value *= unit_pretexel;
+		return ms(value, invunit_pretexel, "*f", unit_pretexel, "*T")
+	end
+
+	local newmin = limit_move_in_one_texel(minextent)
+	local newmax = limit_move_in_one_texel(maxextent)
+	
+	minextent[1], minextent[2] = newmin[1], newmin[2]
+	newmax[1], newmax[2] = newmax[1], newmax[2]
+end
+
 local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 	local view_camera = camerautil.get_camera(world, "main_view")
 
@@ -145,36 +175,19 @@ local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 	local min, max = ms(aabbmin, "T", aabbmax, "T")
 
 	if csm.stabilize then
-		local texsize = 1 / shadow.shadowmap_size
-
-		local unit_pretexel = ms(aabbmax, aabbmin, "-", {texsize, texsize, 0, 0}, "*P")
-		local invunit_pretexel = ms(unit_pretexel, "rP")
-
-		local function limit_move_in_one_texel(value)
-			-- value /= unit_pretexel;
-			-- value = floor( value );
-			-- value *= unit_pretexel;
-			return ms(value, invunit_pretexel, "*f", unit_pretexel, "*T")
-		end
-
-		local newmin = limit_move_in_one_texel(min)
-		local newmax = limit_move_in_one_texel(max)
-		
-		min[1], min[2] = newmin[1], newmin[2]
-		max[1], max[2] = newmax[1], newmax[2]
+		keep_shadowmap_move_one_texel(min, max, shadow.shadowmap_size)
 	end
 
 	shadowcamera.frustum = {
 		ortho = true,
 		l = min[1], r = max[1],
 		b = min[2], t = max[2],
-		n = 0, f = max[3] - min[1],
+		n = min[3], f = max[3],
 	}
 end
 
 function maker_camera:update()
-	local dl = world:first_entity "directional_light"
-	local lightdir = ms(dl.rotation, "dinP")
+	local lightdir = get_directional_light_dir()
 
 	-- local viewcamera = camerautil.get_camera(world, "main_view")
 	-- local _, _, vp = ms:view_proj(viewcamera, viewcamera.frustum, true)
@@ -286,8 +299,7 @@ local function create_csm_entity(lightdir, index, ratios, shadowmap_size, camera
 end
 
 function sm:post_init()
-	local d_light = world:first_entity "directional_light"
-	local lightdir = ms(d_light.rotation, "dnT")
+	local lightdir = get_directional_light_dir_T()
 	local ratios = {
 		{0, 0.15},
 		{0.15, 0.35},
