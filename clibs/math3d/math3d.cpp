@@ -2976,6 +2976,71 @@ lstacksize(lua_State *L) {
 	return 1;
 }
 
+static int
+lmin(lua_State *L){
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
+	struct lastack* LS = bp->LS;
+
+	const int numarg = lua_gettop(L);
+	glm::vec4 minvalue(std::numeric_limits<float>::max());
+
+	for (int ii = 1; ii < numarg; ++ii){
+		auto v = get_vec_value(L, LS, ii);
+		minvalue = glm::min(v, minvalue);
+	}
+
+	minvalue[3] = 0;
+	lastack_pushvec4(LS, &minvalue.x);
+	pushid(L, pop(L, LS));
+	return 1;
+}
+
+static int
+lmax(lua_State *L){
+		struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
+	struct lastack* LS = bp->LS;
+
+	const int numarg = lua_gettop(L);
+	glm::vec4 maxvalue(std::numeric_limits<float>::lowest());
+
+	for (int ii = 1; ii < numarg; ++ii){
+		auto v = get_vec_value(L, LS, ii);
+		maxvalue = glm::max(v, maxvalue);
+	}
+
+	maxvalue[3] = 0;
+	lastack_pushvec4(LS, &maxvalue.x);
+	pushid(L, pop(L, LS));
+	return 1;
+}
+
+static int
+lminmax(lua_State *L){
+	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
+	struct lastack* LS = bp->LS;
+
+	const int numarg = lua_gettop(L);
+	glm::vec4 minvalue(std::numeric_limits<float>::max()),
+			  maxvalue(std::numeric_limits<float>::lowest());
+
+	for (int ii = 1; ii < numarg; ++ii){
+		auto v = get_vec_value(L, LS, ii+1);
+		minvalue = glm::min(v, minvalue);
+		maxvalue = glm::max(v, maxvalue);
+	}
+
+	minvalue[3] = 0;
+	maxvalue[3] = 0;
+
+	lastack_pushvec4(LS, &maxvalue.x);
+	lastack_pushvec4(LS, &minvalue.x);
+
+	pushid(L, pop(L, LS));
+	pushid(L, pop(L, LS));
+	return 2;
+}
+
+
 static void
 register_linalg_mt(lua_State *L) {
 	if (luaL_newmetatable(L, LINALG)) {
@@ -3007,6 +3072,9 @@ register_linalg_mt(lua_State *L) {
 			{ "lhs_mat", llhs_matrix},
 			{ "lerp", llerp},
 			{ "equal", lequal},
+			{ "min", lmin},
+			{ "max", lmax},
+			{ "minmax", lminmax},
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);

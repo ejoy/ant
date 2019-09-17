@@ -61,21 +61,12 @@ local function split_new_frustum(view_frustum, ratios)
 	return frustum
 end
 
-local function calc_csm_camera_bounding(view_camera, view_frustum, transform, ratios)
+local function get_frustum_points(view_camera, view_frustum, ratios)
 	local frustum_desc = split_new_frustum(view_frustum, ratios)
 	
 	local _, _, vp = ms:view_proj(view_camera, frustum_desc, true)
-
-	-- we need point in light space, so the ndc to light space order is:
-	-- inv(proj) -> inv(view) -> light matrix
-	-- so the construct matrix should be reversed order:
-	-- inv(light matrix)-> view -> proj
-	vp = ms(vp, transform, "i*P")
 	local frustum = mathbaselib.new_frustum(ms, vp)
-	local points = frustum:points()
-	local bb = mathbaselib.new_bounding(ms)
-	bb:append(table.unpack(points))
-	return bb
+	return frustum:points()
 end
 
 -- local function create_crop_matrix(shadow)
@@ -84,9 +75,9 @@ end
 -- 	local csm = shadow.csm
 -- 	local csmindex = csm.index
 -- 	local shadowcamera = camerautil.get_camera(world, "csm" .. csmindex)
--- 	local shadowview_mat = ms:view_proj(shadowcamera)
+-- 	local shadow_viewmatrix = ms:view_proj(shadowcamera)
 
--- 	local bb_LS = calc_csm_camera_bounding(view_camera, view_camera.frustum, shadowview_mat, shadow.csm.split_ratios)
+-- 	local bb_LS = get_frustum_points(view_camera, view_camera.frustum, shadow_viewmatrix, shadow.csm.split_ratios)
 -- 	local aabb = bb_LS:get "aabb"
 -- 	local min, max = aabb.min, aabb.max
 -- 	min[4], max[4] = 1, 1	-- as point
@@ -123,31 +114,46 @@ end
 -- 	}
 -- end
 
-local function calc_shadow_frustum(shadow)
+local function calc_shadow_camera_eye_pos(corners_WS, lightdir)
+	local bb = mathbaselib.new_bounding(ms)
+	bb:append(table.unpack(corners_WS))
+	local s = bb:get "sphere"
+	local radius = s[4]
+	s[4] = 1
+	return ms(s, {-radius}, lightdir, "*+P")
+end
+
+local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 	local view_camera = camerautil.get_camera(world, "main_view")
 
+	shadowcamera.viewdir(lightdir)
+
 	local csm = shadow.csm
-	local csmindex = csm.index
-	local shadowcamera = camerautil.get_camera(world, "csm" .. csmindex)
-	local shadowview_mat = ms:view_proj(shadowcamera)
+	local corner_WS = get_frustum_points(view_camera, view_camera.frustum, csm.split_ratios)
+	local eyepos_WS = calc_shadow_camera_eye_pos(corner_WS, lightdir)
+	shadowcamera.eyepos(eyepos_WS)
+	
+	local shadow_viewmatrix = ms(shadowcamera.eyepos, shadowcamera.viewdir, "LP")
 
-	local bb_LS = calc_csm_camera_bounding(view_camera, view_camera.frustum, shadowview_mat, shadow.csm.split_ratios)
+	local corner_LS = {}
+	for _, p in ipairs(corner_WS) do
+		corner_LS[#corner_LS+1] = ms(shadow_viewmatrix, p, "*P")
+	end
 
-	local aabb = bb_LS:get "aabb"
-	local min, max = aabb.min, aabb.max
-	min[4], max[4] = 1, 1	-- as point
+	local aabbmin, aabbmax = ms:minmax(table.unpack(corner_LS))
+	local min, max = ms(aabbmin, "T", aabbmax, "T")
 
 	if csm.stabilize then
 		local texsize = 1 / shadow.shadowmap_size
 
-		local worldunit_pretexel = ms(max, min, "-", {texsize, texsize, 0, 0}, "*P")
-		local invworldunit_pretexel = ms(worldunit_pretexel, "rP")
+		local unit_pretexel = ms(aabbmax, aabbmin, "-", {texsize, texsize, 0, 0}, "*P")
+		local invunit_pretexel = ms(unit_pretexel, "rP")
 
 		local function limit_move_in_one_texel(value)
-			-- value /= worldunit_pretexel;
+			-- value /= unit_pretexel;
 			-- value = floor( value );
-			-- value *= worldunit_pretexel;
-			return ms(value, invworldunit_pretexel, "*f", worldunit_pretexel, "*T")
+			-- value *= unit_pretexel;
+			return ms(value, invunit_pretexel, "*f", unit_pretexel, "*T")
 		end
 
 		local newmin = limit_move_in_one_texel(min)
@@ -157,7 +163,7 @@ local function calc_shadow_frustum(shadow)
 		max[1], max[2] = newmax[1], newmax[2]
 	end
 
-	return {
+	shadowcamera.frustum = {
 		ortho = true,
 		l = min[1], r = max[1],
 		b = min[2], t = max[2],
@@ -167,7 +173,7 @@ end
 
 function maker_camera:update()
 	local dl = world:first_entity "directional_light"
-	local lightdir = ms(dl.rotation, "dnP")
+	local lightdir = ms(dl.rotation, "dinP")
 
 	-- local viewcamera = camerautil.get_camera(world, "main_view")
 	-- local _, _, vp = ms:view_proj(viewcamera, viewcamera.frustum, true)
@@ -191,10 +197,7 @@ function maker_camera:update()
 		local shadowentity = world[eid]
 
 		local shadowcamera = camerautil.get_camera(world, shadowentity.camera_tag)
-		shadowcamera.viewdir(lightdir)
-		shadowcamera.eyepos(mc.ZERO_PT)
-
-		shadowcamera.frustum = calc_shadow_frustum(shadowentity.shadow)
+		calc_shadow_camera(shadowentity.shadow, lightdir, shadowcamera)
 
 		-- local _, _, light_vp = ms:view_proj(shadowcamera, shadowcamera.frustum, true)
 		-- local origin_NDC_LIGHT = to_ndc(origin, light_vp)
@@ -395,8 +398,6 @@ local function main_view_debug_frustum()
 end
 
 function debug_sm:post_init()
-	main_view_debug_frustum()
-	csm_shadow_debug_frustum()
 	csm_shadow_debug_quad()
 end
 

@@ -922,21 +922,25 @@ lbounding_get(lua_State *L){
 	auto bounding = fetch_bounding(L, 1);
 
 	const std::string name = lua_tostring(L, 2);
+	const bool extract_info = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
 	lua_createtable(L, 0, 0);
 	if (name == "aabb"){
-		lua_createtable(L, 3, 0);
-		for (int ii = 0; ii < 3; ++ii){
-			lua_pushnumber(L, bounding->aabb.min[ii]);
-			lua_seti(L, -2, ii + 1);
-		}
-		lua_setfield(L, -2, "min");
+		auto push_vec = [L](const char* name, int num, const auto& vec){
+			lua_createtable(L, num, 0);
+			for (int ii = 0; ii < num; ++ii){
+				lua_pushnumber(L, vec[ii]);
+				lua_seti(L, -2, ii + 1);
+			}
+			lua_setfield(L, -2, name);
+		};
 
-		lua_createtable(L, 3, 0);
-		for (int ii = 0; ii < 3; ++ii) {
-			lua_pushnumber(L, bounding->aabb.max[ii]);
-			lua_seti(L, -2, ii + 1);
+		push_vec("min", 3, bounding->aabb.min);
+		push_vec("max", 3, bounding->aabb.max);
+
+		if (extract_info) {
+			push_vec("center", 3, bounding->aabb.Center());
+			push_vec("extents", 3, bounding->aabb.Extents());
 		}
-		lua_setfield(L, -2, "max");
 	} else if (name == "sphere"){
 		for (int ii = 0; ii < 3; ++ii){
 			lua_pushnumber(L, bounding->sphere.center[ii]);

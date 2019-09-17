@@ -103,8 +103,12 @@ struct AABB {
 		return (min + max) * 0.5f;
 	}
 
+	glm::vec3 Extents() const{
+		return max-min;
+	}
+
 	float DiagonalLength() const {
-		return glm::length(max - min);
+		return glm::length(Extents());
 	}
 
 	void Reset() {
