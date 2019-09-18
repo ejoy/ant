@@ -10,7 +10,6 @@ ecs.import "ant.event"
 ecs.import "ant.math.adapter"
 ecs.import "ant.sky"
 ecs.import "ant.asset"
-ecs.import "ant.imgui"
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack

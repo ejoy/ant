@@ -269,8 +269,10 @@ end
 
 function world:update_marks()
 	for cn in pairs(self._marks) do
-		local handlers = assert(self._mark_handlers[cn])
-		handlers()
+		local handlers = self._mark_handlers[cn]
+		if handlers then
+			handlers()
+		end
 	end
 end
 

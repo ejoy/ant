@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local imgui = import_package "ant.imgui".imgui
+local imgui = require "imgui"
 local imgui_runtime_system =  ecs.system "imgui_runtime_system"
 
 function imgui_runtime_system:update()

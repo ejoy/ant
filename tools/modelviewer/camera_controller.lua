@@ -4,6 +4,7 @@ local world = ecs.world
 local imgui = require "imgui"
 
 ecs.import "ant.inputmgr"
+ecs.import "ant.imguibase"
 
 local math3d = require "math3d"
 
