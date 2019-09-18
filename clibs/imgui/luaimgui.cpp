@@ -3631,6 +3631,7 @@ luaopen_imgui(lua_State *L) {
 
 	luaL_newlib(L, font);
 	lua_setfield(L, -2, "font");
+
 	lua_newtable(L);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "InputText", eInputTextFlags);

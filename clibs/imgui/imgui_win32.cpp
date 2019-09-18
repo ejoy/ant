@@ -25,19 +25,17 @@ void set_cursor(ImGuiMouseCursor im_cursor) {
 	ImGuiViewport* main_viewport = ImGui::GetMainViewport();
 	HWND  window = (HWND)(main_viewport->PlatformHandle);
 	if (window != NULL)
-		PostMessage(window, WM_USER_WINDOW_SETCURSOR, NULL, (LPARAM)cursor);
+		PostMessage(window, WM_USER_WINDOW_SETCURSOR, (WPARAM)NULL, (LPARAM)cursor);
 	else if (cursor != NULL)
 		::SetCursor(::LoadCursor(NULL, cursor));
 	else
 		::SetCursor(NULL);
 }
 
-static void ImGui_ImplWin32_SetImeInputPos(ImGuiViewport * viewport, ImVec2 pos)
-{
+static void ImGui_ImplWin32_SetImeInputPos(ImGuiViewport * viewport, ImVec2 pos) {
 	COMPOSITIONFORM cf = { CFS_FORCE_POSITION,{ (LONG)(pos.x - viewport->Pos.x), (LONG)(pos.y - viewport->Pos.y) },{ 0, 0, 0, 0 } };
 	if (HWND hwnd = (HWND)viewport->PlatformHandle)
-		if (HIMC himc = ::ImmGetContext(hwnd))
-		{
+		if (HIMC himc = ::ImmGetContext(hwnd)) {
 			::ImmSetCompositionWindow(himc, &cf);
 			::ImmReleaseContext(hwnd, himc);
 		}
