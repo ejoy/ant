@@ -2532,12 +2532,6 @@ cGetFrameHeightWithSpacing(lua_State *L) {
 }
 
 static int
-cTreeAdvanceToLabelPos(lua_State *L) {
-	ImGui::TreeAdvanceToLabelPos();
-	return 0;
-}
-
-static int
 cGetTreeNodeToLabelSpacing(lua_State *L) {
 	float v = ImGui::GetTreeNodeToLabelSpacing();
 	lua_pushnumber(L, v);
@@ -3522,7 +3516,6 @@ luaopen_imgui(lua_State *L) {
 		{ "GetTextLineHeightWithSpacing", cGetTextLineHeightWithSpacing },
 		{ "GetFrameHeight", cGetFrameHeight },
 		{ "GetFrameHeightWithSpacing", cGetFrameHeightWithSpacing },
-		{ "TreeAdvanceToLabelPos", cTreeAdvanceToLabelPos },
 		{ "GetTreeNodeToLabelSpacing", cGetTreeNodeToLabelSpacing },
 		{ "Columns", cColumns },
 		{ "NextColumn", cNextColumn },
