@@ -131,7 +131,12 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_KEYBOARD;
 		msg.u.keyboard.state = get_keystate(lParam);
-		msg.u.keyboard.press = (message == WM_KEYDOWN) ? 1 : 0;
+		if (message == WM_KEYUP) {
+			msg.u.keyboard.press = 0;
+		}
+		else {
+			msg.u.keyboard.press = (lParam & (1 << 30))? 2: 1;
+		}
 		msg.u.keyboard.key = (int)wParam;
 		cb->message(cb->ud, &msg);
 		break;

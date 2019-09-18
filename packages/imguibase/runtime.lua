@@ -122,7 +122,7 @@ function callback.touch(x, y, id, state)
 end
 
 function callback.keyboard(key, press, state)
-	imgui.key_state(key, press, state)
+	imgui.key_state(key, press > 0, state)
 	if not imguiIO.WantCaptureKeyboard then
 		iq:push("keyboard", keymap[key], press, inputmgr.translate_key_state(state))
 	end 

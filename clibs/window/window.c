@@ -48,7 +48,7 @@ push_touch_args(lua_State *L, struct ant_window_touch *touch) {
 static void
 push_keyboard_arg(lua_State *L, struct ant_window_keyboard *keyboard) {
 	lua_pushinteger(L, keyboard->key);
-	lua_pushboolean(L, keyboard->press);
+	lua_pushinteger(L, keyboard->press);
 	lua_pushinteger(L, keyboard->state);
 }
 
