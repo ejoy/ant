@@ -362,6 +362,97 @@ lfrustum_points(lua_State *L) {
 	return push_box_points(L, points);
 }
 
+static inline void
+fetch_frustum_points(lua_State *L, lastack* LS, int index, Frustum *f, Frustum::Points &points){
+	if (lua_isnoneornil(L, 2)){
+		f->frustum_planes_intersection_points(points);
+	} else {
+		const int numpoints = (int)lua_rawlen(L, 2);
+		for (int ii=0; ii < numpoints; ++ii){
+			lua_geti(L, 2, ii+1);
+			points[ii] = get_vec_value(L, LS, -1);
+			lua_pop(L, 1);
+		}
+	}
+}
+
+template<typename T>
+static inline void 
+push_vec(lua_State *L, int num, const T& v){
+	lua_createtable(L, num, 0);
+	for (int ii =0; ii < num; ++ii){
+		lua_pushnumber(L, v[ii]);
+		lua_seti(L, -2, ii+1);
+	}
+}
+
+static int
+lfrustum_center(lua_State *L){
+	auto f = fetch_frustum(L, 1);
+	auto LS = fetch_LS(L, 1);
+
+	Frustum::Points points;
+	fetch_frustum_points(L, LS, 2, f, points);
+
+	glm::vec4 center(0, 0, 0, 1);
+	for(const auto &p : points){
+		center += p;
+	}
+
+	center /= Frustum::CornerName::count;
+
+	push_vec(L, 3, center);
+	return 1;
+}
+
+static int
+lfrustum_extents(lua_State *L){
+	auto f = fetch_frustum(L, 1);
+	auto LS = fetch_LS(L, 1);
+
+	Frustum::Points points;
+	fetch_frustum_points(L, LS, 2, f, points);
+
+	if (!lua_isnoneornil(L, 3)){
+		glm::mat m = get_mat_value(L, LS, 3);
+		for (auto &p : points){
+			p = m * p;
+		}
+	}
+
+	glm::vec3 	minextents(std::numeric_limits<float>::max()), 
+				maxextents(std::numeric_limits<float>::lowest());
+
+	for (const auto &p :points){
+		minextents = glm::min(minextents, *tov3(p));
+		maxextents = glm::max(maxextents, *tov3(p));
+	}
+	
+	push_vec(L, 3, minextents);
+	push_vec(L, 3, maxextents);
+	return 2;
+}
+
+static int
+lfrustum_max_radius(lua_State *L){
+	auto f = fetch_frustum(L, 1);
+	auto LS = fetch_LS(L, 1);
+
+	auto center = get_vec_value(L, LS, 2);
+	const int numpoints = (int)lua_rawlen(L, 3);
+	float maxradius = 0;
+	for (int ii = 0; ii < numpoints; ++ii){
+		lua_geti(L, 3, ii+1);
+		auto pt = get_vec_value(L, LS, -1);
+		lua_pop(L, 1);
+
+		maxradius = glm::max(glm::length(pt - center), maxradius);
+	}
+	
+	lua_pushnumber(L, maxradius);
+	return 1;
+}
+
 static int
 lfrustum_intersect(lua_State* L) {
 	auto *f = fetch_frustum(L, 1);
@@ -1001,6 +1092,9 @@ register_frustum_mt(lua_State *L){
 			{ "intersect",		lfrustum_intersect},
 			{ "intersect_list", lfrustum_intersect_list},
 			{ "points", 		lfrustum_points},
+			{ "center",			lfrustum_center},
+			{ "extents",		lfrustum_extents},
+			{ "max_radius",		lfrustum_max_radius},
 			{ "calc_near_far",  lfrustum_calc_near_far},
 			{ "__tostring", 	lfrustum_string},
 			#ifdef _STAT_MEMORY_
@@ -1064,7 +1158,7 @@ extern "C"{
 
 		luaL_Reg l[] = {			
 			{ "new_bounding",	lbounding_new},
-			{ "new_frustum",	lfrustum_new},			
+			{ "new_frustum",	lfrustum_new},
 			{ "plane_interset",	lplane_intersect},
 #ifdef _STAT_MEMORY_
 			{ "memory_stat", 	lmemory_stat},

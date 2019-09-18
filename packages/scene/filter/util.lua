@@ -1,8 +1,9 @@
 local util = {}; util.__index = util
 
-local ms = import_package "ant.math".stack
+local ms 		= import_package "ant.math".stack
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
+local shadowutil= renderpkg.shadow
 
 local function update_uniforms(uniforms, properties)
 	for k, v in pairs(properties) do
@@ -85,18 +86,12 @@ for ii=1, 4 do
 	shadowmap_sampler_names[ii] = "s_shadowmap" .. ii - 1
 end
 
-local shadow_crop_matrix = ms:ref "matrix" {
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0,
-}
-
 function util.load_shadow_properties(world, render_properties)
 	local shadow_properties = render_properties.shadow
 	local uniforms, textures = shadow_properties.uniforms, shadow_properties.textures
 	local csm_stage_start_idx = 4
 	local csm_matrixs = {n=nil, nil, nil, nil, nil}
+	local no_crop_matrix = {n=nil, nil, nil, nil, nil}
 	for _, eid in world:each "shadow" do
 		local se = world[eid]
 		local shadow = se.shadow
@@ -110,12 +105,15 @@ function util.load_shadow_properties(world, render_properties)
 							handle = se.render_target.frame_buffer.render_buffers[1].handle}
 
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
-		vp = ms(shadow_crop_matrix, vp, "*P")
+		no_crop_matrix[csm.index] = vp
+		vp = ms(shadowutil.shadow_crop_matrix, vp, "*P")
 		csm_matrixs[csm.index] = vp
 	end
 
 	csm_matrixs.n = #csm_matrixs
 	uniforms["u_csm_matrix"] = {type="m4", name="csm matrix", value=csm_matrixs}
+	no_crop_matrix.n = #no_crop_matrix
+	uniforms["u_csm_no_crop_matrix"] = {type="m4", name="", value=no_crop_matrix}
 
 	--TODO: currently, all the shadow entity have the samle shadow config
 	-- we should move shadow config to a single entity using unique tag to reference it.
