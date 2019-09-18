@@ -21,6 +21,8 @@ local mu		= mathpkg.util
 local fs 		= require "filesystem"
 local mathbaselib= require "math3d.baselib"
 
+local linear_shadow = true
+
 local csm_comp = ecs.component "csm"
 	.split_ratios "real[2]"
 	.index "int" (0)
@@ -239,8 +241,7 @@ sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
 sm.dependby "debug_shadow_maker"
 
-local function create_csm_entity(lightdir, index, ratios, shadowmap_size, camera_far)
-	camera_far = camera_far or 10000
+local function create_csm_entity(lightdir, index, ratios, shadowmap_size)
 	local camera_tag = "csm" .. index
 	camerautil.bind_camera(world, camera_tag, {
 		type = "csm_shadow",
@@ -251,13 +252,64 @@ local function create_csm_entity(lightdir, index, ratios, shadowmap_size, camera
 			ortho = true,
 			l = -1, r = 1,
 			b = -1, t = 1,
-			n = -camera_far, f = camera_far,
+			n = -1, f = 1,
 		},
 	})
 
+	local renderbuffers
+	local cast_material_path
+	if linear_shadow then
+		local flags = renderutil.generate_sampler_flag {
+			RT="RT_ON",
+			MIN="LINEAR",
+			MAG="LINEAR",
+			U="CLAMP",
+			V="CLAMP",
+		}
+
+		renderbuffers = {
+			{
+				format = "RGBA8",
+				w=shadowmap_size,
+				h=shadowmap_size,
+				layers=1,
+				flags=flags,
+			},
+			{
+				format = "D24S8",
+				w=shadowmap_size,
+				h=shadowmap_size,
+				layers=1,
+				flags=flags,
+			},
+		}
+
+
+		cast_material_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
+	else
+		renderbuffers[#renderbuffers+1] = {
+			{
+				format = "D16F",
+				w=shadowmap_size,
+				h=shadowmap_size,
+				layers=1,
+				flags=renderutil.generate_sampler_flag{
+					RT="RT_ON",
+					MIN="LINEAR",
+					MAG="LINEAR",
+					U="CLAMP",
+					V="CLAMP",
+					COMPARE="COMPARE_LEQUAL",
+					BOARD_COLOR="0",
+				},
+			}
+		}
+		cast_material_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
+	end
+
 	return world:create_entity {
 		material = {
-			{ref_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"},
+			{ref_path = cast_material_path},
 		},
 		shadow = {
 			shadowmap_size = shadowmap_size,
@@ -283,27 +335,11 @@ local function create_csm_entity(lightdir, index, ratios, shadowmap_size, camera
 					color = 0,
 					depth = 1,
 					stencil = 0,
-					clear = "depth",
+					clear = "colordepth",
 				}
 			},
 			frame_buffer = {
-				render_buffers = {
-					{
-						format = "D16F",
-						w=shadowmap_size,
-						h=shadowmap_size,
-						layers=1,
-						flags=renderutil.generate_sampler_flag{
-							RT="RT_ON",
-							MIN="LINEAR",
-							MAG="LINEAR",
-							U="CLAMP",
-							V="CLAMP",
-							COMPARE="COMPARE_LEQUAL",
-							BOARD_COLOR="0",
-						},
-					}
-				}
+				render_buffers = renderbuffers,
 			}
 		},
 		name = "direction light shadow maker:" .. index,
@@ -320,7 +356,7 @@ function sm:post_init()
 	}
 	for ii=1, #ratios do
 		local ratio = ratios[ii]
-		create_csm_entity(lightdir, ii, ratio, 512, 20)
+		create_csm_entity(lightdir, ii, ratio, 512)
 	end
 end
 
@@ -610,6 +646,7 @@ local function check_shadow_matrix()
 		origin_NDC_With_Crop[1], origin_NDC_With_Crop[2], origin_NDC_With_Crop[3], origin_NDC_With_Crop[4]))
 	------------------------------------------------------------------------------------------------------------------------
 	-- read the shadow map back
+
 end
 
 local function log_split_distance()

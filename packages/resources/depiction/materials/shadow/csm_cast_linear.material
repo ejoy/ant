@@ -1,11 +1,10 @@
 shader = {
     vs = "/pkg/ant.resources/shaders/src/shadow/create/vs_create.sc",
     fs = "/pkg/ant.resources/shaders/src/shadow/create/fs_create.sc",
+    -- 'defines' is not use right now
+    defines = {
+        "SM_LINEAR",
+    }
  }
  
-state = {
-    WRITE_MASK  = "Z",
-    ALPHA_REF   = 0,
-    CULL        = "CCW",
-    DEPTH_TEST  = "LESS",
-}
+state = "/pkg/ant.resources/depiction/materials/states/default.state"

@@ -18,10 +18,17 @@ local function find_subres_path(originpath, subrespath)
 	return subrespath
 end
 
+local shader_stage_name = {
+	"vs", "fs", "cs",
+}
+
 local function load_shader(originpath, shader)
-	for k, v in pairs(shader)do
-		assert(type(v) == "string")
-		shader[k] = find_subres_path(originpath, fs.path(v))
+	for ii=1, #shader_stage_name do
+		local stagename = shader_stage_name[ii]
+		local shaderpath = shader[stagename]
+		if shaderpath then
+			shader[stagename] = find_subres_path(originpath, fs.path(shaderpath))
+		end
 	end
 	
 	return assetutil.load_shader_program(shader)
