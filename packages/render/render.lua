@@ -117,7 +117,7 @@ end
 
 local cs = ecs.component "clear_state"
     .color "int" (0x303030ff)
-    .depth "int" (1)
+    .depth "real" (1)
 	.stencil "int" (0)
 	.clear "string" ("all")
 
@@ -171,14 +171,19 @@ rendersys.depend "filter_properties"
 rendersys.dependby "end_frame"
 
 local statemap = {
-	all = "CDS",
-	color = "C",
-	depth = "D",
-	stencil = "S",
-	depthstencil = "DS",
-	DS = "DS",
-	C = "C",
-	D = "D",
+	all 			= "CDS",
+	color 			= "C",
+	depth 			= "D",
+	stencil 		= "S",
+	colordepth 		= "CD",
+	colorstencil	= "CD",
+	depthstencil 	= "DS",
+	C 				= "C",
+	D 				= "D",
+	S				= "S",
+	CD 				= "CD",
+	CS 				= "CS",
+	DS 				= "DS",
 }
 
 local function update_viewport(viewid, viewport)
