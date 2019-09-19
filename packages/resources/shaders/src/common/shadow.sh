@@ -14,7 +14,7 @@ uniform vec4 u_shadow_param2;
 #define u_shadowmap_texelsize	u_shadow_param1.z
 #define u_shadow_color			u_shadow_param2.xyz
 
-#define SM_LINEAR
+//#define SM_LINEAR
 
 // need move these shadowmaps to single shadowmap
 #ifdef SM_LINEAR

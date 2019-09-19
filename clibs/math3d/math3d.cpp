@@ -965,6 +965,21 @@ top_tostring(lua_State *L, struct lastack *LS) {
 }
 
 static void
+push_lookat_matrix(struct lastack* LS, int direction, const glm::vec3* at, const glm::vec3 *eye, const glm::vec3 *up) {
+	glm::mat4x4 m;
+	if (direction) {
+		const glm::vec3 *dir = (const glm::vec3*)at;
+		const glm::vec3 *veye = (const glm::vec3*)eye;
+		const glm::vec3 vat = *veye + *dir;
+		m = glm::lookAtLH(*veye, vat, *(const glm::vec3*)up);
+	} else {
+		m = glm::lookAtLH(*(const glm::vec3*)eye, *(const glm::vec3*)at, *(const glm::vec3*)up);
+	}
+
+	lastack_pushmatrix(LS, &m[0][0]);
+}
+
+static void
 llookat_matrix(lua_State *L, struct lastack *LS, int direction) {
 	int t0, t1;
 	const float *at = pop_value(L, LS, &t0);
@@ -973,17 +988,8 @@ llookat_matrix(lua_State *L, struct lastack *LS, int direction) {
 		luaL_error(L, "lookat_matrix, arg0/arg1 need vec4, arg0/arg1 is : %d/%d", t0, t1);
 	}	
 
-	glm::mat4x4 m;
-	if (direction) {
-		const glm::vec3 *dir = (const glm::vec3*)at;
-		const glm::vec3 *veye = (const glm::vec3*)eye;
-		const glm::vec3 vat = *veye + *dir;
-		m = glm::lookAtLH(*veye, vat, glm::vec3(0, 1, 0));
-	} else {
-		m = glm::lookAtLH(*(const glm::vec3*)eye, *(const glm::vec3*)at, glm::vec3(0, 1, 0));
-	}
-
-	lastack_pushmatrix(LS, &m[0][0]);
+	const glm::vec3 up(0, 1, 0);
+	push_lookat_matrix(LS, direction, (const glm::vec3*)at, (const glm::vec3*)eye, &up);
 }
 
 static void
@@ -996,17 +1002,7 @@ lookat3_matrix(lua_State *L, struct lastack *LS, int direction) {
 		luaL_error(L, "lookat_matrix, arg0/arg1/arg2 need vec4, arg0/arg1/arg2 is : %d/%d/%d", t0, t1, t1);	
 	}
 
-	glm::mat4x4 m;
-	if (direction) {
-		const glm::vec3 *dir = (const glm::vec3*)at;
-		const glm::vec3 *veye = (const glm::vec3*)eye;
-		const glm::vec3 vat = *veye + *dir;
-		m = glm::lookAtLH(*veye, vat, *(const glm::vec3*)up);
-	} else {
-		m = glm::lookAtLH(*(const glm::vec3*)eye, *(const glm::vec3*)at, *(const glm::vec3*)up);
-	}
-
-	lastack_pushmatrix(LS, &m[0][0]);
+	push_lookat_matrix(LS, direction, (const glm::vec3*)at, (const glm::vec3*)eye, (const glm::vec3*)up);
 }
 
 static void
@@ -2483,6 +2479,21 @@ lview_proj(lua_State *L) {
 	return numresult;
 }
 
+static int
+llookat(lua_State *L){
+	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
+	lastack *LS = bp->LS;
+
+	const glm::vec3 eye = get_vec_value(L, LS, 2);
+	const glm::vec3 at = get_vec_value(L, LS, 3);
+	const glm::vec3 up = lua_isnoneornil(L, 4) ? glm::vec3(0.f, 1.f, 0.f) : get_vec_value(L, LS, 4);
+
+	const int direction = lua_isnoneornil(L, 5) ? 0 : lua_toboolean(L, 5);
+	push_lookat_matrix(LS, direction, &at, &eye, &up);
+	pushid(L, pop(L, LS));
+	return 1;
+}
+
 template<typename T>
 static T 
 get_value(lua_State *L, struct lastack *LS, int index) {
@@ -3019,12 +3030,25 @@ lminmax(lua_State *L){
 	struct boxstack *bp = (struct boxstack *)luaL_checkudata(L, 1, LINALG);
 	struct lastack* LS = bp->LS;
 
-	const int numarg = lua_gettop(L);
+	luaL_checktype(L, 2, LUA_TTABLE);
+	int numpoints = (int)lua_rawlen(L, 2);
+
+	glm::mat4x4 transform;
+	const bool needtransform = !lua_isnoneornil(L, 3);
+	if (needtransform) {
+		transform = get_mat_value(L, LS, 3);
+	}
+
 	glm::vec4 minvalue(std::numeric_limits<float>::max()),
 			  maxvalue(std::numeric_limits<float>::lowest());
 
-	for (int ii = 1; ii < numarg; ++ii){
-		auto v = get_vec_value(L, LS, ii+1);
+	for (int ii = 0; ii < numpoints; ++ii){
+		lua_geti(L, 2, ii+1);
+		auto v = get_vec_value(L, LS, -1);
+		lua_pop(L, 1);
+		if (needtransform)
+			v = transform * glm::vec4(*tov3(v), 1.f);
+
 		minvalue = glm::min(v, minvalue);
 		maxvalue = glm::max(v, maxvalue);
 	}
@@ -3051,7 +3075,6 @@ register_linalg_mt(lua_State *L) {
 			{ MFUNCTION(pop) },
 			{ MFUNCTION(popnumber) },
 			{ MFUNCTION(toquaternion)},
-			{ MFUNCTION(lookfrom3)},
 			{ MFUNCTION(length)},
 			{ "stacksize", lstacksize },
 			{ "ref", lstackrefobject },
@@ -3061,6 +3084,7 @@ register_linalg_mt(lua_State *L) {
 			{ "quaternion", new_temp_quaternion},
 			{ "euler", new_temp_euler},
 			{ "base_axes", lbase_axes_from_forward_vector},
+			{ "lookat", llookat},
 			{ "srtmat", lsrt_matrix },
 			{ "mul_srtmat", lmul_srtmat},
 			{ "view_proj", lview_proj},

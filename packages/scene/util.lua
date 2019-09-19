@@ -45,7 +45,6 @@ function util.loop(world, arg)
 	local queue = {}
 	local extra_queue = {
 		update_marks = function () 	world:update_marks() end,
-		clear_marks = function () 	world:clear_all_marks() end,
 	}
 	for _, updatetype in ipairs {
 		"data_changed", 
@@ -54,7 +53,6 @@ function util.loop(world, arg)
 		"update", 
 		"after_update", 
 		"update_marks",
-		"clear_marks",
 		"delete",
 		"end_frame",
 	} do

@@ -21,7 +21,9 @@ local mu		= mathpkg.util
 local fs 		= require "filesystem"
 local mathbaselib= require "math3d.baselib"
 
-local linear_shadow = true
+local bgfx		= require "bgfx"
+
+--local linear_shadow = true
 
 local csm_comp = ecs.component "csm"
 	.split_ratios "real[2]"
@@ -56,6 +58,42 @@ end
 local function get_directional_light_dir_T()
 	local ld = get_directional_light_dir()
 	return ms(ld, "T")
+end
+
+local function calc_split_points(points, ratios)
+	local function sub_point(lhs, rhs)
+		return {
+			lhs[1] - rhs[1],
+			lhs[2] - rhs[2],
+			lhs[3] - rhs[3],
+		}
+	end
+
+	local function mul_point_scalar(pt, scalar)
+		return {
+			pt[1] * scalar,
+			pt[2] * scalar,
+			pt[3] * scalar,
+		}
+	end
+
+	local function add_point(lhs, rhs)
+		return {
+			lhs[1] + rhs[1],
+			lhs[2] + rhs[2],
+			lhs[3] + rhs[3],
+		}
+	end
+	local newpoints = {}
+	for i=1, 4 do
+		local cornerRay = sub_point(points[i + 4], points[i])
+		local nearCornerRay = mul_point_scalar(cornerRay, ratios[1]);
+		local farCornerRay  = mul_point_scalar(cornerRay, ratios[2]);
+		newpoints[i + 4] 	= add_point(points[i], farCornerRay);
+		newpoints[i] 		= add_point(points[i], nearCornerRay);
+	end
+
+	return newpoints
 end
 	
 local function split_new_frustum(view_frustum, ratios)
@@ -164,6 +202,17 @@ local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 
 	local csm = shadow.csm
 
+	-- calc view frustum points
+	-- do
+	-- 	local _, _, vp1 = ms:view_proj(view_camera, view_camera.frustum, true)
+	-- 	local vvf = mathbaselib.new_frustum(ms, vp1)
+	-- 	local points1 = vvf:points();
+
+	-- 	local newpoints = calc_split_points(points1, csm.split_ratios)
+	-- 	print(newpoints, #newpoints)
+
+	-- end
+
 	-- frustum_desc can cache, only camera distance changed or ratios change need recalculate
 	local frustum_desc = split_new_frustum(view_camera.frustum, csm.split_ratios)
 	local _, _, vp = ms:view_proj(view_camera, frustum_desc, true)
@@ -172,26 +221,24 @@ local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 
 	local center_WS = viewfrustum:center(corners_WS)
 
+	--local updir
 	local min_extent, max_extent
 	if false then --csm.stabilize then
 		local radius = viewfrustum:max_radius(center_WS, corners_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
-
+		--updir = mu.YAXIS
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadow.shadowmap_size)
 	else
-		local shadow_viewmatrix = ms(center_WS, lightdir, "LP")
-
-		local corner_LS = {}
-		for _, c in ipairs(corners_WS) do
-			corner_LS[#corner_LS+1] = ms(shadow_viewmatrix, c, "*P")
-		end
-
-		local minv, maxv = ms:minmax(table.unpack(corner_LS))
+		-- using camera world matrix right axis as light camera matrix up direction
+		--updir = ms:base_axes(lightdir)
+		local shadow_viewmatrix = ms:lookat(center_WS, lightdir, nil, true)
+		local minv, maxv = ms:minmax(corners_WS, shadow_viewmatrix)
 		min_extent, max_extent = ms(minv, "T", maxv, "T")
 	end
 
-	shadowcamera.eyepos(center_WS)
+	shadowcamera.eyepos(center_WS)--ms(center_WS, lightdir, {-min_extent[3]}, "*+P"))
+	--shadowcamera.updir(updir)
 	shadowcamera.frustum = {
 		ortho=true,
 		l = min_extent[1], r = max_extent[1],
@@ -287,7 +334,7 @@ local function create_csm_entity(lightdir, index, ratios, shadowmap_size)
 
 		cast_material_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
 	else
-		renderbuffers[#renderbuffers+1] = {
+		renderbuffers = {
 			{
 				format = "D16F",
 				w=shadowmap_size,
@@ -535,6 +582,11 @@ local function calc_frustum_center(frustum)
 	return center
 end
 
+local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
+
+ecs.mark("read_back_blit", "read_back_blit_handler")
+ecs.mark("read_back_sm", "read_back_sm_handler")
+
 local function check_shadow_matrix()
 	local csm1 = world[find_csm_entity(1)]
 
@@ -621,6 +673,10 @@ local function check_shadow_matrix()
 
 	-------------------------------------------------------------------------------------------------
 	-- test shadow matrix
+	local pt = {-0.00009, -0.01307, 0.1544} --mc.ZERO_PT
+	local worldmat = {
+		0.0, 0.0, -20.02002, -20,
+	}
 	local origin_CS = ms(shadow_viewproj, mc.ZERO_PT, "*T")
 	print(string.format("origin clip space:[%f, %f, %f, %f]", origin_CS[1], origin_CS[2], origin_CS[3], origin_CS[4]))
 	local origin_NDC = {
@@ -632,7 +688,7 @@ local function check_shadow_matrix()
 	print(string.format("origin ndc space:[%f, %f, %f, %f]", origin_NDC[1], origin_NDC[2], origin_NDC[3], origin_NDC[4]))
 
 	local shadow_matrix = ms(shadowutil.shadow_crop_matrix, shadow_viewproj, "*P")
-	local origin_CS_With_Crop = ms(shadow_matrix, mc.ZERO_PT, "*T")
+	local origin_CS_With_Crop = ms(shadow_matrix, {0, 0, 0.55, 1}, "*T")
 	print(string.format("origin clip space with corp:[%f, %f, %f, %f]", 
 		origin_CS_With_Crop[1], origin_CS_With_Crop[2], origin_CS_With_Crop[3], origin_CS_With_Crop[4]))
 
@@ -646,7 +702,30 @@ local function check_shadow_matrix()
 		origin_NDC_With_Crop[1], origin_NDC_With_Crop[2], origin_NDC_With_Crop[3], origin_NDC_With_Crop[4]))
 	------------------------------------------------------------------------------------------------------------------------
 	-- read the shadow map back
+	if linear_shadow then
+		local size = csm1.shadow.shadowmap_size
+		
+		local memory_handle = bgfx.memory_texture(size * size * 4)
+		local rb_handle = renderutil.create_renderbuffer {
+			w = size,
+			h = size,
+			layers = 1,
+			format = "RGBA8",
+			flags = renderutil.generate_sampler_flag {
+				BLIT="BLIT_AS_DST",
+				BLIT_READBACK="BLIT_READBACK_ON",
+				MIN="POINT",
+				MAG="POINT",
+				U="CLAMP",
+				V="CLAMP",
+			}
+		}
 
+		bgfx.blit(blit_shadowmap_viewid, rb_handle, 0, 0, csm1.render_target.frame_buffer.render_buffers[1].handle)
+		bgfx.read_texture(rb_handle, memory_handle)
+
+		world:mark(-1, "read_back_blit", {memory_handle, origin_NDC_With_Crop, size})
+	end
 end
 
 local function log_split_distance()
@@ -656,9 +735,48 @@ local function log_split_distance()
 	end
 end
 
+function debug_sm:read_back_blit_handler()
+	for eid, info in world:each_mark "read_back_blit" do
+		world:mark(eid, "read_back_sm", info)
+	end
+end
+
+function debug_sm:read_back_sm_handler()
+	for eid, info in world:each_mark "read_back_sm" do
+		local memory_handle = info[1]
+		local pt = info[2]
+		local sm_size = info[3]
+
+		local depth = pt[3]
+		local x, y = pt[1], pt[2]
+		local fx, fy = math.floor(x * sm_size), math.floor(y * sm_size)
+		local cx, cy = math.ceil(x * sm_size), math.ceil(y * sm_size)
+
+		local depth0 = memory_handle[fy*sm_size+fx]
+		local depth1 = memory_handle[fy*sm_size+cx]
+
+		local depth2 = memory_handle[cy*sm_size+fx]
+		local depth3 = memory_handle[cy*sm_size+cx]
+
+		-- local fs_local = require "filesystem.local"
+		-- local f = fs_local.open(fs.path "tmp.txt", "wb")
+		-- for ii=1, sm_size do
+		-- 	for jj=1, sm_size do
+		-- 		local v = memory_handle[(ii-1)*sm_size+jj]
+		-- 		f:write(v == 0 and 0 or 1)
+		-- 	end
+		-- 	f:write("\n")
+		-- end
+		-- f:close()
+
+		print("depth:", depth)
+		print("depth0:", depth0, "depth1:", depth1, "depth2:", depth2, "depth3:", depth3)
+	end
+end
+
 function debug_sm:camera_state_handler()
 	log_split_distance()
-	--create_debug_entity()
+	create_debug_entity()
 
-	check_shadow_matrix()
+	--check_shadow_matrix()
 end

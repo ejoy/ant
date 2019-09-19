@@ -7,6 +7,8 @@ local component_delete = component.delete
 local ecs = {}
 local world = {} ; world.__index = world
 
+local function dummy_iter() end
+
 function world:create_component(c, args)
 	local ti = assert(self._components[c], c)
 	if not ti.type and ti.multiple then
@@ -235,17 +237,18 @@ function world:each2(ct1, ct2)
 end
 
 function world:mark(eid, markname, arg)
-	local ml = self._marks[markname]
-	if ml == nil then
-		ml = {}
-		self._marks[markname] = ml
+	local actives = self._marks.actives
+	local list = actives[markname]
+	if list == nil then
+		list = {}
+		self._marks.actives[markname] = list
 	end
 
-	ml[#ml+1] = {eid, arg}
+	list[#list+1] = {eid, arg}
 end
 
 function world:each_mark(markname)
-	local ml = self._marks[markname]
+	local ml = self._marks.cache_actives[markname]
 	if ml then
 		local idx = 0
 		local function mark_next()
@@ -258,17 +261,24 @@ function world:each_mark(markname)
 
 		return mark_next, ml
 	end
-end
-
-function world:clear_all_marks()
-	self._marks = {}
+	return dummy_iter
 end
 
 function world:update_marks()
-	for cn in pairs(self._marks) do
-		local handlers = assert(self._mark_handlers[cn])
-		handlers()
+	local marks = self._marks
+	local actives = marks.actives
+	-- clear it, handlers will add new mark, it will handler in next update_marks
+	marks.actives = {}
+	marks.cache_actives = actives
+	local handlers = marks.handlers
+	for cn in pairs(actives) do
+		local handlers = handlers[cn]
+		if handlers then
+			handlers()
+		end
 	end
+
+	marks.current_actives = nil
 end
 
 local function new_component_next(set)
@@ -326,8 +336,6 @@ function world:clear_removed()
 		end
 	end
 end
-
-local function dummy_iter() end
 
 --component_type ~= nil, return pairs<eid,component_data>
 --component_type == nil, return pairs<eid,entity_data>
@@ -552,7 +560,7 @@ function ecs.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_serialize_to_eid = {},
 		_cur_system = {"",""},
-		_marks = {},
+		_marks = {actives={}},
 	}, world)
 
 	-- load systems and components from modules
@@ -569,7 +577,7 @@ function ecs.new_world(config)
 		handlers[cn] = w:update_func(handlername)
 	end
 
-	w._mark_handlers = handlers
+	w._marks.handlers = handlers
 	return w
 end
 
