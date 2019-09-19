@@ -29,8 +29,7 @@ local shadertypes = {
 	VULKAN     = "spirv",
 }
 
-
-return function (identity, srcfilepath, param, outfilepath)	
+return function (identity, srcfilepath, _, outfilepath)	
 	local plat, renderer = util.identify_info(identity)
 	local shadertype = shadertypes[renderer:upper()]
 	assert(plat)
