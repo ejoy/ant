@@ -17,8 +17,22 @@ local function check_compile_shader(plat, srcfilepath, outfilepath, shadertype)
 	return compile_shader(plat, srcfilepath, outfilepath, shadertype)
 end
 
+local shadertypes = {
+	NOOP       = "d3d9",
+	DIRECT3D9  = "d3d9",
+	DIRECT3D11 = "d3d11",
+	DIRECT3D12 = "d3d11",
+	GNM        = "pssl",
+	METAL      = "metal",
+	OPENGL     = "glsl",
+	OPENGLES   = "essl",
+	VULKAN     = "spirv",
+}
+
+
 return function (identity, srcfilepath, param, outfilepath)	
-	local plat, shadertype = util.identify_info(identity)
+	local plat, renderer = util.identify_info(identity)
+	local shadertype = shadertypes[renderer:upper()]
 	assert(plat)
 	assert(shadertype)
 	return check_compile_shader(plat, srcfilepath, outfilepath, shadertype)

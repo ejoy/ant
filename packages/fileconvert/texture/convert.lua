@@ -19,8 +19,8 @@ local function which_format(plat, param)
 end
 
 local extensions = {
-	d3d11 = "dds",
-	d3d12 = "dds",
+	direct3d11 = "dds",
+	direct3d12 = "dds",
 	metal = "ktx",
 	vulkan = "ktx",
 }
