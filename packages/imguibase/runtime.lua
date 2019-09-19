@@ -142,7 +142,7 @@ function callback.exit()
     print "exit"
 end
 
-local function update()
+function callback.update()
 	if debug_update then debug_update() end
 	if world_update then
 		world_update()
@@ -152,7 +152,7 @@ end
 
 local function dispatch(ok, CMD, ...)
 	if not ok then
-		local ok, err = xpcall(update, debug_traceback)
+		local ok, err = xpcall(callback.update, debug_traceback)
 		if not ok then
 			LOGERROR(err)
 		end

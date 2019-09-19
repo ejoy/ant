@@ -1,3 +1,4 @@
+local platform = require "platform"
 local thread = require "thread"
 thread.newchannel "WNDMSG"
 local channel = thread.channel_consume "WNDMSG"
@@ -28,8 +29,16 @@ window.mainloop()
 ]]):format(package.cpath, w, h, name), csearcher)
 end
 
-local function recvmsg()
-	return channel:pop()
+local recvmsg
+
+if platform.OS == "iOS" then
+	function recvmsg()
+		return true, channel:bpop()
+	end
+else
+	function recvmsg()
+		return channel:pop()
+	end
 end
 
 return {

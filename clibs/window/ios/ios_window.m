@@ -52,6 +52,23 @@ static void push_message(struct ant_window_message* msg) {
 }
 - (void)layoutSubviews {
 }
+- (void)start {
+    if (nil == self.m_displayLink) {
+        self.m_displayLink = [self.window.screen displayLinkWithTarget:self selector:@selector(renderFrame)];
+        [self.m_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+    }
+}
+- (void)stop {
+    if (nil != self.m_displayLink) {
+        [self.m_displayLink invalidate];
+        self.m_displayLink = nil;
+    }
+}
+- (void)renderFrame {
+    struct ant_window_message msg;
+    msg.type = ANT_WINDOW_UPDATE;
+    push_message(&msg);
+}
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     for (UITouch *touch in touches) {
         CGPoint pt = [touch locationInView:self];
@@ -115,10 +132,17 @@ static void push_message(struct ant_window_message* msg) {
 
     return YES;
 }
+- (void)applicationDidBecomeActive:(UIApplication *)application {
+    [self.m_view start];
+}
+- (void)applicationWillResignActive:(UIApplication *)application {
+    [self.m_view stop];
+}
 - (void)applicationWillTerminate:(UIApplication *)application {
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_EXIT;
     push_message(&msg);
+    [self.m_view stop];
 }
 @end
 
