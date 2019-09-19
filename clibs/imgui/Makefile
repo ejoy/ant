@@ -2,7 +2,7 @@ include ../common.mk
 include ../bgfx/bgfx_define.mk
 
 ifeq "$(PLAT)" "mingw"
-default : $(ODIR)/imgui.dll
+default : imgui.dll
 else
 default : $(ODIR)/libimgui.a
 endif
@@ -56,6 +56,9 @@ $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_inte
 
 $(ODIR)/imgui.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++ $(LIBS)
+
+imgui.dll: $(ODIR)/imgui.dll | $(ODIR)
+	cp $^ $@
 
 $(ODIR)/libimgui.a : $(OBJS)
 	ar rsv $@ $^
