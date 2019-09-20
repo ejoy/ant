@@ -29,7 +29,6 @@ function GuiPropertyView:_init()
     self._dirty_flag = false
     self.base_component_cfg = {offset_2 = 200}
     ---
-    
     self:_init_subcribe()
 end
 

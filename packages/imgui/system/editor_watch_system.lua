@@ -15,6 +15,9 @@ ecs.tag "outline_entity"
 
 ecs.component_alias("target_entity","entityid")
 
+ecs.mark("entity_delete","entity_delete_handle")
+ecs.mark("entity_create","entity_create_handle")
+
 local editor_watcher_system = ecs.system "editor_watcher_system"
 editor_watcher_system.depend "editor_operate_gizmo_system"
 editor_watcher_system.dependby 'scene_space' 
@@ -99,7 +102,7 @@ local profile_cache = nil
 local function send_entity(eid,typ)
     local hub = world.args.hub
     local entity_info = {type = typ}
-    if eid == nil then
+    if eid == nil or (not world[eid]) then
         hub.publish(WatcherEvent.EntityInfo,entity_info)
         last_eid = nil
         last_tbl = nil
@@ -258,19 +261,22 @@ local function on_entity_operate( self,event,args )
     OperateFunc(self,world,event,args)
 end
 
+local function on_request_hierarchy(self)
+    send_hierarchy()
+end
 
 function editor_watcher_system:init()
     local hub = world.args.hub
     hub.subscribe(WatcherEvent.WatchEntity,on_editor_select_entity)
     hub.subscribe(WatcherEvent.ModifyComponent,on_component_modified)
     hub.subscribe(WatcherEvent.EntityOperate,on_entity_operate,self)
+    hub.subscribe(WatcherEvent.RequestHierarchy,on_request_hierarchy,self)
     profile_cache = self.profile_cache
     -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
 end
 
 function editor_watcher_system:pickup()
-
     local pickupentity = world:first_entity "pickup"
     if pickupentity then
         local pickupcomp = pickupentity.pickup
@@ -286,38 +292,39 @@ function editor_watcher_system:pickup()
             on_pick_entity(nil)
         end
     end
-    
-    
 end
 
 local timer = import_package "ant.timer"
 function editor_watcher_system:after_update()
+    local eid = world:first_entity_id("editor_watching")
+    if eid and world[eid] then
+        send_entity(eid,"auto")
+    end
+end
+
+function editor_watcher_system:entity_delete_handle()
     local hierarchy_dirty = false
-    if world._last_entity_id  ~= world._entity_id then
-        --todo:temporary implement
-        for i = (world._last_entity_id or 0) + 1,world._entity_id do
-            if world[i] and (not world[i].pickup) and (not world[i].outline_entity) then
-                hierarchy_dirty = true
-                break
-            end
-        end
-        world._last_entity_id = world._entity_id
-    end
-    for eid,e in world:each_removed() do
-        --todo:temporary implement
-        if e.pickup == nil and e.outline_entity == nil then
+    for eid,e in world:each_mark "entity_delete" do
+        if not e or (e.pickup == nil and e.outline_entity == nil) then
             hierarchy_dirty = true
+            break
         end
     end
-
-    -- end
-
     if hierarchy_dirty then
-        world._last_entity_id = world._entity_id
         send_hierarchy()
     end
-    local eid = world:first_entity_id("editor_watching")
-    if eid then
-        send_entity(eid,"auto")
+end
+
+function editor_watcher_system:entity_create_handle()
+    local hierarchy_dirty = false
+    for eid in world:each_mark "entity_create" do
+        local e = world[eid]
+        if e.pickup == nil and e.outline_entity == nil then
+            hierarchy_dirty = true
+            break
+        end
+    end
+    if hierarchy_dirty then
+        send_hierarchy()
     end
 end

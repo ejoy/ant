@@ -847,15 +847,17 @@ lgetStats(lua_State *L) {
 		lua_setfield(L, 2, "view");
 		break;
 	}
-	case 'a': {
-		int64_t memory = 0;
-		luabgfx_info(&memory);
-		lua_pushinteger(L, memory);
-		break;
-	}
 	default:
 		return luaL_error(L, "Unkown stat format %c", what[i]);
 	}}
+	return 1;
+}
+
+static int
+lgetMemory(lua_State *L) {
+	int64_t memory = 0;
+	luabgfx_info(&memory);
+	lua_pushinteger(L, memory);
 	return 1;
 }
 
@@ -4193,6 +4195,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "init", linit },
 		{ "get_caps", lgetCaps },
 		{ "get_stats", lgetStats },
+		{ "get_memory", lgetMemory },
 		{ "reset", lreset },
 		{ "shutdown", lshutdown },
 		{ "set_view_clear", lsetViewClear },

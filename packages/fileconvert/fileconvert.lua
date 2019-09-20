@@ -1,9 +1,9 @@
 local lfs = require "filesystem.local"
 local g_log = log
-local converter_names = {
-	shader = "shader.compile",
-	mesh = "mesh.convert",
-	texture = "texture.convert",
+local converter = {
+	shader = require "shader.compile",
+	mesh = require "mesh.convert",
+	texture = require "texture.convert",
 }
 
 local logfolder = lfs.current_path() / "log"
@@ -42,8 +42,7 @@ end
 
 local function link(param, plat, srcfile, dstfile)
 	local ctype = assert(param.type)
-	local converter_name = assert(converter_names[ctype])
-	local c = require(converter_name)
+	local c = assert(converter[ctype])
 	log_info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ctype))
 	local success, err, deps = c(plat, srcfile, param, dstfile)
 	if not success and err then
@@ -73,4 +72,5 @@ end
 return {
 	prelink = prelink,
 	link = link,
+	converter = converter,
 }

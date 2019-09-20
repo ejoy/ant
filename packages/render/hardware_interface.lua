@@ -101,54 +101,20 @@ function hw.remove_reset_flag(flag)
 	bgfx.reset(w, h, get_flags())
 end
 
-local shadertypes = {
-	NOOP       = "d3d9",
-	DIRECT3D9  = "d3d9",
-	DIRECT3D11 = "d3d11",
-	DIRECT3D12 = "d3d11",
-	GNM        = "pssl",
-	METAL      = "metal",
-	OPENGL     = "glsl",
-	OPENGLES   = "essl",
-	VULKAN     = "spirv",
-}
-
-function hw.shader_type()
-	if caps then
-		return assert(shadertypes[caps.rendererType])
-	end
-end
-
 local platform_relates = {
 	WINDOWS = {
-		shadertype="d3d11",
 		renderer="DIRECT3D11",
 	},
 	OSX = {
-		shadertype="metal",
 		renderer="METAL",
 	},
 	IOS = {
-		shadertype="metal",
 		renderer="METAL",
 	},
 	ANDROID = {
-		shadertype="spirv",
 		renderer="VULKAN",
 	},
 }
-
-function hw.default_shader_type(plat)
-	if plat then
-		local PLAT = plat:upper()
-		local pi = platform_relates[PLAT]
-		if pi then
-			return pi.shadertype
-		end
-	end
-
-	return "glsl"
-end
 
 function hw.default_renderer(plat)
 	plat = plat or platform.OS
@@ -168,7 +134,7 @@ function hw.shutdown()
 end
 
 function hw.identity()
-	return "." .. platform.OS:lower() .. "_" .. assert(hw.shader_type())
+	return ("." .. platform.OS .. "_" .. caps.rendererType):lower()
 end
 
 hw.frames = nil

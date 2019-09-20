@@ -17,7 +17,7 @@ function default.viewport(vr)
 	}
 end
 
-local default_far_distance = 100
+local default_far_distance = 1000
 local default_near_distance = 0.1
 function default.frustum(w, h)
 	w = w or 800

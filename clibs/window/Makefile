@@ -20,7 +20,7 @@ endif
 $(ODIR)/window.o : window.c window.h | $(ODIR)
 	$(CC) -g $(CFLAGS) -c -o $@ $< $(LUAINC)
 
-$(ODIR)/$(PLAT)_window.o : $(PLAT)/$(PLAT)_window.$(PLAT_C) window.h | $(ODIR)
+$(ODIR)/$(PLAT)_window.o : $(PLAT)/$(PLAT)_window.$(PLAT_C) $(PLAT)/$(PLAT)_window.h window.h  | $(ODIR)
 	$(CC) -g $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/window.dll : $(ODIR)/window.o $(ODIR)/$(PLAT)_window.o

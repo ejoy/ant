@@ -170,7 +170,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -270,11 +270,11 @@
 				LIBRARY_SEARCH_PATHS = (
 					../../clibs/ant/o/ios/debug,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
-					../../3rd/build/bullet3/ios/lib,
-					"../../3rd/build/ozz-animation/ios/src/animation/runtime",
-					"../../3rd/build/ozz-animation/ios/src/animation/offline",
-					"../../3rd/build/ozz-animation/ios/src/geometry/runtime",
-					"../../3rd/build/ozz-animation/ios/src/base",
+					../../3rd/build/bullet3/ios/debug/lib,
+					"../../3rd/build/ozz-animation/ios/debug/src/animation/runtime",
+					"../../3rd/build/ozz-animation/ios/debug/src/animation/offline",
+					"../../3rd/build/ozz-animation/ios/debug/src/geometry/runtime",
+					"../../3rd/build/ozz-animation/ios/debug/src/base",
 				);
 				OTHER_LDFLAGS = (
 					"-lant",
@@ -320,11 +320,11 @@
 				LIBRARY_SEARCH_PATHS = (
 					../../clibs/ant/o/ios/release,
 					"../../3rd/bgfx/.build/ios-arm64/bin",
-					../../3rd/build/bullet3/ios/lib,
-					"../../3rd/build/ozz-animation/ios/src/animation/runtime",
-					"../../3rd/build/ozz-animation/ios/src/animation/offline",
-					"../../3rd/build/ozz-animation/ios/src/geometry/runtime",
-					"../../3rd/build/ozz-animation/ios/src/base",
+					../../3rd/build/bullet3/ios/release/lib,
+					"../../3rd/build/ozz-animation/ios/release/src/animation/runtime",
+					"../../3rd/build/ozz-animation/ios/release/src/animation/offline",
+					"../../3rd/build/ozz-animation/ios/release/src/geometry/runtime",
+					"../../3rd/build/ozz-animation/ios/release/src/base",
 				);
 				OTHER_LDFLAGS = (
 					"-lant",

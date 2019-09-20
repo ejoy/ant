@@ -8,5 +8,5 @@ local systems = {
     "visible_system",
 }
 
-local runtime = import_package "ant.imgui".runtime
+local runtime = import_package "ant.imguibase".runtime
 runtime.start(packages, systems)

@@ -1,3 +1,5 @@
+_DEBUG = 100 -- dectect memory leak
+
 local math3d = require "math3d"
 --[[
 	local vec = math3d.ref "vector"	-- new vector ref object
@@ -218,3 +220,15 @@ do
 end
 
 print("Memory = ", stackobj:stacksize())
+
+do
+	local tempvec = math3d.ref "vector"
+	stack( tempvec, stackobj:vector( 1,2,3,4 ) , "=")
+end
+
+-- tempvec is leak
+collectgarbage "collect"
+local leaks = stackobj:leaks()
+for _, id in ipairs(leaks) do
+	print("Leaks : ", stack(id, "V"))
+end

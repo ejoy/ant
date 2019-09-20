@@ -42,11 +42,16 @@ local function scale_gizmo_to_normal(gizmo)
         local _,_,t = ms(et.world,"~TTT")
         local tvp  = ms(vp,t,"*T")
         local scale = math.abs(tvp[4]/7)
-        local parent_trans = world[et.parent].transform.world
-        local ps,_,_ = ms(parent_trans,"~TTT")
-        local ps_lua = ms(ps,"T")
-        world:add_component_child(et,"s","vector",
-            {scale/ps_lua[1],scale/ps_lua[2],scale/ps_lua[3],0})
+        local parent_e = world[et.parent]
+        if parent_e then
+            local parent_trans = world[et.parent].transform.world
+            local ps,_,_ = ms(parent_trans,"~TTT")
+            local ps_lua = ms(ps,"T")
+            world:add_component_child(et,"s","vector",
+                {scale/ps_lua[1],scale/ps_lua[2],scale/ps_lua[3],0})
+        else
+            log.error("target entity not found,parent eid:",et.parent)
+        end
     end
 end
 

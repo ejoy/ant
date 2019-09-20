@@ -144,6 +144,7 @@ function world:create_entity(t)
 	self[eid] = {}
 	self._entity[eid] = true
 	self:set_entity(eid, t)
+	self:mark(eid, "entity_create")
 	return eid
 end
 
@@ -154,6 +155,8 @@ function world:remove_entity(eid)
 
 	local removed = self._removed
 	removed[#removed+1] = { eid, e }
+	self:mark(eid, "entity_delete",e)
+
 	-- defer delete , see world:remove_reset
 end
 
@@ -272,9 +275,9 @@ function world:update_marks()
 	marks.cache_actives = actives
 	local handlers = marks.handlers
 	for cn in pairs(actives) do
-		local handlers = handlers[cn]
-		if handlers then
-			handlers()
+		local handler = handlers[cn]
+		if handler then
+			handler()
 		end
 	end
 

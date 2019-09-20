@@ -34,7 +34,7 @@ local function init(rootpath, repopath, cachepath)
 	local mountpath = rootpath / ".mount"
 	if lfs.is_regular_file(mountpath) then
 		for name, path in pairs(access.readmount(mountpath)) do
-			print("Mount", name, path)
+			--print("Mount", name, path)
 		end
 	end
 	if not lfs.is_directory(repopath) then

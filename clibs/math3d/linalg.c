@@ -492,6 +492,13 @@ lastack_unmark(struct lastack *LS, int64_t markid) {
 	}
 }
 
+int
+lastack_isconstant(int64_t markid) {
+	union stackid id;
+	id.i = markid;
+	return (id.s.persistent && id.s.version == 0);
+}
+
 int64_t
 lastack_mark(struct lastack *LS, int64_t tempid) {
 	int t;

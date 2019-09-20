@@ -15,7 +15,7 @@ local TestGuiBase = GuiBase.derive("TestGuiBase")
 TestGuiBase.GuiName = "TestGuiBase"
 function TestGuiBase:_init(default_collapsed)
     GuiBase._init(self)
-    self.title = "test windows"
+    self.title = "Imgui Demo"
     self.id = "Test"
     self.title_id = self.title.."###"..self.id
     self.win_flags = flags.Window { "MenuBar" }
@@ -171,7 +171,7 @@ function TestGuiBase:tab1_update()
     local dds_path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga"
     widget.Image(dds_path,200,200,{border_col={1.0,0.0,1.0,1.0},tint_col={0.0,1.0,1.0,0.5}})
     local dds_path2 = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga"
-    widget.Image(dds_path2,200,200,{border_col={1.0,1.0,1.0,1.0},tint_col={1.0,1.0,1.0,0.5}})
+    widget.Image(dds_path2,600,600,{border_col={1.0,1.0,1.0,1.0},tint_col={1.0,1.0,1.0,1}})
     if  widget.ImageButton(self.texhandle1,50,50,
             {uv0={0.5,0.5},
             uv1={1,1},

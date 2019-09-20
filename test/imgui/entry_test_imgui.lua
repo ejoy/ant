@@ -20,7 +20,7 @@ local callback = {
     mouse_move = imgui.mouse_move,
     mouse_wheel = imgui.mouse_wheel,
     mouse_click = imgui.mouse_click,
-    keyboard = imgui.key_state,
+    keyboard = imgui.keyboard,
     char = imgui.input_char,
     error = log
 }

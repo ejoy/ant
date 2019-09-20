@@ -80,6 +80,7 @@ local function sandbox_env(root, pkgname)
         loaded = _LOADED,
         preload = package.preload,
         path = root .. '/?.lua',
+        cpath = package.cpath,
         searchpath = searchpath,
         searchers = {}
     }

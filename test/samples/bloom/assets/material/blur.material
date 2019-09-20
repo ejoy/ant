@@ -1,0 +1,21 @@
+shader = {
+    vs = '/pkg/bloom/assets/shader/bloom/vs_mesh_blur.sc',
+    fs = '/pkg/bloom/assets/shader/bloom/fs_mesh_blur.sc',    
+}
+
+state = {
+	CULL = "CCW",
+	WRITE_MASK = "RGBAZ",
+	DEPTH_TEST = "LESS"
+}
+
+properties = {
+
+	textures = {
+    	s_basecolor  = { name = "s_basecolor",type = "texture", stage = 0, ref_path = "/pkg/bloom/assets/textures/DefaultA.texture" },
+	},
+	uniforms = {
+		u_params 	 = { name = "u_params", type="v4", value={1, 25, 0, 0} },
+		u_blur	 	 = { name = "u_blur", type="v4", value={5, 0.75, 0, 0} },
+	},
+}

@@ -1,0 +1,10 @@
+
+normalmap = false
+path = "/pkg/bloom/assets/textures/pbr/bolonga_lod.dds"
+sRGB = true
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  U = "MIRROR",
+  V = "MIRROR"
+}

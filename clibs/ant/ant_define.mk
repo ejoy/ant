@@ -3,7 +3,7 @@ include $(ANT3RD)/../clibs/hierarchy/ozz_define.mk
 include $(ANT3RD)/../clibs/bullet/bullet.mk
 
 ifeq "$(PLAT)" "mingw"
-PLAT_LIBS = -lws2_32 -limm32 -lole32 -loleaut32 -lwbemuuid
+PLAT_LIBS = -lws2_32 -limm32 -lole32 -loleaut32 -lwbemuuid -lpsapi
 else
 endif
 

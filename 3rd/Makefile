@@ -67,22 +67,24 @@ endif
 
 SHADER_SRC_PATH = ../../packages/resources/shaders/src
 
-COPY_SHADER_FILES_CMD = cp -f src/bgfx_shader.sh $(SHADER_SRC_PATH)
-COPY_SHADER_FILES_CMD +=cp -f src/bgfx_compute.sh $(SHADER_SRC_PATH)
-COPY_SHADER_FILES_CMD +=cp -f examples/common/common.sh $(SHADER_SRC_PATH)
-COPY_SHADER_FILES_CMD +=cp -f examples/common/shaderlib.sh $(SHADER_SRC_PATH)
 
 ifneq "$(PLAT)" "msvc"
 BGFX_TARGET_A = bgfx
 BGFX_TARGET_B = bimg bx
 ifeq "$(BGFX_CPRC_CMD)" ""
   BGFX_CPRC_CMD += echo ok
+  COPY_SHADER_FILES_CMD += echo ok
 else
   BGFX_TARGET_A += bgfx-shared-lib
   BGFX_TARGET_B += shaderc texturec
   BGFX_CPRC_CMD += && cp shaderc$(MODE) ../../../../../clibs/
   BGFX_CPRC_CMD += && cp texturec$(MODE) ../../../../../clibs/
   BGFX_CPRC_CMD += && cp $(BGFX_SHARED_LIB) ../../../../../clibs/bgfx-core.dll
+
+  COPY_SHADER_FILES_CMD = cp -f src/bgfx_shader.sh $(SHADER_SRC_PATH)
+  COPY_SHADER_FILES_CMD += && cp -f src/bgfx_compute.sh $(SHADER_SRC_PATH)
+  COPY_SHADER_FILES_CMD += && cp -f examples/common/common.sh $(SHADER_SRC_PATH)
+  COPY_SHADER_FILES_CMD += && cp -f examples/common/shaderlib.sh $(SHADER_SRC_PATH)
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
 BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(MODE)64 -j8
@@ -139,17 +141,17 @@ bgfx_clean :
 	cd bgfx && make clean
 
 define CMAKE_TEMP
-  $(BUILD_PATH)/$(1)/$(PLAT) : | $(BUILD_PATH)
+  $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) : | $(BUILD_PATH)
 	mkdir -p $$@
 
-  $(1)_init : | $(BUILD_PATH)/$(1)/$(PLAT)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" $(CMAKE_OPT) ../../../$(1)
+  $(1)_init : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" $(CMAKE_OPT) ../../../../$(1)
 
-  $(1)_make : | $(BUILD_PATH)/$(1)/$(PLAT)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT) && make $(MP)
+  $(1)_make : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && make $(MP)
 
-  $(1)_clean : | $(BUILD_PATH)/$(1)/$(PLAT)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT) && make clean
+  $(1)_clean : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
+	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && make clean
 endef
 
 $(foreach v, $(CMAKE_PROJ), $(eval $(call CMAKE_TEMP,$(v))))

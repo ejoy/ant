@@ -10,16 +10,17 @@ ecs.import "ant.event"
 ecs.import "ant.math.adapter"
 ecs.import "ant.sky"
 ecs.import "ant.asset"
-ecs.import "ant.imgui"
+ecs.import "ant.imguibase"
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
+local imgui = require "imgui"
+
 local model_review_system = ecs.system "model_review_system"
 
 local renderpkg = import_package "ant.render"
-local renderutil = renderpkg.util
 
 local skypkg = import_package "ant.sky"
 local skyutil = skypkg.util
@@ -34,7 +35,8 @@ model_review_system.depend "cull_system"
 model_review_system.depend "luagc_system"
 model_review_system.depend "shadow_maker"
 --model_review_system.depend "render_mesh_bounding"
-model_review_system.dependby "camera_controller"
+model_review_system.dependby "camera_controller_2"
+model_review_system.depend "imgui_runtime_system"
 
 local lu = renderpkg.light
 local cu = renderpkg.components
@@ -191,4 +193,53 @@ function model_review_system:init()
 	local dooreid = find_entity_by_name("door")
 	local door_outlineeid = find_entity_by_name("door_outline")
 	world[dooreid].rendermesh = world[door_outlineeid].rendermesh
+end
+
+local function memory_info()
+	local function bytestr(n)
+		if n < 1024 then
+			return ("%dB"):format(n)
+		end
+		n = n / 1024.0
+		if n < 1024 then
+			return ("%.1fKB"):format(n)
+		end
+		n = n / 1024.0
+		return ("%.1fMB"):format(n)
+	end
+
+	local s = {}
+	local platform = require "platform"
+	local bgfx = require "bgfx"
+	s[#s+1] = ""
+	s[#s+1] = ("sys   memory:%s"):format(bytestr(platform.info "memory"))
+	s[#s+1] = ("lua   memory:%s"):format(bytestr(collectgarbage "count" * 1024.0))
+	s[#s+1] = ("bgfx  memory:%s"):format(bytestr(bgfx.get_memory()))
+	s[#s+1] = ("math  memory:%s"):format(bytestr(ms:stacksize()))
+	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui.get_memory()))
+	
+	s[#s+1] = "-------------------"
+
+	local data = bgfx.get_stats "m"
+	s[#s+1] = ("rt   memory:%s"):format(bytestr(data.rtMemoryUsed))
+	s[#s+1] = ("tex  memory:%s"):format(bytestr(data.textureMemoryUsed))
+	s[#s+1] = ("vb   memory:%s"):format(bytestr(data.transientVbUsed))
+	s[#s+1] = ("ib   memory:%s"):format(bytestr(data.transientIbUsed))
+	s[#s+1] = ""
+
+	local leaks = ms:leaks()
+	if leaks and #leaks >= 0 then
+		s[#s+1] = "-------------------"
+		s[#s+1] = ("math3d leaks: %d"):format(#leaks)
+	end
+	
+	return table.concat(s, "\t\n\t")
+end
+
+function model_review_system:on_gui()
+	local windows = imgui.windows
+	local widget = imgui.widget
+	windows.Begin("Test")
+	widget.Text(memory_info())
+	windows.End()
 end

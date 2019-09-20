@@ -2,14 +2,19 @@ include ../common.mk
 include ../bgfx/bgfx_define.mk
 
 ifeq "$(PLAT)" "mingw"
-default : $(ODIR)/imgui.dll
+default : imgui.dll
 else
 default : $(ODIR)/libimgui.a
 endif
 
 IMGUI_INC=-I$(ANT3RD)/imgui
 IMGUI_SRC=$(ANT3RD)/imgui
-IMGUI_MACRO=-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS
+IMGUI_MACRO  = -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS
+IMGUI_MACRO += -DIMGUI_DISABLE_METRICS_WINDOW
+IMGUI_MACRO += -DIMGUI_DISABLE_DEMO_WINDOWS
+IMGUI_MACRO += -DIMGUI_DISABLE_DEFAULT_ALLOCATORS
+
+WINDOW_INC=-I$(ANTCLIBS)/window
 
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
 
@@ -19,7 +24,7 @@ OBJS += $(ODIR)/imgui_win32.o
 LIBS = -limm32
 
 $(ODIR)/imgui_win32.o : imgui_win32.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(WINDOW_INC) $(IMGUI_MACRO)
 endif
 
 ifeq "$(PLAT)" "osx"
@@ -51,6 +56,9 @@ $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_inte
 
 $(ODIR)/imgui.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++ $(LIBS)
+
+imgui.dll: $(ODIR)/imgui.dll | $(ODIR)
+	cp $^ $@
 
 $(ODIR)/libimgui.a : $(OBJS)
 	ar rsv $@ $^

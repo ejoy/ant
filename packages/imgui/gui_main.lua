@@ -34,12 +34,12 @@ function gui_main.init(nwh, context, width, height)
 	}
     imgui.create(nwh)
     local ocornut_imgui = assetutil.create_shader_program_from_file {
-        vs = fs.path "/pkg/ant.imgui/shader/vs_ocornut_imgui.sc",
-        fs = fs.path "/pkg/ant.imgui/shader/fs_ocornut_imgui.sc",
+        vs = fs.path "/pkg/ant.imguibase/shader/vs_ocornut_imgui.sc",
+        fs = fs.path "/pkg/ant.imguibase/shader/fs_ocornut_imgui.sc",
     }
     local imgui_image = assetutil.create_shader_program_from_file {
-        vs = fs.path "/pkg/ant.imgui/shader/vs_imgui_image.sc",
-        fs = fs.path "/pkg/ant.imgui/shader/fs_imgui_image.sc",
+        vs = fs.path "/pkg/ant.imguibase/shader/vs_imgui_image.sc",
+        fs = fs.path "/pkg/ant.imguibase/shader/fs_imgui_image.sc",
     }
     imgui.setDockEnable(true)
     imgui.viewid(viewidmgr.generate("ui"));
@@ -118,9 +118,9 @@ end
 -- end
 
 function gui_main.keyboard(key, press, state)
-    imgui.key_state(key, press, state)
+    imgui.keyboard(key, press, state)
     -- log.trace("key",key,press,state)
-    gui_input.keyboard(key, press, state)
+    gui_input.keyboard(key, press > 0, state)
 end
 
 local os = require "os"
@@ -168,20 +168,22 @@ function gui_main.exit()
 end
 
 local function dispatch(ok, CMD, ...)
-	if not ok then
-		local ok, err = xpcall(gui_main.update, debug.traceback)
-		if not ok then
-			gui_main.error(err)
-		end
+    if not ok then
+        gui_main.update()
+		-- local ok, err = xpcall(gui_main.update, debug.traceback)
+		-- if not ok then
+		-- 	gui_main.error(err)
+		-- end
 		thread.sleep(0)
 		return true
 	end
 	local f = gui_main[CMD]
-	if f then
-		local ok, err = xpcall(f, debug.traceback, ...)
-		if not ok then
-			gui_main.error(err)
-		end
+    if f then
+        f(...)
+		-- local ok, err = xpcall(f, debug.traceback, ...)
+		-- if not ok then
+		-- 	gui_main.error(err)
+		-- end
 	end
 	return CMD ~= 'exit'
 end

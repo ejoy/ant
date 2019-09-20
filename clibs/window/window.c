@@ -52,7 +52,7 @@ push_touch_args(lua_State *L, struct ant_window_touch *touch) {
 static void
 push_keyboard_arg(lua_State *L, struct ant_window_keyboard *keyboard) {
 	lua_pushinteger(L, keyboard->key);
-	lua_pushboolean(L, keyboard->press);
+	lua_pushinteger(L, keyboard->press);
 	lua_pushinteger(L, keyboard->state);
 }
 
@@ -235,7 +235,7 @@ lcreate(lua_State *L) {
 
 static int
 lmainloop(lua_State *L) {
-	window_mainloop(get_callback(L));
+	window_mainloop(get_callback(L), lua_toboolean(L, 1));
 	return 0;
 }
 

@@ -1,0 +1,29 @@
+shader = {
+	 vs = "/pkg/bloom/assets/shader/pbr/vs_mesh_pbr.sc",
+	 fs = "/pkg/bloom/assets/shader/pbr/fs_mesh_pbr.sc",
+}
+
+-- state = "default.state"
+state = {
+	CULL = "CCW",
+	WRITE_MASK = "RGBAZ",
+	DEPTH_TEST = "LESS"
+}
+
+properties = {
+	textures = {
+		s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/bloom/assets/textures/stone_d.texture"},
+		s_normal = {type="texture", name="normal", stage=1, ref_path="/pkg/bloom/assets/textures/stone_n.texture"},
+		s_metallic = {type="texture", name="s_metallic", stage=2, ref_path="/pkg/bloom/assets/textures/stone_m.texture"},
+		s_texCube = { type="texture", name="s_texCube",  stage=3, ref_path="/pkg/bloom/assets/textures/bolonga.texture"}, 	
+		s_brdfMap   = { type="texture",name="s_brdfMap",   stage = 5,ref_path="/pkg/bloom/Assets/textures/brdfMap3.texture"},	
+	},
+	uniforms = {
+		u_params = { type="v4", name="u_params ", value= { 0, 1, 0, 0.9} },
+    	u_tiling = { type="v4",name="u_tiling", value={20,20,0,0}},		
+		u_diffuseColor = { type="v4", name="diffuse color", value= {1, 1, 1, 1.0} },
+		u_specularColor = {type="v4", name="specular color", value= {0.78, 0.78, 0.78, 0.08}},
+	}
+}
+
+

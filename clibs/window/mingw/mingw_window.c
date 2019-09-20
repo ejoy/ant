@@ -1,10 +1,13 @@
 #include <Windows.h>
 #include <stdint.h>
 #include "../window.h"
+#include "mingw_window.h"
+
 
 // project path in my documents
 #define CLASSNAME L"ANTCLIENT"
 #define WINDOWSTYLE (WS_OVERLAPPEDWINDOW)
+
 
 static void
 get_xy(LPARAM lParam, int *x, int *y) {
@@ -128,7 +131,12 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		msg.type = ANT_WINDOW_KEYBOARD;
 		msg.u.keyboard.state = get_keystate(lParam);
-		msg.u.keyboard.press = (message == WM_KEYDOWN) ? 1 : 0;
+		if (message == WM_KEYUP) {
+			msg.u.keyboard.press = 0;
+		}
+		else {
+			msg.u.keyboard.press = (lParam & (1 << 30))? 2: 1;
+		}
 		msg.u.keyboard.key = (int)wParam;
 		cb->message(cb->ud, &msg);
 		break;
@@ -166,6 +174,14 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
+	case WM_USER_WINDOW_SETCURSOR:
+	{
+		LPTSTR cursor = (LPTSTR)lParam;
+		HCURSOR hcursor = LoadCursor(NULL, cursor);
+		SetCursor(hcursor);
+		break;
+	}
+
 	}
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
@@ -180,7 +196,7 @@ register_class()
 	wndclass.lpfnWndProc = WndProc;
 	wndclass.hInstance = GetModuleHandleW(0);
 	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	//wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.lpszClassName = CLASSNAME;
 	wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
@@ -226,11 +242,28 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	return 0;
 }
 
-void window_mainloop(struct ant_window_callback* cb) {
+void window_mainloop(struct ant_window_callback* cb, int update) {
 	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+	struct ant_window_message update_msg;
+	update_msg.type = ANT_WINDOW_UPDATE;
+	if (update) {
+		for (;;) {
+			if (PeekMessageW (&msg, NULL, 0, 0, PM_REMOVE)) {
+				if (msg.message == WM_QUIT)
+					break;
+				TranslateMessage(&msg); 
+				DispatchMessageW(&msg); 
+			} else {
+				cb->message(cb->ud, &update_msg);
+				Sleep(0);
+			}
+		}
+	}
+	else {
+		while (GetMessage(&msg, NULL, 0, 0)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
