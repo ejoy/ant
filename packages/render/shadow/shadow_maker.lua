@@ -192,7 +192,7 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 	local newmax = limit_move_in_one_texel(maxextent)
 	
 	minextent[1], minextent[2] = newmin[1], newmin[2]
-	newmax[1], newmax[2] = newmax[1], newmax[2]
+	maxextent[1], maxextent[2] = newmax[1], newmax[2]
 end
 
 local function calc_shadow_camera(shadow, lightdir, shadowcamera)
@@ -201,20 +201,9 @@ local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 	shadowcamera.viewdir(lightdir)
 
 	local csm = shadow.csm
-
-	-- calc view frustum points
-	-- do
-	-- 	local _, _, vp1 = ms:view_proj(view_camera, view_camera.frustum, true)
-	-- 	local vvf = mathbaselib.new_frustum(ms, vp1)
-	-- 	local points1 = vvf:points();
-
-	-- 	local newpoints = calc_split_points(points1, csm.split_ratios)
-	-- 	print(newpoints, #newpoints)
-
-	-- end
-
 	-- frustum_desc can cache, only camera distance changed or ratios change need recalculate
 	local frustum_desc = split_new_frustum(view_camera.frustum, csm.split_ratios)
+	csm.split_distance_VS = frustum_desc.f - view_camera.frustum.n
 	local _, _, vp = ms:view_proj(view_camera, frustum_desc, true)
 	local viewfrustum = mathbaselib.new_frustum(ms, vp)
 	local corners_WS = viewfrustum:points()
@@ -249,36 +238,11 @@ end
 
 function maker_camera:update()
 	local lightdir = get_directional_light_dir()
-
-	-- local viewcamera = camerautil.get_camera(world, "main_view")
-	-- local _, _, vp = ms:view_proj(viewcamera, viewcamera.frustum, true)
-
-	-- local origin = {0, 0, 0, 1}
-
-	-- local function to_ndc(pos_WS, viewproj)
-	-- 	local pos_CS = ms(viewproj, pos_WS, "*T")
-	-- 	local h_coord = pos_CS[4]
-	-- 	local pos_NDC = {pos_CS[1] / h_coord, pos_CS[2]/h_coord, pos_CS[3]/h_coord, h_coord}
-	-- 	return pos_NDC
-	-- end
-
-	-- local origin_NDC_VIEW = to_ndc(origin, vp)
-	-- local t0 = to_ndc({1, 1, 2, 1}, vp)
-	-- local t1 = to_ndc({2, 1, 1, 1}, vp)
-	-- print(string.format("origin point view camera ndc:(%f, %f, %f, %f)", 
-	-- 	origin_NDC_VIEW[1], origin_NDC_VIEW[2], origin_NDC_VIEW[3], origin_NDC_VIEW[4]))
-
 	for _, eid in world:each "shadow" do
 		local shadowentity = world[eid]
 
 		local shadowcamera = camerautil.get_camera(world, shadowentity.camera_tag)
 		calc_shadow_camera(shadowentity.shadow, lightdir, shadowcamera)
-
-		-- local _, _, light_vp = ms:view_proj(shadowcamera, shadowcamera.frustum, true)
-		-- local origin_NDC_LIGHT = to_ndc(origin, light_vp)
-		-- print(string.format("origin in light ndc[%d]:(%f, %f, %f, %f)", shadowentity.shadow.csm.index, 
-		-- 	origin_NDC_LIGHT[1], origin_NDC_LIGHT[2], origin_NDC_LIGHT[3], origin_NDC_LIGHT[4]))
-		--shadowcamera.crop_matrix = create_crop_matrix(shadowentity.shadow)
 	end
 end
 
