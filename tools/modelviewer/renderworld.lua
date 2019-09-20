@@ -32,7 +32,7 @@ model_review_system.depend "viewport_detect_system"
 model_review_system.depend "procedural_sky_system"
 model_review_system.depend "cull_system"
 model_review_system.depend "luagc_system"
---model_review_system.depend "shadow_maker"
+model_review_system.depend "shadow_maker"
 --model_review_system.depend "render_mesh_bounding"
 model_review_system.dependby "camera_controller"
 
@@ -43,11 +43,8 @@ local fs = require "filesystem"
 local serialize = import_package 'ant.serialize'
 
 local function create_light()
-	local leid = lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2)
-	local lentity = world[leid]
-
-	ms(lentity.rotation, {math.rad(123.4), math.rad(-34.22), math.rad(-28.2)}, "=")
-
+	lu.create_directional_light_entity(world, "direction light", 
+		{1,1,1,1}, 2, mu.to_radian{60, 50, 0})
 	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
@@ -66,7 +63,7 @@ end
 
 function model_review_system:init()
 	create_light()
-	skyutil.create_procedural_sky(world)
+	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
 	-- world:create_entity {
 	-- 	transform = mu.srt(),
@@ -99,12 +96,14 @@ function model_review_system:init()
 	-- 	can_render = true,
 	-- }
 
-	cu.create_grid_entity(world, "grid")
-	-- cu.create_plane_entity(world, 
-	-- 	{20, 1, 20, 0}, nil, 
-	-- 	fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material", 
-	-- 	{0.8, 0.8, 0.8, 1},
-	-- 	"test shadow plane")
+	--cu.create_grid_entity(world, "grid")
+	cu.create_plane_entity(world, 
+		{50, 1, 50, 0}, nil, 
+		fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material", 
+		{0.8, 0.8, 0.8, 1},
+		"test shadow plane")
+
+	--cu.create_axis_entity(world, mu.translate_mat{0, 0, 1})
 
 	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
@@ -114,6 +113,7 @@ function model_review_system:init()
 		can_render 	= true,
 		main_view 	= true,
 		asyn_load	= "",
+		can_cast	= true,
 		name 		= "door",
 		serialize   = serialize.create(),
 	}
@@ -155,6 +155,7 @@ function model_review_system:init()
 			create_material_item(singlecolor_material, {1, 1, 1, 0}),
 		},
 		main_view = true,
+		can_cast = true,
 		asyn_load = "",
 		name = "test_glb",
 		serialize   = serialize.create(),
