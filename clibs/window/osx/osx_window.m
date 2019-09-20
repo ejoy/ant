@@ -343,10 +343,12 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 	return true;
 }
 
-void window_mainloop(struct ant_window_callback* cb) {
+void window_mainloop(struct ant_window_callback* cb, int update) {
     if (!g_wd) {
         return;
     }
+    struct ant_window_message update_msg;
+    update_msg.type = ANT_WINDOW_UPDATE;
     [NSApplication sharedApplication];
     id dg = [AppDelegate new];
     [NSApp setDelegate:dg];
@@ -354,6 +356,9 @@ void window_mainloop(struct ant_window_callback* cb) {
     [NSApp activateIgnoringOtherApps:YES];
     [NSApp finishLaunching];
     while (![dg applicationHasTerminated]) {
+        if (update) {
+            cb->message(cb->ud, &update_msg);
+        }
         @autoreleasepool {
             while (dispatch_event(cb, peek_event())) { }
         }

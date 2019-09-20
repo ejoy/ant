@@ -118,7 +118,7 @@ end
 -- end
 
 function gui_main.keyboard(key, press, state)
-    imgui.key_state(key, press > 0, state)
+    imgui.keyboard(key, press, state)
     -- log.trace("key",key,press,state)
     gui_input.keyboard(key, press > 0, state)
 end

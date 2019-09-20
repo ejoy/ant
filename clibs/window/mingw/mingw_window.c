@@ -242,11 +242,28 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	return 0;
 }
 
-void window_mainloop(struct ant_window_callback* cb) {
+void window_mainloop(struct ant_window_callback* cb, int update) {
 	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+	struct ant_window_message update_msg;
+	update_msg.type = ANT_WINDOW_UPDATE;
+	if (update) {
+		for (;;) {
+			if (PeekMessageW (&msg, NULL, 0, 0, PM_REMOVE)) {
+				if (msg.message == WM_QUIT)
+					break;
+				TranslateMessage(&msg); 
+				DispatchMessageW(&msg); 
+			} else {
+				cb->message(cb->ud, &update_msg);
+				Sleep(0);
+			}
+		}
+	}
+	else {
+		while (GetMessage(&msg, NULL, 0, 0)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }

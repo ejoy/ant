@@ -235,7 +235,7 @@ lcreate(lua_State *L) {
 
 static int
 lmainloop(lua_State *L) {
-	window_mainloop(get_callback(L));
+	window_mainloop(get_callback(L), lua_toboolean(L, 1));
 	return 0;
 }
 

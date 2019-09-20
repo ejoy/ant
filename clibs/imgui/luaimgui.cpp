@@ -405,9 +405,9 @@ get_cond(lua_State *L, int index) {
 
 // key, press, state
 static int
-lkeyState(lua_State *L) {
+lkeyboard(lua_State *L) {
 	int key = (int)luaL_checkinteger(L, 1);
-	int press = (int)lua_toboolean(L, 2);
+	int press = (int)luaL_checkinteger(L, 2);
 	int state = (int)luaL_checkinteger(L, 3);
 
 	ImGuiIO& io = ImGui::GetIO();
@@ -418,7 +418,7 @@ lkeyState(lua_State *L) {
 	io.KeySuper = (state & 0x08) != 0;
 
 	if (key >= 0 && key < 256) {
-		io.KeysDown[key] = press;
+		io.KeysDown[key] = press > 0;
 	}
 	return 0;
 }
@@ -3422,7 +3422,7 @@ luaopen_imgui(lua_State *L) {
 		{ "destroy", ldestroy },
 		{ "keymap", lkeymap },
 		{ "end_frame", lendFrame },
-		{ "key_state", lkeyState },
+		{ "keyboard", lkeyboard },
 		{ "input_char", linputChar },
 		{ "mouse_wheel", lmouseWheel },
 		{ "mouse", lmouse },

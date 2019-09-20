@@ -5,7 +5,7 @@ function imgui.destroy() end
 function imgui.keymap() end
 function imgui.begin_frame() end
 function imgui.end_frame() end
-function imgui.key_state() end
+function imgui.keyboard() end
 function imgui.input_char() end
 function imgui.mouse_move() end
 function imgui.input_char() end
