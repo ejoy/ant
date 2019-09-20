@@ -3,10 +3,36 @@ local vfs = {} ; vfs.__index = vfs
 -- dir object example :
 -- f vfs.txt 90a5c279259fd4e105c4eb8378e9a21694e1e3c4 1533871795
 
+local function read_history(self)
+	local history = {}
+	local f = io.open(self.path .. "root", "rb")
+	if f then
+		for hash in f:lines() do
+			history[#history+1] = hash:match "[%da-f]+"
+		end
+		f:close()
+	end
+	return history
+end
+
+local function update_history(self, new)
+	local history = read_history(self)
+	for i, h in ipairs(history) do
+		if h == new then
+			table.remove(history, i)
+			table.insert(history, 1, h)
+			return history
+		end
+	end
+	table.insert(history, 1, new)
+	history[11] = nil
+	return history
+end
+
 local function root_hash(self)
 	local f = io.open(self.path .. "root", "rb")
 	if f then
-		local hash = f:read "a"
+		local hash = f:read "l"
 		f:close()
 		return (hash:match "[%da-f]+")
 	end
@@ -89,10 +115,11 @@ function vfs:list(path)
 end
 
 function vfs:changeroot(hash)
+	local history = update_history(self, hash)
 	local f = assert(io.open(self.path .. "root", "wb"))
-	f:write(hash)
-	self.root = hash
+	f:write(table.concat(history, "\n"))
 	f:close()
+	self.root = hash
 end
 
 function vfs:realpath(path)
