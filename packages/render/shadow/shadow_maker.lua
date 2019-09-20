@@ -23,8 +23,6 @@ local mathbaselib= require "math3d.baselib"
 
 local bgfx		= require "bgfx"
 
---local linear_shadow = true
-
 local csm_comp = ecs.component "csm"
 	.split_ratios "real[2]"
 	.index "int" (0)
@@ -60,42 +58,22 @@ local function get_directional_light_dir_T()
 	return ms(ld, "T")
 end
 
-local function calc_split_points(points, ratios)
-	local function sub_point(lhs, rhs)
-		return {
-			lhs[1] - rhs[1],
-			lhs[2] - rhs[2],
-			lhs[3] - rhs[3],
-		}
+--local linear_shadow = true
+local function gen_ratios(distances)
+	local pre_dis = 0
+	local ratios = {}
+	for i=1, #distances do
+		local dis = distances[i]
+		ratios[#ratios+1] = {pre_dis, dis}
+		pre_dis = dis
 	end
-
-	local function mul_point_scalar(pt, scalar)
-		return {
-			pt[1] * scalar,
-			pt[2] * scalar,
-			pt[3] * scalar,
-		}
-	end
-
-	local function add_point(lhs, rhs)
-		return {
-			lhs[1] + rhs[1],
-			lhs[2] + rhs[2],
-			lhs[3] + rhs[3],
-		}
-	end
-	local newpoints = {}
-	for i=1, 4 do
-		local cornerRay = sub_point(points[i + 4], points[i])
-		local nearCornerRay = mul_point_scalar(cornerRay, ratios[1]);
-		local farCornerRay  = mul_point_scalar(cornerRay, ratios[2]);
-		newpoints[i + 4] 	= add_point(points[i], farCornerRay);
-		newpoints[i] 		= add_point(points[i], nearCornerRay);
-	end
-
-	return newpoints
+	ratios[#ratios+1] = {pre_dis, 1.0}
+	return ratios
 end
-	
+
+local split_distance_ratios = gen_ratios{0.18, 0.35, 0.65}
+local shadowmap_size = 1024
+
 local function split_new_frustum(view_frustum, ratios)
 	assert(view_frustum.ortho == nil or view_frustum.ortho == false)
 
@@ -111,14 +89,6 @@ local function split_new_frustum(view_frustum, ratios)
 
 	assert(frustum.fov)
 	return frustum
-end
-
-local function get_frustum_points(view_camera, view_frustum, ratios)
-	local frustum_desc = split_new_frustum(view_frustum, ratios)
-	
-	local _, _, vp = ms:view_proj(view_camera, frustum_desc, true)
-	local frustum = mathbaselib.new_frustum(ms, vp)
-	return frustum:points()
 end
 
 -- local function create_crop_matrix(shadow)
@@ -166,15 +136,6 @@ end
 -- 	}
 -- end
 
-local function calc_shadow_camera_eye_pos(corners_WS, lightdir)
-	local bb = mathbaselib.new_bounding(ms)
-	bb:append(table.unpack(corners_WS))
-	local s = bb:get "sphere"
-	local radius = s[4]
-	s[4] = 1
-	return ms(s, {-radius}, lightdir, "*+P")
-end
-
 local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_size)
 	local texsize = 1 / shadowmap_size
 
@@ -209,18 +170,15 @@ local function calc_shadow_camera(shadow, lightdir, shadowcamera)
 	local corners_WS = viewfrustum:points()
 
 	local center_WS = viewfrustum:center(corners_WS)
-
-	--local updir
 	local min_extent, max_extent
-	if false then --csm.stabilize then
+	if csm.stabilize then
 		local radius = viewfrustum:max_radius(center_WS, corners_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
-		--updir = mu.YAXIS
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadow.shadowmap_size)
 	else
 		-- using camera world matrix right axis as light camera matrix up direction
-		--updir = ms:base_axes(lightdir)
+		-- look at matrix up direction should select one that not easy parallel with view direction
 		local shadow_viewmatrix = ms:lookat(center_WS, lightdir, nil, true)
 		local minv, maxv = ms:minmax(corners_WS, shadow_viewmatrix)
 		min_extent, max_extent = ms(minv, "T", maxv, "T")
@@ -300,7 +258,7 @@ local function create_csm_entity(lightdir, index, ratios, shadowmap_size)
 	else
 		renderbuffers = {
 			{
-				format = "D16F",
+				format = "D32F",
 				w=shadowmap_size,
 				h=shadowmap_size,
 				layers=1,
@@ -328,9 +286,9 @@ local function create_csm_entity(lightdir, index, ratios, shadowmap_size)
 			depth_type = "linear",
 			normal_offset = 0,
 			csm = {
-				split_ratios = ratios,
-				index = index,
-				stabilize = true,
+				split_ratios= ratios,
+				index 		= index,
+				stabilize 	= false,
 			}
 		},
 		viewid = viewidmgr.get(camera_tag),
@@ -359,15 +317,9 @@ end
 
 function sm:post_init()
 	local lightdir = get_directional_light_dir_T()
-	local ratios = {
-		{0, 0.15},
-		{0.15, 0.35},
-		{0.35, 0.5},
-		{0.5, 1},
-	}
-	for ii=1, #ratios do
-		local ratio = ratios[ii]
-		create_csm_entity(lightdir, ii, ratio, 512)
+	for ii=1, #split_distance_ratios do
+		local ratio = split_distance_ratios[ii]
+		create_csm_entity(lightdir, ii, ratio, shadowmap_size)
 	end
 end
 
@@ -396,9 +348,6 @@ debug_sm.depend "shadowmaker_camera"
 ecs.tag "shadow_quad"
 
 local function csm_shadow_debug_quad()
-	local fbsize = world.args.fb_size
-	local fbheight = fbsize.h
-
 	local quadsize = 192
 	local off_y = 0 --fbheight - 192
 	local quadmaterial = fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"
