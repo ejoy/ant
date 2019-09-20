@@ -177,7 +177,6 @@ function ps:init()
 	self.northdir =	ms:ref "vector" {1, 0, 0, 0}
 	self.updir  = ms:ref "vector" {0, 1, 0, 0}
 	self.ecliptic_obliquity = math.rad(23.44)	--the earth's ecliptic obliquity is 23.44
-
 	self.sundir = ms:ref "vector"(calc_sun_direction(self))
 	return self
 end

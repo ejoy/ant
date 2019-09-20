@@ -47,7 +47,8 @@ local function fill_procedural_sky_mesh(skyentity)
 	meshcomp.reskey = assetmgr.register_resource(fs.path "//meshres/procedural_sky.mesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib))
 end
 
-function util.create_procedural_sky(world, whichhour, whichmonth, whichlatitude, turbidity, follow_by_directional_light)
+function util.create_procedural_sky(world, settings)
+	settings = settings or {}
     local skyeid = world:create_entity {
 		transform = mu.identity_transform(),
 		rendermesh = {},
@@ -66,11 +67,11 @@ function util.create_procedural_sky(world, whichhour, whichmonth, whichlatitude,
 		procedural_sky = {
 			grid_width = 32, 
 			grid_height = 32,
-			follow_by_directional_light = follow_by_directional_light or true,
-			which_hour 	= whichhour or 12,	-- high noon
-			turbidity 	= turbidity or 2.15,
-			month 		= whichmonth or "June",
-			latitude 	= whichlatitude or math.rad(50),
+			follow_by_directional_light = settings.follow_by_directional_light,
+			which_hour 	= settings.whichhour or 12,	-- high noon
+			turbidity 	= settings.turbidity or 2.15,
+			month 		= settings.whichmonth or "June",
+			latitude 	= settings.whichlatitude or math.rad(50),
 		},
 		main_view = true,
 		can_render = true,
