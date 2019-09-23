@@ -115,7 +115,7 @@
       <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>vs_bin\$(Configuration)\incbin.exe ..\..\clibs\firmware\firmware.cpp &amp;&amp; cp data.c tools/data.c</Command>
+      <Command>tools\build_firmware.bat debug</Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>generate bin data</Message>
@@ -204,7 +204,7 @@
       <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>vs_bin\$(Configuration)\incbin.exe ..\..\clibs\firmware\firmware.cpp &amp;&amp; cp data.c tools/data.c</Command>
+      <Command>tools\build_firmware.bat release</Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>generate bin data</Message>

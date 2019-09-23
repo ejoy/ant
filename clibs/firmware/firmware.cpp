@@ -13,6 +13,8 @@ INCBIN(FirmwareVfs, "../../engine/firmware/vfs.lua");
 #define FW_PLAT "osx"
 #elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
 #define FW_PLAT "ios"
+#elif defined(_MSC_VER)
+#define FW_PLAT "msvc"
 #endif
 
 #if defined(_DEBUG)

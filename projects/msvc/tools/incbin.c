@@ -18,6 +18,12 @@
 #define SEARCH_PATHS_MAX 64
 #define FILE_PATHS_MAX 1024
 
+#ifdef _MSC_VER
+#define snprintf_ex snprintf
+#else
+#define snprintf_ex _snprintf
+#endif
+
 static int fline(char **line, size_t *n, FILE *fp) {
     int chr;
     char *pos;
@@ -54,20 +60,60 @@ static int fline(char **line, size_t *n, FILE *fp) {
     return (int)(pos - *line);
 }
 
-static FILE *open_file(const char *name, const char *mode, const char (*searches)[PATH_MAX], int count) {
+static FILE* open_file_from_relative_path(const char* name, const char* mode, const char* relativepath){
+    char filename[FILENAME_MAX + PATH_MAX];
+	int split = 0;
+    FILE* fp;
+    char buffer[FILENAME_MAX + PATH_MAX];
+	int i;
+
+    snprintf_ex(buffer, sizeof(buffer), "%s/%s", relativepath, name);
+    if (fp=fopen(buffer, mode)){
+        return fp;
+    }
+
+	for (i = 0; name[i]; ++i) {
+		if (isspace(name[i])) {
+			const char* beg, *end;			
+			int count;
+			for (++i; name[i] && isspace(name[i]); ++i);
+
+			for (++i; name[i] && name[i] == '"'; ++i);
+			beg = name + i;
+
+			for (++i; name[i] && name[i] != '"'; ++i);
+			end = name + i;
+
+			count = (int)(end - beg);
+			strncpy(filename, beg, end - beg);
+			filename[count] = '\0';
+			split = 1;
+		}
+	}
+    
+    if (split){
+        snprintf_ex(buffer, sizeof(buffer), "%s/%s", relativepath, filename);
+		if (fp = fopen(buffer, mode))
+			return fp;
+    }
+
+	return fopen(name, mode);
+}
+
+static FILE *open_file(const char *name, const char *mode, const char (*searches)[PATH_MAX], int count, const char* definepath) {
     int i;
     for (i = 0; i < count; i++) {
         char buffer[FILENAME_MAX + PATH_MAX];
         FILE *fp;
-#ifndef _MSC_VER
-        snprintf(buffer, sizeof(buffer), "%s/%s", searches[i], name);
-#else
-        _snprintf(buffer, sizeof(buffer), "%s/%s", searches[i], name);
-#endif
-        if ((fp = fopen(buffer, mode)))
+        if (fp = open_file_from_relative_path(name, mode, searches[i]))
+            return fp;
+
+		snprintf_ex(buffer, sizeof(buffer), "%s/%s", searches[i], definepath);
+        if (fp = open_file_from_relative_path(name, mode, buffer))
             return fp;
     }
-    return !count ? fopen(name, mode) : NULL;
+
+    return !count ? open_file_from_relative_path(name, mode, definepath) : NULL;
 }
 
 static int strcicmp(const char *s1, const char *s2) {
@@ -115,6 +161,7 @@ int main(int argc, char **argv) {
     char prefix[FILENAME_MAX] = "g";
     char file_paths[FILE_PATHS_MAX][PATH_MAX];
     FILE *out = NULL;
+    const char* definepath = NULL;
 
     argc--;
     argv++;
@@ -123,11 +170,12 @@ int main(int argc, char **argv) {
 
     if (argc == 0) {
 usage:
-        fprintf(stderr, "%s [-help] [-Ipath...] | <files> | [-o output] | [-p prefix]\n", argv[-1]);
+        fprintf(stderr, "%s [-help]|[-Ipath...]|[-Ddefinepath]| <files> | [-o output] | [-p prefix]\n", argv[-1]);
         fprintf(stderr, "   -o         - output file [default is \"data.c\"]\n");
         fprintf(stderr, "   -p         - specify a prefix for symbol names (default is \"g\")\n");
         fprintf(stderr, "   -S<style>  - specify a style for symbol generation (default is \"camelcase\")\n");
         fprintf(stderr, "   -I<path>   - specify an include path for the tool to use\n");
+        fprintf(stderr, "   -D<path>   - specify an relative path for the tool to use, and only specify once. ex:<searchpath>/<definepath>/<filename>\n");
         fprintf(stderr, "   -help      - this\n");
         fprintf(stderr, "example:\n");
         fprintf(stderr, "   %s icon.png music.mp3 -o file.c\n", argv[-1]);
@@ -171,6 +219,14 @@ usage:
             }
             strcpy(search_paths[paths++], name);
             continue;
+        } else if (!strncmp(argv[i], "-D", 2)) {
+            char *path = argv[i] + 2;   /* skip "-D" */
+            if (definepath == NULL){
+                definepath = path;
+            } else {
+                goto usage;
+            }
+            continue;
         } else if (!strncmp(argv[i], "-S", 2)) {
             char *name = argv[i] + 2; /* skip "-S"; */
             if (!strcicmp(name, "camel") || !strcicmp(name, "camelcase"))
@@ -208,7 +264,7 @@ usage:
     fprintf(out, "#endif\n\n");
 
     for (i = 0; i < files; i++) {
-        FILE *fp = open_file(file_paths[i], "r", search_paths, paths);
+        FILE *fp = open_file(file_paths[i], "r", search_paths, paths, definepath);
         char *line = NULL;
         size_t size = 0;
         if (!fp) {
@@ -237,7 +293,7 @@ usage:
             fprintf(out, "INCBIN_CONST INCBIN_ALIGN unsigned char %s%s%s[] = {\n    ", prefix, name, s(kData));
             *--end = '\0';
             file++;
-            if (!(f = open_file(file, "rb", search_paths, paths))) {
+            if (!(f = open_file(file, "rb", search_paths, paths, definepath))) {
                 fprintf(stderr, "failed to include data `%s'\n", file);
                 goto end;
             } else {
