@@ -32,4 +32,24 @@ function util.get_directional_light_dir(world)
 	return ms(d_light.rotation, "dP")
 end
 
+local function gen_ratios(distances)
+	local pre_dis = 0
+	local ratios = {}
+	for i=1, #distances do
+		local dis = distances[i]
+		ratios[#ratios+1] = {pre_dis, dis}
+		pre_dis = dis
+	end
+	ratios[#ratios+1] = {pre_dis, 1.0}
+	return ratios
+end
+
+local split_distance_ratios = gen_ratios{0.18, 0.35, 0.65}
+
+function util.get_split_ratios()
+	return split_distance_ratios
+end
+
+util.shadowmap_size = 1024
+
 return util

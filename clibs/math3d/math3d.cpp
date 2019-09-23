@@ -3068,6 +3068,62 @@ lminmax(lua_State *L){
 	return 2;
 }
 
+template<class OP>
+static void 
+elem_op(lua_State *L, struct lastack *LS, OP op){
+	const int64_t id = get_stack_id(L, LS, 2);
+	int type;
+	lastack_value(LS, id, &type);
+
+	const auto elem_idx = lua_tointeger(L, 3);
+
+	const float value = lua_tonumber(L, 4);
+
+	switch (type)
+	{
+	case LINEAR_TYPE_MAT:{
+		if (elem_idx < 0 || elem_idx > 15){
+			luaL_error(L, "elem index out of range:%d", elem_idx);
+		}
+		auto m = get_mat_value(L, LS, 2);
+		op(m[elem_idx/4][elem_idx%4], value);
+		lastack_pushobject(LS, &m[0][0], type);
+	}
+		break;
+	case LINEAR_TYPE_VEC4:
+	case LINEAR_TYPE_EULER:
+	case LINEAR_TYPE_QUAT:{
+		if (elem_idx < 0 || elem_idx > 3){
+			luaL_error(L, "elem index out of range:%d", elem_idx);
+		}
+
+		auto vv = get_vec_value(L, LS, 2);
+		op(vv[elem_idx], value);
+		lastack_pushobject(LS, &vv.x, type);
+	}
+	default:
+		luaL_error(L, "not support type:%d", type);
+		break;
+	}
+}
+
+static int
+lelem_mul(lua_State *L){
+	struct lastack* LS = getLS(L, 1);
+
+	elem_op(L, LS, [](float &v, float newvalue){ v *= newvalue;});
+	pushid(L, pop(L, LS));
+	return 1;
+}
+
+static int
+lelem_add(lua_State *L){
+	struct lastack* LS = getLS(L, 1);
+
+	elem_op(L, LS, [](float &v, float newvalue){ v += newvalue;});
+	pushid(L, pop(L, LS));
+	return 1;
+}
 
 // reg key for ref leak table
 static int REFLEAK = 0;
@@ -3144,6 +3200,8 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "min", lmin},
 			{ "max", lmax},
 			{ "minmax", lminmax},
+			{ "elem_mul", lelem_mul},
+			{ "elem_add", lelem_add},
 			{ "leaks", lleaks },
 			{ NULL, NULL },
 		};

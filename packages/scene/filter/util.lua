@@ -1,6 +1,8 @@
 local util = {}; util.__index = util
 
-local ms 		= import_package "ant.math".stack
+local mathpkg 	= import_package "ant.math"
+local ms, mu	= mathpkg.stack, mathpkg.util
+
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 local shadowutil= renderpkg.shadow
@@ -81,48 +83,53 @@ function util.load_lighting_properties(world, render_properties)
 	end
 end
 
-local shadowmap_sampler_names = {}
-for ii=1, 4 do
-	shadowmap_sampler_names[ii] = "s_shadowmap" .. ii - 1
+local function calc_viewport_offset(csm_idx)
+	local ratios = shadowutil.get_split_ratios()
+	local numsplit = #ratios
+	local spiltunit = 1 / numsplit
+	return spiltunit * (csm_idx - 1)
 end
 
 function util.load_shadow_properties(world, render_properties)
 	local shadow_properties = render_properties.shadow
 	local uniforms, textures = shadow_properties.uniforms, shadow_properties.textures
-	local csm_stage_start_idx = 4
+
 	local csm_matrixs = {n=nil, nil, nil, nil, nil}
 	local split_distances = {nil, nil, nil, nil}
-	for _, eid in world:each "shadow" do
+	for _, eid in world:each "csm" do
 		local se = world[eid]
-		local shadow = se.shadow
-		local csm = shadow.csm
+		local csm = se.csm
 
 		local camera = camerautil.get_camera(world, se.camera_tag)
 
 		local idx = csm.index
-		local sm_name = shadowmap_sampler_names[idx]
-		textures[sm_name] = {type="texture", stage = csm_stage_start_idx+idx-1, name = sm_name, 
-							handle = se.render_target.frame_buffer.render_buffers[1].handle}
-
 		split_distances[idx] = csm.split_distance_VS
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
 		vp = ms(shadowutil.shadow_crop_matrix, vp, "*P")
+		local offset = calc_viewport_offset(idx)
+		vp = ms:elem_add(vp, 10, offset)
 		csm_matrixs[csm.index] = vp
 	end
 
-	csm_matrixs.n = #csm_matrixs
-	uniforms["u_csm_matrix"] = {type="m4", name="csm matrix", value=csm_matrixs}
-	uniforms["u_csm_split_distances"] = {type="v4", name="csm split distances", value=split_distances}
+	local num_matrixs = #csm_matrixs
+	if num_matrixs > 0 then
+		csm_matrixs.n = num_matrixs
+		uniforms["u_csm_matrix"] = {type="m4", name="csm matrix", value=csm_matrixs}
+		uniforms["u_csm_split_distances"] = {type="v4", name="csm split distances", value=split_distances}
+	end
 
-	--TODO: currently, all the shadow entity have the samle shadow config
-	-- we should move shadow config to a single entity using unique tag to reference it.
 	local shadowentity = world:first_entity "shadow"
-	local shadow = shadowentity.shadow
-	uniforms["u_shadow_param1"] = {type="v4", name="x=[shadow bias],y=[normal offset],z=[texel size],w=[not use]", 
-		value={shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}}
-	local shadowcolor = shadow.color or {0, 0, 0}
-	uniforms["u_shadow_param2"] = {type="v4", name="xyz=[shadow color],w=[not use]", 
-		value={shadowcolor[1], shadowcolor[2], shadowcolor[3], 0}}
+	if shadowentity then
+		textures["s_shadowmap"] = {type="texture", stage=7, name="csm shadow map", 
+							handle = shadowentity.frame_buffer.render_buffers[1].handle}
+
+		local shadow = shadowentity.shadow
+		uniforms["u_shadow_param1"] = {type="v4", name="x=[shadow bias],y=[normal offset],z=[texel size],w=[not use]", 
+			value={shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}}
+		local shadowcolor = shadow.color or {0, 0, 0}
+		uniforms["u_shadow_param2"] = {type="v4", name="xyz=[shadow color],w=[not use]", 
+			value={shadowcolor[1], shadowcolor[2], shadowcolor[3], 0}}
+	end
 end
 
 function util.load_postprocess_properties(world, render_properties)

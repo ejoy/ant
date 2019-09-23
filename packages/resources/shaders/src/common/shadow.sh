@@ -24,11 +24,7 @@ uniform vec4 u_shadow_param2;
 #define shadow_sampler_type sampler2DShadow
 #endif
 
-// need move these shadowmaps to single shadowmap
-SHADOW_SAMPLER2D(s_shadowmap0, 4);
-SHADOW_SAMPLER2D(s_shadowmap1, 5);
-SHADOW_SAMPLER2D(s_shadowmap2, 6);
-SHADOW_SAMPLER2D(s_shadowmap3, 7);
+SHADOW_SAMPLER2D(s_shadowmap, 7);
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
 {

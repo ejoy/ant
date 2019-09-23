@@ -56,36 +56,13 @@ vec4 get_color_coverage(int cascadeidx)
 	return color_coverages[cascadeidx];
 }
 
-float calc_csm_visibility(vec4 shadowcoord, int cascadeidx)
-{
-	// using one shadow map to keep all cascade shadow map
-	if (cascadeidx == 0)
-	{
-		return hardShadow(s_shadowmap0, shadowcoord, u_shadowmap_bias);
-	}
-	else if (cascadeidx == 1)
-	{
-		return hardShadow(s_shadowmap1, shadowcoord, u_shadowmap_bias);
-	}
-	else if (cascadeidx == 2)
-	{
-		return hardShadow(s_shadowmap2, shadowcoord, u_shadowmap_bias);
-	}
-	else if (cascadeidx == 3)
-	{
-		return hardShadow(s_shadowmap3, shadowcoord, u_shadowmap_bias);
-	}
-
-	return 0.0;
-}
-
 void main()
 {
 	int cascadeidx = select_cascade(v_distanceVS);
 	mat4 m = u_csm_matrix[cascadeidx];
 	vec4 shadowcoord = mul(m, v_positionWS);
 
-	float visibility = calc_csm_visibility(shadowcoord, cascadeidx);
+	float visibility = hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
 
 	//vec4 color_coverage = get_color_coverage(cascadeidx);
 	
