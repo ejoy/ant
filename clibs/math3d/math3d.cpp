@@ -591,7 +591,7 @@ push_quat_with_axis_radian(lua_State* L, struct lastack *LS, int index) {
 	lua_pop(L, 1);
 
 	glm::quat q = glm::angleAxis(radian, axis);
-	lastack_pushquat(LS, &q.x);
+	lastack_pushquat(LS, (const float*)&q);
 }
 
 static inline void
@@ -623,7 +623,7 @@ push_quat_with_euler(lua_State* L, struct lastack *LS, int index) {
 	lua_pop(L, 1);
 
 	glm::quat q(e);
-	lastack_pushquat(LS, &(q.x));
+	lastack_pushquat(LS, (const float*)&q);
 }
 
 static inline void 
@@ -820,7 +820,7 @@ normalize(lua_State *L, struct lastack *LS) {
 		break;
 	case LINEAR_TYPE_QUAT:{
 			glm::quat q = glm::normalize(*(glm::quat*)(v));
-			lastack_pushquat(LS, &q.x);
+			lastack_pushquat(LS, (const float*)& q);
 		}
 		break;
 	default:
@@ -866,7 +866,7 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	}
 	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_QUAT): {
 		glm::quat r = *((const glm::quat *)val0) * *((const glm::quat*)val1);
-		lastack_pushquat(LS, &r.x);
+		lastack_pushquat(LS, (const float*)&r);
 		break;
 	}
 	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4):
@@ -1121,7 +1121,7 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 			break;
 	}
 
-	lastack_pushquat(LS, &q.x);
+	lastack_pushquat(LS, (const float*)& q);
 }
 
 glm::vec3
@@ -2309,7 +2309,7 @@ new_temp_quaternion(lua_State *L) {
 		luaL_error(L, "need 5/6 argument, %d provided", top);
 	}
 
-	lastack_pushquat(LS, &q.x);
+	lastack_pushquat(LS, (const float*)& q);
 	pushid(L, lastack_pop(LS));
 
 	return 1;
