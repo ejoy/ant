@@ -83,11 +83,18 @@ function util.load_lighting_properties(world, render_properties)
 	end
 end
 
-local function calc_viewport_offset(csm_idx)
+local function calc_viewport_crop_matrix(csm_idx)
 	local ratios = shadowutil.get_split_ratios()
 	local numsplit = #ratios
 	local spiltunit = 1 / numsplit
-	return spiltunit * (csm_idx - 1)
+
+	local offset = spiltunit * (csm_idx - 1)
+
+	return ms:matrix(
+		spiltunit, 0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0, 0.0, 
+		0.0, 0.0, 1.0, 0.0,
+		offset, 0.0, 0.0, 1.0)
 end
 
 function util.load_shadow_properties(world, render_properties)
@@ -106,9 +113,8 @@ function util.load_shadow_properties(world, render_properties)
 		split_distances[idx] = csm.split_distance_VS
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
 		vp = ms(shadowutil.shadow_crop_matrix, vp, "*P")
-		local offset = calc_viewport_offset(idx)
-		vp = ms:elem_add(vp, 10, offset)
-		csm_matrixs[csm.index] = vp
+		local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
+		csm_matrixs[csm.index] = ms(viewport_cropmatrix, vp, "*P")
 	end
 
 	local num_matrixs = #csm_matrixs

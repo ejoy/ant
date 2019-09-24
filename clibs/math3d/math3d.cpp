@@ -3075,7 +3075,7 @@ elem_op(lua_State *L, struct lastack *LS, OP op){
 	int type;
 	lastack_value(LS, id, &type);
 
-	const auto elem_idx = lua_tointeger(L, 3);
+	const int elem_idx = (int)lua_tointeger(L, 3) - 1;
 
 	const float value = lua_tonumber(L, 4);
 

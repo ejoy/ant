@@ -58,6 +58,7 @@ function camera_controller_system:init()
 
 	local target = math3d.ref "vector"
 	local camera = camerautil.get_camera(world, mq.camera_tag)
+	camera.frustum.f = 100
 	camera_reset(camera, target)
 
 	local move_speed = 10
