@@ -52,7 +52,7 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 	return vec4(diffuse + specular, 1.0);
 }
 
-vec4 calc_fog(vec4 color, float density, float LOG2, float distanceVS)
+vec4 calc_fog_factor(vec4 color, float density, float LOG2, float distanceVS)
 {
 	return saturate(1.0/exp2(density*density*distanceVS*distanceVS*LOG2));
 }
