@@ -93,7 +93,7 @@ local function main_view_debug_frustum()
 end
 
 function debug_sm:post_init()
-	csm_shadow_debug_quad()
+	--csm_shadow_debug_quad()
 end
 
 ecs.mark("record_camera_state", "camera_state_handler")

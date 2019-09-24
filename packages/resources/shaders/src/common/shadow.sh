@@ -69,3 +69,32 @@ float hardShadow(
 	return bgfxShadow2DProj(_sampler, coord);
 #endif
 }
+
+int select_cascade(float distanceVS)
+{
+	if (distanceVS < u_csm_split_distances[0])
+		return 0;
+		
+	if (distanceVS < u_csm_split_distances[1])
+		return 1;
+		
+	if (distanceVS < u_csm_split_distances[2])
+		return 2;
+		
+	if (distanceVS < u_csm_split_distances[3])
+		return 3;
+	
+	return 0;
+}
+
+vec4 get_color_coverage(int cascadeidx)
+{
+	float coverage = 0.4;
+	mat4 color_coverages = mat4(
+		coverage, 0.0, 0.0, 1.0,
+		0.0, coverage, 0.0, 1.0,
+		0.0, 0.0, coverage, 1.0,
+		coverage, coverage, 0.0, 1.0);
+
+	return color_coverages[cascadeidx];
+}
