@@ -17,7 +17,7 @@ void main()
 {
 	vec4 ntexdata 	= texture2D(s_normal, v_texcoord0.xy);
 	float gloss 	= ntexdata.z;
-	vec3 normal 	= unproject_noraml(ntexdata.xy);
+	vec3 normal 	= unproject_normal(ntexdata.xy);
 
 	vec4 basecolor  = texture2D(s_basecolor, v_texcoord0.xy);
 	vec4 lightcolor = directional_color[0] * directional_intensity[0].x;

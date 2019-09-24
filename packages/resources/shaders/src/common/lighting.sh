@@ -57,7 +57,7 @@ vec4 calc_fog(vec4 color, float density, float LOG2, float distanceVS)
 	return saturate(1.0/exp2(density*density*distanceVS*distanceVS*LOG2));
 }
 
-vec3 unproject_noraml(vec2 normalTS)
+vec3 unproject_normal(vec2 normalTS)
 {
 	vec3 normal = vec3(normalTS, 0.0);
 	normal.xy = normal.xy * 2.0 - 1.0;
