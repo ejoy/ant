@@ -13,6 +13,9 @@ local gui_mgr         = require "gui_mgr"
 local gui_util          = require "editor.gui_util"
 local fs                = require "filesystem"
 
+local hub = import_package("ant.editor").hub
+local Event = require "hub_event"
+
 local GuiBase           = require "gui_base"
 local GuiProjectView    = GuiBase.derive("GuiProjectView")
 GuiProjectView.GuiName  = "GuiProjectView"
@@ -107,6 +110,10 @@ function GuiProjectView:list_directory(path_obj)
     for child_obj in childs do
         table.insert(result,child_obj)
     end
+    local function cmp_path_obj(a,b)
+        return string.lower(a:string())<string.lower(b:string())
+    end 
+    table.sort(result,cmp_path_obj)
     self.last_call_list_directory_result = result
     return result
 end
@@ -168,12 +175,10 @@ function GuiProjectView:on_dir_update(delta)
                 end
             end
         end
-
         for i = 1,count do
             self:push_tree_end()
         end
     end
-
 end
 
 function GuiProjectView:on_path_click(path_obj)
@@ -199,7 +204,9 @@ function GuiProjectView:on_path_double_click(path_obj,is_dir)
         self.focus_path_obj = path_obj
         log.info_a("focus_path_obj",self.focus_path_obj)
     else
-        log.trace("Todo: Double click file")
+        log.trace("Double click file",path_obj:string())
+        hub.publish(Event.InspectRes,path_obj:string())
+        
     end
 end
 
@@ -230,10 +237,13 @@ function GuiProjectView:push_tree_end()
 end
 
 function GuiProjectView:on_pkglist_update()
+    --check pkg list every minute
     self.pkg_update_t = (self.pkg_update_t or 0)+1
     if (not self.pkg_list) or (self.pkg_update_t > 60) then
         self.pkg_update_t = 0
-        self.pkg_list = pm.get_pkg_list()
+        local list = pm.get_pkg_list()
+        table.sort(list)
+        self.pkg_list = list
     end
     if not self.pkg_ui_tbl then
         self.pkg_ui_tbl = {self.pkg_list[1]}
@@ -265,8 +275,7 @@ function GuiProjectView:on_file_update(delta)
         local childs =  self:list_directory(self.focus_path_obj)
         local map = self.selection.map
         for _,child_obj in ipairs(childs) do
-
-            if not self:is_directory(child_obj) then
+            if (not self:is_directory(child_obj)) and(not child_obj:equal_extension(".lk")) then
                 local name = (child_obj:filename()):string()
                 local click,double_click = nil
                 if widget.Selectable(name,map[child_obj:string()]) then
@@ -283,7 +292,6 @@ function GuiProjectView:on_file_update(delta)
                 elseif double_click then
                     self:on_path_double_click(child_obj,false)
                 end
-
             end
         end
     end
