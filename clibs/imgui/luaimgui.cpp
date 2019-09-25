@@ -21,7 +21,7 @@ void init_cursor();
 void set_cursor(ImGuiMouseCursor cursor);
 
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
-#define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
+#define IMGUI_FLAGS_FONT        UINT8_C(0x01)
 
 #ifdef _MSC_VER
 #pragma region IMP_IMGUI
@@ -98,22 +98,21 @@ struct context {
 					| BGFX_STATE_WRITE_RGB
 					| BGFX_STATE_WRITE_A
 					| BGFX_STATE_MSAA
+					| BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
 					;
-				if (IMGUI_FLAGS_ALPHA_BLEND & texture.s.flags) {
-					state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
-				}
 				BGFX(set_state)(state, 0);
 
 				BGFX(set_transient_vertex_buffer)(0, &tvb, 0, numVertices);
 				BGFX(set_transient_index_buffer)(&tib, offset, cmd.ElemCount);
-				if (texture.s.mip) {
-					const float lodEnabled[4] = { float(texture.s.mip), 1.0f, 0.0f, 0.0f };
-					BGFX(set_uniform)(u_imageLodEnabled, lodEnabled, 1);
-					BGFX(submit)(m_viewId, m_imageProgram, 0, false);
+				if (IMGUI_FLAGS_FONT & texture.s.flags) {
+					BGFX(set_texture)(0, s_fontTex, texture.s.handle, UINT32_MAX);
+					BGFX(submit)(m_viewId, m_fontProgram, 0, false);
 				}
 				else {
-					BGFX(set_texture)(0, s_tex, texture.s.handle, UINT32_MAX);
-					BGFX(submit)(m_viewId, m_program, 0, false);
+					const float lodEnabled[4] = { float(texture.s.mip), 1.0f, 0.0f, 0.0f };
+					BGFX(set_uniform)(u_imageLodEnabled, lodEnabled, 1);
+					BGFX(set_texture)(0, s_imageTex, texture.s.handle, UINT32_MAX);
+					BGFX(submit)(m_viewId, m_imageProgram, 0, false);
 				}
 				offset += cmd.ElemCount;
 			}
@@ -130,9 +129,10 @@ struct context {
 
 	bgfx_view_id_t        m_viewId;
 	bgfx_vertex_layout_t  m_layout;
-	bgfx_program_handle_t m_program;
+	bgfx_program_handle_t m_fontProgram;
 	bgfx_program_handle_t m_imageProgram;
-	bgfx_uniform_handle_t s_tex;
+	bgfx_uniform_handle_t s_fontTex;
+	bgfx_uniform_handle_t s_imageTex;
 	bgfx_uniform_handle_t u_imageLodEnabled;
 };
 
@@ -182,11 +182,17 @@ lsetDockEnable(lua_State *L) {
 }
 
 static int
-lprogram(lua_State *L) {
-	s_ctx.m_program = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
-	s_ctx.m_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 2)) };
+lfontProgram(lua_State *L) {
+	s_ctx.m_fontProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
+	s_ctx.s_fontTex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 2)) };
+	return 0;
+}
+
+static int
+limageProgram(lua_State *L) {
+	s_ctx.m_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
+	s_ctx.s_imageTex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 2)) };
 	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 3)) };
-	s_ctx.s_tex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 4)) };
 	return 0;
 }
 
@@ -332,7 +338,7 @@ static void buildFont() {
 		, 0
 		, BGFX(copy)(data, width*height)
 		);
-	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
+	texture.s.flags = IMGUI_FLAGS_FONT;
 	texture.s.mip = 0;
 	atlas->TexID = texture.ptr;
 	atlas->ClearInputData();
@@ -1801,8 +1807,8 @@ bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
 	bgfx_texture_handle_t th = { BGFX_LUAHANDLE_ID(TEXTURE, lua_handle) };
 	union { struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
 	texture.s.handle = th;
-	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
-	texture.s.mip = 0;
+	texture.s.flags = 0;
+	texture.s.mip = 0; // TODO: set mip
 	return texture.ptr;
 }
 
@@ -3428,7 +3434,8 @@ luaopen_imgui(lua_State *L) {
 		{ "mouse", lmouse },
 		{ "resize", lresize },
 		{ "viewid", lviewId },
-		{ "program", lprogram },
+		{ "font_program", lfontProgram },
+		{ "image_program", limageProgram },
 		{ "ime_handle", limeHandle },
 		{ "setDockEnable", lsetDockEnable },
 		{ "showDockSpace", lshowDockSpace },

@@ -33,20 +33,23 @@ function gui_main.init(nwh, context, width, height)
         height = height,
 	}
     imgui.create(nwh)
-    local ocornut_imgui = assetutil.create_shader_program_from_file {
-        vs = fs.path "/pkg/ant.imguibase/shader/vs_ocornut_imgui.sc",
-        fs = fs.path "/pkg/ant.imguibase/shader/fs_ocornut_imgui.sc",
+    imgui.setDockEnable(true)
+    imgui.viewid(viewidmgr.generate("ui"));
+    local imgui_font = assetutil.create_shader_program_from_file {
+        vs = fs.path "/pkg/ant.imguibase/shader/vs_imgui_font.sc",
+        fs = fs.path "/pkg/ant.imguibase/shader/fs_imgui_font.sc",
     }
+    imgui.font_program(
+        imgui_font.prog,
+        imgui_font.uniforms.s_tex.handle
+    )
     local imgui_image = assetutil.create_shader_program_from_file {
         vs = fs.path "/pkg/ant.imguibase/shader/vs_imgui_image.sc",
         fs = fs.path "/pkg/ant.imguibase/shader/fs_imgui_image.sc",
     }
-    imgui.setDockEnable(true)
-    imgui.viewid(viewidmgr.generate("ui"));
-    imgui.program(
-        ocornut_imgui.prog,
+    imgui.image_program(
         imgui_image.prog,
-        ocornut_imgui.uniforms.s_tex.handle,
+        imgui_image.uniforms.s_texColor.handle,
         imgui_image.uniforms.u_imageLodEnabled.handle
     )
     imgui.resize(width, height)
