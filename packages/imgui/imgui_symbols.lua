@@ -253,6 +253,7 @@ function flags.Combo.NoPreview() end
 function flags.Selectable.DontClosePopups() end
 function flags.Selectable.SpanAllColumns() end
 function flags.Selectable.AllowDoubleClick() end
+function flags.Selectable.AllowItemOverlap() end
 
 function flags.TreeNode.Selected() end
 function flags.TreeNode.Framed() end
@@ -265,6 +266,8 @@ function flags.TreeNode.OpenOnArrow() end
 function flags.TreeNode.Leaf() end
 function flags.TreeNode.Bullet() end
 function flags.TreeNode.FramePadding() end
+function flags.TreeNode.SpanAvailWidth() end
+function flags.TreeNode.SpanFullWidth() end
 function flags.TreeNode.NavLeftJumpsBackHere() end
 function flags.TreeNode.CollapsingHeader() end
 
