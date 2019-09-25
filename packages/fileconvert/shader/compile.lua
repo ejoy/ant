@@ -2,7 +2,7 @@ local toolset = require "shader.toolset"
 local lfs = require "filesystem.local"
 local util = require "util"
 
-local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders/src"
+local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
 
 local function compile_shader(plat, srcfilepath, outfilepath, shadertype)
 	local config = {

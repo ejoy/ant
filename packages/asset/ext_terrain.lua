@@ -5,7 +5,7 @@ local declmgr = import_package "ant.render".declmgr
 
 return {
 	loader = function (filename)
-		local terrain = assetmgr.get_depiction(filename)
+		local terrain = assetmgr.load_depiction(filename)
 
 		if terrain.declname == nil then
 			terrain.declname = "p3|t20|t21|n3"

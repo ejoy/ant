@@ -1,10 +1,10 @@
-shader = {
-	vs = "/pkg/ant.resources/vs_mesh.sc",
-	fs = "/pkg/ant.resources/fs_mesh.sc",
-}
-state = "materials/states/default.state"
-
-property = {
-	u_color = {type="v4", name="color", value={1, 0, 0, 1}},
-	roughness = {type="texture", default="/pkg/ant.resources/"},
+shader = {
+	vs = "/pkg/ant.resources/shaders/vs_mesh.sc",
+	fs = "/pkg/ant.resources/shaders/fs_mesh.sc",
+}
+state = "/pkg/ant.resources/depiction/materials/states/default.state"
+
+property = {
+	u_color = {type="v4", name="color", value={1, 0, 0, 1}},
+	roughness = {type="texture", default="/pkg/ant.resources/"},
 }

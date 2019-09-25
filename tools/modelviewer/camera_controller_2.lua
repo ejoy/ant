@@ -44,7 +44,7 @@ function camera_controller_system:init()
 	local mq = world:first_entity "main_queue"
 
 	local camera = camerautil.get_camera(world, mq.camera_tag)
-	camera.frustum.f = 100
+	camera.frustum.f = 100	--set far distance to 100
 	camera_reset(camera)
 
 	local data = self.camera_temp_data

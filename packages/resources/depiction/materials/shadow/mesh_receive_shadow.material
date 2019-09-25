@@ -1,6 +1,6 @@
 shader = {
-	vs = "/pkg/ant.resources/shaders/src/shadow/simple/vs_simple.sc",
-	fs = "/pkg/ant.resources/shaders/src/shadow/simple/fs_simple.sc",
+	vs = "/pkg/ant.resources/shaders/shadow/simple/vs_simple.sc",
+	fs = "/pkg/ant.resources/shaders/shadow/simple/fs_simple.sc",
 }
 
 state = {

@@ -1,9 +1,9 @@
 shader = {
-	vs = "/pkg/ant.resources/terrain/vs_terrain.sc",
-    fs = "/pkg/ant.resources/terrain/fs_terrain.sc",
+	vs = "/pkg/ant.resources/shaders/terrain/vs_terrain.sc",
+    fs = "/pkg/ant.resources/shaders/terrain/fs_terrain.sc",
 }
 
-state = "mask.state"
+state = "/pkg/ant.resources/depiction/terrain/mask.state"
 
 -- properties = {
 -- 	textures = {

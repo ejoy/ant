@@ -1,13 +1,13 @@
-shader = {
-    vs = "/pkg/ant.resources/mesh/vs_colormesh_old.sc",  -- 新的shader 修改了，但没有对应的传递颜色,仍旧使用旧版本测试
-    fs = "/pkg/ant.resources/mesh/fs_colormesh.sc",
-}
-
-state = {
-	CULL = "CCW",
-	WRITE_MASK = "RGBAZ",
-	DEPTH_TEST = "LESS"
-}
-properties = {
-	u_time = {name="u_time", type="v4", value={1, 1, 1, 1}},
+shader = {
+    vs = "/pkg/ant.resources/shaders/mesh/vs_colormesh_old.sc",  -- 新的shader 修改了，但没有对应的传递颜色,仍旧使用旧版本测试
+    fs = "/pkg/ant.resources/shaders/mesh/fs_colormesh.sc",
+}
+
+state = {
+	CULL = "CCW",
+	WRITE_MASK = "RGBAZ",
+	DEPTH_TEST = "LESS"
+}
+properties = {
+	u_time = {name="u_time", type="v4", value={1, 1, 1, 1}},
 }

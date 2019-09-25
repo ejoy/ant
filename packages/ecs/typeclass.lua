@@ -109,5 +109,9 @@ return function(world, import, class)
 		class.mark_handlers[name] = handler
 	end
 
+	class_register.tag = function (name)
+		class_register.component_alias(name, "tag")
+	end
+
 	return class_register, class
 end

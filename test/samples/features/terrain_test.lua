@@ -11,7 +11,7 @@ local terrain_test = ecs.system "terrain_test"
 terrain_test.depend 'init_loader'
 
 function terrain_test:init()
-	local terrainfolder = fs.path '/pkg/ant.resources' / 'terrain'
+	local terrainfolder = fs.path '/pkg/ant.resources' / 'depiction' / 'terrain'
 	local function create_properties(basetexpath, masktexpath)
 		local texpath = terrainfolder / "textures"
 		return {

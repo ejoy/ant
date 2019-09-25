@@ -15,7 +15,7 @@ end
 
 return {
 	loader = function (filename)
-		local tex = assetmgr.get_depiction(filename)
+		local tex = assetmgr.load_depiction(filename)
 		local texrefpath = fs.path(tex.path)
 		if not fs.exists(texrefpath) then
 			error(string.format("texture path not found, .texture path:[%s], texture file:[%s]", filename, texrefpath))

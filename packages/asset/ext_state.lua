@@ -1,5 +1,5 @@
 local assetmgr = require "asset"
 
 return {
-	loader = assetmgr.get_depiction
+	loader = assetmgr.load_depiction
 }

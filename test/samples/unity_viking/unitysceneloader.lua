@@ -18,7 +18,7 @@ local function loadLevelLua(path)
     local  source = readDataSource(path)
     local  level = load( source )()
     return level 
-    --local level = assetmgr.get_depiction(path)
+    --local level = assetmgr.load_depiction(path)
 end 
 
 local function load(path,type)

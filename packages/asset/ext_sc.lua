@@ -6,12 +6,9 @@ local function gen_shader_filepath(filename)
 	assert(filename:equal_extension('sc'))
 	if fs.exists(filename) then
 		return filename 
-    end
-    local pkgdir = fs.path("/pkg") / filename:package_name()
-	local newfilename = pkgdir / "shaders" / "src" / fs.relative(filename, pkgdir)
-	if fs.exists(newfilename) then
-		return newfilename
-    end
+	end
+	
+	error(string.format("shader file not found:%s", filename))
 end
 
 local function load_shader(filename)

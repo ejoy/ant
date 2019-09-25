@@ -6,7 +6,7 @@ local mesh_loader 	= import_package "ant.modelloader".loader
 
 return { 
 	loader = function (filename)
-		local mesh = assetmgr.get_depiction(filename)
+		local mesh = assetmgr.load_depiction(filename)
 		local meshpath =  fs.path(mesh.mesh_path)
 		if fs.exists(meshpath) then
 			return mesh_loader.load(meshpath)

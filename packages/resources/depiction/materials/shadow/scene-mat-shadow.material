@@ -1,10 +1,9 @@
 shader = {
-	vs = "/pkg/ant.resources/mesh_shadow/vs_shadowmaps_color_lighting_csm.sc",
-	--fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_hard_csm.sc.sc",
-	fs = "/pkg/ant.resources/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm.sc",
+	vs = "/pkg/ant.resources/shaders/mesh_shadow/vs_shadowmaps_color_lighting_csm.sc",
+	fs = "/pkg/ant.resources/shaders/mesh_shadow/fs_shadowmaps_color_lighting_pcf_csm.sc",
 } 
-    
-state = "materials/states/default.state"
+
+state = "/pkg/ant.resources/depiction/materials/states/default.state"
 
 properties = { 
 	--s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/ant.resources/PVPScene/siegeweapon_d.texture"},

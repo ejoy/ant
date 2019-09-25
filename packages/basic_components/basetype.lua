@@ -1,8 +1,5 @@
 local ecs = ...
 
-ecs.tag = function (name)
-    ecs.component_alias(name, "tag")
-end
 ecs.component_alias("tag", "boolean", true)
 ecs.component_base("entityid", -1)
 

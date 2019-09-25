@@ -1,8 +1,10 @@
 shader = {
-	vs = "/pkg/ant.resources/simple/mesh/vs_mesh.sc",
-	fs = "/pkg/ant.resources/simple/mesh/fs_mesh.sc",
+	vs = "/pkg/ant.resources/shaders/simple/mesh/vs_mesh.sc",
+	fs = "/pkg/ant.resources/shaders/simple/mesh/fs_mesh.sc",
 }
-state = "materials/states/default.state"
+
+state = "/pkg/ant.resources/depiction/materials/states/default.state"
+
 properties = {
 	uniforms = {
 		u_color = {type="color", name = "color", value={1, 1, 1, 1}}

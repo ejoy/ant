@@ -233,7 +233,7 @@ function gui_util.watch_current_package_file(file_path,cb)
 end
 
 function gui_util.watch_shader_src(folder_path,cb)
-    folder_path = folder_path or "/pkg/ant.resources/shaders/src"
+    folder_path = folder_path or "/pkg/ant.resources/shaders"
     local fs = require "filesystem"
     local localfs = require "filesystem.local"
     local current_path = localfs.current_path()

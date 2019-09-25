@@ -110,8 +110,8 @@ function model_review_system:init()
 	local origineid = world:create_entity {
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},
-		mesh 		= {ref_path = fs.path "/pkg/ant.resources/PVPScene/campsite-door.mesh", asyn_load=true},
-		material 	= {{ref_path = fs.path "/pkg/ant.resources/PVPScene/scene-mat.material", asyn_load=true}},
+		mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/campsite-door.mesh", asyn_load=true},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true}},
 		can_render 	= true,
 		main_view 	= true,
 		asyn_load	= "",

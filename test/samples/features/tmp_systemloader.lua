@@ -69,7 +69,7 @@ local function create_animation_test()
         },
         can_render = true,
         rendermesh = {},
-        material = computil.assign_material(fs.path "/pkg/ant.resources/materials/skin_model_sample.material"),
+        material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
         animation = {
             pose_state = {
                 pose = {

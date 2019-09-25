@@ -23,7 +23,7 @@ function simplescene:init()
 		transform = mu.srt(),
 		rendermesh = {},
 		mesh = {ref_path = fs.path "/pkg/ant.resources/bunny.mesh",},
-		material = computil.assign_material(fs.path "/pkg/ant.resources/materials/bunny.material"),
+		material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/bunny.material"),
 		name = "demo_bunny",
 		can_render = true,
 		main_view = true,

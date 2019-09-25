@@ -1,6 +1,6 @@
 shader = {
-   vs = "/pkg/ant.resources/shadow/vs_shadowmaps_packdepth.sc",
-   fs = "/pkg/ant.resources/shadow/fs_shadowmaps_packdepth.sc",
+   vs = "/pkg/ant.resources/shaders/shadow/vs_shadowmaps_packdepth.sc",
+   fs = "/pkg/ant.resources/shaders/shadow/fs_shadowmaps_packdepth.sc",
    --vs = "/pkg/ant.resources/line/vs_line.sc.sc",
    --fs = "/pkg/ant.resources/line/fs_line.sc.sc",
 }

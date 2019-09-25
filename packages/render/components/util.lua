@@ -140,7 +140,7 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag, transform)
 	local gridid = world:create_entity {
 		transform = transform or mu.identity_transform(),
         rendermesh = {},
-        material = util.assign_material(fs.path "/pkg/ant.resources" / "materials" / "line.material"),
+        material = util.assign_material(fs.path "/pkg/ant.resources" / "depiction" / "materials" / "line.material"),
 		name = name,
 		can_render = true,
 		main_view = true,

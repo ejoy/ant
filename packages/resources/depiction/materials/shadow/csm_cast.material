@@ -1,6 +1,6 @@
 shader = {
-    vs = "/pkg/ant.resources/shaders/src/shadow/create/vs_create.sc",
-    fs = "/pkg/ant.resources/shaders/src/shadow/create/fs_create.sc",
+    vs = "/pkg/ant.resources/shaders/shadow/create/vs_create.sc",
+    fs = "/pkg/ant.resources/shaders/shadow/create/fs_create.sc",
  }
  
 state = {

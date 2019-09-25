@@ -1,6 +1,6 @@
-shader = {
-    vs = "/pkg/ant.resources/simple/triangle/vs_simpletri.sc",
-    fs = "/pkg/ant.resources/simple/triangle/fs_simpletri.sc",
-}
-
-state = "materials/states/default.state"
+shader = {
+    vs = "/pkg/ant.resources/shaders/simple/triangle/vs_simpletri.sc",
+    fs = "/pkg/ant.resources/shaders/simple/triangle/fs_simpletri.sc",
+}
+
+state = "/pkg/ant.resources/depiction/materials/states/default.state"

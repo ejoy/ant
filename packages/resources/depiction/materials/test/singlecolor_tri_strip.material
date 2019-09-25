@@ -1,6 +1,6 @@
 shader = {
-    vs = "/pkg/ant.resources/shaders/src/test/singlecolor/vs.sc",
-    fs = "/pkg/ant.resources/shaders/src/test/singlecolor/fs.sc",
+    vs = "/pkg/ant.resources/shaders/test/singlecolor/vs.sc",
+    fs = "/pkg/ant.resources/shaders/test/singlecolor/fs.sc",
 }
 
 state = {
