@@ -50,6 +50,16 @@ local function gen_method(c, callback)
 	end
 end
 
+local function decl_basetype(class_register)
+	class_register.component_alias("tag", "boolean", true)
+	class_register.component_base("entityid", -1)
+	
+	class_register.component_base("int", 0)
+	class_register.component_base("real", 0.0)
+	class_register.component_base("string", "")
+	class_register.component_base("boolean", false)
+end
+
 return function(world, import, class)
 	local schema = createschema(world._schema)
 	local class_register = { world = world, import = import }
@@ -109,6 +119,7 @@ return function(world, import, class)
 		class.mark_handlers[name] = handler
 	end
 
+	decl_basetype(class_register)
 	class_register.tag = function (name)
 		class_register.component_alias(name, "tag")
 	end

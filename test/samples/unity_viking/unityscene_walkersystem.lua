@@ -7,7 +7,6 @@ local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
 
-ecs.import 'ant.basic_components'
 ecs.import 'ant.render'
 ecs.import 'ant.editor'
 ecs.import 'ant.inputmgr'

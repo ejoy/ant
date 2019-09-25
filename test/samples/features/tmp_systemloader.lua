@@ -4,7 +4,6 @@ local world = ecs.world
 local fs = require 'filesystem'
 
 
-ecs.import 'ant.basic_components'
 ecs.import 'ant.math.adapter'
 ecs.import 'ant.asset'
 ecs.import 'ant.render'

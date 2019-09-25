@@ -5,7 +5,6 @@ local fs = require 'filesystem'
 local math3d = import_package "ant.math"
 local ms = math3d.stack
 
-ecs.import 'ant.basic_components'
 ecs.import 'ant.render'
 ecs.import 'ant.math.adapter'
 ecs.import 'ant.asset'

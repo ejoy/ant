@@ -8,7 +8,6 @@ local math3d = import_package "ant.math"
 local ms = math3d.stack
 local mu = math3d.util
 
-ecs.import 'ant.basic_components'
 ecs.import 'ant.render'
 ecs.import 'ant.editor'
 ecs.import 'ant.inputmgr'

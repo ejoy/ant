@@ -1,7 +1,6 @@
 local ecs = ...
 
 ecs.import "ant.inputmgr"
-ecs.import 'ant.basic_components'
 
 local bgfx = require "bgfx"
 local imgui = require "imgui"
