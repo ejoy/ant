@@ -83,6 +83,17 @@ push_char_arg(lua_State *L, struct ant_window_char *c) {
 	lua_pushinteger(L, c->code);
 }
 
+static void
+push_dropfiles_arg(lua_State* L, struct ant_window_dropfiles* dropfiles) {
+	lua_createtable(L, dropfiles->count,0);
+	for (int i = 0; i < dropfiles->count; i++)
+	{
+		lua_pushinteger(L, i + 1);
+		lua_pushstring(L, dropfiles->paths[i]);
+		lua_settable(L, -3);
+	}
+}
+
 static int
 push_arg(lua_State *L, struct ant_window_message *msg) {
 	switch(msg->type) {
@@ -112,6 +123,9 @@ push_arg(lua_State *L, struct ant_window_message *msg) {
 		break;
 	case ANT_WINDOW_CHAR:
 		push_char_arg(L, &msg->u.unichar);
+		break;
+	case ANT_WINDOW_DROPFILES:
+		push_dropfiles_arg(L, &msg->u.dropfiles);
 		break;
 	default:
 		return 0;
@@ -161,6 +175,7 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	register_function(L, "mouse", fL, ANT_WINDOW_MOUSE);
 	register_function(L, "size", fL, ANT_WINDOW_SIZE);
 	register_function(L, "char", fL, ANT_WINDOW_CHAR);
+	register_function(L, "dropfiles", fL, ANT_WINDOW_DROPFILES);
 }
 
 static int
