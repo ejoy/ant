@@ -110,8 +110,6 @@ struct context {
 					BGFX(submit)(m_viewId, m_fontProgram, 0, false);
 				}
 				else {
-					const float lodEnabled[4] = { float(texture.s.mip), 1.0f, 0.0f, 0.0f };
-					BGFX(set_uniform)(u_imageLodEnabled, lodEnabled, 1);
 					BGFX(set_texture)(0, s_imageTex, texture.s.handle, UINT32_MAX);
 					BGFX(submit)(m_viewId, m_imageProgram, 0, false);
 				}
@@ -134,7 +132,6 @@ struct context {
 	bgfx_program_handle_t m_imageProgram;
 	bgfx_uniform_handle_t s_fontTex;
 	bgfx_uniform_handle_t s_imageTex;
-	bgfx_uniform_handle_t u_imageLodEnabled;
 };
 
 static context s_ctx;
@@ -193,7 +190,6 @@ static int
 limageProgram(lua_State *L) {
 	s_ctx.m_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
 	s_ctx.s_imageTex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 2)) };
-	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 3)) };
 	return 0;
 }
 
@@ -1808,7 +1804,7 @@ bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
 	union { struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
 	texture.s.handle = th;
 	texture.s.flags = 0;
-	texture.s.mip = 0; // TODO: set mip
+	texture.s.mip = 0;
 	return texture.ptr;
 }
 
