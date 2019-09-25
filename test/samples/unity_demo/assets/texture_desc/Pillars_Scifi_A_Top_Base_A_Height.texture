@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Props/Pillars/Pillars_Scifi_A/Pillars_Scifi_A_Top_Base_A_Height.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false

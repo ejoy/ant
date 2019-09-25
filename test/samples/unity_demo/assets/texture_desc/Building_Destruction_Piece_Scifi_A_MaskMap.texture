@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Props/Destruction/Building_Destruction_Pieces_Scifi_A/Building_Destruction_Piece_Scifi_A_MaskMap.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false

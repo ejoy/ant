@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Props/Pipes/Pipes_A_Tileset_A/Pipes_D80_Tileset_A_LayerMask.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false

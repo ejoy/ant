@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Generic/Metal/Generic_Painted_Steel_A/Generic_Painted_Steel_A_Normal.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= true

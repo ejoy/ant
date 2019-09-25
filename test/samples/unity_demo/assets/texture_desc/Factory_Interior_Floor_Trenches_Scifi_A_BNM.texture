@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Props/Industrial/Factory_Interior_Floor_Trenches_Scifi_A/Factory_Interior_Floor_Trenches_Scifi_A_BNM.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false

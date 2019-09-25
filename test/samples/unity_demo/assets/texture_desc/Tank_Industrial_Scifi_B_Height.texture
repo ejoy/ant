@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Props/Industrial/Tank_Industrial_Scifi_B/Tank_Industrial_Scifi_B_Height.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false

@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Props/Platforms/Platforms_Scifi_A/Platforms_Scifi_A_Stairs_LayerMask.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false

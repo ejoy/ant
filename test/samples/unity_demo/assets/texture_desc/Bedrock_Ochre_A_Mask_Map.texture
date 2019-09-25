@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Ground/Bedrock_Ochre_A/Bedrock_Ochre_A_Mask_Map.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false

@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Props/Lamps/Lamps_Wall_Scifi_A/Lamps_Wall_Scifi_A_Emissive_Normal.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= true

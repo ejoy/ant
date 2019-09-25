@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Environment_Tileset_Scifi_A/Environment_Tileset_Scifi_A_Floor_Ceiling_Trims_A/Environment_Tileset_Scifi_A_Floor_Ceiling_Trims_A_Albedo.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false

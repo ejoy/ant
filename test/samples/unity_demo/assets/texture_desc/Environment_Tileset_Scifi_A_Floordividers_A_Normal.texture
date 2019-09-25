@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Environment_Tileset_Scifi_A/Environment_Tileset_Scifi_A_Floordividers_A/Environment_Tileset_Scifi_A_Floordividers_A_Normal.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= true

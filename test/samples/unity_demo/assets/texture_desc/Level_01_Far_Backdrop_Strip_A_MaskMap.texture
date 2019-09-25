@@ -1,9 +1,0 @@
- path = "//unity_demo/Assets/Textures/Environment/Backdrop/Level_01_Far_Backdrop_Strip_A/Level_01_Far_Backdrop_Strip_A_MaskMap.dds"
- sampler = {
-   U = "MIRROR",
-   V = "MIRROR",
-   MIN = "LINEAR",
-   MAG = "LINEAR",
- }
- sRGB 		= true
- normalmap 	= false
