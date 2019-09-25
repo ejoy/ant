@@ -220,7 +220,7 @@ local function cache_bin(buildhash, binhash)
 end
 
 function offline.IDENTITY(identity)
-	assert(repo.identity == nil, "identity should only set one time")
+	assert(repo.identity == identity or repo.identity == nil, "identity should only set one time")
 	assert(type(identity) == "string")
 	repo.identity = identity
 end
@@ -656,7 +656,7 @@ function online.TYPE(id, fullpath)
 end
 
 function online.IDENTITY(identity)
-	assert(repo.identity == nil, "identity should only set one time")
+	assert(repo.identity == identity or repo.identity == nil, "identity should only set one time")
 	assert(type(identity) == "string")
 	repo.identity = identity
 end

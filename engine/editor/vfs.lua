@@ -42,7 +42,7 @@ function localvfs.type(filepath)
 end
 
 function localvfs.identity(identity)
-	assert(self.identity == nil)
+	assert(self.identity == identity or self.identity == nil)
 	self.identity = identity
 end
 

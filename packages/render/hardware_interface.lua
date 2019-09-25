@@ -129,6 +129,7 @@ function hw.default_renderer(plat)
 end
 
 function hw.shutdown()
+	caps = nil
 	local bgfx = require "bgfx"
 	bgfx.shutdown()
 end
