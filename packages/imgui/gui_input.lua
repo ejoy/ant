@@ -25,6 +25,8 @@ gui_input.KeyShift = "SHIFT"
 gui_input.KeyAlt = "ALT"
 gui_input.KeySys = "SYS"
 
+gui_input.dropfiles = nil
+
 local function update_mouse_pos(x, y)
 
     if mouse_state.last then
@@ -93,6 +95,19 @@ end
 --gui_input.KeyXXX
 function gui_input.get_ctrl_state(what)
     return gui_input.key_state[what]
+end
+
+function gui_input.set_dropfiles(files)
+    gui_input.cur_dropfiles = files
+    -- log.info_a("set_dropfiles",files)
+end
+
+function gui_input.get_mouse_pos()
+    return mouse_state.x,mouse_state.y
+end
+
+function gui_input.get_dropfiles()
+    return gui_input.cur_dropfiles
 end
 
 return gui_input
