@@ -181,10 +181,8 @@ function create_bloom_target(world, view_rect)
 			},
 		},
 		material = {
-			--{ref_path = fs.path "/pkg/bloom/assets"/"material/blur.material"},
-			--{ref_path = fs.path "/pkg/bloom/assets"/"material/bloom.material"},
-			{ref_path = fs.path "/pkg/ant.resources"/"materials/bloom/blur.material"},
-			{ref_path = fs.path "/pkg/ant.resources"/"materials/bloom/bloom.material"},
+			{ref_path = fs.path "/pkg/ant.resources/depiction/materials/bloom/blur.material"},
+			{ref_path = fs.path "/pkg/ant.resources/depiction/materials/bloom/bloom.material"},
 		},
 
 		visible = false,
