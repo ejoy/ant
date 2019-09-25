@@ -2569,7 +2569,6 @@ cGetFrameHeightWithSpacing(lua_State *L) {
 }
 
 static int
-static int
 cGetTreeNodeToLabelSpacing(lua_State *L) {
 	float v = ImGui::GetTreeNodeToLabelSpacing();
 	lua_pushnumber(L, v);
