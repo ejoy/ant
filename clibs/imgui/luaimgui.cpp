@@ -19,6 +19,7 @@ extern "C" {
 void init_ime(void* window);
 void init_cursor();
 void set_cursor(ImGuiMouseCursor cursor);
+void update_mousepos();
 
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
 #define IMGUI_FLAGS_FONT        UINT8_C(0x01)
@@ -344,7 +345,6 @@ static void buildFont() {
 	atlas->ClearInputData();
 	atlas->ClearTexData();
 }
-
 static int
 lbeginFrame(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
@@ -353,7 +353,7 @@ lbeginFrame(lua_State *L) {
 	ImGuiMouseCursor cursor_type = io.MouseDrawCursor
 		? ImGuiMouseCursor_None
 		: ImGui::GetMouseCursor();
-
+	update_mousepos();
 	if (io.Fonts->Fonts.Size == 0) {
 		ImFontConfig config;
 		config.SizePixels = 18.0f;
@@ -2569,6 +2569,7 @@ cGetFrameHeightWithSpacing(lua_State *L) {
 }
 
 static int
+static int
 cGetTreeNodeToLabelSpacing(lua_State *L) {
 	float v = ImGui::GetTreeNodeToLabelSpacing();
 	lua_pushnumber(L, v);
@@ -3412,7 +3413,6 @@ lgetMemory(lua_State *L) {
 	lua_pushinteger(L, allocator_memory);
 	return 1;
 }
-
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -3649,7 +3649,6 @@ luaopen_imgui(lua_State *L) {
 
 	luaL_newlib(L, font);
 	lua_setfield(L, -2, "font");
-
 	lua_newtable(L);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "InputText", eInputTextFlags);
