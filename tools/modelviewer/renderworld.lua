@@ -10,6 +10,7 @@ ecs.import "ant.math.adapter"
 ecs.import "ant.sky"
 ecs.import "ant.asset"
 ecs.import "ant.imguibase"
+ecs.import "ant.camera_controller"
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
