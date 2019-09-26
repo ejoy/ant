@@ -28,11 +28,20 @@ ecs.component "csm" {depend = "material"}
 
 ecs.component "omni"	-- for point/spot light
 
+ecs.component "csm_split_config"
+	.min_ratio		"real"(0.0)
+	.man_ratio		"real"(1.0)
+	.pssm_lambda	"real"(1.0)
+	.num_split		"int" (4)
+	.ratios	 		"real[]"
+
+
 ecs.component "shadow"
 	.shadowmap_size "int" 	(1024)
 	.bias 			"real"	(0.003)
 	.normal_offset 	"real" (0)
-	.depth_type 	"string"("linear")	-- "inv_z" / "linear"
+	.depth_type 	"string"("linear")		-- "inv_z" / "linear"
+	["opt"].split	"csm_split_config"
 
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.depend "primitive_filter_system"
@@ -42,10 +51,6 @@ local function get_directional_light_dir_T()
 	local ld = shadowutil.get_directional_light_dir(world)
 	return ms(ld, "T")
 end
-
---local linear_shadow = true
-
-local shadowmap_size = shadowutil.shadowmap_size
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = camerautil.get_camera(world, "main_view")
@@ -112,20 +117,18 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 	maxextent[1], maxextent[2] = newmax[1], newmax[2]
 end
 
-local function calc_shadow_camera(csm, lightdir, shadowcamera)
-	local view_camera = camerautil.get_camera(world, "main_view")
-	shadowcamera.viewdir(lightdir)
+local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap_size, stabilize, shadowcamera)
+	shadowcamera.viewdir = lightdir
 
 	-- frustum_desc can cache, only camera distance changed or ratios change need recalculate
-	local frustum_desc = shadowutil.split_new_frustum(view_camera.frustum, csm.split_ratios)
-	csm.split_distance_VS = frustum_desc.f - view_camera.frustum.n
+	local frustum_desc = shadowutil.split_new_frustum(view_camera.frustum, split_ratios)
 	local _, _, vp = ms:view_proj(view_camera, frustum_desc, true)
 	local viewfrustum = mathbaselib.new_frustum(ms, vp)
 	local corners_WS = viewfrustum:points()
 
 	local center_WS = viewfrustum:center(corners_WS)
 	local min_extent, max_extent
-	if csm.stabilize then
+	if stabilize then
 		local radius = viewfrustum:max_radius(center_WS, corners_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
@@ -138,7 +141,7 @@ local function calc_shadow_camera(csm, lightdir, shadowcamera)
 		min_extent, max_extent = ms(minv, "T", maxv, "T")
 	end
 
-	shadowcamera.eyepos(center_WS)--ms(center_WS, lightdir, {-min_extent[3]}, "*+P"))
+	shadowcamera.eyepos = ms(center_WS, "T")--ms(center_WS, lightdir, {-min_extent[3]}, "*+P"))
 	--shadowcamera.updir(updir)
 	shadowcamera.frustum = {
 		ortho=true,
@@ -148,15 +151,17 @@ local function calc_shadow_camera(csm, lightdir, shadowcamera)
 	}
 end
 
-function maker_camera:update()
-	local lightdir = shadowutil.get_directional_light_dir(world)
-	for _, eid in world:each "csm" do
-		local shadowentity = world[eid]
+-- function maker_camera:update()
+-- 	local lightdir = shadowutil.get_directional_light_dir(world)
+-- 	local shadowentity = world:first_entity "shadow"
+-- 	local shadow = shadowentity.shadow
+-- 	for _, eid in world:each "csm" do
+-- 		local csmentity = world[eid]
 
-		local shadowcamera = camerautil.get_camera(world, shadowentity.camera_tag)
-		calc_shadow_camera(shadowentity.csm, lightdir, shadowcamera)
-	end
-end
+-- 		local shadowcamera = camerautil.get_camera(world, csmentity.camera_tag)
+-- 		calc_shadow_camera(csmentity.csm, lightdir, shadow, shadowcamera)
+-- 	end
+-- end
 
 local sm = ecs.system "shadow_maker"
 sm.depend "primitive_filter_system"
@@ -164,33 +169,25 @@ sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
 sm.dependby "debug_shadow_maker"
 
-local function create_csm_entity(lightdir, index, ratios, viewrect)
+local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect, shadowmap_size, linear_shadow)
 	local camera_tag = "csm" .. index
-	camerautil.bind_camera(world, camera_tag, {
-		type = "csm_shadow",
-		eyepos = mc.ZERO_PT,
-		viewdir = lightdir,
-		updir = {0, 1, 0, 0},
-		frustum = {
-			ortho = true,
-			l = -1, r = 1,
-			b = -1, t = 1,
-			n = -1, f = 1,
-		},
-	})
+	local csmcamera = {type = "csm", updir = mc.Y_AXIS}
+	local stabilize = false
+	calc_shadow_camera(view_camera, ratios, lightdir, shadowmap_size, stabilize, csmcamera)
+	camerautil.bind_camera(world, camera_tag, csmcamera)
 
 	local cast_material_path = linear_shadow and 
 		fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material" or
 		fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
 
-	return world:create_entity {
+	local eid = world:create_entity {
 		material = {
 			{ref_path = cast_material_path},
 		},
 		csm = {
 			split_ratios= ratios,
 			index 		= index,
-			stabilize 	= false,
+			stabilize 	= stabilize,
 		},
 		viewid = viewidmgr.get(camera_tag),
 		primitive_filter = {
@@ -205,15 +202,19 @@ local function create_csm_entity(lightdir, index, ratios, viewrect)
 					color = 0,
 					depth = 1,
 					stencil = 0,
-					clear = "colordepth",
+					clear = linear_shadow and "colordepth" or "depth",
 				}
 			},
 		},
 		name = "direction light shadow maker:" .. index,
 	}
+
+	local e = world[eid]
+	e.csm.split_distance_VS = csmcamera.frustum.f - view_camera.frustum.n
+	return eid
 end
 
-local function get_render_buffers(width, height)
+local function get_render_buffers(width, height, linear_shadow)
 	if linear_shadow then
 		local flags = renderutil.generate_sampler_flag {
 			RT="RT_ON",
@@ -261,39 +262,61 @@ local function get_render_buffers(width, height)
 	}
 end
 
-local function create_shadow_entity(shadowmap_size, numsplit)
+local function create_shadow_entity(view_camera, shadowmap_size, numsplit, depth_type)
 	local height = shadowmap_size
 	local width = shadowmap_size * numsplit
+
+	local viewfrustum = view_camera.frustum
+
+	local min_ratio, max_ratio 	= 0.0, 1.0
+	local pssm_lambda 			= 1.0
 	
+	local ratios = shadowutil.calc_split_distance_ratio(min_ratio, max_ratio, 
+						viewfrustum.n, viewfrustum.f, 
+						pssm_lambda, numsplit)
+
 	return world:create_entity {
 		shadow = {
-			shadowmap_size = shadowmap_size,
-			bias = 0.003,
-			depth_type = "linear",
-			normal_offset = 0,
+			shadowmap_size 	= shadowmap_size,
+			bias 			= 0.003,
+			depth_type 		= depth_type,
+			normal_offset 	= 0,
+			split = {
+				min_ratio 	= min_ratio,
+				man_ratio 	= max_ratio,
+				pssm_lambda = pssm_lambda,
+				num_split 	= numsplit,
+				ratios 		= ratios,
+			}
 		},
 		frame_buffer = {
-			render_buffers = get_render_buffers(width, height),
+			render_buffers = get_render_buffers(width, height, depth_type == "linear"),
 		}
 	}
 end
 
 function sm:post_init()
-	local split_ratios = shadowutil.get_split_ratios()
-	local numsplit = #split_ratios
-	local seid = create_shadow_entity(shadowmap_size, numsplit)
-	local se = world[seid]
-	local fb = se.frame_buffer
+	-- this function should move to somewhere which call 'entity spawn'
+	local shadowmap_size 	= 1024
+	local depth_type 		= "inv_z"
+	local linear_shadow 	= depth_type == "linear"
+	local numsplit 			= 4
+
+	local view_camera		= camerautil.get_camera(world, "main_view")
+	local seid 	= create_shadow_entity(view_camera, shadowmap_size, numsplit, depth_type)
+	local se 	= world[seid]
+	local fb 	= se.frame_buffer
 	local lightdir = get_directional_light_dir_T()
+
+	local ratios = se.shadow.split.ratios
 
 	local viewrect = {x=0, y=0, w=shadowmap_size, h=shadowmap_size}
 	for ii=1, numsplit do
-		local ratio = split_ratios[ii]
 		local tagname = "csm" .. ii
 		local csm_viewid = viewidmgr.get(tagname)
 		fbmgr.bind(csm_viewid, fb)
 		viewrect.x = (ii-1)*shadowmap_size
-		create_csm_entity(lightdir, ii, ratio, viewrect)
+		create_csm_entity(view_camera, lightdir, ii, ratios[ii], viewrect, shadowmap_size, linear_shadow)
 	end
 end
 

@@ -47,9 +47,7 @@ local function rawtable(filepath)
 	return env
 end
 
-function assetmgr.load_depiction(fullpath)
-	return rawtable(fullpath)
-end
+assetmgr.load_depiction = rawtable
 
 local function res_key(filename)
 	-- TODO, should use vfs to get the resource file unique key(resource hash), for cache same content file	
