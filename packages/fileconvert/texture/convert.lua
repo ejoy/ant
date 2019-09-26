@@ -64,7 +64,7 @@ local function gen_arm_commands(plat, param, sourcefile, outfile, commands)
 	if mipmap then
 		add_option(commands, "-m")
 		if mipmap ~= 0 then
-			add_option(commands, "--mipskip", mipmap)
+			add_option(commands, "--mipskip", tostring(mipmap))
 		end
 	end
 end
