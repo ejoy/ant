@@ -3080,7 +3080,9 @@ static struct enum_pair eSelectableFlags[] = {
 	ENUM(ImGuiSelectableFlags, DontClosePopups),
 	ENUM(ImGuiSelectableFlags, SpanAllColumns),
 	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
+#if(IMGUI_VERSION_NUM >= 17300)
 	ENUM(ImGuiSelectableFlags, AllowItemOverlap),
+#endif
 	// Use boolean(disabled) in Selectable(_,_, disabled)
 	//	ENUM(ImGuiSelectableFlags, Disabled),
 		{ NULL, 0 },
@@ -3098,8 +3100,10 @@ static struct enum_pair eTreeNodeFlags[] = {
 	ENUM(ImGuiTreeNodeFlags, Leaf),
 	ENUM(ImGuiTreeNodeFlags, Bullet),
 	ENUM(ImGuiTreeNodeFlags, FramePadding),
+#if(IMGUI_VERSION_NUM >= 17300)
 	ENUM(ImGuiTreeNodeFlags, SpanAvailWidth),
 	ENUM(ImGuiTreeNodeFlags, SpanFullWidth),
+#endif
 	ENUM(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
 	ENUM(ImGuiTreeNodeFlags, CollapsingHeader),
 	{ NULL, 0 },

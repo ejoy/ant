@@ -65,6 +65,7 @@ void update_mousepos()
 			// This is the position you can get with GetCursorPos(). In theory adding viewport->Pos is also the reverse operation of doing ScreenToClient().
 			if (ImGui::FindViewportByPlatformHandle((void*)focused_hwnd) != NULL)
 				io.MousePos = ImVec2((float)mouse_screen_pos.x, (float)mouse_screen_pos.y);
+
 		}
 		else
 		{
@@ -74,6 +75,12 @@ void update_mousepos()
 			{
 				POINT mouse_client_pos = mouse_screen_pos;
 				::ScreenToClient(focused_hwnd, &mouse_client_pos);
+				io.MousePos = ImVec2((float)mouse_client_pos.x, (float)mouse_client_pos.y);
+			}
+			else
+			{
+				POINT mouse_client_pos = mouse_screen_pos;
+				::ScreenToClient(main_window, &mouse_client_pos);
 				io.MousePos = ImVec2((float)mouse_client_pos.x, (float)mouse_client_pos.y);
 			}
 		}
