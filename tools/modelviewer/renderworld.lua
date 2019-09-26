@@ -10,6 +10,7 @@ ecs.import "ant.math.adapter"
 ecs.import "ant.sky"
 ecs.import "ant.asset"
 ecs.import "ant.imguibase"
+ecs.import "ant.camera_controller"
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
@@ -42,6 +43,7 @@ local cu = renderpkg.components
 local fs = require "filesystem"
 
 local serialize = import_package 'ant.serialize'
+local steeringTex
 
 local function create_light()
 	lu.create_directional_light_entity(world, "direction light", 
@@ -192,6 +194,11 @@ function model_review_system:init()
 	local dooreid = find_entity_by_name("door")
 	local door_outlineeid = find_entity_by_name("door_outline")
 	world[dooreid].rendermesh = world[door_outlineeid].rendermesh
+
+	
+	local assetmgr = import_package "ant.asset".mgr
+	local texloader = assetmgr.get_loader "texture"
+	steeringTex = texloader(fs.path "/pkg/ant.modelviewer/res/steering.texture")
 end
 
 local function memory_info()
@@ -235,10 +242,16 @@ local function memory_info()
 	return table.concat(s, "\t\n\t")
 end
 
+local wndflags = imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }
+
 function model_review_system:on_gui()
 	local windows = imgui.windows
 	local widget = imgui.widget
-	windows.Begin("Test")
-	widget.Text(memory_info())
+
+	windows.Begin("steering", wndflags)
+	widget.Image(steeringTex.handle, 128, 128)
+	widget.Image(steeringTex.handle, 256, 256)
+	widget.Image(steeringTex.handle, 512, 512)
+	--widget.Text(memory_info())
 	windows.End()
 end

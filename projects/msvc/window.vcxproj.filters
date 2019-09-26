@@ -24,7 +24,10 @@
     <ClInclude Include="..\..\clibs\window\window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\window\window_native.h">
+    <ClInclude Include="..\..\clibs\window\mingw\mingw_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+	<ClInclude Include="..\..\clibs\window\window_native.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

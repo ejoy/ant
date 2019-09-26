@@ -49,8 +49,7 @@ function gui_main.init(nwh, context, width, height)
     }
     imgui.image_program(
         imgui_image.prog,
-        imgui_image.uniforms.s_texColor.handle,
-        imgui_image.uniforms.u_imageLodEnabled.handle
+        imgui_image.uniforms.s_tex.handle
     )
     imgui.resize(width, height)
     gui_input.size(width,height)
@@ -73,6 +72,7 @@ function gui_main.init(nwh, context, width, height)
         main.init(nwh, context, width, height)
     end
     gui_mgr.after_init()
+    print("init completely:",os.clock())
 end
 
 function gui_main.size(width,height,type)
@@ -146,7 +146,6 @@ function gui_main.update()
     -- end
     -- next_update = next_update + FRAME_TIME
 end
-
 function _update(delta)
     local pm = require "antpm"
     gui_mgr.update(delta)
@@ -168,6 +167,12 @@ function gui_main.exit()
     if main.exit then
         main.exit()
     end
+end
+
+function gui_main.dropfiles(paths)
+    local a = paths
+    log.info_a("dropfiles",a)
+    gui_input.set_dropfiles(paths)
 end
 
 local function dispatch(ok, CMD, ...)

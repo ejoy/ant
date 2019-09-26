@@ -1,4 +1,5 @@
 local imgui   = import_package "ant.imgui".imgui
+local gui_util   = import_package "ant.imgui".editor.gui_util
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
@@ -6,6 +7,8 @@ local util = imgui.util
 local cursor = imgui.cursor
 local enum = imgui.enum
 local bgfx = require "bgfx"
+
+local gui_input = import_package "ant.imgui".gui_input
 
 local GuiBase = import_package "ant.imgui".gui_base
 
@@ -168,6 +171,15 @@ local editbox_dynamic = nil
 function TestGuiBase:tab1_update()
     windows.PushStyleVar(enum.StyleVar.FrameBorderSize,2.0)
     windows.PushStyleVar(enum.StyleVar.WindowBorderSize,2.0)
+
+    widget.Button("DropTest")
+
+    if util.IsItemHovered() and gui_input.get_dropfiles() then
+        log.info_a("testgui",gui_input.get_dropfiles() )
+    end
+
+
+
     local dds_path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga"
     widget.Image(dds_path,200,200,{border_col={1.0,0.0,1.0,1.0},tint_col={0.0,1.0,1.0,0.5}})
     local dds_path2 = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga"

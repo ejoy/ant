@@ -25,6 +25,7 @@ local editor = {
         gui_shader_watch = require "editor.gui_shader_watch",
         gui_system_profiler = require "editor.gui_system_profiler",
         gui_project_view = require "editor.gui_project_view",
+        gui_inspector_view = require "editor.inspector.gui_inspector_view",
     },
 }
 return editor

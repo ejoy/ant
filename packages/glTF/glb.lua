@@ -42,6 +42,7 @@ local function decode_from_filehandle(f)
     return {
         version = version,
         info = jsonDecode(json),
+        json = json,
         bin = bin
     }
 end

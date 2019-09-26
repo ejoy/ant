@@ -1,4 +1,5 @@
 local imgui   = require "imgui_wrap"
+local gui_input   = require "gui_input"
 local widget = imgui.widget
 local flags = imgui.flags
 local windows = imgui.windows
@@ -256,17 +257,35 @@ end
 
 function gui_util.pkg_path_to_local(pkg_path,is_full)
     local fs = require "filesystem"
-    local localfs = require "filesystem.local"
     if type(pkg_path) == "string" then pkg_path = fs.path(pkg_path) end
-    local local_path = pkg_path:localpath()
-    local local_path_str = local_path:string()
-    if is_full then
-        local current_path = localfs.current_path()
-        local_path_str = (current_path.."/"..local_path_str):string()
+    local function dir_to_local(pkg_path,is_full)
+        local localfs = require "filesystem.local"
+        
+        local local_path = pkg_path:localpath()
+        local local_path_str = local_path:string()
+        if is_full then
+            local current_path = localfs.current_path()
+            local_path_str = (current_path.."/"..local_path_str):string()
+        end
+        return local_path_str
     end
-    return local_path_str
+    if fs.is_directory(pkg_path) then
+        return dir_to_local(pkg_path,is_full)
+    else
+        local file_name = pkg_path:filename():string()
+        local parent_path = dir_to_local(pkg_path:parent_path(),is_full)
+        return parent_path.."/"..file_name
+    end
 end
 
-
+function gui_util.load_local_file(local_path_str)
+    local localfs = require "filesystem.local"
+    local env = {}
+    local r = loadfile(local_path_str,"t",env)
+    if r then
+        r()
+        return env
+    end
+end
 
 return gui_util

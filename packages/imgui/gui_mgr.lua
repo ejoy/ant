@@ -6,7 +6,7 @@ local util      = imgui.util
 local gui_util  = require "editor.gui_util"
 local thread    = require "thread"
 local TimeStack = require "common.time_stack"
-
+local gui_input = require "gui_input"
 local dbgutil = import_package "ant.editor".debugutil
 
 
@@ -34,6 +34,7 @@ function gui_mgr.init()
     }
     gui_mgr.time_stack = TimeStack.new()
     gui_mgr.update_list = {}
+    gui_mgr.focus_window = nil
     -- local menu_list = {
     --     {{"Views"},gui_mgr._update_mainmenu_view},
     -- }
@@ -53,6 +54,16 @@ function gui_mgr.update(delta)
     gui_mgr.check_can_save()
     local setting_can_save = gui_mgr.setting_status.can_save
     imgui.begin_frame(delta)
+    --dropfiles
+    -- local dropfiles = gui_input.get_dropfiles()
+
+    -- if dropfiles then
+    --     log.info("BeginDragDropSource")
+    --     if widget.BeginDragDropSource(flags.DragDrop.SourceExtern) then
+    --         widget.SetDragDropPayload("DROPFILES","files")
+    --         widget.EndDragDropSource()
+    --     end
+    -- end
     gui_mgr._update_mainmenu(delta)
     imgui.showDockSpace()
     time_stack:Pop("editor")
@@ -64,8 +75,11 @@ function gui_mgr.update(delta)
     gui_mgr._update_list(delta)
     time_stack:Pop("update_list")
 
+
     time_stack:Push("editor")
     gui_util.loop_popup()
+
+    gui_input.set_dropfiles(nil)
     imgui.end_frame()
     if setting_can_save then
         gui_mgr.check_and_save_setting()
@@ -73,19 +87,28 @@ function gui_mgr.update(delta)
     time_stack:Pop("editor")
 end
 
+function gui_mgr.process_next_frame_funcs()
+
+end
+
 function gui_mgr.reset_time_count()
     gui_mgr.time_stack:clear()
 end
 
 function gui_mgr._update_window(delta)
+    local focus_window = gui_mgr.focus_window
     local time_stack = gui_mgr.time_stack
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
         if ui_ins.on_gui then
             time_stack:Push(ui_name)
+            if focus_window and focus_window[ui_ins.GuiName] then
+                windows.SetNextWindowFocus()
+            end
             ui_ins:on_gui(delta)
             time_stack:Pop(ui_name)
         end
     end
+    gui_mgr.focus_window = nil
 end
 
 function gui_mgr._update_list(delta)
@@ -123,8 +146,6 @@ function gui_mgr._update_mainmenu(delta)
         end
         widget.EndMainMenuBar()
     end
-
-    
 end
 
 function gui_mgr._register_mainmenu(gui_ins,cfg)
@@ -218,6 +239,20 @@ function gui_mgr.register_update(func,target)
         table.insert(gui_mgr.update_list,func)
     end
 end
+
+function gui_mgr.set_focus_window(name)
+    assert(type(name)=="string","ui name must be string!")
+    local ins = gui_mgr.get(name)
+    if not ins then
+        log.info("Try to open unregistered window:",name)
+        return 
+    end
+    if not ins:is_opened() then
+        ins:on_open_click()
+    end
+    gui_mgr.focus_window = gui_mgr.focus_window or {}
+    gui_mgr.focus_window[name] = true
+end 
 
 ---------------gui_setting-------------------------------
 function gui_mgr.load_setting()

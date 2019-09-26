@@ -53,8 +53,7 @@ function callback.init(nwh, context, width, height)
     }
     imgui.image_program(
         imgui_image.prog,
-        imgui_image.uniforms.s_texColor.handle,
-        imgui_image.uniforms.u_imageLodEnabled.handle
+        imgui_image.uniforms.s_tex.handle
     )
     imgui.resize(width, height)
     imgui.keymap(window.keymap)

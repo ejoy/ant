@@ -19,6 +19,7 @@ extern "C" {
 void init_ime(void* window);
 void init_cursor();
 void set_cursor(ImGuiMouseCursor cursor);
+void update_mousepos();
 
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
 #define IMGUI_FLAGS_FONT        UINT8_C(0x01)
@@ -109,8 +110,6 @@ struct context {
 					BGFX(submit)(m_viewId, m_fontProgram, 0, false);
 				}
 				else {
-					const float lodEnabled[4] = { float(texture.s.mip), 1.0f, 0.0f, 0.0f };
-					BGFX(set_uniform)(u_imageLodEnabled, lodEnabled, 1);
 					BGFX(set_texture)(0, s_imageTex, texture.s.handle, UINT32_MAX);
 					BGFX(submit)(m_viewId, m_imageProgram, 0, false);
 				}
@@ -133,7 +132,6 @@ struct context {
 	bgfx_program_handle_t m_imageProgram;
 	bgfx_uniform_handle_t s_fontTex;
 	bgfx_uniform_handle_t s_imageTex;
-	bgfx_uniform_handle_t u_imageLodEnabled;
 };
 
 static context s_ctx;
@@ -192,7 +190,6 @@ static int
 limageProgram(lua_State *L) {
 	s_ctx.m_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
 	s_ctx.s_imageTex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 2)) };
-	s_ctx.u_imageLodEnabled = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 3)) };
 	return 0;
 }
 
@@ -344,7 +341,6 @@ static void buildFont() {
 	atlas->ClearInputData();
 	atlas->ClearTexData();
 }
-
 static int
 lbeginFrame(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
@@ -353,7 +349,7 @@ lbeginFrame(lua_State *L) {
 	ImGuiMouseCursor cursor_type = io.MouseDrawCursor
 		? ImGuiMouseCursor_None
 		: ImGui::GetMouseCursor();
-
+	update_mousepos();
 	if (io.Fonts->Fonts.Size == 0) {
 		ImFontConfig config;
 		config.SizePixels = 18.0f;
@@ -1808,7 +1804,7 @@ bgfx_to_imgui_texture_id(lua_State*L, int lua_handle) {
 	union { struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
 	texture.s.handle = th;
 	texture.s.flags = 0;
-	texture.s.mip = 0; // TODO: set mip
+	texture.s.mip = 0;
 	return texture.ptr;
 }
 
@@ -3084,6 +3080,9 @@ static struct enum_pair eSelectableFlags[] = {
 	ENUM(ImGuiSelectableFlags, DontClosePopups),
 	ENUM(ImGuiSelectableFlags, SpanAllColumns),
 	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
+#if(IMGUI_VERSION_NUM >= 17300)
+	ENUM(ImGuiSelectableFlags, AllowItemOverlap),
+#endif
 	// Use boolean(disabled) in Selectable(_,_, disabled)
 	//	ENUM(ImGuiSelectableFlags, Disabled),
 		{ NULL, 0 },
@@ -3101,6 +3100,10 @@ static struct enum_pair eTreeNodeFlags[] = {
 	ENUM(ImGuiTreeNodeFlags, Leaf),
 	ENUM(ImGuiTreeNodeFlags, Bullet),
 	ENUM(ImGuiTreeNodeFlags, FramePadding),
+#if(IMGUI_VERSION_NUM >= 17300)
+	ENUM(ImGuiTreeNodeFlags, SpanAvailWidth),
+	ENUM(ImGuiTreeNodeFlags, SpanFullWidth),
+#endif
 	ENUM(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
 	ENUM(ImGuiTreeNodeFlags, CollapsingHeader),
 	{ NULL, 0 },
@@ -3412,7 +3415,6 @@ lgetMemory(lua_State *L) {
 	lua_pushinteger(L, allocator_memory);
 	return 1;
 }
-
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -3649,7 +3651,6 @@ luaopen_imgui(lua_State *L) {
 
 	luaL_newlib(L, font);
 	lua_setfield(L, -2, "font");
-
 	lua_newtable(L);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "InputText", eInputTextFlags);

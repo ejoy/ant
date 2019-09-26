@@ -73,4 +73,7 @@ return {
 	prelink = prelink,
 	link = link,
 	converter = converter,
+	default_cfg = {
+		mesh = require "mesh.default_cfg"
+	}
 }

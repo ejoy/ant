@@ -9,6 +9,7 @@ local GuiScriptRunner = import_package "ant.imgui".editor.gui_script_runner
 local GuiShaderWatch = import_package "ant.imgui".editor.gui_shader_watch
 local GuiSystemProfiler = import_package "ant.imgui".editor.gui_system_profiler
 local GuiProjectView = import_package "ant.imgui".editor.gui_project_view
+local GuiInspectorView = import_package "ant.imgui".editor.gui_inspector_view
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local args = {
     screen_width = 1680,
@@ -38,6 +39,7 @@ function main.init()
     gui_mgr.register(GuiShaderWatch.GuiName,GuiShaderWatch.new())
     gui_mgr.register(GuiSystemProfiler.GuiName,GuiSystemProfiler.new())
     gui_mgr.register(GuiProjectView.GuiName,GuiProjectView.new())
+    gui_mgr.register(GuiInspectorView.GuiName,GuiInspectorView.new())
 
 end
 

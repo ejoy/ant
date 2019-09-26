@@ -14,7 +14,9 @@ typedef enum {
 	ANT_WINDOW_MOUSE_WHEEL,
 	ANT_WINDOW_SIZE,
 	ANT_WINDOW_CHAR,
-	ANT_WINDOW_COUNT,
+	ANT_WINDOW_DROPFILES,
+
+	ANT_WINDOW_COUNT
 } ANT_WINDOW;
 
 #define ANT_WINDOW_CALLBACK "ANT_WINDOW_CALLBACK"
@@ -78,6 +80,11 @@ struct ant_window_char {
 	int code;
 };
 
+struct ant_window_dropfiles {
+	int count;
+	wchar_t  ** paths;
+};
+
 struct ant_window_message {
 	int type;
 	union {
@@ -90,6 +97,7 @@ struct ant_window_message {
 		struct ant_window_mouse_wheel mouse_wheel;
 		struct ant_window_size size;
 		struct ant_window_char unichar;
+		struct ant_window_dropfiles dropfiles;
 	} u;
 };
 

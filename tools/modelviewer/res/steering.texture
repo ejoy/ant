@@ -1,0 +1,10 @@
+path = "/pkg/ant.modelviewer/res/steering.png"
+normalmap   = false
+sRGB        = true
+sampler = {
+  MAG   = "LINEAR",
+  MIN   = "LINEAR",
+  MIP   = "LINEAR",
+  U     = "CLAMP",
+  V     = "CLAMP",
+}

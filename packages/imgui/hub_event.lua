@@ -16,5 +16,9 @@ local Evt ={
 
     --tool
     RunScript = "Editor_RunScript",
+
+
+    --between editor
+    InspectRes = "Editor_InspectRes", --pkg_path_str
 }
 return Evt

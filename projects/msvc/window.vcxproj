@@ -22,9 +22,10 @@
     <None Include="..\..\clibs\window\test.lua" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\clibs\window\mingw\mingw_window.h" />
     <ClInclude Include="..\..\clibs\window\virtual_keys.h" />
     <ClInclude Include="..\..\clibs\window\window.h" />
-    <ClInclude Include="..\..\clibs\window\window_native.h" />
+	<ClInclude Include="..\..\clibs\window\window_native.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\window\mingw\mingw_window.c" />

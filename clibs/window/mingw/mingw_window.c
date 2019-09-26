@@ -174,6 +174,26 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
+	case WM_DROPFILES: {
+		cb = (struct ant_window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+		HDROP drop = (HDROP)wParam;
+		UINT file_count = DragQueryFile(drop, 0xFFFFFFFF, NULL, 0);
+		msg.type = ANT_WINDOW_DROPFILES;
+		msg.u.dropfiles.paths = malloc( sizeof(char *) * file_count);
+		msg.u.dropfiles.count = file_count;
+		for (UINT i = 0; i < file_count; i++)
+		{
+			msg.u.dropfiles.paths[i] = malloc(sizeof(char) * MAX_DROP_PATH);
+			DragQueryFileA(drop, i, msg.u.dropfiles.paths[i], MAX_DROP_PATH);
+		}
+		cb->message(cb->ud, &msg);
+		for (UINT i = 0; i < file_count; i++)
+		{
+			free(msg.u.dropfiles.paths[i]);
+		}
+		free(msg.u.dropfiles.paths);
+		break;
+	}
 	case WM_USER_WINDOW_SETCURSOR:
 	{
 		LPTSTR cursor = (LPTSTR)lParam;
@@ -236,6 +256,7 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	if (wnd == NULL) {
 		return 3;
 	}
+	DragAcceptFiles(wnd, TRUE);
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
 

@@ -21,6 +21,7 @@ ecs.import 'ant.math.adapter'
 ecs.import 'ant.sky'
 ecs.import 'ant.asset'
 ecs.import "ant.image_effect"
+ecs.import "ant.camera_controller"
 
 local renderpkg = import_package 'ant.render'
 local renderutil=renderpkg.util
@@ -39,7 +40,7 @@ scene_walker.depend     'cull_system'
 scene_walker.depend     'asyn_asset_loader'
 scene_walker.depend     'scene_space'
 
-scene_walker.dependby 	'camera_controller'
+scene_walker.dependby 	'camera_controller_2'
 
 
 function scene_walker:init()

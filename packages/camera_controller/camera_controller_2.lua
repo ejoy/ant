@@ -3,14 +3,9 @@ local world = ecs.world
 
 ecs.import "ant.inputmgr"
 
-local math3d = require "math3d"
-
-local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-
-local renderpkg  = import_package "ant.render"
-local camerautil = renderpkg.camera
+local ms = import_package "ant.math".stack
 local rhwi = import_package "ant.render".hardware_interface
+local camerautil = import_package "ant.render".camera
 
 local camera_temp_data = ecs.singleton "camera_temp_data"
 function camera_temp_data:init()
@@ -27,7 +22,7 @@ camera_controller_system.singleton "camera_temp_data"
 camera_controller_system.singleton "message"
 camera_controller_system.depend "message_system"
 
-local function camera_reset(camera, target)
+local function camera_reset(camera)
 	ms(camera.eyepos, {0, 4, 8, 1}, "=")
 	ms(camera.viewdir, {0, 2, 0, 1}, camera.eyepos, "-n=")
 end
