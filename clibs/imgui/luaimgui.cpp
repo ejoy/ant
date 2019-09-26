@@ -213,6 +213,16 @@ lresize(lua_State *L) {
 	return 0;
 }
 
+static int
+lgetSize(lua_State *L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_pushnumber(L, io.DisplaySize.x);
+	lua_pushnumber(L, io.DisplaySize.y);
+	lua_pushnumber(L, io.DisplayFramebufferScale.x);
+	lua_pushnumber(L, io.DisplayFramebufferScale.y);
+	return 4;
+}
+
 struct lua_imgui_io
 {
 	
@@ -3435,6 +3445,7 @@ luaopen_imgui(lua_State *L) {
 		{ "mouse_wheel", lmouseWheel },
 		{ "mouse", lmouse },
 		{ "resize", lresize },
+		{ "getSize", lgetSize },
 		{ "viewid", lviewId },
 		{ "font_program", lfontProgram },
 		{ "image_program", limageProgram },
