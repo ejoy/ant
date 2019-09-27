@@ -105,5 +105,5 @@ float shadow_visibility(float distanceVS, vec4 posWS)
 	mat4 m = u_csm_matrix[cascadeidx];
 	vec4 shadowcoord = mul(m, posWS);
 
-	return hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
+	return max(0.15, hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
 }
