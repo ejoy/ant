@@ -359,7 +359,9 @@ lbeginFrame(lua_State *L) {
 	ImGuiMouseCursor cursor_type = io.MouseDrawCursor
 		? ImGuiMouseCursor_None
 		: ImGui::GetMouseCursor();
+#if defined(_WIN32)
 	update_mousepos();
+#endif
 	if (io.Fonts->Fonts.Size == 0) {
 		ImFontConfig config;
 		config.SizePixels = 18.0f;

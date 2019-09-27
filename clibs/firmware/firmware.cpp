@@ -25,10 +25,10 @@ INCBIN(FirmwareVfs, "../../engine/firmware/vfs.lua");
 
 #define FW_ODIR "o/" FW_PLAT "/" FW_MODE "/"
 
-INCBIN(FirmwareFsImage,   FW_ODIR "fs_imgui_image.sc");
-INCBIN(FirmwareVsImage,   FW_ODIR "vs_imgui_image.sc");
-INCBIN(FirmwareFsOcornut, FW_ODIR "fs_ocornut_imgui.sc");
-INCBIN(FirmwareVsOcornut, FW_ODIR "vs_ocornut_imgui.sc");
+INCBIN(FirmwareFsImage, FW_ODIR "fs_imgui_image.sc");
+INCBIN(FirmwareVsImage, FW_ODIR "vs_imgui_image.sc");
+INCBIN(FirmwareFsFont,  FW_ODIR "fs_imgui_font.sc");
+INCBIN(FirmwareVsFont,  FW_ODIR "vs_imgui_font.sc");
 
 struct bin {
 	const char* data;
@@ -44,8 +44,8 @@ std::map<std::string_view, bin> firmware = {
 
 	{ "fs_imgui_image.sc", INIT_BIN(FirmwareFsImage) },
 	{ "vs_imgui_image.sc", INIT_BIN(FirmwareVsImage) },
-	{ "fs_ocornut_imgui.sc", INIT_BIN(FirmwareFsOcornut) },
-	{ "vs_ocornut_imgui.sc", INIT_BIN(FirmwareVsOcornut) },
+	{ "fs_imgui_font.sc", INIT_BIN(FirmwareFsFont) },
+	{ "vs_imgui_font.sc", INIT_BIN(FirmwareVsFont) },
 };
 
 static std::string_view luaL_checkstrview(lua_State* L, int idx) {

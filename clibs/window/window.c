@@ -250,7 +250,8 @@ lcreate(lua_State *L) {
 
 static int
 lmainloop(lua_State *L) {
-	window_mainloop(get_callback(L), lua_toboolean(L, 1));
+	int update = lua_toboolean(L, 1);
+	window_mainloop(get_callback(L), update);
 	return 0;
 }
 
