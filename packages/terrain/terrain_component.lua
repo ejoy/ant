@@ -13,9 +13,7 @@ local ms 		= import_package "ant.math".stack
 local colliderutil = import_package "ant.bullet".util
 
 local fs 		= require "filesystem"
-
 local bgfx 		= require "bgfx"
-
 
 local terrainshape = ecs.component "terrain_shape"
 	.up_axis 	"int" (0)

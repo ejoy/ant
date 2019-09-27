@@ -12,7 +12,7 @@ uniform vec4 u_shadow_param2;
 #define u_shadowmap_bias		u_shadow_param1.x
 #define u_normaloffset 			u_shadow_param1.y
 #define u_shadowmap_texelsize	u_shadow_param1.z
-#define u_shadow_color			u_shadow_param2.xyz
+#define u_shadow_color			u_shadow_param2.rgb
 
 //#define SM_LINEAR
 
