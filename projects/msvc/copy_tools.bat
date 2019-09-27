@@ -13,3 +13,5 @@ copy /B /Y ..\..\3rd\bgfx\src\bgfx_shader.sh ..\..\packages\resources\shaders\sr
 copy /B /Y ..\..\3rd\bgfx\src\bgfx_compute.sh ..\..\packages\resources\shaders\src\bgfx_compute.sh
 copy /B /Y ..\..\3rd\bgfx\examples\common\common.sh ..\..\packages\resources\shaders\src\common.sh
 copy /B /Y ..\..\3rd\bgfx\examples\common\shaderlib.sh ..\..\packages\resources\shaders\src\shaderlib.sh
+
+exit 0
