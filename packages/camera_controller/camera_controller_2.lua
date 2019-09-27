@@ -76,6 +76,21 @@ function camera_controller_system:init()
 		end
 	end
 
+	local w,s,a,d=0,0,0,0
+	function message:steering(code, press)
+		if code == "W" then
+			w = press
+		elseif code == "S" then
+			s = press
+		elseif code == "A" then
+			a = press
+		elseif code == "D" then
+			d = press
+		end
+		data.dz = w - s
+		data.dx = d - a
+	end
+
 	self.message.observers:add(message)
 end
 
