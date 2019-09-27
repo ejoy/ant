@@ -17,7 +17,6 @@ local mathbaselib= require "math3d.baselib"
 ----------------------------------------------------------------------------------------------------------
 local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.depend "shadowmaker_camera"
-
 ecs.tag "shadow_quad"
 
 local quadsize = 192
@@ -93,7 +92,7 @@ local function main_view_debug_frustum()
 end
 
 function debug_sm:post_init()
-	--csm_shadow_debug_quad()
+	csm_shadow_debug_quad()
 end
 
 ecs.mark("record_camera_state", "camera_state_handler")

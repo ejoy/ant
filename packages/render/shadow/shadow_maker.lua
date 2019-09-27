@@ -30,7 +30,7 @@ ecs.component "omni"	-- for point/spot light
 
 ecs.component "csm_split_config"
 	.min_ratio		"real"(0.0)
-	.man_ratio		"real"(1.0)
+	.max_ratio		"real"(1.0)
 	.pssm_lambda	"real"(1.0)
 	.num_split		"int" (4)
 	.ratios	 		"real[]"
@@ -46,7 +46,6 @@ ecs.component "shadow"
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.depend "primitive_filter_system"
 maker_camera.dependby "filter_properties"
-
 local function get_directional_light_dir_T()
 	local ld = shadowutil.get_directional_light_dir(world)
 	return ms(ld, "T")
@@ -151,18 +150,23 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 	}
 end
 
--- function maker_camera:update()
--- 	local lightdir = shadowutil.get_directional_light_dir(world)
--- 	local shadowentity = world:first_entity "shadow"
--- 	local shadow = shadowentity.shadow
--- 	for _, eid in world:each "csm" do
--- 		local csmentity = world[eid]
+function maker_camera:update()
+	local lightdir = shadowutil.get_directional_light_dir(world)
+	local shadowentity = world:first_entity "shadow"
+	local shadowcfg = shadowentity.shadow
+	local stabilize = shadowcfg.stabilize
+	local shadowmap_size = shadowcfg.shadowmap_size
 
--- 		local shadowcamera = camerautil.get_camera(world, csmentity.camera_tag)
--- 		calc_shadow_camera(csmentity.csm, lightdir, shadow, shadowcamera)
--- 	end
--- end
+	local view_camera = camerautil.get_camera(world, "main_view")
 
+	for _, eid in world:each "csm" do
+		local csmentity = world[eid]
+
+		local shadowcamera = camerautil.get_camera(world, csmentity.camera_tag)
+		local csm = world[eid].csm
+		calc_shadow_camera(view_camera, csm.split_ratios, lightdir, shadowmap_size, stabilize, shadowcamera)
+	end
+end
 local sm = ecs.system "shadow_maker"
 sm.depend "primitive_filter_system"
 sm.depend "shadowmaker_camera"
@@ -268,8 +272,8 @@ local function create_shadow_entity(view_camera, shadowmap_size, numsplit, depth
 
 	local viewfrustum = view_camera.frustum
 
-	local min_ratio, max_ratio 	= 0.0, 1.0
-	local pssm_lambda 			= 1.0
+	local min_ratio, max_ratio 	= 0.03, 1.0
+	local pssm_lambda 			= 0.85
 	
 	local ratios = shadowutil.calc_split_distance_ratio(min_ratio, max_ratio, 
 						viewfrustum.n, viewfrustum.f, 
@@ -283,7 +287,7 @@ local function create_shadow_entity(view_camera, shadowmap_size, numsplit, depth
 			normal_offset 	= 0,
 			split = {
 				min_ratio 	= min_ratio,
-				man_ratio 	= max_ratio,
+				max_ratio 	= max_ratio,
 				pssm_lambda = pssm_lambda,
 				num_split 	= numsplit,
 				ratios 		= ratios,

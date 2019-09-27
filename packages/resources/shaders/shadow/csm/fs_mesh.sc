@@ -22,8 +22,6 @@ uniform vec4 u_specularLight;
 
 void main()
 {
-	//vec4 color_coverage = get_color_coverage(cascadeidx);
-	
 	vec4 ntexdata 	= texture2D(s_normal, v_texcoord0.xy);
 	float gloss 	= ntexdata.z;
 	vec3 normal 	= unproject_normal(ntexdata.xy);

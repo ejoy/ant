@@ -17,8 +17,9 @@ function util.split_new_frustum_by_distance(view_frustum, n_dis, f_dis)
 		frustum[k] = v
 	end
 
-	assert(frustum.n <= n_dis and n_dis <= frustum.f)
-	assert(frustum.n <= f_dis and f_dis <= frustum.f)
+	local eps = 0.0001
+	assert(frustum.n-eps <= n_dis and n_dis <= frustum.f+eps)
+	assert(frustum.n-eps <= f_dis and f_dis <= frustum.f+eps)
 
 	frustum.n = n_dis
 	frustum.f = f_dis

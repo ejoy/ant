@@ -7,7 +7,11 @@ state = {
 	WRITE_MASK = "RGBA",
 	ALPHA_REF = 0,
 	CULL = "CCW",
-	MSAA = true,
 	DEPTH_TEST = "ALWAYS",
 	PT = "TRISTRIP"
+}
+
+
+surface_type = {
+	transparency = "translucent"
 }

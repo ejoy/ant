@@ -66,8 +66,7 @@ function PVPScene.create_entitices(world)
 		CampsiteDoor = {			
 			srt = {{1, 1, 1}, {0, 90, 0,}, {-12.95, 0.7867187, -14.03104}},
 			mesh = fs.path "PVPScene/campsite-door.mesh",
-			material = fs.path "PVPScene/scene-mat-shadow.material",
-			children = {				
+			children = {
 				srts = {
 					{
 						{},
@@ -79,7 +78,6 @@ function PVPScene.create_entitices(world)
 		CampsiteWall={
 			srt = {{1, 1, 1}, {0, 90, 0,}, {-12.45, 0.7867187, -42.53104}},	
 			mesh = fs.path "PVPScene/campsite-wall.mesh",
-			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -98,8 +96,7 @@ function PVPScene.create_entitices(world)
 		campsite_jianta = {
 			srt = {{0.5, 0.5, 0.5}, {0, 0, 0,}, {7.0, 0.96, -14.03104}},	
 			mesh = fs.path "PVPScene/campsite-door-01.mesh",
-			material = fs.path "PVPScene/scene-mat-shadow.material",
-			children = {				
+			children = {
 				srts = {
 					{
 						{},
@@ -118,7 +115,10 @@ function PVPScene.create_entitices(world)
 				{{0, 0,0}, {0, 0,0 },  {134.72, 5.218985, 17.32593}}
 			},
 			mesh = fs.path "PVPScene/tent-06.mesh",
-			material = fs.path "PVPScene/tent-shadow.material",
+			material_properties = {
+				fs.path "/pkg/ant.resources/depiction/PVPScene/tent_d.texture",
+				fs.path "/pkg/ant.resources/depiction/PVPScene/tent_n.texture",
+			},
 			children = {				
 				srts = {
 					-- relate 1
@@ -149,8 +149,7 @@ function PVPScene.create_entitices(world)
 		wood_build_eid = {
 			srt = {	{1, 1, 1},	{0, -90.7483, 0},  { 30.41463, 1.72, 7.152405 },},
 			mesh = fs.path "PVPScene/woodbuilding-05.mesh",
-			material = fs.path "PVPScene/scene-mat-shadow.material",
-			children = {				
+			children = {
 				srts = {
 					{
 						{}
@@ -166,7 +165,6 @@ function PVPScene.create_entitices(world)
 		woodother_46 = {			
 			srt = {	{1, 1, 1},	{0, -108.1401, 0},  { 33.882416, 0.149453, -32.164627 },},
 			mesh = fs.path "PVPScene/woodother-46.mesh",
-			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -185,7 +183,6 @@ function PVPScene.create_entitices(world)
 		woodother_45 = {
 			srt = {{1, 1, 1}, {0, 50.3198, 0},{-28.68, 2, -10.164627},},
 			mesh = fs.path "PVPScene/woodother-45.mesh",
-			material = fs.path "PVPScene/scene-mat-shadow.material",
 			children = {				
 				srts = {
 					{
@@ -196,7 +193,6 @@ function PVPScene.create_entitices(world)
 					{
 						"box_collider"
 					}
-					
 				},
 			}
 		},
@@ -204,8 +200,7 @@ function PVPScene.create_entitices(world)
 			srt = {{1, 1, 1}, {0, 0, 20}, {120, -1.741485, 34.06}},
 			relate_srt = {{0, 0,0 }, {0, 0, 0}, {-2.1949, 1.842032, -39.867749}},
 			mesh = fs.path "PVPScene/woodother-34.mesh",
-			material = fs.path "PVPScene/scene-mat-shadow.material",
-			children = {				
+			children = {
 				srts = {
 					{
 						{},
@@ -217,7 +212,7 @@ function PVPScene.create_entitices(world)
 				},
 				collision_types = {
 					{
-						"capsule_collider",						
+						"capsule_collider",
 						"box_collider",
 						"cylinder_collider",
 						"box_collider",
@@ -265,17 +260,20 @@ function PVPScene.create_entitices(world)
 
 				local eid = world:create_entity  {
 					transform = mu.srt(s, r, t),
+					rendermesh = {},
+					mesh = {
+						ref_path = fs.path "/pkg/ant.resources/depiction" / scenedata.mesh,
+						asyn_load = true,
+					},
+					material = computil.assign_material(
+						fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", 
+						scenedata.material_properties, true),
+					serialize = import_package 'ant.serialize'.create(), 
+					name = name,
 					can_render = true,
 					hierarchy_visible = true,
 					can_select = true,
-					rendermesh = {},
-					mesh = {
-						ref_path = fs.path "/pkg/ant.resources" / "depiction" / scenedata.mesh,
-						asyn_load = true,
-					},
-					material = computil.assign_material(fs.path "/pkg/ant.resources" / "depiction" / scenedata.material, nil, true),
-					serialize = import_package 'ant.serialize'.create(), 
-					name = name,
+					can_cast = true,
 					main_view = true,
 					asyn_load = "",
 				}

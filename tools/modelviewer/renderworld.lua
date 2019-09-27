@@ -121,16 +121,29 @@ function model_review_system:init()
 		serialize   = serialize.create(),
 	}
 
-	local originentity = world[origineid]
-	local s, r, t = ms(originentity.transform.t, originentity.transform.r, originentity.transform.s, "TTT")
 	world:create_entity {
-		transform 	= mu.srt(s, r, t),
+		transform 	= mu.srt({0.2, 0.2, 0.2}, nil, {5, 0, 0}),
 		rendermesh 	= {},
-		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material",}},
+		mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/woodother-34.mesh", asyn_load=true},
+		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true}},
 		can_render 	= true,
 		main_view 	= true,
-		name 		= "door_outline",
+		asyn_load	= "",
+		can_cast	= true,
+		name 		= "door",
+		serialize   = serialize.create(),
 	}
+
+	-- local originentity = world[origineid]
+	-- local s, r, t = ms(originentity.transform.t, originentity.transform.r, originentity.transform.s, "TTT")
+	-- world:create_entity {
+	-- 	transform 	= mu.srt(s, r, t),
+	-- 	rendermesh 	= {},
+	-- 	material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material",}},
+	-- 	can_render 	= true,
+	-- 	main_view 	= true,
+	-- 	name 		= "door_outline",
+	-- }
 
 	world:create_entity {
 		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
@@ -182,18 +195,18 @@ function model_review_system:init()
 	--serialize.load_entity(world, s)
 	
 
-	local function find_entity_by_name(name)
-		for _, eid in world:each "can_render" do
-			local e = world[eid]
-			if e.name == name then
-				return eid
-			end
-		end
-	end
+	-- local function find_entity_by_name(name)
+	-- 	for _, eid in world:each "can_render" do
+	-- 		local e = world[eid]
+	-- 		if e.name == name then
+	-- 			return eid
+	-- 		end
+	-- 	end
+	-- end
 
-	local dooreid = find_entity_by_name("door")
-	local door_outlineeid = find_entity_by_name("door_outline")
-	world[dooreid].rendermesh = world[door_outlineeid].rendermesh
+	-- local dooreid = find_entity_by_name("door")
+	-- local door_outlineeid = find_entity_by_name("door_outline")
+	-- world[dooreid].rendermesh = world[door_outlineeid].rendermesh
 end
 
 local function memory_info()

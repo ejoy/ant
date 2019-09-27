@@ -1,6 +1,6 @@
 shader = {
-	vs = "/pkg/ant.resources/shaders/mesh/vs_mesh_bump.sc",
-	fs = "/pkg/ant.resources/shaders/mesh/fs_mesh_bumpex.sc",
+	vs = "/pkg/ant.resources/shaders/shadow/csm/vs_mesh.sc",
+	fs = "/pkg/ant.resources/shaders/shadow/csm/fs_mesh.sc",
 }
 
 state = "/pkg/ant.resources/depiction/materials/states/default.state"
@@ -14,4 +14,14 @@ properties = {
 		u_specularColor = {type="v4", name="specular color", value= {6/255, 5/255, 5/255, 0.03}},
 		u_specularLight = {type="v4", name="specular light factor", value={5.5, 0, 0,0}},
 	}
+}
+
+surface_type = {
+	lighting = "on",			-- "on"/"off"
+	transparency = "opaticy",	-- "opaticy"/"translucent"
+	shadow	= {
+		cast 	= "on",			-- "on"/"off"
+		receive = "on",			-- "on"/"off"
+	},
+	subsurface = "off",			-- "on"/"off"? maybe has other setting
 }

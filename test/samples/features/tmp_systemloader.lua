@@ -22,6 +22,7 @@ local serialize = import_package 'ant.serialize'
 
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components
+local camerautil= renderpkg.camera
 local aniutil   = import_package 'ant.animation'.util
 
 local mathpkg   = import_package "ant.math"
@@ -39,6 +40,7 @@ init_loader.depend "serialize_index_system"
 
 init_loader.dependby 'render_system'
 init_loader.dependby 'cull_system'
+init_loader.dependby 'shadow_maker'
 init_loader.dependby 'primitive_filter_system'
 init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
@@ -151,7 +153,8 @@ end
 
 function init_loader:init()
     do
-        lu.create_directional_light_entity(world, 'directional_light')
+        lu.create_directional_light_entity(world, "direction light", 
+		{1,1,1,1}, 2, mu.to_radian{60, 50, 0})
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
@@ -161,6 +164,14 @@ function init_loader:init()
 
     computil.create_grid_entity(world, 'grid', 64, 64, 1, nil, mu.translate_mat {0, 0, 0})
     create_animation_test()
+end
+
+
+function init_loader:post_init()
+    do
+        local viewcamera = camerautil.get_camera(world, "main_view")
+        viewcamera.frustum.f = 300
+    end
 end
 
 function init_loader:asset_loaded()
