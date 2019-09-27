@@ -26,6 +26,7 @@ void main()
 	vec4  diffuseColor = lightColor * textureColor * maskColor;
 	
 	float visilible 	= shadow_visibility(v_distanceVS, v_positionWS);
+	//vec4 colorcoverage  = get_color_coverage(select_cascade(v_distanceVS));
 	vec4 finalcolor 	= saturate(ambientColor + diffuseColor);
 	gl_FragColor.rgb 	= mix(u_shadow_color, finalcolor, visilible);
 	gl_FragColor.a 		= finalcolor.a;

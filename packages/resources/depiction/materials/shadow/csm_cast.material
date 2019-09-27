@@ -6,6 +6,6 @@ shader = {
 state = {
     WRITE_MASK  = "Z",
     ALPHA_REF   = 0,
-    CULL        = "CCW",
+    CULL        = "CW",
     DEPTH_TEST  = "LESS",
 }
