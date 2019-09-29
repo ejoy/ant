@@ -1,6 +1,6 @@
 shader = {
-	 vs = "/pkg/bloom/assets/shader/pbr/vs_mesh_pbr.sc",
-	 fs = "/pkg/bloom/assets/shader/pbr/fs_mesh_pbr.sc",
+	 vs = "/pkg/ant.resources/shaders/pbr/vs_mesh_pbr.sc",
+	 fs = "/pkg/ant.resources/shaders/pbr/fs_mesh_pbr.sc",
 }
 
 -- state = "default.state"
