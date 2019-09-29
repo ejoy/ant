@@ -2,9 +2,9 @@ local packages = {
 	"bloom"
 }
 local systems = {
-    "pbr_demo",
+    "pbr_bloom_demo",
     --"bloom_sys",
 }
 
-local runtime = import_package "ant.imgui".runtime
+local runtime = import_package "ant.imguibase".runtime
 runtime.start(packages, systems)
