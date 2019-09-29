@@ -1,6 +1,6 @@
 shader = {
-	 vs = "/pkg/ant.resources/shaders/pbr/vs_mesh_pbr.sc",
-	 fs = "/pkg/ant.resources/shaders/pbr/fs_mesh_pbr.sc",
+	 vs = "/pkg/bloom/assets/shader/pbr/vs_mesh_pbr.sc",
+	 fs = "/pkg/bloom/assets/shader/pbr/fs_mesh_pbr.sc",
 }
 
 -- 系统包目录不成立，解读成包目录下需要有个 depiction 目录

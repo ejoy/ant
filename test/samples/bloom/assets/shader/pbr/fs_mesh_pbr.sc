@@ -5,7 +5,7 @@ $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texc
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
  
-#include "pbr_protocol.sh"    
+#include "common/pbr_protocol.sh"    
         
 // for shadow 
 #define SM_PCF 1     
