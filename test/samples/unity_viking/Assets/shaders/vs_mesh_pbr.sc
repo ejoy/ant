@@ -7,8 +7,7 @@ $output v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_tex
    
 #include "common/uniforms.sh"
 
-     
-uniform vec4 u_tiling;	 
+uniform vec4 u_tiling;
 void main() 
 {
     vec3 pos      = a_position;

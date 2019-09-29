@@ -84,7 +84,7 @@ static float _GlowExpouse         = 2.0f;
 #define _SPECULAR_COMPATIBLE 1
 #define _DETAIL_MULX2 1
 //#define _BRDFMAP 1
-#include "pbr_protocol.sh"   
+#include "common/pbr_protocol.sh"
 
 
 #define COLOR_SPACE_TRANS 1
