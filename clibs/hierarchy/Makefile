@@ -31,6 +31,9 @@ $(ODIR)/hierarchy.dll : $(OBJ_FILES)
 $(ODIR)/libhierarchy.a : $(OBJ_FILES)
 	ar rsv $@ $^
 
+hierarchy.dll : $(ODIR)/hierarchy.dll
+	cp $^ $@
+
 $(ODIR) :
 	mkdir -p $@
 
