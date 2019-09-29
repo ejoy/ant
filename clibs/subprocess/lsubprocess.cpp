@@ -6,9 +6,24 @@
 #include <system_error>
 
 #if __has_include(<filesystem>)
-#include <filesystem>
-namespace fs = std::filesystem;
-#define ENABLE_FILESYSTEM
+#   if defined(__MINGW32__)
+#   elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
+#       if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
+            #include <filesystem>
+            namespace fs = std::filesystem;
+            #define ENABLE_FILESYSTEM
+#       endif
+#   elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
+#       if __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__ >= 130000
+            #include <filesystem>
+            namespace fs = std::filesystem;
+            #define ENABLE_FILESYSTEM
+#       endif
+#   else
+        #include <filesystem>
+        namespace fs = std::filesystem;
+        #define ENABLE_FILESYSTEM
+#   endif
 #endif
 
 namespace ant::lua {

@@ -15,16 +15,12 @@ BXLIB = -lbx$(MODE)
 BIMG_DECODELIB = -lbimg_decode$(MODE)
 BIMGLIB = -lbimg$(MODE)
 
-IB_COMPRESSROOT:= $(ANT3RD)/ib-compress
-IB_COMPRESSINC:= -I$(IB_COMPRESSROOT)
-IB_COMPRESSLIB:= -L$(IB_COMPRESSROOT) -lib-compress-$(PLAT)
-
 ifeq "$(PLAT)" "mingw"
 BGFXLIBDIR = $(BGFXSRC)/.build/win64_mingw-gcc/bin
 BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -lpsapi -luuid
 else ifeq "$(PLAT)" "osx"
-BGFXLIBDIR = -L$(BGFXSRC)/.build/osx64_clang/bin
-BGFXLIB = $(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
+BGFXLIBDIR = $(BGFXSRC)/.build/osx64_clang/bin
+BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
 BGFXLIB += -framework Foundation -framework Metal -framework QuartzCore -framework Cocoa
 else ifeq "$(PLAT)" "ios"
 BGFXLIBDIR = $(BGFXSRC)/.build/ios-arm64/bin

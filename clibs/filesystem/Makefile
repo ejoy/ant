@@ -1,6 +1,10 @@
 include ../common.mk
 
-default :  filesystem.dll
+ifeq "$(PLAT)" "mingw"
+default : filesystem.dll
+else
+default : $(ODIR)/libfilesystem.a
+endif
 
 OBJS = $(ODIR)/lua_filesystem.o $(ODIR)/path_helper.o $(ODIR)/file_helper.o  $(ODIR)/error.o
 
@@ -32,6 +36,9 @@ $(ODIR)/filesystem.dll : $(OBJS)
 
 $(ODIR)/libfilesystem.a : $(OBJS)
 	ar rsv $@ $^
+
+filesystem.dll : $(ODIR)/filesystem.dll
+	cp $^ $@
 
 $(ODIR) :
 	mkdir -p $@

@@ -1,9 +1,9 @@
 BIN = .
 LIBS := math3d lsocket bgfx filesystem remotedebug \
  crypt meshconverter hierarchy thread protocol bullet \
- window filewatch platform subprocess datalist imgui terrain
+ window filewatch platform subprocess datalist imgui terrain firmware
 
-ALL_LIBS := $(LIBS) lua
+ALL_LIBS := lua $(LIBS)
 
 include common.mk
 
