@@ -1,8 +1,8 @@
 // for metalness flow 
 // use albedo,metallic,roughness
-// compatible compatible with specular params when special specular mode and specular map 
+// compatible with specular params when special specular mode and specular map 
 //    specular no-recommendation, but for scene viking test 
-$input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7,v_worldPos,v_camPos
+$input v_texcoord0, v_normal, v_posWS
 
 #include <common.sh>
 #include "common/uniforms.sh"
@@ -16,11 +16,6 @@ $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texc
 #define _ALPHATEST_ON 1
 #define _BLOOM_EFFECT 1
 
-// for shadow  
-#define SM_PCF 1     
-#define SM_CSM 1 
-#include "mesh_shadow/fs_ext_shadowmaps_color_lighting.sh"
- 
  
 // brief solution for mobile 
 // above 4 - 6 texture units
@@ -232,7 +227,7 @@ struct FragmentCommonData
 inline AntEnv MainEnv( vec2 st,vec3 camPos, vec3 worldPos,vec3 normal)
 {
     AntEnv env;
-    vec3 N = PerPixelWorldNormal( _NormalMap, st, worldPos, normal  );
+    vec3 N = PerPixelWorldNormal(_NormalMap, st, worldPos, normal);
     vec3 V = normalize( camPos - worldPos ).xyz;
     vec3 R = reflect(-V, N); 
     env.normal  = N;
@@ -643,13 +638,11 @@ void main()
 {   
     ParamsSetup(); 
 
-    AntEnv env;
-    env = MainEnv( v_texcoord0.xy,v_camPos,v_worldPos,v_normal);
+    AntEnv env = MainEnv(v_texcoord0.xy, u_eyepos, v_posWS, v_normal);
 
-    AntLight light;
-    light = MainLight();
+    AntLight light = MainLight();
 
-    FragmentCommonData s = FragmentSetup(v_texcoord0,env.viewdir,env.normal,v_worldPos );       
+    FragmentCommonData s = FragmentSetup(v_texcoord0, env.viewdir, env.normal, v_posWS);
 
     vec3 color = FragmentPBR( env, light, s.diffColor,s.specColor,s.metallic, s.roughness);
     color += FragmentAmbient(env,s.specColor,s.metallic,s.roughness,s.diffColor);
@@ -667,9 +660,9 @@ void main()
     }else {
         //gl_FragData[1] = vec4(0,0,0,1);  
         gl_FragData[1] = vec4(color,1);
-    }      
+    }
 #endif 
-    color = FogLinear(vec4(color,1),v_camPos,v_worldPos,_FogColor,_FogParams);
+    color = FogLinear(vec4(color,1), u_eyepos, v_posWS, _FogColor, _FogParams);
     color = ToneMapping(color,0.90,1);
     //color = ToneMappingSimulateHdr(color,1);
     //color += LightGlow(color,env,lum,2.8);            

@@ -1,59 +1,39 @@
+#include "common/transform.sh"
 #define  PI  3.14159265359f
 
 // Walter GGX + Smith G + BlinnSchlick 
 // Lambertian balanced 
 
-vec3 cpn_inverse_proj(vec3 normal)
+float RecalcDXTNormalZ(vec2 normalXY)
 {
-	normal.z = sqrt( (1.0- saturate(dot(normal.xy, normal.xy))) );  
-
-    //return normal; 
-	// projection back 
-	//float pX = normal.x/(1.0 + normal.z);
-	//float pY = normal.y/(1.0 + normal.z);
-	//float denom = 2.0/(1.0 +pX*pX + pY*pY);
-	//normal.x = pX *denom;
-	//normal.y = pX *denom;
-	//normal.z = denom -1.0; 
-    return normal;
+    return sqrt(1.0 - saturate(dot(normalXY, normalXY)));
 }
 
-vec3 UnpackNormalDXTnm ( vec4 packednormal)
+vec3 RemapDXTNormalValue(vec2 normalTSXY, float offset)
 {
-    vec3 normal;
-    normal.xy = packednormal.wy * 2 - 1;
-    normal.z = sqrt(1 - saturate(dot(normal.xy, normal.xy)));
-    return normal;
+    vec2 normalTSXY_Remap = normalTSXY * 2.0 - 1.0;
+    normalTSXY_Remap = normalTSXY_Remap * offset;
+    return vec3(normalTSXY_Remap, RecalcDXTNormalZ(normalTSXY_Remap));
 }
 
-vec3 getNormalFromMap( sampler2D normalMap, vec2 texCoords, vec3 worldPos, vec3 normal)
+vec3 FetchCompressNormalMapValue(sampler2D normalMap, vec2 texcoord, float offset)
 {
-    // tested only normal 
-    // return normal; 
+    return RemapDXTNormalValue(texture2D(normalMap, texcoord).xy, offset);
+}
 
-    vec3 tangentNormal = texture2D(normalMap, texCoords).xyz* 2.0 - 1.0;
-    tangentNormal = tangentNormal*1.2;
-    tangentNormal = cpn_inverse_proj(tangentNormal);
-    
+vec3 UnpackNormalDXTnm(vec4 packednormal)
+{
+    return RemapDXTNormalValue(packednormal.wy, 1.0);
+}
 
-    // tested texture space normal 
-    // tangentNormal += ddx(tangentNormal) + ddy(tangentNormal);  //its bad 
-    // return tangentNormal; 
+// very heary operation to calculate tbn matrix in framgent shader. 
+// we already have some option to calculate tangent and bitangent vector when import mesh.
+vec3 getWorldSpcaeNormalFromTexture(sampler2D normalMap, vec2 texCoords, vec3 worldPos, vec3 vertexNormal)
+{
+    vec3 normalTS = FetchCompressNormalMapValue(normalMap, texCoords, 1.2);
+    mat3 TBN = tbn_from_world_pos(vertexNormal, worldPos, texCoords);
 
-    vec3 Q1  = ddx(worldPos);
-    vec3 Q2  = ddy(worldPos);
-    vec2 st1 = ddx(texCoords);
-    vec2 st2 = ddy(texCoords);
-
-    vec3 N  = normalize(normal);
-    vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
-    vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-
-    // D3D Mode ,OpenGL Must do transpose 
-    tangentNormal = mul(tangentNormal,TBN  ) ;
-
-    return normalize(tangentNormal);
+    return normalize(mul(normalTS, TBN));
 }
 
 half3 BlendNormals(half3 n1, half3 n2)
@@ -62,41 +42,33 @@ half3 BlendNormals(half3 n1, half3 n2)
 }
 
 
-vec3 PixelNormalMap( vec3 normal, sampler2D detailNormalMap,vec2 texCoords)
+vec3 PixelNormalMap(vec3 normal, sampler2D detailNormalMap, vec2 texCoords)
 {
-    vec3 normalTangent = normal;
 #ifdef _DETAIL 
     if( textureSize(detailNormalMap,0).x > 1 )
     {
-        float mask =  1;   
+        float mask =  1.0;
         vec3 detailNormal = texture2D(detailNormalMap, texCoords).xyz* 2.0 - 1.0;
         detailNormal = detailNormal*_DetailNormalMapScale;
 
-        normalTangent;
-        #ifdef _DETAIL_LERP
-            normalTangent = lerp(
-                    normalTangent,
-                    detailNormal,
-                    mask);
-        #else
-            normalTangent = lerp(
-                    normalTangent,
-                    BlendNormals(normalTangent, detailNormal),
-                    mask);
+        #ifndef _DETAIL_LERP
+        detailNormal = BlendNormals(normal, detailNormal);
         #endif
+
+        return lerp(normal, detailNormal, mask);
     }
 #endif 
 
-    return normalTangent;    
+    return normal;    
 }
 
 vec3 getPixelNormalFromMap( sampler2D normalMap, vec2 texCoords, vec3 worldPos, vec3 normal)
 {
-    vec3 normalTangent = getNormalFromMap(normalMap,texCoords,worldPos,normal);
+    vec3 normalWS = getWorldSpcaeNormalFromTexture(normalMap,texCoords,worldPos,normal);
 #ifdef _DETAIL
-    return PixelNormalMap(normalTangent,_DetailNormalMap,texCoords*_DetailTiling);
+    return PixelNormalMap(normalWS,_DetailNormalMap,texCoords*_DetailTiling);
 #else
-    return normalTangent;
+    return normalWS;
 #endif 
 }
 

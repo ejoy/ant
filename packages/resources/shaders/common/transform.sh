@@ -86,3 +86,22 @@ mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
 			normal)
 		);
 }
+
+mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
+{
+    vec3 Q1  = ddx(posWS);
+    vec3 Q2  = ddy(posWS);
+    vec2 st1 = ddx(texcoord);
+    vec2 st2 = ddy(texcoord);
+
+    vec3 N  = normalize(normal);
+    vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
+    vec3 B  = -normalize(cross(N, T));
+
+	mat3 TBN = mat3(T, B, N);
+#if BGFX_SHADER_LANGUAGE_HLSL
+	return TBN;
+#else
+	return transpose(TBN);
+#endif
+}

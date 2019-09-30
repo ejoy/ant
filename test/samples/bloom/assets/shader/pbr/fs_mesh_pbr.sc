@@ -5,26 +5,21 @@ $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texc
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
  
-#include "common/pbr_protocol.sh"    
-        
-// for shadow 
-#define SM_PCF 1     
-#define SM_CSM 1 
-#include "mesh_shadow/fs_ext_shadowmaps_color_lighting.sh"
- 
+#include "common/pbr_protocol.sh"
+
 #define LINEAR_COLORSPACE 1
 
 #ifdef LINEAR_COLORSPACE 
-#define ToLinear toLinear
-#else 
-#define ToLinear 
-#endif    
+#   define ToLinear toLinear
+#else
+#   define ToLinear 
+#endif
 
 #ifdef LINEAR_COLORSPACE 
-#define ToGamma toGamma 
+#   define ToGamma toGamma 
 #else 
-#define ToGamma   
-#endif   
+#   define ToGamma
+#endif
 // brief solution for mobile 
 // above 4 texture units, too expensive 
 // step optimize: remove or combine texture 
@@ -158,7 +153,7 @@ vec4 BaseColor(vec2 texcoord)
 vec4 Phong(vec2 texcoord,vec3 worldPos,vec3 normal,vec4 lightColor,vec3 lightDir,vec3 camPos,float specPower)
 {
     vec4  color =  ( texture2D(s_basecolor, texcoord ) );
-    vec3  N = getNormalFromMap( s_normal, texcoord, worldPos, normal  );
+    vec3  N = getWorldSpcaeNormalFromTexture( s_normal, texcoord, worldPos, normal  );
     vec3  V = normalize( camPos - worldPos ).xyz;
     vec3  L = normalize( lightDir ); 
     vec3  H = normalize( L+V ); 
@@ -173,7 +168,7 @@ vec4 Phong(vec2 texcoord,vec3 worldPos,vec3 normal,vec4 lightColor,vec3 lightDir
 vec4 BlinPhong(vec2 texcoord,vec3 worldPos,vec3 normal,vec4 lightColor,vec3 lightDir,vec3 camPos,float specPower)
 {
     vec4  color =  ( texture2D(s_basecolor, texcoord ) );
-    vec3  N = getNormalFromMap( s_normal, texcoord, worldPos, normal  );
+    vec3  N = getWorldSpcaeNormalFromTexture( s_normal, texcoord, worldPos, normal  );
     vec3  V = normalize( camPos - worldPos ).xyz;
     vec3  L = normalize( lightDir ); 
     vec3  H = normalize( L+V ); 
@@ -235,7 +230,7 @@ void main()
      
    
     vec3  albedo    = ToLinear( texture2D(s_basecolor, texcoord ).rgb ); 
-    vec3  N = getNormalFromMap( s_normal, texcoord, v_worldPos, v_normal  );
+    vec3  N = getWorldSpcaeNormalFromTexture( s_normal, texcoord, v_worldPos, v_normal  );
     vec3  V = normalize( v_camPos - v_worldPos ).xyz;
     vec3  R = reflect(-V, N); 
 
