@@ -5,6 +5,7 @@ ecs.import "ant.imguibase"
 
 local imgui = require "imgui"
 local fs = require "filesystem"
+local platform = require "platform"
 
 local steering_system = ecs.system "steering_system"
 
@@ -21,25 +22,23 @@ function steering_system:init()
     local assetmgr = import_package "ant.asset".mgr
     local texloader = assetmgr.get_loader "texture"
     steeringTex = texloader(fs.path "/pkg/ant.modelviewer/res/steering.texture")
-    
+
     local message = {}
-    function message:mouse(x, y, what, state)
-        if what ~= "LEFT" then
-            return
-        end
+    local function event_touch(x, y, id, state)
+        local w, _, wscale,hscale = imgui.getSize()
+        x,y=x/wscale,y/hscale
         if state == "DOWN" then
-            local w, _, wscale = imgui.getSize()
-            if x < w/wscale/2 then
-                touch.l.enable = true
+            if x < w/2 then
+                touch.l.enable = id
             else
-                touch.r.enable = true
+                touch.r.enable = id
             end
         end
-        
+
         local s
-        if touch.l.enable then
+        if touch.l.enable == id then
             s = touch.l
-        elseif touch.r.enable then
+        elseif touch.r.enable == id then
             s = touch.r
         else
             return
@@ -51,6 +50,19 @@ function steering_system:init()
         s.x, s.y = x, y
         s.state = state
     end
+
+    if platform.OS == "iOS" then
+        function message:touch(x, y, id, state)
+            event_touch(x, y, id, state)
+        end
+    else
+        function message:mouse(x, y, what, state)
+            if what ~= "LEFT" then
+                return
+            end
+            event_touch(x, y, true, state)
+        end
+    end
     self.message.observers:add(message)
 end
 
@@ -60,11 +72,11 @@ local function testhit(t, w, h, size, cx, cy)
     if not touch[t].enable then
         return
     end
-    local mx, my = touch[t].x, h - touch[t].y
+    local mx, my = touch[t].x, touch[t].y - h/2
     local angle = math.atan(my - cy, mx - cx)
     local distance = math.sqrt((cy - my) * (cy - my) + (cx - mx) * (cx - mx))/size
     distance = math.min(distance, 1)
-    return distance*math.cos(angle), -distance*math.sin(angle)
+    return distance*math.cos(angle), distance*math.sin(angle)
 end
 
 local function hitpos(cx, cy, size, nx, ny)
@@ -76,11 +88,9 @@ function steering_system:on_gui()
     local widget = imgui.widget
     local cursor = imgui.cursor
     local mq = world.args.mq
-    local w, h, wscale, hscale = imgui.getSize()
-    w = w / wscale
-    h = h / hscale
+    local w, h = imgui.getSize()
 
-    local size = 128
+    local size = w / 8
     
     windows.SetNextWindowPos(0,h/2)
     windows.SetNextWindowSize(w/2,h/2)

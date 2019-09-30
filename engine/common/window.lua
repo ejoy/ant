@@ -21,8 +21,11 @@ end
 local window = require "window"
 local thread = require "thread"
 local channel = thread.channel_produce "WNDMSG"
-local function dispatch(...)
-	channel:push(...)
+local function dispatch(CMD,...)
+	if CMD == 'update' then
+		return
+	end
+	channel:push(CMD,...)
 end
 window.create(dispatch, %d, %d, %q)
 window.mainloop()
@@ -31,14 +34,8 @@ end
 
 local recvmsg
 
-if platform.OS == "iOS" then
-	function recvmsg()
-		return true, channel:bpop()
-	end
-else
-	function recvmsg()
-		return channel:pop()
-	end
+function recvmsg()
+	return channel:pop()
 end
 
 return {
