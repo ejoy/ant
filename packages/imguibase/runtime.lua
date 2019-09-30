@@ -3,7 +3,6 @@ local window = require "window"
 local inputmgr = import_package "ant.inputmgr"
 local assetutil = import_package "ant.asset".util
 local renderpkg = import_package "ant.render"
-local bgfx = require "bgfx"
 local fs = require "filesystem"
 local thread = require "thread"
 local imgui = require "imgui"

@@ -33,7 +33,7 @@ model_review_system.depend "viewport_detect_system"
 model_review_system.depend "procedural_sky_system"
 model_review_system.depend "cull_system"
 model_review_system.depend "luagc_system"
-model_review_system.depend "shadow_maker"
+--model_review_system.depend "shadow_maker"
 --model_review_system.depend "render_mesh_bounding"
 model_review_system.dependby "camera_controller_2"
 model_review_system.depend "imgui_runtime_system"
@@ -99,12 +99,12 @@ function model_review_system:init()
 	-- 	can_render = true,
 	-- }
 
-	--cu.create_grid_entity(world, "grid")
-	cu.create_plane_entity(world, 
-		{50, 1, 50, 0}, nil, 
-		fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material", 
-		{0.8, 0.8, 0.8, 1},
-		"test shadow plane")
+	cu.create_grid_entity(world, "grid")
+	--cu.create_plane_entity(world, 
+	--	{50, 1, 50, 0}, nil, 
+	--	fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material", 
+	--	{0.8, 0.8, 0.8, 1},
+	--	"test shadow plane")
 
 	--cu.create_axis_entity(world, mu.translate_mat{0, 0, 1})
 
