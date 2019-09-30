@@ -24,7 +24,7 @@ function steering_system:init()
     steeringTex = texloader(fs.path "/pkg/ant.modelviewer/res/steering.texture")
 
     local message = {}
-    local function touch(x, y, id, state)
+    local function event_touch(x, y, id, state)
         local w, _, wscale,hscale = imgui.getSize()
         x,y=x/wscale,y/hscale
         if state == "DOWN" then
@@ -53,14 +53,14 @@ function steering_system:init()
 
     if platform.OS == "iOS" then
         function message:touch(x, y, id, state)
-            touch(x, y, id, state)
+            event_touch(x, y, id, state)
         end
     else
         function message:mouse(x, y, what, state)
             if what ~= "LEFT" then
                 return
             end
-            touch(x, y, true, state)
+            event_touch(x, y, true, state)
         end
     end
     self.message.observers:add(message)
@@ -90,7 +90,7 @@ function steering_system:on_gui()
     local mq = world.args.mq
     local w, h = imgui.getSize()
 
-    local size = w / 6
+    local size = w / 8
     
     windows.SetNextWindowPos(0,h/2)
     windows.SetNextWindowSize(w/2,h/2)
