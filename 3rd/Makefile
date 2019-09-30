@@ -142,18 +142,27 @@ bgfx_make : | $(BUILD_PATH)
 bgfx_clean :
 	cd bgfx && make clean
 
+
+ifeq "$(PLAT)" "msvc"
+CMAKE_PROJ_BUILD_SUB_PATH = $(PLAT)
+CMAKE_PROJ_SRC_RELATIVE_PATH = ../../..
+else
+CMAKE_PROJ_BUILD_SUB_PATH = $(PLAT)/$(MODE)
+CMAKE_PROJ_SRC_RELATIVE_PATH = ../../../..
+endif
+
 define CMAKE_TEMP
-  $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) : | $(BUILD_PATH)
+  $(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH) : | $(BUILD_PATH)
 	mkdir -p $$@
 
-  $(1)_init : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" $(CMAKE_OPT) ../../../../$(1)
+  $(1)_init : | $(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH)
+	cd $$(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" $(CMAKE_OPT) $(CMAKE_PROJ_SRC_RELATIVE_PATH)/$(1)
 
-  $(1)_make : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && make $(MP)
+  $(1)_make : | $(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH)
+	cd $$(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH) && make $(MP)
 
-  $(1)_clean : | $(BUILD_PATH)/$(1)/$(PLAT)/$(MODE)
-	cd $$(BUILD_PATH)/$(1)/$(PLAT)/$(MODE) && make clean
+  $(1)_clean : | $(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH)
+	cd $$(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH) && make clean
 endef
 
 $(foreach v, $(CMAKE_PROJ), $(eval $(call CMAKE_TEMP,$(v))))
