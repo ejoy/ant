@@ -48,7 +48,7 @@ STRIP = strip -u -r -x
 else
 STRIP = echo
 endif
-CFLAGS = $(DEBUG_INFO) -Wall
+CFLAGS = $(DEBUG_INFO) -Wall -mmacosx-version-min=10.15
 
 else ifeq "$(PLAT)" "ios"
 
