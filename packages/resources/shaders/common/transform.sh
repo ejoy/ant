@@ -1,3 +1,5 @@
+#ifndef __SHADER_TRANSFORMS_SH__
+#define __SHADER_TRANSFORMS_SH__
 mat3 mat3_from_columns(vec3 v0, vec3 v1, vec3 v2)
 {
 	mat3 m = mat3(v0, v1, v2);
@@ -105,3 +107,5 @@ mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 	return transpose(TBN);
 #endif
 }
+
+#endif //__SHADER_TRANSFORMS_SH__

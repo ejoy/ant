@@ -3,6 +3,9 @@
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
+ #ifndef __SHADER_SHADOW_SH__
+ #define __SHADER_SHADOW_SH__
+
 #include "common.sh"
 
 uniform mat4 u_csm_matrix[4];
@@ -107,3 +110,4 @@ float shadow_visibility(float distanceVS, vec4 posWS)
 
 	return max(0.15, hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
 }
+#endif //__SHADER_SHADOW_SH__

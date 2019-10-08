@@ -1,3 +1,6 @@
+#ifndef __SHADER_UNIFORMS_SH__
+#define __SHADER_UNIFORMS_SH__
+
 // lighting
 uniform vec4 directional_lightdir[1];
 uniform vec4 directional_color[1];
@@ -19,3 +22,5 @@ uniform vec4 u_lightPos;
 
 //postprocess
 SAMPLER2D(s_mianview, 0);
+
+#endif //__SHADER_UNIFORMS_SH__

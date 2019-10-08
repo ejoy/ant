@@ -1,3 +1,6 @@
+#ifndef __SHADER_PBR_PROTOCOL_SH__
+#define __SHADER_PBR_PROTOCOL_SH__
+
 #include "common/transform.sh"
 #define  PI  3.14159265359f
 
@@ -191,6 +194,4 @@ vec3 toneMapping(vec3 color,float exposure)
    //return vec3_c(1.0) - exp(-color * exposure);
 }
 
-     
-
-
+#endif //__SHADER_PBR_PROTOCOL_SH__

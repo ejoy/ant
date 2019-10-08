@@ -1,3 +1,5 @@
+#ifndef __SHADER_LIGHTING_SH__
+#define __SHADER_LIGHTING_SH__
 float fresnel(float _ndotl, float _bias, float _pow)
 {
 	float facing = (1.0 - _ndotl);
@@ -77,3 +79,5 @@ vec3 unpack_DXTmn_normal(vec2 normalTS)
 	normal.z = sqrt((1.0 - dot(normal.xy, normal.xy)));
 	return normal;
 }
+
+#endif //__SHADER_LIGHTING_SH__
