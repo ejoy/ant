@@ -164,14 +164,11 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0,float roughness)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0)*roughness;
 }
-
-
-#define vec3_c(v) vec3(v,v,v)
  
 vec3 fresnelSchlickRoughness2(float cosTheta, vec3 F0, float roughness)
 {
     float rough = 1.0-roughness;
-    return F0 + (max(vec3_c(rough),F0)-F0)*pow(1.0-cosTheta,5.0);
+    return F0 + (max(vec3_splat(rough), F0) - F0) * pow(1.0-cosTheta, 5.0);
 } 
 
 
@@ -190,8 +187,8 @@ float specPwr(float _gloss)
 // simple tonemapping,if you wanna diff effect,could change and  extend this function 
 vec3 toneMapping(vec3 color,float exposure) 
 {
-    return color / (color + vec3_c(exposure) );
-   //return vec3_c(1.0) - exp(-color * exposure);
+    return color / (color + vec3_splat(exposure) );
+   //return vec3_splat(1.0) - exp(-color * exposure);
 }
 
 #endif //__SHADER_PBR_PROTOCOL_SH__

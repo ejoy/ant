@@ -91,7 +91,7 @@ vec3 DirectTerm( vec3 N, vec3 V, vec3 F0, float metallic, float roughness, vec3 
         vec3  specular = nominator / denominator;
 
         vec3 kS = F;
-        vec3 kD = vec3_c(1.0)- kS;
+        vec3 kD = vec3_splat(1.0)- kS;
         kD *= 1.0 - metallic;
 
         vec3 color = kD*albedo/PI;
@@ -196,7 +196,7 @@ vec4 LightColor()
 
 vec3 DiffuseAndSpecularFromMetallic(vec3 albedo,float metallic) 
 {
-    vec3 F0 = vec3_c(_Dielectric); 
+    vec3 F0 = vec3_splat(_Dielectric); 
     F0 = mix(F0, albedo, metallic);
     return F0;
 }

@@ -26,13 +26,13 @@ $input v_texcoord0, v_normal, v_posWS
 //        metal map or metal params,roughness ,or combine map
 //        cubemap
 // future: metallic,roughness,ao could combine into one texture by artist       
-SAMPLER2D(s_basecolor, 0);
-SAMPLER2D(s_normal, 1); 
-SAMPLER2D(s_metallic, 2);
-SAMPLERCUBE(s_texCube,3);
+SAMPLER2D(s_basecolor,  0);
+SAMPLER2D(s_normal,     1); 
+SAMPLER2D(s_metallic,   2);
+SAMPLERCUBE(s_texCube,  3);
 
-SAMPLER2D(s_detailcolor,4);
-SAMPLER2D(s_detailnormal,5);
+SAMPLER2D(s_detailcolor,    4);
+SAMPLER2D(s_detailnormal,   5);
 //SAMPLER2D(s_brdfMap,6);
 
 uniform vec4 u_params;              
@@ -522,7 +522,7 @@ vec3 FragmentPBR( AntEnv env, AntLight light, vec3 albedo, vec3 specColor, float
         vec3  specular = nominator / denominator;     
 
         vec3 kS = F;
-        vec3 kD = vec3_c(1.0)- kS;
+        vec3 kD = vec3_splat(1.0)- kS;
         kD *= 1.0 - metallic;
 
         vec3 color = kD*albedo/PI;     //unity does not div PI, unity is no accurate but seems ok 
