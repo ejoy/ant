@@ -72,7 +72,7 @@ vec3 unproject_normal(vec3 normal)
 	return normal;
 }
 
-vec3 unpack_DXTmn_normal(vec2 normalTS)
+vec3 remap_normal(vec2 normalTS)
 {
 	vec3 normal = vec3(normalTS, 0.0);
 	normal.xy = normal.xy * 2.0 - 1.0;
