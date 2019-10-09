@@ -62,42 +62,42 @@ vec3 PointLightRadiance(vec3 lightPos,vec3 lightColor,vec3 worldPos)
 }
 
  
-vec3 DirectTerm( vec3 N, vec3 V, vec3 F0, float metallic, float roughness, vec3 albedo, vec3 worldPos, vec4 lightPos,vec3 lightColor ) 
+vec3 DirectTerm( vec3 N, vec3 V, vec3 F0, float metallic, float roughness, vec3 albedo, vec3 worldPos, vec4 lightPos, vec3 lightColor ) 
 { 
-        vec3 L,H;
-        vec3 radiance;
-        // extend light type here 
-        if( lightPos.w > 0 ) {
-           L = normalize( lightPos.xyz - worldPos );                   
-           H = normalize( V + L);
-           radiance = PointLightRadiance( lightPos.xyz,lightColor,worldPos);
-        } else {
-           L = normalize( lightPos.xyz );    
-           H = normalize( V + L);
-           radiance = DirectLightRadiance( lightColor );
-        }
+    vec3 L,H;
+    vec3 radiance;
+    // extend light type here 
+    if( lightPos.w > 0 ) {
+        L = normalize( lightPos.xyz - worldPos );                   
+        H = normalize( V + L);
+        radiance = PointLightRadiance( lightPos.xyz,lightColor,worldPos);
+    } else {
+        L = normalize( lightPos.xyz );    
+        H = normalize( V + L);
+        radiance = DirectLightRadiance( lightColor );
+    }
 
-        float D  = DistributionGGX(N, H, roughness);
-        float G  = GeometrySmith(N, V, L, roughness);      
-        vec3  F  = fresnelSchlick(max(dot(H, V), 0.0), F0);
+    float D  = DistributionGGX(N, H, roughness);
+    float G  = GeometrySmith(N, V, L, roughness);      
+    vec3  F  = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
 
-        float NdotL = max(dot(N, L), 0.0);
-        float NdotV = max(dot(N, V), 0.0);
-        vec3  nominator = D*G*F;
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 0.0);
+    vec3  nominator = D*G*F;
 
-        float denominator = BrdfDenominatorStd(NdotV,NdotL);
-        //float denominator = BrdfDenominatorOpt(NdotV,NdotL,roughness);
-        vec3  specular = nominator / denominator;
+    float denominator = BrdfDenominatorStd(NdotV,NdotL);
+    //float denominator = BrdfDenominatorOpt(NdotV,NdotL,roughness);
+    vec3  specular = nominator / denominator;
 
-        vec3 kS = F;
-        vec3 kD = vec3_splat(1.0)- kS;
-        kD *= 1.0 - metallic;
+    vec3 kS = F;
+    vec3 kD = vec3_splat(1.0)- kS;
+    kD *= 1.0 - metallic;
 
-        vec3 color = kD*albedo/PI;
+    vec3 color = kD*albedo/PI;
 
-        color  = (color + specular)*radiance*NdotL;
-        return color;        
+    color  = (color + specular)*radiance*NdotL;
+    return color;        
 }
  
 vec3 AmbientTerm(vec3 N,vec3 V,vec3 R,vec3 F0,float metallic,float roughness,vec3 albedo,samplerCube s_texCubeIrr,samplerCube s_texCube)

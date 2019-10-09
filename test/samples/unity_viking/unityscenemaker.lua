@@ -262,6 +262,7 @@ function unityScene.create(world, scenepath)
 				asyn_load 	= "",
 				can_render 	= true,
 				can_select 	= true,
+				can_cast    = true,
 				main_view 	= true,
 			}
 

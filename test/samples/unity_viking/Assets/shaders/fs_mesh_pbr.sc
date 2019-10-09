@@ -7,6 +7,7 @@ $input v_texcoord0, v_normal, v_posWS
 #include <common.sh>
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
+#include "common/shadow.sh"
  
 // fence does not provide specular,can not process it like specular texture,notice
 // need special process 
@@ -417,7 +418,7 @@ inline vec3 DiffuseAndSpecularFramSpecular(vec2 uv,vec3 albedo,out float metalli
     vec3  specGloss = _SpecColor.rgb;    
     float _USE_SPECGLOSSMAP = u_params.y;
     if( _USE_SPECGLOSSMAP < 1 ) {
-        specGloss = texture2D(_SpecGlossMap, uv);
+        specGloss = texture2D(_SpecGlossMap, uv).rgb;
     } 
 
     specColor = specGloss.xyz*SPECULAR_SCALE;
@@ -501,34 +502,34 @@ vec3 FragmentAmbient(AntEnv env, vec3 F0,float metallic,float roughness,vec3 alb
 // ENV, FragmentData,Light 
 vec3 FragmentPBR( AntEnv env, AntLight light, vec3 albedo, vec3 specColor, float metallic, float roughness ) 
 {  
-        vec3 N = env.normal;
-        vec3 V = env.viewdir;
-        vec3 L = light.dir;
-        vec3 H = normalize( V+L);
-        vec3 radiance = light.att * light.color;
+    vec3 N = env.normal;
+    vec3 V = env.viewdir;
+    vec3 L = light.dir;
+    vec3 H = normalize( V+L);
+    vec3 radiance = light.att * light.color;
 
-        float D  = DistributionGGX(N, H, roughness);
-        float G  = GeometrySmith(N, V, L, roughness);      
-        vec3  F  = fresnelSchlick(max(dot(H, V), 0.0), specColor );
-        //vec3  F  = fresnelSchlickRoughness(max(dot(H, V), 0.0), F0,roughness);
+    float D  = DistributionGGX(N, H, roughness);
+    float G  = GeometrySmith(N, V, L, roughness);      
+    vec3  F  = fresnelSchlick(max(dot(H, V), 0.0), specColor );
+    //vec3  F  = fresnelSchlickRoughness(max(dot(H, V), 0.0), F0,roughness);
 
-        float NdotL = max(dot(N, L), 0.0);
-        float NdotV = max(dot(N, V), 0.0);
-        vec3  nominator = D*G*F;
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 0.0);
+    vec3  nominator = D*G*F;
 
-        float denominator = BrdfDenominatorStd(NdotV,NdotL);
-        //float denominator = BrdfDenominatorOpt(NdotV,NdotL,roughness);
-        //float denominator = 1/(PI/4);
-        vec3  specular = nominator / denominator;     
+    float denominator = BrdfDenominatorStd(NdotV,NdotL);
+    //float denominator = BrdfDenominatorOpt(NdotV,NdotL,roughness);
+    //float denominator = 1/(PI/4);
+    vec3  specular = nominator / denominator;     
 
-        vec3 kS = F;
-        vec3 kD = vec3_splat(1.0)- kS;
-        kD *= 1.0 - metallic;
+    vec3 kS = F;
+    vec3 kD = vec3_splat(1.0)- kS;
+    kD *= 1.0 - metallic;
 
-        vec3 color = kD*albedo/PI;     //unity does not div PI, unity is no accurate but seems ok 
+    vec3 color = kD*albedo/PI;     //unity does not div PI, unity is no accurate but seems ok 
 
-        color  = (color + specular)*radiance*NdotL;
-        return color;        
+    color  = (color + specular)*radiance*NdotL;
+    return color;        
 } 
 
 
@@ -638,11 +639,14 @@ void main()
 {   
     ParamsSetup(); 
 
-    AntEnv env = MainEnv(v_texcoord0.xy, u_eyepos, v_posWS, v_normal);
+    float distanceVS = v_posWS.w;
+    vec4 posWS = vec4(v_posWS.xyz, 1.0);
+
+    AntEnv env = MainEnv(v_texcoord0.xy, u_eyepos.xyz, posWS.xyz, v_normal);
 
     AntLight light = MainLight();
 
-    FragmentCommonData s = FragmentSetup(v_texcoord0, env.viewdir, env.normal, v_posWS);
+    FragmentCommonData s = FragmentSetup(v_texcoord0, env.viewdir, env.normal, posWS.xyz);
 
     vec3 color = FragmentPBR( env, light, s.diffColor,s.specColor,s.metallic, s.roughness);
     color += FragmentAmbient(env,s.specColor,s.metallic,s.roughness,s.diffColor);
@@ -661,8 +665,11 @@ void main()
         //gl_FragData[1] = vec4(0,0,0,1);  
         gl_FragData[1] = vec4(color,1);
     }
-#endif 
-    color = FogLinear(vec4(color,1), u_eyepos, v_posWS, _FogColor, _FogParams);
+#endif
+    float visibility = shadow_visibility(distanceVS, posWS);
+    color = mix(u_shadow_color.rgb, color.rgb, visibility);
+
+    color = FogLinear(vec4(color,1), u_eyepos, posWS, _FogColor, _FogParams);
     color = ToneMapping(color,0.90,1);
     //color = ToneMappingSimulateHdr(color,1);
     //color += LightGlow(color,env,lum,2.8);            
