@@ -171,7 +171,7 @@ local sm = ecs.system "shadow_maker"
 sm.depend "primitive_filter_system"
 sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
-sm.dependby "debug_shadow_maker"
+--sm.dependby "debug_shadow_maker"
 
 local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect, shadowmap_size, linear_shadow)
 	local camera_tag = "csm" .. index
