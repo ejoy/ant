@@ -12,7 +12,7 @@ properties = {
     s_basecolor = { type="texture",name="s_basecolor",stage = 0,ref_path="/pkg/unity_viking/Assets/texture_desc/build_dragonhead_01_a.texture"},
     s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/Assets/texture_desc/build_dragonhead_01_n.texture"},
     s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/Assets/texture_desc/DefaultM.texture"},
-    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/Assets/textures/bolonga.texture"},
+    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/Assets/textures_desc/pbr/bolonga.texture"},
   },
   uniforms = {
     u_params = { type="v4",name="u_params",value={0,1,0,1-0.325}},

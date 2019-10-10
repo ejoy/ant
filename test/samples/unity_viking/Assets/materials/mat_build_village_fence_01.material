@@ -12,12 +12,12 @@ properties = {
     s_basecolor = { type="texture",name="s_basecolor",stage = 0,ref_path="/pkg/unity_viking/Assets/texture_desc/build_village_fence_01_a.texture"},
     s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/Assets/texture_desc/build_village_fence_01_n.texture"},
     s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/Assets/texture_desc/build_village_fence_01_sg.texture"},
-    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/Assets/textures/bolonga.texture"},
+    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/Assets/textures_desc/pbr/bolonga.texture"},
 
     s_detailcolor = { type="texture",name="s_detailcolor",stage = 4,ref_path="/pkg/unity_viking/Assets/texture_desc/wood_tiled_02_a.texture"},
     s_detailnormal = { type="texture",name="s_detailnormal",stage = 5,ref_path="/pkg/unity_viking/Assets/texture_desc/wood_tiled_02_n.texture"},
 
-    --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/Assets/textures/brdfMap3.texture"},
+    --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/Assets/textures_desc/pbr/brdfMap3.texture"},
   },
   uniforms = {
     u_params = { type="v4",name="u_params",value={0,1,0,1-0.2}},
