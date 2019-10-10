@@ -165,7 +165,8 @@ int luaopen_remotedebug(lua_State *L) {
 		{ NULL, NULL },
 	};
 #if LUA_VERSION_NUM == 501
-    luaL_register(L, "remotedebug", l);
+	luaL_register(L, "remotedebug", l);
+	lua_newuserdata(L, 0);
 #else
 	luaL_newlibtable(L,l);
 	luaL_setfuncs(L,l,0);
@@ -175,5 +176,9 @@ int luaopen_remotedebug(lua_State *L) {
 	lua_pushcfunction(L, lhost_clear);
 	lua_setfield(L, -2, "__gc");
 	lua_setmetatable(L, -2);
+
+#if LUA_VERSION_NUM == 501
+	lua_rawseti(L, -2, 0);
+#endif
 	return 1;
 }

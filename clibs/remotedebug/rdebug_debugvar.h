@@ -14,7 +14,6 @@
 	VAR_UPVALUE     -                  index              ?
 	VAR_GLOBAL      -                  -                  1
 	VAR_REGISTRY    -                  -                  1
-	VAR_MAINTHREAD  -                  -                  1
 	VAR_METATABLE   0/1 (**)           - (lua type)       ?/1
 	VAR_USERVALUE   -                  -                  ?
 
@@ -29,7 +28,6 @@
 #define VAR_UPVALUE 4	// func[index]
 #define VAR_GLOBAL 5	// _G
 #define VAR_REGISTRY 6	// REGISTRY
-#define VAR_MAINTHREAD 7
 #define VAR_METATABLE 8	// table.metatable
 #define VAR_USERVALUE 9	// userdata.uservalue
 #define VAR_STACK 10
@@ -50,7 +48,6 @@ sizeof_value(struct value *v) {
 	case VAR_FRAME_FUNC:
 	case VAR_GLOBAL:
 	case VAR_REGISTRY:
-	case VAR_MAINTHREAD:
 	case VAR_STACK:
 		return 1;
 	case VAR_INDEX_OBJ:
@@ -135,6 +132,16 @@ copy_fromX(rlua_State *from, lua_State *to) {
 		return LUA_TNONE;
 	}
 	return t;
+}
+
+void
+copyvalue(lua_State *from, rlua_State *to) {
+	if (copy_toX(from, to) == LUA_TNONE) {
+		rlua_pushfstring(to, "[%s: %p]",
+			lua_typename(from, lua_type(from, -1)),
+			lua_topointer(from, -1)
+		);
+	}
 }
 
 // L top : value, uservalue
@@ -233,13 +240,6 @@ eval_value_(rlua_State *L, lua_State *cL, struct value *v) {
 	case VAR_REGISTRY:
 		lua_pushvalue(cL, LUA_REGISTRYINDEX);
 		return LUA_TTABLE;
-#if LUA_VERSION_NUM == 501
-		// TODO
-		return LUA_TNIL;
-#else
-		return lua::rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
-#endif
-	case VAR_MAINTHREAD:
 	case VAR_METATABLE:
 		if (v->frame == 1) {
 			switch(v->index) {
@@ -257,14 +257,6 @@ eval_value_(rlua_State *L, lua_State *cL, struct value *v) {
 				break;
 			case LUA_TLIGHTUSERDATA:
 				lua_pushlightuserdata(cL, NULL);
-				break;
-			case LUA_TTHREAD:
-#if LUA_VERSION_NUM == 501
-				// TODO
-				lua_pushnil(cL);
-#else
-				lua_rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
-#endif
 				break;
 			default:
 				return LUA_TNONE;
@@ -343,7 +335,6 @@ assign_value(rlua_State *L, struct value * v, lua_State *cL) {
 	}
 	case VAR_GLOBAL:
 	case VAR_REGISTRY:
-	case VAR_MAINTHREAD:
 	case VAR_FRAME_FUNC:
 	case VAR_STACK:
 		// Can't assign frame func, etc.
@@ -417,14 +408,6 @@ assign_value(rlua_State *L, struct value * v, lua_State *cL) {
 			case LUA_TLIGHTUSERDATA:
 				lua_pushlightuserdata(cL, NULL);
 				break;
-			case LUA_TTHREAD:
-#if LUA_VERSION_NUM == 501
-				// TODO
-				lua_pushnil(cL);
-#else
-				lua_rawgeti(cL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
-#endif
-				break;
 			default:
 				// Invalid
 				return 0;
@@ -469,12 +452,7 @@ get_value(rlua_State *L, lua_State *cL) {
 		return;
 	}
 	rlua_pop(L, 1);
-	if (copy_toX(cL, L) == LUA_TNONE) {
-		rlua_pushfstring(L, "[%s: %p]", 
-			lua_typename(cL, lua_type(cL, -1)),
-			lua_topointer(cL, -1)
-			);
-	}
+	copyvalue(cL, L);
 	lua_pop(cL,1);
 }
 
@@ -496,12 +474,7 @@ tostring(rlua_State *L, lua_State *cL) {
 	lua_pushcfunction(cL, safetostring);
 	lua_insert(cL, -2);
 	lua_pcall(cL, 1, 1, 0);
-	if (copy_toX(cL, L) == LUA_TNONE) {
-		rlua_pushfstring(L, "[%s: %p]", 
-			lua_typename(cL, lua_type(cL, -1)),
-			lua_topointer(cL, -1)
-			);
-	}
+	copyvalue(cL, L);
 	lua_pop(cL,1);
 }
 
@@ -833,7 +806,6 @@ get_registry(rlua_State *L, int type) {
 	switch (type) {
 	case VAR_GLOBAL:
 	case VAR_REGISTRY:
-	case VAR_MAINTHREAD:
 		break;
 	default:
 		return NULL;

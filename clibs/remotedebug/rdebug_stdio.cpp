@@ -112,18 +112,16 @@ static int redirect_print(lua_State* L) {
 }
 
 static int redirect_f_write(lua_State* L) {
-	rlua_State *cL = get_client(L);
-    if (cL) {
-        if (LUA_TUSERDATA == getIoOutput(L) && lua_rawequal(L, -1, 1)) {
-            lua_pop(L, 1);
+    bool ok = LUA_TUSERDATA == getIoOutput(L) && lua_rawequal(L, -1, 1);
+    lua_pop(L, 1);
+    if (ok) {
+        rlua_State *cL = get_client(L);
+        if (cL) {
             int ok = event(cL, L, "iowrite");
             if (ok > 0) {
                 lua_settop(L, 1);
                 return 1;
             }
-        }
-        else {
-            lua_pop(L, 1);
         }
     }
     return callfunc(L);
@@ -161,15 +159,26 @@ static int open_iowrite(rlua_State* L) {
     lua_State* hL = get_host(L);
     if (LUA_TUSERDATA == getIoOutput(hL)) {
         if (lua_getmetatable(hL, -1)) {
-            lua_pushstring(hL, "write");
-            lua_pushvalue(hL, -1);
-            lua_rawget(hL, -3);
-            enable
-                ? lua_pushcclosure(hL, redirect_f_write, 1)
-                : (lua_getupvalue(hL, -1, 1)? lua_remove(hL, -2):(void)0)
-                ;
-            lua_rawset(hL, -3);
-            lua_pop(hL, 1);
+#if LUA_VERSION_NUM >= 504
+            lua_pushstring(hL, "__index");
+            if (LUA_TTABLE == lua_rawget(hL, -2)) {
+                lua_remove(hL, -2);
+#endif
+                lua_pushstring(hL, "write");
+                lua_pushvalue(hL, -1);
+                lua_rawget(hL, -3);
+                enable
+                    ? lua_pushcclosure(hL, redirect_f_write, 1)
+                    : (lua_getupvalue(hL, -1, 1)? lua_remove(hL, -2):(void)0)
+                    ;
+                lua_rawset(hL, -3);
+                lua_pop(hL, 1);
+#if LUA_VERSION_NUM >= 504
+            }
+            else {
+                lua_pop(hL, 1);
+            }
+#endif
         }
     }
     lua_pop(hL, 1);
