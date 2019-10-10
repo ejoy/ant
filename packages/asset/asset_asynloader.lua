@@ -28,8 +28,7 @@ local function load_asset(e)
     computil.create_mesh(rm, e.mesh)
 
     local material = e.material
-    for i=0, #material do
-        local m = material[i]
+    for _, m in world:each_component(material) do
         computil.create_material(m)
     end
 end
@@ -61,9 +60,7 @@ local function is_properties_ready(properties)
 end
 
 local function is_material_loaded(material)
-    --material index start from 0
-    for i=0, #material do
-        local m = material[i]
+    for _, m in world:each_component(material) do
         local mi = assetmgr.get_resource(m.ref_path)
 
         if mi == nil then

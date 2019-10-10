@@ -69,6 +69,9 @@ end
 
 local function each_component(t)
     return function(_, n)
+        if n == 0 then
+            return 1, t
+        end
         if not t[n] then
             return
         end
