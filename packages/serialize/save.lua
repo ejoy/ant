@@ -67,15 +67,6 @@ local function foreach_save_2(component, c)
     return foreach_save_1(component, c.type)
 end
 
-local function each_component(t)
-    return function(_, n)
-        if not t[n] then
-            return
-        end
-        return n + 1, t[n]
-    end, t, 0
-end
-
 function foreach_save_1(component, name)
     if name == 'primtype' then
         return component
@@ -95,7 +86,7 @@ function foreach_save_1(component, name)
     if not c.type then
         if c.multiple then
             ret = {}
-            for i, com in each_component(component) do
+            for i, com in world:each_component(component) do
                 if not ids[com] then
                     ids[com] = crypt.uuid64()
                 end

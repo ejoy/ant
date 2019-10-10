@@ -39,6 +39,37 @@ local function reset_results(results)
 	end
 end
 
+--[[	!NOTICE!
+	the material component defined with 'multiple' property which mean:
+	1. there is only one material, the 'material' component reference this material item;
+	2. there are more than one material, the 'material' component itself keep the first material item 
+		other items will store in array, start from 1 to n -1;
+	examples:
+	...
+	world:create_entity {
+		...
+		material = {
+			{ref_path=def_path1},
+		}
+	}
+	...
+	this entity's material component itself represent 'def_path1' material item, and NO any array item
+
+	...
+	world:create_entity {
+		...
+		material = {
+			{ref_path=def_path1},
+			{ref_path=def_path2},
+		}
+	}
+	entity's material component same as above, but it will stay a array, and array[1] is 'def_path2' material item
+	
+	About the 'prim.material' field
+	prim.material field it come from glb data, it's a index start from [0, n-1] with n elements
+
+	Here 'primidx' stand for primitive index in mesh, it's a lua index, start from [1, n] with n elements
+]]
 local function get_material(prim, primidx, materialcomp, material_refs)
 	local materialidx
 	if material_refs then
@@ -48,7 +79,7 @@ local function get_material(prim, primidx, materialcomp, material_refs)
 		materialidx = prim.material or primidx - 1
 	end
 
-	return materialcomp[materialidx] or materialcomp[0]
+	return materialcomp[materialidx] or materialcomp
 end
 
 local function is_visible(meshname, submesh_refs)

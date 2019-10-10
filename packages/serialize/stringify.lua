@@ -1,5 +1,6 @@
 local datalist = require 'datalist'
 
+local world
 local pool
 local out
 local stack
@@ -210,6 +211,7 @@ local function _stringify_entity(e)
 end
 
 local function stringify_start(w)
+    world = w
     pool = {}
     stack = {}
     typeinfo = w._components

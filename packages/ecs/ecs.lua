@@ -13,7 +13,6 @@ function world:create_component(c, args)
 	local ti = assert(self._components[c], c)
 	if not ti.type and ti.multiple then
 		local res = component_init(self, ti, args[1])
-		res[0] = res
 		for i = 2, #args do
 			res[i-1] = component_init(self, ti, args[i])
 		end
@@ -59,7 +58,6 @@ function world:add_component(eid, component_type, args)
 	if not ti.type and ti.multiple then
 		if not c then
 			e[component_type] = self:create_component(component_type, args)
-			e[component_type][0] = e[component_type]
 			self:register_component(eid, component_type)
 			self:init_component(e, component_type)
 		else
@@ -195,7 +193,10 @@ function world:each(component_type)
 end
 
 function world:each_component(t)
-    return function(_, n)
+	return function(_, n)
+		if n == 0 then
+			return n + 1, t
+		end
         if not t[n] then
             return
         end
@@ -310,7 +311,8 @@ end
 
 local function remove_component(w, ti, c, e)
 	if not ti.type and ti.multiple then
-		for ii=0, #c do
+		component_delete(w, ti, c, e)
+		for ii=1, #c do
 			component_delete(w, ti, c[ii], e)
 		end
 	else
