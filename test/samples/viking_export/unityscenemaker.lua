@@ -183,6 +183,10 @@ function unityScene.create(world, scenepath)
 				submesh_refs[meshref.meshname] = {material_refs=material_refs, visible=true}
 			end
 
+			if next(submesh_refs) then
+				submesh_refs = nil
+			end
+
 			local eid = world:create_entity {
 				name = groupname,
 				transform = trans,
