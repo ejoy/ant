@@ -26,7 +26,7 @@ ecs.import "ant.image_effect"
 ecs.import "ant.camera_controller"
 
 local fs = require "filesystem"
-local vikingmap = fs.path "viking.map"
+local vikingmap = fs.path "/pkg/unity_viking/Assets/viking.map"
 
 local scene_walker = ecs.system 'scene_walker'
 
