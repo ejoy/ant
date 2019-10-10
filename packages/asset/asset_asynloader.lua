@@ -26,7 +26,9 @@ asyn_asset_loader.singleton "asyn_load_list"
 local function load_asset(e)
     local rm = e.rendermesh
     computil.create_mesh(rm, e.mesh)
-    for _, m in world:each_component(e.material) do
+
+    local material = e.material
+    for _, m in world:each_component(material) do
         computil.create_material(m)
     end
 end

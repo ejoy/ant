@@ -192,16 +192,20 @@ function world:each(component_type)
 	return component_next, s, 0
 end
 
-function world:each_component(t)
-	return function(_, n)
-		if n == 0 then
-			return n + 1, t
-		end
+local function each_component(t)
+    return function(_, n)
+        if n == 0 then
+			return 1, t
+        end
         if not t[n] then
             return
         end
         return n + 1, t[n]
     end, t, 0
+end
+
+function world:each_component(t)
+    return each_component(t)
 end
 
 function world:first_entity_id(c_type)
@@ -311,9 +315,8 @@ end
 
 local function remove_component(w, ti, c, e)
 	if not ti.type and ti.multiple then
-		component_delete(w, ti, c, e)
-		for ii=1, #c do
-			component_delete(w, ti, c[ii], e)
+		for _, component in each_component(c) do
+			component_delete(w, ti, component, e)
 		end
 	else
 		component_delete(w, ti, c, e)
