@@ -1,8 +1,8 @@
 local lfs = require "filesystem.local"
 local g_log = log
 local converter = {
-	shader = require "shader.compile",
-	mesh = require "mesh.convert",
+	fx		= require "shader.compile",
+	mesh 	= require "mesh.convert",
 	texture = require "texture.convert",
 }
 
