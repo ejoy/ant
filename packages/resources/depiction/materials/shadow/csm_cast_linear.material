@@ -1,10 +1,3 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/shadow/create/vs_create.sc",
-    fs = "/pkg/ant.resources/shaders/shadow/create/fs_create.sc",
-    -- 'defines' is not use right now
-    defines = {
-        "SM_LINEAR",
-    }
- }
- 
+
+fx = "/pkg/ant.resources/depiction/materials/fx/shadow/csm_cast_linear.fx"
 state = "/pkg/ant.resources/depiction/materials/states/default.state"

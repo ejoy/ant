@@ -1,25 +1,20 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc",
-    fs = "/pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc",
-}
-
-state = {
-    WRITE_MASK = "RGBAZ",
-    ALPHA_REF = 0,
-    CULL = "CCW",
-    MSAA = true,
-    DEPTH_TEST = "LESS",
-    PT = "TRISTRIP"
-}
-
-properties = {
-    textures = {
-        s_texColor = {
-            type="texture", 
-            name="tex color", 
-            stage=0, 
-            ref_path= "/pkg/ant.resources/depiction/PVPScene/siegeweapon_d.texture"
-        }
-    }
-}
-
+
+fx = "/pkg/ant.resources/depiction/materials/fx/texture.fx"
+properties = {
+  textures = {
+    s_texColor = {
+      name = "tex color",
+      ref_path = "/pkg/ant.resources/depiction/PVPScene/siegeweapon_d.texture",
+      stage = 0,
+      type = "texture"
+    }
+  }
+}
+state = {
+  ALPHA_REF = 0,
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  MSAA = true,
+  PT = "TRISTRIP",
+  WRITE_MASK = "RGBAZ"
+}

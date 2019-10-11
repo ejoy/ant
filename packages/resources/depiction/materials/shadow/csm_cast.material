@@ -1,11 +1,8 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/shadow/create/vs_create.sc",
-    fs = "/pkg/ant.resources/shaders/shadow/create/fs_create.sc",
- }
- 
+
+fx = "/pkg/ant.resources/depiction/materials/fx/shadow/csm_cast.fx"
 state = {
-    WRITE_MASK  = "Z",
-    ALPHA_REF   = 0,
-    CULL        = "CW",
-    DEPTH_TEST  = "LESS",
+  ALPHA_REF = 0,
+  CULL = "CW",
+  DEPTH_TEST = "LESS",
+  WRITE_MASK = "Z"
 }

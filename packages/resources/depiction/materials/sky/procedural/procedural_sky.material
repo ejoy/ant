@@ -1,23 +1,56 @@
-shader = {
-	vs = "/pkg/ant.resources/shaders/sky/procedural/vs_sky.sc",
-	fs = "/pkg/ant.resources/shaders/sky/procedural/fs_sky_color_banding_fix.sc",
-}
 
-state = "/pkg/ant.resources/depiction/materials/states/procedural_sky.state"
-
+fx = "/pkg/ant.resources/depiction/materials/fx/sky/procedural/procedural_sky.fx"
 properties = {
-	uniforms = {
-		u_sunDirection = {type="v4", name="sub direction", value = {0, 0, 1, 0}},
-		u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value={0, 0, 0, 0}},
-		u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value={0, 0, 0, 0}},
-		u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", 
-			value={0, 0, 0, 0}},
-		u_perezCoeff = {type="v4", name="Perez coefficients", value = {
-			{0, 0, 0, 0},
-			{0, 0, 0, 0},
-			{0, 0, 0, 0},
-			{0, 0, 0, 0},
-			{0, 0, 0, 0},
-		}},
-	},
+  uniforms = {
+    u_parameters = {
+      name = "parameter include: x=sun size, y=sun bloom, z=exposition, w=time",
+      type = "v4",
+      value = {
+        0, 0, 0, 0
+      }
+    },
+    u_perezCoeff = {
+      name = "Perez coefficients",
+      type = "v4",
+      value = {
+        {
+          0, 0, 0, 0
+        },
+        {
+          0, 0, 0, 0
+        },
+        {
+          0, 0, 0, 0
+        },
+        {
+          0, 0, 0, 0
+        },
+        {
+          0, 0, 0, 0
+        }
+      }
+    },
+    u_skyLuminanceXYZ = {
+      name = "sky luminance in XYZ color space",
+      type = "v4",
+      value = {
+        0, 0, 0, 0
+      }
+    },
+    u_sunDirection = {
+      name = "sub direction",
+      type = "v4",
+      value = {
+        0, 0, 1, 0
+      }
+    },
+    u_sunLuminance = {
+      name = "sky luminace in RGB color space",
+      type = "v4",
+      value = {
+        0, 0, 0, 0
+      }
+    }
+  }
 }
+state = "/pkg/ant.resources/depiction/materials/states/procedural_sky.state"

@@ -1,17 +1,9 @@
-shader = {
-	vs = "/pkg/ant.resources/shaders/simple/quad/vs_texquad.sc",
-	fs = "/pkg/ant.resources/shaders/simple/quad/fs_shadowquad.sc",
-}
 
+fx = "/pkg/ant.resources/depiction/materials/fx/shadow/shadowmap_quad.fx"
 state = {
-	WRITE_MASK = "RGBA",
-	ALPHA_REF = 0,
-	CULL = "CCW",
-	DEPTH_TEST = "ALWAYS",
-	PT = "TRISTRIP"
-}
-
-
-surface_type = {
-	transparency = "translucent"
+  ALPHA_REF = 0,
+  CULL = "CCW",
+  DEPTH_TEST = "ALWAYS",
+  PT = "TRISTRIP",
+  WRITE_MASK = "RGBA"
 }

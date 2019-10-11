@@ -1,35 +1,78 @@
-shader = {
-    vs = '/pkg/bloom/assets/shader/pbr/vs_mesh_pbr',
-    fs = '/pkg/bloom/assets/shader/pbr/fs_mesh_pbr'
-}
-
-state = '/pkg/ant.resources/depiction/materials/states/default.state'
--- state = {
---    CULL = "CCW",
---    WRITE_MASK = "RGBAZ",
---    DEPTH_TEST = "LESS"
--- }
-local deftexpath = '/pkg/ant.resources/depiction/materials/textures/default.texture'
-local defirrtexpath = '/pkg/ant.resources/depiction/materials/textures/defautl_cube.texture'
-local deffactor = {1, 1, 1, 1}
-properties = {
-    textures = {
-        s_basecolor 		= {type = 'texture',name = 'base color', 		stage = 0, ref_path = deftexpath},
-        s_normal 			= {type = 'texture',name = 'normal', 			stage = 1, ref_path = deftexpath},
-        s_metalroughness 	= {type = 'texture',name = 'metal roughness', 	stage = 2, ref_path = deftexpath},
-		-- stage=3 for lightmap
-		-- stage=4~7 for shadowmaps
-		s_emissive			= {type = 'texture',name = 'diffuse irr', 		stage = 8, ref_path = deftexpath},
-		s_ambient_occlusion = {type = 'texture',name = 'ambient occlusion', stage = 9, ref_path = deftexpath},
-        s_diffuse_irr 		= {type = 'texture',name = 'diffuse irr', 		stage = 10,ref_path = defirrtexpath},
-        s_specular_ibl 		= {type = 'texture',name = 'specular ibl', 		stage = 11,ref_path = defirrtexpath},
-        s_specular_uv 		= {type = 'texture',name = 'specular uv', 		stage = 12,ref_path = deftexpath},
-    },
-    uniforms = {
-		u_basecolor_factor 	= {type = 'v4', 	name = 'base color factor', default = deffactor},
-		u_emissive_factor 	= {type = 'v4', 	name = 'emissive factor', 	default = deffactor},
-
-		--{metal, roughness, normalscale, ao_stength}
-		u_param_factor 		= {type = 'v4', 	name = 'param factor', 		default = deffactor},
-    }
-}
+
+fx = "/pkg/bloom/assets/fx/material/pbr.fx"
+properties = {
+  textures = {
+    s_ambient_occlusion = {
+      name = "ambient occlusion",
+      ref_path = "/pkg/ant.resources/depiction/materials/textures/default.texture",
+      stage = 9,
+      type = "texture"
+    },
+    s_basecolor = {
+      name = "base color",
+      ref_path = "/pkg/ant.resources/depiction/materials/textures/default.texture",
+      stage = 0,
+      type = "texture"
+    },
+    s_diffuse_irr = {
+      name = "diffuse irr",
+      ref_path = "/pkg/ant.resources/depiction/materials/textures/defautl_cube.texture",
+      stage = 10,
+      type = "texture"
+    },
+    s_emissive = {
+      name = "diffuse irr",
+      ref_path = "/pkg/ant.resources/depiction/materials/textures/default.texture",
+      stage = 8,
+      type = "texture"
+    },
+    s_metalroughness = {
+      name = "metal roughness",
+      ref_path = "/pkg/ant.resources/depiction/materials/textures/default.texture",
+      stage = 2,
+      type = "texture"
+    },
+    s_normal = {
+      name = "normal",
+      ref_path = "/pkg/ant.resources/depiction/materials/textures/default.texture",
+      stage = 1,
+      type = "texture"
+    },
+    s_specular_ibl = {
+      name = "specular ibl",
+      ref_path = "/pkg/ant.resources/depiction/materials/textures/defautl_cube.texture",
+      stage = 11,
+      type = "texture"
+    },
+    s_specular_uv = {
+      name = "specular uv",
+      ref_path = "/pkg/ant.resources/depiction/materials/textures/default.texture",
+      stage = 12,
+      type = "texture"
+    }
+  },
+  uniforms = {
+    u_basecolor_factor = {
+      default = {
+        1, 1, 1, 1
+      },
+      name = "base color factor",
+      type = "v4"
+    },
+    u_emissive_factor = {
+      default = {
+        1, 1, 1, 1
+      },
+      name = "emissive factor",
+      type = "v4"
+    },
+    u_param_factor = {
+      default = {
+        1, 1, 1, 1
+      },
+      name = "param factor",
+      type = "v4"
+    }
+  }
+}
+state = "/pkg/ant.resources/depiction/materials/states/default.state"

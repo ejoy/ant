@@ -1,9 +1,6 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/picking/vs_picking.sc",
-    fs = "/pkg/ant.resources/shaders/picking/fs_picking.sc",
-}
 
+fx = "/pkg/ant.resources/depiction/materials/fx/pickup_transparent.fx"
 state = {
-	WRITE_MASK = "RGBA",
-	DEPTH_TEST = "ALWAYS",
+  DEPTH_TEST = "ALWAYS",
+  WRITE_MASK = "RGBA"
 }

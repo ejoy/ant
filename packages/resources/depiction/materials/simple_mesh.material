@@ -1,17 +1,14 @@
-shader = {
-	vs = "/pkg/ant.resources/shaders/mesh/vs_lighting.sc",
-	fs = "/pkg/ant.resources/shaders/mesh/fs_lighting.sc",
-}
-state = "/pkg/ant.resources/depiction/materials/states/default.state"
-properties = {
-	uniforms = {
-		u_color = {type="color", name = "color", value={1, 1, 1, 1}}
-	}	
-}
-surface_type = {
-	transparency = "opaticy",
-	shadow = {
-		cast = "off",
-		receive = "off",
-	},	
+
+fx = "/pkg/ant.resources/depiction/materials/fx/simple_mesh.fx"
+properties = {
+  uniforms = {
+    u_color = {
+      name = "color",
+      type = "color",
+      value = {
+        1, 1, 1, 1
+      }
+    }
+  }
 }
+state = "/pkg/ant.resources/depiction/materials/states/default.state"

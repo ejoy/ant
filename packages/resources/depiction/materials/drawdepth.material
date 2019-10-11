@@ -1,13 +1,8 @@
-shader = {
-   vs = "/pkg/ant.resources/shaders/shadow/vs_shadowmaps_unpackdepth.sc",
-   fs = "/pkg/ant.resources/shaders/shadow/fs_shadowmaps_unpackdepth.sc",
-   --vs = "/pkg/ant.resources/line/vs_line.sc.sc",
-   --fs = "/pkg/ant.resources/line/fs_line.sc.sc",
-}
 
+fx = "/pkg/ant.resources/depiction/materials/fx/drawdepth.fx"
 state = {
-    WRITE_MASK = "RGBAZ",
-    DEPTH_TEST = "LESS",
-    CULL = "CCW",
-    MSAA = true,
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  MSAA = true,
+  WRITE_MASK = "RGBAZ"
 }

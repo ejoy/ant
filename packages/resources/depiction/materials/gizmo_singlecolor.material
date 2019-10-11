@@ -1,22 +1,20 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/mesh/vs_singlecolor.sc",
-    fs = "/pkg/ant.resources/shaders/mesh/fs_singlecolor.sc",
-}
 
-state = {
-    WRITE_MASK = "RGBAZ",
-    ALPHA_REF = 1,
-    CULL = "CW",
-    MSAA = true,
-    DEPTH_TEST = "ALWAYS",
-}
-
+fx = "/pkg/ant.resources/depiction/materials/fx/gizmo_singlecolor.fx"
 properties = {
-	uniforms = {
-		u_color = {name="u_color", type="v4", default={1, 1, 1, 1}},
-	}	
+  uniforms = {
+    u_color = {
+      default = {
+        1, 1, 1, 1
+      },
+      name = "u_color",
+      type = "v4"
+    }
+  }
 }
-
-surface_type= {
-    transparency = "translucent",   -- "opaticy"/"transparent"
+state = {
+  ALPHA_REF = 1,
+  CULL = "CW",
+  DEPTH_TEST = "ALWAYS",
+  MSAA = true,
+  WRITE_MASK = "RGBAZ"
 }

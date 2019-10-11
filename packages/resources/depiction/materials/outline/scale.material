@@ -1,19 +1,27 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/outline/vs_scaleoutline.sc",
-    fs = "/pkg/ant.resources/shaders/outline/fs_scaleoutline.sc",
-}
 
-state = {
-	WRITE_MASK = "RGBAZ",
-	ALPHA_REF = 0,
-	CULL = "CCW",
-	MSAA = true,
-	DEPTH_TEST = "LESS",
-}
-
+fx = "/pkg/ant.resources/depiction/materials/fx/outline/scale.fx"
 properties = {
-	uniforms = {
-		u_outlinescale	= {name="outline scale", type="v4", value={0.01, 0.0, 0.0, 0.0}},
-		u_outlinecolor = {name="outline color", type="v4", value={0.8, 0.8, 0, 1}},
-	}
+  uniforms = {
+    u_outlinecolor = {
+      name = "outline color",
+      type = "v4",
+      value = {
+        0.8, 0.8, 0, 1
+      }
+    },
+    u_outlinescale = {
+      name = "outline scale",
+      type = "v4",
+      value = {
+        0.01, 0, 0, 0
+      }
+    }
+  }
+}
+state = {
+  ALPHA_REF = 0,
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  MSAA = true,
+  WRITE_MASK = "RGBAZ"
 }

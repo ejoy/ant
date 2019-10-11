@@ -1,15 +1,10 @@
-shader = {
-	vs = "/pkg/ant.resources/shaders/shadow/simple/vs_simple.sc",
-	fs = "/pkg/ant.resources/shaders/shadow/simple/fs_simple.sc",
-}
 
+fx = "/pkg/ant.resources/depiction/materials/fx/shadow/mesh_receive_shadow.fx"
 state = {
-	WRITE_MASK = "RGBAZ",
-ALPHA_REF = 0,
-CULL = "CCW",
-MSAA = true,
-
-DEPTH_TEST = "LESS",
-
-PT = "TRISTRIP"
+  ALPHA_REF = 0,
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  MSAA = true,
+  PT = "TRISTRIP",
+  WRITE_MASK = "RGBAZ"
 }

@@ -1,33 +1,26 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/mesh/vs_mesh_bump.sc",
-	fs = "/pkg/ant.resources/shaders/mesh/fs_mesh_bump.sc",
-	-- vs = "/pkg/ant.resources/mesh/vs_mesh.sc",
-    -- fs = "/pkg/ant.resources/mesh/fs_mesh.sc",
-}
-
-state = {
-	WRITE_MASK 	= "RGBAZ",
-	ALPHA_REF 	= 0,
-	CULL 		= "CW",
-	MSAA 		= true,
-	DEPTH_TEST 	= "LESS",
-	
-	PT 			= "TRISTRIP",
-}
-
-surface_type = {
-	lighting 		= "on", 		-- "on"/"off"
-	transparency 	= "opaticy", 	-- "opaticy"/"transparent"
-	shadow = {
-		cast = "on",
-		receive = "on",
-	},
-	subsurface 		= "on",
-}
-
-properties = {
-	textures = {
-		s_basecolor = {name="base color", type="texture", stage=0, ref_path="/pkg/ant.resources/depiction/stone.texture"},
-		s_normal = {name="normal", type="texture", stage=1, ref_path="/pkg/ant.resources/depiction/stone_normal.texture"},
-	}	
+
+fx = "/pkg/ant.resources/depiction/materials/fx/stone.fx"
+properties = {
+  textures = {
+    s_basecolor = {
+      name = "base color",
+      ref_path = "/pkg/ant.resources/depiction/stone.texture",
+      stage = 0,
+      type = "texture"
+    },
+    s_normal = {
+      name = "normal",
+      ref_path = "/pkg/ant.resources/depiction/stone_normal.texture",
+      stage = 1,
+      type = "texture"
+    }
+  }
+}
+state = {
+  ALPHA_REF = 0,
+  CULL = "CW",
+  DEPTH_TEST = "LESS",
+  MSAA = true,
+  PT = "TRISTRIP",
+  WRITE_MASK = "RGBAZ"
 }

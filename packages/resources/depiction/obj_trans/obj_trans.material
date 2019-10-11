@@ -1,16 +1,14 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/objtrans/vs_objtrans.sc",
-    fs = "/pkg/ant.resources/shaders/objtrans/fs_objtrans.sc",
-}
-
-state = "/pkg/ant.resources/depiction/materials/statestransparent.state"
-
-properties = {
-	uniforms = {
-		u_color = {type="v4", name="color", value={1, 1, 1, 1}},
-	}	
-}
-
-surface_type = {
-	transparency = "transparent"
+
+fx = "/pkg/ant.resources/depiction/materials/fx/obj_trans/obj_trans.fx"
+properties = {
+  uniforms = {
+    u_color = {
+      name = "color",
+      type = "v4",
+      value = {
+        1, 1, 1, 1
+      }
+    }
+  }
 }
+state = "/pkg/ant.resources/depiction/materials/statestransparent.state"

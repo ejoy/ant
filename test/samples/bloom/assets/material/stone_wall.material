@@ -1,29 +1,71 @@
-shader = {
-	 vs = "/pkg/bloom/assets/shader/pbr/vs_mesh_pbr.sc",
-	 fs = "/pkg/bloom/assets/shader/pbr/fs_mesh_pbr.sc",
-}
 
--- state = "default.state"
-state = {
-	CULL = "CCW",
-	WRITE_MASK = "RGBAZ",
-	DEPTH_TEST = "LESS"
-}
-
+fx = "/pkg/bloom/assets/fx/material/stone_wall.fx"
 properties = {
-	textures = {
-		s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/bloom/assets/textures/stone_d.texture"},
-		s_normal = {type="texture", name="normal", stage=1, ref_path="/pkg/bloom/assets/textures/stone_n.texture"},
-		s_metallic = {type="texture", name="s_metallic", stage=2, ref_path="/pkg/bloom/assets/textures/stone_m.texture"},
-		s_texCube = { type="texture", name="s_texCube",  stage=3, ref_path="/pkg/bloom/assets/textures/bolonga.texture"}, 	
-		s_brdfMap   = { type="texture",name="s_brdfMap",   stage = 5,ref_path="/pkg/bloom/Assets/textures/brdfMap3.texture"},	
-	},
-	uniforms = {
-		u_params = { type="v4", name="u_params ", value= { 0, 1, 0, 0.9} },
-    	u_tiling = { type="v4",name="u_tiling", value={20,20,0,0}},		
-		u_diffuseColor = { type="v4", name="diffuse color", value= {1, 1, 1, 1.0} },
-		u_specularColor = {type="v4", name="specular color", value= {0.78, 0.78, 0.78, 0.08}},
-	}
+  textures = {
+    s_basecolor = {
+      name = "base color",
+      ref_path = "/pkg/bloom/assets/textures/stone_d.texture",
+      stage = 0,
+      type = "texture"
+    },
+    s_brdfMap = {
+      name = "s_brdfMap",
+      ref_path = "/pkg/bloom/Assets/textures/brdfMap3.texture",
+      stage = 5,
+      type = "texture"
+    },
+    s_metallic = {
+      name = "s_metallic",
+      ref_path = "/pkg/bloom/assets/textures/stone_m.texture",
+      stage = 2,
+      type = "texture"
+    },
+    s_normal = {
+      name = "normal",
+      ref_path = "/pkg/bloom/assets/textures/stone_n.texture",
+      stage = 1,
+      type = "texture"
+    },
+    s_texCube = {
+      name = "s_texCube",
+      ref_path = "/pkg/bloom/assets/textures/bolonga.texture",
+      stage = 3,
+      type = "texture"
+    }
+  },
+  uniforms = {
+    u_diffuseColor = {
+      name = "diffuse color",
+      type = "v4",
+      value = {
+        1, 1, 1, 1
+      }
+    },
+    u_params = {
+      name = "u_params ",
+      type = "v4",
+      value = {
+        0, 1, 0, 0.9
+      }
+    },
+    u_specularColor = {
+      name = "specular color",
+      type = "v4",
+      value = {
+        0.78, 0.78, 0.78, 0.08
+      }
+    },
+    u_tiling = {
+      name = "u_tiling",
+      type = "v4",
+      value = {
+        20, 20, 0, 0
+      }
+    }
+  }
 }
-
-
+state = {
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  WRITE_MASK = "RGBAZ"
+}

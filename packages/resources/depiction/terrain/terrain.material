@@ -1,12 +1,3 @@
-shader = {
-	vs = "/pkg/ant.resources/shaders/terrain/vs_terrain.sc",
-    fs = "/pkg/ant.resources/shaders/terrain/fs_terrain.sc",
-}
 
+fx = "/pkg/ant.resources/depiction/materials/fx/terrain/terrain.fx"
 state = "/pkg/ant.resources/depiction/terrain/normal.state"
--- properties = {
--- 	textures = {
--- 		s_baseTexture = { name = "base texture", type = "texture", stage = 0, },
--- 		s_maskTexture = { name = "mask texture", type = "texture", stage = 1, },
--- 	}
--- }

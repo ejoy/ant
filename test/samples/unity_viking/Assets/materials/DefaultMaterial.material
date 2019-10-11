@@ -1,24 +1,65 @@
-shader = {
-   vs = "/pkg/unity_viking/Assets/shaders/vs_mesh_pbr.sc",
-   fs = "/pkg/unity_viking/Assets/shaders/fs_mesh_pbr.sc",
-}
-state = {
-   CULL = "CW",
-   WRITE_MASK = "RGBAZ",
-   DEPTH_TEST = "LESS"
-}
+
+fx = "/pkg/unity_viking/Assets/materials/fx/DefaultMaterial.fx"
 properties = {
   textures = {
-    s_basecolor = { type="texture",name="s_basecolor",stage = 0,ref_path="/pkg/unity_viking/Assets/texture_desc/DefaultA.texture"},
-    s_normal = { type="texture",name="s_normal",stage = 1,ref_path="/pkg/unity_viking/Assets/texture_desc/DefaultN.texture"},
-    s_metallic = { type="texture",name="s_metallic",stage = 2,ref_path="/pkg/unity_viking/Assets/texture_desc/DefaultM.texture"},
-    s_texCube = { type="texture",name="s_texCube",stage = 3,ref_path="/pkg/unity_viking/Assets/texture_desc/pbr/bolonga.texture"},
-    --s_brdfMap = { type="texture",name="s_brdfMap",stage = 6,ref_path="/pkg/unity_viking/Assets/texture_desc/pbr/brdfMap3.texture"},
+    s_basecolor = {
+      name = "s_basecolor",
+      ref_path = "/pkg/unity_viking/Assets/texture_desc/DefaultA.texture",
+      stage = 0,
+      type = "texture"
+    },
+    s_metallic = {
+      name = "s_metallic",
+      ref_path = "/pkg/unity_viking/Assets/texture_desc/DefaultM.texture",
+      stage = 2,
+      type = "texture"
+    },
+    s_normal = {
+      name = "s_normal",
+      ref_path = "/pkg/unity_viking/Assets/texture_desc/DefaultN.texture",
+      stage = 1,
+      type = "texture"
+    },
+    s_texCube = {
+      name = "s_texCube",
+      ref_path = "/pkg/unity_viking/Assets/texture_desc/pbr/bolonga.texture",
+      stage = 3,
+      type = "texture"
+    }
   },
   uniforms = {
-    u_params = { type="v4",name="u_params",value={0,1,0,0.5}},
-    u_diffuseColor = { type="v4",name="u_diffuseColor",value={1,1,1,1}},
-    u_specularColor = { type="v4",name="u_specularColor",value={1,1,1,1}},
-    u_tiling = { type="v4",name="u_tiling",value={1,1,0,0}},
-  },
+    u_diffuseColor = {
+      name = "u_diffuseColor",
+      type = "v4",
+      value = {
+        1, 1, 1, 1
+      }
+    },
+    u_params = {
+      name = "u_params",
+      type = "v4",
+      value = {
+        0, 1, 0, 0.5
+      }
+    },
+    u_specularColor = {
+      name = "u_specularColor",
+      type = "v4",
+      value = {
+        1, 1, 1, 1
+      }
+    },
+    u_tiling = {
+      name = "u_tiling",
+      type = "v4",
+      value = {
+        1, 1, 0, 0
+      }
+    }
+  }
+}
+state = {
+  CULL = "CW",
+  DEPTH_TEST = "LESS",
+  WRITE_MASK = "RGBAZ"
 }

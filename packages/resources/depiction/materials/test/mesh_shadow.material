@@ -1,25 +1,49 @@
-shader = {
-    vs = "/pkg/ant.resources/shaders/shadow/csm/vs_mesh.sc",
-    fs = "/pkg/ant.resources/shaders/shadow/csm/fs_mesh.sc",
-}
 
-state = {
-    WRITE_MASK = "RGBAZ",
-    ALPHA_REF = 0,
-    CULL = "CCW",
-    MSAA = true,
-    DEPTH_TEST = "LESS",
-    PT = "TRISTRIP",
-}
-
+fx = "/pkg/ant.resources/depiction/materials/fx/test/mesh_shadow.fx"
 properties = {
-    uniforms = {
-        u_fog_color     = {type="color",    name = "fog color",        value = {0.8, 0.8, 0.8, 1}},
-        u_specularColor = {type="color",    name = "sepcular color",   value = {0.1, 0.1, 0.1, 1}},
-        u_specularLight = {type="v4",       name = "specular info",    value = {1, 0, 0, 1}},
+  textures = {
+    s_basecolor = {
+      name = "base color",
+      ref_path = "/pkg/ant.resources/depiction/textures/test/1x1_gray.texture",
+      stage = 0,
+      type = "texture"
     },
-    textures = {
-        s_basecolor = {type="texture", name = "base color", stage=0, ref_path = "/pkg/ant.resources/depiction/textures/test/1x1_gray.texture"},
-        s_normal    = {type="texture", name = "normal map", stage=1, ref_path = "/pkg/ant.resources/depiction/textures/test/1x1_normal.texture"},
+    s_normal = {
+      name = "normal map",
+      ref_path = "/pkg/ant.resources/depiction/textures/test/1x1_normal.texture",
+      stage = 1,
+      type = "texture"
+    }
+  },
+  uniforms = {
+    u_fog_color = {
+      name = "fog color",
+      type = "color",
+      value = {
+        0.8, 0.8, 0.8, 1
+      }
     },
+    u_specularColor = {
+      name = "sepcular color",
+      type = "color",
+      value = {
+        0.1, 0.1, 0.1, 1
+      }
+    },
+    u_specularLight = {
+      name = "specular info",
+      type = "v4",
+      value = {
+        1, 0, 0, 1
+      }
+    }
+  }
+}
+state = {
+  ALPHA_REF = 0,
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  MSAA = true,
+  PT = "TRISTRIP",
+  WRITE_MASK = "RGBAZ"
 }

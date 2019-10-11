@@ -1,14 +1,16 @@
-shader = {
-    vs = "/pkg/bloom/assets/shader/mesh/vs_colormesh",
-    fs = "/pkg/ant.resources/shaders/mesh/fs_colormesh",
-}
 
-state = {
-	CULL = "CCW",
-	WRITE_MASK = "RGBAZ",
-	DEPTH_TEST = "LESS"
-}
-
+fx = "/pkg/bloom/assets/fx/material/bunny.fx"
 properties = {
-	u_time = {name="u_time", type="v4", value={1, 1, 1, 1}},
+  u_time = {
+    name = "u_time",
+    type = "v4",
+    value = {
+      1, 1, 1, 1
+    }
+  }
+}
+state = {
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  WRITE_MASK = "RGBAZ"
 }

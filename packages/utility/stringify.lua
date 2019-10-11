@@ -68,6 +68,16 @@ local function step_indent(step, isroot)
 	end
 end
 
+local function is_vector_array(t, maxnum)
+    for i=1, maxnum do
+        if type(t[i]) ~= "number" then
+            return false
+        end
+    end
+
+    return true
+end
+
 local function stringify_array(t, isroot)
     local max = 0
     for k in pairs(t) do
@@ -77,15 +87,26 @@ local function stringify_array(t, isroot)
         max = max > k and max or k
     end
 	if max ~= 0 then
-		step_indent(1, isroot)
-		for i = 1, max do
-			local pos = #res+1
-			res[pos] = false
-			res[pos] = getindent()..stringify_value(t[i])
-			if not isroot then
-				res[#res] = res[#res] .. ","
-			end
-		end
+        step_indent(1, isroot)
+        if is_vector_array(t, max) then
+            local st = {}
+            for i=1, max do
+                st[#st+1] = stringify_value(t[i])
+            end
+            res[#res+1] = getindent()..table.concat(st, ', ')
+            if not isroot then
+                res[#res] = res[#res] .. ","
+            end
+        else
+            for i = 1, max do
+                local pos = #res+1
+                res[pos] = false
+                res[pos] = getindent()..stringify_value(t[i])
+                if not isroot then
+                    res[#res] = res[#res] .. ","
+                end
+            end
+        end
         step_indent(-1, isroot)
     end
    

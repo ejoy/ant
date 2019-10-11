@@ -1,25 +1,52 @@
-shader = {
-	 vs = "/pkg/bloom/assets/shader/vs_mesh_base.sc",
-	 fs = "/pkg/bloom/assets/shader/fs_mesh_base.sc",
-}
 
---state = "default.state"
-state = {
-	CULL = "CCW",
-	WRITE_MASK = "RGBAZ",
-	DEPTH_TEST = "LESS"
-}
+fx = "/pkg/bloom/assets/fx/material/matrix_emiss.fx"
 properties = {
-	textures = {
-		s_basecolor = { type="texture", name="base color", stage=0, ref_path="/pkg/bloom/assets/textures/matrix.texture"},
-		s_normal    = { type="texture", name="normal",     stage=1, ref_path="/pkg/bloom/assets/textures/plastic_n.texture"},
-		s_metallic  = { type="texture", name="s_metallic", stage=2, ref_path="/pkg/bloom/assets/textures/plastic_m.texture"},
-	},
-	uniforms = {
-		u_diffuseColor = { type="v4", name="diffuse color", value={ 8, 8, 8, 1.0} },
-		u_tiling = { type="v4",name="u_tiling", value={1,1,0,0}},		
-		u_specularColor = {type="v4", name="specular color", value= {0.78, 0.78, 0.78, 0.08}},
-	}
+  textures = {
+    s_basecolor = {
+      name = "base color",
+      ref_path = "/pkg/bloom/assets/textures/matrix.texture",
+      stage = 0,
+      type = "texture"
+    },
+    s_metallic = {
+      name = "s_metallic",
+      ref_path = "/pkg/bloom/assets/textures/plastic_m.texture",
+      stage = 2,
+      type = "texture"
+    },
+    s_normal = {
+      name = "normal",
+      ref_path = "/pkg/bloom/assets/textures/plastic_n.texture",
+      stage = 1,
+      type = "texture"
+    }
+  },
+  uniforms = {
+    u_diffuseColor = {
+      name = "diffuse color",
+      type = "v4",
+      value = {
+        8, 8, 8, 1
+      }
+    },
+    u_specularColor = {
+      name = "specular color",
+      type = "v4",
+      value = {
+        0.78, 0.78, 0.78, 0.08
+      }
+    },
+    u_tiling = {
+      name = "u_tiling",
+      type = "v4",
+      value = {
+        1, 1, 0, 0
+      }
+    }
+  }
 }
-
-
+state = {
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  WRITE_MASK = "RGBAZ"
+}

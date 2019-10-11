@@ -1,20 +1,32 @@
-shader = {
-    vs = '/pkg/bloom/assets/shader/bloom/vs_mesh_bloom.sc',
-    fs = '/pkg/bloom/assets/shader/bloom/fs_mesh_bloom.sc',    
-}
 
-state = {
-	CULL = "CCW",
-	WRITE_MASK = "RGBAZ",
-	DEPTH_TEST = "LESS"
-}
-
+fx = "/pkg/bloom/assets/fx/material/bloom.fx"
 properties = {
-	textures = {
-    	s_basecolor  = { name = "s_basecolor",type = "texture", stage = 0, ref_path = "/pkg/bloom/assets/textures/DefaultA.texture" },
-        s_bloomcolor  = { name = "s_bloomcolor",type = "texture", stage = 1, ref_path = "/pkg/bloom/assets/textures/DefaultA.texture" },
-	},
-	uniforms = {
-		u_params 	 = { name = "u_params", type="v4", value={1, 0, 0, 0} },
-	},
+  textures = {
+    s_basecolor = {
+      name = "s_basecolor",
+      ref_path = "/pkg/bloom/assets/textures/DefaultA.texture",
+      stage = 0,
+      type = "texture"
+    },
+    s_bloomcolor = {
+      name = "s_bloomcolor",
+      ref_path = "/pkg/bloom/assets/textures/DefaultA.texture",
+      stage = 1,
+      type = "texture"
+    }
+  },
+  uniforms = {
+    u_params = {
+      name = "u_params",
+      type = "v4",
+      value = {
+        1, 0, 0, 0
+      }
+    }
+  }
+}
+state = {
+  CULL = "CCW",
+  DEPTH_TEST = "LESS",
+  WRITE_MASK = "RGBAZ"
 }

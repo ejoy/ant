@@ -1,19 +1,20 @@
-state = {
-	WRITE_MASK = "RGBAZ",
-	ALPHA_REF = 0,
-	CULL = "NONE",
-	MSAA = true,
 
-	DEPTH_TEST = "LESS",
-}
-
-shader = {
-    vs = "/pkg/ant.resources/shaders/mesh/vs_colormeshex.sc",
-    fs = "/pkg/ant.resources/shaders/mesh/fs_colormesh.sc",
-}
-
+fx = "/pkg/ant.resources/depiction/materials/fx/test_glb.fx"
 properties = {
-	uniforms = {
-		u_time = {name="u_time", type="v4", value={1, 1, 1, 1}},
-	}	
+  uniforms = {
+    u_time = {
+      name = "u_time",
+      type = "v4",
+      value = {
+        1, 1, 1, 1
+      }
+    }
+  }
+}
+state = {
+  ALPHA_REF = 0,
+  CULL = "NONE",
+  DEPTH_TEST = "LESS",
+  MSAA = true,
+  WRITE_MASK = "RGBAZ"
 }

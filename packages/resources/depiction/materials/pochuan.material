@@ -1,16 +1,35 @@
-shader = {
-	vs = "/pkg/ant.resources/shaders/mesh/vs_mesh_bump.sc",
-	fs = "/pkg/ant.resources/shaders/mesh/fs_mesh_bumpex.sc",
+
+fx = "/pkg/ant.resources/depiction/materials/fx/pochuan.fx"
+properties = {
+  textures = {
+    s_basecolor = {
+      name = "base color",
+      ref_path = "/pkg/ant.resources/depiction/pochuan_d.texture",
+      stage = 0,
+      type = "texture"
+    },
+    s_normal = {
+      name = "normal",
+      ref_path = "/pkg/ant.resources/depiction/pochuan_n.texture",
+      stage = 1,
+      type = "texture"
+    }
+  },
+  uniforms = {
+    u_specularColor = {
+      name = "specular color",
+      type = "v4",
+      value = {
+        0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03
+      }
+    },
+    u_specularLight = {
+      name = "specular light factor",
+      type = "v4",
+      value = {
+        5.5, 0, 0, 0
+      }
+    }
+  }
 }
 state = "/pkg/ant.resources/depiction/materials/states/default.state"
-properties = {
-	textures = {
-		s_basecolor = {type="texture", name="base color", stage=0, ref_path="/pkg/ant.resources/depiction/pochuan_d.texture"},
-		s_normal = {type="texture", name="normal", stage=1, ref_path="/pkg/ant.resources/depiction/pochuan_n.texture"},
-	},
-
-	uniforms = {
-		u_specularColor = {type="v4", name="specular color", value= {6/255, 5/255, 5/255, 0.03}},
-		u_specularLight = {type="v4", name="specular light factor", value={5.5, 0, 0,0}},
-	}
-}
