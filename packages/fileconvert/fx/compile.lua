@@ -74,7 +74,7 @@ return function (identity, srcfilepath, _, outfilepath)
 	if build_success then
 		local utility = import_package "utility"
 		local stringify = utility.stringify
-		local s = stringify(c, false, true)
+		local s = stringify(fxcontent, false, true)
 		local f = lfs.open(outfilepath, "wb")
 		f:write(s):close()
 	end
