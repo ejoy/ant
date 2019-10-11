@@ -23,7 +23,7 @@ ecs.import 'ant.math.adapter'
 ecs.import 'ant.sky'
 ecs.import 'ant.asset'
 ecs.import "ant.image_effect"
-ecs.import "ant.camera_controller"
+--ecs.import "ant.camera_controller"
 
 local fs = require "filesystem"
 local vikingmap = fs.path "/pkg/unity_viking/Assets/viking.map"
@@ -39,8 +39,8 @@ scene_walker.depend     'cull_system'
 scene_walker.depend     'asyn_asset_loader'
 scene_walker.depend     'scene_space'
 scene_walker.depend     'shadow_maker'
-
-scene_walker.dependby 	'camera_controller_2'
+scene_walker.depend     'camera_controller'
+--scene_walker.dependby 	'camera_controller_2'
 
 local function load_world(mappath)
     if fs.exists(mappath) then
