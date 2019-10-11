@@ -38,10 +38,13 @@ function util.list_files(subpath, filter, excludes)
     return files
 end
 
-function util.raw_table(filepath)
+function util.raw_table(filepath, fetchresult)
 	local env = {}
 	local r = assert(fs.loadfile(filepath, "t", env))
-	r()
+	local result = r()
+	if fetchresult then
+		return result
+	end
 	return env
 end
 
