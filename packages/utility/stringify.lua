@@ -50,11 +50,15 @@ local function sortpairs(t)
 end
 
 local function end_table(isroot)
-	if not isroot then
-		res[#res] = res[#res]:sub(1,-2)
-	end
-	
-	res[#res+1] = isroot and getindent() or (getindent() .. "}")
+    if not isroot then
+        if res[#res] ~= false then
+            res[#res] = res[#res]:sub(1,-2)
+        else
+            res[#res] = "{"
+        end
+    end
+    res[#res+1] = isroot and getindent() or (getindent() .. "}")
+    
     return isroot and "" or "{"
 end
 
@@ -82,7 +86,7 @@ local function stringify_array(t, isroot)
 				res[#res] = res[#res] .. ","
 			end
 		end
-		step_indent(-1, isroot)
+        step_indent(-1, isroot)
     end
    
 	return end_table(isroot)
