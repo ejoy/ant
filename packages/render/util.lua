@@ -25,7 +25,7 @@ local property_types = {
 }
 
 local function update_properties(material, properties, render_properties)
-	local su = material.shader.uniforms
+	local su = material.fx.shader.uniforms
 	for name, u in pairs(su) do
 		local function find_property(name, properties)
 			if properties == nil then
@@ -88,7 +88,7 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 	bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
 	update_properties(material, primgroup.properties, render_properties)
 
-	local prog = material.shader.prog
+	local prog = material.fx.shader.prog
 
 	local mg = assert(primgroup.mgroup)
 	local ib, vb = mg.ib, mg.vb	
@@ -145,7 +145,7 @@ end
 function util.insert_primitive(eid, group, material, worldmat, filter)
 	local refkey = material.ref_path
 	local mi = assert(assetmgr.get_resource(refkey))
-	local resulttarget = assert(filter.result[mi.surface_type.transparency])
+	local resulttarget = assert(filter.result[mi.fx.surface_type.transparency])
 	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end
 

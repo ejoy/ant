@@ -126,8 +126,8 @@ local function DrawQuad(viewId,fbo,w,h,ctx)
 	bgfx.touch( QuadViewId )
 	
 	local mat = ctx.mat
-	for k,v in pairs(mat.shader.uniforms) do
-		local u = mat.shader.uniforms[k]
+	for k,v in pairs(mat.fx.shader.uniforms) do
+		local u = mat.fx.shader.uniforms[k]
 		if u.type == 's' then 
 			--bgfx.set_texture( mat.properties.textures[k].stage, u.handle , ctx.texIds[k].handle )
 			bgfx.set_texture( mat.properties.textures[k].stage, u.handle , ctx.args.textures[k].handle)  
@@ -139,7 +139,7 @@ local function DrawQuad(viewId,fbo,w,h,ctx)
     
     bgfx.set_state( ctx.state_rgba )
     MakeScreenSpaceQuad( w,h, ctx.s_flipV)
-    bgfx.submit( viewId, mat.shader.prog)  
+    bgfx.submit( viewId, mat.fx.shader.prog)  
 end     
 
 ecs.tag "bloom_ef"
