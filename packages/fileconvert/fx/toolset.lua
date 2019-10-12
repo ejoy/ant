@@ -58,17 +58,6 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 		end
 	end
 
-	local defines
-	if config.macros then
-		local t = {}
-		for _, m in ipairs(config.macros) do
-			t[#t+1] = m
-		end
-		if next(t) then
-			defines = table.concat(t, ';')
-		end
-	end
-
 	local st = config.stagetype or srcfilename:match "([fvc])s[%w_]*%.sc$"
 	local shader_opt = config.shader_opt or assert(shader_options[shadertype .. "_" .. st], shadertype .. "_" .. st)
 
@@ -88,16 +77,27 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 		hideWindow = true,
 	}
 
-	if defines then
-		commands[#commands+1] = "--define"
-		commands[#commands+1] = defines
+	local function add_defines(macros)
+		if macros then
+			local t = {}
+			for _, m in ipairs(macros) do
+				t[#t+1] = m
+			end
+			if next(t) then
+				local defines = table.concat(t, ';')
+				commands[#commands+1] = "--define"
+				commands[#commands+1] = defines
+			end
+		end
 	end
+
+	add_defines(config.macros)
 
 	local function add_optimizelevel(level, defaultlevel)
 		level = level or defaultlevel
 		if level then
-			table.insert(commands, "-O")
-			table.insert(commands, tostring(level))
+			commands[#commands+1] = "-O"
+			commands[#commands+1] = tostring(level)
 		end
 	end
 
