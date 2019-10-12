@@ -1,5 +1,13 @@
 
-normalmap = false
+colorspace = "linear"
+compress = {
+  android = "ASTC6x6",
+  ios = "ASTC6x6",
+  windows = "BC1"
+}
+maxsize = "1024x1024"
+mipmap = 0
+normalmap = true
 path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/Props/prop_bucket_01_n.png"
 sRGB = true
 sampler = {
@@ -8,3 +16,4 @@ sampler = {
   U = "MIRROR",
   V = "MIRROR"
 }
+type = "texture"

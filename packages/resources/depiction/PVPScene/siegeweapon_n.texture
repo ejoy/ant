@@ -1,11 +1,19 @@
-path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-SiegeWeapons-01-N.tga"
 
-sampler = {
-	U = "MIRROR",
-	V = "MIRROR",
-	MIN = "LINEAR",
-	MAG = "LINEAR",	
+colorspace = "linear"
+compress = {
+  android = "ASTC6x6",
+  ios = "ASTC6x6",
+  windows = "BC1"
 }
-
-sRGB 		= true
-normalmap 	= false
+maxsize = "1024x1024"
+mipmap = 0
+normalmap = true
+path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-SiegeWeapons-01-N.tga"
+sRGB = true
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  U = "MIRROR",
+  V = "MIRROR"
+}
+type = "texture"

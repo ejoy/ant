@@ -1,1 +1,19 @@
+
+config = {
+  animation = {
+    ani_list = "all",
+    cpu_skinning = false,
+    load_skeleton = true
+  },
+  flags = {
+    flip_uv = true,
+    ib_32 = false,
+    invert_normal = false
+  },
+  layout = {
+    "p3"
+  }
+}
 mesh_path = "/pkg/ant.resources.binary/meshes/base/ring.glb"
+sourcetype = "glb"
+type = "mesh"

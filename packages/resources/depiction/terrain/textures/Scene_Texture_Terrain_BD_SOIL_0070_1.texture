@@ -1,9 +1,16 @@
-path = "/pkg/ant.resources.binary/terrain/Scene_Texture_Terrain_BD_SOIL_0070_1.dds"
 
-sampler = {
-	-- U = "CLAMP",
-	-- V = "CLAMP",
-	MIN = "LINEAR",
-	MAG = "LINEAR",
-	MIP = "LINEAR",
+colorspace = "linear"
+compress = {
+  android = "ASTC4x4",
+  ios = "ASTC4x4",
+  windows = "BC3"
 }
+maxsize = "1024x1024"
+mipmap = 0
+path = "/pkg/ant.resources.binary/terrain/Scene_Texture_Terrain_BD_SOIL_0070_1.dds"
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  MIP = "LINEAR"
+}
+type = "texture"

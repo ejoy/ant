@@ -1,11 +1,19 @@
-path = "/pkg/bloom/assets/textures/matrix.dds"
 
-sampler = {
-	U = "MIRROR",
-	V = "MIRROR",
-	MIN = "ANISOTROPIC",
-	MAG = "ANISOTROPIC",	
+colorspace = "linear"
+compress = {
+  android = "ASTC4x4",
+  ios = "ASTC4x4",
+  window = "BC3"
 }
-
-sRGB 		= true
-normalmap 	= false
+maxsize = "1024x1024"
+mipmap = 0
+normalmap = false
+path = "/pkg/bloom/assets/textures/matrix.dds"
+sRGB = true
+sampler = {
+  MAG = "ANISOTROPIC",
+  MIN = "ANISOTROPIC",
+  U = "MIRROR",
+  V = "MIRROR"
+}
+type = "texture"

@@ -1,4 +1,13 @@
 
+colorspace = "linear"
+compress = {
+  android = "ASTC4x4",
+  ios = "ASTC4x4",
+  windows = "BC5"
+}
+format = "BGRA8"
+maxsize = "1024x1024"
+mipmap = 0
 normalmap = true
 path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/pbr/gold/normal.dds"
 sRGB = true
@@ -8,3 +17,4 @@ sampler = {
   U = "MIRROR",
   V = "MIRROR"
 }
+type = "texture"

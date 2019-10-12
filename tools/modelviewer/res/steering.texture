@@ -1,10 +1,19 @@
-path = "/pkg/ant.modelviewer/res/steering.png"
-normalmap   = false
-sRGB        = true
-sampler = {
-  MAG   = "LINEAR",
-  MIN   = "LINEAR",
-  MIP   = "LINEAR",
-  U     = "CLAMP",
-  V     = "CLAMP",
+
+colorspace = "linear"
+compress = {
+  android = "ASTC6x6",
+  ios = "ASTC6x6",
+  windows = "BC3"
 }
+maxsize = "512x512"
+normalmap = false
+path = "/pkg/ant.modelviewer/res/steering.png"
+sRGB = true
+sampler = {
+  MAG = "LINEAR",
+  MIN = "LINEAR",
+  MIP = "LINEAR",
+  U = "CLAMP",
+  V = "CLAMP"
+}
+type = "texture"

@@ -1,1 +1,19 @@
+
+config = {
+  animation = {
+    ani_list = "all",
+    cpu_skinning = true,
+    load_skeleton = true
+  },
+  flags = {
+    flip_uv = true,
+    ib_32 = true,
+    invert_normal = true
+  },
+  layout = {
+    "p3|n30nIf|T|b|t20|c40"
+  }
+}
 mesh_path = "/pkg/ant.resources.binary/meshes/PVPScene/BH-Scene-Woodother-45.glb"
+sourcetype = "glb"
+type = "mesh"

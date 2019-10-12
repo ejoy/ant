@@ -1,2 +1,24 @@
 
+config = {
+  animation = {
+    ani_list = "all",
+    cpu_skinning = true,
+    load_skeleton = true
+  },
+  flags = {
+    flip_uv = true,
+    ib_32 = true,
+    invert_normal = true
+  },
+  layout = {
+    "p3|n30nIf|T|b|t20|c40"
+  },
+  mesh = {
+    coord_system = "right",
+    negative_axis = "X",
+    scale = 1
+  }
+}
 mesh_path = "/pkg/ant.resources.binary/test/unity_viking/Assets/Models/Buildings/build_barracks_01.glb"
+sourcetype = "glb"
+type = "mesh"

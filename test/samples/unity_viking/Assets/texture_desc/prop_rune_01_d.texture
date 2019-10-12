@@ -1,4 +1,12 @@
 
+colorspace = "linear"
+compress = {
+  android = "ASTC6x6",
+  ios = "ASTC6x6",
+  windows = "BC1"
+}
+maxsize = "1024x1024"
+mipmap = 0
 normalmap = false
 path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/Props/prop_rune_01_d.png"
 sRGB = true
@@ -8,3 +16,4 @@ sampler = {
   U = "MIRROR",
   V = "MIRROR"
 }
+type = "texture"
