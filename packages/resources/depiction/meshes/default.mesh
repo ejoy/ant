@@ -1,6 +1,0 @@
-mesh_path = "/pkg/ant.resources.binary/"
-ske_path = "/pkg/ant.resources.binary/"
-ani_names = {
-	"",
-	"",
-}
