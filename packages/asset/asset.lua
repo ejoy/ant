@@ -11,6 +11,7 @@ local support_types = {
 	ozz 	= true,
 	sm 		= true,	--animation state machine
 	terrain = true,
+	fx		= true,
 }
 
 local resources = {}

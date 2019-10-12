@@ -1,7 +1,7 @@
 local lfs = require "filesystem.local"
 local g_log = log
 local converter = {
-	fx		= require "shader.compile",
+	fx		= require "fx.compile",
 	mesh 	= require "mesh.convert",
 	texture = require "texture.convert",
 }
@@ -61,7 +61,7 @@ local function link(param, plat, srcfile, dstfile)
 end
 
 local function prelink(param, srcfile)
-	if param.type ~= "shader" then
+	if param.type ~= "fx" then
 		return {
 			srcfile,
 			srcfile..".lk",

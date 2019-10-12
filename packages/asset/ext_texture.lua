@@ -1,31 +1,21 @@
 local bgfx = require "bgfx"
-local fs = require "filesystem"
-local assetmgr = require "asset"
-
+local assetutil= require "util"
 local ru = import_package "ant.render".util
 
-local function texture_load(filepath, info)
-	local f = assert(fs.open(filepath, "rb"))
-	local imgdata = f:read "a"
-	f:close()
-	local h = bgfx.create_texture(imgdata, info)
-	bgfx.set_name(h, filepath:string())
+local function texture_load(bin, texpath, info)
+	local h = bgfx.create_texture(bin, info)
+	bgfx.set_name(h, texpath)
 	return h
 end
 
 return {
 	loader = function (filename)
-		local tex = assetmgr.load_depiction(filename)
-		local texrefpath = fs.path(tex.path)
-		if not fs.exists(texrefpath) then
-			error(string.format("texture path not found, .texture path:[%s], texture file:[%s]", filename, texrefpath))
-		end
-
+		local tex, binary = assetutil.parse_embed_file(filename)
 		local sampler = tex.sampler
 		local flag = ru.generate_sampler_flag(sampler)
 		
-		local handle = texture_load(texrefpath, flag)
-		return {handle=handle, sampler=ru.fill_default_sampler(sampler), path=texrefpath}
+		local handle = texture_load(binary, tex.path, flag)
+		return {handle=handle, sampler=ru.fill_default_sampler(sampler)}
 	end,
 	unloader = function (res)
 		bgfx.destroy(assert(res.handle))

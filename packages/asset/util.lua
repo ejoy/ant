@@ -4,44 +4,9 @@ local shader_mgr = require "shader_mgr"
 local assetmgr = require "asset"
 local fs = require "filesystem"
 
-function util.create_shader_program_from_file(shader)
-    local shader_loader = require "ext_sc".loader
-    if shader.cs == nil then
-        local vs = shader_loader(shader.vs)
-        local fs = shader_loader(shader.fs)
-        
-        shader.prog, shader.uniforms = shader_mgr.create_render_program(vs, fs)
-    else
-        local cs = assetmgr.load(shader.cs)
-        shader.prog, shader.uniforms = shader_mgr.create_compute_program(cs)
-    end
-    return shader
-end
-
-function util.load_shader_program(shader)
-    if shader.cs == nil then
-        local vs = assetmgr.load(shader.vs)
-        local fs = assetmgr.load(shader.fs)
-        
-        shader.prog, shader.uniforms = shader_mgr.create_render_program(vs, fs)
-    else
-        local cs = assetmgr.load(shader.cs)
-        shader.prog, shader.uniforms = shader_mgr.create_compute_program(cs)
-    end
-    return shader
-end
-
-function util.unload_shader_program(shader)
-    shader_mgr.destroy_program(shader)
-
-    for _, name in ipairs {"vs", "fs", "cs"} do
-		local shaderpath = shader[name]
-		if shaderpath then
-            assert(type(shaderpath) ~= "string")
-            assetmgr.unload(shaderpath)
-			shader[name] = nil
-		end
-	end
+function util.create_shader_program_from_file(fxpath)
+    local fxloader = require "ext_fx".loader
+    return fxloader(fxpath)
 end
 
 local function mnext(tbl, index)
@@ -94,6 +59,39 @@ end
 
 function util.unload_material_properties(properties)
     util.unload_material_textures(properties)
+end
+
+function util.parse_embed_file(filepath)
+    local f = fs.open(filepath, "rb")
+
+    local magic = f:read(4)
+    if magic ~= "res\0" then
+        return 
+    end
+
+    local function read_pairs()
+        local mark, len = f:read(4), f:read(4)
+        return mark, string.unpack("<I4", len)
+    end
+
+    local luamark, lualen = read_pairs()
+    assert(luamark == "lua\0")
+    
+    local luacontent = f:read(lualen)
+    local luattable = {}
+    local r, err = load(luacontent, "asset lua content", "t", luattable)
+    if r == nil then
+        log.error(string.format("parse file failed:%s, error:%s", filepath:string(), err))
+        return nil
+    end
+    r()
+    ----------------------------------------------------------------
+    local binmark, binlen = read_pairs()
+    assert(binmark == "bin\0")
+    
+    local binary = f:read(binlen)
+    return luattable, binary
+
 end
 
 return util

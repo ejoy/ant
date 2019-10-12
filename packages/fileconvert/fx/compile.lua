@@ -1,6 +1,7 @@
-local toolset 	= require "shader.toolset"
+local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
 local util 		= require "util"
+local vfs 		= require "vfs"
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
 local function check_compile_shader(plat, srcfilepath, outfilepath, shadertype, macros)	
@@ -35,6 +36,16 @@ local valid_shader_stage = {
 	"vs", "fs", "cs"
 }
 
+local function embed_shader_bin(bins)
+	local t = {}
+	for k, b in pairs(bins)do
+		assert(#k == 2)
+		t[#t+1] = k .. string.pack("<I4", #b)
+		t[#t+1] = b
+	end
+	return t
+end
+
 return function (identity, srcfilepath, _, outfilepath)
 	local plat, renderer = util.identify_info(identity)
 	local shadertype = shadertypes[renderer:upper()]
@@ -45,38 +56,29 @@ return function (identity, srcfilepath, _, outfilepath)
 	local shader = assert(fxcontent.shader)
 	local marcros = shader.macros
 
-	local errors = {}
+	local messages = {}
 	local all_depends = {}
 	local build_success = true
+
+	local binarys = {}
 	
-	for _, stagename in ipairs(valid_shader_stage)do
-		local shader_srcpath = lfs.path(shader[stagename])
-		local shader_binpath = lfs.path(shader_srcpath):replace_extension ".bin"
+	for _, stagename in ipairs(valid_shader_stage) do
+		local stage_file = shader[stagename]
+		if stage_file then
+			local shader_srcpath = lfs.path(vfs.realpath(stage_file))
+			local success, msg, depends = check_compile_shader(plat, shader_srcpath, outfilepath, shadertype, marcros)
+			build_success = build_success and success
+			messages[#messages+1] = msg
 
-		local success, err, depends = check_compile_shader(plat, shader_binpath, shader_binpath, shadertype, marcros)
-		build_success = build_success and success
-		if err then
-			errors[#errors+1] = err
-		end
-
-		if success then
-			table.move(depends, 1, #depends, #all_depends+1, all_depends)
-		end
-
-		do
-			local f = lfs.open(shader_binpath, "rb")
-			local c = f:read "a"
-			f:close()
-			shader[stagename .. "bin"] = c
+			if success then
+				table.move(depends, 1, #depends, #all_depends+1, all_depends)
+				binarys[stagename] = util.fetch_file_content(outfilepath)
+			end
 		end
 	end
 
 	if build_success then
-		local utility = import_package "utility"
-		local stringify = utility.stringify
-		local s = stringify(fxcontent, false, true)
-		local f = lfs.open(outfilepath, "wb")
-		f:write(s):close()
+		util.embed_file(outfilepath, fxcontent, embed_shader_bin(binarys))
 	end
-	return build_success, table.concat(errors, "\n"), all_depends
+	return build_success, table.concat(messages, "\n"), all_depends
 end

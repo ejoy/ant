@@ -41,9 +41,9 @@ local function decode_from_filehandle(f)
 	assert(f:read(1) == nil)
     return {
         version = version,
-        info = jsonDecode(json),
-        json = json,
-        bin = bin
+        info 	= jsonDecode(json),
+        json 	= json,
+        bin 	= bin,
     }
 end
 

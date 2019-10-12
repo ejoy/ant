@@ -46,18 +46,12 @@ function callback.init(nwh, context, width, height)
 		height = height,
 	}
 	imgui.viewid(ui_viewid);
-	local imgui_font = assetutil.create_shader_program_from_file {
-		vs = fs.path "/pkg/ant.imguibase/shader/vs_imgui_font.sc",
-		fs = fs.path "/pkg/ant.imguibase/shader/fs_imgui_font.sc",
-	}
+	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
 	imgui.font_program(
 		imgui_font.prog,
 		imgui_font.uniforms.s_tex.handle
 	)
-	local imgui_image = assetutil.create_shader_program_from_file {
-		vs = fs.path "/pkg/ant.imguibase/shader/vs_imgui_image.sc",
-		fs = fs.path "/pkg/ant.imguibase/shader/fs_imgui_image.sc",
-	}
+	local imgui_image = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
 	imgui.image_program(
 		imgui_image.prog,
         imgui_image.uniforms.s_tex.handle

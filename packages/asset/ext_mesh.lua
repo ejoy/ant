@@ -1,18 +1,12 @@
-local assetmgr 		= require "asset"
-local fs 			= require "filesystem"
-local bgfx 			= require "bgfx"
+local assetutil	= require "util"
+local bgfx 		= require "bgfx"
 
 local mesh_loader 	= import_package "ant.modelloader".loader
 
 return { 
 	loader = function (filename)
-		local mesh = assetmgr.load_depiction(filename)
-		local meshpath =  fs.path(mesh.mesh_path)
-		if fs.exists(meshpath) then
-			return mesh_loader.load(meshpath)
-		else
-			log.warn(string.format("load mesh path failed, mesh file:[%s], .mesh file:[%s],", meshpath, filename))
-		end 
+		local meshcontent, binary = assetutil.parse_embed_file(filename)
+		return mesh_loader.load(binary)
 	end,
 	unloader = function(res)
 		local meshscene = res

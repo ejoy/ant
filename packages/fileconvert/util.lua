@@ -138,4 +138,32 @@ function util.spawn_process(commands, checkmsg)
     return false, "Create process failed."
 end
 
+function util.fetch_file_content(filepath)
+	local f = lfs.open(filepath, "rb")
+	local c = f:read "a"
+	f:close()
+	return c
+end
+
+function util.write_embed_file(filepath, luacontent, binarys)
+    local f = lfs.open(filepath, "wb")
+    f:write("res\0")
+
+    f:write("lua\0", string.pack("<I4", #luacontent), luacontent)
+
+    local binarybytes = 0
+    for _, b in ipairs(binarys) do
+        binarybytes = binarybytes + #b
+    end
+    f:write("bin\0", string.pack("<I4", binarybytes), table.unpack(binarys))
+    f:close()
+end
+
+function util.embed_file(filepath, luacontent, binarys)
+    local utility = import_package "ant.utility.local"
+	local stringify = utility.stringify
+    local s = stringify(luacontent, true, true)
+    util.write_embed_file(filepath, s, binarys)
+end
+
 return util

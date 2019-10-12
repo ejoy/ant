@@ -245,7 +245,24 @@ local function init_scene(gltfscene, bindata)
 	return meshscene
 end
 
-return function (meshfile)
-	local glbdata = glbloader.decode_from_filehandle(meshfile)
+local function file_wrapper(meshcontent)
+	local startiter = 1
+	local count = #meshcontent
+	return {
+		read = function (_, numbytes)
+			local enditer = startiter - 1 + numbytes
+			if enditer <= count then
+				local c = meshcontent:sub(startiter, enditer)
+				startiter = startiter + numbytes
+				return c
+			end
+		end,
+		close = function ()
+		end,
+	}
+end
+
+return function (meshcontent)
+	local glbdata = glbloader.decode_from_filehandle(file_wrapper(meshcontent))
 	return init_scene(glbdata.info, glbdata.bin)
 end

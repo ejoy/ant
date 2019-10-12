@@ -1,3 +1,13 @@
 
-fx = "/pkg/ant.modelviewer/fx/res/test.fx"
+fx = "/pkg/ant.modelviewer/res/test.fx"
 state = "/pkg/ant.resources/depiction/materials/states/default.state"
+
+properties = {
+    textures = {
+        s_basecolor = {
+            type="texture", 
+            stage=0, name="base color", 
+            ref_path = "/pkg/ant.modelviewer/res/steering.texture"
+        },
+    }
+}

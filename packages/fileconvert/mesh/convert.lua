@@ -1,11 +1,19 @@
-local lfs = require "filesystem.local"
+local lfs 	= require "filesystem.local"
+local config= require "mesh.default_cfg"
+local glb_cvt= require "mesh.glb_convertor"
+local util 	= require "util"
+local vfs 	= require "vfs"
 
-local config = require "mesh.default_cfg"
+return function (identity, sourcefile, _, outfile)
+	local meshcontent = util.rawtable(sourcefile)
+	local meshpath = lfs.path(vfs.realpath(assert(meshcontent.mesh_path)))
 
-local glb_cvt = require "mesh.glb_convertor"
+	glb_cvt(meshpath:string(), outfile:string(), meshcontent.config or config)
 
-return function (identity, sourcefile, param, outfile)
-	assert(param.sourcetype == "glb")
-	glb_cvt(sourcefile:string(), outfile:string(), param.config or config)
-	return lfs.exists(outfile)
+	if lfs.exists(outfile) then
+		util.embed_file(outfile, meshcontent, {util.fetch_file_content(outfile)})
+		return true, ""
+	end
+
+	return false, "convert file failed:" .. meshpath:string()
 end

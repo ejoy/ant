@@ -1,7 +1,6 @@
-local lfs = require "filesystem.local"
-local util      = require "util"
-local platform = require "platform"
-local OS = platform.OS
+local lfs 	= require "filesystem.local"
+local util  = require "util"
+local vfs	= require "vfs"
 
 local toolpath = util.valid_tool_exe_path "texturec"
 
@@ -39,7 +38,7 @@ local function add_option(commands, name, value)
 	end
 end
 
-local function gen_arm_commands(plat, param, sourcefile, outfile, commands)
+local function gen_commands(plat, param, sourcefile, outfile, commands)
 	add_option(commands, "-f", sourcefile:string())
 	add_option(commands, "-o", outfile:string())
 	add_option(commands, "-t", which_format(plat, param))
@@ -107,7 +106,11 @@ return function (identity, sourcefile, param, outfile)
 		hideWindow  = true,
 	}
 
-	gen_arm_commands(plat, param, sourcefile, tmpoutfile, commands)
+	local texcontent = util.rawtable(sourcefile)
+
+	local texpath = lfs.path(vfs.realpath(assert(texcontent.path)))
+
+	gen_commands(plat, param, texpath, tmpoutfile, commands)
 
 	local success, msg = util.spawn_process(commands, function (info)
 		local success, msg = true, ""
@@ -121,15 +124,12 @@ return function (identity, sourcefile, param, outfile)
 
 	if success then
 		if lfs.exists(tmpoutfile) then
-			local r, err = pcall(lfs.rename, tmpoutfile, outfile)
-			if r then
-				return success, msg
-			end
-
-			msg = msg  .. "\nrename file failed, from :" .. tmpoutfile:string() .. ", to :", outfile:string() .. ", error :" .. err
-		else
-			msg = msg .. "\nconvert texture return success, but not found file:" .. tmpoutfile:string()
+			util.embed_file(outfile, texcontent, {util.fetch_file_content(tmpoutfile)})
+			lfs.remove(tmpoutfile)
+			return success, msg
 		end
+
+		msg = msg .. "\nconvert texture return success, but not found file:" .. tmpoutfile:string()
 	end
 
 	return false, msg
