@@ -1,4 +1,5 @@
 local lfs 	= require "filesystem.local"
+local fs	= require "filesystem"
 local config= require "mesh.default_cfg"
 local glb_cvt= require "mesh.glb_convertor"
 local util 	= require "util"
@@ -6,7 +7,7 @@ local vfs 	= require "vfs"
 
 return function (identity, sourcefile, outfile)
 	local meshcontent = util.rawtable(sourcefile)
-	local meshpath = lfs.path(vfs.realpath(assert(meshcontent.mesh_path)))
+	local meshpath = fs.path(assert(meshcontent.mesh_path)):localpath()
 
 	glb_cvt(meshpath:string(), outfile:string(), meshcontent.config or config)
 

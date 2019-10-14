@@ -1,5 +1,6 @@
 local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
+local fs		= require "filesystem"
 local util 		= require "util"
 local vfs 		= require "vfs"
 
@@ -65,7 +66,7 @@ return function (identity, srcfilepath, outfilepath)
 	for _, stagename in ipairs(valid_shader_stage) do
 		local stage_file = shader[stagename]
 		if stage_file then
-			local shader_srcpath = lfs.path(vfs.realpath(stage_file))
+			local shader_srcpath = fs.path(stage_file):localpath()
 			local success, msg, depends = check_compile_shader(plat, shader_srcpath, outfilepath, shadertype, marcros)
 			build_success = build_success and success
 			messages[#messages+1] = msg

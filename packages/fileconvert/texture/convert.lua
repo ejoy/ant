@@ -1,4 +1,5 @@
 local lfs 	= require "filesystem.local"
+local fs	= require "filesystem"
 local util  = require "util"
 local vfs	= require "vfs"
 
@@ -107,7 +108,8 @@ return function (identity, sourcefile, outfile)
 	}
 
 	local texcontent = util.rawtable(sourcefile)
-	local texpath = lfs.path(vfs.realpath(assert(texcontent.path)))
+	
+	local texpath = fs.path(assert(texcontent.path)):localpath()
 
 	gen_commands(plat, texcontent, texpath, tmpoutfile, commands)
 
