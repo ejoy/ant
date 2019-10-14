@@ -55,7 +55,7 @@ return function (identity, srcfilepath, outfilepath)
 
 	local fxcontent = rawtable(srcfilepath)
 	local shader = assert(fxcontent.shader)
-	local marcros = shader.macros
+	local marcros = fxcontent.macros
 
 	local messages = {}
 	local all_depends = {}
