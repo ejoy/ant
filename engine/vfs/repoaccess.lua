@@ -209,7 +209,6 @@ local function prebuild(repo, plat, sourcefile, buildfile, deps)
 		end
 	end
 
-	local lkfile = sourcefile .. ".lk"
 	local w = {}
 	local dephash = calchash(plat, depends)
 	w[#w+1] = ("identity = %q"):format(plat)
@@ -219,7 +218,6 @@ local function prebuild(repo, plat, sourcefile, buildfile, deps)
 		w[#w+1] = ("  {%q, %d, %q},"):format(dep[1], dep[2], dep[3])
 	end
 	w[#w+1] = "}"
-	w[#w+1] = readfile(lkfile)
 	writefile(buildfile, table.concat(w, "\n"))
 	return dephash
 end
@@ -265,8 +263,9 @@ local function link(repo, srcfile, identity, buildfile)
 		identity = param.identity
 		srcfile = access.realpath(repo, param.depends[1][3])
 	else
-		param = rawtable(srcfile .. ".lk")
+		param = {}
 	end
+	param.type = srcfile:extension():string():lower():sub(2)
 	local fs = import_package "ant.fileconvert"
 	local deps = fs.prelink(param, srcfile)
 	if deps then

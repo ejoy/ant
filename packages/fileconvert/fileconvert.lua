@@ -51,12 +51,10 @@ local function link(param, plat, srcfile, dstfile)
 	end
 	if deps then
 		table.insert(deps, 1, srcfile)
-		table.insert(deps, 2, srcfile..".lk")
 		return deps
 	end
 	return {
 		srcfile,
-		srcfile..".lk",
 	}
 end
 
@@ -64,7 +62,6 @@ local function prelink(param, srcfile)
 	if param.type ~= "fx" then
 		return {
 			srcfile,
-			srcfile..".lk",
 		}
 	end
 end
