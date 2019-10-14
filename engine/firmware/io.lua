@@ -238,6 +238,17 @@ local function response_bin(id, buildhash)
 	return false
 end
 
+local linkext = {
+	fx = true,
+	mesh = true,
+	texture = true,
+}
+
+local function allowlink(name)
+	local ext = name:match "[^/]%.([%w*?_%-]*)$"
+	return linkext[ext]
+end
+
 function offline.GET(id, fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
@@ -254,9 +265,8 @@ function offline.GET(id, fullpath)
 		response_id(id, nil)
 		return
 	end
-	local lk = dir[name .. ".lk"]
-	if not lk or lk.dir then
-		-- no .lk , raw file
+	if not allowlink(name) then
+		-- no link , raw file
 		local realpath = repo.repo:hashpath(v.hash)
 		response_id(id, realpath, v.hash)
 		return
@@ -608,14 +618,12 @@ local function fetch_all(path)
 	local dir, hash = repo.repo:list(path)
 	if dir then
 		for name,v in pairs(dir) do
-			if not name:match ".lk$" then
-				local subpath = path .. "/" .. name
-				if v.dir then
-					fetch_all(subpath)
-				else
-					print("Fetch", subpath)
-					online.GET(false, subpath)
-				end
+			local subpath = path .. "/" .. name
+			if v.dir then
+				fetch_all(subpath)
+			else
+				print("Fetch", subpath)
+				online.GET(false, subpath)
 			end
 		end
 	elseif hash then
@@ -685,9 +693,8 @@ function online.GET(id, fullpath)
 		return
 	end
 
-	local lk = dir[name .. ".lk"]
-	if not lk or lk.dir then
-		-- no .lk , raw file
+	if not allowlink(name) then
+		-- no link , raw file
 		local realpath = repo.repo:hashpath(v.hash)
 		local f = io.open(realpath,"rb")
 		if not f then
