@@ -33,13 +33,13 @@ function rts:delete()
 end	
 
 local bf = ecs.component "bloom"
-	.blur_size  "int" (7)
-	.blur_strength "real" (2.75)
-	.blur_iters "int" (1)
-	.blur_spread "real" (1)
+	.blur_size  	"int" (7)
+	.blur_strength 	"real" (2.75)
+	.blur_iters 	"int" (1)
+	.blur_spread 	"real" (1)
 	.framebuffer_size "int" (2)
-	.num_targets "int" (2)
-	.view_ids "int[]"
+	.num_targets 	"int" (2)
+	.view_ids 		"int[]"
 	.render_targets "render_targets"
 	
 function bf:init()
@@ -58,9 +58,9 @@ bloom_sys.dependby    "end_frame"
 
 local ctx = {}
 ctx.state_rgba = bgfx.make_state {
-    WRITE_MASK = "RGBA",
-    CULL = "CCW",
-    DEPTH_TEST = "ALWAYS"
+    WRITE_MASK 	= "RGBA",
+    CULL 		= "CCW",
+    DEPTH_TEST 	= "ALWAYS"
 }
 ctx.PosColorTexCoord0Vertex = bgfx.vertex_layout {
     { "POSITION", 3, "FLOAT" },
@@ -189,20 +189,6 @@ function create_bloom_target(world, view_rect)
 		bloom_ef = true,
     }	
 	return world[bloom_ent]
-end
-
-function table_deepcopy( source )
-	local source_type = type(source)
-	local inst
-	if source_type == 'table' then
-		inst = {}
-		for key, value in pairs(source) do
-			inst[table_deepcopy(key)] = table_deepcopy(value)
-		end
-	else 
-		inst = source
-	end
-	return inst 
 end
 
 function bloom_sys:init()
