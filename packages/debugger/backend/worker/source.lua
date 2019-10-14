@@ -70,8 +70,8 @@ local function glob_replace(pattern, target)
 end
 
 local function serverPathToClientPath(p)
-    if not sourceUtf8 and fs.unicode then
-        p = fs.unicode.a2u(p)
+    if not sourceUtf8 then
+        p = fs.a2u(p)
     end
     local skip = false
     local nativePath = fs.source_native(fs.source_normalize(p))

@@ -210,7 +210,7 @@ function CMD.scopes(pkg)
 end
 
 function CMD.variables(pkg)
-    local vars, err = variables.extand(pkg.frameId, pkg.valueId)
+    local vars, err = variables.extand(pkg.valueId)
     if not vars then
         sendToMaster {
             cmd = 'variables',
@@ -231,7 +231,7 @@ function CMD.variables(pkg)
 end
 
 function CMD.setVariable(pkg)
-    local var, err = variables.set(pkg.frameId, pkg.valueId, pkg.name, pkg.value)
+    local var, err = variables.set(pkg.valueId, pkg.name, pkg.value)
     if not var then
         sendToMaster {
             cmd = 'setVariable',

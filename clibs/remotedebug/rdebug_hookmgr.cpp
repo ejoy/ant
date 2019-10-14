@@ -18,7 +18,7 @@ static int HOOK_CALLBACK = 0;
 
 void set_host(rlua_State* L, lua_State* hL);
 lua_State* get_host(rlua_State *L);
-int copyvalue(lua_State *hL, rlua_State *cL);
+void copyvalue(lua_State *hL, rlua_State *cL);
 
 
 #define BPMAP_SIZE (1 << 16)
@@ -120,7 +120,9 @@ struct hookmgr {
                 rlua_pop(cL, 1);
                 return false;
             }
-            if (!rlua_toboolean(cL, -1)) {
+            bool exist = rlua_toboolean(cL, -1);
+            rlua_pop(cL, 1);
+            if (!exist) {
                 break_del(hL, p);
                 return false;
             }
@@ -153,7 +155,10 @@ struct hookmgr {
 #if LUA_VERSION_NUM >= 502
         break_update(hL, ar->i_ci->previous, ar->event);
 #else
-        break_update(hL, (hL->base_ci + ar->i_ci) - 1, ar->event);
+        if (!lua_getstack(hL, 1, ar)) {
+            return;
+        }
+        break_update(hL, hL->base_ci + ar->i_ci, ar->event);
 #endif
     }
     void break_hookmask(lua_State* hL, int mask) {
@@ -435,7 +440,7 @@ struct hookmgr {
             return;
         }
         set_host(cL, hL);
-        if (step_mask & LUA_MASKLINE) {
+        if ((step_mask & LUA_MASKLINE) && (!stepL || stepL == hL)) {
             rlua_pushstring(cL, "step");
             if (rlua_pcall(cL, 1, 0, 0) != LUA_OK) {
                 rlua_pop(cL, 1);
@@ -452,7 +457,10 @@ struct hookmgr {
         }
     }
     void updatehookmask(lua_State* hL) {
-        int mask = update_mask | break_mask | step_mask | exception_mask | thread_mask;
+        int mask = update_mask | break_mask | exception_mask | thread_mask;
+        if (!stepL || stepL == hL) {
+            mask |= step_mask;
+        }
         if (mask) {
             lua_sethook(hL, (lua_Hook)sc_hook->data, mask, update_mask? 0xfffff: 0);
         }

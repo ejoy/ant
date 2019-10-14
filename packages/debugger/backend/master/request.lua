@@ -6,6 +6,7 @@ local ev = require 'common.event'
 local request = {}
 
 local readyTrg = nil
+local firstWorker = true
 local initializing = false
 local config = {
     initialize = {},
@@ -37,6 +38,7 @@ function request.initialize(req)
         response.error(req, 'already initialized')
         return
     end
+    firstWorker = true
     response.initialize(req)
     mgr.setState 'initialized'
     event.initialized()
@@ -62,6 +64,25 @@ function request.launch(req)
     return request.attach(req)
 end
 
+local function tryStop(w)
+    if firstWorker then
+        firstWorker = false
+        if not not config.initialize.stopOnEntry then
+            mgr.sendToWorker(w, {
+                cmd = 'stop',
+                reason = 'entry',
+            })
+            return
+        end
+    end
+    if not not config.initialize.stopOnThreadEntry then
+        mgr.sendToWorker(w, {
+            cmd = 'stop',
+            reason = 'entry',
+        })
+    end
+end
+
 local function initializeWorker(w)
     mgr.sendToWorker(w, {
         cmd = 'initializing',
@@ -75,16 +96,7 @@ local function initializeWorker(w)
             content = bp[3],
         })
     end
-    local stopOnEntry = true
-    if type(config.initialize.stopOnEntry) == 'boolean' then
-        stopOnEntry = config.initialize.stopOnEntry
-    end
-    if stopOnEntry then
-        mgr.sendToWorker(w, {
-            cmd = 'stop',
-            reason = 'entry',
-        })
-    end
+    tryStop(w)
     mgr.sendToWorker(w, {
         cmd = 'initialized',
     })
@@ -131,6 +143,10 @@ end
 function request.setBreakpoints(req)
     local args = req.arguments
     local content = skipBOM(args.sourceContent)
+    if args.source.path and args.source.path:sub(1,4) == "git:" then
+        response.error(req, "Does not support git path.")
+        return
+    end
     for _, bp in ipairs(args.breakpoints) do
         bp.id = genBreakpointID()
         bp.verified = false
@@ -196,9 +212,8 @@ function request.scopes(req)
         return
     end
 
-    local threadAndFrameId = args.frameId
-    local threadId = threadAndFrameId >> 16
-    local frameId = threadAndFrameId & 0xFFFF
+    local threadId = args.frameId >> 24
+    local frameId = args.frameId & 0x00FFFFFF
     if not checkThreadId(req, threadId) then
         return
     end
@@ -213,9 +228,8 @@ end
 
 function request.variables(req)
     local args = req.arguments
-    local valueId = args.variablesReference
-    local threadId = valueId >> 32
-    local frameId = (valueId >> 16) & 0xFFFF
+    local threadId = args.variablesReference >> 24
+    local valueId = args.variablesReference & 0x00FFFFFF
     if not checkThreadId(req, threadId) then
         return
     end
@@ -224,8 +238,7 @@ function request.variables(req)
         cmd = 'variables',
         command = req.command,
         seq = req.seq,
-        frameId = frameId,
-        valueId = valueId & 0xFFFF,
+        valueId = valueId,
     })
 end
 
@@ -239,9 +252,8 @@ function request.evaluate(req)
         response.error(req, "Error expression")
         return
     end
-    local threadAndFrameId = args.frameId
-    local threadId = threadAndFrameId >> 16
-    local frameId = threadAndFrameId & 0xFFFF
+    local threadId = args.frameId >> 24
+    local frameId = args.frameId & 0x00FFFFFF
     if not checkThreadId(req, threadId) then
         return
     end
@@ -336,11 +348,11 @@ end
 
 function request.source(req)
     local args = req.arguments
-    local threadId = args.sourceReference >> 32
+    local threadId = args.sourceReference >> 24
+    local sourceReference = args.sourceReference & 0x00FFFFFF
     if not checkThreadId(req, threadId) then
         return
     end
-    local sourceReference = args.sourceReference & 0xFFFFFFFF
     mgr.sendToWorker(threadId, {
         cmd = 'source',
         command = req.command,
@@ -364,9 +376,8 @@ end
 
 function request.setVariable(req)
     local args = req.arguments
-    local valueId = args.variablesReference
-    local threadId = valueId >> 32
-    local frameId = (valueId >> 16) & 0xFFFF
+    local threadId = args.variablesReference >> 24
+    local valueId = args.variablesReference & 0x00FFFFFF
     if not checkThreadId(req, threadId) then
         return
     end
@@ -374,8 +385,7 @@ function request.setVariable(req)
         cmd = 'setVariable',
         command = req.command,
         seq = req.seq,
-        frameId = frameId,
-        valueId = valueId & 0xFFFF,
+        valueId = valueId,
         name = args.name,
         value = args.value,
     })

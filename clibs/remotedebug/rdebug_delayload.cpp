@@ -42,6 +42,16 @@ namespace remotedebug::delayload {
 		}
 	}
 
+	static int (*_lua_pcall)(lua_State *L, int nargs, int nresults, int errfunc);
+	static int _lua_pcallk(lua_State *L, int nargs, int nresults, int errfunc, intptr_t ctx, intptr_t k) {
+		return _lua_pcall(L,nargs,nresults,errfunc);
+	}
+
+	static int (*_luaL_loadbuffer)(lua_State *L, const char *buff, size_t size, const char *name);
+	static int _luaL_loadbufferx(lua_State *L, const char *buff, size_t size, const char *name, const char *mode) {
+		return _luaL_loadbuffer(L,buff,size,name);
+	}
+
 	static FARPROC WINAPI hook(unsigned dliNotify, PDelayLoadInfo pdli) {
 		switch (dliNotify) {
 		case dliNotePreLoadLibrary:
@@ -61,6 +71,18 @@ namespace remotedebug::delayload {
 			FARPROC ret = ::GetProcAddress(pdli->hmodCur, pdli->dlp.szProcName);
 			if (ret) {
 				return ret;
+			}
+			if (strcmp(pdli->dlp.szProcName, "lua_pcallk") == 0) {
+				_lua_pcall = (int (__cdecl *)(lua_State *,int,int,int))::GetProcAddress(pdli->hmodCur, "lua_pcall");
+				if (_lua_pcall) {
+					return (FARPROC)_lua_pcallk;
+				}
+			}
+			else if (strcmp(pdli->dlp.szProcName, "luaL_loadbufferx") == 0) {
+				_luaL_loadbuffer = (int (__cdecl *)(lua_State *, const char *, size_t, const char *))::GetProcAddress(pdli->hmodCur, "luaL_loadbuffer");
+				if (_luaL_loadbuffer) {
+					return (FARPROC)_luaL_loadbufferx;
+				}
 			}
 			char str[256];
 			sprintf(str, "Can't find lua c function: `%s`.", pdli->dlp.szProcName);

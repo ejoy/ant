@@ -98,9 +98,9 @@ WITH_OZZ_SAMPLES := OFF
 OZZ_ENABLE_EMSCRIPTEN := FALSE
 
 ifeq "$(PLAT)" "mingw"
-  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../../build/bullet3/$(PLAT)/lib
+  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../../../build/bullet3/$(PLAT)/$(MODE)/lib
 else ifeq "$(PLAT)" "msvc"
-  CMAKE_OPT_bullet3 += -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON -DLIBRARY_OUTPUT_PATH=../../../build/bullet3/$(PLAT)/lib -DBUILD_BULLET2_DEMOS=ON
+  CMAKE_OPT_bullet3 += -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON -DLIBRARY_OUTPUT_PATH=../../../../build/bullet3/$(PLAT)/$(MODE)/lib -DBUILD_BULLET2_DEMOS=ON
   WITH_OZZ_SAMPLES := ON
 else ifeq "$(PLAT)" "ios"
   OZZ_ENABLE_EMSCRIPTEN := TRUE

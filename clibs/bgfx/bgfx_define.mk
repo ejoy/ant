@@ -16,8 +16,9 @@ BIMG_DECODELIB = -lbimg_decode$(MODE)
 BIMGLIB = -lbimg$(MODE)
 
 ifeq "$(PLAT)" "mingw"
+BXLIB += -lpsapi
 BGFXLIBDIR = $(BGFXSRC)/.build/win64_mingw-gcc/bin
-BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -lpsapi -luuid
+BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -luuid
 else ifeq "$(PLAT)" "osx"
 BGFXLIBDIR = $(BGFXSRC)/.build/osx64_clang/bin
 BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++

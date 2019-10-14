@@ -136,7 +136,7 @@ function pickup_material_sys:update()
 
 		local material = e.material
 		local result = filter.result
-		replace_material(result.opaticy, material[0])
+		replace_material(result.opaticy, material)
 		replace_material(result.translucent, material[1])
 	end
 end

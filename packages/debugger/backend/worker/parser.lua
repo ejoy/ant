@@ -5,7 +5,7 @@ local version
 local function getproto(content)
     local evaluate = require 'backend.worker.evaluate'
     local ok, bin = evaluate.dump(content)
-    if not ok then
+    if not ok or type(bin) ~= "string" then
         return
     end
     local cl, v = undump(bin)

@@ -489,12 +489,7 @@ lclient_eval(rlua_State *L) {
 		return 2;
 	}
 	rlua_pushboolean(L, 1);
-	if (LUA_TNONE == copy_toX(hL, L)) {
-		rlua_pushfstring(L, "[%s: %p]", 
-			lua_typename(hL, lua_type(hL, -1)),
-			lua_topointer(hL, -1)
-		);
-	}
+	copyvalue(hL, L);
 	lua_pop(hL, 1);
 	return 2;
 }
@@ -520,12 +515,7 @@ lclient_evalref(rlua_State *L) {
 		return 2;
 	}
 	rlua_pushboolean(L, 1);
-	if (LUA_TNONE == copy_toX(hL, L)) {
-		rlua_pushfstring(L, "[%s: %p]", 
-			lua_typename(hL, lua_type(hL, -1)),
-			lua_topointer(hL, -1)
-		);
-	}
+	copyvalue(hL, L);
 	lua_pop(hL, 1);
 	return 2;
 }
@@ -651,8 +641,6 @@ init_visitor(rlua_State *L) {
 	rlua_setfield(L, -2, "_G");
 	get_registry(L, VAR_REGISTRY);
 	rlua_setfield(L, -2, "_REGISTRY");
-	get_registry(L, VAR_MAINTHREAD);
-	rlua_setfield(L, -2, "_MAINTHREAD");
 	return 1;
 }
 
@@ -660,9 +648,4 @@ RLUA_FUNC
 int luaopen_remotedebug_visitor(rlua_State *L) {
 	get_host(L);
 	return init_visitor(L);
-}
-
-int
-copyvalue(lua_State *hL, rlua_State *cL) {
-	return copy_toX(hL, cL);
 }

@@ -1,16 +1,12 @@
-local fs = require 'remotedebug.filesystem'
+local utility = require 'remotedebug.utility'
 local ev = require 'common.event'
 local rdebug = require 'remotedebug.visitor'
+local OS = utility.platform_os()
+local absolute = utility.fs_absolute
+local u2a = utility.u2a or function (...) return ... end
+local a2u = utility.a2u or function (...) return ... end
 
-local function prequire(name)
-    local ok, res = pcall(require, name)
-    if ok then
-        return res
-    end
-end
-local unicode = prequire 'remotedebug.unicode'
-
-local sourceFormat = "path"
+local sourceFormat = OS == "Windows" and "path" or "linuxpath"
 local pathFormat = "path"
 local useWSL = false
 local useUtf8 = false
@@ -26,7 +22,7 @@ end
 
 local function nativepath(s)
     if not useWSL and not useUtf8 then
-        return unicode.u2a(s)
+        return u2a(s)
     end
     return towsl(s)
 end
@@ -54,17 +50,13 @@ local function init_searchpath(config, name)
 end
 
 ev.on('initializing', function(config)
-    sourceFormat = config.sourceFormat or "path"
+    sourceFormat = config.sourceFormat or (OS == "Windows" and "path" or "linuxpath")
     pathFormat = config.pathFormat or "path"
     useWSL = config.useWSL
     useUtf8 = config.sourceCoding == "utf8"
     init_searchpath(config, 'path')
     init_searchpath(config, 'cpath')
 end)
-
-local function absolute(p)
-    return fs.absolute(fs.path(p)):string()
-end
 
 local function normalize_posix(p)
     local stack = {}
@@ -116,8 +108,12 @@ function m.source_normalize(path)
     if sourceFormat == "string" then
         return path
     end
-    local normalize = sourceFormat == "path" and normalize_win32 or normalize_posix
-    return table.concat(normalize(absolute(path)), '/')
+    if sourceFormat == "path" then
+        local absolute_path = OS == 'Windows' and absolute(path) or path
+        return table.concat(normalize_win32(absolute_path), '/')
+    end
+    local absolute_path = OS ~= 'Windows' and absolute(path) or path
+    return table.concat(normalize_posix(absolute_path), '/')
 end
 
 function m.path_normalize(path)
@@ -152,6 +148,6 @@ function m.path_filename(path)
     return paths[#paths]
 end
 
-m.unicode = unicode
+m.a2u = a2u
 
 return m

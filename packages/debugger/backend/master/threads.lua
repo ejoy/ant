@@ -10,9 +10,9 @@ end
 
 function CMD.stackTrace(w, req)
     for _, frame in ipairs(req.stackFrames) do
-        frame.id = (w << 16) | frame.id
+        frame.id = (w << 24) | frame.id
         if frame.source and frame.source.sourceReference then
-            frame.source.sourceReference = (w << 32) | frame.source.sourceReference
+            frame.source.sourceReference = (w << 24) | frame.source.sourceReference
         end
     end
     response.success(req, {
@@ -27,7 +27,7 @@ function CMD.evaluate(w, req)
         return
     end
     if req.variablesReference then
-        req.variablesReference = (w << 32) | req.variablesReference
+        req.variablesReference = (w << 24) | req.variablesReference
     end
     response.success(req, {
         result = req.result,
@@ -51,7 +51,7 @@ end
 
 function CMD.scopes(w, req)
     for _, scope in ipairs(req.scopes) do
-        scope.variablesReference = (w << 32) | scope.variablesReference
+        scope.variablesReference = (w << 24) | scope.variablesReference
     end
     response.success(req, {
         scopes = req.scopes
@@ -65,7 +65,7 @@ function CMD.variables(w, req)
     end
     for _, var in ipairs(req.variables) do
         if var.variablesReference then
-            var.variablesReference = (w << 32) | var.variablesReference
+            var.variablesReference = (w << 24) | var.variablesReference
         end
     end
     response.success(req, {

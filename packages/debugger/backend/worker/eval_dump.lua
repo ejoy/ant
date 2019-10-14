@@ -1,6 +1,6 @@
 local content = ...
-local f, err = load(content)
+local f = load(content)
 if not f then
-    return nil, err
+    return
 end
 return string.dump(f)
