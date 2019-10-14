@@ -29,10 +29,6 @@ $(ODIR)/firmware.o : firmware.cpp incbin.h \
 	$(ANT3RD)/../engine/firmware/bootstrap.lua \
 	$(ANT3RD)/../engine/firmware/io.lua \
 	$(ANT3RD)/../engine/firmware/vfs.lua \
-	$(ODIR)/fs_imgui_image.sc \
-	$(ODIR)/fs_imgui_font.sc \
-	$(ODIR)/vs_imgui_image.sc \
-	$(ODIR)/vs_imgui_font.sc \
 	| $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC)
 
