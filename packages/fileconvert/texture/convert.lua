@@ -94,7 +94,8 @@ end
 -- 	add_option(commands, nil, outfile:string())
 -- end
 
-return function (identity, sourcefile, param, outfile)
+return function (identity, sourcefile, outfile)
+	local param = {}
 	local plat, renderer = util.identify_info(identity)
 	local ext = assert(outfile_extension(renderer))
 	local tmpoutfile = lfs.path(outfile):replace_extension(ext)

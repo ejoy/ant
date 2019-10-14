@@ -40,11 +40,11 @@ local function log_info(info)
 	log:flush()
 end
 
-local function link(param, plat, srcfile, dstfile)
-	local ctype = assert(param.type)
+local function link(plat, srcfile, dstfile)
+	local ctype = srcfile:extension():string():lower():sub(2)
 	local c = assert(converter[ctype])
 	log_info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ctype))
-	local success, err, deps = c(plat, srcfile, param, dstfile)
+	local success, err, deps = c(plat, srcfile, dstfile)
 	if not success and err then
 		log_err(srcfile, err)
 		return
@@ -58,8 +58,9 @@ local function link(param, plat, srcfile, dstfile)
 	}
 end
 
-local function prelink(param, srcfile)
-	if param.type ~= "fx" then
+local function prelink(srcfile)
+	local ext = srcfile:extension():string():lower()
+	if ext ~= ".fx" then
 		return {
 			srcfile,
 		}

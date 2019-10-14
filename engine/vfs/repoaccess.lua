@@ -251,9 +251,8 @@ local function add_ref(repo, file, hash)
 end
 
 local function link(repo, srcfile, identity, buildfile)
-	local param
 	if lfs.exists(buildfile) then
-		param = rawtable(buildfile)
+		local param = rawtable(buildfile)
 		local cpath = repo._cache / param.dephash:sub(1,2) / param.dephash
 		if lfs.exists(cpath) then
 			local binhash = readfile(cpath..".hash")
@@ -262,12 +261,9 @@ local function link(repo, srcfile, identity, buildfile)
 		end
 		identity = param.identity
 		srcfile = access.realpath(repo, param.depends[1][3])
-	else
-		param = {}
 	end
-	param.type = srcfile:extension():string():lower():sub(2)
 	local fs = import_package "ant.fileconvert"
-	local deps = fs.prelink(param, srcfile)
+	local deps = fs.prelink(srcfile)
 	if deps then
 		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
 		local cpath = repo._cache / dephash:sub(1,2) / dephash
@@ -277,7 +273,7 @@ local function link(repo, srcfile, identity, buildfile)
 			return cpath, binhash
 		end
 		local dstfile = repo._repo / "tmp.bin"
-		local ok = fs.link(param, identity, srcfile, dstfile)
+		local ok = fs.link(identity, srcfile, dstfile)
 		if not ok then
 			return
 		end
@@ -291,12 +287,17 @@ local function link(repo, srcfile, identity, buildfile)
 		return cpath, binhash
 	else
 		local dstfile = repo._repo / "tmp.bin"
-		local deps = fs.link(param, identity, srcfile, dstfile)
+		local deps = fs.link(identity, srcfile, dstfile)
 		if not deps then
 			return
 		end
 		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
 		local cpath = repo._cache / dephash:sub(1,2) / dephash
+		if lfs.exists(cpath) then
+			local binhash = readfile(cpath..".hash")
+			add_ref(repo, cpath, binhash)
+			return cpath, binhash
+		end
 		if not pcall(lfs.remove, cpath) then
 			pcall(lfs.remove, dstfile)
 			return
