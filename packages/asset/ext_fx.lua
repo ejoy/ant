@@ -55,7 +55,7 @@ end
 return {
     loader = function (fxpath)
         local content, binary = assetutil.parse_embed_file(fxpath)
-        local shaderbins = fetch_shader_binarys(binary)
+        local shaderbins = fetch_shader_binarys(assert(binary))
         local shader = content.shader
 
         if shader.cs == nil then
