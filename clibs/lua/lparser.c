@@ -1512,10 +1512,12 @@ static void retstat (LexState *ls) {
     nret = explist(ls, &e);  /* optional return values */
     if (hasmultret(e.k)) {
       luaK_setmultret(fs, &e);
+#if !defined(_WIN32) /* disable tail call in windows */
       if (e.k == VCALL && nret == 1) {  /* tail call? */
         SET_OPCODE(getinstruction(fs,&e), OP_TAILCALL);
         lua_assert(GETARG_A(getinstruction(fs,&e)) == fs->nactvar);
       }
+#endif
       first = fs->nactvar;
       nret = LUA_MULTRET;  /* return all values */
     }
