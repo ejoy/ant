@@ -40,11 +40,11 @@ local function log_info(info)
 	log:flush()
 end
 
-local function link(plat, srcfile, dstfile)
+local function link(plat, srcfile, dstfile, localpath)
 	local ctype = srcfile:extension():string():lower():sub(2)
 	local c = assert(converter[ctype])
 	log_info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ctype))
-	local success, err, deps = c(plat, srcfile, dstfile)
+	local success, err, deps = c(plat, srcfile, dstfile, localpath)
 	if not success and err then
 		log_err(srcfile, err)
 		return

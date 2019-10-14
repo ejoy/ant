@@ -95,7 +95,7 @@ end
 -- 	add_option(commands, nil, outfile:string())
 -- end
 
-return function (identity, sourcefile, outfile)
+return function (identity, sourcefile, outfile, localpath)
 	local plat, renderer = util.identify_info(identity)
 	local ext = assert(outfile_extension(renderer))
 	local tmpoutfile = lfs.path(outfile):replace_extension(ext)
@@ -109,7 +109,7 @@ return function (identity, sourcefile, outfile)
 
 	local texcontent = util.rawtable(sourcefile)
 	
-	local texpath = fs.path(assert(texcontent.path)):localpath()
+	local texpath = localpath(assert(texcontent.path))
 
 	gen_commands(plat, texcontent, texpath, tmpoutfile, commands)
 
