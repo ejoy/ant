@@ -46,7 +46,7 @@ local function embed_shader_bin(bins)
 	return t
 end
 
-return function (identity, srcfilepath, _, outfilepath)
+return function (identity, srcfilepath, outfilepath)
 	local plat, renderer = util.identify_info(identity)
 	local shadertype = shadertypes[renderer:upper()]
 	assert(plat)
@@ -71,7 +71,11 @@ return function (identity, srcfilepath, _, outfilepath)
 			messages[#messages+1] = msg
 
 			if success then
-				table.move(depends, 1, #depends, #all_depends+1, all_depends)
+				for _, d in ipairs(depends) do
+					if all_depends[d:string()] == nil then
+						all_depends[d:string()] = d
+					end
+				end
 				binarys[stagename] = util.fetch_file_content(outfilepath)
 			end
 		end
@@ -80,5 +84,18 @@ return function (identity, srcfilepath, _, outfilepath)
 	if build_success then
 		util.embed_file(outfilepath, fxcontent, embed_shader_bin(binarys))
 	end
-	return build_success, table.concat(messages, "\n"), all_depends
+
+	local function depend_files()
+		local t = {}
+		for k in pairs(all_depends) do
+			t[#t+1] = k
+		end
+		table.sort(t)
+		local tt = {}
+		for _, n in ipairs(t) do
+			tt[#tt+1] = all_depends[n]
+		end
+		return tt
+	end
+	return build_success, table.concat(messages, "\n"), depend_files()
 end

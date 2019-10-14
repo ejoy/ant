@@ -14,7 +14,7 @@ return {
 		local sampler = tex.sampler
 		local flag = ru.generate_sampler_flag(sampler)
 		
-		local handle = texture_load(binary, tex.path, flag)
+		local handle = texture_load(assert(binary), tex.path, flag)
 		return {handle=handle, sampler=ru.fill_default_sampler(sampler)}
 	end,
 	unloader = function (res)

@@ -209,7 +209,6 @@ local function prebuild(repo, plat, sourcefile, buildfile, deps)
 		end
 	end
 
-	local lkfile = sourcefile .. ".lk"
 	local w = {}
 	local dephash = calchash(plat, depends)
 	w[#w+1] = ("identity = %q"):format(plat)
@@ -219,7 +218,6 @@ local function prebuild(repo, plat, sourcefile, buildfile, deps)
 		w[#w+1] = ("  {%q, %d, %q},"):format(dep[1], dep[2], dep[3])
 	end
 	w[#w+1] = "}"
-	w[#w+1] = readfile(lkfile)
 	writefile(buildfile, table.concat(w, "\n"))
 	return dephash
 end
@@ -253,9 +251,8 @@ local function add_ref(repo, file, hash)
 end
 
 local function link(repo, srcfile, identity, buildfile)
-	local param
 	if lfs.exists(buildfile) then
-		param = rawtable(buildfile)
+		local param = rawtable(buildfile)
 		local cpath = repo._cache / param.dephash:sub(1,2) / param.dephash
 		if lfs.exists(cpath) then
 			local binhash = readfile(cpath..".hash")
@@ -264,11 +261,9 @@ local function link(repo, srcfile, identity, buildfile)
 		end
 		identity = param.identity
 		srcfile = access.realpath(repo, param.depends[1][3])
-	else
-		param = rawtable(srcfile .. ".lk")
 	end
 	local fs = import_package "ant.fileconvert"
-	local deps = fs.prelink(param, srcfile)
+	local deps = fs.prelink(srcfile)
 	if deps then
 		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
 		local cpath = repo._cache / dephash:sub(1,2) / dephash
@@ -278,7 +273,7 @@ local function link(repo, srcfile, identity, buildfile)
 			return cpath, binhash
 		end
 		local dstfile = repo._repo / "tmp.bin"
-		local ok = fs.link(param, identity, srcfile, dstfile)
+		local ok = fs.link(identity, srcfile, dstfile)
 		if not ok then
 			return
 		end
@@ -292,12 +287,17 @@ local function link(repo, srcfile, identity, buildfile)
 		return cpath, binhash
 	else
 		local dstfile = repo._repo / "tmp.bin"
-		local deps = fs.link(param, identity, srcfile, dstfile)
+		local deps = fs.link(identity, srcfile, dstfile)
 		if not deps then
 			return
 		end
 		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
 		local cpath = repo._cache / dephash:sub(1,2) / dephash
+		if lfs.exists(cpath) then
+			local binhash = readfile(cpath..".hash")
+			add_ref(repo, cpath, binhash)
+			return cpath, binhash
+		end
 		if not pcall(lfs.remove, cpath) then
 			pcall(lfs.remove, dstfile)
 			return
