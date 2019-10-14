@@ -46,7 +46,7 @@ local function embed_shader_bin(bins)
 	return t
 end
 
-return function (identity, srcfilepath, _, outfilepath)
+return function (identity, srcfilepath, outfilepath)
 	local plat, renderer = util.identify_info(identity)
 	local shadertype = shadertypes[renderer:upper()]
 	assert(plat)

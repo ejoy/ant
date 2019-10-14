@@ -4,7 +4,7 @@ local glb_cvt= require "mesh.glb_convertor"
 local util 	= require "util"
 local vfs 	= require "vfs"
 
-return function (identity, sourcefile, _, outfile)
+return function (identity, sourcefile, outfile)
 	local meshcontent = util.rawtable(sourcefile)
 	local meshpath = lfs.path(vfs.realpath(assert(meshcontent.mesh_path)))
 
