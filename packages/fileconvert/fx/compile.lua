@@ -72,9 +72,8 @@ return function (identity, srcfilepath, _, outfilepath)
 
 			if success then
 				for _, d in ipairs(depends) do
-					local dd = d:gsub("\\", "/")
-					if all_depends[dd] == nil then
-						all_depends[dd] = true
+					if all_depends[d:string()] == nil then
+						all_depends[d:string()] = d
 					end
 				end
 				binarys[stagename] = util.fetch_file_content(outfilepath)
@@ -92,7 +91,11 @@ return function (identity, srcfilepath, _, outfilepath)
 			t[#t+1] = k
 		end
 		table.sort(t)
-		return t
+		local tt = {}
+		for _, n in ipairs(t) do
+			tt[#tt+1] = all_depends[n]
+		end
+		return tt
 	end
 	return build_success, table.concat(messages, "\n"), depend_files()
 end

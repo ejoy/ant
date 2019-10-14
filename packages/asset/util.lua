@@ -90,6 +90,7 @@ function util.parse_embed_file(filepath)
     assert(binmark == "bin\0")
     
     local binary = f:read(binlen)
+    f:close()
     return luattable, binary
 
 end
