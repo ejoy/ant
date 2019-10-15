@@ -25,8 +25,8 @@ local shader_options = {
 	metal_v = "metal",
 	metal_f = "metal",
 	metal_c = "metal",
-	vulkan_v = "spirv",
-	vulkan_f = "spirv",
+	spirv_v = "spirv",
+	spirv_f = "spirv",
 }
 
 local function default_level(shadertype, stagetype)

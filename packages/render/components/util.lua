@@ -5,6 +5,7 @@ local fs 		= require "filesystem"
 local bgfx 		= require "bgfx"
 local declmgr 	= require "vertexdecl_mgr"
 local mathbaselib = require "math3d.baselib"
+local hwi		= require "hardware_interface"
 
 local assetpkg 	= import_package "ant.asset"
 local assetmgr 	= assetpkg.mgr
@@ -198,15 +199,20 @@ local function quad_mesh(vb)
 end
 
 function util.quad_mesh(rect)
-	local vb = 	{
+	local origin_bottomleft = hwi.get_caps().originBottomLeft
+	local minv, maxv
+	if origin_bottomleft then
+		minv, maxv = 0, 1
+	else
+		minv, maxv = 1, 0
+	end
+	return quad_mesh{
 		"fffff",
-		rect.x, 		 rect.y, 			0, 	0, 1,	--bottom left
-		rect.x, 		 rect.y + rect.h, 	0, 	0, 0,	--top left
-		rect.x + rect.w, rect.y, 			0, 	1, 1,	--bottom right
-		rect.x + rect.w, rect.y + rect.h, 	0, 	1, 0,	--top right
+		rect.x, 		 rect.y, 			0, 	0, minv,	--bottom left
+		rect.x, 		 rect.y + rect.h, 	0, 	0, maxv,	--top left
+		rect.x + rect.w, rect.y, 			0, 	1, minv,	--bottom right
+		rect.x + rect.w, rect.y + rect.h, 	0, 	1, maxv,	--top right
 	}
-
-	return quad_mesh(vb)
 end
 
 function util.create_quad_entity(world, rect, materialpath, properties, name, view_tag)
