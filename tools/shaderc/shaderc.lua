@@ -6,6 +6,32 @@
 ]]
 
 local fs = require "filesystem.local"
-local shaderc = import_package "ant.fileconvert".converter.shader
-local identity, input, output = table.unpack(arg)
-shaderc(identity, fs.path(input), nil, fs.path(output))
+local fvpkg = import_package "ant.fileconvert"
+local toolset = fvpkg.shader_toolset
+
+for i, a in ipairs(arg) do
+	if a == "--bin=msvc" then
+		table.remove(arg, i)
+		break
+	end
+end
+
+local identity, input, output, macros, includes = table.unpack(arg)
+if includes == nil then
+	includes = {}
+end
+includes[#includes+1] = fs.current_path() / "packages/resources/shaders"
+
+local success, err = toolset.compile{
+	identity = identity,
+	srcfile = fs.path(input),
+	outfile = fs.path(output),
+    includes = includes,
+    macros = macros,
+}
+
+if success then
+	print("success!")
+else
+	print("failed! error : ", err)
+end

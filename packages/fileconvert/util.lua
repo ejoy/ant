@@ -166,4 +166,16 @@ function util.embed_file(filepath, luacontent, binarys)
     util.write_embed_file(filepath, s, binarys)
 end
 
+util.shadertypes = {
+	NOOP       = "d3d9",
+	DIRECT3D9  = "d3d9",
+	DIRECT3D11 = "d3d11",
+	DIRECT3D12 = "d3d11",
+	GNM        = "pssl",
+	METAL      = "metal",
+	OPENGL     = "glsl",
+	OPENGLES   = "essl",
+	VULKAN     = "spirv",
+}
+
 return util

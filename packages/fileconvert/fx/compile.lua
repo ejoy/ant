@@ -4,26 +4,16 @@ local util 		= require "util"
 local vfs 		= require "vfs"
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
-local function check_compile_shader(plat, srcfilepath, outfilepath, shadertype, macros)	
+local function check_compile_shader(identity, srcfilepath, outfilepath, macros)
 	lfs.create_directories(outfilepath:parent_path())
-	return toolset.compile(srcfilepath, outfilepath, shadertype, {
+	return toolset.compile {
+		identity = identity,
+		srcfile = srcfilepath,
+		outfile = outfilepath,
 		includes = {engine_shader_srcpath},
-		platform = plat,
 		macros = macros,
-	})
+	}
 end
-
-local shadertypes = {
-	NOOP       = "d3d9",
-	DIRECT3D9  = "d3d9",
-	DIRECT3D11 = "d3d11",
-	DIRECT3D12 = "d3d11",
-	GNM        = "pssl",
-	METAL      = "metal",
-	OPENGL     = "glsl",
-	OPENGLES   = "essl",
-	VULKAN     = "spirv",
-}
 
 local function rawtable(filepath)
 	local env = {}
@@ -47,11 +37,6 @@ local function embed_shader_bin(bins)
 end
 
 return function (identity, srcfilepath, outfilepath)
-	local plat, renderer = util.identify_info(identity)
-	local shadertype = shadertypes[renderer:upper()]
-	assert(plat)
-	assert(shadertype)
-
 	local fxcontent = rawtable(srcfilepath)
 	local shader = assert(fxcontent.shader)
 	local marcros = shader.macros
@@ -66,7 +51,7 @@ return function (identity, srcfilepath, outfilepath)
 		local stage_file = shader[stagename]
 		if stage_file then
 			local shader_srcpath = lfs.path(vfs.realpath(stage_file))
-			local success, msg, depends = check_compile_shader(plat, shader_srcpath, outfilepath, shadertype, marcros)
+			local success, msg, depends = check_compile_shader(identity, shader_srcpath, outfilepath, marcros)
 			build_success = build_success and success
 			messages[#messages+1] = msg
 

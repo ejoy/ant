@@ -121,7 +121,8 @@
       <Message>generate bin data</Message>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>rm data.c</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

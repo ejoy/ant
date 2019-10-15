@@ -35,7 +35,14 @@ local function default_level(shadertype, stagetype)
 	end
 end
 
-function toolset.compile(filepath, outfilepath, shadertype, config)
+function toolset.compile(config)
+	local plat, renderer = util.identify_info(config.identity)
+	local shadertype = util.shadertypes[renderer:upper()]
+
+	local filepath 		= config.srcfile
+	local outfilepath 	= config.outfile
+	print(filepath, outfilepath)
+	
 	assert(lfs.exists(filepath), filepath:string())
 	
 	local srcfilename = filepath:string()
@@ -65,7 +72,7 @@ function toolset.compile(filepath, outfilepath, shadertype, config)
 
 	local commands = {
 		shaderc:string(),
-		"--platform", config.platform or OS,
+		"--platform", assert(plat),
 		"--type", stagetype,
 		"-p", shader_opt,
 		"-f", srcfilename,

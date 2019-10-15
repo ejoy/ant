@@ -71,6 +71,7 @@ return {
 	prelink = prelink,
 	link = link,
 	converter = converter,
+	shader_toolset = require "fx.toolset",
 	default_cfg = {
 		mesh = require "mesh.default_cfg"
 	}
