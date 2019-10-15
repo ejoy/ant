@@ -32,7 +32,7 @@ local function csm_shadow_debug_quad()
 		local q_eid = computil.create_quad_entity(world, rect, quadmaterial, nil, "csm_quad")
 		world:add_component(q_eid, "shadow_quad", true)
 		local qe = world[q_eid]
-		local quad_material = qe.material[0]
+		local quad_material = qe.material
 		local properties = quad_material.properties 
 		if properties == nil then
 			properties = {}
