@@ -112,7 +112,7 @@ function util.load_shadow_properties(world, render_properties)
 		local idx = csm.index
 		split_distances[idx] = csm.split_distance_VS
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
-		vp = ms(shadowutil.shadow_crop_matrix, vp, "*P")
+		vp = ms(shadowutil.shadow_crop_matrix(), vp, "*P")
 		local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
 		csm_matrixs[csm.index] = ms(viewport_cropmatrix, vp, "*P")
 	end

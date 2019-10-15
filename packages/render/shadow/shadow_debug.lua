@@ -271,7 +271,7 @@ local function check_shadow_matrix()
 	}
 	print(string.format("origin ndc space:[%f, %f, %f, %f]", origin_NDC[1], origin_NDC[2], origin_NDC[3], origin_NDC[4]))
 
-	local shadow_matrix = ms(shadowutil.shadow_crop_matrix, shadow_viewproj, "*P")
+	local shadow_matrix = ms(shadowutil.shadow_crop_matrix(), shadow_viewproj, "*P")
 	local origin_CS_With_Crop = ms(shadow_matrix, {0, 0, 0.55, 1}, "*T")
 	print(string.format("origin clip space with corp:[%f, %f, %f, %f]", 
 		origin_CS_With_Crop[1], origin_CS_With_Crop[2], origin_CS_With_Crop[3], origin_CS_With_Crop[4]))

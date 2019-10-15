@@ -3,12 +3,26 @@ local util = {}; util.__index = util
 local mathpkg   = import_package "ant.math"
 local ms        = mathpkg.stack
 
-util.shadow_crop_matrix = ms:ref "matrix" {
+local hwi 		= require "hardware_interface"
+
+local bottomleft_cropmatrix = ms:ref "matrix" {
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 0.5, 0.0,
+	0.5, 0.5, 0.5, 1.0,
+}
+
+local topleft_cropmatrix = ms:ref "matrix" {
 	0.5, 0.0, 0.0, 0.0,
 	0.0, -0.5, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
 	0.5, 0.5, 0.0, 1.0,
 }
+
+function util.shadow_crop_matrix()
+	local origin_bottomleft = hwi.get_caps().originBottomLeft
+	return origin_bottomleft and bottomleft_cropmatrix or topleft_cropmatrix
+end
 
 function util.split_new_frustum_by_distance(view_frustum, n_dis, f_dis)
 	assert(view_frustum.ortho == nil or view_frustum.ortho == false)
