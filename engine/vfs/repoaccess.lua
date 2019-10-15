@@ -251,6 +251,9 @@ local function add_ref(repo, file, hash)
 end
 
 local function link(repo, srcfile, identity, buildfile)
+	local function localpath(path)
+		return access.realpath(repo, path)
+	end
 	if lfs.exists(buildfile) then
 		local param = rawtable(buildfile)
 		local cpath = repo._cache / param.dephash:sub(1,2) / param.dephash
@@ -273,7 +276,7 @@ local function link(repo, srcfile, identity, buildfile)
 			return cpath, binhash
 		end
 		local dstfile = repo._repo / "tmp.bin"
-		local ok = fs.link(identity, srcfile, dstfile)
+		local ok = fs.link(identity, srcfile, dstfile, localpath)
 		if not ok then
 			return
 		end
@@ -287,7 +290,7 @@ local function link(repo, srcfile, identity, buildfile)
 		return cpath, binhash
 	else
 		local dstfile = repo._repo / "tmp.bin"
-		local deps = fs.link(identity, srcfile, dstfile)
+		local deps = fs.link(identity, srcfile, dstfile, localpath)
 		if not deps then
 			return
 		end
