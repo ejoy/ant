@@ -89,7 +89,7 @@ mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
 		);
 }
 
-#ifdef FRAGMENT_SHADER
+#if BGFX_SHADER_TYPE_FRAGMENT
 mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 {
     vec3 Q1  = dFdx(posWS);
@@ -108,6 +108,6 @@ mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 	return transpose(TBN);
 #endif
 }
-#endif //FRAGMENT_SHADER
+#endif //BGFX_SHADER_TYPE_FRAGMENT
 
 #endif //__SHADER_TRANSFORMS_SH__

@@ -1,7 +1,6 @@
 //simple pbr 
 $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7,v_worldPos,v_camPos
 
-#define FRAGMENT_SHADER 
 #include <common.sh>
 #include "common/uniforms.sh"
 #include "common/lighting.sh"

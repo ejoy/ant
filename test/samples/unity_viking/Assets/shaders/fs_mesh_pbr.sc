@@ -4,13 +4,12 @@
 //    specular no-recommendation, but for scene viking test 
 $input v_texcoord0, v_normal, v_posWS
 
-#define FRAGMENT_SHADER
 
 #include <common.sh>
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
 #include "common/shadow.sh"
- 
+
 // fence does not provide specular,can not process it like specular texture,notice
 // need special process 
 // uniform.x = 0 must set to 0
