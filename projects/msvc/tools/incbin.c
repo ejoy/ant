@@ -330,7 +330,7 @@ usage:
             }
             fprintf(out, "\n};\n");
             fprintf(out, "INCBIN_CONST INCBIN_ALIGN unsigned char *const %s%s%s = g%s%s + sizeof(g%s%s);\n", prefix, name, s(kEnd), name, s(kData), name, s(kData));
-            fprintf(out, "INCBIN_CONST unsigned int %s%s%s = sizeof(g%s%s);\n", prefix, name, s(kSize), name, s(kData));
+            fprintf(out, "INCBIN_CONST unsigned int %s%s%s = sizeof(g%s%s)-1;\n", prefix, name, s(kSize), name, s(kData));
         }
 	end:
         free(line);

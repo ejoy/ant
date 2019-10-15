@@ -185,7 +185,7 @@ INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareBootstrapData[] = {
     0x29, 0x0D, 0x0A, 0x00
 };
 INCBIN_CONST INCBIN_ALIGN unsigned char *const gFirmwareBootstrapEnd = gFirmwareBootstrapData + sizeof(gFirmwareBootstrapData);
-INCBIN_CONST unsigned int gFirmwareBootstrapSize = sizeof(gFirmwareBootstrapData);
+INCBIN_CONST unsigned int gFirmwareBootstrapSize = sizeof(gFirmwareBootstrapData)-1;
 /* INCBIN(FirmwareIo, "../../engine/firmware/io.lua"); */
 INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareIoData[] = {
     0x6C, 0x6F, 0x63, 0x61, 0x6C, 0x20, 0x6C, 0x6F, 0x61, 0x64, 0x66, 0x69, 
@@ -1767,7 +1767,7 @@ INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareIoData[] = {
     0x28, 0x29, 0x0D, 0x0A, 0x00
 };
 INCBIN_CONST INCBIN_ALIGN unsigned char *const gFirmwareIoEnd = gFirmwareIoData + sizeof(gFirmwareIoData);
-INCBIN_CONST unsigned int gFirmwareIoSize = sizeof(gFirmwareIoData);
+INCBIN_CONST unsigned int gFirmwareIoSize = sizeof(gFirmwareIoData)-1;
 /* INCBIN(FirmwareVfs, "../../engine/firmware/vfs.lua"); */
 INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareVfsData[] = {
     0x6C, 0x6F, 0x63, 0x61, 0x6C, 0x20, 0x76, 0x66, 0x73, 0x20, 0x3D, 0x20, 
@@ -2020,7 +2020,7 @@ INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareVfsData[] = {
     0x76, 0x66, 0x73, 0x0D, 0x0A, 0x00
 };
 INCBIN_CONST INCBIN_ALIGN unsigned char *const gFirmwareVfsEnd = gFirmwareVfsData + sizeof(gFirmwareVfsData);
-INCBIN_CONST unsigned int gFirmwareVfsSize = sizeof(gFirmwareVfsData);
+INCBIN_CONST unsigned int gFirmwareVfsSize = sizeof(gFirmwareVfsData)-1;
 /* INCBIN(FirmwareFsImage, FW_ODIR "fs_imgui_image.sc"); */
 INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareFsImageData[] = {
     0x46, 0x53, 0x48, 0x06, 0x01, 0x83, 0xF2, 0xE1, 0x00, 0x00, 0x00, 0x00, 
@@ -2059,7 +2059,7 @@ INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareFsImageData[] = {
     0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 INCBIN_CONST INCBIN_ALIGN unsigned char *const gFirmwareFsImageEnd = gFirmwareFsImageData + sizeof(gFirmwareFsImageData);
-INCBIN_CONST unsigned int gFirmwareFsImageSize = sizeof(gFirmwareFsImageData);
+INCBIN_CONST unsigned int gFirmwareFsImageSize = sizeof(gFirmwareFsImageData)-1;
 /* INCBIN(FirmwareVsImage, FW_ODIR "vs_imgui_image.sc"); */
 INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareVsImageData[] = {
     0x56, 0x53, 0x48, 0x06, 0x00, 0x00, 0x00, 0x00, 0x01, 0x83, 0xF2, 0xE1, 
@@ -2113,7 +2113,7 @@ INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareVsImageData[] = {
     0x00, 0x10, 0x00, 0x40, 0x00, 0x00
 };
 INCBIN_CONST INCBIN_ALIGN unsigned char *const gFirmwareVsImageEnd = gFirmwareVsImageData + sizeof(gFirmwareVsImageData);
-INCBIN_CONST unsigned int gFirmwareVsImageSize = sizeof(gFirmwareVsImageData);
+INCBIN_CONST unsigned int gFirmwareVsImageSize = sizeof(gFirmwareVsImageData)-1;
 /* INCBIN(FirmwareFsFont, FW_ODIR "fs_imgui_font.sc"); */
 INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareFsFontData[] = {
     0x46, 0x53, 0x48, 0x06, 0x01, 0x83, 0xF2, 0xE1, 0x00, 0x00, 0x00, 0x00, 
@@ -2154,7 +2154,7 @@ INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareFsFontData[] = {
     0x00, 0x00, 0x00
 };
 INCBIN_CONST INCBIN_ALIGN unsigned char *const gFirmwareFsFontEnd = gFirmwareFsFontData + sizeof(gFirmwareFsFontData);
-INCBIN_CONST unsigned int gFirmwareFsFontSize = sizeof(gFirmwareFsFontData);
+INCBIN_CONST unsigned int gFirmwareFsFontSize = sizeof(gFirmwareFsFontData)-1;
 /* INCBIN(FirmwareVsFont, FW_ODIR "vs_imgui_font.sc"); */
 INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareVsFontData[] = {
     0x56, 0x53, 0x48, 0x06, 0x00, 0x00, 0x00, 0x00, 0x01, 0x83, 0xF2, 0xE1, 
@@ -2208,7 +2208,7 @@ INCBIN_CONST INCBIN_ALIGN unsigned char gFirmwareVsFontData[] = {
     0x00, 0x10, 0x00, 0x40, 0x00, 0x00
 };
 INCBIN_CONST INCBIN_ALIGN unsigned char *const gFirmwareVsFontEnd = gFirmwareVsFontData + sizeof(gFirmwareVsFontData);
-INCBIN_CONST unsigned int gFirmwareVsFontSize = sizeof(gFirmwareVsFontData);
+INCBIN_CONST unsigned int gFirmwareVsFontSize = sizeof(gFirmwareVsFontData)-1;
 
 #ifdef __cplusplus
 }
