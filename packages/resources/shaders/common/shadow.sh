@@ -104,10 +104,14 @@ vec4 get_color_coverage(int cascadeidx)
 
 float shadow_visibility(float distanceVS, vec4 posWS)
 {
+#ifdef ENABLE_SHADOW
 	int cascadeidx = select_cascade(distanceVS);
 	mat4 m = u_csm_matrix[cascadeidx];
 	vec4 shadowcoord = mul(m, posWS);
 
 	return max(0.15, hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
+#else
+	return 1.0;
+#endif
 }
 #endif //__SHADER_SHADOW_SH__
