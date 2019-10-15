@@ -56,7 +56,7 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 
 vec4 calc_fog_factor(vec4 color, float density, float LOG2, float distanceVS)
 {
-	return saturate(1.0/exp2(density*density*distanceVS*distanceVS*LOG2));
+	return saturate(1.0/exp2(density*density*distanceVS*distanceVS*LOG2)) * color;
 }
 
 vec3 unproject_normal(vec3 normal)

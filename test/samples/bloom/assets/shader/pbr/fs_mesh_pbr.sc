@@ -1,6 +1,7 @@
 //simple pbr 
 $input v_texcoord0, v_lightdir, v_viewdir,v_normal,v_tangent,v_bitangent, v_texcoord4,v_texcoord5,v_texcoord6,v_texcoord7,v_worldPos,v_camPos
- 
+
+#define FRAGMENT_SHADER 
 #include <common.sh>
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
@@ -68,7 +69,7 @@ vec3 DirectTerm( vec3 N, vec3 V, vec3 F0, float metallic, float roughness, vec3 
     vec3 radiance;
     // extend light type here 
     if( lightPos.w > 0 ) {
-        L = normalize( lightPos.xyz - worldPos );                   
+        L = normalize( lightPos.xyz - worldPos );
         H = normalize( V + L);
         radiance = PointLightRadiance( lightPos.xyz,lightColor,worldPos);
     } else {

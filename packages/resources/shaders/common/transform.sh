@@ -89,12 +89,13 @@ mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
 		);
 }
 
+#ifdef FRAGMENT_SHADER
 mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 {
-    vec3 Q1  = ddx(posWS);
-    vec3 Q2  = ddy(posWS);
-    vec2 st1 = ddx(texcoord);
-    vec2 st2 = ddy(texcoord);
+    vec3 Q1  = dFdx(posWS);
+    vec3 Q2  = dFdy(posWS);
+    vec2 st1 = dFdx(texcoord);
+    vec2 st2 = dFdy(texcoord);
 
     vec3 N  = normalize(normal);
     vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
@@ -107,5 +108,6 @@ mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 	return transpose(TBN);
 #endif
 }
+#endif //FRAGMENT_SHADER
 
 #endif //__SHADER_TRANSFORMS_SH__

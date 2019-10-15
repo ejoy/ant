@@ -19,10 +19,11 @@ local function which_format(plat, param)
 end
 
 local extensions = {
-	direct3d11 = "dds",
-	direct3d12 = "dds",
-	metal = "ktx",
-	vulkan = "ktx",
+	direct3d11 	= "dds",
+	direct3d12 	= "dds",
+	metal 		= "ktx",
+	vulkan 		= "ktx",
+	opengl 		= "ktx",
 }
 
 local function outfile_extension(renderer)

@@ -69,7 +69,7 @@ float hardShadow(
 #else
 	vec4 coord = _shadowCoord;
 	coord.z -= _bias;
-	return bgfxShadow2DProj(_sampler, coord);
+	return shadow2DProj(_sampler, coord);
 #endif
 }
 

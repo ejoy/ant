@@ -4,6 +4,8 @@
 //    specular no-recommendation, but for scene viking test 
 $input v_texcoord0, v_normal, v_posWS
 
+#define FRAGMENT_SHADER
+
 #include <common.sh>
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
