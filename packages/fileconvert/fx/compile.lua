@@ -37,7 +37,7 @@ local function embed_shader_bin(bins)
 	return t
 end
 
-return function (identity, srcfilepath, outfilepath)
+return function (identity, srcfilepath, outfilepath, localpath)
 	local fxcontent = rawtable(srcfilepath)
 	local shader = assert(fxcontent.shader)
 	local marcros = fxcontent.macros
@@ -51,7 +51,7 @@ return function (identity, srcfilepath, outfilepath)
 	for _, stagename in ipairs(valid_shader_stage) do
 		local stage_file = shader[stagename]
 		if stage_file then
-			local shader_srcpath = fs.path(stage_file):localpath()
+			local shader_srcpath = localpath(stage_file)
 			local success, msg, depends = check_compile_shader(identity, shader_srcpath, outfilepath, marcros)
 			build_success = build_success and success
 			messages[#messages+1] = msg
