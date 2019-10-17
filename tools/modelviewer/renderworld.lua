@@ -25,6 +25,8 @@ local renderpkg = import_package "ant.render"
 local skypkg = import_package "ant.sky"
 local skyutil = skypkg.util
 
+local assetmgr = import_package "ant.asset".mgr
+
 model_review_system.singleton "constant"
 
 model_review_system.depend "primitive_filter_system"
@@ -64,10 +66,101 @@ local function create_material_item(filepath, color)
 	}
 end
 
+ecs.tag "quad_test"
+
+local function quad_clear_test()
+	local flags = renderpkg.util.generate_sampler_flag {
+		RT="RT_ON",
+		MIN="LINEAR",
+		MAG="LINEAR",
+		U="CLAMP",
+		V="CLAMP",
+	}
+	local width, height = 4096, 1024
+
+	local cameratag = "quad_test_camera"
+
+	renderpkg.camera.bind_camera(world, cameratag, 
+	renderpkg.default.camera(nil, nil, 
+	renderpkg.default.frustum(width, height)))
+
+	local fbeid = world:create_entity {
+		frame_buffer = {
+			render_buffers = {
+				{
+					format = "D32",
+					w=width,
+					h=height,
+					layers=1,
+					flags=flags,
+				},
+			}
+		}
+	}
+
+	local fbentity = world[fbeid]
+
+	local v = cu.quad_vertices()
+	local depth = 1.0
+	local color = 0xff0000ff
+	local gvb = {
+		"fffd",
+		v[1], v[2], depth, color,
+		v[3], v[4], depth, color,
+		v[5], v[6], depth, color,
+		v[7], v[8], depth, color,
+	}
+	local meshkeyname = assetmgr.register_resource(fs.path "//meshres/quadtest.mesh", 
+		cu.create_simple_mesh( "p3|c40niu", gvb, 4))
+
+	local function create_viewport_test(quadname, fb, rect)
+		local quadtest_viewid = renderpkg.viewidmgr.generate(quadname)
+		renderpkg.fbmgr.bind(quadtest_viewid, fb)
+	
+		world:create_entity {
+			viewid = quadtest_viewid,
+			primitive_filter = {
+				view_tag = "quad_test",
+				filter_tag = "quad_test"
+			},
+			camera_tag = "quad_test_camera",
+			render_target = {
+				viewport = {
+					rect = rect,
+					clear_state = {
+						color = 0xff0000ff,
+						depth = 1, stencil = 0,
+						clear = "",
+					}
+				},
+			},
+			name = "quad_test_queue",
+		}
+	end
+
+	local eid = world:create_entity {
+		transform = mu.srt(),
+		rendermesh = {},
+		material = {
+			{ref_path = fs.path "/pkg/ant.modelviewer/res/quadtest/quadtest.material"}
+		},
+		name = "quadtest",
+		quad_test = true,
+		can_render = true,
+	}
+
+	world[eid].rendermesh.reskey = meshkeyname
+
+	create_viewport_test("quadtest1", fbentity.frame_buffer, {x=0,y=0,w=1024,h=1024})
+	create_viewport_test("quadtest2", fbentity.frame_buffer, {x=1024,y=0,w=1024,h=1024})
+	create_viewport_test("quadtest2", fbentity.frame_buffer, {x=2048,y=0,w=1024,h=1024})
+end
+
 function model_review_system:init()
 	create_light()
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
+	-- quad_clear_test()
 	-- world:create_entity {
 	-- 	transform = mu.srt(),
 	-- 	rendermesh = {},
@@ -250,11 +343,11 @@ local function memory_info()
 	return table.concat(s, "\t\n\t")
 end
 
-function model_review_system:on_gui()
-	local windows = imgui.windows
-	local widget = imgui.widget
+-- function model_review_system:on_gui()
+-- 	local windows = imgui.windows
+-- 	local widget = imgui.widget
 
-	windows.Begin("Test")
-	widget.Text(memory_info())
-	windows.End()
-end
+-- 	windows.Begin("Test")
+-- 	widget.Text(memory_info())
+-- 	windows.End()
+-- end

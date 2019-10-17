@@ -1,0 +1,9 @@
+fx = "/pkg/ant.modelviewer/res/quadtest/quadtest.fx"
+state = {
+    WRITE_MASK = "RGBAZ",
+    ALPHA_REF = 0,
+    CULL = "CCW",
+    MSAA = true,
+    DEPTH_TEST = "ALWAYS",
+    PT = "TRISTRIP"
+}

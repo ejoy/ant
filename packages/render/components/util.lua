@@ -166,6 +166,16 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag, transform)
     return gridid
 end
 
+function util.quad_vertices(rect)
+	rect = rect or {x=0, y=0, w=1, h=1}
+	return {
+		rect.x, 		 rect.y, 		
+		rect.x, 		 rect.y + rect.h, 
+		rect.x + rect.w, rect.y, 		
+		rect.x + rect.w, rect.y + rect.h, 
+	}
+end
+
 function util.create_plane_entity(world, size, pos, materialpath, color, name)
 	color = color or {0.8, 0.8, 0.8, 1}	
 	local eid = world:create_entity {
@@ -185,13 +195,13 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name)
 
 	local e = world[eid]
 	local vb = {
-		"fff",
-		-0.5, 0, 0.5,
-		0.5,  0, 0.5,
-		-0.5, 0,-0.5,
-		0.5,  0,-0.5,
+		"fffffffff",
+		-0.5, 0, 0.5, 0, 1, 0, 1, 0, 0,
+		0.5,  0, 0.5, 0, 1, 0, 1, 0, 0,
+		-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
+		0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
 	}
-	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/plane.mesh", util.create_simple_mesh("p3", vb, 4))
+	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
 end
 
 local function quad_mesh(vb)	
