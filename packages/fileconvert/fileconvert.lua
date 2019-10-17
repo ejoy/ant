@@ -25,9 +25,9 @@ local function os_date()
     return os.date('%Y-%m-%d %H:%M:%S:{ms}', ti):gsub('{ms}', math.floor(tf*1000))
 end
 
-local function log_err(src, lk, err)
+local function log_err(src, err)
 	local log = get_logfile()
-	local errinfo = string.format("[fileconvert:%s]src:%s, lk:%s, error:%s\n", os_date(), src, lk, err)
+	local errinfo = string.format("[fileconvert:%s]src:%s, error:%s\n", os_date(), src, err)
 	log:write(errinfo)
 	log:flush()
 	print(errinfo)
