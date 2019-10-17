@@ -63,9 +63,13 @@ end
 
 function util.parse_embed_file(filepath)
     local f = fs.open(filepath, "rb")
-
+    if f == nil then
+        error(string.format("could not open file:%s", filepath:string()))
+        return 
+    end
     local magic = f:read(4)
     if magic ~= "res\0" then
+        error(string.format("wrong format from file:%s",filepath:string()))
         return 
     end
 
@@ -93,6 +97,31 @@ function util.parse_embed_file(filepath)
     f:close()
     return luattable, binary
 
+end
+
+function util.def_surface_type()
+	return {
+		lighting = "on",			-- "on"/"off"
+		transparency = "opaticy",	-- "opaticy"/"translucent"
+		shadow	= {
+			cast = "on",			-- "on"/"off"
+			receive = "on",			-- "on"/"off"
+		},
+		subsurface = "off",			-- "on"/"off"? maybe has other setting
+	}
+end
+
+function util.load_surface_type(surfacetype)
+	if surfacetype == nil then
+		return util.def_surface_type()
+	end
+
+	for k, v in pairs(util.def_surface_type()) do
+		if surfacetype[k] == nil then
+			surfacetype[k] = v
+		end
+	end
+	return surfacetype
 end
 
 return util

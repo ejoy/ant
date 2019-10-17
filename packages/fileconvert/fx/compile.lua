@@ -2,7 +2,9 @@ local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
 local fs		= require "filesystem"
 local util 		= require "util"
-local vfs 		= require "vfs"
+
+local assetpkg = import_package "ant.asset"
+local assetutil= assetpkg.util
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
 local function check_compile_shader(identity, srcfilepath, outfilepath, macros)
@@ -37,10 +39,26 @@ local function embed_shader_bin(bins)
 	return t
 end
 
+local function add_macros_from_surface_setting(surfacetype, macros)
+	if surfacetype then
+		macros = macros or {}
+		surfacetype = assetutil.load_surface_type(surfacetype)
+		
+		if surfacetype.lighting == "on" then
+			macros[#macros+1] = "ENABLE_LIGHTING"
+		end
+
+		if surfacetype.shadow.receive == "on" then
+			macros[#macros+1] = "ENABLE_SHADOW"
+		end
+	end
+	return macros
+end
+
 return function (identity, srcfilepath, outfilepath, localpath)
 	local fxcontent = rawtable(srcfilepath)
 	local shader = assert(fxcontent.shader)
-	local marcros = fxcontent.macros
+	local marcros = add_macros_from_surface_setting(fxcontent.surface_type, fxcontent.macros)
 
 	local messages = {}
 	local all_depends = {}

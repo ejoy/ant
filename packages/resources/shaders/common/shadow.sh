@@ -26,8 +26,9 @@ uniform vec4 u_shadow_param2;
 #define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
 #define shadow_sampler_type sampler2DShadow
 #endif
-
+#ifdef ENABLE_SHADOW
 SHADOW_SAMPLER2D(s_shadowmap, 7);
+#endif //ENABLE_SHADOW
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
 {

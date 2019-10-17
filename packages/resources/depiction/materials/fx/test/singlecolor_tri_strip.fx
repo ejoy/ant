@@ -4,6 +4,6 @@ shader = {
   vs = "/pkg/ant.resources/shaders/test/singlecolor/vs.sc"
 }
 
-macros = {
-  "ENABLE_SHADOW"
+surface_type = {
+  lighting = "off"
 }

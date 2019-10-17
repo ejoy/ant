@@ -3,31 +3,6 @@ local bgfx      = require "bgfx"
 local shadermgr = require "shader_mgr"
 local assetutil = require "util"
 
-local function def_surface_type()
-	return {
-		lighting = "on",			-- "on"/"off"
-		transparency = "opaticy",	-- "opaticy"/"translucent"
-		shadow	= {
-			cast = "on",			-- "on"/"off"
-			receive = "on",			-- "on"/"off"
-		},
-		subsurface = "off",			-- "on"/"off"? maybe has other setting
-	}
-end
-
-local function load_surface_type(surfacetype)
-	if surfacetype == nil then
-		return def_surface_type()
-	end
-
-	for k, v in pairs(def_surface_type()) do
-		if surfacetype[k] == nil then
-			surfacetype[k] = v
-		end
-	end
-	return surfacetype
-end
-
 local function load_shader(shaderbin, filename)
     local h = bgfx.create_shader(shaderbin)
     bgfx.set_name(h, filename)
@@ -71,7 +46,7 @@ return {
 
         return {
             shader      = shader,
-            surface_type= load_surface_type(content.surface_type),
+            surface_type= assetutil.load_surface_type(content.surface_type),
         }
     end,
 

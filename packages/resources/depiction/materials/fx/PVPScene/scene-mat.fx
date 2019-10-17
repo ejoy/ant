@@ -4,10 +4,6 @@ shader = {
   vs = "/pkg/ant.resources/shaders/shadow/csm/vs_mesh.sc"
 }
 
-macros = {
-  "ENABLE_SHADOW"
-}
-
 surface_type = {
   lighting = "on",
   shadow = {
