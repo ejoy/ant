@@ -1,4 +1,5 @@
 @pkg-one packages/fileconvert
 @pkg-one packages/glTF
+@pkg-one packages/asset
 @pkg-one tools/shaderc
 engine engine

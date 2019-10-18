@@ -63,6 +63,7 @@ local function tool_paths(toolbasename)
     end
 
     return {
+        "clibs/" .. toolbasename,
         "clibs/" .. toolnameRelease,
         "clibs/" .. toolnameDebug,
         to_binpath(toolnameRelease),
