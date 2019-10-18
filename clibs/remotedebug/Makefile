@@ -6,7 +6,7 @@ else
 default : $(ODIR)/libremotedebug.a
 endif
 
-OBJS = $(ODIR)/rdebug_host.o $(ODIR)/rdebug_visitor.o $(ODIR)/rdebug_hookmgr.o $(ODIR)/rdebug_eventfree.o $(ODIR)/rdebug_redirect.o $(ODIR)/rdebug_stdio.o $(ODIR)/thunk.o
+OBJS = $(ODIR)/rdebug_host.o $(ODIR)/rdebug_visitor.o $(ODIR)/rdebug_hookmgr.o $(ODIR)/rdebug_eventfree.o $(ODIR)/rdebug_redirect.o $(ODIR)/rdebug_stdio.o $(ODIR)/thunk.o $(ODIR)/rdebug_table.o
 
 $(ODIR)/rdebug_host.o : rdebug_host.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) -DRLUA_DISABLE
@@ -24,6 +24,9 @@ $(ODIR)/rdebug_redirect.o : rdebug_redirect.cpp rdebug_redirect.h | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $< -DRLUA_DISABLE
 
 $(ODIR)/rdebug_stdio.o : rdebug_stdio.cpp rdebug_redirect.h | $(ODIR)
+	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $< -DRLUA_DISABLE
+
+$(ODIR)/rdebug_table.o : rdebug_table.cpp rdebug_table.h | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $< -DRLUA_DISABLE
 
 $(ODIR)/thunk.o : thunk/thunk.cpp thunk/thunk.h thunk/thunk_windows.inl thunk/thunk_windows_i386.inl thunk/thunk_windows_amd64.inl thunk/thunk_linux.inl thunk/thunk_other.inl | $(ODIR)

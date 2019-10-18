@@ -1,9 +1,7 @@
-#include <lua.hpp>
-#include "lua_compat.h"
+#include "rdebug_debugvar.h"
+#include "rdebug_table.h"
 #include <string.h>
 #include <stdio.h>
-
-#include "rdebug_debugvar.h"
 
 static int DEBUG_WATCH = 0;
 static int DEBUG_WATCH_FUNC = 0;
@@ -77,34 +75,17 @@ lclient_indexv(rlua_State *L) {
 }
 
 static int
-client_next(rlua_State *L, int getref) {
+lclient_nextkey(rlua_State *L) {
 	lua_State *hL = get_host(L);
 	rlua_settop(L, 2);
 	rlua_pushvalue(L, 1);
 	// table key table
 	rlua_insert(L, -2);
 	// table table key
-	if (next_key(L, hL, getref) == 0)
+	if (next_key(L, hL, 0) == 0)
 		return 0;
 	// table key_obj
-	rlua_insert(L, 1);
-	// key_obj table
-	rlua_pushvalue(L, 1);
-	// key_obj table key_obj
-	if (get_index(L, hL, getref) == 0) {
-		return 0;
-	}
-	return 2;
-}
-
-static int
-lclient_next(rlua_State *L) {
-	return client_next(L, 1);
-}
-
-static int
-lclient_nextv(rlua_State *L) {
-	return client_next(L, 0);
+	return 1;
 }
 
 static int
@@ -139,26 +120,42 @@ lclient_copytable(rlua_State *L) {
 		lua_pop(hL, 1);	// pop table
 		return 0;
 	}
+	const void* t = lua_topointer(hL, -1);
+	if (!t) {
+		lua_pop(hL, 1);
+		return 0;
+	}
 	rlua_newtable(L);
-	rlua_insert(L, -2);
-	rlua_pushnil(L);
-	// L : result tableref nil
-	lua_pushnil(hL);
-	// hL : table nil
-	while(next_kv(L, hL)) {
-		if (--maxn < 0) {
-			lua_pop(hL, 2);
-			rlua_pop(L, 3);
-			return 1;
+	unsigned int hsize = remotedebug::table::hash_size(t);
+	for (unsigned int i = 0; i < hsize; ++i) {
+		if (remotedebug::table::get_kv(hL, t, i)) {
+			if (--maxn < 0) {
+				lua_pop(hL, 2);
+				return 1;
+			}
+			rlua_pushvalue(L, 1); combine_kv(L, hL, 0, VAR_INDEX_KEY, i);
+			rlua_pushvalue(L, 1); combine_kv(L, hL, 1, VAR_INDEX_VAL, i);
+			rlua_rawset(L, -3);
 		}
-		// L: result tableref nextkey value
-		rlua_pushvalue(L, -2);
-		rlua_insert(L, -2);
-		// L: result tableref nextkey nextkey value
-		rlua_rawset(L, -5);
-		// L: result tableref nextkey
 	}
 	return 1;
+}
+
+int lclient_tablesize(rlua_State *L) {
+	lua_State* hL = get_host(L);
+	if (eval_value(L, hL) != LUA_TTABLE) {
+		lua_pop(hL, 1);
+		return 0;
+	}
+	const void* t = lua_topointer(hL, -1);
+	if (!t) {
+		lua_pop(hL, 1);
+		return 0;
+	}
+	rlua_pushinteger(L, remotedebug::table::array_size(t));
+	rlua_pushinteger(L, remotedebug::table::hash_size(t));
+	lua_pop(hL, 1);
+	return 2;
 }
 
 static int
@@ -333,6 +330,7 @@ lclient_getinfo(rlua_State *L) {
 		case 'l': size += 1; break;
 		case 'n': size += 2; break;
 #if LUA_VERSION_NUM >= 502
+		case 'u': size += 1; break;
 		case 't': size += 1; break;
 #endif
 #if LUA_VERSION_NUM >= 504
@@ -410,6 +408,10 @@ lclient_getinfo(rlua_State *L) {
 			rlua_setfield(L, 3, "namewhat");
 			break;
 #if LUA_VERSION_NUM >= 502
+		case 'u':
+			rlua_pushinteger(L, ar.nparams);
+			rlua_setfield(L, 3, "nparams");
+			break;
 		case 't':
 			rlua_pushboolean(L, ar.istailcall? 1 : 0);
 			rlua_setfield(L, 3, "istailcall");
@@ -617,11 +619,11 @@ init_visitor(rlua_State *L) {
 		{ "getuservaluev", lclient_getuservaluev },
 		{ "index", lclient_index },
 		{ "indexv", lclient_indexv },
-		{ "next", lclient_next },
-		{ "nextv", lclient_nextv },
+		{ "nextkey", lclient_nextkey },
 		{ "getstack", lclient_getstack },
 		{ "getstackv", lclient_getstackv },
 		{ "copytable", lclient_copytable },
+		{ "tablesize", lclient_tablesize },
 		{ "value", lclient_value },
 		{ "tostring", lclient_tostring },
 		{ "assign", lclient_assign },

@@ -118,7 +118,6 @@ function CMD.stackTrace(pkg)
     local curFrame = 0
     local virtualFrame = 0
     local depth = 0
-    local info = {}
     local res = {}
 
     if startFrame == 0 then
@@ -210,7 +209,7 @@ function CMD.scopes(pkg)
 end
 
 function CMD.variables(pkg)
-    local vars, err = variables.extand(pkg.valueId)
+    local vars, err = variables.extand(pkg.valueId, pkg.filter, pkg.start, pkg.count)
     if not vars then
         sendToMaster {
             cmd = 'variables',
