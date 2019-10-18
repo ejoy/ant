@@ -12,9 +12,10 @@ if _VERSION == "Lua 5.1" then
 end
 
 local f = assert(debug.getinfo(level,"f").func, "can't find function")
-local uv = {}
-local uv_id = {}
+local args = {}
 local local_id = {}
+local local_value = {}
+local upvalue_id = {}
 local i = 1
 while true do
 	local name, value = debug.getlocal(level, i)
@@ -22,8 +23,9 @@ while true do
 		break
 	end
 	if name:byte() ~= 40 then	-- '('
-		uv[#uv+1] = name
-		local_id[name] = value
+		args[#args+1] = name
+		local_id[name] = i
+		local_value[name] = value
 	end
 	i = i + 1
 end
@@ -33,18 +35,18 @@ while true do
 	if name == nil then
 		break
 	end
-	uv_id[name] = i
-	uv[#uv+1] = name
+	args[#args+1] = name
+	upvalue_id[name] = i
 	i = i + 1
 end
 local full_source
-if #uv > 0 then
+if #args > 0 then
 	full_source = ([[
 local $ARGS
 return function(...)
 return $SOURCE
 end]]):gsub("%$(%w+)", {
-	ARGS = table.concat(uv, ","),
+	ARGS = table.concat(args, ","),
 	SOURCE = source,
 })
 else
@@ -62,16 +64,15 @@ while true do
 	if name == nil then
 		break
 	end
-	local upvalue_id = uv_id[name]
-	if upvalue_id then
-		local upname, upvalue = debug.getupvalue(f, upvalue_id)
+	local uvid = upvalue_id[name]
+	if uvid then
+		local upname, upvalue = debug.getupvalue(f, uvid)
 		if upname ~= nil then
 			debug.setupvalue(func, i, upvalue)
 		end
 	end
-	local local_value = local_id[name]
-	if local_value then
-		debug.setupvalue(func, i, local_value)
+	if local_id[name] then
+		debug.setupvalue(func, i, local_value[name])
 	end
 	i = i + 1
 end
