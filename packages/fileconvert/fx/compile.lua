@@ -70,15 +70,14 @@ return function (identity, srcfilepath, outfilepath, localpath)
 		local stage_file = shader[stagename]
 		if stage_file then
 			local shader_srcpath = localpath(stage_file)
+			all_depends[shader_srcpath:string()] = shader_srcpath
 			local success, msg, depends = check_compile_shader(identity, shader_srcpath, outfilepath, marcros)
 			build_success = build_success and success
 			messages[#messages+1] = msg
 
 			if success then
 				for _, d in ipairs(depends) do
-					if all_depends[d:string()] == nil then
-						all_depends[d:string()] = d
-					end
+					all_depends[d:string()] = d
 				end
 				binarys[stagename] = util.fetch_file_content(outfilepath)
 			end
