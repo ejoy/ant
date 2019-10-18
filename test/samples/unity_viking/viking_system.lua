@@ -38,8 +38,9 @@ scene_walker.depend     'procedural_sky_system'
 scene_walker.depend     'cull_system'
 scene_walker.depend     'asyn_asset_loader'
 scene_walker.depend     'scene_space'
---scene_walker.depend     'shadow_maker'
+scene_walker.depend     'shadow_maker'
 scene_walker.depend     'camera_controller'
+scene_walker.depend     'steering_system'
 --scene_walker.dependby 	'camera_controller_2'
 
 local function load_world(mappath)
