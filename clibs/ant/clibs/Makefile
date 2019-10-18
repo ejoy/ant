@@ -1,5 +1,5 @@
 LUAINC= -I./../../lua
-LUALIB= -L./../../lua -llua53
+LUALIB= -L./../../lua -llua54
 CFLAGS= -O2 -Wall -fPIC
 
 CLIBSCC= g++ -std=c++17 -c

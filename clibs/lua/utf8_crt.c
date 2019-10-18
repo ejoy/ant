@@ -1,4 +1,6 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #include "utf8_crt.h"
 #include "utf8_unicode.h"
 #include <malloc.h>
@@ -79,6 +81,10 @@ void* __stdcall utf8_LoadLibraryExA(const char* filename, void* file, unsigned l
 unsigned long __stdcall utf8_GetModuleFileNameA(void* module, char* filename, unsigned long size)
 {
 	wchar_t* tmp = calloc(size, sizeof(wchar_t));
+	if (!tmp) {
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return 0;
+	}
 	unsigned long tmplen = GetModuleFileNameW(module, tmp, size);
 	unsigned long ret = WideCharToMultiByte(CP_UTF8, 0, tmp, tmplen + 1, filename, size, NULL, NULL);
 	free(tmp);
@@ -96,6 +102,10 @@ unsigned long __stdcall utf8_FormatMessageA(
 )
 {
 	wchar_t* tmp = calloc(nSize, sizeof(wchar_t));
+	if (!tmp) {
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return 0;
+	}
 	int res = FormatMessageW(dwFlags, lpSource, dwMessageId, dwLanguageId, tmp, nSize, Arguments);
 	if (!res) {
 		free(tmp);
@@ -105,4 +115,3 @@ unsigned long __stdcall utf8_FormatMessageA(
 	free(tmp);
 	return ret;
 }
-
