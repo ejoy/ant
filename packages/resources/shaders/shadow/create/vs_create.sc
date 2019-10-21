@@ -4,7 +4,8 @@ $output v_position
 
 void main()
 {
-	vec4 wpos = mul(u_model[0], vec4(a_position, 1.0));
-	gl_Position = mul(u_viewProj, wpos);	
+	gl_Position = mul(u_modelViewProj, vec4(a_position, 1.0));	
+#ifdef SM_LINEAR
 	v_position = gl_Position;
+#endif //SM_LINEAR
 }

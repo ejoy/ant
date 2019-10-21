@@ -1,5 +1,6 @@
 @pkg-one packages/fileconvert
 @pkg-one packages/glTF
 @pkg-one packages/asset
+@pkg-one test/samples/unity_viking
 @pkg-one tools/shaderc
 engine engine

@@ -9,29 +9,50 @@ local fs = require "filesystem.local"
 local fvpkg = import_package "ant.fileconvert"
 local toolset = fvpkg.shader_toolset
 
+local macros
+local includes
+
+local myarg = {}
 for i, a in ipairs(arg) do
-	if a == "--bin=msvc" then
-		table.remove(arg, i)
-		break
+	local cfgname, cfgvalue = a:match "--(%w+)=(%w+)"
+	if cfgname == nil then
+		myarg[#myarg+1] = a
+	else
+		if cfgname == "macros" then
+			macros = cfgvalue
+		elseif cfgname == "includes" then
+			includes = cfgvalue
+		end
 	end
 end
 
-local identity, input, output, macros, includes = table.unpack(arg)
+local identity, input, output = table.unpack(myarg)
 if includes == nil then
 	includes = {}
 end
 includes[#includes+1] = fs.current_path() / "packages/resources/shaders"
 
-local success, err = toolset.compile{
-	identity = identity,
-	srcfile = fs.path(input),
-	outfile = fs.path(output),
-    includes = includes,
-    macros = macros,
-}
+local srcfile = fs.path(input)
 
-if success then
-	print("success!")
+if srcfile:extension():string():lower() == ".fx" then
+	local success, msg = fvpkg.converter.fx(identity, srcfile, fs.path(output), function(filename)
+		local vfs = require "vfs"
+		return fs.path(vfs.realpath(filename))
+	end)
+	print("build:", success and "success" or "failed")
+	print(msg)
 else
-	print("failed! error : ", err)
+	local success, err = toolset.compile{
+		identity = identity,
+		srcfile = srcfile,
+		outfile = fs.path(output),
+		includes = includes,
+		macros = macros,
+	}
+	
+	if success then
+		print("success!")
+	else
+		print("failed! error : ", err)
+	end
 end

@@ -40,17 +40,20 @@ local function embed_shader_bin(bins)
 end
 
 local function add_macros_from_surface_setting(surfacetype, macros)
-	if surfacetype then
-		macros = macros or {}
-		surfacetype = assetutil.load_surface_type(surfacetype)
-		
-		if surfacetype.lighting == "on" then
-			macros[#macros+1] = "ENABLE_LIGHTING"
-		end
+	surfacetype = assetutil.load_surface_type(surfacetype)
+	macros = macros or {}
 
-		if surfacetype.shadow.receive == "on" then
-			macros[#macros+1] = "ENABLE_SHADOW"
-		end
+	if surfacetype.lighting == "on" then
+		macros[#macros+1] = "ENABLE_LIGHTING"
+	end
+
+	local shadow = surfacetype.shadow
+	if shadow.receive == "on" then
+		macros[#macros+1] = "ENABLE_SHADOW"
+	end
+
+	if shadow.linear then
+		macros[#macros+1] = "SM_LINEAR"
 	end
 	return macros
 end
