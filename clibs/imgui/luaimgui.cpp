@@ -1140,7 +1140,7 @@ create_new_editbuf(lua_State *L) {
 	} else {
 		++sz;
 	}
-	struct editbuf *ebuf = (struct editbuf *)lua_newuserdata(L, sizeof(*ebuf));
+	struct editbuf *ebuf = (struct editbuf *)lua_newuserdatauv(L, sizeof(*ebuf), 0);
 	ebuf->buf = (char *)malloc(sz);
 	if (ebuf->buf == NULL)
 		luaL_error(L, "Edit buffer oom %u", (unsigned)sz);
@@ -3387,7 +3387,7 @@ push_beginframe( lua_State * L ){
 	lua_setfield(L, -3, "IO");
 
 	size_t io_size = sizeof(lua_imgui_io);
-	lua_imgui_io * io_cache =  (lua_imgui_io *)lua_newuserdata(L, io_size);
+	lua_imgui_io * io_cache =  (lua_imgui_io *)lua_newuserdatauv(L, io_size, 0);
 	io_cache->inited = false;
 
 	lua_pushcclosure(L, lbeginFrame, 2);

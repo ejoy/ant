@@ -1406,7 +1406,7 @@ lpointer(lua_State *L) {
 
 struct refobject*
 new_refobj(struct lua_State *L, struct lastack *LS, int64_t id){
-	struct refobject* ref = (struct refobject*)lua_newuserdata(L, sizeof(struct refobject));
+	struct refobject* ref = (struct refobject*)lua_newuserdatauv(L, sizeof(struct refobject), 0);
 	luaL_setmetatable(L, LINALG_REF);
 	ref->LS = LS;
 	int t = 0;
@@ -2881,7 +2881,7 @@ lstackrefobject(lua_State *L) {
 
 static int
 lnew(lua_State *L) {	
-	struct boxstack *bp = (struct boxstack *)lua_newuserdata(L, sizeof(*bp));
+	struct boxstack *bp = (struct boxstack *)lua_newuserdatauv(L, sizeof(*bp), 0);
 
 	bp->LS = NULL;
 	if (luaL_getmetatable(L, LINALG)) {

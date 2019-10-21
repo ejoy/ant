@@ -177,7 +177,7 @@ lterrain_attrib(lua_State *L)
 //	printf("c terrain: new alloc vertex = %d, strid =%d\n", num, vd->getStride());
 //#endif 	
 //
-//	terrain->vertices = (uint8_t*)lua_newuserdata(L, num * vd->getStride());
+//	terrain->vertices = (uint8_t*)lua_newuserdatauv(L, num * vd->getStride(), 0);
 //
 //	if (luaL_newmetatable(L, "TERRAIN_VB")) {
 //		lua_pushcfunction(L, lterrain_vb_close);        // register gc function
@@ -209,7 +209,7 @@ lterrain_attrib(lua_State *L)
 //		return luaL_error(L, "indices already exist.");
 //
 //	uint32_t num = terrain->gridWidth * terrain->gridLength;
-//	terrain->indices = (uint32_t*)lua_newuserdata(L, num * sizeof(uint32_t) * 6);
+//	terrain->indices = (uint32_t*)lua_newuserdatauv(L, num * sizeof(uint32_t) * 6, 0);
 //#ifdef MY_DEBUG	
 //	printf("c terrain: new alloc vertex = %d, index =%d(%d)\n", num, (uint32_t)(num * 6), (uint32_t)(num * sizeof(uint32_t) * 6));
 //#endif 	
@@ -1179,7 +1179,7 @@ init_terrain_data(terrain_data *terrain) {
 static int
 lterrain_create(lua_State *L) {
 	const bool haslayout = lua_isnoneornil(L, 2);
-	terrain_data* terrain = (terrain_data*)lua_newuserdata(L, sizeof(terrain_data));
+	terrain_data* terrain = (terrain_data*)lua_newuserdatauv(L, sizeof(terrain_data), 0);
 	luaL_getmetatable(L, "TERRAIN_DATA");
 	lua_setmetatable(L, -2);
 

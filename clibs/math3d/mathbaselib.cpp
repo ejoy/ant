@@ -75,7 +75,7 @@ record_memory_used(int32_t size_bytes, memory_stat::MEMORY_RECORD_TYPE mrt){
 
 static inline struct lastack*
 fetch_LS(lua_State* L, int index) {
-	lua_getuservalue(L, index);
+	lua_getiuservalue(L, index, 1);
 	struct boxstack* BS = (struct boxstack*)luaL_checkudata(L, -1, LINALG);
 	return BS->LS;
 }
@@ -546,7 +546,7 @@ planenames[Frustum::PlaneName::far], f->planes[5][0], f->planes[5][1], f->planes
 
 static inline int
 push_frustum(lua_State* L, const Frustum& f, int BS_index) {
-	auto* pf = (Frustum*)lua_newuserdata(L, sizeof(Frustum));
+	auto* pf = (Frustum*)lua_newuserdatauv(L, sizeof(Frustum), 1);
 	*pf = f;
 
 	if (luaL_getmetatable(L, "FRUSTUM_MT")) {
@@ -557,7 +557,7 @@ push_frustum(lua_State* L, const Frustum& f, int BS_index) {
 
 	luaL_checkudata(L, BS_index, LINALG);
 	lua_pushvalue(L, BS_index);
-	lua_setuservalue(L, -2);
+	lua_setiuservalue(L, -2, 1);
 
 #ifdef _STAT_MEMORY_
 	record_memory_used(sizeof(Frustum), memory_stat::MRT_Frusutm);
@@ -823,7 +823,7 @@ lfrustum_new(lua_State* L) {
 
 static int
 push_bounding(lua_State *L, const Bounding &bounding, int BS_index) {
-	auto b = (Bounding*)lua_newuserdata(L, sizeof(Bounding));
+	auto b = (Bounding*)lua_newuserdatauv(L, sizeof(Bounding), 1);
 	memcpy(b, &bounding, sizeof(Bounding));
 
 	if (luaL_getmetatable(L, "BOUNDING_MT")){
@@ -834,7 +834,7 @@ push_bounding(lua_State *L, const Bounding &bounding, int BS_index) {
 
 	luaL_checkudata(L, BS_index, LINALG);
 	lua_pushvalue(L, BS_index);
-	lua_setuservalue(L, -2);
+	lua_setiuservalue(L, -2, 1);
 
 #ifdef _STAT_MEMORY_
 	record_memory_used(sizeof(Frustum), memory_stat::MRT_Bounding);

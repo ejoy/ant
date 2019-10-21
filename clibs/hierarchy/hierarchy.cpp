@@ -43,7 +43,7 @@ lbuilddata_del(lua_State *L){
 
 static inline struct hierarchy_tree*
 get_tree(lua_State *L, int index){
-	if (lua_getuservalue(L, index) != LUA_TTABLE) {
+	if (lua_getiuservalue(L, index, 1) != LUA_TTABLE) {
 		luaL_error(L, "Missing cache in get_tree");
 	}
 
@@ -233,7 +233,7 @@ lbuilddata_jointmatrix(lua_State *L) {
 	}
 
 	const auto trans = joint_matrix(builddata->skeleton, jointidx);
-	auto* p = lua_newuserdata(L, sizeof(trans));
+	auto* p = lua_newuserdatauv(L, sizeof(trans), 0);
 	memcpy(p, &trans, sizeof(trans));
 	return 1;
 }
@@ -259,7 +259,7 @@ lbuilddata_bindpose_result(lua_State *L) {
 
 static struct hierarchy_build_data*
 create_builddata_userdata(lua_State *L){
-	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_newuserdata(L, sizeof(*builddata));
+	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_newuserdatauv(L, sizeof(*builddata), 0);
 
 	luaL_getmetatable(L, "HIERARCHY_BUILD_DATA");
 	lua_setmetatable(L, -2);
@@ -400,7 +400,7 @@ expand_children(lua_State *L, int index, RawSkeleton::Joint::Children *c, size_t
 	if (old_ptr == new_ptr) {
 		return;
 	}
-	if (lua_getuservalue(L, index) != LUA_TTABLE) {
+	if (lua_getiuservalue(L, index, 1) != LUA_TTABLE) {
 		luaL_error(L, "Missing cache expand_children");
 	}
 	int cache_index = lua_gettop(L);
@@ -413,7 +413,7 @@ expand_children(lua_State *L, int index, RawSkeleton::Joint::Children *c, size_t
 
 static void
 remove_child(lua_State *L, int index, RawSkeleton::Joint::Children * c, size_t child) {
-	if (lua_getuservalue(L, index) != LUA_TTABLE) {
+	if (lua_getiuservalue(L, index, 1) != LUA_TTABLE) {
 		luaL_error(L, "Missing cache");
 	}
 	int cache_index = lua_gettop(L);
@@ -423,7 +423,7 @@ remove_child(lua_State *L, int index, RawSkeleton::Joint::Children * c, size_t c
 		h->joint = NULL;
 		lua_pushnil(L);
 		// HIERARCHY_NODE nil
-		lua_setuservalue(L, -2);
+		lua_setiuservalue(L, -2, 1);
 	}
 	lua_pop(L, 1);
 	lua_pushnil(L);
@@ -440,14 +440,14 @@ remove_child(lua_State *L, int index, RawSkeleton::Joint::Children * c, size_t c
 
 static inline int
 push_hierarchy_node(lua_State *L, RawSkeleton::Joint *joint){
-	if (lua_getuservalue(L, 1) != LUA_TTABLE) {
+	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
 		return luaL_error(L, "Missing cache lhnodeget");
 	}
 
 	if (lua_rawgetp(L, -1, (const void *)joint) != LUA_TUSERDATA) {
 		lua_pop(L, 1);
 
-		struct hierarchy * h = (struct hierarchy *)lua_newuserdata(L, sizeof(hierarchy)); // stack : hnode
+		struct hierarchy * h = (struct hierarchy *)lua_newuserdatauv(L, sizeof(hierarchy), 1); // stack : hnode
 		h->joint = joint;
 
 		luaL_getmetatable(L, "HIERARCHY_NODE");		// stack : hnode, HIERARCHY_NODE, 
@@ -457,7 +457,7 @@ push_hierarchy_node(lua_State *L, RawSkeleton::Joint *joint){
 		lua_rawsetp(L, -3, (const void *)joint);	// stack : hnode
 
 		luaL_getmetatable(L, "HIERARCHY_CACHE");	// stack : hnode, HIERARCHY_CACHE
-		lua_setuservalue(L, -2);					// stack : hnode ---> HIERARCHY_CACHE as hnode's user value		
+		lua_setiuservalue(L, -2, 1);					// stack : hnode ---> HIERARCHY_CACHE as hnode's user value		
 	}
 
 	return 1;
@@ -514,7 +514,7 @@ lhnode_load(lua_State *L) {
 
 static int
 lnewhierarchy(lua_State *L) {
-	struct hierarchy * node = (struct hierarchy *)lua_newuserdata(L, sizeof(*node));
+	struct hierarchy * node = (struct hierarchy *)lua_newuserdatauv(L, sizeof(*node), 0);
 	node->joint = NULL;
 	luaL_getmetatable(L, "HIERARCHY_NODE");
 	lua_setmetatable(L, -2);
@@ -529,7 +529,7 @@ lnewhierarchy(lua_State *L) {
 
 	// stack: HIERARCHY_NODE HIERARCHY_CACHE
 
-	struct hierarchy_tree * tree = (struct hierarchy_tree *)lua_newuserdata(L, sizeof(*tree));
+	struct hierarchy_tree * tree = (struct hierarchy_tree *)lua_newuserdatauv(L, sizeof(*tree), 1);
 	tree->skl = new RawSkeleton;
 	if (luaL_newmetatable(L, "HIERARCHY_TREE")) {
 		lua_pushcfunction(L, ldelhtree);
@@ -544,7 +544,7 @@ lnewhierarchy(lua_State *L) {
 	// stack: HIERARCHY_NODE HIERARCHY_CACHE HIERARCHY_TREE
 	lua_rawseti(L, -2, 1);	// HIERARCHY_CACHE[1] = HIERARCHY_TREE
 
-	lua_setuservalue(L, -2);	// HIERARCHY_CACHE -> uv of HIERARCHY_NODE
+	lua_setiuservalue(L, -2, 1);	// HIERARCHY_CACHE -> uv of HIERARCHY_NODE
 	
 	// return HIERARCHY_NODE
 	return 1;
@@ -649,7 +649,7 @@ lhnode_getnode(lua_State *L) {
 	}
 
 	RawSkeleton::Joint *joint = &c->at(n - 1);
-	if (lua_getuservalue(L, 1) != LUA_TTABLE) {
+	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
 		return luaL_error(L, "Missing cache lhnodeget");
 	}
 	if (lua_rawgetp(L, -1, (const void *)joint) == LUA_TUSERDATA) {

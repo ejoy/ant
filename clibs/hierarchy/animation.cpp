@@ -737,7 +737,7 @@ lnew_sampling_cache(lua_State *L) {
 		return 0;
 	}
 
-	sampling_node* samplingnode = (sampling_node*)lua_newuserdata(L, sizeof(sampling_node));
+	sampling_node* samplingnode = (sampling_node*)lua_newuserdatauv(L, sizeof(sampling_node), 0);
 	luaL_getmetatable(L, "SAMPLING_NODE");
 	lua_setmetatable(L, -2);
 
@@ -763,7 +763,7 @@ lnew_bpresult(lua_State *L) {
 		return 0;
 	}
 
-	bindpose_result *result = (bindpose_result*)lua_newuserdata(L, sizeof(bindpose_result));
+	bindpose_result *result = (bindpose_result*)lua_newuserdatauv(L, sizeof(bindpose_result), 0);
 	luaL_getmetatable(L, "BPRESULT_NODE");
 	lua_setmetatable(L, -2);	
 	new(&result->pose)ozz::Vector<ozz::math::Float4x4>::Std(numjoints);
@@ -786,7 +786,7 @@ lnew_animation(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TSTRING);
 	const char * path = lua_tostring(L, 1);
 
-	animation_node *node = (animation_node*)lua_newuserdata(L, sizeof(animation_node));
+	animation_node *node = (animation_node*)lua_newuserdatauv(L, sizeof(animation_node), 0);
 	luaL_getmetatable(L, "ANIMATION_NODE");
 	lua_setmetatable(L, -2);
 	
@@ -937,7 +937,7 @@ lnew_ozzmesh(lua_State *L) {
 
 	const char* filename = lua_tostring(L, 1);
 
-	ozzmesh *om = (ozzmesh*)lua_newuserdata(L, sizeof(ozzmesh));
+	ozzmesh *om = (ozzmesh*)lua_newuserdatauv(L, sizeof(ozzmesh), 0);
 	luaL_getmetatable(L, "OZZMESH");
 	lua_setmetatable(L, -2);
 
@@ -1126,7 +1126,7 @@ ldel_bind_pose(lua_State *L) {
 
 static int
 lnew_bind_pose(lua_State *L) {
-	auto bp = (bind_pose*)lua_newuserdata(L, sizeof(bind_pose));
+	auto bp = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
 	luaL_getmetatable(L, "OZZBINGPOSE");
 	lua_setmetatable(L, -2);
 

@@ -281,7 +281,7 @@ namespace ant::lua_filesystem {
         }
 
         static void* newudata(lua_State* L) {
-            void* storage = lua_newuserdata(L, sizeof(fs::path));
+            void* storage = lua_newuserdatauv(L, sizeof(fs::path), 0);
             if (newObject(L, "filesystem")) {
                 static luaL_Reg mt[] = {
                     { "string", path::mt_tostring },

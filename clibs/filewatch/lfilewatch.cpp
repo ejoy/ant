@@ -97,7 +97,7 @@ extern "C"
 __declspec(dllexport)
 #endif
 int luaopen_filewatch(lua_State* L) {
-    ant::fsevent::watch* fw = (ant::fsevent::watch*)lua_newuserdata(L, sizeof(ant::fsevent::watch));
+    ant::fsevent::watch* fw = (ant::fsevent::watch*)lua_newuserdatauv(L, sizeof(ant::fsevent::watch), 0);
     new (fw)ant::fsevent::watch;
 
     static luaL_Reg lib[] = {

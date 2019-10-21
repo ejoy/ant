@@ -64,7 +64,7 @@ static aResolver* ares_checkaResolver(lua_State *L, int index)
  */
 static aResolver* ares_pushaResolver(lua_State *L)
 {
-	aResolver *ares = (aResolver*) lua_newuserdata(L, sizeof(aResolver));
+	aResolver *ares = (aResolver*) lua_newuserdatauv(L, sizeof(aResolver), 0);
 	luaL_getmetatable(L, ARESOLVER);
 	lua_setmetatable(L, -2);
 	return ares;

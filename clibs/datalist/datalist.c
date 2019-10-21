@@ -283,7 +283,7 @@ push_token_string(lua_State *L, const char *ptr, size_t sz) {
 	char *buffer = tmp;
 	assert(sz > 0);
 	if (sz > SHORT_STRING) {
-		buffer = lua_newuserdata(L, sz);
+		buffer = lua_newuserdatauv(L, sz, 0);
 	}
 
 	size_t i, n;

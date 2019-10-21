@@ -537,7 +537,7 @@ lreset_bullet_world(lua_State *L) {
 // object parameters need open for lua
 static int
 lnew_bullet_world(lua_State *L) {
-	collworld_node *worldnode = (collworld_node*)lua_newuserdata(L, sizeof(collworld_node));
+	collworld_node *worldnode = (collworld_node*)lua_newuserdatauv(L, sizeof(collworld_node), 0);
 	luaL_setmetatable(L, "BULLET_WORLD_NODE");
 	worldnode->cfg		= new btDefaultCollisionConfiguration;
 	worldnode->dispatcher = new btCollisionDispatcher(worldnode->cfg);

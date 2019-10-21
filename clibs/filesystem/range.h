@@ -44,7 +44,7 @@ namespace ant::lua {
 
     template <class Iterator>
     int make_range(lua_State* L, const Iterator& first, const Iterator& last) {
-        void* storage = lua_newuserdata(L, sizeof(iterator<Iterator>));
+        void* storage = lua_newuserdatauv(L, sizeof(iterator<Iterator>), 0);
         lua_newtable(L);
         lua_pushcclosure(L, iterator<Iterator>::destroy, 0);
         lua_setfield(L, -2, "__gc");
