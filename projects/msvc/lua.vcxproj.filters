@@ -21,9 +21,6 @@
     <ClCompile Include="..\..\clibs\lua\utf8_lua.c">
       <Filter>utf8</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\lua\utf8_unicode.c">
-      <Filter>utf8</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\lua\lzio.h">

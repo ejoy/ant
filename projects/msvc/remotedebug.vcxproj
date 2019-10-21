@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_delayload.h" />
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_eventfree.h" />
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_redirect.h" />
+    <ClInclude Include="..\..\clibs\remotedebug\rdebug_table.h" />
     <ClInclude Include="..\..\clibs\remotedebug\rdebug_timer.h" />
     <ClInclude Include="..\..\clibs\remotedebug\thunk\thunk.h" />
   </ItemGroup>
@@ -33,6 +34,7 @@
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_host.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_redirect.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_stdio.cpp" />
+    <ClCompile Include="..\..\clibs\remotedebug\rdebug_table.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\rdebug_visitor.cpp" />
     <ClCompile Include="..\..\clibs\remotedebug\thunk\thunk.cpp" />
   </ItemGroup>

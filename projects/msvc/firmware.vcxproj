@@ -115,7 +115,7 @@
       <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>tools\build_firmware.bat debug</Command>
+      <Command>tools\build_firmware.bat debug --bin=msvc</Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>generate bin data</Message>
