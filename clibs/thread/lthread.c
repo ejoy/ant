@@ -168,7 +168,7 @@ lpchannel(lua_State *L) {
 	if (c == NULL)
 		return luaL_error(L, "Can't query channel %s", name);
 
-	struct boxchannel *bc = lua_newuserdata(L, sizeof(*bc));
+	struct boxchannel *bc = lua_newuserdatauv(L, sizeof(*bc), 0);
 	bc->c = c;
 	if (luaL_newmetatable(L, "THREAD_PRODUCE")) {
 		luaL_Reg l[] = {
@@ -192,7 +192,7 @@ lcchannel(lua_State *L) {
 	if (c == NULL)
 		return luaL_error(L, "Can't query channel %s", name);
 
-	struct boxchannel *bc = lua_newuserdata(L, sizeof(*bc));
+	struct boxchannel *bc = lua_newuserdatauv(L, sizeof(*bc), 0);
 	bc->c = c;
 	if (luaL_newmetatable(L, "THREAD_CONSUME")) {
 		luaL_Reg l[] = {

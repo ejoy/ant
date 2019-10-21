@@ -282,7 +282,7 @@ lsha1_final(lua_State *L) {
 
 int
 lsha1_encoder(lua_State *L) {
-	SHA1_CTX * ctx = lua_newuserdata(L, sizeof(*ctx));
+	SHA1_CTX * ctx = lua_newuserdatauv(L, sizeof(*ctx), 0);
 	if (luaL_newmetatable(L, "SHA1ENCODER")) {
 		lua_pushcfunction(L, lsha1_init);
 		lua_setfield(L, -2, "init");

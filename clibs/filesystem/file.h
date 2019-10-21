@@ -21,7 +21,7 @@ namespace ant::lua {
         }
     }
     inline int newfile(lua_State* L, FILE* f) {
-        luaL_Stream* pf = (luaL_Stream*)lua_newuserdata(L, sizeof(luaL_Stream));
+        luaL_Stream* pf = (luaL_Stream*)lua_newuserdatauv(L, sizeof(luaL_Stream), 0);
         luaL_setmetatable(L, LUA_FILEHANDLE);
         pf->closef = &_fileclose;
         pf->f = f;

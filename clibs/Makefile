@@ -13,9 +13,9 @@ all: $(ALL_LIBS)
 
 LUA_TARGETS = $(ODIR)/lua.exe
 ifeq "$(PLAT)" "msvc"
-LUA_TARGETS += $(ODIR)/lua53.dll
+LUA_TARGETS += $(ODIR)/lua54.dll
 else ifeq "$(PLAT)" "mingw"
-LUA_TARGETS += $(ODIR)/lua53.dll
+LUA_TARGETS += $(ODIR)/lua54.dll
 endif
 
 copy_lua: build_lua

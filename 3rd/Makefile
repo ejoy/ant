@@ -65,8 +65,7 @@ else
   CMAKE_PROJ_CLEAN = make clean
 endif
 
-SHADER_SRC_PATH = ../../packages/resources/shaders/src
-
+SHADER_SRC_PATH = ../../packages/resources/shaders
 
 ifneq "$(PLAT)" "msvc"
 BGFX_TARGET_A = bgfx
@@ -81,10 +80,10 @@ else
   BGFX_CPRC_CMD += && cp texturec$(MODE) ../../../../../clibs/
   BGFX_CPRC_CMD += && cp $(BGFX_SHARED_LIB) ../../../../../clibs/bgfx-core.dll
 
-  COPY_SHADER_FILES_CMD = cp -f src/bgfx_shader.sh $(SHADER_SRC_PATH)
-  COPY_SHADER_FILES_CMD += && cp -f src/bgfx_compute.sh $(SHADER_SRC_PATH)
-  COPY_SHADER_FILES_CMD += && cp -f examples/common/common.sh $(SHADER_SRC_PATH)
-  COPY_SHADER_FILES_CMD += && cp -f examples/common/shaderlib.sh $(SHADER_SRC_PATH)
+  COPY_SHADER_FILES_CMD = cp -f src/bgfx_shader.sh $(SHADER_SRC_PATH)/bgfx_shader.sh
+  COPY_SHADER_FILES_CMD += && cp -f src/bgfx_compute.sh $(SHADER_SRC_PATH)/bgfx_compute.sh
+  COPY_SHADER_FILES_CMD += && cp -f examples/common/common.sh $(SHADER_SRC_PATH)/common.sh
+  COPY_SHADER_FILES_CMD += && cp -f examples/common/shaderlib.sh $(SHADER_SRC_PATH)/shaderlib.sh
 endif
 BGFX_INIT_CMD = make $(BGFX_MAKEFILE)
 BGFX_MAKE_CMD = make -R -C $(BGFX_MAKEFILE) config=$(MODE)64 -j8

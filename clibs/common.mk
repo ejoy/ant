@@ -27,7 +27,7 @@ endif
 ifeq "$(PLAT)" "mingw"
 
 LUA_FLAGS = -DLUA_BUILD_AS_DLL
-LUALIB = -L../lua/$(ODIR) -llua53
+LUALIB = -L../lua/$(ODIR) -llua54
 LUABIN = ../lua/lua.exe
 LD_SHARED = --shared
 ifeq ("$(MODE)","release")

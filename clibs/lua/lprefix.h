@@ -1,11 +1,12 @@
 /*
-** $Id: lprefix.h,v 1.2.1.1 2017/04/19 17:20:42 roberto Exp $
+** $Id: lprefix.h $
 ** Definitions for Lua code that must come before any other header file
 ** See Copyright Notice in lua.h
 */
 
 #ifndef lprefix_h
 #define lprefix_h
+
 
 /*
 ** Allows POSIX/XSI stuff
@@ -45,5 +46,9 @@
 #include <assert.h>
 #define lua_assert(e) assert(e)
 
-#endif
+#include <stdlib.h>
 
+#define l_randomizePivot() (*(unsigned int*)"Lua\0Lua\0")
+#define luai_makeseed(L) (getenv("LUA_SEED")? atoi(getenv("LUA_SEED")): l_randomizePivot())
+
+#endif

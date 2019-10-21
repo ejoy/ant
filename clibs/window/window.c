@@ -215,7 +215,7 @@ lregistercallback(lua_State *L) {
 	struct ant_window_callback *cb = (struct ant_window_callback *)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 
-	struct callback_context * context = lua_newuserdata(L, sizeof(*context));
+	struct callback_context * context = lua_newuserdatauv(L, sizeof(*context), 0);
 	context->surrogate = 0;
 	lua_createtable(L, 2, 0);	// for callback and functions thread
 	context->callback = lua_newthread(L);
@@ -257,7 +257,7 @@ lmainloop(lua_State *L) {
 
 static void
 init(lua_State *L) {
-	struct ant_window_callback* cb = lua_newuserdata(L, sizeof(*cb));
+	struct ant_window_callback* cb = lua_newuserdatauv(L, sizeof(*cb), 0);
 	cb->ud = NULL;
 	cb->message = message_callback;
 	lua_setfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK);

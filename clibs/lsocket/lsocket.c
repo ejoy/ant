@@ -172,7 +172,7 @@ static int lsocket_islSocket(lua_State *L, int index)
  */
 static lSocket* lsocket_pushlSocket(lua_State *L)
 {
-	lSocket *sock = (lSocket*) lua_newuserdata(L, sizeof(lSocket));
+	lSocket *sock = (lSocket*) lua_newuserdatauv(L, sizeof(lSocket), 0);
 	sock->sockfd = -1;
 	luaL_getmetatable(L, LSOCKET);
 	lua_setmetatable(L, -2);
@@ -927,7 +927,7 @@ static int lsocket_sock_recv(lua_State *L)
 		buf = luaL_prepbuffer(&lbuf);
 	} else {
 		// allocate buffer as userdata, will then be collected later
-		buf = lua_newuserdata(L, howmuch);
+		buf = lua_newuserdatauv(L, howmuch, 0);
 	}
 #else
 	luaL_buffinit(L, &lbuf);
@@ -994,7 +994,7 @@ static int lsocket_sock_recvfrom(lua_State *L)
 		buf = luaL_prepbuffer(&lbuf);
 	} else {
 		// allocate buffer as userdata, will then be collected later
-		buf = lua_newuserdata(L, howmuch);
+		buf = lua_newuserdatauv(L, howmuch, 0);
 	}
 #else
 	luaL_buffinit(L, &lbuf);

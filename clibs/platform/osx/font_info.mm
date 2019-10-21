@@ -15,7 +15,7 @@ int lfont(lua_State* L) {
     fseek(f, 0, SEEK_END);
     size_t len = (size_t)ftell(f);
     fseek(f, 0, SEEK_SET);
-    void* buffer = lua_newuserdata(L, len);
+    void* buffer = lua_newuserdatauv(L, len, 0);
     fread(buffer, len, 1, f);
     fclose(f);
     lua_pushlstring(L, (const char*)buffer, len);

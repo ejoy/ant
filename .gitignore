@@ -10,6 +10,7 @@
 *.xcscheme
 *.xcbkptlist
 *.o.d
+*.lib
 
 .cache
 .vscode

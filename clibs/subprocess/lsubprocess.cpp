@@ -115,7 +115,7 @@ namespace ant::lua_subprocess {
             if (LUA_TNIL != lua_rawget(L, lua_upvalueindex(1))) {
                 return 1;
             }
-            if (LUA_TTABLE == lua_getuservalue(L, 1)) {
+            if (LUA_TTABLE == lua_getiuservalue(L, 1, 1)) {
                 lua_pushvalue(L, 2);
                 if (LUA_TNIL != lua_rawget(L, -2)) {
                     return 1;
@@ -125,16 +125,16 @@ namespace ant::lua_subprocess {
         }
 
         static int newindex(lua_State* L) {
-            if (LUA_TTABLE != lua_getuservalue(L, 1)) {
+            if (LUA_TTABLE != lua_getiuservalue(L, 1, 1)) {
                 lua_pop(L, 1);
                 lua_newtable(L);
                 lua_pushvalue(L, -1);
 #if LUA_VERSION_NUM >= 504
-                if (!lua_setuservalue(L, 1)) {
+                if (!lua_setiuservalue(L, 1, 1)) {
                     return 0;
                 }
 #else
-                lua_setuservalue(L, 1);
+                lua_setiuservalue(L, 1, 1);
 #endif
             }
             lua_insert(L, -3);
@@ -143,7 +143,7 @@ namespace ant::lua_subprocess {
         }
 
         static int constructor(lua_State* L, subprocess::spawn& spawn) {
-            void* storage = lua_newuserdata(L, sizeof(subprocess::process));
+            void* storage = lua_newuserdatauv(L, sizeof(subprocess::process), 1);
 
             if (luaL_newmetatable(L, "subprocess")) {
                 static luaL_Reg mt[] = {
@@ -207,7 +207,7 @@ namespace ant::lua_subprocess {
         }
 
         static int newfile(lua_State* L, FILE* f) {
-            luaL_Stream* pf = (luaL_Stream*)lua_newuserdata(L, sizeof(luaL_Stream));
+            luaL_Stream* pf = (luaL_Stream*)lua_newuserdatauv(L, sizeof(luaL_Stream), 0);
             luaL_setmetatable(L, LUA_FILEHANDLE);
             pf->closef = &fileclose;
             pf->f = f;
