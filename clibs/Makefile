@@ -62,9 +62,17 @@ $(error "$(PLAT) not support copy tool")
 endif
 BGFX_BUILD_PATH = ../3rd/bgfx/.build
 
+ifeq "$(MODE)" "debug"
+SHADER_TOOLNAME=shadercDebug$(TOOL_EXT_NAME)
+TEXTURE_TOOLNAME=texturecDebug$(TOOL_EXT_NAME)
+else
+SHADER_TOOLNAME=shadercRelease$(TOOL_EXT_NAME)
+TEXTURE_TOOLNAME=texturecRelease$(TOOL_EXT_NAME)
+endif
+
 copy_tools:
-	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/shadercRelease$(TOOL_EXT_NAME) $(BIN)/shadercRelease$(TOOL_EXT_NAME) &&\
-	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/texturecRelease$(TOOL_EXT_NAME) $(BIN)/texturecRelease$(TOOL_EXT_NAME)
+	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/$(SHADER_TOOLNAME) $(BIN)/$(SHADER_TOOLNAME) &&\
+	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/$(TEXTURE_TOOLNAME) $(BIN)/$(TEXTURE_TOOLNAME)
 
 copy: $(addprefix copy_,$(ALL_LIBS)) copy_tools
 	
