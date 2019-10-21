@@ -134,7 +134,7 @@ namespace ant::lua_subprocess {
                     return 0;
                 }
 #else
-                lua_setuservalue(L, 1, 1);
+                lua_setuservalue(L, 1);
 #endif
             }
             lua_insert(L, -3);
