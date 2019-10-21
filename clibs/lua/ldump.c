@@ -1,5 +1,5 @@
 /*
-** $Id: ldump.c,v 2.37.1.1 2017/04/19 17:20:42 roberto Exp $
+** $Id: ldump.c $
 ** save precompiled Lua chunks
 ** See Copyright Notice in lua.h
 */
@@ -55,8 +55,23 @@ static void DumpByte (int y, DumpState *D) {
 }
 
 
+/* DumpInt Buff Size */
+#define DIBS    ((sizeof(size_t) * 8 / 7) + 1)
+
+static void DumpSize (size_t x, DumpState *D) {
+  lu_byte buff[DIBS];
+  int n = 0;
+  do {
+    buff[DIBS - (++n)] = x & 0x7f;  /* fill buffer in reverse order */
+    x >>= 7;
+  } while (x != 0);
+  buff[DIBS - 1] |= 0x80;  /* mark last byte */
+  DumpVector(buff + DIBS - n, n, D);
+}
+
+
 static void DumpInt (int x, DumpState *D) {
-  DumpVar(x, D);
+  DumpSize(x, D);
 }
 
 
@@ -72,17 +87,12 @@ static void DumpInteger (lua_Integer x, DumpState *D) {
 
 static void DumpString (const TString *s, DumpState *D) {
   if (s == NULL)
-    DumpByte(0, D);
+    DumpSize(0, D);
   else {
-    size_t size = tsslen(s) + 1;  /* include trailing '\0' */
+    size_t size = tsslen(s);
     const char *str = getstr(s);
-    if (size < 0xFF)
-      DumpByte(cast_int(size), D);
-    else {
-      DumpByte(0xFF, D);
-      DumpVar(size, D);
-    }
-    DumpVector(str, size - 1, D);  /* no need to save '\0' */
+    DumpSize(size + 1, D);
+    DumpVector(str, size, D);
   }
 }
 
@@ -101,25 +111,24 @@ static void DumpConstants (const Proto *f, DumpState *D) {
   DumpInt(n, D);
   for (i = 0; i < n; i++) {
     const TValue *o = &f->k[i];
-    DumpByte(ttype(o), D);
-    switch (ttype(o)) {
-    case LUA_TNIL:
-      break;
-    case LUA_TBOOLEAN:
-      DumpByte(bvalue(o), D);
-      break;
-    case LUA_TNUMFLT:
-      DumpNumber(fltvalue(o), D);
-      break;
-    case LUA_TNUMINT:
-      DumpInteger(ivalue(o), D);
-      break;
-    case LUA_TSHRSTR:
-    case LUA_TLNGSTR:
-      DumpString(tsvalue(o), D);
-      break;
-    default:
-      lua_assert(0);
+    DumpByte(ttypetag(o), D);
+    switch (ttypetag(o)) {
+      case LUA_TNIL:
+        break;
+      case LUA_TBOOLEAN:
+        DumpByte(bvalue(o), D);
+        break;
+      case LUA_TNUMFLT:
+        DumpNumber(fltvalue(o), D);
+        break;
+      case LUA_TNUMINT:
+        DumpInteger(ivalue(o), D);
+        break;
+      case LUA_TSHRSTR:
+      case LUA_TLNGSTR:
+        DumpString(tsvalue(o), D);
+        break;
+      default: lua_assert(0);
     }
   }
 }
@@ -140,6 +149,7 @@ static void DumpUpvalues (const Proto *f, DumpState *D) {
   for (i = 0; i < n; i++) {
     DumpByte(f->upvalues[i].instack, D);
     DumpByte(f->upvalues[i].idx, D);
+    DumpByte(f->upvalues[i].kind, D);
   }
 }
 
@@ -149,6 +159,12 @@ static void DumpDebug (const Proto *f, DumpState *D) {
   n = (D->strip) ? 0 : f->sizelineinfo;
   DumpInt(n, D);
   DumpVector(f->lineinfo, n, D);
+  n = (D->strip) ? 0 : f->sizeabslineinfo;
+  DumpInt(n, D);
+  for (i = 0; i < n; i++) {
+    DumpInt(f->abslineinfo[i].pc, D);
+    DumpInt(f->abslineinfo[i].line, D);
+  }
   n = (D->strip) ? 0 : f->sizelocvars;
   DumpInt(n, D);
   for (i = 0; i < n; i++) {
@@ -183,11 +199,9 @@ static void DumpFunction (const Proto *f, TString *psource, DumpState *D) {
 
 static void DumpHeader (DumpState *D) {
   DumpLiteral(LUA_SIGNATURE, D);
-  DumpByte(LUAC_VERSION, D);
+  DumpInt(LUAC_VERSION, D);
   DumpByte(LUAC_FORMAT, D);
   DumpLiteral(LUAC_DATA, D);
-  DumpByte(sizeof(int), D);
-  DumpByte(sizeof(size_t), D);
   DumpByte(sizeof(Instruction), D);
   DumpByte(sizeof(lua_Integer), D);
   DumpByte(sizeof(lua_Number), D);

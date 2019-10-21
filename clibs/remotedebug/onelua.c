@@ -86,3 +86,9 @@
 #include "linit.c"
 
 #include "../../lua-seri/lua-seri.c"
+
+LClosure *luaU_undump(lua_State *L, ZIO *Z, const char *name) {
+  luaO_pushfstring(L, "%s: binary loader not available", name);
+  luaD_throw(L, LUA_ERRSYNTAX);
+  return NULL;
+}

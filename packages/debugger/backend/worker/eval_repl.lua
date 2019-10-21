@@ -12,10 +12,11 @@ if _VERSION == "Lua 5.1" then
 end
 
 local f = assert(debug.getinfo(level,"f").func, "can't find function")
-local uv = {}
+local args = {}
 local locals = {}
-local uv_id = {}
 local local_id = {}
+local local_value = {}
+local upvalue_id = {}
 local i = 1
 while true do
 	local name, value = debug.getlocal(level, i)
@@ -23,9 +24,10 @@ while true do
 		break
 	end
 	if name:byte() ~= 40 then	-- '('
-		uv[#uv+1] = name
+		args[#args+1] = name
 		locals[#locals+1] = ("[%d]=%s,"):format(i,name)
-		local_id[name] = value
+		local_id[name] = i
+		local_value[name] = value
 	end
 	i = i + 1
 end
@@ -35,12 +37,12 @@ while true do
 	if name == nil then
 		break
 	end
-	uv_id[name] = i
-	uv[#uv+1] = name
+	upvalue_id[name] = i
+	args[#args+1] = name
 	i = i + 1
 end
 local full_source
-if #uv > 0 then
+if #args > 0 then
 	full_source = ([[
 local $ARGS
 return function(...)
@@ -50,7 +52,7 @@ function()
 return {$LOCALS}
 end
 ]]):gsub("%$(%w+)", {
-	ARGS = table.concat(uv, ","),
+	ARGS = table.concat(args, ","),
 	SOURCE = source,
 	LOCALS = table.concat(locals),
 })
@@ -75,13 +77,12 @@ while true do
 	if name == nil then
 		break
 	end
-	local upvalue_id = uv_id[name]
-	if upvalue_id then
-		debug.upvaluejoin(func, i, f, upvalue_id)
+	local uvid = upvalue_id[name]
+	if uvid then
+		debug.upvaluejoin(func, i, f, uvid)
 	end
-	local local_value = local_id[name]
-	if local_value then
-		debug.setupvalue(func, i, local_value)
+	if local_id[name] then
+		debug.setupvalue(func, i, local_value[name])
 	end
 	i = i + 1
 end

@@ -27,7 +27,7 @@ local function run_repl(frameId, expression)
         end
         return true, ''
     end
-    if #res == 1 then
+    if res.n == 1 then
         return true, 'nil'
     end
     local ref
@@ -52,7 +52,7 @@ local function run_watch(frameId, expression)
     if not res[1] then
         return false, res[2]
     end
-    if #res == 0 then
+    if res.n == 1 then
         return true, 'nil'
     end
     local ref
@@ -68,7 +68,7 @@ local function run_copyvalue(frameId, expression)
     if not res[1] then
         return false, res[2]
     end
-    if #res == 0 then
+    if res.n == 1 then
         return true, 'nil'
     end
     for i = 2, res.n do

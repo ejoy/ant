@@ -233,12 +233,14 @@ function request.variables(req)
     if not checkThreadId(req, threadId) then
         return
     end
-
     mgr.sendToWorker(threadId, {
         cmd = 'variables',
         command = req.command,
         seq = req.seq,
         valueId = valueId,
+        filter = args.filter,
+        start = args.start,
+        count = args.count,
     })
 end
 

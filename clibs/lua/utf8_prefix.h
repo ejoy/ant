@@ -33,6 +33,7 @@
 #define LoadLibraryExA(...) utf8_LoadLibraryExA(__VA_ARGS__)
 #define GetModuleFileNameA(...) utf8_GetModuleFileNameA(__VA_ARGS__)
 #define FormatMessageA(...) utf8_FormatMessageA(__VA_ARGS__)
+
 #endif
 
 #endif
