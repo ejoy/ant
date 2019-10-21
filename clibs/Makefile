@@ -63,8 +63,8 @@ endif
 BGFX_BUILD_PATH = ../3rd/bgfx/.build
 
 copy_tools:
-	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/shadercRelease$(TOOL_EXT_NAME) $(BIN)/shaderc$(TOOL_EXT_NAME) &&\
-	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/texturecRelease$(TOOL_EXT_NAME) $(BIN)/texturec$(TOOL_EXT_NAME)
+	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/shadercRelease$(TOOL_EXT_NAME) $(BIN)/shadercRelease$(TOOL_EXT_NAME) &&\
+	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/texturecRelease$(TOOL_EXT_NAME) $(BIN)/texturecRelease$(TOOL_EXT_NAME)
 
 copy: $(addprefix copy_,$(ALL_LIBS)) copy_tools
 	
