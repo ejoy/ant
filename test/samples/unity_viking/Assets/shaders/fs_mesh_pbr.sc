@@ -14,9 +14,9 @@ $input v_texcoord0, v_normal, v_posWS
 // need special process 
 // uniform.x = 0 must set to 0
 
-#define _DETAIL 1
+//#define _DETAIL 1
 #define _ALPHATEST_ON 1
-#define _BLOOM_EFFECT 1
+//#define _BLOOM_EFFECT 1
 
  
 // brief solution for mobile 
@@ -33,8 +33,10 @@ SAMPLER2D(s_normal,     1);
 SAMPLER2D(s_metallic,   2);
 SAMPLERCUBE(s_texCube,  3);
 
+#if _DETAIL
 SAMPLER2D(s_detailcolor,    4);
 SAMPLER2D(s_detailnormal,   5);
+#endif //_DETAIL
 //SAMPLER2D(s_brdfMap,6);
 
 uniform vec4 u_params;              
@@ -638,6 +640,9 @@ vec3 LightGlow(vec3 color,AntEnv env,float brightness,float strength)
 //-------------------------------------   
 void main() 
 {   
+    #ifdef ENABLE_SHADOW
+    #error 11111111111
+    #endif //ENABLE_SHADOW
     ParamsSetup(); 
 
     float distanceVS = v_posWS.w;
