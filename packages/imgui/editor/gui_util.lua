@@ -62,7 +62,7 @@ function gui_util.notice(arg)
             windows.PopStyleVar()
         end
     end
-    gui_util.popup(arg)
+    gui_util._popup(arg)
 end
 
 --arg.msg = * 
@@ -102,22 +102,34 @@ function gui_util.message(arg)
         end
         
     end
-    gui_util.popup(arg)
+    gui_util._popup(arg)
+end
+
+function gui_util.popup(update_func,title,flags)
+    local arg = {
+        loop_func = update_func,
+        title = title,
+        flags = flags,
+        id = title or tostring(loop_func),
+    }
+    gui_util._popup(arg)
 end
 
 
 gui_util.popup_idx = 0
 gui_util.popup_list = {}
 gui_util.popup_tbl = {}
+gui_util.last_popup_id = nil
 
 --arg.flags
 --arg.title
 --arg.loop_func
-function gui_util.popup(arg)
+function gui_util._popup(arg)
     local flags = arg.flags or flags.Window.AlwaysAutoResize
     local title = arg.title or "Popup"
     gui_util.popup_idx = gui_util.popup_idx + 1
-    local titleid = string.format( "%s###Popup%d", title, gui_util.popup_idx)
+    local my_id = gui_util.popup_idx
+    local titleid = string.format( "%s###Popup%d", title, my_id)
     local popup_list = gui_util.popup_list
     local popup_tbl = gui_util.popup_tbl
     if popup_tbl[arg.id] then
@@ -125,8 +137,10 @@ function gui_util.popup(arg)
         return
     end
     local pf = nil
-    local first_time = true
+    
     pf = function()
+        local first_time = (my_id ~= gui_util.last_popup_id)
+        gui_util.last_popup_id = my_id
         if first_time then
             windows.OpenPopup(titleid)
             first_time = false
@@ -147,7 +161,6 @@ function gui_util.popup(arg)
             if arg.close_cb then
                 arg.close_cb(arg.result)
             end
-
         end
         
         windows.PopStyleVar()
