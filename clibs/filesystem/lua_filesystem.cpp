@@ -399,6 +399,16 @@ namespace ant::lua_filesystem {
         return 0;
         LUA_TRY_END;
     }
+	static int copy(lua_State* L)
+	{
+		LUA_TRY;
+		const fs::path& from = path::to(L, 1);
+		const fs::path& to = path::to(L, 2);
+		bool overwritten = !!lua_toboolean(L, 3);
+		fs::copy(from, to, overwritten ? fs::copy_options::overwrite_existing : fs::copy_options::none);
+		return 0;
+		LUA_TRY_END;
+	}
 
     static int copy_file(lua_State* L)
     {
@@ -519,6 +529,7 @@ namespace ant::lua_filesystem {
             { "remove", remove },
             { "remove_all", remove_all },
             { "current_path", current_path },
+			{ "copy", copy },
             { "copy_file", copy_file },
             { "absolute", absolute },
             { "relative", relative },
