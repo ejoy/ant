@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <windows.h>
+#include <WinNT.h>
 
 typedef enum {
 	ANT_WINDOW_UPDATE = 1,
@@ -82,7 +84,9 @@ struct ant_window_char {
 
 struct ant_window_dropfiles {
 	int count;
-	wchar_t  ** paths;
+	//WCHAR  ** paths;
+	char** paths;
+	int * path_counts;
 };
 
 struct ant_window_message {
@@ -110,5 +114,6 @@ int  window_init(struct ant_window_callback* cb);
 int  window_create(struct ant_window_callback* cb, int w, int h, const char* title, size_t sz);
 void window_mainloop(struct ant_window_callback* cb, int update);
 void window_ime(void* ime);
+int window_set_title(void * handle, const char * title,size_t sz );
 
 #endif

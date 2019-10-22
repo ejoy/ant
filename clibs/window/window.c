@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include "window.h"
 #include "virtual_keys.h"
+#include <windows.h>
+#include <WinNT.h>
+
 
 struct callback_context {
 	lua_State *callback;
@@ -89,7 +92,7 @@ push_dropfiles_arg(lua_State* L, struct ant_window_dropfiles* dropfiles) {
 	for (int i = 0; i < dropfiles->count; i++)
 	{
 		lua_pushinteger(L, i + 1);
-		lua_pushstring(L, dropfiles->paths[i]);
+		lua_pushlstring(L, dropfiles->paths[i], dropfiles->path_counts[i]);
 		lua_settable(L, -3);
 	}
 }
@@ -255,6 +258,23 @@ lmainloop(lua_State *L) {
 	return 0;
 }
 
+static int
+lset_title(lua_State* L) {
+	void * handle = lua_touserdata(L, 1);
+	size_t sz;
+	const char* title = luaL_checklstring(L, 2, &sz);
+	int err = window_set_title(handle, title, sz);
+	if (err) {
+		lua_pushboolean(L, FALSE);
+		lua_pushinteger(L, err);
+		return 2;
+	}
+	else {
+		lua_pushboolean(L, TRUE);
+		return 1;
+	}
+}
+
 static void
 init(lua_State *L) {
 	struct ant_window_callback* cb = lua_newuserdatauv(L, sizeof(*cb), 0);
@@ -302,6 +322,7 @@ luaopen_window(lua_State *L) {
 		{ "create", lcreate },
 		{ "mainloop", lmainloop },
 		{ "set_ime", lset_ime },
+		{"set_title",lset_title},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
