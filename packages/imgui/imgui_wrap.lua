@@ -5,7 +5,7 @@ local EnableLuaTrace = false
 local EnableCheckPair = true
 local EnabelFlagsWrap = true
 
-local log = print
+-- local log = print
 
 --log error when tryint to index a unexist key
 local function asset_index(tbl,path)
@@ -82,11 +82,17 @@ local function path2tex_handle(path)
     if type(path) == "string" then
         if not handle_cache[path] then
             local fs = require "filesystem"
-            local texrefpath = fs.path(path)
-            local f = assert(fs.open(texrefpath, "rb"))
-            local imgdata = f:read "a"
-            f:close()
-            handle_cache[path] = bgfx.create_texture(imgdata, "")
+            local assetpkg = import_package "ant.asset"
+            local assetmgr = assetpkg.mgr
+            local loader = assetmgr.get_loader "texture"
+            local t = loader(fs.path(path) )
+            log.info_a("load",path,t)
+            -- local texrefpath = fs.path(path)
+            -- local f = assert(fs.open(texrefpath, "rb"))
+            -- local imgdata = f:read "a"
+            -- f:close()
+            -- handle_cache[path] = bgfx.create_texture(imgdata, "")
+            handle_cache[path] = t.handle
         end
         return handle_cache[path]
     else
