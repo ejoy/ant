@@ -18,6 +18,7 @@ function GuiBase:_init()
     -- self.default_size = {200,100}
     self._last_frame_opened = false
     self._err_count = 0
+    self.dont_show_in_mainmenu = false
 end
 
 function GuiBase:on_open_click()
@@ -104,6 +105,12 @@ end
 --override if needed
 function GuiBase:get_mainmenu()
     self.get_mainmenu = false
+end
+
+function GuiBase.get_ins(MyClass)
+    local gui_mgr = require "gui_mgr"
+    local ins = gui_mgr.get(MyClass.GuiName)
+    return ins
 end
 
 
