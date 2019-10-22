@@ -45,7 +45,9 @@ end
 --main menu
 function GuiScene:get_mainmenu()
     local parent_path = {"Scene"}
-    return {{parent_path,self._scene_menu},}
+    return {
+        {parent_path,self._scene_menu},
+    }
 end
 
 function GuiScene:on_gui(delta)

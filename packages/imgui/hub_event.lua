@@ -19,6 +19,8 @@ local Evt ={
 
 
     --between editor
-    InspectRes = "Editor_InspectRes", --pkg_path_str
+    InspectRes = "Editor_InspectRes", -- (pkg_path_str)
+    OpenProject = "Editor_OpenProject", -- ()
+    CloseProject = "Editor_CloseProject", -- ()
 }
 return Evt

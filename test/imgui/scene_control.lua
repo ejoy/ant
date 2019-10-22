@@ -25,7 +25,7 @@ function scene_control.test_new_world(raw_path)
         "ant.hierarchy.offline",
     }
     local systems = {
-        --"pickup_material_system",
+        --"pickup_material_system", 
         "pickup_system",
         -- "obj_transform_system",
         "build_hierarchy_system",
