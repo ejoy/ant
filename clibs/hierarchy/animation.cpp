@@ -1141,8 +1141,8 @@ register_bind_pose_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {
-		"__gc", ldel_bind_pose,
-		nullptr, nullptr,
+		{"__gc", ldel_bind_pose},
+		{nullptr, nullptr},
 	};
 
 	luaL_setfuncs(L, l, 0);

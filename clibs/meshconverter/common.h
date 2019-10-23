@@ -6,7 +6,7 @@
 	//  GCC
 //#define EXPORT	__attribute__(visibility("default"))
 	// need force export, visibility("default") will follow static lib setting
-#define MC_EXPORT	__attribute__((dllexport))
+#define MC_EXPORT	__attribute__
 #define MC_IMPORT
 #else
 	//  do nothing and hope for the best?
