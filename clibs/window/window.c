@@ -270,8 +270,7 @@ lset_title(lua_State* L) {
 		lua_pushboolean(L, 0);
 		lua_pushinteger(L, err);
 		return 2;
-	}
-	else {
+	} else {
 		lua_pushboolean(L, 1);
 		return 1;
 	}
@@ -324,7 +323,7 @@ luaopen_window(lua_State *L) {
 		{ "create", lcreate },
 		{ "mainloop", lmainloop },
 		{ "set_ime", lset_ime },
-		{"set_title",lset_title},
+		{ "set_title",lset_title},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

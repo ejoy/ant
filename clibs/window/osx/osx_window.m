@@ -368,3 +368,8 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
 void window_ime(void* ime) {
     g_ime = (NSView*)ime;
 }
+
+int window_set_title(void* handle,const char* title,size_t sz){
+    // not implement
+    return 0;
+}
