@@ -132,8 +132,12 @@ local function listen_server(address, port)
 		print("bind:", err)
 		return
 	end
-	local rd,wt = lsocket.select({fd}, 1.0)
-	if not rd then
+	local rd,wt = lsocket.select({fd}, 10.0)
+	if rd == false then
+		print("select:", 'timeout')
+		fd:close()
+		return
+	elseif rd == nil then
 		print("select:", wt)	-- select error
 		fd:close()
 		return
