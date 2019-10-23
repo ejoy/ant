@@ -149,10 +149,6 @@ static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
       return hashpointer(t, pvalueraw(*kvl));
     case LUA_TLCF:
       return hashpointer(t, fvalueraw(*kvl));
-    case LUA_TTABLE:
-      return hashint(t, gco2t(gcvalueraw(*kvl))->gchash);
-    case LUA_TUSERDATA:
-      return hashint(t, gco2u(gcvalueraw(*kvl))->gchash);
     default:
       return hashpointer(t, gcvalueraw(*kvl));
   }
