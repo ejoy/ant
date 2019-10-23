@@ -6,8 +6,10 @@
 #include <stdint.h>
 #include "window.h"
 #include "virtual_keys.h"
+#ifdef _WIN32
 #include <windows.h>
 #include <WinNT.h>
+#endif //_WIN32
 
 
 struct callback_context {
@@ -265,12 +267,12 @@ lset_title(lua_State* L) {
 	const char* title = luaL_checklstring(L, 2, &sz);
 	int err = window_set_title(handle, title, sz);
 	if (err) {
-		lua_pushboolean(L, FALSE);
+		lua_pushboolean(L, 0);
 		lua_pushinteger(L, err);
 		return 2;
 	}
 	else {
-		lua_pushboolean(L, TRUE);
+		lua_pushboolean(L, 1);
 		return 1;
 	}
 }
