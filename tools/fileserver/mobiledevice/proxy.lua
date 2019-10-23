@@ -65,7 +65,7 @@ local function update_event()
         elseif event.MessageType == 'Paired' then
             LOG('device paired', devices[event.DeviceID].sn)
         else
-            assert(false, 'Unknown message: ' .. event.MessageType)
+            error('Unknown message: ' .. event.MessageType)
         end
     end
 end
@@ -95,9 +95,11 @@ local function update_devices()
                 if msg.Number == 0 then
                     LOG('connected')
                     device.status = 'connected'
-                else
+                elseif msg.Number == 3 then
                     network.close(device.cfd)
                     try_connect(device)
+                else
+                    error('Unknown result: ' .. msg.Number)
                 end
             end
         elseif device.status == 'connected' then
@@ -147,7 +149,7 @@ end
 
 local function update()
     local objs = {}
-    if network.dispatch(objs) then
+    if network.dispatch(objs, 0.1) then
         for _, obj in ipairs(objs) do
             if obj._status == "CLOSED" then
                 closed[obj] = true
