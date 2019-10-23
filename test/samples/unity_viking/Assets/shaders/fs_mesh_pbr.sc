@@ -639,10 +639,7 @@ vec3 LightGlow(vec3 color,AntEnv env,float brightness,float strength)
 
 //-------------------------------------   
 void main() 
-{   
-    #ifdef ENABLE_SHADOW
-    #error 11111111111
-    #endif //ENABLE_SHADOW
+{
     ParamsSetup(); 
 
     float distanceVS = v_posWS.w;
