@@ -1057,9 +1057,9 @@ register_animation_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");	// ANIMATION_NODE.__index = ANIMATION_NODE
 
 	luaL_Reg l[] = {		
-		"duration", lduration_animation,		
-		"__gc", ldel_animation,
-		nullptr, nullptr,
+		{"duration", lduration_animation},		
+		{"__gc", ldel_animation},
+		{nullptr, nullptr},
 	};
 
 	luaL_setfuncs(L, l, 0);
@@ -1072,8 +1072,8 @@ register_sampling_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {
-		"__gc", ldel_sampling,
-		nullptr, nullptr,
+		{"__gc", ldel_sampling},
+		{nullptr, nullptr},
 	};
 
 	luaL_setfuncs(L, l, 0);
@@ -1086,11 +1086,11 @@ register_bpresult_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {
-		"joint", lbp_result_joint,
-		"joints", lbp_result_joints,
-		"count", lbp_result_count,
-		"__gc", ldel_bpresult,
-		nullptr, nullptr,
+		{"joint", lbp_result_joint},
+		{"joints", lbp_result_joints},
+		{"count", lbp_result_count},
+		{"__gc", ldel_bpresult},
+		{nullptr, nullptr},
 	};
 
 	luaL_setfuncs(L, l, 0);
@@ -1103,14 +1103,14 @@ register_ozzmesh_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {		
-		"buffer", lbuffer_ozzmesh,
-		"num_vertices", lnum_vertices,
-		"num_indices", lnum_indices,
-		"index_buffer", lindexbuffer_ozzmesh,
-		"layout", llayout_ozzmesh,		
-		"bounding", lbounding_ozzmesh,
-		"__gc", ldel_ozzmesh,
-		nullptr, nullptr,
+		{"buffer", lbuffer_ozzmesh},
+		{"num_vertices", lnum_vertices},
+		{"num_indices", lnum_indices},
+		{"index_buffer", lindexbuffer_ozzmesh},
+		{"layout", llayout_ozzmesh},
+		{"bounding", lbounding_ozzmesh},
+		{"__gc", ldel_ozzmesh},
+		{nullptr, nullptr},
 	};
 
 	luaL_setfuncs(L, l, 0);
