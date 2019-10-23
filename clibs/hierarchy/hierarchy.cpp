@@ -637,28 +637,28 @@ lhnode_name(lua_State *L) {
 	return 0;
 }
 
-static int
-lhnode_getnode(lua_State *L) {
-	const size_t n = (int)lua_tointeger(L, 2);
-	if (n <= 0) {
-		return luaL_error(L, "Invalid children index %f", lua_tonumber(L, 2));
-	}
-	RawSkeleton::Joint::Children * c = get_children(L, 1);	
-	if (n > c->size()) {
-		return 0;
-	}
+// static int
+// lhnode_getnode(lua_State *L) {
+// 	const size_t n = (int)lua_tointeger(L, 2);
+// 	if (n <= 0) {
+// 		return luaL_error(L, "Invalid children index %f", lua_tonumber(L, 2));
+// 	}
+// 	RawSkeleton::Joint::Children * c = get_children(L, 1);	
+// 	if (n > c->size()) {
+// 		return 0;
+// 	}
 
-	RawSkeleton::Joint *joint = &c->at(n - 1);
-	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
-		return luaL_error(L, "Missing cache lhnodeget");
-	}
-	if (lua_rawgetp(L, -1, (const void *)joint) == LUA_TUSERDATA) {
-		return 1;
-	}
-	lua_pop(L, 1);
+// 	RawSkeleton::Joint *joint = &c->at(n - 1);
+// 	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
+// 		return luaL_error(L, "Missing cache lhnodeget");
+// 	}
+// 	if (lua_rawgetp(L, -1, (const void *)joint) == LUA_TUSERDATA) {
+// 		return 1;
+// 	}
+// 	lua_pop(L, 1);
 
-	return push_hierarchy_node(L, joint);
-}
+// 	return push_hierarchy_node(L, joint);
+// }
 
 static void
 register_hierarchy_builddata(lua_State *L) {
@@ -666,17 +666,17 @@ register_hierarchy_builddata(lua_State *L) {
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 		luaL_Reg l[] = {
-			"__gc", lbuilddata_del,
-			"__len", lbuilddata_len,
-			"save", lbuilddata_save,
-			"load", lbuilddata_load,
-			"isleaf", lbuilddata_isleaf,
-			"parent", lbuilddata_parent,
-			"isroot", lbuilddata_isroot,
-			"joint_index", lbuilddata_jointindex,
-			"joint_matrix", lbuilddata_jointmatrix,
-			"bindpose_result", lbuilddata_bindpose_result,
-			nullptr, nullptr,
+			{"__gc", lbuilddata_del},
+			{"__len", lbuilddata_len},
+			{"save", lbuilddata_save},
+			{"load", lbuilddata_load},
+			{"isleaf", lbuilddata_isleaf},
+			{"parent", lbuilddata_parent},
+			{"isroot", lbuilddata_isroot},
+			{"joint_index", lbuilddata_jointindex},
+			{"joint_matrix", lbuilddata_jointmatrix},
+			{"bindpose_result", lbuilddata_bindpose_result},
+			{nullptr, nullptr},
 		};
 
 		luaL_setfuncs(L, l, 0);
@@ -690,14 +690,14 @@ register_hierarchy_node(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {
-		"__len", lhnode_childcount,
-		"save", lhnode_save,
-		"load", lhnode_load,
-		"add_child", lhnode_addchild,
-		"remove_child", lhnode_removechild,
-		"transform", lhnode_transform,		
-		"name", lhnode_name,
-		nullptr, nullptr,
+		{"__len", lhnode_childcount},
+		{"save", lhnode_save},
+		{"load", lhnode_load},
+		{"add_child", lhnode_addchild},
+		{"remove_child", lhnode_removechild},
+		{"transform", lhnode_transform,	},
+		{"name", lhnode_name},
+		{nullptr, nullptr},
 	};
 
 	luaL_setfuncs(L, l, 0);	

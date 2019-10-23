@@ -8,6 +8,8 @@ else
 default : $(ODIR)/libmath3d.a
 endif
 
+CFLAGS = $(CFLAGS) -Wunused-function
+
 math3d.dll : $(ODIR)/math3d.dll
 	cp $< $@
 
