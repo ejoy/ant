@@ -18,10 +18,10 @@
 .repo
 _build
 
-/clibs/shadercrelease
-/clibs/shadercdebug
-/clibs/texturecrelease
-/clibs/texturecdebug
+/clibs/shaderc[Rr]elease
+/clibs/shaderc[Dd]ebug
+/clibs/texturec[Rr]elease
+/clibs/texturec[Dd]ebug
 /log
 
 /projects/msvc/vs_bin
@@ -29,14 +29,6 @@ _build
 /projects/msvc/Debug
 /projects/msvc/Release
 
-/assets/map
-/assets/textures
-/assets/shaders/dx11
-/assets/shaders/glsl
-/assets/meshes
-/assets/shaders/d3d11
-/assets/shaders/ogl
-/assets/shaders/ogles
 editor.user.setting
 editor.user.ini
 script_runner.user.lua
