@@ -193,7 +193,6 @@
     <ClCompile Include="..\..\clibs\lua\lapi.c" />
     <ClCompile Include="..\..\clibs\lua\lauxlib.c" />
     <ClCompile Include="..\..\clibs\lua\lbaselib.c" />
-    <ClCompile Include="..\..\clibs\lua\lbitlib.c" />
     <ClCompile Include="..\..\clibs\lua\lcode.c" />
     <ClCompile Include="..\..\clibs\lua\lcorolib.c" />
     <ClCompile Include="..\..\clibs\lua\lctype.c" />
@@ -224,7 +223,6 @@
     <ClCompile Include="..\..\clibs\lua\lvm.c" />
     <ClCompile Include="..\..\clibs\lua\lzio.c" />
     <ClCompile Include="..\..\clibs\lua\utf8_crt.c" />
-    <ClCompile Include="..\..\clibs\lua\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\clibs\lua\lvm.s" />

@@ -194,17 +194,11 @@
     <ClCompile Include="..\..\clibs\lua\lcode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\lua\lbitlib.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\clibs\lua\lbaselib.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\clibs\lua\lauxlib.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\lua\utf8_unicode.c">
-      <Filter>utf8</Filter>
     </ClCompile>
     <ClCompile Include="..\..\clibs\lua\utf8_crt.c">
       <Filter>utf8</Filter>

@@ -130,7 +130,7 @@ function windows.EndTabItem() end
 function windows.SetTabItemClosed() end
 function windows.OpenPopup() end
 function windows.BeginPopup() end
-function windows.BeginPopupContextItem() end
+function windows.BeginPopupContextItem(strid,boolean) end --return open
 function windows.BeginPopupContextWindow() end
 function windows.BeginPopupContextVoid() end
 function windows.BeginPopupModal() end
@@ -164,10 +164,11 @@ function windows.GetContentRegionAvail() end
 function windows.GetWindowContentRegionMin() end
 function windows.GetWindowContentRegionMax() end
 function windows.GetWindowContentRegionWidth() end
-function windows.PushStyleColor() end
-function windows.PopStyleColor() end
-function windows.PushStyleVar() end
-function windows.PopStyleVar() end
+--co1 0~1
+function windows.PushStyleColor(enum.StyleCol.XXX,col_r,col_g,col_b,col_a) end
+function windows.PopStyleColor(num) end
+function windows.PushStyleVar(enum.StyleVal.XXX,v1,...) end
+function windows.PopStyleVar(num) end
 function windows.SetWindowFontScale() end
 
 function util.SetColorEditOptions() end
@@ -422,6 +423,7 @@ function enum.MouseCursor.COUNT() end
 function IO.WantCaptureMouse()          -- When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
 function IO.WantCaptureKeyboard()       -- When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
 function IO.WantTextInput()             -- Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+--WantSetMousePos:imgui want to override the system mouse pos by imgui.mousepos,need to implement on platform
 function IO.WantSetMousePos()           -- MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
 function IO.WantSaveIniSettings()       -- When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
 function IO.NavActive()                 -- Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.

@@ -26,6 +26,8 @@ local editor = {
         gui_system_profiler = require "editor.gui_system_profiler",
         gui_project_view = require "editor.gui_project_view",
         gui_inspector_view = require "editor.inspector.gui_inspector_view",
+        gui_project_list = require "editor.projects.gui_project_list",
+        gui_window_controller = require "editor.gui_window_controller",
     },
 }
 return editor

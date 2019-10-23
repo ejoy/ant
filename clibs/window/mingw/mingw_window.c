@@ -179,19 +179,37 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		HDROP drop = (HDROP)wParam;
 		UINT file_count = DragQueryFile(drop, 0xFFFFFFFF, NULL, 0);
 		msg.type = ANT_WINDOW_DROPFILES;
-		msg.u.dropfiles.paths = malloc( sizeof(char *) * file_count);
+		msg.u.dropfiles.paths = malloc(sizeof(char*) * file_count);
+		msg.u.dropfiles.path_counts = malloc(sizeof(int) * file_count);
 		msg.u.dropfiles.count = file_count;
 		for (UINT i = 0; i < file_count; i++)
 		{
-			msg.u.dropfiles.paths[i] = malloc(sizeof(char) * MAX_DROP_PATH);
-			DragQueryFileA(drop, i, msg.u.dropfiles.paths[i], MAX_DROP_PATH);
+			msg.u.dropfiles.path_counts[i] = 0;
+			msg.u.dropfiles.paths[i] = NULL;
+			WCHAR * str_w = malloc(sizeof(WCHAR) * MAX_DROP_PATH);
+			UINT size_w = DragQueryFileW(drop, i, str_w, MAX_DROP_PATH);
+			if (str_w !=NULL && size_w > 0) {
+				int len_a = WideCharToMultiByte(CP_UTF8, 0, str_w, size_w, NULL, 0, NULL, NULL);
+				if (len_a > 0)
+				{
+					msg.u.dropfiles.paths[i] = malloc(sizeof(char) * (len_a + 1));
+					if (msg.u.dropfiles.paths[i] != NULL)
+					{
+						int out_len = WideCharToMultiByte(CP_UTF8, 0, str_w, size_w, msg.u.dropfiles.paths[i], len_a, NULL, NULL);
+						msg.u.dropfiles.path_counts[i] = out_len;
+					}
+				}
+			}
+			free(str_w);
 		}
 		cb->message(cb->ud, &msg);
 		for (UINT i = 0; i < file_count; i++)
 		{
-			free(msg.u.dropfiles.paths[i]);
+			if(msg.u.dropfiles.paths[i]!=NULL)
+				free(msg.u.dropfiles.paths[i]);
 		}
 		free(msg.u.dropfiles.paths);
+		free(msg.u.dropfiles.path_counts);
 		break;
 	}
 	case WM_USER_WINDOW_SETCURSOR:
@@ -263,6 +281,8 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	return 0;
 }
 
+
+
 void window_mainloop(struct ant_window_callback* cb, int update) {
 	MSG msg;
 	struct ant_window_message update_msg;
@@ -291,4 +311,19 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
 
 void window_ime(void* ime) {
     // do nothing
+}
+
+int window_set_title(void* handle,const char* title,size_t sz) {
+	wchar_t* wtitle = (wchar_t*)malloc((sz + 1) * sizeof(wchar_t));
+	if (wtitle == 0) {
+		return 1;
+	}
+	int wsz = MultiByteToWideChar(CP_UTF8, 0, title, (int)sz + 1, wtitle, (int)sz + 1);
+	if (wsz == 0) {
+		free(wtitle);
+		return 2;
+	}
+	SetWindowTextW((HWND) handle, wtitle);
+	free(wtitle);
+	return 0;
 }

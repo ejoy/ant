@@ -130,7 +130,7 @@ function path_mt:string()
 end
 
 function path_mt:filename()
-    return constructor(self._value:match("[/]?([%w*?_.%-]*)$"))
+    return constructor(self._value:match("[/]?([^/]*)$"))
 end
 
 function path_mt:parent_path()

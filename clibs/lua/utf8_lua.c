@@ -1,5 +1,5 @@
 #define main(a, b) utf8_main(a, b)
-#include "../src/lua.c"
+#include "lua.c"
 #undef main
 
 #include "utf8_unicode.h"

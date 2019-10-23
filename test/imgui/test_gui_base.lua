@@ -24,17 +24,17 @@ function TestGuiBase:_init(default_collapsed)
     self.win_flags = flags.Window { "MenuBar" }
     self._is_opened = true
     local fs = require "filesystem"
-    local texrefpath1 = fs.path("/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga")
-    local f = assert(fs.open(texrefpath1, "rb"))
-    local imgdata1 = f:read "a"
-    f:close()
-    self.texhandle1 = bgfx.create_texture(imgdata1, "")
+    self.texrefpath1 = "/pkg/ant.resources/depiction/textures/test/1x1_normal.texture"
+    -- local f = assert(fs.open(texrefpath1, "rb"))
+    -- local imgdata1 = f:read "a"
+    -- f:close()
+    -- self.texhandle1 = bgfx.create_texture(imgdata1, "")
 
-    local texrefpath2 = fs.path("/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga")
-    local f2 = assert(fs.open(texrefpath2, "rb"))
-    local imgdata2 = f2:read "a"
-    f2:close()
-    self.texhandle2 = bgfx.create_texture(imgdata2, "")
+    -- local texrefpath2 = fs.path("/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga")
+    -- local f2 = assert(fs.open(texrefpath2, "rb"))
+    -- local imgdata2 = f2:read "a"
+    -- f2:close()
+    -- self.texhandle2 = bgfx.create_texture(imgdata2, "")
 
     self.default_collapsed = default_collapsed
 end
@@ -74,7 +74,6 @@ function TestGuiBase:on_update()
             if widget.Button "Popup" then
                 windows.OpenPopup "Popup window"
             end
-            
             windows.EndTabItem()
         end
         if windows.BeginTabItem ("Tab3",tab_noclosed) then
@@ -180,11 +179,11 @@ function TestGuiBase:tab1_update()
 
 
 
-    local dds_path = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga"
+    local dds_path = "/pkg/ant.resources/depiction/PVPScene/siegeweapon_d.texture"
     widget.Image(dds_path,200,200,{border_col={1.0,0.0,1.0,1.0},tint_col={0.0,1.0,1.0,0.5}})
-    local dds_path2 = "/pkg/ant.resources.binary/textures/PVPScene/BH-Scene-Tent-d.tga"
+    local dds_path2 = "/pkg/ant.resources/depiction/PVPScene/siegeweapon_n.texture"
     widget.Image(dds_path2,600,600,{border_col={1.0,1.0,1.0,1.0},tint_col={1.0,1.0,1.0,1}})
-    if  widget.ImageButton(self.texhandle1,50,50,
+    if  widget.ImageButton(self.texrefpath1,50,50,
             {uv0={0.5,0.5},
             uv1={1,1},
             bg_col={0.5,0.5,0.5,0.5},
@@ -205,8 +204,13 @@ function TestGuiBase:tab1_update()
     if widget.Checkbox("Checkbox", checkbox) then
         log("Click Checkbox", checkbox[1])
     end
-    if widget.InputText("Edit", editbox) then
+    if widget.InputText("Set Title", editbox) then
         log(editbox.text)
+    end
+    if widget.Button("Set Window Title") then
+        local gui_mgr = import_package "ant.imgui".gui_mgr
+        local window = require "window"
+        window.set_title(gui_mgr.win_handle,tostring(editbox.text))
     end
     if (not editbox_dynamic) or (editbox_dynamic.count > 2000) then
         editbox_dynamic = self:create_textbox()

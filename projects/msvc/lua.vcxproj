@@ -165,7 +165,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\lua\utf8_lua.c" />
-    <ClCompile Include="..\..\clibs\lua\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\lua\lapi.h" />

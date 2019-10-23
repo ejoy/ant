@@ -24,7 +24,16 @@ local initialized = false
 
 local uieditor_viewid = viewidmgr.generate("uieditor")
 
+local function imgui_resize(width, height)
+	local xdpi, ydpi = rhwi.dpi()
+	local xscale = math.floor(xdpi/96.0+0.5)
+	local yscale = math.floor(ydpi/96.0+0.5)
+	imgui.resize(width/xscale, height/yscale, xscale, yscale)
+end
+
+
 function gui_main.init(nwh, context, width, height)
+	imgui.create(nwh)
     initialized = true
     rhwi.init {
         nwh = nwh,
@@ -32,29 +41,23 @@ function gui_main.init(nwh, context, width, height)
         width = width,
         height = height,
 	}
-    imgui.create(nwh)
     imgui.setDockEnable(true)
     imgui.viewid(viewidmgr.generate("ui"));
-    local imgui_font = assetutil.create_shader_program_from_file {
-        vs = fs.path "/pkg/ant.imguibase/shader/vs_imgui_font.sc",
-        fs = fs.path "/pkg/ant.imguibase/shader/fs_imgui_font.sc",
-    }
+    gui_mgr.win_handle = nwh
+	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
     imgui.font_program(
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
-    local imgui_image = assetutil.create_shader_program_from_file {
-        vs = fs.path "/pkg/ant.imguibase/shader/vs_imgui_image.sc",
-        fs = fs.path "/pkg/ant.imguibase/shader/fs_imgui_image.sc",
-    }
+	local imgui_image = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
     imgui.image_program(
         imgui_image.prog,
         imgui_image.uniforms.s_tex.handle
-    )
-    imgui.resize(width, height)
+	)
+	imgui_resize(width, height)
     gui_input.size(width,height)
-    imgui.keymap(window.keymap)
-
+	imgui.keymap(window.keymap)
+	window.set_ime(imgui.ime_handle())
     bgfx.set_view_rect(uieditor_viewid, 0, 0, width, height)
     bgfx.set_view_clear(uieditor_viewid, "CD", 0x303030ff, 1, 0)
 
@@ -171,7 +174,11 @@ end
 
 function gui_main.dropfiles(paths)
     local a = paths
-    log.info_a("dropfiles",a)
+    log.info("dropfiles",a)
+    for i,v in pairs(a) do
+
+        log(v)
+    end
     gui_input.set_dropfiles(paths)
 end
 

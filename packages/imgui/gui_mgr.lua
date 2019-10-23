@@ -23,6 +23,8 @@ local CreateDefaultSetting = function()
     }
 end
 
+gui_mgr.EditorName = "Ant"
+
 function gui_mgr.init()
     gui_mgr.gui_tbl = {}
     gui_mgr.mainmenu_list = {}
@@ -185,13 +187,15 @@ end
 
 function gui_mgr._update_mainmenu_view()
     for ui_name,ui_ins in pairs(gui_mgr.gui_tbl) do
-        local is_opened =  ui_ins:is_opened()
-        local change,status =  widget.MenuItem(ui_name,nil,is_opened)
-        if change then
-            if status then
-                ui_ins:on_open_click()
-            else
-                ui_ins:on_close_click()
+        if not ui_ins.dont_show_in_mainmenu then
+            local is_opened =  ui_ins:is_opened()
+            local change,status =  widget.MenuItem(ui_name,nil,is_opened)
+            if change then
+                if status then
+                    ui_ins:on_open_click()
+                else
+                    ui_ins:on_close_click()
+                end
             end
         end
     end
@@ -343,19 +347,22 @@ function gui_mgr.check_and_save_setting()
         end
     end
     if need_save then
+
+        local r,data = dbgutil.try( thread.pack,setting_tbl)
         -- log.trace("Setting changed,save to path:",UserImguiSetting)
-        local file,file_path = gui_util.open_current_pkg_path(UserImguiSetting,"wb")
-        if file then
-            local data = thread.pack(setting_tbl)
-            file:write(data)
-            file:close()
-            if gui_mgr.last_time_save_failed then
-                log.trace("Save successfully!")
-                gui_mgr.last_time_save_failed = false
+        if r and data then
+            local file,file_path = gui_util.open_current_pkg_path(UserImguiSetting,"wb")
+            if file then
+                file:write(data)
+                file:close()
+                if gui_mgr.last_time_save_failed then
+                    log.trace("Save successfully!")
+                    gui_mgr.last_time_save_failed = false
+                end
+            else
+                log.error("Can't Open file:",file_path)
+                gui_mgr.last_time_save_failed = true
             end
-        else
-            log.error("Can't Open file:",file_path)
-            gui_mgr.last_time_save_failed = true
         end
     end
 end
@@ -371,6 +378,14 @@ function gui_mgr.save_setting_to(path)
 end
 
 ---------------gui_setting-------------------------------
+
+---------------gui-window-api--------------------------------
+function gui_mgr.set_window_title(title)
+    local window = require "window"
+    window.set_title(gui_mgr.win_handle,tostring(title))
+end
+
+---------------gui-window-api--------------------------------
 
 
 gui_mgr.init()

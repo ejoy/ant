@@ -46,8 +46,9 @@ local function class(class_name,super)
     local class_type={}
     class_type._init=false
     class_type._type = class_name
+    class_type.__index = class_type
     class_type.new=function(...)
-        local obj=setmetatable({},{ __index=class_type })
+        local obj=setmetatable({},class_type)
         if class_type._init then
             class_type._init(obj,...)
         end
@@ -77,7 +78,7 @@ local function class(class_name,super)
     class_type.is_instance = is_instance
 
     if super then
-        setmetatable(class_type,{__index=super})
+        setmetatable(class_type,super)
     end
     return class_type
 end

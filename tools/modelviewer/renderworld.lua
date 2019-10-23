@@ -34,7 +34,6 @@ model_review_system.depend "render_system"
 model_review_system.depend "viewport_detect_system"
 model_review_system.depend "procedural_sky_system"
 model_review_system.depend "cull_system"
-model_review_system.depend "luagc_system"
 model_review_system.depend "shadow_maker"
 --model_review_system.depend "render_mesh_bounding"
 model_review_system.dependby "camera_controller_2"
@@ -343,11 +342,11 @@ local function memory_info()
 	return table.concat(s, "\t\n\t")
 end
 
--- function model_review_system:on_gui()
--- 	local windows = imgui.windows
--- 	local widget = imgui.widget
+function model_review_system:on_gui()
+	local windows = imgui.windows
+	local widget = imgui.widget
 
--- 	windows.Begin("Test")
--- 	widget.Text(memory_info())
--- 	windows.End()
--- end
+	windows.Begin("Test")
+	widget.Text(memory_info())
+	windows.End()
+end

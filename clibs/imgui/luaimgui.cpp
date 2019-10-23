@@ -2590,11 +2590,12 @@ cColumns(lua_State *L) {
 	bool border = true;
 	if (lua_isinteger(L, 1)) {
 		count = (int)lua_tointeger(L, 1);
-		if (lua_isstring(L, 2)) {
-			id = lua_tostring(L, 2);
-			if (lua_isboolean(L, 3))
-				border = lua_toboolean(L, 3);
-		}
+	}
+	if (lua_isstring(L, 2)) {
+		id = lua_tostring(L, 2);
+	}
+	if (lua_isboolean(L, 3)){
+		border = lua_toboolean(L, 3);
 	}
 	ImGui::Columns(count, id, border);
 	return 0;

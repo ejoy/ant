@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <Windows.h>
 
-#define MAX_DROP_PATH 255
+#define MAX_DROP_PATH 255*3
 
 enum {
 	WM_USER_WINDOW_SETCURSOR = WM_USER,
