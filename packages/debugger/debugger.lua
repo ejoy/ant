@@ -53,4 +53,5 @@ return {
     start_master = start_master,
     start_worker = start_worker,
     math3d = require "math3d",
+    protocol = require 'common.protocol',
 }

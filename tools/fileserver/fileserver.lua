@@ -20,6 +20,7 @@ local protocol = require "protocol"
 local network = require "network"
 local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
+local dbg = require "debugger"
 
 local WORKDIR = lfs.current_path()
 
@@ -194,7 +195,7 @@ function message:DBG(data)
 	for _, v in pairs(debug) do
 		if v.server == self then
 			if v.client then
-				network.send(v.client, data)
+				network.send(v.client, dbg.convert(self._repo, data))
 			end
 			break
 		end
