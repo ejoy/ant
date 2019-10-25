@@ -5,7 +5,6 @@ local ev = require 'common.event'
 
 local SHORT_TABLE_FIELD = 100
 local MAX_TABLE_FIELD = 1000
-local TEMPORARY = "(temporary)"
 local LUAVERSION = 54
 
 local info = {}
@@ -56,17 +55,16 @@ local function init_standard()
         table.insert(lstandard, "newproxy")
         table.insert(lstandard, "setfenv")
         table.insert(lstandard, "unpack")
-    end
-    if LUAVERSION >= 52 then
+    elseif LUAVERSION == 52 then
         table.insert(lstandard, "rawlen")
-    end
-    if LUAVERSION == 52 or LUAVERSION == 53 then
         table.insert(lstandard, "bit32")
-    end
-    if LUAVERSION >= 53 then
+    elseif LUAVERSION == 53 then
+        table.insert(lstandard, "rawlen")
+        table.insert(lstandard, "bit32")
         table.insert(lstandard, "utf8")
-    end
-    if LUAVERSION >= 54 then
+    elseif LUAVERSION >= 54 then
+        table.insert(lstandard, "rawlen")
+        table.insert(lstandard, "utf8")
         table.insert(lstandard, "warn")
     end
     standard = {}
@@ -78,9 +76,14 @@ end
 ev.on('initializing', function()
     LUAVERSION = luaver.LUAVERSION
     init_standard()
-    TEMPORARY = LUAVERSION >= 54 and "(temporary)" or "(*temporary)"
 end)
 
+local function isTemporary(name)
+    if LUAVERSION >= 54 then
+        return name == "(C temporary)" or name == "(temporary)"
+    end
+    return name == "(*temporary)"
+end
 
 local special_has = {}
 
@@ -105,7 +108,7 @@ function special_has.Local(frameId)
         if name == nil then
             return false
         end
-        if name ~= TEMPORARY then
+        if not isTemporary(name) then
             return true
         end
         i = i + 1
@@ -152,8 +155,10 @@ local function normalizeNumber(str)
 end
 
 
-local function varCanExtand(type, subtype, value)
+local function varCanExtand(type, value)
     if type == 'function' then
+        return rdebug.getupvaluev(value, 1) ~= nil
+    elseif type == 'cfunction' then
         return rdebug.getupvaluev(value, 1) ~= nil
     elseif type == 'table' then
         if rdebug.nextkey(value, nil) ~= nil then
@@ -167,7 +172,12 @@ local function varCanExtand(type, subtype, value)
         if rdebug.getmetatablev(value) ~= nil then
             return true
         end
-        if subtype == 'full' and rdebug.getuservaluev(value) ~= nil then
+        if rdebug.getuservaluev(value) ~= nil then
+            return true
+        end
+        return false
+    elseif type == 'lightuserdata' then
+        if rdebug.getmetatablev(value) ~= nil then
             return true
         end
         return false
@@ -176,7 +186,13 @@ local function varCanExtand(type, subtype, value)
 end
 
 local function varGetName(value)
-    local type, subtype = rdebug.type(value)
+    local type = rdebug.type(value)
+    if LUAVERSION <= 52 and type == "float" then
+        local rvalue = rdebug.value(value)
+        if rvalue == math.floor(rvalue) then
+            type = 'integer'
+        end
+    end
     if type == 'string' then
         local str = rdebug.value(value)
         if #str < 32 then
@@ -191,28 +207,20 @@ local function varGetName(value)
         end
     elseif type == 'nil' then
         return 'nil'
-    elseif type == 'number' then
-        if LUAVERSION <= 52 then
-            local rvalue = rdebug.value(value)
-            if rvalue == math.floor(rvalue) then
-                subtype = 'integer'
-            end
+    elseif type == 'integer' then
+        local rvalue = rdebug.value(value)
+        if rvalue > 0 and rvalue < 1000 then
+            return ('[%03d]'):format(rvalue)
         end
-        if subtype == 'integer' then
-            local rvalue = rdebug.value(value)
-            if rvalue > 0 and rvalue < 1000 then
-                return ('[%03d]'):format(rvalue)
-            end
-            return ('%d'):format(rvalue)
-        else
-            return normalizeNumber(('%.4f'):format(rdebug.value(value)))
-        end
+        return ('%d'):format(rvalue)
+    elseif type == 'float' then
+        return normalizeNumber(('%.4f'):format(rdebug.value(value)))
     end
     return tostring(rdebug.value(value))
 end
 
 local function varGetShortValue(value)
-    local type, subtype = rdebug.type(value)
+    local type = rdebug.type(value)
     if type == 'string' then
         local str = rdebug.value(value)
         if #str < 16 then
@@ -227,23 +235,19 @@ local function varGetShortValue(value)
         end
     elseif type == 'nil' then
         return 'nil'
-    elseif type == 'number' then
-        if subtype == 'integer' then
-            return ('%d'):format(rdebug.value(value))
-        else
-            return normalizeNumber(('%f'):format(rdebug.value(value)))
-        end
+    elseif type == 'integer' then
+        return ('%d'):format(rdebug.value(value))
+    elseif type == 'float' then
+        return normalizeNumber(('%f'):format(rdebug.value(value)))
     elseif type == 'function' then
         return 'func'
+    elseif type == 'c function' then
+        return 'func'
     elseif type == 'table' then
-        if varCanExtand(type, subtype, value) then
+        if varCanExtand(type, value) then
             return "..."
         end
         return '{}'
-    elseif type == 'userdata' then
-        return 'userdata'
-    elseif type == 'thread' then
-        return 'thread'
     end
     return type
 end
@@ -329,7 +333,7 @@ local function getFunctionCode(str, startLn, endLn)
 end
 
 -- context: getvalue,setvalue,scopes,hover,watch,repl,copyvalue
-local function varGetValue(context, type, subtype, value)
+local function varGetValue(context, type, value)
     if type == 'string' then
         local str = rdebug.value(value)
         if context == "repl" or context == "copyvalue" then
@@ -353,16 +357,11 @@ local function varGetValue(context, type, subtype, value)
         end
     elseif type == 'nil' then
         return 'nil'
-    elseif type == 'number' then
-        if subtype == 'integer' then
-            return ('%d'):format(rdebug.value(value))
-        else
-            return normalizeNumber(('%f'):format(rdebug.value(value)))
-        end
+    elseif type == 'integer' then
+        return ('%d'):format(rdebug.value(value))
+    elseif type == 'float' then
+        return normalizeNumber(('%f'):format(rdebug.value(value)))
     elseif type == 'function' then
-        if subtype == 'c' then
-            return 'C function'
-        end
         rdebug.getinfo(value, "S", info)
         local src = source.create(info.source)
         if not source.valid(src) then
@@ -373,13 +372,15 @@ local function varGetValue(context, type, subtype, value)
         end
         local code = source.getCode(src.sourceReference)
         return getFunctionCode(code, info.linedefined, info.lastlinedefined)
+    elseif type == 'c function' then
+        return 'C function'
     elseif type == 'table' then
         return varGetTableValue(value)
     elseif type == 'userdata' then
         local meta = rdebug.getmetatablev(value)
         if meta ~= nil then
             local fn = rdebug.indexv(meta, '__debugger_tostring')
-            if fn ~= nil and rdebug.type(fn) == 'function' then
+            if fn ~= nil and (rdebug.type(fn) == 'function' or rdebug.type(fn) == 'c function') then
                 local ok, res = rdebug.evalref(fn, value)
                 if ok then
                     return res
@@ -390,52 +391,25 @@ local function varGetValue(context, type, subtype, value)
                 return 'userdata: ' .. tostring(rdebug.value(name))
             end
         end
-        if subtype == 'light' then
-            return 'light' .. tostring(rdebug.value(value))
-        end
         return 'userdata'
+    elseif type == 'lightuserdata' then
+        return 'light' .. tostring(rdebug.value(value))
     elseif type == 'thread' then
         return 'thread'
     end
     return tostring(rdebug.value(value))
 end
 
-local function varGetType(type, subtype)
-    if type == 'string'
-        or type == 'boolean'
-        or type == 'nil'
-        or type == 'table'
-        or type == 'table'
-        or type == 'thread'
-    then
-        return type
-    elseif type == 'number' then
-        return subtype
-    elseif type == 'function' then
-        if subtype == 'c' then
-            return 'C function'
-        end
-        return 'function'
-    elseif type == 'userdata' then
-        if subtype == 'light' then
-            return 'lightuserdata'
-        end
-        return 'userdata'
-    end
-    return type
-end
-
-local function varCreateReference(frameId, value, evaluateName, context)
-    local type, subtype = rdebug.type(value)
+local function varCreateReference(value, evaluateName, context)
+    local type = rdebug.type(value)
     local result = {
-        type = varGetType(type, subtype),
-        value = varGetValue(context, type, subtype, value),
+        type = type,
+        value = varGetValue(context, type, value),
     }
-    if varCanExtand(type, subtype, value) then
+    if varCanExtand(type, value) then
         varPool[#varPool + 1] = {
             v = value,
             eval = evaluateName,
-            frameId = frameId,
         }
         result.variablesReference = #varPool
         if type == "table" then
@@ -473,7 +447,7 @@ local function varCreateScopes(frameId, scopes, name, expensive)
     end
 end
 
-local function varCreate(vars, frameId, varRef, kind, name, nameidx, value, evaluateName, calcValue)
+local function varCreate(vars, varRef, kind, name, nameidx, value, evaluateName, calcValue)
     local extand = varRef.extand
     if extand[name] then
         local index = extand[name][3]
@@ -502,7 +476,7 @@ local function varCreate(vars, frameId, varRef, kind, name, nameidx, value, eval
     if type(evaluateName) ~= "string" then
         evaluateName = nil
     end
-    local var = varCreateReference(frameId, value, evaluateName, "getvalue")
+    local var = varCreateReference(value, evaluateName, "getvalue")
     var.name = name
     var.evaluateName = evaluateName
     var.presentationHint = kind and { kind = kind } or nil
@@ -518,27 +492,26 @@ local function getTabelKey(key)
             return ('.%s'):format(str)
         end
         return ('[%q]'):format(str)
-    elseif type == 'boolean' then
-        return ('[%s]'):format(tostring(rdebug.value(key)))
-    elseif type == 'number' then
+    elseif type == 'boolean' or type == 'float' or type == 'integer' then
         return ('[%s]'):format(tostring(rdebug.value(key)))
     end
 end
 
 local function extandTableIndexed(varRef, start, count)
     varRef.extand = varRef.extand or {}
-    local frameId = varRef.frameId
     local t = varRef.v
     local evaluateName = varRef.eval
     local vars = {}
+    local last = start + count - 1
     if start <= 0 then
         start = 1
     end
-    for key = start, start + count do
+    for key = start, last do
         local value = rdebug.indexv(t, key)
         if value ~= nil then
-            varCreate(vars, frameId, varRef, nil
-                , ('%d'):format(key), nil
+            local name = (key > 0 and key < 1000) and ('[%03d]'):format(key) or ('%d'):format(key)
+            varCreate(vars, varRef, nil
+                , name, nil
                 , value, evaluateName and ('%s[%d]'):format(evaluateName, key)
                 , function() return rdebug.index(t, key) end
             )
@@ -549,14 +522,13 @@ end
 
 local function extandTableNamed(varRef)
     varRef.extand = varRef.extand or {}
-    local frameId = varRef.frameId
     local t = varRef.v
     local evaluateName = varRef.eval
     local vars = {}
     local loct = rdebug.copytable(t,MAX_TABLE_FIELD)
     for key, value in pairs(loct) do
         local evalKey = getTabelKey(key)
-        varCreate(vars, frameId, varRef, nil
+        varCreate(vars, varRef, nil
             , varGetName(key), nil
             , value, evaluateName and evalKey and ('%s%s'):format(evaluateName, evalKey)
             , function() return rdebug.index(t, key) end
@@ -565,7 +537,7 @@ local function extandTableNamed(varRef)
     table.sort(vars, function(a, b) return a.name < b.name end)
     local meta = rdebug.getmetatablev(t)
     if meta ~= nil then
-        varCreate(vars, frameId, varRef, "virtual"
+        varCreate(vars, varRef, "virtual"
             , '[metatable]', nil
             , meta, evaluateName and ('debug.getmetatable(%s)'):format(evaluateName)
             , function() return rdebug.getmetatable(t) end
@@ -587,13 +559,11 @@ end
 
 local function extandFunction(varRef)
     varRef.extand = varRef.extand or {}
-    local frameId = varRef.frameId
     local f = varRef.v
     local evaluateName = varRef.eval
     local vars = {}
     local i = 1
-    local _, subtype = rdebug.type(f)
-    local isCFunction = subtype == "c"
+    local isCFunction = rdebug.type(f) == "c function"
     while true do
         local name, value = rdebug.getupvaluev(f, i)
         if name == nil then
@@ -601,7 +571,7 @@ local function extandFunction(varRef)
         end
         local displayName = isCFunction and ("[%d]"):format(i) or name
         local fi = i
-        varCreate(vars, frameId, varRef, "virtual"
+        varCreate(vars, varRef, "virtual"
             , displayName, nil
             , value, evaluateName and ('select(2, debug.getupvalue(%s,%d))'):format(evaluateName, i)
             , function() local _, r = rdebug.getupvalue(f, fi) return r end
@@ -613,14 +583,13 @@ end
 
 local function extandUserdata(varRef)
     varRef.extand = varRef.extand or {}
-    local frameId = varRef.frameId
     local u = varRef.v
     local evaluateName = varRef.eval
     local vars = {}
 
     local meta = rdebug.getmetatablev(u)
     if meta ~= nil then
-        varCreate(vars, frameId, varRef, "virtual"
+        varCreate(vars, varRef, "virtual"
             , '[metatable]', nil
             , meta, evaluateName and ('debug.getmetatable(%s)'):format(evaluateName)
             , function() return rdebug.getmetatable(u) end
@@ -636,7 +605,7 @@ local function extandUserdata(varRef)
             end
             if uv ~= nil then
                 local fi = i
-                varCreate(vars, frameId, varRef, "virtual"
+                varCreate(vars, varRef, "virtual"
                     , ('[uservalue %d]'):format(i), nil
                     , uv, evaluateName and ('debug.getuservalue(%s,%d)'):format(evaluateName,i)
                     , function() return rdebug.getuservalue(u, fi) end
@@ -647,7 +616,7 @@ local function extandUserdata(varRef)
     else
         local uv = rdebug.getuservaluev(u)
         if uv ~= nil then
-            varCreate(vars, frameId, varRef, "virtual"
+            varCreate(vars, varRef, "virtual"
                 , '[uservalue]', nil
                 , uv, evaluateName and ('debug.getuservalue(%s)'):format(evaluateName)
                 , function() return rdebug.getuservalue(u) end
@@ -663,6 +632,8 @@ local function extandValue(varRef, filter, start, count)
         return extandTable(varRef, filter, start, count)
     elseif type == 'function' then
         return extandFunction(varRef)
+    elseif type == 'c function' then
+        return extandFunction(varRef)
     elseif type == 'userdata' then
         return extandUserdata(varRef)
     end
@@ -673,7 +644,6 @@ local function setValue(varRef, name, value)
     if not varRef.extand or not varRef.extand[name] then
         return nil, 'Failed set variable'
     end
-    local frameId = varRef.frameId
     local newvalue
     if value == 'nil' then
         newvalue = nil
@@ -695,7 +665,7 @@ local function setValue(varRef, name, value)
     if not rdebug.assign(rvalue, newvalue) then
         return nil, 'Failed set variable'
     end
-    return varCreateReference(frameId, rvalue, evaluateName, "setvalue")
+    return varCreateReference(rvalue, evaluateName, "setvalue")
 end
 
 local special_extand = {}
@@ -717,13 +687,13 @@ function special_extand.Local(varRef)
         if name == nil then
             break
         end
-        if name ~= TEMPORARY then
+        if not isTemporary(name) then
             if name:sub(1,1) == "(" then
                 tempVar[name] = tempVar[name] and (tempVar[name] + 1) or 1
                 name = ("(%s #%d)"):format(name:sub(2,-2), tempVar[name])
             end
             local fi = i
-            varCreate(vars, frameId, varRef, nil
+            varCreate(vars, varRef, nil
                 , name, i
                 , value, name
                 , function() local _, r = rdebug.getlocal(frameId, fi) return r end
@@ -746,7 +716,7 @@ function special_extand.Upvalue(varRef)
             break
         end
         local fi = i
-        varCreate(vars, frameId, varRef, nil
+        varCreate(vars, varRef, nil
             , name, nil
             , value, name
             , function() local _, r = rdebug.getupvalue(f, fi) return r end
@@ -768,7 +738,7 @@ function special_extand.Parameter(varRef)
                 local name, value = rdebug.getlocalv(frameId, i)
                 if name ~= nil then
                     local fi = i
-                    varCreate(vars, frameId, varRef, nil
+                    varCreate(vars, varRef, nil
                         , name, i
                         , value, name
                         , function() local _, r = rdebug.getlocal(frameId, fi) return r end
@@ -785,7 +755,7 @@ function special_extand.Parameter(varRef)
             break
         end
         local fi = i
-        varCreate(vars, frameId, varRef, nil
+        varCreate(vars, varRef, nil
             , ('[vararg %d]'):format(-i), nil
             , value, ('select(%d,...)'):format(-i)
             , function() local _, r = rdebug.getlocal(frameId, fi) return r end
@@ -806,7 +776,7 @@ function special_extand.Return(varRef)
             local name, value = rdebug.getlocalv(frameId, i)
             if name ~= nil then
                 local fi = i
-                varCreate(vars, frameId, varRef, nil
+                varCreate(vars, varRef, nil
                     , ('[%d]'):format(i - info.ftransfer + 1), nil
                     , value, nil
                     , function() local _, r = rdebug.getlocal(frameId, fi) return r end
@@ -823,12 +793,11 @@ end
 
 local function extandGlobalNamed(varRef)
     varRef.extand = varRef.extand or {}
-    local frameId = varRef.frameId
     local vars = {}
     local loct = rdebug.copytable(rdebug._G,MAX_TABLE_FIELD)
     for key, value in pairs(loct) do
         if not isStandardName(key) then
-            varCreate(vars, frameId, varRef, nil
+            varCreate(vars, varRef, nil
                 , varGetName(key), nil
                 , value, ('_G%s'):format(getTabelKey(key))
                 , function() return rdebug.index(rdebug._G, key) end
@@ -850,11 +819,10 @@ end
 
 function special_extand.Standard(varRef)
     varRef.extand = varRef.extand or {}
-    local frameId = varRef.frameId
     local vars = {}
     for name in pairs(standard) do
         local value = rdebug.index(rdebug._G, name)
-        varCreate(vars, frameId, varRef, nil
+        varCreate(vars, varRef, nil
             , name, nil
             , value , ('_G%s'):format(getTabelKey(name))
             , function() return rdebug.index(rdebug._G, name) end
@@ -900,16 +868,16 @@ end
 
 function m.clean()
     varPool = {}
+    rdebug.cleanwatch()
 end
 
 function m.createText(value, context)
-    local type, subtype = rdebug.type(value)
-    return varGetValue(context, type, subtype, value)
+    local type = rdebug.type(value)
+    return varGetValue(context, type, value)
 end
 
-function m.createRef(frameId, value, evaluateName, context)
-    local var = varCreateReference(frameId, value, evaluateName, context)
-    return var.value, var.variablesReference
+function m.createRef(value, evaluateName, context)
+    return varCreateReference(value, evaluateName, context)
 end
 
 ev.on('terminated', function()

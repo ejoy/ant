@@ -211,15 +211,13 @@ lclient_assign(rlua_State *L) {
 static int
 lclient_type(rlua_State *L) {
 	lua_State *hL = get_host(L);
-
 	int t = eval_value(L, hL);
-	rlua_pushstring(L, rlua_typename(L, t));
 	switch (t) {
 	case LUA_TFUNCTION:
 		if (lua_iscfunction(hL, -1)) {
-			rlua_pushstring(L, "c");
+			rlua_pushstring(L, "c function");
 		} else {
-			rlua_pushstring(L, "lua");
+			rlua_pushstring(L, "function");
 		}
 		break;
 	case LUA_TNUMBER:
@@ -233,18 +231,15 @@ lclient_type(rlua_State *L) {
 		rlua_pushstring(L, "float");
 #endif
 		break;
-	case LUA_TUSERDATA:
-		rlua_pushstring(L, "full");
-		break;
 	case LUA_TLIGHTUSERDATA:
-		rlua_pushstring(L, "light");
+		rlua_pushstring(L, "lightuserdata");
 		break;
 	default:
-		lua_pop(hL, 1);
-		return 1;
+		rlua_pushstring(L, lua_typename(hL, t));
+		break;
 	}
 	lua_pop(hL, 1);
-	return 2;
+	return 1;
 }
 
 static int

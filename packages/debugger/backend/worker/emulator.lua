@@ -48,11 +48,13 @@ function m.scopes(frameId)
         if s == nil then
             break
         end
-        local _,ref = variables.createRef(frameId, rdebug.index(s, "value"), "scopes")
-        if ref then
+        local var = variables.createRef(rdebug.index(s, "value"), nil, "scopes")
+        if var.variablesReference then
             res[#res+1] = {
                 name = rdebug.indexv(s, "name"),
-                variablesReference = ref,
+                variablesReference = var.variablesReference,
+                namedVariables = var.namedVariables,
+                indexedVariables = var.indexedVariables,
                 expensive = false,
             }
         end

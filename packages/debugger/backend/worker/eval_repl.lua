@@ -37,8 +37,10 @@ while true do
 	if name == nil then
 		break
 	end
-	upvalue_id[name] = i
-	args[#args+1] = name
+	if #name > 0 then
+		upvalue_id[name] = i
+		args[#args+1] = name
+	end
 	i = i + 1
 end
 local full_source
@@ -70,7 +72,7 @@ end
 })
 end
 
-local func, update = assert(load(full_source, '=(eval)'))()
+local func, update = assert(load(full_source, '=(EVAL)'))()
 local i = 1
 while true do
 	local name = debug.getupvalue(func, i)
