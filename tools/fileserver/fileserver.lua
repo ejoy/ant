@@ -20,7 +20,7 @@ local protocol = require "protocol"
 local network = require "network"
 local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
-local dbg = require "debugger"
+local debugger = require "debugger"
 
 local WORKDIR = lfs.current_path()
 
@@ -195,7 +195,7 @@ function message:DBG(data)
 	for _, v in pairs(debug) do
 		if v.server == self then
 			if v.client then
-				network.send(v.client, dbg.convert(self._repo, data))
+				network.send(v.client, debugger.convertSend(self._repo, data))
 			end
 			break
 		end
@@ -262,7 +262,11 @@ local function dbgserver_update(obj)
 	local data = table.concat(obj._read)
 	obj._read = {}
 	if data ~= "" then
-		response(dbg.server, "DBG", data)
+		local msg = debugger.convertRecv(data)
+		while msg do
+			response(dbg.server, "DBG", msg)
+			msg = debugger.convertRecv ""
+		end
 	end
 	if obj._status == "CONNECTING" then
 		obj._status = "CONNECTED"

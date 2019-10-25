@@ -1,6 +1,7 @@
 local protocol = import_package "ant.debugger".protocol
 local fs = require "filesystem.local"
-local stat = {}
+local statSend = {}
+local statRecv = {}
 
 local function fixPath(repo, path)
     return fs.absolute(repo:realpath(path)):string()
@@ -49,12 +50,36 @@ local function convertPaths(repo, msg)
     end
 end
 
-local function convert(repo, data)
-    local msg = protocol.recv(data, stat)
+local function convertSend(repo, data)
+    local msg = protocol.recv(data, statSend)
     convertPaths(repo, msg)
-    return protocol.send(msg, stat)
+    return protocol.send(msg, statSend)
+end
+
+local function convertLaunch(msg)
+    if msg.type ~= "request" then
+        return
+    end
+    if msg.command ~= "launch" and msg.command ~= "attach" then
+        return
+    end
+    msg.arguments.sourceFormat = "string"
+    if msg.arguments.skipFiles then
+        table.insert(msg.arguments.skipFiles, "/pkg/ant.debugger/*")
+    else
+        msg.arguments.skipFiles = {"/pkg/ant.debugger/*"}
+    end
+end
+
+local function convertRecv(data)
+    local msg = protocol.recv(data, statRecv)
+    if msg then
+        convertLaunch(msg)
+        return protocol.send(msg, statRecv)
+    end
 end
 
 return {
-    convert = convert,
+    convertSend = convertSend,
+    convertRecv = convertRecv,
 }
