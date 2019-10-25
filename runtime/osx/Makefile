@@ -15,11 +15,11 @@ mingw : default
 main.o : main.cpp
 	g++ -std=c++17 -c $(CFLAGS) $(ANTINC) $(LUAINC) -o $@ $<
 
-libant-$(PLAT).a :
-	cd $(ANT)/clibs/ant/ && $(MAKE) "PLAT=$(PLAT)"
+$(ODIR)/libant.a :
+	cd $(ANT)/clibs/ant/ && $(MAKE) $@
 
-ant.exe : main.o libant-$(PLAT).a
-	gcc -o $@ main.o $(ANT)/clibs/ant/libant-$(PLAT).a $(LINKLIBANT) && $(STRIP) $@
+ant.exe : main.o $(ODIR)/libant.a
+	gcc -o $@ main.o $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) && $(STRIP) $@
 
 clean :
 	rm -f *.o && rm -f ant.exe
