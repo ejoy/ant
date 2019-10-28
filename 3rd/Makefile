@@ -69,7 +69,7 @@ SHADER_SRC_PATH = ../../packages/resources/shaders
 
 ifneq "$(PLAT)" "msvc"
 BGFX_TARGET_A = bgfx
-BGFX_TARGET_B = bimg bx
+BGFX_TARGET_B = bimg
 ifeq "$(BGFX_CPRC_CMD)" ""
   BGFX_CPRC_CMD += echo ok
   COPY_SHADER_FILES_CMD += echo ok
@@ -137,7 +137,7 @@ $(BUILD_PATH):
 bgfx_init : | $(BUILD_PATH)
 	cd bgfx && $(BGFX_INIT_CMD) && $(COPY_SHADER_FILES_CMD)
 bgfx_make : | $(BUILD_PATH)
-	cd bgfx && $(BGFX_MAKE_CMD) $(BGFX_TARGET_A) CFLAGS=-DBGFX_CONFIG_DEBUG=1 && $(BGFX_MAKE_CMD) $(BGFX_TARGET_B) && $(BGFX_CPRC_CMD)
+	cd bgfx && $(BGFX_MAKE_CMD) bx CPPFLAGS=-DBX_CONFIG_DEBUG=1 && $(BGFX_MAKE_CMD) $(BGFX_TARGET_A) CPPFLAGS=-DBGFX_CONFIG_DEBUG=1 && $(BGFX_MAKE_CMD) $(BGFX_TARGET_B) && $(BGFX_CPRC_CMD)
 bgfx_clean :
 	cd bgfx && make clean
 
