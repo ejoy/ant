@@ -266,7 +266,7 @@ local function link(repo, srcfile, identity, buildfile)
 		srcfile = access.realpath(repo, param.depends[1][3])
 	end
 	local fs = import_package "ant.fileconvert"
-	local deps = fs.prelink(srcfile)
+	local deps = fs.depend(srcfile)
 	if deps then
 		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
 		local cpath = repo._cache / dephash:sub(1,2) / dephash

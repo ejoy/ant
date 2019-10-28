@@ -41,9 +41,9 @@ local function log_info(info)
 end
 
 local function link(plat, srcfile, dstfile, localpath)
-	local ctype = srcfile:extension():string():lower():sub(2)
-	local c = assert(converter[ctype])
-	log_info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ctype))
+	local ext = srcfile:extension():string():lower()
+	local c = assert(converter[ext:sub(2)])
+	log_info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ext))
 	local success, err, deps = c(plat, srcfile, dstfile, localpath)
 	if not success and err then
 		log_err(srcfile, err)
@@ -58,7 +58,7 @@ local function link(plat, srcfile, dstfile, localpath)
 	}
 end
 
-local function prelink(srcfile)
+local function depend(srcfile)
 	local ext = srcfile:extension():string():lower()
 	if ext ~= ".fx" then
 		return {
@@ -68,7 +68,7 @@ local function prelink(srcfile)
 end
 
 return {
-	prelink = prelink,
+	depend = depend,
 	link = link,
 	converter = converter,
 	shader_toolset = require "fx.toolset",
