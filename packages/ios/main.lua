@@ -1,4 +1,11 @@
 local platform = require "platform"
+
+if platform.OS ~= "iOS" then
+    return {
+        error = "Not running in iOS"
+    }
+end
+
 local fs = require "filesystem"
 local machine = platform.machine()
 local name, major, minor = machine:match "(%a+)(%d+),(%d+)"
