@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #include <lua.hpp>
 #include <sys/utsname.h>
+#include <sys/sysctl.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -154,4 +155,16 @@ int ldpi(lua_State* L) {
     lua_pushinteger(L, it->second);
     lua_pushinteger(L, it->second);
     return 2;
+}
+
+int lmachine(lua_State* L) {
+    char value[256];
+    size_t len = 256;
+    if (sysctlbyname("hw.machine", &value, &len, nullptr, 0) == 0) {
+        assert(len > 1);
+        assert(value[len - 1] == '\0');
+        lua_pushlstring(L, value, len - 1);
+        return 1;
+    }
+    return 0;
 }
