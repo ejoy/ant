@@ -402,10 +402,10 @@ function repo:dir(hash)
 	return { dir = dir, file = file }
 end
 
-function repo:link(identity, path, hash)
-	local binhash, buildhash = access.link(self, identity, path, hash)
+function repo:link(path, hash)
+	local binhash, buildhash = access.link(self, path, hash)
 	if not binhash then
-		if _DEBUG then print ("LINKFAIL", identity, path, hash) end
+		if _DEBUG then print ("LINKFAIL", path, hash) end
 		return
 	end
 	return binhash, buildhash

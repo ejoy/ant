@@ -1,52 +1,26 @@
 local lfs = require "filesystem.local"
-local g_log = log
 local converter = {
 	fx		= require "fx.compile",
 	mesh 	= require "mesh.convert",
 	texture = require "texture.convert",
 }
 
-local logfolder = lfs.current_path() / "log"
-lfs.create_directories(logfolder)
-
-local logfile = nil
-
-local function get_logfile()
-	if logfile == nil then
-		logfile = assert(lfs.open(logfolder / "fileconvert.log", "a"))
-	end
-
-	return logfile
+local log = require "common.log".fork()
+lfs.create_directories(lfs.current_path() / "log")
+log.file = assert(lfs.open(lfs.current_path() / "log" / "fileconvert.log", "a"))
+function log.raw(data)
+	log.file:write(data)
+	log.file:write("\n")
+	log.file:flush()
 end
 
-local origin = os.time() - os.clock()
-local function os_date()
-    local ti, tf = math.modf(origin + os.clock())
-    return os.date('%Y-%m-%d %H:%M:%S:{ms}', ti):gsub('{ms}', math.floor(tf*1000))
-end
-
-local function log_err(src, err)
-	local log = get_logfile()
-	local errinfo = string.format("[fileconvert:%s]src:%s, error:%s\n", os_date(), src, err)
-	log:write(errinfo)
-	log:flush()
-	print(errinfo)
-	if g_log then g_log.error(errinfo) end
-end
-
-local function log_info(info)
-	local log = get_logfile()
-	log:write(string.format("[fileconvert-info:%s]%s\n", os_date(), info))
-	log:flush()
-end
-
-local function link(plat, srcfile, dstfile, localpath)
+local function link(plat, linkconfig, srcfile, dstfile, localpath)
 	local ext = srcfile:extension():string():lower()
 	local c = assert(converter[ext:sub(2)])
-	log_info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ext))
+	log.info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ext))
 	local success, err, deps = c(plat, srcfile, dstfile, localpath)
 	if not success and err then
-		log_err(srcfile, err)
+		log.error(string.format("src:%s, error:%s", srcfile, err))
 		return
 	end
 	if deps then

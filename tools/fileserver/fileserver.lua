@@ -174,10 +174,17 @@ function message:GET(hash)
 	f:close()
 end
 
-function message:LINK(identity, path, hash)
+function message:IDENTITY(identity, linkconfig)
 	local repo = self._repo
-	local binhash, buildhash = repo:link(identity, path, hash)
-	LOG("LINK", identity, path, hash, buildhash, binhash)
+	repo.identity = identity
+	repo.linkconfig = linkconfig
+	LOG("IDENTITY", identity, linkconfig)
+end
+
+function message:LINK(path, hash)
+	local repo = self._repo
+	local binhash, buildhash = repo:link(path, hash)
+	LOG("LINK", path, hash, buildhash, binhash)
 	if binhash then
 		response(self, "LINK", path, buildhash, binhash)
 	else

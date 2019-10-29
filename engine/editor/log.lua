@@ -110,4 +110,6 @@ log = setmetatable(log,{
     end
 })
 
+require "common.log"
+
 return log

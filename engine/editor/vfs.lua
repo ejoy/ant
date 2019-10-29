@@ -17,7 +17,7 @@ function localvfs.realpath(pathname)
 	local ext = rp:extension():string():lower()
 	if allowlink[ext] then
 		pathname = pathname:match "^/?(.-)/?$"
-		local realpath = access.link_loc(self, self.identity, pathname)
+		local realpath = access.link_loc(self, pathname)
 		if realpath == nil then
 			error(string.format("build from path failed, pathname:%s, log file can found in log folder", pathname))
 		end
@@ -47,9 +47,10 @@ function localvfs.type(filepath)
 	end
 end
 
-function localvfs.identity(identity)
+function localvfs.identity(identity, linkconfig)
 	assert(self.identity == identity or self.identity == nil)
 	self.identity = identity
+	self.linkconfig = linkconfig
 end
 
 function localvfs.new(path)
@@ -62,7 +63,7 @@ function localvfs.clean_build(srcpath)
 		self:clean()
 		return
 	end
-	access.clean_build(self, self.identity, srcpath)
+	access.clean_build(self, srcpath)
 end
 
 function localvfs.add_mount(name, mountpath)

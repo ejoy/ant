@@ -223,7 +223,7 @@ local function cache_bin(buildhash, binhash)
 	end
 end
 
-function offline.IDENTITY(identity)
+function offline.IDENTITY(identity, _)
 	assert(repo.identity == identity or repo.identity == nil, "identity should only set one time")
 	assert(type(identity) == "string")
 	repo.identity = identity
@@ -414,7 +414,7 @@ local function request_link(id, path, hash)
 		hash_req[id] = path
 	else
 		connection.request_link[path] = { [id] = path }
-		connection_send("LINK", repo.identity, path, hash)
+		connection_send("LINK", path, hash)
 	end
 end
 
@@ -667,10 +667,11 @@ function online.TYPE(id, fullpath)
 	end
 end
 
-function online.IDENTITY(identity)
+function online.IDENTITY(identity, linkconfig)
 	assert(repo.identity == identity or repo.identity == nil, "identity should only set one time")
 	assert(type(identity) == "string")
 	repo.identity = identity
+	connection_send("IDENTITY", identity, linkconfig)
 end
 
 function online.GET(id, fullpath)
