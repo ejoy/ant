@@ -144,7 +144,7 @@ function util.load_postprocess_properties(world, render_properties)
 	local fb = mq.render_target.frame_buffer
 	if fb then
 		local rendertex = fb.render_buffers[1].handle
-		postprocess.textures["s_mianview"] = {
+		postprocess.textures["s_mainview"] = {
 			name = "Main view render texture", type = "texture",
 			stage = 0, handle = rendertex,
 		}

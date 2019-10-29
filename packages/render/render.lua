@@ -170,45 +170,9 @@ rendersys.depend "primitive_filter_system"
 rendersys.depend "filter_properties"
 rendersys.dependby "end_frame"
 
-local statemap = {
-	all 			= "CDS",
-	color 			= "C",
-	depth 			= "D",
-	stencil 		= "S",
-	colordepth 		= "CD",
-	colorstencil	= "CD",
-	depthstencil 	= "DS",
-	C 				= "C",
-	D 				= "D",
-	S				= "S",
-	CD 				= "CD",
-	CS 				= "CS",
-	DS 				= "DS",
-}
-
-local function update_viewport(viewid, viewport)
-	local cs = viewport.clear_state
-	local clear_what = cs.clear
-	local state = statemap[clear_what]
-	if state then
-		bgfx.set_view_clear(viewid, state, cs.color, cs.depth, cs.stencil)
-	end
-
-	local rt = viewport.rect
-	bgfx.set_view_rect(viewid, rt.x, rt.y, rt.w, rt.h)
-end
-
 local function update_view_proj(viewid, camera)
 	local view, proj = ms:view_proj(camera, camera.frustum)
 	bgfx.set_view_transform(viewid, view, proj)
-end
-
-local function update_frame_buffer_view(viewid, rt)
-	local fb = rt.frame_buffer or rt.wnd_frame_buffer
-	if fb then
-		local handle = fb.handle
-		bgfx.set_view_frame_buffer(viewid, handle)
-	end
 end
 
 function rendersys:init()
@@ -223,11 +187,7 @@ function rendersys:update()
 		local rq = world[eid]
 		if rq.visible ~= false then
 			local viewid = rq.viewid
-			local rt = rq.render_target
-			-- TODO, only call after bgfx.reset has been call?
-			update_frame_buffer_view(viewid, rt)
-			
-			update_viewport(viewid, rt.viewport)
+			ru.update_render_target(viewid, rq.render_target)
 			update_view_proj(viewid, camerautil.get_camera(world, rq.camera_tag))
 
 			local filter = rq.primitive_filter

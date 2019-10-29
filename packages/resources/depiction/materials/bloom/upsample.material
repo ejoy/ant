@@ -1,0 +1,9 @@
+local bloom_path = "/pkg/ant.resources/materials/bloom/fx/"
+fx      = bloom_path .. "upsample.fx"
+state   = bloom_path .. "bloom.state"
+
+properties = {
+    uniforms = {
+        u_intensity = {type="v4", name = "upsample intensity(scale)", value = {1.2, 0.0, 0.0, 0.0}}
+    }
+}

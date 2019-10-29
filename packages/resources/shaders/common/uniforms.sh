@@ -20,7 +20,5 @@ uniform vec4 u_lightPos;
 
 // lightmap - shadow
 
-//postprocess
-SAMPLER2D(s_mianview, 0);
 
 #endif //__SHADER_UNIFORMS_SH__
