@@ -1,5 +1,5 @@
 local crc_table = {}
-local POLY = 0xEDB88320
+local POLY <const> = 0xEDB88320
 
 for i = 0, 255 do
     local crc = i

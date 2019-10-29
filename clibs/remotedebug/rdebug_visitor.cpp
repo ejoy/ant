@@ -130,7 +130,7 @@ lclient_copytable(rlua_State *L) {
 	for (unsigned int i = 0; i < hsize; ++i) {
 		if (remotedebug::table::get_kv(hL, t, i)) {
 			if (--maxn < 0) {
-				lua_pop(hL, 2);
+				lua_pop(hL, 3);
 				return 1;
 			}
 			rlua_pushvalue(L, 1); combine_kv(L, hL, 0, VAR_INDEX_KEY, i);
@@ -138,6 +138,7 @@ lclient_copytable(rlua_State *L) {
 			rlua_rawset(L, -3);
 		}
 	}
+	lua_pop(hL, 1);
 	return 1;
 }
 
@@ -472,6 +473,7 @@ lclient_eval(rlua_State *L) {
 	const char* source = rluaL_checkstring(L, 2);
 	rlua_Integer level = rluaL_checkinteger(L, 3);
 	lua_State* hL = get_host(L);
+	lua_checkstack(hL, 3);
 	if (!getreffunc(hL, (lua_Integer)func)) {
 		rlua_pushboolean(L, 0);
 		rlua_pushstring(L, "invalid func");
@@ -495,6 +497,7 @@ static int
 lclient_evalref(rlua_State *L) {
 	lua_State* hL = get_host(L);
 	int n = rlua_gettop(L);
+	lua_checkstack(hL, n);
 	for (int i = 1; i <= n; ++i) {
 		rlua_pushvalue(L, i);
 		int t = eval_value(L, hL);
@@ -519,6 +522,7 @@ lclient_evalref(rlua_State *L) {
 
 static int
 addwatch(lua_State *hL, int idx) {
+	lua_checkstack(hL, 3);
 	lua_pushvalue(hL, idx);
 	if (lua::rawgetp(hL, LUA_REGISTRYINDEX, &DEBUG_WATCH) == LUA_TNIL) {
 		lua_pop(hL, 1);
@@ -535,7 +539,6 @@ addwatch(lua_State *hL, int idx) {
 static int
 storewatch(rlua_State *L, lua_State *hL, int idx) {
 	int ref = addwatch(hL, idx);
-	lua_remove(hL, idx);
 	get_registry(L, VAR_REGISTRY);
 	rlua_pushlightuserdata(L, &DEBUG_WATCH);
 	if (!get_index(L, hL, 1)) {
@@ -554,6 +557,7 @@ lclient_evalwatch(rlua_State *L) {
 	const char* source = rluaL_checkstring(L, 2);
 	rlua_Integer level = rluaL_checkinteger(L, 3);
 	lua_State* hL = get_host(L);
+	lua_checkstack(hL, 3);
 	if (!getreffunc(hL, (lua_Integer)func)) {
 		rlua_pushboolean(L, 0);
 		rlua_pushstring(L, "invalid func");
@@ -573,11 +577,13 @@ lclient_evalwatch(rlua_State *L) {
 		if (!storewatch(L, hL, i-rets)) {
 			rlua_pushboolean(L, 0);
 			rlua_pushstring(L, "error");
+			lua_settop(hL, n);
 			return 2;
 		}
 	}
 	rlua_pushboolean(L, 1);
 	rlua_insert(L, -1-rets);
+	lua_settop(hL, n);
 	return 1 + rets;
 }
 
