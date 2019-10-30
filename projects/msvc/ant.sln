@@ -83,6 +83,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filewatch", "filewatch.vcxp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "firmware", "firmware.vcxproj", "{4E00A5A9-EC1A-442E-8E9D-4A44A4BC5898}"
 	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
 		{B2124B58-4F0F-4C3F-AEEE-DED80A8DFC11} = {B2124B58-4F0F-4C3F-AEEE-DED80A8DFC11}
 	EndProjectSection
 EndProject
@@ -107,6 +108,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filesystem", "filesystem.vc
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "datalist", "datalist.vcxproj", "{C7C5B671-3FFE-4AF9-9EDD-55B33D96542E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meshbase", "meshbase.vcxproj", "{0A244AD6-90BC-4CE5-A618-83A497F843D2}"
 EndProject
@@ -139,6 +143,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "imgui", "imgui.vcxproj", "{
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snapshot", "snapshot.vcxproj", "{A9DE4AF9-A0FF-40D4-ACA8-379DAC447AEC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "incbin", "incbin.vcxproj", "{B2124B58-4F0F-4C3F-AEEE-DED80A8DFC11}"
 EndProject
