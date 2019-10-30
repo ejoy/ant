@@ -69,7 +69,7 @@ local function render_pass(pass, render_properties)
     }, nil, render_properties)
 end
 
-function pp_sys:init()
+function pp_sys:update()
     local pp = world:first_entity "postprocess"
     local technique = pp.technique
     local render_properties = self.render_properties
