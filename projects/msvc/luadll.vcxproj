@@ -78,7 +78,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>lua53</TargetName>
+    <TargetName>lua54</TargetName>
     <OutDir>$(SolutionDir)vs_bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vs_bin\obj\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -90,7 +90,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>lua53</TargetName>
+    <TargetName>lua54</TargetName>
     <OutDir>$(SolutionDir)vs_bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vs_bin\obj\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>

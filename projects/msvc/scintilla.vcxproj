@@ -286,7 +286,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>../../3rd/iup/lib/$(Configuration)_64;$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;iuplua.lib;gdi32.lib;msimg32.lib;imm32.lib;ole32.lib;uuid.lib;comdlg32.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua54.lib;iuplua.lib;gdi32.lib;msimg32.lib;imm32.lib;ole32.lib;uuid.lib;comdlg32.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/scintilla.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -306,7 +306,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua54.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/scintilla.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -330,7 +330,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua54.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/scintilla.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -354,7 +354,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>../../3rd/iup/lib/$(Configuration)_64;$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua53.lib;iuplua.lib;gdi32.lib;msimg32.lib;imm32.lib;ole32.lib;uuid.lib;comdlg32.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua54.lib;iuplua.lib;gdi32.lib;msimg32.lib;imm32.lib;ole32.lib;uuid.lib;comdlg32.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>iup_def_files/scintilla.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

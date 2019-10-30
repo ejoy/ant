@@ -8,7 +8,7 @@ local assetmgr = assetpkg.mgr
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
-local renderutil= require "render.util"
+local renderutil= require "util"
 local computil  = require "components.util"
 
 ecs.tag "postprocess"
