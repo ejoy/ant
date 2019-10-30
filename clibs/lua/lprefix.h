@@ -46,9 +46,4 @@
 #include <assert.h>
 #define lua_assert(e) assert(e)
 
-#include <stdlib.h>
-
-#define l_randomizePivot() (*(unsigned int*)"Lua\0Lua\0")
-#define luai_makeseed(L) (getenv("LUA_SEED")? atoi(getenv("LUA_SEED")): l_randomizePivot())
-
 #endif

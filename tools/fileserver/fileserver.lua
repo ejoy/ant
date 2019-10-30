@@ -20,6 +20,7 @@ local protocol = require "protocol"
 local network = require "network"
 local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
+local debugger = require "debugger"
 
 local WORKDIR = lfs.current_path()
 
@@ -173,10 +174,17 @@ function message:GET(hash)
 	f:close()
 end
 
-function message:LINK(identity, path, hash)
+function message:IDENTITY(identity, linkconfig)
 	local repo = self._repo
-	local binhash, buildhash = repo:link(identity, path, hash)
-	LOG("LINK", identity, path, hash, buildhash, binhash)
+	repo.identity = identity
+	repo.linkconfig = linkconfig
+	LOG("IDENTITY", identity, linkconfig)
+end
+
+function message:LINK(path, hash)
+	local repo = self._repo
+	local binhash, buildhash = repo:link(path, hash)
+	LOG("LINK", path, hash, buildhash, binhash)
 	if binhash then
 		response(self, "LINK", path, buildhash, binhash)
 	else
@@ -194,7 +202,7 @@ function message:DBG(data)
 	for _, v in pairs(debug) do
 		if v.server == self then
 			if v.client then
-				network.send(v.client, data)
+				network.send(v.client, debugger.convertSend(self._repo, data))
 			end
 			break
 		end
@@ -261,7 +269,11 @@ local function dbgserver_update(obj)
 	local data = table.concat(obj._read)
 	obj._read = {}
 	if data ~= "" then
-		response(dbg.server, "DBG", data)
+		local msg = debugger.convertRecv(data)
+		while msg do
+			response(dbg.server, "DBG", msg)
+			msg = debugger.convertRecv ""
+		end
 	end
 	if obj._status == "CONNECTING" then
 		obj._status = "CONNECTED"

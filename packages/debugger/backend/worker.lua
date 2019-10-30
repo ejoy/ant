@@ -75,11 +75,11 @@ ev.on('output', function(category, output, source, line)
     }
 end)
 
-ev.on('loadedSource', function(reason, source)
+ev.on('loadedSource', function(reason, s)
     sendToMaster {
         cmd = 'loadedSource',
         reason = reason,
-        source = source
+        source = source.output(s)
     }
 end)
 
@@ -252,7 +252,7 @@ function CMD.setVariable(pkg)
 end
 
 function CMD.evaluate(pkg)
-    local ok, result, ref = evaluate.run(pkg.frameId, pkg.expression, pkg.context)
+    local ok, result = evaluate.run(pkg.frameId, pkg.expression, pkg.context)
     if not ok then
         sendToMaster {
             cmd = 'evaluate',
@@ -263,13 +263,14 @@ function CMD.evaluate(pkg)
         }
         return
     end
+    result.result = result.value
+    result.value = nil
     sendToMaster {
         cmd = 'evaluate',
         command = pkg.command,
         seq = pkg.seq,
         success = true,
-        result = result,
-        variablesReference = ref,
+        body = result
     }
 end
 
@@ -277,7 +278,11 @@ function CMD.setBreakpoints(pkg)
     if noDebug or not source.valid(pkg.source) then
         return
     end
-    breakpoint.update(pkg.source, pkg.breakpoints, pkg.content)
+    breakpoint.set_bp(pkg.source, pkg.breakpoints, pkg.content)
+end
+
+function CMD.setFunctionBreakpoints(pkg)
+    breakpoint.set_funcbp(pkg.breakpoints)
 end
 
 function CMD.setExceptionBreakpoints(pkg)
@@ -312,7 +317,7 @@ function CMD.stop(pkg)
         return
     end
     state = 'stopped'
-    stopReason = pkg.reason
+    stopReason = pkg.reason -- entry or pause
     hookmgr.step_in()
 end
 
@@ -345,12 +350,20 @@ function CMD.stepOut()
     hookmgr.step_out()
 end
 
-local function runLoop(reason, description)
-    --TODO: 只在lua栈帧时需要description？
+function CMD.restartFrame()
+    variables.clean()
+    sendToMaster {
+        cmd = 'eventStop',
+        reason = 'restart',
+    }
+end
+
+local function runLoop(reason, text)
+    --TODO: 只在lua栈帧时需要text？
     sendToMaster {
         cmd = 'eventStop',
         reason = reason,
-        text = description,
+        text = text,
     }
 
     while true do
@@ -360,7 +373,6 @@ local function runLoop(reason, description)
         end
     end
     variables.clean()
-    rdebug.cleanwatch()
 end
 
 local hook = {}
@@ -380,6 +392,14 @@ function hook.bp(line)
             runLoop 'breakpoint'
             return
         end
+    end
+end
+
+function hook.funcbp(func)
+    if not initialized then return end
+    if breakpoint.hit_funcbp(func) then
+        state = 'stopped'
+        runLoop 'function breakpoint'
     end
 end
 

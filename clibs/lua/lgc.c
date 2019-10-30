@@ -243,11 +243,6 @@ GCObject *luaC_newobj (lua_State *L, int tt, size_t sz) {
   o->marked = luaC_white(g);
   o->tt = tt;
   o->next = g->allgc;
-  switch (tt) {
-    case LUA_TTABLE: gco2t(o)->gchash = g->hash++; break;
-    case LUA_TUSERDATA: gco2u(o)->gchash = g->hash++; break;
-    default: break;
-  }
   g->allgc = o;
   return o;
 }

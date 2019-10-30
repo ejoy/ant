@@ -25,17 +25,18 @@ local function run_repl(frameId, expression)
         if not ok then
             return false, res[2]
         end
-        return true, ''
+        return true, { value = '' }
     end
     if res.n == 1 then
-        return true, 'nil'
+        return true, { value = 'nil' }
     end
-    local ref
-    res[2], ref = variables.createRef(frameId, res[2], expression, "repl")
+    local var = variables.createRef(res[2], expression, "repl")
+    res[2] = var.value
     for i = 3, res.n do
         res[i] = variables.createText(res[i], "repl")
     end
-    return true, table.concat(res, ',', 2), ref
+    var.value = table.concat(res, ',', 2)
+    return true, var
 end
 
 local function run_hover(frameId, expression)
@@ -43,8 +44,7 @@ local function run_hover(frameId, expression)
     if not ok then
         return false, res
     end
-    local res, ref = variables.createRef(frameId, res, expression, "hover")
-    return true, res, ref
+    return true, variables.createRef(res, expression, "hover")
 end
 
 local function run_watch(frameId, expression)
@@ -53,14 +53,15 @@ local function run_watch(frameId, expression)
         return false, res[2]
     end
     if res.n == 1 then
-        return true, 'nil'
+        return true, { value = 'nil' }
     end
-    local ref
-    res[2], ref = variables.createRef(frameId, res[2], expression, "watch")
+    local var = variables.createRef(res[2], expression, "watch")
+    res[2] = var.value
     for i = 3, res.n do
         res[i] = variables.createText(res[i], "watch")
     end
-    return true, table.concat(res, ',', 2), ref
+    var.value = table.concat(res, ',', 2)
+    return true, var
 end
 
 local function run_copyvalue(frameId, expression)
@@ -69,12 +70,12 @@ local function run_copyvalue(frameId, expression)
         return false, res[2]
     end
     if res.n == 1 then
-        return true, 'nil'
+        return true, { value = 'nil' }
     end
     for i = 2, res.n do
         res[i] = variables.createText(res[i], "copyvalue")
     end
-    return true, table.concat(res, ',', 2)
+    return true, { value = table.concat(res, ',', 2) }
 end
 
 local m = {}
@@ -95,8 +96,8 @@ function m.run(frameId, expression, context)
     return nil, ("unknown context `%s`"):format(context)
 end
 
-function m.eval(expression)
-    return rdebug.eval(eval_watch, expression, 0)
+function m.eval(expression, level)
+    return rdebug.eval(eval_watch, expression, level or 0)
 end
 
 function m.dump(content)

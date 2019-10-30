@@ -369,14 +369,10 @@ function repo:hash(hash)
 		return
 	end
 	for line in f:lines() do
-		local name, timestamp = line:match "f (.-) ?(%d*)$"
-		if timestamp then
-			timestamp = tonumber(timestamp)
-			local realpath = self:realpathEx(name)
-			if lfs.last_write_time(realpath) == timestamp then
-				f:close()
-				return realpath
-			end
+		local name = line:match "f (.-) ?(%d*)$"
+		if name then
+			f:close()
+			return self:realpathEx(name)
 		end
 	end
 	f:close()
@@ -406,10 +402,10 @@ function repo:dir(hash)
 	return { dir = dir, file = file }
 end
 
-function repo:link(identity, path, hash)
-	local binhash, buildhash = access.link(self, identity, path, hash)
+function repo:link(path, hash)
+	local binhash, buildhash = access.link(self, path, hash)
 	if not binhash then
-		if _DEBUG then print ("LINKFAIL", identity, path, hash) end
+		if _DEBUG then print ("LINKFAIL", path, hash) end
 		return
 	end
 	return binhash, buildhash

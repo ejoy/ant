@@ -62,7 +62,7 @@ local function findfield(t, f, level, name)
             local skey = rdebug.value(key)
             if level ~= 0 or skey ~= '_G' then
                 local tvalue = rdebug.type(value)
-                if tvalue == 'function' and rdebug.value(value) == f then
+                if (tvalue == 'function' or tvalue == 'c function') and rdebug.value(value) == f then
                     return name and (name .. '.' .. skey) or skey
                 end
                 if level < 2 and tvalue == 'table' then

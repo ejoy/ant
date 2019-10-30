@@ -854,34 +854,30 @@ register_bullet_world_node(lua_State *L) {
 	lua_setfield(L, -2, "__index");	 // BULLET_NODE.__index = BULLET_NODE
 
 	luaL_Reg l[] = {
-		"new_shape",			lnew_shape,
-		"del_shape",			ldel_shape,
-		"update_object_shape",	lupdate_object_shape,
-		"set_shape_scale",		lset_shape_scale,
-		"new_obj",				lnew_collision_obj,
-		"del_obj",				ldel_collision_obj,
-		"add_obj",				ladd_collision_obj,
-		"remove_obj",			lremove_collision_obj,
-		"set_obj_transform",	lset_obj_trans,
-		"set_obj_position",		lset_obj_pos,
-		"set_obj_rotation",		lset_obj_rot,		
-		"add_to_compound",		ladd_to_compound,
-	
-		"world_collide",		lworld_collide,		
-		"collide_objects",		lcollide_objects,
-		"raycast",				lraycast,
-		
-		"drawline",				ldrawline,
-		"get_debug_info",		lget_debug_info,
-		"create_debug_drawer",	lcreate_debugDrawer,
-		"delete_debug_drawer",	ldelete_debugDrawer,
-		"debug_begin_draw",		ldebug_draw_world,
-		"debug_end_draw",		ldebug_clear_world,
-
-		"reset_world",			lreset_bullet_world,
-		"del_bullet_world",		ldel_bullet_world,    		
-
-		nullptr, nullptr,
+		{"new_shape",			lnew_shape},
+		{"del_shape",			ldel_shape},
+		{"update_object_shape",	lupdate_object_shape},
+		{"set_shape_scale",		lset_shape_scale},
+		{"new_obj",				lnew_collision_obj},
+		{"del_obj",				ldel_collision_obj},
+		{"add_obj",				ladd_collision_obj},
+		{"remove_obj",			lremove_collision_obj},
+		{"set_obj_transform",	lset_obj_trans},
+		{"set_obj_position",		lset_obj_pos},
+		{"set_obj_rotation",		lset_obj_rot},
+		{"add_to_compound",		ladd_to_compound},
+		{"world_collide",		lworld_collide,	},
+		{"collide_objects",		lcollide_objects},
+		{"raycast",				lraycast},
+		{"drawline",				ldrawline},
+		{"get_debug_info",		lget_debug_info},
+		{"create_debug_drawer",	lcreate_debugDrawer},
+		{"delete_debug_drawer",	ldelete_debugDrawer},
+		{"debug_begin_draw",		ldebug_draw_world},
+		{"debug_end_draw",		ldebug_clear_world},
+		{"reset_world",			lreset_bullet_world},
+		{"del_bullet_world",		ldel_bullet_world},
+		{nullptr, nullptr},
 	};
 
 	luaL_setfuncs(L, l, 0);
@@ -894,7 +890,7 @@ extern "C" {
 
 		luaL_Reg l[] = {
 			{ "new_collision_world", lnew_bullet_world},
-			nullptr, nullptr,
+			{nullptr, nullptr},
 		};
 
 		luaL_newlib(L, l);

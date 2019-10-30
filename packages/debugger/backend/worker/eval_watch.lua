@@ -35,8 +35,10 @@ while true do
 	if name == nil then
 		break
 	end
-	args[#args+1] = name
-	upvalue_id[name] = i
+	if #name > 0 then
+		args[#args+1] = name
+		upvalue_id[name] = i
+	end
 	i = i + 1
 end
 local full_source
@@ -57,7 +59,7 @@ end]]):gsub("%$(%w+)", {
 	SOURCE = source,
 })
 end
-local func = assert(load(full_source, '=(eval)'))()
+local func = assert(load(full_source, '=(EVAL)'))()
 local i = 1
 while true do
 	local name = debug.getupvalue(func, i)

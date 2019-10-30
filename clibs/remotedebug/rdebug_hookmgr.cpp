@@ -5,6 +5,7 @@
 #include <new>
 #include <memory>
 #include <array>
+#include <vector>
 #include "rdebug_eventfree.h"
 #include "rdebug_timer.h"
 #include "thunk/thunk.h"
@@ -50,6 +51,14 @@ static Proto* ci2proto(CallInfo* ci) {
         return 0;
     }
     return clvalue(func)->l.p;
+#endif
+}
+
+static CallInfo* debug2ci(lua_State* hL, lua_Debug* ar) {
+#if LUA_VERSION_NUM >= 502
+    return ar->i_ci;
+#else
+    return hL->base_ci + ar->i_ci;
 #endif
 }
 
@@ -148,11 +157,7 @@ struct hookmgr {
         }
     }
     void break_hook_call(lua_State* hL, lua_Debug* ar) {
-#if LUA_VERSION_NUM >= 502
-        break_update(hL, ar->i_ci, ar->event);
-#else
-        break_update(hL, hL->base_ci + ar->i_ci, ar->event);
-#endif
+        break_update(hL, debug2ci(hL, ar), ar->event);
     }
     void break_hook_return(lua_State* hL, lua_Debug* ar) {
 #if LUA_VERSION_NUM >= 502
@@ -167,6 +172,38 @@ struct hookmgr {
     void break_hookmask(lua_State* hL, int mask) {
         if (break_mask != mask) {
             break_mask = mask;
+            updatehookmask(hL);
+        }
+    }
+
+    // 
+    // funcbp
+    //
+    int funcbp_mask = 0;
+    void funcbp_hook(lua_State* hL, lua_Debug* ar) {
+        if (0 == lua_getinfo(hL, "f", ar)) {
+            return;
+        }
+        const void* function = lua_topointer(hL, -1);
+        lua_pop(hL, 1);
+
+        if (rlua_rawgetp(cL, RLUA_REGISTRYINDEX, &HOOK_CALLBACK) != LUA_TFUNCTION) {
+            rlua_pop(cL, 1);
+            return;
+        }
+        set_host(cL, hL);
+        rlua_pushstring(cL, "funcbp");
+        rlua_pushfstring(cL, "[function: %p]", function);
+        if (rlua_pcall(cL, 2, 0, 0) != LUA_OK) {
+            rlua_pop(cL, 1);
+        }
+    }
+    void funcbp_open(lua_State* hL, bool enable) {
+        funcbp_hookmask(hL, enable? LUA_MASKCALL: 0);
+    }
+    void funcbp_hookmask(lua_State* hL, int mask) {
+        if (funcbp_mask != mask) {
+            funcbp_mask = mask;
             updatehookmask(hL);
         }
     }
@@ -406,6 +443,9 @@ struct hookmgr {
 #else
         case LUA_HOOKTAILRET:
 #endif
+            if (funcbp_mask) {
+                funcbp_hook(hL, ar);
+            }
             if (break_mask & LUA_MASKCALL) {
                 break_hook_call(hL, ar);
             }
@@ -494,7 +534,7 @@ struct hookmgr {
     }
 
     void updatehookmask(lua_State* hL) {
-        int mask = break_mask;
+        int mask = break_mask | funcbp_mask;
         if (!stepL || stepL == hL) {
             mask |= step_mask;
         }
@@ -672,6 +712,11 @@ static int break_closeline(rlua_State* L) {
     return 0;
 }
 
+static int funcbp_open(rlua_State* L) {
+    hookmgr::get_self(L)->funcbp_open(get_host(L), rlua_toboolean(L, 1));
+    return 0;
+}
+
 static int step_in(rlua_State* L) {
     hookmgr::get_self(L)->step_in(get_host(L));
     return 0;
@@ -740,6 +785,7 @@ int luaopen_remotedebug_hookmgr(rlua_State* L) {
         { "break_open", break_open },
         { "break_close", break_close },
         { "break_closeline", break_closeline },
+        { "funcbp_open", funcbp_open },
         { "step_in", step_in },
         { "step_out", step_out },
         { "step_over", step_over },

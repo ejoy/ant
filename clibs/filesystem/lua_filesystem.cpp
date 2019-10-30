@@ -457,7 +457,6 @@ namespace ant::lua_filesystem {
         // TODO: need file_clock http://wg21.link/p0355r7
         using namespace std::chrono;
         LUA_TRY;
-#if defined(_MSC_VER)
         const fs::path& p = path::to(L, 1);
         if (lua_gettop(L) == 1) {
             auto const system_time = clock_cast<system_clock>(fs::last_write_time(p));
@@ -467,18 +466,6 @@ namespace ant::lua_filesystem {
         auto const file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + seconds(luaL_checkinteger(L, 2)));
         fs::last_write_time(p, file_time);
         return 0;
-#else
-        const fs::path& p = path::to(L, 1);
-        if (lua_gettop(L) == 1) {
-            fs::file_time_type time = fs::last_write_time(p);
-            auto system_time = system_clock::now() + duration_cast<seconds>(time - fs::file_time_type::clock::now());
-            lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
-            return 1;
-        }
-        auto system_duration = system_clock::time_point() + seconds(luaL_checkinteger(L, 2)) - system_clock::now();
-        fs::last_write_time(p, fs::file_time_type::clock::now() + duration_cast<fs::file_time_type::duration>(system_duration));
-        return 0;
-#endif
         LUA_TRY_END;
     }
 

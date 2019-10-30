@@ -807,36 +807,36 @@ get_upvalue(rlua_State *L, lua_State *cL, int index, int getref) {
 	return name;
 }
 
-static struct value *
+static int
 get_registry(rlua_State *L, int type) {
 	switch (type) {
 	case VAR_GLOBAL:
 	case VAR_REGISTRY:
 		break;
 	default:
-		return NULL;
+		return 0;
 	}
 	struct value * v = (struct value *)rlua_newuserdata(L, sizeof(struct value));
 	v->frame = 0;
 	v->index = 0;
 	v->type = type;
-	return v;
+	return 1;
 }
 
-static struct value *
+static int
 get_metatable(rlua_State *L, lua_State *cL, int getref) {
 	if (lua_checkstack(cL, 2)==0)
 		rluaL_error(L, "stack overflow");
 	int t = eval_value(L, cL);
 	if (t == LUA_TNONE) {
 		rlua_pop(L, 1);
-		return NULL;
+		return 0;
 	}
 	if (!getref) {
 		if (lua_getmetatable(cL,-1) == 0) {
 			rlua_pop(L, 1);
 			lua_pop(cL, 1);
-			return NULL;
+			return 0;
 		}
 		lua_pop(cL, 2);
 	} else {
@@ -853,14 +853,14 @@ get_metatable(rlua_State *L, lua_State *cL, int getref) {
 		// t v
 		copy_table(L, -2);
 		rlua_replace(L, -2);
-		return v;
+		return 1;
 	} else {
 		rlua_pop(L, 1);
 		struct value *v = (struct value *)rlua_newuserdata(L, sizeof(struct value));
 		v->type = VAR_METATABLE;
 		v->frame = 1;
 		v->index = t;
-		return v;
+		return 1;
 	}
 }
 

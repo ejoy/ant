@@ -198,7 +198,7 @@ local function calchash(plat, depends)
 	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
-local function prebuild(repo, plat, sourcefile, buildfile, deps)
+local function prebuild(repo, buildfile, deps)
 	local depends = {}
 	for _, name in ipairs(deps) do
 		local vname = access.virtualpath(repo, lfs.relative(name, lfs.current_path()))
@@ -210,8 +210,7 @@ local function prebuild(repo, plat, sourcefile, buildfile, deps)
 	end
 
 	local w = {}
-	local dephash = calchash(plat, depends)
-	w[#w+1] = ("identity = %q"):format(plat)
+	local dephash = calchash(repo.identity, depends)
 	w[#w+1] = ("dephash = %q"):format(dephash)
 	w[#w+1] = "depends = {"
 	for _, dep in ipairs(depends) do
@@ -250,7 +249,7 @@ local function add_ref(repo, file, hash)
 	f:close()
 end
 
-local function link(repo, srcfile, identity, buildfile)
+local function link(repo, srcfile, buildfile)
 	local function localpath(path)
 		return access.realpath(repo, path)
 	end
@@ -262,13 +261,12 @@ local function link(repo, srcfile, identity, buildfile)
 			add_ref(repo, cpath, binhash)
 			return cpath, binhash
 		end
-		identity = param.identity
 		srcfile = access.realpath(repo, param.depends[1][3])
 	end
 	local fs = import_package "ant.fileconvert"
-	local deps = fs.prelink(srcfile)
+	local deps = fs.depend(srcfile)
 	if deps then
-		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
+		local dephash = prebuild(repo, buildfile, deps)
 		local cpath = repo._cache / dephash:sub(1,2) / dephash
 		if lfs.exists(cpath) then
 			local binhash = readfile(cpath..".hash")
@@ -276,7 +274,7 @@ local function link(repo, srcfile, identity, buildfile)
 			return cpath, binhash
 		end
 		local dstfile = repo._repo / "tmp.bin"
-		local ok = fs.link(identity, srcfile, dstfile, localpath)
+		local ok = fs.link(repo.identity, repo.linkconfig, srcfile, dstfile, localpath)
 		if not ok then
 			return
 		end
@@ -290,11 +288,11 @@ local function link(repo, srcfile, identity, buildfile)
 		return cpath, binhash
 	else
 		local dstfile = repo._repo / "tmp.bin"
-		local deps = fs.link(identity, srcfile, dstfile, localpath)
+		local deps = fs.link(repo.identity, repo.linkconfig, srcfile, dstfile, localpath)
 		if not deps then
 			return
 		end
-		local dephash = prebuild(repo, identity, srcfile, buildfile, deps)
+		local dephash = prebuild(repo, buildfile, deps)
 		local cpath = repo._cache / dephash:sub(1,2) / dephash
 		if lfs.exists(cpath) then
 			local binhash = readfile(cpath..".hash")
@@ -316,14 +314,14 @@ local function link(repo, srcfile, identity, buildfile)
 	end
 end
 
-function access.link_loc(repo, identity, path)
+function access.link_loc(repo, path)
 	local srcfile = access.realpath(repo, path)
 	local pathhash = access.sha1(path)
-	local buildfile = repo._build / pathhash / srcfile:filename() .. identity
-	return link(repo, srcfile, identity, buildfile)
+	local buildfile = repo._build / pathhash / srcfile:filename() .. repo.identity
+	return link(repo, srcfile, buildfile)
 end
 
-function access.link(repo, identity, path, buildhash)
+function access.link(repo, path, buildhash)
 	local srcfile = access.realpath(repo, path)
 	local buildfile
 	if buildhash then
@@ -331,9 +329,9 @@ function access.link(repo, identity, path, buildhash)
 	end
 	if not buildfile then
 		local pathhash = access.sha1(path)
-		buildfile = repo._build / pathhash / srcfile:filename() .. identity
+		buildfile = repo._build / pathhash / srcfile:filename() .. repo.identity
 	end
-	local dstfile, binhash = link(repo, srcfile, identity, buildfile)
+	local dstfile, binhash = link(repo, srcfile, buildfile)
 	if not dstfile then
 		return
 	end
@@ -355,14 +353,14 @@ function access.check_build(repo, buildfile)
 	return true
 end
 
-function access.clean_build(repo, identity, srcpath)
+function access.clean_build(repo, srcpath)
 	local srcfile = access.realpath(repo, srcpath)
 	if not srcfile then
 		return
 	end
 	srcpath = srcpath:match "^/?(.-)/?$"
 	local pathhash = access.sha1(srcpath)
-	local buildfile = repo._build / pathhash / srcfile:filename() .. identity
+	local buildfile = repo._build / pathhash / srcfile:filename() .. repo.identity
 	lfs.remove(buildfile)
 end
 

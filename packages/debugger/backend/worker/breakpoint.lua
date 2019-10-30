@@ -132,14 +132,14 @@ function m.find(src, currentline)
     return currentBP[currentline]
 end
 
-function m.update(clientsrc, bps, content)
+function m.set_bp(clientsrc, breakpoints, content)
     local src = source.c2s(clientsrc, content)
     if src then
         clientsrc.si = clientsrc.si or src.si
-        verifyBreakpoint(src, clientsrc, bps)
+        verifyBreakpoint(src, clientsrc, breakpoints)
         return
     end
-    waitverify[bpKey(clientsrc)] = { clientsrc, bps }
+    waitverify[bpKey(clientsrc)] = { clientsrc, breakpoints }
     updateHook()
 end
 
@@ -200,6 +200,24 @@ function m.newproto(proto, src, activeline)
     src.protos[proto] = activeline
     sourceUpdateBreakpoint(src)
     return activeline.bp
+end
+
+local funcs = {}
+function m.set_funcbp(breakpoints)
+    funcs = {}
+    for _, bp in ipairs(breakpoints) do
+        funcs[#funcs+1] = bp.name
+    end
+    hookmgr.funcbp_open(#breakpoints > 0)
+end
+
+function m.hit_funcbp(func)
+    for _, funcstr in ipairs(funcs) do
+        local ok, res = evaluate.eval(funcstr, 1)
+        if ok and res == func then
+            return true
+        end
+    end
 end
 
 ev.on('terminated', function()
