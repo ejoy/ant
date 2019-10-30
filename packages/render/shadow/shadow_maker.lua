@@ -203,7 +203,7 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect,
 			viewport = {
 				rect = viewrect,
 				clear_state = {
-					color = 0,
+					color = 0xffffffff,
 					depth = 1,
 					stencil = 0,
 					clear = linear_shadow and "colordepth" or "depth",
@@ -302,7 +302,7 @@ end
 function sm:post_init()
 	-- this function should move to somewhere which call 'entity spawn'
 	local shadowmap_size 	= 1024
-	local depth_type 		= ""--"linear" --"inv_z"
+	local depth_type 		= "inv_z"
 	local linear_shadow 	= depth_type == "linear"
 	local numsplit 			= 4
 
