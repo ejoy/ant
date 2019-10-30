@@ -6,6 +6,7 @@ local ms, mu	= mathpkg.stack, mathpkg.util
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 local shadowutil= renderpkg.shadow
+local uniformutil=renderpkg.uniforms
 
 local function update_uniforms(uniforms, properties)
 	for k, v in pairs(properties) do
@@ -126,9 +127,13 @@ function util.load_shadow_properties(world, render_properties)
 
 	local shadowentity = world:first_entity "shadow"
 	if shadowentity then
-		textures["s_shadowmap"] = {type="texture", stage=7, name="csm shadow map", 
+		local smstage = uniformutil.system_uniform("s_shadowmap").stage
+		textures["s_shadowmap"] = {type="texture", stage=smstage, name="csm shadow map", 
 							handle = shadowentity.frame_buffer.render_buffers[1].handle}
 
+		uniforms["u_depth_scale_offset"] = {
+			type = "v4", name = "depth scale offset", value = shadowutil.shadow_depth_scale_offset(),
+		}
 		local shadow = shadowentity.shadow
 		uniforms["u_shadow_param1"] = {type="v4", name="x=[shadow bias],y=[normal offset],z=[texel size],w=[not use]", 
 			value={shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}}
@@ -144,9 +149,11 @@ function util.load_postprocess_properties(world, render_properties)
 	local fb = mq.render_target.frame_buffer
 	if fb then
 		local rendertex = fb.render_buffers[1].handle
-		postprocess.textures["s_mainview"] = {
+		local mainview_name = "s_mainview"
+		local stage = assert(uniformutil.system_uniform(mainview_name)).stage
+		postprocess.textures[mainview_name] = {
 			name = "Main view render texture", type = "texture",
-			stage = 0, handle = rendertex,
+			stage = stage, handle = rendertex,
 		}
 	end
 end

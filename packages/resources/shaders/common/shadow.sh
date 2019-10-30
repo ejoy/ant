@@ -65,7 +65,7 @@ float hardShadow(
 	// when use multi sampler case, no need to check border
 	vec2 tc = clamp(_shadowCoord.xy, 0.0, 1.0);
 	float receiver = (_shadowCoord.z-_bias);
-	float occluder = texture2D(_sampler, tc).r;
+	float occluder = unpackRgbaToFloat(texture2D(_sampler, tc));
 	return step(receiver, occluder);
 #else
 	vec4 coord = _shadowCoord;

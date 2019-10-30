@@ -19,6 +19,19 @@ local topleft_cropmatrix = ms:ref "matrix" {
 	0.5, 0.5, 0.0, 1.0,
 }
 
+local homogeneous_depth_scale_offset = ms:ref "vector"{
+	0.5, 0.5, 0.0, 0.0,
+}
+
+local normal_depth_scale_offset = ms:ref "vector"{
+	1.0, 0.0, 0.0, 0.0,
+}
+
+function util.shadow_depth_scale_offset()
+	local homogeneousDepth = hwi.get_caps().homogeneousDepth
+	return homogeneousDepth and homogeneous_depth_scale_offset or normal_depth_scale_offset
+end
+
 function util.shadow_crop_matrix()
 	local origin_bottomleft = hwi.get_caps().originBottomLeft
 	return origin_bottomleft and bottomleft_cropmatrix or topleft_cropmatrix

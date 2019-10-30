@@ -8,5 +8,6 @@ return {
 	fbmgr       = require "framebuffer_mgr",
     declmgr     = require "vertexdecl_mgr",
     default     = require "components.default",
-    shadow      = require "shadow.util"
+    shadow      = require "shadow.util",
+    uniforms    = require "uniforms",
 }

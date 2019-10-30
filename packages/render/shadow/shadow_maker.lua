@@ -302,7 +302,7 @@ end
 function sm:post_init()
 	-- this function should move to somewhere which call 'entity spawn'
 	local shadowmap_size 	= 1024
-	local depth_type 		= "inv_z"
+	local depth_type 		= ""--"linear" --"inv_z"
 	local linear_shadow 	= depth_type == "linear"
 	local numsplit 			= 4
 

@@ -1,11 +1,13 @@
 $input v_position
 #include "common.sh"
 
+uniform vec4 u_depth_scale_offset;
+
 void main()
 {
 	#ifdef SM_LINEAR
-	gl_FragColor.xyz = vec3_splat(v_position.z / v_position.w);
-	gl_FragColor.w = 1.0;
+	float depth = (v_position.z / v_position.w) * u_depth_scale_offset.x + u_depth_scale_offset.y;
+	gl_FragColor = packFloatToRgba(depth);
 	#else
 	gl_FragColor = vec4_splat(1.0);
 	#endif //SM_LINEAR

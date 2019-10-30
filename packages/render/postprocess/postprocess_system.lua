@@ -6,10 +6,10 @@ local fs = require "filesystem"
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
 
-local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local renderutil= require "util"
 local computil  = require "components.util"
+local uniformuitl=require "uniforms"
 
 ecs.tag "postprocess"
 ecs.component_alias("postprocess_input",    "viewid")
@@ -46,11 +46,12 @@ function pp_sys:init()
 end
 
 local function render_pass(pass, render_properties)
+    local ppinput_stage = uniformuitl.system_uniform("s_postprocess_input").stage
     local function bind_input(in_viewid)
         local pp_properties = render_properties.postprocess
         local fb = fbmgr.get(in_viewid)
         pp_properties["s_postprocess_input"] = {
-            type = "texture", stage = 7,
+            type = "texture", stage = ppinput_stage,
             name = "post process output frame buffer",
             handle = fb.render_buffers[1].handle,
         }
