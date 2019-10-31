@@ -208,9 +208,8 @@ local function prebuild(repo, buildfile, deps)
 			print("MISSING DEPEND", name)
 		end
 	end
-
 	local w = {}
-	local dephash = calchash(repo.identity, depends)
+	local dephash = calchash("", depends)
 	w[#w+1] = ("dephash = %q"):format(dephash)
 	w[#w+1] = "depends = {"
 	for _, dep in ipairs(depends) do
@@ -274,7 +273,7 @@ local function link(repo, srcfile, buildfile)
 			return cpath, binhash
 		end
 		local dstfile = repo._repo / "tmp.bin"
-		local ok = fs.link(repo.identity, repo.linkconfig, srcfile, dstfile, localpath)
+		local ok = fs.link(repo._link, srcfile, dstfile, localpath)
 		if not ok then
 			return
 		end
@@ -288,7 +287,7 @@ local function link(repo, srcfile, buildfile)
 		return cpath, binhash
 	else
 		local dstfile = repo._repo / "tmp.bin"
-		local deps = fs.link(repo.identity, repo.linkconfig, srcfile, dstfile, localpath)
+		local deps = fs.link(repo._link, srcfile, dstfile, localpath)
 		if not deps then
 			return
 		end
@@ -314,10 +313,16 @@ local function link(repo, srcfile, buildfile)
 	end
 end
 
+local function getbuildpath(repo, path)
+	local pathhash = access.sha1(path)
+	local ext = (path:match "[^/](%.[%w*?_%-]*)$"):lower()
+	local filename = path:match "[/]?([^/]*)$"
+	return repo._build / pathhash / filename .. repo._link[ext].identity
+end
+
 function access.link_loc(repo, path)
 	local srcfile = access.realpath(repo, path)
-	local pathhash = access.sha1(path)
-	local buildfile = repo._build / pathhash / srcfile:filename() .. repo.identity
+	local buildfile = getbuildpath(repo, path)
 	return link(repo, srcfile, buildfile)
 end
 
@@ -328,8 +333,7 @@ function access.link(repo, path, buildhash)
 		buildfile = repo:hash(buildhash)
 	end
 	if not buildfile then
-		local pathhash = access.sha1(path)
-		buildfile = repo._build / pathhash / srcfile:filename() .. repo.identity
+		buildfile = getbuildpath(repo, path)
 	end
 	local dstfile, binhash = link(repo, srcfile, buildfile)
 	if not dstfile then
@@ -353,14 +357,9 @@ function access.check_build(repo, buildfile)
 	return true
 end
 
-function access.clean_build(repo, srcpath)
-	local srcfile = access.realpath(repo, srcpath)
-	if not srcfile then
-		return
-	end
-	srcpath = srcpath:match "^/?(.-)/?$"
-	local pathhash = access.sha1(srcpath)
-	local buildfile = repo._build / pathhash / srcfile:filename() .. repo.identity
+function access.clean_build(repo, path)
+	path = path:match "^/?(.-)/?$"
+	local buildfile = getbuildpath(repo, path)
 	lfs.remove(buildfile)
 end
 
