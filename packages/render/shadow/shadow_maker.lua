@@ -20,6 +20,21 @@ local mc 		= mathpkg.constant
 local fs 		= require "filesystem"
 local mathbaselib= require "math3d.baselib"
 
+local platform  = require "platform"
+local platOS 	= platform.OS
+
+local function is_hw_support_depth_sample()
+	if platOS == "iOS" then
+		local iosinfo = import_package "ant.ios"
+		local a_series = iosinfo.cpu:lower():match "apple a(%d)"
+		if a_series then
+			local num = tonumber(a_series)
+			return num > 8
+		end
+	end
+end
+
+local hw_support_depth_sample = is_hw_support_depth_sample()
 
 ecs.component "csm" {depend = "material"}
 	.split_ratios "real[2]"
@@ -302,7 +317,7 @@ end
 function sm:post_init()
 	-- this function should move to somewhere which call 'entity spawn'
 	local shadowmap_size 	= 1024
-	local depth_type 		= "inv_z"
+	local depth_type 		= hw_support_depth_sample and "inv_z" or "linear"
 	local linear_shadow 	= depth_type == "linear"
 	local numsplit 			= 4
 
