@@ -36,7 +36,7 @@ local function default_level(shadertype, stagetype)
 end
 
 function toolset.compile(config)
-	local plat, renderer = util.identify_info(config.identity)
+	local plat, plat_info, renderer = util.identify_info(config.identity)
 	local shadertype = util.shadertypes[renderer:upper()]
 
 	local filepath 		= config.srcfile

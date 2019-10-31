@@ -39,7 +39,20 @@ local function embed_shader_bin(bins)
 	return t
 end
 
-local function add_macros_from_surface_setting(surfacetype, macros)
+local function need_linear_shadow(identity)
+	local plat, platinfo, renderer = util.identify_info(identity)
+	if plat == "ios" then
+		local a_series = platinfo:match "apple a(%d)"
+		if a_series then
+			local series_num = tonumber(a_series)
+			if series_num <= 8 then
+				return true
+			end
+		end
+	end
+end
+
+local function add_macros_from_surface_setting(identity, surfacetype, macros)
 	surfacetype = assetutil.load_surface_type(surfacetype)
 	macros = macros or {}
 
@@ -52,16 +65,29 @@ local function add_macros_from_surface_setting(surfacetype, macros)
 		macros[#macros+1] = "ENABLE_SHADOW"
 	end
 
-	if shadow.linear then
+	if shadow.linear or need_linear_shadow(identity) then
 		macros[#macros+1] = "SM_LINEAR"
 	end
 	return macros
 end
 
+local function depend_files(files)
+	local t = {}
+	for k in pairs(files) do
+		t[#t+1] = k
+	end
+	table.sort(t)
+	local tt = {}
+	for _, n in ipairs(t) do
+		tt[#tt+1] = files[n]
+	end
+	return tt
+end
+
 return function (identity, srcfilepath, outfilepath, localpath)
 	local fxcontent = rawtable(srcfilepath)
 	local shader = assert(fxcontent.shader)
-	local marcros = add_macros_from_surface_setting(fxcontent.surface_type, fxcontent.macros)
+	local marcros = add_macros_from_surface_setting(identity, fxcontent.surface_type, fxcontent.macros)
 
 	local messages = {}
 	local all_depends = {}
@@ -90,18 +116,5 @@ return function (identity, srcfilepath, outfilepath, localpath)
 	if build_success then
 		util.embed_file(outfilepath, fxcontent, embed_shader_bin(binarys))
 	end
-
-	local function depend_files()
-		local t = {}
-		for k in pairs(all_depends) do
-			t[#t+1] = k
-		end
-		table.sort(t)
-		local tt = {}
-		for _, n in ipairs(t) do
-			tt[#tt+1] = all_depends[n]
-		end
-		return tt
-	end
-	return build_success, table.concat(messages, "\n"), depend_files()
+	return build_success, table.concat(messages, "\n"), depend_files(all_depends)
 end

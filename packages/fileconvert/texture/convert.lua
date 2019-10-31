@@ -97,7 +97,7 @@ end
 -- end
 
 return function (identity, sourcefile, outfile, localpath)
-	local plat, renderer = util.identify_info(identity)
+	local plat, platinfo, renderer = util.identify_info(identity)
 	local ext = assert(outfile_extension(renderer))
 	local tmpoutfile = lfs.path(outfile):replace_extension(ext)
 
