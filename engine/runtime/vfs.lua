@@ -34,8 +34,8 @@ function vfs.type(path)
 	return io_resp()
 end
 
-function vfs.identity(identity)
-	io_req("IDENTITY", identity)
+function vfs.identity(ext, identity, linkconfig)
+	io_req("IDENTITY", ext, identity, linkconfig)
 end
 
 package.loaded.vfs = vfs

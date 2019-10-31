@@ -6,16 +6,10 @@ local repo = require "vfs.repo"
 
 local self
 
-local allowlink = {
-	[".fx"] = true,
-	[".mesh"] = true,
-	[".texture"] = true,
-}
-
 function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
 	local ext = rp:extension():string():lower()
-	if allowlink[ext] then
+	if self._link[ext] then
 		pathname = pathname:match "^/?(.-)/?$"
 		local realpath = access.link_loc(self, pathname)
 		if realpath == nil then
@@ -47,10 +41,8 @@ function localvfs.type(filepath)
 	end
 end
 
-function localvfs.identity(identity, linkconfig)
-	assert(self.identity == identity or self.identity == nil)
-	self.identity = identity
-	self.linkconfig = linkconfig
+function localvfs.identity(ext, identity, linkconfig)
+	self._link[ext] = {identity=identity, linkconfig=linkconfig}
 end
 
 function localvfs.new(path)

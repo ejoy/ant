@@ -14,8 +14,9 @@ function log.raw(data)
 	log.file:flush()
 end
 
-local function link(plat, linkconfig, srcfile, dstfile, localpath)
+local function link(config, srcfile, dstfile, localpath)
 	local ext = srcfile:extension():string():lower()
+	local plat, linkconfig = config[ext].identity, config[ext].linkconfig
 	local c = assert(converter[ext:sub(2)])
 	log.info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ext))
 	local success, err, deps = c(plat, srcfile, dstfile, localpath)

@@ -24,7 +24,7 @@ local logqueue = {}
 local repo = {
 	repo = nil,
 	uncomplete = {},
-	identity = nil,
+	link = {},
 }
 
 local connection = {
@@ -223,10 +223,8 @@ local function cache_bin(buildhash, binhash)
 	end
 end
 
-function offline.IDENTITY(identity, _)
-	assert(repo.identity == identity or repo.identity == nil, "identity should only set one time")
-	assert(type(identity) == "string")
-	repo.identity = identity
+function offline.IDENTITY(ext, identity, linkconfig)
+	repo.link[ext] = { identity = identity, linkconfig = linkconfig }
 end
 
 local function response_bin(id, buildhash)
@@ -242,15 +240,8 @@ local function response_bin(id, buildhash)
 	return false
 end
 
-local linkext = {
-	fx = true,
-	mesh = true,
-	texture = true,
-}
-
-local function allowlink(name)
-	local ext = name:match "[^/]%.([%w*?_%-]*)$"
-	return linkext[ext]
+local function extension(name)
+	return name:match "[^/](%.[%w*?_%-]*)$"
 end
 
 function offline.GET(id, fullpath)
@@ -269,7 +260,8 @@ function offline.GET(id, fullpath)
 		response_id(id, nil)
 		return
 	end
-	if not allowlink(name) then
+	local ext = extension(name)
+	if not repo.link[ext] then
 		-- no link , raw file
 		local realpath = repo.repo:hashpath(v.hash)
 		response_id(id, realpath, v.hash)
@@ -279,7 +271,7 @@ function offline.GET(id, fullpath)
 	local builddir = getbuilddir(fullpath)
 	local dir = repo.repo:list(builddir)
 	if dir then
-		local build = dir[name .. repo.identity]
+		local build = dir[name .. repo.link[ext].identity]
 		if build and not build.dir then
 			if response_bin(id, build.hash) then
 				return
@@ -667,11 +659,9 @@ function online.TYPE(id, fullpath)
 	end
 end
 
-function online.IDENTITY(identity, linkconfig)
-	assert(repo.identity == identity or repo.identity == nil, "identity should only set one time")
-	assert(type(identity) == "string")
-	repo.identity = identity
-	connection_send("IDENTITY", identity, linkconfig)
+function online.IDENTITY(ext, identity, linkconfig)
+	repo.link[ext] = { identity = identity, linkconfig = linkconfig }
+	connection_send("IDENTITY", ext, identity, linkconfig)
 end
 
 function online.GET(id, fullpath)
@@ -697,8 +687,8 @@ function online.GET(id, fullpath)
 		response_id(id, nil)
 		return
 	end
-
-	if not allowlink(name) then
+	local ext = extension(name)
+	if not repo.link[ext] then
 		-- no link , raw file
 		local realpath = repo.repo:hashpath(v.hash)
 		local f = io.open(realpath,"rb")
@@ -714,7 +704,7 @@ function online.GET(id, fullpath)
 	local builddir = getbuilddir(fullpath)
 	local dir, hash = repo.repo:list(builddir)
 	if dir then
-		local build = dir[name .. repo.identity]
+		local build = dir[name .. repo.link[ext].identity]
 		if build and not build.dir then
 			if response_bin(id, build.hash) then
 				return
@@ -738,7 +728,8 @@ function online._LINK(id, fullpath)
 	local builddir = getbuilddir(fullpath)
 	local dir, hash = repo.repo:list(builddir)
 	if dir then
-		local build = dir[name .. repo.identity]
+		local ext = extension(name)
+		local build = dir[name .. repo.link[ext].identity]
 		if build and not build.dir then
 			if response_bin(id, build.hash) then
 				return
