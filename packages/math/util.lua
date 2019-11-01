@@ -102,5 +102,11 @@ util.YAXIS 	= ms:ref "vector" {0, 1, 0, 0}
 util.NYAXIS = ms:ref "vector" {0, -1,0, 0}
 util.ZAXIS 	= ms:ref "vector" {0, 0, 1, 0}
 util.NZAXIS = ms:ref "vector" {0, 0,-1, 0}
+util.IDENTITY_MAT = ms:ref "matrix" {
+	1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1,
+}
 
 return util

@@ -6,6 +6,9 @@ local fs = require "filesystem"
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
 
+local mathpkg  = import_package "ant.math"
+local mu       = mathpkg.util
+
 local fbmgr     = require "framebuffer_mgr"
 local renderutil= require "util"
 local computil  = require "components.util"
@@ -31,6 +34,7 @@ local pp_sys = ecs.system "postprocess_system"
 pp_sys.singleton "render_properties"
 pp_sys.depend "render_system"
 pp_sys.depend "bloom_system"
+pp_sys.dependby "end_frame"
 
 local quad_reskey = fs.path "//meshres/postprocess.mesh" 
 
@@ -67,7 +71,7 @@ local function render_pass(pass, render_properties)
         mgroup 	    = meshgroup,
         material 	= assert(assetmgr.get_resource(pass.material.ref_path)),
         properties  = pass.material.properties,
-    }, nil, render_properties)
+    }, mu.IDENTITY_MATRIX, render_properties)
 end
 
 function pp_sys:update()
