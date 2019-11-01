@@ -10,4 +10,5 @@ return {
     default     = require "components.default",
     shadow      = require "shadow.util",
     uniforms    = require "uniforms",
+    setting     = require "setting",
 }

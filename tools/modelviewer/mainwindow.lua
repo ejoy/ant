@@ -6,4 +6,5 @@ local systems = {
 }
 
 local runtime = import_package "ant.imguibase".runtime
-runtime.start(packages, systems)
+local fs 		= require "filesystem"
+runtime.start(packages, systems, fs.path "/pkg/ant.modelviewer/settings")

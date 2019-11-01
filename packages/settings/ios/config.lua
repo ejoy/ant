@@ -1,14 +1,9 @@
 graphic = {
+    api = "metal",
     shadow = {
         enable = true,
-        type = {
-            value = "inv_z",
-            fallback = "linear",
-        },
-        split_num = {
-            value = 4,
-            fallback = 1,
-        },
+        type = "inv_z",
+        split_num = 4,
     },
 
     hdr = {
@@ -19,26 +14,17 @@ graphic = {
     postprocess = {
         bloom = {
             enable = false,
-            sample_times = {
-                value = 4,
-                fallback = 1,
-            },
+            sample_times = 4,
         },
     },
 }
 
 animation = {
     skinning = {
-        type = {
-            value = "GPU",
-            fallback = "CPU",
-        },
+        type = "CPU",
         CPU = {
             enable = true,
-            max_indices = {
-                value = 5,
-                fallback = 4,
-            },
+            max_indices = 5,
         },
         GPU = {
             enable = true,

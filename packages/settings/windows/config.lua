@@ -1,8 +1,8 @@
 graphic = {
-    api = "metal",
+    api = "d3d11",
     shadow = {
         enable = true,
-        type = "linear",
+        type = "inv_z",
         split_num = 4,
     },
 

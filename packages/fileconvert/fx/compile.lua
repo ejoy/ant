@@ -3,8 +3,8 @@ local lfs 		= require "filesystem.local"
 local fs		= require "filesystem"
 local util 		= require "util"
 
-local assetpkg = import_package "ant.asset"
-local assetutil= assetpkg.util
+local assetpkg  = import_package "ant.asset"
+local assetutil = assetpkg.util
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
 local function check_compile_shader(identity, srcfilepath, outfilepath, macros)
@@ -44,15 +44,20 @@ local function need_linear_shadow(identity)
 	if plat == "ios" then
 		local a_series = platinfo:match "apple a(%d)"
 		if a_series then
-			local series_num = tonumber(a_series)
-			if series_num <= 8 then
-				return true
-			end
+			return tonumber(a_series) <= 8
 		end
 	end
 end
 
-local function add_macros_from_surface_setting(identity, surfacetype, macros)
+local function read_linkconfig(linkconfig, identity)
+	local s = rawtable(linkconfig)
+	if s.graphic.shadow.type ~= "linear" and need_linear_shadow(identity) then
+		s.graphic.shadow.type = "linear"
+	end
+	return s
+end
+
+local function add_macros_from_surface_setting(identity, mysetting, surfacetype, macros)
 	surfacetype = assetutil.load_surface_type(surfacetype)
 	macros = macros or {}
 
@@ -65,7 +70,7 @@ local function add_macros_from_surface_setting(identity, surfacetype, macros)
 		macros[#macros+1] = "ENABLE_SHADOW"
 	end
 
-	if shadow.linear or need_linear_shadow(identity) then
+	if mysetting.graphic.shadow.type == "linear" then
 		macros[#macros+1] = "SM_LINEAR"
 	end
 	return macros
@@ -84,10 +89,11 @@ local function depend_files(files)
 	return tt
 end
 
-return function (identity, srcfilepath, outfilepath, localpath)
+return function (identity, linkconfig, srcfilepath, outfilepath, localpath)
 	local fxcontent = rawtable(srcfilepath)
-	local shader = assert(fxcontent.shader)
-	local marcros = add_macros_from_surface_setting(identity, fxcontent.surface_type, fxcontent.macros)
+
+	local mysetting	= read_linkconfig(localpath(linkconfig:string()), identity)
+	local marcros 	= add_macros_from_surface_setting(identity, mysetting, fxcontent.surface_type, fxcontent.macros)
 
 	local messages = {}
 	local all_depends = {}
@@ -95,6 +101,7 @@ return function (identity, srcfilepath, outfilepath, localpath)
 
 	local binarys = {}
 	
+	local shader 	= assert(fxcontent.shader)
 	for _, stagename in ipairs(valid_shader_stage) do
 		local stage_file = shader[stagename]
 		if stage_file then
