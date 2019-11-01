@@ -16,7 +16,7 @@
 #include "bgfx_interface.h"
 #include "bgfx_alloc.h"
 
-#if BGFX_API_VERSION != 100
+#if BGFX_API_VERSION != 102
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -838,9 +838,9 @@ lgetStats(lua_State *L) {
 			lua_setfield(L, -2, "name");
 			lua_pushinteger(L, stat->viewStats[i].view);
 			lua_setfield(L, -2, "view");
-			lua_pushnumber(L, stat->viewStats[i].cpuTimeElapsed * cpums);
+			lua_pushnumber(L, (stat->viewStats[i].cpuTimeEnd - stat->viewStats[i].cpuTimeBegin) * cpums);
 			lua_setfield(L, -2, "cpu");
-			lua_pushnumber(L, stat->viewStats[i].gpuTimeElapsed * gpums);
+			lua_pushnumber(L, (stat->viewStats[i].gpuTimeEnd - stat->viewStats[i].gpuTimeBegin) * gpums);
 			lua_setfield(L, -2, "gpu");
 			lua_pop(L, 1);
 		}
