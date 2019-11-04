@@ -31,8 +31,13 @@ function setting.read_setting(linkconfig)
     return s
 end
 
+local settingdata
 function setting.init(linkconfig)
-    setting.setting = setting.read_setting(linkconfig)
+    settingdata = setting.read_setting(linkconfig)
+end
+
+function setting.get()
+  return settingdata
 end
 
 return setting

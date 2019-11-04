@@ -10,7 +10,7 @@ local renderutil= require "util"
 local camerautil= require "camera.util"
 local shadowutil= require "shadow.util"
 local fbmgr 	= require "framebuffer_mgr"
-local setting	= require "setting".setting
+local setting	= require "setting"
 
 local assetpkg 	= import_package "ant.asset"
 local assetmgr 	= assetpkg.mgr
@@ -229,14 +229,14 @@ local function get_render_buffers(width, height, linear_shadow)
 		}
 
 		return {
-			{
+			fbmgr.create_rb{
 				format = "RGBA8",
 				w=width,
 				h=height,
 				layers=1,
 				flags=flags,
 			},
-			{
+			fbmgr.create_rb {
 				format = "D24S8",
 				w=width,
 				h=height,
@@ -248,7 +248,7 @@ local function get_render_buffers(width, height, linear_shadow)
 	end
 
 	return {
-		{
+		fbmgr.create_rb{
 			format = "D32F",
 			w=width,
 			h=height,
@@ -266,9 +266,9 @@ local function get_render_buffers(width, height, linear_shadow)
 	}
 end
 
-local function create_shadow_entity(view_camera, shadowmap_size, numsplit, depth_type)
+local function create_shadow_entity(view_camera, shadowmap_size, split_num, depth_type)
 	local height = shadowmap_size
-	local width = shadowmap_size * numsplit
+	local width = shadowmap_size * split_num
 
 	local viewfrustum = view_camera.frustum
 
@@ -277,7 +277,7 @@ local function create_shadow_entity(view_camera, shadowmap_size, numsplit, depth
 	
 	local ratios = shadowutil.calc_split_distance_ratio(min_ratio, max_ratio, 
 						viewfrustum.n, viewfrustum.f, 
-						pssm_lambda, numsplit)
+						pssm_lambda, split_num)
 
 	return world:create_entity {
 		shadow = {
@@ -289,36 +289,38 @@ local function create_shadow_entity(view_camera, shadowmap_size, numsplit, depth
 				min_ratio 	= min_ratio,
 				max_ratio 	= max_ratio,
 				pssm_lambda = pssm_lambda,
-				num_split 	= numsplit,
+				num_split 	= split_num,
 				ratios 		= ratios,
 			}
 		},
-		frame_buffer = {
-			render_buffers = get_render_buffers(width, height, depth_type == "linear"),
+		fb_index = fbmgr.create{
+			render_buffers = get_render_buffers(width, height, depth_type == "linear")
 		}
 	}
 end
 
 function sm:post_init()
 	-- this function should move to somewhere which call 'entity spawn'
-	local shadowmap_size 	= 1024
-	local depth_type 		= setting.graphic.shadow.type
-	local linear_shadow 	= depth_type == "linear"
-	local numsplit 			= 4
+	local sd = setting.get()
+	local shadowsetting = sd.graphic.shadow
+	local shadowmap_size= shadowsetting.size
+	local depth_type 	= shadowsetting.type
+	local linear_shadow = depth_type == "linear"
+	local split_num 	= shadowsetting.split_num
 
-	local view_camera		= camerautil.get_camera(world, "main_view")
-	local seid 	= create_shadow_entity(view_camera, shadowmap_size, numsplit, depth_type)
+	local view_camera	= camerautil.get_camera(world, "main_view")
+	local seid 	= create_shadow_entity(view_camera, shadowmap_size, split_num, depth_type)
 	local se 	= world[seid]
-	local fb 	= se.frame_buffer
+	local fbidx = se.fb_index
 	local lightdir = get_directional_light_dir_T()
 
 	local ratios = se.shadow.split.ratios
 
 	local viewrect = {x=0, y=0, w=shadowmap_size, h=shadowmap_size}
-	for ii=1, numsplit do
+	for ii=1, split_num do
 		local tagname = "csm" .. ii
 		local csm_viewid = viewidmgr.get(tagname)
-		fbmgr.bind(csm_viewid, fb)
+		fbmgr.bind(csm_viewid, fbidx)
 		viewrect.x = (ii-1)*shadowmap_size
 		create_csm_entity(view_camera, lightdir, ii, ratios[ii], viewrect, shadowmap_size, linear_shadow)
 	end

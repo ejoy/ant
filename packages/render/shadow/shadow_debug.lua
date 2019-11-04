@@ -7,6 +7,7 @@ local shadowutil= require "shadow.util"
 local viewidmgr = require "viewid_mgr"
 local renderutil= require "util"
 local uniformutil=require "uniforms"
+local fbmgr		= require "framebuffer_mgr"
 
 local mathpkg   = import_package "ant.math"
 local ms, mu, mc= mathpkg.stack, mathpkg.util, mathpkg.constant
@@ -27,7 +28,7 @@ local function csm_shadow_debug_quad()
 	local quadmaterial = fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"
 	for _, eid in world:each "shadow" do
 		local se = world[eid]
-		local fb = se.frame_buffer
+		local fb = fbmgr.get(se.fb_index)
 	
 		local split_ratios = shadowutil.get_split_ratios()
 		local rect = {x=0, y=0, w=quadsize*#split_ratios, h=quadsize}
@@ -48,7 +49,7 @@ local function csm_shadow_debug_quad()
 
 		textures["s_shadowmap"] = {
 			type = "texture", name = "csm render buffer", stage = smstage,
-			handle = fb.render_buffers[1].handle,
+			handle = fbmgr.get_rb(fb[1]).handle,
 		}
 	end
 end
@@ -307,7 +308,8 @@ local function check_shadow_matrix()
 			}
 		}
 
-		bgfx.blit(blit_shadowmap_viewid, rb_handle, 0, 0, csm1.render_target.frame_buffer.render_buffers[1].handle)
+		local fb = fbmgr.get(csm1.render_target.fb_idx)
+		bgfx.blit(blit_shadowmap_viewid, rb_handle, 0, 0, fbmgr.get_rb(fb[1]).handle)
 		bgfx.read_texture(rb_handle, memory_handle)
 
 		world:mark(-1, "read_back_blit", {memory_handle, origin_NDC_With_Crop, size})

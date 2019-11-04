@@ -2,19 +2,21 @@ graphic = {
     api = "d3d11",
     shadow = {
         enable = true,
+        size = 1024,
         type = "inv_z",
         split_num = 4,
     },
 
     hdr = {
-        enable = false,
-        format = "RGBA16"   -- "RGBA32"
+        enable = true,
+        format = "RGBA16F"   -- "RGBA32F"
     },
     
     postprocess = {
         bloom = {
-            enable = false,
+            enable = true,
             sample_times = 4,
+            format = "RGBA16F"
         },
     },
 }

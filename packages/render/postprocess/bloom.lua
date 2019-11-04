@@ -33,8 +33,8 @@ local bloom_blur_sample_viewid_names = get_bloom_blur_sample_names()
 
 local function create_bloom_viewids()
     local viewids = {
-        bloom_fetch_bright = viewidmgr.generate "bloom_fetch_bright",
-        bloom_combine = viewidmgr.generate "bloom_combine"
+        bloom_fetch_bright  = viewidmgr.generate "bloom_fetch_bright",
+        bloom_combine       = viewidmgr.generate "bloom_combine"
     }
 
     for _, name in ipairs(bloom_blur_sample_viewid_names) do
@@ -46,8 +46,7 @@ end
 
 local viewids = create_bloom_viewids()
 
-ecs.component "frame_buffer_array"
-    .framebuffers "frame_buffer[]"
+local fb_indices
 
 local function create_framebuffers_container_obj(fbsize)
     local flags = renderutil.generate_sampler_flag {
@@ -58,27 +57,20 @@ local function create_framebuffers_container_obj(fbsize)
         V="CLAMP",
     }
 
-    return world:create_entity {
-        bloom = true,
-        frame_buffer_array = {
-            {
-                render_buffers = {
-                    {
-                        format = "RGBA8",
-                        width = fbsize.w, height = fbsize.h,
-                        layer = 1, flags = flags,
-                    }
-                }
-            },
-            {
-                render_buffers = {
-                    {
-                        format = "RGBA8",
-                        width = fbsize.w, height = fbsize.h,
-                        layer = 1, flags = flags,
-                    }
-                }
-            },
+    fb_indices = {
+        fbgmgr.create {
+            fbgmgr.create_rb {
+                format = "RGBA8",
+                width = fbsize.w, height = fbsize.h,
+                layer = 1, flags = flags,
+            }
+        },
+        fbgmgr.create {
+            fbgmgr.create_rb {
+                format = "RGBA8",
+                width = fbsize.w, height = fbsize.h,
+                layer = 1, flags = flags,
+            }
         }
     }
 end
@@ -112,12 +104,10 @@ local function get_passes_settings(main_viewid, viewids, fbsize)
     local fbw, fbh = fbsize.w, fbsize.h
     local start_viewid = main_viewid
 
-    local function default_render_target()
+    local function default_viewport()
         return {
-            viewport = {
-                clear_state = {color=0, clear="C"},
-                rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},
-            },
+            clear_state = {color=0, clear="C"},
+            rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},
         }
     end
 
@@ -132,9 +122,9 @@ local function get_passes_settings(main_viewid, viewids, fbsize)
                 },
             }
         }),
-        render_target = default_render_target(),
-        input = start_viewid,
-        output = viewids["bloom_fetch_bright"],
+        viewport= default_viewport(),
+        input   = start_viewid,
+        output  = viewids["bloom_fetch_bright"],
     }
 
     local function insert_blur_pass(input_viewid, output_passidx, fbw, fbh, material)
@@ -143,11 +133,9 @@ local function get_passes_settings(main_viewid, viewids, fbsize)
         passes[#passes+1] = {
             name = "bloom:" .. viewidname,
             material = computil.assign_material(material),
-            render_target = {
-                viewport = {
-                    clear_state = {color=0, clear="C"},
-                    rect = {x=0,y=0,w=fbw, h=fbh},
-                }
+            viewport = {
+                clear_state = {color=0, clear="C"},
+                rect = {x=0,y=0,w=fbw, h=fbh},
             },
             input = input_viewid,
             output = output_viewid,
@@ -167,7 +155,7 @@ local function get_passes_settings(main_viewid, viewids, fbsize)
     passes[#passes+1] = {
         name = "combine scene with bloom",
         material = computil.assign_material(combine_material),
-        render_target = default_render_target(),
+        viewport = default_viewport(),
 
         input   = start_viewid,
         output  = viewids["bloom_combine"],
@@ -178,10 +166,9 @@ local function get_passes_settings(main_viewid, viewids, fbsize)
     passes[#passes+1] = {
         name = "copy bloom result",
         material = computil.assign_material(copy_quad_material),
-        render_target = default_render_target(),
-
-        input = viewids["bloom_combine"],
-        output = main_viewid,
+        viewport = default_viewport(),
+        input   = viewids["bloom_combine"],
+        output  = main_viewid,
     }
 end
 

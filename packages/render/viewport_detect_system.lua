@@ -14,27 +14,18 @@ local vp_detect = ecs.system "viewport_detect_system"
 vp_detect.dependby "primitive_filter_system"
 vp_detect.singleton "message"
 
-local function resize_renderbuffer(w, h, rb)
-	if rb.w ~= w or rb.h ~= h then
-		rb.w, rb.h = w, h
-		bgfx.destroy(assert(rb.handle))
-		rb.handle = util.create_renderbuffer(rb)
-		return true
-	end
-end
-
-local function resize_framebuffer(w, h, fb, viewid)
-	if fb then
-		local rbs = assert(fb.render_buffers)
+local function resize_framebuffer(w, h, fbidx, viewid)
+	if fbidx then
+		local fb = fbmgr.get(fbidx)
 		local changed = false
-		for _, rb in ipairs(rbs)do
-			changed = (resize_renderbuffer(w, h, rb) ~= nil) or changed
+		local rbs = {}
+		for _, rbidx in ipairs(fb)do
+			rbs[#rbs+1] = rbidx
+			changed = fbmgr.resize_rb(w, h, rbidx) or changed
 		end
 		
 		if changed then
-			fbmgr.unbind(viewid)
-			bgfx.destroy(fb.handle)
-			fb.handle = util.create_framebuffer(rbs, fb.manager_buffer)
+			fbmgr.recreate(fbidx, {render_buffers = rbs, manager_buffer = fb.manager_buffer})
 		end
 	else
 		rhwi.reset(nil, w, h)
@@ -48,18 +39,17 @@ function vp_detect:init()
 
 	local function update_camera_viewrect(w, h)
 		local mq = world:first_entity("main_queue")
-		if mq == nil then
-			return 
-		end
-		local vp = mq.render_target.viewport
-		vp.rect.w, vp.rect.h = w, h
-
-		local camera = camerautil.get_camera(world, mq.camera_tag)
-		camera.frustum.aspect = w / h
-		
-		resize_framebuffer(w, h, mq.render_target.frame_buffer, mq.viewid)
-    end
+		if mq then
+			local vp = mq.render_target.viewport
+			vp.rect.w, vp.rect.h = w, h
 	
+			local camera = camerautil.get_camera(world, mq.camera_tag)
+			camera.frustum.aspect = w / h
+			
+			resize_framebuffer(w, h, mq.render_target.fb_idx, mq.viewid)
+		end
+    end
+
 	local fb_size = world.args.fb_size
     update_camera_viewrect(fb_size.w, fb_size.h)
 	self.message.observers:add {

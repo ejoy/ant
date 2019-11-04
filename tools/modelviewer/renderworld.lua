@@ -83,10 +83,9 @@ local function quad_clear_test()
 	renderpkg.default.camera(nil, nil, 
 	renderpkg.default.frustum(width, height)))
 
-	local fbeid = world:create_entity {
-		frame_buffer = {
+	local fbidx = renderpkg.fbmgr.create{
 			render_buffers = {
-				{
+				renderpkg.fbmgr.create_rb{
 					format = "D32",
 					w=width,
 					h=height,
@@ -95,9 +94,8 @@ local function quad_clear_test()
 				},
 			}
 		}
-	}
 
-	local fbentity = world[fbeid]
+	
 
 	local v = cu.quad_vertices()
 	local depth = 1.0
@@ -112,9 +110,9 @@ local function quad_clear_test()
 	local meshkeyname = assetmgr.register_resource(fs.path "//meshres/quadtest.mesh", 
 		cu.create_simple_mesh( "p3|c40niu", gvb, 4))
 
-	local function create_viewport_test(quadname, fb, rect)
+	local function create_viewport_test(quadname, fbidx, rect)
 		local quadtest_viewid = renderpkg.viewidmgr.generate(quadname)
-		renderpkg.fbmgr.bind(quadtest_viewid, fb)
+		renderpkg.fbmgr.bind(quadtest_viewid, fbidx)
 	
 		world:create_entity {
 			viewid = quadtest_viewid,
@@ -150,9 +148,9 @@ local function quad_clear_test()
 
 	world[eid].rendermesh.reskey = meshkeyname
 
-	create_viewport_test("quadtest1", fbentity.frame_buffer, {x=0,y=0,w=1024,h=1024})
-	create_viewport_test("quadtest2", fbentity.frame_buffer, {x=1024,y=0,w=1024,h=1024})
-	create_viewport_test("quadtest2", fbentity.frame_buffer, {x=2048,y=0,w=1024,h=1024})
+	create_viewport_test("quadtest1", fbidx, {x=0,y=0,w=1024,h=1024})
+	create_viewport_test("quadtest2", fbidx, {x=1024,y=0,w=1024,h=1024})
+	create_viewport_test("quadtest2", fbidx, {x=2048,y=0,w=1024,h=1024})
 end
 
 function model_review_system:init()

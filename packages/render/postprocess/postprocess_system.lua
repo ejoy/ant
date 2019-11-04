@@ -53,7 +53,7 @@ local function render_pass(pass, render_properties)
     local ppinput_stage = uniformuitl.system_uniform("s_postprocess_input").stage
     local function bind_input(in_viewid)
         local pp_properties = render_properties.postprocess
-        local fb = fbmgr.get(in_viewid)
+        local fb = fbmgr.get_byviewid(in_viewid)
         pp_properties["s_postprocess_input"] = {
             type = "texture", stage = ppinput_stage,
             name = "post process output frame buffer",

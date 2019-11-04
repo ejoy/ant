@@ -18,101 +18,27 @@ ecs.component_alias("view_tag", "string")
 ecs.component_alias("viewid", "int", 0)
 ecs.component_alias("view_mode", "string", "")
 
-local function delete_handle(self)
-	if self.handle then
-		bgfx.destroy(self.handle)
-		self.handle = nil
-	end
-end
-
-local renderbuffer = ecs.component "render_buffer"
-	.format "string"
-	.flags "string"
-	.w "real" (1)
-	.h "real" (1)
-	.layers "real" (1)
-
-function renderbuffer:init()
-	if not self.handle then
-		self.handle = ru.create_renderbuffer(self)
-	end
-	return self
-end
-
-renderbuffer.delete = delete_handle
-
-local whandle = ecs.component "wnd_handle"
-	.name "string" ("")
-
-function whandle:init()
-	local name = assert(self.name)
-	self.handle = fbmgr.get_native_handle(name)
-	return self
-end
-
-local nfb = ecs.component "wnd_frame_buffer"
-	.wndhandle "wnd_handle"
-	.w "int" (1)
-	.h "int" (1)
-	["opt"].color_format "string" ("")
-	["opt"].depth_format "string" ("")
-
-function nfb:init()
-	local w = self.wndhandle
-	self.handle = bgfx.create_frame_buffer(assert(w.handle), self.w, self.h, self.color_format, self.depth_format)
-	return self
-end
-
-nfb.delete = delete_handle
-
-local fb = ecs.component "frame_buffer" 
-	.render_buffers "render_buffer[]"
-	["opt"].manager_buffer "boolean" (true)
-	
-
-function fb:init()
-	assert(self.handle == nil)
-	self.handle = ru.create_framebuffer(self.render_buffers, self.manager_buffer)
-	return self
-end
-
-function fb:delete()
-	if not self.manager_buffer then
-		delete_handle(self)
-	end
-end
+ecs.component_alias("fb_index", "int")
+ecs.component_alias("rb_index", "int")
 
 local rt = ecs.component "render_target" {depend = "viewid"}
-	.viewport "viewport"
-	["opt"].frame_buffer "frame_buffer"
-	["opt"].wnd_frame_buffer "wnd_frame_buffer"
+	.viewport 	"viewport"
+	["opt"].fb_idx 	"fb_index"
 
 function rt:postinit(e)
 	local viewid = e.viewid
-	local fb = self.frame_buffer or self.wnd_frame_buffer
-	if fb then
-		fbmgr.bind(viewid, fb)
-		bgfx.set_view_frame_buffer(viewid, assert(fb.handle))
+	local fb_idx = self.fb_idx
+	if fb_idx then
+		fbmgr.bind(viewid, fb_idx)
 	else
-		fb = fbmgr.get(viewid)
-		if fb then
-			if fb.wndhandle then
-				self.wnd_frame_buffer = fb
-			else
-				self.frame_buffer = fb
-			end
-		end
+		self.fb_idx = fbmgr.get_fb_idx(viewid)
 	end
+
 	return self
 end
 
 function rt:delete(e)
-	local fb = self.frame_buffer or self.wnd_frame_buffer
-	if fb then
-		fbmgr.unbind(e.viewid)
-		self.frame_buffer = nil
-		self.wnd_frame_buffer = nil
-	end
+	fbmgr.unbind(e.viewid)
 end
 
 local cs = ecs.component "clear_state"

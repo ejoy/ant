@@ -6,6 +6,7 @@ local ms = mathpkg.stack
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
+local fbmgr			= require "framebuffer_mgr"
 local camerautil	= require "camera.util"
 local default_comp 	= require "components.default"
 local computil 		= require "components.util"
@@ -13,6 +14,7 @@ local computil 		= require "components.util"
 local fs 			= require "filesystem"
 local mathbaselib 	= require "math3d.baselib"
 
+local setting		= require "setting"
 
 local util = {}
 util.__index = util
@@ -171,7 +173,7 @@ function util.create_render_queue_entity(world, view_rect, eyepos, viewdir, view
 end
 
 function util.create_main_queue(world, view_rect, viewdir, eyepos)
-	local fb_renderbuffer_flag = util.generate_sampler_flag {
+	local rb_flag = util.generate_sampler_flag {
 		RT="RT_MSAA2",
 		MIN="LINEAR",
 		MAG="LINEAR",
@@ -185,17 +187,38 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 		default_comp.camera(eyepos, viewdir, 
 			default_comp.frustum(view_rect.w, view_rect.h)))
 
+	local sd = setting.get()
+
+	local render_buffers = {}
+
+	local main_display_format = sd.graphic.hdr.enable and "RGBA16F" or "RGBA8"
+	render_buffers[#render_buffers+1] = fbmgr.create_rb(
+		default_comp.render_buffer(
+		view_rect.w, view_rect.h, main_display_format, rb_flag)
+	)
+
+	local bloom = sd.graphic.postprocess.bloom
+	if bloom.enable then
+		local fmt = bloom.format
+		-- not support RGBA8
+		assert(fmt == "RGBA16F" or fmt == "RGBA32F")
+		render_buffers[#render_buffers+1] = fbmgr.create_rb(
+			default_comp.render_buffer(
+			view_rect.w, view_rect.h, bloom.format, rb_flag)
+		)
+	end
+	render_buffers[#render_buffers+1] = fbmgr.create_rb(
+		default_comp.render_buffer(
+		view_rect.w, view_rect.h, "D24S8", rb_flag)
+	)
+
 	return world:create_entity {
 		camera_tag = "main_view",
 		viewid = viewidmgr.get "main_view",
 		render_target = {
 			viewport = default_comp.viewport(view_rect),
-			frame_buffer = {
-				render_buffers = {
-					default_comp.render_buffer(view_rect.w, view_rect.h, "RGBA8", fb_renderbuffer_flag),
-					default_comp.render_buffer(view_rect.w, view_rect.h, "D24S8", fb_renderbuffer_flag),
-					default_comp.render_buffer(view_rect.w, view_rect.h, "RGBA16F", fb_renderbuffer_flag),
-				},
+			fb_idx = fbmgr.create {
+				render_buffers = render_buffers
 			},
 		},
 		primitive_filter = {
@@ -204,7 +227,7 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 		},
 		main_queue = true,
 		visible = true,
-	}	
+	}
 end
 
 function util.default_sampler()
@@ -309,75 +332,18 @@ function util.generate_sampler_flag(sampler)
 	return flag
 end
 
--- function util.create_frame_buffer(world,hwnd,w,h,viewid)
--- 	local fb_handle = bgfx.create_frame_buffer(hwnd, w, h)
--- 	bgfx.set_view_frame_buffer(viewid, assert(fb_handle))
--- 	local frame_buffer = {
--- 		render_buffers = {},
--- 		viewid = viewid,
--- 	}
--- 	local frame_buffer_com = world:create_component("frame_buffer",frame_buffer)
--- 	frame_buffer_com.handle = fb_handle
--- 	fbmgr.bind(viewid,frame_buffer_com)
--- end
-
---frame_buffer:component
-function util.create_general_render_queue(world,view_rect,view_tag,viewid)
-	local default_viewdir = { -25, -45, 0, 0 }
-	local default_eyepos = { 5, 5, -5, 1 }
-	local entity_id = util.create_render_queue_entity(world,view_rect,
-					default_viewdir,
-					default_eyepos,
-					view_tag,
-					viewid)
-	local frame_buffer = {ref_viewid = viewid}
-	-- if not frame_buffer.ref_viewid then
-	-- 	local default_render_buffer = {
-	-- 			w = viewsize.w,
-	-- 			h = viewsize.h,
-	-- 			layers = 1,
-	-- 			format = "RGBA32",
-	-- 			flags = util.generate_sampler_flag {
-	-- 				RT="RT_ON",
-	-- 				MIN="POINT",
-	-- 				MAG="POINT",
-	-- 				U="CLAMP",
-	-- 				V="CLAMP"
-	-- 			}
-	-- 		}
-	-- 	frame_buffer.render_buffers = frame_buffer.render_buffers or {default_render_buffer}
-	-- 	frame_buffer.manager_buffer = true
-	-- end
-	-- world[entity_id].frame_buffer = frame_buffer
-	world:add_component(entity_id,"frame_buffer",frame_buffer)
-
-	return entity_id
-end
-
 local blitviewid = viewidmgr.generate "blit"
 
 function util.get_main_view_rendertexture(world)
 	local mq = world:first_entity "main_queue"
-	return mq.render_target.frame_buffer.render_buffers[1].handle	
+	local fb = fbmgr.get(mq.render_target.fb_idx)
+	return fbmgr.get_rb(fb[1].handle)
 end
 
 function util.create_blit_queue(world, viewrect)
 	util.create_render_queue_entity(world, viewrect, nil, nil, "blit_view", blitviewid)
 	computil.create_quad_entity(world, viewrect,
 	fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material", nil, "full_quad", "blit_view")
-end
-
-function util.create_renderbuffer(desc)
-	return bgfx.create_texture2d(desc.w, desc.h, false, desc.layers, desc.format, desc.flags)
-end
-
-function util.create_framebuffer(renderbuffers, manager_buffer)
-	local handles = {}
-	for _, rb in ipairs(renderbuffers) do
-		handles[#handles+1] = rb.handle
-	end
-	assert(#handles > 0)
-	return bgfx.create_frame_buffer(handles, manager_buffer or true)
 end
 
 function util.modify_view_rect(world,rect)
@@ -407,15 +373,14 @@ local statemap = {
 	DS 				= "DS",
 }
 
-local function update_frame_buffer_view(viewid, rt)
-	local fb = rt.frame_buffer or rt.wnd_frame_buffer
-	if fb then
-		local handle = fb.handle
-		bgfx.set_view_frame_buffer(viewid, handle)
+function util.update_frame_buffer_view(viewid, fbidx)
+	if fbidx then
+		local fb = fbmgr.get(fbidx)
+		bgfx.set_view_frame_buffer(viewid, fb.handle)
 	end
 end
 
-local function update_viewport(viewid, viewport)
+function util.update_viewport(viewid, viewport)
 	local cs = viewport.clear_state
 	local clear_what = cs.clear
 	local state = statemap[clear_what]
@@ -428,8 +393,8 @@ local function update_viewport(viewid, viewport)
 end
 
 function util.update_render_target(viewid, rt)
-	update_frame_buffer_view(viewid, rt)
-	update_viewport(viewid, rt.viewport)
+	util.update_frame_buffer_view(viewid, rt.fb_idx)
+	util.update_viewport(viewid, rt.viewport)
 end
 
 return util

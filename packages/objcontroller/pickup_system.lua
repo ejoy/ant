@@ -12,11 +12,11 @@ local ms 		= mathpkg.stack
 local filterutil = import_package "ant.scene".filterutil
 
 local renderpkg = import_package "ant.render"
-local computil 	= renderpkg.components
+local fbmgr 	= renderpkg.fbmgr
 local renderutil= renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
 local camerautil= renderpkg.camera
-local compdefault=renderpkg.default
+
 local assetmgr = import_package "ant.asset".mgr
 
 local bgfx 		= require "bgfx"
@@ -142,11 +142,11 @@ function pickup_material_sys:update()
 end
 
 -- pickup_system
-local rb = ecs.component "raw_buffer"
+local raw_buf = ecs.component "raw_buffer"
 	.w "real" (1)
 	.h "real" (1)
 	.elemsize "int" (4)
-function rb:init()
+function raw_buf:init()
 	self.handle = bgfx.memory_texture(self.w*self.h * self.elemsize)
 	return self
 end
@@ -154,7 +154,7 @@ end
 ecs.component_alias("blit_viewid", "viewid") 
 ecs.component "blit_buffer" {depend = "blit_viewid"}
 	.raw_buffer "raw_buffer"
-	.render_buffer "render_buffer"
+	.rb_idx 	"rb_index"
 
 ecs.component_alias("pickup_viewtag", "boolean")
 
@@ -202,6 +202,40 @@ local function add_pick_entity()
 		})
 	end
 
+	local fbidx = fbmgr.create {
+		render_buffers = {
+			fbmgr.create_rb {
+				w = pickup_buffer_w,
+				h = pickup_buffer_h,
+				layers = 1,
+				format = "RGBA8",
+				flags = fb_renderbuffer_flag,
+			},
+			fbmgr.create_rb {
+				w = pickup_buffer_w,
+				h = pickup_buffer_h,
+				layers = 1,
+				format = "D24S8",
+				flags = fb_renderbuffer_flag,
+			}
+		}
+	}
+
+	local blit_rbidx = fbmgr.create_rb {
+		w = pickup_buffer_w,
+		h = pickup_buffer_h,
+		layers = 1,
+		format = "RGBA8",
+		flags = renderutil.generate_sampler_flag {
+			BLIT="BLIT_AS_DST",
+			BLIT_READBACK="BLIT_READBACK_ON",
+			MIN="POINT",
+			MAG="POINT",
+			U="CLAMP",
+			V="CLAMP",
+		}
+	}
+
 	return world:create_entity {
 		material = {
 			{ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_opacity.material'},
@@ -215,20 +249,7 @@ local function add_pick_entity()
 					h = pickup_buffer_h,
 					elemsize = 4,
 				},
-				render_buffer = {
-					w = pickup_buffer_w,
-					h = pickup_buffer_h,
-					layers = 1,
-					format = "RGBA8",
-					flags = renderutil.generate_sampler_flag {
-						BLIT="BLIT_AS_DST",
-						BLIT_READBACK="BLIT_READBACK_ON",
-						MIN="POINT",
-						MAG="POINT",
-						U="CLAMP",
-						V="CLAMP",
-					}
-				},
+				rb_idx = blit_rbidx,
 			},
 			blit_viewid = viewidmgr.get("pickup_blit"),
 			pickup_cache = {
@@ -249,24 +270,7 @@ local function add_pick_entity()
 					clear = "all"
 				},
 			},
-			frame_buffer = {
-				render_buffers = {
-					{
-						w = pickup_buffer_w,
-						h = pickup_buffer_h,
-						layers = 1,
-						format = "RGBA8",
-						flags = fb_renderbuffer_flag,
-					},
-					{
-						w = pickup_buffer_w,
-						h = pickup_buffer_h,
-						layers = 1,
-						format = "D24S8",
-						flags = fb_renderbuffer_flag,
-					}
-				}
-			}
+			fb_idx = fbidx,
 		},		
 		viewid = pickupviewid,
 		primitive_filter = filterutil.create_primitve_filter("main_view", "can_select"),
@@ -300,11 +304,12 @@ function pickup_sys:init()
 	})
 end
 
-local function blit(blitviewid, blit_buffer, colorbuffer)		
-	local rb = blit_buffer.render_buffer.handle
+local function blit(blitviewid, blit_buffer, colorbuffer)
+	local rb = fbmgr.get_rb(blit_buffer.rb_idx)
+	local rbhandle = rb.handle
 	
-	bgfx.blit(blitviewid, rb, 0, 0, assert(colorbuffer.handle))
-	return bgfx.read_texture(rb, blit_buffer.raw_buffer.handle)	
+	bgfx.blit(blitviewid, rbhandle, 0, 0, assert(colorbuffer.handle))
+	return bgfx.read_texture(rbhandle, blit_buffer.raw_buffer.handle)	
 end
 
 local function print_raw_buffer(rawbuffer)
@@ -352,7 +357,9 @@ function pickup_sys:update()
 		local pickupcomp = pickupentity.pickup
 		local nextstep = pickupcomp.nextstep
 		if nextstep == "blit" then
-			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, pickupentity.render_target.frame_buffer.render_buffers[1])
+			local fb = fbmgr.get(pickupentity.render_target.fb_idx)
+			local rb = fbmgr.get_rb(fb[1])
+			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, rb.handle)
 		elseif nextstep	== "select_obj" then
 			recover_filter(pickupentity.primitive_filter)
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)

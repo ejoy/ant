@@ -7,6 +7,7 @@ local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 local shadowutil= renderpkg.shadow
 local uniformutil=renderpkg.uniforms
+local fbmgr     = renderpkg.fbmgr
 
 local function update_uniforms(uniforms, properties)
 	for k, v in pairs(properties) do
@@ -127,9 +128,10 @@ function util.load_shadow_properties(world, render_properties)
 
 	local shadowentity = world:first_entity "shadow"
 	if shadowentity then
+		local fb = fbmgr.get(shadowentity.fb_index)
 		local smstage = uniformutil.system_uniform("s_shadowmap").stage
 		textures["s_shadowmap"] = {type="texture", stage=smstage, name="csm shadow map", 
-							handle = shadowentity.frame_buffer.render_buffers[1].handle}
+							handle = fbmgr.get_rb(fb[1]).handle}
 
 		uniforms["u_depth_scale_offset"] = {
 			type = "v4", name = "depth scale offset", value = shadowutil.shadow_depth_scale_offset(),
@@ -146,9 +148,10 @@ end
 function util.load_postprocess_properties(world, render_properties)
 	local mq = assert(world:first_entity("main_queue"))
 	local postprocess = render_properties.postprocess
-	local fb = mq.render_target.frame_buffer
-	if fb then
-		local rendertex = fb.render_buffers[1].handle
+	local fbidx = mq.render_target.fb_idx
+	if fbidx then
+		local fb = fbmgr.get(fbidx)
+		local rendertex = fbmgr.get_rb(fb[1]).handle
 		local mainview_name = "s_mainview"
 		local stage = assert(uniformutil.system_uniform(mainview_name)).stage
 		postprocess.textures[mainview_name] = {
