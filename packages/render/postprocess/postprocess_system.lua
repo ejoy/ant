@@ -31,14 +31,13 @@ ecs.component "technique" {multiple=true}
     .passes         "pass[]"
     ["opt"].reorders"int[]"
 
-ecs.component "technique_orders"
+ecs.component "technique_order"
     .orders "string[]"
 
 
 local pp_sys = ecs.system "postprocess_system"
 pp_sys.singleton "render_properties"
 pp_sys.depend "render_system"
-pp_sys.depend "bloom_system"
 pp_sys.dependby "end_frame"
 
 local quad_reskey = fs.path "//meshres/postprocess.mesh" 
@@ -47,11 +46,8 @@ function pp_sys:init()
     quad_reskey = assetmgr.register_resource(quad_reskey, computil.quad_mesh{x=0, y=0, w=1, h=1})
 
     world:create_entity {
-        technique = {
-            passes = {}
-        },
-        technique_orders = {
-            "bloom", "tonemapping",
+        technique_order = {
+            orders = {"bloom", "tonemapping"},
         },
         postprocess = true,
     }
@@ -62,17 +58,20 @@ local function render_pass(lastviewid, pass, meshgroup, render_properties)
     local function bind_input(in_viewid)
         local pp_properties = render_properties.postprocess
         local fb = fbmgr.get_byviewid(in_viewid)
-        pp_properties["s_postprocess_input"] = {
+        pp_properties.textures["s_postprocess_input"] = {
             type = "texture", stage = ppinput_stage,
-            name = "post process output frame buffer",
+            name = "post process input frame buffer",
             handle = fbmgr.get_rb(fb[1]).handle,
         }
     end
     
-    bind_input(pass.input or lastviewid)
-
-
+    local in_viewid = pass.input or lastviewid
     local out_viewid = pass.output
+    if in_viewid == out_viewid then
+        error(string.format("input viewid[%d] is the same as output viewid[%d]", in_viewid, out_viewid))
+    end
+    bind_input(in_viewid)
+
     renderutil.update_frame_buffer_view(out_viewid)
     renderutil.update_viewport(out_viewid, pass.viewport)
 
@@ -80,7 +79,7 @@ local function render_pass(lastviewid, pass, meshgroup, render_properties)
         mgroup 	    = meshgroup,
         material 	= assert(assetmgr.get_resource(pass.material.ref_path)),
         properties  = pass.material.properties,
-    }, mu.IDENTITY_MATRIX, render_properties)
+    }, mu.IDENTITY_MAT, render_properties)
 
     return out_viewid
 end
@@ -109,11 +108,11 @@ function pp_sys:update()
     local meshgroup = meshres.scenes[1][1][1]
 
     local techniques = {}
-    for tech in world:each_component(technique) do
+    for _, tech in world:each_component(technique) do
         techniques[tech.name] = tech
     end
 
-    for _, name in pairs(pp.technique_orders) do
+    for _, name in pairs(pp.technique_order.orders) do
         local tech = techniques[name]
         if tech then
             techniques[name] = nil

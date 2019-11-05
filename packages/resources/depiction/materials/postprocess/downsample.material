@@ -1,3 +1,3 @@
 local bloom_path = "/pkg/ant.resources/materials/bloom/fx/"
 fx      = bloom_path .. "downsample.fx"
-state   = bloom_path .. "bloom.state"
+state   = bloom_path .. "postprocess.state"

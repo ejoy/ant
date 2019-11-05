@@ -1,7 +1,7 @@
 local bloom_path = "/pkg/ant.resources/materials/bloom/"
 
 fx = bloom_path .. "fetch_bright.material"
-state = bloom_path .. "bloom.state"
+state = bloom_path .. "postprocess.state"
 
 properties = {
     uniforms = {

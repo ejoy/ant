@@ -173,9 +173,9 @@ local function get_passes_settings(main_viewid, viewids, fbsize)
 end
 
 function bloom_sys:post_init()
-    local pp_eid = world:first_entity_eid "postprocess"
+    local pp_eid = world:first_entity_id "postprocess"
     local main_viewid = viewidmgr.get "main_view"
-    bind_fb_with_viewids(viewids, create_framebuffers_container_obj(world.arg.fb_size))
+    bind_fb_with_viewids(viewids, create_framebuffers_container_obj(world.args.fb_size))
 
     world:add_component(pp_eid, "technique", {
         name = "bloom",
