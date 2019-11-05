@@ -10,6 +10,7 @@ local mathpkg  = import_package "ant.math"
 local mu       = mathpkg.util
 
 local fbmgr     = require "framebuffer_mgr"
+local viewidmgr = require "viewid_mgr"
 local renderutil= require "util"
 local computil  = require "components.util"
 local uniformuitl=require "uniforms"
@@ -49,7 +50,7 @@ function pp_sys:init()
     }
 end
 
-local function render_pass(pass, render_properties)
+local function render_pass(lastviewid, pass, render_properties)
     local ppinput_stage = uniformuitl.system_uniform("s_postprocess_input").stage
     local function bind_input(in_viewid)
         local pp_properties = render_properties.postprocess
@@ -60,8 +61,8 @@ local function render_pass(pass, render_properties)
             handle = fb.render_buffers[1].handle,
         }
     end
-    bind_input(pass.input)
-
+    
+    bind_input(pass.input or lastviewid)
     local meshres = assetmgr.load(quad_reskey)
     local meshgroup = meshres.scenes[1][1][1]
 
@@ -72,21 +73,24 @@ local function render_pass(pass, render_properties)
         material 	= assert(assetmgr.get_resource(pass.material.ref_path)),
         properties  = pass.material.properties,
     }, mu.IDENTITY_MATRIX, render_properties)
+
+    return pass.output
 end
 
 function pp_sys:update()
     local pp = world:first_entity "postprocess"
     local technique = pp.technique
     local render_properties = self.render_properties
+    local lastviewid = viewidmgr.get "main_view"
     for tech in world:each_component(technique) do
         if tech.reorders then
             for _, idx in ipairs(tech.reorders) do
                 local pass = assert(tech.passes[idx])
-                render_pass(pass, render_properties)
+                lastviewid = render_pass(lastviewid, pass, render_properties)
             end
         else
             for _, pass in ipairs(tech.passes) do
-                render_pass(pass, render_properties)
+                lastviewid = render_pass(lastviewid, pass, render_properties)
             end
         end
     end

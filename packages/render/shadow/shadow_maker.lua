@@ -173,6 +173,9 @@ sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
 --sm.dependby "debug_shadow_maker"
 
+local linear_cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
+local cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
+
 local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect, shadowmap_size, linear_shadow)
 	local camera_tag = "csm" .. index
 	local csmcamera = {type = "csm", updir = mc.Y_AXIS}
@@ -180,13 +183,9 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect,
 	calc_shadow_camera(view_camera, ratios, lightdir, shadowmap_size, stabilize, csmcamera)
 	camerautil.bind_camera(world, camera_tag, csmcamera)
 
-	local cast_material_path = linear_shadow and 
-		fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material" or
-		fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
-
 	local eid = world:create_entity {
 		material = {
-			{ref_path = cast_material_path},
+			{ref_path = linear_shadow and linear_cast_material or cast_material},
 		},
 		csm = {
 			split_ratios= ratios,
