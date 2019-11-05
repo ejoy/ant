@@ -373,9 +373,9 @@ local statemap = {
 	DS 				= "DS",
 }
 
-function util.update_frame_buffer_view(viewid, fbidx)
-	if fbidx then
-		local fb = fbmgr.get(fbidx)
+function util.update_frame_buffer_view(viewid)
+	local fb = fbmgr.get_byviewid(viewid)
+	if fb then
 		bgfx.set_view_frame_buffer(viewid, fb.handle)
 	end
 end
@@ -393,7 +393,7 @@ function util.update_viewport(viewid, viewport)
 end
 
 function util.update_render_target(viewid, rt)
-	util.update_frame_buffer_view(viewid, rt.fb_idx)
+	util.update_frame_buffer_view(viewid)
 	util.update_viewport(viewid, rt.viewport)
 end
 

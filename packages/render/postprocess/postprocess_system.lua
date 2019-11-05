@@ -22,7 +22,7 @@ ecs.component_alias("postprocess_output",   "viewid")
 ecs.component "pass"
     .name           "string" ("")
     .material       "material"
-    .render_target  "render_target"
+    .viewport       "viewport"
     .input          "postprocess_input"
     .output         "postprocess_output"
 
@@ -50,7 +50,7 @@ function pp_sys:init()
     }
 end
 
-local function render_pass(lastviewid, pass, render_properties)
+local function render_pass(lastviewid, pass, meshgroup, render_properties)
     local ppinput_stage = uniformuitl.system_uniform("s_postprocess_input").stage
     local function bind_input(in_viewid)
         local pp_properties = render_properties.postprocess
@@ -63,18 +63,19 @@ local function render_pass(lastviewid, pass, render_properties)
     end
     
     bind_input(pass.input or lastviewid)
-    local meshres = assetmgr.load(quad_reskey)
-    local meshgroup = meshres.scenes[1][1][1]
 
-    renderutil.update_render_target(pass.output, pass.render_target)
-	
-    renderutil.draw_primitive(pass.output, {
+
+    local out_viewid = pass.output
+    renderutil.update_frame_buffer_view(out_viewid)
+    renderutil.update_viewport(out_viewid, pass.viewport)
+
+    renderutil.draw_primitive(out_viewid, {
         mgroup 	    = meshgroup,
         material 	= assert(assetmgr.get_resource(pass.material.ref_path)),
         properties  = pass.material.properties,
     }, mu.IDENTITY_MATRIX, render_properties)
 
-    return pass.output
+    return out_viewid
 end
 
 function pp_sys:update()
@@ -82,15 +83,18 @@ function pp_sys:update()
     local technique = pp.technique
     local render_properties = self.render_properties
     local lastviewid = viewidmgr.get "main_view"
+    local meshres = assetmgr.load(quad_reskey)
+    local meshgroup = meshres.scenes[1][1][1]
+
     for tech in world:each_component(technique) do
         if tech.reorders then
             for _, idx in ipairs(tech.reorders) do
                 local pass = assert(tech.passes[idx])
-                lastviewid = render_pass(lastviewid, pass, render_properties)
+                lastviewid = render_pass(lastviewid, pass, meshgroup, render_properties)
             end
         else
             for _, pass in ipairs(tech.passes) do
-                lastviewid = render_pass(lastviewid, pass, render_properties)
+                lastviewid = render_pass(lastviewid, pass, meshgroup, render_properties)
             end
         end
     end
