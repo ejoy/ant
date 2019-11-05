@@ -41,8 +41,7 @@ function toolset.compile(config)
 
 	local filepath 		= config.srcfile
 	local outfilepath 	= config.outfile
-	print(filepath, outfilepath)
-	
+
 	assert(lfs.exists(filepath), filepath:string())
 	
 	local srcfilename = filepath:string()
