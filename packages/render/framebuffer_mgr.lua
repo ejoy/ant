@@ -94,6 +94,20 @@ function mgr.recreate(fbidx, fb)
 	framebuffers[fbidx] = create_fb_handle(fb.render_buffers, fb.manager_buffer)
 end
 
+function mgr.copy(fbidx)
+	local template_fb = mgr.get(fbidx)
+	local rbs = {}
+    for _, rbidx in ipairs(template_fb) do
+        local rb = mgr.get_rb(rbidx)
+        rbs[#rbs+1] = mgr.create_rb(rb)
+    end
+
+    return mgr.create {
+        render_buffers = rbs,
+        manager_buffer = template_fb.manager_buffer,
+    }
+end
+
 function mgr.is_wnd_frame_buffer(fb_idx)
 	return framebuffers[fb_idx].wndhandle ~= nil
 end

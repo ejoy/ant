@@ -39,6 +39,8 @@ model_review_system.depend "shadow_maker"
 model_review_system.dependby "camera_controller_2"
 model_review_system.depend "imgui_runtime_system"
 model_review_system.depend "steering_system"
+model_review_system.depend "postprocess_system"
+model_review_system.depend "tonemapping"
 
 local lu = renderpkg.light
 local cu = renderpkg.components

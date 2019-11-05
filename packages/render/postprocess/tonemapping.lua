@@ -7,6 +7,7 @@ local fs = require "filesystem"
 
 local tm = ecs.system "tonemapping"
 tm.depend    "render_system"
+tm.depend    "bloom"
 tm.dependby  "postprocess_system"
 
 function tm:post_init()

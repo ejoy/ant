@@ -23,7 +23,7 @@ ecs.component "pass"
     .name           "string" ("")
     .material       "material"
     .viewport       "viewport"
-    .input          "postprocess_input"
+    ["opt"].input   "postprocess_input"
     .output         "postprocess_output"
 
 ecs.component "technique" {multiple=true}
@@ -34,21 +34,19 @@ ecs.component "technique" {multiple=true}
 ecs.component "technique_order"
     .orders "string[]"
 
+ecs.component_alias("copy_pass", "pass")
 
 local pp_sys = ecs.system "postprocess_system"
 pp_sys.singleton "render_properties"
 pp_sys.depend "render_system"
 pp_sys.dependby "end_frame"
 
-local quad_reskey = fs.path "//meshres/postprocess.mesh" 
+local quad_reskey = fs.path "//meshres/postprocess.mesh"
 
 function pp_sys:init()
     quad_reskey = assetmgr.register_resource(quad_reskey, computil.quad_mesh{x=0, y=0, w=1, h=1})
 
     world:create_entity {
-        technique_order = {
-            orders = {"bloom", "tonemapping"},
-        },
         postprocess = true,
     }
 end
@@ -107,20 +105,7 @@ function pp_sys:update()
     local meshres = assetmgr.load(quad_reskey)
     local meshgroup = meshres.scenes[1][1][1]
 
-    local techniques = {}
     for _, tech in world:each_component(technique) do
-        techniques[tech.name] = tech
-    end
-
-    for _, name in pairs(pp.technique_order.orders) do
-        local tech = techniques[name]
-        if tech then
-            techniques[name] = nil
-            render_technique(tech, lastviewid, meshgroup, render_properties)
-        end
-    end
-
-    for _, tech in pairs(techniques) do
         render_technique(tech, lastviewid, meshgroup, render_properties)
     end
 end
