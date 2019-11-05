@@ -27,9 +27,13 @@ ecs.component "pass"
     .output         "postprocess_output"
 
 ecs.component "technique" {multiple=true}
-    .name        "string"
-    .passes      "pass[]"
-    ["opt"].reorders    "int[]"
+    .name           "string"
+    .passes         "pass[]"
+    ["opt"].reorders"int[]"
+
+ecs.component "technique_orders"
+    .orders "string[]"
+
 
 local pp_sys = ecs.system "postprocess_system"
 pp_sys.singleton "render_properties"
@@ -46,6 +50,9 @@ function pp_sys:init()
         technique = {
             passes = {}
         },
+        technique_orders = {
+            "bloom", "tonemapping",
+        },
         postprocess = true,
     }
 end
@@ -58,7 +65,7 @@ local function render_pass(lastviewid, pass, meshgroup, render_properties)
         pp_properties["s_postprocess_input"] = {
             type = "texture", stage = ppinput_stage,
             name = "post process output frame buffer",
-            handle = fb.render_buffers[1].handle,
+            handle = fbmgr.get_rb(fb[1]).handle,
         }
     end
     
@@ -78,6 +85,21 @@ local function render_pass(lastviewid, pass, meshgroup, render_properties)
     return out_viewid
 end
 
+local function render_technique(tech, lastviewid, meshgroup, render_properties)
+    if tech.reorders then
+        for _, idx in ipairs(tech.reorders) do
+            local pass = assert(tech.passes[idx])
+            lastviewid = render_pass(lastviewid, pass, meshgroup, render_properties)
+        end
+    else
+        for _, pass in ipairs(tech.passes) do
+            lastviewid = render_pass(lastviewid, pass, meshgroup, render_properties)
+        end
+    end
+
+    return lastviewid
+end
+
 function pp_sys:update()
     local pp = world:first_entity "postprocess"
     local technique = pp.technique
@@ -86,16 +108,20 @@ function pp_sys:update()
     local meshres = assetmgr.load(quad_reskey)
     local meshgroup = meshres.scenes[1][1][1]
 
+    local techniques = {}
     for tech in world:each_component(technique) do
-        if tech.reorders then
-            for _, idx in ipairs(tech.reorders) do
-                local pass = assert(tech.passes[idx])
-                lastviewid = render_pass(lastviewid, pass, meshgroup, render_properties)
-            end
-        else
-            for _, pass in ipairs(tech.passes) do
-                lastviewid = render_pass(lastviewid, pass, meshgroup, render_properties)
-            end
+        techniques[tech.name] = tech
+    end
+
+    for _, name in pairs(pp.technique_orders) do
+        local tech = techniques[name]
+        if tech then
+            techniques[name] = nil
+            render_technique(tech, lastviewid, meshgroup, render_properties)
         end
+    end
+
+    for _, tech in pairs(techniques) do
+        render_technique(tech, lastviewid, meshgroup, render_properties)
     end
 end

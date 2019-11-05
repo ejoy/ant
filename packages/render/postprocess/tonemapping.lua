@@ -20,12 +20,10 @@ function tm:post_init()
             {
                 name = "main",
                 material = fs.path "/pkg/ant.resources/depiction/materials/tonemapping/tonemapping.material",
-                output = 1,
-                render_target = {
-                    viewport = {
-                        rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},
-                        clear_state = {clear="C", color=0},
-                    }
+                output = main_viewid,
+                viewport = {
+                    rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},
+                    clear_state = {clear=""},
                 }
             },
 
