@@ -7,7 +7,7 @@ local fs = require "filesystem"
 
 local tm = ecs.system "tonemapping"
 tm.depend    "render_system"
-tm.depend    "bloom"
+tm.depend    "bloom_system"
 tm.dependby  "postprocess_system"
 
 function tm:post_init()
@@ -26,7 +26,9 @@ function tm:post_init()
                             ref_path = fs.path "/pkg/ant.resources/depiction/materials/postprocess/tonemapping.material",
                         }
                     },
-                    output = main_viewid,
+                    output = {
+                        viewid = main_viewid,
+                    },
                     viewport = {
                         rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},
                         clear_state = {clear=""},

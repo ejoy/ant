@@ -9,6 +9,8 @@ local shadowutil= renderpkg.shadow
 local uniformutil=renderpkg.uniforms
 local fbmgr     = renderpkg.fbmgr
 
+local setting	= renderpkg.setting
+
 local function update_uniforms(uniforms, properties)
 	for k, v in pairs(properties) do
 		assert(type(v) == "table")

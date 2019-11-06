@@ -5,7 +5,7 @@ local bgfx = require "bgfx"
 local framebuffers = {}
 local renderbuffers = {}
 
-local viewid_bindings = {__mode="v"}
+local viewid_bindings = {}
 
 function mgr.bind(viewid, fb_idx)
 	viewid_bindings[viewid] = fb_idx

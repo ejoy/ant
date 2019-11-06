@@ -16,8 +16,17 @@ local computil  = require "components.util"
 local uniformuitl=require "uniforms"
 
 ecs.tag "postprocess"
-ecs.component_alias("postprocess_input",    "viewid")
-ecs.component_alias("postprocess_output",   "viewid")
+local pps = ecs.component "postprocess_slot"
+    .viewid "viewid"
+    ["opt"].slot   "int"
+
+function pps:init()
+    self.slot = self.slot or 1
+    return self
+end
+
+ecs.component_alias("postprocess_input",    "postprocess_slot")
+ecs.component_alias("postprocess_output",   "postprocess_slot")
 
 ecs.component "pass"
     .name           "string" ("")
@@ -38,6 +47,11 @@ ecs.component_alias("copy_pass", "pass")
 
 local pp_sys = ecs.system "postprocess_system"
 pp_sys.singleton "render_properties"
+
+-- we list all postporcess effect here, but the order is dependent on effect's depend
+pp_sys.depend "bloom_system"
+pp_sys.depend "tonemapping"
+
 pp_sys.depend "render_system"
 pp_sys.dependby "end_frame"
 
@@ -51,25 +65,36 @@ function pp_sys:init()
     }
 end
 
-local function render_pass(lastviewid, pass, meshgroup, render_properties)
+local function is_slot_equal(lhs, rhs)
+    return lhs.viewid == rhs.viewid and lhs.slot == rhs.slot
+end
+
+local function render_pass(lastslot, pass, meshgroup, render_properties)
     local ppinput_stage = uniformuitl.system_uniform("s_postprocess_input").stage
-    local function bind_input(in_viewid)
+
+    local in_slot = pass.input or lastslot
+    local out_slot = pass.output
+    if is_slot_equal(in_slot, out_slot) then
+        error(string.format("input viewid[%d:%d] is the same as output viewid[%d:%d]", 
+            in_slot.viewid, in_slot.slot, out_slot.viewid, out_slot.slot))
+    end
+
+    local function bind_input(in_viewid, slot)
         local pp_properties = render_properties.postprocess
         local fb = fbmgr.get_byviewid(in_viewid)
         pp_properties.textures["s_postprocess_input"] = {
             type = "texture", stage = ppinput_stage,
             name = "post process input frame buffer",
-            handle = fbmgr.get_rb(fb[1]).handle,
+            handle = fbmgr.get_rb(fb[slot]).handle,
+        }
+        pp_properties.uniforms["u_bright_threshold"] = {
+            type = "v4", name = "bright threshold",
+            value = {0.85, 0.0, 0.0, 0.0}
         }
     end
-    
-    local in_viewid = pass.input or lastviewid
-    local out_viewid = pass.output
-    if in_viewid == out_viewid then
-        error(string.format("input viewid[%d] is the same as output viewid[%d]", in_viewid, out_viewid))
-    end
-    bind_input(in_viewid)
+    bind_input(in_slot.viewid, in_slot.slot)
 
+    local out_viewid = out_slot.viewid
     renderutil.update_frame_buffer_view(out_viewid)
     renderutil.update_viewport(out_viewid, pass.viewport)
 
@@ -79,33 +104,37 @@ local function render_pass(lastviewid, pass, meshgroup, render_properties)
         properties  = pass.material.properties,
     }, mu.IDENTITY_MAT, render_properties)
 
-    return out_viewid
+    return { viewid=out_viewid, slot=1} --right now, output slot only 1
 end
 
-local function render_technique(tech, lastviewid, meshgroup, render_properties)
+local function render_technique(tech, lastslot, meshgroup, render_properties)
     if tech.reorders then
         for _, idx in ipairs(tech.reorders) do
             local pass = assert(tech.passes[idx])
-            lastviewid = render_pass(lastviewid, pass, meshgroup, render_properties)
+            lastslot = render_pass(lastslot, pass, meshgroup, render_properties)
         end
     else
         for _, pass in ipairs(tech.passes) do
-            lastviewid = render_pass(lastviewid, pass, meshgroup, render_properties)
+            lastslot = render_pass(lastslot, pass, meshgroup, render_properties)
         end
     end
 
-    return lastviewid
+    return lastslot
 end
 
 function pp_sys:update()
     local pp = world:first_entity "postprocess"
     local technique = pp.technique
     local render_properties = self.render_properties
-    local lastviewid = viewidmgr.get "main_view"
+    local lastslot = {
+        viewid = viewidmgr.get "main_view",
+        slot = 1
+    }
+    
     local meshres = assetmgr.load(quad_reskey)
     local meshgroup = meshres.scenes[1][1][1]
 
     for _, tech in world:each_component(technique) do
-        render_technique(tech, lastviewid, meshgroup, render_properties)
+        lastslot = render_technique(tech, lastslot, meshgroup, render_properties)
     end
 end

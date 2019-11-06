@@ -13,6 +13,8 @@ $input v_positionWS, v_texcoord0, v_lightdirTS, v_viewdirTS, v_packed_info,
 
 #include "common/shadow.sh"
 
+#include "common/postprocess.sh"
+
 SAMPLER2D(s_basecolor, 	0);
 SAMPLER2D(s_normal, 	1);
 
@@ -39,5 +41,8 @@ void main()
 	
 	vec4 finalcolor = vec4(mix(u_shadow_color.rgb, scenecolor.rgb, visibility), scenecolor.a);
 
-	gl_FragColor = mix(u_fog_color, finalcolor, fog_factor);
+	gl_FragData[0] = mix(u_fog_color, finalcolor, fog_factor);
+#ifdef BLOOM_ENABLE
+	gl_FragData[1] = bloom_color(scenecolor);
+#endif
 }

@@ -1,3 +1,4 @@
 WRITE_MASK  = "RGBA"
 CULL        = "CCW"
 PT          = "TRISTRIP"
+DEPTH_TEST  = "ALWAYS"

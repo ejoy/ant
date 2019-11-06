@@ -1,0 +1,4 @@
+local pp_path = "/pkg/ant.resources/depiction/materials/postprocess/"
+
+fx = pp_path .. "fx/combine.fx"
+state = pp_path .. "postprocess.state"

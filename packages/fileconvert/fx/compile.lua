@@ -73,6 +73,10 @@ local function add_macros_from_surface_setting(identity, mysetting, surfacetype,
 	if mysetting.graphic.shadow.type == "linear" then
 		macros[#macros+1] = "SM_LINEAR"
 	end
+
+	if mysetting.graphic.postprocess.bloom.enable then
+		macros[#macros+1] = "BLOOM_ENABLE"
+	end
 	return macros
 end
 

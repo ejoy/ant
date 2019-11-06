@@ -5,13 +5,14 @@ local viewidmgr = require "viewid_mgr"
 local fbgmgr    = require "framebuffer_mgr"
 local renderutil= require "util"
 local computil  = require "components.util"
-
+local setting   = require "setting"
 
 local fs        = require "filesystem"
 
 local bloom_sys = ecs.system "bloom_system"
 bloom_sys.depend    "render_system"
 bloom_sys.dependby  "postprocess_system"
+bloom_sys.dependby  "tonemapping"
 
 local bloom_chain_count = 4
 
@@ -46,8 +47,6 @@ end
 
 local viewids = create_bloom_viewids()
 
-local fb_indices
-
 local function create_framebuffers_container_obj(fbsize)
     local flags = renderutil.generate_sampler_flag {
         RT="RT_ON",
@@ -57,119 +56,93 @@ local function create_framebuffers_container_obj(fbsize)
         V="CLAMP",
     }
 
-    fb_indices = {
+    local sd = setting.get()
+    local bloomsetting = sd.graphic.postprocess.bloom
+    local fmt = bloomsetting.format
+    return {
         fbgmgr.create {
-            fbgmgr.create_rb {
-                format = "RGBA8",
-                width = fbsize.w, height = fbsize.h,
-                layer = 1, flags = flags,
-            }
+            render_buffers = {
+                fbgmgr.create_rb {
+                    format = fmt,
+                    w = fbsize.w, h = fbsize.h,
+                    layers = 1, flags = flags,
+                }
+            },
         },
         fbgmgr.create {
-            fbgmgr.create_rb {
-                format = "RGBA8",
-                width = fbsize.w, height = fbsize.h,
-                layer = 1, flags = flags,
+            render_buffers = {
+                fbgmgr.create_rb {
+                    format = fmt,
+                    w = fbsize.w, h = fbsize.h,
+                    layers = 1, flags = flags,
+                }
             }
         }
     }
 end
 
-local function bind_fb_with_viewids(viewids, fbeid)
-    local fb_entity = world[fbeid]
-    local fbs = fb_entity.framebuffers
-
-    local fbidx = 1
-    fbgmgr.bind(viewids["bloom_fetch_bright"], fbidx)
-
-    for _, name in ipairs(bloom_blur_sample_viewid_names) do
-        fbidx = (fbidx // 2) + 1
-        fbgmgr.bind(viewids[name], fbs[fbidx])
+local function bind_fb_with_viewids(viewids, fb_indices)
+    local sel_idx = 0
+    local num_swap_fb = #fb_indices
+    local function next_idx()
+        sel_idx = (sel_idx % num_swap_fb) + 1
+        return sel_idx
     end
 
-    fbidx = (fbidx // 2) + 1
-    fbgmgr.bind(viewids["bloom_combine"], fbs[fbidx])
+    for _, name in ipairs(bloom_blur_sample_viewid_names) do
+        fbgmgr.bind(viewids[name], fb_indices[next_idx()])
+    end
+
+    fbgmgr.bind(viewids["bloom_combine"], fb_indices[next_idx()])
 end
 
-local bloompath = fs.path "/pkg/ant.resources/depiction/materials/bloom"
+local bloompath = fs.path "/pkg/ant.resources/depiction/materials/postprocess"
 
-local fetch_bright_material = bloompath / "fetch_bright.material"
 local downsample_material   = bloompath / "downsample.material"
 local upsample_material     = bloompath / "upsample.material"
 local combine_material      = bloompath / "combine.material"
-local copy_quad_material    = bloompath / "copy_quad.material"
 
 local function get_passes_settings(main_viewid, viewids, fbsize)
     local passes = {}
     local fbw, fbh = fbsize.w, fbsize.h
-    local start_viewid = main_viewid
 
-    local function default_viewport()
+    local function get_viewport(w, h)
         return {
-            clear_state = {color=0, clear="C"},
-            rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},
+            clear_state = {clear=""},
+            rect = {x=0, y=0, w=w or fbsize.w, h= h or fbsize.h},
         }
     end
 
-    passes[#passes+1] = {
-        name = "fetch bright value by threshold value",
-        material = computil.assign_material(fetch_bright_material, {
-            uniforms = {
-                u_bright_threshold = {
-                    type="color", 
-                    name = "bright value threshold(linear value, [0, 1])", 
-                    value = {0.75, 0.0, 0.0, 0.0}
-                },
-            }
-        }),
-        viewport= default_viewport(),
-        input   = start_viewid,
-        output  = viewids["bloom_fetch_bright"],
-    }
-
-    local function insert_blur_pass(input_viewid, output_passidx, fbw, fbh, material)
+    local function insert_blur_pass(output_passidx, fbw, fbh, material)
         local viewidname = bloom_blur_sample_viewid_names[output_passidx]
         local output_viewid = viewids[viewidname]
         passes[#passes+1] = {
             name = "bloom:" .. viewidname,
             material = computil.assign_material(material),
-            viewport = {
-                clear_state = {color=0, clear="C"},
-                rect = {x=0,y=0,w=fbw, h=fbh},
-            },
-            input = input_viewid,
-            output = output_viewid,
+            viewport = get_viewport(fbw, fbh),
+            output = {viewid=output_viewid, slot=1},
         }
-        return output_viewid
     end
     for ii=1, bloom_chain_count do
-        fbw, fbh = fbw*0.5, fbh*0.5
-        start_viewid = insert_blur_pass(start_viewid, ii, fbw, fbh, downsample_material)
+        fbw, fbh = math.floor(fbw*0.5), math.floor(fbh*0.5)
+        insert_blur_pass(ii, fbw, fbh, downsample_material)
     end
 
-    for ii=bloom_chain_count, bloom_chain_count*2 do
+    for ii=bloom_chain_count+1, bloom_chain_count*2 do
         fbw, fbh = fbw*2, fbh*2
-        start_viewid = insert_blur_pass(start_viewid, ii, fbw, fbh, upsample_material)
+        insert_blur_pass(ii, fbw, fbh, upsample_material)
     end
 
     passes[#passes+1] = {
         name = "combine scene with bloom",
         material = computil.assign_material(combine_material),
-        viewport = default_viewport(),
-
-        input   = start_viewid,
-        output  = viewids["bloom_combine"],
+        viewport = get_viewport(),
+        output  = {viewid=viewids["bloom_combine"], slot=1},
     }
 
-    --TODO: we need a copy resource system to handle this. 
-    --      here, we just render another quad to copy the result back to main viewid, it will lost performance
-    passes[#passes+1] = {
-        name = "copy bloom result",
-        material = computil.assign_material(copy_quad_material),
-        viewport = default_viewport(),
-        input   = viewids["bloom_combine"],
-        output  = main_viewid,
-    }
+    assert(passes[1].input == nil)
+    passes[1].input = {viewid=main_viewid, slot=2}
+    return passes
 end
 
 function bloom_sys:post_init()
@@ -178,7 +151,9 @@ function bloom_sys:post_init()
     bind_fb_with_viewids(viewids, create_framebuffers_container_obj(world.args.fb_size))
 
     world:add_component(pp_eid, "technique", {
-        name = "bloom",
-        passes = get_passes_settings(main_viewid, viewids, world.arg.fb_size),
+        {
+            name = "bloom",
+            passes = get_passes_settings(main_viewid, viewids, world.args.fb_size),
+        }
     })
 end
