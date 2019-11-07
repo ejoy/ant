@@ -144,17 +144,19 @@ end
 function pp_sys:update()
     local pp = world:first_entity "postprocess"
     local technique = pp.technique
-    local render_properties = self.render_properties
-    local lastslot = {
-        fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
-        rb_idx = 1
-    }
-    
-    local meshres = assetmgr.load(quad_reskey)
-    local meshgroup = meshres.scenes[1][1][1]
+    if technique then
+        local render_properties = self.render_properties
+        local lastslot = {
+            fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
+            rb_idx = 1
+        }
+        
+        local meshres = assetmgr.load(quad_reskey)
+        local meshgroup = meshres.scenes[1][1][1]
 
-    reset_viewid_idx()
-    for _, tech in world:each_component(technique) do
-        lastslot = render_technique(tech, lastslot, meshgroup, render_properties)
+        reset_viewid_idx()
+        for _, tech in world:each_component(technique) do
+            lastslot = render_technique(tech, lastslot, meshgroup, render_properties)
+        end
     end
 end
