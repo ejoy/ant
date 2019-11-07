@@ -12,7 +12,7 @@ tm.dependby  "postprocess_system"
 
 function tm:post_init()
     local pp_eid = world:first_entity_id "postprocess"
-    local main_viewid = viewidmgr.get "main_view"
+    local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 
     local fbsize = world.args.fb_size
     world:add_component(pp_eid, "technique", {
@@ -27,7 +27,8 @@ function tm:post_init()
                         }
                     },
                     output = {
-                        viewid = main_viewid,
+                        fb_idx = main_fbidx,
+                        rb_idx = 1,
                     },
                     viewport = {
                         rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},

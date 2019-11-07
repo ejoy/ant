@@ -332,7 +332,7 @@ function util.generate_sampler_flag(sampler)
 	return flag
 end
 
-local blitviewid = viewidmgr.generate "blit"
+local blitviewid = viewidmgr.get "blit"
 
 function util.get_main_view_rendertexture(world)
 	local mq = world:first_entity "main_queue"
@@ -373,8 +373,8 @@ local statemap = {
 	DS 				= "DS",
 }
 
-function util.update_frame_buffer_view(viewid)
-	local fb = fbmgr.get_byviewid(viewid)
+function util.update_frame_buffer_view(viewid, fbidx)
+	local fb = fbmgr.get(fbidx)
 	if fb then
 		bgfx.set_view_frame_buffer(viewid, fb.handle)
 	end
@@ -393,7 +393,7 @@ function util.update_viewport(viewid, viewport)
 end
 
 function util.update_render_target(viewid, rt)
-	util.update_frame_buffer_view(viewid)
+	util.update_frame_buffer_view(viewid, rt.fb_idx)
 	util.update_viewport(viewid, rt.viewport)
 end
 

@@ -5,16 +5,14 @@ local max_viewid = 256
 --1~99
 local shadow_csm_start_viewid = 1
 local bindings = {
-	csm1 = shadow_csm_start_viewid + 0,
-	csm2 = shadow_csm_start_viewid + 1,
-	csm3 = shadow_csm_start_viewid + 2,
-	csm4 = shadow_csm_start_viewid + 3,
-	main_view = 30,
-	pickup = 31,
+	csm1 		= shadow_csm_start_viewid + 0,
+	csm2 		= shadow_csm_start_viewid + 1,
+	csm3 		= shadow_csm_start_viewid + 2,
+	csm4 		= shadow_csm_start_viewid + 3,
+	main_view 	= 30,
+	pickup 		= 31,
 	pickup_blit = 32,
-	pingpong_view_s = 35,
-	pingpong_view_e = 85,
-	bloom_view = 87,
+	blit		= max_viewid - 1,
 }
 local freeidx = 100
 
@@ -23,15 +21,25 @@ for _, v in pairs(bindings) do
 	pool[v] = true
 end
 
-
-function viewid_pool.generate(name)
+function viewid_pool.generate(name, afterviewid)
 	if freeidx >= 256 then
 		--to do, need release function for not used viewid to mark which view id released
 		return error("not enougth view id to alloc")
 	end
 
-	local vid = freeidx
-	freeidx = freeidx + 1
+	local vid
+	if afterviewid then
+		vid = afterviewid + 1
+		while viewid_pool.get(vid) ~= nil and vid < max_viewid do
+			vid = vid + 1
+		end
+		if vid == max_viewid then
+			error(string.format("want a viewid after:%d, but not enough viewid to alloc", afterviewid))
+		end
+	else
+		vid = freeidx
+		freeidx = freeidx + 1
+	end
 
 	viewid_pool.bind(name, vid)
 	return vid
