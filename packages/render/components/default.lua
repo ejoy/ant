@@ -5,7 +5,7 @@ function default.viewport(vr)
 	local w, h = assert(vr.w), assert(vr.h)
 	return {
 		clear_state = {
-			color = 0x303030ff,
+			color = 0x000000ff,
 			depth = 1,
 			stencil = 0,
 			clear = "all",
