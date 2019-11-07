@@ -10,7 +10,7 @@ uniform vec4 u_bright_threshold;
 
 vec4 bloom_color(vec4 color)
 {
-    vec3 l = luma(color.rgb);
+    vec3 l = luma(toLinear(color.rgb));
     return step(u_bright_threshold.x, l.x) * color;
 }
 

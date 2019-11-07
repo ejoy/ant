@@ -110,7 +110,7 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
         }
         pp_properties.uniforms["u_bright_threshold"] = {
             type = "v4", name = "bright threshold",
-            value = {0.85, 0.0, 0.0, 0.0}
+            value = {0.8, 0.0, 0.0, 0.0}
         }
     end
     bind_input(in_slot)
