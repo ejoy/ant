@@ -79,7 +79,7 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    quad_reskey = assetmgr.register_resource(quad_reskey, computil.quad_mesh{x=0, y=0, w=1, h=1})
+    quad_reskey = assetmgr.register_resource(quad_reskey, computil.quad_mesh{x=-1, y=-1, w=2, h=2})
 
     world:create_entity {
         postprocess = true,
