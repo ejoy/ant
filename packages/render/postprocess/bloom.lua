@@ -69,11 +69,25 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
         }
     end
 
-    local function insert_blur_pass(fbidx, fbw, fbh, material)
+    local function insert_blur_pass(fbidx, fbw, fbh, material, sampleparam, intensity)
         local passidx = #passes+1
+        local properties = {
+            uniforms = {
+                u_sample_param = {
+                    type = "v4", name = "sample param", value = sampleparam,
+                },
+            }
+        }
+
+        if intensity then
+            properties.uniforms["u_intensity"] = {
+                type = "v4", name = "up sample intensity", value = {intensity, 0.0, 0.0, 0.0},
+            }
+        end
+
         passes[passidx] = {
             name = "bloom" .. passidx,
-            material = computil.assign_material(material),
+            material = computil.assign_material(material, properties),
             viewport = get_viewport(fbw, fbh),
             output = {fb_idx=fbidx, rb_idx=1},
         }
@@ -86,14 +100,22 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
         return fb_indices[fbidx]
     end
 
+    local function create_sample_param_uniform(fbw, fbh)
+        local scalex, scaley = fbw / fbsize.w, fbh / fbsize.h
+        local texelsizex, texelsizey = 1 / fbw, 1 / fbh
+        return {scalex, scaley, texelsizex, texelsizey}
+    end
+
     for ii=1, bloom_chain_count do
+        local sampleparam = create_sample_param_uniform(fbw, fbh)
         fbw, fbh = math.floor(fbw*0.5), math.floor(fbh*0.5)
-        insert_blur_pass(next_fbidx(), fbw, fbh, downsample_material)
+        insert_blur_pass(next_fbidx(), fbw, fbh, downsample_material, sampleparam)
     end
 
     for ii=bloom_chain_count+1, bloom_chain_count*2 do
+        local sampleparam = create_sample_param_uniform(fbw, fbh)
         fbw, fbh = fbw*2, fbh*2
-        insert_blur_pass(next_fbidx(), fbw, fbh, upsample_material)
+        insert_blur_pass(next_fbidx(), fbw, fbh, upsample_material, sampleparam, 1.2)
     end
 
     passes[#passes+1] = {
