@@ -16,9 +16,13 @@ ecs.import 'ant.bullet'
 ecs.import 'ant.animation'
 ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
+ecs.import 'ant.sky'
 
 
 local serialize = import_package 'ant.serialize'
+
+local skypkg = import_package 'ant.sky'
+local skyutil = skypkg.util
 
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components
@@ -37,6 +41,7 @@ init_loader.singleton "asyn_load_list"
 
 init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"
+init_loader.depend "procedural_sky_system"
 
 init_loader.dependby 'render_system'
 init_loader.dependby 'cull_system'
@@ -158,9 +163,11 @@ function init_loader:init()
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
-    do
-        PVPScenLoader.create_entitices(world)
-    end
+    skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
+
+    -- do
+    --     PVPScenLoader.create_entitices(world)
+    -- end
 
     computil.create_grid_entity(world, 'grid', 64, 64, 1, nil, mu.translate_mat {0, 0, 0})
     create_animation_test()

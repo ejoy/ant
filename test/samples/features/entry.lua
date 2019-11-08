@@ -4,7 +4,6 @@ local packages = {
 local systems = {
 	"init_loader",
 	"scenespace_test",
-	"terrain_test",
     "visible_system",
 }
 
