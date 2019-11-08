@@ -161,11 +161,11 @@ local function pbr_test()
         transform = mu.srt(nil, nil, {3, 2, 0, 1}),
         rendermesh = {},
         mesh = {
-            ref_path = fs.path "/pkg/ant.resources/depiction/meshes/DamagedHelmet.mesh",
+            ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
         },
         material = {
             {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
+                ref_path = fs.path "/pkg/ant.test.features/asset/DamagedHelmet.material",
             }
         },
         can_render = true,
