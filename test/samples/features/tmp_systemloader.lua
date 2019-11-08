@@ -156,6 +156,24 @@ local function test_serialize(delfile_aftertest)
     end
 end
 
+local function pbr_test()
+    world:create_entity {
+        transform = mu.srt(nil, nil, {3, 2, 0, 1}),
+        rendermesh = {},
+        mesh = {
+            ref_path = fs.path "/pkg/ant.resources/depiction/meshes/DamagedHelmet.mesh",
+        },
+        material = {
+            {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
+            }
+        },
+        can_render = true,
+        main_view = true,
+        can_cast = true,
+    }
+end
+
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
@@ -171,6 +189,7 @@ function init_loader:init()
 
     computil.create_grid_entity(world, 'grid', 64, 64, 1, nil, mu.translate_mat {0, 0, 0})
     create_animation_test()
+    pbr_test()
 end
 
 

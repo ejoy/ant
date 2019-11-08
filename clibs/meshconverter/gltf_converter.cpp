@@ -115,16 +115,6 @@ fetch_load_config(lua_State *L, int idx, load_config &config) {
 
 	verify(LUA_TTABLE == lua_getfield(L, idx, "flags"));
 
-	auto extract_boolean = [&](auto name, auto bit) {
-		const int type = lua_getfield(L, -1, name);
-		const bool need = type == LUA_TBOOLEAN ? lua_toboolean(L, -1) != 0 : false;
-		if (need)
-			config.flags |= bit;
-		else
-			config.flags &= ~bit;
-		lua_pop(L, 1);
-	};
-
 	LayoutArray elems;
 	for (const auto &layout : config.layouts) {
 		auto ee = split_string(layout, '|');
@@ -137,12 +127,6 @@ fetch_load_config(lua_State *L, int idx, load_config &config) {
 	if (std::find_if(std::begin(elems), std::end(elems), [](auto e) {return e[0] == 'T' || e[0] == 'b'; }) != std::end(elems))
 		config.flags |= load_config::CreateTangent | load_config::CreateBitangent;
 
-	extract_boolean("invert_normal", load_config::InvertNormal);
-	extract_boolean("flip_u", load_config::FlipU);
-	extract_boolean("flip_v", load_config::FlipV);
-
-	extract_boolean("ib_32", load_config::IndexBuffer32Bit);
-	extract_boolean("reset_root_pos", load_config::ResetRootPos);
 }
 
 static inline void
