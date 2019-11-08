@@ -1,5 +1,5 @@
 
 shader = {
-  fs = "/pkg/unity_viking/Assets/shaders/fs_mesh_pbr.sc",
-  vs = "/pkg/unity_viking/Assets/shaders/vs_mesh_pbr.sc"
+  fs = "/pkg/ant.resources/shaders/pbr/fs_mesh_pbr.sc",
+  vs = "/pkg/ant.resources/shaders/pbr/vs_mesh_pbr.sc"
 }
