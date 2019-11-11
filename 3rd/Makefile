@@ -96,13 +96,8 @@ CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXT
 WITH_OZZ_SAMPLES := OFF
 OZZ_ENABLE_EMSCRIPTEN := FALSE
 
-ifeq "$(PLAT)" "msvc"
-  CMAKE_PROJ_BUILD_SUB_PATH = $(PLAT)
-  CMAKE_PROJ_SRC_RELATIVE_PATH = ../../..
-else
-  CMAKE_PROJ_BUILD_SUB_PATH = $(PLAT)/$(MODE)
-  CMAKE_PROJ_SRC_RELATIVE_PATH = ../../../..
-endif
+CMAKE_PROJ_BUILD_SUB_PATH = $(PLAT)/$(MODE)
+CMAKE_PROJ_SRC_RELATIVE_PATH = ../../../..
 
 ifeq "$(PLAT)" "mingw"
   CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=$(CMAKE_PROJ_SRC_RELATIVE_PATH)/build/bullet3/$(CMAKE_PROJ_BUILD_SUB_PATH)/lib
@@ -116,7 +111,7 @@ else
   CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
 endif
 
-CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=$(WITH_OZZ_SAMPLES) -Dozz_build_howtos=$(WITH_OZZ_SAMPLES) -DEMSCRIPTEN=$(OZZ_ENABLE_EMSCRIPTEN)
+CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=$(WITH_OZZ_SAMPLES) -Dozz_build_howtos=$(WITH_OZZ_SAMPLES) -Dozz_build_gltf=ON -Dozz_build_cpp11=ON -DEMSCRIPTEN=$(OZZ_ENABLE_EMSCRIPTEN)
 
 .PHONY: info init all clean
 

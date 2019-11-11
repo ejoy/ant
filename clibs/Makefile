@@ -48,9 +48,11 @@ $(foreach v, $(LIBS), $(eval $(call MAKE_temp,$(v))))
 $(foreach v, $(LIBS), $(eval $(call COPY_DLL_func,$(v))))
 $(foreach v, $(ALL_LIBS), $(eval $(call TARG_func,$(v))))
 
+BGFX_BUILD_PATH := ../3rd/bgfx/.build
+OZZ_BUILD_PATH := ../3rd/build/ozz-animation
+
 ifeq "$(PLAT)" "osx"
 BGFX_BUILD_PLAT_NAME = osx64_clang/bin
-
 else ifeq "$(PLAT)" "mingw"
 BGFX_BUILD_PLAT_NAME = win64_mingw-gcc/bin
 TOOL_EXT_NAME=.exe
@@ -60,7 +62,6 @@ TOOL_EXT_NAME=.exe
 else
 $(error "$(PLAT) not support copy tool")
 endif
-BGFX_BUILD_PATH = ../3rd/bgfx/.build
 
 ifeq "$(MODE)" "debug"
 SHADER_TOOLNAME=shadercDebug$(TOOL_EXT_NAME)
@@ -72,7 +73,8 @@ endif
 
 copy_tools:
 	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/$(SHADER_TOOLNAME) $(BIN)/$(SHADER_TOOLNAME) &&\
-	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/$(TEXTURE_TOOLNAME) $(BIN)/$(TEXTURE_TOOLNAME)
+	cp $(BGFX_BUILD_PATH)/$(BGFX_BUILD_PLAT_NAME)/$(TEXTURE_TOOLNAME) $(BIN)/$(TEXTURE_TOOLNAME) &&\
+	cp $(OZZ_BUILD_PATH)/$(PLAT)/$(MODE)/src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) $(BIN)/gltf2ozz$(TOOL_EXT_NAME)
 
 copy: $(addprefix copy_,$(ALL_LIBS)) copy_tools
 	

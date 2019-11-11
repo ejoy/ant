@@ -6,6 +6,10 @@ copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\shadercDebug.exe      .\vs_bin
 copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\shadercRelease.exe    .\vs_bin\Release\shadercRelease.exe
 copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\shadercRelease.exe    ..\..\bin\msvc\shaderc.exe
 
+copy /B /Y ..\..\3rd\build\ozz-animation\msvc\debug\src\animation\offline\gltf\gltf2ozz.exe .\vs_bin\Debug\gltf2ozz.exe
+copy /B /Y ..\..\3rd\build\ozz-animation\msvc\release\src\animation\offline\gltf\gltf2ozz.exe .\vs_bin\Release\gltf2ozz.exe
+copy /B /Y ..\..\3rd\build\ozz-animation\msvc\release\src\animation\offline\gltf\gltf2ozz.exe ..\..\bin\msvc\gltf2ozz.exe
+
 copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\bgfx-shared-libDebug.dll      .\vs_bin\Debug\bgfx-core.dll
 copy /B /Y ..\..\3rd\bgfx\.build\win64_vs2019\bin\bgfx-shared-libRelease.dll    .\vs_bin\Release\bgfx-core.dll
 
