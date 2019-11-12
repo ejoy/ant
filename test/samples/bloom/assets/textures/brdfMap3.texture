@@ -1,11 +1,10 @@
 
-colorspace = "linear"
 format = "BGRA8"
 maxsize = "1024x1024"
 mipmap = 0
 normalmap = false
 path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/pbr/brdfMap3.dds"
-colorspace="sRGB"
+colorspace="linear"
 sampler = {
   MAG = "LINEAR",
   MIN = "LINEAR",

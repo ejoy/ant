@@ -1,5 +1,4 @@
 
-colorspace = "linear"
 compress = {
   android = "ASTC4x4",
   ios = "ASTC4x4",

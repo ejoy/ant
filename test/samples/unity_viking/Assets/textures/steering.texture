@@ -1,5 +1,4 @@
 
-colorspace = "linear"
 compress = {
   android = "ASTC6x6",
   ios = "ASTC6x6",
@@ -8,7 +7,7 @@ compress = {
 maxsize = "512x512"
 normalmap = false
 path = "/pkg/ant.resources.binary/textures/steering.png"
-colorspace="sRGB"
+colorspace="linear"
 sampler = {
   MAG = "LINEAR",
   MIN = "LINEAR",

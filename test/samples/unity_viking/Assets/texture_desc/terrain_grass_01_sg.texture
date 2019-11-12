@@ -1,5 +1,4 @@
 
-colorspace = "linear"
 compress = {
   android = "ASTC4x4",
   ios = "ASTC4x4",
@@ -9,7 +8,7 @@ maxsize = "1024x1024"
 mipmap = 0
 normalmap = false
 path = "/pkg/ant.resources.binary/test/unity_viking/Assets/textures/Terrain/terrain_grass_01_sg.png"
-colorspace="sRGB"
+colorspace="linear"
 sampler = {
   MAG = "ANISOTROPIC",
   MIN = "ANISOTROPIC",
