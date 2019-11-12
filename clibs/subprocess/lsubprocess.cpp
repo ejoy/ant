@@ -428,11 +428,21 @@ namespace ant::lua_subprocess {
     static int filemode(lua_State*) { return 0; }
 #endif
 
+    static int get_id(lua_State* L) {
+#if defined(_WIN32)
+        lua_pushinteger(L, ::GetCurrentProcessId());
+#else
+        lua_pushinteger(L, ::getpid());
+#endif
+        return 1;
+    }
+
     int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             { "spawn", spawn::spawn },
             { "peek", peek },
             { "filemode", filemode },
+            { "get_id", get_id },
             { NULL, NULL }
         };
         luaL_newlib(L, lib);

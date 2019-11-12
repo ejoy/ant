@@ -41,8 +41,8 @@ function localvfs.type(filepath)
 	end
 end
 
-function localvfs.identity(ext, identity, linkconfig)
-	self._link[ext] = {identity=identity, linkconfig=linkconfig}
+function localvfs.identity(ext, identity)
+	self._link[ext] = {identity=identity}
 end
 
 function localvfs.new(path)

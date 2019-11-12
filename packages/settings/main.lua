@@ -1,3 +1,9 @@
+local registry = require "registry"
+
+local function create(path, mode)
+    return registry.create(path, mode)
+end
+
 return {
-    util = require "util"
+    create = create,
 }

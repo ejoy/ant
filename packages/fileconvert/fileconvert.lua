@@ -16,10 +16,10 @@ end
 
 local function link(config, srcfile, dstfile, localpath)
 	local ext = srcfile:extension():string():lower()
-	local plat, linkconfig = config[ext].identity, config[ext].linkconfig
+	local plat = config[ext].identity
 	local c = assert(converter[ext:sub(2)])
 	log.info(string.format("plat:%s, src:%s, dst:%s, cvt type:%s", plat, srcfile, dstfile, ext))
-	local success, err, deps = c(plat, lfs.path(linkconfig), srcfile, dstfile, localpath)
+	local success, err, deps = c(plat, srcfile, dstfile, localpath)
 	if not success and err then
 		log.error(string.format("src:%s, error:%s", srcfile, err))
 		return

@@ -1,4 +1,4 @@
 return {
-    name = "ant.default_settings",
+    name = "ant.settings",
     entry = "main"
 }

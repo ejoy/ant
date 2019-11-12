@@ -1,11 +1,9 @@
 local hw = {}
 hw.__index = hw
 
-local platform 	= require "platform"
-local bgfx 		= require "bgfx"
-local fs 		= require "filesystem"
-
-local setting	= require "setting"
+local platform = require "platform"
+local bgfx     = require "bgfx"
+local setting  = require "setting"
 
 local caps = nil
 function hw.get_caps()
@@ -61,38 +59,13 @@ local function bgfx_init(args)
 	caps = bgfx.get_caps()
 end
 
-local function select_linkconfig(cfgpath)
-	local os = platform.OS:lower()
-
-	local def_cfgpath = fs.path "/pkg/ant.default_settings"
-	
-	if cfgpath then
-		local cfgfile = cfgpath / os / "config.lua"
-		if fs.exists(cfgfile) then
-			return cfgfile
-		end
-	end
-
-	if def_cfgpath then
-		local cfgfile = def_cfgpath / os / "config.lua"
-		if fs.exists(cfgfile) then
-			return cfgfile
-		end
-	end
-
-	error(string.format("platform:%s, not found link config file from:%s, %s", os, (cfgpath and cfgpath:string() or ""), def_cfgpath:string()))
-end
-
 function hw.init(args)
 	bgfx_init(args)
-	local linkconfig = select_linkconfig(args.linkconfig_path)
 	local vfs = require "vfs"
-	vfs.identity(".fx", 	hw.identity(), linkconfig:string())
-	vfs.identity(".mesh", 	hw.identity(), linkconfig:string())
-	vfs.identity(".texture",hw.identity(), linkconfig:string())
-
-	hw.linkconfig = linkconfig
-	setting.init(linkconfig)
+	vfs.identity(".fx",      hw.identity(), "")
+	vfs.identity(".mesh",    hw.identity(), "")
+	vfs.identity(".texture", hw.identity(), "")
+	setting.init()
 end
 
 function hw.dpi()

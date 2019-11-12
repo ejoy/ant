@@ -223,8 +223,8 @@ local function cache_bin(buildhash, binhash)
 	end
 end
 
-function offline.IDENTITY(ext, identity, linkconfig)
-	repo.link[ext] = { identity = identity, linkconfig = linkconfig }
+function offline.IDENTITY(ext, identity)
+	repo.link[ext] = { identity = identity }
 end
 
 local function response_bin(id, buildhash)
@@ -659,9 +659,9 @@ function online.TYPE(id, fullpath)
 	end
 end
 
-function online.IDENTITY(ext, identity, linkconfig)
-	repo.link[ext] = { identity = identity, linkconfig = linkconfig }
-	connection_send("IDENTITY", ext, identity, linkconfig)
+function online.IDENTITY(ext, identity)
+	repo.link[ext] = { identity = identity }
+	connection_send("IDENTITY", ext, identity)
 end
 
 function online.GET(id, fullpath)
