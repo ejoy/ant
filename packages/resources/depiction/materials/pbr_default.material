@@ -1,0 +1,7 @@
+local epath = "/pkg/ant.resources/depiction/"
+local pbrpath = epath .. "shaders/pbr/"
+shader = {
+    vs = pbrpath .. "/vs_pbr.sc",
+    fs = pbrpath .. "/fs_pbr.sc",
+}
+state = epath .. "materials/states/default.state"

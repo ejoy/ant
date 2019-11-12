@@ -83,16 +83,88 @@ end
 
 local stringify = require "utility.stringify"
 
+local filter_tags = {
+    NEAREST = 9728,
+    LINEAR = 9729,
+    NEAREST_MIPMAP_NEAREST = 9984,
+    LINEAR_MIPMAP_NEAREST = 9985,
+    NEAREST_MIPMAP_LINEAR = 9986,
+    LINEAR_MIPMAP_LINEAR = 9987,
+}
+
+local clamp_tags = {
+    CLAMP_TO_EDGE   = 33071,
+    MIRRORED_REPEAT = 33648,
+    REPEAT          = 10497,
+}
+
+local default_sampler_flags = {
+    magFilter   = filter_tags["LINEAR"],
+    minFilter   = filter_tags["LINEAR"],
+    wrapS       = clamp_tags["REPEAT"],
+    wrapT       = clamp_tags["REPEAT"],
+}
+
+local function to_sampler(gltfsampler)
+    local minfilter = gltfsampler.minFilter or default_sampler_flags.minFilter
+    local maxFilter = gltfsampler.maxFilter or default_sampler_flags.maxFilter
+
+    local MIP_map = {
+        NEAREST = "NEAREST",
+        LINEAR = "NEAREST",
+        NEAREST_MIPMAP_NEAREST = "NEAREST",
+        LINEAR_MIPMAP_NEAREST = "NEAREST",
+        NEAREST_MIPMAP_LINEAR = "LINEAR",
+        LINEAR_MIPMAP_LINEAR = "LINEAR",
+    }
+
+    local MAX_MIN_map = {
+        NEAREST = "NEAREST",
+        LINEAR = "NEAREST",
+        NEAREST_MIPMAP_NEAREST = "NEAREST",
+        LINEAR_MIPMAP_NEAREST = "NEAREST",
+        NEAREST_MIPMAP_LINEAR = "LINEAR",
+        LINEAR_MIPMAP_LINEAR = "LINEAR",
+    }
+
+    local UV_map = {
+        CLAMP_TO_EDGE   = "CLAMP",
+        MIRRORED_REPEAT = "MIRROR",
+        REPEAT          = "WRAP",
+    }
+
+    local wrapS, wrapT =    
+        gltfsampler.wrapS or default_sampler_flags.wrapS,
+        gltfsampler.wrapT or default_sampler_flags.wrapT
+
+    return {
+        MIP = MIP_map[minfilter],
+        MIN = MAX_MIN_map[minfilter],
+        MAX = MAX_MIN_map[maxFilter],
+        U = UV_map[wrapS],
+        V = UV_map[wrapT],
+    }
+end
+
 local function export_pbrm(pbrm_path)
     fs.create_directories(pbrm_path)
 
-    local function fetch_texture_info(texidx)
+    local function fetch_texture_info(texidx, normalmap, colorspace)
         local tex = textures[texidx]
 
-        return {
-            sampler = samplers[tex.sampler],
-            source = export_image(image_folder, tex.source),
+        local imgpath = export_image(image_folder, tex.source)
+        local sampler = samplers[tex.sampler]
+        local texture_desc = {
+            path = imgpath,
+            sampler = to_sampler(sampler),
+            normalmap = normalmap,
+            colorspace = colorspace,
+            type = "texture",
         }
+
+        local texpath = fs.path(imgpath):replace_extension ".texture"
+        write_file(texpath, stringify(texture_desc, true, true))
+        return texpath
     end
 
     local function handle_texture(tex_desc)
@@ -102,25 +174,32 @@ local function export_pbrm(pbrm_path)
         end
     end
 
-    local function handle_mr(pbr_mr)
-        handle_texture(pbr_mr.baseColorTexture)
-        handle_texture(pbr_mr.metallicRoughnessTexture)
-        return pbr_mr
-    end
-
     local pbrm_paths = {}
-
     for matidx, mat in ipairs(glbscene.materials) do
         local name = mat.name or tostring(matidx)
+        local pbr_mr = mat.pbrMetallicRoughness
         local pbrm = {
-            pbrMetallicRoughness    = handle_mr(mat.pbrMetallicRoughness),
-            normalTexture           = handle_texture(mat.normalTexture),
-            occlusionTexture        = handle_texture(mat.occlusionTexture),
-            emissiveTexture         = handle_texture(mat.emissiveTexture),
-            emissiveFactor          = mat.emissiveFactor,
-            alphaMode               = mat.alphaMode,
-            alphaCutoff             = mat.alphaCutoff,
-            doubleSided             = mat.doubleSided,
+            basecolor = {
+                texture = handle_texture(pbr_mr.baseColorTexture),
+                factor = pbr_mr.baseColorFactor,
+            },
+            metallic_roughness = {
+                texture = handle_texture(pbr_mr.metallicRoughnessTexture),
+                factor = {pbr_mr.metallicFactor, pbr_mr.roughnessFactor,},
+            },
+            normal = {
+                texture = handle_texture(mat.normalTexture),
+            },
+            occlusion = {
+                texture = handle_texture(mat.occlusionTexture),
+            },
+            emissive = {
+                texture = handle_texture(mat.emissiveTexture),
+                factor  = mat.emissiveFactor,
+            },
+            alphaMode   = mat.alphaMode,
+            alphaCutoff = mat.alphaCutoff,
+            doubleSided = mat.doubleSided,
         }
 
         local filepath = pbrm_path / name .. ".pbrm"
