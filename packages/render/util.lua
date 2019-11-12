@@ -275,8 +275,10 @@ local sample_types = {
 }
 
 local sample_value = {
-	CLAMP="c", BORDER="b", MIRROR="",	--default
-	POINT="p", ANISOTROPIC="a", LINEAR="", --default,
+	-- filter mode
+	CLAMP="c", MIRROR = "m", BORDER="b", 	WRAP="w",	--default
+	-- filter address
+	POINT="p", ANISOTROPIC="a", 			LINEAR="l", --default,
 
 	-- compare
 	COMPARE_LESS = '<',
