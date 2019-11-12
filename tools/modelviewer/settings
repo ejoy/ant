@@ -1,0 +1,29 @@
+_ios:
+  graphic:
+    api: metal
+_osx:
+  graphic:
+    api: metal
+_windows:
+  graphic:
+    api: d3d11
+animation:
+  skinning:
+    type: CPU
+    CPU:
+      enable: true
+      max_indices: 5
+    GPU:
+      enable: true
+graphic:
+  hdr:
+    enable: false
+    format: RGBA16
+  postprocess:
+    bloom:
+      enable: false
+      sample_times: 4
+  shadow:
+    enable: true
+    split_num: 4
+    type: inv_z

@@ -174,10 +174,10 @@ function message:GET(hash)
 	f:close()
 end
 
-function message:IDENTITY(ext, identity, linkconfig)
+function message:IDENTITY(ext, identity)
 	local repo = self._repo
-	repo._link[ext] = {identity=identity, linkconfig=linkconfig}
-	LOG("IDENTITY", ext, identity, linkconfig)
+	repo._link[ext] = {identity=identity}
+	LOG("IDENTITY", ext, identity)
 end
 
 function message:LINK(path, hash)

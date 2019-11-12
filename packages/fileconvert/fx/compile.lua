@@ -49,12 +49,14 @@ local function need_linear_shadow(identity)
 	end
 end
 
-local function read_linkconfig(linkconfig, identity)
-	local s = rawtable(linkconfig)
-	if s.graphic.shadow.type ~= "linear" and need_linear_shadow(identity) then
-		s.graphic.shadow.type = "linear"
+local function read_linkconfig(path, identity)
+	local os = util.identify_info(identity)
+	local settings = import_package "ant.settings".create(path, "r")
+	settings:use(os)
+	if settings:get 'graphic/shadow/type' ~= "linear" and need_linear_shadow(identity) then
+		settings:set('_'..os..'/graphic/shadow/type', 'linear')
 	end
-	return s
+	return settings:data()
 end
 
 local function add_macros_from_surface_setting(identity, mysetting, surfacetype, macros)
@@ -93,10 +95,10 @@ local function depend_files(files)
 	return tt
 end
 
-return function (identity, linkconfig, srcfilepath, outfilepath, localpath)
+return function (identity, srcfilepath, outfilepath, localpath)
 	local fxcontent = rawtable(srcfilepath)
 
-	local mysetting	= read_linkconfig(localpath(linkconfig:string()), identity)
+	local mysetting	= read_linkconfig(localpath("settings"), identity)
 	local marcros 	= add_macros_from_surface_setting(identity, mysetting, fxcontent.surface_type, fxcontent.macros)
 
 	local messages = {}

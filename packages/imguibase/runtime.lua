@@ -24,7 +24,7 @@ local iq = inputmgr.queue()
 
 local callback = {}
 
-local packages, systems, linkconfig_path
+local packages, systems
 local world
 local world_update
 
@@ -44,7 +44,6 @@ function callback.init(nwh, context, width, height)
 		context = context,
 		width = width,
 		height = height,
-		linkconfig_path = linkconfig_path,
 	}
 	imgui.viewid(ui_viewid);
 	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
@@ -166,8 +165,8 @@ local function run()
 	end
 end
 
-local function start(m1, m2, m3)
-	packages, systems, linkconfig_path = m1, m2, m3
+local function start(m1, m2)
+	packages, systems = m1, m2
 
 	local window = require "common.window"
 	window.create(run, 1024, 768, "Hello")
