@@ -18,12 +18,14 @@ animation:
 graphic:
   hdr:
     enable: false
-    format: RGBA16
+    format: RGBA16F
   postprocess:
     bloom:
       enable: false
+      format: RGBA16F
       sample_times: 4
   shadow:
     enable: true
+    size: 1024
     split_num: 4
     type: inv_z
