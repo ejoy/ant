@@ -61,7 +61,9 @@ local pbrm_folder = output_folder   / "pbrm"
 local mesh_folder = output_folder   / "meshes"
 
 local function export_image(image_folder, imgidx)
-    local img = images[imgidx]
+    fs.create_directories(image_folder)
+
+    local img = images[imgidx+1]
     local name = img.name or tostring(imgidx)
     local imgpath = image_folder / name .. image_extension[img.mimeType]
 
@@ -92,17 +94,29 @@ local filter_tags = {
     LINEAR_MIPMAP_LINEAR = 9987,
 }
 
-local clamp_tags = {
+local filter_names = {}
+for k, v in pairs(filter_tags) do
+    assert(filter_names[v] == nil, "duplicate value")
+    filter_names[v] = k
+end
+
+local address_tags = {
     CLAMP_TO_EDGE   = 33071,
     MIRRORED_REPEAT = 33648,
     REPEAT          = 10497,
 }
 
+local address_names = {}
+for k, v in pairs(address_tags) do
+    assert(address_names[v] == nil)
+    address_names[v] = k
+end
+
 local default_sampler_flags = {
-    magFilter   = filter_tags["LINEAR"],
+    maxFilter   = filter_tags["LINEAR"],
     minFilter   = filter_tags["LINEAR"],
-    wrapS       = clamp_tags["REPEAT"],
-    wrapT       = clamp_tags["REPEAT"],
+    wrapS       = address_tags["REPEAT"],
+    wrapT       = address_tags["REPEAT"],
 }
 
 local function to_sampler(gltfsampler)
@@ -120,7 +134,7 @@ local function to_sampler(gltfsampler)
 
     local MAX_MIN_map = {
         NEAREST = "NEAREST",
-        LINEAR = "NEAREST",
+        LINEAR = "LINEAR",
         NEAREST_MIPMAP_NEAREST = "NEAREST",
         LINEAR_MIPMAP_NEAREST = "NEAREST",
         NEAREST_MIPMAP_LINEAR = "LINEAR",
@@ -138,38 +152,39 @@ local function to_sampler(gltfsampler)
         gltfsampler.wrapT or default_sampler_flags.wrapT
 
     return {
-        MIP = MIP_map[minfilter],
-        MIN = MAX_MIN_map[minfilter],
-        MAX = MAX_MIN_map[maxFilter],
-        U = UV_map[wrapS],
-        V = UV_map[wrapT],
+        MIP = MIP_map[filter_names[minfilter]],
+        MIN = MAX_MIN_map[filter_names[minfilter]],
+        MAX = MAX_MIN_map[filter_names[maxFilter]],
+        U = UV_map[address_names[wrapS]],
+        V = UV_map[address_names[wrapT]],
     }
 end
 
 local function export_pbrm(pbrm_path)
     fs.create_directories(pbrm_path)
 
-    local function fetch_texture_info(texidx, normalmap, colorspace)
-        local tex = textures[texidx]
+    local function fetch_texture_info(texidx, name, normalmap, colorspace)
+        local tex = textures[texidx+1]
 
         local imgpath = export_image(image_folder, tex.source)
-        local sampler = samplers[tex.sampler]
+        local sampler = samplers[tex.sampler+1]
         local texture_desc = {
-            path = imgpath,
+            path = imgpath:string(),
             sampler = to_sampler(sampler),
             normalmap = normalmap,
             colorspace = colorspace,
             type = "texture",
         }
 
-        local texpath = fs.path(imgpath):replace_extension ".texture"
+        local texpath = imgpath:parent_path() / name .. ".texture"
         write_file(texpath, stringify(texture_desc, true, true))
-        return texpath
+        return texpath:string()
     end
 
-    local function handle_texture(tex_desc)
+    local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            tex_desc.texture = fetch_texture_info(tex_desc.index)
+            tex_desc.texture = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
+            tex_desc.index = nil
             return tex_desc
         end
     end
@@ -180,21 +195,21 @@ local function export_pbrm(pbrm_path)
         local pbr_mr = mat.pbrMetallicRoughness
         local pbrm = {
             basecolor = {
-                texture = handle_texture(pbr_mr.baseColorTexture),
+                texture = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                 factor = pbr_mr.baseColorFactor,
             },
             metallic_roughness = {
-                texture = handle_texture(pbr_mr.metallicRoughnessTexture),
-                factor = {pbr_mr.metallicFactor, pbr_mr.roughnessFactor,},
+                texture = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
+                factor = {pbr_mr.metallicFactor, pbr_mr.roughnessFactor, 0, 0},
             },
             normal = {
-                texture = handle_texture(mat.normalTexture),
+                texture = handle_texture(mat.normalTexture, "normal", true, "linear"),
             },
             occlusion = {
-                texture = handle_texture(mat.occlusionTexture),
+                texture = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
             },
             emissive = {
-                texture = handle_texture(mat.emissiveTexture),
+                texture = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
                 factor  = mat.emissiveFactor,
             },
             alphaMode   = mat.alphaMode,
