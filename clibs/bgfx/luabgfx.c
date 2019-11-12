@@ -3049,33 +3049,37 @@ get_texture_flags(lua_State *L, const char *format) {
 		case 'b': t|= 3; break;	// BORDER
 		
 		case 'l':		 break;	// LINEAR
-		case 'p': t|= 1; break;	// POINT
-		case 'a': t|= 2; break;	// ANISOTROPIC
-
-		case 'x': t|= 4; break;	// MIN/MAX/MIP as POINT filter
+		case 'p': t|= 4; break;	// POINT
+		case 'a': t|= 5; break;	// ANISOTROPIC
 		default:
 			luaL_error(L, "Invalid texture flags %c", format[i+1]);
 		}
 		switch(t) {
+		case 0x00:	break;
 		case 0x01: flags |= BGFX_SAMPLER_U_MIRROR; break;
 		case 0x02: flags |= BGFX_SAMPLER_U_CLAMP; break;
 		case 0x03: flags |= BGFX_SAMPLER_U_BORDER; break;
 
+		case 0x10: break;
 		case 0x11: flags |= BGFX_SAMPLER_V_MIRROR; break;
 		case 0x12: flags |= BGFX_SAMPLER_V_CLAMP; break;
 		case 0x13: flags |= BGFX_SAMPLER_V_BORDER; break;
 
+		case 0x20: break;
 		case 0x21: flags |= BGFX_SAMPLER_W_MIRROR; break;
 		case 0x22: flags |= BGFX_SAMPLER_W_CLAMP; break;
 		case 0x23: flags |= BGFX_SAMPLER_W_BORDER; break;
 
-		case 0x31: flags |= BGFX_SAMPLER_MIN_POINT; break;
-		case 0x32: flags |= BGFX_SAMPLER_MIN_ANISOTROPIC; break;
+		case 0x30: break;
+		case 0x34: flags |= BGFX_SAMPLER_MIN_POINT; break;
+		case 0x35: flags |= BGFX_SAMPLER_MIN_ANISOTROPIC; break;
 
-		case 0x41: flags |= BGFX_SAMPLER_MAG_POINT; break;
-		case 0x42: flags |= BGFX_SAMPLER_MAG_ANISOTROPIC; break;
+		case 0x40: break;
+		case 0x44: flags |= BGFX_SAMPLER_MAG_POINT; break;
+		case 0x45: flags |= BGFX_SAMPLER_MAG_ANISOTROPIC; break;
 
-		case 0x51: flags |= BGFX_SAMPLER_MIP_POINT; break;
+		case 0x50: break;
+		case 0x54: flags |= BGFX_SAMPLER_MIP_POINT; break;
 
 		case 0x61: flags |= BGFX_SAMPLER_UVW_MIRROR; break;
 		case 0x62: flags |= BGFX_SAMPLER_UVW_CLAMP; break;
