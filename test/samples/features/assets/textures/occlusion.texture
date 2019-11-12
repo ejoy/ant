@@ -1,7 +1,7 @@
 
-colorspace = "sRGB"
+colorspace = "linear"
 normalmap = false
-path = "/pkg/ant.resources.binary/textures/test/tt/0.jpg"
+path = "/pkg/ant.resources.binary/textures/test/tt/3.jpg"
 sampler = {
   MAX = "LINEAR",
   MIN = "LINEAR",

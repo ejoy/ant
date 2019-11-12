@@ -165,7 +165,7 @@ local function pbr_test()
         },
         material = {
             {
-                ref_path = fs.path "/pkg/ant.test.features/asset/DamagedHelmet.material",
+                ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
             }
         },
         can_render = true,

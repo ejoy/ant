@@ -1,0 +1,12 @@
+
+colorspace = "linear"
+normalmap = true
+path = "/pkg/ant.resources.binary/textures/test/tt/4.jpg"
+sampler = {
+  MAX = "LINEAR",
+  MIN = "LINEAR",
+  MIP = "NEAREST",
+  U = "WRAP",
+  V = "WRAP"
+}
+type = "texture"

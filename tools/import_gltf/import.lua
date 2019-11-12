@@ -183,7 +183,7 @@ local function export_pbrm(pbrm_path)
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            tex_desc.texture = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
+            tex_desc.path = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
             tex_desc.index = nil
             return tex_desc
         end

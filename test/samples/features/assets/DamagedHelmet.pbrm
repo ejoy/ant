@@ -1,0 +1,35 @@
+
+basecolor = {
+  texture = {
+    path = "tools/import_gltf/test/images/basecolor.texture"
+  }
+}
+emissive = {
+  factor = {
+    1, 1, 1
+  },
+  texture = {
+    path = "tools/import_gltf/test/images/emissive.texture"
+  }
+}
+metallic_roughness = {
+  factor = {
+    nil,
+    nil,
+    0,
+    0
+  },
+  texture = {
+    path = "tools/import_gltf/test/images/metallic_roughness.texture"
+  }
+}
+normal = {
+  texture = {
+    path = "tools/import_gltf/test/images/normal.texture"
+  }
+}
+occlusion = {
+  texture = {
+    path = "tools/import_gltf/test/images/occlusion.texture"
+  }
+}

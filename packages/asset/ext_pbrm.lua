@@ -27,6 +27,13 @@ local default_pbr_param = {
 	},
 }
 
+local function refine_paths(pbrm)
+	for k, v in pairs(pbrm) do
+		local tex = v.texture
+		tex.path = fs.path(tex.path)
+	end
+end
+
 return {
 	loader = function (filename)
 		local material_loader = assetmgr.get_loader "material"
@@ -34,45 +41,47 @@ return {
 
 		local pbrm = assetmgr.load_depiction(filename)
 
+		refine_paths(pbrm)
+
 		material.properties = {
 			textures = {
 				s_basecolor = {
 					type="texture", name="BaseColor texture", stage=0, 
-					value=pbrm.pbrMetallicRoughness.baseColorTexture or default_pbr_param.basecolor.texture
+					value=pbrm.basecolor.texture.path or default_pbr_param.basecolor.texture
 				},
 				s_metal_roughness = {
 					type="texture", name="metal roughness texutre", stage=1,
-					value=pbrm.pbrMetallicRoughness.metallicRoughnessTexture or default_pbr_param.metal_roughness.texture
+					value=pbrm.metallic_roughness.texture.path or default_pbr_param.metal_roughness.texture
 				},
 				s_normal = {
 					type="texture", name="normal texture", stage=2,
-					value=pbrm.normalTexture or default_pbr_param.normal.texture,
+					value=pbrm.normal.texture.path or default_pbr_param.normal.texture,
 				},
 				s_occlusion = {
 					type="texture", name="occlusion texture", stage=3,
-					value=pbrm.occlusionTexture or default_pbr_param.occlusion.texture,
+					value=pbrm.occlusion.texture.path or default_pbr_param.occlusion.texture,
 				},
 				s_emissive = {
 					type="texture", name="emissive texture", stage=4,
-					value=pbrm.emissiveTexture or default_pbr_param.emissive.texture,
+					value=pbrm.emissive.texture.path or default_pbr_param.emissive.texture,
 				},
 			},
 			uniforms = {
 				u_basecolor_factor = {
 					type="color", name="base color factor",
-					value=pbrm.pbrMetallicRoughness.baseColorFactor or default_pbr_param.basecolor.factor,
+					value=pbrm.basecolor.factor or default_pbr_param.basecolor.factor,
 				},
 				u_metal_roughness_factor = {
 					type="v4", name="metal roughness factor",
 					value={
-						pbrm.pbrMetallicRoughness.metallicFactor or 1, 
-						pbrm.pbrMetallicRoughness.roughnessFactor or 1,
+						pbrm.metallic_roughness.factor[1] or 1, 
+						pbrm.metallic_roughness.factor[2] or 1,
 						0, 0
 					}
 				},
 				u_emissive_factor = {
 					type="v4", name="emissive factor",
-					value=pbrm.emissiveFactor or default_pbr_param.emissive.factor,
+					value=pbrm.emissive.factor or default_pbr_param.emissive.factor,
 				}
 			},
 		}
