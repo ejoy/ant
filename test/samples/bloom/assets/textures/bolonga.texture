@@ -1,7 +1,7 @@
 
 normalmap = false
 path = "/pkg/bloom/assets/textures/pbr/bolonga_lod.dds"
-sRGB = true
+colorspace="sRGB"
 sampler = {
   MAG = "LINEAR",
   MIN = "LINEAR",

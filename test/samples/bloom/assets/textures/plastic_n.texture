@@ -7,5 +7,5 @@ sampler = {
 	MAG = "LINEAR",	
 }
 
-sRGB 		= true
+colorspace="sRGB"
 normalmap 	= true 
