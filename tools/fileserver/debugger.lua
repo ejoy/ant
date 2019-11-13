@@ -51,7 +51,7 @@ local function convertSendPaths(repo, msg)
 end
 
 local function pathToDA(repo, path)
-    local vp = repo:virtualpath(fs.relative(fs.path(path), fs.current_path()))
+    local vp = repo:virtualpath(fs.relative(fs.path(path)))
     if vp then
         return '/' .. vp
     end

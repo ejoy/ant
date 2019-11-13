@@ -258,6 +258,7 @@ end
 
 function fs.relative(path, base)
     --TODO root
+    base = base or fs.current_path()
     local _, pstack = normalize_split(path._value)
     local _, bstack = normalize_split(base._value)
     while #pstack > 0 and #bstack > 0 and pstack[1] == bstack[1] do
