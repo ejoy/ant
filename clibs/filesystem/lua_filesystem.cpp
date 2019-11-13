@@ -456,10 +456,11 @@ namespace ant::lua_filesystem {
 
     static int relative(lua_State* L) {
         LUA_TRY;
-        if (lua_gettop(L) == 1) {
-            return path::constructor_(L, fs::relative(FS_NATIVE(path::to(L, 1))));
-        }
-        return path::constructor_(L, fs::relative(FS_NATIVE(path::to(L, 1)), FS_NATIVE(path::to(L, 2))));
+        return path::constructor_(L, fs::relative(FS_NATIVE(path::to(L, 1)), 
+                lua_gettop(L) == 1
+                ? FS_NATIVE(fs::current_path())
+                : FS_NATIVE(path::to(L, 2))
+            ));
         LUA_TRY_END;
     }
 
