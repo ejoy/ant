@@ -91,6 +91,10 @@ function repo:realpath(filepath)
 	return access.realpath(self, filepath)
 end
 
+function repo:virtualpath(pathname)
+	return access.virtualpath(self, pathname)
+end
+
 function repo:realpathEx(filepath)
 	if filepath:match "^%.cache/" then
 		return self._cache / filepath:sub(8)

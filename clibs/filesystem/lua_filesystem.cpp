@@ -438,11 +438,29 @@ namespace ant::lua_filesystem {
         LUA_TRY_END;
     }
 
-    static int relative(lua_State* L)
-    {
+#if !defined(__linux__)
+    static fs::path pathtolower(const fs::path& p) {
+        auto s = p.native();
+        std::transform(s.begin(), s.end(), s.begin(),
+#if defined(_WIN32)
+            ::towlower
+#else
+            ::tolower
+#endif
+        );
+        return fs::path(s);
+    }
+#endif
+
+    static int relative(lua_State* L) {
         LUA_TRY;
+#if !defined(__linux__)
+        fs::path p = pathtolower(path::to(L, 1));
+        fs::path base = pathtolower(path::to(L, 2));
+#else
         const fs::path& p = path::to(L, 1);
         const fs::path& base = path::to(L, 2);
+#endif
         return path::constructor_(L, fs::relative(p, base));
         LUA_TRY_END;
     }
