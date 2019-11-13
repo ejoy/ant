@@ -13,12 +13,7 @@ emissive = {
   }
 }
 metallic_roughness = {
-  factor = {
-    nil,
-    nil,
-    0,
-    0
-  },
+  factor = {0, 0, 0, 0},
   texture = {
     path = "tools/import_gltf/test/images/metallic_roughness.texture"
   }
