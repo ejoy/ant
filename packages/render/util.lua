@@ -232,12 +232,12 @@ end
 
 function util.default_sampler()
 	return {
-		U="MIRROR",
-		V="MIRROR",
-		W="MIRROR",
+		U="WRAP",
+		V="WRAP",
+		W="WRAP",
 		MIN="LINEAR",
 		MAG="LINEAR",
-		MIP="LINEAR",
+		MIP="POINT",
 	}
 end
 
