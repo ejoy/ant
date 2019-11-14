@@ -24,7 +24,7 @@ local function bootstrap()
         init_thread()
         package.path = [[%s]]
         package.readfile = function(filename)
-            local vfs = require 'vfs.simplefs'
+            local vfs = require 'vfs'
             local fullpath = assert(package.searchpath(filename, package.path))
             local fullpath = assert(vfs.realpath(fullpath))
             local f = assert(io.open(fullpath))
