@@ -2,41 +2,18 @@
 #define __SHADER_PBR_PROTOCOL_SH__
 
 #include "common/transform.sh"
-#define  PI  3.14159265359f
 
 // Walter GGX + Smith G + BlinnSchlick 
 // Lambertian balanced 
-
-float RecalcDXTNormalZ(vec2 normalXY)
-{
-    return sqrt(1.0 - saturate(dot(normalXY, normalXY)));
-}
-
-vec3 RemapDXTNormalValue(vec2 normalTSXY, float offset)
-{
-    vec2 normalTSXY_Remap = normalTSXY * 2.0 - 1.0;
-    normalTSXY_Remap = normalTSXY_Remap * offset;
-    return vec3(normalTSXY_Remap, RecalcDXTNormalZ(normalTSXY_Remap));
-}
-
-vec3 FetchCompressNormalMapValue(sampler2D normalMap, vec2 texcoord, float offset)
-{
-    return RemapDXTNormalValue(texture2D(normalMap, texcoord).xy, offset);
-}
-
-vec3 UnpackNormalDXTnm(vec4 packednormal)
-{
-    return RemapDXTNormalValue(packednormal.wy, 1.0);
-}
 
 // very heary operation to calculate tbn matrix in framgent shader. 
 // we already have some option to calculate tangent and bitangent vector when import mesh.
 vec3 getWorldSpcaeNormalFromTexture(sampler2D normalMap, vec2 texCoords, vec3 worldPos, vec3 vertexNormal)
 {
-    vec3 normalTS = FetchCompressNormalMapValue(normalMap, texCoords, 1.2);
+    vec3 normalTS = fetch_dxt_normal(normalMap, texCoords, 1.2);
     mat3 TBN = tbn_from_world_pos(vertexNormal, worldPos, texCoords);
 
-    return normalize(mul(normalTS, TBN));
+    return normalize(mul(TBN, normalTS));
 }
 
 half3 BlendNormals(half3 n1, half3 n2)
@@ -86,7 +63,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 
     float nom   = a2;
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
+    denom = M_PI * denom * denom;
 
     return nom / max(denom,1e-6);
 }
@@ -128,7 +105,7 @@ float GeometryGGX(vec3 n, vec3 v, vec3 l, vec3 h, float roughness)
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
     float r = (roughness + 1.0);
-    //float k= 2/sqrt(PI*(r+2));  //more expensive ，make it simple 
+    //float k= 2/sqrt(M_PI*(r+2));  //more expensive ，make it simple 
     float k = (r*r) / 4.0;
 
     float nom   = NdotV;

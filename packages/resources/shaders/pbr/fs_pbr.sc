@@ -1,10 +1,13 @@
-$output v_normal, v_posWS, v_texcoord0
+$input v_normal, v_posWS, v_texcoord0
 #include <bgfx_shader.sh>
+#include <shaderlib.sh>
+#include "common/uniforms.sh"
 #include "common/lighting.sh"
+#include "common/transform.sh"
 
 uniform vec4 u_IBLparam;
-#define u_prefilteredCubeMipLevels IBLparam.x
-#define u_scaleIBLAmbient IBLparam.y
+#define u_prefilteredCubeMipLevels u_IBLparam.x
+#define u_scaleIBLAmbient u_IBLparam.y
 
 
 // material properites
@@ -62,7 +65,6 @@ struct PBRInfo
 	vec3 specularColor;           // color contribution from specular lighting
 };
 
-const float M_PI = 3.141592653589793;
 const float c_MinRoughness = 0.04;
 
 const float PBR_WORKFLOW_METALLIC_ROUGHNESS = 0.0;
@@ -90,26 +92,14 @@ const float PBR_WORKFLOW_SPECULAR_GLOSINESS = 1.0f;
 
 // Find the normal for this fragment, pulling either from a predefined normal map
 // or from the interpolated mesh normal and tangent attributes.
-vec3 getNormal(vec3 normal_WS, vec4 posWS, vec2 texcoord)
+vec3 getNormal(vec3 normalWS, vec3 posWS, vec2 texcoord)
 {
     if (u_normal_texture_flag > 1.0){
-	    // Perturb normal, see http://www.thetenthplanet.de/archives/1180
-        vec3 normal_TS = texture(s_normal, v_texcoord0).xyz * 2.0 - 1.0;
-
-        vec3 q1 = dFdx(posWS);
-        vec3 q2 = dFdy(posWS);
-        vec2 st1 = dFdx(texcoord);
-        vec2 st2 = dFdy(texcoord);
-
-        vec3 N = normalize(normal_WS);
-        vec3 T = normalize(q1 * st2.t - q2 * st1.t);
-        vec3 B = -normalize(cross(N, T));
-        mat3 TBN = mat3(T, B, N);
-
-        return normalize(TBN * normal_TS);
+		vec3 normalTS = fetch_dxt_normal(s_normal, texcoord, 0.0);
+	    return normalize(mul(tbn_from_world_pos(normalWS, posWS, texcoord), normalTS));	// TS to WS
     }
 
-    return normalize(normal_WS);
+    return normalize(normalWS);
 }
 
 // Calculation of the lighting contribution from an optional Image Based Light source.
@@ -119,9 +109,11 @@ vec3 getIBLContribution(PBRInfo pbrInputs, vec3 n, vec3 reflection)
 {
 	float lod = (pbrInputs.perceptualRoughness * u_prefilteredCubeMipLevels);
 	// retrieve a scale and bias to F0. See [1], Figure 3
-	vec3 brdf = (texture(samplerBRDFLUT, vec2(pbrInputs.NdotV, 1.0 - pbrInputs.perceptualRoughness))).rgb;
-	vec3 diffuseLight = toLinear(tonemap(texture(samplerIrradiance, n))).rgb;
-	vec3 specularLight = toLinear(tonemap(textureLod(prefilteredMap, reflection, lod))).rgb;
+	vec3 brdf = (texture2D(s_BRDFLUT, vec2(pbrInputs.NdotV, 1.0 - pbrInputs.perceptualRoughness))).rgb;
+	// vec3 diffuseLight = toLinear(tonemap(textureCube(s_irradiance, n))).rgb;
+	// vec3 specularLight = toLinear(tonemap(textureCubeLod(s_prefilteredmap, reflection, lod))).rgb;
+	vec3 diffuseLight = toLinear(textureCube(s_irradiance, n)).rgb;
+	vec3 specularLight = toLinear(textureCubeLod(s_prefilteredmap, reflection, lod)).rgb;
 
 	vec3 diffuse = diffuseLight * pbrInputs.diffuseColor;
 	vec3 specular = specularLight * (pbrInputs.specularColor * brdf.x + brdf.y);
@@ -174,28 +166,26 @@ float microfacetDistribution(PBRInfo pbrInputs)
 	return roughnessSq / (M_PI * f * f);
 }
 
-vec4 get_basecolor(texcoord)
+vec4 get_basecolor(vec2 texcoord)
 {
-    if (u_basecolor_texture_flag > 0) {
-		baseColor = toLinear(texture(s_basecolor, texcoord)) * u_basecolor_factor;
-	} else {
-		baseColor = u_basecolor_factor;
-	}
+    if (u_basecolor_texture_flag > 0)
+		return toLinear(texture2D(s_basecolor, texcoord)) * u_basecolor_factor;
+
+	return u_basecolor_factor;
 }
 
 void main()
 {
-	vec4 baseColor;
-
-	vec3 f0 = vec3(0.04);
+	// The albedo may be defined from a base texture or a flat color
+	vec4 baseColor = get_basecolor(v_texcoord0);
 
 	if (u_alpha_mask == 1.0f) {
-		baseColor = get_basecolor(v_texcoord0);
-		if (baseColor.a < u_alphaMaskCutoff) {
+		if (baseColor.a < u_alpha_mask_cutoff) {
 			discard;
 		}
 	}
 
+	vec3 f0 = vec3_splat(0.04);
     // Metallic and Roughness material properties are packed together
     // In glTF, these factors can be specified by fixed scalar values
     // or from a metallic-roughness map
@@ -204,7 +194,7 @@ void main()
     if (u_metallic_roughness_texture_flag > 1.0) {
         // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
         // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
-        vec4 mrSample = texture(physicalDescriptorMap, v_texcoord0);
+        vec4 mrSample = texture2D(s_metallic_roughness, v_texcoord0);
         perceptualRoughness = mrSample.g * perceptualRoughness;
         metallic = mrSample.b * metallic;
     } else {
@@ -214,10 +204,7 @@ void main()
     // Roughness is authored as perceptual roughness; as is convention,
     // convert to material roughness by squaring the perceptual roughness [2].
 
-    // The albedo may be defined from a base texture or a flat color
-    baseColor = get_basecolor(v_texcoord0);
-
-	vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0);
+	vec3 diffuseColor = baseColor.rgb * (1.0 - f0);
 	diffuseColor *= 1.0 - metallic;
 		
 	float alphaRoughness = perceptualRoughness * perceptualRoughness;
@@ -233,33 +220,27 @@ void main()
 	vec3 specularEnvironmentR0 = specularColor.rgb;
 	vec3 specularEnvironmentR90 = vec3(1.0, 1.0, 1.0) * reflectance90;
 
-	vec3 n = getNormal(v_normal, v_posWS, v_texcoord0);
-	vec3 v = normalize(u_eyePos - v_posWS);    // Vector from surface point to camera
+	vec3 n = getNormal(v_normal, v_posWS.xyz, v_texcoord0);
+	vec3 v = normalize(u_eyepos.xyz - v_posWS.xyz);    // Vector from surface point to camera
 	vec3 l = normalize(directional_lightdir[0].xyz);     // Vector from surface point to light
 	vec3 h = normalize(l+v);                        // Half vector between both l and v
 	vec3 reflection = -normalize(reflect(v, n));
 	reflection.y *= -1.0f;
 
-	float NdotL = clamp(dot(n, l), 0.001, 1.0);
-	float NdotV = clamp(abs(dot(n, v)), 0.001, 1.0);
-	float NdotH = clamp(dot(n, h), 0.0, 1.0);
-	float LdotH = clamp(dot(l, h), 0.0, 1.0);
-	float VdotH = clamp(dot(v, h), 0.0, 1.0);
+	PBRInfo pbrInputs;
 
-	PBRInfo pbrInputs = PBRInfo(
-		NdotL,
-		NdotV,
-		NdotH,
-		LdotH,
-		VdotH,
-		perceptualRoughness,
-		metallic,
-		specularEnvironmentR0,
-		specularEnvironmentR90,
-		alphaRoughness,
-		diffuseColor,
-		specularColor
-	);
+	pbrInputs.NdotL 				= clamp(dot(n, l), 0.001, 1.0);
+	pbrInputs.NdotV 				= clamp(abs(dot(n, v)), 0.001, 1.0);
+	pbrInputs.NdotH 				= clamp(dot(n, h), 0.0, 1.0);
+	pbrInputs.LdotH 				= clamp(dot(l, h), 0.0, 1.0);
+	pbrInputs.VdotH 				= clamp(dot(v, h), 0.0, 1.0);
+	pbrInputs.perceptualRoughness 	= perceptualRoughness;
+	pbrInputs.metalness 			= metallic;
+	pbrInputs.reflectance0 			= specularEnvironmentR0;
+	pbrInputs.reflectance90			= specularEnvironmentR90;
+	pbrInputs.alphaRoughness 		= alphaRoughness;
+	pbrInputs.diffuseColor 			= diffuseColor;
+	pbrInputs.specularColor 		= specularColor;
 
 	// Calculate the shading terms for the microfacet specular shading model
 	vec3 F = specularReflection(pbrInputs);
@@ -269,9 +250,9 @@ void main()
 
     // Calculation of analytical lighting contribution
 	vec3 diffuseContrib = (1.0 - F) * diffuse(pbrInputs);
-	vec3 specContrib = F * G * D / (4.0 * NdotL * NdotV);
+	vec3 specContrib = F * G * D / (4.0 * pbrInputs.NdotL * pbrInputs.NdotV);
 	// Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
-	vec3 color = NdotL * (diffuseContrib + specContrib);
+	vec3 color = pbrInputs.NdotL * (diffuseContrib + specContrib);
 
 	// Calculate lighting contribution from image based lighting source (IBL)
 	color += getIBLContribution(pbrInputs, n, reflection);
@@ -279,15 +260,15 @@ void main()
 	//const float u_OcclusionStrength = 1.0f;
 	// Apply optional PBR terms for additional (optional) shading
 	if (u_occlusion_texture_flag > 1.0) {
-		float ao = texture(s_occlusion, v_texcoord0).r;
+		float ao = texture2D(s_occlusion, v_texcoord0).r;
 		//color = mix(color, color * ao, u_OcclusionStrength);
         color = color * ao;
 	}
 
 	if (u_emissive_texture_flag > 1.0) {
-		vec3 emissive = toLinear(texture(s_emissive, v_texcoord0)).rgb * u_emissive_factor;
+		vec3 emissive = toLinear(texture2D(s_emissive, v_texcoord0)).rgb * u_emissive_factor;
 		color += emissive;
 	}
 	
-	outColor = vec4(color, baseColor.a);
+	gl_FragColor = vec4(color, baseColor.a);
 }

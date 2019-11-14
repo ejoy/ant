@@ -103,11 +103,33 @@ mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 
 	mat3 TBN = mat3(T, B, N);
 #if BGFX_SHADER_LANGUAGE_HLSL
-	return TBN;
-#else
 	return transpose(TBN);
+#else
+	return TBN;
 #endif
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
+
+float recalc_dxt_normal_Z(vec2 normalXY)
+{
+    return sqrt(1.0 - saturate(dot(normalXY, normalXY)));
+}
+
+vec3 remap_dxt_normal(vec2 normalTSXY, float offset)
+{
+    vec2 normalTSXY_Remap = normalTSXY * 2.0 - 1.0;
+    normalTSXY_Remap = normalTSXY_Remap * offset;
+    return vec3(normalTSXY_Remap, recalc_dxt_normal_Z(normalTSXY_Remap));
+}
+
+vec3 fetch_dxt_normal(sampler2D normalMap, vec2 texcoord, float offset)
+{
+    return remap_dxt_normal(texture2D(normalMap, texcoord).xy, offset);
+}
+
+vec3 unpack_dxt_normal(vec4 packednormal)
+{
+    return remap_dxt_normal(packednormal.wy, 1.0);
+}
 
 #endif //__SHADER_TRANSFORMS_SH__
