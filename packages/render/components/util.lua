@@ -134,7 +134,7 @@ function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 	}
 end
 
-function util.create_grid_entity(world, name, w, h, unit, view_tag, transform)
+function util.create_grid_entity(world, name, w, h, unit, transform)
     local geopkg = import_package "ant.geometry"
     local geolib = geopkg.geometry
 
@@ -144,10 +144,8 @@ function util.create_grid_entity(world, name, w, h, unit, view_tag, transform)
         material = util.assign_material(fs.path "/pkg/ant.resources" / "depiction" / "materials" / "line.material"),
 		name = name,
 		can_render = true,
-		main_view = true,
     }
     local grid = world[gridid]
-    if view_tag then world:add_component(gridid, view_tag, true) end
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
@@ -189,7 +187,6 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name)
 				materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
 				{uniforms = {u_color = {type="color", name="color", value=color}},}),
 		can_render = true,
-		main_view = true,
 		name = name or "Plane",
 	}
 
@@ -225,14 +222,12 @@ function util.quad_mesh(rect)
 	}
 end
 
-function util.create_quad_entity(world, rect, materialpath, properties, name, view_tag)
-	view_tag = view_tag or "main_view"
+function util.create_quad_entity(world, rect, materialpath, properties, name)
 	local eid = world:create_entity {
 		transform = mu.identity_transform(),
 		rendermesh = {},
 		material = util.assign_material(materialpath, properties),
 		can_render = true,
-		[view_tag] = true,
 		name = name or "quad",
 	}
 
@@ -243,10 +238,10 @@ end
 
 function util.create_shadow_quad_entity(world, rect, name)
 	return util.create_quad_entity(world, rect, 
-		fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material", nil, name)
+		fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material", name)
 end
 
-function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
+function util.create_texture_quad_entity(world, texture_tbl, name)
     local quadid = world:create_entity{
         transform = mu.identity_transform(),
         can_render = true,
@@ -255,7 +250,6 @@ function util.create_texture_quad_entity(world, texture_tbl, view_tag, name)
 			fs.path "/pkg/ant.resources/materials/texture.material", 
 			{textures = texture_tbl,}),
 		name = name,
-		[view_tag] = true,
     }
     local quad = world[quadid]
 	local vb = {
@@ -308,7 +302,6 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 		rendermesh = {},
 		material = util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/line.material"),
 		can_render = true,
-		main_view = true,
 		name = name or "frustum"
 	}
 
@@ -350,7 +343,6 @@ function util.create_axis_entity(world, transform, color, name)
 		},
 		name = name or "axis",
 		can_render = true,
-		main_view = true,
 	}
 
 	local vb = {
@@ -375,7 +367,6 @@ function util.create_skybox(world, material)
         rendermesh = {},
         material = material or util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skybox.material"),
         can_render = true,
-        main_view = true,
         name = "sky_box",
     }
     local e = world[eid]

@@ -163,13 +163,6 @@ function util.load_postprocess_properties(world, render_properties)
 	end
 end
 
-function util.create_primitve_filter(viewtag, filtertag)
-	return {
-		view_tag = viewtag,
-		filter_tag = filtertag,
-	}
-end
-
 function util.update_render_entity_transform(world, eid, hierarchy_cache)
 	local e = world[eid]
 	local transform = e.transform

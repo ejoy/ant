@@ -274,7 +274,6 @@ function PVPScene.create_entitices(world)
 					hierarchy_visible = true,
 					can_select = true,
 					can_cast = true,
-					main_view = true,
 					asyn_load = "",
 				}
 

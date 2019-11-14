@@ -109,7 +109,6 @@ local function create_animation_test()
             ref_path = fs.path '/pkg/ant.resources' / smpath
         },
         name = 'animation_sample',
-		main_view = true,
 		serialize = serialize.create(),
     }
 
@@ -169,7 +168,6 @@ local function pbr_test()
             }
         },
         can_render = true,
-        main_view = true,
         can_cast = true,
     }
 end
@@ -187,7 +185,7 @@ function init_loader:init()
     --     PVPScenLoader.create_entitices(world)
     -- end
 
-    computil.create_grid_entity(world, 'grid', 64, 64, 1, nil, mu.translate_mat {0, 0, 0})
+    computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_animation_test()
     pbr_test()
 end

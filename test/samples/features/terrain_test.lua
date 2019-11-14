@@ -78,7 +78,6 @@ function terrain_test:init()
         name = "pvp terrain test",
         can_render = true,
         can_select = true,
-		main_view = true,
 		--can_cast  = true,
 		serialize = serialize.create(),
 		hierarchy_visible = true,

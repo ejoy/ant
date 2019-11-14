@@ -194,7 +194,6 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect,
 		},
 		viewid = viewidmgr.get(camera_tag),
 		primitive_filter = {
-			view_tag = "main_view",
 			filter_tag = "can_cast",
 		},
 		camera_tag = camera_tag,

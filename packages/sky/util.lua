@@ -73,7 +73,6 @@ function util.create_procedural_sky(world, settings)
 			month 		= settings.whichmonth or "June",
 			latitude 	= settings.whichlatitude or math.rad(50),
 		},
-		main_view = true,
 		can_render = true,
 		name = "procedural sky",
 	}

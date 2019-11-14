@@ -75,7 +75,6 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
                 {uniforms = {u_color = {type="v4", name="u_color", value=color}},}),
         --can_cast = true,
         can_render = true,
-        main_view = true,
         name = name,
         can_select = true,
         hierarchy_visible = false,
@@ -87,7 +86,7 @@ end
 
 
 
-local function create_line_entity(world, name, start_pos,end_pos,color,view_tag,parent,dir)
+local function create_line_entity(world, name, start_pos,end_pos,color,parent,dir)
     local util  = import_package "ant.render".components
     -- local geopkg = import_package "ant.geometry"
     -- local geolib = geopkg.geometry
@@ -98,14 +97,12 @@ local function create_line_entity(world, name, start_pos,end_pos,color,view_tag,
         material = util.assign_material(fs.path "/pkg/ant.resources" /"depiction" / "materials" / "gizmo_line.material"),
         name = name,
         can_render = true,
-        main_view = true,
         can_select = true,
         gizmo_object = {dir = dir},
         hierarchy_visible = true,
     }
     local grid = world[gridid]
     grid.transform.parent = parent
-    if view_tag then world:add_component(gridid, view_tag, true) end
     local vb, ib = line(start_pos, end_pos, color)
     local gvb = {"fffd"}
     for _, v in ipairs(vb) do
@@ -123,7 +120,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,view_tag,
     return gridid
 end
 
-local function create_circle_entity(world, name,color,rot,view_tag,parent,dir)
+local function create_circle_entity(world, name,color,rot,parent,dir)
     local util  = import_package "ant.render".components
 
     local gridid = world:create_entity {
@@ -137,14 +134,12 @@ local function create_circle_entity(world, name,color,rot,view_tag,parent,dir)
         material = util.assign_material(fs.path "/pkg/ant.resources" /"depiction" / "materials" / "gizmo_front_line.material"),
         name = name,
         can_render = true,
-        main_view = true,
         can_select = true,
         gizmo_object = {dir = dir},
         hierarchy_visible = true,
     }
     local grid = world[gridid]
     grid.transform.parent = parent
-    if view_tag then world:add_component(gridid, view_tag, true) end
     local vb, ib = circle(color)
     local gvb = {"fffd"}
     for _, v in ipairs(vb) do
@@ -177,10 +172,8 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
                 fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
                 {uniforms = {u_color = {type="v4", name="u_color", value=color}},}),
         can_render = true,
-        --can_cast = true,
-        main_view = true,
-        name = name,
         can_select = true,
+        name = name,
         gizmo_object = {dir=dir},
         hierarchy_visible = true,
 
@@ -203,7 +196,6 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
                 {uniforms = {u_color = {type="v4", name="u_color", value=color}},}),
         can_render = true,
         --can_cast = true,
-        main_view = true,
         name = name,
         can_select = true,
         gizmo_object = {dir=dir},
@@ -237,7 +229,6 @@ function Util.create_gizmo(world)
             transform = trans,
             name = name,
             hierarchy = {},
-            main_view = true,
             -- serialize = seriazlizeutil.create(),
             hierarchy_visible = true,
             gizmo_object = {},
@@ -260,11 +251,11 @@ function Util.create_gizmo(world)
         position.line_length = line_length
         local parent = create_gizmo_object("position",root)
         position.eid = parent
-        position.line_x = create_line_entity(world,"line_x",{0,0,0},{line_length,0,0},0xff0000ff,"main_view",parent,"x")
+        position.line_x = create_line_entity(world,"line_x",{0,0,0},{line_length,0,0},0xff0000ff,parent,"x")
         position.cone_x = create_cone_entity(world,{1,0,0,1},{0.1,0.13,0.1},{0,0,-0.5*math.pi,0}, {line_length,0,0}, "cone_x",parent,"x")
-        position.line_y = create_line_entity(world,"line_y",{0,0,0},{0,line_length,0},0xff00ff00,"main_view",parent,"y")
+        position.line_y = create_line_entity(world,"line_y",{0,0,0},{0,line_length,0},0xff00ff00,parent,"y")
         position.cone_y = create_cone_entity(world,{0,1,0,1},{0.1,0.13,0.1},{0,0,0,0},{0,line_length,0}, "cone_y",parent,"y")
-        position.line_z = create_line_entity(world,"line_z",{0,0,0},{0,0,line_length},0xffff0000,"main_view",parent,"z")
+        position.line_z = create_line_entity(world,"line_z",{0,0,0},{0,0,line_length},0xffff0000,parent,"z")
         position.cone_z = create_cone_entity(world,{0,0,1,1},{0.1,0.13,0.1},{0.5*math.pi,0,0,0}, {0,0,line_length}, "cone_z",parent,"z")
         position.center = create_box_entity(world,{1,1,1,1},{0.15,0.15,0.15}, {0,0,0}, "box_o",parent)
     end
@@ -276,11 +267,11 @@ function Util.create_gizmo(world)
         scale.line_length = line_length
         local parent = create_gizmo_object("scale",root)
         scale.eid = parent
-        scale.line_x = create_line_entity(world,"line_x",{0,0,0},{line_length,0,0},0xff0000ff,"main_view",parent,"x")
+        scale.line_x = create_line_entity(world,"line_x",{0,0,0},{line_length,0,0},0xff0000ff,parent,"x")
         scale.box_x = create_box_entity(world,{1,0,0,1},{0.15,0.15,0.15}, {line_length,0,0}, "box_x",parent,"x")
-        scale.line_y = create_line_entity(world,"line_y",{0,0,0},{0,line_length,0},0xff00ff00,"main_view",parent,"y")
+        scale.line_y = create_line_entity(world,"line_y",{0,0,0},{0,line_length,0},0xff00ff00,parent,"y")
         scale.box_y = create_box_entity(world,{0,1,0,1},{0.15,0.15,0.15},{0,line_length,0}, "box_y",parent,"y")
-        scale.line_z = create_line_entity(world,"line_z",{0,0,0},{0,0,line_length},0xffff0000,"main_view",parent,"z")
+        scale.line_z = create_line_entity(world,"line_z",{0,0,0},{0,0,line_length},0xffff0000,parent,"z")
         scale.box_z = create_box_entity(world,{0,0,1,1},{0.15,0.15,0.15}, {0,0,line_length}, "box_z",parent,"z")
         scale.center = create_box_entity(world,{1,1,1,1},{0.18,0.18,0.18}, {0,0,0}, "box_o",parent)
     end
@@ -289,11 +280,11 @@ function Util.create_gizmo(world)
         result.rotation = rotation
         local parent = create_gizmo_object("rotation",root)
         rotation.eid = parent
-        rotation.line_x = create_circle_entity(world,"line_x",0xff0000ff,{0,0,0,0},"main_view",parent,"x")
+        rotation.line_x = create_circle_entity(world,"line_x",0xff0000ff,{0,0,0,0},parent,"x")
         rotation.ring_x = create_ring_entity(world,{1,0,0,1},{1,1,1},{0,0,0.5*math.pi,0}, "cylinder_x",parent,"x")
-        rotation.line_y = create_circle_entity(world,"line_y",0xff00ff00,{0,0,0.5*math.pi,0},"main_view",parent,"y")
+        rotation.line_y = create_circle_entity(world,"line_y",0xff00ff00,{0,0,0.5*math.pi,0},parent,"y")
         rotation.ring_y = create_ring_entity(world,{0,1,0,1},{1,1,1},{0,0,0,0}, "cylinder_y",parent,"y")
-        rotation.line_z = create_circle_entity(world,"line_z",0xffff0000,{0,-0.5*math.pi,0,0},"main_view",parent,"z")
+        rotation.line_z = create_circle_entity(world,"line_z",0xffff0000,{0,-0.5*math.pi,0,0},parent,"z")
         rotation.ring_z = create_ring_entity(world,{0,0,1,1},{1,1,1},{0.5*math.pi,0,0,0}, "cylinder_z",parent,"z")
     end
     return result

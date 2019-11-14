@@ -65,7 +65,6 @@ local function create_scene_node_test()
         transform = mu.translate_mat {0, 5, 0},
         hierarchy = {},
         name = 'hie_root',
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
 
@@ -80,7 +79,6 @@ local function create_scene_node_test()
         },
         name = 'hie_level1_1',
         hierarchy = {},
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
 
@@ -95,7 +93,6 @@ local function create_scene_node_test()
         },
         hierarchy = {},
         name = 'hie_level1_2',
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
     
@@ -111,7 +108,6 @@ local function create_scene_node_test()
         hierarchy = {ref_path = hie_refpath,},
         ignore_parent_scale = true,
         name = 'hie_level2_1',
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
     local render_child1_1 =
@@ -131,7 +127,6 @@ local function create_scene_node_test()
         can_render = true,
         hierarchy_visible = true,
         can_select = true,
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
     
@@ -152,7 +147,6 @@ local function create_scene_node_test()
         can_render = true,
         hierarchy_visible = true,
         can_select = true,
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
 
@@ -173,7 +167,6 @@ local function create_scene_node_test()
         can_render = true,
         hierarchy_visible = true,
         can_select = true,
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
 
@@ -195,7 +188,6 @@ local function create_scene_node_test()
         transform = mu.srt({2, 1, 1, 0}, nil, {3, 2, -3, 1}),
         name = 'hie_root2',
         hierarchy = {},
-        main_view = true,
         serialize = seriazlizeutil.create(),
         hierarchy_visible = true,
     }
@@ -210,7 +202,6 @@ local function create_scene_node_test()
         },
         hierarchy = {},
         name = 'hie2_level1_1',
-        main_view = true,
         serialize = seriazlizeutil.create(),
         hierarchy_visible = true,
     }
@@ -241,7 +232,6 @@ local function create_scene_node_test()
         can_render = true,
         hierarchy_visible = true,
         can_select = true,
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
 
@@ -262,7 +252,6 @@ local function create_scene_node_test()
         can_render = true,
         hierarchy_visible = true,
         can_select = true,
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
 
@@ -309,7 +298,6 @@ local function create_scene_node_test()
         can_render = true,
         hierarchy_visible = true,
         can_select = true,
-        main_view = true,
         serialize = seriazlizeutil.create(),
     }
 
@@ -502,7 +490,6 @@ local test_queue = {
             },
             mesh = {ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cone.mesh'},
             can_render = true,
-            main_view = true,
             can_select = true,
             name = 'test attach entity',
         }

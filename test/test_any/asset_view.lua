@@ -211,9 +211,8 @@ function asset_view:_on_canvas_map()
 			}
 		end
 
-		local function default_primitive_filter(viewtag)
+		local function default_primitive_filter()
 			return {
-				view_tag = viewtag,
 				filter_tag = "can_render",
 			}
         end
@@ -234,7 +233,7 @@ function asset_view:_on_canvas_map()
 				},
 			},
 			viewid = self.view_id,
-			primitive_filter = default_primitive_filter "asset_viewtag_3d",
+			primitive_filter = default_primitive_filter(),
 			name = "camera3d",
 			show_light = true,
 			show_grid = true,
@@ -256,7 +255,7 @@ function asset_view:_on_canvas_map()
 				viewport = default_viewport(),
 			},
 			viewid = self.view_id,
-			primitive_filter = default_primitive_filter "asset_viewtag_2d",
+			primitive_filter = default_primitive_filter(),
 			show_light = true,
 			name = "camera2d",
 			visible = false,
@@ -288,7 +287,7 @@ function asset_view:_on_canvas_map()
                 type = "texture",
             }
         }
-        self.texture_id = component_util.create_texture_quad_entity(self.world, texture_tbl, "asset_viewtag_2d")
+        self.texture_id = component_util.create_texture_quad_entity(self.world, texture_tbl)
 
         -----create empty camera
         local camera_eid_empty = self.world:create_entity {

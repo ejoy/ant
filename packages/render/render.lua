@@ -13,7 +13,6 @@ local bgfx 		= require "bgfx"
 local ru 		= require "util"
 
 ecs.tag "main_queue"
-ecs.component_alias("view_tag", "string")
 
 ecs.component_alias("viewid", "int", 0)
 ecs.component_alias("view_mode", "string", "")

@@ -27,9 +27,6 @@ local fs = require "filesystem"
 
 ecs.tag "show_light"
 ecs.tag "show_grid"
-ecs.component_alias("asset_viewtag_3d", "boolean")
-ecs.component_alias("asset_viewtag_2d", "boolean")
-
 
 local function create_light()
     local leid = lu.create_directional_light_entity(world)
@@ -53,16 +50,13 @@ function asset_view_render_sys:update()
         create_light()
     end
     for eid in world:each_new("show_grid") do
-        local view_tag = world[eid].primitive_filter.view_tag
-        local grid_id = cu.create_grid_entity(world, "grid")
-        world:add_component(grid_id, view_tag, true)
+        cu.create_grid_entity(world, "grid")
     end
 end
 
 function asset_view_render_sys:init()
     -- print("asset_view_render_sys:init")
     -- create_light()
-    -- world:first_entity("primitive_filter").view_tag
     -- cu.create_grid_entity(world, "grid" )
     
     -- local model = world[eid]

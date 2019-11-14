@@ -151,27 +151,6 @@ function util.insert_primitive(eid, group, material, worldmat, filter)
 	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end
 
-function util.create_render_queue_entity(world, view_rect, eyepos, viewdir, view_tag, viewid)
-	camerautil.bind_camera(world, 
-		view_tag, 
-		default_comp.camera(eyepos, viewdir, 
-			default_comp.frustum(view_rect.w, view_rect.h)))
-
-	return world:create_entity {
-		camera_tag = view_tag,
-		viewid = viewid or viewidmgr.get(view_tag),
-		render_target = {
-			viewport = default_comp.viewport(view_rect),
-		},
-		primitive_filter = {
-			view_tag = view_tag,
-			filter_tag = "can_render",
-		},
-		main_queue = view_tag == "main_view" and true or nil,
-		visible = true,
-	}	
-end
-
 function util.create_main_queue(world, view_rect, viewdir, eyepos)
 	local rb_flag = util.generate_sampler_flag {
 		RT="RT_MSAA2",
@@ -222,7 +201,6 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 			},
 		},
 		primitive_filter = {
-			view_tag = "main_view",
 			filter_tag = "can_render",
 		},
 		main_queue = true,
@@ -343,9 +321,23 @@ function util.get_main_view_rendertexture(world)
 end
 
 function util.create_blit_queue(world, viewrect)
-	util.create_render_queue_entity(world, viewrect, nil, nil, "blit_view", blitviewid)
+	camerautil.bind_camera(world, "blit_view",
+		default_comp.camera(nil, nil, default_comp.frustum(viewrect.w, viewrect.h))
+	)
+
+	world:create_entity {
+		camera_tag = "blit_view",
+		viewid = blitviewid,
+		render_target = {
+			viewport = default_comp.viewport(viewrect),
+		},
+		primitive_filter = {
+			filter_tag = "can_render",
+		},
+		visible = true,
+	}
 	computil.create_quad_entity(world, viewrect,
-	fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material", nil, "full_quad", "blit_view")
+	fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material", nil, "full_quad")
 end
 
 function util.modify_view_rect(world,rect)

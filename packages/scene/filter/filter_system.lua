@@ -189,14 +189,11 @@ function primitive_filter_sys:update()
 		local e = world[prim_eid]
 		local filter = e.primitive_filter
 		reset_results(filter.result)
-		local viewtag = filter.view_tag
 		local filtertag = filter.filter_tag
 
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
-			local vt = ce[viewtag]
-			local ft = ce[filtertag]
-			if vt and ft then
+			if ce[filtertag] then
 				if is_entity_prepared(ce) then
 					local worldmat = update_entity_transform(hierarchy_cache, eid)
 					filter_element(eid, ce.rendermesh, worldmat, ce.material, filter)

@@ -29,7 +29,6 @@ function rmb:init()
 		rendermesh = {},
 		name = "mesh's bounding renderer",
 		can_render = true,
-		main_view = true,
 		mesh_bounding_drawer_tag = true,
 		can_show_bounding = true,
 	}

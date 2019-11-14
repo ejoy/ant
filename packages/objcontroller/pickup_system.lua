@@ -257,7 +257,7 @@ local function add_pick_entity()
 				pick_ids = {},
 			},
 		},
-		camera_tag = "pickup", 
+		camera_tag = "pickup",
 		render_target = {
 			viewport = {
 				rect = {
@@ -271,11 +271,12 @@ local function add_pick_entity()
 				},
 			},
 			fb_idx = fbidx,
-		},		
+		},
 		viewid = pickupviewid,
-		primitive_filter = filterutil.create_primitve_filter("main_view", "can_select"),
+		primitive_filter = {
+			filter_tag = "can_select"
+		},
 		name = "pickup_renderqueue",
-		pickup_viewtag = true,
 	}
 end
 

@@ -119,7 +119,6 @@ local function quad_clear_test()
 		world:create_entity {
 			viewid = quadtest_viewid,
 			primitive_filter = {
-				view_tag = "quad_test",
 				filter_tag = "quad_test"
 			},
 			camera_tag = "quad_test_camera",
@@ -166,7 +165,6 @@ function model_review_system:init()
 	-- 	material = {{ref_path = fs.path "/pkg/ant.modelviewer/res/test.material"}},
 	-- 	name = "test",
 	-- 	can_render = true,
-	-- 	main_view = true,
 	-- }
 
 	-- world:create_entity {
@@ -187,7 +185,6 @@ function model_review_system:init()
 	-- 		create_material_item(singlecolor_material, {1, 0, 1, 0}),
 	-- 	},
 	-- 	asyn_load = "",
-	-- 	main_view = true,
 	-- 	can_render = true,
 	-- }
 
@@ -206,7 +203,6 @@ function model_review_system:init()
 		mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/campsite-door.mesh", asyn_load=true},
 		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true}},
 		can_render 	= true,
-		main_view 	= true,
 		asyn_load	= "",
 		can_cast	= true,
 		name 		= "door",
@@ -219,7 +215,6 @@ function model_review_system:init()
 		mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/woodother-34.mesh", asyn_load=true},
 		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true}},
 		can_render 	= true,
-		main_view 	= true,
 		asyn_load	= "",
 		can_cast	= true,
 		name 		= "door",
@@ -262,7 +257,6 @@ function model_review_system:init()
 			create_material_item(singlecolor_material, {0, 1, 1, 0}),
 			create_material_item(singlecolor_material, {1, 1, 1, 0}),
 		},
-		main_view = true,
 		can_cast = true,
 		asyn_load = "",
 		name = "test_glb",

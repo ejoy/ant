@@ -153,7 +153,6 @@ local function create_outline(seleid)
             rendermesh = {},
             material = {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"}},
             can_render = true,
-            main_view = true,
             outline_entity = true,
             target_entity = seleid,
             -- name = "outline_object"
