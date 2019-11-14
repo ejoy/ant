@@ -268,10 +268,11 @@ local function dbgserver_update(obj)
 	local data = table.concat(obj._read)
 	obj._read = {}
 	if data ~= "" then
-		local msg = debugger.convertRecv(data)
+		local self = dbg.server._repo
+		local msg = debugger.convertRecv(self, data)
 		while msg do
 			response(dbg.server, "DBG", msg)
-			msg = debugger.convertRecv ""
+			msg = debugger.convertRecv(self, "")
 		end
 	end
 	if obj._status == "CONNECTING" then

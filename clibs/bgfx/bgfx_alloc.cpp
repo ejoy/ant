@@ -8,7 +8,7 @@
 #endif
 
 static bx::DefaultAllocator bx_alloc;
-static std::atomic<int64_t> allocator_memory = 0;
+static std::atomic<int64_t> allocator_memory (0);
 
 #if BX_PLATFORM_WINDOWS
 #define bx_malloc_size _msize
