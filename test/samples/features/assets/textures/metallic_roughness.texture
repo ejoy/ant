@@ -1,11 +1,11 @@
 
 colorspace = "linear"
 normalmap = false
-path = "/pkg/ant.resources.binary/textures/test/tt/1.jpg"
+path = "/pkg/ant.resources.binary/test/tt/1.jpg"
 sampler = {
-  MAX = "LINEAR",
+  MAG = "LINEAR",
   MIN = "LINEAR",
-  MIP = "NEAREST",
+  MIP = "POINT",
   U = "WRAP",
   V = "WRAP"
 }

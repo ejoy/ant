@@ -1,4 +1,5 @@
-local assetmgr = require "asset"
+local assetmgr 	= require "asset"
+local assetutil = require "util"
 local fs = require "filesystem"
 
 local engine_resource_path = fs.path "/pkg/ant.resources/depiction"
@@ -43,27 +44,27 @@ return {
 
 		refine_paths(pbrm)
 
-		material.properties = {
+		material.properties = assetutil.load_material_properties{
 			textures = {
 				s_basecolor = {
 					type="texture", name="BaseColor texture", stage=0, 
-					value=pbrm.basecolor.texture.path or default_pbr_param.basecolor.texture
+					ref_path=pbrm.basecolor.texture.path or default_pbr_param.basecolor.texture
 				},
 				s_metal_roughness = {
 					type="texture", name="metal roughness texutre", stage=1,
-					value=pbrm.metallic_roughness.texture.path or default_pbr_param.metal_roughness.texture
+					ref_path=pbrm.metallic_roughness.texture.path or default_pbr_param.metal_roughness.texture
 				},
 				s_normal = {
 					type="texture", name="normal texture", stage=2,
-					value=pbrm.normal.texture.path or default_pbr_param.normal.texture,
+					ref_path=pbrm.normal.texture.path or default_pbr_param.normal.texture,
 				},
 				s_occlusion = {
 					type="texture", name="occlusion texture", stage=3,
-					value=pbrm.occlusion.texture.path or default_pbr_param.occlusion.texture,
+					ref_path=pbrm.occlusion.texture.path or default_pbr_param.occlusion.texture,
 				},
 				s_emissive = {
 					type="texture", name="emissive texture", stage=4,
-					value=pbrm.emissive.texture.path or default_pbr_param.emissive.texture,
+					ref_path=pbrm.emissive.texture.path or default_pbr_param.emissive.texture,
 				},
 			},
 			uniforms = {

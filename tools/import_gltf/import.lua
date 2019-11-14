@@ -124,19 +124,19 @@ local function to_sampler(gltfsampler)
     local maxFilter = gltfsampler.maxFilter or default_sampler_flags.maxFilter
 
     local MIP_map = {
-        NEAREST = "NEAREST",
-        LINEAR = "NEAREST",
-        NEAREST_MIPMAP_NEAREST = "NEAREST",
-        LINEAR_MIPMAP_NEAREST = "NEAREST",
+        NEAREST = "POINT",
+        LINEAR = "POINT",
+        NEAREST_MIPMAP_NEAREST = "POINT",
+        LINEAR_MIPMAP_NEAREST = "POINT",
         NEAREST_MIPMAP_LINEAR = "LINEAR",
         LINEAR_MIPMAP_LINEAR = "LINEAR",
     }
 
-    local MAX_MIN_map = {
-        NEAREST = "NEAREST",
+    local MAG_MIN_map = {
+        NEAREST = "POINT",
         LINEAR = "LINEAR",
-        NEAREST_MIPMAP_NEAREST = "NEAREST",
-        LINEAR_MIPMAP_NEAREST = "NEAREST",
+        NEAREST_MIPMAP_NEAREST = "POINT",
+        LINEAR_MIPMAP_NEAREST = "POINT",
         NEAREST_MIPMAP_LINEAR = "LINEAR",
         LINEAR_MIPMAP_LINEAR = "LINEAR",
     }
@@ -153,8 +153,8 @@ local function to_sampler(gltfsampler)
 
     return {
         MIP = MIP_map[filter_names[minfilter]],
-        MIN = MAX_MIN_map[filter_names[minfilter]],
-        MAX = MAX_MIN_map[filter_names[maxFilter]],
+        MIN = MAG_MIN_map[filter_names[minfilter]],
+        MAG = MAG_MIN_map[filter_names[maxFilter]],
         U = UV_map[address_names[wrapS]],
         V = UV_map[address_names[wrapT]],
     }

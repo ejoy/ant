@@ -1,30 +1,30 @@
 
 basecolor = {
   texture = {
-    path = "tools/import_gltf/test/images/basecolor.texture"
+    path = "/pkg/ant.test.features/assets/textures/basecolor.texture"
   }
 }
 emissive = {
   factor = {
-    1, 1, 1
+    1, 1, 1, 1
   },
   texture = {
-    path = "tools/import_gltf/test/images/emissive.texture"
+    path = "/pkg/ant.test.features/assets/textures/emissive.texture"
   }
 }
 metallic_roughness = {
   factor = {0, 0, 0, 0},
   texture = {
-    path = "tools/import_gltf/test/images/metallic_roughness.texture"
+    path = "/pkg/ant.test.features/assets/textures/metallic_roughness.texture"
   }
 }
 normal = {
   texture = {
-    path = "tools/import_gltf/test/images/normal.texture"
+    path = "/pkg/ant.test.features/assets/textures/normal.texture"
   }
 }
 occlusion = {
   texture = {
-    path = "tools/import_gltf/test/images/occlusion.texture"
+    path = "/pkg/ant.test.features/assets/textures/occlusion.texture"
   }
 }
