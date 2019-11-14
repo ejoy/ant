@@ -13,6 +13,11 @@ local bgfx 		= require "bgfx"
 local ru 		= require "util"
 
 ecs.tag "main_queue"
+local br = ecs.component "blit_render"{depend="can_render"}
+function br:postinit()
+	self.can_render = false	-- skip 'can_render' filter
+	return self
+end
 
 ecs.component_alias("viewid", "int", 0)
 ecs.component_alias("view_mode", "string", "")

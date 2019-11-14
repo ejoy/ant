@@ -164,7 +164,11 @@ ldestroy(lua_State *L) {
 
 static int
 lviewId(lua_State *L) {
-	s_ctx.m_viewId = (bgfx_view_id_t)luaL_checkinteger(L, 1);
+	if (lua_isnoneornil(L, 1)){
+		lua_pushinteger(L, s_ctx.m_viewId);
+		return 1;
+	}
+	s_ctx.m_viewId = (bgfx_view_id_t)lua_tointeger(L, 1);
 	return 0;
 }
 

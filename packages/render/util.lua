@@ -332,12 +332,13 @@ function util.create_blit_queue(world, viewrect)
 			viewport = default_comp.viewport(viewrect),
 		},
 		primitive_filter = {
-			filter_tag = "can_render",
+			filter_tag = "blit_render",
 		},
 		visible = true,
 	}
-	computil.create_quad_entity(world, viewrect,
+	local eid = computil.create_quad_entity(world, viewrect,
 	fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material", nil, "full_quad")
+	world:add_component(eid, "blit_render", true)
 end
 
 function util.modify_view_rect(world,rect)

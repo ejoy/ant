@@ -10,6 +10,7 @@ local platform = require "platform"
 
 local keymap = inputmgr.keymap
 local viewidmgr = renderpkg.viewidmgr
+local fbmgr = renderpkg.fbmgr
 local rhwi = renderpkg.hardware_interface
 local font = imgui.font
 local Font = platform.font
@@ -69,6 +70,8 @@ function callback.init(nwh, context, width, height)
 
 	local su = import_package "ant.scene".util
 	world = su.start_new_world(iq, width, height, packages, systems)
+	local main_viewid = viewidmgr.get "main_view"
+	fbmgr.bind(ui_viewid, assert(fbmgr.get_fb_idx(main_viewid)))
 	world_update = su.loop(world, {
 		update = {"timesystem", "message_system"}
 	})
