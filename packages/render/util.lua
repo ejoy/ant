@@ -338,6 +338,7 @@ function util.create_blit_queue(world, viewrect)
 	}
 	local eid = computil.create_quad_entity(world, viewrect,
 	fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material", nil, "full_quad")
+	world:remove_component(eid, "can_render")
 	world:add_component(eid, "blit_render", true)
 end
 
