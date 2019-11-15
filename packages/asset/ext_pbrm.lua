@@ -44,7 +44,7 @@ return {
 
 		refine_paths(pbrm)
 
-		material.properties = assetutil.load_material_properties{
+		local properties = {
 			textures = {
 				s_basecolor = {
 					type="texture", name="BaseColor texture", stage=0, 
@@ -77,15 +77,43 @@ return {
 					value={
 						pbrm.metallic_roughness.factor[1] or 1, 
 						pbrm.metallic_roughness.factor[2] or 1,
-						0, 0
+						pbrm.metallic_roughness.texture and 1.0 or 0.0,
+						0,
 					}
 				},
 				u_emissive_factor = {
 					type="v4", name="emissive factor",
 					value=pbrm.emissive.factor or default_pbr_param.emissive.factor,
+				},
+				u_material_texture_flags = {
+					type="v4", name="texture flags",
+					value={
+						pbrm.basecolor.texture and 1.0 or 0.0,
+						pbrm.normal.texture and 1.0 or 0.0,
+						pbrm.occlusion.texture and 1.0 or 0.0,
+						pbrm.emissive.texture and 1.0 or 0.0,
+					},
+				},
+				u_IBLparam = {
+					type="v4", name="IBL sample parameter",
+					value={
+						1.0, -- perfilter cubemap mip levels
+						1.0, -- IBL indirect lighting scale
+						0.0, 0.0,
+					}
+				},
+				u_alpha_info = {
+					type="v4", name="alpha test/mask info",
+					value={
+						pbrm.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
+						pbrm.alphaCutoff or 0.0,
+						0.0, 0.0,
+					}
 				}
 			},
 		}
+
+		material.properties = assetutil.load_material_properties(properties)
 		return material
 	end,
 }
