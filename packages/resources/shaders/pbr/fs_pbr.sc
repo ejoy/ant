@@ -109,9 +109,10 @@ vec3 getIBLContribution(PBRInfo pbrInputs, vec3 n, vec3 reflection)
 {
 	float lod = (pbrInputs.perceptualRoughness * u_prefilteredCubeMipLevels);
 	// retrieve a scale and bias to F0. See [1], Figure 3
-	vec3 brdf = (texture2D(s_BRDFLUT, vec2(pbrInputs.NdotV, 1.0 - pbrInputs.perceptualRoughness))).rgb;
+	vec3 brdf = texture2D(s_BRDFLUT, vec2(pbrInputs.NdotV, 1.0 - pbrInputs.perceptualRoughness)).rgb;
 	// vec3 diffuseLight = toLinear(tonemap(textureCube(s_irradiance, n))).rgb;
 	// vec3 specularLight = toLinear(tonemap(textureCubeLod(s_prefilteredmap, reflection, lod))).rgb;
+
 	vec3 diffuseLight = toLinear(textureCube(s_irradiance, n)).rgb;
 	vec3 specularLight = toLinear(textureCubeLod(s_prefilteredmap, reflection, lod)).rgb;
 
@@ -255,7 +256,7 @@ void main()
 	vec3 color = pbrInputs.NdotL * (diffuseContrib + specContrib);
 
 	// Calculate lighting contribution from image based lighting source (IBL)
-	color += getIBLContribution(pbrInputs, n, reflection);
+	//color += getIBLContribution(pbrInputs, n, reflection);
 
 	//const float u_OcclusionStrength = 1.0f;
 	// Apply optional PBR terms for additional (optional) shading
