@@ -124,4 +124,17 @@ function util.load_surface_type(surfacetype)
 	return surfacetype
 end
 
+function util.which_format(plat, param)
+	local compress = param.compress
+	if compress then
+		-- TODO: some bug on texturec tool, format is not 4X4 and texture size is not multipe of 4/5/6/8, the tool will crash
+		if plat == "ios" then
+			return "ASTC4X4"
+		end
+		return compress[plat]
+	end
+
+	return param.format
+end
+
 return util

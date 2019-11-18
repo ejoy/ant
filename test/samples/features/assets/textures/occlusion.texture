@@ -1,6 +1,11 @@
 
 colorspace = "linear"
 normalmap = false
+compress = {
+  android = "ASTC6x6",
+  ios = "ASTC6x6",
+  windows = "BC1"
+}
 path = "/pkg/ant.resources.binary/test/tt/3.jpg"
 sampler = {
   MAG = "LINEAR",

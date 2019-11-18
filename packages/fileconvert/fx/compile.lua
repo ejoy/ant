@@ -79,6 +79,10 @@ local function add_macros_from_surface_setting(identity, mysetting, surfacetype,
 	if mysetting.graphic.postprocess.bloom.enable then
 		macros[#macros+1] = "BLOOM_ENABLE"
 	end
+
+	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"
+	macros[#macros+1] = "ENABLE_FB_SRGB"
+	
 	return macros
 end
 

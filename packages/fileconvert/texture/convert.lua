@@ -3,20 +3,10 @@ local fs	= require "filesystem"
 local util  = require "util"
 local vfs	= require "vfs"
 
+local assetpkg = import_package "ant.asset"
+local assetutil= assetpkg.util
+
 local toolpath = util.valid_tool_exe_path "texturec"
-
-local function which_format(plat, param)
-	local compress = param.compress
-	if compress then
-		-- TODO: some bug on texturec tool, format is not 4X4 and texture size is not multipe of 4/5/6/8, the tool will crash
-		if plat == "ios" then
-			return "ASTC4X4"
-		end
-		return compress[plat]
-	end
-
-	return param.format
-end
 
 local extensions = {
 	direct3d11 	= "dds",
@@ -43,7 +33,7 @@ end
 local function gen_commands(plat, param, sourcefile, outfile, commands)
 	add_option(commands, "-f", sourcefile:string())
 	add_option(commands, "-o", outfile:string())
-	add_option(commands, "-t", assert(which_format(plat, param)))
+	add_option(commands, "-t", assert(assetutil.which_format(plat, param)))
 	add_option(commands, "-q", "fastest")
 
 	if param.maxsize then

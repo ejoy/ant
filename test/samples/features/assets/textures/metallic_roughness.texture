@@ -1,4 +1,8 @@
-
+compress = {
+  android = "ASTC6x6",
+  ios = "ASTC6x6",
+  windows = "BC1"
+}
 colorspace = "linear"
 normalmap = false
 path = "/pkg/ant.resources.binary/test/tt/1.jpg"

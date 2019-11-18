@@ -4,6 +4,7 @@ $input v_normal, v_posWS, v_texcoord0
 #include "common/uniforms.sh"
 #include "common/lighting.sh"
 #include "common/transform.sh"
+#include "common/utils.sh"
 
 uniform vec4 u_IBLparam;
 #define u_prefilteredCubeMipLevels u_IBLparam.x
@@ -171,8 +172,7 @@ float microfacetDistribution(PBRInfo pbrInputs)
 vec4 get_basecolor(vec2 texcoord)
 {
     if (u_basecolor_texture_flag > 0.0)
-		//return toLinear(texture2D(s_basecolor, texcoord)) * u_basecolor_factor;
-		return texture2D(s_basecolor, texcoord) * u_basecolor_factor;
+		return texture2D_sRGB(s_basecolor, texcoord) * u_basecolor_factor;
 
 	return u_basecolor_factor;
 }
@@ -269,9 +269,9 @@ void main()
 	}
 
 	if (u_emissive_texture_flag > 1.0) {
-		vec3 emissive = toLinear(texture2D(s_emissive, v_texcoord0)).rgb * u_emissive_factor;
+		vec3 emissive = texture2D_sRGB(s_emissive, v_texcoord0).rgb * u_emissive_factor;
 		color += emissive;
 	}
 	
-	gl_FragColor = vec4(color, baseColor.a);
+	gl_FragColor = output_color_sRGB(vec4(color, baseColor.a));
 }
