@@ -7,6 +7,7 @@ local config = {
 	nettype = (platform.OS ~= "iOS") and "connect" or "listen",
 	address = "127.0.0.1",
 	port = 2018,
+	rootname = arg[1],
 }
 
 local thread = require "thread"
@@ -34,13 +35,13 @@ local errthread = thread.thread([[
 	end
 ]], package.searchers[3])
 
-local iothread = thread.thread(([[
+local iothread = thread.thread([[
 	-- IO Thread
 	package.searchers[1] = ...
 	package.searchers[2] = nil
 	local fw = require "firmware"
-	assert(fw.loadfile "io.lua")(fw.loadfile, %q)
-]]):format(arg[1]), package.searchers[3])
+	assert(fw.loadfile "io.lua")(fw.loadfile)
+]], package.searchers[3])
 
 local function vfs_init()
 	io_req:push(config)

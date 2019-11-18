@@ -1,4 +1,4 @@
-local loadfile, name = ...
+local loadfile = ...
 
 local INTERVAL = 0.01 -- socket select timeout
 
@@ -95,6 +95,7 @@ local function init_config()
 	config.address = assert(c.address)
 	config.port = assert(c.port)
 	config.vfspath = assert(c.vfspath)
+	config.rootname = assert(c.rootname)
 end
 
 local function init_repo()
@@ -441,7 +442,7 @@ local response = {}
 
 function response.ROOT(hash)
 	if hash == '' then
-		_print("INVALID ROOT", name)
+		_print("INVALID ROOT", config.rootname)
 		os.exit(-1, true)
 		return
 	end
@@ -564,7 +565,7 @@ end
 local function waiting_for_root()
 	local resp = {}
 	local reading = connection.recvq
-	connection_send("ROOT", name)
+	connection_send("ROOT", config.rootname)
 	while true do
 		local ok, err = connection_dispose(INTERVAL)
 		if not ok then
