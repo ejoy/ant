@@ -43,7 +43,7 @@ end
 local function gen_commands(plat, param, sourcefile, outfile, commands)
 	add_option(commands, "-f", sourcefile:string())
 	add_option(commands, "-o", outfile:string())
-	add_option(commands, "-t", which_format(plat, param))
+	add_option(commands, "-t", assert(which_format(plat, param)))
 	add_option(commands, "-q", "fastest")
 
 	if param.maxsize then
