@@ -16,7 +16,7 @@ function scene_control.test_new_world(raw_path)
     local mapcfg = localfs.dofile(path) 
     log.info_a(mapcfg)
     local pkgname = mapcfg.name
-    local pkgsystems = mapcfg.systems
+    local pkgsystems = mapcfg.systems or {}
     local packages = {
         -- "ant.EditorLauncher",
         -- "ant.objcontroller",

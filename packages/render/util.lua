@@ -317,7 +317,7 @@ local blitviewid = viewidmgr.get "blit"
 function util.get_main_view_rendertexture(world)
 	local mq = world:first_entity "main_queue"
 	local fb = fbmgr.get(mq.render_target.fb_idx)
-	return fbmgr.get_rb(fb[1].handle)
+	return fbmgr.get_rb(fb[1])
 end
 
 function util.create_blit_queue(world, viewrect)
