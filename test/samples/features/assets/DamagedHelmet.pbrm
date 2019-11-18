@@ -13,7 +13,6 @@ emissive = {
   }
 }
 metallic_roughness = {
-  factor = {0, 0, 0, 0},
   texture = {
     path = "/pkg/ant.test.features/assets/textures/metallic_roughness.texture"
   }

@@ -16,8 +16,8 @@ uniform vec4 u_basecolor_factor;
 
 SAMPLER2D(s_metallic_roughness, 1);
 uniform vec4 u_metallic_roughness_factor;
-#define u_metallic_factor   u_metallic_roughness_factor.x
 #define u_roughness_factor  u_metallic_roughness_factor.y
+#define u_metallic_factor   u_metallic_roughness_factor.z
 
 SAMPLER2D(s_normal, 2);
 
@@ -28,7 +28,7 @@ uniform vec4 u_emissive_factor;
 
 uniform vec4 u_material_texture_flags;
 #define u_basecolor_texture_flag    u_material_texture_flags.x
-#define u_metallic_roughness_texture_flag u_metallic_roughness_factor.z
+#define u_metallic_roughness_texture_flag u_metallic_roughness_factor.w
 #define u_normal_texture_flag       u_material_texture_flags.y
 #define u_occlusion_texture_flag    u_material_texture_flags.z
 #define u_emissive_texture_flag     u_material_texture_flags.w
@@ -94,8 +94,9 @@ const float PBR_WORKFLOW_SPECULAR_GLOSINESS = 1.0f;
 // or from the interpolated mesh normal and tangent attributes.
 vec3 getNormal(vec3 normalWS, vec3 posWS, vec2 texcoord)
 {
-    if (u_normal_texture_flag > 1.0){
-		vec3 normalTS = fetch_dxt_normal(s_normal, texcoord, 0.0);
+    if (u_normal_texture_flag > 0.0){
+		//vec3 normalTS = fetch_dxt_normal(s_normal, texcoord, 0.0);
+		vec3 normalTS = texture2D(s_normal, texcoord).rgb * 2.0 - 1.0;
 	    return normalize(mul(tbn_from_world_pos(normalWS, posWS, texcoord), normalTS));	// TS to WS
     }
 
@@ -169,8 +170,9 @@ float microfacetDistribution(PBRInfo pbrInputs)
 
 vec4 get_basecolor(vec2 texcoord)
 {
-    if (u_basecolor_texture_flag > 0)
-		return toLinear(texture2D(s_basecolor, texcoord)) * u_basecolor_factor;
+    if (u_basecolor_texture_flag > 0.0)
+		//return toLinear(texture2D(s_basecolor, texcoord)) * u_basecolor_factor;
+		return texture2D(s_basecolor, texcoord) * u_basecolor_factor;
 
 	return u_basecolor_factor;
 }
@@ -191,16 +193,16 @@ void main()
     // In glTF, these factors can be specified by fixed scalar values
     // or from a metallic-roughness map
     float perceptualRoughness = u_roughness_factor;
-    float metallic    = u_metallic_factor;
-    if (u_metallic_roughness_texture_flag > 1.0) {
+    float metallic = u_metallic_factor;
+    if (u_metallic_roughness_texture_flag > 0.0) {
         // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
         // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
-        vec4 mrSample = texture2D(s_metallic_roughness, v_texcoord0);
+        vec4 mrSample 		= texture2D(s_metallic_roughness, v_texcoord0);
         perceptualRoughness = mrSample.g * perceptualRoughness;
-        metallic = mrSample.b * metallic;
+        metallic 			= mrSample.b * metallic;
     } else {
         perceptualRoughness = clamp(perceptualRoughness, c_MinRoughness, 1.0);
-        metallic = clamp(metallic, 0.0, 1.0);
+        metallic 			= clamp(metallic, 0.0, 1.0);
     }
     // Roughness is authored as perceptual roughness; as is convention,
     // convert to material roughness by squaring the perceptual roughness [2].
@@ -219,7 +221,7 @@ void main()
 	// For very low reflectance range on highly diffuse objects (below 4%), incrementally reduce grazing reflecance to 0%.
 	float reflectance90 = clamp(reflectance * 25.0, 0.0, 1.0);
 	vec3 specularEnvironmentR0 = specularColor.rgb;
-	vec3 specularEnvironmentR90 = vec3(1.0, 1.0, 1.0) * reflectance90;
+	vec3 specularEnvironmentR90 = vec3_splat(1.0) * reflectance90;
 
 	vec3 n = getNormal(v_normal, v_posWS.xyz, v_texcoord0);
 	vec3 v = normalize(u_eyepos.xyz - v_posWS.xyz);    // Vector from surface point to camera
@@ -271,5 +273,5 @@ void main()
 		color += emissive;
 	}
 	
-	gl_FragColor = vec4(color, baseColor.a);
+	gl_FragColor = vec4(toGamma(color), baseColor.a);
 }

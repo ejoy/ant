@@ -10,6 +10,16 @@ mat3 mat3_from_columns(vec3 v0, vec3 v1, vec3 v2)
 #endif
 }
 
+mat3 to_tbn(vec3 t, vec3 b, vec3 n)
+{
+	mat3 TBN = mat3(t, b, n);
+#if BGFX_SHADER_LANGUAGE_HLSL
+	return TBN;
+#else
+	return transpose(TBN);
+#endif
+}
+
 mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 {
 	mat4 wolrdMat = mat4(0, 0, 0, 0, 
@@ -33,12 +43,7 @@ mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
 	vec3 tangent = normalize(mul(worldMat, vec4(t.xyz, 0.0)).xyz);
 	vec3 bitangent = cross(normal, tangent) * b_sign;
 
-	mat3 tbn = mat3(tangent, bitangent, normal);
-#if BGFX_SHADER_LANGUAGE_HLSL
-	return tbn;
-#else
-	return transpose(tbn);
-#endif
+	return to_tbn(tangent, bitangent, normal);
 }
 
 // left handside
@@ -81,12 +86,7 @@ mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
 	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
 	vec3 tangent = normalize(mul(worldMat, vec4(t, 0.0)).xyz);
 	vec3 bitangent = normalize(mul(worldMat, vec4(b, 0.0)).xyz);
- 	return transpose(
-			mat3_from_columns(
-			tangent,
-			bitangent,
-			normal)
-		);
+ 	return to_tbn(tangent, bitangent, normal);
 }
 
 #if BGFX_SHADER_TYPE_FRAGMENT
@@ -101,12 +101,7 @@ mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
     vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
     vec3 B  = -normalize(cross(N, T));
 
-	mat3 TBN = mat3(T, B, N);
-#if BGFX_SHADER_LANGUAGE_HLSL
-	return transpose(TBN);
-#else
-	return TBN;
-#endif
+	return to_tbn(T, B, N);
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 

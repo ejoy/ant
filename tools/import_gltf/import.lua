@@ -200,7 +200,8 @@ local function export_pbrm(pbrm_path)
             },
             metallic_roughness = {
                 texture = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
-                factor = {pbr_mr.metallicFactor, pbr_mr.roughnessFactor, 0, 0},
+                roughness_factor = pbr_mr.roughnessFactor,
+                metallic_factor = pbr_mr.metallicFactor
             },
             normal = {
                 texture = handle_texture(mat.normalTexture, "normal", true, "linear"),

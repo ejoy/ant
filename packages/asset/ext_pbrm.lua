@@ -12,8 +12,8 @@ local default_pbr_param = {
 		texture = pbr_default_path / "basecolor.texture",
 		factor = {1, 1, 1, 1},
 	},
-	metal_roughness = {
-		texture = pbr_default_path / "metallic_roughness.texture",
+	roughness_metallic = {
+		texture = pbr_default_path / "roughness_metallic.texture",
 		factor = {1, 1, 0, 0},
 	},
 	normal = {
@@ -35,6 +35,11 @@ local function refine_paths(pbrm)
 	end
 end
 
+local function get_texture(pbrm, name)
+	local t = pbrm[name].texture
+	return t and t.path or default_pbr_param[name].texture
+end
+
 return {
 	loader = function (filename)
 		local material_loader = assetmgr.get_loader "material"
@@ -48,23 +53,23 @@ return {
 			textures = {
 				s_basecolor = {
 					type="texture", name="BaseColor texture", stage=0, 
-					ref_path=pbrm.basecolor.texture.path or default_pbr_param.basecolor.texture
+					ref_path=get_texture(pbrm, "basecolor")
 				},
-				s_metal_roughness = {
-					type="texture", name="metal roughness texutre", stage=1,
-					ref_path=pbrm.metallic_roughness.texture.path or default_pbr_param.metal_roughness.texture
+				s_metallic_roughness = {
+					type="texture", name="roughness metallic texutre", stage=1,
+					ref_path=get_texture(pbrm, "metallic_roughness")
 				},
 				s_normal = {
 					type="texture", name="normal texture", stage=2,
-					ref_path=pbrm.normal.texture.path or default_pbr_param.normal.texture,
+					ref_path=get_texture(pbrm, "normal")
 				},
 				s_occlusion = {
 					type="texture", name="occlusion texture", stage=3,
-					ref_path=pbrm.occlusion.texture.path or default_pbr_param.occlusion.texture,
+					ref_path=get_texture(pbrm, "occlusion")
 				},
 				s_emissive = {
 					type="texture", name="emissive texture", stage=4,
-					ref_path=pbrm.emissive.texture.path or default_pbr_param.emissive.texture,
+					ref_path=get_texture(pbrm, "emissive")
 				},
 			},
 			uniforms = {
@@ -72,13 +77,13 @@ return {
 					type="color", name="base color factor",
 					value=pbrm.basecolor.factor or default_pbr_param.basecolor.factor,
 				},
-				u_metal_roughness_factor = {
-					type="v4", name="metal roughness factor",
+				u_metallic_roughness_factor = {
+					type="v4", name="metalllic&roughness factor",
 					value={
-						pbrm.metallic_roughness.factor[1] or 1, 
-						pbrm.metallic_roughness.factor[2] or 1,
-						pbrm.metallic_roughness.texture and 1.0 or 0.0,
-						0,
+						0.0, -- keep for occlusion factor
+						pbrm.metallic_roughness.roughness_factor or 1,	-- roughness
+						pbrm.metallic_roughness.metallic_factor or 1, 	-- metallic
+						pbrm.metallic_roughness.texture and 1.0 or 0.0,	-- whether using metallic_roughtness texture or not
 					}
 				},
 				u_emissive_factor = {
