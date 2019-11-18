@@ -23,14 +23,15 @@ local UnappliedTips = "Unapplied setting for %s,\nstill want to open other resou
 function InspectorBase:_init()
     self.res_ext = "xxx"
     self.modified = false
-    self.res_pkg_path = nil
+    self.res_pkg_path = nil --file_pathobj or [pathstr]
     self.res_arg = nil
-    self.display_type_map = {
+    self.display_type_map = { --some cache data
         boolean = self.show_cfg_of_boolean,
     }
-    self.write_type_map = {
+    self.write_type_map = { --some cache data
         boolean = self.write_cfg_of_boolean,
     }
+    self.ui_cache = {}
 end
 
 function InspectorBase:get_type()
@@ -41,6 +42,7 @@ function InspectorBase:set_res(res_pkg_path,res_arg)
     assert(self.res_pkg_path == nil,"should call close first!")
     self.res_pkg_path = res_pkg_path
     self.res_arg = res_arg
+
     self:before_res_open()
 end
 
@@ -82,6 +84,11 @@ function InspectorBase:clear()
     self.modified = false
     self.res_pkg_path = nil
     self.res_arg = nil
+    self:clear_ui_cache()
+end
+
+function InspectorBase:clear_ui_cache()
+    self.ui_cache = {}
 end
 
 function InspectorBase:_show_key_value(parent_tbl,key,typ,indent)
@@ -107,22 +114,23 @@ function InspectorBase:show_import_cfg(data,cfg)
 end
 
 function InspectorBase:show_one_cfg(data_tbl,cfg_item)
-    local type_cfg_field = type(cfg_item.field)
+    local field = cfg_item.display or cfg_item.field
+    local type_cfg_field = type(field)
     if type_cfg_field == "string" then
-        local func = self.display_type_map[cfg_item.field]
+        local func = self.display_type_map[field]
         if not func then
-            widget.Text("Unimplemented field type:",cfg_item.field)
+            widget.Text("Unimplemented field type:",field)
         end
         return func(self,data_tbl,cfg_item)
     elseif type_cfg_field == "function" then
-        local func = cfg_item.field
+        local func = field
         return func(self,data_tbl,cfg_item)
     elseif type_cfg_field == "table" then
         local data = data_tbl[cfg_item.name]
         local change = false
         if widget.TreeNode(cfg_item.name,flags.TreeNode.DefaultOpen) then
             -- cursor.Indent()
-            for _,citem in ipairs(cfg_item.field) do
+            for _,citem in ipairs(field) do
                 change = self:show_one_cfg(data,citem) or change
             end
             widget.TreePop()
@@ -190,15 +198,16 @@ end
 function InspectorBase:write_one_cfg(data,cfg_item,tbl,indent)
     local name = cfg_item.name
     
-    local type_cfg_field = type(cfg_item.write or cfg_item.field )
     local cfg_field = cfg_item.write or cfg_item.field
+    local type_cfg_field = type(cfg_field)
         
     if type_cfg_field == "string" then
         local func = self.write_type_map[cfg_field]
         if not func then
-            widget.Text("Unimplemented field type:",cfg_field)
+            log.info_a("Unimplemented field type:",cfg_field)
+        else
+            func(self,data,cfg_item,tbl,indent)
         end
-        func(self,data,cfg_item,tbl,indent)
     elseif type_cfg_field == "function" then
         local func = cfg_field
         func(self,data,cfg_item,tbl,indent)
@@ -232,6 +241,8 @@ function InspectorBase:write_cfg_of_boolean(data,cfg_item,tbl,indent)
         table.insert(tbl,",\n")
     end
 end
+
+
 
 
 return InspectorBase

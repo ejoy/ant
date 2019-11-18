@@ -1,4 +1,4 @@
 return {
-    name = "ant.project",
+    name = "project",
     entry = "entry",
 }

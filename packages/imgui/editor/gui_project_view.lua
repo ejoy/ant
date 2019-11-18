@@ -23,6 +23,16 @@ local GuiBase           = require "gui_base"
 local GuiPackageView    = GuiBase.derive("GuiGuiPackageView")
 GuiPackageView.GuiName  = "GuiPackageView"
 
+local FileOpenEvent = setmetatable(
+    {
+        scene = Event.OpenScene,
+    },
+    {   __index = function(tab,key)
+            return Event.OpenRes
+        end
+    })
+
+
 function GuiPackageView:_init()
     GuiBase._init(self)
     self.win_flags = flags.Window { "MenuBar" }
@@ -31,11 +41,12 @@ function GuiPackageView:_init()
     self.left_precent = 0.3
     self:_init_subcribe()
     self.cur_pkg_name = nil
-    self.pkg_list = {nil,nil}
+    self.pkg_list = {nil,nil,nil}
     self.selection = {list={},map={}} --pathstr
     self.focus_path_obj = nil
     self.is_directory_cache = {}
     self.cur_project_name = nil
+    self.cur_project_data = nil
 end
 
 function GuiPackageView:_init_subcribe()
@@ -48,9 +59,11 @@ function GuiPackageView:on_project_change()
     local p_data = project_ins and project_ins:get_cur_project()
     if p_data then
         self.cur_project_name = p_data.name
+        self.cur_project_data = p_data
         self.title_id = string.format("Project - %s###%s",p_data.name,self.GuiName)
     else
         self.cur_project_name = nil
+        self.cur_project_data = nil
         self.title_id = string.format("Project - Not Project###%s",self.GuiName)
     end
     self:update_package_list_data(true)
@@ -96,7 +109,9 @@ end
 function GuiPackageView:_update_menu_bar()
     local _,y1 = cursor.GetCursorPos()
     if widget.BeginMenuBar() then
-        widget.Button("button")
+        if widget.MenuItem("New") then
+            self:open_new_package_box()
+        end
         widget.EndMenuBar()
     end
     local _,y2 = cursor.GetCursorPos()
@@ -125,7 +140,9 @@ function GuiPackageView:list_directory(path_obj)
     local childs =  path_obj:list_directory()
     local result = {}
     for child_obj in childs do
-        table.insert(result,child_obj)
+        if child_obj:filename():string() ~= "_build" then
+            table.insert(result,child_obj)
+        end
     end
     local function cmp_path_obj(a,b)
         return string.lower(a:string())<string.lower(b:string())
@@ -149,7 +166,6 @@ function GuiPackageView:is_directory(path_obj)
     end
 end
 
-
 function GuiPackageView:on_dir_update(delta)
     -- if self.pkg_list = 
     self:on_pkglist_update()
@@ -160,13 +176,12 @@ function GuiPackageView:on_dir_update(delta)
 
     local root_dir = fs.path("/pkg/"..self.cur_pkg_name)
     if not fs.exists(root_dir) then
-        widget.Text("Package not exists.")
+        widget.Text("Package not exists:"..self.cur_pkg_name)
     end
     ---
     local cur_dir = root_dir
     --do
     if self:push_open_tree_node(root_dir,true,false) then
-
         local count = 1
         local is_break = false
         if self.focus_path_obj then
@@ -187,7 +202,6 @@ function GuiPackageView:on_dir_update(delta)
 
         if not is_break then
             local childs =  self:list_directory(self.focus_path_obj)
-
             for _,child_obj in ipairs(childs) do
                 if self:is_directory(child_obj)then
                     if self:push_open_tree_node(child_obj,true,true) then
@@ -207,18 +221,22 @@ function GuiPackageView:on_path_click(path_obj)
     local ctrl = gui_input.get_ctrl_state(gui_input.KeyCtrl)
     if ctrl then
         --mult select
-        table.insert(self.selection.list,path_str)
-        self.selection.map[path_str] = true
+        if not self.selection.map[path_str] then
+            table.insert(self.selection.list,path_str)
+            self.selection.map[path_str] = true
+        end
     else
         --single select
         self.selection.list = {path_str}
         local map = self.selection.map
         for k,_ in pairs(map) do
-            map[k] = false
+            map[k] = nil
         end
         map[path_str] = true
     end
+    hub.publish(Event.InspectRes,self.selection.list)
 end
+
 
 function GuiPackageView:on_path_double_click(path_obj,is_dir)
     if is_dir then
@@ -226,8 +244,14 @@ function GuiPackageView:on_path_double_click(path_obj,is_dir)
         log.info_a("focus_path_obj",self.focus_path_obj)
     else
         log.trace("Double click file",path_obj:string())
-        hub.publish(Event.InspectRes,path_obj:string())
-        
+        local function get_ext(path_obj)
+            local ext = path_obj:extension():string():sub(2):lower()
+            return ext
+        end
+        local _,ext = pcall(get_ext,path_obj)
+        log("path ext:",ext)
+        local event = FileOpenEvent[ext]
+        hub.publish(event,path_obj:string())
     end
 end
 
@@ -249,7 +273,6 @@ function GuiPackageView:push_open_tree_node(path_obj,is_dir,is_leaf)
     elseif is_click then
         self:on_path_click(path_obj)
     end
-
     return open
 end
 
@@ -265,21 +288,26 @@ function GuiPackageView:update_package_list_data(force)
         --todo
         local project_data,project_detail = GuiProjectList:get_ins():get_cur_project()
         local engine_pkgs = {}
-        local project_pkgs = {}
+        local external_packages = {}
+        local inner_packages = {}
         for i,pkg_name in ipairs(list) do
             local pkg_path = fs.path(string.format("/pkg/%s",pkg_name))
             local local_path = pkg_path:localpath():string()
             if string.sub(local_path,1,9) == "packages/" then
                 table.insert(engine_pkgs,pkg_name)
-            elseif project_detail and project_detail.packages[pkg_name] then
-                table.insert(project_pkgs,pkg_name)
+            elseif project_detail then
+                if project_detail.external_packages[pkg_name] then
+                    table.insert(external_packages,pkg_name)
+                elseif project_detail.inner_packages[pkg_name] then
+                    table.insert(inner_packages,pkg_name)
+                end
             end
         end
-
         table.sort(engine_pkgs)
-        table.sort(project_pkgs)
+        table.sort(external_packages)
         self.pkg_list[1] = engine_pkgs
-        self.pkg_list[2] = project_pkgs
+        self.pkg_list[2] = external_packages
+        self.pkg_list[3] = inner_packages
     end
 end
 
@@ -287,7 +315,8 @@ function GuiPackageView:on_pkglist_update()
     --check pkg list every minute
     self:update_package_list_data(false)
     local engine_pkgs = self.pkg_list[1]
-    local project_pkgs = self.pkg_list[2]
+    local external = self.pkg_list[2]
+    local inner = self.pkg_list[3]
     if not self.pkg_ui_tbl then
         self.pkg_ui_tbl = {engine_pkgs[1]}
         self.cur_pkg_name = self.pkg_ui_tbl[1]
@@ -296,22 +325,39 @@ function GuiPackageView:on_pkglist_update()
     local w,h = windows.GetContentRegionAvail()
     cursor.SetNextItemWidth(w)
     if widget.BeginCombo("###PKG_LIST",self.pkg_ui_tbl) then
-        if project_pkgs then
-            for i,pname in ipairs(project_pkgs) do
-                if widget.Selectable(string.format("[]%s",pname),self.pkg_ui_tbl) then
+        if self.cur_project_name then
+            if widget.Selectable(string.format("[Project]project"),self.pkg_ui_tbl) then
+                change = true
+            end
+        end
+        if inner then
+            for i,pname in ipairs(inner) do
+                if widget.Selectable(string.format("[Inner]%s",pname),self.pkg_ui_tbl) then
                     change = true
                 end
             end
+        end
+        if external then
+            for i,pname in ipairs(external) do
+                if widget.Selectable(string.format("[External]%s",pname),self.pkg_ui_tbl) then
+                    change = true
+                end
+            end
+        end
+        if self.cur_project_name then
+            cursor.Spacing()
+            cursor.Separator()
+            cursor.Spacing()
+
         end
         for i,pname in ipairs(engine_pkgs) do
             if widget.Selectable(pname,self.pkg_ui_tbl) then
                 change = true
             end
         end
-        
         widget.EndCombo()
         if change then
-            self.cur_pkg_name = self.pkg_ui_tbl[1]
+            self.cur_pkg_name = string.match(self.pkg_ui_tbl[1],"([^]]+)$")
             self.focus_path_obj = nil
             log.trace("cur_pkg",self.cur_pkg_name)
         end
@@ -357,6 +403,7 @@ function GuiPackageView:show_file_selected_menu(name)
     if open then
         if widget.Button("Delete") then
             for i,path_str in ipairs(self.selection.list) do
+                log.info("select",path_str)
                 local local_path = gui_util.pkg_path_to_local(path_str,true)
                 log.info_a("remove"..local_path,lfs.remove_all(lfs.path(local_path)))
             end
@@ -435,13 +482,139 @@ function GuiPackageView:on_dropfiles(files)
         else
             action(1)
         end
-
     end
     for _,file in  ipairs(files) do
         local file_obj = lfs.path(file)
         dropfile(file_obj)
     end
-    
+end
+
+local function check_input_args(name_text,location_text,entry_text)
+    if #name_text == 0 then
+        gui_util.notice({msg="Need to input package name"})
+        return false
+    end
+    if #location_text == 0 then
+        gui_util.notice({msg="Need to input package location"})
+        return false
+    end
+    if #entry_text == 0 then
+        gui_util.notice({msg="Need to input entry name"})
+        return false
+    end
+    log(name_text,location_text,entry_text)
+    return true
+end
+
+local function create_package_at(name,location,entry)
+    local pm = require "antpm"
+    local dir_obj = lfs.path(location)
+    if lfs.exists(dir_obj) then
+        gui_util.notice({msg="create package failed,same name exists"})
+        return false
+    end
+
+    -- local current_path = lfs.current_path()
+    local package_temp_path = fs.path(pm.get_entry_pkg().."/package_temp.lua")
+    -- local local_path = package_temp_path:localpath()
+    local package_temp_str = nil
+    do
+        local f = fs.open(package_temp_path,"r")
+        package_temp_str = f:read("*a")
+        f:close()
+    end
+    log("f",package_temp_str)
+    lfs.create_directory(dir_obj)
+    local package_file_path = dir_obj / "package.lua"
+    do
+        local f = lfs.open(package_file_path,"w")
+        f:write(string.format(package_temp_str,{pkg_name = name,pkg_entry=entry}))
+        f:close()
+    end
+    do
+        local f = lfs.open(dir_obj/string.format("%s.lua",entry),"w")
+        f:write("return {}")
+        f:close()
+    end
+    return true
+end
+
+function GuiPackageView:open_new_package_box( )
+    local name_tbl = {hint = "package_name" }
+    local entry_tbl = {text = "entry",hint="will create {entry}.lua"}
+    local project_data = self.cur_project_data
+    local _meta_location_in_project = nil
+    local location_tbl = {}
+    local inside_project = not not project_data
+    local function refresh_location_hint()
+        if inside_project then
+            location_tbl.hint = project_data.path.."/package_dir"
+        else
+            location_tbl.hint = "./package_dir"
+        end
+    end
+    refresh_location_hint(location_tbl)
+    local result = 0
+    local function cb()
+        local name = tostring(name_tbl.text)
+        local location = tostring(location_tbl.text)
+        local entry = tostring(entry_tbl.text)
+        log("callback name:",name,"location:",location)
+        if not check_input_args(name,location,entry) then
+            return false
+        end
+        if inside_project then
+            if string.sub(location,1,#(project_data.path))~=project_data.path then
+                gui_util.notice({msg="'Inside Project' is choosen,package path mush inside project!"})
+                return false
+            end
+        end
+        local success_path = create_package_at(name,location,entry)
+        if inside_project then
+            local package_relative_path = string.sub(location,#(project_data.path)+2)
+            hub.publish(Event.RequestAddPackageToProject,"inner",package_relative_path)
+        else
+            hub.publish(Event.RequestAddPackageToProject,"external",location)
+        end
+        return success_path
+    end
+
+    local function update_func()
+        widget.Text("PackageName")
+        cursor.SameLine()
+        cursor.SetCursorPos(120,nil)
+        widget.InputText("##Name",name_tbl)
+        widget.Text("Entry      ")
+        cursor.SameLine()
+        cursor.SetCursorPos(120,nil)
+        widget.InputText("##Entry",entry_tbl)
+        if project_data then
+            widget.Text("In Project  ")
+            cursor.SameLine()
+            cursor.SetCursorPos(120,nil)
+            local change,nv
+            log("inside_project",inside_project)
+            change,nv = widget.Checkbox("##InProject",inside_project)
+            if change then
+                inside_project = nv
+                refresh_location_hint()
+            end
+        end
+        widget.Text("Location")
+        cursor.SameLine()
+        cursor.SetCursorPos(120,nil)
+        widget.InputText("##Location",location_tbl)
+        if widget.Button("Confirm") then
+            if cb() then
+                windows.CloseCurrentPopup()
+            end
+        end
+        cursor.SameLine()
+        if widget.Button("Cancel") then
+            windows.CloseCurrentPopup()
+        end
+    end
+    gui_util.popup(update_func,"New Package")
 end
 
 return GuiPackageView

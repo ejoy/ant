@@ -6,4 +6,4 @@ package.path = table.concat({
 
 require "runtime"
 local pm = require "antpm"
-pm.import "ant.project"
+pm.import "project"

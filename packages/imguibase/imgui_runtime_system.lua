@@ -8,9 +8,15 @@ local viewidmgr = renderpkg.viewidmgr
 local fbmgr = renderpkg.fbmgr
 
 local imgui_runtime_system =  ecs.system "imgui_runtime_system"
+local timer = import_package "ant.timer"
+
 
 function imgui_runtime_system:update()
-    imgui.begin_frame(1/60)
+    local frame_time = timer.deltatime/1000
+    if frame_time <= 0.0 then
+        frame_time = 1.0/60
+    end
+    imgui.begin_frame(frame_time)
     world:update_func("on_gui")()
     local vid = imgui.viewid()
     renderutil.update_frame_buffer_view(vid, fbmgr.get_fb_idx(vid))

@@ -14,7 +14,7 @@ local function asset_index(tbl,path)
         if v then
             return v
         else
-            log(string.format("[Imgui Error]:%s<%s> not exist!",path,key))
+        log(string.format("[Imgui Error]:%s<%s> not exist!",path,key))
             log(debug.traceback())
         end
     end

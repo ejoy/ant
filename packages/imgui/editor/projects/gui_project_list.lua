@@ -14,6 +14,8 @@ local gui_util          = require "editor.gui_util"
 local fs                = require "filesystem"
 local lfs                = require "filesystem.local"
 
+local project_data_accessor    = require "editor.projects.project_data_accessor"
+
 local hub = import_package("ant.editor").hub
 local Event = require "hub_event"
 
@@ -34,9 +36,16 @@ function GuiProjectList:_init()
     self:_init_subcribe()
 end
 
+---event process
 function GuiProjectList:_init_subcribe()
-
+    hub.subscribe(Event.RequestAddPackageToProject,self.on_request_add_package_to_project,self)
 end
+
+function GuiProjectList:on_request_add_package_to_project(typ,path)
+    log.info("on_request_add_package_to_project:",typ,path)
+    self:add_package_to_cur_project(typ,path)
+end
+---
 
 function GuiProjectList:on_update()
     local SelectableHeight = cursor.GetTextLineHeight()+cursor.GetTextLineHeightWithSpacing()
@@ -247,28 +256,15 @@ function GuiProjectList:open_import_project_box()
     gui_util.popup(update_func,"Import Project")
 end
 
+---project_access begin
+
 function GuiProjectList:open_project(pdata)
     assert(self.cur_open_project_path ~= pdata.path)
     --todo close old project
     self:close_project(false)
     --read config
-    local config_path = string.format("%s/_config.lua",pdata.path)
-    local r = loadfile(config_path,"t")
-    assert(r)
-    local config = r()
-    local external_packages = config.external_packages
-    local packages = {}
-    for i,pkg_path in ipairs(external_packages) do
-        local _path = lfs.path(pkg_path)
-        local pkg_data = pm.get_registered(_path)
-        if pkg_data then
-            packages[pkg_data.config.name] = _path
-        else
-            local pkg_name = pm.register_package(_path)
-            packages[pkg_name] = _path
-        end
-    end
-    self.project_details[pdata.path] = { config = config,packages = packages }
+    local project_detail = project_data_accessor.load(pdata)
+    self.project_details[pdata.path] = project_detail
     log.info_a(self.project_details[pdata.path])
     self.cur_open_project = pdata
     hub.publish(Event.OpenProject)
@@ -284,6 +280,30 @@ function GuiProjectList:close_project(publish_event)
         end
     end
 end
+
+--typ == "external",path relative to /Ant_dir
+--typ == "inner",path relative to /Ant/xxx/your_project_dir
+function GuiProjectList:add_package_to_cur_project(typ,path)
+    assert(typ and path)
+    local pdata,project_detail = self:get_cur_project()
+    assert(pdata,"Not project opening.")
+    local success = false
+    if typ == "external" then
+        success = project_data_accessor.add_external_package(pdata,project_detail,path)
+    elseif typ == "inner" then
+        success = project_data_accessor.add_inner_package(pdata,project_detail,path)
+    else
+        log.warning("Unknown type:"..typ)
+    end
+    if success then
+        project_data_accessor.save(pdata,project_detail)
+        log.info("Project saved successfully:",pdata.name)
+        hub.publish(Event.ProjectModified)
+    end
+end
+
+---project_access end
+
 
 function GuiProjectList:remove_project_by_index(index)
     table.remove(self.project_list,index)
