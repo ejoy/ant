@@ -1,4 +1,5 @@
 local editor = {
+    extend = require "common.extend",
     imgui = require "imgui_wrap",
     gui_mgr = require "gui_mgr",
     gui_input = require "gui_input",
@@ -6,6 +7,7 @@ local editor = {
     gui_base = require "gui_base",
     gui_main = require "gui_main",
     class = require "common.class",
+    hub_event = require "hub_event",
     controls = {
         list = require "controls.list",
         tree = require "controls.tree",
@@ -28,6 +30,10 @@ local editor = {
         gui_inspector_view = require "editor.inspector.gui_inspector_view",
         gui_project_list = require "editor.projects.gui_project_list",
         gui_window_controller = require "editor.gui_window_controller",
+        scene = {
+            scene_data_accessor = require "editor.scene.scene_data_accessor",
+        }
+        
     },
 }
 return editor

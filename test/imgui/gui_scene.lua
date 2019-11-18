@@ -6,11 +6,14 @@ local flags         = imgui.flags
 local windows       = imgui.windows
 local util          = imgui.util
 local cursor        = imgui.cursor
+local scene_data_accessor  = imguipkg.editor.scene.scene_data_accessor
+local Event         = imguipkg.hub_event
 local GuiCanvas     = imguipkg.editor.gui_canvas
-local gui_util     = imguipkg.editor.gui_util
+local gui_util      = imguipkg.editor.gui_util
 local scene         = import_package "ant.scene".util
 local ru            = import_package "ant.render".util
 local scene_control = require "scene_control"
+local hub           = import_package "ant.editor".hub 
 
 local GuiScene = GuiCanvas.derive("GuiScene")
 GuiScene.GuiName = "GuiScene"
@@ -21,6 +24,12 @@ function GuiScene:_init()
     GuiCanvas._init(self)
     self.message_shown = false
     self.recent_scenes = {}
+    hub.subscribe(Event.OpenScene,self.on_request_open_scene_file,self)
+end
+
+function GuiScene:on_request_open_scene_file(path)
+    log("on_request_open_scene_file",path)
+    scene_data_accessor.start_scene(path)
 end
 
 function GuiScene:_get_editpath()

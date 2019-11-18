@@ -54,8 +54,8 @@ thread.thread (([[
         f:close()
 		return load(str, "@/" .. name)
     end
-    assert(loadfile(firmware_io, 'engine/firmware/io.lua'))(loadfile, %q)
-]]):format(firmware_io, arg[1]), package.searchers[3])
+    assert(loadfile(firmware_io, 'engine/firmware/io.lua'))(loadfile)
+]]):format(firmware_io), package.searchers[3])
 
 local function vfs_init()
     config.vfspath = repo:realpath("engine/firmware/vfs.lua")

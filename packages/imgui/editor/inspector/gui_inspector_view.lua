@@ -16,7 +16,6 @@ local gui_mgr         = require "gui_mgr"
 local gui_util          = require "editor.gui_util"
 local fs                = require "filesystem"
 
-local GLBInspector          = require "editor.inspector.glb_inspector"
 
 local GuiBase           = require "gui_base"
 local GuiInspectorView    = GuiBase.derive("GuiInspectorView")
@@ -33,7 +32,10 @@ end
 
 
 function GuiInspectorView:_init_res_inspector()
+    local GLBInspector = require "editor.inspector.glb_inspector"
+    local SceneInspector = require "editor.inspector.scene_inspector"
     self:_register_inspector(GLBInspector.new())
+    self:_register_inspector(SceneInspector.new())
 end
 
 function GuiInspectorView:_register_inspector(inspector_ins)
@@ -46,25 +48,35 @@ function GuiInspectorView:_init_subcribe()
     hub.subscribe(Event.InspectRes,self.on_inspect_res,self)
 end
 
-function GuiInspectorView:on_inspect_res(pkg_path_str)
-    local pkg_path = fs.path(pkg_path_str)
-    self:set_res_pkg_path(pkg_path)
-    gui_mgr.set_focus_window(GuiInspectorView.GuiName)
+function GuiInspectorView:on_inspect_res(pkg_path_strs)
+    log.info_a(pkg_path_strs)
+    if #pkg_path_strs == 1 then
+        local pkg_path_str = pkg_path_strs[1]
+        local pkg_path = fs.path(pkg_path_str)
+        self:set_inspector_data(pkg_path)
+        gui_mgr.set_focus_window(GuiInspectorView.GuiName)
+    else
+        self:set_inspector_data(pkg_path_strs)
+        gui_mgr.set_focus_window(GuiInspectorView.GuiName)
+    end
 end
 
 function GuiInspectorView:find_inspector(pkg_path)
+    if not pkg_path.__name then
+        return nil
+    end
     local ext = pkg_path:extension():string()
     ext = string.sub(ext,2)
     ext = string.lower(ext)
     return self.res_inspector[ext]
 end
 
-function GuiInspectorView:set_res_pkg_path(pkg_path)
+function GuiInspectorView:set_inspector_data(res_data)
     local function open_new()
-        self.res_pkg_path = pkg_path
-        self.cur_inspector = self:find_inspector(pkg_path)
+        self.inspector_data = res_data
+        self.cur_inspector = self:find_inspector(res_data)
         if self.cur_inspector then
-            self.cur_inspector:set_res(pkg_path)
+            self.cur_inspector:set_res(res_data)
         end
     end
     local is_closing = self.close_cb
@@ -74,12 +86,18 @@ function GuiInspectorView:set_res_pkg_path(pkg_path)
     end
 end
 function GuiInspectorView:on_update()
-    if self.res_pkg_path then
+    if self.inspector_data then
         if self.cur_inspector then
             self.cur_inspector:on_update()
         else
-            widget.Text("ResPath")
-            widget.Text(self.res_pkg_path:string())
+            widget.Text("Selection Files")
+            if self.inspector_data.__name then
+                widget.Text(self.inspector_data:string())
+            else
+                for k,v in ipairs(self.inspector_data) do
+                    widget.Text(v)
+                end
+            end
         end
     else
         widget.Text("Not Resource")
@@ -93,7 +111,7 @@ function GuiInspectorView:try_close_res()
         end
         self.close_cb = nil
     end
-    if self.res_pkg_path and self.cur_inspector then
+    if self.inspector_data and self.cur_inspector then
         self.cur_inspector:try_close_res(close_cb)
     else
         close_cb(true)

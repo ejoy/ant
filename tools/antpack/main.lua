@@ -6,4 +6,4 @@ package.path = table.concat({
 
 require "runtime"
 local pm = require "antpm"
-pm.import "ant.testimgui"
+pm.import "ant.antpack"

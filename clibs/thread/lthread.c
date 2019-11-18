@@ -234,7 +234,10 @@ static int luaopen_thread_worker(lua_State *L);
 
 static int
 thread_luamain(lua_State *L) {
+	lua_pushboolean(L, 1);
+	lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
 	luaL_openlibs(L);
+	lua_gc(L, LUA_GCGEN, 0, 0);
 	int id = atom_inc(&g_thread_id);
 	lua_pushinteger(L, id);
 	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");

@@ -74,4 +74,17 @@ function localvfs.add_mount(name, mountpath)
 	return true
 end
 
+function localvfs.unmount(name)
+	if self._mountpoint[name] then
+		local mnames = self._mountname
+		for i, n in ipairs(mnames) do
+			if n == name then
+				table.remove(mnames,i)
+				self._mountpoint[name] = nil
+				return true
+			end
+		end
+	end
+end
+
 package.loaded.vfs = localvfs

@@ -1,4 +1,7 @@
 return {
+    inner_packages = { 
+        --relative_path
+    },
     external_packages = {
         --pkg_path
         "test/imgui",

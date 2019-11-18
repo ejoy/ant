@@ -1,4 +1,4 @@
-local loadfile, name = ...
+local loadfile = ...
 
 local INTERVAL = 0.01 -- socket select timeout
 
@@ -88,6 +88,18 @@ local function init_channels()
 	end
 end
 
+local function read_config(path, env)
+	env = env or {}
+	local r = loadfile(path, "t", env)
+	if not r then
+		return
+	end
+	if not pcall(r) then
+		return
+	end
+	return env
+end
+
 local function init_config()
 	local c = channel.req()
 	config.repopath = assert(c.repopath)
@@ -95,6 +107,8 @@ local function init_config()
 	config.address = assert(c.address)
 	config.port = assert(c.port)
 	config.vfspath = assert(c.vfspath)
+	config.rootname = c.rootname
+	read_config(config.repopath .. "config", config)
 end
 
 local function init_repo()
@@ -156,7 +170,9 @@ local function wait_server()
 	if config.nettype == "listen" then
 		return listen_server(config.address, config.port)
 	end
-	return connect_server(config.address, config.port)
+	if config.nettype == "connect" then
+		return connect_server(config.address, config.port)
+	end
 end
 
 -- response io request with id
@@ -441,7 +457,7 @@ local response = {}
 
 function response.ROOT(hash)
 	if hash == '' then
-		_print("INVALID ROOT", name)
+		_print("INVALID ROOT", config.rootname)
 		os.exit(-1, true)
 		return
 	end
@@ -564,7 +580,7 @@ end
 local function waiting_for_root()
 	local resp = {}
 	local reading = connection.recvq
-	connection_send("ROOT", name)
+	connection_send("ROOT", config.rootname)
 	while true do
 		local ok, err = connection_dispose(INTERVAL)
 		if not ok then

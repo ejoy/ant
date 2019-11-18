@@ -11,10 +11,10 @@ local gui_util = {}
 function gui_util.get_all_schema()
     local pm = require "antpm"
     local packages = pm.get_pkg_list(true)
-    for k,v in ipairs(packages) do
-        if v == "ant.ecs" then
+    for k = #packages,1,-1 do
+        local v = packages[k]
+        if v == "ant.ecs" or v == "project" then
             table.remove(packages,k)
-            break
         end
     end
     -- log.info_a("all_package:",packages)
