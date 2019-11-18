@@ -9,24 +9,24 @@
 
 static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr, size_t wsz) {
     int usz = WideCharToMultiByte(CP_UTF8, 0, wstr, wsz, 0, 0, NULL, NULL);
-	if (usz <= 0) {
+    if (usz <= 0) {
         luaL_error(L, "convert to utf-8 string fail.");
         return 0;
     }
     void *ud;
     lua_Alloc allocf = lua_getallocf(L, &ud);
     char* ustr = (char*)allocf(ud, NULL, 0, usz);
-	if (!ustr) {
+    if (!ustr) {
         luaL_error(L, "convert to utf-8 string fail.");
         return 0;
     }
     int rusz = WideCharToMultiByte(CP_UTF8, 0, wstr, wsz, ustr, usz, NULL, NULL);
-	if (rusz <= 0) {
+    if (rusz <= 0) {
         allocf(ud, ustr, usz, 0);
         luaL_error(L, "convert to utf-8 string fail.");
         return 0;
     }
-	const char* r = lua_pushlstring(L, ustr, rusz-1);
+    const char* r = lua_pushlstring(L, ustr, rusz-1);
     allocf(ud, ustr, usz, 0);
     return r;
 }
@@ -34,7 +34,7 @@ static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr, size_t 
 static const wchar_t hex[] = L"0123456789abcdef";
 
 static void repo_setup(wchar_t* dir) {
-	PathAppendW(dir, L".repo");
+    PathAppendW(dir, L".repo");
     CreateDirectoryW(dir, NULL);
     size_t sz = wcslen(dir);
     dir[sz] = L'\\';
@@ -50,14 +50,25 @@ static void repo_setup(wchar_t* dir) {
 }
 
 static void repo_dir(lua_State* L) {
-	wchar_t dir[MAX_PATH] = {0};
-	LPITEMIDLIST pidl = NULL;
-	SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl);
-    SHGetPathFromIDListW(pidl, dir);
-	PathAppendW(dir, L"ant");
-    CreateDirectoryW(dir, NULL);
-	PathAppendW(dir, L"runtime");
-    CreateDirectoryW(dir, NULL);
+    wchar_t dir[MAX_PATH] = {0};
+    LPITEMIDLIST pidl = NULL;
+    GetModuleFileNameW(NULL, dir, MAX_PATH);
+    PathRemoveBlanksW(dir);
+    PathUnquoteSpacesW(dir);
+    PathRemoveBackslashW(dir);
+    PathRemoveFileSpecW(dir);
+    PathAppendW(dir, L".repo");
+    if (PathFileExistsW(dir)) {
+        PathRemoveFileSpecW(dir);
+    }
+    else {
+        SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl);
+        SHGetPathFromIDListW(pidl, dir);
+        PathAppendW(dir, L"ant");
+        CreateDirectoryW(dir, NULL);
+        PathAppendW(dir, L"runtime");
+        CreateDirectoryW(dir, NULL);
+    }
     SetCurrentDirectoryW(dir);
     repo_setup(dir);
 }

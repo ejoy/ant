@@ -313,6 +313,13 @@ local function link(repo, srcfile, buildfile)
 	end
 end
 
+local function sandbox_link(repo, srcfile, buildfile)
+	local ok, r1, r2 = pcall(link, repo, srcfile, buildfile)
+	if ok then
+		return r1, r2
+	end
+end
+
 local function getbuildpath(repo, path)
 	local pathhash = access.sha1(path)
 	local ext = (path:match "[^/](%.[%w*?_%-]*)$"):lower()
@@ -323,7 +330,7 @@ end
 function access.link_loc(repo, path)
 	local srcfile = access.realpath(repo, path)
 	local buildfile = getbuildpath(repo, path)
-	return link(repo, srcfile, buildfile)
+	return sandbox_link(repo, srcfile, buildfile)
 end
 
 function access.link(repo, path, buildhash)
@@ -335,7 +342,7 @@ function access.link(repo, path, buildhash)
 	if not buildfile then
 		buildfile = getbuildpath(repo, path)
 	end
-	local dstfile, binhash = link(repo, srcfile, buildfile)
+	local dstfile, binhash = sandbox_link(repo, srcfile, buildfile)
 	if not dstfile then
 		return
 	end
