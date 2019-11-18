@@ -273,5 +273,5 @@ void main()
 		color += emissive;
 	}
 	
-	gl_FragColor = vec4(toGamma(color), baseColor.a);
+	gl_FragColor = vec4(color, baseColor.a);
 }
