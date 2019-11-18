@@ -130,15 +130,28 @@ local function load_packages(dir)
     return res
 end
 
-local function register_package(path)
+local function get_registered(path)
     if __ANT_RUNTIME__ then
         return false
     end
     local name = load_package(path)
+    return registered[name]
+end
+
+local function register_package(path,force)
+    if __ANT_RUNTIME__ then
+        return false
+    end
+    local name = load_package(path)
+    if registered[name] and force then
+        registered[name] = nil
+    end
     local editorvfs = require "vfs"
+    editorvfs.unmount("pkg/"..name)
     editorvfs.add_mount("pkg/"..name, path)
     return register(vfs.join('/pkg', name))
 end
+
 
 local function get_entry_pkg()
     if entry_pkg then
@@ -152,7 +165,7 @@ return {
     loadfile = pm_loadfile,
     get_pkg_list = get_pkg_list,
     get_entry_pkg = get_entry_pkg,
-    
+    get_registered = get_registered,
     init = init,
     config = config,
     load_package = load_package,
