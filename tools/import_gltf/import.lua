@@ -59,6 +59,7 @@ local image_extension = {
 local image_folder = output_folder  / "images"
 local pbrm_folder = output_folder   / "pbrm"
 local mesh_folder = output_folder   / "meshes"
+local animation_folder = output_folder / "animation"
 
 local function export_image(image_folder, imgidx)
     fs.create_directories(image_folder)
@@ -225,5 +226,12 @@ local function export_pbrm(pbrm_path)
     end
 end
 
+local subprocess = require "subprocess"
+
+local function export_animation(animation_folder)
+    
+end
+
 export_pbrm(pbrm_folder)
+export_animation(animation_folder)
 export_meshes(mesh_folder)

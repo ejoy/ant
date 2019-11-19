@@ -1,0 +1,11 @@
+
+basecolor = {
+    factor = {0.2, 0.2, 0.2, 1.0},
+}
+emissive = {
+    factor = {0.0, 0.0, 0.0, 0.0,},
+}
+metallic_roughness = {
+    metallic_factor = 0.0,
+    roughness_factor = 1.0,
+}

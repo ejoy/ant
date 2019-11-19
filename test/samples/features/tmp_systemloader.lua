@@ -35,6 +35,7 @@ local mu        = mathpkg.util
 local lu = renderpkg.light
 
 local PVPScenLoader = require 'PVPSceneLoader'
+local pbrscene = require "pbr_scene"
 
 local init_loader = ecs.system 'init_loader'
 init_loader.singleton "asyn_load_list"
@@ -181,13 +182,10 @@ function init_loader:init()
 
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
-    -- do
-    --     PVPScenLoader.create_entitices(world)
-    -- end
-
     computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_animation_test()
     pbr_test()
+    pbrscene.create_scene(world)
 end
 
 
