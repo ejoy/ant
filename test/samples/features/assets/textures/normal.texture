@@ -4,7 +4,7 @@ normalmap = true
 compress = {
   android = "ASTC6x6",
   ios = "ASTC6x6",
-  windows = "BC1"
+  windows = "BC5"
 }
 
 path = "/pkg/ant.resources.binary/test/tt/4.jpg"

@@ -10,7 +10,7 @@
 // we already have some option to calculate tangent and bitangent vector when import mesh.
 vec3 getWorldSpcaeNormalFromTexture(sampler2D normalMap, vec2 texCoords, vec3 worldPos, vec3 vertexNormal)
 {
-    vec3 normalTS = fetch_dxt_normal(normalMap, texCoords, 1.2);
+    vec3 normalTS = fetch_compress_normal(normalMap, texCoords, 1.2);
     mat3 TBN = tbn_from_world_pos(vertexNormal, worldPos, texCoords);
 
     return normalize(mul(TBN, normalTS));

@@ -1,5 +1,8 @@
 #ifndef __SHADER_TRANSFORMS_SH__
 #define __SHADER_TRANSFORMS_SH__
+
+#include <shaderlib.sh>
+
 mat3 mat3_from_columns(vec3 v0, vec3 v1, vec3 v2)
 {
 	mat3 m = mat3(v0, v1, v2);
@@ -117,9 +120,9 @@ vec3 remap_dxt_normal(vec2 normalTSXY, float offset)
     return vec3(normalTSXY_Remap, recalc_dxt_normal_Z(normalTSXY_Remap));
 }
 
-vec3 fetch_dxt_normal(sampler2D normalMap, vec2 texcoord, float offset)
+vec3 fetch_compress_normal(sampler2D normalMap, vec2 texcoord, float offset)
 {
-    return remap_dxt_normal(texture2D(normalMap, texcoord).xy, offset);
+    return remap_dxt_normal(texture2DBc5(normalMap, texcoord), offset);
 }
 
 vec3 unpack_dxt_normal(vec4 packednormal)
