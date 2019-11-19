@@ -12,8 +12,8 @@ local default_pbr_param = {
 		texture = pbr_default_path / "basecolor.texture",
 		factor = {1, 1, 1, 1},
 	},
-	roughness_metallic = {
-		texture = pbr_default_path / "roughness_metallic.texture",
+	metallic_roughness = {
+		texture = pbr_default_path / "metallic_roughness.texture",
 		factor = {1, 1, 0, 0},
 	},
 	normal = {
@@ -31,13 +31,50 @@ local default_pbr_param = {
 local function refine_paths(pbrm)
 	for k, v in pairs(pbrm) do
 		local tex = v.texture
-		tex.path = fs.path(tex.path)
+		if tex then
+			tex.path = fs.path(tex.path)
+		end
+	end
+end
+
+local function texture_path(pbrm, name)
+	local p = pbrm[name]
+	if p then
+		local t = pbrm[name].texture
+		if t then
+			return t.path
+		end
 	end
 end
 
 local function get_texture(pbrm, name)
-	local t = pbrm[name].texture
-	return t and t.path or default_pbr_param[name].texture
+	return texture_path(pbrm, name) or default_pbr_param[name].texture
+end
+
+local function property_factor(pbrm, name)
+	local p = pbrm[name]
+	if p then
+		return p.factor
+	end
+end
+
+local function get_property_factor(pbrm, name)
+	local f = property_factor(pbrm, name)
+	return f or default_pbr_param[name].factor
+end
+
+local function texture_flag(pbrm, name)
+	return texture_path(pbrm, name) and 1.0 or 0.0
+end
+
+local function get_metallic_roughness_factor(pbrm)
+	local mr = pbrm.metallic_roughness
+	if mr then
+		local m = mr.metallic_factor or 1.0
+		local r = mr.roughness_factor or 1.0
+		return m, r
+	end
+	return 1.0, 1.0
 end
 
 return {
@@ -48,6 +85,9 @@ return {
 		local pbrm = assetmgr.load_depiction(filename)
 
 		refine_paths(pbrm)
+
+		local metallic_factor, roughness_factor = 
+			get_metallic_roughness_factor(pbrm)
 
 		local properties = {
 			textures = {
@@ -75,28 +115,28 @@ return {
 			uniforms = {
 				u_basecolor_factor = {
 					type="color", name="base color factor",
-					value=pbrm.basecolor.factor or default_pbr_param.basecolor.factor,
+					value=get_property_factor(pbrm, "basecolor"),
 				},
 				u_metallic_roughness_factor = {
 					type="v4", name="metalllic&roughness factor",
 					value={
 						0.0, -- keep for occlusion factor
-						pbrm.metallic_roughness.roughness_factor or 1,	-- roughness
-						pbrm.metallic_roughness.metallic_factor or 1, 	-- metallic
-						pbrm.metallic_roughness.texture and 1.0 or 0.0,	-- whether using metallic_roughtness texture or not
+						roughness_factor,
+						metallic_factor,
+						texture_flag(pbrm, "metallic_roughness"),-- whether using metallic_roughtness texture or not
 					}
 				},
 				u_emissive_factor = {
 					type="v4", name="emissive factor",
-					value=pbrm.emissive.factor or default_pbr_param.emissive.factor,
+					value=get_property_factor(pbrm, "emissive"),
 				},
 				u_material_texture_flags = {
 					type="v4", name="texture flags",
 					value={
-						pbrm.basecolor.texture and 1.0 or 0.0,
-						pbrm.normal.texture and 1.0 or 0.0,
-						pbrm.occlusion.texture and 1.0 or 0.0,
-						pbrm.emissive.texture and 1.0 or 0.0,
+						texture_flag(pbrm, "basecolor"),
+						texture_flag(pbrm, "normal"),
+						texture_flag(pbrm, "occlusion"),
+						texture_flag(pbrm, "emissive"),
 					},
 				},
 				u_IBLparam = {

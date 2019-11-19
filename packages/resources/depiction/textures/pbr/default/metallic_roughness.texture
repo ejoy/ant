@@ -1,4 +1,5 @@
 path = "/pkg/ant.resources.binary/textures/1x1_white.png"
+format = "RGBA8"
 sampler = {
   MAG = "LINEAR",
   MIN = "LINEAR",
