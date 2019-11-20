@@ -12,7 +12,9 @@ local bindings = {
 	main_view 	= 30,
 	pickup 		= 31,
 	pickup_blit = 32,
-	blit		= max_viewid - 1,
+
+	blit		= max_viewid - 2,
+	uieditor	= max_viewid - 1,
 }
 local freeidx = 100
 

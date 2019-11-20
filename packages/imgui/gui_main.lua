@@ -22,7 +22,7 @@ local attribs   = {}
 local main = nil
 local initialized = false
 
-local uieditor_viewid = viewidmgr.generate("uieditor")
+local uieditor_viewid = viewidmgr.get "uieditor"
 
 local function imgui_resize(width, height)
 	local xdpi, ydpi = rhwi.dpi()
@@ -42,7 +42,7 @@ function gui_main.init(nwh, context, width, height)
         height = height,
 	}
     imgui.setDockEnable(true)
-    imgui.viewid(viewidmgr.generate("ui"));
+    imgui.viewid(uieditor_viewid);
     gui_mgr.win_handle = nwh
 	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
     imgui.font_program(
@@ -155,7 +155,7 @@ function _update(delta)
 
     task.update()
 	
-	bgfx.touch(uieditor_viewid)
+    bgfx.touch(uieditor_viewid)
     rhwi.frame()
     if main.update then
         main.update()
