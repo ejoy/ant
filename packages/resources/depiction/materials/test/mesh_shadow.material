@@ -20,7 +20,7 @@ properties = {
       name = "fog color",
       type = "color",
       value = {
-        0.8, 0.8, 0.8, 1
+        0.95, 0.95, 0.95, 1
       }
     },
     u_specularColor = {

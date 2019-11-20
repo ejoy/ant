@@ -21,6 +21,6 @@ void main()
 	float sun2 = min(sun * sun, 1.0);
 	vec3 color = v_skyColor + sun2;
 	color = toGamma(color);
-
-	gl_FragColor = vec4(color, 1.0);
+	
+	//gl_FragColor = vec4(color, 1.0);
 }

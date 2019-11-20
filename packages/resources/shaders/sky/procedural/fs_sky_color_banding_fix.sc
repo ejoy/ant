@@ -38,9 +38,7 @@ void main()
 	float sun = exp(-distance/ u_parameters.y / size2) + step(distance, size2);
 	float sun2 = min(sun * sun, 1.0);
 	vec3 color = v_skyColor + sun2;
-	color = toGamma(color);
 	float r = n4rand_ss(v_screenPos);
-	color += vec3(r, r, r) / 40.0;
-
+	color += toLinear(vec3(r, r, r) / 40.0);
 	gl_FragColor = vec4(color, 1.0);
 }
