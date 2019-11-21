@@ -36,12 +36,7 @@ local images = glbscene.images
 local function export_meshes(meshpath)
     fs.create_directories(meshpath)
 
-    -- for _, scene in ipairs(glbscene.scenes) do
-    --     for _, nodeidx  in ipairs(scene.nodes) do
-    --         local meshidx = nodeidx.mesh
-            
-    --     end
-    -- end
+
 
 end
 
@@ -230,13 +225,14 @@ local filecvt_util = require "fileconvert.util"
 local gltf2ozz = filecvt_util.valid_tool_exe_path "gltf2ozz"
 
 local function export_animation(animation_folder)
+    fs.create_directories(animation_folder)
     local commands = {
         gltf2ozz:string(),
-        "--file=" .. inputfile:string(),
+        "--file=" .. (fs.current_path() / inputfile):string(),
         stdout = true,
 		stderr = true,
         hideWindow = true,
-        cwd = animation_folder
+        cwd = animation_folder:string(),
     }
 
     local success, msg = filecvt_util.spawn_process(commands)
