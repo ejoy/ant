@@ -103,6 +103,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="lua53.natvis" />
+    <Natvis Include="lua54.natvis" />
   </ItemGroup>
 </Project>
