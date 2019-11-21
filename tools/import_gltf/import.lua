@@ -226,10 +226,21 @@ local function export_pbrm(pbrm_path)
     end
 end
 
-local subprocess = require "subprocess"
+local filecvt_util = require "fileconvert.util"
+local gltf2ozz = filecvt_util.valid_tool_exe_path "gltf2ozz"
 
 local function export_animation(animation_folder)
-    
+    local commands = {
+        gltf2ozz:string(),
+        "--file=" .. inputfile:string(),
+        stdout = true,
+		stderr = true,
+        hideWindow = true,
+        cwd = animation_folder
+    }
+
+    local success, msg = filecvt_util.spawn_process(commands)
+    print((success and "success" or "failed"), msg)
 end
 
 export_pbrm(pbrm_folder)

@@ -100,7 +100,12 @@ function util.to_cmdline(commands)
     return s
 end
 
+local function def_check_msg(msg)
+    return true, msg
+end
+
 function util.spawn_process(commands, checkmsg)
+    checkmsg = checkmsg or def_check_msg
     local prog = subprocess.spawn(commands)
 	print(util.to_cmdline(commands))
 
