@@ -1,10 +1,17 @@
 
-package.path = package.path .. ";./packages/bullet/?.lua"
+package.path = table.concat(
+	{
+		"engine/?.lua",
+		"packages/?.lua",
+	}, ";"
+)
 
-local math3d = require "math3d"
-local ms = math3d.new()
+package.cpath = "projects/msvc/vs_bin/Debug/?.dll"
 
-local bt = require "bulletworld"
+local math3d 	= require "math3d"
+local ms		= math3d.new()
+
+local bt = require "bullet"
 local btworld = bt.new()
 
 local shapes = {
@@ -53,34 +60,27 @@ for i = 1, num_compounds do
        btworld:add_to_compound(compound_shape, child_shape, pos, rot)
     end 
     -- object
-	local object = btworld:new_obj(compound_shape, 
-					gen_user_idx(), 
-					ms({ i*1*1.5, -2.4, 0 }, "m"), 
+	local object = btworld:new_obj(compound_shape,
+					gen_user_idx(),
+					ms({ i*1*1.5, -2.4, 0 }, "m"),
 					ms({ 0, 0, 0, 1}, "m"))
 
 	btworld:add_obj(object)
-    objs[i] = object 
-end 
-  
-
-------- do collision check ---------
-print("world collide begin ----")
+    objs[i] = object
+end
 
 local function print_collide_points(points)
 	for _, pt in ipairs(points) do
         print("point A in world:", 	pt.ptA_in_WS[1], 	pt.ptA_in_WS[2], 	pt.ptA_in_WS[3])
         print("point B in world:", 	pt.ptB_in_WS[1],	pt.ptB_in_WS[2],	pt.ptB_in_WS[3])
         print("normal B in world:", pt.normalB_in_WS[1],pt.normalB_in_WS[2],pt.normalB_in_WS[3])
-        print("distance:", 			pt.distance)        		
+        print("distance:", 			pt.distance)
 	end
 end
 
-print("")
-
--- 简单直接的另一个方法 
 print("world collide begin 2 ======")
 local points = btworld:world_collide()
-if points then 
+if points then
 	print("world collide result : ", #points)
 	print_collide_points(points)
 end 
@@ -94,9 +94,9 @@ print("simple collide obj[1] to obj[2]")
 local objAB_collide_points = btworld:collide_objects(objs[1], objs[2] )
 if objAB_collide_points then 
     print("objA objB collide result : ", #objAB_collide_points)
-    print_collide_points(objAB_collide_points)  
+    print_collide_points(objAB_collide_points)
 end 
-print("");
+print("")
 
 
 -- raycast 
@@ -128,22 +128,22 @@ btworld:set_obj_transform(object_plane, ms({0,3,0}, "m"), ms({0,0,0,1}, "m"))
 local hit1, result1 = btworld:raycast(rayFrom,rayTo)
 
 print("move plane to {0,3,0}")
-if hit1 then     
+if hit1 then
     print_raycast_result(result1)
-else 
+else
     print("--- hit nothing, rayInfo = ", result1 )
-end 
+end
 
 print("")
 -- move up 6 unit
 btworld:set_obj_position(object_plane, ms({0,6,0}, "m"))
 local hit2, result2 = btworld:raycast(rayFrom,rayTo)
-if hit2 then 
+if hit2 then
     print("move plane to {0,6,0}")
     print_raycast_result(result2)
-else 
+else
     print("--- hit nothing, rayInfo = ", result2 )
-end 
+end
 print("")
 
 -- rotate 

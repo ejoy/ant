@@ -3,7 +3,7 @@ local util = {}; util.__index = util
 local ecs 			= import_package "ant.ecs"
 local mathadapter 	= import_package "ant.math.adapter"
 
-local bullet_world 	= import_package "ant.bullet".bulletworld
+local bullet        = require "bullet"
 
 local function new_world(packages, systems, args)
 	local world = ecs.new_world {
@@ -25,7 +25,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems,other_arg
 	local args =  { 
 		mq = input_queue, 
 		fb_size={w=fbw, h=fbh},
-		Physics = bullet_world.new(),
+		Physics = bullet.new(),
 	}
 	if other_args then
 		for k,v in pairs(other_args) do
@@ -38,7 +38,7 @@ end
 
 -- static_world use for editor module,only data needed
 function util.start_static_world(packages,systems)
-	return new_world(packages, systems, {Physics = bullet_world.new(),})
+	return new_world(packages, systems, {Physics = bullet.new(),})
 end
 
 function util.loop(world, arg)	

@@ -100,8 +100,7 @@ end
 local math3d_adapter = require "math3d.adapter"
 local mathadapter_util = import_package "ant.math.adapter"
 mathadapter_util.bind("bullet", function ()
-	local bw = Physics.world
-	local bw_mt = getmetatable(bw)
+	local bw_mt 			= getmetatable(Physics)
 	bw_mt.new_obj 			= math3d_adapter.vector(ms, bw_mt.new_obj, 4)
 	bw_mt.set_obj_transform = math3d_adapter.vector(ms, bw_mt.set_obj_transform, 3)
 	bw_mt.set_obj_position 	= math3d_adapter.vector(ms, bw_mt.set_obj_position, 3)

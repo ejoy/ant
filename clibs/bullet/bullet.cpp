@@ -329,6 +329,7 @@ lnew_collision_obj(lua_State *L) {
 	auto shape = (btCollisionShape*)lua_touserdata(L, 2);
 	if (shape == nullptr) {
 		luaL_error(L, "invalid shape object");
+		return 0;
 	}
 
 	luaL_checktype(L, 3, LUA_TNUMBER);
@@ -889,7 +890,7 @@ extern "C" {
 		register_bullet_world_node(L);
 
 		luaL_Reg l[] = {
-			{ "new_collision_world", lnew_bullet_world},
+			{ "new", lnew_bullet_world},
 			{nullptr, nullptr},
 		};
 

@@ -5,7 +5,7 @@ local terrainmodule = require "terrain"
 local math3d = require "math3d"
 local ms = math3d.new()
 
-local bt = require "bulletworld"
+local bt = require "bullet"
 local btworld = bt.new()
 
 local terraininfo = {
