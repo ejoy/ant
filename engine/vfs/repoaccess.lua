@@ -201,7 +201,7 @@ end
 local function prebuild(repo, buildfile, deps)
 	local depends = {}
 	for _, name in ipairs(deps) do
-		local vname = access.virtualpath(repo, lfs.relative(name))
+		local vname = access.virtualpath(repo, name:is_absolute() and lfs.relative(name) or name)
 		if vname then
 			depends[#depends+1] = {access.sha1_from_file(name), lfs.last_write_time(name), vname}
 		else

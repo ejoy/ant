@@ -1,97 +1,76 @@
 ### 环境
-1. 使用msvc版本（mingw版本参考后面的launch.json配置）
-2. 下载vscode，并安装插件vscode-lua-debug插件，命令为：ext install lua-debug，github地址：[vscode-lua-debug](https://github.com/actboy168/vscode-lua-debug)
-3. 配置vscode debug选项，使用launch直接启动(见下面解析）；
-4. 按F5进行调试；
+1. 下载VSCode
+2. 安装插件lua-debug插件，`Ctrl+P`然后输入`ext install actboy168.lua-debug`
+3. 在VSCode里，打开ant目录
+4. 配置调试配置，将下面的配置复制到`.vscode/launch.json`里
 
-### launch调试项配置
-这些配置都需要在request类型为: "launch"下进行（目前attach模式还没有尝试过，如尝试过后，请更新文档。此外这个插件也支持远程调试）
-1. 配置runtimeExecutable选项。如："runtimeExecutable" : "${workspaceRoot}/projects/msvc/vs_bin/x64/Debug/iup.exe"。这是因为lua是嵌入到自定义的程序中，所以这个一定要定义，并且vscode-lua-debug这个插件需要从启动的exe程序来决定加载的debugger是32位还是64位；
-2. 配置runtimeArgs。如："runtimeArgs": "libs/main.lua"。这里决定了启动时候需要用到的lua文件；
-3. 配置env。如："env": { "STATIC_LINKING_IUP" : "1", "BIN_PATH" : "projects/msvc/vs_bin/x64/Debug"}，这些环境变量在使用msvc工程启动的时候是需要的，否则会有报错；
-4. 配置cwd。根据需要调试的环境，设定对应的cwd。如上述运行libs/main.lua的时候，就需要将cwd配置到ant目录下；
+### 调试编辑器
 
+1. 打开VSCode调试面板，选择`Editor (mingw)`或`Editor (msvc)`，按F5
 
-### 已知的问题
-1. 在vscode中点击“stop debug”按钮后，如果程序连接了hierarchy.dll的话，会崩溃。看堆栈信息是因为hierarchy有自己一套的内存管理，在stop debug后，尝试去释放之前分配的一块内容，但这块内存在这个时候已经被系统回收了，再尝试释放就崩溃了，原因未知；
+### 调试windows运行时
 
+1. 启动fileserver, `./clibs/lua.exe tools/fileserver/main.lua`
+2. 启动运行时, `./runtime/windows/ant.exe <需要调试的项目路径>`
+3. 打开VSCode调试面板，选择`Attach`，按F5
+
+### 调试osx运行时
+
+1. 启动fileserver, `./clibs/ant/ant.exe tools/fileserver/main.lua`
+2. 启动运行时, `./runtime/osx/ant.exe <需要调试的项目路径>`
+3. 打开VSCode调试面板，选择`Attach`，按F5
+
+### 调试ios运行时
+
+1. 启动fileserver, `./clibs/ant/ant.exe tools/fileserver/main.lua <需要调试的项目路径>`
+2. 启动ios代理， `./clibs/ant/ant.exe tools/fileserver/mobiledevice/proxy.lua`
+3. 在iOS中，启动运行时APP
+4. 打开VSCode调试面板，选择`Attach`，按F5
 
 ### 附上launch.json具体的设置
-使用iup调试
+
 ``` json
 {
     "version": "0.2.0",
     "configurations": [
-    {
-        "name": "Editor (msvc)",
-        "type": "lua",
-        "request": "launch",        
-        "cwd": "${workspaceRoot}",  
-        "runtimeExecutable" : "${workspaceRoot}/projects/msvc/vs_bin/x64/Debug/iup.exe",
-        "runtimeArgs": "${workspaceRoot}/libs/main.lua", 
-        "internalModule": "vscode-dbg",      
-        "stopOnEntry": true,
-        "env": {
-            "STATIC_LINKING_IUP" : "1",
-            "BIN_PATH" : "projects/msvc/vs_bin/x64/Debug"
-        }
-    },
-    {
-        "name": "Editor (mingw)",
-        "type": "lua",
-        "request": "launch",
-        "luaexe": "${workspaceRoot}\\bin\\lua.exe",
-        "program": "${workspaceRoot}\\test\\samples\\editorlauncher\\main.lua",
-        "cwd": "${workspaceRoot}",
-        "internalModule": "vscode-dbg",
-        "stopOnEntry": true,
-        "sourceFormat": "string",
-        "skipFiles": [
-            "/pkg/ant.debugger/*"
-        ],
-        "sourceMaps": [
-            [
-                "/vfs/engine/*",
-                "${workspaceRoot}/*"
-            ],
-            [
-                "/pkg/ant.modelviewer/*",
-                "${workspaceRoot}/tools/modelviewer/*"
-            ],
-            [
-                "/pkg/ant.*",
-                "${workspaceRoot}/packages/*"
+        {
+            "name": "Editor (msvc)",
+            "type": "lua",
+            "request": "launch",
+            "luaexe": "${workspaceRoot}/clibs/lua.exe",
+            "program": "${workspaceRoot}/test/imgui/main.lua",
+            "cwd": "${workspaceRoot}",
+            "env": {
+                "PATH": "${workspaceFolder}/clibs/"
+            },
+            "skipFiles": [
+                "engine/antpm/*"
             ]
-        ]
-    },
-    {
-        "type": "lua",
-        "request": "launch",
-        "name": "Runtime",
-        "ip": "localhost",
-        "port": 4278,
-        "noInject": true,
-        "runtimeExecutable": "${workspaceFolder}/runtime/windows/ant.exe",
-        "sourceFormat": "string",
-        "skipFiles": [
-            "/pkg/ant.debugger/*"
-        ],
-        "sourceMaps": [
-            [
-                "/vfs/engine/*",
-                "${workspaceRoot}/*"
-            ],
-            [
-                "/pkg/ant.modelviewer/*",
-                "${workspaceRoot}/tools/modelviewer/*"
-            ],
-            [
-                "/pkg/ant.*",
-                "${workspaceRoot}/packages/*"
+        },
+        {
+            "name": "Editor (mingw)",
+            "type": "lua",
+            "request": "launch",
+            "luaexe": "${workspaceRoot}/clibs/lua.exe",
+            "program": "${workspaceRoot}/test/imgui/main.lua",
+            "cwd": "${workspaceRoot}",
+            "env": {
+                "PATH": "${workspaceFolder}/clibs/"
+            },
+            "skipFiles": [
+                "engine/antpm/*"
             ]
-        ]
-    }
+        },
+        {
+            "type": "lua",
+            "request": "attach",
+            "name": "Attach",
+            "stopOnEntry": true,
+            "address": "127.0.0.1:4278",
+        },
     ]
  }
 ```
 
+### 已知的问题
+1. 在vscode中点击“stop debug”按钮后，如果程序连接了hierarchy.dll的话，会崩溃。看堆栈信息是因为hierarchy有自己一套的内存管理，在stop debug后，尝试去释放之前分配的一块内容，但这块内存在这个时候已经被系统回收了，再尝试释放就崩溃了，原因未知；
