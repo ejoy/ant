@@ -35,14 +35,13 @@ end
 local gen_user_idx = get_user_idx_op()
 
 local useridx = gen_user_idx()
-local object_plane = btworld:new_obj(shapes.plane, useridx, ms({0,0,0}, "m"), ms({0,0,0,1}, "m"))
+local object_plane = btworld:new_obj(shapes.plane, useridx, nil, ms({type='q', 0,0,0,1}, "m"))
 btworld:add_obj(object_plane)
 
-
-btworld:add_to_compound(shapes.compound, shapes.sphere, ms({0,0,0}, "m"), ms({90,0,0,1}, "m"))
+btworld:add_to_compound(shapes.compound, shapes.sphere, nil, ms({type='e', math.rad(90), 0, 0}, "qm"))
 
 local compound_idx = gen_user_idx()
-local compound_obj = btworld:new_obj(shapes.compound, compound_idx, ms({2,2,2}, "m"), ms({45,0,0,1}, "m"))
+local compound_obj = btworld:new_obj(shapes.compound, compound_idx, ms({2, 2, 2,1}, "m"), ms({type='e', math.rad(45),0,0}, "qm"))
 btworld:add_obj(compound_obj)
 
 local radius = 1
@@ -52,18 +51,17 @@ local num_spheres = 1
 local objs = {} 
  
 for i = 1, num_compounds do 
-    local compound_shape = btworld:new_shape "compound"
+	local compound_shape = btworld:new_shape "compound"
+	local ipos = i
     for j = 1, num_spheres do 
-       local pos = ms({ j*1.5, 0, 0 }, "m")
-	   local rot = ms({ 0, 0, 0, 1 }, "m")
+       local pos = ms({ipos, 0, j*1.5, 1}, "m")
        local child_shape = btworld:new_shape("sphere", {radius=radius})
-       btworld:add_to_compound(compound_shape, child_shape, pos, rot)
-    end 
-    -- object
+       btworld:add_to_compound(compound_shape, child_shape, pos)
+    end
+
 	local object = btworld:new_obj(compound_shape,
 					gen_user_idx(),
-					ms({ i*1*1.5, -2.4, 0 }, "m"),
-					ms({ 0, 0, 0, 1}, "m"))
+					ms({ipos, 0.0, 0, 1}, "m"))
 
 	btworld:add_obj(object)
     objs[i] = object
@@ -86,22 +84,18 @@ if points then
 end 
 print("world collide end 2 ======")
 
-
-
---- collide between two objects ---
-print("")
 print("simple collide obj[1] to obj[2]")
 local objAB_collide_points = btworld:collide_objects(objs[1], objs[2] )
 if objAB_collide_points then 
     print("objA objB collide result : ", #objAB_collide_points)
     print_collide_points(objAB_collide_points)
-end 
+end
 print("")
 
 
 -- raycast 
-local rayFrom = ms({ 1.5, 20, 0}, "m")
-local rayTo = ms({  1.5, -5, 0 }, "m")
+local rayFrom = ms({ 1.5, 20, 0, 1}, "m")
+local rayTo = ms({1.5, -5, 0, 1}, "m")
 
 local hit, result = btworld:raycast(rayFrom, rayTo)
 
@@ -113,9 +107,9 @@ local function print_raycast_result(result)
 	print("hit normal : ", result.hit_normal_in_WS[1], result.hit_normal_in_WS[2], result.hit_normal_in_WS[3])
 	print("filter group : ", result.filter_group)
 	print("filter mask : ", result.filter_mask)
-	print("flags : ", result.flags)    
+	print("flags : ", result.flags)
 end
-if hit then 
+if hit then
 	print_raycast_result(result)
 else 
     print("--- hit nothing, rayInfo = ", result )

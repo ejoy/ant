@@ -319,7 +319,6 @@ ldelete_debugDrawer(lua_State *L) {
 	return 0;
 }
 
-
 static int
 lnew_collision_obj(lua_State *L) {
 	auto worldnode = get_worldnode(L);
@@ -335,11 +334,17 @@ lnew_collision_obj(lua_State *L) {
 	luaL_checktype(L, 3, LUA_TNUMBER);
 	const int useridx = (int)lua_tointeger(L, 3);
 
-	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
-	btVector3* pos = (btVector3*)lua_touserdata(L, 4);
-	
-	luaL_checktype(L, 5, LUA_TLIGHTUSERDATA);
-	btQuaternion *quat = (btQuaternion*)lua_touserdata(L, 5);
+	btVector3* pos = nullptr;
+	if (!lua_isnoneornil(L, 4)) {
+		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+		pos = (btVector3*)lua_touserdata(L, 4);
+	}
+
+	btQuaternion* quat = nullptr;
+	if (!lua_isnoneornil(L, 5)) {
+		luaL_checktype(L, 5, LUA_TLIGHTUSERDATA);
+		quat = (btQuaternion*)lua_touserdata(L, 5);
+	}
 
 	void *userdata = lua_isnoneornil(L, 6) ? nullptr : lua_touserdata(L, 6);
 
@@ -348,10 +353,16 @@ lnew_collision_obj(lua_State *L) {
 	coll_obj->setUserIndex(useridx);
 	coll_obj->setUserPointer(userdata);
 	coll_obj->setCollisionShape(shape);
-	btTransform tr;
-	tr.setOrigin(*pos);
-	tr.setRotation(*quat);
-	coll_obj->setWorldTransform(tr);
+
+	if (pos || quat) {
+		btTransform tr;
+		if (pos)
+			tr.setOrigin(*pos);
+		if (quat)
+			tr.setRotation(*quat);
+		coll_obj->setWorldTransform(tr);
+	}
+
 	if (shape->getShapeType() == TERRAIN_SHAPE_PROXYTYPE) {
 		int flags = coll_obj->getCollisionFlags();
 		flags |= btCollisionObject::CF_DISABLE_VISUALIZE_OBJECT;
@@ -450,15 +461,29 @@ ladd_to_compound(lua_State *L) {
 	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
 	auto child = (btCollisionShape*)lua_touserdata(L, 3);
 
-	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
-	btVector3 *pos = (btVector3 *)lua_touserdata(L, 4);
+	btVector3* pos = nullptr;
+	if (!lua_isnoneornil(L, 4)) {
+		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+		pos = (btVector3*)lua_touserdata(L, 4);
+	}
 
-	luaL_checktype(L, 5, LUA_TLIGHTUSERDATA);
-	btQuaternion *quat = (btQuaternion *)lua_touserdata(L, 5);
+	btQuaternion* quat = nullptr;
+	if (!lua_isnoneornil(L, 5)) {
+		luaL_checktype(L, 5, LUA_TLIGHTUSERDATA);
+		quat = (btQuaternion*)lua_touserdata(L, 5);
+	}
 
 	btTransform localTrans;
-	localTrans.setOrigin(*pos);
-	localTrans.setRotation(*quat);
+
+	if (pos || quat) {
+		if (pos)
+			localTrans.setOrigin(*pos);
+		if (quat)
+			localTrans.setRotation(*quat);
+	} else {
+		localTrans.setOrigin(btVector3(0.0f, 0.0f, 0.0f));
+	}
+
 	compound->addChildShape(localTrans, child);
 
 	return 0;
@@ -802,13 +827,25 @@ lset_obj_trans(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
-	const btVector3 *pos = (const btVector3 *)lua_touserdata(L, 3);
+	btTransform trans;
+	bool needtrans = false;
+	if (!lua_isnoneornil(L, 3)){
+		luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+		auto pos = (const btVector3 *)lua_touserdata(L, 3);
+		needtrans = true;
+		trans.setOrigin(*pos);
+	}
 
-	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
-	const btQuaternion* quat = (const btQuaternion *)lua_touserdata(L, 4);
+	const btQuaternion* quat = nullptr;
+	if (!lua_isnoneornil(L, 4)){
+		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+		auto quat = (const btQuaternion *)lua_touserdata(L, 4);
+		needtrans = true;
+		trans.setRotation(*quat);
+	}
 
-	obj->setWorldTransform(btTransform(*quat, *pos));
+	if (needtrans)
+		obj->setWorldTransform(trans);
 
 	worldnode->world->updateSingleAabb(obj);
 	return 0;

@@ -691,7 +691,7 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		break;
 	case 3: {
 		const char* type = get_type_field(L, index);
-		if (type != NULL)
+		if (type && (strcmp(type, "euler") == 0 || strcmp(type, "e") == 0))
 			push_euler(L, LS, index);
 		else {
 			v[3] = 0;
