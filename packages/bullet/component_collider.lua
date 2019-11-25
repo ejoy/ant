@@ -19,7 +19,7 @@ function coll:delete()
 		Physics:del_obj(handle)
 	end
 end
-	
+
 local objidx_counter = 0
 local function collider_obj_idx_creator()
 	local oi = objidx_counter
@@ -70,7 +70,7 @@ for _, pp in ipairs {
 	{"character_collider", "character_shape" },
 } do
 	local collidername, shapename = pp[1], pp[2]
-	local s = ecs.component(shapename)
+	local s = ecs.component(shapename){depend="collider_tag"}
 	function s:init()
 		self.handle = Physics:new_shape(self.type, self)
 		return self
