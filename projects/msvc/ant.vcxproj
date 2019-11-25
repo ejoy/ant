@@ -24,9 +24,6 @@
     <ClInclude Include="..\..\clibs\ant\ant_module_define.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="bgfx-core.vcxproj">
-      <Project>{5de848f5-6bfb-4f23-8f23-071dd7c5f770}</Project>
-    </ProjectReference>
     <ProjectReference Include="bgfx.vcxproj">
       <Project>{50b83d8c-7938-4814-bc5a-738cba9bf0e6}</Project>
     </ProjectReference>
@@ -180,8 +177,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\bgfx\.build\win64_vs2019\bin</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua54.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;bgfx-shared-lib$(Configuration).lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -245,8 +242,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\build_msvc\lua-cjson\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\bgfx\.build\win64_vs2019\bin</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lua54.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;bgfx-shared-lib$(Configuration).lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
