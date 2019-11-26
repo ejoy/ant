@@ -849,6 +849,28 @@ lset_obj_trans(lua_State *L) {
 }
 
 static int
+lget_obj_trans(lua_State *L){
+	auto worldnode = get_worldnode(L);
+	assert(worldnode && worldnode->world);
+
+	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
+	auto trans = obj->getWorldTransform();
+	lua_createtable(L, 16, 0);
+	for (int ii = 0; ii < 3; ++ii){
+		auto m = trans.getBasis();
+		for (int jj = 0; jj < 3; ++ii){
+			lua_pushnumber(L, m[ii][jj]);
+			lua_seti(L, -2, ii*3+jj+1);
+		}
+		lua_pushnumber(L, 0.0);
+		lua_seti(L, -2, ii*3+3+1);
+	}
+	lua_pushnumber(L, 1.0);
+	lua_seti(L, -2, 16);
+	return 1;
+}
+
+static int
 lset_obj_pos(lua_State *L) {
 	auto worldnode = get_worldnode(L);
 
@@ -901,6 +923,7 @@ register_bullet_world_node(lua_State *L) {
 		{"remove_obj",			lremove_collision_obj},
 		{"set_obj_user_idx",	lset_obj_user_idx},
 		{"set_obj_transform",	lset_obj_trans},
+		{"get_obj_transform",	lget_obj_trans},
 		{"set_obj_position",	lset_obj_pos},
 		{"set_obj_rotation",	lset_obj_rot},
 		{"add_to_compound",		ladd_to_compound},

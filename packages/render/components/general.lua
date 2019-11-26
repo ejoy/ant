@@ -206,7 +206,7 @@ end
 ecs.component_alias("color", "real[4]", {1,1,1,1})
 
 ecs.tag "dynamic_object"
-ecs.component "character" {depend = {"dynamic_object", "collider_tag"}}
+ecs.component "character" {depend = {"dynamic_object",}}
 	.movespeed "real" (1.0)
 
 ecs.component "physic_state"

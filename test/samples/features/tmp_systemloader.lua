@@ -125,6 +125,9 @@ local function create_animation_test()
                 axis   = 0,
             },
         },
+        character = {
+            movespeed = 1.0,
+        }
     }
 
     local e = world[eid]

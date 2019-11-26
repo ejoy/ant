@@ -27,7 +27,7 @@ local char_sys = ecs.system "character_system"
 char_sys.dependby "primitive_filter_system"
 
 function char_sys:update()
-    for _, char_eid in world:each "character" do
+    for _, char_eid in world:each "collider_tag" do
         local char = world[char_eid]
         local collider = char[char.collider_tag]
 
@@ -35,11 +35,12 @@ function char_sys:update()
         -- we need seprarte update transform from primitive_filter_system
         local worldmat = char.transform.world
         local colliderobj = collider.handle
-        physicworld:set_obj_trans(colliderobj, worldmat)
+        local t = physicworld:get_obj_transform(colliderobj)
+        physicworld:set_obj_transform(colliderobj, ms(worldmat, t, "*m"))
 
         local aabbmin, aabbmax = physicworld:get_obj_aabb(colliderobj)
         local center = ms({0.5}, aabbmax, aabbmin, "+*T")
-        local at = {center[1], aabbmin[2] - 1.0, center[3]}
+        local at = {center[1], aabbmin[2] - 20, center[3]}
 
         local hit, result = physicworld:raycast(center, at)
         if hit then
