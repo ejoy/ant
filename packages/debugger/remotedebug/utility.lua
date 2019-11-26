@@ -8,7 +8,12 @@ local function platform_os()
     return platform.OS
 end
 
+local function closeprocess()
+    os.exit(true, true)
+end
+
 return {
     fs_absolute = fs_absolute,
-    platform_os = platform_os
+    platform_os = platform_os,
+    closeprocess = closeprocess,
 }

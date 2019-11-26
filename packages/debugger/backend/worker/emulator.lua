@@ -7,6 +7,7 @@ local m = {}
 local stacks = {}
 local scopes = {}
 local enable = false
+local kVirtualFrameId <const> = 0xff0000
 
 function m.open()
     enable = true
@@ -37,7 +38,7 @@ function m.getCode(sourceReference)
 end
 
 function m.scopes(frameId)
-    if not enable or frameId ~= 0xffff then
+    if not enable or frameId ~= kVirtualFrameId then
         return variables.scopes(frameId)
     end
     local scope = scopes[1]
@@ -48,10 +49,10 @@ function m.scopes(frameId)
         if s == nil then
             break
         end
-        local var = variables.createRef(rdebug.index(s, "value"), nil, "scopes")
+        local var = variables.createRef(rdebug.fieldv(s, "value"), nil, "scopes")
         if var.variablesReference then
             res[#res+1] = {
-                name = rdebug.indexv(s, "name"),
+                name = rdebug.fieldv(s, "name"),
                 variablesReference = var.variablesReference,
                 namedVariables = var.namedVariables,
                 indexedVariables = var.indexedVariables,
@@ -65,7 +66,7 @@ end
 
 function m.eventCall(state, code, name)
     table.insert(stacks, 1, {
-        id = 0xffff,
+        id = kVirtualFrameId,
         code = code,
         name = name,
         source = source.create(code, true),

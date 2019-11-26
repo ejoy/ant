@@ -9,6 +9,10 @@ function CMD.eventStop(w, req)
 end
 
 function CMD.stackTrace(w, req)
+    if not req.success then
+        response.error(req, req.message)
+        return
+    end
     for _, frame in ipairs(req.stackFrames) do
         frame.id = (w << 24) | frame.id
         if frame.source and frame.source.sourceReference then

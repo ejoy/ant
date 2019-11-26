@@ -2,11 +2,13 @@ local mgr = require 'backend.master.mgr'
 local response = require 'backend.master.response'
 local event = require 'backend.master.event'
 local ev = require 'common.event'
+local utility = require 'remotedebug.utility'
 
 local request = {}
 
 local readyTrg = nil
 local firstWorker = true
+local firstTerminate = true
 local initializing = false
 local config = {
     initialize = {},
@@ -36,30 +38,23 @@ local function checkThreadId(req, threadId)
 end
 
 function request.initialize(req)
-    if not mgr.isState 'birth' then
-        response.error(req, 'already initialized')
-        return
-    end
     firstWorker = true
+    firstTerminate = true
     response.initialize(req)
-    mgr.setState 'initialized'
     event.initialized()
     event.capabilities()
 end
 
 function request.attach(req)
-    if not mgr.isState 'initialized' then
-        response.error(req, 'not initialized or unexpected state')
-        return
-    end
     response.success(req)
 
     initializing = true
     config = {
         initialize = req.arguments,
         breakpoints = {},
+        function_breakpoints = {},
+        exception_breakpoints = {},
     }
-    mgr.termOnExit(req.arguments.termOnExit)
 end
 
 function request.launch(req)
@@ -156,11 +151,16 @@ local function skipBOM(s)
     return s
 end
 
+local function isValidPath(path)
+    local prefix = path:match "^(%a+):"
+    return not (prefix and #prefix > 1)
+end
+
 function request.setBreakpoints(req)
     local args = req.arguments
     local content = skipBOM(args.sourceContent)
-    if args.source.path and args.source.path:sub(1,4) == "git:" then
-        response.error(req, "Does not support git path.")
+    if args.source.path and not isValidPath(args.source.path) then
+        response.error(req, ("Does not support path: `%s`"):format(args.source.path))
         return
     end
     for _, bp in ipairs(args.breakpoints) do
@@ -229,18 +229,12 @@ function request.stackTrace(req)
     if not checkThreadId(req, threadId) then
         return
     end
-
-    local levels = args.levels and args.levels or 200
-    levels = levels ~= 0 and levels or 200
-    local startFrame = args.startFrame and args.startFrame or 0
-    local endFrame = startFrame + levels
-
     mgr.sendToWorker(threadId, {
         cmd = 'stackTrace',
         command = req.command,
         seq = req.seq,
-        startFrame = startFrame,
-        endFrame = endFrame,
+        startFrame = args.startFrame,
+        levels = args.levels,
     })
 end
 
@@ -313,14 +307,22 @@ function request.threads(req)
 end
 
 function request.disconnect(req)
-    response.success(req)
-    mgr.close()
-    return true
+    return request.terminate(req)
 end
 
 function request.terminate(req)
     response.success(req)
-    mgr.close()
+    mgr.broadcastToWorker {
+        cmd = 'terminated',
+    }
+    if config.initialize.termOnExit then
+        if firstTerminate then
+            firstTerminate = false
+            utility.closeprocess()
+        else
+            os.exit(true, true)
+        end
+    end
     return true
 end
 
@@ -463,5 +465,8 @@ end
 --    end
 --    event.output('stdout', table.concat(t, '\t')..'\n')
 --end
+
+--local log = require 'common.log'
+--print = log.info
 
 return request

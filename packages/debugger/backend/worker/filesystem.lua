@@ -43,7 +43,7 @@ local function init_searchpath(config, name)
     else
         value = nativepath(value)
     end
-    local visitor = rdebug.index(rdebug.index(rdebug._G, "package"), name)
+    local visitor = rdebug.field(rdebug.field(rdebug._G, "package"), name)
     if not rdebug.assign(visitor, value) then
         return
     end

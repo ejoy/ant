@@ -24,6 +24,8 @@ local exceptionTrace = ''
 local outputCapture = {}
 local noDebug = false
 local openUpdate = false
+local coroutineTree = {}
+local statckFrame = {}
 
 local CMD = {}
 
@@ -95,6 +97,11 @@ end)
 --local log = require 'common.log'
 --print = log.info
 
+local function cleanFrame()
+    variables.clean()
+    statckFrame = {}
+end
+
 function CMD.initializing(pkg)
     luaver.init()
     ev.emit('initializing', pkg.config)
@@ -112,81 +119,103 @@ function CMD.terminated()
     end
 end
 
-function CMD.stackTrace(pkg)
-    local startFrame = pkg.startFrame
-    local endFrame = pkg.endFrame
-    local curFrame = 0
-    local virtualFrame = 0
-    local depth = 0
-    local res = {}
-
-    if startFrame == 0 then
-        res = emulator.stackTrace()
-        virtualFrame = #res
-    end
-
-    while rdebug.getinfo(depth, "Sln", info) do
-        if curFrame ~= 0 and ((curFrame < startFrame) or (curFrame >= endFrame)) then
-            depth = depth + 1
-            curFrame = curFrame + 1
-            goto continue
+local function stackTrace(res, coid, start, levels)
+    for depth = start, start + levels do
+        if not rdebug.getinfo(depth, "Sln", info) then
+            return depth - start
         end
-        local src
-        if curFrame == 0 then
-            if info.what == 'C' then
-                depth = depth + 1
-                goto continue
-            else
-                src = source.create(info.source)
-                if not source.valid(src) then
-                    depth = depth + 1
-                    goto continue
-                end
-            end
-        end
-        if (curFrame < startFrame) or (curFrame >= endFrame) then
-            depth = depth + 1
-            curFrame = curFrame + 1
-            goto continue
-        end
-        curFrame = curFrame + 1
-        if info.what == 'C' then
-            res[#res + 1] = {
-                id = depth,
-                name = info.what == 'main' and '[main chunk]' or info.name,
-                line = 0,
-                column = 0,
-                presentationHint = 'label',
-            }
-        else
+        local r = {
+            id = (coid << 16) | depth,
+            name = info.what == 'main' and '[main chunk]' or info.name,
+            line = 0,
+            column = 0,
+        }
+        if info.what ~= 'C' then
+            r.line = info.currentline
+            r.column = 1
             local src = source.create(info.source)
             if source.valid(src) then
-                res[#res + 1] = {
-                    id = depth,
-                    name = info.what == 'main' and '[main chunk]' or info.name,
-                    line = info.currentline,
-                    column = 1,
-                    source = source.output(src),
-                }
-            elseif curFrame ~= 0 then
-                res[#res + 1] = {
-                    id = depth,
-                    name = info.what == 'main' and '[main chunk]' or info.name,
-                    line = info.currentline,
-                    column = 1,
-                    presentationHint = 'label',
-                }
+                r.source = source.output(src)
+                r.presentationHint = 'normal'
+            else
+                r.presentationHint = 'label'
             end
+        else
+            r.presentationHint = 'label'
         end
-        depth = depth + 1
-        ::continue::
+        res[#res + 1] = r
     end
+    return levels
+end
+
+local function calcStackLevel()
+    if statckFrame.total then
+        return
+    end
+    local n = 0
+    local baseL = hookmgr.gethost()
+    local L = baseL
+    repeat
+        hookmgr.sethost(L)
+        local sl = hookmgr.stacklevel()
+        n = n + sl
+        statckFrame[L] = sl
+        statckFrame[#statckFrame+1] = L
+        L = coroutineTree[L]
+    until not L
+    hookmgr.sethost(baseL)
+    statckFrame.total = n
+end
+
+function CMD.stackTrace(pkg)
+    local start = pkg.startFrame and pkg.startFrame or 0
+    local levels = (pkg.levels and pkg.levels ~= 0) and pkg.levels or 200
+    local res = {}
+
+    --
+    -- 在VSCode的实现中这是一帧的第一个请求，所以在这里清理上一帧的数据。
+    -- 很特殊，但目前也只能这样。
+    --
+    if start == 0 and levels == 1 then
+        cleanFrame()
+    end
+
+    -- TODO
+    --local virtualFrame = 0
+    --if startFrame == 0 then
+    --    res = emulator.stackTrace()
+    --    virtualFrame = #res
+    --end
+
+    calcStackLevel()
+
+    local baseL = hookmgr.gethost()
+    local L = baseL
+    local coroutineId = 0
+    repeat
+        hookmgr.sethost(L)
+        if start > statckFrame[L] then
+            start = start - statckFrame[L]
+        else
+            local n = stackTrace(res, coroutineId, start, levels)
+            if levels == n then
+                break
+            end
+            start = 0
+            levels = levels - n
+        end
+        coroutineId = coroutineId + 1
+        L = coroutineTree[L]
+    until not L
+    hookmgr.sethost(baseL)
+
     sendToMaster {
         cmd = 'stackTrace',
         command = pkg.command,
         seq = pkg.seq,
+        success = true,
         stackFrames = res,
-        totalFrames = curFrame + virtualFrame,
+        totalFrames = statckFrame.total,
     }
 end
 
@@ -200,11 +229,14 @@ function CMD.source(pkg)
 end
 
 function CMD.scopes(pkg)
+    local coid = (pkg.frameId >> 16) + 1
+    local depth = pkg.frameId & 0xFFFF
+    hookmgr.sethost(assert(statckFrame[coid]))
     sendToMaster {
         cmd = 'scopes',
         command = pkg.command,
         seq = pkg.seq,
-        scopes = emulator.scopes(pkg.frameId),
+        scopes = emulator.scopes(depth),
     }
 end
 
@@ -252,7 +284,8 @@ function CMD.setVariable(pkg)
 end
 
 function CMD.evaluate(pkg)
-    local ok, result = evaluate.run(pkg.frameId, pkg.expression, pkg.context)
+    local depth = pkg.frameId & 0xFFFF
+    local ok, result = evaluate.run(depth, pkg.expression, pkg.context)
     if not ok then
         sendToMaster {
             cmd = 'evaluate',
@@ -351,7 +384,7 @@ function CMD.stepOut()
 end
 
 function CMD.restartFrame()
-    variables.clean()
+    cleanFrame()
     sendToMaster {
         cmd = 'eventStop',
         reason = 'restart',
@@ -372,15 +405,11 @@ local function runLoop(reason, text)
             break
         end
     end
-    variables.clean()
 end
 
-local hook = {}
+local event = {}
 
-function hook.bp(line)
-    if not initialized then return end
-    rdebug.getinfo(0, "S", info)
-    local src = source.create(info.source)
+local function event_breakpoint(src, line)
     if not source.valid(src) then
         hookmgr.break_closeline()
         return
@@ -390,12 +419,19 @@ function hook.bp(line)
         if breakpoint.exec(bp) then
             state = 'stopped'
             runLoop 'breakpoint'
-            return
+            return true
+        end
         end
     end
+
+function event.bp(line)
+    if not initialized then return end
+    rdebug.getinfo(0, "S", info)
+    local src = source.create(info.source)
+    event_breakpoint(src, line)
 end
 
-function hook.funcbp(func)
+function event.funcbp(func)
     if not initialized then return end
     if breakpoint.hit_funcbp(func) then
         state = 'stopped'
@@ -403,10 +439,13 @@ function hook.funcbp(func)
     end
 end
 
-function hook.step()
+function event.step(line)
     if not initialized then return end
     rdebug.getinfo(0, "S", info)
     local src = source.create(info.source)
+    if event_breakpoint(src, line) then
+        return
+    end
     if not source.valid(src) then
         return
     end
@@ -423,7 +462,7 @@ function hook.step()
     end
 end
 
-function hook.newproto(proto, level)
+function event.newproto(proto, level)
     if not initialized then return end
     rdebug.getinfo(level, "S", info)
     local src = source.create(info.source)
@@ -441,28 +480,21 @@ local function getEventArgs(i)
     return true, rdebug.value(value)
 end
 
-local function getEventArgsRaw(i)
-    local name, value = rdebug.getlocal(1, -i)
-    if name == nil then
-        return false
-    end
-    return true, value
-end
-
 local function pairsEventArgs()
-    local n = 2
+    local max = rdebug.getstack()
+    local n = 1
     return function()
-        local value = rdebug.getstack(n)
-        if value ~= nil then
-            n = n + 1
-            return value
+        n = n + 1
+        if n > max then
+            return
         end
+        return rdebug.getstack(n)
     end
 end
 
 local function getExceptionType()
-    local pcall = rdebug.value(rdebug.index(rdebug._G, 'pcall'))
-    local xpcall = rdebug.value(rdebug.index(rdebug._G, 'xpcall'))
+    local pcall = rdebug.value(rdebug.fieldv(rdebug._G, 'pcall'))
+    local xpcall = rdebug.value(rdebug.fieldv(rdebug._G, 'xpcall'))
     local level = 1
     while true do
         local f = rdebug.getfunc(level)
@@ -481,8 +513,6 @@ local function getExceptionType()
     return nil, 'lua_pcall'
 end
 
-local event = hook
-
 function event.update()
     workerThreadUpdate()
 end
@@ -491,7 +521,7 @@ function event.print()
     if not initialized then return end
     local res = {}
     for arg in pairsEventArgs() do
-        res[#res + 1] = rdebug.tostring(arg)
+        res[#res + 1] = variables.tostring(arg)
     end
     res = table.concat(res, '\t') .. '\n'
     rdebug.getinfo(1, "Sl", info)
@@ -508,7 +538,7 @@ function event.iowrite()
     if not initialized then return end
     local res = {}
     for arg in pairsEventArgs() do
-        res[#res + 1] = rdebug.tostring(arg)
+        res[#res + 1] = variables.tostring(arg)
     end
     res = table.concat(res, '\t')
     rdebug.getinfo(1, "Sl", info)
@@ -554,13 +584,22 @@ function event.exception()
     runLoop('exception', exceptionMsg)
 end
 
-function event.r_thread(co)
-    hookmgr.setcoroutine(co)
+function event.r_thread(co, type)
+    local L = hookmgr.gethost()
+    if co then
+        if type == 0 then
+            coroutineTree[L] = co
+        elseif type == 1 then
+            coroutineTree[co] = nil
+        end
+    end
+    hookmgr.updatehookmask(L)
 end
 
 function event.thread()
-    local _, co = getEventArgsRaw(1)
-    hookmgr.setcoroutine(co)
+    local _, co = rdebug.getlocalv(1, -1)
+    local _, type = rdebug.getlocalv(1, -2)
+    event.r_thread(co, type)
 end
 
 function event.wait()
@@ -629,8 +668,8 @@ local function init_internalmodule(config)
     if not mod then
         return
     end
-    local newvalue = rdebug.index(rdebug.index(rdebug.index(rdebug._G, "package"), "loaded"), mod)
-    local oldvalue = rdebug.index(rdebug._REGISTRY, "lua-debug")
+    local newvalue = rdebug.field(rdebug.field(rdebug.field(rdebug._G, "package"), "loaded"), mod)
+    local oldvalue = rdebug.fieldv(rdebug._REGISTRY, "lua-debug")
     rdebug.assign(newvalue, oldvalue)
 end
 

@@ -58,6 +58,7 @@ rlua_Integer (rluaL_checkinteger) (rlua_State *L, int arg);
 rlua_Integer (rluaL_optinteger) (rlua_State *L, int arg, rlua_Integer def);
 rlua_Integer (rluaL_len) (rlua_State *L, int idx);
 int (rluaL_argerror) (rlua_State *L, int arg, const char *extramsg);
+int (rluaL_typeerror) (rlua_State *L, int arg, const char *tname);
 
 void (rlua_close) (rlua_State *L);
 int  (rlua_pcallk) (rlua_State *L, int nargs, int nresults, int errfunc, rlua_KContext ctx, rlua_KFunction k);
@@ -109,6 +110,7 @@ void (rlua_settop) (rlua_State *L, int idx);
 void (rlua_rotate) (rlua_State *L, int idx, int n);
 void (rlua_copy) (rlua_State *L, int fromidx, int toidx);
 int  (rlua_checkstack) (rlua_State *L, int n);
+void (rluaL_checkstack) (rlua_State *L, int sz, const char *msg);
 
 void  (rluaL_buffinit) (rlua_State *L, rluaL_Buffer *B);
 char *(rluaL_prepbuffsize) (rluaL_Buffer *B, size_t sz);
@@ -128,6 +130,7 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 
 #define rlua_tonumber(L,i) rlua_tonumberx(L,(i),NULL)
 #define rlua_tointeger(L,i) rlua_tointegerx(L,(i),NULL)
+#define rlua_tostring(L,i)	rlua_tolstring(L, (i), NULL)
 #define rlua_call(L,n,r) rlua_callk(L, (n), (r), 0, NULL)
 #define rlua_pcall(L,n,r,f) rlua_pcallk(L, (n), (r), (f), 0, NULL)
 #define rluaL_loadbuffer(L,s,sz,n) rluaL_loadbufferx(L,s,sz,n,NULL)
