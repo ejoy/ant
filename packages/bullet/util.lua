@@ -49,11 +49,11 @@ function util.create_collider_comp(btworld, shape, collider, transform)
 	local pos = ms(transform.t, collider.center, "+P")
 	
 	assert(collider.handle == nil)
-	collider.handle = util.create_collider(btworld, assert(shape.handle), collider.obj_idx, pos, ms(transform.r, "qP"))
+	collider.handle = util.create_collider(btworld, assert(shape.handle), pos, ms(transform.r, "qP"), collider.user_idx)
 end
 
-function util.create_collider(btworld, shapehandle, obj_idx, pos, rot)
-	local object = btworld:new_obj(shapehandle, obj_idx, pos, rot)
+function util.create_collider(btworld, shapehandle, pos, rot, user_idx)
+	local object = btworld:new_obj(shapehandle, pos, rot, user_idx)
 	btworld:add_obj(object)
 	return object
 end

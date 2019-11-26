@@ -113,7 +113,7 @@ local function create_animation_test()
         },
         name = 'animation_sample',
         serialize = serialize.create(),
-        collider_tag = true,
+        collider_tag = "capsule_collider",
         capsule_collider = {
             collider = {
                 center = {0, 0, 0},
@@ -194,7 +194,7 @@ local function create_plane_test()
     {0.8, 0.8, 0.8, 1},
     "test shadow plane")
 
-    world:add_component(planeeid, "collider_tag", true)
+    world:add_component(planeeid, "collider_tag", "box_collider")
     world:add_component(planeeid, "box_collider", {
         collider = {
             center = {0, 0, 0},

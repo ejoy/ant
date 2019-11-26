@@ -17,6 +17,13 @@ local function new_world(packages, systems, args)
     return world
 end
 
+local function create_physic()
+	return {
+		world = bullet.new(),
+		objid_mapper = {},
+	}
+end
+
 function util.start_new_world(input_queue, fbw, fbh, packages, systems,other_args)
 	if input_queue == nil then
 		log.info("input queue is not privided, no input event will be received!")
@@ -25,7 +32,7 @@ function util.start_new_world(input_queue, fbw, fbh, packages, systems,other_arg
 	local args =  { 
 		mq = input_queue, 
 		fb_size={w=fbw, h=fbh},
-		Physics = bullet.new(),
+		Physics = create_physic(),
 	}
 	if other_args then
 		for k,v in pairs(other_args) do
@@ -38,7 +45,9 @@ end
 
 -- static_world use for editor module,only data needed
 function util.start_static_world(packages,systems)
-	return new_world(packages, systems, {Physics = bullet.new(),})
+	return new_world(packages, systems, {
+		Physics = create_physic()
+	})
 end
 
 function util.loop(world, arg)	

@@ -46,7 +46,7 @@ local function get_default_collider_comp_value(name)
 				distance = 1,
 			},
 		},
-		sphere = {
+		sphere_collider = {
 			collider = default_collider_field,
 			shape = {
 				type = "sphere",
@@ -279,7 +279,7 @@ function PVPScene.create_entitices(world)
 
 				if collision_array then
 					local collisitontype = collision_array[idx]
-					world:add_component(eid, "collider_tag", true)
+					world:add_component(eid, "collider_tag", collisitontype)
 					local collidercomp = get_default_collider_comp_value(collisitontype)
 					world:add_component(eid, collisitontype, collidercomp)
 				end

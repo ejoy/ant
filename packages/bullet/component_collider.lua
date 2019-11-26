@@ -1,46 +1,36 @@
 local ecs = ...
 local world = ecs.world
 
-local Physics = assert(world.args.Physics)
+local physic = assert(world.args.Physic)
+local physicworld = physic.world
 local ms = import_package "ant.math".stack
 
 local colliderutil = require "util"
 
-ecs.tag "collider_tag"
+ecs.component_alias("collider_tag", "string")
 
 local coll = ecs.component "collider"
 	.center "real[3]" {0, 0, 0}
 	.is_tigger "boolean" (true)
+	["opt"].user_idx "int"
 
-function coll:delete()	
+function coll:delete()
 	local handle = self.handle
 	if handle then
-		Physics:del_obj(handle)
+		physicworld:del_obj(handle)
 	end
-end
-
-local objidx_counter = 0
-local function collider_obj_idx_creator()
-	local oi = objidx_counter
-	objidx_counter = objidx_counter + 1
-	return oi
-end
-
-function coll:init()
-	self.obj_idx = collider_obj_idx_creator()
-	return self
 end
 
 local function shape_delete(shape)
 	if shape.handle then
-		Physics:del_shape(shape.handle)
+		physicworld:del_shape(shape.handle)
 	end
 end
 
 local function shape_new(shapetype)
 	return function (shape)
 		shape.type = shapetype
-		shape.handle = Physics:new_shape(shapetype, shape)
+		shape.handle = physicworld:new_shape(shapetype, shape)
 		return shape
 	end
 end
@@ -110,7 +100,7 @@ for _, pp in ipairs {
 	function c:postinit(e)
 		local shape = self.shape
 		local collider = self.collider
-		colliderutil.create_collider_comp(Physics, shape, collider, e.transform)
+		colliderutil.create_collider_comp(physicworld, shape, collider, e.transform)
 	end
 
 	function c:delete()
@@ -121,7 +111,7 @@ end
 local math3d_adapter = require "math3d.adapter"
 local mathadapter_util = import_package "ant.math.adapter"
 mathadapter_util.bind("bullet", function ()
-	local bw_mt 			= getmetatable(Physics)
+	local bw_mt 			= getmetatable(physicworld)
 	bw_mt.new_obj 			= math3d_adapter.vector(ms, bw_mt.new_obj, 4)
 	bw_mt.set_obj_transform = math3d_adapter.vector(ms, bw_mt.set_obj_transform, 3)
 	bw_mt.set_obj_position 	= math3d_adapter.vector(ms, bw_mt.set_obj_position, 3)

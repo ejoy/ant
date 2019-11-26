@@ -1,7 +1,7 @@
 #define LUA_LIB
 
 #include "btBulletDynamicsCommon.h"
-
+#include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
 extern "C" {
 #include <lua.h>
 #include <lualib.h>
@@ -18,13 +18,13 @@ extern "C" {
 #include <cstdlib>
 
 //#include "Collision/CollisionSdkC_Api.h"
-#include "Collision/Internal/BulletDebugDraw.h"
+//#include "Collision/Internal/BulletDebugDraw.h"
 
 struct collworld_node {
 	btDefaultCollisionConfiguration *cfg;
 	btCollisionDispatcher	*dispatcher;
 	btDbvtBroadphase		*broadphase;
-	MyDebugDrawer			*debug_drawer;
+	//MyDebugDrawer			*debug_drawer;
 	btCollisionWorld		*world;
 };
 
@@ -204,7 +204,7 @@ lnew_shape(lua_State *L) {
 		shape = new btStaticPlaneShape(normal, distance);		
 	} else if (strcmp(type, "capsule") == 0) {
 		luaL_checktype(L, 3, LUA_TTABLE);
-		lua_getfield(L, 3, "radius");		
+		lua_getfield(L, 3, "radius");
 		const btScalar radius = (btScalar)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 
@@ -231,8 +231,8 @@ lnew_shape(lua_State *L) {
 			break;
 		}
 	} else if (strcmp(type, "compound") == 0) {
-		shape = new btCompoundShape();		
-	} else if (strcmp(type,"terrain") == 0 ) {		
+		shape = new btCompoundShape();
+	} else if (strcmp(type,"terrain") == 0 ) {
 		shape = create_terrain_shape(L, worldnode, 3);
 	} else {
 		return luaL_error(L, "unknown type:%s", type);
@@ -244,7 +244,7 @@ lnew_shape(lua_State *L) {
 
 template<typename T>
 void extract_vec(lua_State *L, int index, int num, T& obj) {
-	for (auto ii = 0; ii < num; ++ii) {    //error: 3-num
+	for (auto ii = 0; ii < num; ++ii) {
 		lua_geti(L, index, ii + 1);
 		obj[ii] = (btScalar)lua_tonumber(L, -1);
 		lua_pop(L, 1);
@@ -252,34 +252,39 @@ void extract_vec(lua_State *L, int index, int num, T& obj) {
 };
 
 template<typename T>
-void push_vec(lua_State *L, const char* name, int num, const T &obj) {
+void push_vec(lua_State *L, int num, const T &obj){
 	lua_createtable(L, num, 0);
 	for (auto ii = 0; ii < num; ++ii) {
 		lua_pushnumber(L, obj[ii]);
 		lua_seti(L, -2, ii + 1);
 	}
+}
+
+template<typename T>
+void push_vec(lua_State *L, const char* name, int num, const T &obj) {
+	push_vec(L, num, obj);
 	lua_setfield(L, -2, name);
 };
 
-static int 
-lcreate_debugDrawer(lua_State *L) {
-	auto worldnode = get_worldnode(L);
-	check_delete(worldnode->debug_drawer);
+//static int 
+//lcreate_debugDrawer(lua_State *L) {
+//	auto worldnode = get_worldnode(L);
+//	check_delete(worldnode->debug_drawer);
+//
+//	worldnode->debug_drawer = new MyDebugDrawer();
+//	worldnode->world->setDebugDrawer(worldnode->debug_drawer);
+//	worldnode->debug_drawer->setDebugMode(
+//		btIDebugDraw::DBG_DrawWireframe
+//	);
+//	return 0;
+//}
 
-	worldnode->debug_drawer = new MyDebugDrawer();
-	worldnode->world->setDebugDrawer(worldnode->debug_drawer);
-	worldnode->debug_drawer->setDebugMode(            // default view status
-		btIDebugDraw::DBG_DrawWireframe		
-	);
-	return 0;
-}
-
-static int 
-ldelete_debugDrawer(lua_State *L) {
-	auto worldnode = get_worldnode(L);
-	check_delete(worldnode->debug_drawer);
-	return 0;
-}
+//static int 
+//ldelete_debugDrawer(lua_State *L) {
+//	auto worldnode = get_worldnode(L);
+//	check_delete(worldnode->debug_drawer);
+//	return 0;
+//}
 
 static int
 lnew_collision_obj(lua_State *L) {
@@ -293,26 +298,27 @@ lnew_collision_obj(lua_State *L) {
 		return 0;
 	}
 
-	luaL_checktype(L, 3, LUA_TNUMBER);
-	const int useridx = (int)lua_tointeger(L, 3);
+	btCollisionObject* coll_obj = new btCollisionObject;
 
 	btVector3* pos = nullptr;
-	if (!lua_isnoneornil(L, 4)) {
-		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
-		pos = (btVector3*)lua_touserdata(L, 4);
+	if (!lua_isnoneornil(L, 3)) {
+		luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+		pos = (btVector3*)lua_touserdata(L, 3);
 	}
 
 	btQuaternion* quat = nullptr;
-	if (!lua_isnoneornil(L, 5)) {
-		luaL_checktype(L, 5, LUA_TLIGHTUSERDATA);
-		quat = (btQuaternion*)lua_touserdata(L, 5);
+	if (!lua_isnoneornil(L, 4)) {
+		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+		quat = (btQuaternion*)lua_touserdata(L, 4);
+	}
+
+	if (!lua_isnil(L, 3)){
+		const int useridx = (int)lua_tointeger(L, 3);
+		coll_obj->setUserIndex(useridx);
 	}
 
 	void *userdata = lua_isnoneornil(L, 6) ? nullptr : lua_touserdata(L, 6);
-
-	btCollisionObject* coll_obj = new btCollisionObject;
-		
-	coll_obj->setUserIndex(useridx);
+	
 	coll_obj->setUserPointer(userdata);
 	coll_obj->setCollisionShape(shape);
 
@@ -370,47 +376,47 @@ lremove_collision_obj(lua_State *L) {
 	return 0;
 }
 
-static int 
-lget_debug_info(lua_State *L) {
-	auto worldnode = get_worldnode(L);
-	btCollisionWorld* btWorld = worldnode->world;
-	MyDebugDrawer *debugDrawer = (MyDebugDrawer*) btWorld->getDebugDrawer(); 
-	if(debugDrawer == nullptr ) {
-	   return 0;
-	}
+//static int 
+//lget_debug_info(lua_State *L) {
+//	auto worldnode = get_worldnode(L);
+//	btCollisionWorld* btWorld = worldnode->world;
+//	MyDebugDrawer *debugDrawer = (MyDebugDrawer*) btWorld->getDebugDrawer(); 
+//	if(debugDrawer == nullptr ) {
+//	   return 0;
+//	}
+//
+//	int idx_size =0, vert_size =0;
+//	float *verts = debugDrawer->getVertices(vert_size);
+//	unsigned int *indices = debugDrawer->getIndices(idx_size);
+//	if( idx_size<=0 || vert_size<=0 ) {
+//		return 0;
+//	}
+//	lua_pushlstring(L,(const char *) verts, vert_size*sizeof(struct MyDebugVec) );
+//	lua_pushlstring(L,(const char *) indices, idx_size*sizeof(unsigned int) );
+//	lua_pushinteger(L,vert_size);
+//	lua_pushinteger(L,idx_size);
+//	return 4;
+//}
+//
+//static int 
+//ldebug_draw_world(lua_State *L) {
+//	auto worldnode = get_worldnode(L);
+//	btCollisionWorld* collisionWorld = worldnode->world;
+//	//MyDebugDrawer* debugDrawer = (MyDebugDrawer*)collisionWorld->getDebugDrawer();
+//	collisionWorld->debugDrawWorld();
+//	return 0;
+//}
 
-	int idx_size =0, vert_size =0;
-	float *verts = debugDrawer->getVertices(vert_size);
-	unsigned int *indices = debugDrawer->getIndices(idx_size);
-	if( idx_size<=0 || vert_size<=0 ) {
-		return 0;
-	}
-	lua_pushlstring(L,(const char *) verts, vert_size*sizeof(struct MyDebugVec) );
-	lua_pushlstring(L,(const char *) indices, idx_size*sizeof(unsigned int) );
-	lua_pushinteger(L,vert_size);
-	lua_pushinteger(L,idx_size);
-	return 4;
-}
-
-static int 
-ldebug_draw_world(lua_State *L) {
-	auto worldnode = get_worldnode(L);
-	btCollisionWorld* collisionWorld = worldnode->world;
-	//MyDebugDrawer* debugDrawer = (MyDebugDrawer*)collisionWorld->getDebugDrawer();
-	collisionWorld->debugDrawWorld();
-	return 0;
-}
-
-// clear debugDrawer data
-static int 
-ldebug_clear_world(lua_State*L) {
-	auto world = get_worldnode(L);
-	btCollisionWorld* btWorld =(btCollisionWorld*) world->world;
-	MyDebugDrawer* debugDrawer = (MyDebugDrawer*)btWorld->getDebugDrawer();
-	if( debugDrawer) 
-		debugDrawer->reset();
-	return 0;
-}
+//// clear debugDrawer data
+//static int 
+//ldebug_clear_world(lua_State*L) {
+//	auto world = get_worldnode(L);
+//	btCollisionWorld* btWorld =(btCollisionWorld*) world->world;
+//	MyDebugDrawer* debugDrawer = (MyDebugDrawer*)btWorld->getDebugDrawer();
+//	if( debugDrawer) 
+//		debugDrawer->reset();
+//	return 0;
+//}
 
 static int
 ladd_to_compound(lua_State *L) {
@@ -484,6 +490,23 @@ lset_shape_scale(lua_State *L) {
 
 	shape->setLocalScaling(*scale);
 	return 0;
+}
+
+static int
+lget_obj_aabb(lua_State *L){
+	auto worldnode = get_worldnode(L);
+	assert(worldnode && worldnode->world);
+
+	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
+
+	auto shape = obj->getCollisionShape();
+
+	btVector3 min, max;
+	shape->getAabb(obj->getWorldTransform(), min, max);
+
+	push_vec(L, 3, min);
+	push_vec(L, 3, max);
+	return 2;
 }
 
 static int
@@ -767,18 +790,30 @@ lraycast(lua_State *L) {
 	return 2;
 }
 
+// static int
+// ldrawline(lua_State *L) {
+// 	auto worldnode = get_worldnode(L);
+// 	assert(worldnode && worldnode->world);
+
+// 	btVector3* from = (btVector3*)lua_touserdata(L, 2);
+// 	btVector3* to = (btVector3*)lua_touserdata(L, 3);
+
+// 	uint32_t color = (int)luaL_optinteger(L,4,0xffffffff);
+
+// 	//plDrawline(world->sdk, world->world, from, to, color );
+
+// 	return 0;
+// }
+
 static int
-ldrawline(lua_State *L) {
+lset_obj_user_idx(lua_State *L){
 	auto worldnode = get_worldnode(L);
 	assert(worldnode && worldnode->world);
 
-	btVector3* from = (btVector3*)lua_touserdata(L, 2);
-	btVector3* to = (btVector3*)lua_touserdata(L, 3);
+	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
+	auto useridx = lua_tointeger(L, 3);
 
-	uint32_t color = (int)luaL_optinteger(L,4,0xffffffff);
-
-	//plDrawline(world->sdk, world->world, from, to, color );
-
+	obj->setUserIndex(useridx);
 	return 0;
 }
 
@@ -858,23 +893,26 @@ register_bullet_world_node(lua_State *L) {
 		{"del_shape",			ldel_shape},
 		{"update_object_shape",	lupdate_object_shape},
 		{"set_shape_scale",		lset_shape_scale},
+		{"get_shape_aabb",		lget_obj_aabb},
+
 		{"new_obj",				lnew_collision_obj},
 		{"del_obj",				ldel_collision_obj},
 		{"add_obj",				ladd_collision_obj},
 		{"remove_obj",			lremove_collision_obj},
+		{"set_obj_user_idx",	lset_obj_user_idx},
 		{"set_obj_transform",	lset_obj_trans},
-		{"set_obj_position",		lset_obj_pos},
-		{"set_obj_rotation",		lset_obj_rot},
+		{"set_obj_position",	lset_obj_pos},
+		{"set_obj_rotation",	lset_obj_rot},
 		{"add_to_compound",		ladd_to_compound},
 		{"world_collide",		lworld_collide,	},
 		{"collide_objects",		lcollide_objects},
 		{"raycast",				lraycast},
-		{"drawline",				ldrawline},
-		{"get_debug_info",		lget_debug_info},
-		{"create_debug_drawer",	lcreate_debugDrawer},
-		{"delete_debug_drawer",	ldelete_debugDrawer},
-		{"debug_begin_draw",		ldebug_draw_world},
-		{"debug_end_draw",		ldebug_clear_world},
+		//{"drawline",			ldrawline},
+		//{"get_debug_info",		lget_debug_info},
+		//{"create_debug_drawer",	lcreate_debugDrawer},
+		//{"delete_debug_drawer",	ldelete_debugDrawer},
+		//{"debug_begin_draw",		ldebug_draw_world},
+		//{"debug_end_draw",		ldebug_clear_world},
 		{"reset_world",			lreset_bullet_world},
 		{"del_bullet_world",		ldel_bullet_world},
 		{nullptr, nullptr},
