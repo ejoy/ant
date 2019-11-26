@@ -67,6 +67,8 @@ local function create_animation_test()
         anilist[#anilist + 1] = {ref_path = anipath}
     end
 
+    local respath = fs.path '/pkg/ant.resources'
+
     local eid =
         world:create_entity {
         transform = {
@@ -89,13 +91,13 @@ local function create_animation_test()
             },
             anilist = {
                 {
-                    ref_path = fs.path '/pkg/ant.resources' / meshdir / 'animation' / 'animation1.ozz',
+                    ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'ani1'
                 },
                 {
-                    ref_path = fs.path '/pkg/ant.resources' / meshdir / 'animation' / 'animation2.ozz',
+                    ref_path = respath / meshdir / 'animation' / 'animation2.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'ani2'
@@ -104,13 +106,25 @@ local function create_animation_test()
             blendtype = 'blend'
         },
         skeleton = {
-            ref_path = fs.path '/pkg/ant.resources' / skepath
+            ref_path = respath / skepath
         },
         skinning_mesh = {
-            ref_path = fs.path '/pkg/ant.resources' / smpath
+            ref_path = respath / smpath
         },
         name = 'animation_sample',
-		serialize = serialize.create(),
+        serialize = serialize.create(),
+        collider_tag = true,
+        capsule_collider = {
+            collider = {
+                center = {0, 0, 0},
+                is_tigger = true,
+            },
+            shape = {
+                radius = 1.0,
+                height = 1.0,
+                axis   = 0,
+            },
+        },
     }
 
     local e = world[eid]
@@ -173,6 +187,24 @@ local function pbr_test()
     }
 end
 
+local function create_plane_test()
+    local planeeid = computil.create_plane_entity(world,
+    {50, 1, 50, 0}, nil,
+    fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
+    {0.8, 0.8, 0.8, 1},
+    "test shadow plane")
+
+    world:add_component(planeeid, "collider_tag", true)
+    world:add_component(planeeid, "box_collider", {
+        collider = {
+            center = {0, 0, 0},
+        },
+        shape = {
+            size = {50, 1, 50},
+        }
+    })
+end
+
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
@@ -182,7 +214,9 @@ function init_loader:init()
 
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
-    computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
+    --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
+    create_plane_test()
+
     create_animation_test()
     pbr_test()
     pbrscene.create_scene(world)

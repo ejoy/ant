@@ -199,6 +199,7 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name)
 		0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
 	}
 	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
+	return eid
 end
 
 local function quad_mesh(vb)	

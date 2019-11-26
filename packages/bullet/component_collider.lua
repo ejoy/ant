@@ -15,7 +15,6 @@ local coll = ecs.component "collider"
 function coll:delete()	
 	local handle = self.handle
 	if handle then
-		local Physics = assert(world.args.Physics)
 		Physics:del_obj(handle)
 	end
 end
@@ -32,57 +31,79 @@ function coll:init()
 	return self
 end
 
-ecs.component "plane_shape"
-	.type "string" "plane"
+local function shape_delete(shape)
+	if shape.handle then
+		Physics:del_shape(shape.handle)
+	end
+end
+
+local function shape_new(shapetype)
+	return function (shape)
+		shape.type = shapetype
+		shape.handle = Physics:new_shape(shapetype, shape)
+		return shape
+	end
+end
+
+local p = ecs.component "plane_shape"
 	.normal "real[3]" {0, 1, 0}
 	.distance "real" (1)
+p.init = shape_new "plane"
+p.delete = shape_delete
 
-ecs.component "sphere_shape"	
+local s = ecs.component "sphere_shape"
 	.radius "real" (1)
+s.init = shape_new "sphere"
+s.delete = shape_delete
 
-ecs.component "box_shape"	
-	.type "string" "box"
-	.size "real[3]" {1, 1, 1}	
+local b = ecs.component "box_shape"
+	.size "real[3]" {1, 1, 1}
+b.init = shape_new "box"
+b.delete = shape_delete
 
-ecs.component "capsule_shape"	
-	.type "string" "capsule"
+local c = ecs.component "capsule_shape"
 	.radius "real" (1)
 	.height "real" (1)
-	.axis "int" (0)	
+	.axis 	"string" "Y"
+c.init = shape_new "capsule"
+c.delete = shape_delete
 
-ecs.component_alias("cylinder_shape", "capsule_shape")
+local C = ecs.component "custom_shape"
+C.init = shape_new "compound"
+C.delete = shape_delete
 
-ecs.component "custom_shape"
-	.type "string" "compound"	
-
-ecs.component "character_shape"
-	.type "string" "compound"
-	.spheres "sphere_shape[]"
+local char = ecs.component "character_shape"
+	.spheres"sphere_shape[]"
 	.boxes 	"box_shape[]"
-	.customs "custom_shape[]"
+	.customs"custom_shape[]"
+
+function char:init()
+	self.type = "character"
+	for _, sshape in ipairs(self.spheres) do
+		shape_new "sphere"(sshape)
+	end
+
+	for _, bshape in ipairs(self.boxes) do
+		shape_new "box"(bshape)
+	end
+
+	for _, cshape in ipairs(self.customs) do
+		shape_new "compound"(cshape)
+	end
+
+	return self
+end
 
 for _, pp in ipairs {
-	{"plane_collider", 	"plane_shape"},
-	{"sphere_collider", "sphere_shape"},
-	{"box_collider", 	"box_shape"},
-	{"capsule_collider","capsule_shape"},
-	{"cylinder_collider","cylinder_shape"},	
-	{"character_collider", "character_shape" },
+	{"plane_collider", 	  "plane_shape",},
+	{"sphere_collider",   "sphere_shape",},
+	{"box_collider", 	  "box_shape", },
+	{"capsule_collider",  "capsule_shape",},
+	{"character_collider","character_shape",},
 } do
 	local collidername, shapename = pp[1], pp[2]
-	local s = ecs.component(shapename){depend="collider_tag"}
-	function s:init()
-		self.handle = Physics:new_shape(self.type, self)
-		return self
-	end
 
-	function s:delete()
-		if self.handle then
-			Physics:del_shape(self.handle)		
-		end
-	end
-
-	local c = ecs.component(collidername) { depend = {"rendermesh", "transform"} }
+	local c = ecs.component(collidername) { depend = {"rendermesh", "transform", "collider_tag"} }
 		.collider "collider"
 		.shape(shapename)
 

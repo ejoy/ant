@@ -213,56 +213,18 @@ lnew_shape(lua_State *L) {
 		lua_pop(L, 1);
 
 		lua_getfield(L, 3, "axis");
-		const int axis = (int)luaL_optinteger(L, -1, 1);
+		const char* axis = luaL_optstring(L, -1, "X");
+		assert(strlen(axis) > 1);
 		lua_pop(L, 1);
-		switch (axis) {
-		case 0:
+		switch (axis[0]) {
+		case 'X':
 			shape = new btCapsuleShapeX(radius, height);
 			break;
-		case 1:
+		case 'Y':
 			shape = new btCapsuleShape(radius, height);
 			break;
-		case 2:
+		case 'Z':
 			shape = new btCapsuleShapeZ(radius, height);
-			break;
-		default:
-			luaL_error(L, "invalid axis data:%d", axis);
-			break;
-		}
-	} else if (strcmp(type, "cylinder") == 0) {
-		btScalar top_radius = 0, bottom_radius = 0;
-		if (lua_getfield(L, 3, "radius") != LUA_TNIL) {
-			top_radius = bottom_radius = (btScalar)lua_tonumber(L, -1);
-		}
-		lua_pop(L, 1);
-
-		if (lua_getfield(L, 3, "top_radius") != LUA_TNIL) {
-			top_radius = (btScalar)lua_tonumber(L, -1);
-		}
-		lua_pop(L, 1);
-
-		if (lua_getfield(L, 3, "bottom_radius") != LUA_TNIL) {
-			bottom_radius = (btScalar)lua_tonumber(L, -1);
-		}
-		lua_pop(L, 1);
-
-		lua_getfield(L, 3, "height");
-		const btScalar height = (btScalar)lua_tonumber(L, -1);
-		lua_pop(L, 1);
-
-		lua_getfield(L, 3, "axis");
-		const int axis = (int)luaL_optinteger(L, -1, 1);
-		lua_pop(L, 1);
-
-		switch (axis) {
-		case 0:
-			shape = new btCylinderShapeX(btVector3(height, top_radius, bottom_radius));
-			break;
-		case 1:
-			shape = new btCylinderShape(btVector3(top_radius, height, bottom_radius));
-			break;
-		case 2:
-			shape = new btCylinderShapeZ(btVector3(top_radius, bottom_radius, height));
 			break;
 		default:
 			luaL_error(L, "invalid axis data:%d", axis);
