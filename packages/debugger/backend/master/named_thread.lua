@@ -3,9 +3,6 @@ local thread = require "remotedebug.thread"
 local exitGuard = {}
 
 local threadMgr = [[
-    package.path = %q
-    package.cpath = %q
-    if debug.setcstacklimit then debug.setcstacklimit(1000) end
     local thread = require "remotedebug.thread"
     local MgrChanReq = thread.channel "NamedThread-Req:%s"
     local function MgrUpdate()
@@ -40,11 +37,11 @@ local function createChannel(name)
     return not ok
 end
 
-local function createThread(name, path, cpath, script)
+local function createThread(name, script)
     if createChannel(reqChannelName(name)) then
         return
     end
-    thread.thread(threadMgr:format(path, cpath, name) .. script)
+    thread.thread(thread.bootstrap_lua .. threadMgr:format(name) .. script, thread.bootstrap_c)
     exitGuard[#exitGuard+1] = name
     local errlog = thread.channel "errlog"
     local ok, msg = errlog:pop()

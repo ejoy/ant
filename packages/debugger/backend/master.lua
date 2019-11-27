@@ -8,7 +8,7 @@ return function (logpath, address, errthread)
     nt.createChannel "DbgMaster"
 
     if errthread then
-        nt.createThread("error", package.path, package.cpath, ([[
+        nt.createThread("error", ([[
             local err = thread.channel "errlog"
             local log = require "common.log"
             log.file = %q..'/error.log'
@@ -22,7 +22,7 @@ return function (logpath, address, errthread)
         ]]):format(logpath))
     end
 
-    nt.createThread("master", package.path, package.cpath, ([[
+    nt.createThread("master", ([[
         local dbg_io = require "common.io"(%s)
         local master = require "backend.master.mgr"
         local log = require "common.log"
