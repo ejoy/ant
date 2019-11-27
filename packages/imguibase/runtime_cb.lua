@@ -6,6 +6,8 @@ local renderpkg = import_package "ant.render"
 local fs = require "filesystem"
 local thread = require "thread"
 local imgui = require "imgui"
+local imgui_ant = require "imgui.ant"
+imgui = setmetatable(imgui_ant,{__index=imgui})
 local platform = require "platform"
 
 local keymap = inputmgr.keymap

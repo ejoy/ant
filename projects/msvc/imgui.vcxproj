@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\3rd\imgui\imgui.cpp" />
     <ClCompile Include="..\..\3rd\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\..\3rd\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\..\clibs\imgui\imgui_ant.cpp" />
     <ClCompile Include="..\..\clibs\imgui\imgui_win32.cpp" />
     <ClCompile Include="..\..\clibs\imgui\luaimgui.cpp" />
   </ItemGroup>
