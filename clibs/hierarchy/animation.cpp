@@ -439,74 +439,13 @@ lsample_animation(lua_State *L) {
 	return 0;
 }
 
-static inline int
-find_root_index(const ozz::animation::Skeleton *ske) {
-	const auto jointcount = ske->num_joints();
-	const auto &parents = ske->joint_parents();
-	for (auto ii = 0; ii < jointcount; ++ii) {
-		auto &parent = parents[ii];
-		if (parent == ozz::animation::Skeleton::kNoParent)
-			return ii;
-	}
-
-	return -1;
-}
-
-static inline void
-fetch_float4x4(const ozz::math::SoaTransform &trans, int subidx, ozz::math::Float4x4 &f4x4) {
-	const ozz::math::SoaFloat4x4 local_soa_matrices = ozz::math::SoaFloat4x4::FromAffine(
-		trans.translation, trans.rotation, trans.scale);
-
-	// Converts to aos matrices.
-	ozz::math::Float4x4 local_aos_matrices[4];
-	ozz::math::Transpose16x16(&local_soa_matrices.cols[0].x,
-		local_aos_matrices->cols);
-
-	f4x4 = local_aos_matrices[subidx];
-}
-
-static inline void
-extract_fix_matrix(const ozz::animation::Skeleton *ske, const soa_poses &poses, ozz::math::Float4x4 &root) {
-	const auto rootidx = find_root_index(ske);
-	assert(rootidx >= 0);
-	
-	const auto soa_rootidx = rootidx / 4;
-	const auto aos_subidx = rootidx % 4;
-
-	const auto &trans = poses[soa_rootidx];
-	fetch_float4x4(trans, aos_subidx, root);
-
-	const auto &bindpose_root = ske->joint_bind_poses()[soa_rootidx];
-	ozz::math::Float4x4 bp4x4;
-	fetch_float4x4(bindpose_root, aos_subidx, bp4x4);
-
-	root = ozz::math::Invert(root) * bp4x4;
-	
-}
-
-static inline bool
-transform_bindpose_result(ozz::animation::Skeleton *ske, 
-	const soa_poses &soapose,
-	bool fixroot,
-	bindpose_result *result) {
-
-	ozz::math::Float4x4 rootmat = ozz::math::Float4x4::identity();
-	if (fixroot) {
-		extract_fix_matrix(ske, soapose, rootmat);
-	}
-
-	return do_ltm(ske, soapose, result->pose, &rootmat);
-}
-
-
 static int
 ltransform_to_bindpose_result(lua_State *L) {
 	auto ske = get_ske(L, 1);
 	auto bindpose = get_bindpose(L, 2);
 	auto result = get_aniresult(L, ske, 3);
-	const bool need_fix_root = luaL_opt(L, lua_toboolean, 4, true);
 
-	if (!transform_bindpose_result(ske, bindpose->pose, need_fix_root, result)) {
+	if (!do_ltm(ske, bindpose->pose, result->pose)) {
 		luaL_error(L, "transform bind pose is failed!");
 	}
 	return 0;
@@ -651,13 +590,12 @@ lmotion(lua_State *L) {
 	auto aniresult = get_aniresult(L, ske, 4);
 
 	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
-	const bool need_fix_root = luaL_opt(L, lua_toboolean, 6, true);
-	 
+ 
 	bind_pose bindpose;
 	blend_animations(L, 2, blendtype, ske, threshold, &bindpose);
 
-	if (!transform_bindpose_result(ske, bindpose.pose, need_fix_root, aniresult)){
-		luaL_error(L, "doing blend result to ltm job failed!");
+	if (!do_ltm(ske, bindpose.pose, aniresult->pose)){
+		return luaL_error(L, "doing blend result to ltm job failed!");
 	}
 
 	return 0;
@@ -678,7 +616,7 @@ create_joint_table(lua_State *L, const ozz::math::Float4x4 &joint) {
 static int
 lbp_result_joint(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	const bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
+	bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TNUMBER);
 	const size_t idx = (size_t)lua_tointeger(L, 2);
@@ -689,9 +627,14 @@ lbp_result_joint(lua_State *L) {
 	}
 
 	auto &joint = result->pose[idx];
-	auto p = &(joint.cols[0]);
-	lua_pushlightuserdata(L, (void*)p);
-	return 1;
+	if (lua_isnoneornil(L, 3)){
+		auto p = &(joint.cols[0]);
+		lua_pushlightuserdata(L, (void*)p);
+		return 1;
+	}
+
+	joint = *(ozz::math::Float4x4*)lua_touserdata(L, 3);
+	return 0;
 }
 
 static int
@@ -716,6 +659,34 @@ lbp_result_count(lua_State *L) {
 
 	lua_pushinteger(L, result->pose.size());
 	return 1;
+}
+
+// static inline int
+// find_root_index(const ozz::animation::Skeleton *ske) {
+// 	const auto jointcount = ske->num_joints();
+// 	const auto &parents = ske->joint_parents();
+// 	for (auto ii = 0; ii < jointcount; ++ii) {
+// 		auto &parent = parents[ii];
+// 		if (parent == ozz::animation::Skeleton::kNoParent)
+// 			return ii;
+// 	}
+
+// 	return -1;
+// }
+
+static int
+lbp_result_transform(lua_State *L){
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
+
+	auto mat = (const ozz::math::Float4x4*)lua_touserdata(L, 2);
+	auto except_root = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
+
+	for (int ii = (except_root ? 1 : 0); ii < result->pose.size(); ++ii){
+		result->pose[ii] = *mat * result->pose[ii];
+	}
+	
+	return 0;
 }
 
 static int
@@ -1089,6 +1060,7 @@ register_bpresult_mt(lua_State *L) {
 		{"joint", lbp_result_joint},
 		{"joints", lbp_result_joints},
 		{"count", lbp_result_count},
+		{"transform", lbp_result_transform},
 		{"__gc", ldel_bpresult},
 		{nullptr, nullptr},
 	};

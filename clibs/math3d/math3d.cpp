@@ -440,16 +440,17 @@ make_srt(struct lastack*LS, const glm::vec3 &scale, const glm::mat4x4 &rotmat, c
 
 static void inline 
 push_srt_from_table(lua_State *L, struct lastack *LS, int index) {
-	lua_getfield(L, index, "s");
-	const glm::vec3 scale = extract_scale(L, LS, -1);
+	const glm::vec3 scale = (LUA_TNIL != lua_getfield(L, index, "s")) ?
+		extract_scale(L, LS, -1) : glm::vec3(1.f, 1.f, 1.f);
 	lua_pop(L, 1);
 	
-	lua_getfield(L, index, "r");
-	const glm::mat4x4 rotMat = extract_rotation_mat(L, LS, -1);
+	
+	const glm::mat4x4 rotMat = (LUA_TNIL != lua_getfield(L, index, "r")) ?
+		extract_rotation_mat(L, LS, -1) : glm::mat4x4(1.f);
 	lua_pop(L, 1);
 
-	lua_getfield(L, index, "t");
-	const glm::vec3 translate = extract_translate(L, LS, -1);	
+	const glm::vec3 translate = (LUA_TNIL != lua_getfield(L, index, "t")) ?
+		extract_translate(L, LS, -1) : glm::vec3(0.f, 0.f, 0.f);
 	lua_pop(L, 1);
 	 
 	make_srt(LS, scale, rotMat, translate);
@@ -3079,26 +3080,39 @@ elem_op(lua_State *L, struct lastack *LS, OP op){
 
 	const float value = lua_tonumber(L, 4);
 
+	const int elem_count = luaL_optinteger(L, 5, 1);
+
 	switch (type)
 	{
 	case LINEAR_TYPE_MAT:{
-		if (elem_idx < 0 || elem_idx > 15){
+		const auto elem_end = elem_idx + elem_count;
+
+		if (elem_idx < 0 || elem_idx > 15 || elem_end - 1 > 15){
 			luaL_error(L, "elem index out of range:%d", elem_idx);
 		}
 		auto m = get_mat_value(L, LS, 2);
-		op(m[elem_idx/4][elem_idx%4], value);
+		
+		for (int ii= elem_idx; ii < elem_end; ++ii){
+			op(m[ii /4][ii %4], value);
+		}
+
 		lastack_pushobject(LS, &m[0][0], type);
 	}
 		break;
 	case LINEAR_TYPE_VEC4:
 	case LINEAR_TYPE_EULER:
 	case LINEAR_TYPE_QUAT:{
-		if (elem_idx < 0 || elem_idx > 3){
+		const auto elem_end = elem_idx + elem_count;
+		if (elem_idx < 0 || elem_idx > 3 || elem_end - 1 > 3){
 			luaL_error(L, "elem index out of range:%d", elem_idx);
 		}
 
 		auto vv = get_vec_value(L, LS, 2);
-		op(vv[elem_idx], value);
+
+		
+		for (int ii = elem_idx; ii < elem_end; ++ii) {
+			op(vv[ii], value);
+		}
 		lastack_pushobject(LS, &vv.x, type);
 	}
 	default:

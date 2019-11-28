@@ -82,14 +82,6 @@ local function deep_copy(t)
 	return t
 end
 
--- local function update_transform_from_animation(aniresult, ske, e)
--- 	local rootidx = 1
--- 	assert(ske:isroot(rootidx))
--- 	local trans = aniresult:joint(rootidx)
--- 	local s, r, t = ms(ms:matrix(trans), "~PPP")
--- 	e.transform.t(t)
--- end
-
 function anisystem:update()	
 	local current_counter = timer.current_counter
 
@@ -100,7 +92,7 @@ function anisystem:update()
 
 		local anicomp = assert(e.animation)
 
-		local fix_root = false
+		local fix_root = true
 		local ikcomp = e.ik
 		if ikcomp and ikcomp.enable then
 			local mat = ms:srtmat(e.transform)
@@ -142,15 +134,24 @@ function anisystem:update()
 					{pose=srcbindpose, weight=assert(transmit.source_weight)}, 
 					{pose=targetbindpose, weight=assert(transmit.target_weight)}
 				}, anicomp.blendtype, finalbindpose)
-				ani_module.transform(ske, finalbindpose, anicomp.aniresult, fix_root)
+				ani_module.transform(ske, finalbindpose, anicomp.aniresult)
 			else
-				ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult, nil, fix_root)
+				ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult)
 			end
 		end
 
-		-- if not fix_root then
-		-- 	update_transform_from_animation(anicomp.aniresult, ske, e)
-		-- end
+		if fix_root then
+			local bpresult = anicomp.aniresult
+			local rootmat = ms:matrix(bpresult:joint(0))
+			--[[
+				'>': pop matrix in stack as vec4, column 4 is on top of the stack
+				'i': invert col4
+			]]
+			local inv_t = ms(rootmat, '>iP')
+			local invroot_translatemat = ms({type="srt", t=inv_t}, "m")
+
+			bpresult:transform(invroot_translatemat, true)
+		end
 	end
 end
 
