@@ -17,6 +17,7 @@ local ms = mathpkg.stack
 local mu = mathpkg.util
 
 local imgui = require "imgui"
+local imgui_ant = require "imgui.ant"
 
 local model_review_system = ecs.system "model_review_system"
 
@@ -316,7 +317,7 @@ local function memory_info()
 	s[#s+1] = ("lua   memory:%s"):format(bytestr(collectgarbage "count" * 1024.0))
 	s[#s+1] = ("bgfx  memory:%s"):format(bytestr(bgfx.get_memory()))
 	s[#s+1] = ("math  memory:%s"):format(bytestr(ms:stacksize()))
-	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui.get_memory()))
+	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui_ant.get_memory()))
 	
 	s[#s+1] = "-------------------"
 
@@ -336,11 +337,25 @@ local function memory_info()
 	return table.concat(s, "\t\n\t")
 end
 
-function model_review_system:on_gui()
-	local windows = imgui.windows
-	local widget = imgui.widget
+local function defer(f)
+    local toclose = setmetatable({}, { __close = f })
+    return function (_, w)
+        if not w then
+            return toclose
+        end
+    end, nil, nil, toclose
+end
 
-	windows.Begin("Test")
-	widget.Text(memory_info())
-	windows.End()
+local function imgui_windows(...)
+	imgui.windows.Begin(...)
+	return defer(function()
+		imgui.windows.End()
+	end)
+end
+
+function model_review_system:on_gui()
+	local widget = imgui.widget
+	for _ in imgui_windows("Test") do
+		widget.Text(memory_info())
+	end
 end
