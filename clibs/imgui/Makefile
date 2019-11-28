@@ -16,7 +16,7 @@ IMGUI_MACRO += -DIMGUI_DISABLE_DEFAULT_ALLOCATORS
 
 WINDOW_INC=-I$(ANTCLIBS)/window
 
-OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
+OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_ant.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
 
 ifeq "$(PLAT)" "mingw"
 CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
@@ -42,6 +42,9 @@ $(ODIR)/imgui_ios.o : imgui_ios.mm | $(ODIR)
 endif
 
 $(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
+
+$(ODIR)/imgui_ant.o : imgui_ant.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
 
