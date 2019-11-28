@@ -15,19 +15,14 @@ ecs.component "transmit_target"
 ecs.component "transmit"	
 	.targets "transmit_target[]"
 
-local state_chain = ecs.component_alias("state_chain", "resource")
+local state_chain = ecs.component "state_chain" {depend = "animation"}
+	.ref_path "respath"
 
 function state_chain:init()
 	local res = assetmgr.load(self.ref_path)
 	self.target = res.main_entry
 	return self
 end
-
-local timer = import_package "ant.timer"
-local aniutil = require "util"
-
-local sm = ecs.system "state_machine"
-sm.dependby "animation_system"
 
 local function get_pose(chain, name)
 	for _, s in ipairs(chain) do
@@ -36,6 +31,18 @@ local function get_pose(chain, name)
 		end
 	end
 end
+
+function state_chain:postinit(e)
+	local anicomp = e.animation
+	local sc = assetmgr.get_resource(self.ref_path)
+	anicomp.pose_state.pose = get_pose(sc.chain, self.target)
+end
+
+local timer = import_package "ant.timer"
+local aniutil = require "util"
+
+local sm = ecs.system "state_machine"
+sm.dependby "animation_system"
 
 
 local function get_transmit_merge(entity, targettransmit)
@@ -61,9 +68,9 @@ end
 function sm:update()
 	for _, eid in world:each "state_chain" do
 		local e = world[eid]
-		local statecfg = assetmgr.load(e.state_chain.ref_path)
+		local statecfg = assetmgr.get_resource(e.state_chain.ref_path)
 		local anicomp = assert(e.animation)
-		local anipose = anicomp.pose
+		local anipose = anicomp.pose_state.pose
 
 		local chain = statecfg.chain
 
@@ -87,7 +94,7 @@ function sm:update()
 							target_weight = 0,
 							targetpose = targetpose
 						}
-			
+
 						aniutil.play_animation(anicomp, targetpose)
 						statecfg.transmit_merge = get_transmit_merge(e, transmit)
 						break

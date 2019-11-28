@@ -51,6 +51,7 @@ init_loader.dependby 'primitive_filter_system'
 init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
+init_loader.dependby 'state_machine'
 
 local function create_animation_test()
     local meshdir = fs.path 'meshes'
@@ -105,6 +106,9 @@ local function create_animation_test()
             },
             blendtype = 'blend'
         },
+        state_chain = {
+            ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
+        },
         skeleton = {
             ref_path = respath / skepath
         },
@@ -122,17 +126,17 @@ local function create_animation_test()
             shape = {
                 radius = 1.0,
                 height = 1.0,
-                axis   = 0,
+                axis   = "Y",
             },
         },
-        character = {
-            movespeed = 1.0,
-        }
+        -- character = {
+        --     movespeed = 1.0,
+        -- }
     }
 
-    local e = world[eid]
-    local anicomp = e.animation
-    aniutil.play_animation(e.animation, anicomp.pose_state.pose)
+    -- local e = world[eid]
+    -- local anicomp = e.animation
+    -- aniutil.play_animation(e.animation, anicomp.pose_state.pose)
 end
 
 local function test_serialize(delfile_aftertest)

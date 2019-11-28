@@ -1,0 +1,124 @@
+chain = {
+	{
+		name = "idle",
+		pose = {
+			name = "idle",
+			anirefs = {
+				{idx=1, weight=1},
+			},
+		}
+	},
+	{
+		name = "walk",
+		pose = {
+			name = "walk",
+			anirefs = {
+                {idx=2, weight=1},
+                {idx=3, weight=1},
+                {idx=6, weight=1},
+			}
+		}
+	},
+	{
+		name = "run",
+		pose = {
+			name = "run",
+			anirefs = {
+				{idx=3, weight=1}
+			}
+		}
+	}
+}
+
+main_entry = "idle"
+
+transmits = {
+	idle = {
+		{
+			duration = 0.5, targetname="walk", 
+			can_transmit = function (entity, param)
+				local physic_state = entity.physic_state
+				if physic_state == nil then
+					return false
+				end
+
+				local velocity = physic_state.velocity
+				return velocity and (velocity[1] ~= 0 or velocity[2] ~= 0 or velocity[3] ~= 0) or false
+			end,
+		},
+	},
+	walk = {
+		{
+			duration = 0.3, targetname="idle",
+			can_transmit = function (entity, param)
+				local physic_state = entity.physic_state
+				if physic_state then
+					local velocity = physic_state.velocity
+					if velocity then						
+						local function is_almost_zero(v)
+							return -1e-6 < v and v < 1e-6
+						end
+						return is_almost_zero(velocity[1]) 
+						and is_almost_zero(velocity[2]) 
+						and is_almost_zero(velocity[3])
+					end
+				end
+
+				return false
+			end
+		},
+		{
+			duration = 0.2, targetname="run",
+			can_transmit = function (entity, param)
+				local physic_state = entity.physic_state
+				if physic_state then
+					local velocity = physic_state.velocity
+					if velocity then
+						local function is_large_enough_to_run(v)
+							return v > 5
+						end
+						return is_large_enough_to_run(velocity[1]) 
+						and is_large_enough_to_run(velocity[2]) 
+						and is_large_enough_to_run(velocity[3])
+					end
+				end
+			end
+		},
+	},
+	run = {
+		{
+			duration = 0.5, targetname="idle",
+			can_transmit = function (entity, param)
+				local physic_state = entity.physic_state
+				if physic_state then
+					local velocity = physic_state.velocity
+					if velocity then						
+						local function is_almost_zero(v)
+							return -1e-6 < v and v < 1e-6
+						end
+						return is_almost_zero(velocity[1]) 
+						and is_almost_zero(velocity[2]) 
+						and is_almost_zero(velocity[3])
+					end
+				end
+			end
+		},
+		{
+			duration = 0.2, targetname="walk",
+			can_transmit = function (entity, param)
+				local physic_state = entity.physic_state
+				if physic_state then
+					local velocity = physic_state.velocity
+					if velocity then
+						local function is_slow_to_walk(v)
+							return 1 < v and v <= 5
+						end
+						return is_slow_to_walk(velocity[1]) 
+						and is_slow_to_walk(velocity[2]) 
+						and is_slow_to_walk(velocity[3])
+					end
+				end
+			end
+		},
+	}
+}
