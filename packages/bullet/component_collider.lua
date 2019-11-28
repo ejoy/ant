@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local physic = assert(world.args.Physic)
+local physic = assert(world.args.Physics)
 local physicworld = physic.world
 local ms = import_package "ant.math".stack
 
@@ -112,7 +112,7 @@ local math3d_adapter = require "math3d.adapter"
 local mathadapter_util = import_package "ant.math.adapter"
 mathadapter_util.bind("bullet", function ()
 	local bw_mt 			= getmetatable(physicworld)
-	bw_mt.new_obj 			= math3d_adapter.vector(ms, bw_mt.new_obj, 4)
+	bw_mt.new_obj 			= math3d_adapter.vector(ms, bw_mt.new_obj, 3)
 	bw_mt.set_obj_transform = math3d_adapter.vector(ms, bw_mt.set_obj_transform, 3)
 	bw_mt.set_obj_position 	= math3d_adapter.vector(ms, bw_mt.set_obj_position, 3)
 	bw_mt.set_obj_rotation 	= math3d_adapter.vector(ms, bw_mt.set_obj_rotation, 3)

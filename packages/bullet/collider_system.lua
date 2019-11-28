@@ -1,7 +1,7 @@
 local ecs = ...
 
 local world = ecs.world
-local physic = ecs.args.Physic
+local physic = world.args.Physics
 local physicworld = physic.world
 local physic_objid_mapper = physic.objid_mapper
 

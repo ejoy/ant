@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local physicworld = world.args.Physic.world
+local physicworld = world.args.Physics.world
 
 local update_physic_obj_sys = ecs.system "update_physic_object_transform"
 function update_physic_obj_sys:update()

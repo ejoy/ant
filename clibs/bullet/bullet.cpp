@@ -214,7 +214,7 @@ lnew_shape(lua_State *L) {
 
 		lua_getfield(L, 3, "axis");
 		const char* axis = luaL_optstring(L, -1, "X");
-		assert(strlen(axis) > 1);
+		assert(strlen(axis) > 0);
 		lua_pop(L, 1);
 		switch (axis[0]) {
 		case 'X':
@@ -312,8 +312,8 @@ lnew_collision_obj(lua_State *L) {
 		quat = (btQuaternion*)lua_touserdata(L, 4);
 	}
 
-	if (!lua_isnil(L, 3)){
-		const int useridx = (int)lua_tointeger(L, 3);
+	if (!lua_isnil(L, 5)){
+		const int useridx = (int)lua_tointeger(L, 5);
 		coll_obj->setUserIndex(useridx);
 	}
 
@@ -813,7 +813,7 @@ lset_obj_user_idx(lua_State *L){
 	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
 	auto useridx = lua_tointeger(L, 3);
 
-	obj->setUserIndex(useridx);
+	obj->setUserIndex((int)useridx);
 	return 0;
 }
 
