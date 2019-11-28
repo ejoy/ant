@@ -18,6 +18,9 @@ $(ODIR)/bullet.dll : $(BULLET_OBJ)
 $(ODIR)/libbullet.a : $(BULLET_OBJ)
 	ar rsv $@ $^
 
+bullet.dll : $(ODIR)/bullet.dll | $(ODIR)
+	cp $^ $@
+
 $(ODIR) :
 	mkdir -p $@
 
