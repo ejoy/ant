@@ -78,17 +78,17 @@ local function create_ib_handle(bv, bufferflag, bindata, buffers)
 	if bindata then
 		local start_offset = bv.byteOffset + 1
 		local end_offset = start_offset + bv.byteLength
-
+		local value = bindata:sub(start_offset, end_offset)
 		return bgfx.create_index_buffer({
-			bindata, start_offset, end_offset,
-		}, bufferflag)
+			value, 1, end_offset - start_offset,
+		}, bufferflag), value
 	end
 
 	assert(buffers)
 	local buffer = buffers[assert(bv.buffer)+1]
 	local appdata = buffer.extras
 	if buffer.extras then
-		return bgfx.create_index_buffer(appdata)
+		return bgfx.create_index_buffer(appdata), appdata
 	end
 
 	assert("not implement from uri")
@@ -99,16 +99,17 @@ local function create_vb_handle(bv, declhandle, bindata, buffers)
 	local end_offset = start_offset + bv.byteLength
 	
 	if bindata then
+		local value = bindata:sub(start_offset, end_offset)
 		return bgfx.create_vertex_buffer({
-			"!", bindata, start_offset, end_offset
-		}, declhandle)
+			"!", value, 1, bv.byteLength,
+		}, declhandle), value
 	end
 
 	assert(buffers)
 	local buffer = buffers[assert(bv.buffer)+1]
 	local appdata = buffer.extras
 	if buffer.extras then
-		return bgfx.create_vertex_buffer(appdata, declhandle)
+		return bgfx.create_vertex_buffer(appdata, declhandle), appdata
 	end
 
 	assert("not implement from uri")
@@ -140,6 +141,24 @@ local function calc_node_transform(node, parentmat)
 	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
 end
 
+local function fetch_skinning_matrices(gltfscene, skinidx, bindata)
+	if skinidx then
+		local skin 		= gltfscene.skins[skinidx+1]
+		local ibm_idx 	= skin.inverseBindMatrices+1
+		local ibm 		= gltfscene.accessors[ibm_idx+1]
+		local ibm_bv 	= gltfscene.bufferViews[ibm.bufferView+1]
+
+		local start_offset = ibm_bv.byteOffset + 1
+		local end_offset = start_offset + ibm_bv.byteLength
+
+		return {
+			start = 0,
+			num = ibm_bv.count,
+			value = bindata:sub(start_offset, end_offset),
+		}
+	end
+end
+
 local function init_scene(gltfscene, bindata)
 	local bvhandles = {}
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
@@ -150,14 +169,14 @@ local function init_scene(gltfscene, bindata)
 			if node.children then
 				create_mesh_scene(node.children, nodetrans, scenegroups)
 			end
-			
+
 			local meshidx = node.mesh
 			if meshidx then
 				local meshnode = {
 					nodename = node.name,
 					transform = ms:ref "matrix" (nodetrans),
+					skinning_matrices = fetch_skinning_matrices(gltfscene, node.skin, bindata),
 				}
-
 				local mesh = gltfscene.meshes[meshidx+1]
 				local meshbounding = mathbaselib.new_bounding(ms)
 
@@ -171,36 +190,49 @@ local function init_scene(gltfscene, bindata)
 					local attribclass = classfiy_attri(prim.attributes, gltfscene.accessors)
 					local decls = create_decl(attribclass)
 					
-					local handles = {}
+					local handles, values = {}, {}
 					for bvidx, decl in pairs(decls) do
-						local handle = bvhandles[bvidx+1]
+						local bvcache = bvhandles[bvidx+1]
 						local bv = gltfscene.bufferViews[bvidx+1]
-						if handle == nil then
-							handle = create_vb_handle(bv, decl.handle, bindata, gltfscene.buffers)
+						if bvcache == nil then
+							local handle, value = create_vb_handle(bv, decl.handle, bindata, gltfscene.buffers)
+							bvcache = {
+								handle = handle,
+								value = value,
+							}
+
+							bvhandles[bvidx+1] = bvcache
 						end
-						handles[#handles+1] = handle
+						handles[#handles+1] = bvcache.handle
+						values[#values+1] = bvcache.value
 					end
 
 					group.vb = {
 						handles = handles,
-						start = gltfutil.start_vertex(prim, gltfscene),
+						values = values,
+						start = 0,
 						num = gltfutil.num_vertices(prim, gltfscene),
 					}
 
 					local indices_accidx = prim.indices
 					if indices_accidx then
 						local idxacc = gltfscene.accessors[indices_accidx+1]
-						local elemsize = gltfutil.accessor_elemsize(idxacc)
 						local bv = gltfscene.bufferViews[idxacc.bufferView+1]
 
-						local handle = bvhandles[idxacc.bufferView+1]
-						if handle == nil then
-							handle = create_ib_handle(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
+						local cache = bvhandles[idxacc.bufferView+1]
+						if cache == nil then
+							local handle, value = create_ib_handle(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
+							cache = {
+								handle = handle,
+								value = value,
+							}
+							bvhandles[idxacc.bufferView+1] = cache
 						end
 
 						group.ib = {
-							handle = handle,
-							start = idxacc.byteOffset // elemsize,
+							handle = cache.handle,
+							value = cache.value,
+							start = 0,
 							num = idxacc.count,
 						}
 					end
