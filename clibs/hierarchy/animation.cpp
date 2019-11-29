@@ -25,6 +25,7 @@ extern "C" {
 #include <ozz/base/io/stream.h>
 #include <ozz/base/io/archive.h>
 #include <ozz/base/containers/vector.h>
+#include <ozz/base/maths/math_ex.h>
 
 // glm
 #include <glm/glm.hpp>
@@ -439,13 +440,82 @@ lsample_animation(lua_State *L) {
 	return 0;
 }
 
+static inline int
+find_root_index(const ozz::animation::Skeleton *ske) {
+	const auto jointcount = ske->num_joints();
+	const auto &parents = ske->joint_parents();
+	for (auto ii = 0; ii < jointcount; ++ii) {
+		auto &parent = parents[ii];
+		if (parent == ozz::animation::Skeleton::kNoParent)
+			return ii;
+	}
+
+	return -1;
+}
+
+static inline void
+fetch_float4x4(const ozz::math::SoaTransform &trans, int subidx, ozz::math::Float4x4 &f4x4) {
+	const ozz::math::SoaFloat4x4 local_soa_matrices = ozz::math::SoaFloat4x4::FromAffine(
+		trans.translation, trans.rotation, trans.scale);
+
+	// Converts to aos matrices.
+	ozz::math::Float4x4 local_aos_matrices[4];
+	ozz::math::Transpose16x16(&local_soa_matrices.cols[0].x,
+		local_aos_matrices->cols);
+
+	f4x4 = local_aos_matrices[subidx];
+}
+
+template<typename PoseRanage>
+static inline ozz::math::Float4x4
+extract_joint_matrix(const PoseRanage &poses, int jointidx) {
+	assert(jointidx >= 0);
+	
+	const auto soa_rootidx = jointidx / 4;
+	const auto aos_subidx = jointidx % 4;
+
+	const auto &pose = poses[soa_rootidx];
+	ozz::math::Float4x4 mat;
+	fetch_float4x4(pose, aos_subidx, mat);
+	return mat;
+}
+
+static inline void
+fix_root_translation(ozz::animation::Skeleton *ske, soa_poses &pose){
+	auto rootidx = find_root_index(ske);
+	const auto soa_rootidx = rootidx / 4;
+	const auto aos_subidx = rootidx % 4;
+
+	auto& trans = pose[soa_rootidx];
+	auto newtrans = ozz::math::simd_float4::Load1(0.0f);
+	trans.translation.x = ozz::math::SetI(trans.translation.x, newtrans, 0);
+	trans.translation.y = ozz::math::SetI(trans.translation.y, newtrans, 0);
+	trans.translation.z = ozz::math::SetI(trans.translation.z, newtrans, 0);
+}
+
+static inline bool
+transform_bindpose(ozz::animation::Skeleton *ske, 
+	soa_poses &pose,
+	result_poses& resultpose,
+	bool fixroot){
+	ozz::math::Float4x4 rootmat;
+	if (fixroot){
+		fix_root_translation(ske, pose);
+	} else {
+		rootmat = ozz::math::Float4x4::identity();
+	}
+	
+	return do_ltm(ske, pose, resultpose);
+}
+
 static int
 ltransform_to_bindpose_result(lua_State *L) {
 	auto ske = get_ske(L, 1);
 	auto bindpose = get_bindpose(L, 2);
 	auto result = get_aniresult(L, ske, 3);
+	auto fixroot = lua_isnoneornil(L, 4) ? false : lua_toboolean(L, 4);
 
-	if (!do_ltm(ske, bindpose->pose, result->pose)) {
+	if (!transform_bindpose(ske, bindpose->pose, result->pose, fixroot)) {
 		luaL_error(L, "transform bind pose is failed!");
 	}
 	return 0;
@@ -590,11 +660,12 @@ lmotion(lua_State *L) {
 	auto aniresult = get_aniresult(L, ske, 4);
 
 	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
+	const bool fixroot = lua_isnoneornil(L, 6) ? false : lua_toboolean(L, 6);
  
 	bind_pose bindpose;
 	blend_animations(L, 2, blendtype, ske, threshold, &bindpose);
 
-	if (!do_ltm(ske, bindpose.pose, aniresult->pose)){
+	if (!transform_bindpose(ske, bindpose.pose, aniresult->pose, fixroot)){
 		return luaL_error(L, "doing blend result to ltm job failed!");
 	}
 
@@ -660,19 +731,6 @@ lbp_result_count(lua_State *L) {
 	lua_pushinteger(L, result->pose.size());
 	return 1;
 }
-
-// static inline int
-// find_root_index(const ozz::animation::Skeleton *ske) {
-// 	const auto jointcount = ske->num_joints();
-// 	const auto &parents = ske->joint_parents();
-// 	for (auto ii = 0; ii < jointcount; ++ii) {
-// 		auto &parent = parents[ii];
-// 		if (parent == ozz::animation::Skeleton::kNoParent)
-// 			return ii;
-// 	}
-
-// 	return -1;
-// }
 
 static int
 lbp_result_transform(lua_State *L){

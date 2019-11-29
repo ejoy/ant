@@ -134,24 +134,24 @@ function anisystem:update()
 					{pose=srcbindpose, weight=assert(transmit.source_weight)}, 
 					{pose=targetbindpose, weight=assert(transmit.target_weight)}
 				}, anicomp.blendtype, finalbindpose)
-				ani_module.transform(ske, finalbindpose, anicomp.aniresult)
+				ani_module.transform(ske, finalbindpose, anicomp.aniresult, fix_root)
 			else
-				ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult)
+				ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult, nil, fix_root)
 			end
 		end
 
-		if fix_root then
-			local bpresult = anicomp.aniresult
-			local rootmat = ms:matrix(bpresult:joint(0))
-			--[[
-				'>': pop matrix in stack as vec4, column 4 is on top of the stack
-				'i': invert col4
-			]]
-			local inv_t = ms(rootmat, '>iP')
-			local invroot_translatemat = ms({type="srt", t=inv_t}, "m")
+		-- if fix_root then
+		-- 	local bpresult = anicomp.aniresult
+		-- 	local rootmat = ms:matrix(bpresult:joint(0))
+		-- 	--[[
+		-- 		'>': pop matrix in stack as vec4, column 4 is on top of the stack
+		-- 		'i': invert col4
+		-- 	]]
+		-- 	local inv_t = ms(rootmat, '>iP')
+		-- 	local invroot_translatemat = ms({type="srt", t=inv_t}, "m")
 
-			bpresult:transform(invroot_translatemat, true)
-		end
+		-- 	bpresult:transform(invroot_translatemat, true)
+		-- end
 	end
 end
 
