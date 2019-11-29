@@ -374,6 +374,7 @@ return function (srcname, dstname, cfg)
 		scenescale = get_scale(cfg),
 		nodes = nodes,
 		meshes = meshes,
+		skins = scene.skins,
 		accessors = {},
 		bufferViews = {},
 		buffers = {
@@ -409,11 +410,40 @@ return function (srcname, dstname, cfg)
 					newscene.buffers[1].byteLength = newscene.buffers[1].byteLength + #prim_binary_buffers
 				end
 			end
+
+			if node.skin then
+				local skin = scene.skins[node.skin+1]
+				local ibm = scene.accessors[skin.inverseBindMatrices+1]
+
+				local function refine_accessor(accidx)
+					local newaccidx = #newscene.accessors
+					newscene.accessors[accidx] = ibm
+
+					local bvidx = ibm.bufferView+1
+					local bv = scene.bufferViews[bvidx+1]
+	
+					ibm.bufferView = #newscene.bufferViews
+					newscene.bufferViews[#newscene.bufferViews+1] = bv
+	
+					local binstart = bv.byteOffset+1
+					local binend = binstart + bv.byteLength
+					local newbuffer = glbdata.bin:sub(binstart, binend)
+	
+					bv.byteOffset = newscene.buffers[1].byteLength
+					bv.buffer = 0
+					new_bindata_table[#new_bindata_table+1] = newbuffer
+					newscene.buffers[1].byteLength = newscene.buffers[1].byteLength + #newbuffer
+
+					return newaccidx
+				end
+				
+				skin.inverseBindMatrices = refine_accessor(skin.inverseBindMatrices+1)
+
+			end
 		end
 	end
 
 	fetch_mesh_buffers(scenerootnode)
-	
 	local new_bindata = table.concat(new_bindata_table, "")
 
 	if cfg.flags.reset_root_pos then
