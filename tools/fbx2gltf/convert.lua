@@ -7,7 +7,7 @@ local subprocess = require "subprocess"
 local function convert(filename)
 	local outfile = fs.path(filename):replace_extension("")	-- should not pass filename with extension, just filename without any extension
 	local commands = {
-		"bin/FBX2glTF-windows-x64.exe",
+		"bin/msvc/FBX2glTF-windows-x64.exe",
 		"-i", filename:string(),
 		"-o", outfile:string(),
 		"-b", 

@@ -1,4 +1,12 @@
-package.path = "tools/fbx2gltf/?.lua;tools/?.lua;./?.lua;engine/?.lua;engine/?/?.lua;packages/glTF/?.lua"
+package.path = table.concat({
+	"tools/fbx2gltf/?.lua",
+	"tools/?.lua",
+	"./?.lua", 
+	"engine/?.lua",
+	"engine/?/?.lua",
+	"packages/glTF/?.lua",
+	"packages/utility/?.lua",
+}, ";")
 package.cpath = "projects/msvc/vs_bin/Debug/?.dll"
 
 local fs = require "filesystem.local"
@@ -7,7 +15,7 @@ local util = require "util"
 local convert = require "convert"
 
 local files = {
-	fs.path "packages/resources.binary/meshes/test/tt.fbx"
+	fs.path "d:/tmp/xbot.fbx"
 }
 
 -- for _, srcpath in ipairs {
