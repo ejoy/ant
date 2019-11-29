@@ -36,7 +36,7 @@ function camera_controller_system:post_init()
 
 	local function step(axis, scale)
 		if scale ~= 0 then
-			ms(cameracomp.eyepos, cameracomp.eyepos, axis, {calc_step(speed_persecond, timer.deltatime * 0.005) * scale}, "*+=")
+			ms(cameracomp.eyepos, cameracomp.eyepos, axis, {calc_step(speed_persecond, timer.deltatime * 0.005) * scale * 5}, "*+=")
 		end
 	end
 
