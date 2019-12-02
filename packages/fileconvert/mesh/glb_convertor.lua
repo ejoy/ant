@@ -359,23 +359,80 @@ local function convert_coord_system(scene, meshcfg)
 	end
 end
 
+-- local function is_array(val)
+-- 	local c = #val
+-- 	if c == 0 then
+-- 		return not next(val)
+-- 	end
+
+-- 	local _cache = {}
+-- 	for kk, vv in pairs(val) do
+-- 		_cache[kk] = vv
+-- 	end
+
+-- 	for i=1, c do
+-- 		if _cache[i] == nil then
+-- 			return
+-- 		end
+-- 		_cache[i] = nil
+-- 	end
+-- 	return not next(_cache)
+-- end
+
+local function dupicate_node(node)
+	if node == nil then
+		return nil
+	end
+	assert(type(node) == "table")
+	local n = {}
+	for k, v in pairs(node) do
+		if type(v) == "table" then
+			n[k] = dupicate_node(v)
+		else
+			n[k] = v
+		end
+	end
+	return n
+end
+
+local function refine_accessor(newscene, scene, glbdata, new_bindata_table, accidx)
+	local newaccidx = #newscene.accessors
+	local acc = scene.accessors[accidx+1]
+	newscene.accessors[#newscene.accessors+1] = acc
+
+	local bvidx = acc.bufferView+1
+	local bv = scene.bufferViews[bvidx]
+
+	acc.bufferView = #newscene.bufferViews
+	newscene.bufferViews[#newscene.bufferViews+1] = bv
+
+	local binstart = bv.byteOffset+1
+	local binend = binstart + bv.byteLength
+	local newbuffer = glbdata.bin:sub(binstart, binend)
+
+	bv.byteOffset = newscene.buffers[1].byteLength
+	bv.buffer = 0
+	new_bindata_table[#new_bindata_table+1] = newbuffer
+	newscene.buffers[1].byteLength = newscene.buffers[1].byteLength + #newbuffer
+
+	return newaccidx
+end
+
 return function (srcname, dstname, cfg)
 	local glbdata = glbloader.decode(srcname)
 	local scene = glbdata.info
 	local scenes, nodes, meshes = scene.scenes, scene.nodes, scene.meshes
 
-	local scenerootnode = scenes[scene.scene+1].nodes
-
 	local new_bindata_table = {}
 	local newscene = {
-		scene = scene.scene,
-		scenes = scenes,
-		scenelods = scene.scenelods,
-		scenescale = get_scale(cfg),
-		nodes = nodes,
-		meshes = meshes,
-		skins = scene.skins,
-		accessors = {},
+		scene 		= scene.scene,
+		scenes 		= {},
+		scenelods 	= dupicate_node(scene.scenelods),
+		scenescale 	= get_scale(cfg),
+		nodes 		= {},
+		meshes 		= {},
+		skins 		= {},
+		accessors 	= {},
 		bufferViews = {},
 		buffers = {
 			{byteLength = 0,}
@@ -386,17 +443,27 @@ return function (srcname, dstname, cfg)
 		}
 	}
 
+	local sceneroot = scenes[scene.scene+1]
+	local scenerootnode = sceneroot.nodes
+
+	newscene.scenes[#newscene.scenes+1] = dupicate_node(sceneroot)
+
 	local function fetch_mesh_buffers(scenenodes)
 		for _, nodeidx in ipairs(scenenodes) do
 			local node = nodes[nodeidx + 1]
 			if node.children then
 				fetch_mesh_buffers(node.children)
 			end
-			
+
 			if node.mesh then
+				local newnode = dupicate_node(node)
+				
 				local meshidx = node.mesh + 1
 				local mesh = meshes[meshidx]
-				local primitives = mesh.primitives
+
+				local newmesh = dupicate_node(mesh)
+
+				local primitives = newmesh.primitives
 				for idx, prim in ipairs(primitives) do
 					local seri_prim = compile_primitive(scene, prim)
 					local new_seri_prim, prim_binary_buffers = gltf_converter.convert_buffers(seri_prim, glbdata.bin, cfg)
@@ -409,36 +476,21 @@ return function (srcname, dstname, cfg)
 					new_bindata_table[#new_bindata_table+1] = prim_binary_buffers
 					newscene.buffers[1].byteLength = newscene.buffers[1].byteLength + #prim_binary_buffers
 				end
-			end
 
-			if node.skin then
-				local skin = scene.skins[node.skin+1]
-				local ibm = scene.accessors[skin.inverseBindMatrices+1]
+				if node.skin then
+					local skin = scene.skins[node.skin+1]
 
-				local function refine_accessor(accidx)
-					local newaccidx = #newscene.accessors
-					newscene.accessors[accidx] = ibm
+					local newskin = dupicate_node(skin)
+					newskin.inverseBindMatrices = refine_accessor(newscene, scene, glbdata, new_bindata_table, skin.inverseBindMatrices)
 
-					local bvidx = ibm.bufferView+1
-					local bv = scene.bufferViews[bvidx+1]
-	
-					ibm.bufferView = #newscene.bufferViews
-					newscene.bufferViews[#newscene.bufferViews+1] = bv
-	
-					local binstart = bv.byteOffset+1
-					local binend = binstart + bv.byteLength
-					local newbuffer = glbdata.bin:sub(binstart, binend)
-	
-					bv.byteOffset = newscene.buffers[1].byteLength
-					bv.buffer = 0
-					new_bindata_table[#new_bindata_table+1] = newbuffer
-					newscene.buffers[1].byteLength = newscene.buffers[1].byteLength + #newbuffer
-
-					return newaccidx
+					newmesh.skin = #newscene.skins
+					newscene.skins[#newscene.skins+1] = newskin
 				end
-				
-				skin.inverseBindMatrices = refine_accessor(skin.inverseBindMatrices+1)
 
+				newnode.mesh = #newscene.meshes
+				newscene.meshes[#newscene.meshes+1] = newmesh
+
+				newscene.nodes[#newscene.nodes+1] = newnode
 			end
 		end
 	end
