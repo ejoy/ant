@@ -80,7 +80,7 @@ function respath:save()
 end
 
 local resource = ecs.component "resource"
-	.ref_path "respath" ()
+	.ref_path "respath"
 	["opt"].asyn_load "boolean" (false)
 
 function resource:init()

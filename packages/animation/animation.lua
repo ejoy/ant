@@ -6,7 +6,7 @@ local timer = import_package "ant.timer"
 local animodule = require "hierarchy.animation"
 
 local animation_content = ecs.component "animation_content"		
-	.ref_path "respath" ()
+	.ref_path "respath"
 	.name "string"
 	.scale "real" (1)
 	.looptimes "int" (0)

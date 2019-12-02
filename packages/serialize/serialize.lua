@@ -39,6 +39,7 @@ return {
     save_entity = save_entity,
     load_world = load_world,
     load_entity = load_entity,
+    v2 = require "v2.serialize",
     create = create,
     watch = require "watch",
     --binary pack&unpack table
