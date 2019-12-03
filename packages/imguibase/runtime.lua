@@ -149,6 +149,11 @@ local function dispatch(ok, CMD, ...)
 		local ok, err = xpcall(callback.update, debug_traceback)
 		if not ok then
 			LOGERROR(err)
+			if err:find("interrupted!", 1, true) then
+				dispatch(true, 'exit')
+				window.exit()
+				return false
+			end
 		end
 		thread_sleep(0)
 		return true

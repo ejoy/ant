@@ -285,6 +285,12 @@ init(lua_State *L) {
 	window_init(cb);
 }
 
+static int
+lexit(lua_State *L) {
+	window_exit(get_callback(L));
+	return 0;
+}
+
 static void
 init_keymap(lua_State *L) {
 	typedef struct {
@@ -324,6 +330,7 @@ luaopen_window(lua_State *L) {
 		{ "mainloop", lmainloop },
 		{ "set_ime", lset_ime },
 		{ "set_title",lset_title},
+		{ "exit",lexit},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
