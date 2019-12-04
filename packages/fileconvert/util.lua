@@ -6,15 +6,8 @@ local subprocess=require "subprocess"
 local vspath    = "projects/msvc/vs_bin"
 
 local function is_msvc()
-    local function has_arg(name)
-		for _, a in ipairs(arg) do
-			if a == name then
-				return true
-			end
-		end
-    end
-    
-    return has_arg("--bin=msvc")
+    -- TODO
+    return not not package.cpath:match 'projects\\msvc\\vs_bin'
 end
 
 local function which_platfrom_type()

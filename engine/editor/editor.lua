@@ -1,23 +1,13 @@
-
-local cpaths = {	
-    "clibs/?.dll",
-	"bin/?.dll",
-}
-
-if #arg > 0 then
-	local function has_arg(name)
-		for _, a in ipairs(arg) do
-			if a == name then
-				return true
-			end
-		end
+local function getcpath()
+	local i = 0
+	while arg[i] ~= nil do
+		i = i - 1
 	end
-	if has_arg("--bin=msvc") then
-		table.insert(cpaths, 1, "projects/msvc/vs_bin/Debug/?.dll")
-	end
+	local clibs = arg[i + 1]:match("(.+)[/\\][%w_.-]+$")
+	local ext = package.cpath:match "[/\\]%?%.([a-z]+)"
+	return ("%s\\?.%s"):format(clibs, ext)
 end
-
-package.cpath = table.concat(cpaths, ";")
+package.cpath = getcpath()
 
 require "editor.vfs"
 require "common.init_bgfx"
