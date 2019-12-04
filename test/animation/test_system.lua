@@ -60,53 +60,69 @@ local function create_animation_test()
         },
         can_render = true,
         rendermesh = {},
-        material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/bunny.material"),
+        material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
         animation = {
-            pose_state = {
-                pose = {
-                    anirefs = {
-                        {idx = 1, weight = 0.5},
-                        {idx = 2, weight = 0.5}
-                    },
-                    name = "walk",
-                }
-            },
             anilist = {
+                --{
+                --    ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/idle.ozz',
+                --    scale = 1,
+                --    looptimes = 0,
+                --    name = 'idle'
+                --},
                 {
-                    ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/idle.ozz',
-                    scale = 1,
-                    looptimes = 0,
-                    name = 'idle'
-                },
-                {
-                    ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
+                    --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
+                    ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation1.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'walk'
                 },
                 {
-                    ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
+                    --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
+                    ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation2.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'run'
                 },
                 {
-                    ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
+                    --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
+                    ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation3.ozz',
                     scale = 1,
                     looptimes = 0,
                     name = 'run fast'
                 }
             },
-            blendtype = 'blend'
+            blendtype = 'blend',
+            pose = {
+                {
+                    name = "walk",
+                    anirefs = {
+                        {idx=1, weight=1},
+                    },
+                },
+                {
+                    name = "run",
+                    anirefs = {
+                        {idx=2, weight=1},
+                    }
+                },
+                {
+                    name = "run fast",
+                    anirefs = {
+                        {idx=3, weight=1}
+                    }
+                }
+            }
         },
         state_chain = {
             ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',
         },
         skeleton = {
-            ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
+            --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
+            ref_path = fs.path '/pkg/ant.resources/meshes/skeleton/human_skeleton.ozz'
         },
         skinning_mesh = {
-            ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/female.ozz'
+            --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/female.ozz'
+            ref_path = fs.path '/pkg/ant.resources/meshes/mesh.ozz'
         },
         name = 'animation_sample',
         serialize = serialize.create(),
@@ -126,16 +142,25 @@ local function create_animation_test()
         --     movespeed = 1.0,
         -- }
     }
+    --world[eid].state_chain.target = 'run'
 
-    -- local e = world[eid]
-    -- local anicomp = e.animation
-    -- aniutil.play_animation(e.animation, anicomp.pose_state.pose)
+    --local e = world[eid]
+    --local anicomp = e.animation
+    --aniutil.play_animation(e.animation, anicomp.pose[2])
     
-    local function save_file(file, data)
-        assert(assert(io.open(file, 'w')):write(data)):close()
-    end
-    local s = serialize.save_entity(world, eid)
-    save_file('serialize_entity.txt', s)
+    --local function save_file(file, data)
+    --    assert(assert(io.open(file, 'w')):write(data)):close()
+    --end
+    --local function load_file(file)
+    --    local f = assert(io.open(file, 'r'))
+    --    local data = f:read 'a'
+    --    f:close()
+    --    return data
+    --end
+    --local s = serialize.v2.save_entity(world, eid)
+    --save_file('serialize_entity.txt', s)
+    --world:remove_entity(eid)
+    --serialize.v2.load_entity(world, s)
 end
 
 function init_loader:init()

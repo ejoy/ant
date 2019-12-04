@@ -12,7 +12,7 @@ ecs.component "transmit_target"
 	.targetname "string"
 	.duration "real"
 
-ecs.component "transmit"	
+ecs.component "transmit"
 	.targets "transmit_target[]"
 
 local state_chain = ecs.component "state_chain" {depend = "animation"}
@@ -24,18 +24,16 @@ function state_chain:init()
 	return self
 end
 
-local function get_pose(chain, name)
-	for _, s in ipairs(chain) do
+local function get_pose(e, name)
+	for _, s in ipairs(e.animation.pose) do
 		if s.name == name then
-			return s.pose
+			return s
 		end
 	end
 end
 
 function state_chain:postinit(e)
-	local anicomp = e.animation
-	local sc = assetmgr.get_resource(self.ref_path)
-	anicomp.pose_state.pose = get_pose(sc.chain, self.target)
+	e.animation.current_pose = get_pose(e, self.target)
 end
 
 local timer = import_package "ant.timer"
@@ -45,10 +43,9 @@ local sm = ecs.system "state_machine"
 sm.dependby "animation_system"
 
 
-local function get_transmit_merge(entity, targettransmit)
+local function get_transmit_merge(entity, tt_duration)
 	local timepassed = 0
 	return function (deltatime)
-		local tt_duration = targettransmit.duration
 		timepassed = timepassed + deltatime
 
 		if timepassed > tt_duration then
@@ -70,40 +67,35 @@ function sm:update()
 		local e = world[eid]
 		local statecfg = assetmgr.get_resource(e.state_chain.ref_path)
 		local anicomp = assert(e.animation)
-		local anipose = anicomp.pose_state.pose
-
-		local chain = statecfg.chain
+		local anipose = anicomp.current_pose
 
 		local transmit_merge = statecfg.transmit_merge
 		if transmit_merge then
 			if transmit_merge(timer.deltatime) then
 				statecfg.transmit_merge = nil
-				anipose.define = anipose.transmit.targetpose
+				anipose.current_pose = anipose.transmit.targetpose
 				anipose.transmit = nil
 			end
 		else
-			local traget_transmits = statecfg.transmits[statecfg.target]
-			if traget_transmits then
-				for _, transmit in ipairs(traget_transmits) do
-					if transmit.can_transmit(e, _G) then
-						local newtarget = transmit.targetname
-						statecfg.target = newtarget
-						local targetpose = get_pose(chain, newtarget)
-						anipose.transmit = {
-							source_weight = 1,
-							target_weight = 0,
-							targetpose = targetpose
-						}
+			if e.state_chain.target then
+				local traget_transmits = statecfg.transmits[anipose.name]
+				local newtarget = e.state_chain.target
+				if traget_transmits and traget_transmits[newtarget] then
+					local targetpose = get_pose(e, newtarget)
+					anipose.transmit = {
+						source_weight = 1,
+						target_weight = 0,
+						targetpose = targetpose
+					}
 
-						aniutil.play_animation(anicomp, targetpose)
-						statecfg.transmit_merge = get_transmit_merge(e, transmit)
-						break
+					aniutil.play_animation(anicomp, targetpose)
+					statecfg.transmit_merge = get_transmit_merge(e, traget_transmits[newtarget].duration)
+				else
+					if _G.DEBUG then
+						print("[state machine]: there are not transmit targets for current target> ", e.state_chain.target)
 					end
 				end
-			else
-				if _G.DEBUG then
-					print("[state machine]: there are not transmit targets for current target> ", statecfg.target)
-				end
+				e.state_chain.target = nil
 			end
 		end
 	end
