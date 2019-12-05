@@ -127,7 +127,7 @@ ldo_ik(lua_State *L) {
 	auto invRoot = ozz::math::Invert(rootMat);
 
 	luaL_checktype(L, 4, LUA_TUSERDATA);
-	bindpose_result* result = (bindpose_result*)lua_touserdata(L, 4);
+	bind_pose* result = (bind_pose*)lua_touserdata(L, 4);
 
 	const auto &poses = ske->joint_bind_poses();
 	ozz::Vector<ozz::math::SoaTransform>::Std local_trans(poses.count());	

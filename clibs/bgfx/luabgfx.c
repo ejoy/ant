@@ -3167,9 +3167,21 @@ memory_write(lua_State *L) {
  */
 static int
 lmemoryTexture(lua_State *L) {
-	int size = luaL_checkinteger(L, 1);
-	void * data = lua_newuserdata(L, size);
-	memset(data, 0, size);
+	const int intype = lua_type(L, 1);
+	void *data = NULL;
+	if (intype == LUA_TNUMBER){
+		int size = (int)lua_tointeger(L, 1);
+		void * data = lua_newuserdata(L, size);
+		memset(data, 0, size);
+	} else if (intype == LUA_TSTRING){
+		size_t size;
+		const char* origdata = lua_tolstring(L, 1, &size);
+		void * data = lua_newuserdata(L, size);
+		memcpy(data, origdata, size);
+	} else {
+		return luaL_error(L, "not support argument type:%d", intype);
+	}
+	
 	if (luaL_newmetatable(L, "BGFX_MEMORY")) {
 		lua_pushcfunction(L, memory_tostring);
 		lua_setfield(L, -2, "__tostring");

@@ -35,6 +35,7 @@ extern "C" {
 #include <string>
 #include <cstring>
 #include <algorithm>
+#include <sstream>
 
 struct animation_node {
 	ozz::animation::Animation		*ani;	
@@ -164,18 +165,162 @@ llayout_ozzmesh(lua_State *L) {
 	return 1;
 }
 
+// static int
+// lcreate_inverse_bind_poses(lua_State *L){
+// 	luaL_checktype(L, 1, LUA_TUSERDATA);
+// 	auto ske = get_ske(L, 1);
+
+// 	luaL_checktype(L, 2, LUA_TSTRING);
+// 	size_t bpdata_size;
+// 	auto bindpose_data = lua_tolstring(L, 2, &bpdata_size);
+
+// 	auto bindposes = ske->joint_bind_poses();
+// 	if (bindposes.count() * sizeof(float) * 16 != bpdata_size){
+// 		return luaL_error(L, "bind pose data size is not correct");
+// 	}
+
+// 	bind_pose *bp = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
+
+// 	return 1;
+// }
+
+static std::vector<std::string>
+split_string(const std::string &ss, char delim) {
+	std::istringstream iss(ss);
+	std::vector<std::string> vv;
+	std::string elem;
+	while (std::getline(iss, elem, delim)) {
+		vv.push_back(elem);
+	}
+
+	return vv;
+}
+
+static uint32_t
+component_size(const std::string &e){
+	switch(e.back()){
+		case 'i':return 2;
+		case 'u':return 1;
+		case 'f':return 4;
+		case 'h':return 2;
+		case 'U':
+		default:
+		return 0;
+	}
+}
+
+static uint32_t
+elem_stride(const std::string &e){
+	const uint32_t elemcount =  e[1] - '0';
+	return elemcount * component_size(e);
+}
+
+static uint32_t
+calc_layout_stride(const std::vector<std::string> &layout){
+	uint32_t stride = 0;
+	for (auto e : layout){
+		stride += elem_stride(e);
+	}
+	return stride;
+}
+
+static int
+lmesh_skinning(lua_State *L){
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	bind_pose *ani = (bind_pose*)lua_touserdata(L, 1);
+
+	luaL_checktype(L, 2, LUA_TUSERDATA);
+	bind_pose *inverse_bind_pose = (bind_pose*)lua_touserdata(L, 2);
+
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	const float* in_vertex_data = (float*)lua_touserdata(L, 3);
+
+	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+	float* out_vertex_data = (float*)lua_touserdata(L, 4);
+
+	luaL_checktype(L, 5, LUA_TNUMBER);
+	const uint32_t num_vertices = (uint32_t)lua_tointeger(L, 5);
+
+	luaL_checktype(L, 6, LUA_TSTRING);
+	std::string layout = lua_tostring(L, 6);
+
+	const uint32_t influences_count = (uint32_t)luaL_optinteger(L, 7, 4);
+
+	bind_pose::bind_pose_type skinning_matrices;
+	skinning_matrices.resize(inverse_bind_pose->pose.size());
+
+	for (int ii = 0; ii < inverse_bind_pose->pose.size(); ++ii){
+		skinning_matrices[ii] = ani->pose[ii] * inverse_bind_pose->pose[ii];
+	}
+
+	ozz::geometry::SkinningJob skinning_job;
+	skinning_job.vertex_count = num_vertices;
+	skinning_job.influences_count = influences_count;
+
+	auto elems = split_string(layout, '|');
+	auto layout_stride = calc_layout_stride(elems);
+	uint32_t offset_bytes = 0;
+	for (auto e : elems){
+		switch (e[0]){
+		case 'p':{
+			auto stride = elem_stride(e);
+			skinning_job.in_positions.begin = in_vertex_data + offset_bytes;
+			skinning_job.in_positions.end = skinning_job.in_positions.begin + stride * num_vertices;
+			skinning_job.in_positions_stride = stride;
+
+			skinning_job.out_positions.begin = out_vertex_data + offset_bytes;
+			skinning_job.out_positions.end = skinning_job.out_positions.begin + layout_stride * num_vertices;
+			skinning_job.out_positions_stride = stride;
+			offset_bytes += stride;
+		}
+		break;
+		case 'n':{
+			auto stride = elem_stride(e);
+			skinning_job.in_normals.begin = in_vertex_data + offset_bytes;
+			skinning_job.in_normals.end = skinning_job.in_normals.begin + stride * num_vertices;
+			skinning_job.in_normals_stride = stride;
+
+			skinning_job.out_normals.begin = out_vertex_data + offset_bytes;
+			skinning_job.out_normals.end = skinning_job.out_normals.begin + layout_stride * num_vertices;
+			skinning_job.out_normals_stride = stride;
+			offset_bytes += stride;
+		}
+		break;
+		case 'T':{
+			auto stride = elem_stride(e);
+			skinning_job.in_tangents.begin = in_vertex_data + offset_bytes;
+			skinning_job.in_tangents.end = skinning_job.in_tangents.begin + stride * num_vertices;
+			skinning_job.in_tangents_stride = stride;
+
+			skinning_job.out_tangents.begin = out_vertex_data + offset_bytes;
+			skinning_job.out_tangents.end = skinning_job.out_tangents.begin + layout_stride * num_vertices;
+			skinning_job.out_tangents_stride = stride;
+			offset_bytes += stride;
+		}
+		break;
+		default:
+			break;
+		}
+		if (!skinning_job.Run()){
+			luaL_error(L, "running skinning failed!");
+		}
+	}
+
+	return 0;
+}
+
 static int
 lskinning(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TUSERDATA);
-	bindpose_result *ani = (bindpose_result*)lua_touserdata(L, 2);
+	bind_pose *ani = (bind_pose*)lua_touserdata(L, 2);
 	assert(om->mesh);
 
 	auto &mesh = *(om->mesh);
 
-	for (size_t ii = 0; ii < mesh.joint_remaps.size(); ++ii) {		
+	for (size_t ii = 0; ii < mesh.joint_remaps.size(); ++ii) {
 		om->skinning_matrices[ii] =
 			ani->pose[mesh.joint_remaps[ii]] * mesh.inverse_bind_poses[ii];
 	}
@@ -341,10 +486,10 @@ get_ratio(lua_State*L, int idx = 4) {
 	return (float)lua_tonumber(L, idx);
 }
 
-static inline bindpose_result*
+static inline bind_pose*
 get_aniresult(lua_State *L, ozz::animation::Skeleton* ske, int idx) {
 	luaL_checktype(L, idx, LUA_TUSERDATA);
-	bindpose_result* result = (bindpose_result*) lua_touserdata(L, idx);
+	bind_pose* result = (bind_pose*) lua_touserdata(L, idx);
 	if (result->pose.size() != (size_t)ske->num_joints()) {
 		luaL_error(L, "animation result joint count:%d, is not equal to skeleton joint number: %d", result->pose.size(), ske->num_joints());
 	}
@@ -352,10 +497,10 @@ get_aniresult(lua_State *L, ozz::animation::Skeleton* ske, int idx) {
 	return result;
 }
 
-static inline bind_pose*
+static inline bind_pose_soa*
 get_bindpose(lua_State *L, int idx) {
 	luaL_checktype(L, idx, LUA_TUSERDATA);
-	return (bind_pose*)lua_touserdata(L, idx);
+	return (bind_pose_soa*)lua_touserdata(L, idx);
 }
 
 struct sample_info {
@@ -368,7 +513,7 @@ struct sample_info {
 
 static inline bool
 do_sample(const ozz::animation::Skeleton *ske, 
-			const sample_info &si, bind_pose &result) {
+			const sample_info &si, bind_pose_soa &result) {
 	ozz::animation::SamplingJob job;
 	job.animation = si.aninode->ani;
 	job.cache = si.sampling->cache;
@@ -380,8 +525,8 @@ do_sample(const ozz::animation::Skeleton *ske,
 
 bool
 do_ltm(ozz::animation::Skeleton *ske, 
-	const ozz::Vector<ozz::math::SoaTransform>::Std &intermediateResult, 
-	ozz::Vector<ozz::math::Float4x4>::Std &joints,
+	const bind_pose_soa::bind_pose_type &intermediateResult, 
+	bind_pose::bind_pose_type &joints,
 	const ozz::math::Float4x4 *root = nullptr,
 	int from = ozz::animation::Skeleton::kNoParent,
 	int to = ozz::animation::Skeleton::kMaxJoints) {
@@ -396,7 +541,7 @@ do_ltm(ozz::animation::Skeleton *ske,
 
 struct blendlayers {
 	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std layers;
-	ozz::Vector<bind_pose>::Std results;
+	ozz::Vector<bind_pose_soa>::Std results;
 };
 
 static inline void
@@ -421,7 +566,7 @@ load_sample_info(lua_State *L, int index, sample_info &si) {
 }
 
 static inline bool
-sample_animation(const ozz::animation::Skeleton *ske, const sample_info &si, bind_pose *bindpose) {
+sample_animation(const ozz::animation::Skeleton *ske, const sample_info &si, bind_pose_soa *bindpose) {
 	bindpose->pose.resize(ske->num_soa_joints());
 	//assert(ske->joint_parents()[0] == ozz::animation::Skeleton::kNoParent);
 	return do_sample(ske, si, *bindpose);
@@ -432,7 +577,7 @@ lsample_animation(lua_State *L) {
 	auto ske = get_ske(L, 1);	
 	sample_info si;
 	load_sample_info(L, 2, si);
-	bind_pose *bindpose = (bind_pose*)lua_touserdata(L, 3);
+	bind_pose_soa *bindpose = (bind_pose_soa*)lua_touserdata(L, 3);
 
 	if (!sample_animation(ske, si, bindpose)) {
 		luaL_error(L, "sampling animation failed");
@@ -481,7 +626,7 @@ extract_joint_matrix(const PoseRanage &poses, int jointidx) {
 }
 
 static inline void
-fix_root_translation(ozz::animation::Skeleton *ske, soa_poses &pose){
+fix_root_translation(ozz::animation::Skeleton *ske, bind_pose_soa::bind_pose_type &pose){
 	auto rootidx = find_root_index(ske);
 	const auto soa_rootidx = rootidx / 4;
 	const auto aos_subidx = rootidx % 4;
@@ -495,8 +640,8 @@ fix_root_translation(ozz::animation::Skeleton *ske, soa_poses &pose){
 
 static inline bool
 transform_bindpose(ozz::animation::Skeleton *ske, 
-	soa_poses &pose,
-	result_poses& resultpose,
+	bind_pose_soa::bind_pose_type &pose,
+	bind_pose::bind_pose_type& resultpose,
 	bool fixroot){
 	ozz::math::Float4x4 rootmat;
 	if (fixroot){
@@ -556,7 +701,7 @@ do_blend(const ozz::animation::Skeleton *ske,
 	const ozz::Vector<ozz::animation::BlendingJob::Layer>::Std &layers, 
 	const char* blendtype, 
 	float threshold, 
-	bind_pose *finalpose) {
+	bind_pose_soa *finalpose) {
 	ozz::animation::BlendingJob blendjob;
 	blendjob.bind_pose = ske->joint_bind_poses();
 
@@ -590,7 +735,7 @@ lblend_bind_poses(lua_State *L) {
 		{
 			luaL_checktype(L, -1, LUA_TTABLE);
 			lua_getfield(L, -1, "pose");
-			auto pose = (bind_pose*)lua_touserdata(L, -1);
+			auto pose = (bind_pose_soa*)lua_touserdata(L, -1);
 			lua_pop(L, 1);
 
 			lua_getfield(L, -1, "weight");
@@ -604,7 +749,7 @@ lblend_bind_poses(lua_State *L) {
 	}
 
 	const char* blendtype = lua_tostring(L, 3);
-	bind_pose *finalpose = (bind_pose*)lua_touserdata(L, 4);
+	bind_pose_soa *finalpose = (bind_pose_soa*)lua_touserdata(L, 4);
 	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
 
 	finalpose->pose.resize(ske->num_soa_joints());
@@ -617,7 +762,7 @@ static bool
 blend_animations(lua_State *L, 
 	int ani_index,
 	const char* blendtype, const ozz::animation::Skeleton *ske, float threshold, 
-	bind_pose *bindpose) {
+	bind_pose_soa *bindpose) {
 
 	blendlayers bl;
 	create_blend_layers(L, ani_index, ske, bl);
@@ -662,7 +807,7 @@ lmotion(lua_State *L) {
 	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
 	const bool fixroot = lua_isnoneornil(L, 6) ? false : lua_toboolean(L, 6);
  
-	bind_pose bindpose;
+	bind_pose_soa bindpose;
 	blend_animations(L, 2, blendtype, ske, threshold, &bindpose);
 
 	if (!transform_bindpose(ske, bindpose.pose, aniresult->pose, fixroot)){
@@ -685,9 +830,20 @@ create_joint_table(lua_State *L, const ozz::math::Float4x4 &joint) {
 }
 
 static int
+lbp_result_init(lua_State *L){
+	luaL_checktype(L, 1, LUA_TSTRING);
+	size_t size;
+	const char* buffer = lua_tolstring(L, 1, &size);
+	float* dstbuffer = (float*)lua_touserdata(L, 2);
+
+	memcpy(dstbuffer, buffer, size);
+	return 0;
+}
+
+static int
 lbp_result_joint(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
+	bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TNUMBER);
 	const size_t idx = (size_t)lua_tointeger(L, 2);
@@ -711,7 +867,7 @@ lbp_result_joint(lua_State *L) {
 static int
 lbp_result_joints(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	const bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
+	const bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
 
 	auto jointcount = result->pose.size();
 	lua_createtable(L, (int)jointcount, 0);
@@ -726,7 +882,7 @@ lbp_result_joints(lua_State *L) {
 static int
 lbp_result_count(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	const bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
+	const bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
 
 	lua_pushinteger(L, result->pose.size());
 	return 1;
@@ -735,7 +891,7 @@ lbp_result_count(lua_State *L) {
 static int
 lbp_result_transform(lua_State *L){
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	bindpose_result * result = (bindpose_result*)lua_touserdata(L, 1);
+	bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
 
 	auto mat = (const ozz::math::Float4x4*)lua_touserdata(L, 2);
 	auto except_root = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
@@ -777,13 +933,13 @@ lnew_sampling_cache(lua_State *L) {
 static int
 ldel_bpresult(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	bindpose_result *result = (bindpose_result *)lua_touserdata(L, 1);	
+	bind_pose *result = (bind_pose *)lua_touserdata(L, 1);	
 	result->pose.~vector();
 	return 0;
 }
 
 static int
-lnew_bpresult(lua_State *L) {
+lnew_bind_pose(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TNUMBER);
 	const size_t numjoints = (size_t)lua_tointeger(L, 1);
 
@@ -792,10 +948,24 @@ lnew_bpresult(lua_State *L) {
 		return 0;
 	}
 
-	bindpose_result *result = (bindpose_result*)lua_newuserdatauv(L, sizeof(bindpose_result), 0);
+	size_t initdata_size = 0;
+	const float* initdata = nullptr;
+	if (lua_type(L, 2) == LUA_TSTRING){
+		initdata = (const float*)lua_tolstring(L, 2, &initdata_size);
+
+ 		if (initdata_size != sizeof(ozz::math::Float4x4) * numjoints){
+			 return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
+		 }
+	}
+
+	bind_pose *result = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
 	luaL_getmetatable(L, "BPRESULT_NODE");
-	lua_setmetatable(L, -2);	
-	new(&result->pose)ozz::Vector<ozz::math::Float4x4>::Std(numjoints);
+	lua_setmetatable(L, -2);
+	new(&result->pose)bind_pose::bind_pose_type(numjoints);
+
+	if (initdata){
+		memcpy(&result->pose, initdata, initdata_size);
+	}
 
 	return 1;
 }
@@ -1115,6 +1285,7 @@ register_bpresult_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {
+		{"", lbp_result_init},
 		{"joint", lbp_result_joint},
 		{"joints", lbp_result_joints},
 		{"count", lbp_result_count},
@@ -1149,14 +1320,14 @@ register_ozzmesh_mt(lua_State *L) {
 static int
 ldel_bind_pose(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
-	bind_pose *pose = (bind_pose*)lua_touserdata(L, 1);
+	bind_pose_soa *pose = (bind_pose_soa*)lua_touserdata(L, 1);
 	pose->pose.~vector();
 	return 0;
 }
 
 static int
-lnew_bind_pose(lua_State *L) {
-	auto bp = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
+lnew_bind_pose_soa(lua_State *L) {
+	auto bp = (bind_pose_soa*)lua_newuserdatauv(L, sizeof(bind_pose_soa), 0);
 	luaL_getmetatable(L, "OZZBINGPOSE");
 	lua_setmetatable(L, -2);
 
@@ -1189,6 +1360,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 
 	luaL_Reg l[] = {		
 		{ "skinning", lskinning},
+		{ "mesh_skinning", lmesh_skinning},
 		{ "motion", lmotion},
 		{ "blend_animations", lblend_animations},
 		{ "blend_bind_poses", lblend_bind_poses},
@@ -1197,8 +1369,8 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "new_ani", lnew_animation},
 		{ "new_ozzmesh", lnew_ozzmesh},
 		{ "new_sampling_cache", lnew_sampling_cache},
-		{ "new_bind_pose_result", lnew_bpresult,},
-		{ "new_bind_pose", lnew_bind_pose},
+		{ "new_bind_pose", lnew_bind_pose,},
+		{ "new_bind_pose_soa", lnew_bind_pose_soa},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

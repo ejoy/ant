@@ -164,8 +164,8 @@ local function mark_cache(eid, cache_result)
 	if hiecomp.ref_path then
 		local hiehandle = assetmgr.get_resource(hiecomp.ref_path).handle
 		if t.hierarchy_result == nil then
-			local bpresult = animodule.new_bind_pose_result(#hiehandle)
-			hiehandle:bindpose_result(bpresult)
+			local bpresult = animodule.new_bind_pose(#hiehandle)
+			hiehandle:bind_pose(bpresult)
 			t.hierarchy_result = setmetatable({}, {__index=function(t, key)
 				local jointidx = hiehandle:joint_index(key)
 				local j = bpresult:joint(jointidx)

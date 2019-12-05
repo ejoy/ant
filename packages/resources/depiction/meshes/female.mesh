@@ -1,8 +1,7 @@
 config = {
     animation = {
-        ani_list = "all",
         cpu_skinning = true,
-        load_skeleton = true
+        load_skeleton = true,
     },
     flags = {
         flip_uv = true,
@@ -11,7 +10,11 @@ config = {
     },
     layout = {
         "p3|n30nIf|T|b",
-        "t20|c40",
+        "t20|w40Nif|i40nIi",
+    },
+    layout_types = {
+        "dynamic",
+        "static",
     }
 }
 

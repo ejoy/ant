@@ -13,12 +13,11 @@ struct hierarchy_build_data {
 	ozz::animation::Skeleton *skeleton;
 };
 
-using result_poses = ozz::Vector<ozz::math::Float4x4>::Std;
-struct bindpose_result {
-	result_poses	pose;
+template<typename T>
+struct bind_pose_T{
+	using bind_pose_type = typename ozz::Vector<T>::Std;
+	typename ozz::Vector<T>::Std pose;
 };
 
-using soa_poses = ozz::Vector<ozz::math::SoaTransform>::Std;
-struct bind_pose {
-	soa_poses pose;
-};
+using bind_pose 	= bind_pose_T<ozz::math::Float4x4>;
+using bind_pose_soa = bind_pose_T<ozz::math::SoaTransform>;

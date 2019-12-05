@@ -55,7 +55,7 @@ function animation:postinit(e)
 
 	local skehandle = asset.get_resource(ske.ref_path).handle
 	local numjoints = #skehandle
-	self.aniresult = animodule.new_bind_pose_result(numjoints)
+	self.aniresult = animodule.new_bind_pose(numjoints)
 	for _, ani in ipairs(self.anilist) do
 		ani.sampling_cache = animodule.new_sampling_cache(numjoints)
 	end
@@ -123,13 +123,13 @@ function anisystem:update()
 			local srcanilist = fetch_anilist(pose)
 			if transmit then
 				local targetanilist = fetch_anilist(transmit.targetpose)
-				local srcbindpose = ani_module.new_bind_pose()
-				local targetbindpose = ani_module.new_bind_pose()
+				local srcbindpose = ani_module.new_bind_pose_soa()
+				local targetbindpose = ani_module.new_bind_pose_soa()
 
 				ani_module.blend_animations(ske, srcanilist, anicomp.blendtype, srcbindpose)
 				ani_module.blend_animations(ske, targetanilist, anicomp.blendtype, targetbindpose)
 
-				local finalbindpose = ani_module.new_bind_pose()
+				local finalbindpose = ani_module.new_bind_pose_soa()
 				ani_module.blend_bind_poses(ske, {
 					{pose=srcbindpose, weight=assert(transmit.source_weight)}, 
 					{pose=targetbindpose, weight=assert(transmit.target_weight)}

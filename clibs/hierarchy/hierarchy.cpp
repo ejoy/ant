@@ -244,7 +244,7 @@ lbuilddata_bindpose_result(lua_State *L) {
 	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TUSERDATA);
-	struct bindpose_result* bpresult = (struct bindpose_result*)lua_touserdata(L, 2);
+	bind_pose* bpresult = (bind_pose*)lua_touserdata(L, 2);
 
 	ozz::animation::LocalToModelJob job;
 	job.skeleton = builddata->skeleton;
@@ -675,7 +675,7 @@ register_hierarchy_builddata(lua_State *L) {
 			{"isroot", lbuilddata_isroot},
 			{"joint_index", lbuilddata_jointindex},
 			{"joint_matrix", lbuilddata_jointmatrix},
-			{"bindpose_result", lbuilddata_bindpose_result},
+			{"bind_pose", lbuilddata_bindpose_result},
 			{nullptr, nullptr},
 		};
 

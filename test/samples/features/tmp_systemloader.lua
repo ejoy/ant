@@ -177,6 +177,29 @@ local function test_serialize(delfile_aftertest)
     end
 end
 
+local function gltf_animation_test()
+    world:create_entity {
+        transform = mu.srt(nil, nil, {-3, 2, 0, 1}),
+        rendermesh = {},
+        skinning_mesh = {
+            ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
+        },
+        material = {
+            {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
+            }
+        },
+        skeleton = {
+            ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
+        },
+        animation = {
+            
+        },
+        can_render = true,
+        can_cast = true,
+    }
+end
+
 local function pbr_test()
     world:create_entity {
         transform = mu.srt(nil, nil, {3, 2, 0, 1}),
@@ -187,21 +210,6 @@ local function pbr_test()
         material = {
             {
                 ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
-            }
-        },
-        can_render = true,
-        can_cast = true,
-    }
-
-    world:create_entity {
-        transform = mu.srt(nil, nil, {-3, 2, 0, 1}),
-        rendermesh = {},
-        mesh = {
-            ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
-        },
-        material = {
-            {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
             }
         },
         can_render = true,
@@ -239,8 +247,9 @@ function init_loader:init()
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_plane_test()
 
-    create_animation_test()
+    --create_animation_test()
     pbr_test()
+    gltf_animation_test()
     pbrscene.create_scene(world)
 end
 

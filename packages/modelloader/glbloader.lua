@@ -38,7 +38,18 @@ local function classfiy_attri(attributes, accessors)
 	return attri_class
 end
 
-local function create_decl(attri_class)
+local function which_layout_type(name, layout, layout_types)
+	if layout_types then
+		for i=1, #layout do
+			if layout[i] == name then
+				return layout_types[i]
+			end
+		end
+	end
+	return "static"
+end
+
+local function create_decl(attri_class, layout, layout_types)
 	local decls = {}
 	for bvidx, class in pairs(attri_class) do
 		local sorted_class = {}
@@ -58,7 +69,10 @@ local function create_decl(attri_class)
 		end
 
 		local declname = table.concat(decl_descs, "|")
-		decls[bvidx] = declmgr.get(declname)
+		decls[bvidx] = {
+			declname = declname,
+			type = assert(which_layout_type(declname, layout, layout_types)),
+		}
 	end
 
 	return decls
@@ -80,36 +94,52 @@ local function create_ib_handle(bv, bufferflag, bindata, buffers)
 		local end_offset = start_offset + bv.byteLength
 		local value = bindata:sub(start_offset, end_offset)
 		return bgfx.create_index_buffer({
-			value, 1, end_offset - start_offset,
-		}, bufferflag), value
+			bindata, start_offset, end_offset
+		}, bufferflag)
 	end
 
 	assert(buffers)
 	local buffer = buffers[assert(bv.buffer)+1]
 	local appdata = buffer.extras
 	if buffer.extras then
-		return bgfx.create_index_buffer(appdata), appdata
+		return bgfx.create_index_buffer(appdata)
 	end
 
 	assert("not implement from uri")
 end
 
-local function create_vb_handle(bv, declhandle, bindata, buffers)
+local function create_vb_handle(bv, declinfo, bindata, buffers)
+	local buffertype = declinfo.type
+	local declname = declinfo.declname
 	local start_offset = bv.byteOffset + 1
 	local end_offset = start_offset + bv.byteLength
-	
+
 	if bindata then
-		local value = bindata:sub(start_offset, end_offset)
-		return bgfx.create_vertex_buffer({
-			"!", value, 1, bv.byteLength,
-		}, declhandle), value
+		if buffertype == "dynamic" then
+			local value = bindata:sub(start_offset, end_offset)
+			return nil, {
+				data = value,
+				declname = declname,
+			}
+		end
+		
+		return bgfx.create_vertex_buffer(
+			{"!", bindata, start_offset, end_offset,}, declmgr.get(declname).handle
+		)
 	end
 
 	assert(buffers)
 	local buffer = buffers[assert(bv.buffer)+1]
 	local appdata = buffer.extras
 	if buffer.extras then
-		return bgfx.create_vertex_buffer(appdata, declhandle), appdata
+		if buffertype == "dynamic" then
+			return nil, {
+				data = appdata,
+				declname = declname
+			}
+		end
+
+		return bgfx.create_vertex_buffer(appdata, declmgr.get(declname).handle)
 	end
 
 	assert("not implement from uri")
@@ -141,7 +171,7 @@ local function calc_node_transform(node, parentmat)
 	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
 end
 
-local function fetch_skinning_matrices(gltfscene, skinidx, bindata)
+local function fetch_inverse_bind_poses(gltfscene, skinidx, bindata)
 	if skinidx then
 		local skin 		= gltfscene.skins[skinidx+1]
 		local ibm_idx 	= skin.inverseBindMatrices+1
@@ -159,7 +189,13 @@ local function fetch_skinning_matrices(gltfscene, skinidx, bindata)
 	end
 end
 
-local function init_scene(gltfscene, bindata)
+local function init_scene(gltfscene, bindata, config)
+	local layout 		= config.config.layout
+	for i=1, #layout do
+		layout[i] = declmgr.correct_layout(layout[i])
+	end
+	local layout_types 	= config.config.layout_types
+
 	local bvhandles = {}
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
 		for _, nodeidx in ipairs(gltfnodes) do
@@ -175,7 +211,7 @@ local function init_scene(gltfscene, bindata)
 				local meshnode = {
 					nodename = node.name,
 					transform = ms:ref "matrix" (nodetrans),
-					skinning_matrices = fetch_skinning_matrices(gltfscene, node.skin, bindata),
+					inverse_bind_poses = fetch_inverse_bind_poses(gltfscene, node.skin, bindata),
 				}
 				local mesh = gltfscene.meshes[meshidx+1]
 				local meshbounding = mathbaselib.new_bounding(ms)
@@ -187,18 +223,18 @@ local function init_scene(gltfscene, bindata)
 						mode = prim.mode,
 						material = prim.material,
 					}
-					local attribclass = classfiy_attri(prim.attributes, gltfscene.accessors)
-					local decls = create_decl(attribclass)
-					
+					local attribclass 	= classfiy_attri(prim.attributes, gltfscene.accessors)
+					local decls 		= create_decl(attribclass, layout, layout_types)
+
 					local handles, values = {}, {}
-					for bvidx, decl in pairs(decls) do
+					for bvidx, declinfo in pairs(decls) do
 						local bvcache = bvhandles[bvidx+1]
 						local bv = gltfscene.bufferViews[bvidx+1]
 						if bvcache == nil then
-							local handle, value = create_vb_handle(bv, decl.handle, bindata, gltfscene.buffers)
+							local handle, value = create_vb_handle(bv, declinfo, bindata, gltfscene.buffers)
 							bvcache = {
-								handle = handle,
-								value = value,
+								handle = handle or false,	-- need occupy an array slot
+								value = value or false,
 							}
 
 							bvhandles[bvidx+1] = bvcache
@@ -221,10 +257,9 @@ local function init_scene(gltfscene, bindata)
 
 						local cache = bvhandles[idxacc.bufferView+1]
 						if cache == nil then
-							local handle, value = create_ib_handle(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
+							local handle = create_ib_handle(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
 							cache = {
-								handle = handle,
-								value = value,
+								handle = handle
 							}
 							bvhandles[idxacc.bufferView+1] = cache
 						end
@@ -294,7 +329,7 @@ local function file_wrapper(meshcontent)
 	}
 end
 
-return function (meshcontent)
+return function (meshcontent, config)
 	local glbdata = glbloader.decode_from_filehandle(file_wrapper(meshcontent))
-	return init_scene(glbdata.info, glbdata.bin)
+	return init_scene(glbdata.info, glbdata.bin, config)
 end

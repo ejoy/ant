@@ -475,8 +475,21 @@ refine_primitive(primitive &prim, std::map<uint32_t, uint32_t>&new_attributes) {
 	std::swap(prim.attributes, new_attributes);
 }
 
+static uint8_t layout_elem_size(const std::string &elem) {
+	char s = elem.back();
+	switch (s) {
+	case 'u':return 1;
+	case 'i':return 2;
+	case 'f':return 4;
+	case 'h':return 2;
+	case 'U':
+	default:return 0;
+	}
+}
+
 static uint32_t
 rearrange_buffers(
+	lua_State* L,
 	const attrib_buffers& abuffers, 
 	const load_config& cfg, 	
 	primitive& prim, 
@@ -512,12 +525,18 @@ rearrange_buffers(
 
 				auto itAttrib = attributes.find(attribname);
 				if (itAttrib == attributes.end()) {
-					assert("could not found attribute in seri primitive data");
+					luaL_error(L, "could not found attribute in seri primitive data");
 				}
 
 				const uint32_t accidx = itAttrib->second;
 				new_attributes[attribname] = accidx;
 				primitive::accessor& acc = prim.accessors[accidx];
+
+				if (layout_elem_size(e) != component_size(acc.componentType)) {
+					luaL_error(L, "attribname:%d, component size define in layout is : %d[%s], but origin component size in gltf is : %d",
+						attribname, layout_elem_size(e), e.c_str(), component_size(acc.componentType));
+				}
+
 				const uint32_t elemsize = elem_size(acc.type, acc.componentType);
 
 				acc.byteOffset = stride;
@@ -526,7 +545,7 @@ rearrange_buffers(
 
 				attribs.push_back(attrib_info{attribname, elemsize, ab.data});
 			} else {
-				assert("not found attribute need create new buffer or error this");
+				luaL_error(L, "not found this layout attribute:[%s] in gltf", e.c_str());
 			}
 		}
 
@@ -629,7 +648,7 @@ lconvert_buffers(lua_State *L) {
 
 	std::vector<data_buffer> newbuffers;
 	std::vector<primitive::bufferview>	newbufferviews;
-	const uint32_t binary_offset = rearrange_buffers(abuffers, cfg, prim, newbufferviews, newbuffers);
+	const uint32_t binary_offset = rearrange_buffers(L, abuffers, cfg, prim, newbufferviews, newbuffers);
 	if (prim.indices != 0xffffffff) {
 		rearrange_indices_buffer(prim, binary_offset, indexbuffer, newbufferviews, newbuffers);
 	}	

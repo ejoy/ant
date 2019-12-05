@@ -12,6 +12,7 @@ local name_mapper = {
 
 local name_remapper = {
 	JOINTS = "i",
+	WEIGHTS = "w",
 }
 for k, v in pairs(name_mapper) do
 	name_remapper[v] = k
