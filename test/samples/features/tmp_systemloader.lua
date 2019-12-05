@@ -81,15 +81,6 @@ local function create_animation_test()
         rendermesh = {},
         material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
         animation = {
-            pose_state = {
-                pose = {
-                    anirefs = {
-                        {idx = 1, weight = 0.5},
-                        {idx = 2, weight = 0.5}
-					},
-					name = "walk",
-                }
-            },
             anilist = {
                 {
                     ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
@@ -104,7 +95,29 @@ local function create_animation_test()
                     name = 'ani2'
                 }
             },
-            blendtype = 'blend'
+            blendtype = 'blend',
+            pose = {
+                {
+                    name = "idle",
+                    anirefs = {
+                        {idx=1, weight=1},
+                    },
+                },
+                {
+                    name = "walk",
+                    anirefs = {
+                        {idx=2, weight=1},
+                        {idx=3, weight=1},
+                        {idx=6, weight=1},
+                    }
+                },
+                {
+                    name = "run",
+                    anirefs = {
+                        {idx=3, weight=1}
+                    }
+                }
+            }
         },
         state_chain = {
             ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
@@ -136,7 +149,7 @@ local function create_animation_test()
 
     -- local e = world[eid]
     -- local anicomp = e.animation
-    -- aniutil.play_animation(e.animation, anicomp.pose_state.pose)
+    -- aniutil.play_animation(e.animation, anicomp.current_pose)
 end
 
 local function test_serialize(delfile_aftertest)

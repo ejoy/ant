@@ -18,7 +18,7 @@ local function sortpairs(t)
 end
 
 local function foreach_init_2(w, c, args)
-    if c.has_default or c.type == 'primtype' then
+    if c.type == 'primtype' then
         return args
     end
     assert(w._components[c.type], "unknown type:" .. c.type)

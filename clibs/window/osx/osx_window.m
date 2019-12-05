@@ -365,6 +365,10 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
     }
 }
 
+void window_exit(struct ant_window_callback* cb) {
+    //TODO
+}
+
 void window_ime(void* ime) {
     g_ime = (NSView*)ime;
 }

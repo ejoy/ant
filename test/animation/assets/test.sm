@@ -1,0 +1,25 @@
+main_entry = "walk"
+
+transmits = {
+	idle = {
+		walk = {
+			duration = 0.5,
+		},
+	},
+	walk = {
+		idle = {
+			duration = 0.3,
+		},
+		run = {
+			duration = 0.2,
+		},
+	},
+	run = {
+		idle = {
+			duration = 0.5,
+		},
+		walk = {
+			duration = 0.2,
+		},
+	}
+}

@@ -6,7 +6,7 @@ local timer = import_package "ant.timer"
 local animodule = require "hierarchy.animation"
 
 local animation_content = ecs.component "animation_content"		
-	.ref_path "respath" ()
+	.ref_path "respath"
 	.name "string"
 	.scale "real" (1)
 	.looptimes "int" (0)
@@ -42,11 +42,8 @@ ecs.component "pose"
 	.anirefs "aniref[]"
 	.name "string"
 
-ecs.component "pose_state"
-	.pose "pose"
-
 local animation = ecs.component "animation"  { depend = "skeleton" }
-	.pose_state "pose_state"
+	.pose "pose[]"
 	.anilist "animation_content[]"
 	.blendtype "string" ("blend")
 
@@ -82,7 +79,7 @@ local function deep_copy(t)
 	return t
 end
 
-function anisystem:update()	
+function anisystem:update()
 	local current_counter = timer.current_counter
 
 	for _, eid in world:each("animation") do
@@ -103,9 +100,8 @@ function anisystem:update()
 
 			ik_module.do_ik(mat, ske, t, anicomp.aniresult, fix_root)
 		else
-			local pose_state = anicomp.pose_state
-			local pose = pose_state.pose
-			local transmit = pose_state.transmit
+			local pose = anicomp.current_pose
+			local transmit = anicomp.transmit
 
 			local anilist = anicomp.anilist
 			local function fetch_anilist(pose)
@@ -140,18 +136,18 @@ function anisystem:update()
 			end
 		end
 
-		-- if fix_root then
-		-- 	local bpresult = anicomp.aniresult
-		-- 	local rootmat = ms:matrix(bpresult:joint(0))
-		-- 	--[[
-		-- 		'>': pop matrix in stack as vec4, column 4 is on top of the stack
-		-- 		'i': invert col4
-		-- 	]]
-		-- 	local inv_t = ms(rootmat, '>iP')
-		-- 	local invroot_translatemat = ms({type="srt", t=inv_t}, "m")
+		if fix_root then
+			local bpresult = anicomp.aniresult
+			local rootmat = ms:matrix(bpresult:joint(0))
+			--[[
+				'>': pop matrix in stack as vec4, column 4 is on top of the stack
+				'i': invert col4
+			]]
+			local inv_t = ms(rootmat, '>iP')
+			local invroot_translatemat = ms({type="srt", t=inv_t}, "m")
 
-		-- 	bpresult:transform(invroot_translatemat, true)
-		-- end
+			bpresult:transform(invroot_translatemat, true)
+		end
 	end
 end
 

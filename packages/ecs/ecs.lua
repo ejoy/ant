@@ -21,6 +21,18 @@ function world:create_component(c, args)
 	return component_init(self, ti, args)
 end
 
+function world:create_component_v2(c, args)
+	local ti = assert(self._components[c], c)
+	if not ti.type and ti.multiple then
+		local res = component_init(self, ti, args)
+		for i = 1, #args do
+			res[i] = component_init(self, ti, args[i])
+		end
+		return res
+	end
+	return component_init(self, ti, args)
+end
+
 function world:register_component(eid, c)
 	local set = self._set[c]
 	if set then
@@ -142,6 +154,25 @@ function world:create_entity(t)
 	self[eid] = {}
 	self._entity[eid] = true
 	self:set_entity(eid, t)
+	self:mark(eid, "entity_create")
+	return eid
+end
+
+function world:set_entity_v2(eid, t)
+	local entity = self[eid]
+	for c, args in sortcomponent(self, t) do
+		entity[c] = self:create_component_v2(c, args)
+		self:register_component(eid, c)
+		self:init_component(entity, c)
+	end
+end
+
+function world:create_entity_v2(t)
+	local eid = self._entity_id + 1
+	self._entity_id = eid
+	self[eid] = {}
+	self._entity[eid] = true
+	self:set_entity_v2(eid, t)
 	self:mark(eid, "entity_create")
 	return eid
 end
