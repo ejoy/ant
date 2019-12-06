@@ -11,7 +11,7 @@ config = {
     invert_normal = true
   },
   layout = {
-    "p3|n30nIf|T|b|t20|c40"
+    "p3|n30nIf|T|b|t20"
   },
   mesh = {
     coord_system = "right",

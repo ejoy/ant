@@ -60,42 +60,46 @@ local skinningmesh = ecs.component_alias("skinning_mesh", "resource") {depend = 
 
 function skinningmesh:postinit(e)
 	local rm = e.rendermesh
-	local ske = e.skeleton
+	local ske = assetmgr.get_resource(e.skeleton.ref_path).handle
 	local res = assetmgr.get_resource(self.ref_path)
 	-- for support dynamic vertex buffer, we need duplicate this meshscene
 	-- if we only support static vertex buffer, we will not need this code
 	local function deep_copy(t)
 		local tt = {}
 		for k, v in pairs(t) do
-			tt[k] = type(tt) == "table" and deep_copy(v) or v
+			tt[k] = type(v) == "table" and deep_copy(v) or v
 		end
 		return tt
 	end
 
-	local newmesh_scene = deep_copy(res.handle)
+	local newmesh_res = deep_copy(res)
 
-	for _, meshnode in ipairs(newmesh_scene) do
+	local newmeshscene = newmesh_res.scenes[newmesh_res.sceneidx]
+	for _, meshnode in ipairs(newmeshscene) do
 		for _, group in ipairs(meshnode) do
 			local values = assert(group.vb.values)
 			for idx, value in ipairs(values) do
 				if value then
 					assert(group.vb.handles[idx] == false)
-
+					local declname = value.declname
 					local data = value.data
 					group.vb.handles[idx] = bgfx.create_dynamic_vertex_buffer(
-						{"!", data, 1, #data}, value.decl.handle
+						{"!", data, 1, #data}, declmgr.get(declname).handle
 					)
 					value.datapointer = bgfx.memory_texture(data)
 					value.updatedata = bgfx.memory_texture(#data)
 				end
 			end
 		end
-		local ibp = meshnode.inverse_bind_pose
+		local ibp = meshnode.inverse_bind_poses
 		if ibp then
-			meshnode.inverse_bind_pose_result = animodule.new_bind_pose(#ske, ibp)
+			-- if #ske ~= ibp.num then
+			-- 	error(string.format("mesh inverse bind pose not match skeleton:%s", e.skeleton.ref_path:string()))
+			-- end
+			meshnode.inverse_bind_pose_result = animodule.new_bind_pose(ibp.num, ibp.value)
 		end
 	end
-	rm.reskey = assetmgr.register_resource(fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh"), newmesh_scene)
+	rm.reskey = assetmgr.register_resource(fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh"), newmesh_res)
 
 	return self
 end
@@ -112,7 +116,7 @@ function skinning_sys:update()
 		local meshscene = assetmgr.get_resource(assert(e.rendermesh.reskey))
 		local aniresult = e.animation.aniresult
 
-		for _, meshnode in ipairs(meshscene) do
+		for _, meshnode in ipairs(meshscene.scenes[meshscene.sceneidx]) do
 			for _, group in ipairs(meshnode) do
 				local vb = group.vb
 				local values = assert(vb.values)

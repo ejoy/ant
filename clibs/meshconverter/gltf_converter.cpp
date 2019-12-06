@@ -301,6 +301,7 @@ create_accessor(uint32_t count, uint32_t bvidx, uint32_t elemtype, uint32_t offs
 	acc.componentType = ComponentType::FLOAT;
 	acc.type = elemtype;
 	acc.maxvalue_count = acc.minvalue_count = 0;
+	acc.normalized = false;
 
 	return acc;
 }

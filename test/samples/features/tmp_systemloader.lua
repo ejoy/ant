@@ -206,7 +206,23 @@ local function gltf_animation_test()
             ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
         },
         animation = {
-            
+            anilist = {
+                {
+                    ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
+                    scale = 1,
+                    looptimes = 0,
+                    name = 'ani1'
+                },
+            },
+            blendtype = 'blend',
+            pose = {
+                {
+                    name = "idle",
+                    anirefs = {
+                        {idx=1, weight=1},
+                    },
+                },
+            }
         },
         can_render = true,
         can_cast = true,

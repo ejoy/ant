@@ -9,8 +9,8 @@ config = {
         invert_normal = true
     },
     layout = {
-        "p3|n30nIf|T|b",
-        "t20|w40Nif|i40nIi",
+        "p3|n30|T40|b30",
+        "t20|w4|i40NIi",
     },
     layout_types = {
         "dynamic",

@@ -964,7 +964,7 @@ lnew_bind_pose(lua_State *L) {
 	new(&result->pose)bind_pose::bind_pose_type(numjoints);
 
 	if (initdata){
-		memcpy(&result->pose, initdata, initdata_size);
+		memcpy(&result->pose[0], initdata, initdata_size);
 	}
 
 	return 1;

@@ -7,7 +7,7 @@ local vspath    = "projects/msvc/vs_bin"
 
 local function is_msvc()
     -- TODO
-    return not not package.cpath:match 'projects\\msvc\\vs_bin'
+    return not not package.cpath:match 'projects[\\/]msvc[\\/]vs_bin'
 end
 
 local function which_platfrom_type()
@@ -65,8 +65,8 @@ local function tool_paths(toolbasename)
     }
 end
 
-function util.valid_tool_exe_path(plat, toolname)
-    local toolpaths = tool_paths(plat, toolname)
+function util.valid_tool_exe_path(toolname)
+    local toolpaths = tool_paths(toolname)
 
     for _, name in ipairs(toolpaths) do
         local exepath = util.to_execute_path(name)

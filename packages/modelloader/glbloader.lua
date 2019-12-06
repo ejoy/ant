@@ -116,7 +116,7 @@ local function create_vb_handle(bv, declinfo, bindata, buffers)
 
 	if bindata then
 		if buffertype == "dynamic" then
-			local value = bindata:sub(start_offset, end_offset)
+			local value = bindata:sub(start_offset, end_offset-1)
 			return nil, {
 				data = value,
 				declname = declname,
@@ -174,7 +174,7 @@ end
 local function fetch_inverse_bind_poses(gltfscene, skinidx, bindata)
 	if skinidx then
 		local skin 		= gltfscene.skins[skinidx+1]
-		local ibm_idx 	= skin.inverseBindMatrices+1
+		local ibm_idx 	= skin.inverseBindMatrices
 		local ibm 		= gltfscene.accessors[ibm_idx+1]
 		local ibm_bv 	= gltfscene.bufferViews[ibm.bufferView+1]
 
@@ -183,8 +183,8 @@ local function fetch_inverse_bind_poses(gltfscene, skinidx, bindata)
 
 		return {
 			start = 0,
-			num = ibm_bv.count,
-			value = bindata:sub(start_offset, end_offset),
+			num = ibm.count,
+			value = bindata:sub(start_offset, end_offset-1),
 		}
 	end
 end

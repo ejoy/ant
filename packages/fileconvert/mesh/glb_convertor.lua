@@ -408,7 +408,7 @@ local function refine_accessor(newscene, scene, glbdata, new_bindata_table, acci
 
 	local binstart = bv.byteOffset+1
 	local binend = binstart + bv.byteLength
-	local newbuffer = glbdata.bin:sub(binstart, binend)
+	local newbuffer = glbdata.bin:sub(binstart, binend-1)
 
 	bv.byteOffset = newscene.buffers[1].byteLength
 	bv.buffer = 0
@@ -483,7 +483,7 @@ return function (srcname, dstname, cfg)
 					local newskin = dupicate_node(skin)
 					newskin.inverseBindMatrices = refine_accessor(newscene, scene, glbdata, new_bindata_table, skin.inverseBindMatrices)
 
-					newmesh.skin = #newscene.skins
+					newnode.skin = #newscene.skins
 					newscene.skins[#newscene.skins+1] = newskin
 				end
 
