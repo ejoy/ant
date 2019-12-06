@@ -182,13 +182,13 @@ function init_loader:on_gui()
 	local widget = imgui.widget
 	for _ in imgui_windows("Test", wndflags) do
         if widget.Button "walk" then
-            world[eid].animation.target = 'walk'
+            world[eid].state_chain.target = 'walk'
         end
         if widget.Button "run" then
-            world[eid].animation.target = 'run'
+            world[eid].state_chain.target = 'run'
         end
         if widget.Button "run fast" then
-            world[eid].animation.target = 'runfast'
+            world[eid].state_chain.target = 'runfast'
         end
 	end
 end
