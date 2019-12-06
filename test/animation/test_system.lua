@@ -17,6 +17,7 @@ ecs.import 'ant.animation'
 ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
 ecs.import 'ant.sky'
+ecs.import 'ant.imguibase'
 
 
 local serialize = import_package 'ant.serialize'
@@ -49,6 +50,7 @@ init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
+init_loader.depend "imgui_runtime_system"
 
 local function create_animation_test()
     local eid =
@@ -63,53 +65,35 @@ local function create_animation_test()
         material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
         animation = {
             anilist = {
-                --{
-                --    ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/idle.ozz',
-                --    scale = 1,
-                --    looptimes = 0,
-                --    name = 'idle'
-                --},
-                {
+                walk = {
                     --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
                     ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation1.ozz',
                     scale = 1,
                     looptimes = 0,
-                    name = 'walk'
                 },
-                {
+                run = {
                     --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
                     ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation2.ozz',
                     scale = 1,
                     looptimes = 0,
-                    name = 'run'
                 },
-                {
+                runfast = {
                     --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
                     ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation3.ozz',
                     scale = 1,
                     looptimes = 0,
-                    name = 'run fast'
                 }
             },
             blendtype = 'blend',
             pose = {
-                {
-                    name = "walk",
-                    anirefs = {
-                        {idx=1, weight=1},
-                    },
+                walk = {
+                    {name="walk", weight=1},
                 },
-                {
-                    name = "run",
-                    anirefs = {
-                        {idx=2, weight=1},
-                    }
+                run = {
+                    {name="run", weight=1},
                 },
-                {
-                    name = "run fast",
-                    anirefs = {
-                        {idx=3, weight=1}
-                    }
+                runfast = {
+                    {name="runfast", weight=1}
                 }
             }
         },
@@ -142,12 +126,7 @@ local function create_animation_test()
         --     movespeed = 1.0,
         -- }
     }
-    --world[eid].state_chain.target = 'run'
 
-    --local e = world[eid]
-    --local anicomp = e.animation
-    --aniutil.play_animation(e.animation, anicomp.pose[2])
-    
     --local function save_file(file, data)
     --    assert(assert(io.open(file, 'w')):write(data)):close()
     --end
@@ -161,17 +140,55 @@ local function create_animation_test()
     --save_file('serialize_entity.txt', s)
     --world:remove_entity(eid)
     --serialize.v2.load_entity(world, s)
+    return eid
 end
+
+local eid
 
 function init_loader:init()
     lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0})
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
     computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
-    create_animation_test()
+    eid = create_animation_test()
 end
 
 function init_loader:post_init()
     local viewcamera = camerautil.get_camera(world, "main_view")
     viewcamera.frustum.f = 300
+end
+
+local imgui = require "imgui"
+
+local function defer(f)
+    local toclose = setmetatable({}, { __close = f })
+    return function (_, w)
+        if not w then
+            return toclose
+        end
+    end, nil, nil, toclose
+end
+
+local function imgui_windows(...)
+	imgui.windows.Begin(...)
+	return defer(function()
+		imgui.windows.End()
+	end)
+end
+
+local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
+
+function init_loader:on_gui()
+	local widget = imgui.widget
+	for _ in imgui_windows("Test", wndflags) do
+        if widget.Button "walk" then
+            world[eid].state_chain.target = 'walk'
+        end
+        if widget.Button "run" then
+            world[eid].state_chain.target = 'run'
+        end
+        if widget.Button "run fast" then
+            world[eid].state_chain.target = 'runfast'
+        end
+	end
 end

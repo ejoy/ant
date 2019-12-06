@@ -720,49 +720,11 @@ do_blend(const ozz::animation::Skeleton *ske,
 	return blendjob.Run();
 }
 
-static int
-lblend_bind_poses(lua_State *L) {
-	const auto ske = get_ske(L, 1);
-	luaL_checktype(L, 2, LUA_TTABLE);
-
-	int numposes = (int)lua_rawlen(L, 2);
-	blendlayers bl;
-	bl.layers.resize(numposes);
-	bl.results.resize(numposes);
-
-	for (int ii = 0; ii < numposes; ++ii) {
-		lua_geti(L, 2, ii+1);
-		{
-			luaL_checktype(L, -1, LUA_TTABLE);
-			lua_getfield(L, -1, "pose");
-			auto pose = (bind_pose_soa*)lua_touserdata(L, -1);
-			lua_pop(L, 1);
-
-			lua_getfield(L, -1, "weight");
-			const float weight = (float)lua_tonumber(L, -1);
-			lua_pop(L, 1);
-
-			bl.layers[ii].weight = weight;
-			bl.layers[ii].transform = ozz::make_range(pose->pose);
-		}
-		lua_pop(L, 1);
-	}
-
-	const char* blendtype = lua_tostring(L, 3);
-	bind_pose_soa *finalpose = (bind_pose_soa*)lua_touserdata(L, 4);
-	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
-
-	finalpose->pose.resize(ske->num_soa_joints());
-	do_blend(ske, bl.layers, blendtype, threshold, finalpose);
-
-	return 0;
-}
-
 static bool
-blend_animations(lua_State *L, 
+blend_animations(lua_State* L,
 	int ani_index,
-	const char* blendtype, const ozz::animation::Skeleton *ske, float threshold, 
-	bind_pose_soa *bindpose) {
+	const char* blendtype, const ozz::animation::Skeleton* ske, float threshold,
+	bind_pose_soa* bindpose) {
 
 	blendlayers bl;
 	create_blend_layers(L, ani_index, ske, bl);
@@ -774,17 +736,18 @@ blend_animations(lua_State *L,
 	if (bl.layers.size() > 1) {
 		bindpose->pose.resize(ske->num_soa_joints());
 		do_blend(ske, bl.layers, blendtype, threshold, bindpose);
-	} else {
-		auto &result = bl.results.back();
+	}
+	else {
+		auto& result = bl.results.back();
 		bindpose->pose = std::move(result.pose);
 	}
-	
+
 	return true;
 }
 
 static int
-lblend_animations(lua_State *L) {
-	auto ske = get_ske(L, 1);	
+lblend_animations(lua_State* L) {
+	auto ske = get_ske(L, 1);
 	const char* blendtype = lua_tostring(L, 3);
 	auto bindpose = get_bindpose(L, 4);
 
@@ -797,23 +760,59 @@ lblend_animations(lua_State *L) {
 	return 0;
 }
 
+static bool
+blend_bind_poses(lua_State *L, int idx, const char* blendtype, const ozz::animation::Skeleton *ske, float threshold, bind_pose_soa*bindpose) {
+	int numposes = (int)lua_rawlen(L, idx);
+	blendlayers bl;
+	bl.layers.resize(numposes);
+	bl.results.resize(numposes);
+	std::vector<bind_pose_soa> poseset(numposes);
+	for (int ii = 0; ii < numposes; ++ii) {
+		lua_geti(L, idx, ii+1);
+		{
+			luaL_checktype(L, -1, LUA_TTABLE);
+			blend_animations(L, lua_absindex(L, -1), blendtype, ske, threshold, &poseset[ii]);
+
+			lua_getfield(L, -1, "weight");
+			const float weight = (float)lua_tonumber(L, -1);
+			lua_pop(L, 1);
+
+			bl.layers[ii].weight = weight;
+			bl.layers[ii].transform = ozz::make_range(poseset[ii].pose);
+		}
+		lua_pop(L, 1);
+	}
+	bindpose->pose.resize(ske->num_soa_joints());
+	do_blend(ske, bl.layers, blendtype, threshold, bindpose);
+	return true;
+}
+
 static int
 lmotion(lua_State *L) {
 	auto ske = get_ske(L, 1);	
+	luaL_checktype(L, 2, LUA_TTABLE);
 	luaL_checktype(L, 3, LUA_TSTRING);
 	const char* blendtype = lua_tostring(L, 3);
 	auto aniresult = get_aniresult(L, ske, 4);
-
 	const float threshold = (float)luaL_optnumber(L, 5, 0.1f);
 	const bool fixroot = lua_isnoneornil(L, 6) ? false : lua_toboolean(L, 6);
  
 	bind_pose_soa bindpose;
-	blend_animations(L, 2, blendtype, ske, threshold, &bindpose);
-
+	int numposes = (int)lua_rawlen(L, 2);
+	if (numposes == 1) {
+		lua_geti(L, 2, 1);
+		luaL_checktype(L, -1, LUA_TTABLE);
+		blend_animations(L, lua_absindex(L, -1), blendtype, ske, threshold, &bindpose);
+	}
+	else if (numposes > 1) {
+		blend_bind_poses(L, 2, blendtype, ske, threshold, &bindpose);
+	}
+	else {
+		return luaL_error(L, "pose cannot be empty.");
+	}
 	if (!transform_bindpose(ske, bindpose.pose, aniresult->pose, fixroot)){
 		return luaL_error(L, "doing blend result to ltm job failed!");
 	}
-
 	return 0;
 }
 
@@ -1363,7 +1362,6 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "mesh_skinning", lmesh_skinning},
 		{ "motion", lmotion},
 		{ "blend_animations", lblend_animations},
-		{ "blend_bind_poses", lblend_bind_poses},
 		{ "sample_animation", lsample_animation},
 		{ "transform", ltransform_to_bindpose_result},
 		{ "new_ani", lnew_animation},

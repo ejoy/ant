@@ -320,8 +320,8 @@ void window_exit(struct ant_window_callback* cb) {
 				PostThreadMessageW(te.th32ThreadID, WM_QUIT, 0, 0);
 			}
 		}
+		CloseHandle(h);
 	}
-	CloseHandle(h);
 }
 
 void window_ime(void* ime) {
