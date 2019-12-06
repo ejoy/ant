@@ -84,7 +84,6 @@ local function create_animation_test()
                     looptimes = 0,
                 }
             },
-            blendtype = 'blend',
             pose = {
                 walk = {
                     {name="walk", weight=1},
@@ -95,7 +94,9 @@ local function create_animation_test()
                 runfast = {
                     {name="runfast", weight=1},
                 }
-            }
+            },
+            blendtype = 'blend',
+            birth_pose = "walk"
         },
         state_chain = {
             ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',

@@ -1,5 +1,3 @@
-main_entry = "walk"
-
 transmits = {
 	walk = {
 		runfast = {

@@ -49,7 +49,6 @@ local state_chain = ecs.component "state_chain" {depend = "animation"}
 
 function state_chain:init()
 	local res = assetmgr.load(self.ref_path)
-	self.target = res.main_entry
 	return self
 end
 
