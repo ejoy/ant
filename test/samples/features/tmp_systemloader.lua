@@ -146,10 +146,6 @@ local function create_animation_test()
         --     movespeed = 1.0,
         -- }
     }
-
-    -- local e = world[eid]
-    -- local anicomp = e.animation
-    -- aniutil.play_animation(e.animation, anicomp.current_pose)
 end
 
 local function test_serialize(delfile_aftertest)

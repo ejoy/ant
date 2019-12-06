@@ -5,56 +5,43 @@ local asset = import_package "ant.asset".mgr
 local timer = import_package "ant.timer"
 local animodule = require "hierarchy.animation"
 
-local animation_content = ecs.component "animation_content"		
+local animation_content = ecs.component "animation_content"
 	.ref_path "respath"
-	.name "string"
 	.scale "real" (1)
 	.looptimes "int" (0)
 
-local function calc_ratio(current_counter, ani)
-	local handle = asset.get_resource(ani.ref_path).handle
-	local duration = handle:duration() * 1000
-	local localtime = timer.from_counter(current_counter - ani.start_counter) * ani.scale
-	local frametime
-	if ani.looptimes > 0 then
-		frametime = localtime - duration * ani.looptimes
-	else
-		frametime = localtime % duration
-	end
-	
-	frametime = math.max(0, math.min(duration, frametime))
-	return frametime / duration
-end
-
 function animation_content:init()
 	asset.load(self.ref_path)
-
-	self.start_counter = 0
-	self.ratio = 0
 	return self
 end
 
 ecs.component "aniref"
-	.idx "int"	-- TODO: need use name to reference which animation
+	.name "string"
 	.weight "real"
 
-ecs.component "pose"
-	.anirefs "aniref[]"
-	.name "string"
+ecs.component_alias("pose", "aniref[]")
 
 local animation = ecs.component "animation"  { depend = "skeleton" }
-	.pose "pose[]"
-	.anilist "animation_content[]"
+	.anilist "animation_content{}"
+	.pose "pose{}"
 	.blendtype "string" ("blend")
 
 function animation:postinit(e)
 	local ske = e.skeleton
-
 	local skehandle = asset.get_resource(ske.ref_path).handle
 	local numjoints = #skehandle
 	self.aniresult = animodule.new_bind_pose_result(numjoints)
-	for _, ani in ipairs(self.anilist) do
-		ani.sampling_cache = animodule.new_sampling_cache(numjoints)
+	for posename, pose in pairs(self.pose) do
+		pose.name = posename
+		pose.weight = nil
+		for _, aniref in ipairs(pose) do
+			local ani = self.anilist[aniref.name]
+			aniref.handle = asset.get_resource(ani.ref_path).handle
+			aniref.sampling_cache = animodule.new_sampling_cache(numjoints)
+			aniref.start_time = 0
+			aniref.duration = aniref.handle:duration() * 1000. / ani.scale
+			aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
+		end
 	end
 end
 
@@ -80,15 +67,11 @@ local function deep_copy(t)
 end
 
 function anisystem:update()
-	local current_counter = timer.current_counter
+	local current_time = timer.from_counter(timer.current_counter)
 
 	for _, eid in world:each("animation") do
 		local e = world[eid]
-		
 		local ske = asset.get_resource(e.skeleton.ref_path).handle
-
-		local anicomp = assert(e.animation)
-
 		local fix_root = true
 		local ikcomp = e.ik
 		if ikcomp and ikcomp.enable then
@@ -97,47 +80,23 @@ function anisystem:update()
 			t.target = ms(assert(t.target), "m")
 			t.pole_vector = ms(assert(t.pole_vector), "m")
 			t.mid_axis = ms(assert(t.mid_axis), "m")
-
-			ik_module.do_ik(mat, ske, t, anicomp.aniresult, fix_root)
+			ik_module.do_ik(mat, ske, t, e.animation.aniresult, fix_root)
 		else
-			local pose = anicomp.current_pose
-			local transmit = anicomp.transmit
-
-			local anilist = anicomp.anilist
-			local function fetch_anilist(pose)
-				local anis = {}
-				for _, aniref in ipairs(pose.anirefs) do
-					local ani = assert(anilist[aniref.idx])
-					ani.ratio = calc_ratio(current_counter, ani)
-					ani.weight = aniref.weight
-					ani.handle = asset.get_resource(ani.ref_path).handle
-					anis[#anis+1] = ani
+			for _, pose in ipairs(e.animation.current_pose) do
+				for _, aniref in ipairs(pose) do
+					local localtime = current_time - aniref.start_time
+					if localtime > aniref.max_time then
+						aniref.ratio = 0
+					else
+						aniref.ratio = localtime % aniref.duration / aniref.duration
+					end
 				end
-				return anis
 			end
-
-			local srcanilist = fetch_anilist(pose)
-			if transmit then
-				local targetanilist = fetch_anilist(transmit.targetpose)
-				local srcbindpose = ani_module.new_bind_pose()
-				local targetbindpose = ani_module.new_bind_pose()
-
-				ani_module.blend_animations(ske, srcanilist, anicomp.blendtype, srcbindpose)
-				ani_module.blend_animations(ske, targetanilist, anicomp.blendtype, targetbindpose)
-
-				local finalbindpose = ani_module.new_bind_pose()
-				ani_module.blend_bind_poses(ske, {
-					{pose=srcbindpose, weight=assert(transmit.source_weight)}, 
-					{pose=targetbindpose, weight=assert(transmit.target_weight)}
-				}, anicomp.blendtype, finalbindpose)
-				ani_module.transform(ske, finalbindpose, anicomp.aniresult, fix_root)
-			else
-				ani_module.motion(ske, srcanilist, anicomp.blendtype, anicomp.aniresult, nil, fix_root)
-			end
+			ani_module.motion(ske, e.animation.current_pose, e.animation.blendtype, e.animation.aniresult, nil, fix_root)
 		end
 
 		if fix_root then
-			local bpresult = anicomp.aniresult
+			local bpresult = e.animation.aniresult
 			local rootmat = ms:matrix(bpresult:joint(0))
 			--[[
 				'>': pop matrix in stack as vec4, column 4 is on top of the stack
@@ -154,7 +113,7 @@ end
 local mathadapter_util = import_package "ant.math.adapter"
 local math3d_adapter = require "math3d.adapter"
 mathadapter_util.bind("animation", function ()
-	ik_module.do_ik = math3d_adapter.matrix(ms, ik_module.do_ik, 1)	
+	ik_module.do_ik = math3d_adapter.matrix(ms, ik_module.do_ik, 1)
 end)
 
 
