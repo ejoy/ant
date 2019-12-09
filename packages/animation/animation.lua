@@ -82,17 +82,17 @@ function anisystem:update()
 			t.mid_axis = ms(assert(t.mid_axis), "m")
 			ik_module.do_ik(mat, ske, t, e.animation.aniresult, fix_root)
 		else
-			for _, pose in ipairs(e.animation.current_pose) do
-				for _, aniref in ipairs(pose) do
-					local localtime = current_time - aniref.start_time
-					if localtime > aniref.max_time then
-						aniref.ratio = 0
-					else
-						aniref.ratio = localtime % aniref.duration / aniref.duration
-					end
-				end
-			end
-			ani_module.motion(ske, e.animation.current_pose, e.animation.blendtype, e.animation.aniresult, nil, fix_root)
+			-- for _, pose in ipairs(e.animation.current_pose) do
+			-- 	for _, aniref in ipairs(pose) do
+			-- 		local localtime = current_time - aniref.start_time
+			-- 		if localtime > aniref.max_time then
+			-- 			aniref.ratio = 0
+			-- 		else
+			-- 			aniref.ratio = localtime % aniref.duration / aniref.duration
+			-- 		end
+			-- 	end
+			-- end
+			-- ani_module.motion(ske, e.animation.current_pose, e.animation.blendtype, e.animation.aniresult, nil, fix_root)
 		end
 	end
 end

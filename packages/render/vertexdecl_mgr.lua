@@ -45,6 +45,25 @@ local shortname_mapper = {
 	h = "HALF",	f = "FLOAT",
 }
 
+local component_size_mapper = {
+	f=4, i=2, u=1,	-- not valid for U, for 10 bit elemenet
+}
+
+function mgr.elem_size(corrected_elem)
+	assert(#corrected_elem == 6)
+	local count = tonumber(corrected_elem:sub(2, 2))
+	local comp_size = assert(component_size_mapper[corrected_elem:sub(6, 6)])
+	return count * comp_size
+end
+
+function mgr.layout_stride(corrected_layout)
+	local stride = 0
+	for e in corrected_layout:gmatch "%w+" do
+		stride = stride + mgr.elem_size(e)
+	end
+	return stride
+end
+
 local function get_type(v)
 	return assert(shortname_mapper[v])
 end

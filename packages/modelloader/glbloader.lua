@@ -182,9 +182,9 @@ local function fetch_inverse_bind_poses(gltfscene, skinidx, bindata)
 		local end_offset = start_offset + ibm_bv.byteLength
 
 		return {
-			start = 0,
-			num = ibm.count,
-			value = bindata:sub(start_offset, end_offset-1),
+			num		= ibm.count,
+			joints 	= skin.joints,
+			value 	= bindata:sub(start_offset, end_offset-1),
 		}
 	end
 end

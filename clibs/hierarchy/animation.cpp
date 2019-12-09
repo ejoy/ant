@@ -224,6 +224,73 @@ calc_layout_stride(const std::vector<std::string> &layout){
 	return stride;
 }
 
+template<typename DataType>
+struct vertex_data {
+	struct data_stride {
+		DataType* data;
+		uint32_t offset;
+		uint32_t stride;
+	};
+
+	data_stride positions;
+	data_stride normals;
+	data_stride tangents;
+};
+
+struct in_vertex_data : public vertex_data<const void>{
+	data_stride joint_weights;
+	data_stride joint_indices;
+};
+
+typedef vertex_data<void> out_vertex_data;
+
+template<typename DataStride>
+static void
+read_data_stride(lua_State *L, int elem_index, int index, DataStride &ds){
+	lua_geti(L, index, elem_index);
+	{
+		lua_geti(L, -1, 1);
+		ds.data = lua_touserdata(L, -1);
+		lua_pop(L, 1);
+
+		lua_geti(L, -1, 2);
+		ds.offset = (uint32_t)lua_tointeger(L, -1);
+		lua_pop(L, 1);
+
+		lua_geti(L, -1, 3);
+		ds.stride = (uint32_t)lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+}
+
+template<typename DataType>
+static void
+read_vertex_data(lua_State* L, int index, vertex_data<DataType>& vd) {
+	const int positions = 1, normals = 2, tangents = 3;
+	read_data_stride(L, positions, index, vd.positions);
+	read_data_stride(L, normals, index, vd.normals);
+	read_data_stride(L, tangents, index, vd.tangents);
+}
+
+static void
+read_in_vertex_data(lua_State *L, int index, in_vertex_data &vd){
+	read_vertex_data(L, index, vd);
+
+	const int joint_weights = 4, joint_indices = 5;
+	read_data_stride(L, joint_weights, index, vd.joint_weights);
+	read_data_stride(L, joint_indices, index, vd.joint_indices);
+}
+
+template<typename T, typename DataT>
+static void
+fill_skinning_job_field(uint32_t num_vertices, const DataT &d, ozz::Range<T> &r, size_t &stride) {
+	const uint8_t* begin_data = (const uint8_t*)d.data + d.offset;
+	r.begin = (T*)(begin_data);
+	r.end	= (T*)(begin_data + d.stride * num_vertices);
+	stride = d.stride;
+}
+
 static int
 lmesh_skinning(lua_State *L){
 	luaL_checktype(L, 1, LUA_TUSERDATA);
@@ -232,19 +299,18 @@ lmesh_skinning(lua_State *L){
 	luaL_checktype(L, 2, LUA_TUSERDATA);
 	bind_pose *inverse_bind_pose = (bind_pose*)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
-	const float* in_vertex_data = (float*)lua_touserdata(L, 3);
+	luaL_checktype(L, 3, LUA_TTABLE);
+	in_vertex_data vd = {0};
+	read_in_vertex_data(L, 3, vd);
 
-	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
-	float* out_vertex_data = (float*)lua_touserdata(L, 4);
+	luaL_checktype(L, 4, LUA_TTABLE);
+	out_vertex_data ovd = {0};
+	read_vertex_data(L, 4, ovd);
 
 	luaL_checktype(L, 5, LUA_TNUMBER);
 	const uint32_t num_vertices = (uint32_t)lua_tointeger(L, 5);
 
-	luaL_checktype(L, 6, LUA_TSTRING);
-	std::string layout = lua_tostring(L, 6);
-
-	const uint32_t influences_count = (uint32_t)luaL_optinteger(L, 7, 4);
+	const uint32_t influences_count = (uint32_t)luaL_optinteger(L, 6, 4);
 
 	bind_pose::bind_pose_type skinning_matrices;
 	skinning_matrices.resize(inverse_bind_pose->pose.size());
@@ -256,54 +322,23 @@ lmesh_skinning(lua_State *L){
 	ozz::geometry::SkinningJob skinning_job;
 	skinning_job.vertex_count = num_vertices;
 	skinning_job.influences_count = influences_count;
+	skinning_job.joint_matrices = ozz::make_range(skinning_matrices);
+	
+	fill_skinning_job_field(num_vertices, vd.positions, skinning_job.in_positions, skinning_job.in_positions_stride);
+	fill_skinning_job_field(num_vertices, ovd.positions, skinning_job.out_positions, skinning_job.out_positions_stride);
 
-	auto elems = split_string(layout, '|');
-	auto layout_stride = calc_layout_stride(elems);
-	uint32_t offset_bytes = 0;
-	for (auto e : elems){
-		switch (e[0]){
-		case 'p':{
-			auto stride = elem_stride(e);
-			skinning_job.in_positions.begin = in_vertex_data + offset_bytes;
-			skinning_job.in_positions.end = skinning_job.in_positions.begin + stride * num_vertices;
-			skinning_job.in_positions_stride = stride;
+	fill_skinning_job_field(num_vertices, vd.normals, skinning_job.in_normals, skinning_job.in_normals_stride);
+	fill_skinning_job_field(num_vertices, ovd.normals, skinning_job.out_normals, skinning_job.out_normals_stride);
 
-			skinning_job.out_positions.begin = out_vertex_data + offset_bytes;
-			skinning_job.out_positions.end = skinning_job.out_positions.begin + layout_stride * num_vertices;
-			skinning_job.out_positions_stride = stride;
-			offset_bytes += stride;
-		}
-		break;
-		case 'n':{
-			auto stride = elem_stride(e);
-			skinning_job.in_normals.begin = in_vertex_data + offset_bytes;
-			skinning_job.in_normals.end = skinning_job.in_normals.begin + stride * num_vertices;
-			skinning_job.in_normals_stride = stride;
+	fill_skinning_job_field(num_vertices, vd.tangents, skinning_job.in_tangents, skinning_job.in_tangents_stride);
+	fill_skinning_job_field(num_vertices, ovd.tangents, skinning_job.out_tangents, skinning_job.out_tangents_stride);
 
-			skinning_job.out_normals.begin = out_vertex_data + offset_bytes;
-			skinning_job.out_normals.end = skinning_job.out_normals.begin + layout_stride * num_vertices;
-			skinning_job.out_normals_stride = stride;
-			offset_bytes += stride;
-		}
-		break;
-		case 'T':{
-			auto stride = elem_stride(e);
-			skinning_job.in_tangents.begin = in_vertex_data + offset_bytes;
-			skinning_job.in_tangents.end = skinning_job.in_tangents.begin + stride * num_vertices;
-			skinning_job.in_tangents_stride = stride;
+	fill_skinning_job_field(num_vertices, vd.joint_weights, skinning_job.joint_weights, skinning_job.joint_weights_stride);
+	
+	fill_skinning_job_field(num_vertices, vd.joint_indices, skinning_job.joint_indices, skinning_job.joint_indices_stride);
 
-			skinning_job.out_tangents.begin = out_vertex_data + offset_bytes;
-			skinning_job.out_tangents.end = skinning_job.out_tangents.begin + layout_stride * num_vertices;
-			skinning_job.out_tangents_stride = stride;
-			offset_bytes += stride;
-		}
-		break;
-		default:
-			break;
-		}
-		if (!skinning_job.Run()){
-			luaL_error(L, "running skinning failed!");
-		}
+	if (!skinning_job.Run()) {
+		luaL_error(L, "running skinning failed!");
 	}
 
 	return 0;
@@ -845,7 +880,7 @@ lbp_result_joint(lua_State *L) {
 	bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TNUMBER);
-	const size_t idx = (size_t)lua_tointeger(L, 2);
+	const size_t idx = (size_t)lua_tointeger(L, 2) - 1;
 	const auto joint_count = result->pose.size();
 
 	if (idx >= joint_count) {
@@ -853,13 +888,29 @@ lbp_result_joint(lua_State *L) {
 	}
 
 	auto &joint = result->pose[idx];
+	
 	if (lua_isnoneornil(L, 3)){
 		auto p = &(joint.cols[0]);
 		lua_pushlightuserdata(L, (void*)p);
 		return 1;
 	}
 
-	joint = *(ozz::math::Float4x4*)lua_touserdata(L, 3);
+	auto intype = lua_type(L, 3);
+	const ozz::math::Float4x4 *inputdata = nullptr;
+	if (intype == LUA_TLIGHTUSERDATA || intype == LUA_TUSERDATA){
+		inputdata = (const ozz::math::Float4x4*)lua_touserdata(L, 3);
+	} else if (intype == LUA_TSTRING){
+		size_t size;
+		inputdata = (const ozz::math::Float4x4*)lua_tolstring(L, 3, &size);
+		if (sizeof(ozz::math::Float4x4) != size){
+			return luaL_error(L, "invalid string data size:%d, not match joint data size:%d", size, sizeof(joint));
+		}
+	}
+
+	if (inputdata){
+		joint = *inputdata;
+	}
+	
 	return 0;
 }
 
@@ -958,7 +1009,7 @@ lnew_bind_pose(lua_State *L) {
 	}
 
 	bind_pose *result = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
-	luaL_getmetatable(L, "BPRESULT_NODE");
+	luaL_getmetatable(L, "OZZ_BIND_POSE");
 	lua_setmetatable(L, -2);
 	new(&result->pose)bind_pose::bind_pose_type(numjoints);
 
@@ -1278,8 +1329,8 @@ register_sampling_mt(lua_State *L) {
 }
 
 static void
-register_bpresult_mt(lua_State *L) {
-	luaL_newmetatable(L, "BPRESULT_NODE");
+register_bind_pose_mt(lua_State *L) {
+	luaL_newmetatable(L, "OZZ_BIND_POSE");
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
 
@@ -1327,7 +1378,7 @@ ldel_bind_pose(lua_State *L) {
 static int
 lnew_bind_pose_soa(lua_State *L) {
 	auto bp = (bind_pose_soa*)lua_newuserdatauv(L, sizeof(bind_pose_soa), 0);
-	luaL_getmetatable(L, "OZZBINGPOSE");
+	luaL_getmetatable(L, "OZZ_BING_POSE_SOA");
 	lua_setmetatable(L, -2);
 
 	new(&bp->pose)ozz::Vector<ozz::math::SoaTransform>::Std();	
@@ -1335,8 +1386,8 @@ lnew_bind_pose_soa(lua_State *L) {
 }
 
 static void
-register_bind_pose_mt(lua_State *L) {
-	luaL_newmetatable(L, "OZZBINGPOSE");
+register_bind_pose_soa_mt(lua_State *L) {
+	luaL_newmetatable(L, "OZZ_BING_POSE_SOA");
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
 
@@ -1354,8 +1405,8 @@ luaopen_hierarchy_animation(lua_State *L) {
 	register_animation_mt(L);
 	register_sampling_mt(L);
 	register_ozzmesh_mt(L);
-	register_bpresult_mt(L);
 	register_bind_pose_mt(L);
+	register_bind_pose_soa_mt(L);
 
 	luaL_Reg l[] = {		
 		{ "skinning", lskinning},

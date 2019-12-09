@@ -15,7 +15,7 @@ local util = require "util"
 local convert = require "convert"
 
 local files = {
-	fs.path "d:/tmp/xbot.fbx"
+	fs.path "d:/tmp/Y-bot-Jumping.fbx"
 }
 
 -- for _, srcpath in ipairs {
