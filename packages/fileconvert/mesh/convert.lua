@@ -7,7 +7,7 @@ local vfs 	= require "vfs"
 
 return function (identity, sourcefile, outfile, localpath)
 	local meshcontent = util.rawtable(sourcefile)
-	local meshpath = fs.path(assert(meshcontent.mesh_path)):localpath()
+	local meshpath = localpath(meshcontent.mesh_path)
 
 	glb_cvt(meshpath:string(), outfile:string(), meshcontent.config or config)
 

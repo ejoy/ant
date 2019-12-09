@@ -44,14 +44,10 @@ function util.raw_table(filepath)
 end
 
 function util.is_PVPScene_obj(glbfile)
-	local ff = fs.path(glbfile)
-	while ff:string() ~= "" do
-		local tt = ff:filename()
-		if tt:string() == "PVPScene" then
+	for m in glbfile:string():gmatch "[\\/]" do
+		if m == "PVPScene" then
 			return true
 		end
-
-		ff = ff:parent_path()
 	end
 end
 
