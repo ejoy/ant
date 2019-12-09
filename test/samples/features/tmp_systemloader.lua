@@ -82,40 +82,27 @@ local function create_animation_test()
         material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
         animation = {
             anilist = {
-                {
+                ani1 = {
                     ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
                     scale = 1,
                     looptimes = 0,
-                    name = 'ani1'
                 },
-                {
+                ani2 = {
                     ref_path = respath / meshdir / 'animation' / 'animation2.ozz',
                     scale = 1,
                     looptimes = 0,
-                    name = 'ani2'
                 }
             },
             blendtype = 'blend',
             pose = {
-                {
-                    name = "idle",
-                    anirefs = {
-                        {idx=1, weight=1},
-                    },
+                idle = {
+                    {name = "idle", weight=1},
                 },
-                {
-                    name = "walk",
-                    anirefs = {
-                        {idx=2, weight=1},
-                        {idx=3, weight=1},
-                        {idx=6, weight=1},
-                    }
+                walk = {
+                    {name = "walk",weight=1},
                 },
-                {
-                    name = "run",
-                    anirefs = {
-                        {idx=3, weight=1}
-                    }
+                run = {
+                    {name = "run", weight=1},
                 }
             }
         },
@@ -203,22 +190,19 @@ local function gltf_animation_test()
         },
         animation = {
             anilist = {
-                {
+                ani1 = {
                     ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
                     scale = 1,
                     looptimes = 0,
-                    name = 'ani1'
                 },
             },
             blendtype = 'blend',
             pose = {
-                {
-                    name = "idle",
-                    anirefs = {
-                        {idx=1, weight=1},
-                    },
+                idle = {
+                    {name="ani1", weight=1},
                 },
-            }
+            },
+            birth_pose = "idle",
         },
         can_render = true,
         can_cast = true,
