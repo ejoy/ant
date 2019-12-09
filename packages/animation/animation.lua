@@ -25,6 +25,7 @@ local animation = ecs.component "animation"  { depend = "skeleton" }
 	.anilist "animation_content{}"
 	.pose "pose{}"
 	.blendtype "string" ("blend")
+	.birth_pose "string"
 
 function animation:postinit(e)
 	local ske = e.skeleton
@@ -43,6 +44,9 @@ function animation:postinit(e)
 			aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
 		end
 	end
+	local pose = e.animation.pose[self.birth_pose]
+	pose.weight = 1
+	e.animation.current_pose = {pose}
 end
 
 ecs.component_alias("skeleton", "resource")

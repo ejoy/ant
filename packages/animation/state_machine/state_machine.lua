@@ -13,7 +13,10 @@ local function get_transmit_merge(e, tt_duration)
 		if timepassed > tt_duration then
 			local current_pose = e.animation.current_pose
 			current_pose[1] = current_pose[#current_pose]
-			current_pose[2] = nil
+			current_pose[1].weight = 1
+			for i = 2, #current_pose do
+				current_pose[i] = nil
+			end
 			return true
 		end
 		local scale = math.max(0, math.min(1, timepassed / tt_duration))
@@ -46,14 +49,7 @@ local state_chain = ecs.component "state_chain" {depend = "animation"}
 
 function state_chain:init()
 	local res = assetmgr.load(self.ref_path)
-	self.target = res.main_entry
 	return self
-end
-
-function state_chain:postinit(e)
-	local pose = e.animation.pose[self.target]
-	pose.weight = 1
-	e.animation.current_pose = {pose}
 end
 
 local sm = ecs.system "state_machine"

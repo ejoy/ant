@@ -84,7 +84,6 @@ local function create_animation_test()
                     looptimes = 0,
                 }
             },
-            blendtype = 'blend',
             pose = {
                 walk = {
                     {name="walk", weight=1},
@@ -93,9 +92,11 @@ local function create_animation_test()
                     {name="run", weight=1},
                 },
                 runfast = {
-                    {name="runfast", weight=1}
+                    {name="runfast", weight=1},
                 }
-            }
+            },
+            blendtype = 'blend',
+            birth_pose = "walk"
         },
         state_chain = {
             ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',
@@ -176,19 +177,32 @@ local function imgui_windows(...)
 	end)
 end
 
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
 function init_loader:on_gui()
 	local widget = imgui.widget
-	for _ in imgui_windows("Test", wndflags) do
-        if widget.Button "walk" then
-            world[eid].state_chain.target = 'walk'
-        end
-        if widget.Button "run" then
-            world[eid].state_chain.target = 'run'
-        end
-        if widget.Button "run fast" then
-            world[eid].state_chain.target = 'runfast'
+    for _ in imgui_windows("Test", wndflags) do
+        for name in sortpairs(world[eid].animation.pose) do
+            if widget.Button(name) then
+                world[eid].state_chain.target = name
+            end
         end
 	end
 end
