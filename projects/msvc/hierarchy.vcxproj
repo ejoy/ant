@@ -19,14 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\3rd\ozz-animation\samples\framework\mesh.cc" />
     <ClCompile Include="..\..\clibs\hierarchy\animation.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\hierarchy.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\ik.cpp" />
-    <ClCompile Include="..\..\clibs\hierarchy\ozz_mesh\mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\3rd\ozz-animation\samples\framework\mesh.h" />
     <ClInclude Include="..\..\clibs\hierarchy\hierarchy.h" />
-    <ClInclude Include="..\..\clibs\hierarchy\ozz_mesh\mesh.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="luadll.vcxproj">

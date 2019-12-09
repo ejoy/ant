@@ -5,6 +5,8 @@ GLM_DIR = -I$(ANT3RD)/glm
 OZZINC = -I $(ANT3RD) -I $(ANT3RD)/ozz-animation/include	
 CLIBS = -I..
 
+OZZ_SAMPLE_DIR=$(ANT3RD)/ozz-animation/samples
+
 ifeq "$(PLAT)" "mingw"
 default : hierarchy.dll
 else
@@ -22,8 +24,8 @@ $(ODIR)/ik.o: ik.cpp | $(ODIR)
 $(ODIR)/animation.o: animation.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
 
-$(ODIR)/mesh.o: ozz_mesh/mesh.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
+$(ODIR)/mesh.o: $(OZZ_SAMPLE_DIR)/framework/mesh.cc | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC) $(OZZ_SAMPLE_DIR)/framework
 
 $(ODIR)/hierarchy.dll : $(OBJ_FILES)
 	$(CXX) $(LD_SHARED) -lstdc++ -o $@ $^ $(LUALIB) $(GLM_DIR) $(OZZINC) $(OZZRUNTIME) $(OZZOFFLINE) $(OZZGEOMERTY) $(OZZBASE)
