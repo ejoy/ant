@@ -1,6 +1,4 @@
 #include "hierarchy.h"
-#include "ozz_mesh/mesh.h"
-
 #include "meshbase/meshbase.h"
 
 extern "C" {
@@ -27,6 +25,8 @@ extern "C" {
 #include <ozz/base/containers/vector.h>
 #include <ozz/base/maths/math_ex.h>
 
+#include <../samples/framework/mesh.h>
+
 // glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -47,12 +47,9 @@ struct sampling_node {
 
 struct ozzmesh {
 	ozz::sample::Mesh* mesh;
-	ozz::Range<ozz::math::Float4x4>	skinning_matrices;
 
 	uint8_t * dynamic_buffer;
 	uint8_t * static_buffer;
-
-	Bounding bounding;
 };
 
 template<typename T>
@@ -339,145 +336,6 @@ lmesh_skinning(lua_State *L){
 
 	if (!skinning_job.Run()) {
 		luaL_error(L, "running skinning failed!");
-	}
-
-	return 0;
-}
-
-static int
-lskinning(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
-
-	luaL_checktype(L, 2, LUA_TUSERDATA);
-	bind_pose *ani = (bind_pose*)lua_touserdata(L, 2);
-	assert(om->mesh);
-
-	auto &mesh = *(om->mesh);
-
-	for (size_t ii = 0; ii < mesh.joint_remaps.size(); ++ii) {
-		om->skinning_matrices[ii] =
-			ani->pose[mesh.joint_remaps[ii]] * mesh.inverse_bind_poses[ii];
-	}
-
-	// offset
-	const size_t positions_offset = 0;
-	const size_t normals_offset = sizeof(float) * ozz::sample::Mesh::Part::kPositionsCpnts;
-	const size_t tangents_offset = normals_offset + sizeof(float) * (ozz::sample::Mesh::Part::kNormalsCpnts);
-
-	// stride
-	const size_t positions_stride = sizeof(float) * (ozz::sample::Mesh::Part::kPositionsCpnts 
-													+ ozz::sample::Mesh::Part::kNormalsCpnts 
-													+ ozz::sample::Mesh::Part::kTangentsCpnts);
-	const size_t normals_stride = positions_stride;
-	const size_t tangents_stride = positions_stride;
-
-	size_t processed_vertex_count = 0;
-	for (const auto& part : mesh.parts) {
-		const size_t part_vertex_count = part.vertex_count();
-		if (part_vertex_count == 0)
-			continue;
-
-		// Fills the job.
-		ozz::geometry::SkinningJob skinning_job;
-		skinning_job.vertex_count = static_cast<int>(part_vertex_count);
-		const int part_influences_count = part.influences_count();
-
-		// Clamps joints influence count according to the option.
-		skinning_job.influences_count = part_influences_count;
-
-		// Setup skinning matrices, that came from the animation stage before being
-		// multiplied by inverse model-space bind-pose.
-		skinning_job.joint_matrices = om->skinning_matrices;
-
-		// Setup joint's indices.
-		skinning_job.joint_indices = make_range(part.joint_indices);
-		skinning_job.joint_indices_stride =
-			sizeof(uint16_t) * part_influences_count;
-
-		// Setup joint's weights.
-		if (part_influences_count > 1) {
-			skinning_job.joint_weights = make_range(part.joint_weights);
-			skinning_job.joint_weights_stride =
-				sizeof(float) * (part_influences_count - 1);
-		}
-
-		// Setup input positions, coming from the loaded mesh.
-		skinning_job.in_positions = make_range(part.positions);
-		skinning_job.in_positions_stride =
-			sizeof(float) * ozz::sample::Mesh::Part::kPositionsCpnts;
-
-		// Setup output positions, coming from the rendering output mesh buffers.
-		// We need to offset the buffer every loop.
-		skinning_job.out_positions.begin = reinterpret_cast<float*>(
-			ozz::PointerStride(om->dynamic_buffer, positions_offset + processed_vertex_count *
-				positions_stride));
-		skinning_job.out_positions.end = ozz::PointerStride(
-			skinning_job.out_positions.begin, part_vertex_count * positions_stride);
-		skinning_job.out_positions_stride = positions_stride;
-
-		// Setup normals if input are provided.
-		float* out_normal_begin = reinterpret_cast<float*>(ozz::PointerStride(
-			om->dynamic_buffer, normals_offset + processed_vertex_count * normals_stride));
-		const float* out_normal_end = ozz::PointerStride(
-			out_normal_begin, part_vertex_count * normals_stride);
-
-		if (part.normals.size() / ozz::sample::Mesh::Part::kNormalsCpnts ==
-			part_vertex_count) {
-			// Setup input normals, coming from the loaded mesh.
-			skinning_job.in_normals = make_range(part.normals);
-			skinning_job.in_normals_stride =
-				sizeof(float) * ozz::sample::Mesh::Part::kNormalsCpnts;
-
-			// Setup output normals, coming from the rendering output mesh buffers.
-			// We need to offset the buffer every loop.
-			skinning_job.out_normals.begin = out_normal_begin;
-			skinning_job.out_normals.end = out_normal_end;
-			skinning_job.out_normals_stride = normals_stride;
-		} else {
-			// Fills output with default normals.
-			for (float* normal = out_normal_begin; normal < out_normal_end;
-				normal = ozz::PointerStride(normal, normals_stride)) {
-				normal[0] = 0.f;
-				normal[1] = 1.f;
-				normal[2] = 0.f;
-			}
-		}
-
-		// Setup tangents if input are provided.
-		float* out_tangent_begin = reinterpret_cast<float*>(ozz::PointerStride(
-			om->dynamic_buffer, tangents_offset + processed_vertex_count * tangents_stride));
-		const float* out_tangent_end = ozz::PointerStride(
-			out_tangent_begin, part_vertex_count * tangents_stride);
-
-		if (part.tangents.size() / ozz::sample::Mesh::Part::kTangentsCpnts ==
-			part_vertex_count) {
-			// Setup input tangents, coming from the loaded mesh.
-			skinning_job.in_tangents = make_range(part.tangents);
-			skinning_job.in_tangents_stride =
-				sizeof(float) * ozz::sample::Mesh::Part::kTangentsCpnts;
-
-			// Setup output tangents, coming from the rendering output mesh buffers.
-			// We need to offset the buffer every loop.
-			skinning_job.out_tangents.begin = out_tangent_begin;
-			skinning_job.out_tangents.end = out_tangent_end;
-			skinning_job.out_tangents_stride = tangents_stride;
-		} else {
-			// Fills output with default tangents.
-			for (float* tangent = out_tangent_begin; tangent < out_tangent_end;
-				tangent = ozz::PointerStride(tangent, tangents_stride)) {
-				tangent[0] = 1.f;
-				tangent[1] = 0.f;
-				tangent[2] = 0.f;
-			}
-		}
-
-		// Execute the job, which should succeed unless a parameter is invalid.
-		if (!skinning_job.Run()) {
-			return false;
-		}
-
-		processed_vertex_count += part_vertex_count;
 	}
 
 	return 0;
@@ -1070,114 +928,32 @@ ldel_ozzmesh(lua_State *L) {
 
 	if (om->mesh) {
 		ozz::memory::default_allocator()->Delete(om->mesh);
-		ozz::memory::default_allocator()->Deallocate(om->skinning_matrices.begin);
-	}
-
-	if (om->dynamic_buffer) {
-		delete[] om->dynamic_buffer;
-		om->dynamic_buffer = nullptr;
-	}
-
-	if (om->static_buffer) {
-		delete[] om->static_buffer;
-		om->static_buffer = nullptr;
 	}
 
 	return 0;
 }
 
-static void 
-create_buffer(ozzmesh *om) {
-	const auto num_vertices = om->mesh->vertex_count();
-
-	auto &aabb = om->bounding.aabb;
-	const size_t dynamic_stride = dynamic_vertex_elem_stride(om);
-	if (dynamic_stride != 0) {
-		om->dynamic_buffer = new uint8_t[dynamic_stride * num_vertices];
-		auto *db = om->dynamic_buffer;
-		const size_t posstep = ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float);
-		const size_t normalstep = ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float);
-		const size_t tangentstep = ozz::sample::Mesh::Part::kTangentsCpnts * sizeof(float);
-
-		if (!om->mesh->parts.empty()) {
-			auto v = (const glm::vec3*)(&om->mesh->parts.front().positions[0]);
-			assert(!aabb.IsValid());
-			aabb.Init(v, 3);
-		}
-
-		for (const auto &part : om->mesh->parts) {
-			assert(0 != part.vertex_count());			
-			for (auto iv = 0; iv < part.vertex_count(); ++iv) {
-				auto posptr = &(part.positions[iv * ozz::sample::Mesh::Part::kPositionsCpnts]);				
-				aabb.Append(*(glm::vec3*)(posptr));
-				memcpy(db, posptr, posstep);
-				db += posstep;
-
-				if (!part.normals.empty()) {
-					memcpy(db, &(part.normals[iv * ozz::sample::Mesh::Part::kNormalsCpnts]), normalstep);
-					db += normalstep;
-				}
-
-				if (!part.tangents.empty()) {
-					memcpy(db, &(part.tangents[iv * ozz::sample::Mesh::Part::kTangentsCpnts]), tangentstep);
-					db += tangentstep;
-				}
-			}
-		}
-	} else {
-		om->dynamic_buffer = nullptr;
-	}	
-	
-	om->bounding.sphere.Init(aabb);
-	om->bounding.obb.Init(aabb);
-
-	const size_t static_stride = static_vertex_elem_stride(om);
-	if (static_stride != 0) {
-		om->static_buffer = new uint8_t[static_stride * num_vertices];
-		uint8_t *sb = om->static_buffer;
-		const size_t colorstep = ozz::sample::Mesh::Part::kColorsCpnts * sizeof(uint8_t);
-		const size_t uvstep = ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float);
-		for (const auto &part : om->mesh->parts) {
-			for (auto iv = 0; iv < part.vertex_count(); ++iv) {
-				if (!part.colors.empty()) {
-					memcpy(sb, &(part.colors[iv * size_t(ozz::sample::Mesh::Part::kColorsCpnts)]), colorstep);
-					sb += colorstep;
-				}
-				if (!part.uvs.empty()) {
-					memcpy(sb, &(part.uvs[iv * size_t(ozz::sample::Mesh::Part::kUVsCpnts)]), uvstep);
-					sb += uvstep;
-				}
-			}
-		}
-	} else {
-		om->static_buffer = nullptr;
+static bool 
+LoadOzzMesh(const char* _filename, ozz::sample::Mesh* _mesh) {
+	assert(_filename && _mesh);
+	//ozz::log::Out() << "Loading mesh archive: " << _filename << "." << std::endl;
+	ozz::io::File file(_filename, "rb");
+	if (!file.opened()) {
+		//ozz::log::Err() << "Failed to open mesh file " << _filename << "."
+		//	<< std::endl;
+		return false;
 	}
-}
-
-namespace ozz {
-	namespace sample {
-		static bool LoadMesh(const char* _filename, ozz::sample::Mesh* _mesh) {
-			assert(_filename && _mesh);
-			//ozz::log::Out() << "Loading mesh archive: " << _filename << "." << std::endl;
-			ozz::io::File file(_filename, "rb");
-			if (!file.opened()) {
-				//ozz::log::Err() << "Failed to open mesh file " << _filename << "."
-				//	<< std::endl;
-				return false;
-			}
-			ozz::io::IArchive archive(&file);
-			if (!archive.TestTag<ozz::sample::Mesh>()) {
-				//ozz::log::Err() << "Failed to load mesh instance from file " << _filename
-				//	<< "." << std::endl;
-				return false;
-			}
-
-			// Once the tag is validated, reading cannot fail.
-			archive >> *_mesh;
-
-			return true;
-		}
+	ozz::io::IArchive archive(&file);
+	if (!archive.TestTag<ozz::sample::Mesh>()) {
+		//ozz::log::Err() << "Failed to load mesh instance from file " << _filename
+		//	<< "." << std::endl;
+		return false;
 	}
+
+	// Once the tag is validated, reading cannot fail.
+	archive >> *_mesh;
+
+	return true;
 }
 
 static int
@@ -1190,65 +966,161 @@ lnew_ozzmesh(lua_State *L) {
 	luaL_getmetatable(L, "OZZMESH");
 	lua_setmetatable(L, -2);
 
-	om->bounding = Bounding();
-
 	om->mesh = ozz::memory::default_allocator()->New<ozz::sample::Mesh>();
-	ozz::sample::LoadMesh(filename, om->mesh);
+	LoadOzzMesh(filename, om->mesh);
+	return 1;
+}
 
-	if (!om->mesh->inverse_bind_poses.empty()) {
-		om->skinning_matrices = create_range<ozz::math::Float4x4>(om->mesh->inverse_bind_poses.size());
-	} else {
-		om->skinning_matrices = ozz::Range<ozz::math::Float4x4>();
+static inline ozzmesh*
+get_ozzmesh(lua_State *L, int index = 1){
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	return (ozzmesh*)lua_touserdata(L, index);
+}
+
+static inline int
+get_partindex(lua_State *L, ozzmesh *om, int index=2){
+	luaL_checkinteger(L, index);
+	const int partidx = (int)lua_tointeger(L, index) - 1;
+
+	if (partidx < 0 || om->mesh->parts.size() <= partidx){
+		luaL_error(L, "invalid part index:%d, max parts:%d", partidx + 1, om->mesh->parts.size());
+		return -1;
 	}
 
-	create_buffer(om);
+	return partidx;
+}
+
+static int
+lozzmesh_inverse_bind_matries(lua_State *L){
+	auto om = get_ozzmesh(L);
+	lua_pushlightuserdata(L, &om->mesh->inverse_bind_poses.back());
 	return 1;
 }
 
 static int
-lnum_vertices(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
-	lua_pushinteger(L, om->mesh->vertex_count());
+lozzmesh_layout(lua_State *L){
+	auto om = get_ozzmesh(L);
+	auto partidx = get_partindex(L, om);
+
+	lua_createtable(L, 0, 0);
+
+	const auto &part = om->mesh->parts[partidx];
+
+	auto set_elem = [L, part](uint32_t numelem, int itemidx, const std::string &def){
+		std::string elem(def);
+		elem[1] = numelem + '0';
+		lua_pushstring(L, elem.c_str());
+		lua_seti(L, -2, ++itemidx);
+		return ++itemidx;
+	};
+
+	const std::string defelem = "_30NIf";
+	
+	int arrayidx = 0;
+	arrayidx = set_elem(ozz::sample::Mesh::Part::kPositionsCpnts, arrayidx, defelem);
+
+	if (!part.normals.empty()){
+		arrayidx = set_elem(ozz::sample::Mesh::Part::kNormalsCpnts, arrayidx, defelem);
+	}
+
+	if (!part.tangents.empty()){
+		arrayidx = set_elem(ozz::sample::Mesh::Part::kTangentsCpnts, arrayidx, defelem);
+	}
+
+	if (!part.colors.empty()){
+		arrayidx = set_elem(ozz::sample::Mesh::Part::kColorsCpnts, arrayidx, "_30nIu");
+	}
+
+	if (!part.uvs.empty()){
+		arrayidx = set_elem(ozz::sample::Mesh::Part::kUVsCpnts, arrayidx, defelem);
+	}
 	
 	return 1;
 }
 
 static int
-lnum_indices(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
+lozzmesh_vertex_buffer(lua_State *L){
+	auto om = get_ozzmesh(L);
+
+	auto partidx = get_partindex(L, om);
+
+	luaL_checkstring(L, 3);
+	const std::string attribname = lua_tostring(L, 3);
+
+	const auto &part = om->mesh->parts[partidx];
+
+	auto push_result = [L](auto datapointer, uint32_t stride){
+		lua_createtable(L, 3, 0);
+
+		// data
+		lua_pushlightuserdata(L, (void*)(datapointer));
+		lua_seti(L, -2, 1);
+
+		// offset
+		lua_pushinteger(L, 0);	// no offset
+		lua_seti(L, -2, 2);
+
+		// stride
+		lua_pushinteger(L, stride);
+		lua_seti(L, -2, 3);
+	};
+
+	if (attribname == "position"){
+		push_result(&part.positions.back(), ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float));
+	}else if(attribname == "normal") {
+		if (part.normals.empty())
+			return 0;
+		push_result(&part.normals.back(), ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float));
+	}else if(attribname == "tangent"){
+		if (part.tangents.empty())
+			return 0;
+		push_result(&part.tangents.back(), ozz::sample::Mesh::Part::kTangentsCpnts * sizeof(float));
+	}else if(attribname == "color"){
+		if (part.colors.empty())
+			return 0;
+		push_result(&part.colors.back(), ozz::sample::Mesh::Part::kColorsCpnts * sizeof(uint8_t));
+	}else if (attribname == "texcoord"){
+		if (part.uvs.empty())
+			return 0;
+		push_result(&part.uvs.back(), ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float));
+	}else{
+		return luaL_error(L, "invalid attribute name:%s", attribname.c_str());
+	}
+
+	return 1;
+}
+
+static int
+lozzmesh_num_vertices(lua_State *L) {
+	ozzmesh *om = get_ozzmesh(L);
+
+	if (lua_isnoneornil(L, 2)){
+		lua_pushinteger(L, om->mesh->vertex_count());
+	}else {
+		const int partidx = get_partindex(L, om, 2);
+		const auto &part = om->mesh->parts[partidx];
+		lua_pushinteger(L, part.positions.size() / ozz::sample::Mesh::Part::kPositionsCpnts);
+	}
+	
+	return 1;
+}
+
+static int
+lozzmesh_index_buffer(lua_State *L){
+	auto om = get_ozzmesh(L);
+	lua_pushlightuserdata(L, &om->mesh->triangle_indices.back());
+	return 1;
+}
+
+static int
+lozzmesh_num_indices(lua_State *L) {
+	auto om = get_ozzmesh(L);
 	lua_pushinteger(L, om->mesh->triangle_index_count());
 	return 1;
 }
 
-static int 
-lbuffer_ozzmesh(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
-
-	luaL_checktype(L, 2, LUA_TSTRING);
-	const char* type = lua_tostring(L, 2);
-
-	size_t vertex_stride = 0;
-	uint8_t * buffer = nullptr;
-	if (strcmp(type, "dynamic") == 0) {
-		buffer = om->dynamic_buffer;
-		vertex_stride = dynamic_vertex_elem_stride(om);
-	} else if (strcmp(type, "static") == 0) {
-		buffer = om->static_buffer;
-		vertex_stride = static_vertex_elem_stride(om);
-	} else {
-		luaL_error(L, "not support type : %s", type);
-	}
-	
-	lua_pushlightuserdata(L, buffer);
-	lua_pushinteger(L, lua_Integer(vertex_stride * om->mesh->vertex_count()));
-	return 2;
-}
-
 static int
-lbounding_ozzmesh(lua_State *L) {
+lozzmesh_bounding(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	auto om = (ozzmesh*)lua_touserdata(L, 1);
 
@@ -1262,41 +1134,15 @@ lbounding_ozzmesh(lua_State *L) {
 	};
 	
 	lua_createtable(L, 0, 3);
-
-	// aabb
-	lua_createtable(L, 0, 2);
-	push_vec("min", 3, om->bounding.aabb.min);
-	push_vec("max", 3, om->bounding.aabb.max);
-	lua_setfield(L, -2, "aabb");
-
-	// sphere
-	lua_createtable(L, 0, 2);
-
-	push_vec("center", 3, om->bounding.sphere.center);
-	lua_pushnumber(L, om->bounding.sphere.radius);
-	lua_setfield(L, -2, "radius");
-
-	lua_setfield(L, -2, "sphere");
-
-	//obb
-	push_vec("obb", 16, (const float*)(&om->bounding.obb.m));
-
+	assert(false && "need calculate bounding");
 	return 1;
 }
 
 static int
-lindexbuffer_ozzmesh(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
-
-	auto mesh = om->mesh;
-
-	lua_pushlightuserdata(L, ozz::array_begin(mesh->triangle_indices));
-	const size_t sizeInBytes = mesh->triangle_index_count() * sizeof(uint16_t);
-	lua_pushinteger(L, lua_Integer(sizeInBytes));
-	lua_pushinteger(L, sizeof(uint16_t));
-
-	return 3;
+lozz_numpart(lua_State *L){
+	auto om = get_ozzmesh(L);
+	lua_pushinteger(L, om->mesh->parts.size());
+	return 1;
 }
 
 static void 
@@ -1354,12 +1200,12 @@ register_ozzmesh_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {		
-		{"buffer", lbuffer_ozzmesh},
-		{"num_vertices", lnum_vertices},
-		{"num_indices", lnum_indices},
-		{"index_buffer", lindexbuffer_ozzmesh},
-		{"layout", llayout_ozzmesh},
-		{"bounding", lbounding_ozzmesh},
+		{"num_vertices", lozzmesh_num_vertices},
+		{"num_indices", lozzmesh_num_indices},
+		{"index_buffer", lozzmesh_index_buffer},
+		{"vertex_buffer", lozzmesh_vertex_buffer},
+		{"bounding", lozzmesh_bounding},
+		{"num_part", lozz_numpart},
 		{"__gc", ldel_ozzmesh},
 		{nullptr, nullptr},
 	};
@@ -1408,8 +1254,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 	register_bind_pose_mt(L);
 	register_bind_pose_soa_mt(L);
 
-	luaL_Reg l[] = {		
-		{ "skinning", lskinning},
+	luaL_Reg l[] = {
 		{ "mesh_skinning", lmesh_skinning},
 		{ "motion", lmotion},
 		{ "blend_animations", lblend_animations},

@@ -17,38 +17,18 @@ local fs 		= require "filesystem"
 local animodule = require "hierarchy.animation"
 local bgfx 		= require "bgfx"
 
--- skinning_mesh component is different from mesh component.
--- mesh component is used for render purpose.
--- skinning_mesh component is used for producing mesh component render data.
 local ozzmesh = ecs.component_alias("ozz_mesh", "resource") {depend = {"rendermesh", "animation"}}
 
 local function gen_mesh_assetinfo(ozzmesh)
-	local smhandle = assetmgr.get_resource(ozzmesh.ref_path).handle
+	local meshhandle = assetmgr.get_resource(ozzmesh.ref_path).handle
 
-	local num_vertices, num_indices = smhandle:num_vertices(), smhandle:num_indices()
+	local meshscene = {}
 
-	local vbhandles = {}
-	local create_buffer_op = {dynamic=bgfx.create_dynamic_vertex_buffer, static=bgfx.create_vertex_buffer}
-
-	for _, buffertype in ipairs {"dynamic", "static"} do
-		local layout = smhandle:layout(buffertype)
-		local buffer, size = smhandle:buffer(buffertype)
-		vbhandles[#vbhandles+1] = create_buffer_op[buffertype]({"!", buffer, size}, declmgr.get(layout).handle)
+	local numpart = meshhandle:num_part()
+	for partidx=1, numpart do
+		local meshnode = {}
+		local numvertices = meshhandle:num_vertices()
 	end
-
-	local idxbuffer, indices_sizebyte = smhandle:index_buffer()
-	return computil.assign_group_as_mesh {
-		vb = {
-			handles = vbhandles,
-			start = 0,
-			num = num_vertices,
-		},
-		ib = {
-			handle = bgfx.create_index_buffer {idxbuffer, indices_sizebyte},
-			start = 0,
-			num = num_indices,
-		}
-	}
 end
 
 function ozzmesh:postinit(e)
