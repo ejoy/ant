@@ -3,7 +3,6 @@ local world = ecs.world
 
 local fs = require 'filesystem'
 
-
 ecs.import 'ant.math.adapter'
 ecs.import 'ant.asset'
 ecs.import 'ant.render'
@@ -19,21 +18,16 @@ ecs.import 'ant.objcontroller'
 ecs.import 'ant.sky'
 ecs.import 'ant.imguibase'
 
-
-local serialize = import_package 'ant.serialize'
-
-local skypkg = import_package 'ant.sky'
-local skyutil = skypkg.util
-
-local renderpkg = import_package 'ant.render'
-local computil  = renderpkg.components
-local camerautil= renderpkg.camera
-local aniutil   = import_package 'ant.animation'.util
-
-local mathpkg   = import_package "ant.math"
-local mu        = mathpkg.util
-
-local lu = renderpkg.light
+local serialize  = import_package 'ant.serialize'
+local skypkg     = import_package 'ant.sky'
+local renderpkg  = import_package 'ant.render'
+local mathpkg    = import_package "ant.math"
+local skyutil    = skypkg.util
+local computil   = renderpkg.components
+local camerautil = renderpkg.camera
+local ms         = mathpkg.stack
+local mu         = mathpkg.util
+local lu         = renderpkg.light
 
 local init_loader = ecs.system 'init_loader'
 init_loader.singleton "asyn_load_list"
@@ -41,6 +35,7 @@ init_loader.singleton "asyn_load_list"
 init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"
 init_loader.depend "procedural_sky_system"
+init_loader.depend "imgui_runtime_system"
 
 init_loader.dependby 'render_system'
 init_loader.dependby 'cull_system'
@@ -50,7 +45,6 @@ init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
-init_loader.depend "imgui_runtime_system"
 
 local function create_animation_test()
     local eid =
@@ -123,9 +117,6 @@ local function create_animation_test()
                 axis   = "Y",
             },
         },
-        -- character = {
-        --     movespeed = 1.0,
-        -- }
     }
 
     --local function save_file(file, data)
@@ -149,14 +140,19 @@ local eid
 function init_loader:init()
     lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0})
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
-    skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
-    computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
+    --skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
+    --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     eid = create_animation_test()
 end
 
 function init_loader:post_init()
     local viewcamera = camerautil.get_camera(world, "main_view")
     viewcamera.frustum.f = 300
+    ms(viewcamera.eyepos,  { 1.6, 0.8,-1.8, 0.0}, "=")
+    ms(viewcamera.updir,   { 0.0, 1.0, 0.0, 0.0}, "=")
+    ms(viewcamera.viewdir, {-0.6,-0.4, 0.7, 0.0}, "=")
+    local e = world:first_entity "render_target"
+    e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
 
 local imgui = require "imgui"
