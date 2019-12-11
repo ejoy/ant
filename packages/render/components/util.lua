@@ -51,9 +51,7 @@ function util.remove_material(material)
 end
 
 function util.assign_material(filepath, properties, asyn_load)
-	return {
-		{ref_path = filepath, properties = properties, asyn_load=asyn_load}
-	}
+	return {ref_path = filepath, properties = properties, asyn_load=asyn_load}
 end
 
 function util.create_submesh_item(material_refs)

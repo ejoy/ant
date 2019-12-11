@@ -13,10 +13,17 @@ local fs 		= require "filesystem"
 local animodule = require "hierarchy.animation"
 local bgfx 		= require "bgfx"
 
--- skinning_mesh component is different from mesh component.
--- mesh component is used for render purpose.
--- skinning_mesh component is used for producing mesh component render data.
-local sm = ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation"}}
+local m = ecs.policy "skinning"
+m.require_component "animation"
+m.require_component "skeleton"
+m.require_component "rendermesh"
+m.require_component "skinning_mesh"
+m.require_transform "skinning"
+
+local m = ecs.transform "skinning"
+m.input "rendermesh"
+m.input "animation"
+m.output "skinning_mesh"
 
 local function gen_mesh_assetinfo(sm)
 	local smhandle = assetmgr.get_resource(sm.ref_path).handle
@@ -47,12 +54,17 @@ local function gen_mesh_assetinfo(sm)
 	}
 end
 
-function sm:postinit(e)
+function m.process(e)
 	local rm = e.rendermesh
-	
-	local reskey = fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh")
-	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(self))
+	local reskey = fs.path("//meshres/" .. e.skinning_mesh.ref_path:stem():string() .. ".mesh")
+	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(e.skinning_mesh))
 end
+
+-- skinning_mesh component is different from mesh component.
+-- mesh component is used for render purpose.
+-- skinning_mesh component is used for producing mesh component render data.
+ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation"}}
+
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"

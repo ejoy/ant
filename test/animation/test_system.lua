@@ -46,77 +46,93 @@ init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
 
+local m = ecs.policy "test"
+m.require_component "transform"
+m.require_component "can_render"
+m.require_component "material"
+m.require_component "state_chain"
+m.require_component "name"
+m.require_component "serialize"
+m.require_component "collider_tag"
+m.require_component "capsule_collider"
+
 local function create_animation_test()
-    local eid =
-        world:create_entity {
-        transform = {
-            s = {1, 1, 1, 0},
-            r = {0, math.pi*.75, 0, 0},
-            t = {0, 0, 0, 1}
+    local eid = world:create_entity_v2 {
+        policy = {
+            "animation",
+            "skinning",
+            "test",
         },
-        can_render = true,
-        rendermesh = {},
-        material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
-        animation = {
-            anilist = {
-                walk = {
-                    --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
-                    ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation1.ozz',
-                    scale = 1,
-                    looptimes = 0,
-                },
-                run = {
-                    --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
-                    ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation2.ozz',
-                    scale = 1,
-                    looptimes = 0,
-                },
-                runfast = {
-                    --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
-                    ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation3.ozz',
-                    scale = 1,
-                    looptimes = 0,
-                }
+        data = {
+            transform = {
+                s = {1, 1, 1, 0},
+                r = {0, math.pi*.75, 0, 0},
+                t = {0, 0, 0, 1}
             },
-            pose = {
-                walk = {
-                    {name="walk", weight=1},
+            can_render = true,
+            rendermesh = {},
+            material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
+            animation = {
+                anilist = {
+                    walk = {
+                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
+                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation1.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                    run = {
+                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
+                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation2.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                    runfast = {
+                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
+                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation3.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    }
                 },
-                run = {
-                    {name="run", weight=1},
+                pose = {
+                    walk = {
+                        {name="walk", weight=1},
+                    },
+                    run = {
+                        {name="run", weight=1},
+                    },
+                    runfast = {
+                        {name="runfast", weight=1},
+                    }
                 },
-                runfast = {
-                    {name="runfast", weight=1},
-                }
+                blendtype = 'blend',
+                birth_pose = "walk"
             },
-            blendtype = 'blend',
-            birth_pose = "walk"
-        },
-        state_chain = {
-            ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',
-        },
-        skeleton = {
-            --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
-            ref_path = fs.path '/pkg/ant.resources/meshes/skeleton/human_skeleton.ozz'
-        },
-        skinning_mesh = {
-            --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/female.ozz'
-            ref_path = fs.path '/pkg/ant.resources/meshes/mesh.ozz'
-        },
-        name = 'animation_sample',
-        serialize = serialize.create(),
-        collider_tag = "capsule_collider",
-        capsule_collider = {
-            collider = {
-                center = {0, 0, 0},
-                is_tigger = true,
+            state_chain = {
+                ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',
             },
-            shape = {
-                radius = 1.0,
-                height = 1.0,
-                axis   = "Y",
+            skeleton = {
+                --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
+                ref_path = fs.path '/pkg/ant.resources/meshes/skeleton/human_skeleton.ozz'
             },
-        },
+            skinning_mesh = {
+                --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/female.ozz'
+                ref_path = fs.path '/pkg/ant.resources/meshes/mesh.ozz'
+            },
+            name = 'animation_sample',
+            serialize = serialize.create(),
+            collider_tag = "capsule_collider",
+            capsule_collider = {
+                collider = {
+                    center = {0, 0, 0},
+                    is_tigger = true,
+                },
+                shape = {
+                    radius = 1.0,
+                    height = 1.0,
+                    axis   = "Y",
+                },
+            },
+        }
     }
 
     --local function save_file(file, data)

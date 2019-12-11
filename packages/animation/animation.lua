@@ -21,22 +21,19 @@ ecs.component "aniref"
 
 ecs.component_alias("pose", "aniref[]")
 
-local animation = ecs.component "animation"  { depend = "skeleton" }
-	.anilist "animation_content{}"
-	.pose "pose{}"
-	.blendtype "string" ("blend")
-	.birth_pose "string"
-
-function animation:postinit(e)
+local m = ecs.transform "animation"
+m.input "skeleton"
+m.output "animation"
+function m.process(e)
 	local ske = e.skeleton
 	local skehandle = asset.get_resource(ske.ref_path).handle
 	local numjoints = #skehandle
-	self.aniresult = animodule.new_bind_pose_result(numjoints)
-	for posename, pose in pairs(self.pose) do
+	e.animation.aniresult = animodule.new_bind_pose_result(numjoints)
+	for posename, pose in pairs(e.animation.pose) do
 		pose.name = posename
 		pose.weight = nil
 		for _, aniref in ipairs(pose) do
-			local ani = self.anilist[aniref.name]
+			local ani = e.animation.anilist[aniref.name]
 			aniref.handle = asset.get_resource(ani.ref_path).handle
 			aniref.sampling_cache = animodule.new_sampling_cache(numjoints)
 			aniref.start_time = 0
@@ -44,10 +41,21 @@ function animation:postinit(e)
 			aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
 		end
 	end
-	local pose = e.animation.pose[self.birth_pose]
+	local pose = e.animation.pose[e.animation.birth_pose]
 	pose.weight = 1
 	e.animation.current_pose = {pose}
 end
+
+local m = ecs.policy "animation"
+m.require_component "animation"
+m.require_component "skeleton"
+m.require_transform "animation"
+
+ecs.component "animation"
+	.anilist "animation_content{}"
+	.pose "pose{}"
+	.blendtype "string" ("blend")
+	.birth_pose "string"
 
 ecs.component_alias("skeleton", "resource")
 

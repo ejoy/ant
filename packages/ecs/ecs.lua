@@ -1,6 +1,7 @@
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
+local policy = require "policy"
 local component_init = component.init
 local component_delete = component.delete
 
@@ -10,18 +11,6 @@ local world = {} ; world.__index = world
 local function dummy_iter() end
 
 function world:create_component(c, args)
-	local ti = assert(self._components[c], c)
-	if not ti.type and ti.multiple then
-		local res = component_init(self, ti, args[1])
-		for i = 2, #args do
-			res[i-1] = component_init(self, ti, args[i])
-		end
-		return res
-	end
-	return component_init(self, ti, args)
-end
-
-function world:create_component_v2(c, args)
 	local ti = assert(self._components[c], c)
 	if not ti.type and ti.multiple then
 		local res = component_init(self, ti, args)
@@ -139,41 +128,48 @@ local function sortcomponent(w, t, r)
     end
 end
 
+function world:new_entity_id()
+	local eid = self._entity_id + 1
+	self._entity_id = eid
+	return eid
+end
+
 function world:set_entity(eid, t)
-	local entity = self[eid]
+	local entity = {}
+	self[eid] = entity
+	self._entity[eid] = true
 	for c, args in sortcomponent(self, t) do
 		entity[c] = self:create_component(c, args)
 		self:register_component(eid, c)
 		self:init_component(entity, c)
 	end
+	self:mark(eid, "entity_create")
 end
 
 function world:create_entity(t)
-	local eid = self._entity_id + 1
-	self._entity_id = eid
-	self[eid] = {}
-	self._entity[eid] = true
+	local eid = self:new_entity_id()
 	self:set_entity(eid, t)
-	self:mark(eid, "entity_create")
 	return eid
 end
 
 function world:set_entity_v2(eid, t)
-	local entity = self[eid]
-	for c, args in sortcomponent(self, t) do
-		entity[c] = self:create_component_v2(c, args)
+	local init = policy.apply(self, t.policy, t.data)
+	local e = {}
+	self[eid] = e
+	self._entity[eid] = true
+	for _, c in ipairs(init[1]) do
+		e[c] = self:create_component(c, t.data[c])
 		self:register_component(eid, c)
-		self:init_component(entity, c)
 	end
+	for _, f in ipairs(init[2]) do
+		f(e)
+	end
+	self:mark(eid, "entity_create")
 end
 
 function world:create_entity_v2(t)
-	local eid = self._entity_id + 1
-	self._entity_id = eid
-	self[eid] = {}
-	self._entity[eid] = true
+	local eid = self:new_entity_id()
 	self:set_entity_v2(eid, t)
-	self:mark(eid, "entity_create")
 	return eid
 end
 
@@ -559,7 +555,7 @@ function world:find_serialize(serialize_id)
 		"function world:set_serialize2eid\nserialize_id can't be nil")
 	return self._serialize_to_eid[serialize_id]
 end
-function world:slove_comonpent()
+function world:slove_component()
 	local typeinfo = self._schema
 	for k,v in ipairs(typeinfo.list) do
 		if v.uncomplete then
@@ -605,7 +601,51 @@ function ecs.new_world(config)
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
-	w:slove_comonpent()
+	w:slove_component()
+	for name, v in pairs(class.transform) do
+		if #v.input == 0 then
+			error(("transform `%s`'s input cannot be empty."):format(name))
+		end
+		if #v.output == 0 then
+			error(("transform `%s`'s output cannot be empty."):format(name))
+		end
+		if type(v.method.process) ~= 'function' then
+			error(("transform `%s`'s process cannot be empty."):format(name))
+		end
+	end
+	for policy_name, v in pairs(class.policy) do
+		local components = {}
+		if not v.require_component then
+			error(("policy `%s`'s require_component cannot be empty."):format(policy_name))
+		end
+		for _, component_name in ipairs(v.require_component) do
+			if not class.component[component_name] then
+				error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
+			end
+			components[component_name] = true
+		end
+		if not v.require_transform then
+			v.require_transform = {}
+		end
+		for _, transform_name in ipairs(v.require_transform) do
+			local c = class.transform[transform_name]
+			if not c then
+				error(("transform `%s` in policy `%s` is not defined."):format(transform_name, policy_name))
+			end
+			for _, v in ipairs(c.input) do
+				if not components[v] then
+					error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name))
+				end
+			end
+			for _, v in ipairs(c.output) do
+				if not components[v] then
+					error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name))
+				end
+			end
+		end
+	end
+	
+	w._class = class
 
 	-- init system
 	w._systems = system.lists(class.system)
