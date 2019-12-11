@@ -224,6 +224,7 @@ calc_layout_stride(const std::vector<std::string> &layout){
 template<typename DataType>
 struct vertex_data {
 	struct data_stride {
+		typedef DataType Type;
 		DataType* data;
 		uint32_t offset;
 		uint32_t stride;
@@ -247,11 +248,19 @@ read_data_stride(lua_State *L, int elem_index, int index, DataStride &ds){
 	lua_geti(L, index, elem_index);
 	{
 		lua_geti(L, -1, 1);
-		ds.data = lua_touserdata(L, -1);
+		const int type = lua_type(L, -1);
+		switch (type){
+		case LUA_TSTRING: ds.data = (typename DataStride::Type*)lua_tostring(L, -1); break;
+		case LUA_TLIGHTUSERDATA:
+		case LUA_TUSERDATA: ds.data = (typename DataStride::Type*)lua_touserdata(L, -1); break;
+		default:
+			luaL_error(L, "not support data type in data stride, only string and userdata is support, type:%d", type);
+			return;
+		}
 		lua_pop(L, 1);
 
 		lua_geti(L, -1, 2);
-		ds.offset = (uint32_t)lua_tointeger(L, -1);
+		ds.offset = (uint32_t)lua_tointeger(L, -1) - 1;
 		lua_pop(L, 1);
 
 		lua_geti(L, -1, 3);

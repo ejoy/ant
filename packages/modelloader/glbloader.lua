@@ -88,58 +88,61 @@ local function gen_indices_flags(accessor)
 	return flags
 end
 
-local function create_ib_handle(bv, bufferflag, bindata, buffers)
+local function fetch_ib_info(bv, bufferflag, bindata, buffers)
 	if bindata then
 		local start_offset = bv.byteOffset + 1
-		local end_offset = start_offset + bv.byteLength
-		local value = bindata:sub(start_offset, end_offset)
-		return bgfx.create_index_buffer({
-			bindata, start_offset, end_offset
-		}, bufferflag)
+		return {
+			type = "static",
+			value = bindata,
+			start = start_offset,
+			num = bv.byteLength,
+			flag = bufferflag,
+		}
 	end
 
 	assert(buffers)
 	local buffer = buffers[assert(bv.buffer)+1]
 	local appdata = buffer.extras
 	if buffer.extras then
-		return bgfx.create_index_buffer(appdata)
+		return {
+			type = "static",
+			value = appdata[1],
+			start = appdata[2],
+			num = appdata[3] - appdata[2],
+			flag = bufferflag,
+		}
 	end
 
 	assert("not implement from uri")
 end
 
-local function create_vb_handle(bv, declinfo, bindata, buffers)
+local function fetch_vb_info(bv, declinfo, bindata, buffers)
 	local buffertype = declinfo.type
 	local declname = declinfo.declname
-	local start_offset = bv.byteOffset + 1
-	local end_offset = start_offset + bv.byteLength
 
 	if bindata then
-		if buffertype == "dynamic" then
-			local value = bindata:sub(start_offset, end_offset-1)
-			return nil, {
-				data = value,
-				declname = declname,
-			}
-		end
-		
-		return bgfx.create_vertex_buffer(
-			{"!", bindata, start_offset, end_offset,}, declmgr.get(declname).handle
-		)
+		local start_offset = bv.byteOffset + 1
+		return {
+			type = buffertype,
+			declname = declname,
+			value 	= bindata,
+			start 	= start_offset,
+			num 	= bv.byteLength,
+		}
 	end
 
 	assert(buffers)
 	local buffer = buffers[assert(bv.buffer)+1]
 	local appdata = buffer.extras
 	if buffer.extras then
-		if buffertype == "dynamic" then
-			return nil, {
-				data = appdata,
-				declname = declname
-			}
-		end
-
-		return bgfx.create_vertex_buffer(appdata, declmgr.get(declname).handle)
+		assert(appdata[1] == "!")
+		return {
+			type = buffertype,
+			declname = declname,
+			value = appdata[2],
+			start = appdata[3],
+			num = appdata[4] - appdata[3],
+		}
 	end
 
 	assert("not implement from uri")
@@ -196,7 +199,7 @@ local function init_scene(gltfscene, bindata, config)
 	end
 	local layout_types 	= config.config.layout_types
 
-	local bvhandles = {}
+	local bvcaches = {}
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
 		for _, nodeidx in ipairs(gltfnodes) do
 			local node = gltfscene.nodes[nodeidx + 1]
@@ -226,28 +229,21 @@ local function init_scene(gltfscene, bindata, config)
 					local attribclass 	= classfiy_attri(prim.attributes, gltfscene.accessors)
 					local decls 		= create_decl(attribclass, layout, layout_types)
 
-					local handles, values = {}, {}
+					local values = {}
 					for bvidx, declinfo in pairs(decls) do
-						local bvcache = bvhandles[bvidx+1]
+						local vbcache = bvcaches[bvidx+1]
 						local bv = gltfscene.bufferViews[bvidx+1]
-						if bvcache == nil then
-							local handle, value = create_vb_handle(bv, declinfo, bindata, gltfscene.buffers)
-							bvcache = {
-								handle = handle or false,	-- need occupy an array slot
-								value = value or false,
-							}
-
-							bvhandles[bvidx+1] = bvcache
+						if vbcache == nil then
+							vbcache = fetch_vb_info(bv, declinfo, bindata, gltfscene.buffers)
+							bvcaches[bvidx+1] = vbcache
 						end
-						handles[#handles+1] = bvcache.handle
-						values[#values+1] = bvcache.value
+						values[#values+1] = vbcache
 					end
 
 					group.vb = {
-						handles = handles,
-						values = values,
-						start = 0,
-						num = gltfutil.num_vertices(prim, gltfscene),
+						values 	= values,
+						start 	= 0,
+						num 	= gltfutil.num_vertices(prim, gltfscene),
 					}
 
 					local indices_accidx = prim.indices
@@ -255,20 +251,16 @@ local function init_scene(gltfscene, bindata, config)
 						local idxacc = gltfscene.accessors[indices_accidx+1]
 						local bv = gltfscene.bufferViews[idxacc.bufferView+1]
 
-						local cache = bvhandles[idxacc.bufferView+1]
+						local cache = bvcaches[idxacc.bufferView+1]
 						if cache == nil then
-							local handle = create_ib_handle(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
-							cache = {
-								handle = handle
-							}
-							bvhandles[idxacc.bufferView+1] = cache
+							cache = fetch_ib_info(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
+							bvcaches[idxacc.bufferView+1] = cache
 						end
 
 						group.ib = {
-							handle = cache.handle,
-							value = cache.value,
-							start = 0,
-							num = idxacc.count,
+							value 	= cache,
+							start 	= 0,
+							num 	= idxacc.count,
 						}
 					end
 
@@ -282,7 +274,7 @@ local function init_scene(gltfscene, bindata, config)
 				end
 
 				if meshbounding:isvalid() then
-					meshnode.boundings = meshbounding
+					meshnode.bounding = meshbounding
 				end
 
 				scenegroups[#scenegroups+1] = meshnode

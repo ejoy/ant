@@ -5,6 +5,7 @@ local fs 		= require "filesystem"
 local bgfx 		= require "bgfx"
 local declmgr 	= require "vertexdecl_mgr"
 local mathbaselib = require "math3d.baselib"
+local animodule = require "hierarchy.animation"
 local hwi		= require "hardware_interface"
 
 local assetpkg 	= import_package "ant.asset"
@@ -396,28 +397,127 @@ local function check_rendermesh_lod(meshscene, lodidx)
 	end
 end
 
+function util.create_mesh_buffers(meshres)
+	local meshscene = {
+		sceneidx = meshres.sceneidx,
+		scenelods = meshres.scenelods,
+	}
+	local new_scenes = {}
+	for _, scene in ipairs(meshres.scenes) do
+		local new_scene = {}
+		for _, meshnode in ipairs(scene) do
+			local new_meshnode = {
+				bounding = meshnode.bounding,
+				transform = meshnode.transform,
+				meshname = meshnode.meshname,
+			}
+			for _, group in ipairs(meshnode) do
+				local vb = group.vb
+				local handles = {}
+				for _, value in ipairs(vb.values) do
+					local create_vb = value.type == "dynamic" and bgfx.create_dynamic_index_buffer or bgfx.create_vertex_buffer
+					local start_bytes = value.start
+					local end_bytes = start_bytes + value.num - 1
+
+					handles[#handles+1] = {
+						handle = create_vb({"!", value.value, start_bytes, end_bytes},
+											declmgr.get(value.declname).handle),
+						updatedata = value.type == "dynamic" and 
+									bgfx.memory_texture(value.value, start_bytes, end_bytes) or nil,
+					}
+				end
+				local new_meshgroup = {
+					bounding = group.bounding,
+					material = group.material,
+					mode = group.mode,
+					vb = {
+						start = vb.start,
+						num = vb.num,
+						handles = handles,
+					}
+				}
+	
+				local ib = group.ib
+				if ib then
+					local v = ib.value
+					local create_ib = v.type == "dynamic" and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer
+					local startbytes = v.start
+					local endbytes = startbytes+v.num-1
+					new_meshgroup.ib = {
+						start = ib.start,
+						num = ib.num,
+						handle = create_ib({v.value, startbytes, endbytes}, v.flag),
+						updatedata = v.type == "dynamic" and bgfx.memory_texture(v.value, startbytes, endbytes) or nil
+					}
+				end
+	
+				new_meshnode[#new_meshnode+1] = new_meshgroup
+			end
+
+			local ibp = meshnode.inverse_bind_poses
+			if ibp then
+				local ibp_joints = ibp.joints
+				local ibp_value = ibp.value
+				local ibp_result = animodule.new_bind_pose(#ibp_joints)
+				local function get_ibp_matrix_value(idx)
+					local start = (idx-1) * 64+1
+					local v = string.unpack("<c64", ibp_value, start)
+					return v
+				end
+
+				for jointidx=1, #ibp_joints do
+					ibp_result:joint(jointidx, get_ibp_matrix_value(jointidx))
+				end
+				new_meshnode.inverse_bind_poses = ibp_result
+				-- local bpresult = animodule.new_bind_pose(#ske)
+				-- local numjoints = #ske
+				-- local ibp_joints = ibp.joints
+				-- local ibp_value = ibp.value
+				-- local function get_ibp_matrix_value(idx)
+				-- 	local start = (idx-1) * 64+1
+				-- 	local v = string.unpack("<c64", ibp_value, start)
+				-- 	return v
+				-- end
+				-- local set_joints = {}
+				-- for i=1, #ibp_joints do
+				-- 	local jointidx = ibp_joints[i]+1
+				-- 	bpresult:joint(jointidx, get_ibp_matrix_value(i))
+				-- 	set_joints[jointidx] = true
+				-- end
+	
+				-- local mat_identity = ms(mc.mat_identity, "m")
+				-- for jointidx=1, numjoints do
+				-- 	if not set_joints[jointidx] then
+				-- 		bpresult:joint(jointidx, mat_identity)
+				-- 	end
+				-- end
+			end
+			new_scene[#new_scene+1] = new_meshnode
+		end
+		new_scenes[#new_scenes+1] = new_scene
+	end
+
+	meshscene.scenes = new_scenes
+		
+	return meshscene
+end
+
 function util.create_mesh(rendermesh, mesh)
 	local res = assetmgr.load(mesh.ref_path)
 	check_rendermesh_lod(res)
-	rendermesh.reskey = mesh.ref_path
-	-- just for debug
-	mesh.debug_rendermesh = rendermesh
-end
-
-function util.check_mesh_valid(rendermesh, mesh)
-	if rendermesh.reskey then
-		return mesh.debug_rendermesh == rendermesh
+	
+	local ref_path = mesh.ref_path
+	local reskey = fs.path ("//meshres/" .. ref_path:string())
+	local meshscene = assetmgr.get_resource(reskey)
+	if meshscene == nil then
+		local meshscene = util.create_mesh_buffers(res)
+		assetmgr.register_resource(reskey, meshscene)
+		-- just for debug
+		mesh.debug_meshscene_DOTNOT_DIRECTLY_USED 		= {meshscene, res}
+		rendermesh.debug_meshscene_DOTNOT_DIRECTLY_USED = mesh.debug_meshscene_DOTNOT_DIRECTLY_USED
 	end
-	return rendermesh.handle ~= nil
-end
 
-function util.remove_mesh(rendermesh, mesh)
-	if util.check_mesh_valid(rendermesh, mesh) then
-		rendermesh.reskey = nil
-		assetmgr.unload(mesh.ref_path)
-		mesh.ref_path = nil
-		mesh.debug_rendermesh = nil
-	end
+	rendermesh.reskey = reskey
 end
 
 function util.scene_index(lodidx, meshscene)

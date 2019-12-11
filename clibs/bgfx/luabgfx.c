@@ -3176,8 +3176,21 @@ lmemoryTexture(lua_State *L) {
 	} else if (intype == LUA_TSTRING){
 		size_t size;
 		const char* origdata = lua_tolstring(L, 1, &size);
+
+		//lua data range are both in closed interval and start from 1
+		//but c data range is different and start point in close interval, but end point in open interval, and start from 0
+		//so, a data range with 10 bytes data, in lua we express as: 
+		// [1, 10], size: 10 - 1 + 1 = 10 bytes, 
+		// but in c we express as: 
+		// [0, 10), size: 10 - 0 = 10 bytes
+		const int startbytes = lua_isnoneornil(L, 2) ? 0 :lua_tointeger(L, 2) - 1;
+		const int endbytes = lua_isnoneornil(L, 3) ? -1 : lua_tointeger(L, 3) - 1;
+
+		if (endbytes > startbytes)
+			size = (endbytes - startbytes + 1);
+
 		void * data = lua_newuserdata(L, size);
-		memcpy(data, origdata, size);
+		memcpy(data, origdata + startbytes, size);
 	} else {
 		return luaL_error(L, "not support argument type:%d", intype);
 	}
