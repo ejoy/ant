@@ -867,12 +867,22 @@ lnew_bind_pose(lua_State *L) {
 
 	size_t initdata_size = 0;
 	const float* initdata = nullptr;
-	if (lua_type(L, 2) == LUA_TSTRING){
-		initdata = (const float*)lua_tolstring(L, 2, &initdata_size);
+	switch (lua_type(L, 2)){
+		case LUA_TSTRING: initdata = (const float*)lua_tolstring(L, 2, &initdata_size); break;
+		case LUA_TUSERDATA:
+		case LUA_TLIGHTUSERDATA:
+		initdata = (const float*)lua_touserdata(L, 2);
+		if (lua_isnoneornil(L, 3)) 
+			return luaL_error(L, "argument 2 is userdata/light userdata, it require argument 3 to provide buffer size, but it not!");
 
- 		if (initdata_size != sizeof(ozz::math::Float4x4) * numjoints){
-			 return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
-		 }
+		initdata_size = lua_tointeger(L, 3);
+		break;
+		default:
+		return luaL_error(L, "argument 2 is not support type, only support string/userdata/light userdata");
+	}
+
+	if (initdata_size != sizeof(ozz::math::Float4x4) * numjoints){
+		 return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
 	}
 
 	bind_pose *result = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
@@ -1048,6 +1058,48 @@ lozzmesh_layout(lua_State *L){
 }
 
 static int
+lozzmesh_combinebuffer(lua_State *L){
+	auto om = get_ozzmesh(L);
+
+	const std::string layout = lua_tostring(L, 2);
+
+	auto updatedata = (uint8_t*)lua_touserdata(L, 3);
+	auto offset = luaL_optinteger(L, 4, 1) - 1;
+
+	auto outdata = updatedata + offset;
+
+	auto elems = split_string(layout, '|');
+
+	auto cp_vertex_attrib = [](const auto &contanier, uint32_t vertexidx, uint32_t elemnum, uint32_t elemsize, auto &outdata){
+		if (contanier.empty())
+			return;
+		const uint8_t * srcdata = (const uint8_t*)(&contanier.back());
+		const auto stride = elemnum * elemsize;
+		const auto offset = vertexidx * stride;
+		memcpy(outdata, srcdata + offset, stride);
+		outdata += stride;
+	};
+
+	for (auto &part : om->mesh->parts){
+		for (auto ii = 0; ii < part.vertex_count(); ++ii){
+			for (auto e : elems){
+				switch (e[0]){
+					case 'p': cp_vertex_attrib(part.positions, ii, ozz::sample::Mesh::Part::kPositionsCpnts, sizeof(float), outdata); break;
+					case 'n': cp_vertex_attrib(part.normals, ii, ozz::sample::Mesh::Part::kNormalsCpnts, sizeof(float), outdata); break;
+					case 'T': cp_vertex_attrib(part.tangents, ii, ozz::sample::Mesh::Part::kTangentsCpnts, sizeof(float), outdata); break;
+					case 'c': cp_vertex_attrib(part.colors, ii, ozz::sample::Mesh::Part::kColorsCpnts, sizeof(uint8_t), outdata); break;
+					case 't': cp_vertex_attrib(part.uvs, ii, ozz::sample::Mesh::Part::kUVsCpnts, sizeof(float), outdata); break;
+					default: return luaL_error(L, "not support layout element:%s", e.c_str());
+				}
+			}
+		}
+
+	}
+
+	return 0;
+}
+
+static int
 lozzmesh_vertex_buffer(lua_State *L){
 	auto om = get_ozzmesh(L);
 
@@ -1118,6 +1170,7 @@ static int
 lozzmesh_index_buffer(lua_State *L){
 	auto om = get_ozzmesh(L);
 	lua_pushlightuserdata(L, &om->mesh->triangle_indices.back());
+	lua_pushinteger(L, 2);	// stride is uint16_t
 	return 1;
 }
 
@@ -1215,6 +1268,9 @@ register_ozzmesh_mt(lua_State *L) {
 		{"vertex_buffer", lozzmesh_vertex_buffer},
 		{"bounding", lozzmesh_bounding},
 		{"num_part", lozz_numpart},
+		{"inverse_bind_matries", lozzmesh_inverse_bind_matries},
+		{"layout", lozzmesh_layout},
+		{"combine_buffer", lozzmesh_combinebuffer},
 		{"__gc", ldel_ozzmesh},
 		{nullptr, nullptr},
 	};

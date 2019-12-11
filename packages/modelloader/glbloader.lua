@@ -174,7 +174,7 @@ local function calc_node_transform(node, parentmat)
 	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
 end
 
-local function fetch_inverse_bind_poses(gltfscene, skinidx, bindata)
+local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
 	if skinidx then
 		local skin 		= gltfscene.skins[skinidx+1]
 		local ibm_idx 	= skin.inverseBindMatrices
@@ -214,7 +214,7 @@ local function init_scene(gltfscene, bindata, config)
 				local meshnode = {
 					nodename = node.name,
 					transform = ms:ref "matrix" (nodetrans),
-					inverse_bind_poses = fetch_inverse_bind_poses(gltfscene, node.skin, bindata),
+					inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
 				}
 				local mesh = gltfscene.meshes[meshidx+1]
 				local meshbounding = mathbaselib.new_bounding(ms)

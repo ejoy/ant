@@ -454,33 +454,21 @@ function util.create_mesh_buffers(meshres)
 				new_meshnode[#new_meshnode+1] = new_meshgroup
 			end
 
-			local ibp = meshnode.inverse_bind_poses
-			if ibp then
-				local ibp_joints = ibp.joints
-				local ibp_value = ibp.value
-				local ibp_result = animodule.new_bind_pose(#ibp_joints)
-				local function get_ibp_matrix_value(idx)
-					local start = (idx-1) * 64+1
-					local v = string.unpack("<c64", ibp_value, start)
-					return v
-				end
-
-				for jointidx=1, #ibp_joints do
-					ibp_result:joint(jointidx, get_ibp_matrix_value(jointidx))
-				end
-				new_meshnode.inverse_bind_poses = ibp_result
+			local ibm = meshnode.inverse_bind_matries
+			if ibm then
+				new_meshnode.inverse_bind_pose = animodule.new_bind_pose(#ibm.joints, ibm.value)
 				-- local bpresult = animodule.new_bind_pose(#ske)
 				-- local numjoints = #ske
-				-- local ibp_joints = ibp.joints
-				-- local ibp_value = ibp.value
+				-- local ibm_joints = ibp.joints
+				-- local ibm_value = ibp.value
 				-- local function get_ibp_matrix_value(idx)
 				-- 	local start = (idx-1) * 64+1
-				-- 	local v = string.unpack("<c64", ibp_value, start)
+				-- 	local v = string.unpack("<c64", ibm_value, start)
 				-- 	return v
 				-- end
 				-- local set_joints = {}
-				-- for i=1, #ibp_joints do
-				-- 	local jointidx = ibp_joints[i]+1
+				-- for i=1, #ibm_joints do
+				-- 	local jointidx = ibm_joints[i]+1
 				-- 	bpresult:joint(jointidx, get_ibp_matrix_value(i))
 				-- 	set_joints[jointidx] = true
 				-- end

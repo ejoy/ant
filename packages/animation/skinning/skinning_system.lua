@@ -22,13 +22,78 @@ local ozzmesh = ecs.component_alias("ozz_mesh", "resource") {depend = {"renderme
 local function gen_mesh_assetinfo(ozzmesh)
 	local meshhandle = assetmgr.get_resource(ozzmesh.ref_path).handle
 
-	local meshscene = {}
+	local layouts = meshhandle:layout()
+	local num_vertices = meshhandle:num_vertices()
 
-	local numpart = meshhandle:num_part()
-	for partidx=1, numpart do
-		local meshnode = {}
-		local numvertices = meshhandle:num_vertices()
+	local function find_layout(shortname, layouts)
+		for _, l in ipairs(layouts) do
+			if shortname == l:sub(1, 1) then
+				return l
+			end
+		end
 	end
+
+	local function generate_layout(shortnames, layouts)
+		local layout = {}
+		for _, sn in ipairs(shortnames) do
+			local l = find_layout(sn, layouts)
+			if l then
+				layout[#layout+1] = l
+			end
+		end
+
+		if next(layout) then
+			return table.concat(layout, '|')
+		end
+	end
+
+	local static_layout = generate_layout({'c', 't'}, layouts)
+	local static_stride = declmgr.layout_stride(static_layout)
+	local static_buffer = bgfx.memory_texture(num_vertices * static_stride)
+
+	local static_vbhandle = {
+		handle = bgfx.create_vertex_buffer(static_buffer)
+	}
+
+	local dynamic_layout = generate_layout({'p', 'n', 'T'}, layouts)
+	local dynamic_stride = declmgr.layout_stride(dynamic_layout)
+	local dynamic_vbhandle = {
+		handle = bgfx.create_dynamic_vertex_buffer(num_vertices * dynamic_stride),
+		updatedata = bgfx.memory_texture(num_vertices * dynamic_stride)
+	}
+
+	local meshgroup = {
+		vb = {
+			start = 0,
+			num = num_vertices,
+			handles = {
+				static_vbhandle,
+				dynamic_vbhandle,
+			}
+		}
+	}
+
+	local num_indices = meshhandle:num_indices()
+	
+	if num_indices ~= 0 then
+		local indices_buffer, stride = meshhandle:index_buffer()
+		meshgroup.ib = {
+			start = 0,
+			num = num_indices,
+			handle = bgfx.create_index_buffer({indices_buffer, 1, num_indices * stride})
+		}
+	end
+
+	return {
+		sceneidx = 0,
+		scenescale = 1.0,
+		scenes = {
+			{
+				inverse_bind_pose = animodule.new_bind_pose(meshhandle:inverse_bind_pose()),
+				meshgroup
+			}
+		}
+	}
 end
 
 function ozzmesh:postinit(e)
@@ -40,7 +105,7 @@ end
 
 
 local skinningmesh = ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation", "skeleton"}}
-.ref_path "string"
+.ref_path "respath"
 
 function skinningmesh:postinit(e)
 	local rm = e.rendermesh
