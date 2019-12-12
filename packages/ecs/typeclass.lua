@@ -53,7 +53,7 @@ end
 local function decl_basetype(class_register)
 	class_register.component_alias("tag", "boolean", true)
 	class_register.component_base("entityid", -1)
-	
+
 	class_register.component_base("int", 0)
 	class_register.component_base("real", 0.0)
 	class_register.component_base("string", "")

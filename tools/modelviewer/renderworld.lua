@@ -155,6 +155,14 @@ local function quad_clear_test()
 	create_viewport_test("quadtest2", fbidx, {x=2048,y=0,w=1024,h=1024})
 end
 
+local function a2c(t)
+	local r = t[1]
+	for i = 2, #t do
+		r[i-1] = t[i]
+	end
+	return r
+end
+
 function model_review_system:init()
 	create_light()
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
@@ -202,7 +210,7 @@ function model_review_system:init()
 		transform 	= mu.scale_mat(0.2),
 		rendermesh 	= {},
 		mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/campsite-door.mesh", asyn_load=true},
-		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true}},
+		material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true},
 		can_render 	= true,
 		asyn_load	= "",
 		can_cast	= true,
@@ -214,7 +222,7 @@ function model_review_system:init()
 		transform 	= mu.srt({0.2, 0.2, 0.2}, nil, {5, 0, 0}),
 		rendermesh 	= {},
 		mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/woodother-34.mesh", asyn_load=true},
-		material 	= {{ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true}},
+		material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true},
 		can_render 	= true,
 		asyn_load	= "",
 		can_cast	= true,
@@ -249,7 +257,7 @@ function model_review_system:init()
 			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
 			asyn_load = true,
 		},
-		material = {
+		material = a2c {
 			create_material_item(singlecolor_material, {1, 0, 0, 0}),
 			create_material_item(singlecolor_material, {0, 1, 0, 0}),
 			create_material_item(singlecolor_material, {0, 0, 1, 0}),

@@ -135,20 +135,32 @@ function world:new_entity_id()
 end
 
 function world:set_entity(eid, t)
-	local entity = {}
-	self[eid] = entity
+	local init = policy.apply(self, t.policy, t.data)
+	local e = {}
+	self[eid] = e
 	self._entity[eid] = true
-	for c, args in sortcomponent(self, t) do
-		entity[c] = self:create_component(c, args)
-		self:register_component(eid, c)
-		self:init_component(entity, c)
+	for _, c in ipairs(init[1]) do
+		if t.data[c] then
+			e[c] = self:create_component(c, t.data[c])
+			self:register_component(eid, c)
+		end
+	end
+	for _, f in ipairs(init[2]) do
+		f(e)
 	end
 	self:mark(eid, "entity_create")
 end
 
 function world:create_entity(t)
 	local eid = self:new_entity_id()
-	self:set_entity(eid, t)
+	local policy = {"compat"}
+	if t.render_target then
+		policy[#policy+1] = "render_target"
+	end
+	self:set_entity(eid, {
+		policy = policy,
+		data = t,
+	})
 	return eid
 end
 
@@ -479,7 +491,7 @@ local function init_modules(w, packages, systems, loader)
 	for k in pairs(delete) do
 		class.system[k] = nil
 	end
-	return class
+	return class, reg
 end
 
 function world:groups()
@@ -599,9 +611,15 @@ function ecs.new_world(config)
 	}, world)
 
 	-- load systems and components from modules
-	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
+	local class, class_register = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
 	w:slove_component()
+
+	local m = class_register.policy "compat"
+	for name in pairs(class.component) do
+		m.require_component(name)
+	end
+
 	for name, v in pairs(class.transform) do
 		if #v.input == 0 then
 			error(("transform `%s`'s input cannot be empty."):format(name))
