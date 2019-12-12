@@ -52,6 +52,10 @@ struct ozzmesh {
 	uint8_t * static_buffer;
 };
 
+struct aligned_memory{
+	void* ptr;
+};
+
 template<typename T>
 static ozz::Range<T>
 create_range(size_t count) {
@@ -96,70 +100,6 @@ static_vertex_elem_stride(ozzmesh *om) {
 		stride += ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float);
 
 	return stride;
-}
-
-static int
-llayout_ozzmesh(lua_State *L) {
-	int numarg = lua_gettop(L);
-	if (numarg < 2) {
-		luaL_error(L, "need 1: ozzmesh, 2: type(dynamic/static) two argument");
-		return 0;
-	}
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
-	luaL_checktype(L, 2, LUA_TSTRING);
-	const char* type = lua_tostring(L, 2);
-	
-	const char *deflayout = "_30NIf";
-	auto mesh = om->mesh;
-
-	auto &part = mesh->parts.back();
-
-	std::string layout;
-	if (strcmp(type, "dynamic") == 0) {
-		std::string pos(deflayout);
-		pos[0] = 'p';
-		layout = pos;
-
-		if (!part.normals.empty()) {
-			std::string normal(deflayout);
-			normal[0] = 'n';
-			normal[1] = '0' + ozz::sample::Mesh::Part::kNormalsCpnts;
-			layout += "|" + normal;
-		}
-
-		if (!part.tangents.empty()) {
-			std::string tangent(deflayout);
-			tangent[0] = 'T';
-			tangent[1] = '0' + ozz::sample::Mesh::Part::kTangentsCpnts;
-			layout += "|" + tangent;
-		}
-
-	} else if (strcmp(type, "static") == 0) {
-		if (!part.colors.empty()) {
-			std::string color(deflayout);
-			color[0] = 'c';
-			color[1] = '0' + ozz::sample::Mesh::Part::kColorsCpnts;
-			color[3] = 'n';
-			color[5] = 'u';
-			layout = color;		
-		}
-
-		if (!part.uvs.empty()) {
-			std::string uv(deflayout);
-			uv[0] = 't';
-			uv[1] = '0' + ozz::sample::Mesh::Part::kUVsCpnts;
-			if (layout.empty())
-				layout = uv;
-			else
-				layout += "|" + uv;
-		}
-	} else {
-		luaL_error(L, "not support type : %s", type);
-	}
-
-	lua_pushstring(L, layout.c_str());
-	return 1;
 }
 
 // static int
@@ -244,8 +184,9 @@ typedef vertex_data<void> out_vertex_data;
 
 template<typename DataStride>
 static void
-read_data_stride(lua_State *L, int elem_index, int index, DataStride &ds){
-	lua_geti(L, index, elem_index);
+read_data_stride(lua_State *L, const char* name, int index, DataStride &ds){
+	const int type = lua_getfield(L, index, name);
+	if (type != LUA_TNIL)
 	{
 		lua_geti(L, -1, 1);
 		const int type = lua_type(L, -1);
@@ -273,19 +214,16 @@ read_data_stride(lua_State *L, int elem_index, int index, DataStride &ds){
 template<typename DataType>
 static void
 read_vertex_data(lua_State* L, int index, vertex_data<DataType>& vd) {
-	const int positions = 1, normals = 2, tangents = 3;
-	read_data_stride(L, positions, index, vd.positions);
-	read_data_stride(L, normals, index, vd.normals);
-	read_data_stride(L, tangents, index, vd.tangents);
+	read_data_stride(L, "POSITION", index, vd.positions);
+	read_data_stride(L, "NORMAL", index, vd.normals);
+	read_data_stride(L, "TANGENT", index, vd.tangents);
 }
 
 static void
 read_in_vertex_data(lua_State *L, int index, in_vertex_data &vd){
 	read_vertex_data(L, index, vd);
-
-	const int joint_weights = 4, joint_indices = 5;
-	read_data_stride(L, joint_weights, index, vd.joint_weights);
-	read_data_stride(L, joint_indices, index, vd.joint_indices);
+	read_data_stride(L, "WEIGHT", index, vd.joint_weights);
+	read_data_stride(L, "INDICES", index, vd.joint_indices);
 }
 
 template<typename T, typename DataT>
@@ -330,17 +268,33 @@ lmesh_skinning(lua_State *L){
 	skinning_job.influences_count = influences_count;
 	skinning_job.joint_matrices = ozz::make_range(skinning_matrices);
 	
+	assert(vd.positions.data && "skinning system must provide 'position' attribute");
+
 	fill_skinning_job_field(num_vertices, vd.positions, skinning_job.in_positions, skinning_job.in_positions_stride);
 	fill_skinning_job_field(num_vertices, ovd.positions, skinning_job.out_positions, skinning_job.out_positions_stride);
 
-	fill_skinning_job_field(num_vertices, vd.normals, skinning_job.in_normals, skinning_job.in_normals_stride);
-	fill_skinning_job_field(num_vertices, ovd.normals, skinning_job.out_normals, skinning_job.out_normals_stride);
+	if (vd.normals.data) {
+		fill_skinning_job_field(num_vertices, vd.normals, skinning_job.in_normals, skinning_job.in_normals_stride);
+	}
 
-	fill_skinning_job_field(num_vertices, vd.tangents, skinning_job.in_tangents, skinning_job.in_tangents_stride);
-	fill_skinning_job_field(num_vertices, ovd.tangents, skinning_job.out_tangents, skinning_job.out_tangents_stride);
-
-	fill_skinning_job_field(num_vertices, vd.joint_weights, skinning_job.joint_weights, skinning_job.joint_weights_stride);
+	if (ovd.normals.data) {
+		fill_skinning_job_field(num_vertices, ovd.normals, skinning_job.out_normals, skinning_job.out_normals_stride);
+	}
 	
+	if (vd.tangents.data) {
+		fill_skinning_job_field(num_vertices, vd.tangents, skinning_job.in_tangents, skinning_job.in_tangents_stride);
+	}
+
+	if (ovd.tangents.data) {
+		fill_skinning_job_field(num_vertices, ovd.tangents, skinning_job.out_tangents, skinning_job.out_tangents_stride);
+	}
+
+	if (influences_count > 1) {
+		assert(vd.joint_weights.data && "joint weight data is not valid!");
+		fill_skinning_job_field(num_vertices, vd.joint_weights, skinning_job.joint_weights, skinning_job.joint_weights_stride);
+	}
+		
+	assert(vd.joint_indices.data && "skinning job must provide 'indices' attribute");
 	fill_skinning_job_field(num_vertices, vd.joint_indices, skinning_job.joint_indices, skinning_job.joint_indices_stride);
 
 	if (!skinning_job.Run()) {
@@ -867,23 +821,25 @@ lnew_bind_pose(lua_State *L) {
 
 	size_t initdata_size = 0;
 	const float* initdata = nullptr;
-	switch (lua_type(L, 2)){
-		case LUA_TSTRING: initdata = (const float*)lua_tolstring(L, 2, &initdata_size); break;
-		case LUA_TUSERDATA:
-		case LUA_TLIGHTUSERDATA:
-		initdata = (const float*)lua_touserdata(L, 2);
-		if (lua_isnoneornil(L, 3)) 
-			return luaL_error(L, "argument 2 is userdata/light userdata, it require argument 3 to provide buffer size, but it not!");
 
-		initdata_size = lua_tointeger(L, 3);
-		break;
-		default:
-		return luaL_error(L, "argument 2 is not support type, only support string/userdata/light userdata");
-	}
+	if (!lua_isnoneornil(L, 2)){
+		switch (lua_type(L, 2)){
+			case LUA_TSTRING: initdata = (const float*)lua_tolstring(L, 2, &initdata_size); break;
+			case LUA_TUSERDATA:
+			case LUA_TLIGHTUSERDATA:
+			initdata = (const float*)lua_touserdata(L, 2);
+			if (lua_isnoneornil(L, 3)) 
+				return luaL_error(L, "argument 2 is userdata/light userdata, it require argument 3 to provide buffer size, but it not!");
 
-	if (initdata_size != sizeof(ozz::math::Float4x4) * numjoints){
-		 return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
-	}
+			initdata_size = lua_tointeger(L, 3);
+			break;
+			default:
+			return luaL_error(L, "argument 2 is not support type, only support string/userdata/light userdata");
+		}
+		if (initdata_size != sizeof(ozz::math::Float4x4) * numjoints){
+			return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
+		}
+	} 
 
 	bind_pose *result = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
 	luaL_getmetatable(L, "OZZ_BIND_POSE");
@@ -1010,48 +966,49 @@ get_partindex(lua_State *L, ozzmesh *om, int index=2){
 }
 
 static int
-lozzmesh_inverse_bind_matries(lua_State *L){
+lozzmesh_inverse_bind_matrices(lua_State *L){
 	auto om = get_ozzmesh(L);
 	lua_pushlightuserdata(L, &om->mesh->inverse_bind_poses.back());
-	return 1;
+	lua_pushinteger(L, om->mesh->inverse_bind_poses.size());
+	return 2;
 }
 
 static int
 lozzmesh_layout(lua_State *L){
 	auto om = get_ozzmesh(L);
-	auto partidx = get_partindex(L, om);
+	const int partidx = lua_isnoneornil(L, 2) ? 0 : get_partindex(L, om);
 
 	lua_createtable(L, 0, 0);
 
 	const auto &part = om->mesh->parts[partidx];
 
-	auto set_elem = [L, part](uint32_t numelem, int itemidx, const std::string &def){
+	auto set_elem = [L, part](char shortname, uint32_t numelem, int itemidx, const std::string &def){
 		std::string elem(def);
+		elem[0] = shortname;
 		elem[1] = numelem + '0';
 		lua_pushstring(L, elem.c_str());
 		lua_seti(L, -2, ++itemidx);
-		return ++itemidx;
+		return itemidx;
 	};
 
 	const std::string defelem = "_30NIf";
 	
-	int arrayidx = 0;
-	arrayidx = set_elem(ozz::sample::Mesh::Part::kPositionsCpnts, arrayidx, defelem);
+	int arrayidx = set_elem('p', ozz::sample::Mesh::Part::kPositionsCpnts, 0, defelem);
 
 	if (!part.normals.empty()){
-		arrayidx = set_elem(ozz::sample::Mesh::Part::kNormalsCpnts, arrayidx, defelem);
+		arrayidx = set_elem('n', ozz::sample::Mesh::Part::kNormalsCpnts, arrayidx, defelem);
 	}
 
 	if (!part.tangents.empty()){
-		arrayidx = set_elem(ozz::sample::Mesh::Part::kTangentsCpnts, arrayidx, defelem);
+		arrayidx = set_elem('T', ozz::sample::Mesh::Part::kTangentsCpnts, arrayidx, defelem);
 	}
 
 	if (!part.colors.empty()){
-		arrayidx = set_elem(ozz::sample::Mesh::Part::kColorsCpnts, arrayidx, "_30nIu");
+		arrayidx = set_elem('c', ozz::sample::Mesh::Part::kColorsCpnts, arrayidx, "_30nIu");
 	}
 
 	if (!part.uvs.empty()){
-		arrayidx = set_elem(ozz::sample::Mesh::Part::kUVsCpnts, arrayidx, defelem);
+		arrayidx = set_elem('t', ozz::sample::Mesh::Part::kUVsCpnts, arrayidx, defelem);
 	}
 	
 	return 1;
@@ -1089,6 +1046,11 @@ lozzmesh_combinebuffer(lua_State *L){
 					case 'T': cp_vertex_attrib(part.tangents, ii, ozz::sample::Mesh::Part::kTangentsCpnts, sizeof(float), outdata); break;
 					case 'c': cp_vertex_attrib(part.colors, ii, ozz::sample::Mesh::Part::kColorsCpnts, sizeof(uint8_t), outdata); break;
 					case 't': cp_vertex_attrib(part.uvs, ii, ozz::sample::Mesh::Part::kUVsCpnts, sizeof(float), outdata); break;
+					case 'w': 
+						if (part.influences_count() > 1)
+							cp_vertex_attrib(part.joint_weights, ii, part.influences_count() - 1, sizeof(float), outdata);
+						break;
+					case 'i': cp_vertex_attrib(part.joint_indices, ii, part.influences_count(), sizeof(uint16_t), outdata); break;
 					default: return luaL_error(L, "not support layout element:%s", e.c_str());
 				}
 			}
@@ -1097,6 +1059,17 @@ lozzmesh_combinebuffer(lua_State *L){
 	}
 
 	return 0;
+}
+
+static int
+lozzmesh_influences_count(lua_State *L){
+	auto om = get_ozzmesh(L);
+	auto partidx = get_partindex(L, om);
+
+	const auto &part = om->mesh->parts[partidx];
+	lua_pushinteger(L, part.influences_count());
+	
+	return 1;
 }
 
 static int
@@ -1110,15 +1083,15 @@ lozzmesh_vertex_buffer(lua_State *L){
 
 	const auto &part = om->mesh->parts[partidx];
 
-	auto push_result = [L](auto datapointer, uint32_t stride){
+	auto push_result = [L](const auto& container, uint32_t stride){
 		lua_createtable(L, 3, 0);
 
 		// data
-		lua_pushlightuserdata(L, (void*)(datapointer));
+		lua_pushlightuserdata(L, (void*)(&container.back()));
 		lua_seti(L, -2, 1);
 
 		// offset
-		lua_pushinteger(L, 0);	// no offset
+		lua_pushinteger(L, 1);	// no offset, lua index from 1
 		lua_seti(L, -2, 2);
 
 		// stride
@@ -1126,24 +1099,33 @@ lozzmesh_vertex_buffer(lua_State *L){
 		lua_seti(L, -2, 3);
 	};
 
-	if (attribname == "position"){
-		push_result(&part.positions.back(), ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float));
-	}else if(attribname == "normal") {
+	if (attribname == "POSITION"){
+		push_result(part.positions, ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float));
+	}else if(attribname == "NORMAL") {
 		if (part.normals.empty())
 			return 0;
-		push_result(&part.normals.back(), ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float));
-	}else if(attribname == "tangent"){
+		push_result(part.normals, ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float));
+	}else if(attribname == "TANGENT"){
 		if (part.tangents.empty())
 			return 0;
-		push_result(&part.tangents.back(), ozz::sample::Mesh::Part::kTangentsCpnts * sizeof(float));
-	}else if(attribname == "color"){
+		push_result(part.tangents, ozz::sample::Mesh::Part::kTangentsCpnts * sizeof(float));
+	}else if(attribname == "COLOR"){
 		if (part.colors.empty())
 			return 0;
-		push_result(&part.colors.back(), ozz::sample::Mesh::Part::kColorsCpnts * sizeof(uint8_t));
-	}else if (attribname == "texcoord"){
+		push_result(part.colors, ozz::sample::Mesh::Part::kColorsCpnts * sizeof(uint8_t));
+	}else if (attribname == "TEXCOORD"){
 		if (part.uvs.empty())
 			return 0;
-		push_result(&part.uvs.back(), ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float));
+		push_result(part.uvs, ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float));
+	} else if (attribname == "WEIGHT"){
+		if (part.influences_count() <= 1 || part.joint_weights.empty())
+			return 0;
+		push_result(part.joint_weights, (part.influences_count() - 1) * sizeof(float));
+	} else if (attribname == "INDICES"){
+		if (part.joint_indices.empty())
+			return 0;
+
+		push_result(part.joint_indices, part.influences_count() * sizeof(uint16_t));
 	}else{
 		return luaL_error(L, "invalid attribute name:%s", attribname.c_str());
 	}
@@ -1171,7 +1153,7 @@ lozzmesh_index_buffer(lua_State *L){
 	auto om = get_ozzmesh(L);
 	lua_pushlightuserdata(L, &om->mesh->triangle_indices.back());
 	lua_pushinteger(L, 2);	// stride is uint16_t
-	return 1;
+	return 2;
 }
 
 static int
@@ -1205,6 +1187,35 @@ lozz_numpart(lua_State *L){
 	auto om = get_ozzmesh(L);
 	lua_pushinteger(L, om->mesh->parts.size());
 	return 1;
+}
+
+static int
+lmemory_new(lua_State *L){
+	const size_t sizebytes = (size_t)lua_tointeger(L, 1);
+	const size_t aligned = (size_t)luaL_optinteger(L, 2, 16);
+
+	aligned_memory* am =  (aligned_memory*)lua_newuserdatauv(L, sizeof(aligned_memory), 0);
+	luaL_getmetatable(L, "ALIGNED_MEMORY");
+	lua_setmetatable(L, -2);
+
+	am->ptr = ozz::memory::default_allocator()->Allocate(sizebytes, aligned);
+	return 1;
+}
+
+static int
+lmemory_pointer(lua_State *L){
+	auto am = (aligned_memory*)lua_touserdata(L, 1);
+	lua_pushlightuserdata(L, am->ptr);
+	return 1;
+}
+
+static int
+lmemory_del(lua_State *L){
+	luaL_checkudata(L, 1, "ALIGNED_MEMORY");
+	auto am = (aligned_memory*)lua_touserdata(L, 1);
+	ozz::memory::default_allocator()->Deallocate(am->ptr);
+
+	return 0;
 }
 
 static void 
@@ -1268,9 +1279,10 @@ register_ozzmesh_mt(lua_State *L) {
 		{"vertex_buffer", lozzmesh_vertex_buffer},
 		{"bounding", lozzmesh_bounding},
 		{"num_part", lozz_numpart},
-		{"inverse_bind_matries", lozzmesh_inverse_bind_matries},
+		{"inverse_bind_matrices", lozzmesh_inverse_bind_matrices},
 		{"layout", lozzmesh_layout},
 		{"combine_buffer", lozzmesh_combinebuffer},
+		{"influences_count", lozzmesh_influences_count},
 		{"__gc", ldel_ozzmesh},
 		{nullptr, nullptr},
 	};
@@ -1310,6 +1322,20 @@ register_bind_pose_soa_mt(lua_State *L) {
 	luaL_setfuncs(L, l, 0);
 }
 
+static void
+register_aligned_memory(lua_State *L){
+	luaL_newmetatable(L, "ALIGNED_MEMORY");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+	luaL_Reg l[] = {
+		{"pointer", lmemory_pointer},
+		{"__gc", lmemory_del},
+		{nullptr, nullptr},
+	};
+
+	luaL_setfuncs(L, l, 0);
+}
+
 extern "C" {
 LUAMOD_API int
 luaopen_hierarchy_animation(lua_State *L) {
@@ -1318,6 +1344,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 	register_ozzmesh_mt(L);
 	register_bind_pose_mt(L);
 	register_bind_pose_soa_mt(L);
+	register_aligned_memory(L);
 
 	luaL_Reg l[] = {
 		{ "mesh_skinning", lmesh_skinning},
@@ -1330,6 +1357,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "new_sampling_cache", lnew_sampling_cache},
 		{ "new_bind_pose", lnew_bind_pose,},
 		{ "new_bind_pose_soa", lnew_bind_pose_soa},
+		{ "new_aligned_memory", lmemory_new},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

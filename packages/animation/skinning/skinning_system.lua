@@ -50,19 +50,19 @@ local function gen_mesh_assetinfo(ozzmesh)
 	local static_layout = generate_layout({'c', 't'}, layouts)
 	local static_stride = declmgr.layout_stride(static_layout)
 	local static_buffer = bgfx.memory_texture(num_vertices * static_stride)
-
+	meshhandle:combine_buffer(static_layout, static_buffer)
 	local static_vbhandle = {
-		handle = bgfx.create_vertex_buffer(static_buffer)
+		handle = bgfx.create_vertex_buffer(static_buffer, declmgr.get(static_layout).handle)
 	}
 
 	local dynamic_layout = generate_layout({'p', 'n', 'T'}, layouts)
 	local dynamic_stride = declmgr.layout_stride(dynamic_layout)
 	local dynamic_vbhandle = {
-		handle = bgfx.create_dynamic_vertex_buffer(num_vertices * dynamic_stride),
-		updatedata = bgfx.memory_texture(num_vertices * dynamic_stride)
+		handle = bgfx.create_dynamic_vertex_buffer(num_vertices * dynamic_stride, declmgr.get(dynamic_layout).handle),
+		updatedata = animodule.new_aligned_memory(num_vertices * dynamic_stride, 4)
 	}
 
-	local meshgroup = {
+	local primitive = {
 		vb = {
 			start = 0,
 			num = num_vertices,
@@ -77,20 +77,26 @@ local function gen_mesh_assetinfo(ozzmesh)
 	
 	if num_indices ~= 0 then
 		local indices_buffer, stride = meshhandle:index_buffer()
-		meshgroup.ib = {
+		primitive.ib = {
 			start = 0,
 			num = num_indices,
 			handle = bgfx.create_index_buffer({indices_buffer, 1, num_indices * stride})
 		}
 	end
 
+	local ibm_pointer, ibm_count = meshhandle:inverse_bind_matrices()
+
 	return {
-		sceneidx = 0,
+		sceneidx = 1,
 		scenescale = 1.0,
 		scenes = {
+			--scene
 			{
-				inverse_bind_pose = animodule.new_bind_pose(meshhandle:inverse_bind_pose()),
-				meshgroup
+				--meshnode
+				{
+					inverse_bind_pose = animodule.new_bind_pose(ibm_count, ibm_pointer, ibm_count * 64),
+					primitive
+				}
 			}
 		}
 	}
@@ -146,7 +152,8 @@ local function layout_desc(elem_prefixs, layout_elems, layout_stride, pointer, o
 
 	for _, elem_prefix in ipairs(elem_prefixs) do
 		local elem = find_elem(elem_prefix, layout_elems)
-		desc[#desc+1], offset = create_node(elem, offset, layout_stride, pointer, offset)
+		local name = declmgr.name_mapper[elem_prefix]
+		desc[name], offset = create_node(elem, offset, layout_stride, pointer)
 	end
 	return desc
 end
@@ -178,7 +185,7 @@ function skinning_sys:update()
 							layout_elems[#layout_elems+1] = elem
 						end
 
-						animodule.mesh_skinning(aniresult, meshnode.inverse_bind_pose_result,
+						animodule.mesh_skinning(aniresult, meshnode.inverse_bind_pose,
 							layout_desc({'p', 'n', 'T', 'w', 'i'}, layout_elems, layout_stride, vbvalue, offset),
 							layout_desc({'p', 'n', 'T'}, layout_elems, layout_stride, updatedata), vb.num)
 
@@ -187,16 +194,67 @@ function skinning_sys:update()
 				end
 			end
 		end
+	end
 
-		-- local sm 		= assetmgr.get_resource(e.skinning_mesh.ref_path).handle
-		-- local aniresult = e.animation.aniresult
-		
-		-- -- update data include : position, normal, tangent
-		-- animodule.skinning(sm, aniresult)
+	for _, eid in world:each "ozz_mesh" do
+		local e = world[eid]
+		local meshres = assetmgr.get_resource(e.ozz_mesh.ref_path).handle
+		local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
 
-		-- -- update mesh dynamic buffer
-		-- local group = meshscene.scenes[1][1][1]
-		-- local buffer, size = sm:buffer("dynamic")
-		-- bgfx.update(group.vb.handles[1], 0, {"!", buffer, size})
+		local aniresult = e.animation.aniresult
+
+		local meshscene = meshscene.scenes[meshscene.sceneidx]
+		assert(#meshscene == 1 and #meshscene[1] == 1)
+		local meshnode = meshscene[1]
+
+		local primitive = meshscene[1][1]
+		local ibp = meshnode.inverse_bind_pose
+
+		local vb = primitive.vb
+
+		for _, handle in ipairs(vb.handles) do
+			local updatedata = handle.updatedata
+			if updatedata then
+				local num_part = meshres:num_part()
+				local outptr = updatedata:pointer()
+
+				local output_buffer_offset = 0
+				for ipart=1, num_part do
+					local part_num_vertices = meshres:num_vertices(ipart)
+					local input_desc, output_desc = {}, {}
+
+					for _, n in ipairs {"p", "n", "T", "w", "i"} do
+						local name = declmgr.name_mapper[n]
+						input_desc[name] = meshres:vertex_buffer(ipart, name)
+					end
+
+					local offset = 0
+					for _, n in ipairs{"p", "n", "T"} do
+						local name = declmgr.name_mapper[n]
+						local input = input_desc[name]
+						output_desc[name] = {
+							outptr,
+							output_buffer_offset + offset + 1,
+							nil,
+						}
+						offset = offset + input[3]
+					end
+
+					local layout_stride = offset
+					for _, output in pairs(output_desc) do
+						output[3] = layout_stride
+					end
+
+					output_buffer_offset = output_buffer_offset + layout_stride * part_num_vertices
+
+					animodule.mesh_skinning(aniresult, ibp,
+						input_desc, output_desc,
+						part_num_vertices, meshres:influences_count(ipart)
+					)
+				end
+
+				bgfx.update(handle.handle, 0, {'!', outptr, output_buffer_offset})
+			end
+		end
 	end
 end

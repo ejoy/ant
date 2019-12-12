@@ -82,12 +82,12 @@ local function create_animation_test()
         material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
         animation = {
             anilist = {
-                ani1 = {
+                idle = {
                     ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
                     scale = 1,
                     looptimes = 0,
                 },
-                ani2 = {
+                walk = {
                     ref_path = respath / meshdir / 'animation' / 'animation2.ozz',
                     scale = 1,
                     looptimes = 0,
@@ -101,10 +101,11 @@ local function create_animation_test()
                 walk = {
                     {name = "walk",weight=1},
                 },
-                run = {
-                    {name = "run", weight=1},
-                }
-            }
+                -- run = {
+                --     {name = "run", weight=1},
+                -- }
+            },
+            birth_pose = "idle",
         },
         state_chain = {
             ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
@@ -112,7 +113,7 @@ local function create_animation_test()
         skeleton = {
             ref_path = respath / skepath
         },
-        skinning_mesh = {
+        ozz_mesh = {
             ref_path = respath / smpath
         },
         name = 'animation_sample',
@@ -256,9 +257,9 @@ function init_loader:init()
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_plane_test()
 
-    --create_animation_test()
+    create_animation_test()
     pbr_test()
-    gltf_animation_test()
+    --gltf_animation_test()
     pbrscene.create_scene(world)
 end
 
