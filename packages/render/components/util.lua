@@ -106,7 +106,7 @@ function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
 	return util.assign_group_as_mesh {
 		vb = {
 			handles = {
-				bgfx.create_vertex_buffer(vb, declmgr.get(vertex_desc).handle),
+				{handle = bgfx.create_vertex_buffer(vb, declmgr.get(vertex_desc).handle)},
 			},
 			start = 0, num = num_vertices,
 		},

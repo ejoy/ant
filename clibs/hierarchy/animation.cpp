@@ -70,7 +70,7 @@ dynamic_vertex_elem_stride(ozzmesh *om) {
 		return 0;
 	}
 
-	const auto &part = mesh->parts.back();
+	const auto &part = mesh->parts.front();
 	assert(!part.positions.empty());
 
 	size_t num_elem = ozz::sample::Mesh::Part::kPositionsCpnts;
@@ -89,7 +89,7 @@ static_vertex_elem_stride(ozzmesh *om) {
 	if (mesh->parts.empty())
 		return 0;
 
-	const auto &part = mesh->parts.back();
+	const auto &part = mesh->parts.front();
 	assert(!part.positions.empty());
 
 	size_t stride = 0;
@@ -968,7 +968,7 @@ get_partindex(lua_State *L, ozzmesh *om, int index=2){
 static int
 lozzmesh_inverse_bind_matrices(lua_State *L){
 	auto om = get_ozzmesh(L);
-	lua_pushlightuserdata(L, &om->mesh->inverse_bind_poses.back());
+	lua_pushlightuserdata(L, &om->mesh->inverse_bind_poses.front());
 	lua_pushinteger(L, om->mesh->inverse_bind_poses.size());
 	return 2;
 }
@@ -1030,7 +1030,7 @@ lozzmesh_combinebuffer(lua_State *L){
 	auto cp_vertex_attrib = [](const auto &contanier, uint32_t vertexidx, uint32_t elemnum, uint32_t elemsize, auto &outdata){
 		if (contanier.empty())
 			return;
-		const uint8_t * srcdata = (const uint8_t*)(&contanier.back());
+		const uint8_t * srcdata = (const uint8_t*)(&contanier.front());
 		const auto stride = elemnum * elemsize;
 		const auto offset = vertexidx * stride;
 		memcpy(outdata, srcdata + offset, stride);
@@ -1087,7 +1087,7 @@ lozzmesh_vertex_buffer(lua_State *L){
 		lua_createtable(L, 3, 0);
 
 		// data
-		lua_pushlightuserdata(L, (void*)(&container.back()));
+		lua_pushlightuserdata(L, (void*)(&container.front()));
 		lua_seti(L, -2, 1);
 
 		// offset
@@ -1151,7 +1151,7 @@ lozzmesh_num_vertices(lua_State *L) {
 static int
 lozzmesh_index_buffer(lua_State *L){
 	auto om = get_ozzmesh(L);
-	lua_pushlightuserdata(L, &om->mesh->triangle_indices.back());
+	lua_pushlightuserdata(L, &om->mesh->triangle_indices.front());
 	lua_pushinteger(L, 2);	// stride is uint16_t
 	return 2;
 }

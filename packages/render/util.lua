@@ -100,8 +100,8 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 	end
 
 	local start_v, num_v = vb.start, vb.num
-	for idx, h in ipairs(vb.handles) do
-		local handle = h.handle
+	for idx, v in ipairs(vb.handles) do
+		local handle = v.handle
 		bgfx.set_vertex_buffer(idx-1, handle, start_v, num_v)
 	end
 	bgfx.submit(vid, prog, 0, false)
