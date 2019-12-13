@@ -259,7 +259,7 @@ function init_loader:init()
 
     create_animation_test()
     pbr_test()
-    --gltf_animation_test()
+    gltf_animation_test()
     pbrscene.create_scene(world)
 end
 

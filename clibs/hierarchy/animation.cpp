@@ -1237,7 +1237,7 @@ lnumpart_ozzmesh(lua_State *L){
 static int
 lnew_memory(lua_State *L){
 	const size_t sizebytes = (size_t)lua_tointeger(L, 1);
-	const size_t aligned = (size_t)luaL_optinteger(L, 2, 16);
+	const size_t aligned = (size_t)luaL_optinteger(L, 2, 4);
 
 	aligned_memory* am =  (aligned_memory*)lua_newuserdatauv(L, sizeof(aligned_memory), 0);
 	luaL_getmetatable(L, "ALIGNED_MEMORY");

@@ -415,15 +415,14 @@ function util.create_mesh_buffers(meshres)
 				local vb = group.vb
 				local handles = {}
 				for _, value in ipairs(vb.values) do
-					local create_vb = value.type == "dynamic" and bgfx.create_dynamic_index_buffer or bgfx.create_vertex_buffer
+					local create_vb = value.type == "dynamic" and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
 					local start_bytes = value.start
 					local end_bytes = start_bytes + value.num - 1
 
 					handles[#handles+1] = {
 						handle = create_vb({"!", value.value, start_bytes, end_bytes},
 											declmgr.get(value.declname).handle),
-						updatedata = value.type == "dynamic" and 
-									bgfx.memory_texture(value.value, start_bytes, end_bytes) or nil,
+						updatedata = value.type == "dynamic" and animodule.new_aligned_memory(value.num, 4) or nil,
 					}
 				end
 				local new_meshgroup = {
@@ -447,7 +446,7 @@ function util.create_mesh_buffers(meshres)
 						start = ib.start,
 						num = ib.num,
 						handle = create_ib({v.value, startbytes, endbytes}, v.flag),
-						updatedata = v.type == "dynamic" and bgfx.memory_texture(v.value, startbytes, endbytes) or nil
+						updatedata = v.type == "dynamic" and animodule.new_aligned_memory(v.num) or nil
 					}
 				end
 	

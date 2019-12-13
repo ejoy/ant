@@ -187,10 +187,12 @@ function skinning_sys:update()
 				local res_group = res_meshnode[groupidx]
 
 				local vb = group.vb
+				local res_vb = res_group.vb
 				for idx, handle in ipairs(vb.handles) do
 					local updatedata = handle.updatedata
 					if updatedata then
-						local res_value = res_group.values[idx]
+						local outptr = updatedata:pointer()
+						local res_value = res_vb.values[idx]
 						local vbvalue = res_value.value
 						local offset = res_value.start
 						local declname = res_value.declname
@@ -202,9 +204,9 @@ function skinning_sys:update()
 
 						animodule.mesh_skinning(aniresult, skinning_matrices,
 							layout_desc({'p', 'n', 'T', 'w', 'i'}, layout_elems, layout_stride, vbvalue, offset),
-							layout_desc({'p', 'n', 'T'}, layout_elems, layout_stride, updatedata), vb.num)
+							layout_desc({'p', 'n', 'T'}, layout_elems, layout_stride, outptr), vb.num)
 
-						bgfx.update(handle.handle, 0, {"!", updatedata, layout_stride * vb.num})
+						bgfx.update(handle.handle, 0, {"!", outptr, layout_stride * vb.num})
 					end
 				end
 			end
