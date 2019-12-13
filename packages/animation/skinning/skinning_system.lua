@@ -80,12 +80,12 @@ local function gen_mesh_assetinfo(ozzmesh)
 		primitive.ib = {
 			start = 0,
 			num = num_indices,
-			handle = bgfx.create_index_buffer({indices_buffer, 1, num_indices * stride})
+			handle = bgfx.create_index_buffer({indices_buffer, num_indices * stride})
 		}
 	end
 
 	local ibm_pointer, ibm_count = meshhandle:inverse_bind_matrices()
-
+	local joint_remapp_pointer, count = meshhandle:joint_remap()
 	return {
 		sceneidx = 1,
 		scenescale = 1.0,
@@ -94,7 +94,8 @@ local function gen_mesh_assetinfo(ozzmesh)
 			{
 				--meshnode
 				{
-					inverse_bind_pose = animodule.new_bind_pose(ibm_count, ibm_pointer, ibm_count * 64),
+					inverse_bind_pose 	= animodule.new_bind_pose(ibm_count, ibm_pointer),
+					joint_remap 		= animodule.new_joint_remap(joint_remapp_pointer, count),
 					primitive
 				}
 			}
@@ -106,7 +107,8 @@ function ozzmesh:postinit(e)
 	local rm = e.rendermesh
 
 	local reskey = fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh")
-	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(self))
+	local skehandle = assetmgr.get_resource(e.skeleton.ref_path).handle
+	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(self, skehandle))
 end
 
 
@@ -158,6 +160,17 @@ local function layout_desc(elem_prefixs, layout_elems, layout_stride, pointer, o
 	return desc
 end
 
+local function build_skinning_matrices(meshnode, aniresult)
+	local skinning_matrices = meshnode.skinning_matrices
+	if skinning_matrices == nil then
+		skinning_matrices = animodule.new_bind_pose(aniresult:count())
+		meshnode.skinning_matrices = skinning_matrices
+	end
+
+	animodule.build_skinning_matrices(skinning_matrices, aniresult, meshnode.inverse_bind_pose, meshnode.joint_remap)
+	return skinning_matrices
+end
+
 function skinning_sys:update()
 	for _, eid in world:each "skinning_mesh" do
 		local e = world[eid]
@@ -169,6 +182,8 @@ function skinning_sys:update()
 		for meshidx, meshnode in ipairs(meshscene.scenes[meshscene.sceneidx]) do
 			local res_meshnode = meshres.scenes[meshscene.sceneidx][meshidx]
 			for groupidx, group in ipairs(meshnode) do
+
+				local skinning_matrices = build_skinning_matrices(meshnode, aniresult)
 				local res_group = res_meshnode[groupidx]
 
 				local vb = group.vb
@@ -185,7 +200,7 @@ function skinning_sys:update()
 							layout_elems[#layout_elems+1] = elem
 						end
 
-						animodule.mesh_skinning(aniresult, meshnode.inverse_bind_pose,
+						animodule.mesh_skinning(aniresult, skinning_matrices,
 							layout_desc({'p', 'n', 'T', 'w', 'i'}, layout_elems, layout_stride, vbvalue, offset),
 							layout_desc({'p', 'n', 'T'}, layout_elems, layout_stride, updatedata), vb.num)
 
@@ -208,7 +223,7 @@ function skinning_sys:update()
 		local meshnode = meshscene[1]
 
 		local primitive = meshscene[1][1]
-		local ibp = meshnode.inverse_bind_pose
+		local skinning_matrices = build_skinning_matrices(meshnode, aniresult)
 
 		local vb = primitive.vb
 
@@ -247,7 +262,7 @@ function skinning_sys:update()
 
 					output_buffer_offset = output_buffer_offset + layout_stride * part_num_vertices
 
-					animodule.mesh_skinning(aniresult, ibp,
+					animodule.mesh_skinning(aniresult, skinning_matrices,
 						input_desc, output_desc,
 						part_num_vertices, meshres:influences_count(ipart)
 					)

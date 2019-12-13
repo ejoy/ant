@@ -456,29 +456,8 @@ function util.create_mesh_buffers(meshres)
 
 			local ibm = meshnode.inverse_bind_matries
 			if ibm then
-				new_meshnode.inverse_bind_pose = animodule.new_bind_pose(#ibm.joints, ibm.value)
-				-- local bpresult = animodule.new_bind_pose(#ske)
-				-- local numjoints = #ske
-				-- local ibm_joints = ibp.joints
-				-- local ibm_value = ibp.value
-				-- local function get_ibp_matrix_value(idx)
-				-- 	local start = (idx-1) * 64+1
-				-- 	local v = string.unpack("<c64", ibm_value, start)
-				-- 	return v
-				-- end
-				-- local set_joints = {}
-				-- for i=1, #ibm_joints do
-				-- 	local jointidx = ibm_joints[i]+1
-				-- 	bpresult:joint(jointidx, get_ibp_matrix_value(i))
-				-- 	set_joints[jointidx] = true
-				-- end
-	
-				-- local mat_identity = ms(mc.mat_identity, "m")
-				-- for jointidx=1, numjoints do
-				-- 	if not set_joints[jointidx] then
-				-- 		bpresult:joint(jointidx, mat_identity)
-				-- 	end
-				-- end
+				new_meshnode.inverse_bind_pose 	= animodule.new_bind_pose(ibm.num, ibm.value)
+				new_meshnode.joint_remap 		= animodule.new_joint_remap(ibm.joints)
 			end
 			new_scene[#new_scene+1] = new_meshnode
 		end

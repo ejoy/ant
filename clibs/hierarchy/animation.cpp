@@ -56,6 +56,10 @@ struct aligned_memory{
 	void* ptr;
 };
 
+struct joint_remap{
+	ozz::Vector<uint16_t>::Std joints;
+};
+
 template<typename T>
 static ozz::Range<T>
 create_range(size_t count) {
@@ -235,13 +239,53 @@ fill_skinning_job_field(uint32_t num_vertices, const DataT &d, ozz::Range<T> &r,
 	stride = d.stride;
 }
 
+static void
+build_skinning_matrices(bind_pose *skinning_matrices, 
+	const bind_pose* current_pose, 
+	const bind_pose* inverse_bind_matrices, 
+	const joint_remap *jarray){
+	if (jarray){
+		assert(jarray->joints.size() == inverse_bind_matrices->pose.size());
+		for (size_t ii = 0; ii < jarray->joints.size(); ++ii){
+			skinning_matrices->pose[ii] = current_pose->pose[jarray->joints[ii]] * inverse_bind_matrices->pose[ii];
+		}
+	} else {
+		assert(skinning_matrices->pose.size() == inverse_bind_matrices->pose.size() &&
+			skinning_matrices->pose.size() == current_pose->pose.size());
+		for (size_t ii = 0; ii < inverse_bind_matrices->pose.size(); ++ii){
+			skinning_matrices->pose[ii] = current_pose->pose[ii] * inverse_bind_matrices->pose[ii];
+		}
+	}
+}
+
+static int
+lbuild_skinning_matrices(lua_State *L){
+	luaL_checkudata(L, 1, "OZZ_BIND_POSE");
+	auto skinning_matrices = (bind_pose*)lua_touserdata(L, 1);
+
+	luaL_checkudata(L, 2, "OZZ_BIND_POSE");
+	auto current_bind_pose = (bind_pose*)lua_touserdata(L, 2);
+
+	luaL_checkudata(L, 3, "OZZ_BIND_POSE");
+	auto inverse_bind_matrices = (bind_pose*)lua_touserdata(L, 3);
+
+	const joint_remap *jarray = lua_isnoneornil(L, 4) ? nullptr : (const joint_remap*)lua_touserdata(L, 4);
+
+	if (skinning_matrices->pose.size() < inverse_bind_matrices->pose.size()){
+		return luaL_error(L, "invalid skinning matrices and inverse bind matrices, skinning matrices must larger than inverse bind matrices");
+	}
+
+	build_skinning_matrices(skinning_matrices, current_bind_pose, inverse_bind_matrices, jarray);
+	return 0;
+}
+
 static int
 lmesh_skinning(lua_State *L){
-	luaL_checktype(L, 1, LUA_TUSERDATA);
+	luaL_checkudata(L, 1, "OZZ_BIND_POSE");
 	bind_pose *ani = (bind_pose*)lua_touserdata(L, 1);
 
-	luaL_checktype(L, 2, LUA_TUSERDATA);
-	bind_pose *inverse_bind_pose = (bind_pose*)lua_touserdata(L, 2);
+	luaL_checkudata(L, 2, "OZZ_BIND_POSE");
+	bind_pose *skinning_matrices = (bind_pose*)lua_touserdata(L, 2);
 
 	luaL_checktype(L, 3, LUA_TTABLE);
 	in_vertex_data vd = {0};
@@ -256,17 +300,10 @@ lmesh_skinning(lua_State *L){
 
 	const uint32_t influences_count = (uint32_t)luaL_optinteger(L, 6, 4);
 
-	bind_pose::bind_pose_type skinning_matrices;
-	skinning_matrices.resize(inverse_bind_pose->pose.size());
-
-	for (int ii = 0; ii < inverse_bind_pose->pose.size(); ++ii){
-		skinning_matrices[ii] = ani->pose[ii] * inverse_bind_pose->pose[ii];
-	}
-
 	ozz::geometry::SkinningJob skinning_job;
 	skinning_job.vertex_count = num_vertices;
 	skinning_job.influences_count = influences_count;
-	skinning_job.joint_matrices = ozz::make_range(skinning_matrices);
+	skinning_job.joint_matrices = ozz::make_range(skinning_matrices->pose);
 	
 	assert(vd.positions.data && "skinning system must provide 'position' attribute");
 
@@ -824,20 +861,19 @@ lnew_bind_pose(lua_State *L) {
 
 	if (!lua_isnoneornil(L, 2)){
 		switch (lua_type(L, 2)){
-			case LUA_TSTRING: initdata = (const float*)lua_tolstring(L, 2, &initdata_size); break;
+			case LUA_TSTRING: 
+				initdata = (const float*)lua_tolstring(L, 2, &initdata_size); 
+				if (initdata_size != sizeof(ozz::math::Float4x4) * numjoints){
+					return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
+				}
+			break;
 			case LUA_TUSERDATA:
 			case LUA_TLIGHTUSERDATA:
-			initdata = (const float*)lua_touserdata(L, 2);
-			if (lua_isnoneornil(L, 3)) 
-				return luaL_error(L, "argument 2 is userdata/light userdata, it require argument 3 to provide buffer size, but it not!");
-
-			initdata_size = lua_tointeger(L, 3);
+				initdata = (const float*)lua_touserdata(L, 2);
+				initdata_size = numjoints * sizeof(ozz::math::Float4x4);
 			break;
 			default:
 			return luaL_error(L, "argument 2 is not support type, only support string/userdata/light userdata");
-		}
-		if (initdata_size != sizeof(ozz::math::Float4x4) * numjoints){
-			return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
 		}
 	} 
 
@@ -966,7 +1002,7 @@ get_partindex(lua_State *L, ozzmesh *om, int index=2){
 }
 
 static int
-lozzmesh_inverse_bind_matrices(lua_State *L){
+linverse_bind_matrices_ozzmesh(lua_State *L){
 	auto om = get_ozzmesh(L);
 	lua_pushlightuserdata(L, &om->mesh->inverse_bind_poses.front());
 	lua_pushinteger(L, om->mesh->inverse_bind_poses.size());
@@ -974,7 +1010,7 @@ lozzmesh_inverse_bind_matrices(lua_State *L){
 }
 
 static int
-lozzmesh_layout(lua_State *L){
+llayout_ozzmesh(lua_State *L){
 	auto om = get_ozzmesh(L);
 	const int partidx = lua_isnoneornil(L, 2) ? 0 : get_partindex(L, om);
 
@@ -1015,7 +1051,7 @@ lozzmesh_layout(lua_State *L){
 }
 
 static int
-lozzmesh_combinebuffer(lua_State *L){
+lcombinebuffer_ozzmesh(lua_State *L){
 	auto om = get_ozzmesh(L);
 
 	const std::string layout = lua_tostring(L, 2);
@@ -1062,7 +1098,7 @@ lozzmesh_combinebuffer(lua_State *L){
 }
 
 static int
-lozzmesh_influences_count(lua_State *L){
+linfluences_count_ozzmesh(lua_State *L){
 	auto om = get_ozzmesh(L);
 	auto partidx = get_partindex(L, om);
 
@@ -1073,7 +1109,16 @@ lozzmesh_influences_count(lua_State *L){
 }
 
 static int
-lozzmesh_vertex_buffer(lua_State *L){
+ljoint_remap_ozzmesh(lua_State *L){
+	auto om = get_ozzmesh(L);
+	lua_pushlightuserdata(L, &om->mesh->joint_remaps.front());
+	lua_pushinteger(L, om->mesh->joint_remaps.size());
+
+	return 2;
+}
+
+static int
+lvertex_buffer_ozzmesh(lua_State *L){
 	auto om = get_ozzmesh(L);
 
 	auto partidx = get_partindex(L, om);
@@ -1134,7 +1179,7 @@ lozzmesh_vertex_buffer(lua_State *L){
 }
 
 static int
-lozzmesh_num_vertices(lua_State *L) {
+lnum_vertices_ozzmesh(lua_State *L) {
 	ozzmesh *om = get_ozzmesh(L);
 
 	if (lua_isnoneornil(L, 2)){
@@ -1149,7 +1194,7 @@ lozzmesh_num_vertices(lua_State *L) {
 }
 
 static int
-lozzmesh_index_buffer(lua_State *L){
+lindex_buffer_ozzmesh(lua_State *L){
 	auto om = get_ozzmesh(L);
 	lua_pushlightuserdata(L, &om->mesh->triangle_indices.front());
 	lua_pushinteger(L, 2);	// stride is uint16_t
@@ -1157,14 +1202,14 @@ lozzmesh_index_buffer(lua_State *L){
 }
 
 static int
-lozzmesh_num_indices(lua_State *L) {
+lnum_indices_ozzmesh(lua_State *L) {
 	auto om = get_ozzmesh(L);
 	lua_pushinteger(L, om->mesh->triangle_index_count());
 	return 1;
 }
 
 static int
-lozzmesh_bounding(lua_State *L) {
+lbounding_ozzmesh(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	auto om = (ozzmesh*)lua_touserdata(L, 1);
 
@@ -1183,14 +1228,14 @@ lozzmesh_bounding(lua_State *L) {
 }
 
 static int
-lozz_numpart(lua_State *L){
+lnumpart_ozzmesh(lua_State *L){
 	auto om = get_ozzmesh(L);
 	lua_pushinteger(L, om->mesh->parts.size());
 	return 1;
 }
 
 static int
-lmemory_new(lua_State *L){
+lnew_memory(lua_State *L){
 	const size_t sizebytes = (size_t)lua_tointeger(L, 1);
 	const size_t aligned = (size_t)luaL_optinteger(L, 2, 16);
 
@@ -1203,18 +1248,62 @@ lmemory_new(lua_State *L){
 }
 
 static int
-lmemory_pointer(lua_State *L){
+lpointer_memory(lua_State *L){
 	auto am = (aligned_memory*)lua_touserdata(L, 1);
 	lua_pushlightuserdata(L, am->ptr);
 	return 1;
 }
 
 static int
-lmemory_del(lua_State *L){
+ldel_memory(lua_State *L){
 	luaL_checkudata(L, 1, "ALIGNED_MEMORY");
 	auto am = (aligned_memory*)lua_touserdata(L, 1);
 	ozz::memory::default_allocator()->Deallocate(am->ptr);
 
+	return 0;
+}
+
+static int
+lnew_joint_remap(lua_State *L){
+	decltype(joint_remap::joints)	joints;
+
+	switch (lua_type(L, 1)){
+		case LUA_TTABLE:{
+			const uint32_t jointnum = (uint32_t)lua_rawlen(L, 1);
+			joints.resize(jointnum);
+			for (uint32_t ii = 0; ii < jointnum; ++ii){
+				lua_geti(L, 1, ii+1);
+				joints[ii] = (uint16_t)lua_tointeger(L, -1);
+				lua_pop(L, 1);
+			}
+		}
+		break;
+		case LUA_TLIGHTUSERDATA:{
+			luaL_checktype(L, 2, LUA_TNUMBER);
+			const uint32_t jointnum = (uint32_t)lua_tointeger(L, 2);
+			joints.resize(jointnum);
+
+			const uint16_t *p = (const uint16_t*)lua_touserdata(L, 1);
+			memcpy(&joints.front(), p, jointnum * sizeof(uint16_t));
+		}
+		break;
+		default:
+		return luaL_error(L, "not support type in argument 1");
+	}
+
+	auto jarray = (joint_remap*)lua_newuserdatauv(L, sizeof(joint_remap), 0);
+	luaL_getmetatable(L, "JOINT_REMAP");
+	lua_setmetatable(L, -2);
+
+	new(&jarray->joints) decltype(jarray->joints)(std::move(joints));
+	return 1;
+}
+
+static int
+ldel_joint_remap(lua_State *L){
+	luaL_checkudata(L, 1, "JOINT_REMAP");
+	auto jarray = (joint_remap*)lua_touserdata(L, 1);
+	jarray->joints.~vector();
 	return 0;
 }
 
@@ -1273,17 +1362,18 @@ register_ozzmesh_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_Reg l[] = {		
-		{"num_vertices", lozzmesh_num_vertices},
-		{"num_indices", lozzmesh_num_indices},
-		{"index_buffer", lozzmesh_index_buffer},
-		{"vertex_buffer", lozzmesh_vertex_buffer},
-		{"bounding", lozzmesh_bounding},
-		{"num_part", lozz_numpart},
-		{"inverse_bind_matrices", lozzmesh_inverse_bind_matrices},
-		{"layout", lozzmesh_layout},
-		{"combine_buffer", lozzmesh_combinebuffer},
-		{"influences_count", lozzmesh_influences_count},
-		{"__gc", ldel_ozzmesh},
+		{"num_vertices", 	lnum_vertices_ozzmesh},
+		{"num_indices", 	lnum_indices_ozzmesh},
+		{"index_buffer", 	lindex_buffer_ozzmesh},
+		{"vertex_buffer", 	lvertex_buffer_ozzmesh},
+		{"bounding", 		lbounding_ozzmesh},
+		{"num_part", 		lnumpart_ozzmesh},
+		{"inverse_bind_matrices", linverse_bind_matrices_ozzmesh},
+		{"layout", 			llayout_ozzmesh},
+		{"combine_buffer", 	lcombinebuffer_ozzmesh},
+		{"influences_count",linfluences_count_ozzmesh},
+		{"joint_remap", 	ljoint_remap_ozzmesh},
+		{"__gc", 			ldel_ozzmesh},
 		{nullptr, nullptr},
 	};
 
@@ -1328,8 +1418,22 @@ register_aligned_memory(lua_State *L){
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
 	luaL_Reg l[] = {
-		{"pointer", lmemory_pointer},
-		{"__gc", lmemory_del},
+		{"pointer", lpointer_memory},
+		{"__gc", ldel_memory},
+		{nullptr, nullptr},
+	};
+
+	luaL_setfuncs(L, l, 0);
+}
+
+static void
+register_joint_remap(lua_State *L){
+	luaL_newmetatable(L, "JOINT_REMAP");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	luaL_Reg l[] = {
+		{"__gc", ldel_joint_remap},
 		{nullptr, nullptr},
 	};
 
@@ -1345,19 +1449,25 @@ luaopen_hierarchy_animation(lua_State *L) {
 	register_bind_pose_mt(L);
 	register_bind_pose_soa_mt(L);
 	register_aligned_memory(L);
+	register_joint_remap(L);
 
 	luaL_Reg l[] = {
-		{ "mesh_skinning", lmesh_skinning},
-		{ "motion", lmotion},
-		{ "blend_animations", lblend_animations},
-		{ "sample_animation", lsample_animation},
-		{ "transform", ltransform_to_bindpose_result},
-		{ "new_ani", lnew_animation},
-		{ "new_ozzmesh", lnew_ozzmesh},
+		{ "mesh_skinning", 			lmesh_skinning},
+		{ "build_skinning_matrices", lbuild_skinning_matrices},
+
+		{ "motion", 			lmotion},
+		{ "blend_animations", 	lblend_animations},
+		{ "sample_animation", 	lsample_animation},
+		{ "transform", 			ltransform_to_bindpose_result},
+		{ "new_ani", 			lnew_animation},
+		{ "new_ozzmesh", 		lnew_ozzmesh},
 		{ "new_sampling_cache", lnew_sampling_cache},
-		{ "new_bind_pose", lnew_bind_pose,},
-		{ "new_bind_pose_soa", lnew_bind_pose_soa},
-		{ "new_aligned_memory", lmemory_new},
+		{ "new_bind_pose", 		lnew_bind_pose,},
+		{ "new_bind_pose_soa", 	lnew_bind_pose_soa},
+
+		{ "new_aligned_memory", lnew_memory},
+
+		{ "new_joint_remap", 	lnew_joint_remap},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
