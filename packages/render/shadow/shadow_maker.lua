@@ -184,9 +184,7 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect,
 	camerautil.bind_camera(world, camera_tag, csmcamera)
 
 	local eid = world:create_entity {
-		material = {
-			{ref_path = linear_shadow and linear_cast_material or cast_material},
-		},
+		material = {ref_path = linear_shadow and linear_cast_material or cast_material},
 		csm = {
 			split_ratios= ratios,
 			index 		= index,

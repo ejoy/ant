@@ -53,7 +53,7 @@ end
 local function decl_basetype(class_register)
 	class_register.component_alias("tag", "boolean", true)
 	class_register.component_base("entityid", -1)
-	
+
 	class_register.component_base("int", 0)
 	class_register.component_base("real", 0.0)
 	class_register.component_base("string", "")
@@ -64,6 +64,7 @@ return function(world, import, class)
 	local schema = createschema(world._schema)
 	local class_register = { world = world, import = import }
 	local class = class or {}
+	class.component = world._schema.map
 	world._components = world._schema.map
 
 	local function register(args)
@@ -97,6 +98,17 @@ return function(world, import, class)
 	register {
 		type = "system",
 		setter = { "depend" , "dependby", "singleton" },
+	}
+
+	register {
+		type = "transform",
+		setter = { "input" , "output" },
+		callback = { "process" },
+	}
+
+	register {
+		type = "policy",
+		setter = { "require_component", "require_transform" },
 	}
 
 	class.packages = {}

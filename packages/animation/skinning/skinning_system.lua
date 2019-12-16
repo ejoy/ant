@@ -103,27 +103,49 @@ local function gen_mesh_assetinfo(ozzmesh)
 	}
 end
 
-function ozzmesh:postinit(e)
-	local rm = e.rendermesh
+ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation"}}
 
-	local reskey = fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh")
-	local skehandle = assetmgr.get_resource(e.skeleton.ref_path).handle
-	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(self, skehandle))
+local s = ecs.policy "skinning"
+s.require_component "animation"
+s.require_component "skeleton"
+s.require_component "rendermesh"
+s.require_component "skinning_mesh"
+s.require_transform "skinning"
+
+local m = ecs.transform "skinning"
+m.input "rendermesh"
+m.input "animation"
+m.output "skinning_mesh"
+
+function m.process(e)
+	local rm = e.rendermesh
+	local reskey = fs.path("//meshres/" .. e.skinning_mesh.ref_path:stem():string() .. ".mesh")
+	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(e.skinning_mesh))
 end
 
 
-local skinningmesh = ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation", "skeleton"}}
-.ref_path "respath"
+-- function ozzmesh:postinit(e)
+-- 	local rm = e.rendermesh
 
-function skinningmesh:postinit(e)
-	local rm = e.rendermesh
-	local res = assetmgr.get_resource(self.ref_path)
-	local meshscene = computil.create_mesh_buffers(res)
+-- 	local reskey = fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh")
+-- 	local skehandle = assetmgr.get_resource(e.skeleton.ref_path).handle
+-- 	rm.reskey = assetmgr.register_resource(reskey, gen_mesh_assetinfo(self, skehandle))
+-- end
 
-	rm.reskey = assetmgr.register_resource(fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh"), meshscene)
 
-	return self
-end
+-- local skinningmesh = ecs.component_alias("skinning_mesh", "resource") {depend = {"rendermesh", "animation", "skeleton"}}
+-- .ref_path "respath"
+
+-- function skinningmesh:postinit(e)
+-- 	local rm = e.rendermesh
+-- 	local res = assetmgr.get_resource(self.ref_path)
+-- 	local meshscene = computil.create_mesh_buffers(res)
+
+-- 	rm.reskey = assetmgr.register_resource(fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh"), meshscene)
+
+-- 	return self
+-- end
+
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"

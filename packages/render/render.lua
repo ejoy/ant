@@ -21,21 +21,27 @@ ecs.component_alias("view_mode", "string", "")
 ecs.component_alias("fb_index", "int")
 ecs.component_alias("rb_index", "int")
 
-local rt = ecs.component "render_target" {depend = "viewid"}
-	.viewport 	"viewport"
-	["opt"].fb_idx 	"fb_index"
+local m = ecs.policy "render_target"
+m.require_component "viewid"
+m.require_component "render_target"
+m.require_transform "render_target"
 
-function rt:postinit(e)
+local m = ecs.transform "render_target"
+m.input "viewid"
+m.output "render_target"
+function m.process(e)
 	local viewid = e.viewid
-	local fb_idx = self.fb_idx
+	local fb_idx = e.render_target.fb_idx
 	if fb_idx then
 		fbmgr.bind(viewid, fb_idx)
 	else
-		self.fb_idx = fbmgr.get_fb_idx(viewid)
+		e.render_target.fb_idx = fbmgr.get_fb_idx(viewid)
 	end
-
-	return self
 end
+
+local rt = ecs.component "render_target" {depend = "viewid"}
+	.viewport 	"viewport"
+	["opt"].fb_idx 	"fb_index"
 
 function rt:delete(e)
 	fbmgr.unbind(e.viewid)

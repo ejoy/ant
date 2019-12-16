@@ -121,7 +121,7 @@ local function load_start(w, s)
         slove = w:import(name) or slove
     end
     if slove then
-        w:slove_comonpent()
+        w:slove_component()
     end
     w.__deserialize = ids
     component = res[3]
