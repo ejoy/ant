@@ -53,7 +53,7 @@ init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
 
-local function create_animation_test()
+local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'
     local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
     local anipaths = {
@@ -257,7 +257,7 @@ function init_loader:init()
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_plane_test()
 
-    create_animation_test()
+    --ozzmesh_animation_test()
     pbr_test()
     gltf_animation_test()
     pbrscene.create_scene(world)
