@@ -135,7 +135,7 @@ function world:new_entity_id()
 end
 
 function world:set_entity(eid, t)
-	local init = policy.apply(self, t.policy, t.data)
+	local init = policy.apply(self, t.policy)
 	local e = {}
 	self[eid] = e
 	self._entity[eid] = true

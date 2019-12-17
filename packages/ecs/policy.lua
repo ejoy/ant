@@ -57,6 +57,26 @@ local function apply(w, policies, dataset)
             init_transform[#init_transform+1] = transform_class[name].method.process
         end
     end
+
+    if dataset then
+        local i = 1
+        while true do
+            local name = init_component[i]
+            if not name then
+                break
+            end
+            if not dataset[name] then
+                if not reflection[name] then
+                    error(("dataset does not have component `%s`."):format(name))
+                end
+                init_component[i] = init_component[#init_component]
+                init_component[#init_component] = nil
+            else
+                i = i + 1
+            end
+        end
+    end
+
     table.sort(init_component)
     return {
         init_component,
