@@ -97,12 +97,12 @@ return function(world, import, class)
 
 	register {
 		type = "system",
-		setter = { "depend" , "dependby", "singleton" },
+		setter = { "depend", "dependby", "singleton" },
 	}
 
 	register {
 		type = "transform",
-		setter = { "input" , "output" },
+		setter = { "input", "output" },
 		callback = { "process" },
 	}
 

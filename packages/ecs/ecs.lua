@@ -632,6 +632,14 @@ function ecs.new_world(config)
 		end
 	end
 	for policy_name, v in pairs(class.policy) do
+		local union_name, name = policy_name:match "^([%a_][%w_]*)%.([%a_][%w_]*)$"
+		if not union_name then
+			name = policy_name:match "^([%a_][%w_]*)$"
+		end
+		if not name then
+			error(("invalid policy name: `%s`."):format(policy_name))
+		end
+		v.union = union_name
 		local components = {}
 		if not v.require_component then
 			error(("policy `%s`'s require_component cannot be empty."):format(policy_name))

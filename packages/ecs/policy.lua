@@ -5,10 +5,22 @@ local function apply(w, policies, dataset)
     local transform = {}
     local component = {}
     local init_component = {}
+    local policyset = {}
+    local unionset = {}
     for _, name in ipairs(policies) do
         local class = policy_class[name]
         if not class then
             error(("policy `%s` is not defined."):format(name))
+        end
+        if policyset[name] then
+            error(("duplicate policy `%s`."):format(name))
+        end
+        policyset[name] = name
+        if class.union then
+            if unionset[class.union] then
+                error(("duplicate union `%s` in `%s` and `%s`."):format(class.union, name, unionset[class.union]))
+            end
+            unionset[class.union] = name
         end
         for _, v in ipairs(class.require_transform) do
             if not transform[v] then
