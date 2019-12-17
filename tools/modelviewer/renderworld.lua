@@ -64,95 +64,8 @@ local function create_material_item(filepath, color)
 				u_color = {type = "color", name = "Color", value = color},
 			}
 		},
-		asyn_load = true,
+		--asyn_load = true,
 	}
-end
-
-ecs.tag "quad_test"
-
-local function quad_clear_test()
-	local flags = renderpkg.util.generate_sampler_flag {
-		RT="RT_ON",
-		MIN="LINEAR",
-		MAG="LINEAR",
-		U="CLAMP",
-		V="CLAMP",
-	}
-	local width, height = 4096, 1024
-
-	local cameratag = "quad_test_camera"
-
-	renderpkg.camera.bind_camera(world, cameratag, 
-	renderpkg.default.camera(nil, nil, 
-	renderpkg.default.frustum(width, height)))
-
-	local fbidx = renderpkg.fbmgr.create{
-			render_buffers = {
-				renderpkg.fbmgr.create_rb{
-					format = "D32",
-					w=width,
-					h=height,
-					layers=1,
-					flags=flags,
-				},
-			}
-		}
-
-	
-
-	local v = cu.quad_vertices()
-	local depth = 1.0
-	local color = 0xff0000ff
-	local gvb = {
-		"fffd",
-		v[1], v[2], depth, color,
-		v[3], v[4], depth, color,
-		v[5], v[6], depth, color,
-		v[7], v[8], depth, color,
-	}
-	local meshkeyname = assetmgr.register_resource(fs.path "//meshres/quadtest.mesh", 
-		cu.create_simple_mesh( "p3|c40niu", gvb, 4))
-
-	local function create_viewport_test(quadname, fbidx, rect)
-		local quadtest_viewid = renderpkg.viewidmgr.generate(quadname)
-		renderpkg.fbmgr.bind(quadtest_viewid, fbidx)
-	
-		world:create_entity {
-			viewid = quadtest_viewid,
-			primitive_filter = {
-				filter_tag = "quad_test"
-			},
-			camera_tag = "quad_test_camera",
-			render_target = {
-				viewport = {
-					rect = rect,
-					clear_state = {
-						color = 0xff0000ff,
-						depth = 1, stencil = 0,
-						clear = "",
-					}
-				},
-			},
-			name = "quad_test_queue",
-		}
-	end
-
-	local eid = world:create_entity {
-		transform = mu.srt(),
-		rendermesh = {},
-		material = {
-			{ref_path = fs.path "/pkg/ant.modelviewer/res/quadtest/quadtest.material"}
-		},
-		name = "quadtest",
-		quad_test = true,
-		can_render = true,
-	}
-
-	world[eid].rendermesh.reskey = meshkeyname
-
-	create_viewport_test("quadtest1", fbidx, {x=0,y=0,w=1024,h=1024})
-	create_viewport_test("quadtest2", fbidx, {x=1024,y=0,w=1024,h=1024})
-	create_viewport_test("quadtest2", fbidx, {x=2048,y=0,w=1024,h=1024})
 end
 
 local function a2c(t)
@@ -167,36 +80,6 @@ function model_review_system:init()
 	create_light()
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
-	-- quad_clear_test()
-	-- world:create_entity {
-	-- 	transform = mu.srt(),
-	-- 	rendermesh = {},
-	-- 	material = {{ref_path = fs.path "/pkg/ant.modelviewer/res/test.material"}},
-	-- 	name = "test",
-	-- 	can_render = true,
-	-- }
-
-	-- world:create_entity {
-	-- 	name = "terrain far",
-	-- 	transform = mu.srt({-0.1, 0.1, 0.1},{0.000,0.000,0.000},{0, -5, 0, 1}),
-	-- 	rendermesh = {},
-	-- 	mesh = {
-	-- 		ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test.mesh",
-	-- 		submesh_refs = {
-	-- 			terrain_far_01 = cu.create_submesh_item {0},
-	-- 			terrain_near_01 = cu.create_submesh_item {1, 2},
-	-- 		},
-	-- 		asyn_load = true,
-	-- 	},
-	-- 	material = {
-	-- 		create_material_item(singlecolor_material, {1, 0, 0, 0}),
-	-- 		create_material_item(singlecolor_material, {1, 1, 0, 0}),
-	-- 		create_material_item(singlecolor_material, {1, 0, 1, 0}),
-	-- 	},
-	-- 	asyn_load = "",
-	-- 	can_render = true,
-	-- }
-
 	--cu.create_grid_entity(world, "grid")
 	cu.create_plane_entity(world, 
 		{50, 1, 50, 0}, nil, 
@@ -206,28 +89,38 @@ function model_review_system:init()
 
 	--cu.create_axis_entity(world, mu.translate_mat{0, 0, 1})
 
-	local origineid = world:create_entity {
-		transform 	= mu.scale_mat(0.2),
-		rendermesh 	= {},
-		mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/campsite-door.mesh", asyn_load=true},
-		material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true},
-		can_render 	= true,
-		asyn_load	= "",
-		can_cast	= true,
-		name 		= "door",
-		serialize   = serialize.create(),
+	local default_policy = {
+		"render",
+		"mesh",
+	}
+	local origineid = world:create_entity_v2 {
+		policy = default_policy,
+		data = {
+			transform 	= mu.scale_mat(0.2),
+			rendermesh 	= {},
+			mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/campsite-door.mesh",},
+			material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material",},
+			can_render 	= true,
+			asyn_load	= "loaded",
+			can_cast	= true,
+			name 		= "door",
+			serialize   = serialize.create(),
+		}
 	}
 
-	world:create_entity {
-		transform 	= mu.srt({0.2, 0.2, 0.2}, nil, {5, 0, 0}),
-		rendermesh 	= {},
-		mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/woodother-34.mesh", asyn_load=true},
-		material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", asyn_load=true},
-		can_render 	= true,
-		asyn_load	= "",
-		can_cast	= true,
-		name 		= "door",
-		serialize   = serialize.create(),
+	world:create_entity_v2 {
+		policy = default_policy,
+		data = {
+			transform 	= mu.srt({0.2, 0.2, 0.2}, nil, {5, 0, 0}),
+			rendermesh 	= {},
+			mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/woodother-34.mesh", },
+			material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", },
+			can_render 	= true,
+			asyn_load	= "loaded",
+			can_cast	= true,
+			name 		= "door",
+			serialize   = serialize.create(),
+		}
 	}
 
 	-- local originentity = world[origineid]
@@ -241,35 +134,38 @@ function model_review_system:init()
 	-- 	name 		= "door_outline",
 	-- }
 
-	world:create_entity {
-		transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
-		can_render = true,
-		rendermesh = {
-			submesh_refs = {
-				["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
-				["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
-				["build_big_storage_01_straw_roof_002"] = cu.create_submesh_item {4, 5, 6, 7},
-				["build_big_storage_01_walls_down"] 	= cu.create_submesh_item {2},
-				["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
+	world:create_entity_v2 {
+		policy = default_policy,
+		data = {
+			transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
+			can_render = true,
+			rendermesh = {
+				submesh_refs = {
+					["build_big_storage_01_fence_02"] 		= cu.create_submesh_item {1}, 
+					["build_big_storage_01_pillars_01"] 	= cu.create_submesh_item {2, 3},
+					["build_big_storage_01_straw_roof_002"] = cu.create_submesh_item {4, 5, 6, 7},
+					["build_big_storage_01_walls_down"] 	= cu.create_submesh_item {2},
+					["build_big_storage_01_walls_up"] 		= cu.create_submesh_item {2},
+				},
 			},
-		},
-		mesh = {
-			ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
-			asyn_load = true,
-		},
-		material = a2c {
-			create_material_item(singlecolor_material, {1, 0, 0, 0}),
-			create_material_item(singlecolor_material, {0, 1, 0, 0}),
-			create_material_item(singlecolor_material, {0, 0, 1, 0}),
-			create_material_item(singlecolor_material, {1, 1, 0, 0}),
-			create_material_item(singlecolor_material, {1, 0, 1, 0}),
-			create_material_item(singlecolor_material, {0, 1, 1, 0}),
-			create_material_item(singlecolor_material, {1, 1, 1, 0}),
-		},
-		can_cast = true,
-		asyn_load = "",
-		name = "test_glb",
-		serialize   = serialize.create(),
+			mesh = {
+				ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
+				--asyn_load = true,
+			},
+			material = a2c {
+				create_material_item(singlecolor_material, {1, 0, 0, 0}),
+				create_material_item(singlecolor_material, {0, 1, 0, 0}),
+				create_material_item(singlecolor_material, {0, 0, 1, 0}),
+				create_material_item(singlecolor_material, {1, 1, 0, 0}),
+				create_material_item(singlecolor_material, {1, 0, 1, 0}),
+				create_material_item(singlecolor_material, {0, 1, 1, 0}),
+				create_material_item(singlecolor_material, {1, 1, 1, 0}),
+			},
+			can_cast = true,
+			asyn_load = "loaded",
+			name = "test_glb",
+			serialize   = serialize.create(),
+		}
 	}
 	
     --local function save_file(file, data)
