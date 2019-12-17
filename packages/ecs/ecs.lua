@@ -141,7 +141,7 @@ function world:set_entity(eid, t)
 	self._entity[eid] = true
 	for _, c in ipairs(init[1]) do
 		if t.data[c] then
-			e[c] = self:create_component(c, t.data[c])
+			e[c] = assert(self:create_component(c, t.data[c]))
 			self:register_component(eid, c)
 		end
 	end
@@ -170,7 +170,7 @@ function world:set_entity_v2(eid, t)
 	self[eid] = e
 	self._entity[eid] = true
 	for _, c in ipairs(init[1]) do
-		e[c] = self:create_component(c, t.data[c])
+		e[c] = assert(self:create_component(c, t.data[c]))
 		self:register_component(eid, c)
 	end
 	for _, f in ipairs(init[2]) do
