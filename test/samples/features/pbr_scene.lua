@@ -16,32 +16,40 @@ local function create_pbr_entity(world,
     name, transform, meshpath,
     color, metallic, roughness)
 
-    return world:create_entity {
-        name = name,
-        transform = transform,
-        material = computil.assign_material(
-            pbr_materialpath,
-            {
-                uniforms = {
-                    u_basecolor_factor = {
-                        type="color", name = "base color",
-                        value = color,
-                    },
-                    u_metallic_roughness_factor = {
-                        type="v4", name = "metallic roughness",
-                        value = {0.0, roughness, metallic, 0.0},
-                    },
-                    u_emissive_factor = {
-                        type="color", name = "emissive",
-                        value = {0.0, 0.0 ,0.0 ,0.0},
+    return world:create_entity_v2 {
+        policy = {
+            "render",
+            "mesh",
+        },
+        data = {
+            name = name,
+            transform = transform,
+            material = computil.assign_material(
+                pbr_materialpath,
+                {
+                    uniforms = {
+                        u_basecolor_factor = {
+                            type="color", name = "base color",
+                            value = color,
+                        },
+                        u_metallic_roughness_factor = {
+                            type="v4", name = "metallic roughness",
+                            value = {0.0, roughness, metallic, 0.0},
+                        },
+                        u_emissive_factor = {
+                            type="color", name = "emissive",
+                            value = {0.0, 0.0 ,0.0 ,0.0},
+                        }
                     }
                 }
-            }
-        ),
-        rendermesh = {},
-        mesh = {ref_path = meshpath,},
-        can_render = true,
-        can_select = true,
+            ),
+            asyn_load = "loaded",
+            rendermesh = {},
+            mesh = {ref_path = meshpath,},
+            can_render = true,
+            can_select = true,
+        }
+
     }
 end
 

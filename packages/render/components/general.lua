@@ -114,13 +114,30 @@ local mesh = ecs.component "mesh" {depend="rendermesh"}
 	["opt"].asyn_load "boolean" (false)
 
 function mesh:init()
+	if not self.asyn_load then
+		asset.load(self.ref_path)
+	end
 	return self
 end
-function mesh:postinit(e)
-	if not self.asyn_load then
-		assert(e.asyn_load == nil)
-		component_util.create_mesh(e.rendermesh, self)
-	end
+
+local meshpolicy = ecs.policy "mesh"
+meshpolicy.require_component "rendermesh"
+meshpolicy.require_component "mesh"
+meshpolicy.require_component "asyn_load"
+meshpolicy.require_transform "mesh_loader"
+
+local ml = ecs.transform "mesh_loader"
+ml.input    "mesh"
+ml.output   "rendermesh"
+
+function ml.process(e)
+    local mesh = e.mesh
+    local meshres = asset.get_resource(mesh.ref_path)
+    if meshres == nil and mesh.asyn_load then
+        assert(e.asyn_load ~= "loaded")
+    else
+        component_util.create_mesh(e.rendermesh, mesh)
+    end
 end
 
 --DO NOT define init/delete function to manager texture resource
@@ -179,22 +196,14 @@ ecs.component_alias("can_render", "boolean", true) {depend={"transform", "render
 ecs.component_alias("can_cast", "boolean", false)
 ecs.component_alias("name", "string", "")
 
-local asynload_state = ecs.component_alias("asyn_load", "string", "") {depend={"mesh", "material"}}
-function asynload_state.init()
-	return ""	-- always true
-end
+--maybe we need an asyn_load_policy to determine how to asyn load asset
+ecs.component_alias("asyn_load", "string", "")
 
-function asynload_state:postinit(e)
-	assert(self == "")
-	assert(e.mesh.asyn_load)
-	for _, m in ipairs(e.material) do
-		assert(m.asyn_load)
-	end
-end
-
-function asynload_state.save()
-	return ""	--always save empty string
-end
+local renderpolicy = ecs.policy "render"
+renderpolicy.require_component "can_render"
+renderpolicy.require_component "rendermesh"
+renderpolicy.require_component "material"
+renderpolicy.require_component "transform"
 
 ecs.tag "can_select"
 

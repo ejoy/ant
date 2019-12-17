@@ -108,6 +108,19 @@ for _, pp in ipairs {
 	end
 end
 
+local capsule_policy = ecs.policy "capsule"
+capsule_policy.require_component "collider_tag"
+capsule_policy.require_component "capsule_collider"
+capsule_policy.require_transform "capsule_transform"
+
+local ct = ecs.transform "capsule_transform"
+ct.input "capsule_collider"
+ct.output "collider_tag"
+
+function ct.process(e)
+    e.collider_tag = "capsule_collider"
+end
+
 local math3d_adapter = require "math3d.adapter"
 local mathadapter_util = import_package "ant.math.adapter"
 mathadapter_util.bind("bullet", function ()

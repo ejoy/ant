@@ -467,7 +467,7 @@ function util.create_mesh_buffers(meshres)
 end
 
 function util.create_mesh(rendermesh, mesh)
-	local res = assetmgr.load(mesh.ref_path)
+	local res = assetmgr.get_resource(mesh.ref_path)
 	check_rendermesh_lod(res)
 	
 	local ref_path = mesh.ref_path

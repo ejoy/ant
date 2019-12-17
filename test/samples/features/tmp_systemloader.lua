@@ -32,6 +32,9 @@ local aniutil   = import_package 'ant.animation'.util
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
 
+local assetpkg = import_package "ant.asset"
+local assetmgr = assetpkg.mgr
+
 local lu = renderpkg.light
 
 local PVPScenLoader = require 'PVPSceneLoader'
@@ -56,83 +59,83 @@ init_loader.dependby 'state_machine'
 local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'
     local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
-    local anipaths = {
-        meshdir / 'animation' / 'animation1.ozz',
-        meshdir / 'animation' / 'animation2.ozz'
-    }
-
     local smpath = meshdir / 'mesh.ozz'
-
-    local anilist = {}
-    for _, anipath in ipairs(anipaths) do
-        anilist[#anilist + 1] = {ref_path = anipath}
-    end
 
     local respath = fs.path '/pkg/ant.resources'
 
     local eid =
-        world:create_entity {
-        transform = {
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 2, 0, 1}
+        world:create_entity_v2 {
+        policy = {
+            "render",
+            "ozzmesh",
+            "animation",
+            "ozz_skinning",
+            "capsule",
         },
-        can_render = true,
-        rendermesh = {},
-        material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
-        animation = {
-            anilist = {
-                idle = {
-                    ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
-                    scale = 1,
-                    looptimes = 0,
+        data = {
+            transform = {
+                s = {1, 1, 1, 0},
+                r = {0, 0, 0, 0},
+                t = {0, 2, 0, 1}
+            },
+            material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
+            animation = {
+                anilist = {
+                    idle = {
+                        ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                    walk = {
+                        ref_path = respath / meshdir / 'animation' / 'animation2.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    }
                 },
-                walk = {
-                    ref_path = respath / meshdir / 'animation' / 'animation2.ozz',
-                    scale = 1,
-                    looptimes = 0,
-                }
-            },
-            blendtype = 'blend',
-            pose = {
-                idle = {
-                    {name = "idle", weight=1},
+                blendtype = 'blend',
+                pose = {
+                    idle = {
+                        {name = "idle", weight=1},
+                    },
+                    walk = {
+                        {name = "walk",weight=1},
+                    },
+                    -- run = {
+                    --     {name = "run", weight=1},
+                    -- }
                 },
-                walk = {
-                    {name = "walk",weight=1},
+                birth_pose = "idle",
+            },
+            can_render = true,
+            rendermesh = {},
+            state_chain = {
+                ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
+            },
+            skeleton = {
+                ref_path = respath / skepath
+            },
+            mesh = {
+                ref_path = respath / smpath
+            },
+            name = 'animation_sample',
+            serialize = serialize.create(),
+            collider_tag = "",
+            capsule_collider = {
+                collider = {
+                    center = {0, 0, 0},
+                    is_tigger = true,
                 },
-                -- run = {
-                --     {name = "run", weight=1},
-                -- }
+                shape = {
+                    radius = 1.0,
+                    height = 1.0,
+                    axis   = "Y",
+                },
             },
-            birth_pose = "idle",
-        },
-        state_chain = {
-            ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
-        },
-        skeleton = {
-            ref_path = respath / skepath
-        },
-        ozz_mesh = {
-            ref_path = respath / smpath
-        },
-        name = 'animation_sample',
-        serialize = serialize.create(),
-        collider_tag = "capsule_collider",
-        capsule_collider = {
-            collider = {
-                center = {0, 0, 0},
-                is_tigger = true,
-            },
-            shape = {
-                radius = 1.0,
-                height = 1.0,
-                axis   = "Y",
-            },
-        },
-        -- character = {
-        --     movespeed = 1.0,
-        -- }
+            asyn_load = "loaded",
+            -- character = {
+            --     movespeed = 1.0,
+            -- }
+        }
     }
 end
 
@@ -175,55 +178,71 @@ local function test_serialize(delfile_aftertest)
 end
 
 local function gltf_animation_test()
-    world:create_entity {
-        transform = mu.srt(nil, nil, {-3, 2, 0, 1}),
-        rendermesh = {},
-        skinning_mesh = {
-            ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
+    world:create_entity_v2 {
+        policy = {
+            "render",
+            "mesh",
+            "animation",
+            "skinning"
         },
-        material = {
-            {
+        data = {
+            transform = mu.srt(nil, nil, {-3, 2, 0, 1}),
+            rendermesh = {},
+            mesh = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
+            },
+            material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
-            }
-        },
-        skeleton = {
-            ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
-        },
-        animation = {
-            anilist = {
-                ani1 = {
-                    ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
-                    scale = 1,
-                    looptimes = 0,
-                },
             },
-            blendtype = 'blend',
-            pose = {
-                idle = {
-                    {name="ani1", weight=1},
-                },
+            skeleton = {
+                ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
             },
-            birth_pose = "idle",
-        },
-        can_render = true,
-        can_cast = true,
+            state_chain = {
+                ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
+            },
+            animation = {
+                anilist = {
+                    ani1 = {
+                        ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                },
+                blendtype = 'blend',
+                pose = {
+                    idle = {
+                        {name="ani1", weight=1},
+                    },
+                },
+                birth_pose = "idle",
+            },
+            asyn_load = "loaded",
+            can_render = true,
+            can_cast = true,
+        }
     }
 end
 
 local function pbr_test()
-    world:create_entity {
-        transform = mu.srt(nil, nil, {3, 2, 0, 1}),
-        rendermesh = {},
-        mesh = {
-            ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
+    world:create_entity_v2 {
+        policy = {
+            "render",
+            "mesh",
         },
-        material = {
-            {
+        data = {
+            transform = mu.srt(nil, nil, {3, 2, 0, 1}),
+            rendermesh = {},
+            mesh = {
+                ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
+            },
+            material = {
                 ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
-            }
-        },
-        can_render = true,
-        can_cast = true,
+            },
+            asyn_load = "loaded",
+            can_render = true,
+            can_cast = true,
+        }
+
     }
 end
 
@@ -257,7 +276,7 @@ function init_loader:init()
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_plane_test()
 
-    --ozzmesh_animation_test()
+    ozzmesh_animation_test()
     pbr_test()
     gltf_animation_test()
     pbrscene.create_scene(world)

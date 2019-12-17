@@ -27,6 +27,13 @@ ozz_skinning_policy.require_component "skinning"
 ozz_skinning_policy.require_component "mesh"
 ozz_skinning_policy.require_transform "ozzmesh_skinning"
 
+local ozzmesh_policy = ecs.policy "ozzmesh"
+ozzmesh_policy.require_component "rendermesh"
+ozzmesh_policy.require_component "mesh"
+ozzmesh_policy.require_component "asyn_load"
+
+ozzmesh_policy.require_transform "ozzmesh_loader"
+
 local ozzmesh_skinning_transform = ecs.transform "ozzmesh_skinning"
 ozzmesh_skinning_transform.input 	"mesh"
 ozzmesh_skinning_transform.input 	"rendermesh"
@@ -116,23 +123,32 @@ local function gen_mesh_assetinfo(ozzmesh)
 	}
 end
 
-function ozzmesh_skinning_transform:process(e)
-	local rm 		= e.rendermesh
-	local reskey 	= fs.path("//meshres/" .. self.ref_path:stem():string() .. ".mesh")
-	local meshscene = gen_mesh_assetinfo(self)
-	rm.reskey 		= assetmgr.register_resource(reskey, meshscene)
+local ozzmesh_loader = ecs.transform "ozzmesh_loader"
+ozzmesh_loader.input "mesh"
+ozzmesh_loader.output "rendermesh"
+ozzmesh_loader.output "asyn_load"
 
+function ozzmesh_loader.process(e)
+	local rm 		= e.rendermesh
+	local mesh 		= e.mesh
+	local reskey 	= fs.path("//meshres/" .. mesh.ref_path:stem():string() .. ".mesh")
+	rm.reskey 		= assetmgr.register_resource(reskey, gen_mesh_assetinfo(mesh))
+end
+
+function ozzmesh_skinning_transform.process(e)
+	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
 	local meshres 	= assetmgr.get_resource(e.mesh.ref_path).handle
 
-	assert(#meshscene == 1 and #meshscene[1] == 1)
-	local meshnode = meshscene[1]
+	local scene = meshscene.scenes[meshscene.sceneidx]
+	assert(#scene == 1 and #scene[1] == 1)
+	local meshnode = scene[1]
 
 	local primitive = meshnode[1]
 
 	local skincomp = e.skinning
 	skincomp.jobs = {
 		{
-			inverse_bind_matrices = meshnode.inverse_bind_matrices,
+			inverse_bind_pose = meshnode.inverse_bind_pose,
 			joint_remap = meshnode.joint_remap,
 			parts = {},
 		}
@@ -242,14 +258,14 @@ end
 
 function mesh_skinning_transform.process(e)
 	local meshres = assetmgr.get_resource(e.mesh.ref_path)
-	local meshscene = assetmgr.get_resource(e.rendermesh).handle
+	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
 
 	local skinning = e.skinning
 
 	local jobs = {}
 	skinning.jobs = jobs
 
-	for meshidx, meshnode in ipairs(meshscene[meshscene.sceneidx]) do
+	for meshidx, meshnode in ipairs(meshscene.scenes[meshscene.sceneidx]) do
 		local res_meshnode = meshres.scenes[meshres.sceneidx][meshidx]
 		for groupidx, group in ipairs(meshnode) do
 			local res_group = res_meshnode[groupidx]
@@ -270,7 +286,7 @@ function mesh_skinning_transform.process(e)
 					end
 
 					jobs[#jobs+1] = {
-						inverse_bind_matrices = meshnode.inverse_bind_matrices,
+						inverse_bind_pose = meshnode.inverse_bind_pose,
 						joint_remap = meshnode.joint_remap,
 						hwbuffer_handle = handle.handle,
 						updatedata = updatedata,
@@ -318,7 +334,7 @@ function skinning_sys:update()
 			local handle = job.hwbuffer_handle
 			local updatedata = job.updatedata
 			for _, part in ipairs(job.parts) do
-				animodule.mesh_skinning(aniresult, skinning_matrices, part.inputdesc, part.outputdesc, part.num)
+				animodule.mesh_skinning(aniresult, skinning_matrices, part.inputdesc, part.outputdesc, part.num, part.influences_count)
 			end
 
 			bgfx.update(handle, 0, {"!", updatedata:pointer(), job.buffersize})
