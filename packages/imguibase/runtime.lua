@@ -47,7 +47,7 @@ function callback.init(nwh, context, width, height)
 		width = width,
 		height = height,
 	}
-	imgui.viewid(ui_viewid);
+	imgui.viewid(ui_viewid)
 	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
 	imgui.font_program(
 		imgui_font.prog,

@@ -59,6 +59,11 @@ local function apply(w, policies, dataset)
     end
 
     if dataset then
+        for name in pairs(dataset) do
+            if not component[name] then
+                error(("dataset have an unknown component `%s`."):format(name))
+            end
+        end
         local i = 1
         while true do
             local name = init_component[i]
