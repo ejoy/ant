@@ -68,7 +68,7 @@ end
 
 function util.get_directional_light_dir(world)
 	local d_light = world:first_entity "directional_light"
-	return ms(d_light.rotation, "dP")
+	return ms(d_light.transform.r, "dP")
 end
 
 local function gen_ratios(distances)

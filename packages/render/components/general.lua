@@ -196,6 +196,9 @@ ecs.component_alias("can_render", "boolean", true) {depend={"transform", "render
 ecs.component_alias("can_cast", "boolean", false)
 ecs.component_alias("name", "string", "")
 
+local gp = ecs.policy "general"
+gp.require_component "name"
+
 --maybe we need an asyn_load_policy to determine how to asyn load asset
 ecs.component_alias("asyn_load", "string", "")
 
