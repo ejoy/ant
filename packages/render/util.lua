@@ -399,7 +399,7 @@ function util.screen_capture(world, force_read)
 	local fbidx = mq.render_target.fb_idx
 	local fb = fbmgr.get(fbidx)
 	local s = setting.get()
-	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA"
+	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
 	return util.read_render_buffer_content(world.args.fb_size, format, fb[1], force_read)
 end
 
@@ -410,12 +410,12 @@ function util.read_render_buffer_content(size, format, rb_idx, force_read)
 		RGBA16F = 8,
 	}
 
-	local elem_size = assert(elem_size_mapper(format))
+	local elem_size = assert(elem_size_mapper[format])
 	
-	local memory_handle = bgfx.memory_texture(size.x * size.y * elem_size)
+	local memory_handle = bgfx.memory_texture(size.h * size.w * elem_size)
 	local rb_handle = util.create_renderbuffer {
-		w = size.x,
-		h = size.y,
+		w = size.w,
+		h = size.h,
 		layers = 1,
 		format = format,
 		flags = util.generate_sampler_flag {
