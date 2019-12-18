@@ -394,6 +394,15 @@ function util.update_render_target(viewid, rt)
 	util.update_viewport(viewid, rt.viewport)
 end
 
+function util.screen_capture(world, force_read)
+	local mq = world:first_entity "main_queue"
+	local fbidx = mq.render_target.fb_idx
+	local fb = fbmgr.get(fbidx)
+	local s = setting.get()
+	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA"
+	return util.read_render_buffer_content(world.args.fb_size, format, fb[1], force_read)
+end
+
 function util.read_render_buffer_content(size, format, rb_idx, force_read)
 	local rb = fbmgr.get_rb(rb_idx)
 	local elem_size_mapper = {
