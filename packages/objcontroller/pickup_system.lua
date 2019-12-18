@@ -9,8 +9,6 @@ local mathpkg 	= import_package "ant.math"
 local point2d 	= mathpkg.point2d
 local ms 		= mathpkg.stack
 
-local filterutil = import_package "ant.scene".filterutil
-
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local renderutil= renderpkg.util
@@ -28,7 +26,7 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-function traverse_from_center( blitdata,w,h )
+local function traverse_from_center( blitdata,w,h )
 	assert(w==h)
     local function incr(v2a,v2b)
         for i = 1,#v2a do
@@ -180,6 +178,11 @@ pickup_sys.dependby "end_frame"
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
 
+local pup = ecs.policy "pickup"
+pup.require_component "pickup"
+pup.require_component "material"
+pup.require_component "view_mode"
+
 local function add_pick_entity()
 	local fb_renderbuffer_flag = renderutil.generate_sampler_flag {
 		RT="RT_ON",
@@ -236,47 +239,55 @@ local function add_pick_entity()
 		}
 	}
 
-	return world:create_entity {
-		material = {
-			{ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_opacity.material'},
-			{ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_transparent.material'},
+	return world:create_entity_v2 {
+		policy = {
+			"general",
+			"pickup",
+			"render_queue",
 		},
-		view_mode = "s",
-		pickup = {
-			blit_buffer = {
-				raw_buffer = {
-					w = pickup_buffer_w,
-					h = pickup_buffer_h,
-					elemsize = 4,
-				},
-				rb_idx = blit_rbidx,
+		data = {
+			material = {
+				{ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_opacity.material'},
+				{ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_transparent.material'},
 			},
-			blit_viewid = viewidmgr.get("pickup_blit"),
-			pickup_cache = {
-				last_pick = -1,
-				pick_ids = {},
-			},
-		},
-		camera_tag = "pickup",
-		render_target = {
-			viewport = {
-				rect = {
-					x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
+			view_mode = "s",
+			pickup = {
+				blit_buffer = {
+					raw_buffer = {
+						w = pickup_buffer_w,
+						h = pickup_buffer_h,
+						elemsize = 4,
+					},
+					rb_idx = blit_rbidx,
 				},
-				clear_state = {
-					color = 0,
-					depth = 1,
-					stencil = 0,
-					clear = "all"
+				blit_viewid = viewidmgr.get("pickup_blit"),
+				pickup_cache = {
+					last_pick = -1,
+					pick_ids = {},
 				},
 			},
-			fb_idx = fbidx,
-		},
-		viewid = pickupviewid,
-		primitive_filter = {
-			filter_tag = "can_select"
-		},
-		name = "pickup_renderqueue",
+			camera_tag = "pickup",
+			render_target = {
+				viewport = {
+					rect = {
+						x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
+					},
+					clear_state = {
+						color = 0,
+						depth = 1,
+						stencil = 0,
+						clear = "all"
+					},
+				},
+				fb_idx = fbidx,
+			},
+			viewid = pickupviewid,
+			primitive_filter = {
+				filter_tag = "can_select"
+			},
+			name = "pickup_renderqueue",
+		}
+
 	}
 end
 
