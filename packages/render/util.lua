@@ -394,4 +394,43 @@ function util.update_render_target(viewid, rt)
 	util.update_viewport(viewid, rt.viewport)
 end
 
+function util.read_render_buffer_content(size, format, rb_idx, force_read)
+	local rb = fbmgr.get_rb(rb_idx)
+	local elem_size_mapper = {
+		RGBA8 = 4,
+		RGBA16F = 8,
+	}
+
+	local elem_size = assert(elem_size_mapper(format))
+	
+	local memory_handle = bgfx.memory_texture(size.x * size.y * elem_size)
+	local rb_handle = util.create_renderbuffer {
+		w = size.x,
+		h = size.y,
+		layers = 1,
+		format = format,
+		flags = util.generate_sampler_flag {
+			BLIT="BLIT_AS_DST",
+			BLIT_READBACK="BLIT_READBACK_ON",
+			MIN="POINT",
+			MAG="POINT",
+			U="CLAMP",
+			V="CLAMP",
+		}
+	}
+
+	local viewid = viewidmgr.get "blit"
+	if viewid == nil then
+		viewid = viewidmgr.generate "blit"
+	end
+	bgfx.blit(viewid, rb_handle, 0, 0, rb.handle)
+	bgfx.read_texture(rb_handle, memory_handle)
+
+	if force_read then
+		bgfx.frame()
+	end
+
+	return memory_handle
+end
+
 return util
