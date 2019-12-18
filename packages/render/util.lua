@@ -192,20 +192,28 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 		view_rect.w, view_rect.h, "D24S8", rb_flag)
 	)
 
-	return world:create_entity {
-		camera_tag = "main_view",
-		viewid = viewidmgr.get "main_view",
-		render_target = {
-			viewport = default_comp.viewport(view_rect),
-			fb_idx = fbmgr.create {
-				render_buffers = render_buffers
+	return world:create_entity_v2 {
+		policy = {
+			"render_queue",
+			"main_queue",
+			"general",
+		},
+		data = {
+			camera_tag = "main_view",
+			viewid = viewidmgr.get "main_view",
+			render_target = {
+				viewport = default_comp.viewport(view_rect),
+				fb_idx = fbmgr.create {
+					render_buffers = render_buffers
+				},
 			},
-		},
-		primitive_filter = {
-			filter_tag = "can_render",
-		},
-		main_queue = true,
-		visible = true,
+			primitive_filter = {
+				filter_tag = "can_render",
+			},
+			visible = true,
+			name = "main render queue",
+			main_queue = true,
+		}
 	}
 end
 
@@ -326,16 +334,23 @@ function util.create_blit_queue(world, viewrect)
 		default_comp.camera(nil, nil, default_comp.frustum(viewrect.w, viewrect.h))
 	)
 
-	world:create_entity {
-		camera_tag = "blit_view",
-		viewid = blitviewid,
-		render_target = {
-			viewport = default_comp.viewport(viewrect),
+	world:create_entity_v2 {
+		policy = {
+			"render_queue",
+			"general",
 		},
-		primitive_filter = {
-			filter_tag = "blit_render",
-		},
-		visible = true,
+		data = {
+			camera_tag = "blit_view",
+			viewid = blitviewid,
+			render_target = {
+				viewport = default_comp.viewport(viewrect),
+			},
+			primitive_filter = {
+				filter_tag = "blit_render",
+			},
+			visible = true,
+			name = "blit main queue to window frame buffer",
+		}
 	}
 	local eid = computil.create_quad_entity(world, viewrect,
 	fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material", nil, "full_quad")

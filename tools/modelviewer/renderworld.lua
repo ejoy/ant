@@ -92,6 +92,7 @@ function model_review_system:init()
 	local default_policy = {
 		"render",
 		"mesh",
+		"shadow_cast",
 	}
 	local origineid = world:create_entity_v2 {
 		policy = default_policy,

@@ -43,6 +43,17 @@ ecs.component "shadow"
 	.depth_type 	"string"("linear")		-- "inv_z" / "linear"
 	["opt"].split	"csm_split_config"
 
+local sp = ecs.policy "shadow_config"
+sp.require_component "shadow"
+sp.require_component "fb_index"
+
+local smp = ecs.policy "shadow_make"
+smp.require_component "csm"
+smp.require_component "material"
+
+local scp = ecs.policy "shadow_cast"
+scp.require_component "can_cast"
+
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.depend "primitive_filter_system"
 maker_camera.dependby "filter_properties"
@@ -183,30 +194,38 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect,
 	calc_shadow_camera(view_camera, ratios, lightdir, shadowmap_size, stabilize, csmcamera)
 	camerautil.bind_camera(world, camera_tag, csmcamera)
 
-	local eid = world:create_entity {
-		material = {ref_path = linear_shadow and linear_cast_material or cast_material},
-		csm = {
-			split_ratios= ratios,
-			index 		= index,
-			stabilize 	= stabilize,
+	local eid = world:create_entity_v2 {
+		policy = {
+			"shadow_make",
+			"render_queue",
+			"general",
 		},
-		viewid = viewidmgr.get(camera_tag),
-		primitive_filter = {
-			filter_tag = "can_cast",
-		},
-		camera_tag = camera_tag,
-		render_target = {
-			viewport = {
-				rect = viewrect,
-				clear_state = {
-					color = 0xffffffff,
-					depth = 1,
-					stencil = 0,
-					clear = linear_shadow and "colordepth" or "depth",
-				}
+		data = {
+			material = {ref_path = linear_shadow and linear_cast_material or cast_material},
+			csm = {
+				split_ratios= ratios,
+				index 		= index,
+				stabilize 	= stabilize,
 			},
-		},
-		name = "direction light shadow maker:" .. index,
+			viewid = viewidmgr.get(camera_tag),
+			primitive_filter = {
+				filter_tag = "can_cast",
+			},
+			camera_tag = camera_tag,
+			render_target = {
+				viewport = {
+					rect = viewrect,
+					clear_state = {
+						color = 0xffffffff,
+						depth = 1,
+						stencil = 0,
+						clear = linear_shadow and "colordepth" or "depth",
+					}
+				},
+			},
+			visible = true,
+			name = "direction light shadow maker:" .. index,
+		}
 	}
 
 	local e = world[eid]
@@ -275,23 +294,29 @@ local function create_shadow_entity(view_camera, shadowmap_size, split_num, dept
 						viewfrustum.n, viewfrustum.f, 
 						pssm_lambda, split_num)
 
-	return world:create_entity {
-		shadow = {
-			shadowmap_size 	= shadowmap_size,
-			bias 			= 0.003,
-			depth_type 		= depth_type,
-			normal_offset 	= 0,
-			split = {
-				min_ratio 	= min_ratio,
-				max_ratio 	= max_ratio,
-				pssm_lambda = pssm_lambda,
-				num_split 	= split_num,
-				ratios 		= ratios,
-			}
+	return world:create_entity_v2 {
+		policy = {
+			"shadow_config"
 		},
-		fb_index = fbmgr.create{
-			render_buffers = get_render_buffers(width, height, depth_type == "linear")
+		data = {
+			shadow = {
+				shadowmap_size 	= shadowmap_size,
+				bias 			= 0.003,
+				depth_type 		= depth_type,
+				normal_offset 	= 0,
+				split = {
+					min_ratio 	= min_ratio,
+					max_ratio 	= max_ratio,
+					pssm_lambda = pssm_lambda,
+					num_split 	= split_num,
+					ratios 		= ratios,
+				}
+			},
+			fb_index = fbmgr.create{
+				render_buffers = get_render_buffers(width, height, depth_type == "linear")
+			}
 		}
+
 	}
 end
 

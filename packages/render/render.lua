@@ -21,10 +21,8 @@ ecs.component_alias("view_mode", "string", "")
 ecs.component_alias("fb_index", "int")
 ecs.component_alias("rb_index", "int")
 
-local m = ecs.policy "render_target"
-m.require_component "viewid"
-m.require_component "render_target"
-m.require_transform "render_target"
+local mqp = ecs.policy "main_queue"
+mqp.require_component "main_queue"
 
 local m = ecs.transform "render_target"
 m.input "viewid"
@@ -76,6 +74,14 @@ ecs.component "camera_mgr"
 ecs.component_alias("camera_tag", "string") {depend = "viewid"}
 ecs.component_alias("visible", "boolean", true) 
 
+local rqp = ecs.policy "render_queue"
+rqp.require_component "viewid"
+rqp.require_component "render_target"
+rqp.require_component "camera_tag"
+rqp.require_component "primitive_filter"
+rqp.require_component "visible"
+rqp.require_transform "render_target"
+
 local render_props = ecs.singleton "render_properties"
 function render_props.init()
 	return {
@@ -117,7 +123,7 @@ function rendersys:update()
 	local render_properties = self.render_properties
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
-		if rq.visible ~= false then
+		if rq.visible then
 			local viewid = rq.viewid
 			ru.update_render_target(viewid, rq.render_target)
 			update_view_proj(viewid, camerautil.get_camera(world, rq.camera_tag))
