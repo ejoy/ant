@@ -3,6 +3,7 @@ local window = require "window"
 local inputmgr = import_package "ant.inputmgr"
 local assetutil = import_package "ant.asset".util
 local renderpkg = import_package "ant.render"
+local argument = import_package "ant.argument"
 local fs = require "filesystem"
 local thread = require "thread"
 local imgui = require "imgui"
@@ -42,7 +43,7 @@ end
 function callback.init(nwh, context, width, height)
 	imgui.create(nwh)
 	rhwi.init {
-		nwh = nwh,
+		--nwh = nwh,
 		context = context,
 		width = width,
 		height = height,
@@ -174,11 +175,66 @@ local function run()
 	end
 end
 
-local function start(m1, m2)
-	packages, systems = m1, m2
-
+local function windowMode()
 	local window = require "common.window"
 	window.create(run, 1024, 768, "Hello")
+end
+
+local function savebmp(name, width, height, pitch, data)
+	if not name then
+		return
+	end
+	local size = pitch * height
+	local patternBITMAPFILEHEADER <const> = "<c2I4I2I2I4"
+	local patternBITMAPINFOHEADER <const> = "<I4i4i4I2I2I4I4i4i4I4I4"
+	local f = assert(io.open(name, "wb"))
+	f:write(patternBITMAPFILEHEADER:pack(
+		--[[BITMAPFILEHEADER::bfType         ]]   "BM"
+		--[[BITMAPFILEHEADER::bfSize         ]] , patternBITMAPFILEHEADER:packsize() + patternBITMAPINFOHEADER:packsize() + size
+		--[[BITMAPFILEHEADER::bfReserved1    ]] , 0
+		--[[BITMAPFILEHEADER::bfReserved2    ]] , 0
+		--[[BITMAPFILEHEADER::bfOffBits      ]] , patternBITMAPFILEHEADER:packsize() + patternBITMAPINFOHEADER:packsize()
+	))
+	f:write(patternBITMAPINFOHEADER:pack(
+		--[[BITMAPINFOHEADER::biSize         ]]   patternBITMAPINFOHEADER:packsize()
+		--[[BITMAPINFOHEADER::biWidth        ]] , width
+		--[[BITMAPINFOHEADER::biHeight       ]] , -height
+		--[[BITMAPINFOHEADER::biPlanes       ]] , 1
+		--[[BITMAPINFOHEADER::biBitCount     ]] , 32 --TODO
+		--[[BITMAPINFOHEADER::biCompression  ]] , 0
+		--[[BITMAPINFOHEADER::biSizeImage    ]] , size
+		--[[BITMAPINFOHEADER::biXPelsPerMeter]] , 0
+		--[[BITMAPINFOHEADER::biYPelsPerMeter]] , 0
+		--[[BITMAPINFOHEADER::biClrUsed      ]] , 0
+		--[[BITMAPINFOHEADER::biClrImportant ]] , 0
+	))
+	f:write(data)
+	f:close()
+end
+
+local function screenshot(name)
+	savebmp(name, renderpkg.util.screen_capture(world, true))
+	--local bgfx = require "bgfx"
+	--bgfx.request_screenshot(nil, name)
+	--bgfx.frame()
+	--bgfx.frame()
+	--savebmp(bgfx.get_screenshot())
+end
+
+local function headlessMode()
+	callback.init(nil, nil, 1024, 768)
+	if debug_update then debug_update() end
+	if world_update then world_update() end
+	screenshot(type(argument.headless) == "string" and  argument.headless or "test.bmp")
+	callback.exit()
+end
+
+local function start(m1, m2)
+	packages, systems = m1, m2
+	if argument.headless then
+		return headlessMode()
+	end
+	return windowMode()
 end
 
 return {

@@ -400,7 +400,8 @@ function util.screen_capture(world, force_read)
 	local fb = fbmgr.get(fbidx)
 	local s = setting.get()
 	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
-	return util.read_render_buffer_content(world.args.fb_size, format, fb[1], force_read)
+	local handle, width, height, pitch = util.read_render_buffer_content(world.args.fb_size, format, fb[1], force_read)
+	return width, height, pitch, tostring(handle)
 end
 
 function util.read_render_buffer_content(size, format, rb_idx, force_read)
@@ -437,9 +438,10 @@ function util.read_render_buffer_content(size, format, rb_idx, force_read)
 
 	if force_read then
 		bgfx.frame()
+		bgfx.frame()
 	end
 
-	return memory_handle
+	return memory_handle, size.w, size.h, size.w * elem_size
 end
 
 return util

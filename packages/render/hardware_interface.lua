@@ -42,7 +42,7 @@ end
 
 local function bgfx_init(args)
 	nwh, w, h = args.nwh, args.width, args.height
-	assert(nwh,"handle is nil")
+	--assert(nwh,"handle is nil")
 	local bgfx = require "bgfx"
 	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
