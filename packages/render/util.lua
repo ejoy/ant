@@ -413,7 +413,7 @@ function util.read_render_buffer_content(size, format, rb_idx, force_read)
 	local elem_size = assert(elem_size_mapper[format])
 	
 	local memory_handle = bgfx.memory_texture(size.h * size.w * elem_size)
-	local rb_handle = util.create_renderbuffer {
+	local rb_handle = fbmgr.get_rb(fbmgr.create_rb {
 		w = size.w,
 		h = size.h,
 		layers = 1,
@@ -426,7 +426,7 @@ function util.read_render_buffer_content(size, format, rb_idx, force_read)
 			U="CLAMP",
 			V="CLAMP",
 		}
-	}
+	}).handle
 
 	local viewid = viewidmgr.get "blit"
 	if viewid == nil then
