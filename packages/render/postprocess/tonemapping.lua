@@ -8,21 +8,21 @@ local fs = require "filesystem"
 local setting = require "setting"
 
 local tm = ecs.system "tonemapping"
+tm.singleton "postprocess"
 tm.depend    "render_system"
 tm.depend    "bloom_system"
 tm.dependby  "postprocess_system"
 
 function tm:post_init()
     local sd = setting.get()
-
     local hdrsetting = sd.graphic.hdr
-
+    local pp = self.postprocess
     if hdrsetting.enable then
-        local pp_eid = world:first_entity_id "postprocess"
         local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 
         local fbsize = world.args.fb_size
-        world:add_component(pp_eid, "technique", {
+        local techniques = pp.techniques
+        techniques[#techniques+1]
             {
                 name = "tonemapping",
                 passes = {
@@ -42,9 +42,7 @@ function tm:post_init()
                             clear_state = {clear=""},
                         }
                     },
-
                 }
-            },
-        })
+            }
     end
 end

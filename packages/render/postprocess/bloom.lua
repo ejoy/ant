@@ -10,6 +10,7 @@ local setting   = require "setting"
 local fs        = require "filesystem"
 
 local bloom_sys = ecs.system "bloom_system"
+bloom_sys.singleton "postprocess"
 bloom_sys.depend    "render_system"
 bloom_sys.dependby  "postprocess_system"
 bloom_sys.dependby  "tonemapping"
@@ -131,18 +132,18 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 end
 
 function bloom_sys:post_init()
+    local pp = self.postprocess
+
     local sd = setting.get()
     local bloom = sd.graphic.postprocess.bloom
     if bloom.enable then
-        local pp_eid = world:first_entity_id "postprocess"
         local main_fbidx = fbgmgr.get_fb_idx(viewidmgr.get "main_view")
 
         local fbsize = world.args.fb_size
-        world:add_component(pp_eid, "technique", {
-            {
-                name = "bloom",
-                passes = get_passes_settings(main_fbidx, create_framebuffers_container_obj(fbsize), fbsize),
-            }
-        })
+        local techniques = pp.techniques
+        techniques[#techniques+1] = {
+            name = "bloom",
+            passes = get_passes_settings(main_fbidx, create_framebuffers_container_obj(fbsize), fbsize),
+        }
     end
 end
