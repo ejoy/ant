@@ -128,37 +128,7 @@ local function gen_ref(c)
 	return c.ref
 end
 
-local function solve(w)
-    typeinfo = w._components
-    local res = solve_depend(typeinfo)
-    for i, name in ipairs(res) do
-        typeinfo[name]._sortid = i
-    end
-    for vname,v in pairs(typeinfo) do
-        if v.depend then
-            if not v._depend then v._depend = {} end
-            for _, kname in ipairs(v.depend) do
-                v._depend[kname] = true
-                local k = typeinfo[kname]
-                if not k._dependby then k._dependby = {} end
-                k._dependby[vname] = true
-            end
-        end
-        if v.dependby then
-            if not v._dependby then v._dependby = {} end
-            for _, kname in ipairs(v.dependby) do
-                v._dependby[kname] = true
-                local k = typeinfo[kname]
-                if not k._depend then k._depend = {} end
-                k._depend[vname] = true
-            end
-        end
-        gen_ref(v)
-    end
-end
-
 return {
     init = foreach_init_1,
     delete = foreach_delete_1,
-    solve = solve,
 }

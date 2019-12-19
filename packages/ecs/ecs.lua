@@ -69,12 +69,6 @@ end
 
 function world:remove_component(eid, c)
 	local e = assert(self[eid])
-	local ti = assert(self._components[c], c)
-	if ti._dependby then
-		for name in pairs(ti._dependby) do
-			assert(e[name] == nil, ("Can't delete `%s` because `%s` depends on it."):format(c, name))
-		end
-	end
 	assert(e[c] ~= nil)
 	self._set[c] = nil
 	-- defer delete , see world:remove_reset
@@ -532,7 +526,6 @@ function world:slove_component()
 			error( k .. " is undefined in " .. typeinfo._undefined[k])
 		end
 	end
-	component.solve(self)
 end
 
 --return 
