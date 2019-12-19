@@ -5,8 +5,6 @@ local physic = assert(world.args.Physics)
 local physicworld = physic.world
 local ms = import_package "ant.math".stack
 
-local colliderutil = require "util"
-
 ecs.component_alias("collider_tag", "string")
 
 local coll = ecs.component "collider"
@@ -84,41 +82,36 @@ function char:init()
 	return self
 end
 
-for _, pp in ipairs {
-	{"plane_collider", 	  "plane_shape",},
-	{"sphere_collider",   "sphere_shape",},
-	{"box_collider", 	  "box_shape", },
-	{"capsule_collider",  "capsule_shape",},
-	{"character_collider","character_shape",},
+for _, name in ipairs {
+	"plane",
+	"sphere",
+	"box",
+	"capsule",
+	"custom",
+	"character",
 } do
-	local collidername, shapename = pp[1], pp[2]
-
-	local c = ecs.component(collidername) { depend = {"rendermesh", "transform", "collider_tag"} }
+	local collider_name = name .. "_collider"
+	local shape_name = name .. "_shape"
+	local collcomp = ecs.component(collider_name)
 		.collider "collider"
-		.shape(shapename)
+		.shape(shape_name)
 
-	function c:postinit(e)
-		local shape = self.shape
-		local collider = self.collider
-		colliderutil.create_collider_comp(physicworld, shape, collider, e.transform)
-	end
-
-	function c:delete()
+	function collcomp:delete()
 		self.shape.handle = nil	-- collider object has own this shape handle
 	end
-end
 
-local capsule_policy = ecs.policy "capsule"
-capsule_policy.require_component "collider_tag"
-capsule_policy.require_component "capsule_collider"
-capsule_policy.require_transform "capsule_transform"
+	local trans_name = name .. "_transform"
+	local t = ecs.transform(trans_name)
+	t.input(collider_name)
+	t.output "collider_tag"
+	function t.process(e)
+		e.collider_tag = collider_name
+	end
 
-local ct = ecs.transform "capsule_transform"
-ct.input "capsule_collider"
-ct.output "collider_tag"
-
-function ct.process(e)
-    e.collider_tag = "capsule_collider"
+	local cp = ecs.policy(name)
+	cp.require_component "collider_tag"
+	cp.require_component(collider_name)
+	cp.require_transform(trans_name)
 end
 
 local math3d_adapter = require "math3d.adapter"

@@ -97,11 +97,7 @@ remove_collision_obj(btCollisionWorld *world, btCollisionObject *collobj) {
 		world->removeCollisionObject(collobj);
 	}
 
-	auto shape = collobj->getCollisionShape();
-	if (shape) {
-		delete shape;
-		collobj->setCollisionShape(nullptr);
-	}
+	collobj->setCollisionShape(nullptr);
 }
 
 static inline void
