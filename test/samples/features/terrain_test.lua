@@ -58,7 +58,7 @@ function terrain_test:init()
 			"render",
 			"terrain",
 			"terrain_collider",
-			"general",
+			"name",
 			"select",
 		},
 		data = {

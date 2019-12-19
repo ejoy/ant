@@ -10,7 +10,7 @@ function util.create_directional_light_entity(world, name, color, intensity, rot
 		policy = {
 			"directional_light",
 			"serialize",
-			"general",
+			"name",
 		},
 		data = {
 			transform = mu.srt(nil, rotation, nil),
@@ -31,7 +31,7 @@ function util.create_point_light_entity(world, name)
 		policy = {
 			"point_light",
 			"serialize",
-			"general",
+			"name",
 		},
 		data = {
 			transform = mu.srt(),
@@ -54,7 +54,7 @@ function util.create_spot_light_entity(world, name)
 		policy = {
 			"spot_light",
 			"serialize",
-			"general",
+			"name",
 		},
 		data = {
 			transform = mu.srt(),
@@ -78,7 +78,7 @@ function util.create_ambient_light_entity(world, name, mode, skycolor, midcolor,
 		policy = {
 			"ambient_light",
 			"serialize",
-			"general",
+			"name",
 		},
 		data = {
 			name = name,

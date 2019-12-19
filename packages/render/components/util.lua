@@ -140,7 +140,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	local gridid = world:create_entity_v2 {
 		policy = {
 			"render",
-			"general",
+			"name",
 		},
 		data = {
 			transform = transform or mu.identity_transform(),
@@ -181,10 +181,10 @@ end
 
 function util.create_plane_entity(world, size, pos, materialpath, color, name)
 	color = color or {0.8, 0.8, 0.8, 1}	
-	local eid = world:create_entity_2 {
+	local eid = world:create_entity_v2 {
 		policy = {
 			"render",
-			"general",
+			"name",
 		},
 		data = {
 			transform = {
@@ -237,7 +237,7 @@ end
 function util.create_quad_entity(world, rect, materialpath, properties, name)
 	local eid = world:create_entity_v2 {
 		policy = {
-			"general",
+			"name",
 			"render",
 		},
 		data = {
@@ -263,7 +263,7 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
     local quadid = world:create_entity_v2{
 		policy = {
 			"render",
-			"general",
+			"name",
 		},
 		data = {
 			transform = mu.identity_transform(),
@@ -325,7 +325,7 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	local eid = world:create_entity_v2 {
 		policy = {
 			"render",
-			"general",
+			"name",
 		},
 		data = {
 			transform = transform or mu.srt(),
@@ -370,7 +370,7 @@ function util.create_axis_entity(world, transform, color, name)
 	local eid = world:create_entity_v2 {
 		policy = {
 			"render",
-			"general",
+			"name",
 		},
 		data = {
 			transform = transform or mu.srt(),
@@ -403,7 +403,7 @@ function util.create_skybox(world, material)
     local eid = world:create_entity_v2 {
 		policy = {
 			"render",
-			"general"
+			"name"
 		},
 		data = {
 			transform = mu.srt(),

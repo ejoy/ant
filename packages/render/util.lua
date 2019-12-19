@@ -196,7 +196,7 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 		policy = {
 			"render_queue",
 			"main_queue",
-			"general",
+			"name",
 		},
 		data = {
 			camera_tag = "main_view",
@@ -337,7 +337,7 @@ function util.create_blit_queue(world, viewrect)
 	world:create_entity_v2 {
 		policy = {
 			"render_queue",
-			"general",
+			"name",
 		},
 		data = {
 			camera_tag = "blit_view",

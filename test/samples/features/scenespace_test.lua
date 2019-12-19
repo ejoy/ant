@@ -45,7 +45,7 @@ local function create_scene_node_test()
 
     local default_hie_policy = {
         "hierarchy",
-        "general",
+        "name",
         "serialize"
     }
 
@@ -169,7 +169,7 @@ local function create_scene_node_test()
                 "render",
                 "mesh",
                 "select",
-                "general",
+                "name",
                 "serialize",
             },
             data = {
@@ -198,7 +198,7 @@ local function create_scene_node_test()
                 "mesh",
                 "select",
                 "serialize",
-                "general",
+                "name",
             },
             data = {
                 transform = {
@@ -249,7 +249,7 @@ local function create_scene_node_test()
         world:create_entity_v2 {
             policy = {
                 "hierarchy",
-                "general",
+                "name",
                 "serialize",
             },
             data = {
@@ -278,7 +278,7 @@ local function create_scene_node_test()
         world:create_entity_v2 {
             policy = {
                 "select",
-                "general",
+                "name",
                 "render",
                 "mesh",
                 "serialize",
@@ -307,7 +307,7 @@ local function create_scene_node_test()
         world:create_entity_v2 {
             policy = {
                 "select",
-                "general",
+                "name",
                 "render",
                 "mesh",
                 "serialize",
@@ -347,7 +347,7 @@ local function create_scene_node_test()
     local submesh_child = world:create_entity_v2 {
         policy = {
             "serialize",
-            "general",
+            "name",
             "render",
             "mesh",
         },
@@ -561,7 +561,7 @@ local test_queue = {
                 "select",
                 "render",
                 "mesh",
-                "general",
+                "name",
             },
             data = {
                 transform = {

@@ -13,7 +13,7 @@ local function create_pbr_entity(world,name,pos,rot,scl,mesh_desc,material_desc,
         policy = {
             "render",
             "mesh",
-            "general",
+            "name",
         },
         data = {
             name = name,

@@ -244,7 +244,7 @@ local function add_pick_entity()
 
 	return world:create_entity_v2 {
 		policy = {
-			"general",
+			"name",
 			"pickup",
 			"render_queue",
 		},

@@ -198,7 +198,7 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect,
 		policy = {
 			"shadow_make",
 			"render_queue",
-			"general",
+			"name",
 		},
 		data = {
 			material = {ref_path = linear_shadow and linear_cast_material or cast_material},

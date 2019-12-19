@@ -53,7 +53,7 @@ function util.create_procedural_sky(world, settings)
 		policy = {
 			"render",
 			"procedural_sky",
-			"general",
+			"name",
 		},
 		data = {
 			transform = mu.identity_transform(),
