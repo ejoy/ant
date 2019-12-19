@@ -66,7 +66,7 @@ local function create_scene_node_test()
     ]]
 
     local hie_root =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = default_hie_policy,
             data = {
                 hierarchy = {},
@@ -78,7 +78,7 @@ local function create_scene_node_test()
         }
 
     local hie_level1_1 =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = default_hie_policy,
             data = {
                 hierarchy_visible = true,
@@ -96,7 +96,7 @@ local function create_scene_node_test()
     }
 
     local hie_level1_2 =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = default_hie_policy,
             data = {
                 hierarchy_visible = true,
@@ -113,7 +113,7 @@ local function create_scene_node_test()
     }
     
     local hie_level2_1 =
-        world:create_entity_v2 {
+        world:create_entity {
         policy = {
             "genreal",
             "hierarchy",
@@ -135,7 +135,7 @@ local function create_scene_node_test()
         }
     }
     local render_child1_1 =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = {
                 "render",
                 "mesh",
@@ -164,7 +164,7 @@ local function create_scene_node_test()
     }
     
     local render_child1_2 =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = {
                 "render",
                 "mesh",
@@ -192,7 +192,7 @@ local function create_scene_node_test()
         }
 
     local render_child2_1 =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = {
                 "render",
                 "mesh",
@@ -234,7 +234,7 @@ local function create_scene_node_test()
     ]]
 
     local hie_root2 =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = default_hie_policy,
             data = {
                 transform = mu.srt({2, 1, 1, 0}, nil, {3, 2, -3, 1}),
@@ -246,7 +246,7 @@ local function create_scene_node_test()
     }
 
     local hie2_level1_1 =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = {
                 "hierarchy",
                 "name",
@@ -275,7 +275,7 @@ local function create_scene_node_test()
     end
 
     local render2_rootchild =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = {
                 "select",
                 "name",
@@ -304,7 +304,7 @@ local function create_scene_node_test()
     }
 
     local render2_child1 =
-        world:create_entity_v2 {
+        world:create_entity {
             policy = {
                 "select",
                 "name",
@@ -344,7 +344,7 @@ local function create_scene_node_test()
         }
     end
 
-    local submesh_child = world:create_entity_v2 {
+    local submesh_child = world:create_entity {
         policy = {
             "serialize",
             "name",
@@ -556,7 +556,7 @@ local test_queue = {
         world:add_component(eid, 'hierarchy', {})
         world:add_component(eid, 'ignore_parent_scale', true)
 
-        world:create_entity_v2 {
+        world:create_entity {
             policy = {
                 "select",
                 "render",

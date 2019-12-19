@@ -16,7 +16,7 @@ local function create_pbr_entity(world,
     name, transform, meshpath,
     color, metallic, roughness)
 
-    return world:create_entity_v2 {
+    return world:create_entity {
         policy = {
             "render",
             "mesh",

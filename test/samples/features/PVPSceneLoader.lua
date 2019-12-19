@@ -258,7 +258,7 @@ function PVPScene.create_entitices(world)
 					t = ms(t, rsrt[3], "+T")
 				end
 
-				local eid = world:create_entity_v2  {
+				local eid = world:create_entity  {
 					policy = {
 						"render",
 						"mesh",

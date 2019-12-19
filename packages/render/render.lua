@@ -37,7 +37,7 @@ function m.process(e)
 	end
 end
 
-local rt = ecs.component "render_target" {depend = "viewid"}
+local rt = ecs.component "render_target"
 	.viewport 	"viewport"
 	["opt"].fb_idx 	"fb_index"
 
@@ -75,7 +75,7 @@ local cp = ecs.policy "camera"
 cp.require_component "camera_mgr"
 cp.require_component "name"
 
-ecs.component_alias("camera_tag", "string") {depend = "viewid"}
+ecs.component_alias("camera_tag", "string")
 ecs.component_alias("visible", "boolean", true) 
 
 local rqp = ecs.policy "render_queue"

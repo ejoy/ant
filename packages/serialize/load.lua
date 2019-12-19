@@ -5,24 +5,6 @@ local doPost
 local component
 local entitys
 
-local function sortcomponent(w, t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    local ti = w._components
-    table.sort(sort, function (a, b) return ti[a]._sortid < ti[b]._sortid end)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -62,9 +44,6 @@ local function getPost(w)
 end
 
 local function init_entity(w, e)
-    for name in sortcomponent(w, e) do
-        w:init_component(e, name)
-    end
 end
 
 local function _load_entity(w, tree)

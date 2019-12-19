@@ -60,7 +60,7 @@ function mods.dummy(...)
 
 	function dummy:init()
 		print ("Dummy init")
-		local eid = world:create_entity_v2 {
+		local eid = world:create_entity {
 			policy = {
 				"foobar"
 			},
@@ -80,7 +80,7 @@ function mods.dummy(...)
 		for _, eid in world:each "foobar" do
 			print("1. Dummy foobar", eid)
 		end
-		local newid = world:create_entity_v2 {
+		local newid = world:create_entity {
 			policy = {
 				"foobar",
 			},

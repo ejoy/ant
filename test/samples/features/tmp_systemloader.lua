@@ -64,7 +64,7 @@ local function ozzmesh_animation_test()
     local respath = fs.path '/pkg/ant.resources'
 
     local eid =
-        world:create_entity_v2 {
+        world:create_entity {
         policy = {
             "render",
             "ozzmesh",
@@ -180,7 +180,7 @@ local function test_serialize(delfile_aftertest)
 end
 
 local function gltf_animation_test()
-    world:create_entity_v2 {
+    world:create_entity {
         policy = {
             "render",
             "mesh",
@@ -227,7 +227,7 @@ local function gltf_animation_test()
 end
 
 local function pbr_test()
-    world:create_entity_v2 {
+    world:create_entity {
         policy = {
             "render",
             "mesh",

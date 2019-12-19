@@ -26,7 +26,7 @@ function terrainshape:delete()
 	end
 end
 
-local terrain_collider = ecs.component "terrain_collider" {depend = {"transform", "terrain"}}
+local terrain_collider = ecs.component "terrain_collider"
 	.shape "terrain_shape"
 	.collider "collider"
 
@@ -50,19 +50,11 @@ local function create_terrain_shape(shape, terraincomp)
 	Physics:set_shape_scale(shape.handle, ms(scale, "P"))
 end
 
-function terrain_collider:postinit(e)	
-	create_terrain_shape(self.shape, e.terrain)
-	colliderutil.create_collider_comp(Physics, self.shape, self.collider, e.transform)
-end
-
 function terrain_collider:delete()
 	self.shape.handle = nil -- collider own this handle, will delete in collider:delete function
 end
 
-local terraincomp =
-    ecs.component_alias('terrain', 'resource') {
-    depend = {'rendermesh', 'material'}
-}
+ecs.component_alias('terrain', 'resource')
 
 local terrainpolicy = ecs.policy "terrain"
 terrainpolicy.require_component "rendermesh"

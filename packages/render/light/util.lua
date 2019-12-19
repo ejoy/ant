@@ -6,7 +6,7 @@ local mathpkg = import_package 'ant.math'
 local mu = mathpkg.util
 
 function util.create_directional_light_entity(world, name, color, intensity, rotation)
-	return world:create_entity_v2 {
+	return world:create_entity {
 		policy = {
 			"directional_light",
 			"serialize",
@@ -27,7 +27,7 @@ function util.create_directional_light_entity(world, name, color, intensity, rot
 end
 
 function util.create_point_light_entity(world, name)
-	return world:create_entity_v2 {
+	return world:create_entity {
 		policy = {
 			"point_light",
 			"serialize",
@@ -50,7 +50,7 @@ function util.create_point_light_entity(world, name)
 end
 
 function util.create_spot_light_entity(world, name)
-	return world:create_entity_v2 {
+	return world:create_entity {
 		policy = {
 			"spot_light",
 			"serialize",
@@ -74,7 +74,7 @@ function util.create_spot_light_entity(world, name)
 end
 
 function util.create_ambient_light_entity(world, name, mode, skycolor, midcolor, groundcolor)	
-	return world:create_entity_v2 {
+	return world:create_entity {
 		policy = {
 			"ambient_light",
 			"serialize",

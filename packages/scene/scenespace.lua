@@ -14,7 +14,7 @@ local animodule = require "hierarchy.animation"
 ecs.mark("hierarchy_delete", "hierarchy_del_handle")
 
 ecs.component_alias("attach", "entityid")
-ecs.component_alias("ignore_parent_scale", "boolean") {depend = "hierarchy"}
+ecs.component_alias("ignore_parent_scale", "boolean")
 
 local ip = ecs.policy "ignore_parent_scale"
 ip.require_component "ignore_parent_scale"

@@ -137,7 +137,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
     local geopkg = import_package "ant.geometry"
     local geolib = geopkg.geometry
 
-	local gridid = world:create_entity_v2 {
+	local gridid = world:create_entity {
 		policy = {
 			"render",
 			"name",
@@ -253,7 +253,7 @@ function util.quad_mesh(rect)
 end
 
 function util.create_quad_entity(world, rect, materialpath, properties, name)
-	local eid = world:create_entity_v2 {
+	local eid = world:create_entity {
 		policy = {
 			"name",
 			"render",
@@ -278,7 +278,7 @@ function util.create_shadow_quad_entity(world, rect, name)
 end
 
 function util.create_texture_quad_entity(world, texture_tbl, name)
-    local quadid = world:create_entity_v2{
+    local quadid = world:create_entity{
 		policy = {
 			"render",
 			"name",
@@ -340,7 +340,7 @@ end
 
 function util.create_frustum_entity(world, frustum, name, transform, color)
 	local points = frustum:points()
-	local eid = world:create_entity_v2 {
+	local eid = world:create_entity {
 		policy = {
 			"render",
 			"name",
@@ -385,7 +385,7 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 end
 
 function util.create_axis_entity(world, transform, color, name)
-	local eid = world:create_entity_v2 {
+	local eid = world:create_entity {
 		policy = {
 			"render",
 			"name",
@@ -418,7 +418,7 @@ function util.create_axis_entity(world, transform, color, name)
 end
 
 function util.create_skybox(world, material)
-    local eid = world:create_entity_v2 {
+    local eid = world:create_entity {
 		policy = {
 			"render",
 			"name"

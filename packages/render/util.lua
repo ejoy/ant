@@ -192,7 +192,7 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 		view_rect.w, view_rect.h, "D24S8", rb_flag)
 	)
 
-	return world:create_entity_v2 {
+	return world:create_entity {
 		policy = {
 			"render_queue",
 			"main_queue",
@@ -334,7 +334,7 @@ function util.create_blit_queue(world, viewrect)
 		default_comp.camera(nil, nil, default_comp.frustum(viewrect.w, viewrect.h))
 	)
 
-	world:create_entity_v2 {
+	world:create_entity {
 		policy = {
 			"render_queue",
 			"name",
