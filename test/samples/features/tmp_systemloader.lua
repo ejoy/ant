@@ -71,6 +71,9 @@ local function ozzmesh_animation_test()
             "animation",
             "ozz_skinning",
             "capsule",
+            "serialize",
+            "name",
+            "shadow_cast",
         },
         data = {
             transform = {
@@ -108,9 +111,6 @@ local function ozzmesh_animation_test()
             },
             can_render = true,
             rendermesh = {},
-            state_chain = {
-                ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
-            },
             skinning = {},
             skeleton = {
                 ref_path = respath / skepath
@@ -133,6 +133,7 @@ local function ozzmesh_animation_test()
                 },
             },
             asyn_load = "loaded",
+            can_cast = true,
             -- character = {
             --     movespeed = 1.0,
             -- }
@@ -184,7 +185,9 @@ local function gltf_animation_test()
             "render",
             "mesh",
             "animation",
-            "skinning"
+            "skinning",
+            "shadow_cast",
+            "name",
         },
         data = {
             transform = mu.srt(nil, nil, {-3, 2, 0, 1}),
@@ -197,9 +200,6 @@ local function gltf_animation_test()
             },
             skeleton = {
                 ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
-            },
-            state_chain = {
-                ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
             },
             skinning = {},
             animation = {
@@ -221,6 +221,7 @@ local function gltf_animation_test()
             asyn_load = "loaded",
             can_render = true,
             can_cast = true,
+            name = "gltf animation test"
         }
     }
 end
@@ -230,6 +231,8 @@ local function pbr_test()
         policy = {
             "render",
             "mesh",
+            "shadow_cast",
+            "name",
         },
         data = {
             transform = mu.srt(nil, nil, {3, 2, 0, 1}),
@@ -243,6 +246,7 @@ local function pbr_test()
             asyn_load = "loaded",
             can_render = true,
             can_cast = true,
+            name = "Damaged Helmet"
         }
 
     }

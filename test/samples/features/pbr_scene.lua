@@ -20,6 +20,8 @@ local function create_pbr_entity(world,
         policy = {
             "render",
             "mesh",
+            "name",
+            "select",
         },
         data = {
             name = name,
