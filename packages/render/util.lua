@@ -414,8 +414,9 @@ function util.screen_capture(world, force_read)
 	local fbidx = mq.render_target.fb_idx
 	local fb = fbmgr.get(fbidx)
 	local s = setting.get()
-	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA"
-	return util.read_render_buffer_content(world.args.fb_size, format, fb[1], force_read)
+	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
+	local handle, width, height, pitch = util.read_render_buffer_content(world.args.fb_size, format, fb[1], force_read)
+	return width, height, pitch, tostring(handle)
 end
 
 function util.read_render_buffer_content(size, format, rb_idx, force_read)
@@ -425,12 +426,12 @@ function util.read_render_buffer_content(size, format, rb_idx, force_read)
 		RGBA16F = 8,
 	}
 
-	local elem_size = assert(elem_size_mapper(format))
+	local elem_size = assert(elem_size_mapper[format])
 	
-	local memory_handle = bgfx.memory_texture(size.x * size.y * elem_size)
-	local rb_handle = util.create_renderbuffer {
-		w = size.x,
-		h = size.y,
+	local memory_handle = bgfx.memory_texture(size.h * size.w * elem_size)
+	local rb_handle = fbmgr.get_rb(fbmgr.create_rb {
+		w = size.w,
+		h = size.h,
 		layers = 1,
 		format = format,
 		flags = util.generate_sampler_flag {
@@ -441,7 +442,7 @@ function util.read_render_buffer_content(size, format, rb_idx, force_read)
 			U="CLAMP",
 			V="CLAMP",
 		}
-	}
+	}).handle
 
 	local viewid = viewidmgr.get "blit"
 	if viewid == nil then
@@ -452,9 +453,10 @@ function util.read_render_buffer_content(size, format, rb_idx, force_read)
 
 	if force_read then
 		bgfx.frame()
+		bgfx.frame()
 	end
 
-	return memory_handle
+	return memory_handle, size.w, size.h, size.w * elem_size
 end
 
 return util
