@@ -179,28 +179,46 @@ function util.quad_vertices(rect)
 	}
 end
 
-function util.create_plane_entity(world, size, pos, materialpath, color, name)
-	color = color or {0.8, 0.8, 0.8, 1}	
-	local eid = world:create_entity_v2 {
-		policy = {
-			"render",
-			"name",
-		},
-		data = {
-			transform = {
-				s = size or {1, 1, 1, 0},
-				r = {0, 0, 0, 0},
-				t = pos or {0, 0, 0, 1}
-			},
-			rendermesh = {},
-			material = util.assign_material(
-					materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
-					{uniforms = {u_color = {type="color", name="color", value=color}},}),
-			can_render = true,
-			name = name or "Plane",
-		}
+function util.create_plane_entity(world, size, pos, materialpath, color, name, needcollider)
+	local policy = {
+		"render",
+		"name",
 	}
 
+	local scale = size or {1, 1, 1, 0}
+
+	local data = {
+		transform = {
+			s = scale,
+			r = {0, 0, 0, 0},
+			t = pos or {0, 0, 0, 1}
+		},
+		rendermesh = {},
+		material = util.assign_material(
+				materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+				{uniforms = {u_color = {type="color", name="color", value=color}},}),
+		can_render = true,
+		name = name or "Plane",
+	}
+	if needcollider then
+		policy[#policy+1] = "box"
+
+		data["collider_tag"] = "box_collider"
+		data["box_collider"] = {
+			collider = {
+				center = {0, 0, 0},
+			},
+			shape = {
+				size = scale,
+			}
+		}
+	end
+
+	local eid = world:create_entity_v2{
+		policy = policy,
+		data = data,
+	}
+	
 	local e = world[eid]
 	local vb = {
 		"fffffffff",

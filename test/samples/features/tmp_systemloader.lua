@@ -253,21 +253,13 @@ local function pbr_test()
 end
 
 local function create_plane_test()
-    local planeeid = computil.create_plane_entity(world,
-    {50, 1, 50, 0}, nil,
-    fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
-    {0.8, 0.8, 0.8, 1},
-    "test shadow plane")
-
-    world:add_component(planeeid, "collider_tag", "box_collider")
-    world:add_component(planeeid, "box_collider", {
-        collider = {
-            center = {0, 0, 0},
-        },
-        shape = {
-            size = {50, 1, 50},
-        }
-    })
+    return 
+    computil.create_plane_entity(world,
+            {50, 1, 50, 0}, nil,
+            fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
+            {0.8, 0.8, 0.8, 1},
+            "test shadow plane",
+            true)
 end
 
 function init_loader:init()
