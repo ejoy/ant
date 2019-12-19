@@ -146,8 +146,8 @@ end
 
 function pp_sys:update()
     local pp = self.postprocess
-    local technique = pp.technique
-    if next(technique) then
+    local techniques = pp.techniques
+    if next(techniques) then
         local render_properties = self.render_properties
         local lastslot = {
             fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
@@ -158,8 +158,8 @@ function pp_sys:update()
         local meshgroup = meshres.scenes[1][1][1]
 
         reset_viewid_idx()
-        for i=1, #technique do
-            local tech = technique[i]
+        for i=1, #techniques do
+            local tech = techniques[i]
             lastslot = render_technique(tech, lastslot, meshgroup, render_properties)
         end
     end

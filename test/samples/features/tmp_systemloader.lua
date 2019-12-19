@@ -111,6 +111,7 @@ local function ozzmesh_animation_test()
             state_chain = {
                 ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
             },
+            skinning = {},
             skeleton = {
                 ref_path = respath / skepath
             },
@@ -200,6 +201,7 @@ local function gltf_animation_test()
             state_chain = {
                 ref_path = fs.path "/pkg/ant.test.features" / 'assets' / 'test.sm',
             },
+            skinning = {},
             animation = {
                 anilist = {
                     ani1 = {
