@@ -62,9 +62,6 @@ local function getPost(w)
 end
 
 local function init_entity(w, e)
-    for name in sortcomponent(w, e) do
-        w:init_component(e, name)
-    end
 end
 
 local function _load_entity(w, tree)

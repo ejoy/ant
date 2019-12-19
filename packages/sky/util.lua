@@ -49,7 +49,7 @@ end
 
 function util.create_procedural_sky(world, settings)
 	settings = settings or {}
-    local skyeid = world:create_entity_v2 {
+    local skyeid = world:create_entity {
 		policy = {
 			"render",
 			"procedural_sky",

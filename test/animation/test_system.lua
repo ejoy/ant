@@ -57,7 +57,7 @@ m.require_component "collider_tag"
 m.require_component "capsule_collider"
 
 local function create_animation_test()
-    local eid = world:create_entity_v2 {
+    local eid = world:create_entity {
         policy = {
             "animation",
             "skinning",

@@ -53,7 +53,7 @@ function terrain_test:init()
 	}
 	end
 
-	world:create_entity_v2 {
+	world:create_entity {
 		policy = {
 			"render",
 			"terrain",

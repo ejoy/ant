@@ -15,7 +15,7 @@ local fp = ecs.policy "foobar"
 fp.require_component "foobar"
 
 function test:init()
-	world:create_entity_v2 {
+	world:create_entity {
 		policy = {
 			"foobar"
 		},

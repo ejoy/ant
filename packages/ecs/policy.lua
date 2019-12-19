@@ -45,7 +45,9 @@ local function apply(w, policies, dataset)
                 error(("transform `%s` and transform `%s` has same output."):format(name, reflection[v]))
             end
             reflection[v] = name
-            table_append(component[v].depend, class.input)
+            if class.input then
+                table_append(component[v].depend, class.input)
+            end
         end
     end
     local mark = {}
@@ -57,36 +59,8 @@ local function apply(w, policies, dataset)
             init_transform[#init_transform+1] = transform_class[name].method.process
         end
     end
-
-    if dataset then
-        for name in pairs(dataset) do
-            if not component[name] then
-                error(("dataset have an unknown component `%s`."):format(name))
-            end
-        end
-        local i = 1
-        while true do
-            local name = init_component[i]
-            if not name then
-                break
-            end
-            if not dataset[name] then
-                if not reflection[name] then
-                    error(("dataset does not have component `%s`."):format(name))
-                end
-                init_component[i] = init_component[#init_component]
-                init_component[#init_component] = nil
-            else
-                i = i + 1
-            end
-        end
-    end
-
     table.sort(init_component)
-    return {
-        init_component,
-        init_transform,
-    }
+    return init_component, init_transform
 end
 
 return {

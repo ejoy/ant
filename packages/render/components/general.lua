@@ -90,12 +90,6 @@ function resource:init()
 	return self
 end
 
-function resource:postinit(e)
-	if not self.asyn_load then
-		assert(e.asyn_load == nil)
-	end
-end
-
 ecs.component "submesh_ref"
 	.material_refs "int[]"
 	.visible "boolean"
@@ -109,7 +103,7 @@ function rendermesh:init()
 	return self
 end
 
-local mesh = ecs.component "mesh" {depend="rendermesh"}
+local mesh = ecs.component "mesh"
 	.ref_path "respath" ()
 	["opt"].asyn_load "boolean" (false)
 
@@ -218,7 +212,7 @@ end
 ecs.component_alias("color", "real[4]", {1,1,1,1})
 
 ecs.tag "dynamic_object"
-ecs.component "character" {depend = {"dynamic_object",}}
+ecs.component "character"
 	.movespeed "real" (1.0)
 
 ecs.component "physic_state"

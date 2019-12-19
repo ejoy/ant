@@ -96,7 +96,7 @@ function model_review_system:init()
 		"serialize",
 		"name",
 	}
-	local origineid = world:create_entity_v2 {
+	local origineid = world:create_entity {
 		policy = default_policy,
 		data = {
 			transform 	= mu.scale_mat(0.2),
@@ -111,7 +111,7 @@ function model_review_system:init()
 		}
 	}
 
-	world:create_entity_v2 {
+	world:create_entity {
 		policy = default_policy,
 		data = {
 			transform 	= mu.srt({0.2, 0.2, 0.2}, nil, {5, 0, 0}),
@@ -137,7 +137,7 @@ function model_review_system:init()
 	-- 	name 		= "door_outline",
 	-- }
 
-	world:create_entity_v2 {
+	world:create_entity {
 		policy = default_policy,
 		data = {
 			transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),

@@ -93,15 +93,9 @@ for _, pp in ipairs {
 } do
 	local collidername, shapename = pp[1], pp[2]
 
-	local c = ecs.component(collidername) { depend = {"rendermesh", "transform", "collider_tag"} }
+	local c = ecs.component(collidername)
 		.collider "collider"
 		.shape(shapename)
-
-	function c:postinit(e)
-		local shape = self.shape
-		local collider = self.collider
-		colliderutil.create_collider_comp(physicworld, shape, collider, e.transform)
-	end
 
 	function c:delete()
 		self.shape.handle = nil	-- collider object has own this shape handle

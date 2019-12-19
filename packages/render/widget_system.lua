@@ -27,7 +27,7 @@ local rmb = ecs.system "render_mesh_bounding"
 rmb.dependby "primitive_filter_system"
 
 function rmb:init()
-	local eid = world:create_entity_v2 {
+	local eid = world:create_entity {
 		policy = {
 			"name",
 			"render",

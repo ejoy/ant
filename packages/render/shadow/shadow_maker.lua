@@ -21,7 +21,7 @@ local mc 		= mathpkg.constant
 local fs 		= require "filesystem"
 local mathbaselib= require "math3d.baselib"
 
-ecs.component "csm" {depend = "material"}
+ecs.component "csm"
 	.split_ratios "real[2]"
 	.index "int" (0)
 	.stabilize "boolean" (true)
@@ -194,7 +194,7 @@ local function create_csm_entity(view_camera, lightdir, index, ratios, viewrect,
 	calc_shadow_camera(view_camera, ratios, lightdir, shadowmap_size, stabilize, csmcamera)
 	camerautil.bind_camera(world, camera_tag, csmcamera)
 
-	local eid = world:create_entity_v2 {
+	local eid = world:create_entity {
 		policy = {
 			"shadow_make",
 			"render_queue",
@@ -294,7 +294,7 @@ local function create_shadow_entity(view_camera, shadowmap_size, split_num, dept
 						viewfrustum.n, viewfrustum.f, 
 						pssm_lambda, split_num)
 
-	return world:create_entity_v2 {
+	return world:create_entity {
 		policy = {
 			"shadow_config"
 		},

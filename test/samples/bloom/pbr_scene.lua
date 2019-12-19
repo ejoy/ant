@@ -9,7 +9,7 @@ local fs = require "filesystem"
 local pbr_scene = {}
 
 local function create_pbr_entity(world,name,pos,rot,scl,mesh_desc,material_desc,metal,rough)
-    return world:create_entity_v2 {
+    return world:create_entity {
         policy = {
             "render",
             "mesh",

@@ -44,7 +44,7 @@ local function play_animation(e, name, duration)
 	end
 end
 
-local state_chain = ecs.component "state_chain" {depend = "animation"}
+local state_chain = ecs.component "state_chain"
 	.ref_path "respath"
 
 function state_chain:init()

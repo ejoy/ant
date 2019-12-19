@@ -33,18 +33,6 @@ function world:register_component(eid, c)
 	end
 end
 
-function world:init_component(e, c)
-	local ti = assert(self._components[c], c)
-	if ti._depend then
-		for name in pairs(ti._depend) do
-			assert(e[name], ("Can't init `%s` because `%s` depends on it."):format(c, name))
-		end
-	end
-	if ti.method and ti.method.postinit then
-		ti.method.postinit(e[c], e)
-	end
-end
-
 function world:register_entity()
 	local entity_id = self._entity_id + 1
 	self._entity_id = entity_id
@@ -60,7 +48,6 @@ function world:add_component(eid, component_type, args)
 		if not c then
 			e[component_type] = self:create_component(component_type, args)
 			self:register_component(eid, component_type)
-			self:init_component(e, component_type)
 		else
 			c[#c+1] = self:create_component(component_type, args)
 		end
@@ -68,7 +55,6 @@ function world:add_component(eid, component_type, args)
 	end
 	e[component_type] = self:create_component(component_type, args)
 	self:register_component(eid, component_type)
-	self:init_component(e, component_type)
 end
 
 function world:add_component_child(parent_com,child_name,child_type,child_value)
@@ -106,17 +92,12 @@ function world:component_list(eid)
 	return r
 end
 
-local function sortcomponent(w, t, r)
+local function sortcomponent(w, t)
     local sort = {}
     for k in pairs(t) do
         sort[#sort+1] = k
     end
-	local ti = w._components
-	if not r then
-		table.sort(sort, function (a, b) return ti[a]._sortid < ti[b]._sortid end)
-	else
-		table.sort(sort, function (a, b) return ti[a]._sortid > ti[b]._sortid end)
-	end
+    table.sort(sort)
     local n = 1
     return function ()
         local k = sort[n]
@@ -135,17 +116,15 @@ function world:new_entity_id()
 end
 
 function world:set_entity(eid, t)
-	local init = policy.apply(self, t.policy)
+	local component, transform = policy.apply(self, t.policy, t.data)
 	local e = {}
 	self[eid] = e
 	self._entity[eid] = true
-	for _, c in ipairs(init[1]) do
-		if t.data[c] then
-			e[c] = assert(self:create_component(c, t.data[c]))
-			self:register_component(eid, c)
-		end
+	for _, c in ipairs(component) do
+		e[c] = assert(self:create_component(c, t.data[c]))
+		self:register_component(eid, c)
 	end
-	for _, f in ipairs(init[2]) do
+	for _, f in ipairs(transform) do
 		f(e)
 	end
 	self:mark(eid, "entity_create")
@@ -153,35 +132,7 @@ end
 
 function world:create_entity(t)
 	local eid = self:new_entity_id()
-	local policy = {"compat"}
-	if t.render_target then
-		policy[#policy+1] = "render_target"
-	end
-	self:set_entity(eid, {
-		policy = policy,
-		data = t,
-	})
-	return eid
-end
-
-function world:set_entity_v2(eid, t)
-	local init = policy.apply(self, t.policy, t.data)
-	local e = {}
-	self[eid] = e
-	self._entity[eid] = true
-	for _, c in ipairs(init[1]) do
-		e[c] = assert(self:create_component(c, t.data[c]))
-		self:register_component(eid, c)
-	end
-	for _, f in ipairs(init[2]) do
-		f(e)
-	end
-	self:mark(eid, "entity_create")
-end
-
-function world:create_entity_v2(t)
-	local eid = self:new_entity_id()
-	self:set_entity_v2(eid, t)
+	self:set_entity(eid, t)
 	return eid
 end
 
@@ -376,7 +327,7 @@ function world:clear_removed()
 			remove_component(self, ti, e[component_type], e)
 		else
 			-- delete entity
-			for component_type, c in sortcomponent(self, e, true) do
+			for component_type, c in sortcomponent(self, e) do
 				local ti = assert(self._components[component_type], component_type)
 				remove_component(self, ti, c, e)
 			end
@@ -491,7 +442,7 @@ local function init_modules(w, packages, systems, loader)
 	for k in pairs(delete) do
 		class.system[k] = nil
 	end
-	return class, reg
+	return class
 end
 
 function world:groups()
@@ -611,19 +562,11 @@ function ecs.new_world(config)
 	}, world)
 
 	-- load systems and components from modules
-	local class, class_register = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
+	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
 	w:slove_component()
 
-	local m = class_register.policy "compat"
-	for name in pairs(class.component) do
-		m.require_component(name)
-	end
-
 	for name, v in pairs(class.transform) do
-		if #v.input == 0 then
-			error(("transform `%s`'s input cannot be empty."):format(name))
-		end
 		if #v.output == 0 then
 			error(("transform `%s`'s output cannot be empty."):format(name))
 		end
@@ -658,9 +601,11 @@ function ecs.new_world(config)
 			if not c then
 				error(("transform `%s` in policy `%s` is not defined."):format(transform_name, policy_name))
 			end
-			for _, v in ipairs(c.input) do
-				if not components[v] then
-					error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name))
+			if c.input then
+				for _, v in ipairs(c.input) do
+					if not components[v] then
+						error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name))
+					end
 				end
 			end
 			for _, v in ipairs(c.output) do

@@ -150,7 +150,7 @@ function raw_buf:init()
 end
 
 ecs.component_alias("blit_viewid", "viewid") 
-ecs.component "blit_buffer" {depend = "blit_viewid"}
+ecs.component "blit_buffer"
 	.raw_buffer "raw_buffer"
 	.rb_idx 	"rb_index"
 
@@ -242,7 +242,7 @@ local function add_pick_entity()
 		}
 	}
 
-	return world:create_entity_v2 {
+	return world:create_entity {
 		policy = {
 			"name",
 			"pickup",
