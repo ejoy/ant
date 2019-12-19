@@ -43,7 +43,7 @@ end
 function callback.init(nwh, context, width, height)
 	imgui.create(nwh)
 	rhwi.init {
-		--nwh = nwh,
+		nwh = nwh,
 		context = context,
 		width = width,
 		height = height,
