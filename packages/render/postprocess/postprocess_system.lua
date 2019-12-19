@@ -15,7 +15,6 @@ local renderutil= require "util"
 local computil  = require "components.util"
 local uniformuitl=require "uniforms"
 
-ecs.tag "postprocess"
 local pps = ecs.component "postprocess_slot"
     .fb_idx         "fb_index"
     ["opt"].rb_idx  "rb_index"
@@ -45,8 +44,11 @@ ecs.component "technique_order"
 
 ecs.component_alias("copy_pass", "pass")
 
+ecs.singleton "postprocess"
+
 local pp_sys = ecs.system "postprocess_system"
 pp_sys.singleton "render_properties"
+pp_sys.singleton "postprocess"
 
 -- we list all postporcess effect here, but the order is dependent on effect's depend
 pp_sys.depend "bloom_system"
@@ -80,10 +82,6 @@ end
 
 function pp_sys:init()
     quad_reskey = assetmgr.register_resource(quad_reskey, computil.quad_mesh{x=-1, y=-1, w=2, h=2})
-
-    world:create_entity {
-        postprocess = true,
-    }
 end
 
 local function is_slot_equal(lhs, rhs)
@@ -142,9 +140,9 @@ local function render_technique(tech, lastslot, meshgroup, render_properties)
 end
 
 function pp_sys:update()
-    local pp = world:first_entity "postprocess"
+    local pp = self.postprocess
     local technique = pp.technique
-    if technique then
+    if next(technique) then
         local render_properties = self.render_properties
         local lastslot = {
             fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
@@ -155,7 +153,8 @@ function pp_sys:update()
         local meshgroup = meshres.scenes[1][1][1]
 
         reset_viewid_idx()
-        for _, tech in world:each_component(technique) do
+        for i=1, #technique do
+            local tech = technique[i]
             lastslot = render_technique(tech, lastslot, meshgroup, render_properties)
         end
     end

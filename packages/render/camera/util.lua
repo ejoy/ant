@@ -55,13 +55,19 @@ function util.focus_obj(world, eid)
 end
 
 function util.create_camera_mgr_entity(world, main_camera)
-	return world:create_entity {
-		name = "camera_manager",
-		camera_mgr = {
-			cameras = {
-				main_view = main_camera,
+	return world:create_entity_v2 {
+		policy = {
+			"camera"
+		},
+		data = {
+			name = "camera_manager",
+			camera_mgr = {
+				cameras = {
+					main_view = main_camera,
+				}
 			}
 		}
+
 	}
 end
 

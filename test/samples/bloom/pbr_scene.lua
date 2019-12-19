@@ -9,23 +9,31 @@ local fs = require "filesystem"
 local pbr_scene = {}
 
 local function create_pbr_entity(world,name,pos,rot,scl,mesh_desc,material_desc,metal,rough)
-    return world:create_entity {
-        name = name,
-        transform = { s = scl, r = rot, t = pos,},
-        can_render = true,
-        can_select = true,
-        material = computil.assign_material(
-            fs.path (material_desc),
-            {
-                uniforms = {
-                    u_params = {type="v4", name="u_params", value={0,0,metal,rough}},
-                }
-            }
-        ),
-        rendermesh = {},
-        mesh = {
-             ref_path = fs.path ( mesh_desc ),
+    return world:create_entity_v2 {
+        policy = {
+            "render",
+            "mesh",
+            "general",
         },
+        data = {
+            name = name,
+            transform = { s = scl, r = rot, t = pos,},
+            can_render = true,
+            can_select = true,
+            material = computil.assign_material(
+                fs.path (material_desc),
+                {
+                    uniforms = {
+                        u_params = {type="v4", name="u_params", value={0,0,metal,rough}},
+                    }
+                }
+            ),
+            rendermesh = {},
+            mesh = {
+                 ref_path = fs.path ( mesh_desc ),
+            },
+        }
+
     }
 end
 

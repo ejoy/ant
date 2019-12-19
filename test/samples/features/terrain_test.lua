@@ -53,33 +53,41 @@ function terrain_test:init()
 	}
 	end
 
-	world:create_entity {
-        material = create_material(),
-        transform = {
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {-147, 0.1,-225,1},
-        },
-        terrain = {
-            ref_path = terrainfolder / 'pvp.terrain'
+	world:create_entity_v2 {
+		policy = {
+			"render",
+			"terrain",
+			"terrain_collider",
+			"general",
+			"select",
 		},
-		terrain_collider = {
-			shape = {
-				up_axis = 1,
-				flip_quad_edges = false,
+		data = {
+			material = create_material(),
+			transform = {
+				s = {1, 1, 1, 0},
+				r = {0, 0, 0, 0},
+				t = {-147, 0.1,-225,1},
 			},
-			collider = {
-				center = {0, 0, 0, 1},
-				is_tigger = true,
-				obj_idx = -1,
+			terrain = {
+				ref_path = terrainfolder / 'pvp.terrain'
 			},
-		},
-        rendermesh = {},
-        name = "pvp terrain test",
-        can_render = true,
-        can_select = true,
-		--can_cast  = true,
-		serialize = serialize.create(),
-		hierarchy_visible = true,
+			terrain_collider = {
+				shape = {
+					up_axis = 1,
+					flip_quad_edges = false,
+				},
+				collider = {
+					center = {0, 0, 0, 1},
+					is_tigger = true,
+					obj_idx = -1,
+				},
+			},
+			rendermesh = {},
+			name = "pvp terrain test",
+			can_render = true,
+			can_select = true,
+			--can_cast  = true,
+			serialize = serialize.create(),
+		}
 	}
 end

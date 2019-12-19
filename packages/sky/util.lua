@@ -49,32 +49,39 @@ end
 
 function util.create_procedural_sky(world, settings)
 	settings = settings or {}
-    local skyeid = world:create_entity {
-		transform = mu.identity_transform(),
-		rendermesh = {},
-		material = computil.assign_material(
-			fs.path "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",
-			{
-				uniforms = {
-					u_sunDirection = {type="v4", name="sub direction", value = {0, 0, 1, 0}},
-					u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value={0, 0, 0, 0}},
-					u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value={0, 0, 0, 0}},
-					u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", 
-						value={}},
-					u_perezCoeff = {type="v4", name="Perez coefficients", value = {}},
-				}
-			}),
-		procedural_sky = {
-			grid_width = 32, 
-			grid_height = 32,
-			follow_by_directional_light = settings.follow_by_directional_light,
-			which_hour 	= settings.whichhour or 12,	-- high noon
-			turbidity 	= settings.turbidity or 2.15,
-			month 		= settings.whichmonth or "June",
-			latitude 	= settings.whichlatitude or math.rad(50),
+    local skyeid = world:create_entity_v2 {
+		policy = {
+			"render",
+			"procedural_sky",
+			"general",
 		},
-		can_render = true,
-		name = "procedural sky",
+		data = {
+			transform = mu.identity_transform(),
+			rendermesh = {},
+			material = computil.assign_material(
+				fs.path "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",
+				{
+					uniforms = {
+						u_sunDirection = {type="v4", name="sub direction", value = {0, 0, 1, 0}},
+						u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value={0, 0, 0, 0}},
+						u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value={0, 0, 0, 0}},
+						u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", 
+							value={}},
+						u_perezCoeff = {type="v4", name="Perez coefficients", value = {}},
+					}
+				}),
+			procedural_sky = {
+				grid_width = 32, 
+				grid_height = 32,
+				follow_by_directional_light = settings.follow_by_directional_light,
+				which_hour 	= settings.whichhour or 12,	-- high noon
+				turbidity 	= settings.turbidity or 2.15,
+				month 		= settings.whichmonth or "June",
+				latitude 	= settings.whichlatitude or math.rad(50),
+			},
+			can_render = true,
+			name = "procedural sky",
+		}
 	}
 
 	fill_procedural_sky_mesh(world[skyeid])

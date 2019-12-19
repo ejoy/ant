@@ -16,6 +16,9 @@ ecs.mark("hierarchy_delete", "hierarchy_del_handle")
 ecs.component_alias("attach", "entityid")
 ecs.component_alias("ignore_parent_scale", "boolean") {depend = "hierarchy"}
 
+local ip = ecs.policy "ignore_parent_scale"
+ip.require_component "ignore_parent_scale"
+
 ecs.singleton "hierarchy_transform_result"
 
 local ur = ecs.singleton "hierarchy_update_result"

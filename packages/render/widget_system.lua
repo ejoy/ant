@@ -19,18 +19,29 @@ ecs.component_alias("can_show_bounding", "boolean") {depend="can_render"}
 
 ecs.tag "mesh_bounding_drawer_tag"
 
+local bdp = ecs.policy "bounding_draw"
+bdp.require_component "mesh_bounding_drawer_tag"
+bdp.require_component "can_show_bounding"
+
 local rmb = ecs.system "render_mesh_bounding"
 rmb.dependby "primitive_filter_system"
 
 function rmb:init()
-	local eid = world:create_entity {
-		transform = mu.identity_transform(),
-		material = computil.assign_material "/pkg/ant.resources/depiction/materials/line.material",
-		rendermesh = {},
-		name = "mesh's bounding renderer",
-		can_render = true,
-		mesh_bounding_drawer_tag = true,
-		can_show_bounding = true,
+	local eid = world:create_entity_v2 {
+		policy = {
+			"general",
+			"render",
+			"bounding_draw",
+		},
+		data = {
+			transform = mu.identity_transform(),
+			material = computil.assign_material "/pkg/ant.resources/depiction/materials/line.material",
+			rendermesh = {},
+			name = "mesh's bounding renderer",
+			can_render = true,
+			mesh_bounding_drawer_tag = true,
+			can_show_bounding = true,
+		}
 	}
 
 	local rm = world[eid].rendermesh

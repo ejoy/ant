@@ -19,6 +19,12 @@ function hiecomp:init()
 	return self
 end
 
+local hp = ecs.policy "hierarchy"
+hp.require_component "hierarchy"
+hp.require_component "hierarchy_visible"
+hp.require_component "transform"
+
+
 local mathadapter_util = import_package "ant.math.adapter"
 
 mathadapter_util.bind("hierarchy", function ()

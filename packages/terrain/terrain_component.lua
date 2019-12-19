@@ -64,10 +64,19 @@ local terraincomp =
     depend = {'rendermesh', 'material'}
 }
 
-function terraincomp:postinit(e)
+local terrainpolicy = ecs.policy "terrain"
+terrainpolicy.require_component "rendermesh"
+terrainpolicy.require_component "terrain"
+terrainpolicy.require_transform "terrain"
+
+local t = ecs.transform "terrain"
+t.input "terrain"
+t.output "rendermesh"
+
+function t.process(e)
 	local rm = e.rendermesh
-	assert(self.asyn_load == nil)
-    local terraininfo = assetmgr.get_resource(self.ref_path)
+	local terrain = e.terrain
+    local terraininfo = assetmgr.get_resource(terrain.ref_path)
     local terrainhandle = terraininfo.handle
 
     local numlayers = terraininfo.num_layers

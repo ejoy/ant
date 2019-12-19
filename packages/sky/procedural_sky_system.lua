@@ -109,6 +109,9 @@ local ABCDE_t = {
 	ms:ref "vector" { -0.0033, -0.0109, -0.0670 },
 }
 
+local psp = ecs.policy "procedural_sky"
+psp.require_component "procedural_sky"
+
 -- Controls sun position according to time, month, and observer's latitude.
 -- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 local ps = ecs.component "procedural_sky"

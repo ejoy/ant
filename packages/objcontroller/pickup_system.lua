@@ -183,6 +183,9 @@ pup.require_component "pickup"
 pup.require_component "material"
 pup.require_component "view_mode"
 
+local sp = ecs.policy "select"
+sp.require_component "can_select"
+
 local function add_pick_entity()
 	local fb_renderbuffer_flag = renderutil.generate_sampler_flag {
 		RT="RT_ON",

@@ -69,7 +69,11 @@ ecs.component "camera"
 	.frustum"frustum"
 
 ecs.component "camera_mgr"
-    .cameras "camera{}"
+	.cameras "camera{}"
+	
+local cp = ecs.policy "camera"
+cp.require_component "camera_mgr"
+cp.require_component "name"
 
 ecs.component_alias("camera_tag", "string") {depend = "viewid"}
 ecs.component_alias("visible", "boolean", true) 

@@ -258,23 +258,30 @@ function PVPScene.create_entitices(world)
 					t = ms(t, rsrt[3], "+T")
 				end
 
-				local eid = world:create_entity  {
-					transform = mu.srt(s, r, t),
-					rendermesh = {},
-					mesh = {
-						ref_path = fs.path "/pkg/ant.resources/depiction" / scenedata.mesh,
-						asyn_load = true,
+				local eid = world:create_entity_v2  {
+					policy = {
+						"render",
+						"mesh",
+						"genreal",
 					},
-					material = computil.assign_material(
-						fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", 
-						scenedata.material_properties, true),
-					serialize = import_package 'ant.serialize'.create(), 
-					name = name,
-					can_render = true,
-					hierarchy_visible = true,
-					can_select = true,
-					can_cast = true,
-					asyn_load = "",
+					data = {
+						transform = mu.srt(s, r, t),
+						rendermesh = {},
+						mesh = {
+							ref_path = fs.path "/pkg/ant.resources/depiction" / scenedata.mesh,
+							asyn_load = true,
+						},
+						material = computil.assign_material(
+							fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", 
+							scenedata.material_properties, true),
+						serialize = import_package 'ant.serialize'.create(), 
+						name = name,
+						can_render = true,
+						hierarchy_visible = true,
+						can_select = true,
+						can_cast = true,
+						asyn_load = "",
+					}
 				}
 
 				if collision_array then

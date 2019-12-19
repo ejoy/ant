@@ -54,13 +54,22 @@ function mods.dummy(...)
 	dummy.singleton "init"
 	dummy.depend "init"
 
+	local fp = ecs.policy "foobar"
+	fp.require_component "foobar"
+	fp.require_component "name"
+
 	function dummy:init()
 		print ("Dummy init")
-		local eid = world:create_entity {
-			foobar = {
-				x = 0, y = 0,
+		local eid = world:create_entity_v2 {
+			policy = {
+				"foobar"
 			},
-			name = "foobar_name"
+			data = {
+				foobar = {
+					x = 0, y = 0,
+				},
+				name = "foobar_name"
+			}
 		}
 
 		world:mark(eid, "test_mark")
@@ -71,9 +80,15 @@ function mods.dummy(...)
 		for _, eid in world:each "foobar" do
 			print("1. Dummy foobar", eid)
 		end
-		local newid = world:create_entity {
-			foobar = {
-				x = 1, y = 1,
+		local newid = world:create_entity_v2 {
+			policy = {
+				"foobar",
+			},
+			data = {
+				foobar = {
+					x = 1, y = 1,
+				},
+				name = "foobar_name2",
 			}
 		}
 

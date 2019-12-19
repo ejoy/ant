@@ -43,6 +43,12 @@ end
 local function create_scene_node_test()
     local materialpath = fs.path '/pkg/ant.resources/depiction/materials/bunny.material'
 
+    local default_hie_policy = {
+        "hierarchy",
+        "general",
+        "serialize"
+    }
+
     --[[
                                  hie_root
                                 /        \
@@ -60,114 +66,158 @@ local function create_scene_node_test()
     ]]
 
     local hie_root =
-        world:create_entity {
-        hierarchy_visible = true,
-        transform = mu.translate_mat {0, 5, 0},
-        hierarchy = {},
-        name = 'hie_root',
-        serialize = seriazlizeutil.create(),
-    }
+        world:create_entity_v2 {
+            policy = default_hie_policy,
+            data = {
+                hierarchy = {},
+                hierarchy_visible = true,
+                transform = mu.translate_mat {0, 5, 0},
+                name = 'hie_root',
+                serialize = seriazlizeutil.create(),
+            }
+        }
 
     local hie_level1_1 =
-        world:create_entity {
-        hierarchy_visible = true,
-        transform = {
-            parent = hie_root,
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {2, 0, 0, 1},
-        },
-        name = 'hie_level1_1',
-        hierarchy = {},
-        serialize = seriazlizeutil.create(),
+        world:create_entity_v2 {
+            policy = default_hie_policy,
+            data = {
+                hierarchy_visible = true,
+                transform = {
+                    parent = hie_root,
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {2, 0, 0, 1},
+                },
+                name = 'hie_level1_1',
+                hierarchy = {},
+                serialize = seriazlizeutil.create(),
+            }
+
     }
 
     local hie_level1_2 =
-        world:create_entity {
-        hierarchy_visible = true,
-        transform = {
-            parent = hie_root,
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {2, 0, 4, 1},
-        },
-        hierarchy = {},
-        name = 'hie_level1_2',
-        serialize = seriazlizeutil.create(),
+        world:create_entity_v2 {
+            policy = default_hie_policy,
+            data = {
+                hierarchy_visible = true,
+                transform = {
+                    parent = hie_root,
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {2, 0, 4, 1},
+                },
+                hierarchy = {},
+                name = 'hie_level1_2',
+                serialize = seriazlizeutil.create(),
+            }
     }
     
     local hie_level2_1 =
-        world:create_entity {
-        hierarchy_visible = true,
-        transform = {
-            parent = hie_level1_2,
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {-2, 0, 0, 1},
+        world:create_entity_v2 {
+        policy = {
+            "genreal",
+            "hierarchy",
+            "serialize",
+            "ignore_parent_scale",
         },
-        hierarchy = {ref_path = hie_refpath,},
-        ignore_parent_scale = true,
-        name = 'hie_level2_1',
-        serialize = seriazlizeutil.create(),
+        data = {
+            hierarchy_visible = true,
+            transform = {
+                parent = hie_level1_2,
+                s = {1, 1, 1, 0},
+                r = {0, 0, 0, 0},
+                t = {-2, 0, 0, 1},
+            },
+            hierarchy = {ref_path = hie_refpath,},
+            ignore_parent_scale = true,
+            name = 'hie_level2_1',
+            serialize = seriazlizeutil.create(),
+        }
     }
     local render_child1_1 =
-        world:create_entity {
-        transform = {
-            parent = hie_level1_1, 
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
-        },
-        name = 'render_child1_1',
-        rendermesh = {},
-        mesh = {
-            ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
-        },
-        material = computil.assign_material(materialpath),
-        can_render = true,
-        hierarchy_visible = true,
-        can_select = true,
-        serialize = seriazlizeutil.create(),
+        world:create_entity_v2 {
+            policy = {
+                "render",
+                "mesh",
+                "genreal",
+                "select",
+                "serialize",
+            },
+            data = {
+                transform = {
+                    parent = hie_level1_1, 
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {0, 0, 0, 1},
+                },
+                rendermesh = {},
+                mesh = {
+                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
+                },
+                material = computil.assign_material(materialpath),
+
+                name = 'render_child1_1',
+                can_render = true,
+                can_select = true,
+                serialize = seriazlizeutil.create(),
+            }
     }
     
     local render_child1_2 =
-        world:create_entity {
-        transform = {
-            parent = hie_level1_2, 
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
-        },
-        name = 'render_child1_2',
-        rendermesh = {},
-        mesh = {
-            ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
-        },
-        material = computil.assign_material(materialpath),
-        can_render = true,
-        hierarchy_visible = true,
-        can_select = true,
-        serialize = seriazlizeutil.create(),
-    }
+        world:create_entity_v2 {
+            policy = {
+                "render",
+                "mesh",
+                "select",
+                "general",
+                "serialize",
+            },
+            data = {
+                transform = {
+                    parent = hie_level1_2, 
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {0, 0, 0, 1},
+                },
+                name = 'render_child1_2',
+                rendermesh = {},
+                mesh = {
+                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
+                },
+                material = computil.assign_material(materialpath),
+                can_render = true,
+                can_select = true,
+                serialize = seriazlizeutil.create(),
+            }
+        }
 
     local render_child2_1 =
-        world:create_entity {
-        transform = {
-            parent = hie_level2_1, 
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 2, 0, 1},
-        },
-        name = 'render_child2_1',
-        rendermesh = {},
-        mesh = {
-            ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cube.mesh'
-        },
-        material = computil.assign_material(materialpath),
-        can_render = true,
-        hierarchy_visible = true,
-        can_select = true,
-        serialize = seriazlizeutil.create(),
+        world:create_entity_v2 {
+            policy = {
+                "render",
+                "mesh",
+                "select",
+                "serialize",
+                "general",
+            },
+            data = {
+                transform = {
+                    parent = hie_level2_1, 
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {0, 2, 0, 1},
+                },
+                name = 'render_child2_1',
+                rendermesh = {},
+                mesh = {
+                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cube.mesh'
+                },
+                material = computil.assign_material(materialpath),
+                can_render = true,
+                can_select = true,
+                serialize = seriazlizeutil.create(),
+            }
+
     }
 
     --[[
@@ -184,27 +234,36 @@ local function create_scene_node_test()
     ]]
 
     local hie_root2 =
-        world:create_entity {
-        transform = mu.srt({2, 1, 1, 0}, nil, {3, 2, -3, 1}),
-        name = 'hie_root2',
-        hierarchy = {},
-        serialize = seriazlizeutil.create(),
-        hierarchy_visible = true,
+        world:create_entity_v2 {
+            policy = default_hie_policy,
+            data = {
+                transform = mu.srt({2, 1, 1, 0}, nil, {3, 2, -3, 1}),
+                hierarchy = {},
+                hierarchy_visible = true,
+                serialize = seriazlizeutil.create(),
+                name = 'hie_root2',
+            }
     }
 
     local hie2_level1_1 =
-        world:create_entity {
-        transform = {
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 5, 0, 1},
-            parent = hie_root2,
-        },
-        hierarchy = {},
-        name = 'hie2_level1_1',
-        serialize = seriazlizeutil.create(),
-        hierarchy_visible = true,
-    }
+        world:create_entity_v2 {
+            policy = {
+                "hierarchy",
+                "general",
+                "serialize",
+            },
+            data = {
+                transform = {
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {0, 5, 0, 1},
+                    parent = hie_root2,
+                },
+                hierarchy = {},
+                name = 'hie2_level1_1',
+                serialize = seriazlizeutil.create(),
+            }
+        }
 
     local function color_material(colorvalue)
         return computil.assign_material(fs.path "/pkg/ant.resources/materials/simple_mesh.material",
@@ -216,44 +275,61 @@ local function create_scene_node_test()
     end
 
     local render2_rootchild =
-        world:create_entity {
-        transform = {
-            parent = hie_root2, 
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 2, -3, 1},
-        },
-        name = 'render2_rootchild',
-        rendermesh = {},
-        mesh = {
-            ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cube.mesh'
-        },
-        material = computil.assign_material(materialpath),
-        can_render = true,
-        hierarchy_visible = true,
-        can_select = true,
-        serialize = seriazlizeutil.create(),
+        world:create_entity_v2 {
+            policy = {
+                "select",
+                "general",
+                "render",
+                "mesh",
+                "serialize",
+            },
+            data = {
+                transform = {
+                    parent = hie_root2, 
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {0, 2, -3, 1},
+                },
+                name = 'render2_rootchild',
+                rendermesh = {},
+                mesh = {
+                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cube.mesh'
+                },
+                material = computil.assign_material(materialpath),
+                can_render = true,
+                can_select = true,
+                serialize = seriazlizeutil.create(),
+            }
+
     }
 
     local render2_child1 =
-        world:create_entity {
-        transform = {
-            parent = hie2_level1_1, 
-            s = {1, 1, 1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
-        },
-        name = 'render2_child1',
-        rendermesh = {},
-        mesh = {
-            ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
-        },
-        material = computil.assign_material(materialpath),
-        can_render = true,
-        hierarchy_visible = true,
-        can_select = true,
-        serialize = seriazlizeutil.create(),
-    }
+        world:create_entity_v2 {
+            policy = {
+                "select",
+                "general",
+                "render",
+                "mesh",
+                "serialize",
+            },
+            data = {
+                transform = {
+                    parent = hie2_level1_1,
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {0, 0, 0, 1},
+                },
+                name = 'render2_child1',
+                rendermesh = {},
+                mesh = {
+                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
+                },
+                material    = computil.assign_material(materialpath),
+                can_render  = true,
+                can_select  = true,
+                serialize   = seriazlizeutil.create(),
+            }
+        }
 
     local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
 
@@ -268,37 +344,45 @@ local function create_scene_node_test()
         }
     end
 
-    local submesh_child = world:create_entity {
-        transform = {
-            parent = hie2_level1_1, 
-            s = {0.1, 0.1, 0.1, 0},
-            r = {0, 0, 0, 0},
-            t = {0, 0, 0, 1},
+    local submesh_child = world:create_entity_v2 {
+        policy = {
+            "serialize",
+            "general",
+            "render",
+            "mesh",
         },
-        name = 'submesh_child',
-        rendermesh = {
-            submesh_refs = {
-                build_big_storage_01_pillars_01     = computil.create_submesh_item {1},
-                build_big_storage_01_fence_02       = computil.create_submesh_item {2},
-                build_big_storage_01_walls_up       = computil.create_submesh_item {3},
-                build_big_storage_01_walls_down     = computil.create_submesh_item {4},
-                build_big_storage_01_straw_roof_002 = computil.create_submesh_item {5},
+        data = {
+            transform = {
+                parent = hie2_level1_1, 
+                s = {0.1, 0.1, 0.1, 0},
+                r = {0, 0, 0, 0},
+                t = {0, 0, 0, 1},
             },
+            name = 'submesh_child',
+            rendermesh = {
+                submesh_refs = {
+                    build_big_storage_01_pillars_01     = computil.create_submesh_item {1},
+                    build_big_storage_01_fence_02       = computil.create_submesh_item {2},
+                    build_big_storage_01_walls_up       = computil.create_submesh_item {3},
+                    build_big_storage_01_walls_down     = computil.create_submesh_item {4},
+                    build_big_storage_01_straw_roof_002 = computil.create_submesh_item {5},
+                },
+            },
+            mesh = {
+                ref_path = fs.path '/pkg/ant.resources/depiction/meshes/build_big_storage_01.mesh',
+            },
+            material = {
+                create_material_item(singlecolor_material, {1, 0, 0, 0}),
+                create_material_item(singlecolor_material, {0, 1, 0, 0}),
+                create_material_item(singlecolor_material, {1, 0, 1, 0}),
+                create_material_item(singlecolor_material, {1, 1, 0, 0}),
+                create_material_item(singlecolor_material, {1, 1, 1, 0}),
+            },
+            can_render = true,
+            can_select = true,
+            serialize = seriazlizeutil.create(),
         },
-        mesh = {
-            ref_path = fs.path '/pkg/ant.resources/depiction/meshes/build_big_storage_01.mesh',
-        },
-        material = {
-            create_material_item(singlecolor_material, {1, 0, 0, 0}),
-            create_material_item(singlecolor_material, {0, 1, 0, 0}),
-            create_material_item(singlecolor_material, {1, 0, 1, 0}),
-            create_material_item(singlecolor_material, {1, 1, 0, 0}),
-            create_material_item(singlecolor_material, {1, 1, 1, 0}),
-        },
-        can_render = true,
-        hierarchy_visible = true,
-        can_select = true,
-        serialize = seriazlizeutil.create(),
+
     }
 
 end
@@ -472,26 +556,34 @@ local test_queue = {
         world:add_component(eid, 'hierarchy', {})
         world:add_component(eid, 'ignore_parent_scale', true)
 
-        world:create_entity {
-            transform = {
-                s = {1, 1, 1, 0},
-                r = {0, 0, 0, 0},
-                t = {1, 2, 3, 1},
-                parent=eid,
+        world:create_entity_v2 {
+            policy = {
+                "select",
+                "render",
+                "mesh",
+                "general",
             },
-            rendermesh = {},
-            material = {
-                {
-                    ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                    properties = {
-                        uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
+            data = {
+                transform = {
+                    s = {1, 1, 1, 0},
+                    r = {0, 0, 0, 0},
+                    t = {1, 2, 3, 1},
+                    parent=eid,
+                },
+                rendermesh = {},
+                material = {
+                    {
+                        ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
+                        properties = {
+                            uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
+                        }
                     }
-                }
+                },
+                mesh = {ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cone.mesh'},
+                can_render = true,
+                can_select = true,
+                name = 'test attach entity',
             },
-            mesh = {ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cone.mesh'},
-            can_render = true,
-            can_select = true,
-            name = 'test attach entity',
         }
     end,
     function ()
