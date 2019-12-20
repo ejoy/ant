@@ -5,6 +5,8 @@ local renderpkg = import_package "ant.render"
 local hw = renderpkg.hardware_interface
 local viewidmgr = renderpkg.viewidmgr
 
+local fs = require "filesystem"
+
 local assetutil = import_package "ant.asset".util
 local imgui   = import_package "ant.imgui".imgui
 -- local imgui = require "bgfx.imgui"
