@@ -911,7 +911,7 @@ register_bullet_world_node(lua_State *L) {
 		{"del_shape",			ldel_shape},
 		{"update_object_shape",	lupdate_object_shape},
 		{"set_shape_scale",		lset_shape_scale},
-		{"get_shape_aabb",		lget_obj_aabb},
+		{"aabb",				lget_obj_aabb},
 
 		{"new_obj",				lnew_collision_obj},
 		{"del_obj",				ldel_collision_obj},

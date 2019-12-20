@@ -6,7 +6,12 @@ local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
 
+local assetpkg = import_package "ant.asset"
+local assetmgr = assetpkg.mgr
+
 local mathbaselib = require "math3d.baselib"
+
+local animodule = require "hierarchy.animation"
 
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
@@ -45,18 +50,11 @@ function rmb:init()
 	}
 
 	local rm = world[eid].rendermesh
-	rm.handle = computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048)
+	rm.reskey = assetmgr.register_resource("//meshres/mesh_bounding.mesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
 end
 
-local function reset_buffers(buffers)
-	buffers.vb = {"fffd"}
-	buffers.ib = {}
-end
-
-local function append_buffer(desc, buffers)
+local function append_buffer(desc, gvb, gib)
 	local vb, ib = desc.vb, desc.ib
-	local gvb, gib = buffers.vb, buffers.ib
-
 	local offsetib = (#gvb - 1) // 4	--yes, gvb not gib
 	table.move(vb, 1, #vb, #gvb+1, gvb)
 
@@ -65,42 +63,34 @@ local function append_buffer(desc, buffers)
 	end
 end
 
-local function add_aabb_bounding(dmesh, aabb)
-	local rm = dmesh.rendermesh
-
-	local buffers = rm.buffers
-	if buffers == nil then
-		buffers = {}
-		rm.buffers = buffers
-		reset_buffers(buffers)
-	end
-
+local function add_aabb_bounding(aabb, vb, ib)
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_aabb_box(aabb, 0xffffff00, nil, desc)
 
-	append_buffer(desc, buffers)
+	append_buffer(desc, vb, ib)
 end
 
-local function update_buffers(dmesh)
+local function update_buffers(dmesh, vb, ib)
 	local rm = dmesh.rendermesh
-	local meshscene = rm.handle
+	local meshscene = assetmgr.get_resource(rm.reskey)
 	local group = meshscene.scenes[1][1][1]
-	local buffers = rm.buffers
 
-	if buffers then
-		local vb, ib = buffers.vb, buffers.ib
+	local vbdesc, ibdesc = group.vb, group.ib
 
-		group.vb.num = (#vb - 1) // 4
-		group.ib.num = #ib
-	
-		group.vb.start = 0
-		group.ib.start = 0
-	
-		bgfx.update(group.vb.handles[1], 0, vb)
-		bgfx.update(group.ib.handle, 0, ib)
-	
-		reset_buffers(buffers)
-	end
+	vbdesc.num = (#vb - 1) // 4
+	ibdesc.num = #ib
+
+	vbdesc.start = 0
+	ibdesc.start = 0
+
+	local vbhandle = vbdesc.handles[1]
+	local vboffset = vbhandle.updateoffset or 0
+	local iboffset = ib.updateoffset
+
+	bgfx.update(vbhandle.handle, vboffset, vb);
+	vbhandle.updateoffset = (#vb - 1) / 4	-- 4 for 3 float and one dword
+	bgfx.update(ib.handle, iboffset, ib)
+	ib.updateoffset = #ib * 2	-- 2 for uint16_t
 end
 
 function rmb:update()
@@ -109,9 +99,29 @@ function rmb:update()
 	local transformed_boundings = {}
 	computil.calc_transform_boundings(world, transformed_boundings)
 
+	local vb, ib = {"fffd"}, {}
 	for _, tb in ipairs(transformed_boundings) do
 		add_aabb_bounding(dmesh, tb:get "aabb")
 	end
 
-	update_buffers(dmesh)
+	update_buffers(dmesh, vb, ib)
+end
+
+local phy_bounding = ecs.system "physic_bounding"
+ecs.dependby "primitive_filter_system"
+
+function phy_bounding:update()
+	local dmesh = world:first_entity "mesh_bounding_drawer_tag"
+
+	local vb, ib = {}, {}
+	for _, eid in world:each "collider_tag" do
+		local e = world[eid]
+		local collidercomp = assert(e[e.collider_tag])
+		local colliderhandle = collidercomp.collider.handle
+
+		local min, max = colliderhandle:aabb()
+		add_aabb_bounding({min=min, max=max}, vb, ib)
+	end
+
+	update_buffers(dmesh, vb, ib)
 end

@@ -117,16 +117,22 @@ end
 
 function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 	local decl = declmgr.get(vertex_desc)
+	local vb_size = num_vertices * decl.stride
+
+	assert(num_vertices <= 65535)
+	local ib_size = num_indices * 2
 	return util.assign_group_as_mesh {
 		vb = {
 			handles = {
-				bgfx.create_dynamic_vertex_buffer(num_vertices * decl.stride, decl.handle, "a"),
+				handle = bgfx.create_dynamic_vertex_buffer(vb_size, decl.handle, "a"),
+				updatedata = animodule.new_aligned_memory(vb_size),
 			},
 			start = 0,
 			num = num_vertices,
 		},
 		ib = num_indices and {
-			handle = bgfx.create_dynamic_index_buffer(num_indices * 2, "a"),
+			handle = bgfx.create_dynamic_index_buffer(ib_size, "a"),
+			updatedata = animodule.new_aligned_memory(ib_size),
 			start = 0,
 			num = num_indices,
 		}

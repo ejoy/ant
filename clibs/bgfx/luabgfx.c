@@ -1921,6 +1921,43 @@ get_stride(lua_State *L, const char *format) {
 	return stride;
 }
 
+static inline void
+copy_layout_data(lua_State*L, const char* layout, int tableidx, int startidx, size_t numvertices, uint8_t *addr){
+	for (size_t i=0;i<numvertices;i++) {
+		for (int j=0;layout[j];j++) {
+			if (lua_geti(L, tableidx, startidx) != LUA_TNUMBER) {
+				luaL_error(L, "vertex buffer data %d type error %s", tableidx, lua_typename(L, lua_type(L, -1)));
+			}
+			switch (layout[j]) {
+			case 'f':
+				*(float *)addr = lua_tonumber(L, -1);
+				addr += 4;
+				break;
+			case 'd': {
+				uint8_t * ptr = addr;
+				uint32_t data = (uint32_t)lua_tointeger(L, -1);
+				ptr[0] = data & 0xff;
+				ptr[1] = (data >> 8) & 0xff;
+				ptr[2] = (data >> 16) & 0xff;
+				ptr[3] = (data >> 24) & 0xff;
+				addr += 4;
+				break;
+			}
+			case 's':
+				*(int16_t *)addr = lua_tointeger(L, -1);
+				addr += 2;
+				break;
+			case 'b':
+				*(uint8_t *)addr = lua_tointeger(L, -1);
+				addr += 1;
+				break;
+			}
+			lua_pop(L, 1);
+			++startidx;
+		}
+	}
+}
+
 /*
 	the first one is layout
 	f : float
@@ -1957,42 +1994,7 @@ create_from_table_decl(lua_State *L, int idx, bgfx_vertex_layout_t *vd) {
 		luaL_error(L, "Invalid number of table %d", n);
 	}
 	const bgfx_memory_t *mem = BGFX(alloc)(numv * stride);
-	int i,j;
-	int tidx = 2;
-	uint8_t * addr = mem->data;
-	for (i=0;i<numv;i++) {
-		for (j=0;layout[j];j++) {
-			if (lua_geti(L, idx, tidx) != LUA_TNUMBER) {
-				luaL_error(L, "vertex buffer data %d type error %s", tidx, lua_typename(L, lua_type(L, -1)));
-			}
-			switch (layout[j]) {
-			case 'f':
-				*(float *)addr = lua_tonumber(L, -1);
-				addr += 4;
-				break;
-			case 'd': {
-				uint8_t * ptr = addr;
-				uint32_t data = (uint32_t)lua_tointeger(L, -1);
-				ptr[0] = data & 0xff;
-				ptr[1] = (data >> 8) & 0xff;
-				ptr[2] = (data >> 16) & 0xff;
-				ptr[3] = (data >> 24) & 0xff;
-				addr += 4;
-				break;
-			}
-			case 's':
-				*(int16_t *)addr = lua_tointeger(L, -1);
-				addr += 2;
-				break;
-			case 'b':
-				*(uint8_t *)addr = lua_tointeger(L, -1);
-				addr += 1;
-				break;
-			}
-			lua_pop(L, 1);
-			++tidx;
-		}
-	}
+	copy_layout_data(L, layout, idx, 2, numv, mem->data);
 	return mem;
 }
 
@@ -2060,6 +2062,50 @@ NORMALIZE(float v[3]) {
 	v[2] *= invLen;
 
 	return v;
+}
+
+static inline void
+copy_index_data(lua_State *L, const char* layout, int tableidx, int startidx, size_t num, uint8_t *addr){
+	const auto elemsize = layout[1] - '0';
+	if (elemsize != 2 || elemsize != 4){
+		luaL_error(L, "copy index buffer failed, element size must 2 or 4", elemsize);
+	}
+	for (size_t ii = 0; ii < num; ++ii){
+		lua_geti(L, tableidx, ii+startidx);
+		if (elemsize == 2){
+			*(uint16_t*)addr = (uint16_t)lua_tointeger(L, -1);
+		} else if (elemsize == 4) {
+			*(uint32_t*)addr = (uint32_t)lua_tointeger(L, -1);
+		}
+		lua_pop(L, 1);
+		addr += elemsize;
+	}
+}
+
+static int 
+lcopy_data(lua_State *L){
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	uint8_t *addr = (uint8_t*)lua_touserdata(L, 1);
+	
+	luaL_checktype(L, 2, LUA_TTABLE);
+	const auto type = lua_geti(L, 2, 1);
+	if (type != LUA_TSTRING){
+		return luaL_error(L, "first element of table must define vertex stride, \
+						if one vertex include position and color, it like:'fffd', mean 3 float data and 32bit integer");
+	}
+	size_t layoutsize = 0;
+	const char* layout = lua_tolstring(L, -1, &layoutsize);
+	lua_pop(L, 1);
+
+	const int num = lua_rawlen(L, 2) - 1;
+	if (layout[0] == '!'){
+		copy_index_data(L, layout, 2, 2, num, addr);
+	}else{
+		const int numvertices = num / layoutsize;
+		copy_layout_data(L, layout, 2, 2, numvertices, addr);
+	}
+
+	return 0;
 }
 
 static void
@@ -4318,6 +4364,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "get_screenshot", lgetScreenshot },
 		{ "export_vertex_layout", lexportVertexLayout },
 		{ "vertex_layout_stride", lvertexLayoutStride },
+		{ "copy_data", lcopy_data},
 		{ "get_log", lgetLog },
 
 		{ NULL, NULL },
