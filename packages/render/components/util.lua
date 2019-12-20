@@ -214,7 +214,7 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 		}
 	end
 
-	local eid = world:create_entity_v2{
+	local eid = world:create_entity {
 		policy = policy,
 		data = data,
 	}

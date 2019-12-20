@@ -35,10 +35,13 @@ local function camera_move(forward_axis, position, dx, dy, dz)
 			forward_axis, {dz}, "*+=")
 end
 
-function camera_controller_system:init()
+local function get_camera()
 	local mq = world:first_entity "main_queue"
+	return camerautil.get_camera(world, mq.camera_tag)
+end
 
-	local camera = camerautil.get_camera(world, mq.camera_tag)
+function camera_controller_system:init()
+	local camera = get_camera()
 	camera.frustum.f = 100	--set far distance to 100
 	camera_reset(camera)
 
@@ -58,34 +61,26 @@ function camera_controller_system:init()
 	--	data.dx = d - a
 	--end
 	--self.message.observers:add(message)
-	self.eventMouseLeft = world:sub {"mouse", "LEFT"}
-	self.eventKeyboard = world:sub {"keyboard"}
-end
-
-local function get_camera()
-	local mq = world:first_entity "main_queue"
-	return camerautil.get_camera(world, mq.camera_tag)
+	local data = self.camera_temp_data
+	data.xdpi, data.ydpi = rhwi.dpi()
+	data.eventMouseLeft = world:sub {"mouse", "LEFT"}
+	data.eventKeyboard = world:sub {"keyboard"}
 end
 
 function camera_controller_system:update()
 	local data = self.camera_temp_data
 	local move_speed <const> = 0.5
-	local xdpi, ydpi = rhwi.dpi()
-
-	for msg in self.eventMouseLeft:each() do
-		local _,_,state,x,y = table.unpack(msg)
+	for _,_,state,x,y in data.eventMouseLeft:unpack() do
 		if state == "MOVE" then
 			local camera = get_camera()
-			local dx = (x - data.lastx) / xdpi * move_speed
-			local dy = (y - data.lasty) / ydpi * move_speed
+			local dx = (x - data.lastx) / data.xdpi * move_speed
+			local dy = (y - data.lasty) / data.ydpi * move_speed
 			local right, up = ms:base_axes(camera.viewdir)
 			ms(camera.viewdir, {type="q", axis=up, radian={dx}}, {type="q", axis=right, radian={dy}}, "3**n=")
 		end
 		data.lastx, data.lasty = x, y
 	end
-
-	for msg in self.eventKeyboard:each() do
-		local _,code,press = table.unpack(msg)
+	for _,code,press in data.eventKeyboard:unpack() do
 		local delta = press == 1 and 1 or (press == 0 and -1 or 0)
 		if code == "W" then
 			data.dz = data.dz + delta
@@ -97,7 +92,6 @@ function camera_controller_system:update()
 			data.dx = data.dx + delta
 		end
 	end
-
 	if data.dx ~= 0 or data.dy ~= 0 or data.dz ~= 0 then
 		local camera = get_camera()
 		local speed = 0.5

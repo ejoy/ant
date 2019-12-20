@@ -85,6 +85,17 @@ function mailbox:each()
     end
 end
 
+function mailbox:unpack()
+    local q = self.__queue
+    return function ()
+        local msg = q[1]
+        if msg then
+            table.remove(q, 1)
+            return table.unpack(msg)
+        end
+    end
+end
+
 function mailbox:each()
     local q = self.__queue
     return function ()
