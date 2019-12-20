@@ -124,8 +124,10 @@ function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 	return util.assign_group_as_mesh {
 		vb = {
 			handles = {
-				handle = bgfx.create_dynamic_vertex_buffer(vb_size, decl.handle, "a"),
-				updatedata = animodule.new_aligned_memory(vb_size),
+				{
+					handle = bgfx.create_dynamic_vertex_buffer(vb_size, decl.handle, "a"),
+					updatedata = animodule.new_aligned_memory(vb_size),
+				}
 			},
 			start = 0,
 			num = num_vertices,
@@ -220,7 +222,7 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 		}
 	end
 
-	local eid = world:create_entity_v2{
+	local eid = world:create_entity{
 		policy = policy,
 		data = data,
 	}
@@ -585,6 +587,27 @@ function util.entity_bounding(entity)
 		
 		return entitybounding:isvalid() and entitybounding or nil
 	end
+end
+
+function util.create_bounding_drawer(world)
+	local eid = world:create_entity {
+		policy = {
+			"name",
+			"render",
+			"bounding_draw",
+		},
+		data = {
+			transform 		= mu.identity_transform(),
+			material 		= util.assign_material "/pkg/ant.resources/depiction/materials/line.material",
+			rendermesh 		= {},
+			name 			= "mesh's bounding renderer",
+			can_render 		= true,
+			bounding_drawer = true,
+		}
+	}
+
+	local rm = world[eid].rendermesh
+	rm.reskey = assetmgr.register_resource(fs.path "//meshres/bounding.mesh", util.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
 end
 
 

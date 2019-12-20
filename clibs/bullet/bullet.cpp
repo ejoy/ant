@@ -854,7 +854,7 @@ lget_obj_trans(lua_State *L){
 	lua_createtable(L, 16, 0);
 	for (int ii = 0; ii < 3; ++ii){
 		auto m = trans.getBasis();
-		for (int jj = 0; jj < 3; ++ii){
+		for (int jj = 0; jj < 3; ++jj){
 			lua_pushnumber(L, m[ii][jj]);
 			lua_seti(L, -2, ii*3+jj+1);
 		}

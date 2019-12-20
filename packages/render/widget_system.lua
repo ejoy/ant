@@ -1,6 +1,7 @@
 --luacheck: ignore self
 local ecs = ...
 local world = ecs.world
+local physicworld = world.args.Physics.world
 
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
@@ -20,38 +21,14 @@ local geometry_drawer = import_package "ant.geometry".drawer
 
 local bgfx = require "bgfx"
 
-ecs.component_alias("can_show_bounding", "boolean") {depend="can_render"}
-
-ecs.tag "mesh_bounding_drawer_tag"
+ecs.tag "bounding_drawer"
 
 local bdp = ecs.policy "bounding_draw"
-bdp.require_component "mesh_bounding_drawer_tag"
-bdp.require_component "can_show_bounding"
+bdp.require_component "bounding_drawer"
 
 local rmb = ecs.system "render_mesh_bounding"
 rmb.dependby "primitive_filter_system"
-
-function rmb:init()
-	local eid = world:create_entity {
-		policy = {
-			"name",
-			"render",
-			"bounding_draw",
-		},
-		data = {
-			transform = mu.identity_transform(),
-			material = computil.assign_material "/pkg/ant.resources/depiction/materials/line.material",
-			rendermesh = {},
-			name = "mesh's bounding renderer",
-			can_render = true,
-			mesh_bounding_drawer_tag = true,
-			can_show_bounding = true,
-		}
-	}
-
-	local rm = world[eid].rendermesh
-	rm.reskey = assetmgr.register_resource("//meshres/mesh_bounding.mesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
-end
+rmb.dependby "reset_mesh_buffer"
 
 local function append_buffer(desc, gvb, gib)
 	local vb, ib = desc.vb, desc.ib
@@ -85,16 +62,16 @@ local function update_buffers(dmesh, vb, ib)
 
 	local vbhandle = vbdesc.handles[1]
 	local vboffset = vbhandle.updateoffset or 0
-	local iboffset = ib.updateoffset
+	local iboffset = ib.updateoffset or 0
 
 	bgfx.update(vbhandle.handle, vboffset, vb);
 	vbhandle.updateoffset = (#vb - 1) / 4	-- 4 for 3 float and one dword
-	bgfx.update(ib.handle, iboffset, ib)
+	bgfx.update(ibdesc.handle, iboffset, ib)
 	ib.updateoffset = #ib * 2	-- 2 for uint16_t
 end
 
 function rmb:update()
-	local dmesh = world:first_entity "mesh_bounding_drawer_tag"
+	local dmesh = world:first_entity "bounding_drawer"
 
 	local transformed_boundings = {}
 	computil.calc_transform_boundings(world, transformed_boundings)
@@ -108,20 +85,35 @@ function rmb:update()
 end
 
 local phy_bounding = ecs.system "physic_bounding"
-ecs.dependby "primitive_filter_system"
+phy_bounding.dependby "primitive_filter_system"
+phy_bounding.dependby "reset_mesh_buffer"
+phy_bounding.depend "collider_system"
 
 function phy_bounding:update()
-	local dmesh = world:first_entity "mesh_bounding_drawer_tag"
+	local dmesh = world:first_entity "bounding_drawer"
 
-	local vb, ib = {}, {}
+	local vb, ib = {"fffd"}, {}
 	for _, eid in world:each "collider_tag" do
 		local e = world[eid]
 		local collidercomp = assert(e[e.collider_tag])
 		local colliderhandle = collidercomp.collider.handle
 
-		local min, max = colliderhandle:aabb()
+		local min, max = physicworld:aabb(colliderhandle)
 		add_aabb_bounding({min=min, max=max}, vb, ib)
 	end
 
 	update_buffers(dmesh, vb, ib)
+end
+
+local reset_bounding_buffer = ecs.system "reset_mesh_buffer"
+reset_bounding_buffer.depend "end_frame"
+
+function reset_bounding_buffer:update()
+	local dmesh = world:first_entity "bounding_drawer"
+	if dmesh then
+		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
+		local group = meshscene.scenes[1][1][1]
+		group.vb.handles[1].updateoffset = 0
+		group.ib.updateoffset = 0
+	end
 end

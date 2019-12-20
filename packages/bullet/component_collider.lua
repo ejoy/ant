@@ -102,13 +102,25 @@ for _, name in ipairs {
 
 	local trans_name = name .. "_transform"
 	local t = ecs.transform(trans_name)
+	t.input "transform"
 	t.input(collider_name)
 	t.output "collider_tag"
 	function t.process(e)
+		local cc = e[collider_name]
+		local shapehandle = cc.shape.handle
+		local collider = cc.collider
+		local transform = e.transform
+		local pos = ms(collider.center, e.transform.t, "+P")
+		local rot = ms(transform.r, "qP")
+		local object = physicworld:new_obj(shapehandle, pos, rot)
+		physicworld:add_obj(object)
+		collider.handle = object
+
 		e.collider_tag = collider_name
 	end
 
 	local cp = ecs.policy(name)
+	cp.require_component "transform"
 	cp.require_component "collider_tag"
 	cp.require_component(collider_name)
 	cp.require_transform(trans_name)

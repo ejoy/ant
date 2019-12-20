@@ -55,6 +55,7 @@ init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
+init_loader.dependby 'physic_bounding'
 
 local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'
@@ -81,7 +82,9 @@ local function ozzmesh_animation_test()
                 r = {0, 0, 0, 0},
                 t = {0, 2, 0, 1}
             },
-            material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
+            },
             animation = {
                 anilist = {
                     idle = {
@@ -196,7 +199,7 @@ local function gltf_animation_test()
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
             },
             material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
             },
             skeleton = {
                 ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
@@ -270,6 +273,7 @@ function init_loader:init()
     end
 
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
+    computil.create_bounding_drawer(world)
 
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_plane_test()
