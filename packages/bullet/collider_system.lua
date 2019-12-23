@@ -41,14 +41,7 @@ function char_sys:update()
     for _, char_eid in world:each "character" do
         local char = world[char_eid]
         local collidercomp = char[char.collider_tag]
-
-        -- TODO: world transform will not correct when this entity attach on hierarchy tree
-        -- we need seprarte update transform from primitive_filter_system
-        local worldmat = char.transform.world
         local colliderobj = collidercomp.collider.handle
-        local t = physicworld:get_obj_transform(colliderobj)
-        physicworld:set_obj_transform(colliderobj, ms(worldmat, t, "*m"))
-
         local aabbmin, aabbmax = physicworld:aabb(colliderobj)
         local center = ms({0.5}, aabbmax, aabbmin, "+*T")
         local at = {center[1], aabbmin[2] - 20, center[3]}

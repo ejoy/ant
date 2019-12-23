@@ -320,10 +320,9 @@ lnew_collision_obj(lua_State *L) {
 
 	if (pos || quat) {
 		btTransform tr;
-		if (pos)
-			tr.setOrigin(*pos);
-		if (quat)
-			tr.setRotation(*quat);
+		tr.setOrigin(pos ? *pos : btVector3(0.f, 0.f, 0.f));
+		tr.setRotation(quat ? *quat : btQuaternion(0.f, 0.f, 0.f, 1.f));
+
 		coll_obj->setWorldTransform(tr);
 	}
 
@@ -827,6 +826,8 @@ lset_obj_trans(lua_State *L) {
 		auto pos = (const btVector3 *)lua_touserdata(L, 3);
 		needtrans = true;
 		trans.setOrigin(*pos);
+	} else {
+		trans.setOrigin(btVector3(0.f, 0.f, 0.f));
 	}
 
 	const btQuaternion* quat = nullptr;
@@ -835,6 +836,8 @@ lset_obj_trans(lua_State *L) {
 		auto quat = (const btQuaternion *)lua_touserdata(L, 4);
 		needtrans = true;
 		trans.setRotation(*quat);
+	} else {
+		trans.setRotation(btQuaternion(0.f, 0.f, 0.f, 1.f));
 	}
 
 	if (needtrans)
@@ -856,11 +859,18 @@ lget_obj_trans(lua_State *L){
 		auto m = trans.getBasis();
 		for (int jj = 0; jj < 3; ++jj){
 			lua_pushnumber(L, m[ii][jj]);
-			lua_seti(L, -2, ii*3+jj+1);
+			lua_seti(L, -2, ii*4+jj+1);
 		}
 		lua_pushnumber(L, 0.0);
-		lua_seti(L, -2, ii*3+3+1);
+		lua_seti(L, -2, ii*4+3+1);
 	}
+
+	auto origin = trans.getOrigin();
+	for (int ii = 0; ii < 3; ++ii) {
+		lua_pushnumber(L, origin[ii]);
+		lua_seti(L, -2, ii + 13);
+	}
+
 	lua_pushnumber(L, 1.0);
 	lua_seti(L, -2, 16);
 	return 1;
