@@ -35,35 +35,52 @@ local function camera_move(forward_axis, position, dx, dy, dz)
 			forward_axis, {dz}, "*+=")
 end
 
-function camera_controller_system:init()	
+local function get_camera()
 	local mq = world:first_entity "main_queue"
+	return camerautil.get_camera(world, mq.camera_tag)
+end
 
-	local camera = camerautil.get_camera(world, mq.camera_tag)
+function camera_controller_system:init()
+	local camera = get_camera()
 	camera.frustum.f = 100	--set far distance to 100
 	camera_reset(camera)
 
+	--local message = {}
+	--local w,s,a,d=0,0,0,0
+	--function message:steering(code, press)
+	--	if code == "W" then
+	--		w = press
+	--	elseif code == "S" then
+	--		s = press
+	--	elseif code == "A" then
+	--		a = press
+	--	elseif code == "D" then
+	--		d = press
+	--	end
+	--	data.dz = w - s
+	--	data.dx = d - a
+	--end
+	--self.message.observers:add(message)
 	local data = self.camera_temp_data
+	data.xdpi, data.ydpi = rhwi.dpi()
+	data.eventMouseLeft = world:sub {"mouse", "LEFT"}
+	data.eventKeyboard = world:sub {"keyboard"}
+end
 
-	local move_speed = 0.5
-	local lastx, lasty
-	local xdpi, ydpi = rhwi.dpi()
-
-	local message = {}
-
-	function message:mouse(x, y, what, state)
-		if what ~= "RIGHT" then
-			return
-		end
+function camera_controller_system:update()
+	local data = self.camera_temp_data
+	local move_speed <const> = 0.5
+	for _,_,state,x,y in data.eventMouseLeft:unpack() do
 		if state == "MOVE" then
-			local dx = (x - lastx) / xdpi * move_speed
-			local dy = (y - lasty) / ydpi * move_speed
+			local camera = get_camera()
+			local dx = (x - data.lastx) / data.xdpi * move_speed
+			local dy = (y - data.lasty) / data.ydpi * move_speed
 			local right, up = ms:base_axes(camera.viewdir)
 			ms(camera.viewdir, {type="q", axis=up, radian={dx}}, {type="q", axis=right, radian={dy}}, "3**n=")
 		end
-		lastx, lasty = x, y
+		data.lastx, data.lasty = x, y
 	end
-
-	function message:keyboard(code, press)
+	for _,code,press in data.eventKeyboard:unpack() do
 		local delta = press == 1 and 1 or (press == 0 and -1 or 0)
 		if code == "W" then
 			data.dz = data.dz + delta
@@ -75,30 +92,8 @@ function camera_controller_system:init()
 			data.dx = data.dx + delta
 		end
 	end
-
-	local w,s,a,d=0,0,0,0
-	function message:steering(code, press)
-		if code == "W" then
-			w = press
-		elseif code == "S" then
-			s = press
-		elseif code == "A" then
-			a = press
-		elseif code == "D" then
-			d = press
-		end
-		data.dz = w - s
-		data.dx = d - a
-	end
-
-	self.message.observers:add(message)
-end
-
-function camera_controller_system:update()
-	local data = self.camera_temp_data
 	if data.dx ~= 0 or data.dy ~= 0 or data.dz ~= 0 then
-		local mq = world:first_entity "main_queue"
-		local camera = camerautil.get_camera(world, mq.camera_tag)
+		local camera = get_camera()
 		local speed = 0.5
 		camera_move(camera.viewdir, camera.eyepos, speed * data.dx, speed * data.dy, speed * data.dz)
 	end

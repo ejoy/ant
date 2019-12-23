@@ -2,6 +2,8 @@ local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
 local policy = require "policy"
+local event = require "event"
+
 local component_init = component.init
 local component_delete = component.delete
 
@@ -554,6 +556,11 @@ function ecs.new_world(config)
 		_marks = {actives={}},
 	}, world)
 
+	--init event
+	event.init(world)
+	world.sub = event.sub
+	world.pub = event.pub
+
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
@@ -621,6 +628,7 @@ function ecs.new_world(config)
 	end
 
 	w._marks.handlers = handlers
+
 	return w
 end
 

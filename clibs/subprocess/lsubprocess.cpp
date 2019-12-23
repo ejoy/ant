@@ -5,6 +5,10 @@
 #include <string.h>
 #include <system_error>
 
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
+
 #if __has_include(<filesystem>)
 #   if defined(__MINGW32__)
 #   elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)

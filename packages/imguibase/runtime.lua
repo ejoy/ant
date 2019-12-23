@@ -82,14 +82,14 @@ end
 function callback.mouse_wheel(x, y, delta)
 	imgui.mouse_wheel(x, y, delta)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse_wheel", x, y, delta)
+		world:pub {"mouse_wheel", delta, x, y}
 	end
 end
 
 function callback.mouse(x, y, what, state)
 	imgui.mouse(x, y, what, state)
 	if not imguiIO.WantCaptureMouse then
-		iq:push("mouse", x, y, inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state))
+		world:pub {"mouse", inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state), x, y}
 	end
 end
 
@@ -112,15 +112,15 @@ function callback.touch(x, y, id, state)
 		end
 	end
 	if not imguiIO.WantCaptureMouse then
-		iq:push("touch", x, y, id, inputmgr.translate_mouse_state(state))
+		world:pub {"touch", inputmgr.translate_mouse_state(state), id, x, y }
 	end
 end
 
 function callback.keyboard(key, press, state)
 	imgui.keyboard(key, press, state)
 	if not imguiIO.WantCaptureKeyboard then
-		iq:push("keyboard", keymap[key], press, inputmgr.translate_key_state(state))
-	end 
+		world:pub {"keyboard", keymap[key], press, inputmgr.translate_key_state(state)}
+	end
 end
 
 callback.char = imgui.input_char
