@@ -791,6 +791,7 @@ lset_obj_trans(lua_State *L) {
 	}
 
 	trans.setOrigin(*((const btVector3*)m));
+	obj->setWorldTransform(trans);
 
 	worldnode->world->updateSingleAabb(obj);
 	return 0;

@@ -3146,6 +3146,7 @@ ladd_translate(lua_State *L){
 	auto m = get_mat_value(L, LS, 2);
 	auto v = get_vec_value(L, LS, 3);
 
+	v[3] = 0.f;
 	m[3] += v;
 
 	lastack_pushmatrix(LS, &m[0].x);

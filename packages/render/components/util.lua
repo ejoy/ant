@@ -217,7 +217,7 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 				center = {0, 0, 0},
 			},
 			shape = {
-				size = scale,
+				size = {1, 1, 1},
 			}
 		}
 	end

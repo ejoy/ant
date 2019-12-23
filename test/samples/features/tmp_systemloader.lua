@@ -16,6 +16,7 @@ ecs.import 'ant.bullet'
 ecs.import 'ant.animation'
 ecs.import 'ant.event'
 ecs.import 'ant.objcontroller'
+ecs.import 'ant.camera_controller'
 ecs.import 'ant.sky'
 
 
@@ -51,11 +52,12 @@ init_loader.dependby 'render_system'
 init_loader.dependby 'cull_system'
 init_loader.dependby 'shadow_maker'
 init_loader.dependby 'primitive_filter_system'
-init_loader.dependby 'camera_controller'
+--init_loader.dependby 'camera_controller'
 init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
 init_loader.dependby 'physic_bounding'
+init_loader.dependby 'camera_controller_2'
 
 local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'
