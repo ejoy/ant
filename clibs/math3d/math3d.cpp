@@ -3139,6 +3139,20 @@ lelem_add(lua_State *L){
 	return 1;
 }
 
+static int
+ladd_translate(lua_State *L){
+	auto LS = getLS(L, 1);
+
+	auto m = get_mat_value(L, LS, 2);
+	auto v = get_vec_value(L, LS, 3);
+
+	m[3] += v;
+
+	lastack_pushmatrix(LS, &m[0].x);
+	pushid(L, pop(L, LS));
+	return 1;
+}
+
 // reg key for ref leak table
 static int REFLEAK = 0;
 
@@ -3216,6 +3230,7 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "minmax", lminmax},
 			{ "elem_mul", lelem_mul},
 			{ "elem_add", lelem_add},
+			{ "add_translate", ladd_translate},
 			{ "leaks", lleaks },
 			{ NULL, NULL },
 		};

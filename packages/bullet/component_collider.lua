@@ -109,10 +109,7 @@ for _, name in ipairs {
 		local cc = e[collider_name]
 		local shapehandle = cc.shape.handle
 		local collider = cc.collider
-		local transform = e.transform
-		local pos = ms(collider.center, e.transform.t, "+P")
-		local rot = ms(transform.r, "qP")
-		local object = physicworld:new_obj(shapehandle, pos, rot)
+		local object = physicworld:new_obj(shapehandle)
 		physicworld:add_obj(object)
 		collider.handle = object
 
@@ -130,11 +127,10 @@ local math3d_adapter = require "math3d.adapter"
 local mathadapter_util = import_package "ant.math.adapter"
 mathadapter_util.bind("bullet", function ()
 	local bw_mt 			= getmetatable(physicworld)
-	bw_mt.new_obj 			= math3d_adapter.vector(ms, bw_mt.new_obj, 3)
-	bw_mt.set_obj_transform = math3d_adapter.vector(ms, bw_mt.set_obj_transform, 3)
+	bw_mt.set_obj_transform = math3d_adapter.matrix(ms, bw_mt.set_obj_transform, 3)
 	bw_mt.set_obj_position 	= math3d_adapter.vector(ms, bw_mt.set_obj_position, 3)
 	bw_mt.set_obj_rotation 	= math3d_adapter.vector(ms, bw_mt.set_obj_rotation, 3)
-	bw_mt.set_shape_scale 	= math3d_adapter.vector(ms, bw_mt.set_shape_scale, 3)
-	bw_mt.update_object_shape = math3d_adapter.vector(ms, bw_mt.update_object_shape, 4)
+	bw_mt.update_obj_scale  = math3d_adapter.vector(ms, bw_mt.update_obj_scale, 4)
+	bw_mt.add_to_compound	= math3d_adapter.vector(ms, bw_mt.add_to_compound, 4)
 	bw_mt.raycast		 	= math3d_adapter.vector(ms, bw_mt.raycast, 2)
 end)

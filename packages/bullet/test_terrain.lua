@@ -64,12 +64,18 @@ local gen_user_idx = get_user_idx_op()
 
 local useridx = gen_user_idx()
 print("plane useridx:", useridx)
-local object_plane = btworld:new_obj(shapes.plane, useridx, ms({0,-200,0}, "m"), ms({0,0,0,1}, "m"))
+local pos, quat = ms({0,-200,0}, "m"), ms({0,0,0,1}, "m")
+local object_plane = btworld:new_obj(shapes.plane, useridx)
+btworld:set_obj_position(object_plane, pos)
+btworld:set_obj_rotation(object_plane, quat)
 --btworld:add_obj(object_plane)
 
 useridx = gen_user_idx()
 print("cylinder eid : ", useridx)
-local obj_cylinder = btworld:new_obj(shapes.cylinder, useridx, ms({0,-200,0}, "m"), ms({0,0,0,1}, "m"))
+local pos1, rot1 = ms({0,-200,0}, "m"), ms({0,0,0,1}, "m")
+local obj_cylinder = btworld:new_obj(shapes.cylinder, useridx)
+btworld:set_obj_position(obj_cylinder, pos1)
+btworld:set_obj_rotation(obj_cylinder, rot1)
 --btworld:add_obj(obj_cylinder)
 
 useridx = gen_user_idx()
@@ -77,7 +83,11 @@ print("terrain eid : ", useridx)
 
 local center = bounding.sphere.center
 local offset = {center[1] * width_scale, center[2] * heightmap_scale, center[3] * length_scale}
-local obj_terrain = btworld:new_obj(shapes.terrain, useridx, ms(offset, "m"), ms({0,0,0,1}, "m"))
+local pos2, rot2 = ms(offset, "m"), ms({0,0,0,1}, "m")
+local obj_terrain = btworld:new_obj(shapes.terrain, useridx)
+btworld:set_obj_position(obj_cylinder, pos2)
+btworld:set_obj_rotation(obj_cylinder, rot2)
+
 btworld:add_obj(obj_terrain)
 
 local print_r = function(name,x,y,z)

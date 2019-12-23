@@ -26,10 +26,8 @@ function collider_sys:update()
 
         -- TODO: world transform will not correct when this entity attach on hierarchy tree
         -- we need seprarte update transform from primitive_filter_system
-        local worldmat = e.transform.world
-        local colliderobj = collidercomp.collider.handle
-        local t = physicworld:get_obj_transform(colliderobj)
-        physicworld:set_obj_transform(colliderobj, ms(worldmat, t, "*P"))
+        local collider = collidercomp.collider
+        physicworld:set_obj_transform(collider.handle, ms:add_translate(e.transform.world, collider.center))
     end
 end
 

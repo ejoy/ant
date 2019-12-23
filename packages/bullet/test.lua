@@ -35,10 +35,13 @@ end
 local gen_user_idx = get_user_idx_op()
 
 local useridx = gen_user_idx()
-local object_plane = btworld:new_obj(shapes.plane, useridx, nil, ms({type='q', 0,0,0,1}, "m"))
+local rot = ms({type='q', 0,0,0,1}, "m")
+local object_plane = btworld:new_obj(shapes.plane, useridx)
+btworld:set_obj_rotation(object_plane, rot)
 btworld:add_obj(object_plane)
 
-btworld:add_to_compound(shapes.compound, shapes.sphere, nil, ms({type='e', math.rad(90), 0, 0}, "qm"))
+local rot1 = ms({type='e', math.rad(90), 0, 0}, "qm")
+btworld:add_to_compound(shapes.compound, shapes.sphere)
 
 local compound_idx = gen_user_idx()
 local compound_obj = btworld:new_obj(shapes.compound, compound_idx, ms({2, 2, 2,1}, "m"), ms({type='e', math.rad(45),0,0}, "qm"))

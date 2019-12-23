@@ -40,7 +40,9 @@ check_delete(T* &p) {
 static inline collworld_node*
 get_worldnode(lua_State *L, int idx = 1) {
 	luaL_checktype(L, idx, LUA_TUSERDATA);
-	return (collworld_node*)lua_touserdata(L, idx);
+	auto worldnode = (collworld_node*)lua_touserdata(L, idx);
+	assert(worldnode && worldnode->world);
+	return worldnode;
 }
 
 template<typename T>
@@ -296,35 +298,15 @@ lnew_collision_obj(lua_State *L) {
 
 	btCollisionObject* coll_obj = new btCollisionObject;
 
-	btVector3* pos = nullptr;
-	if (!lua_isnoneornil(L, 3)) {
-		luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
-		pos = (btVector3*)lua_touserdata(L, 3);
-	}
-
-	btQuaternion* quat = nullptr;
-	if (!lua_isnoneornil(L, 4)) {
-		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
-		quat = (btQuaternion*)lua_touserdata(L, 4);
-	}
-
-	if (!lua_isnil(L, 5)){
+	if (!lua_isnil(L, 3)){
 		const int useridx = (int)lua_tointeger(L, 5);
 		coll_obj->setUserIndex(useridx);
 	}
 
-	void *userdata = lua_isnoneornil(L, 6) ? nullptr : lua_touserdata(L, 6);
+	void *userdata = lua_isnoneornil(L, 4) ? nullptr : lua_touserdata(L, 6);
 	
 	coll_obj->setUserPointer(userdata);
 	coll_obj->setCollisionShape(shape);
-
-	if (pos || quat) {
-		btTransform tr;
-		tr.setOrigin(pos ? *pos : btVector3(0.f, 0.f, 0.f));
-		tr.setRotation(quat ? *quat : btQuaternion(0.f, 0.f, 0.f, 1.f));
-
-		coll_obj->setWorldTransform(tr);
-	}
 
 	if (shape->getShapeType() == TERRAIN_SHAPE_PROXYTYPE) {
 		int flags = coll_obj->getCollisionFlags();
@@ -338,7 +320,6 @@ lnew_collision_obj(lua_State *L) {
 static int
 ldel_collision_obj(lua_State *L) {
 	auto worldnode = get_worldnode(L);
-	assert(worldnode && worldnode->world);
 
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
@@ -416,7 +397,6 @@ lremove_collision_obj(lua_State *L) {
 static int
 ladd_to_compound(lua_State *L) {
 	auto worldnode = get_worldnode(L);
-	assert(worldnode && worldnode->world);
 
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto compound = (btCompoundShape*)lua_touserdata(L, 2);
@@ -453,7 +433,7 @@ ladd_to_compound(lua_State *L) {
 }
 
 static int 
-lupdate_object_shape(lua_State *L) {
+lupdate_obj_scale(lua_State *L) {
 	auto worldnode = get_worldnode(L);
 
 	luaL_checktype(L,2,LUA_TLIGHTUSERDATA);
@@ -473,24 +453,8 @@ lupdate_object_shape(lua_State *L) {
 }
 
 static int
-lset_shape_scale(lua_State *L) {
-	auto worldnode = get_worldnode(L);
-	assert(worldnode && worldnode->world);
-
-	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
-	auto shape = (btCollisionShape*)lua_touserdata(L, 2);
-
-	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
-	btVector3 *scale = (btVector3*)lua_touserdata(L, 3);
-
-	shape->setLocalScaling(*scale);
-	return 0;
-}
-
-static int
 lget_obj_aabb(lua_State *L){
 	auto worldnode = get_worldnode(L);
-	assert(worldnode && worldnode->world);
 
 	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
 
@@ -507,7 +471,6 @@ lget_obj_aabb(lua_State *L){
 static int
 ldel_shape(lua_State *L) {
 	auto worldnode = get_worldnode(L);	
-	assert(worldnode && worldnode->world);
 
 	auto shape = (btCollisionShape*)lua_touserdata(L, 2);
 	check_delete(shape);
@@ -534,8 +497,7 @@ ldel_bullet_world(lua_State *L) {
 static int 
 lreset_bullet_world(lua_State *L) {
 	auto worldnode = get_worldnode(L);
-	assert(worldnode->world);
-	
+
 	remove_collision_objects(worldnode->world);	
 	return 0;
 }
@@ -803,7 +765,6 @@ lraycast(lua_State *L) {
 static int
 lset_obj_user_idx(lua_State *L){
 	auto worldnode = get_worldnode(L);
-	assert(worldnode && worldnode->world);
 
 	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
 	auto useridx = lua_tointeger(L, 3);
@@ -819,29 +780,17 @@ lset_obj_trans(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
 
+	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
+	auto m = (const float*)lua_touserdata(L, 3);
+
 	btTransform trans;
-	bool needtrans = false;
-	if (!lua_isnoneornil(L, 3)){
-		luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
-		auto pos = (const btVector3 *)lua_touserdata(L, 3);
-		needtrans = true;
-		trans.setOrigin(*pos);
-	} else {
-		trans.setOrigin(btVector3(0.f, 0.f, 0.f));
+	auto &bais = trans.getBasis();
+	for (int ii = 0; ii < 3; ++ii){
+		bais[ii] = *(const btVector3*)m;
+		m += 4;
 	}
 
-	const btQuaternion* quat = nullptr;
-	if (!lua_isnoneornil(L, 4)){
-		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
-		auto quat = (const btQuaternion *)lua_touserdata(L, 4);
-		needtrans = true;
-		trans.setRotation(*quat);
-	} else {
-		trans.setRotation(btQuaternion(0.f, 0.f, 0.f, 1.f));
-	}
-
-	if (needtrans)
-		obj->setWorldTransform(trans);
+	trans.setOrigin(*((const btVector3*)m));
 
 	worldnode->world->updateSingleAabb(obj);
 	return 0;
@@ -850,7 +799,6 @@ lset_obj_trans(lua_State *L) {
 static int
 lget_obj_trans(lua_State *L){
 	auto worldnode = get_worldnode(L);
-	assert(worldnode && worldnode->world);
 
 	auto obj = (btCollisionObject*)lua_touserdata(L, 2);
 	auto trans = obj->getWorldTransform();
@@ -919,8 +867,7 @@ register_bullet_world_node(lua_State *L) {
 	luaL_Reg l[] = {
 		{"new_shape",			lnew_shape},
 		{"del_shape",			ldel_shape},
-		{"update_object_shape",	lupdate_object_shape},
-		{"set_shape_scale",		lset_shape_scale},
+		{"update_obj_scale",	lupdate_obj_scale},
 		{"aabb",				lget_obj_aabb},
 
 		{"new_obj",				lnew_collision_obj},
@@ -932,6 +879,7 @@ register_bullet_world_node(lua_State *L) {
 		{"get_obj_transform",	lget_obj_trans},
 		{"set_obj_position",	lset_obj_pos},
 		{"set_obj_rotation",	lset_obj_rot},
+
 		{"add_to_compound",		ladd_to_compound},
 		{"world_collide",		lworld_collide,	},
 		{"collide_objects",		lcollide_objects},
