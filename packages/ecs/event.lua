@@ -9,16 +9,27 @@ local function copytable(t)
     return r
 end
 
-local function addmb(lookup, mb)
-    local pattern = copytable(mb.__pattern)
+local function compile_pattern(pattern)
+    local res = {}
+    for k, v in pairs(pattern) do
+        res[#res+1] = k
+        res[#res+1] = v
+    end
+    if #res == 0 then
+        return true
+    end
+    return res
+end
+
+local function addmb(lookup, event_pattern, mb, pattern)
+    event_pattern[mb] = copytable(pattern)
     for _, k in ipairs(INDEX) do
         local v = pattern[k]
         if not v then
-            mb.__compiled = pattern
             if lookup[NOTCARE] then
-                lookup[NOTCARE][mb] = true
+                lookup[NOTCARE][mb] = compile_pattern(pattern)
             else
-                lookup[NOTCARE] = {[mb] = true}
+                lookup[NOTCARE] = {[mb] = compile_pattern(pattern)}
             end
             return
         end
@@ -28,12 +39,11 @@ local function addmb(lookup, mb)
         end
         lookup = lookup[v]
     end
-    mb.__compiled = pattern
-    lookup[mb] = true
+    lookup[mb] = compile_pattern(pattern)
 end
 
-local function delmb(lookup, mb)
-    local pattern = mb.__pattern
+local function delmb(lookup, event_pattern, mb)
+    local pattern = event_pattern[mb]
     for _, k in ipairs(INDEX) do
         local v = pattern[k]
         if not v then
@@ -42,18 +52,21 @@ local function delmb(lookup, mb)
         end
         lookup = lookup[v]
     end
+    event_pattern[mb] = nil
     lookup[mb] = nil
 end
 
-
 local function filter(message, lst)
     local res = {}
-    for mb in pairs(lst) do
+    for mb, compiled in pairs(lst) do
         res[mb] = true
-        for k, v in pairs(mb.__compiled) do
-            if message[k] ~= v then
-                res[mb] = nil
-                break
+        if compiled ~= true then
+            for i = 1, #compiled, 2 do
+                local k, v = compiled[i], compiled[i+1]
+                if message[k] ~= v then
+                    res[mb] = nil
+                    break
+                end
             end
         end
     end
@@ -75,57 +88,45 @@ local mailbox = {}
 mailbox.__index = mailbox
 
 function mailbox:each()
-    local q = self.__queue
     return function ()
-        local msg = q[1]
+        local msg = self[1]
         if msg then
-            table.remove(q, 1)
+            table.remove(self, 1)
             return msg
         end
     end
 end
 
 function mailbox:unpack()
-    local q = self.__queue
     return function ()
-        local msg = q[1]
+        local msg = self[1]
         if msg then
-            table.remove(q, 1)
+            table.remove(self, 1)
             return table.unpack(msg)
         end
     end
 end
 
-function mailbox:unsub()
-    delmb(self.__mgr, self)
-end
-
-local function create_mailbox(mgr, pattern)
-    return setmetatable({
-        __mgr = mgr,
-        __pattern = pattern,
-        __queue = {}
-    }, mailbox)
-end
-
 local world = {}
 
 function world:init()
-    self._event_mgr = {}
+    self._event_lookup = {}
+    self._event_pattern = {}
 end
 
 function world:sub(pattern)
-    local mgr = self._event_mgr
-    local mb = create_mailbox(mgr, pattern)
-    addmb(mgr, mb)
+    local mb = setmetatable({}, mailbox)
+    addmb(self._event_lookup, self._event_pattern, mb, pattern)
     return mb
 end
 
+function world:unsub(mb)
+    delmb(self._event_lookup, self._event_pattern, mb)
+end
+
 function world:pub(message)
-    local mgr = self._event_mgr
-    for mb in pairs(findmb(mgr, message)) do
-        local q = mb.__queue
-        q[#q+1] = message
+    for mb in pairs(findmb(self._event_lookup, message)) do
+        mb[#mb+1] = message
     end
 end
 
