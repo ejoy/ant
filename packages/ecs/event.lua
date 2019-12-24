@@ -89,6 +89,16 @@ function mailbox:each()
     end
 end
 
+function mailbox:unpack()
+    return function ()
+        local msg = self[1]
+        if msg then
+            table.remove(self, 1)
+            return table.unpack(msg)
+        end
+    end
+end
+
 local world = {}
 
 function world:init()
