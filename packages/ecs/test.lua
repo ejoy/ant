@@ -118,10 +118,13 @@ function mods.dummy(...)
 		print("in dby:init()")
 	end
 
+	local new_foobar_event = world:sub {"foobar"}
+	
 	local newdummy = ecs.system "new"
 
 	function newdummy:update()
-		for eid in world:each_new "foobar" do
+		for msg in new_foobar_event:each() do
+			local eid = msg[2]
 			print("New foobar", eid)
 			world:remove_entity(eid)
 		end

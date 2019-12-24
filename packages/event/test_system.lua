@@ -9,6 +9,8 @@ local foobar = ecs.component "foobar"
 
 local test = ecs.system "test_event"
 
+local new_foobar_event = world:sub {"foobar"}
+
 test.singleton "event"
 
 local fp = ecs.policy "foobar"
@@ -22,12 +24,12 @@ function test:init()
 		data = {
 			foobar = { x = 1, y = 2 },
 		}
-		
 	}
 end
 
 function test:post_init()
-	for eid in world:each_new "foobar" do
+	for msg in new_foobar_event:each() do
+		local eid = msg[2]
 		print("New entity", eid)
 		self.event:new(eid, "foobar")
 	end

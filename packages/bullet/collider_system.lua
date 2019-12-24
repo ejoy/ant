@@ -7,11 +7,15 @@ local physicworld = physic.world
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 
+local collider_mb = world:sub {"collider_tag"}
+
 local collider_sys = ecs.system "collider_system"
 collider_sys.dependby "primitive_filter_system"
 
 function collider_sys:data_changed()
-    for eid in world:each_new "collider_tag" do
+    for msg in collider_mb:each() do
+        local eid = msg[2]
+        
         local e = world[eid]
         local c = e[e.collider_tag]
         physicworld:set_obj_user_idx(assert(c.collider.handle), eid)

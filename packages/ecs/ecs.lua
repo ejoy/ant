@@ -29,10 +29,8 @@ function world:register_component(eid, c)
 	if set then
 		set[#set+1] = eid
 	end
-	local newset = self._newset[c]
-	if newset then
-		newset[#newset+1] = eid
-	end
+
+	self:pub {c, eid}
 end
 
 function world:register_entity()
@@ -273,30 +271,6 @@ function world:update_marks()
 	end
 
 	marks.current_actives = nil
-end
-
-local function new_component_next(set)
-	local n = #set
-	while n >= 0 do
-		local eid = set[n]
-		if set.entity[eid] then
-			set[n] = nil
-			return eid
-		end
-		n = n - 1
-	end
-end
-
-function world:each_new(component_type)
-	local s = self._newset[component_type]
-	if s == nil then
-		s = { entity = self._entity }
-		for index, eid in self:each(component_type) do
-			s[index] = eid
-		end
-		self._newset[component_type] = s
-	end
-	return new_component_next, s
 end
 
 local function remove_component(w, ti, c, e)

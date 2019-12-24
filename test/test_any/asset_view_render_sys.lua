@@ -45,11 +45,14 @@ local function create_light()
     ambient_comp.groundcolor = {0.60, 0.74, 0.68, 1}
 end
 
+local show_light_mb = world:sub {"show_light"}
+local show_grid_mb = world:sub {"show_grid"}
+
 function asset_view_render_sys:update()
-    for eid in world:each_new("show_light") do
+    for _ in show_light_mb:each() do
         create_light()
     end
-    for eid in world:each_new("show_grid") do
+    for _ in show_grid_mb:each() do
         cu.create_grid_entity(world, "grid")
     end
 end

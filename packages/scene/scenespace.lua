@@ -281,10 +281,12 @@ local function add_hierarchy_tree_item(eid, events, init, trees)
 	end
 end
 
-local need_check_components_changed = {"hierarchy", "ignore_parent_scale"}
-
+local trans_mb = world:sub {"transform"}
+local hierarchy_mb = world:sub {"hierarchy"}
+local ignore_parent_scale_mb = world:sub {"ignore_parent_scale"}
 function scene_space:data_changed()
-	for eid in world:each_new "transform" do
+	for msg in trans_mb:each() do
+		local eid = msg[2]
 		self.event:new(eid, "transform")
 	end
 	
@@ -307,11 +309,12 @@ function scene_space:data_changed()
 		end
 	end
 
-	for i=1, #need_check_components_changed do
-		local compname = need_check_components_changed[i]
-		for eid in world:each_new(compname) do
-			add_hierarchy_tree_item(eid, nil, true, trees)
-		end
+	for msg in hierarchy_mb:each() do
+		add_hierarchy_tree_item(msg[2], nil, true, trees)
+	end
+
+	for msg in ignore_parent_scale_mb:each() do
+		add_hierarchy_tree_item(msg[2], nil, true, trees)
 	end
 
 	-- remove 'ignore_parent_scale' need update hierarchy tree

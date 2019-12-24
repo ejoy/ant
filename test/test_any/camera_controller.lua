@@ -106,9 +106,10 @@ function camera_controller_system:init()
 	add_msg_callback(self)
 end
 
-
+local camera_ctrl_mb = world:sub {"camera_control"}
 function camera_controller_system:update()
-	for eid in world:each_new("camera_control") do
+	for msg in camera_ctrl_mb:each() do
+		local eid = msg[2]
 		local camera_entity = world[eid]
 		local target = math3d.ref "vector"
 		local camera = camera_entity.camera
