@@ -7,18 +7,9 @@ local ms = import_package "ant.math".stack
 local rhwi = import_package "ant.render".hardware_interface
 local camerautil = import_package "ant.render".camera
 
-local camera_temp_data = ecs.singleton "camera_temp_data"
-function camera_temp_data:init()
-	return {
-		dx = 0,
-		dy = 0,
-		dz = 0,
-	}
-end
 
 local camera_controller_system = ecs.system "camera_controller_2"
 
-camera_controller_system.singleton "camera_temp_data"
 camera_controller_system.singleton "message"
 camera_controller_system.depend "message_system"
 
@@ -40,10 +31,20 @@ local function get_camera()
 	return camerautil.get_camera(world, mq.camera_tag)
 end
 
+local eventMouseLeft = world:sub {"mouse", "LEFT"}
+local kMouseSpeed <const> = 0.5
+local mouse_lastx, mouse_lasty
+local dpi_x, dpi_y
+
+local eventKeyboard = world:sub {"keyboard"}
+local kKeyboardSpeed <const> = 0.5
+local keyboard_dx, keyborad_dy, keyboard_dz = 0, 0, 0
+
 function camera_controller_system:init()
 	local camera = get_camera()
 	camera.frustum.f = 100	--set far distance to 100
 	camera_reset(camera)
+	dpi_x, dpi_y = rhwi.dpi()
 
 	--local message = {}
 	--local w,s,a,d=0,0,0,0
@@ -61,40 +62,33 @@ function camera_controller_system:init()
 	--	data.dx = d - a
 	--end
 	--self.message.observers:add(message)
-	local data = self.camera_temp_data
-	data.xdpi, data.ydpi = rhwi.dpi()
-	data.eventMouseLeft = world:sub {"mouse", "LEFT"}
-	data.eventKeyboard = world:sub {"keyboard"}
 end
 
 function camera_controller_system:update()
-	local data = self.camera_temp_data
-	local move_speed <const> = 0.5
-	for _,_,state,x,y in data.eventMouseLeft:unpack() do
+	for _,_,state,x,y in eventMouseLeft:unpack() do
 		if state == "MOVE" then
 			local camera = get_camera()
-			local dx = (x - data.lastx) / data.xdpi * move_speed
-			local dy = (y - data.lasty) / data.ydpi * move_speed
+			local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
+			local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
 			local right, up = ms:base_axes(camera.viewdir)
-			ms(camera.viewdir, {type="q", axis=up, radian={dx}}, {type="q", axis=right, radian={dy}}, "3**n=")
+			ms(camera.viewdir, {type="q", axis=up, radian={ux}}, {type="q", axis=right, radian={uy}}, "3**n=")
 		end
-		data.lastx, data.lasty = x, y
+		mouse_lastx, mouse_lasty = x, y
 	end
-	for _,code,press in data.eventKeyboard:unpack() do
-		local delta = press == 1 and 1 or (press == 0 and -1 or 0)
+	for _,code,press in eventKeyboard:unpack() do
+		local delta = press == 1 and kKeyboardSpeed or (press == 0 and -kKeyboardSpeed or 0)
 		if code == "W" then
-			data.dz = data.dz + delta
+			keyboard_dz = keyboard_dz + delta
 		elseif code == "S" then
-			data.dz = data.dz - delta
+			keyboard_dz = keyboard_dz - delta
 		elseif code == "A" then
-			data.dx = data.dx - delta
+			keyboard_dx = keyboard_dx - delta
 		elseif code == "D" then
-			data.dx = data.dx + delta
+			keyboard_dx = keyboard_dx + delta
 		end
 	end
-	if data.dx ~= 0 or data.dy ~= 0 or data.dz ~= 0 then
+	if keyboard_dx ~= 0 or keyborad_dy ~= 0 or keyboard_dz ~= 0 then
 		local camera = get_camera()
-		local speed = 0.5
-		camera_move(camera.viewdir, camera.eyepos, speed * data.dx, speed * data.dy, speed * data.dz)
+		camera_move(camera.viewdir, camera.eyepos, keyboard_dx, keyborad_dy, keyboard_dz)
 	end
 end
