@@ -9,7 +9,7 @@ local foobar = ecs.component "foobar"
 
 local test = ecs.system "test_event"
 
-local new_foobar_event = world:sub {"foobar"}
+local new_foobar_event = world:sub {"component_register","foobar"}
 
 test.singleton "event"
 
@@ -29,7 +29,7 @@ end
 
 function test:post_init()
 	for msg in new_foobar_event:each() do
-		local eid = msg[2]
+		local eid = msg[3]
 		print("New entity", eid)
 		self.event:new(eid, "foobar")
 	end

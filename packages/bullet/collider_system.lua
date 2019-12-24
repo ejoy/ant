@@ -7,14 +7,14 @@ local physicworld = physic.world
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 
-local collider_mb = world:sub {"collider_tag"}
+local collider_mb = world:sub {"component_register", "collider_tag"}
 
 local collider_sys = ecs.system "collider_system"
 collider_sys.dependby "primitive_filter_system"
 
 function collider_sys:data_changed()
     for msg in collider_mb:each() do
-        local eid = msg[2]
+        local eid = msg[3]
         
         local e = world[eid]
         local c = e[e.collider_tag]

@@ -30,7 +30,7 @@ function world:register_component(eid, c)
 		set[#set+1] = eid
 	end
 
-	self:pub {c, eid}
+	self:pub {"component_register", c, eid}
 end
 
 function world:register_entity()
@@ -74,6 +74,8 @@ function world:remove_component(eid, c)
 	-- defer delete , see world:remove_reset
 	local removed = self._removed
 	removed[#removed+1] = { eid, e, c }
+
+	self:pub {"component_removed", c, eid, e}
 	e[c] = nil
 end
 
@@ -135,11 +137,11 @@ function world:remove_entity(eid)
 	self[eid] = nil
 	self._entity[eid] = nil
 
-	local removed = self._removed
-	removed[#removed+1] = { eid, e }
-	self:mark(eid, "entity_delete",e)
+	-- local removed = self._removed
+	-- removed[#removed+1] = { eid, e }
 
-	-- defer delete , see world:remove_reset
+	self:pub {"entity_removed", eid, e,}
+	self:mark(eid, "entity_delete",e)
 end
 
 local function component_next(set, index)
@@ -302,49 +304,6 @@ function world:clear_removed()
 				remove_component(self, ti, c, e)
 			end
 		end
-	end
-end
-
---component_type ~= nil, return pairs<eid,component_data>
---component_type == nil, return pairs<eid,entity_data>
-function world:each_removed(component_type)
-	local removed_set
-	local set = self._removed
-	if not component_type then
-		for i = 1, #set do
-			local item = set[i]
-			if not item[3] then
-				local eid = item[1]
-				local e = item[2]
-				removed_set = removed_set or {}
-				removed_set[eid] = e
-			end
-		end
-	else
-		for i = 1, #set do
-			local item = set[i]
-			local eid = item[1]
-			local c = item[3]	-- { eid, component_type, c }
-			if c ~= nil then
-				local ctype = item[2]
-				if ctype == component_type then
-					removed_set = removed_set or {}
-					removed_set[eid] = {c, world[eid]}	-- just remove componen
-				end
-			else
-				local e = item[2]
-				c = e[component_type]
-				if c ~= nil then
-					removed_set = removed_set or {}
-					removed_set[eid] = {c, e}	-- remove entity
-				end
-			end
-		end
-	end
-	if removed_set then
-		return pairs(removed_set)
-	else
-		return dummy_iter
 	end
 end
 
@@ -522,7 +481,6 @@ function ecs.new_world(config)
 		_entity = {},	-- entity id set
 		_entity_id = 0,
 		_set = setmetatable({}, { __mode = "kv" }),
-		_newset = {},
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_serialize_to_eid = {},

@@ -85,7 +85,7 @@ local function is_asset_loaded(e)
     return is_material_loaded(e.material)
 end
 
-local asyn_load_mb = world:sub {"asyn_load"}
+local asyn_load_mb = world:sub {"component_register", "asyn_load"}
 
 function asyn_asset_loader:data_changed()
     local loadlist = self.asyn_load_list
@@ -93,7 +93,7 @@ function asyn_asset_loader:data_changed()
     local max_entity = 5
 
     for msg in asyn_load_mb:each() do
-        local eid = msg[2]
+        local eid = msg[3]
         loadlist[loadlist.n+1] = eid
         loadlist.n = loadlist.n+1
     end

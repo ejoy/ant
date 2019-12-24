@@ -45,8 +45,8 @@ local function create_light()
     ambient_comp.groundcolor = {0.60, 0.74, 0.68, 1}
 end
 
-local show_light_mb = world:sub {"show_light"}
-local show_grid_mb = world:sub {"show_grid"}
+local show_light_mb = world:sub {"component_register","show_light"}
+local show_grid_mb = world:sub {"component_register","show_grid"}
 
 function asset_view_render_sys:update()
     for _ in show_light_mb:each() do

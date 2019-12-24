@@ -118,13 +118,13 @@ function mods.dummy(...)
 		print("in dby:init()")
 	end
 
-	local new_foobar_event = world:sub {"foobar"}
+	local new_foobar_event = world:sub {"component_register", "foobar"}
 	
 	local newdummy = ecs.system "new"
 
 	function newdummy:update()
 		for msg in new_foobar_event:each() do
-			local eid = msg[2]
+			local eid = msg[3]
 			print("New foobar", eid)
 			world:remove_entity(eid)
 		end
@@ -154,10 +154,11 @@ function mods.dummy(...)
 
 	local delete = ecs.system "delete"
 
+	local remove_foobar = world:sub {"component_removed", "foobar"}
+
 	function delete:delete()
-		for eid, info in world:each_removed "foobar" do
-			local c = info[1]
-			local e = info[2]
+		for _, cname, eid, e in remove_foobar:unpack() do
+			local c = e[cname]
 			print("Delete foobar", eid, "foobar", c.x, c.y, "name:", e.name or "")
 		end
 	end
