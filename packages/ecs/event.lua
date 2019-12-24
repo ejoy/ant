@@ -16,7 +16,7 @@ local function compile_pattern(pattern)
         res[#res+1] = v
     end
     if #res == 0 then
-        return true
+        return false
     end
     return res
 end
@@ -56,32 +56,24 @@ local function delmb(lookup, event_pattern, mb)
     lookup[mb] = nil
 end
 
-local function filter(message, lst)
-    local res = {}
-    for mb, compiled in pairs(lst) do
-        res[mb] = true
-        if compiled ~= true then
-            for i = 1, #compiled, 2 do
-                local k, v = compiled[i], compiled[i+1]
-                if message[k] ~= v then
-                    res[mb] = nil
-                    break
-                end
+local function msg_match(message, compiled)
+    for i = 1, #compiled, 2 do
+        local k, v = compiled[i], compiled[i+1]
+        if message[k] ~= v then
+            return
+        end
+    end
+    return true
+end
+
+local function msg_push(message, lst)
+    if lst then
+        for mb, compiled in pairs(lst) do
+            if not compiled or msg_match(message, compiled) then
+                mb[#mb+1] = message
             end
         end
     end
-    return res
-end
-
-local function findmb(lookup, message)
-    for _, k in ipairs(INDEX) do
-        local v = message[k]
-        if not v or not lookup[v] then
-            return lookup[NOTCARE] and filter(message, lookup[NOTCARE]) or {}
-        end
-        lookup = lookup[v]
-    end
-    return lookup and filter(message, lookup) or {}
 end
 
 local mailbox = {}
@@ -93,16 +85,6 @@ function mailbox:each()
         if msg then
             table.remove(self, 1)
             return msg
-        end
-    end
-end
-
-function mailbox:unpack()
-    return function ()
-        local msg = self[1]
-        if msg then
-            table.remove(self, 1)
-            return table.unpack(msg)
         end
     end
 end
@@ -125,9 +107,16 @@ function world:unsub(mb)
 end
 
 function world:pub(message)
-    for mb in pairs(findmb(self._event_lookup, message)) do
-        mb[#mb+1] = message
+    local lookup = self._event_lookup
+    for _, k in ipairs(INDEX) do
+        local v = message[k]
+        if not v or not lookup[v] then
+            msg_push(message, lookup[NOTCARE])
+            return
+        end
+        lookup = lookup[v]
     end
+    msg_push(message, lookup)
 end
 
 return world

@@ -65,8 +65,18 @@ function camera_controller_system:init()
 	--self.message.observers:add(message)
 end
 
+local function mb_unpack(self)
+    return function ()
+        local msg = self[1]
+        if msg then
+            table.remove(self, 1)
+            return table.unpack(msg)
+        end
+    end
+end
+
 function camera_controller_system:update()
-	for _,_,state,x,y in eventMouseLeft:unpack() do
+	for _,_,state,x,y in mb_unpack(eventMouseLeft) do
 		if state == "MOVE" then
 			local camera = get_camera()
 			local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
@@ -76,7 +86,7 @@ function camera_controller_system:update()
 		end
 		mouse_lastx, mouse_lasty = x, y
 	end
-	for _,code,press in eventKeyboard:unpack() do
+	for _,code,press in mb_unpack(eventKeyboard) do
 		local delta = press == 1 and kKeyboardSpeed or (press == 0 and -kKeyboardSpeed or 0)
 		if code == "W" then
 			keyboard_dz = keyboard_dz + delta
