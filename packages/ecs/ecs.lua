@@ -123,7 +123,7 @@ function world:set_entity(eid, t)
 	for _, f in ipairs(transform) do
 		f(e)
 	end
-	self:mark(eid, "entity_create")
+	self:pub {"entity_created", eid}
 end
 
 function world:create_entity(t)
@@ -137,11 +137,10 @@ function world:remove_entity(eid)
 	self[eid] = nil
 	self._entity[eid] = nil
 
-	-- local removed = self._removed
-	-- removed[#removed+1] = { eid, e }
+	local removed = self._removed
+	removed[#removed+1] = { eid, e }
 
 	self:pub {"entity_removed", eid, e,}
-	self:mark(eid, "entity_delete",e)
 end
 
 local function component_next(set, index)
@@ -228,51 +227,6 @@ end
 function world:each2(ct1, ct2)
 	local _,s = self:each(ct1)
 	return component_filter(self, ct2), s, 0
-end
-
-function world:mark(eid, markname, arg)
-	local actives = self._marks.actives
-	local list = actives[markname]
-	if list == nil then
-		list = {}
-		self._marks.actives[markname] = list
-	end
-
-	list[#list+1] = {eid, arg}
-end
-
-function world:each_mark(markname)
-	local ml = self._marks.cache_actives[markname]
-	if ml then
-		local idx = 0
-		local function mark_next()
-			idx = idx + 1
-			local t = ml[idx]
-			if t then
-				return t[1], t[2]
-			end
-		end
-
-		return mark_next, ml
-	end
-	return dummy_iter
-end
-
-function world:update_marks()
-	local marks = self._marks
-	local actives = marks.actives
-	-- clear it, handlers will add new mark, it will handler in next update_marks
-	marks.actives = {}
-	marks.cache_actives = actives
-	local handlers = marks.handlers
-	for cn in pairs(actives) do
-		local handler = handlers[cn]
-		if handler then
-			handler()
-		end
-	end
-
-	marks.current_actives = nil
 end
 
 local function remove_component(w, ti, c, e)
@@ -485,7 +439,6 @@ function ecs.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_serialize_to_eid = {},
 		_cur_system = {"",""},
-		_marks = {actives={}},
 	}, world)
 
 	--init event
@@ -553,13 +506,6 @@ function ecs.new_world(config)
 	-- init system
 	w._systems = system.lists(class.system)
 	w._singleton_proxy = system.proxy(class.system, class.singleton)
-
-	local handlers = {}
-	for cn, handlername in pairs(class.mark_handlers) do
-		handlers[cn] = w:update_func(handlername)
-	end
-
-	w._marks.handlers = handlers
 
 	return w
 end

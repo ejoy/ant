@@ -15,7 +15,7 @@ function t.handler.Delete(world,args)
         world:remove_entity(id)
 
         if e.hierarchy then
-            world:mark(id, "hierarchy_delete")
+            world:pub {"hierarchy_delete", id}
         end
     end
 end

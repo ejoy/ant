@@ -46,8 +46,7 @@ function mods.dummy(...)
 
 	ecs.component_alias("name", "string")
 
-	ecs.mark("test_mark", "mark_handler")
-	ecs.mark("test_mark2", "mark_handler2")
+	local tm_mb = world:sub {"test_mark"}
 
 	local dummy = ecs.system "dummy"
 
@@ -72,7 +71,7 @@ function mods.dummy(...)
 			}
 		}
 
-		world:mark(eid, "test_mark")
+		world:pub {"test_mark", eid}
 	end
 
 	function dummy:update()
@@ -92,16 +91,18 @@ function mods.dummy(...)
 			}
 		}
 
-		world:mark(newid, "test_mark2", "test arg111")
+		world:pub {"test_mark2", newid, "test arg111"}
 		print("Create foobar", newid)
 		for _, eid in world:each "foobar" do
 			print("2. Dummy foobar", eid)
 		end
 	end
 
-	function dummy:mark_handler()
-		print("handle 'mark_handler', list number:")
-		for eid, arg in world:each_mark "test_mark2" do
+	local handle_sys = ecs.system "handle_system"
+	function handle_sys:update()
+		for msg in tm_mb:each() do
+			local eid = msg[2]
+			local arg = msg[3]
 			local e = world[eid]
 			if e then
 				print("[dummy], eid:", eid, arg)
@@ -122,28 +123,27 @@ function mods.dummy(...)
 	
 	local newdummy = ecs.system "new"
 
+	local tm1_mb = world:sub {"test_mark"}
+	local tm2_mb = world:sub {"test_mark2"}
+
 	function newdummy:update()
 		for msg in new_foobar_event:each() do
 			local eid = msg[3]
 			print("New foobar", eid)
 			world:remove_entity(eid)
 		end
-	end
 
-	function newdummy:mark_handler()
-		print("handle 'mark_handler'")
-		for eid in world:each_mark "test_mark" do
+		for msg in tm1_mb:each() do
+			local eid = msg[2]
 			if world[eid] then
 				print("test_mark:", eid, world[eid].name or "[..]")
 			else
 				print("test_mark:", eid, "has been removed")
 			end
 		end
-	end
 
-	function newdummy:mark_handler2()
-		print("handle 'mark_handler2'")
-		for eid in world:each_mark "test_mark2" do
+		for msg in tm2_mb:each() do
+			local eid = msg[2]
 			if world[eid] then
 				print("test_mark2:", eid, world[eid].name or "[..]")
 			else

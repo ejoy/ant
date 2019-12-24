@@ -182,7 +182,7 @@ function camera_controller_system:init()
 		end
 
 		if press and code == "SPACE" then
-			world:mark(world:first_entity_id "main_queue", "record_camera_state")
+			world:pub {"record_camera_state", world:first_entity_id "main_queue"}
 		end
 	end
 

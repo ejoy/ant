@@ -542,7 +542,7 @@ local test_queue = {
     function ()
         local level1_1_eid = find_entity_by_name('hie_level1_1', 'transform')
         world:remove_entity(level1_1_eid)
-        world:mark(level1_1_eid, "hierarchy_delete")
+        world:pub {"hierarchy_delete", level1_1_eid}
     end,
     function ()
         print_scene_nodes()

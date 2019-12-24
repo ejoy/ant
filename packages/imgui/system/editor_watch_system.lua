@@ -15,7 +15,6 @@ ecs.tag "outline_entity"
 
 ecs.component_alias("target_entity","entityid")
 
-ecs.mark("entity_delete","entity_delete_handle")
 ecs.mark("entity_create","entity_create_handle")
 
 local editor_watcher_system = ecs.system "editor_watcher_system"
@@ -294,16 +293,13 @@ function editor_watcher_system:pickup()
 end
 
 local timer = import_package "ant.timer"
-function editor_watcher_system:after_update()
-    local eid = world:first_entity_id("editor_watching")
-    if eid and world[eid] then
-        send_entity(eid,"auto")
-    end
-end
 
-function editor_watcher_system:entity_delete_handle()
+local entity_delete_mb = world:sub {"entity_removed"}
+local entity_create_mb = world:sub {"entity_created"}
+local function entity_delete_handle()
     local hierarchy_dirty = false
-    for eid,e in world:each_mark "entity_delete" do
+    for msg in entity_delete_mb:each() do
+        local e = msg[3]
         if not e or (e.pickup == nil and e.outline_entity == nil) then
             hierarchy_dirty = true
             break
@@ -314,9 +310,10 @@ function editor_watcher_system:entity_delete_handle()
     end
 end
 
-function editor_watcher_system:entity_create_handle()
+local function entity_create_handle()
     local hierarchy_dirty = false
-    for eid in world:each_mark "entity_create" do
+    for msg in entity_create_mb:each() do
+        local eid = msg[2]
         local e = world[eid]
         if e.pickup == nil and e.outline_entity == nil then
             hierarchy_dirty = true
@@ -326,4 +323,18 @@ function editor_watcher_system:entity_create_handle()
     if hierarchy_dirty then
         send_hierarchy()
     end
+end
+
+function editor_watcher_system:update()
+    entity_create_handle()
+    entity_delete_handle()
+end
+
+function editor_watcher_system:after_update()
+    local eid = world:first_entity_id("editor_watching")
+    if eid and world[eid] then
+        send_entity(eid,"auto")
+    end
+
+
 end

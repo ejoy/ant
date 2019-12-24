@@ -98,8 +98,6 @@ function debug_sm:post_init()
 	csm_shadow_debug_quad()
 end
 
-ecs.mark("record_camera_state", "camera_state_handler")
-
 local function find_csm_entity(index)
 	for _, seid in world:each "csm" do
 		local se = world[seid]
@@ -121,27 +119,25 @@ local function get_split_distance(index)
 	return n, f
 end
 
-local function create_debug_entity()
-	for eid in world:each_mark "record_camera_state" do
-		local e = assert(world[eid])
-		assert(e.main_queue)
+local function create_debug_entity(eid)
+	local e = assert(world[eid])
+	assert(e.main_queue)
 
-		local function remove_eids(eids)
-			for _, eid in ipairs(eids)do
-				world:remove_entity(eid)
-			end
+	local function remove_eids(eids)
+		for _, eid in ipairs(eids)do
+			world:remove_entity(eid)
 		end
-
-		local debug_shadow_eids = {}
-		for _, seid in world:each "shadow_debug" do
-			debug_shadow_eids[#debug_shadow_eids+1] = seid
-		end
-
-		remove_eids(debug_shadow_eids)
-
-		main_view_debug_frustum()
-		csm_shadow_debug_frustum()
 	end
+
+	local debug_shadow_eids = {}
+	for _, seid in world:each "shadow_debug" do
+		debug_shadow_eids[#debug_shadow_eids+1] = seid
+	end
+
+	remove_eids(debug_shadow_eids)
+
+	main_view_debug_frustum()
+	csm_shadow_debug_frustum()
 end
 
 local function print_points(points)
@@ -170,9 +166,6 @@ local function calc_frustum_center(frustum)
 end
 
 local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
-
-ecs.mark("read_back_blit", "read_back_blit_handler")
-ecs.mark("read_back_sm", "read_back_sm_handler")
 
 local function check_shadow_matrix()
 	local csm1 = world[find_csm_entity(1)]
@@ -290,61 +283,21 @@ local function check_shadow_matrix()
 	------------------------------------------------------------------------------------------------------------------------
 	-- read the shadow map back
 	if linear_shadow then
+
 		local size = csm1.shadow.shadowmap_size
-		
-		local memory_handle = bgfx.memory_texture(size * size * 4)
-		local rb_handle = renderutil.create_renderbuffer {
-			w = size,
-			h = size,
-			layers = 1,
-			format = "RGBA8",
-			flags = renderutil.generate_sampler_flag {
-				BLIT="BLIT_AS_DST",
-				BLIT_READBACK="BLIT_READBACK_ON",
-				MIN="POINT",
-				MAG="POINT",
-				U="CLAMP",
-				V="CLAMP",
-			}
-		}
-
 		local fb = fbmgr.get(csm1.render_target.fb_idx)
-		bgfx.blit(blit_shadowmap_viewid, rb_handle, 0, 0, fbmgr.get_rb(fb[1]).handle)
-		bgfx.read_texture(rb_handle, memory_handle)
-
-		world:mark(-1, "read_back_blit", {memory_handle, origin_NDC_With_Crop, size})
-	end
-end
-
-local function log_split_distance()
-	for i=1, 4 do
-		local n, f = get_split_distance(i)
-		print(string.format("csm%d, distance[%f, %f]", i, n, f))
-	end
-end
-
-function debug_sm:read_back_blit_handler()
-	for eid, info in world:each_mark "read_back_blit" do
-		world:mark(eid, "read_back_sm", info)
-	end
-end
-
-function debug_sm:read_back_sm_handler()
-	for eid, info in world:each_mark "read_back_sm" do
-		local memory_handle = info[1]
-		local pt = info[2]
-		local sm_size = info[3]
+		local memory_handle, width, height, pitch = renderutil.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1], true)
 
 		local depth = pt[3]
 		local x, y = pt[1], pt[2]
-		local fx, fy = math.floor(x * sm_size), math.floor(y * sm_size)
-		local cx, cy = math.ceil(x * sm_size), math.ceil(y * sm_size)
+		local fx, fy = math.floor(x * width), math.floor(y * height)
+		local cx, cy = math.ceil(x * width), math.ceil(y * height)
 
-		local depth0 = memory_handle[fy*sm_size+fx]
-		local depth1 = memory_handle[fy*sm_size+cx]
+		local depth0 = memory_handle[fy*pitch+fx]
+		local depth1 = memory_handle[fy*pitch+cx]
 
-		local depth2 = memory_handle[cy*sm_size+fx]
-		local depth3 = memory_handle[cy*sm_size+cx]
+		local depth2 = memory_handle[cy*pitch+fx]
+		local depth3 = memory_handle[cy*pitch+cx]
 
 		-- local fs_local = require "filesystem.local"
 		-- local f = fs_local.open(fs.path "tmp.txt", "wb")
@@ -362,9 +315,20 @@ function debug_sm:read_back_sm_handler()
 	end
 end
 
-function debug_sm:camera_state_handler()
-	log_split_distance()
-	create_debug_entity()
+local function log_split_distance()
+	for i=1, 4 do
+		local n, f = get_split_distance(i)
+		print(string.format("csm%d, distance[%f, %f]", i, n, f))
+	end
+end
 
-	--check_shadow_matrix()
+local record_camera_state_mb = world:sub {"record_camera_state"}
+
+function debug_sm:update()
+	for _, eid in record_camera_state_mb:unpack() do
+		log_split_distance()
+		create_debug_entity(eid)
+
+		check_shadow_matrix()
+	end
 end

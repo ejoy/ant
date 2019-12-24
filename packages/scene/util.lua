@@ -52,25 +52,16 @@ end
 
 function util.loop(world, arg)	
 	local queue = {}
-	local extra_queue = {
-		update_marks = function () 	world:update_marks() end,
-	}
 	for _, updatetype in ipairs {
-		"data_changed", 
+		"data_changed",
 		"asset_loaded",
-		"before_update", 
-		"update", 
-		"after_update", 
-		"update_marks",
+		"before_update",
+		"update",
+		"after_update",
 		"delete",
 		"end_frame",
 	} do
-		local handlers = extra_queue[updatetype]
-		if handlers == nil then
-			handlers = world:update_func(updatetype, arg[updatetype])
-		end
-
-		queue[#queue+1] = handlers
+		queue[#queue+1] = world:update_func(updatetype, arg[updatetype])
 	end
 
 	return function ()

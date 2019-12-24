@@ -11,8 +11,6 @@ local assetmgr 	= assetpkg.mgr
 
 local animodule = require "hierarchy.animation"
 
-ecs.mark("hierarchy_delete", "hierarchy_del_handle")
-
 ecs.component_alias("attach", "entityid")
 ecs.component_alias("ignore_parent_scale", "boolean")
 
@@ -230,10 +228,11 @@ local function update_remove_subtree(remove_trees, cache_result)
 	end
 end
 
-function scene_space:hierarchy_del_handle()
-	local hierarchy_cache = self.hierarchy_transform_result	
+local hie_del_mb = world:sub {"hierarchy_delete"}
+
+local function hierarchy_del_handle(hierarchy_cache)
 	local removed_eids = {}
-	for eid in world:each_mark "hierarchy_delete" do
+	for _, eid in hie_del_mb:unpack() do
 		hierarchy_cache[eid] = nil
 		removed_eids[eid] = true
 	end
@@ -257,7 +256,7 @@ function scene_space:hierarchy_del_handle()
 			end
 		end
 
-		update_remove_subtree(trees, self.hierarchy_transform_result)
+		update_remove_subtree(trees, hierarchy_cache)
 	end
 end
 
@@ -329,4 +328,6 @@ function scene_space:data_changed()
 	if next(trees) then
 		update_hierarchy_tree(trees, self.hierarchy_transform_result)
 	end
+
+	hierarchy_del_handle(self.hierarchy_transform_result)
 end
