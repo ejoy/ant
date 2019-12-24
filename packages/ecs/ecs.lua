@@ -1,8 +1,9 @@
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
-local policy = require "policy"
+local policy_apply = require "policy".apply
 local event = require "event"
+local datalist = require "datalist"
 
 local component_init = component.init
 local component_delete = component.delete
@@ -111,13 +112,13 @@ function world:new_entity_id()
 	return eid
 end
 
-function world:set_entity(eid, t)
-	local component, transform = policy.apply(self, t.policy, t.data)
+function world:set_entity(eid, policy, data)
+	local component, transform = policy_apply(self, policy, data)
 	local e = {}
 	self[eid] = e
 	self._entity[eid] = true
 	for _, c in ipairs(component) do
-		e[c] = assert(self:create_component(c, t.data[c]))
+		e[c] = assert(self:create_component(c, data[c]))
 		self:register_component(eid, c)
 	end
 	for _, f in ipairs(transform) do
@@ -128,7 +129,12 @@ end
 
 function world:create_entity(t)
 	local eid = self:new_entity_id()
-	self:set_entity(eid, t)
+	if type(t) == 'string' then
+		local d = datalist.parse(t)
+		self:set_entity(eid, d[1], d[2])
+	else
+		self:set_entity(eid, t.policy, t.data)
+	end
 	return eid
 end
 
@@ -415,6 +421,7 @@ function world:slove_component()
 			error( k .. " is undefined in " .. typeinfo._undefined[k])
 		end
 	end
+	component.solve(self)
 end
 
 --return 

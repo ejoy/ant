@@ -8,7 +8,7 @@ local function prefix(n)
     return ("  "):rep(n)
 end
 
-local function sortpairs(t)
+local function pairs_sortk(t)
     local sort = {}
     for k in pairs(t) do
         if type(k) == "string" then
@@ -25,6 +25,15 @@ local function sortpairs(t)
         n = n + 1
         return k, t[k]
     end
+end
+
+local function pairs_sortv(t)
+    local sort = {}
+    for _,v in pairs(t) do
+        sort[#sort+1] = v
+    end
+    table.sort(sort)
+    return ipairs(sort)
 end
 
 local function convertreal(v)
@@ -78,7 +87,7 @@ local function stringify_map_value(c, v)
         return stringify_map_value(typeinfo[c.type], v)
     end
     local s = {}
-    for k, o in sortpairs(v) do
+    for k, o in pairs_sortk(v) do
         s[#s+1] = k..':'..stringify_basetype(c.name, o)
     end
     return '{'..table.concat(s, ',')..'}'
@@ -131,7 +140,7 @@ local function stringify_component_ref(c, v, n)
                     out[#out+1] = prefix(n) .. ('%s: {}'):format(cv.name)
                 else
                     out[#out+1] = prefix(n) .. ('%s:'):format(cv.name)
-                    for k, o in sortpairs(vv) do
+                    for k, o in pairs_sortk(vv) do
                         stringify_component(k..':', typeinfo[cv.type].name, o, n+1)
                     end
                 end
@@ -167,10 +176,15 @@ function stringify_component(name, typename, value, n)
     end
 end
 
-return function (w, e)
+return function (w, policies, data)
     typeinfo = w._components
     out = {}
-    for _, c in ipairs(e) do
+    out[#out+1] = '---------'
+    for _, p in pairs_sortv(policies) do
+        out[#out+1] = p
+    end
+    out[#out+1] = '---------'
+    for _, c in ipairs(data) do
         stringify_component(c[1]..':', c[1], c[2], 0)
     end
     out[#out+1] = ''

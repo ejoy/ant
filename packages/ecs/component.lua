@@ -128,7 +128,36 @@ local function gen_ref(c)
 	return c.ref
 end
 
+local typeinfo
+local function gen_ref(c)
+    if c.ref ~= nil then
+        return c.ref
+    end
+	if not c.type then
+		c.ref = true
+        for _,v in ipairs(c) do
+            v.ref = gen_ref(v)
+        end        
+        return c.ref
+    end
+    if c.type == 'primtype' then
+        c.ref = false
+        return c.ref
+    end
+    assert(typeinfo[c.type], "unknown type:" .. c.type)
+	c.ref = gen_ref(typeinfo[c.type])
+	return c.ref
+end
+
+local function solve(w)
+    typeinfo = w._components
+    for _,v in pairs(typeinfo) do
+        gen_ref(v)
+    end
+end
+
 return {
     init = foreach_init_1,
     delete = foreach_delete_1,
+    solve = solve,
 }
