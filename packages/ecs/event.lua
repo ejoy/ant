@@ -136,7 +136,7 @@ function world:pub(message)
     local mgr = self._event_mgr
     for mb in pairs(findmb(mgr, message)) do
         local q = mb.__queue
-        q[#q+1] = copytable(message)
+        q[#q+1] = message
     end
 end
 
