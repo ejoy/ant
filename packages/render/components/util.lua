@@ -19,40 +19,8 @@ local ms = mathpkg.stack
 local geopkg 	= import_package "ant.geometry"
 local geodrawer	= geopkg.drawer
 
-local function deep_copy(t)
-	if type(t) == "table" then
-		local tmp = {}
-		for k, v in pairs(t) do
-			tmp[k] = deep_copy(v)
-		end
-		return tmp
-	end
-	return t
-end
-
-function util.add_material(material, filename)
-	local item = {
-		ref_path = filename,
-	}
-	util.create_material(item)
-    material[#material + 1] = item
-end
-
-function util.create_material(material)
-	assetmgr.load(material.ref_path)
-	assetutil.load_material_properties(material.properties)
-end
-
-function util.remove_material(material)
-	assetmgr.unload(material.ref_path)
-	material.ref_path = nil
-
-	assetutil.unload_material_properties(material.properties)
-	material.properties = nil
-end
-
-function util.assign_material(filepath, properties, asyn_load)
-	return {ref_path = filepath, properties = properties, asyn_load=asyn_load}
+function util.assign_material(filepath, properties)
+	return {ref_path = filepath, properties = properties,}
 end
 
 function util.create_submesh_item(material_refs)
@@ -60,29 +28,16 @@ function util.create_submesh_item(material_refs)
 end
 
 function util.change_textures(content, texture_tbl)
-	if content.properties then
-		if content.properties.textures then
-			assetutil.unload_material_textures(content.properties)
-		end
-	else
+	if content.properties == nil then
 		content.properties = {}
 	end
 	content.properties.textures = texture_tbl
-	assetutil.load_material_textures(content.properties)
 end
 
-function util.is_entity_visible(entity)
-    local can_render = entity.can_render
-	if can_render then
-		local al = entity.asyn_load
-		local rm = entity.rendermesh
-		if al then
-			return al == "loaded" and rm.handle ~= nil
-		end
-        return rm.handle ~= nil
-    end
-
-    return false
+function util.is_entity_visible(e)
+	return e.can_render
+		and assetmgr.has_resource(e.rendermesh.reskey)
+		or false
 end
 
 function util.assign_group_as_mesh(group)
@@ -537,15 +492,16 @@ function util.create_mesh_buffers(meshres)
 end
 
 function util.create_mesh(rendermesh, mesh)
-	local res = assetmgr.get_resource(mesh.ref_path)
-	check_rendermesh_lod(res)
-	
 	local ref_path = mesh.ref_path
+	local res = assetmgr.get_resource(ref_path)
+	check_rendermesh_lod(res)
 	local reskey = fs.path ("//meshres/" .. ref_path:string())
 	local meshscene = assetmgr.get_resource(reskey)
 	if meshscene == nil then
 		local meshscene = util.create_mesh_buffers(res)
-		assetmgr.register_resource(reskey, meshscene)
+		assetmgr.register_resource(reskey, meshscene, function ()
+			return util.create_mesh_buffers(assetmgr.get_resource(ref_path))
+		end)
 		-- just for debug
 		mesh.debug_meshscene_DOTNOT_DIRECTLY_USED 		= {meshscene, res}
 		rendermesh.debug_meshscene_DOTNOT_DIRECTLY_USED = mesh.debug_meshscene_DOTNOT_DIRECTLY_USED

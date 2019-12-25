@@ -34,6 +34,19 @@ local function get_accessor(name)
 	return accessor
 end
 
+local function res_key(filename)
+	-- TODO, should use vfs to get the resource file unique key(resource hash), for cache same content file	
+	return filename:string()
+end
+
+local function module_name(filename)
+	return filename:extension():string():match "%.(.+)$"
+end
+
+local function is_file(filename)
+	return filename:string():sub(1, 2) ~= '//'
+end
+
 function assetmgr.get_loader(name)
 	return get_accessor(name).loader
 end
@@ -51,36 +64,21 @@ end
 
 assetmgr.load_depiction = rawtable
 
-local function res_key(filename)
-	-- TODO, should use vfs to get the resource file unique key(resource hash), for cache same content file	
-	return filename:string()
-end
+-- local function load(filename)
+-- 	local reskey = res_key(filename)
+-- 	local res = resources[reskey]
+-- 	if res == nil then
+-- 		local loader = assetmgr.get_loader(module_name(filename))
+-- 		res = loader(filename)
+-- 		resources[reskey] = res
+-- 	end
 
-local function module_name(filepath)
-	return filepath:extension():string():match "%.(.+)$"
-end
+-- 	return res
+-- end
 
-local function get_resource(ref_path)
-	local reskey = res_key(ref_path)
-	return resources[reskey]
-end
-
-assetmgr.get_resource = get_resource
 assetmgr.res_key = res_key
 
-function assetmgr.load(filename, param)
-	local reskey = res_key(filename)
-	local res = resources[reskey]
-	if res == nil then
-		local loader = assetmgr.get_loader(module_name(filename))
-		res = loader(filename, param)
-		resources[reskey] = res
-	end
-	
-	return res
-end
-
-function assetmgr.unload(filename)
+local function unload(filename)
 	local reskey = res_key(filename)
 	local res = resources[reskey]
 	if res then
@@ -113,11 +111,38 @@ end
 
 local generate_resname = generate_resname_operation()
 
-function assetmgr.register_resource(reffile, content)
-	local res = get_resource(reffile)
+local reloaders = {}
+
+local function load_resource(filename)
+	if is_file(filename) then
+		local loader = assetmgr.get_loader(module_name(filename))
+		return loader(filename)
+	end
+
+	assert(filename:string():match "//meshres")
+	local loader = reloaders[res_key(filename)]
+	if loader then
+		return loader()
+	end
+end
+
+function assetmgr.get_resource(filename)
+	local reskey = res_key(filename)
+	local res = resources[reskey]
+	if res == nil then
+		res = load_resource(filename)
+		if res then
+			resources[reskey] = res
+		end
+	end
+	return res
+end
+
+function assetmgr.register_resource(reffile, content, reloader)
+	local res = assetmgr.get_resource(reffile)
 	if res then
 		local newreffile = generate_resname(reffile)
-		res = get_resource(newreffile)
+		res = assetmgr.get_resource(newreffile)
 		if res then
 			log.error("ref key have been used:", reffile:string(), ", regenerate resname still used:", newreffile:string())
 		else
@@ -126,7 +151,12 @@ function assetmgr.register_resource(reffile, content)
 		reffile = newreffile
 	end
 
-	resources[res_key(reffile)] = content
+	local reskey = res_key(reffile)
+	resources[reskey] = content
+
+	if reloader then
+		reloaders[reskey] = reloader
+	end
 	return reffile
 end
 
@@ -134,12 +164,12 @@ function assetmgr.get_all_resources()
 	return resources
 end
 
-function assetmgr.save(tree, filename)	
+function assetmgr.save(tree, filename)
 	local seri = import_package "ant.serialize"
 	seri.save(filename, tree)
 end
 
-function assetmgr.has_res(filename)
+function assetmgr.has_resource(filename)
 	local key = res_key(filename)
 	return resources[key] ~= nil
 end

@@ -64,7 +64,6 @@ local function create_material_item(filepath, color)
 				u_color = {type = "color", name = "Color", value = color},
 			}
 		},
-		--asyn_load = true,
 	}
 end
 
@@ -104,7 +103,6 @@ function model_review_system:init()
 			mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/campsite-door.mesh",},
 			material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material",},
 			can_render 	= true,
-			asyn_load	= "loaded",
 			can_cast	= true,
 			name 		= "door",
 			serialize   = serialize.create(),
@@ -119,7 +117,6 @@ function model_review_system:init()
 			mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/woodother-34.mesh", },
 			material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", },
 			can_render 	= true,
-			asyn_load	= "loaded",
 			can_cast	= true,
 			name 		= "door",
 			serialize   = serialize.create(),
@@ -153,7 +150,6 @@ function model_review_system:init()
 			},
 			mesh = {
 				ref_path = fs.path "/pkg/ant.resources/depiction/meshes/test_glb.mesh",
-				--asyn_load = true,
 			},
 			material = a2c {
 				create_material_item(singlecolor_material, {1, 0, 0, 0}),
@@ -165,7 +161,6 @@ function model_review_system:init()
 				create_material_item(singlecolor_material, {1, 1, 1, 0}),
 			},
 			can_cast = true,
-			asyn_load = "loaded",
 			name = "test_glb",
 			serialize   = serialize.create(),
 		}

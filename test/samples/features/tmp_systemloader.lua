@@ -42,7 +42,6 @@ local PVPScenLoader = require 'PVPSceneLoader'
 local pbrscene = require "pbr_scene"
 
 local init_loader = ecs.system 'init_loader'
-init_loader.singleton "asyn_load_list"
 
 init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"
@@ -137,7 +136,6 @@ local function ozzmesh_animation_test()
                     axis   = "Y",
                 },
             },
-            asyn_load = "loaded",
             can_cast = true,
             -- character = {
             --     movespeed = 1.0,
@@ -223,7 +221,6 @@ local function gltf_animation_test()
                 },
                 birth_pose = "idle",
             },
-            asyn_load = "loaded",
             can_render = true,
             can_cast = true,
             name = "gltf animation test"
@@ -248,7 +245,6 @@ local function pbr_test()
             material = {
                 ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
             },
-            asyn_load = "loaded",
             can_render = true,
             can_cast = true,
             name = "Damaged Helmet"
@@ -292,16 +288,4 @@ function init_loader:post_init()
         local viewcamera = camerautil.get_camera(world, "main_view")
         viewcamera.frustum.f = 300
     end
-end
-
-function init_loader:asset_loaded()
-    -- local ll = self.asyn_load_list
-    -- -- scene finish
-    -- if ll.i >= ll.n then
-    --     if  not __ANT_RUNTIME__ and 
-    --         not _RUN_TEST_SERIALIZE_ then
-    --         test_serialize(true)
-    --         _RUN_TEST_SERIALIZE_ = true
-    --     end
-    -- end
 end

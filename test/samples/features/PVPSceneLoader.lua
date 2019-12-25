@@ -1,9 +1,9 @@
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
+
 local fs = require "filesystem"
+local seriutil = import_package 'ant.serialize'
 
 local PVPScene = {}
 local function get_default_collider_comp_value(name)
@@ -269,18 +269,17 @@ function PVPScene.create_entitices(world)
 						rendermesh = {},
 						mesh = {
 							ref_path = fs.path "/pkg/ant.resources/depiction" / scenedata.mesh,
-							asyn_load = true,
 						},
-						material = computil.assign_material(
-							fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", 
-							scenedata.material_properties, true),
-						serialize = import_package 'ant.serialize'.create(), 
+						material = {
+							ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", 
+							properties = scenedata.material_properties
+						},
+						serialize = seriutil.create(),
 						name = name,
 						can_render = true,
 						hierarchy_visible = true,
 						can_select = true,
 						can_cast = true,
-						asyn_load = "",
 					}
 				}
 

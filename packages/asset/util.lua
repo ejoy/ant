@@ -39,28 +39,6 @@ function util.each_texture(properties)
     return mnext, nil, nil
 end
 
-function util.load_material_textures(properties)
-    for _, tex in util.each_texture(properties) do
-        assetmgr.load(tex.ref_path)
-    end
-
-	return properties
-end
-
-function util.unload_material_textures(properties)
-    for _, tex in util.each_texture(properties) do
-        assetmgr.unload(tex.ref_path)
-    end
-end
-
-function util.load_material_properties(properties)
-    return util.load_material_textures(properties)
-end
-
-function util.unload_material_properties(properties)
-    util.unload_material_textures(properties)
-end
-
 function util.parse_embed_file(filepath)
     local f = fs.open(filepath, "rb")
     if f == nil then

@@ -79,16 +79,8 @@ function respath:save()
 	return self:string()
 end
 
-local resource = ecs.component "resource"
+ecs.component "resource"
 	.ref_path "respath"
-	["opt"].asyn_load "boolean" (false)
-
-function resource:init()
-	if not self.asyn_load then
-		asset.load(self.ref_path)
-	end
-	return self
-end
 
 ecs.component "submesh_ref"
 	.material_refs "int[]"
@@ -103,21 +95,12 @@ function rendermesh:init()
 	return self
 end
 
-local mesh = ecs.component "mesh"
+ecs.component "mesh"
 	.ref_path "respath" ()
-	["opt"].asyn_load "boolean" (false)
-
-function mesh:init()
-	if not self.asyn_load then
-		asset.load(self.ref_path)
-	end
-	return self
-end
 
 local meshpolicy = ecs.policy "mesh"
 meshpolicy.require_component "rendermesh"
 meshpolicy.require_component "mesh"
-meshpolicy.require_component "asyn_load"
 meshpolicy.require_transform "mesh_loader"
 
 local ml = ecs.transform "mesh_loader"
@@ -125,13 +108,7 @@ ml.input    "mesh"
 ml.output   "rendermesh"
 
 function ml.process(e)
-    local mesh = e.mesh
-    local meshres = asset.get_resource(mesh.ref_path)
-    if meshres == nil and mesh.asyn_load then
-        assert(e.asyn_load ~= "loaded")
-    else
-        component_util.create_mesh(e.rendermesh, mesh)
-    end
+    component_util.create_mesh(e.rendermesh, e.mesh)
 end
 
 --DO NOT define init/delete function to manager texture resource
@@ -174,17 +151,10 @@ ecs.component "properties"
 	["opt"].textures "texture{}"
 	["opt"].uniforms "uniform{}"
 
-local material = ecs.component "material" { multiple=true }
+ecs.component "material" { multiple=true }
 	.ref_path "respath"
 	["opt"].properties "properties"
-	["opt"].asyn_load "boolean" (false)
 
-function material:init()
-	if not self.asyn_load then
-		component_util.create_material(self)
-	end
-	return self
-end
 
 ecs.component_alias("can_render", "boolean", true) {depend={"transform", "rendermesh", "material"}}
 ecs.component_alias("can_cast", "boolean", false)
@@ -192,9 +162,6 @@ ecs.component_alias("name", "string", "")
 
 local gp = ecs.policy "name"
 gp.require_component "name"
-
---maybe we need an asyn_load_policy to determine how to asyn load asset
-ecs.component_alias("asyn_load", "string", "")
 
 local renderpolicy = ecs.policy "render"
 renderpolicy.require_component "can_render"

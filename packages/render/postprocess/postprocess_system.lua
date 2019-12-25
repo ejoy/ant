@@ -154,7 +154,7 @@ function pp_sys:update()
             rb_idx = 1
         }
         
-        local meshres = assetmgr.load(quad_reskey)
+        local meshres = assetmgr.get_resource(quad_reskey)
         local meshgroup = meshres.scenes[1][1][1]
 
         reset_viewid_idx()

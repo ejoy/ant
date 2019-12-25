@@ -6,7 +6,7 @@ local bgfx		= require "bgfx"
 local function load_state(state)
 	if type(state) == "string" then
 		local filepath = fs.path(state)
-		local s = assetmgr.load(filepath)
+		local s = assetmgr.get_resource(filepath)
 		if s.ref_path then
 			assert(s.ref_path == filepath)
 		else
@@ -20,15 +20,21 @@ local function load_state(state)
 	return state
 end
 
-local function load_properties(properties)
-	for _, tex in assetutil.each_texture(properties) do
-		tex.ref_path = fs.path(tex.ref_path)
-	end
-	return assetutil.load_material_properties(properties)
+local function load_fx(fx)
+	return assetmgr.get_resource(fs.path(fx))
 end
 
-local function load_fx(fx)
-	return assetmgr.load(fs.path(fx))
+local function load_properties(properties)
+	if properties then
+		local textures = properties.textures
+		if textures then
+			for _, tex in pairs(textures) do
+				tex.ref_path = fs.path(tex.ref_path)
+			end
+		end
+	end
+
+	return properties
 end
 
 return {

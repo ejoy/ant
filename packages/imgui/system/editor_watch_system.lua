@@ -150,7 +150,9 @@ local function create_outline(seleid)
         local outlineeid = world:create_entity {
             transform = t,
             rendermesh = {},
-            material = {{ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"}},
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"
+            },
             can_render = true,
             outline_entity = true,
             target_entity = seleid,
@@ -158,7 +160,6 @@ local function create_outline(seleid)
         }
         local oe = world[outlineeid]
         oe.rendermesh.reskey = se.rendermesh.reskey
-        assetmgr.load(se.rendermesh.reskey)
     end
 end
 

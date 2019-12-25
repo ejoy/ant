@@ -28,7 +28,6 @@ pbr_demo.depend "viewport_detect_system"
 pbr_demo.depend 'render_system'
 pbr_demo.depend 'primitive_filter_system'
 pbr_demo.depend 'cull_system'
-pbr_demo.depend  'asyn_asset_loader'
 
 pbr_demo.dependby 	'camera_controller'
 

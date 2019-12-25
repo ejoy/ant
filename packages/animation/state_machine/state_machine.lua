@@ -44,13 +44,7 @@ local function play_animation(e, name, duration)
 	end
 end
 
-local state_chain = ecs.component "state_chain"
-	.ref_path "respath"
-
-function state_chain:init()
-	local res = assetmgr.load(self.ref_path)
-	return self
-end
+ecs.component_alias("state_chain", "resource")
 
 local sm = ecs.system "state_machine"
 sm.dependby "animation_system"

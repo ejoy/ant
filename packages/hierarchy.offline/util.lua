@@ -61,10 +61,6 @@ local function update_transform(world, pe, psrt)
 		local hiecomp = pe.hierarchy
         local refpath = hiecomp.ref_path
         local hieres = assetmgr.get_resource(refpath)
-        if hieres == nil then
-            hieres = assetmgr.load(refpath)
-        end
-		
 		for _, node in ipairs(hieres.handle) do
 			local rot = ms(ms:quaternion(node.r), 'eP')
 			local csrt = ms(psrt, ms:srtmat(node.s, rot, node.t), '*P')
@@ -86,10 +82,10 @@ function util.rebuild_hierarchy(world, eid_rebuild)
 	local rootentity = world[eid_rebuild]
 
     for epath, rpath in pairs(moditied_files) do
-        local root = assetmgr.load(epath)
+        local root = assetmgr.get_resource(epath)
 
         -- we need to rewrite the file from cache
-        if assetmgr.has_res(epath) then
+        if assetmgr.has_resource(epath) then
             save_rawdata(root.handle, epath)
         end
 

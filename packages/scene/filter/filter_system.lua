@@ -28,7 +28,6 @@ end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
 primitive_filter_sys.dependby 	"filter_properties"
-primitive_filter_sys.depend 	"asyn_asset_loader"
 primitive_filter_sys.singleton 	"hierarchy_transform_result"
 primitive_filter_sys.singleton 	"event"
 
@@ -134,12 +133,32 @@ local function filter_element(eid, rendermesh, worldmat, materialcomp, filter)
 	end
 end
 
+-- TODO: we should optimize this code, it's too inefficient!
 local function is_entity_prepared(e)
-	if e.asyn_load == nil then
-		return true
+	local rm = e.rendermesh
+	if assetmgr.get_resource(rm.reskey) == nil then
+		return false
 	end
 
-	return e.asyn_load == "loaded"
+	for _, m in world:each_component(e.material) do
+		if assetmgr.get_resource(m.ref_path) == nil then
+			return false
+		end
+
+		local p = m.properties
+		if p then
+			local t = p.textures
+			if t then
+				for k, tex in pairs(t) do
+					if assetmgr.get_resource(tex.ref_path) == nil then
+						return false
+					end
+				end
+			end
+		end
+	end
+	
+	return true
 end
 
 local function update_entity_transform(hierarchy_cache, eid)

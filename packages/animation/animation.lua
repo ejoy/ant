@@ -5,15 +5,10 @@ local asset = import_package "ant.asset".mgr
 local timer = import_package "ant.timer"
 local animodule = require "hierarchy.animation"
 
-local animation_content = ecs.component "animation_content"
+ecs.component "animation_content"
 	.ref_path "respath"
 	.scale "real" (1)
 	.looptimes "int" (0)
-
-function animation_content:init()
-	asset.load(self.ref_path)
-	return self
-end
 
 ecs.component "aniref"
 	.name "string"

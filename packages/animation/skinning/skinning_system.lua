@@ -30,7 +30,6 @@ ozz_skinning_policy.require_transform "ozzmesh_skinning"
 local ozzmesh_policy = ecs.policy "ozzmesh"
 ozzmesh_policy.require_component "rendermesh"
 ozzmesh_policy.require_component "mesh"
-ozzmesh_policy.require_component "asyn_load"
 
 ozzmesh_policy.require_transform "ozzmesh_loader"
 
@@ -126,7 +125,6 @@ end
 local ozzmesh_loader = ecs.transform "ozzmesh_loader"
 ozzmesh_loader.input "mesh"
 ozzmesh_loader.output "rendermesh"
-ozzmesh_loader.output "asyn_load"
 
 function ozzmesh_loader.process(e)
 	local rm 		= e.rendermesh

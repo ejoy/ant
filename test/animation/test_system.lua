@@ -30,7 +30,6 @@ local mu         = mathpkg.util
 local lu         = renderpkg.light
 
 local init_loader = ecs.system 'init_loader'
-init_loader.singleton "asyn_load_list"
 
 init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"

@@ -89,7 +89,7 @@ return {
 		local metallic_factor, roughness_factor = 
 			get_metallic_roughness_factor(pbrm)
 
-		local properties = {
+		material.properties = {
 			textures = {
 				s_basecolor = {
 					type="texture", name="BaseColor texture", stage=0, 
@@ -158,7 +158,7 @@ return {
 			},
 		}
 
-		material.properties = assetutil.load_material_properties(properties)
+		
 		return material
 	end,
 }

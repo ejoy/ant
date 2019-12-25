@@ -45,7 +45,6 @@ local function create_pbr_entity(world,
                     }
                 }
             ),
-            asyn_load = "loaded",
             rendermesh = {},
             mesh = {ref_path = meshpath,},
             can_render = true,
