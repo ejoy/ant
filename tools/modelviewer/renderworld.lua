@@ -134,7 +134,7 @@ function model_review_system:init()
 	-- 	name 		= "door_outline",
 	-- }
 
-	world:create_entity {
+	local eid = world:create_entity {
 		policy = default_policy,
 		data = {
 			transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
@@ -169,33 +169,16 @@ function model_review_system:init()
     --local function save_file(file, data)
     --    assert(assert(io.open(file, 'w')):write(data)):close()
     --end
-    ---- test serialize world
-    --local s = serialize.save_world(world)
-    --save_file('serialize_world.txt', s)
-    --for _, eid in world:each 'serialize' do
-    --    world:remove_entity(eid)
+    --local function load_file(file)
+    --    local f = assert(io.open(file, 'r'))
+    --    local data = f:read 'a'
+    --    f:close()
+    --    return data
     --end
-	--serialize.load_world(world, s)
-
-    --local eid = world:first_entity_id 'serialize'
-    --local s = serialize.save_entity(world, eid)
-    --save_file('serialize_entity.txt', s)
+    --local s = serialize.v2.save_entity(world, eid, default_policy)
+    --save_file('tools/modelviewer/serialize_entity.txt', s)
     --world:remove_entity(eid)
-	--serialize.load_entity(world, s)
-	
-
-	-- local function find_entity_by_name(name)
-	-- 	for _, eid in world:each "can_render" do
-	-- 		local e = world[eid]
-	-- 		if e.name == name then
-	-- 			return eid
-	-- 		end
-	-- 	end
-	-- end
-
-	-- local dooreid = find_entity_by_name("door")
-	-- local door_outlineeid = find_entity_by_name("door_outline")
-	-- world[dooreid].rendermesh = world[door_outlineeid].rendermesh
+    --world:create_entity(load_file 'tools/modelviewer/serialize_entity.txt')
 end
 
 local function memory_info()
