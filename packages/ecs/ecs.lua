@@ -33,9 +33,9 @@ end
 
 function world:add_component(eid, component_type, args)
 	local e = self[eid]
-	local c = e[component_type]
 	local ti = assert(self._components[component_type], component_type)
 	if not ti.type and ti.multiple then
+		local c = e[component_type]
 		if not c then
 			e[component_type] = self:create_component(component_type, args)
 			self:register_component(eid, component_type)
@@ -70,13 +70,24 @@ function world:remove_component(eid, c)
 	e[c] = nil
 end
 
-function world:component_list(eid)
-	local e = assert(self[eid])
-	local r = {}
-	for k in pairs(e) do
-		table.insert(r, k)
+function world:enable_tag(eid, c)
+	local e = self[eid]
+	local ti = assert(self._components[c], c)
+	assert(ti.type == 'tag')
+	e[c] = true
+	local set = self._set[c]
+	if set then
+		set[#set+1] = eid
 	end
-	return r
+end
+
+function world:disable_tag(eid, c)
+	local e = assert(self[eid])
+	local ti = assert(self._components[c], c)
+	assert(ti.type == 'tag')
+	assert(e[c] ~= nil)
+	self._set[c] = nil
+	e[c] = nil
 end
 
 local function sortcomponent(w, t)
