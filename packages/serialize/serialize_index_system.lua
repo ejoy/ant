@@ -3,7 +3,7 @@ local world = ecs.world
 
 local m = ecs.singleton "serialize2eid"
 function m.init()
-    local o = {}
+    local o = {_serialize_to_eid={}}
     function o:set(serialize_id,eid)
         assert(serialize_id,
             "function world:set_serialize2eid\nserialize_id can't be nil")
