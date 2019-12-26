@@ -11,8 +11,6 @@ local component_delete = component.delete
 local ecs = {}
 local world = {} ; world.__index = world
 
-local function dummy_iter() end
-
 function world:create_component(c, args)
 	local ti = assert(self._components[c], c)
 	if not ti.type and ti.multiple then
@@ -30,22 +28,14 @@ function world:register_component(eid, c)
 	if set then
 		set[#set+1] = eid
 	end
-
 	self:pub {"component_register", c, eid}
-end
-
-function world:register_entity()
-	local entity_id = self._entity_id + 1
-	self._entity_id = entity_id
-	self._entity[entity_id] = true
-	return entity_id
 end
 
 function world:add_component(eid, component_type, args)
 	local e = self[eid]
-	local c = e[component_type]
 	local ti = assert(self._components[component_type], component_type)
 	if not ti.type and ti.multiple then
+		local c = e[component_type]
 		if not c then
 			e[component_type] = self:create_component(component_type, args)
 			self:register_component(eid, component_type)
@@ -80,13 +70,27 @@ function world:remove_component(eid, c)
 	e[c] = nil
 end
 
-function world:component_list(eid)
-	local e = assert(self[eid])
-	local r = {}
-	for k in pairs(e) do
-		table.insert(r, k)
+function world:enable_tag(eid, c)
+	local e = self[eid]
+	local ti = assert(self._components[c], c)
+	assert(ti.type == 'tag')
+	if not e[c] then
+		e[c] = true
+		local set = self._set[c]
+		if set then
+			set[#set+1] = eid
+		end
 	end
-	return r
+end
+
+function world:disable_tag(eid, c)
+	local e = assert(self[eid])
+	local ti = assert(self._components[c], c)
+	assert(ti.type == 'tag')
+	if e[c] then
+		self._set[c] = nil
+		e[c] = nil
+	end
 end
 
 local function sortcomponent(w, t)
@@ -106,7 +110,7 @@ local function sortcomponent(w, t)
     end
 end
 
-function world:new_entity_id()
+function world:register_entity()
 	local eid = self._entity_id + 1
 	self._entity_id = eid
 	return eid
@@ -128,7 +132,7 @@ function world:set_entity(eid, policy, data)
 end
 
 function world:create_entity(t)
-	local eid = self:new_entity_id()
+	local eid = self:register_entity()
 	if type(t) == 'string' then
 		local d = datalist.parse(t)
 		self:set_entity(eid, d[1], d[2])
@@ -207,10 +211,9 @@ end
 
 function world:first_entity(c_type)
 	local eid = self:first_entity_id(c_type)
-	if eid == nil then
-		return nil
+	if eid then
+		return self[eid]
 	end
-	return self[eid]
 end
 
 local function component_filter(world, minor_type)
@@ -334,14 +337,6 @@ local function init_modules(w, packages, systems, loader)
 	return class
 end
 
-function world:groups()
-	local keys = {}
-	for k in pairs(self._systems) do
-		keys[#keys+1] = k
-	end
-	return keys
-end
-
 function world:update_func(what, order)
 	local list = self._systems[what]
 	if not list then
@@ -353,39 +348,14 @@ function world:update_func(what, order)
 	local switch = system.list_switch(list)
 	self._switchs[what] = switch
 	local proxy = self._singleton_proxy
-	local system_begin_f = self:raw_update_func("system_begin")
-	local system_end_f = self:raw_update_func("system_end")
-	return function()
-		switch:update()
-		self._cur_system[2] = what
-		
-		for _, v in ipairs(list) do
-			local name, f = v[1], v[2]
-			self._cur_system[1] = name
-			system_begin_f()
-			f(proxy[name])
-			system_end_f()
-		end
-	end
-end
-
-function world:raw_update_func(what, order)
-	local list = self._systems[what]
-	if not list then
-		return function() end
-	end
-	if order then
-		list = system.order_list(list, order)
-	end
-	local switch = system.list_switch(list)
-	self._switchs[what] = switch
-	local proxy = self._singleton_proxy
-
+	local timer = import_package "ant.timer".cur_time
 	return function()
 		switch:update()
 		for _, v in ipairs(list) do
 			local name, f = v[1], v[2]
+			self:pub {"system_begin",name,what,timer()}
 			f(proxy[name])
+			self:pub {"system_end",name,what,timer()}
 		end
 	end
 end
@@ -396,17 +366,6 @@ function world:enable_system(name, enable)
 	end
 end
 
-function world:set_serialize2eid(serialize_id,eid)
-	assert(serialize_id,
-		"function world:set_serialize2eid\nserialize_id can't be nil")
-	self._serialize_to_eid[serialize_id] = eid
-end
-
-function world:find_serialize(serialize_id)
-	assert(serialize_id,
-		"function world:set_serialize2eid\nserialize_id can't be nil")
-	return self._serialize_to_eid[serialize_id]
-end
 function world:slove_component()
 	local typeinfo = self._schema
 	for k,v in ipairs(typeinfo.list) do
@@ -424,11 +383,6 @@ function world:slove_component()
 	component.solve(self)
 end
 
---return 
-function world:get_cur_system()
-	return self._cur_system[1],self._cur_system[2]
-end
-
 -- config.packages
 -- config.systems
 -- config.update_order
@@ -444,8 +398,6 @@ function ecs.new_world(config)
 		_set = setmetatable({}, { __mode = "kv" }),
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
-		_serialize_to_eid = {},
-		_cur_system = {"",""},
 	}, world)
 
 	--init event
