@@ -44,6 +44,9 @@ local function play_animation(e, name, duration)
 	end
 end
 
+local m = ecs.policy "state_chain"
+m.require_component "state_chain"
+
 ecs.component_alias("state_chain", "resource")
 
 local sm = ecs.system "state_machine"

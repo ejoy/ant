@@ -45,22 +45,18 @@ init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
 
-local m = ecs.policy "test"
-m.require_component "transform"
-m.require_component "can_render"
-m.require_component "material"
-m.require_component "state_chain"
-m.require_component "name"
-m.require_component "serialize"
-m.require_component "collider_tag"
-m.require_component "capsule_collider"
 
 local function create_animation_test()
     local eid = world:create_entity {
         policy = {
             "animation",
-            "skinning",
-            "test",
+            "state_chain",
+            "ozzmesh",
+            "ozz_skinning",
+            "capsule",
+            "render",
+            "serialize",
+            "name",
         },
         data = {
             transform = {
@@ -113,7 +109,7 @@ local function create_animation_test()
                 --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
                 ref_path = fs.path '/pkg/ant.resources/meshes/skeleton/human_skeleton.ozz'
             },
-            skinning_mesh = {
+            mesh = {
                 --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/female.ozz'
                 ref_path = fs.path '/pkg/ant.resources/meshes/mesh.ozz'
             },
