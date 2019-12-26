@@ -74,10 +74,12 @@ function world:enable_tag(eid, c)
 	local e = self[eid]
 	local ti = assert(self._components[c], c)
 	assert(ti.type == 'tag')
-	e[c] = true
-	local set = self._set[c]
-	if set then
-		set[#set+1] = eid
+	if not e[c] then
+		e[c] = true
+		local set = self._set[c]
+		if set then
+			set[#set+1] = eid
+		end
 	end
 end
 
@@ -85,9 +87,10 @@ function world:disable_tag(eid, c)
 	local e = assert(self[eid])
 	local ti = assert(self._components[c], c)
 	assert(ti.type == 'tag')
-	assert(e[c] ~= nil)
-	self._set[c] = nil
-	e[c] = nil
+	if e[c] then
+		self._set[c] = nil
+		e[c] = nil
+	end
 end
 
 local function sortcomponent(w, t)
