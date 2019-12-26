@@ -111,7 +111,7 @@ end
 local function save_entity(w, eid)
     world = w
     pool = {}
-    typeinfo = w._components
+    typeinfo = w._class.component
     local e = assert(w[eid])
     local t = {}
     for name, cv in sortpairs(e) do

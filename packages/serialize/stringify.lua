@@ -214,7 +214,7 @@ local function stringify_start(w)
     world = w
     pool = {}
     stack = {}
-    typeinfo = w._components
+    typeinfo = w._class.component
     out1, out2, out3 = {}, {}, {}
 end
 

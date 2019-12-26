@@ -33,7 +33,7 @@ end
 local function getPost(w)
     if not postPool[w] then
         local t = {}
-        for k, v in pairs(w._components) do
+        for k, v in pairs(w._class.component) do
             if v.method and v.method.init then
                 t[k] = v.method.init
             end

@@ -65,7 +65,6 @@ return function(world, import, class)
 	local class_register = { world = world, import = import }
 	local class = class or {}
 	class.component = world._schema.map
-	world._components = world._schema.map
 
 	local function register(args)
 		local what = args.type
