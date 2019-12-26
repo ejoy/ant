@@ -13,14 +13,18 @@ local world = {} ; world.__index = world
 
 function world:create_component(c, args)
 	local ti = assert(self._components[c], c)
+	if ti.type == 'tag' then
+		assert(args == true or args == nil)
+		return args
+	end
 	if not ti.type and ti.multiple then
-		local res = component_init(self, ti, args)
+		local res = assert(component_init(self, ti, args))
 		for i = 1, #args do
-			res[i] = component_init(self, ti, args[i])
+			res[i] = assert(component_init(self, ti, args[i]))
 		end
 		return res
 	end
-	return component_init(self, ti, args)
+	return assert(component_init(self, ti, args))
 end
 
 function world:register_component(eid, c)
@@ -122,7 +126,7 @@ function world:set_entity(eid, policy, data)
 	self[eid] = e
 	self._entity[eid] = true
 	for _, c in ipairs(component) do
-		e[c] = assert(self:create_component(c, data[c]))
+		e[c] = self:create_component(c, data[c])
 		self:register_component(eid, c)
 	end
 	for _, f in ipairs(transform) do
