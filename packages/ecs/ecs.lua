@@ -12,7 +12,7 @@ local ecs = {}
 local world = {} ; world.__index = world
 
 function world:create_component(c, args)
-	local ti = assert(self._components[c], c)
+	local ti = assert(self._class.component[c], c)
 	if ti.type == 'tag' then
 		assert(args == true or args == nil)
 		return args
@@ -37,7 +37,7 @@ end
 
 function world:add_component(eid, component_type, args)
 	local e = self[eid]
-	local ti = assert(self._components[component_type], component_type)
+	local ti = assert(self._class.component[component_type], component_type)
 	if not ti.type and ti.multiple then
 		local c = e[component_type]
 		if not c then
@@ -76,7 +76,7 @@ end
 
 function world:enable_tag(eid, c)
 	local e = self[eid]
-	local ti = assert(self._components[c], c)
+	local ti = assert(self._class.component[c], c)
 	assert(ti.type == 'tag')
 	if not e[c] then
 		e[c] = true
@@ -89,7 +89,7 @@ end
 
 function world:disable_tag(eid, c)
 	local e = assert(self[eid])
-	local ti = assert(self._components[c], c)
+	local ti = assert(self._class.component[c], c)
 	assert(ti.type == 'tag')
 	if e[c] then
 		self._set[c] = nil
@@ -242,7 +242,8 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
-local function remove_component(w, ti, c, e)
+local function remove_component(w, e, component_type, c)
+	local ti = assert(w._class.component[component_type], component_type)
 	if not ti.type and ti.multiple then
 		for _, component in each_component(c) do
 			component_delete(w, ti, component, e)
@@ -252,24 +253,23 @@ local function remove_component(w, ti, c, e)
 	end
 end
 
+local function remove_entity(w, e)
+	for component_type, c in sortcomponent(w, e) do
+		remove_component(w, e, component_type, c)
+	end
+end
+
 function world:clear_removed()
 	local set = self._removed
-
 	for i = #set,1,-1 do
 		local item = set[i]
 		set[i] = nil
 		local e = item[2]
 		local component_type = item[3]
 		if component_type ~= nil then
-			-- delete component
-			local ti = assert(self._components[component_type], component_type)
-			remove_component(self, ti, e[component_type], e)
+			remove_component(self, e, component_type, e[component_type])
 		else
-			-- delete entity
-			for component_type, c in sortcomponent(self, e) do
-				local ti = assert(self._components[component_type], component_type)
-				remove_component(self, ti, c, e)
-			end
+			remove_entity(self, e)
 		end
 	end
 end
@@ -396,7 +396,6 @@ function ecs.new_world(config)
 	local w = setmetatable({
 		args = config.args,
 		_schema = {},
-		_components = {},
 		_entity = {},	-- entity id set
 		_entity_id = 0,
 		_set = setmetatable({}, { __mode = "kv" }),
@@ -412,6 +411,7 @@ function ecs.new_world(config)
 	-- load systems and components from modules
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
+	w._class = class
 	w:slove_component()
 
 	for name, v in pairs(class.transform) do
@@ -463,8 +463,6 @@ function ecs.new_world(config)
 			end
 		end
 	end
-	
-	w._class = class
 
 	-- init system
 	w._systems = system.lists(class.system)

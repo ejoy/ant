@@ -1,5 +1,3 @@
-local solve_depend = require "solve_depend"
-
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -17,37 +15,57 @@ local function sortpairs(t)
     end
 end
 
-local function foreach_init_2(w, c, args)
+local path
+local typeinfo
+local foreach_init_1
+
+local poppath = setmetatable({}, {__close=function() path[#path] = nil end})
+local function pushpath(v)
+    path[#path+1] = v
+    return poppath
+end
+
+local function foreach_init_2(c, args)
     if c.type == 'primtype' then
+        assert(args ~= nil)
         return args
     end
-    assert(w._components[c.type], "unknown type:" .. c.type)
+    local ti = typeinfo[c.type]
+    assert(ti, "unknown type:" .. c.type)
     if c.array then
         local n = c.array == 0 and (args and #args or 0) or c.array
-        local ret = {}
+        local res = {}
         for i = 1, n do
-            ret[i] = w:create_component(c.type, args[i])
+            local _ <close> = pushpath(i)
+            res[i] = foreach_init_1(ti, args[i])
         end
-        return ret
+        return res
     end
     if c.map then
-        local ret = {}
+        local res = {}
         if args then
             for k, v in sortpairs(args) do
                 if type(k) == "string" then
-                    ret[k] = w:create_component(c.type, v)
+                    local _ <close> = pushpath(k)
+                    res[k] = foreach_init_1(ti, v)
                 end
             end
         end
-        return ret
+        return res
     end
-    return w:create_component(c.type, args)
+    local res = foreach_init_1(ti, args)
+    return res
 end
 
-local function foreach_init_1(w, c, args)
+function foreach_init_1(c, args)
+	if c.type == 'tag' then
+		assert(args == true or args == nil)
+		return args
+    end
+
     local ret
     if c.type then
-        ret = foreach_init_2(w, c, args)
+        ret = foreach_init_2(c, args)
     else
         ret = {}
         for _, v in ipairs(c) do
@@ -55,7 +73,8 @@ local function foreach_init_1(w, c, args)
                 goto continue
             end
             assert(v.type)
-            ret[v.name] = foreach_init_2(w, v, args[v.name])
+            local _ <close> = pushpath(v.name)
+            ret[v.name] = foreach_init_2(v, args[v.name])
             ::continue::
         end
     end
@@ -65,16 +84,23 @@ local function foreach_init_1(w, c, args)
     return ret
 end
 
+local function init(w, c, args)
+    typeinfo = w._class.component
+    path = {}
+    local _ <close> = pushpath(c.name)
+    return foreach_init_1(c, args)
+end
+
 local foreach_delete_1
-local function foreach_delete_2(w, c, component)
+local function foreach_delete_2(c, component)
     if c.type == 'primtype' then
         return
     end
-    assert(w._components[c.type], "unknown type:" .. c.type)
-    foreach_delete_1(w, w._components[c.type], component)
+    assert(typeinfo[c.type], "unknown type:" .. c.type)
+    foreach_delete_1(typeinfo[c.type], component)
 end
 
-function foreach_delete_1(w, c, component, e)
+function foreach_delete_1(c, component, e)
     if c.method and c.method.delete then
         c.method.delete(component, e)
     end
@@ -84,7 +110,7 @@ function foreach_delete_1(w, c, component, e)
 				goto continue
 			end
 			assert(v.type)
-            foreach_delete_1(w, v, component[v.name])
+            foreach_delete_1(v, component[v.name])
 			::continue::
 		end
         return
@@ -92,22 +118,26 @@ function foreach_delete_1(w, c, component, e)
     if c.array then
         local n = c.array == 0 and #component or c.array
         for i = 1, n do
-            foreach_delete_2(w, c, component[i])
+            foreach_delete_2(c, component[i])
         end
         return
     end
     if c.map then
         for k, v in pairs(component) do
             if type(k) == "string" then
-                foreach_delete_2(w, c, v)
+                foreach_delete_2(c, v)
             end
         end
         return
     end
-    foreach_delete_2(w, c, component)
+    foreach_delete_2(c, component)
 end
 
-local typeinfo
+local function delete(w, c, component, e)
+    typeinfo = w._class.component
+    return foreach_delete_1(c, component, e)
+end
+
 local function gen_ref(c)
     if c.ref ~= nil then
         return c.ref
@@ -116,28 +146,7 @@ local function gen_ref(c)
 		c.ref = true
         for _,v in ipairs(c) do
             v.ref = gen_ref(v)
-        end        
-        return c.ref
-    end
-    if c.type == 'primtype' then
-        c.ref = false
-        return c.ref
-    end
-    assert(typeinfo[c.type], "unknown type:" .. c.type)
-	c.ref = gen_ref(typeinfo[c.type])
-	return c.ref
-end
-
-local typeinfo
-local function gen_ref(c)
-    if c.ref ~= nil then
-        return c.ref
-    end
-	if not c.type then
-		c.ref = true
-        for _,v in ipairs(c) do
-            v.ref = gen_ref(v)
-        end        
+        end
         return c.ref
     end
     if c.type == 'primtype' then
@@ -150,14 +159,14 @@ local function gen_ref(c)
 end
 
 local function solve(w)
-    typeinfo = w._components
+    typeinfo = w._class.component
     for _,v in pairs(typeinfo) do
         gen_ref(v)
     end
 end
 
 return {
-    init = foreach_init_1,
-    delete = foreach_delete_1,
+    init = init,
+    delete = delete,
     solve = solve,
 }

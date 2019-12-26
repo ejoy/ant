@@ -51,7 +51,7 @@ local serialize = import_package 'ant.serialize'
 
 local function create_light()
 	lu.create_directional_light_entity(world, "direction light", 
-		{1,1,1,1}, 2, mu.to_radian{60, 50, 0})
+		{1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
 	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 

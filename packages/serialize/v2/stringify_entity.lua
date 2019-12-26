@@ -177,7 +177,7 @@ function stringify_component(name, typename, value, n)
 end
 
 return function (w, policies, data)
-    typeinfo = w._components
+    typeinfo = w._class.component
     out = {}
     out[#out+1] = '---------'
     for _, p in pairs_sortv(policies) do

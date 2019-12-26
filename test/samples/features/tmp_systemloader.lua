@@ -266,7 +266,7 @@ end
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
-		{1,1,1,1}, 2, mu.to_radian{60, 50, 0})
+		{1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
 

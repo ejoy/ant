@@ -56,7 +56,7 @@ end
 ecs.tag "editor"
 
 ecs.component "frustum"
-	.type "string" ("mat")
+	['opt'].type "string" ("mat")
 	.n "real" (0.1)
 	.f "real" (10000)
 	['opt'].l "real" (-1)
@@ -65,7 +65,7 @@ ecs.component "frustum"
 	['opt'].b "real" (-1)
 	['opt'].aspect "real" (1)
 	['opt'].fov "real" (1)
-	.ortho "boolean" (false)
+	['opt'].ortho "boolean" (false)
 
 local respath = ecs.component_alias("respath", "string")
 

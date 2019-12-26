@@ -64,7 +64,7 @@ end
 
 local function getobject(w, id, path)
     path = tostring(path)
-    typeinfo = w._components
+    typeinfo = w._class.component
     local sp = split(path)
     if id then
         local ids = w.__deserialize

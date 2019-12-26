@@ -147,7 +147,7 @@ local function _save_entity(w, eid)
     }
     for name, cv in sortpairs(e) do
         t[#t+1] = { name, foreach_save_1(cv, name) }
-        packages[w._components[name].package] = true
+        packages[w._class.component[name].package] = true
     end
     return t
 end
@@ -174,7 +174,7 @@ local function save_start(w)
     pool = {}
     load = {}
     packages = {}
-    typeinfo = w._components
+    typeinfo = w._class.component
     update_deserialize_1(w)
 end
 
