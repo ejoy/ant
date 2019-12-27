@@ -58,9 +58,9 @@ local function foreach_init_2(c, args)
 end
 
 function foreach_init_1(c, args)
-	if c.type == 'tag' then
-		assert(args == true or args == nil)
-		return args
+    if c.type == 'tag' then
+        assert(args == true or args == nil)
+        return args
     end
 
     local ret
@@ -105,14 +105,14 @@ function foreach_delete_1(c, component, e)
         c.method.delete(component, e)
     end
     if not c.type then
-		for _, v in ipairs(c) do
-			if component[v.name] == nil and v.attrib and v.attrib.opt then
-				goto continue
-			end
-			assert(v.type)
+        for _, v in ipairs(c) do
+            if component[v.name] == nil and v.attrib and v.attrib.opt then
+                goto continue
+            end
+            assert(v.type)
             foreach_delete_1(v, component[v.name])
-			::continue::
-		end
+            ::continue::
+        end
         return
     end
     if c.array then
@@ -142,8 +142,8 @@ local function gen_ref(c)
     if c.ref ~= nil then
         return c.ref
     end
-	if not c.type then
-		c.ref = true
+    if not c.type then
+        c.ref = true
         for _,v in ipairs(c) do
             v.ref = gen_ref(v)
         end
@@ -154,12 +154,25 @@ local function gen_ref(c)
         return c.ref
     end
     assert(typeinfo[c.type], "unknown type:" .. c.type)
-	c.ref = gen_ref(typeinfo[c.type])
-	return c.ref
+    c.ref = gen_ref(typeinfo[c.type])
+    return c.ref
 end
 
 local function solve(w)
     typeinfo = w._class.component
+    local schema = w._schema
+    for _,v in ipairs(schema.list) do
+        if v.uncomplete then
+            error(v.name .. " is uncomplete")
+        end
+    end
+    for k in pairs(schema._undefined) do
+        if schema.map[k] then
+            schema._undefined[k] = nil
+        else
+            error(k .. " is undefined in " .. schema._undefined[k])
+        end
+    end
     for _,v in pairs(typeinfo) do
         gen_ref(v)
     end
