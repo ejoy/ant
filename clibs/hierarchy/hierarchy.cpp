@@ -36,7 +36,7 @@ struct hierarchy {
 static int
 lbuilddata_del(lua_State *L){
 	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	ozz::memory::default_allocator()->Delete(builddata->skeleton);	
+	OZZ_DELETE(ozz::memory::default_allocator(), builddata->skeleton);	
 	builddata->skeleton = NULL;
 	return 0;
 }
@@ -323,7 +323,7 @@ lbuild(lua_State *L){
 	if (type == LUA_TSTRING) {
 		const char* filepath = lua_tostring(L, 1);
 		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
-		builddata->skeleton = ozz::memory::default_allocator()->New<ozz::animation::Skeleton>();
+		builddata->skeleton = OZZ_NEW(ozz::memory::default_allocator(), ozz::animation::Skeleton);
 		ozz::io::File ff(filepath, "rb");
 		if (!ff.opened()) {
 			luaL_error(L, "could not open file : %s", filepath);

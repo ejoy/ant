@@ -47,9 +47,6 @@ struct sampling_node {
 
 struct ozzmesh {
 	ozz::sample::Mesh* mesh;
-
-	uint8_t * dynamic_buffer;
-	uint8_t * static_buffer;
 };
 
 struct aligned_memory{
@@ -815,7 +812,7 @@ static int
 ldel_sampling(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	sampling_node *sampling = (sampling_node *)lua_touserdata(L, 1);
-	ozz::memory::default_allocator()->Delete(sampling->cache);	
+	OZZ_DELETE(ozz::memory::default_allocator(), sampling->cache);
 
 	return 0;
 }
@@ -834,7 +831,7 @@ lnew_sampling_cache(lua_State *L) {
 	luaL_getmetatable(L, "SAMPLING_NODE");
 	lua_setmetatable(L, -2);
 
-	samplingnode->cache = ozz::memory::default_allocator()->New<ozz::animation::SamplingCache>(numjoints);
+	samplingnode->cache = OZZ_NEW(ozz::memory::default_allocator(), ozz::animation::SamplingCache)(numjoints);
 	return 1;
 }
 
@@ -894,7 +891,7 @@ ldel_animation(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 
 	animation_node *node = (animation_node*)lua_touserdata(L, 1);
-	ozz::memory::default_allocator()->Delete(node->ani);	
+	OZZ_DELETE(ozz::memory::default_allocator(), node->ani);	
 	
 	return 0;
 }
@@ -908,7 +905,7 @@ lnew_animation(lua_State *L) {
 	luaL_getmetatable(L, "ANIMATION_NODE");
 	lua_setmetatable(L, -2);
 	
-	node->ani = ozz::memory::default_allocator()->New<ozz::animation::Animation>();
+	node->ani = OZZ_NEW(ozz::memory::default_allocator(), ozz::animation::Animation);
 
 	ozz::io::File file(path, "rb");
 	if (!file.opened()) {
@@ -932,13 +929,21 @@ lduration_animation(lua_State *L) {
 }
 
 static int
+lsize_animation(lua_State *L){
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	animation_node *node = (animation_node*)lua_touserdata(L, 1);
+	lua_pushinteger(L, node->ani->size());
+	return 1;
+}
+
+static int
 ldel_ozzmesh(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 
 	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
 
 	if (om->mesh) {
-		ozz::memory::default_allocator()->Delete(om->mesh);
+		OZZ_DELETE(ozz::memory::default_allocator(), om->mesh);
 	}
 
 	return 0;
@@ -977,7 +982,7 @@ lnew_ozzmesh(lua_State *L) {
 	luaL_getmetatable(L, "OZZMESH");
 	lua_setmetatable(L, -2);
 
-	om->mesh = ozz::memory::default_allocator()->New<ozz::sample::Mesh>();
+	om->mesh = OZZ_NEW(ozz::memory::default_allocator(), ozz::sample::Mesh);
 	LoadOzzMesh(filename, om->mesh);
 	return 1;
 }
@@ -1115,6 +1120,14 @@ ljoint_remap_ozzmesh(lua_State *L){
 	lua_pushinteger(L, om->mesh->joint_remaps.size());
 
 	return 2;
+}
+
+static int
+lsize_ozzmesh(lua_State *L){
+	auto om = get_ozzmesh(L);
+
+	
+	return 1;
 }
 
 static int
@@ -1314,7 +1327,8 @@ register_animation_mt(lua_State *L) {
 	lua_setfield(L, -2, "__index");	// ANIMATION_NODE.__index = ANIMATION_NODE
 
 	luaL_Reg l[] = {		
-		{"duration", lduration_animation},		
+		{"duration", lduration_animation},
+		{"size", lsize_animation},
 		{"__gc", ldel_animation},
 		{nullptr, nullptr},
 	};
@@ -1373,6 +1387,7 @@ register_ozzmesh_mt(lua_State *L) {
 		{"combine_buffer", 	lcombinebuffer_ozzmesh},
 		{"influences_count",linfluences_count_ozzmesh},
 		{"joint_remap", 	ljoint_remap_ozzmesh},
+		{"size", 			lsize_ozzmesh},
 		{"__gc", 			ldel_ozzmesh},
 		{nullptr, nullptr},
 	};
