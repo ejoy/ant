@@ -1,15 +1,15 @@
 local typeclass = require "typeclass"
 local system = require "system"
 local component = require "component"
-local policy_apply = require "policy".apply
+local policy = require "policy"
 local event = require "event"
 local datalist = require "datalist"
 
 local component_init = component.init
 local component_delete = component.delete
 
-local ecs = {}
-local world = {} ; world.__index = world
+local world = {}
+world.__index = world
 
 function world:create_component(c, args)
 	local ti = assert(self._class.component[c], c)
@@ -120,18 +120,28 @@ function world:register_entity()
 	return eid
 end
 
-function world:set_entity(eid, policy, data)
-	local component, transform = policy_apply(self, policy, data)
-	local e = {}
-	self[eid] = e
-	self._entity[eid] = true
+local function apply_policy(w, eid, component, transform, dataset)
+	local e = w[eid]
 	for _, c in ipairs(component) do
-		e[c] = self:create_component(c, data[c])
-		self:register_component(eid, c)
+		e[c] = w:create_component(c, dataset[c])
+		w:register_component(eid, c)
 	end
 	for _, f in ipairs(transform) do
 		f(e)
 	end
+end
+
+function world:add_policy(eid, t)
+	local policies, dataset = t.policy, t.data
+	local component, transform = policy.add(self, eid, policies)
+	apply_policy(self, eid, component, transform, dataset)
+end
+
+function world:set_entity(eid, policies, dataset)
+	local component, transform = policy.create(self, policies)
+	self[eid] = {}
+	self._entity[eid] = true
+	apply_policy(self, eid, component, transform, dataset)
 	self:pub {"entity_created", eid}
 end
 
@@ -370,29 +380,14 @@ function world:enable_system(name, enable)
 	end
 end
 
-function world:slove_component()
-	local typeinfo = self._schema
-	for k,v in ipairs(typeinfo.list) do
-		if v.uncomplete then
-			error( v.name .. " is uncomplete")
-		end
-	end
-	for k in pairs(typeinfo._undefined) do
-		if typeinfo.map[k] then
-		typeinfo._undefined[k] = nil
-		else
-			error( k .. " is undefined in " .. typeinfo._undefined[k])
-		end
-	end
-	component.solve(self)
-end
+local m = {}
 
 -- config.packages
 -- config.systems
 -- config.update_order
 -- config.loader (optional)
 -- config.args
-function ecs.new_world(config)
+function m.new_world(config)
 	local w = setmetatable({
 		args = config.args,
 		_schema = {},
@@ -412,57 +407,8 @@ function ecs.new_world(config)
 	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
 
 	w._class = class
-	w:slove_component()
-
-	for name, v in pairs(class.transform) do
-		if #v.output == 0 then
-			error(("transform `%s`'s output cannot be empty."):format(name))
-		end
-		if type(v.method.process) ~= 'function' then
-			error(("transform `%s`'s process cannot be empty."):format(name))
-		end
-	end
-	for policy_name, v in pairs(class.policy) do
-		local union_name, name = policy_name:match "^([%a_][%w_]*)%.([%a_][%w_]*)$"
-		if not union_name then
-			name = policy_name:match "^([%a_][%w_]*)$"
-		end
-		if not name then
-			error(("invalid policy name: `%s`."):format(policy_name))
-		end
-		v.union = union_name
-		local components = {}
-		if not v.require_component then
-			error(("policy `%s`'s require_component cannot be empty."):format(policy_name))
-		end
-		for _, component_name in ipairs(v.require_component) do
-			if not class.component[component_name] then
-				error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
-			end
-			components[component_name] = true
-		end
-		if not v.require_transform then
-			v.require_transform = {}
-		end
-		for _, transform_name in ipairs(v.require_transform) do
-			local c = class.transform[transform_name]
-			if not c then
-				error(("transform `%s` in policy `%s` is not defined."):format(transform_name, policy_name))
-			end
-			if c.input then
-				for _, v in ipairs(c.input) do
-					if not components[v] then
-						error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name))
-					end
-				end
-			end
-			for _, v in ipairs(c.output) do
-				if not components[v] then
-					error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name))
-				end
-			end
-		end
-	end
+	component.solve(w)
+	policy.solve(w)
 
 	-- init system
 	w._systems = system.lists(class.system)
@@ -471,4 +417,4 @@ function ecs.new_world(config)
 	return w
 end
 
-return ecs
+return m
