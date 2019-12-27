@@ -32,7 +32,7 @@ return {
 			end
 		end
 		local handle = texture_load(assert(binary), tex.path, flag)
-		return {handle=handle, sampler=ru.fill_default_sampler(sampler)}
+		return {handle=handle, sampler=ru.fill_default_sampler(sampler)}, 0
 	end,
 	unloader = function (res)
 		bgfx.destroy(assert(res.handle))

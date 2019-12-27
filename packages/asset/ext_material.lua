@@ -44,7 +44,7 @@ return {
 			fx			= load_fx(material.fx),
 			state 		= load_state(material.state),
 			properties 	= load_properties(material.properties),
-		}
+		}, 0
 	end,
 	unloader = function(res)
 		bgfx.destroy(res.fx.shader.prog)

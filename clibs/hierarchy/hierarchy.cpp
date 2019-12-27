@@ -239,7 +239,7 @@ lbuilddata_jointmatrix(lua_State *L) {
 }
 
 static int
-lbuilddata_bindpose_result(lua_State *L) {
+lbuilddata_bindpose(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
 
@@ -255,6 +255,26 @@ lbuilddata_bindpose_result(lua_State *L) {
 		luaL_error(L, "build local to model failed");
 	}
 	return 0;
+}
+
+static int
+lbuilddata_size(lua_State *L){
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+
+	size_t buffersize = 0;
+
+	auto bind_poses = builddata->skeleton->joint_bind_poses();
+	buffersize += bind_poses.size() * sizeof(*bind_poses.begin);
+	buffersize += builddata->skeleton->joint_parents().size() * sizeof(uint16_t);
+
+	auto names = builddata->skeleton->joint_names();
+	for (int ii = 0; ii < names.count(); ++ii){
+		buffersize += strlen(names[ii]);
+	}
+
+	lua_pushinteger(L, buffersize);
+	return 1;
 }
 
 static struct hierarchy_build_data*
@@ -637,6 +657,31 @@ lhnode_name(lua_State *L) {
 	return 0;
 }
 
+static size_t 
+rawskeleton_size(const ozz::animation::offline::RawSkeleton::Joint::Children &joints){
+	size_t buffersize = 0;
+	for (const auto &j : joints){
+		if (!j.children.empty()){
+			buffersize += rawskeleton_size(j.children);
+		}
+
+		buffersize += j.name.size();
+		buffersize += sizeof(j.transform);
+	}
+
+	return buffersize;
+}
+
+static int
+lhnode_size(lua_State *L){
+	luaL_checkudata(L, 1, "HIERARCHY_NODE");
+	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
+	auto tree = get_tree(L, 2);
+	
+	lua_pushinteger(L, rawskeleton_size(tree->skl->roots));
+	return 1;
+}
+
 // static int
 // lhnode_getnode(lua_State *L) {
 // 	const size_t n = (int)lua_tointeger(L, 2);
@@ -675,7 +720,8 @@ register_hierarchy_builddata(lua_State *L) {
 			{"isroot", lbuilddata_isroot},
 			{"joint_index", lbuilddata_jointindex},
 			{"joint_matrix", lbuilddata_jointmatrix},
-			{"bind_pose", lbuilddata_bindpose_result},
+			{"bind_pose", lbuilddata_bindpose},
+			{"size", lbuilddata_size},
 			{nullptr, nullptr},
 		};
 
@@ -697,6 +743,7 @@ register_hierarchy_node(lua_State *L) {
 		{"remove_child", lhnode_removechild},
 		{"transform", lhnode_transform,	},
 		{"name", lhnode_name},
+		{"size", lhnode_size},
 		{nullptr, nullptr},
 	};
 

@@ -1126,7 +1126,42 @@ static int
 lsize_ozzmesh(lua_State *L){
 	auto om = get_ozzmesh(L);
 
-	
+	size_t buffersize = 0;
+	for (const auto& p : om->mesh->parts){
+		if (!p.positions.empty()){
+			buffersize += p.positions.size() * ozz::sample::Mesh::Part::kPositionsCpnts * sizeof(float);
+		}
+
+		if (!p.normals.empty()){
+			buffersize += p.normals.size() * ozz::sample::Mesh::Part::kNormalsCpnts * sizeof(float);
+		}
+
+		if (!p.tangents.empty()){
+			buffersize += p.tangents.size() * ozz::sample::Mesh::Part::kTangentsCpnts * sizeof(float);
+		}
+
+		if (!p.colors.empty()){
+			buffersize += p.colors.size() * ozz::sample::Mesh::Part::kColorsCpnts * sizeof(uint8_t);
+		}
+
+		if (!p.uvs.empty()){
+			buffersize += p.uvs.size() * ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float);
+		}
+
+		if (!p.joint_indices.empty()){
+			buffersize += p.joint_indices.size() * p.influences_count() * sizeof(uint16_t);
+		}
+
+		if (!p.joint_weights.empty()){
+			buffersize += p.joint_weights.size() * (p.influences_count() - 1) * sizeof(float);
+		}
+	}
+
+	buffersize += om->mesh->triangle_indices.size() * sizeof(uint16_t);
+	buffersize += om->mesh->inverse_bind_poses.size() * sizeof(ozz::math::Float4x4);
+	buffersize += om->mesh->joint_remaps.size() * sizeof(uint16_t);
+
+	lua_pushinteger(L, buffersize);
 	return 1;
 }
 

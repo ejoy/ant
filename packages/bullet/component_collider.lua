@@ -9,7 +9,7 @@ ecs.component_alias("collider_tag", "string")
 
 local coll = ecs.component "collider"
 	.center "real[3]" {0, 0, 0}
-	.is_tigger "boolean" (true)
+	["opt"].is_tigger "boolean" (true)
 	["opt"].user_idx "int"
 
 function coll:delete()

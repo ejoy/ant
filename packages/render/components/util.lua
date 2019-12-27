@@ -128,7 +128,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	grid.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/grid.mesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+	grid.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/grid.mesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -190,7 +190,7 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 		-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
 		0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
 	}
-	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
+	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
 	return eid
 end
 
@@ -231,7 +231,7 @@ function util.create_quad_entity(world, rect, materialpath, properties, name)
 	}
 
 	local e = world[eid]
-	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/quad.mesh", util.quad_mesh(rect))
+	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/quad.mesh", util.quad_mesh(rect))
 	return eid
 end
 
@@ -266,7 +266,7 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
 		 3, -3, 0, 1, 1,
 	}
 	
-	quad.rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/quad_scale3.mesh", quad_mesh(vb))
+	quad.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/quad_scale3.mesh", quad_mesh(vb))
     return quadid
 end
 
@@ -343,7 +343,7 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 		2, 6, 3, 7,
 	}
 	
-	m.reskey = assetmgr.register_resource(fs.path "//meshres/frustum.mesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
+	m.reskey = assetmgr.register_resource(fs.path "//res.mesh/frustum.mesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
 	return eid
 end
 
@@ -376,7 +376,7 @@ function util.create_axis_entity(world, transform, color, name)
 		0, 2, 
 		0, 3,
 	}
-	world[eid].rendermesh.reskey = assetmgr.register_resource(fs.path "//meshres/axis.mesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
+	world[eid].rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/axis.mesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
 	return eid
 end
 
@@ -495,7 +495,7 @@ function util.create_mesh(rendermesh, mesh)
 	local ref_path = mesh.ref_path
 	local res = assetmgr.get_resource(ref_path)
 	check_rendermesh_lod(res)
-	local reskey = fs.path ("//meshres/" .. ref_path:string())
+	local reskey = fs.path ("//res.mesh/" .. ref_path:string())
 	local meshscene = assetmgr.get_resource(reskey)
 	if meshscene == nil then
 		local meshscene = util.create_mesh_buffers(res)
@@ -563,7 +563,7 @@ function util.create_bounding_drawer(world)
 	}
 
 	local rm = world[eid].rendermesh
-	rm.reskey = assetmgr.register_resource(fs.path "//meshres/bounding.mesh", util.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
+	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/bounding.mesh", util.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
 end
 
 

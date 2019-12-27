@@ -114,7 +114,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
     local num_vertices = #vb
     local num_indices = #ib
 
-    local reskey = fs.path(string.format("//meshres/line_%s.mesh",RES_IDX))
+    local reskey = fs.path(string.format("//res.mesh/line_%s.mesh",RES_IDX))
     RES_IDX = RES_IDX + 1
     grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
@@ -151,7 +151,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
     local num_vertices = #vb
     local num_indices = #ib
 
-    local reskey = fs.path(string.format("//meshres/circle_%s.mesh",RES_IDX))
+    local reskey = fs.path(string.format("//res.mesh/circle_%s.mesh",RES_IDX))
     RES_IDX = RES_IDX + 1
     grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid

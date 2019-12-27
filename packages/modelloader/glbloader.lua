@@ -323,5 +323,5 @@ end
 
 return function (meshcontent, config)
 	local glbdata = glbloader.decode_from_filehandle(file_wrapper(meshcontent))
-	return init_scene(glbdata.info, glbdata.bin, config)
+	return init_scene(glbdata.info, glbdata.bin, config), #glbdata.bin
 end

@@ -47,10 +47,13 @@ return {
         return {
             shader      = shader,
             surface_type= assetutil.load_surface_type(content.surface_type),
-        }
+        }, 0
     end,
 
     unloader = function (res)
-        assert(false, "not implement")
+        local shader = res.shader
+        bgfx.destroy(shader.prog)
+        res.shader = nil
+        res.surface_type = nil
     end
 }

@@ -16,7 +16,7 @@ return {
 			heightmap.path 	= fs.path(heightmap.ref_path):localpath():string()
 		end
 		terrain.handle = terrain_module.create(terrain, declmgr.get(terrain.declname).handle)
-		return terrain
+		return terrain, 0
 	end,
 	unloader = function(terraincomp)
 		terraincomp.declname = nil

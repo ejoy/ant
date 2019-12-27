@@ -130,7 +130,7 @@ ozzmesh_loader.output "rendermesh"
 function ozzmesh_loader.process(e)
 	local rm 		= e.rendermesh
 	local mesh 		= e.mesh
-	local reskey 	= fs.path("//meshres/" .. mesh.ref_path:stem():string() .. ".mesh")
+	local reskey 	= fs.path("//res.mesh/" .. mesh.ref_path:stem():string() .. ".mesh")
 	rm.reskey 		= assetmgr.register_resource(reskey, gen_mesh_assetinfo(mesh))
 end
 

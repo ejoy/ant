@@ -112,5 +112,5 @@ function t.process(e)
 	end
 
 	meshscene.scenes[1][1] = groups
-	rm.reskey = assetmgr.register_resource(fs.path "//meshres/terrain.mesh", meshscene)
+	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/terrain.mesh", meshscene)
 end

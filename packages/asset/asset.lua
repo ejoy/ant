@@ -64,31 +64,21 @@ end
 
 assetmgr.load_depiction = rawtable
 
--- local function load(filename)
--- 	local reskey = res_key(filename)
--- 	local res = resources[reskey]
--- 	if res == nil then
--- 		local loader = assetmgr.get_loader(module_name(filename))
--- 		res = loader(filename)
--- 		resources[reskey] = res
--- 	end
-
--- 	return res
--- end
-
 assetmgr.res_key = res_key
 
-local function unload(filename)
-	local reskey = res_key(filename)
+local resource_profiles = {}
+
+function assetmgr.unload(reskey)
 	local res = resources[reskey]
 	if res then
-		local unloader = assetmgr.get_unloader(module_name(filename))
+		local unloader = assetmgr.get_unloader(module_name(fs.path(reskey)))
 		if unloader then
 			unloader(res)
 		end
 		resources[reskey] = nil
+		resource_profiles[reskey] = nil
 	else
-		log.error("not found resource:", filename:string())
+		log.error("not found resource:", reskey)
 	end
 end
 
@@ -119,21 +109,46 @@ local function load_resource(filename)
 		return loader(filename)
 	end
 
-	assert(filename:string():match "//meshres")
+	assert(filename:string():match "//res.mesh")
 	local loader = reloaders[res_key(filename)]
 	if loader then
 		return loader()
 	end
 end
 
+local function record_resource_used(reskey)
+	local profile = assert(resource_profiles[reskey])
+	profile.counter = profile.counter + 1
+end
+
+function assetmgr.resource_profiles()
+	return resource_profiles
+end
+
+function assetmgr.each_resource()
+	return pairs(resources)
+end
+
+local function default_profile(sizebytes)
+	return {
+		counter = 0,
+		sizebytes = sizebytes
+	}
+end
+
 function assetmgr.get_resource(filename)
 	local reskey = res_key(filename)
 	local res = resources[reskey]
 	if res == nil then
-		res = load_resource(filename)
+		local ressize
+		res, ressize = load_resource(filename)
 		if res then
 			resources[reskey] = res
+			resource_profiles[reskey] = default_profile(ressize or 0)
 		end
+	end
+	if res then
+		record_resource_used(reskey)
 	end
 	return res
 end
@@ -153,6 +168,7 @@ function assetmgr.register_resource(reffile, content, reloader)
 
 	local reskey = res_key(reffile)
 	resources[reskey] = content
+	resource_profiles[reskey] = default_profile(0)
 
 	if reloader then
 		reloaders[reskey] = reloader

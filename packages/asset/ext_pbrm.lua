@@ -159,6 +159,6 @@ return {
 		}
 
 		
-		return material
+		return material, 0
 	end,
 }

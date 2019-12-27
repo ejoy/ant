@@ -62,7 +62,7 @@ pp_sys.depend "tonemapping"
 pp_sys.depend "render_system"
 pp_sys.dependby "end_frame"
 
-local quad_reskey = fs.path "//meshres/postprocess.mesh"
+local quad_reskey = fs.path "//res.mesh/postprocess.mesh"
 
 local function alloc_range_viewids(num)
     local viewids = {}

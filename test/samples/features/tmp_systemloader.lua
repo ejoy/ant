@@ -57,6 +57,7 @@ init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
 init_loader.dependby 'physic_bounding'
 init_loader.dependby 'camera_controller_2'
+init_loader.dependby 'asset_gc'
 
 local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'

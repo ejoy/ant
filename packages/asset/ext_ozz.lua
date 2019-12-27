@@ -42,9 +42,10 @@ return {
 
 		local readop = find_tagop(filename, readops)
 		if readop then
+			local handle = readop(filename:localpath():string())
 			return {
-				handle = readop(filename:localpath():string())
-			}
+				handle = handle,
+			}, handle:size()
 		end
 		error("not support type")
 		return nil

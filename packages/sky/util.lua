@@ -44,7 +44,7 @@ local function fill_procedural_sky_mesh(skyentity)
 	end
 
 	local meshcomp = skyentity.rendermesh
-	meshcomp.reskey = assetmgr.register_resource(fs.path "//meshres/procedural_sky.mesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib))
+	meshcomp.reskey = assetmgr.register_resource(fs.path "//res.mesh/procedural_sky.mesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib))
 end
 
 function util.create_procedural_sky(world, settings)
