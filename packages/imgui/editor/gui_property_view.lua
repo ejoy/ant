@@ -25,7 +25,11 @@ function GuiPropertyView:_init()
     self.widget_entity = EntityWidget.new()
     self.debug_mode = false
     self.widget_entity:set_debug_mode(self.debug_mode)
-    self.widget_entity:set_change_cb(self.on_component_value_change,self)
+    self.widget_entity:set_change_cb(
+        self.on_component_value_change,
+        self.on_mult_component_value_change,
+        self
+    )
     self._dirty_flag = false
     self.base_component_cfg = {offset_2 = 200}
     ---
@@ -35,6 +39,11 @@ end
 function GuiPropertyView:on_component_value_change(eid,com_id,name,value)
     hub.publish(Event.ModifyComponent,eid,com_id,name,value)
 end
+
+function GuiPropertyView:on_mult_component_value_change(eids,com_ids,name,value,is_list)
+    hub.publish(Event.ModifyMultComponent,eids,com_ids,name,value,is_list)
+end
+
 
 -------hub begin
 function GuiPropertyView:_init_subcribe()
@@ -59,10 +68,10 @@ function GuiPropertyView:_on_refresh_entity(tbl)
         log.info_a(tbl)
     end
     if self.widget_entity and self.widget_entity.is_editing then
-        self.temp_entity_tbl = tbl.entities
+        self.temp_entity_tbl = tbl
     else
         self.temp_entity_tbl = nil
-        self.entity_tbl = tbl.entities
+        self.entity_tbl = tbl
     end
 end
 
@@ -105,9 +114,10 @@ function GuiPropertyView:on_update()
         end
 
         local eid,entity = next(self.entity_tbl)
-        if eid then
+        local eids,entities = self.entity_tbl.eids,self.entity_tbl.entities
+        if eids and #eids > 0 then
             local is_editing = self.widget_entity.is_editing
-            self.widget_entity:update(eid,entity,self.base_component_cfg)
+            self.widget_entity:update(eids,entities,self.base_component_cfg)
             if (not is_editing) and (self.widget_entity.is_editing) then
                 if self.temp_entity_tbl then
                     self.entity_tbl = self.temp_entity_tbl

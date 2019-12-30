@@ -15,8 +15,12 @@ GuiHierarchyView.GuiName = "GuiHierarchyView"
 local hub = import_package("ant.editor").hub
 local Event = require "hub_event"
 
-local LeafFlag = flags.TreeNode.Leaf
+local rxbus = import_package("ant.rxlua").RxBus
+
+local LeafFlag = flags.TreeNode.Leaf 
 local ParentFlag = flags.TreeNode.OpenOnDoubleClick
+
+local OrderedMap = require "common.ordered_map"
 
 function GuiHierarchyView:_init()
     GuiBase._init(self)
@@ -25,7 +29,7 @@ function GuiHierarchyView:_init()
     self.sorted_map = {}
     self.default_size = {250,600}
     self.title_id = string.format("SceneHierarchy###%s",self.GuiName)
-    self.selected_map = {}
+    self.selected_map = OrderedMap:new()
     self._scroll_flag = false
     ---
     self:_init_subcribe()
@@ -34,11 +38,17 @@ end
 -------hub begin
 function GuiHierarchyView:_init_subcribe()
     hub.subscribe(Event.HierarchyChange,self._on_refresh_hierarchy,self)
-    hub.subscribe(Event.EntityPick, self._on_scene_pick,self)
+    hub.subscribe(Event.SceneEntityPick, self._on_scene_pick,self)
+    local ob = rxbus.get_observable(Event.HierarchyChange)
+    ob:subscribe(function(...)
+        log("rxbus:",Event.HierarchyChange,...)
+    end)
 end
 
-function GuiHierarchyView:publish_selected_entity(eid,focus)
-    hub.publish(Event.WatchEntity, eid, focus)
+function GuiHierarchyView:publish_selected_entity(eids,focus)
+    local subject = rxbus:get_subject(Event.WatchEntity)
+    subject:onNext(eids,foucs)
+    -- hub.publish(Event.WatchEntity, eid, focus)
 end
 
 function GuiHierarchyView:publish_operate_event(event,args)
@@ -47,9 +57,9 @@ end
 -------hub end
 
 function GuiHierarchyView:_on_scene_pick(eid_list)
-    self.selected_map = {}
+    self.selected_map:removeAll()
     for _,eid in ipairs(eid_list) do
-        self.selected_map[eid] = true
+        self.selected_map:insert(eit)
         self._scroll_flag = true
     end
 end
@@ -97,14 +107,14 @@ function GuiHierarchyView:_render_entity(id,entity)
         flag = LeafFlag
     end
     local name = string.format("[%d]%s",id,entity.name)
-    if self.selected_map[id] then
+    if self.selected_map:has(id) then
         flag = flag | flags.TreeNode.Selected
     end
     if entity.childnum >= 1 and entity.childnum <= 9 then
         widget.SetNextItemOpen(true,"f")
     end
     local cur_open = widget.TreeNode(name,flag)
-    if self._scroll_flag and self.selected_map[id] then
+    if self._scroll_flag and self.selected_map:has(id) then
         windows.SetScrollHereY()
         self._scroll_flag = false
     end
@@ -112,11 +122,12 @@ function GuiHierarchyView:_render_entity(id,entity)
 
     if util.IsItemClicked() then
         if gui_input.key_state.CTRL then
-            self.selected_map[id]=true
+            self.selected_map:insert(id)
         else
-            self.selected_map = {[id]=true}
+            self.selected_map:removeAll()
+            self.selected_map:insert(id)
         end
-        self:publish_selected_entity(id,util.IsMouseDoubleClicked(0))
+        self:publish_selected_entity(self.selected_map:get_list(),util.IsMouseDoubleClicked(0))
     end
     if util.IsItemHovered() then
         widget.BeginTooltip()
@@ -126,7 +137,6 @@ function GuiHierarchyView:_render_entity(id,entity)
         widget.BulletText("...")
         widget.EndTooltip()
     end
-    
 
     if cur_open then
         if children then
@@ -143,23 +153,19 @@ function GuiHierarchyView:_show_selected_entity_menu(id,entity)
             local select_children = nil
             select_children = function(children)
                 for i,c in pairs(children) do
-                    self.selected_map[i]=true
+                    self.selected_map:insert(i)
                     if c.children then
                         select_children(c.children)
                     end
                 end
             end
-            self.selected_map[id]=true
+            self.selected_map:insert(id)
             if entity.children then
                 select_children(entity.children)
             end
         end
         if widget.Button("Delete") then
-            local id_list = {}
-            for id,_ in pairs(self.selected_map) do
-                table.insert(id_list,id)
-            end
-            self:publish_operate_event( "Delete",id_list )
+            self:publish_operate_event( "Delete",self.selected_map:get_list() )
         end
         windows.EndPopup()
     end

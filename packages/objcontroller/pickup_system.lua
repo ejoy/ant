@@ -374,7 +374,7 @@ function pickup_sys:update()
 		if nextstep == "blit" then
 			local fb = fbmgr.get(pickupentity.render_target.fb_idx)
 			local rb = fbmgr.get_rb(fb[1])
-			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, rb.handle)
+			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, rb)
 		elseif nextstep	== "select_obj" then
 			recover_filter(pickupentity.primitive_filter)
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
