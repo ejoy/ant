@@ -28,3 +28,6 @@
 [submodule "3rd/imgui"]
 	path = 3rd/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "3rd/RxLua"]
+	path = 3rd/RxLua
+	url = https://github.com/bjornbytes/RxLua
