@@ -501,20 +501,6 @@ fetch_float4x4(const ozz::math::SoaTransform &trans, int subidx, ozz::math::Floa
 	f4x4 = local_aos_matrices[subidx];
 }
 
-template<typename PoseRanage>
-static inline ozz::math::Float4x4
-extract_joint_matrix(const PoseRanage &poses, int jointidx) {
-	assert(jointidx >= 0);
-	
-	const auto soa_rootidx = jointidx / 4;
-	const auto aos_subidx = jointidx % 4;
-
-	const auto &pose = poses[soa_rootidx];
-	ozz::math::Float4x4 mat;
-	fetch_float4x4(pose, aos_subidx, mat);
-	return mat;
-}
-
 static inline void
 fix_root_translation(ozz::animation::Skeleton *ske, bind_pose_soa::bind_pose_type &pose){
 	auto rootidx = find_root_index(ske);
@@ -522,9 +508,8 @@ fix_root_translation(ozz::animation::Skeleton *ske, bind_pose_soa::bind_pose_typ
 	const auto aos_subidx = rootidx % 4;
 
 	auto& trans = pose[soa_rootidx];
-	auto newtrans = ozz::math::simd_float4::Load1(0.0f);
+	const auto newtrans = ozz::math::simd_float4::zero();
 	trans.translation.x = ozz::math::SetI(trans.translation.x, newtrans, 0);
-	trans.translation.y = ozz::math::SetI(trans.translation.y, newtrans, 0);
 	trans.translation.z = ozz::math::SetI(trans.translation.z, newtrans, 0);
 }
 
@@ -533,12 +518,8 @@ transform_bindpose(ozz::animation::Skeleton *ske,
 	bind_pose_soa::bind_pose_type &pose,
 	bind_pose::bind_pose_type& resultpose,
 	bool fixroot){
-	ozz::math::Float4x4 rootmat;
-	if (fixroot){
+	if (fixroot)
 		fix_root_translation(ske, pose);
-	} else {
-		rootmat = ozz::math::Float4x4::identity();
-	}
 	
 	return do_ltm(ske, pose, resultpose);
 }
