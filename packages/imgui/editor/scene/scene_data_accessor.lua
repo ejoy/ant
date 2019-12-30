@@ -18,6 +18,7 @@ local inputmgr  = import_package "ant.inputmgr"
 local gui_mgr   = require "gui_mgr"
 local fs        = require "filesystem"
 local serialize = import_package 'ant.serialize'
+local rxbus = import_package "ant.rxlua".RxBus
 
 local function string_list(self,data_tbl,cfg)
     local has_change = false
@@ -196,7 +197,11 @@ function scene_data_accessor._start_scene(config,serialize_str)
         end
     end
     scene_data_accessor.input_queue = inputmgr.queue()
-    local world = scene.start_new_world(scene_data_accessor.input_queue, 600, 400, packages, systems,{hub=hub})
+    local world = scene.start_new_world(scene_data_accessor.input_queue, 
+        600, 400, 
+        packages, 
+        systems,
+        {hub=hub,rxbus = rxbus})
     local world_update = scene.loop(world, {
             update = {"timesystem", "message_system"}
         })

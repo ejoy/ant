@@ -6,10 +6,11 @@ local scene         = import_package "ant.scene".util
 local localfs = require "filesystem.local"
 local inputmgr      = import_package "ant.inputmgr"
 local gui_mgr = import_package "ant.imgui".gui_mgr
+local rxbus = import_package "ant.rxlua".RxBus
 local scene_control = {}
 local fs = require "filesystem"
 
-function scene_control.test_new_world(raw_path)
+function scene_control.run_test_package(raw_path)
     log("raw_path",raw_path,type(raw_path))
     local path = localfs.path(tostring(raw_path))
     log.info_a(path)
@@ -20,12 +21,14 @@ function scene_control.test_new_world(raw_path)
     local packages = {
         -- "ant.EditorLauncher",
         -- "ant.objcontroller",
+        pkgname,
         "ant.imgui",
         "ant.testimgui",
         "ant.hierarchy.offline",
     }
     local systems = {
         --"pickup_material_system", 
+        "init_loader", -- test only
         "pickup_system",
         -- "obj_transform_system",
         "build_hierarchy_system",
@@ -45,7 +48,11 @@ function scene_control.test_new_world(raw_path)
     packages[#packages+1] = pkgname
     table.move(pkgsystems, 1, #pkgsystems, #systems+1, systems)
     scene_control.input_queue = inputmgr.queue()
-    local world = scene.start_new_world(scene_control.input_queue, 600, 400, packages, systems,{hub=hub})
+    local world = scene.start_new_world(scene_control.input_queue, 
+        600, 400, 
+        packages, 
+        systems,
+        {hub=hub,rxbus = rxbus})
     local world_update = scene.loop(world, {
             update = {"timesystem", "message_system"}
         })

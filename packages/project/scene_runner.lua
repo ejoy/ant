@@ -1,5 +1,6 @@
 local inputmgr = import_package "ant.inputmgr"
 local lfs       = require "filesystem.local"
+local rxbus = import_package "ant.rxlua".RxBus
 
 local scene_runner = {
     width = 1280,
@@ -70,7 +71,11 @@ function scene_runner.start(scene_path,width, height)
     local iq = inputmgr.queue()
     local su = import_package "ant.scene".util
 
-    local world = su.start_new_world(iq, width, height, packages, systems,{callback = script_obj})
+    local world = su.start_new_world(
+            iq, width, height, 
+            packages, systems,
+            {callback = script_obj,rxbus = rxbus},
+        )
     world_update = su.loop(world, {
         update = {"timesystem", "message_system"}
     })

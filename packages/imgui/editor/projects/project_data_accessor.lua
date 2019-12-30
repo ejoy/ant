@@ -84,7 +84,7 @@ function project_data_accessor.add_inner_package(pdata,project_detail,pkg_relati
     local pkg_data = pm.get_registered(_path)
     if pkg_data then
         if inner_packages[pkg_data.config.name] then
-            log.warning("Can't add inner_packages,package with same name exist:"..pkg_data.config.name)
+            log.warning("Can't add inner_packages, warningpackage with same name exist:"..pkg_data.config.name)
             return false
         end
         inner_packages[pkg_data.config.name] = _path
