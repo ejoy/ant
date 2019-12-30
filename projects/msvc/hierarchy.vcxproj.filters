@@ -30,6 +30,9 @@
     <ClCompile Include="..\..\3rd\ozz-animation\samples\framework\mesh.cc">
       <Filter>ozz_mesh</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\hierarchy\ozzmesh.cpp">
+      <Filter>ozz_mesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\hierarchy\hierarchy.h">

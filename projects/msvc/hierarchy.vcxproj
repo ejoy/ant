@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\clibs\hierarchy\animation.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\hierarchy.cpp" />
     <ClCompile Include="..\..\clibs\hierarchy\ik.cpp" />
+    <ClCompile Include="..\..\clibs\hierarchy\ozzmesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rd\ozz-animation\samples\framework\mesh.h" />
