@@ -6,6 +6,7 @@ local windows = imgui.windows
 local util = imgui.util
 local cursor = imgui.cursor
 local enum = imgui.enum
+local mult_widget = import_package "ant.imgui".controls.mult_widget
 local bgfx = require "bgfx"
 
 local gui_input = import_package "ant.imgui".gui_input
@@ -88,6 +89,10 @@ function TestGuiBase:on_update()
             self:tab_scroll_litem()
             windows.EndTabItem()
         end
+        if windows.BeginTabItem ("Tab_Temp",tab_noclosed) then
+            self:tab_temp()
+            windows.EndTabItem()
+        end
         windows.EndTabBar()
     end
     windows.PopStyleVar()
@@ -140,7 +145,7 @@ function TestGuiBase:create_textbox()
     local editbox = {
         text = "nil",
         flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
-        count = 0,
+        count = 0, 
     }
     function editbox:filter(c)
         if c == 65 then
@@ -149,7 +154,7 @@ function TestGuiBase:create_textbox()
         end
         return c
     end
-    local t = 0
+    local t = 0 
     function editbox:up()
         t = t - 1
         return tostring(t)
@@ -159,7 +164,7 @@ function TestGuiBase:create_textbox()
         t = t + 1
         return tostring(t)
     end
-
+ 
     function editbox:tab(pos)
         t = t + 1
         return tostring(t)
@@ -167,7 +172,34 @@ function TestGuiBase:create_textbox()
     return editbox
 end
 local editbox_dynamic = nil
+local editbox_editing = false
+local editbox_testfloat = {
+    test = "--"
+}
+local mult_float = {0.1,0.2,0.3,0.4}
+local mult_int = {1,2,3,4}
+local mult_vector = {{0.1,0.2,0.3,0.4},{0.1,0.2,0.3,0.5},{0.2,0.3,0.3,0.5}}
+local mult_boolean = {false,true,false}
 function TestGuiBase:tab1_update()
+    do --test mult_widget
+        if widget.CollapsingHeader("Test Mult Number Drag",flags.TreeNode.DefaultOpen) then
+            widget.DragFloat("Mult Float##test_show",mult_float)
+
+            mult_widget.DragFloat("DragMultFloat##test_mult",mult_float,{})
+            widget.DragInt("Mult Int##test_show",mult_int)
+            mult_widget.DragInt("DragMultInt##test_mult",mult_int,{})
+            for i = 1,#mult_vector do
+                widget.DragFloat("Vector"..i.."##test_show",mult_vector[i])
+            end
+            mult_widget.DragVector("DragMultVector##test_mult",mult_vector,{})
+            for i = 1,#mult_boolean do
+                local _
+                _,mult_boolean[i] = widget.Checkbox("bool"..i.."##test_show",mult_boolean[i])
+                cursor.SameLine()
+            end
+            mult_widget.Checkbox("Mult Boolean##test_show",mult_boolean,{})
+        end
+    end
     windows.PushStyleVar(enum.StyleVar.FrameBorderSize,2.0)
     windows.PushStyleVar(enum.StyleVar.WindowBorderSize,2.0)
 
@@ -176,8 +208,6 @@ function TestGuiBase:tab1_update()
     if util.IsItemHovered() and gui_input.get_dropfiles() then
         log.info_a("testgui",gui_input.get_dropfiles() )
     end
-
-
 
     local dds_path = "/pkg/ant.resources/depiction/PVPScene/siegeweapon_d.texture"
     widget.Image(dds_path,200,200,{border_col={1.0,0.0,1.0,1.0},tint_col={0.0,1.0,1.0,0.5}})
@@ -215,18 +245,31 @@ function TestGuiBase:tab1_update()
     if (not editbox_dynamic) or (editbox_dynamic.count > 2000) then
         editbox_dynamic = self:create_textbox()
     end
-    editbox_dynamic.count = editbox_dynamic.count + 1
-    if widget.InputText("EditDynamic", editbox_dynamic) then
+    -- editbox_dynamic.count = editbox_dynamic.count + 1
+    -- if widget.InputText("EditDynamic", editbox_dynamic) then
+    --     log(editbox_dynamic.text)
+    -- end
+    -- widget.InputFloat("InputFloat", editfloat)
+    local is_editing = widget.InputFloat("InputFloat", editfloat)
+    log("editor:",is_editing)
+    if is_editing then
+        log(editfloat[1])
+    end
+    log("float:",util.IsItemFocused(),util.IsItemActivated(),util.IsItemEdited(),util.IsItemDeactivated())
+    if widget.InputText("editbox_dynamic", editbox_dynamic) then
         log(editbox_dynamic.text)
     end
+    -- log("text",util.IsItemFocused(),util.IsItemActivated(),util.IsItemEdited(),util.IsItemDeactivated())
 
+
+    
 
     cursor.SetNextItemWidth(-1)
     widget.LabelText("##asd","asdad\nasdasds")
     widget.BulletText("asdad\nasdasds")
 
-    widget.InputFloat("InputFloat", editfloat)
     widget.Text("Hello World", 1,0,0)
+    
     if widget.BeginCombo( "Combo", combobox ) then
         widget.Selectable("A", combobox)
         widget.Selectable("B", combobox)
@@ -519,6 +562,12 @@ function TestGuiBase:tab_scroll_litem()
     windows.BeginChild("Child",0,0,false,flag)
     scroll_list:update()
     windows.EndChild()
+end
+
+function TestGuiBase:tab_temp()
+    widget.DragFloat("Vector1##test_show",mult_vector[1])
+    mult_widget.DragVector("DragMultVector##test_mult",mult_vector,{})
+    -- widget.LabelText("LabelOP1231231231231231231231231231231231231231231232","Value1231241231312312312312313123123123123123")
 end
 
 return TestGuiBase
