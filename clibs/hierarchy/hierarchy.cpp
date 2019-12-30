@@ -269,7 +269,7 @@ lbuilddata_size(lua_State *L){
 	buffersize += builddata->skeleton->joint_parents().size() * sizeof(uint16_t);
 
 	auto names = builddata->skeleton->joint_names();
-	for (int ii = 0; ii < names.count(); ++ii){
+	for (size_t ii = 0; ii < names.count(); ++ii){
 		buffersize += strlen(names[ii]);
 	}
 
@@ -675,9 +675,7 @@ rawskeleton_size(const ozz::animation::offline::RawSkeleton::Joint::Children &jo
 static int
 lhnode_size(lua_State *L){
 	luaL_checkudata(L, 1, "HIERARCHY_NODE");
-	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
-	auto tree = get_tree(L, 2);
-	
+	auto tree = get_tree(L, 2);	
 	lua_pushinteger(L, rawskeleton_size(tree->skl->roots));
 	return 1;
 }

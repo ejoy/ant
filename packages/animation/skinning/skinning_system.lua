@@ -334,7 +334,7 @@ function skinning_sys:update()
 			local handle = job.hwbuffer_handle
 			local updatedata = job.updatedata
 			for _, part in ipairs(job.parts) do
-				animodule.mesh_skinning(aniresult, skinning_matrices, part.inputdesc, part.outputdesc, part.num, part.influences_count)
+				animodule.mesh_skinning(skinning_matrices, part.inputdesc, part.outputdesc, part.num, part.influences_count)
 			end
 
 			bgfx.update(handle, 0, {"!", updatedata:pointer(), job.buffersize})

@@ -57,71 +57,6 @@ struct joint_remap{
 	ozz::Vector<uint16_t>::Std joints;
 };
 
-template<typename T>
-static ozz::Range<T>
-create_range(size_t count) {
-	auto beg = ozz::memory::default_allocator()->Allocate(sizeof(T) * count, OZZ_ALIGN_OF(T));
-	return ozz::Range<T>(reinterpret_cast<T*>(beg), count);
-}
-
-static size_t 
-dynamic_vertex_elem_stride(ozzmesh *om) {
-	auto mesh = om->mesh;
-	if (mesh->parts.empty()) {
-		return 0;
-	}
-
-	const auto &part = mesh->parts.front();
-	assert(!part.positions.empty());
-
-	size_t num_elem = ozz::sample::Mesh::Part::kPositionsCpnts;
-	if (!part.normals.empty())
-		num_elem += ozz::sample::Mesh::Part::kNormalsCpnts;
-
-	if (!part.tangents.empty())
-		num_elem += ozz::sample::Mesh::Part::kTangentsCpnts;
-
-	return sizeof(float) * num_elem;		
-}
-
-static size_t 
-static_vertex_elem_stride(ozzmesh *om) {
-	auto mesh = om->mesh;
-	if (mesh->parts.empty())
-		return 0;
-
-	const auto &part = mesh->parts.front();
-	assert(!part.positions.empty());
-
-	size_t stride = 0;
-	if (!part.colors.empty())
-		stride += ozz::sample::Mesh::Part::kColorsCpnts * sizeof(uint8_t);
-
-	if (!part.uvs.empty())
-		stride += ozz::sample::Mesh::Part::kUVsCpnts * sizeof(float);
-
-	return stride;
-}
-
-// static int
-// lcreate_inverse_bind_poses(lua_State *L){
-// 	luaL_checktype(L, 1, LUA_TUSERDATA);
-// 	auto ske = get_ske(L, 1);
-
-// 	luaL_checktype(L, 2, LUA_TSTRING);
-// 	size_t bpdata_size;
-// 	auto bindpose_data = lua_tolstring(L, 2, &bpdata_size);
-
-// 	auto bindposes = ske->joint_bind_poses();
-// 	if (bindposes.count() * sizeof(float) * 16 != bpdata_size){
-// 		return luaL_error(L, "bind pose data size is not correct");
-// 	}
-
-// 	bind_pose *bp = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
-
-// 	return 1;
-// }
-
 static std::vector<std::string>
 split_string(const std::string &ss, char delim) {
 	std::istringstream iss(ss);
@@ -132,34 +67,6 @@ split_string(const std::string &ss, char delim) {
 	}
 
 	return vv;
-}
-
-static uint32_t
-component_size(const std::string &e){
-	switch(e.back()){
-		case 'i':return 2;
-		case 'u':return 1;
-		case 'f':return 4;
-		case 'h':return 2;
-		case 'U':
-		default:
-		return 0;
-	}
-}
-
-static uint32_t
-elem_stride(const std::string &e){
-	const uint32_t elemcount =  e[1] - '0';
-	return elemcount * component_size(e);
-}
-
-static uint32_t
-calc_layout_stride(const std::vector<std::string> &layout){
-	uint32_t stride = 0;
-	for (auto e : layout){
-		stride += elem_stride(e);
-	}
-	return stride;
 }
 
 template<typename DataType>
@@ -279,23 +186,20 @@ lbuild_skinning_matrices(lua_State *L){
 static int
 lmesh_skinning(lua_State *L){
 	luaL_checkudata(L, 1, "OZZ_BIND_POSE");
-	bind_pose *ani = (bind_pose*)lua_touserdata(L, 1);
-
-	luaL_checkudata(L, 2, "OZZ_BIND_POSE");
 	bind_pose *skinning_matrices = (bind_pose*)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 3, LUA_TTABLE);
+	luaL_checktype(L, 2, LUA_TTABLE);
 	in_vertex_data vd = {0};
-	read_in_vertex_data(L, 3, vd);
+	read_in_vertex_data(L, 2, vd);
 
-	luaL_checktype(L, 4, LUA_TTABLE);
+	luaL_checktype(L, 3, LUA_TTABLE);
 	out_vertex_data ovd = {0};
-	read_vertex_data(L, 4, ovd);
+	read_vertex_data(L, 3, ovd);
 
-	luaL_checktype(L, 5, LUA_TNUMBER);
-	const uint32_t num_vertices = (uint32_t)lua_tointeger(L, 5);
+	luaL_checktype(L, 4, LUA_TNUMBER);
+	const uint32_t num_vertices = (uint32_t)lua_tointeger(L, 4);
 
-	const uint32_t influences_count = (uint32_t)luaL_optinteger(L, 6, 4);
+	const uint32_t influences_count = (uint32_t)luaL_optinteger(L, 5, 4);
 
 	ozz::geometry::SkinningJob skinning_job;
 	skinning_job.vertex_count = num_vertices;
@@ -505,7 +409,6 @@ static inline void
 fix_root_translation(ozz::animation::Skeleton *ske, bind_pose_soa::bind_pose_type &pose){
 	auto rootidx = find_root_index(ske);
 	const auto soa_rootidx = rootidx / 4;
-	const auto aos_subidx = rootidx % 4;
 
 	auto& trans = pose[soa_rootidx];
 	const auto newtrans = ozz::math::simd_float4::zero();
@@ -782,7 +685,7 @@ lbp_result_transform(lua_State *L){
 	auto mat = (const ozz::math::Float4x4*)lua_touserdata(L, 2);
 	auto except_root = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
 
-	for (int ii = (except_root ? 1 : 0); ii < result->pose.size(); ++ii){
+	for (size_t ii = (except_root ? 1 : 0); ii < result->pose.size(); ++ii){
 		result->pose[ii] = *mat * result->pose[ii];
 	}
 	
@@ -977,7 +880,7 @@ get_ozzmesh(lua_State *L, int index = 1){
 static inline int
 get_partindex(lua_State *L, ozzmesh *om, int index=2){
 	luaL_checkinteger(L, index);
-	const int partidx = (int)lua_tointeger(L, index) - 1;
+	const size_t partidx = (size_t)lua_tointeger(L, index) - 1;
 
 	if (partidx < 0 || om->mesh->parts.size() <= partidx){
 		luaL_error(L, "invalid part index:%d, max parts:%d", partidx + 1, om->mesh->parts.size());
@@ -1241,6 +1144,7 @@ static int
 lbounding_ozzmesh(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	auto om = (ozzmesh*)lua_touserdata(L, 1);
+	om;
 
 	auto push_vec = [L](auto name, auto num, auto obj) {
 		lua_createtable(L, num, 0);
@@ -1250,6 +1154,8 @@ lbounding_ozzmesh(lua_State *L) {
 		}
 		lua_setfield(L, -2, name);
 	};
+
+	push_vec;
 	
 	lua_createtable(L, 0, 3);
 	assert(false && "need calculate bounding");
