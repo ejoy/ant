@@ -22,7 +22,7 @@ function widget.Button(label,w,h) end
 function widget.SmallButton() end
 function widget.InvisibleButton() end
 function widget.ArrowButton() end
---return change,new_value
+--@return change,new_value
 function widget.Checkbox(field,value) end 
 function widget.RadioButton(name,selected) end
 function widget.ProgressBar() end
@@ -38,8 +38,10 @@ function widget.ColorEdit() end
 function widget.ColorPicker() end
 function widget.ColorButton() end
 function widget.InputText() end
-function widget.InputFloat() end
-function widget.InputInt() end
+--@return value change
+function widget.InputFloat(title,{flag = flags.InputText,val1,...}) end
+--@return value change
+function widget.InputInt(title,{flag = flags.InputText, val1,...}) end
 function widget.Text() end
 function widget.TextDisabled() end
 function widget.TextWrapped() end
@@ -119,7 +121,10 @@ function cursor.SetColumnOffset(int index,float offset) end
 function cursor.SetNextItemWidth() end
 function cursor.SetMouseCursor( cursor = enum.MouseCursor.Arrow ) end
 
-function windows.Begin() end
+--@return 
+--  opening:false if window is collapsed;
+--  closebtn_change:return false if clicked;
+function windows.Begin(title_id,flag) end
 function windows.End() end
 function windows.BeginChild(strid,w,h,has_border,flags) end --return change
 function windows.EndChild() end
@@ -197,8 +202,15 @@ function util.SaveIniSettings(clear_want_save_flag) end
 function util.CaptureKeyboardFromApp() end
 function util.CaptureMouseFromApp() end
 function util.IsMouseDoubleClicked() end
-function util.PushID()
+--@param id:integer or string
+function util.PushID(id)
 function util.PopID()
+--@param label
+--@param *hide_text_after_double_hash:default false;
+--@param *wrap_width:default -1.0f
+--@return x,y
+function util.CalcTextSize(label,hide_text_after_double_hash,wrap_width)
+function util.CalcItemWidth()
 
 function flags.ColorEdit.NoAlpha() end
 function flags.ColorEdit.NoPicker() end
