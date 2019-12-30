@@ -1,5 +1,5 @@
 
--- local log = print
+local log_error = (log and log.error) or print
 
 --================simple stack start=================
 local stack_top = 0
@@ -92,7 +92,7 @@ local function pop_until_idx(idx)
     while top ~= idx do
         --todo call top and alter
         local fname = EndFunNameTbl[top]
-        log.error(string.format("Forget to call %s,call it automaticly",fname))
+        log_error(string.format("Forget to call %s,call it automaticly",fname))
         local temp_ef =  PureEndFunTbl[top]
         temp_ef()
         if stack_top <= 0 then
@@ -108,7 +108,7 @@ local check_and_pop_style = function()
         if num > 0 then
             local ef_name = EndFunNameTbl[style_id]
             local temp_ef =  PureEndFunTbl[style_id]
-            log.error(string.format("Forget to %s,call it automaticly,stack size:%d",ef_name,num))
+            log_error(string.format("Forget to %s,call it automaticly,stack size:%d",ef_name,num))
             temp_ef(num)
             cur_style_dict[style_id] = 0
         end
@@ -120,7 +120,7 @@ end
 local function wrap_begin_frame(bf,idx)
     return function(...)
         if stack_top ~= 0 then
-            log.error("call begin_frame twice before end_frame! stack_top:"..stack_top)
+            log_error("call begin_frame twice before end_frame! stack_top:"..stack_top)
             cur_style_dict_index = 1
             check_and_pop_style()
             pop_until_idx(-1) -- pop to empty
@@ -144,7 +144,7 @@ local function wrap_end_frame(ef,idx)
                 return ef(...)
             else
                 --ef will be ignore
-                log.error("call end_frame without begin_frame,end_frame ignored")
+                log_error("call end_frame without begin_frame,end_frame ignored")
             end
         end
     end
@@ -167,7 +167,7 @@ local function wrap_pop_style(ef,idx)
         -- log("pop",401,cur_style_dict[401],402,cur_style_dict[402])
         if cur_style_dict[idx] < 0 then
             local name = EndFunNameTbl[idx]
-            log.error("call style function mismatch stack size<0:",name)
+            log_error("call style function mismatch stack size<0:",name)
         end
         return ef(num)
     end
@@ -231,7 +231,7 @@ local wrap_end = function(ef,idx,is_style_region)
             else
                 local fname = EndFunNameTbl[idx]
                 --ef will be ignore
-                log.error(string.format("call %s without begin_xxx pairs,%s ignored",fname,fname))
+                log_error(string.format("call %s without begin_xxx pairs,%s ignored",fname,fname))
             end
         end
     end
