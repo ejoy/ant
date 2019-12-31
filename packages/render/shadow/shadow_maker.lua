@@ -55,6 +55,7 @@ local scp = ecs.policy "shadow_cast"
 scp.require_component "can_cast"
 
 local maker_camera = ecs.system "shadowmaker_camera"
+maker_camera.step "shadow_camera"
 maker_camera.depend "primitive_filter_system"
 maker_camera.dependby "filter_properties"
 local function get_directional_light_dir_T()
@@ -179,6 +180,7 @@ function maker_camera:update()
 	end
 end
 local sm = ecs.system "shadow_maker"
+sm.step "make_shadow"
 sm.depend "primitive_filter_system"
 sm.depend "shadowmaker_camera"
 sm.dependby "render_system"

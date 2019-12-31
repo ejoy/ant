@@ -106,6 +106,8 @@ end
 
 local rendersys = ecs.system "render_system"
 
+rendersys.step "render_commit"
+
 rendersys.singleton "render_properties"
 
 rendersys.depend "primitive_filter_system"

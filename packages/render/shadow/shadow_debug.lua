@@ -18,6 +18,8 @@ local mathbaselib= require "math3d.baselib"
 
 ----------------------------------------------------------------------------------------------------------
 local debug_sm = ecs.system "debug_shadow_maker"
+debug_sm.step "debug_shadow"
+
 debug_sm.depend "shadowmaker_camera"
 ecs.tag "shadow_quad"
 

@@ -10,6 +10,7 @@ local setting   = require "setting"
 local fs        = require "filesystem"
 
 local bloom_sys = ecs.system "bloom_system"
+bloom_sys.step "bloom"
 bloom_sys.singleton "postprocess"
 bloom_sys.depend    "render_system"
 bloom_sys.dependby  "postprocess_system"

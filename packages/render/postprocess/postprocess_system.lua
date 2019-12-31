@@ -44,14 +44,16 @@ ecs.component "technique_order"
 
 ecs.component_alias("copy_pass", "pass")
 
-local pp = ecs.singleton "postprocess"
-function pp.init()
+local ppv = ecs.singleton "postprocess"
+function ppv.init()
     return {
         techniques = {}
     }
 end
 
 local pp_sys = ecs.system "postprocess_system"
+pp_sys.step "combine_postprocess"
+
 pp_sys.singleton "render_properties"
 pp_sys.singleton "postprocess"
 

@@ -51,6 +51,7 @@ function char_sys:update()
 
         local hit, result = physicworld:raycast(center, at)
         if hit then
+            world:pub {"ray_cast_hitted", char_eid, result}
             ms(char.transform.t, result.hit_pt_in_WS, "=");
         end
     end

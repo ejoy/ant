@@ -27,6 +27,8 @@ local bdp = ecs.policy "bounding_draw"
 bdp.require_component "bounding_drawer"
 
 local rmb = ecs.system "render_mesh_bounding"
+rmb.step "widget"
+
 rmb.dependby "primitive_filter_system"
 rmb.dependby "reset_mesh_buffer"
 
@@ -106,6 +108,8 @@ function phy_bounding:update()
 end
 
 local reset_bounding_buffer = ecs.system "reset_mesh_buffer"
+reset_bounding_buffer.step "end_frame"
+
 reset_bounding_buffer.depend "end_frame"
 
 function reset_bounding_buffer:update()
@@ -115,5 +119,28 @@ function reset_bounding_buffer:update()
 		local group = meshscene.scenes[1][1][1]
 		group.vb.handles[1].updateoffset = 0
 		group.ib.updateoffset = 0
+	end
+end
+
+
+local ray_cast_hitted = world:sub {"ray_cast_hitted"}
+
+local draw_raycast_point = ecs.system "draw_raycast_point"
+draw_raycast_point.step "widget"
+draw_raycast_point.dependby "primitive_filter_system"
+draw_raycast_point.depend "character_system"
+
+function draw_raycast_point:update()
+    local vb, ib = {"fffd", }, {}
+    for hitted in ray_cast_hitted:each() do
+        local result = hitted[3]
+        local pt = result.hit_pt_in_WS
+
+		local len = 0.5
+		local min = {-len, -len, -len,}
+		local max = {len, len, len}
+		min = ms(min, pt, "T")
+		max = ms(max, pt, "T")
+        add_aabb_bounding({min=min, max=max}, vb, ib)
 	end
 end

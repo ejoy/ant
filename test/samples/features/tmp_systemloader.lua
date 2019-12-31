@@ -56,8 +56,10 @@ init_loader.dependby 'skinning_system'
 init_loader.dependby 'viewport_detect_system'
 init_loader.dependby 'state_machine'
 init_loader.dependby 'physic_bounding'
+init_loader.dependby 'draw_raycast_point'
 init_loader.dependby 'camera_controller_2'
-init_loader.dependby 'asset_gc'
+init_loader.dependby 'character_system'
+--init_loader.dependby 'asset_gc'
 
 local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'
@@ -82,7 +84,7 @@ local function ozzmesh_animation_test()
             transform = {
                 s = {1, 1, 1, 0},
                 r = {0, 0, 0, 0},
-                t = {0, 2, 0, 1}
+                t = {0, 0, -3, 1}
             },
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
@@ -188,13 +190,13 @@ local function gltf_animation_test()
         policy = {
             "render",
             "mesh",
-            "animation",
-            "skinning",
+            --"animation",
+            --"skinning",
             "shadow_cast",
             "name",
         },
         data = {
-            transform = mu.srt(nil, nil, {-3, 2, 0, 1}),
+            transform = mu.srt(nil, nil, {-5, 0, 0, 1}),
             rendermesh = {},
             mesh = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
@@ -202,29 +204,32 @@ local function gltf_animation_test()
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
             },
-            skeleton = {
-                ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
-            },
-            skinning = {},
-            animation = {
-                anilist = {
-                    ani1 = {
-                        ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
-                        scale = 1,
-                        looptimes = 0,
-                    },
-                },
-                blendtype = 'blend',
-                pose = {
-                    idle = {
-                        {name="ani1", weight=1},
-                    },
-                },
-                birth_pose = "idle",
-            },
+            -- skeleton = {
+            --     ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
+            -- },
+            -- skinning = {},
+            -- animation = {
+            --     anilist = {
+            --         ani1 = {
+            --             ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
+            --             scale = 1,
+            --             looptimes = 0,
+            --         },
+            --     },
+            --     blendtype = 'blend',
+            --     pose = {
+            --         idle = {
+            --             {name="ani1", weight=1},
+            --         },
+            --     },
+            --     birth_pose = "idle",
+            -- },
             can_render = true,
             can_cast = true,
-            name = "gltf animation test"
+            name = "gltf animation test",
+            character = {
+                movespeed = 1.0,
+            }
         }
     }
 end

@@ -96,7 +96,7 @@ return function(world, import, class)
 
 	register {
 		type = "system",
-		setter = { "depend", "dependby", "singleton" },
+		setter = { "depend", "dependby", "singleton", "step" },
 	}
 
 	register {

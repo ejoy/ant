@@ -32,6 +32,8 @@ function ur.init()
 end
 
 local scene_space = ecs.system "scene_space"
+scene_space.step "scene_update"
+
 scene_space.dependby "primitive_filter_system"
 
 scene_space.singleton "event"

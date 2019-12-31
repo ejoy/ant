@@ -8,6 +8,8 @@ local fs = require "filesystem"
 local setting = require "setting"
 
 local tm = ecs.system "tonemapping"
+tm.step "tonemapping"
+
 tm.singleton "postprocess"
 tm.depend    "render_system"
 tm.depend    "bloom_system"

@@ -17,6 +17,7 @@ local ms = mathpkg.stack
 local mu = mathpkg.util
 
 local filter_properties = ecs.system "filter_properties"
+filter_properties.step "filter_primitive"
 filter_properties.singleton "render_properties"
 
 function filter_properties:update()
@@ -27,6 +28,8 @@ function filter_properties:update()
 end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
+primitive_filter_sys.step "filter_primitive"
+
 primitive_filter_sys.dependby 	"filter_properties"
 primitive_filter_sys.singleton 	"hierarchy_transform_result"
 primitive_filter_sys.singleton 	"event"
