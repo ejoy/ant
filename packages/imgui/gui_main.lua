@@ -11,7 +11,7 @@ local assetpkg  = import_package "ant.asset"
 local assetutil = assetpkg.util
 local assetmgr  = assetpkg.mgr
 local editor    = import_package "ant.editor"
-
+local rxpkg     = import_package "ant.rxlua"
 local task      = editor.task
 local gui_mgr   = require "gui_mgr"
 local gui_input = require "gui_input"
@@ -64,14 +64,15 @@ function gui_main.init(nwh, context, width, height)
     -- bgfx.set_view_rect(1, 200, 200, width-100, height-100)
     -- bgfx.set_view_clear(1, "CD", 0xffff00ff, 1, 0)
     -- bgfx.set_debug "ST"
-    if platform.OS == "Windows" then
-        font.Create { { Font "Arial" ,16, "Default"},{ Font "黑体" ,16, "ChineseFull"} }
-    elseif platform.OS == "macOS" then
-        font.Create { { Font "华文细黑" , 16, "\x20\x00\xFF\xFF\x00"} }
-    else -- iOS
-        font.Create { { Font "Heiti SC" ,    16, "\x20\x00\xFF\xFF\x00"} }
-    end
+    
     if main.init then
+        if platform.OS == "Windows" then
+            font.Create { { Font "Arial" ,16, "Default"},{ Font "黑体" ,16, "ChineseFull"} }
+        elseif platform.OS == "macOS" then
+            font.Create { { Font "华文细黑" , 16, "\x20\x00\xFF\xFF\x00"} }
+        else -- iOS
+            font.Create { { Font "Heiti SC" ,    16, "\x20\x00\xFF\xFF\x00"} }
+        end
         main.init(nwh, context, width, height)
     end
     gui_mgr.after_init()
@@ -154,6 +155,7 @@ function _update(delta)
     gui_mgr.update(delta)
 
     task.update()
+    rxpkg.update(delta)
 	
     bgfx.touch(uieditor_viewid)
     rhwi.frame()

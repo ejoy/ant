@@ -5,7 +5,7 @@ local windows   = imgui.windows
 local util      = imgui.util
 local cursor    = imgui.cursor
 local enum      = imgui.enum
-local IO      = imgui.IO
+local IO        = imgui.IO
 local hub       = import_package "ant.editor".hub
 local ComponentSetting = require "editor.component_setting"
 local factory = require "widget.gui_basecomponent_widget"
@@ -13,7 +13,30 @@ local factory = require "widget.gui_basecomponent_widget"
 local class     = require "common.class"
 local GuiEntityWidget = class("GuiEntityWidget")
 
+local function table_list_get(table_list,key)
+    local value_list = {}
+    for i,tbl in ipairs(table_list) do
+        local value = tbl[key]
+        if value then
+            table.insert(value_list,value)
+        else
+            return false
+        end
+    end
+    return value_list
+end
 
+local function table_list_set_single(table_list,key,value)
+    for i,tbl in ipairs(table_list) do
+        tbl[key] = value
+    end
+end
+local function table_list_set_list(table_list,key,value_list)
+    assert((#table_list)<=(#value_list))
+    for i,tbl in ipairs(table_list) do
+        tbl[key] = value_list[i]
+    end
+end
 
 local is_direct_type
 
@@ -23,6 +46,7 @@ function GuiEntityWidget:_init()
     self.schema = nil
     self.com_setting = nil
     self.path_tbl_cache = {}
+    self.state = "single" -- or "mult"
 end
 
 function GuiEntityWidget:set_schema(schema)
@@ -37,14 +61,19 @@ function GuiEntityWidget:set_com_setting(com_setting)
     end
 end
 
-function GuiEntityWidget:set_change_cb(cb,obj)
+function GuiEntityWidget:set_change_cb(cb,mult_cb,obj)
     if obj then
         local obj_cb = function(...)
             cb(obj,...)
         end
         self.change_cb = obj_cb
+        local mult_obj_cb = function(...)
+            mult_cb(obj,...)
+        end
+        self.mult_change_cb = mult_obj_cb
     else
         self.change_cb = cb
+        self.mult_change_cb = mult_cb
     end
 end
 
@@ -143,11 +172,16 @@ function GuiEntityWidget:on_base_component_change(eid,com_id,name,value)
     end
 end
 
+function GuiEntityWidget:on_mult_component_change(eids,com_ids,name,value,is_list)
+    if self.mult_change_cb then
+        return self.mult_change_cb(eids,com_ids,name,value,is_list)
+    end
+end
+
 function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     local schema = self.schema
     -- local com_schema = schema[com_name]
     -- local typ = com_schema.type
-    local base_widget = factory[com_name]
     local value = component_data
     local ui_cache = parent_tbl.__ui_cache or {}
     parent_tbl.__ui_cache = ui_cache
@@ -156,19 +190,41 @@ function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_dat
     if cfg.DisplayName and cfg.DisplayName ~= "" then
         display_name = cfg.DisplayName
     end
+    local change,new_value,editing
+    if self.state == "single" then
+        local base_widget = factory.single[com_name]
+        change,new_value,editing =  base_widget(ui_cache,display_name,value,cfg)
+    else
+        local base_widget = factory.mult[com_name]
+        change,new_value,editing =  base_widget(ui_cache,display_name,value,cfg)
+    end
 
-    local change,new_value,editing =  base_widget(ui_cache,display_name,value,cfg)
     self.is_editing = self.is_editing or editing
         --todo something
     if change then
         log.trace_a("base_component",display_name,new_value)
-        parent_tbl[alias_name] = new_value
-        local eid = parent_tbl.__id
-        if not eid then
-            --entity has nor __id,but has __entity_id
-            eid = parent_tbl.__entity_id
+        if self.state == "single" then
+            parent_tbl[alias_name] = new_value
+            local eid = parent_tbl.__id
+            if not eid then
+                --entity has nor __id,but has __entity_id
+                eid = parent_tbl.__entity_id
+            end
+            self:on_base_component_change(eid,parent_tbl.__id,alias_name,new_value)
+        else --mult
+            local com_ids = table_list_get(parent_tbl,"__id")
+            local eids
+            if not com_ids then
+                eids = table_list_get(parent_tbl,"__entity_id")
+            end
+            local is_list = factory.WillReturnList[com_name]
+            if is_list then
+                table_list_set_list(parent_tbl,alias_name,new_value)
+            else
+                table_list_set_single(parent_tbl,alias_name,new_value)
+            end
+            self:on_mult_component_change(com_ids or eids,com_ids,alias_name,new_value,is_list)
         end
-        self:on_base_component_change(eid,parent_tbl.__id,alias_name,new_value)
 
         --todo
         -- entity_property_builder.notify_modify(eid,parent_tbl.__id,alias_name,value)
@@ -205,15 +261,17 @@ function GuiEntityWidget:render_array_component(parent_tbl,com_name,component_da
     if cfg.ArrayAsVector then
         self:render_base_component(parent_tbl,"vector",component_data,alias_name,path_tbl)
     else
-        local show,popfunc = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Array)
-        if show then
-            local child_path_tbl = self:create_child_path(path_tbl,schema[typ])
-            
-            local len = #component_data
-            for index,data in ipairs(component_data) do
-                self:render_component(component_data,typ,data,index,child_path_tbl)
+        if self.state == "mult" then
+            widget.Text("Array cannot be mult-edited.")
+        else
+            local show,popfunc = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Array)
+            if show then
+                local child_path_tbl = self:create_child_path(path_tbl,schema[typ])
+                for index,data in ipairs(component_data) do
+                    self:render_component(component_data,typ,data,index,child_path_tbl)
+                end
+                popfunc()
             end
-            popfunc()
         end
     end
     return true
@@ -224,16 +282,22 @@ function GuiEntityWidget:render_map_component(parent_tbl,com_name,component_data
     local com_schema = schema[com_name]
     -- local map_com_type = com_schema.type
     -- local map = com_schema.map
-    local show,pop_func = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Map)
-    if show then
-        for child_name,data in pairs(component_data) do
-            local child_path_tbl = self:create_child_path(path_tbl,com_schema)
-            self:render_component(component_data,com_name,data,child_name,child_path_tbl)
+    if self.state == "mult" then
+        widget.Text("Map cannot be mult-edited.")
+    else
+        local show,pop_func = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Map)
+        if show then
+            for child_name,data in pairs(component_data) do
+                local child_path_tbl = self:create_child_path(path_tbl,com_schema)
+                self:render_component(component_data,com_name,data,child_name,child_path_tbl)
+            end
+            pop_func()
         end
-        pop_func()
     end
     return true
 end
+
+
 
 function GuiEntityWidget:render_com_component( parent_tbl,com_name,component_data,alias_name,path_tbl)
     local schema = self.schema
@@ -242,8 +306,13 @@ function GuiEntityWidget:render_com_component( parent_tbl,com_name,component_dat
         local com_schema = schema[com_name]
         local count = 0
         for _,sub_schema in ipairs(com_schema) do
-            local sub_data = component_data[sub_schema.name]
-            if component_data[sub_schema.name] then
+            local sub_data = nil
+            if self.state == "mult" then
+                sub_data = table_list_get(component_data,sub_schema.name)
+            else
+                sub_data = component_data[sub_schema.name]
+            end
+            if sub_data then
                 local child_ctrl = nil
                 local child_path_tbl = self:create_child_path(path_tbl,sub_schema)
                 if not sub_schema.type then
@@ -273,16 +342,20 @@ function GuiEntityWidget:render_multiple_component(parent_tbl,com_name,component
     if typ == nil or typ == "primtype" then
         typ = com_name
     end
-    local show_main,popfunc_main = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Multiple)
-    if show_main then
-        local len = #component_data
-        for index,data in ipairs(component_data) do
-            self:render_component(component_data,typ,data,index,path_tbl,true)
-            if index ~= #component_data then
-                cursor.Separator()
+    if self.state == "mult" then
+        widget.Text("Map cannot be mult-edited.")
+    else
+        local show_main,popfunc_main = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Multiple)
+        if show_main then
+            local len = #component_data
+            for index,data in ipairs(component_data) do
+                self:render_component(component_data,typ,data,index,path_tbl,true)
+                if index ~= #component_data then
+                    cursor.Separator()
+                end
             end
+            popfunc_main()
         end
-        popfunc_main()
     end
     return true
 end
@@ -309,7 +382,7 @@ function GuiEntityWidget:render_component(parent_tbl,com_name,component_data,ali
 end
 
 function is_direct_type(type)
-    return factory[type]
+    return factory.single[type]
 end
 
 function GuiEntityWidget:_refresh_sorted_entity(entity)
@@ -321,25 +394,120 @@ function GuiEntityWidget:_refresh_sorted_entity(entity)
             table.insert(sorted_entity,{com_name=com_name,data = entity[com_name]})
         end
     end
-    self._sorted_entity = sorted_entity
+    self._sorted_coms = sorted_entity
     self._last_entity = entity
 end
 
-function GuiEntityWidget:update(eid,entity,base_component_cache)
+function GuiEntityWidget:_refresh_sorted_entity_mult(eids,entities,entitys)
+    assert(self.com_setting)
+    local sort_cfg = self.com_setting:get_sort_cfg()
+    local entity_list = {}
+    for i,eid in ipairs(eids) do
+        table.insert(entity_list,entities[eid])
+    end
+    local sorted_coms_mult = {}
+    for i,com_name in ipairs(sort_cfg) do
+        local all_has = true
+        for i,entity in ipairs(entity_list) do
+            if not entity[com_name] then
+                all_has = false
+                break
+            end
+        end
+        if all_has then
+            local datas = {}
+            for i,entity in ipairs(entity_list) do
+                table.insert(datas,entity[com_name])
+            end
+            table.insert(sorted_coms_mult,{com_name=com_name,datas = datas})
+        end
+    end
+
+    self._entity_list = entity_list
+    self._sorted_coms_mult = sorted_coms_mult
+    self._last_eids = eids
+end
+
+function GuiEntityWidget:update(eids,entities,base_component_cache)
+    if #eids == 1 then
+        if self.state ~= "single" then
+            self:clear_mult_temp()
+            self.state = "single"
+        end
+        widget.Text(self.state)
+        self:update_single(eids,entities,base_component_cache)
+    else
+         if self.state ~= "mult" then
+            self:clear_single_temp()
+            self.state = "mult"
+        end
+        widget.Text(self.state)
+        assert(#eids > 1,"GuiEntityWidget:update eids is empty")
+        self:update_mult(eids,entities,base_component_cache)
+    end
+end
+
+function GuiEntityWidget:clear_single_temp()
+    self._sorted_coms = nil --{{com1_name,com1_data1},{com2_name,com2_data}}
+    self._last_entity = nil
+end
+
+function GuiEntityWidget:clear_mult_temp()
+    self._entity_list = nil -- {entity1,entity2,...}
+    self._sorted_coms_mult = nil --{{com1_name,{com1_data1,com1_data2}},{com2_name,{com2_data1,com2_data2}}}
+    self._last_eids = nil --eids
+end 
+
+function GuiEntityWidget:update_single(eids,entities,base_component_cache)
     local schema = self.schema
-    entity.__entity_id = eid
+    local first_eid = eids[1]
+    local entity = entities[first_eid]
+    assert(entity)
+    entity.__entity_id = first_eid
     if self._last_entity ~= entity then
-        self:_refresh_sorted_entity(entity)
+        self:_refresh_sorted_entity(entities[first_eid])
     end
     self.is_editing = false
     factory.BeginProperty(base_component_cache)
-    for i,data in ipairs(self._sorted_entity) do
-        local com_name = data.com_name 
+    for i,data in ipairs(self._sorted_coms) do
+        local com_name = data.com_name
         local component_data = data.data
         if com_name ~= "__entity_id" and com_name ~= "__ui_cache" then
         -- if widget.CollapsingHeader(com_name.."##RootComponent") then
             local path_tbl = self:create_child_path(nil,schema[com_name])
             if self:render_component(entity,com_name,component_data,com_name,path_tbl) then
+            -- end
+                cursor.Separator()
+            end
+        end
+    end
+    factory.EndProperty()
+    if self.debug_mode then
+        widget.Text(dump_a({entity},"\t"))
+    end
+end
+
+
+function GuiEntityWidget:update_mult(eids,entities,base_component_cache)
+    local schema = self.schema
+    assert(entities)
+    for eid,entity in pairs(entities) do
+        entity.__entity_id = eid
+    end
+    if self._last_eids ~= eids then
+        self:_refresh_sorted_entity_mult(eids,entities)
+    end
+    self.is_editing = false
+    local entity_list = self._entity_list
+    local sorted_coms_mult = self._sorted_coms_mult
+    factory.BeginProperty(base_component_cache)
+    for i,data in ipairs(sorted_coms_mult) do
+        local com_name = data.com_name
+        local component_datas = data.datas
+        if com_name ~= "__entity_id" and com_name ~= "__ui_cache" then
+        -- if widget.CollapsingHeader(com_name.."##RootComponent") then
+            local path_tbl = self:create_child_path(nil,schema[com_name])
+            if self:render_component(entity_list,com_name,component_datas,com_name,path_tbl) then
             -- end
                 cursor.Separator()
             end

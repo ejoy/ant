@@ -3,9 +3,10 @@ local Evt       ={
     --Scene&Entity
     HierarchyChange         = "Editor_HierarchyChange",
     EntityInfo              = "Editor_EntityInfo", --type       ="pick" or "editor","auto"
-    EntityPick              = "Editor_EntityPick",
+    SceneEntityPick         = "Editor_SceneEntityPick",
     WatchEntity             = "Editor_WatchEntity",
     ModifyComponent         = "Editor_ModifyComponent",
+    ModifyMultComponent     = "Editor_ModifyMultComponent",
     ResponseWorldInfo       = "Editor_ResponseWorldInfo",
     RequestWorldInfo        = "Editor_RequestWorldInfo",
     RequestHierarchy        = "RequestHierarchy",

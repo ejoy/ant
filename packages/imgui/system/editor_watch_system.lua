@@ -7,6 +7,7 @@ local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
 local assetmgr = import_package "ant.asset".mgr
+local Rx        = import_package "ant.rxlua".Rx
 
 local OperateFunc = require "system.editor_operate_func"
 
@@ -15,7 +16,6 @@ ecs.tag "outline_entity"
 
 ecs.component_alias("target_entity","entityid")
 
-ecs.mark("entity_create","entity_create_handle")
 
 local editor_watcher_system = ecs.system "editor_watcher_system"
 editor_watcher_system.depend "editor_operate_gizmo_system"
@@ -24,6 +24,13 @@ editor_watcher_system.dependby 'scene_space'
 editor_watcher_system.depend "before_render_system"
 editor_watcher_system.singleton "profile_cache"
 editor_watcher_system.singleton "operate_gizmo_cache"
+
+local editor_watcher_cache = ecs.singleton "editor_watcher_cache"
+function editor_watcher_cache:init()
+    return {}
+end
+editor_watcher_system.singleton "editor_watcher_cache"
+
 
 local function send_hierarchy()
     local temp = {}
@@ -48,6 +55,9 @@ local function send_hierarchy()
     end
     local hub = world.args.hub
     hub.publish(WatcherEvent.HierarchyChange,result)
+    local rxbus = world.args.rxbus
+    local subject = rxbus.get_subject(WatcherEvent.HierarchyChange)
+    subject:onNext(result)
     return
 end
 
@@ -98,31 +108,37 @@ local last_eid = nil
 local last_tbl = nil
 local timer = import_package "ant.timer"
 local profile_cache = nil
-local function send_entity(eid,typ)
+local function send_entity(eids,typ)
     local hub = world.args.hub
     local entity_info = {type = typ}
-    if eid == nil or (not world[eid]) then
+    if eids == nil or (not world[eids[1]]) then
         hub.publish(WatcherEvent.EntityInfo,entity_info)
         last_eid = nil
         last_tbl = nil
+        log.info_a("send_entity","nothing")
     else
         local setialize_result = {}
         table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","begin",timer.cur_time()})
-        setialize_result[eid] = serialize.entity2tbl(world,eid)
-        table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","end",timer.cur_time()})
-        if last_eid == eid then
-            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","begin",timer.cur_time()})
-            local b = compare_values(last_tbl,setialize_result[eid])
-            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","end",timer.cur_time()})
-            if b then
-                return 
+        for i,eid in ipairs(eids) do
+            if world[eid] then
+                setialize_result[eid] = serialize.entity2tbl(world,eid)
             end
         end
-
-        last_eid = eid
-        last_tbl = setialize_result[eid]
-        entity_info.entities = setialize_result 
+        table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","end",timer.cur_time()})
+        if compare_values(last_eid,eids) then
+            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","begin",timer.cur_time()})
+            local b = compare_values(last_tbl,setialize_result)
+            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","end",timer.cur_time()})
+            if b then
+                return
+            end
+        end
+        last_eid = eids
+        last_tbl = setialize_result
+        entity_info.entities = setialize_result
+        entity_info.eids = eids
         hub.publish(WatcherEvent.EntityInfo,entity_info)
+        log.info_a("send_entity",eids)
     end
 end
 
@@ -160,59 +176,143 @@ local function create_outline(seleid)
         }
         local oe = world[outlineeid]
         oe.rendermesh.reskey = se.rendermesh.reskey
+        assetmgr.load(se.rendermesh.reskey)
     end
 end
 
-
-local function start_watch_entitiy(eid,focus,is_pick)
-    local hub = world.args.hub
-    local old_eids = {}
-    for _, id in world:each("editor_watching") do
-        table.insert(old_eids,id)
+local function change_watch_entity(self,eids,focus,is_pick)
+    local adds = {}
+    local remove_map = {}
+    local olds_map = {}
+    for _,id in world:each("editor_watching") do
+        olds_map[id] = true
     end
-    for _,id in ipairs(old_eids) do
+    log.info_a(olds_map,olds_map)
+    for _,id in ipairs(eids) do
+        if olds_map[id] then
+            olds_map[id] = nil
+        else
+            table.insert(adds,id)
+        end
+    end
+    for id,_ in pairs(olds_map) do
+        remove_map[id] = true
+    end
+    log.info_a("remove_map",remove_map)
+    --remove tag:editor_watching,show_operate_gizmo
+    for id,_ in pairs(remove_map) do
         world:remove_component(id,"editor_watching")
         log.trace(">>remove_component [editor_watching] from:",id)
-        world:remove_component(id,"show_operate_gizmo")
-        log.trace(">>remove_component [show_operate_gizmo] from:",id)
+        if world[id].show_operate_gizmo then
+            world:remove_component(id,"show_operate_gizmo")
+            log.trace(">>remove_component [show_operate_gizmo] from:",id)
+        end
     end
-    remove_all_outline()
-    ------------------------------------------------
-    if (not eid) or (not world[eid]) then
-        send_entity(nil,( is_pick and "pick" or "editor"))
-        return
+    --remove entity:outline_entity
+    local removes = {}
+    for _,id in world:each("outline_entity") do
+        local target = world[id].target_entity
+        if remove_map[target] then
+            table.insert(removes,id)
+        end
     end
-    if eid and focus then
+    for _,id in ipairs(removes) do
+        world:remove_entity(id)
+    end
+    --------------------------
+    if (not eids) or #eids <= 0 then
+        return 
+    end
+    local last_eid = eids[#eids]
+    if focus then
+        --todo calc multselect center
         local camerautil = import_package "ant.render".camera
-        if not camerautil.focus_obj(world, eid) then
-            local transform = world[eid].transform
+        if not camerautil.focus_obj(world, last_eid) then
+            local transform = world[last_eid].transform
             if transform then
-                camerautil.focus_point(world, transform.t)
+                camerautil.focus_point(world,transform.t)
             end
         end
     end
-    local target_ent = world[eid]
-    if target_ent then
-        if target_ent.can_select then
-            create_outline(eid)
+    local need_send = {}
+    for _, eid in ipairs( eids ) do
+        local target_ent = world[eid]
+        if target_ent.serialize then
+            if target_ent.can_select then
+                create_outline(eid)
+            end
+            world:add_component(eid,"editor_watching",true)
+            if target_ent.transform then
+                world:add_component(eid,"show_operate_gizmo",true)
+            end
+            table.insert(need_send,eid)
         end
-        world:add_component(eid,"editor_watching",true)
-        world:add_component(eid,"show_operate_gizmo",true)
-        log.trace(">>add_component [editor_watching] to:",eid)
-        send_entity(eid,( is_pick and "pick" or "editor"))
     end
+    log.info_a("eids",eids,"need_send",need_send)
+    self.editor_watcher_cache.need_send = need_send
+    send_entity(need_send,(is_pick and "pick" or "editor"))
 end
 
-local function on_editor_select_entity(eid,focus)
-    if world[eid] and (not world[eid].gizmo_object) then
-        start_watch_entitiy(eid,focus,false)
+local function start_watch_entitiy(eid,focus,is_pick)
+    
+    if false then
+        local hub = world.args.hub
+        local old_eids = {}
+        for _, id in world:each("editor_watching") do
+            table.insert(old_eids,id)
+        end
+        for _,id in ipairs(old_eids) do
+            world:remove_component(id,"editor_watching")
+            log.trace(">>remove_component [editor_watching] from:",id)
+            if world[id].show_operate_gizmo then
+                world:remove_component(id,"show_operate_gizmo")
+                log.trace(">>remove_component [show_operate_gizmo] from:",id)
+            end
+        end
+        remove_all_outline()
+        ------------------------------------------------
+        if (not eid) or (not world[eid]) then
+            send_entity(nil,( is_pick and "pick" or "editor"))
+            return
+        end
+        if eid and focus then
+            local camerautil = import_package "ant.render".camera
+            if not camerautil.focus_obj(world, eid) then
+                local transform = world[eid].transform
+                if transform then
+                    camerautil.focus_point(world, transform.t)
+                end
+            end
+        end
+        local target_ent = world[eid]
+        if target_ent then
+            if target_ent.can_select then
+                create_outline(eid)
+            end
+            world:add_component(eid,"editor_watching",true)
+            if target_ent.transform then
+                world:add_component(eid,"show_operate_gizmo",true)
+            end
+            log.trace(">>add_component [editor_watching] to:",eid)
+            send_entity({eid},( is_pick and "pick" or "editor"))
+        end
     end
+    return change_watch_entity(self,eid,focus,is_pick)
+end
+
+local function on_editor_select_entity(self,eids,focus)
+    -- for i,eid in ipairs(eids) do 
+    --     if world[eid] and (not world[eid].gizmo_object) then
+    --         start_watch_entitiy(eid,focus,false)
+    --     end
+    -- end
+    change_watch_entity(self,eids,focus,false)
 end
 
 local function on_pick_entity(eid)
     if eid then
         if world[eid] and (not world[eid].gizmo_object) then
-            start_watch_entitiy(eid,false,true)
+            start_watch_entitiy({eid},false,true)
         end
     else
         start_watch_entitiy(nil,false,true)
@@ -228,6 +328,36 @@ local function on_component_modified(eid,com_id,key,value)
     else
         serialize.watch.set(world,com_id,"",key,value)
         log.trace_a("after_component_modified:",serialize.watch.query(world,com_id,""))
+    end
+end
+
+
+local function on_mult_component_modified(eids,com_ids,key,value,is_list)
+    log.trace_a("on_mult_component_modified",eids,com_ids,key,value)
+    if not com_ids then
+        if not is_list then
+            for i,eid in ipairs(eids) do
+                serialize.watch.set(world,nil,eid,key,value)
+                log.trace_a("after_component_modified:",serialize.watch.query(world,nil,eid))
+            end
+        else
+            for i,eid in ipairs(eids) do
+                serialize.watch.set(world,nil,eid,key,value[i])
+                log.trace_a("after_component_modified:",serialize.watch.query(world,nil,eid))
+            end
+        end
+    else
+        if not is_list then
+            for i,com_id in ipairs(com_ids) do
+                serialize.watch.set(world,com_id,"",key,value)
+                log.trace_a("after_component_modified:",serialize.watch.query(world,com_id,""))
+            end
+        else
+            for i,com_id in ipairs(com_ids) do
+                serialize.watch.set(world,com_id,"",key,value[i])
+                log.trace_a("after_component_modified:",serialize.watch.query(world,com_id,""))
+            end
+        end
     end
 end
 
@@ -266,13 +396,17 @@ end
 
 function editor_watcher_system:init()
     local hub = world.args.hub
-    hub.subscribe(WatcherEvent.WatchEntity,on_editor_select_entity)
+    hub.subscribe(WatcherEvent.WatchEntity,on_editor_select_entity,self)
     hub.subscribe(WatcherEvent.ModifyComponent,on_component_modified)
+    hub.subscribe(WatcherEvent.ModifyMultComponent,on_mult_component_modified)
     hub.subscribe(WatcherEvent.EntityOperate,on_entity_operate,self)
     hub.subscribe(WatcherEvent.RequestHierarchy,on_request_hierarchy,self)
     profile_cache = self.profile_cache
     -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
+    local rxbus = world.args.rxbus
+    local watchentity_ob = rxbus:get_observable(WatcherEvent.WatchEntity)
+    watchentity_ob:subscribe(Rx.handler(on_editor_select_entity,self))
 end
 
 function editor_watcher_system:pickup()
@@ -283,11 +417,11 @@ function editor_watcher_system:pickup()
         local hub = world.args.hub
         if eid and world[eid] then
             if not world[eid].gizmo_object then
-                hub.publish(WatcherEvent.EntityPick,{eid})
+                hub.publish(WatcherEvent.SceneEntityPick,{eid})
                 on_pick_entity(eid)
             end
         else
-            hub.publish(WatcherEvent.EntityPick,{})
+            hub.publish(WatcherEvent.SceneEntityPick,{})
             on_pick_entity(nil)
         end
     end
@@ -330,12 +464,17 @@ function editor_watcher_system:update()
     entity_create_handle()
     entity_delete_handle()
 end
-
 function editor_watcher_system:after_update()
-    local eid = world:first_entity_id("editor_watching")
-    if eid and world[eid] then
-        send_entity(eid,"auto")
+    local need_send = self.editor_watcher_cache.need_send
+    if not need_send then
+        return
     end
-
-
+    local check = {}
+    for i,id in ipairs(need_send) do
+        local entity = world[id]
+        if entity and entity.editor_watching then
+            table.insert(check,id)
+        end
+    end
+    send_entity(check,"auto")
 end

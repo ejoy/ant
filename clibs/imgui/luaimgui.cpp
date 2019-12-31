@@ -2773,6 +2773,24 @@ uPopID(lua_State* L) {
 	return 0;
 }
 
+static int
+uCalcTextSize(lua_State * L){
+	const char * label = luaL_checkstring(L, 1);
+	const bool hide_text_after_double_hash = lua_tonumber(L, 2);
+	const float wrap_width = (const float)luaL_optnumber(L, 3, -1.0f);
+	ImVec2 size = ImGui::CalcTextSize(label, NULL, hide_text_after_double_hash, wrap_width);
+	lua_pushnumber(L,size.x);
+	lua_pushnumber(L,size.y);
+	return 2;
+}
+
+static int
+uCalcItemWidth(lua_State* L) {
+	int w = ImGui::CalcItemWidth();
+	lua_pushinteger(L,w);
+	return 1;
+}
+
 #ifdef _MSC_VER
 #pragma endregion IMP_UTIL
 #endif
@@ -3426,6 +3444,8 @@ luaopen_imgui(lua_State *L) {
 		{ "IsMouseDoubleClicked",uIsMouseDoubleClicked},
 		{ "PushID",uPushID},
 		{ "PopID",uPopID},
+		{ "CalcTextSize",uCalcTextSize},
+		{ "CalcItemWidth",uCalcItemWidth},
 		{ NULL, NULL },
 	};
 

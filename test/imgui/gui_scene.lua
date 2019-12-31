@@ -60,25 +60,25 @@ function GuiScene:get_mainmenu()
 end
 
 function GuiScene:on_gui(delta)
-    if (not self.world) and (not self.message_shown) then
-        local box = self:_get_editpath()
-        local message_cb = function(result)
-            if result == 1 then
-                self:_open_scene(tostring(box.text))
-            end
-        end
-        local arg = {
-            msg = string.format("Open default scene:%s",box.text),
-            close_cb = message_cb,
-        }
-        gui_util.message(arg)
-        self.message_shown = true
-    end
+    -- if (not self.world) and (not self.message_shown) then
+    --     local box = self:_get_editpath()
+    --     local message_cb = function(result)
+    --         if result == 1 then
+    --             self:_open_scene(tostring(box.text))
+    --         end
+    --     end
+    --     local arg = {
+    --         msg = string.format("Open default scene:%s",box.text),
+    --         close_cb = message_cb,
+    --     }
+    --     gui_util.message(arg)
+    --     self.message_shown = true
+    -- end
     GuiCanvas.on_gui(self,delta)
 end
 
 function GuiScene:_open_scene(path)
-    local status = dbgutil.try(function () scene_control.test_new_world(path) end)
+    local status = dbgutil.try(function () scene_control.run_test_package(path) end)
     if status then
         self:save_path_to_recent(path)
     end

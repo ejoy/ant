@@ -14,6 +14,7 @@ local editor = {
         combobox = require "controls.combobox",
         scroll_list = require "controls.scroll_list",
         simple_plotline = require "controls.simple_plotline",
+        mult_widget = require "controls.mult_widget",
     },
     editor = {
         gui_canvas = require "editor.gui_canvas",
