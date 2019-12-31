@@ -86,6 +86,10 @@ function camera_controller_system:update()
 			keyboard_dx = keyboard_dx - delta
 		elseif code == "D" then
 			keyboard_dx = keyboard_dx + delta
+		elseif code == "Q" then
+			keyborad_dy = keyborad_dy - delta
+		elseif code == "E" then
+			keyborad_dy = keyborad_dy + delta
 		end
 	end
 	if keyboard_dx ~= 0 or keyborad_dy ~= 0 or keyboard_dz ~= 0 then
