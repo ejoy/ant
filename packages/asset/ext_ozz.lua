@@ -35,8 +35,8 @@ return {
 				return hiemodule.build(fn)
 			end,
 			["ozz-sample-Mesh"] = function(fn)
-				local animodule = require "hierarchy.animation"
-				return animodule.new_ozzmesh(fn)
+				local animodule = require "hierarchy.ozzmesh"
+				return animodule.new(fn)
 			end,
 		}
 

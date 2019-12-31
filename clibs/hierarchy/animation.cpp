@@ -170,7 +170,7 @@ lbuild_skinning_matrices(lua_State *L){
 static int
 lmesh_skinning(lua_State *L){
 	luaL_checkudata(L, 1, "OZZ_BIND_POSE");
-	bind_pose *skinning_matrices = (bind_pose*)lua_touserdata(L, 2);
+	bind_pose *skinning_matrices = (bind_pose*)lua_touserdata(L, 1);
 
 	luaL_checktype(L, 2, LUA_TTABLE);
 	in_vertex_data vd = {0};
