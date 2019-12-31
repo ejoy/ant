@@ -31,6 +31,8 @@ local lu         = renderpkg.light
 
 local init_loader = ecs.system 'init_loader'
 
+init_loader.step 'start'
+
 init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"
 init_loader.depend "procedural_sky_system"
@@ -159,7 +161,7 @@ end
 function init_loader:post_init()
     local viewcamera = camerautil.get_camera(world, "main_view")
     viewcamera.frustum.f = 300
-    ms(viewcamera.eyepos,  { 1.6, 0.8,-1.8, 0.0}, "=")
+    ms(viewcamera.eyepos,  { 1.6, 1.8,-1.8, 0.0}, "=")
     ms(viewcamera.updir,   { 0.0, 1.0, 0.0, 0.0}, "=")
     ms(viewcamera.viewdir, {-0.6,-0.4, 0.7, 0.0}, "=")
     local e = world:first_entity "render_target"

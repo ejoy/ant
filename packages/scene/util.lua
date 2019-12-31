@@ -5,13 +5,9 @@ local mathadapter 	= import_package "ant.math.adapter"
 
 local bullet        = require "bullet"
 
-local function new_world(packages, systems, args)
-	local world = ecs.new_world {
-		packages = packages,
-		systems = systems,
-		args = args,
-	}
-	mathadapter.bind_math_adapter()	
+local function new_world(config)
+	local world = ecs.new_world(config)
+	mathadapter.bind_math_adapter()
 	world:update_func "init" ()
 	world:update_func "post_init" ()
     return world
@@ -24,23 +20,14 @@ local function create_physic()
 	}
 end
 
-function util.start_new_world(input_queue, fbw, fbh, packages, systems,other_args)
+function util.start_new_world(input_queue, fbw, fbh, config)
 	if input_queue == nil then
 		log.info("input queue is not privided, no input event will be received!")
 	end
-
-	local args =  { 
-		mq = input_queue, 
-		fb_size={w=fbw, h=fbh},
-		Physics = create_physic(),
-	}
-	if other_args then
-		for k,v in pairs(other_args) do
-			args[k] = v
-		end
-	end
-
-	return new_world(packages, systems, args)
+	config.mq = input_queue
+	config.fb_size={w=fbw, h=fbh}
+	config.Physics = create_physic()
+	return new_world(config)
 end
 
 -- static_world use for editor module,only data needed

@@ -114,6 +114,11 @@ rendersys.depend "primitive_filter_system"
 rendersys.depend "filter_properties"
 rendersys.dependby "end_frame"
 
+rendersys.require_policy "render_queue"
+rendersys.require_policy "main_queue"
+rendersys.require_policy "camera"
+rendersys.require_policy "name"
+
 local function update_view_proj(viewid, camera)
 	local view, proj = ms:view_proj(camera, camera.frustum)
 	bgfx.set_view_transform(viewid, view, proj)

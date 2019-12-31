@@ -186,6 +186,11 @@ sm.depend "shadowmaker_camera"
 sm.dependby "render_system"
 --sm.dependby "debug_shadow_maker"
 
+sm.require_policy "shadow_make"
+sm.require_policy "shadow_config"
+sm.require_policy "render_queue"
+sm.require_policy "name"
+
 local linear_cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
 local cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
 

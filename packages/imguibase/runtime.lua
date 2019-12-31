@@ -27,7 +27,7 @@ local iq = inputmgr.queue()
 
 local callback = {}
 
-local packages, systems
+local conifg
 local world
 local world_update
 
@@ -71,7 +71,7 @@ function callback.init(nwh, context, width, height)
 	end
 
 	local su = import_package "ant.scene".util
-	world = su.start_new_world(iq, width, height, packages, systems)
+	world = su.start_new_world(iq, width, height, conifg)
 	local main_viewid = viewidmgr.get "main_view"
 	fbmgr.bind(ui_viewid, assert(fbmgr.get_fb_idx(main_viewid)))
 	world_update = su.loop(world, {
@@ -229,8 +229,8 @@ local function headlessMode()
 	callback.exit()
 end
 
-local function start(m1, m2)
-	packages, systems = m1, m2
+local function start(cfg)
+	conifg = cfg
 	if argument.headless then
 		return headlessMode()
 	end

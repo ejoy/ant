@@ -284,11 +284,34 @@ function world:clear_removed()
 	end
 end
 
-local function init_modules(w, packages, systems, loader)
+local function splitName(fullname, import)
+	local package, name = fullname:match "^([^|]*)|(.*)$"
+	if package then
+		import(package)
+		return name
+	end
+	return fullname
+end
+
+local function tableDelete(t, l)
+	local delete = {}
+	for k in pairs(t) do
+		if not l[k] then
+			delete[k] = true
+		end
+	end
+	for k in pairs(delete) do
+		t[k] = nil
+	end
+end
+
+local function init_modules(w, config, loader)
+	local policies = config.policy
+	local systems = config.system
 	local class = {}
 	local imported = {}
 	local reg
-	local function import(name)
+	local function import_package(name)
 		if imported[name] then
 			return false
 		end
@@ -305,49 +328,86 @@ local function init_modules(w, packages, systems, loader)
 		table.remove(class.packages, 1)
 		return true
 	end
-	reg = typeclass(w, import, class)
-
-	for _, name in ipairs(packages) do
-		import(name)
-	end
+	reg = typeclass(w, import_package, class)
 	w.import = function(_, name)
-		return import(name)
+		return import_package(name)
 	end
 
-	local cut = {}
-
-	local function solve_depend(k)
-		if cut[k] then
+	local policycut = {}
+	local systemcut = {}
+	local import_policy
+	local import_system
+	function import_system(k)
+		local name = splitName(k, import_package)
+		if systemcut[name] then
 			return
 		end
-		cut[k] = true
-		local v = class.system[k]
-		assert(v, 'invalid system '..k)
+		systemcut[name] = true
+		local v = class.system[name]
+		if not v then
+			error(("invalid system name: `%s`."):format(name))
+		end
 		if v.depend then
 			for _, subk in ipairs(v.depend) do
-				solve_depend(subk)
+				import_system(subk)
 			end
 		end
 		if v.dependby then
 			for _, subk in ipairs(v.dependby) do
-				solve_depend(subk)
+				import_system(subk)
+			end
+		end
+		if v.require_package then
+			for _, name in ipairs(v.require_package) do
+				import_package(name)
+			end
+		end
+		if v.require_system then
+			for _, k in ipairs(v.require_system) do
+				import_system(k)
+			end
+		end
+		if v.require_policy then
+			for _, k in ipairs(v.require_policy) do
+				import_policy(k)
 			end
 		end
 	end
-
-	for _, k in ipairs(systems) do
-		solve_depend(k)
-	end
-
-	local delete = {}
-	for k in pairs(class.system) do
-		if not cut[k] then
-			delete[k] = true
+	function import_policy(k)
+		local name = splitName(k, import_package)
+		if policycut[name] then
+			return
+		end
+		policycut[name] = true
+		local v = class.policy[name]
+		if not v then
+			error(("invalid policy name: `%s`."):format(name))
+		end
+		if v.require_package then
+			for _, name in ipairs(v.require_package) do
+				import_package(name)
+			end
+		end
+		if v.require_system then
+			for _, k in ipairs(v.require_system) do
+				import_system(k)
+			end
+		end
+		if v.require_policy then
+			for _, k in ipairs(v.require_policy) do
+				import_policy(k)
+			end
 		end
 	end
-	for k in pairs(delete) do
-		class.system[k] = nil
+	for _, k in ipairs(policies) do
+		import_policy(k)
 	end
+	for _, k in ipairs(systems) do
+		import_system(k)
+	end
+	tableDelete(class.policy, policycut)
+	tableDelete(class.system, systemcut)
+	--tableDelete(class.component, componentcut)
 	return class
 end
 
@@ -389,7 +449,7 @@ local m = {}
 -- config.args
 function m.new_world(config)
 	local w = setmetatable({
-		args = config.args,
+		args = config,
 		_schema = {},
 		_entity = {},	-- entity id set
 		_entity_id = 0,
@@ -404,14 +464,14 @@ function m.new_world(config)
 	world.pub = event.pub
 
 	-- load systems and components from modules
-	local class = init_modules(w, config.packages, config.systems, config.loader or require "packageloader")
+	local class = init_modules(w, config, config.loader or require "packageloader")
 
 	w._class = class
 	component.solve(w)
 	policy.solve(w)
 
 	-- init system
-	w._systems = system.lists(class.system)
+	w._systems = system.lists(class.system, config.pipeline)
 	w._singleton_proxy = system.proxy(class.system, class.singleton)
 
 	return w

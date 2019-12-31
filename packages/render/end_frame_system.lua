@@ -15,6 +15,8 @@ ecs.singleton "post_end_frame_jobs"
 local end_frame_sys = ecs.system "end_frame"
 --end_frame_sys.dependby "asset_watch_system"
 
+end_frame_sys.step "end_frame"
+
 end_frame_sys.singleton "frame_stat"
 
 local math3d = require "math3d"

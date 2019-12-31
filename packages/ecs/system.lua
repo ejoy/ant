@@ -1,6 +1,5 @@
--- load systems
 local solve_depend = require "solve_depend"
-local system = {}	-- module system
+local system = {}
 
 local function get_singleton(sys, c)
 	local s = {}
@@ -41,13 +40,48 @@ function system.proxy(sys, c)
 	return p
 end
 
-function system.lists(sys)
+local function table_append(t, a)
+	table.move(a, 1, #a, #t+1, t)
+end
+
+local function solve(res, step, pipeline)
+	for _, v in ipairs(pipeline) do
+		if type(v) == "string" then
+			if step[v] then
+				table.sort(step[v])
+				table_append(res, step[v])
+			end
+		elseif type(v) == "table" then
+			solve(res, step, v[2])
+		end
+	end
+end
+
+local function solve_depend(sys, pipeline)
+	local step = setmetatable({}, {__index = function(t,k)
+		local obj = {}
+		t[k] = obj
+		return obj
+	end})
+	for sys_name, s in pairs(sys) do
+		if s.step then
+			local step_name = s.step[#s.step]
+			table.insert(step[step_name], sys_name)
+		end
+	end
+	setmetatable(step, nil)
+	local res = {}
+	solve(res, step, pipeline)
+	return res
+end
+
+function system.lists(sys, pipeline)
 	local r = setmetatable( {} , { __index = function(t,k)
-			local obj = {}
-			t[k] = obj
-			return obj
-		end } )
-	local depend_list = solve_depend(sys)
+		local obj = {}
+		t[k] = obj
+		return obj
+	end } )
+	local depend_list = solve_depend(sys, pipeline)
 	for _, sname in ipairs(depend_list) do
 		for what, func in pairs(sys[sname].method) do
 			table.insert(r[what], { sname, func })
@@ -144,10 +178,6 @@ function system.list_switch(list)
 		__list = list,
 		__all = all_list,
 	} , switch_mt )
-end
-
-if TEST then
-	system._solve_depend = solve_depend	-- for test
 end
 
 return system
