@@ -12,7 +12,7 @@ local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 
 local cull_sys = ecs.system "cull_system"
-
+cull_sys.step "cull"
 cull_sys.depend "primitive_filter_system"
 
 function cull_sys:update()

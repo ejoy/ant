@@ -20,12 +20,11 @@ runtime.start {
 		"timer",
 		"widget",
 		{"render", {
+			"shadow_camera",
 			"filter_primitive",
-			{"shadow", {
-				"shadow_camera",
-				"make_shadow",
-				"debug_shadow",
-			}},
+			"make_shadow",
+			"debug_shadow",
+			"cull",
 			"render_commit",
 			{"postprocess", {
 				"bloom",

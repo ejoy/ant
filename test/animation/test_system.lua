@@ -51,10 +51,10 @@ init_loader.dependby 'state_machine'
 local function create_animation_test()
     local eid = world:create_entity {
         policy = {
-            "animation",
-            "state_chain",
+            -- "animation",
+            -- "state_chain",
             "ozzmesh",
-            "ozz_skinning",
+            -- "ozz_skinning",
             "capsule",
             "render",
             "serialize",
@@ -69,48 +69,48 @@ local function create_animation_test()
             can_render = true,
             rendermesh = {},
             material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
-            animation = {
-                anilist = {
-                    walk = {
-                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
-                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation1.ozz',
-                        scale = 1,
-                        looptimes = 0,
-                    },
-                    run = {
-                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
-                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation2.ozz',
-                        scale = 1,
-                        looptimes = 0,
-                    },
-                    runfast = {
-                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
-                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation3.ozz',
-                        scale = 1,
-                        looptimes = 0,
-                    }
-                },
-                pose = {
-                    walk = {
-                        {name="walk", weight=1},
-                    },
-                    run = {
-                        {name="run", weight=1},
-                    },
-                    runfast = {
-                        {name="runfast", weight=1},
-                    }
-                },
-                blendtype = 'blend',
-                birth_pose = "walk"
-            },
-            state_chain = {
-                ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',
-            },
-            skeleton = {
-                --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
-                ref_path = fs.path '/pkg/ant.resources/meshes/skeleton/human_skeleton.ozz'
-            },
+            -- animation = {
+            --     anilist = {
+            --         walk = {
+            --             --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
+            --             ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation1.ozz',
+            --             scale = 1,
+            --             looptimes = 0,
+            --         },
+            --         run = {
+            --             --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
+            --             ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation2.ozz',
+            --             scale = 1,
+            --             looptimes = 0,
+            --         },
+            --         runfast = {
+            --             --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
+            --             ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation3.ozz',
+            --             scale = 1,
+            --             looptimes = 0,
+            --         }
+            --     },
+            --     pose = {
+            --         walk = {
+            --             {name="walk", weight=1},
+            --         },
+            --         run = {
+            --             {name="run", weight=1},
+            --         },
+            --         runfast = {
+            --             {name="runfast", weight=1},
+            --         }
+            --     },
+            --     blendtype = 'blend',
+            --     birth_pose = "walk"
+            -- },
+            -- state_chain = {
+            --     ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',
+            -- },
+            -- skeleton = {
+            --     --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
+            --     ref_path = fs.path '/pkg/ant.resources/meshes/skeleton/human_skeleton.ozz'
+            -- },
             mesh = {
                 --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/female.ozz'
                 ref_path = fs.path '/pkg/ant.resources/meshes/mesh.ozz'
