@@ -46,10 +46,12 @@ end
 
 local m = ecs.policy "state_chain"
 m.require_component "state_chain"
+m.require_system "state_machine"
 
 ecs.component_alias("state_chain", "resource")
 
 local sm = ecs.system "state_machine"
+sm.step "animation_state"
 sm.require_system "animation_system"
 
 function sm:update()

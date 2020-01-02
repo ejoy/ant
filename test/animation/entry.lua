@@ -14,11 +14,21 @@ runtime.start {
 	},
 	system = {
 		"ant.test.animation|init_loader",
+		"ant.test.animation|init_camera",
 		"ant.test.animation|init_gui",
 	},
 	pipeline = {
 		"start",
 		"timer",
+		{"animation",{
+			"animation_state",
+			"sample_animation_pose",
+			"skin_mesh",
+		}},
+		{"sky",{
+			"update_sun",
+			"update_sky",
+		}},
 		"widget",
 		{"render", {
 			"shadow_camera",
@@ -33,6 +43,7 @@ runtime.start {
 				"combine_postprocess",
 			}}
 		}},
+		"camera_control",
 		{"ui", {
 			"ui_start",
 			"ui",

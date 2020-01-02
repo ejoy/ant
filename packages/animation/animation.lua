@@ -45,6 +45,7 @@ local m = ecs.policy "animation"
 m.require_component "animation"
 m.require_component "skeleton"
 m.require_transform "animation"
+m.require_system "animation_system"
 
 ecs.component "animation"
 	.anilist "animation_content{}"
