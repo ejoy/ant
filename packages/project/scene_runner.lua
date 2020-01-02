@@ -76,9 +76,7 @@ function scene_runner.start(scene_path,width, height)
             packages, systems,
             {callback = script_obj,rxbus = rxbus},
         )
-    world_update = su.loop(world, {
-        update = {"timesystem", "message_system"}
-    })
+    world_update = su.loop(world)
     single_world.world = world
 
     local world_dic = {

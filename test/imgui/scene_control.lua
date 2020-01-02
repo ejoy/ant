@@ -53,12 +53,8 @@ function scene_control.run_test_package(raw_path)
         packages, 
         systems,
         {hub=hub,rxbus = rxbus})
-    local world_update = scene.loop(world, {
-            update = {"timesystem", "message_system"}
-        })
-    -- task.safe_loop(scene.loop(world, {
-    --         update = {"timesystem", "message_system"}
-    --     }))
+    local world_update = scene.loop(world)
+    -- task.safe_loop(scene.loop(world))
     gui_mgr.get("GuiScene"):bind_world(world,world_update,scene_control.input_queue)
 end
 

@@ -1,50 +1,37 @@
 local ecs = ...
 local world = ecs.world
 
-local fs = require 'filesystem'
-
-ecs.import 'ant.math.adapter'
-ecs.import 'ant.asset'
-ecs.import 'ant.render'
-ecs.import 'ant.editor'
-ecs.import 'ant.inputmgr'
-ecs.import 'ant.serialize'
-ecs.import 'ant.scene'
-ecs.import 'ant.timer'
-ecs.import 'ant.bullet'
-ecs.import 'ant.animation'
-ecs.import 'ant.event'
-ecs.import 'ant.objcontroller'
-ecs.import 'ant.sky'
-ecs.import 'ant.imguibase'
-
 local serialize  = import_package 'ant.serialize'
-local skypkg     = import_package 'ant.sky'
 local renderpkg  = import_package 'ant.render'
 local mathpkg    = import_package "ant.math"
-local skyutil    = skypkg.util
+local imgui      = require "imgui"
+local fs         = require 'filesystem'
 local computil   = renderpkg.components
 local camerautil = renderpkg.camera
 local ms         = mathpkg.stack
 local mu         = mathpkg.util
 local lu         = renderpkg.light
 
-local init_loader = ecs.system 'init_loader'
+local m = ecs.system 'init_loader'
 
-init_loader.step 'start'
+m.step 'start'
 
-init_loader.require_system 'timesystem'
-init_loader.require_system "serialize_index_system"
-init_loader.require_system "procedural_sky_system"
-init_loader.require_system 'render_system'
-init_loader.require_system 'cull_system'
-init_loader.require_system 'shadow_maker'
-init_loader.require_system 'primitive_filter_system'
-init_loader.require_system 'camera_controller'
-init_loader.require_system 'skinning_system'
-init_loader.require_system 'viewport_detect_system'
-init_loader.require_system 'state_machine'
+m.require_policy "ant.animation|animation"
+m.require_policy "ant.animation|state_chain"
+m.require_policy "ant.animation|ozzmesh"
+m.require_policy "ant.animation|ozz_skinning"
+m.require_policy "ant.serialize|serialize"
+m.require_policy "ant.bullet|collider.capsule"
+m.require_policy "ant.render|render"
+m.require_policy "ant.render|name"
+m.require_policy "ant.render|directional_light"
+m.require_policy "ant.render|ambient_light"
 
+m.require_system 'ant.timer|timesystem'
+m.require_system 'cull_system'
+m.require_system 'shadow_maker'
+m.require_system 'primitive_filter_system'
+m.require_system 'viewport_detect_system'
 
 local function create_animation_test()
     local eid = world:create_entity {
@@ -148,7 +135,7 @@ end
 
 local eid
 
-function init_loader:init()
+function m:init()
     lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     --skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
@@ -156,22 +143,25 @@ function init_loader:init()
     eid = create_animation_test()
 end
 
-function init_loader:post_init()
+local m = ecs.system 'init_camera'
+m.step "camera_control"
+m.require_policy "ant.render|main_queue"
+m.require_policy "ant.render|camera"
+
+function m:init()
     local viewcamera = camerautil.get_camera(world, "main_view")
     viewcamera.frustum.f = 300
     ms(viewcamera.eyepos,  { 1.6, 1.8,-1.8, 0.0}, "=")
     ms(viewcamera.updir,   { 0.0, 1.0, 0.0, 0.0}, "=")
     ms(viewcamera.viewdir, {-0.6,-0.4, 0.7, 0.0}, "=")
-    local e = world:first_entity "render_target"
+    local e = world:first_entity "main_queue"
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
 
 local m = ecs.system 'init_gui'
 m.step "ui"
-m.require_system "imgui_start_system"
-m.require_system "imgui_end_system"
-
-local imgui = require "imgui"
+m.require_system "ant.imguibase|imgui_start_system"
+m.require_system "ant.imguibase|imgui_end_system"
 
 local function defer(f)
     local toclose = setmetatable({}, { __close = f })

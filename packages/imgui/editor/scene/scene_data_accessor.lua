@@ -202,9 +202,7 @@ function scene_data_accessor._start_scene(config,serialize_str)
         packages, 
         systems,
         {hub=hub,rxbus = rxbus})
-    local world_update = scene.loop(world, {
-            update = {"timesystem", "message_system"}
-        })
+    local world_update = scene.loop(world)
     gui_mgr.get("GuiScene"):bind_world(world,world_update,scene_data_accessor.input_queue)
     for _, eid in world:each 'serialize' do
         world:remove_entity(eid)
@@ -251,13 +249,9 @@ function scene_data_accessor.start_new_world(raw_path)
     table.move(pkgsystems, 1, #pkgsystems, #systems+1, systems)
     scene_control.input_queue = inputmgr.queue()
     local world = scene.start_new_world(scene_control.input_queue, 600, 400, packages, systems,{hub=hub})
-    local world_update = scene.loop(world, {
-            update = {"timesystem", "message_system"}
-        })
+    local world_update = scene.loop(world)
 
-    -- task.safe_loop(scene.loop(world, {
-    --         update = {"timesystem", "message_system"}
-    --     }))
+    -- task.safe_loop(scene.loop(world))
     gui_mgr.get("GuiScene"):bind_world(world,world_update,scene_control.input_queue)
 end
 

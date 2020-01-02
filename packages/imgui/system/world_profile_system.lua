@@ -27,9 +27,6 @@ function world_profile_system:update()
             table.insert(self.profile_cache.list,{sys,what,"end",time_ms})
         end
     end
-end
-
-function world_profile_system:end_frame()
     local hub = world.args.hub
     hub.publish(WatcherEvent.SystemProfile,self.profile_cache.list)
     self.profile_cache.list = {}
