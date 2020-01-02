@@ -69,17 +69,23 @@ local function gen_mesh_assetinfo(ozzmesh)
 
 	local static_layout = generate_layout({'c', 't'}, layouts)
 	local static_stride = declmgr.layout_stride(static_layout)
-	local static_buffer = bgfx.memory_texture(num_vertices * static_stride)
-	meshhandle:combine_buffer(static_layout, static_buffer)
+	local static_buffersize = num_vertices * static_stride
+	local static_buffer = animodule.new_aligned_memory(static_buffersize, 4)
+	local static_pointer = static_buffer:pointer()
+	meshhandle:combine_buffer(static_layout, static_pointer)
 	local static_vbhandle = {
-		handle = bgfx.create_vertex_buffer(static_buffer, declmgr.get(static_layout).handle)
+		handle = bgfx.create_vertex_buffer({"!", static_pointer, 0, static_buffersize}, declmgr.get(static_layout).handle)
 	}
 
 	local dynamic_layout = generate_layout({'p', 'n', 'T'}, layouts)
 	local dynamic_stride = declmgr.layout_stride(dynamic_layout)
+	local dynamic_buffersize = num_vertices * dynamic_stride
+	local dynamic_buffer = animodule.new_aligned_memory(dynamic_buffersize, 4)
+	local dynamic_pointer = dynamic_buffer:pointer()
+	meshhandle:combine_buffer(dynamic_layout, dynamic_pointer)
 	local dynamic_vbhandle = {
-		handle = bgfx.create_dynamic_vertex_buffer(num_vertices * dynamic_stride, declmgr.get(dynamic_layout).handle),
-		updatedata = animodule.new_aligned_memory(num_vertices * dynamic_stride, 4)
+		handle = bgfx.create_dynamic_vertex_buffer({"!", dynamic_pointer, 0, dynamic_buffersize}, declmgr.get(dynamic_layout).handle),
+		updatedata = dynamic_buffer,
 	}
 
 	local primitive = {
@@ -100,7 +106,7 @@ local function gen_mesh_assetinfo(ozzmesh)
 		primitive.ib = {
 			start = 0,
 			num = num_indices,
-			handle = bgfx.create_index_buffer({indices_buffer, num_indices * stride})
+			handle = bgfx.create_index_buffer({indices_buffer, 0, num_indices * stride})
 		}
 	end
 
@@ -337,7 +343,7 @@ function skinning_sys:update()
 				animodule.mesh_skinning(skinning_matrices, part.inputdesc, part.outputdesc, part.num, part.influences_count)
 			end
 
-			bgfx.update(handle, 0, {"!", updatedata:pointer(), job.buffersize})
+			bgfx.update(handle, 0, {"!", 0, updatedata:pointer(), job.buffersize})
 		end
 	end
 end

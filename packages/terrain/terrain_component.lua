@@ -84,10 +84,10 @@ function t.process(e)
 	local dynamic = terraininfo.dynamic
 	
 	local create_vb = dynamic and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
-	local vbhandle = create_vb({"!", vb, vbsize}, decl.handle, dynamic and "wa" or "")
+	local vbhandle = create_vb({"!", vb, 0, vbsize}, decl.handle, dynamic and "wa" or "")
 
 	local create_ib = dynamic and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer	
-	local ibhandle = create_ib({ib, ibsize}, dynamic and "wad" or "d")
+	local ibhandle = create_ib({ib, 0, ibsize}, dynamic and "wad" or "d")
 
 	local group = {
 		vb = {

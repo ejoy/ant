@@ -1862,9 +1862,16 @@ create_mem_from_table(lua_State *L, int idx, int n, bgfx_vertex_layout_t *src_vd
 	// binary data
 	int t = lua_geti(L, idx, n);
 	if (t == LUA_TLIGHTUSERDATA || t == LUA_TUSERDATA) {
-		void * data = lua_touserdata(L, -1);
-		size_t sz;
+		const uint8_t * data = (const uint8_t*)lua_touserdata(L, -1);
+		size_t offset, sz;
 		if (lua_geti(L, idx, n+1) == LUA_TNUMBER) {
+			offset = lua_tointeger(L, -1);
+		} else {
+			luaL_error(L, "need offset for userdata");
+			return NULL;
+		}
+		
+		if (lua_geti(L, idx, n+2) == LUA_TNUMBER) {
 			sz = lua_tointeger(L, -1);
 		} else if (t == LUA_TLIGHTUSERDATA) {
 			luaL_error(L, "Missing size for lightuserdata");
@@ -1874,11 +1881,10 @@ create_mem_from_table(lua_State *L, int idx, int n, bgfx_vertex_layout_t *src_vd
 		}
 		lua_pop(L, 2);
 		if (src_vd) {
-			return convert_by_decl(data, sz, src_vd, desc_vd);
-		} else {
-			const bgfx_memory_t *mem = BGFX(make_ref)(data, sz);
-			return mem;
+			return convert_by_decl(data + offset, sz, src_vd, desc_vd);
 		}
+		
+		return BGFX(make_ref)(data + offset, sz);
 	}
 
 	if (t != LUA_TSTRING) {
