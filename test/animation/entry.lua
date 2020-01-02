@@ -20,6 +20,7 @@ runtime.start {
 	pipeline = {
 		"start",
 		"timer",
+		"data_changed",
 		{"animation",{
 			"animation_state",
 			"sample_animation_pose",

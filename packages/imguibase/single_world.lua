@@ -12,9 +12,7 @@ local packages,system
 function single_world.init(nwh, context, width, height)
     local su = import_package "ant.scene".util
     world = su.start_new_world(iq, width, height, packages, systems)
-    world_update = su.loop(world, {
-        update = {"timesystem", "message_system"}
-    })
+    world_update = su.loop(world)
     single_world.world = world
 end
 

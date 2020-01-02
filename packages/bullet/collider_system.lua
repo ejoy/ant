@@ -9,19 +9,22 @@ local ms = mathpkg.stack
 
 local collider_mb = world:sub {"component_register", "collider_tag"}
 
-local collider_sys = ecs.system "collider_system"
-collider_sys.require_system "primitive_filter_system"
 
-function collider_sys:data_changed()
+local m = ecs.system "collider_update_data_system"
+m.step "data_changed"
+function m:update()
     for msg in collider_mb:each() do
         local eid = msg[3]
-        
         local e = world[eid]
         local c = e[e.collider_tag]
         physicworld:set_obj_user_idx(assert(c.collider.handle), eid)
         c.user_idx = eid
     end
 end
+
+local collider_sys = ecs.system "collider_system"
+collider_sys.require_system "primitive_filter_system"
+collider_sys.require_system "collider_update_data_system"
 
 function collider_sys:update()
     for _, eid in world:each "collider_tag" do

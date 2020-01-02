@@ -37,25 +37,10 @@ function util.start_static_world(packages,systems)
 	})
 end
 
-function util.loop(world, arg)	
-	local queue = {}
-	for _, updatetype in ipairs {
-		"data_changed",
-		"asset_loaded",
-		"before_update",
-		"update",
-		"after_update",
-		"delete",
-		"end_frame",
-	} do
-		queue[#queue+1] = world:update_func(updatetype, arg[updatetype])
-	end
-
+function util.loop(world)
+	local update = world:update_func "update"
 	return function ()
-		for _, q in ipairs(queue) do
-			q()
-		end
-
+		update()
 		world:clear_removed()
 		if world.need_stop then
 			world.stop()
