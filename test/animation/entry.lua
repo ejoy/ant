@@ -6,7 +6,7 @@ runtime.start {
 		"ant.animation|ozzmesh",
 		"ant.animation|ozz_skinning",
 		"ant.serialize|serialize",
-		"ant.bullet|capsule",
+		"ant.bullet|collider.capsule",
 		"ant.render|render",
 		"ant.render|name",
 		"ant.render|directional_light",

@@ -75,7 +75,7 @@ local function ozzmesh_animation_test()
             "ozzmesh",
             "animation",
             "ozz_skinning",
-            "capsule",
+            "collider.capsule",
             "serialize",
             "name",
             "shadow_cast",

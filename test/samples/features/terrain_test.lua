@@ -57,7 +57,7 @@ function terrain_test:init()
 		policy = {
 			"render",
 			"terrain",
-			"terrain_collider",
+			"terrain.collider",
 			"name",
 			"select",
 		},

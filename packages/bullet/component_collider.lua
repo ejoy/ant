@@ -88,7 +88,6 @@ for _, name in ipairs {
 	"box",
 	"capsule",
 	"custom",
-	"character",
 } do
 	local collider_name = name .. "_collider"
 	local shape_name = name .. "_shape"
@@ -116,7 +115,8 @@ for _, name in ipairs {
 		e.collider_tag = collider_name
 	end
 
-	local cp = ecs.policy(name)
+	local policy_name = "collider." .. name
+	local cp = ecs.policy(policy_name)
 	cp.require_component "transform"
 	cp.require_component "collider_tag"
 	cp.require_component(collider_name)

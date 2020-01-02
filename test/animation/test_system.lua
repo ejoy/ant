@@ -55,7 +55,7 @@ local function create_animation_test()
             -- "state_chain",
             "ozzmesh",
             -- "ozz_skinning",
-            "capsule",
+            "collider.capsule",
             "render",
             "serialize",
             "name",
