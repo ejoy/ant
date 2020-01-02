@@ -315,7 +315,7 @@ end
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
-
+skinning_sys.step "skin_mesh"
 skinning_sys.depend "animation_system"
 
 local function build_skinning_matrices(skinningjob, aniresult)
@@ -343,7 +343,7 @@ function skinning_sys:update()
 				animodule.mesh_skinning(skinning_matrices, part.inputdesc, part.outputdesc, part.num, part.influences_count)
 			end
 
-			bgfx.update(handle, 0, {"!", 0, updatedata:pointer(), job.buffersize})
+			bgfx.update(handle, 0, {"!", updatedata:pointer(), 0, job.buffersize})
 		end
 	end
 end

@@ -2,6 +2,7 @@ local ecs = ...
 local timer = require "timer"
 
 local timesystem = ecs.system "timesystem"
+timesystem.step "timer"
 local baselib = require "bgfx.baselib"
 
 function timesystem:update()

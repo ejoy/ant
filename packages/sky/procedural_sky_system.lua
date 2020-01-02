@@ -185,6 +185,8 @@ function ps:init()
 end
 
 local sky_system = ecs.system "procedural_sky_system"
+sky_system.step "update_sky"
+
 sky_system.dependby "primitive_filter_system"
 sky_system.dependby "filter_properties"
 
@@ -275,6 +277,8 @@ end
 
 
 local sun_update_system = ecs.system "sun_update_system"
+sky_system.step "update_sun"
+
 sun_update_system.dependby "procedural_sky_system"
 sun_update_system.depend "timesystem"
 

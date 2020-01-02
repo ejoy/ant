@@ -42,6 +42,7 @@ local PVPScenLoader = require 'PVPSceneLoader'
 local pbrscene = require "pbr_scene"
 
 local init_loader = ecs.system 'init_loader'
+init_loader.step 'start'
 
 init_loader.depend 'timesystem'
 init_loader.depend "serialize_index_system"

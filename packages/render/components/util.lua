@@ -164,7 +164,7 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 		name = name or "Plane",
 	}
 	if needcollider then
-		policy[#policy+1] = "box"
+		policy[#policy+1] = "collider.box"
 
 		data["collider_tag"] = "box_collider"
 		data["box_collider"] = {

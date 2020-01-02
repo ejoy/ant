@@ -55,6 +55,7 @@ ecs.component "animation"
 ecs.component_alias("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
+anisystem.step "sample_animation_pose"
 
 local ani_module = require "hierarchy.animation"
 local ik_module = require "hierarchy.ik"

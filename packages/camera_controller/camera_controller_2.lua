@@ -9,6 +9,7 @@ local camerautil = import_package "ant.render".camera
 
 
 local camera_controller_system = ecs.system "camera_controller_2"
+camera_controller_system.step "camera_control"
 
 camera_controller_system.singleton "message"
 camera_controller_system.depend "message_system"
