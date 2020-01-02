@@ -104,12 +104,22 @@ function render_props.init()
 	}
 end
 
+local render_init = ecs.system "render_init"
+render_init.step "start"
+
+function render_init:init()
+	local fbsize = world.args.fb_size
+	ru.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5, 0})
+	ru.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
+end
+
 local rendersys = ecs.system "render_system"
 
 rendersys.step "render_commit"
 
 rendersys.singleton "render_properties"
 
+rendersys.require_system "render_init"
 rendersys.require_system "primitive_filter_system"
 rendersys.require_system "filter_properties"
 rendersys.require_system "end_frame"
@@ -122,12 +132,6 @@ rendersys.require_policy "name"
 local function update_view_proj(viewid, camera)
 	local view, proj = ms:view_proj(camera, camera.frustum)
 	bgfx.set_view_transform(viewid, view, proj)
-end
-
-function rendersys:init()
-	local fbsize = world.args.fb_size	
-	ru.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5, 0})
-	ru.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 end
 
 function rendersys:update()

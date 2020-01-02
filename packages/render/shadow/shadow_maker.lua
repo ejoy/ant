@@ -327,7 +327,18 @@ local function create_shadow_entity(view_camera, shadowmap_size, split_num, dept
 	}
 end
 
-function sm:post_init()
+local default_viewcamera = {
+	updir = ms:vector(0, 1, 0),
+	viewdir = ms:vector(0, 0, 1),
+	eyepos = ms:vector(0, 0, 0),
+	frustum = {
+		fov = math.rad(90), aspect = 1,
+		n = 1, f = 100,
+		ortho = false,
+	},
+}
+
+function sm:init()
 	-- this function should move to somewhere which call 'entity spawn'
 	local sd = setting.get()
 	local shadowsetting = sd.graphic.shadow
@@ -336,8 +347,7 @@ function sm:post_init()
 	local linear_shadow = depth_type == "linear"
 	local split_num 	= shadowsetting.split_num
 
-	local view_camera	= camerautil.get_camera(world, "main_view")
-	local seid 	= create_shadow_entity(view_camera, shadowmap_size, split_num, depth_type)
+	local seid 	= create_shadow_entity(default_viewcamera, shadowmap_size, split_num, depth_type)
 	local se 	= world[seid]
 	local fbidx = se.fb_index
 	local lightdir = get_directional_light_dir_T()
@@ -350,14 +360,14 @@ function sm:post_init()
 		local csm_viewid = viewidmgr.get(tagname)
 		fbmgr.bind(csm_viewid, fbidx)
 		viewrect.x = (ii-1)*shadowmap_size
-		create_csm_entity(view_camera, lightdir, ii, ratios[ii], viewrect, shadowmap_size, linear_shadow)
+		create_csm_entity(default_viewcamera, lightdir, ii, ratios[ii], viewrect, shadowmap_size, linear_shadow)
 	end
 end
 
 function sm:update()
 	for _, eid in world:each "csm" do
-		local sm = world[eid]
-		local filter = sm.primitive_filter
+		local se = world[eid]
+		local filter = se.primitive_filter
 		local results = filter.result
 		local function replace_material(result, material)
 			local mi = assetmgr.get_resource(material.ref_path)	-- must only one material content
@@ -367,7 +377,7 @@ function sm:update()
 			end
 		end
 	
-		local shadowmaterial = sm.material
+		local shadowmaterial = se.material
 		replace_material(results.opaticy, 		shadowmaterial)
 		replace_material(results.translucent, 	shadowmaterial)
 	end
