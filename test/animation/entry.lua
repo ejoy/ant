@@ -14,6 +14,7 @@ runtime.start {
 	},
 	system = {
 		"ant.test.animation|init_loader",
+		"ant.test.animation|init_gui",
 	},
 	pipeline = {
 		"start",
@@ -31,6 +32,11 @@ runtime.start {
 				"tonemapping",
 				"combine_postprocess",
 			}}
+		}},
+		{"ui", {
+			"ui_start",
+			"ui",
+			"ui_end",
 		}},
 		"end_frame",
 		"final",
