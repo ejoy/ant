@@ -347,16 +347,6 @@ local function init_modules(w, config, loader)
 		if not v then
 			error(("invalid system name: `%s`."):format(name))
 		end
-		if v.depend then
-			for _, subk in ipairs(v.depend) do
-				import_system(subk)
-			end
-		end
-		if v.dependby then
-			for _, subk in ipairs(v.dependby) do
-				import_system(subk)
-			end
-		end
 		if v.require_package then
 			for _, name in ipairs(v.require_package) do
 				import_package(name)

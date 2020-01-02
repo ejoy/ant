@@ -92,8 +92,8 @@ end
 
 -- update material system
 local pickup_material_sys = ecs.system "pickup_material_system"
-pickup_material_sys.depend "primitive_filter_system"
-pickup_material_sys.dependby "render_system"
+pickup_material_sys.require_system "primitive_filter_system"
+pickup_material_sys.require_system "render_system"
 
 local function replace_material(result, material)
 	if result then
@@ -172,8 +172,8 @@ local pickup_sys = ecs.system "pickup_system"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "message"
 
-pickup_sys.depend "pickup_material_system"
-pickup_sys.dependby "end_frame"
+pickup_sys.require_system "pickup_material_system"
+pickup_sys.require_system "end_frame"
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"

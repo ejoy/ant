@@ -8,7 +8,7 @@ local fs = require "filesystem"
 local serialize = import_package "ant.serialize"
 
 local terrain_test = ecs.system "terrain_test"
-terrain_test.depend 'init_loader'
+terrain_test.require_system 'init_loader'
 
 function terrain_test:init()
 	local terrainfolder = fs.path '/pkg/ant.resources' / 'depiction' / 'terrain'

@@ -20,7 +20,7 @@ local camera_controller_system = ecs.system "camera_controller_1"
 camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
-camera_controller_system.depend "message_system"
+camera_controller_system.require_system "message_system"
 
 local function camera_move(forward_axis, position, dx, dy, dz)
 	local right_axis, up_axis = ms:base_axes(forward_axis)

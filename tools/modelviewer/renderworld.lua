@@ -30,18 +30,18 @@ local assetmgr = import_package "ant.asset".mgr
 
 model_review_system.singleton "constant"
 
-model_review_system.depend "primitive_filter_system"
-model_review_system.depend "render_system"
-model_review_system.depend "viewport_detect_system"
-model_review_system.depend "procedural_sky_system"
-model_review_system.depend "cull_system"
-model_review_system.depend "shadow_maker"
---model_review_system.depend "render_mesh_bounding"
-model_review_system.dependby "camera_controller_2"
-model_review_system.depend "imgui_runtime_system"
-model_review_system.depend "steering_system"
-model_review_system.depend "postprocess_system"
-model_review_system.depend "tonemapping"
+model_review_system.require_system "primitive_filter_system"
+model_review_system.require_system "render_system"
+model_review_system.require_system "viewport_detect_system"
+model_review_system.require_system "procedural_sky_system"
+model_review_system.require_system "cull_system"
+model_review_system.require_system "shadow_maker"
+--model_review_system.require_system "render_mesh_bounding"
+model_review_system.require_system "camera_controller_2"
+model_review_system.require_system "imgui_runtime_system"
+model_review_system.require_system "steering_system"
+model_review_system.require_system "postprocess_system"
+model_review_system.require_system "tonemapping"
 
 local lu = renderpkg.light
 local cu = renderpkg.components

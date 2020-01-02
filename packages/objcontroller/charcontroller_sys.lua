@@ -16,8 +16,8 @@
 -- local char_controller_sys = ecs.system "charcontroller_system"
 -- char_controller_sys.singleton "message"
 
--- char_controller_sys.depend "message_system"
--- char_controller_sys.depend "camera_init"  -- new use mode 
+-- char_controller_sys.require_system "message_system"
+-- char_controller_sys.require_system "camera_init"  -- new use mode 
 
 -- local VIEW_DEBUG_DRAWER = 255
 

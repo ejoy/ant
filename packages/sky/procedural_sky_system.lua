@@ -185,8 +185,8 @@ function ps:init()
 end
 
 local sky_system = ecs.system "procedural_sky_system"
-sky_system.dependby "primitive_filter_system"
-sky_system.dependby "filter_properties"
+sky_system.require_system "primitive_filter_system"
+sky_system.require_system "filter_properties"
 
 local shader_parameters = {0.02, 3.0, 0.1, 0}
 
@@ -275,8 +275,8 @@ end
 
 
 local sun_update_system = ecs.system "sun_update_system"
-sun_update_system.dependby "procedural_sky_system"
-sun_update_system.depend "timesystem"
+sun_update_system.require_system "procedural_sky_system"
+sun_update_system.require_system "timesystem"
 
 local timer = import_package "ant.timer"
 

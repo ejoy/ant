@@ -10,7 +10,7 @@ function update_physic_obj_sys:update()
 end
 
 local physic_sys = ecs.system "physic_system"
-physic_sys.depend "update_physic_object_transform"
+physic_sys.require_system "update_physic_object_transform"
 
 function physic_sys:update()
 

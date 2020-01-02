@@ -10,7 +10,7 @@ local ms = mathpkg.stack
 local collider_mb = world:sub {"component_register", "collider_tag"}
 
 local collider_sys = ecs.system "collider_system"
-collider_sys.dependby "primitive_filter_system"
+collider_sys.require_system "primitive_filter_system"
 
 function collider_sys:data_changed()
     for msg in collider_mb:each() do
@@ -37,8 +37,8 @@ function collider_sys:update()
 end
 
 local char_sys = ecs.system "character_system"
-char_sys.dependby "primitive_filter_system"
-char_sys.depend "collider_system"
+char_sys.require_system "primitive_filter_system"
+char_sys.require_system "collider_system"
 
 function char_sys:update()
     for _, char_eid in world:each "character" do

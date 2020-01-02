@@ -10,7 +10,7 @@ local platform = require "platform"
 local steering_system = ecs.system "steering_system"
 
 steering_system.singleton "message"
-steering_system.depend "imgui_runtime_system"
+steering_system.require_system "imgui_runtime_system"
 
 local steeringTex
 local touch = {

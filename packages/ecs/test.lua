@@ -51,7 +51,7 @@ function mods.dummy(...)
 	local dummy = ecs.system "dummy"
 
 	dummy.singleton "init"
-	dummy.depend "init"
+	dummy.require_system "init"
 
 	local fp = ecs.policy "foobar"
 	fp.require_component "foobar"
@@ -113,7 +113,7 @@ function mods.dummy(...)
 	end
 
 	local dby = ecs.system "dependby"
-	dby.dependby "dummy"
+	dby.require_system "dummy"
 
 	function dby:init()
 		print("in dby:init()")

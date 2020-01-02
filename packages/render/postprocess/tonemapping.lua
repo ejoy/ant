@@ -11,9 +11,9 @@ local tm = ecs.system "tonemapping"
 tm.step "tonemapping"
 
 tm.singleton "postprocess"
-tm.depend    "render_system"
-tm.depend    "bloom_system"
-tm.dependby  "postprocess_system"
+tm.require_system "render_system"
+tm.require_system "bloom_system"
+tm.require_system "postprocess_system"
 
 function tm:post_init()
     local sd = setting.get()

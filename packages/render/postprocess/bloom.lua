@@ -12,9 +12,9 @@ local fs        = require "filesystem"
 local bloom_sys = ecs.system "bloom_system"
 bloom_sys.step "bloom"
 bloom_sys.singleton "postprocess"
-bloom_sys.depend    "render_system"
-bloom_sys.dependby  "postprocess_system"
-bloom_sys.dependby  "tonemapping"
+bloom_sys.require_system "render_system"
+bloom_sys.require_system "postprocess_system"
+bloom_sys.require_system "tonemapping"
 
 local bloom_chain_count = 4
 

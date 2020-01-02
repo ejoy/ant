@@ -110,9 +110,9 @@ rendersys.step "render_commit"
 
 rendersys.singleton "render_properties"
 
-rendersys.depend "primitive_filter_system"
-rendersys.depend "filter_properties"
-rendersys.dependby "end_frame"
+rendersys.require_system "primitive_filter_system"
+rendersys.require_system "filter_properties"
+rendersys.require_system "end_frame"
 
 rendersys.require_policy "render_queue"
 rendersys.require_policy "main_queue"
@@ -169,7 +169,7 @@ function rendersys:update()
 end
 
 local before_render_system = ecs.system "before_render_system"
-before_render_system.dependby "render_system"
+before_render_system.require_system "render_system"
 
 function before_render_system:update()
 	world:update_func("before_render")()

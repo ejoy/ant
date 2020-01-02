@@ -18,10 +18,10 @@ ecs.component_alias("target_entity","entityid")
 
 
 local editor_watcher_system = ecs.system "editor_watcher_system"
-editor_watcher_system.depend "editor_operate_gizmo_system"
-editor_watcher_system.dependby 'scene_space' 
+editor_watcher_system.require_system "editor_operate_gizmo_system"
+editor_watcher_system.require_system 'scene_space' 
 
-editor_watcher_system.depend "before_render_system"
+editor_watcher_system.require_system "before_render_system"
 editor_watcher_system.singleton "profile_cache"
 editor_watcher_system.singleton "operate_gizmo_cache"
 

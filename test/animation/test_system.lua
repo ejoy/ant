@@ -33,19 +33,18 @@ local init_loader = ecs.system 'init_loader'
 
 init_loader.step 'start'
 
-init_loader.depend 'timesystem'
-init_loader.depend "serialize_index_system"
-init_loader.depend "procedural_sky_system"
-init_loader.depend "imgui_runtime_system"
-
-init_loader.dependby 'render_system'
-init_loader.dependby 'cull_system'
-init_loader.dependby 'shadow_maker'
-init_loader.dependby 'primitive_filter_system'
-init_loader.dependby 'camera_controller'
-init_loader.dependby 'skinning_system'
-init_loader.dependby 'viewport_detect_system'
-init_loader.dependby 'state_machine'
+init_loader.require_system 'timesystem'
+init_loader.require_system "serialize_index_system"
+init_loader.require_system "procedural_sky_system"
+init_loader.require_system "imgui_runtime_system"
+init_loader.require_system 'render_system'
+init_loader.require_system 'cull_system'
+init_loader.require_system 'shadow_maker'
+init_loader.require_system 'primitive_filter_system'
+init_loader.require_system 'camera_controller'
+init_loader.require_system 'skinning_system'
+init_loader.require_system 'viewport_detect_system'
+init_loader.require_system 'state_machine'
 
 
 local function create_animation_test()

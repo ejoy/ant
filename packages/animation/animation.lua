@@ -109,12 +109,3 @@ local math3d_adapter = require "math3d.adapter"
 mathadapter_util.bind("animation", function ()
 	ik_module.do_ik = math3d_adapter.matrix(ms, ik_module.do_ik, 1)
 end)
-
-
-
--- local post_ani_sys = ecs.system "post_animation_system"
--- post_ani_sys.depend "animation"
--- post_ani_sys.dependby
--- function post_ani_sys:update()
--- 	for _, eid in 
--- end

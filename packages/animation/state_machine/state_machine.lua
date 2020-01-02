@@ -50,7 +50,7 @@ m.require_component "state_chain"
 ecs.component_alias("state_chain", "resource")
 
 local sm = ecs.system "state_machine"
-sm.dependby "animation_system"
+sm.require_system "animation_system"
 
 function sm:update()
 	for _, eid in world:each "state_chain" do
