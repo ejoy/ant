@@ -13,7 +13,7 @@ local util = imgui.util
 local imgui_system = ecs.system "imgui_system"
 
 imgui_system.singleton "message"
-imgui_system.depend "message_system"
+imgui_system.require_system "message_system"
 
 local editbox = {
 	flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },

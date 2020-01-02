@@ -6,7 +6,7 @@ local ms = import_package "ant.math".stack
 local objutil = require "util"
 
 local cc = ecs.system "character_controller"
-cc.depend "objcontroller_system"
+cc.require_system "objcontroller_system"
 
 
 local objctrller = require "objcontroller"

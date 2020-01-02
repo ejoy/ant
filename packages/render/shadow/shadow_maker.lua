@@ -56,8 +56,8 @@ scp.require_component "can_cast"
 
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.step "shadow_camera"
-maker_camera.depend "primitive_filter_system"
-maker_camera.dependby "filter_properties"
+maker_camera.require_system "primitive_filter_system"
+maker_camera.require_system "filter_properties"
 local function get_directional_light_dir_T()
 	local ld = shadowutil.get_directional_light_dir(world)
 	return ms(ld, "T")
@@ -181,10 +181,10 @@ function maker_camera:update()
 end
 local sm = ecs.system "shadow_maker"
 sm.step "make_shadow"
-sm.depend "primitive_filter_system"
-sm.depend "shadowmaker_camera"
-sm.dependby "render_system"
---sm.dependby "debug_shadow_maker"
+sm.require_system "primitive_filter_system"
+sm.require_system "shadowmaker_camera"
+sm.require_system "render_system"
+--sm.require_system "debug_shadow_maker"
 
 sm.require_policy "shadow_make"
 sm.require_policy "shadow_config"

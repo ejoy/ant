@@ -58,11 +58,11 @@ pp_sys.singleton "render_properties"
 pp_sys.singleton "postprocess"
 
 -- we list all postporcess effect here, but the order is dependent on effect's depend
-pp_sys.depend "bloom_system"
-pp_sys.depend "tonemapping"
+pp_sys.require_system "bloom_system"
+pp_sys.require_system "tonemapping"
 
-pp_sys.depend "render_system"
-pp_sys.dependby "end_frame"
+pp_sys.require_system "render_system"
+pp_sys.require_system "end_frame"
 
 local quad_reskey = fs.path "//res.mesh/postprocess.mesh"
 

@@ -11,7 +11,7 @@ local camerautil= require "camera.util"
 local bgfx = require "bgfx"
 
 local vp_detect = ecs.system "viewport_detect_system"
-vp_detect.dependby "primitive_filter_system"
+vp_detect.require_system "primitive_filter_system"
 vp_detect.singleton "message"
 
 local function resize_framebuffer(w, h, fbidx, viewid)

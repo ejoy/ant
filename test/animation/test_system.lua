@@ -33,28 +33,26 @@ local init_loader = ecs.system 'init_loader'
 
 init_loader.step 'start'
 
-init_loader.depend 'timesystem'
-init_loader.depend "serialize_index_system"
-init_loader.depend "procedural_sky_system"
-init_loader.depend "imgui_runtime_system"
-
-init_loader.dependby 'render_system'
-init_loader.dependby 'cull_system'
-init_loader.dependby 'shadow_maker'
-init_loader.dependby 'primitive_filter_system'
-init_loader.dependby 'camera_controller'
-init_loader.dependby 'skinning_system'
-init_loader.dependby 'viewport_detect_system'
-init_loader.dependby 'state_machine'
+init_loader.require_system 'timesystem'
+init_loader.require_system "serialize_index_system"
+init_loader.require_system "procedural_sky_system"
+init_loader.require_system 'render_system'
+init_loader.require_system 'cull_system'
+init_loader.require_system 'shadow_maker'
+init_loader.require_system 'primitive_filter_system'
+init_loader.require_system 'camera_controller'
+init_loader.require_system 'skinning_system'
+init_loader.require_system 'viewport_detect_system'
+init_loader.require_system 'state_machine'
 
 
 local function create_animation_test()
     local eid = world:create_entity {
         policy = {
-            -- "animation",
-            -- "state_chain",
+            "animation",
+            "state_chain",
             "ozzmesh",
-            -- "ozz_skinning",
+            "ozz_skinning",
             "collider.capsule",
             "render",
             "serialize",
@@ -69,48 +67,48 @@ local function create_animation_test()
             can_render = true,
             rendermesh = {},
             material = computil.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"),
-            -- animation = {
-            --     anilist = {
-            --         walk = {
-            --             --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
-            --             ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation1.ozz',
-            --             scale = 1,
-            --             looptimes = 0,
-            --         },
-            --         run = {
-            --             --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
-            --             ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation2.ozz',
-            --             scale = 1,
-            --             looptimes = 0,
-            --         },
-            --         runfast = {
-            --             --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
-            --             ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation3.ozz',
-            --             scale = 1,
-            --             looptimes = 0,
-            --         }
-            --     },
-            --     pose = {
-            --         walk = {
-            --             {name="walk", weight=1},
-            --         },
-            --         run = {
-            --             {name="run", weight=1},
-            --         },
-            --         runfast = {
-            --             {name="runfast", weight=1},
-            --         }
-            --     },
-            --     blendtype = 'blend',
-            --     birth_pose = "walk"
-            -- },
-            -- state_chain = {
-            --     ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',
-            -- },
-            -- skeleton = {
-            --     --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
-            --     ref_path = fs.path '/pkg/ant.resources/meshes/skeleton/human_skeleton.ozz'
-            -- },
+            animation = {
+                anilist = {
+                    walk = {
+                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/walking.ozz',
+                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation1.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                    run = {
+                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running.ozz',
+                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation2.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                    runfast = {
+                        --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz',
+                        ref_path = fs.path '/pkg/ant.resources/meshes/animation/animation3.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    }
+                },
+                pose = {
+                    walk = {
+                        {name="walk", weight=1},
+                    },
+                    run = {
+                        {name="run", weight=1},
+                    },
+                    runfast = {
+                        {name="runfast", weight=1},
+                    }
+                },
+                blendtype = 'blend',
+                birth_pose = "walk"
+            },
+            state_chain = {
+                ref_path = fs.path '/pkg/ant.test.animation/assets/test.sm',
+            },
+            skeleton = {
+                --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/skeleton.ozz'
+                ref_path = fs.path '/pkg/ant.resources/meshes/skeleton/human_skeleton.ozz'
+            },
             mesh = {
                 --ref_path = fs.path '/pkg/ant.resources.binary/meshes/female/female.ozz'
                 ref_path = fs.path '/pkg/ant.resources/meshes/mesh.ozz'
@@ -168,6 +166,11 @@ function init_loader:post_init()
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
 
+local m = ecs.system 'init_gui'
+m.step "ui"
+m.require_system "imgui_start_system"
+m.require_system "imgui_end_system"
+
 local imgui = require "imgui"
 
 local function defer(f)
@@ -205,7 +208,7 @@ end
 
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
-function init_loader:on_gui()
+function m:update()
 	local widget = imgui.widget
     for _ in imgui_windows("Test", wndflags) do
         for name in sortpairs(world[eid].animation.pose) do

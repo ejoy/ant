@@ -156,7 +156,7 @@ ecs.component "material" { multiple=true }
 	["opt"].properties "properties"
 
 
-ecs.component_alias("can_render", "boolean", true) {depend={"transform", "rendermesh", "material"}}
+ecs.component_alias("can_render", "boolean", true)
 ecs.component_alias("can_cast", "boolean", false)
 ecs.component_alias("name", "string", "")
 

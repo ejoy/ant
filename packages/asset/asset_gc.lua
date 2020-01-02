@@ -6,7 +6,7 @@ local platform = require "platform"
 local timer = import_package "ant.timer"
 
 local gc = ecs.system "asset_gc"
-gc.depend "end_frame"
+gc.require_system "end_frame"
 
 local expiration<const> = 1000
 local lasttime = timer.cur_time()

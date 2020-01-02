@@ -13,7 +13,7 @@ local camerautil= renderpkg.camera
 
 local cull_sys = ecs.system "cull_system"
 cull_sys.step "cull"
-cull_sys.depend "primitive_filter_system"
+cull_sys.require_system "primitive_filter_system"
 
 function cull_sys:update()
 	for _, tag in ipairs {"main_queue", "csm", "pickup"} do

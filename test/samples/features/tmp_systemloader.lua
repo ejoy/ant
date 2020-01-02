@@ -44,23 +44,23 @@ local pbrscene = require "pbr_scene"
 local init_loader = ecs.system 'init_loader'
 init_loader.step 'start'
 
-init_loader.depend 'timesystem'
-init_loader.depend "serialize_index_system"
-init_loader.depend "procedural_sky_system"
+init_loader.require_system 'timesystem'
+init_loader.require_system "serialize_index_system"
+init_loader.require_system "procedural_sky_system"
 
-init_loader.dependby 'render_system'
-init_loader.dependby 'cull_system'
-init_loader.dependby 'shadow_maker'
-init_loader.dependby 'primitive_filter_system'
---init_loader.dependby 'camera_controller'
-init_loader.dependby 'skinning_system'
-init_loader.dependby 'viewport_detect_system'
-init_loader.dependby 'state_machine'
-init_loader.dependby 'physic_bounding'
-init_loader.dependby 'draw_raycast_point'
-init_loader.dependby 'camera_controller_2'
-init_loader.dependby 'character_system'
---init_loader.dependby 'asset_gc'
+init_loader.require_system 'render_system'
+init_loader.require_system 'cull_system'
+init_loader.require_system 'shadow_maker'
+init_loader.require_system 'primitive_filter_system'
+--init_loader.require_system 'camera_controller'
+init_loader.require_system 'skinning_system'
+init_loader.require_system 'viewport_detect_system'
+init_loader.require_system 'state_machine'
+init_loader.require_system 'physic_bounding'
+init_loader.require_system 'draw_raycast_point'
+init_loader.require_system 'camera_controller_2'
+init_loader.require_system 'character_system'
+--init_loader.require_system 'asset_gc'
 
 local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'

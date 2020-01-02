@@ -17,8 +17,8 @@ local camera_controller_system = ecs.system "editor_camera_controller"
 camera_controller_system.singleton "message"
 camera_controller_system.singleton "control_state"
 
-camera_controller_system.depend "message_system"
--- camera_controller_system.depend "camera_init"
+camera_controller_system.require_system "message_system"
+-- camera_controller_system.require_system "camera_init"
 
 ecs.tag "test_remove_com"
 

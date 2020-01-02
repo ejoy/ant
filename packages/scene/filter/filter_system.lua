@@ -30,9 +30,9 @@ end
 local primitive_filter_sys = ecs.system "primitive_filter_system"
 primitive_filter_sys.step "filter_primitive"
 
-primitive_filter_sys.dependby 	"filter_properties"
-primitive_filter_sys.singleton 	"hierarchy_transform_result"
-primitive_filter_sys.singleton 	"event"
+primitive_filter_sys.require_system "filter_properties"
+primitive_filter_sys.singleton "hierarchy_transform_result"
+primitive_filter_sys.singleton "event"
 
 --luacheck: ignore self
 local function reset_results(results)
