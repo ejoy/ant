@@ -124,7 +124,7 @@ local draw_raycast_point = ecs.system "draw_raycast_point"
 draw_raycast_point.require_system "primitive_filter_system"
 draw_raycast_point.require_system "character_system"
 
-function draw_raycast_point:update()
+function draw_raycast_point:widget()
     local vb, ib = {"fffd", }, {}
     for hitted in ray_cast_hitted:each() do
         local result = hitted[3]

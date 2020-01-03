@@ -31,6 +31,10 @@ runtime.start {
 			"start",
 			"timer",
 			"data_changed",
+			{name = "collider",
+				"update_collider_transform",
+				"update_collider",
+			},
 			{ name = "animation",
 				"animation_state",
 				"sample_animation_pose",
@@ -40,6 +44,7 @@ runtime.start {
 				"update_sun",
 				"update_sky",
 			},
+			
 			"widget",
 			{ name = "render",
 				"shadow_camera",

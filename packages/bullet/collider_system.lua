@@ -21,7 +21,7 @@ function collider_sys:data_changed()
     end
 end
 
-function collider_sys:update()
+function collider_sys:update_collider_transform()
     for _, eid in world:each "collider_tag" do
         local e = world[eid]
         local collidercomp = e[e.collider_tag]
@@ -37,7 +37,7 @@ end
 local char_sys = ecs.system "character_system"
 char_sys.require_system "collider_system"
 
-function char_sys:update()
+function char_sys:update_collider()
     for _, char_eid in world:each "character" do
         local char = world[char_eid]
         local collidercomp = char[char.collider_tag]
