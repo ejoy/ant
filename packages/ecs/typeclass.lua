@@ -96,7 +96,7 @@ return function(world, import, class)
 
 	register {
 		type = "system",
-		setter = { "depend", "singleton", "step", "require_policy", "require_system" },
+		setter = { "singleton", "require_policy", "require_system" },
 	}
 
 	register {
@@ -107,7 +107,7 @@ return function(world, import, class)
 
 	register {
 		type = "policy",
-		setter = { "require_component", "require_transform", "require_package", "require_system", "require_policy" },
+		setter = { "require_component", "require_transform", "require_system", "require_policy" },
 	}
 
 	class.packages = {}

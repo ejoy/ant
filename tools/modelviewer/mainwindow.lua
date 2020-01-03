@@ -21,7 +21,6 @@ runtime.start {
 			"post_init",
 		},
 		{ name = "update",
-			"start",
 			"timer",
 			"data_changed",
 			{ name = "animation",

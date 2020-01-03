@@ -9,10 +9,8 @@ local w = ecs.new_world {
 }
 
 local init = w:update_func "init"
-local post_init = w:update_func "post_init"
 local update = w:update_func "update"
 
 init()
-post_init()
 update()
 

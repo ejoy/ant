@@ -347,11 +347,6 @@ local function init_modules(w, config, loader)
 		if not v then
 			error(("invalid system name: `%s`."):format(name))
 		end
-		if v.require_package then
-			for _, name in ipairs(v.require_package) do
-				import_package(name)
-			end
-		end
 		if v.require_system then
 			for _, k in ipairs(v.require_system) do
 				import_system(k)
@@ -372,11 +367,6 @@ local function init_modules(w, config, loader)
 		local v = class.policy[name]
 		if not v then
 			error(("invalid policy name: `%s`."):format(name))
-		end
-		if v.require_package then
-			for _, name in ipairs(v.require_package) do
-				import_package(name)
-			end
 		end
 		if v.require_system then
 			for _, k in ipairs(v.require_system) do
@@ -402,13 +392,13 @@ local function init_modules(w, config, loader)
 end
 
 function world:update_func(what)
-	local list = system.lists(self._steps, self._pipeline, what)
+	local list = system.lists(self._systems, what)
 	if not list then
 		return function() end
 	end
 	local switch = system.list_switch(list)
 	self._switchs[what] = switch
-	local proxy = self._singleton_proxy
+	local proxy = self._systems.proxy
 	local timer = import_package "ant.timer".cur_time
 	return function()
 		switch:update()
@@ -458,9 +448,7 @@ function m.new_world(config)
 	policy.solve(w)
 
 	-- init system
-	w._steps = system.steps(class.system, config.pipeline)
-	w._pipeline = config.pipeline
-	w._singleton_proxy = system.proxy(class.system, class.singleton)
+	w._systems = system.init(class.system, class.singleton, config.pipeline)
 
 	return w
 end
