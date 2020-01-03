@@ -13,7 +13,7 @@ runtime.start {
 	system = {
 		"ant.modelviewer|model_review_system",
 		"ant.modelviewer|steering_system",
-		"ant.camera_controller|camera_controller_2"
+		"ant.camera_controller|camera_controller"
 	},
 	pipeline = {
 		{ name = "init",

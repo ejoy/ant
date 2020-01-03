@@ -5,7 +5,7 @@ local ms = import_package "ant.math".stack
 local rhwi = import_package "ant.render".hardware_interface
 local camerautil = import_package "ant.render".camera
 
-local camera_controller_system = ecs.system "camera_controller_2"
+local camera_controller_system = ecs.system "camera_controller2"
 local function camera_reset(camera)
 	ms(camera.eyepos, {0, 4, 8, 1}, "=")
 	ms(camera.viewdir, {0, 2, 0, 1}, camera.eyepos, "-n=")

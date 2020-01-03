@@ -25,8 +25,7 @@ m.require_policy "ant.render|name"
 m.require_policy "ant.render|directional_light"
 m.require_policy "ant.render|ambient_light"
 
-m.require_system "ant.imguibase|imgui_start_system"
-m.require_system "ant.imguibase|imgui_end_system"
+m.require_system "ant.imguibase|imgui_system"
 
 local function create_animation_test()
     local eid = world:create_entity {

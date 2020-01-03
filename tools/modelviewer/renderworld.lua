@@ -39,8 +39,7 @@ m.require_system "procedural_sky_system"
 m.require_system "shadow_maker"
 m.require_system "tonemapping"
 
-m.require_system "ant.imguibase|imgui_start_system"
-m.require_system "ant.imguibase|imgui_end_system"
+m.require_system "ant.imguibase|imgui_system"
 
 local lu = renderpkg.light
 local cu = renderpkg.components

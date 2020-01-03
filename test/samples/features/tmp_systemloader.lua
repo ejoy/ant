@@ -58,7 +58,7 @@ init_loader.require_system 'viewport_detect_system'
 init_loader.require_system 'state_machine'
 init_loader.require_system 'physic_bounding'
 init_loader.require_system 'draw_raycast_point'
-init_loader.require_system 'camera_controller_2'
+init_loader.require_system 'ant.camera_controller|camera_controller2'
 init_loader.require_system 'character_system'
 --init_loader.require_system 'asset_gc'
 
