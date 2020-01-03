@@ -68,11 +68,10 @@ function scene_runner.start(scene_path,width, height)
     --start scene
     local serialize = import_package 'ant.serialize'
     local single_world = import_package "ant.imguibase".single_world
-    local iq = inputmgr.queue()
     local su = import_package "ant.scene".util
 
     local world = su.start_new_world(
-            iq, width, height, 
+            width, height, 
             packages, systems,
             {callback = script_obj,rxbus = rxbus},
         )

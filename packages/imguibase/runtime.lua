@@ -23,8 +23,6 @@ local thread_sleep = thread.sleep
 local LOGERROR = __ANT_RUNTIME__ and log.error or print
 local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
-local iq = inputmgr.queue()
-
 local callback = {}
 
 local conifg
@@ -71,7 +69,7 @@ function callback.init(nwh, context, width, height)
 	end
 
 	local su = import_package "ant.scene".util
-	world = su.start_new_world(iq, width, height, conifg)
+	world = su.start_new_world(width, height, conifg)
 	local main_viewid = viewidmgr.get "main_view"
 	fbmgr.bind(ui_viewid, assert(fbmgr.get_fb_idx(main_viewid)))
 	world_update = su.loop(world)
@@ -125,7 +123,7 @@ callback.char = imgui.input_char
 
 function callback.size(width,height,_)
 	imgui_resize(width,height)
-	iq:push("resize", width,height)
+	world:pub {"resize", width, height}
 	rhwi.reset(nil, width, height)
 end
 

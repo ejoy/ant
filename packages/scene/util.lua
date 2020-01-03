@@ -20,11 +20,7 @@ local function create_physic()
 	}
 end
 
-function util.start_new_world(input_queue, fbw, fbh, config)
-	if input_queue == nil then
-		log.info("input queue is not privided, no input event will be received!")
-	end
-	config.mq = input_queue
+function util.start_new_world(fbw, fbh, config)
 	config.fb_size={w=fbw, h=fbh}
 	config.Physics = create_physic()
 	return new_world(config)
