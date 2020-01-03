@@ -148,7 +148,7 @@ m.step "camera_control"
 m.require_policy "ant.render|main_queue"
 m.require_policy "ant.render|camera"
 
-function m:init()
+function m:post_init()
     local viewcamera = camerautil.get_camera(world, "main_view")
     viewcamera.frustum.f = 300
     ms(viewcamera.eyepos,  { 1.6, 1.8,-1.8, 0.0}, "=")

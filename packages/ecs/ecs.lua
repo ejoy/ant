@@ -401,13 +401,10 @@ local function init_modules(w, config, loader)
 	return class
 end
 
-function world:update_func(what, order)
-	local list = self._systems[what]
+function world:update_func(what)
+	local list = system.lists(self._class.system, self._pipeline, what)
 	if not list then
 		return function() end
-	end
-	if order then
-		list = system.order_list(list, order)
 	end
 	local switch = system.list_switch(list)
 	self._switchs[what] = switch
@@ -461,7 +458,7 @@ function m.new_world(config)
 	policy.solve(w)
 
 	-- init system
-	w._systems = system.lists(class.system, config.pipeline)
+	w._pipeline = config.pipeline
 	w._singleton_proxy = system.proxy(class.system, class.singleton)
 
 	return w

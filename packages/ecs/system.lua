@@ -1,5 +1,25 @@
-local solve_depend = require "solve_depend"
 local system = {}
+
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
+local function table_append(t, a)
+	table.move(a, 1, #a, #t+1, t)
+end
 
 local function get_singleton(sys, c)
 	local s = {}
@@ -40,19 +60,31 @@ function system.proxy(sys, c)
 	return p
 end
 
-local function table_append(t, a)
-	table.move(a, 1, #a, #t+1, t)
-end
-
 local function solve(res, step, pipeline)
 	for _, v in ipairs(pipeline) do
 		if type(v) == "string" then
-			if step[v] then
-				table.sort(step[v])
+			if step[v] == false then
+				error(("pipeline has duplicate step `%s`"):format(v))
+			elseif step[v] ~= nil then
 				table_append(res, step[v])
+				step[v] = false
 			end
 		elseif type(v) == "table" then
-			solve(res, step, v[2])
+			solve(res, step, v)
+		end
+	end
+end
+
+local function find_entry(pipeline, what)
+	for _, v in ipairs(pipeline) do
+		if type(v) == "table" then
+			if v.name == what then
+				return v
+			end
+			local res = find_entry(v, what)
+			if res then
+				return res
+			end
 		end
 	end
 end
@@ -63,10 +95,13 @@ local function solve_depend(sys, pipeline)
 		t[k] = obj
 		return obj
 	end})
-	for sys_name, s in pairs(sys) do
-		if s.step then
+	for sys_name, s in sortpairs(sys) do
+		for step_name, func in pairs(s.method) do
+			table.insert(step[step_name], { sys_name, func })
+		end
+		if s.step and s.method.update then
 			local step_name = s.step[#s.step]
-			table.insert(step[step_name], sys_name)
+			table.insert(step[step_name], { sys_name, s.method.update })
 		end
 	end
 	setmetatable(step, nil)
@@ -75,66 +110,12 @@ local function solve_depend(sys, pipeline)
 	return res
 end
 
-function system.lists(sys, pipeline)
-	local r = setmetatable( {} , { __index = function(t,k)
-		local obj = {}
-		t[k] = obj
-		return obj
-	end } )
-	local depend_list = solve_depend(sys, pipeline)
-	for _, sname in ipairs(depend_list) do
-		for what, func in pairs(sys[sname].method) do
-			table.insert(r[what], { sname, func })
-		end
+function system.lists(sys, pipeline, what)
+	local subpipeline = find_entry(pipeline, what)
+	if not subpipeline then
+		return
 	end
-	setmetatable(r, nil)
-	return r
-end
-
-function system.order_list(list, order)
-	local update_list = {}
-	local norder = {}
-	for _, sname in ipairs(list) do
-		norder[sname] = true
-	end
-	for _, sname in ipairs(order) do
-		if norder[sname] then
-			table.insert(update_list, sname)
-			norder[sname] = nil
-		end
-	end
-
-	for _, n in ipairs(list) do
-		if norder[n] then
-			table.insert(update_list, n)
-			norder[n] = nil
-		end
-	end
-
-	local norder_list = {}
-	for sname in pairs(norder) do
-		table.insert(norder_list, sname)
-	end
-	table.sort(norder_list)
-	table.move(norder_list, 1, #norder_list, #update_list+1,update_list)
-
-	return update_list
-end
-
-function system.notify_list(sys, proxy)
-	local notify = {}
-	for sname, sobject in pairs(sys) do
-		for cname, f in pairs(sobject.notify) do
-			local functor = { sname, f, proxy[sname] }
-			local list = notify[cname]
-			if list == nil then
-				notify[cname] = { functor }
-			else
-				table.insert(list, functor)
-			end
-		end
-	end
-	return notify
+	return solve_depend(sys, subpipeline)
 end
 
 local switch_mt = {}; switch_mt.__index = switch_mt
