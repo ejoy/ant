@@ -14,8 +14,6 @@ runtime.start {
 	},
 	system = {
 		"ant.test.animation|init_loader",
-		"ant.test.animation|init_camera",
-		"ant.test.animation|init_gui",
 	},
 	pipeline = {
 		{ name = "init",
@@ -52,7 +50,7 @@ runtime.start {
 			"camera_control",
 			{ name = "ui",
 				"ui_start",
-				"ui",
+				"ui_update",
 				"ui_end",
 			},
 			"end_frame",

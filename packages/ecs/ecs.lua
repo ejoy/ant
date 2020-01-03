@@ -402,7 +402,7 @@ local function init_modules(w, config, loader)
 end
 
 function world:update_func(what)
-	local list = system.lists(self._class.system, self._pipeline, what)
+	local list = system.lists(self._steps, self._pipeline, what)
 	if not list then
 		return function() end
 	end
@@ -458,6 +458,7 @@ function m.new_world(config)
 	policy.solve(w)
 
 	-- init system
+	w._steps = system.steps(class.system, config.pipeline)
 	w._pipeline = config.pipeline
 	w._singleton_proxy = system.proxy(class.system, class.singleton)
 

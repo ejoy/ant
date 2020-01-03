@@ -60,7 +60,7 @@ function system.proxy(sys, c)
 	return p
 end
 
-local function solve(res, step, pipeline)
+local function solve_depend(res, step, pipeline)
 	for _, v in ipairs(pipeline) do
 		if type(v) == "string" then
 			if step[v] == false then
@@ -70,7 +70,7 @@ local function solve(res, step, pipeline)
 				step[v] = false
 			end
 		elseif type(v) == "table" then
-			solve(res, step, v)
+			solve_depend(res, step, v)
 		end
 	end
 end
@@ -89,33 +89,51 @@ local function find_entry(pipeline, what)
 	end
 end
 
-local function solve_depend(sys, pipeline)
-	local step = setmetatable({}, {__index = function(t,k)
+function system.steps(sys, pipeline)
+	local mark = {}
+	local res = setmetatable({}, {__index = function(t,k)
 		local obj = {}
 		t[k] = obj
+		mark[k] = true
 		return obj
 	end})
 	for sys_name, s in sortpairs(sys) do
 		for step_name, func in pairs(s.method) do
-			table.insert(step[step_name], { sys_name, func })
+			table.insert(res[step_name], { sys_name, func })
 		end
 		if s.step and s.method.update then
 			local step_name = s.step[#s.step]
-			table.insert(step[step_name], { sys_name, s.method.update })
+			table.insert(res[step_name], { sys_name, s.method.update })
 		end
 	end
-	setmetatable(step, nil)
-	local res = {}
-	solve(res, step, pipeline)
+	setmetatable(res, nil)
+
+	local function check(pl)
+		for _, v in ipairs(pl) do
+			if type(v) == "string" then
+				mark[v] = nil
+			elseif type(v) == "table" then
+				check(v)
+			end
+		end
+	end
+	check(pipeline)
+	mark["update"] = nil
+
+	for name in pairs(mark) do
+		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
+	end
 	return res
 end
 
-function system.lists(sys, pipeline, what)
+function system.lists(steps, pipeline, what)
 	local subpipeline = find_entry(pipeline, what)
 	if not subpipeline then
 		return
 	end
-	return solve_depend(sys, subpipeline)
+	local res = {}
+	solve_depend(res, steps, subpipeline)
+	return res
 end
 
 local switch_mt = {}; switch_mt.__index = switch_mt
