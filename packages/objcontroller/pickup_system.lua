@@ -125,7 +125,7 @@ local function recover_filter(filter)
 	recover_material(result.translucent)
 end
 
-function pickup_material_sys:update()
+function pickup_material_sys:pickup()
 	local e = world:first_entity "pickup"
 	if e then
 		local filter = e.primitive_filter

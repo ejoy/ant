@@ -14,8 +14,6 @@ local lu         = renderpkg.light
 
 local m = ecs.system 'init_loader'
 
-m.step 'start'
-
 m.require_policy "ant.animation|animation"
 m.require_policy "ant.animation|state_chain"
 m.require_policy "ant.animation|ozzmesh"
@@ -27,11 +25,8 @@ m.require_policy "ant.render|name"
 m.require_policy "ant.render|directional_light"
 m.require_policy "ant.render|ambient_light"
 
-m.require_system 'ant.timer|timesystem'
-m.require_system 'cull_system'
-m.require_system 'shadow_maker'
-m.require_system 'primitive_filter_system'
-m.require_system 'viewport_detect_system'
+m.require_system "ant.imguibase|imgui_start_system"
+m.require_system "ant.imguibase|imgui_end_system"
 
 local function create_animation_test()
     local eid = world:create_entity {
@@ -143,10 +138,6 @@ function m:init()
     eid = create_animation_test()
 end
 
-local m = ecs.system 'init_camera'
-m.require_policy "ant.render|main_queue"
-m.require_policy "ant.render|camera"
-
 function m:post_init()
     local viewcamera = camerautil.get_camera(world, "main_view")
     viewcamera.frustum.f = 300
@@ -157,8 +148,6 @@ function m:post_init()
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
 
-local m = ecs.system 'init_gui'
-m.require_system "ant.imguibase|imgui_system"
 
 local function defer(f)
     local toclose = setmetatable({}, { __close = f })
@@ -195,13 +184,13 @@ end
 
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
-function m:ui()
-	local widget = imgui.widget
+function m:ui_update()
+    local widget = imgui.widget
     for _ in imgui_windows("Test", wndflags) do
         for name in sortpairs(world[eid].animation.pose) do
             if widget.Button(name) then
                 world[eid].state_chain.target = name
             end
         end
-	end
+    end
 end

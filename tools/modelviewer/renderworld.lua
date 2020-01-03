@@ -15,33 +15,32 @@ ecs.import "ant.camera_controller"
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mu = mathpkg.util
-
 local imgui = require "imgui"
 local imgui_ant = require "imgui.ant"
-
-local model_review_system = ecs.system "model_review_system"
-
 local renderpkg = import_package "ant.render"
-
 local skypkg = import_package "ant.sky"
 local skyutil = skypkg.util
 
-local assetmgr = import_package "ant.asset".mgr
+local m = ecs.system "model_review_system"
 
-model_review_system.singleton "constant"
+m.singleton "constant"
 
-model_review_system.require_policy "ant.sky|procedural_sky"
+m.require_policy "ant.sky|procedural_sky"
+m.require_policy "ant.serialize|serialize"
+m.require_policy "ant.bullet|collider.capsule"
+m.require_policy "ant.render|mesh"
+m.require_policy "ant.render|render"
+m.require_policy "ant.render|name"
+m.require_policy "ant.render|shadow_cast"
+m.require_policy "ant.render|directional_light"
+m.require_policy "ant.render|ambient_light"
 
-model_review_system.require_system "primitive_filter_system"
-model_review_system.require_system "render_system"
-model_review_system.require_system "viewport_detect_system"
-model_review_system.require_system "procedural_sky_system"
-model_review_system.require_system "cull_system"
-model_review_system.require_system "shadow_maker"
---model_review_system.require_system "render_mesh_bounding"
-model_review_system.require_system "steering_system"
-model_review_system.require_system "postprocess_system"
-model_review_system.require_system "tonemapping"
+m.require_system "procedural_sky_system"
+m.require_system "shadow_maker"
+m.require_system "tonemapping"
+
+m.require_system "ant.imguibase|imgui_start_system"
+m.require_system "ant.imguibase|imgui_end_system"
 
 local lu = renderpkg.light
 local cu = renderpkg.components
@@ -75,7 +74,7 @@ local function a2c(t)
 	return r
 end
 
-function model_review_system:init()
+function m:init()
 	create_light()
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
@@ -181,9 +180,6 @@ function model_review_system:init()
     --world:create_entity(load_file 'tools/modelviewer/serialize_entity.txt')
 end
 
-local m = ecs.system 'init_gui'
-m.require_system "ant.imguibase|imgui_system"
-
 local function memory_info()
 	local function bytestr(n)
 		if n < 1024 then
@@ -241,7 +237,7 @@ local function imgui_windows(...)
 	end)
 end
 
-function m:ui()
+function m:ui_update()
 	local widget = imgui.widget
 	for _ in imgui_windows("Test") do
 		widget.Text(memory_info())

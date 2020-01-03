@@ -60,7 +60,9 @@ runtime.start {
 					"combine_postprocess",
 				}
 			},
+			-- editor
 			"camera_control",
+			"pickup",
 			{ name = "ui",
 				"ui_start",
 				"ui",

@@ -47,6 +47,7 @@ end
 local m = ecs.policy "state_chain"
 m.require_component "state_chain"
 m.require_system "state_machine"
+m.require_system 'ant.timer|timesystem'
 
 ecs.component_alias("state_chain", "resource")
 
