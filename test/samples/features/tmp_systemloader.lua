@@ -61,6 +61,10 @@ init_loader.require_system 'ant.camera_controller|camera_controller2'
 init_loader.require_system 'character_system'
 --init_loader.require_system 'asset_gc'
 
+local char_controller_policy = ecs.policy "character_controller"
+char_controller_policy.require_component "character"
+char_controller_policy.require_policy "collider.character"
+
 local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'
     local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
@@ -68,7 +72,7 @@ local function ozzmesh_animation_test()
 
     local respath = fs.path '/pkg/ant.resources'
 
-    local eid =
+    return
         world:create_entity {
         policy = {
             "render",
@@ -128,21 +132,21 @@ local function ozzmesh_animation_test()
             name = 'animation_sample',
             serialize = serialize.create(),
             collider_tag = "",
-            capsule_collider = {
+            character_collider = {
                 collider = {
                     center = {0, 0, 0},
                     is_tigger = true,
                 },
                 shape = {
-                    radius = 1.0,
-                    height = 1.0,
-                    axis   = "Y",
+                    customs = {
+                        
+                    }
                 },
             },
             can_cast = true,
-            -- character = {
-            --     movespeed = 1.0,
-            -- }
+            character = {
+                movespeed = 1.0,
+            }
         }
     }
 end

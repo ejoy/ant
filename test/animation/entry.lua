@@ -52,6 +52,7 @@ runtime.start {
 				}
 			},
 			"camera_control",
+			"pickup",
 			{ name = "ui",
 				"ui_start",
 				"ui_update",

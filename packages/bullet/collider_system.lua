@@ -44,7 +44,7 @@ function char_sys:update_collider()
         local colliderobj = collidercomp.collider.handle
         local aabbmin, aabbmax = physicworld:aabb(colliderobj)
         local center = ms({0.5}, aabbmax, aabbmin, "+*T")
-        local at = {center[1], aabbmin[2] - 20, center[3]}
+        local at = {center[1], aabbmin[2], center[3]}
 
         local hit, result = physicworld:raycast(center, at)
         if hit then

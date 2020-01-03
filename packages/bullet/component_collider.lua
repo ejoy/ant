@@ -57,30 +57,29 @@ c.init = shape_new "capsule"
 c.delete = shape_delete
 
 local C = ecs.component "custom_shape"
-C.init = shape_new "compound"
-C.delete = shape_delete
+	["opt"].sphere "sphere_shape"
+	["opt"].box "box_shape"
+	["opt"].capsule "capsule_shape"
+	["opt"].children "custom_shape"
 
-local char = ecs.component "character_shape"
-	.spheres"sphere_shape[]"
-	.boxes 	"box_shape[]"
-	.customs"custom_shape[]"
+function C:init()
+	self.type = "compound"
+	local compoundhandle = physicworld:new_shape("compound", self)
+	self.handle = compoundhandle
 
-function char:init()
-	self.type = "character"
-	for _, sshape in ipairs(self.spheres) do
-		shape_new "sphere"(sshape)
+	local function check_add_child(shape)
+		if shape then
+			physicworld:add_to_compound(compoundhandle, shape.handle)
+		end
 	end
 
-	for _, bshape in ipairs(self.boxes) do
-		shape_new "box"(bshape)
-	end
-
-	for _, cshape in ipairs(self.customs) do
-		shape_new "compound"(cshape)
-	end
-
+	check_add_child(self.shape)
+	check_add_child(self.box)
+	check_add_child(self.capsule)
 	return self
 end
+
+C.delete = shape_delete
 
 local function process_collider(e, collider_name)
 	local cc = e[collider_name]
