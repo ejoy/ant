@@ -402,13 +402,13 @@ local function init_modules(w, config, loader)
 end
 
 function world:update_func(what)
-	local list = system.lists(self._steps, self._pipeline, what)
+	local list = system.lists(self._systems, what)
 	if not list then
 		return function() end
 	end
 	local switch = system.list_switch(list)
 	self._switchs[what] = switch
-	local proxy = self._singleton_proxy
+	local proxy = self._systems.proxy
 	local timer = import_package "ant.timer".cur_time
 	return function()
 		switch:update()
@@ -458,9 +458,7 @@ function m.new_world(config)
 	policy.solve(w)
 
 	-- init system
-	w._steps = system.steps(class.system, config.pipeline)
-	w._pipeline = config.pipeline
-	w._singleton_proxy = system.proxy(class.system, class.singleton)
+	w._systems = system.init(class.system, class.singleton, config.pipeline)
 
 	return w
 end

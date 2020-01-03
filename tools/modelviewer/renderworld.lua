@@ -1,29 +1,20 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.inputmgr"
-ecs.import "ant.render"
-ecs.import "ant.scene"
-ecs.import "ant.serialize"
-ecs.import "ant.event"
-ecs.import "ant.math.adapter"
-ecs.import "ant.sky"
-ecs.import "ant.asset"
-ecs.import "ant.imguibase"
-ecs.import "ant.camera_controller"
-
 local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-local mu = mathpkg.util
-local imgui = require "imgui"
-local imgui_ant = require "imgui.ant"
 local renderpkg = import_package "ant.render"
 local skypkg = import_package "ant.sky"
+local serialize = import_package 'ant.serialize'
+local imgui = require "imgui"
+local imgui_ant = require "imgui.ant"
+local fs = require "filesystem"
 local skyutil = skypkg.util
+local ms = mathpkg.stack
+local mu = mathpkg.util
+local lu = renderpkg.light
+local cu = renderpkg.components
 
 local m = ecs.system "model_review_system"
-
-m.singleton "constant"
 
 m.require_policy "ant.sky|procedural_sky"
 m.require_policy "ant.serialize|serialize"
@@ -35,18 +26,12 @@ m.require_policy "ant.render|shadow_cast"
 m.require_policy "ant.render|directional_light"
 m.require_policy "ant.render|ambient_light"
 
-m.require_system "procedural_sky_system"
+m.require_system "ant.sky|procedural_sky_system"
 m.require_system "shadow_maker"
 m.require_system "tonemapping"
 
-m.require_system "ant.imguibase|imgui_start_system"
-m.require_system "ant.imguibase|imgui_end_system"
+m.require_system "ant.imguibase|imgui_system"
 
-local lu = renderpkg.light
-local cu = renderpkg.components
-local fs = require "filesystem"
-
-local serialize = import_package 'ant.serialize'
 
 local function create_light()
 	lu.create_directional_light_entity(world, "direction light", 

@@ -51,7 +51,7 @@ local function gen_proxy(sto, singletons)
 	return inst
 end
 
-function system.proxy(sys, c)
+local function create_proxy(sys, c)
 	local singletons = get_singleton(sys, c)
 	local p = {}
 	for system_name, system_typeobject in pairs(sys) do
@@ -89,7 +89,7 @@ local function find_entry(pipeline, what)
 	end
 end
 
-function system.steps(sys, pipeline)
+function system.init(sys, singleton, pipeline)
 	local mark = {}
 	local res = setmetatable({}, {__index = function(t,k)
 		local obj = {}
@@ -123,16 +123,20 @@ function system.steps(sys, pipeline)
 	for name in pairs(mark) do
 		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
 	end
-	return res
+	return {
+		steps = res,
+		pipeline = pipeline,
+		proxy = create_proxy(sys, singleton),
+	}
 end
 
-function system.lists(steps, pipeline, what)
-	local subpipeline = find_entry(pipeline, what)
+function system.lists(sys, what)
+	local subpipeline = find_entry(sys.pipeline, what)
 	if not subpipeline then
 		return
 	end
 	local res = {}
-	solve_depend(res, steps, subpipeline)
+	solve_depend(res, sys.steps, subpipeline)
 	return res
 end
 
