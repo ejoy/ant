@@ -56,6 +56,7 @@ function mods.dummy(...)
 	local fp = ecs.policy "foobar"
 	fp.require_component "foobar"
 	fp.require_component "name"
+	fp.require_system "dummy"
 
 	function dummy:init()
 		print ("Dummy init")

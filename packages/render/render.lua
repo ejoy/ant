@@ -75,6 +75,8 @@ local cp = ecs.policy "camera"
 cp.require_component "camera_mgr"
 cp.require_component "name"
 
+cp.require_system "render_init"
+
 ecs.component_alias("camera_tag", "string")
 ecs.component_alias("visible", "boolean", true) 
 

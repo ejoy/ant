@@ -49,6 +49,7 @@ runtime.start {
 			}}
 		}},
 		"camera_control",
+		"pickup",
 		"end_frame",
 		"final",
 	}

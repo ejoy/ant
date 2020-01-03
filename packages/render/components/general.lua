@@ -169,6 +169,8 @@ renderpolicy.require_component "rendermesh"
 renderpolicy.require_component "material"
 renderpolicy.require_component "transform"
 
+renderpolicy.require_system "render_system"
+
 ecs.tag "can_select"
 
 local control_state = ecs.singleton "control_state"

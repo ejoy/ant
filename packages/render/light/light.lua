@@ -2,9 +2,6 @@ local ecs = ...
 
 ecs.component_alias("light", "string")
 
-local dl = ecs.policy "directional_light_policy"
-dl.require_component "light"
-
 ecs.component "directional_light"
 		.intensity "int"	(50)
 		.color "color"

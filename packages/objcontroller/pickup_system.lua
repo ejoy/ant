@@ -92,8 +92,6 @@ end
 
 -- update material system
 local pickup_material_sys = ecs.system "pickup_material_system"
-pickup_material_sys.require_system "primitive_filter_system"
-pickup_material_sys.require_system "render_system"
 
 local function replace_material(result, material)
 	if result then
@@ -167,24 +165,24 @@ ecs.component "pickup"
 	.blit_viewid "blit_viewid"
 	.pickup_cache "pickup_cache"
 
-local pickup_sys = ecs.system "pickup_system"
+local pup = ecs.policy "pickup"
+	pup.require_component "pickup"
+	pup.require_component "material"
+	pup.require_component "view_mode"
+	pup.require_system "pickup_system"
+	
+local sp = ecs.policy "select"
+	sp.require_component "can_select"
+	sp.require_system "pickup_material_system"
+	sp.require_system "pickup_system"
 
+local pickup_sys = ecs.system "pickup_system"
+pickup_sys.step "pickup"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "message"
 
-pickup_sys.require_system "pickup_material_system"
-pickup_sys.require_system "end_frame"
-
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
-
-local pup = ecs.policy "pickup"
-pup.require_component "pickup"
-pup.require_component "material"
-pup.require_component "view_mode"
-
-local sp = ecs.policy "select"
-sp.require_component "can_select"
 
 local function add_pick_entity()
 	local fb_renderbuffer_flag = renderutil.generate_sampler_flag {

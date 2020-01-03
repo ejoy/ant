@@ -15,6 +15,7 @@ test.singleton "event"
 
 local fp = ecs.policy "foobar"
 fp.require_component "foobar"
+fp.require_system "test_event"
 
 function test:init()
 	world:create_entity {

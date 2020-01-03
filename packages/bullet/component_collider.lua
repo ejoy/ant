@@ -82,12 +82,24 @@ function char:init()
 	return self
 end
 
+local function process_collider(e, collider_name)
+	local cc = e[collider_name]
+	local shapehandle = cc.shape.handle
+	local collider = cc.collider
+	local object = physicworld:new_obj(shapehandle)
+	physicworld:add_obj(object)
+	collider.handle = object
+
+	e.collider_tag = collider_name
+end
+
 for _, name in ipairs {
 	"plane",
 	"sphere",
 	"box",
 	"capsule",
 	"custom",
+	"character",
 } do
 	local collider_name = name .. "_collider"
 	local shape_name = name .. "_shape"
@@ -105,14 +117,7 @@ for _, name in ipairs {
 	t.input(collider_name)
 	t.output "collider_tag"
 	function t.process(e)
-		local cc = e[collider_name]
-		local shapehandle = cc.shape.handle
-		local collider = cc.collider
-		local object = physicworld:new_obj(shapehandle)
-		physicworld:add_obj(object)
-		collider.handle = object
-
-		e.collider_tag = collider_name
+		process_collider(e, collider_name)
 	end
 
 	local policy_name = "collider." .. name
