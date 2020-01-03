@@ -82,7 +82,7 @@ local function hitpos(cx, cy, size, nx, ny)
     return cx + nx*size - size*0.25, cy + ny*size - size*0.25
 end
 
-function steering_system:on_gui()
+function steering_system:ui_update()
     local windows = imgui.windows
     local widget = imgui.widget
     local cursor = imgui.cursor
