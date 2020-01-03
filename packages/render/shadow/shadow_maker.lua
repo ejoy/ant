@@ -303,8 +303,8 @@ local function create_shadow_entity(shadowmap_size, split_num, depth_type)
 	local height = shadowmap_size
 	local width = shadowmap_size * split_num
 
-	local min_ratio, max_ratio 	= 0.03, 1.0
-	local pssm_lambda 			= 0.85
+	local min_ratio, max_ratio 	= 0.02, 1.0
+	local pssm_lambda 			= 3
 
 	return world:create_entity {
 		policy = {
