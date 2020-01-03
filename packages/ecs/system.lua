@@ -101,10 +101,6 @@ function system.init(sys, singleton, pipeline)
 		for step_name, func in pairs(s.method) do
 			table.insert(res[step_name], { sys_name, func })
 		end
-		if s.step and s.method.update then
-			local step_name = s.step[#s.step]
-			table.insert(res[step_name], { sys_name, s.method.update })
-		end
 	end
 	setmetatable(res, nil)
 
@@ -118,7 +114,6 @@ function system.init(sys, singleton, pipeline)
 		end
 	end
 	check(pipeline)
-	mark["update"] = nil
 
 	for name in pairs(mark) do
 		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
