@@ -46,7 +46,7 @@ function vp_detect:init()
 	update_camera_viewrect(fb_size.w, fb_size.h)
 end
 
-function vp_detect:update()
+function vp_detect:data_changed()
 	for _, w, h in eventResize:unpack() do
 		update_camera_viewrect(w, h)
 	end

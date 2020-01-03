@@ -24,7 +24,7 @@ local serialize_delete_mb = world:sub {"component_removed", "serialize"}
 serialize_index_system.singleton "serialize2eid"
 
 
-function serialize_index_system:update()
+function serialize_index_system:start()
     for msg in serialize_mb:each() do
         local eid = msg[3]
         local serialize = world[eid].serialize
