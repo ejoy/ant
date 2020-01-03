@@ -28,7 +28,10 @@ local skyutil = skypkg.util
 
 local assetmgr = import_package "ant.asset".mgr
 
+model_review_system.step "start"
 model_review_system.singleton "constant"
+
+model_review_system.require_policy "ant.sky|procedural_sky"
 
 model_review_system.require_system "primitive_filter_system"
 model_review_system.require_system "render_system"
@@ -37,8 +40,6 @@ model_review_system.require_system "procedural_sky_system"
 model_review_system.require_system "cull_system"
 model_review_system.require_system "shadow_maker"
 --model_review_system.require_system "render_mesh_bounding"
-model_review_system.require_system "camera_controller_2"
-model_review_system.require_system "imgui_runtime_system"
 model_review_system.require_system "steering_system"
 model_review_system.require_system "postprocess_system"
 model_review_system.require_system "tonemapping"
@@ -112,7 +113,7 @@ function model_review_system:init()
 	world:create_entity {
 		policy = default_policy,
 		data = {
-			transform 	= mu.srt({0.2, 0.2, 0.2}, nil, {5, 0, 0}),
+			transform 	= mu.srt({0.2, 0.2, 0.2, 0}, nil, {5, 0, 0, 0}),
 			rendermesh 	= {},
 			mesh 		= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/woodother-34.mesh", },
 			material 	= {ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", },
@@ -137,7 +138,7 @@ function model_review_system:init()
 	local eid = world:create_entity {
 		policy = default_policy,
 		data = {
-			transform = mu.srt({0.1, 0.1, 0.1}, nil,  {0, 0, 10}),
+			transform = mu.srt({0.1, 0.1, 0.1, 0}, nil,  {0, 0, 10, 0}),
 			can_render = true,
 			rendermesh = {
 				submesh_refs = {
@@ -180,6 +181,11 @@ function model_review_system:init()
     --world:remove_entity(eid)
     --world:create_entity(load_file 'tools/modelviewer/serialize_entity.txt')
 end
+
+local m = ecs.system 'init_gui'
+m.step "ui"
+m.require_system "ant.imguibase|imgui_start_system"
+m.require_system "ant.imguibase|imgui_end_system"
 
 local function memory_info()
 	local function bytestr(n)
@@ -238,7 +244,7 @@ local function imgui_windows(...)
 	end)
 end
 
-function model_review_system:on_gui()
+function m:update()
 	local widget = imgui.widget
 	for _ in imgui_windows("Test") do
 		widget.Text(memory_info())

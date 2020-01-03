@@ -1,19 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.inputmgr"
-
 local ms = import_package "ant.math".stack
 local rhwi = import_package "ant.render".hardware_interface
 local camerautil = import_package "ant.render".camera
 
-
 local camera_controller_system = ecs.system "camera_controller_2"
 camera_controller_system.step "camera_control"
-
-camera_controller_system.singleton "message"
-camera_controller_system.require_system "message_system"
-camera_controller_system.require_system "render_system"
 
 local function camera_reset(camera)
 	ms(camera.eyepos, {0, 4, 8, 1}, "=")

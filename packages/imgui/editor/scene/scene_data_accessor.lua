@@ -197,7 +197,7 @@ function scene_data_accessor._start_scene(config,serialize_str)
         end
     end
     scene_data_accessor.input_queue = inputmgr.queue()
-    local world = scene.start_new_world(scene_data_accessor.input_queue, 
+    local world = scene.start_new_world(
         600, 400, 
         packages, 
         systems,
@@ -247,12 +247,11 @@ function scene_data_accessor.start_new_world(raw_path)
     
     packages[#packages+1] = pkgname
     table.move(pkgsystems, 1, #pkgsystems, #systems+1, systems)
-    scene_control.input_queue = inputmgr.queue()
-    local world = scene.start_new_world(scene_control.input_queue, 600, 400, packages, systems,{hub=hub})
+    local world = scene.start_new_world(600, 400, packages, systems,{hub=hub})
     local world_update = scene.loop(world)
 
     -- task.safe_loop(scene.loop(world))
-    gui_mgr.get("GuiScene"):bind_world(world,world_update,scene_control.input_queue)
+    gui_mgr.get("GuiScene"):bind_world(world,world_update)
 end
 
 

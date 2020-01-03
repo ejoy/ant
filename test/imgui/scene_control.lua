@@ -48,9 +48,9 @@ function scene_control.run_test_package(raw_path)
     packages[#packages+1] = pkgname
     table.move(pkgsystems, 1, #pkgsystems, #systems+1, systems)
     scene_control.input_queue = inputmgr.queue()
-    local world = scene.start_new_world(scene_control.input_queue, 
-        600, 400, 
-        packages, 
+    local world = scene.start_new_world(
+        600, 400,
+        packages,
         systems,
         {hub=hub,rxbus = rxbus})
     local world_update = scene.loop(world)
