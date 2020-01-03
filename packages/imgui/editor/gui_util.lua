@@ -8,7 +8,7 @@ local cursor = imgui.cursor
 local enum = imgui.enum
 local gui_util = {}
 
-function gui_util.get_all_schema()
+function gui_util.get_all_components()
     local pm = require "antpm"
     local packages = pm.get_pkg_list(true)
     for k = #packages,1,-1 do
@@ -28,6 +28,35 @@ function gui_util.get_all_schema()
     -- log.info_a(world._schema.map)
     -- log(world._schema.map)
     return world._schema.map
+end
+
+
+function gui_util.get_all_schema()
+    local pm = require "antpm"
+    local packages = pm.get_pkg_list(true)
+    for k = #packages,1,-1 do
+        local v = packages[k]
+        if v == "ant.ecs" or v == "project" then
+            table.remove(packages,k)
+        end
+    end
+    -- log.info_a("all_package:",packages)
+    local systems = {"timesystem", "message_system"}
+    local inputmgr      = import_package "ant.inputmgr"
+    local scene         = import_package "ant.scene".util
+    local input_queue = inputmgr.queue()
+    local world = scene.start_new_world(input_queue, 600, 400, packages, systems)
+    local world_update = scene.loop(world, {
+            update = {"timesystem", "message_system"}
+        })
+    -- world_update()
+    -- log.info_a(world._schema.map)
+    -- log(world._schema.map)
+    return {
+        policies = world._class.policy,
+        transforms = world._class.transform,
+        components = world._class.component,
+    }
 end
 
 -----------------------------------------------------------------------------

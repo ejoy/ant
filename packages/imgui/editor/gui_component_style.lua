@@ -100,7 +100,7 @@ end
 
 function GuiComponentStyle:get_schema_map()
     local util = require "editor.gui_util"
-    local schema_map = util.get_all_schema()
+    local schema_map = util.get_all_components()
     return schema_map
 end
 ------------------render setting----------------------------

@@ -31,6 +31,7 @@ local editor = {
         gui_inspector_view = require "editor.inspector.gui_inspector_view",
         gui_project_list = require "editor.projects.gui_project_list",
         gui_window_controller = require "editor.gui_window_controller",
+        gui_policy_component_pair = require "editor.gui_policy_component_pair",
         scene = {
             scene_data_accessor = require "editor.scene.scene_data_accessor",
         }

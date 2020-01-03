@@ -11,7 +11,6 @@ local function compare(tbls)
     local v1 = tbls[1]
     for i = 2,#tbls do
         if tbls[i] ~= v1 then
-            log.info_a(tbls)
             return false
         end
     end

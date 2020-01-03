@@ -11,6 +11,7 @@ local GuiProjectView = import_package "ant.imgui".editor.gui_project_view
 local GuiInspectorView = import_package "ant.imgui".editor.gui_inspector_view
 local GuiProjectList = import_package "ant.imgui".editor.gui_project_list
 local GuiWindowController = import_package "ant.imgui".editor.gui_window_controller
+local GuiPolicyComponentPair = import_package "ant.imgui".editor.gui_policy_component_pair
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local args = {
     screen_width = 1680,
@@ -43,7 +44,7 @@ function main.init()
     gui_mgr.register(GuiInspectorView.GuiName,GuiInspectorView.new())
     gui_mgr.register(GuiProjectList.GuiName,GuiProjectList.new())
     gui_mgr.register(GuiWindowController.GuiName,GuiWindowController.new())
-
+    gui_mgr.register(GuiPolicyComponentPair.GuiName,GuiPolicyComponentPair.new())
 end
 
 pm = require "antpm"

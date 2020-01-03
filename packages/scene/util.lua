@@ -9,7 +9,6 @@ local function new_world(config)
 	local world = ecs.new_world(config)
 	mathadapter.bind_math_adapter()
 	world:update_func "init" ()
-	world:update_func "post_init" ()
     return world
 end
 
