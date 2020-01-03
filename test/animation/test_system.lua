@@ -158,8 +158,7 @@ function m:post_init()
 end
 
 local m = ecs.system 'init_gui'
-m.require_system "ant.imguibase|imgui_start_system"
-m.require_system "ant.imguibase|imgui_end_system"
+m.require_system "ant.imguibase|imgui_system"
 
 local function defer(f)
     local toclose = setmetatable({}, { __close = f })

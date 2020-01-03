@@ -6,7 +6,7 @@ local timer     = import_package "ant.timer"
 local renderutil= renderpkg.util
 local fbmgr     = renderpkg.fbmgr
 
-local m = ecs.system "imgui_start_system"
+local m = ecs.system "imgui_system"
 function m:ui_start()
     local time = timer.deltatime/1000
     if time <= 0.0 then

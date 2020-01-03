@@ -38,6 +38,7 @@ runtime.start {
 			"widget",
 			{ name = "render",
 				"shadow_camera",
+				"load_render_properties",
 				"filter_primitive",
 				"make_shadow",
 				"debug_shadow",

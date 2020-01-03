@@ -182,8 +182,7 @@ function model_review_system:init()
 end
 
 local m = ecs.system 'init_gui'
-m.require_system "ant.imguibase|imgui_start_system"
-m.require_system "ant.imguibase|imgui_end_system"
+m.require_system "ant.imguibase|imgui_system"
 
 local function memory_info()
 	local function bytestr(n)
