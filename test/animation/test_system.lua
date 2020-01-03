@@ -144,7 +144,6 @@ function m:init()
 end
 
 local m = ecs.system 'init_camera'
-m.step "camera_control"
 m.require_policy "ant.render|main_queue"
 m.require_policy "ant.render|camera"
 
@@ -159,7 +158,6 @@ function m:post_init()
 end
 
 local m = ecs.system 'init_gui'
-m.step "ui"
 m.require_system "ant.imguibase|imgui_start_system"
 m.require_system "ant.imguibase|imgui_end_system"
 
@@ -198,7 +196,7 @@ end
 
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
-function m:update()
+function m:ui()
 	local widget = imgui.widget
     for _ in imgui_windows("Test", wndflags) do
         for name in sortpairs(world[eid].animation.pose) do

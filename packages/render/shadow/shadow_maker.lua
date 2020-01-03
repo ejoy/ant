@@ -55,13 +55,7 @@ local scp = ecs.policy "shadow_cast"
 scp.require_component "can_cast"
 
 local maker_camera = ecs.system "shadowmaker_camera"
-maker_camera.step "shadow_camera"
 maker_camera.require_system "primitive_filter_system"
-maker_camera.require_system "filter_properties"
-local function get_directional_light_dir_T()
-	local ld = shadowutil.get_directional_light_dir(world)
-	return ms(ld, "T")
-end
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = camerautil.get_camera(world, "main_view")
@@ -162,7 +156,7 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 	}
 end
 
-function maker_camera:update()
+function maker_camera:shadow_camera()
 	local lightdir = shadowutil.get_directional_light_dir(world)
 	local shadowentity = world:first_entity "shadow"
 	local shadowcfg = shadowentity.shadow
@@ -187,7 +181,6 @@ function maker_camera:update()
 	end
 end
 local sm = ecs.system "shadow_maker"
-sm.step "make_shadow"
 sm.require_system "primitive_filter_system"
 sm.require_system "shadowmaker_camera"
 sm.require_system "render_system"
@@ -200,16 +193,17 @@ sm.require_policy "name"
 local linear_cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
 local cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
 
-local function default_csm_camera() return {
-	type = "csm", 
-	updir = mc.Y_AXIS, 
-	viewdir = mc.Z_AXIS,
-	eyepos = mc.ZERO_PT,
-	frustum = {
-		l = -1, r = 1, t = -1, b = 1,
-		n = 1, f = 100, ortho = true,
+local function default_csm_camera()
+	return {
+		type = "csm", 
+		updir = mc.Y_AXIS, 
+		viewdir = mc.Z_AXIS,
+		eyepos = mc.ZERO_PT,
+		frustum = {
+			l = -1, r = 1, t = -1, b = 1,
+			n = 1, f = 100, ortho = true,
+		}
 	}
-}
 end
 
 local function create_csm_entity(index, viewrect, linear_shadow)
@@ -353,7 +347,7 @@ function sm:init()
 	end
 end
 
-function sm:update()
+function sm:make_shadow()
 	for _, eid in world:each "csm" do
 		local se = world[eid]
 		local filter = se.primitive_filter

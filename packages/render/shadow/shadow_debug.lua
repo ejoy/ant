@@ -18,9 +18,8 @@ local mathbaselib= require "math3d.baselib"
 
 ----------------------------------------------------------------------------------------------------------
 local debug_sm = ecs.system "debug_shadow_maker"
-debug_sm.step "debug_shadow"
-
 debug_sm.require_system "shadowmaker_camera"
+
 ecs.tag "shadow_quad"
 
 local quadsize = 192
@@ -326,7 +325,7 @@ end
 
 local record_camera_state_mb = world:sub {"record_camera_state"}
 
-function debug_sm:update()
+function debug_sm:debug_shadow()
 	for _, eid in record_camera_state_mb:unpack() do
 		log_split_distance()
 		create_debug_entity(eid)

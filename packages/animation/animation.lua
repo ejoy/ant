@@ -56,7 +56,6 @@ ecs.component "animation"
 ecs.component_alias("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
-anisystem.step "sample_animation_pose"
 
 local ani_module = require "hierarchy.animation"
 local ik_module = require "hierarchy.ik"
@@ -75,7 +74,7 @@ local function deep_copy(t)
 	return t
 end
 
-function anisystem:update()
+function anisystem:sample_animation_pose()
 	local current_time = timer.from_counter(timer.current_counter)
 
 	for _, eid in world:each("animation") do

@@ -12,10 +12,9 @@ local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 
 local cull_sys = ecs.system "cull_system"
-cull_sys.step "cull"
 cull_sys.require_system "primitive_filter_system"
 
-function cull_sys:update()
+function cull_sys:cull()
 	for _, tag in ipairs {"main_queue", "csm", "pickup"} do
 		for _, queue_eid in world:each(tag) do
 			local e = world[queue_eid]

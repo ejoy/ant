@@ -75,7 +75,7 @@ local cp = ecs.policy "camera"
 cp.require_component "camera_mgr"
 cp.require_component "name"
 
-cp.require_system "render_init"
+cp.require_system "render_system"
 
 ecs.component_alias("camera_tag", "string")
 ecs.component_alias("visible", "boolean", true) 
@@ -106,22 +106,10 @@ function render_props.init()
 	}
 end
 
-local render_init = ecs.system "render_init"
-render_init.step "start"
-
-function render_init:init()
-	local fbsize = world.args.fb_size
-	ru.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5, 0})
-	ru.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
-end
-
 local rendersys = ecs.system "render_system"
-
-rendersys.step "render_commit"
 
 rendersys.singleton "render_properties"
 
-rendersys.require_system "render_init"
 rendersys.require_system "primitive_filter_system"
 rendersys.require_system "filter_properties"
 rendersys.require_system "end_frame"
@@ -136,7 +124,13 @@ local function update_view_proj(viewid, camera)
 	bgfx.set_view_transform(viewid, view, proj)
 end
 
-function rendersys:update()
+function rendersys:init()
+	local fbsize = world.args.fb_size
+	ru.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5, 0})
+	ru.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
+end
+
+function rendersys:render_commit()
 	local render_properties = self.render_properties
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
@@ -174,12 +168,12 @@ function rendersys:update()
 	end
 end
 
-local before_render_system = ecs.system "before_render_system"
-before_render_system.require_system "render_system"
+-- local before_render_system = ecs.system "before_render_system"
+-- before_render_system.require_system "render_system"
 
-function before_render_system:update()
-	world:update_func("before_render")()
-end
+-- function before_render_system:update()
+-- 	world:update_func("before_render")()
+-- end
 
 local mathadapter_util = import_package "ant.math.adapter"
 local math3d_adapter = require "math3d.adapter"

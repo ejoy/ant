@@ -28,7 +28,6 @@ local skyutil = skypkg.util
 
 local assetmgr = import_package "ant.asset".mgr
 
-model_review_system.step "start"
 model_review_system.singleton "constant"
 
 model_review_system.require_policy "ant.sky|procedural_sky"
@@ -183,7 +182,6 @@ function model_review_system:init()
 end
 
 local m = ecs.system 'init_gui'
-m.step "ui"
 m.require_system "ant.imguibase|imgui_start_system"
 m.require_system "ant.imguibase|imgui_end_system"
 
@@ -244,7 +242,7 @@ local function imgui_windows(...)
 	end)
 end
 
-function m:update()
+function m:ui()
 	local widget = imgui.widget
 	for _ in imgui_windows("Test") do
 		widget.Text(memory_info())

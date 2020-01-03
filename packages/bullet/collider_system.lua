@@ -9,10 +9,9 @@ local ms = mathpkg.stack
 
 local collider_mb = world:sub {"component_register", "collider_tag"}
 
+local collider_sys = ecs.system "collider_system"
 
-local m = ecs.system "collider_update_data_system"
-m.step "data_changed"
-function m:update()
+function collider_sys:data_changed()
     for msg in collider_mb:each() do
         local eid = msg[3]
         local e = world[eid]
@@ -21,10 +20,6 @@ function m:update()
         c.user_idx = eid
     end
 end
-
-local collider_sys = ecs.system "collider_system"
-collider_sys.require_system "primitive_filter_system"
-collider_sys.require_system "collider_update_data_system"
 
 function collider_sys:update()
     for _, eid in world:each "collider_tag" do
@@ -40,7 +35,6 @@ function collider_sys:update()
 end
 
 local char_sys = ecs.system "character_system"
-char_sys.require_system "primitive_filter_system"
 char_sys.require_system "collider_system"
 
 function char_sys:update()

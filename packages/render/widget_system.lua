@@ -27,7 +27,6 @@ local bdp = ecs.policy "bounding_draw"
 bdp.require_component "bounding_drawer"
 
 local rmb = ecs.system "render_mesh_bounding"
-rmb.step "widget"
 
 rmb.require_system "primitive_filter_system"
 rmb.require_system "reset_mesh_buffer"
@@ -72,7 +71,7 @@ local function update_buffers(dmesh, vb, ib)
 	ib.updateoffset = #ib * 2	-- 2 for uint16_t
 end
 
-function rmb:update()
+function rmb:widget()
 	local dmesh = world:first_entity "bounding_drawer"
 
 	local transformed_boundings = {}
@@ -91,7 +90,7 @@ phy_bounding.require_system "primitive_filter_system"
 phy_bounding.require_system "reset_mesh_buffer"
 phy_bounding.require_system "collider_system"
 
-function phy_bounding:update()
+function phy_bounding:widget()
 	local dmesh = world:first_entity "bounding_drawer"
 
 	local vb, ib = {"fffd"}, {}
@@ -108,11 +107,7 @@ function phy_bounding:update()
 end
 
 local reset_bounding_buffer = ecs.system "reset_mesh_buffer"
-reset_bounding_buffer.step "end_frame"
-
-reset_bounding_buffer.require_system "end_frame"
-
-function reset_bounding_buffer:update()
+function reset_bounding_buffer:end_frame()
 	local dmesh = world:first_entity "bounding_drawer"
 	if dmesh then
 		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
@@ -126,7 +121,6 @@ end
 local ray_cast_hitted = world:sub {"ray_cast_hitted"}
 
 local draw_raycast_point = ecs.system "draw_raycast_point"
-draw_raycast_point.step "widget"
 draw_raycast_point.require_system "primitive_filter_system"
 draw_raycast_point.require_system "character_system"
 

@@ -32,7 +32,6 @@ function ur.init()
 end
 
 local scene_space = ecs.system "scene_space"
-scene_space.step "data_changed"
 
 scene_space.require_system "primitive_filter_system"
 
@@ -286,7 +285,7 @@ local trans_mb = world:sub {"component_register", "transform"}
 local hierarchy_mb = world:sub {"component_register", "hierarchy"}
 local ignore_parent_scale_mb = world:sub {"component_register", "ignore_parent_scale"}
 local ignore_parent_scale_delete_mb = world:sub {"component_removed", "ignore_parent_scale"}
-function scene_space:update()
+function scene_space:data_changed()
 	for msg in trans_mb:each() do
 		local eid = msg[3]
 		self.event:new(eid, "transform")

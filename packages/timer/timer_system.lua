@@ -2,10 +2,9 @@ local ecs = ...
 local timer = require "timer"
 
 local timesystem = ecs.system "timesystem"
-timesystem.step "timer"
 local baselib = require "bgfx.baselib"
 
-function timesystem:update()
+function timesystem:timer()
 	local current_counter = baselib.HP_counter()
 	if timer.previous_counter == 0 then
 		timer.previous_counter = current_counter

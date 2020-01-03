@@ -52,17 +52,10 @@ function ppv.init()
 end
 
 local pp_sys = ecs.system "postprocess_system"
-pp_sys.step "combine_postprocess"
-
 pp_sys.singleton "render_properties"
 pp_sys.singleton "postprocess"
 
--- we list all postporcess effect here, but the order is dependent on effect's depend
-pp_sys.require_system "bloom_system"
-pp_sys.require_system "tonemapping"
-
 pp_sys.require_system "render_system"
-pp_sys.require_system "end_frame"
 
 local quad_reskey = fs.path "//res.mesh/postprocess.mesh"
 
@@ -146,7 +139,7 @@ local function render_technique(tech, lastslot, meshgroup, render_properties)
     return lastslot
 end
 
-function pp_sys:update()
+function pp_sys:combine_postprocess()
     local pp = self.postprocess
     local techniques = pp.techniques
     if next(techniques) then

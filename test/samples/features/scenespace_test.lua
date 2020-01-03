@@ -12,7 +12,6 @@ local computil      = renderpkg.components
 local fs            = require "filesystem"
 
 local scenespace_test = ecs.system "scenespace_test"
-scenespace_test.step "data_changed"
 scenespace_test.singleton 'event'
 scenespace_test.singleton 'frame_stat'
 
@@ -592,7 +591,7 @@ local test_queue = {
     end,
 }
 
-function scenespace_test:update()
+function scenespace_test:data_changed()
     if test_queue.idx <= #test_queue then
         local op = test_queue[test_queue.idx]
         op()

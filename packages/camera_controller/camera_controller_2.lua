@@ -6,8 +6,6 @@ local rhwi = import_package "ant.render".hardware_interface
 local camerautil = import_package "ant.render".camera
 
 local camera_controller_system = ecs.system "camera_controller_2"
-camera_controller_system.step "camera_control"
-
 local function camera_reset(camera)
 	ms(camera.eyepos, {0, 4, 8, 1}, "=")
 	ms(camera.viewdir, {0, 2, 0, 1}, camera.eyepos, "-n=")
@@ -35,7 +33,7 @@ local eventKeyboard = world:sub {"keyboard"}
 local kKeyboardSpeed <const> = 0.5
 local keyboard_dx, keyborad_dy, keyboard_dz = 0, 0, 0
 
-function camera_controller_system:init()
+function camera_controller_system:post_init()
 	local camera = get_camera()
 	camera.frustum.f = 100	--set far distance to 100
 	camera_reset(camera)
@@ -59,7 +57,7 @@ function camera_controller_system:init()
 	--self.message.observers:add(message)
 end
 
-function camera_controller_system:update()
+function camera_controller_system:camera_control()
 	for _,_,state,x,y in eventMouseLeft:unpack() do
 		if state == "MOVE" then
 			local camera = get_camera()

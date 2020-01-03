@@ -177,7 +177,6 @@ local sp = ecs.policy "select"
 	sp.require_system "pickup_system"
 
 local pickup_sys = ecs.system "pickup_system"
-pickup_sys.step "pickup"
 pickup_sys.singleton "frame_stat"
 pickup_sys.singleton "message"
 
@@ -364,7 +363,7 @@ local function check_next_step(pickupcomp)
 	pickupcomp.nextstep = state_list[pickupcomp.nextstep]	
 end
 
-function pickup_sys:update()
+function pickup_sys:pickup()
 	local pickupentity = world:first_entity "pickup"
 	if pickupentity then
 		local pickupcomp = pickupentity.pickup

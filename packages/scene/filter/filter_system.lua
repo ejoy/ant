@@ -17,10 +17,9 @@ local ms = mathpkg.stack
 local mu = mathpkg.util
 
 local filter_properties = ecs.system "filter_properties"
-filter_properties.step "filter_primitive"
 filter_properties.singleton "render_properties"
 
-function filter_properties:update()
+function filter_properties:load_render_properties()
 	local render_properties = self.render_properties
 	filterutil.load_lighting_properties(world, render_properties)
 	filterutil.load_shadow_properties(world, render_properties)
@@ -28,7 +27,6 @@ function filter_properties:update()
 end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
-primitive_filter_sys.step "filter_primitive"
 
 primitive_filter_sys.require_system "filter_properties"
 primitive_filter_sys.singleton "hierarchy_transform_result"
@@ -205,7 +203,7 @@ local function reset_hierarchy_transform_result(hierarchy_cache)
 	end
 end
 
-function primitive_filter_sys:update()	
+function primitive_filter_sys:filter_primitive()
 	local hierarchy_cache = self.hierarchy_transform_result
 	for _, prim_eid in world:each "primitive_filter" do
 		local e = world[prim_eid]

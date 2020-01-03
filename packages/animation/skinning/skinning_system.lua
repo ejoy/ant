@@ -1,19 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local renderpkg = import_package "ant.render"
-local declmgr 	= renderpkg.declmgr
-local computil 	= renderpkg.components
-
-local mathpkg   = import_package "ant.math"
-local ms		= mathpkg.stack
-local mc 		= mathpkg.constant
-
-local assetpkg 	= import_package "ant.asset"
-local assetmgr 	= assetpkg.mgr
-
-local fs 		= require "filesystem"
-
 local animodule = require "hierarchy.animation"
 local bgfx 		= require "bgfx"
 
@@ -21,8 +8,6 @@ ecs.component "skinning" {}
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
-
-skinning_sys.step "skin_mesh"
 skinning_sys.require_system "animation_system"
 
 local function build_skinning_matrices(skinningjob, aniresult)
@@ -36,7 +21,7 @@ local function build_skinning_matrices(skinningjob, aniresult)
 	return skinning_matrices
 end
 
-function skinning_sys:update()
+function skinning_sys:skin_mesh()
 	for _, eid in world:each "skinning" do
 		local e = world[eid]
 		local skincomp = e.skinning

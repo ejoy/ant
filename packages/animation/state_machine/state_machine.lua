@@ -50,11 +50,12 @@ m.require_system "state_machine"
 
 ecs.component_alias("state_chain", "resource")
 
+-- state_machine should only produce animation state, and not do any animation relative work
+-- we should move animation code to animation_system, just keep state change in state_machine
 local sm = ecs.system "state_machine"
-sm.step "animation_state"
 sm.require_system "animation_system"
 
-function sm:update()
+function sm:animation_state()
 	for _, eid in world:each "state_chain" do
 		local e = world[eid]
 		if e.state_chain.transmit_merge then
