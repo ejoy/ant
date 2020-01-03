@@ -6,7 +6,6 @@
 -- -- package.path = package.path..';./libs/bullet/?.lua;'
 -- -- local bullet_world = require "bulletworld"
 
--- ecs.import "ant.inputmgr"
 -- local timer = import_package "ant.timer"
 -- local bgfx = require "bgfx"
 -- local camera_util = import_package "ant.render".util

@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.terrain"
-
 local fs = require "filesystem"
 
 local serialize = import_package "ant.serialize"

@@ -1,15 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.imguibase"
-
 local imgui = require "imgui"
 local fs = require "filesystem"
 local platform = require "platform"
 
 local steering_system = ecs.system "steering_system"
 
-steering_system.singleton "message"
 
 local steeringTex
 local touch = {
@@ -62,7 +59,7 @@ function steering_system:init()
             event_touch(x, y, true, state)
         end
     end
-    self.message.observers:add(message)
+    --self.message.observers:add(message)
 end
 
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar", "NoInputs" }

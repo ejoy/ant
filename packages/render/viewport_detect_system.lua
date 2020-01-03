@@ -1,14 +1,12 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.inputmgr"
-
 local rhwi 		= require "hardware_interface"
 local fbmgr 	= require "framebuffer_mgr"
 local camerautil= require "camera.util"
 
 local vp_detect = ecs.system "viewport_detect_system"
-vp_detect.require_system "primitive_filter_system"
+vp_detect.require_system "ant.scene|primitive_filter_system"
 
 local eventResize = world:sub {"resize"}
 

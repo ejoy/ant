@@ -28,7 +28,7 @@ bdp.require_component "bounding_drawer"
 
 local rmb = ecs.system "render_mesh_bounding"
 
-rmb.require_system "primitive_filter_system"
+rmb.require_system "ant.scene|primitive_filter_system"
 rmb.require_system "reset_mesh_buffer"
 
 local function append_buffer(desc, gvb, gib)
@@ -86,7 +86,7 @@ function rmb:widget()
 end
 
 local phy_bounding = ecs.system "physic_bounding"
-phy_bounding.require_system "primitive_filter_system"
+phy_bounding.require_system "ant.scene|primitive_filter_system"
 phy_bounding.require_system "reset_mesh_buffer"
 phy_bounding.require_system "collider_system"
 
@@ -121,7 +121,7 @@ end
 local ray_cast_hitted = world:sub {"ray_cast_hitted"}
 
 local draw_raycast_point = ecs.system "draw_raycast_point"
-draw_raycast_point.require_system "primitive_filter_system"
+draw_raycast_point.require_system "ant.scene|primitive_filter_system"
 draw_raycast_point.require_system "character_system"
 
 function draw_raycast_point:widget()

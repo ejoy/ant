@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.inputmgr"
-
 local timer 	= import_package "ant.timer"
 local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack

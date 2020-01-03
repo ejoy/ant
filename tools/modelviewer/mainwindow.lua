@@ -13,7 +13,7 @@ runtime.start {
 	system = {
 		"ant.modelviewer|model_review_system",
 		"ant.modelviewer|steering_system",
-		"ant.camera_controller|camera_controller"
+		"ant.camera_controller|camera_controller2"
 	},
 	pipeline = {
 		{ name = "init",
@@ -35,6 +35,7 @@ runtime.start {
 			"widget",
 			{ name = "render",
 				"shadow_camera",
+				"load_render_properties",
 				"filter_primitive",
 				"make_shadow",
 				"debug_shadow",

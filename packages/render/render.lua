@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.scene"
-
+ecs.import "ant.math"
 local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack
 
@@ -110,7 +109,7 @@ local rendersys = ecs.system "render_system"
 
 rendersys.singleton "render_properties"
 
-rendersys.require_system "primitive_filter_system"
+rendersys.require_system "ant.scene|primitive_filter_system"
 rendersys.require_system "filter_properties"
 rendersys.require_system "end_frame"
 
