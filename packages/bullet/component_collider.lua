@@ -81,6 +81,8 @@ end
 
 C.delete = shape_delete
 
+ecs.component_alias("character_shape", "custom_shape")
+
 local function process_collider(e, collider_name)
 	local cc = e[collider_name]
 	local shapehandle = cc.shape.handle

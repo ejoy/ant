@@ -8,6 +8,7 @@ runtime.start {
 		"ant.serialize|serialize",
 		"ant.bullet|collider.capsule",
 		"ant.bullet|collider.box",
+		"ant.bullet|collider.character",
 		"ant.sky|procedural_sky",
 		"ant.render|name",
 		"ant.render|mesh",
@@ -17,6 +18,7 @@ runtime.start {
 		"ant.render|directional_light",
 		"ant.render|ambient_light",
 		--editor
+		"ant.test.features|character_controller",
 		"ant.objcontroller|select",
 	},
 	system = {

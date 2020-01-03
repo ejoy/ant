@@ -6,6 +6,7 @@ local physicworld = physic.world
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
+local mu = mathpkg.util
 
 local collider_mb = world:sub {"component_register", "collider_tag"}
 
@@ -44,9 +45,8 @@ function char_sys:update_collider()
         local colliderobj = collidercomp.collider.handle
         local aabbmin, aabbmax = physicworld:aabb(colliderobj)
         local center = ms({0.5}, aabbmax, aabbmin, "+*T")
-        local at = {center[1], aabbmin[2], center[3]}
-
-        local hit, result = physicworld:raycast(center, at)
+        local at = ms({center[1], aabbmin[2], center[3], 1.0}, "P")
+        local hit, result = physicworld:raycast(ms(center, "P"), at)
         if hit then
             world:pub {"ray_cast_hitted", char_eid, result}
             ms(char.transform.t, result.hit_pt_in_WS, "=");

@@ -63,7 +63,7 @@ init_loader.require_system 'character_system'
 
 local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
-char_controller_policy.require_policy "collider.character"
+char_controller_policy.require_policy "ant.bullet|collider.character"
 
 local function ozzmesh_animation_test()
     local meshdir = fs.path 'meshes'
@@ -79,7 +79,8 @@ local function ozzmesh_animation_test()
             "ozzmesh",
             "animation",
             "ozz_skinning",
-            "collider.capsule",
+            "character_controller",
+            "collider.character",
             "serialize",
             "name",
             "shadow_cast",
@@ -138,8 +139,10 @@ local function ozzmesh_animation_test()
                     is_tigger = true,
                 },
                 shape = {
-                    customs = {
-                        
+                    capsule = {
+                        radius = 1.0,
+                        height = 1.0,
+                        axis = "Y",
                     }
                 },
             },
