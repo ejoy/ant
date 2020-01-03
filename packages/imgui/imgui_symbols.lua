@@ -49,8 +49,9 @@ function widget.LabelText() end
 function widget.BulletText() end
 function widget.BeginCombo() end
 function widget.EndCombo() end
-function widget.Selectable(name,selected,  x,y,flags,disable) end
 --widget.Selectable(name,{[1]=select_name,item_flags=?,width=?,height=?},disable)
+--@return pressed
+function widget.Selectable(name,selected,  x,y,flags,disable) end
 function widget.TreeNode(name,flags) end
 function widget.TreePush(name) end
 function widget.TreePop() end
@@ -126,6 +127,11 @@ function cursor.SetMouseCursor( cursor = enum.MouseCursor.Arrow ) end
 --  closebtn_change:return false if clicked;
 function windows.Begin(title_id,flag) end
 function windows.End() end
+--@param strid
+--@param w,h:default 0
+--@param has_border:default false
+--@param flags:default 0
+--@return opening
 function windows.BeginChild(strid,w,h,has_border,flags) end --return change
 function windows.EndChild() end
 function windows.BeginTabBar() end
@@ -331,6 +337,7 @@ function flags.TabBar.NoTabListScrollingButtons() end
 function flags.TabBar.NoTooltip() end
 function flags.TabBar.FittingPolicyResizeDown() end
 function flags.TabBar.FittingPolicyScroll() end
+function flags.TabBar.NoClosed() end
 
 
 function flags.DragDrop.SourceNoPreviewTooltip() end
