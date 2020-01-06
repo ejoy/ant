@@ -47,15 +47,14 @@ local function wrap_flags(flags_c,flags)
     end
 end
 
-local imgui_c = require "imgui"
+local imgui_c = require "imgui.ant"
 local widget_c = imgui_c.widget
 local flags_c = imgui_c.flags
 local windows_c = imgui_c.windows
 local util_c = imgui_c.util
 local cursor_c = imgui_c.cursor
 local enum_c = imgui_c.enum
-local imgui_ant = require "imgui.ant"
-local imgui_lua = setmetatable(imgui_ant,{__index=imgui_c})
+local imgui_lua = setmetatable({},{__index=imgui_c})
 imgui_lua.widget = setmetatable({},{__index=widget_c})
 imgui_lua.flags = setmetatable({},{__index=flags_c})
 imgui_lua.windows = setmetatable({},{__index=windows_c})

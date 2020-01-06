@@ -5,9 +5,7 @@ local assetutil = import_package "ant.asset".util
 local renderpkg = import_package "ant.render"
 local fs = require "filesystem"
 local thread = require "thread"
-local imgui = require "imgui"
-local imgui_ant = require "imgui.ant"
-imgui = setmetatable(imgui_ant,{__index=imgui})
+local imgui = require "imgui.ant"
 local platform = require "platform"
 
 local keymap = inputmgr.keymap
@@ -41,21 +39,21 @@ local function imgui_resize(width, height)
 end
 
 function callback.init(nwh, context, width, height)
-    imgui.create(nwh)
+    imgui.ant.create(nwh)
     rhwi.init {
         nwh = nwh,
         context = context,
         width = width,
         height = height,
     }
-    imgui.viewid(ui_viewid);
+    imgui.ant.viewid(ui_viewid);
     local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
-    imgui.font_program(
+    imgui.ant.font_program(
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
     local imgui_image = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
-    imgui.image_program(
+    imgui.ant.image_program(
         imgui_image.prog,
         imgui_image.uniforms.s_tex.handle
     )
@@ -125,7 +123,7 @@ function callback.size(width,height,_)
 end
 
 function callback.exit()
-    imgui.destroy()
+	imgui.ant.destroy()
     rhwi.shutdown()
     print "exit"
 end
