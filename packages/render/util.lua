@@ -152,7 +152,7 @@ function util.insert_primitive(eid, group, material, worldmat, filter)
 	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end
 
-function util.create_main_queue(world, view_rect, viewdir, eyepos)
+function util.create_main_queue(world, view_rect, camera_tag)
 	local rb_flag = util.generate_sampler_flag {
 		RT="RT_MSAA2",
 		MIN="LINEAR",
@@ -161,14 +161,7 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 		V="CLAMP"
 	}
 
-	assert(world:first_entity "camera_mgr" == nil, "camera_mgr entity have been created")
-
-	camerautil.create_camera_mgr_entity(world, 
-		default_comp.camera(eyepos, viewdir, 
-			default_comp.frustum(view_rect.w, view_rect.h)))
-
 	local sd = setting.get()
-
 	local render_buffers = {}
 
 	local main_display_format = sd.graphic.hdr.enable and "RGBA16F" or "RGBA8"
@@ -199,7 +192,7 @@ function util.create_main_queue(world, view_rect, viewdir, eyepos)
 			"name",
 		},
 		data = {
-			camera_tag = "main_view",
+			camera_tag = camera_tag,
 			viewid = viewidmgr.get "main_view",
 			render_target = {
 				viewport = default_comp.viewport(view_rect),

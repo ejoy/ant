@@ -7,9 +7,9 @@ local mathpkg    = import_package "ant.math"
 local imgui      = require "imgui"
 local fs         = require 'filesystem'
 local computil   = renderpkg.components
-local camerautil = renderpkg.camera
-local ms         = mathpkg.stack
+local defaultcomp= renderpkg.default
 local mu         = mathpkg.util
+local mc         = mathpkg.constant
 local lu         = renderpkg.light
 
 local m = ecs.system 'init_loader'
@@ -130,6 +130,16 @@ end
 local eid
 
 function m:init()
+    local fbsize = world.args.fb_size
+    local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
+    frustum.f = 300
+    world:pub {"spawn_camera", "main_camera",{
+        type = "",
+        eyepos = { 1.6, 1.8,-1.8, 1.0},
+        updir = mc.Y_AXIS,
+        viewdir = {-0.6,-0.4, 0.7, 0.0},
+        frustum = frustum,
+    }}
     lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     --skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
@@ -138,11 +148,6 @@ function m:init()
 end
 
 function m:post_init()
-    local viewcamera = camerautil.get_camera(world, "main_view")
-    viewcamera.frustum.f = 300
-    ms(viewcamera.eyepos,  { 1.6, 1.8,-1.8, 0.0}, "=")
-    ms(viewcamera.updir,   { 0.0, 1.0, 0.0, 0.0}, "=")
-    ms(viewcamera.viewdir, {-0.6,-0.4, 0.7, 0.0}, "=")
     local e = world:first_entity "main_queue"
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end

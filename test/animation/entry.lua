@@ -14,6 +14,7 @@ runtime.start {
 	},
 	system = {
 		"ant.test.animation|init_loader",
+		"ant.camera_controller|camera_spawn_system",
 	},
 	pipeline = {
 		{ name = "init",
@@ -22,6 +23,10 @@ runtime.start {
 		},
 		{ name = "update",
 			"timer",
+			{name = "logic",
+				"spawn_camera",
+				"bind_camera",
+			},
 			"data_changed",
 			{name = "collider",
 				"update_collider_transform",

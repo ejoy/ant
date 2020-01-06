@@ -111,7 +111,8 @@ end
 local function get_split_distance(index)
 	local se = world[find_csm_entity(index)]
 
-	local viewcamera = camerautil.get_camera(world, "main_view")
+	local mq = world:first_entity "main_queue"
+	local viewcamera = camerautil.get_camera(world, mq.camera_tag)
 	local viewdistance = viewcamera.frustum.f - viewcamera.frustum.n
 
 	local ratios = se.csm.split_ratios
@@ -174,7 +175,8 @@ local function check_shadow_matrix()
 	local lightdir = shadowutil.get_directional_light_dir(world)
 	print("light direction:", ms(lightdir, "V"))
 
-	local viewcamera = camerautil.get_camera(world, "main_view")
+	local mq = world:first_entity "main_queue"
+	local viewcamera = camerautil.get_camera(world, mq.camera_tag)
 	print("eye posision:", ms(viewcamera.eyepos, "V"))
 	print("view direction:", ms(viewcamera.viewdir, "V"))
 

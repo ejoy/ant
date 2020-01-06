@@ -34,9 +34,9 @@ local kKeyboardSpeed <const> = 0.5
 local keyboard_dx, keyborad_dy, keyboard_dz = 0, 0, 0
 
 function camera_controller_system:post_init()
-	local camera = get_camera()
-	camera.frustum.f = 100	--set far distance to 100
-	camera_reset(camera)
+	-- local camera = get_camera()
+	-- camera.frustum.f = 100	--set far distance to 100
+	-- camera_reset(camera)
 	dpi_x, dpi_y = rhwi.dpi()
 
 	--local message = {}

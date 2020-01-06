@@ -27,11 +27,13 @@ local skyutil = skypkg.util
 
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components
+local defaultcomp=renderpkg.default
 local camerautil= renderpkg.camera
 local aniutil   = import_package 'ant.animation'.util
 
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
+local mc        = mathpkg.constant
 
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
@@ -283,6 +285,17 @@ function init_loader:init()
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
+    local fbsize = world.args.fb_size
+    local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
+    frustum.f = 300
+    world:pub {"spawn_camera", "test_main_camera", {
+        type    = "",
+        eyepos  = {0, 0, -5, 1},
+        viewdir = mc.Z_AXIS,
+        updir   = mc.Y_AXIS,
+        frustum = frustum,
+    }}
+
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
     computil.create_bounding_drawer(world)
 
@@ -293,12 +306,4 @@ function init_loader:init()
     pbr_test()
     gltf_animation_test()
     pbrscene.create_scene(world)
-end
-
-
-function init_loader:post_init()
-    do
-        local viewcamera = camerautil.get_camera(world, "main_view")
-        viewcamera.frustum.f = 300
-    end
 end

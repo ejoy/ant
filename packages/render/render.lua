@@ -126,7 +126,7 @@ end
 
 function rendersys:init()
 	local fbsize = world.args.fb_size
-	ru.create_main_queue(world, fbsize, ms({1, 1, -1}, "inT"), {5, 5, -5, 0})
+	ru.create_main_queue(world, fbsize, "")
 	ru.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
 end
 

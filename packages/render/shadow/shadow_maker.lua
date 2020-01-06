@@ -58,7 +58,8 @@ local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.require_system "primitive_filter_system"
 
 -- local function create_crop_matrix(shadow)
--- 	local view_camera = camerautil.get_camera(world, "main_view")
+--	local mq = world:first_entity "main_queue"
+-- 	local view_camera = camerautil.get_camera(world, mq.camera_tag)
 
 -- 	local csm = shadow.csm
 -- 	local csmindex = csm.index
@@ -163,7 +164,8 @@ function maker_camera:shadow_camera()
 	local stabilize = shadowcfg.stabilize
 	local shadowmap_size = shadowcfg.shadowmap_size
 
-	local view_camera = camerautil.get_camera(world, "main_view")
+	local mq = world:first_entity "main_queue"
+	local view_camera = camerautil.get_camera(world, mq.camera_tag)
 	local frustum = view_camera.frustum
 
 	local split = shadowcfg.split

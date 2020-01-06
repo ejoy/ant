@@ -70,8 +70,6 @@ function callback.init(nwh, context, width, height)
 
 	local su = import_package "ant.scene".util
 	world = su.start_new_world(width, height, conifg)
-	local main_viewid = viewidmgr.get "main_view"
-	fbmgr.bind(ui_viewid, assert(fbmgr.get_fb_idx(main_viewid)))
 	world_update = su.loop(world)
 end
 
