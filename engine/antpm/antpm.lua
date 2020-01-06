@@ -7,23 +7,13 @@ local registered = {}
 local loaded = {}
 local entry_pkg = nil
 
-local function register(pkg, config)
-    if registered[config.name] then
-        error(('Duplicate definition package `%s` in `%s`.'):format(config.name, pkg))
-    end
-    registered[config.name] = {
-        config = config
-    }
-    return config.name
-end
-
 local function require_package(name)
     if not registered[name] or not registered[name].config.entry then
         error(("\n\tno package '%s'"):format(name))
     end
     local info = registered[name]
     if not info.env then
-		info.env = sandbox.env("/pkg/"..name, name)
+        info.env = sandbox.env("/pkg/"..name, name)
     end
     return info.env.require(info.config.entry)
 end
@@ -84,22 +74,13 @@ local function load_package(path)
             error(('Missing `%s` field in `%s`.'):format(field, cfgpath:string()))
         end
     end
-    register(vfs.join('/pkg', config.name), config)
-    return config.name
-end
-
-local function load_packages(dir)
-    local res = {}
-    for path in dir:list_directory() do
-        local ok, name = pcall(load_package, path)
-        if ok then
-            if res[name] then
-                error(('Duplicate definition package `%s` in `%s`.'):format(name, path:string()))
-            end
-            res[name] = path
-        end
+    if registered[config.name] then
+        error(('Duplicate definition package `%s` in `/pkg/%s`.'):format(config.name, config.name))
     end
-    return res
+    registered[config.name] = {
+        config = config
+    }
+    return config.name
 end
 
 local function get_registered(path)
@@ -138,6 +119,5 @@ return {
     get_registered = get_registered,
     config = config,
     load_package = load_package,
-    load_packages = load_packages,
     register_package = register_package,
 }
