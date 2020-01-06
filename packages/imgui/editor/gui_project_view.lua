@@ -280,11 +280,20 @@ function GuiPackageView:push_tree_end()
     widget.TreePop()
 end
 
+local function get_pkg_list()
+    local fs = require "filesystem"
+    local res = {}
+    for pkg in fs.path('/pkg'):list_directory() do
+        res[#res+1] = pkg:filename():string()
+    end
+    return res
+end
+
 function GuiPackageView:update_package_list_data(force)
     self.pkg_update_t = (self.pkg_update_t or 0)+1
     if force or (not self.pkg_list[1]) or (self.pkg_update_t > 160) then
         self.pkg_update_t = 0
-        local list = pm.get_pkg_list()
+        local list = get_pkg_list()
         --todo
         local project_data,project_detail = GuiProjectList:get_ins():get_cur_project()
         local engine_pkgs = {}

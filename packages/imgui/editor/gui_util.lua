@@ -8,9 +8,18 @@ local cursor = imgui.cursor
 local enum = imgui.enum
 local gui_util = {}
 
+local function get_pkg_list()
+    local fs = require "filesystem"
+    local res = {}
+    for pkg in fs.path('/pkg'):list_directory() do
+        res[#res+1] = pkg:filename():string()
+    end
+    return res
+end
+
 function gui_util.get_all_components()
     local pm = require "antpm"
-    local packages = pm.get_pkg_list(true)
+    local packages = get_pkg_list(true)
     for k = #packages,1,-1 do
         local v = packages[k]
         if v == "ant.ecs" or v == "project" then
@@ -33,7 +42,7 @@ end
 
 function gui_util.get_all_schema()
     local pm = require "antpm"
-    local packages = pm.get_pkg_list(true)
+    local packages = get_pkg_list(true)
     for k = #packages,1,-1 do
         local v = packages[k]
         if v == "ant.ecs" or v == "project" then
