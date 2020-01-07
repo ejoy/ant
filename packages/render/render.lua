@@ -61,12 +61,17 @@ ecs.component "viewport"
 	.clear_state "clear_state"
 	.rect "rect"
 
+ecs.component "camera_target"
+	.type "string"
+	.target "entityid"
+	["opt"].offset "vector"
+
 ecs.component "camera"
-	.type "string" ("free")
-	.eyepos	"vector"
-	.viewdir "vector"
-	.updir "vector"
-	.frustum"frustum"
+	.eyepos		"vector"
+	.viewdir	"vector"
+	.updir		"vector"
+	.frustum	"frustum"
+	["opt"].target"camera_target"
 
 ecs.component "camera_mgr"
 	.cameras "camera{}"

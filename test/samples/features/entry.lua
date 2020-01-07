@@ -36,6 +36,7 @@ runtime.start {
 			{name = "logic",
 				"spawn_camera",
 				"bind_camera",
+				"motion_camera",
 			},
 			{name = "render",
 				"data_changed",
@@ -69,6 +70,7 @@ runtime.start {
 					}
 				},
 				-- editor
+				"camera_lock_target",
 				"camera_control",
 				"pickup",
 				{ name = "ui",

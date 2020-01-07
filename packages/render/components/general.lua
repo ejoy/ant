@@ -3,7 +3,6 @@ local world = ecs.world
 
 ecs.import "ant.math"
 
-local asset 	= import_package "ant.asset".mgr
 local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack
 
