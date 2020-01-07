@@ -14,7 +14,7 @@ function m:ui_start()
         time = 1.0/60
     end
 
-    local vid = imgui_ant.viewid()
+    local vid = imgui.ant.viewid()
     if nil == fbmgr.get_fb_idx(vid) then
         local main_viewid = assert(viewidmgr.get "main_view")
         fbmgr.bind(vid, assert(fbmgr.get_fb_idx(main_viewid)))

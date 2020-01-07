@@ -176,7 +176,6 @@ local sp = ecs.policy "select"
 
 local pickup_sys = ecs.system "pickup_system"
 pickup_sys.singleton "frame_stat"
-pickup_sys.singleton "message"
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
@@ -302,16 +301,16 @@ end
 function pickup_sys:init()	
 	--local pickup_eid = add_pick_entity()
 
-	self.message.observers:add({
-		mouse = function (_, x, y, what, state)
-			if what == "LEFT" and state == "DOWN" then
-				local eid = enable_pickup(true)
-				local entity = world[eid]
-				update_viewinfo(entity, point2d(x, y))
-				entity.pickup.nextstep = "blit"
-			end
-		end
-	})
+	-- self.message.observers:add({
+	-- 	mouse = function (_, x, y, what, state)
+	-- 		if what == "LEFT" and state == "DOWN" then
+	-- 			local eid = enable_pickup(true)
+	-- 			local entity = world[eid]
+	-- 			update_viewinfo(entity, point2d(x, y))
+	-- 			entity.pickup.nextstep = "blit"
+	-- 		end
+	-- 	end
+	-- })
 end
 
 local function blit(blitviewid, blit_buffer, colorbuffer)
