@@ -1,7 +1,7 @@
-local ms = require "stack"
-
 local util = {}
 util.__index = util
+
+local const = require "constant"
 
 function util.limit(v, min, max)
     if v > max then return max end
@@ -82,31 +82,14 @@ end
 function util.to_radian(angles) return list_op(angles, math.rad) end
 function util.to_angle(radians) return list_op(radians, math.deg) end
 
-function util.AXIS(name)
-	if name == "X" then
-		return util.XAXIS
-	end
-
-	if name == "Y" then
-		return util.YAXIS
-	end
-
-	if name == "Z" then
-		return util.ZAXIS
-	end
-end
-
-util.XAXIS 	= ms:ref "vector" {1, 0, 0, 0}
-util.NXAXIS = ms:ref "vector" {-1,0, 0, 0}
-util.YAXIS 	= ms:ref "vector" {0, 1, 0, 0}
-util.NYAXIS = ms:ref "vector" {0, -1,0, 0}
-util.ZAXIS 	= ms:ref "vector" {0, 0, 1, 0}
-util.NZAXIS = ms:ref "vector" {0, 0,-1, 0}
-util.IDENTITY_MAT = ms:ref "matrix" {
-	1, 0, 0, 0,
-	0, 1, 0, 0,
-	0, 0, 1, 0,
-	0, 0, 0, 1,
+local AXISES = {
+	X = const.XAXIS,
+	Y = const.YAXIS,
+	Z = const.ZAXIS,
 }
+
+function util.AXIS(name)
+	return AXISES[name]
+end
 
 return util

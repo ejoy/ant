@@ -198,9 +198,9 @@ local cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm
 local function default_csm_camera()
 	return {
 		type = "csm", 
-		updir = mc.Y_AXIS, 
-		viewdir = mc.Z_AXIS,
-		eyepos = mc.ZERO_PT,
+		updir = mc.T_NXAXIS, 
+		viewdir = mc.T_ZAXIS,
+		eyepos = mc.T_ZERO_PT,
 		frustum = {
 			l = -1, r = 1, t = -1, b = 1,
 			n = 1, f = 100, ortho = true,

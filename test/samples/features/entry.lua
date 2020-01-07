@@ -70,8 +70,8 @@ runtime.start {
 					}
 				},
 				-- editor
-				"camera_lock_target",
 				"camera_control",
+				"camera_lock_target",
 				"pickup",
 				{ name = "ui",
 					"ui_start",

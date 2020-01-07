@@ -291,8 +291,8 @@ function init_loader:init()
     world:pub {"spawn_camera", "test_main_camera", {
         type    = "",
         eyepos  = {0, 0, -5, 1},
-        viewdir = mc.Z_AXIS,
-        updir   = mc.Y_AXIS,
+        viewdir = mc.T_ZAXIS,
+        updir   = mc.T_NXAXIS,
         frustum = frustum,
     }}
 

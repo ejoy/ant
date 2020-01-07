@@ -23,9 +23,9 @@ function camerasys:spawn_camera()
     for _, name, info in sc_mb:unpack() do
         camerautil.bind_camera(world, name, {
             type    = info.type     or "",
-            eyepos  = info.eyepos   or mc.ZERO_PT,
-            viewdir = info.viewdir  or mc.Z_AXIS,
-            updir   = info.updir    or mc.Y_AXIS,
+            eyepos  = info.eyepos   or mc.T_ZERO_PT,
+            viewdir = info.viewdir  or mc.T_ZAXIS,
+            updir   = info.updir    or mc.T_NXAXIS,
             frustum = info.frustum  or default_frustum,
         })
         if mq.camera_tag == "" then
@@ -57,21 +57,21 @@ function camerasys:motion_camera()
         local camera = camerautil.get_camera(cameraname)
 
         if motiontype == "target" then
-            local target = camera.target
-            if target == nil then
-                target = {}
-                camera.target = target
+            local lock_target = camera.lock_target
+            if lock_target == nil then
+                lock_target = {}
+                camera.lock_target = lock_target
             end
-            
-            target.type = value.type
+
+            lock_target.type = value.type
             local eid = value.eid
             if world[eid].transform == nil then
                 error(string.format("camera lock target entity must have transform component"));
             end
-            target.target = value.eid
-            local offset = value.offset or {0, 0, 0, 0}
-            target.offset = ms:ref "vector"(offset)
-        elseif motiontype == "translate" then
+            lock_target.target = value.eid
+            local offset = value.offset or mc.ZERO
+            lock_target.offset = ms:ref "vector"(offset)
+        elseif motiontype == "move" then
             ms(camera.eyepos, value, "=")
         elseif motiontype == "rotate" then
             ms(camera.viewdir, value, "dn=")
@@ -82,10 +82,9 @@ end
 function camerasys:camera_lock_target()
     for _, eid in world:each "camera_tag" do
         local camera = camerautil.get_camera(world[eid].camera_tag)
-        local lock_target = camera.target
+        local lock_target = camera.lock_target
         local locktype = lock_target.type
-        
-        if locktype == "translate" then
+        if locktype == "move" then
             local targetentity = world[lock_target.eid]
             local transform = targetentity.transform
             ms(camera.eyepos, transform.t, lock_target.offset, "+=")

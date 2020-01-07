@@ -180,7 +180,7 @@ local function check_shadow_matrix()
 	print("eye posision:", ms(viewcamera.eyepos, "V"))
 	print("view direction:", ms(viewcamera.viewdir, "V"))
 
-	local camera_2_origin = ms:length(mc.ZERO_PT, viewcamera.eyepos)
+	local camera_2_origin = ms:length(mc.T_ZERO_PT, viewcamera.eyepos)
 	print("check eye position to [0, 0, 0] distance:", camera_2_origin)
 
 	local dis_n, dis_f = get_split_distance(1)
@@ -256,11 +256,11 @@ local function check_shadow_matrix()
 
 	-------------------------------------------------------------------------------------------------
 	-- test shadow matrix
-	local pt = {-0.00009, -0.01307, 0.1544} --mc.ZERO_PT
+	local pt = {-0.00009, -0.01307, 0.1544} --mc.T_ZERO_PT
 	local worldmat = {
 		0.0, 0.0, -20.02002, -20,
 	}
-	local origin_CS = ms(shadow_viewproj, mc.ZERO_PT, "*T")
+	local origin_CS = ms(shadow_viewproj, mc.T_ZERO_PT, "*T")
 	print(string.format("origin clip space:[%f, %f, %f, %f]", origin_CS[1], origin_CS[2], origin_CS[3], origin_CS[4]))
 	local origin_NDC = {
 		origin_CS[1] / origin_CS[4], 

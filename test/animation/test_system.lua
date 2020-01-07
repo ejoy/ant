@@ -136,7 +136,7 @@ function m:init()
     world:pub {"spawn_camera", "main_camera",{
         type = "",
         eyepos = { 1.6, 1.8,-1.8, 1.0},
-        updir = mc.Y_AXIS,
+        updir = mc.T_NXAXIS,
         viewdir = {-0.6,-0.4, 0.7, 0.0},
         frustum = frustum,
     }}
