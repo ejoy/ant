@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.event"
-
 local render = import_package "ant.render"
 local ru = render.util
 local computil = render.components
@@ -17,7 +15,7 @@ local ms = mathpkg.stack
 local mu = mathpkg.util
 
 local filter_properties = ecs.system "filter_properties"
-filter_properties.singleton "render_properties"
+filter_properties.singleton "ant.render|render_properties"
 
 function filter_properties:load_render_properties()
 	local render_properties = self.render_properties
@@ -30,7 +28,7 @@ local primitive_filter_sys = ecs.system "primitive_filter_system"
 
 primitive_filter_sys.require_system "filter_properties"
 primitive_filter_sys.singleton "hierarchy_transform_result"
-primitive_filter_sys.singleton "event"
+primitive_filter_sys.singleton "ant.event|event"
 
 --luacheck: ignore self
 local function reset_results(results)

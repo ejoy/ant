@@ -30,14 +30,14 @@ m.require_system "ant.imguibase|imgui_system"
 local function create_animation_test()
     local eid = world:create_entity {
         policy = {
-            "animation",
-            "state_chain",
-            "ozzmesh",
-            "ozz_skinning",
-            "collider.capsule",
-            "render",
-            "serialize",
-            "name",
+            "ant.animation|animation",
+            "ant.animation|state_chain",
+            "ant.animation|ozzmesh",
+            "ant.animation|ozz_skinning",
+            "ant.bullet|collider.capsule",
+            "ant.render|render",
+            "ant.serialize|serialize",
+            "ant.render|name",
         },
         data = {
             transform = {

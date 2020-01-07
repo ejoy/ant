@@ -8,9 +8,9 @@ local mu = mathpkg.util
 function util.create_directional_light_entity(world, name, color, intensity, rotation)
 	return world:create_entity {
 		policy = {
-			"directional_light",
-			"serialize",
-			"name",
+			"ant.render|directional_light",
+			"ant.render|name",
+			"ant.serialize|serialize",
 		},
 		data = {
 			transform = mu.srt(nil, rotation, nil),
@@ -29,9 +29,9 @@ end
 function util.create_point_light_entity(world, name)
 	return world:create_entity {
 		policy = {
-			"point_light",
-			"serialize",
-			"name",
+			"ant.render|point_light",
+			"ant.render|name",
+			"ant.serialize|serialize",
 		},
 		data = {
 			transform = mu.srt(),
@@ -52,9 +52,9 @@ end
 function util.create_spot_light_entity(world, name)
 	return world:create_entity {
 		policy = {
-			"spot_light",
-			"serialize",
-			"name",
+			"ant.render|spot_light",
+			"ant.render|name",
+			"ant.serialize|serialize",
 		},
 		data = {
 			transform = mu.srt(),
@@ -76,9 +76,9 @@ end
 function util.create_ambient_light_entity(world, name, mode, skycolor, midcolor, groundcolor)	
 	return world:create_entity {
 		policy = {
-			"ambient_light",
-			"serialize",
-			"name",
+			"ant.render|ambient_light",
+			"ant.render|name",
+			"ant.serialize|serialize",
 		},
 		data = {
 			name = name,

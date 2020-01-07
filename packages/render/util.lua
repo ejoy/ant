@@ -187,9 +187,9 @@ function util.create_main_queue(world, view_rect, camera_tag)
 
 	return world:create_entity {
 		policy = {
-			"render_queue",
-			"main_queue",
-			"name",
+			"ant.render|render_queue",
+			"ant.render|main_queue",
+			"ant.render|name",
 		},
 		data = {
 			camera_tag = camera_tag,
@@ -329,8 +329,8 @@ function util.create_blit_queue(world, viewrect)
 
 	world:create_entity {
 		policy = {
-			"render_queue",
-			"name",
+			"ant.render|render_queue",
+			"ant.render|name",
 		},
 		data = {
 			camera_tag = "blit_view",

@@ -284,113 +284,6 @@ function world:clear_removed()
 	end
 end
 
-local function splitName(fullname, import)
-	local package, name = fullname:match "^([^|]*)|(.*)$"
-	if package then
-		import(package)
-		return name
-	end
-	return fullname
-end
-
-local function tableDelete(t, l)
-	local delete = {}
-	for k in pairs(t) do
-		if not l[k] then
-			delete[k] = true
-		end
-	end
-	for k in pairs(delete) do
-		t[k] = nil
-	end
-end
-
-local function init_modules(w, config, loader)
-	local policies = config.policy
-	local systems = config.system
-	local class = {}
-	local imported = {}
-	local reg
-	local function import_package(name)
-		if imported[name] then
-			return false
-		end
-		imported[name] = true
-		table.insert(class.packages, 1, name)
-		local modules = assert(loader(name) , "load module " .. name .. " failed")
-		if type(modules) == "table" then
-			for _, m in ipairs(modules) do
-				m(reg)
-			end
-		else
-			modules(reg)
-		end
-		table.remove(class.packages, 1)
-		return true
-	end
-	reg = typeclass(w, import_package, class)
-	w.import = function(_, name)
-		return import_package(name)
-	end
-
-	local policycut = {}
-	local systemcut = {}
-	local import_policy
-	local import_system
-	function import_system(k)
-		local name = splitName(k, import_package)
-		if systemcut[name] then
-			return
-		end
-		systemcut[name] = true
-		local v = class.system[name]
-		if not v then
-			error(("invalid system name: `%s`."):format(name))
-		end
-		if v.require_system then
-			for _, k in ipairs(v.require_system) do
-				import_system(k)
-			end
-		end
-		if v.require_policy then
-			for _, k in ipairs(v.require_policy) do
-				import_policy(k)
-			end
-		end
-	end
-	function import_policy(k)
-		local name = splitName(k, import_package)
-		if policycut[name] then
-			return
-		end
-		policycut[name] = true
-		local v = class.policy[name]
-		if not v then
-			error(("invalid policy name: `%s`."):format(name))
-		end
-		if v.require_system then
-			for _, k in ipairs(v.require_system) do
-				import_system(k)
-			end
-		end
-		if v.require_policy then
-			for _, k in ipairs(v.require_policy) do
-				import_policy(k)
-			end
-		end
-	end
-	for _, k in ipairs(policies) do
-		import_policy(k)
-	end
-	for _, k in ipairs(systems) do
-		import_system(k)
-	end
-	tableDelete(class.policy, policycut)
-	tableDelete(class.system, systemcut)
-	--tableDelete(class.component, componentcut)
-	return class
-end
-
 function world:update_func(what)
 	local list = system.lists(self._systems, what)
 	if not list then
@@ -427,7 +320,6 @@ local m = {}
 function m.new_world(config)
 	local w = setmetatable({
 		args = config,
-		_schema = {},
 		_entity = {},	-- entity id set
 		_entity_id = 0,
 		_set = setmetatable({}, { __mode = "kv" }),
@@ -441,14 +333,10 @@ function m.new_world(config)
 	world.pub = event.pub
 
 	-- load systems and components from modules
-	local class = init_modules(w, config, config.loader or require "packageloader")
-
-	w._class = class
-	component.solve(w)
-	policy.solve(w)
+	typeclass(w, config, config.loader or require "packageloader")
 
 	-- init system
-	w._systems = system.init(class.system, class.singleton, config.pipeline)
+	w._systems = system.init(w._class.system, w._class.singleton, config.pipeline)
 
 	return w
 end

@@ -53,11 +53,11 @@ function terrain_test:init()
 
 	world:create_entity {
 		policy = {
-			"render",
+			"ant.render|render",
 			"terrain",
 			"terrain.collider",
-			"name",
-			"select",
+			"ant.render|name",
+			"ant.objcontroller|select",
 		},
 		data = {
 			material = create_material(),

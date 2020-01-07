@@ -57,7 +57,7 @@ end
 function util.create_camera_mgr_entity(world, main_camera)
 	return world:create_entity {
 		policy = {
-			"camera"
+			"ant.render|camera"
 		},
 		data = {
 			name = "camera_manager",

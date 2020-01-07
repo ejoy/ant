@@ -115,7 +115,7 @@ local rendersys = ecs.system "render_system"
 rendersys.singleton "render_properties"
 
 rendersys.require_system "ant.scene|primitive_filter_system"
-rendersys.require_system "filter_properties"
+rendersys.require_system "ant.scene|filter_properties"
 rendersys.require_system "end_frame"
 
 rendersys.require_policy "render_queue"

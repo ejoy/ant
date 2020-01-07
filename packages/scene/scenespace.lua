@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.event"
-
 local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack
 
@@ -35,7 +33,7 @@ local scene_space = ecs.system "scene_space"
 
 scene_space.require_system "primitive_filter_system"
 
-scene_space.singleton "event"
+scene_space.singleton "ant.event|event"
 scene_space.singleton "hierarchy_transform_result"
 scene_space.singleton "hierarchy_update_result"
 

@@ -175,7 +175,7 @@ local sp = ecs.policy "select"
 	sp.require_system "pickup_system"
 
 local pickup_sys = ecs.system "pickup_system"
-pickup_sys.singleton "frame_stat"
+pickup_sys.singleton "ant.render|frame_stat"
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
@@ -238,9 +238,9 @@ local function add_pick_entity()
 
 	return world:create_entity {
 		policy = {
-			"name",
-			"pickup",
-			"render_queue",
+			"ant.render|name",
+			"ant.render|render_queue",
+			"ant.objcontroller|pickup",
 		},
 		data = {
 			material = {
