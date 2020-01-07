@@ -19,7 +19,7 @@
         1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
 iABC         C(8)     |      B(8)     |k|     A(8)      |   Op(7)     |
 iABx               Bx(17)               |     A(8)      |   Op(7)     |
-iAsB              sBx (signed)(17)      |     A(8)      |   Op(7)     |
+iAsBx             sBx (signed)(17)      |     A(8)      |   Op(7)     |
 iAx                           Ax(25)                    |   Op(7)     |
 isJ                          sJ(25)                     |   Op(7)     |
 
@@ -133,7 +133,7 @@ enum OpMode {iABC, iABx, iAsBx, iAx, isJ};  /* basic instruction formats */
 #define GETARG_sC(i)	sC2int(GETARG_C(i))
 #define SETARG_C(i,v)	setarg(i, v, POS_C, SIZE_C)
 
-#define TESTARG_k(i)	(cast_int(((i) & (1u << POS_k))))
+#define TESTARG_k(i)	check_exp(checkopm(i, iABC), (cast_int(((i) & (1u << POS_k)))))
 #define GETARG_k(i)	check_exp(checkopm(i, iABC), getarg(i, POS_k, 1))
 #define SETARG_k(i,v)	setarg(i, v, POS_k, 1)
 
@@ -183,9 +183,9 @@ enum OpMode {iABC, iABx, iAsBx, iAx, isJ};  /* basic instruction formats */
 
 
 /*
-** R(x) - register
-** K(x) - constant (in constant table)
-** RK(x) == if k(i) then K(x) else R(x)
+** R[x] - register
+** K[x] - constant (in constant table)
+** RK(x) == if k(i) then K[x] else R[x]
 */
 
 
@@ -197,109 +197,110 @@ typedef enum {
 /*----------------------------------------------------------------------
 name		args	description
 ------------------------------------------------------------------------*/
-OP_MOVE,/*	A B	R(A) := R(B)					*/
-OP_LOADI,/*	A sBx	R(A) := sBx					*/
-OP_LOADF,/*	A sBx	R(A) := (lua_Number)sBx				*/
-OP_LOADK,/*	A Bx	R(A) := K(Bx)					*/
-OP_LOADKX,/*	A 	R(A) := K(extra arg)				*/
-OP_LOADBOOL,/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
-OP_LOADNIL,/*	A B	R(A), R(A+1), ..., R(A+B) := nil		*/
-OP_GETUPVAL,/*	A B	R(A) := UpValue[B]				*/
-OP_SETUPVAL,/*	A B	UpValue[B] := R(A)				*/
+OP_MOVE,/*	A B	R[A] := R[B]					*/
+OP_LOADI,/*	A sBx	R[A] := sBx					*/
+OP_LOADF,/*	A sBx	R[A] := (lua_Number)sBx				*/
+OP_LOADK,/*	A Bx	R[A] := K[Bx]					*/
+OP_LOADKX,/*	A 	R[A] := K[extra arg]				*/
+OP_LOADFALSE,/*	A B	R[A] := false; if (B) pc++			*/
+OP_LOADTRUE,/*	A	R[A] := true					*/
+OP_LOADNIL,/*	A B	R[A], R[A+1], ..., R[A+B] := nil		*/
+OP_GETUPVAL,/*	A B	R[A] := UpValue[B]				*/
+OP_SETUPVAL,/*	A B	UpValue[B] := R[A]				*/
 
-OP_GETTABUP,/*	A B C	R(A) := UpValue[B][K(C):string]			*/
-OP_GETTABLE,/*	A B C	R(A) := R(B)[R(C)]				*/
-OP_GETI,/*	A B C	R(A) := R(B)[C]					*/
-OP_GETFIELD,/*	A B C	R(A) := R(B)[K(C):string]			*/
+OP_GETTABUP,/*	A B C	R[A] := UpValue[B][K[C]:string]			*/
+OP_GETTABLE,/*	A B C	R[A] := R[B][R[C]]				*/
+OP_GETI,/*	A B C	R[A] := R[B][C]					*/
+OP_GETFIELD,/*	A B C	R[A] := R[B][K[C]:string]			*/
 
-OP_SETTABUP,/*	A B C	UpValue[A][K(B):string] := RK(C)		*/
-OP_SETTABLE,/*	A B C	R(A)[R(B)] := RK(C)				*/
-OP_SETI,/*	A B C	R(A)[B] := RK(C)				*/
-OP_SETFIELD,/*	A B C	R(A)[K(B):string] := RK(C)			*/
+OP_SETTABUP,/*	A B C	UpValue[A][K[B]:string] := RK(C)		*/
+OP_SETTABLE,/*	A B C	R[A][R[B]] := RK(C)				*/
+OP_SETI,/*	A B C	R[A][B] := RK(C)				*/
+OP_SETFIELD,/*	A B C	R[A][K[B]:string] := RK(C)			*/
 
-OP_NEWTABLE,/*	A B C	R(A) := {}					*/
+OP_NEWTABLE,/*	A B C k	R[A] := {}					*/
 
-OP_SELF,/*	A B C	R(A+1) := R(B); R(A) := R(B)[RK(C):string]	*/
+OP_SELF,/*	A B C	R[A+1] := R[B]; R[A] := R[B][RK(C):string]	*/
 
-OP_ADDI,/*	A B sC	R(A) := R(B) + sC				*/
+OP_ADDI,/*	A B sC	R[A] := R[B] + sC				*/
 
-OP_ADDK,/*	A B C	R(A) := R(B) + K(C)				*/
-OP_SUBK,/*	A B C	R(A) := R(B) - K(C)				*/
-OP_MULK,/*	A B C	R(A) := R(B) * K(C)				*/
-OP_MODK,/*	A B C	R(A) := R(B) % K(C)				*/
-OP_POWK,/*	A B C	R(A) := R(B) ^ K(C)				*/
-OP_DIVK,/*	A B C	R(A) := R(B) / K(C)				*/
-OP_IDIVK,/*	A B C	R(A) := R(B) // K(C)				*/
+OP_ADDK,/*	A B C	R[A] := R[B] + K[C]				*/
+OP_SUBK,/*	A B C	R[A] := R[B] - K[C]				*/
+OP_MULK,/*	A B C	R[A] := R[B] * K[C]				*/
+OP_MODK,/*	A B C	R[A] := R[B] % K[C]				*/
+OP_POWK,/*	A B C	R[A] := R[B] ^ K[C]				*/
+OP_DIVK,/*	A B C	R[A] := R[B] / K[C]				*/
+OP_IDIVK,/*	A B C	R[A] := R[B] // K[C]				*/
 
-OP_BANDK,/*	A B C	R(A) := R(B) & K(C):integer			*/
-OP_BORK,/*	A B C	R(A) := R(B) | K(C):integer			*/
-OP_BXORK,/*	A B C	R(A) := R(B) ~ K(C):integer			*/
+OP_BANDK,/*	A B C	R[A] := R[B] & K[C]:integer			*/
+OP_BORK,/*	A B C	R[A] := R[B] | K[C]:integer			*/
+OP_BXORK,/*	A B C	R[A] := R[B] ~ K[C]:integer			*/
 
-OP_SHRI,/*	A B sC	R(A) := R(B) >> sC				*/
-OP_SHLI,/*	A B sC	R(A) := sC << R(B)				*/
+OP_SHRI,/*	A B sC	R[A] := R[B] >> sC				*/
+OP_SHLI,/*	A B sC	R[A] := sC << R[B]				*/
 
-OP_ADD,/*	A B C	R(A) := R(B) + R(C)				*/
-OP_SUB,/*	A B C	R(A) := R(B) - R(C)				*/
-OP_MUL,/*	A B C	R(A) := R(B) * R(C)				*/
-OP_MOD,/*	A B C	R(A) := R(B) % R(C)				*/
-OP_POW,/*	A B C	R(A) := R(B) ^ R(C)				*/
-OP_DIV,/*	A B C	R(A) := R(B) / R(C)				*/
-OP_IDIV,/*	A B C	R(A) := R(B) // R(C)				*/
+OP_ADD,/*	A B C	R[A] := R[B] + R[C]				*/
+OP_SUB,/*	A B C	R[A] := R[B] - R[C]				*/
+OP_MUL,/*	A B C	R[A] := R[B] * R[C]				*/
+OP_MOD,/*	A B C	R[A] := R[B] % R[C]				*/
+OP_POW,/*	A B C	R[A] := R[B] ^ R[C]				*/
+OP_DIV,/*	A B C	R[A] := R[B] / R[C]				*/
+OP_IDIV,/*	A B C	R[A] := R[B] // R[C]				*/
 
-OP_BAND,/*	A B C	R(A) := R(B) & R(C)				*/
-OP_BOR,/*	A B C	R(A) := R(B) | R(C)				*/
-OP_BXOR,/*	A B C	R(A) := R(B) ~ R(C)				*/
-OP_SHL,/*	A B C	R(A) := R(B) << R(C)				*/
-OP_SHR,/*	A B C	R(A) := R(B) >> R(C)				*/
+OP_BAND,/*	A B C	R[A] := R[B] & R[C]				*/
+OP_BOR,/*	A B C	R[A] := R[B] | R[C]				*/
+OP_BXOR,/*	A B C	R[A] := R[B] ~ R[C]				*/
+OP_SHL,/*	A B C	R[A] := R[B] << R[C]				*/
+OP_SHR,/*	A B C	R[A] := R[B] >> R[C]				*/
 
-OP_MMBIN,/*	A B C	call C metamethod over R(A) and R(B)		*/
-OP_MMBINI,/*	A sB C	call C metamethod over R(A) and sB		*/
-OP_MMBINK,/*	A B C	call C metamethod over R(A) and K(B)		*/
+OP_MMBIN,/*	A B C	call C metamethod over R[A] and R[B]		*/
+OP_MMBINI,/*	A sB C k	call C metamethod over R[A] and sB	*/
+OP_MMBINK,/*	A B C k		call C metamethod over R[A] and K[B]	*/
 
-OP_UNM,/*	A B	R(A) := -R(B)					*/
-OP_BNOT,/*	A B	R(A) := ~R(B)					*/
-OP_NOT,/*	A B	R(A) := not R(B)				*/
-OP_LEN,/*	A B	R(A) := length of R(B)				*/
+OP_UNM,/*	A B	R[A] := -R[B]					*/
+OP_BNOT,/*	A B	R[A] := ~R[B]					*/
+OP_NOT,/*	A B	R[A] := not R[B]				*/
+OP_LEN,/*	A B	R[A] := length of R[B]				*/
 
-OP_CONCAT,/*	A B  	R(A) := R(A).. ... ..R(A + B - 1)		*/
+OP_CONCAT,/*	A B  	R[A] := R[A].. ... ..R[A + B - 1]		*/
 
-OP_CLOSE,/*	A	close all upvalues >= R(A)			*/
+OP_CLOSE,/*	A	close all upvalues >= R[A]			*/
 OP_TBC,/*	A	mark variable A "to be closed"			*/
-OP_JMP,/*	k sJ	pc += sJ  (k is used in code generation)	*/
-OP_EQ,/*	A B	if ((R(A) == R(B)) ~= k) then pc++		*/
-OP_LT,/*	A B	if ((R(A) <  R(B)) ~= k) then pc++		*/
-OP_LE,/*	A B	if ((R(A) <= R(B)) ~= k) then pc++		*/
+OP_JMP,/*	sJ	pc += sJ  					*/
+OP_EQ,/*	A B k	if ((R[A] == R[B]) ~= k) then pc++		*/
+OP_LT,/*	A B k	if ((R[A] <  R[B]) ~= k) then pc++		*/
+OP_LE,/*	A B k	if ((R[A] <= R[B]) ~= k) then pc++		*/
 
-OP_EQK,/*	A B	if ((R(A) == K(B)) ~= k) then pc++		*/
-OP_EQI,/*	A sB	if ((R(A) == sB) ~= k) then pc++		*/
-OP_LTI,/*	A sB	if ((R(A) < sB) ~= k) then pc++			*/
-OP_LEI,/*	A sB	if ((R(A) <= sB) ~= k) then pc++		*/
-OP_GTI,/*	A sB	if ((R(A) > sB) ~= k) then pc++			*/
-OP_GEI,/*	A sB	if ((R(A) >= sB) ~= k) then pc++		*/
+OP_EQK,/*	A B k	if ((R[A] == K[B]) ~= k) then pc++		*/
+OP_EQI,/*	A sB k	if ((R[A] == sB) ~= k) then pc++		*/
+OP_LTI,/*	A sB k	if ((R[A] < sB) ~= k) then pc++			*/
+OP_LEI,/*	A sB k	if ((R[A] <= sB) ~= k) then pc++		*/
+OP_GTI,/*	A sB k	if ((R[A] > sB) ~= k) then pc++			*/
+OP_GEI,/*	A sB k	if ((R[A] >= sB) ~= k) then pc++		*/
 
-OP_TEST,/*	A 	if (not R(A) == k) then pc++			*/
-OP_TESTSET,/*	A B	if (not R(B) == k) then pc++ else R(A) := R(B)	*/
+OP_TEST,/*	A k 	if (not R[A] == k) then pc++			*/
+OP_TESTSET,/*	A B k	if (not R[B] == k) then pc++ else R[A] := R[B]	*/
 
-OP_CALL,/*	A B C	R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1)) */
-OP_TAILCALL,/*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
+OP_CALL,/*	A B C	R[A], ... ,R[A+C-2] := R[A](R[A+1], ... ,R[A+B-1]) */
+OP_TAILCALL,/*	A B C k	return R[A](R[A+1], ... ,R[A+B-1])		*/
 
-OP_RETURN,/*	A B C	return R(A), ... ,R(A+B-2)	(see note)	*/
+OP_RETURN,/*	A B C k	return R[A], ... ,R[A+B-2]	(see note)	*/
 OP_RETURN0,/*	  	return 						*/
-OP_RETURN1,/*	A 	return R(A)					*/
+OP_RETURN1,/*	A 	return R[A]					*/
 
 OP_FORLOOP,/*	A Bx	update counters; if loop continues then pc-=Bx; */
 OP_FORPREP,/*	A Bx	<check values and prepare counters>;
                         if not to run then pc+=Bx+1;			*/
 
-OP_TFORPREP,/*	A Bx	create upvalue for R(A + 3); pc+=Bx		*/
-OP_TFORCALL,/*	A C	R(A+4), ... ,R(A+3+C) := R(A)(R(A+1), R(A+2));	*/
-OP_TFORLOOP,/*	A Bx	if R(A+2) ~= nil then { R(A)=R(A+2); pc -= Bx }	*/
+OP_TFORPREP,/*	A Bx	create upvalue for R[A + 3]; pc+=Bx		*/
+OP_TFORCALL,/*	A C	R[A+4], ... ,R[A+3+C] := R[A](R[A+1], R[A+2]);	*/
+OP_TFORLOOP,/*	A Bx	if R[A+2] ~= nil then { R[A]=R[A+2]; pc -= Bx }	*/
 
-OP_SETLIST,/*	A B C	R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B	*/
+OP_SETLIST,/*	A B C k	R[A][(C-1)*FPF+i] := R[A+i], 1 <= i <= B	*/
 
-OP_CLOSURE,/*	A Bx	R(A) := closure(KPROTO[Bx])			*/
+OP_CLOSURE,/*	A Bx	R[A] := closure(KPROTO[Bx])			*/
 
-OP_VARARG,/*	A C  	R(A), R(A+1), ..., R(A+C-2) = vararg		*/
+OP_VARARG,/*	A C  	R[A], R[A+1], ..., R[A+C-2] = vararg		*/
 
 OP_VARARGPREP,/*A 	(adjust vararg parameters)			*/
 
@@ -323,7 +324,7 @@ OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
   (*) In OP_RETURN, if (B == 0) then return up to 'top'.
 
   (*) In OP_LOADKX and OP_NEWTABLE, the next instruction is always
-  EXTRAARG.
+  OP_EXTRAARG.
 
   (*) In OP_SETLIST, if (B == 0) then real B = 'top'; if k, then
   real C = EXTRAARG _ C (the bits of EXTRAARG concatenated with the
@@ -336,6 +337,9 @@ OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
   (*) For comparisons, k specifies what condition the test should accept
   (true or false).
 
+  (*) In OP_MMBINI/OP_MMBINK, k means the arguments were flipped
+   (the constant is the first operand).
+
   (*) All 'skips' (pc++) assume that next instruction is a jump.
 
   (*) In instructions OP_RETURN/OP_TAILCALL, 'k' specifies that the
@@ -344,7 +348,8 @@ OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
   returning; in this case, (C - 1) is its number of fixed parameters.
 
   (*) In comparisons with an immediate operand, C signals whether the
-  original operand was a float.
+  original operand was a float. (It must be corrected in case of
+  metamethods.)
 
 ===========================================================================*/
 
