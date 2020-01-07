@@ -33,8 +33,8 @@ function access.readmount(filename)
 			ret['pkg/'..pkgname] = path
 		elseif name == '@pkg' then
 			local pm = require "antpm"
-			local pkgs = pm.load_packages(path)
-			for pkgname, pkgpath in pairs(pkgs) do
+			for pkgpath in path:list_directory() do
+				local pkgname = pm.load_package(pkgpath)
 				ret['pkg/'..pkgname] = pkgpath
 			end
 		else

@@ -36,11 +36,20 @@ function GuiShaderWatch:_init()
     self.time_count = 0
 end
 
+local function get_pkg_list()
+    local fs = require "filesystem"
+    local res = {}
+    for pkg in fs.path('/pkg'):list_directory() do
+        res[#res+1] = pkg:filename():string()
+    end
+    return res
+end
+
 function GuiShaderWatch:on_gui(delta)
     self.time_count = self.time_count + delta
     if self.time_count < 2 then return end
     self.time_count = 0
-    local packages = pm.get_pkg_list()
+    local packages = get_pkg_list()
     if #packages ~= self.watch_num then
         local cb = function(typ,pkgpath)
             self:on_shader_change(typ,pkgpath)

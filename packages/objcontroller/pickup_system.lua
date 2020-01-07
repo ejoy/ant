@@ -2,8 +2,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.inputmgr"
-ecs.import "ant.scene"
 local lua_math = math
 local mathpkg 	= import_package "ant.math"
 local point2d 	= mathpkg.point2d

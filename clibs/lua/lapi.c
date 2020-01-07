@@ -350,23 +350,21 @@ LUA_API size_t lua_stringtonumber (lua_State *L, const char *s) {
 
 
 LUA_API lua_Number lua_tonumberx (lua_State *L, int idx, int *pisnum) {
-  lua_Number n;
+  lua_Number n = 0;
   const TValue *o = index2value(L, idx);
   int isnum = tonumber(o, &n);
-  if (!isnum)
-    n = 0;  /* call to 'tonumber' may change 'n' even if it fails */
-  if (pisnum) *pisnum = isnum;
+  if (pisnum)
+    *pisnum = isnum;
   return n;
 }
 
 
 LUA_API lua_Integer lua_tointegerx (lua_State *L, int idx, int *pisnum) {
-  lua_Integer res;
+  lua_Integer res = 0;
   const TValue *o = index2value(L, idx);
   int isnum = tointeger(o, &res);
-  if (!isnum)
-    res = 0;  /* call to 'tointeger' may change 'n' even if it fails */
-  if (pisnum) *pisnum = isnum;
+  if (pisnum)
+    *pisnum = isnum;
   return res;
 }
 
@@ -576,7 +574,10 @@ LUA_API void lua_pushcclosure (lua_State *L, lua_CFunction fn, int n) {
 
 LUA_API void lua_pushboolean (lua_State *L, int b) {
   lua_lock(L);
-  setbvalue(s2v(L->top), (b != 0));  /* ensure that true is 1 */
+  if (b)
+    setbtvalue(s2v(L->top));
+  else
+    setbfvalue(s2v(L->top));
   api_incr_top(L);
   lua_unlock(L);
 }
@@ -850,18 +851,30 @@ LUA_API void lua_seti (lua_State *L, int idx, lua_Integer n) {
 }
 
 
-LUA_API void lua_rawset (lua_State *L, int idx) {
+static void aux_rawset (lua_State *L, int idx, TValue *key, int n) {
   Table *t;
   TValue *slot;
   lua_lock(L);
-  api_checknelems(L, 2);
+  api_checknelems(L, n);
   t = gettable(L, idx);
-  slot = luaH_set(L, t, s2v(L->top - 2));
+  slot = luaH_set(L, t, key);
   setobj2t(L, slot, s2v(L->top - 1));
   invalidateTMcache(t);
   luaC_barrierback(L, obj2gco(t), s2v(L->top - 1));
-  L->top -= 2;
+  L->top -= n;
   lua_unlock(L);
+}
+
+
+LUA_API void lua_rawset (lua_State *L, int idx) {
+  aux_rawset(L, idx, s2v(L->top - 2), 2);
+}
+
+
+LUA_API void lua_rawsetp (lua_State *L, int idx, const void *p) {
+  TValue k;
+  setpvalue(&k, cast_voidp(p));
+  aux_rawset(L, idx, &k, 1);
 }
 
 
@@ -871,21 +884,6 @@ LUA_API void lua_rawseti (lua_State *L, int idx, lua_Integer n) {
   api_checknelems(L, 1);
   t = gettable(L, idx);
   luaH_setint(L, t, n, s2v(L->top - 1));
-  luaC_barrierback(L, obj2gco(t), s2v(L->top - 1));
-  L->top--;
-  lua_unlock(L);
-}
-
-
-LUA_API void lua_rawsetp (lua_State *L, int idx, const void *p) {
-  Table *t;
-  TValue k, *slot;
-  lua_lock(L);
-  api_checknelems(L, 1);
-  t = gettable(L, idx);
-  setpvalue(&k, cast_voidp(p));
-  slot = luaH_set(L, t, &k);
-  setobj2t(L, slot, s2v(L->top - 1));
   luaC_barrierback(L, obj2gco(t), s2v(L->top - 1));
   L->top--;
   lua_unlock(L);

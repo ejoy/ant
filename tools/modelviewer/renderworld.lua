@@ -5,8 +5,7 @@ local mathpkg = import_package "ant.math"
 local renderpkg = import_package "ant.render"
 local skypkg = import_package "ant.sky"
 local serialize = import_package 'ant.serialize'
-local imgui = require "imgui"
-local imgui_ant = require "imgui.ant"
+local imgui = require "imgui.ant"
 local fs = require "filesystem"
 local skyutil = skypkg.util
 local ms = mathpkg.stack
@@ -186,7 +185,7 @@ local function memory_info()
 	s[#s+1] = ("lua   memory:%s"):format(bytestr(collectgarbage "count" * 1024.0))
 	s[#s+1] = ("bgfx  memory:%s"):format(bytestr(bgfx.get_memory()))
 	s[#s+1] = ("math  memory:%s"):format(bytestr(ms:stacksize()))
-	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui_ant.get_memory()))
+	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui.ant.get_memory()))
 	
 	s[#s+1] = "-------------------"
 

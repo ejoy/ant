@@ -3,23 +3,6 @@ local world = ecs.world
 
 local fs = require 'filesystem'
 
-
-ecs.import 'ant.math.adapter'
-ecs.import 'ant.asset'
-ecs.import 'ant.render'
-ecs.import 'ant.editor'
-ecs.import 'ant.inputmgr'
-ecs.import 'ant.serialize'
-ecs.import 'ant.scene'
-ecs.import 'ant.timer'
-ecs.import 'ant.bullet'
-ecs.import 'ant.animation'
-ecs.import 'ant.event'
-ecs.import 'ant.objcontroller'
-ecs.import 'ant.camera_controller'
-ecs.import 'ant.sky'
-
-
 local serialize = import_package 'ant.serialize'
 
 local skypkg = import_package 'ant.sky'
@@ -47,7 +30,6 @@ init_loader.require_system 'render_system'
 init_loader.require_system 'cull_system'
 init_loader.require_system 'shadow_maker'
 init_loader.require_system 'primitive_filter_system'
---init_loader.require_system 'camera_controller'
 init_loader.require_system 'skinning_system'
 init_loader.require_system 'viewport_detect_system'
 init_loader.require_system 'state_machine'

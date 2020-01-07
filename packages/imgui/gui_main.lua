@@ -33,7 +33,7 @@ end
 
 
 function gui_main.init(nwh, context, width, height)
-	imgui.create(nwh)
+	imgui.ant.create(nwh)
     initialized = true
     rhwi.init {
         nwh = nwh,
@@ -42,15 +42,15 @@ function gui_main.init(nwh, context, width, height)
         height = height,
 	}
     imgui.setDockEnable(true)
-    imgui.viewid(uieditor_viewid);
+    imgui.ant.viewid(uieditor_viewid);
     gui_mgr.win_handle = nwh
 	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
-    imgui.font_program(
+    imgui.ant.font_program(
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
 	local imgui_image = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
-    imgui.image_program(
+    imgui.ant.image_program(
         imgui_image.prog,
         imgui_image.uniforms.s_tex.handle
 	)
@@ -167,7 +167,7 @@ end
 
 function gui_main.exit()
     log("Exit")
-    imgui.destroy()
+    imgui.ant.destroy()
     rhwi.shutdown()
     if main.exit then
         main.exit()

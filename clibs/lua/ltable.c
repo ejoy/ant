@@ -143,8 +143,10 @@ static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
       return hashstr(t, tsvalueraw(*kvl));
     case LUA_TLNGSTR:
       return hashpow2(t, luaS_hashlongstr(tsvalueraw(*kvl)));
-    case LUA_TBOOLEAN:
-      return hashboolean(t, bvalueraw(*kvl));
+    case LUA_TFALSE:
+      return hashboolean(t, 0);
+    case LUA_TTRUE:
+      return hashboolean(t, 1);
     case LUA_TLIGHTUSERDATA:
       return hashpointer(t, pvalueraw(*kvl));
     case LUA_TLCF:
@@ -155,6 +157,9 @@ static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
 }
 
 
+/*
+** Returns the main position of an element given as a 'TValue'
+*/
 static Node *mainpositionTV (const Table *t, const TValue *key) {
   return mainposition(t, rawtt(key), valraw(key));
 }
@@ -172,14 +177,12 @@ static int equalkey (const TValue *k1, const Node *n2) {
   if (rawtt(k1) != keytt(n2))  /* not the same variants? */
    return 0;  /* cannot be same key */
   switch (ttypetag(k1)) {
-    case LUA_TNIL:
+    case LUA_TNIL: case LUA_TFALSE: case LUA_TTRUE:
       return 1;
     case LUA_TNUMINT:
       return (ivalue(k1) == keyival(n2));
     case LUA_TNUMFLT:
       return luai_numeq(fltvalue(k1), fltvalueraw(keyval(n2)));
-    case LUA_TBOOLEAN:
-      return bvalue(k1) == bvalueraw(keyval(n2));
     case LUA_TLIGHTUSERDATA:
       return pvalue(k1) == pvalueraw(keyval(n2));
     case LUA_TLCF:
@@ -623,7 +626,7 @@ TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
   else if (ttisfloat(key)) {
     lua_Number f = fltvalue(key);
     lua_Integer k;
-    if (luaV_flttointeger(f, &k, 0)) {  /* does key fit in an integer? */
+    if (luaV_flttointeger(f, &k, F2Ieq)) {  /* does key fit in an integer? */
       setivalue(&aux, k);
       key = &aux;  /* insert it as an integer */
     }
@@ -742,7 +745,7 @@ const TValue *luaH_get (Table *t, const TValue *key) {
     case LUA_TNIL: return &absentkey;
     case LUA_TNUMFLT: {
       lua_Integer k;
-      if (luaV_flttointeger(fltvalue(key), &k, 0)) /* index is an integral? */
+      if (luaV_flttointeger(fltvalue(key), &k, F2Ieq)) /* integral index? */
         return luaH_getint(t, k);  /* use specialized version */
       /* else... */
     }  /* FALLTHROUGH */

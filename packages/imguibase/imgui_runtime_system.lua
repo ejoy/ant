@@ -1,6 +1,5 @@
 local ecs = ...
-local imgui     = require "imgui"
-local imgui_ant = require "imgui.ant"
+local imgui     = require "imgui.ant"
 local renderpkg = import_package "ant.render"
 local timer     = import_package "ant.timer"
 local renderutil= renderpkg.util
@@ -26,6 +25,6 @@ end
 
 function m:ui_end()
     imgui.end_frame()
-    local vid = imgui_ant.viewid()
+    local vid = imgui.ant.viewid()
     renderutil.update_frame_buffer_view(vid, fbmgr.get_fb_idx(vid))
 end

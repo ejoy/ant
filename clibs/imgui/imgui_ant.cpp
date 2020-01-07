@@ -278,6 +278,7 @@ luahandle_to_texture_id(lua_State* L, int lua_handle) {
 	return texture.ptr;
 }
 
+extern "C" int luaopen_imgui(lua_State* L);
 
 extern "C"
 #if defined(_WIN32)
@@ -286,10 +287,8 @@ __declspec(dllexport)
 int
 luaopen_imgui_ant(lua_State* L) {
 	luaL_checkversion(L);
-
 	init_interface(L);
 	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
-
 	luaL_Reg l[] = {
 		{ "create", lcreate },
 		{ "destroy", ldestroy },
@@ -299,6 +298,9 @@ luaopen_imgui_ant(lua_State* L) {
 		{ "image_program", limageProgram },
 		{NULL,NULL}
 	};
+	luaopen_imgui(L);
 	luaL_newlib(L, l);
+	luaL_setfuncs(L,l,0);
+	lua_setfield(L, -2, "ant");
 	return 1;
 }

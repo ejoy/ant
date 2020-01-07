@@ -3,8 +3,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.scene"
-
 local viewidmgr = require "viewid_mgr"
 local renderutil= require "util"
 local camerautil= require "camera.util"
@@ -55,7 +53,7 @@ local scp = ecs.policy "shadow_cast"
 scp.require_component "can_cast"
 
 local maker_camera = ecs.system "shadowmaker_camera"
-maker_camera.require_system "primitive_filter_system"
+maker_camera.require_system "ant.scene|primitive_filter_system"
 
 -- local function create_crop_matrix(shadow)
 --	local mq = world:first_entity "main_queue"
@@ -183,7 +181,7 @@ function maker_camera:shadow_camera()
 	end
 end
 local sm = ecs.system "shadow_maker"
-sm.require_system "primitive_filter_system"
+sm.require_system "ant.scene|primitive_filter_system"
 sm.require_system "shadowmaker_camera"
 sm.require_system "render_system"
 

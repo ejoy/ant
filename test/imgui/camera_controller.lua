@@ -1,9 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.inputmgr"
-
-
 local math3d    = require "math3d"
 local mathpkg   = import_package "ant.math"
 local ms        = mathpkg.stack

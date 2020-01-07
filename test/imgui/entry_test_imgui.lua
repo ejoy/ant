@@ -268,7 +268,7 @@ end
 
 function callback.exit()
     log("Exit")
-    imgui.destroy()
+	imgui.ant.destroy()
     hw.shutdown()
 end
 
