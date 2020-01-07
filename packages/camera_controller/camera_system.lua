@@ -54,7 +54,7 @@ local motion_camera_mb = world:sub {"motion_camera"}
 
 function camerasys:motion_camera()
     for _, motiontype, cameraname, value in motion_camera_mb:unpack() do
-        local camera = camerautil.get_camera(cameraname)
+        local camera = camerautil.get_camera(world, cameraname)
 
         if motiontype == "target" then
             local lock_target = camera.lock_target
@@ -72,31 +72,36 @@ function camerasys:motion_camera()
             local offset = value.offset or mc.ZERO
             lock_target.offset = ms:ref "vector"(offset)
         elseif motiontype == "move" then
-            ms(camera.eyepos, value, "=")
+            ms(camera.eyepos, camera.eyepos, value, "+=")
         elseif motiontype == "rotate" then
-            ms(camera.viewdir, value, "dn=")
+            ms(camera.viewdir, 
+                camera.viewdir, "D",    -- rotation = to_rotation(viewdir)
+                value, "+dn=")          -- rotation = rotation + value
+                                        -- viewdir = normalize(to_viewdir(rotation))
         end
     end
 end
 
 function camerasys:camera_lock_target()
     for _, eid in world:each "camera_tag" do
-        local camera = camerautil.get_camera(world[eid].camera_tag)
+        local camera = camerautil.get_camera(world, world[eid].camera_tag)
         local lock_target = camera.lock_target
-        local locktype = lock_target.type
-        if locktype == "move" then
-            local targetentity = world[lock_target.eid]
-            local transform = targetentity.transform
-            ms(camera.eyepos, transform.t, lock_target.offset, "+=")
-        elseif locktype == "rotate" then
-            local targetentity = world[lock_target.eid]
-            local transform = targetentity.transform
+        if lock_target then
+            local locktype = lock_target.type
+            if locktype == "move" then
+                local targetentity = world[lock_target.target]
+                local transform = targetentity.transform
+                ms(camera.eyepos, transform.t, lock_target.offset, "+=")
+            elseif locktype == "rotate" then
+                local targetentity = world[lock_target.target]
+                local transform = targetentity.transform
 
-            local eyepos = camera.eyepos
-            local targetpos = transform.t
-            ms(camera.viewdir, targetpos, eyepos, "-n=")
-        else
-            error(string.format("not support locktype:%s", locktype))
+                local eyepos = camera.eyepos
+                local targetpos = transform.t
+                ms(camera.viewdir, targetpos, eyepos, "-n=")
+            else
+                error(string.format("not support locktype:%s", locktype))
+            end
         end
     end
 end

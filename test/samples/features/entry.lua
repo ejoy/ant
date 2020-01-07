@@ -23,7 +23,6 @@ runtime.start {
 	},
 	system = {
 		"ant.test.features|init_loader",
-		"ant.camera_controller|camera_spawn_system",
 	},
 	pipeline = {
 		{ name = "init",
@@ -75,7 +74,7 @@ runtime.start {
 				"pickup",
 				{ name = "ui",
 					"ui_start",
-					"ui",
+					"ui_update",
 					"ui_end",
 				},
 			},

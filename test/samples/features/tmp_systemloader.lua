@@ -28,19 +28,13 @@ local skyutil = skypkg.util
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components
 local defaultcomp=renderpkg.default
-local camerautil= renderpkg.camera
-local aniutil   = import_package 'ant.animation'.util
+local lu        = renderpkg.light
 
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
 local mc        = mathpkg.constant
 
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
 
-local lu = renderpkg.light
-
-local PVPScenLoader = require 'PVPSceneLoader'
 local pbrscene = require "pbr_scene"
 
 local init_loader = ecs.system 'init_loader'
@@ -60,7 +54,9 @@ init_loader.require_system 'state_machine'
 init_loader.require_system 'physic_bounding'
 init_loader.require_system 'draw_raycast_point'
 init_loader.require_system 'ant.camera_controller|camera_controller2'
-init_loader.require_system 'character_system'
+init_loader.require_system 'ant.bullet|character_system'
+init_loader.require_system "ant.camera_controller|camera_system"
+init_loader.require_system "ant.imguibase|imgui_system"
 --init_loader.require_system 'asset_gc'
 
 local char_controller_policy = ecs.policy "character_controller"
@@ -292,7 +288,7 @@ function init_loader:init()
         type    = "",
         eyepos  = {0, 0, -5, 1},
         viewdir = mc.T_ZAXIS,
-        updir   = mc.T_NXAXIS,
+        updir   = mc.T_YAXIS,
         frustum = frustum,
     }}
 
@@ -306,4 +302,51 @@ function init_loader:init()
     pbr_test()
     gltf_animation_test()
     pbrscene.create_scene(world)
+end
+
+local imgui      = require "imgui"
+local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
+
+function init_loader:ui_update()
+    local mq = world:first_entity "main_queue"
+    local cameraname = mq.camera_tag
+
+    local widget = imgui.widget
+    imgui.windows.Begin("Test", wndflags)
+    if widget.Button "rotate" then
+        world:pub {"motion_camera", "rotate", cameraname, {math.rad(10), 0, 0}}
+    end
+
+    if widget.Button "move" then
+        world:pub {"motion_camera", "move", cameraname, {1, 0, 0}}
+    end
+
+    local function find_entity(name, whichtype)
+        for _, eid in world:each(whichtype) do
+            if world[eid].name:match(name) then
+                return eid
+            end
+        end
+    end
+
+    if widget.Button "lock_target_for_move" then
+        local foundeid = find_entity("animation_sample", "character")
+        if foundeid then
+            world:pub {"motion_camera", "target", cameraname, {type = "move", eid = foundeid, offset = {0, 1, 0}}}
+        else
+            print "not found animation_sample"
+        end
+        
+    end
+
+    if widget.Button "lock_target_for_rotate" then
+        local foundeid = find_entity("animation_sample", "character")
+        if foundeid then
+            world:pub {"motion_camera", "target", cameraname, {type = "rotate", eid = foundeid}}
+        else
+            print "not found gltf entity"
+        end
+    end
+
+    imgui.windows.End()
 end
