@@ -26,8 +26,8 @@ m.require_policy "ant.render|directional_light"
 m.require_policy "ant.render|ambient_light"
 
 m.require_system "ant.sky|procedural_sky_system"
-m.require_system "shadow_maker"
-m.require_system "tonemapping"
+m.require_system "ant.render|shadow_maker"
+m.require_system "ant.render|tonemapping"
 
 m.require_system "ant.imguibase|imgui_system"
 
@@ -72,11 +72,11 @@ function m:init()
 	--cu.create_axis_entity(world, mu.translate_mat{0, 0, 1})
 
 	local default_policy = {
-		"render",
-		"mesh",
-		"shadow_cast",
-		"serialize",
-		"name",
+		"ant.render|render",
+		"ant.render|mesh",
+		"ant.render|shadow_cast",
+		"ant.render|name",
+		"ant.serialize|serialize",
 	}
 	local origineid = world:create_entity {
 		policy = default_policy,

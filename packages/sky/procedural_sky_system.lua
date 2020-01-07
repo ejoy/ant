@@ -274,7 +274,7 @@ end
 
 local sun_update_system = ecs.system "sun_update_system"
 sun_update_system.require_system "procedural_sky_system"
-sun_update_system.require_system "timesystem"
+sun_update_system.require_system "ant.timer|timesystem"
 
 local timer = import_package "ant.timer"
 

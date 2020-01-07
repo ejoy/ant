@@ -21,19 +21,31 @@ local function table_append(t, a)
 	table.move(a, 1, #a, #t+1, t)
 end
 
+local function spiltName(pkg, fullname)
+	local package, name = fullname:match "^([^|]*)|(.*)$"
+	if not package then
+		return pkg, fullname
+	end
+	return package, name
+end
+
 local function get_singleton(sys, c)
 	local s = {}
-	for _,v in pairs(sys) do
-		if v.singleton then
-			for _, singleton_name in ipairs(v.singleton) do
-				local singleton_typeobject = c[singleton_name]
-				if not singleton_typeobject then
-					error( singleton_name .. " is not defined")
-				end
-				if s[singleton_name] == nil then
-					log.info("New singleton", singleton_name)
-					local init = singleton_typeobject.method.init
-					s[singleton_name] = init and init() or {}
+	for _, pkg_system in pairs(sys) do
+		for _,v in pairs(pkg_system) do
+			if v.singleton then
+				for _, singleton_name in ipairs(v.singleton) do
+					local package, name = spiltName(v.package, singleton_name)
+					local fullname = package.."|"..name
+					local singleton_typeobject = c[package][name]
+					if not singleton_typeobject then
+						error(singleton_name .. " is not defined")
+					end
+					if s[fullname] == nil then
+						log.info("New singleton", fullname)
+						local init = singleton_typeobject.method.init
+						s[fullname] = init and init() or {}
+					end
 				end
 			end
 		end
@@ -41,11 +53,25 @@ local function get_singleton(sys, c)
 	return s
 end
 
-local function gen_proxy(sto, singletons)
+local function gen_proxy(v, singletons)
+	if not v.singleton then
+		return {}
+	end
+	local lst = {}
 	local inst = {}
-	if sto.singleton then
-		for _, singleton_name in ipairs(sto.singleton) do
-			inst[singleton_name] = singletons[singleton_name]
+	for _, singleton_name in ipairs(v.singleton) do
+		local package, name = spiltName(v.package, singleton_name)
+		local fullname = package.."|"..name
+		if lst[name] == true then
+			inst[fullname] = singletons[fullname]
+		elseif lst[name] then
+			inst[lst[name]] = inst[name]
+			inst[fullname] = singletons[fullname]
+			inst[name] = nil
+			lst[name] = true
+		else
+			inst[name] = singletons[fullname]
+			lst[name] = fullname
 		end
 	end
 	return inst
@@ -54,8 +80,10 @@ end
 local function create_proxy(sys, c)
 	local singletons = get_singleton(sys, c)
 	local p = {}
-	for system_name, system_typeobject in pairs(sys) do
-		p[system_name] = gen_proxy(system_typeobject, singletons)
+	for _, pkg_system in pairs(sys) do
+		for system_name, system_typeobject in pairs(pkg_system) do
+			p[system_name] = gen_proxy(system_typeobject, singletons)
+		end
 	end
 	return p
 end
@@ -97,9 +125,11 @@ function system.init(sys, singleton, pipeline)
 		mark[k] = true
 		return obj
 	end})
-	for sys_name, s in sortpairs(sys) do
-		for step_name, func in pairs(s.method) do
-			table.insert(res[step_name], { sys_name, func })
+	for _, pkg_system in sortpairs(sys) do
+		for sys_name, s in sortpairs(pkg_system) do
+			for step_name, func in pairs(s.method) do
+				table.insert(res[step_name], { sys_name, func })
+			end
 		end
 	end
 	setmetatable(res, nil)

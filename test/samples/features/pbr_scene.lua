@@ -18,10 +18,10 @@ local function create_pbr_entity(world,
 
     return world:create_entity {
         policy = {
-            "render",
-            "mesh",
-            "name",
-            "select",
+            "ant.render|render",
+            "ant.render|mesh",
+            "ant.render|name",
+            "ant.objcontroller|select",
         },
         data = {
             name = name,

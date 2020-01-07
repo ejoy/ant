@@ -212,9 +212,9 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 
 	return world:create_entity {
 		policy = {
-			"shadow_make",
-			"render_queue",
-			"name",
+			"ant.render|shadow_make",
+			"ant.render|render_queue",
+			"ant.render|name",
 		},
 		data = {
 			material = {ref_path = linear_shadow and linear_cast_material or cast_material},
@@ -302,7 +302,7 @@ local function create_shadow_entity(shadowmap_size, split_num, depth_type)
 
 	return world:create_entity {
 		policy = {
-			"shadow_config"
+			"ant.render|shadow_config"
 		},
 		data = {
 			shadow = {

@@ -22,24 +22,11 @@ local pbrscene = require "pbr_scene"
 
 local init_loader = ecs.system 'init_loader'
 
-init_loader.require_system 'timesystem'
-init_loader.require_system "serialize_index_system"
-init_loader.require_system "procedural_sky_system"
-
-init_loader.require_system 'render_system'
-init_loader.require_system 'cull_system'
-init_loader.require_system 'shadow_maker'
-init_loader.require_system 'primitive_filter_system'
-init_loader.require_system 'skinning_system'
-init_loader.require_system 'viewport_detect_system'
-init_loader.require_system 'state_machine'
-init_loader.require_system 'physic_bounding'
-init_loader.require_system 'draw_raycast_point'
 init_loader.require_system 'ant.camera_controller|camera_controller2'
 init_loader.require_system 'ant.bullet|character_system'
 init_loader.require_system "ant.camera_controller|camera_system"
 init_loader.require_system "ant.imguibase|imgui_system"
---init_loader.require_system 'asset_gc'
+init_loader.require_system "ant.sky|procedural_sky_system"
 
 local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
@@ -55,15 +42,15 @@ local function ozzmesh_animation_test()
     return
         world:create_entity {
         policy = {
-            "render",
-            "ozzmesh",
-            "animation",
-            "ozz_skinning",
-            "character_controller",
-            "collider.character",
-            "serialize",
-            "name",
-            "shadow_cast",
+            "ant.render|render",
+            "ant.animation|ozzmesh",
+            "ant.animation|animation",
+            "ant.animation|ozz_skinning",
+            "ant.serialize|serialize",
+            "ant.render|name",
+            "ant.render|shadow_cast",
+            "ant.bullet|collider.character",
+            "ant.test.features|character_controller",
         },
         data = {
             transform = {
@@ -175,12 +162,12 @@ end
 local function gltf_animation_test()
     world:create_entity {
         policy = {
-            "render",
-            "mesh",
-            --"animation",
-            --"skinning",
-            "shadow_cast",
-            "name",
+            "ant.render|render",
+            "ant.render|mesh",
+            --"ant.animation|animation",
+            --"ant.animation|skinning",
+            "ant.render|shadow_cast",
+            "ant.render|name",
         },
         data = {
             transform = mu.srt(nil, nil, {-5, 0, 0, 1}),
@@ -224,10 +211,10 @@ end
 local function pbr_test()
     world:create_entity {
         policy = {
-            "render",
-            "mesh",
-            "shadow_cast",
-            "name",
+            "ant.render|render",
+            "ant.render|mesh",
+            "ant.render|shadow_cast",
+            "ant.render|name",
         },
         data = {
             transform = mu.srt(nil, nil, {3, 2, 0, 1}),

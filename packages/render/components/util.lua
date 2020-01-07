@@ -102,8 +102,8 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 
 	local gridid = world:create_entity {
 		policy = {
-			"render",
-			"name",
+			"ant.render|render",
+			"ant.render|name",
 		},
 		data = {
 			transform = transform or mu.identity_transform(),
@@ -144,8 +144,8 @@ end
 
 function util.create_plane_entity(world, size, pos, materialpath, color, name, needcollider)
 	local policy = {
-		"render",
-		"name",
+		"ant.render|render",
+		"ant.render|name",
 	}
 
 	local scale = size or {1, 1, 1, 0}
@@ -164,7 +164,7 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 		name = name or "Plane",
 	}
 	if needcollider then
-		policy[#policy+1] = "collider.box"
+		policy[#policy+1] = "ant.bullet|collider.box"
 
 		data["collider_tag"] = ""
 		data["box_collider"] = {
@@ -218,8 +218,8 @@ end
 function util.create_quad_entity(world, rect, materialpath, properties, name)
 	local eid = world:create_entity {
 		policy = {
-			"name",
-			"render",
+			"ant.render|name",
+			"ant.render|render",
 		},
 		data = {
 			transform = mu.identity_transform(),
@@ -243,8 +243,8 @@ end
 function util.create_texture_quad_entity(world, texture_tbl, name)
     local quadid = world:create_entity{
 		policy = {
-			"render",
-			"name",
+			"ant.render|render",
+			"ant.render|name",
 		},
 		data = {
 			transform = mu.identity_transform(),
@@ -305,8 +305,8 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	local points = frustum:points()
 	local eid = world:create_entity {
 		policy = {
-			"render",
-			"name",
+			"ant.render|render",
+			"ant.render|name",
 		},
 		data = {
 			transform = transform or mu.srt(),
@@ -350,8 +350,8 @@ end
 function util.create_axis_entity(world, transform, color, name)
 	local eid = world:create_entity {
 		policy = {
-			"render",
-			"name",
+			"ant.render|render",
+			"ant.render|name",
 		},
 		data = {
 			transform = transform or mu.srt(),
@@ -383,8 +383,8 @@ end
 function util.create_skybox(world, material)
     local eid = world:create_entity {
 		policy = {
-			"render",
-			"name"
+			"ant.render|render",
+			"ant.render|name"
 		},
 		data = {
 			transform = mu.srt(),
@@ -548,9 +548,9 @@ end
 function util.create_bounding_drawer(world)
 	local eid = world:create_entity {
 		policy = {
-			"name",
-			"render",
-			"bounding_draw",
+			"ant.render|name",
+			"ant.render|render",
+			"ant.render|bounding_draw",
 		},
 		data = {
 			transform 		= mu.identity_transform(),

@@ -137,11 +137,11 @@ local function create_scene_node_test()
     local render_child1_1 =
         world:create_entity {
             policy = {
-                "render",
-                "mesh",
+                "ant.render|render",
+                "ant.render|mesh",
                 "genreal",
-                "select",
-                "serialize",
+                "ant.objcontroller|select",
+                "ant.serialize|serialize",
             },
             data = {
                 transform = {
@@ -166,11 +166,11 @@ local function create_scene_node_test()
     local render_child1_2 =
         world:create_entity {
             policy = {
-                "render",
-                "mesh",
-                "select",
-                "name",
-                "serialize",
+                "ant.render|render",
+                "ant.render|mesh",
+                "ant.objcontroller|select",
+                "ant.render|name",
+                "ant.serialize|serialize",
             },
             data = {
                 transform = {
@@ -194,11 +194,11 @@ local function create_scene_node_test()
     local render_child2_1 =
         world:create_entity {
             policy = {
-                "render",
-                "mesh",
-                "select",
-                "serialize",
-                "name",
+                "ant.render|render",
+                "ant.render|mesh",
+                "ant.objcontroller|select",
+                "ant.serialize|serialize",
+                "ant.render|name",
             },
             data = {
                 transform = {
@@ -277,11 +277,11 @@ local function create_scene_node_test()
     local render2_rootchild =
         world:create_entity {
             policy = {
-                "select",
-                "name",
-                "render",
-                "mesh",
-                "serialize",
+                "ant.objcontroller|select",
+                "ant.render|name",
+                "ant.render|render",
+                "ant.render|mesh",
+                "ant.serialize|serialize",
             },
             data = {
                 transform = {
@@ -306,11 +306,11 @@ local function create_scene_node_test()
     local render2_child1 =
         world:create_entity {
             policy = {
-                "select",
-                "name",
-                "render",
-                "mesh",
-                "serialize",
+                "ant.objcontroller|select",
+                "ant.render|name",
+                "ant.render|render",
+                "ant.render|mesh",
+                "ant.serialize|serialize",
             },
             data = {
                 transform = {
@@ -346,10 +346,10 @@ local function create_scene_node_test()
 
     local submesh_child = world:create_entity {
         policy = {
-            "serialize",
-            "name",
-            "render",
-            "mesh",
+            "ant.serialize|serialize",
+            "ant.render|name",
+            "ant.render|render",
+            "ant.render|mesh",
         },
         data = {
             transform = {
@@ -558,10 +558,10 @@ local test_queue = {
 
         world:create_entity {
             policy = {
-                "select",
-                "render",
-                "mesh",
-                "name",
+                "ant.objcontroller|select",
+                "ant.render|render",
+                "ant.render|mesh",
+                "ant.render|name",
             },
             data = {
                 transform = {

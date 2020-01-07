@@ -260,8 +260,8 @@ function PVPScene.create_entitices(world)
 
 				local eid = world:create_entity  {
 					policy = {
-						"render",
-						"mesh",
+						"ant.render|render",
+						"ant.render|mesh",
 						"genreal",
 					},
 					data = {

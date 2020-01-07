@@ -50,90 +50,264 @@ local function gen_method(c, callback)
 	end
 end
 
-local function decl_basetype(class_register)
-	class_register.component_alias("tag", "boolean", true)
-	class_register.component_base("entityid", -1)
-
-	class_register.component_base("int", 0)
-	class_register.component_base("real", 0.0)
-	class_register.component_base("string", "")
-	class_register.component_base("boolean", false)
+local function decl_basetype(ecs)
+	ecs.component_alias("tag", "boolean", true)
+	ecs.component_base("entityid", -1)
+	ecs.component_base("int", 0)
+	ecs.component_base("real", 0.0)
+	ecs.component_base("string", "")
+	ecs.component_base("boolean", false)
 end
 
-return function(world, import, class)
-	local schema = createschema(world._schema)
-	local class_register = { world = world, import = import }
-	local class = class or {}
-	class.component = world._schema.map
+local current_package = {}
+local function resetCurrentPackage()
+	current_package = {}
+end
+
+local function getCurrentPackage()
+	return current_package[#current_package]
+end
+local function pushCurrentPackage(name)
+	current_package[#current_package+1] = name
+end
+local function popCurrentPackage()
+	current_package[#current_package] = nil
+end
+local deferCurrentPackage = setmetatable({}, {__close=popCurrentPackage})
+
+local function tableAt(t, k)
+	local v = t[k]
+	if v then
+		return v
+	end
+	v = {}
+	t[k] = v
+	return v
+end
+
+local function importAll(w, ecs, class, config, loader)
+	local cut = {
+		policy = {},
+		system = {},
+		transform = {},
+		singleton = {},
+		component = class.component,
+	}
+	w._class = cut
+	local policies = config.policy
+	local systems  = config.system
+	local imported = {}
+	local importPolicy
+	local importSystem
+	local importComponent
+	local importTransform
+	local importSingleton
+	local function importPackage(name)
+		if imported[name] then
+			return
+		end
+		imported[name] = true
+		local modules = assert(loader(name) , "load module " .. name .. " failed")
+		if type(modules) == "table" then
+			for _, m in ipairs(modules) do
+				m(ecs)
+			end
+		else
+			modules(ecs)
+		end
+	end
+	local function splitName(fullname)
+		local package, name = fullname:match "^([^|]*)|(.*)$"
+		if package then
+			pushCurrentPackage(package)
+			importPackage(package)
+			return package, name, deferCurrentPackage
+		end
+		return getCurrentPackage(), fullname
+	end
+	ecs.import = function(name)
+		pushCurrentPackage(name)
+		importPackage(name)
+		popCurrentPackage()
+	end
+	function importPolicy(k)
+		local package, name, defer <close> = splitName(k)
+		if tableAt(cut.policy, package)[name] then
+			return
+		end
+		local v = class.policy[package][name]
+		if not v then
+			error(("invalid policy name: `%s`."):format(name))
+		end
+		tableAt(cut.policy, package)[name] = v
+		if v.require_system then
+			for _, k in ipairs(v.require_system) do
+				importSystem(k)
+			end
+		end
+		if v.require_policy then
+			for _, k in ipairs(v.require_policy) do
+				importPolicy(k)
+			end
+		end
+		if v.require_transform then
+			for _, k in ipairs(v.require_transform) do
+				importTransform(k)
+			end
+		end
+		if v.require_component then
+			for _, k in ipairs(v.require_component) do
+				importComponent(k)
+			end
+		end
+	end
+	function importSystem(k)
+		local package, name, defer <close> = splitName(k)
+		if tableAt(cut.system, package)[name] then
+			return
+		end
+		local v = class.system[package][name]
+		if not v then
+			error(("invalid system name: `%s`."):format(name))
+		end
+		tableAt(cut.system, package)[name] = v
+		if v.require_system then
+			for _, k in ipairs(v.require_system) do
+				importSystem(k)
+			end
+		end
+		if v.require_policy then
+			for _, k in ipairs(v.require_policy) do
+				importPolicy(k)
+			end
+		end
+		if v.singleton then
+			for _, k in ipairs(v.singleton) do
+				importSingleton(k)
+			end
+		end
+	end
+	function importComponent(k)
+		--TODO
+		--local package, name, defer <close> = splitName(k)
+		--if tableAt(cut.component, package)[name] then
+		--	return
+		--end
+		--local v = class.component[name]
+		--if not v then
+		--	error(("invalid component name: `%s`."):format(name))
+		--end
+		--tableAt(cut.component, package)[name] = v
+	end
+	function importTransform(k)
+		local package, name, defer <close> = splitName(k)
+		if tableAt(cut.transform, package)[name] then
+			return
+		end
+		local v = class.transform[package][name]
+		if not v then
+			error(("invalid transform name: `%s`."):format(name))
+		end
+		tableAt(cut.transform, package)[name] = v
+		if v.input then
+			for _, k in ipairs(v.input) do
+				importComponent(k)
+			end
+		end
+		if v.output then
+			for _, k in ipairs(v.output) do
+				importComponent(k)
+			end
+		end
+	end
+	function importSingleton(k)
+		local package, name, defer <close> = splitName(k)
+		if tableAt(cut.singleton, package)[name] then
+			return
+		end
+		local v = class.singleton[package][name]
+		if not v then
+			error(("invalid singleton name: `%s`."):format(name))
+		end
+		tableAt(cut.singleton, package)[name] = v
+	end
+	resetCurrentPackage()
+	for _, k in ipairs(policies) do
+		importPolicy(k)
+	end
+	for _, k in ipairs(systems) do
+		importSystem(k)
+	end
+	return cut
+end
+
+local function dyntable()
+	return setmetatable({}, {__index=function(t,k)
+		local o = {}
+		t[k] = o
+		return o
+	end})
+end
+
+return function (w, config, loader)
+	local schema_data = {}
+	local schema = createschema(schema_data)
+	local class = { component = schema_data.map }
+	local ecs = { world = w }
 
 	local function register(args)
 		local what = args.type
 		local class_set = {}
-		local class_data = class[what] or {}
+		local class_data = class[what] or dyntable()
 		class[what] = class_data
-		class_register[what] = function(name)
-			local r = class_set[name]
+		ecs[what] = function(name)
+			local package = getCurrentPackage()
+			local r = tableAt(class_set, package)[name]
 			if r == nil then
-				log.info("Register", what, name)
-				local c = { name = name, method = {}, source = {}, defined = sourceinfo() }
-				class_data[name] = c
+				log.info("Register", what, package .. "|" .. name)
+				local c = { name = name, method = {}, source = {}, defined = sourceinfo(), package = package }
+				class_data[package][name] = c
 				r = {}
 				setmetatable(r, {
 					__index = args.setter and gen_set(c, args.setter),
 					__newindex = gen_method(c),
 				})
-
-				class_set[name] = r
+				tableAt(class_set, package)[name] = r
 			end
 			return r
 		end
 	end
-
 	register {
 		type = "singleton",
 		callback = { "init" },
 	}
-
 	register {
 		type = "system",
 		setter = { "singleton", "require_policy", "require_system" },
 	}
-
 	register {
 		type = "transform",
 		setter = { "input", "output" },
 		callback = { "process" },
 	}
-
 	register {
 		type = "policy",
 		setter = { "require_component", "require_transform", "require_system", "require_policy" },
 	}
-
-	class.packages = {}
-
-	class_register.component = function (name)
-		return schema:type(class.packages[1], name)
+	ecs.component = function (name)
+		return schema:type(getCurrentPackage(), name)
 	end
-
-	class_register.component_alias = function (name, ...)
-		return schema:typedef(class.packages[1], name, ...)
+	ecs.component_alias = function (name, ...)
+		return schema:typedef(getCurrentPackage(), name, ...)
 	end
-	
-	class_register.component_base = function (name, ...)
-		schema:primtype(class.packages[1], name, ...)
+	ecs.component_base = function (name, ...)
+		schema:primtype(getCurrentPackage(), name, ...)
 	end
-
-	class.mark_handlers = {}
-	class_register.mark = function(name, handler)
-		--class_register.tag(name)
-		class.mark_handlers[name] = handler
+	ecs.tag = function (name)
+		ecs.component_alias(name, "tag")
 	end
-
-	decl_basetype(class_register)
-	class_register.tag = function (name)
-		class_register.component_alias(name, "tag")
-	end
-
-	return class_register, class
+	decl_basetype(ecs)
+	importAll(w, ecs, class, config, loader)
+	require "component".solve(schema_data)
+	require "policy".solve(w)
 end

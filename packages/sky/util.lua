@@ -51,9 +51,9 @@ function util.create_procedural_sky(world, settings)
 	settings = settings or {}
     local skyeid = world:create_entity {
 		policy = {
-			"render",
-			"procedural_sky",
-			"name",
+			"ant.render|render",
+			"ant.sky|procedural_sky",
+			"ant.render|name",
 		},
 		data = {
 			transform = mu.identity_transform(),
