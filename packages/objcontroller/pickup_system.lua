@@ -282,6 +282,7 @@ local function add_pick_entity()
 			primitive_filter = {
 				filter_tag = "can_select"
 			},
+			visible = true,
 			name = "pickup_renderqueue",
 		}
 
@@ -290,27 +291,14 @@ end
 
 local function enable_pickup(enable)
 	world:enable_system("pickup_system", enable)
-	if enable then
-		return add_pick_entity()
-	end
-
-	local eid = world:first_entity_id "pickup"
-	world:remove_entity(eid)
+	local e = world:first_entity "pickup"
+	e.visible = enable
 end
 
-function pickup_sys:init()	
-	--local pickup_eid = add_pick_entity()
+local leftmousepress_mb = world:sub {"mouse", "LEFT"}
 
-	-- self.message.observers:add({
-	-- 	mouse = function (_, x, y, what, state)
-	-- 		if what == "LEFT" and state == "DOWN" then
-	-- 			local eid = enable_pickup(true)
-	-- 			local entity = world[eid]
-	-- 			update_viewinfo(entity, point2d(x, y))
-	-- 			entity.pickup.nextstep = "blit"
-	-- 		end
-	-- 	end
-	-- })
+function pickup_sys:init()
+	add_pick_entity()
 end
 
 local function blit(blitviewid, blit_buffer, colorbuffer)
@@ -362,8 +350,17 @@ end
 
 function pickup_sys:pickup()
 	local pickupentity = world:first_entity "pickup"
-	if pickupentity then
+	if pickupentity.visible then
 		local pickupcomp = pickupentity.pickup
+
+		for _,_,state,x,y in leftmousepress_mb:unpack() do
+			if state == "DOWN" then
+				enable_pickup(true)
+				update_viewinfo(pickupentity, point2d(x, y))
+				pickupcomp.nextstep = "blit"
+			end
+		end
+
 		local nextstep = pickupcomp.nextstep
 		if nextstep == "blit" then
 			local fb = fbmgr.get(pickupentity.render_target.fb_idx)
