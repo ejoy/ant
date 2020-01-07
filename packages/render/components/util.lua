@@ -166,7 +166,7 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 	if needcollider then
 		policy[#policy+1] = "collider.box"
 
-		data["collider_tag"] = "box_collider"
+		data["collider_tag"] = ""
 		data["box_collider"] = {
 			collider = {
 				center = {0, 0, 0},

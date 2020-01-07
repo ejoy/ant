@@ -424,6 +424,7 @@ ladd_to_compound(lua_State *L) {
 		if (quat)
 			localTrans.setRotation(*quat);
 	} else {
+		localTrans.setRotation(btQuaternion::getIdentity());
 		localTrans.setOrigin(btVector3(0.0f, 0.0f, 0.0f));
 	}
 
