@@ -174,6 +174,8 @@ local sp = ecs.policy "select"
 	sp.require_system "pickup_material_system"
 	sp.require_system "pickup_system"
 
+	sp.require_policy "pickup"
+
 local pickup_sys = ecs.system "pickup_system"
 pickup_sys.singleton "frame_stat"
 
@@ -244,7 +246,7 @@ local function add_pick_entity()
 		},
 		data = {
 			material = {
-				{ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_opacity.material'},
+				ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_opacity.material',
 				{ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_transparent.material'},
 			},
 			view_mode = "s",
@@ -282,7 +284,7 @@ local function add_pick_entity()
 			primitive_filter = {
 				filter_tag = "can_select"
 			},
-			visible = true,
+			visible = false,
 			name = "pickup_renderqueue",
 		}
 
