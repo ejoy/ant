@@ -18,13 +18,18 @@ function world:create_component(c, args)
 		return args
 	end
 	if not ti.type and ti.multiple then
-		local res = assert(component_init(self, ti, args))
+		local res = component_init(self, ti, args)
+		assert(res ~= nil)
 		for i = 1, #args do
-			res[i] = assert(component_init(self, ti, args[i]))
+			local r = component_init(self, ti, args[i])
+			assert(r ~= nil)
+			res[i] = r
 		end
 		return res
 	end
-	return assert(component_init(self, ti, args))
+	local res = component_init(self, ti, args)
+	assert(res ~= nil)
+	return res
 end
 
 function world:register_component(eid, c)
