@@ -26,6 +26,7 @@ m.require_policy "ant.render|directional_light"
 m.require_policy "ant.render|ambient_light"
 
 m.require_system "ant.imguibase|imgui_system"
+m.require_system "ant.camera_controller|camera_system"
 
 local function create_animation_test()
     local eid = world:create_entity {
@@ -136,7 +137,7 @@ function m:init()
     world:pub {"spawn_camera", "main_camera",{
         type = "",
         eyepos = { 1.6, 1.8,-1.8, 1.0},
-        updir = mc.T_NXAXIS,
+        updir = mc.T_YAXIS,
         viewdir = {-0.6,-0.4, 0.7, 0.0},
         frustum = frustum,
     }}

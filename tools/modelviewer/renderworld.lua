@@ -7,11 +7,15 @@ local skypkg = import_package "ant.sky"
 local serialize = import_package 'ant.serialize'
 local imgui = require "imgui.ant"
 local fs = require "filesystem"
+
 local skyutil = skypkg.util
 local ms = mathpkg.stack
 local mu = mathpkg.util
+local mc = mathpkg.constant
+
 local lu = renderpkg.light
 local cu = renderpkg.components
+local defaultcomp = renderpkg.default
 
 local m = ecs.system "model_review_system"
 
@@ -30,6 +34,7 @@ m.require_system "ant.render|shadow_maker"
 m.require_system "ant.render|tonemapping"
 
 m.require_system "ant.imguibase|imgui_system"
+m.require_system "ant.camera_controller|camera_system"
 
 
 local function create_light()
@@ -58,8 +63,24 @@ local function a2c(t)
 	return r
 end
 
+
+local function create_camera()
+    local fbsize = world.args.fb_size
+    local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
+    frustum.f = 300
+    world:pub {"spawn_camera", "test_main_camera", {
+        type    = "",
+        eyepos  = {0, 3, -10, 1},
+        viewdir = mc.T_ZAXIS,
+        updir   = mc.T_YAXIS,
+        frustum = frustum,
+    }}
+end
+
 function m:init()
+	create_camera()
 	create_light()
+	
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
 	--cu.create_grid_entity(world, "grid")
