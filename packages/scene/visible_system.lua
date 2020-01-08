@@ -3,29 +3,9 @@ local world = ecs.world
 
 ecs.component_alias("hierarchy_visible", "boolean")
 
--- local visible_change_cache = ecs.singleton "visible_change_cache"
--- function visible_change_cache:init()
---     local cache
---     local function clear( )
---         cache.list = {}
---     end
---     cache = {
---         clear = clear,
---         list = {},
---     }
---     return cache
--- end
-
 
 local visible_system = ecs.system "visible_system"
--- visible_system.singleton "visible_change_cache"
 
--- function visible_system:update()
---     local change_cache_list = self.visible_change_cache.list
---     for eid in world:each_new("hierarchy_visible") do
---         table.insert(change_cache_list,eid)
---     end
--- end
 
 local NotUpdated = nil
 local DontHave = 0

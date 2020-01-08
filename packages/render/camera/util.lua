@@ -52,7 +52,7 @@ function util.focus_obj(world, eid)
 end
 
 function util.queue_camera(world, queuetag)
-	local q = world:first_entity(queuetag)
+	local q = world:singleton_entity(queuetag)
 	return world[q.camera_eid].camera
 end
 

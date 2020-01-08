@@ -30,7 +30,7 @@ local function add_directional_light_properties(world, uniform_properties)
 		directional_intensity = {name="Light Intensity", type="v4",value={}},
 	}
 
-	local dlight = world:first_entity "directional_light"
+	local dlight = world:singleton_entity "directional_light"
 	if dlight then		
 		local l = dlight.directional_light
 
@@ -125,7 +125,7 @@ function util.load_shadow_properties(world, render_properties)
 		uniforms["u_csm_split_distances"] = {type="v4", name="csm split distances", value=split_distances}
 	end
 
-	local shadowentity = world:first_entity "shadow"
+	local shadowentity = world:singleton_entity "shadow"
 	if shadowentity then
 		local fb = fbmgr.get(shadowentity.fb_index)
 		local smstage = uniformutil.system_uniform("s_shadowmap").stage
@@ -145,7 +145,7 @@ function util.load_shadow_properties(world, render_properties)
 end
 
 function util.load_postprocess_properties(world, render_properties)
-	local mq = assert(world:first_entity("main_queue"))
+	local mq = assert(world:singleton_entity "main_queue")
 	local postprocess = render_properties.postprocess
 	local fbidx = mq.render_target.fb_idx
 	if fbidx then

@@ -19,7 +19,7 @@ function cc:init()
 	}
 
 	local function move(value, x, y, z)
-		local character = assert(world:first_entity("character"))
+		local character --TODO
 		
 		local movespeed = character.character.movespeed
 		local deltatime = timer.deltatime * 0.001 * value

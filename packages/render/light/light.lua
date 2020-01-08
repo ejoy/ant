@@ -39,7 +39,11 @@ for _, lighttype in ipairs {
 	if lighttype ~= "ambient_light" then
 		p.require_component "transform"
 	end
-	p.require_component(lighttype)
+	if lighttype == "directional_light" then
+		p.unique_component(lighttype)
+	else
+		p.require_component(lighttype)
+	end
 	p.require_transform(lighttype)
 
 	local t = ecs.transform(lighttype)

@@ -42,7 +42,7 @@
 --     --local ms = self.math_stack
 --     local ms = stack 
 
---     local camera = world:first_entity("main_queue")
+--     local camera = world:singleton_entity "main_queue"
 
 --     local math = import_package "ant.math"
 --     local point2d = math.point2d
@@ -111,7 +111,7 @@
 --     local math = import_package "ant.math"
 --     local point2d = math.point2d
 
---     local camera = world:first_entity("main_queue")
+--     local camera = world:singleton_entity "main_queue"
 
 -- 	local move_speed = 1
 -- 	local message = {}
@@ -325,7 +325,7 @@
 --     local math = import_package "ant.math"
 --     local point2d = math.point2d
 
---     local camera = world:first_entity("main_queue")
+--     local camera = world:singleton_entity "main_queue"
 
 -- 	local move_speed = 1
 -- 	local message = {}
@@ -430,7 +430,7 @@
 --     local ms = stack 
 
 --     -- raycast 
---     local camera = world:first_entity("main_queue")
+--     local camera = world:singleton_entity "main_queue"
 --     local pos = ms(camera.position,"T")
 
 --     local deltaTime =  timer.deltatime

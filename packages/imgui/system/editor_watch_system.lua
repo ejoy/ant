@@ -410,7 +410,7 @@ function editor_watcher_system:init()
 end
 
 function editor_watcher_system:pickup()
-    local pickupentity = world:first_entity "pickup"
+    local pickupentity = world:singleton_entity "pickup"
     if pickupentity then
         local pickupcomp = pickupentity.pickup
         local eid = pickupcomp.pickup_cache.last_pick

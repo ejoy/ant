@@ -24,7 +24,7 @@ local bgfx = require "bgfx"
 ecs.tag "bounding_drawer"
 
 local bdp = ecs.policy "bounding_draw"
-bdp.require_component "bounding_drawer"
+bdp.unique_component "bounding_drawer"
 
 local rmb = ecs.system "render_mesh_bounding"
 
@@ -72,7 +72,7 @@ local function update_buffers(dmesh, vb, ib)
 end
 
 function rmb:widget()
-	local dmesh = world:first_entity "bounding_drawer"
+	local dmesh = world:singleton_entity "bounding_drawer"
 
 	local transformed_boundings = {}
 	computil.calc_transform_boundings(world, transformed_boundings)
@@ -91,7 +91,7 @@ phy_bounding.require_system "reset_mesh_buffer"
 phy_bounding.require_system "collider_system"
 
 function phy_bounding:widget()
-	local dmesh = world:first_entity "bounding_drawer"
+	local dmesh = world:singleton_entity "bounding_drawer"
 
 	local vb, ib = {"fffd"}, {}
 	for _, eid in world:each "collider_tag" do
@@ -108,7 +108,7 @@ end
 
 local reset_bounding_buffer = ecs.system "reset_mesh_buffer"
 function reset_bounding_buffer:end_frame()
-	local dmesh = world:first_entity "bounding_drawer"
+	local dmesh = world:singleton_entity "bounding_drawer"
 	if dmesh then
 		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
 		local group = meshscene.scenes[1][1][1]

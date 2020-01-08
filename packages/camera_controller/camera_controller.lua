@@ -20,7 +20,7 @@ local function camera_move(forward_axis, position, dx, dy, dz)
 end
 
 local function get_camera()
-	local mq = world:first_entity "main_queue"
+	local mq = world:singleton_entity "main_queue"
 	return world[mq.camera_eid].camera
 end
 

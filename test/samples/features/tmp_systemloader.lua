@@ -121,44 +121,6 @@ local function ozzmesh_animation_test()
     }
 end
 
-local function test_serialize(delfile_aftertest)
-	--local eid = world:first_entity_id "main_queue"
-	--local watch = import_package "ant.serialize".watch
-	--local res1 = watch.query(world, nil, eid.."/camera")
-	--local res2 = watch.query(world, res1.__id, "")
-	--watch.set(world, res1.__id, "", "type", "test")
-	--local res3 = watch.query(world, res1.__id, "")
-    
-    local function save_file(file, data)
-        assert(assert(io.open(file, 'w')):write(data)):close()
-    end
-    -- test serialize world
-    local s = serialize.save_world(world)
-    save_file('serialize_world.txt', s)
-    for _, eid in world:each 'serialize' do
-        world:remove_entity(eid)
-    end
-    world:update_func "delete"()
-    world:clear_removed()
-    serialize.load_world(world, s)
-    -- DO NOT call update_func "init", if you donot close the world
-    -- in this test, just call "post_init" is enougth
-    world:update_func "post_init"()
-
-    --test serialize entity
-    local eid = world:first_entity_id 'serialize'
-    local s = serialize.save_entity(world, eid)
-    save_file('serialize_entity.txt', s)
-    world:remove_entity(eid)
-    serialize.load_entity(world, s)
-
-    if delfile_aftertest then
-        local lfs = require "filesystem.local"
-        lfs.remove(lfs.path 'serialize_world.txt')
-        lfs.remove(lfs.path 'serialize_entity.txt')
-    end
-end
-
 local function gltf_animation_test()
     world:create_entity {
         policy = {
@@ -277,7 +239,7 @@ local imgui      = require "imgui"
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
 function init_loader:ui_update()
-    local mq = world:first_entity "main_queue"
+    local mq = world:singleton_entity "main_queue"
     local cameraeid = mq.camera_eid
 
     local widget = imgui.widget

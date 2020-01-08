@@ -49,6 +49,12 @@ local function create(w, policies)
                 init_component[#init_component+1] = v
             end
         end
+        for _, v in ipairs(class.unique_component) do
+            if not component[v] then
+                component[v] = {depend={}}
+                init_component[#init_component+1] = v
+            end
+        end
     end
     local function table_append(t, a)
         table.move(a, 1, #a, #t+1, t)
@@ -138,8 +144,17 @@ local function solve(w)
             end
             v.union = union_name
             local components = {}
+            if not v.require_component and not v.unique_component then
+                error(("policy `%s`'s require_component or unique_component cannot be empty."):format(policy_name))
+            end
             if not v.require_component then
-                error(("policy `%s`'s require_component cannot be empty."):format(policy_name))
+                v.require_component = {}
+            end
+            if not v.unique_component then
+                v.unique_component = {}
+            end
+            if not v.require_transform then
+                v.require_transform = {}
             end
             for _, component_name in ipairs(v.require_component) do
                 if not class.component[component_name] then
@@ -147,8 +162,11 @@ local function solve(w)
                 end
                 components[component_name] = true
             end
-            if not v.require_transform then
-                v.require_transform = {}
+            for _, component_name in ipairs(v.unique_component) do
+                if not class.component[component_name] then
+                    error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
+                end
+                components[component_name] = true
             end
             for _, transform_name in ipairs(v.require_transform) do
                 local c = find(class.transform, v.package, transform_name)

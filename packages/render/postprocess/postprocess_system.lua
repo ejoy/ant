@@ -52,7 +52,7 @@ function ppv.init()
 end
 
 local pp_sys = ecs.system "postprocess_system"
-pp_sys.singleton "render_properties"
+pp_sys.require_singleton "render_properties"
 pp_sys.singleton "postprocess"
 
 pp_sys.require_system "render_system"
@@ -143,7 +143,7 @@ function pp_sys:combine_postprocess()
     local pp = self.postprocess
     local techniques = pp.techniques
     if next(techniques) then
-        local render_properties = self.render_properties
+        local render_properties = world:singleton "render_properties"
         local lastslot = {
             fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
             rb_idx = 1
