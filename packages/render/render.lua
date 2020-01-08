@@ -72,19 +72,16 @@ ecs.component "camera"
 	.frustum	"frustum"
 	["opt"].lock_target"camera_lock_target"
 
-ecs.component "camera_mgr"
-	.cameras "camera{}"
-	
 local cp = ecs.policy "camera"
-cp.require_component "camera_mgr"
-ecs.component_alias("camera_tag", "string")
+cp.require_component "camera"
 
+ecs.component_alias("camera_eid", "entityid")
 ecs.component_alias("visible", "boolean", true)
 
 local rqp = ecs.policy "render_queue"
 rqp.require_component "viewid"
 rqp.require_component "render_target"
-rqp.require_component "camera_tag"
+rqp.require_component "camera_eid"
 rqp.require_component "primitive_filter"
 rqp.require_component "visible"
 rqp.require_transform "render_target"
@@ -127,8 +124,8 @@ end
 
 function rendersys:init()
 	local fbsize = world.args.fb_size
-	ru.create_main_queue(world, fbsize, "")
-	ru.create_blit_queue(world, {x=0, y=0, w=fbsize.w, h=fbsize.h})
+	ru.create_main_queue(world, fbsize)
+	ru.create_blit_queue(world, fbsize)
 end
 
 function rendersys:render_commit()
@@ -138,7 +135,7 @@ function rendersys:render_commit()
 		if rq.visible then
 			local viewid = rq.viewid
 			ru.update_render_target(viewid, rq.render_target)
-			update_view_proj(viewid, camerautil.get_camera(world, rq.camera_tag))
+			update_view_proj(viewid, world[rq.camera_eid].camera)
 
 			local filter = rq.primitive_filter
 			local results = filter.result

@@ -21,7 +21,7 @@ end
 
 local function get_camera()
 	local mq = world:first_entity "main_queue"
-	return camerautil.get_camera(world, mq.camera_tag)
+	return world[mq.camera_eid].camera
 end
 
 local eventMouseLeft = world:sub {"mouse", "LEFT"}

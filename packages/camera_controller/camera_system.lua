@@ -14,25 +14,29 @@ local ms = mathpkg.stack
 
 local default_frustum = default_comp.frustum()
 
-function camerasys:init()
-    camerautil.create_camera_mgr_entity(world)
-end
-
 function camerasys:spawn_camera()
     local mq = world:first_entity "main_queue"
     for _, name, info in sc_mb:unpack() do
-        camerautil.bind_camera(world, name, {
-            type    = info.type     or "",
-            eyepos  = info.eyepos   or mc.T_ZERO_PT,
-            viewdir = info.viewdir  or mc.T_ZAXIS,
-            updir   = info.updir    or mc.T_NXAXIS,
-            frustum = info.frustum  or default_frustum,
-        })
-        if mq.camera_tag == "" then
-            mq.camera_tag = name
+        local cameraeid = world:create_entity {
+            policy = {
+                "ant.render|camera",
+                "ant.render|name",
+            },
+            data = {
+                camera = {
+                    type    = info.type     or "",
+                    eyepos  = info.eyepos   or mc.T_ZERO_PT,
+                    viewdir = info.viewdir  or mc.T_ZAXIS,
+                    updir   = info.updir    or mc.T_NXAXIS,
+                    frustum = info.frustum  or default_frustum,
+                },
+                name = name,
+            }
+        }
+        if mq.camera_eid == 0 then
+            mq.camera_eid = cameraeid
         end
-
-        world:pub {"camera_spawned", name}
+        world:pub {"camera_spawned", cameraeid}
     end
 end
 
@@ -40,10 +44,10 @@ end
 local bind_camera_mb = world:sub {"bind_camera"}
 
 function camerasys:bind_camera()
-    for _, cameraname, dest in bind_camera_mb:unpack() do
+    for _, camera_eid, dest in bind_camera_mb:unpack() do
         if dest == "main_queue" then
             local mq = world:first_entity "main_queue"
-            mq.camera_tag = cameraname
+            mq.camera_eid = camera_eid
         elseif dest == nil or dest == "editor.image" then
             assert("need implement")
         end
@@ -53,8 +57,8 @@ end
 local motion_camera_mb = world:sub {"motion_camera"}
 
 function camerasys:motion_camera()
-    for _, motiontype, cameraname, value in motion_camera_mb:unpack() do
-        local camera = camerautil.get_camera(world, cameraname)
+    for _, motiontype, camera_eid, value in motion_camera_mb:unpack() do
+        local camera = world[camera_eid].camera
 
         if motiontype == "target" then
             local lock_target = camera.lock_target
@@ -83,8 +87,8 @@ function camerasys:motion_camera()
 end
 
 function camerasys:camera_lock_target()
-    for _, eid in world:each "camera_tag" do
-        local camera = camerautil.get_camera(world, world[eid].camera_tag)
+    for _, eid in world:each "camera" do
+        local camera = world[eid].camera
         local lock_target = camera.lock_target
         if lock_target then
             local locktype = lock_target.type

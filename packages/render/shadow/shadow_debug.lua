@@ -64,7 +64,7 @@ local frustum_colors = {
 local function	csm_shadow_debug_frustum()
 	for _, seid in world:each "csm" do
 		local e = world[seid]
-		local camera = camerautil.get_camera(world, e.camera_tag)
+		local camera = world[e.camera_eid].camera
 		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
 
 		local color = frustum_colors[e.csm.index]
@@ -75,9 +75,7 @@ local function	csm_shadow_debug_frustum()
 end
 
 local function main_view_debug_frustum()
-	local mq = world:first_entity "main_queue"
-	--create_frustum_debug(mq, "main view frustum", 0xff0000ff)
-	local camera = camerautil.get_camera(world, mq.camera_tag)
+	local camera = camerautil.main_queue_camera(world)
 
 	for _, seid in world:each "csm" do
 		local s = world[seid]
@@ -106,8 +104,7 @@ end
 local function get_split_distance(index)
 	local se = world[find_csm_entity(index)]
 
-	local mq = world:first_entity "main_queue"
-	local viewcamera = camerautil.get_camera(world, mq.camera_tag)
+	local viewcamera = camerautil.main_queue_camera(world)
 	local viewdistance = viewcamera.frustum.f - viewcamera.frustum.n
 
 	local ratios = se.csm.split_ratios
@@ -170,8 +167,7 @@ local function check_shadow_matrix()
 	local lightdir = shadowutil.get_directional_light_dir(world)
 	print("light direction:", ms(lightdir, "V"))
 
-	local mq = world:first_entity "main_queue"
-	local viewcamera = camerautil.get_camera(world, mq.camera_tag)
+	local viewcamera = camerautil.main_queue_camera(world)
 	print("eye posision:", ms(viewcamera.eyepos, "V"))
 	print("view direction:", ms(viewcamera.viewdir, "V"))
 
@@ -232,7 +228,7 @@ local function check_shadow_matrix()
 
 	---------------------------------------------------------------------------------------------------------
 
-	local shadowcamera = camerautil.get_camera(world, csm1.camera_tag)
+	local shadowcamera = world[csm1.camera_eid].camera
 	print("shadow camera view direction:", ms(shadowcamera.viewdir, "V"))
 	print("shadow camera position:", ms(shadowcamera.eyepos, "V"))
 

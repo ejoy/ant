@@ -278,16 +278,16 @@ local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
 function init_loader:ui_update()
     local mq = world:first_entity "main_queue"
-    local cameraname = mq.camera_tag
+    local cameraeid = mq.camera_eid
 
     local widget = imgui.widget
     imgui.windows.Begin("Test", wndflags)
     if widget.Button "rotate" then
-        world:pub {"motion_camera", "rotate", cameraname, {math.rad(10), 0, 0}}
+        world:pub {"motion_camera", "rotate", cameraeid, {math.rad(10), 0, 0}}
     end
 
     if widget.Button "move" then
-        world:pub {"motion_camera", "move", cameraname, {1, 0, 0}}
+        world:pub {"motion_camera", "move", cameraeid, {1, 0, 0}}
     end
 
     local function find_entity(name, whichtype)
@@ -301,7 +301,7 @@ function init_loader:ui_update()
     if widget.Button "lock_target_for_move" then
         local foundeid = find_entity("animation_sample", "character")
         if foundeid then
-            world:pub {"motion_camera", "target", cameraname, {type = "move", eid = foundeid, offset = {0, 1, 0}}}
+            world:pub {"motion_camera", "target", cameraeid, {type = "move", eid = foundeid, offset = {0, 1, 0}}}
         else
             print "not found animation_sample"
         end
@@ -311,7 +311,7 @@ function init_loader:ui_update()
     if widget.Button "lock_target_for_rotate" then
         local foundeid = find_entity("animation_sample", "character")
         if foundeid then
-            world:pub {"motion_camera", "target", cameraname, {type = "rotate", eid = foundeid}}
+            world:pub {"motion_camera", "target", cameraeid, {type = "rotate", eid = foundeid}}
         else
             print "not found gltf entity"
         end

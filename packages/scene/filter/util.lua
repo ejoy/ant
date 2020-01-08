@@ -80,11 +80,8 @@ function util.load_lighting_properties(world, render_properties)
 	add_directional_light_properties(world, lighting_properties)
 	add_ambient_light_propertices(world, lighting_properties)
 
-	local mq = world:first_entity "main_queue"
-	if mq then
-		local camera = camerautil.get_camera(world, mq.camera_tag)
-		lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=camera.eyepos}
-	end
+	local camera = camerautil.main_queue_camera(world)
+	lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=camera.eyepos}
 end
 
 local function calc_viewport_crop_matrix(csm_idx)
@@ -111,7 +108,7 @@ function util.load_shadow_properties(world, render_properties)
 		local se = world[eid]
 		local csm = se.csm
 
-		local camera = camerautil.get_camera(world, se.camera_tag)
+		local camera = world[se.camera_eid].camera
 
 		local idx = csm.index
 		split_distances[idx] = csm.split_distance_VS

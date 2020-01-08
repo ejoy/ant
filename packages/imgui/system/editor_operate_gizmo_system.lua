@@ -35,7 +35,7 @@ end
 
 local function scale_gizmo_to_normal(gizmo)
     local mq = world:first_entity "main_queue"
-    local camera = camerautil.get_camera(world, mq.camera_tag)
+    local camera = world[mq.camera_eid].camera
     local _, _, vp = ms:view_proj(camera, camera.frustum, true)
     local et = gizmo.transform
     if et.world then
@@ -103,8 +103,8 @@ local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
         -- log("dxdy",dx,dy)
         --calc part1
         local mq = world:first_entity "main_queue"
-        
-        local camera = camerautil.get_camera(world, mq.camera_tag)
+        local camera = world[mq.camera_eid].camera
+
         -- log.info_a("mq",mq)
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
         local trans = target_entity.transform
@@ -182,7 +182,7 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
         local scale_box_trans =  scale_box.transform
         local axis_unit = cache.axis_map[picked_dir] -- {1,0,0} or {0,1,0} or {0,0,1}
         local mq = world:first_entity("main_queue")
-        local camera = camerautil.get_camera(world, mq.camera_tag)
+        local camera = world[mq.camera_eid].camera
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
         local viewport = mq.render_target.viewport
         local w,h = viewport.rect.w,viewport.rect.h
@@ -246,8 +246,8 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
             local axis_unit = cache.axis_map[typ]
             local rot_unit = cache.rot_axis_map[typ]
             local mq = world:first_entity "main_queue"
-
-            local camera = camerautil.get_camera(world, mq.camera_tag)
+            local camera = world[mq.camera_eid].camera
+            
             local _,_,viewproj = ms:view_proj(camera,camera.frustum,true)
             r_axis_unit = convert_to_model_axis(trans,axis_unit)
             rotat_unit_quat = ms({type="quat",axis=r_axis_unit,radian={0.02}},"T")

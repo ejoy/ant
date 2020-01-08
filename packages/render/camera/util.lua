@@ -7,8 +7,7 @@ local cu 		= require "components.util"
 local mathbaselib 	= require "math3d.baselib"
 
 function util.focus_point(world, pt)
-	local mq = world:first_entity "main_queue"
-	local camera = util.get_camera(world, mq.camera_tag)
+	local camera = util.main_queue_camera(world)
 	ms(camera.viewdir, pt, camera.eyepos, "-n=")
 end
 
@@ -39,9 +38,7 @@ function util.focus_obj(world, eid)
 	local bounding = cu.entity_bounding(entity)
 	if bounding then
 		local sphere = bounding:get "sphere"
-
-		local mq = world:first_entity "main_queue"
-		local camera = util.get_camera(world, mq.camera_tag)
+		local camera = util.main_queue_camera(world)
 		local center = ms({sphere[1], sphere[2], sphere[3], 1.0}, "P")
 		ms(camera.viewdir, center, camera.eyepos, "-n=")
 	
@@ -54,44 +51,13 @@ function util.focus_obj(world, eid)
 	end
 end
 
-function util.create_camera_mgr_entity(world, main_camera)
-	return world:create_entity {
-		policy = {
-			"ant.render|camera"
-		},
-		data = {
-			name = "camera_manager",
-			camera_mgr = {
-				cameras = {
-					main_view = main_camera,
-				}
-			}
-		}
-
-	}
+function util.queue_camera(world, queuetag)
+	local q = world:first_entity(queuetag)
+	return world[q.camera_eid].camera
 end
 
-function util.bind_camera(world, name, camera)
-	local entity = assert(world:first_entity "camera_mgr")
-	local cameras = entity.camera_mgr.cameras
-	if cameras[name] then
-		log.error("already bind camera:", name)
-	end
-
-	local comp = world:create_component("camera", camera)
-	cameras[name] = comp
-	return comp
-end
-
-function util.unbind_camera(cameramgr_entity, name)
-	local mgr = cameramgr_entity.camera_mgr
-	mgr.cameras[name] = nil
-end
-
-function util.get_camera(world, name)
-	local cameramgr_entity = world:first_entity "camera_mgr"
-	local mgr = cameramgr_entity.camera_mgr
-	return mgr.cameras[name]
+function util.main_queue_camera(world)
+	return util.queue_camera(world, "main_queue")
 end
 
 return util

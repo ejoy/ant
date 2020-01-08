@@ -318,7 +318,7 @@ function Util.mouse_project_onto_plane(world,mouse_pos,plane_point,plane_normal)
     local viewport = mq.render_target.viewport
     local win_w,win_h = viewport.rect.w,viewport.rect.h
     local screen_pos = {2.0*mouse_pos[1]/win_w-1,1.0-2.0*mouse_pos[2]/win_h}
-    local camera = camerautil.get_camera(world, mq.camera_tag)
+    local camera = world[mq.camera_eid].camera
     local _, _, view_proj = ms:view_proj(camera, camera.frustum, true)
     local p = project_screen_onto_plane(screen_pos,plane_point,plane_normal,view_proj)
     return p

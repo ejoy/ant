@@ -20,7 +20,7 @@ function cull_sys:cull()
 			local e = world[queue_eid]
 			local filter = e.primitive_filter
 
-			local camera = camerautil.get_camera(world, e.camera_tag)
+			local camera = world[e.camera_eid].camera
 			local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
 			local frustum = mathbaselib.new_frustum(ms, viewproj)
 			

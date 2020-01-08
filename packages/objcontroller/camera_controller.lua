@@ -16,8 +16,7 @@ camera_controller_system.singleton "control_state"
 camera_controller_system.require_system "objcontroller_system"
 
 function camera_controller_system:post_init()
-	local mq = world:first_entity "main_queue"
-	local cameracomp = camerautil.get_camera(world, mq.camera_tag)
+	local cameracomp = camerautil.main_queue_camera(world)
 	local speed_persecond = 5
 	local function calc_step(speed, delta)
 		return speed * delta

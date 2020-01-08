@@ -4,6 +4,7 @@ local assetmgr = assetpkg.mgr
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mc = mathpkg.constant
+local mu = mathpkg.util
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -153,7 +154,7 @@ function util.insert_primitive(eid, group, material, worldmat, filter)
 	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end
 
-function util.create_main_queue(world, view_rect, camera_tag)
+function util.create_main_queue(world, view_rect)
 	local rb_flag = util.generate_sampler_flag {
 		RT="RT_MSAA2",
 		MIN="LINEAR",
@@ -193,7 +194,7 @@ function util.create_main_queue(world, view_rect, camera_tag)
 			"ant.render|name",
 		},
 		data = {
-			camera_tag = camera_tag,
+			camera_eid = 0,
 			viewid = viewidmgr.get "main_view",
 			render_target = {
 				viewport = default_comp.viewport(view_rect),
@@ -324,9 +325,21 @@ function util.get_main_view_rendertexture(world)
 end
 
 function util.create_blit_queue(world, viewrect)
-	camerautil.bind_camera(world, "blit_view",
-		default_comp.camera(nil, nil, default_comp.frustum(viewrect.w, viewrect.h))
-	)
+	local cameraeid = world:create_entity {
+		policy = {
+			"ant.render|camera",
+			"ant.render|name",
+		},
+		data = {
+			camera = {
+				eyepos = mc.T_ZERO_PT,
+				viewdir = mc.T_ZAXIS,
+				updir = mc.T_YAXIS,
+				frustum = default_comp.frustum(viewrect.w, viewrect.h),
+			},
+			name = "blit_camera",
+		}
+	}
 
 	world:create_entity {
 		policy = {
@@ -334,7 +347,7 @@ function util.create_blit_queue(world, viewrect)
 			"ant.render|name",
 		},
 		data = {
-			camera_tag = "blit_view",
+			camera_eid = cameraeid,
 			viewid = blitviewid,
 			render_target = {
 				viewport = default_comp.viewport(viewrect),
@@ -350,12 +363,12 @@ function util.create_blit_queue(world, viewrect)
 	local eid = world:create_entity {
 		policy = {
 			"ant.render|name",
-			"ant.render|render",
+			"ant.render|blitrender",
 		},
 		data = {
-			transform = mc.mat_identity,
+			transform = mu.srt(),
 			rendermesh = {},
-			material = fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material",
+			material = {ref_path = fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material"},
 			blit_render = true,
 			name = "full_quad",
 		}

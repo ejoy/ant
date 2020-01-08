@@ -207,12 +207,15 @@ function util.quad_mesh(rect)
 	else
 		minv, maxv = 1, 0
 	end
+	local x = rect.x or 0
+	local y = rect.y or 0
+	local w, h = rect.w, rect.h
 	return quad_mesh{
 		"fffff",
-		rect.x, 		 rect.y, 			0, 	0, minv,	--bottom left
-		rect.x, 		 rect.y + rect.h, 	0, 	0, maxv,	--top left
-		rect.x + rect.w, rect.y, 			0, 	1, minv,	--bottom right
-		rect.x + rect.w, rect.y + rect.h, 	0, 	1, maxv,	--top right
+		x, 		y, 		0, 	0, minv,	--bottom left
+		x,		y + h, 	0, 	0, maxv,	--top left
+		x + w, 	y, 		0, 	1, minv,	--bottom right
+		x + w, 	y + h, 	0, 	1, maxv,	--top right
 	}
 end
 

@@ -49,19 +49,26 @@ local smp = ecs.policy "shadow_make"
 smp.require_component "csm"
 smp.require_component "material"
 
+smp.require_policy "render_queue"
+smp.require_policy "name"
+
+smp.require_system "shadowmaker_camera"
+smp.require_system "shadow_maker"
+
 local scp = ecs.policy "shadow_cast"
 scp.require_component "can_cast"
+scp.require_policy "shadow_make"
+scp.require_policy "shadow_config"
 
 local maker_camera = ecs.system "shadowmaker_camera"
 maker_camera.require_system "ant.scene|primitive_filter_system"
 
 -- local function create_crop_matrix(shadow)
---	local mq = world:first_entity "main_queue"
--- 	local view_camera = camerautil.get_camera(world, mq.camera_tag)
+-- 	local view_camera = world.main_queue_camera(world)
 
 -- 	local csm = shadow.csm
 -- 	local csmindex = csm.index
--- 	local shadowcamera = camerautil.get_camera(world, "csm" .. csmindex)
+-- 	local shadowcamera = world[shadow.camera_eid].camera
 -- 	local shadow_viewmatrix = ms:view_proj(shadowcamera)
 
 -- 	local bb_LS = get_frustum_points(view_camera, view_camera.frustum, shadow_viewmatrix, shadow.csm.split_ratios)
@@ -162,8 +169,7 @@ function maker_camera:shadow_camera()
 	local stabilize = shadowcfg.stabilize
 	local shadowmap_size = shadowcfg.shadowmap_size
 
-	local mq = world:first_entity "main_queue"
-	local view_camera = camerautil.get_camera(world, mq.camera_tag)
+	local view_camera = camerautil.main_queue_camera(world)
 	local frustum = view_camera.frustum
 
 	local split = shadowcfg.split
@@ -172,8 +178,7 @@ function maker_camera:shadow_camera()
 
 	for _, eid in world:each "csm" do
 		local csmentity = world[eid]
-
-		local shadowcamera = camerautil.get_camera(world, csmentity.camera_tag)
+		local shadowcamera = world[csmentity.camera_eid].camera
 		local csm = world[eid].csm
 		local ratio = ratios[csm.index]
 		calc_shadow_camera(view_camera, ratio, lightdir, shadowmap_size, stabilize, shadowcamera)
@@ -184,11 +189,6 @@ local sm = ecs.system "shadow_maker"
 sm.require_system "ant.scene|primitive_filter_system"
 sm.require_system "shadowmaker_camera"
 sm.require_system "render_system"
-
-sm.require_policy "shadow_make"
-sm.require_policy "shadow_config"
-sm.require_policy "render_queue"
-sm.require_policy "name"
 
 local linear_cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
 local cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
@@ -207,8 +207,17 @@ local function default_csm_camera()
 end
 
 local function create_csm_entity(index, viewrect, linear_shadow)
-	local camera_tag = "csm" .. index
-	camerautil.bind_camera(world, camera_tag, default_csm_camera())
+	local cameraname = "csm" .. index
+	local cameraeid = world:create_entity {
+		policy = {
+			"ant.render|camera",
+			"ant.render|name",
+		},
+		data = {
+			camera = default_csm_camera(),
+			name = cameraname
+		}
+	}
 
 	return world:create_entity {
 		policy = {
@@ -223,11 +232,11 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 				index 		= index,
 				stabilize 	= false,
 			},
-			viewid = viewidmgr.get(camera_tag),
+			viewid = viewidmgr.get(cameraname),
 			primitive_filter = {
 				filter_tag = "can_cast",
 			},
-			camera_tag = camera_tag,
+			camera_eid = cameraeid,
 			render_target = {
 				viewport = {
 					rect = viewrect,

@@ -160,6 +160,12 @@ ecs.component_alias("name", "string", "")
 local gp = ecs.policy "name"
 gp.require_component "name"
 
+local blitpolicy = ecs.policy "blitrender"
+blitpolicy.require_component "blit_render"
+blitpolicy.require_component "rendermesh"
+blitpolicy.require_component "material"
+blitpolicy.require_component "transform"
+
 local renderpolicy = ecs.policy "render"
 renderpolicy.require_component "can_render"
 renderpolicy.require_component "rendermesh"
@@ -167,6 +173,7 @@ renderpolicy.require_component "material"
 renderpolicy.require_component "transform"
 
 renderpolicy.require_system "render_system"
+renderpolicy.require_policy "blitrender"
 
 ecs.tag "can_select"
 

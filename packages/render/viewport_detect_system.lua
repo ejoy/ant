@@ -35,7 +35,7 @@ local function update_camera_viewrect(mq, w, h)
 	if w then rt.w = w else w = rt.w end
 	if h then rt.h = h else h = rt.h end
 
-	local camera = camerautil.get_camera(world, mq.camera_tag)
+	local camera = world[mq.camera_eid].camera
 	if camera then
 		camera.frustum.aspect = w / h
 		resize_framebuffer(w, h, mq.render_target.fb_idx, mq.viewid)
@@ -54,8 +54,8 @@ function vp_detect:data_changed()
 			update_camera_viewrect(mq, w, h)
 		end
 
-		for _, camearname in camera_spawned_mb:unpack() do
-			if mq.camera_tag == camearname then
+		for _, cameraeid in camera_spawned_mb:unpack() do
+			if mq.camera_eid == cameraeid then
 				update_camera_viewrect(mq)
 			end
 		end

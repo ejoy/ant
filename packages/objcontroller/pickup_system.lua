@@ -6,6 +6,7 @@ local lua_math = math
 local mathpkg 	= import_package "ant.math"
 local point2d 	= mathpkg.point2d
 local ms 		= mathpkg.stack
+local mc 		= mathpkg.constant
 
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
@@ -77,13 +78,13 @@ end
 
 local function update_viewinfo(e, clickpt) 
 	local mq = world:first_entity "main_queue"
-	local cameracomp = camerautil.get_camera(world, mq.camera_tag)
+	local cameracomp = world[mq.camera_eid].camera
 	local eye, at = ms:screenpt_to_3d(
 		cameracomp, mq.render_target.viewport.rect,
 		{clickpt.x, clickpt.y, 0,},
 		{clickpt.x, clickpt.y, 1,})
 
-	local pickupcamera = camerautil.get_camera(world, e.camera_tag)
+	local pickupcamera = world[e.camera_eid].camera
 	pickupcamera.eyepos(eye)
 	pickupcamera.viewdir(ms(at, eye, "-nP"))
 end
@@ -191,18 +192,23 @@ local function add_pick_entity()
 		V="CLAMP"
 	}
 
-	local pickupcamera = camerautil.get_camera(world, "pickup")
-	if pickupcamera == nil then
-		camerautil.bind_camera(world, "pickup", {
-			type = "pickup",
-			viewdir = {0, 0, 1, 0},
-			updir = {0, 1, 0, 0},
-			eyepos = {0, 0, 0, 1},
-			frustum = {
-				type="mat", n=0.1, f=1000, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
+	local cameraeid = world:create_entity {
+		policy = {
+			"ant.render|camera",
+			"ant.render|name",
+		},
+		data = {
+			camera = {
+				viewdir = mc.T_ZAXIS,
+				updir = mc.T_YAXIS,
+				eyepos = mc.T_ZERO_PT,
+				frustum = {
+					type="mat", n=0.1, f=1000, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
+				}
 			},
-		})
-	end
+			name = "camera.pickup"
+		}
+	}
 
 	local fbidx = fbmgr.create {
 		render_buffers = {
@@ -265,7 +271,7 @@ local function add_pick_entity()
 					pick_ids = {},
 				},
 			},
-			camera_tag = "pickup",
+			camera_eid = cameraeid,
 			render_target = {
 				viewport = {
 					rect = {
