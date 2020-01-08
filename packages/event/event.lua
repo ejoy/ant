@@ -1,9 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
-local event = {} ; event.__index = event
+local watcher = {} ; watcher.__index = watcher
 
-function event:new(eid, component_type)
+function watcher:new(eid, component_type)
 	local c = world[eid][component_type]
 	assert(c.watcher == nil , "Can't new watcher more than once")
 	-- A modifier is a table with meta, __newindex is init with a trigger.
@@ -15,12 +15,12 @@ function event:new(eid, component_type)
 	tigger(c.watcher, "_marked_init", true)
 end
 
-function event:each(component_type)
+function watcher:each(component_type)
 	local t = self._triggers[component_type]	-- lazy init iterator
 	return self._iterators[component_type]
 end
 
-local event_singleton = ecs.singleton "event"
+local event_singleton = ecs.singleton "watcher"
 
 function event_singleton.init()
 	local self = {}
@@ -69,5 +69,5 @@ function event_singleton.init()
 	end
 
 	self._triggers = setmetatable( {} , { __index = get_trigger } )
-	return setmetatable(self, event)
+	return setmetatable(self, watcher)
 end
