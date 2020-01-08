@@ -1,3 +1,3 @@
 return {
-    name = "ant.event",
+    name = "ant.watcher",
 }
