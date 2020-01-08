@@ -6,8 +6,10 @@ local world = ecs.world
 local util = require "util"
 
 local build_system = ecs.system "build_hierarchy_system"
-function build_system:init()
-	for _, eid in world:each("editable_hierarchy") do
-		util.rebuild_hierarchy(world, eid)
+local edit_hierarchy_mb = world:sub {"update_editable_hierarchy"}
+
+function build_system:update_editable_hierarchy()
+	for _, eid in edit_hierarchy_mb:unpack() do
+		--util.rebuild_hierarchy(world, eid)
 	end
 end
