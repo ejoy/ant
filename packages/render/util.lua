@@ -3,6 +3,7 @@ local assetmgr = assetpkg.mgr
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
+local mc = mathpkg.constant
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -345,10 +346,24 @@ function util.create_blit_queue(world, viewrect)
 			name = "blit main queue to window frame buffer",
 		}
 	}
-	local eid = computil.create_quad_entity(world, viewrect,
-	fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material", nil, "full_quad")
-	world:remove_component(eid, "can_render")
-	world:add_component(eid, "blit_render", true)
+
+	local eid = world:create_entity {
+		policy = {
+			"ant.render|name",
+			"ant.render|render",
+		},
+		data = {
+			transform = mc.mat_identity,
+			rendermesh = {},
+			material = fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material",
+			blit_render = true,
+			name = "full_quad",
+		}
+	}
+
+	world[eid].rendermesh.reskey = assetmgr.register_resource(
+		fs.path "//res.mesh/quad.mesh",
+		computil.quad_mesh(viewrect))
 end
 
 function util.modify_view_rect(world,rect)

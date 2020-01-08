@@ -72,6 +72,7 @@ runtime.start {
 				"camera_control",
 				"camera_lock_target",
 				"pickup",
+				"update_editable_hierarchy",
 				{ name = "ui",
 					"ui_start",
 					"ui_update",

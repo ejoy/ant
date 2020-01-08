@@ -258,37 +258,38 @@ function PVPScene.create_entitices(world)
 					t = ms(t, rsrt[3], "+T")
 				end
 
-				local eid = world:create_entity  {
-					policy = {
-						"ant.render|render",
-						"ant.render|mesh",
-						"genreal",
+				local dataset = {
+					transform = mu.srt(s, r, t),
+					rendermesh = {},
+					mesh = {
+						ref_path = fs.path "/pkg/ant.resources/depiction" / scenedata.mesh,
 					},
-					data = {
-						transform = mu.srt(s, r, t),
-						rendermesh = {},
-						mesh = {
-							ref_path = fs.path "/pkg/ant.resources/depiction" / scenedata.mesh,
-						},
-						material = {
-							ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", 
-							properties = scenedata.material_properties
-						},
-						serialize = seriutil.create(),
-						name = name,
-						can_render = true,
-						hierarchy_visible = true,
-						can_select = true,
-						can_cast = true,
-					}
+					material = {
+						ref_path = fs.path "/pkg/ant.resources/depiction/PVPScene/scene-mat.material", 
+						properties = scenedata.material_properties
+					},
+					serialize = seriutil.create(),
+					name = name,
+					can_render = true,
+					hierarchy_visible = true,
+					can_select = true,
+					can_cast = true,
 				}
 
 				if collision_array then
-					local collisitontype = collision_array[idx]
-					world:add_component(eid, "collider_tag", collisitontype)
-					local collidercomp = get_default_collider_comp_value(collisitontype)
-					world:add_component(eid, collisitontype, collidercomp)
+					dataset.collider_tag = ""
+					local colltype = collision_array[idx]
+					dataset[colltype] = get_default_collider_comp_value(colltype)
 				end
+
+				world:create_entity  {
+					policy = {
+						"ant.render|render",
+						"ant.render|mesh",
+						"ant.render|name",
+					},
+					data = dataset,
+				}
 			end
 		end
 	end	

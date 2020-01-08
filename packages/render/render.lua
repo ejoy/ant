@@ -77,12 +77,9 @@ ecs.component "camera_mgr"
 	
 local cp = ecs.policy "camera"
 cp.require_component "camera_mgr"
-cp.require_component "name"
-
-cp.require_system "render_system"
-
 ecs.component_alias("camera_tag", "string")
-ecs.component_alias("visible", "boolean", true) 
+
+ecs.component_alias("visible", "boolean", true)
 
 local rqp = ecs.policy "render_queue"
 rqp.require_component "viewid"

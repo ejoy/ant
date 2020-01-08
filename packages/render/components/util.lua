@@ -14,6 +14,7 @@ local assetutil	= assetpkg.util
 
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
+local mc = mathpkg.constant
 local ms = mathpkg.stack
 
 local geopkg 	= import_package "ant.geometry"
@@ -215,48 +216,39 @@ function util.quad_mesh(rect)
 	}
 end
 
-function util.create_quad_entity(world, rect, materialpath, properties, name)
-	local eid = world:create_entity {
-		policy = {
-			"ant.render|name",
-			"ant.render|render",
-		},
-		data = {
-			transform = mu.identity_transform(),
-			rendermesh = {},
-			material = util.assign_material(materialpath, properties),
-			can_render = true,
-			name = name or "quad",
-		}
+local function create_simple_render_entity(world, transform, material, name, tag)
+	local dataset = {
+		transform = transform or mc.mat_identity,
+		rendermesh = {},
+		material = material,
+		can_render = true,
+		name = name or "frustum",
 	}
+	if tag then
+		dataset[tag] = true
+	end
+	return world:create_entity {
+		policy = {
+			"ant.render|render",
+			"ant.render|name",
+		},
+		data = dataset,
+	}
+end
 
+function util.create_quad_entity(world, rect, material, name, tag)
+	local eid = create_simple_render_entity(world, material, name, tag)
 	local e = world[eid]
 	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/quad.mesh", util.quad_mesh(rect))
 	return eid
 end
 
-function util.create_shadow_quad_entity(world, rect, name)
-	return util.create_quad_entity(world, rect, 
-		fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material", name)
-end
-
 function util.create_texture_quad_entity(world, texture_tbl, name)
-    local quadid = world:create_entity{
-		policy = {
-			"ant.render|render",
-			"ant.render|name",
-		},
-		data = {
-			transform = mu.identity_transform(),
-			can_render = true,
-			rendermesh = {},
-			material = util.assign_material(
-				fs.path "/pkg/ant.resources/materials/texture.material", 
-				{textures = texture_tbl,}),
-			name = name,			
-		}
+	local quadid = create_simple_render_entity( world, nil, {
+		ref_path = fs.path "/pkg/ant.resources/materials/texture.material",
+		properties = texture_tbl,
+	}, name)
 
-    }
     local quad = world[quadid]
 	local vb = {
 		"fffff",
@@ -301,23 +293,12 @@ function util.calc_transform_boundings(world, transformed_boundings)
 	end
 end
 
-function util.create_frustum_entity(world, frustum, name, transform, color)
+function util.create_frustum_entity(world, frustum, name, transform, color, tag)
+	local eid = create_simple_render_entity(world, transform, 
+	{ref_path = fs.path "/pkg/ant.resources/depiction/materials/line.material"},
+	name, tag)
+
 	local points = frustum:points()
-	local eid = world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.render|name",
-		},
-		data = {
-			transform = transform or mu.srt(),
-			rendermesh = {},
-			material = util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/line.material"),
-			can_render = true,
-			name = name or "frustum"
-		}
-
-	}
-
 	local e = world[eid]
 	local m = e.rendermesh
 	local vb = {"fffd",}
@@ -347,22 +328,9 @@ function util.create_frustum_entity(world, frustum, name, transform, color)
 	return eid
 end
 
-function util.create_axis_entity(world, transform, color, name)
-	local eid = world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.render|name",
-		},
-		data = {
-			transform = transform or mu.srt(),
-			rendermesh = {},
-			material = {
-				{ref_path = fs.path "/pkg/ant.resources/depiction/materials/line.material"},
-			},
-			name = name or "axis",
-			can_render = true,
-		}
-	}
+function util.create_axis_entity(world, transform, color, name, tag)
+	local eid = create_simple_render_entity(world, transform, 
+	{ref_path = fs.path "/pkg/ant.resources/depiction/materials/line.material"}, name, tag)
 
 	local vb = {
 		"fffd",

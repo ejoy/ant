@@ -115,10 +115,10 @@ local function create_scene_node_test()
     local hie_level2_1 =
         world:create_entity {
         policy = {
-            "genreal",
-            "hierarchy",
-            "serialize",
-            "ignore_parent_scale",
+            "ant.render|name",
+            "ant.scene|hierarchy",
+            "ant.scene|ignore_parent_scale",
+            "ant.serialize|serialize",
         },
         data = {
             hierarchy_visible = true,
@@ -139,7 +139,7 @@ local function create_scene_node_test()
             policy = {
                 "ant.render|render",
                 "ant.render|mesh",
-                "genreal",
+                "ant.render|name",
                 "ant.objcontroller|select",
                 "ant.serialize|serialize",
             },
@@ -553,9 +553,16 @@ local test_queue = {
     end,
     function ()
         local eid = find_entity_by_name("render2_rootchild", 'can_render')
-        world:add_component(eid, 'hierarchy', {})
-        world:add_component(eid, 'ignore_parent_scale', true)
-
+        world:add_policy(eid, {
+            policy = {
+                "ant.scene|hierarchy",
+                "ant.scene|ignore_parent_scale",
+            },
+            data = {
+                hierarchy = {},
+                ignore_parent_scale = true,
+            }
+        })
         world:create_entity {
             policy = {
                 "ant.objcontroller|select",

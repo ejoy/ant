@@ -26,15 +26,15 @@ local quadsize = 192
 
 local function csm_shadow_debug_quad()
 	local smstage = uniformutil.system_uniform("s_shadowmap").stage
-	local quadmaterial = fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"
+	local quadmaterial = {ref_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"}
+
 	for _, eid in world:each "shadow" do
 		local se = world[eid]
 		local fb = fbmgr.get(se.fb_index)
 	
 		local split_ratios = shadowutil.get_split_ratios()
 		local rect = {x=0, y=0, w=quadsize*#split_ratios, h=quadsize}
-		local q_eid = computil.create_quad_entity(world, rect, quadmaterial, nil, "csm_quad")
-		world:add_component(q_eid, "shadow_quad", true)
+		local q_eid = computil.create_quad_entity(world, rect, quadmaterial, "csm_quad", "shadow_quad")
 		local qe = world[q_eid]
 		local quad_material = qe.material
 		local properties = quad_material.properties 
@@ -69,12 +69,8 @@ local function	csm_shadow_debug_frustum()
 
 		local color = frustum_colors[e.csm.index]
 		local frustum = mathbaselib.new_frustum(ms, vp)
-		local f_eid = computil.create_frustum_entity(world, 
-			frustum, "csm frusutm part" .. e.csm.index, nil, color)
-		world:add_component(f_eid, "shadow_debug", true)
-
-		local a_eid = computil.create_axis_entity(world, mu.srt(nil, ms(camera.viewdir, "DT"), ms(camera.eyepos, "T")), color)
-		world:add_component(a_eid, "shadow_debug", true)
+		computil.create_frustum_entity(world, frustum, "csm frusutm part" .. e.csm.index, nil, color, "shadow_debug")
+		computil.create_axis_entity(world, mu.srt(nil, ms(camera.viewdir, "DT"), ms(camera.eyepos, "T")), color, "shadow_debug")
 	end
 end
 
@@ -90,8 +86,7 @@ local function main_view_debug_frustum()
 		local frustum_desc = shadowutil.split_new_frustum(camera.frustum, csm.split_ratios)
 		local _, _, vp = ms:view_proj(camera, frustum_desc, true)
 		local frustum = mathbaselib.new_frustum(ms, vp)
-		local f_eid = computil.create_frustum_entity(world, frustum, "main view part" .. csm.index, nil, frustum_colors[csm.index])
-		world:add_component(f_eid, "shadow_debug", true)
+		computil.create_frustum_entity(world, frustum, "main view part" .. csm.index, nil, frustum_colors[csm.index], "shadow_debug")
 	end
 end
 
