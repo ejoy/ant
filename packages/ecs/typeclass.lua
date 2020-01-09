@@ -50,13 +50,13 @@ local function gen_method(c, callback)
 	end
 end
 
-local function decl_basetype(ecs)
-	ecs.component_alias("tag", "boolean", true)
-	ecs.component_base("entityid", -1)
-	ecs.component_base("int", 0)
-	ecs.component_base("real", 0.0)
-	ecs.component_base("string", "")
-	ecs.component_base("boolean", false)
+local function decl_basetype(schema)
+	schema:primtype("ant.ecs", "tag", "boolean", true)
+	schema:primtype("ant.ecs", "entityid", -1)
+	schema:primtype("ant.ecs", "int", 0)
+	schema:primtype("ant.ecs", "real", 0.0)
+	schema:primtype("ant.ecs", "string", "")
+	schema:primtype("ant.ecs", "boolean", false)
 end
 
 local function singleton_solve(class)
@@ -319,9 +319,6 @@ return function (w, config, loader)
 	ecs.component_alias = function (name, ...)
 		return schema:typedef(getCurrentPackage(), name, ...)
 	end
-	ecs.component_base = function (name, ...)
-		schema:primtype(getCurrentPackage(), name, ...)
-	end
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
 	end
@@ -333,7 +330,7 @@ return function (w, config, loader)
 			class.singleton[name] = {dataset}
 		end
 	end
-	decl_basetype(ecs)
+	decl_basetype(schema)
 	importAll(w, ecs, class, config, loader)
 	require "component".solve(schema_data)
 	require "policy".solve(w)
