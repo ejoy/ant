@@ -307,14 +307,14 @@ function world:update_func(what)
 	end
 	local switch = system.list_switch(list)
 	self._switchs[what] = switch
-	local proxy = self._systems.proxy
 	local timer = import_package "ant.timer".cur_time
 	return function()
 		switch:update()
-		for _, v in ipairs(list) do
-			local name, f = v[1], v[2]
+		for i = 1, #list do
+			local v = list[i]
+			local f, proxy, name = v[1], v[2], v[3]
 			self:pub {"system_begin",name,what,timer()}
-			f(proxy[name])
+			f(proxy)
 			self:pub {"system_end",name,what,timer()}
 		end
 	end
@@ -365,7 +365,7 @@ function m.new_world(config)
 	typeclass(w, config, config.loader or require "packageloader")
 
 	-- init system
-	w._systems = system.init(w._class.system, w._class.singleton, config.pipeline)
+	w._systems = system.init(w._class.system, config.pipeline)
 
 	-- init singleton
 	local eid = w:create_entity {policy = {}, data = {}}
