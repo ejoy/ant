@@ -47,38 +47,40 @@ end
 local mailbox = {}
 mailbox.__index = mailbox
 
+local function next_each(mb)
+    local head = mb[1]
+    local msg = mb[head]
+    if msg then
+        mb[head] = false
+        mb[1] = head + 1
+        return msg
+    end
+    mb[1] = 2
+    for i = 2, #mb do
+        mb[i] = nil
+    end
+end
+
 function mailbox:each()
-    return function ()
-        local head = self[1]
-        local msg = self[head]
-        if msg then
-            self[head] = false
-            self[1] = head + 1
-            return msg
-        else
-            self[1] = 2
-            for i = 2, #self do
-                self[i] = nil
-            end
-        end
+    return next_each, self
+end
+
+local function next_unpack(mb)
+    local head = mb[1]
+    local msg = mb[head]
+    if msg then
+        mb[head] = false
+        mb[1] = head + 1
+        return table_unpack(msg)
+    end
+    mb[1] = 2
+    for i = 2, #mb do
+        mb[i] = nil
     end
 end
 
 function mailbox:unpack()
-    return function ()
-        local head = self[1]
-        local msg = self[head]
-        if msg then
-            self[head] = false
-            self[1] = head + 1
-            return table_unpack(msg)
-        else
-            self[1] = 2
-            for i = 2, #self do
-                self[i] = nil
-            end
-        end
-    end
+    return next_unpack, self
 end
 
 local world = {}
