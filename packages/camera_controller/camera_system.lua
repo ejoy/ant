@@ -15,7 +15,7 @@ local ms = mathpkg.stack
 local default_frustum = default_comp.frustum()
 
 function camerasys:spawn_camera()
-    local mq = world:first_entity "main_queue"
+    local mq = world:singleton_entity "main_queue"
     for _, name, info in sc_mb:unpack() do
         local cameraeid = world:create_entity {
             policy = {
@@ -46,7 +46,7 @@ local bind_camera_mb = world:sub {"bind_camera"}
 function camerasys:bind_camera()
     for _, camera_eid, dest in bind_camera_mb:unpack() do
         if dest == "main_queue" then
-            local mq = world:first_entity "main_queue"
+            local mq = world:singleton_entity "main_queue"
             mq.camera_eid = camera_eid
         elseif dest == nil or dest == "editor.image" then
             assert("need implement")

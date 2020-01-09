@@ -21,7 +21,7 @@ ecs.component_alias("fb_index", "int")
 ecs.component_alias("rb_index", "int")
 
 local mqp = ecs.policy "main_queue"
-mqp.require_component "main_queue"
+mqp.unique_component "main_queue"
 
 local m = ecs.transform "render_target"
 m.input "viewid"
@@ -86,27 +86,29 @@ rqp.require_component "primitive_filter"
 rqp.require_component "visible"
 rqp.require_transform "render_target"
 
-local render_props = ecs.singleton "render_properties"
-function render_props.init()
-	return {
-		lighting = {
-			uniforms = {},
-			textures = {},
-		},
-		shadow = {
-			uniforms = {},
-			textures = {},
-		},
-		postprocess = {
-			uniforms = {},
-			textures = {},
-		}
+ecs.component "render_properties"
+	.lighting "properties"
+	.shadow "properties"
+	.postprocess "properties"
+
+ecs.singleton_v2 "render_properties" {
+	lighting = {
+		uniforms = {},
+		textures = {},
+	},
+	shadow = {
+		uniforms = {},
+		textures = {},
+	},
+	postprocess = {
+		uniforms = {},
+		textures = {},
 	}
-end
+}
 
 local rendersys = ecs.system "render_system"
 
-rendersys.singleton "render_properties"
+rendersys.require_singleton "render_properties"
 
 rendersys.require_system "ant.scene|primitive_filter_system"
 rendersys.require_system "ant.scene|filter_properties"
@@ -129,7 +131,7 @@ function rendersys:init()
 end
 
 function rendersys:render_commit()
-	local render_properties = self.render_properties
+	local render_properties = world:singleton "render_properties"
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
 		if rq.visible then

@@ -59,6 +59,22 @@ local function decl_basetype(ecs)
 	ecs.component_base("boolean", false)
 end
 
+local function singleton_solve(class)
+	for name in pairs(class.singleton_v2) do
+		local ti = class.component[name]
+		if not ti then
+			error(("singleton `%s` is not defined in component"):format(name))
+		end
+		if not ti.type and ti.multiple then
+			error(("singleton `%s` does not support multiple component"):format(name))
+		end
+		if class.unique[name] then
+			error(("singleton `%s` does not support unique component"):format(name))
+		end
+		class.unique[name] = true
+	end
+end
+
 local current_package = {}
 local function resetCurrentPackage()
 	current_package = {}
@@ -92,6 +108,8 @@ local function importAll(w, ecs, class, config, loader)
 		transform = {},
 		singleton = {},
 		component = class.component,
+		singleton_v2 = {},
+		unique = {},
 	}
 	w._class = cut
 	local policies = config.policy
@@ -102,6 +120,7 @@ local function importAll(w, ecs, class, config, loader)
 	local importComponent
 	local importTransform
 	local importSingleton
+	local importSingletonV2
 	local function importPackage(name)
 		if imported[name] then
 			return
@@ -160,6 +179,12 @@ local function importAll(w, ecs, class, config, loader)
 				importComponent(k)
 			end
 		end
+		if v.unique_component then
+			for _, k in ipairs(v.unique_component) do
+				importComponent(k)
+				cut.unique[k] = true
+			end
+		end
 	end
 	function importSystem(k)
 		local package, name, defer <close> = splitName(k)
@@ -179,6 +204,11 @@ local function importAll(w, ecs, class, config, loader)
 		if v.require_policy then
 			for _, k in ipairs(v.require_policy) do
 				importPolicy(k)
+			end
+		end
+		if v.require_singleton then
+			for _, k in ipairs(v.require_singleton) do
+				importSingletonV2(k)
 			end
 		end
 		if v.singleton then
@@ -231,6 +261,17 @@ local function importAll(w, ecs, class, config, loader)
 		end
 		tableAt(cut.singleton, package)[name] = v
 	end
+	function importSingletonV2(k)
+		local name = k
+		if cut.singleton_v2[name] then
+			return
+		end
+		local v = class.singleton_v2[name]
+		if not v then
+			error(("invalid singleton name: `%s`."):format(name))
+		end
+		cut.singleton_v2[name] = v
+	end
 	resetCurrentPackage()
 	for _, k in ipairs(policies) do
 		importPolicy(k)
@@ -252,7 +293,7 @@ end
 return function (w, config, loader)
 	local schema_data = {}
 	local schema = createschema(schema_data)
-	local class = { component = schema_data.map }
+	local class = { component = schema_data.map, singleton_v2 = {} }
 	local ecs = { world = w }
 
 	local function register(args)
@@ -283,7 +324,7 @@ return function (w, config, loader)
 	}
 	register {
 		type = "system",
-		setter = { "singleton", "require_policy", "require_system" },
+		setter = { "singleton", "require_policy", "require_system", "require_singleton" },
 	}
 	register {
 		type = "transform",
@@ -292,7 +333,7 @@ return function (w, config, loader)
 	}
 	register {
 		type = "policy",
-		setter = { "require_component", "require_transform", "require_system", "require_policy" },
+		setter = { "require_component", "require_transform", "require_system", "require_policy", "unique_component" },
 	}
 	ecs.component = function (name)
 		return schema:type(getCurrentPackage(), name)
@@ -306,8 +347,17 @@ return function (w, config, loader)
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
 	end
+	ecs.singleton_v2 = function (name)
+		return function (dataset)
+			if class.singleton_v2[name] then
+				error(("singleton `%s` duplicate definition"):format(name))
+			end
+			class.singleton_v2[name] = {dataset}
+		end
+	end
 	decl_basetype(ecs)
 	importAll(w, ecs, class, config, loader)
 	require "component".solve(schema_data)
 	require "policy".solve(w)
+	singleton_solve(w._class)
 end

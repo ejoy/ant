@@ -28,7 +28,7 @@ local function csm_shadow_debug_quad()
 	local smstage = uniformutil.system_uniform("s_shadowmap").stage
 	local quadmaterial = {ref_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"}
 
-	for _, eid in world:each "shadow" do
+	for _, eid in world:each "csm" do
 		local se = world[eid]
 		local fb = fbmgr.get(se.fb_index)
 	

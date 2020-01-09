@@ -319,7 +319,7 @@ end
 local blitviewid = viewidmgr.get "blit"
 
 function util.get_main_view_rendertexture(world)
-	local mq = world:first_entity "main_queue"
+	local mq = world:singleton_entity "main_queue"
 	local fb = fbmgr.get(mq.render_target.fb_idx)
 	return fbmgr.get_rb(fb[1]).handle
 end
@@ -431,7 +431,7 @@ function util.update_render_target(viewid, rt)
 end
 
 function util.screen_capture(world, force_read)
-	local mq = world:first_entity "main_queue"
+	local mq = world:singleton_entity "main_queue"
 	local fbidx = mq.render_target.fb_idx
 	local fb = fbmgr.get(fbidx)
 	local s = setting.get()

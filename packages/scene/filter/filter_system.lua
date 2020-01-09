@@ -15,10 +15,10 @@ local ms = mathpkg.stack
 local mu = mathpkg.util
 
 local filter_properties = ecs.system "filter_properties"
-filter_properties.singleton "ant.render|render_properties"
+filter_properties.require_singleton "render_properties"
 
 function filter_properties:load_render_properties()
-	local render_properties = self.render_properties
+	local render_properties = world:singleton "render_properties"
 	filterutil.load_lighting_properties(world, render_properties)
 	filterutil.load_shadow_properties(world, render_properties)
 	filterutil.load_postprocess_properties(world, render_properties)
@@ -27,7 +27,7 @@ end
 local primitive_filter_sys = ecs.system "primitive_filter_system"
 
 primitive_filter_sys.require_system "filter_properties"
-primitive_filter_sys.singleton "hierarchy_transform_result"
+primitive_filter_sys.require_singleton "hierarchy_transform_result"
 primitive_filter_sys.singleton "ant.event|event"
 
 --luacheck: ignore self
@@ -202,7 +202,7 @@ local function reset_hierarchy_transform_result(hierarchy_cache)
 end
 
 function primitive_filter_sys:filter_primitive()
-	local hierarchy_cache = self.hierarchy_transform_result
+	local hierarchy_cache = world:singleton "hierarchy_transform_result"
 	for _, prim_eid in world:each "primitive_filter" do
 		local e = world[prim_eid]
 		local filter = e.primitive_filter

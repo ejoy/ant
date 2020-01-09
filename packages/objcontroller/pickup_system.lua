@@ -77,7 +77,7 @@ local function which_entity_hitted(blitdata, viewrect)
 end
 
 local function update_viewinfo(e, clickpt) 
-	local mq = world:first_entity "main_queue"
+	local mq = world:singleton_entity "main_queue"
 	local cameracomp = world[mq.camera_eid].camera
 	local eye, at = ms:screenpt_to_3d(
 		cameracomp, mq.render_target.viewport.rect,
@@ -125,7 +125,7 @@ local function recover_filter(filter)
 end
 
 function pickup_material_sys:pickup()
-	local e = world:first_entity "pickup"
+	local e = world:singleton_entity "pickup"
 	if e then
 		local filter = e.primitive_filter
 
@@ -165,7 +165,7 @@ ecs.component "pickup"
 	.pickup_cache "pickup_cache"
 
 local pup = ecs.policy "pickup"
-	pup.require_component "pickup"
+	pup.unique_component "pickup"
 	pup.require_component "material"
 	pup.require_component "view_mode"
 	pup.require_system "pickup_system"
@@ -299,7 +299,7 @@ end
 
 local function enable_pickup(enable)
 	world:enable_system("pickup_system", enable)
-	local e = world:first_entity "pickup"
+	local e = world:singleton_entity "pickup"
 	e.visible = enable
 end
 
@@ -357,7 +357,7 @@ local function check_next_step(pickupcomp)
 end
 
 function pickup_sys:pickup()
-	local pickupentity = world:first_entity "pickup"
+	local pickupentity = world:singleton_entity "pickup"
 	if pickupentity.visible then
 		local pickupcomp = pickupentity.pickup
 

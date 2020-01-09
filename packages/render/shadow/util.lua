@@ -67,7 +67,7 @@ function util.split_new_frustum(view_frustum, ratios)
 end
 
 function util.get_directional_light_dir(world)
-	local d_light = world:first_entity "directional_light"
+	local d_light = world:singleton_entity "directional_light"
 	return ms(d_light.transform.r, "dP")
 end
 

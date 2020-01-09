@@ -34,7 +34,7 @@ function operate_gizmo_cache:init()
 end
 
 local function scale_gizmo_to_normal(gizmo)
-    local mq = world:first_entity "main_queue"
+    local mq = world:singleton_entity "main_queue"
     local camera = world[mq.camera_eid].camera
     local _, _, vp = ms:view_proj(camera, camera.frustum, true)
     local et = gizmo.transform
@@ -93,7 +93,7 @@ local function update_world(trans)
 end
 
 local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
-    local target_entity_id = world:first_entity_id("show_operate_gizmo")
+    local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     --assert(target_entity)
     if target_entity then
@@ -102,7 +102,7 @@ local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
         local dx,dy = mouse_delta[1],mouse_delta[2]
         -- log("dxdy",dx,dy)
         --calc part1
-        local mq = world:first_entity "main_queue"
+        local mq = world:singleton_entity "main_queue"
         local camera = world[mq.camera_eid].camera
 
         -- log.info_a("mq",mq)
@@ -171,7 +171,7 @@ end
 
 local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
     local scale_object = cache.gizmo.scale
-    local target_entity_id = world:first_entity_id("show_operate_gizmo")
+    local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     --assert(target_entity)
     if target_entity then
@@ -181,7 +181,7 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
         local scale_box = world[scale_box_id]
         local scale_box_trans =  scale_box.transform
         local axis_unit = cache.axis_map[picked_dir] -- {1,0,0} or {0,1,0} or {0,0,1}
-        local mq = world:first_entity("main_queue")
+        local mq = world:singleton_entity "main_queue"
         local camera = world[mq.camera_eid].camera
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
         local viewport = mq.render_target.viewport
@@ -227,7 +227,7 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
         point[4] = t
         return mp
     end
-    local target_entity_id = world:first_entity_id("show_operate_gizmo")
+    local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     if target_entity then
         local trans = target_entity.transform
@@ -245,7 +245,7 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
             local typ = picked_type
             local axis_unit = cache.axis_map[typ]
             local rot_unit = cache.rot_axis_map[typ]
-            local mq = world:first_entity "main_queue"
+            local mq = world:singleton_entity "main_queue"
             local camera = world[mq.camera_eid].camera
             
             local _,_,viewproj = ms:view_proj(camera,camera.frustum,true)
@@ -423,7 +423,7 @@ end
 
 
 function gizmo_sys:update()
-    local target_entity_id = world:first_entity_id("show_operate_gizmo")
+    local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     --sync transform gizmo
     local operate_gizmo_cache = self.operate_gizmo_cache
@@ -486,7 +486,7 @@ function gizmo_sys:update()
 end
 
 function gizmo_sys:pickup()
-    local pickup_entity = world:first_entity "pickup"
+    local pickup_entity = world:singleton_entity "pickup"
     if pickup_entity then
         local picked_dir = nil
         local pickup_comp = pickup_entity.pickup

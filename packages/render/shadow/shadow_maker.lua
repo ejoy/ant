@@ -42,7 +42,7 @@ ecs.component "shadow"
 	["opt"].split	"csm_split_config"
 
 local sp = ecs.policy "shadow_config"
-sp.require_component "shadow"
+sp.unique_component "shadow"
 sp.require_component "fb_index"
 
 local smp = ecs.policy "shadow_make"
@@ -164,7 +164,7 @@ end
 
 function maker_camera:shadow_camera()
 	local lightdir = shadowutil.get_directional_light_dir(world)
-	local shadowentity = world:first_entity "shadow"
+	local shadowentity = world:singleton_entity "shadow"
 	local shadowcfg = shadowentity.shadow
 	local stabilize = shadowcfg.stabilize
 	local shadowmap_size = shadowcfg.shadowmap_size

@@ -37,6 +37,12 @@ function world:register_component(eid, c)
 	if set then
 		set[#set+1] = eid
 	end
+	if self._class.unique[c] then
+		if self._uniques[c] then
+			error "unique component already exists"
+		end
+		self._uniques[c] = eid
+	end
 	self:pub {"component_register", c, eid}
 end
 
@@ -222,16 +228,21 @@ function world:each_component(t)
     return each_component(t)
 end
 
-function world:first_entity_id(c_type)
-	local n, s, i = self:each(c_type)
-	local _, eid = n(s, i)
-	return eid
+function world:singleton_entity_id(c_type)
+	return self._uniques[c_type]
 end
 
-function world:first_entity(c_type)
-	local eid = self:first_entity_id(c_type)
+function world:singleton_entity(c_type)
+	local eid = self._uniques[c_type]
 	if eid then
 		return self[eid]
+	end
+end
+
+function world:singleton(c_type)
+	local eid = self._uniques[c_type]
+	if eid then
+		return self[eid][c_type]
 	end
 end
 
@@ -315,13 +326,25 @@ function world:enable_system(name, enable)
 	end
 end
 
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
 local m = {}
 
--- config.packages
--- config.systems
--- config.update_order
--- config.loader (optional)
--- config.args
 function m.new_world(config)
 	local w = setmetatable({
 		args = config,
@@ -330,6 +353,7 @@ function m.new_world(config)
 		_set = setmetatable({}, { __mode = "kv" }),
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
+		_uniques = {},
 	}, world)
 
 	--init event
@@ -342,6 +366,14 @@ function m.new_world(config)
 
 	-- init system
 	w._systems = system.init(w._class.system, w._class.singleton, config.pipeline)
+
+	-- init singleton
+	local eid = w:create_entity {policy = {}, data = {}}
+	local e = w[eid]
+	for name, dataset in sortpairs(w._class.singleton_v2) do
+		e[name] = w:create_component(name, dataset[1])
+		w:register_component(eid, name)
+	end
 
 	return w
 end

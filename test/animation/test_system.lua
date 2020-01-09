@@ -149,7 +149,7 @@ function m:init()
 end
 
 function m:post_init()
-    local e = world:first_entity "main_queue"
+    local e = world:singleton_entity "main_queue"
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
 

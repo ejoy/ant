@@ -15,27 +15,15 @@ ecs.component_alias("ignore_parent_scale", "boolean")
 local ip = ecs.policy "ignore_parent_scale"
 ip.require_component "ignore_parent_scale"
 
-ecs.singleton "hierarchy_transform_result"
-
-local ur = ecs.singleton "hierarchy_update_result"
-local function reset_hierarchy_update_result(rr)
-	rr.removed_eids 	= {}
-	rr.remove_trees 	= {}
-end
-
-function ur.init()
-	local rr = {}
-	reset_hierarchy_update_result(rr)
-	return rr
-end
+ecs.component "hierarchy_transform_result" {}
+ecs.singleton_v2 "hierarchy_transform_result" {}
 
 local scene_space = ecs.system "scene_space"
 
 scene_space.require_system "primitive_filter_system"
 
 scene_space.singleton "ant.event|event"
-scene_space.singleton "hierarchy_transform_result"
-scene_space.singleton "hierarchy_update_result"
+scene_space.require_singleton "hierarchy_transform_result"
 
 local pseudoroot_eid = -1
 
@@ -324,9 +312,10 @@ function scene_space:data_changed()
 		end
 	end
 
+	local transform = world:singleton "hierarchy_transform_result"
 	if next(trees) then
-		update_hierarchy_tree(trees, self.hierarchy_transform_result)
+		update_hierarchy_tree(trees, transform)
 	end
 
-	hierarchy_del_handle(self.hierarchy_transform_result)
+	hierarchy_del_handle(transform)
 end

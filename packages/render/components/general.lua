@@ -177,11 +177,6 @@ renderpolicy.require_policy "blitrender"
 
 ecs.tag "can_select"
 
-local control_state = ecs.singleton "control_state"
-function control_state:init()
-	return ""
-end
-
 ecs.component_alias("color", "real[4]", {1,1,1,1})
 
 ecs.tag "dynamic_object"
@@ -190,12 +185,3 @@ ecs.component "character"
 
 ecs.component "physic_state"
 	.velocity "real[3]"
-
-local constant = ecs.singleton "constant"
-function constant.init()
-	return {
-		tcolors = {
-
-		}
-	}
-end

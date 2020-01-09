@@ -12,7 +12,6 @@ local camerautil= renderpkg.camera
 local objctrller = require "objcontroller"
 local camera_controller_system = ecs.system "camera_controller"
 
-camera_controller_system.singleton "control_state"
 camera_controller_system.require_system "objcontroller_system"
 
 function camera_controller_system:post_init()

@@ -1,34 +1,24 @@
 local ecs = ...
+local world = ecs.world
 
 local math3d 	= require "math3d"
 local math		= import_package "ant.math"
 local ms 		= math.stack
 
-local frame_stat = ecs.singleton "frame_stat"
-function frame_stat.init()
-	return {
-		frame_num 	= 0,
-		bgfx_frames = -1,
-	}
-end
+ecs.component "frame_stat"
+	.frame_num "int"
+	.bgfx_frames "int"
 
-ecs.singleton "post_end_frame_jobs"
+ecs.singleton_v2 "frame_stat" {
+	frame_num 	= 0,
+	bgfx_frames = -1,
+}
 
 local end_frame_sys = ecs.system "end_frame"
-end_frame_sys.singleton "frame_stat"
-end_frame_sys.singleton "post_end_frame_jobs"
+end_frame_sys.require_singleton "frame_stat"
 
 function end_frame_sys:end_frame()
-    local stat = self.frame_stat
+	local stat = world:singleton "frame_stat"
 	stat.frame_num = stat.frame_num + 1
 	math3d.reset(ms)
-end
-
-function end_frame_sys:final()
-	if next(self.post_end_frame_jobs) then
-		for _, job in ipairs(self.post_end_frame_jobs) do
-			job()
-		end
-		self.post_end_frame_jobs = {}
-	end
 end
