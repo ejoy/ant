@@ -1,4 +1,4 @@
-local inputmgr = import_package "ant.inputmgr"
+local inputmgr = import_package "ant.imguibase".inputmgr
 local lfs       = require "filesystem.local"
 local rxbus = import_package "ant.rxlua".RxBus
 

@@ -11,7 +11,7 @@ local test = ecs.system "test_event"
 
 local new_foobar_event = world:sub {"component_register","foobar"}
 
-test.singleton "event"
+test.require_singleton "event"
 
 local fp = ecs.policy "foobar"
 fp.require_component "foobar"

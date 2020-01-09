@@ -8,13 +8,13 @@ local fs = require "filesystem"
 local setting = require "setting"
 
 local tm = ecs.system "tonemapping"
-tm.singleton        "postprocess"
-tm.require_system   "postprocess_system"
+tm.require_singleton "postprocess"
+tm.require_system    "postprocess_system"
 
 function tm:post_init()
     local sd = setting.get()
     local hdrsetting = sd.graphic.hdr
-    local pp = self.postprocess
+    local pp = world:singleton "postprocess"
     if hdrsetting.enable then
         local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 

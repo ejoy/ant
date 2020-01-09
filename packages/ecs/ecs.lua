@@ -370,7 +370,7 @@ function m.new_world(config)
 	-- init singleton
 	local eid = w:create_entity {policy = {}, data = {}}
 	local e = w[eid]
-	for name, dataset in sortpairs(w._class.singleton_v2) do
+	for name, dataset in sortpairs(w._class.singleton) do
 		e[name] = w:create_component(name, dataset[1])
 		w:register_component(eid, name)
 	end

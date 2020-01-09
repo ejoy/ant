@@ -20,9 +20,9 @@ function event:each(component_type)
 	return self._iterators[component_type]
 end
 
-local event_singleton = ecs.singleton "event"
+ecs.component "event" {}
 
-function event_singleton.init()
+local function event_singleton()
 	local self = {}
 	local all_sets = {}
 	self._iterators = {}
@@ -71,3 +71,5 @@ function event_singleton.init()
 	self._triggers = setmetatable( {} , { __index = get_trigger } )
 	return setmetatable(self, event)
 end
+
+ecs.singleton "event" (event_singleton())

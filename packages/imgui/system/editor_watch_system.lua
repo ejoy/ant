@@ -22,14 +22,12 @@ editor_watcher_system.require_system "editor_operate_gizmo_system"
 editor_watcher_system.require_system 'scene_space' 
 
 editor_watcher_system.require_system "before_render_system"
-editor_watcher_system.singleton "profile_cache"
-editor_watcher_system.singleton "operate_gizmo_cache"
+editor_watcher_system.require_singleton "profile_cache"
 
-local editor_watcher_cache = ecs.singleton "editor_watcher_cache"
-function editor_watcher_cache:init()
-    return {}
-end
-editor_watcher_system.singleton "editor_watcher_cache"
+ecs.component "editor_watcher_cache" {}
+ecs.singleton "editor_watcher_cache" {}
+
+editor_watcher_system.require_singleton "editor_watcher_cache"
 
 
 local function send_hierarchy()
@@ -249,7 +247,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
         end
     end
     log.info_a("eids",eids,"need_send",need_send)
-    self.editor_watcher_cache.need_send = need_send
+    world:singleton "editor_watcher_cache".need_send = need_send
     send_entity(need_send,(is_pick and "pick" or "editor"))
 end
 
@@ -401,7 +399,7 @@ function editor_watcher_system:init()
     hub.subscribe(WatcherEvent.ModifyMultComponent,on_mult_component_modified)
     hub.subscribe(WatcherEvent.EntityOperate,on_entity_operate,self)
     hub.subscribe(WatcherEvent.RequestHierarchy,on_request_hierarchy,self)
-    profile_cache = self.profile_cache
+    profile_cache = world:singleton "profile_cache"
     -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
     local rxbus = world.args.rxbus
@@ -465,7 +463,7 @@ function editor_watcher_system:update()
     entity_delete_handle()
 end
 function editor_watcher_system:after_update()
-    local need_send = self.editor_watcher_cache.need_send
+    local need_send = world:singleton "editor_watcher_cache".need_send
     if not need_send then
         return
     end

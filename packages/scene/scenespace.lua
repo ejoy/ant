@@ -16,13 +16,13 @@ local ip = ecs.policy "ignore_parent_scale"
 ip.require_component "ignore_parent_scale"
 
 ecs.component "hierarchy_transform_result" {}
-ecs.singleton_v2 "hierarchy_transform_result" {}
+ecs.singleton "hierarchy_transform_result" {}
 
 local scene_space = ecs.system "scene_space"
 
 scene_space.require_system "primitive_filter_system"
 
-scene_space.singleton "ant.event|event"
+scene_space.require_singleton "event"
 scene_space.require_singleton "hierarchy_transform_result"
 
 local pseudoroot_eid = -1
@@ -274,12 +274,12 @@ local ignore_parent_scale_delete_mb = world:sub {"component_removed", "ignore_pa
 function scene_space:data_changed()
 	for msg in trans_mb:each() do
 		local eid = msg[3]
-		self.event:new(eid, "transform")
+		world:singleton "event":new(eid, "transform")
 	end
 	
 	local trees = {}
 	
-	for eid, events, init in self.event:each "transform" do
+	for eid, events, init in world:singleton "event":each "transform" do
 		local e = world[eid]
 		if e.hierarchy then
 			add_hierarchy_tree_item(eid, events, init, trees)

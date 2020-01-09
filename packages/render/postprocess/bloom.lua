@@ -10,8 +10,8 @@ local setting   = require "setting"
 local fs        = require "filesystem"
 
 local bloom_sys = ecs.system "bloom_system"
-bloom_sys.singleton         "postprocess"
-bloom_sys.require_system    "postprocess_system"
+bloom_sys.require_singleton  "postprocess"
+bloom_sys.require_system     "postprocess_system"
 
 local bloom_chain_count = 4
 
@@ -128,7 +128,7 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 end
 
 function bloom_sys:post_init()
-    local pp = self.postprocess
+    local pp = world:singleton "postprocess"
 
     local sd = setting.get()
     local bloom = sd.graphic.postprocess.bloom

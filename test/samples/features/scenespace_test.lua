@@ -12,8 +12,6 @@ local computil      = renderpkg.components
 local fs            = require "filesystem"
 
 local scenespace_test = ecs.system "scenespace_test"
-scenespace_test.singleton 'event'
-scenespace_test.singleton 'frame_stat'
 
 scenespace_test.require_system 'scene_space'
 scenespace_test.require_system 'init_loader'

@@ -14,7 +14,6 @@ local hub       = editor.hub
 local vfs       = require "vfs"
 local scene     = import_package "ant.scene".util
 local localfs   = require "filesystem.local"
-local inputmgr  = import_package "ant.inputmgr"
 local gui_mgr   = require "gui_mgr"
 local fs        = require "filesystem"
 local serialize = import_package 'ant.serialize'
@@ -196,7 +195,6 @@ function scene_data_accessor._start_scene(config,serialize_str)
             end
         end
     end
-    scene_data_accessor.input_queue = inputmgr.queue()
     local world = scene.start_new_world(
         600, 400, 
         packages, 

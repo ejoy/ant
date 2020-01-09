@@ -9,7 +9,7 @@ ecs.component "frame_stat"
 	.frame_num "int"
 	.bgfx_frames "int"
 
-ecs.singleton_v2 "frame_stat" {
+ecs.singleton "frame_stat" {
 	frame_num 	= 0,
 	bgfx_frames = -1,
 }

@@ -60,7 +60,7 @@ local function decl_basetype(ecs)
 end
 
 local function singleton_solve(class)
-	for name in pairs(class.singleton_v2) do
+	for name in pairs(class.singleton) do
 		local ti = class.component[name]
 		if not ti then
 			error(("singleton `%s` is not defined in component"):format(name))
@@ -108,7 +108,6 @@ local function importAll(w, ecs, class, config, loader)
 		transform = {},
 		singleton = {},
 		component = class.component,
-		singleton_v2 = {},
 		unique = {},
 	}
 	w._class = cut
@@ -120,7 +119,6 @@ local function importAll(w, ecs, class, config, loader)
 	local importComponent
 	local importTransform
 	local importSingleton
-	local importSingletonV2
 	local function importPackage(name)
 		if imported[name] then
 			return
@@ -208,11 +206,6 @@ local function importAll(w, ecs, class, config, loader)
 		end
 		if v.require_singleton then
 			for _, k in ipairs(v.require_singleton) do
-				importSingletonV2(k)
-			end
-		end
-		if v.singleton then
-			for _, k in ipairs(v.singleton) do
 				importSingleton(k)
 			end
 		end
@@ -251,26 +244,15 @@ local function importAll(w, ecs, class, config, loader)
 		end
 	end
 	function importSingleton(k)
-		local package, name, defer <close> = splitName(k)
-		if tableAt(cut.singleton, package)[name] then
-			return
-		end
-		local v = class.singleton[package][name]
-		if not v then
-			error(("invalid singleton name: `%s`."):format(name))
-		end
-		tableAt(cut.singleton, package)[name] = v
-	end
-	function importSingletonV2(k)
 		local name = k
-		if cut.singleton_v2[name] then
+		if cut.singleton[name] then
 			return
 		end
-		local v = class.singleton_v2[name]
+		local v = class.singleton[name]
 		if not v then
 			error(("invalid singleton name: `%s`."):format(name))
 		end
-		cut.singleton_v2[name] = v
+		cut.singleton[name] = v
 	end
 	resetCurrentPackage()
 	for _, k in ipairs(policies) do
@@ -293,7 +275,7 @@ end
 return function (w, config, loader)
 	local schema_data = {}
 	local schema = createschema(schema_data)
-	local class = { component = schema_data.map, singleton_v2 = {} }
+	local class = { component = schema_data.map, singleton = {} }
 	local ecs = { world = w }
 
 	local function register(args)
@@ -319,12 +301,8 @@ return function (w, config, loader)
 		end
 	end
 	register {
-		type = "singleton",
-		callback = { "init" },
-	}
-	register {
 		type = "system",
-		setter = { "singleton", "require_policy", "require_system", "require_singleton" },
+		setter = { "require_policy", "require_system", "require_singleton" },
 	}
 	register {
 		type = "transform",
@@ -347,12 +325,12 @@ return function (w, config, loader)
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
 	end
-	ecs.singleton_v2 = function (name)
+	ecs.singleton = function (name)
 		return function (dataset)
-			if class.singleton_v2[name] then
+			if class.singleton[name] then
 				error(("singleton `%s` duplicate definition"):format(name))
 			end
-			class.singleton_v2[name] = {dataset}
+			class.singleton[name] = {dataset}
 		end
 	end
 	decl_basetype(ecs)

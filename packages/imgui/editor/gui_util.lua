@@ -28,9 +28,7 @@ function gui_util.get_all_components()
     end
     -- log.info_a("all_package:",packages)
     local systems = {}
-    local inputmgr      = import_package "ant.inputmgr"
     local scene         = import_package "ant.scene".util
-    local input_queue = inputmgr.queue()
     local world = scene.start_new_world(600, 400, packages, systems)
     local world_update = scene.loop(world)
     -- world_update()
@@ -50,10 +48,8 @@ function gui_util.get_all_schema()
         end
     end
     -- log.info_a("all_package:",packages)
-    local inputmgr      = import_package "ant.inputmgr"
     local scene         = import_package "ant.scene".util
-    local input_queue = inputmgr.queue()
-    local world = scene.start_new_world(input_queue, 600, 400, packages, systems)
+    local world = scene.start_new_world(600, 400, packages, systems)
     local world_update = scene.loop(world)
     -- world_update()
     -- log.info_a(world._schema.map)

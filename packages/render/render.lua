@@ -91,7 +91,7 @@ ecs.component "render_properties"
 	.shadow "properties"
 	.postprocess "properties"
 
-ecs.singleton_v2 "render_properties" {
+ecs.singleton "render_properties" {
 	lighting = {
 		uniforms = {},
 		textures = {},

@@ -44,16 +44,15 @@ ecs.component "technique_order"
 
 ecs.component_alias("copy_pass", "pass")
 
-local ppv = ecs.singleton "postprocess"
-function ppv.init()
-    return {
-        techniques = {}
-    }
-end
+ecs.component "postprocess"
+    .techniques "int[]"
+ecs.singleton "postprocess" {
+    techniques = {}
+}
 
 local pp_sys = ecs.system "postprocess_system"
 pp_sys.require_singleton "render_properties"
-pp_sys.singleton "postprocess"
+pp_sys.require_singleton "postprocess"
 
 pp_sys.require_system "render_system"
 
@@ -140,7 +139,7 @@ local function render_technique(tech, lastslot, meshgroup, render_properties)
 end
 
 function pp_sys:combine_postprocess()
-    local pp = self.postprocess
+    local pp = world:singleton "postprocess"
     local techniques = pp.techniques
     if next(techniques) then
         local render_properties = world:singleton "render_properties"

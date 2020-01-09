@@ -1,6 +1,5 @@
 local window = require "window"
 
-local inputmgr = import_package "ant.inputmgr"
 local assetutil = import_package "ant.asset".util
 local renderpkg = import_package "ant.render"
 local argument = import_package "ant.argument"
@@ -8,9 +7,9 @@ local fs = require "filesystem"
 local thread = require "thread"
 local imgui = require "imgui.ant"
 local platform = require "platform"
-local keymap = inputmgr.keymap
+local inputmgr = require "inputmgr"
+local keymap = require "keymap"
 local viewidmgr = renderpkg.viewidmgr
-local fbmgr = renderpkg.fbmgr
 local rhwi = renderpkg.hardware_interface
 local font = imgui.font
 local Font = platform.font
