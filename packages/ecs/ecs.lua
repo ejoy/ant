@@ -326,6 +326,10 @@ function world:enable_system(name, enable)
 	end
 end
 
+function world:interface(name)
+	return self._interface[name]
+end
+
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -354,6 +358,7 @@ function m.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
+		_interface = {},
 	}, world)
 
 	--init event

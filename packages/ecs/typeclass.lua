@@ -59,7 +59,8 @@ local function decl_basetype(schema)
 	schema:primtype("ant.ecs", "boolean", false)
 end
 
-local function singleton_solve(class)
+local function singleton_solve(w)
+	local class = w._class
 	for name in pairs(class.singleton) do
 		local ti = class.component[name]
 		if not ti then
@@ -72,6 +73,16 @@ local function singleton_solve(class)
 			error(("singleton `%s` does not support unique component"):format(name))
 		end
 		class.unique[name] = true
+	end
+end
+
+local function interface_solve(w)
+	local class = w._class
+	local interface = w._interface
+	for package, o in pairs(class.interface) do
+		for name, v in pairs(o) do
+			interface[package.."|"..name] = setmetatable({}, {__index = v.method})
+		end
 	end
 end
 
@@ -107,6 +118,7 @@ local function importAll(w, ecs, class, config, loader)
 		system = {},
 		transform = {},
 		singleton = {},
+		interface = {},
 		component = class.component,
 		unique = {},
 	}
@@ -119,6 +131,7 @@ local function importAll(w, ecs, class, config, loader)
 	local importComponent
 	local importTransform
 	local importSingleton
+	local importInterface
 	local function importPackage(name)
 		if imported[name] then
 			return
@@ -209,6 +222,11 @@ local function importAll(w, ecs, class, config, loader)
 				importSingleton(k)
 			end
 		end
+		if v.require_interface then
+			for _, k in ipairs(v.require_interface) do
+				importInterface(k)
+			end
+		end
 	end
 	function importComponent(k)
 		--TODO
@@ -254,6 +272,17 @@ local function importAll(w, ecs, class, config, loader)
 		end
 		cut.singleton[name] = v
 	end
+	function importInterface(k)
+		local package, name, defer <close> = splitName(k)
+		if tableAt(cut.interface, package)[name] then
+			return
+		end
+		local v = class.interface[package][name]
+		if not v then
+			error(("invalid interface name: `%s`."):format(name))
+		end
+		tableAt(cut.interface, package)[name] = v
+	end
 	resetCurrentPackage()
 	for _, k in ipairs(policies) do
 		importPolicy(k)
@@ -293,7 +322,7 @@ return function (w, config, loader)
 				r = {}
 				setmetatable(r, {
 					__index = args.setter and gen_set(c, args.setter),
-					__newindex = gen_method(c),
+					__newindex = gen_method(c, args.callback),
 				})
 				tableAt(class_set, package)[name] = r
 			end
@@ -302,7 +331,7 @@ return function (w, config, loader)
 	end
 	register {
 		type = "system",
-		setter = { "require_policy", "require_system", "require_singleton" },
+		setter = { "require_policy", "require_system", "require_singleton", "require_interface" },
 	}
 	register {
 		type = "transform",
@@ -312,6 +341,10 @@ return function (w, config, loader)
 	register {
 		type = "policy",
 		setter = { "require_component", "require_transform", "require_system", "require_policy", "unique_component" },
+		callback = { },
+	}
+	register {
+		type = "interface",
 	}
 	ecs.component = function (name)
 		return schema:type(getCurrentPackage(), name)
@@ -334,5 +367,6 @@ return function (w, config, loader)
 	importAll(w, ecs, class, config, loader)
 	require "component".solve(schema_data)
 	require "policy".solve(w)
-	singleton_solve(w._class)
+	singleton_solve(w)
+	interface_solve(w)
 end
