@@ -3,7 +3,23 @@ local function find_byruntime(class, fullname)
     if not package then
         return
     end
-    return class[package][name]
+    local v = class[package]
+    if not v then
+        return
+    end
+    return v[name]
+end
+
+local function find(class, pkg, fullname)
+    local package, name = fullname:match "^([^|]*)|(.*)$"
+    if not package then
+        package, name = pkg, fullname
+    end
+    local v = class[package]
+    if not v then
+        return
+    end
+    return v[name]
 end
 
 local function merger_name(pkg, fullname)
@@ -93,7 +109,7 @@ local function add(w, eid, policies)
     for _, policy_name in ipairs(policies) do
         local class = find_byruntime(policy_class, policy_name)
         for _, transform_name in ipairs(class.require_transform) do
-            local class = transform_class[transform_name]
+            local class = find(transform_class, class.package, transform_name)
             for _, v in ipairs(class.output) do
                 if e[v] ~= nil then
                     error(("component `%s` already exists, it conflicts with policy `%s`."):format(v, policy_name))
@@ -102,7 +118,7 @@ local function add(w, eid, policies)
         end
     end
     local i = 1
-    while i < #component do
+    while i <= #component do
         local c = component[i]
         if e[c] ~= nil then
             table.remove(component, i)
@@ -111,14 +127,6 @@ local function add(w, eid, policies)
         end
     end
     return component, transform
-end
-
-local function find(class, pkg, fullname)
-    local package, name = fullname:match "^([^|]*)|(.*)$"
-    if not package then
-        package, name = pkg, fullname
-    end
-    return class[package][name]
 end
 
 local function solve(w)
