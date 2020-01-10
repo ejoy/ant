@@ -7,8 +7,6 @@ runtime.start {
 		"ant.render|render",
 		"ant.render|name",
 		"ant.render|shadow_cast",
-		"ant.render|directional_light",
-		"ant.render|ambient_light",
 	},
 	system = {
 		"ant.modelviewer|model_review_system",

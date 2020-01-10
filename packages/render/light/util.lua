@@ -8,7 +8,7 @@ local mu = mathpkg.util
 function util.create_directional_light_entity(world, name, color, intensity, rotation)
 	return world:create_entity {
 		policy = {
-			"ant.render|directional_light",
+			"ant.render|light.directional",
 			"ant.render|name",
 			"ant.serialize|serialize",
 		},
@@ -76,7 +76,7 @@ end
 function util.create_ambient_light_entity(world, name, mode, skycolor, midcolor, groundcolor)	
 	return world:create_entity {
 		policy = {
-			"ant.render|ambient_light",
+			"ant.render|light.ambient",
 			"ant.render|name",
 			"ant.serialize|serialize",
 		},

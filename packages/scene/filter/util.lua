@@ -27,13 +27,11 @@ local function add_directional_light_properties(world, uniform_properties)
 		directional_intensity = {name="Light Intensity", type="v4",value={}},
 	}
 
-	local dlight = world:singleton_entity "directional_light"
-	if dlight then		
+	for _, eid in world:each "directional_light" do
+		local dlight = world[eid]
 		local l = dlight.directional_light
 
-		-- point from vertex position to light position
-		local lightdir = ms:ref"vector" 
-		ms(lightdir, dlight.transform.r, "di=")
+		local lightdir = ms(dlight.transform.r, "dinP")
 		table.insert(dlight_info.directional_lightdir.value, 	lightdir)
 		table.insert(dlight_info.directional_color.value, 		l.color)
 		table.insert(dlight_info.directional_intensity.value, 	{l.intensity, 0.28, 0, 0})

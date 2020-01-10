@@ -15,8 +15,8 @@ runtime.start {
 		"ant.render|shadow_cast",
 		"ant.render|render",
 		"ant.render|bounding_draw",
-		"ant.render|directional_light",
-		"ant.render|ambient_light",
+		"ant.render|light.directional",
+		"ant.render|light.ambient",
 		"ant.scene|hierarchy",
 		"ant.scene|ignore_parent_scale",
 		--editor

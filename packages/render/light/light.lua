@@ -29,28 +29,29 @@ ecs.component "ambient_light"
 ['tmp']	.dirty "boolean"	(true)
 
 for _, lighttype in ipairs {
-	"directional_light",
-	"point_light",
-	"spot_light",
-	"ambient_light",
+	"directional",
+	"point",
+	"spot",
+	"ambient",
 } do
-	local p = ecs.policy(lighttype)
+	local policyname = "light." .. lighttype
+	local p = ecs.policy(policyname)
 	p.require_component "light"
-	if lighttype ~= "ambient_light" then
+	if lighttype ~= "ambient" then
 		p.require_component "transform"
 	end
-	if lighttype == "directional_light" then
-		p.unique_component(lighttype)
-	else
-		p.require_component(lighttype)
-	end
-	p.require_transform(lighttype)
+	
+	local lightname = lighttype .. "_light"
+	p.require_component(lightname)
 
-	local t = ecs.transform(lighttype)
-	t.input(lighttype)
+	local transname = lighttype .. "_transform"
+	p.require_transform(transname)
+
+	local t = ecs.transform(transname)
+	t.input(lightname)
 	t.output "light"
 
 	function t.process(e)
-		e.light = lighttype
+		e.light = lightname
 	end
 end

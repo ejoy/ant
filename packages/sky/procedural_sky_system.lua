@@ -258,7 +258,12 @@ end
 local function sync_directional_light(skyentity)
 	local skycomp = skyentity.procedural_sky
 	if skycomp.follow_by_directional_light then
-		local dlight = world:singleton_entity "directional_light"
+		local function get_light()
+			for _, eid in world:each "directional_light" do
+				return world[eid]
+			end
+		end
+		local dlight = get_light()
 		ms(dlight.rotation, skycomp.sundir, "D=")
 	end
 end

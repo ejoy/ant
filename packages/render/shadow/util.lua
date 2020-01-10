@@ -67,8 +67,10 @@ function util.split_new_frustum(view_frustum, ratios)
 end
 
 function util.get_directional_light_dir(world)
-	local d_light = world:singleton_entity "directional_light"
-	return ms(d_light.transform.r, "dP")
+	for _, eid in world:each "directional_light" do
+		local e = world[eid]
+		return ms(e.transform.r, "dP")
+	end
 end
 
 local function gen_ratios(distances)

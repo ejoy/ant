@@ -9,8 +9,8 @@ runtime.start {
 		"ant.bullet|collider.capsule",
 		"ant.render|render",
 		"ant.render|name",
-		"ant.render|directional_light",
-		"ant.render|ambient_light",
+		"ant.render|light.directional",
+		"ant.render|light.ambient",
 	},
 	system = {
 		"ant.test.animation|init_loader",

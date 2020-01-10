@@ -14,17 +14,6 @@ local lu         = renderpkg.light
 
 local m = ecs.system 'init_loader'
 
-m.require_policy "ant.animation|animation"
-m.require_policy "ant.animation|state_chain"
-m.require_policy "ant.animation|ozzmesh"
-m.require_policy "ant.animation|ozz_skinning"
-m.require_policy "ant.serialize|serialize"
-m.require_policy "ant.bullet|collider.capsule"
-m.require_policy "ant.render|render"
-m.require_policy "ant.render|name"
-m.require_policy "ant.render|directional_light"
-m.require_policy "ant.render|ambient_light"
-
 m.require_system "ant.imguibase|imgui_system"
 m.require_system "ant.camera_controller|camera_system"
 
