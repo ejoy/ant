@@ -38,7 +38,7 @@ local function init(rootpath, repopath, cachepath)
 	if not lfs.is_directory(rootpath / "pkg") then
 		assert(lfs.create_directories(rootpath / "pkg"))
 	end
-
+	
 	for i=0,0xff do
 		local path = repopath / string.format("%02x", i)
 		if not lfs.is_directory(path) then

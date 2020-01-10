@@ -41,7 +41,7 @@ function scene_control.run_test_package(raw_path)
 
     local pm = require "antpm"
     if not fs.exists(fs.path ("/pkg/"..pkgname)) then
-        pkgname = pm.register_package(path:parent_path())
+        pkgname = pm.editor_register_package(path:parent_path())
     end
     
     packages[#packages+1] = pkgname

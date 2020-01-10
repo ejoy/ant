@@ -18,7 +18,7 @@ function project_data_accessor.load(pdata)
     local config = r()
     do--register self
         local project_path = lfs.path(pdata.path)
-        pm.register_package(project_path,true)
+        pm.editor_register_package(project_path,true)
     end
     local config_external_packages = config.external_packages
     local external_packages = {}
@@ -29,7 +29,7 @@ function project_data_accessor.load(pdata)
             if pkg_data then
                 external_packages[pkg_data.config.name] = _path
             else
-                local pkg_name = pm.register_package(_path)
+                local pkg_name = pm.editor_register_package(_path)
                 external_packages[pkg_name] = _path
             end
         end
@@ -43,7 +43,7 @@ function project_data_accessor.load(pdata)
             if pkg_data then
                 inner_packages[pkg_data.config.name] = _path
             else
-                local pkg_name = pm.register_package(_path)
+                local pkg_name = pm.editor_register_package(_path)
                 inner_packages[pkg_name] = _path
             end
         end
@@ -89,7 +89,7 @@ function project_data_accessor.add_inner_package(pdata,project_detail,pkg_relati
         end
         inner_packages[pkg_data.config.name] = _path
     else
-        local pkg_name = pm.register_package(_path)
+        local pkg_name = pm.editor_register_package(_path)
         if inner_packages[pkg_name] then
             log.warning("Can't add inner_packages,package with same name exist:"..pkg_data.config.name)
             return false
@@ -113,7 +113,7 @@ function project_data_accessor.add_external_package(pdata,project_detail,pkg_pat
         end
         external_packages[pkg_data.config.name] = _path
     else
-        local pkg_name = pm.register_package(_path)
+        local pkg_name = pm.editor_register_package(_path)
          if external_packages[pkg_name] then
             log.warning("Can't add external_packages,package with same name exist:"..pkg_data.config.name)
             return false

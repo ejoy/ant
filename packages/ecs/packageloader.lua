@@ -3,22 +3,8 @@ local fs = require "filesystem"
 local get_modules = require "modules"
 
 return function(name)
-	local config = pm.config(name)
-	if not config then
-		error(("package '%s' not found"):format(name))
-		return
-	end
 	local root = fs.path('/pkg/'..name)
-	local modules = config.ecs_modules
-	if modules then
-		local tmp = {}
-		for _, m in ipairs(modules) do
-			tmp[#tmp+1] = root / m
-		end
-		modules = tmp
-	else
-		modules = get_modules(root, {"*.lua"})
-	end
+	local modules = get_modules(root, {"*.lua"})
 	local results = {}
 	for _, path in ipairs(modules) do
 		local module, err = pm.loadfile(path)
