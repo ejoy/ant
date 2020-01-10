@@ -17,23 +17,22 @@ local gizmo_object = ecs.component "gizmo_object"
 
 local GizmoType = {"position","rotation","scale"}
 local GizmoDirection = {"x","y","z"}
-local operate_gizmo_cache = ecs.singleton "operate_gizmo_cache"
-function operate_gizmo_cache:init()
-    local self = {}
-    self.last_target_eid = nil
-    self.picked_dir = nil -- "x"/"y","z", not supported yet:("xy","xz","yz")
-    self.picked_type = nil -- "position"/"ratation","scale", not supported yet:("xy","xz","yz")
-    self.last_mouse_pos = nil
-    self.mouse_delta = nil
-    self.gizmo_type = "position"
-    self.gizmo = nil
-    self.cur_mouse_state = "UP"
-    self.is_scale_draging = false
-    self.is_rotation_draging = false
-    -- self.count = {0,0}
-    -- self.move_count = {0,0,0}
-    return self
-end
+
+ecs.component "operate_gizmo_cache" {}
+ecs.singleton "operate_gizmo_cache" {
+    last_target_eid = nil,
+    picked_dir = nil, -- "x"/"y","z", not supported yet:("xy","xz","yz")
+    picked_type = nil, -- "position"/"ratation","scale", not supported yet:("xy","xz","yz")
+    last_mouse_pos = nil,
+    mouse_delta = nil,
+    gizmo_type = "position",
+    gizmo = nil,
+    cur_mouse_state = "UP",
+    is_scale_draging = false,
+    is_rotation_draging = false,
+    -- count = {0,0},
+    -- move_count = {0,0,0},
+}
 
 local function update_transform(eid, transform, field, value)
     local oldvalue = ms(transform[field], "P")
@@ -357,7 +356,7 @@ local function gizmo_rotation_on_release(cache)
 end
 
 local function on_gizmo_type_change(self,typ)
-    local operate_gizmo_cache = self.operate_gizmo_cache
+    local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
     if typ ~= operate_gizmo_cache.gizmo_type then
         local gizmo = operate_gizmo_cache.gizmo
         local old_typ = operate_gizmo_cache.gizmo_type
@@ -369,11 +368,10 @@ local function on_gizmo_type_change(self,typ)
 end
 
 local gizmo_sys =  ecs.system "editor_operate_gizmo_system"
-gizmo_sys.singleton "operate_gizmo_cache"
-gizmo_sys.singleton "message"
+gizmo_sys.require_singleton "operate_gizmo_cache"
 function gizmo_sys:init()
     --create gizmo
-    local operate_gizmo_cache = self.operate_gizmo_cache
+    local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
     assert(not operate_gizmo_cache.gizmo_eid)
     local gizmo = util.create_gizmo(world)
     for i,typ in ipairs(GizmoType) do
@@ -446,7 +444,7 @@ function gizmo_sys:update()
     local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     --sync transform gizmo
-    local operate_gizmo_cache = self.operate_gizmo_cache
+    local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
     local gizmo_eid =  operate_gizmo_cache.gizmo.eid
     local gizmo_entity = world[gizmo_eid]
     if target_entity then
@@ -514,7 +512,7 @@ function gizmo_sys:pickup()
         if eid and world[eid] and world[eid].gizmo_object then
             picked_dir = world[eid].gizmo_object.dir
         end
-        self.operate_gizmo_cache.picked_dir = picked_dir
+        world:singleton "operate_gizmo_cache".picked_dir = picked_dir
     end
 end
 

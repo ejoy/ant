@@ -1,4 +1,4 @@
-local keymap = (import_package "ant.inputmgr").keymap
+local keymap = import_package "ant.imguibase".keymap
 
 local str_map = { 
     [1] = "LEFT",

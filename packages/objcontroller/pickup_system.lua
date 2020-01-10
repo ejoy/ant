@@ -178,7 +178,6 @@ local sp = ecs.policy "select"
 	sp.require_policy "pickup"
 
 local pickup_sys = ecs.system "pickup_system"
-pickup_sys.require_singleton "frame_stat"
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"

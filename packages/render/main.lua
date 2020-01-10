@@ -9,6 +9,5 @@ return {
     declmgr     = require "vertexdecl_mgr",
     default     = require "components.default",
     shadow      = require "shadow.util",
-    uniforms    = require "uniforms",
     setting     = require "setting",
 }

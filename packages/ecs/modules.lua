@@ -60,14 +60,19 @@ local function get_sources(root, sources)
     return result
 end
 
+local function is_ecs_file(path)
+    for line in fs.lines(path) do
+        if line:match "^[%s]*local[%s]+ecs[%s]*=[%s]*%.%.%.[%s]*$" then
+            return true
+        end
+    end
+end
+
 return function (root, sources)
-	local results = {}	
+    local results = {}
     for _, path in ipairs(get_sources(root, sources)) do
-        for line in fs.lines(path) do
-            if line:match "^[%s]*local[%s]+ecs[%s]*=[%s]*%.%.%.[%s]*$" then
-                results[#results+1] = path
-                break
-            end
+        if is_ecs_file(path) then
+            results[#results+1] = path
         end
     end
     return results

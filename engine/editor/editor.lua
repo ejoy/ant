@@ -19,6 +19,7 @@ local vfs = require "vfs"
 vfs.new(fs.path(arg[0]):remove_filename())
 
 local pm = require "antpm"
+pm.initialize()
 import_package = pm.import
 
 print_r 	= require "editor.print_r".print_r

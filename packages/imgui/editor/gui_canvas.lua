@@ -9,7 +9,7 @@ local IO      = imgui.IO
 local hub       = import_package "ant.editor".hub
 local Event = require "hub_event"
 
-local inputmgr = import_package "ant.inputmgr"
+local inputmgr = import_package "ant.imguibase".inputmgr
 
 local GuiBase = require "gui_base"
 local gui_input = require "gui_input"

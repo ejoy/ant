@@ -4,7 +4,6 @@ local hub          = editor.hub
 local vfs           = require "vfs"
 local scene         = import_package "ant.scene".util
 local localfs = require "filesystem.local"
-local inputmgr      = import_package "ant.inputmgr"
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local rxbus = import_package "ant.rxlua".RxBus
 local scene_control = {}
@@ -42,12 +41,11 @@ function scene_control.run_test_package(raw_path)
 
     local pm = require "antpm"
     if not fs.exists(fs.path ("/pkg/"..pkgname)) then
-        pkgname = pm.register_package(path:parent_path())
+        pkgname = pm.editor_register_package(path:parent_path())
     end
     
     packages[#packages+1] = pkgname
     table.move(pkgsystems, 1, #pkgsystems, #systems+1, systems)
-    scene_control.input_queue = inputmgr.queue()
     local world = scene.start_new_world(
         600, 400,
         packages,

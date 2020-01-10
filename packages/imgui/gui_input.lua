@@ -1,4 +1,4 @@
-local inputmgr = import_package "ant.inputmgr"
+local inputmgr = import_package "ant.imguibase".inputmgr
 
 local gui_input = {}
 gui_input.key_state = {CTRL=false,SHIFT=false,SYS=false,ALT = false}

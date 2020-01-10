@@ -16,7 +16,7 @@ local ip = ecs.policy "ignore_parent_scale"
 ip.require_component "ignore_parent_scale"
 
 ecs.component "hierarchy_transform_result" {}
-ecs.singleton_v2 "hierarchy_transform_result" {}
+ecs.singleton "hierarchy_transform_result" {}
 
 local scene_space = ecs.system "scene_space"
 

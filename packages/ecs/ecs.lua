@@ -297,14 +297,14 @@ function world:update_func(what)
 	end
 	local switch = system.list_switch(list)
 	self._switchs[what] = switch
-	local proxy = self._systems.proxy
 	local timer = import_package "ant.timer".cur_time
 	return function()
 		switch:update()
-		for _, v in ipairs(list) do
-			local name, f = v[1], v[2]
+		for i = 1, #list do
+			local v = list[i]
+			local f, proxy, name = v[1], v[2], v[3]
 			self:pub {"system_begin",name,what,timer()}
-			f(proxy[name])
+			f(proxy)
 			self:pub {"system_end",name,what,timer()}
 		end
 	end
@@ -314,6 +314,10 @@ function world:enable_system(name, enable)
 	for _, switch in pairs(self._switchs) do
 		switch:enable(name, enable)
 	end
+end
+
+function world:interface(name)
+	return self._interface[name]
 end
 
 local function sortpairs(t)
@@ -355,12 +359,12 @@ function m.new_world(config)
 	typeclass(w, config, config.loader or require "packageloader")
 
 	-- init system
-	w._systems = system.init(w._class.system, w._class.singleton, config.pipeline)
+	w._systems = system.init(w._class.system, config.pipeline)
 
 	-- init singleton
 	local eid = w:create_entity {policy = {}, data = {}}
 	local e = w[eid]
-	for name, dataset in sortpairs(w._class.singleton_v2) do
+	for name, dataset in sortpairs(w._class.singleton) do
 		e[name] = w:create_component(name, dataset[1])
 		w:register_component(eid, name)
 	end

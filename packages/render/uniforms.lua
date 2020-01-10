@@ -1,4 +1,6 @@
-local uniforms = {}; uniforms.__index = uniforms
+local ecs = ...
+
+local m = ecs.interface "uniforms"
 
 local system_uniforms = {
     s_mainview          = {type="texture", stage=6},
@@ -6,8 +8,6 @@ local system_uniforms = {
     s_shadowmap         = {type="texture", stage=7},
 }
 
-function uniforms.system_uniform(name)
+function m.system_uniform(name)
     return system_uniforms[name]
 end
-
-return uniforms

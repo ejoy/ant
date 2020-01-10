@@ -6,10 +6,7 @@ local ms, mu	= mathpkg.stack, mathpkg.util
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 local shadowutil= renderpkg.shadow
-local uniformutil=renderpkg.uniforms
 local fbmgr     = renderpkg.fbmgr
-
-local setting	= renderpkg.setting
 
 local function update_uniforms(uniforms, properties)
 	for k, v in pairs(properties) do
@@ -128,7 +125,7 @@ function util.load_shadow_properties(world, render_properties)
 	local shadowentity = world:singleton_entity "shadow"
 	if shadowentity then
 		local fb = fbmgr.get(shadowentity.fb_index)
-		local smstage = uniformutil.system_uniform("s_shadowmap").stage
+		local smstage = world:interface "ant.render|uniforms".system_uniform("s_shadowmap").stage
 		textures["s_shadowmap"] = {type="texture", stage=smstage, name="csm shadow map", 
 							handle = fbmgr.get_rb(fb[1]).handle}
 
@@ -152,7 +149,7 @@ function util.load_postprocess_properties(world, render_properties)
 		local fb = fbmgr.get(fbidx)
 		local rendertex = fbmgr.get_rb(fb[1]).handle
 		local mainview_name = "s_mainview"
-		local stage = assert(uniformutil.system_uniform(mainview_name)).stage
+		local stage = assert(world:interface "ant.render|uniforms".system_uniform(mainview_name)).stage
 		postprocess.textures[mainview_name] = {
 			name = "Main view render texture", type = "texture",
 			stage = stage, handle = rendertex,

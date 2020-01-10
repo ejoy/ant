@@ -50,17 +50,18 @@ local function gen_method(c, callback)
 	end
 end
 
-local function decl_basetype(ecs)
-	ecs.component_alias("tag", "boolean", true)
-	ecs.component_base("entityid", -1)
-	ecs.component_base("int", 0)
-	ecs.component_base("real", 0.0)
-	ecs.component_base("string", "")
-	ecs.component_base("boolean", false)
+local function decl_basetype(schema)
+	schema:primtype("ant.ecs", "tag", "boolean", true)
+	schema:primtype("ant.ecs", "entityid", -1)
+	schema:primtype("ant.ecs", "int", 0)
+	schema:primtype("ant.ecs", "real", 0.0)
+	schema:primtype("ant.ecs", "string", "")
+	schema:primtype("ant.ecs", "boolean", false)
 end
 
-local function singleton_solve(class)
-	for name in pairs(class.singleton_v2) do
+local function singleton_solve(w)
+	local class = w._class
+	for name in pairs(class.singleton) do
 		local ti = class.component[name]
 		if not ti then
 			error(("singleton `%s` is not defined in component"):format(name))
@@ -72,6 +73,16 @@ local function singleton_solve(class)
 			error(("singleton `%s` does not support unique component"):format(name))
 		end
 		class.unique[name] = true
+	end
+end
+
+local function interface_solve(w)
+	local class = w._class
+	local interface = w._interface
+	for package, o in pairs(class.interface) do
+		for name, v in pairs(o) do
+			 setmetatable(interface[package.."|"..name], {__index = v.method})
+		end
 	end
 end
 
@@ -101,17 +112,26 @@ local function tableAt(t, k)
 	return v
 end
 
+local function dyntable()
+	return setmetatable({}, {__index=function(t,k)
+		local o = {}
+		t[k] = o
+		return o
+	end})
+end
+
 local function importAll(w, ecs, class, config, loader)
 	local cut = {
 		policy = {},
 		system = {},
 		transform = {},
 		singleton = {},
+		interface = {},
 		component = class.component,
-		singleton_v2 = {},
 		unique = {},
 	}
 	w._class = cut
+	w._interface =  dyntable()
 	local policies = config.policy
 	local systems  = config.system
 	local imported = {}
@@ -120,7 +140,7 @@ local function importAll(w, ecs, class, config, loader)
 	local importComponent
 	local importTransform
 	local importSingleton
-	local importSingletonV2
+	local importInterface
 	local function importPackage(name)
 		if imported[name] then
 			return
@@ -208,12 +228,12 @@ local function importAll(w, ecs, class, config, loader)
 		end
 		if v.require_singleton then
 			for _, k in ipairs(v.require_singleton) do
-				importSingletonV2(k)
+				importSingleton(k)
 			end
 		end
-		if v.singleton then
-			for _, k in ipairs(v.singleton) do
-				importSingleton(k)
+		if v.require_interface then
+			for _, k in ipairs(v.require_interface) do
+				importInterface(k)
 			end
 		end
 	end
@@ -251,26 +271,26 @@ local function importAll(w, ecs, class, config, loader)
 		end
 	end
 	function importSingleton(k)
-		local package, name, defer <close> = splitName(k)
-		if tableAt(cut.singleton, package)[name] then
-			return
-		end
-		local v = class.singleton[package][name]
-		if not v then
-			error(("invalid singleton name: `%s`."):format(name))
-		end
-		tableAt(cut.singleton, package)[name] = v
-	end
-	function importSingletonV2(k)
 		local name = k
-		if cut.singleton_v2[name] then
+		if cut.singleton[name] then
 			return
 		end
-		local v = class.singleton_v2[name]
+		local v = class.singleton[name]
 		if not v then
 			error(("invalid singleton name: `%s`."):format(name))
 		end
-		cut.singleton_v2[name] = v
+		cut.singleton[name] = v
+	end
+	function importInterface(k)
+		local package, name, defer <close> = splitName(k)
+		if tableAt(cut.interface, package)[name] then
+			return
+		end
+		local v = class.interface[package][name]
+		if not v then
+			error(("invalid interface name: `%s`."):format(name))
+		end
+		tableAt(cut.interface, package)[name] = v
 	end
 	resetCurrentPackage()
 	for _, k in ipairs(policies) do
@@ -282,18 +302,10 @@ local function importAll(w, ecs, class, config, loader)
 	return cut
 end
 
-local function dyntable()
-	return setmetatable({}, {__index=function(t,k)
-		local o = {}
-		t[k] = o
-		return o
-	end})
-end
-
 return function (w, config, loader)
 	local schema_data = {}
 	local schema = createschema(schema_data)
-	local class = { component = schema_data.map, singleton_v2 = {} }
+	local class = { component = schema_data.map, singleton = {} }
 	local ecs = { world = w }
 
 	local function register(args)
@@ -311,7 +323,7 @@ return function (w, config, loader)
 				r = {}
 				setmetatable(r, {
 					__index = args.setter and gen_set(c, args.setter),
-					__newindex = gen_method(c),
+					__newindex = gen_method(c, args.callback),
 				})
 				tableAt(class_set, package)[name] = r
 			end
@@ -319,12 +331,8 @@ return function (w, config, loader)
 		end
 	end
 	register {
-		type = "singleton",
-		callback = { "init" },
-	}
-	register {
 		type = "system",
-		setter = { "singleton", "require_policy", "require_system", "require_singleton" },
+		setter = { "require_policy", "require_system", "require_singleton", "require_interface" },
 	}
 	register {
 		type = "transform",
@@ -334,6 +342,10 @@ return function (w, config, loader)
 	register {
 		type = "policy",
 		setter = { "require_component", "require_transform", "require_system", "require_policy", "unique_component" },
+		callback = { },
+	}
+	register {
+		type = "interface",
 	}
 	ecs.component = function (name)
 		return schema:type(getCurrentPackage(), name)
@@ -341,23 +353,21 @@ return function (w, config, loader)
 	ecs.component_alias = function (name, ...)
 		return schema:typedef(getCurrentPackage(), name, ...)
 	end
-	ecs.component_base = function (name, ...)
-		schema:primtype(getCurrentPackage(), name, ...)
-	end
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
 	end
-	ecs.singleton_v2 = function (name)
+	ecs.singleton = function (name)
 		return function (dataset)
-			if class.singleton_v2[name] then
+			if class.singleton[name] then
 				error(("singleton `%s` duplicate definition"):format(name))
 			end
-			class.singleton_v2[name] = {dataset}
+			class.singleton[name] = {dataset}
 		end
 	end
-	decl_basetype(ecs)
+	decl_basetype(schema)
 	importAll(w, ecs, class, config, loader)
 	require "component".solve(schema_data)
 	require "policy".solve(w)
-	singleton_solve(w._class)
+	singleton_solve(w)
+	interface_solve(w)
 end
