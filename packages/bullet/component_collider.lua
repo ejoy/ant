@@ -127,6 +127,12 @@ for _, name in ipairs {
 	cp.require_component "collider_tag"
 	cp.require_component(collider_name)
 	cp.require_transform(trans_name)
+
+	cp.require_system "ant.bullet|collider_system"
+
+	if name == "character" then
+		cp.require_system "ant.bullet|character_system"
+	end
 end
 
 local math3d_adapter = require "math3d.adapter"

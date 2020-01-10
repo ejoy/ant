@@ -28,6 +28,8 @@ init_loader.require_system "ant.camera_controller|camera_system"
 init_loader.require_system "ant.imguibase|imgui_system"
 init_loader.require_system "ant.sky|procedural_sky_system"
 init_loader.require_system "ant.test.features|scenespace_test"
+init_loader.require_system "ant.render|physic_bounding"
+init_loader.require_system "ant.render|render_mesh_bounding"
 
 local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
@@ -103,7 +105,7 @@ local function ozzmesh_animation_test()
             collider_tag = "",
             character_collider = {
                 collider = {
-                    center = {0, 0, 0},
+                    center = {0, 1, 0},
                     is_tigger = true,
                 },
                 shape = {

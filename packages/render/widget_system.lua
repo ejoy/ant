@@ -29,7 +29,7 @@ bdp.unique_component "bounding_drawer"
 local rmb = ecs.system "render_mesh_bounding"
 
 rmb.require_system "ant.scene|primitive_filter_system"
-rmb.require_system "reset_mesh_buffer"
+rmb.require_system "ant.render|reset_mesh_buffer"
 
 local function append_buffer(desc, gvb, gib)
 	local vb, ib = desc.vb, desc.ib
@@ -41,7 +41,9 @@ local function append_buffer(desc, gvb, gib)
 	end
 end
 
-local function add_aabb_bounding(aabb, vb, ib)
+local function add_aabb_bounding(aabb, vb, ib, color)
+	color = color or 0xffffff00
+	
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_aabb_box(aabb, 0xffffff00, nil, desc)
 
@@ -87,8 +89,8 @@ end
 
 local phy_bounding = ecs.system "physic_bounding"
 phy_bounding.require_system "ant.scene|primitive_filter_system"
-phy_bounding.require_system "reset_mesh_buffer"
-phy_bounding.require_system "collider_system"
+phy_bounding.require_system "ant.render|reset_mesh_buffer"
+phy_bounding.require_system "ant.bullet|collider_system"
 
 function phy_bounding:widget()
 	local dmesh = world:singleton_entity "bounding_drawer"
