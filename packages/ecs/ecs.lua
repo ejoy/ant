@@ -358,7 +358,6 @@ function m.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
-		_interface = {},
 	}, world)
 
 	--init event

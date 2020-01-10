@@ -6,8 +6,8 @@ local camerautil= require "camera.util"
 local shadowutil= require "shadow.util"
 local viewidmgr = require "viewid_mgr"
 local renderutil= require "util"
-local uniformutil=require "uniforms"
-local fbmgr		= require "framebuffer_mgr"
+local fbmgr     = require "framebuffer_mgr"
+local uniforms  = world:interface "ant.render|uniforms"
 
 local mathpkg   = import_package "ant.math"
 local ms, mu, mc= mathpkg.stack, mathpkg.util, mathpkg.constant
@@ -19,13 +19,14 @@ local mathbaselib= require "math3d.baselib"
 ----------------------------------------------------------------------------------------------------------
 local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.require_system "shadowmaker_camera"
+debug_sm.require_interface "uniforms"
 
 ecs.tag "shadow_quad"
 
 local quadsize = 192
 
 local function csm_shadow_debug_quad()
-	local smstage = uniformutil.system_uniform("s_shadowmap").stage
+	local smstage = uniforms.system_uniform("s_shadowmap").stage
 	local quadmaterial = {ref_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"}
 
 	for _, eid in world:each "csm" do

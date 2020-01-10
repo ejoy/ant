@@ -16,6 +16,7 @@ local mu = mathpkg.util
 
 local filter_properties = ecs.system "filter_properties"
 filter_properties.require_singleton "render_properties"
+filter_properties.require_interface "ant.render|uniforms"
 
 function filter_properties:load_render_properties()
 	local render_properties = world:singleton "render_properties"

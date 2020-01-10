@@ -81,7 +81,7 @@ local function interface_solve(w)
 	local interface = w._interface
 	for package, o in pairs(class.interface) do
 		for name, v in pairs(o) do
-			interface[package.."|"..name] = setmetatable({}, {__index = v.method})
+			 setmetatable(interface[package.."|"..name], {__index = v.method})
 		end
 	end
 end
@@ -112,6 +112,14 @@ local function tableAt(t, k)
 	return v
 end
 
+local function dyntable()
+	return setmetatable({}, {__index=function(t,k)
+		local o = {}
+		t[k] = o
+		return o
+	end})
+end
+
 local function importAll(w, ecs, class, config, loader)
 	local cut = {
 		policy = {},
@@ -123,6 +131,7 @@ local function importAll(w, ecs, class, config, loader)
 		unique = {},
 	}
 	w._class = cut
+	w._interface =  dyntable()
 	local policies = config.policy
 	local systems  = config.system
 	local imported = {}
@@ -291,14 +300,6 @@ local function importAll(w, ecs, class, config, loader)
 		importSystem(k)
 	end
 	return cut
-end
-
-local function dyntable()
-	return setmetatable({}, {__index=function(t,k)
-		local o = {}
-		t[k] = o
-		return o
-	end})
 end
 
 return function (w, config, loader)
