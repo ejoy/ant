@@ -224,7 +224,7 @@ local function hierarchy_del_handle(hierarchy_cache)
 end
 
 local function parent_changed(eid, oldparent, trees)
-	local newparent = world[eid].transform.newparent
+	local newparent = world[eid].transform.parent
 	if newparent and world[newparent] then
 		if newparent ~= oldparent then
 			local parentparent = world[newparent].transform.parent
@@ -237,17 +237,30 @@ local function parent_changed(eid, oldparent, trees)
 	end
 end
 
-local function add_hierarchy_tree_item(eid, event, trees)
-	if event.field == "parent" then
-		local oldparent = event[5]
-		parent_changed(eid, oldparent, trees)
+local trans_changed_mb = world:sub {"component_changed", "transform"}
+
+local ignore_parent_scale_changed_mb = world:sub {"component_changed", "ignore_parent_scale"}
+
+local register_remove_mb = {
+	world:sub {"component_register", "hierarchy"},
+	world:sub {"component_register", "ignore_parent_scale"},
+
+	world:sub {"component_removed", "ignore_parent_scale"},
+}
+
+local function get_check_mb_list()
+	local list = {}
+	for _, mb in ipairs(register_remove_mb) do
+		list[#list+1] = mb
 	end
+
+	list[#list+1] = ignore_parent_scale_changed_mb
+
+	return list
 end
 
-local trans_mb = world:sub {"component_changed", "transform"}
-local hierarchy_mb = world:sub {"component_register", "hierarchy"}
-local ignore_parent_scale_mb = world:sub {"component_changed", "ignore_parent_scale"}
-local ignore_parent_scale_delete_mb = world:sub {"component_removed", "ignore_parent_scale"}
+local checklist = get_check_mb_list()
+
 function scene_space:scene_update()
 	local trees = {}
 
@@ -255,11 +268,12 @@ function scene_space:scene_update()
 		trees[eid] = world[eid].transform.parent or pseudoroot_eid
 	end
 
-	for event in trans_mb:each() do
+	for event in trans_changed_mb:each() do
 		local eid = event[3]
 		local e = world[eid]
+
+		local what = event[4]
 		if e.hierarchy then
-			local what = event[4]
 			if what.field == "parent" then
 				local oldparent = what.oldvalue
 				parent_changed(eid, oldparent, trees)
@@ -269,7 +283,7 @@ function scene_space:scene_update()
 		end
 	end
 
-	for _, mb in ipairs {hie_del_mb, ignore_parent_scale_mb, ignore_parent_scale_delete_mb} do
+	for _, mb in ipairs(checklist) do
 		for msg in mb:each() do
 			local eid = msg[3]
 			if world[eid] then
@@ -277,7 +291,7 @@ function scene_space:scene_update()
 			end
 		end
 	end
-	
+
 	local transform_result = world:singleton "hierarchy_transform_result"
 	if next(trees) then
 		update_hierarchy_tree(trees, transform_result)
