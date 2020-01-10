@@ -1,8 +1,12 @@
 local NOTCARE      <const> = {}
-local INDEX        <const> = {1,2}
+local INDEX        <const> = {1,2,3}
 local pairs        <const> = pairs
 local setmetatable <const> = setmetatable
 local table_unpack <const> = table.unpack
+local HEAD         <const> = 1
+local TAIL         <const> = 2
+local HEAD_INIT    <const> = TAIL + 1
+local TAIL_INIT    <const> = HEAD_INIT - 1
 
 local function copytable(t)
     local r = {}
@@ -38,7 +42,9 @@ local function msg_push(message, lst)
     if lst then
         for mb, compiled in pairs(lst) do
             if not compiled or msg_match(message, compiled) then
-                mb[#mb+1] = message
+                local tail = mb[TAIL] + 1
+                mb[TAIL] = tail
+                mb[tail] = message
             end
         end
     end
@@ -48,17 +54,15 @@ local mailbox = {}
 mailbox.__index = mailbox
 
 local function next_each(mb)
-    local head = mb[1]
-    local msg = mb[head]
+    local h = mb[HEAD]
+    local msg = mb[h]
     if msg then
-        mb[head] = false
-        mb[1] = head + 1
+        mb[h] = nil
+        mb[HEAD] = h + 1
         return msg
     end
-    mb[1] = 2
-    for i = 2, #mb do
-        mb[i] = nil
-    end
+    mb[HEAD] = HEAD_INIT
+    mb[TAIL] = TAIL_INIT
 end
 
 function mailbox:each()
@@ -66,17 +70,15 @@ function mailbox:each()
 end
 
 local function next_unpack(mb)
-    local head = mb[1]
-    local msg = mb[head]
+    local h = mb[HEAD]
+    local msg = mb[h]
     if msg then
-        mb[head] = false
-        mb[1] = head + 1
+        mb[h] = nil
+        mb[HEAD] = h + 1
         return table_unpack(msg)
     end
-    mb[1] = 2
-    for i = 2, #mb do
-        mb[i] = nil
-    end
+    mb[HEAD] = HEAD_INIT
+    mb[TAIL] = TAIL_INIT
 end
 
 function mailbox:unpack()
@@ -91,25 +93,19 @@ function world:init()
 end
 
 function world:sub(pattern)
-    local mb = setmetatable({2}, mailbox)
+    local mb = setmetatable({HEAD_INIT,TAIL_INIT}, mailbox)
     local lookup = self._event_lookup
     self._event_pattern[mb] = copytable(pattern)
     for i = 1, #INDEX do
         local k = INDEX[i]
-        local v = pattern[k]
-        if not v then
-            if lookup[NOTCARE] then
-                lookup[NOTCARE][mb] = compile_pattern(pattern)
-            else
-                lookup[NOTCARE] = {[mb] = compile_pattern(pattern)}
-            end
-            return mb
-        end
+        local v = pattern[k] or NOTCARE
         pattern[k] = nil
-        if not lookup[v] then
-            lookup[v] = {}
+        local l = lookup[v]
+        if not l then
+            l = {}
+            lookup[v] = l
         end
-        lookup = lookup[v]
+        lookup = l
     end
     lookup[mb] = compile_pattern(pattern)
     return mb
@@ -120,30 +116,31 @@ function world:unsub(mb)
     local pattern = self._event_pattern[mb]
     for i = 1, #INDEX do
         local k = INDEX[i]
-        local v = pattern[k]
-        if not v then
-            self._event_pattern[mb] = nil
-            lookup[NOTCARE][mb] = nil
-            return
-        end
+        local v = pattern[k] or NOTCARE
         lookup = lookup[v]
     end
     self._event_pattern[mb] = nil
     lookup[mb] = nil
 end
 
+local function pubmessage(lookup, message, n)
+    if lookup[NOTCARE] then
+        pubmessage(lookup[NOTCARE], message, n+1)
+    end
+    local k = INDEX[n]
+    if k == nil then
+        return msg_push(message, lookup)
+    end
+    local v = message[k]
+    if not v or not lookup[v] then
+        return
+    end
+    return pubmessage(lookup[v], message, n+1)
+end
+
 function world:pub(message)
     local lookup = self._event_lookup
-    for i = 1, #INDEX do
-        local k = INDEX[i]
-        local v = message[k]
-        if not v or not lookup[v] then
-            msg_push(message, lookup[NOTCARE])
-            return
-        end
-        lookup = lookup[v]
-    end
-    msg_push(message, lookup)
+    pubmessage(lookup, message, 1)
 end
 
 return world
