@@ -2597,7 +2597,7 @@ lis_parallel(lua_State *L) {
 }
 
 static int
-lscreen_point_to_3d(lua_State *L) {
+lscreenpt_to_3d(lua_State *L) {
 	const int numarg = lua_gettop(L);
 	if (numarg < 4) {
 		luaL_error(L, "at least 4 arguments, %d provided. arguments: (camera component[with eyepos/viewdir/frustum], viewport[w, h], point at 2d", numarg);
@@ -2673,6 +2673,41 @@ lscreen_point_to_3d(lua_State *L) {
 	}
 
 	return num2dpoint;
+}
+
+static int
+l3d_to_screenpt(lua_State *L){
+	struct lastack* LS = getLS(L, 1);
+
+	const auto pt = get_vec_value(L, LS, 2);
+
+	glm::mat4 finalmat = get_mat_value(L, LS, 3);	// viewproj matrix
+
+	if (!lua_isnoneornil(L, 4))
+		finalmat *= get_mat_value(L, LS, 2);	// multi world matrix
+
+	const float screenwidth = lua_tonumber(L, 5);
+	const float screenheight = lua_tonumber(L, 6);
+
+	const bool origin_leftup = lua_isnoneornil(L, 7) ? false : lua_toboolean(L, 7);
+
+	const auto pt_proj = finalmat * pt;
+	const auto pt_ndc = pt_proj / pt_proj.w;
+
+	const auto pt_mapper = (pt_ndc + glm::vec4(1.f, 1.f, 0.f, 0.f)) * glm::vec4(0.5f, 0.5f, 0.f, 0.f);
+
+	glm::vec4 finalpt;
+	if (origin_leftup){
+		finalpt = pt_mapper * glm::vec4(screenwidth, screenheight, 0.f, 0.f);
+	} else {
+		finalpt.x = pt_mapper.x * screenwidth;
+		finalpt.y = (1 - pt_mapper.y) * screenheight;
+	}
+
+	lastack_pushvec4(LS, &finalpt.x);
+	pushid(L, pop(L, LS));
+
+	return 1;
 }
 
 static int
@@ -3221,7 +3256,8 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "length", llength},
 			{ "dot", ldot},
 			{ "is_parallel", lis_parallel},
-			{ "screenpt_to_3d", lscreen_point_to_3d},
+			{ "screenpt_to_3d", lscreenpt_to_3d},
+			{ "to_screenpt", l3d_to_screenpt},
 			{ "lhs_rotation", llhs_rotation},
 			{ "lhs_mat", llhs_matrix},
 			{ "lerp", llerp},

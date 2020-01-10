@@ -63,16 +63,6 @@ function world:add_component(eid, component_type, args)
 	self:register_component(eid, component_type)
 end
 
-function world:add_component_child(parent_com,child_name,child_type,child_value)
-	local child_com = self:create_component(child_type, child_value)
-	if parent_com.watcher then
-		-- assert(parent_com.watcher[child_name]==nil,"watched value can't set twice in a frame:"..child_name,parent_com.watcher[child_name])
-        parent_com.watcher[child_name] =  child_com
-    else
-        parent_com[child_name] = child_com
-    end
-end
-
 function world:remove_component(eid, c)
 	local e = assert(self[eid])
 	assert(e[c] ~= nil)

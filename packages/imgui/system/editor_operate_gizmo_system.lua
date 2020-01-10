@@ -13,6 +13,8 @@ local gizmo_object = ecs.component "gizmo_object"
     ["opt"].type "string"   --"position"/"rotation"/"scale"
     ["opt"].dir "string"    --"x"/"y"/"z"  *"xy"/"yz"/"xz"
 
+--local transform_watcher = world:sub {"transform_changed", "transform"}
+
 local GizmoType = {"position","rotation","scale"}
 local GizmoDirection = {"x","y","z"}
 local operate_gizmo_cache = ecs.singleton "operate_gizmo_cache"
@@ -33,39 +35,56 @@ function operate_gizmo_cache:init()
     return self
 end
 
-local function scale_gizmo_to_normal(gizmo)
-    local mq = world:singleton_entity "main_queue"
-    local camera = world[mq.camera_eid].camera
-    local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+local function update_transform(eid, transform, field, value)
+    local oldvalue = ms(transform[field], "P")
+    ms(transform[field], value, "=")
+    world:pub {"component_changed", "transform", eid, field, oldvalue, value}
+end
+
+local function scale_gizmo_to_normal(gizmo_eid)
+    local gizmo = world[gizmo_eid]
     local et = gizmo.transform
-    if et.world then
-        local _,_,t = ms(et.world,"~TTT")
+    if et.world and et.parent then
+        local camera = camerautil.main_queue_camera(world)
+        local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+
+        local _,_,t = ms(et.world,"~PPP")
         local tvp  = ms(vp,t,"*T")
+
         local scale = math.abs(tvp[4]/7)
         local parent_e = world[et.parent]
-        if parent_e then
-            local parent_trans = world[et.parent].transform.world
-            local ps,_,_ = ms(parent_trans,"~TTT")
-            local ps_lua = ms(ps,"T")
-            world:add_component_child(et,"s","vector",
-                {scale/ps_lua[1],scale/ps_lua[2],scale/ps_lua[3],0})
-        else
-            log.error("target entity not found,parent eid:",et.parent)
-        end
+        local parent_scale = ms(parent_e.transform.world,"~P")
+        local finalscale = ms(scale, parent_scale, "r*P")
+        update_transform(gizmo_eid, et, "s", finalscale)
     end
 end
 
 local function pos_to_screen(pos,trans,viewproj,w,h)
-    local scale = ms(trans.s,"T")
-    local vec4 = { pos[1]/scale[1],pos[2]/scale[2],pos[3]/scale[3],1}
-    -- log.info_a(vec4)
-    local trans_world = trans.world
-    local proj_pos = ms(viewproj,trans_world,vec4,"**T")
-    local x = proj_pos[1]/proj_pos[4]
-    local y = proj_pos[2]/proj_pos[4]
-    -- log.info_a("proj_pos",proj_pos[1]/proj_pos[4],proj_pos[2]/proj_pos[4])
-    -- local screen_pos = (x+1)/2*w,(y+1)/2*h
-    return {(x+1)/2*w,(y+1)/2*h}
+    -- local scale = ms(trans.s,"T")
+    -- local vec4 = { pos[1]/scale[1],pos[2]/scale[2],pos[3]/scale[3],1}
+    -- -- log.info_a(vec4)
+    -- local trans_world = trans.world
+    -- local proj_pos = ms(viewproj,trans_world,vec4,"**T")
+    -- local x = proj_pos[1]/proj_pos[4]
+    -- local y = proj_pos[2]/proj_pos[4]
+    -- -- log.info_a("proj_pos",proj_pos[1]/proj_pos[4],proj_pos[2]/proj_pos[4])
+    -- -- local screen_pos = (x+1)/2*w,(y+1)/2*h
+    -- return {(x+1)/2*w,(y+1)/2*h}
+
+    local vec4 = ms(pos, trans.s, "r*P") --{ pos[1]/scale[1],pos[2]/scale[2],pos[3]/scale[3],1}
+
+    return 
+    --[[
+        vec4_WS = trans.wrold * vec4        --> *
+        vec4_proj= viewproj * vec4          |   --> %
+        vec4_NDC = vec4_proj / vec4_proj.w  |
+
+        vec4_map = (vec4_NDC + 1) * 0.5  |--> +*  transform from [-1, 1] ==>[0, 1]
+        vec4_screen = vec4_map.xy * wh   |
+    ]]
+    ms(viewproj, trans.world, vec4,        "*%",
+        {1, 1, 0, 0}, {0.5*w, 0.5*h, 0, 0}, "+*T")
+
 end
 
 local function convert_to_model_axis(trans,axis_unit)
@@ -134,7 +153,7 @@ local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
         -- move_count[3] = move_count[3] + r_axis_unit[3]*t
         -- log.info_a("new_pos",new_pos)
         -- ms(trans.t,new_pos,"=")
-        world:add_component_child(trans,"t","vector",new_pos)
+        update_transform(target_entity_id, trans, "t", new_pos)
         -- update_world(trans)
     end
 end
@@ -144,29 +163,29 @@ local function add_gizmo_scale_length(scale_object,picked_dir,add_length)
     local scale_box = world[scale_box_id]
     local scale_line_id = scale_object["line_"..picked_dir]
     local scale_line= world[scale_line_id]
-    local pos = ms(scale_box.transform.t,add_length,"+T")
-    -- log.info_a("add_gizmo_scale_length",add_length,pos)
-    world:add_component_child(scale_box.transform,"t","vector",pos)
-    local line_length = scale_object.line_length
-    world:add_component_child(scale_line.transform,"s","vector",
-        {pos[1]/line_length,pos[2]/line_length,pos[3]/line_length})
+    local pos = ms(scale_box.transform.t,add_length,"+P")
+    
+    update_transform(scale_box_id, scale_box.transform, "t", pos)
+    update_transform(scale_line_id, scale_line, "s", ms(pos, {1 / scale_object.line_length}, "*P"))
     return pos
 end
 
 local function gizmo_scale_on_release(cache)
     local picked_dir = cache.is_scale_draging
     assert(picked_dir)
-    local scale_object = cache.gizmo.scale
-    local line_length = scale_object.line_length
-    local scale_box_id = scale_object["box_"..picked_dir]
+
     local axis_unit = cache.axis_map[picked_dir]
+
+    local scale_object = cache.gizmo.scale
+    local scale_box_id = scale_object["box_"..picked_dir]
     local scale_box = world[scale_box_id]
-    local pos = {axis_unit[1]*line_length,axis_unit[2]*line_length,axis_unit[3]*line_length}
-    -- log.info_a("scale_box.transform.t",pos)
-    world:add_component_child(scale_box.transform,"t","vector",pos)
+    local pos = ms(axis_unit, {scale_object.line_length}, "*P")
+    
+    update_transform(scale_box_id, scale_box.transform, "t", pos)
+
     local scale_line_id = scale_object["line_"..picked_dir]
     local scale_line= world[scale_line_id]
-    world:add_component_child(scale_line.transform,"s","vector",axis_unit)
+    update_transform(scale_line_id, scale_line.transform, "s", axis_unit)
 end
 
 local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
@@ -181,6 +200,7 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
         local scale_box = world[scale_box_id]
         local scale_box_trans =  scale_box.transform
         local axis_unit = cache.axis_map[picked_dir] -- {1,0,0} or {0,1,0} or {0,0,1}
+        
         local mq = world:singleton_entity "main_queue"
         local camera = world[mq.camera_eid].camera
         local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
@@ -188,6 +208,7 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
         local w,h = viewport.rect.w,viewport.rect.h
         local screen_pos0 = pos_to_screen({0,0,0},scale_box_trans,viewproj,w,h)
         local screen_pos1= pos_to_screen(axis_unit,scale_box_trans,viewproj,w,h)
+
         local sceen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
         local normalize_sceen_unit =  ms(sceen_unit,"nT")
         local sceen_unit_dis = nil
@@ -197,18 +218,17 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
             sceen_unit_dis = sceen_unit[2]/normalize_sceen_unit[2]
         end
         local effect_dis = dx*normalize_sceen_unit[1]+dy*normalize_sceen_unit[2]
-        local t = effect_dis/sceen_unit_dis
-        local tvec3 = {axis_unit[1]*t,axis_unit[2]*t,axis_unit[3]*t}
+
+        local tvec3 =  ms(axis_unit, {effect_dis/sceen_unit_dis}, "*P") --{axis_unit[1]*t,axis_unit[2]*t,axis_unit[3]*t}
         add_gizmo_scale_length(scale_object,picked_dir,tvec3)
+
         local line_length = scale_object.line_length
-        local scale_add = {tvec3[1]/line_length,tvec3[2]/line_length,tvec3[3]/line_length}
+        local scale_add = ms(tvec3, {1/line_length}, "*P")--{tvec3[1]/line_length,tvec3[2]/line_length,tvec3[3]/line_length}
         local trans = target_entity.transform
-        local old_scale = ms(trans.s,"T")
-        local new_scale = {}
-        for i = 1,3 do
-            new_scale[i] = old_scale[i]*(scale_add[i] + 1)
-        end
-        world:add_component_child(trans,"s","vector",new_scale)
+
+        local newscale = ms(trans.s, scale_add, {1, 1, 1, 0}, "+*P")
+    
+        update_transform(target_entity_id, trans, "s", newscale)
         -- world:update_func("event_changed")()
         -- local gizmo_eid =  cache.gizmo.eid
         -- local gizmo_entity = world[gizmo_eid]
@@ -323,11 +343,9 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
         end
         local effect_dis = dx*normalize_sceen_unit[1]+dy*normalize_sceen_unit[2]
         local t = effect_dis/sceen_unit_dis
-        local rotat_t_quat = ms({type="quat",axis=r_axis_unit,radian={0.01*t}},"T")
-        local cur_rot = ms(trans.r,"qT")
-        local new_rot = ms(rotat_t_quat,cur_rot,"*eT")
-        -- local new_rot =  {cur_rot[1]+rotat_e[1]*t,cur_rot[2]+rotat_e[2]*t,cur_rot[3]+rotat_e[3]*t}
-        world:add_component_child(trans,"r","vector",new_rot)
+        local new_rot = 
+            ms({type="quat",axis=r_axis_unit,radian={0.01*t}}, trans.r, "q*eP")
+        update_transform(target_entity_id, trans, "r", new_rot)
     end
 end
 
@@ -438,9 +456,9 @@ function gizmo_sys:update()
         -- local s,r,t = ms(trans.world,"~TTT")
         
         -- world: gizmo_entity
-        -- world:add_component_child(gizmo_entity.transform,"t","vector",t)
-        -- world:add_component_child(gizmo_entity.transform,"r","vector",r)
-        scale_gizmo_to_normal(gizmo_entity)
+        -- update_transform(gizmo_entity.transform,"t",t)
+        -- update_transform(gizmo_entity.transform,"r",r)
+        scale_gizmo_to_normal(gizmo_eid)
 
         if target_entity_id ~= operate_gizmo_cache.last_target_eid then
             world:add_component(gizmo_eid,"hierarchy_visible",false)

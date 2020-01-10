@@ -28,7 +28,6 @@ local primitive_filter_sys = ecs.system "primitive_filter_system"
 
 primitive_filter_sys.require_system "filter_properties"
 primitive_filter_sys.require_singleton "hierarchy_transform_result"
-primitive_filter_sys.singleton "ant.event|event"
 
 --luacheck: ignore self
 local function reset_results(results)

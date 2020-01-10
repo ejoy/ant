@@ -112,7 +112,8 @@ function m.set(w, id, path, key, value)
         assert(not c.type)
         for _, v in ipairs(c) do
             if v.name == key then
-                w:add_component_child(component,key,v.type, value)
+                component[key] = w:create_component(v.type, value)
+                w:pub {"component_changed", key, id}
                 return
             end
         end

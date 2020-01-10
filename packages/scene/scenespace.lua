@@ -21,8 +21,6 @@ ecs.singleton_v2 "hierarchy_transform_result" {}
 local scene_space = ecs.system "scene_space"
 
 scene_space.require_system "primitive_filter_system"
-
-scene_space.singleton "ant.event|event"
 scene_space.require_singleton "hierarchy_transform_result"
 
 local pseudoroot_eid = -1

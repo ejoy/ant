@@ -379,17 +379,6 @@ function util.create_blit_queue(world, viewrect)
 		computil.quad_mesh(viewrect))
 end
 
-function util.modify_view_rect(world,rect)
-	for _,eid in world:each("render_target") do
-		local e = world[eid]
-		world:add_component_child(
-			e["render_target"]["viewport"],
-			"rect",
-			"rect",
-			rect)
-	end
-end
-
 local statemap = {
 	all 			= "CDS",
 	color 			= "C",
