@@ -164,33 +164,11 @@ local function mark_cache(eid, cache_result)
 end
 
 local function update_hierarchy_tree(tree, cache_result)
-	if next(tree) then
-		local sort_result = fetch_hirarchy_tree(tree)
-		for i = #sort_result, 1, -1 do
-			local eid = sort_result[i]
-			mark_cache(eid, cache_result)
-		end
+	local sort_result = fetch_hirarchy_tree(tree)
+	for i = #sort_result, 1, -1 do
+		local eid = sort_result[i]
+		mark_cache(eid, cache_result)
 	end
-end
-
-local function update_transform_field(trans, events, init)
-	if init then
-		assert(events == nil or (not next(events)))
-		return true
-	end
-
-	local changed = true
-	for k, v in pairs(events) do
-		if k == 's' or k == 'r' or k == 't' then
-			ms(trans[k], v, "=")
-		elseif k == 'parent' then
-			trans.parent = v
-		else
-			changed = changed or nil
-		end
-	end
-
-	return changed
 end
 
 local function update_remove_subtree(remove_trees, cache_result)
@@ -245,14 +223,8 @@ local function hierarchy_del_handle(hierarchy_cache)
 	end
 end
 
-local function add_hierarchy_tree_item(eid, events, init, trees)
-	local trans = world[eid].transform
-	local oldparent = trans.parent
-	if events then
-		update_transform_field(trans, events, init)
-	end
-
-	local newparent = trans.parent
+local function parent_changed(eid, oldparent, trees)
+	local newparent = world[eid].transform.newparent
 	if newparent and world[newparent] then
 		if newparent ~= oldparent then
 			local parentparent = world[newparent].transform.parent
@@ -265,55 +237,58 @@ local function add_hierarchy_tree_item(eid, events, init, trees)
 	end
 end
 
-local trans_mb = world:sub {"component_register", "transform"}
-local hierarchy_mb = world:sub {"component_register", "hierarchy"}
-local ignore_parent_scale_mb = world:sub {"component_register", "ignore_parent_scale"}
-local ignore_parent_scale_delete_mb = world:sub {"component_removed", "ignore_parent_scale"}
-function scene_space:data_changed()
-	for msg in trans_mb:each() do
-		local eid = msg[3]
-		self.event:new(eid, "transform")
+local function add_hierarchy_tree_item(eid, event, trees)
+	if event.field == "parent" then
+		local oldparent = event[5]
+		parent_changed(eid, oldparent, trees)
 	end
-	
+end
+
+local trans_mb = world:sub {"component_changed", "transform"}
+local hierarchy_mb = world:sub {"component_register", "hierarchy"}
+local ignore_parent_scale_mb = world:sub {"component_changed", "ignore_parent_scale"}
+local ignore_parent_scale_delete_mb = world:sub {"component_removed", "ignore_parent_scale"}
+function scene_space:scene_update()
 	local trees = {}
-	
-	for eid, events, init in self.event:each "transform" do
+
+	local function mark_parent(eid)
+		trees[eid] = world[eid].transform.parent or pseudoroot_eid
+	end
+
+	for event in trans_mb:each() do
+		local eid = event[3]
 		local e = world[eid]
 		if e.hierarchy then
-			add_hierarchy_tree_item(eid, events, init, trees)
-		else
-			update_transform_field(e.transform, events, init)
-			local trans = e.transform
-			trans.world(ms:srtmat(trans))
-			--TODO: mark parent to cache, if no other hirarchy node change, we can only call 'mark_cache' function here
-			local peid = trans.parent
-			if peid then
-				assert(world[peid].hierarchy)
-				add_hierarchy_tree_item(peid, nil, true, trees)
+			local what = event[4]
+			if what.field == "parent" then
+				local oldparent = what.oldvalue
+				parent_changed(eid, oldparent, trees)
 			end
+
+			mark_parent(eid)
 		end
 	end
 
 	for msg in hierarchy_mb:each() do
-		add_hierarchy_tree_item(msg[3], nil, true, trees)
+		mark_parent(msg[3])
 	end
 
 	for msg in ignore_parent_scale_mb:each() do
-		add_hierarchy_tree_item(msg[3], nil, true, trees)
+		mark_parent(msg[3])
 	end
 
 	-- remove 'ignore_parent_scale' need update hierarchy tree
 	for msg in ignore_parent_scale_delete_mb:each() do
 		local eid = msg[3]
 		if world[eid] then
-			add_hierarchy_tree_item(eid, nil, true, trees)
+			mark_parent(eid)
 		end
 	end
 
-	local transform = world:singleton "hierarchy_transform_result"
+	local transform_result = world:singleton "hierarchy_transform_result"
 	if next(trees) then
-		update_hierarchy_tree(trees, transform)
+		update_hierarchy_tree(trees, transform_result)
 	end
 
-	hierarchy_del_handle(transform)
+	hierarchy_del_handle(transform_result)
 end

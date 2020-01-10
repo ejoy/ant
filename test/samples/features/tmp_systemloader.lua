@@ -27,6 +27,7 @@ init_loader.require_system 'ant.bullet|character_system'
 init_loader.require_system "ant.camera_controller|camera_system"
 init_loader.require_system "ant.imguibase|imgui_system"
 init_loader.require_system "ant.sky|procedural_sky_system"
+init_loader.require_system "ant.test.features|scenespace_test"
 
 local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"

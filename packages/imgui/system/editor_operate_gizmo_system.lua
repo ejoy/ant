@@ -38,7 +38,9 @@ end
 local function update_transform(eid, transform, field, value)
     local oldvalue = ms(transform[field], "P")
     ms(transform[field], value, "=")
-    world:pub {"component_changed", "transform", eid, field, oldvalue, value}
+    world:pub {"component_changed", "transform", eid,
+        {field = field, oldvalue = oldvalue, newvalue=value}
+    }
 end
 
 local function scale_gizmo_to_normal(gizmo_eid)
