@@ -47,7 +47,7 @@ end
 	world:create_entity {
 		...
 		material = {
-			{ref_path=def_path1},
+			ref_path=def_path1,
 		}
 	}
 	...
@@ -57,7 +57,7 @@ end
 	world:create_entity {
 		...
 		material = {
-			{ref_path=def_path1},
+			ref_path=def_path1,
 			{ref_path=def_path2},
 		}
 	}

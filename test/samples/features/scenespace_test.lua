@@ -14,7 +14,7 @@ local fs            = require "filesystem"
 local scenespace_test = ecs.system "scenespace_test"
 scenespace_test.require_singleton 'frame_stat'
 
-scenespace_test.require_system 'scene_space'
+scenespace_test.require_system 'ant.scene|scene_space'
 
 local hie_refpath = fs.path '/pkg/ant.resources' / 'hierarchy' / 'test_hierarchy.hierarchy'
 local function add_hierarchy_file(hiepath)
@@ -42,9 +42,9 @@ local function create_scene_node_test()
     local materialpath = fs.path '/pkg/ant.resources/depiction/materials/bunny.material'
 
     local default_hie_policy = {
-        "hierarchy",
-        "name",
-        "serialize"
+        "ant.scene|hierarchy",
+        "ant.render|name",
+        "ant.serialize|serialize"
     }
 
     --[[
@@ -69,7 +69,7 @@ local function create_scene_node_test()
             data = {
                 hierarchy = {},
                 hierarchy_visible = true,
-                transform = mu.translate_mat {0, 5, 0},
+                transform = mu.translate_mat {0, 5, 0, 1},
                 name = 'hie_root',
                 serialize = seriazlizeutil.create(),
             }
@@ -245,11 +245,7 @@ local function create_scene_node_test()
 
     local hie2_level1_1 =
         world:create_entity {
-            policy = {
-                "hierarchy",
-                "name",
-                "serialize",
-            },
+            policy = default_hie_policy,
             data = {
                 transform = {
                     s = {1, 1, 1, 0},
@@ -258,6 +254,7 @@ local function create_scene_node_test()
                     parent = hie_root2,
                 },
                 hierarchy = {},
+                hierarchy_visible = true,
                 name = 'hie2_level1_1',
                 serialize = seriazlizeutil.create(),
             }
@@ -370,7 +367,10 @@ local function create_scene_node_test()
                 ref_path = fs.path '/pkg/ant.resources/depiction/meshes/build_big_storage_01.mesh',
             },
             material = {
-                create_material_item(singlecolor_material, {1, 0, 0, 0}),
+                ref_path = singlecolor_material,
+                properties = {uniforms = {
+                        u_color = {type = "color", name = "Color", value = {1, 0, 0, 0}},
+                    }},
                 create_material_item(singlecolor_material, {0, 1, 0, 0}),
                 create_material_item(singlecolor_material, {1, 0, 1, 0}),
                 create_material_item(singlecolor_material, {1, 1, 0, 0}),
@@ -513,7 +513,13 @@ end
 local function move_root_node(rootnodename)
     local eid = find_entity_by_name(rootnodename, 'hierarchy')
     local e = world[eid]
-    e.transform.watcher.t = {10, 0, 0, 1}
+    local oldvalue = ms(e.transform.t, "P")
+    ms(e.transform.t, {10, 0, 0, 1}, "=")
+    world:pub {"component_changed", "transform", eid, {
+        field = "t",
+        oldvalue = oldvalue,
+        newvalue = ms(e.transform.t, "P"),
+    }}
 end
 
 local test_queue = {
@@ -530,7 +536,14 @@ local test_queue = {
             local level1_1_trans = level1_1.transform
             assert(level1_1_trans.parent == level1_2_trans.parent)
     
-            level1_2_trans.watcher.parent = level1_1_eid
+            local oldparent = level1_2_trans.parent
+            level1_2_trans.parent = level1_1_eid
+            world:pub {"component_changed", "transform", level1_2_eid, 
+            {
+                field = "parent",
+                oldvalue = oldparent, newvalue = level1_1_eid,
+            }}
+                
         end
     end,
     function ()
@@ -558,6 +571,7 @@ local test_queue = {
             },
             data = {
                 hierarchy = {},
+                hierarchy_visible = true,
                 ignore_parent_scale = true,
             }
         })
@@ -577,11 +591,9 @@ local test_queue = {
                 },
                 rendermesh = {},
                 material = {
-                    {
-                        ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                        properties = {
-                            uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
-                        }
+                    ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
+                    properties = {
+                        uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
                     }
                 },
                 mesh = {ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cone.mesh'},

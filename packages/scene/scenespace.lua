@@ -269,22 +269,15 @@ function scene_space:scene_update()
 		end
 	end
 
-	for msg in hierarchy_mb:each() do
-		mark_parent(msg[3])
-	end
-
-	for msg in ignore_parent_scale_mb:each() do
-		mark_parent(msg[3])
-	end
-
-	-- remove 'ignore_parent_scale' need update hierarchy tree
-	for msg in ignore_parent_scale_delete_mb:each() do
-		local eid = msg[3]
-		if world[eid] then
-			mark_parent(eid)
+	for _, mb in ipairs {hie_del_mb, ignore_parent_scale_mb, ignore_parent_scale_delete_mb} do
+		for msg in mb:each() do
+			local eid = msg[3]
+			if world[eid] then
+				mark_parent(msg[3])
+			end
 		end
 	end
-
+	
 	local transform_result = world:singleton "hierarchy_transform_result"
 	if next(trees) then
 		update_hierarchy_tree(trees, transform_result)

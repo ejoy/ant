@@ -14,6 +14,8 @@ hp.require_component "hierarchy"
 hp.require_component "hierarchy_visible"
 hp.require_component "transform"
 
+hp.require_system "ant.scene|scene_space"
+
 
 local mathadapter_util = import_package "ant.math.adapter"
 

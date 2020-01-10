@@ -17,6 +17,8 @@ runtime.start {
 		"ant.render|bounding_draw",
 		"ant.render|directional_light",
 		"ant.render|ambient_light",
+		"ant.scene|hierarchy",
+		"ant.scene|ignore_parent_scale",
 		--editor
 		"ant.test.features|character_controller",
 		"ant.objcontroller|select",
