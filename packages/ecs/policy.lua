@@ -91,7 +91,7 @@ local function add(w, eid, policies)
     local policy_class = w._class.policy
     local transform_class = w._class.transform
     for _, policy_name in ipairs(policies) do
-        local class = policy_class[policy_name]
+        local class = find_byruntime(policy_class, policy_name)
         for _, transform_name in ipairs(class.require_transform) do
             local class = transform_class[transform_name]
             for _, v in ipairs(class.output) do
