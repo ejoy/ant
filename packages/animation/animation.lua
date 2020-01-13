@@ -59,18 +59,6 @@ ecs.component_alias("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
 
-local function deep_copy(t)
-	local typet = type(t)
-	if typet == "table" then
-		local tmp = {}
-		for k, v in pairs(t) do
-			tmp[k] = deep_copy(v)
-		end
-		return tmp
-	end
-	return t
-end
-
 function anisystem:sample_animation_pose()
 	local current_time = timer.from_counter(timer.current_counter)
 	for _, eid in world:each "animation" do
