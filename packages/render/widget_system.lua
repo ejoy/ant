@@ -26,6 +26,12 @@ ecs.tag "bounding_drawer"
 local bdp = ecs.policy "bounding_draw"
 bdp.unique_component "bounding_drawer"
 
+ecs.component "debug_mesh_bounding"
+
+local bt = ecs.policy "debug_mesh_bounding"
+bt.require_component "debug_mesh_bounding"
+bt.require_system "render_mesh_bounding"
+
 local rmb = ecs.system "render_mesh_bounding"
 
 rmb.require_system "ant.scene|primitive_filter_system"
@@ -43,34 +49,44 @@ end
 
 local function add_aabb_bounding(aabb, vb, ib, color)
 	color = color or 0xffffff00
-	
+
 	local desc={vb={}, ib={}}
-	geometry_drawer.draw_aabb_box(aabb, 0xffffff00, nil, desc)
+	geometry_drawer.draw_aabb_box(aabb, color, nil, desc)
 
 	append_buffer(desc, vb, ib)
 end
 
-local function update_buffers(dmesh, vb, ib)
+local function offset_ib(start_vertex, ib)
+	local newib = {}
+	for _, idx in ipairs(ib) do
+		newib[#newib+1] = idx + start_vertex
+	end
+	return newib
+end
+
+local function append_buffers(dmesh, vb, ib)
 	local rm = dmesh.rendermesh
 	local meshscene = assetmgr.get_resource(rm.reskey)
 	local group = meshscene.scenes[1][1][1]
 
 	local vbdesc, ibdesc = group.vb, group.ib
 
-	vbdesc.num = (#vb - 1) // 4
-	ibdesc.num = #ib
+	local numvertices = (#vb - 1) // 4
+	local numindices = #ib
 
-	vbdesc.start = 0
-	ibdesc.start = 0
+	vbdesc.num = vbdesc.num + numvertices
+	ibdesc.num = ibdesc.num + numindices
 
 	local vbhandle = vbdesc.handles[1]
-	local vboffset = vbhandle.updateoffset or 0
-	local iboffset = ib.updateoffset or 0
+	local vertex_offset = vbhandle.updateoffset or 0
+	local index_offset = ibdesc.updateoffset or 0
 
-	bgfx.update(vbhandle.handle, vboffset, vb);
-	vbhandle.updateoffset = (#vb - 1) / 4	-- 4 for 3 float and one dword
-	bgfx.update(ibdesc.handle, iboffset, ib)
-	ib.updateoffset = #ib * 2	-- 2 for uint16_t
+	local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
+
+	bgfx.update(vbhandle.handle, vertex_offset, vb);
+	vbhandle.updateoffset = vertex_offset + numvertices
+	bgfx.update(ibdesc.handle, index_offset, newib)
+	ibdesc.updateoffset = index_offset + numindices
 end
 
 function rmb:widget()
@@ -81,10 +97,10 @@ function rmb:widget()
 
 	local vb, ib = {"fffd"}, {}
 	for _, tb in ipairs(transformed_boundings) do
-		add_aabb_bounding(dmesh, tb:get "aabb")
+		add_aabb_bounding(tb:get "aabb", vb, ib, 0xffff00ff)
 	end
 
-	update_buffers(dmesh, vb, ib)
+	append_buffers(dmesh, vb, ib)
 end
 
 local phy_bounding = ecs.system "physic_bounding"
@@ -105,7 +121,7 @@ function phy_bounding:widget()
 		add_aabb_bounding({min=min, max=max}, vb, ib)
 	end
 
-	update_buffers(dmesh, vb, ib)
+	append_buffers(dmesh, vb, ib)
 end
 
 local reset_bounding_buffer = ecs.system "reset_mesh_buffer"
@@ -114,8 +130,12 @@ function reset_bounding_buffer:end_frame()
 	if dmesh then
 		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
 		local group = meshscene.scenes[1][1][1]
-		group.vb.handles[1].updateoffset = 0
-		group.ib.updateoffset = 0
+		local vbdesc, ibdesc = group.vb, group.ib
+		vbdesc.start, vbdesc.num = 0, 0
+		ibdesc.start, ibdesc.num = 0, 0
+
+		vbdesc.handles[1].updateoffset = 0
+		ibdesc.updateoffset = 0
 	end
 end
 

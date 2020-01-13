@@ -111,6 +111,12 @@ local ABCDE_t = {
 
 local psp = ecs.policy "procedural_sky"
 psp.require_component "procedural_sky"
+psp.require_system "procedural_sky_system"
+
+local psp_sun = ecs.policy "procedural_sky_follow_sun"
+psp_sun.require_component "procedural_sky"
+psp_sun.require_system "procedural_sky_system"
+psp_sun.require_system "sun_update_system"
 
 -- Controls sun position according to time, month, and observer's latitude.
 -- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html

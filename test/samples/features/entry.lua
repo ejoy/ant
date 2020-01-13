@@ -15,6 +15,7 @@ runtime.start {
 		"ant.render|shadow_cast",
 		"ant.render|render",
 		"ant.render|bounding_draw",
+		"ant.render|debug_mesh_bounding",
 		"ant.render|light.directional",
 		"ant.render|light.ambient",
 		"ant.scene|hierarchy",

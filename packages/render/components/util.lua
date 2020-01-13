@@ -143,7 +143,7 @@ function util.quad_vertices(rect)
 	}
 end
 
-function util.create_plane_entity(world, size, pos, materialpath, color, name, needcollider)
+function util.create_plane_entity(world, size, pos, materialpath, color, name, info)
 	local policy = {
 		"ant.render|render",
 		"ant.render|name",
@@ -158,24 +158,23 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 			t = pos or {0, 0, 0, 1}
 		},
 		rendermesh = {},
-		material = util.assign_material(
-				materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
-				{uniforms = {u_color = {type="color", name="color", value=color}},}),
+		material = {
+			ref_path = materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+			properties = {
+				uniforms = {u_color = {type="color", name="color", value=color}},
+			}
+		},
 		can_render = true,
 		name = name or "Plane",
 	}
-	if needcollider then
-		policy[#policy+1] = "ant.bullet|collider.box"
 
-		data["collider_tag"] = ""
-		data["box_collider"] = {
-			collider = {
-				center = {0, 0, 0},
-			},
-			shape = {
-				size = {1, 1, 1},
-			}
-		}
+	if info then
+		for policy_name, dd in pairs(info) do
+			policy[#policy+1] = policy_name
+			for k, d in pairs(dd) do
+				data[k] = d
+			end
+		end
 	end
 
 	local eid = world:create_entity{
@@ -192,6 +191,9 @@ function util.create_plane_entity(world, size, pos, materialpath, color, name, n
 		0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
 	}
 	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
+	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
+	local selectscene = meshscene.scenes[meshscene.sceneidx]
+	selectscene[1].bounding = mathbaselib.new_bounding(ms, {-0.5, -0.5, -0.5}, {0.5, 0.5, 0.5})
 	return eid
 end
 
@@ -265,31 +267,35 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
     return quadid
 end
 
+local function check_add_bounding(b, trans, transformed_boundings)
+	if b then
+		local tb = mathbaselib.new_bounding(ms)
+		tb:reset(b, trans)
+		transformed_boundings[#transformed_boundings+1] = tb
+	end
+end
+
 function util.calc_transform_boundings(world, transformed_boundings)
 	for _, eid in world:each "can_render" do
 		local e = world[eid]
 
-		if e.mesh_bounding_drawer_tag == nil and e.main_view then
+		if e.debug_mesh_bounding then
 			local rm = e.rendermesh
-			local meshscene = rm.handle
+			local meshscene = assetmgr.get_resource(rm.reskey)
 
 			local worldmat = ms:srtmat(e.transform)
 
-			for _, scene in ipairs(meshscene.scenes) do
-				for _, mn in ipairs(scene)	do
-					local trans = worldmat
-					if mn.transform then
-						trans = ms(trans, mn.transform, "*P")
-					end
+			local selectscene = meshscene.scenes[meshscene.sceneidx]
 
-					for _, g in ipairs(mn) do
-						local b = g.bounding
-						if b then
-							local tb = mathbaselib.new_bounding(ms)
-							tb:reset(b, trans)
-							transformed_boundings[#transformed_boundings+1] = tb
-						end
-					end
+			for _, mn in ipairs(selectscene) do
+				local trans = worldmat
+				if mn.transform then
+					trans = ms(trans, mn.transform, "*P")
+				end
+
+				check_add_bounding(mn.bounding, trans, transformed_boundings)
+				for _, g in ipairs(mn) do
+					check_add_bounding(g.bounding, trans, transformed_boundings)
 				end
 			end
 		end

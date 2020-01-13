@@ -54,6 +54,7 @@ local function ozzmesh_animation_test()
             "ant.render|shadow_cast",
             "ant.bullet|collider.character",
             "ant.test.features|character_controller",
+            "ant.render|debug_mesh_bounding",
         },
         data = {
             transform = {
@@ -119,7 +120,8 @@ local function ozzmesh_animation_test()
             can_cast = true,
             character = {
                 movespeed = 1.0,
-            }
+            },
+            debug_mesh_bounding = true,
         }
     }
 end
@@ -205,7 +207,22 @@ local function create_plane_test()
             fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
             {0.8, 0.8, 0.8, 1},
             "test shadow plane",
-            true)
+            {
+                ["ant.bullet|collider.box"] = {
+                    box_collider = {
+                        collider = {
+                            center = {0, 0, 0},
+                        },
+                        shape = {
+                            size = {1, 1, 1},
+                        }
+                    },
+                    collider_tag = "",
+                },
+                ["ant.render|debug_mesh_bounding"] = {
+                    debug_mesh_bounding = true,
+                }
+            })
 end
 
 function init_loader:init()
