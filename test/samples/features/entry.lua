@@ -5,6 +5,7 @@ runtime.start {
 		"ant.animation|state_chain",
 		"ant.animation|ozzmesh",
 		"ant.animation|ozz_skinning",
+		"ant.animation|skinning",
 		"ant.serialize|serialize",
 		"ant.bullet|collider.capsule",
 		"ant.bullet|collider.box",

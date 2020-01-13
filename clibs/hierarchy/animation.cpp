@@ -251,13 +251,6 @@ get_aninode(lua_State *L, int idx = 2) {
 	return aninode;
 }
 
-static inline sampling_node*
-get_samplingnode(lua_State *L, ozz::animation::Skeleton* ske, int idx = 3) {
-	luaL_checktype(L, idx, LUA_TUSERDATA);
-	sampling_node * samplingnode = (sampling_node*)lua_touserdata(L, idx);
-	return samplingnode;
-}
-
 static inline float
 get_ratio(lua_State*L, int idx = 4) {
 	luaL_checktype(L, idx, LUA_TNUMBER);
@@ -323,7 +316,7 @@ struct blendlayers {
 };
 
 static inline void
-load_sample_info(lua_State *L, int index, sample_info &si) {	
+load_sample_info(lua_State *L, int index, const ozz::animation::Skeleton* ske, sample_info &si) {
 	luaL_checktype(L, index, LUA_TTABLE);
 
 	lua_getfield(L, index, "handle");
@@ -331,8 +324,13 @@ load_sample_info(lua_State *L, int index, sample_info &si) {
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "sampling_cache");
-	si.sampling = (sampling_node*)lua_touserdata(L, -1);
+	auto sampling = (sampling_node*)lua_touserdata(L, -1);
 	lua_pop(L, 1);
+
+	if (ske->num_joints() > sampling->cache->max_tracks()){
+		sampling->cache->Resize(ske->num_joints());
+	}
+	si.sampling = sampling;
 
 	lua_getfield(L, index, "ratio");
 	si.ratio = (float)lua_tonumber(L, -1);
@@ -354,7 +352,7 @@ static int
 lsample_animation(lua_State *L) {
 	auto ske = get_ske(L, 1);	
 	sample_info si;
-	load_sample_info(L, 2, si);
+	load_sample_info(L, 2, ske, si);
 	bind_pose_soa *bindpose = (bind_pose_soa*)lua_touserdata(L, 3);
 
 	if (!sample_animation(ske, si, bindpose)) {
@@ -440,9 +438,9 @@ create_blend_layers(lua_State *L, int index,
 		lua_geti(L, index, ii + 1);
 
 		sample_info si;
-		load_sample_info(L, -1, si);
+		load_sample_info(L, -1, ske, si);
 
-		auto &result = results[ii];		
+		auto &result = results[ii];
 		if (!sample_animation(ske, si, &result)) {
 			luaL_error(L, "sampling animation failed!");
 		}
@@ -687,13 +685,7 @@ ldel_sampling(lua_State *L) {
 
 static int
 lnew_sampling_cache(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TNUMBER);
-	const int numjoints = (int)lua_tointeger(L, 1);
-
-	if (numjoints <= 0) {
-		luaL_error(L, "joints number should be > 0");
-		return 0;
-	}
+	const int numjoints = (int)luaL_optinteger(L, 1, 0);
 
 	sampling_node* samplingnode = (sampling_node*)lua_newuserdatauv(L, sizeof(sampling_node), 0);
 	luaL_getmetatable(L, "SAMPLING_NODE");

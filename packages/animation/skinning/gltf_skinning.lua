@@ -10,12 +10,16 @@ local assetmgr  = assetpkg.mgr
 local s = ecs.policy "skinning"
 s.require_component "animation"
 s.require_component "skeleton"
-s.require_component "rendermesh"
+s.require_component "pose_result"
 s.require_component "skinning"
-s.require_component "mesh"
 s.require_transform "mesh_skinning"
-s.require_transform "mesh_loader"
-s.require_system "skinning_system"
+
+s.require_component "rendermesh"
+s.require_component "mesh"
+
+s.require_transform "ant.render|mesh_loader"
+s.require_transform "ant.animation|pose_result"
+s.require_system "ant.animation|skinning_system"
 
 
 local mesh_skinning_transform = ecs.transform "mesh_skinning"

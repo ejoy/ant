@@ -21,6 +21,9 @@ local p = ecs.policy "ik"
 p.require_component "ik"
 p.require_component "skeleton"
 p.require_component "transform"
+p.require_component "pose_result"
+
+p.require_transform "pose_result"
 
 p.require_system "ik_system"
 
@@ -50,7 +53,7 @@ function ik_system:ik()
 	for _, eid in world:each "ik" do
 		local e = world[eid]
 		local fixroot <const> = true
-		ik_module.do_ik(e.skeleton.handle, e.animation.aniresult, fixroot, prepare_ik(e.transform, e.ik))
+		ik_module.do_ik(e.skeleton.handle, e.pose_result.result, fixroot, prepare_ik(e.transform, e.ik))
 	end
 end
 
