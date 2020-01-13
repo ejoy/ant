@@ -35,7 +35,7 @@ function collider_sys:update_collider_transform()
     end
 end
 
-local char_sys = ecs.system "character_system"
+local char_sys = ecs.system "character_collider_system"
 char_sys.require_system "collider_system"
 
 function char_sys:update_collider()

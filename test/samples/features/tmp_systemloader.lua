@@ -23,13 +23,14 @@ local pbrscene = require "pbr_scene"
 local init_loader = ecs.system 'init_loader'
 
 init_loader.require_system 'ant.camera_controller|camera_controller2'
-init_loader.require_system 'ant.bullet|character_system'
+init_loader.require_system 'ant.bullet|character_collider_system'
 init_loader.require_system "ant.camera_controller|camera_system"
 init_loader.require_system "ant.imguibase|imgui_system"
 init_loader.require_system "ant.sky|procedural_sky_system"
 init_loader.require_system "ant.test.features|scenespace_test"
 init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
+init_loader.require_system "ant.render|draw_raycast_point"
 
 local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
@@ -111,8 +112,8 @@ local function ozzmesh_animation_test()
                 },
                 shape = {
                     capsule = {
-                        radius = 1.0,
-                        height = 1.0,
+                        radius = 0.5,
+                        height = 1,
                         axis = "Y",
                     }
                 },
@@ -214,7 +215,7 @@ local function create_plane_test()
                             center = {0, 0, 0},
                         },
                         shape = {
-                            size = {1, 1, 1},
+                            size = {0.5, 0.5, 0.5},
                         }
                     },
                     collider_tag = "",

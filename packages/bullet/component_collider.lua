@@ -131,7 +131,7 @@ for _, name in ipairs {
 	cp.require_system "ant.bullet|collider_system"
 
 	if name == "character" then
-		cp.require_system "ant.bullet|character_system"
+		cp.require_system "ant.bullet|character_collider_system"
 	end
 end
 

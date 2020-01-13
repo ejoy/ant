@@ -144,7 +144,7 @@ local ray_cast_hitted = world:sub {"ray_cast_hitted"}
 
 local draw_raycast_point = ecs.system "draw_raycast_point"
 draw_raycast_point.require_system "ant.scene|primitive_filter_system"
-draw_raycast_point.require_system "character_system"
+draw_raycast_point.require_system "ant.bullet|character_collider_system"
 
 function draw_raycast_point:widget()
     local vb, ib = {"fffd", }, {}
