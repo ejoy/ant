@@ -3,7 +3,9 @@ local world = ecs.world
 
 local asset = import_package "ant.asset".mgr
 local timer = import_package "ant.timer"
-local animodule = require "hierarchy.animation"
+local ani_module = require "hierarchy.animation"
+local ik_module = require "hierarchy.ik"
+local ms = import_package "ant.math".stack
 
 ecs.component "animation_content"
 	.ref_path "respath"
@@ -23,14 +25,14 @@ function m.process(e)
 	local ske = e.skeleton
 	local skehandle = asset.get_resource(ske.ref_path).handle
 	local numjoints = #skehandle
-	e.animation.aniresult = animodule.new_bind_pose(numjoints)
+	e.animation.aniresult = ani_module.new_bind_pose(numjoints)
 	for posename, pose in pairs(e.animation.pose) do
 		pose.name = posename
 		pose.weight = nil
 		for _, aniref in ipairs(pose) do
 			local ani = e.animation.anilist[aniref.name]
 			aniref.handle = asset.get_resource(ani.ref_path).handle
-			aniref.sampling_cache = animodule.new_sampling_cache(numjoints)
+			aniref.sampling_cache = ani_module.new_sampling_cache(numjoints)
 			aniref.start_time = 0
 			aniref.duration = aniref.handle:duration() * 1000. / ani.scale
 			aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
@@ -57,11 +59,6 @@ ecs.component_alias("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
 
-local ani_module = require "hierarchy.animation"
-local ik_module = require "hierarchy.ik"
-
-local ms = import_package "ant.math".stack
-
 local function deep_copy(t)
 	local typet = type(t)
 	if typet == "table" then
@@ -76,11 +73,10 @@ end
 
 function anisystem:sample_animation_pose()
 	local current_time = timer.from_counter(timer.current_counter)
-
-	for _, eid in world:each("animation") do
+	for _, eid in world:each "animation" do
 		local e = world[eid]
 		local ske = asset.get_resource(e.skeleton.ref_path).handle
-		local fix_root = true
+		local fix_root <const> = true
 		local ikcomp = e.ik
 		if ikcomp and ikcomp.enable then
 			local mat = ms:srtmat(e.transform)
@@ -90,7 +86,8 @@ function anisystem:sample_animation_pose()
 			t.mid_axis = ms(assert(t.mid_axis), "m")
 			ik_module.do_ik(mat, ske, t, e.animation.aniresult, fix_root)
 		else
-			for _, pose in ipairs(e.animation.current_pose) do
+			local animation = e.animation
+			for _, pose in ipairs(animation.current_pose) do
 				for _, aniref in ipairs(pose) do
 					local localtime = current_time - aniref.start_time
 					if localtime > aniref.max_time then
@@ -100,7 +97,7 @@ function anisystem:sample_animation_pose()
 					end
 				end
 			end
-			ani_module.motion(ske, e.animation.current_pose, e.animation.blendtype, e.animation.aniresult, nil, fix_root)
+			ani_module.motion(ske, animation.current_pose, animation.blendtype, animation.aniresult, nil, fix_root)
 		end
 	end
 end
