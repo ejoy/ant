@@ -30,8 +30,6 @@ m.require_policy "ant.render|light.directional"
 m.require_policy "ant.render|light.ambient"
 
 m.require_system "ant.sky|procedural_sky_system"
-m.require_system "ant.render|shadow_cast"
-m.require_system "ant.render|tonemapping"
 
 m.require_system "ant.imguibase|imgui_system"
 m.require_system "ant.camera_controller|camera_system"
@@ -242,9 +240,14 @@ local function imgui_windows(...)
 	end)
 end
 
+local event = world:sub {"mouse",nil,"MOVE"}
 function m:ui_update()
+	for a,b,c in event:unpack() do
+		print(a,b,c)
+	end
 	local widget = imgui.widget
 	for _ in imgui_windows("Test") do
 		widget.Text(memory_info())
 	end
 end
+
