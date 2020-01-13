@@ -161,6 +161,10 @@ local function stringify_component_value(name, typename, value, n)
         out[#out+1] = prefix(n)..('%s %s'):format(name, stringify_value(c, value))
         return
     end
+    if type(value) == "table" and next(value) == nil then
+        out[#out+1] = prefix(n)..('%s {}'):format(name)
+        return
+    end
     out[#out+1] = prefix(n)..('%s'):format(name)
     stringify_component_ref(c, value, name == ARRAY and n or (n+1))
 end

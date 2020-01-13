@@ -157,7 +157,7 @@ local function gltf_animation_test()
             skinning = {},
             animation = {
                 anilist = {
-                    ani1 = {
+                    idle = {
                         ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
                         scale = 1,
                         looptimes = 0,

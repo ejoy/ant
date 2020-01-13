@@ -41,21 +41,20 @@ local anicomp = ecs.component "animation"
 	.birth_pose "string"
 
 function anicomp:init()
-	for posename, pose in pairs(self.pose) do
-		pose.name = posename
-		pose.weight = nil
-		for _, aniref in ipairs(pose) do
-			local ani = self.anilist[aniref.name]
-			aniref.handle = asset.get_resource(ani.ref_path).handle
-			aniref.sampling_cache = ani_module.new_sampling_cache()
-			aniref.start_time = 0
-			aniref.duration = aniref.handle:duration() * 1000. / ani.scale
-			aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
-		end
+	local pose = {}
+	for name, ani in pairs(self.anilist) do
+		local aniref = {}
+		aniref.handle = asset.get_resource(ani.ref_path).handle
+		aniref.sampling_cache = ani_module.new_sampling_cache()
+		aniref.start_time = 0
+		aniref.duration = aniref.handle:duration() * 1000. / ani.scale
+		aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
+		pose[name] = {name = name, aniref}
 	end
-	local pose = self.pose[self.birth_pose]
-	pose.weight = 1
-	self.current_pose = {pose}
+	self.pose = pose
+	local birth_pose = self.pose[self.birth_pose]
+	birth_pose.weight = 1
+	self.current_pose = {birth_pose}
 	return self
 end
 
@@ -83,6 +82,6 @@ function anisystem:sample_animation_pose()
 				end
 			end
 		end
-		ani_module.motion(ske, animation.current_pose, animation.blendtype, posresult.result, nil, fix_root)
+		ani_module.motion(ske, animation.current_pose, "blend", posresult.result, nil, fix_root)
 	end
 end

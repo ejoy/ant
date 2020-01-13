@@ -1,0 +1,69 @@
+---------
+ant.animation|animation
+ant.animation|skinning
+ant.animation|state_machine
+ant.bullet|collider.capsule
+ant.render|mesh
+ant.render|name
+ant.render|render
+ant.serialize|serialize
+---------
+animation:
+  anilist:
+    idle:
+      ref_path: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+      scale: 1
+      looptimes: 0
+    junmping:
+      ref_path: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+      scale: 1
+      looptimes: 0
+    punching:
+      ref_path: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
+      scale: 1
+      looptimes: 0
+    running:
+      ref_path: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
+      scale: 1
+      looptimes: 0
+    running_fast:
+      ref_path: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
+      scale: 1
+      looptimes: 0
+    walking:
+      ref_path: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
+      scale: 1
+      looptimes: 0
+  birth_pose: idle
+can_render: true
+capsule_collider:
+  collider:
+    center: {0,0,0}
+    is_tigger: true
+  shape:
+    radius: 1
+    height: 1
+    axis: Y
+collider_tag: capsule_collider
+material:
+  ref_path: /pkg/ant.resources/depiction/materials/skin_model_sample.material
+mesh:
+  ref_path: /pkg/ant.resources/depiction/meshes/female.mesh
+name: animation_sample
+rendermesh:
+  lodidx: 1
+serialize: 5e1c39ad369fa96c5bd44fc5
+skeleton:
+  ref_path: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
+skinning: {}
+state_machine:
+  transmits:
+    idle:
+      walking:
+        duration: 0.5
+      junmping:
+        duration: 0.5
+transform:
+  s: {1,1,1,0}
+  r: {0,2.356194496154785,0,0}
+  t: {0,0,0,1}

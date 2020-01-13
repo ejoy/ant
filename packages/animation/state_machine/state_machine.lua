@@ -37,19 +37,23 @@ local function play_animation(e, name, duration)
 	local targetpose = e.animation.pose[name]
 	targetpose.weight = 0
 	current_pose[#current_pose+1] = targetpose
-	e.state_chain.transmit_merge = get_transmit_merge(e, duration * 1000.)
+	e.state_machine.transmit_merge = get_transmit_merge(e, duration * 1000.)
 	local current = timer.from_counter(timer.get_sys_counter())
 	for _, aniref in ipairs(targetpose) do
 		aniref.start_time = current
 	end
 end
 
-local m = ecs.policy "state_chain"
-m.require_component "state_chain"
+local m = ecs.policy "state_machine"
+m.require_component "state_machine"
 m.require_system "state_machine"
 m.require_system 'ant.timer|timesystem'
 
-ecs.component_alias("state_chain", "resource")
+ecs.component "state_machine_target"
+	.duration "real"
+ecs.component_alias("state_machine_node", "state_machine_target{}")
+ecs.component "state_machine"
+	.transmits "state_machine_node{}"
 
 -- state_machine should only produce animation state, and not do any animation relative work
 -- we should move animation code to animation_system, just keep state change in state_machine
@@ -57,22 +61,24 @@ local sm = ecs.system "state_machine"
 sm.require_system "animation_system"
 
 function sm:animation_state()
-	for _, eid in world:each "state_chain" do
+	for _, eid in world:each "state_machine" do
 		local e = world[eid]
-		if e.state_chain.transmit_merge then
-			if e.state_chain.transmit_merge(timer.deltatime) then
-				e.state_chain.transmit_merge = nil
+		if e.state_machine.transmit_merge then
+			if e.state_machine.transmit_merge(timer.deltatime) then
+				e.state_machine.transmit_merge = nil
 			end
 		end
-		local newtarget = e.state_chain.target
+		local newtarget = e.state_machine.target
 		if newtarget then
 			local current_pose = e.animation.current_pose
-			local statecfg = assetmgr.get_resource(e.state_chain.ref_path)
+			local statecfg = e.state_machine
 			local traget_transmits = statecfg.transmits[current_pose[#current_pose].name]
 			if traget_transmits and traget_transmits[newtarget] then
 				play_animation(e, newtarget, traget_transmits[newtarget].duration)
+			else
+				play_animation(e, newtarget, 0)
 			end
-			e.state_chain.target = nil
+			e.state_machine.target = nil
 		end
 	end
 end
