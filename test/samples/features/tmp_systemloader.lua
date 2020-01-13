@@ -64,7 +64,7 @@ local function ozzmesh_animation_test()
             transform = {
                 s = {1, 1, 1, 0},
                 r = {0, 0, 0, 0},
-                t = {0, 0, -3, 1}
+                t = {0, 5, -5, 1}
             },
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
@@ -259,7 +259,7 @@ local function create_plane_test()
         {
             transform = mu.srt({5, 1, 5, 1},
                                 {math.rad(10), 0, 0, 0},
-                                {0, 5, -5, 1}),
+                                {0, 3, -5, 1}),
             color = {0.5, 0.5, 0, 1},
             material = fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
         }
