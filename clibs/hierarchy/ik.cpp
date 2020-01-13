@@ -21,14 +21,17 @@ extern "C" {
 
 #include <ozz/base/containers/vector.h>
 
-static void
-to_matrix(lua_State *L, int idx, ozz::math::Float4x4 &sf) {
+static ozz::math::Float4x4
+to_matrix(lua_State *L, int idx) {
+	ozz::math::Float4x4 sf;
 	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
 	const float* m = (const float*)lua_touserdata(L, idx);	
 	float* p = reinterpret_cast<float*>(&sf);
 	for (int ii = 0; ii < 16; ++ii) {
 		*p++ = m[ii];
 	}
+
+	return sf;
 }
 
 bool
@@ -50,7 +53,7 @@ static void
 prepare_two_bone_ik_job(lua_State *L, int idx, 
 	const ozz::Range<ozz::math::Float4x4> &models, 
 	ozz::animation::IKTwoBoneJob &job) {
-	luaL_checktype(L, 3, LUA_TTABLE);
+	luaL_checktype(L, idx, LUA_TTABLE);
 
 	auto get_vec = [L](int idx, auto name, auto *result) {
 		verfiy(lua_getfield(L, idx, name), LUA_TLIGHTUSERDATA);
@@ -62,11 +65,9 @@ prepare_two_bone_ik_job(lua_State *L, int idx,
 		lua_pop(L, 1);
 	};
 
-	// define in world space
+	// define in model space
 	get_vec(idx, "target", (float*)(&job.target));
 	get_vec(idx, "pole_vector", (float*)(&job.pole_vector));
-
-	// define in model space
 	get_vec(idx, "mid_axis", (float*)(&job.mid_axis));
 
 	auto get_number = [L](int idx, auto name) {
@@ -99,7 +100,7 @@ prepare_two_bone_ik_job(lua_State *L, int idx,
 	job.end_joint = get_joint(idx, "end_joint");
 }
 
-void 
+static inline void 
 mul_quaternion(size_t jointidx, const ozz::math::SimdQuaternion& quat,
 	ozz::Vector<ozz::math::SoaTransform>::Std& transforms) {	
 
@@ -115,19 +116,17 @@ mul_quaternion(size_t jointidx, const ozz::math::SimdQuaternion& quat,
 
 static int
 ldo_ik(lua_State *L) {	
-	ozz::math::Float4x4 rootMat;
-	to_matrix(L, 1, rootMat);
 	luaL_checktype(L, 2, LUA_TUSERDATA);
-	hierarchy_build_data *builddata = (hierarchy_build_data *)lua_touserdata(L, 2);
+	hierarchy_build_data *builddata = (hierarchy_build_data *)lua_touserdata(L, 1);
 	auto ske = builddata->skeleton;
 	if (ske == nullptr) {
 		luaL_error(L, "skeleton data must init!");
 	}
 
-	auto invRoot = ozz::math::Invert(rootMat);
+	luaL_checkudata(L, 2, "OZZ_BIND_POSE");
+	bind_pose* result = (bind_pose*)lua_touserdata(L, 2);
 
-	luaL_checktype(L, 4, LUA_TUSERDATA);
-	bind_pose* result = (bind_pose*)lua_touserdata(L, 4);
+	const bool fixroot = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
 
 	const auto &poses = ske->joint_bind_poses();
 	ozz::Vector<ozz::math::SoaTransform>::Std local_trans(poses.count());	
@@ -140,11 +139,7 @@ ldo_ik(lua_State *L) {
 
 	ozz::animation::IKTwoBoneJob ikjob;
 	auto jointrange = ozz::make_range(result->pose);
-	prepare_two_bone_ik_job(L, 3, jointrange, ikjob);
-
-	// to model space
-	ikjob.target = ozz::math::TransformPoint(invRoot, ikjob.target);
-	ikjob.pole_vector = ozz::math::TransformVector(invRoot, ikjob.pole_vector);
+	prepare_two_bone_ik_job(L, 4, jointrange, ikjob);
 
 	ozz::math::SimdQuaternion start_correction, mid_correction;
 	ikjob.start_joint_correction = &start_correction;

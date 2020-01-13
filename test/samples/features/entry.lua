@@ -50,6 +50,7 @@ runtime.start {
 				{ name = "animation",
 					"animation_state",
 					"sample_animation_pose",
+					"ik",
 					"skin_mesh",
 				},
 				{ name = "sky",

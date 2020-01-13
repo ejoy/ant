@@ -77,33 +77,18 @@ function anisystem:sample_animation_pose()
 		local e = world[eid]
 		local ske = asset.get_resource(e.skeleton.ref_path).handle
 		local fix_root <const> = true
-		local ikcomp = e.ik
-		if ikcomp and ikcomp.enable then
-			local mat = ms:srtmat(e.transform)
-			local t = deep_copy(ikcomp)
-			t.target = ms(assert(t.target), "m")
-			t.pole_vector = ms(assert(t.pole_vector), "m")
-			t.mid_axis = ms(assert(t.mid_axis), "m")
-			ik_module.do_ik(mat, ske, t, e.animation.aniresult, fix_root)
-		else
-			local animation = e.animation
-			for _, pose in ipairs(animation.current_pose) do
-				for _, aniref in ipairs(pose) do
-					local localtime = current_time - aniref.start_time
-					if localtime > aniref.max_time then
-						aniref.ratio = 0
-					else
-						aniref.ratio = localtime % aniref.duration / aniref.duration
-					end
+
+		local animation = e.animation
+		for _, pose in ipairs(animation.current_pose) do
+			for _, aniref in ipairs(pose) do
+				local localtime = current_time - aniref.start_time
+				if localtime > aniref.max_time then
+					aniref.ratio = 0
+				else
+					aniref.ratio = localtime % aniref.duration / aniref.duration
 				end
 			end
-			ani_module.motion(ske, animation.current_pose, animation.blendtype, animation.aniresult, nil, fix_root)
 		end
+		ani_module.motion(ske, animation.current_pose, animation.blendtype, animation.aniresult, nil, fix_root)
 	end
 end
-
-local mathadapter_util = import_package "ant.math.adapter"
-local math3d_adapter = require "math3d.adapter"
-mathadapter_util.bind("animation", function ()
-	ik_module.do_ik = math3d_adapter.matrix(ms, ik_module.do_ik, 1)
-end)
