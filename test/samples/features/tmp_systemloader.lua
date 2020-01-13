@@ -5,6 +5,9 @@ local fs = require 'filesystem'
 
 local serialize = import_package 'ant.serialize'
 
+local mathpkg = import_package 'ant.math'
+local ms = mathpkg.stack
+
 local skypkg = import_package 'ant.sky'
 local skyutil = skypkg.util
 
@@ -204,7 +207,7 @@ end
 local function create_plane_test()
     return 
     computil.create_plane_entity(world,
-            {50, 1, 50, 0}, nil,
+            mu.srt({50, 1, 50, 0}, {math.rad(10), 0, 0, 0,}),
             fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
             {0.8, 0.8, 0.8, 1},
             "test shadow plane",

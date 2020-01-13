@@ -49,7 +49,7 @@ function char_sys:update_collider()
         local hit, result = physicworld:raycast(ms(center, "P"), at)
         if hit then
             world:pub {"ray_cast_hitted", char_eid, result}
-            ms(char.transform.t, result.hit_pt_in_WS, "=");
+            ms(char.transform.t, result.hit_pt_in_WS, "=")
         end
     end
 end

@@ -143,20 +143,14 @@ function util.quad_vertices(rect)
 	}
 end
 
-function util.create_plane_entity(world, size, pos, materialpath, color, name, info)
+function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	local policy = {
 		"ant.render|render",
 		"ant.render|name",
 	}
 
-	local scale = size or {1, 1, 1, 0}
-
 	local data = {
-		transform = {
-			s = scale,
-			r = {0, 0, 0, 0},
-			t = pos or {0, 0, 0, 1}
-		},
+		transform = trans,
 		rendermesh = {},
 		material = {
 			ref_path = materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
