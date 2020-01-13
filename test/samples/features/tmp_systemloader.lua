@@ -135,8 +135,8 @@ local function gltf_animation_test()
         policy = {
             "ant.render|render",
             "ant.render|mesh",
-            --"ant.animation|animation",
-            --"ant.animation|skinning",
+            "ant.animation|animation",
+            "ant.animation|skinning",
             "ant.render|shadow_cast",
             "ant.render|name",
         },
@@ -149,26 +149,26 @@ local function gltf_animation_test()
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
             },
-            -- skeleton = {
-            --     ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
-            -- },
-            -- skinning = {},
-            -- animation = {
-            --     anilist = {
-            --         ani1 = {
-            --             ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
-            --             scale = 1,
-            --             looptimes = 0,
-            --         },
-            --     },
-            --     blendtype = 'blend',
-            --     pose = {
-            --         idle = {
-            --             {name="ani1", weight=1},
-            --         },
-            --     },
-            --     birth_pose = "idle",
-            -- },
+            skeleton = {
+                ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
+            },
+            skinning = {},
+            animation = {
+                anilist = {
+                    ani1 = {
+                        ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                },
+                blendtype = 'blend',
+                pose = {
+                    idle = {
+                        {name="ani1", weight=1},
+                    },
+                },
+                birth_pose = "idle",
+            },
             can_render = true,
             can_cast = true,
             name = "gltf animation test",

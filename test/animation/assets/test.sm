@@ -1,25 +1,42 @@
 transmits = {
-	walk = {
-		runfast = {
+	idle = {
+		junmping = {
 			duration = 0.5,
 		},
-		run = {
+		punching = {
+			duration = 0.5,
+		},
+		walking = {
+			duration = 0.5,
+		},
+		running_fast = {
+			duration = 0.5,
+		},
+		running = {
 			duration = 0.5,
 		},
 	},
-	run = {
-		runfast = {
+	walking = {
+		running_fast = {
 			duration = 0.5,
 		},
-		walk = {
+		running = {
 			duration = 0.5,
 		},
 	},
-	runfast = {
-		run = {
+	running = {
+		running_fast = {
 			duration = 0.5,
 		},
-		walk = {
+		walking = {
+			duration = 0.5,
+		},
+	},
+	running_fast = {
+		running = {
+			duration = 0.5,
+		},
+		walking = {
 			duration = 0.5,
 		},
 	}

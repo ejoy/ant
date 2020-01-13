@@ -14,7 +14,7 @@ s.require_component "rendermesh"
 s.require_component "skinning"
 s.require_component "mesh"
 s.require_transform "mesh_skinning"
-s.require_transform "mesh_loader"
+s.require_transform "ant.render|mesh_loader"
 s.require_system "skinning_system"
 
 

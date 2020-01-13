@@ -26,18 +26,17 @@ function m.process(e)
 	local skehandle = asset.get_resource(ske.ref_path).handle
 	local numjoints = #skehandle
 	e.animation.aniresult = ani_module.new_bind_pose(numjoints)
-	for posename, pose in pairs(e.animation.pose) do
-		pose.name = posename
-		pose.weight = nil
-		for _, aniref in ipairs(pose) do
-			local ani = e.animation.anilist[aniref.name]
-			aniref.handle = asset.get_resource(ani.ref_path).handle
-			aniref.sampling_cache = ani_module.new_sampling_cache(numjoints)
-			aniref.start_time = 0
-			aniref.duration = aniref.handle:duration() * 1000. / ani.scale
-			aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
-		end
+	local pose = {}
+	for name, ani in pairs(e.animation.anilist) do
+		local aniref = {}
+		aniref.handle = asset.get_resource(ani.ref_path).handle
+		aniref.sampling_cache = ani_module.new_sampling_cache(numjoints)
+		aniref.start_time = 0
+		aniref.duration = aniref.handle:duration() * 1000. / ani.scale
+		aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
+		pose[name] = {name = name, aniref}
 	end
+	e.animation.pose = pose
 	local pose = e.animation.pose[e.animation.birth_pose]
 	pose.weight = 1
 	e.animation.current_pose = {pose}
@@ -52,7 +51,6 @@ m.require_system "animation_system"
 ecs.component "animation"
 	.anilist "animation_content{}"
 	.pose "pose{}"
-	.blendtype "string" ("blend")
 	.birth_pose "string"
 
 ecs.component_alias("skeleton", "resource")
@@ -77,6 +75,6 @@ function anisystem:sample_animation_pose()
 				end
 			end
 		end
-		ani_module.motion(ske, animation.current_pose, animation.blendtype, animation.aniresult, nil, fix_root)
+		ani_module.motion(ske, animation.current_pose, "blend", animation.aniresult, nil, fix_root)
 	end
 end
