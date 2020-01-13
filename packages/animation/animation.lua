@@ -12,12 +12,6 @@ ecs.component "animation_content"
 	.scale "real" (1)
 	.looptimes "int" (0)
 
-ecs.component "aniref"
-	.name "string"
-	.weight "real"
-
-ecs.component_alias("pose", "aniref[]")
-
 local m = ecs.transform "animation"
 m.input "skeleton"
 m.output "animation"
@@ -50,7 +44,6 @@ m.require_system "animation_system"
 
 ecs.component "animation"
 	.anilist "animation_content{}"
-	.pose "pose{}"
 	.birth_pose "string"
 
 ecs.component_alias("skeleton", "resource")
