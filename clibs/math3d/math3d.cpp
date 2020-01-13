@@ -3230,6 +3230,91 @@ lleaks(lua_State *L) {
 	return 1;
 }
 
+static inline glm::vec4
+transform_dir(lua_State*L, const glm::vec4 &dir, const float* v, int type){
+	switch ( type )
+	{
+	case LINEAR_CONSTANT_IMAT:{
+		const glm::mat4 *m = (const glm::mat4*)v;
+		return *m * dir;
+	}
+	case LINEAR_CONSTANT_EULER:{
+		const glm::quat q(*(glm::vec3*)v);
+		return glm::rotate(q, dir);
+	}
+		break;
+	case LINEAR_CONSTANT_QUAT:
+		return glm::rotate(*(const glm::quat*)v, dir);
+	default:
+		luaL_error(L, "unsupport linear stack type:%d", type);
+		return dir;
+	}
+}
+
+static int
+lforward_dir(lua_State *L){
+	auto LS = getLS(L, 1);
+
+	glm::vec4 forwarddir(0.f, 0.f, 1.f, 0.f);
+	const auto luatype = lua_type(L, 2);
+	switch (luatype)
+	{
+	case LUA_TNUMBER:
+	case LUA_TUSERDATA:{
+		int datatype;
+		const float * v = lastack_value(LS, get_stack_id(L, LS, 2), &datatype);
+		forwarddir = transform_dir(L, forwarddir, v, datatype);
+	}
+		break;
+	case LUA_TTABLE:{
+		const int num = lua_rawlen(L, 2);
+		float v[16];
+		for (int ii = 0; ii < num; ++ii){
+			lua_geti(L, 2, ii+1);
+			v[ii] = lua_tonumber(L, -1);
+			lua_pop(L, 1);
+		}
+
+		switch (num){
+		case 3:
+		case 4:
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_EULER);
+			break;
+		case 16:
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_IMAT);
+			break;
+		default:
+			return luaL_error(L, "too many argument in table, 3/4 for euler, 16 for matrix, num:%d", num);
+		}
+	}
+		break;
+	case LUA_TLIGHTUSERDATA:{
+		if (lua_type(L, 3) != LUA_TSTRING){
+			return luaL_error(L, "light userdata in arg 2 must have data type describe in argument 3, argument 3 need to be:'mat'/'quat'/'euler'");
+		}
+
+		const char* datatype = lua_tostring(L, 3);
+		const float *v = (const float*)lua_touserdata(L, 2);
+		if (strcmp(datatype, "mat") == 0){
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_IMAT);
+		}else if(strcmp(datatype, "quat") == 0){
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_QUAT);
+		}else if(strcmp(datatype, "euler") == 0){
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_EULER);
+		}else {
+			return luaL_error(L, "not support datatype:%s", datatype);
+		}
+	}
+		break;
+	default:
+		return luaL_error(L, "unsupport type:%d", luatype);
+	}
+
+	lastack_pushvec4(LS, &forwarddir.x);
+	pushid(L, pop(L, LS));
+	return 1;
+}
+
 static void
 register_linalg_mt(lua_State *L, int debug_level) {
 	if (luaL_newmetatable(L, LINALG)) {
@@ -3268,6 +3353,7 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "elem_mul", lelem_mul},
 			{ "elem_add", lelem_add},
 			{ "add_translate", ladd_translate},
+			{ "forward_dir", lforward_dir},
 			{ "leaks", lleaks },
 			{ NULL, NULL },
 		};

@@ -205,11 +205,26 @@ local function pbr_test()
 end
 
 local function create_plane_test()
-    return 
-    computil.create_plane_entity(world,
-            mu.srt({50, 1, 50, 0}, {math.rad(10), 0, 0, 0,}),
-            fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
-            {0.8, 0.8, 0.8, 1},
+    local planes = {
+        {
+            transform = mu.srt{50, 1, 50, 1},
+            color = {0.8, 0.8, 0.8, 1},
+            material = fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
+        },
+        {
+            transform = mu.srt({5, 1, 5, 1},
+                                {math.rad(10), 0, 0, 0},
+                                {0, 5, -5, 1}),
+            color = {0.5, 0.5, 0, 1},
+            material = fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+        }
+    }
+
+    for _, p in ipairs(planes) do
+        computil.create_plane_entity(world,
+            p.transform,
+            p.material,
+            p.color,
             "test shadow plane",
             {
                 ["ant.bullet|collider.box"] = {
@@ -227,6 +242,7 @@ local function create_plane_test()
                     debug_mesh_bounding = true,
                 }
             })
+    end
 end
 
 function init_loader:init()
@@ -241,8 +257,8 @@ function init_loader:init()
     frustum.f = 300
     world:pub {"spawn_camera", "test_main_camera", {
         type    = "",
-        eyepos  = {0, 0, -5, 1},
-        viewdir = mc.T_ZAXIS,
+        eyepos  = {0, 5, -10, 1},
+        viewdir = ms(ms:forward_dir({math.rad(30), 0, 0, 0}), "T"),
         updir   = mc.T_YAXIS,
         frustum = frustum,
     }}
