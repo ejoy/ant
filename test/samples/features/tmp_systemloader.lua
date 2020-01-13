@@ -233,7 +233,7 @@ local function create_plane_test()
                             center = {0, 0, 0},
                         },
                         shape = {
-                            size = {0.5, 0.5, 0.5},
+                            size = {0.5, 0, 0.5},
                         }
                     },
                     collider_tag = "",

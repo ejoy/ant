@@ -187,7 +187,7 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
 	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
 	local selectscene = meshscene.scenes[meshscene.sceneidx]
-	selectscene[1].bounding = mathbaselib.new_bounding(ms, {-0.5, -0.5, -0.5}, {0.5, 0.5, 0.5})
+	selectscene[1].bounding = mathbaselib.new_bounding(ms, {-0.5, 0, -0.5}, {0.5, 0, 0.5})
 	return eid
 end
 
