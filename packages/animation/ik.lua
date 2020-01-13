@@ -7,15 +7,15 @@ local ms = mathpkg.stack
 local ik_module = require "hierarchy.ik"
 
 ecs.component "ik"
-	.target "vector"
-	.pole_vector "vector"
-	.mid_axis "vector"
-	.weight "real" (0.0)
-	.soften "real" (0.0)
-	.twist_angle "real" (0.0)
-	.start_joint "int" (-1)
-	.mid_joint "int" (-1)
-	.end_joint "int" (-1)
+	.target 	"vector"{0, 0, 0, 1}
+	.pole_vector"vector"{0, 0, 0, 0}
+	.mid_axis 	"vector"{0, 1, 0, 0}
+	.weight 	"real"	(0.0)
+	.soften 	"real"	(0.0)
+	.twist_angle"real" 	(0.0)
+	.start_joint"string"(-1)
+	.mid_joint 	"string"(-1)
+	.end_joint 	"string"(-1)
 
 local p = ecs.policy "ik"
 p.require_component "ik"
@@ -30,22 +30,22 @@ p.require_system "ik_system"
 local ik_system = ecs.system "ik_system"
 
 local ikcomp_cache = {}
-local function prepare_ik(transform, ikcomp)
+local function prepare_ik(transform, skehandle, ikcomp)
 	local invmat = ms:inverse(ms:srtmat(transform), "P")
 
 	-- ik need all data work in model space
-	ikcomp_cache.target 		= ms(invmat, ikcomp.target, "*m")
-	ikcomp_cache.pole_vector 	= ms(invmat, ikcomp.pole_vector, "*m")
+	ikcomp_cache.target 	= ms(invmat, ikcomp.target, "*m")
+	ikcomp_cache.pole_vector= ms(invmat, ikcomp.pole_vector, "*m")
 
-	ikcomp_cache.mid_axis 		= ms(ikcomp.mid_axis, "m")
+	ikcomp_cache.mid_axis 	= ms(ikcomp.mid_axis, "m")
 
-	ikcomp_cache.weight 		= ikcomp.weight
-	ikcomp_cache.soften 		= ikcomp.soften
-	ikcomp_cache.twist_angle 	= ikcomp.twist_angle
+	ikcomp_cache.weight 	= ikcomp.weight
+	ikcomp_cache.soften 	= ikcomp.soften
+	ikcomp_cache.twist_angle= ikcomp.twist_angle
 
-	ikcomp_cache.start_joint 	= ikcomp.start_joint
-	ikcomp_cache.mid_joint 		= ikcomp.mid_joint
-	ikcomp_cache.end_joint 		= ikcomp.end_joint
+	ikcomp_cache.start_joint= skehandle:joint_index(ikcomp.start_joint)
+	ikcomp_cache.mid_joint 	= skehandle:joint_index(ikcomp.mid_joint)
+	ikcomp_cache.end_joint 	= skehandle:joint_index(ikcomp.end_joint)
 	return ikcomp_cache
 end
 

@@ -181,6 +181,49 @@ local function gltf_animation_test()
     }
 end
 
+local function ik_test()
+    return world:create_entity {
+        policy = {
+            "ant.animation|ik",
+            "ant.render|animation",
+            "ant.serialize|serialize",
+            "ant.render|render",
+            "ant.render|shadow_cast",
+            "ant.render|name",
+        },
+        data = {
+            transform = mu.translate_mat {-5, 0, 0, 1},
+            rendermesh = {},
+            material = {
+                ref_path = fs.path "",
+            },
+            mesh = {
+                ref_path = fs.path "",
+            },
+            skeleton = {
+                ref_path = fs.path "",
+            },
+            pose_result = {},
+            ik = {
+                target = {0, 0, 0, 1},
+                pole_vector = {0, 1, 0, 0},
+                mid_axis = {0, 1, 0, 0},
+                weight = 1.0,
+                soften = 0.5,
+                twist_angle = math.rad(30),
+                start_joint = "",
+                mid_joint = "",
+                end_joint = "",
+            },
+            serialize = serialize.create(),
+            name = "ik_test",
+            can_cast = true,
+            can_render = true,
+        }
+    }
+    
+end
+
 local function pbr_test()
     world:create_entity {
         policy = {
@@ -274,6 +317,9 @@ function init_loader:init()
     ozzmesh_animation_test()
     pbr_test()
     gltf_animation_test()
+
+    --ik_test()
+
     pbrscene.create_scene(world)
 end
 
