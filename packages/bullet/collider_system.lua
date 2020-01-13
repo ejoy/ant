@@ -38,18 +38,28 @@ end
 local char_sys = ecs.system "character_collider_system"
 char_sys.require_system "collider_system"
 
+local character_motion = world:sub {"character_motion"}
+local character_spawn = world:sub {"component_register", "character"}
+
+local function update_collider(eid)
+    local char = world[eid]
+    local collidercomp = char[char.collider_tag]
+    local colliderobj = collidercomp.collider.handle
+    local aabbmin, aabbmax = physicworld:aabb(colliderobj)
+    local center = ms({0.5}, aabbmax, aabbmin, "+*T")
+    local at = ms({center[1], aabbmin[2] - 3, center[3], 1.0}, "P")
+    local hit, result = physicworld:raycast(ms(center, "P"), at)
+    if hit then
+        world:pub {"ray_cast_hitted", eid, result}
+        ms(char.transform.t, result.hit_pt_in_WS, "=")
+    end
+end
+
 function char_sys:update_collider()
-    for _, char_eid in world:each "character" do
-        local char = world[char_eid]
-        local collidercomp = char[char.collider_tag]
-        local colliderobj = collidercomp.collider.handle
-        local aabbmin, aabbmax = physicworld:aabb(colliderobj)
-        local center = ms({0.5}, aabbmax, aabbmin, "+*T")
-        local at = ms({center[1], aabbmin[2] - 3, center[3], 1.0}, "P")
-        local hit, result = physicworld:raycast(ms(center, "P"), at)
-        if hit then
-            world:pub {"ray_cast_hitted", char_eid, result}
-            ms(char.transform.t, result.hit_pt_in_WS, "=")
-        end
+    for _, _, eid in character_spawn:unpack() do
+        update_collider(eid)
+    end
+    for _, eid in character_motion:unpack() do
+        update_collider(eid)
     end
 end
