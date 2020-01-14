@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local timer 	= import_package "ant.timer"
+local timer = world:interface "ant.timer|timer"
 local mathpkg 	= import_package "ant.math"
 local ms 		= mathpkg.stack
 
@@ -13,6 +13,7 @@ local objctrller = require "objcontroller"
 local camera_controller_system = ecs.system "camera_controller"
 
 camera_controller_system.require_system "objcontroller_system"
+camera_controller_system.require_interface "ant.timer|timer"
 
 function camera_controller_system:post_init()
 	local cameracomp = camerautil.main_queue_camera(world)
@@ -32,7 +33,7 @@ function camera_controller_system:post_init()
 
 	local function step(axis, scale)
 		if scale ~= 0 then
-			ms(cameracomp.eyepos, cameracomp.eyepos, axis, {calc_step(speed_persecond, timer.deltatime * 0.005) * scale * 5}, "*+=")
+			ms(cameracomp.eyepos, cameracomp.eyepos, axis, {calc_step(speed_persecond, timer.delta() * 0.005) * scale * 5}, "*+=")
 		end
 	end
 
@@ -57,7 +58,7 @@ function camera_controller_system:post_init()
 			step(yaxis, scale)
 			return "handled"
 		end
-	end)	
+	end)
 
 	objctrller.bind_tigger("rotate", function (event)
 		if not hit.enable then
@@ -82,5 +83,5 @@ function camera_controller_system:post_init()
 			ms(cameracomp.viewdir, q, cameracomp.viewdir, "*n=")
 		end
 		hit[1], hit[2] = event[1], event[2]
-	end)	
+	end)
 end

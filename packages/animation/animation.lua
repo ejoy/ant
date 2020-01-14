@@ -2,19 +2,12 @@ local ecs = ...
 local world = ecs.world
 
 local asset = import_package "ant.asset".mgr
-local timer = import_package "ant.timer"
 local ani_module = require "hierarchy.animation"
 
 ecs.component "animation_content"
 	.ref_path "respath"
 	.scale "real" (1)
 	.looptimes "int" (0)
-
-ecs.component "aniref"
-	.name "string"
-	.weight "real"
-
-ecs.component_alias("pose", "aniref[]")
 
 ecs.component "pose_result"
 
@@ -31,7 +24,6 @@ ap.require_component "skeleton"
 ap.require_component "animation"
 ap.require_component "pose_result"
 ap.require_transform "pose_result"
-
 ap.require_system "animation_system"
 
 local anicomp = ecs.component "animation"
@@ -46,7 +38,7 @@ function anicomp:init()
 		aniref.sampling_cache = ani_module.new_sampling_cache()
 		aniref.start_time = 0
 		aniref.duration = aniref.handle:duration() * 1000. / ani.scale
-		aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
+		aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.duration) or math.maxinteger
 		pose[name] = {name = name, aniref}
 	end
 	self.pose = pose
@@ -59,17 +51,17 @@ end
 ecs.component_alias("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
+anisystem.require_interface "ant.timer|timer"
+
+local timer = world:interface "ant.timer|timer"
 
 function anisystem:sample_animation_pose()
-	local current_time = timer.from_counter(timer.current_counter)
+	local current_time = timer.current()
 	for _, eid in world:each "animation" do
 		local e = world[eid]
-		local ske = asset.get_resource(e.skeleton.ref_path).handle
-		local fix_root <const> = true
-
-		local posresult = e.pose_result
-
 		local animation = e.animation
+		local fix_root <const> = true
+		local ske = asset.get_resource(e.skeleton.ref_path).handle
 		for _, pose in ipairs(animation.current_pose) do
 			for _, aniref in ipairs(pose) do
 				local localtime = current_time - aniref.start_time
@@ -80,6 +72,6 @@ function anisystem:sample_animation_pose()
 				end
 			end
 		end
-		ani_module.motion(ske, animation.current_pose, "blend", posresult.result, nil, fix_root)
+		ani_module.motion(ske, animation.current_pose, "blend", e.pose_result.result, nil, fix_root)
 	end
 end

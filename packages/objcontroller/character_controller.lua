@@ -1,12 +1,14 @@
 local ecs = ...
 local world = ecs.world
 
-local timer = import_package "ant.timer"
 local ms = import_package "ant.math".stack
 local objutil = require "util"
 
+local timer = world:interface "ant.timer|timer"
+
 local cc = ecs.system "character_controller"
 cc.require_system "objcontroller_system"
+cc.require_interface "ant.timer|timer"
 
 
 local objctrller = require "objcontroller"
@@ -19,10 +21,11 @@ function cc:init()
 	}
 
 	local function move(value, x, y, z)
+		local delta = timer.delta()
 		local character --TODO
 		
 		local movespeed = character.character.movespeed
-		local deltatime = timer.deltatime * 0.001 * value
+		local deltatime = delta * 0.001 * value
 
 		local physic_state = character.physic_state
 		local srt = character.transform

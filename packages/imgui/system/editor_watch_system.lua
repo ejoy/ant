@@ -104,7 +104,7 @@ local function compare_values(val1, val2)
 end
 local last_eid = nil
 local last_tbl = nil
-local timer = import_package "ant.timer"
+local timer = world:interface "ant.timer|timer"
 local profile_cache = nil
 local function send_entity(eids,typ)
     local hub = world.args.hub
@@ -116,17 +116,17 @@ local function send_entity(eids,typ)
         log.info_a("send_entity","nothing")
     else
         local setialize_result = {}
-        table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","begin",timer.cur_time()})
+        table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","begin",timer.current()})
         for i,eid in ipairs(eids) do
             if world[eid] then
                 setialize_result[eid] = serialize.entity2tbl(world,eid)
             end
         end
-        table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","end",timer.cur_time()})
+        table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","end",timer.current()})
         if compare_values(last_eid,eids) then
-            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","begin",timer.cur_time()})
+            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","begin",timer.current()})
             local b = compare_values(last_tbl,setialize_result)
-            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","end",timer.cur_time()})
+            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","end",timer.current()})
             if b then
                 return
             end
@@ -425,7 +425,7 @@ function editor_watcher_system:pickup()
     end
 end
 
-local timer = import_package "ant.timer"
+local timer = world:interface "ant.timer|timer"
 
 local entity_delete_mb = world:sub {"entity_removed"}
 local entity_create_mb = world:sub {"entity_created"}

@@ -290,6 +290,13 @@ function world:clear_removed()
 	end
 end
 
+local baselib = require "bgfx.baselib"
+local time_counter = baselib.HP_counter
+local time_freq    = baselib.HP_frequency / 1000
+local function gettime()
+	return time_counter() / time_freq
+end
+
 function world:update_func(what)
 	local list = system.lists(self._systems, what)
 	if not list then
@@ -297,15 +304,14 @@ function world:update_func(what)
 	end
 	local switch = system.list_switch(list)
 	self._switchs[what] = switch
-	local timer = import_package "ant.timer".cur_time
 	return function()
 		switch:update()
 		for i = 1, #list do
 			local v = list[i]
 			local f, proxy, name = v[1], v[2], v[3]
-			self:pub {"system_begin",name,what,timer()}
+			self:pub {"system_begin",name,what,gettime()}
 			f(proxy)
-			self:pub {"system_end",name,what,timer()}
+			self:pub {"system_end",name,what,gettime()}
 		end
 	end
 end

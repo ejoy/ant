@@ -3,13 +3,14 @@ local ecs = ...
 local assetmgr = require "asset"
 
 local platform = require "platform"
-local timer = import_package "ant.timer"
+local timer = world:interface "ant.timer|timer"
 
 local gc = ecs.system "asset_gc"
 gc.require_system "end_frame"
+gc.require_interface "ant.timer|timer"
 
 local expiration<const> = 1000
-local lasttime = timer.cur_time()
+local lasttime
 
 local function need_check()
     local curtime = timer.cur_time()
@@ -21,6 +22,10 @@ end
 
 local function resource_type(reskey)
     return reskey:match "%.([%w_]+)$"
+end
+
+function gc:init()
+    lasttime = timer.current()
 end
 
 function gc:update()
