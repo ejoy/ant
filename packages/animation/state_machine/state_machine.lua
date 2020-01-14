@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
-local timer = import_package "ant.timer"
+local timer = world:interface "ant.timer|timer"
 
 local function get_transmit_merge(e, tt_duration)
 	local timepassed = 0
@@ -35,7 +34,7 @@ local function play_animation(e, name, duration)
 	targetpose.weight = 0
 	current_pose[#current_pose+1] = targetpose
 	e.state_machine.transmit_merge = get_transmit_merge(e, duration * 1000.)
-	local current = timer.from_counter(timer.get_sys_counter())
+	local current = timer.current()
 	for _, aniref in ipairs(targetpose) do
 		aniref.start_time = current
 	end
@@ -44,7 +43,6 @@ end
 local m = ecs.policy "state_machine"
 m.require_component "state_machine"
 m.require_system "state_machine"
-m.require_system 'ant.timer|timesystem'
 
 ecs.component "state_machine_target"
 	.duration "real"
@@ -56,12 +54,14 @@ ecs.component "state_machine"
 -- we should move animation code to animation_system, just keep state change in state_machine
 local sm = ecs.system "state_machine"
 sm.require_system "animation_system"
+sm.require_interface "ant.timer|timer"
 
 function sm:animation_state()
+	local delta = timer.delta()
 	for _, eid in world:each "state_machine" do
 		local e = world[eid]
 		if e.state_machine.transmit_merge then
-			if e.state_machine.transmit_merge(timer.deltatime) then
+			if e.state_machine.transmit_merge(delta) then
 				e.state_machine.transmit_merge = nil
 			end
 		end
@@ -69,6 +69,7 @@ function sm:animation_state()
 end
 
 local m = ecs.interface "animation"
+m.require_interface "ant.timer|timer"
 
 function m.travel(e, name)
 	if e.animation and e.state_machine then

@@ -291,6 +291,16 @@ local function importAll(w, ecs, class, config, loader)
 			error(("invalid interface name: `%s`."):format(name))
 		end
 		tableAt(cut.interface, package)[name] = v
+		if v.require_system then
+			for _, k in ipairs(v.require_system) do
+				importSystem(k)
+			end
+		end
+		if v.require_interface then
+			for _, k in ipairs(v.require_interface) do
+				importInterface(k)
+			end
+		end
 	end
 	resetCurrentPackage()
 	for _, k in ipairs(policies) do
@@ -346,6 +356,7 @@ return function (w, config, loader)
 	}
 	register {
 		type = "interface",
+		setter = { "require_system", "require_interface" },
 	}
 	ecs.component = function (name)
 		return schema:type(getCurrentPackage(), name)

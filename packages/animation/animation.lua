@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local asset = import_package "ant.asset".mgr
-local timer = import_package "ant.timer"
 local ani_module = require "hierarchy.animation"
 
 ecs.component "animation_content"
@@ -52,9 +51,12 @@ end
 ecs.component_alias("skeleton", "resource")
 
 local anisystem = ecs.system "animation_system"
+anisystem.require_interface "ant.timer|timer"
+
+local timer = world:interface "ant.timer|timer"
 
 function anisystem:sample_animation_pose()
-	local current_time = timer.from_counter(timer.current_counter)
+	local current_time = timer.current()
 	for _, eid in world:each "animation" do
 		local e = world[eid]
 		local animation = e.animation

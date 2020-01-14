@@ -285,20 +285,21 @@ end
 
 local sun_update_system = ecs.system "sun_update_system"
 sun_update_system.require_system "procedural_sky_system"
-sun_update_system.require_system "ant.timer|timesystem"
-
-local timer = import_package "ant.timer"
+sun_update_system.require_interface "ant.timer|timer"
 
 local function update_hour(skycomp, deltatime, unit)
 	unit = unit or 24
 	skycomp.which_hour = (skycomp.which_hour + deltatime) % unit
 end
 
+local timer = world:interface "ant.timer|timer"
+
 function sun_update_system:update_sun()
+	local delta = timer.delta()
 	for _, eid in world:each "procedural_sky" do
 		local e = world[eid]
 		local skycomp = e.procedural_sky
-		update_hour(skycomp, timer.deltatime)
+		update_hour(skycomp, delta)
 		calc_sun_direction(skycomp)
 	end
 end

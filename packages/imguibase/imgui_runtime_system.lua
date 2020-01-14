@@ -1,12 +1,15 @@
 local ecs = ...
+local world = ecs.world
+
 local imgui     = require "imgui.ant"
 local renderpkg = import_package "ant.render"
-local timer     = import_package "ant.timer"
 local renderutil= renderpkg.util
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
 local m = ecs.system "imgui_system"
+
+m.require_interface "ant.timer|timer"
 
 function m:post_init()
     local main_viewid = assert(viewidmgr.get "main_view")
@@ -14,13 +17,11 @@ function m:post_init()
     fbmgr.bind(vid, assert(fbmgr.get_fb_idx(main_viewid)))
 end
 
-function m:ui_start()
-    local time = timer.deltatime/1000
-    if time <= 0.0 then
-        time = 1.0/60
-    end
+local timer = world:interface "ant.timer|timer"
 
-    imgui.begin_frame(time)
+function m:ui_start()
+    local delta = timer.delta()
+    imgui.begin_frame(delta * 1000)
 end
 
 function m:ui_end()
