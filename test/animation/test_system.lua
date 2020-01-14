@@ -42,13 +42,14 @@ function m:init()
     local fbsize = world.args.fb_size
     local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
     frustum.f = 300
-    world:pub {"spawn_camera", "main_camera",{
+    local ics = world:interface "ant.camera_controller|camera_spawn"
+    ics.bind("main_queue", ics.spawn("main_camera",{
         type = "",
         eyepos = { 1.6, 1.8,-1.8, 1.0},
         updir = mc.T_YAXIS,
         viewdir = {-0.6,-0.4, 0.7, 0.0},
         frustum = frustum,
-    }}
+    }))
     lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     eid = create_animation_test()

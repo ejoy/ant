@@ -9,7 +9,6 @@ local vp_detect = ecs.system "viewport_detect_system"
 vp_detect.require_system "ant.scene|primitive_filter_system"
 
 local eventResize = world:sub {"resize"}
-local camera_spawned_mb = world:sub {"camera_spawned", }
 
 local function resize_framebuffer(w, h, fbidx, viewid)
 	if fbidx then
@@ -52,12 +51,6 @@ function vp_detect:data_changed()
 	if mq then
 		for _, w, h in eventResize:unpack() do
 			update_camera_viewrect(mq, w, h)
-		end
-
-		for _, cameraeid in camera_spawned_mb:unpack() do
-			if mq.camera_eid == cameraeid then
-				update_camera_viewrect(mq)
-			end
 		end
 	end
 end

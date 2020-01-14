@@ -1,92 +1,90 @@
 local ecs = ...
 local world = ecs.world
 
-local camerasys = ecs.system "camera_system"
-local sc_mb = world:sub {"spawn_camera"}
-
 local renderpkg = import_package "ant.render"
-local camerautil= renderpkg.camera
 local default_comp=renderpkg.default
 
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local ms = mathpkg.stack
 
+local icamera_spawn = ecs.interface "camera_spawn"
 local default_frustum = default_comp.frustum()
 
-function camerasys:spawn_camera()
-    local mq = world:singleton_entity "main_queue"
-    for _, name, info in sc_mb:unpack() do
-        local cameraeid = world:create_entity {
-            policy = {
-                "ant.render|camera",
-                "ant.render|name",
+function icamera_spawn.spawn(name, info)
+    return world:create_entity {
+        policy = {
+            "ant.render|camera",
+            "ant.render|name",
+        },
+        data = {
+            camera = {
+                type    = info.type     or "",
+                eyepos  = info.eyepos   or mc.T_ZERO_PT,
+                viewdir = info.viewdir  or mc.T_ZAXIS,
+                updir   = info.updir    or mc.T_NXAXIS,
+                frustum = info.frustum  or default_frustum,
             },
-            data = {
-                camera = {
-                    type    = info.type     or "",
-                    eyepos  = info.eyepos   or mc.T_ZERO_PT,
-                    viewdir = info.viewdir  or mc.T_ZAXIS,
-                    updir   = info.updir    or mc.T_NXAXIS,
-                    frustum = info.frustum  or default_frustum,
-                },
-                name = name,
-            }
+            name = name,
         }
-        if mq.camera_eid == 0 then
-            mq.camera_eid = cameraeid
-        end
-        world:pub {"camera_spawned", cameraeid}
-    end
+    }
 end
 
-
-local bind_camera_mb = world:sub {"bind_camera"}
-
-function camerasys:bind_camera()
-    for _, camera_eid, dest in bind_camera_mb:unpack() do
-        if dest == "main_queue" then
-            local mq = world:singleton_entity "main_queue"
-            mq.camera_eid = camera_eid
-        elseif dest == nil or dest == "editor.image" then
-            assert("need implement")
-        end
+function icamera_spawn.bind(which_queue, cameraeid)
+    local q = world:singleton_entity(which_queue)
+    if q == nil then
+        error(string.format("not find queue:%s", which_queue))
     end
+    q.camera_eid = cameraeid
 end
 
-local motion_camera_mb = world:sub {"motion_camera"}
-
-function camerasys:motion_camera()
-    for _, motiontype, camera_eid, value in motion_camera_mb:unpack() do
-        local camera = world[camera_eid].camera
-
-        if motiontype == "target" then
-            local lock_target = camera.lock_target
-            if lock_target == nil then
-                lock_target = {}
-                camera.lock_target = lock_target
-            end
-
-            lock_target.type = value.type
-            local eid = value.eid
-            if world[eid].transform == nil then
-                error(string.format("camera lock target entity must have transform component"));
-            end
-            lock_target.target = value.eid
-            local offset = value.offset or mc.ZERO
-            lock_target.offset = ms:ref "vector"(offset)
-        elseif motiontype == "move" then
-            ms(camera.eyepos, camera.eyepos, value, "+=")
-        elseif motiontype == "rotate" then
-            ms(camera.viewdir, 
-                camera.viewdir, "D",    -- rotation = to_rotation(viewdir)
-                value, "+dn=")          -- rotation = rotation + value
-                                        -- viewdir = normalize(to_viewdir(rotation))
-        end
+local imotion_camera = ecs.interface "motion_camera"
+function imotion_camera.target(cameraeid, locktype, lock_eid, offset)
+    local ce = world[cameraeid]
+    if ce == nil then
+        error(string.format("invalid camera:%d", cameraeid))
     end
+
+    local camera = ce.camera
+    local lock_target = camera.lock_target
+    if lock_target == nil then
+        lock_target = {}
+        camera.lock_target = lock_target
+    end
+
+    lock_target.type = locktype
+    
+    if world[lock_eid].transform == nil then
+        error(string.format("camera lock target entity must have transform component"));
+    end
+    lock_target.target = lock_eid
+    lock_target.offset = ms:ref "vector"(offset or mc.ZERO)
 end
 
-function camerasys:camera_lock_target()
+function imotion_camera.move(cameraeid, delta)
+    local ce = world[cameraeid]
+    if ce == nil then
+        error(string.format("invalid camera:%d", cameraeid))
+    end
+    local camera = ce.camera
+    ms(camera.eyepos, camera.eyepos, delta, "+=")
+end
+
+function imotion_camera.rotate(cameraeid, delta)
+    local ce = world[cameraeid]
+    if ce == nil then
+        error(string.format("invalid camera:%d", cameraeid))
+    end
+    local camera = ce.camera
+    ms(camera.viewdir, 
+    camera.viewdir, "D",    -- rotation = to_rotation(viewdir)
+    delta, "+dn=")          -- rotation = rotation + value
+                            -- viewdir = normalize(to_viewdir(rotation))
+end
+
+-- TODO: will move to another stage, this lock can do with any entity with transform component
+local camerasys = ecs.system "camera_system"
+function camerasys:lock_target()
     for _, eid in world:each "camera" do
         local camera = world[eid].camera
         local lock_target = camera.lock_target

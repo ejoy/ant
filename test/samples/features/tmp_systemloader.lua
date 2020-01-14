@@ -35,6 +35,8 @@ init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
 init_loader.require_system "ant.render|draw_raycast_point"
 
+init_loader.require_interface "ant.camera_controller|camera_spawn"
+
 local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
 char_controller_policy.require_policy "ant.bullet|collider.character"
@@ -290,6 +292,7 @@ local function create_plane_test()
     end
 end
 
+local ics = world:interface "ant.camera_controller|camera_spawn"
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
@@ -300,13 +303,13 @@ function init_loader:init()
     local fbsize = world.args.fb_size
     local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
     frustum.f = 300
-    world:pub {"spawn_camera", "test_main_camera", {
+    ics.bind("main_queue", ics.spawn("test_main_camera", {
         type    = "",
         eyepos  = {0, 5, -10, 1},
         viewdir = ms(ms:forward_dir({math.rad(30), 0, 0, 0}), "T"),
         updir   = mc.T_YAXIS,
         frustum = frustum,
-    }}
+    }))
 
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
     computil.create_bounding_drawer(world)
@@ -326,6 +329,8 @@ end
 local imgui      = require "imgui"
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
+local icamera_motion = world:interface "ant.camera_controller|camera_motion"
+
 function init_loader:ui_update()
     local mq = world:singleton_entity "main_queue"
     local cameraeid = mq.camera_eid
@@ -333,11 +338,11 @@ function init_loader:ui_update()
     local widget = imgui.widget
     imgui.windows.Begin("Test", wndflags)
     if widget.Button "rotate" then
-        world:pub {"motion_camera", "rotate", cameraeid, {math.rad(10), 0, 0}}
+        icamera_motion.rotate(cameraeid, {math.rad(10), 0, 0})
     end
 
     if widget.Button "move" then
-        world:pub {"motion_camera", "move", cameraeid, {1, 0, 0}}
+        icamera_motion.move(cameraeid, {1, 0, 0})
     end
 
     local function find_entity(name, whichtype)
@@ -351,7 +356,7 @@ function init_loader:ui_update()
     if widget.Button "lock_target_for_move" then
         local foundeid = find_entity("animation_sample", "character")
         if foundeid then
-            world:pub {"motion_camera", "target", cameraeid, {type = "move", eid = foundeid, offset = {0, 1, 0}}}
+            icamera_motion.target(cameraeid, "move", foundeid, {0, 1, 0})
         else
             print "not found animation_sample"
         end
@@ -361,7 +366,7 @@ function init_loader:ui_update()
     if widget.Button "lock_target_for_rotate" then
         local foundeid = find_entity("animation_sample", "character")
         if foundeid then
-            world:pub {"motion_camera", "target", cameraeid, {type = "rotate", eid = foundeid}}
+            icamera_motion.target(cameraeid, "rotate", foundeid)
         else
             print "not found gltf entity"
         end

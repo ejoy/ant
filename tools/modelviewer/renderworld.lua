@@ -65,14 +65,15 @@ end
 local function create_camera()
     local fbsize = world.args.fb_size
     local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
-    frustum.f = 300
-    world:pub {"spawn_camera", "test_main_camera", {
+	frustum.f = 300
+	local ics = world:interface "ant.camera_controller|camera_spawn"
+	ics.bind("main_queue", ics.spawn("test_main_camera", {
         type    = "",
         eyepos  = {0, 3, -10, 1},
         viewdir = mc.T_ZAXIS,
         updir   = mc.T_YAXIS,
         frustum = frustum,
-    }}
+    }))
 end
 
 function m:init()

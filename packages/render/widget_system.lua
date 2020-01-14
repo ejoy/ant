@@ -147,16 +147,16 @@ draw_raycast_point.require_system "ant.scene|primitive_filter_system"
 draw_raycast_point.require_system "ant.bullet|character_collider_system"
 
 function draw_raycast_point:widget()
-    local vb, ib = {"fffd", }, {}
-    for hitted in ray_cast_hitted:each() do
-        local result = hitted[3]
-        local pt = result.hit_pt_in_WS
+    -- local vb, ib = {"fffd", }, {}
+    -- for hitted in ray_cast_hitted:each() do
+    --     local result = hitted[3]
+    --     local pt = result.hit_pt_in_WS
 
-		local len = 0.5
-		local min = {-len, -len, -len,}
-		local max = {len, len, len}
-		min = ms(min, pt, "T")
-		max = ms(max, pt, "T")
-        add_aabb_bounding({min=min, max=max}, vb, ib)
-	end
+	-- 	local len = 0.5
+	-- 	local min = {-len, -len, -len,}
+	-- 	local max = {len, len, len}
+	-- 	min = ms(min, pt, "T")
+	-- 	max = ms(max, pt, "T")
+    --     add_aabb_bounding({min=min, max=max}, vb, ib)
+	-- end
 end
