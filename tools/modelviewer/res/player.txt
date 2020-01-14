@@ -14,7 +14,7 @@ animation:
       ref_path: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
       scale: 1
       looptimes: 0
-    junmping:
+    jumping:
       ref_path: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
       scale: 1
       looptimes: 0
@@ -61,9 +61,10 @@ state_machine:
     idle:
       walking:
         duration: 0.5
-      junmping:
+    walking:
+      idle:
         duration: 0.5
 transform:
   s: {1,1,1,0}
-  r: {0,2.356194496154785,0,0}
-  t: {0,0,0,1}
+  r: {0,0,0,0}
+  t: {0,0,-5,1}

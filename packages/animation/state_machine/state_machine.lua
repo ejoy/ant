@@ -50,8 +50,6 @@ ecs.component_alias("state_machine_node", "state_machine_target{}")
 ecs.component "state_machine"
 	.transmits "state_machine_node{}"
 
--- state_machine should only produce animation state, and not do any animation relative work
--- we should move animation code to animation_system, just keep state change in state_machine
 local sm = ecs.system "state_machine"
 sm.require_system "animation_system"
 sm.require_interface "ant.timer|timer"
@@ -71,9 +69,12 @@ end
 local m = ecs.interface "animation"
 m.require_interface "ant.timer|timer"
 
-function m.travel(e, name)
-	if e.animation and e.state_machine then
+function m.set_state(e, name)
+	if e.animation and e.animation.pose[name] and e.state_machine then
 		local current_pose = e.animation.current_pose
+		if current_pose.name == name then
+			return
+		end
 		local statecfg = e.state_machine
 		local traget_transmits = statecfg.transmits[current_pose[#current_pose].name]
 		if traget_transmits and traget_transmits[name] then
@@ -85,6 +86,10 @@ end
 
 function m.play(e, name, time)
 	if e.animation and e.animation.pose[name]  then
+		local current_pose = e.animation.current_pose
+		if current_pose.name == name then
+			return
+		end
 		play_animation(e, name, time)
 		return true
 	end

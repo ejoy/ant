@@ -102,7 +102,7 @@ function m:ui_update()
         for name in sortpairs(e.animation.pose) do
             if widget.Button(name) then
                 local animation = world:interface "ant.animation|animation"
-                if not animation.travel(e, name) then
+                if not animation.set_state(e, name) then
                     animation.play(e, name, 0.5)
                 end
             end

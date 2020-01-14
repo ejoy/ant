@@ -9,6 +9,7 @@ local fs = require "filesystem"
 local skyutil = skypkg.util
 local mu = mathpkg.util
 local mc = mathpkg.constant
+local ms = mathpkg.stack
 
 local lu = renderpkg.light
 local cu = renderpkg.components
@@ -45,6 +46,8 @@ local function create_camera()
     }}
 end
 
+local player
+
 function m:init()
 	create_camera()
 	create_light()
@@ -65,5 +68,31 @@ function m:init()
 	end
 	world:create_entity(load_file 'res/door.txt')
 	world:create_entity(load_file 'res/fence.txt')
-	world:create_entity(load_file 'res/player.txt')
+	local eid = world:create_entity(load_file 'res/player.txt')
+	player = world[eid]
+end
+
+m.require_interface "ant.animation|animation"
+m.require_interface "ant.timer|timer"
+
+local animation = world:interface "ant.animation|animation"
+local eventKeyboard = world:sub {"keyboard"}
+local walking = false
+function m:ui_update()
+	for _,what, press in eventKeyboard:unpack() do
+		if what == "UP" then
+			if press == 1 then
+				walking = true
+				animation.set_state(player, "walking")
+			elseif press == 0 then
+				walking = false
+				animation.set_state(player, "idle")
+			end
+		end
+	end
+	if walking then
+		local delta = world:interface "ant.timer|timer".delta() / 1000
+		local srt = player.transform
+		ms(srt.t, srt.t, {2*delta}, srt.r,"d*+=")
+	end
 end

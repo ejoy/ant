@@ -38,7 +38,7 @@ function anicomp:init()
 		aniref.sampling_cache = ani_module.new_sampling_cache()
 		aniref.start_time = 0
 		aniref.duration = aniref.handle:duration() * 1000. / ani.scale
-		aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.durations) or math.maxinteger
+		aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.duration) or math.maxinteger
 		pose[name] = {name = name, aniref}
 	end
 	self.pose = pose
