@@ -84,24 +84,49 @@ end
 m.require_interface "ant.animation|animation"
 m.require_interface "ant.timer|timer"
 
+local renderpkg = import_package "ant.render"
+local camerautil= renderpkg.camera
+
 local animation = world:interface "ant.animation|animation"
 local eventKeyboard = world:sub {"keyboard"}
-local walking = false
+local PRESS <const> = {[0]=-1,1,0}
+local DIR_NULL      <const> = 5
+local cur_direction = DIR_NULL
+local RADIAN <const> = {
+	math.rad(225), --SOUTHWEST
+	math.rad(270), --WEST
+	math.rad(315), --NORTHWEST
+	math.rad(180), --SOUTH
+	math.rad(  0), --NULL
+	math.rad(  0), --NORTH
+	math.rad(135), --SOUTHEAST
+	math.rad( 90), --EAST
+	math.rad( 45), --NORTHEAST
+}
+
 function m:ui_update()
 	for _,what, press in eventKeyboard:unpack() do
+		local v = PRESS[press]
 		if what == "UP" then
-			if press == 1 then
-				walking = true
-				animation.set_state(player, "walking")
-			elseif press == 0 then
-				walking = false
-				animation.set_state(player, "idle")
-			end
+			cur_direction = cur_direction + v
+		elseif what == "DOWN" then
+			cur_direction = cur_direction - v
+		elseif what == "LEFT" then
+			cur_direction = cur_direction - 3*v
+		elseif what == "RIGHT" then
+			cur_direction = cur_direction + 3*v
 		end
 	end
-	if walking then
-		local delta = world:interface "ant.timer|timer".delta() / 1000
-		local srt = player.transform
-		ms(srt.t, srt.t, {2*delta}, srt.r,"d*+=")
+	if cur_direction == DIR_NULL then
+		animation.set_state(player, "idle")
+		return
 	end
+	local camera = camerautil.main_queue_camera(world)
+	local viewdir = ms(camera.viewdir, "T")
+	local radian = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
+	animation.set_state(player, "walking")
+	local delta = world:interface "ant.timer|timer".delta() / 1000
+	local srt = player.transform
+	ms(srt.r, {type="e",0,radian,0}, "=")
+	ms(srt.t, srt.t, {2*delta}, srt.r,"d*+=")
 end
