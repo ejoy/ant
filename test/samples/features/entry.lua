@@ -78,8 +78,8 @@ runtime.start {
 				"ui_update",
 				"ui_end",
 			},
+			"end_frame",
+			"final",
 		},
-		"end_frame",
-		"final",
 	}
 }

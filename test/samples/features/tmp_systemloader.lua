@@ -35,7 +35,8 @@ init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
 init_loader.require_system "ant.render|draw_raycast_point"
 
-init_loader.require_interface "ant.camera_controller|camera_spawn"
+init_loader.require_interface "ant.render|camera_spawn"
+init_loader.require_interface "ant.camera_controller|camera_motion"
 
 local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
@@ -292,7 +293,7 @@ local function create_plane_test()
     end
 end
 
-local ics = world:interface "ant.camera_controller|camera_spawn"
+local ics = world:interface "ant.render|camera_spawn"
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
