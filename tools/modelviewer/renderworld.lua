@@ -33,6 +33,7 @@ m.require_system "ant.imguibase|imgui_system"
 m.require_interface "ant.render|camera_spawn"
 
 local ics = world:interface "ant.render|camera_spawn"
+local cameraeid
 
 local function create_light()
 	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
@@ -43,13 +44,14 @@ local function create_camera()
     local fbsize = world.args.fb_size
     local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
 	frustum.f = 300
-	ics.bind("main_queue", ics.spawn("test_main_camera", {
+	cameraeid = ics.spawn("test_main_camera", {
         type    = "",
         eyepos  = {0, 3, -10, 1},
         viewdir = mc.T_ZAXIS,
         updir   = mc.T_YAXIS,
         frustum = frustum,
-    }))
+    })
+	ics.bind("main_queue", cameraeid)
 end
 
 function m:post_init()
@@ -83,15 +85,18 @@ end
 
 m.require_interface "ant.animation|animation"
 m.require_interface "ant.timer|timer"
-
-local renderpkg = import_package "ant.render"
-local camerautil= renderpkg.camera
+m.require_interface "ant.camera_controller|camera_motion"
 
 local animation = world:interface "ant.animation|animation"
+local timer = world:interface "ant.timer|timer"
+local camera_motion = world:interface "ant.camera_controller|camera_motion"
+
 local eventKeyboard = world:sub {"keyboard"}
+local eventMouse = world:sub {"mouse","LEFT","DOWN"}
+local eventResize = world:sub {"resize"}
+
 local PRESS <const> = {[0]=-1,1,0}
 local DIR_NULL      <const> = 5
-local cur_direction = DIR_NULL
 local RADIAN <const> = {
 	math.rad(225), --SOUTHWEST
 	math.rad(270), --WEST
@@ -104,7 +109,16 @@ local RADIAN <const> = {
 	math.rad( 45), --NORTHEAST
 }
 
+local cur_direction = DIR_NULL
+local screensize = {w=0,h=0}
+local mouse = {x=0,y=0}
+
 function m:ui_update()
+	local walking
+	for _,w, h in eventResize:unpack() do
+		screensize.w = w
+		screensize.h = h
+	end
 	for _,what, press in eventKeyboard:unpack() do
 		local v = PRESS[press]
 		if what == "UP" then
@@ -117,16 +131,29 @@ function m:ui_update()
 			cur_direction = cur_direction + 3*v
 		end
 	end
-	if cur_direction == DIR_NULL then
+	for _,_,_,x,y in eventMouse:unpack() do
+		mouse.x = x
+		mouse.y = y
+		local res = camera_motion.ray(cameraeid, mouse, screensize)
+		if res.dir[2] ~= 0 then
+			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
+			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
+			walking = math.atan(x0, z0)
+		end
+	end
+	if not walking and cur_direction ~= DIR_NULL then
+		local camera = world[cameraeid].camera
+		local viewdir = ms(camera.viewdir, "T")
+		walking = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
+	end
+	if not walking then
 		animation.set_state(player, "idle")
 		return
+	else
+		animation.set_state(player, "walking")
 	end
-	local camera = camerautil.main_queue_camera(world)
-	local viewdir = ms(camera.viewdir, "T")
-	local radian = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
-	animation.set_state(player, "walking")
-	local delta = world:interface "ant.timer|timer".delta() / 1000
+	local delta = timer.delta() / 1000
 	local srt = player.transform
-	ms(srt.r, {type="e",0,radian,0}, "=")
+	ms(srt.r, {type="e",0,walking,0}, "=")
 	ms(srt.t, srt.t, {2*delta}, srt.r,"d*+=")
 end
