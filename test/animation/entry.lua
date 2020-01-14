@@ -54,7 +54,7 @@ runtime.start {
 				}
 			},
 			"camera_control",
-			"camera_lock_target",
+			"lock_target",
 			"pickup",
 			{ name = "ui",
 				"ui_start",

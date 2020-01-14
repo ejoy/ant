@@ -2,7 +2,7 @@ local window = require "window"
 local bgfx = require "bgfx"
 local platform = require "platform"
 local renderpkg = import_package "ant.render"
-local hw = renderpkg.hardware_interface
+local hw = renderpkg.hwi
 local viewidmgr = renderpkg.viewidmgr
 
 local fs = require "filesystem"

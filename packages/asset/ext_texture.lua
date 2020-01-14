@@ -3,7 +3,7 @@ local assetutil= require "util"
 
 local renderpkg = import_package "ant.render"
 local ru 		= renderpkg.util
-local rhwi 		= renderpkg.hardware_interface
+local rhwi 		= renderpkg.hwi
 
 local bgfx 		= require "bgfx"
 local platform 	= require "platform"

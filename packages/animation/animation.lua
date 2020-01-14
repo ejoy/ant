@@ -36,8 +36,6 @@ ap.require_system "animation_system"
 
 local anicomp = ecs.component "animation"
 	.anilist "animation_content{}"
-	.pose "pose{}"
-	.blendtype "string" ("blend")
 	.birth_pose "string"
 
 function anicomp:init()

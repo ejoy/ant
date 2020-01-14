@@ -4,7 +4,7 @@ local bgfx      = require "bgfx"
 local platform  = require "platform"
 local fs        = require "filesystem"
 local renderpkg = import_package "ant.render"
-local rhwi      = renderpkg.hardware_interface
+local rhwi      = renderpkg.hwi
 local viewidmgr = renderpkg.viewidmgr
 
 local assetpkg  = import_package "ant.asset"

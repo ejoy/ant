@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local ms = import_package "ant.math".stack
-local rhwi = import_package "ant.render".hardware_interface
+local rhwi = import_package "ant.render".hwi
 local camerautil = import_package "ant.render".camera
 
 local camera_controller_system = ecs.system "camera_controller2"

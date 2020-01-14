@@ -5,6 +5,9 @@ local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 local mc = mathpkg.constant
 
+local renderpkg = import_package "ant.render"
+local hwi = renderpkg.hwi
+
 local icamera_moition = ecs.interface "camera_motion"
 function icamera_moition.target(cameraeid, locktype, lock_eid, offset)
     local ce = world[cameraeid]
@@ -48,8 +51,6 @@ function icamera_moition.rotate(cameraeid, delta)
     delta, "+dn=")          -- rotation = rotation + value
                             -- viewdir = normalize(to_viewdir(rotation))
 end
-
-local hwi = require "hardware_interface"
 
 local function to_ndc(pt2d, screensize)
     local ndcnear = hwi.get_caps().homogeneousDepth and -1 or 0

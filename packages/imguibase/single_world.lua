@@ -3,7 +3,7 @@ local inputmgr = require "inputmgr"
 local keymap = require "keymap"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
-local rhwi = renderpkg.hardware_interface
+local rhwi = renderpkg.hwi
 
 local single_world = {}
 

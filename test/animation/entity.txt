@@ -53,6 +53,7 @@ name: animation_sample
 rendermesh:
   lodidx: 1
 serialize: 5e1c39ad369fa96c5bd44fc5
+pose_result: {}
 skeleton:
   ref_path: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
 skinning: {}

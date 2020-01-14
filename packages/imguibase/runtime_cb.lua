@@ -8,7 +8,7 @@ local imgui = require "imgui.ant"
 local platform = require "platform"
 
 local viewidmgr = renderpkg.viewidmgr
-local rhwi = renderpkg.hardware_interface
+local rhwi = renderpkg.hwi
 local font = imgui.font
 local Font = platform.font
 local imguiIO = imgui.IO
