@@ -5,7 +5,6 @@ local camerasys = ecs.system "camera_system"
 local sc_mb = world:sub {"spawn_camera"}
 
 local renderpkg = import_package "ant.render"
-local camerautil= renderpkg.camera
 local default_comp=renderpkg.default
 
 local mathpkg = import_package "ant.math"
