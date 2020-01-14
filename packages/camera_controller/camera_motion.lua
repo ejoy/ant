@@ -48,3 +48,41 @@ function icamera_moition.rotate(cameraeid, delta)
     delta, "+dn=")          -- rotation = rotation + value
                             -- viewdir = normalize(to_viewdir(rotation))
 end
+
+local hwi = require "hardware_interface"
+
+local function to_ndc(pt2d, screensize)
+    local ndcnear = hwi.get_caps().homogeneousDepth and -1 or 0
+    local screen_y = pt2d.y / screensize.h
+    if hwi.get_caps().originBottomLeft then
+        screen_y = 1 - screen_y
+    end
+
+    return {
+        (pt2d.x / screensize.w) * 2 - 1,
+        (screen_y) * 2 - 1,
+        ndcnear,
+    }
+end
+
+function icamera_moition.ray(cameraeid, pt2d, screensize)
+    local ce = world[cameraeid]
+    if ce == nil then
+        error(string.format("invalid camera:%d", cameraeid))
+    end
+
+    screensize = screensize or world.args.fb_size
+
+    local ndc = to_ndc(pt2d, screensize)
+
+    local camera = ce.camera
+    local _, _, viewproj = ms:viewproj(camera, camera.frustum, true)
+
+    local ptWS = ms(viewproj, "i", ndc, "*T")
+    local viewdir = camera.viewdir
+
+    return {
+        origin = ptWS,
+        dir = ms(viewdir, "T")
+    }
+end
