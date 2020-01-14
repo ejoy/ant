@@ -14,6 +14,7 @@ local m = ecs.system 'init_loader'
 
 m.require_system "ant.imguibase|imgui_system"
 m.require_system "ant.camera_controller|camera_system"
+m.require_interface "ant.animation|animation"
 
 local function load_file(file)
     local f = assert(fs.open(fs.path(file), 'r'))
@@ -95,11 +96,15 @@ end
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
 function m:ui_update()
+    local e = world[eid]
     local widget = imgui.widget
     for _ in imgui_windows("Test", wndflags) do
-        for name in sortpairs(world[eid].animation.pose) do
+        for name in sortpairs(e.animation.pose) do
             if widget.Button(name) then
-                world[eid].state_machine.target = name
+                local animation = world:interface "ant.animation|animation"
+                if not animation.travel(e, name) then
+                    animation.play(e, name, 0.5)
+                end
             end
         end
     end

@@ -1,0 +1,21 @@
+---------
+ant.render|mesh
+ant.render|name
+ant.render|render
+ant.render|shadow_cast
+ant.serialize|serialize
+---------
+can_cast: true
+can_render: true
+material:
+  ref_path: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
+mesh:
+  ref_path: /pkg/ant.resources/depiction/PVPScene/campsite-door.mesh
+name: door
+rendermesh:
+  lodidx: 1
+serialize: 5e1d264e369fa92007d55026
+transform:
+  s: {0.4,0.4,0.4,0}
+  r: {0,0,0,0}
+  t: {0,0,0,1}

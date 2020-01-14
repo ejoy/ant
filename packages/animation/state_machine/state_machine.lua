@@ -1,9 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
-
 local timer = import_package "ant.timer"
 
 local function get_transmit_merge(e, tt_duration)
@@ -68,17 +65,26 @@ function sm:animation_state()
 				e.state_machine.transmit_merge = nil
 			end
 		end
-		local newtarget = e.state_machine.target
-		if newtarget then
-			local current_pose = e.animation.current_pose
-			local statecfg = e.state_machine
-			local traget_transmits = statecfg.transmits[current_pose[#current_pose].name]
-			if traget_transmits and traget_transmits[newtarget] then
-				play_animation(e, newtarget, traget_transmits[newtarget].duration)
-			else
-				play_animation(e, newtarget, 0)
-			end
-			e.state_machine.target = nil
+	end
+end
+
+local m = ecs.interface "animation"
+
+function m.travel(e, name)
+	if e.animation and e.state_machine then
+		local current_pose = e.animation.current_pose
+		local statecfg = e.state_machine
+		local traget_transmits = statecfg.transmits[current_pose[#current_pose].name]
+		if traget_transmits and traget_transmits[name] then
+			play_animation(e, name, traget_transmits[name].duration)
+			return true
 		end
+	end
+end
+
+function m.play(e, name, time)
+	if e.animation and e.animation.pose[name]  then
+		play_animation(e, name, time)
+		return true
 	end
 end

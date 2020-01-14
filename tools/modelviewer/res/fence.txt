@@ -1,0 +1,21 @@
+---------
+ant.render|mesh
+ant.render|name
+ant.render|render
+ant.render|shadow_cast
+ant.serialize|serialize
+---------
+can_cast: true
+can_render: true
+material:
+  ref_path: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
+mesh:
+  ref_path: /pkg/ant.resources/depiction/PVPScene/woodother-34.mesh
+name: door
+rendermesh:
+  lodidx: 1
+serialize: 5e1d2628369fa9fc11d5504d
+transform:
+  s: {1,1,1,0}
+  r: {0,0,0,0}
+  t: {5,0,-5,0}
