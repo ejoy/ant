@@ -301,17 +301,6 @@ function init_loader:init()
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
-    local fbsize = world.args.fb_size
-    local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
-    frustum.f = 300
-    ics.bind("main_queue", ics.spawn("test_main_camera", {
-        type    = "",
-        eyepos  = {0, 5, -10, 1},
-        viewdir = ms(ms:forward_dir({math.rad(30), 0, 0, 0}), "T"),
-        updir   = mc.T_YAXIS,
-        frustum = frustum,
-    }))
-
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
     computil.create_bounding_drawer(world)
 
@@ -325,6 +314,23 @@ function init_loader:init()
     --ik_test()
 
     pbrscene.create_scene(world)
+end
+
+local function create_camera()
+    local fbsize = world.args.fb_size
+    local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
+    frustum.f = 300
+    ics.bind("main_queue", ics.spawn("test_main_camera", {
+        type    = "",
+        eyepos  = {0, 5, -10, 1},
+        viewdir = ms(ms:forward_dir({math.rad(30), 0, 0, 0}), "T"),
+        updir   = mc.T_YAXIS,
+        frustum = frustum,
+    }))
+end
+
+function init_loader:post_init()
+    create_camera()
 end
 
 local imgui      = require "imgui"

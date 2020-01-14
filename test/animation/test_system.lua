@@ -40,7 +40,7 @@ end
 
 local eid
 
-function m:init()
+local function create_camera()
     local fbsize = world.args.fb_size
     local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
     frustum.f = 300
@@ -51,12 +51,17 @@ function m:init()
         viewdir = {-0.6,-0.4, 0.7, 0.0},
         frustum = frustum,
     }))
+end
+
+function m:init()
     lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     eid = create_animation_test()
 end
 
 function m:post_init()
+    create_camera()
+    
     local e = world:singleton_entity "main_queue"
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end

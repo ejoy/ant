@@ -32,7 +32,9 @@ m.require_policy "ant.render|light.ambient"
 m.require_system "ant.sky|procedural_sky_system"
 
 m.require_system "ant.imguibase|imgui_system"
-m.require_system "ant.camera_controller|camera_system"
+m.require_interface "ant.render|camera_spawn"
+
+local ics = world:interface "ant.render|camera_spawn"
 
 
 local function create_light()
@@ -66,7 +68,6 @@ local function create_camera()
     local fbsize = world.args.fb_size
     local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
 	frustum.f = 300
-	local ics = world:interface "ant.camera_controller|camera_spawn"
 	ics.bind("main_queue", ics.spawn("test_main_camera", {
         type    = "",
         eyepos  = {0, 3, -10, 1},
@@ -76,8 +77,12 @@ local function create_camera()
     }))
 end
 
-function m:init()
+function m:post_init()
 	create_camera()
+end
+
+function m:init()
+	
 	create_light()
 	
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
