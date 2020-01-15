@@ -73,13 +73,14 @@ function icamera_moition.ray(cameraeid, pt2d, screensize)
     screensize = screensize or world.args.fb_size
 
     local ndc2d = to_ndc(pt2d, screensize)
-    local ndc_near = {ndc2d[1], ndc2d[2], hwi.get_caps().homogeneousDepth and -1 or 0}
-    local ndc_far = {ndc2d[1], ndc2d[2], 1}
+    local ndc_near = {ndc2d[1], ndc2d[2], hwi.get_caps().homogeneousDepth and -1 or 0, 1}
+    local ndc_far = {ndc2d[1], ndc2d[2], 1, 1}
 
     local camera = ce.camera
     local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
-    local pt_near_WS = ms(viewproj, "i", ndc_near, "*P")
-    local pt_far_WS = ms(viewproj, "i", ndc_far, "*P")
+    local invviewproj = ms(viewproj, "iP")
+    local pt_near_WS = ms(invviewproj, ndc_near, "%P")
+    local pt_far_WS = ms(invviewproj, ndc_far, "%P")
 
     return {
         origin = ms(pt_near_WS, "T"),
