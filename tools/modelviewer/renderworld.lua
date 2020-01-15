@@ -30,8 +30,13 @@ m.require_policy "ant.render|light.ambient"
 m.require_system "ant.render|physic_bounding"
 m.require_system "ant.imguibase|imgui_system"
 m.require_interface "ant.render|camera_spawn"
+m.require_interface "ant.animation|animation"
+m.require_interface "ant.timer|timer"
+m.require_interface "ant.camera_controller|camera_motion"
+m.require_interface "ant.render|iwidget_drawer"
 
 local ics = world:interface "ant.render|camera_spawn"
+local iwd = world:interface "ant.render|iwidget_drawer"
 local cameraeid
 
 local function create_light()
@@ -61,7 +66,7 @@ local player
 function m:init()
 	create_light()
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
-    cu.create_bounding_drawer(world)
+    iwd.create()
 	cu.create_plane_entity(
 		world,
 		mu.srt{50, 1, 50, 0},
@@ -83,21 +88,17 @@ function m:init()
 	player = world[eid]
 end
 
-m.require_interface "ant.animation|animation"
-m.require_interface "ant.timer|timer"
-m.require_interface "ant.camera_controller|camera_motion"
-
-local animation = world:interface "ant.animation|animation"
-local timer = world:interface "ant.timer|timer"
+local animation     = world:interface "ant.animation|animation"
+local timer         = world:interface "ant.timer|timer"
 local camera_motion = world:interface "ant.camera_controller|camera_motion"
 
 local eventKeyboard = world:sub {"keyboard"}
-local eventMouse = world:sub {"mouse","LEFT","DOWN"}
-local eventResize = world:sub {"resize"}
+local eventMouse    = world:sub {"mouse","LEFT","DOWN"}
+local eventResize   = world:sub {"resize"}
 
-local PRESS <const> = {[0]=-1,1,0}
-local DIR_NULL      <const> = 5
-local RADIAN <const> = {
+local PRESS    <const> = {[0]=-1,1,0}
+local DIR_NULL <const> = 5
+local RADIAN   <const> = {
 	math.rad(225), --SOUTHWEST
 	math.rad(270), --WEST
 	math.rad(315), --NORTHWEST
@@ -113,7 +114,7 @@ local cur_direction = DIR_NULL
 local screensize = {w=0,h=0}
 local mouse = {x=0,y=0}
 local mode
-local walking_target
+local target
 
 local function setEntityFacing(e, facing)
 	ms(e.transform.r, {type="e",0,facing,0}, "=")
@@ -128,7 +129,8 @@ local function moveEntity(e, distance)
 	return setEntityPosition(e, postion)
 end
 
-function m:ui_update()
+local startpos, endpos
+function m:data_changed()
 	for _,w, h in eventResize:unpack() do
 		screensize.w = w
 		screensize.h = h
@@ -153,15 +155,20 @@ function m:ui_update()
 		mouse.x = x
 		mouse.y = y
 		local res = camera_motion.ray(cameraeid, mouse, screensize)
+		startpos = res.origin
+		endpos   =  ms(res.origin, res.dir, {1000}, "*+T")
 		if res.dir[2] ~= 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
 			local postion = ms(player.transform.t, "T")
 			local facing = math.atan(x0-postion[1], z0-postion[3])
 			setEntityFacing(player, facing)
-			walking_target = {x0, z0}
+			target = {x0, 0, z0}
 			mode = "mouse"
 		end
+	end
+	if startpos and endpos then
+		iwd.draw_lines {startpos, endpos}
 	end
 	if mode == "keyboard" and cur_direction == DIR_NULL then
 		mode = nil
@@ -180,15 +187,16 @@ function m:ui_update()
 		moveEntity(player, move_speed)
 	elseif mode == "mouse" then
 		local postion = ms(player.transform.t, "T")
-		local dx = walking_target[1] - postion[1]
-		local dy = walking_target[2] - postion[3]
+		local dx = target[1] - postion[1]
+		local dy = target[3] - postion[3]
 		local dis = dx*dx+dy*dy
 		if dis < 1 then
 			animation.set_state(player, "idle")
-			walking_target = nil
+			target = nil
 			mode = nil
 			return
 		end
+		iwd.draw_lines {postion, target}
 		animation.set_state(player, "walking")
 		if dis < move_speed * move_speed then
 			moveEntity(player, math.sqrt(dis))
