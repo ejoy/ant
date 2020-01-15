@@ -55,7 +55,7 @@ end
 local function to_ndc(pt2d, screensize)
     local ndcnear = hwi.get_caps().homogeneousDepth and -1 or 0
     local screen_y = pt2d.y / screensize.h
-    if hwi.get_caps().originBottomLeft then
+    if not hwi.get_caps().originBottomLeft then
         screen_y = 1 - screen_y
     end
 
