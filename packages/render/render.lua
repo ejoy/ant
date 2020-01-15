@@ -113,6 +113,7 @@ rendersys.require_singleton "render_properties"
 rendersys.require_system "ant.scene|primitive_filter_system"
 rendersys.require_system "ant.scene|filter_properties"
 rendersys.require_system "end_frame"
+rendersys.require_system "viewport_detect_system"
 
 rendersys.require_policy "render_queue"
 rendersys.require_policy "main_queue"

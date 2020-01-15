@@ -41,16 +41,14 @@ local function update_camera_viewrect(mq, w, h)
 	end
 end
 
-function vp_detect:init()
+function vp_detect:post_init()
 	local fb_size = world.args.fb_size
 	update_camera_viewrect(world:singleton_entity "main_queue", fb_size.w, fb_size.h)
 end
 
 function vp_detect:data_changed()
 	local mq = world:singleton_entity "main_queue"
-	if mq then
-		for _, w, h in eventResize:unpack() do
-			update_camera_viewrect(mq, w, h)
-		end
+	for _, w, h in eventResize:unpack() do
+		update_camera_viewrect(mq, w, h)
 	end
 end
