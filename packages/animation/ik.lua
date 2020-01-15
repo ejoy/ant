@@ -13,7 +13,7 @@ ecs.component "ik_data"
 	.pole_vector"vector"{0, 0, 0, 0}	-- model space
 	.upaxis		"vector"{0, 1, 0, 0}	-- local space, same as IKTwoBoneJob's mid_axis
 	.twist_angle"real" 	(0.0)
-	.joints		"string[]"("")			-- type == 'aim', #joints == 1, type == 'two_bone', #joints == 3, with start/mid/end
+	.joints		"string[]"({})			-- type == 'aim', #joints == 1, type == 'two_bone', #joints == 3, with start/mid/end
 	["opt"].soften "real" (0.0)
 	["opt"].forward "vector"{0, 0, 1, 0}-- local space
 	["opt"].offset "vector" {0, 0, 0, 0}-- local space
