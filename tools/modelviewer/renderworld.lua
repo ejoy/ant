@@ -27,8 +27,7 @@ m.require_policy "ant.render|shadow_cast"
 m.require_policy "ant.render|light.directional"
 m.require_policy "ant.render|light.ambient"
 
-m.require_system "ant.sky|procedural_sky_system"
-
+m.require_system "ant.render|physic_bounding"
 m.require_system "ant.imguibase|imgui_system"
 m.require_interface "ant.render|camera_spawn"
 
@@ -46,7 +45,7 @@ local function create_camera()
 	frustum.f = 300
 	cameraeid = ics.spawn("test_main_camera", {
         type    = "",
-        eyepos  = {0, 3, -10, 1},
+        eyepos  = {0, 3, -20, 1},
         viewdir = mc.T_ZAXIS,
         updir   = mc.T_YAXIS,
         frustum = frustum,
@@ -60,9 +59,9 @@ end
 
 local player
 function m:init()
-	
 	create_light()
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
+    cu.create_bounding_drawer(world)
 	cu.create_plane_entity(
 		world,
 		mu.srt{50, 1, 50, 0},
@@ -78,7 +77,8 @@ function m:init()
 		return data
 	end
 	world:create_entity(load_file 'res/door.txt')
-	world:create_entity(load_file 'res/fence.txt')
+	world:create_entity(load_file 'res/fence1.txt')
+	world:create_entity(load_file 'res/fence2.txt')
 	local eid = world:create_entity(load_file 'res/player.txt')
 	player = world[eid]
 end
@@ -112,9 +112,23 @@ local RADIAN <const> = {
 local cur_direction = DIR_NULL
 local screensize = {w=0,h=0}
 local mouse = {x=0,y=0}
+local walking_target
+local walking_facing
+
+local function setEntityFacing(e, facing)
+	ms(e.transform.r, {type="e",0,facing,0}, "=")
+end
+
+local function setEntityPosition(e, postion)
+	ms(e.transform.t, postion, "=")
+end
+
+local function moveEntity(e, distance)
+	local postion = ms(e.transform.t, {distance}, e.transform.r,"d*+P")
+	return setEntityPosition(e, postion)
+end
 
 function m:ui_update()
-	local walking
 	for _,w, h in eventResize:unpack() do
 		screensize.w = w
 		screensize.h = h
@@ -138,22 +152,44 @@ function m:ui_update()
 		if res.dir[2] ~= 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
-			walking = math.atan(x0, z0)
+			local postion = ms(player.transform.t, "T")
+			walking_facing = math.atan(x0-postion[1], z0-postion[3])
+			walking_target = {x0, z0}
 		end
 	end
-	if not walking and cur_direction ~= DIR_NULL then
+	if not walking_facing and cur_direction ~= DIR_NULL then
 		local camera = world[cameraeid].camera
 		local viewdir = ms(camera.viewdir, "T")
-		walking = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
+		walking_facing = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
+		walking_target = nil
 	end
-	if not walking then
+	if not walking_facing then
 		animation.set_state(player, "idle")
 		return
+	end
+	setEntityFacing(player, walking_facing)
+	local move_speed = timer.delta() * 0.002
+	if walking_target then
+		local e = player
+		local postion = ms(e.transform.t, "T")
+		local dx = walking_target[1] - postion[1]
+		local dy = walking_target[2] - postion[3]
+		local dis = dx*dx+dy*dy
+		if dis < 1 then
+			animation.set_state(player, "idle")
+			return
+		end
+		if dis < move_speed * move_speed then
+			animation.set_state(player, "walking")
+			moveEntity(player, math.sqrt(dis))
+			walking_facing = nil
+			walking_target = nil
+		else
+			animation.set_state(player, "walking")
+			moveEntity(player, move_speed)
+		end
 	else
 		animation.set_state(player, "walking")
+		moveEntity(player, move_speed)
 	end
-	local delta = timer.delta() / 1000
-	local srt = player.transform
-	ms(srt.r, {type="e",0,walking,0}, "=")
-	ms(srt.t, srt.t, {2*delta}, srt.r,"d*+=")
 end
