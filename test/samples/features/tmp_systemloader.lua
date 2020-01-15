@@ -294,6 +294,8 @@ local function create_plane_test()
 end
 
 local ics = world:interface "ant.render|camera_spawn"
+local icm = world:interface "ant.camera_controller|camera_motion"
+
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
@@ -320,23 +322,27 @@ local function create_camera()
     local fbsize = world.args.fb_size
     local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
     frustum.f = 300
-    ics.bind("main_queue", ics.spawn("test_main_camera", {
+    local cameraeid = ics.spawn("test_main_camera", {
         type    = "",
         eyepos  = {0, 5, -10, 1},
         viewdir = ms(ms:forward_dir({math.rad(30), 0, 0, 0}), "T"),
         updir   = mc.T_YAXIS,
         frustum = frustum,
-    }))
+    })
+    ics.bind("main_queue", cameraeid)
+    return cameraeid
 end
 
 function init_loader:post_init()
-    create_camera()
+    local eid = create_camera()
+    local r = icm.ray(eid, {x=100, y=100}, {w=768, h=1024})
+    
 end
 
 local imgui      = require "imgui"
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
-local icamera_motion = world:interface "ant.camera_controller|camera_motion"
+local icm = world:interface "ant.camera_controller|camera_motion"
 
 function init_loader:ui_update()
     local mq = world:singleton_entity "main_queue"
@@ -345,11 +351,11 @@ function init_loader:ui_update()
     local widget = imgui.widget
     imgui.windows.Begin("Test", wndflags)
     if widget.Button "rotate" then
-        icamera_motion.rotate(cameraeid, {math.rad(10), 0, 0})
+        icm.rotate(cameraeid, {math.rad(10), 0, 0})
     end
 
     if widget.Button "move" then
-        icamera_motion.move(cameraeid, {1, 0, 0})
+        icm.move(cameraeid, {1, 0, 0})
     end
 
     local function find_entity(name, whichtype)
@@ -363,7 +369,7 @@ function init_loader:ui_update()
     if widget.Button "lock_target_for_move" then
         local foundeid = find_entity("animation_sample", "character")
         if foundeid then
-            icamera_motion.target(cameraeid, "move", foundeid, {0, 1, 0})
+            icm.target(cameraeid, "move", foundeid, {0, 1, 0})
         else
             print "not found animation_sample"
         end
@@ -373,7 +379,7 @@ function init_loader:ui_update()
     if widget.Button "lock_target_for_rotate" then
         local foundeid = find_entity("animation_sample", "character")
         if foundeid then
-            icamera_motion.target(cameraeid, "rotate", foundeid)
+            icm.target(cameraeid, "rotate", foundeid)
         else
             print "not found gltf entity"
         end

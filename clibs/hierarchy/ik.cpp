@@ -114,14 +114,21 @@ mul_quaternion(size_t jointidx, const ozz::math::SimdQuaternion& quat,
 	ozz::math::Transpose4x4(&aos_quats->xyzw, &soa_transform_ref.rotation.x);
 }
 
-static int
-ldo_ik(lua_State *L) {	
-	luaL_checktype(L, 2, LUA_TUSERDATA);
+auto get_ske(lua_State *L, int index = 1){
+	luaL_checktype(L, 1, LUA_TUSERDATA);
 	hierarchy_build_data *builddata = (hierarchy_build_data *)lua_touserdata(L, 1);
 	auto ske = builddata->skeleton;
 	if (ske == nullptr) {
 		luaL_error(L, "skeleton data must init!");
+		return (ozz::animation::Skeleton*)nullptr;
 	}
+
+	return ske;
+}
+
+static int
+ldo_two_bone_ik(lua_State *L) {	
+	auto ske = get_ske(L, 1);
 
 	luaL_checkudata(L, 2, "OZZ_BIND_POSE");
 	bind_pose* result = (bind_pose*)lua_touserdata(L, 2);
@@ -132,10 +139,6 @@ ldo_ik(lua_State *L) {
 	ozz::Vector<ozz::math::SoaTransform>::Std local_trans(poses.count());	
 	for (size_t ii = 0; ii < poses.count(); ++ii)
 		local_trans[ii] = poses[ii];
-
-	if (!do_ltm(ske, local_trans, result->pose)) {
-		luaL_error(L, "transform from local to model job failed!");
-	}
 
 	ozz::animation::IKTwoBoneJob ikjob;
 	auto jointrange = ozz::make_range(result->pose);
@@ -160,11 +163,20 @@ ldo_ik(lua_State *L) {
 	return 0;
 }
 
+static int
+ldo_aim_ik(lua_State *L){
+	auto ske = get_ske(L, 1);
+
+	
+	return 0;
+}
+
 extern "C" {
 	LUAMOD_API int
 	luaopen_hierarchy_ik(lua_State *L) {
 		luaL_Reg l[] = {
-			{ "do_ik", ldo_ik},
+			{ "do_two_bone_ik", ldo_two_bone_ik},
+			{ "do_aim_ik", ldo_aim_ik},
 			{nullptr, nullptr},
 		};
 
