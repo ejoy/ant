@@ -20,11 +20,12 @@ local computil = renderpkg.components
 local geometry_drawer = import_package "ant.geometry".drawer
 
 local bgfx = require "bgfx"
+local fs = require "filesystem"
 
-ecs.tag "bounding_drawer"
+ecs.tag "widget_drawer"
 
 local bdp = ecs.policy "bounding_draw"
-bdp.unique_component "bounding_drawer"
+bdp.unique_component "widget_drawer"
 
 ecs.component "debug_mesh_bounding"
 
@@ -72,25 +73,24 @@ local function append_buffers(dmesh, vb, ib)
 	local vbdesc, ibdesc = group.vb, group.ib
 
 	local numvertices = (#vb - 1) // 4
-	local numindices = #ib
-
 	vbdesc.num = vbdesc.num + numvertices
-	ibdesc.num = ibdesc.num + numindices
 
 	local vbhandle = vbdesc.handles[1]
 	local vertex_offset = vbhandle.updateoffset or 0
-	local index_offset = ibdesc.updateoffset or 0
-
-	local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
-
 	bgfx.update(vbhandle.handle, vertex_offset, vb);
 	vbhandle.updateoffset = vertex_offset + numvertices
+
+	local numindices = #ib
+	ibdesc.num = ibdesc.num + numindices
+
+	local index_offset = ibdesc.updateoffset or 0
+	local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
 	bgfx.update(ibdesc.handle, index_offset, newib)
 	ibdesc.updateoffset = index_offset + numindices
 end
 
 function rmb:widget()
-	local dmesh = world:singleton_entity "bounding_drawer"
+	local dmesh = world:singleton_entity "widget_drawer"
 
 	local transformed_boundings = {}
 	computil.calc_transform_boundings(world, transformed_boundings)
@@ -109,7 +109,7 @@ phy_bounding.require_system "ant.render|reset_mesh_buffer"
 phy_bounding.require_system "ant.bullet|collider_system"
 
 function phy_bounding:widget()
-	local dmesh = world:singleton_entity "bounding_drawer"
+	local dmesh = world:singleton_entity "widget_drawer"
 
 	local vb, ib = {"fffd"}, {}
 	for _, eid in world:each "collider_tag" do
@@ -126,7 +126,7 @@ end
 
 local reset_bounding_buffer = ecs.system "reset_mesh_buffer"
 function reset_bounding_buffer:end_frame()
-	local dmesh = world:singleton_entity "bounding_drawer"
+	local dmesh = world:singleton_entity "widget_drawer"
 	if dmesh then
 		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
 		local group = meshscene.scenes[1][1][1]
@@ -159,4 +159,53 @@ function draw_raycast_point:widget()
 		max = ms(max, pt, "T")
         add_aabb_bounding({min=min, max=max}, vb, ib)
 	end
+end
+
+
+local iwidget_drawer = ecs.interface "iwidget_drawer"
+
+
+function iwidget_drawer.create()
+	local eid = world:create_entity {
+		policy = {
+			"ant.render|name",
+			"ant.render|render",
+			"ant.render|bounding_draw",
+		},
+		data = {
+			transform 		= mu.identity_transform(),
+			material 		= {ref_path = "/pkg/ant.resources/depiction/materials/line.material"},
+			rendermesh 		= {},
+			name 			= "mesh's bounding renderer",
+			can_render 		= true,
+			widget_drawer = true,
+		}
+	}
+
+	local rm = world[eid].rendermesh
+	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/bounding.mesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
+	return eid
+end
+
+function iwidget_drawer.draw_lines(points, color, transform)
+	local m = math.fmod(#points, 2)
+	if m ~= 0 then
+		error(string.format("argument array must multiple of 2:%d", #points))
+	end
+
+	color = color or 0xfff0f000
+
+	local debugdrawer = world:singleton_entity "widget_drawer"
+	local desc = {vb={"fffd"}, ib={}}
+	geometry_drawer.draw_line(points, color, transform, desc)
+
+	append_buffers(debugdrawer, desc.vb, desc.ib)
+end
+
+function iwidget_drawer.draw_box(size, color, transform)
+	
+end
+
+function iwidget_drawer.draw_sphere(radius, color, transform)
+
 end

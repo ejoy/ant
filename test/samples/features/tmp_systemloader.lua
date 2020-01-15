@@ -37,6 +37,7 @@ init_loader.require_system "ant.render|draw_raycast_point"
 
 init_loader.require_interface "ant.render|camera_spawn"
 init_loader.require_interface "ant.camera_controller|camera_motion"
+init_loader.require_interface "ant.render|iwidget_drawer"
 
 local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
@@ -295,6 +296,7 @@ end
 
 local ics = world:interface "ant.render|camera_spawn"
 local icm = world:interface "ant.camera_controller|camera_motion"
+local iwd = world:interface "ant.render|iwidget_drawer"
 
 function init_loader:init()
     do
@@ -304,7 +306,7 @@ function init_loader:init()
     end
 
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
-    computil.create_bounding_drawer(world)
+    iwd.create()
 
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_plane_test()
@@ -333,16 +335,19 @@ local function create_camera()
     return cameraeid
 end
 
+function init_loader:data_changed()
+    iwd.draw_lines({
+        {5, 2, 5},
+        {5, 2, 15},
+    }, 0xff0000ff)
+end
+
 function init_loader:post_init()
-    local eid = create_camera()
-    local r = icm.ray(eid, {x=100, y=100}, {w=768, h=1024})
-    
+    create_camera()
 end
 
 local imgui      = require "imgui"
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
-
-local icm = world:interface "ant.camera_controller|camera_motion"
 
 function init_loader:ui_update()
     local mq = world:singleton_entity "main_queue"

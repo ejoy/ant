@@ -28,10 +28,6 @@ local function gen_color_vertices(pts, color, transform, vb)
 	end
 end
 
-local function add_primitive(primitives, voffset, vnum, ioffset, inum)
-	table.insert(primitives, {start_vertex=voffset, num_vertices=vnum, start_index=ioffset, num_indices=inum})
-end
-
 local function append_array(from, to)
 	table.move(from, 1, #from, #to+1, to)
 end
@@ -132,11 +128,12 @@ end
 
 function draw.draw_line(pts, color, transform, desc)
 	local vb = assert(desc.vb)
-
-	local offset = #vb
-	local num = #pts
 	gen_color_vertices(pts, color, transform, vb)
-	add_primitive(desc.primitives, offset, num)
+
+	local ib = assert(desc.ib)
+	for i=1, #pts do
+		ib[i] = i-1
+	end
 end
 
 local function draw_primitve(color, transform, desc, buffer_generator)

@@ -516,26 +516,5 @@ function util.entity_bounding(entity)
 	end
 end
 
-function util.create_bounding_drawer(world)
-	local eid = world:create_entity {
-		policy = {
-			"ant.render|name",
-			"ant.render|render",
-			"ant.render|bounding_draw",
-		},
-		data = {
-			transform 		= mu.identity_transform(),
-			material 		= util.assign_material "/pkg/ant.resources/depiction/materials/line.material",
-			rendermesh 		= {},
-			name 			= "mesh's bounding renderer",
-			can_render 		= true,
-			bounding_drawer = true,
-		}
-	}
-
-	local rm = world[eid].rendermesh
-	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/bounding.mesh", util.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
-end
-
 
 return util
