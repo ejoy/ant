@@ -83,6 +83,6 @@ function icamera_moition.ray(cameraeid, pt2d, screensize)
 
     return {
         origin = ms(pt_near_WS, "T"),
-        dir = ms(pt_far_WS, pt_near_WS, "-T")
+        dir = ms(pt_far_WS, pt_near_WS, "-nT")
     }
 end
