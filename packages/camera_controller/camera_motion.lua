@@ -77,8 +77,7 @@ function icamera_moition.ray(cameraeid, pt2d, screensize)
     local ndc = to_ndc(pt2d, screensize)
 
     local camera = ce.camera
-    local _, _, viewproj = ms:viewproj(camera, camera.frustum, true)
-
+    local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
     local ptWS = ms(viewproj, "i", ndc, "*T")
     local viewdir = camera.viewdir
 
