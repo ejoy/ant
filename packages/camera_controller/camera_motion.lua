@@ -53,7 +53,6 @@ function icamera_moition.rotate(cameraeid, delta)
 end
 
 local function to_ndc(pt2d, screensize)
-    local ndcnear = hwi.get_caps().homogeneousDepth and -1 or 0
     local screen_y = pt2d.y / screensize.h
     if not hwi.get_caps().originBottomLeft then
         screen_y = 1 - screen_y
@@ -62,7 +61,6 @@ local function to_ndc(pt2d, screensize)
     return {
         (pt2d.x / screensize.w) * 2 - 1,
         (screen_y) * 2 - 1,
-        ndcnear,
     }
 end
 
@@ -74,15 +72,17 @@ function icamera_moition.ray(cameraeid, pt2d, screensize)
 
     screensize = screensize or world.args.fb_size
 
-    local ndc = to_ndc(pt2d, screensize)
+    local ndc2d = to_ndc(pt2d, screensize)
+    local ndc_near = {ndc2d[1], ndc2d[2], hwi.get_caps().homogeneousDepth and -1 or 0}
+    local ndc_far = {ndc2d[1], ndc2d[2], 1}
 
     local camera = ce.camera
     local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
-    local ptWS = ms(viewproj, "i", ndc, "*T")
-    local viewdir = camera.viewdir
+    local pt_near_WS = ms(viewproj, "i", ndc_near, "*P")
+    local pt_far_WS = ms(viewproj, "i", ndc_far, "*P")
 
     return {
-        origin = ptWS,
-        dir = ms(viewdir, "T")
+        origin = ms(pt_near_WS, "T"),
+        dir = ms(pt_far_WS, pt_near_WS, "-T")
     }
 end
