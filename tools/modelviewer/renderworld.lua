@@ -112,8 +112,8 @@ local RADIAN <const> = {
 local cur_direction = DIR_NULL
 local screensize = {w=0,h=0}
 local mouse = {x=0,y=0}
+local mode
 local walking_target
-local walking_facing
 
 local function setEntityFacing(e, facing)
 	ms(e.transform.r, {type="e",0,facing,0}, "=")
@@ -137,16 +137,16 @@ function m:ui_update()
 		local v = PRESS[press]
 		if what == "UP" then
 			cur_direction = cur_direction + v
-			walking_facing = nil
+			mode = "keyboard"
 		elseif what == "DOWN" then
 			cur_direction = cur_direction - v
-			walking_facing = nil
+			mode = "keyboard"
 		elseif what == "LEFT" then
 			cur_direction = cur_direction - 3*v
-			walking_facing = nil
+			mode = "keyboard"
 		elseif what == "RIGHT" then
 			cur_direction = cur_direction + 3*v
-			walking_facing = nil
+			mode = "keyboard"
 		end
 	end
 	for _,_,_,x,y in eventMouse:unpack() do
@@ -157,32 +157,36 @@ function m:ui_update()
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
 			local postion = ms(player.transform.t, "T")
-			walking_facing = math.atan(x0-postion[1], z0-postion[3])
+			local facing = math.atan(x0-postion[1], z0-postion[3])
+			setEntityFacing(player, facing)
 			walking_target = {x0, z0}
+			mode = "mouse"
 		end
 	end
-	if not walking_facing and cur_direction ~= DIR_NULL then
-		local camera = world[cameraeid].camera
-		local viewdir = ms(camera.viewdir, "T")
-		walking_facing = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
-		walking_target = nil
+	if mode == "keyboard" and cur_direction == DIR_NULL then
+		mode = nil
 	end
-	if not walking_facing then
+	if not mode then
 		animation.set_state(player, "idle")
 		return
 	end
-	setEntityFacing(player, walking_facing)
 	local move_speed = timer.delta() * 0.002
-	if walking_target then
-		local e = player
-		local postion = ms(e.transform.t, "T")
+	if mode == "keyboard" then
+		local camera = world[cameraeid].camera
+		local viewdir = ms(camera.viewdir, "T")
+		local facing = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
+		animation.set_state(player, "walking")
+		setEntityFacing(player, facing)
+		moveEntity(player, move_speed)
+	elseif mode == "mouse" then
+		local postion = ms(player.transform.t, "T")
 		local dx = walking_target[1] - postion[1]
 		local dy = walking_target[2] - postion[3]
 		local dis = dx*dx+dy*dy
 		if dis < 1 then
 			animation.set_state(player, "idle")
-			walking_facing = nil
 			walking_target = nil
+			mode = nil
 			return
 		end
 		animation.set_state(player, "walking")
@@ -191,8 +195,5 @@ function m:ui_update()
 		else
 			moveEntity(player, move_speed)
 		end
-	else
-		animation.set_state(player, "walking")
-		moveEntity(player, move_speed)
 	end
 end
