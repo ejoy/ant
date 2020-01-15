@@ -137,12 +137,16 @@ function m:ui_update()
 		local v = PRESS[press]
 		if what == "UP" then
 			cur_direction = cur_direction + v
+			walking_facing = nil
 		elseif what == "DOWN" then
 			cur_direction = cur_direction - v
+			walking_facing = nil
 		elseif what == "LEFT" then
 			cur_direction = cur_direction - 3*v
+			walking_facing = nil
 		elseif what == "RIGHT" then
 			cur_direction = cur_direction + 3*v
+			walking_facing = nil
 		end
 	end
 	for _,_,_,x,y in eventMouse:unpack() do
@@ -177,15 +181,14 @@ function m:ui_update()
 		local dis = dx*dx+dy*dy
 		if dis < 1 then
 			animation.set_state(player, "idle")
-			return
-		end
-		if dis < move_speed * move_speed then
-			animation.set_state(player, "walking")
-			moveEntity(player, math.sqrt(dis))
 			walking_facing = nil
 			walking_target = nil
+			return
+		end
+		animation.set_state(player, "walking")
+		if dis < move_speed * move_speed then
+			moveEntity(player, math.sqrt(dis))
 		else
-			animation.set_state(player, "walking")
 			moveEntity(player, move_speed)
 		end
 	else
