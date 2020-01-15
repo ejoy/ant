@@ -27,8 +27,7 @@ m.require_policy "ant.render|shadow_cast"
 m.require_policy "ant.render|light.directional"
 m.require_policy "ant.render|light.ambient"
 
-m.require_system "ant.sky|procedural_sky_system"
-
+m.require_system "ant.render|physic_bounding"
 m.require_system "ant.imguibase|imgui_system"
 m.require_interface "ant.render|camera_spawn"
 
@@ -46,7 +45,7 @@ local function create_camera()
 	frustum.f = 300
 	cameraeid = ics.spawn("test_main_camera", {
         type    = "",
-        eyepos  = {0, 3, -10, 1},
+        eyepos  = {0, 3, -20, 1},
         viewdir = mc.T_ZAXIS,
         updir   = mc.T_YAXIS,
         frustum = frustum,
@@ -60,9 +59,9 @@ end
 
 local player
 function m:init()
-	
 	create_light()
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
+    cu.create_bounding_drawer(world)
 	cu.create_plane_entity(
 		world,
 		mu.srt{50, 1, 50, 0},
@@ -78,7 +77,8 @@ function m:init()
 		return data
 	end
 	world:create_entity(load_file 'res/door.txt')
-	world:create_entity(load_file 'res/fence.txt')
+	world:create_entity(load_file 'res/fence1.txt')
+	world:create_entity(load_file 'res/fence2.txt')
 	local eid = world:create_entity(load_file 'res/player.txt')
 	player = world[eid]
 end
@@ -112,6 +112,19 @@ local RADIAN <const> = {
 local cur_direction = DIR_NULL
 local screensize = {w=0,h=0}
 local mouse = {x=0,y=0}
+
+local function setEntityFacing(e, facing)
+	ms(e.transform.r, {type="e",0,facing,0}, "=")
+end
+
+local function setEntityPosition(e, postion)
+	ms(e.transform.t, postion, "=")
+end
+
+local function moveEntity(e, distance)
+	local postion = ms(e.transform.t, {distance}, e.transform.r,"d*+P")
+	return setEntityPosition(e, postion)
+end
 
 function m:ui_update()
 	local walking
@@ -152,8 +165,6 @@ function m:ui_update()
 	else
 		animation.set_state(player, "walking")
 	end
-	local delta = timer.delta() / 1000
-	local srt = player.transform
-	ms(srt.r, {type="e",0,walking,0}, "=")
-	ms(srt.t, srt.t, {2*delta}, srt.r,"d*+=")
+	setEntityFacing(player, walking)
+	moveEntity(player, timer.delta() * 0.002)
 end

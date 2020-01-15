@@ -38,10 +38,10 @@ animation:
 can_render: true
 capsule_collider:
   collider:
-    center: {0,0,0}
+    center: {0,1,0}
     is_tigger: true
   shape:
-    radius: 1
+    radius: 0.5
     height: 1
     axis: Y
 collider_tag: capsule_collider
@@ -67,4 +67,4 @@ state_machine:
 transform:
   s: {1,1,1,0}
   r: {0,0,0,0}
-  t: {0,0,-5,1}
+  t: {0,0,-15,1}

@@ -1,5 +1,5 @@
 ---------
-ant.bullet|collider.custom
+ant.bullet|collider.box
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -8,23 +8,22 @@ ant.serialize|serialize
 ---------
 can_cast: true
 can_render: true
-custom_collider:
+box_collider:
   collider:
-    center: {-10,12,0}
+    center: {0,1,0}
     is_tigger: true
   shape:
-    box:
-      size: {4,12,4}
-collider_tag: custom_collider
+    size: {2.2,1,1}
+collider_tag: box_collider
 material:
   ref_path: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
 mesh:
-  ref_path: /pkg/ant.resources/depiction/PVPScene/campsite-door.mesh
+  ref_path: /pkg/ant.resources/depiction/PVPScene/woodother-34.mesh
 name: door
 rendermesh:
   lodidx: 1
-serialize: 5e1d264e369fa92007d55026
+serialize: 5e1d2628369fa9fc11d5504d
 transform:
   s: {1,1,1,0}
   r: {0,0,0,0}
-  t: {0,0,0,1}
+  t: {2.2,0,-8,0}
