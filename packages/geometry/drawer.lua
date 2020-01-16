@@ -159,6 +159,12 @@ function draw.draw_sphere(sphere, color, transform, desc)
 	end)
 end
 
+function draw.draw_capsule(capsule, color, transform, desc)
+	draw_primitve(color, transform, desc, function()
+		return geo.capsule(capsule.radius, capsule.height, capsule.tessellation, true, true)
+	end)
+end
+
 function draw.draw_aabb_box(aabb, color, transform, desc)
 	draw_primitve(color, transform, desc, function()
 		return geo.box_from_aabb(aabb, true, true)

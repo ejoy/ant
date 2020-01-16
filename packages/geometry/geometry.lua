@@ -396,6 +396,74 @@ function geometry.sphere(tessellation, radius, needib, line)
 	return vb
 end
 
+function geometry.capsule(radius, height, tessellation)
+	local t_vb = {
+		{      0, radius,   0},
+		{ radius, 0,        0},
+		{      0, 0,  -radius},
+		{-radius, 0,        0},
+		{      0, 0,   radius},
+	}
+	local b_vb = {
+		{      0, -radius,  0},
+		{ radius, 0,        0},
+		{      0, 0,  -radius},
+		{-radius, 0,        0},
+		{      0, 0,   radius},
+	}
+	local t_ib = {
+		0, 1, 2,
+		0, 2, 3,
+		0, 3, 4,
+		0, 4, 1,
+	}
+	local b_ib = {
+		0, 1, 2,
+		0, 2, 3,
+		0, 3, 4,
+		0, 4, 1,
+	}
+	for _=2, tessellation do
+		t_vb, t_ib = tessellateion(t_vb, t_ib, radius)
+		b_vb, b_ib = tessellateion(b_vb, b_ib, radius)
+	end
+
+	local h = height / 2
+	local mark = {}
+	local middle = {}
+	for i, v in ipairs(t_vb) do
+		if not mark[v] then
+			mark[v] = true
+			if v[2] < 0.001 and v[2] > -0.001 then
+				middle[#middle+1] = i - 1
+			end
+			v[2] = v[2] + h
+		end
+	end
+	for _, v in ipairs(b_vb) do
+		if not mark[v] then
+			mark[v] = true
+			v[2] = v[2] - h
+		end
+	end
+	local vb, ib = t_vb, t_ib
+	local offset = #vb
+	for i = 1, #b_ib do
+		b_ib[i] = b_ib[i] + offset
+	end
+    local function table_append(t, a)
+        table.move(a, 1, #a, #t+1, t)
+	end
+	table_append(vb, b_vb)
+	table_append(ib, b_ib)
+	ib = triangle_index_to_line_index(ib)
+	for _, t in ipairs(middle) do
+		ib[#ib+1] = t
+		ib[#ib+1] = t + offset
+	end
+	return vb, ib
+end
+
 function geometry.sphereLatitude(slices, stacks, radius, needib, line)
 
 end
