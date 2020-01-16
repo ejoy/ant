@@ -435,7 +435,7 @@ function geometry.capsule(radius, height, tessellation)
 		if not mark[v] then
 			mark[v] = true
 			if v[2] < 0.001 and v[2] > -0.001 then
-				middle[#middle+1] = i
+				middle[#middle+1] = i - 1
 			end
 			v[2] = v[2] + h
 		end
@@ -457,7 +457,7 @@ function geometry.capsule(radius, height, tessellation)
 	table_append(vb, b_vb)
 	table_append(ib, b_ib)
 	ib = triangle_index_to_line_index(ib)
-	for _, t in pairs(middle) do
+	for _, t in ipairs(middle) do
 		ib[#ib+1] = t
 		ib[#ib+1] = t + offset
 	end
