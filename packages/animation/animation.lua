@@ -4,31 +4,48 @@ local world = ecs.world
 local asset = import_package "ant.asset".mgr
 local ani_module = require "hierarchy.animation"
 
+local mathpkg = import_package "ant.math"
+local ms = mathpkg.stack
+
+--there are 2 types in ik_data, which are 'two_bone'(IKTwoBoneJob) and 'aim'(IKAimJob).
+ecs.component "ik_data"
+	.type		"string"("aim")			-- can be 'two_bone'/'aim'
+	.target 	"vector"{0, 0, 0, 1}	-- model space
+	.pole_vector"vector"{0, 0, 0, 0}	-- model space
+	.upaxis		"vector"{0, 1, 0, 0}	-- local space, same as IKTwoBoneJob's mid_axis
+	.twist_angle"real" 	(0.0)
+	.joints		"string[]"{}			-- type == 'aim', #joints == 1, type == 'two_bone', #joints == 3, with start/mid/end
+	["opt"].soften "real" (0.0)
+	["opt"].forward "vector"{0, 0, 1, 0}-- local space
+	["opt"].offset "vector" {0, 0, 0, 0}-- local space
+
+ecs.component "ik"
+	.jobs 'ik_data[]'
+
 ecs.component "animation_content"
 	.ref_path "respath"
 	.scale "real" (1)
 	.looptimes "int" (0)
 
-ecs.component "pose_result"
-
-local t_pr = ecs.transform "pose_result"
-t_pr.input "skeleton"
-t_pr.output "pose_result"
-function t_pr.process(e)
+local t_ani = ecs.transform "ani_result"
+t_ani.input "skeleton"
+t_ani.output "animation"
+function t_ani.process(e)
 	local skehandle = asset.get_resource(e.skeleton.ref_path).handle
-	e.pose_result.result = ani_module.new_bind_pose(#skehandle)
+	e.animation.result = ani_module.new_bind_pose(#skehandle)
 end
 
 local ap = ecs.policy "animation"
 ap.require_component "skeleton"
 ap.require_component "animation"
-ap.require_component "pose_result"
-ap.require_transform "pose_result"
+ap.require_transform "ani_result"
+
 ap.require_system "animation_system"
 
 local anicomp = ecs.component "animation"
 	.anilist "animation_content{}"
 	.birth_pose "string"
+	.ik "ik"
 
 function anicomp:init()
 	local pose = {}
@@ -55,6 +72,34 @@ anisystem.require_interface "ant.timer|timer"
 
 local timer = world:interface "ant.timer|timer"
 
+local function prepare_ik(transform, ikcomp)
+	local invtran = ms(transform, "iP")
+	local cache = {}
+	for _, ikdata in ipairs(ikcomp.jobs) do
+		local c = {
+			type = ikdata.type,
+			target = ms(invtran, ikdata.target, "*m"),
+			pole_vector = ms(invtran, ikdata.pole_vector, "*m"),
+			
+			updir = ms(ikdata.updir, "m"),
+			weight = ikdata.weight,
+			twist_angle = ikdata.twist_angle,
+			joints = ikdata.joints,
+		}
+
+		if ikdata.type == "aim" then
+			c.forward = ms(ikdata.forward, "m")
+			c.offset = ms(ikdata.offset, "m")
+		else
+			assert(ikdata.type == "two_bone")
+			c.soften = ikdata.soften
+		end
+
+		cache[#cache+1] = c
+	end
+	return cache
+end
+
 function anisystem:sample_animation_pose()
 	local current_time = timer.current()
 	for _, eid in world:each "animation" do
@@ -72,6 +117,12 @@ function anisystem:sample_animation_pose()
 				end
 			end
 		end
-		ani_module.motion(ske, animation.current_pose, "blend", e.pose_result.result, nil, fix_root)
+
+		ani_module.setup(ske)
+
+		ani_module.do_animation(animation.current_pose, "blend", nil, fix_root)
+		--ani_module.do_ik(prepare_ik(e.transform, animation.ik))
+
+		ani_module.get_result(animation.result, fix_root)
 	end
 end

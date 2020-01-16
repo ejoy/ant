@@ -10,7 +10,7 @@ vp_detect.require_system "ant.scene|primitive_filter_system"
 
 local eventResize = world:sub {"resize"}
 
-local function resize_framebuffer(w, h, fbidx, viewid)
+local function resize_framebuffer(w, h, fbidx)
 	if fbidx then
 		local fb = fbmgr.get(fbidx)
 		local changed = false
@@ -34,10 +34,11 @@ local function update_camera_viewrect(mq, w, h)
 	if w then rt.w = w else w = rt.w end
 	if h then rt.h = h else h = rt.h end
 
-	local camera = world[mq.camera_eid].camera
-	if camera then
+	local ce = world[mq.camera_eid]
+	if ce then
+		local camera = ce.camera
 		camera.frustum.aspect = w / h
-		resize_framebuffer(w, h, mq.render_target.fb_idx, mq.viewid)
+		resize_framebuffer(w, h, mq.render_target.fb_idx)
 	end
 end
 

@@ -73,7 +73,6 @@ local function ozzmesh_animation_test()
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
             },
-            pose_result = {},
             animation = {
                 anilist = {
                     idle = {
@@ -87,19 +86,8 @@ local function ozzmesh_animation_test()
                         looptimes = 0,
                     }
                 },
-                blendtype = 'blend',
-                pose = {
-                    idle = {
-                        {name = "idle", weight=1},
-                    },
-                    walk = {
-                        {name = "walk",weight=1},
-                    },
-                    -- run = {
-                    --     {name = "run", weight=1},
-                    -- }
-                },
                 birth_pose = "idle",
+                ik = {jobs={}}
             },
             can_render = true,
             rendermesh = {},
@@ -154,7 +142,6 @@ local function gltf_animation_test()
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
             },
-            pose_result = {},
             skeleton = {
                 ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
             },
@@ -167,13 +154,13 @@ local function gltf_animation_test()
                         looptimes = 0,
                     },
                 },
-                blendtype = 'blend',
                 pose = {
                     idle = {
                         {name="ani1", weight=1},
                     },
                 },
                 birth_pose = "idle",
+                ik = {jobs={}}
             },
             can_render = true,
             can_cast = true,
@@ -185,7 +172,7 @@ local function gltf_animation_test()
     }
 end
 
-local function ik_test()
+local function foot_ik_test()
     return world:create_entity {
         policy = {
             "ant.animation|ik",
@@ -207,20 +194,41 @@ local function ik_test()
             skeleton = {
                 ref_path = fs.path "",
             },
-            pose_result = {},
-            ik = {
-                target = {0, 0, 0, 1},
-                pole_vector = {0, 1, 0, 0},
-                mid_axis = {0, 1, 0, 0},
-                weight = 1.0,
-                soften = 0.5,
-                twist_angle = math.rad(30),
-                start_joint = "",
-                mid_joint = "",
-                end_joint = "",
+            animation = {
+                anilist = {},
+                birth_pose = "",
+                ik = {
+                    jobs = {
+                        {
+                            type        = "two_bone",
+                            target      = {0, 0, 0, 1},
+                            pole_vector = {0, 1, 0, 0},
+                            updir       = {0, 1, 0, 0},
+                            widget      = 1.0,
+                            twist_angle = 0,
+                            soften      = 0.5,
+                            joints      = {
+                                "hip", "knee", "ankle",
+                            }
+                        },
+                        {
+                            type = "aim",
+                            target = {0, 0, 0, 1},
+                            pole_vector = {0, 1, 0, 0},
+                            updir = {0, 1, 0, 0},
+                            forward = {0, 0, 1, 0},
+                            offset = {0, 0, 0, 0},
+                            widget = 1.0,
+                            twist_angle = 0,
+                            joints = {
+                                "ankle",
+                            }
+                        }
+                    }
+                }
             },
             serialize = serialize.create(),
-            name = "ik_test",
+            name = "foot_ik_test",
             can_cast = true,
             can_render = true,
         }
@@ -315,7 +323,7 @@ function init_loader:init()
     pbr_test()
     gltf_animation_test()
 
-    --ik_test()
+    --foot_ik_test()
 
     pbrscene.create_scene(world)
 end

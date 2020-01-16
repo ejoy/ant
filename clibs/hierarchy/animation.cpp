@@ -74,6 +74,11 @@ struct in_vertex_data : public vertex_data<const void>{
 
 typedef vertex_data<void> out_vertex_data;
 
+struct animation_cache{
+	ozz::animation::Skeleton *ske;
+	bind_pose_soa bindpose_cache;
+};
+
 template<typename DataStride>
 static void
 read_data_stride(lua_State *L, const char* name, int index, DataStride &ds){
@@ -295,7 +300,7 @@ do_sample(const ozz::animation::Skeleton *ske,
 }
 
 bool
-do_ltm(ozz::animation::Skeleton *ske, 
+do_ltm(const ozz::animation::Skeleton *ske, 
 	const bind_pose_soa::bind_pose_type &intermediateResult, 
 	bind_pose::bind_pose_type &joints,
 	const ozz::math::Float4x4 *root = nullptr,
@@ -353,9 +358,9 @@ lsample_animation(lua_State *L) {
 	auto ske = get_ske(L, 1);	
 	sample_info si;
 	load_sample_info(L, 2, ske, si);
-	bind_pose_soa *bindpose = (bind_pose_soa*)lua_touserdata(L, 3);
+	bind_pose_soa *bindpose_cache = (bind_pose_soa*)lua_touserdata(L, 3);
 
-	if (!sample_animation(ske, si, bindpose)) {
+	if (!sample_animation(ske, si, bindpose_cache)) {
 		luaL_error(L, "sampling animation failed");
 	}
 	return 0;
@@ -978,6 +983,118 @@ register_joint_remap(lua_State *L){
 	luaL_setfuncs(L, l, 0);
 }
 
+static int
+ldel_animation_cache(lua_State *L){
+	luaL_checkudata(L, 1, "ANI_CACHE");
+	animation_cache* ac = (animation_cache*)lua_touserdata(L, 1);
+	
+	ac->bindpose_cache.pose.~vector();
+	return 0;
+}
+
+static void
+register_animation_cache(lua_State *L){
+	luaL_newmetatable(L, "ANI_CACHE");
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+
+	luaL_Reg l[] = {
+		{"__gc", ldel_joint_remap},
+		{nullptr, nullptr},
+	};
+
+	luaL_setfuncs(L, l, 0);
+}
+
+bool
+do_ik(const ozz::animation::Skeleton *ske,
+	const ik_data &ikdata,
+	bind_pose_soa &bp, 
+	bind_pose &result);
+
+static inline animation_cache*
+get_ac(lua_State *L){
+	return (animation_cache*)lua_touserdata(L, lua_upvalueindex(1));
+}
+
+static int
+lsetup(lua_State *L){
+	auto ac = get_ac(L);
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	auto hie = (hierarchy_build_data*)lua_touserdata(L, 1);
+	ac->ske = hie->skeleton;
+
+	ac->bindpose_cache.pose.resize(ac->ske->num_joints());
+	return 0;
+}
+
+static int
+ldo_animation(lua_State *L){
+	auto ac = get_ac(L);
+
+	luaL_checktype(L, 1, LUA_TTABLE);
+	luaL_checktype(L, 2, LUA_TSTRING);
+	const char* blendtype = lua_tostring(L, 2);
+	const float threshold = (float)luaL_optnumber(L, 3, 0.1f);
+	const bool fixroot = lua_isnoneornil(L, 4) ? false : lua_toboolean(L, 4);
+
+	int numposes = (int)lua_rawlen(L, 1);
+	if (numposes == 1) {
+		lua_geti(L, 1, 1);
+		luaL_checktype(L, -1, LUA_TTABLE);
+		blend_animations(L, lua_absindex(L, -1), blendtype, ac->ske, threshold, &ac->bindpose_cache);
+	} else if (numposes > 1) {
+		blend_bind_poses(L, 1, blendtype, ac->ske, threshold, &ac->bindpose_cache);
+	} else {
+		return luaL_error(L, "pose cannot be empty.");
+	}
+
+	return 0;
+}
+
+
+static int
+ldo_ik(lua_State *L){
+
+	return 0;
+}
+
+static int
+lget_result(lua_State *L){
+	auto ac = get_ac(L);
+
+	auto aniresult = (bind_pose*)lua_touserdata(L, 1);
+	const bool fixroot = lua_isnoneornil(L, 6) ? false : lua_toboolean(L, 5);
+
+	if (!transform_bindpose(ac->ske, ac->bindpose_cache.pose, aniresult->pose, fixroot)){
+		return luaL_error(L, "doing blend result to ltm job failed!");
+	}
+
+	ac->ske = nullptr;
+
+	return 0;
+}
+
+static void
+bind_animation_lib(lua_State* L){
+	luaL_Reg ani_lib[] = {
+		{ "setup",			lsetup},
+		{ "do_animation",	ldo_animation},
+		{ "do_ik",			ldo_ik},
+		{ "get_result",		lget_result},
+		{ nullptr, nullptr},
+	};
+
+	animation_cache* ac = (animation_cache*)lua_newuserdata(L, sizeof(animation_cache));
+	ac->ske = nullptr;
+	new(&ac->bindpose_cache.pose)bind_pose::bind_pose_type();
+
+	luaL_getmetatable(L, "ANI_CACHE");
+	lua_setmetatable(L, -2);
+	
+	luaL_setfuncs(L, ani_lib, 1);
+}
+
 extern "C" {
 LUAMOD_API int
 luaopen_hierarchy_animation(lua_State *L) {
@@ -989,6 +1106,10 @@ luaopen_hierarchy_animation(lua_State *L) {
 	register_aligned_memory(L);
 	register_joint_remap(L);
 
+	register_animation_cache(L);
+
+	lua_newtable(L);
+
 	luaL_Reg l[] = {
 		{ "mesh_skinning", 			lmesh_skinning},
 		{ "build_skinning_matrices", lbuild_skinning_matrices},
@@ -996,7 +1117,6 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "motion", 			lmotion},
 		{ "blend_animations", 	lblend_animations},
 		{ "sample_animation", 	lsample_animation},
-		{ "transform", 			ltransform_to_bindpose_result},
 		{ "new_ani", 			lnew_animation},
 		{ "new_sampling_cache", lnew_sampling_cache},
 		{ "new_bind_pose", 		lnew_bind_pose,},
@@ -1007,7 +1127,10 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "new_joint_remap", 	lnew_joint_remap},
 		{ NULL, NULL },
 	};
-	luaL_newlib(L, l);
+
+	luaL_setfuncs(L,l,0);
+
+	bind_animation_lib(L);
 	return 1;
 }
 
