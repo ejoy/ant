@@ -1064,7 +1064,7 @@ lget_result(lua_State *L){
 	auto ac = get_ac(L);
 
 	auto aniresult = (bind_pose*)lua_touserdata(L, 1);
-	const bool fixroot = lua_isnoneornil(L, 6) ? false : lua_toboolean(L, 5);
+	const bool fixroot = lua_isnoneornil(L, 2) ? false : lua_toboolean(L, 2);
 
 	if (!transform_bindpose(ac->ske, ac->bindpose_cache.pose, aniresult->pose, fixroot)){
 		return luaL_error(L, "doing blend result to ltm job failed!");
