@@ -1,3 +1,2 @@
 return {
-	util = require "util"
 }

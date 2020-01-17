@@ -111,13 +111,22 @@ phy_bounding.require_system "ant.bullet|collider_system"
 function phy_bounding:widget()
 	local dmesh = world:singleton_entity "widget_drawer"
 	local vb, ib = {"fffd"}, {}
+	local function apply_srt(shape, srt)
+		return {
+			s = srt.s,
+			r = srt.r,
+			t = ms(srt.t, shape.origin, "+P"),
+		}
+	end
 	local function draw_box(shape, srt)
+		srt = apply_srt(shape, srt)
 		local color <const> = 0xffffff00
 		local desc={vb={}, ib={}}
 		geometry_drawer.draw_box(shape.size, color, srt, desc)
 		append_buffer(desc, vb, ib)
 	end
 	local function draw_capsule(shape, srt)
+		srt = apply_srt(shape, srt)
 		local color <const> = 0xffffff00
 		local desc={vb={}, ib={}}
 		geometry_drawer.draw_capsule({
@@ -128,6 +137,7 @@ function phy_bounding:widget()
 		append_buffer(desc, vb, ib)
 	end
 	local function draw_sphere(shape, srt)
+		srt = apply_srt(shape, srt)
 		local color <const> = 0xffffff00
 		local desc={vb={}, ib={}}
 		geometry_drawer.draw_sphere({
@@ -136,59 +146,45 @@ function phy_bounding:widget()
 		}, color, srt, desc)
 		append_buffer(desc, vb, ib)
 	end
-	local function draw_custom(shape, srt)
+	local function draw_compound(shape, srt)
+		srt = apply_srt(shape, srt)
 		if shape.box then
-			draw_box(shape.box, srt)
+			for _, sh in ipairs(shape.box) do
+				draw_box(sh, srt)
+			end
 		end
 		if shape.capsule then
-			draw_capsule(shape.capsule, srt)
+			for _, sh in ipairs(shape.capsule) do
+				draw_capsule(sh, srt)
+			end
 		end
 		if shape.sphere then
-			draw_sphere(shape.sphere, srt)
+			for _, sh in ipairs(shape.sphere) do
+				draw_sphere(sh, srt)
+			end
 		end
-		if shape.children then
-			draw_custom(shape.children, srt)
+		if shape.compound then
+			for _, sh in ipairs(shape.compound) do
+				draw_compound(sh, srt)
+			end
 		end
 	end
-	for _, eid in world:each "custom_collider" do
+	for _, eid in world:each "collider" do
 		local e = world[eid]
-		local collidercomp = e.custom_collider
-		local srt = {
-			s = e.transform.s,
-			r = e.transform.r,
-			t = ms(e.transform.t, collidercomp.collider.center, "+T"),
-		}
-		draw_custom(collidercomp.shape, srt)
-	end
-	for _, eid in world:each "box_collider" do
-		local e = world[eid]
-		local collidercomp = e.box_collider
-		local srt = {
-			s = e.transform.s,
-			r = e.transform.r,
-			t = ms(e.transform.t, collidercomp.collider.center, "+T"),
-		}
-		draw_box(collidercomp.shape, srt)
-	end
-	for _, eid in world:each "capsule_collider" do
-		local e = world[eid]
-		local collidercomp = e.capsule_collider
-		local srt = {
-			s = e.transform.s,
-			r = e.transform.r,
-			t = ms(e.transform.t, collidercomp.collider.center, "+T"),
-		}
-		draw_capsule(collidercomp.shape, srt)
-	end
-	for _, eid in world:each "sphere_collider" do
-		local e = world[eid]
-		local collidercomp = e.sphere_collider
-		local srt = {
-			s = e.transform.s,
-			r = e.transform.r,
-			t = ms(e.transform.t, collidercomp.collider.center, "+T"),
-		}
-		draw_sphere(collidercomp.shape, srt)
+		local collider = e.collider
+		local srt = e.transform
+		if collider.sphere then
+			draw_sphere(collider.sphere, srt)
+		end
+		if collider.box then
+			draw_box(collider.box, srt)
+		end
+		if collider.capsule then
+			draw_capsule(collider.capsule, srt)
+		end
+		if collider.compound then
+			draw_compound(collider.compound, srt)
+		end
 	end
 	append_buffers(dmesh, vb, ib)
 end

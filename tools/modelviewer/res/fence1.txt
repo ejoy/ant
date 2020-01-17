@@ -1,5 +1,5 @@
 ---------
-ant.bullet|collider.box
+ant.bullet|collider
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -8,13 +8,10 @@ ant.serialize|serialize
 ---------
 can_cast: true
 can_render: true
-box_collider:
-  collider:
-    center: {0,1,0}
-    is_tigger: true
-  shape:
+collider:
+  box:
+    origin: {0,1,0,0}
     size: {2.2,1,1}
-collider_tag: box_collider
 material:
   ref_path: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
 mesh:

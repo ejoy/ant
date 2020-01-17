@@ -6,9 +6,8 @@ local physicworld = physic.world
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
-local mu = mathpkg.util
 
-local collider_mb = world:sub {"component_register", "collider_tag"}
+local collider_mb = world:sub {"component_register", "collider"}
 
 local collider_sys = ecs.system "collider_system"
 
@@ -16,22 +15,19 @@ function collider_sys:data_changed()
     for msg in collider_mb:each() do
         local eid = msg[3]
         local e = world[eid]
-        local c = e[e.collider_tag]
-        physicworld:set_obj_user_idx(assert(c.collider.handle), eid)
-        c.user_idx = eid
+        local collider = e.collider
+        physicworld:set_obj_user_idx(assert(collider.handle), eid)
+        collider.user_idx = eid
     end
 end
 
 function collider_sys:update_collider_transform()
-    for _, eid in world:each "collider_tag" do
+    for _, eid in world:each "collider" do
         local e = world[eid]
-        local collidercomp = e[e.collider_tag]
-
         -- TODO: world transform will not correct when this entity attach on hierarchy tree
         -- we need seprarte update transform from primitive_filter_system
-        local collider = collidercomp.collider
-        local m = ms:add_translate(e.transform.world, collider.center)
-        physicworld:set_obj_transform(collider.handle, m)
+        local m = ms:add_translate(e.transform.world, e.collider.center)
+        physicworld:set_obj_transform(e.collider.handle, m)
     end
 end
 
@@ -42,16 +38,15 @@ local character_motion = world:sub {"character_motion"}
 local character_spawn = world:sub {"component_register", "character"}
 
 local function update_collider(eid)
-    local char = world[eid]
-    local collidercomp = char[char.collider_tag]
-    local colliderobj = collidercomp.collider.handle
+    local e = world[eid]
+    local colliderobj = e.collider.handle
     local aabbmin, aabbmax = physicworld:aabb(colliderobj)
     local center = ms({0.5}, aabbmax, aabbmin, "+*T")
     local at = ms({center[1], aabbmin[2] - 3, center[3], 1.0}, "P")
     local hit, result = physicworld:raycast(ms(center, "P"), at)
     if hit then
         world:pub {"ray_cast_hitted", eid, result}
-        ms(char.transform.t, result.hit_pt_in_WS, "=")
+        ms(e.transform.t, result.hit_pt_in_WS, "=")
     end
 end
 

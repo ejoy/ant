@@ -19,7 +19,7 @@ local m = ecs.system "model_review_system"
 
 m.require_policy "ant.sky|procedural_sky"
 m.require_policy "ant.serialize|serialize"
-m.require_policy "ant.bullet|collider.capsule"
+m.require_policy "ant.bullet|collider"
 m.require_policy "ant.render|mesh"
 m.require_policy "ant.render|render"
 m.require_policy "ant.render|name"
@@ -162,13 +162,13 @@ function m:data_changed()
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
 			local postion = ms(player.transform.t, "T")
 			local facing = math.atan(x0-postion[1], z0-postion[3])
-			setEntityFacing(player, facing)
+			--setEntityFacing(player, facing)
 			target = {x0, 0, z0}
 			mode = "mouse"
 		end
 	end
 	if startpos and endpos then
-		iwd.draw_lines {startpos, endpos}
+		--iwd.draw_lines {startpos, endpos}
 	end
 	if mode == "keyboard" and cur_direction == DIR_NULL then
 		mode = nil
@@ -186,22 +186,22 @@ function m:data_changed()
 		setEntityFacing(player, facing)
 		moveEntity(player, move_speed)
 	elseif mode == "mouse" then
-		local postion = ms(player.transform.t, "T")
-		local dx = target[1] - postion[1]
-		local dy = target[3] - postion[3]
-		local dis = dx*dx+dy*dy
-		if dis < 1 then
-			animation.set_state(player, "idle")
-			target = nil
-			mode = nil
-			return
-		end
-		iwd.draw_lines {postion, target}
-		animation.set_state(player, "walking")
-		if dis < move_speed * move_speed then
-			moveEntity(player, math.sqrt(dis))
-		else
-			moveEntity(player, move_speed)
-		end
+		--local postion = ms(player.transform.t, "T")
+		--local dx = target[1] - postion[1]
+		--local dy = target[3] - postion[3]
+		--local dis = dx*dx+dy*dy
+		--if dis < 1 then
+		--	animation.set_state(player, "idle")
+		--	target = nil
+		--	mode = nil
+		--	return
+		--end
+		--iwd.draw_lines {postion, target}
+		--animation.set_state(player, "walking")
+		--if dis < move_speed * move_speed then
+		--	moveEntity(player, math.sqrt(dis))
+		--else
+		--	moveEntity(player, move_speed)
+		--end
 	end
 end

@@ -5,35 +5,22 @@ local physic = assert(world.args.Physics)
 local physicworld = physic.world
 local ms = import_package "ant.math".stack
 
-ecs.component_alias("collider_tag", "string")
-
-local coll = ecs.component "collider"
-	.center "real[3]" {0, 0, 0}
-	["opt"].is_tigger "boolean" (true)
-	["opt"].user_idx "int"
-
-function coll:delete()
-	local handle = self.handle
-	if handle then
-		physicworld:del_obj(handle)
-	end
-end
 
 local function shape_delete(shape)
-	if shape.handle then
+	if shape.handle and shape.needdel ~= false then
 		physicworld:del_shape(shape.handle)
 	end
 end
 
 local function shape_new(shapetype)
 	return function (shape)
-		shape.type = shapetype
 		shape.handle = physicworld:new_shape(shapetype, shape)
 		return shape
 	end
 end
 
 local p = ecs.component "plane_shape"
+	.origin "position"
 	.normal "real[3]" {0, 1, 0}
 	.distance "real" (1)
 p.init = shape_new "plane"
@@ -41,99 +28,98 @@ p.delete = shape_delete
 
 local s = ecs.component "sphere_shape"
 	.radius "real" (1)
+	.origin "position"
 s.init = shape_new "sphere"
 s.delete = shape_delete
 
 local b = ecs.component "box_shape"
+	.origin "position"
 	.size "real[3]" {1, 1, 1}
 b.init = shape_new "box"
 b.delete = shape_delete
 
 local c = ecs.component "capsule_shape"
+	.origin "position"
 	.radius "real" (1)
 	.height "real" (1)
 	.axis 	"string" "Y"
 c.init = shape_new "capsule"
 c.delete = shape_delete
 
-local C = ecs.component "custom_shape"
-	["opt"].sphere "sphere_shape"
-	["opt"].box "box_shape"
-	["opt"].capsule "capsule_shape"
-	["opt"].children "custom_shape"
+local C = ecs.component "compound_shape"
+	.origin "position"
+	["opt"].plane "plane_shape[]"
+	["opt"].sphere "sphere_shape[]"
+	["opt"].box "box_shape[]"
+	["opt"].capsule "capsule_shape[]"
+	["opt"].compound "compound_shape[]"
 
 function C:init()
-	self.type = "compound"
-	local compoundhandle = physicworld:new_shape("compound", self)
-	self.handle = compoundhandle
-
+	self.handle = physicworld:new_shape("compound", self)
 	local function check_add_child(shape)
-		if shape then
-			physicworld:add_to_compound(compoundhandle, shape.handle)
+		if not shape then
+			return
+		end
+		for _, sh in ipairs(shape) do
+			physicworld:add_to_compound(self.handle, sh.handle, sh.origin)
 		end
 	end
-
+	check_add_child(self.plane)
 	check_add_child(self.shape)
 	check_add_child(self.box)
 	check_add_child(self.capsule)
+	check_add_child(self.compound)
 	return self
 end
 
 C.delete = shape_delete
 
-ecs.component_alias("character_shape", "custom_shape")
 
-local function process_collider(e, collider_name)
-	local cc = e[collider_name]
-	local shapehandle = cc.shape.handle
-	local collider = cc.collider
-	local object = physicworld:new_obj(shapehandle)
-	physicworld:add_obj(object)
-	collider.handle = object
+local collcomp = ecs.component "collider"
+	["opt"].user_idx "int"
+	["opt"].plane "plane_shape"
+	["opt"].sphere "sphere_shape"
+	["opt"].box "box_shape"
+	["opt"].capsule "capsule_shape"
+	["opt"].compound "compound_shape"
 
-	e.collider_tag = collider_name
+function collcomp:init()
+	local function add_shape(shape)
+		if not shape then
+			return
+		end
+		if self.handle then
+			error "collider can only have one shape"
+		end
+		self.center = shape.origin
+		self.handle = physicworld:new_obj(shape.handle)
+		physicworld:add_obj(self.handle)
+	end
+	add_shape(self.plane)
+	add_shape(self.sphere)
+	add_shape(self.box)
+	add_shape(self.capsule)
+	add_shape(self.compound)
+	if not self.handle then
+		error "shape cannot be empty"
+	end
+	return self
 end
 
-for _, name in ipairs {
-	"plane",
-	"sphere",
-	"box",
-	"capsule",
-	"custom",
-	"character",
-} do
-	local collider_name = name .. "_collider"
-	local shape_name = name .. "_shape"
-	local collcomp = ecs.component(collider_name)
-		.collider "collider"
-		.shape(shape_name)
-
-	function collcomp:delete()
-		self.shape.handle = nil	-- collider object has own this shape handle
-	end
-
-	local trans_name = name .. "_transform"
-	local t = ecs.transform(trans_name)
-	t.input "transform"
-	t.input(collider_name)
-	t.output "collider_tag"
-	function t.process(e)
-		process_collider(e, collider_name)
-	end
-
-	local policy_name = "collider." .. name
-	local cp = ecs.policy(policy_name)
-	cp.require_component "transform"
-	cp.require_component "collider_tag"
-	cp.require_component(collider_name)
-	cp.require_transform(trans_name)
-
-	cp.require_system "ant.bullet|collider_system"
-
-	if name == "character" then
-		cp.require_system "ant.bullet|character_collider_system"
+function collcomp:delete()
+	if self.handle then
+		physicworld:del_obj(self.handle)
 	end
 end
+
+local cp = ecs.policy "collider"
+cp.require_component "transform"
+cp.require_component "collider"
+cp.require_system "ant.bullet|collider_system"
+
+local cp = ecs.policy "collider.character"
+cp.require_policy "collider"
+cp.require_system "ant.bullet|character_collider_system"
 
 local math3d_adapter = require "math3d.adapter"
 local mathadapter_util = import_package "ant.math.adapter"
