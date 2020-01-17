@@ -1,7 +1,5 @@
---luacheck: ignore self
 local ecs = ...
 local world = ecs.world
-local physicworld = world.args.Physics.world
 
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
@@ -9,10 +7,6 @@ local ms = mathpkg.stack
 
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
-
-local mathbaselib = require "math3d.baselib"
-
-local animodule = require "hierarchy.animation"
 
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components

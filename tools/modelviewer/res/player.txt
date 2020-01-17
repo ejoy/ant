@@ -34,6 +34,8 @@ animation:
       ref_path: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
       scale: 1
       looptimes: 0
+  ik:
+    jobs: {}
   birth_pose: idle
 can_render: true
 collider:

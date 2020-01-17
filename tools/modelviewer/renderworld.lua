@@ -34,6 +34,7 @@ m.require_interface "ant.animation|animation"
 m.require_interface "ant.timer|timer"
 m.require_interface "ant.camera_controller|camera_motion"
 m.require_interface "ant.render|iwidget_drawer"
+m.require_interface "ant.bullet|collider"
 
 local ics = world:interface "ant.render|camera_spawn"
 local iwd = world:interface "ant.render|iwidget_drawer"
@@ -91,6 +92,7 @@ end
 local animation     = world:interface "ant.animation|animation"
 local timer         = world:interface "ant.timer|timer"
 local camera_motion = world:interface "ant.camera_controller|camera_motion"
+local collider      = world:interface "ant.bullet|collider"
 
 local eventKeyboard = world:sub {"keyboard"}
 local eventMouse    = world:sub {"mouse","LEFT","DOWN"}
@@ -121,6 +123,14 @@ local function setEntityFacing(e, facing)
 end
 
 local function setEntityPosition(e, postion)
+	local srt = {
+		s = e.transform.s,
+		r = e.transform.r,
+		t = postion,
+	}
+	if collider.test(e, srt) then
+		return
+	end
 	ms(e.transform.t, postion, "=")
 end
 
@@ -162,7 +172,7 @@ function m:data_changed()
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
 			local postion = ms(player.transform.t, "T")
 			local facing = math.atan(x0-postion[1], z0-postion[3])
-			--setEntityFacing(player, facing)
+			setEntityFacing(player, facing)
 			target = {x0, 0, z0}
 			mode = "mouse"
 		end
@@ -186,22 +196,22 @@ function m:data_changed()
 		setEntityFacing(player, facing)
 		moveEntity(player, move_speed)
 	elseif mode == "mouse" then
-		--local postion = ms(player.transform.t, "T")
-		--local dx = target[1] - postion[1]
-		--local dy = target[3] - postion[3]
-		--local dis = dx*dx+dy*dy
-		--if dis < 1 then
-		--	animation.set_state(player, "idle")
-		--	target = nil
-		--	mode = nil
-		--	return
-		--end
-		--iwd.draw_lines {postion, target}
-		--animation.set_state(player, "walking")
-		--if dis < move_speed * move_speed then
-		--	moveEntity(player, math.sqrt(dis))
-		--else
-		--	moveEntity(player, move_speed)
-		--end
+		local postion = ms(player.transform.t, "T")
+		local dx = target[1] - postion[1]
+		local dy = target[3] - postion[3]
+		local dis = dx*dx+dy*dy
+		if dis < 1 then
+			animation.set_state(player, "idle")
+			target = nil
+			mode = nil
+			return
+		end
+		iwd.draw_lines {postion, target}
+		animation.set_state(player, "walking")
+		if dis < move_speed * move_speed then
+			moveEntity(player, math.sqrt(dis))
+		else
+			moveEntity(player, move_speed)
+		end
 	end
 end
