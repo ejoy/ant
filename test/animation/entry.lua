@@ -7,7 +7,6 @@ runtime.start {
 		"ant.animation|ozz_skinning",
 		"ant.animation|skinning",
 		"ant.serialize|serialize",
-		"ant.bullet|collider.capsule",
 		"ant.render|mesh",
 		"ant.render|render",
 		"ant.render|name",

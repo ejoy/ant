@@ -51,9 +51,9 @@ local function create_camera()
 	frustum.f = 300
 	cameraeid = ics.spawn("test_main_camera", {
         type    = "",
-        eyepos  = {0, 3, -20, 1},
-        viewdir = mc.T_ZAXIS,
-        updir   = mc.T_YAXIS,
+        eyepos  = {0,10,-24,1},
+        viewdir = {0,-1,1,0},
+        updir   = {0,1,1,0},
         frustum = frustum,
     })
 	ics.bind("main_queue", cameraeid)
@@ -132,11 +132,15 @@ local function setEntityPosition(e, postion)
 		return
 	end
 	ms(e.transform.t, postion, "=")
+	return true
 end
 
 local function moveEntity(e, distance)
-	local postion = ms(e.transform.t, {distance}, e.transform.r,"d*+P")
-	return setEntityPosition(e, postion)
+	local postion = ms(e.transform.t, {distance}, e.transform.r, "d*+P")
+	if setEntityPosition(e, postion) then
+		local camera = world[cameraeid].camera
+		camera.eyepos = ms(camera.eyepos, {distance}, e.transform.r, "d*+T")
+	end
 end
 
 function m:data_changed()

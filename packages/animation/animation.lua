@@ -119,7 +119,7 @@ function anisystem:sample_animation_pose()
 		end
 
 		ani_module.setup(ske)
-		ani_module.do_animation(animation.current_pose, "blend", nil, fix_root)
+		ani_module.do_animation(animation.current_pose, "blend")
 		--ani_module.do_ik(prepare_ik(e.transform, animation.ik))
 		ani_module.get_result(animation.result, fix_root)
 	end

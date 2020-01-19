@@ -1031,13 +1031,9 @@ lsetup(lua_State *L){
 static int
 ldo_animation(lua_State *L){
 	auto ac = get_ac(L);
-
 	luaL_checktype(L, 1, LUA_TTABLE);
-	luaL_checktype(L, 2, LUA_TSTRING);
-	const char* blendtype = lua_tostring(L, 2);
+	const char* blendtype = luaL_checkstring(L, 2);
 	const float threshold = (float)luaL_optnumber(L, 3, 0.1f);
-	const bool fixroot = lua_isnoneornil(L, 4) ? false : lua_toboolean(L, 4);
-
 	int numposes = (int)lua_rawlen(L, 1);
 	if (numposes == 1) {
 		lua_geti(L, 1, 1);
@@ -1048,7 +1044,6 @@ ldo_animation(lua_State *L){
 	} else {
 		return luaL_error(L, "pose cannot be empty.");
 	}
-
 	return 0;
 }
 
