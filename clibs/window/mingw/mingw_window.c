@@ -52,12 +52,15 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
 		cb = (struct ant_window_callback *)cs->lpCreateParams;
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)cb);
-
+		
+		RECT r;
+		GetClientRect(hWnd, &r);
 		msg.type = ANT_WINDOW_INIT;
 		msg.u.init.window = hWnd;
 		msg.u.init.context = 0;
-		msg.u.init.w = cs->cx;
-		msg.u.init.h = cs->cy;
+		msg.u.init.w = r.right-r.left;
+		msg.u.init.h = r.bottom-r.top;
+
 		cb->message(cb->ud, &msg);
 
 		break;
