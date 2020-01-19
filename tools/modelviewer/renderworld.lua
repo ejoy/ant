@@ -95,7 +95,7 @@ local camera_motion = world:interface "ant.camera_controller|camera_motion"
 local collider      = world:interface "ant.bullet|collider"
 
 local eventKeyboard = world:sub {"keyboard"}
-local eventMouse    = world:sub {"mouse","LEFT","DOWN"}
+local eventMouse    = world:sub {"mouse","RIGHT","DOWN"}
 local eventResize   = world:sub {"resize"}
 
 local PRESS    <const> = {[0]=-1,1,0}
@@ -139,7 +139,6 @@ local function moveEntity(e, distance)
 	return setEntityPosition(e, postion)
 end
 
-local startpos, endpos
 function m:data_changed()
 	for _,w, h in eventResize:unpack() do
 		screensize.w = w
@@ -165,9 +164,7 @@ function m:data_changed()
 		mouse.x = x
 		mouse.y = y
 		local res = camera_motion.ray(cameraeid, mouse, screensize)
-		startpos = res.origin
-		endpos   =  ms(res.origin, res.dir, {1000}, "*+T")
-		if res.dir[2] ~= 0 then
+		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
 			local postion = ms(player.transform.t, "T")
@@ -176,9 +173,6 @@ function m:data_changed()
 			target = {x0, 0, z0}
 			mode = "mouse"
 		end
-	end
-	if startpos and endpos then
-		--iwd.draw_lines {startpos, endpos}
 	end
 	if mode == "keyboard" and cur_direction == DIR_NULL then
 		mode = nil
