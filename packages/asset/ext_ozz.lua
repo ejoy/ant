@@ -22,7 +22,7 @@ return {
 		local readops = {
 			["ozz-animation"] = function (fn)
 				local animodule = require "hierarchy.animation"
-				return animodule.new_ani(fn)
+				return animodule.new_animation(fn)
 			end,
 			["ozz-raw_skeleton"] = function (fn)
 				local hiemodule = require "hierarchy"

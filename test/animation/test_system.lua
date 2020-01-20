@@ -106,7 +106,7 @@ function m:ui_update()
     local e = world[eid]
     local widget = imgui.widget
     for _ in imgui_windows("Test", wndflags) do
-        for name in sortpairs(e.animation.pose) do
+        for name in sortpairs(e.animation.anilist) do
             if widget.Button(name) then
                 local animation = world:interface "ant.animation|animation"
                 if not animation.set_state(e, name) then

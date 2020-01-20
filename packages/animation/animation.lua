@@ -33,6 +33,7 @@ t_ani.output "animation"
 function t_ani.process(e)
 	local skehandle = asset.get_resource(e.skeleton.ref_path).handle
 	e.animation.result = ani_module.new_bind_pose(#skehandle)
+	e.animation.ske = skehandle
 end
 
 local ap = ecs.policy "animation"
@@ -48,20 +49,17 @@ local anicomp = ecs.component "animation"
 	.ik "ik"
 
 function anicomp:init()
-	local pose = {}
 	for name, ani in pairs(self.anilist) do
-		local aniref = {}
-		aniref.handle = asset.get_resource(ani.ref_path).handle
-		aniref.sampling_cache = ani_module.new_sampling_cache()
-		aniref.start_time = 0
-		aniref.duration = aniref.handle:duration() * 1000. / ani.scale
-		aniref.max_time = ani.looptimes > 0 and (ani.looptimes * aniref.duration) or math.maxinteger
-		pose[name] = {name = name, aniref}
+		ani.handle = asset.get_resource(ani.ref_path).handle
+		ani.sampling_cache = ani_module.new_sampling_cache()
+		ani.start_time = 0
+		ani.duration = ani.handle:duration() * 1000. / ani.scale
+		ani.max_time = ani.looptimes > 0 and (ani.looptimes * ani.duration) or math.maxinteger
+		ani.name = name
 	end
-	self.pose = pose
-	local birth_pose = self.pose[self.birth_pose]
+	local birth_pose = self.anilist[self.birth_pose]
 	birth_pose.weight = 1
-	self.current_pose = {birth_pose}
+	self.current = {birth_pose}
 	return self
 end
 
@@ -103,23 +101,20 @@ end
 function anisystem:sample_animation_pose()
 	local current_time = timer.current()
 	for _, eid in world:each "animation" do
+		local fix_root <const> = true
 		local e = world[eid]
 		local animation = e.animation
-		local fix_root <const> = true
-		local ske = asset.get_resource(e.skeleton.ref_path).handle
-		for _, pose in ipairs(animation.current_pose) do
-			for _, aniref in ipairs(pose) do
-				local localtime = current_time - aniref.start_time
-				if localtime > aniref.max_time then
-					aniref.ratio = 0
-				else
-					aniref.ratio = localtime % aniref.duration / aniref.duration
-				end
+		ani_module.setup(animation.ske)
+		for _, ani in ipairs(animation.current) do
+			local localtime = current_time - ani.start_time
+			local ratio = 0
+			if localtime <= ani.max_time then
+				ratio = localtime % ani.duration / ani.duration
 			end
+			ani_module.do_sample(ani.sampling_cache, ani.handle, ratio, ani.weight)
 		end
-
-		ani_module.setup(ske)
-		ani_module.do_animation(animation.current_pose, "blend")
+		local pose = animation.current
+		ani_module.do_blend("blend", #pose)
 		--ani_module.do_ik(prepare_ik(e.transform, animation.ik))
 		ani_module.get_result(animation.result, fix_root)
 	end
