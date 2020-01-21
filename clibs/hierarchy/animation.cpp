@@ -34,13 +34,80 @@
 #include <algorithm>
 #include <sstream>
 
-struct aligned_memory {
-	void* ptr;
+template <typename T>
+class luaClass {
+protected:
+	typedef luaClass<T> base_type;
+	template <typename ...Args>
+	static T* constructor(lua_State* L, Args ...args) {
+		T* o = (T*)lua_newuserdatauv(L, sizeof(T), 0);
+		new (o) T(args...);
+		if (luaL_newmetatable(L, kLuaName)) {
+			lua_pushvalue(L, -1);
+			lua_setfield(L, -2, "__index");
+			luaL_Reg l[] = {
+				{"__gc", destructor},
+				{nullptr, nullptr},
+			};
+			luaL_setfuncs(L, l, 0);
+		}
+		lua_setmetatable(L, -2);
+		return o;
+	}
+	static void set_method(lua_State* L, luaL_Reg l[]) {
+		if (lua_getmetatable(L, -1)) {
+			luaL_setfuncs(L, l, 0);
+			lua_pop(L, 1);
+		}
+	}
+private:
+	static const char kLuaName[];
+	static int destructor(lua_State* L) {
+		get(L, 1)->~T();
+		return 0;
+	}
+public:
+	static T* get(lua_State* L, int idx) {
+		return (T*)luaL_testudata(L, idx, kLuaName);
+	}
 };
+#define REGISTER_LUA_CLASS(C) template<> const char luaClass<C>::kLuaName[] = #C;
 
-struct joint_remap {
+struct ozzJointRemap : public luaClass<ozzJointRemap> {
 	ozz::Vector<uint16_t>::Std joints;
+	ozzJointRemap()
+	: joints()
+	{ }
+	~ozzJointRemap()
+	{ }
+
+	static int create(lua_State* L) {
+		ozzJointRemap* self = base_type::constructor(L);
+		switch (lua_type(L, 1)) {
+		case LUA_TTABLE: {
+			size_t n = (size_t)lua_rawlen(L, 1);
+			self->joints.resize(n);
+			for (size_t i = 0; i < n; ++i){
+				lua_geti(L, 1, i+1);
+				self->joints[i] = (uint16_t)luaL_checkinteger(L, -1);
+				lua_pop(L, 1);
+			}
+			break;
+		}
+		case LUA_TLIGHTUSERDATA: {
+			const size_t jointnum = (size_t)luaL_checkinteger(L, 2);
+			self->joints.resize(jointnum);
+			const uint16_t *p = (const uint16_t*)lua_touserdata(L, 1);
+			memcpy(&self->joints.front(), p, jointnum * sizeof(uint16_t));
+			break;
+		}
+		default:
+			return luaL_error(L, "not support type in argument 1");
+		}
+		return 1;
+	}
 };
+REGISTER_LUA_CLASS(ozzJointRemap)
 
 template<typename DataType>
 struct vertex_data {
@@ -120,7 +187,7 @@ static void
 build_skinning_matrices(bind_pose *skinning_matrices, 
 	const bind_pose* current_pose, 
 	const bind_pose* inverse_bind_matrices, 
-	const joint_remap *jarray){
+	const ozzJointRemap *jarray){
 	if (jarray){
 		assert(jarray->joints.size() == inverse_bind_matrices->pose.size());
 		for (size_t ii = 0; ii < jarray->joints.size(); ++ii){
@@ -140,7 +207,7 @@ lbuild_skinning_matrices(lua_State *L){
 	auto skinning_matrices = (bind_pose*)luaL_checkudata(L, 1, "OZZ_BIND_POSE");
 	auto current_bind_pose = (bind_pose*)luaL_checkudata(L, 2, "OZZ_BIND_POSE");
 	auto inverse_bind_matrices = (bind_pose*)luaL_checkudata(L, 3, "OZZ_BIND_POSE");
-	const joint_remap *jarray = lua_isnoneornil(L, 4) ? nullptr : (const joint_remap*)lua_touserdata(L, 4);
+	const ozzJointRemap *jarray = lua_isnoneornil(L, 4) ? nullptr : ozzJointRemap::get(L, 4);
 	if (skinning_matrices->pose.size() < inverse_bind_matrices->pose.size()){
 		return luaL_error(L, "invalid skinning matrices and inverse bind matrices, skinning matrices must larger than inverse bind matrices");
 	}
@@ -357,78 +424,32 @@ lnew_bind_pose(lua_State *L) {
 	return 1;
 }
 
-static int
-lnew_memory(lua_State *L){
-	const size_t sizebytes = (size_t)lua_tointeger(L, 1);
-	const size_t aligned = (size_t)luaL_optinteger(L, 2, 4);
-
-	aligned_memory* am =  (aligned_memory*)lua_newuserdatauv(L, sizeof(aligned_memory), 0);
-	luaL_getmetatable(L, "ALIGNED_MEMORY");
-	lua_setmetatable(L, -2);
-
-	am->ptr = ozz::memory::default_allocator()->Allocate(sizebytes, aligned);
-	return 1;
-}
-
-static int
-lpointer_memory(lua_State *L){
-	auto am = (aligned_memory*)lua_touserdata(L, 1);
-	lua_pushlightuserdata(L, am->ptr);
-	return 1;
-}
-
-static int
-ldel_memory(lua_State *L){
-	luaL_checkudata(L, 1, "ALIGNED_MEMORY");
-	auto am = (aligned_memory*)lua_touserdata(L, 1);
-	ozz::memory::default_allocator()->Deallocate(am->ptr);
-
-	return 0;
-}
-
-static int
-lnew_joint_remap(lua_State *L){
-	decltype(joint_remap::joints)	joints;
-
-	switch (lua_type(L, 1)){
-		case LUA_TTABLE:{
-			const uint32_t jointnum = (uint32_t)lua_rawlen(L, 1);
-			joints.resize(jointnum);
-			for (uint32_t ii = 0; ii < jointnum; ++ii){
-				lua_geti(L, 1, ii+1);
-				joints[ii] = (uint16_t)lua_tointeger(L, -1);
-				lua_pop(L, 1);
-			}
-		}
-		break;
-		case LUA_TLIGHTUSERDATA:{
-			luaL_checktype(L, 2, LUA_TNUMBER);
-			const uint32_t jointnum = (uint32_t)lua_tointeger(L, 2);
-			joints.resize(jointnum);
-
-			const uint16_t *p = (const uint16_t*)lua_touserdata(L, 1);
-			memcpy(&joints.front(), p, jointnum * sizeof(uint16_t));
-		}
-		break;
-		default:
-		return luaL_error(L, "not support type in argument 1");
+struct ozzAllocator : public luaClass<ozzAllocator> {
+	void* v;
+	ozzAllocator(size_t size, size_t alignment)
+	: v(ozz::memory::default_allocator()->Allocate(size, alignment))
+	{ }
+	~ozzAllocator() {
+		ozz::memory::default_allocator()->Deallocate(v);
 	}
 
-	auto jarray = (joint_remap*)lua_newuserdatauv(L, sizeof(joint_remap), 0);
-	luaL_getmetatable(L, "JOINT_REMAP");
-	lua_setmetatable(L, -2);
-
-	new(&jarray->joints) decltype(jarray->joints)(std::move(joints));
-	return 1;
-}
-
-static int
-ldel_joint_remap(lua_State *L){
-	luaL_checkudata(L, 1, "JOINT_REMAP");
-	auto jarray = (joint_remap*)lua_touserdata(L, 1);
-	jarray->joints.~vector();
-	return 0;
-}
+	static int lpointer(lua_State* L) {
+		lua_pushlightuserdata(L, base_type::get(L, 1)->v);
+		return 1;
+	}
+	static int create(lua_State* L) {
+		const size_t sizebytes = (size_t)luaL_checkinteger(L, 1);
+		const size_t aligned = (size_t)luaL_optinteger(L, 2, 4);
+		base_type::constructor(L, sizebytes, aligned);
+		luaL_Reg l[] = {
+			{"pointer", lpointer},
+			{nullptr, nullptr},
+		};
+		base_type::set_method(L, l);
+		return 1;
+	}
+};
+REGISTER_LUA_CLASS(ozzAllocator)
 
 static void
 register_bind_pose_mt(lua_State *L) {
@@ -449,32 +470,6 @@ register_bind_pose_mt(lua_State *L) {
 	luaL_setfuncs(L, l, 0);
 }
 
-static void
-register_aligned_memory(lua_State *L){
-	luaL_newmetatable(L, "ALIGNED_MEMORY");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");
-	luaL_Reg l[] = {
-		{"pointer", lpointer_memory},
-		{"__gc", ldel_memory},
-		{nullptr, nullptr},
-	};
-
-	luaL_setfuncs(L, l, 0);
-}
-
-static void
-register_joint_remap(lua_State *L){
-	luaL_newmetatable(L, "JOINT_REMAP");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");
-	luaL_Reg l[] = {
-		{"__gc", ldel_joint_remap},
-		{nullptr, nullptr},
-	};
-	luaL_setfuncs(L, l, 0);
-}
-
 bool
 do_ltm(const ozz::animation::Skeleton *ske, 
 	const bind_pose_soa::bind_pose_type &intermediateResult, 
@@ -490,7 +485,7 @@ do_ltm(const ozz::animation::Skeleton *ske,
 	return ltmjob.Run();
 }
 
-struct ozzSamplingCache {
+struct ozzSamplingCache : public luaClass<ozzSamplingCache> {
 	ozz::animation::SamplingCache* v;
 	ozzSamplingCache(int max_tracks)
 	: v(OZZ_NEW(ozz::memory::default_allocator(), ozz::animation::SamplingCache)(max_tracks))
@@ -498,35 +493,15 @@ struct ozzSamplingCache {
 	~ozzSamplingCache() {
 		OZZ_DELETE(ozz::memory::default_allocator(), v);
 	}
-
-	static const char kLuaName[];
-	static ozzSamplingCache* get(lua_State* L, int idx) {
-		return (ozzSamplingCache*)luaL_testudata(L, idx, kLuaName);
-	}
-	static int destroy(lua_State* L) {
-		get(L, 1)->~ozzSamplingCache();
-		return 0;
-	}
 	static int create(lua_State* L) {
-		const int max_tracks = (int)luaL_optinteger(L, 1, 0);
-		ozzSamplingCache* self = (ozzSamplingCache*)lua_newuserdatauv(L, sizeof(ozzSamplingCache), 0);
-		new (self) ozzSamplingCache(max_tracks);
-		if (luaL_newmetatable(L, kLuaName)) {
-			lua_pushvalue(L, -1);
-			lua_setfield(L, -2, "__index");
-			luaL_Reg l[] = {
-				{"__gc", destroy},
-				{nullptr, nullptr},
-			};
-			luaL_setfuncs(L, l, 0);
-		}
-		lua_setmetatable(L, -2);
+		int max_tracks = (int)luaL_optinteger(L, 1, 0);
+		base_type::constructor(L, max_tracks);
 		return 1;
 	}
 };
-const char ozzSamplingCache::kLuaName[] = "ozz::animation::SamplingCache";
+REGISTER_LUA_CLASS(ozzSamplingCache)
 
-struct ozzAnimation {
+struct ozzAnimation : public luaClass<ozzAnimation> {
 	ozz::animation::Animation* v;
 	ozzAnimation()
 	: v(OZZ_NEW(ozz::memory::default_allocator(), ozz::animation::Animation)())
@@ -535,38 +510,23 @@ struct ozzAnimation {
 		OZZ_DELETE(ozz::memory::default_allocator(), v);
 	}
 
-	static const char kLuaName[];
-	static ozzAnimation* get(lua_State* L, int idx) {
-		return (ozzAnimation*)luaL_testudata(L, idx, kLuaName);
-	}
-	static int destroy(lua_State* L) {
-		get(L, 1)->~ozzAnimation();
-		return 0;
-	}
 	static int duration(lua_State *L) {
-		lua_pushnumber(L, get(L, 1)->v->duration());
+		lua_pushnumber(L, base_type::get(L, 1)->v->duration());
 		return 1;
 	}
 	static int size(lua_State *L) {
-		lua_pushinteger(L, get(L, 1)->v->size());
+		lua_pushinteger(L, base_type::get(L, 1)->v->size());
 		return 1;
 	}
 	static int create(lua_State* L) {
 		const char* path = luaL_checkstring(L, 1);
-		ozzAnimation* self = (ozzAnimation*)lua_newuserdatauv(L, sizeof(ozzAnimation), 0);
-		new (self) ozzAnimation();
-		if (luaL_newmetatable(L, kLuaName)) {
-			lua_pushvalue(L, -1);
-			lua_setfield(L, -2, "__index");
-			luaL_Reg l[] = {		
-				{"duration", duration},
-				{"size", size},
-				{"__gc", destroy},
-				{nullptr, nullptr},
-			};
-			luaL_setfuncs(L, l, 0);
-		}
-		lua_setmetatable(L, -2);
+		ozzAnimation* self = base_type::constructor(L);
+		luaL_Reg l[] = {		
+			{"duration", duration},
+			{"size", size},
+			{nullptr, nullptr},
+		};
+		base_type::set_method(L, l);
 
 		ozz::io::File file(path, "rb");
 		if (!file.opened()) {
@@ -580,9 +540,9 @@ struct ozzAnimation {
 		return 1;
 	}
 };
-const char ozzAnimation::kLuaName[] = "ozz::animation::Animation";
+REGISTER_LUA_CLASS(ozzAnimation)
 
-struct ozzBlendingJob {
+struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 	ozz::animation::Skeleton*                            m_ske = nullptr;
 	ozz::Vector<bind_pose_soa::bind_pose_type>::Std      m_result;
 	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std m_layers;
@@ -598,10 +558,9 @@ struct ozzBlendingJob {
 	int do_sample(lua_State* L) {
 		ozzSamplingCache* sampling = ozzSamplingCache::get(L, 1);
 		ozzAnimation* animation = ozzAnimation::get(L, 2);
-		lua_Number ratio = luaL_checknumber(L, 3);
-		lua_Number weight = luaL_optnumber(L, 4, 1.0f);
-		bind_pose_soa::bind_pose_type pose;
-		pose.resize(m_ske->num_soa_joints());
+		float ratio = (float)luaL_checknumber(L, 3);
+		float weight = (float)luaL_optnumber(L, 4, 1.0f);
+		bind_pose_soa::bind_pose_type pose(m_ske->num_soa_joints());
 		ozz::animation::SamplingJob job;
 		if (m_ske->num_joints() > sampling->v->max_tracks()){
 			sampling->v->Resize(m_ske->num_joints());
@@ -623,8 +582,8 @@ struct ozzBlendingJob {
 	int do_blend(lua_State* L) {
 		const char* blendtype = luaL_checkstring(L, 1);
 		lua_Integer n = luaL_checkinteger(L, 2);
-		lua_Number weight = luaL_optnumber(L, 3, 1.0f);
-		lua_Number threshold = luaL_optnumber(L, 4, 0.1f);
+		float weight = (float)luaL_optnumber(L, 3, 1.0f);
+		float threshold = (float)luaL_optnumber(L, 4, 0.1f);
 		size_t max = m_layers.size();
 		if (n <= 0 || (size_t)n > max) {
 			return luaL_error(L, "invalid blend range: %d", n);
@@ -634,8 +593,7 @@ struct ozzBlendingJob {
 			return 0;
 		}
 		ozz::animation::BlendingJob job;
-		bind_pose_soa::bind_pose_type pose;
-		pose.resize(m_ske->num_soa_joints());
+		bind_pose_soa::bind_pose_type pose(m_ske->num_soa_joints());
 		if (strcmp(blendtype, "blend") == 0) {
 			job.layers = ozz::Range(&m_layers[max-n], n);
 		} else if (strcmp(blendtype, "additive") == 0) {
@@ -662,23 +620,18 @@ struct ozzBlendingJob {
 		return 0;
 	}
 	
-	static int find_root_index(const ozz::animation::Skeleton *ske) {
-		const auto jointcount = ske->num_joints();
-		const auto &parents = ske->joint_parents();
-		for (auto ii = 0; ii < jointcount; ++ii) {
-			auto &parent = parents[ii];
-			if (parent == ozz::animation::Skeleton::kNoParent)
-				return ii;
-		}
-		return -1;
-	}
 	static void fix_root_translation(ozz::animation::Skeleton *ske, bind_pose_soa::bind_pose_type& pose){
-		auto rootidx = find_root_index(ske);
-		const auto soa_rootidx = rootidx / 4;
-		auto& trans = const_cast<ozz::math::SoaTransform&>(pose[soa_rootidx]);
-		const auto newtrans = ozz::math::simd_float4::zero();
-		trans.translation.x = ozz::math::SetI(trans.translation.x, newtrans, 0);
-		trans.translation.z = ozz::math::SetI(trans.translation.z, newtrans, 0);
+		size_t n = (size_t)ske->num_joints();
+		const auto& parents = ske->joint_parents();
+		for (size_t i = 0; i < n; ++i) {
+			if (parents[i] == ozz::animation::Skeleton::kNoParent) {
+				auto& trans = pose[i / 4];
+				const auto newtrans = ozz::math::simd_float4::zero();
+				trans.translation.x = ozz::math::SetI(trans.translation.x, newtrans, 0);
+				trans.translation.z = ozz::math::SetI(trans.translation.z, newtrans, 0);
+				return;
+			}
+		}
 	}
 
 	int get_result(lua_State* L) {
@@ -696,51 +649,27 @@ struct ozzBlendingJob {
 		return 0;
 	}
 	static int lsetup(lua_State* L) {
-		return get(L, lua_upvalueindex(1))
+		return base_type::get(L, lua_upvalueindex(1))
 			->setup(L);
 	}
 	static int ldo_sample(lua_State* L) {
-		return get(L, lua_upvalueindex(1))
+		return base_type::get(L, lua_upvalueindex(1))
 			->do_sample(L);
 	}
 	static int ldo_blend(lua_State* L) {
-		return get(L, lua_upvalueindex(1))
+		return base_type::get(L, lua_upvalueindex(1))
 			->do_blend(L);
 	}
 	static int ldo_ik(lua_State* L) {
-		return get(L, lua_upvalueindex(1))
+		return base_type::get(L, lua_upvalueindex(1))
 			->do_ik(L);
 	}
 	static int lget_result(lua_State* L) {
-		return get(L, lua_upvalueindex(1))
+		return base_type::get(L, lua_upvalueindex(1))
 			->get_result(L);
 	}
-
-	static const char kLuaName[];
-	static ozzBlendingJob* get(lua_State* L, int idx) {
-		return (ozzBlendingJob*)luaL_testudata(L, idx, kLuaName);
-	}
-	static int destroy(lua_State* L) {
-		get(L, 1)->~ozzBlendingJob();
-		return 0;
-	}
-	static int create(lua_State* L) {
-		ozzBlendingJob* self = (ozzBlendingJob*)lua_newuserdata(L, sizeof(ozzBlendingJob));
-		new(self)ozzBlendingJob();
-		if (luaL_newmetatable(L, kLuaName)) {
-			lua_pushvalue(L, -1);
-			lua_setfield(L, -2, "__index");
-			luaL_Reg l[] = {
-				{"__gc", destroy},
-				{nullptr, nullptr},
-			};
-			luaL_setfuncs(L, l, 0);
-		}
-		lua_setmetatable(L, -2);
-		return 1;
-	}
 	static int init(lua_State* L) {
-		create(L);
+		base_type::constructor(L);
 		luaL_Reg l[] = {
 			{ "setup",		lsetup},
 			{ "do_sample",	ldo_sample},
@@ -752,16 +681,13 @@ struct ozzBlendingJob {
 		luaL_setfuncs(L, l, 1);
 		return 1;
 	}
-	
 };
-const char ozzBlendingJob::kLuaName[] = "ozz::animation::BlendingJob";
+REGISTER_LUA_CLASS(ozzBlendingJob)
 
 extern "C" {
 LUAMOD_API int
 luaopen_hierarchy_animation(lua_State *L) {
 	register_bind_pose_mt(L);
-	register_aligned_memory(L);
-	register_joint_remap(L);
 	lua_newtable(L);
 	luaL_Reg l[] = {
 		{ "mesh_skinning",				lmesh_skinning},
@@ -769,8 +695,8 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "new_animation",				ozzAnimation::create},
 		{ "new_sampling_cache",			ozzSamplingCache::create},
 		{ "new_bind_pose",				lnew_bind_pose},
-		{ "new_aligned_memory",			lnew_memory},
-		{ "new_joint_remap",			lnew_joint_remap},
+		{ "new_aligned_memory",			ozzAllocator::create},
+		{ "new_joint_remap",			ozzJointRemap::create},
 		{ NULL, NULL },
 	};
 	luaL_setfuncs(L,l,0);
