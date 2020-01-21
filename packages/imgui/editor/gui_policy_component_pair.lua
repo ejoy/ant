@@ -22,8 +22,9 @@ local MultStateColor = {
     normal = {0.4,0.7,0,1},
     conflict = {255,0,0.1,1},
 }
-
-
+--Todo:
+    --增加规则：同group的冲突，目前还没需要，都有output约束；
+    --Policy增加依赖关系；
 local GuiPolicyComponentPair = GuiBase.derive("GuiPolicyComponentPair")
 GuiPolicyComponentPair.GuiName = "PolicyComponentPair"
 function GuiPolicyComponentPair:_init()
@@ -103,32 +104,52 @@ function GuiPolicyComponentPair:init_cache()
             policy_tbl[pname] = policy_info
             local require_transform = policy_data.require_transform --list
             local require_component = policy_data.require_component --list
+            local unique_component = policy_data.unique_component --list
             policy_info.components = {}
-            for _,c in ipairs(require_component) do
-                policy_info.components[c] = "normal"
+            policy_info.is_unique = {}
+            if require_component then
+                for _,c in ipairs(require_component) do
+                    policy_info.components[c] = "normal"
+                end
             end
-            policy_info.transforms = {} --
-            for _,tname in ipairs(require_transform) do
-                local tdata = transform_dic[tname]
-                local temp = {
-                    name = tname,
-                    output = tdata.output,
-                    input = tdata.input,
-                }
-                for _,cname in ipairs(tdata.output) do
-                    policy_info.components[cname] = "output"
+            if unique_component then
+                for _,c in ipairs(unique_component) do
+                    policy_info.components[c] = "normal"
+                    policy_info.is_unique[c] = true
                 end
-                for _,cname in ipairs(tdata.input) do
-                    if policy_info.components[cname]~="output" then
-                        policy_info.components[cname] = "input"
+            end
+
+            if require_transform then
+                policy_info.transforms = {} --
+                for _,tname in ipairs(require_transform) do
+                    local _p, _name = tname:match "^([^|]*)|(.*)$"
+                    _name = _name or tname
+                    local tdata = transform_dic[_name]
+                    local temp = {
+                        name = _name,
+                        output = tdata.output,
+                        input = tdata.input,
+                    }
+                    for _,cname in ipairs(tdata.output) do
+                        policy_info.components[cname] = "output"
                     end
+                    for _,cname in ipairs(tdata.input) do
+                        if policy_info.components[cname]~="output" then
+                            policy_info.components[cname] = "input"
+                        end
+                    end
+                    table.insert(policy_info.transforms,temp)
                 end
-                table.insert(policy_info.transforms,temp)
             end
             for cname,ctype in pairs(policy_info.components) do
                 component_tbl[cname] = component_tbl[cname] or {}
                 component_tbl[cname][pname] = ctype
             end
+            policy_info.require_package = policy_data.require_package
+            policy_info.require_system = policy_data.require_system
+            policy_info.require_policy = policy_data.require_policy
+            policy_info.defined = policy_data.defined
+            policy_info.package = policy_data.package
         end
 
     end
@@ -148,8 +169,15 @@ function GuiPolicyComponentPair:on_update()
     if windows.BeginChild("left",w*0.5,0,true,flags.Window.MenuBar) then
         if widget.BeginMenuBar() then
             widget.Text("Policy")
+            cursor.SameLine()
+            local avail_w,_ = windows.GetContentRegionAvail()
+            cursor.Dummy(avail_w-100,0)
+            if widget.Button("SelectAll",-1) then
+                self:on_select_all("policy")
+            end
             widget.EndMenuBar()
         end
+
         local policies = self.schema_map.policies
         local selected_map = self.selected_map["policy"]
         local sorted_names = self.cache.sorted.policies
@@ -263,6 +291,18 @@ function GuiPolicyComponentPair:policy_selectable(name,selected)
     if util.IsItemHovered() then
         widget.BeginTooltip()
         local policy_data = self.cache.policy_tbl[name]
+        if policy_data.package then
+            if default_open_treenode("Package") then
+                widget.BulletText(policy_data.package)
+                widget.TreePop()
+            end
+        end
+        if policy_data.defined then
+            if default_open_treenode("Location") then
+                widget.BulletText(policy_data.defined)
+                widget.TreePop()
+            end
+        end
         local transforms = policy_data.transforms
         if transforms and #transforms> 0 then
             if default_open_treenode("Transforms") then
@@ -287,12 +327,39 @@ function GuiPolicyComponentPair:policy_selectable(name,selected)
                 end
                 widget.TreePop()
             end
-
         end
         local components = policy_data.components
         if default_open_treenode("Component") then
             for cname,_ in sorted_pairs(components) do
                 widget.BulletText(cname)
+                if policy_data.is_unique[cname] then
+                    cursor.SameLine()
+                    widget.Text("[unique]")
+                end
+            end
+            widget.TreePop()
+        end
+        local require_package = policy_data.require_package
+        local require_system = policy_data.require_system
+        local require_policy = policy_data.require_policy
+        if require_package or require_system or require_policy then
+            cursor.Separator()
+        end
+        if require_package and  default_open_treenode("RequirePackage") then
+            for _,name in sorted_pairs(require_package) do
+                widget.BulletText(name)
+            end
+            widget.TreePop()
+        end
+        if require_system and  default_open_treenode("RequireSystem") then
+            for _,name in sorted_pairs(require_system) do
+                widget.BulletText(name)
+            end
+            widget.TreePop()
+        end
+        if require_policy and  default_open_treenode("RequirePolicy") then
+            for _,name in sorted_pairs(require_policy) do
+                widget.BulletText(name)
             end
             widget.TreePop()
         end
@@ -408,6 +475,25 @@ function GuiPolicyComponentPair:on_select_item(typ,name)
     end
     self:_refresh_pair()
 end
+
+function GuiPolicyComponentPair:on_select_all(typ)
+    assert(typ == "policy")
+    if self.cur_selected_type and self.cur_selected_type ~= typ then
+        for k,_ in pairs(self.selected_map) do
+            if k ~= typ then
+                self.selected_map[k] = {}
+            end
+        end
+    end
+    self.cur_selected_type = typ
+    local selected_map = self.selected_map[typ]
+    local sorted_names = self.cache.sorted.policies
+    for _,name in ipairs(sorted_names) do
+        selected_map[name] = true
+    end
+    self:_refresh_pair()
+end
+
 
 function GuiPolicyComponentPair:_refresh_pair()
     if not self.cur_selected_type then
