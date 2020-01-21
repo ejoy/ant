@@ -26,7 +26,7 @@ local dpi_x, dpi_y
 
 local eventKeyboard = world:sub {"keyboard"}
 local kKeyboardSpeed <const> = 0.5
-local keyboard_dx, keyborad_dy, keyboard_dz = 0, 0, 0
+
 
 function camera_controller_system:post_init()
 	-- local camera = get_camera()
@@ -63,11 +63,12 @@ local function can_move(camera)
 end
 
 function camera_controller_system:camera_control()
+	local keyboard_dx, keyborad_dy, keyboard_dz = 0, 0, 0
 	local camera = get_camera()
 	
 	if can_rotate(camera) then
 		for _,_,state,x,y in eventMouseLeft:unpack() do
-			if state == "MOVE" then
+			if state == "MOVE" and mouse_lastx then
 				local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 				local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
 				local right, up = ms:base_axes(camera.viewdir)
@@ -76,10 +77,9 @@ function camera_controller_system:camera_control()
 			mouse_lastx, mouse_lasty = x, y
 		end
 	end
-
 	if can_move(camera) then
 		for _,code,press in eventKeyboard:unpack() do
-			local delta = press == 1 and kKeyboardSpeed or (press == 0 and -kKeyboardSpeed or 0)
+			local delta = press and kKeyboardSpeed or ((not press) and -kKeyboardSpeed or 0)
 			if code == "W" then
 				keyboard_dz = keyboard_dz + delta
 			elseif code == "S" then

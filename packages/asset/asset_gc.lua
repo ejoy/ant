@@ -1,5 +1,5 @@
 local ecs = ...
-
+local world = ecs.world
 local assetmgr = require "asset"
 
 local platform = require "platform"
