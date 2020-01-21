@@ -121,7 +121,7 @@ local function get_registered(path)
     return registered[name]
 end
 
-local function editor_register_package(path,force)
+local function editor_load_package(path,force)
     if __ANT_RUNTIME__ then
         return false
     end
@@ -132,6 +132,7 @@ local function editor_register_package(path,force)
     local editorvfs = require "vfs"
     editorvfs.unmount("pkg/"..name)
     editorvfs.add_mount("pkg/"..name, path)
+
     return name
 end
 
