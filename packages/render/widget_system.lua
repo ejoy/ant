@@ -1,7 +1,5 @@
---luacheck: ignore self
 local ecs = ...
 local world = ecs.world
-local physicworld = world.args.Physics.world
 
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
@@ -9,10 +7,6 @@ local ms = mathpkg.stack
 
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
-
-local mathbaselib = require "math3d.baselib"
-
-local animodule = require "hierarchy.animation"
 
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
@@ -103,6 +97,72 @@ function rmb:widget()
 	append_buffers(dmesh, vb, ib)
 end
 
+local function apply_srt(shape, srt)
+	if not srt then
+		return {
+			s = {1,1,1,0},
+			r = {0,0,0,0},
+			t = ms(shape.origin, "P"),
+		}
+	end
+	return {
+		s = srt.s,
+		r = srt.r,
+		t = ms(srt.t, shape.origin, "+P"),
+	}
+end
+local function draw_box(shape, srt, vb, ib)
+	srt = apply_srt(shape, srt)
+	local color <const> = 0xffffff00
+	local desc={vb={}, ib={}}
+	geometry_drawer.draw_box(shape.size, color, srt, desc)
+	append_buffer(desc, vb, ib)
+end
+local function draw_capsule(shape, srt, vb, ib)
+	srt = apply_srt(shape, srt)
+	local color <const> = 0xffffff00
+	local desc={vb={}, ib={}}
+	geometry_drawer.draw_capsule({
+		tessellation = 2,
+		height = shape.height,
+		radius = shape.radius,
+	}, color, srt, desc)
+	append_buffer(desc, vb, ib)
+end
+local function draw_sphere(shape, srt, vb, ib)
+	srt = apply_srt(shape, srt)
+	local color <const> = 0xffffff00
+	local desc={vb={}, ib={}}
+	geometry_drawer.draw_sphere({
+		tessellation = 2,
+		radius = shape.radius,
+	}, color, srt, desc)
+	append_buffer(desc, vb, ib)
+end
+local function draw_compound(shape, srt, vb, ib)
+	srt = apply_srt(shape, srt)
+	if shape.box then
+		for _, sh in ipairs(shape.box) do
+			draw_box(sh, srt, vb, ib)
+		end
+	end
+	if shape.capsule then
+		for _, sh in ipairs(shape.capsule) do
+			draw_capsule(sh, srt, vb, ib)
+		end
+	end
+	if shape.sphere then
+		for _, sh in ipairs(shape.sphere) do
+			draw_sphere(sh, srt, vb, ib)
+		end
+	end
+	if shape.compound then
+		for _, sh in ipairs(shape.compound) do
+			draw_compound(sh, srt, vb, ib)
+		end
+	end
+end
+
 local phy_bounding = ecs.system "physic_bounding"
 phy_bounding.require_system "ant.scene|primitive_filter_system"
 phy_bounding.require_system "ant.render|reset_mesh_buffer"
@@ -111,84 +171,22 @@ phy_bounding.require_system "ant.bullet|collider_system"
 function phy_bounding:widget()
 	local dmesh = world:singleton_entity "widget_drawer"
 	local vb, ib = {"fffd"}, {}
-	local function draw_box(shape, srt)
-		local color <const> = 0xffffff00
-		local desc={vb={}, ib={}}
-		geometry_drawer.draw_box(shape.size, color, srt, desc)
-		append_buffer(desc, vb, ib)
-	end
-	local function draw_capsule(shape, srt)
-		local color <const> = 0xffffff00
-		local desc={vb={}, ib={}}
-		geometry_drawer.draw_capsule({
-			tessellation = 2,
-			height = shape.height,
-			radius = shape.radius,
-		}, color, srt, desc)
-		append_buffer(desc, vb, ib)
-	end
-	local function draw_sphere(shape, srt)
-		local color <const> = 0xffffff00
-		local desc={vb={}, ib={}}
-		geometry_drawer.draw_sphere({
-			tessellation = 2,
-			radius = shape.radius,
-		}, color, srt, desc)
-		append_buffer(desc, vb, ib)
-	end
-	local function draw_custom(shape, srt)
-		if shape.box then
-			draw_box(shape.box, srt)
-		end
-		if shape.capsule then
-			draw_capsule(shape.capsule, srt)
-		end
-		if shape.sphere then
-			draw_sphere(shape.sphere, srt)
-		end
-		if shape.children then
-			draw_custom(shape.children, srt)
-		end
-	end
-	for _, eid in world:each "custom_collider" do
+	for _, eid in world:each "collider" do
 		local e = world[eid]
-		local collidercomp = e.custom_collider
-		local srt = {
-			s = e.transform.s,
-			r = e.transform.r,
-			t = ms(e.transform.t, collidercomp.collider.center, "+T"),
-		}
-		draw_custom(collidercomp.shape, srt)
-	end
-	for _, eid in world:each "box_collider" do
-		local e = world[eid]
-		local collidercomp = e.box_collider
-		local srt = {
-			s = e.transform.s,
-			r = e.transform.r,
-			t = ms(e.transform.t, collidercomp.collider.center, "+T"),
-		}
-		draw_box(collidercomp.shape, srt)
-	end
-	for _, eid in world:each "capsule_collider" do
-		local e = world[eid]
-		local collidercomp = e.capsule_collider
-		local srt = {
-			s = e.transform.s,
-			r = e.transform.r,
-			t = ms(e.transform.t, collidercomp.collider.center, "+T"),
-		}
-		draw_capsule(collidercomp.shape, srt)
-	end
-	for _, eid in world:each "sphere_collider" do
-		local e = world[eid]
-		local collidercomp = e.sphere_collider
-		local srt = {
-			s = e.transform.s,
-			r = e.transform.r,
-			t = ms(e.transform.t, collidercomp.collider.center, "+T"),
-		}
-		draw_sphere(collidercomp.shape, srt)
+		local collider = e.collider
+		local srt = e.transform
+		if collider.sphere then
+			draw_sphere(collider.sphere, srt, vb, ib)
+		end
+		if collider.box then
+			draw_box(collider.box, srt, vb, ib)
+		end
+		if collider.capsule then
+			draw_capsule(collider.capsule, srt, vb, ib)
+		end
+		if collider.compound then
+			draw_compound(collider.compound, srt, vb, ib)
+		end
 	end
 	append_buffers(dmesh, vb, ib)
 end
@@ -256,25 +254,22 @@ function iwidget_drawer.create()
 	return eid
 end
 
-function iwidget_drawer.draw_lines(points, color, transform)
-	local m = math.fmod(#points, 2)
-	if m ~= 0 then
+function iwidget_drawer.draw_lines(points, transform)
+	if #points % 2 ~= 0 then
 		error(string.format("argument array must multiple of 2:%d", #points))
 	end
-
-	color = color or 0xfff0f000
-
-	local debugdrawer = world:singleton_entity "widget_drawer"
+	local dmesh = world:singleton_entity "widget_drawer"
 	local desc = {vb={"fffd"}, ib={}}
-	geometry_drawer.draw_line(points, color, transform, desc)
-
-	append_buffers(debugdrawer, desc.vb, desc.ib)
+	geometry_drawer.draw_line(points, 0xfff0f000, transform, desc)
+	append_buffers(dmesh, desc.vb, desc.ib)
 end
 
-function iwidget_drawer.draw_box(size, color, transform)
-	
+function iwidget_drawer.draw_box(size, transform)
 end
 
-function iwidget_drawer.draw_sphere(radius, color, transform)
-
+function iwidget_drawer.draw_sphere(sphere, transform)
+	local dmesh = world:singleton_entity "widget_drawer"
+	local vb, ib = {"fffd"}, {}
+	draw_sphere(sphere, transform, vb, ib)
+	append_buffers(dmesh, vb, ib)
 end

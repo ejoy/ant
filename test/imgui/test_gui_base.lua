@@ -251,11 +251,11 @@ function TestGuiBase:tab1_update()
     -- end
     -- widget.InputFloat("InputFloat", editfloat)
     local is_editing = widget.InputFloat("InputFloat", editfloat)
-    log("editor:",is_editing)
+    -- log("editor:",is_editing)
     if is_editing then
         log(editfloat[1])
     end
-    log("float:",util.IsItemFocused(),util.IsItemActivated(),util.IsItemEdited(),util.IsItemDeactivated())
+    -- log("float:",util.IsItemFocused(),util.IsItemActivated(),util.IsItemEdited(),util.IsItemDeactivated())
     if widget.InputText("editbox_dynamic", editbox_dynamic) then
         log(editbox_dynamic.text)
     end

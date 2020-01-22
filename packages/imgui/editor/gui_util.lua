@@ -8,7 +8,7 @@ local cursor = imgui.cursor
 local enum = imgui.enum
 local gui_util = {}
 
-local function get_pkg_list()
+function gui_util.get_pkg_list()
     local fs = require "filesystem"
     local res = {}
     for pkg in fs.path('/pkg'):list_directory() do
@@ -17,20 +17,18 @@ local function get_pkg_list()
     return res
 end
 
+
 function gui_util.get_all_components()
-    local pm = require "antpm"
-    local packages = get_pkg_list(true)
+    local packages = gui_util.get_pkg_list()
     for k = #packages,1,-1 do
         local v = packages[k]
         if v == "ant.ecs" or v == "project" then
             table.remove(packages,k)
         end
     end
-    -- log.info_a("all_package:",packages)
-    local systems = {}
     local scene         = import_package "ant.scene".util
-    local world = scene.start_new_world(600, 400, packages, systems)
-    local world_update = scene.loop(world)
+    -- log.info_a("all_package:",packages)
+    local world = scene.start_static_world(packages)
     -- world_update()
     -- log.info_a(world._schema.map)
     -- log(world._schema.map)
@@ -39,8 +37,7 @@ end
 
 
 function gui_util.get_all_schema()
-    local pm = require "antpm"
-    local packages = get_pkg_list(true)
+    local packages = gui_util.get_pkg_list()
     for k = #packages,1,-1 do
         local v = packages[k]
         if v == "ant.ecs" or v == "project" then
@@ -48,9 +45,13 @@ function gui_util.get_all_schema()
         end
     end
     -- log.info_a("all_package:",packages)
+    -- local systems = {"timesystem", "message_system"}
+    -- local inputmgr      = import_package "ant.inputmgr"
+    -- local scene         = import_package "ant.scene".util
+    -- local input_queue = inputmgr.queue()
     local scene         = import_package "ant.scene".util
-    local world = scene.start_new_world(600, 400, packages, systems)
-    local world_update = scene.loop(world)
+    local world = scene.start_static_world(packages)
+        -- })
     -- world_update()
     -- log.info_a(world._schema.map)
     -- log(world._schema.map)
@@ -328,6 +329,17 @@ function gui_util.load_local_file(local_path_str)
         r()
         return env
     end
+end
+
+function gui_util.remount_package(lfs_path)
+    local fs = require "filesystem"
+    local pm = require "antpm"
+    local name = pm.load_package(lfs_path)
+    local vfs = require "vfs"
+    vfs.unmount("pkg/"..name)
+    vfs.add_mount("pkg/"..name,lfs_path)
+    pm.unregister_package(fs.path("pkg/"..name))
+    pm.register_package(fs.path("pkg/"..name))
 end
 
 return gui_util

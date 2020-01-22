@@ -7,7 +7,7 @@ local function get_transmit_merge(e, tt_duration)
 	return function (deltatime)
 		timepassed = timepassed + deltatime
 		if timepassed > tt_duration then
-			local current_pose = e.animation.current_pose
+			local current_pose = e.animation.current
 			current_pose[1] = current_pose[#current_pose]
 			current_pose[1].weight = 1
 			for i = 2, #current_pose do
@@ -16,7 +16,7 @@ local function get_transmit_merge(e, tt_duration)
 			return true
 		end
 		local scale = math.max(0, math.min(1, timepassed / tt_duration))
-		local current_pose = e.animation.current_pose
+		local current_pose = e.animation.current
 		for i = 1, #current_pose-1 do
 			current_pose[i].weight = current_pose[i].init_weight * (1 - scale)
 		end
@@ -26,18 +26,15 @@ local function get_transmit_merge(e, tt_duration)
 end
 
 local function play_animation(e, name, duration)
-	local current_pose = e.animation.current_pose
+	local current_pose = e.animation.current
 	for i = 1, #current_pose do
 		current_pose[i].init_weight = current_pose[i].weight
 	end
-	local targetpose = e.animation.pose[name]
-	targetpose.weight = 0
-	current_pose[#current_pose+1] = targetpose
+	local ani = e.animation.anilist[name]
+	ani.weight = 0
+	ani.start_time = timer.current()
+	current_pose[#current_pose+1] = ani
 	e.state_machine.transmit_merge = get_transmit_merge(e, duration * 1000.)
-	local current = timer.current()
-	for _, aniref in ipairs(targetpose) do
-		aniref.start_time = current
-	end
 end
 
 local m = ecs.policy "state_machine"
@@ -70,13 +67,14 @@ local m = ecs.interface "animation"
 m.require_interface "ant.timer|timer"
 
 function m.set_state(e, name)
-	if e.animation and e.animation.pose[name] and e.state_machine then
-		local current_pose = e.animation.current_pose
+	if e.animation and e.animation.anilist[name] and e.state_machine then
+		local current_pose = e.animation.current
+		current_pose = current_pose[#current_pose]
 		if current_pose.name == name then
 			return
 		end
 		local statecfg = e.state_machine
-		local traget_transmits = statecfg.transmits[current_pose[#current_pose].name]
+		local traget_transmits = statecfg.transmits[current_pose.name]
 		if traget_transmits and traget_transmits[name] then
 			play_animation(e, name, traget_transmits[name].duration)
 			return true
@@ -85,8 +83,9 @@ function m.set_state(e, name)
 end
 
 function m.play(e, name, time)
-	if e.animation and e.animation.pose[name]  then
-		local current_pose = e.animation.current_pose
+	if e.animation and e.animation.anilist[name]  then
+		local current_pose = e.animation.current
+		current_pose = current_pose[#current_pose]
 		if current_pose.name == name then
 			return
 		end

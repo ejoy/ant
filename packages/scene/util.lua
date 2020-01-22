@@ -3,33 +3,20 @@ local util = {}; util.__index = util
 local ecs 			= import_package "ant.ecs"
 local mathadapter 	= import_package "ant.math.adapter"
 
-local bullet        = require "bullet"
-
-local function new_world(config)
+function util.start_new_world(fbw, fbh, config)
+	config.fb_size = {w=fbw, h=fbh}
 	local world = ecs.new_world(config)
 	mathadapter.bind_math_adapter()
 	world:update_func "init" ()
-    return world
-end
-
-local function create_physic()
-	return {
-		world = bullet.new(),
-		objid_mapper = {},
-	}
-end
-
-function util.start_new_world(fbw, fbh, config)
-	config.fb_size={w=fbw, h=fbh}
-	config.Physics = create_physic()
-	return new_world(config)
+	return world
 end
 
 -- static_world use for editor module,only data needed
-function util.start_static_world(packages,systems)
-	return new_world(packages, systems, {
-		Physics = create_physic()
-	})
+function util.start_static_world(packages)
+-- local config = {Physics = create_physic()}
+	local world = ecs.get_schema({Physics={}},packages)
+	mathadapter.bind_math_adapter()
+	return world
 end
 
 function util.loop(world)

@@ -1,5 +1,5 @@
 ---------
-ant.bullet|collider.custom
+ant.bullet|collider
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -8,14 +8,16 @@ ant.serialize|serialize
 ---------
 can_cast: true
 can_render: true
-custom_collider:
-  collider:
-    center: {-10,12,0}
-    is_tigger: true
-  shape:
+collider:
+  compound:
+    origin: {0,0,0,0}
     box:
+      ---
+      origin: {-10,12,0,0}
       size: {4,12,4}
-collider_tag: custom_collider
+      ---
+      origin: {10,12,0,0}
+      size: {4,12,4}
 material:
   ref_path: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
 mesh:

@@ -185,7 +185,7 @@ function GuiCanvas:on_dispatch_msg()
     local focus = windows.IsWindowFocused(focus_flag)
     local hovered = windows.IsWindowHovered(focus_flag)
 
-    local msgqueue = self.world.args.mq
+    -- local msgqueue = self.world.args.mq
 
     if focus or ( hovered and self:check_is_click_inside(rx,ry)) then
         if not focus then
@@ -198,27 +198,44 @@ function GuiCanvas:on_dispatch_msg()
                 local btn = inputmgr.translate_mouse_button(what)
                 local state = inputmgr.translate_mouse_state(state)
                 if not self:check_is_left_click_outside(btn,state,rx,ry) then
-                    msgqueue:push("mouse", rx, ry,
-                    btn,
-                    state)
+                    -- msgqueue:push("mouse", rx, ry,
+                    -- btn,
+                    -- state)
+                    self.world:pub({
+                        "mouse",
+                        btn,state,
+                        rx,ry,
+                    })
                 end
             end
         end
     end
     
     if hovered and called.mouse_wheel then
-        msgqueue:push("mouse_wheel", rx, ry, in_mouse.scroll)
+        -- msgqueue:push("mouse_wheel", rx, ry, in_mouse.scroll)
+        self.world:pub({
+            "mouse_wheel",
+            in_mouse.scroll,
+            rx, ry
+        })
     end
     
     if focus and #key_down > 0 then
         for _,record in ipairs(key_down) do
-            msgqueue:push("keyboard", inputmgr.translate_key(record[1]), record[2], in_key)
+            -- msgqueue:push("keyboard", inputmgr.translate_key(record[1]), record[2], in_key)
+            self.world:pub({
+                "keyboard",
+                inputmgr.translate_key(record[1]),
+                record[2],
+                in_key
+            })
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(gui_input.MouseLeft)
     if not mouse_pressed and self.vp_dirty then
         self.vp_dirty = false
-        msgqueue:push("resize", rect.w, rect.h)
+        -- msgqueue:push("resize", rect.w, rect.h)
+        self.world:pub({"resize", rect.w, rect.h})
     end
 end
 

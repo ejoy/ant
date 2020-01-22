@@ -296,7 +296,6 @@ local time_freq    = baselib.HP_frequency / 1000
 local function gettime()
 	return time_counter() / time_freq
 end
-
 function world:update_func(what)
 	local list = system.lists(self._systems, what)
 	if not list then
@@ -308,10 +307,10 @@ function world:update_func(what)
 		switch:update()
 		for i = 1, #list do
 			local v = list[i]
-			local f, proxy, name = v[1], v[2], v[3]
-			self:pub {"system_begin",name,what,gettime()}
+			local f, proxy, name, step_name = v[1], v[2], v[3], v[4]
+			self:pub {"system_hook","begin",name,what,step_name,gettime()}
 			f(proxy)
-			self:pub {"system_end",name,what,gettime()}
+			self:pub {"system_hook","end",name,what,step_name,gettime()}
 		end
 	end
 end
@@ -376,6 +375,11 @@ function m.new_world(config)
 	end
 
 	return w
+end
+
+function m.get_schema(...)
+	local extract_schema = require "extract_schema"
+	return extract_schema.run(world,...) 
 end
 
 return m

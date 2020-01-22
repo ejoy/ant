@@ -10,7 +10,6 @@ local declmgr 	= renderpkg.declmgr
 local computil 	= renderpkg.components
 
 local ms 		= import_package "ant.math".stack
-local colliderutil = import_package "ant.bullet".util
 
 local fs 		= require "filesystem"
 local bgfx 		= require "bgfx"

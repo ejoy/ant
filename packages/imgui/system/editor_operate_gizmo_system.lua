@@ -13,6 +13,8 @@ local gizmo_object = ecs.component "gizmo_object"
     ["opt"].type "string"   --"position"/"rotation"/"scale"
     ["opt"].dir "string"    --"x"/"y"/"z"  *"xy"/"yz"/"xz"
 
+local policy_gizmo_object = ecs.policy "gizmo_object"
+policy_gizmo_object.require_component "gizmo_object"
 --local transform_watcher = world:sub {"transform_changed", "transform"}
 
 local GizmoType = {"position","rotation","scale"}
@@ -367,6 +369,8 @@ local function on_gizmo_type_change(self,typ)
 
 end
 
+local mouse_left_mb = world:sub {"mouse","LEFT"}
+
 local gizmo_sys =  ecs.system "editor_operate_gizmo_system"
 gizmo_sys.require_singleton "operate_gizmo_cache"
 function gizmo_sys:init()
@@ -401,46 +405,82 @@ function gizmo_sys:init()
     local hub = world.args.hub
     hub.subscribe(WatcherEvent.GizmoType,on_gizmo_type_change,self)
     --------------
-    self.message.observers:add({
-        mouse = function (_, x, y, what, state)
-            if what == "LEFT" then
-                -- local count = operate_gizmo_cache.count
-                operate_gizmo_cache.cur_mouse_state = state
-                if  ( state == "MOVE" or state == "DOWN" ) then
-                    if state == "MOVE" and operate_gizmo_cache.last_mouse_pos then
-                        local gizmo_type = operate_gizmo_cache.gizmo_type
-                        local picked_dir = operate_gizmo_cache.picked_dir
-                        if picked_dir then
-                            local last_mouse_pos = operate_gizmo_cache.last_mouse_pos
-                            local dx,dy = x-last_mouse_pos[1],(y-last_mouse_pos[2])*-1
-                            -- 
-                            local mouse_delta = operate_gizmo_cache.mouse_delta[gizmo_type][picked_dir]
-                            mouse_delta[1] = mouse_delta[1] + dx
-                            mouse_delta[2] = mouse_delta[2] + dy
-                        end
-                        -- count[1] = count[1] + (x-operate_gizmo_cache.last_mouse_pos[1])
-                        -- count[2] = count[2] + (y-operate_gizmo_cache.last_mouse_pos[2])
-                    else
-                        operate_gizmo_cache.mouse_pos = {x, y}
-                    end
-                    operate_gizmo_cache.last_mouse_pos = {x,y}
-                else
-                    -- log.info_a("count",count)
-                    -- log.info_a("move_count",operate_gizmo_cache.move_count)
-                    -- count[1] = 0
-                    -- count[2] = 0
-                    -- operate_gizmo_cache.move_count[1] = 0
-                    -- operate_gizmo_cache.move_count[2] = 0
-                    -- operate_gizmo_cache.move_count[3] = 0
-                end
-            end
-        end
-    })
+    -- self.message.observers:add({
+    --     mouse = function (_, x, y, what, state)
+    --         if what == "LEFT" then
+    --             -- local count = operate_gizmo_cache.count
+    --             operate_gizmo_cache.cur_mouse_state = state
+    --             if  ( state == "MOVE" or state == "DOWN" ) then
+    --                 if state == "MOVE" and operate_gizmo_cache.last_mouse_pos then
+    --                     local gizmo_type = operate_gizmo_cache.gizmo_type
+    --                     local picked_dir = operate_gizmo_cache.picked_dir
+    --                     if picked_dir then
+    --                         local last_mouse_pos = operate_gizmo_cache.last_mouse_pos
+    --                         local dx,dy = x-last_mouse_pos[1],(y-last_mouse_pos[2])*-1
+    --                         -- 
+    --                         local mouse_delta = operate_gizmo_cache.mouse_delta[gizmo_type][picked_dir]
+    --                         mouse_delta[1] = mouse_delta[1] + dx
+    --                         mouse_delta[2] = mouse_delta[2] + dy
+    --                     end
+    --                     -- count[1] = count[1] + (x-operate_gizmo_cache.last_mouse_pos[1])
+    --                     -- count[2] = count[2] + (y-operate_gizmo_cache.last_mouse_pos[2])
+    --                 else
+    --                     operate_gizmo_cache.mouse_pos = {x, y}
+    --                 end
+    --                 operate_gizmo_cache.last_mouse_pos = {x,y}
+    --             else
+    --                 -- log.info_a("count",count)
+    --                 -- log.info_a("move_count",operate_gizmo_cache.move_count)
+    --                 -- count[1] = 0
+    --                 -- count[2] = 0
+    --                 -- operate_gizmo_cache.move_count[1] = 0
+    --                 -- operate_gizmo_cache.move_count[2] = 0
+    --                 -- operate_gizmo_cache.move_count[3] = 0
+    --             end
+    --         end
+    --     end
+    -- })
 
 end
 
+local function update_mouse_event()
+    local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
+    for mouse_event in mouse_left_mb:each() do
+        local _,what,state,x,y = table.unpack(mouse_event)
+        operate_gizmo_cache.cur_mouse_state = state
+        if  ( state == "MOVE" or state == "DOWN" ) then
+            if state == "MOVE" and operate_gizmo_cache.last_mouse_pos then
+                local gizmo_type = operate_gizmo_cache.gizmo_type
+                local picked_dir = operate_gizmo_cache.picked_dir
+                if picked_dir then
+                    local last_mouse_pos = operate_gizmo_cache.last_mouse_pos
+                    local dx,dy = x-last_mouse_pos[1],(y-last_mouse_pos[2])*-1
+                    -- 
+                    local mouse_delta = operate_gizmo_cache.mouse_delta[gizmo_type][picked_dir]
+                    mouse_delta[1] = mouse_delta[1] + dx
+                    mouse_delta[2] = mouse_delta[2] + dy
+                end
+                -- count[1] = count[1] + (x-operate_gizmo_cache.last_mouse_pos[1])
+                -- count[2] = count[2] + (y-operate_gizmo_cache.last_mouse_pos[2])
+            else
+                operate_gizmo_cache.mouse_pos = {x, y}
+            end
+            operate_gizmo_cache.last_mouse_pos = {x,y}
+        else
+            -- log.info_a("count",count)
+            -- log.info_a("move_count",operate_gizmo_cache.move_count)
+            -- count[1] = 0
+            -- count[2] = 0
+            -- operate_gizmo_cache.move_count[1] = 0
+            -- operate_gizmo_cache.move_count[2] = 0
+            -- operate_gizmo_cache.move_count[3] = 0
+        end
+    end
+end
 
-function gizmo_sys:update()
+
+function gizmo_sys:editor_update()
+    update_mouse_event()
     local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     --sync transform gizmo

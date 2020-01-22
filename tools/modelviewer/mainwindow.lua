@@ -3,9 +3,7 @@ runtime.start {
 	policy = {
 		"ant.render|mesh",
 		"ant.serialize|serialize",
-		"ant.bullet|collider.capsule",
-		"ant.bullet|collider.custom",
-		"ant.bullet|collider.box",
+		"ant.bullet|collider",
 		"ant.render|render",
 		"ant.render|name",
 		"ant.render|shadow_cast",

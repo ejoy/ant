@@ -2,7 +2,7 @@
 ant.animation|animation
 ant.animation|skinning
 ant.animation|state_machine
-ant.bullet|collider.capsule
+ant.bullet|collider
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -34,17 +34,16 @@ animation:
       ref_path: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
       scale: 1
       looptimes: 0
+  ik:
+    jobs: {}
   birth_pose: idle
 can_render: true
-capsule_collider:
-  collider:
-    center: {0,1,0}
-    is_tigger: true
-  shape:
+collider:
+  capsule:
+    origin: {0,1,0,0}
     radius: 0.5
     height: 1
     axis: Y
-collider_tag: capsule_collider
 material:
   ref_path: /pkg/ant.resources/depiction/materials/skin_model_sample.material
 mesh:

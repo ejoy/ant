@@ -19,9 +19,9 @@ ecs.component_alias("target_entity","entityid")
 
 local editor_watcher_system = ecs.system "editor_watcher_system"
 editor_watcher_system.require_system "editor_operate_gizmo_system"
-editor_watcher_system.require_system 'scene_space' 
+editor_watcher_system.require_system 'ant.scene|scene_space' 
 
-editor_watcher_system.require_system "before_render_system"
+-- editor_watcher_system.require_system "before_render_system"
 editor_watcher_system.require_singleton "profile_cache"
 
 ecs.component "editor_watcher_cache" {}
@@ -185,7 +185,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
     for _,id in world:each("editor_watching") do
         olds_map[id] = true
     end
-    log.info_a(olds_map,olds_map)
+    -- log.info_a(olds_map,olds_map)
     for _,id in ipairs(eids) do
         if olds_map[id] then
             olds_map[id] = nil
@@ -196,7 +196,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
     for id,_ in pairs(olds_map) do
         remove_map[id] = true
     end
-    log.info_a("remove_map",remove_map)
+    -- log.info_a("remove_map",remove_map)
     --remove tag:editor_watching,show_operate_gizmo
     for id,_ in pairs(remove_map) do
         world:remove_component(id,"editor_watching")
@@ -295,7 +295,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
             send_entity({eid},( is_pick and "pick" or "editor"))
         end
     end
-    return change_watch_entity(self,eid,focus,is_pick)
+    return change_watch_entity(self,{eid},focus,is_pick)
 end
 
 local function on_editor_select_entity(self,eids,focus)
@@ -448,7 +448,8 @@ local function entity_create_handle()
     for msg in entity_create_mb:each() do
         local eid = msg[2]
         local e = world[eid]
-        if e.pickup == nil and e.outline_entity == nil then
+        --e may be deleted already
+        if e and e.pickup == nil and e.outline_entity == nil then
             hierarchy_dirty = true
             break
         end
@@ -458,10 +459,11 @@ local function entity_create_handle()
     end
 end
 
-function editor_watcher_system:update()
+function editor_watcher_system:editor_update()
     entity_create_handle()
     entity_delete_handle()
 end
+
 function editor_watcher_system:after_update()
     local need_send = world:singleton "editor_watcher_cache".need_send
     if not need_send then

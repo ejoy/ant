@@ -19,7 +19,7 @@ local m = ecs.system "model_review_system"
 
 m.require_policy "ant.sky|procedural_sky"
 m.require_policy "ant.serialize|serialize"
-m.require_policy "ant.bullet|collider.capsule"
+m.require_policy "ant.bullet|collider"
 m.require_policy "ant.render|mesh"
 m.require_policy "ant.render|render"
 m.require_policy "ant.render|name"
@@ -34,6 +34,7 @@ m.require_interface "ant.animation|animation"
 m.require_interface "ant.timer|timer"
 m.require_interface "ant.camera_controller|camera_motion"
 m.require_interface "ant.render|iwidget_drawer"
+m.require_interface "ant.bullet|collider"
 
 local ics = world:interface "ant.render|camera_spawn"
 local iwd = world:interface "ant.render|iwidget_drawer"
@@ -50,9 +51,9 @@ local function create_camera()
 	frustum.f = 300
 	cameraeid = ics.spawn("test_main_camera", {
         type    = "",
-        eyepos  = {0, 3, -20, 1},
-        viewdir = mc.T_ZAXIS,
-        updir   = mc.T_YAXIS,
+        eyepos  = {0,10,-24,1},
+        viewdir = {0,-1,1,0},
+        updir   = {0,1,1,0},
         frustum = frustum,
     })
 	ics.bind("main_queue", cameraeid)
@@ -91,9 +92,10 @@ end
 local animation     = world:interface "ant.animation|animation"
 local timer         = world:interface "ant.timer|timer"
 local camera_motion = world:interface "ant.camera_controller|camera_motion"
+local collider      = world:interface "ant.bullet|collider"
 
 local eventKeyboard = world:sub {"keyboard"}
-local eventMouse    = world:sub {"mouse","LEFT","DOWN"}
+local eventMouse    = world:sub {"mouse","RIGHT","DOWN"}
 local eventResize   = world:sub {"resize"}
 
 local PRESS    <const> = {[0]=-1,1,0}
@@ -121,15 +123,26 @@ local function setEntityFacing(e, facing)
 end
 
 local function setEntityPosition(e, postion)
+	local srt = {
+		s = e.transform.s,
+		r = e.transform.r,
+		t = postion,
+	}
+	if collider.test(e, srt) then
+		return
+	end
 	ms(e.transform.t, postion, "=")
+	return true
 end
 
 local function moveEntity(e, distance)
-	local postion = ms(e.transform.t, {distance}, e.transform.r,"d*+P")
-	return setEntityPosition(e, postion)
+	local postion = ms(e.transform.t, {distance}, e.transform.r, "d*+P")
+	if setEntityPosition(e, postion) then
+		local camera = world[cameraeid].camera
+		camera.eyepos = ms(camera.eyepos, {distance}, e.transform.r, "d*+T")
+	end
 end
 
-local startpos, endpos
 function m:data_changed()
 	for _,w, h in eventResize:unpack() do
 		screensize.w = w
@@ -155,9 +168,7 @@ function m:data_changed()
 		mouse.x = x
 		mouse.y = y
 		local res = camera_motion.ray(cameraeid, mouse, screensize)
-		startpos = res.origin
-		endpos   =  ms(res.origin, res.dir, {1000}, "*+T")
-		if res.dir[2] ~= 0 then
+		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
 			local postion = ms(player.transform.t, "T")
@@ -166,9 +177,6 @@ function m:data_changed()
 			target = {x0, 0, z0}
 			mode = "mouse"
 		end
-	end
-	if startpos and endpos then
-		iwd.draw_lines {startpos, endpos}
 	end
 	if mode == "keyboard" and cur_direction == DIR_NULL then
 		mode = nil

@@ -62,7 +62,7 @@ function system.init(sys, pipeline)
 		for sys_name, s in sortpairs(pkg_system) do
 			local proxy = {}
 			for step_name, func in pairs(s.method) do
-				table.insert(res[step_name], { func, proxy, sys_name })
+				table.insert(res[step_name], { func, proxy, sys_name, step_name})
 			end
 		end
 	end
