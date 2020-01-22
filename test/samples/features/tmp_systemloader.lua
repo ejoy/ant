@@ -11,6 +11,9 @@ local ms = mathpkg.stack
 local skypkg = import_package 'ant.sky'
 local skyutil = skypkg.util
 
+local assetpkg = import_package "ant.asset"
+local assetmgr = assetpkg.mgr
+
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components
 local defaultcomp=renderpkg.default
@@ -43,85 +46,85 @@ local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
 char_controller_policy.require_policy "ant.bullet|collider.character"
 
-local function ozzmesh_animation_test()
-    local meshdir = fs.path 'meshes'
-    local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
-    local smpath = meshdir / 'mesh.ozz'
+-- local function ozzmesh_animation_test()
+--     local meshdir = fs.path 'meshes'
+--     local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
+--     local smpath = meshdir / 'mesh.ozz'
 
-    local respath = fs.path '/pkg/ant.resources'
+--     local respath = fs.path '/pkg/ant.resources'
 
-    return
-        world:create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.animation|ozzmesh",
-            "ant.animation|animation",
-            "ant.animation|ozz_skinning",
-            "ant.serialize|serialize",
-            "ant.render|name",
-            "ant.render|shadow_cast",
-            "ant.bullet|collider.character",
-            "ant.test.features|character_controller",
-            "ant.render|debug_mesh_bounding",
-        },
-        data = {
-            transform = {
-                s = {1, 1, 1, 0},
-                r = {0, 0, 0, 0},
-                t = {0, 5, -5, 1}
-            },
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
-            },
-            animation = {
-                anilist = {
-                    idle = {
-                        ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
-                        scale = 1,
-                        looptimes = 0,
-                    },
-                    walk = {
-                        ref_path = respath / meshdir / 'animation' / 'animation2.ozz',
-                        scale = 1,
-                        looptimes = 0,
-                    }
-                },
-                birth_pose = "idle",
-                ik = {jobs={}}
-            },
-            can_render = true,
-            rendermesh = {},
-            skinning = {},
-            skeleton = {
-                ref_path = respath / skepath
-            },
-            mesh = {
-                ref_path = respath / smpath
-            },
-            name = 'animation_sample',
-            serialize = serialize.create(),
-            collider_tag = "",
-            character_collider = {
-                collider = {
-                    center = {0, 1, 0},
-                    is_tigger = true,
-                },
-                shape = {
-                    capsule = {
-                        radius = 0.5,
-                        height = 1,
-                        axis = "Y",
-                    }
-                },
-            },
-            can_cast = true,
-            character = {
-                movespeed = 1.0,
-            },
-            debug_mesh_bounding = true,
-        }
-    }
-end
+--     return
+--         world:create_entity {
+--         policy = {
+--             "ant.render|render",
+--             "ant.animation|ozzmesh",
+--             "ant.animation|animation",
+--             "ant.animation|ozz_skinning",
+--             "ant.serialize|serialize",
+--             "ant.render|name",
+--             "ant.render|shadow_cast",
+--             "ant.bullet|collider.character",
+--             "ant.test.features|character_controller",
+--             "ant.render|debug_mesh_bounding",
+--         },
+--         data = {
+--             transform = {
+--                 s = {1, 1, 1, 0},
+--                 r = {0, 0, 0, 0},
+--                 t = {0, 5, -5, 1}
+--             },
+--             material = {
+--                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
+--             },
+--             animation = {
+--                 anilist = {
+--                     idle = {
+--                         ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
+--                         scale = 1,
+--                         looptimes = 0,
+--                     },
+--                     walk = {
+--                         ref_path = respath / meshdir / 'animation' / 'animation2.ozz',
+--                         scale = 1,
+--                         looptimes = 0,
+--                     }
+--                 },
+--                 birth_pose = "idle",
+--                 ik = {jobs={}}
+--             },
+--             can_render = true,
+--             rendermesh = {},
+--             skinning = {},
+--             skeleton = {
+--                 ref_path = respath / skepath
+--             },
+--             mesh = {
+--                 ref_path = respath / smpath
+--             },
+--             name = 'animation_sample',
+--             serialize = serialize.create(),
+--             collider_tag = "",
+--             character_collider = {
+--                 collider = {
+--                     center = {0, 1, 0},
+--                     is_tigger = true,
+--                 },
+--                 shape = {
+--                     capsule = {
+--                         radius = 0.5,
+--                         height = 1,
+--                         axis = "Y",
+--                     }
+--                 },
+--             },
+--             can_cast = true,
+--             character = {
+--                 movespeed = 1.0,
+--             },
+--             debug_mesh_bounding = true,
+--         }
+--     }
+-- end
 
 local function gltf_animation_test()
     world:create_entity {
@@ -173,11 +176,16 @@ local function gltf_animation_test()
 end
 
 local function foot_ik_test()
+    local meshdir = fs.path 'meshes'
+    local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
+    local smpath = meshdir / 'mesh.ozz'
+
+    local respath = fs.path '/pkg/ant.resources'
+
     return world:create_entity {
         policy = {
-            "ant.animation|ik",
-            "ant.render|animation",
             "ant.serialize|serialize",
+            "ant.animation|animation",
             "ant.render|render",
             "ant.render|shadow_cast",
             "ant.render|name",
@@ -186,42 +194,48 @@ local function foot_ik_test()
             transform = mu.translate_mat {-5, 0, 0, 1},
             rendermesh = {},
             material = {
-                ref_path = fs.path "",
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
             },
             mesh = {
-                ref_path = fs.path "",
+                ref_path = respath / smpath,
             },
             skeleton = {
-                ref_path = fs.path "",
+                ref_path = respath / skepath
             },
             animation = {
-                anilist = {},
-                birth_pose = "",
+                anilist = {
+                    idle = {
+                        ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                },
+                birth_pose = "idle",
                 ik = {
                     jobs = {
                         {
                             type        = "two_bone",
                             target      = {0, 0, 0, 1},
                             pole_vector = {0, 1, 0, 0},
-                            updir       = {0, 1, 0, 0},
+                            mid_axis    = {0, 0, 1, 0},
                             widget      = 1.0,
                             twist_angle = 0,
                             soften      = 0.5,
                             joints      = {
-                                "hip", "knee", "ankle",
+                                "LeftUpLeg", "LeftLeg", "LeftFoot",
                             }
                         },
                         {
-                            type = "aim",
-                            target = {0, 0, 0, 1},
+                            type        = "aim",
+                            target      = {0, 0, 0, 1},
                             pole_vector = {0, 1, 0, 0},
-                            updir = {0, 1, 0, 0},
-                            forward = {0, 0, 1, 0},
-                            offset = {0, 0, 0, 0},
-                            widget = 1.0,
+                            up_axis     = {0, 1, 0, 0},
+                            forward     = {0, 0, 1, 0},
+                            offset      = {0, 0, 0, 0},
+                            widget      = 1.0,
                             twist_angle = 0,
-                            joints = {
-                                "ankle",
+                            joints      = {
+                                "LeftFoot",
                             }
                         }
                     }
@@ -271,7 +285,7 @@ local function create_plane_test()
         {
             transform = mu.srt({5, 1, 5, 1},
                                 {math.rad(10), 0, 0, 0},
-                                {0, 3, -5, 1}),
+                                {0, 0, -5, 1}),
             color = {0.5, 0.5, 0, 1},
             material = fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
         }
@@ -306,6 +320,24 @@ local ics = world:interface "ant.render|camera_spawn"
 local icm = world:interface "ant.camera_controller|camera_motion"
 local iwd = world:interface "ant.render|iwidget_drawer"
 
+local function print_ske(ske)
+    local trees = {}
+    for i=1, #ske do
+        local jname = ske:joint_name(i)
+        if ske:isroot(i) then
+            trees[i] = ""
+            print(jname)
+        else
+            local s = "  "
+            local p = ske:parent(i)
+            assert(trees[p])
+            s = s .. trees[p]
+            trees[i] = s
+            print(s .. jname)
+        end
+    end
+end
+
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
@@ -319,11 +351,10 @@ function init_loader:init()
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_plane_test()
 
-    ozzmesh_animation_test()
     pbr_test()
     gltf_animation_test()
 
-    --foot_ik_test()
+    foot_ik_test()
 
     pbrscene.create_scene(world)
 end

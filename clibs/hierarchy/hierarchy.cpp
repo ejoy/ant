@@ -239,6 +239,24 @@ lbuilddata_jointmatrix(lua_State *L) {
 }
 
 static int
+lbuilddata_jointname(lua_State *L){
+	luaL_checktype(L, 1, LUA_TUSERDATA);
+	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
+	const auto ske = builddata->skeleton;
+
+	const int jointidx = (int)lua_tointeger(L, 2) - 1;
+
+	if (jointidx < 0 || jointidx >= (int)ske->joint_bind_poses().size()) {
+		luaL_error(L, "invalid joint index : %d", jointidx);
+	}
+
+	auto name = ske->joint_names()[jointidx];
+
+	lua_pushstring(L, name);
+	return 1;
+}
+
+static int
 lbuilddata_bindpose(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	struct hierarchy_build_data* builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
@@ -718,6 +736,7 @@ register_hierarchy_builddata(lua_State *L) {
 			{"isroot", lbuilddata_isroot},
 			{"joint_index", lbuilddata_jointindex},
 			{"joint_matrix", lbuilddata_jointmatrix},
+			{"joint_name", lbuilddata_jointname},
 			{"bind_pose", lbuilddata_bindpose},
 			{"size", lbuilddata_size},
 			{nullptr, nullptr},

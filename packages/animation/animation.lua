@@ -12,10 +12,11 @@ ecs.component "ik_data"
 	.type		"string"("aim")			-- can be 'two_bone'/'aim'
 	.target 	"vector"{0, 0, 0, 1}	-- model space
 	.pole_vector"vector"{0, 0, 0, 0}	-- model space
-	.upaxis		"vector"{0, 1, 0, 0}	-- local space, same as IKTwoBoneJob's mid_axis
 	.twist_angle"real" 	(0.0)
 	.joints		"string[]"{}			-- type == 'aim', #joints == 1, type == 'two_bone', #joints == 3, with start/mid/end
-	["opt"].soften "real" (0.0)
+	["opt"].mid_axis"vector" {0, 0, 1, 0}
+	["opt"].soften "real" 	(0.0)
+	["opt"].up_axis"vector" {0, 1, 0, 0}
 	["opt"].forward "vector"{0, 0, 1, 0}-- local space
 	["opt"].offset "vector" {0, 0, 0, 0}-- local space
 
@@ -77,22 +78,22 @@ local function prepare_ik(transform, ikcomp)
 	local cache = {}
 	for _, ikdata in ipairs(ikcomp.jobs) do
 		local c = {
-			type = ikdata.type,
-			target = ms(invtran, ikdata.target, "*m"),
+			type		= ikdata.type,
+			target 		= ms(invtran, ikdata.target, "*m"),
 			pole_vector = ms(invtran, ikdata.pole_vector, "*m"),
-			
-			updir = ms(ikdata.updir, "m"),
-			weight = ikdata.weight,
+			weight		= ikdata.weight,
 			twist_angle = ikdata.twist_angle,
-			joints = ikdata.joints,
+			joints 		= ikdata.joints,
 		}
 
 		if ikdata.type == "aim" then
-			c.forward = ms(ikdata.forward, "m")
-			c.offset = ms(ikdata.offset, "m")
+			c.forward	= ms(ikdata.forward, "m")
+			c.up_axis	= ms(ikdata.up_axis, "m")
+			c.offset	= ms(ikdata.offset, "m")
 		else
 			assert(ikdata.type == "two_bone")
-			c.soften = ikdata.soften
+			c.soften	= ikdata.soften
+			c.mid_axis	= ms(ikdata.mid_axis, "m")
 		end
 
 		cache[#cache+1] = c
@@ -121,7 +122,7 @@ function anisystem:sample_animation_pose()
 		ani_module.setup(ske)
 
 		ani_module.do_animation(animation.current_pose, "blend", nil, fix_root)
-		--ani_module.do_ik(prepare_ik(e.transform, animation.ik))
+		ani_module.do_ik(prepare_ik(e.transform, animation.ik))
 
 		ani_module.get_result(animation.result, fix_root)
 	end

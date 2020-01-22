@@ -75,9 +75,6 @@ prepare_job(lua_State *L, int idx,
 	get_vec(idx, "target",		(float*)(&ikdata.target));
 	get_vec(idx, "pole_vector", (float*)(&ikdata.pole_vector));
 
-	// define in local space
-	get_vec(idx, "mid_axis",	(float*)(&ikdata.mid_axis));
-
 	auto get_number = [L](int idx, auto name) {
 		verfiy(lua_getfield(L, idx, name), LUA_TNUMBER);
 		const float value = (float)lua_tonumber(L, -1);
@@ -106,7 +103,9 @@ prepare_job(lua_State *L, int idx,
 
 	if (ikdata.type == "twobone"){
 		ikdata.soften = get_number(idx, "soften");
+		get_vec(idx, "mid_axis", (float*)(&ikdata.mid_axis));
 	}else if(ikdata.type == "aim"){
+		get_vec(idx, "up_axis", (float*)(&ikdata.up_axis));
 		get_vec(idx, "forward", (float*)(&ikdata.forward));
 		get_vec(idx, "offset", (float*)(&ikdata.offset));
 	}else{
@@ -175,13 +174,11 @@ do_ik(const ozz::animation::Skeleton *ske,
 
 		mul_quaternion(ikdata.joints[0], start_correction, bp.pose);
 		mul_quaternion(ikdata.joints[1], mid_correction, bp.pose);
-
-		return do_ltm(ske, bp.pose, result.pose, nullptr, ikdata.joints[0]);
 	} else {
 		ozz::animation::IKAimJob aimjob;
 		aimjob.target 		= ikdata.target;
 		aimjob.pole_vector 	= ikdata.pole_vector;
-		aimjob.up 			= ikdata.updir;
+		aimjob.up 			= ikdata.up_axis;
 		aimjob.forward		= ikdata.forward;
 		aimjob.offset 		= ikdata.offset;
 
@@ -197,8 +194,7 @@ do_ik(const ozz::animation::Skeleton *ske,
 		}
 
 		mul_quaternion(ikdata.joints[0], correction, bp.pose);
-		return do_ltm(ske, bp.pose, result.pose, nullptr, ikdata.joints[0]);
 	}
 
-	return 0;
+	return do_ltm(ske, bp.pose, result.pose, nullptr, ikdata.joints[0]);
 }

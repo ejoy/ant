@@ -28,7 +28,7 @@ struct ik_data{
 	ozz::math::SimdFloat4		target;
 	ozz::math::SimdFloat4		pole_vector;
 	union{
-		ozz::math::SimdFloat4	updir;
+		ozz::math::SimdFloat4	up_axis;
 		ozz::math::SimdFloat4	mid_axis;
 	};
 	
