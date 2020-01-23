@@ -116,7 +116,7 @@ function anisystem:sample_animation_pose()
 		end
 		local pose = animation.current
 		ani_module.do_blend("blend", #pose)
-		--ani_module.do_ik(prepare_ik(e.transform, animation.ik))
+		ani_module.do_ik(animation.result, prepare_ik(e.transform, animation.ik))
 		ani_module.get_result(animation.result, fix_root)
 	end
 end
