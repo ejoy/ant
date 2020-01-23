@@ -775,17 +775,9 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 	}
 	int do_ik(lua_State* L) {
 		auto aniresult = (bind_pose*)lua_touserdata(L, 1);
-
-		luaL_checktype(L, 2, LUA_TTABLE);
-		const int numjob = (int)lua_rawlen(L, 2);
-		for (int ii = 0; ii < numjob; ++ii){
-			lua_geti(L, 2, ii+1);
-			ik_data ikdata;
-			fetch_ikdata(L, -1, ikdata);
-			lua_pop(L, 1);
-
-			::do_ik(m_ske, ikdata, m_result.back(), aniresult->pose);
-		}
+		ik_data ikdata;
+		fetch_ikdata(L, -1, ikdata);
+		::do_ik(m_ske, ikdata, m_result.back(), aniresult->pose);
 		return 0;
 	}
 	

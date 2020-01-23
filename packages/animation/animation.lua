@@ -71,32 +71,25 @@ anisystem.require_interface "ant.timer|timer"
 
 local timer = world:interface "ant.timer|timer"
 
-local function prepare_ik(transform, ikcomp)
-	local invtran = ms(transform, "iP")
-	local cache = {}
-	for _, ikdata in ipairs(ikcomp.jobs) do
-		local c = {
-			type		= ikdata.type,
-			target 		= ms(invtran, ikdata.target, "*m"),
-			pole_vector = ms(invtran, ikdata.pole_vector, "*m"),
-			weight		= ikdata.weight,
-			twist_angle = ikdata.twist_angle,
-			joints 		= ikdata.joints,
-		}
+local ikdata_cache = {}
+local function prepare_ikdata(invtran, ikdata)
+	ikdata_cache.type		= ikdata.type
+	ikdata_cache.target 	= ms(invtran, ikdata.target, "*m")
+	ikdata_cache.pole_vector= ms(invtran, ikdata.pole_vector, "*m")
+	ikdata_cache.weight		= ikdata.weight
+	ikdata_cache.twist_angle= ikdata.twist_angle
+	ikdata_cache.joints 	= ikdata.joints
 
-		if ikdata.type == "aim" then
-			c.forward	= ms(ikdata.forward, "m")
-			c.up_axis	= ms(ikdata.up_axis, "m")
-			c.offset	= ms(ikdata.offset, "m")
-		else
-			assert(ikdata.type == "two_bone")
-			c.soften	= ikdata.soften
-			c.mid_axis	= ms(ikdata.mid_axis, "m")
-		end
-
-		cache[#cache+1] = c
+	if ikdata.type == "aim" then
+		ikdata_cache.forward	= ms(ikdata.forward, "m")
+		ikdata_cache.up_axis	= ms(ikdata.up_axis, "m")
+		ikdata_cache.offset	= ms(ikdata.offset, "m")
+	else
+		assert(ikdata.type == "two_bone")
+		ikdata_cache.soften	= ikdata.soften
+		ikdata_cache.mid_axis	= ms(ikdata.mid_axis, "m")
 	end
-	return cache
+	return ikdata_cache
 end
 
 function anisystem:sample_animation_pose()
@@ -116,7 +109,9 @@ function anisystem:sample_animation_pose()
 		end
 		local pose = animation.current
 		ani_module.do_blend("blend", #pose)
-		ani_module.do_ik(animation.result, prepare_ik(e.transform, animation.ik))
+		for _, ikdata in ipairs(animation.ik.jobs) do
+			ani_module.do_ik(animation.result, prepare_ikdata(e.transform, ikdata))
+		end
 		ani_module.get_result(animation.result, fix_root)
 	end
 end
