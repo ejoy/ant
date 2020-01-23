@@ -46,12 +46,13 @@ local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
 char_controller_policy.require_policy "ant.bullet|collider.character"
 
-local function ozzmesh_animation_test()
-    local meshdir = fs.path 'meshes'
-    local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
-    local smpath = meshdir / 'mesh.ozz'
+local ozzmeshdir = fs.path 'meshes' / 'ozz'
+local ozzskepath = ozzmeshdir / 'human_skeleton.ozz'
+local ozzmeshpath = ozzmeshdir / 'mesh.ozz'
 
-    local respath = fs.path '/pkg/ant.resources'
+local ozzrespath = fs.path '/pkg/ant.resources.binary'
+
+local function ozzmesh_animation_test()
 
     return
         world:create_entity {
@@ -79,7 +80,7 @@ local function ozzmesh_animation_test()
             animation = {
                 anilist = {
                     walk = {
-                        ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
+                        ref_path = ozzrespath / ozzmeshdir / 'animation1.ozz',
                         scale = 1,
                         looptimes = 0,
                     },
@@ -91,10 +92,10 @@ local function ozzmesh_animation_test()
             rendermesh = {},
             skinning = {},
             skeleton = {
-                ref_path = respath / skepath
+                ref_path = ozzrespath / ozzskepath
             },
             mesh = {
-                ref_path = respath / smpath
+                ref_path = ozzrespath / ozzmeshpath
             },
             name = 'animation_sample',
             serialize = serialize.create(),
@@ -160,11 +161,7 @@ local function gltf_animation_test()
 end
 
 local function foot_ik_test()
-    local meshdir = fs.path 'meshes'
-    local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
-    local smpath = meshdir / 'mesh.ozz'
-
-    local respath = fs.path '/pkg/ant.resources'
+    
 
     return world:create_entity {
         policy = {
@@ -183,15 +180,15 @@ local function foot_ik_test()
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
             },
             mesh = {
-                ref_path = respath / smpath,
+                ref_path = ozzrespath / ozzmeshpath,
             },
             skeleton = {
-                ref_path = respath / skepath
+                ref_path = ozzrespath / ozzskepath
             },
             animation = {
                 anilist = {
                     idle = {
-                        ref_path = respath / meshdir / 'animation' / 'animation.ozz',
+                        ref_path = ozzrespath / ozzmeshdir / 'animation.ozz',
                         scale = 1,
                         looptimes = 0,
                     },
