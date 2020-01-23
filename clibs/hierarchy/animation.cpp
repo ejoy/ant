@@ -546,31 +546,11 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 };
 REGISTER_LUA_CLASS(ozzAnimation)
 
-#ifdef _DEBUG
-#define verfiy(_c, _check)	assert((_c) == _check)
-#else
-#define verfiy(_c, _check)	(_c)
-#endif // _DEBUG
+static void 
+fetch_ikdata(lua_State *L, int idx, ik_data &ikdata){
+    luaL_checktype(L, idx, LUA_TTABLE);
 
-static ozz::math::Float4x4
-to_matrix(lua_State *L, int idx) {
-	ozz::math::Float4x4 sf;
-	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-	const float* m = (const float*)lua_touserdata(L, idx);	
-	float* p = reinterpret_cast<float*>(&sf);
-	for (int ii = 0; ii < 16; ++ii) {
-		*p++ = m[ii];
-	}
-
-	return sf;
-}
-
-static void
-fetch_ikdata(lua_State *L, int idx, 
-	ik_data &ikdata) {
-	luaL_checktype(L, idx, LUA_TTABLE);
-
-	verfiy(lua_getfield(L, idx, "type"), LUA_TLIGHTUSERDATA);
+	lua_getfield(L, idx, "type");
 	ikdata.type = lua_tostring(L, -1);
 	lua_pop(L, 1);
 
@@ -590,7 +570,7 @@ fetch_ikdata(lua_State *L, int idx,
 	get_vec(idx, "pole_vector", (float*)(&ikdata.pole_vector));
 
 	auto get_number = [L](int idx, auto name) {
-		verfiy(lua_getfield(L, idx, name), LUA_TNUMBER);
+		lua_getfield(L, idx, name);
 		const float value = (float)lua_tonumber(L, -1);
 		lua_pop(L, 1);
 
@@ -600,9 +580,9 @@ fetch_ikdata(lua_State *L, int idx,
 	ikdata.weight = get_number(idx, "weight");
 	ikdata.twist_angle = get_number(idx, "twist_angle");
 
-	verfiy(lua_getfield(L, idx, "joints"), LUA_TTABLE);{
+	if (lua_getfield(L, idx, "joints") == LUA_TTABLE){
 		const auto len = lua_rawlen(L, -1);
-		if (len <= 0 || 3 >len){
+		if (len <= 0 || len > 3){
 			luaL_error(L, "ik joints data must be in (0, 3], %d", len);
 		}
 
@@ -611,10 +591,12 @@ fetch_ikdata(lua_State *L, int idx,
 			ikdata.joints[ii] = (uint16_t)lua_tointeger(L, -1);
 			lua_pop(L, 1);
 		}
+	} else {
+		luaL_error(L, "joints field must be 'table'");
 	}
 	lua_pop(L, 1);
 
-	if (ikdata.type == "twobone"){
+	if (ikdata.type == "two_bone"){
 		ikdata.soften = get_number(idx, "soften");
 		get_vec(idx, "mid_axis", (float*)(&ikdata.mid_axis));
 	}else if(ikdata.type == "aim"){
@@ -626,78 +608,11 @@ fetch_ikdata(lua_State *L, int idx,
 	}
 }
 
-bool
+extern bool
 do_ik(const ozz::animation::Skeleton *ske,
 	const ik_data &ikdata,
 	bind_pose_soa::bind_pose_type &pose_soa, 
-	bind_pose::bind_pose_type &result_pose) {
-	auto get_joint = [&result_pose](int jointidx) {
-		if (jointidx < 0 || jointidx > result_pose.size()){
-			return (ozz::math::Float4x4*)nullptr;
-		}
-
-		return &result_pose[jointidx];
-	};
-
-	if (ikdata.type == "twobone"){
-		ozz::animation::IKTwoBoneJob twobone_ikjob;
-
-		twobone_ikjob.start_joint	= get_joint(ikdata.joints[0]);
-		twobone_ikjob.mid_joint		= get_joint(ikdata.joints[1]);
-		twobone_ikjob.end_joint		= get_joint(ikdata.joints[2]);
-
-		twobone_ikjob.soften = ikdata.soften;
-		twobone_ikjob.twist_angle = ikdata.twist_angle;
-		twobone_ikjob.weight = ikdata.weight;
-
-		ozz::math::SimdQuaternion start_correction, mid_correction;
-		twobone_ikjob.start_joint_correction = &start_correction;
-		twobone_ikjob.mid_joint_correction = &mid_correction;
-
-		if (!twobone_ikjob.Run()) {
-			return false;
-		}
-
-		mul_quaternion(ikdata.joints[0], start_correction, pose_soa);
-		mul_quaternion(ikdata.joints[1], mid_correction, pose_soa);
-	} else {
-		ozz::animation::IKAimJob aimjob;
-		aimjob.target 		= ikdata.target;
-		aimjob.pole_vector 	= ikdata.pole_vector;
-		aimjob.up 			= ikdata.up_axis;
-		aimjob.forward		= ikdata.forward;
-		aimjob.offset 		= ikdata.offset;
-
-		aimjob.joint		= get_joint(ikdata.joints[0]);
-		aimjob.twist_angle	= ikdata.twist_angle;
-		aimjob.weight		= ikdata.weight;
-
-		ozz::math::SimdQuaternion correction;
-		aimjob.joint_correction = &correction;
-
-		if (!aimjob.Run()){
-			return false;
-		}
-
-		mul_quaternion(ikdata.joints[0], correction, pose_soa);
-	}
-
-	return do_ltm(ske, pose_soa, result_pose, nullptr, ikdata.joints[0]);
-}
-
-static inline void 
-mul_quaternion(size_t jointidx, const ozz::math::SimdQuaternion& quat,
-	ozz::Vector<ozz::math::SoaTransform>::Std& transforms) {	
-
-	ozz::math::SoaTransform& soa_transform_ref = transforms[jointidx / 4];
-	ozz::math::SimdQuaternion aos_quats[4];
-	ozz::math::Transpose4x4(&soa_transform_ref.rotation.x, &aos_quats->xyzw);
-
-	ozz::math::SimdQuaternion& aos_joint_quat_ref = aos_quats[jointidx & 3];
-	aos_joint_quat_ref = aos_joint_quat_ref * quat;
-
-	ozz::math::Transpose4x4(&aos_quats->xyzw, &soa_transform_ref.rotation.x);
-}
+	bind_pose::bind_pose_type &result_pose);
 
 struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 	ozz::animation::Skeleton*                            m_ske = nullptr;
