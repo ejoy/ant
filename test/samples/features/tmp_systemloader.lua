@@ -46,85 +46,74 @@ local char_controller_policy = ecs.policy "character_controller"
 char_controller_policy.require_component "character"
 char_controller_policy.require_policy "ant.bullet|collider.character"
 
--- local function ozzmesh_animation_test()
---     local meshdir = fs.path 'meshes'
---     local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
---     local smpath = meshdir / 'mesh.ozz'
+local function ozzmesh_animation_test()
+    local meshdir = fs.path 'meshes'
+    local skepath = meshdir / 'skeleton' / 'human_skeleton.ozz'
+    local smpath = meshdir / 'mesh.ozz'
 
---     local respath = fs.path '/pkg/ant.resources'
+    local respath = fs.path '/pkg/ant.resources'
 
---     return
---         world:create_entity {
---         policy = {
---             "ant.render|render",
---             "ant.animation|ozzmesh",
---             "ant.animation|animation",
---             "ant.animation|ozz_skinning",
---             "ant.serialize|serialize",
---             "ant.render|name",
---             "ant.render|shadow_cast",
---             "ant.bullet|collider.character",
---             "ant.test.features|character_controller",
---             "ant.render|debug_mesh_bounding",
---         },
---         data = {
---             transform = {
---                 s = {1, 1, 1, 0},
---                 r = {0, 0, 0, 0},
---                 t = {0, 5, -5, 1}
---             },
---             material = {
---                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
---             },
---             animation = {
---                 anilist = {
---                     idle = {
---                         ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
---                         scale = 1,
---                         looptimes = 0,
---                     },
---                     walk = {
---                         ref_path = respath / meshdir / 'animation' / 'animation2.ozz',
---                         scale = 1,
---                         looptimes = 0,
---                     }
---                 },
---                 birth_pose = "idle",
---                 ik = {jobs={}}
---             },
---             can_render = true,
---             rendermesh = {},
---             skinning = {},
---             skeleton = {
---                 ref_path = respath / skepath
---             },
---             mesh = {
---                 ref_path = respath / smpath
---             },
---             name = 'animation_sample',
---             serialize = serialize.create(),
---             collider_tag = "",
---             character_collider = {
---                 collider = {
---                     center = {0, 1, 0},
---                     is_tigger = true,
---                 },
---                 shape = {
---                     capsule = {
---                         radius = 0.5,
---                         height = 1,
---                         axis = "Y",
---                     }
---                 },
---             },
---             can_cast = true,
---             character = {
---                 movespeed = 1.0,
---             },
---             debug_mesh_bounding = true,
---         }
---     }
--- end
+    return
+        world:create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.animation|ozzmesh",
+            "ant.animation|animation",
+            "ant.animation|ozz_skinning",
+            "ant.serialize|serialize",
+            "ant.render|name",
+            "ant.render|shadow_cast",
+            "ant.bullet|collider.character",
+            "ant.test.features|character_controller",
+            "ant.render|debug_mesh_bounding",
+        },
+        data = {
+            transform = {
+                s = {1, 1, 1, 0},
+                r = {0, 0, 0, 0},
+                t = {-5, 0, 5, 1}
+            },
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
+            },
+            animation = {
+                anilist = {
+                    walk = {
+                        ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
+                        scale = 1,
+                        looptimes = 0,
+                    },
+                },
+                birth_pose = "walk",
+                ik = {jobs={}}
+            },
+            can_render = true,
+            rendermesh = {},
+            skinning = {},
+            skeleton = {
+                ref_path = respath / skepath
+            },
+            mesh = {
+                ref_path = respath / smpath
+            },
+            name = 'animation_sample',
+            serialize = serialize.create(),
+            collider = {
+                capsule = {
+                    origin = {0, 1, 0, 1},
+                    radius = 0.5,
+                    height = 1,
+                    axis = "Y",
+                }
+            },
+            can_cast = true,
+            character = {
+                movespeed = 1.0,
+            },
+            debug_mesh_bounding = true,
+        }
+    }
+end
 
 local function gltf_animation_test()
     world:create_entity {
@@ -157,11 +146,6 @@ local function gltf_animation_test()
                         looptimes = 0,
                     },
                 },
-                pose = {
-                    idle = {
-                        {name="ani1", weight=1},
-                    },
-                },
                 birth_pose = "idle",
                 ik = {jobs={}}
             },
@@ -188,11 +172,12 @@ local function foot_ik_test()
             "ant.animation|animation",
             "ant.render|render",
             "ant.animation|ozzmesh",
+            "ant.animation|ozz_skinning",
             "ant.render|shadow_cast",
             "ant.render|name",
         },
         data = {
-            transform = mu.translate_mat {-5, 0, 0, 1},
+            transform = mu.translate_mat {0, 0, -6, 1},
             rendermesh = {},
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
@@ -206,7 +191,7 @@ local function foot_ik_test()
             animation = {
                 anilist = {
                     idle = {
-                        ref_path = respath / meshdir / 'animation' / 'animation1.ozz',
+                        ref_path = respath / meshdir / 'animation' / 'animation.ozz',
                         scale = 1,
                         looptimes = 0,
                     },
@@ -349,6 +334,7 @@ function init_loader:init()
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
     create_plane_test()
 
+    ozzmesh_animation_test()
     pbr_test()
     gltf_animation_test()
 
