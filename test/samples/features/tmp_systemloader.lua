@@ -187,6 +187,7 @@ local function foot_ik_test()
             "ant.serialize|serialize",
             "ant.animation|animation",
             "ant.render|render",
+            "ant.animation|ozzmesh",
             "ant.render|shadow_cast",
             "ant.render|name",
         },
@@ -298,16 +299,13 @@ local function create_plane_test()
             p.color,
             "test shadow plane",
             {
-                ["ant.bullet|collider.box"] = {
-                    box_collider = {
-                        collider = {
-                            center = {0, 0, 0},
-                        },
-                        shape = {
+                ["ant.bullet|collider"] = {
+                    collider = {
+                        box = {
+                            origin = {0, 0, 0, 1},
                             size = {0.5, 0, 0.5},
                         }
                     },
-                    collider_tag = "",
                 },
                 ["ant.render|debug_mesh_bounding"] = {
                     debug_mesh_bounding = true,
@@ -375,10 +373,10 @@ local function create_camera()
 end
 
 function init_loader:data_changed()
-    iwd.draw_lines({
-        {5, 2, 5},
-        {5, 2, 15},
-    }, 0xff0000ff)
+    -- iwd.draw_lines({
+    --     {5, 2, 5},
+    --     {5, 2, 15},
+    -- }, 0xff0000ff)
 end
 
 function init_loader:post_init()

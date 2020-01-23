@@ -120,6 +120,7 @@ cp.require_component "collider"
 cp.require_system "ant.bullet|collider_system"
 
 local cp = ecs.policy "collider.character"
+cp.require_component "character"
 cp.require_policy "collider"
 cp.require_system "ant.bullet|character_collider_system"
 
