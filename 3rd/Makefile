@@ -129,7 +129,7 @@ endif
 all : $(MAKE_ALL_DEPEND)
 
 msvc_all : 
-	start build_msvc_all.bat
+	start build_msvc_all.bat $(MODE)
 
 clean : $(addsuffix _clean,$(ALL_PROJ))
 
