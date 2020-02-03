@@ -6,7 +6,6 @@ local ms = math3d.stack
 local geo = require "geometry"
 
 local function gen_color_vertex(pt, color, transform)
-	assert(#pt == 3)
 	local npt = ms(transform, {pt[1], pt[2], pt[3], 1}, "*T")
 	npt[4] = color
 	return npt
