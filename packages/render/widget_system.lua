@@ -60,13 +60,18 @@ local function offset_ib(start_vertex, ib)
 end
 
 local function append_buffers(dmesh, vb, ib)
+	local numvertices = (#vb - 1) // 4
+
+	if numvertices == 0 then
+		return 
+	end
+	
 	local rm = dmesh.rendermesh
 	local meshscene = assetmgr.get_resource(rm.reskey)
 	local group = meshscene.scenes[1][1][1]
 
 	local vbdesc, ibdesc = group.vb, group.ib
 
-	local numvertices = (#vb - 1) // 4
 	vbdesc.num = vbdesc.num + numvertices
 
 	local vbhandle = vbdesc.handles[1]
@@ -75,12 +80,13 @@ local function append_buffers(dmesh, vb, ib)
 	vbhandle.updateoffset = vertex_offset + numvertices
 
 	local numindices = #ib
-	ibdesc.num = ibdesc.num + numindices
-
-	local index_offset = ibdesc.updateoffset or 0
-	local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
-	bgfx.update(ibdesc.handle, index_offset, newib)
-	ibdesc.updateoffset = index_offset + numindices
+	if numindices ~= 0 then
+		ibdesc.num = ibdesc.num + numindices
+		local index_offset = ibdesc.updateoffset or 0
+		local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
+		bgfx.update(ibdesc.handle, index_offset, newib)
+		ibdesc.updateoffset = index_offset + numindices
+	end
 end
 
 function rmb:widget()
