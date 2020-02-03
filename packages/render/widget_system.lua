@@ -188,7 +188,9 @@ function phy_bounding:widget()
 			draw_compound(collider.compound, srt, vb, ib)
 		end
 	end
-	append_buffers(dmesh, vb, ib)
+	if #vb > 1 then
+		append_buffers(dmesh, vb, ib)
+	end
 end
 
 local reset_bounding_buffer = ecs.system "reset_mesh_buffer"

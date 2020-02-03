@@ -1996,7 +1996,7 @@ create_from_table_decl(lua_State *L, int idx, bgfx_vertex_layout_t *vd) {
 	int n = lua_rawlen(L, idx) - 1;
 	int stride = get_stride(L, layout);
 	int numv = n / sz;
-	if (numv * sz != n) {
+	if (n == 0 || numv * sz != n) {
 		luaL_error(L, "Invalid number of table %d", n);
 	}
 	const bgfx_memory_t *mem = BGFX(alloc)(numv * stride);
