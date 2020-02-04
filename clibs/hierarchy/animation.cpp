@@ -115,12 +115,12 @@ REGISTER_LUA_CLASS(ozzJointRemap)
 
 __declspec (align(8))
 struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzBindPose> {
-	typedef ozz::Vector<ozz::math::Float4x4>::Std base_type;
+	typedef ozz::Vector<ozz::math::Float4x4>::Std self_type;
 	ozzBindPose(size_t numjoints)
-		: base_type(numjoints)
+		: self_type(numjoints)
 	{ }
 	ozzBindPose(size_t numjoints, const float* data)
-		: base_type(numjoints) {
+		: self_type(numjoints) {
 		memcpy(&(*this)[0], data, sizeof(ozz::math::Float4x4) * numjoints);
 	}
 	~ozzBindPose() {
@@ -296,7 +296,7 @@ lmesh_skinning(lua_State *L){
 	ozz::geometry::SkinningJob skinning_job;
 	skinning_job.vertex_count = num_vertices;
 	skinning_job.influences_count = influences_count;
-	skinning_job.joint_matrices = ozz::make_range((ozzBindPose::base_type&)*skinning_matrices);
+	skinning_job.joint_matrices = ozz::make_range((ozzBindPose::self_type&)*skinning_matrices);
 	
 	assert(vd.positions.data && "skinning system must provide 'position' attribute");
 
