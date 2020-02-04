@@ -16,14 +16,7 @@
 #include <ozz/base/containers/vector.h>
 
 #include <string>
-
-bool
-do_ltm(const ozz::animation::Skeleton *ske,
-	const ozz::Vector<ozz::math::SoaTransform>::Std &intermediateResult,
-	ozz::Vector<ozz::math::Float4x4>::Std &joints,
-	const ozz::math::Float4x4 *root = nullptr,
-	int from = ozz::animation::Skeleton::kNoParent,
-	int to = ozz::animation::Skeleton::kMaxJoints);
+#include <lua.hpp>
 
 #ifdef _DEBUG
 #define verfiy(_c, _check)	assert((_c) == _check)
@@ -45,11 +38,76 @@ mul_quaternion(size_t jointidx, const ozz::math::SimdQuaternion& quat,
 	ozz::math::Transpose4x4(&aos_quats->xyzw, &soa_transform_ref.rotation.x);
 }
 
+void fetch_ikdata(lua_State* L, int idx, ik_data& ikdata) {
+	luaL_checktype(L, idx, LUA_TTABLE);
+
+	lua_getfield(L, idx, "type");
+	ikdata.type = lua_tostring(L, -1);
+	lua_pop(L, 1);
+
+	auto get_vec = [L](int idx, auto name, auto* result) {
+		if (LUA_TNIL != lua_getfield(L, idx, name)) {
+			auto p = (const float*)lua_touserdata(L, -1);
+			for (size_t ii = 0; ii < 4; ++ii) {
+				*result++ = p[ii];
+			}
+			lua_pop(L, 1);
+		}
+	};
+
+	// define in model space
+	get_vec(idx, "target", (float*)(&ikdata.target));
+	get_vec(idx, "pole_vector", (float*)(&ikdata.pole_vector));
+
+	auto get_number = [L](int idx, auto name) {
+		lua_getfield(L, idx, name);
+		const float value = (float)lua_tonumber(L, -1);
+		lua_pop(L, 1);
+		return value;
+	};
+
+	ikdata.weight = get_number(idx, "weight");
+	ikdata.twist_angle = get_number(idx, "twist_angle");
+
+	if (lua_getfield(L, idx, "joints") == LUA_TTABLE) {
+		const lua_Integer len = lua_rawlen(L, -1);
+		if (len <= 0 || len > 3) {
+			luaL_error(L, "ik joints data must be in (0, 3], %d", len);
+		}
+		for (lua_Integer ii = 0; ii < len; ++ii) {
+			lua_geti(L, -1, ii + 1);
+			ikdata.joints[ii] = (uint16_t)lua_tointeger(L, -1);
+			lua_pop(L, 1);
+		}
+	}
+	else {
+		luaL_error(L, "joints field must be 'table'");
+	}
+	lua_pop(L, 1);
+
+	if (ikdata.type == "two_bone") {
+		ikdata.soften = get_number(idx, "soften");
+		get_vec(idx, "mid_axis", (float*)(&ikdata.mid_axis));
+	}
+	else if (ikdata.type == "aim") {
+		get_vec(idx, "up_axis", (float*)(&ikdata.up_axis));
+		get_vec(idx, "forward", (float*)(&ikdata.forward));
+		get_vec(idx, "offset", (float*)(&ikdata.offset));
+	}
+	else {
+		luaL_error(L, "not support type:%s", ikdata.type.c_str());
+	}
+}
+
 bool
-do_ik(const ozz::animation::Skeleton *ske,
-	const ik_data &ikdata,
+do_ik(lua_State* L,
+	const ozz::animation::Skeleton *ske,
 	bind_pose_soa::bind_pose_type &pose_soa, 
 	bind_pose::bind_pose_type &result_pose) {
+
+	ik_data ikdata;
+	fetch_ikdata(L, -1, ikdata);
+
 	auto get_joint = [&result_pose](int jointidx) {
 		if (jointidx < 0 || jointidx > result_pose.size()){
 			return (ozz::math::Float4x4*)nullptr;
@@ -101,5 +159,10 @@ do_ik(const ozz::animation::Skeleton *ske,
 		mul_quaternion(ikdata.joints[0], correction, pose_soa);
 	}
 
-	return do_ltm(ske, pose_soa, result_pose, nullptr, ikdata.joints[0]);
+	ozz::animation::LocalToModelJob job;
+	job.input = ozz::make_range(pose_soa);
+	job.skeleton = ske;
+	job.output = ozz::make_range(result_pose);
+	job.from = ikdata.joints[0];
+	return job.Run();
 }

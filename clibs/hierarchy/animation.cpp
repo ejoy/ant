@@ -474,21 +474,6 @@ register_bind_pose_mt(lua_State *L) {
 	luaL_setfuncs(L, l, 0);
 }
 
-bool
-do_ltm(const ozz::animation::Skeleton *ske, 
-	const bind_pose_soa::bind_pose_type &intermediateResult, 
-	bind_pose::bind_pose_type &joints,
-	const ozz::math::Float4x4 *root = nullptr,
-	int from = ozz::animation::Skeleton::kNoParent,
-	int to = ozz::animation::Skeleton::kMaxJoints) {
-	ozz::animation::LocalToModelJob ltmjob;
-	ltmjob.root = root;
-	ltmjob.input = ozz::make_range(intermediateResult);
-	ltmjob.skeleton = ske;
-	ltmjob.output = ozz::make_range(joints);
-	return ltmjob.Run();
-}
-
 struct ozzSamplingCache : public luaClass<ozzSamplingCache> {
 	ozz::animation::SamplingCache* v;
 	ozzSamplingCache(int max_tracks)
@@ -546,71 +531,11 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 };
 REGISTER_LUA_CLASS(ozzAnimation)
 
-static void 
-fetch_ikdata(lua_State *L, int idx, ik_data &ikdata){
-    luaL_checktype(L, idx, LUA_TTABLE);
 
-	lua_getfield(L, idx, "type");
-	ikdata.type = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	auto get_vec = [L](int idx, auto name, auto *result) {
-		if (LUA_TNIL != lua_getfield(L, idx, name)){
-			auto p = (const float*)lua_touserdata(L, -1);
-			for (int ii = 0; ii < 4; ++ii) {
-				*result++ = p[ii];
-			}
-
-			lua_pop(L, 1);
-		}
-	};
-
-	// define in model space
-	get_vec(idx, "target",		(float*)(&ikdata.target));
-	get_vec(idx, "pole_vector", (float*)(&ikdata.pole_vector));
-
-	auto get_number = [L](int idx, auto name) {
-		lua_getfield(L, idx, name);
-		const float value = (float)lua_tonumber(L, -1);
-		lua_pop(L, 1);
-
-		return value;
-	};
-	
-	ikdata.weight = get_number(idx, "weight");
-	ikdata.twist_angle = get_number(idx, "twist_angle");
-
-	if (lua_getfield(L, idx, "joints") == LUA_TTABLE){
-		const auto len = lua_rawlen(L, -1);
-		if (len <= 0 || len > 3){
-			luaL_error(L, "ik joints data must be in (0, 3], %d", len);
-		}
-
-		for (int ii = 0; ii < len; ++ii){
-			lua_geti(L, -1, ii+1);
-			ikdata.joints[ii] = (uint16_t)lua_tointeger(L, -1);
-			lua_pop(L, 1);
-		}
-	} else {
-		luaL_error(L, "joints field must be 'table'");
-	}
-	lua_pop(L, 1);
-
-	if (ikdata.type == "two_bone"){
-		ikdata.soften = get_number(idx, "soften");
-		get_vec(idx, "mid_axis", (float*)(&ikdata.mid_axis));
-	}else if(ikdata.type == "aim"){
-		get_vec(idx, "up_axis", (float*)(&ikdata.up_axis));
-		get_vec(idx, "forward", (float*)(&ikdata.forward));
-		get_vec(idx, "offset", (float*)(&ikdata.offset));
-	}else{
-		luaL_error(L, "not support type:%s", ikdata.type.c_str());
-	}
-}
 
 extern bool
-do_ik(const ozz::animation::Skeleton *ske,
-	const ik_data &ikdata,
+do_ik(lua_State* L,
+	const ozz::animation::Skeleton *ske,
 	bind_pose_soa::bind_pose_type &pose_soa, 
 	bind_pose::bind_pose_type &result_pose);
 
@@ -619,6 +544,26 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 	ozz::Vector<bind_pose_soa::bind_pose_type>::Std      m_result;
 	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std m_layers;
 
+	void _push_pose(bind_pose_soa::bind_pose_type const& pose, float weight) {
+		m_result.emplace_back(pose);
+		ozz::animation::BlendingJob::Layer layer;
+		layer.weight = weight;
+		layer.transform = ozz::make_range(m_result.back());
+		m_layers.emplace_back(layer);
+	}
+	void _fix_root_translation(ozz::animation::Skeleton* ske, bind_pose_soa::bind_pose_type& pose) {
+		size_t n = (size_t)ske->num_joints();
+		const auto& parents = ske->joint_parents();
+		for (size_t i = 0; i < n; ++i) {
+			if (parents[i] == ozz::animation::Skeleton::kNoParent) {
+				auto& trans = pose[i / 4];
+				const auto newtrans = ozz::math::simd_float4::zero();
+				trans.translation.x = ozz::math::SetI(trans.translation.x, newtrans, 0);
+				trans.translation.z = ozz::math::SetI(trans.translation.z, newtrans, 0);
+				return;
+			}
+		}
+	}
 	int setup(lua_State* L) {
 		luaL_checktype(L, 1, LUA_TUSERDATA);
 		auto hie = (hierarchy_build_data*)lua_touserdata(L, 1);
@@ -644,11 +589,7 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		if (!job.Run()) {
 			return luaL_error(L, "sampling animation failed!");
 		}
-		m_result.emplace_back(pose);
-		ozz::animation::BlendingJob::Layer layer;
-		layer.weight = weight;
-		layer.transform = ozz::make_range(m_result.back());
-		m_layers.emplace_back(layer);
+		_push_pose(pose, weight);
 		return 0;
 	}
 	int do_blend(lua_State* L) {
@@ -681,35 +622,14 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		}
 		m_result.resize(max-n);
 		m_layers.resize(max-n);
-		m_result.emplace_back(pose);
-		ozz::animation::BlendingJob::Layer layer;
-		layer.weight = weight;
-		layer.transform = ozz::make_range(m_result.back());
-		m_layers.emplace_back(layer);
+		_push_pose(pose, weight);
 		return 0;
 	}
 	int do_ik(lua_State* L) {
 		auto aniresult = (bind_pose*)lua_touserdata(L, 1);
-		ik_data ikdata;
-		fetch_ikdata(L, -1, ikdata);
-		::do_ik(m_ske, ikdata, m_result.back(), aniresult->pose);
+		::do_ik(L, m_ske, m_result.back(), aniresult->pose);
 		return 0;
 	}
-	
-	static void fix_root_translation(ozz::animation::Skeleton *ske, bind_pose_soa::bind_pose_type& pose){
-		size_t n = (size_t)ske->num_joints();
-		const auto& parents = ske->joint_parents();
-		for (size_t i = 0; i < n; ++i) {
-			if (parents[i] == ozz::animation::Skeleton::kNoParent) {
-				auto& trans = pose[i / 4];
-				const auto newtrans = ozz::math::simd_float4::zero();
-				trans.translation.x = ozz::math::SetI(trans.translation.x, newtrans, 0);
-				trans.translation.z = ozz::math::SetI(trans.translation.z, newtrans, 0);
-				return;
-			}
-		}
-	}
-
 	int get_result(lua_State* L) {
 		if (m_result.empty()) {
 			return luaL_error(L, "no result");
@@ -717,9 +637,13 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		auto aniresult = (bind_pose*)lua_touserdata(L, 1);
 		const bool fixroot = lua_isnoneornil(L, 2) ? false : lua_toboolean(L, 2);
 		if (fixroot) {
-			fix_root_translation(m_ske, m_result.back());
+			_fix_root_translation(m_ske, m_result.back());
 		}
-		if (!do_ltm(m_ske, m_result.back(), aniresult->pose)){
+		ozz::animation::LocalToModelJob job;
+		job.input = ozz::make_range(m_result.back());
+		job.skeleton = m_ske;
+		job.output = ozz::make_range(aniresult->pose);
+		if (!job.Run()) {
 			return luaL_error(L, "doing blend result to ltm job failed!");
 		}
 		return 0;
