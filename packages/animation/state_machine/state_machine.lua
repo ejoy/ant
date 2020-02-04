@@ -6,17 +6,12 @@ local function get_transmit_merge(e, tt_duration)
 	local timepassed = 0
 	return function (deltatime)
 		timepassed = timepassed + deltatime
+		local current_pose = e.animation.current
 		if timepassed > tt_duration then
-			local current_pose = e.animation.current
-			current_pose[1] = current_pose[#current_pose]
-			current_pose[1].weight = 1
-			for i = 2, #current_pose do
-				current_pose[i] = nil
-			end
+			e.animation.current = current_pose[#current_pose]
 			return true
 		end
 		local scale = math.max(0, math.min(1, timepassed / tt_duration))
-		local current_pose = e.animation.current
 		for i = 1, #current_pose-1 do
 			current_pose[i].weight = current_pose[i].init_weight * (1 - scale)
 		end
@@ -27,13 +22,33 @@ end
 
 local function play_animation(e, name, duration)
 	local current_pose = e.animation.current
-	for i = 1, #current_pose do
-		current_pose[i].init_weight = current_pose[i].weight
+	if current_pose.type == "blend" then
+		for i = 1, #current_pose do
+			current_pose[i].init_weight = current_pose[i].weight
+		end
+		local ani = e.animation.anilist[name]
+		current_pose[#current_pose+1] = {
+			animation = ani,
+			weight = 0,
+			start_time = timer.current(),
+		}
+	else
+		e.animation.current = {
+			type = "blend",
+			{
+				animation = current_pose.animation,
+				weight = 1,
+				init_weight = 1,
+				start_time = current_pose.start_time,
+			},
+			{
+				animation = e.animation.anilist[name],
+				weight = 0,
+				init_weight = 0,
+				start_time = timer.current(),
+			}
+		}
 	end
-	local ani = e.animation.anilist[name]
-	ani.weight = 0
-	ani.start_time = timer.current()
-	current_pose[#current_pose+1] = ani
 	e.state_machine.transmit_merge = get_transmit_merge(e, duration * 1000.)
 end
 
@@ -69,8 +84,7 @@ m.require_interface "ant.timer|timer"
 function m.set_state(e, name)
 	if e.animation and e.animation.anilist[name] and e.state_machine then
 		local current_pose = e.animation.current
-		current_pose = current_pose[#current_pose]
-		if current_pose.name == name then
+		if current_pose.type ~= 'blend' and current_pose.animation.name == name then
 			return
 		end
 		local statecfg = e.state_machine
@@ -85,8 +99,7 @@ end
 function m.play(e, name, time)
 	if e.animation and e.animation.anilist[name]  then
 		local current_pose = e.animation.current
-		current_pose = current_pose[#current_pose]
-		if current_pose.name == name then
+		if current_pose.type ~= 'blend' and current_pose.animation.name == name then
 			return
 		end
 		play_animation(e, name, time)
