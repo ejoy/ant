@@ -7,29 +7,6 @@ INCBIN(FirmwareBootstrap, "../../engine/firmware/bootstrap.lua");
 INCBIN(FirmwareIo, "../../engine/firmware/io.lua");
 INCBIN(FirmwareVfs, "../../engine/firmware/vfs.lua");
 
-#if defined(__MINGW32__)
-#define FW_PLAT "mingw"
-#elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
-#define FW_PLAT "osx"
-#elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
-#define FW_PLAT "ios"
-#elif defined(_MSC_VER)
-#define FW_PLAT "msvc"
-#endif
-
-#if defined(_DEBUG)
-#define FW_MODE "debug"
-#else
-#define FW_MODE "release"
-#endif
-
-#define FW_ODIR "o/" FW_PLAT "/" FW_MODE "/"
-
-//INCBIN(FirmwareFsImage, FW_ODIR "fs_imgui_image.sc");
-//INCBIN(FirmwareVsImage, FW_ODIR "vs_imgui_image.sc");
-//INCBIN(FirmwareFsFont,  FW_ODIR "fs_imgui_font.sc");
-//INCBIN(FirmwareVsFont,  FW_ODIR "vs_imgui_font.sc");
-
 struct bin {
 	const char* data;
 	size_t      size;
@@ -41,11 +18,6 @@ std::map<std::string_view, bin> firmware = {
 	{ "bootstrap.lua", INIT_BIN(FirmwareBootstrap) },
 	{ "io.lua", INIT_BIN(FirmwareIo) },
 	{ "vfs.lua", INIT_BIN(FirmwareVfs) },
-
-	//{ "fs_imgui_image.sc", INIT_BIN(FirmwareFsImage) },
-	//{ "vs_imgui_image.sc", INIT_BIN(FirmwareVsImage) },
-	//{ "fs_imgui_font.sc", INIT_BIN(FirmwareFsFont) },
-	//{ "vs_imgui_font.sc", INIT_BIN(FirmwareVsFont) },
 };
 
 static std::string_view luaL_checkstrview(lua_State* L, int idx) {
