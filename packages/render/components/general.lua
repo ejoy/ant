@@ -180,8 +180,6 @@ ecs.tag "can_select"
 ecs.component_alias("color", "real[4]", {1,1,1,1})
 
 ecs.tag "dynamic_object"
-ecs.component "character"
-	.movespeed "real" (1.0)
 
 ecs.component "physic_state"
 	.velocity "real[3]"

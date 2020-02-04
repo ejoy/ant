@@ -21,7 +21,7 @@ runtime.start {
 		"ant.scene|hierarchy",
 		"ant.scene|ignore_parent_scale",
 		--editor
-		"ant.test.features|character_controller",
+		"ant.test.features|character",
 		"ant.objcontroller|select",
 	},
 	system = {
@@ -40,6 +40,11 @@ runtime.start {
 			{name = "collider",
 				"update_collider_transform",
 				"update_collider",
+				"raycast",
+				{name = "character",
+					"character_height",
+					"character_ik_target",
+				}
 			},
 			{ name = "animation",
 				"animation_state",

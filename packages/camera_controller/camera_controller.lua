@@ -20,6 +20,7 @@ local function get_camera()
 end
 
 local eventMouseLeft = world:sub {"mouse", "LEFT"}
+local eventMouseRight = world:sub {"mouse", "RIGHT"}
 local kMouseSpeed <const> = 0.5
 local mouse_lastx, mouse_lasty
 local dpi_x, dpi_y
@@ -67,14 +68,16 @@ function camera_controller_system:camera_control()
 	local camera = get_camera()
 	
 	if can_rotate(camera) then
-		for _,_,state,x,y in eventMouseLeft:unpack() do
-			if state == "MOVE" and mouse_lastx then
-				local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
-				local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-				local right, up = ms:base_axes(camera.viewdir)
-				ms(camera.viewdir, {type="q", axis=up, radian={ux}}, {type="q", axis=right, radian={uy}}, "3**n=")
+		for _, e in ipairs{eventMouseLeft, eventMouseRight} do
+			for _,_,state,x,y in e:unpack() do
+				if state == "MOVE" and mouse_lastx then
+					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
+					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
+					local right, up = ms:base_axes(camera.viewdir)
+					ms(camera.viewdir, {type="q", axis=up, radian={ux}}, {type="q", axis=right, radian={uy}}, "3**n=")
+				end
+				mouse_lastx, mouse_lasty = x, y
 			end
-			mouse_lastx, mouse_lasty = x, y
 		end
 	end
 	if can_move(camera) then

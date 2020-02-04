@@ -119,13 +119,6 @@ cp.require_component "transform"
 cp.require_component "collider"
 cp.require_system "ant.bullet|collider_system"
 
-local cp = ecs.policy "collider.character"
-cp.require_component "character"
-cp.require_component "collider"
-cp.require_component "transform"
-cp.require_policy "collider"
-cp.require_system "ant.bullet|character_collider_system"
-
 local math3d_adapter = require "math3d.adapter"
 local mathadapter_util = import_package "ant.math.adapter"
 mathadapter_util.bind("bullet", function ()
@@ -146,6 +139,17 @@ function m.test(e, srt)
 	end
 	local mat = ms:add_translate(ms:srtmat(srt), e.collider.center)
 	return physicworld:contact_test(collider.handle, mat)
+end
+
+function m.ray_test(ray)
+    return physicworld:ray_test(ray[1], ray[2])
+end
+
+function m.aabb(e)
+	local collider = e.collider
+	if collider then
+		return physicworld:object_get_aabb(collider.handle)
+	end
 end
 
 local collider_mb = world:sub {"component_register", "collider"}
@@ -172,30 +176,29 @@ function collider_sys:update_collider_transform()
     end
 end
 
-local char_sys = ecs.system "character_collider_system"
-char_sys.require_system "collider_system"
+ecs.component_alias("ray", "vector[2]")
+ecs.component "raycast"
+	.rays "ray{}"
 
-local character_motion = world:sub {"character_motion"}
-local character_spawn = world:sub {"component_register", "character"}
 
-local function update_collider(eid)
-    local e = world[eid]
-    local colliderobj = e.collider.handle
-    local aabbmin, aabbmax = physicworld:object_get_aabb(colliderobj)
-    local center = ms({0.5}, aabbmax, aabbmin, "+*T")
-    local at = ms({center[1], aabbmin[2] - 3, center[3], 1.0}, "P")
-    local hit, result = physicworld:ray_test(ms(center, "P"), at)
-    if hit then
-        world:pub {"ray_cast_hitted", eid, result}
-        ms(e.transform.t, result.hit_pt_in_WS, "=")
-    end
-end
+local rc_p = ecs.policy "raycast"
+rc_p.require_component "raycast"
+rc_p.require_system "raycast_system"
 
-function char_sys:update_collider()
-    for _, _, eid in character_spawn:unpack() do
-        update_collider(eid)
-    end
-    for _, eid in character_motion:unpack() do
-        update_collider(eid)
-    end
+local rcs = ecs.system "raycast_system"
+function rcs:raycast()
+	for _, eid in world:each "raycast" do
+		local e = world[eid]
+		local rc = e.raycast
+		local rays = rc.rays
+		local results = {}
+		
+		for name, ray in pairs(rays) do
+			local hit, result = physicworld:ray_test(ray[1], ray[2])
+			if hit then
+				results[name] = result
+			end
+		end
+		rc.results = results
+	end
 end

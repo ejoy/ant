@@ -33,7 +33,8 @@ init_loader.require_system 'ant.bullet|character_collider_system'
 init_loader.require_system "ant.camera_controller|camera_system"
 init_loader.require_system "ant.imguibase|imgui_system"
 init_loader.require_system "ant.sky|procedural_sky_system"
-init_loader.require_system "ant.test.features|scenespace_test"
+--init_loader.require_system "ant.test.features|scenespace_test"
+init_loader.require_system "ant.test.features|character_ik_system"
 init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
 init_loader.require_system "ant.render|draw_raycast_point"
@@ -42,9 +43,6 @@ init_loader.require_interface "ant.render|camera_spawn"
 init_loader.require_interface "ant.camera_controller|camera_motion"
 init_loader.require_interface "ant.render|iwidget_drawer"
 
-local char_controller_policy = ecs.policy "character_controller"
-char_controller_policy.require_component "character"
-char_controller_policy.require_policy "ant.bullet|collider.character"
 
 local ozzmeshdir = fs.path 'meshes' / 'ozz'
 local ozzskepath = ozzmeshdir / 'human_skeleton.ozz'
@@ -65,7 +63,7 @@ local function ozzmesh_animation_test()
             "ant.render|name",
             "ant.render|shadow_cast",
             "ant.bullet|collider.character",
-            "ant.test.features|character_controller",
+            "ant.test.features|character",
             "ant.render|debug_mesh_bounding",
         },
         data = {
@@ -160,78 +158,7 @@ local function gltf_animation_test()
     }
 end
 
-local function foot_ik_test()
-    
 
-    return world:create_entity {
-        policy = {
-            "ant.serialize|serialize",
-            "ant.animation|animation",
-            "ant.render|render",
-            "ant.animation|ozzmesh",
-            "ant.animation|ozz_skinning",
-            "ant.render|shadow_cast",
-            "ant.render|name",
-        },
-        data = {
-            transform = mu.translate_mat {0, 0, -6, 1},
-            rendermesh = {},
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
-            },
-            mesh = {
-                ref_path = ozzrespath / ozzmeshpath,
-            },
-            skeleton = {
-                ref_path = ozzrespath / ozzskepath
-            },
-            animation = {
-                anilist = {
-                    idle = {
-                        ref_path = ozzrespath / ozzmeshdir / 'animation.ozz',
-                        scale = 1,
-                        looptimes = 0,
-                    },
-                },
-                birth_pose = "idle",
-                ik = {
-                    jobs = {
-                        {
-                            type        = "two_bone",
-                            target      = {0, 0, 0, 1},
-                            pole_vector = {0, 1, 0, 0},
-                            mid_axis    = {0, 0, 1, 0},
-                            widget      = 1.0,
-                            twist_angle = 0,
-                            soften      = 0.5,
-                            joints      = {
-                                "LeftUpLeg", "LeftLeg", "LeftFoot",
-                            }
-                        },
-                        {
-                            type        = "aim",
-                            target      = {0, 0, 0, 1},
-                            pole_vector = {0, 1, 0, 0},
-                            up_axis     = {0, 1, 0, 0},
-                            forward     = {0, 0, 1, 0},
-                            offset      = {0, 0, 0, 0},
-                            widget      = 1.0,
-                            twist_angle = 0,
-                            joints      = {
-                                "LeftFoot",
-                            }
-                        }
-                    }
-                }
-            },
-            serialize = serialize.create(),
-            name = "foot_ik_test",
-            can_cast = true,
-            can_render = true,
-        }
-    }
-    
-end
 
 local function pbr_test()
     world:create_entity {
@@ -318,6 +245,43 @@ local function print_ske(ske)
     end
 end
 
+local function simple_box()
+    local eid = world:create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.render|name",
+        },
+        data = {
+            transform = mu.srt(),
+            rendermesh = {},
+            can_render = true,
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/simpletri.material",
+                properties = {
+                    uniforms = {
+                        u_color = {
+                            type = "color",
+                            value = {1, 0, 0, 1},
+                            name = "color"
+                        }
+                    }
+                }
+            },
+            name = "simplebox"
+        }
+    }
+
+    local e = world[eid]
+
+    local geopkg 	= import_package "ant.geometry"
+    local geodrawer	= geopkg.drawer
+
+    local desc = {vb={"fff"}, ib={}}
+    geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
+    e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/simplebox.mesh", computil.create_simple_mesh("p3", desc.vb, 8, desc.ib, #desc.ib))
+    return eid
+end
+
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
@@ -328,16 +292,16 @@ function init_loader:init()
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
     iwd.create()
 
-    --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0})
-    create_plane_test()
+    computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0, 1})
+    --create_plane_test()
 
-    ozzmesh_animation_test()
-    pbr_test()
-    gltf_animation_test()
+    --ozzmesh_animation_test()
+    --pbr_test()
+    --gltf_animation_test()
 
-    foot_ik_test()
+    simple_box()
 
-    pbrscene.create_scene(world)
+    --pbrscene.create_scene(world)
 end
 
 local function create_camera()
@@ -356,10 +320,10 @@ local function create_camera()
 end
 
 function init_loader:data_changed()
-    -- iwd.draw_lines({
+    -- iwd.draw_lines{
     --     {5, 2, 5},
     --     {5, 2, 15},
-    -- }, 0xff0000ff)
+    -- }
 end
 
 function init_loader:post_init()

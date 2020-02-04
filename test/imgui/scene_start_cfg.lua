@@ -19,7 +19,7 @@ local runtime_config = {
         "ant.scene|hierarchy",
         "ant.scene|ignore_parent_scale",
         --editor
-        "ant.test.features|character_controller",
+        "ant.test.features|character",
         "ant.objcontroller|select",
     },
     system = {
@@ -103,7 +103,7 @@ local editor_config = {
         -- "ant.testimgui|"
         -- "ant.hierarchy.offline|",
         --editor
-        "ant.test.features|character_controller",
+        "ant.test.features|character",
         "ant.objcontroller|select",
     },
     system = {
