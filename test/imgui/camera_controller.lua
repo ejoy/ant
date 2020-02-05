@@ -35,7 +35,8 @@ local move_speed = 1
 local wheel_speed = 1
 local last_xy
 
-local target = math3d.ref "vector" {0, 0, 0, 1}
+local target = math3d.ref "vector"
+ms(target, {0, 0, 0, 1}, "=")
 
 function camera_controller_system:update()
     for _,_, _, x, y in leftmouse_mb:unpack() do
