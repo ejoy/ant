@@ -20,6 +20,7 @@ runtime.start {
 	pipeline = {
 		{ name = "init",
 			"init",
+			"init_blit_render",
 			"post_init",
 		},
 		{ name = "update",

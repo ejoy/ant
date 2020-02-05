@@ -28,6 +28,10 @@ function gui_util.get_all_components()
     end
     local scene         = import_package "ant.scene".util
     local world = scene.start_static_world(packages)
+    -- world_update()
+    -- log.info_a(world._schema.map)
+    -- log(world._schema.map)
+    -- log.info_a(world)
     return world._class.component
 end
 

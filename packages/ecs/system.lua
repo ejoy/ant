@@ -79,9 +79,9 @@ function system.init(sys, pipeline)
 	end
 	check(pipeline)
 
-	for name in pairs(mark) do
-		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
-	end
+	-- for name in pairs(mark) do
+	-- 	error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
+	-- end
 	return {
 		steps = res,
 		pipeline = pipeline,
