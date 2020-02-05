@@ -113,6 +113,64 @@ struct ozzJointRemap : public luaClass<ozzJointRemap> {
 };
 REGISTER_LUA_CLASS(ozzJointRemap)
 
+__declspec (align(8))
+struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzBindPose> {
+	typedef ozz::Vector<ozz::math::Float4x4>::Std self_type;
+	ozzBindPose(size_t numjoints)
+		: self_type(numjoints)
+	{ }
+	ozzBindPose(size_t numjoints, const float* data)
+		: self_type(numjoints) {
+		memcpy(&(*this)[0], data, sizeof(ozz::math::Float4x4) * numjoints);
+	}
+	~ozzBindPose() {
+	}
+
+	static int lcount(lua_State* L) {
+		lua_pushinteger(L, get(L, 1)->size());
+		return 1;
+	}
+
+	static int create(lua_State* L) {
+		lua_Integer numjoints = luaL_checkinteger(L, 1);
+		if (numjoints <= 0) {
+			luaL_error(L, "joints number should be > 0");
+			return 0;
+		}
+		switch (lua_type(L, 2)) {
+		case LUA_TNIL:
+		case LUA_TNONE:
+			base_type::constructor(L, (size_t)numjoints);
+			break;
+		case LUA_TSTRING: {
+			size_t size = 0;
+			const float* data = (const float*)lua_tolstring(L, 2, &size);
+			if (size != sizeof(ozz::math::Float4x4) * numjoints) {
+				return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
+			}
+			base_type::constructor(L, (size_t)numjoints, data);
+			break;
+		}
+		case LUA_TUSERDATA:
+		case LUA_TLIGHTUSERDATA: {
+			const float* data = (const float*)lua_touserdata(L, 2);
+			base_type::constructor(L, (size_t)numjoints, data);
+			break;
+		}
+		default:
+			return luaL_error(L, "argument 2 is not support type, only support string/userdata/light userdata");
+		}
+		luaL_Reg l[] = {
+			{"count", lcount},
+			{nullptr, nullptr},
+		};
+		base_type::set_method(L, l);
+		return 1;
+	}
+};
+REGISTER_LUA_CLASS(ozzBindPose)
+
+
 template<typename DataType>
 struct vertex_data {
 	struct data_stride {
@@ -188,31 +246,30 @@ fill_skinning_job_field(uint32_t num_vertices, const DataT &d, ozz::Range<T> &r,
 }
 
 static void
-build_skinning_matrices(bind_pose *skinning_matrices, 
-	const bind_pose* current_pose, 
-	const bind_pose* inverse_bind_matrices, 
+build_skinning_matrices(ozzBindPose& skinning_matrices,
+	const ozzBindPose& current_pose,
+	const ozzBindPose& inverse_bind_matrices,
 	const ozzJointRemap *jarray){
 	if (jarray){
-		assert(jarray->joints.size() == inverse_bind_matrices->pose.size());
+		assert(jarray->joints.size() == inverse_bind_matrices.size());
 		for (size_t ii = 0; ii < jarray->joints.size(); ++ii){
-			skinning_matrices->pose[ii] = current_pose->pose[jarray->joints[ii]] * inverse_bind_matrices->pose[ii];
+			skinning_matrices[ii] = current_pose[jarray->joints[ii]] * inverse_bind_matrices[ii];
 		}
 	} else {
-		assert(skinning_matrices->pose.size() == inverse_bind_matrices->pose.size() &&
-			skinning_matrices->pose.size() == current_pose->pose.size());
-		for (size_t ii = 0; ii < inverse_bind_matrices->pose.size(); ++ii){
-			skinning_matrices->pose[ii] = current_pose->pose[ii] * inverse_bind_matrices->pose[ii];
+		assert(current_pose.size() == inverse_bind_matrices.size() && skinning_matrices.size() == current_pose.size());
+		for (size_t ii = 0; ii < inverse_bind_matrices.size(); ++ii){
+			skinning_matrices[ii] = current_pose[ii] * inverse_bind_matrices[ii];
 		}
 	}
 }
 
 static int
 lbuild_skinning_matrices(lua_State *L){
-	auto skinning_matrices = (bind_pose*)luaL_checkudata(L, 1, "OZZ_BIND_POSE");
-	auto current_bind_pose = (bind_pose*)luaL_checkudata(L, 2, "OZZ_BIND_POSE");
-	auto inverse_bind_matrices = (bind_pose*)luaL_checkudata(L, 3, "OZZ_BIND_POSE");
+	ozzBindPose& skinning_matrices = *ozzBindPose::get(L, 1);
+	ozzBindPose& current_bind_pose = *ozzBindPose::get(L, 2);
+	ozzBindPose& inverse_bind_matrices = *ozzBindPose::get(L, 3);
 	const ozzJointRemap *jarray = lua_isnoneornil(L, 4) ? nullptr : ozzJointRemap::get(L, 4);
-	if (skinning_matrices->pose.size() < inverse_bind_matrices->pose.size()){
+	if (skinning_matrices.size() < inverse_bind_matrices.size()){
 		return luaL_error(L, "invalid skinning matrices and inverse bind matrices, skinning matrices must larger than inverse bind matrices");
 	}
 	build_skinning_matrices(skinning_matrices, current_bind_pose, inverse_bind_matrices, jarray);
@@ -221,7 +278,7 @@ lbuild_skinning_matrices(lua_State *L){
 
 static int
 lmesh_skinning(lua_State *L){
-	bind_pose *skinning_matrices = (bind_pose*)luaL_checkudata(L, 1, "OZZ_BIND_POSE");
+	ozzBindPose* skinning_matrices = ozzBindPose::get(L, 1);
 
 	luaL_checktype(L, 2, LUA_TTABLE);
 	in_vertex_data vd = {0};
@@ -239,7 +296,7 @@ lmesh_skinning(lua_State *L){
 	ozz::geometry::SkinningJob skinning_job;
 	skinning_job.vertex_count = num_vertices;
 	skinning_job.influences_count = influences_count;
-	skinning_job.joint_matrices = ozz::make_range(skinning_matrices->pose);
+	skinning_job.joint_matrices = ozz::make_range((ozzBindPose::self_type&)*skinning_matrices);
 	
 	assert(vd.positions.data && "skinning system must provide 'position' attribute");
 
@@ -277,157 +334,6 @@ lmesh_skinning(lua_State *L){
 	return 0;
 }
 
-static inline void
-create_joint_table(lua_State *L, const ozz::math::Float4x4 &joint) {
-	lua_createtable(L, 16, 0);
-	for (auto icol = 0; icol < 4; ++icol) {
-		for (auto ii = 0; ii < 4; ++ii) {
-			const float* col = (const float*)(&(joint.cols[icol]));
-			lua_pushnumber(L, col[ii]);
-			lua_seti(L, -2, icol * 4 + ii + 1);
-		}
-	}
-}
-
-static int
-lbp_result_init(lua_State *L){
-	size_t size;
-	const char* buffer = luaL_checklstring(L, 1, &size);
-	float* dstbuffer = (float*)lua_touserdata(L, 2);
-	memcpy(dstbuffer, buffer, size);
-	return 0;
-}
-
-static int
-lbp_result_joint(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
-
-	luaL_checktype(L, 2, LUA_TNUMBER);
-	const size_t idx = (size_t)lua_tointeger(L, 2) - 1;
-	const auto joint_count = result->pose.size();
-
-	if (idx >= joint_count) {
-		luaL_error(L, "invalid index:%d, joints count:%d", idx, joint_count);
-	}
-
-	auto &joint = result->pose[idx];
-	
-	if (lua_isnoneornil(L, 3)){
-		auto p = &(joint.cols[0]);
-		lua_pushlightuserdata(L, (void*)p);
-		return 1;
-	}
-
-	auto intype = lua_type(L, 3);
-	const ozz::math::Float4x4 *inputdata = nullptr;
-	if (intype == LUA_TLIGHTUSERDATA || intype == LUA_TUSERDATA){
-		inputdata = (const ozz::math::Float4x4*)lua_touserdata(L, 3);
-	} else if (intype == LUA_TSTRING){
-		size_t size;
-		inputdata = (const ozz::math::Float4x4*)lua_tolstring(L, 3, &size);
-		if (sizeof(ozz::math::Float4x4) != size){
-			return luaL_error(L, "invalid string data size:%d, not match joint data size:%d", size, sizeof(joint));
-		}
-	}
-
-	if (inputdata){
-		joint = *inputdata;
-	}
-	
-	return 0;
-}
-
-static int
-lbp_result_joints(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	const bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
-
-	auto jointcount = result->pose.size();
-	lua_createtable(L, (int)jointcount, 0);
-
-	for (size_t ii = 0; ii < jointcount; ++ii) {
-		create_joint_table(L, result->pose[ii]);
-		lua_seti(L, -2, ii + 1);
-	}
-	return 1;
-}
-
-static int
-lbp_result_count(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	const bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
-
-	lua_pushinteger(L, result->pose.size());
-	return 1;
-}
-
-static int
-lbp_result_transform(lua_State *L){
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	bind_pose * result = (bind_pose*)lua_touserdata(L, 1);
-
-	auto mat = (const ozz::math::Float4x4*)lua_touserdata(L, 2);
-	auto except_root = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
-
-	for (size_t ii = (except_root ? 1 : 0); ii < result->pose.size(); ++ii){
-		result->pose[ii] = *mat * result->pose[ii];
-	}
-	
-	return 0;
-}
-
-static int
-ldel_bpresult(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TUSERDATA);
-	bind_pose *result = (bind_pose *)lua_touserdata(L, 1);	
-	result->pose.~vector();
-	return 0;
-}
-
-static int
-lnew_bind_pose(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TNUMBER);
-	const size_t numjoints = (size_t)lua_tointeger(L, 1);
-
-	if (numjoints <= 0) {
-		luaL_error(L, "joints number should be > 0");
-		return 0;
-	}
-
-	size_t initdata_size = 0;
-	const float* initdata = nullptr;
-
-	if (!lua_isnoneornil(L, 2)){
-		switch (lua_type(L, 2)){
-			case LUA_TSTRING: 
-				initdata = (const float*)lua_tolstring(L, 2, &initdata_size); 
-				if (initdata_size != sizeof(ozz::math::Float4x4) * numjoints){
-					return luaL_error(L, "init data size is not valid, need:%d", sizeof(ozz::math::Float4x4) * numjoints);
-				}
-			break;
-			case LUA_TUSERDATA:
-			case LUA_TLIGHTUSERDATA:
-				initdata = (const float*)lua_touserdata(L, 2);
-				initdata_size = numjoints * sizeof(ozz::math::Float4x4);
-			break;
-			default:
-			return luaL_error(L, "argument 2 is not support type, only support string/userdata/light userdata");
-		}
-	} 
-
-	bind_pose *result = (bind_pose*)lua_newuserdatauv(L, sizeof(bind_pose), 0);
-	luaL_getmetatable(L, "OZZ_BIND_POSE");
-	lua_setmetatable(L, -2);
-	new(&result->pose)bind_pose::bind_pose_type(numjoints);
-
-	if (initdata){
-		memcpy(&result->pose[0], initdata, initdata_size);
-	}
-
-	return 1;
-}
-
 struct ozzAllocator : public luaClass<ozzAllocator> {
 	void* v;
 	ozzAllocator(size_t size, size_t alignment)
@@ -454,25 +360,6 @@ struct ozzAllocator : public luaClass<ozzAllocator> {
 	}
 };
 REGISTER_LUA_CLASS(ozzAllocator)
-
-static void
-register_bind_pose_mt(lua_State *L) {
-	luaL_newmetatable(L, "OZZ_BIND_POSE");
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");
-
-	luaL_Reg l[] = {
-		{"", lbp_result_init},
-		{"joint", lbp_result_joint},
-		{"joints", lbp_result_joints},
-		{"count", lbp_result_count},
-		{"transform", lbp_result_transform},
-		{"__gc", ldel_bpresult},
-		{nullptr, nullptr},
-	};
-
-	luaL_setfuncs(L, l, 0);
-}
 
 struct ozzSamplingCache : public luaClass<ozzSamplingCache> {
 	ozz::animation::SamplingCache* v;
@@ -687,14 +574,13 @@ REGISTER_LUA_CLASS(ozzBlendingJob)
 extern "C" {
 LUAMOD_API int
 luaopen_hierarchy_animation(lua_State *L) {
-	register_bind_pose_mt(L);
 	lua_newtable(L);
 	luaL_Reg l[] = {
 		{ "mesh_skinning",				lmesh_skinning},
 		{ "build_skinning_matrices",	lbuild_skinning_matrices},
 		{ "new_animation",				ozzAnimation::create},
 		{ "new_sampling_cache",			ozzSamplingCache::create},
-		{ "new_bind_pose",				lnew_bind_pose},
+		{ "new_bind_pose",				ozzBindPose::create},
 		{ "new_aligned_memory",			ozzAllocator::create},
 		{ "new_joint_remap",			ozzJointRemap::create},
 		{ NULL, NULL },

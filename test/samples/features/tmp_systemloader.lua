@@ -298,7 +298,7 @@ function init_loader:init()
     --ozzmesh_animation_test()
     --pbr_test()
     --gltf_animation_test()
-
+    
     simple_box()
 
     --pbrscene.create_scene(world)

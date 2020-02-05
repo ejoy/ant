@@ -106,6 +106,13 @@ ecs.singleton "render_properties" {
 	}
 }
 
+local blitsys = ecs.system "blit_render_system"
+
+function blitsys:init_blit_render()
+	print("init bilt queue")
+    ru.create_blit_queue(world, world.args.fb_size)
+end
+
 local rendersys = ecs.system "render_system"
 
 rendersys.require_singleton "render_properties"
@@ -114,6 +121,7 @@ rendersys.require_system "ant.scene|primitive_filter_system"
 rendersys.require_system "ant.scene|filter_properties"
 rendersys.require_system "end_frame"
 rendersys.require_system "viewport_detect_system"
+rendersys.require_system "blit_render_system"
 
 rendersys.require_policy "render_queue"
 rendersys.require_policy "main_queue"
@@ -128,7 +136,6 @@ end
 function rendersys:init()
 	local fbsize = world.args.fb_size
 	ru.create_main_queue(world, fbsize)
-	ru.create_blit_queue(world, fbsize)
 end
 
 function rendersys:render_commit()

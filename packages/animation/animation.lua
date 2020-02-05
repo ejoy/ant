@@ -53,14 +53,14 @@ function anicomp:init()
 	for name, ani in pairs(self.anilist) do
 		ani.handle = asset.get_resource(ani.ref_path).handle
 		ani.sampling_cache = ani_module.new_sampling_cache()
-		ani.start_time = 0
 		ani.duration = ani.handle:duration() * 1000. / ani.scale
 		ani.max_time = ani.looptimes > 0 and (ani.looptimes * ani.duration) or math.maxinteger
 		ani.name = name
 	end
-	local birth_pose = self.anilist[self.birth_pose]
-	birth_pose.weight = 1
-	self.current = {birth_pose}
+	self.current = {
+		animation = self.anilist[self.birth_pose],
+		start_time = 0,
+	}
 	return self
 end
 
@@ -94,21 +94,30 @@ end
 
 function anisystem:sample_animation_pose()
 	local current_time = timer.current()
+
+	local function do_animation(task)
+		if task.type == 'blend' then
+			for _, t in ipairs(task) do
+				do_animation(t)
+			end
+			ani_module.do_blend("blend", #task, task.weight)
+		else
+			local ani = task.animation
+			local localtime = current_time - task.start_time
+			local ratio = 0
+			if localtime <= ani.max_time then
+				ratio = localtime % ani.duration / ani.duration
+			end
+			ani_module.do_sample(ani.sampling_cache, ani.handle, ratio, task.weight)
+		end
+	end
+
 	for _, eid in world:each "animation" do
 		local fix_root <const> = true
 		local e = world[eid]
 		local animation = e.animation
 		ani_module.setup(animation.ske)
-		for _, ani in ipairs(animation.current) do
-			local localtime = current_time - ani.start_time
-			local ratio = 0
-			if localtime <= ani.max_time then
-				ratio = localtime % ani.duration / ani.duration
-			end
-			ani_module.do_sample(ani.sampling_cache, ani.handle, ratio, ani.weight)
-		end
-		local pose = animation.current
-		ani_module.do_blend("blend", #pose)
+		do_animation(animation.current)
 		for _, ikdata in ipairs(animation.ik.jobs) do
 			ani_module.do_ik(animation.result, prepare_ikdata(e.transform, ikdata))
 		end
