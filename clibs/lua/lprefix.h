@@ -40,6 +40,7 @@
 #endif
 
 #include "utf8_prefix.h"
+#include "luai_userstate.h"
 
 #endif			/* } */
 

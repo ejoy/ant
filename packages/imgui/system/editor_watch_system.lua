@@ -373,16 +373,6 @@ local function copy_table(tbl)
     return new_tbl
 end
 
--- local function publish_world_info()
---     -- local pm = require "antpm"
---     -- local packages = pm.get_registered_list()
---     local schemas = copy_table(world._schema.map)
---     -- local pack = 
---     -- hub.subscribe(WatcherEvent.RESPONSE_WORLD_INFO,)
---     local hub = world.args.hub
---     hub.publish(WatcherEvent.ResponseWorldInfo,{schemas = schemas})
--- end
-
 local function on_entity_operate( self,event,args )
     log.info_a(event,args)
     OperateFunc(self,world,event,args)

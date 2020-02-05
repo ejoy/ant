@@ -27,7 +27,6 @@ function gui_util.get_all_components()
         end
     end
     local scene         = import_package "ant.scene".util
-    -- log.info_a("all_package:",packages)
     local world = scene.start_static_world(packages)
     -- world_update()
     -- log.info_a(world._schema.map)
@@ -54,8 +53,6 @@ function gui_util.get_all_schema()
     local world = scene.start_static_world(packages)
         -- })
     -- world_update()
-    -- log.info_a(world._schema.map)
-    -- log(world._schema.map)
     return {
         policies = world._class.policy,
         transforms = world._class.transform,
