@@ -4,6 +4,8 @@ local world = ecs.world
 local mathpkg = import_package "ant.math"
 local ms, mu = mathpkg.stack, mathpkg.util
 
+local ani_module = require "hierarchy.animation"
+
 ecs.component "character"
     .movespeed "real" (1.0)
 
@@ -11,19 +13,12 @@ local character_policy = ecs.policy "character"
 character_policy.require_component "character"
 character_policy.require_component "collider.character"
 
-character_policy.require_component "raycast"
-character_policy.require_component "animation"
-character_policy.require_component "skeleton"
-
-character_policy.require_policy "ant.aniamtion|animaiton"
-character_policy.require_policy "ant.bullet|raycast"
-
 ecs.component "character_height_raycast"
     .dir "vector4" (0, -2, 0, 0)
 local char_height_policy = ecs.policy "character_height_raycast"
 char_height_policy.require_component "character_height_raycast"
 char_height_policy.require_component "character"
-char_height_policy.require_component "raycast"
+
 char_height_policy.require_system "character_height_system"
 
 local char_height_sys = ecs.system "character_height_system"
@@ -48,54 +43,73 @@ local function generate_height_test_ray(e)
         }
     end
 end
-function char_height_sys:data_changed()
+
+function char_height_sys:ik_target()
     for _, eid in world:each "character_height_raycast" do
         local e = world[eid]
-        local rc = e.raycast
 
         local ray = generate_height_test_ray(e)
         if ray then
-            rc.rays["height"] = ray
+            icollider.raycast(ray[1], ray[2])
         end
     end
 end
 
-function char_height_sys:character_height()
-    for _, eid in world:each "character" do
-        local e = world[eid]
-        local char = e.character
-        local rc = e.raycast
-
-    end
-end
+ecs.component"leg"
+    .joints "string[]"
 
 ecs.component "foot_ik_ray"
-    .target_names "string[]"
-    .dir "vector4" (0, -2, 0, 0)
+    .foot "leg[2]"
+    .cast_dir "vector4" (0, -2, 0, 0)
 
 local foot_ik_policy = ecs.policy "foot_ik_raycast"
 foot_ik_policy.require_component "character"
 foot_ik_policy.require_component "foot_ik_ray"
-foot_ik_policy.require_component "skeleton"
-foot_ik_policy.require_component "animation"
-foot_ik_policy.require_component "raycast"
+foot_ik_policy.require_component "ik"
 
 foot_ik_policy.require_system "character_foot_ik_system"
+foot_ik_policy.require_system "ik_system"
 
 local char_foot_ik_sys = ecs.system "character_foot_ik_system"
 
-function char_foot_ik_sys:data_changed()
+local function ankles_raycast_ray()
+    return {
+
+    }
+end
+
+local function ankles_target(ray)
+
+end
+
+local function calc_pelvis_offset(target)
+    return {
+
+    }
+end
+
+local function fill_ik_data(ikcomp)
+
+end
+
+function char_foot_ik_sys:ik_target()
     for _, eid in world:each "foot_ik_raycast" do
         local e = world[eid]
-        local rc = e.raycast
 
         local ske = e.skeleton
         local foot_rc = e.foot_ik_raycast
+        local ik = e.ik
 
-        for _, tn in ipairs(foot_rc.target_names) do
-            assert(ske:joint_idx(tn), "not exist target name in skeleton:" .. tn)
-            
-            
+        for _, leg in ipairs(foot_rc.foot) do
+            local cast_dir = leg.cast_dir
+            local anklename = leg[3]
+            local jointidx = ske:joint_index(anklename)
+            assert(jointidx ~= nil, "not exist target name in skeleton:" .. anklename)
+            local ankle_pos = ani_module.joint_pos(jointidx)
+
+            local target = ankles_target(ankles_raycast_ray(ankle_pos, cast_dir))
+            calc_pelvis_offset(target)
+            fill_ik_data(ik, target)
         end
 
     end

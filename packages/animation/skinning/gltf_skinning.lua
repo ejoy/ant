@@ -11,6 +11,8 @@ local s = ecs.policy "skinning"
 s.require_component "animation"
 s.require_component "skeleton"
 s.require_component "skinning"
+s.require_component "pose_result"
+
 s.require_transform "mesh_skinning"
 
 s.require_component "rendermesh"

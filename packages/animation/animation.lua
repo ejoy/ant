@@ -7,6 +7,24 @@ local ani_module = require "hierarchy.animation"
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
 
+ecs.component "pose_result"
+
+local pr_p = ecs.policy "pose_result"
+pr_p.require_component "skeleton"
+
+pr_p.require_transform "pose_result_transform"
+
+local pr_t = ecs.transform "pose_result_transform"
+pr_t.input "skeleton"
+pr_t.output "pose_result"
+
+function pr_t.process(e)
+	local ske = asset.get_resource(e.skeleton.ref_path)
+	local skehandle = ske.handle
+	e.pose_result.result = ani_module.new_bind_pose(#skehandle)
+end
+
+
 --there are 2 types in ik_data, which are 'two_bone'(IKTwoBoneJob) and 'aim'(IKAimJob).
 ecs.component "ik_data"
 	.type		"string"("aim")			-- can be 'two_bone'/'aim'
@@ -23,31 +41,29 @@ ecs.component "ik_data"
 ecs.component "ik"
 	.jobs 'ik_data[]'
 
+local ik_p = ecs.policy "ik"
+ik_p.require_component "skeleton"
+ik_p.require_component "ik"
+
+ik_p.require_policy "pose_result"
+
 ecs.component "animation_content"
 	.ref_path "respath"
 	.scale "real" (1)
 	.looptimes "int" (0)
 
-local t_ani = ecs.transform "ani_result"
-t_ani.input "skeleton"
-t_ani.output "animation"
-function t_ani.process(e)
-	local skehandle = asset.get_resource(e.skeleton.ref_path).handle
-	e.animation.result = ani_module.new_bind_pose(#skehandle)
-	e.animation.ske = skehandle
-end
-
 local ap = ecs.policy "animation"
 ap.require_component "skeleton"
 ap.require_component "animation"
-ap.require_transform "ani_result"
+ap.require_component "pose_result"
+
+ap.require_policy "pose_result"
 
 ap.require_system "animation_system"
 
 local anicomp = ecs.component "animation"
 	.anilist "animation_content{}"
 	.birth_pose "string"
-	.ik "ik"
 
 function anicomp:init()
 	for name, ani in pairs(self.anilist) do
@@ -92,6 +108,8 @@ local function prepare_ikdata(invtran, ikdata)
 	return ikdata_cache
 end
 
+local fix_root <const> = true
+
 function anisystem:sample_animation_pose()
 	local current_time = timer.current()
 
@@ -113,14 +131,32 @@ function anisystem:sample_animation_pose()
 	end
 
 	for _, eid in world:each "animation" do
-		local fix_root <const> = true
 		local e = world[eid]
 		local animation = e.animation
-		ani_module.setup(animation.ske)
+		local ske = asset.get_resource(e.skeleton.ref_path)
+
+		ani_module.setup(e.pose_result.result, ske.handle, fix_root)
 		do_animation(animation.current)
-		for _, ikdata in ipairs(animation.ik.jobs) do
-			ani_module.do_ik(animation.result, prepare_ikdata(e.transform, ikdata))
-		end
-		ani_module.get_result(animation.result, fix_root)
+		ani_module.fetch_result()
 	end
+end
+
+function anisystem:do_ik()
+	for _, eid in world:each "ik" do
+		local e = world[eid]
+		local ikcomp = e.ik
+		local invtran = ms(ms:srtmat(e.transform), "iP")
+		local skehandle = asset.get_resource(e.skeleton.ref_path).handle
+		
+		ani_module.setup(e.pose_result.result, skehandle, fix_root)
+		for _, job in ipairs(ikcomp.jobs) do
+			ani_module.do_ik(skehandle, prepare_ikdata(invtran, job))
+		end
+
+		ani_module.fetch_result()
+	end
+end
+
+function anisystem:end_animation()
+	ani_module.end_animation()
 end

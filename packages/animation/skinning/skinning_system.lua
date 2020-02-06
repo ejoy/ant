@@ -25,7 +25,7 @@ function skinning_sys:skin_mesh()
 	for _, eid in world:each "skinning" do
 		local e = world[eid]
 		local skincomp = e.skinning
-		local aniresult = e.animation.result
+		local aniresult = e.pose_result.result
 
 		for _, job in ipairs(skincomp.jobs) do
 			local skinning_matrices = build_skinning_matrices(job, aniresult)

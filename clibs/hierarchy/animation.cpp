@@ -24,6 +24,7 @@
 #include <ozz/base/io/stream.h>
 #include <ozz/base/io/archive.h>
 #include <ozz/base/containers/vector.h>
+#include <ozz/base/containers/map.h>
 #include <ozz/base/maths/math_ex.h>
 
 #include <../samples/framework/mesh.h>
@@ -427,16 +428,30 @@ do_ik(lua_State* L,
 	bind_pose::bind_pose_type &result_pose);
 
 struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
-	ozz::animation::Skeleton*                            m_ske = nullptr;
-	ozz::Vector<bind_pose_soa::bind_pose_type>::Std      m_result;
-	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std m_layers;
+	bind_pose*												m_current_bp;
+	struct blendingData{
+		blendingData(ozz::animation::Skeleton* ske = nullptr, bool fixroot = true)
+		:m_ske(ske), m_fix_root(fixroot){}
+		ozz::animation::Skeleton*                            m_ske;
+		bool												 m_fix_root;
+		ozz::Vector<bind_pose_soa::bind_pose_type>::Std      m_result;
+		ozz::Vector<ozz::animation::BlendingJob::Layer>::Std m_layers;
+	};
+	ozz::Map<bind_pose*, blendingData>::Std					m_data;
+
+	blendingData* _getCurrentData(){
+		auto it = m_data.find(m_current_bp)
+		return it != m_data.end() ? &it->second : nullptr;
+	}
 
 	void _push_pose(bind_pose_soa::bind_pose_type const& pose, float weight) {
-		m_result.emplace_back(pose);
+		auto data = _getCurrentData();
+
+		data->m_result.emplace_back(pose);
 		ozz::animation::BlendingJob::Layer layer;
 		layer.weight = weight;
 		layer.transform = ozz::make_range(m_result.back());
-		m_layers.emplace_back(layer);
+		data->m_layers.emplace_back(layer);
 	}
 	void _fix_root_translation(ozz::animation::Skeleton* ske, bind_pose_soa::bind_pose_type& pose) {
 		size_t n = (size_t)ske->num_joints();
@@ -452,11 +467,21 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		}
 	}
 	int setup(lua_State* L) {
-		luaL_checktype(L, 1, LUA_TUSERDATA);
-		auto hie = (hierarchy_build_data*)lua_touserdata(L, 1);
-		m_ske = hie->skeleton;
-		m_result.clear();
-		m_layers.clear();
+		m_current_bp = (bind_pose*)luaL_checkudata(L, 1, "ozzBindPose");
+		const auto hie = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
+		const bool fix_root = lua_isnoneornil(L, 3) ? true : lua_toboolean(L, 3);
+		auto data = _getCurrentData();
+		if (data){
+			if (data->m_ske != hie->skeleton){
+				return luaL_error(L, "using sample pose_result but different skeleton");
+			}
+
+			if (data->m_fix_root != fix_root){
+				return luaL_error(L, "setup animiation step with different fix root argument, input:%s, cache:%s", (data->m_fix_root ? "true" : "false"), (fix_root ? "true" : "false"));
+			}
+		} else {
+			m_data.insert(std::make_pair(m_current_id, blendingData(hie->skeleton, fix_root)));
+		}
 		return 0;
 	}
 	int do_sample(lua_State* L) {
@@ -464,10 +489,14 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		ozzAnimation* animation = ozzAnimation::get(L, 2);
 		float ratio = (float)luaL_checknumber(L, 3);
 		float weight = (float)luaL_optnumber(L, 4, 1.0f);
-		bind_pose_soa::bind_pose_type pose(m_ske->num_soa_joints());
+
+		auto data = _getCurrentData();
+		auto ske = data->m_ske;
+
+		bind_pose_soa::bind_pose_type pose(ske->num_soa_joints());
 		ozz::animation::SamplingJob job;
-		if (m_ske->num_joints() > sampling->v->max_tracks()){
-			sampling->v->Resize(m_ske->num_joints());
+		if (ske->num_joints() > sampling->v->max_tracks()){
+			sampling->v->Resize(ske->num_joints());
 		}
 		job.animation = animation->v;
 		job.cache = sampling->v;
@@ -484,56 +513,62 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		lua_Integer n = luaL_checkinteger(L, 2);
 		float weight = (float)luaL_optnumber(L, 3, 1.0f);
 		float threshold = (float)luaL_optnumber(L, 4, 0.1f);
-		size_t max = m_layers.size();
+		auto data = _getCurrentData();
+		size_t max = data->m_layers.size();
 		if (n <= 0 || (size_t)n > max) {
 			return luaL_error(L, "invalid blend range: %d", n);
 		}
 		if (n == 1) {
-			m_layers.back().weight = weight;
+			data->m_layers.back().weight = weight;
 			return 0;
 		}
 		ozz::animation::BlendingJob job;
-		bind_pose_soa::bind_pose_type pose(m_ske->num_soa_joints());
+		bind_pose_soa::bind_pose_type pose(data->m_ske->num_soa_joints());
 		if (strcmp(blendtype, "blend") == 0) {
-			job.layers = ozz::Range(&m_layers[max-n], n);
+			job.layers = ozz::Range(&(data->m_layers[max-n]), n);
 		} else if (strcmp(blendtype, "additive") == 0) {
-			job.additive_layers = ozz::Range(&m_layers[max-n], n);
+			job.additive_layers = ozz::Range(&(data->m_layers[max-n]), n);
 		} else {
 			return luaL_error(L, "invalid blend type: %s", blendtype);
 		}
-		job.bind_pose = m_ske->joint_bind_poses();
+		job.bind_pose = data->m_ske->joint_bind_poses();
 		job.threshold = threshold;
 		job.output = ozz::make_range(pose);
 		if (!job.Run()) {
 			return luaL_error(L, "blend failed");
 		}
-		m_result.resize(max-n);
-		m_layers.resize(max-n);
+		data->m_result.resize(max-n);
+		data->m_layers.resize(max-n);
 		_push_pose(pose, weight);
 		return 0;
 	}
+
 	int do_ik(lua_State* L) {
-		auto aniresult = (bind_pose*)lua_touserdata(L, 1);
-		::do_ik(L, m_ske, m_result.back(), aniresult->pose);
+		auto data = _getCurrentData();
+		::do_ik(L, data->m_ske, m_result.back(), m_current_bp->pose);
 		return 0;
 	}
-	int get_result(lua_State* L) {
-		if (m_result.empty()) {
+
+	int do_result(lua_State* L) {
+		auto data = _getCurrentData();
+		if (data->m_result.empty()) {
 			return luaL_error(L, "no result");
 		}
-		auto aniresult = (bind_pose*)lua_touserdata(L, 1);
-		const bool fixroot = lua_isnoneornil(L, 2) ? false : lua_toboolean(L, 2);
-		if (fixroot) {
-			_fix_root_translation(m_ske, m_result.back());
+		if (data->m_fix_root) {
+			_fix_root_translation(data->m_ske, data->m_result.back());
 		}
 		ozz::animation::LocalToModelJob job;
-		job.input = ozz::make_range(m_result.back());
-		job.skeleton = m_ske;
-		job.output = ozz::make_range(aniresult->pose);
+		job.input = ozz::make_range(data->m_result.back());
+		job.skeleton = data->m_ske;
+		job.output = ozz::make_range(m_current_bp->pose);
 		if (!job.Run()) {
 			return luaL_error(L, "doing blend result to ltm job failed!");
 		}
 		return 0;
+	}
+
+	int end_animation(lua_State*L){
+		m_data.clear();
 	}
 	static int lsetup(lua_State* L) {
 		return base_type::get(L, lua_upvalueindex(1))
@@ -551,9 +586,14 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		return base_type::get(L, lua_upvalueindex(1))
 			->do_ik(L);
 	}
-	static int lget_result(lua_State* L) {
+	static int ldo_result(lua_State* L) {
 		return base_type::get(L, lua_upvalueindex(1))
-			->get_result(L);
+			->do_result(L);
+	}
+
+	static int lend_animation(lua_State *L){
+		return base_type::get(L, lua_upvalueindex(1))
+			->end_animation(L);
 	}
 	static int init(lua_State* L) {
 		base_type::constructor(L);
@@ -562,7 +602,8 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 			{ "do_sample",	ldo_sample},
 			{ "do_blend",	ldo_blend},
 			{ "do_ik",		ldo_ik},
-			{ "get_result",	lget_result},
+			{ "do_result",	ldo_result},
+			{ "end_animation",lend_animation},
 			{ nullptr, nullptr},
 		};
 		luaL_setfuncs(L, l, 1);
