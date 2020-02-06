@@ -108,6 +108,9 @@ ecs.singleton "render_properties" {
 
 local blitsys = ecs.system "blit_render_system"
 
+blitsys.require_policy "blitrender"
+blitsys.require_policy "name"
+
 function blitsys:init_blit_render()
 	print("init bilt queue")
     ru.create_blit_queue(world, world.args.fb_size)
