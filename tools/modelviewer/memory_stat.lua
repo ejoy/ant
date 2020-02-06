@@ -60,9 +60,11 @@ local function imgui_windows(...)
 	end)
 end
 
+local wndflags = imgui.flags.Window { "NoResize", "NoScrollbar" }
+
 function m:ui_update()
-	local widget = imgui.widget
-	for _ in imgui_windows("Test") do
-		widget.Text(memory_info())
+	imgui.windows.SetNextWindowPos(0,0)
+	for _ in imgui_windows("Memory Stat", wndflags) do
+		imgui.widget.Text(memory_info())
 	end
 end
