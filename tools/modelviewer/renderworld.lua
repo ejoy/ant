@@ -8,7 +8,6 @@ local fs = require "filesystem"
 
 local skyutil = skypkg.util
 local mu = mathpkg.util
-local mc = mathpkg.constant
 local ms = mathpkg.stack
 
 local lu = renderpkg.light
@@ -67,7 +66,6 @@ local player
 function m:init()
 	create_light()
 	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
-    iwd.create()
 	cu.create_plane_entity(
 		world,
 		mu.srt{50, 1, 50, 0},
