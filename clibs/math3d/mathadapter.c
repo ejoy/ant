@@ -415,7 +415,7 @@ struct stack_buf {
 	struct stack_buf *prev;
 };
 
-static void
+static int
 get_n(lua_State *L, int n, struct stack_buf *prev) {
 	if (n == 0) {
 		struct boxstack *bp = lua_touserdata(L, lua_upvalueindex(1));
@@ -423,8 +423,20 @@ get_n(lua_State *L, int n, struct stack_buf *prev) {
 		lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
 		size_t sz = 0;
 		const char *format = lua_tolstring(L, lua_upvalueindex(3), &sz);
-		f(L);
-		lua_settop(L, 0);
+		int ret = f(L);
+		if (ret == 0) {
+			lua_settop(L, 0);
+		} else {
+			int top = lua_gettop(L);
+			if (ret != top) {
+				if (ret < top) {
+					int remove = top-ret;
+					lua_rotate(L, 1, -remove);
+				}
+				lua_settop(L, ret);
+			}
+		}
+		luaL_checkstack(L, sz, NULL);
 		int i = (int)sz - 1;
 		while (prev) {
 			switch(format[i]) {
@@ -443,27 +455,25 @@ get_n(lua_State *L, int n, struct stack_buf *prev) {
 			}
 			int64_t id = lastack_pop(LS);
 			lua_pushinteger(L, id);
-			lua_insert(L, 1);
+			lua_insert(L, ret+1);
 
 			prev = prev->prev;
 			--i;
 		}
-		return;
+		return ret + sz;
 	}
 	struct stack_buf buf;
 	buf.prev = prev;
 	lua_pushlightuserdata(L, (void *)buf.mat);
-	get_n(L, n-1, &buf);
+	return get_n(L, n-1, &buf);
 }
 
 static int
 lgetter(lua_State *L) {
 	size_t n = 0;
 	lua_tolstring(L, lua_upvalueindex(3), &n);
-	luaL_checkstack(L, n, NULL);
-	get_n(L, (int)n, NULL);
-	return n;
-
+	luaL_checkstack(L, n + LUA_MINSTACK, NULL);
+	return get_n(L, (int)n, NULL);
 }
 
 // userdata mathstack
