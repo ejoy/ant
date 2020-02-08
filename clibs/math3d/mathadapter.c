@@ -429,7 +429,7 @@ get_n(lua_State *L, int n, struct stack_buf *prev) {
 		} else {
 			int top = lua_gettop(L);
 			if (ret != top) {
-				if (ret < top) {
+				if (ret < top && ret != 0) {
 					int remove = top-ret;
 					lua_rotate(L, 1, -remove);
 				}
