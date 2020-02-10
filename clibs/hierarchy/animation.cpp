@@ -440,7 +440,7 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 	ozz::Map<bind_pose*, blendingData>::Std					m_data;
 
 	blendingData* _getCurrentData(){
-		auto it = m_data.find(m_current_bp)
+		auto it = m_data.find(m_current_bp);
 		return it != m_data.end() ? &it->second : nullptr;
 	}
 
@@ -450,7 +450,7 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		data->m_result.emplace_back(pose);
 		ozz::animation::BlendingJob::Layer layer;
 		layer.weight = weight;
-		layer.transform = ozz::make_range(m_result.back());
+		layer.transform = ozz::make_range(data->m_result.back());
 		data->m_layers.emplace_back(layer);
 	}
 	void _fix_root_translation(ozz::animation::Skeleton* ske, bind_pose_soa::bind_pose_type& pose) {
@@ -480,7 +480,7 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 				return luaL_error(L, "setup animiation step with different fix root argument, input:%s, cache:%s", (data->m_fix_root ? "true" : "false"), (fix_root ? "true" : "false"));
 			}
 		} else {
-			m_data.insert(std::make_pair(m_current_id, blendingData(hie->skeleton, fix_root)));
+			m_data.insert(std::make_pair(m_current_bp, blendingData(hie->skeleton, fix_root)));
 		}
 		return 0;
 	}
@@ -545,7 +545,7 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 
 	int do_ik(lua_State* L) {
 		auto data = _getCurrentData();
-		::do_ik(L, data->m_ske, m_result.back(), m_current_bp->pose);
+		::do_ik(L, data->m_ske, data->m_result.back(), m_current_bp->pose);
 		return 0;
 	}
 
@@ -569,6 +569,7 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 
 	int end_animation(lua_State*L){
 		m_data.clear();
+		return 0;
 	}
 	static int lsetup(lua_State* L) {
 		return base_type::get(L, lua_upvalueindex(1))

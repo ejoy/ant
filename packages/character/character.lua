@@ -159,12 +159,16 @@ function char_foot_ik_sys:ik_target()
         local foot_rc = e.foot_ik_raycast
         local ik = e.ik
 
-        local invtrans = ms(ms:srtmat(e.transform), "iP")
+        local pose_result = e.pose_result.result
+
+        local trans = ms:srtmat(e.transform)
+        local invtrans = ms(trans, "iP")
+
         local cast_dir = foot_rc.cast_dir
         for _, leg in ipairs(foot_rc.ray_joint_indices) do
             local anklenidx = leg[3]
-            local ankle_pos = ani_module.joint_pos(anklenidx)
-            local ankle_pos_ws = ms(invtrans, ankle_pos, "*P")
+            local ankle_pos = pose_result:joint(anklenidx)
+            local ankle_pos_ws = ms(trans, ankle_pos, "*P")
 
             local target_ws = ankles_target(ankles_raycast_ray(ankle_pos_ws, cast_dir))
             calc_pelvis_offset(target_ws)
