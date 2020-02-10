@@ -308,8 +308,34 @@ ltestOverlap(lua_State *L) {
 static int
 lsphereShape(lua_State *L) {
 	double radius = luaL_checknumber(L, 1);
+
 	SphereShape * s = new SphereShape(radius);
 	lua_pushlightuserdata(L, (void *)s);
+
+	return 1;
+}
+
+static int
+lboxShape(lua_State *L) {
+	double x = luaL_checknumber(L, 1);
+	double y = luaL_optnumber(L, 2, x);
+	double z = luaL_optnumber(L, 3, y);
+
+	Vector3 halfExtents(x,y,z);
+	BoxShape * s = new BoxShape(halfExtents);
+	lua_pushlightuserdata(L, (void *)s);
+
+	return 1;
+}
+
+static int
+lcapsuleShape(lua_State *L) {
+	double radius = luaL_checknumber(L, 1);
+	double height = luaL_checknumber(L, 2);
+
+	CapsuleShape * s = new CapsuleShape(radius, height);
+	lua_pushlightuserdata(L, (void *)s);
+
 	return 1;
 }
 
@@ -348,6 +374,8 @@ luaopen_rp3d_core(lua_State *L) {
 
 	luaL_Reg collision_shape[] = {
 		{ "sphere", lsphereShape },
+		{ "box", lboxShape },
+		{ "capsule", lcapsuleShape },
 		{ NULL, NULL },
 	};
 

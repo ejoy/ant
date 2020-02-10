@@ -40,7 +40,15 @@ print(ms(p, "V"))
 print(ms(o, "V"))
 
 local object2 = w:body_create(ms:vector(10,10,10))
-w:add_shape(object2, sphere)
+local box = w:new_shape("box", 10)	-- rad / can also be (10,20,30)
+w:add_shape(object2, box)
+local capsule = w:new_shape("capsule", 10, 20)	-- rad/height
+w:add_shape(object2, capsule, ms:vector(0,20,0))
+
+local p, o = w:get_aabb(object2)
+print(ms(p, "V"))
+print(ms(o, "V"))
+
 
 print(w:test_overlap(object2))
 
