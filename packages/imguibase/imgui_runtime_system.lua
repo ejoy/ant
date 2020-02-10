@@ -9,6 +9,7 @@ local viewidmgr = renderpkg.viewidmgr
 
 local m = ecs.system "imgui_system"
 
+m.require_system "ant.render|render_system"
 m.require_interface "ant.timer|timer"
 
 function m:post_init()

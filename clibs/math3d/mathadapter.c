@@ -389,6 +389,10 @@ lformat(lua_State *L) {
 	return f(L);
 }
 
+// userdata mathstack
+// cfunction original function for varient
+// cfunction function for format
+// integer from
 static int
 lbind_format(lua_State *L) {
 	luaL_checkudata(L, 1, LINALG);
@@ -406,10 +410,86 @@ lbind_format(lua_State *L) {
 	return 1;
 }
 
+struct stack_buf {
+	float mat[16];
+	struct stack_buf *prev;
+};
+
+static int
+get_n(lua_State *L, int n, struct stack_buf *prev) {
+	if (n == 0) {
+		struct boxstack *bp = lua_touserdata(L, lua_upvalueindex(1));
+		struct lastack *LS = bp->LS;
+		lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
+		size_t sz = 0;
+		const char *format = lua_tolstring(L, lua_upvalueindex(3), &sz);
+		int ret = f(L);
+		if (ret == 0) {
+			lua_settop(L, 0);
+		} else {
+			int top = lua_gettop(L);
+			if (ret != top) {
+				if (ret < top && ret != 0) {
+					int remove = top-ret;
+					lua_rotate(L, 1, -remove);
+				}
+				lua_settop(L, ret);
+			}
+		}
+		luaL_checkstack(L, sz, NULL);
+		int i = (int)sz - 1;
+		while (prev) {
+			switch(format[i]) {
+			case 'm':
+				lastack_pushmatrix(LS, prev->mat);
+				break;
+			case 'v':
+				lastack_pushvec4(LS, prev->mat);
+				break;
+			case 'q':
+				lastack_pushquat(LS, prev->mat);
+				break;
+			default:
+				luaL_error(L,"Invalid getter format %s", format);
+				break;
+			}
+			int64_t id = lastack_pop(LS);
+			lua_pushinteger(L, id);
+			lua_insert(L, ret+1);
+
+			prev = prev->prev;
+			--i;
+		}
+		return ret + sz;
+	}
+	struct stack_buf buf;
+	buf.prev = prev;
+	lua_pushlightuserdata(L, (void *)buf.mat);
+	return get_n(L, n-1, &buf);
+}
+
+static int
+lgetter(lua_State *L) {
+	size_t n = 0;
+	lua_tolstring(L, lua_upvalueindex(3), &n);
+	luaL_checkstack(L, n + LUA_MINSTACK, NULL);
+	return get_n(L, (int)n, NULL);
+}
+
 // userdata mathstack
-// cfunction original function for varient
-// cfunction function for format
-// integer from
+// cfunction original getter
+// string format "mvqep" , m for matrix, v for vector4, q for quat
+static int
+lbind_getter(lua_State *L) {
+	luaL_checkudata(L, 1, LINALG);
+	if (!lua_iscfunction(L, 2))
+		return luaL_error(L, "need a c function");
+	luaL_checkstring(L, 3);
+	lua_settop(L, 3);
+	lua_pushcclosure(L, lgetter, 3);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_math3d_adapter(lua_State *L) {
 	luaL_checkversion(L);
@@ -418,6 +498,7 @@ luaopen_math3d_adapter(lua_State *L) {
 		{ "vector", lbind_vector},
 		{ "variant", lbind_variant },
 		{ "format", lbind_format },
+		{ "getter", lbind_getter },
 		{ NULL, NULL },
 	};
 

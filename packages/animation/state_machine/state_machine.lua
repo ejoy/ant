@@ -81,14 +81,22 @@ end
 local m = ecs.interface "animation"
 m.require_interface "ant.timer|timer"
 
+local function current_animation(current)
+	if current.type == 'blend' then
+		return current[#current].animation
+	else
+		return current.animation
+	end
+end
+
 function m.set_state(e, name)
 	if e.animation and e.animation.anilist[name] and e.state_machine then
-		local current_pose = e.animation.current
-		if current_pose.type ~= 'blend' and current_pose.animation.name == name then
+		local current_ani = current_animation(e.animation.current)
+		if current_ani.name == name then
 			return
 		end
 		local statecfg = e.state_machine
-		local traget_transmits = statecfg.transmits[current_pose.name]
+		local traget_transmits = statecfg.transmits[current_ani.name]
 		if traget_transmits and traget_transmits[name] then
 			play_animation(e, name, traget_transmits[name].duration)
 			return true
@@ -98,8 +106,8 @@ end
 
 function m.play(e, name, time)
 	if e.animation and e.animation.anilist[name]  then
-		local current_pose = e.animation.current
-		if current_pose.type ~= 'blend' and current_pose.animation.name == name then
+		local current_ani = current_animation(e.animation.current)
+		if current_ani.name == name then
 			return
 		end
 		play_animation(e, name, time)

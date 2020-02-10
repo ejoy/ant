@@ -31,3 +31,6 @@
 [submodule "3rd/RxLua"]
 	path = 3rd/RxLua
 	url = https://github.com/bjornbytes/RxLua
+[submodule "3rd/reactphysics3d"]
+	path = 3rd/reactphysics3d
+	url = https://github.com/DanielChappuis/reactphysics3d.git

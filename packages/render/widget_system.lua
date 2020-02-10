@@ -27,29 +27,52 @@ local bt = ecs.policy "debug_mesh_bounding"
 bt.require_component "debug_mesh_bounding"
 bt.require_system "render_mesh_bounding"
 
-local rmb = ecs.system "render_mesh_bounding"
+local m = ecs.system "widget_drawer"
 
-rmb.require_system "ant.scene|primitive_filter_system"
-rmb.require_system "ant.render|reset_mesh_buffer"
+m.require_policy "name"
+m.require_policy "render"
+m.require_policy "bounding_draw"
 
-local function append_buffer(desc, gvb, gib)
-	local vb, ib = desc.vb, desc.ib
-	local offsetib = (#gvb - 1) // 4	--yes, gvb not gib
-	table.move(vb, 1, #vb, #gvb+1, gvb)
+function m:init()
+	local eid = world:create_entity {
+		policy = {
+			"ant.render|name",
+			"ant.render|render",
+			"ant.render|bounding_draw",
+		},
+		data = {
+			transform 		= mu.identity_transform(),
+			material 		= {ref_path = "/pkg/ant.resources/depiction/materials/line.material"},
+			rendermesh 		= {},
+			name 			= "mesh's bounding renderer",
+			can_render 		= true,
+			widget_drawer = true,
+		}
+	}
 
-	for _, i in ipairs(ib) do
-		gib[#gib+1] = i + offsetib
+	local rm = world[eid].rendermesh
+	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/bounding.mesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
+end
+
+function m:end_frame()
+	local dmesh = world:singleton_entity "widget_drawer"
+	if dmesh then
+		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
+		local group = meshscene.scenes[1][1][1]
+		local vbdesc, ibdesc = group.vb, group.ib
+		vbdesc.start, vbdesc.num = 0, 0
+		ibdesc.start, ibdesc.num = 0, 0
+
+		vbdesc.handles[1].updateoffset = 0
+		ibdesc.updateoffset = 0
 	end
 end
 
-local function add_aabb_bounding(aabb, vb, ib, color)
-	color = color or 0xffffff00
+local m = ecs.interface "iwidget_drawer"
 
-	local desc={vb={}, ib={}}
-	geometry_drawer.draw_aabb_box(aabb, color, nil, desc)
+m.require_system "widget_drawer"
 
-	append_buffer(desc, vb, ib)
-end
+local DEFAULT_COLOR <const> = 0xffffff00
 
 local function offset_ib(start_vertex, ib)
 	local newib = {}
@@ -59,13 +82,12 @@ local function offset_ib(start_vertex, ib)
 	return newib
 end
 
-local function append_buffers(dmesh, vb, ib)
+local function append_buffers(vb, ib)
 	local numvertices = (#vb - 1) // 4
-
 	if numvertices == 0 then
-		return 
+		return
 	end
-	
+	local dmesh = world:singleton_entity "widget_drawer"
 	local rm = dmesh.rendermesh
 	local meshscene = assetmgr.get_resource(rm.reskey)
 	local group = meshscene.scenes[1][1][1]
@@ -89,21 +111,10 @@ local function append_buffers(dmesh, vb, ib)
 	end
 end
 
-function rmb:widget()
-	local dmesh = world:singleton_entity "widget_drawer"
-
-	local transformed_boundings = {}
-	computil.calc_transform_boundings(world, transformed_boundings)
-
-	local vb, ib = {"fffd"}, {}
-	for _, tb in ipairs(transformed_boundings) do
-		add_aabb_bounding(tb:get "aabb", vb, ib, 0xffff00ff)
-	end
-
-	append_buffers(dmesh, vb, ib)
-end
-
 local function apply_srt(shape, srt)
+	if not shape.origin then
+		return srt
+	end
 	if not srt then
 		return {
 			s = {1,1,1,0},
@@ -117,167 +128,123 @@ local function apply_srt(shape, srt)
 		t = ms(srt.t, shape.origin, "+P"),
 	}
 end
-local function draw_box(shape, srt, vb, ib)
-	srt = apply_srt(shape, srt)
-	local color <const> = 0xffffff00
-	local desc={vb={}, ib={}}
-	geometry_drawer.draw_box(shape.size, color, srt, desc)
-	append_buffer(desc, vb, ib)
+
+function m.draw_lines(shape, srt)
+	local desc = {vb={"fffd"}, ib={}}
+	geometry_drawer.draw_line(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	append_buffers(desc.vb, desc.ib)
 end
-local function draw_capsule(shape, srt, vb, ib)
-	srt = apply_srt(shape, srt)
-	local color <const> = 0xffffff00
-	local desc={vb={}, ib={}}
+
+function m.draw_box(shape, srt)
+	local desc={vb={"fffd"}, ib={}}
+	geometry_drawer.draw_box(shape.size, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	append_buffers(desc.vb, desc.ib)
+end
+
+function m.draw_capsule(shape, srt)
+	local desc={vb={"fffd"}, ib={}}
 	geometry_drawer.draw_capsule({
 		tessellation = 2,
 		height = shape.height,
 		radius = shape.radius,
-	}, color, srt, desc)
-	append_buffer(desc, vb, ib)
+	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	append_buffers(desc.vb, desc.ib)
 end
-local function draw_sphere(shape, srt, vb, ib)
-	srt = apply_srt(shape, srt)
-	local color <const> = 0xffffff00
-	local desc={vb={}, ib={}}
+
+function m.draw_sphere(shape, srt)
+	local desc={vb={"fffd"}, ib={}}
 	geometry_drawer.draw_sphere({
 		tessellation = 2,
 		radius = shape.radius,
-	}, color, srt, desc)
-	append_buffer(desc, vb, ib)
+	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	append_buffers(desc.vb, desc.ib)
 end
-local function draw_compound(shape, srt, vb, ib)
-	srt = apply_srt(shape, srt)
+
+function m.draw_aabb_box(shape, srt)
+	local desc={vb={"fffd"}, ib={}}
+	geometry_drawer.draw_aabb_box(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	append_buffers(desc.vb, desc.ib)
+end
+
+local m = ecs.system "physic_bounding"
+m.require_interface "iwidget_drawer"
+
+local iwd = world:interface "ant.render|iwidget_drawer"
+
+local function draw_compound(shape, srt)
+	srt.t = ms(srt.t, shape.origin, "+P")
 	if shape.box then
 		for _, sh in ipairs(shape.box) do
-			draw_box(sh, srt, vb, ib)
+			iwd.draw_box(sh, srt)
 		end
 	end
 	if shape.capsule then
 		for _, sh in ipairs(shape.capsule) do
-			draw_capsule(sh, srt, vb, ib)
+			iwd.draw_capsule(sh, srt)
 		end
 	end
 	if shape.sphere then
 		for _, sh in ipairs(shape.sphere) do
-			draw_sphere(sh, srt, vb, ib)
+			iwd.draw_sphere(sh, srt)
 		end
 	end
 	if shape.compound then
 		for _, sh in ipairs(shape.compound) do
-			draw_compound(sh, srt, vb, ib)
+			draw_compound(sh, srt)
 		end
 	end
 end
 
-local phy_bounding = ecs.system "physic_bounding"
-phy_bounding.require_system "ant.scene|primitive_filter_system"
-phy_bounding.require_system "ant.render|reset_mesh_buffer"
-phy_bounding.require_system "ant.bullet|collider_system"
-
-function phy_bounding:widget()
-	local dmesh = world:singleton_entity "widget_drawer"
-	local vb, ib = {"fffd"}, {}
+function m:widget()
 	for _, eid in world:each "collider" do
 		local e = world[eid]
 		local collider = e.collider
 		local srt = e.transform
 		if collider.sphere then
-			draw_sphere(collider.sphere, srt, vb, ib)
+			iwd.draw_sphere(collider.sphere, srt)
 		end
 		if collider.box then
-			draw_box(collider.box, srt, vb, ib)
+			iwd.draw_box(collider.box, srt)
 		end
 		if collider.capsule then
-			draw_capsule(collider.capsule, srt, vb, ib)
+			iwd.draw_capsule(collider.capsule, srt)
 		end
 		if collider.compound then
-			draw_compound(collider.compound, srt, vb, ib)
+			draw_compound(collider.compound, {
+				s = srt.s,
+				r = srt.r,
+				t = srt.t,
+			})
 		end
 	end
-	if #vb > 1 then
-		append_buffers(dmesh, vb, ib)
-	end
 end
 
-local reset_bounding_buffer = ecs.system "reset_mesh_buffer"
-function reset_bounding_buffer:end_frame()
-	local dmesh = world:singleton_entity "widget_drawer"
-	if dmesh then
-		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
-		local group = meshscene.scenes[1][1][1]
-		local vbdesc, ibdesc = group.vb, group.ib
-		vbdesc.start, vbdesc.num = 0, 0
-		ibdesc.start, ibdesc.num = 0, 0
+local rmb = ecs.system "render_mesh_bounding"
 
-		vbdesc.handles[1].updateoffset = 0
-		ibdesc.updateoffset = 0
+rmb.require_system "widget_drawer"
+
+function rmb:widget()
+	local transformed_boundings = {}
+	computil.calc_transform_boundings(world, transformed_boundings)
+	for _, tb in ipairs(transformed_boundings) do
+		iwd.draw_aabb_box(tb:get "aabb")
 	end
 end
-
 
 local ray_cast_hitted = world:sub {"ray_cast_hitted"}
 
 local draw_raycast_point = ecs.system "draw_raycast_point"
-draw_raycast_point.require_system "ant.scene|primitive_filter_system"
-draw_raycast_point.require_system "ant.bullet|character_collider_system"
+draw_raycast_point.require_system "widget_drawer"
 
 function draw_raycast_point:widget()
-    local vb, ib = {"fffd", }, {}
     for hitted in ray_cast_hitted:each() do
         local result = hitted[3]
         local pt = result.hit_pt_in_WS
-
 		local len = 0.5
 		local min = {-len, -len, -len,}
 		local max = {len, len, len}
 		min = ms(min, pt, "T")
 		max = ms(max, pt, "T")
-        add_aabb_bounding({min=min, max=max}, vb, ib)
+		iwd.draw_aabb_box {min=min, max=max}
 	end
-end
-
-
-local iwidget_drawer = ecs.interface "iwidget_drawer"
-
-
-function iwidget_drawer.create()
-	local eid = world:create_entity {
-		policy = {
-			"ant.render|name",
-			"ant.render|render",
-			"ant.render|bounding_draw",
-		},
-		data = {
-			transform 		= mu.identity_transform(),
-			material 		= {ref_path = "/pkg/ant.resources/depiction/materials/line.material"},
-			rendermesh 		= {},
-			name 			= "mesh's bounding renderer",
-			can_render 		= true,
-			widget_drawer = true,
-		}
-	}
-
-	local rm = world[eid].rendermesh
-	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/bounding.mesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
-	return eid
-end
-
-function iwidget_drawer.draw_lines(points, transform)
-	if #points % 2 ~= 0 then
-		error(string.format("argument array must multiple of 2:%d", #points))
-	end
-	local dmesh = world:singleton_entity "widget_drawer"
-	local desc = {vb={"fffd"}, ib={}}
-	geometry_drawer.draw_line(points, 0xfff0f000, transform, desc)
-	append_buffers(dmesh, desc.vb, desc.ib)
-end
-
-function iwidget_drawer.draw_box(size, transform)
-end
-
-function iwidget_drawer.draw_sphere(sphere, transform)
-	local dmesh = world:singleton_entity "widget_drawer"
-	local vb, ib = {"fffd"}, {}
-	draw_sphere(sphere, transform, vb, ib)
-	append_buffers(dmesh, vb, ib)
 end
