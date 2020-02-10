@@ -1,4 +1,4 @@
-CMAKE_PROJ := ozz-animation bullet3
+CMAKE_PROJ := ozz-animation bullet3 reactphysics3d
 ALL_PROJ := bgfx $(CMAKE_PROJ)
 MODE = release
 
@@ -112,6 +112,8 @@ else
 endif
 
 CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=$(WITH_OZZ_SAMPLES) -Dozz_build_howtos=$(WITH_OZZ_SAMPLES) -Dozz_build_gltf=ON -Dozz_build_cpp11=ON -DEMSCRIPTEN=$(OZZ_ENABLE_EMSCRIPTEN)
+
+CMAKE_OPT_reactphysics3d=-DRP3D_LOGS_ENABLED=ON
 
 .PHONY: info init all clean
 

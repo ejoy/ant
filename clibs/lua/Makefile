@@ -31,6 +31,9 @@ $(ODIR)/liblua.a : $(foreach v, $(BASE_O), $(ODIR)/$(v))
 lua54.dll : $(ODIR)/lua54.dll | $(ODIR)
 	cp $^ $@
 
+lua.exe : $(ODIR)/lua.exe | $(ODIR)
+	cp $^ $@
+
 ifeq "$(PLAT)" "mingw"
 
 $(ODIR)/lua54.dll : $(foreach v, $(BASE_O), $(ODIR)/$(v))
