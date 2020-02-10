@@ -261,14 +261,39 @@ lgetAABB(lua_State *L) {
 }
 
 static int
+maskbits(lua_State *L, int index) {
+	const char *mask_string = luaL_checkstring(L, index);
+	int i;
+	int mask = 0;
+	for (i=0;mask_string[i];i++) {
+		char c = mask_string[i];
+		int layer;
+		if (c >= '0' && c <= '9') {
+			layer = c - '0';
+		} else if (c >= 'a' && c <= 'f') {
+			layer = c - 'a' + 10;
+		} else if (c >= 'A' && c <= 'F') {
+			layer = c - 'A' + 10;
+		} else {
+			return luaL_error(L, "Invalid mask string %s", mask_string);
+		}
+		mask |= 1 << layer;
+	}
+	return mask;
+}
+
+static int
 laddCollisionShape(lua_State *L) {
 //	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
 	CollisionBody *body = (CollisionBody*)lua_touserdata(L, 2);
 	CollisionShape *shape = (CollisionShape *)lua_touserdata(L, 3);
-
-	Transform trans = get_transform(L, 4);
+	int mask = maskbits(L, 4);
+	Transform trans = get_transform(L, 5);
 
 	ProxyShape* proxy = body->addCollisionShape(shape, trans);
+	if (mask > 0) {
+		proxy->setCollisionCategoryBits((unsigned short)mask);
+	}
 	lua_pushlightuserdata(L, (void *)proxy);
 	return 1;
 }
@@ -297,10 +322,13 @@ static int
 ltestOverlap(lua_State *L) {
 	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
 	CollisionBody *body = (CollisionBody*)lua_touserdata(L, 2);
-	unsigned short categoryMaskBits = 0xFFFF;	// todo : support mask
+	int categoryMaskBits = 0xFFFF;	// todo : support mask
+	if (lua_type(L, 3) == LUA_TSTRING) {
+		categoryMaskBits = maskbits(L, 3);
+	}
 	
 	luaOverlapCallback cb(L);
-	world->w->testOverlap(body, &cb, categoryMaskBits);
+	world->w->testOverlap(body, &cb, (unsigned short)categoryMaskBits);
 	lua_pushboolean(L, cb.isHit());
 	return 1;
 }
