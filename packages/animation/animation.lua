@@ -27,6 +27,7 @@ end
 
 --there are 2 types in ik_data, which are 'two_bone'(IKTwoBoneJob) and 'aim'(IKAimJob).
 ecs.component "ik_data"
+	.name		"string"
 	.type		"string"("aim")			-- can be 'two_bone'/'aim'
 	.target 	"vector"{0, 0, 0, 1}	-- model space
 	.pole_vector"vector"{0, 0, 0, 0}	-- model space
