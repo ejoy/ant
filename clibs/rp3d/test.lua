@@ -1,4 +1,5 @@
 package.cpath = package.cpath .. ";../?/?.dll" -- for math3d
+--package.path = package.path .. ";clibs/?/?.lua"
 
 local rp3d = require "rp3d"
 local math3d = require "math3d"
