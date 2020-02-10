@@ -9,7 +9,7 @@ extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 
-int luaopen_rp3d_core(lua_State *L);
+LUAMOD_API int luaopen_rp3d_core(lua_State *L);
 
 }
 
@@ -339,8 +339,9 @@ lcapsuleShape(lua_State *L) {
 	return 1;
 }
 
-LUAMOD_API int
-luaopen_rp3d_core(lua_State *L) {
+extern "C" {
+	LUAMOD_API int
+	luaopen_rp3d_core(lua_State* L) {
 	luaL_Reg collision_world[] = {
 		{ "body_create", lcreateCollisionBody },
 		{ "body_destroy", ldestroyCollisionBody },
@@ -364,12 +365,12 @@ luaopen_rp3d_core(lua_State *L) {
 	// collision_world metatable
 	luaL_newlib(L, collision_world);
 	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index" );
+	lua_setfield(L, -2, "__index");
 
 	lua_pushvalue(L, -1);
 	lua_setfield(L, lib_index, "collision_world_mt");
 
-	lua_pushcclosure(L, lcollision_world , 1);
+	lua_pushcclosure(L, lcollision_world, 1);
 	lua_setfield(L, lib_index, "collision_world");
 
 	luaL_Reg collision_shape[] = {
@@ -385,4 +386,5 @@ luaopen_rp3d_core(lua_State *L) {
 	lua_setfield(L, lib_index, "delete_shape");
 
 	return 1;
+}
 }
