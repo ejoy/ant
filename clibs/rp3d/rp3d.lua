@@ -28,6 +28,17 @@ function lib.init(ms)
 	world_mt.set_transform = math3d_adapter.vector(ms, world_mt.set_transform, 3)
 	world_mt.get_aabb = math3d_adapter.getter(ms, world_mt.get_aabb, "vv")
 	world_mt.add_shape = math3d_adapter.vector(ms, world_mt.add_shape, 5)
+
+	local rayfilter = math3d_adapter.vector(ms, lib.rayfilter, 1)
+	local raycast = math3d_adapter.getter(ms, world_mt.raycast, "vv")
+
+	function world_mt.raycast(world, p0, p1, maskbits)
+		p0,p1 = rayfilter(p0,p1)
+		local hit, pos, norm = raycast(world, p0, p1, maskbits or "")
+		if hit then
+			return pos, norm
+		end
+	end
 end
 
 return lib
