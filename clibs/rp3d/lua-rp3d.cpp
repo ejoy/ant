@@ -260,26 +260,14 @@ lgetAABB(lua_State *L) {
 	return 0;
 }
 
-static int
+static inline int
 maskbits(lua_State *L, int index) {
-	const char *mask_string = luaL_checkstring(L, index);
-	int i;
-	int mask = 0;
-	for (i=0;mask_string[i];i++) {
-		char c = mask_string[i];
-		int layer;
-		if (c >= '0' && c <= '9') {
-			layer = c - '0';
-		} else if (c >= 'a' && c <= 'f') {
-			layer = c - 'a' + 10;
-		} else if (c >= 'A' && c <= 'F') {
-			layer = c - 'A' + 10;
-		} else {
-			return luaL_error(L, "Invalid mask string %s", mask_string);
-		}
-		mask |= 1 << layer;
-	}
-	return mask;
+	int maskbits = luaL_checkinteger(L, index);
+	if (maskbits < 0 || maskbits > 0xffff)
+		return luaL_error(L, "Invalid mask bits %x", maskbits);
+	if (maskbits == 0)
+		maskbits = 0xffff;
+	return maskbits;
 }
 
 static int
@@ -321,7 +309,7 @@ ltestOverlap(lua_State *L) {
 	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
 	CollisionBody *body = (CollisionBody*)lua_touserdata(L, 2);
 	int categoryMaskBits = 0xFFFF;
-	if (lua_type(L, 3) == LUA_TSTRING) {
+	if (lua_isinteger(L, 3)) {
 		categoryMaskBits = maskbits(L, 3);
 	}
 	
@@ -362,10 +350,6 @@ lraycast(lua_State *L) {
 	int categoryMaskBits = maskbits(L, 4);
 	float *hit = (float *)lua_touserdata(L, 5);
 	float *normal = (float *)lua_touserdata(L, 6);
-
-	if (categoryMaskBits == 0) {
-		categoryMaskBits = 0xffff;
-	}
 
 	luaRaycastCallback cb;
 	Ray ray(Vector3(startp[0], startp[1], startp[2]), Vector3(endp[0], endp[1], endp[2]));

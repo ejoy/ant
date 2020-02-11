@@ -34,7 +34,7 @@ function lib.init(ms)
 
 	function world_mt.raycast(world, p0, p1, maskbits)
 		p0,p1 = rayfilter(p0,p1)
-		local hit, pos, norm = raycast(world, p0, p1, maskbits or "")
+		local hit, pos, norm = raycast(world, p0, p1, maskbits or 0)
 		if hit then
 			return pos, norm
 		end
