@@ -2,7 +2,7 @@
 ant.animation|animation
 ant.animation|skinning
 ant.animation|state_machine
-ant.bullet|collider
+ant.collision|collider
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -40,10 +40,10 @@ animation:
 can_render: true
 collider:
   capsule:
+    ---
     origin: {0,1,0,0}
     radius: 0.5
     height: 1
-    axis: Y
 material:
   ref_path: /pkg/ant.resources/depiction/materials/skin_model_sample.material
 mesh:

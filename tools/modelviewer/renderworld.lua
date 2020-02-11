@@ -18,7 +18,7 @@ local m = ecs.system "model_review_system"
 
 m.require_policy "ant.sky|procedural_sky"
 m.require_policy "ant.serialize|serialize"
-m.require_policy "ant.bullet|collider"
+m.require_policy "ant.collision|collider"
 m.require_policy "ant.render|mesh"
 m.require_policy "ant.render|render"
 m.require_policy "ant.render|name"
@@ -33,7 +33,7 @@ m.require_interface "ant.animation|animation"
 m.require_interface "ant.timer|timer"
 m.require_interface "ant.camera_controller|camera_motion"
 m.require_interface "ant.render|iwidget_drawer"
-m.require_interface "ant.bullet|collider"
+m.require_interface "ant.collision|collider"
 
 local ics = world:interface "ant.render|camera_spawn"
 local iwd = world:interface "ant.render|iwidget_drawer"
@@ -90,7 +90,7 @@ end
 local animation     = world:interface "ant.animation|animation"
 local timer         = world:interface "ant.timer|timer"
 local camera_motion = world:interface "ant.camera_controller|camera_motion"
-local collider      = world:interface "ant.bullet|collider"
+local collider      = world:interface "ant.collision|collider"
 
 local eventKeyboard = world:sub {"keyboard"}
 local eventMouse    = world:sub {"mouse","RIGHT","DOWN"}

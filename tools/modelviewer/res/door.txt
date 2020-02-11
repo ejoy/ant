@@ -1,5 +1,5 @@
 ---------
-ant.bullet|collider
+ant.collision|collider
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -9,15 +9,13 @@ ant.serialize|serialize
 can_cast: true
 can_render: true
 collider:
-  compound:
-    origin: {0,0,0,0}
-    box:
-      ---
-      origin: {-10,12,0,0}
-      size: {4,12,4}
-      ---
-      origin: {10,12,0,0}
-      size: {4,12,4}
+  box:
+    ---
+    origin: {-10,12,0,0}
+    size: {4,12,4}
+    ---
+    origin: {10,12,0,0}
+    size: {4,12,4}
 material:
   ref_path: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
 mesh:
