@@ -91,8 +91,8 @@ local timer = world:interface "ant.timer|timer"
 local ikdata_cache = {}
 local function prepare_ikdata(invtran, ikdata)
 	ikdata_cache.type		= ikdata.type
-	ikdata_cache.target 	= ms(invtran, ikdata.target, "*m")
-	ikdata_cache.pole_vector= ms(invtran, ikdata.pole_vector, "*m")
+	ikdata_cache.target 	= ms(ikdata.target, "m")
+	ikdata_cache.pole_vector= ms(ikdata.pole_vector, "m")
 	ikdata_cache.weight		= ikdata.weight
 	ikdata_cache.twist_angle= ikdata.twist_angle
 	ikdata_cache.joints 	= ikdata.joints
@@ -100,10 +100,10 @@ local function prepare_ikdata(invtran, ikdata)
 	if ikdata.type == "aim" then
 		ikdata_cache.forward	= ms(ikdata.forward, "m")
 		ikdata_cache.up_axis	= ms(ikdata.up_axis, "m")
-		ikdata_cache.offset	= ms(ikdata.offset, "m")
+		ikdata_cache.offset		= ms(ikdata.offset, "m")
 	else
 		assert(ikdata.type == "two_bone")
-		ikdata_cache.soften	= ikdata.soften
+		ikdata_cache.soften		= ikdata.soften
 		ikdata_cache.mid_axis	= ms(ikdata.mid_axis, "m")
 	end
 	return ikdata_cache
@@ -146,15 +146,12 @@ function anisystem:do_ik()
 	for _, eid in world:each "ik" do
 		local e = world[eid]
 		local ikcomp = e.ik
-		local invtran = ms(ms:srtmat(e.transform), "iP")
 		local skehandle = asset.get_resource(e.skeleton.ref_path).handle
 		
 		ani_module.setup(e.pose_result.result, skehandle, fix_root)
 		for _, job in ipairs(ikcomp.jobs) do
-			ani_module.do_ik(skehandle, prepare_ikdata(invtran, job))
+			ani_module.do_ik(skehandle, prepare_ikdata(job))
 		end
-
-		ani_module.fetch_result()
 	end
 end
 

@@ -70,7 +70,7 @@ local function foot_ik_test()
                         joints      = {"RightUpLeg", "RightLeg", "RightFoot",},
                     },
                     {
-                        name        = "character_ankle_position",
+                        name        = "sole_left",
                         type        = "aim",
                         target      = {0, 0, 0, 1},
                         pole_vector = {0, 1, 0, 0},
@@ -80,12 +80,25 @@ local function foot_ik_test()
                         widget      = 1.0,
                         twist_angle = 0,
                         joints      = {"LeftFoot",}
-                    }
+                    },
+                    {
+                        name        = "sole_right",
+                        type        = "aim",
+                        target      = {0, 0, 0, 1},
+                        pole_vector = {0, 1, 0, 0},
+                        up_axis     = {0, 1, 0, 0},
+                        forward     = {0, 0, 1, 0},
+                        offset      = {0, 0, 0, 0},
+                        widget      = 1.0,
+                        twist_angle = 0,
+                        joints      = {"RightFoot",}
+                    },
                 }
             },
             foot_ik_ray = {
                 cast_dir = {0, -2, 0, 0},
-                ik_job_names = {"left_leg", "right_leg",},
+                legs = {"left_leg", "right_leg",},
+                soles = {"sole_left", "sole_right"},
             },
             character = {movespeed = 1.0,},
             serialize = serialize.create(),
@@ -97,12 +110,6 @@ local function foot_ik_test()
     
 end
 
-local footik_eid
 function iktest_sys:init()
-    footik_eid = foot_ik_test()
-end
-
-
-function iktest_sys:data_changed()
-    
+    foot_ik_test()
 end
