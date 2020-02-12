@@ -22,6 +22,7 @@ local function foot_ik_test()
             "ant.render|render",
             "ant.animation|animation",
             "ant.animation|ozzmesh",
+            "ant.animation|ik",
             "ant.animation|ozz_skinning",
             "ant.render|shadow_cast",
             "ant.render|name",

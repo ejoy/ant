@@ -69,7 +69,7 @@ void fetch_ikdata(lua_State* L, int idx, ik_data& ikdata) {
 	ikdata.weight = get_number(idx, "weight");
 	ikdata.twist_angle = get_number(idx, "twist_angle");
 
-	if (lua_getfield(L, idx, "joints") == LUA_TTABLE) {
+	if (lua_getfield(L, idx, "joint_indices") == LUA_TTABLE) {
 		const lua_Integer len = lua_rawlen(L, -1);
 		if (len <= 0 || len > 3) {
 			luaL_error(L, "ik joints data must be in (0, 3], %d", len);
