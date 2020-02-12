@@ -305,8 +305,8 @@ local function create_camera()
     frustum.f = 300
     local cameraeid = ics.spawn("test_main_camera", {
         type    = "",
-        eyepos  = {0, 5, -10, 1},
-        viewdir = ms(ms:forward_dir({math.rad(30), 0, 0, 0}), "T"),
+        eyepos  = {-4.5, 2, -1.5, 1},
+        viewdir = ms(ms:forward_dir({math.rad(30), math.rad(150), 0, 0}), "T"),
         updir   = mc.T_YAXIS,
         frustum = frustum,
     })
