@@ -19,7 +19,7 @@ local runtime_config = {
         "ant.scene|hierarchy",
         "ant.scene|ignore_parent_scale",
         --editor
-        "ant.test.features|character",
+        "ant.character|character",
         "ant.objcontroller|select",
     },
     system = {

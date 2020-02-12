@@ -4,17 +4,18 @@ local world = ecs.world
 local mathpkg = import_package "ant.math"
 local ms, mu = mathpkg.stack, mathpkg.util
 
-local ani_module = require "hierarchy.animation"
+local assetpkg = import_package "ant.asset"
+local assetmgr = assetpkg.mgr
 
 ecs.component "character"
     .movespeed "real" (1.0)
 
 local character_policy = ecs.policy "character"
 character_policy.require_component "character"
-character_policy.require_component "collider.character"
+character_policy.require_component "collider"
 
 ecs.component "character_height_raycast"
-    .dir "vector4" (0, -2, 0, 0)
+    .dir "vector" (0, -2, 0, 0)
 
 local char_height_policy = ecs.policy "character_height_raycast"
 char_height_policy.require_component "character_height_raycast"
@@ -56,23 +57,27 @@ function char_height_sys:ik_target()
     end
 end
 
-ecs.component "foot_ik_ray"
-    .cast_dir "vector4" (0, -2, 0, 0)
+ecs.component "ik_tracker"
+    .leg            "string"
+    ["opt"].sole    "string"
+
+ecs.component "foot_ik_raycast"
+    .cast_dir "vector" (0, -2, 0, 0)
     .foot_height "real" (0)
-    .legs   "string[]"
-    .soles  "string[]"
+    .trackers  "ik_tracker[]"
 
 local foot_ik_policy = ecs.policy "foot_ik_raycast"
 foot_ik_policy.require_component "character"
-foot_ik_policy.require_component "foot_ik_ray"
+foot_ik_policy.require_component "foot_ik_raycast"
 foot_ik_policy.require_component "ik"
 
-foot_ik_policy.require_system "character_foot_ik_system"
-foot_ik_policy.require_system "ik_system"
-foot_ik_policy.require_transform "match_ik_job_transform"
+foot_ik_policy.require_policy "ant.animation|ik"
 
-local foot_t = ecs.transform "match_ik_job_transform"
-foot_t.input "foot_ik_ray"
+foot_ik_policy.require_system "character_foot_ik_system"
+foot_ik_policy.require_transform "build_ik_joint_indices"
+
+local foot_t = ecs.transform "build_ik_joint_indices"
+foot_t.input "foot_ik_raycast"
 foot_t.output "ik"
 
 local function which_job(ik, name)
@@ -84,23 +89,23 @@ local function which_job(ik, name)
 end
 
 function foot_t.process(e)
-    local r = e.foot_ik_ray
+    local r = e.foot_ik_raycast
     local ik = e.ik
 
-    local ske = e.skeleton
+    local ske = assetmgr.get_resource(e.skeleton.ref_path).handle
 
-    local leg_joint_indices = {}
-    for _, jobname in ipairs(r.legs) do
-        local ikdata = which_job(ik, jobname)
-        if ikdata == nil then
-            error(string.format("foot_ik_ray.ik_job_name:%s, not found in ik component", r.ik_job_name))
+    local trackers = r.trackers
+    for _, tracker in ipairs(trackers) do
+        local leg_ikdata = which_job(ik, tracker.leg)
+        if leg_ikdata == nil then
+            error(string.format("foot_ik_raycast.ik_job_name:%s, not found in ik component", r.ik_job_name))
         end
 
-        if ikdata.type ~= "two_bone" then
-            error(string.format("leg ik job must be two_bone:%s", ikdata.type))
+        if leg_ikdata.type ~= "two_bone" then
+            error(string.format("leg ik job must be two_bone:%s", leg_ikdata.type))
         end
 
-        local joints = ikdata.joints
+        local joints = leg_ikdata.joints
         if #joints ~= 3 then
             error(string.format("joints number must be 3 for two_bone ik type, %d provided", #joints))
         end
@@ -127,45 +132,36 @@ function foot_t.process(e)
                 error(string.format("ik joints can not use as foot ik, which joints must as parent clain:%s %s %s", joints[1], joints[2], joints[3]))
             end
         end
-        leg_joint_indices[#leg_joint_indices+1] = joint_indices
-    end
+        tracker.leg_joint_indices = joint_indices
 
-    if #leg_joint_indices == 0 then
-        error(string.format("leg joint is empty"))
-    end
-
-    local sole_joint_indices = {}
-    for _, jobname in ipairs(r.soles) do
-        local ikdata = which_job(ik, jobname)
-        if ikdata == nil then
-            error(string.format("invalid ik job name:%s", jobname))
+        -----
+        local sole_ikdata = which_job(ik, tracker.sole)
+        if sole_ikdata == nil then
+            error(string.format("invalid ik job name:%s", tracker.sole))
         end
 
-        if ikdata.type ~= "aim" then
-            error(string.foramt("sole ik job must aim type:%s", ikdata.type))
+        if sole_ikdata.type ~= "aim" then
+            error(string.foramt("sole ik job must aim type:%s", sole_ikdata.type))
         end
 
-        local joints = ikdata.joints
-        if #joints ~= 1 then
-            error(string.format("joints number must be 1 for aim ik type, %d provided", #joints))
+        local sole_joints = sole_ikdata.joints
+        if #sole_joints ~= 1 then
+            error(string.format("joints number must be 1 for aim ik type, %d provided", #sole_joints))
         end
 
-        sole_joint_indices[#sole_joint_indices+1] = ske:joint_index()
-    end
+        local sole_joint_index = ske:joint_index(sole_joints[1])
+    
+        if joint_indices[3] ~= sole_joint_index then
+            error(string.format("we assume leg last joint is equal to sole joint"))
+        end
 
-    if #sole_joint_indices == 0 then
-        error(string.format("sole joint indices is empty"))
+        tracker.sole_joint_index = sole_joint_index
     end
-
-    if leg_joint_indices[3] ~= sole_joint_indices[1] then
-        error(string.format("we assume leg last joint is equal to sole joint"))
-    end
-
-    r.leg_joint_indices = leg_joint_indices
-    r.sole_joint_indices = sole_joint_indices
 end
 
 local char_foot_ik_sys = ecs.system "character_foot_ik_system"
+char_foot_ik_sys.require_interface "ant.bullet|collider"
+char_foot_ik_sys.require_policy "foot_ik_raycast"
 
 local function ankles_raycast_ray(ankle_pos_ws, dir)
     return {
@@ -175,7 +171,7 @@ local function ankles_raycast_ray(ankle_pos_ws, dir)
 end
 
 local function ankles_target(ray, foot_height)
-    local hit, result = icollider:raycast(ray)
+    local hit, result = icollider.ray_test(ray)
     if hit then
         local pt = result.hit_pt_in_WS
         local normal = result.hit_normal_in_WS
@@ -198,20 +194,13 @@ function char_foot_ik_sys:ik_target()
         local cast_dir = foot_rc.cast_dir
         local foot_height = foot_rc.foot_height
 
-        local leg_joint_indices = foot_rc.leg_joint_indices
-        local numlegs = #leg_joint_indices
-
-        local legs = foot_rc.legs
-        local soles = foot_rc.soles
-
-        local sole_joint_indices = foot_rc.leg_joint_indices
-        assert(numlegs == #sole_joint_indices)
-
         local leg_info = {}
+        local trackers = foot_rc.trackers
+        local numlegs = #trackers
         for whichleg=1, numlegs do
-            local leg = leg_joint_indices[whichleg]
+            local leg = trackers[whichleg].leg_joint_indices
             local anklenidx = leg[3]
-            local ankle_pos = pose_result:joint(anklenidx)
+            local ankle_pos = ms:vector(pose_result:joint_trans(anklenidx, 4))
             local ankle_pos_ws = ms(trans, ankle_pos, "*P")
 
             local castray = ankles_raycast_ray(ankle_pos_ws, cast_dir)
@@ -238,27 +227,27 @@ function char_foot_ik_sys:ik_target()
         local inv_correct_trans = ms(correct_trans, "iP")
 
         local function joint_y_vector(jointidx)
-            local knee_trans = pose_result:joint_trans(jointidx)
-            local _, y = ms(knee_trans, "~PP")
-            return y
+            return ms:vector(pose_result:joint_trans(jointidx, 2))
         end
 
 
         for whichleg=1, numlegs do
             local li = leg_info[whichleg]
             if li then
-                local leg_ikdata = which_job(ik, legs[whichleg])
+                local tracker = trackers[whichleg]
+                local leg_ikdata = which_job(ik, tracker.leg)
                 local target_ws = li[2]
 
                 local target_ms = ms(inv_correct_trans, target_ws, "*P")
-                leg_ikdata.traget = target_ms
-                local indices = leg_joint_indices[whichleg]
-                local knee = indices[2]
-                leg_ikdata.pole_vector  = joint_y_vector(knee)
+                leg_ikdata.target(target_ms)
+                local knee = tracker.leg_joint_indices[2]
+                leg_ikdata.pole_vector(joint_y_vector(knee))
 
-                local solejob = which_job(ik, soles[whichleg])
-                solejob.target = target_ms
-                solejob.pole_vector = joint_y_vector(sole_joint_indices[whichleg][1])
+                if tracker.sole then
+                    local solejob = which_job(ik, tracker.sole)
+                    solejob.target(target_ms)
+                    solejob.pole_vector(joint_y_vector(tracker.sole_joint_index))
+                end
             end
         end
     end

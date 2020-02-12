@@ -1,10 +1,14 @@
 local ecs = ...
+local world = ecs.world
 
 local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
 
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
+
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
 
 local iktest_sys = ecs.system "character_ik_test"
 iktest_sys.require_policy "ant.character|foot_ik_raycast"
@@ -21,10 +25,11 @@ local function foot_ik_test()
             "ant.animation|ozz_skinning",
             "ant.render|shadow_cast",
             "ant.render|name",
+            "ant.character|character",
             "ant.character|foot_ik_raycast",
         },
         data = {
-            transform = mu.translate_mat {0, 0, -6, 1},
+            transform = mu.translate_mat {-2.5, 0, -6, 1},
             rendermesh = {},
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
@@ -70,24 +75,24 @@ local function foot_ik_test()
                         joints      = {"RightUpLeg", "RightLeg", "RightFoot",},
                     },
                     {
-                        name        = "sole_left",
+                        name        = "left_sole",
                         type        = "aim",
                         target      = {0, 0, 0, 1},
                         pole_vector = {0, 1, 0, 0},
                         up_axis     = {0, 1, 0, 0},
-                        forward     = {0, 0, 1, 0},
+                        forward     = {1, 0, 0, 0},
                         offset      = {0, 0, 0, 0},
                         widget      = 1.0,
                         twist_angle = 0,
                         joints      = {"LeftFoot",}
                     },
                     {
-                        name        = "sole_right",
+                        name        = "right_sole",
                         type        = "aim",
                         target      = {0, 0, 0, 1},
                         pole_vector = {0, 1, 0, 0},
                         up_axis     = {0, 1, 0, 0},
-                        forward     = {0, 0, 1, 0},
+                        forward     = {1, 0, 0, 0},
                         offset      = {0, 0, 0, 0},
                         widget      = 1.0,
                         twist_angle = 0,
@@ -95,12 +100,29 @@ local function foot_ik_test()
                     },
                 }
             },
-            foot_ik_ray = {
+            foot_ik_raycast = {
                 cast_dir = {0, -2, 0, 0},
-                legs = {"left_leg", "right_leg",},
-                soles = {"sole_left", "sole_right"},
+                foot_height = 0.12,
+                trackers = {
+                    {
+                        leg = "left_leg",
+                        sole = "left_sole",
+                    },
+                    {
+                        leg = "right_leg",
+                        sole = "right_sole",
+                    },
+                },
             },
             character = {movespeed = 1.0,},
+            collider = {
+                capsule = {
+                    origin = {0, 1, 0, 1},
+                    radius = 0.5,
+                    height = 1,
+                    axis = "Y",
+                }
+            },
             serialize = serialize.create(),
             name = "foot_ik_test",
             can_cast = true,
@@ -110,6 +132,31 @@ local function foot_ik_test()
     
 end
 
+local function create_plane_test()
+    computil.create_plane_entity(world,
+    mu.srt(
+        {5, 1, 5, 1},
+        {math.rad(5), 0, 0, 0},
+        {0, 0, -5, 1}),
+    fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+    {0.5, 0.5, 0, 1},
+    "test shadow plane",
+    {
+        ["ant.bullet|collider"] = {
+            collider = {
+                box = {
+                    origin = {0, 0, 0, 1},
+                    size = {0.5, 0, 0.5},
+                }
+            },
+        },
+        ["ant.render|debug_mesh_bounding"] = {
+            debug_mesh_bounding = true,
+        }
+    })
+end
+
 function iktest_sys:init()
+    create_plane_test()
     foot_ik_test()
 end

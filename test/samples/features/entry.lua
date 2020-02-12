@@ -6,9 +6,9 @@ runtime.start {
 		"ant.animation|ozzmesh",
 		"ant.animation|ozz_skinning",
 		"ant.animation|skinning",
+		"ant.animation|ik",
 		"ant.serialize|serialize",
 		"ant.bullet|collider",
-		"ant.bullet|collider.character",
 		"ant.sky|procedural_sky",
 		"ant.render|name",
 		"ant.render|mesh",
@@ -21,7 +21,7 @@ runtime.start {
 		"ant.scene|hierarchy",
 		"ant.scene|ignore_parent_scale",
 		--editor
-		"ant.test.features|character",
+		"ant.character|character",
 		"ant.objcontroller|select",
 	},
 	system = {

@@ -29,12 +29,11 @@ local pbrscene = require "pbr_scene"
 local init_loader = ecs.system 'init_loader'
 
 init_loader.require_system 'ant.camera_controller|camera_controller2'
-init_loader.require_system 'ant.bullet|character_collider_system'
 init_loader.require_system "ant.camera_controller|camera_system"
 init_loader.require_system "ant.imguibase|imgui_system"
 init_loader.require_system "ant.sky|procedural_sky_system"
 --init_loader.require_system "ant.test.features|scenespace_test"
-init_loader.require_system "ant.test.features|character_ik_system"
+init_loader.require_system "ant.test.features|character_ik_test"
 init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
 init_loader.require_system "ant.render|draw_raycast_point"
@@ -62,8 +61,7 @@ local function ozzmesh_animation_test()
             "ant.serialize|serialize",
             "ant.render|name",
             "ant.render|shadow_cast",
-            "ant.bullet|collider.character",
-            "ant.test.features|character",
+            "ant.character|character",
             "ant.render|debug_mesh_bounding",
         },
         data = {
@@ -192,13 +190,13 @@ local function create_plane_test()
             color = {0.8, 0.8, 0.8, 1},
             material = fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
         },
-        {
-            transform = mu.srt({5, 1, 5, 1},
-                                {math.rad(10), 0, 0, 0},
-                                {0, 0, -5, 1}),
-            color = {0.5, 0.5, 0, 1},
-            material = fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
-        }
+        -- {
+        --     transform = mu.srt({5, 1, 5, 1},
+        --                         {math.rad(10), 0, 0, 0},
+        --                         {0, 0, -5, 1}),
+        --     color = {0.5, 0.5, 0, 1},
+        --     material = fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+        -- }
     }
 
     for _, p in ipairs(planes) do
@@ -290,18 +288,15 @@ function init_loader:init()
     end
 
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
-    iwd.create()
 
-    computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0, 1})
-    --create_plane_test()
+    --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0, 1})
+    create_plane_test()
 
-    --ozzmesh_animation_test()
-    --pbr_test()
-    --gltf_animation_test()
-    
-    simple_box()
+    ozzmesh_animation_test()
+    pbr_test()
+    gltf_animation_test()
 
-    --pbrscene.create_scene(world)
+    pbrscene.create_scene(world)
 end
 
 local function create_camera()

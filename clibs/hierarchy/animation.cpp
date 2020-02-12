@@ -132,6 +132,26 @@ struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzB
 		return 1;
 	}
 
+	static int ljoint_trans(lua_State *L){
+		auto self = get(L, 1);
+		const auto jointidx = (uint32_t)lua_tointeger(L, 2);
+		if (jointidx < 0 || jointidx > self->size()){
+			luaL_error(L, "invalid joint index:%d", jointidx);
+		}
+
+		auto& trans = self->at(jointidx);
+		if (lua_isnoneornil(L, 3)) {
+			lua_pushlightuserdata(L, &trans);
+		} else {
+			const auto colidx = (uint32_t)lua_tointeger(L, 3) - 1;
+			if (colidx < 0 || colidx > 3) {
+				luaL_error(L, "invalid column index:%d, should be in [0, 3]", colidx);
+			}
+			lua_pushlightuserdata(L, &trans.cols[colidx]);
+		}
+		return 1;
+	}
+
 	static int create(lua_State* L) {
 		lua_Integer numjoints = luaL_checkinteger(L, 1);
 		if (numjoints <= 0) {
@@ -162,7 +182,8 @@ struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzB
 			return luaL_error(L, "argument 2 is not support type, only support string/userdata/light userdata");
 		}
 		luaL_Reg l[] = {
-			{"count", lcount},
+			{"count",		lcount},
+			{"joint_trans", ljoint_trans},
 			{nullptr, nullptr},
 		};
 		base_type::set_method(L, l);
@@ -549,7 +570,7 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		return 0;
 	}
 
-	int do_result(lua_State* L) {
+	int fetch_result(lua_State* L) {
 		auto data = _getCurrentData();
 		if (data->m_result.empty()) {
 			return luaL_error(L, "no result");
@@ -587,9 +608,9 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		return base_type::get(L, lua_upvalueindex(1))
 			->do_ik(L);
 	}
-	static int ldo_result(lua_State* L) {
+	static int lfetch_result(lua_State* L) {
 		return base_type::get(L, lua_upvalueindex(1))
-			->do_result(L);
+			->fetch_result(L);
 	}
 
 	static int lend_animation(lua_State *L){
@@ -602,8 +623,8 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 			{ "setup",		lsetup},
 			{ "do_sample",	ldo_sample},
 			{ "do_blend",	ldo_blend},
+			{ "fetch_result",lfetch_result},
 			{ "do_ik",		ldo_ik},
-			{ "do_result",	ldo_result},
 			{ "end_animation",lend_animation},
 			{ nullptr, nullptr},
 		};

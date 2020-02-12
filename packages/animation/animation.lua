@@ -11,10 +11,11 @@ ecs.component "pose_result"
 
 local pr_p = ecs.policy "pose_result"
 pr_p.require_component "skeleton"
+pr_p.require_component "pose_result"
 
-pr_p.require_transform "pose_result_transform"
+pr_p.require_transform "build_pose_result"
 
-local pr_t = ecs.transform "pose_result_transform"
+local pr_t = ecs.transform "build_pose_result"
 pr_t.input "skeleton"
 pr_t.output "pose_result"
 
@@ -45,6 +46,10 @@ ecs.component "ik"
 local ik_p = ecs.policy "ik"
 ik_p.require_component "skeleton"
 ik_p.require_component "ik"
+ik_p.require_component "pose_result"
+ik_p.require_transform "build_pose_result"
+
+ik_p.require_system "ik_system"
 
 ik_p.require_policy "pose_result"
 
@@ -57,10 +62,11 @@ local ap = ecs.policy "animation"
 ap.require_component "skeleton"
 ap.require_component "animation"
 ap.require_component "pose_result"
-
-ap.require_policy "pose_result"
+ap.require_transform "build_pose_result"
 
 ap.require_system "animation_system"
+
+ap.require_policy "pose_result"
 
 local anicomp = ecs.component "animation"
 	.anilist "animation_content{}"
@@ -89,22 +95,22 @@ anisystem.require_interface "ant.timer|timer"
 local timer = world:interface "ant.timer|timer"
 
 local ikdata_cache = {}
-local function prepare_ikdata(invtran, ikdata)
+local function prepare_ikdata(ikdata)
 	ikdata_cache.type		= ikdata.type
-	ikdata_cache.target 	= ms(ikdata.target, "m")
-	ikdata_cache.pole_vector= ms(ikdata.pole_vector, "m")
+	ikdata_cache.target 	= ~ikdata.target
+	ikdata_cache.pole_vector= ~ikdata.pole_vector
 	ikdata_cache.weight		= ikdata.weight
 	ikdata_cache.twist_angle= ikdata.twist_angle
 	ikdata_cache.joints 	= ikdata.joints
 
 	if ikdata.type == "aim" then
-		ikdata_cache.forward	= ms(ikdata.forward, "m")
-		ikdata_cache.up_axis	= ms(ikdata.up_axis, "m")
-		ikdata_cache.offset		= ms(ikdata.offset, "m")
+		ikdata_cache.forward	= ~ikdata.forward
+		ikdata_cache.up_axis	= ~ikdata.up_axis
+		ikdata_cache.offset		= ~ikdata.offset
 	else
 		assert(ikdata.type == "two_bone")
 		ikdata_cache.soften		= ikdata.soften
-		ikdata_cache.mid_axis	= ms(ikdata.mid_axis, "m")
+		ikdata_cache.mid_axis	= ~ikdata.mid_axis
 	end
 	return ikdata_cache
 end
@@ -142,15 +148,17 @@ function anisystem:sample_animation_pose()
 	end
 end
 
-function anisystem:do_ik()
+local iksys = ecs.system "ik_system"
+
+function iksys:do_ik()
 	for _, eid in world:each "ik" do
 		local e = world[eid]
 		local ikcomp = e.ik
 		local skehandle = asset.get_resource(e.skeleton.ref_path).handle
 		
 		ani_module.setup(e.pose_result.result, skehandle, fix_root)
-		for _, job in ipairs(ikcomp.jobs) do
-			ani_module.do_ik(skehandle, prepare_ikdata(job))
+		for _, ikdata in ipairs(ikcomp.jobs) do
+			ani_module.do_ik(skehandle, prepare_ikdata(ikdata))
 		end
 	end
 end
