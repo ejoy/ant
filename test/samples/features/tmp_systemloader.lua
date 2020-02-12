@@ -38,7 +38,7 @@ init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
 init_loader.require_system "ant.render|draw_raycast_point"
 
-init_loader.require_interface "ant.render|camera_spawn"
+init_loader.require_interface "ant.render|camera"
 init_loader.require_interface "ant.camera_controller|camera_motion"
 init_loader.require_interface "ant.render|iwidget_drawer"
 
@@ -296,7 +296,7 @@ local function create_plane_test()
     end
 end
 
-local ics = world:interface "ant.render|camera_spawn"
+local camera = world:interface "ant.render|camera"
 local icm = world:interface "ant.camera_controller|camera_motion"
 local iwd = world:interface "ant.render|iwidget_drawer"
 
@@ -341,18 +341,12 @@ function init_loader:init()
 end
 
 local function create_camera()
-    local fbsize = world.args.fb_size
-    local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
-    frustum.f = 300
-    local cameraeid = ics.spawn("test_main_camera", {
-        type    = "",
+    local id = camera.create {
         eyepos  = {0, 5, -10, 1},
         viewdir = ms(ms:forward_dir({math.rad(30), 0, 0, 0}), "T"),
-        updir   = mc.T_YAXIS,
-        frustum = frustum,
-    })
-    ics.bind("main_queue", cameraeid)
-    return cameraeid
+    }
+    camera.bind(id, "main_queue")
+    return id
 end
 
 function init_loader:data_changed()

@@ -10,12 +10,12 @@ local mu         = mathpkg.util
 local mc         = mathpkg.constant
 local lu         = renderpkg.light
 
-local ics = world:interface "ant.render|camera_spawn"
+local camera = world:interface "ant.render|camera"
 
 local m = ecs.system 'init_loader'
 
 m.require_system "ant.imguibase|imgui_system"
-m.require_interface "ant.render|camera_spawn"
+m.require_interface "ant.render|camera"
 m.require_interface "ant.animation|animation"
 
 local function load_file(file)
@@ -42,16 +42,10 @@ end
 local eid
 
 local function create_camera()
-    local fbsize = world.args.fb_size
-    local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
-    frustum.f = 300
-    ics.bind("main_queue", ics.spawn("main_camera",{
-        type = "",
+    camera.bind(camera.create {
         eyepos = { 1.6, 1.8,-1.8, 1.0},
-        updir = mc.T_YAXIS,
         viewdir = {-0.6,-0.4, 0.7, 0.0},
-        frustum = frustum,
-    }))
+    }, "main_queue")
 end
 
 function m:init()
