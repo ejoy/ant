@@ -566,7 +566,9 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 
 	int do_ik(lua_State* L) {
 		auto data = _getCurrentData();
-		::do_ik(L, data->m_ske, data->m_result.back(), m_current_bp->pose);
+		if (!::do_ik(L, data->m_ske, data->m_result.back(), m_current_bp->pose)){
+			luaL_error(L, "do_ik failed!");
+		}
 		return 0;
 	}
 

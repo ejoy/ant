@@ -120,6 +120,12 @@ do_ik(lua_State* L,
 		return &result_pose[jointidx];
 	};
 
+	ozz::animation::LocalToModelJob ltm_job;
+	ltm_job.input = ozz::make_range(pose_soa);
+	ltm_job.skeleton = ske;
+	ltm_job.output = ozz::make_range(result_pose);
+	ltm_job.from = ikdata.joints[0];
+
 	if (ikdata.type == "two_bone"){
 		ozz::animation::IKTwoBoneJob twobone_ikjob;
 
@@ -141,6 +147,8 @@ do_ik(lua_State* L,
 
 		mul_quaternion(ikdata.joints[0], start_correction, pose_soa);
 		mul_quaternion(ikdata.joints[1], mid_correction, pose_soa);
+
+		ltm_job.to = ikdata.joints[2];
 	} else {
 		ozz::animation::IKAimJob aimjob;
 		aimjob.target 		= ikdata.target;
@@ -161,12 +169,9 @@ do_ik(lua_State* L,
 		}
 
 		mul_quaternion(ikdata.joints[0], correction, pose_soa);
+
+		ltm_job.to = ozz::animation::Skeleton::kMaxJoints;
 	}
 
-	ozz::animation::LocalToModelJob job;
-	job.input = ozz::make_range(pose_soa);
-	job.skeleton = ske;
-	job.output = ozz::make_range(result_pose);
-	job.from = ikdata.joints[0];
-	return job.Run();
+	return ltm_job.Run();
 }

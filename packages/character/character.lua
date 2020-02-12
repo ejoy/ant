@@ -109,22 +109,25 @@ function foot_t.process(e)
         end
 
         -----
-        local sole_ikdata = which_job(ik, tracker.sole)
-        if sole_ikdata == nil then
-            error(string.format("invalid ik job name:%s", tracker.sole))
-        end
+        local sole_name = tracker.sole
+        if sole_name then
+            local sole_ikdata = which_job(ik, tracker.sole)
+            if sole_ikdata == nil then
+                error(string.format("invalid ik job name:%s", tracker.sole))
+            end
 
-        if sole_ikdata.type ~= "aim" then
-            error(string.foramt("sole ik job must aim type:%s", sole_ikdata.type))
-        end
+            if sole_ikdata.type ~= "aim" then
+                error(string.foramt("sole ik job must aim type:%s", sole_ikdata.type))
+            end
 
-        local sole_joint_indices = sole_ikdata.joint_indices
-        if #sole_joint_indices ~= 1 then
-            error(string.format("joints number must be 1 for aim ik type, %d provided", #sole_joint_indices))
-        end
+            local sole_joint_indices = sole_ikdata.joint_indices
+            if #sole_joint_indices ~= 1 then
+                error(string.format("joints number must be 1 for aim ik type, %d provided", #sole_joint_indices))
+            end
 
-        if joint_indices[3] ~= sole_joint_indices[1] then
-            error(string.format("we assume leg last joint is equal to sole joint"))
+            if joint_indices[3] ~= sole_joint_indices[1] then
+                error(string.format("we assume leg last joint is equal to sole joint"))
+            end
         end
     end
 end
@@ -213,7 +216,6 @@ function char_foot_ik_sys:ik_target()
             local function joint_y_vector(jointidx)
                 return ms:vector(pose_result:joint_trans(jointidx, 2))
             end
-
 
             for whichleg=1, numlegs do
                 local li = leg_info[whichleg]
