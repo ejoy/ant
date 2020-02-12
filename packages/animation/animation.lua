@@ -33,6 +33,7 @@ ecs.component "ik_data"
 	.target 	"vector"{0, 0, 0, 1}	-- model space
 	.pole_vector"vector"{0, 0, 0, 0}	-- model space
 	.twist_angle"real" 	(0.0)
+	.weight		"real"  (0.0)
 	.joints		"string[]"{}			-- type == 'aim', #joints == 1, type == 'two_bone', #joints == 3, with start/mid/end
 	["opt"].mid_axis"vector" {0, 0, 1, 0}
 	["opt"].soften "real" 	(0.0)

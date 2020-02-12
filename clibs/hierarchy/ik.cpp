@@ -60,10 +60,14 @@ void fetch_ikdata(lua_State* L, int idx, ik_data& ikdata) {
 	get_vec(idx, "pole_vector", (float*)(&ikdata.pole_vector));
 
 	auto get_number = [L](int idx, auto name) {
-		lua_getfield(L, idx, name);
-		const float value = (float)lua_tonumber(L, -1);
-		lua_pop(L, 1);
-		return value;
+		if (lua_getfield(L, idx, name) == LUA_TNUMBER){
+			const float value = (float)lua_tonumber(L, -1);
+			lua_pop(L, 1);
+			return value;
+		}
+
+		luaL_error(L, "%s must be a number from lua", name);
+		return 0.f;
 	};
 
 	ikdata.weight = get_number(idx, "weight");
@@ -76,7 +80,7 @@ void fetch_ikdata(lua_State* L, int idx, ik_data& ikdata) {
 		}
 		for (lua_Integer ii = 0; ii < len; ++ii) {
 			lua_geti(L, -1, ii + 1);
-			ikdata.joints[ii] = (uint16_t)lua_tointeger(L, -1);
+			ikdata.joints[ii] = (uint16_t)lua_tointeger(L, -1) - 1;
 			lua_pop(L, 1);
 		}
 	}
@@ -116,7 +120,7 @@ do_ik(lua_State* L,
 		return &result_pose[jointidx];
 	};
 
-	if (ikdata.type == "twobone"){
+	if (ikdata.type == "two_bone"){
 		ozz::animation::IKTwoBoneJob twobone_ikjob;
 
 		twobone_ikjob.start_joint	= get_joint(ikdata.joints[0]);
