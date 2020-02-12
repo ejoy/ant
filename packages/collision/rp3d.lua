@@ -7,17 +7,23 @@ do
 	local shape = lib.shape
 	local all_shapes = {}
 	local function all_shapes_gc(self)
-		for _, shape in ipairs(all_shapes) do
+		for key , shape in pairs(all_shapes) do
+			all_shapes[key] = nil
 			lib.delete_shape(shape)
 		end
 	end
 	setmetatable(all_shapes, { __gc = all_shapes_gc })
 
-	-- todo : interning shapes
 	function world_mt:new_shape(typename, ...)
-		local s = shape[typename](...)
-		all_shapes[#all_shapes+1] = s
-		return s
+		-- interning shapes
+		local key = table.concat ({ typename, ... } , ":")
+		local value = all_shapes[key]
+		if value then
+			return value
+		end
+		value = shape[typename](...)
+		all_shapes[key] = value
+		return value
 	end
 end
 
