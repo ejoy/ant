@@ -129,13 +129,17 @@ do_ik(lua_State* L,
 	if (ikdata.type == "two_bone"){
 		ozz::animation::IKTwoBoneJob twobone_ikjob;
 
+		twobone_ikjob.target		= ikdata.target;
+		twobone_ikjob.pole_vector	= ikdata.pole_vector;
+		twobone_ikjob.mid_axis 		= ikdata.mid_axis;
+
+		twobone_ikjob.soften		= ikdata.soften;
+		twobone_ikjob.twist_angle	= ikdata.twist_angle;
+		twobone_ikjob.weight		= ikdata.weight;
+
 		twobone_ikjob.start_joint	= get_joint(ikdata.joints[0]);
 		twobone_ikjob.mid_joint		= get_joint(ikdata.joints[1]);
 		twobone_ikjob.end_joint		= get_joint(ikdata.joints[2]);
-
-		twobone_ikjob.soften = ikdata.soften;
-		twobone_ikjob.twist_angle = ikdata.twist_angle;
-		twobone_ikjob.weight = ikdata.weight;
 
 		ozz::math::SimdQuaternion start_correction, mid_correction;
 		twobone_ikjob.start_joint_correction = &start_correction;
