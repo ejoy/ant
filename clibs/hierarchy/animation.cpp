@@ -134,7 +134,7 @@ struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzB
 
 	static int ljoint_trans(lua_State *L){
 		auto self = get(L, 1);
-		const auto jointidx = (uint32_t)lua_tointeger(L, 2);
+		const auto jointidx = (uint32_t)lua_tointeger(L, 2) - 1;
 		if (jointidx < 0 || jointidx > self->size()){
 			luaL_error(L, "invalid joint index:%d", jointidx);
 		}
