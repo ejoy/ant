@@ -15,7 +15,9 @@ iktest_sys.require_policy "ant.character|foot_ik_raycast"
 
 local function foot_ik_test()
     local tmp_ozzrespath = fs.path '/pkg/ant.test.features'
-    local assetpath = tmp_ozzrespath / 'assets' / 'tmp'
+    local tmp_assetpath = tmp_ozzrespath / 'assets' / 'tmp'
+
+    local assetpath = fs.path '/pkg/ant.resources.binary/meshes/ozz'
     return world:create_entity {
         policy = {
             "ant.serialize|serialize",
@@ -39,12 +41,12 @@ local function foot_ik_test()
                 ref_path = assetpath / 'mesh.ozz'
             },
             skeleton = {
-                ref_path = assetpath / 'skeleton.ozz'
+                ref_path = assetpath / 'human_skeleton.ozz'
             },
             animation = {
                 anilist = {
                     idle = {
-                        ref_path = assetpath / 'animation.ozz',
+                        ref_path = tmp_assetpath / 'animation.ozz',
                         scale = 1,
                         looptimes = 0,
                     },
