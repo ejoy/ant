@@ -20,12 +20,15 @@ static btVector3 get_vec(lua_State* L, int idx) {
     return btVector3(x, y, z);
 }
 
-static void push_vec(lua_State* L, const btVector3& v){
-    lua_createtable(L, 3, 0);
-    for (lua_Integer i = 1; i <= 3; ++i) {
-        lua_pushnumber(L, v[i-1]);
-        lua_seti(L, -2, i);
+static void push_vec(lua_State* L, const btVector3& v, bool ispt = false){
+    lua_createtable(L, 4, 0);
+    for (lua_Integer i = 0; i < 3; ++i) {
+        lua_pushnumber(L, v[i]);
+        lua_seti(L, -2, i+1);
     }
+
+    lua_pushnumber(L, ispt ? 1.f : 0.f);
+    lua_seti(L, -2, 4);
 }
 
 struct collworld_node {
@@ -209,9 +212,9 @@ namespace world {
         }
         lua_createtable(L, 0, 7);
         lua_pushinteger(L, result.m_collisionObject->getUserIndex()); lua_setfield(L, -2, "useridx");
-        lua_pushinteger(L, result.m_closestHitFraction);   lua_setfield(L, -2, "hit_fraction");
-        push_vec(L,        result.m_hitPointWorld);        lua_setfield(L, -2, "hit_pt_in_WS");
-        push_vec(L,        result.m_hitNormalWorld);       lua_setfield(L, -2, "hit_normal_in_WS");
+        lua_pushnumber(L, result.m_closestHitFraction);   lua_setfield(L, -2, "hit_fraction");
+        push_vec(L,        result.m_hitPointWorld, true);        lua_setfield(L, -2, "hit_pt_in_WS");
+        push_vec(L,        result.m_hitNormalWorld, false);       lua_setfield(L, -2, "hit_normal_in_WS");
         lua_pushinteger(L, result.m_collisionFilterGroup); lua_setfield(L, -2, "filter_group");
         lua_pushinteger(L, result.m_collisionFilterMask);  lua_setfield(L, -2, "filter_mask");
         lua_pushinteger(L, result.m_flags);                lua_setfield(L, -2, "flags");
