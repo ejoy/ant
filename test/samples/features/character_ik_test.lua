@@ -103,7 +103,7 @@ local function foot_ik_test()
             },
             foot_ik_raycast = {
                 cast_dir = {0, -2, 0, 0},
-                foot_height = 0.12,
+                foot_height = 0.2,
                 trackers = {
                     {
                         leg = "left_leg",

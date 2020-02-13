@@ -186,59 +186,56 @@ function char_foot_ik_sys:ik_target()
         end
 
         local function calc_pelvis_offset()
-            local maxdot
-            for whichleg=1, numlegs do
-                local li = leg_info[whichleg]
-                if li then
-                    local ankle_pos_ws, target_ws = li[1], li[2]
-                    local dot = ms(cast_dir, target_ws, ankle_pos_ws, "-.T")
-                    if maxdot then
-                        if dot[1] > maxdot[1] then
-                            maxdot = dot
-                        end
-                    else
-                        maxdot = dot
-                    end
-                end
-            end
+            return nil
+            -- local maxdot
+            -- for whichleg=1, numlegs do
+            --     local li = leg_info[whichleg]
+            --     if li then
+            --         local ankle_pos_ws, target_ws = li[1], li[2]
+            --         local dot = ms(target_ws, ankle_pos_ws, "-", cast_dir, ".T")
+            --         if maxdot then
+            --             if dot[1] > maxdot[1] then
+            --                 maxdot = dot
+            --             end
+            --         else
+            --             maxdot = dot
+            --         end
+            --     end
+            -- end
             
-            if maxdot then
-                maxdot[2] = nil
-                return ms(maxdot, cast_dir, "*P")
-            end
+            -- if maxdot then
+            --     maxdot[2] = nil
+            --     return ms(maxdot, cast_dir, "*P")
+            -- end
         end
 
         local pelvis_offset = calc_pelvis_offset()
-        if pelvis_offset then
-            local correct_trans = ms:add_translate(trans, pelvis_offset)
-            local inv_correct_trans = ms(correct_trans, "iP")
+        local correct_trans = pelvis_offset and ms:add_translate(trans, pelvis_offset) or trans
+        local inv_correct_trans = ms(correct_trans, "iP")
 
-            local function joint_y_vector(jointidx)
-                return ms:vector(pose_result:joint_trans(jointidx, 2))
-            end
+        local function joint_y_vector(jointidx)
+            return ms:vector(pose_result:joint_trans(jointidx, 2))
+        end
 
-            for whichleg=1, numlegs do
-                local li = leg_info[whichleg]
-                if li then
-                    local tracker = trackers[whichleg]
-                    local leg_ikdata = which_job(ik, tracker.leg)
-                    local target_ws = li[2]
+        for whichleg=1, numlegs do
+            local li = leg_info[whichleg]
+            if li then
+                local tracker = trackers[whichleg]
+                local leg_ikdata = which_job(ik, tracker.leg)
+                local target_ws = li[2]
 
-                    ms(leg_ikdata.target, inv_correct_trans, target_ws, "*=")
+                ms(leg_ikdata.target, inv_correct_trans, target_ws, "*=")
 
-                    local knee = leg_ikdata.joint_indices[2]
-                    leg_ikdata.pole_vector(joint_y_vector(knee))
+                local knee = leg_ikdata.joint_indices[2]
+                leg_ikdata.pole_vector(joint_y_vector(knee))
 
-                    if tracker.sole then
-                        local sole_ikdata = which_job(ik, tracker.sole)
-                        local hitnormal = li[3]
-                        ms(sole_ikdata.target, inv_correct_trans, target_ws, hitnormal, "+*=")
-                        sole_ikdata.pole_vector(joint_y_vector(sole_ikdata.joint_indices[1]))
-                    end
+                if tracker.sole then
+                    local sole_ikdata = which_job(ik, tracker.sole)
+                    local hitnormal = li[3]
+                    ms(sole_ikdata.target, inv_correct_trans, target_ws, hitnormal, "+*=")
+                    sole_ikdata.pole_vector(joint_y_vector(sole_ikdata.joint_indices[1]))
                 end
             end
-        else
-            --error(string.format("not valid leg found and colud not correct pelivs offset"))
         end
     end
 end
