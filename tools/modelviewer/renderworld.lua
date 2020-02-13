@@ -18,7 +18,7 @@ local m = ecs.system "model_review_system"
 
 m.require_policy "ant.sky|procedural_sky"
 m.require_policy "ant.serialize|serialize"
-m.require_policy "ant.bullet|collider"
+m.require_policy "ant.collision|collider"
 m.require_policy "ant.render|mesh"
 m.require_policy "ant.render|render"
 m.require_policy "ant.render|name"
@@ -28,16 +28,16 @@ m.require_policy "ant.render|light.ambient"
 
 m.require_system "ant.render|physic_bounding"
 m.require_system "ant.imguibase|imgui_system"
-m.require_interface "ant.render|camera_spawn"
+m.require_interface "ant.render|camera"
 m.require_interface "ant.animation|animation"
 m.require_interface "ant.timer|timer"
 m.require_interface "ant.camera_controller|camera_motion"
 m.require_interface "ant.render|iwidget_drawer"
-m.require_interface "ant.bullet|collider"
+m.require_interface "ant.collision|collider"
 
-local ics = world:interface "ant.render|camera_spawn"
+local camera = world:interface "ant.render|camera"
 local iwd = world:interface "ant.render|iwidget_drawer"
-local cameraeid
+local camera_id
 
 local function create_light()
 	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
@@ -45,17 +45,11 @@ local function create_light()
 end
 
 local function create_camera()
-    local fbsize = world.args.fb_size
-    local frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
-	frustum.f = 300
-	cameraeid = ics.spawn("test_main_camera", {
-        type    = "",
+	camera_id = camera.create {
         eyepos  = {0,10,-24,1},
-        viewdir = {0,-1,1,0},
-        updir   = {0,1,1,0},
-        frustum = frustum,
-    })
-	ics.bind("main_queue", cameraeid)
+        viewdir = {0,-1,1,0}
+    }
+	camera.bind(camera_id, "main_queue")
 end
 
 function m:post_init()
@@ -90,7 +84,7 @@ end
 local animation     = world:interface "ant.animation|animation"
 local timer         = world:interface "ant.timer|timer"
 local camera_motion = world:interface "ant.camera_controller|camera_motion"
-local collider      = world:interface "ant.bullet|collider"
+local collider      = world:interface "ant.collision|collider"
 
 local eventKeyboard = world:sub {"keyboard"}
 local eventMouse    = world:sub {"mouse","RIGHT","DOWN"}
@@ -136,8 +130,8 @@ end
 local function moveEntity(e, distance)
 	local postion = ms(e.transform.t, {distance}, e.transform.r, "d*+P")
 	if setEntityPosition(e, postion) then
-		local camera = world[cameraeid].camera
-		camera.eyepos = ms(camera.eyepos, {distance}, e.transform.r, "d*+T")
+		local camera_data = camera.get(camera_id)
+		camera_data.eyepos = ms(camera_data.eyepos, {distance}, e.transform.r, "d*+T")
 	end
 end
 
@@ -165,7 +159,7 @@ function m:data_changed()
 	for _,_,_,x,y in eventMouse:unpack() do
 		mouse.x = x
 		mouse.y = y
-		local res = camera_motion.ray(cameraeid, mouse, screensize)
+		local res = camera_motion.ray(camera_id, mouse, screensize)
 		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
@@ -185,8 +179,8 @@ function m:data_changed()
 	end
 	local move_speed = timer.delta() * 0.002
 	if mode == "keyboard" then
-		local camera = world[cameraeid].camera
-		local viewdir = ms(camera.viewdir, "T")
+		local camera_data = camera.get(camera_id)
+		local viewdir = ms(camera_data.viewdir, "T")
 		local facing = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
 		animation.set_state(player, "walking")
 		setEntityFacing(player, facing)

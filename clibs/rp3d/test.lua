@@ -35,22 +35,31 @@ local object = w:body_create(pos, ori)
 w:set_transform(object, pos, ori)
 
 local sphere = w:new_shape("sphere", 10)
-w:add_shape(object, sphere)
+w:add_shape(object, sphere, 0)	-- all layer , 0 == 0xffff
 local p, o = w:get_aabb(object)
 print(ms(p, "V"))
 print(ms(o, "V"))
 
 local object2 = w:body_create(ms:vector(10,10,10))
 local box = w:new_shape("box", 10)	-- rad / can also be (10,20,30)
-w:add_shape(object2, box)
+w:add_shape(object2, box , 1<<0)	-- add to layer 0
 local capsule = w:new_shape("capsule", 10, 20)	-- rad/height
-w:add_shape(object2, capsule, ms:vector(0,20,0))
+w:add_shape(object2, capsule, 1<<1, ms:vector(0,20,0))	-- add to layer 1
 
 local p, o = w:get_aabb(object2)
 print(ms(p, "V"))
 print(ms(o, "V"))
 
 
-print(w:test_overlap(object2))
+print(w:test_overlap(object))	-- test all layer
+print(w:test_overlap(object,1<<0))	-- test layer 0
+print(w:test_overlap(object,1<<1))	-- test layer 1
+
+local hit, norm = w:raycast(ms:vector(100,100,100), ms:vector(0,0,0))
+if hit then
+	print("Hit position", ms(hit, "V"))
+	print("Hit normal", ms(norm, "V"))
+end
 
 w:body_destroy(object)
+w:body_destroy(object2)

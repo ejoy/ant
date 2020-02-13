@@ -260,15 +260,28 @@ lgetAABB(lua_State *L) {
 	return 0;
 }
 
+static inline int
+maskbits(lua_State *L, int index) {
+	int maskbits = luaL_checkinteger(L, index);
+	if (maskbits < 0 || maskbits > 0xffff)
+		return luaL_error(L, "Invalid mask bits %x", maskbits);
+	if (maskbits == 0)
+		maskbits = 0xffff;
+	return maskbits;
+}
+
 static int
 laddCollisionShape(lua_State *L) {
 //	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
 	CollisionBody *body = (CollisionBody*)lua_touserdata(L, 2);
 	CollisionShape *shape = (CollisionShape *)lua_touserdata(L, 3);
-
-	Transform trans = get_transform(L, 4);
+	int mask = maskbits(L, 4);
+	Transform trans = get_transform(L, 5);
 
 	ProxyShape* proxy = body->addCollisionShape(shape, trans);
+	if (mask > 0) {
+		proxy->setCollisionCategoryBits((unsigned short)mask);
+	}
 	lua_pushlightuserdata(L, (void *)proxy);
 	return 1;
 }
@@ -281,11 +294,9 @@ ldeleteShape(lua_State *L) {
 }
 
 class luaOverlapCallback : public OverlapCallback {
-	lua_State *L;
 	bool hit;
 public:
-	luaOverlapCallback(lua_State *L) : L(L), hit(false) {}
-	virtual ~luaOverlapCallback() {}
+	luaOverlapCallback() : hit(false) {}
 	bool isHit() const { return hit; }
 
 	virtual void notifyOverlap(CollisionBody* collisionBody) {
@@ -297,11 +308,64 @@ static int
 ltestOverlap(lua_State *L) {
 	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
 	CollisionBody *body = (CollisionBody*)lua_touserdata(L, 2);
-	unsigned short categoryMaskBits = 0xFFFF;	// todo : support mask
+	int categoryMaskBits = 0xFFFF;
+	if (lua_isinteger(L, 3)) {
+		categoryMaskBits = maskbits(L, 3);
+	}
 	
-	luaOverlapCallback cb(L);
-	world->w->testOverlap(body, &cb, categoryMaskBits);
+	luaOverlapCallback cb;
+	world->w->testOverlap(body, &cb, (unsigned short)categoryMaskBits);
 	lua_pushboolean(L, cb.isHit());
+	return 1;
+}
+
+struct luaRaycastCallback : RaycastCallback {
+	bool hit;
+	Vector3 worldPoint;
+	Vector3 worldNormal;
+
+	luaRaycastCallback() : hit (false) {}
+
+	virtual decimal notifyRaycastHit(const RaycastInfo& raycastInfo) {
+		hit = true;
+		worldPoint = raycastInfo.worldPoint;
+		worldNormal = raycastInfo.worldNormal;
+		// term
+		return 0;
+	}
+};
+
+// userdata world
+// vector3 start
+// vector3 end
+// string mask
+// vector3 &hitpoint
+// vector3 &normal
+// return true/false (isHit)
+static int
+lraycast(lua_State *L) {
+	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
+	const float * startp = (const float *)lua_touserdata(L, 2);
+	const float * endp = (const float *)lua_touserdata(L, 3);
+	int categoryMaskBits = maskbits(L, 4);
+	float *hit = (float *)lua_touserdata(L, 5);
+	float *normal = (float *)lua_touserdata(L, 6);
+
+	luaRaycastCallback cb;
+	Ray ray(Vector3(startp[0], startp[1], startp[2]), Vector3(endp[0], endp[1], endp[2]));
+	world->w->raycast(ray, &cb, (unsigned short)categoryMaskBits);
+
+	hit[0] = cb.worldPoint.x;
+	hit[1] = cb.worldPoint.y;
+	hit[2] = cb.worldPoint.z;
+	hit[3] = 1.0;
+
+	normal[0] = cb.worldNormal.x;
+	normal[1] = cb.worldNormal.y;
+	normal[2] = cb.worldNormal.z;
+	normal[3] = 0;
+
+	lua_pushboolean(L, cb.hit);
 	return 1;
 }
 
@@ -339,6 +403,11 @@ lcapsuleShape(lua_State *L) {
 	return 1;
 }
 
+static int
+lrayfilter(lua_State *L) {
+	return 2;
+}
+
 extern "C" {
 	LUAMOD_API int
 	luaopen_rp3d_core(lua_State* L) {
@@ -349,6 +418,7 @@ extern "C" {
 		{ "get_aabb", lgetAABB },
 		{ "add_shape", laddCollisionShape },
 		{ "test_overlap", ltestOverlap },
+		{ "raycast", lraycast },
 		{ "__gc", lcollision_world_gc },
 		{ NULL, NULL },
 	};
@@ -384,6 +454,9 @@ extern "C" {
 	lua_setfield(L, lib_index, "shape");
 	lua_pushcfunction(L, ldeleteShape);
 	lua_setfield(L, lib_index, "delete_shape");
+
+	lua_pushcfunction(L, lrayfilter);
+	lua_setfield(L, lib_index, "rayfilter");	// for math3d adapter
 
 	return 1;
 }

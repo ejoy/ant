@@ -171,50 +171,25 @@ m.require_interface "iwidget_drawer"
 
 local iwd = world:interface "ant.render|iwidget_drawer"
 
-local function draw_compound(shape, srt)
-	srt.t = ms(srt.t, shape.origin, "+P")
-	if shape.box then
-		for _, sh in ipairs(shape.box) do
-			iwd.draw_box(sh, srt)
-		end
-	end
-	if shape.capsule then
-		for _, sh in ipairs(shape.capsule) do
-			iwd.draw_capsule(sh, srt)
-		end
-	end
-	if shape.sphere then
-		for _, sh in ipairs(shape.sphere) do
-			iwd.draw_sphere(sh, srt)
-		end
-	end
-	if shape.compound then
-		for _, sh in ipairs(shape.compound) do
-			draw_compound(sh, srt)
-		end
-	end
-end
-
 function m:widget()
 	for _, eid in world:each "collider" do
 		local e = world[eid]
 		local collider = e.collider
 		local srt = e.transform
-		if collider.sphere then
-			iwd.draw_sphere(collider.sphere, srt)
-		end
 		if collider.box then
-			iwd.draw_box(collider.box, srt)
+			for _, sh in ipairs(collider.box) do
+				iwd.draw_box(sh, srt)
+			end
 		end
 		if collider.capsule then
-			iwd.draw_capsule(collider.capsule, srt)
+			for _, sh in ipairs(collider.capsule) do
+				iwd.draw_capsule(sh, srt)
+			end
 		end
-		if collider.compound then
-			draw_compound(collider.compound, {
-				s = srt.s,
-				r = srt.r,
-				t = srt.t,
-			})
+		if collider.sphere then
+			for _, sh in ipairs(collider.sphere) do
+				iwd.draw_sphere(sh, srt)
+			end
 		end
 	end
 end

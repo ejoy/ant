@@ -1,5 +1,5 @@
 ---------
-ant.bullet|collider
+ant.collision|collider
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -10,6 +10,7 @@ can_cast: true
 can_render: true
 collider:
   box:
+    ---
     origin: {0,1,0,0}
     size: {2.2,1,1}
 material:
