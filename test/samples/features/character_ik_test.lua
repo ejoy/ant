@@ -76,17 +76,17 @@ local function foot_ik_test()
                     --     twist_angle = 0,
                     --     joints      = {"LeftFoot",}
                     -- },
-                    -- {
-                    --     name        = "right_leg",
-                    --     type        = "two_bone",
-                    --     target      = {0, 0, 0, 1},
-                    --     pole_vector = {0, 1, 0, 0},
-                    --     mid_axis    = {0, 0, 1, 0},
-                    --     weight      = 1.0,
-                    --     twist_angle = 0,
-                    --     soften      = 1.0,
-                    --     joints      = {"RightUpLeg", "RightLeg", "RightFoot",},
-                    -- },
+                    {
+                        name        = "right_leg",
+                        type        = "two_bone",
+                        target      = {0, 0, 0, 1},
+                        pole_vector = {0, 1, 0, 0},
+                        mid_axis    = {0, 0, 1, 0},
+                        weight      = 1.0,
+                        twist_angle = 0,
+                        soften      = 1.0,
+                        joints      = {"RightUpLeg", "RightLeg", "RightFoot",},
+                    },
                     -- {
                     --     name        = "right_sole",
                     --     type        = "aim",
@@ -109,10 +109,10 @@ local function foot_ik_test()
                         leg = "left_leg",
                         --sole = "left_sole",
                     },
-                    -- {
-                    --     leg = "right_leg",
-                    --     sole = "right_sole",
-                    -- },
+                    {
+                        leg = "right_leg",
+                        --sole = "right_sole",
+                    },
                 },
             },
             character = {movespeed = 1.0,},
