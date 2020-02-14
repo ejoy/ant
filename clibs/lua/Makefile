@@ -7,7 +7,7 @@ default : $(ODIR)/liblua.a
 endif
 
 ifeq "$(PLAT)" "mingw"
-MYOBJS=utf8_crt.o
+MYOBJS=utf8_crt.o utf8_unicode.o
 endif
 
 CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
@@ -122,3 +122,4 @@ lzio.o: lzio.c lprefix.h lua.h luaconf.h llimits.h lmem.h lstate.h \
 
 utf8_crt.o: utf8_crt.c utf8_crt.h utf8_unicode.h
 utf8_lua.o: utf8_lua.c utf8_unicode.h lua.c lprefix.h lua.h luaconf.h lauxlib.h lualib.h
+utf8_unicode.o: utf8_unicode.c utf8_unicode.h

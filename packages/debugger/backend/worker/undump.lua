@@ -1,10 +1,3 @@
-local LUA_TNIL = 0
-local LUA_TBOOLEAN = 1
-local LUA_TNUMFLT = 3 | (0 << 4)
-local LUA_TNUMINT = 3 | (1 << 4)
-local LUA_TSHRSTR = 4 | (0 << 4)
-local LUA_TLNGSTR = 4 | (1 << 4)
-
 local unpack_buf = ''
 local unpack_pos = 1
 local function unpack_setpos(...)
@@ -64,58 +57,8 @@ end
 local Version = 503
 local LoadInt = LoadRawInt
 local LoadLineInfo = LoadRawInt
-
-local function InitCompat()
-    local version = LoadByte()
-    if version == 0x53 then
-        Version = 503
-        LoadLength = LoadLength53
-        LoadInt = LoadRawInt
-        LoadLineInfo = LoadRawInt
-        LUA_TNUMFLT = 3 | (0 << 4)
-        LUA_TNUMINT = 3 | (1 << 4)
-        LUA_TSHRSTR = 4 | (0 << 4)
-        LUA_TLNGSTR = 4 | (1 << 4)
-        return
-    end
-    if version == 0x03 then
-        undo()
-        version = LoadLength54()
-        if version == 504 then
-            Version = 504
-            LoadLength = LoadLength54
-            LoadInt = LoadLength54
-            LoadLineInfo = function () return unpack 'b' end
-            LUA_TNUMFLT = 3 | (1 << 4)
-            LUA_TNUMINT = 3 | (2 << 4)
-            LUA_TSHRSTR = 4 | (1 << 4)
-            LUA_TLNGSTR = 4 | (2 << 4)
-            return
-        end
-    end
-    assert(false, tostring(version))
-end
-
-local function CheckHeader()
-    assert(LoadCharN(4) == '\x1bLua')
-    InitCompat()
-    assert(LoadByte() == 0)
-    assert(LoadCharN(6) == '\x19\x93\r\n\x1a\n')
-    if Version < 504 then
-        -- int
-        assert(string.packsize 'i' == LoadByte())
-        -- size_t
-        assert(string.packsize 'T' == LoadByte())
-    end
-    -- Instruction
-    assert(LoadByte() == 4)
-    -- lua_Integer
-    assert(string.packsize 'j' == LoadByte())
-    -- lua_Number
-    assert(string.packsize 'n' == LoadByte())
-    assert(LoadInteger() == 0x5678)
-    assert(LoadNumber() == 370.5)
-end
+local LoadLength
+local LoadConstants
 
 local function LoadString()
     local size = LoadLength()
@@ -135,7 +78,13 @@ end
 
 local LoadFunction
 
-local function LoadConstants(f)
+local function LoadConstants53(f)
+    local LUA_TNIL = 0
+    local LUA_TBOOLEAN = 1
+    local LUA_TNUMFLT = 3 | (0 << 4)
+    local LUA_TNUMINT = 3 | (1 << 4)
+    local LUA_TSHRSTR = 4 | (0 << 4)
+    local LUA_TLNGSTR = 4 | (1 << 4)
     f.sizek = LoadInt()
     f.k = {}
     for i = 1, f.sizek do
@@ -143,6 +92,35 @@ local function LoadConstants(f)
         if t == LUA_TNIL then
         elseif t == LUA_TBOOLEAN then
             f.k[i] = LoadByte()
+        elseif t == LUA_TNUMFLT then
+            f.k[i] = LoadNumber()
+        elseif t == LUA_TNUMINT then
+            f.k[i] = LoadInteger()
+        elseif t == LUA_TSHRSTR then
+            f.k[i] = LoadString()
+        elseif t == LUA_TLNGSTR then
+            f.k[i] = LoadString()
+        else
+            assert(false)
+        end
+    end
+end
+
+local function LoadConstants54(f)
+    local LUA_TNIL = 0
+    local LUA_TFALSE  = 1 | (1 << 4)
+    local LUA_TTRUE   = 1 | (2 << 4)
+    local LUA_TNUMINT = 3 | (1 << 4)
+    local LUA_TNUMFLT = 3 | (2 << 4)
+    local LUA_TSHRSTR = 4 | (1 << 4)
+    local LUA_TLNGSTR = 4 | (2 << 4)
+    f.sizek = LoadInt()
+    f.k = {}
+    for i = 1, f.sizek do
+        local t = LoadByte()
+        if t == LUA_TNIL then
+        elseif t == LUA_TFALSE then
+        elseif t == LUA_TTRUE then
         elseif t == LUA_TNUMFLT then
             f.k[i] = LoadNumber()
         elseif t == LUA_TNUMINT then
@@ -224,6 +202,52 @@ function LoadFunction(f, psource)
     LoadProtos(f)
     LoadDebug(f)
     return f
+end
+
+local function InitCompat()
+    local version = LoadByte()
+    if version == 0x53 then
+        Version = 503
+        LoadLength = LoadLength53
+        LoadInt = LoadRawInt
+        LoadLineInfo = LoadRawInt
+        LoadConstants = LoadConstants53
+        return
+    end
+    if version == 0x03 then
+        undo()
+        version = LoadLength54()
+        if version == 504 then
+            Version = 504
+            LoadLength = LoadLength54
+            LoadInt = LoadLength54
+            LoadLineInfo = function () return unpack 'b' end
+            LoadConstants = LoadConstants54
+            return
+        end
+    end
+    assert(false, tostring(version))
+end
+
+local function CheckHeader()
+    assert(LoadCharN(4) == '\x1bLua')
+    InitCompat()
+    assert(LoadByte() == 0)
+    assert(LoadCharN(6) == '\x19\x93\r\n\x1a\n')
+    if Version < 504 then
+        -- int
+        assert(string.packsize 'i' == LoadByte())
+        -- size_t
+        assert(string.packsize 'T' == LoadByte())
+    end
+    -- Instruction
+    assert(LoadByte() == 4)
+    -- lua_Integer
+    assert(string.packsize 'j' == LoadByte())
+    -- lua_Number
+    assert(string.packsize 'n' == LoadByte())
+    assert(LoadInteger() == 0x5678)
+    assert(LoadNumber() == 370.5)
 end
 
 local function undump(bytes)

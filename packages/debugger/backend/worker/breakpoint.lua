@@ -78,6 +78,20 @@ local function bpKey(src)
     return fs.path_native(fs.path_normalize(src.path))
 end
 
+local function valid(bp)
+    if bp.condition then
+        if not evaluate.verify(bp.condition) then
+            return false
+        end
+    end
+    if bp.hitCondition then
+        if not evaluate.verify('0 ' .. bp.hitCondition) then
+            return false
+        end
+    end
+    return true
+end
+
 local function verifyBreakpoint(src, clientsrc, bps)
     if not clientsrc.si then
         return
@@ -93,32 +107,36 @@ local function verifyBreakpoint(src, clientsrc, bps)
 
     local res = {}
     for _, bp in ipairs(bps) do
-        local activeline = nextActiveLine(clientsrc.si, bp.line)
-        if activeline then
-            bp.source = src
-            bp.realLine = bp.line
-            bp.line = activeline
-            res[bp.line] = bp
-
-            bp.statHit = hits[bp.realLine] or 0
-            if bp.logMessage then
-                local n = 0
-                bp.statLog = {}
-                bp.statLog[1] = bp.logMessage:gsub('%b{}', function(str)
-                    n = n + 1
-                    local key = ('{%d}'):format(n)
-                    bp.statLog[key] = str:sub(2,-2)
-                    return key
-                end)
-                bp.statLog[1] = bp.statLog[1] .. '\n'
-            end
-            ev.emit('breakpoint', 'changed', {
-                id = bp.id,
-                line = bp.line,
-                message = bp.message,
-                verified = true,
-            })
+        if not valid(bp) then
+            goto continue
         end
+        local activeline = nextActiveLine(clientsrc.si, bp.line)
+        if not activeline then
+            goto continue
+        end
+        bp.source = src
+        bp.realLine = bp.line
+        bp.line = activeline
+        res[bp.line] = bp
+        bp.statHit = hits[bp.realLine] or 0
+        if bp.logMessage then
+            local n = 0
+            bp.statLog = {}
+            bp.statLog[1] = bp.logMessage:gsub('%b{}', function(str)
+                n = n + 1
+                local key = ('{%d}'):format(n)
+                bp.statLog[key] = str:sub(2,-2)
+                return key
+            end)
+            bp.statLog[1] = bp.statLog[1] .. '\n'
+        end
+        ev.emit('breakpoint', 'changed', {
+            id = bp.id,
+            line = bp.line,
+            message = bp.message,
+            verified = true,
+        })
+        ::continue::
     end
     updateBreakpoint(key, src, res)
 end
@@ -146,7 +164,7 @@ end
 function m.exec(bp)
     if bp.condition then
         local ok, res = evaluate.eval(bp.condition)
-        if not ok or res ~= true then
+        if not ok or not res then
             return false
         end
     end
@@ -165,7 +183,7 @@ function m.exec(bp)
             end
             local ok, res = evaluate.eval(info)
             if not ok then
-                return info
+                return '{'..info..'}'
             end
             return tostring(res)
         end)
@@ -206,9 +224,11 @@ local funcs = {}
 function m.set_funcbp(breakpoints)
     funcs = {}
     for _, bp in ipairs(breakpoints) do
-        funcs[#funcs+1] = bp.name
+        if evaluate.verify(bp.name) then
+            funcs[#funcs+1] = bp.name
+        end
     end
-    hookmgr.funcbp_open(#breakpoints > 0)
+    hookmgr.funcbp_open(#funcs > 0)
 end
 
 function m.hit_funcbp(func)

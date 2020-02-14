@@ -26,6 +26,7 @@ local noDebug = false
 local openUpdate = false
 local coroutineTree = {}
 local statckFrame = {}
+local baseL
 
 local CMD = {}
 
@@ -119,14 +120,55 @@ function CMD.terminated()
     end
 end
 
+local function getFuncName(depth)
+    if info.what == 'main' then
+        return '(main)'
+    end
+    if info.namewhat == '' then
+        if luaver.LUAVERSION >= 52
+            and info.what == "Lua"
+            and rdebug.getinfo(depth, "t", info)
+            and info.istailcall
+        then
+            return '(...tail calls...)'
+        end
+        local previous = {}
+        if rdebug.getinfo(depth+1, "S", previous) then
+            if previous.what == "Lua" or previous.what == "main" then
+                return '(anonymous function)'
+            end
+            if previous.what == "C" then
+                return '(called from C)'
+            end
+        end
+        return ('(%s ?)'):format(info.what)
+    end
+    if info.namewhat == 'for iterator' then
+        return '(for iterator)'
+    end
+    if info.namewhat == 'hook' then
+        return '(hook)'
+    end
+    if info.namewhat == 'metamethod' then
+        return ('(metamethod %s)'):format(info.name)
+    end
+    if info.namewhat == 'field' and info.name == 'integer index' then
+        return '(field ?)'
+    end
+    if info.name == '?' then
+        return ('(%s ?)'):format(info.namewhat)
+    end
+    return info.name
+end
+
 local function stackTrace(res, coid, start, levels)
-    for depth = start, start + levels do
+    for depth = start, start + levels - 1 do
         if not rdebug.getinfo(depth, "Sln", info) then
             return depth - start
         end
         local r = {
             id = (coid << 16) | depth,
-            name = info.what == 'main' and '[main chunk]' or info.name,
+            name = getFuncName(depth),
             line = 0,
             column = 0,
         }
@@ -153,7 +195,6 @@ local function calcStackLevel()
         return
     end
     local n = 0
-    local baseL = hookmgr.gethost()
     local L = baseL
     repeat
         hookmgr.sethost(L)
@@ -162,6 +203,14 @@ local function calcStackLevel()
         statckFrame[L] = sl
         statckFrame[#statckFrame+1] = L
         L = coroutineTree[L]
+        if not L then
+            for depth = sl-1, 0, -1 do
+                if not rdebug.getinfo(depth, "S", info) or info.what ~= "C" then
+                    break
+                end
+                n = n - 1
+            end
+        end
     until not L
     hookmgr.sethost(baseL)
     statckFrame.total = n
@@ -189,7 +238,10 @@ function CMD.stackTrace(pkg)
 
     calcStackLevel()
 
-    local baseL = hookmgr.gethost()
+    if start + levels > statckFrame.total then
+        levels = statckFrame.total - start
+    end
+
     local L = baseL
     local coroutineId = 0
     repeat
@@ -206,7 +258,7 @@ function CMD.stackTrace(pkg)
         end
         coroutineId = coroutineId + 1
         L = coroutineTree[L]
-    until not L
+    until (not L or levels <= 0)
     hookmgr.sethost(baseL)
 
     sendToMaster {
@@ -392,6 +444,7 @@ function CMD.restartFrame()
 end
 
 local function runLoop(reason, text)
+    baseL = hookmgr.gethost()
     --TODO: 只在lua栈帧时需要text？
     sendToMaster {
         cmd = 'eventStop',
@@ -421,8 +474,8 @@ local function event_breakpoint(src, line)
             runLoop 'breakpoint'
             return true
         end
-        end
     end
+end
 
 function event.bp(line)
     if not initialized then return end
@@ -488,7 +541,7 @@ local function pairsEventArgs()
         if n > max then
             return
         end
-        return rdebug.getstack(n)
+        return n, rdebug.getstack(n)
     end
 end
 
@@ -520,7 +573,7 @@ end
 function event.print()
     if not initialized then return end
     local res = {}
-    for arg in pairsEventArgs() do
+    for _, arg in pairsEventArgs() do
         res[#res + 1] = variables.tostring(arg)
     end
     res = table.concat(res, '\t') .. '\n'
@@ -537,7 +590,7 @@ end
 function event.iowrite()
     if not initialized then return end
     local res = {}
-    for arg in pairsEventArgs() do
+    for _, arg in pairsEventArgs() do
         res[#res + 1] = variables.tostring(arg)
     end
     res = table.concat(res, '\t')

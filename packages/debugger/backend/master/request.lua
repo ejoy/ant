@@ -8,7 +8,7 @@ local request = {}
 
 local readyTrg = nil
 local firstWorker = true
-local firstTerminate = true
+local terminateTimestamp
 local initializing = false
 local config = {
     initialize = {},
@@ -39,7 +39,7 @@ end
 
 function request.initialize(req)
     firstWorker = true
-    firstTerminate = true
+    terminateTimestamp = nil
     response.initialize(req)
     event.initialized()
     event.capabilities()
@@ -316,11 +316,13 @@ function request.terminate(req)
         cmd = 'terminated',
     }
     if config.initialize.termOnExit then
-        if firstTerminate then
-            firstTerminate = false
+        if not terminateTimestamp then
+            terminateTimestamp = os.clock()
             utility.closeprocess()
         else
-            os.exit(true, true)
+            if terminateTimestamp - os.clock() > 2 then
+                os.exit(true, true)
+            end
         end
     end
     return true

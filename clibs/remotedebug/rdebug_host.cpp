@@ -155,6 +155,18 @@ lhost_event(lua_State *L) {
 	return 1;
 }
 
+#if defined(_WIN32) && !defined(RLUA_DISABLE)
+#include <bee/utility/unicode_win.h>
+#include <bee/lua/binding.h>
+
+static int
+la2u(lua_State *L) {
+    std::string r = bee::a2u(bee::lua::to_strview(L, 1));
+    lua_pushlstring(L, r.data(), r.size());
+    return 1;
+}
+#endif
+
 RLUA_FUNC
 int luaopen_remotedebug(lua_State *L) {
 	luaL_Reg l[] = {
@@ -162,6 +174,9 @@ int luaopen_remotedebug(lua_State *L) {
 		{ "clear", lhost_clear },
 		{ "probe", lhost_probe },
 		{ "event", lhost_event },
+#if defined(_WIN32) && !defined(RLUA_DISABLE)
+		{ "a2u",   la2u },
+#endif
 		{ NULL, NULL },
 	};
 #if LUA_VERSION_NUM == 501
