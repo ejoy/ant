@@ -39,13 +39,13 @@ function cc:init()
 			x = x * delta_dis
 		end
 		if y then
-			y = y * delta_dis			
+			y = y * delta_dis
 		end
 
 		if z then
-			z = z * delta_dis			
+			z = z * delta_dis
 		end
-		objutil.move(character, x, y, z)		
+		objutil.move(character, x, y, z)
 	end
 
 	objctrller.bind_constant("move_forward", function (value)

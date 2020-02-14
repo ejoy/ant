@@ -118,7 +118,7 @@ local function apply_srt(shape, srt)
 	if not srt then
 		return {
 			s = {1,1,1,0},
-			r = {0,0,0,0},
+			r = {0,0,0,1},
 			t = ms(shape.origin, "P"),
 		}
 	end

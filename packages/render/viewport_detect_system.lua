@@ -23,33 +23,44 @@ local function resize_framebuffer(w, h, fbidx)
 		if changed then
 			fbmgr.recreate(fbidx, {render_buffers = rbs, manager_buffer = fb.manager_buffer})
 		end
-	else
-		rhwi.reset(nil, w, h)
 	end
 end
 
-local function update_camera_viewrect(mq, w, h)
-	local vp = mq.render_target.viewport
+local function update_render_queue(q, w, h)
+	local vp = q.render_target.viewport
 	local rt = vp.rect
-	if w then rt.w = w else w = rt.w end
-	if h then rt.h = h else h = rt.h end
+	rt.w, rt.h = w, h
 
-	local ce = world[mq.camera_eid]
+	local ce = world[q.camera_eid]
 	if ce then
 		local camera = ce.camera
 		camera.frustum.aspect = w / h
-		resize_framebuffer(w, h, mq.render_target.fb_idx)
+		resize_framebuffer(w, h, q.render_target.fb_idx)
 	end
+end
+
+local function update_camera_viewrect(w, h)
+	local mq = world:singleton_entity "main_queue"
+	update_render_queue(mq, w, h)
+
+	local bq = world:singleton_entity "blit_queue"
+	update_render_queue(bq, w, h)
 end
 
 function vp_detect:post_init()
 	local fb_size = world.args.fb_size
-	update_camera_viewrect(world:singleton_entity "main_queue", fb_size.w, fb_size.h)
+	update_camera_viewrect(fb_size.w, fb_size.h)
 end
 
 function vp_detect:data_changed()
-	local mq = world:singleton_entity "main_queue"
+	local new_fbw, new_fbh
 	for _, w, h in eventResize:unpack() do
-		update_camera_viewrect(mq, w, h)
+		new_fbw, new_fbh = w, h
+	end
+
+	if new_fbw then
+		local fbsize = world.args.fb_size
+		fbsize.w, fbsize.h = new_fbw, new_fbh
+		update_camera_viewrect(new_fbw, new_fbh)
 	end
 end

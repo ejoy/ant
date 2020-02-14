@@ -392,26 +392,13 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 		m = glm::mat4x4(glm::quat(*(const glm::vec3*)value));
 	} else if (rtype == LUA_TTABLE) {
 		const size_t len = lua_rawlen(L, index);
-
-		if (len == 3) {
-			//the table is define as : rotate x-axis(pitch), rotate y-axis(yaw), rotate z-axis(roll)
-			glm::vec3 e;
-			for (int ii = 0; ii < 3; ++ii)
-				e[ii] = get_table_item(L, index, ii + 1);
-
-			// be careful here, glm::quat(euler_angles) result is different from eulerAngleXYZ()
-			// keep the same order with glm::quat
-			m = glm::mat4x4(glm::quat(e));
-		} else if (len == 4) {
-			glm::quat q;
-			get_table_value(L, index, 4, q);
-			m = glm::mat4x4(q);
-		} else {
-			luaL_error(L, "r field should : \
-							1. with 3 element(euler angle): r={1, 2, 3}, only accept 3 value;\n\
-							2. with 4 element(quaternion): r={0, 0, 0, 1};\n\
-							%d is give", len);
+		if (len != 4) {
+			luaL_error(L, "r field should with 4 element(quaternion): r={0, 0, 0, 1}, %d is provided", len);
 		}
+
+		glm::quat q;
+		get_table_value(L, index, 4, q);
+		m = glm::mat4x4(q);
 	} else {
 		m = glm::mat4x4(1.f);
 		if (rtype != LUA_TNIL)
@@ -1137,17 +1124,20 @@ convert_rotation_to_viewdir(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
 	const float *v = lastack_value(LS, id, &type);
+	glm::vec4 d;
 	switch (type){
-		case LINEAR_TYPE_EULER:
-		case LINEAR_TYPE_VEC4:{
-			glm::vec4 v4(to_viewdir(*(const glm::vec3*)v), 0);
-			lastack_pushvec4(LS, &v4.x);
+		case LINEAR_TYPE_VEC4:
+		case LINEAR_TYPE_QUAT:{
+			const auto *q = (glm::quat*)v;
+			d = glm::vec4(glm::rotate(*q, glm::vec3(0, 0, 1)), 0.f);
 			break;
 		}
 		default:
-		luaL_error(L, "convect rotation to dir need euler/vec3/vec4 type, type given is : %d", type);
+		luaL_error(L, "convect rotation to dir need quat/vec4 type, type given is : %d", type);
 		break;
 	}
+
+	lastack_pushvec4(LS, &d.x);
 }
 
 static inline void
@@ -1156,10 +1146,9 @@ convert_viewdir_to_rotation(lua_State *L, struct lastack *LS){
 	int type;
 	const float *v = lastack_value(LS, id, &type);
 	switch (type){		
-		case LINEAR_TYPE_VEC4: {						
+		case LINEAR_TYPE_VEC4: {
 			glm::quat q(glm::vec3(0, 0, 1), *(const glm::vec3*)v);
-			glm::vec4 e(glm::eulerAngles(q), 0);
-			lastack_pushvec4(LS, &e.x);
+			lastack_pushvec4(LS, &q.x);
 			break;
 		}
 	default:
@@ -1169,7 +1158,7 @@ convert_viewdir_to_rotation(lua_State *L, struct lastack *LS){
 }
 
 static inline void
-matrix_decompose(const glm::mat4x4 &m, glm::vec4 &scale, glm::vec4 &rot, glm::vec4 &trans) {
+matrix_decompose(const glm::mat4x4 &m, glm::vec4 &scale, glm::quat &rot, glm::vec4 &trans) {
 	trans = m[3];
 
 	for (int ii = 0; ii < 3; ++ii)
@@ -1186,7 +1175,7 @@ matrix_decompose(const glm::mat4x4 &m, glm::vec4 &scale, glm::vec4 &rot, glm::ve
 	for (int ii = 0; ii < 3; ++ii) {
 		rotMat[ii] /= scale[ii];		
 	}
-	rot = glm::vec4(glm::eulerAngles(glm::quat_cast(rotMat)), 0);
+	rot = glm::quat_cast(rotMat);
 }
 
 static inline void
@@ -1198,7 +1187,8 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 		luaL_error(L, "split operation '~' is only valid for mat4 type, type is : %d", type);
 	
 	const glm::mat4x4 *mat = (const glm::mat4x4 *)v;
-	glm::vec4 scale(1, 1, 1, 0), rotation(0, 0, 0, 0), translate(0, 0, 0, 0);
+	glm::vec4 scale(1, 1, 1, 0), translate(0, 0, 0, 0);
+	glm::quat rotation(0, 0, 0, 1);
 	matrix_decompose(*mat, scale, rotation, translate);
 	
 	lastack_pushvec4(LS, &translate.x);
@@ -1239,14 +1229,11 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 		zdir = (*(glm::mat4x4 *)v) * glm::vec4(0, 0, 1, 0);
 		break;
 	case LINEAR_TYPE_VEC4:
-	case LINEAR_TYPE_EULER:
-		zdir = glm::vec4(to_viewdir(*(glm::vec3*)v), 0);
-		break;
 	case LINEAR_TYPE_QUAT: 
 		zdir = (*(glm::quat*)v) * glm::vec4(0, 0, 1, 0);
 		break;
 	default:
-		luaL_error(L, "not support data type, need rotation matrix/quaternion/euler angles, type : %d", type);
+		luaL_error(L, "not support data type, need rotation matrix/quaternion angles, type : %d", type);
 		break;
 	}
 	
@@ -3315,6 +3302,42 @@ lforward_dir(lua_State *L){
 	return 1;
 }
 
+static inline void
+push_euler_quat_result(lua_State *L, struct lastack *LS, const float *v, uint32_t num, bool astable){
+	if (astable){
+		lua_createtable(L, num, 0);
+		for (uint32_t ii=0; ii < num;++ii){
+			lua_pushnumber(L, v[ii]);
+			lua_seti(L, -2, ii+1);
+		}
+	} else {
+		lastack_pushvec4(LS, v);
+		pushid(L, pop(L, LS));
+	}
+}
+
+static int
+leuler2quat(lua_State *L){
+	auto LS = getLS(L, 1);
+	auto v = get_vec_value(L, LS, 2);
+	const bool astable = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
+
+	auto q = glm::quat(v);
+	push_euler_quat_result(L, LS, &q.x, 4, astable);
+	return 1;
+}
+
+static int
+lquat2euler(lua_State *L){
+	auto LS = getLS(L, 1);
+	auto v = get_vec_value(L, LS, 2);
+	const bool astable = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
+
+	auto e = glm::eulerAngles(*(glm::quat *)(&v.x));
+	push_euler_quat_result(L, LS, &e.x, 3, astable);
+	return 1;
+}
+
 static void
 register_linalg_mt(lua_State *L, int debug_level) {
 	if (luaL_newmetatable(L, LINALG)) {
@@ -3354,6 +3377,8 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "elem_add", lelem_add},
 			{ "add_translate", ladd_translate},
 			{ "forward_dir", lforward_dir},
+			{ "euler2quat", leuler2quat},
+			{ "quat2euler", lquat2euler},
 			{ "leaks", lleaks },
 			{ NULL, NULL },
 		};

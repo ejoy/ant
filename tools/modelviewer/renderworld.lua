@@ -40,7 +40,7 @@ local iwd = world:interface "ant.render|iwidget_drawer"
 local camera_id
 
 local function create_light()
-	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
+	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, ms:euler2quat(mu.to_radian{60, 50, 0, 0}, true))
 	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
@@ -111,7 +111,7 @@ local mode
 local target
 
 local function setEntityFacing(e, facing)
-	ms(e.transform.r, {type="e",0,facing,0}, "=")
+	ms(e.transform.r, {type="e",0,facing,0}, "q=")
 end
 
 local function setEntityPosition(e, postion)

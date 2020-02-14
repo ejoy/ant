@@ -2,6 +2,7 @@ local util = {}
 util.__index = util
 
 local const = require "constant"
+local ms = require "stack"
 
 function util.limit(v, min, max)
     if v > max then return max end
@@ -25,7 +26,7 @@ function util.print_srt(e, numtab)
 	if numtab then
 		for i=1, numtab do
 			tab = tab .. '\t'
-		end		
+		end
 	end
 	
 	local srt = e.transform
@@ -41,7 +42,7 @@ end
 function util.srt(s, r, t)
 	return {
 		s = s or {1, 1, 1, 0},
-		r = r or {0, 0, 0, 0},
+		r = r or {0, 0, 0, 1},
 		t = t or {0, 0, 0, 1},
 	}
 end

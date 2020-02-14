@@ -63,7 +63,7 @@ function terrain_test:init()
 			material = create_material(),
 			transform = {
 				s = {1, 1, 1, 0},
-				r = {0, 0, 0, 0},
+				r = {0, 0, 0, 1},
 				t = {-147, 0.1,-225,1},
 			},
 			terrain = {

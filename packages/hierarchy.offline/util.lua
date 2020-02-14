@@ -62,8 +62,7 @@
 --         local refpath = hiecomp.ref_path
 --         local hieres = assetmgr.get_resource(refpath)
 -- 		for _, node in ipairs(hieres.handle) do
--- 			local rot = ms(ms:quaternion(node.r), 'eP')
--- 			local csrt = ms(psrt, ms:srtmat(node.s, rot, node.t), '*P')
+-- 			local csrt = ms(psrt, ms:srtmat(node), '*P')
 -- 			local s, r, t = ms(csrt, '~PPP')
 -- 			local ceid = mapper[node.name]
 -- 			local ce = world[ceid]

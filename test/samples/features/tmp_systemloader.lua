@@ -65,11 +65,7 @@ local function ozzmesh_animation_test()
             "ant.render|debug_mesh_bounding",
         },
         data = {
-            transform = {
-                s = {1, 1, 1, 0},
-                r = {0, 0, 0, 0},
-                t = {-5, 0, 5, 1}
-            },
+            transform = mu.translate_mat{-5, 0, 5, 1},
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
             },
@@ -123,7 +119,7 @@ local function gltf_animation_test()
             "ant.render|name",
         },
         data = {
-            transform = mu.srt(nil, nil, {-5, 0, 0, 1}),
+            transform = mu.translate_mat{-5, 0, 0, 1},
             rendermesh = {},
             mesh = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
@@ -167,7 +163,7 @@ local function pbr_test()
             "ant.render|name",
         },
         data = {
-            transform = mu.srt(nil, nil, {3, 2, 0, 1}),
+            transform = mu.translate_mat{3, 2, 0, 1},
             rendermesh = {},
             mesh = {
                 ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
@@ -186,13 +182,13 @@ end
 local function create_plane_test()
     local planes = {
         {
-            transform = mu.srt{50, 1, 50, 1},
+            transform = mu.scale_mat{50, 1, 50, 1},
             color = {0.8, 0.8, 0.8, 1},
             material = fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
         },
         -- {
         --     transform = mu.srt({5, 1, 5, 1},
-        --                         {math.rad(10), 0, 0, 0},
+        --                         ms:euler2quat({math.rad(10), 0, 0, 0}, true),
         --                         {0, 0, -5, 1}),
         --     color = {0.5, 0.5, 0, 1},
         --     material = fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
@@ -283,7 +279,7 @@ end
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
-		{1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
+		{1,1,1,1}, 2, ms:euler2quat(mu.to_radian{60, 50, 0, 0}, true))
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
