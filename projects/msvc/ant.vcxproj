@@ -75,6 +75,9 @@
     <ProjectReference Include="remotedebug.vcxproj">
       <Project>{d1b7638b-572f-4212-915c-512395553224}</Project>
     </ProjectReference>
+    <ProjectReference Include="rp3d.vcxproj">
+      <Project>{36c6cfe5-e334-4216-a5bb-371d0655eb53}</Project>
+    </ProjectReference>
     <ProjectReference Include="subprocess.vcxproj">
       <Project>{43ebc525-120e-430c-9e79-f351a13f11be}</Project>
     </ProjectReference>
