@@ -81,7 +81,7 @@ int get_k(lua_State* L, int idx, unsigned int i) {
 	if (ttisnil(gval(n))) {
 		return 0;
 	}
-	StkId key = L->top - 1;
+	StkId key = L->top;
 #if LUA_VERSION_NUM >= 504
 	getnodekey(L, s2v(key), n);
 #else

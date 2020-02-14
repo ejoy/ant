@@ -23,11 +23,11 @@ return function (logpath, address, errthread)
     end
 
     nt.createThread("master", ([[
-        local dbg_io = require "common.io"(%s)
+        local network = require "common.network"(%s)
         local master = require "backend.master.mgr"
         local log = require "common.log"
         log.file = %q..'/master.log'
-        master.init(dbg_io)
+        master.init(network)
         while true do
             master.update()
             MgrUpdate()

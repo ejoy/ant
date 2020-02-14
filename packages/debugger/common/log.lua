@@ -38,6 +38,21 @@ local function packstring(...)
     return table.concat(t, ' ')
 end
 
+local function filename(info)
+    local s = info.source
+    if log.root and s:sub(1,1) == "@" then
+        s = s:gsub("\\", "/")
+        if log.root == s:sub(2, 1+#log.root) then
+            return s:sub(3+#log.root)
+        end
+    end
+    return info.short_src
+end
+
+if log.root then
+    log.root = log.root:gsub("\\", "/")
+end
+
 for i, name in ipairs(modes) do
     levels[name] = i
     log[name] = function(...)
@@ -48,9 +63,9 @@ for i, name in ipairs(modes) do
             return
         end
         local info = debug.getinfo(2, 'Sl')
-        local msg = ('[%s][%s:%3d][%-6s] %s\n'):format(
+        local msg = ('[%s][%s:%3d][%-5s]%s\n'):format(
             os_date('%Y-%m-%d %H:%M:%S:{ms}'),
-            info.short_src,
+            filename(info),
             info.currentline,
             name:upper(),
             packstring(...)

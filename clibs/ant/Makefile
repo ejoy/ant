@@ -9,7 +9,7 @@ else
 default : libant.a
 endif
 
-LIBS= lua bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem meshconverter imgui
+LIBS= lua bgfx bullet hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem meshconverter imgui rp3d
 
 define MakeLibs
 

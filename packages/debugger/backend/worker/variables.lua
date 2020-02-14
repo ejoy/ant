@@ -404,6 +404,7 @@ local function varCreateReference(value, evaluateName, context)
     local result = {
         type = type,
         value = varGetValue(context, type, value),
+        variablesReference = 0,
     }
     if varCanExtand(type, value) then
         varPool[#varPool + 1] = {
@@ -909,7 +910,7 @@ function m.tostring(v)
             type = tostring(rdebug.value(name))
         end
     end
-    return ('%s: %s'):format(type, tostring(rdebug.value(v)))
+    return tostring(rdebug.value(v))
 end
 
 ev.on('terminated', function()
