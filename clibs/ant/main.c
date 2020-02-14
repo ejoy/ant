@@ -7,6 +7,7 @@ static void hook_openlibs(lua_State *L);
 
 #if defined(_WIN32)
 #include "utf8_lua.c"
+#include "utf8_unicode.c"
 #else
 #include "lua.c"
 #endif
