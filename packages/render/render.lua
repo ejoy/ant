@@ -12,7 +12,11 @@ local bgfx 		= require "bgfx"
 local ru 		= require "util"
 
 ecs.tag "main_queue"
+ecs.tag "blit_queue"
 ecs.component_alias("blit_render", "can_render")
+
+local bq_p = ecs.policy "blit_queue"
+bq_p.unique_component "blit_queue"
 
 ecs.component_alias("viewid", "int", 0)
 ecs.component_alias("view_mode", "string", "")
@@ -107,12 +111,12 @@ ecs.singleton "render_properties" {
 }
 
 local blitsys = ecs.system "blit_render_system"
-
+blitsys.require_policy "blit_queue"
 blitsys.require_policy "blitrender"
 blitsys.require_policy "name"
 
 function blitsys:init_blit_render()
-	print("init bilt queue")
+	log.info("init blit system")
     ru.create_blit_queue(world, world.args.fb_size)
 end
 

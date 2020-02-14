@@ -343,6 +343,7 @@ function util.create_blit_queue(world, viewrect)
 
 	world:create_entity {
 		policy = {
+			"ant.render|blit_queue",
 			"ant.render|render_queue",
 			"ant.render|name",
 		},
@@ -356,6 +357,7 @@ function util.create_blit_queue(world, viewrect)
 				filter_tag = "blit_render",
 			},
 			visible = true,
+			blit_queue = true,
 			name = "blit main queue to window frame buffer",
 		}
 	}
@@ -376,7 +378,7 @@ function util.create_blit_queue(world, viewrect)
 
 	world[eid].rendermesh.reskey = assetmgr.register_resource(
 		fs.path "//res.mesh/quad.mesh",
-		computil.quad_mesh(viewrect))
+		computil.quad_mesh())
 end
 
 local statemap = {
