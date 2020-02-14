@@ -12,18 +12,13 @@ local math3d 	= require "math3d"
 ecs.component_alias("parent", 	"entityid")
 ecs.component_alias("point", 	"vector")
 ecs.component_alias("position", "vector")
-ecs.component_alias("rotation", "vector")
+ecs.component_alias("rotation", "quaternion")
 ecs.component_alias("scale", 	"vector")
 
-ecs.component "srt"
-	.s "vector"
-	.r "vector"
-	.t "vector"
-
 local trans = ecs.component "transform"
-	.s "vector"
-	.r "vector"
-	.t "vector"
+	.s "scale"
+	.r "rotation"
+	.t "position"
 	['opt'].slotname "string"
 	['opt'].parent "parent"
 
@@ -45,9 +40,7 @@ function trans:init()
 end
 
 function trans:delete()
-	if self.world then
-		self.world(nil)
-	end
+	self.world(nil)
 end
 
 ecs.tag "editor"

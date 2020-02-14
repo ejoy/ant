@@ -254,7 +254,7 @@ function PVPScene.create_entitices(world)
 				local rsrt = scenedata.relate_srts and scenedata.relate_srts[idx_array] or nil
 				if rsrt then
 					s = ms(s, rsrt[1], "+T")
-					r = ms(r, to_radian(rsrt[2]), "+T")
+					r = ms(r, to_radian(rsrt[2]), "+qT")
 					t = ms(t, rsrt[3], "+T")
 				end
 

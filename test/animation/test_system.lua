@@ -5,9 +5,7 @@ local renderpkg  = import_package 'ant.render'
 local mathpkg    = import_package "ant.math"
 local imgui      = require "imgui"
 local fs         = require 'filesystem'
-local defaultcomp= renderpkg.default
-local mu         = mathpkg.util
-local mc         = mathpkg.constant
+local ms, mu     = mathpkg.stack, mathpkg.util
 local lu         = renderpkg.light
 
 local camera = world:interface "ant.render|camera"
@@ -49,7 +47,7 @@ local function create_camera()
 end
 
 function m:init()
-    lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, mu.to_radian{60, 50, 0, 0})
+    lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, ms:euler2quat(mu.to_radian{60, 50, 0, 0}, true))
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     eid = create_animation_test()
 end

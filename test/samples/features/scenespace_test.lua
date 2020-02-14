@@ -83,7 +83,7 @@ local function create_scene_node_test()
                 transform = {
                     parent = hie_root,
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {2, 0, 0, 1},
                 },
                 name = 'hie_level1_1',
@@ -101,7 +101,7 @@ local function create_scene_node_test()
                 transform = {
                     parent = hie_root,
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {2, 0, 4, 1},
                 },
                 hierarchy = {},
@@ -123,7 +123,7 @@ local function create_scene_node_test()
             transform = {
                 parent = hie_level1_2,
                 s = {1, 1, 1, 0},
-                r = {0, 0, 0, 0},
+                r = {0, 0, 0, 1},
                 t = {-2, 0, 0, 1},
             },
             hierarchy = {ref_path = hie_refpath,},
@@ -145,7 +145,7 @@ local function create_scene_node_test()
                 transform = {
                     parent = hie_level1_1, 
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {0, 0, 0, 1},
                 },
                 rendermesh = {},
@@ -174,7 +174,7 @@ local function create_scene_node_test()
                 transform = {
                     parent = hie_level1_2, 
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {0, 0, 0, 1},
                 },
                 name = 'render_child1_2',
@@ -202,7 +202,7 @@ local function create_scene_node_test()
                 transform = {
                     parent = hie_level2_1, 
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {0, 2, 0, 1},
                 },
                 name = 'render_child2_1',
@@ -249,7 +249,7 @@ local function create_scene_node_test()
             data = {
                 transform = {
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {0, 5, 0, 1},
                     parent = hie_root2,
                 },
@@ -282,7 +282,7 @@ local function create_scene_node_test()
                 transform = {
                     parent = hie_root2, 
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {0, 2, -3, 1},
                 },
                 name = 'render2_rootchild',
@@ -311,7 +311,7 @@ local function create_scene_node_test()
                 transform = {
                     parent = hie2_level1_1,
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {0, 0, 0, 1},
                 },
                 name = 'render2_child1',
@@ -350,7 +350,7 @@ local function create_scene_node_test()
             transform = {
                 parent = hie2_level1_1, 
                 s = {0.1, 0.1, 0.1, 0},
-                r = {0, 0, 0, 0},
+                r = {0, 0, 0, 1},
                 t = {0, 0, 0, 1},
             },
             name = 'submesh_child',
@@ -585,7 +585,7 @@ local test_queue = {
             data = {
                 transform = {
                     s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 0},
+                    r = {0, 0, 0, 1},
                     t = {1, 2, 3, 1},
                     parent=eid,
                 },

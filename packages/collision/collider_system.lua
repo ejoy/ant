@@ -74,9 +74,7 @@ local m = ecs.interface "collider"
 m.require_system "collider_system"
 
 local function set_obj_transform(obj, srt)
-	local euler = ms(srt.r, "T")
-	euler[4] = nil
-	w:set_transform(obj, srt.t, ms:quaternion(euler))
+	w:set_transform(obj, srt.t, srt.r)
 end
 
 function m.test(e, srt)

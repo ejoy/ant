@@ -44,3 +44,5 @@ function matrix.save(v)
     t.type = nil
     return t
 end
+
+ecs.component_alias("quaternion", "vector")
