@@ -386,10 +386,10 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 		int type;
 		const float *value = lastack_value(LS, id, &type);
 
-		if (type != LINEAR_TYPE_VEC4 && type != LINEAR_TYPE_EULER)
-			luaL_error(L, "ref object need should be vec4/euler!, type is : %d", type);
+		if (type != LINEAR_TYPE_VEC4 && type != LINEAR_TYPE_QUAT)
+			luaL_error(L, "ref object need should be vec4/quternion!, type is : %d", type);
 
-		m = glm::mat4x4(glm::quat(*(const glm::vec3*)value));
+		m = glm::mat4x4(*(glm::quat*)value);
 	} else if (rtype == LUA_TTABLE) {
 		const size_t len = lua_rawlen(L, index);
 		if (len != 4) {
