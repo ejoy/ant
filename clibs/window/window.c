@@ -167,7 +167,7 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	lua_pushvalue(L, index);
 	lua_xmove(L, fL, 1);
 
-	luaL_checkstack(fL, ANT_WINDOW_COUNT+2, NULL);	// 2 for temp
+	luaL_checkstack(fL, ANT_WINDOW_COUNT+3, NULL);	// 3 for temp
 	for (int i = 0; i < ANT_WINDOW_COUNT; ++i) {
 		lua_pushnil(fL);
 	}
