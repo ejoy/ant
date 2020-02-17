@@ -11,9 +11,46 @@ local math3d 	= require "math3d"
 
 ecs.component_alias("parent", 	"entityid")
 ecs.component_alias("point", 	"vector")
-ecs.component_alias("position", "vector")
 ecs.component_alias("rotation", "quaternion")
-ecs.component_alias("scale", 	"vector")
+
+do
+	local p = ecs.component_alias("position", "real[3]")
+	function p.init(v)
+		v[4] = 1
+		return ms:ref "vector"(v)
+	end
+
+	local function del(v)
+		assert(type(v) == "userdata")
+		v(nil)
+	end
+
+	local function save(v)
+		assert(type(v) == "userdata")
+		local t = ms(v, "T")
+		assert(t.type)
+		t.type = nil
+		return t
+	end
+
+	p.delete = del
+	p.save = save
+
+	local s = ecs.component_alias("scale", 	"real[]")
+	function s.init(v)
+		local num = #v
+		if num == 1 then
+			v[2], v[3] = v[1], v[1]
+		else
+			assert(num >= 3, "scale must provided 1/3 element")
+		end
+		v[4] = 0
+		return ms:ref "vector"(v)
+	end
+
+	s.delete = del
+	s.save = save
+end
 
 local trans = ecs.component "transform"
 	.s "scale"
@@ -34,8 +71,7 @@ function trans:init()
 		end
 	end
 
-	self.world = math3d.ref "matrix"
-	ms(self.world, ms:srtmat(self), "=")
+	self.world = ms:ref "matrix"(ms:srtmat(self))
 	return self
 end
 
