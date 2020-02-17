@@ -2,6 +2,7 @@ local ecs = ...
 
 local mathpkg = import_package "ant.math"
 local imgui = require "imgui.ant"
+local rp3d = require "rp3d.core"
 local ms = mathpkg.stack
 
 local m = ecs.system "memory_stat"
@@ -29,6 +30,7 @@ local function memory_info()
 	s[#s+1] = ("bgfx  memory:%s"):format(bytestr(bgfx.get_memory()))
 	s[#s+1] = ("math  memory:%s"):format(bytestr(ms:stacksize()))
 	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui.ant.get_memory()))
+	s[#s+1] = ("rp3d  memory:%s"):format(bytestr(rp3d.memory()))
 	s[#s+1] = "-------------------"
 	local data = bgfx.get_stats "m"
 	s[#s+1] = ("rt   memory:%s"):format(bytestr(data.rtMemoryUsed))
