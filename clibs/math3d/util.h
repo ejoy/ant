@@ -14,6 +14,9 @@ extern "C"{
 glm::vec4
 get_vec_value(lua_State* L, struct lastack* LS, int index);
 
+glm::quat
+get_quat_value(lua_State* L, struct lastack* LS, int index);
+
 glm::mat4x4
 get_mat_value(lua_State* L, struct lastack* LS, int index);
 
@@ -45,6 +48,12 @@ is_zero(const T& a, const T& e = T(glm::epsilon<float>())) {
 inline bool
 is_zero(const float& a, float e = glm::epsilon<float>()) {
 	return glm::equal(a, glm::zero<float>(), e);
+}
+
+template<typename T>
+inline bool
+is_equal(const T& a, const T& b, const T& e = T(glm::epsilon<float>())) {
+	return is_zero(a - b, e);
 }
 
 #endif //math3d_util_h

@@ -122,9 +122,6 @@ value_tostring(lua_State *L, const char * prefix, const float *r, int type) {
 	case LINEAR_TYPE_NUM:
 		sprintf(buffer, "%sNUMBER (%.2f)", prefix, r[0]);
 		break;
-	case LINEAR_TYPE_EULER:
-		sprintf(buffer, "%sEULER (yaw(y) = %.2f, pitch(x) = %.2f, roll(z) = %.2f)", prefix, r[0], r[1], r[2]);
-		break;
 	default:
 		sprintf(buffer, "%sUNKNOWN", prefix);
 		break;
@@ -149,7 +146,7 @@ lreftostring(lua_State *L) {
 static inline const char*
 get_linear_type_name(LinearType lt) {
 	const char * names[] = {
-		"mat", "v4", "num", "quat", "euler", "",
+		"mat", "v4", "num", "quat", "",
 	};
 
 	assert((sizeof(names) / sizeof(names[0])) > size_t(lt));
@@ -160,31 +157,18 @@ static inline void
 push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	int type;
 	const float * val = lastack_value(LS, id, &type);
-	lua_newtable(L);
 
-#define TO_LUA_STACK(_VV, _LUA_STACK_IDX) lua_pushnumber(L, _VV);	lua_seti(L, -2, _LUA_STACK_IDX)
-	switch (type)
-	{
-	case LINEAR_TYPE_MAT:
-		for (int i = 0; i < 16; ++i) {
-			TO_LUA_STACK(val[i], i + 1);
-		}
-		break;
-	case LINEAR_TYPE_QUAT:
-	case LINEAR_TYPE_VEC4:
-		TO_LUA_STACK(val[3], 3 + 1);	
-	case LINEAR_TYPE_EULER:
-		for (int i = 0; i < 3; ++i) {
-			TO_LUA_STACK(val[i], i + 1);
-		}
-		break;
-	case LINEAR_TYPE_NUM:
-		TO_LUA_STACK(val[0], 0 + 1);
-		break;
-	default:
-		break;
+	const int type_valid_sizes[LINEAR_TYPE_COUNT] = { 16, 4, 1, 4 };
+	if (type <= LINEAR_TYPE_NONE || type >= LINEAR_TYPE_COUNT){
+		luaL_error(L, "invalid type:%d", type);
 	}
-#undef TO_LUA_STACK
+
+	const int size = type_valid_sizes[type];
+	lua_createtable(L, size, 1);
+	for (int ii=0; ii < size; ++ii ){
+		lua_pushnumber(L, val[ii]);
+		lua_seti(L, -2, ii+1);
+	}
 
 	// push type to table	
 	lua_pushstring(L, get_linear_type_name(LinearType(type)));	
@@ -204,9 +188,6 @@ unpack_obj(lua_State *L, struct lastack *LS, int64_t id) {
 	case LINEAR_TYPE_QUAT:
 	case LINEAR_TYPE_VEC4:
 		n = 4;
-		break;
-	case LINEAR_TYPE_EULER:
-		n = 3;
 		break;
 	case LINEAR_TYPE_NUM:
 		n = 1;
@@ -386,7 +367,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 		int type;
 		const float *value = lastack_value(LS, id, &type);
 
-		if (type != LINEAR_TYPE_VEC4 && type != LINEAR_TYPE_QUAT)
+		if (type != LINEAR_TYPE_QUAT)
 			luaL_error(L, "ref object need should be vec4/quternion!, type is : %d", type);
 
 		m = glm::mat4x4(*(glm::quat*)value);
@@ -531,120 +512,41 @@ get_type_field(lua_State *L, int index) {
 	return get_field(L, index, "type");
 }
 
-static inline void
-push_quat_with_axis_radian(lua_State* L, struct lastack *LS, int index) {
+static void
+push_quat(lua_State* L, struct lastack *LS, int index) {
 	// get axis
-	lua_getfield(L, index, "axis");
-
-	glm::vec3 axis;
-	int axis_type = lua_type(L, -1);
-	switch (axis_type) {
-	case LUA_TTABLE: {
-		get_table_value(L, -1, 3, axis);		
-		break;
-	}
-	case LUA_TNUMBER: {
-		int64_t stackid = get_id(L, -1);
-		int t;
-		const float *address = lastack_value(LS, stackid, &t);
-		memcpy(&axis.x, address, sizeof(float) * 3);
-		break;
-	}
-	case LUA_TSTRING: {
-		const char* t = lua_tostring(L, -1);
-		axis[0] = 0; axis[1] = 0; axis[2] = 0;
-		if (strcmp(t, "x") == 0 || strcmp(t, "X") == 0)
-			axis[0] = 1;
-		else if (strcmp(t, "y") == 0 || strcmp(t, "Y") == 0)
-			axis[1] = 1;
-		else if (strcmp(t, "z") == 0 || strcmp(t, "X") == 0)
-			axis[2] = 1;
-		else
-			luaL_error(L, "not support this string type : %s", t);
-		break;
-	}
-	default:
-		luaL_error(L, "quaternion axis radian init, only support table and number, type is : %d", axis_type);
-	}
-
-	lua_pop(L, 1);
-
-	// get radian
-	lua_getfield(L, index, "radian");
-	int radian_type = lua_type(L, -1);
-	if (radian_type != LUA_TTABLE) {
-		luaL_error(L, "radian should define as radian = {xx}");
-	}
-	const float radian = get_table_item(L, -1, 1);
-	lua_pop(L, 1);
-
-	glm::quat q = glm::angleAxis(radian, axis);
-	lastack_pushquat(LS, (const float*)&q);
-}
-
-static inline void
-push_quat_with_euler(lua_State* L, struct lastack *LS, int index) {
-	lua_getfield(L, index, "pyr");
-	glm::vec3 e;
-	int luaType = lua_type(L, -1);
-	switch (luaType)
-	{
-	case LUA_TTABLE: 
-		get_table_value(L, -1, 3, e);		
-		break;
-	case LUA_TNUMBER: {
-		int64_t stackid = get_id(L, -1);
-		int type;
-		const float *value = lastack_value(LS, stackid, &type);
-		if (type == LINEAR_TYPE_VEC4 || type == LINEAR_TYPE_EULER) {
-			memcpy(&e, value, sizeof(float) * 3);
-		} else {
-			luaL_error(L, "using vec3/vec4 to define roll(z) pitch(x) yaw(y), type define is : %d", type);
+	const int axisfield_type = lua_getfield(L, index, "axis");
+	glm::quat q;
+	if (axisfield_type == LUA_TNIL) {
+		lua_pop(L, 1);
+		const int count = lua_rawlen(L, index);
+		if (count != 4) {
+			luaL_error(L, "create quaternion need 4 number as (x, y, z, w), %d provided", count);
 		}
 
-		break;
-	}
-	default:
-		luaL_error(L, "create quaternion from euler failed, unknown type, %d", luaType);
-	}
-
-	lua_pop(L, 1);
-
-	glm::quat q(e);
-	lastack_pushquat(LS, (const float*)&q);
-}
-
-static inline void 
-push_quat(lua_State* L, struct lastack *LS, int index) {
-	lua_getfield(L, index, "pyr");	// pyr -> pitch, yaw, roll
-	int curType = lua_type(L, -1);
-	lua_pop(L, 1);
-
-	if (curType == LUA_TTABLE || curType == LUA_TNUMBER) {
-		push_quat_with_euler(L, LS, index);
-	} else {
-		push_quat_with_axis_radian(L, LS, index);
-	}
-}
-
-static inline void
-push_euler(lua_State *L, struct lastack *LS, int index) {
-	glm::vec3 e;
-	const uint32_t n = (uint32_t)lua_rawlen(L, index);
-	
-	if (n == 3) {
-		get_table_value(L, index, 3, e);		
-	} else {
-		const char* names[] = { "pitch", "yaw", "roll" };		
-		for (uint32_t i = 0; i < (sizeof(names) / sizeof(names[0])); ++i) {
-			lua_getfield(L, index, names[i]);
-			if (lua_type(L, -1) != LUA_TNIL) {
-				e[i] = lua_tonumber(L, -1);
-			}
+		for (int ii = 0; ii < 4; ++ii) {
+			lua_geti(L, index, ii + 1);
+			q[ii] = lua_tonumber(L, -1);
 			lua_pop(L, 1);
 		}
-	}	
-	lastack_pusheuler(LS, &e.x);
+	}
+	else {
+		glm::vec3 axis = get_vec_value(L, LS, -1);
+		lua_pop(L, 1);
+
+		// get radian
+		lua_getfield(L, index, "radian");
+		int radian_type = lua_type(L, -1);
+		if (radian_type != LUA_TTABLE) {
+			luaL_error(L, "radian should define as radian = {xx}");
+		}
+		const float radian = get_table_item(L, -1, 1);
+		lua_pop(L, 1);
+
+		q = glm::angleAxis(radian, axis);
+	}
+
+	lastack_pushquat(LS, (const float*)&q);
 }
 
 static void
@@ -662,10 +564,8 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 			push_proj_mat(L, LS, index);
 		} else if (strcmp(type, "quat") == 0 || strcmp(type, "q") == 0) {
 			push_quat(L, LS, index);
-		} else if (strcmp(type, "euler") == 0 || strcmp(type, "e") == 0) {
-			push_euler(L, LS, index);
 		} else {
-			luaL_error(L, "Invalid matrix type %s", type);
+			luaL_error(L, "Invalid type %s", type);
 		}
 		return;
 	}
@@ -677,16 +577,6 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 	case 1:
 		lastack_pushnumber(LS, v[0]);
 		break;
-	case 3: {
-		const char* type = get_type_field(L, index);
-		if (type && (strcmp(type, "euler") == 0 || strcmp(type, "e") == 0))
-			push_euler(L, LS, index);
-		else {
-			v[3] = 0;
-			lastack_pushvec4(LS, v);
-		}			
-		break;
-	}
 	case 4:	{
 		const char* type = get_type_field(L, index);
 		if (type != NULL && (strcmp(type, "quat") == 0 || strcmp(type, "q") == 0))
@@ -740,16 +630,17 @@ add_2values(lua_State *L, struct lastack *LS) {
 		ret[0] = val[0][0] + val[1][0];
 		ret[1] = val[0][1] + val[1][1];
 		ret[2] = val[0][2] + val[1][2];
-		ret[3] = val[0][3];		
+
+		if (is_equal(val[0][3], 1.f) || is_equal(val[1][3], 1.f)) {
+			ret[3] = 1.f;
+		} else {
+			if (!is_zero(val[0][3]) || !is_zero(val[1][3])) {
+				luaL_error(L, "found a vec4.w is not zero or one:%f, %f", val[0][3], val[1][3]);
+			}
+			ret[3] = 0.f;
+		}
+
 		lastack_pushvec4(LS, ret);
-		break;
-	case LINEAR_TYPE_EULER:
-		if (types[1] != LINEAR_TYPE_EULER)
-			luaL_error(L, "Invalid type for euler to add, only support euler + euler, type0 = %d, type1 = %d", types[0], types[1]);
-		ret[0] = val[0][0] + val[1][0];
-		ret[1] = val[0][1] + val[1][1];
-		ret[2] = val[0][2] + val[1][2];
-		lastack_pusheuler(LS, ret);
 		break;
 	default:
 		luaL_error(L, "Invalid type %d to add", types[0]);
@@ -774,13 +665,6 @@ sub_2values(lua_State *L, struct lastack *LS) {
 		ret[3] = 0.f; // must be 0, dir - point is no meaning
 		lastack_pushvec4(LS, ret);
 		break;
-	case LINEAR_TYPE_EULER:
-		ret[0] = val[0][0] - val[1][0];
-		ret[1] = val[0][1] - val[1][1];
-		ret[2] = val[0][2] - val[1][2];
-		lastack_pusheuler(LS, ret);
-		break;
-
 	default:
 		luaL_error(L, "Invalid type %d to add", types[0]);
 	}
@@ -863,15 +747,6 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		const glm::vec4 *v = (const glm::vec4 *)(type == BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4) ? val1 : val0);
 
 		glm::vec4 r = glm::rotate(*q, *v);
-		lastack_pushvec4(LS, &r.x);
-		break;
-	}
-	case BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4):
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_EULER): {		
-		const glm::vec3 *e = (const glm::vec3*)(type == BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4) ? val0 : val1);
-		const glm::vec4 *v = (const glm::vec4 *)(type == BINTYPE(LINEAR_TYPE_EULER, LINEAR_TYPE_VEC4) ? val1 : val0);
-
-		glm::vec4 r = glm::rotate(glm::quat(*e), *v);
 		lastack_pushvec4(LS, &r.x);
 		break;
 	}
@@ -1032,36 +907,6 @@ get_lnametype_pairs(struct lnametype_pairs *p) {
 	SET(p, "vec4",		"v",	LINEAR_TYPE_VEC4);	
 	SET(p, "quat",		"q",	LINEAR_TYPE_QUAT);
 	SET(p, "num",		"n",	LINEAR_TYPE_NUM);	
-	SET(p, "euler",		"e",	LINEAR_TYPE_EULER);
-}
-
-static inline void
-convert_to_euler(lua_State *L, struct lastack*LS) {
-	int64_t id = pop(L, LS);
-	int type;
-	const float *value = lastack_value(LS, id, &type);
-	glm::vec3 e;
-	switch (type) {
-		case LINEAR_TYPE_VEC4:{
-			glm::vec3 v = glm::normalize(*(glm::vec3*)value);
-			glm::quat q(glm::vec3(0, 0, 1), v);
-			e = glm::eulerAngles(q);
-			break;
-		}
-		case LINEAR_TYPE_MAT:{
-			const glm::mat4x4 *m = (const glm::mat4x4*)value;			
-			e = glm::eulerAngles(glm::quat(*m));
-			break;
-		}
-		case LINEAR_TYPE_QUAT:{
-			e = glm::eulerAngles(*(glm::quat *)value);			
-			break;
-		}
-		default:
-			luaL_error(L, "not support for converting to euler, type is : %d", type);
-			break;
-	}
-	lastack_pusheuler(LS, &e.x);
 }
 
 static inline void
@@ -1099,10 +944,6 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 	switch (type){
 		case LINEAR_TYPE_MAT: 		
 			q = glm::quat_cast(*(const glm::mat4x4 *)value);
-			break;		
-		case LINEAR_TYPE_VEC4:
-		case LINEAR_TYPE_EULER:	
-			q = glm::quat(*(const glm::vec3*)value);
 			break;
 		default:
 			luaL_error(L, "not support for converting to quaternion, type is : %d", type);
@@ -1112,13 +953,6 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 	lastack_pushquat(LS, (const float*)& q);
 }
 
-glm::vec3
-to_viewdir(const glm::vec3 &e){
-	return is_zero(e) ?
-		glm::vec3(0, 0, 1) :
-		glm::rotate(glm::quat(e), glm::vec3(0, 0, 1));		
-}
-
 static inline void
 convert_rotation_to_viewdir(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
@@ -1126,10 +960,14 @@ convert_rotation_to_viewdir(lua_State *L, struct lastack *LS){
 	const float *v = lastack_value(LS, id, &type);
 	glm::vec4 d;
 	switch (type){
-		case LINEAR_TYPE_VEC4:
 		case LINEAR_TYPE_QUAT:{
 			const auto *q = (glm::quat*)v;
-			d = glm::vec4(glm::rotate(*q, glm::vec3(0, 0, 1)), 0.f);
+			d = glm::rotate(*q, glm::vec4(0, 0, 1, 0));
+			break;
+		}
+		case LINEAR_TYPE_MAT: {
+			const auto* m = (glm::mat4x4*)v;
+			d = *m * glm::vec4(0, 0, 1, 0);
 			break;
 		}
 		default:
@@ -1228,7 +1066,6 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 	case LINEAR_TYPE_MAT:
 		zdir = (*(glm::mat4x4 *)v) * glm::vec4(0, 0, 1, 0);
 		break;
-	case LINEAR_TYPE_VEC4:
 	case LINEAR_TYPE_QUAT: 
 		zdir = (*(glm::quat*)v) * glm::vec4(0, 0, 1, 0);
 		break;
@@ -1413,18 +1250,19 @@ new_refobj(struct lua_State *L, struct lastack *LS, int64_t id){
 static inline int
 const_type(const char* t){
 	if (strcmp(t, "vector") == 0) 
-		return LINEAR_CONSTANT_IVEC; 
+		return LINEAR_TYPE_VEC4; 
 	
 	if (strcmp(t, "matrix") == 0) 
-		return LINEAR_CONSTANT_IMAT;
+		return LINEAR_TYPE_MAT;
 	
 	if (strcmp(t, "quaternion") == 0)
-		return LINEAR_CONSTANT_QUAT;
+		return LINEAR_TYPE_QUAT;
 	
-	if (strcmp(t, "euler") == 0) 
-		return LINEAR_CONSTANT_EULER;
+	if (strcmp(t, "number") == 0) {
+		return LINEAR_TYPE_NUM;
+	}
 
-	return LINEAR_CONSTANT_COUNT;
+	return LINEAR_TYPE_COUNT;
 }
 
 static int
@@ -1751,12 +1589,6 @@ static FASTMATH(extract)
 	return 0;
 }
 
-static FASTMATH(toeuler)
-	convert_to_euler(L, LS);
-	refstack_1_1(RS);
-	return 0;
-}
-
 static FASTMATH(toquaternion)
 	convert_to_quaternion(L, LS);
 	refstack_1_1(RS);
@@ -1938,7 +1770,7 @@ static struct fastmath_function s_fastmath[256] = {
 	{ m_tobase, "split matrix as x, y, z axis" }, //b
 	{ m_ceil, "ceil" }, //c
 	{ m_todirection, "to direction" }, //d
-	{ m_toeuler, "to euler" }, //e
+	{ NULL, NULL }, //e
 	{ m_floor, "floor"}, //f
 	{ NULL, NULL }, //g
 	{ NULL, NULL }, //h
@@ -2104,7 +1936,7 @@ static int
 new_temp_vector4(lua_State *L) {
 	int top = lua_gettop(L);
 	if (top == 1) {
-		pushid(L, lastack_constant(LINEAR_CONSTANT_IVEC));
+		pushid(L, lastack_constant(LINEAR_TYPE_VEC4));
 		return 1;
 	}
 	struct lastack* LS = getLS(L, 1);
@@ -2140,7 +1972,7 @@ static int
 new_temp_matrix(lua_State *L) {
 	int top = lua_gettop(L);
 	if (top == 1) {
-		pushid(L, lastack_constant(LINEAR_CONSTANT_IMAT));
+		pushid(L, lastack_constant(LINEAR_TYPE_MAT));
 		return 1;
 	}
 	struct lastack* LS = getLS(L, 1);
@@ -2217,82 +2049,22 @@ new_temp_quaternion(lua_State *L) {
 	int top = lua_gettop(L);
 
 	if (top == 1) {
-		pushid(L, lastack_constant(LINEAR_CONSTANT_QUAT));
+		pushid(L, lastack_constant(LINEAR_TYPE_QUAT));
 		return 1;
 	}
 
 	glm::quat q = glm::identity<glm::quat>();
-	if (top == 6) {
-		luaL_checktype(L, 6, LUA_TBOOLEAN);	// axis radian
-		glm::vec3 axis;		
-		for (int ii = 0; ii < 3; ++ii) {
-			axis[ii] = lua_tonumber(L, ii + 2);
-		}
-
-		const float radian = lua_tonumber(L, 5);
-		q = glm::angleAxis(radian, axis);
-	} else if (top == 5) {
+	if (top == 5) {
 		for (int ii = 0; ii < 4; ++ii) {
 			q[ii] = lua_tonumber(L, ii + 2);
 		}
 	} else if (top == 3) {
 		const int type = lua_type(L, 2);
-		glm::vec3 axis;
-		if (type == LUA_TUSERDATA) {
-			if (luaL_testudata(L, 2, LINALG_REF)){
-				int valuetype;
-				axis = *(const glm::vec3*)lastack_value(LS, get_ref_id(L, LS, 2), &valuetype);
-			} else {
-				axis = *((const glm::vec3*)lua_touserdata(L, 2));
-			}		
-		} else if(type == LUA_TLIGHTUSERDATA) {
-			axis = *((const glm::vec3*)lua_touserdata(L, 2));
-		} else if (type == LUA_TNUMBER) {
-			int64_t id = lua_tointeger(L, 2);
-			int valuetype;
-			axis = *((const glm::vec3 *)lastack_value(LS, id, &valuetype));
-		} else if (type == LUA_TTABLE){
-			int tblnum = (int)lua_rawlen(L, 2);
-			if (tblnum != 3) {
-				luaL_error(L, "[second] argument must provied 3 values in table array, only %d provided", tblnum);
-			}
-			get_table_value(L, 2, 3, axis);			
-		} else {
-			luaL_error(L, "invalid [second] argument, type = %d, should provided as: \
-							userdata/lightuserdata[as float*], stack id or table as array[x, y, z]", type);
-		}
+		glm::vec4 axis = get_vec_value(L, LS, 2);
 		const float radian = lua_tonumber(L, 3);
-		q = glm::angleAxis(radian, axis);
+		q = glm::angleAxis(radian, *tov3(axis));
 	} else if (top == 2) {
-		const int type = lua_type(L, 2);
-		if (type == LUA_TTABLE) {
-			const size_t arraynum = lua_rawlen(L, 2);
-			if (arraynum == 4) {
-				get_table_value(L, -1, 4, q);
-			} else if (arraynum == 3) {
-				glm::vec3 euler;
-				get_table_value(L, -1, 3, euler);				
-				q = glm::quat(euler);
-			} else {
-				luaL_error(L, "need 3/4 element in array as euler radian or quaternion:%d", arraynum);
-			}
-		} else if (type == LUA_TUSERDATA) {
-			const float* ptr = nullptr;
-			if (luaL_testudata(L, 2, LINALG_REF)){
-				int valuetype;
-				ptr = lastack_value(LS, get_ref_id(L, LS, 2), &valuetype);
-			}else{
-				ptr = (const float*)lua_touserdata(L, 2);
-			}
-
-			q = *((const glm::quat*)ptr);
-			
-		} else if (type == LUA_TLIGHTUSERDATA){
-			q = *((const glm::quat*)lua_touserdata(L, 2));
-		}
-		else {
-			luaL_error(L, "invalid type, only support 'table(array 3/4)' or 'userdata(quaternion data)' : %d", type);
-		}
+		q = get_quat_value(L, LS, 2);
 	} else {
 		luaL_error(L, "need 5/6 argument, %d provided", top);
 	}
@@ -2300,27 +2072,6 @@ new_temp_quaternion(lua_State *L) {
 	lastack_pushquat(LS, (const float*)& q);
 	pushid(L, lastack_pop(LS));
 
-	return 1;
-}
-
-static int
-new_temp_euler(lua_State *L) {
-	struct lastack* LS = getLS(L, 1);
-
-	auto top = lua_gettop(L);
-	if (top == 1) {
-		pushid(L, lastack_constant(LINEAR_CONSTANT_EULER));
-		return 1;
-	}
-
-	glm::vec4 v(0, 0, 0, 0);
-	assert(top == 4);
-	for (int ii = 0; ii < 3; ++ii) {
-		v[ii] = lua_tonumber(L, ii + 2);
-	}
-	
-	lastack_pusheuler(LS, &v.x);
-	pushid(L, lastack_pop(LS));
 	return 1;
 }
 
@@ -2490,28 +2241,42 @@ template<typename T>
 static T 
 get_value(lua_State *L, struct lastack *LS, int index) {
 	switch (lua_type(L, index)) {
-	case LUA_TUSERDATA:
-	case LUA_TNUMBER:
-	{
+	case LUA_TUSERDATA:{
+		if (luaL_testudata(L, index, LINALG_REF)){
+			int type;
+			return *((const T*)lastack_value(LS, get_stack_id(L, LS, index), &type));
+		}
+
+		return *(const T*)lua_touserdata(L, index);
+	}
+	break;
+	case LUA_TNUMBER:{
 		int type;
 		return *((const T*)lastack_value(LS, get_stack_id(L, LS, index), &type));
 	}
-	case LUA_TTABLE:
-	{
-		T v;		
+	case LUA_TTABLE:{
+		T v;
 		const int len = (int)lua_rawlen(L, index);
 		get_table_value(L, index, len, v);
 		return v;
 	}
+	case LUA_TLIGHTUSERDATA:{
+		return *(const T*)lua_touserdata(L, index);
+	}
 	default:
 		luaL_error(L, "invalid data type, only support table/userdata(refvalue)/stack number");
-		return T(0);
+		return T();
 	}
 }
 
 glm::vec4 
 get_vec_value(lua_State *L, struct lastack *LS, int index) {
 	return get_value<glm::vec4>(L, LS, index);
+}
+
+glm::quat
+get_quat_value(lua_State* L, struct lastack* LS, int index) {
+	return get_value<glm::quat>(L, LS, index);
 }
 
 glm::mat4x4
@@ -2830,7 +2595,7 @@ lequal(lua_State* L) {
 			return 1;
 		}
 
-		const int num = type1 == LINEAR_CONSTANT_IMAT ? 16 : 4;
+		const int num = type1 == LINEAR_TYPE_MAT ? 16 : 4;
 		for (int ii = 0; ii < num; ++ii) {
 			if (!is_zero(lhs[ii] - rhs[ii])) {
 				lua_pushboolean(L, false);
@@ -2952,15 +2717,13 @@ lconstant(lua_State *L) {
 	const char *what = luaL_checkstring(L, 1);	
 	int cons;
 	if (strcmp(what, "identvec") == 0) {
-		cons = LINEAR_CONSTANT_IVEC;
+		cons = LINEAR_TYPE_VEC4;
 	} else if (strcmp(what, "identmat") == 0) {
-		cons = LINEAR_CONSTANT_IMAT;
+		cons = LINEAR_TYPE_MAT;
 	} else if (strcmp(what, "identnum") == 0) {
-		cons = LINEAR_CONSTANT_NUM;
+		cons = LINEAR_TYPE_NUM;
 	} else if (strcmp(what, "identquat") == 0) {
-		cons = LINEAR_CONSTANT_QUAT;
-	} else if (strcmp(what, "identeuler") == 0) {
-		cons = LINEAR_CONSTANT_EULER;
+		cons = LINEAR_TYPE_QUAT;
 	} else {
 		return luaL_error(L, "Invalid constant %s", what);
 	}
@@ -3122,7 +2885,6 @@ elem_op(lua_State *L, struct lastack *LS, OP op){
 	}
 		break;
 	case LINEAR_TYPE_VEC4:
-	case LINEAR_TYPE_EULER:
 	case LINEAR_TYPE_QUAT:{
 		const auto elem_end = elem_idx + elem_count;
 		if (elem_idx < 0 || elem_idx > 3 || elem_end - 1 > 3){
@@ -3130,8 +2892,6 @@ elem_op(lua_State *L, struct lastack *LS, OP op){
 		}
 
 		auto vv = get_vec_value(L, LS, 2);
-
-		
 		for (int ii = elem_idx; ii < elem_end; ++ii) {
 			op(vv[ii], value);
 		}
@@ -3221,16 +2981,9 @@ static inline glm::vec4
 transform_dir(lua_State*L, const glm::vec4 &dir, const float* v, int type){
 	switch ( type )
 	{
-	case LINEAR_CONSTANT_IMAT:{
-		const glm::mat4 *m = (const glm::mat4*)v;
-		return *m * dir;
-	}
-	case LINEAR_CONSTANT_EULER:{
-		const glm::quat q(*(glm::vec3*)v);
-		return glm::rotate(q, dir);
-	}
-		break;
-	case LINEAR_CONSTANT_QUAT:
+	case LINEAR_TYPE_MAT:
+		return *(const glm::mat4*)v * dir;
+	case LINEAR_TYPE_QUAT:
 		return glm::rotate(*(const glm::quat*)v, dir);
 	default:
 		luaL_error(L, "unsupport linear stack type:%d", type);
@@ -3263,12 +3016,11 @@ lforward_dir(lua_State *L){
 		}
 
 		switch (num){
-		case 3:
 		case 4:
-			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_EULER);
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_TYPE_QUAT);
 			break;
 		case 16:
-			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_IMAT);
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_TYPE_MAT);
 			break;
 		default:
 			return luaL_error(L, "too many argument in table, 3/4 for euler, 16 for matrix, num:%d", num);
@@ -3283,11 +3035,9 @@ lforward_dir(lua_State *L){
 		const char* datatype = lua_tostring(L, 3);
 		const float *v = (const float*)lua_touserdata(L, 2);
 		if (strcmp(datatype, "mat") == 0){
-			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_IMAT);
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_TYPE_MAT);
 		}else if(strcmp(datatype, "quat") == 0){
-			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_QUAT);
-		}else if(strcmp(datatype, "euler") == 0){
-			forwarddir = transform_dir(L, forwarddir, v, LINEAR_CONSTANT_EULER);
+			forwarddir = transform_dir(L, forwarddir, v, LINEAR_TYPE_QUAT);
 		}else {
 			return luaL_error(L, "not support datatype:%s", datatype);
 		}
@@ -3355,7 +3105,6 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "vector", new_temp_vector4 },	// equivalent to stack( { x,y,z,w }, "P" )
 			{ "matrix", new_temp_matrix },
 			{ "quaternion", new_temp_quaternion},
-			{ "euler", new_temp_euler},
 			{ "base_axes", lbase_axes_from_forward_vector},
 			{ "lookat", llookat},
 			{ "srtmat", lsrt_matrix },

@@ -27,21 +27,17 @@ static float c_ident_num[4] = {
 static float c_ident_quat[4] = {
 	0, 0, 0, 1,
 };
-static float c_ident_euler[4] = {
-	0, 0, 0, 0,
-};
 
 struct constant {
 	float * ptr;
 	int size;
 };
 
-static struct constant c_constant_table[LINEAR_CONSTANT_COUNT] = {
+static struct constant c_constant_table[LINEAR_TYPE_COUNT] = {
 	{ c_ident_mat, MATRIX },
 	{ c_ident_vec, VECTOR4 },	
 	{ c_ident_num, VECTOR4 },
 	{ c_ident_quat, VECTOR4 },
-	{ c_ident_euler, VECTOR4 },
 };
 
 struct stackid_ {
@@ -58,7 +54,7 @@ union stackid {
 
 int64_t
 lastack_constant(int cons) {
-	if (cons < 0 || cons >= LINEAR_CONSTANT_COUNT)
+	if (cons < 0 || cons >= LINEAR_TYPE_COUNT)
 		return 0;
 	union stackid sid;	
 	sid.s.version = 0;
@@ -339,9 +335,9 @@ new_page(struct lastack *LS, void *page, size_t page_size) {
 	return page;
 }
 
-static inline int
+inline int
 get_type_size(int type) {
-	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 1, 4, 3 };
+	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 1, 4 };
 	assert(LINEAR_TYPE_MAT <= type && type < LINEAR_TYPE_COUNT);
 	return sizes[type];
 }
@@ -400,11 +396,6 @@ lastack_pushquat(struct lastack *LS, const float *v) {
 }
 
 void
-lastack_pusheuler(struct lastack *LS, const float *v) {
-	lastack_pushobject(LS, v, LINEAR_TYPE_EULER);
-}
-
-void
 lastack_pushnumber(struct lastack *LS, float n) {
 	lastack_pushobject(LS, &n, LINEAR_TYPE_NUM);
 }
@@ -422,7 +413,7 @@ lastack_value(struct lastack *LS, int64_t ref, int *type) {
 		if (sid.s.version == 0) {
 			// constant
 			int id = sid.s.id;
-			if (id < 0 || id >= LINEAR_CONSTANT_COUNT)
+			if (id < 0 || id >= LINEAR_TYPE_COUNT)
 				return NULL;
 			struct constant * c = &c_constant_table[id];
 			return c->ptr;
@@ -475,21 +466,12 @@ lastack_unmark(struct lastack *LS, int64_t markid) {
 			blob_dealloc(LS->per_mat, id.s.id, id.s.version);
 		}
 	}
-	switch (id.s.type) {
-	case LINEAR_TYPE_VEC4:
-		return lastack_constant(LINEAR_CONSTANT_IVEC);
-	case LINEAR_TYPE_MAT:
-		return lastack_constant(LINEAR_CONSTANT_IMAT);
-	case LINEAR_CONSTANT_NUM:
-		return lastack_constant(LINEAR_CONSTANT_NUM);
-	case LINEAR_CONSTANT_QUAT:
-		return lastack_constant(LINEAR_CONSTANT_QUAT);
-	case LINEAR_TYPE_EULER:
-		return lastack_constant(LINEAR_CONSTANT_EULER);
-	default:
-		assert(0 && "not support type");
-		return lastack_constant(LINEAR_CONSTANT_IVEC);
+	if (id.s.type != LINEAR_TYPE_NONE && id.s.type != LINEAR_TYPE_COUNT) {
+		return lastack_constant(id.s.type);
 	}
+	
+	assert(0 && "not support type");
+	return lastack_constant(LINEAR_TYPE_VEC4);
 }
 
 int
@@ -631,10 +613,6 @@ print_object(const float *address, int id, int type) {
 		printf("(N%d: ",id);
 		print_float(address, 1);
 		break;
-	case LINEAR_TYPE_EULER:
-		printf("(E%d: ",id);
-		print_float(address, 3);
-		break;
 	default:
 		printf("(Invalid");
 		break;
@@ -714,9 +692,6 @@ lastack_idstring(int64_t id, char tmp[64]) {
 		break;
 	case LINEAR_TYPE_NUM:
 		flags[0] = 'N';
-		break;
-	case LINEAR_TYPE_EULER:
-		flags[0] = 'E';
 		break;
 	default:
 		flags[0] = '?';

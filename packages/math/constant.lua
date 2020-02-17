@@ -47,4 +47,6 @@ constant.NZAXIS  = ms:ref "vector"(constant.T_NZAXIS)
 
 constant.IDENTITY_MAT = ms:ref "matrix"(constant.mat_identity)
 
+constant.IDENTITY_QUAT = ms:ref "quaternion"({type='q', 0, 0, 0, 1})
+
 return constant

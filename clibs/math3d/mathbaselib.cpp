@@ -24,7 +24,6 @@ extern "C" {
 #include <sstream>
 
 extern bool default_homogeneous_depth();
-extern glm::vec3 to_viewdir(const glm::vec3 &e);
 
 #ifndef _STAT_MEMORY_
 #	ifdef _DEBUG
@@ -401,7 +400,7 @@ lfrustum_center(lua_State *L){
 
 	center /= Frustum::CornerName::count;
 
-	push_vec(L, 3, center);
+	push_vec(L, 4, center);
 	return 1;
 }
 
@@ -420,12 +419,12 @@ lfrustum_extents(lua_State *L){
 		}
 	}
 
-	glm::vec3 	minextents(std::numeric_limits<float>::max()), 
+	glm::vec4 	minextents(std::numeric_limits<float>::max()), 
 				maxextents(std::numeric_limits<float>::lowest());
 
 	for (const auto &p :points){
-		minextents = glm::min(minextents, *tov3(p));
-		maxextents = glm::max(maxextents, *tov3(p));
+		minextents = glm::min(minextents, p);
+		maxextents = glm::max(maxextents, p);
 	}
 	
 	push_vec(L, 3, minextents);

@@ -134,12 +134,12 @@ print("axisid : ", axisid)
 local qq = stack({type = "quat", axis = axisid, radian = {math.rad(60)}}, "V")
 print("quaternion axis angle : ", qq)
 
---euler
-local zdir = stack({0, 0, 1, 0}, "P")
-local e0  = stack(zdir, "eP")
-local e1 = stack(e0, {type="e", pitch=-45, yaw=10, roll=0}, "+P")
-zdir = stack(e1, zdir, "*P")
-print("zdir after rotate : ", stack(zdir, "V"))
+
+--quaternion and euler
+local q = stack:euler2quat {math.rad(90), 0, 0}
+local e = stack:quat2euler(q)
+
+print(stack(e, "V"))
 
 --lookat
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)

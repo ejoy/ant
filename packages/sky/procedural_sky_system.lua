@@ -42,20 +42,20 @@ end
 -- Computed using code from Game Engine Gems, Volume One, chapter 15. Implementation based on Dr. Richard Bird model.
 -- This table is used for piecewise linear interpolation. Transitions from and to 0.0 at sunset and sunrise are highly inaccurate
 local sun_luminance_XYZ = {
-	[5.0]  = ms:ref "vector" {  0.000000,  0.000000,  0.000000 },
-	[7.0]  = ms:ref "vector" { 12.703322, 12.989393,  9.100411 },
-	[8.0]  = ms:ref "vector" { 13.202644, 13.597814, 11.524929 },
-	[9.0]  = ms:ref "vector" { 13.192974, 13.597458, 12.264488 },
-	[10.0] = ms:ref "vector" { 13.132943, 13.535914, 12.560032 },
-	[11.0] = ms:ref "vector" { 13.088722, 13.489535, 12.692996 },
-	[12.0] = ms:ref "vector" { 13.067827, 13.467483, 12.745179 },
-	[13.0] = ms:ref "vector" { 13.069653, 13.469413, 12.740822 },
-	[14.0] = ms:ref "vector" { 13.094319, 13.495428, 12.678066 },
-	[15.0] = ms:ref "vector" { 13.142133, 13.545483, 12.526785 },
-	[16.0] = ms:ref "vector" { 13.201734, 13.606017, 12.188001 },
-	[17.0] = ms:ref "vector" { 13.182774, 13.572725, 11.311157 },
-	[18.0] = ms:ref "vector" { 12.448635, 12.672520,  8.267771 },
-	[20.0] = ms:ref "vector" {  0.000000,  0.000000,  0.000000 },
+	[5.0]  = ms:ref "vector" {  0.000000,  0.000000,  0.000000, 0 },
+	[7.0]  = ms:ref "vector" { 12.703322, 12.989393,  9.100411, 0 },
+	[8.0]  = ms:ref "vector" { 13.202644, 13.597814, 11.524929, 0 },
+	[9.0]  = ms:ref "vector" { 13.192974, 13.597458, 12.264488, 0 },
+	[10.0] = ms:ref "vector" { 13.132943, 13.535914, 12.560032, 0 },
+	[11.0] = ms:ref "vector" { 13.088722, 13.489535, 12.692996, 0 },
+	[12.0] = ms:ref "vector" { 13.067827, 13.467483, 12.745179, 0 },
+	[13.0] = ms:ref "vector" { 13.069653, 13.469413, 12.740822, 0 },
+	[14.0] = ms:ref "vector" { 13.094319, 13.495428, 12.678066, 0 },
+	[15.0] = ms:ref "vector" { 13.142133, 13.545483, 12.526785, 0 },
+	[16.0] = ms:ref "vector" { 13.201734, 13.606017, 12.188001, 0 },
+	[17.0] = ms:ref "vector" { 13.182774, 13.572725, 11.311157, 0 },
+	[18.0] = ms:ref "vector" { 12.448635, 12.672520,  8.267771, 0 },
+	[20.0] = ms:ref "vector" {  0.000000,  0.000000,  0.000000, 0 },
 };
 
 
@@ -65,28 +65,28 @@ local sun_luminance_XYZ = {
 -- The scale of luminance change in Day/night transitions is not preserved.
 -- Luminance at night was increased to eliminate need the of HDR render.
 local sky_luminance_XYZ = {
-	[0.0]  = ms:ref "vector" { 0.308,    0.308,    0.411    },
-	[1.0]  = ms:ref "vector" { 0.308,    0.308,    0.410    },
-	[2.0]  = ms:ref "vector" { 0.301,    0.301,    0.402    },
-	[3.0]  = ms:ref "vector" { 0.287,    0.287,    0.382    },
-	[4.0]  = ms:ref "vector" { 0.258,    0.258,    0.344    },
-	[5.0]  = ms:ref "vector" { 0.258,    0.258,    0.344    },
-	[7.0]  = ms:ref "vector" { 0.962851, 1.000000, 1.747835 },
-	[8.0]  = ms:ref "vector" { 0.967787, 1.000000, 1.776762 },
-	[9.0]  = ms:ref "vector" { 0.970173, 1.000000, 1.788413 },
-	[10.0] = ms:ref "vector" { 0.971431, 1.000000, 1.794102 },
-	[11.0] = ms:ref "vector" { 0.972099, 1.000000, 1.797096 },
-	[12.0] = ms:ref "vector" { 0.972385, 1.000000, 1.798389 },
-	[13.0] = ms:ref "vector" { 0.972361, 1.000000, 1.798278 },
-	[14.0] = ms:ref "vector" { 0.972020, 1.000000, 1.796740 },
-	[15.0] = ms:ref "vector" { 0.971275, 1.000000, 1.793407 },
-	[16.0] = ms:ref "vector" { 0.969885, 1.000000, 1.787078 },
-	[17.0] = ms:ref "vector" { 0.967216, 1.000000, 1.773758 },
-	[18.0] = ms:ref "vector" { 0.961668, 1.000000, 1.739891 },
-	[20.0] = ms:ref "vector" { 0.264,    0.264,    0.352    },
-	[21.0] = ms:ref "vector" { 0.264,    0.264,    0.352    },
-	[22.0] = ms:ref "vector" { 0.290,    0.290,    0.386    },
-	[23.0] = ms:ref "vector" { 0.303,    0.303,    0.404    },
+	[0.0]  = ms:ref "vector" { 0.308,    0.308,    0.411   , 0 },
+	[1.0]  = ms:ref "vector" { 0.308,    0.308,    0.410   , 0 },
+	[2.0]  = ms:ref "vector" { 0.301,    0.301,    0.402   , 0 },
+	[3.0]  = ms:ref "vector" { 0.287,    0.287,    0.382   , 0 },
+	[4.0]  = ms:ref "vector" { 0.258,    0.258,    0.344   , 0 },
+	[5.0]  = ms:ref "vector" { 0.258,    0.258,    0.344   , 0 },
+	[7.0]  = ms:ref "vector" { 0.962851, 1.000000, 1.747835, 0 },
+	[8.0]  = ms:ref "vector" { 0.967787, 1.000000, 1.776762, 0 },
+	[9.0]  = ms:ref "vector" { 0.970173, 1.000000, 1.788413, 0 },
+	[10.0] = ms:ref "vector" { 0.971431, 1.000000, 1.794102, 0 },
+	[11.0] = ms:ref "vector" { 0.972099, 1.000000, 1.797096, 0 },
+	[12.0] = ms:ref "vector" { 0.972385, 1.000000, 1.798389, 0 },
+	[13.0] = ms:ref "vector" { 0.972361, 1.000000, 1.798278, 0 },
+	[14.0] = ms:ref "vector" { 0.972020, 1.000000, 1.796740, 0 },
+	[15.0] = ms:ref "vector" { 0.971275, 1.000000, 1.793407, 0 },
+	[16.0] = ms:ref "vector" { 0.969885, 1.000000, 1.787078, 0 },
+	[17.0] = ms:ref "vector" { 0.967216, 1.000000, 1.773758, 0 },
+	[18.0] = ms:ref "vector" { 0.961668, 1.000000, 1.739891, 0 },
+	[20.0] = ms:ref "vector" { 0.264,    0.264,    0.352   , 0 },
+	[21.0] = ms:ref "vector" { 0.264,    0.264,    0.352   , 0 },
+	[22.0] = ms:ref "vector" { 0.290,    0.290,    0.386   , 0 },
+	[23.0] = ms:ref "vector" { 0.303,    0.303,    0.404   , 0 },
 };
 
 
@@ -94,19 +94,19 @@ local sky_luminance_XYZ = {
 -- A. J. Preetham, P. Shirley, and B. Smits. A Practical Analytic Model for Daylight. SIGGRAPH ’99
 -- Coefficients correspond to xyY colorspace.
 local ABCDE = {
-	ms:ref "vector" { -0.2592, -0.2608, -1.4630 },
-	ms:ref "vector" {  0.0008,  0.0092,  0.4275 },
-	ms:ref "vector" {  0.2125,  0.2102,  5.3251 },
-	ms:ref "vector" { -0.8989, -1.6537, -2.5771 },
-	ms:ref "vector" {  0.0452,  0.0529,  0.3703 },
+	ms:ref "vector" { -0.2592, -0.2608, -1.4630, 0 },
+	ms:ref "vector" {  0.0008,  0.0092,  0.4275, 0 },
+	ms:ref "vector" {  0.2125,  0.2102,  5.3251, 0 },
+	ms:ref "vector" { -0.8989, -1.6537, -2.5771, 0 },
+	ms:ref "vector" {  0.0452,  0.0529,  0.3703, 0 },
 }
 
 local ABCDE_t = {
-	ms:ref "vector" { -0.0193, -0.0167,  0.1787 },
-	ms:ref "vector" { -0.0665, -0.0950, -0.3554 },
-	ms:ref "vector" { -0.0004, -0.0079, -0.0227 },
-	ms:ref "vector" { -0.0641, -0.0441,  0.1206 },
-	ms:ref "vector" { -0.0033, -0.0109, -0.0670 },
+	ms:ref "vector" { -0.0193, -0.0167,  0.1787, 0 },
+	ms:ref "vector" { -0.0665, -0.0950, -0.3554, 0 },
+	ms:ref "vector" { -0.0004, -0.0079, -0.0227, 0 },
+	ms:ref "vector" { -0.0641, -0.0441,  0.1206, 0 },
+	ms:ref "vector" { -0.0033, -0.0109, -0.0670, 0 },
 }
 
 local psp = ecs.policy "procedural_sky"

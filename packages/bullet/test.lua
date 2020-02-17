@@ -40,11 +40,10 @@ local object_plane = btworld:new_obj(shapes.plane, useridx)
 btworld:set_obj_rotation(object_plane, rot)
 btworld:add_obj(object_plane)
 
-local rot1 = ms({type='e', math.rad(90), 0, 0}, "qm")
 btworld:add_to_compound(shapes.compound, shapes.sphere)
 
 local compound_idx = gen_user_idx()
-local compound_obj = btworld:new_obj(shapes.compound, compound_idx, ms({2, 2, 2,1}, "m"), ms({type='e', math.rad(45),0,0}, "qm"))
+local compound_obj = btworld:new_obj(shapes.compound, compound_idx, ms({2, 2, 2,1}, "m"), ms:euler2quat{math.rad(45),0,0})
 btworld:add_obj(compound_obj)
 
 local radius = 1

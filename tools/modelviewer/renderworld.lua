@@ -111,7 +111,7 @@ local mode
 local target
 
 local function setEntityFacing(e, facing)
-	ms(e.transform.r, {type="e",0,facing,0}, "q=")
+	e.transform.r(ms:euler2quat {0,facing,0})
 end
 
 local function setEntityPosition(e, postion)

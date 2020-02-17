@@ -3,46 +3,31 @@ local ecs = ...
 local math3d = require "math3d"
 local ms = require "stack"
 
-local vector = ecs.component_alias("vector", "real[4]")
 
-function vector.init(s)
-    local v = math3d.ref "vector"
-    ms(v, s, "=")
-    return v
+for _, t in ipairs {
+    {"vector",      "real[4]", "v4"},
+    {"matrix",      "real[16]", "m4"},
+    {"quaternion",  "real[4]", "quat"}
+} do
+    local typename, typedef, innertype = t[1], t[2], t[3]
+    local m = ecs.component_alias(typename, typedef)
+    function m.init(v)
+        if innertype == "quat" then
+            v.type = "q"
+        end
+        local r = ms:ref(typename)(v)
+        return r
+    end
+
+    function m.delete(v)
+        v(nil)
+    end
+
+    function m.save(v)
+        assert(type(v) == "userdata")	
+        local tt = ms(v, "T")
+        assert(type(tt) == "table" and t.type ~= nil)
+        assert(t.type == innertype, "vector load function need vector type")
+        t.type = nil
+    end
 end
-
-function vector.delete(m)
-    m(nil)
-end
-
-function vector.save(v)
-    assert(type(v) == "userdata")	
-    local t = ms(v, "T")
-    assert(type(t) == "table" and t.type ~= nil)
-    assert(t.type == "v4", "vector load function need vector type")
-    t.type = nil
-    return t
-end
-
-local matrix = ecs.component_alias("matrix", "real[16]")
-
-function matrix.init(s)
-    local v = math3d.ref "matrix"
-    ms(v, s, "=")
-    return v
-end
-
-function matrix.delete(m)
-    m()
-end
-
-function matrix.save(v)
-    assert(type(v) == "userdata")	
-    local t = ms(v, "T")
-    assert(type(t) == "table" and t.type ~= nil)
-    assert(t.type == "m4", "matrix load function need matrix type")
-    t.type = nil
-    return t
-end
-
-ecs.component_alias("quaternion", "vector")

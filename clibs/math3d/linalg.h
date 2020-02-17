@@ -4,23 +4,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-enum LinearConstType {
-	LINEAR_CONSTANT_IMAT = 0,
-	LINEAR_CONSTANT_IVEC,
-	LINEAR_CONSTANT_NUM,
-	LINEAR_CONSTANT_QUAT,
-	LINEAR_CONSTANT_EULER,
-	
-	LINEAR_CONSTANT_COUNT,
-};
-
 enum LinearType {
 	LINEAR_TYPE_NONE = -1,
 	LINEAR_TYPE_MAT = 0,
 	LINEAR_TYPE_VEC4,	
 	LINEAR_TYPE_NUM,
-	LINEAR_TYPE_QUAT,	
-	LINEAR_TYPE_EULER,
+	LINEAR_TYPE_QUAT,
 	LINEAR_TYPE_COUNT,
 };
 
@@ -40,7 +29,6 @@ void lastack_pushobject(struct lastack *LS, const float *v, int type);
 //void lastack_pushvector(struct lastack *LS, const float *vec4, int type);
 void lastack_pushvec4(struct lastack *LS, const float *v);
 void lastack_pushquat(struct lastack *LS, const float *v);
-void lastack_pusheuler(struct lastack *LS, const float *v);
 void lastack_pushnumber(struct lastack *LS, float number);
 void lastack_pushmatrix(struct lastack *LS, const float *mat);
 const float * lastack_value(struct lastack *LS, int64_t id, int *type);
