@@ -182,7 +182,7 @@ end
 local function create_plane_test()
     local planes = {
         {
-            transform = mu.scale_mat{50, 1, 50, 1},
+            transform = mu.scale_mat{50, 1, 50},
             color = {0.8, 0.8, 0.8, 1},
             material = fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
         },
@@ -207,7 +207,7 @@ local function create_plane_test()
                         box = {
                             {
                                 origin = {0, 0, 0, 1},
-                                size = {0.5, 0.0001, 0.5},
+                                size = {50, 0.001, 50},
                             }
                         }
                     },

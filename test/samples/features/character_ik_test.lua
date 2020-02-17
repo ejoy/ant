@@ -140,7 +140,7 @@ end
 local function create_plane_test()
     computil.create_plane_entity(world,
     mu.srt(
-        {5, 1, 5, 1},
+        {5, 1, 5, 0},
         ms:euler2quat({math.rad(5), 0, 0, 0}, true),
         {0, 0, -5, 1}),
     fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
@@ -152,7 +152,7 @@ local function create_plane_test()
                 box = {
                     {
                         origin = {0, 0, 0, 1},
-                        size = {0.5, 0.0001, 0.5},
+                        size = {5, 0.001, 5},
                     }
                 }
             },
