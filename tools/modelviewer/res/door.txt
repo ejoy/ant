@@ -26,5 +26,5 @@ rendermesh:
 serialize: 5e1d264e369fa92007d55026
 transform:
   s: {1,1,1,0}
-  r: {0,0,0,0}
+  r: {0,0,0,1}
   t: {0,0,0,1}
