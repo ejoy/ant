@@ -12,7 +12,6 @@ local ms = mathpkg.stack
 
 local lu = renderpkg.light
 local cu = renderpkg.components
-local defaultcomp = renderpkg.default
 
 local m = ecs.system "model_review_system"
 

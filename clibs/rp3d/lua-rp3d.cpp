@@ -9,13 +9,12 @@ extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 
-LUAMOD_API int luaopen_rp3d_core(lua_State *L);
-
 }
 
 #include <iostream>
 #include <cstdio>
 #include <cmath>
+#include <atomic>
 
 #define LUA_LIB
 
@@ -408,6 +407,47 @@ lrayfilter(lua_State *L) {
 	return 2;
 }
 
+// memory profiler
+
+class AllocatorProfiler : public MemoryAllocator {
+	MemoryAllocator &allocator;
+	std::atomic<size_t> memory;
+	size_t size;
+public:
+	AllocatorProfiler(MemoryAllocator &a) : allocator(a), memory(0) {}
+	virtual ~AllocatorProfiler() override = default;
+	AllocatorProfiler& operator=(AllocatorProfiler& allocator) = default;
+	virtual void* allocate(size_t size) override {
+		this->memory += size;
+		return allocator.allocate(size);
+	}
+	virtual void release(void* pointer, size_t size) override {
+		this->memory -= size;
+		allocator.release(pointer, size);
+	}
+	size_t get_memory() const { return memory; }
+};
+
+static void
+init_memory_profiler() {
+	MemoryAllocator& alloc = MemoryManager::getBaseAllocator();
+	AllocatorProfiler *p = dynamic_cast<AllocatorProfiler *>(&alloc);
+	if (p != nullptr) {
+		// already init, todo: use CAS instead
+		return;
+	}
+	static AllocatorProfiler profiler(alloc);
+	MemoryManager::setBaseAllocator(&profiler);
+}
+
+static int
+lmemory(lua_State *L) {
+	MemoryAllocator& alloc = MemoryManager::getBaseAllocator();
+	AllocatorProfiler *p = static_cast<AllocatorProfiler *>(&alloc);
+	lua_pushinteger(L, p->get_memory());
+	return 1;
+}
+
 extern "C" {
 	LUAMOD_API int
 	luaopen_rp3d_core(lua_State* L) {
@@ -422,6 +462,8 @@ extern "C" {
 		{ "__gc", lcollision_world_gc },
 		{ NULL, NULL },
 	};
+
+	init_memory_profiler();
 
 	luaL_checkversion(L);
 
@@ -457,6 +499,9 @@ extern "C" {
 
 	lua_pushcfunction(L, lrayfilter);
 	lua_setfield(L, lib_index, "rayfilter");	// for math3d adapter
+
+	lua_pushcfunction(L, lmemory);
+	lua_setfield(L, lib_index, "memory");
 
 	return 1;
 }
