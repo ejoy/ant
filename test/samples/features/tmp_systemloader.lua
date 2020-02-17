@@ -296,9 +296,10 @@ function init_loader:init()
 end
 
 local function create_camera()
+    local rotation = ms:euler2quat{math.rad(30), math.rad(150), 0, 0}
     local id = camera.create {
         eyepos  = {-4.5, 2, -1.5, 1},
-        viewdir = ms(ms:forward_dir({math.rad(30), math.rad(150), 0, 0}), "T"),
+        viewdir = ms(ms:forward_dir(rotation), "T"),
     }
     camera.bind(id, "main_queue")
     return id

@@ -3053,7 +3053,7 @@ lforward_dir(lua_State *L){
 }
 
 static inline void
-push_euler_quat_result(lua_State *L, struct lastack *LS, const float *v, uint32_t num, bool astable){
+push_euler_quat_result(lua_State *L, struct lastack *LS, const float *v, uint32_t num, LinearType ltype, bool astable){
 	if (astable){
 		lua_createtable(L, num, 0);
 		for (uint32_t ii=0; ii < num;++ii){
@@ -3061,7 +3061,7 @@ push_euler_quat_result(lua_State *L, struct lastack *LS, const float *v, uint32_
 			lua_seti(L, -2, ii+1);
 		}
 	} else {
-		lastack_pushvec4(LS, v);
+		lastack_pushobject(LS, v, ltype);
 		pushid(L, pop(L, LS));
 	}
 }
@@ -3073,7 +3073,7 @@ leuler2quat(lua_State *L){
 	const bool astable = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
 
 	auto q = glm::quat(v);
-	push_euler_quat_result(L, LS, &q.x, 4, astable);
+	push_euler_quat_result(L, LS, &q.x, 4, LINEAR_TYPE_QUAT, astable);
 	return 1;
 }
 
@@ -3083,8 +3083,8 @@ lquat2euler(lua_State *L){
 	auto v = get_vec_value(L, LS, 2);
 	const bool astable = lua_isnoneornil(L, 3) ? false : lua_toboolean(L, 3);
 
-	auto e = glm::eulerAngles(*(glm::quat *)(&v.x));
-	push_euler_quat_result(L, LS, &e.x, 3, astable);
+	auto e = glm::vec4(glm::eulerAngles(*(glm::quat *)(&v.x)), 0.f);
+	push_euler_quat_result(L, LS, &e.x, 4, LINEAR_TYPE_VEC4,  astable);
 	return 1;
 }
 

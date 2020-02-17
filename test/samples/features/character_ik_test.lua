@@ -5,7 +5,7 @@ local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
 
 local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
+local ms, mu = mathpkg.stack, mathpkg.util
 
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
@@ -139,7 +139,7 @@ local function create_plane_test()
     computil.create_plane_entity(world,
     mu.srt(
         {5, 1, 5, 1},
-        {math.rad(5), 0, 0, 0},
+        ms:euler2quat({math.rad(5), 0, 0, 0}, true),
         {0, 0, -5, 1}),
     fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},

@@ -56,6 +56,11 @@ local stack = stackobj:command()
 --  stack(...) is equivalent to debug.getmetatable(stackobj).__call(stackobj, ...)
 
 -- NOTICE: don't use mathed.ref directly, or we should remember call math3d.unref(refobj) or refobj(nil)
+
+local quat = stack:ref "quaternion" {type='q', 0, 0, 0, 1}
+stack:reset()
+print(stack(quat, "V"))
+
 local vec = math3d.ref "vector"
 local mat = math3d.ref "matrix"	-- matrix ref
 
@@ -64,10 +69,10 @@ do
 	local line2 = stackobj:vector(1,2,3)	-- (1,2,3,0)
 	local line3 = stackobj:vector(4,5,6,7)
 	local line4 = stackobj:vector(8,9,10,11)
-	local mat = stackobj:matrix(line1,line2,line3,line4)
-	print(stack(mat, "VR"))
-	local mat = stackobj:matrix(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
-	print(stack(mat, "VR"))
+	local mat1 = stackobj:matrix(line1,line2,line3,line4)
+	print(stack(mat1, "VR"))
+	local mat1 = stackobj:matrix(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+	print(stack(mat1, "VR"))
 
 	mat1 = stackobj:matrix() -- (1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
 	print(stack(mat1, "VR"))
@@ -85,7 +90,6 @@ do
 	local e1 = stackobj:euler()
 	print(stack(e0, "VR"))
 	print(stack(e1, "VR"))
-
 end
 
 -- # turn on log
@@ -113,10 +117,12 @@ end
 
 --rotation view vector
 do
-	local zdir = stack({60, 30, 0, 0}, "dP")
+	local zdir = stack(stack:euler2quat{math.mad(60), math.rad(30), 0, 0}, "dP")
 	print("zdir : ", stack(zdir, "V"))
 	local rot = stack(zdir, "DP")
 	print("rot : ", stack(rot, "V"))
+
+	print(stack(stack:forward_dir(stack:matrix(), "V")))
 end
 
 --quaternion
