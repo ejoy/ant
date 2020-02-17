@@ -15,7 +15,6 @@ runtime.start {
 	system = {
 		"ant.modelviewer|model_review_system",
 		"ant.modelviewer|memory_stat",
-		"ant.camera_controller|camera_controller2"
 	},
 	pipeline = {
 		{ name = "init",
