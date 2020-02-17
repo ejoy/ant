@@ -1,4 +1,5 @@
 #define IS_LOGGING_ACTIVE
+#define LUA_LIB
 
 #include "reactphysics3d.h"
 
@@ -15,8 +16,6 @@ extern "C" {
 #include <cstdio>
 #include <cmath>
 #include <atomic>
-
-#define LUA_LIB
 
 struct collision_world {
 	class CollisionWorld *w;
@@ -261,7 +260,7 @@ lgetAABB(lua_State *L) {
 
 static inline int
 maskbits(lua_State *L, int index) {
-	int maskbits = luaL_checkinteger(L, index);
+	int maskbits = (int)luaL_checkinteger(L, index);
 	if (maskbits < 0 || maskbits > 0xffff)
 		return luaL_error(L, "Invalid mask bits %x", maskbits);
 	if (maskbits == 0)
@@ -370,7 +369,7 @@ lraycast(lua_State *L) {
 
 static int
 lsphereShape(lua_State *L) {
-	double radius = luaL_checknumber(L, 1);
+	auto radius = (reactphysics3d::decimal)luaL_checknumber(L, 1);
 
 	SphereShape * s = new SphereShape(radius);
 	lua_pushlightuserdata(L, (void *)s);
@@ -380,9 +379,9 @@ lsphereShape(lua_State *L) {
 
 static int
 lboxShape(lua_State *L) {
-	double x = luaL_checknumber(L, 1);
-	double y = luaL_optnumber(L, 2, x);
-	double z = luaL_optnumber(L, 3, y);
+	auto x = (reactphysics3d::decimal)luaL_checknumber(L, 1);
+	auto y = (reactphysics3d::decimal)luaL_optnumber(L, 2, x);
+	auto z = (reactphysics3d::decimal)luaL_optnumber(L, 3, y);
 
 	Vector3 halfExtents(x,y,z);
 	BoxShape * s = new BoxShape(halfExtents);
@@ -393,8 +392,8 @@ lboxShape(lua_State *L) {
 
 static int
 lcapsuleShape(lua_State *L) {
-	double radius = luaL_checknumber(L, 1);
-	double height = luaL_checknumber(L, 2);
+	auto radius = (reactphysics3d::decimal)luaL_checknumber(L, 1);
+	auto height = (reactphysics3d::decimal)luaL_checknumber(L, 2);
 
 	CapsuleShape * s = new CapsuleShape(radius, height);
 	lua_pushlightuserdata(L, (void *)s);

@@ -202,11 +202,13 @@ local function create_plane_test()
             p.color,
             "test shadow plane",
             {
-                ["ant.bullet|collider"] = {
+                ["ant.collision|collider"] = {
                     collider = {
                         box = {
-                            origin = {0, 0, 0, 1},
-                            size = {0.5, 0, 0.5},
+                            {
+                                origin = {0, 0, 0, 1},
+                                size = {0.5, 0.0001, 0.5},
+                            }
                         }
                     },
                 },

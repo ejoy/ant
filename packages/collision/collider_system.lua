@@ -88,6 +88,10 @@ function m.test(e, srt)
 	return hit
 end
 
+function m.raycast(ray)
+	return w:raycast(ray[1], ray[2], ray.mask)
+end
+
 local collider_sys = ecs.system "collider_system"
 
 function collider_sys:update_collider_transform()

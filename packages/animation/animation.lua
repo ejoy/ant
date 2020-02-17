@@ -204,7 +204,9 @@ function iksys:do_ik()
 		
 		ani_module.setup(e.pose_result.result, skehandle, fix_root)
 		for _, ikdata in ipairs(ikcomp.jobs) do
-			ani_module.do_ik(skehandle, prepare_ikdata(ikdata))
+			if ikdata.enable then
+				ani_module.do_ik(skehandle, prepare_ikdata(ikdata))
+			end
 		end
 	end
 end

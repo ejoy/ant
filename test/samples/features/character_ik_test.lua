@@ -120,10 +120,12 @@ local function foot_ik_test()
             character = {movespeed = 1.0,},
             collider = {
                 capsule = {
-                    origin = {0, 1, 0, 1},
-                    radius = 0.5,
-                    height = 1,
-                    axis = "Y",
+                    {
+                        origin = {0, 1, 0, 1},
+                        radius = 0.5,
+                        height = 1,
+                        axis = "Y",
+                    }
                 }
             },
             serialize = serialize.create(),
@@ -145,11 +147,13 @@ local function create_plane_test()
     {0.5, 0.5, 0, 1},
     "test shadow plane",
     {
-        ["ant.bullet|collider"] = {
+        ["ant.collision|collider"] = {
             collider = {
                 box = {
-                    origin = {0, 0, 0, 1},
-                    size = {0.5, 0, 0.5},
+                    {
+                        origin = {0, 0, 0, 1},
+                        size = {0.5, 0.0001, 0.5},
+                    }
                 }
             },
         },

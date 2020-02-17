@@ -8,7 +8,7 @@ runtime.start {
 		"ant.animation|skinning",
 		"ant.animation|ik",
 		"ant.serialize|serialize",
-		"ant.bullet|collider",
+		"ant.collision|collider",
 		"ant.sky|procedural_sky",
 		"ant.render|name",
 		"ant.render|mesh",

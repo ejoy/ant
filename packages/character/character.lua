@@ -24,10 +24,10 @@ char_height_policy.require_component "character"
 char_height_policy.require_system "character_height_system"
 
 local char_height_sys = ecs.system "character_height_system"
-char_height_sys.require_system     "ant.bullet|collider_system"
-char_height_sys.require_interface  "ant.bullet|collider"
+char_height_sys.require_system     "ant.collision|collider_system"
+char_height_sys.require_interface  "ant.collision|collider"
 
-local icollider = world:interface "ant.bullet|collider"
+local icollider = world:interface "ant.collision|collider"
 
 local character_motion = world:sub {"character_motion"}
 local character_spawn = world:sub {"component_register", "character"}
@@ -133,7 +133,7 @@ function foot_t.process(e)
 end
 
 local char_foot_ik_sys = ecs.system "character_foot_ik_system"
-char_foot_ik_sys.require_interface "ant.bullet|collider"
+char_foot_ik_sys.require_interface "ant.collision|collider"
 char_foot_ik_sys.require_policy "foot_ik_raycast"
 
 local function ankles_raycast_ray(ankle_pos_ws, dir)
@@ -144,12 +144,9 @@ local function ankles_raycast_ray(ankle_pos_ws, dir)
 end
 
 local function ankles_target(ray, foot_height)
-    local hit, result = icollider.ray_test(ray)
-    if hit then
-        local pt = result.hit_pt_in_WS
-        local normal = result.hit_normal_in_WS
-
-        return ms(pt, normal, {foot_height}, "*+P"), normal
+    local pos, normal = icollider.raycast(ray)
+    if pos then
+        return ms(pos, normal, {foot_height}, "*+P"), normal
     end
 end
 
@@ -219,21 +216,27 @@ function char_foot_ik_sys:ik_target()
 
         for whichleg=1, numlegs do
             local li = leg_info[whichleg]
+            local tracker = trackers[whichleg]
+            local leg_ikdata = which_job(ik, tracker.leg)
+            local sole_ikdata = tracker.sole and which_job(ik, tracker.sole) or nil
             if li then
-                local tracker = trackers[whichleg]
-                local leg_ikdata = which_job(ik, tracker.leg)
+                leg_ikdata.enable = true
                 local target_ws = li[2]
-
                 ms(leg_ikdata.target, inv_correct_trans, target_ws, "*=")
 
                 local knee = leg_ikdata.joint_indices[2]
                 leg_ikdata.pole_vector(joint_y_vector(knee))
 
-                if tracker.sole then
-                    local sole_ikdata = which_job(ik, tracker.sole)
+                if sole_ikdata then
+                    sole_ikdata.enable = nil
                     local hitnormal = li[3]
                     ms(sole_ikdata.target, inv_correct_trans, target_ws, hitnormal, "+*=")
                     sole_ikdata.pole_vector(joint_y_vector(sole_ikdata.joint_indices[1]))
+                end
+            else
+                leg_ikdata.enable = nil
+                if sole_ikdata then
+                    sole_ikdata.enable = nil
                 end
             end
         end
