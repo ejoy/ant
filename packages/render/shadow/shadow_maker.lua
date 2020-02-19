@@ -164,25 +164,27 @@ end
 
 function maker_camera:shadow_camera()
 	local lightdir = shadowutil.get_directional_light_dir(world)
-	local shadowentity = world:singleton_entity "shadow"
-	local shadowcfg = shadowentity.shadow
-	local stabilize = shadowcfg.stabilize
-	local shadowmap_size = shadowcfg.shadowmap_size
+	if lightdir then
+		local shadowentity = world:singleton_entity "shadow"
+		local shadowcfg = shadowentity.shadow
+		local stabilize = shadowcfg.stabilize
+		local shadowmap_size = shadowcfg.shadowmap_size
 
-	local view_camera = camerautil.main_queue_camera(world)
-	local frustum = view_camera.frustum
+		local view_camera = camerautil.main_queue_camera(world)
+		local frustum = view_camera.frustum
 
-	local split = shadowcfg.split
-	local ratios = shadowutil.calc_split_distance_ratio(split.min_ratio, split.max_ratio, 
-		frustum.n, frustum.f, split.pssm_lambda, split.num_split)
+		local split = shadowcfg.split
+		local ratios = shadowutil.calc_split_distance_ratio(split.min_ratio, split.max_ratio, 
+			frustum.n, frustum.f, split.pssm_lambda, split.num_split)
 
-	for _, eid in world:each "csm" do
-		local csmentity = world[eid]
-		local shadowcamera = world[csmentity.camera_eid].camera
-		local csm = world[eid].csm
-		local ratio = ratios[csm.index]
-		calc_shadow_camera(view_camera, ratio, lightdir, shadowmap_size, stabilize, shadowcamera)
-		csm.split_distance_VS = shadowcamera.frustum.f - frustum.n
+		for _, eid in world:each "csm" do
+			local csmentity = world[eid]
+			local shadowcamera = world[csmentity.camera_eid].camera
+			local csm = world[eid].csm
+			local ratio = ratios[csm.index]
+			calc_shadow_camera(view_camera, ratio, lightdir, shadowmap_size, stabilize, shadowcamera)
+			csm.split_distance_VS = shadowcamera.frustum.f - frustum.n
+		end
 	end
 end
 local sm = ecs.system "shadow_maker"

@@ -341,11 +341,14 @@ push_box_points(lua_State *L, const Frustum::Points &points){
 	lua_createtable(L, 0, 8);
 	for (int jj = 0; jj < Frustum::CornerName::count; ++jj) {
 		const auto& p = points[jj];
-		lua_createtable(L, 3, 0);
+		lua_createtable(L, 4, 0);
 		for (int ii = 0; ii < 3; ++ii) {
 			lua_pushnumber(L, p[ii]);
 			lua_seti(L, -2, ii + 1);
 		}
+		lua_pushnumber(L, 1.f);
+		lua_seti(L, -2, 4);
+
 		lua_seti(L, -2, jj + 1);
 	}
 	return 1;
@@ -399,7 +402,7 @@ lfrustum_center(lua_State *L){
 	}
 
 	center /= Frustum::CornerName::count;
-
+	center.w = 1.f;
 	push_vec(L, 4, center);
 	return 1;
 }
@@ -427,8 +430,9 @@ lfrustum_extents(lua_State *L){
 		maxextents = glm::max(maxextents, p);
 	}
 	
-	push_vec(L, 3, minextents);
-	push_vec(L, 3, maxextents);
+	minextents[3] = 0.f, maxextents[3] = 0.f;
+	push_vec(L, 4, minextents);
+	push_vec(L, 4, maxextents);
 	return 2;
 }
 

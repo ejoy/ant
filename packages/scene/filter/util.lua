@@ -1,7 +1,7 @@
 local util = {}; util.__index = util
 
 local mathpkg 	= import_package "ant.math"
-local ms, mu	= mathpkg.stack, mathpkg.util
+local ms, mu, mc= mathpkg.stack, mathpkg.util, mathpkg.constant
 
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
@@ -93,6 +93,12 @@ local function calc_viewport_crop_matrix(csm_idx)
 		offset, 0.0, 0.0, 1.0)
 end
 
+local default_csm_matricies = {
+	n = 4, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT
+}
+
+local default_split_distance = mc.ZERO
+
 function util.load_shadow_properties(world, render_properties)
 	local shadow_properties = render_properties.shadow
 	local uniforms, textures = shadow_properties.uniforms, shadow_properties.textures
@@ -106,11 +112,14 @@ function util.load_shadow_properties(world, render_properties)
 		local camera = world[se.camera_eid].camera
 
 		local idx = csm.index
-		split_distances[idx] = csm.split_distance_VS
-		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
-		vp = ms(shadowutil.shadow_crop_matrix(), vp, "*P")
-		local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
-		csm_matrixs[csm.index] = ms(viewport_cropmatrix, vp, "*P")
+		local split_distanceVS = csm.split_distance_VS
+		if split_distanceVS then
+			split_distances[idx] = split_distanceVS
+			local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+			vp = ms(shadowutil.shadow_crop_matrix(), vp, "*P")
+			local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
+			csm_matrixs[csm.index] = ms(viewport_cropmatrix, vp, "*P")
+		end
 	end
 
 	local num_matrixs = #csm_matrixs
@@ -118,6 +127,9 @@ function util.load_shadow_properties(world, render_properties)
 		csm_matrixs.n = num_matrixs
 		uniforms["u_csm_matrix"] = {type="m4", name="csm matrix", value=csm_matrixs}
 		uniforms["u_csm_split_distances"] = {type="v4", name="csm split distances", value=split_distances}
+	else
+		uniforms["u_csm_matrix"] = {type="m4", name="csm matrix", value=default_csm_matricies}
+		uniforms["u_csm_split_distances"] = {type="v4", name="csm split distances", value=default_split_distance}
 	end
 
 	local shadowentity = world:singleton_entity "shadow"
