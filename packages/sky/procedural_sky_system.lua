@@ -1,10 +1,18 @@
 local ecs = ...
 local world = ecs.world
 
-local fs = require "filesystem"
-
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
+--[[
+	this code from bgfx example-36, references:
+	[1] R. Perez, R. Seals, and J. Michalsky."An All-Weather Model for Sky Luminance Distribution".
+ 	Solar Energy, Volume 50, Number 3 (March 1993), pp. 235–245.
+    
+    [2] A. J. Preetham, Peter Shirley, and Brian Smits. "A Practical Analytic Model for Daylight",
+        Proceedings of the 26th Annual Conference on Computer Graphics and Interactive Techniques,
+        1999, pp. 91–100.
+        https://www.cs.utah.edu/~shirley/papers/sunsky/sunsky.pdf
+    
+    [3] E. Lengyel, Game Engine Gems, Volume One. Jones & Bartlett Learning, 2010. pp. 219 - 234
+]]
 
 local mathpkg = import_package "ant.math"
 local ms = mathpkg.stack
@@ -161,8 +169,9 @@ local function calc_sun_orbit_delta(whichmonth, ecliptic_obliquity)
 end
 
 local function calc_sun_direction(skycomp)
+	-- should move to C
 	local latitude = skycomp.latitude
-	local whichhour = skycomp.which_hour
+	local whichhour = skycomp.which_hour - 12	-- this algorithm take hour from [-12, 12]
 	local delta = calc_sun_orbit_delta(skycomp.month, skycomp.ecliptic_obliquity)
 
 	local hh = whichhour * math.pi / 12
@@ -177,8 +186,7 @@ local function calc_sun_direction(skycomp)
 	local dir = ms(skycomp.northdir, rot0, "*P")
 	local uxd = ms(skycomp.updir, dir, "xP")
 	
-	local rot1 = ms:quaternion(uxd, altitude)
-	
+	local rot1 = ms:quaternion(uxd, -altitude)
 	return ms(dir, rot1, "*P")
 end
 
