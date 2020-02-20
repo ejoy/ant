@@ -139,8 +139,9 @@ local ps = ecs.component "procedural_sky"
 
 local function compute_PerezCoeff(turbidity)
 	assert(#ABCDE == #ABCDE_t)
-	local result = {}
-	for i=1, #ABCDE do
+	local n = #ABCDE
+	local result = {n=n}
+	for i=1, n do
 		local v0, v1 = ABCDE_t[i], ABCDE[i]
 		result[#result+1] = ms(v1, {turbidity}, v0, "*+P")
 	end
