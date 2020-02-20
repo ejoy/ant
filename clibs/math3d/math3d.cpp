@@ -986,7 +986,7 @@ convert_viewdir_to_rotation(lua_State *L, struct lastack *LS){
 	switch (type){		
 		case LINEAR_TYPE_VEC4: {
 			glm::quat q(glm::vec3(0, 0, 1), *(const glm::vec3*)v);
-			lastack_pushvec4(LS, &q.x);
+			lastack_pushquat(LS, &q.x);
 			break;
 		}
 	default:
@@ -3052,6 +3052,16 @@ lforward_dir(lua_State *L){
 	return 1;
 }
 
+static int
+lrotation(lua_State *L){
+	auto LS = getLS(L, 1);
+	auto v = get_vec_value(L, LS, 2);
+	glm::quat q(glm::vec3(0, 0, 1), v);
+	lastack_pushquat(LS, &q.x);
+	pushid(L, pop(L, LS));
+	return 1;
+}
+
 static inline void
 push_euler_quat_result(lua_State *L, struct lastack *LS, const float *v, uint32_t num, LinearType ltype, bool astable){
 	if (astable){
@@ -3126,6 +3136,7 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "elem_add", lelem_add},
 			{ "add_translate", ladd_translate},
 			{ "forward_dir", lforward_dir},
+			{ "rotation", lrotation},
 			{ "euler2quat", leuler2quat},
 			{ "quat2euler", lquat2euler},
 			{ "leaks", lleaks },

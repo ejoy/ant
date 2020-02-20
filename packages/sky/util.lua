@@ -73,7 +73,7 @@ function util.create_procedural_sky(world, settings)
 			procedural_sky = {
 				grid_width = 32, 
 				grid_height = 32,
-				follow_by_directional_light = settings.follow_by_directional_light,
+				attached_sun_light = settings.attached_sun_light,
 				which_hour 	= settings.whichhour or 12,	-- high noon
 				turbidity 	= settings.turbidity or 2.15,
 				month 		= settings.whichmonth or "June",

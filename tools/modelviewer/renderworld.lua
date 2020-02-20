@@ -58,7 +58,7 @@ end
 local player
 function m:init()
 	create_light()
-	skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
+	skyutil.create_procedural_sky(world)
 	cu.create_plane_entity(
 		world,
 		mu.srt{50, 1, 50, 0},

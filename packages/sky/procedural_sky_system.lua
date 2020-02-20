@@ -131,11 +131,11 @@ psp_sun.require_system "sun_update_system"
 local ps = ecs.component "procedural_sky"
 	.grid_width	"int" (1)
 	.grid_height"int" (1)
-	.follow_by_directional_light "boolean" (true)
 	.which_hour "real" (12)
 	.turbidity 	"real" (2.15)
 	.month 		"string" ("June")
 	.latitude 	"real" (math.rad(50))
+	["opt"].attached_sun_light "entityid" (-1)
 
 local function compute_PerezCoeff(turbidity)
 	assert(#ABCDE == #ABCDE_t)
@@ -272,14 +272,10 @@ end
 
 local function sync_directional_light(skyentity)
 	local skycomp = skyentity.procedural_sky
-	if skycomp.follow_by_directional_light then
-		local function get_light()
-			for _, eid in world:each "directional_light" do
-				return world[eid]
-			end
-		end
-		local dlight = get_light()
-		ms(dlight.rotation, skycomp.sundir, "D=")
+	local sunlight_eid = skycomp.attached_sun_light
+	if sunlight_eid then
+		local dlight = world[sunlight_eid]
+		ms(dlight.transform.r, skycomp.sundir, "D=")
 	end
 end
 
