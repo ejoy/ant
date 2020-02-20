@@ -194,7 +194,26 @@ function anisystem:sample_animation_pose()
 	end
 end
 
+local ik_i = ecs.interface "ik"
+local current_ikjob_info
+function ik_i.set_ikinfo(ikjob_info)
+	current_ikjob_info = ikjob_info
+end
+
+function ik_i.get_ikinfo()
+	return current_ikjob_info
+end
+
+function ik_i.clear()
+	current_ikjob_info = nil
+end
+
+local iik = world:interface "ant.animation|ik"
+
 local iksys = ecs.system "ik_system"
+iksys.require_interface "ant.animation|ik"
+
+local ik_group = world:update_func "ik_group"
 
 function iksys:do_ik()
 	for _, eid in world:each "ik" do
@@ -204,9 +223,18 @@ function iksys:do_ik()
 		
 		ani_module.setup(e.pose_result.result, skehandle, fix_root)
 		for _, ikdata in ipairs(ikcomp.jobs) do
-			if ikdata.enable then
-				ani_module.do_ik(skehandle, prepare_ikdata(ikdata))
-			end
+			iik.set_ikinfo {eid = eid, ikdata=ikdata}
+			ik_group()
+		end
+	end
+end
+
+function iksys:compute_ik()
+	local ikinfo = iik.get_ikinfo()
+	if ikinfo then
+		local ikdata = ikinfo.ikdata
+		if ikdata.enable then
+			ani_module.do_ik(prepare_ikdata(ikdata))
 		end
 	end
 end

@@ -45,10 +45,7 @@ runtime.start {
 			{ name = "animation",
 				"animation_state",
 				"sample_animation_pose",
-				{name = "ik",
-					"ik_target",
-					"do_ik",
-				},
+				"do_ik",
 				"skin_mesh",
 				"end_animation",
 			},
@@ -85,5 +82,10 @@ runtime.start {
 			"end_frame",
 			"final",
 		},
+
+		{name = "ik_group",
+			"ik_target",
+			"compute_ik",
+		}
 	}
 }
