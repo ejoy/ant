@@ -102,7 +102,7 @@ end
 
 function foreach_delete_1(c, component, e)
     if c.method and c.method.delete then
-        c.method.delete(component, e)
+        component = c.method.delete(component, e) or component
     end
     if not c.type then
         for _, v in ipairs(c) do
