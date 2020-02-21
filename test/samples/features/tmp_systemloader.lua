@@ -124,7 +124,6 @@ local function gltf_animation_test()
             rendermesh = {
                 submesh_refs = {
                     Beta_Joints = {
-                        material_refs = {1},
                         visible = false,
                     },
                 }

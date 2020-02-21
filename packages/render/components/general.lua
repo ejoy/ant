@@ -109,9 +109,15 @@ end
 ecs.component "resource"
 	.ref_path "respath"
 
-ecs.component "submesh_ref"
-	.material_refs "int[]"
+local sm_ref = ecs.component "submesh_ref"
+	["opt"].material_refs "int[]"
 	.visible "boolean"
+function sm_ref:init()
+	if self.visible and self.material_refs == nil then
+		error(string.format("submesh is visible, but material_refs is nil"))
+	end
+	return self
+end
 
 local rendermesh = ecs.component "rendermesh"
 	["opt"].submesh_refs "submesh_ref{}"
