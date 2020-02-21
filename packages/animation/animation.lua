@@ -22,78 +22,6 @@ function pr_t.process(e)
 	e.pose_result.result = ani_module.new_bind_pose(#skehandle)
 end
 
-
---there are 2 types in ik_data, which are 'two_bone'(IKTwoBoneJob) and 'aim'(IKAimJob).
-ecs.component "ik_data"
-	.name		"string"
-	.type		"string"("aim")			-- can be 'two_bone'/'aim'
-	.target 	"vector"{0, 0, 0, 1}	-- model space
-	.pole_vector"vector"{0, 0, 0, 0}	-- model space
-	.twist_angle"real" 	(0.0)
-	.weight		"real"  (0.0)
-	.joints		"string[]"{}			-- type == 'aim', #joints == 1, type == 'two_bone', #joints == 3, with start/mid/end
-	["opt"].mid_axis"vector" {0, 0, 1, 0}
-	["opt"].soften "real" 	(0.0)
-	["opt"].up_axis"vector" {0, 1, 0, 0}
-	["opt"].forward "vector"{0, 0, 1, 0}-- local space
-	["opt"].offset "vector" {0, 0, 0, 0}-- local space
-
-ecs.component "ik"
-	.jobs 'ik_data[]'
-
-local ik_p = ecs.policy "ik"
-ik_p.require_component "skeleton"
-ik_p.require_component "ik"
-ik_p.require_component "pose_result"
-ik_p.require_transform "build_pose_result"
-ik_p.require_transform "build_ik"
-
-ik_p.require_policy "pose_result"
-
-local build_ik_tranform = ecs.transform "build_ik"
-build_ik_tranform.input "skeleton"
-build_ik_tranform.output "ik"
-
-local function check_joints_in_hierarchy_chain(ske, joint_indices)
-	for i=3, 2, -1 do
-		local jidx = joint_indices[i]
-		local pidx = ske:parent(jidx)
-
-		local next_jidx = joint_indices[i-1]
-		while pidx ~= next_jidx and pidx ~= 0 do
-			pidx = ske:parent(pidx)
-		end
-
-		if pidx == 0 then
-			error(string.format("ik joints can not use as foot ik, which joints must as parent clain:%d %d %d", joint_indices[1], joint_indices[2], joint_indices[3]))
-		end
-	end
-end
-
-function build_ik_tranform.process(e)
-	local ske = asset.get_resource(e.skeleton.ref_path).handle
-	local ik = e.ik
-
-	for _, ikdata in ipairs(ik.jobs) do
-		local joint_indices = {}
-		for _, jn in ipairs(ikdata.joints) do
-			local jointidx = ske:joint_index(jn)
-			if jointidx == nil then
-				error(string.format("invalid joint name:%s", jn))
-			end
-
-			joint_indices[#joint_indices+1] = jointidx
-		end
-
-		if e.ik.type == "two_bone" then
-			assert(#joint_indices == 3)
-
-			check_joints_in_hierarchy_chain(joint_indices)
-		end
-		ikdata.joint_indices = joint_indices
-	end
-end
-
 ecs.component "animation_content"
 	.ref_path "respath"
 	.scale "real" (1)
@@ -129,6 +57,8 @@ local anisystem = ecs.system "animation_system"
 anisystem.require_interface "ant.timer|timer"
 
 local timer = world:interface "ant.timer|timer"
+
+local fix_root <const> = true
 
 function anisystem:sample_animation_pose()
 	local current_time = timer.current()

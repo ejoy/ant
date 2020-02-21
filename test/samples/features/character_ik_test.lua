@@ -23,6 +23,7 @@ local function foot_ik_test()
             "ant.serialize|serialize",
             "ant.render|render",
             "ant.animation|animation",
+            "ant.animation|animation_controller.birth",
             "ant.animation|ozzmesh",
             "ant.animation|ik",
             "ant.animation|ozz_skinning",
@@ -51,8 +52,8 @@ local function foot_ik_test()
                         looptimes = 0,
                     },
                 },
-                birth_pose = "idle",
             },
+            animation_birth = "idle",
             ik = {
                 jobs = {
                     {

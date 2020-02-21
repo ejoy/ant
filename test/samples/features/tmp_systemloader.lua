@@ -57,6 +57,7 @@ local function ozzmesh_animation_test()
             "ant.render|render",
             "ant.animation|ozzmesh",
             "ant.animation|animation",
+            "ant.animation|animation_controller.birth",
             "ant.animation|ozz_skinning",
             "ant.serialize|serialize",
             "ant.render|name",
@@ -77,9 +78,8 @@ local function ozzmesh_animation_test()
                         looptimes = 0,
                     },
                 },
-                birth_pose = "walk",
-                ik = {jobs={}}
             },
+            animation_birth = "walk",
             can_render = true,
             rendermesh = {},
             skinning = {},
@@ -115,12 +115,20 @@ local function gltf_animation_test()
             "ant.render|mesh",
             "ant.animation|animation",
             "ant.animation|skinning",
+            "ant.animation|animation_controller.birth",
             "ant.render|shadow_cast",
             "ant.render|name",
         },
         data = {
             transform = mu.translate_mat{-5, 0, 0, 1},
-            rendermesh = {},
+            rendermesh = {
+                -- submesh_refs = {
+                --     Beta_Joints = {
+                --         material_refs = {1},
+                --         visible = false,
+                --     }
+                -- }
+            },
             mesh = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
             },
@@ -139,9 +147,8 @@ local function gltf_animation_test()
                         looptimes = 0,
                     },
                 },
-                birth_pose = "idle",
-                ik = {jobs={}}
             },
+            animation_birth = "idle",
             can_render = true,
             can_cast = true,
             name = "gltf animation test",
