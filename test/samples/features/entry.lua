@@ -82,10 +82,5 @@ runtime.start {
 			"end_frame",
 			"final",
 		},
-
-		{name = "ik_group",
-			"ik_target",
-			"compute_ik",
-		}
 	}
 }

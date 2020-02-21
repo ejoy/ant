@@ -140,29 +140,6 @@ anisystem.require_interface "ant.timer|timer"
 
 local timer = world:interface "ant.timer|timer"
 
-local ikdata_cache = {}
-local function prepare_ikdata(ikdata)
-	ikdata_cache.type		= ikdata.type
-	ikdata_cache.target 	= ~ikdata.target
-	ikdata_cache.pole_vector= ~ikdata.pole_vector
-	ikdata_cache.weight		= ikdata.weight
-	ikdata_cache.twist_angle= ikdata.twist_angle
-	ikdata_cache.joint_indices= ikdata.joint_indices
-
-	if ikdata.type == "aim" then
-		ikdata_cache.forward	= ~ikdata.forward
-		ikdata_cache.up_axis	= ~ikdata.up_axis
-		ikdata_cache.offset		= ~ikdata.offset
-	else
-		assert(ikdata.type == "two_bone")
-		ikdata_cache.soften		= ikdata.soften
-		ikdata_cache.mid_axis	= ~ikdata.mid_axis
-	end
-	return ikdata_cache
-end
-
-local fix_root <const> = true
-
 function anisystem:sample_animation_pose()
 	local current_time = timer.current()
 
@@ -191,51 +168,6 @@ function anisystem:sample_animation_pose()
 		ani_module.setup(e.pose_result.result, ske.handle, fix_root)
 		do_animation(animation.current)
 		ani_module.fetch_result()
-	end
-end
-
-local ik_i = ecs.interface "ik"
-local current_ikjob_info
-function ik_i.set_ikinfo(ikjob_info)
-	current_ikjob_info = ikjob_info
-end
-
-function ik_i.get_ikinfo()
-	return current_ikjob_info
-end
-
-function ik_i.clear()
-	current_ikjob_info = nil
-end
-
-local iik = world:interface "ant.animation|ik"
-
-local iksys = ecs.system "ik_system"
-iksys.require_interface "ant.animation|ik"
-
-local ik_group = world:update_func "ik_group"
-
-function iksys:do_ik()
-	for _, eid in world:each "ik" do
-		local e = world[eid]
-		local ikcomp = e.ik
-		local skehandle = asset.get_resource(e.skeleton.ref_path).handle
-		
-		ani_module.setup(e.pose_result.result, skehandle, fix_root)
-		for _, ikdata in ipairs(ikcomp.jobs) do
-			iik.set_ikinfo {eid = eid, ikdata=ikdata}
-			ik_group()
-		end
-	end
-end
-
-function iksys:compute_ik()
-	local ikinfo = iik.get_ikinfo()
-	if ikinfo then
-		local ikdata = ikinfo.ikdata
-		if ikdata.enable then
-			ani_module.do_ik(prepare_ikdata(ikdata))
-		end
 	end
 end
 

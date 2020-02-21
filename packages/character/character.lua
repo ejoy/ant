@@ -153,98 +153,99 @@ local function ankles_target(ray, foot_height)
     end
 end
 
-function char_foot_ik_sys:ik_target()
-    local ikinfo = iik.get_ikinfo()
+local function calc_pelvis_offset()
+    return nil
+    -- local maxdot
+    -- for whichleg=1, numlegs do
+    --     local li = leg_info[whichleg]
+    --     if li then
+    --         local ankle_pos_ws, target_ws = li[1], li[2]
+    --         local dot = ms(target_ws, ankle_pos_ws, "-", cast_dir, ".T")
+    --         if maxdot then
+    --             if dot[1] > maxdot[1] then
+    --                 maxdot = dot
+    --             end
+    --         else
+    --             maxdot = dot
+    --         end
+    --     end
+    -- end
+    
+    -- if maxdot then
+    --     maxdot[2] = nil
+    --     return ms(maxdot, cast_dir, "*P")
+    -- end
+end
 
-    if ikinfo then
-        local e = world[ikinfo.eid]
+local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
+    local leg_raycasts = {}
+    local cast_dir = foot_rc.cast_dir
+    local foot_height = foot_rc.foot_height
+    for _, tracker in ipairs(foot_rc.trackers) do
+        local leg_ikdata = which_job(ik, tracker.leg)
+        local anklenidx = leg_ikdata.joint_indices[3]
+        local ankle_pos = ms:vector(pose_result:joint_trans(anklenidx, 4))
+        local ankle_pos_ws = ms(trans, ankle_pos, "*P")
+
+        local castray = ankles_raycast_ray(ankle_pos_ws, cast_dir)
+        local target_ws, hitnormal_ws = ankles_target(castray, foot_height)
+        if target_ws then
+            leg_raycasts[#leg_raycasts+1] = {
+                tracker, ankle_pos_ws, target_ws, hitnormal_ws
+            }
+        end
+    end
+
+    return leg_raycasts
+end
+
+local function do_foot_ik(pose_result, ik, foot_rc, inv_trans, leg_raycasts)
+    local function joint_y_vector(jointidx)
+        return ms:vector(pose_result:joint_trans(jointidx, 2))
+    end
+
+    for _, leg in ipairs(leg_raycasts) do
+        local tracker = leg[1]
+        local leg_ikdata = which_job(ik, tracker.leg)
+        local sole_ikdata = tracker.sole and which_job(ik, tracker.sole) or nil
+
+        local target_ws = leg[3]
+        ms(leg_ikdata.target, inv_trans, target_ws, "*=")
+
+        local knee = leg_ikdata.joint_indices[2]
+        leg_ikdata.pole_vector(joint_y_vector(knee))
+
+        iik.do_ik(leg_ikdata)
+
+        if sole_ikdata then
+            sole_ikdata.enable = nil
+            local hitnormal = leg[4]
+            ms(sole_ikdata.target, inv_trans, target_ws, hitnormal, "+*=")
+            sole_ikdata.pole_vector(joint_y_vector(sole_ikdata.joint_indices[1]))
+            iik.do_ik(sole_ikdata)
+        end
+    end
+end
+
+function char_foot_ik_sys:do_ik()
+    for _, eid in world:each "foot_ik_raycast" do
+        local e = world[eid]
         local foot_rc = e.foot_ik_raycast
-        if foot_rc then
-            local ik = e.ik
-            local pose_result = e.pose_result.result
-            local trans = ms:srtmat(e.transform)
+        
+        local ik = e.ik
+        local pose_result = e.pose_result.result
+        local trans = ms:srtmat(e.transform)
 
-            local cast_dir = foot_rc.cast_dir
-            local foot_height = foot_rc.foot_height
+        local leg_raycasts = find_leg_raycast_target(pose_result, ik, foot_rc, trans)
 
-            local leg_info = {}
-            local trackers = foot_rc.trackers
-            local numlegs = #trackers
-            
-            for whichleg=1, numlegs do
-                local leg_ikdata = which_job(ik, trackers[whichleg].leg)
-                local anklenidx = leg_ikdata.joint_indices[3]
-                local ankle_pos = ms:vector(pose_result:joint_trans(anklenidx, 4))
-                local ankle_pos_ws = ms(trans, ankle_pos, "*P")
-    
-                local castray = ankles_raycast_ray(ankle_pos_ws, cast_dir)
-                local target_ws, hitnormal_ws = ankles_target(castray, foot_height)
-                if target_ws then
-                    leg_info[whichleg] = {
-                        ankle_pos_ws, target_ws, hitnormal_ws
-                    }
-                end
-            end
-    
-            local function calc_pelvis_offset()
-                return nil
-                -- local maxdot
-                -- for whichleg=1, numlegs do
-                --     local li = leg_info[whichleg]
-                --     if li then
-                --         local ankle_pos_ws, target_ws = li[1], li[2]
-                --         local dot = ms(target_ws, ankle_pos_ws, "-", cast_dir, ".T")
-                --         if maxdot then
-                --             if dot[1] > maxdot[1] then
-                --                 maxdot = dot
-                --             end
-                --         else
-                --             maxdot = dot
-                --         end
-                --     end
-                -- end
-                
-                -- if maxdot then
-                --     maxdot[2] = nil
-                --     return ms(maxdot, cast_dir, "*P")
-                -- end
-            end
-    
+        if next(leg_raycasts) then
+            iik.setup(e)
             local pelvis_offset = calc_pelvis_offset()
             local correct_trans = pelvis_offset and ms:add_translate(trans, pelvis_offset) or trans
             local inv_correct_trans = ms(correct_trans, "iP")
-    
-            local function joint_y_vector(jointidx)
-                return ms:vector(pose_result:joint_trans(jointidx, 2))
-            end
-    
-            for whichleg=1, numlegs do
-                local li = leg_info[whichleg]
-                local tracker = trackers[whichleg]
-                local leg_ikdata = which_job(ik, tracker.leg)
-                local sole_ikdata = tracker.sole and which_job(ik, tracker.sole) or nil
-                if li then
-                    leg_ikdata.enable = true
-                    local target_ws = li[2]
-                    ms(leg_ikdata.target, inv_correct_trans, target_ws, "*=")
-    
-                    local knee = leg_ikdata.joint_indices[2]
-                    leg_ikdata.pole_vector(joint_y_vector(knee))
-    
-                    if sole_ikdata then
-                        sole_ikdata.enable = nil
-                        local hitnormal = li[3]
-                        ms(sole_ikdata.target, inv_correct_trans, target_ws, hitnormal, "+*=")
-                        sole_ikdata.pole_vector(joint_y_vector(sole_ikdata.joint_indices[1]))
-                    end
-                else
-                    leg_ikdata.enable = nil
-                    if sole_ikdata then
-                        sole_ikdata.enable = nil
-                    end
-                end
-            end
+
+            do_foot_ik(pose_result, ik, foot_rc, inv_correct_trans, leg_raycasts)
         end
- 
     end
+
 end
