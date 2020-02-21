@@ -218,7 +218,6 @@ local function do_foot_ik(pose_result, ik, foot_rc, inv_trans, leg_raycasts)
         iik.do_ik(leg_ikdata)
 
         if sole_ikdata then
-            sole_ikdata.enable = nil
             local hitnormal = leg[4]
             ms(sole_ikdata.target, inv_trans, target_ws, hitnormal, "+*=")
             sole_ikdata.pole_vector(joint_y_vector(sole_ikdata.joint_indices[1]))

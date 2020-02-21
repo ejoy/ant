@@ -51,8 +51,6 @@ ik_p.require_component "pose_result"
 ik_p.require_transform "build_pose_result"
 ik_p.require_transform "build_ik"
 
-ik_p.require_system "ik_system"
-
 ik_p.require_policy "pose_result"
 
 local build_ik_tranform = ecs.transform "build_ik"

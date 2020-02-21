@@ -66,18 +66,18 @@ local function foot_ik_test()
                         soften      = 1.0,
                         joints      = {"LeftUpLeg", "LeftLeg", "LeftFoot",},
                     },
-                    -- {
-                    --     name        = "left_sole",
-                    --     type        = "aim",
-                    --     target      = {0, 0, 0, 1},
-                    --     pole_vector = {0, 1, 0, 0},
-                    --     up_axis     = {0, 1, 0, 0},
-                    --     forward     = {1, 0, 0, 0},
-                    --     offset      = {0, 0, 0, 0},
-                    --     weight      = 1.0,
-                    --     twist_angle = 0,
-                    --     joints      = {"LeftFoot",}
-                    -- },
+                    {
+                        name        = "left_sole",
+                        type        = "aim",
+                        target      = {0, 0, 0, 1},
+                        pole_vector = {0, 1, 0, 0},
+                        up_axis     = {0, 1, 0, 0},
+                        forward     = {1, 0, 0, 0},
+                        offset      = {0, 0, 0, 0},
+                        weight      = 1.0,
+                        twist_angle = 0,
+                        joints      = {"LeftFoot",}
+                    },
                     {
                         name        = "right_leg",
                         type        = "two_bone",
@@ -89,18 +89,18 @@ local function foot_ik_test()
                         soften      = 1.0,
                         joints      = {"RightUpLeg", "RightLeg", "RightFoot",},
                     },
-                    -- {
-                    --     name        = "right_sole",
-                    --     type        = "aim",
-                    --     target      = {0, 0, 0, 1},
-                    --     pole_vector = {0, 1, 0, 0},
-                    --     up_axis     = {0, 1, 0, 0},
-                    --     forward     = {1, 0, 0, 0},
-                    --     offset      = {0, 0, 0, 0},
-                    --     weight      = 1.0,
-                    --     twist_angle = 0,
-                    --     joints      = {"RightFoot",}
-                    -- },
+                    {
+                        name        = "right_sole",
+                        type        = "aim",
+                        target      = {0, 0, 0, 1},
+                        pole_vector = {0, 1, 0, 0},
+                        up_axis     = {0, 1, 0, 0},
+                        forward     = {1, 0, 0, 0},
+                        offset      = {0, 0, 0, 0},
+                        weight      = 1.0,
+                        twist_angle = 0,
+                        joints      = {"RightFoot",}
+                    },
                 }
             },
             foot_ik_raycast = {
@@ -109,11 +109,11 @@ local function foot_ik_test()
                 trackers = {
                     {
                         leg = "left_leg",
-                        --sole = "left_sole",
+                        sole = "left_sole",
                     },
                     {
                         leg = "right_leg",
-                        --sole = "right_sole",
+                        sole = "right_sole",
                     },
                 },
             },
