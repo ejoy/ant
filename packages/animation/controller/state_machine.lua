@@ -89,12 +89,14 @@ m.require_system "state_machine"
 m.require_transform "state_machine"
 
 local m = ecs.component "state_machine"
-	.current "string"
-	.file "respath"
-	.nodes "state_machine_node{}"
+		.current "string"
+["opt"]	.file "respath"
+		.nodes "state_machine_node{}"
 
 function m:init()
-	assert(fs.loadfile(self.file))(self.nodes)
+	if self.file then
+		assert(fs.loadfile(self.file))(self.nodes)
+	end
 	return self
 end
 
