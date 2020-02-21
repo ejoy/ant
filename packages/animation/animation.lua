@@ -4,9 +4,6 @@ local world = ecs.world
 local asset = import_package "ant.asset".mgr
 local ani_module = require "hierarchy.animation"
 
-local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-
 ecs.component "pose_result"
 
 local pr_p = ecs.policy "pose_result"
@@ -114,7 +111,6 @@ ap.require_policy "pose_result"
 
 local anicomp = ecs.component "animation"
 	.anilist "animation_content{}"
-	.birth_pose "string"
 
 function anicomp:init()
 	for name, ani in pairs(self.anilist) do
@@ -124,10 +120,6 @@ function anicomp:init()
 		ani.max_time = ani.looptimes > 0 and (ani.looptimes * ani.duration) or math.maxinteger
 		ani.name = name
 	end
-	self.current = {
-		animation = self.anilist[self.birth_pose],
-		start_time = 0,
-	}
 	return self
 end
 

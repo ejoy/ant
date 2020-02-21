@@ -13,7 +13,7 @@ local ms = mathpkg.stack
 local lu = renderpkg.light
 local cu = renderpkg.components
 
-local m = ecs.system "model_review_system"
+local m = ecs.system "model_viewer"
 
 m.require_policy "ant.sky|procedural_sky"
 m.require_policy "ant.serialize|serialize"
@@ -36,6 +36,7 @@ m.require_interface "ant.collision|collider"
 
 local camera = world:interface "ant.render|camera"
 local iwd = world:interface "ant.render|iwidget_drawer"
+local animation = world:interface "ant.animation|animation"
 local camera_id
 
 local function create_light()
@@ -80,7 +81,6 @@ function m:init()
 	player = world[eid]
 end
 
-local animation     = world:interface "ant.animation|animation"
 local timer         = world:interface "ant.timer|timer"
 local camera_motion = world:interface "ant.camera_controller|camera_motion"
 local collider      = world:interface "ant.collision|collider"
@@ -108,6 +108,7 @@ local screensize = {w=0,h=0}
 local mouse = {x=0,y=0}
 local mode
 local target
+local move_speed = 200
 
 local function setEntityFacing(e, facing)
 	e.transform.r(ms:euler2quat {0,facing,0})
@@ -153,6 +154,17 @@ function m:data_changed()
 		elseif what == "RIGHT" then
 			cur_direction = cur_direction + 3*v
 			mode = "keyboard"
+		elseif what == "SPACE" then
+			if press == 1 then
+				if mode == "attack" then
+					mode = "idle"
+					animation.set_state(player, "idle")
+				else
+					mode = "attack"
+					animation.set_state(player, "attack")
+				end
+			end
+			return
 		end
 	end
 	for _,_,_,x,y in eventMouse:unpack() do
@@ -170,37 +182,58 @@ function m:data_changed()
 		end
 	end
 	if mode == "keyboard" and cur_direction == DIR_NULL then
-		mode = nil
-	end
-	if not mode then
+		mode = "idle"
 		animation.set_state(player, "idle")
-		return
 	end
-	local move_speed = timer.delta() * 0.002
+	local move_distance = timer.delta() * move_speed / 100000
 	if mode == "keyboard" then
 		local camera_data = camera.get(camera_id)
 		local viewdir = ms(camera_data.viewdir, "T")
 		local facing = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
-		animation.set_state(player, "walking")
+		animation.set_state(player, "move")
 		setEntityFacing(player, facing)
-		moveEntity(player, move_speed)
+		moveEntity(player, move_distance)
 	elseif mode == "mouse" then
 		local postion = ms(player.transform.t, "T")
 		local dx = target[1] - postion[1]
 		local dy = target[3] - postion[3]
 		local dis = dx*dx+dy*dy
 		if dis < 1 then
+			mode = "idle"
 			animation.set_state(player, "idle")
 			target = nil
-			mode = nil
 			return
 		end
 		iwd.draw_lines {postion, target}
-		animation.set_state(player, "walking")
-		if dis < move_speed * move_speed then
+		animation.set_state(player, "move")
+		if dis < move_distance * move_distance then
 			moveEntity(player, math.sqrt(dis))
 		else
-			moveEntity(player, move_speed)
+			moveEntity(player, move_distance)
+		end
+	end
+end
+
+
+
+local imgui = require "imgui.ant"
+local imgui_util = require "imgui_util"
+
+local m = ecs.system "gui"
+
+m.require_system "ant.imguibase|imgui_system"
+
+local wndflags = imgui.flags.Window {  }
+
+local imguiMoveSpeed = {move_speed, min = 0, max = 600}
+
+function m:ui_update()
+	imgui.windows.SetNextWindowPos(800,0)
+	imgui.windows.SetNextWindowSize(200,200)
+	for _ in imgui_util.windows("GUI", wndflags) do
+		if imgui.widget.SliderInt("Move Speed", imguiMoveSpeed) then
+			move_speed = imguiMoveSpeed[1]
+			animation.set_value(player, "move", "move_speed", move_speed)
 		end
 	end
 end

@@ -8,12 +8,13 @@ runtime.start {
 		"ant.render|name",
 		"ant.render|shadow_cast",
 		"ant.animation|animation",
-		"ant.animation|state_machine",
+		"ant.animation|animation_controller.state_machine",
 		"ant.animation|skinning",
 		"ant.render|bounding_draw",
 	},
 	system = {
-		"ant.modelviewer|model_review_system",
+		"ant.modelviewer|model_viewer",
+		"ant.modelviewer|gui",
 		"ant.modelviewer|memory_stat",
 	},
 	pipeline = {
