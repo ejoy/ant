@@ -16,9 +16,6 @@
 [submodule "3rd/glm"]
 	path = 3rd/glm
 	url = https://github.com/g-truc/glm.git
-[submodule "3rd/bullet3"]
-	path = 3rd/bullet3
-	url = https://github.com/bulletphysics/bullet3.git
 [submodule "3rd/ios-cmake"]
 	path = 3rd/ios-cmake
 	url = https://github.com/leetal/ios-cmake.git
