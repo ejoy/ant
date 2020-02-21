@@ -23,6 +23,7 @@ do
 	local function del(v)
 		assert(type(v) == "userdata")
 		v(nil)
+		return {}
 	end
 
 	local function save(v)
