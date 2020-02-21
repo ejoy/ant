@@ -1,7 +1,7 @@
 ---------
 ant.animation|animation
 ant.animation|skinning
-ant.animation|state_machine
+ant.animation|animation_controller.state_machine
 ant.collision|collider
 ant.render|mesh
 ant.render|name
@@ -36,7 +36,6 @@ animation:
       looptimes: 0
   ik:
     jobs: {}
-  birth_pose: idle
 can_render: true
 collider:
   capsule:
@@ -56,13 +55,27 @@ skeleton:
   ref_path: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
 skinning: {}
 state_machine:
-  transmits:
+  current: idle
+  file: /pkg/ant.modelviewer/res/player_animation.lua
+  nodes:
     idle:
-      walking:
-        duration: 0.5
-    walking:
-      idle:
-        duration: 0.5
+      transmits:
+        move:
+          duration: 0.5
+        attack:
+          duration: 0.5
+    move:
+      transmits:
+        idle:
+          duration: 0.5
+        attack:
+          duration: 0.5
+    attack:
+      transmits:
+        idle:
+          duration: 0.5
+        move:
+          duration: 0.5
 transform:
   s: {1,1,1,0}
   r: {0,0,0,1}

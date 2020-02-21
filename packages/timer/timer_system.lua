@@ -8,7 +8,7 @@ local function gettime()
 end
 
 local previous
-local current
+local current = 0
 local delta
 
 local timer = ecs.interface "timer"

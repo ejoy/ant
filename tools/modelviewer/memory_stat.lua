@@ -3,6 +3,7 @@ local ecs = ...
 local mathpkg = import_package "ant.math"
 local imgui = require "imgui.ant"
 local rp3d = require "rp3d.core"
+local imgui_util = require "imgui_util"
 local ms = mathpkg.stack
 
 local m = ecs.system "memory_stat"
@@ -46,27 +47,11 @@ local function memory_info()
 	return table.concat(s, "\t\n\t")
 end
 
-local function defer(f)
-    local toclose = setmetatable({}, { __close = f })
-    return function (_, w)
-        if not w then
-            return toclose
-        end
-    end, nil, nil, toclose
-end
-
-local function imgui_windows(...)
-	imgui.windows.Begin(...)
-	return defer(function()
-		imgui.windows.End()
-	end)
-end
-
 local wndflags = imgui.flags.Window { "NoResize", "NoScrollbar" }
 
 function m:ui_update()
 	imgui.windows.SetNextWindowPos(0,0)
-	for _ in imgui_windows("Memory Stat", wndflags) do
+	for _ in imgui_util.windows("Memory Stat", wndflags) do
 		imgui.widget.Text(memory_info())
 	end
 end
