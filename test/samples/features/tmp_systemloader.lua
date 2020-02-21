@@ -122,12 +122,12 @@ local function gltf_animation_test()
         data = {
             transform = mu.translate_mat{-5, 0, 0, 1},
             rendermesh = {
-                -- submesh_refs = {
-                --     Beta_Joints = {
-                --         material_refs = {1},
-                --         visible = false,
-                --     }
-                -- }
+                submesh_refs = {
+                    Beta_Joints = {
+                        material_refs = {1},
+                        visible = false,
+                    },
+                }
             },
             mesh = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",

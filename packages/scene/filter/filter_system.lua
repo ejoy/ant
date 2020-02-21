@@ -90,13 +90,16 @@ local function is_visible(meshname, submesh_refs)
 		if ref then
 			return ref.visible
 		end
+		return true
 	end
 end
 
 local function get_material_refs(meshname, submesh_refs)
 	if submesh_refs then
-		local ref = assert(submesh_refs[meshname])
-		return assert(ref.material_refs)
+		local ref = submesh_refs[meshname]
+		if ref then
+			return ref.material_refs
+		end
 	end
 end
 
