@@ -2,7 +2,7 @@ local runtime = import_package "ant.imguibase".runtime
 runtime.start {
 	policy = {
 		"ant.animation|animation",
-		"ant.animation|state_machine",
+		"ant.animation|animation_controller.state_machine",
 		"ant.animation|ozzmesh",
 		"ant.animation|ozz_skinning",
 		"ant.animation|skinning",

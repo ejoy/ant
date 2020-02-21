@@ -1,7 +1,7 @@
 ---------
 ant.animation|animation
 ant.animation|skinning
-ant.animation|state_machine
+ant.animation|animation_controller.state_machine
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -35,7 +35,6 @@ animation:
       looptimes: 0
   ik:
     jobs: {}
-  birth_pose: idle
 can_render: true
 material:
   ref_path: /pkg/ant.resources/depiction/materials/skin_model_sample.material
@@ -50,14 +49,17 @@ skeleton:
   ref_path: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
 skinning: {}
 state_machine:
-  transmits:
+  current: idle
+  nodes:
     idle:
-      walking:
-        duration: 0.5
+      transmits:
+        walking:
+          duration: 0.5
     walking:
-      idle:
-        duration: 0.5
+      transmits:
+        idle:
+          duration: 0.5
 transform:
   s: {1,1,1,0}
-  r: {0,2.356194496154785,0,0}
+  r: {0,0.92388,0,0.382683}
   t: {0,0,0,1}
