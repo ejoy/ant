@@ -1,4 +1,4 @@
-CMAKE_PROJ := ozz-animation bullet3 reactphysics3d
+CMAKE_PROJ := ozz-animation reactphysics3d
 ALL_PROJ := bgfx $(CMAKE_PROJ)
 MODE = release
 
@@ -91,25 +91,11 @@ else
 COPY_SHADER_FILES_CMD += echo ok
 endif
 
-CMAKE_OPT_bullet3 = -DBUILD_BULLET2_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF
-
 WITH_OZZ_SAMPLES := OFF
 OZZ_ENABLE_EMSCRIPTEN := FALSE
 
 CMAKE_PROJ_BUILD_SUB_PATH = $(PLAT)/$(MODE)
 CMAKE_PROJ_SRC_RELATIVE_PATH = ../../../..
-
-ifeq "$(PLAT)" "mingw"
-  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=$(CMAKE_PROJ_SRC_RELATIVE_PATH)/build/bullet3/$(CMAKE_PROJ_BUILD_SUB_PATH)/lib
-else ifeq "$(PLAT)" "msvc"
-  CMAKE_OPT_bullet3 += -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON -DLIBRARY_OUTPUT_PATH=$(CMAKE_PROJ_SRC_RELATIVE_PATH)/build/bullet3/$(CMAKE_PROJ_BUILD_SUB_PATH)/lib -DBUILD_BULLET2_DEMOS=ON
-  WITH_OZZ_SAMPLES := ON
-else ifeq "$(PLAT)" "ios"
-  OZZ_ENABLE_EMSCRIPTEN := TRUE
-  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
-else
-  CMAKE_OPT_bullet3 += -DLIBRARY_OUTPUT_PATH=../../lib
-endif
 
 CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=$(WITH_OZZ_SAMPLES) -Dozz_build_howtos=$(WITH_OZZ_SAMPLES) -Dozz_build_gltf=ON -Dozz_build_cpp11=ON -DEMSCRIPTEN=$(OZZ_ENABLE_EMSCRIPTEN)
 
