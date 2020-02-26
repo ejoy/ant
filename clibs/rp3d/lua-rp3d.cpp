@@ -402,6 +402,37 @@ lcapsuleShape(lua_State *L) {
 }
 
 static int
+lheightFieldShape(lua_State *L){
+	auto grid_width = (uint32_t)luaL_checkinteger(L, 1);
+	auto grid_height = (uint32_t)luaL_checkinteger(L, 2);
+
+	auto min_height = (reactphysics3d::decimal)luaL_checknumber(L, 3);
+	auto max_height = (reactphysics3d::decimal)luaL_checknumber(L, 4);
+
+	auto heightfield_data = (float*)lua_touserdata(L, 5);
+
+	auto height_scaling = (reactphysics3d::decimal)luaL_checknumber(L, 6);
+
+	auto upaxis = luaL_checkstring(L, 7);
+	auto translate_upaxis = [](auto upaxis_str){
+		if (strcmp(upaxis_str, "Y") == 0)
+			return 1;
+		if (strcmp(upaxis_str, "X") == 0)
+			return 0;
+		if (strcmp(upaxis_str, "Z") == 0)
+			return 2;
+		return -1;
+	};
+
+	auto scaling = (reactphysics3d::Vector3*)lua_touserdata(L, 8);
+
+	HeightFieldShape * hfs = new HeightFieldShape(grid_width, grid_height, min_height, max_height, heightfield_data, reactphysics3d::HeightFieldShape::HeightDataType::HEIGHT_FLOAT_TYPE, translate_upaxis(upaxis), height_scaling, *scaling);
+	lua_pushlightuserdata(L, hfs);
+
+	return 1;
+}
+
+static int
 lrayfilter(lua_State *L) {
 	return 2;
 }
@@ -488,6 +519,7 @@ extern "C" {
 		{ "sphere", lsphereShape },
 		{ "box", lboxShape },
 		{ "capsule", lcapsuleShape },
+		{ "heightfield", lheightFieldShape},
 		{ NULL, NULL },
 	};
 

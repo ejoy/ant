@@ -38,6 +38,49 @@ function c:init()
 	return self
 end
 
+ecs.component "terrain_shape"
+	.origin "position"
+	["opt"].up_axis 		"string" ("Y")
+	["opt"].min_height 		"real"
+	["opt"].max_height 		"real"
+	["opt"].height_scaling	"real"(1.0)
+	["opt"].scaling 		"scale"
+
+local tc = ecs.component "terrain_collider"
+.shape "terrain_shape"
+
+local tc_p = ecs.policy "terrain_collider"
+tc_p.require_component "terrain_collider"
+tc_p.require_component "terrain"
+
+tc_p.require_transform "terrain_collider_build"
+
+local tcb = ecs.transform "terrain_collider_build"
+tcb.input "terrain"
+tcb.output "terrain_collider"
+
+local iterrain = world:interface "ant.terrain|terrain"
+
+function tcb.process(e)
+	local terraincomp = e.terrain
+	local terraincollider = e.terrain_collider
+
+	terraincollider.handle = w:body_create()
+	assert(terraincollider.shape.handle == nil)
+
+	local min_height, max_height = terraincollider.min_height, terraincollider.max_height
+	if terraincollider.min_height == nil then
+		 min_height, max_height = iterrain.calc_min_max_height()
+	end
+	local hieghtfield_data 		= iterrain.heightfield_data(terraincomp)
+	terraincollider.shape.handle = w:new_shape("heightfield", 
+			iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp),
+			min_height, max_height, hieghtfield_data, terraincollider.height_scaling,
+			terraincollider.up_axis, terraincollider.scaling)
+
+	w:add_shape(terraincollider.handle, terraincollider.shaple.handle, 0, terraincollider.shape.origin)
+end
+
 local collcomp = ecs.component "collider"
 	["opt"].sphere "sphere_shape[]"
 	["opt"].box "box_shape[]"
