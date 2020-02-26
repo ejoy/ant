@@ -33,8 +33,6 @@ animation:
       ref_path: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
       scale: 1
       looptimes: 0
-  ik:
-    jobs: {}
 can_render: true
 material:
   ref_path: /pkg/ant.resources/depiction/materials/skin_model_sample.material
@@ -42,7 +40,9 @@ mesh:
   ref_path: /pkg/ant.resources/depiction/meshes/female.mesh
 name: animation_sample
 rendermesh:
-  lodidx: 1
+  submesh_refs:
+    Beta_Joints:
+      visible: false
 serialize: 5e1c39ad369fa96c5bd44fc5
 pose_result: {}
 skeleton:

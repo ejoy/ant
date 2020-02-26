@@ -1,21 +1,21 @@
 local imgui = require "imgui.ant"
 
-local function defer(f)
-    local toclose = setmetatable({}, { __close = f })
-    return function (_, w)
-        if not w then
-            return toclose
-        end
-    end, nil, nil, toclose
+local function TOCLOSE(f)
+    return setmetatable({}, { __close = f })
 end
 
-local function imgui_windows(...)
-	imgui.windows.Begin(...)
-	return defer(function()
-		imgui.windows.End()
-	end)
+local function ONCE(t, s)
+    if not s then return t end
+end
+
+local windiwsBegin = imgui.windows.Begin
+local windiwsEnd = TOCLOSE(imgui.windows.End)
+
+local function windows(...)
+	windiwsBegin(...)
+	return ONCE, windiwsEnd, nil, windiwsEnd
 end
 
 return {
-    windows = imgui_windows
+    windows = windows
 }

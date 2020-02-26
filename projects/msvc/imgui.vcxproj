@@ -19,17 +19,53 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\3rd\imgui\imgui.cpp" />
-    <ClCompile Include="..\..\3rd\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\..\3rd\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\..\clibs\imgui\imgui_ant.cpp" />
-    <ClCompile Include="..\..\clibs\imgui\imgui_win32.cpp" />
-    <ClCompile Include="..\..\clibs\imgui\luaimgui.cpp" />
+    <ClCompile Include="..\..\3rd\imgui\imgui.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG=\"imgui_config.h\";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\imgui\imgui_draw.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG=\"imgui_config.h\";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\imgui\imgui_widgets.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG=\"imgui_config.h\";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\imgui_ant.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\imgui_config.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\imgui_win32.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\luaimgui.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="luadll.vcxproj">
       <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\3rd\imgui\imgui.h" />
+    <ClInclude Include="..\..\3rd\imgui\imgui_internal.h" />
+    <ClInclude Include="..\..\3rd\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\..\3rd\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\..\3rd\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\..\clibs\imgui\imgui_config.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

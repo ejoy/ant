@@ -173,6 +173,7 @@ lcreate(lua_State* L) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
+	io.UserData = L;
 	init_ime(lua_touserdata(L, 1));
 	init_cursor();
 	s_ctx.create();
