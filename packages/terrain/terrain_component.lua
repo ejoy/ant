@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local Physics = assert(world.args.Physics)
 
 local assetpkg 	= import_package "ant.asset"
 local assetmgr	= assetpkg.mgr
@@ -159,7 +158,7 @@ function t:init()
 
 		self.num_element = self.num_section * self.element_size * self.element_size
 		local unitlen = unit_length(self)
-		self.bounding = mathbaselib.new_bounding()
+		self.bounding = mathbaselib.new_bounding(ms)
 		self.terrain_vertices, self.terrain_indices, self.terrain_normaldata = terrain_module.alloc(self.tile_width * unitlen, self.tile_height * unitlen, nil, self.bounding)
 	end
 	return self

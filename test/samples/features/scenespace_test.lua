@@ -126,7 +126,8 @@ local function create_scene_node_test()
                 r = {0, 0, 0, 1},
                 t = {-2, 0, 0, 1},
             },
-            hierarchy = {ref_path = hie_refpath,},
+            --hierarchy = {ref_path = hie_refpath,},
+            hierarchy = {},
             ignore_parent_scale = true,
             name = 'hie_level2_1',
             serialize = seriazlizeutil.create(),
@@ -387,7 +388,6 @@ end
 
 function scenespace_test:init()
     --add_hierarchy_file(hie_refpath)
-    assert(fs.exists(hie_refpath))
     create_scene_node_test()
 end
 

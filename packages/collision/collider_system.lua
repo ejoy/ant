@@ -38,7 +38,7 @@ function c:init()
 	return self
 end
 
-ecs.component "terrain_shape"
+local ts = ecs.component "terrain_shape"
 	.origin "position"
 	["opt"].up_axis 		"string" ("Y")
 	["opt"].min_height 		"real"
@@ -46,7 +46,17 @@ ecs.component "terrain_shape"
 	["opt"].height_scaling	"real"(1.0)
 	["opt"].scaling 		"scale"
 
-local tc = ecs.component "terrain_collider"
+function ts:init()
+	self.up_axis = self.up_axis or "Y"
+	self.min_height = self.min_height or 0
+	self.max_height = self.max_height or 0
+	self.height_scaling = self.height_scaling or 1
+	self.scaling = self.scaling or ms:ref "vector" {1, 1, 1, 0}
+
+	return self
+end
+
+ecs.component "terrain_collider"
 .shape "terrain_shape"
 
 local tc_p = ecs.policy "terrain_collider"

@@ -11,18 +11,21 @@ local mu = mathpkg.util
 local terrain_test = ecs.system "terrain_test"
 terrain_test.require_system 'init_loader'
 
+terrain_test.require_policy "ant.terrain|terrain_render"
+terrain_test.require_policy "ant.collision|terrain_collider"
+
 function terrain_test:init()
 	world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.terrain|terrain",
+			"ant.terrain|terrain_render",
 			"ant.render|name",
-			"ant.collider|terrain_collider",
+			"ant.collision|terrain_collider",
 		},
 		data = {
 			rendermesh = {},
 			material = {
-				ref_path = fs.path "",
+				ref_path = fs.path "/pkg/ant.resources/depiction/materials/terrain/test.material",
 			},
 			transform = mu.srt(),
 			can_render = true,
@@ -31,6 +34,9 @@ function terrain_test:init()
 				tile_height = 4,
 				section_size = 7,
 				element_size = 15,
+			},
+			terrain_collider = {
+				origin = {0, 0, 0, 1},
 			},
 			name = "terrain_test",
 		}

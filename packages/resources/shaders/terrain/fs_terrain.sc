@@ -8,9 +8,6 @@ $input v_normal, v_texcoord0, v_texcoord1, v_positionWS
 
 #define v_distanceVS v_positionWS.w
 
-SAMPLER2D(s_baseTexture, 0);
-SAMPLER2D(s_maskTexture, 1);
-
 void main()
 {
 	// only diffuse?
