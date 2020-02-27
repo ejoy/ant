@@ -174,27 +174,30 @@ t_p.require_component "can_render"
 
 t_p.require_transform "terrain_render_transform"
 
+local iterrain_class = ecs.interface "terrain"
+local iterrain = world:interface "ant.terrain|terrain"
+
+function iterrain_class.grid_width(tc)
+	return tc.tile_width * unit_length(tc)
+end
+
+function iterrain_class.grid_height(tc)
+	return tc.tile_height * unit_length(tc)
+end
+
+function iterrain_class.calc_min_max_height(tc)
+	return terrain_module.calc_min_max_height(iterrain.grid_width(tc), iterrain.grid_height(tc), tc.terrain_vertices)
+end
+
+function iterrain_class.heightfield_data(tc)
+	return tc.terrain_vertices
+end
+
 local trt = ecs.transform "terrain_render_transform"
 trt.input "terrain"
 trt.output "rendermesh"
 
-local iterrain = ecs.interface "terrain"
-
-function iterrain.grid_width(tc)
-	return tc.tile_width * unit_length(tc)
-end
-
-function iterrain.grid_height(tc)
-	return tc.tile_height * unit_length(tc)
-end
-
-function iterrain.calc_min_max_height(tc)
-	return terrain_module.calc_min_max_height(iterrain.grid_width(tc), iterrain.grid_height(tc), tc.terrain_vertices)
-end
-
-function iterrain.heightfield_data(tc)
-	return tc.terrain_vertices
-end
+trt.require_interface "ant.terrain|terrain"
 
 function trt.process(e)
 	local rm 			= e.rendermesh
@@ -205,8 +208,7 @@ function trt.process(e)
 		-- TODO: need define lod info
 	}
 
-	local it = world:interface "ant.terrain|terrain"
-	local gridwidth, gridheight = it.grid_width(terraincomp), it.grid_height(terraincomp)
+	local gridwidth, gridheight = iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp)
 	local numvertices = (gridwidth + 1) * (gridheight + 1)
 
 	local vb = {

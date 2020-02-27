@@ -79,8 +79,10 @@ function tcb.process(e)
 	assert(terraincollider.shape.handle == nil)
 
 	local min_height, max_height = terraincollider.min_height, terraincollider.max_height
-	if terraincollider.min_height == nil then
-		 min_height, max_height = iterrain.calc_min_max_height(terraincomp)
+	if terraincollider.min_height == nil or  terraincollider.max_height == nil then
+		 local min, max = iterrain.calc_min_max_height(terraincomp)
+		 terraincollider.min_height = terraincollider.min_height or min
+		 terraincollider.max_height = terraincollider.max_height or max
 	end
 	local hieghtfield_data 		= iterrain.heightfield_data(terraincomp)
 	terraincollider.shape.handle = w:new_shape("heightfield", 
