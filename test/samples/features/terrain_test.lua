@@ -36,7 +36,9 @@ function terrain_test:init()
 				element_size = 15,
 			},
 			terrain_collider = {
-				origin = {0, 0, 0, 1},
+				shape = {
+					origin = {0, 0, 0, 1},
+				}
 			},
 			name = "terrain_test",
 		}

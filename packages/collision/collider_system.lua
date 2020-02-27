@@ -68,7 +68,6 @@ tc_p.require_transform "terrain_collider_build"
 local tcb = ecs.transform "terrain_collider_build"
 tcb.input "terrain"
 tcb.output "terrain_collider"
-
 local iterrain = world:interface "ant.terrain|terrain"
 
 function tcb.process(e)
@@ -80,7 +79,7 @@ function tcb.process(e)
 
 	local min_height, max_height = terraincollider.min_height, terraincollider.max_height
 	if terraincollider.min_height == nil then
-		 min_height, max_height = iterrain.calc_min_max_height()
+		 min_height, max_height = iterrain.calc_min_max_height(terraincomp)
 	end
 	local hieghtfield_data 		= iterrain.heightfield_data(terraincomp)
 	terraincollider.shape.handle = w:new_shape("heightfield", 

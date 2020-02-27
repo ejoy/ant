@@ -178,7 +178,7 @@ local trt = ecs.transform "terrain_render_transform"
 trt.input "terrain"
 trt.output "rendermesh"
 
-local iterrain = ecs.interface "terrain"
+local iterrain = ecs.interface "ant.terrain|terrain"
 
 function iterrain.grid_width(tc)
 	return tc.tile_width * unit_length(tc)

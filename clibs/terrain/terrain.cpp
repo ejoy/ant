@@ -1264,14 +1264,6 @@ extern "C" {
 #include <vector>
 #include "glm/glm.hpp"
 
-static inline bool
-is_power_of_2(uint32_t n){
-	if (n == 0)
-		return false;
-	auto l = std::log2(n);
-	return std::ceil(l) == std::floor(l);
-}
-
 struct heightfield_data{
 	uint32_t w, h;
 	const float *data;
@@ -1292,15 +1284,9 @@ lterrain_alloc(lua_State* L){
 	const uint32_t grid_width = (uint32_t)lua_tointeger(L, 1);
 	const uint32_t grid_height = (uint32_t)lua_tointeger(L, 2);
 
-	const uint32_t vertex_width = grid_width + 1;
-	const uint32_t vertex_height = grid_height + 1;
-	if (!is_power_of_2(vertex_width) || !is_power_of_2(vertex_height)){
-		luaL_error(L, "grid width or height + 1 is not power of 2:%d, %d", grid_width, grid_height);
-	}
-
 	const float grid_unit = lua_isnoneornil(L, 3) ? 1.f : (float)lua_tonumber(L, 3);
 
-	Bounding *bounding = lua_isnoneornil(L, 4) ? nullptr : (Bounding*)luaL_checkudata(L, 7, "BOUNDING_MT");
+	Bounding *bounding = lua_isnoneornil(L, 4) ? nullptr : (Bounding*)luaL_checkudata(L, 4, "BOUNDING_MT");
 	
 	heightfield_data hfdata = {0};
 	if (!lua_isnoneornil(L, 5)){
@@ -1312,6 +1298,9 @@ lterrain_alloc(lua_State* L){
 		hfdata.data = (const float*)lua_touserdata(L, 4);
 		lua_pop(L, 3);
 	}
+
+	const uint32_t vertex_width = grid_width 	+ 1;
+	const uint32_t vertex_height = grid_height 	+ 1;
 
 	const float offsetX = lua_isnoneornil(L, 6) ? vertex_width * -0.5f : (float)lua_tonumber(L, 5);
 	const float offsetZ = lua_isnoneornil(L, 7) ? vertex_height * -0.5f : (float)lua_tonumber(L, 6);
