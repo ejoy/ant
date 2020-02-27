@@ -1302,8 +1302,8 @@ lterrain_alloc(lua_State* L){
 	const uint32_t vertex_width = grid_width 	+ 1;
 	const uint32_t vertex_height = grid_height 	+ 1;
 
-	const float offsetX = lua_isnoneornil(L, 6) ? vertex_width * -0.5f : (float)lua_tonumber(L, 5);
-	const float offsetZ = lua_isnoneornil(L, 7) ? vertex_height * -0.5f : (float)lua_tonumber(L, 6);
+	const float offsetX = lua_isnoneornil(L, 6) ? grid_width * -0.5f : (float)lua_tonumber(L, 5);
+	const float offsetZ = lua_isnoneornil(L, 7) ? grid_height * -0.5f : (float)lua_tonumber(L, 6);
 
 	const uint32_t buffersize = vertex_width * vertex_height * sizeof(glm::vec3);
 	auto positions = (glm::vec3*)lua_newuserdatauv(L, buffersize, 0);
@@ -1354,7 +1354,7 @@ lterrain_alloc(lua_State* L){
 			
 			normals[idx0] = calc_normal(idx0, idx1, idx2);
 
-			const uint32_t idx3 = (iz+1 * vertex_width) + (ix + 1);
+			const uint32_t idx3 = (iz+1) * vertex_width + (ix + 1);
 			indices[itriangle++] = glm::uvec3(idx0, idx1, idx2);
 			indices[itriangle++] = glm::uvec3(idx3, idx2, idx1);
 		}
