@@ -269,6 +269,11 @@ local function importAll(w, ecs, class, config, loader)
 				importComponent(k)
 			end
 		end
+		if v.require_interface then
+			for _, k in ipairs(v.require_interface) do
+				importInterface(k)
+			end
+		end
 	end
 	function importSingleton(k)
 		local name = k
@@ -346,7 +351,7 @@ return function (w, config, loader)
 	}
 	register {
 		type = "transform",
-		setter = { "input", "output" },
+		setter = { "input", "output", "require_interface" },
 		callback = { "process" },
 	}
 	register {

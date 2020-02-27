@@ -68,6 +68,7 @@ tc_p.require_transform "terrain_collider_build"
 local tcb = ecs.transform "terrain_collider_build"
 tcb.input "terrain"
 tcb.output "terrain_collider"
+tcb.require_interface "ant.terrain|terrain"
 local iterrain = world:interface "ant.terrain|terrain"
 
 function tcb.process(e)
