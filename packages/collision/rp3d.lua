@@ -14,9 +14,17 @@ do
 	end
 	setmetatable(all_shapes, { __gc = all_shapes_gc })
 
+	local function shape_key(...)
+		local t = {}
+		for ii=1, select('#', ...) do
+			t[#t+1] = tostring(select(ii, ...))
+		end
+		return table.concat(t, ":")
+	end
+
 	function world_mt:new_shape(typename, ...)
 		-- interning shapes
-		local key = table.concat ({ typename, ... } , ":")
+		local key = shape_key(typename, ...)
 		local value = all_shapes[key]
 		if value then
 			return value
@@ -34,6 +42,8 @@ function lib.init(ms)
 	world_mt.set_transform = math3d_adapter.vector(ms, world_mt.set_transform, 3)
 	world_mt.get_aabb = math3d_adapter.getter(ms, world_mt.get_aabb, "vv")
 	world_mt.add_shape = math3d_adapter.vector(ms, world_mt.add_shape, 5)
+
+	lib.shape.heightfield = math3d_adapter.vector(ms, lib.shape.heightfield, 8)
 
 	local rayfilter = math3d_adapter.vector(ms, lib.rayfilter, 1)
 	local raycast = math3d_adapter.getter(ms, world_mt.raycast, "vv")

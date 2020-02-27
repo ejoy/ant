@@ -14,8 +14,8 @@ void main()
 	float lightIntensity= ntol * directional_intensity[0].x;
     vec4 lightColor 	= vec4(directional_color[0].xyz * lightIntensity, 1.0);
 
-	vec4  ambientColor  = vec4(calc_ambient_color(ambient_mode.x, v_normal.y).rgb, 0.0) * textureColor;
-	vec4  diffuseColor  = lightColor * textureColor * maskColor;
+	vec4  ambientColor  = vec4(calc_ambient_color(ambient_mode.x, v_normal.y).rgb, 0.0);
+	vec4  diffuseColor  = lightColor; 
 	
 	vec4 finalcolor 	= saturate(ambientColor + diffuseColor);
     gl_FragColor        = finalcolor;

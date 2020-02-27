@@ -78,19 +78,20 @@ function tcb.process(e)
 	terraincollider.handle = w:body_create()
 	assert(terraincollider.shape.handle == nil)
 
-	local min_height, max_height = terraincollider.min_height, terraincollider.max_height
-	if terraincollider.min_height == nil or  terraincollider.max_height == nil then
-		 local min, max = iterrain.calc_min_max_height(terraincomp)
-		 terraincollider.min_height = terraincollider.min_height or min
-		 terraincollider.max_height = terraincollider.max_height or max
-	end
-	local hieghtfield_data 		= iterrain.heightfield_data(terraincomp)
-	terraincollider.shape.handle = w:new_shape("heightfield", 
-			iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp),
-			min_height, max_height, hieghtfield_data, terraincollider.height_scaling,
-			terraincollider.up_axis, terraincollider.scaling)
+	local shape = terraincollider.shape
 
-	w:add_shape(terraincollider.handle, terraincollider.shaple.handle, 0, terraincollider.shape.origin)
+	if shape.min_height == nil or  shape.max_height == nil then
+		 local min, max = iterrain.calc_min_max_height(terraincomp)
+		 shape.min_height = shape.min_height or min
+		 shape.max_height = shape.max_height or max
+	end
+	local heightfield_data 		= iterrain.heightfield_data(terraincomp)
+	shape.handle = w:new_shape("heightfield", 
+			iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp),
+			shape.min_height, shape.max_height, heightfield_data, shape.height_scaling,
+			shape.up_axis, shape.scaling)
+
+	w:add_shape(terraincollider.handle, shape.handle, 0, shape.origin)
 end
 
 local collcomp = ecs.component "collider"

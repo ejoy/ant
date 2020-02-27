@@ -1394,7 +1394,7 @@ lterrain_min_max_height(lua_State *L){
 	const uint32_t vertex_width = grid_width + 1;
 	const uint32_t vertex_height = grid_height + 1;
 
-	glm::vec3 *positions = (glm::vec3*)lua_touserdata(L, 2);
+	glm::vec3 *positions = (glm::vec3*)lua_touserdata(L, 3);
 
 	float minH = std::numeric_limits<float>::lowest(), 
 			maxH = std::numeric_limits<float>::max();

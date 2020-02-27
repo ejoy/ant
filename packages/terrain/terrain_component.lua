@@ -204,7 +204,7 @@ function trt.process(e)
 	local terraincomp 	= e.terrain
 
 	local meshscene = {
-		sceneidx = 0,
+		sceneidx = 1,
 		-- TODO: need define lod info
 	}
 
@@ -236,8 +236,11 @@ function trt.process(e)
 		{
 			--mesh node:0
 			{
-				vb = vb,
-				ib = ib,
+				-- group:0
+				{
+					vb = vb,
+					ib = ib,
+				}
 			}
 		}
 	}

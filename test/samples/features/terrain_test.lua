@@ -25,7 +25,7 @@ function terrain_test:init()
 		data = {
 			rendermesh = {},
 			material = {
-				ref_path = fs.path "/pkg/ant.resources/depiction/materials/terrain/test.material",
+				ref_path = fs.path "/pkg/ant.resources/depiction/terrain/test.material",
 			},
 			transform = mu.srt(),
 			can_render = true,
