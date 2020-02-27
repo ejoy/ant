@@ -32,8 +32,8 @@ init_loader.require_system 'ant.camera_controller|camera_controller2'
 init_loader.require_system "ant.camera_controller|camera_system"
 init_loader.require_system "ant.imguibase|imgui_system"
 init_loader.require_system "ant.sky|procedural_sky_system"
--- init_loader.require_system "ant.test.features|scenespace_test"
--- init_loader.require_system "ant.test.features|character_ik_test"
+init_loader.require_system "ant.test.features|scenespace_test"
+init_loader.require_system "ant.test.features|character_ik_test"
 init_loader.require_system "ant.test.features|terrain_test"
 init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
@@ -295,7 +295,7 @@ function init_loader:init()
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0, 1})
-    create_plane_test()
+    --create_plane_test()
 
     ozzmesh_animation_test()
     pbr_test()

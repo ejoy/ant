@@ -146,10 +146,6 @@ function t:init()
 			error(string.format("terrain data must provide if not from height field file"))
 		end
 		self.num_title = self.tile_width * self.tile_height
-		if not is_power_of_2(self.section_size+1) then
-			error(string.format("section size must be power of two - 1:%d", self.section_size))
-		end
-
 		self.num_section = self.num_title * self.section_size * self.section_size
 
 		if not is_power_of_2(self.element_size+1) then
@@ -210,25 +206,25 @@ function trt.process(e)
 
 	local gridwidth, gridheight = iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp)
 	local numvertices = (gridwidth + 1) * (gridheight + 1)
-
+	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
 	local vb = {
 		start = 0,
 		num = numvertices,
 		handles = {
 			{
-				handle = bgfx.create_vertex_buffer({"!", terraincomp.terrain_vertices, 0, numvertices}, declmgr.get("p3").handle),
+				handle = bgfx.create_vertex_buffer({"!", terraincomp.terrain_vertices, 0, numvertices * pos_decl.stride}, pos_decl.handle),
 			},
 			{
-				handle = bgfx.create_vertex_buffer({"!", terraincomp.terrain_normaldata, 0, numvertices}, declmgr.get("n3").handle)
+				handle = bgfx.create_vertex_buffer({"!", terraincomp.terrain_normaldata, 0, numvertices * normal_decl.stride}, normal_decl.handle)
 			}
 		},
 	}
 
-	local numindices = gridwidth * gridheight * 3
+	local numindices = gridwidth * gridheight * 2 * 3
 	local ib = {
 		start = 0,
 		num = numindices,
-		handle = bgfx.create_index_buffer({terraincomp.terrain_indices, 0, numindices}),
+		handle = bgfx.create_index_buffer({terraincomp.terrain_indices, 0, numindices * 4}, "d"),
 	}
 
 	local scenes = {

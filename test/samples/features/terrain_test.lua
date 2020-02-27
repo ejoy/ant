@@ -30,10 +30,10 @@ function terrain_test:init()
 			transform = mu.srt(),
 			can_render = true,
 			terrain = {
-				tile_width = 4,
-				tile_height = 4,
-				section_size = 7,
-				element_size = 15,
+				tile_width = 2,
+				tile_height = 2,
+				section_size = 2,
+				element_size = 7,
 			},
 			terrain_collider = {
 				shape = {
