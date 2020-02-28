@@ -33,8 +33,8 @@ local function foot_ik_test()
             "ant.character|foot_ik_raycast",
         },
         data = {
-            --transform = mu.translate_mat {-2.5, 0, -6, 1},
-            transform = mu.translate_mat {-4.5, 0, -6, 1},
+            transform = mu.translate_mat {-2.5, 0, -6, 1},
+            --transform = mu.translate_mat {-4.5, 0, -6, 1},
             rendermesh = {},
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
@@ -103,7 +103,7 @@ local function foot_ik_test()
             },
             foot_ik_raycast = {
                 cast_dir = {0, -2, 0, 0},
-                foot_height = 0.2,
+                foot_height = 0.5,
                 trackers = {
                     {
                         leg = "left_leg",
@@ -139,7 +139,7 @@ local function create_plane_test()
     computil.create_plane_entity(world,
     mu.srt(
         {5, 1, 5, 0},
-        ms:euler2quat({math.rad(5), 0, 0, 0}, true),
+        ms:euler2quat({math.rad(10), 0, 0, 0}, true),
         {0, 0, -5, 1}),
     fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},

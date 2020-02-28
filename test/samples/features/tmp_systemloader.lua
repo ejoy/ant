@@ -297,11 +297,11 @@ function init_loader:init()
     --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0, 1})
     --create_plane_test()
 
-    ozzmesh_animation_test()
-    pbr_test()
-    gltf_animation_test()
+    -- ozzmesh_animation_test()
+    -- pbr_test()
+    -- gltf_animation_test()
 
-    pbrscene.create_scene(world)
+    -- pbrscene.create_scene(world)
 end
 
 local function create_camera()

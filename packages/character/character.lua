@@ -146,28 +146,44 @@ local function ankles_target(ray, foot_height)
     end
 end
 
-local function calc_pelvis_offset()
-    return nil
-    -- local maxdot
-    -- for whichleg=1, numlegs do
-    --     local li = leg_info[whichleg]
-    --     if li then
-    --         local ankle_pos_ws, target_ws = li[1], li[2]
-    --         local dot = ms(target_ws, ankle_pos_ws, "-", cast_dir, ".T")
-    --         if maxdot then
-    --             if dot[1] > maxdot[1] then
-    --                 maxdot = dot
-    --             end
-    --         else
-    --             maxdot = dot
-    --         end
-    --     end
-    -- end
-    
-    -- if maxdot then
-    --     maxdot[2] = nil
-    --     return ms(maxdot, cast_dir, "*P")
-    -- end
+local function calc_pelvis_offset(leg_raycasts, cast_dir)
+    local normalize_cast_dir = ms(cast_dir, "nP")
+    local max_dot
+    local offset
+    for _, l in ipairs(leg_raycasts) do
+        local ankle_pos, target_pos = l[2], l[3]
+
+        local dot = ms(normalize_cast_dir, target_pos, ankle_pos, "-.T")
+        if max_dot == nil or dot[1] > max_dot then
+            max_dot = dot[1]
+            dot[2] = nil
+            offset = ms(normalize_cast_dir, dot, "*P")
+        end
+    end
+
+    return offset
+end
+
+local function refine_target(raystart, hitpt, hitnormal, foot_height)
+    -- see ozz-animation samples:sample_foot_ik.cc:UpdateAnklesTarget for commonet
+    local ABl = ms(raystart, hitpt, "-", hitnormal, ".T")
+    if ABl[1] ~= 0 then
+        ABl[2] = nil
+        local ptB = ms(raystart, hitnormal, ABl, "*-P")
+        local IB = ms(ptB, hitpt, "-P")
+        local IBl = ms:length(IB)
+
+        if IBl <= 0 then
+            return ms(hitpt, hitnormal, {foot_height}, "*+P")
+        end
+
+        local IHl = IBl * foot_height / ABl[1]
+        local IH = ms(IB, {IHl / IBl}, "*P")
+        local H = ms(hitpt, IH, "+P")
+        return ms(H, hitnormal, {foot_height}, "*+P")
+    end
+
+    return hitpt
 end
 
 local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
@@ -184,6 +200,7 @@ local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
         local castray = ankles_raycast_ray(ankle_pos_ws, cast_dir)
         local target_ws, hitnormal_ws = ankles_target(castray, foot_height)
         if target_ws then
+            target_ws = refine_target(castray[1], target_ws, hitnormal_ws, foot_height)
             leg_raycasts[#leg_raycasts+1] = {
                 tracker, ankle_pos_ws, target_ws, hitnormal_ws
             }
@@ -233,7 +250,7 @@ function char_foot_ik_sys:do_ik()
 
         if next(leg_raycasts) then
             iik.setup(e)
-            local pelvis_offset = calc_pelvis_offset()
+            local pelvis_offset = calc_pelvis_offset(leg_raycasts, foot_rc.cast_dir)
             local correct_trans = pelvis_offset and ms:add_translate(trans, pelvis_offset) or trans
             local inv_correct_trans = ms(correct_trans, "iP")
 
