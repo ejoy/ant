@@ -43,7 +43,7 @@ function lib.init(ms)
 	world_mt.get_aabb = math3d_adapter.getter(ms, world_mt.get_aabb, "vv")
 	world_mt.add_shape = math3d_adapter.vector(ms, world_mt.add_shape, 5)
 
-	lib.shape.heightfield = math3d_adapter.vector(ms, lib.shape.heightfield, 8)
+	lib.shape.heightfield = math3d_adapter.vector(ms, lib.shape.heightfield, 7)
 
 	local rayfilter = math3d_adapter.vector(ms, lib.rayfilter, 1)
 	local raycast = math3d_adapter.getter(ms, world_mt.raycast, "vv")

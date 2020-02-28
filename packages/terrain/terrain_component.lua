@@ -118,8 +118,9 @@ local bgfx 		= require "bgfx"
 local t = ecs.component "terrain"
 ["opt"].tile_width		"int" (2)
 ["opt"].tile_height		"int" (2)
-["opt"].section_size	"int" (7)
-["opt"].element_size	"int" (15)
+["opt"].section_size	"int" (2)
+["opt"].element_size	"int" (7)
+["opt"].grid_unit		"real"(1)
 ["opt"].is_dynamic		"boolean"
 ["opt"].ref_path 		"respath"
 
@@ -132,7 +133,7 @@ end
 
 local terrain_module = require "terrain"
 
-local function unit_length(tc)
+local function tile_length(tc)
 	return tc.section_size * tc.element_size
 end
 
@@ -153,9 +154,16 @@ function t:init()
 		end
 
 		self.num_element = self.num_section * self.element_size * self.element_size
-		local unitlen = unit_length(self)
+		local tlen = tile_length(self)
 		self.bounding = mathbaselib.new_bounding(ms)
-		self.terrain_vertices, self.terrain_indices, self.terrain_normaldata = terrain_module.alloc(self.tile_width * unitlen, self.tile_height * unitlen, nil, self.bounding)
+		local gridwidth, gridheight = self.tile_width * tlen, self.tile_height * tlen
+		local hf_width, hf_height = gridwidth+1, gridheight+1
+		local heightfield = {hf_width, hf_height}
+		heightfield[3] = terrain_module.alloc_heightfield(hf_width, hf_height)
+		self.grid_unit = self.grid_unit or 1
+
+		self.heightfield = heightfield
+		self.terrain_vertices, self.terrain_indices, self.terrain_normaldata = terrain_module.create(gridwidth, gridheight, self.grid_unit, self.bounding, heightfield)
 	end
 	return self
 end
@@ -174,19 +182,19 @@ local iterrain_class = ecs.interface "terrain"
 local iterrain = world:interface "ant.terrain|terrain"
 
 function iterrain_class.grid_width(tc)
-	return tc.tile_width * unit_length(tc)
+	return tc.tile_width * tile_length(tc)
 end
 
 function iterrain_class.grid_height(tc)
-	return tc.tile_height * unit_length(tc)
+	return tc.tile_height * tile_length(tc)
 end
 
 function iterrain_class.calc_min_max_height(tc)
-	return terrain_module.calc_min_max_height(iterrain.grid_width(tc), iterrain.grid_height(tc), tc.terrain_vertices)
+	return terrain_module.calc_min_max_height(tc.heightfield)
 end
 
-function iterrain_class.heightfield_data(tc)
-	return tc.terrain_vertices
+function iterrain_class.heightfield(tc)
+	return tc.heightfield
 end
 
 local trt = ecs.transform "terrain_render_transform"

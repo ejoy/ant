@@ -19,34 +19,40 @@ struct heightfield_data{
 };
 static inline float
 get_heightfield_data(const heightfield_data &hfdata, float percentW, float percentH, uint32_t x, uint32_t z){
-	if (hfdata.data == nullptr)
-		return 0.f;
-
 	const uint32_t sampleX = uint32_t(x * percentW), sampleZ = uint32_t(z * percentH);
 
 	assert((sampleZ * hfdata.w + sampleX) < (hfdata.w * hfdata.h));
 	return hfdata.data[sampleZ * hfdata.w + sampleX];
 }
 
+static inline heightfield_data
+fetch_heightfield(lua_State *L, int index){
+	heightfield_data hf;
+	lua_geti(L, index, 1);
+	hf.w = (uint32_t)lua_tointeger(L, -1);
+	lua_geti(L, index, 2);
+	hf.h = (uint32_t)lua_tointeger(L, -1);
+	lua_geti(L, index, 3);
+	hf.data = (const float*)lua_touserdata(L, -1);
+	lua_pop(L, 3);
+
+	return hf;
+}
+
 static int
-lterrain_alloc(lua_State* L){
+lterrain_create(lua_State* L){
 	const uint32_t grid_width = (uint32_t)lua_tointeger(L, 1);
 	const uint32_t grid_height = (uint32_t)lua_tointeger(L, 2);
 
-	const float grid_unit = lua_isnoneornil(L, 3) ? 1.f : (float)lua_tonumber(L, 3);
+	const float grid_unit = (float)lua_tonumber(L, 3);
 
-	Bounding *bounding = lua_isnoneornil(L, 4) ? nullptr : (Bounding*)luaL_checkudata(L, 4, "BOUNDING_MT");
+	Bounding *bounding = (Bounding*)luaL_checkudata(L, 4, "BOUNDING_MT");
 	
-	heightfield_data hfdata = {0};
-	if (!lua_isnoneornil(L, 5)){
-		lua_geti(L, 4, 1);
-		hfdata.w = (uint32_t)lua_tointeger(L, -1);
-		lua_geti(L, 4, 2);
-		hfdata.h = (uint32_t)lua_tointeger(L, -1);
-		lua_geti(L, 4, 3);
-		hfdata.data = (const float*)lua_touserdata(L, 4);
-		lua_pop(L, 3);
+	if (lua_isnoneornil(L, 5)){
+		return luaL_error(L, "heightfield data must provided");
 	}
+
+	const heightfield_data hfdata = fetch_heightfield(L, 5);
 
 	const uint32_t vertex_width = grid_width 	+ 1;
 	const uint32_t vertex_height = grid_height 	+ 1;  
@@ -72,16 +78,12 @@ lterrain_alloc(lua_State* L){
 
 			auto p = glm::vec3(x, y, z);
 			positions[ip] = p;
-
-			if (bounding)
-				bounding->aabb.Append(p);
+			bounding->aabb.Append(p);
 		}
 	}
 
-	if (bounding){
-		bounding->sphere.Init(bounding->aabb);
-		bounding->obb.Init(bounding->aabb);
-	}
+	bounding->sphere.Init(bounding->aabb);
+	bounding->obb.Init(bounding->aabb);
 
 	auto calc_normal = [positions](uint32_t idx0, uint32_t idx1, uint32_t idx2){
 			const auto& p0 = positions[idx0], 
@@ -135,6 +137,17 @@ lterrain_alloc(lua_State* L){
 	return 3;
 }
 
+static int
+lterrain_alloc_heightfield(lua_State *L){
+	const uint32_t width = (uint32_t)luaL_checkinteger(L, 1);
+	const uint32_t height = (uint32_t)luaL_checkinteger(L, 2);
+
+	const uint32_t buffersize = width * height * sizeof(float);
+	float * hf = (float*)lua_newuserdatauv(L, buffersize, 0);
+	memset(hf, 0, buffersize);
+	return 1;
+}
+
 static int 
 lterrain_min_max_height(lua_State *L){
 	const uint32_t grid_width = (uint32_t)lua_tointeger(L, 1);
@@ -179,15 +192,27 @@ lterrain_aabb(lua_State *L){
 	return 1;
 }
 
+static int
+lterrain_update_buffer(lua_State *L){
+	const auto hf = fetch_heightfield(L, 1);
+	auto positions = (glm::vec3*)lua_touserdata(L, 2);
+	auto normals = (glm::vec3*)lua_touserdata(L, 3);
+
+	
+	return 0;
+}
+
 extern "C" {
 LUAMOD_API int
 	luaopen_terrain(lua_State *L) {
 	luaL_checkversion(L);
 	
 	luaL_Reg l[] = {
-		{ "alloc",	lterrain_alloc},
-		{ "calc_min_max_height", lterrain_min_max_height},
-		{ "calc_aabb", lterrain_aabb},
+		{ "create",				lterrain_create},
+		{ "alloc_heightfield", 	lterrain_alloc_heightfield},
+		{ "calc_min_max_height",lterrain_min_max_height},
+		{ "calc_aabb", 			lterrain_aabb},
+		{ "update_buffers",		lterrain_update_buffer},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

@@ -40,7 +40,6 @@ end
 
 local ts = ecs.component "terrain_shape"
 	.origin "position"
-	["opt"].up_axis 		"string" ("Y")
 	["opt"].min_height 		"real"
 	["opt"].max_height 		"real"
 	["opt"].height_scaling	"real"(1.0)
@@ -85,11 +84,16 @@ function tcb.process(e)
 		 shape.min_height = shape.min_height or min
 		 shape.max_height = shape.max_height or max
 	end
-	local heightfield_data 		= iterrain.heightfield_data(terraincomp)
-	shape.handle = w:new_shape("heightfield", 
-			iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp),
-			shape.min_height, shape.max_height, heightfield_data, shape.height_scaling,
-			shape.up_axis, shape.scaling)
+
+	local scaling = shape.scaling
+	local terrain_grid_unit = terraincomp.grid_unit
+	local terrain_scaling = ms({terrain_grid_unit, 1, terrain_grid_unit, 0}, "P")
+	scaling = scaling and ms(scaling, terrain_scaling, "*P") or terrain_scaling
+
+	local heightfield = terraincomp.heightfield
+	local hf_width, hf_height = heightfield[1], heightfield[2]
+	local hf_data = heightfield[3]
+	shape.handle = w:new_shape("heightfield", hf_width, hf_height, shape.min_height, shape.max_height, hf_data, shape.height_scaling, scaling)
 
 	w:add_shape(terraincollider.handle, shape.handle, 0, shape.origin)
 end

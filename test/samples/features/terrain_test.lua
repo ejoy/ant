@@ -50,7 +50,7 @@ function terrain_test:init()
 		}
 	}
 
-	local p1, p2 = ms({0, 1, 0, 1}, {0, -1, 0, 1}, "PP")
+	local p2, p1 = ms({0, 1, 0, 1}, {0, -1, 0, 1}, "PP")
 	local hitpt, hitnormal = icollider.raycast {p1, p2}
 	if hitpt then
 		print("raycast terrain collider:")
