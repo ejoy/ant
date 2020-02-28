@@ -5,6 +5,7 @@ local mathpkg = import_package "ant.math"
 local renderpkg = import_package "ant.render"
 local skypkg = import_package "ant.sky"
 local fs = require "filesystem"
+local task = require "task"
 
 local skyutil = skypkg.util
 local mu = mathpkg.util
@@ -135,7 +136,7 @@ local function moveEntity(e, distance)
 	end
 end
 
-function m:data_changed()
+local function mainloop(delta)
 	for _,w, h in eventResize:unpack() do
 		screensize.w = w
 		screensize.h = h
@@ -156,12 +157,17 @@ function m:data_changed()
 			mode = "keyboard"
 		elseif what == "SPACE" then
 			if press == 1 then
-				if mode == "attack" then
-					mode = "idle"
-					animation.set_state(player, "idle")
-				else
+				if mode ~= "attack" then
+					local tmp = mode
 					mode = "attack"
 					animation.set_state(player, "attack")
+					task.wait(1000)
+					mode = tmp
+					if mode == "idle" then
+						animation.set_state(player, "idle")
+					else
+						animation.set_state(player, "move")
+					end
 				end
 			end
 			return
@@ -185,7 +191,7 @@ function m:data_changed()
 		mode = "idle"
 		animation.set_state(player, "idle")
 	end
-	local move_distance = timer.delta() * move_speed / 100000
+	local move_distance = delta * move_speed / 100000
 	if mode == "keyboard" then
 		local camera_data = camera.get(camera_id)
 		local viewdir = ms(camera_data.viewdir, "T")
@@ -214,7 +220,17 @@ function m:data_changed()
 	end
 end
 
+local excess_tick = 0
 
+function m:data_changed()
+	local tick = excess_tick + timer.delta()
+	local delta = math.floor(tick)
+	excess_tick = tick - delta
+	task.add(function()
+		return mainloop(delta)
+	end)
+	task.update(delta)
+end
 
 local imgui = require "imgui.ant"
 local imgui_util = require "imgui_util"
