@@ -56,8 +56,7 @@ local function foot_ik_test()
             animation_birth = "idle",
             ik = {
                 jobs = {
-                    {
-                        name        = "left_leg",
+                    left_leg = {
                         type        = "two_bone",
                         target      = {0, 0, 0, 1},
                         pole_vector = {0, 1, 0, 0},
@@ -67,8 +66,7 @@ local function foot_ik_test()
                         soften      = 1.0,
                         joints      = {"LeftUpLeg", "LeftLeg", "LeftFoot",},
                     },
-                    {
-                        name        = "left_sole",
+                    left_sole = {
                         type        = "aim",
                         target      = {0, 0, 0, 1},
                         pole_vector = {0, 1, 0, 0},
@@ -79,8 +77,7 @@ local function foot_ik_test()
                         twist_angle = 0,
                         joints      = {"LeftFoot",}
                     },
-                    {
-                        name        = "right_leg",
+                    right_leg = {
                         type        = "two_bone",
                         target      = {0, 0, 0, 1},
                         pole_vector = {0, 1, 0, 0},
@@ -90,8 +87,7 @@ local function foot_ik_test()
                         soften      = 1.0,
                         joints      = {"RightUpLeg", "RightLeg", "RightFoot",},
                     },
-                    {
-                        name        = "right_sole",
+                    right_sole = {
                         type        = "aim",
                         target      = {0, 0, 0, 1},
                         pole_vector = {0, 1, 0, 0},

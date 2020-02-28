@@ -10,7 +10,6 @@ local ani_module = require "hierarchy.animation"
 
 --there are 2 types in ik_data, which are 'two_bone'(IKTwoBoneJob) and 'aim'(IKAimJob).
 ecs.component "ik_data"
-	.name		"string"
 	.type		"string"("aim")			-- can be 'two_bone'/'aim'
 	.target 	"vector"{0, 0, 0, 1}	-- model space
 	.pole_vector"vector"{0, 0, 0, 0}	-- model space
@@ -24,7 +23,7 @@ ecs.component "ik_data"
 	["opt"].offset "vector" {0, 0, 0, 0}-- local space
 
 ecs.component "ik"
-	.jobs 'ik_data[]'
+	.jobs 'ik_data{}'
 
 local ik_p = ecs.policy "ik"
 ik_p.require_component "skeleton"
@@ -59,7 +58,7 @@ function build_ik_tranform.process(e)
 	local ske = asset.get_resource(e.skeleton.ref_path).handle
 	local ik = e.ik
 
-	for _, ikdata in ipairs(ik.jobs) do
+	for _, ikdata in pairs(ik.jobs) do
 		local joint_indices = {}
 		for _, jn in ipairs(ikdata.joints) do
 			local jointidx = ske:joint_index(jn)

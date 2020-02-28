@@ -80,21 +80,14 @@ local foot_t = ecs.transform "check_ik_data"
 foot_t.input "ik"
 foot_t.output "foot_ik_raycast"
 
-local function which_job(ik, name)
-    for _, j in ipairs(ik.jobs) do
-        if j.name == name then
-            return j
-        end
-    end
-end
-
 function foot_t.process(e)
     local r = e.foot_ik_raycast
     local ik = e.ik
 
     local trackers = r.trackers
+    local jobs = ik.jobs
     for _, tracker in ipairs(trackers) do
-        local leg_ikdata = which_job(ik, tracker.leg)
+        local leg_ikdata = jobs[tracker.leg]
         if leg_ikdata == nil then
             error(string.format("foot_ik_raycast.ik_job_name:%s, not found in ik component", r.ik_job_name))
         end
@@ -111,7 +104,7 @@ function foot_t.process(e)
         -----
         local sole_name = tracker.sole
         if sole_name then
-            local sole_ikdata = which_job(ik, tracker.sole)
+            local sole_ikdata = jobs[tracker.sole]
             if sole_ikdata == nil then
                 error(string.format("invalid ik job name:%s", tracker.sole))
             end
@@ -181,8 +174,9 @@ local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
     local leg_raycasts = {}
     local cast_dir = foot_rc.cast_dir
     local foot_height = foot_rc.foot_height
+    local jobs = ik.jobs
     for _, tracker in ipairs(foot_rc.trackers) do
-        local leg_ikdata = which_job(ik, tracker.leg)
+        local leg_ikdata = jobs[tracker.leg]
         local anklenidx = leg_ikdata.joint_indices[3]
         local ankle_pos = ms:vector(pose_result:joint_trans(anklenidx, 4))
         local ankle_pos_ws = ms(trans, ankle_pos, "*P")
@@ -199,15 +193,15 @@ local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
     return leg_raycasts
 end
 
-local function do_foot_ik(pose_result, ik, foot_rc, inv_trans, leg_raycasts)
+local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
     local function joint_y_vector(jointidx)
         return ms:vector(pose_result:joint_trans(jointidx, 2))
     end
-
+    local jobs = ik.jobs
     for _, leg in ipairs(leg_raycasts) do
         local tracker = leg[1]
-        local leg_ikdata = which_job(ik, tracker.leg)
-        local sole_ikdata = tracker.sole and which_job(ik, tracker.sole) or nil
+        local leg_ikdata = jobs[tracker.leg]
+        local sole_ikdata = tracker.sole and jobs[tracker.sole] or nil
 
         local target_ws = leg[3]
         ms(leg_ikdata.target, inv_trans, target_ws, "*=")
@@ -243,7 +237,7 @@ function char_foot_ik_sys:do_ik()
             local correct_trans = pelvis_offset and ms:add_translate(trans, pelvis_offset) or trans
             local inv_correct_trans = ms(correct_trans, "iP")
 
-            do_foot_ik(pose_result, ik, foot_rc, inv_correct_trans, leg_raycasts)
+            do_foot_ik(pose_result, ik, inv_correct_trans, leg_raycasts)
         end
     end
 
