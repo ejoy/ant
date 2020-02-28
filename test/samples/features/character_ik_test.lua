@@ -33,7 +33,8 @@ local function foot_ik_test()
             "ant.character|foot_ik_raycast",
         },
         data = {
-            transform = mu.translate_mat {-2.5, 0, -6, 1},
+            --transform = mu.translate_mat {-2.5, 0, -6, 1},
+            transform = mu.translate_mat {-4.5, 0, -6, 1},
             rendermesh = {},
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",

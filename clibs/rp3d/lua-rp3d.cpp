@@ -184,7 +184,7 @@ static Transform
 get_transform(lua_State *L, int index) {
 	const float * pos = (const float *)lua_touserdata(L, index);
 	const float * ori = (const float *)lua_touserdata(L, index+1);
-	printf("pos = %p ori = %p\n", pos, ori);
+
 	if (pos == NULL && ori == NULL) {
 		return Transform(Vector3(0,0,0), Quaternion(0,0,0,1));
 	}
