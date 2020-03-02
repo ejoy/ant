@@ -1,4 +1,6 @@
 #include "subprocess.h"
+#include "luafile.h"
+#include "file_helper.h"
 #include <lua.hpp>
 #include <optional>
 #include <errno.h>
@@ -55,6 +57,19 @@ namespace ant::lua {
         return std::string(str, len);
     }
 #endif
+
+    static std::optional<string_type> get_path(lua_State* L, int idx) {
+        switch (lua_type(L, idx)) {
+        case LUA_TSTRING:
+            return lua::string_type(to_string(L, idx));
+#ifdef ENABLE_FILESYSTEM
+        case LUA_TUSERDATA:
+            return (*(fs::path*)luaL_checkudata(L, idx, "filesystem")).string<string_type::value_type>();
+#endif
+        default:
+            return std::optional<string_type>();
+        }
+    }
 }
 
 namespace ant::lua_subprocess {
@@ -85,7 +100,7 @@ namespace ant::lua_subprocess {
 
         static int kill(lua_State* L) {
             subprocess::process& self = to(L, 1);
-            bool ok = self.kill((int)luaL_optinteger(L, 2, 15));
+            bool                 ok = self.kill((int)luaL_optinteger(L, 2, 15));
             lua_pushboolean(L, ok);
             return 1;
         }
@@ -133,13 +148,9 @@ namespace ant::lua_subprocess {
                 lua_pop(L, 1);
                 lua_newtable(L);
                 lua_pushvalue(L, -1);
-#if LUA_VERSION_NUM >= 504
                 if (!lua_setiuservalue(L, 1, 1)) {
                     return 0;
                 }
-#else
-                lua_setuservalue(L, 1);
-#endif
             }
             lua_insert(L, -3);
             lua_rawset(L, -3);
@@ -151,100 +162,73 @@ namespace ant::lua_subprocess {
 
             if (luaL_newmetatable(L, "subprocess")) {
                 static luaL_Reg mt[] = {
-                    { "wait", process::wait },
-                    { "kill", process::kill },
-                    { "get_id", process::get_id },
-                    { "is_running", process::is_running },
-                    { "resume", process::resume },
-                    { "native_handle", process::native_handle },
-                    { "__gc", process::destructor },
-                    { NULL, NULL }
-                };
+                    {"wait", process::wait},
+                    {"kill", process::kill},
+                    {"get_id", process::get_id},
+                    {"is_running", process::is_running},
+                    {"resume", process::resume},
+                    {"native_handle", process::native_handle},
+                    {"__gc", process::destructor},
+                    {NULL, NULL}};
                 luaL_setfuncs(L, mt, 0);
 
                 static luaL_Reg mt2[] = {
-                    { "__index", process::index },
-                    { "__newindex", process::newindex },
-                    { NULL, NULL }
-                };
+                    {"__index", process::index},
+                    {"__newindex", process::newindex},
+                    {NULL, NULL}};
                 lua_pushvalue(L, -1);
                 luaL_setfuncs(L, mt2, 1);
             }
             lua_setmetatable(L, -2);
-            new (storage)subprocess::process(spawn);
+            new (storage) subprocess::process(spawn);
             return 1;
         }
     }
 
     namespace spawn {
-        static std::optional<nativestring> cast_cwd(lua_State* L) {
-            if (LUA_TSTRING == lua_getfield(L, 1, "cwd")) {
-                nativestring ret(lua::to_string(L, -1));
-                lua_pop(L, 1);
-                return ret;
-            }
-#ifdef ENABLE_FILESYSTEM
-            else if (LUA_TUSERDATA == lua_type(L, -1)) {
-                nativestring ret = topath(L, -1).string<nativestring::value_type>();
-                lua_pop(L, 1);
-                return ret;
-            }
-#endif
+        static std::optional<lua::string_type> cast_cwd(lua_State* L) {
+            lua_getfield(L, 1, "cwd");
+            auto ret = lua::get_path(L, -1);
             lua_pop(L, 1);
-            return std::optional<nativestring>();
+            return ret;
         }
 
-        static int fileclose(lua_State* L) {
-            luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
-            int ok = fclose(p->f);
-            int en = errno;  /* calls to Lua API may change this value */
-            if (ok) {
-                lua_pushboolean(L, 1);
-                return 1;
-            }
-            else {
-                lua_pushnil(L);
-                lua_pushfstring(L, "%s", strerror(en));
-                lua_pushinteger(L, en);
-                return 3;
-            }
-        }
-
-        static int newfile(lua_State* L, FILE* f) {
-            luaL_Stream* pf = (luaL_Stream*)lua_newuserdatauv(L, sizeof(luaL_Stream), 0);
-            luaL_setmetatable(L, LUA_FILEHANDLE);
-            pf->closef = &fileclose;
-            pf->f = f;
-            return 1;
-        }
-
-#if defined(_WIN32)
-        typedef std::vector<nativestring> native_args;
-#   define LOAD_ARGS(L, idx) lua::to_string((L), (idx))
-#else
-        typedef std::vector<char*> native_args;
-#   define LOAD_ARGS(L, idx) (char*)luaL_checkstring((L), (idx))
-#endif
-        static void cast_args(lua_State* L, int idx, native_args& args) {
+        static void cast_args_array(lua_State* L, int idx, subprocess::args_t& args) {
+            args.type = subprocess::args_t::type::array;
             lua_Integer n = luaL_len(L, idx);
             for (lua_Integer i = 1; i <= n; ++i) {
-                switch (lua_geti(L, idx, i)) {
-                case LUA_TSTRING:
-                    args.push_back(LOAD_ARGS(L, -1));
-                    break;
-#ifdef ENABLE_FILESYSTEM
-                case LUA_TUSERDATA:
+                lua_geti(L, idx, i);
+                auto ret = lua::get_path(L, -1);
+                if (ret) {
 #if defined(_WIN32)
-                    args.push_back(topath(L, -1).wstring());
+                    args.push_back(*ret);
 #else
-                    args.push_back((char*)topath(L, -1).c_str());
+                    args.push(*ret);
 #endif
-                    break;
+                }
+                else if (lua_type(L, -1) == LUA_TTABLE) {
+                    cast_args_array(L, lua_absindex(L, -1), args);
+                }
+                else {
+                    luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
+                }
+                lua_pop(L, 1);
+            }
+        }
+
+        static void cast_args_string(lua_State* L, int idx, subprocess::args_t& args) {
+            args.type = subprocess::args_t::type::string;
+            for (lua_Integer i = 1; i <= 2; ++i) {
+                lua_geti(L, idx, i);
+                auto ret = lua::get_path(L, -1);
+                if (ret) {
+#if defined(_WIN32)
+                    args.push_back(*ret);
+#else
+                    args.push(*ret);
 #endif
-                case LUA_TTABLE:
-                    cast_args(L, lua_absindex(L, -1), args);
-                    break;
-                default:
+                }
+                else {
                     luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
                     return;
                 }
@@ -252,20 +236,56 @@ namespace ant::lua_subprocess {
             }
         }
 
-        static native_args cast_args(lua_State* L) {
-            native_args args;
-            cast_args(L, 1, args);
+        static subprocess::args_t cast_args(lua_State* L) {
+            bool as_string = false;
+            if (LUA_TSTRING == lua_getfield(L, 1, "argsStyle")) {
+                as_string = (strcmp(lua_tostring(L, -1), "string") == 0);
+            }
+            lua_pop(L, 1);
+            subprocess::args_t args;
+            if (as_string) {
+                cast_args_string(L, 1, args);
+            }
+            else {
+                cast_args_array(L, 1, args);
+            }
             return args;
         }
 
-        static subprocess::pipe::handle cast_stdio(lua_State* L, const char* name) {
+        static luaL_Stream* get_file(lua_State* L, int idx) {
+            void *p = lua_touserdata(L, idx);
+            void* r = NULL;
+            if (p) {
+                if (lua_getmetatable(L, idx)) {
+                    do {
+                        luaL_getmetatable(L, "submodule::file");
+                        if (lua_rawequal(L, -1, -2)) {
+                            r = p;
+                            break;
+                        }
+                        lua_pop(L, 1);
+                        luaL_getmetatable(L, LUA_FILEHANDLE);
+                        if (lua_rawequal(L, -1, -2)) {
+                            r = p;
+                            break;
+                        }
+                    } while (false);
+                    lua_pop(L, 2);
+                }
+            }
+            luaL_argexpected(L, r != NULL, idx, LUA_FILEHANDLE);
+            return (luaL_Stream*)r;
+        }
+
+        static file::handle cast_stdio(lua_State* L, const char* name) {
             switch (lua_getfield(L, 1, name)) {
             case LUA_TUSERDATA: {
-                luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, -1, LUA_FILEHANDLE);
+                luaL_Stream* p = get_file(L, -1);
                 if (!p->closef) {
-                    return 0;
+                    lua_pop(L, 1);
+                    return file::handle::invalid();
                 }
-                return subprocess::pipe::to_handle(p->f);
+                return file::dup(p->f);
             }
             case LUA_TBOOLEAN: {
                 if (!lua_toboolean(L, -1)) {
@@ -277,11 +297,19 @@ namespace ant::lua_subprocess {
                 }
                 lua_pop(L, 1);
                 if (strcmp(name, "stdin") == 0) {
-                    newfile(L, pipe.open_file(subprocess::pipe::mode::eWrite));
+                    FILE* f = pipe.open_write();
+                    if (!f) {
+                        return file::handle::invalid();
+                    }
+                    lua::newfile(L, f);
                     return pipe.rd;
                 }
                 else {
-                    newfile(L, pipe.open_file(subprocess::pipe::mode::eRead));
+                    FILE* f = pipe.open_read();
+                    if (!f) {
+                        return file::handle::invalid();
+                    }
+                    lua::newfile(L, f);
                     return pipe.wr;
                 }
             }
@@ -289,12 +317,20 @@ namespace ant::lua_subprocess {
                 break;
             }
             lua_pop(L, 1);
-            return 0;
+            return file::handle::invalid();
+        }
+
+        static file::handle cast_stdio(lua_State* L, subprocess::spawn& self, const char* name, subprocess::stdio type) {
+            file::handle f = cast_stdio(L, name);
+            if (f) {
+                self.redirect(type, f);
+            }
+            return f;
         }
 
         static void cast_env(lua_State* L, subprocess::spawn& self) {
             if (LUA_TTABLE == lua_getfield(L, 1, "env")) {
-                lua_next(L, 1);
+                lua_pushnil(L);
                 while (lua_next(L, -2)) {
                     if (LUA_TSTRING == lua_type(L, -1)) {
                         self.env_set(lua::to_string(L, -2), lua::to_string(L, -1));
@@ -317,9 +353,17 @@ namespace ant::lua_subprocess {
             lua_pop(L, 1);
         }
 
+        static void cast_detached(lua_State* L, subprocess::spawn& self) {
+            if (LUA_TBOOLEAN == lua_getfield(L, 1, "detached")) {
+                if (lua_toboolean(L, -1)) {
+                    self.detached();
+                }
+            }
+            lua_pop(L, 1);
+        }
+
 #if defined(_WIN32)
-        static void cast_option(lua_State* L, subprocess::spawn& self)
-        {
+        static void cast_option(lua_State* L, subprocess::spawn& self) {
             if (LUA_TSTRING == lua_getfield(L, 1, "console")) {
                 std::string console = luaL_checkstring(L, -1);
                 if (console == "new") {
@@ -331,6 +375,12 @@ namespace ant::lua_subprocess {
                 else if (console == "inherit") {
                     self.set_console(subprocess::console::eInherit);
                 }
+                else if (console == "detached") {
+                    self.set_console(subprocess::console::eDetached);
+                }
+                else if (console == "hide") {
+                    self.set_console(subprocess::console::eHide);
+                }
             }
             lua_pop(L, 1);
 
@@ -340,37 +390,35 @@ namespace ant::lua_subprocess {
                 }
             }
             lua_pop(L, 1);
+
+            if (LUA_TBOOLEAN == lua_getfield(L, 1, "searchPath")) {
+                if (lua_toboolean(L, -1)) {
+                    self.search_path();
+                }
+            }
+            lua_pop(L, 1);
         }
 #else
-        static void cast_option(lua_State*, subprocess::spawn&)
-        { }
+        static void cast_option(lua_State*, subprocess::spawn&) {}
 #endif
 
         static int spawn(lua_State* L) {
             luaL_checktype(L, 1, LUA_TTABLE);
-            subprocess::spawn spawn;
-            native_args args = cast_args(L);
+            subprocess::spawn  spawn;
+            subprocess::args_t args = cast_args(L);
             if (args.size() == 0) {
                 return 0;
             }
 
-            std::optional<nativestring> cwd = cast_cwd(L);
+            std::optional<lua::string_type> cwd = cast_cwd(L);
             cast_env(L, spawn);
             cast_suspended(L, spawn);
             cast_option(L, spawn);
+            cast_detached(L, spawn);
 
-            subprocess::pipe::handle f_stdin = cast_stdio(L, "stdin");
-            if (f_stdin) {
-                spawn.redirect(subprocess::stdio::eInput, f_stdin);
-            }
-            subprocess::pipe::handle f_stdout = cast_stdio(L, "stdout");
-            if (f_stdout) {
-                spawn.redirect(subprocess::stdio::eOutput, f_stdout);
-            }
-            subprocess::pipe::handle f_stderr = cast_stdio(L, "stderr");
-            if (f_stderr) {
-                spawn.redirect(subprocess::stdio::eError, f_stderr);
-            }
+            file::handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
+            file::handle f_stdout = cast_stdio(L, spawn, "stdout", subprocess::stdio::eOutput);
+            file::handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError);
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
                 lua_pushnil(L);
                 lua_pushstring(L, "spawn: error"); // TODO
@@ -394,7 +442,7 @@ namespace ant::lua_subprocess {
     }
 
     static int peek(lua_State* L) {
-        luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+        luaL_Stream* p = spawn::get_file(L, 1);
         if (!p->closef) {
             auto ec = std::make_error_code(std::errc::broken_pipe);
             lua_pushnil(L);
@@ -407,18 +455,18 @@ namespace ant::lua_subprocess {
             lua_pushstring(L, "peek: error"); // TODO
             return 2;
         }
-		lua_pushinteger(L, n);
+        lua_pushinteger(L, n);
         return 1;
     }
 
 #if defined(_WIN32)
-#include <io.h>
 #include <fcntl.h>
+#include <io.h>
 
     static int filemode(lua_State* L) {
-        luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
-        const char* mode = luaL_checkstring(L, 2);
-        if (p && !p->closef && p->f) {
+        luaL_Stream* p = spawn::get_file(L, 1);
+        const char*  mode = luaL_checkstring(L, 2);
+        if (p && p->closef && p->f) {
             if (mode[0] == 'b') {
                 _setmode(_fileno(p->f), _O_BINARY);
             }
@@ -432,6 +480,18 @@ namespace ant::lua_subprocess {
     static int filemode(lua_State*) { return 0; }
 #endif
 
+    static int lsetenv(lua_State* L) {
+        const char* name = luaL_checkstring(L, 1);
+        const char* value = luaL_checkstring(L, 2);
+#if defined(_WIN32)
+        lua_pushfstring(L, "%s=%s", name, value);
+        ::_putenv(lua_tostring(L, -1));
+#else
+        ::setenv(name, value, 1);
+#endif
+        return 0;
+    }
+
     static int get_id(lua_State* L) {
 #if defined(_WIN32)
         lua_pushinteger(L, ::GetCurrentProcessId());
@@ -441,14 +501,14 @@ namespace ant::lua_subprocess {
         return 1;
     }
 
-    int luaopen(lua_State* L) {
+    static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
-            { "spawn", spawn::spawn },
-            { "peek", peek },
-            { "filemode", filemode },
-            { "get_id", get_id },
-            { NULL, NULL }
-        };
+            {"spawn", spawn::spawn},
+            {"peek", peek},
+            {"filemode", filemode},
+            {"setenv", lsetenv},
+            {"get_id", get_id},
+            {NULL, NULL}};
         luaL_newlib(L, lib);
         return 1;
     }

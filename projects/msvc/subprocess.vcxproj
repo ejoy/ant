@@ -19,10 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\clibs\subprocess\file_helper.cpp" />
     <ClCompile Include="..\..\clibs\subprocess\lsubprocess.cpp" />
+    <ClCompile Include="..\..\clibs\subprocess\sharedmemory_win.cpp" />
     <ClCompile Include="..\..\clibs\subprocess\subprocess_win.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\clibs\subprocess\args_helper.h" />
+    <ClInclude Include="..\..\clibs\subprocess\file_helper.h" />
+    <ClInclude Include="..\..\clibs\subprocess\sharedmemory_win.h" />
     <ClInclude Include="..\..\clibs\subprocess\subprocess.h" />
     <ClInclude Include="..\..\clibs\subprocess\subprocess_win.h" />
   </ItemGroup>

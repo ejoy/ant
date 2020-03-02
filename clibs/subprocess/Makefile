@@ -2,7 +2,7 @@ include ../common.mk
 
 default : subprocess.dll
 
-OBJS = $(ODIR)/lsubprocess.o
+OBJS = $(ODIR)/lsubprocess.o $(ODIR)/file_helper.o 
 ifeq "$(PLAT)" "mingw"
 OBJS += $(ODIR)/subprocess_win.o
 else ifeq "$(PLAT)" "osx"
@@ -14,6 +14,9 @@ subprocess.h : subprocess_win.h subprocess_posix.h
 $(ODIR)/lsubprocess.o : lsubprocess.cpp subprocess.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC)
 
+$(ODIR)/file_helper.o : file_helper.cpp file_helper.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC)
+
 $(ODIR)/subprocess_win.o : subprocess_win.cpp subprocess.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
@@ -21,7 +24,7 @@ $(ODIR)/subprocess_posix.o : subprocess_posix.cpp subprocess.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/subprocess.dll : $(OBJS)
-	$(CC) $(CFLAGS) $(LD_SHARED) $(LUALIB) -o $@ $^ -lstdc++
+	$(CC) $(CFLAGS) $(LD_SHARED) $(LUALIB) -o $@ $^ -lstdc++ -lole32
 
 subprocess.dll: $(ODIR)/subprocess.dll | $(ODIR)
 	cp $^ $@

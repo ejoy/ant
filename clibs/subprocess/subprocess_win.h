@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include "file_helper.h"
 
 namespace ant::win::subprocess {
     namespace ignore_case {
@@ -28,6 +29,8 @@ namespace ant::win::subprocess {
         eInherit,
         eDisable,
         eNew,
+        eDetached,
+        eHide,
     };
     enum class stdio {
         eInput,
@@ -36,62 +39,77 @@ namespace ant::win::subprocess {
     };
 
     namespace pipe {
-        typedef HANDLE handle;
-        enum class mode {
-            eRead,
-            eWrite,
-        };
         struct open_result {
-            handle rd;
-            handle wr;
-            FILE*  open_file(mode m);
+            file::handle rd;
+            file::handle wr;
+            FILE*        open_read();
+            FILE*        open_write();
             operator bool() { return rd && wr; }
         };
-        handle to_handle(FILE* f);
         open_result open();
         int         peek(FILE* f);
     }
 
+    class sharedmemory;
     class spawn;
-    class process : public PROCESS_INFORMATION {
+    class process {
     public:
         process(spawn& spawn);
-        process(process&& pi);
-        process(PROCESS_INFORMATION&& pi);
+        process(PROCESS_INFORMATION&& pi) { pi_ = std::move(pi); }
         ~process();
-        process& operator=(process&& pi);
         bool      is_running();
         bool      kill(int signum);
         uint32_t  wait();
         uint32_t  get_id() const;
         bool      resume();
         uintptr_t native_handle();
+        PROCESS_INFORMATION const& info() const { return pi_; }
 
     private:
         bool     wait(uint32_t timeout);
         uint32_t exit_code();
+
+    private:
+        PROCESS_INFORMATION           pi_;
+    };
+
+    struct args_t : public std::vector<std::wstring> {
+        enum class type {
+            string,
+            array,
+        };
+        type type = type::array;
+        args_t() {}
+        args_t(std::vector<std::wstring> init) : std::vector<std::wstring>(init) {}
     };
 
     class spawn {
+        friend class process;
     public:
         spawn();
         ~spawn();
+        void search_path();
         bool set_console(console type);
         bool hide_window();
         void suspended();
-        void redirect(stdio type, pipe::handle h);
+        void detached();
+        void redirect(stdio type, file::handle h);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
-        bool exec(const std::vector<std::wstring>& args, const wchar_t* cwd);
-        bool exec(const std::wstring& app, const std::wstring& cmd, const wchar_t* cwd);
-        PROCESS_INFORMATION release();
+        bool exec(const args_t& args, const wchar_t* cwd);
+
+    private:
+        bool raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd);
 
     private:
         std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>> set_env_;
         std::set<std::wstring, ignore_case::less<std::wstring>>               del_env_;
         STARTUPINFOW            si_;
         PROCESS_INFORMATION     pi_;
-        bool                    inherit_handle_;
-        DWORD                   flags_;
+        DWORD                   flags_ = 0;
+		console                 console_ = console::eInherit;
+        bool                    inherit_handle_ = false;
+        bool                    search_path_ = false;
+        bool                    detached_ = false;
     };
 }

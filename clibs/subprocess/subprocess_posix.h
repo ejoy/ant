@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include "file_helper.h"
 
 namespace ant::posix::subprocess {
     enum class stdio {
@@ -15,18 +16,13 @@ namespace ant::posix::subprocess {
     };
 
     namespace pipe {
-        typedef int handle;
-        enum class mode {
-            eRead,
-            eWrite,
-        };
         struct open_result {
-            handle rd;
-            handle wr;
-            FILE* open_file(mode m);
+            file::handle rd;
+            file::handle wr;
+            FILE*        open_read();
+            FILE*        open_write();
             operator bool() { return rd && wr; }
         };
-        handle to_handle(FILE* f);
         open_result open();
         int         peek(FILE* f);
     }
@@ -46,22 +42,36 @@ namespace ant::posix::subprocess {
         int status = 0;
     };
 
+    struct args_t : public std::vector<char*> {
+        enum class type {
+            string,
+            array,
+        };
+        type type = type::array;
+        ~args_t();
+        void push(char* str);
+        void push(const std::string& str);
+    };
+
     class spawn {
         friend class process;
     public:
         spawn();
         ~spawn();
         void suspended();
-        void redirect(stdio type, pipe::handle f);
+        void detached();
+        void redirect(stdio type, file::handle f);
         void env_set(const std::string& key, const std::string& value);
         void env_del(const std::string& key);
-        bool exec(std::vector<char*>& args, const char* cwd);
-
+        bool exec(args_t& args, const char* cwd);
+    private:
+        bool raw_exec(char* const args[], const char* cwd);
     private:
         std::map<std::string, std::string> set_env_;
         std::set<std::string>              del_env_;
         int                                fds_[3];
-        int                                pid_;
-        bool                               suspended_;
+        int                                pid_ = -1;
+        bool                               suspended_ = false;
+        bool                               detached_ = false;
     };
 }
