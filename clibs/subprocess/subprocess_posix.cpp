@@ -178,6 +178,24 @@ namespace ant::posix::subprocess {
         }
     }
 
+    void spawn::do_duplicate() {
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                if (dup2(fds_[i], i) == -1) {
+                    _exit(127);
+                }
+            }
+        }
+    }
+
+    void spawn::do_duplicate_shutdown() {
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                close(fds_[i]);
+            }
+        }
+    }
+
     void spawn::env_set(const std::string& key, const std::string& value) {
         set_env_[key] = value;
     }
@@ -195,6 +213,7 @@ namespace ant::posix::subprocess {
             if (detached_) {
                 setsid();
             }
+            do_duplicate();
             if (!set_env_.empty() || !del_env_.empty()) {
                 environ = make_env(set_env_, del_env_);
             }
@@ -208,6 +227,7 @@ namespace ant::posix::subprocess {
             _exit(127);
         }
         pid_ = pid;
+        do_duplicate_shutdown();
         return true;
 
     }

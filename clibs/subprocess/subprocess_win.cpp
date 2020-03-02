@@ -282,6 +282,18 @@ namespace ant::win::subprocess {
         }
     }
 
+    void spawn::do_duplicate_start() {
+        ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+    }
+
+    void spawn::do_duplicate_shutdown() {
+        ::CloseHandle(si_.hStdInput);
+        ::CloseHandle(si_.hStdOutput);
+        ::CloseHandle(si_.hStdError);
+    }
+
     bool spawn::raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd) {
         std::unique_ptr<wchar_t[]> command_line(commandline);
         std::unique_ptr<wchar_t[]> environment;
@@ -290,6 +302,7 @@ namespace ant::win::subprocess {
             flags_ |= CREATE_UNICODE_ENVIRONMENT;
         }
         bool resume = false;
+        do_duplicate_start();
         if (!::CreateProcessW(
             application,
             command_line.get(),
@@ -301,8 +314,10 @@ namespace ant::win::subprocess {
             &si_, &pi_
         ))
         {
+            do_duplicate_shutdown();
             return false;
         }
+        do_duplicate_shutdown();
         if (!detached_) {
             join_job(pi_.hProcess);
         }

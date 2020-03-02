@@ -66,6 +66,8 @@ namespace ant::posix::subprocess {
         bool exec(args_t& args, const char* cwd);
     private:
         bool raw_exec(char* const args[], const char* cwd);
+        void do_duplicate();
+        void do_duplicate_shutdown();
     private:
         std::map<std::string, std::string> set_env_;
         std::set<std::string>              del_env_;

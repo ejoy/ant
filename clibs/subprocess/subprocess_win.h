@@ -100,6 +100,8 @@ namespace ant::win::subprocess {
 
     private:
         bool raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd);
+        void do_duplicate_start();
+        void do_duplicate_shutdown();
 
     private:
         std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>> set_env_;
