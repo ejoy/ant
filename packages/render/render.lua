@@ -13,7 +13,7 @@ local ru 		= require "util"
 
 ecs.tag "main_queue"
 ecs.tag "blit_queue"
-ecs.component_alias("blit_render", "can_render")
+ecs.tag "blit_render"
 
 local bq_p = ecs.policy "blit_queue"
 bq_p.unique_component "blit_queue"

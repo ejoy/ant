@@ -26,6 +26,7 @@ end
 
 local function create_animation_test()
     local eid = world:create_entity(load_file 'entity.txt')
+    world:disable_tag(eid, "can_render")
 
     --local serialize  = import_package 'ant.serialize'
     --local function save_file(file, data)

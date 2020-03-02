@@ -215,11 +215,9 @@ function primitive_filter_sys:filter_primitive()
 
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
-			if ce[filtertag] then
-				if is_entity_prepared(ce) then
-					local worldmat = update_entity_transform(hierarchy_cache, eid)
-					filter_element(eid, ce.rendermesh, worldmat, ce.material, filter)
-				end
+			if is_entity_prepared(ce) then
+				local worldmat = update_entity_transform(hierarchy_cache, eid)
+				filter_element(eid, ce.rendermesh, worldmat, ce.material, filter)
 			end
 		end
 	end
