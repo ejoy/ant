@@ -214,7 +214,11 @@ local function export_pbrm(pbrm_path)
             doubleSided = mat.doubleSided,
         }
 
-        local filepath = pbrm_path / name .. ".pbrm"
+        local function refine_name(name)
+            local newname = name:gsub("['\\/:*?\"<>|]", "_")
+            return newname
+        end
+        local filepath = pbrm_path / refine_name(name) .. ".pbrm"
         write_file(filepath, stringify(pbrm, true, true))
 
         pbrm_paths[#pbrm_paths+1] = filepath
