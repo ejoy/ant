@@ -13,6 +13,7 @@ local camera = world:interface "ant.render|camera"
 local m = ecs.system 'init_loader'
 
 m.require_system "ant.imguibase|imgui_system"
+m.require_system "ant.render|draw_skeleton"
 m.require_interface "ant.render|camera"
 m.require_interface "ant.animation|animation"
 

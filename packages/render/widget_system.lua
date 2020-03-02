@@ -15,6 +15,7 @@ local geometry_drawer = import_package "ant.geometry".drawer
 
 local bgfx = require "bgfx"
 local fs = require "filesystem"
+local asset = import_package "ant.asset".mgr
 
 ecs.tag "widget_drawer"
 
@@ -166,6 +167,12 @@ function m.draw_aabb_box(shape, srt)
 	append_buffers(desc.vb, desc.ib)
 end
 
+function m.draw_skeleton(ske, ani, srt)
+	local desc={vb={"fffd"}, ib={}}
+	geometry_drawer.draw_skeleton(ske, ani, DEFAULT_COLOR, srt, desc)
+	append_buffers(desc.vb, desc.ib)
+end
+
 local m = ecs.system "physic_bounding"
 m.require_interface "iwidget_drawer"
 
@@ -221,5 +228,18 @@ function draw_raycast_point:widget()
 		min = ms(min, pt, "T")
 		max = ms(max, pt, "T")
 		iwd.draw_aabb_box {min=min, max=max}
+	end
+end
+
+
+local m = ecs.system "draw_skeleton"
+
+m.require_interface "iwidget_drawer"
+
+function m:widget()
+	for _, eid in world:each "animation" do
+		local e = world[eid]
+		local ske = asset.get_resource(e.skeleton.ref_path)
+		iwd.draw_skeleton(ske.handle, e.pose_result.result, e.transform)
 	end
 end

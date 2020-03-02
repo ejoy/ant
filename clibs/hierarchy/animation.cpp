@@ -132,6 +132,25 @@ struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzB
 		return 1;
 	}
 
+	static int ljoints(lua_State *L){
+		auto self = get(L, 1);
+		int n = (int)self->size();
+		lua_createtable(L, n, 0);
+		for (int i = 0; i < n; ++i) {
+			auto const& joint = (*self)[i];
+			lua_createtable(L, 16, 0);
+			for (size_t icol = 0; icol < 4; ++icol) {
+				for (size_t ii = 0; ii < 4; ++ii) {
+					const float* col = (const float*)(&(joint.cols[icol]));
+					lua_pushnumber(L, col[ii]);
+					lua_rawseti(L, -2, icol * 4 + ii + 1);
+				}
+			}
+			lua_rawseti(L, -2, i + 1);
+		}
+		return 1;
+	}
+
 	static int ljoint_trans(lua_State *L){
 		auto self = get(L, 1);
 		const auto jointidx = (uint32_t)lua_tointeger(L, 2) - 1;
@@ -183,6 +202,7 @@ struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzB
 		}
 		luaL_Reg l[] = {
 			{"count",		lcount},
+			{"joints",		ljoints},
 			{"joint_trans", ljoint_trans},
 			{nullptr, nullptr},
 		};
