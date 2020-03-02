@@ -12,6 +12,7 @@ extern "C" {
 #include <limits>
 #include <algorithm>
 #include <vector>
+#include <memory.h>
 
 struct heightfield_data{
 	uint32_t w, h;
