@@ -9,7 +9,14 @@ extern "C" {
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
-#include <malloc.h>
+#include <cstdint>
+
+static void*
+lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
+	void *ud;
+	lua_Alloc allocator = lua_getallocf (L, &ud);
+	return allocator(ud, ptr, osize, nsize);
+}
 
 int beginFrame(lua_State* L); //call sync_io
 int endFrame(lua_State* L); //call ImGui::Render();
@@ -926,7 +933,7 @@ editbuf_tostring(lua_State *L) {
 static int
 editbuf_release(lua_State *L) {
 	struct editbuf * ebuf = (struct editbuf *)lua_touserdata(L, 1);
-	free(ebuf->buf);
+	lua_realloc(L, ebuf->buf, ebuf->size, 0);
 	ebuf->buf = NULL;
 	ebuf->size = 0;
 	return 0;
@@ -946,7 +953,7 @@ create_new_editbuf(lua_State *L) {
 #else
 	struct editbuf* ebuf = (struct editbuf*)lua_newuserdata(L, sizeof(*ebuf));
 #endif
-	ebuf->buf = (char *)malloc(sz);
+	ebuf->buf = (char *)lua_realloc(L, NULL, 0, sz);
 	if (ebuf->buf == NULL)
 		luaL_error(L, "Edit buffer oom %u", (unsigned)sz);
 	ebuf->size = sz;
@@ -975,7 +982,7 @@ edit_callback(ImGuiInputTextCallbackData *data) {
 		while (newsize <= (size_t)data->BufTextLen) {
 			newsize *= 2;
 		}
-		data->Buf = (char *)realloc(ebuf->buf, newsize);
+		data->Buf = (char *)lua_realloc(L, ebuf->buf, ebuf->size, newsize);
 		if (data->Buf == NULL) {
 			data->Buf = ebuf->buf;
 			data->BufTextLen = 0;
@@ -3223,7 +3230,7 @@ push_beginframe( lua_State * L ){
 
 static int
 lendFrame(lua_State* L) {
-	int r = endFrame(L);
+	endFrame(L);
 	return 0;
 }
 

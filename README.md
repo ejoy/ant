@@ -68,7 +68,7 @@ iOS:
 > 需要注意的是，如果$(antfolder)/packages/*packagename*，*packagename*目前下如果没有package.lua文件，会报错。所以不用的包文件夹要及时清理
 
 #### 编辑器模式
-> bin/lua.exe test/imgui/main.lua	#会打开一个场景观察器的UI框架  
+> clibs/lua.exe test/imgui/main.lua	#会打开一个场景观察器的UI框架  
 > projects/msvc/vs_bin/x64/Debug/lua.exe tools/modelviewer/main.lua --bin=msvc #会使用msvc编译的程序进行启动
 
 #### 使用fileserver运行runtime程序到iOS设备
