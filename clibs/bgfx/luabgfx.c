@@ -3563,6 +3563,9 @@ lcreateTexture2D(lua_State *L) {
 		default:
 			return luaL_error(L, "Invalid texture data type %s", lua_typename(L, lua_type(L, idx)));
 		}
+		if (width <= 0 || height <= 0) {
+			return luaL_error(L, "Invalid texture size (width %d, height %d).", width, height);
+		}
 		handle = BGFX(create_texture_2d)(width, height, hasMips, layers, fmt, flags, mem);
 	}
 	if (!BGFX_HANDLE_IS_VALID(handle)) {
