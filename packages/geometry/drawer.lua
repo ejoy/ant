@@ -38,12 +38,24 @@ local function offset_index_buffer(ib, istart, iend, offset)
 end
 
 local function create_bone(ratio)
-	local vb, ib = geo.cone(4, ratio, 0.25, true, true)
-	local vbdown, ibdown = geo.cone(4, -(1-ratio), 0.25, true, true)
-	offset_index_buffer(ibdown, 1, #ibdown, #vb)
-	
-	append_array(vbdown, vb)
-	append_array(ibdown, ib)
+	local radius = 0.25
+	local vb = {
+		{0, ratio, 0},
+		{-radius, 0, -radius},
+		{radius, 0, -radius},
+		{radius, 0, radius},
+		{-radius, 0, radius},
+		{0, -(1-ratio), 0},
+	}
+
+	local ib = {
+		0, 1, 0, 2, 0, 3, 0, 4,
+		1, 2, 2, 3, 3, 4, 4, 1,
+
+		1, 3, 2, 4,
+
+		5, 1, 5, 2, 5, 3, 5, 4,
+	}
 	return vb, ib
 end
 
@@ -88,7 +100,8 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 	local updown_ratio = 0.3
 
 	local bonevb, boneib = create_bone(updown_ratio)
-	local localtrans = ms({type="srt", r={-90, 0, 0}, t={0, 0, updown_ratio}}, "P")
+	--local localtrans = ms({type="srt", r={-90, 0, 0}, t={0, 0, updown_ratio}}, "P")
+	local localtrans = ms:srtmat({1}, ms:euler2quat{math.rad(-90), 0, 0}, {0, 0, updown_ratio, 1})
 
 	local poitions = {}
 	local origin = ms({0 ,0, 0, 1}, "P")
@@ -97,31 +110,33 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 		table.insert(poitions, p)
 	end
 
-	for _, b in ipairs(bones) do
+	--for _, b in ipairs(bones) do
+	for i=1, #bones do
+		local b = bones[i]
 		local beg_pos, end_pos = poitions[b[1]], poitions[b[2]]
 		local vec = ms(end_pos, beg_pos, "-P")
-		local len = math.sqrt(ms(vec, vec, ".T")[1])
-		local rotation = ms(vec, "neP")
+		local len = ms:length(vec)
+		local rotation = ms(vec, "nDP")
 		
 		local finaltrans = ms({type="srt", r=rotation, s={len, len, len}, t=beg_pos}, localtrans, "*P")
 		if transform then
 			finaltrans = ms(transform, finaltrans, "*P")
 		end
 
-		local vstart = #dvb
-		append_array(bonevb, dvb)
+		local vstart = (#dvb - 1) // 4
+
+		for _, bb in ipairs(bonevb) do
+			local newbb = {bb[1], bb[2], bb[3], 1}
+			local t = ms(finaltrans, newbb, "*T")
+			t[4] = color
+			append_array(t, dvb)
+		end
+
 		local istart = #dib+1
 		append_array(boneib, dib)
 		if vstart ~= 0 then
-			offset_index_buffer(dib, istart, #dib, vstart)			
+			offset_index_buffer(dib, istart, #dib, vstart)
 		end
-		
-		for i=vstart+1, #dvb do
-			local v = dvb[i]
-			local nv = ms(finaltrans, {v[1], v[2], v[3], 1}, "*T")
-			nv[4] = color
-			dvb[i] = nv
-		end	
 	end
 end
 
