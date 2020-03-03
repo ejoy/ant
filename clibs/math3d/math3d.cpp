@@ -1042,10 +1042,10 @@ base_axes_from_forward_vector(const glm::vec4& forward, glm::vec4& right, glm::v
 	} else {
 
 		if (is_zero(forward - glm::vec4(0, 1, 0, 0))) {
-			up = glm::vec4(0, 0, 1, 0);
+			up = glm::vec4(0, 0, -1, 0);
 			right = glm::vec4(1, 0, 0, 0);
 		} else if (is_zero(forward - glm::vec4(0, -1, 0, 0))) {
-			up = glm::vec4(0, 0, -1, 0);
+			up = glm::vec4(0, 0, 1, 0);
 			right = glm::vec4(1, 0, 0, 0);
 		} else {
 			right = glm::vec4(glm::normalize(glm::cross(glm::vec3(0, 1, 0), *((glm::vec3*)&forward.x))), 0);
