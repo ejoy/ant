@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+print(world.name)
 local WatcherEvent = require "hub_event"
 local serialize = import_package 'ant.serialize'
 local fs = require "filesystem"
@@ -16,9 +17,14 @@ ecs.tag "outline_entity"
 
 ecs.component_alias("target_entity","entityid")
 
+local outline_policy = ecs.policy "outline"
+outline_policy.require_component "outline_entity"
+outline_policy.require_component "target_entity"
+
 
 local editor_watcher_system = ecs.system "editor_watcher_system"
 editor_watcher_system.require_system "editor_operate_gizmo_system"
+editor_watcher_system.require_system "editor_policy_system"
 editor_watcher_system.require_system 'ant.scene|scene_space' 
 
 -- editor_watcher_system.require_system "before_render_system"
@@ -102,11 +108,21 @@ local function compare_values(val1, val2)
     end
     return true
 end
+
+local function get_entity_policies(eids)
+    local entity_policies = {}
+    for i in ipairs(eids) do
+        local eid = eids[i] 
+        entity_policies[eid] = world:get_entity_policies(eid)
+    end
+    return entity_policies
+end
+
 local last_eid = nil
 local last_tbl = nil
 local timer = world:interface "ant.timer|timer"
-local profile_cache = nil
 local function send_entity(eids,typ)
+    local profile_cache = world:singleton "profile_cache"
     local hub = world.args.hub
     local entity_info = {type = typ}
     if eids == nil or (not world[eids[1]]) then
@@ -116,17 +132,17 @@ local function send_entity(eids,typ)
         log.info_a("send_entity","nothing")
     else
         local setialize_result = {}
-        table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","begin",timer.current()})
+        table.insert(profile_cache,{"editor_watcher_system","entity2tbl","begin",timer.current()})
         for i,eid in ipairs(eids) do
             if world[eid] then
                 setialize_result[eid] = serialize.entity2tbl(world,eid)
             end
         end
-        table.insert(profile_cache.list,{"editor_watcher_system","entity2tbl","end",timer.current()})
+        table.insert(profile_cache,{"editor_watcher_system","entity2tbl","end",timer.current()})
         if compare_values(last_eid,eids) then
-            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","begin",timer.current()})
+            table.insert(profile_cache,{"editor_watcher_system","compare_values","begin",timer.current()})
             local b = compare_values(last_tbl,setialize_result)
-            table.insert(profile_cache.list,{"editor_watcher_system","compare_values","end",timer.current()})
+            table.insert(profile_cache,{"editor_watcher_system","compare_values","end",timer.current()})
             if b then
                 return
             end
@@ -134,11 +150,13 @@ local function send_entity(eids,typ)
         last_eid = eids
         last_tbl = setialize_result
         entity_info.entities = setialize_result
+        entity_info.policies = get_entity_policies(eids)
         entity_info.eids = eids
         hub.publish(WatcherEvent.EntityInfo,entity_info)
-        log.info_a("send_entity",eids)
+        -- log.info_a("send_entity",eids)
     end
 end
+
 
 local function remove_all_outline()
     local old_eids = {}
@@ -152,6 +170,7 @@ local function remove_all_outline()
 end
 
 local function create_outline(seleid)
+    local computil  = import_package "ant.render".components
     local se = world[seleid]
     if se then
         if not se.hierarchy then
@@ -162,19 +181,29 @@ local function create_outline(seleid)
         local t = mu.identity_transform()
         t.parent = seleid
         local outlineeid = world:create_entity {
-            transform = t,
-            rendermesh = {},
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"
+            policy={
+                -- "ant.render|name",
+                "ant.render|render",
+                "ant.scene|hierarchy",
+                "ant.imgui|outline",
             },
-            can_render = true,
-            outline_entity = true,
-            target_entity = seleid,
-            -- name = "outline_object"
+            data={
+                transform = t,
+                rendermesh = {},
+                material = computil.assign_material(
+                    fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"),
+                can_render = true,
+                outline_entity = true,
+                target_entity = seleid,
+                hierarchy = {},
+                hierarchy_visible = true,
+                -- name = "outline_object"
+            },
+           
         }
         local oe = world[outlineeid]
         oe.rendermesh.reskey = se.rendermesh.reskey
-        assetmgr.load(se.rendermesh.reskey)
+        -- assetmgr.load(se.rendermesh.reskey)
     end
 end
 
@@ -199,7 +228,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
     -- log.info_a("remove_map",remove_map)
     --remove tag:editor_watching,show_operate_gizmo
     for id,_ in pairs(remove_map) do
-        world:remove_component(id,"editor_watching")
+        world:disable_tag(id,"editor_watching")
         log.trace(">>remove_component [editor_watching] from:",id)
         if world[id].show_operate_gizmo then
             world:remove_component(id,"show_operate_gizmo")
@@ -219,6 +248,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
     end
     --------------------------
     if (not eids) or #eids <= 0 then
+        log.info("if (not eids) or #eids <= 0 then")
         return 
     end
     local last_eid = eids[#eids]
@@ -239,7 +269,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
             if target_ent.can_select then
                 create_outline(eid)
             end
-            world:add_component(eid,"editor_watching",true)
+            world:enable_tag(eid,"editor_watching")
             if target_ent.transform then
                 world:add_component(eid,"show_operate_gizmo",true)
             end
@@ -260,7 +290,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
             table.insert(old_eids,id)
         end
         for _,id in ipairs(old_eids) do
-            world:remove_component(id,"editor_watching")
+            world:disable_tag(id,"editor_watching")
             log.trace(">>remove_component [editor_watching] from:",id)
             if world[id].show_operate_gizmo then
                 world:remove_component(id,"show_operate_gizmo")
@@ -287,7 +317,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
             if target_ent.can_select then
                 create_outline(eid)
             end
-            world:add_component(eid,"editor_watching",true)
+            world:enable_tag(eid,"editor_watching")
             if target_ent.transform then
                 world:add_component(eid,"show_operate_gizmo",true)
             end
@@ -299,6 +329,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
 end
 
 local function on_editor_select_entity(self,eids,focus)
+    log.info_a("on_editor_select_entity",eids,focus)
     -- for i,eid in ipairs(eids) do 
     --     if world[eid] and (not world[eid].gizmo_object) then
     --         start_watch_entitiy(eid,focus,false)
@@ -308,6 +339,7 @@ local function on_editor_select_entity(self,eids,focus)
 end
 
 local function on_pick_entity(eid)
+    log.info_a("on_pick_entity",eid)
     if eid then
         if world[eid] and (not world[eid].gizmo_object) then
             start_watch_entitiy({eid},false,true)
@@ -389,7 +421,7 @@ function editor_watcher_system:init()
     hub.subscribe(WatcherEvent.ModifyMultComponent,on_mult_component_modified)
     hub.subscribe(WatcherEvent.EntityOperate,on_entity_operate,self)
     hub.subscribe(WatcherEvent.RequestHierarchy,on_request_hierarchy,self)
-    profile_cache = world:singleton "profile_cache"
+    local profile_cache = world:singleton "profile_cache"
     -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
     local rxbus = world.args.rxbus
@@ -397,7 +429,7 @@ function editor_watcher_system:init()
     watchentity_ob:subscribe(Rx.handler(on_editor_select_entity,self))
 end
 
-function editor_watcher_system:pickup()
+function editor_watcher_system:after_pickup()
     local pickupentity = world:singleton_entity "pickup"
     if pickupentity then
         local pickupcomp = pickupentity.pickup

@@ -72,9 +72,9 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
         },
         data = {
             transform = {
-                s = size or {1, 1, 1, 0},
-                r = rot or {0, 0, 0, 1},
-                t = {0, 0, 0, 1},
+                s = size or {1, 1, 1,0},
+                r = rot or {0, 0, 0, 0},
+                t = pos or {0, 0, 0, 1},
                 parent = parent,
             },
             rendermesh = {},
