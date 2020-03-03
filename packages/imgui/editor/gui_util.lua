@@ -35,8 +35,11 @@ function gui_util.get_all_components()
     return world._class.component
 end
 
-
-function gui_util.get_all_schema()
+local all_scheme = nil
+function gui_util.get_all_schema(force)
+    if not force and all_scheme then
+        return all_scheme
+    end
     local packages = gui_util.get_pkg_list()
     for k = #packages,1,-1 do
         local v = packages[k]
@@ -53,11 +56,13 @@ function gui_util.get_all_schema()
     local world = scene.start_static_world(packages)
         -- })
     -- world_update()
-    return {
+
+    all_scheme =  {
         policies = world._class.policy,
         transforms = world._class.transform,
         components = world._class.component,
     }
+    return all_scheme
 end
 
 -----------------------------------------------------------------------------
