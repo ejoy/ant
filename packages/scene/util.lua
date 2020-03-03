@@ -1,10 +1,11 @@
 local util = {}; util.__index = util
 
 local ecs 			= import_package "ant.ecs"
+local mathadapter 	= import_package "ant.math.adapter"
 
-function util.start_new_world(fbw, fbh, config)
+function util.start_new_world(fbw, fbh, config,world_class)
 	config.fb_size = {w=fbw, h=fbh}
-	local world = ecs.new_world(config)
+	local world = ecs.new_world(config,world_class)
 	world:update_func "init" ()
 	return world
 end
@@ -15,6 +16,7 @@ function util.start_static_world(packages)
 	local world = ecs.get_schema({Physics={}},packages)
 	return world
 end
+
 
 function util.loop(world)
 	local update = world:update_func "update"
