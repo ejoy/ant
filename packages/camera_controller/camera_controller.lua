@@ -82,7 +82,7 @@ function camera_controller_system:camera_control()
 	end
 	if can_move(camera) then
 		for _,code,press in eventKeyboard:unpack() do
-			local delta = press and kKeyboardSpeed or ((not press) and -kKeyboardSpeed or 0)
+			local delta = (press>0) and kKeyboardSpeed or 0
 			if code == "W" then
 				keyboard_dz = keyboard_dz + delta
 			elseif code == "S" then
