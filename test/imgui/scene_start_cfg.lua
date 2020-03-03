@@ -1,10 +1,12 @@
 local runtime_config = {
     policy = {
         "ant.animation|animation",
-        "ant.animation|state_machine",
+        "ant.animation|animation_controller.state_machine",
+		"ant.animation|animation_controller.birth",
         "ant.animation|ozzmesh",
         "ant.animation|ozz_skinning",
         "ant.animation|skinning",
+		"ant.animation|ik",
         "ant.serialize|serialize",
         "ant.collision|collider",
         "ant.sky|procedural_sky",
@@ -28,6 +30,7 @@ local runtime_config = {
     pipeline = {
         { name = "init",
             "init",
+			"init_blit_render",
             "post_init",
         },
         { name = "update",
@@ -42,8 +45,9 @@ local runtime_config = {
             { name = "animation",
                 "animation_state",
                 "sample_animation_pose",
-                "ik",
+                "do_ik",
                 "skin_mesh",
+				"end_animation",
                 },
                 { name = "sky",
                     "update_sun",
@@ -82,10 +86,13 @@ local runtime_config = {
 local editor_config = {
     policy = {
         "ant.animation|animation",
-        "ant.animation|state_machine",
+		
+        "ant.animation|animation_controller.state_machine",
+		"ant.animation|animation_controller.birth",
         "ant.animation|ozzmesh",
         "ant.animation|ozz_skinning",
         "ant.animation|skinning",
+		"ant.animation|ik",
         "ant.serialize|serialize",
         "ant.collision|collider",
         "ant.sky|procedural_sky",
@@ -100,10 +107,12 @@ local editor_config = {
         "ant.scene|hierarchy",
         "ant.scene|ignore_parent_scale",
         "ant.imgui|gizmo_object",
+        "ant.imgui|outline",
+        "ant.imgui|test_add_policy",
         -- "ant.testimgui|"
         -- "ant.hierarchy.offline|",
         --editor
-        "ant.test.features|character",
+        "ant.character|character",
         "ant.objcontroller|select",
     },
     system = {
@@ -120,6 +129,7 @@ local editor_config = {
     pipeline = {
         { name = "init",
             "init",
+			-- "init_blit_render",
             "post_init",
         },
         { name = "update",
@@ -134,8 +144,9 @@ local editor_config = {
             { name = "animation",
                 "animation_state",
                 "sample_animation_pose",
-                "ik",
+                "do_ik",
                 "skin_mesh",
+				"end_animation",
                 },
                 { name = "sky",
                     "update_sun",
@@ -174,94 +185,6 @@ local editor_config = {
         }
     }
 }
---animation test
--- local editor_config = {
---     policy = {
---         "ant.animation|animation",
---         "ant.animation|state_machine",
---         "ant.animation|ozzmesh",
---         "ant.animation|ozz_skinning",
---         "ant.animation|skinning",
---         "ant.serialize|serialize",
---         "ant.render|mesh",
---         "ant.render|render",
---         "ant.render|name",
---         "ant.render|light.directional",
---         "ant.render|light.ambient",
---         --
---         --editor
---         "ant.imgui|gizmo_object",
---         -- "ant.testimgui|"
---         -- "ant.hierarchy.offline|",
---         -- "ant.test.features|character_controller",
---         "ant.objcontroller|select",
---         "ant.scene|hierarchy",
---     },
---     system = {
---         "ant.test.animation|init_loader",
---         "ant.objcontroller|pickup_system",
---         "ant.hierarchy.offline|build_hierarchy_system",
---         "ant.imgui|editor_watcher_system",
---         "ant.imgui|editor_operate_gizmo_system",
---         "ant.imgui|editor_tool_system",
---         "ant.imgui|world_profile_system",
---         "ant.scene|visible_system",
---         "ant.render|viewport_detect_system",
---     },
---     pipeline = {
---         { name = "init",
---             "init",
---             "post_init",
---         },
---         { name = "update",
---             "timer",
---             "data_changed",
---             "scene_update",
---             {name = "collider",
---                 "update_collider_transform",
---                 "update_collider",
---             },
---             { name = "animation",
---                 "animation_state",
---                 "sample_animation_pose",
---                 "skin_mesh",
---             },
---             { name = "sky",
---                 "update_sun",
---                 "update_sky",
---             },
---             "widget",
---             "update",
---             { name = "render",
---                 "shadow_camera",
---                 "load_render_properties",
---                 "filter_primitive",
---                 "make_shadow",
---                 "debug_shadow",
---                 "cull",
---                 "render_commit",
---                 { name = "postprocess",
---                     "bloom",
---                     "tonemapping",
---                     "combine_postprocess",
---                 }
---             },
---             "camera_control",
---             "lock_target",
---             "pickup",
---             "update_editable_hierarchy",
---             "editor_update",
---             { name = "ui",
---                 "ui_start",
---                 "ui_update",
---                 "ui_end",
---             },
---             "after_update",
---             "end_frame",
---             "final",
---         }
---     }
--- }
 
 return {
     runtime = runtime_config,
