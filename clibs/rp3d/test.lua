@@ -4,6 +4,10 @@ package.cpath = package.cpath .. ";../?/?.dll" -- for math3d
 local rp3d = require "rp3d"
 local math3d = require "math3d"
 
+local ms = math3d.new()
+
+local rp3d = rp3d(ms) -- init math adapter
+
 local w = rp3d.collision_world {
 	worldName = "world",
 	persistentContactDistanceThreshold = 0.03,
@@ -23,10 +27,6 @@ local w = rp3d.collision_world {
 
 --	logger = { Level = "Error", Format = "Text" },
 }
-
-local ms = math3d.new()
-
-rp3d.init(ms)	-- init math adapter, shapes manager, etc.
 
 local pos = ms:vector()	-- (0,0,0,1)
 local ori = ms:quaternion(0, 0, 0, 1)

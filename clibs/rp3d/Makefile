@@ -26,6 +26,3 @@ $(ODIR) :
 
 clean :
 	rm -rf $(ODIR) && rm -f *.dll && rm -f $(RP3D_OBJ)
-
-test :
-	$(LUABIN) test.lua

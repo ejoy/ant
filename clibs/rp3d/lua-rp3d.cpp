@@ -84,6 +84,8 @@ lcollision_world(lua_State *L) {
 
 	WorldSettings settings;
 
+	luaL_checktype(L, 2, LUA_TTABLE);
+
 	if (lua_istable(L,1)) {
 		const char *worldName = getstring(L, 1, "worldName");
 		if (worldName) {
@@ -156,7 +158,7 @@ lcollision_world(lua_State *L) {
 	}
 
 	world->w = new CollisionWorld(settings, world->logger);
-	lua_pushvalue(L, lua_upvalueindex(1));
+	lua_pushvalue(L, 2);
 	lua_setmetatable(L, -2);
 
 	return 1;
@@ -482,6 +484,11 @@ extern "C" {
 		{ NULL, NULL },
 	};
 
+	// collision_world metatable
+	luaL_newlib(L, collision_world);
+
+	int world_mt = lua_gettop(L);
+
 	init_memory_profiler();
 
 	luaL_checkversion(L);
@@ -490,19 +497,20 @@ extern "C" {
 		luaL_error(L, "decimal should be float");
 	}
 
-	lua_newtable(L);
+	luaL_Reg apis[] = {
+		{ "new_collision_world", lcollision_world },
+		{ "delete_shape", ldeleteShape },
+		{ "rayfilter", lrayfilter },
+		{ "memory", lmemory },
+		{ NULL, NULL },
+	};
+
+	luaL_newlib(L, apis);
+
 	int lib_index = lua_gettop(L);
 
-	// collision_world metatable
-	luaL_newlib(L, collision_world);
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");
-
-	lua_pushvalue(L, -1);
+	lua_pushvalue(L, world_mt);
 	lua_setfield(L, lib_index, "collision_world_mt");
-
-	lua_pushcclosure(L, lcollision_world, 1);
-	lua_setfield(L, lib_index, "collision_world");
 
 	luaL_Reg collision_shape[] = {
 		{ "sphere", lsphereShape },
@@ -514,14 +522,6 @@ extern "C" {
 
 	luaL_newlib(L, collision_shape);
 	lua_setfield(L, lib_index, "shape");
-	lua_pushcfunction(L, ldeleteShape);
-	lua_setfield(L, lib_index, "delete_shape");
-
-	lua_pushcfunction(L, lrayfilter);
-	lua_setfield(L, lib_index, "rayfilter");	// for math3d adapter
-
-	lua_pushcfunction(L, lmemory);
-	lua_setfield(L, lib_index, "memory");
 
 	return 1;
 }
