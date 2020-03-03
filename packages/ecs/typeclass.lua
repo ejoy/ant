@@ -176,7 +176,7 @@ local function importAll(w, ecs, class, config, loader)
 		end
 		local v = class.policy[package][name]
 		if not v then
-			error(("invalid policy name: `%s`."):format(name))
+			error(("invalid policy name: `%s` in package '%s'."):format(name,package))
 		end
 		tableAt(cut.policy, package)[name] = v
 		if v.require_system then
