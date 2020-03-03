@@ -61,5 +61,11 @@ if hit then
 	print("Hit normal", ms(norm, "V"))
 end
 
+local hit, norm = w:raycast(ms:vector(100,100,100), ms:vector(0,0,0), object)
+if hit then
+	print("Hit sphere position", ms(hit, "V"))
+	print("Hit sphere normal", ms(norm, "V"))
+end
+
 w:body_destroy(object)
 w:body_destroy(object2)

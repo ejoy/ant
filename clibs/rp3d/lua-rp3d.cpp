@@ -338,7 +338,7 @@ struct luaRaycastCallback : RaycastCallback {
 // userdata world
 // vector3 start
 // vector3 end
-// string mask
+// integer mask / pointer body
 // vector3 &hitpoint
 // vector3 &normal
 // return true/false (isHit)
@@ -347,25 +347,46 @@ lraycast(lua_State *L) {
 	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
 	const float * startp = (const float *)lua_touserdata(L, 2);
 	const float * endp = (const float *)lua_touserdata(L, 3);
-	int categoryMaskBits = maskbits(L, 4);
 	float *hit = (float *)lua_touserdata(L, 5);
 	float *normal = (float *)lua_touserdata(L, 6);
 
-	luaRaycastCallback cb;
 	Ray ray(Vector3(startp[0], startp[1], startp[2]), Vector3(endp[0], endp[1], endp[2]));
-	world->w->raycast(ray, &cb, (unsigned short)categoryMaskBits);
 
-	hit[0] = cb.worldPoint.x;
-	hit[1] = cb.worldPoint.y;
-	hit[2] = cb.worldPoint.z;
-	hit[3] = 1.0;
+	if (lua_isinteger(L, 4)) {
+		int categoryMaskBits = maskbits(L, 4);
 
-	normal[0] = cb.worldNormal.x;
-	normal[1] = cb.worldNormal.y;
-	normal[2] = cb.worldNormal.z;
-	normal[3] = 0;
+		luaRaycastCallback cb;
+		world->w->raycast(ray, &cb, (unsigned short)categoryMaskBits);
 
-	lua_pushboolean(L, cb.hit);
+		hit[0] = cb.worldPoint.x;
+		hit[1] = cb.worldPoint.y;
+		hit[2] = cb.worldPoint.z;
+		hit[3] = 1.0;
+
+		normal[0] = cb.worldNormal.x;
+		normal[1] = cb.worldNormal.y;
+		normal[2] = cb.worldNormal.z;
+		normal[3] = 0;
+
+		lua_pushboolean(L, cb.hit);
+	} else {
+		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);	// it's a body
+		CollisionBody *body = (CollisionBody *)lua_touserdata(L, 4);
+		RaycastInfo raycastInfo;
+		bool isHit = body->raycast(ray , raycastInfo);
+
+		hit[0] = raycastInfo.worldPoint.x;
+		hit[1] = raycastInfo.worldPoint.y;
+		hit[2] = raycastInfo.worldPoint.z;
+		hit[3] = 1.0;
+
+		normal[0] = raycastInfo.worldNormal.x;
+		normal[1] = raycastInfo.worldNormal.y;
+		normal[2] = raycastInfo.worldNormal.z;
+		normal[3] = 0;
+
+		lua_pushboolean(L, isHit);
+	}
 	return 1;
 }
 
