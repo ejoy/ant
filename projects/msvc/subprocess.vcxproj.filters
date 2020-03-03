@@ -21,12 +21,27 @@
     <ClCompile Include="..\..\clibs\subprocess\lsubprocess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\subprocess\file_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\subprocess\sharedmemory_win.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\subprocess\subprocess_win.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\subprocess\subprocess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\subprocess\args_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\subprocess\file_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\subprocess\sharedmemory_win.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

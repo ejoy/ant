@@ -1,7 +1,6 @@
 #include "subprocess.h"
 #include <deque>
 #include <memory.h>
-
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -11,9 +10,30 @@
 #include <errno.h>
 #include <assert.h>
 
+#if defined(__APPLE__)
+# include <crt_externs.h>
+# define environ (*_NSGetEnviron())
+#else
 extern char **environ;
+#endif
 
 namespace ant::posix::subprocess {
+
+    args_t::~args_t() {
+        for (size_t i = 0; i < size(); ++i) {
+            delete[]((*this)[i]);
+        }
+    }
+
+    void args_t::push(char* str) {
+        push_back(str);
+    }
+
+    void args_t::push(const std::string& str) {
+        std::unique_ptr<char[]> tmp(new char[str.size() + 1]);
+        memcpy(tmp.get(), str.data(), str.size() + 1);
+        push(tmp.release());
+    }
 
     static void sigalrm_handler (int) {
         // Nothing to do
@@ -57,14 +77,15 @@ namespace ant::posix::subprocess {
             delete[] data;
         }
         T* release() {
+            append(0);
             T* r = data;
             data = nullptr;
             return r;
         }
-        void append(T const& t) {
+        void append(T t) {
             if (size + 1 > maxsize) {
                 maxsize *= 2;
-                data = (T*)realloc(data, maxsize);
+                data = (T*)realloc(data, maxsize * sizeof(T));
                 if (!data) {
                     throw std::bad_alloc();
                 }
@@ -123,12 +144,11 @@ namespace ant::posix::subprocess {
         return nullptr;
     }
 
-    spawn::spawn() {
+    spawn::spawn()
+    {
         fds_[0] = -1;
         fds_[1] = -1;
         fds_[2] = -1;
-        pid_ = -1;
-        suspended_ = false;
     }
 
     spawn::~spawn()
@@ -138,7 +158,11 @@ namespace ant::posix::subprocess {
         suspended_ = true;
     }
 
-    void spawn::redirect(stdio type, pipe::handle h) { 
+    void spawn::detached() {
+        detached_ = true;
+    }
+
+    void spawn::redirect(stdio type, file::handle h) { 
         switch (type) {
         case stdio::eInput:
             fds_[0] = h;
@@ -154,6 +178,24 @@ namespace ant::posix::subprocess {
         }
     }
 
+    void spawn::do_duplicate() {
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                if (dup2(fds_[i], i) == -1) {
+                    _exit(127);
+                }
+            }
+        }
+    }
+
+    void spawn::do_duplicate_shutdown() {
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                close(fds_[i]);
+            }
+        }
+    }
+
     void spawn::env_set(const std::string& key, const std::string& value) {
         set_env_[key] = value;
     }
@@ -162,19 +204,16 @@ namespace ant::posix::subprocess {
         del_env_.insert(key);
     }
 
-    bool spawn::exec(std::vector<char*>& args, const char* cwd) {
+    bool spawn::raw_exec(char* const args[], const char* cwd) {
         pid_t pid = fork();
         if (pid == -1) {
             return false;
         }
         if (pid == 0) {
-            for (int i = 0; i < 3; ++i) {
-                if (fds_[i] > 0) {
-                    if (dup2(fds_[i], i) == -1) {
-                        _exit(127);
-                    }
-                }
+            if (detached_) {
+                setsid();
             }
+            do_duplicate();
             if (!set_env_.empty() || !del_env_.empty()) {
                 environ = make_env(set_env_, del_env_);
             }
@@ -184,17 +223,121 @@ namespace ant::posix::subprocess {
             if (suspended_) {
                 ::kill(getpid(), SIGSTOP);
             }
-            args.push_back(nullptr);
-            execvp(args[0], args.data());
+            execvp(args[0], args);
             _exit(127);
         }
         pid_ = pid;
-        for (int i = 0; i < 3; ++i) {
-            if (fds_[i] > 0) {
-                close(fds_[i]);
+        do_duplicate_shutdown();
+        return true;
+
+    }
+
+    static void split_accept(args_t& args, const char* str, size_t len) {
+        char* data = new char[len + 1];
+        size_t j = 0;
+        for (size_t i = 0; i < len; ++i, ++j) {
+            if (str[i] == '\\' && i + 1 < len) {
+                i++;
+            }
+            data[j] = str[i];
+        }
+        data[j] = 0;
+        args.push(data);
+    }
+    static void split_str(args_t& args, const char*& z) {
+        const char* start = z;
+        for (;;) {
+            switch (*z) {
+            case '\0':
+                split_accept(args, start, z - start);
+                return;
+            case '"':
+                split_accept(args, start, z - start);
+                z++;
+                return;
+            case '\\':
+                z++;
+                if (*z != '\0') {
+                    z++;
+                }
+                break;
+            default:
+                z++;
+                break;
             }
         }
-        return true;
+    }
+    static void split_arg(args_t& args, const char*& z) {
+        const char* start = z;
+        for (;;) {
+            switch (*z) {
+            case '\0':
+            case ' ':
+            case '\t':
+                split_accept(args, start, z - start);
+                return;
+            case '"':
+                z++;
+                split_str(args, z);
+                return;
+            case '\\':
+                z++;
+                switch (*z) {
+                case '\0':
+                case ' ':
+                case '\t':
+                    break;
+                default:
+                    z++;
+                    break;
+                }
+                break;
+            default:
+                z++;
+                break;
+            }
+        }
+    }
+    static void split_next(args_t& args, const char* z) {
+        for (;;) {
+            switch (*z) {
+            case '\0':
+                return;
+            case ' ':
+            case '\t':
+                z++;
+                break;
+            default:
+                split_arg(args, z);
+                break;
+            }
+        }
+    }
+    static void split(args_t& args) {
+        if (args.size() < 2) {
+            return;
+        }
+        else if (args.size() > 2) {
+            args.resize(2);
+        }
+        args.push(std::string(args[0]));
+        split_next(args, args[1]);
+    }
+    bool spawn::exec(args_t& args, const char* cwd) {
+        if (args.size() == 0) {
+            return false;
+        }
+        switch (args.type) {
+        case args_t::type::array:
+            args.push(nullptr);
+            return raw_exec(args.data(), cwd);
+        case args_t::type::string:
+            split(args);
+            args.push(nullptr);
+            return raw_exec(args.data() + 2, cwd);
+        default:
+            return false;
+        }
     }
 
     process::process(spawn& spawn)
@@ -237,39 +380,22 @@ namespace ant::posix::subprocess {
     }
 
     namespace pipe {
-        static bool cloexec(int fd, bool set) {
-            int r;
-            do
-                r = ioctl(fd, set ? FIOCLEX : FIONCLEX);
-            while (r == -1 && errno == EINTR);
-            return !r;
+        FILE* open_result::open_read() {
+            return file::open_read(rd);
         }
-        FILE* open_result::open_file(mode m) {
-            switch (m) {
-            case mode::eRead:
-                return fdopen(rd, "rb");
-            case mode::eWrite:
-                return fdopen(wr, "wb");
-            default:
-                assert(false);
-                return 0;
-            }
-        }
-        handle to_handle(FILE* f) {
-            return fileno(f);
+        FILE* open_result::open_write() {
+            return file::open_write(wr);
         }
         open_result open() {
             int fds[2];
-            if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds)) {
-                return { 0, 0 };
+            if (!net::socket::blockpair(fds)) {
+                return { file::handle::invalid(), file::handle::invalid() };
             }
-            cloexec(fds[0], true);
-            cloexec(fds[1], true);
-            return { fds[0], fds[1] };
+            return { file::handle(fds[0]), file::handle(fds[1]) };
         }
         int peek(FILE* f) {
             char tmp[256];
-            int rc = recv(to_handle(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
+            int rc = recv(file::get_handle(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
             if (rc == 0) {
                 return -1;
             }

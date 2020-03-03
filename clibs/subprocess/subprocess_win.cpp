@@ -1,7 +1,11 @@
 #include "subprocess.h"
+#include "sharedmemory_win.h"
+#include "args_helper.h"
 #include <Windows.h>
+#include <Shobjidl.h>
 #include <memory>
 #include <deque>
+#include <thread>
 #include <assert.h>
 #include <fcntl.h>
 #include <io.h>
@@ -9,115 +13,22 @@
 
 #define SIGKILL 9
 
+#ifdef __MINGW32__
+extern "C" {
+const GUID CLSID_TaskbarList = { 0x56FDF344, 0xFD6D, 0x11D0, {0x95, 0x8A, 0x00, 0x60, 0x97, 0xC9, 0xA0, 0x90} };
+const GUID IID_ITaskbarList  = { 0x56FDF342, 0xFD6D, 0x11D0, {0x95, 0x8A, 0x00, 0x60, 0x97, 0xC9, 0xA0, 0x90} };
+const GUID IID_ITaskbarList2 = { 0x602D4995, 0xB13A, 0x429b, {0xA6, 0x6E, 0x19, 0x35, 0xE4, 0x4F, 0x43, 0x17} };
+const GUID IID_ITaskbarList3 = { 0xEA1AFB91, 0x9E28, 0x4B86, {0x90, 0xE9, 0x9E, 0x9F, 0x8A, 0x5E, 0xEF, 0xAF} }; 
+}
+#endif
+
 namespace ant::win::subprocess {
 
-    struct strbuilder {
-        struct node {
-            size_t size;
-            size_t maxsize;
-            wchar_t* data;
-            node(size_t maxsize)
-                : size(0)
-                , maxsize(maxsize)
-                , data(new wchar_t[maxsize])
-            { }
-            ~node() {
-                delete[] data;
-            }
-            wchar_t* release() {
-                wchar_t* r = data;
-                data = nullptr;
-                return r;
-            }
-            bool append(const wchar_t* str, size_t n) {
-                if (size + n > maxsize) {
-                    return false;
-                }
-                memcpy(data + size, str, n * sizeof(wchar_t));
-                size += n;
-                return true;
-            }
-            template <class T, size_t n>
-            void operator +=(T(&str)[n]) {
-                append(str, n - 1);
-            }
-        };
-        strbuilder() : size(0) { }
-        void clear() {
-            size = 0;
-            data.clear();
+    static wchar_t* make_array_args(const std::vector<std::wstring>& args, std::wstring_view prefix = std::wstring_view()) {
+        strbuilder<wchar_t> res;
+        if (!prefix.empty()) {
+            res += prefix;
         }
-        bool append(const wchar_t* str, size_t n) {
-            if (!data.empty() && data.back().append(str, n)) {
-                size += n;
-                return true;
-            }
-            size_t m = 1024;
-            while (m < n) {
-                m *= 2;
-            }
-            data.emplace_back(m).append(str, n);
-            size += n;
-            return true;
-        }
-        template <class T, size_t n>
-        strbuilder& operator +=(T(&str)[n]) {
-            append(str, n - 1);
-            return *this;
-        }
-        strbuilder& operator +=(const std::wstring& s) {
-            append(s.data(), s.size());
-            return *this;
-        }
-        wchar_t* string() {
-            node r(size + 1);
-            for (auto& s : data) {
-                r.append(s.data, s.size);
-            }
-            r += L"\0";
-            return r.release();
-        }
-        std::deque<node> data;
-        size_t size;
-    };
-
-    static std::wstring quote_arg(const std::wstring& source) {
-        size_t len = source.size();
-        if (len == 0) {
-            return L"\"\"";
-        }
-        if (std::wstring::npos == source.find_first_of(L" \t\"")) {
-            return source;
-        }
-        if (std::wstring::npos == source.find_first_of(L"\"\\")) {
-            return L"\"" + source + L"\"";
-        }
-        std::wstring target;
-        target += L'"';
-        int quote_hit = 1;
-        for (size_t i = len; i > 0; --i) {
-            target += source[i - 1];
-
-            if (quote_hit && source[i - 1] == L'\\') {
-                target += L'\\';
-            }
-            else if (source[i - 1] == L'"') {
-                quote_hit = 1;
-                target += L'\\';
-            }
-            else {
-                quote_hit = 0;
-            }
-        }
-        target += L'"';
-        for (size_t i = 0; i < target.size() / 2; ++i) {
-            std::swap(target[i], target[target.size() - i - 1]);
-        }
-        return target;
-    }
-
-    static wchar_t* make_args(const std::vector<std::wstring>& args) {
-        strbuilder res; 
         for (size_t i = 0; i < args.size(); ++i) {
             res += quote_arg(args[i]);
             if (i + 1 != args.size()) {
@@ -127,12 +38,26 @@ namespace ant::win::subprocess {
         return res.string();
     }
 
-    static wchar_t* make_args(const std::wstring& app, const std::wstring& cmd) {
-        strbuilder res;
+    static wchar_t* make_string_args(const std::wstring& app, const std::wstring& cmd, std::wstring_view prefix = std::wstring_view()) {
+        strbuilder<wchar_t> res;
+        if (!prefix.empty()) {
+            res += prefix;
+        }
         res += quote_arg(app);
         res += L" ";
         res += cmd;
         return res.string();
+    }
+
+    static wchar_t* make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
+        switch (args.type) {
+        case args_t::type::array:
+            return make_array_args(args, prefix);
+        case args_t::type::string:
+            return make_string_args(args[0], args[1], prefix);
+        default:
+            return 0;
+        }
     }
 
     static wchar_t* make_env(std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>>& set, std::set<std::wstring, ignore_case::less<std::wstring>>& del)
@@ -142,13 +67,14 @@ namespace ant::win::subprocess {
             return nullptr;
         }
         try {
-            strbuilder res;
+            strbuilder<wchar_t> res;
             wchar_t* escp = es;
             while (*escp != L'\0') {
                 std::wstring str = escp;
                 std::wstring::size_type pos = str.find(L'=');
                 std::wstring key = str.substr(0, pos);
                 if (del.find(key) != del.end()) {
+                    escp += str.length() + 1;
                     continue;
                 }
                 std::wstring val = str.substr(pos + 1, str.length());
@@ -183,9 +109,105 @@ namespace ant::win::subprocess {
         return nullptr;
     }
 
+    static HANDLE create_job() {
+        SECURITY_ATTRIBUTES attr;
+        memset(&attr, 0, sizeof attr);
+        attr.bInheritHandle = FALSE;
+
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
+        memset(&info, 0, sizeof info);
+        info.BasicLimitInformation.LimitFlags =
+            JOB_OBJECT_LIMIT_BREAKAWAY_OK
+            | JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK
+            | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            | JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION
+            ;
+
+        HANDLE job = CreateJobObjectW(&attr, NULL);
+        if (job == NULL) {
+            return NULL;
+        }
+        if (!SetInformationJobObject(job, JobObjectExtendedLimitInformation, &info, sizeof info)) {
+            return NULL;
+        }
+        return job;
+    }
+
+    static bool join_job(HANDLE process) {
+        static HANDLE job = create_job();
+        if (job) {
+            return false;
+        }
+        if (!AssignProcessToJobObject(job, process)) {
+            DWORD err = GetLastError();
+            if (err != ERROR_ACCESS_DENIED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static HWND console_window(DWORD pid) {
+        DWORD wpid;
+        HWND wnd = NULL;
+        do {
+            wnd = FindWindowExW(NULL, wnd, L"ConsoleWindowClass", NULL);
+            if (wnd == NULL) {
+                break;
+            }
+            GetWindowThreadProcessId(wnd, &wpid);
+        } while (pid != wpid);
+        return wnd;
+    }
+
+    bool hide_taskbar(HWND w) {
+        ITaskbarList* taskbar;
+        ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
+        if (SUCCEEDED(CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_ITaskbarList, (void**)&taskbar))) {
+            taskbar->HrInit();
+            taskbar->DeleteTab(w);
+            taskbar->Release();
+            return true;
+        }
+        return false;
+    }
+
+    static bool hide_console(PROCESS_INFORMATION& pi) {
+        HANDLE hProcess = NULL;
+        if (!::DuplicateHandle(
+            ::GetCurrentProcess(),
+            pi.hProcess,
+            ::GetCurrentProcess(),
+            &hProcess,
+            0, FALSE, DUPLICATE_SAME_ACCESS)
+            ) {
+            return false;
+        }
+
+        std::thread thd([=]() {
+            PROCESS_INFORMATION cpi;
+            cpi.dwProcessId = pi.dwProcessId;
+            cpi.dwThreadId = pi.dwThreadId;
+            cpi.hThread = NULL;
+            cpi.hProcess = hProcess;
+            process process(std::move(cpi));
+            for (;; std::this_thread::sleep_for(std::chrono::milliseconds(10))) {
+                if (!process.is_running()) {
+                    return;
+                }
+                HWND wnd = console_window(process.get_id());
+                if (wnd) {
+                    SetWindowPos(wnd, NULL, -10000, -10000, 0, 0, SWP_HIDEWINDOW);
+                    hide_taskbar(wnd);
+                    return;
+                }
+            }
+        });
+        thd.detach();
+        return true;
+    }
+
     spawn::spawn()
-        : inherit_handle_(false)
-        , flags_(0)
     {
         memset(&si_, 0, sizeof(STARTUPINFOW));
         memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
@@ -201,15 +223,24 @@ namespace ant::win::subprocess {
         ::CloseHandle(pi_.hProcess);
     }
 
+    void spawn::search_path() {
+        search_path_ = true;
+    }
+
     bool spawn::set_console(console type) {
-        flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE);
+		console_ = type;
+        flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP);
         switch (type) {
         case console::eInherit:
+            break;
+        case console::eDetached:
+            flags_ |= DETACHED_PROCESS & CREATE_NEW_PROCESS_GROUP;
             break;
         case console::eDisable:
             flags_ |= CREATE_NO_WINDOW;
             break;
         case console::eNew:
+        case console::eHide:
             flags_ |= CREATE_NEW_CONSOLE;
             break;
         default:
@@ -227,11 +258,15 @@ namespace ant::win::subprocess {
     void spawn::suspended() {
         flags_ |= CREATE_SUSPENDED;
     }
-    
-    void spawn::redirect(stdio type, pipe::handle h) {
+
+    void spawn::detached() {
+        set_console(console::eDetached);
+        detached_ = true;
+    }
+
+    void spawn::redirect(stdio type, file::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
-        ::SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         switch (type) {
         case stdio::eInput:
             si_.hStdInput = h;
@@ -242,19 +277,34 @@ namespace ant::win::subprocess {
         case stdio::eError:
             si_.hStdError = h;
             break;
+        default:
+            break;
         }
     }
 
-    bool spawn::exec(const std::vector<std::wstring>& args, const wchar_t* cwd) {
+    void spawn::do_duplicate_start() {
+        ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+    }
+
+    void spawn::do_duplicate_shutdown() {
+        ::CloseHandle(si_.hStdInput);
+        ::CloseHandle(si_.hStdOutput);
+        ::CloseHandle(si_.hStdError);
+    }
+
+    bool spawn::raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd) {
+        std::unique_ptr<wchar_t[]> command_line(commandline);
         std::unique_ptr<wchar_t[]> environment;
         if (!set_env_.empty() || !del_env_.empty()) {
             environment.reset(make_env(set_env_, del_env_));
             flags_ |= CREATE_UNICODE_ENVIRONMENT;
         }
-
-        std::unique_ptr<wchar_t[]> command_line(make_args(args));
+        bool resume = false;
+        do_duplicate_start();
         if (!::CreateProcessW(
-            args[0].c_str(),
+            application,
             command_line.get(),
             NULL, NULL,
             inherit_handle_,
@@ -264,39 +314,31 @@ namespace ant::win::subprocess {
             &si_, &pi_
         ))
         {
+            do_duplicate_shutdown();
             return false;
         }
-        ::CloseHandle(si_.hStdInput);
-        ::CloseHandle(si_.hStdOutput);
-        ::CloseHandle(si_.hStdError);
+        do_duplicate_shutdown();
+        if (!detached_) {
+            join_job(pi_.hProcess);
+        }
+        if (console_ == console::eHide) {
+            hide_console(pi_);
+        }
+        if (resume) {
+            ::ResumeThread(pi_.hThread);
+        }
         return true;
     }
 
-    bool spawn::exec(const std::wstring& app, const std::wstring& cmd, const wchar_t* cwd) {
-        std::unique_ptr<wchar_t[]> environment;
-        if (!set_env_.empty() || !del_env_.empty()) {
-            environment.reset(make_env(set_env_, del_env_));
-            flags_ |= CREATE_UNICODE_ENVIRONMENT;
-        }
-
-        std::unique_ptr<wchar_t[]> command_line(make_args(app, cmd));
-        if (!::CreateProcessW(
-            app.c_str(),
-            command_line.get(),
-            NULL, NULL,
-            inherit_handle_,
-            flags_ | NORMAL_PRIORITY_CLASS,
-            environment.get(),
-            cwd,
-            &si_, &pi_
-        ))
-        {
+    bool spawn::exec(const args_t& args, const wchar_t* cwd) {
+        if (args.size() == 0) {
             return false;
         }
-        ::CloseHandle(si_.hStdInput);
-        ::CloseHandle(si_.hStdOutput);
-        ::CloseHandle(si_.hStdError);
-        return true;
+        wchar_t* command = make_args(args);
+        if (!command) {
+            return false;
+        }
+        return raw_exec(search_path_ ? 0 : args[0].c_str(), command, cwd);
     }
 
     void spawn::env_set(const std::wstring& key, const std::wstring& value) {
@@ -307,51 +349,15 @@ namespace ant::win::subprocess {
         del_env_.insert(key);
     }
 
-    PROCESS_INFORMATION spawn::release() {
-        PROCESS_INFORMATION r = pi_;
-        memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
-        return r;
-    }
-
     process::process(spawn& spawn)
-        : PROCESS_INFORMATION(spawn.release())
-    { }
-
-    process::process(process&& pi)
-        : PROCESS_INFORMATION(pi)
+        : pi_(spawn.pi_)
     {
-        pi.hProcess = 0;
-        pi.hThread = 0;
-        pi.dwProcessId = 0;
-        pi.dwThreadId = 0;
-    }
-
-    process::process(PROCESS_INFORMATION&& pi)
-        : PROCESS_INFORMATION(pi)
-    {
-        pi.hProcess = 0;
-        pi.hThread = 0;
-        pi.dwProcessId = 0;
-        pi.dwThreadId = 0;
+        memset(&spawn.pi_, 0, sizeof(PROCESS_INFORMATION));
     }
 
     process::~process() {
-        ::CloseHandle(hThread);
-        ::CloseHandle(hProcess);
-    }
-
-    process& process::operator=(process&& pi) {
-        if (this != &pi) {
-            hProcess = pi.hProcess;
-            hThread = pi.hThread;
-            dwProcessId = pi.dwProcessId;
-            dwThreadId = pi.dwThreadId;
-            pi.hProcess = 0;
-            pi.hThread = 0;
-            pi.dwProcessId = 0;
-            pi.dwThreadId = 0;
-        }
-        return *this;
+        ::CloseHandle(pi_.hThread);
+        ::CloseHandle(pi_.hProcess);
     }
 
     uint32_t process::wait() {
@@ -360,9 +366,9 @@ namespace ant::win::subprocess {
     }
 
     bool process::wait(uint32_t timeout) {
-        return ::WaitForSingleObject(hProcess, timeout) == WAIT_OBJECT_0;
+        return ::WaitForSingleObject(pi_.hProcess, timeout) == WAIT_OBJECT_0;
     }
-    
+
     bool process::is_running() {
         if (exit_code() == STILL_ACTIVE) {
             return !wait(0);
@@ -375,7 +381,7 @@ namespace ant::win::subprocess {
         case SIGTERM:
         case SIGKILL:
         case SIGINT:
-            if (TerminateProcess(hProcess, (signum << 8))) {
+            if (TerminateProcess(pi_.hProcess, (signum << 8))) {
                 return wait(5000);
             }
             return false;
@@ -387,41 +393,32 @@ namespace ant::win::subprocess {
     }
 
     bool process::resume() {
-        return (DWORD)-1 != ::ResumeThread(hThread);
+        return (DWORD)-1 != ::ResumeThread(pi_.hThread);
     }
 
     uint32_t process::exit_code() {
         DWORD ret = 0;
-        if (!::GetExitCodeProcess(hProcess, &ret)) {
+        if (!::GetExitCodeProcess(pi_.hProcess, &ret)) {
             return 0;
         }
         return (int32_t)ret;
     }
 
     uint32_t process::get_id() const {
-        return (uint32_t)dwProcessId;
+        return (uint32_t)pi_.dwProcessId;
     }
 
     uintptr_t process::native_handle() {
-        return (uintptr_t)hProcess;
+        return (uintptr_t)pi_.hProcess;
     }
 
     namespace pipe {
-        FILE* open_result::open_file(mode m) {
-            switch (m) {
-            case mode::eRead:
-                return _fdopen(_open_osfhandle((intptr_t)rd, _O_RDONLY | _O_BINARY), "rb");
-            case mode::eWrite:
-                return _fdopen(_open_osfhandle((intptr_t)wr, _O_WRONLY | _O_BINARY), "wb");
-            default:
-                assert(false);
-                return 0;
-            }
+        FILE* open_result::open_read() {
+            return file::open_read(rd);
         }
 
-        handle to_handle(FILE* f) {
-            int n = _fileno(f);
-            return (n >= 0) ? (HANDLE)_get_osfhandle(n) : INVALID_HANDLE_VALUE;
+        FILE* open_result::open_write() {
+            return file::open_write(wr);
         }
 
         open_result open() {
@@ -431,14 +428,14 @@ namespace ant::win::subprocess {
             sa.lpSecurityDescriptor = NULL;
             HANDLE read_pipe = NULL, write_pipe = NULL;
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
-                return { NULL, NULL };
+                return { file::handle::invalid(), file::handle::invalid() };
             }
-            return { read_pipe, write_pipe };
+            return { file::handle(read_pipe), file::handle(write_pipe) };
         }
 
         int peek(FILE* f) {
             DWORD rlen = 0;
-            if (PeekNamedPipe(to_handle(f), 0, 0, 0, &rlen, 0)) {
+            if (PeekNamedPipe(file::get_handle(f), 0, 0, 0, &rlen, 0)) {
                 return rlen;
             }
             return -1;
