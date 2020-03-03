@@ -139,6 +139,22 @@ function world:add_policy(eid, t)
 end
 
 function world:set_entity(eid, policies, dataset)
+	local h = false
+	for _,p in ipairs(policies) do
+		if p == "ant.serialize|serialize" then
+			h = true
+			break
+		end
+	end
+	if not h then
+		table.insert(policies,"ant.serialize|serialize")
+	end
+	dataset = dataset or {}
+	if not dataset["serialize"] then
+		local seripkg = import_package 'ant.serialize'
+		dataset["serialize"] = seripkg.create()
+	end
+
 	local component, transform = policy.create(self, policies)
 	self[eid] = {}
 	self._entity[eid] = true
@@ -344,7 +360,10 @@ end
 
 local m = {}
 
-function m.new_world(config)
+m.world_base = world
+
+function m.new_world(config,world_class)
+	-- print(world_class.name)
 	local w = setmetatable({
 		args = config,
 		_entity = {},	-- entity id set
@@ -353,7 +372,7 @@ function m.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
-	}, world)
+	}, world_class or world)
 
 	--init event
 	event.init(world)
