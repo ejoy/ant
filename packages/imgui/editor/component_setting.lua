@@ -277,6 +277,7 @@ function ComponentSetting.Path2Desc(path_tbl)
     local con = {}
     while path_tbl[1] do
         table.insert(con,path_tbl[1].name)
+        path_tbl = path_tbl[1]
     end
     return table.concat(con,".")
 end
