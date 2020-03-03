@@ -4,6 +4,7 @@ local world = ecs.world
 local renderpkg  = import_package 'ant.render'
 local mathpkg    = import_package "ant.math"
 local imgui      = require "imgui"
+local imgui_util = require "imgui_util"
 local fs         = require 'filesystem'
 local ms, mu     = mathpkg.stack, mathpkg.util
 local lu         = renderpkg.light
@@ -13,7 +14,7 @@ local camera = world:interface "ant.render|camera"
 local m = ecs.system 'init_loader'
 
 m.require_system "ant.imguibase|imgui_system"
-m.require_system "ant.render|draw_skeleton"
+m.require_system "draw_skeleton"
 m.require_interface "ant.render|camera"
 m.require_interface "ant.animation|animation"
 
@@ -26,7 +27,6 @@ end
 
 local function create_animation_test()
     local eid = world:create_entity(load_file 'entity.txt')
-    world:disable_tag(eid, "can_render")
 
     --local serialize  = import_package 'ant.serialize'
     --local function save_file(file, data)
@@ -61,22 +61,6 @@ function m:post_init()
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
 
-local function defer(f)
-    local toclose = setmetatable({}, { __close = f })
-    return function (_, w)
-        if not w then
-            return toclose
-        end
-    end, nil, nil, toclose
-end
-
-local function imgui_windows(...)
-	imgui.windows.Begin(...)
-	return defer(function()
-		imgui.windows.End()
-	end)
-end
-
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -94,19 +78,52 @@ local function sortpairs(t)
     end
 end
 
+
+local status = {
+    current_animation = 'idle'
+}
+
+local checkboxSkeletonView = imgui_util.checkbox {
+    label = "Skeleton View",
+    enable = function ()
+        world:disable_tag(eid, "can_render")
+    end,
+    disable = function ()
+        world:enable_tag(eid, "can_render")
+    end,
+}
+
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
 function m:ui_update()
     local e = world[eid]
     local widget = imgui.widget
-    for _ in imgui_windows("Test", wndflags) do
+    for _ in imgui_util.windows("Test", wndflags) do
         for name in sortpairs(e.animation.anilist) do
-            if widget.Button(name) then
+            if widget.Selectable(name, status.current_animation == name) then
+                status.current_animation = name
                 local animation = world:interface "ant.animation|animation"
                 if not animation.set_state(e, name) then
                     animation.play(e, name, 0.5)
                 end
             end
         end
+        imgui.cursor.Separator()
+        checkboxSkeletonView:update()
+    end
+end
+
+local m = ecs.system "draw_skeleton"
+local drawer = world:interface "ant.render|iwidget_drawer"
+local asset = import_package "ant.asset"
+m.require_interface "ant.render|iwidget_drawer"
+function m:widget()
+    if not checkboxSkeletonView.selected then
+        return
+    end
+    for _, eid in world:each "animation" do
+        local e = world[eid]
+        local ske = asset.mgr.get_resource(e.skeleton.ref_path)
+        drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform)
     end
 end
