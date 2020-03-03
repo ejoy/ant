@@ -26,8 +26,9 @@ for _, t in ipairs {
     function m.save(v)
         assert(type(v) == "userdata")	
         local tt = ms(v, "T")
-        assert(type(tt) == "table" and t.type ~= nil)
-        assert(t.type == innertype, "vector load function need vector type")
-        t.type = nil
+        assert(type(tt) == "table" and tt.type ~= nil)
+        assert(tt.type == innertype, "vector load function need vector type")
+        tt.type = nil
+        return tt
     end
 end
