@@ -9,8 +9,11 @@ local Evt       ={
     ModifyMultComponent     = "Editor_ModifyMultComponent",
     ResponseWorldInfo       = "Editor_ResponseWorldInfo",
     RequestWorldInfo        = "Editor_RequestWorldInfo",
-    RequestHierarchy        = "RequestHierarchy",
+    RequestHierarchy        = "Editor_RequestHierarchy",
     EntityOperate           = "Editor_EntityOperate",
+    RequestEntityPolicy     = "Editor_RequestEntityPolicy",
+    SendEntityPolicy        = "Editor_SendEntityPolicy",
+    RequestAddPolicy        = "Editor_RequestAddPolicy",
     --Delete,{eid,...}
     GizmoType               = "Editor_GizmoType",--"position"/"rotation"/"scale"
     SystemProfile           = "Editor_SystemProfile",
@@ -26,5 +29,6 @@ local Evt       ={
     CloseProject            = "Editor_CloseProject", -- ()
     RequestAddPackageToProject  = "Editor_RequestAddPackageToProject",
     ProjectModified         = "Editor_ProjectModified",
+    OpenAddPolicyView       = "Editor_OpenAddPolicyView",
 }
 return Evt
