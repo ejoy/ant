@@ -42,29 +42,23 @@ local function rotate_round_point(camera, point, distance, dx, dy)
 		--ms(camera.viewdir, {type="q", axis=up, radian={dx}}, camera.viewdir, "*n=")
 	--else
 		--ms(camera.viewdir, {type="q", axis=up, radian={dx}}, {type="q", axis=right, radian={dy}}, "3**n=")
-		ms(camera.viewdir, ms:euler2quat{dy/2, 0, 0}, "2*n=")
-		print(dy,dx)
+		ms(camera.viewdir, ms:euler2quat{0, dx*20, 0}, "2*n=")
 	--end
 	ms(camera.eyepos, point, camera.viewdir, {distance}, '*-=')
 end
 
 local camera = world:interface "ant.render|camera"
 
-local function camera_reset(camera, target)
-	ms(target, {0, 0, 0, 1}, "=")
-	ms(camera.eyepos, {3, 3, -3, 1}, "=")
-	ms(camera.viewdir, target, camera.eyepos, "-n=")
-end
-
 function m:post_init()
 	dpi_x, dpi_y = rhwi.dpi()
-    camera.bind(camera.create {
-        eyepos = { 1.6, 1.8,-1.8, 1.0},
-        viewdir = {-0.6,-0.4, 0.7, 0.0},
-	}, "main_queue")
 	target = math3d.ref "vector"
-	ms(target, {0, 0, 0, 1}, "=")
-	camera_reset(get_camera(), target)
+	ms(target, {0, 0.9, 0, 1}, "=")
+	local eyepos ={ 1.6, 1.8,-1.8, 1 }
+	local viewdir = ms(target, eyepos, "-nT")
+    camera.bind(camera.create {
+        eyepos = eyepos,
+        viewdir = viewdir,
+	}, "main_queue")
 end
 
 local function convertxy(p2d)
@@ -81,6 +75,7 @@ function m:camera_control()
 			if last_xy then
 				local delta = convertxy(xy - last_xy) * rotation_speed
 				rotate_round_point(camera, target, distance, delta.x, delta.y)
+				last_xy = point2d(x, y)
 			end
 		elseif state == "DOWN" then
 			last_xy = point2d(x, y)
