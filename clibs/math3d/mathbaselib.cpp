@@ -357,7 +357,6 @@ push_box_points(lua_State *L, const Frustum::Points &points){
 static int
 lfrustum_points(lua_State *L) {
 	auto f = fetch_frustum(L, 1);
-	auto LS = fetch_LS(L, 1);
 
 	Frustum::Points points;
 	f->frustum_planes_intersection_points(points);
@@ -438,7 +437,7 @@ lfrustum_extents(lua_State *L){
 
 static int
 lfrustum_max_radius(lua_State *L){
-	auto f = fetch_frustum(L, 1);
+//	auto f = fetch_frustum(L, 1);
 	auto LS = fetch_LS(L, 1);
 
 	auto center = get_vec_value(L, LS, 2);
@@ -510,6 +509,55 @@ lfrustum_intersect_list(lua_State* L) {
 	}
 
 	return 1;
+}
+
+// todo: it's from math3d.cpp
+static inline void
+mat_to_aabb(const float mat[16], float minv[3], float maxv[3]) {
+	maxv[0] = mat[0*4+0] * 0.5f + mat[3*4+0];
+	maxv[1] = mat[1*4+1] * 0.5f + mat[3*4+1];
+	maxv[2] = mat[2*4+2] * 0.5f + mat[3*4+2];
+
+	minv[0] = maxv[0] - mat[0*4+0];
+	minv[1] = maxv[1] - mat[1*4+1];
+	minv[2] = maxv[2] - mat[2*4+2];
+}
+
+static int
+lfrustum_intersect_list_aabb(lua_State *L) {
+	auto* f = fetch_frustum(L, 1);
+	struct lastack* LS = fetch_LS(L, 1);
+
+	luaL_checktype(L, 2, LUA_TTABLE);
+	const int len = luaL_checkinteger(L, 3);
+
+	lua_createtable(L, len, 0);
+	int visibleset_idx = 0;
+	int idx;
+	for (idx = 1; idx <= len ; ++idx) {
+		if (lua_geti(L, 2, idx) != LUA_TTABLE) {
+			return luaL_error(L, "Can't fetch AABB from index %d", idx);
+		}
+		if (lua_getfield(L, -1, "AABB") == LUA_TNIL) {
+			return luaL_error(L, "Can't fetch AABB from index %d", idx);
+		}
+		int64_t AABB_id = get_stack_id(L, LS, -1);
+		lua_pop(L, 1);	// pop AABB
+		int type = 0;
+		const float * mat = lastack_value(LS, AABB_id, &type);
+		if (type != LINEAR_TYPE_MAT) {
+			return luaL_error(L, "Invalid AABB type at index %d", idx);
+		}
+		AABB tmp;
+		mat_to_aabb(mat, &tmp.min.x, &tmp.max.x);
+		auto result = planes_intersect(f->planes, tmp);
+		if (result[0] != 'o') {
+			lua_seti(L, -3, ++visibleset_idx);
+		} else {
+			lua_pop(L, 1);	// pop object with AABB
+		}
+	}
+	return 0;
 }
 
 static int
@@ -1094,6 +1142,7 @@ register_frustum_mt(lua_State *L){
 		luaL_Reg l[] = {
 			{ "intersect",		lfrustum_intersect},
 			{ "intersect_list", lfrustum_intersect_list},
+			{ "intersect_list_aabb", lfrustum_intersect_list_aabb },
 			{ "points", 		lfrustum_points},
 			{ "center",			lfrustum_center},
 			{ "extents",		lfrustum_extents},
