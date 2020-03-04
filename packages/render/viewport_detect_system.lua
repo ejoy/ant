@@ -44,7 +44,9 @@ local function update_camera_viewrect(w, h)
 	update_render_queue(mq, w, h)
 
 	local bq = world:singleton_entity "blit_queue"
-	update_render_queue(bq, w, h)
+	if bq then
+		update_render_queue(bq, w, h)
+	end
 end
 
 function vp_detect:post_init()
