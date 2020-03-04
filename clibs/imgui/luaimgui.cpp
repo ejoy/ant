@@ -42,6 +42,7 @@ struct lua_args {
 static int
 lCreateContext(lua_State* L) {
 	ImGuiContext* ctx = ImGui::CreateContext();
+	ImGui::SetCurrentContext(ctx);
 	plat::CreateContext(L);
 	lua_pushlightuserdata(L, ctx);
 	return 1;
