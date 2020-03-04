@@ -199,7 +199,7 @@ do
 	local q2 = stack({type="q", axis={0, 1, 0}, radian={math.rad(90)}}, "P")
 	print("quaternion 1 : ", stack(q2, "V"))
 
-	local e1 = stackobj:quat2euler(q)
+	local e1 = stackobj:quat2euler(q1)
 	print("euler : ", stack(e1, "V"))
 end
 
