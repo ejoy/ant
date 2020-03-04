@@ -501,8 +501,8 @@ get_field(lua_State *L, int index, const char* name) {
 	const char* field = NULL;
 	if (lua_getfield(L, index, name) == LUA_TSTRING) {
 		field = lua_tostring(L, -1);
-		lua_pop(L, 1);
 	}
+	lua_pop(L, 1);
 
 	return field;
 }
@@ -1658,7 +1658,62 @@ static FASTMATH(length)
 	const glm::vec3 * v = (const glm::vec3 *)lastack_value(LS, id, &type);
 	
 	lastack_pushnumber(LS, glm::length(*v));
+
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(fromAABB)
+	int t1,t2;
+	const float * maxv = pop_value(L, LS, &t1);
+	const float * minv = pop_value(L, LS, &t2);
+	if (t1 != LINEAR_TYPE_VEC4 || t1 != t2) {
+		luaL_error(L, "AABB need 2 vec4 type");
+	}
+
+	float diff[3] = { maxv[0] - minv[0], maxv[1] - minv[1], maxv[2] - minv[2] };
+	if (diff[0] < 0 || diff[1] < 0 || diff[2] < 0) {
+		return luaL_error(L, "Invalid minv/maxv (%f %f %f) (%f %f %f)",
+			minv[0], minv[1], minv[2],
+			maxv[0], maxv[1], maxv[2]);
+	}
+
+	float mat[16] = {
+		diff[0],0,0,0,
+		0,diff[1],0,0,
+		0,0,diff[2],0,
+		(minv[0] + maxv[0]) * 0.5f,(minv[1] + maxv[1]) * 0.5f,(minv[2] + maxv[2]) * 0.5f,1,
+	};
+
+	lastack_pushmatrix(LS, mat);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(toAABB)
+	int64_t id = pop(L, LS);
+	int type;
+	const float* mat = lastack_value(LS, id, &type);
+	if (type != LINEAR_TYPE_MAT)
+		luaL_error(L, "Need an OBB matrix");
+	float minv[4];
+	float maxv[4];
+
+	maxv[0] = mat[0*4+0] * 0.5f + mat[3*4+0];
+	maxv[1] = mat[1*4+1] * 0.5f + mat[3*4+1];
+	maxv[2] = mat[2*4+2] * 0.5f + mat[3*4+2];
+	maxv[3] = 1.0f;
+
+	minv[0] = maxv[0] - mat[0*4+0];
+	minv[1] = maxv[1] - mat[1*4+1];
+	minv[2] = maxv[2] - mat[2*4+2];
+	minv[3] = 1.0f;
+
+	lastack_pushvec4(LS, minv);
+	lastack_pushvec4(LS, maxv);
+
 	refstack_pop(RS);
+	refstack_push(RS);
 	refstack_push(RS);
 	return 0;
 }
@@ -2059,7 +2114,6 @@ new_temp_quaternion(lua_State *L) {
 			q[ii] = lua_tonumber(L, ii + 2);
 		}
 	} else if (top == 3) {
-		const int type = lua_type(L, 2);
 		glm::vec4 axis = get_vec_value(L, LS, 2);
 		const float radian = lua_tonumber(L, 3);
 		q = glm::angleAxis(radian, *tov3(axis));
@@ -3109,6 +3163,9 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ MFUNCTION(popnumber) },
 			{ MFUNCTION(toquaternion)},
 			{ MFUNCTION(length)},
+			{ MFUNCTION(fromAABB)},
+			{ MFUNCTION(toAABB)},
+			{ MFUNCTION(lookfrom3)},
 			{ "stacksize", lstacksize },
 			{ "ref", lstackrefobject },
 			{ "command", gencommand },
