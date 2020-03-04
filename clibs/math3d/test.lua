@@ -212,8 +212,12 @@ end
 
 do
 	-- AABB
-	print("fromAABB", stack( {-1,-2,-3, 1}, "V", {4,5,6,1} , "V", stackobj.fromAABB , "V" ))
-	print("toAABB (max,min)", stack( stackobj.toAABB , "VRVR" ))
+	print("AABB", stack( {-1,-2,-3, 1}, "V", {4,5,6,1} , "V", stackobj.fromAABB , "V" ))
+	print("AABB", stack( {1,1,1, 1}, "V", {5,5,5,1} , "V", stackobj.fromAABB , "V" ))
+	print("Insect", stack( "22", stackobj.intersectAABB))
+	print("Insert Plane {0,1,0,0}", stack( "2V", { 0,1,0,0 }, stackobj.intersectAABB))
+	print("Insert Plane {0,1,0,0}", stack( "1V", { 0,1,0,0 }, stackobj.intersectAABB))
+	print("mergeAABB (min,max)", stack( stackobj.mergeAABB, stackobj.toAABB , "SVRVR" ))
 end
 
 print("Memory = ", stackobj:stacksize())
