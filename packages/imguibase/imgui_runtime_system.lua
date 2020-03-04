@@ -1,16 +1,114 @@
 local ecs = ...
 local world = ecs.world
 
-local imgui     = require "imgui.ant"
-local renderpkg = import_package "ant.render"
-local renderutil= renderpkg.util
-local fbmgr     = renderpkg.fbmgr
-local viewidmgr = renderpkg.viewidmgr
+local imgui       = require "imgui.ant"
+local renderpkg   = import_package "ant.render"
+local renderutil  = renderpkg.util
+local fbmgr       = renderpkg.fbmgr
+local viewidmgr   = renderpkg.viewidmgr
+local rhwi        = renderpkg.hwi
+local window      = require "window"
+local assetutil   = import_package "ant.asset".util
+local fs          = require "filesystem"
+local platform    = require "platform"
+local runtime     = require "runtime"
+local inputmgr    = require "inputmgr"
+local keymap      = require "keymap"
+local imguiIO     = imgui.IO
+local font        = imgui.font
+local Font        = platform.font
+local timer       = world:interface "ant.timer|timer"
+local eventResize = world:sub {"resize"}
+local context     = nil
 
 local m = ecs.system "imgui_system"
 
 m.require_system "ant.render|render_system"
 m.require_interface "ant.timer|timer"
+
+local callback = {}
+
+function callback.mouse_wheel(x, y, delta)
+	imgui.mouse_wheel(x, y, delta)
+	if not imguiIO.WantCaptureMouse then
+		world:pub {"mouse_wheel", delta, x, y}
+	end
+end
+
+function callback.mouse(x, y, what, state)
+	imgui.mouse(x, y, what, state)
+	if not imguiIO.WantCaptureMouse and world then
+		world:pub {"mouse", inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state), x, y}
+	end
+end
+
+local touchid
+
+function callback.touch(x, y, id, state)
+	if state == 1 then
+		if not touchid then
+			touchid = id
+			imgui.mouse(x, y, 1, state)
+		end
+	elseif state == 2 then
+		if touchid == id then
+			imgui.mouse(x, y, 1, state)
+		end
+	elseif state == 3 then
+		if touchid == id then
+			imgui.mouse(x, y, 1, state)
+			touchid = nil
+		end
+	end
+	if not imguiIO.WantCaptureMouse then
+		world:pub {"touch", inputmgr.translate_mouse_state(state), id, x, y }
+	end
+end
+
+function callback.keyboard(key, press, state)
+	imgui.keyboard(key, press, state)
+	if not imguiIO.WantCaptureKeyboard then
+		world:pub {"keyboard", keymap[key], press, inputmgr.translate_key_state(state)}
+	end
+end
+
+callback.char = imgui.input_char
+
+local function replaceImguiCallback(t)
+	for k, v in pairs(callback) do
+		t[k] = v
+	end
+end
+
+function m:init()
+	replaceImguiCallback(runtime.callback)
+
+	context = imgui.CreateContext(rhwi.native_window())
+	imgui.ant.viewid(viewidmgr.generate "ui")
+	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
+	imgui.ant.font_program(
+		imgui_font.prog,
+		imgui_font.uniforms.s_tex.handle
+	)
+	local imgui_image = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
+	imgui.ant.image_program(
+		imgui_image.prog,
+        imgui_image.uniforms.s_tex.handle
+	)
+	imgui.keymap(window.keymap)
+	window.set_ime(imgui.ime_handle())
+	if platform.OS == "Windows" then
+		font.Create { { Font "黑体" ,     18, "\x20\x00\xFF\xFF\x00"} }
+	elseif platform.OS == "macOS" then
+		font.Create { { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"} }
+	else -- iOS
+		font.Create { { Font "Heiti SC" , 18, "\x20\x00\xFF\xFF\x00"} }
+	end
+end
+
+function m:exit()
+    imgui.DestroyContext()
+end
 
 function m:post_init()
     local main_viewid = assert(viewidmgr.get "main_view")
@@ -18,9 +116,18 @@ function m:post_init()
     fbmgr.bind(vid, assert(fbmgr.get_fb_idx(main_viewid)))
 end
 
-local timer = world:interface "ant.timer|timer"
+local function imgui_resize(width, height)
+	local xdpi, ydpi = rhwi.dpi()
+	local xscale = math.floor(xdpi/96.0+0.5)
+	local yscale = math.floor(ydpi/96.0+0.5)
+	imgui.resize(width/xscale, height/yscale, xscale, yscale)
+end
 
 function m:ui_start()
+    imgui.SetCurrentContext(context)
+	for _,w, h in eventResize:unpack() do
+		imgui_resize(w, h)
+	end
     local delta = timer.delta()
     imgui.begin_frame(delta * 1000)
 end

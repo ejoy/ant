@@ -1,19 +1,11 @@
 local window = require "window"
 
-local assetutil = import_package "ant.asset".util
 local renderpkg = import_package "ant.render"
-local argument = import_package "ant.argument"
-local fs = require "filesystem"
-local thread = require "thread"
-local imgui = require "imgui.ant"
-local platform = require "platform"
-local inputmgr = require "inputmgr"
-local keymap = require "keymap"
-local viewidmgr = renderpkg.viewidmgr
-local rhwi = renderpkg.hwi
-local font = imgui.font
-local Font = platform.font
-local imguiIO = imgui.IO
+local argument  = import_package "ant.argument"
+local thread    = require "thread"
+local inputmgr  = require "inputmgr"
+local keymap    = require "keymap"
+local rhwi      = renderpkg.hwi
 local debug_traceback = debug.traceback
 local thread_sleep = thread.sleep
 
@@ -26,98 +18,35 @@ local conifg
 local world
 local world_update
 
-local ui_viewid = viewidmgr.generate "ui"
-
-local function imgui_resize(width, height)
-	local xdpi, ydpi = rhwi.dpi()
-	local xscale = math.floor(xdpi/96.0+0.5)
-	local yscale = math.floor(ydpi/96.0+0.5)
-	imgui.resize(width/xscale, height/yscale, xscale, yscale)
-end
-
 function callback.init(nwh, context, width, height)
-	imgui.CreateContext(nwh)
 	rhwi.init {
 		nwh = nwh,
 		context = context,
 		width = width,
 		height = height,
 	}
-	imgui.ant.viewid(ui_viewid)
-	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
-	imgui.ant.font_program(
-		imgui_font.prog,
-		imgui_font.uniforms.s_tex.handle
-	)
-	local imgui_image = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
-	imgui.ant.image_program(
-		imgui_image.prog,
-        imgui_image.uniforms.s_tex.handle
-	)
-	imgui_resize(width, height)
-	imgui.keymap(window.keymap)
-	window.set_ime(imgui.ime_handle())
-	if platform.OS == "Windows" then
-		font.Create { { Font "黑体" ,     18, "\x20\x00\xFF\xFF\x00"} }
-	elseif platform.OS == "macOS" then
-		font.Create { { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"} }
-	else -- iOS
-		font.Create { { Font "Heiti SC" , 18, "\x20\x00\xFF\xFF\x00"} }
-	end
-
 	local su = import_package "ant.scene".util
 	world = su.start_new_world(width, height, conifg)
 	world_update = su.loop(world)
 end
 
 function callback.mouse_wheel(x, y, delta)
-	imgui.mouse_wheel(x, y, delta)
-	if not imguiIO.WantCaptureMouse then
-		world:pub {"mouse_wheel", delta, x, y}
-	end
+	world:pub {"mouse_wheel", delta, x, y}
 end
 
 function callback.mouse(x, y, what, state)
-	imgui.mouse(x, y, what, state)
-	if not imguiIO.WantCaptureMouse and world then
-		world:pub {"mouse", inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state), x, y}
-	end
+	world:pub {"mouse", inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state), x, y}
 end
 
-local touchid
-
 function callback.touch(x, y, id, state)
-	if state == 1 then
-		if not touchid then
-			touchid = id
-			imgui.mouse(x, y, 1, state)
-		end
-	elseif state == 2 then
-		if touchid == id then
-			imgui.mouse(x, y, 1, state)
-		end
-	elseif state == 3 then
-		if touchid == id then
-			imgui.mouse(x, y, 1, state)
-			touchid = nil
-		end
-	end
-	if not imguiIO.WantCaptureMouse then
-		world:pub {"touch", inputmgr.translate_mouse_state(state), id, x, y }
-	end
+	world:pub {"touch", inputmgr.translate_mouse_state(state), id, x, y }
 end
 
 function callback.keyboard(key, press, state)
-	imgui.keyboard(key, press, state)
-	if not imguiIO.WantCaptureKeyboard then
-		world:pub {"keyboard", keymap[key], press, inputmgr.translate_key_state(state)}
-	end
+	world:pub {"keyboard", keymap[key], press, inputmgr.translate_key_state(state)}
 end
 
-callback.char = imgui.input_char
-
 function callback.size(width,height,_)
-	imgui_resize(width,height)
 	if world then
 		world:pub {"resize", width, height}
 	end
@@ -125,7 +54,9 @@ function callback.size(width,height,_)
 end
 
 function callback.exit()
-    imgui.DestroyContext()
+	if world then
+		world:update_func "exit" ()
+	end
 	rhwi.shutdown()
     print "exit"
 end
@@ -232,4 +163,5 @@ end
 
 return {
 	start = start,
+	callback = callback,
 }
