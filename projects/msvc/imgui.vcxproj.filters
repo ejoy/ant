@@ -50,5 +50,8 @@
     <ClInclude Include="..\..\3rd\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\clibs\imgui\imgui_ant.h">
+      <Filter>binding</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

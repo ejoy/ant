@@ -45,11 +45,11 @@ endif
 $(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
-$(ODIR)/imgui_ant.o : imgui_ant.cpp | $(ODIR)
+$(ODIR)/imgui_ant.o : imgui_ant.cpp imgui_ant.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
-$(ODIR)/imgui_config.o : imgui_config.cpp $(IMGUI_SRC)/imgui.h | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO)
+$(ODIR)/imgui_config.o : imgui_config.cpp imgui_ant.h $(IMGUI_SRC)/imgui.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx
 
 $(ODIR)/imgui.o : $(IMGUI_SRC)/imgui.cpp  $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)

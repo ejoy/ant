@@ -37,7 +37,7 @@ local function imgui_resize(width, height)
 end
 
 function callback.init(nwh, context, width, height)
-    imgui.ant.create(nwh)
+    imgui.CreateContext(nwh)
     rhwi.init {
         nwh = nwh,
         context = context,
@@ -121,7 +121,7 @@ function callback.size(width,height,_)
 end
 
 function callback.exit()
-	imgui.ant.destroy()
+    imgui.DestroyContext()
     rhwi.shutdown()
     print "exit"
 end
