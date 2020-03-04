@@ -130,10 +130,10 @@ function GuiPolicyComponentPair:init_cache()
                         output = tdata.output,
                         input = tdata.input,
                     }
-                    for _,cname in ipairs(tdata.output) do
+                    for _,cname in ipairs(tdata.output or {}) do
                         policy_info.components[cname] = "output"
                     end
-                    for _,cname in ipairs(tdata.input) do
+                    for _,cname in ipairs(tdata.input or {}) do
                         if policy_info.components[cname]~="output" then
                             policy_info.components[cname] = "input"
                         end

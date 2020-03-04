@@ -330,7 +330,7 @@ local function typeclass(w, packages, loader)
     }
     register {
         type = "transform",
-        setter = { "input", "output" },
+        setter = { "input", "output", "require_interface" },
         callback = { "process" },
     }
     register {

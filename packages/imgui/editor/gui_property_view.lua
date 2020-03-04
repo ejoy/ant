@@ -48,6 +48,7 @@ end
 -------hub begin
 function GuiPropertyView:_init_subcribe()
     hub.subscribe(Event.EntityInfo,self._on_refresh_entity,self)
+    -- hub.subscribe(Event.SendEntityPolicy,self._on_refresh_policy,self)
     -- hub.subscribe(Event.ResponseWorldInfo,
     --             self.on_response_world_info,
     --             self)
@@ -74,6 +75,18 @@ function GuiPropertyView:_on_refresh_entity(tbl)
         self.entity_tbl = tbl
     end
 end
+
+-- function GuiPropertyView:_on_refresh_policy(tbl)
+--     if tbl.type ~= "auto" then 
+--         log.info_a(tbl)
+--     end
+--     if self.widget_entity and self.widget_entity.is_editing then
+--         self.temp_entity_policy = tbl
+--     else
+--         self.temp_entity_policy = nil
+--         self.entity_polciy = tbl
+--     end
+-- end
 
 function GuiPropertyView:reset_com_setting()
     if self.schemas then
@@ -106,18 +119,18 @@ function GuiPropertyView:on_update()
         if not self.schemas then
             local util = require "editor.gui_util"
             local schema_map = util.get_all_schema()
-            self.schemas = schema_map
+            self.schemas = schema_map.components
             self.widget_entity:set_schema(self.schemas)
         end
         if (not self.com_setting) then
             self:reset_com_setting()
         end
 
-        local eid,entity = next(self.entity_tbl)
-        local eids,entities = self.entity_tbl.eids,self.entity_tbl.entities
+        -- local eid,entity = next(self.entity_tbl)
+        local eids,entities,policy_dic = self.entity_tbl.eids,self.entity_tbl.entities,self.entity_tbl.policies
         if eids and #eids > 0 then
             local is_editing = self.widget_entity.is_editing
-            self.widget_entity:update(eids,entities,self.base_component_cfg)
+            self.widget_entity:update(eids,entities,self.base_component_cfg,policy_dic)
             if (not is_editing) and (self.widget_entity.is_editing) then
                 if self.temp_entity_tbl then
                     self.entity_tbl = self.temp_entity_tbl

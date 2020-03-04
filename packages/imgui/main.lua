@@ -8,6 +8,7 @@ local editor = {
     gui_main = require "gui_main",
     class = require "common.class",
     hub_event = require "hub_event",
+    editor_world = require "editor_world",
     controls = {
         list = require "controls.list",
         tree = require "controls.tree",
@@ -32,6 +33,7 @@ local editor = {
         gui_project_list = require "editor.projects.gui_project_list",
         gui_window_controller = require "editor.gui_window_controller",
         gui_policy_component_pair = require "editor.gui_policy_component_pair",
+        gui_add_policy_view = require "editor.gui_add_policy_view",
         scene = {
             scene_data_accessor = require "editor.scene.scene_data_accessor",
         }

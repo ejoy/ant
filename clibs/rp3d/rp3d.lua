@@ -1,7 +1,7 @@
 local lib = require "rp3d.core"
 local math3d_adapter = require "math3d.adapter"
 
-do
+local function shape_interning()
 	local shape = lib.shape
 	local all_shapes = {}
 	local function all_shapes_gc(self)
@@ -27,15 +27,9 @@ do
 	end
 end
 
-return function(ms)
-	local rp3d = {}
-
-	local world_mt = {}
-
-	-- copy metatable
-	for k,v in pairs(lib.collision_world_mt) do
-		world_mt[k] = v
-	end
+function lib.init(ms)
+	shape_interning()
+	local world_mt = lib.collision_world_mt
 
 	world_mt.__index = world_mt
 
@@ -55,9 +49,9 @@ return function(ms)
 		end
 	end
 
-	function rp3d.collision_world(settings)
+	function lib.collision_world(settings)
 		return lib.new_collision_world(settings, world_mt)
 	end
-
-	return rp3d
 end
+
+return lib

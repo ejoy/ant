@@ -127,7 +127,7 @@ end
 function gui_main.keyboard(key, press, state)
     imgui.keyboard(key, press, state)
     -- log.trace("key",key,press,state)
-    gui_input.keyboard(key, press > 0, state)
+    gui_input.keyboard(key, press, state)
 end
 
 local os = require "os"

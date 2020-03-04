@@ -285,6 +285,7 @@ return {
     single={
         real = real,
         boolean = boolean,
+        tag = boolean,
         string = string,
         int = int,
         vector = vector,
@@ -297,6 +298,7 @@ return {
     mult = {
         real = mult_real,
         boolean = mult_boolean,
+        tag = mult_boolean,
         string = mult_string,
         int = mult_int,
         vector = mult_vector,

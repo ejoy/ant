@@ -55,7 +55,9 @@ function widget.Selectable(name,selected,  x,y,flags,disable) end
 function widget.TreeNode(name,flags) end
 function widget.TreePush(name) end
 function widget.TreePop() end
-function widget.CollapsingHeader() end
+--@param title:string
+--@return bool
+function widget.CollapsingHeader(title) end
 function widget.SetNextItemOpen(is_open,ImGuiCond) end
 function widget.PlotLines() end
 function widget.PlotHistogram() end

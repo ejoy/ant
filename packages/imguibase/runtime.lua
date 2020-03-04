@@ -79,7 +79,7 @@ end
 
 function callback.mouse(x, y, what, state)
 	imgui.mouse(x, y, what, state)
-	if not imguiIO.WantCaptureMouse then
+	if not imguiIO.WantCaptureMouse and world then
 		world:pub {"mouse", inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state), x, y}
 	end
 end
@@ -118,7 +118,9 @@ callback.char = imgui.input_char
 
 function callback.size(width,height,_)
 	imgui_resize(width,height)
-	world:pub {"resize", width, height}
+	if world then
+		world:pub {"resize", width, height}
+	end
 	rhwi.reset(nil, width, height)
 end
 

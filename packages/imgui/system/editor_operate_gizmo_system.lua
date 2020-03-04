@@ -92,7 +92,7 @@ end
 
 local function convert_to_model_axis(trans,axis_unit)
     local r = trans.r
-    return  ms(axis_unit,r,"S*T")
+    return  ms(axis_unit,r,"qS*T")
 end
 
 local function update_world(trans)
@@ -347,7 +347,7 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
         local effect_dis = dx*normalize_sceen_unit[1]+dy*normalize_sceen_unit[2]
         local t = effect_dis/sceen_unit_dis
         local new_rot = 
-            ms({type="quat",axis=r_axis_unit,radian={0.01*t}}, trans.r, "*P")
+            ms({type="quat",axis=r_axis_unit,radian={0.01*t}}, trans.r, "q*eP")
         update_transform(target_entity_id, trans, "r", new_rot)
     end
 end
@@ -543,7 +543,7 @@ function gizmo_sys:editor_update()
     end
 end
 
-function gizmo_sys:pickup()
+function gizmo_sys:after_pickup()
     local pickup_entity = world:singleton_entity "pickup"
     if pickup_entity then
         local picked_dir = nil

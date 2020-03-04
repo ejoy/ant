@@ -291,7 +291,7 @@ end
 
 function GuiComponentStyle:_query_path_tbl( parent_path,schema)
     local name,type
-    if schema._sortid then
+    if schema.package then
         name = schema.name
         type = name
     else
@@ -398,7 +398,7 @@ function GuiComponentStyle:TreeNode(show_name,com_type,schema_type,schema,path_t
         flag = flag | flags.TreeNode.Selected
     end
     local com_name = nil
-    if schema._sortid then
+    if schema.package then
         com_name = schema.name
     end
     -- if not schema._sortid then

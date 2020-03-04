@@ -7,6 +7,8 @@ local cursor    = imgui.cursor
 local enum      = imgui.enum
 local IO        = imgui.IO
 local hub       = import_package "ant.editor".hub
+local Event     = require "hub_event"
+
 local ComponentSetting = require "editor.component_setting"
 local factory = require "widget.gui_basecomponent_widget"
 
@@ -150,7 +152,7 @@ function GuiEntityWidget:create_child_path( parent_path,schema)
         return child_path
     until true
     local name,type
-    if schema._sortid then
+    if schema.package then
         name = schema.name
         type = name
     else
@@ -428,14 +430,14 @@ function GuiEntityWidget:_refresh_sorted_entity_mult(eids,entities,entitys)
     self._last_eids = eids
 end
 
-function GuiEntityWidget:update(eids,entities,base_component_cache)
+function GuiEntityWidget:update(eids,entities,base_component_cache,policy)
     if #eids == 1 then
         if self.state ~= "single" then
             self:clear_mult_temp()
             self.state = "single"
         end
         widget.Text(self.state)
-        self:update_single(eids,entities,base_component_cache)
+        self:update_single(eids,entities,base_component_cache,policy)
     else
          if self.state ~= "mult" then
             self:clear_single_temp()
@@ -458,7 +460,7 @@ function GuiEntityWidget:clear_mult_temp()
     self._last_eids = nil --eids
 end 
 
-function GuiEntityWidget:update_single(eids,entities,base_component_cache)
+function GuiEntityWidget:update_single(eids,entities,base_component_cache,policy_dic)
     local schema = self.schema
     local first_eid = eids[1]
     local entity = entities[first_eid]
@@ -468,6 +470,7 @@ function GuiEntityWidget:update_single(eids,entities,base_component_cache)
         self:_refresh_sorted_entity(entities[first_eid])
     end
     self.is_editing = false
+    self:update_policy(first_eid,policy_dic,entities,base_component_cache)
     factory.BeginProperty(base_component_cache)
     for i,data in ipairs(self._sorted_coms) do
         local com_name = data.com_name
@@ -485,6 +488,42 @@ function GuiEntityWidget:update_single(eids,entities,base_component_cache)
     if self.debug_mode then
         widget.Text(dump_a({entity},"\t"))
     end
+end
+
+function GuiEntityWidget:update_policy(eid,policy_dic,entity_dic,cache)
+    if widget.CollapsingHeader("Policy") then
+        -- local policy = policy_dic[eid]
+        -- log.info_a(">>",eid,policy_dic)
+        local policy = policy_dic[eid]
+        cache.policy = cache.policy or {
+            select_index = nil
+        }
+        cursor.Indent()
+        for i in ipairs(policy) do
+            local selected =( i==cache.policy.select_index )
+            if widget.Selectable(policy[i],selected) then
+                if selected then
+                    cache.policy.select_index = nil
+                else
+                    cache.policy.select_index = i
+                end
+            end
+            self:show_policy_menu(i,eid,policy[i],policy_dic,entity_dic)
+        end
+        cursor.Unindent()
+        cursor.Separator()
+    end
+end
+
+function GuiEntityWidget:show_policy_menu(id,eid,policy_name,policy_dic,entity_dic)
+    local open = windows.BeginPopupContextItem("Selected_Menu###"..id,1)
+    if open then
+        if widget.Button("Add Policy") then
+            hub.publish(Event.OpenAddPolicyView,{eid},policy_dic)
+        end
+        windows.EndPopup()
+    end
+    return open
 end
 
 

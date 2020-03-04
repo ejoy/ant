@@ -3,6 +3,9 @@ local world = ecs.world
 
 local ms = import_package "ant.math".stack
 local rp3d = require "rp3d"
+local mathadapter_util = import_package "ant.math.adapter"
+
+mathadapter_util.bind("collision", function() rp3d.init(ms) end)
 
 local w = rp3d.collision_world {
 	worldName = "world",
@@ -11,7 +14,6 @@ local w = rp3d.collision_world {
 	cosAngleSimilarContactManifold = 0.95,
 --	logger = { Level = "Error", Format = "Text" },
 }
-rp3d.init(ms)
 
 local s = ecs.component "sphere_shape"
 	.origin "position"

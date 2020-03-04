@@ -419,7 +419,7 @@ local function print_scene_nodes()
         if node then
             return node
         end
-        local peid = world[eid].transform.parent
+        local peid = world[eid] and world[eid].transform.parent
         node = {}
         if peid == nil then
             tree[eid] = node
@@ -456,7 +456,7 @@ local function print_scene_nodes()
             for i=1, depth - 1 do
                 prefix = prefix .. '--'
             end         
-            print(prefix .. "eid:", eid, "name:", world[eid].name)
+            print(prefix .. "eid:", eid, "name:", world[eid] and world[eid].name)
             print_tree(children, depth+1)
         end
     end

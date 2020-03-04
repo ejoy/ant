@@ -2,6 +2,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "ant.inputmgr"
+ecs.import "ant.scene"
 local lua_math = math
 local mathpkg 	= import_package "ant.math"
 local point2d 	= mathpkg.point2d
@@ -337,11 +339,11 @@ local function select_obj(pickup_com,blit_buffer, viewrect)
 		pickup_com.pickup_cache.pick_ids = {selecteid}
 		local name = assert(world[selecteid]).name
 		print("pick entity id : ", selecteid, ", name : ", name)
-		world:update_func("pickup")()
+		world:update_func("after_pickup")()
 	else
 		pickup_com.pickup_cache.last_pick = nil
 		pickup_com.pickup_cache.pick_ids = {}
-		world:update_func("pickup")()
+		world:update_func("after_pickup")()
 		print("not found any eid")
 	end
 end
