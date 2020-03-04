@@ -44,15 +44,15 @@ local ts = ecs.component "terrain_shape"
 	.origin "position"
 	["opt"].min_height 		"real"
 	["opt"].max_height 		"real"
-	["opt"].height_scaling	"real"(1.0)
-	["opt"].scaling 		"scale"
+	["opt"].height_scaling	"real"(1)
+	["opt"].scaling 		"real"(1)
 
 function ts:init()
-	self.up_axis = self.up_axis or "Y"
-	self.min_height = self.min_height or 0
-	self.max_height = self.max_height or 0
+	self.up_axis 		= self.up_axis or "Y"
+	self.min_height 	= self.min_height or 0
+	self.max_height 	= self.max_height or 0
 	self.height_scaling = self.height_scaling or 1
-	self.scaling = self.scaling or ms:ref "vector" {1, 1, 1, 0}
+	self.scaling 		= self.scaling or 1
 
 	return self
 end

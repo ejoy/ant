@@ -1,5 +1,5 @@
-package.cpath = package.cpath .. ";../?/?.dll" -- for math3d
---package.path = package.path .. ";clibs/?/?.lua"
+package.cpath = package.cpath .. ";../?/?.dll"
+package.path = package.path .. ";packages/collision/?.lua"
 
 local rp3d = require "rp3d"
 local math3d = require "math3d"
@@ -69,3 +69,25 @@ end
 
 w:body_destroy(object)
 w:body_destroy(object2)
+
+-- heightfield
+do
+	local heightfield = ms:ref "matrix" {
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+	}
+	local height_scaling = 1
+	local scaling = 1
+	local hf_shape = w:new_shape("heightfield", 4, 4, 0, 1, ~heightfield, height_scaling, scaling)
+
+	local hf_obj = w:body_create(ms:vector(0, 0, 0, 1), ms:quaternion(0, 0, 0, 1))
+	w:add_shape(hf_obj, hf_shape, 0)
+
+	local h, n = w:raycast(ms:vector(0, 1, 0, 1), ms:vector(0, -1, 0, 1))
+	if h then
+		print("height field shape hitted, point:%s, normal:%s", ms(h, "V"), ms(n, "V"))
+	end
+	w:body_destroy(hf_obj)
+end

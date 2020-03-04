@@ -139,9 +139,13 @@ end
 
 function t:init()
 	if self.ref_path then
-		-- TODO
 		self.tile_width = self.tile_width or 1
 		self.tile_height = self.tile_height or 1
+		self.section_size = self.section_size or 1
+		self.element_size = self.element_size or 7
+
+		local res = assetmgr.get_resource(self.ref_path)
+		
 	else
 		if self.tile_width == nil or self.tile_height == nil then
 			error(string.format("terrain data must provide if not from height field file"))

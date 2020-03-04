@@ -14,15 +14,35 @@ local function shape_interning()
 
 	local world_mt = lib.collision_world_mt
 
+	local heightfield_idx = 1
+
 	function world_mt:new_shape(typename, ...)
-		-- interning shapes
-		local key = table.concat ({ typename, ... } , ":")
-		local value = all_shapes[key]
-		if value then
-			return value
+		local value
+		if typename ~= "heightfield" then
+			-- interning shapes
+			local key = table.concat ({ typename, ... } , ":")
+			value = all_shapes[key]
+			if value then
+				return value
+			end
+			value = shape[typename](...)
+			all_shapes[key] = value
+		else
+			local function generate_heightfield_name()
+				local name = "__heightfield"
+				while true do
+					if all_shapes[name] == nil then
+						break
+					end
+					name = name .. heightfield_idx
+					heightfield_idx = heightfield_idx + 1
+				end
+				return name
+			end
+			value = shape.heightfield(...)
+			local key = generate_heightfield_name()
+			all_shapes[key] = value
 		end
-		value = shape[typename](...)
-		all_shapes[key] = value
 		return value
 	end
 end
