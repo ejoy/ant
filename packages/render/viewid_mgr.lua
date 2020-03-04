@@ -13,10 +13,23 @@ local bindings = {
 	pickup 		= 31,
 	pickup_blit = 32,
 
+	uiruntime	= max_viewid - 3,
 	blit		= max_viewid - 2,
 	uieditor	= max_viewid - 1,
 }
+
 local freeidx = 100
+
+local function alloc_postprocess_viewids(num)
+    local name = "postprocess"
+	for i=1, num do
+		local n = name .. i
+		bindings[n] = freeidx
+		freeidx = freeidx + 1
+    end
+end
+
+alloc_postprocess_viewids(30)
 
 local pool = {}
 for _, v in pairs(bindings) do

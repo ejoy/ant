@@ -59,16 +59,16 @@ pp_sys.require_system "render_system"
 
 local quad_reskey = fs.path "//res.mesh/postprocess.mesh"
 
-local function alloc_range_viewids(num)
+local function local_postprocess_views(num)
     local viewids = {}
     local name = "postprocess"
     for i=1, num do
-        viewids[#viewids+1] = viewidmgr.generate(name .. i)
+        viewids[#viewids+1] = viewidmgr.get(name .. i)
     end
     return viewids
 end
 
-local postprocess_viewids = alloc_range_viewids(30)
+local postprocess_viewids = local_postprocess_views(10)
 
 local viewid_idx = 0
 local function next_viewid()
