@@ -20,7 +20,7 @@ m.require_interface "ant.render|camera"
 m.require_interface "ant.animation|animation"
 m.require_interface "ant.render|iwidget_drawer"
 
-m.require_system "camera_controller2"
+m.require_system "camera_controller"
 
 local function load_file(file)
     local f = assert(fs.open(fs.path(file), 'r'))
