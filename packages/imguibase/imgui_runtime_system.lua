@@ -12,8 +12,6 @@ local assetutil   = import_package "ant.asset".util
 local fs          = require "filesystem"
 local platform    = require "platform"
 local runtime     = require "runtime"
-local inputmgr    = require "inputmgr"
-local keymap      = require "keymap"
 local imguiIO     = imgui.IO
 local font        = imgui.font
 local Font        = platform.font
@@ -26,58 +24,51 @@ local m = ecs.system "imgui_system"
 m.require_system "ant.render|render_system"
 m.require_interface "ant.timer|timer"
 
-local callback = {}
-
-function callback.mouse_wheel(x, y, delta)
-	imgui.mouse_wheel(x, y, delta)
-	if not imguiIO.WantCaptureMouse then
-		world:pub {"mouse_wheel", delta, x, y}
-	end
-end
-
-function callback.mouse(x, y, what, state)
-	imgui.mouse(x, y, what, state)
-	if not imguiIO.WantCaptureMouse and world then
-		world:pub {"mouse", inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state), x, y}
-	end
-end
-
-local touchid
-
-function callback.touch(x, y, id, state)
-	if state == 1 then
-		if not touchid then
-			touchid = id
-			imgui.mouse(x, y, 1, state)
-		end
-	elseif state == 2 then
-		if touchid == id then
-			imgui.mouse(x, y, 1, state)
-		end
-	elseif state == 3 then
-		if touchid == id then
-			imgui.mouse(x, y, 1, state)
-			touchid = nil
-		end
-	end
-	if not imguiIO.WantCaptureMouse then
-		world:pub {"touch", inputmgr.translate_mouse_state(state), id, x, y }
-	end
-end
-
-function callback.keyboard(key, press, state)
-	imgui.keyboard(key, press, state)
-	if not imguiIO.WantCaptureKeyboard then
-		world:pub {"keyboard", keymap[key], press, inputmgr.translate_key_state(state)}
-	end
-end
-
-callback.char = imgui.input_char
-
 local function replaceImguiCallback(t)
-	for k, v in pairs(callback) do
-		t[k] = v
+	local l_mouse_wheel = t.mouse_wheel
+	local l_mouse = t.mouse
+	local l_touch = t.touch
+	local l_keyboard = t.keyboard
+	function t.mouse_wheel(x, y, delta)
+		imgui.mouse_wheel(x, y, delta)
+		if not imguiIO.WantCaptureMouse then
+			l_mouse_wheel(x, y, delta)
+		end
 	end
+	function t.mouse(x, y, what, state)
+		imgui.mouse(x, y, what, state)
+		if not imguiIO.WantCaptureMouse then
+			l_mouse(x, y, what, state)
+		end
+	end
+	local touchid
+	function t.touch(x, y, id, state)
+		if state == 1 then
+			if not touchid then
+				touchid = id
+				imgui.mouse(x, y, 1, state)
+			end
+		elseif state == 2 then
+			if touchid == id then
+				imgui.mouse(x, y, 1, state)
+			end
+		elseif state == 3 then
+			if touchid == id then
+				imgui.mouse(x, y, 1, state)
+				touchid = nil
+			end
+		end
+		if not imguiIO.WantCaptureMouse then
+			l_touch(x, y, id, state)
+		end
+	end
+	function t.keyboard(key, press, state)
+		imgui.keyboard(key, press, state)
+		if not imguiIO.WantCaptureKeyboard then
+			l_keyboard(key, press, state)
+		end
+	end
+	t.char = imgui.input_char
 end
 
 function m:init()
