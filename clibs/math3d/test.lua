@@ -57,8 +57,8 @@ local stack = stackobj:command()
 
 -- NOTICE: don't use mathed.ref directly, or we should remember call math3d.unref(refobj) or refobj(nil)
 
-local quat = stack:ref "quaternion" {type='q', 0, 0, 0, 1}
-stack:reset()
+local quat = stackobj:ref "quaternion" {type='q', 0, 0, 0, 1}
+math3d.reset(stackobj)
 print(stack(quat, "V"))
 
 local vec = math3d.ref "vector"
@@ -79,17 +79,9 @@ do
 
 
 	local q0 = stackobj:quaternion(0, 0, 0, 1)
-	local axisangle = true
-	local q1 = stackobj:quaternion(1, 0, 0, 60, axisangle)
-	local q2 = stackobj:quaternion()
+	local q1 = stackobj:quaternion()
 	print(stack(q0, "VR"))
 	print(stack(q1, "VR"))
-	print(stack(q2, "VR"))
-
-	local e0 = stackobj:euler(10, 20, 30)
-	local e1 = stackobj:euler()
-	print(stack(e0, "VR"))
-	print(stack(e1, "VR"))
 end
 
 -- # turn on log
@@ -99,7 +91,7 @@ print(v)
 local orthmat = stack({type="m", l=-1, r=1, t=1, b=-1, n=1, f=1000, ortho=true}, "V")	-- make a ortho mat
 print(orthmat)
 
-stack( "#", vec, stackobj:vector( 1,2,3,4 ) , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
+stack( "#", vec, stackobj:vector( 1,2,3,1 ) , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
 
 local vv = stack({1, 2, 3, 1}, {2}, "*V")
 print("vec4 mul : " .. vv)
@@ -117,12 +109,12 @@ end
 
 --rotation view vector
 do
-	local zdir = stack(stack:euler2quat{math.mad(60), math.rad(30), 0, 0}, "dP")
+	local zdir = stack(stackobj:euler2quat{math.rad(60), math.rad(30), 0, 0}, "dP")
 	print("zdir : ", stack(zdir, "V"))
 	local rot = stack(zdir, "DP")
 	print("rot : ", stack(rot, "V"))
 
-	print(stack(stack:forward_dir(stack:matrix(), "V")))
+	print(stack(stackobj:forward_dir(stackobj:matrix(), "V")))
 end
 
 --quaternion
@@ -135,22 +127,22 @@ print("q * q : " .. quat_mul)
 local quat_vec_mul = stack({1, 2, 3, 0}, {type = "quat", 0, 1, 0, 0.5}, "*V")
 print("q * v : " .. quat_vec_mul)
 
-local axisid = stack({1, 0, 0}, "P")
+local axisid = stack({1, 0, 0, 0}, "P")
 print("axisid : ", axisid)
 local qq = stack({type = "quat", axis = axisid, radian = {math.rad(60)}}, "V")
 print("quaternion axis angle : ", qq)
 
 
 --quaternion and euler
-local q = stack:euler2quat {math.rad(90), 0, 0}
-local e = stack:quat2euler(q)
+local q = stackobj:euler2quat {math.rad(90), 0, 0}
+local e = stackobj:quat2euler(q)
 
 print(stack(e, "V"))
 
 --lookat
 stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
 
-local vH = stack({2, 4, 5, 1}, mat, "%P")
+local vH = stack(mat, {2, 4, 5, 1}, "%P")
 print("vector homogeneous divide : ", stack(vH, "%V"))
 
 local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
@@ -175,7 +167,7 @@ print(stack(">RRSRV"))	-- unpack ident mat, get 2st line, 1: RRR 2: RRSR 3:RSRSR
 
 -- matrix to srt
 do
-	local srt = stack({type="srt", s={0.01}, r={60, 60, -30}, t={0, 0, 0}}, "P")
+	local srt = stack({type="srt", s={0.01}, r=stackobj:euler2quat{math.rad(60), math.rad(60), math.rad(-30)}, t={0, 0, 0}}, "P")
 	stack(srt, "~")
 	local s = stack("P")
 	local r = stack("P")
@@ -184,21 +176,14 @@ do
 	print("r : ", stack(r, "V"))
 	print("t : ", stack(t, "V"))
 
-	local e = stack(srt, "eP")
-	print("e : ", stack(e, "V"))
-
-	local e1 = stack({type="q", math.cos(math.pi * 0.25), 0, 0, math.sin(math.pi * 0.25)}, "eP")
-	print("q to e : ", stack(e1, "V"))
-
-	-- local q = stack(e1, "qP")
-	-- print("e to q : ", stack(q, "V"))
-
-
+	local q1 = stack(srt, "qP")
+	local e1 = stackobj:quat2euler(q1)
+	print("e : ", stack(e1, "V"))
 end
 
 -- direction to euler
 do
-	local rot = stack({1, 1, 1}, "nDT")
+	local rot = stack({1, 1, 1, 0}, "nDT")
 	local dir = stack(rot, "dT")
 	print(rot)
 	print(dir)
@@ -208,19 +193,19 @@ end
 
 --euler to quaternion
 do
-	local q = stack({0, 90, 0}, "qP")
-	print("quaternion", stack(q, "V"))
+	local q1 = stackobj:euler2quat{0, math.rad(90), 0}
+	print("quaternion", stack(q1, "V"))
 
-	local q1 = stack({type="q", axis={0, 1, 0}, radian={math.rad(90)}}, "P")
-	print("quaternion 1 : ", stack(q1, "V"))
+	local q2 = stack({type="q", axis={0, 1, 0}, radian={math.rad(90)}}, "P")
+	print("quaternion 1 : ", stack(q2, "V"))
 
-	local e = stack(q, "eP")
-	print("euler : ", stack(e, "V"))
+	local e1 = stackobj:quat2euler(q)
+	print("euler : ", stack(e1, "V"))
 end
 
 do
 	-- extract base axis
-	local lookat = stack({0, 0, 0}, {0, 0, 1}, "LP")
+	local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "LP")
 	local x, y, z = stack(lookat, "bPPP")
 	print(stack(x, y, z, "VVV"))
 end

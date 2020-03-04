@@ -990,7 +990,7 @@ convert_viewdir_to_rotation(lua_State *L, struct lastack *LS){
 			break;
 		}
 	default:
-		luaL_error(L, "view dir to rotation only accept vec3/vec4/euler, type given : %d", type);
+		luaL_error(L, "view dir to rotation only accept quat, type given : %d", type);
 		break;
 	}
 }
