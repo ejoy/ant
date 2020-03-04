@@ -139,16 +139,6 @@ function world:add_policy(eid, t)
 end
 
 function world:set_entity(eid, policies, dataset)
-	local h = false
-	for _,p in ipairs(policies) do
-		if p == "ant.serialize|serialize" then
-			h = true
-			break
-		end
-	end
-	if not h then
-		table.insert(policies,"ant.serialize|serialize")
-	end
 	dataset = dataset or {}
 	if not dataset["serialize"] then
 		local seripkg = import_package 'ant.serialize'
