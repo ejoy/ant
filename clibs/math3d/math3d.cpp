@@ -464,6 +464,7 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 		bottom = -ymax;
 		top = ymax;
 	} else {
+		lua_pop(L, 1); //pop "fov"
 		mattype = get_mat_type(L, index);
 		lua_getfield(L, index, "l");
 		left = luaL_checknumber(L, -1);
