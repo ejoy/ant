@@ -1778,8 +1778,6 @@ plane_intersect(const float plane[4], const float aabb_mat[16]) {
 	int i;
 	float minD=0, maxD=0;
 	for (i=0;i<3;i++) {
-		minv[i] *= plane[i];
-		maxv[i] *= plane[i];
 		if (plane[i] > 0) {
 			minD += plane[i] * minv[i];
 			maxD += plane[i] * maxv[i];
