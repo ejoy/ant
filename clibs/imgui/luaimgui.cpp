@@ -11,17 +11,21 @@ extern "C" {
 #include <cstdlib>
 #include <cstdint>
 
+namespace plat {
+	void CreateContext(lua_State* L);
+	void DestroyContext(lua_State* L);
+	void NewFrame(lua_State* L);
+	void Render(lua_State* L);
+	int  BuildFont(lua_State* L);
+	ImTextureID GetTextureID(lua_State* L, int lua_handle);
+}
+
 static void*
 lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
 	void *ud;
 	lua_Alloc allocator = lua_getallocf (L, &ud);
 	return allocator(ud, ptr, osize, nsize);
 }
-
-int beginFrame(lua_State* L); //call sync_io
-int endFrame(lua_State* L); //call ImGui::Render();
-int buildFont(lua_State* L);
-ImTextureID luahandle_to_texture_id(lua_State* L, int lua_handle);
 
 #ifdef _MSC_VER
 #pragma region IMP_IMGUI
@@ -36,14 +40,24 @@ struct lua_args {
 };
 
 static int
-lcreate(lua_State* L) {
-	ImGui::CreateContext();
+lCreateContext(lua_State* L) {
+	ImGuiContext* ctx = ImGui::CreateContext();
+	plat::CreateContext(L);
+	lua_pushlightuserdata(L, ctx);
+	return 1;
+}
+
+static int
+lDestroyContext(lua_State *L) {
+	plat::DestroyContext(L);
+	ImGui::DestroyContext();
 	return 0;
 }
 
 static int
-ldestroy(lua_State *L) {
-	ImGui::DestroyContext();
+lSetCurrentContext(lua_State* L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	ImGui::SetCurrentContext((ImGuiContext*)lua_touserdata(L, 1));
 	return 0;
 }
 
@@ -1626,7 +1640,7 @@ wListBox(lua_State *L) {
 
 static int wImage(lua_State *L) {
 	int lua_handle = (int)luaL_checkinteger(L, 1);
-	ImTextureID tex_id = luahandle_to_texture_id(L, lua_handle);
+	ImTextureID tex_id = plat::GetTextureID(L, lua_handle);
 	float size_x = (float)luaL_checknumber(L, 2);
 	float size_y = (float)luaL_checknumber(L, 3);
 	ImVec2 size = { size_x, size_y };
@@ -1661,7 +1675,7 @@ static int wImage(lua_State *L) {
 static int
 wImageButton(lua_State *L) {
 	int lua_handle = (int)luaL_checkinteger(L, 1);
-	ImTextureID tex_id = luahandle_to_texture_id(L, lua_handle);
+	ImTextureID tex_id = plat::GetTextureID(L, lua_handle);
 	float size_x = (float)luaL_checknumber(L, 2);
 	float size_y = (float)luaL_checknumber(L, 3);
 	ImVec2 size = { size_x, size_y };
@@ -2731,7 +2745,7 @@ fCreate(lua_State *L) {
 		return 0;
 	}
 
-	int r = buildFont(L);
+	int r = plat::BuildFont(L);
 	return r;
 }
 
@@ -3202,9 +3216,10 @@ lkeymap(lua_State *L) {
 
 static int
 lbeginFrame(lua_State* L) {
-	int r = beginFrame(L);
+	plat::NewFrame(L);
+	ImGui::NewFrame();
 	sync_io(L);
-	return r;
+	return 0;
 }
 
 static void
@@ -3230,7 +3245,8 @@ push_beginframe( lua_State * L ){
 
 static int
 lendFrame(lua_State* L) {
-	endFrame(L);
+	ImGui::Render();
+	plat::Render(L);
 	return 0;
 }
 
@@ -3243,8 +3259,9 @@ luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
 
 	luaL_Reg l[] = {
-		{ "create", lcreate },
-		{ "destroy", ldestroy },
+		{ "CreateContext", lCreateContext },
+		{ "DestroyContext", lDestroyContext },
+		{ "SetCurrentContext", lSetCurrentContext },
 		{ "keymap", lkeymap },
 		//begin_frame(see down there)
 		{ "end_frame", lendFrame },

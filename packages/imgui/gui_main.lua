@@ -33,7 +33,7 @@ end
 
 
 function gui_main.init(nwh, context, width, height)
-	imgui.ant.create(nwh)
+	imgui.CreateContext(nwh)
     initialized = true
     rhwi.init {
         nwh = nwh,
@@ -167,7 +167,7 @@ end
 
 function gui_main.exit()
     log("Exit")
-    imgui.ant.destroy()
+    imgui.DestroyContext()
     rhwi.shutdown()
     if main.exit then
         main.exit()

@@ -65,6 +65,7 @@
     <ClInclude Include="..\..\3rd\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\..\3rd\imgui\imstb_textedit.h" />
     <ClInclude Include="..\..\3rd\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\..\clibs\imgui\imgui_ant.h" />
     <ClInclude Include="..\..\clibs\imgui\imgui_config.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

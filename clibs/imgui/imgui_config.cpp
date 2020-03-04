@@ -1,8 +1,10 @@
 #include <lua.hpp>
 #include <imgui.h>
+#include "imgui_ant.h"
 
 void IM_THROW(const char* err) {
     if (ImGui::GetIO().UserData) {
-        luaL_error((lua_State*)ImGui::GetIO().UserData, "%s", err);
+        plat::context* plat_ctx = (plat::context*)ImGui::GetIO().UserData;
+        luaL_error(plat_ctx->L, "%s", err);
     }
 }
