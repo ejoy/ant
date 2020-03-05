@@ -45,8 +45,24 @@ local function checkbox(t)
     return setmetatable(t, checkbox_mt)
 end
 
+local list_mt = {}
+list_mt.__index = list_mt
+function list_mt:update()
+    for _, name in ipairs(self.lst) do
+        if imgui.widget.Selectable(name, self.selected == name) then
+            self.selected = name
+            self:select(name)
+        end
+    end
+end
+
+local function list(t)
+    return setmetatable(t, list_mt)
+end
+
 return {
     windows = windows,
     checkbox = checkbox,
+    list = list,
     tooltip = tooltip,
 }
