@@ -40,7 +40,7 @@ extern "C" {
 
 #define DEBUG_INFO 100
 
-//#define __CLOCKWISE 1
+//#define CLOCKWISE 1
 
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
@@ -51,32 +51,13 @@ bool default_homogeneous_depth(){
 	return g_default_homogeneous_depth;
 }
 
-/*
-static inline float
-get_angle(lua_State *L, int index) {
-	int type = lua_type(L, index);
-	switch (type) {
-	case LUA_TNUMBER:
-		return lua_tonumber(L, index);
-	case LUA_TSTRING: {
-		float degree = lua_tonumber(L, index);	// all degree should be string like "30"
-		return glm::radians(degree);
-	}
-	case LUA_TNIL:
-		return 0;
-	default:
-		return luaL_error(L, "Invalid angle type %s", lua_typename(L, lua_type(L, index)));
-	}
-}
-*/
 static const char *
 get_typename(uint32_t t) {
 	static const char * type_names[] = {
-		"matrix",
-		"vector4",
-		"vector3",
-		"quaternion",
-		"number",
+		"mat",
+		"v4",
+		"num",
+		"quat",
 	};
 	if (t < 0 || t >= sizeof(type_names)/sizeof(type_names[0]))
 		return "unknown";
@@ -144,16 +125,6 @@ lreftostring(lua_State *L) {
 	return 1;
 }
 
-static inline const char*
-get_linear_type_name(LinearType lt) {
-	const char * names[] = {
-		"mat", "v4", "num", "quat", "",
-	};
-
-	assert((sizeof(names) / sizeof(names[0])) > size_t(lt));
-	return names[lt];
-}
-
 static inline void
 push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	int type;
@@ -172,7 +143,7 @@ push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	}
 
 	// push type to table	
-	lua_pushstring(L, get_linear_type_name(LinearType(type)));	
+	lua_pushstring(L, get_typename(LinearType(type)));
 	lua_setfield(L, -2, "type");
 }
 
@@ -394,7 +365,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 static void inline
 make_srt(struct lastack*LS, const glm::vec3 &scale, const glm::mat4x4 &rotmat, const glm::vec3 &translate) {
 	glm::mat4x4 srt(1);
-	#ifdef __CLOCKWISE
+	#ifdef CLOCKWISE
 	srt[0][0] = -scale[0];
 	#else 
 	srt[0][0] = scale[0];
