@@ -873,15 +873,6 @@ struct lnametype_pairs {
 };
 
 static inline void
-get_lnametype_pairs(struct lnametype_pairs *p) {
-#define SET(_P, _NAME, _ALIAS, _TYPE) (_P)->name = _NAME; (_P)->alias = _ALIAS; (_P)->type = _TYPE
-	SET(p, "mat4x4",	"m",	LINEAR_TYPE_MAT);
-	SET(p, "vec4",		"v",	LINEAR_TYPE_VEC4);	
-	SET(p, "quat",		"q",	LINEAR_TYPE_QUAT);
-	SET(p, "num",		"n",	LINEAR_TYPE_NUM);	
-}
-
-static inline void
 reciprocal(lua_State* L, struct lastack* LS) {
 	int64_t id = pop(L, LS);
 	int type;
