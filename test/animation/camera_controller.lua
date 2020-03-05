@@ -5,86 +5,91 @@ local mathpkg = import_package "ant.math"
 local rhwi    = import_package "ant.render".hwi
 local math3d  = require "math3d"
 local ms, mu  = mathpkg.stack, mathpkg.util
-local point2d = mathpkg.point2d
 
-local m = ecs.system "camera_controller2"
-
+local m = ecs.system "camera_controller"
 m.require_interface "ant.render|camera"
 
-local function get_camera()
-	local mq = world:singleton_entity "main_queue"
-	return world[mq.camera_eid].camera
+local eventCameraControl = world:sub {"camera"}
+local kMinThreshold <const> = 0.6
+local kMaxThreshold <const> = math.pi - kMinThreshold
+local cameraInitEyepos <const> = {1.6, 1.8,-1.8, 1}
+local cameraInitTarget <const> = {0, 0.9, 0, 1}
+local cameraTarget
+local cameraDistance
+local cameraId
+
+local function getAngle(v1,v2)
+	return math.acos(ms(v1, "n", v2, "n.T")[1])
 end
 
-local eventMouseLeft = world:sub {"mouse", "LEFT"}
-local dpi_x, dpi_y
-local last_xy
-local target, distance
-local rotation_speed = 0.05
-
-local function getangle(v1,v2)
-	local x1,y1,z1 = table.unpack(ms(v1, "T"))
-	local x2,y2,z2 = table.unpack(ms(v2, "T"))
-	local dot = x1*x2 + y1*y2 + z1*z2 
-	local sq1 = x1*x1 + y1*y1 + z1*z1
-	local sq2 = x2*x2 + y2*y2 + z2*z2
-	return math.acos(dot/math.sqrt(sq1*sq2))
+local function cameraRotateX(camera, dx)
+	ms(camera.viewdir, ms:euler2quat{0, dx, 0}, "2*n=")
 end
 
-local function is_parallel(v1,v2,threshold)
-	local angle = getangle(v1,v2)
-	return angle < threshold or angle > math.pi-threshold
+local function cameraRotateY(camera, dy)
+	local right = ms({0,1,0,1}, camera.viewdir, "xnP")
+	ms(camera.viewdir, {type="q", axis=right, radian={dy}}, "2*n=")
 end
 
-local function rotate_round_point(camera, point, distance, dx, dy)
-	local right, up = ms:base_axes(camera.viewdir)
-	--if is_parallel(mu.AXIS('Y'), camera.viewdir, 0.5) then
-		--ms(camera.viewdir, {type="q", axis=up, radian={dx}}, camera.viewdir, "*n=")
-	--else
-		--ms(camera.viewdir, {type="q", axis=up, radian={dx}}, {type="q", axis=right, radian={dy}}, "3**n=")
-		ms(camera.viewdir, ms:euler2quat{dy/2, 0, 0}, "2*n=")
-		print(dy,dx)
-	--end
-	ms(camera.eyepos, point, camera.viewdir, {distance}, '*-=')
+local function cameraRotate(dx, dy)
+	local camera = world[cameraId].camera
+	local angle = getAngle(mu.AXIS('Y'), camera.viewdir)
+	if  (angle > kMinThreshold or dy > 0) and (angle < kMaxThreshold or dy < 0) then
+		cameraRotateY(camera, dy)
+	end
+	cameraRotateX(camera, dx)
+	ms(camera.eyepos, cameraTarget, camera.viewdir, cameraDistance, '*-=')
 end
 
-local camera = world:interface "ant.render|camera"
+local function cameraReset(eyepos, target)
+	local camera = world[cameraId].camera
+	ms(cameraTarget, target, "=")
+	cameraDistance = {math.sqrt(ms(cameraTarget, eyepos, "-1.T")[1])}
+	ms(camera.eyepos, eyepos, "=")
+	ms(camera.viewdir, cameraTarget, eyepos, "-n=")
+end
 
-local function camera_reset(camera, target)
-	ms(target, {0, 0, 0, 1}, "=")
-	ms(camera.eyepos, {3, 3, -3, 1}, "=")
-	ms(camera.viewdir, target, camera.eyepos, "-n=")
+local function cameraInit()
+	cameraTarget = math3d.ref "vector"
+	local camera = world:interface "ant.render|camera"
+	cameraId = camera.create {
+		eyepos = {0,0,0,1},
+		viewdir = {0,1,0,0},
+	}
+	camera.bind(cameraId, "main_queue")
 end
 
 function m:post_init()
-	dpi_x, dpi_y = rhwi.dpi()
-    camera.bind(camera.create {
-        eyepos = { 1.6, 1.8,-1.8, 1.0},
-        viewdir = {-0.6,-0.4, 0.7, 0.0},
-	}, "main_queue")
-	target = math3d.ref "vector"
-	ms(target, {0, 0, 0, 1}, "=")
-	camera_reset(get_camera(), target)
-end
-
-local function convertxy(p2d)
-	p2d.x = p2d.x / dpi_x
-	p2d.y = p2d.y / dpi_y
-	return p2d
+	cameraInit()
+	cameraReset(cameraInitEyepos, cameraInitTarget)
 end
 
 function m:camera_control()
-	local camera = get_camera()
+	for _,what,x,y in eventCameraControl:unpack() do
+		if what == "rotate" then
+			cameraRotate(x, y)
+		elseif what == "reset" then
+			cameraReset(cameraInitEyepos, cameraInitTarget)
+		end
+	end
+end
+
+local eventMouseLeft = world:sub {"mouse", "LEFT"}
+local kRotationSpeed <const> = 1
+local lastX, lastY
+
+function m:data_changed()
 	for _,_,state,x,y in eventMouseLeft:unpack() do
 		if state == "MOVE" then
-			local xy = point2d(x, y)
-			if last_xy then
-				local delta = convertxy(xy - last_xy) * rotation_speed
-				rotate_round_point(camera, target, distance, delta.x, delta.y)
-			end
+			local dpiX, dpiY = rhwi.dpi()
+			world:pub {
+				"camera","rotate",
+				(x - lastX) / dpiX * kRotationSpeed,
+				(y - lastY) / dpiY * kRotationSpeed
+			}
+			lastX, lastY = x, y
 		elseif state == "DOWN" then
-			last_xy = point2d(x, y)
-			distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
+			lastX, lastY = x, y
 		end
 	end
 end

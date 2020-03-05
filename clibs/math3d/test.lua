@@ -172,13 +172,13 @@ do
 	local s = stack("P")
 	local r = stack("P")
 	local t = stack("P")
-	print("s : ", stack(s, "V"))
-	print("r : ", stack(r, "V"))
-	print("t : ", stack(t, "V"))
+	print("s : ", stack(s, "VR"))
+	print("r : ", stack(r, "VR"))
+	print("t : ", stack(t, "VR"))
 
 	local q1 = stack(srt, "qP")
 	local e1 = stackobj:quat2euler(q1)
-	print("e : ", stack(e1, "V"))
+	print("e : ", stack(e1, "VR"))
 end
 
 -- direction to euler
@@ -194,20 +194,30 @@ end
 --euler to quaternion
 do
 	local q1 = stackobj:euler2quat{0, math.rad(90), 0}
-	print("quaternion", stack(q1, "V"))
+	print("quaternion", stack(q1, "VR"))
 
 	local q2 = stack({type="q", axis={0, 1, 0}, radian={math.rad(90)}}, "P")
-	print("quaternion 1 : ", stack(q2, "V"))
+	print("quaternion 1 : ", stack(q2, "VR"))
 
 	local e1 = stackobj:quat2euler(q1)
-	print("euler : ", stack(e1, "V"))
+	print("euler : ", stack(e1, "VR"))
 end
 
 do
 	-- extract base axis
 	local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "LP")
 	local x, y, z = stack(lookat, "bPPP")
-	print(stack(x, y, z, "VVV"))
+	print(stack(x, y, z, "VRVRVR"))
+end
+
+do
+	-- AABB
+	print("AABB", stack( {-1,-2,-3, 1}, "V", {4,5,6,1} , "V", stackobj.fromAABB , "V" ))
+	print("AABB", stack( {1,1,1, 1}, "V", {5,5,5,1} , "V", stackobj.fromAABB , "V" ))
+	print("Insect", stack( "22", stackobj.intersectAABB))
+	print("Insert Plane {0,1,0,0}", stack( "2V", { 0,1,0,0 }, stackobj.intersectAABB))
+	print("Insert Plane {0,1,0,0}", stack( "1V", { 0,1,0,0 }, stackobj.intersectAABB))
+	print("mergeAABB (min,max)", stack( stackobj.mergeAABB, stackobj.toAABB , "SVRVR" ))
 end
 
 print("Memory = ", stackobj:stacksize())
@@ -215,11 +225,19 @@ print("Memory = ", stackobj:stacksize())
 do
 	local tempvec = math3d.ref "vector"
 	stack( tempvec, stackobj:vector( 1,2,3,4 ) , "=")
+--	math3d.unref(tempvec)
 end
 
 -- tempvec is leak
 collectgarbage "collect"
 local leaks = stackobj:leaks()
-for _, id in ipairs(leaks) do
-	print("Leaks : ", stack(id, "V"))
+if leaks then
+	for _, id in ipairs(leaks) do
+		print("Leaks : ", stack(id, "V"))
+	end
 end
+
+math3d.unref(vec0)
+math3d.unref(vec)
+math3d.unref(mat)
+math3d.unref(quat)

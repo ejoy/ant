@@ -6,6 +6,7 @@ extern "C" {
 	#include "refstack.h"
 	#include "fastmath.h"
 	#include "math3d.h"
+	#include "string.h"
 }
 
 #include "util.h"
@@ -39,7 +40,7 @@ extern "C" {
 
 #define DEBUG_INFO 100
 
-//#define __CLOCKWISE 1
+//#define CLOCKWISE 1
 
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
@@ -50,32 +51,13 @@ bool default_homogeneous_depth(){
 	return g_default_homogeneous_depth;
 }
 
-/*
-static inline float
-get_angle(lua_State *L, int index) {
-	int type = lua_type(L, index);
-	switch (type) {
-	case LUA_TNUMBER:
-		return lua_tonumber(L, index);
-	case LUA_TSTRING: {
-		float degree = lua_tonumber(L, index);	// all degree should be string like "30"
-		return glm::radians(degree);
-	}
-	case LUA_TNIL:
-		return 0;
-	default:
-		return luaL_error(L, "Invalid angle type %s", lua_typename(L, lua_type(L, index)));
-	}
-}
-*/
 static const char *
 get_typename(uint32_t t) {
 	static const char * type_names[] = {
-		"matrix",
-		"vector4",
-		"vector3",
-		"quaternion",
-		"number",
+		"mat",
+		"v4",
+		"num",
+		"quat",
 	};
 	if (t < 0 || t >= sizeof(type_names)/sizeof(type_names[0]))
 		return "unknown";
@@ -143,16 +125,6 @@ lreftostring(lua_State *L) {
 	return 1;
 }
 
-static inline const char*
-get_linear_type_name(LinearType lt) {
-	const char * names[] = {
-		"mat", "v4", "num", "quat", "",
-	};
-
-	assert((sizeof(names) / sizeof(names[0])) > size_t(lt));
-	return names[lt];
-}
-
 static inline void
 push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	int type;
@@ -171,7 +143,7 @@ push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	}
 
 	// push type to table	
-	lua_pushstring(L, get_linear_type_name(LinearType(type)));	
+	lua_pushstring(L, get_typename(LinearType(type)));
 	lua_setfield(L, -2, "type");
 }
 
@@ -393,7 +365,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 static void inline
 make_srt(struct lastack*LS, const glm::vec3 &scale, const glm::mat4x4 &rotmat, const glm::vec3 &translate) {
 	glm::mat4x4 srt(1);
-	#ifdef __CLOCKWISE
+	#ifdef CLOCKWISE
 	srt[0][0] = -scale[0];
 	#else 
 	srt[0][0] = scale[0];
@@ -502,8 +474,8 @@ get_field(lua_State *L, int index, const char* name) {
 	const char* field = NULL;
 	if (lua_getfield(L, index, name) == LUA_TSTRING) {
 		field = lua_tostring(L, -1);
-		lua_pop(L, 1);
 	}
+	lua_pop(L, 1);
 
 	return field;
 }
@@ -902,15 +874,6 @@ struct lnametype_pairs {
 };
 
 static inline void
-get_lnametype_pairs(struct lnametype_pairs *p) {
-#define SET(_P, _NAME, _ALIAS, _TYPE) (_P)->name = _NAME; (_P)->alias = _ALIAS; (_P)->type = _TYPE
-	SET(p, "mat4x4",	"m",	LINEAR_TYPE_MAT);
-	SET(p, "vec4",		"v",	LINEAR_TYPE_VEC4);	
-	SET(p, "quat",		"q",	LINEAR_TYPE_QUAT);
-	SET(p, "num",		"n",	LINEAR_TYPE_NUM);	
-}
-
-static inline void
 reciprocal(lua_State* L, struct lastack* LS) {
 	int64_t id = pop(L, LS);
 	int type;
@@ -930,7 +893,7 @@ reciprocal(lua_State* L, struct lastack* LS) {
 			break;
 
 		default:
-			luaL_error(L, "not support in [reciprocal] function:%d", type);
+			luaL_error(L, "not support in [reciprocal] function:%s", get_typename(type));
 			break;
 	}
 }
@@ -947,7 +910,7 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 			q = glm::quat_cast(*(const glm::mat4x4 *)value);
 			break;
 		default:
-			luaL_error(L, "not support for converting to quaternion, type is : %d", type);
+			luaL_error(L, "not support for converting to quaternion, type is : %s", get_typename(type));
 			break;
 	}
 
@@ -1071,7 +1034,7 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 		zdir = (*(glm::quat*)v) * glm::vec4(0, 0, 1, 0);
 		break;
 	default:
-		luaL_error(L, "not support data type, need rotation matrix/quaternion angles, type : %d", type);
+		luaL_error(L, "not support data type, need rotation matrix/quaternion angles, type : %s", get_typename(type));
 		break;
 	}
 	
@@ -1362,7 +1325,7 @@ static FASTMATH(floor)
 		}
 			break;
 		default:
-			luaL_error(L, "not support type:%d", t);
+			luaL_error(L, "not support type:%s", get_typename(t));
 			break;
 	}
 	return 0;
@@ -1385,7 +1348,7 @@ static FASTMATH(ceil)
 		}
 		break;
 		default:
-			luaL_error(L, "not support type:%d", t);
+			luaL_error(L, "not support type:%s", get_typename(t));
 			break;
 	}
 	return 0;
@@ -1659,9 +1622,139 @@ static FASTMATH(length)
 	const glm::vec3 * v = (const glm::vec3 *)lastack_value(LS, id, &type);
 	
 	lastack_pushnumber(LS, glm::length(*v));
+
+	refstack_1_1(RS);
+	return 0;
+}
+
+static FASTMATH(fromAABB)
+	int t1,t2;
+	const float * maxv = pop_value(L, LS, &t1);
+	const float * minv = pop_value(L, LS, &t2);
+	if (t1 != LINEAR_TYPE_VEC4 || t1 != t2) {
+		luaL_error(L, "AABB need 2 vec4 type");
+	}
+
+	float mat[16];
+
+	memcpy(&mat[0*4], minv, 4 * sizeof(float));
+	memcpy(&mat[1*4], maxv, 4 * sizeof(float));
+	memset(&mat[2*4], 0, 8 * sizeof(float));
+
+	lastack_pushmatrix(LS, mat);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static FASTMATH(toAABB)
+	int64_t id = pop(L, LS);
+	int type;
+	const float* mat = lastack_value(LS, id, &type);
+	if (type != LINEAR_TYPE_MAT)
+		luaL_error(L, "Need an OBB matrix");
+
+	lastack_pushvec4(LS, &mat[0*4]);	// fist line of matrix (minv)
+	lastack_pushvec4(LS, &mat[1*4]);	// second line of matrix (maxv)
+
 	refstack_pop(RS);
 	refstack_push(RS);
+	refstack_push(RS);
 	return 0;
+}
+
+static FASTMATH(mergeAABB)
+	int t1,t2;
+	const float * mat1 = pop_value(L, LS, &t1);
+	const float * mat2 = pop_value(L, LS, &t2);
+	if (t1 != LINEAR_TYPE_MAT || t1 != t2) {
+		luaL_error(L, "need 2 AABB matrix");
+	}
+	float merge[16];
+	int i;
+	for (i=0;i<3;i++) {
+		float min1 = mat1[i];
+		float min2 = mat2[i];
+		float max1 = mat1[i+4];
+		float max2 = mat2[i+4];
+
+		merge[i] = min1 < min2 ? min1 : min2;
+		merge[i+4] = max1 > max2 ? max1 : max2;
+	}
+	merge[3] = 1.0f;
+	merge[3+4] = 1.0f;
+	memset(&merge[2*4], 0, 8 * sizeof(float));
+
+	lastack_pushmatrix(LS, merge);
+	refstack_2_1(RS);
+	return 0;
+}
+
+static int
+plane_intersect(const float plane[4], const float aabb_mat[8]) {
+	int i;
+	float minD=0, maxD=0;
+	for (i=0;i<3;i++) {
+		float minv = aabb_mat[i] * plane[i];
+		float maxv = aabb_mat[i+4] * plane[i];
+		if (plane[i] > 0) {
+			minD += minv;
+			maxD += maxv;
+		} else {
+			minD += maxv;
+			maxD += minv;
+		}
+	}
+
+	// in front of the plane
+	if (minD > -plane[3]) {
+		return 1;
+	}
+
+	// in back of the plane
+	if (maxD < -plane[3]) {
+		return -1;
+	}
+
+	// straddle of the plane
+	return 0;
+}
+
+static inline bool
+is_outside(const float *mat1, const float *mat2) {
+	float min1 = mat1[0];
+	float min2 = mat2[0];
+	float max1 = mat1[4];
+	float max2 = mat2[4];
+
+	return max1 < min2 || max2 < min1;
+}
+
+static FASTMATH(intersectAABB)
+	int t, tAABB;
+	const float * v = pop_value(L, LS, &t);
+	const float * AABB = pop_value(L, LS, &tAABB);
+	refstack_pop(RS);
+	refstack_pop(RS);
+
+	if (tAABB != LINEAR_TYPE_MAT) {
+		return luaL_error(L, "AABB should be a matrix");
+	}
+	switch(t) {
+	case LINEAR_TYPE_VEC4:
+		// It's a plane
+		lua_pushinteger(L, plane_intersect(v, AABB));
+		break;
+	case LINEAR_TYPE_MAT:
+		// It's an AABB
+		lua_pushboolean(L, !(
+			is_outside(AABB+0, v+0) ||
+			is_outside(AABB+1, v+1) ||
+			is_outside(AABB+2, v+2)));
+		break;
+	default:
+		return luaL_error(L, "AABB can only intersect with a plane or an AABB matrix");
+	}
+	return 1;
 }
 
 struct fastmath_function {
@@ -2005,7 +2098,7 @@ new_temp_matrix(lua_State *L) {
 			lua_pushinteger(L, pop(L, LS));
 			return 1;
 		default:
-			luaL_error(L, "not support type in arg: %d, type is : %d", top, type);
+			luaL_error(L, "not support type in arg: %s, type is : %s", lua_typename(L,top), lua_typename(L,type));
 			break;
 		}
 	}
@@ -2060,7 +2153,6 @@ new_temp_quaternion(lua_State *L) {
 			q[ii] = lua_tonumber(L, ii + 2);
 		}
 	} else if (top == 3) {
-		const int type = lua_type(L, 2);
 		glm::vec4 axis = get_vec_value(L, LS, 2);
 		const float radian = lua_tonumber(L, 3);
 		q = glm::angleAxis(radian, *tov3(axis));
@@ -2505,7 +2597,7 @@ llhs_matrix(lua_State *L) {
 		int datatype = 0;
 		const float* v = lastack_value(LS, get_stack_id(L, LS, 2), &datatype);
 		if (datatype != LINEAR_TYPE_MAT) {
-			luaL_error(L, "not support datatype:%d", datatype);
+			luaL_error(L, "not support datatype:%s", get_typename(datatype));
 		}
 
 		r_mat = *(glm::mat4*)v;
@@ -2636,7 +2728,7 @@ lequal(lua_State* L) {
 		lua_pushboolean(L, true);
 		return 1;
 	} else {
-		luaL_error(L, "not support type:%d", lhstype);
+		luaL_error(L, "not support type:%s", lua_typename(L,lhstype));
 	}
 
 	return 0;
@@ -2899,7 +2991,7 @@ elem_op(lua_State *L, struct lastack *LS, OP op){
 		lastack_pushobject(LS, &vv.x, type);
 	}
 	default:
-		luaL_error(L, "not support type:%d", type);
+		luaL_error(L, "not support type:%s", get_typename(type));
 		break;
 	}
 }
@@ -3045,7 +3137,7 @@ lforward_dir(lua_State *L){
 	}
 		break;
 	default:
-		return luaL_error(L, "unsupport type:%d", luatype);
+		return luaL_error(L, "unsupport type:%s", lua_typename(L, luatype));
 	}
 
 	lastack_pushvec4(LS, &forwarddir.x);
@@ -3110,6 +3202,11 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ MFUNCTION(popnumber) },
 			{ MFUNCTION(toquaternion)},
 			{ MFUNCTION(length)},
+			{ MFUNCTION(fromAABB)},
+			{ MFUNCTION(toAABB)},
+			{ MFUNCTION(mergeAABB)},
+			{ MFUNCTION(intersectAABB)},
+			{ MFUNCTION(lookfrom3)},
 			{ "stacksize", lstacksize },
 			{ "ref", lstackrefobject },
 			{ "command", gencommand },

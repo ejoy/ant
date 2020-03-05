@@ -20,7 +20,7 @@ m.require_interface "ant.render|camera"
 m.require_interface "ant.animation|animation"
 m.require_interface "ant.render|iwidget_drawer"
 
-m.require_system "camera_controller2"
+m.require_system "camera_controller"
 
 local function load_file(file)
     local f = assert(fs.open(fs.path(file), 'r'))
@@ -90,6 +90,10 @@ function m:ui_update()
         end
         imgui.cursor.Separator()
         checkboxSkeletonView:update()
+        if imgui.widget.Selectable("   Reset Camera", true) then
+            world:pub {"camera","reset"}
+        end
+        imgui_util.tooltip "Reset Camera"
     end
 end
 
