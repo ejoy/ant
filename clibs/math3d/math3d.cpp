@@ -1672,34 +1672,15 @@ static FASTMATH(fromAABB)
 		luaL_error(L, "AABB need 2 vec4 type");
 	}
 
-	float diff[3] = { maxv[0] - minv[0], maxv[1] - minv[1], maxv[2] - minv[2] };
-	if (diff[0] < 0 || diff[1] < 0 || diff[2] < 0) {
-		return luaL_error(L, "Invalid minv/maxv (%f %f %f) (%f %f %f)",
-			minv[0], minv[1], minv[2],
-			maxv[0], maxv[1], maxv[2]);
-	}
+	float mat[16];
 
-	float mat[16] = {
-		diff[0],0,0,0,
-		0,diff[1],0,0,
-		0,0,diff[2],0,
-		(minv[0] + maxv[0]) * 0.5f,(minv[1] + maxv[1]) * 0.5f,(minv[2] + maxv[2]) * 0.5f,1,
-	};
+	memcpy(&mat[0*4], minv, 4 * sizeof(float));
+	memcpy(&mat[1*4], maxv, 4 * sizeof(float));
+	memset(&mat[2*4], 0, 8 * sizeof(float));
 
 	lastack_pushmatrix(LS, mat);
 	refstack_2_1(RS);
 	return 0;
-}
-
-static inline void
-mat_to_aabb(const float mat[16], float minv[3], float maxv[3]) {
-	maxv[0] = mat[0*4+0] * 0.5f + mat[3*4+0];
-	maxv[1] = mat[1*4+1] * 0.5f + mat[3*4+1];
-	maxv[2] = mat[2*4+2] * 0.5f + mat[3*4+2];
-
-	minv[0] = maxv[0] - mat[0*4+0];
-	minv[1] = maxv[1] - mat[1*4+1];
-	minv[2] = maxv[2] - mat[2*4+2];
 }
 
 static FASTMATH(toAABB)
@@ -1708,35 +1689,14 @@ static FASTMATH(toAABB)
 	const float* mat = lastack_value(LS, id, &type);
 	if (type != LINEAR_TYPE_MAT)
 		luaL_error(L, "Need an OBB matrix");
-	float minv[4];
-	float maxv[4];
 
-	mat_to_aabb(mat, minv, maxv);
-
-	minv[3] = 1.0f;
-	maxv[3] = 1.0f;
-
-	lastack_pushvec4(LS, minv);
-	lastack_pushvec4(LS, maxv);
+	lastack_pushvec4(LS, &mat[0*4]);	// fist line of matrix (minv)
+	lastack_pushvec4(LS, &mat[1*4]);	// second line of matrix (maxv)
 
 	refstack_pop(RS);
 	refstack_push(RS);
 	refstack_push(RS);
 	return 0;
-}
-
-static inline void
-merge_minmax(const float *mat1, const float *mat2, float *merge, int idx1, int idx2) {
-	float max1 = mat1[idx1] * 0.5f + mat1[idx2];
-	float max2 = mat2[idx1] * 0.5f + mat2[idx2];
-	float min1 = max1 - mat1[idx1];
-	float min2 = max2 - mat2[idx1];
-
-	float max_merge = max1 > max2 ? max1 : max2;
-	float min_merge = min1 < min2 ? min1 : min2;
-
-	merge[idx1] = max_merge - min_merge;
-	merge[idx2] = (max_merge + min_merge) * 0.5f;
 }
 
 static FASTMATH(mergeAABB)
@@ -1747,43 +1707,38 @@ static FASTMATH(mergeAABB)
 		luaL_error(L, "need 2 AABB matrix");
 	}
 	float merge[16];
-	memset(merge, 0, sizeof(merge));
-	merge_minmax(mat1,mat2,merge,0*4+0,3*4+0);
-	merge_minmax(mat1,mat2,merge,1*4+1,3*4+1);
-	merge_minmax(mat1,mat2,merge,2*4+2,3*4+2);
-	merge[15] = 1.0f;
+	int i;
+	for (i=0;i<3;i++) {
+		float min1 = mat1[i];
+		float min2 = mat2[i];
+		float max1 = mat1[i+4];
+		float max2 = mat2[i+4];
+
+		merge[i] = min1 < min2 ? min1 : min2;
+		merge[i+4] = max1 > max2 ? max1 : max2;
+	}
+	merge[3] = 1.0f;
+	merge[3+4] = 1.0f;
+	memset(&merge[2*4], 0, 8 * sizeof(float));
 
 	lastack_pushmatrix(LS, merge);
 	refstack_2_1(RS);
 	return 0;
 }
 
-static inline bool
-is_outside(const float *mat1, const float *mat2, int idx1, int idx2) {
-	float max1 = mat1[idx1] * 0.5f + mat1[idx2];
-	float max2 = mat2[idx1] * 0.5f + mat2[idx2];
-	float min1 = max1 - mat1[idx1];
-	float min2 = max2 - mat2[idx1];
-
-	return max1 < min2 || max2 < min1;
-}
-
 static int
-plane_intersect(const float plane[4], const float aabb_mat[16]) {
-	float minv[3];
-	float maxv[3];
-
-	mat_to_aabb(aabb_mat, minv, maxv);
-
+plane_intersect(const float plane[4], const float aabb_mat[8]) {
 	int i;
 	float minD=0, maxD=0;
 	for (i=0;i<3;i++) {
+		float minv = aabb_mat[i] * plane[i];
+		float maxv = aabb_mat[i+4] * plane[i];
 		if (plane[i] > 0) {
-			minD += plane[i] * minv[i];
-			maxD += plane[i] * maxv[i];
+			minD += minv;
+			maxD += maxv;
 		} else {
-			minD += plane[i] * maxv[i];
-			maxD += plane[i] * minv[i];
+			minD += maxv;
+			maxD += minv;
 		}
 	}
 
@@ -1799,6 +1754,16 @@ plane_intersect(const float plane[4], const float aabb_mat[16]) {
 
 	// straddle of the plane
 	return 0;
+}
+
+static inline bool
+is_outside(const float *mat1, const float *mat2) {
+	float min1 = mat1[0];
+	float min2 = mat2[0];
+	float max1 = mat1[4];
+	float max2 = mat2[4];
+
+	return max1 < min2 || max2 < min1;
 }
 
 static FASTMATH(intersectAABB)
@@ -1819,9 +1784,9 @@ static FASTMATH(intersectAABB)
 	case LINEAR_TYPE_MAT:
 		// It's an AABB
 		lua_pushboolean(L, !(
-			is_outside(AABB, v, 0*4+0,3*4+0) ||
-			is_outside(AABB, v, 1*4+1,3*4+1) ||
-			is_outside(AABB, v, 2*4+2,3*4+2)));
+			is_outside(AABB+0, v+0) ||
+			is_outside(AABB+1, v+1) ||
+			is_outside(AABB+2, v+2)));
 		break;
 	default:
 		return luaL_error(L, "AABB can only intersect with a plane or an AABB matrix");

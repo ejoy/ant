@@ -511,18 +511,6 @@ lfrustum_intersect_list(lua_State* L) {
 	return 1;
 }
 
-// todo: it's from math3d.cpp
-static inline void
-mat_to_aabb(const float mat[16], float minv[3], float maxv[3]) {
-	maxv[0] = mat[0*4+0] * 0.5f + mat[3*4+0];
-	maxv[1] = mat[1*4+1] * 0.5f + mat[3*4+1];
-	maxv[2] = mat[2*4+2] * 0.5f + mat[3*4+2];
-
-	minv[0] = maxv[0] - mat[0*4+0];
-	minv[1] = maxv[1] - mat[1*4+1];
-	minv[2] = maxv[2] - mat[2*4+2];
-}
-
 static int
 lfrustum_intersect_list_aabb(lua_State *L) {
 	auto* f = fetch_frustum(L, 1);
@@ -549,7 +537,12 @@ lfrustum_intersect_list_aabb(lua_State *L) {
 			return luaL_error(L, "Invalid AABB type at index %d", idx);
 		}
 		AABB tmp;
-		mat_to_aabb(mat, &tmp.min.x, &tmp.max.x);
+		tmp.min.x = mat[0];
+		tmp.min.y = mat[1];
+		tmp.min.z = mat[2];
+		tmp.max.x = mat[4];
+		tmp.max.y = mat[5];
+		tmp.max.z = mat[6];
 		auto result = planes_intersect(f->planes, tmp);
 		if (result[0] != 'o') {
 			lua_seti(L, -3, ++visibleset_idx);
