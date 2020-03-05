@@ -892,7 +892,7 @@ reciprocal(lua_State* L, struct lastack* LS) {
 			break;
 
 		default:
-			luaL_error(L, "not support in [reciprocal] function:%d", type);
+			luaL_error(L, "not support in [reciprocal] function:%s", get_typename(type));
 			break;
 	}
 }
@@ -909,7 +909,7 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 			q = glm::quat_cast(*(const glm::mat4x4 *)value);
 			break;
 		default:
-			luaL_error(L, "not support for converting to quaternion, type is : %d", type);
+			luaL_error(L, "not support for converting to quaternion, type is : %s", get_typename(type));
 			break;
 	}
 
@@ -1033,7 +1033,7 @@ rotation_to_base_axis(lua_State *L, struct lastack *LS){
 		zdir = (*(glm::quat*)v) * glm::vec4(0, 0, 1, 0);
 		break;
 	default:
-		luaL_error(L, "not support data type, need rotation matrix/quaternion angles, type : %d", type);
+		luaL_error(L, "not support data type, need rotation matrix/quaternion angles, type : %s", get_typename(type));
 		break;
 	}
 	
@@ -1324,7 +1324,7 @@ static FASTMATH(floor)
 		}
 			break;
 		default:
-			luaL_error(L, "not support type:%d", t);
+			luaL_error(L, "not support type:%s", get_typename(t));
 			break;
 	}
 	return 0;
@@ -1347,7 +1347,7 @@ static FASTMATH(ceil)
 		}
 		break;
 		default:
-			luaL_error(L, "not support type:%d", t);
+			luaL_error(L, "not support type:%s", get_typename(t));
 			break;
 	}
 	return 0;
@@ -2097,7 +2097,7 @@ new_temp_matrix(lua_State *L) {
 			lua_pushinteger(L, pop(L, LS));
 			return 1;
 		default:
-			luaL_error(L, "not support type in arg: %d, type is : %d", top, type);
+			luaL_error(L, "not support type in arg: %s, type is : %s", lua_typename(L,top), lua_typename(L,type));
 			break;
 		}
 	}
@@ -2596,7 +2596,7 @@ llhs_matrix(lua_State *L) {
 		int datatype = 0;
 		const float* v = lastack_value(LS, get_stack_id(L, LS, 2), &datatype);
 		if (datatype != LINEAR_TYPE_MAT) {
-			luaL_error(L, "not support datatype:%d", datatype);
+			luaL_error(L, "not support datatype:%s", get_typename(datatype));
 		}
 
 		r_mat = *(glm::mat4*)v;
@@ -2727,7 +2727,7 @@ lequal(lua_State* L) {
 		lua_pushboolean(L, true);
 		return 1;
 	} else {
-		luaL_error(L, "not support type:%d", lhstype);
+		luaL_error(L, "not support type:%s", lua_typename(L,lhstype));
 	}
 
 	return 0;
@@ -2990,7 +2990,7 @@ elem_op(lua_State *L, struct lastack *LS, OP op){
 		lastack_pushobject(LS, &vv.x, type);
 	}
 	default:
-		luaL_error(L, "not support type:%d", type);
+		luaL_error(L, "not support type:%s", get_typename(type));
 		break;
 	}
 }
@@ -3136,7 +3136,7 @@ lforward_dir(lua_State *L){
 	}
 		break;
 	default:
-		return luaL_error(L, "unsupport type:%d", luatype);
+		return luaL_error(L, "unsupport type:%s", lua_typename(L, luatype));
 	}
 
 	lastack_pushvec4(LS, &forwarddir.x);
