@@ -90,6 +90,10 @@ function m:ui_update()
         end
         imgui.cursor.Separator()
         checkboxSkeletonView:update()
+        if imgui.widget.Selectable("   Reset Camera", true) then
+            world:pub {"camera","reset"}
+        end
+        imgui_util.tooltip "Reset Camera"
     end
 end
 

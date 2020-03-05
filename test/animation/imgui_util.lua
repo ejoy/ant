@@ -16,6 +16,14 @@ local function windows(...)
 	return ONCE, windiwsEnd, nil, windiwsEnd
 end
 
+local function tooltip(text, wrap)
+    if imgui.util.IsItemHovered() then
+        imgui.widget.BeginTooltip()
+        imgui.widget.TextWrapped(text, wrap or 200)
+        imgui.widget.EndTooltip()
+    end
+end
+
 local checkbox_mt = {}
 checkbox_mt.__index = checkbox_mt
 function checkbox_mt:update()
@@ -30,6 +38,7 @@ function checkbox_mt:update()
             self:enable()
         end
     end
+    tooltip(self.label)
 end
 
 local function checkbox(t)
@@ -39,4 +48,5 @@ end
 return {
     windows = windows,
     checkbox = checkbox,
+    tooltip = tooltip,
 }
