@@ -58,11 +58,11 @@ function system.init(sys, pipeline)
 		mark[k] = true
 		return obj
 	end})
-	for _, pkg_system in sortpairs(sys) do
+	for pkg_name, pkg_system in sortpairs(sys) do
 		for sys_name, s in sortpairs(pkg_system) do
 			local proxy = {}
 			for step_name, func in pairs(s.method) do
-				table.insert(res[step_name], { func, proxy, sys_name, step_name})
+				table.insert(res[step_name], { func, proxy, sys_name, step_name, pkg_name })
 			end
 		end
 	end
@@ -116,7 +116,7 @@ function switch_mt:update()
 		local all = self.__all
 		local list = self.__list
 		for i = 1, #all do
-			local name = all[i][1]
+			local name = all[i][5] .. "|" .. all[i][3]
 			if self[name] ~= false then
 				-- enable it
 				list[index] = all[i]

@@ -1,7 +1,7 @@
 ---------
 ant.animation|animation
 ant.animation|skinning
-ant.animation|animation_controller.state_machine
+ant.animation|animation_controller.birth
 ant.render|mesh
 ant.render|name
 ant.render|render
@@ -48,17 +48,7 @@ pose_result: {}
 skeleton:
   ref_path: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
 skinning: {}
-state_machine:
-  current: idle
-  nodes:
-    idle:
-      transmits:
-        walking:
-          duration: 0.5
-    walking:
-      transmits:
-        idle:
-          duration: 0.5
+animation_birth: idle
 transform:
   s: {1,1,1,0}
   r: {0,0.92388,0,0.382683}

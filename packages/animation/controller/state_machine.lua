@@ -43,7 +43,7 @@ local function play_animation(e, name, duration)
 		current_pose[#current_pose+1] = {
 			animation = ani,
 			weight = 0,
-			start_time = timer.current(),
+            ratio = 0,
 		}
 	elseif current_pose.animation then
 		e.animation.current = {
@@ -52,19 +52,19 @@ local function play_animation(e, name, duration)
 				animation = current_pose.animation,
 				weight = 1,
 				init_weight = 1,
-				start_time = current_pose.start_time,
+				ratio = current_pose.ratio,
 			},
 			{
 				animation = e.animation.anilist[name],
 				weight = 0,
 				init_weight = 0,
-				start_time = timer.current(),
+				ratio = 0,
 			}
 		}
 	else
 		e.animation.current = {
 			animation = e.animation.anilist[name],
-			start_time = timer.current(),
+            ratio = 0,
 		}
 		return
 	end
@@ -156,8 +156,13 @@ function m.play(e, name, time)
 	if e.animation and e.animation.anilist[name]  then
 		if e.state_machine then
 			e.state_machine.current = nil
+			play_animation(e, name, time)
+		else
+			e.animation.current = {
+				animation = e.animation.anilist[name],
+				ratio = 0,
+			}
 		end
-		play_animation(e, name, time)
 		return true
 	end
 end

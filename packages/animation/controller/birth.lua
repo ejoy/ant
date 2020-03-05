@@ -14,7 +14,7 @@ m.output "animation"
 function m.process(e)
 	e.animation.current = {
 		animation = e.animation.anilist[e.animation_birth],
-		start_time = 0,
+		ratio = 0,
 	}
 end
 

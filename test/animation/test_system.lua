@@ -12,14 +12,14 @@ local lu         = renderpkg.light
 local rhwi       = renderpkg.hwi
 
 local drawer = world:interface "ant.render|iwidget_drawer"
+local timer  = world:interface "ant.timer|timer"
 
 local m = ecs.system 'init_loader'
 
 m.require_system "ant.imguibase|imgui_system"
-m.require_interface "ant.animation|animation"
-m.require_interface "ant.render|iwidget_drawer"
-
 m.require_system "camera_controller"
+m.require_interface "ant.render|iwidget_drawer"
+m.require_interface "ant.timer|timer"
 
 local function load_file(file)
     local f = assert(fs.open(fs.path(file), 'r'))
@@ -50,21 +50,14 @@ local function sort(t)
     return r
 end
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
+local function playAnimation(e, name)
+	if e.animation and e.animation.anilist[name]  then
+        e.animation.current = {
+            animation = e.animation.anilist[name],
+            ratio = 0,
+        }
+		return true
+	end
 end
 
 local checkboxSkeletonView = imgui_util.checkbox {
@@ -77,14 +70,27 @@ local checkboxSkeletonView = imgui_util.checkbox {
     end,
 }
 
+local checkboxLoop = imgui_util.checkbox {
+    label = "Loop",
+    selected = true,
+    enable = function ()
+        local e = world[RoleEntityId]
+        for _, ani in pairs(e.animation.anilist) do
+            ani.max_ratio = math.maxinteger
+        end
+    end,
+    disable = function ()
+        local e = world[RoleEntityId]
+        for _, ani in pairs(e.animation.anilist) do
+            ani.max_ratio = 1
+        end
+    end,
+}
+
 local listAnimation = imgui_util.list {
     selected = 'idle',
     select = function (_, value)
-        local animation = world:interface "ant.animation|animation"
-        local e = world[RoleEntityId]
-        if not animation.set_state(e, value) then
-            animation.play(e, value, 0.5)
-        end
+        playAnimation(world[RoleEntityId], value)
     end,
 }
 
@@ -96,17 +102,31 @@ local listCamera = imgui_util.list {
 
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
+local statusPause = false
+
 function m:ui_update()
-    local e = world[RoleEntityId]
     for _ in imgui_util.windows("Test", wndflags) do
-        listAnimation.lst = sort(e.animation.anilist)
+        listAnimation.lst = sort(world[RoleEntityId].animation.anilist)
         listAnimation:update()
-        imgui.cursor.Separator()
-        checkboxSkeletonView:update()
         imgui.cursor.Separator()
         listCamera:update()
         if imgui.widget.Selectable("Camera Reset", true) then
             world:pub {"camera","reset"}
+        end
+        imgui.cursor.Separator()
+        checkboxSkeletonView:update()
+        checkboxLoop:update()
+        imgui.cursor.Separator()
+        if statusPause then
+            if imgui.widget.Button "|>" then
+                statusPause = false
+                world:enable_system("ant.animation|animation_system", true)
+            end
+        else
+            if imgui.widget.Button "||" then
+                statusPause = true
+                world:enable_system("ant.animation|animation_system", false)
+            end
         end
     end
 end
@@ -115,11 +135,9 @@ function m:widget()
     if not checkboxSkeletonView.selected then
         return
     end
-    for _, eid in world:each "animation" do
-        local e = world[eid]
-        local ske = asset.mgr.get_resource(e.skeleton.ref_path)
-        drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform)
-    end
+    local e = world[RoleEntityId]
+    local ske = asset.mgr.get_resource(e.skeleton.ref_path)
+    drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform)
 end
 
 local eventMouse = world:sub {"mouse"}

@@ -45,7 +45,7 @@ function anicomp:init()
 		ani.handle = asset.get_resource(ani.ref_path).handle
 		ani.sampling_cache = ani_module.new_sampling_cache()
 		ani.duration = ani.handle:duration() * 1000. / ani.scale
-		ani.max_time = ani.looptimes > 0 and (ani.looptimes * ani.duration) or math.maxinteger
+		ani.max_ratio = ani.looptimes > 0 and ani.looptimes or math.maxinteger
 		ani.name = name
 	end
 	return self
@@ -61,7 +61,7 @@ local timer = world:interface "ant.timer|timer"
 local fix_root <const> = true
 
 function anisystem:sample_animation_pose()
-	local current_time = timer.current()
+	local delta_time = timer.delta()
 
 	local function do_animation(task)
 		if task.type == 'blend' then
@@ -71,12 +71,10 @@ function anisystem:sample_animation_pose()
 			ani_module.do_blend("blend", #task, task.weight)
 		else
 			local ani = task.animation
-			local localtime = current_time - task.start_time
-			local ratio = 0
-			if localtime <= ani.max_time then
-				ratio = localtime % ani.duration / ani.duration
-			end
-			ani_module.do_sample(ani.sampling_cache, ani.handle, ratio, task.weight)
+			local delta = delta_time / ani.duration
+			local current_ratio = task.ratio + delta
+			task.ratio = current_ratio <= ani.max_ratio and current_ratio or ani.max_ratio
+			ani_module.do_sample(ani.sampling_cache, ani.handle, task.ratio % 1, task.weight)
 		end
 	end
 
