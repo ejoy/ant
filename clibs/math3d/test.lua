@@ -165,9 +165,11 @@ print(stack(math3d.constant "identmat", "V"))	-- R: remove top
 print(stack(">RRSRV"))	-- unpack ident mat, get 2st line, 1: RRR 2: RRSR 3:RSRSR 4:SRSRSR
 
 
--- matrix to srt
+-- srt object
 do
+	print "=====SRT====="
 	local srt = stack({type="srt", s={0.01}, r=stackobj:euler2quat{math.rad(60), math.rad(60), math.rad(-30)}, t={0, 0, 0}}, "P")
+	print("srt : ", stack(srt, "VR"))
 	stack(srt, "~")
 	local s = stack("P")
 	local r = stack("P")
@@ -179,14 +181,24 @@ do
 	local q1 = stack(srt, "qP")
 	local e1 = stackobj:quat2euler(q1)
 	print("e : ", stack(e1, "VR"))
+
+	local mat = stackobj:srtmat(srt)
+
+	print("to mat :", stack(mat , "VR"))
+	print("to srt :", stack(stackobj:srt(mat), "VR"))
+
+	print("scale(2) * scale(3) : ", stack(stackobj:srt { s = {2} } , stackobj:srt { s = {3} }, "*VR"))
+	print("scale(2) * scalemat(3) : ", stack(stackobj:srt { s = {2} } , stackobj:srtmat { s = {3} }, "*VR"))
+	print("scalemat(2) * scale(3) : ", stack(stackobj:srtmat { s = {2} } , stackobj:srt { s = {3} }, "*VR"))
 end
 
 -- direction to euler
+print "=====DIRECTION====="
 do
 	local rot = stack({1, 1, 1, 0}, "nDT")
 	local dir = stack(rot, "dT")
-	print(rot)
-	print(dir)
+	print(rot[1],rot[2],rot[3])
+	print(dir[1],dir[2],dir[3])
 end
 
 

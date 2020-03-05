@@ -40,8 +40,6 @@ extern "C" {
 
 #define DEBUG_INFO 100
 
-//#define CLOCKWISE 1
-
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
@@ -58,6 +56,7 @@ get_typename(uint32_t t) {
 		"v4",
 		"num",
 		"quat",
+		"srt",
 	};
 	if (t < 0 || t >= sizeof(type_names)/sizeof(type_names[0]))
 		return "unknown";
@@ -82,6 +81,11 @@ delLS(lua_State *L) {
 	return 0;
 }
 
+static inline char
+srt_mark(float m, char def) {
+	return m == 0 ? def : '.';
+}
+
 static void
 value_tostring(lua_State *L, const char * prefix, const float *r, int type) {
 	char buffer[512] = { 0 };
@@ -93,6 +97,15 @@ value_tostring(lua_State *L, const char * prefix, const float *r, int type) {
 			r[4],r[5],r[6],r[7],
 			r[8],r[9],r[10],r[11],
 			r[12],r[13],r[14],r[15]
+		);
+		break;
+	case LINEAR_TYPE_SRT:
+		sprintf(buffer, "%sSRT (%.2f,%.2f,%.2f : %.2f,%.2f,%.2f,%.2f : %.2f,%.2f,%.2f : %c%c%c%c",
+			prefix,
+			r[0],r[1],r[2],
+			r[4],r[5],r[6],r[7],
+			r[8],r[9],r[10],
+			srt_mark(r[12],'S'), srt_mark(r[13],'R'), srt_mark(r[14],'T'), srt_mark(r[15],'I')
 		);		
 		break;
 	case LINEAR_TYPE_VEC4:
@@ -284,7 +297,7 @@ extract_scale(lua_State *L, struct lastack *LS, int index){
 			scale = *(glm::vec3*)value;
 			break;
 		default:
-			luaL_error(L, "linear type should be vec3/vec4, type is : %d", type);
+			luaL_error(L, "linear type should be vec3/vec4, type is : %s", get_typename(type));
 			break;
 		}
 	} else if (stype == LUA_TTABLE) {
@@ -312,7 +325,7 @@ extract_translate(lua_State *L, struct lastack *LS, int index){
 		int type;
 		const float *value = lastack_value(LS, id, &type);
 		if (type != LINEAR_TYPE_VEC4)
-			luaL_error(L, "t field should provide vec4, provide type is : %d", type);
+			luaL_error(L, "t field should provide vec4, provide type is : %s", get_typename(type));
 
 		if (value == NULL)
 			luaL_error(L, "invalid id : %ld, get NULL value", id);
@@ -340,7 +353,7 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 		const float *value = lastack_value(LS, id, &type);
 
 		if (type != LINEAR_TYPE_QUAT)
-			luaL_error(L, "ref object need should be vec4/quternion!, type is : %d", type);
+			luaL_error(L, "ref object need should be vec4/quternion!, type is : %s", get_typename(type));
 
 		m = glm::mat4x4(*(glm::quat*)value);
 	} else if (rtype == LUA_TTABLE) {
@@ -361,15 +374,44 @@ extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
 	return m;
 }
 
+static inline glm::quat
+extract_rotation(lua_State *L, struct lastack *LS, int index) {
+	glm::quat q;
+	const int rtype = lua_type(L, index);
+
+	if (rtype == LUA_TNUMBER || rtype == LUA_TUSERDATA) {
+		int64_t id = get_id_by_type(L, LS, rtype, index);
+		int type;
+		const float *value = lastack_value(LS, id, &type);
+
+		if (type != LINEAR_TYPE_QUAT)
+			luaL_error(L, "ref object need should be vec4/quternion!, type is : %s", get_typename(type));
+
+		q.x = value[0];
+		q.y = value[1];
+		q.z = value[2];
+		q.w = value[3];
+	} else if (rtype == LUA_TTABLE) {
+		const size_t len = lua_rawlen(L, index);
+		if (len != 4) {
+			luaL_error(L, "r field should with 4 element(quaternion): r={0, 0, 0, 1}, %d is provided", len);
+		}
+		get_table_value(L, index, 4, q);
+	} else {
+		q.x = 0;
+		q.y = 0;
+		q.z = 0;
+		q.w = 1;
+		if (rtype != LUA_TNIL)
+			luaL_error(L, "Invalid rotation type %s", lua_typename(L, rtype));
+	}
+	return q;
+}
 
 static void inline
 make_srt(struct lastack*LS, const glm::vec3 &scale, const glm::mat4x4 &rotmat, const glm::vec3 &translate) {
 	glm::mat4x4 srt(1);
-	#ifdef CLOCKWISE
-	srt[0][0] = -scale[0];
-	#else 
 	srt[0][0] = scale[0];
-	#endif  
 	srt[1][1] = scale[1];
 	srt[2][2] = scale[2];
 
@@ -378,22 +420,48 @@ make_srt(struct lastack*LS, const glm::vec3 &scale, const glm::mat4x4 &rotmat, c
 	lastack_pushmatrix(LS, &srt[0][0]);
 }
 
-static void inline 
-push_srt_from_table(lua_State *L, struct lastack *LS, int index) {
-	const glm::vec3 scale = (LUA_TNIL != lua_getfield(L, index, "s")) ?
-		extract_scale(L, LS, -1) : glm::vec3(1.f, 1.f, 1.f);
-	lua_pop(L, 1);
-	
-	
-	const glm::mat4x4 rotMat = (LUA_TNIL != lua_getfield(L, index, "r")) ?
-		extract_rotation_mat(L, LS, -1) : glm::mat4x4(1.f);
+static void
+push_srtmat_from_table(lua_State *L, struct lastack *LS, int index) {
+	lua_getfield(L, index, "s");
+	const glm::vec3 scale = extract_scale(L, LS, -1);
 	lua_pop(L, 1);
 
-	const glm::vec3 translate = (LUA_TNIL != lua_getfield(L, index, "t")) ?
-		extract_translate(L, LS, -1) : glm::vec3(0.f, 0.f, 0.f);
+	lua_getfield(L, index, "r");
+	const glm::mat4x4 rotMat = extract_rotation_mat(L, LS, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "t");
+	const glm::vec3 translate = extract_translate(L, LS, -1);
 	lua_pop(L, 1);
 	 
 	make_srt(LS, scale, rotMat, translate);
+}
+
+static void
+push_srt_from_table(lua_State *L, struct lastack *LS, int index) {
+	const float *s = NULL;
+	const float *r = NULL;
+	const float *t = NULL;
+	glm::vec3 scale;
+	if (lua_getfield(L, index, "s") != LUA_TNIL) {
+		scale = extract_scale(L, LS, -1);
+		s = &scale.x;
+	}
+	lua_pop(L, 1);
+	glm::quat quat;
+	if (lua_getfield(L, index, "r") != LUA_TNIL) {
+		quat = extract_rotation(L, LS, -1);
+		r = &quat.x;
+	}
+	lua_pop(L, 1);
+	glm::vec3 trans;
+	if (lua_getfield(L, index, "t") != LUA_TNIL) {
+		trans = extract_translate(L, LS, -1);
+		t = &trans.x;
+	}
+	lua_pop(L, 1);
+
+	lastack_pushsrt(LS, s, r, t);
 }
 
 static int
@@ -583,7 +651,7 @@ pop2_values(lua_State *L, struct lastack *LS, const float *val[2], int types[2])
 	val[0] = lastack_value(LS, v2, types + 1);
 	if (types[0] != types[1]) {
 		if (!lastack_is_vec_type(types[0]) && !lastack_is_vec_type(types[1]))
-			luaL_error(L, "pop2_values : type mismatch, type0 = %d, type1 = %d", types[0], types[1]);
+			luaL_error(L, "pop2_values : type mismatch, type0 = %s, type1 = %s", get_typename(types[0]), get_typename(types[1]));
 	}		
 }
 
@@ -615,7 +683,7 @@ add_2values(lua_State *L, struct lastack *LS) {
 		lastack_pushvec4(LS, ret);
 		break;
 	default:
-		luaL_error(L, "Invalid type %d to add", types[0]);
+		luaL_error(L, "Invalid type %s to add", get_typename(types[0]));
 	}
 }
 
@@ -638,7 +706,7 @@ sub_2values(lua_State *L, struct lastack *LS) {
 		lastack_pushvec4(LS, ret);
 		break;
 	default:
-		luaL_error(L, "Invalid type %d to add", types[0]);
+		luaL_error(L, "Invalid type %s to add", get_typename(types[0]));
 	}
 }
 
@@ -673,6 +741,52 @@ normalize(lua_State *L, struct lastack *LS) {
 	}
 }
 
+// If output == NULL, push matrix into LS, otherwise fill output as a matrix
+// If srt is identity, return NULL.
+static float *
+srt_to_matrix(struct lastack *LS, const float srt[16], float *output) {
+	float tmp[16];
+	float *mat_ptr;
+	if (output == NULL) {
+		mat_ptr = tmp;
+	} else {
+		mat_ptr = output;
+	}
+	glm::mat4x4 &mat = *(glm::mat4x4 *)mat_ptr;
+	mat = glm::mat4x4(1);
+	uint32_t *mark = (uint32_t *)&srt[3*4];
+
+	if (mark[3] != 0) {
+		// not identity matrix
+		if (mark[0] != 0) {
+			// has scale
+			mat[0][0] = srt[0];
+			mat[1][1] = srt[1];
+			mat[2][2] = srt[2];
+		}
+		if (mark[1] != 0) {
+			// has rot
+			glm::quat &q = *(glm::quat *)&srt[1*4];
+			mat = glm::mat4x4(q) * mat;
+		}
+		if (mark[2] != 0) {
+			// has trans
+			mat[3][0] = srt[2*4+0];
+			mat[3][1] = srt[2*4+1];
+			mat[3][2] = srt[2*4+2];
+		}
+		if (output == NULL) {
+			lastack_pushmatrix(LS, mat_ptr);
+		}
+		return output;
+	} else {
+		if (output == NULL) {
+			lastack_pushref(LS, lastack_constant(LINEAR_TYPE_MAT));
+		}
+		return NULL;
+	}
+}
+
 #define BINTYPE(v1, v2) (((v1) << LINEAR_TYPE_BITS_NUM) + (v2))
 
 static void
@@ -682,6 +796,7 @@ mul_2values(lua_State *L, struct lastack *LS) {
 	int t0,t1;
 	const float * val1 = lastack_value(LS, v1, &t1);
 	const float * val0 = lastack_value(LS, v0, &t0);
+	float tmp[16];
 	int type = BINTYPE(t0,t1);
 	switch (type) {
 	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT): {
@@ -689,11 +804,58 @@ mul_2values(lua_State *L, struct lastack *LS) {
 		lastack_pushmatrix(LS, &m[0][0]);
 		break;
 	}
+	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_SRT): {
+		if (srt_to_matrix(LS, val1, tmp) == NULL) {
+			lastack_pushref(LS, v0);
+			break;
+		}
+		glm::mat4x4 m = *((const glm::mat4x4*)val0) * *((const glm::mat4x4*)tmp);
+		lastack_pushmatrix(LS, &m[0][0]);
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_SRT,LINEAR_TYPE_MAT): {
+		if (srt_to_matrix(LS, val0, tmp) == NULL) {
+			lastack_pushref(LS, v1);
+			break;
+		}
+		glm::mat4x4 m = *((const glm::mat4x4*)tmp) * *((const glm::mat4x4*)val1);
+		lastack_pushmatrix(LS, &m[0][0]);
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_SRT,LINEAR_TYPE_SRT): {
+		if (srt_to_matrix(LS, val0, tmp) == NULL) {
+			srt_to_matrix(LS, val1, NULL);
+			break;
+		}
+		float tmp2[16];
+		if (srt_to_matrix(LS, val1, tmp2) == NULL) {
+			// val2 is identity, push val0 as matrix (tmp)
+			lastack_pushmatrix(LS, tmp);
+			break;
+		}
+		glm::mat4x4 m = *((const glm::mat4x4*)tmp) * *((const glm::mat4x4*)tmp2);
+		lastack_pushmatrix(LS, &m[0][0]);
+		break;
+	}
+	case BINTYPE(LINEAR_TYPE_SRT, LINEAR_TYPE_VEC4):
+		if (srt_to_matrix(LS, val0, tmp) == NULL) {
+			lastack_pushref(LS, v1);
+			break;
+		}
+		val0 = tmp;
+		// fallthrough
 	case BINTYPE(LINEAR_TYPE_MAT, LINEAR_TYPE_VEC4): {
 		glm::vec4 r = *((const glm::mat4x4*)val0) * *((const glm::vec4*)val1);
 		lastack_pushvec4(LS, &r.x);
 		break;
 	}
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_SRT):
+		if (srt_to_matrix(LS, val1, tmp) == NULL) {
+			lastack_pushref(LS, v0);
+			break;
+		}
+		val1 = tmp;
+		// fallthrough
 	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_MAT): {
 		glm::vec4 r = *((const glm::vec4*)val0) * *((const glm::mat4x4*)val1);
 		lastack_pushvec4(LS, &r.x);
@@ -741,7 +903,7 @@ static void mulH_2values(lua_State *L, struct lastack *LS){
 	const glm::vec4 * v = (const glm::vec4 *)lastack_value(LS, v1, &t1);
 	const glm::mat4x4 * mat = (const glm::mat4x4 *)lastack_value(LS, v0, &t0);
 	if (t0 != LINEAR_TYPE_MAT && t1 != LINEAR_TYPE_VEC4)
-		luaL_error(L, "'%%' operator only support mat * vec4, type0 is : %d, type1 is : %d", t0, t1);
+		luaL_error(L, "'%%' operator only support mat * vec4, type0 is : %s, type1 is : %s", get_typename(t0), get_typename(t1));
 
 	glm::vec4 r = *mat * *v;	
 	if (!is_zero(r)){
@@ -757,7 +919,7 @@ transposed_matrix(lua_State *L, struct lastack *LS) {
 	int t;
 	const glm::mat4x4 *mat = (glm::mat4x4*)pop_value(L, LS, &t);
 	if (t != LINEAR_TYPE_MAT)
-		luaL_error(L, "transposed_matrix need mat4 type, type is : %d", t);
+		luaL_error(L, "transposed_matrix need mat4 type, type is : %s", get_typename(t));
 	glm::mat4x4 r = glm::transpose(*mat);
 	lastack_pushmatrix(LS, &r[0][0]);
 }
@@ -788,7 +950,7 @@ inverted_value(lua_State *L, struct lastack *LS) {
 		break;
 	}
 	default:
-		luaL_error(L, "inverted_value only support mat/vec3/vec4, type is : %d", t);
+		luaL_error(L, "inverted_value only support mat/vec3/vec4, type is : %s", get_typename(t));
 	}		
 }
 
@@ -823,7 +985,7 @@ llookat_matrix(lua_State *L, struct lastack *LS, int direction) {
 	const float *at = pop_value(L, LS, &t0);
 	const float *eye = pop_value(L, LS, &t1);
 	if (t0 != LINEAR_TYPE_VEC4 || t1 != LINEAR_TYPE_VEC4) {
-		luaL_error(L, "lookat_matrix, arg0/arg1 need vec4, arg0/arg1 is : %d/%d", t0, t1);
+		luaL_error(L, "lookat_matrix, arg0/arg1 need vec4, arg0/arg1 is : %s/%s", get_typename(t0), get_typename(t1));
 	}	
 
 	const glm::vec3 up(0, 1, 0);
@@ -837,7 +999,7 @@ lookat3_matrix(lua_State *L, struct lastack *LS, int direction) {
 	const float *eye = pop_value(L, LS, &t1);
 	const float *up = pop_value(L, LS, &t2);
 	if (t0 != LINEAR_TYPE_VEC4 || t1 != LINEAR_TYPE_VEC4 || t2 != LINEAR_TYPE_VEC4) {
-		luaL_error(L, "lookat_matrix, arg0/arg1/arg2 need vec4, arg0/arg1/arg2 is : %d/%d/%d", t0, t1, t1);	
+		luaL_error(L, "lookat_matrix, arg0/arg1/arg2 need vec4, arg0/arg1/arg2 is : %s/%s/%s", get_typename(t0), get_typename(t1), get_typename(t2));	
 	}
 
 	push_lookat_matrix(LS, direction, (const glm::vec3*)at, (const glm::vec3*)eye, (const glm::vec3*)up);
@@ -902,18 +1064,29 @@ convert_to_quaternion(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
 	const float *value = lastack_value(LS, id, &type);
-	glm::quat q;
 
 	switch (type){
-		case LINEAR_TYPE_MAT: 		
-			q = glm::quat_cast(*(const glm::mat4x4 *)value);
+		case LINEAR_TYPE_MAT: {
+			glm::quat q = glm::quat_cast(*(const glm::mat4x4 *)value);
+			lastack_pushquat(LS, (const float*)& q);
 			break;
+		}
+		case LINEAR_TYPE_SRT: {
+			if (value[3] != 0) {
+				// uniform scaling
+				lastack_pushquat(LS, &value[1*4]);	// line 1 is rot
+			} else {
+				float mat[16];
+				srt_to_matrix(LS, value, mat);
+				glm::quat q = glm::quat_cast(*(const glm::mat4x4 *)mat);
+				lastack_pushquat(LS, (const float*)& q);
+			}
+			break;
+		}
 		default:
 			luaL_error(L, "not support for converting to quaternion, type is : %s", get_typename(type));
 			break;
 	}
-
-	lastack_pushquat(LS, (const float*)& q);
 }
 
 static inline void
@@ -934,7 +1107,7 @@ convert_rotation_to_viewdir(lua_State *L, struct lastack *LS){
 			break;
 		}
 		default:
-		luaL_error(L, "convect rotation to dir need quat/vec4 type, type given is : %d", type);
+		luaL_error(L, "convect rotation to dir need quat/vec4 type, type given is : %s", get_typename(type));
 		break;
 	}
 
@@ -953,7 +1126,7 @@ convert_viewdir_to_rotation(lua_State *L, struct lastack *LS){
 			break;
 		}
 	default:
-		luaL_error(L, "view dir to rotation only accept quat, type given : %d", type);
+		luaL_error(L, "view dir to rotation only accept quat, type given : %s", get_typename(type));
 		break;
 	}
 }
@@ -966,9 +1139,6 @@ matrix_decompose(const glm::mat4x4 &m, glm::vec4 &scale, glm::quat &rot, glm::ve
 		scale[ii] = glm::length(m[ii]);
 
 	if (scale.x == 0 || scale.y == 0 || scale.z == 0) {
-		rot.x = 0;
-		rot.y = 0;
-		rot.z = 0;
 		return;
 	}
 
@@ -984,16 +1154,22 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 	int64_t id = pop(L, LS);
 	int type;
 	const float* v = lastack_value(LS, id, &type);
+	if (type == LINEAR_TYPE_SRT) {
+		lastack_pushvec4(LS, &v[2*4]);
+		lastack_pushquat(LS, &v[1*4]);
+		lastack_pushvec4(LS, &v[0*4]);
+		return;
+	}
 	if (type != LINEAR_TYPE_MAT)
-		luaL_error(L, "split operation '~' is only valid for mat4 type, type is : %d", type);
+		luaL_error(L, "split operation '~' is only valid for mat4/srt type, type is : %s", get_typename(type));
 	
 	const glm::mat4x4 *mat = (const glm::mat4x4 *)v;
 	glm::vec4 scale(1, 1, 1, 0), translate(0, 0, 0, 0);
-	glm::quat rotation(0, 0, 0, 1);
+	glm::quat rotation(1, 0, 0, 0);
 	matrix_decompose(*mat, scale, rotation, translate);
 	
 	lastack_pushvec4(LS, &translate.x);
-	lastack_pushvec4(LS, &rotation.x);
+	lastack_pushquat(LS, &rotation.x);
 	lastack_pushvec4(LS, &scale.x);	
 }
 
@@ -2179,14 +2355,87 @@ lsrt_matrix(lua_State *L) {
 	switch (numarg) {
 	case 1:
 	{
-		glm::mat4x4 srt(1);
-		lastack_pushmatrix(LS, &(srt[0][0]));
+		// push identity matrix
+		lastack_pushref(LS, lastack_constant(LINEAR_TYPE_MAT));
 	}
 	break;
 	case 2:
 	{
-		luaL_checktype(L, 2, LUA_TTABLE);
-		push_srt_from_table(L, LS, 2);
+		int rtype = lua_type(L, 2);
+		switch (rtype) {
+		case LUA_TTABLE:
+			push_srtmat_from_table(L, LS, 2);
+			break;
+		case LUA_TNUMBER:
+		case LUA_TUSERDATA: {
+			int64_t id = get_id_by_type(L, LS, rtype, 2);
+			int type;
+			const float *value = lastack_value(LS, id, &type);
+			if (type != LINEAR_TYPE_SRT)
+				luaL_error(L, "object need should be srt!, type is : %s", get_typename(type));
+			srt_to_matrix(LS, value, NULL);
+			break;
+		}
+		default:
+			return luaL_error(L, "You can only construct matrix by srt table or srt object");
+		}
+	}
+	break;
+	case 4:
+		make_srt(LS,
+			extract_scale(L, LS, 2),
+			extract_rotation_mat(L, LS, 3),
+			extract_translate(L, LS, 4));
+		break;
+	default:
+		luaL_error(L, "only support 1(const)/2({s=...,r=...,t=...})/4(s,r,t) argument:%d", numarg);
+		break;
+	}
+
+	pushid(L, pop(L, LS));
+	return 1;
+}
+
+static int
+lsrt(lua_State *L) {
+	const int numarg = lua_gettop(L);
+	if (numarg < 1) {
+		luaL_error(L, "invalid argument, at least 1:%d", numarg);
+	}
+
+	struct lastack* LS = getLS(L, 1);
+
+	switch (numarg) {
+	case 1:
+	{
+		// push identity matrix
+		lastack_pushref(LS, lastack_constant(LINEAR_TYPE_SRT));
+	}
+	break;
+	case 2:
+	{
+		int rtype = lua_type(L, 2);
+		switch (rtype) {
+		case LUA_TTABLE:
+			push_srt_from_table(L, LS, 2);
+			break;
+		case LUA_TNUMBER:
+		case LUA_TUSERDATA: {
+			int64_t id = get_id_by_type(L, LS, rtype, 2);
+			int type;
+			const float *value = lastack_value(LS, id, &type);
+			if (type != LINEAR_TYPE_MAT)
+				luaL_error(L, "object need should be mat!, type is : %s", get_typename(type));
+			const glm::mat4x4 *mat = (const glm::mat4x4 *)value;
+			glm::vec4 scale(1, 1, 1, 0), translate(0, 0, 0, 0);
+			glm::quat rotation(1, 0, 0, 0);
+			matrix_decompose(*mat, scale, rotation, translate);
+			lastack_pushsrt(LS, &scale.x, &rotation.x, &translate.x);
+			break;
+		}
+		default:
+			return luaL_error(L, "You can only construct matrix by srt table or srt object");
+		}
 	}
 	break;
 	case 4:
@@ -2194,8 +2443,7 @@ lsrt_matrix(lua_State *L) {
 			extract_scale(L, LS, 2), 
 			extract_rotation_mat(L, LS, 3), 
 			extract_translate(L, LS, 4));
-	break;
-
+		break;
 	default:
 		luaL_error(L, "only support 1(const)/2({s=...,r=...,t=...})/4(s,r,t) argument:%d", numarg);
 		break;
@@ -2236,12 +2484,12 @@ static int
 lview_proj(lua_State *L) {
 	const int numarg = lua_gettop(L);
 	if (numarg < 2) {
-		return luaL_error(L, "argument should provided as: \
-							camera[view matrix, can be nil],\
-							frustum[project, can be nil],\
-							combine[view&proj or not], \
-							but camera, frustum must provided one of them.\
-							%d provided", numarg);
+		return luaL_error(L, "argument should provided as:"
+							"camera[view matrix, can be nil], "
+							"frustum[project, can be nil], "
+							"combine[view&proj or not], "
+							"but camera, frustum must provided one of them. "
+							"%d provided", numarg);
 	}
 
 	struct boxstack *bp = (struct boxstack*)lua_touserdata(L, 1);
@@ -2816,6 +3064,8 @@ lconstant(lua_State *L) {
 		cons = LINEAR_TYPE_NUM;
 	} else if (strcmp(what, "identquat") == 0) {
 		cons = LINEAR_TYPE_QUAT;
+	} else if (strcmp(what, "identsrt") == 0) {
+		cons = LINEAR_TYPE_SRT;
 	} else {
 		return luaL_error(L, "Invalid constant %s", what);
 	}
@@ -3215,6 +3465,7 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "base_axes", lbase_axes_from_forward_vector},
 			{ "lookat", llookat},
 			{ "srtmat", lsrt_matrix },
+			{ "srt", lsrt },
 			{ "mul_srtmat", lmul_srtmat},
 			{ "view_proj", lview_proj},
 			{ "length", llength},
