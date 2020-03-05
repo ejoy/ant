@@ -1271,7 +1271,8 @@ static int
 wTextWrapped(lua_State *L) {
 	size_t sz;
 	const char * text = luaL_checklstring(L, 1, &sz);
-	ImGui::PushTextWrapPos(0.0f);
+	float wrap = (float)luaL_optnumber(L, 2, 0.0f);
+	ImGui::PushTextWrapPos(wrap);
 	ImGui::TextUnformatted(text, text + sz);
 	ImGui::PopTextWrapPos();
 	return 0;

@@ -9,14 +9,14 @@ local ms, mu  = mathpkg.stack, mathpkg.util
 local m = ecs.system "camera_controller"
 m.require_interface "ant.render|camera"
 
-local eventMouseLeft = world:sub {"mouse", "LEFT"}
-local kRotationSpeed <const> = 1
+local eventCameraControl = world:sub {"camera"}
 local kMinThreshold <const> = 0.6
 local kMaxThreshold <const> = math.pi - kMinThreshold
+local cameraInitEyepos <const> = {1.6, 1.8,-1.8, 1}
+local cameraInitTarget <const> = {0, 0.9, 0, 1}
 local cameraTarget
 local cameraDistance
 local cameraId
-local lastX, lastY
 
 local function getAngle(v1,v2)
 	return math.acos(ms(v1, "n", v2, "n.T")[1])
@@ -41,32 +41,52 @@ local function cameraRotate(dx, dy)
 	ms(camera.eyepos, cameraTarget, camera.viewdir, cameraDistance, '*-=')
 end
 
-local function cameraInit(eyepos, target)
-	cameraTarget = math3d.ref "vector"
+local function cameraReset(eyepos, target)
+	local camera = world[cameraId].camera
 	ms(cameraTarget, target, "=")
-	local viewdir = ms(cameraTarget, eyepos, "-nT")
 	cameraDistance = {math.sqrt(ms(cameraTarget, eyepos, "-1.T")[1])}
+	ms(camera.eyepos, eyepos, "=")
+	ms(camera.viewdir, cameraTarget, eyepos, "-n=")
+end
 
+local function cameraInit()
+	cameraTarget = math3d.ref "vector"
 	local camera = world:interface "ant.render|camera"
 	cameraId = camera.create {
-        eyepos = eyepos,
-        viewdir = viewdir,
+		eyepos = {0,0,0,1},
+		viewdir = {0,1,0,0},
 	}
-    camera.bind(cameraId, "main_queue")
+	camera.bind(cameraId, "main_queue")
 end
 
 function m:post_init()
-	cameraInit({1.6, 1.8,-1.8, 1}, {0, 0.9, 0, 1})
+	cameraInit()
+	cameraReset(cameraInitEyepos, cameraInitTarget)
 end
 
 function m:camera_control()
+	for _,what,x,y in eventCameraControl:unpack() do
+		if what == "rotate" then
+			cameraRotate(x, y)
+		elseif what == "reset" then
+			cameraReset(cameraInitEyepos, cameraInitTarget)
+		end
+	end
+end
+
+local eventMouseLeft = world:sub {"mouse", "LEFT"}
+local kRotationSpeed <const> = 1
+local lastX, lastY
+
+function m:data_changed()
 	for _,_,state,x,y in eventMouseLeft:unpack() do
 		if state == "MOVE" then
 			local dpiX, dpiY = rhwi.dpi()
-			cameraRotate(
+			world:pub {
+				"camera","rotate",
 				(x - lastX) / dpiX * kRotationSpeed,
 				(y - lastY) / dpiY * kRotationSpeed
-			)
+			}
 			lastX, lastY = x, y
 		elseif state == "DOWN" then
 			lastX, lastY = x, y
