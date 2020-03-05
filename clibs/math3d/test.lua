@@ -190,6 +190,16 @@ do
 	print("scale(2) * scale(3) : ", stack(stackobj:srt { s = {2} } , stackobj:srt { s = {3} }, "*VR"))
 	print("scale(2) * scalemat(3) : ", stack(stackobj:srt { s = {2} } , stackobj:srtmat { s = {3} }, "*VR"))
 	print("scalemat(2) * scale(3) : ", stack(stackobj:srtmat { s = {2} } , stackobj:srt { s = {3} }, "*VR"))
+
+	local srtref = math3d.ref "srt"
+
+	stack(srtref, srt, "=")
+
+	stack(srtref:pack( {0.1}, nil , nil))
+	stack(srtref:unpack())
+	print("Ref srt", stack("3VR2VR1VRRRR"))
+
+	math3d.unref(srtref)
 end
 
 -- direction to euler

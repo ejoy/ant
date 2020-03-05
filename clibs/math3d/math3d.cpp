@@ -160,6 +160,15 @@ push_obj_to_lua_table(lua_State *L, struct lastack *LS, int64_t id){
 	lua_setfield(L, -2, "type");
 }
 
+static inline void
+pushid(lua_State *L, int64_t v) {
+	if (sizeof(lua_Integer) >= sizeof(int64_t)) {
+		lua_pushinteger(L, v);
+	} else {
+		lua_pushnumber(L, (lua_Number)v);
+	}
+}
+
 static inline int
 unpack_obj(lua_State *L, struct lastack *LS, int64_t id) {
 	int type;
@@ -177,6 +186,20 @@ unpack_obj(lua_State *L, struct lastack *LS, int64_t id) {
 	case LINEAR_TYPE_NUM:
 		n = 1;
 		break;
+	case LINEAR_TYPE_SRT:
+		if (LS == NULL) {
+			pushid(L, lastack_constant(LINEAR_TYPE_VEC4));
+			pushid(L, lastack_constant(LINEAR_TYPE_QUAT));
+			pushid(L, lastack_constant(LINEAR_TYPE_VEC4));
+			return 3;
+		}
+		lastack_pushvec4(LS, &val[0*4]);
+		pushid(L, lastack_pop(LS));
+		lastack_pushquat(LS, &val[1*4]);
+		pushid(L, lastack_pop(LS));
+		lastack_pushvec4(LS, &val[2*4]);
+		pushid(L, lastack_pop(LS));
+		return 3;
 	default:
 		n = 0;
 		break;
@@ -630,15 +653,6 @@ push_value(lua_State *L, struct lastack *LS, int index) {
 		break;
 	default:
 		luaL_error(L, "Invalid value %d", n);
-	}
-}
-
-static inline void
-pushid(lua_State *L, int64_t v) {
-	if (sizeof(lua_Integer) >= sizeof(int64_t)) {
-		lua_pushinteger(L, v);
-	} else {
-		lua_pushnumber(L, (lua_Number)v);
 	}
 }
 
@@ -1230,6 +1244,31 @@ ref_pack_value(lua_State *L) {
 	}
 	int type;
 	const float * v = lastack_value(LS, ref->id, &type);
+	if (type == LINEAR_TYPE_SRT) {
+		const float *s = &v[0];
+		const float *r = &v[1*4];
+		const float *t = &v[2*4];
+		glm::vec3 scale;
+		if (!lua_isnil(L, 2)) {
+			scale = extract_scale(L, LS, 2);
+			s = &scale.x;
+		}
+		glm::quat quat;
+		if (!lua_isnil(L, 3)) {
+			quat = extract_rotation(L, LS, 3);
+			r = &quat.x;
+		}
+		glm::vec3 trans;
+		if (!lua_isnil(L, 4)) {
+			trans = extract_translate(L, LS, 4);
+			t = &trans.x;
+		}
+
+		lastack_pushsrt(LS, s, r, t);
+		assign_ref(L, ref, lastack_pop(LS));
+		lua_settop(L, 1);
+		return 1;
+	}
 	float vv[16];
 	int n;
 	if (type == LINEAR_TYPE_MAT) {
@@ -1399,6 +1438,10 @@ const_type(const char* t){
 	
 	if (strcmp(t, "number") == 0) {
 		return LINEAR_TYPE_NUM;
+	}
+
+	if (strcmp(t, "srt") == 0) {
+		return LINEAR_TYPE_SRT;
 	}
 
 	return LINEAR_TYPE_COUNT;
