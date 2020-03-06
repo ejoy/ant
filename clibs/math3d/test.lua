@@ -182,18 +182,10 @@ do
 	local e1 = stackobj:quat2euler(q1)
 	print("e : ", stack(e1, "VR"))
 
-	local mat = stackobj:srtmat(srt)
-
-	print("to mat :", stack(mat , "VR"))
-	print("to srt :", stack(stackobj:srt(mat), "VR"))
-
-	print("scale(2) * scale(3) : ", stack(stackobj:srt { s = {2} } , stackobj:srt { s = {3} }, "*VR"))
-	print("scale(2) * scalemat(3) : ", stack(stackobj:srt { s = {2} } , stackobj:srtmat { s = {3} }, "*VR"))
-	print("scalemat(2) * scale(3) : ", stack(stackobj:srtmat { s = {2} } , stackobj:srt { s = {3} }, "*VR"))
-
-	local srtref = stackobj:ref "srt"
+	local srtref = stackobj:ref "matrix"
 
 	srtref.s = { 0.1 , 0.2, 0.3 }
+	srtref.t = { 1,2,3 }
 
 	stack(srtref:srt())
 	print("Ref srt", stack("3VR2VR1VRRRR"))
@@ -262,3 +254,4 @@ math3d.unref(vec0)
 math3d.unref(vec)
 math3d.unref(mat)
 math3d.unref(quat)
+

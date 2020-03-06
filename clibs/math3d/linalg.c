@@ -20,13 +20,6 @@ static float c_ident_mat[16] = {
 	0,0,0,1,
 };
 
-static float c_ident_srt[16] = {
-	1,1,1,1,	// scale, if the 4th is not zero, it's uniform scaling
-	0,0,0,1,	// rotation, it's a quat
-	0,0,0,0,	// translate
-	0,0,0,0,	// [0] scale [1] rotation [2] transform [3] all, 0 means identity
-};
-
 static float c_ident_num[4] = {
 	0, 0, 0, 0
 };
@@ -45,7 +38,6 @@ static struct constant c_constant_table[LINEAR_TYPE_COUNT] = {
 	{ c_ident_vec, VECTOR4 },	
 	{ c_ident_num, VECTOR4 },
 	{ c_ident_quat, VECTOR4 },
-	{ c_ident_srt, MATRIX },
 };
 
 struct stackid_ {
@@ -345,7 +337,7 @@ new_page(struct lastack *LS, void *page, size_t page_size) {
 
 inline static int
 get_type_size(int type) {
-	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 1, 4, 16 };
+	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 1, 4 };
 //	assert(LINEAR_TYPE_MAT <= type && type < LINEAR_TYPE_COUNT);
 	return sizes[type];
 }
@@ -386,7 +378,7 @@ lastack_pushsrt(struct lastack *LS, const float *s, const float *r, const float 
 		scale[0] = 1;
 		scale[1] = 1;
 		scale[2] = 1;
-		scale[3] = 1;
+		scale[3] = 0;
 		mark[0] = 0;
 	} else {
 		float sx = s[0];
@@ -395,15 +387,8 @@ lastack_pushsrt(struct lastack *LS, const float *s, const float *r, const float 
 		scale[0] = sx;
 		scale[1] = sy;
 		scale[2] = sz;
-		if (sx == sy && sy == sz) {
-			scale[3] = sx;
-			if (sx == 1) {
-				mark[0] = 0;
-			} else {
-				mark[0] = NOTIDENTITY;
-			}
-		} else {
-			scale[3] = 0;
+		scale[3] = 0;
+		if (sx == 1 && sy == 1 && sz == 1) {
 			mark[0] = NOTIDENTITY;
 		}
 	}
@@ -444,7 +429,7 @@ lastack_pushsrt(struct lastack *LS, const float *s, const float *r, const float 
 		mark[3] = NOTIDENTITY;
 	}
 	union stackid sid;
-	sid.s.type = LINEAR_TYPE_SRT;
+	sid.s.type = LINEAR_TYPE_MAT;
 	sid.s.persistent = 0;
 	sid.s.version = LS->version;
 	sid.s.id = LS->temp_matrix_top;
@@ -693,10 +678,6 @@ print_object(const float *address, int id, int type) {
 		printf("(M%d: ",id);
 		print_float(address, 16);
 		break;
-	case LINEAR_TYPE_SRT:
-		printf("(T%d: ",id);
-		print_float(address, 16);
-		break;
 	case LINEAR_TYPE_VEC4:
 		printf("(V%d: ",id);
 		print_float(address, 4);
@@ -788,9 +769,6 @@ lastack_idstring(int64_t id, char tmp[64]) {
 		break;
 	case LINEAR_TYPE_NUM:
 		flags[0] = 'N';
-		break;
-	case LINEAR_TYPE_SRT:
-		flags[0] = 'T';
 		break;
 	default:
 		flags[0] = '?';
