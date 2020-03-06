@@ -18,8 +18,6 @@ extern "C" {
 #include <glm/ext/scalar_relational.hpp>
 #include <glm/ext/vector_relational.hpp>
 
-//#include <glm/vector_relational.hpp>
-
 #include <glm/gtx/euler_angles.hpp>
 
 
@@ -155,13 +153,22 @@ pushid(lua_State *L, int64_t v) {
 }
 
 static inline void
-matrix_decompose(const glm::mat4x4 &m, glm::vec4 &scale, glm::quat &rot, glm::vec4 &trans) {
-	trans = m[3];
+matrix_decompose(const float mat[16], float scale[4], float rot[4], float trans[4]) {
+	const glm::mat4x4 &m = *(const glm::mat4x4 *)mat;
+	trans[0] = m[3][0];
+	trans[1] = m[3][1];
+	trans[2] = m[3][2];
+	trans[3] = 1;
 
 	for (int ii = 0; ii < 3; ++ii)
 		scale[ii] = glm::length(m[ii]);
+	scale[3] = 0;
 
-	if (scale.x == 0 || scale.y == 0 || scale.z == 0) {
+	if (scale[0] == 0 || scale[1] == 0 || scale[2] == 0) {
+		rot[0] = 0;
+		rot[1] = 0;
+		rot[2] = 0;
+		rot[3] = 1;
 		return;
 	}
 
@@ -169,7 +176,11 @@ matrix_decompose(const glm::mat4x4 &m, glm::vec4 &scale, glm::quat &rot, glm::ve
 	for (int ii = 0; ii < 3; ++ii) {
 		rotMat[ii] /= scale[ii];
 	}
-	rot = glm::quat_cast(rotMat);
+	glm::quat q = glm::quat_cast(rotMat);
+	rot[0] = q.x;
+	rot[1] = q.y;
+	rot[2] = q.z;
+	rot[3] = q.w;
 }
 
 static inline int
@@ -222,16 +233,14 @@ ref_decompose_srt(lua_State *L) {
 	const float * val = lastack_value(LS, ref->id, &type);
 	switch (type) {
 	case LINEAR_TYPE_MAT: {
-		const glm::mat4x4 *mat = (const glm::mat4x4 *)val;
-		glm::vec4 scale(1, 1, 1, 0), translate(0, 0, 0, 0);
-		glm::quat rotation(1, 0, 0, 0);
-		matrix_decompose(*mat, scale, rotation, translate);
+		float scale[4], translate[4], rotation[4];
+		matrix_decompose(val, scale, rotation, translate);
 
-		lastack_pushvec4(LS, &translate.x);
+		lastack_pushvec4(LS, translate);
 		pushid(L, lastack_pop(LS));
-		lastack_pushquat(LS, &rotation.x);
+		lastack_pushquat(LS, rotation);
 		pushid(L, lastack_pop(LS));
-		lastack_pushvec4(LS, &scale.x);
+		lastack_pushvec4(LS, scale);
 		pushid(L, lastack_pop(LS));
 
 		return 3;
@@ -391,37 +400,6 @@ extract_translate(lua_State *L, struct lastack *LS, int index){
 	return translate;
 }
 
-static inline glm::mat4x4
-extract_rotation_mat(lua_State *L, struct lastack *LS, int index){
-	glm::mat4x4 m;
-	const int rtype = lua_type(L, index);
-	if (rtype == LUA_TNUMBER || rtype == LUA_TUSERDATA) {
-		int64_t id = get_id_by_type(L, LS, rtype, index);
-		int type;
-		const float *value = lastack_value(LS, id, &type);
-
-		if (type != LINEAR_TYPE_QUAT)
-			luaL_error(L, "ref object need should be vec4/quternion!, type is : %s", get_typename(type));
-
-		m = glm::mat4x4(*(glm::quat*)value);
-	} else if (rtype == LUA_TTABLE) {
-		const size_t len = lua_rawlen(L, index);
-		if (len != 4) {
-			luaL_error(L, "r field should with 4 element(quaternion): r={0, 0, 0, 1}, %d is provided", len);
-		}
-
-		glm::quat q;
-		get_table_value(L, index, 4, q);
-		m = glm::mat4x4(q);
-	} else {
-		m = glm::mat4x4(1.f);
-		if (rtype != LUA_TNIL)
-			luaL_error(L, "Invalid rotation type %s", lua_typename(L, rtype));
-	}
-
-	return m;
-}
-
 static inline glm::quat
 extract_rotation(lua_State *L, struct lastack *LS, int index) {
 	glm::quat q;
@@ -457,14 +435,16 @@ extract_rotation(lua_State *L, struct lastack *LS, int index) {
 }
 
 static void inline
-make_srt(struct lastack*LS, const glm::vec4 &scale, const glm::mat4x4 &rotmat, const glm::vec4 &translate) {
+make_srt(struct lastack*LS, const glm::vec4 &scale, const glm::quat &rot, const glm::vec4 &translate) {
 	glm::mat4x4 srt(1);
 	srt[0][0] = scale[0];
 	srt[1][1] = scale[1];
 	srt[2][2] = scale[2];
 
-	srt = rotmat * srt;
-	srt[3] = translate;
+	srt = glm::mat4x4(rot) * srt;
+	srt[3][0] = translate.x;
+	srt[3][1] = translate.y;
+	srt[3][2] = translate.z;
 	srt[3][3] = 1;
 	lastack_pushmatrix(LS, &srt[0][0]);
 }
@@ -476,14 +456,14 @@ push_srtmat_from_table(lua_State *L, struct lastack *LS, int index) {
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "r");
-	const glm::mat4x4 rotMat = extract_rotation_mat(L, LS, -1);
+	const glm::quat rot = extract_rotation(L, LS, -1);
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "t");
 	const glm::vec4 translate = extract_translate(L, LS, -1);
 	lua_pop(L, 1);
 	 
-	make_srt(LS, scale, rotMat, translate);
+	make_srt(LS, scale, rot, translate);
 }
 
 static int
@@ -503,11 +483,10 @@ ref_compose_srt(lua_State *L) {
 	const float * val = lastack_value(LS, id, &type);
 	size_t sz;
 	const char * key = luaL_checklstring(L, 2, &sz);
-	glm::vec4 scale(1, 1, 1, 0), translate(0, 0, 0, 0);
-	glm::quat rotation(1, 0, 0, 0);
+	glm::vec4 scale, translate;
+	glm::quat rotation;
 	if (type == LINEAR_TYPE_MAT) {
-		const glm::mat4x4 *mat = (const glm::mat4x4 *)val;
-		matrix_decompose(*mat, scale, rotation, translate);
+		matrix_decompose(val, (float *)&scale, (float *)&rotation, (float *)&translate);
 	} else {
 		return luaL_error(L, "Can't set %s into refobject(%s)", key, get_typename(type));
 	}
@@ -529,7 +508,7 @@ ref_compose_srt(lua_State *L) {
 		return luaL_error(L, "Invalid key , only support s/r/t");
 	}
 
-	make_srt(LS, scale, glm::mat4x4(rotation), translate);
+	make_srt(LS, scale, rotation, translate);
 	assign_ref(L, ref, lastack_pop(LS));
 
 	return 0;
@@ -1095,14 +1074,12 @@ split_mat_to_srt(lua_State *L, struct lastack *LS){
 	if (type != LINEAR_TYPE_MAT)
 		luaL_error(L, "split operation '~' is only valid for mat4 type, type is : %s", get_typename(type));
 	
-	const glm::mat4x4 *mat = (const glm::mat4x4 *)v;
-	glm::vec4 scale(1, 1, 1, 0), translate(0, 0, 0, 0);
-	glm::quat rotation(1, 0, 0, 0);
-	matrix_decompose(*mat, scale, rotation, translate);
+	float scale[4], translate[4], rotation[4];
+	matrix_decompose(v, scale, rotation, translate);
 	
-	lastack_pushvec4(LS, &translate.x);
-	lastack_pushquat(LS, &rotation.x);
-	lastack_pushvec4(LS, &scale.x);	
+	lastack_pushvec4(LS, translate);
+	lastack_pushquat(LS, rotation);
+	lastack_pushvec4(LS, scale);
 }
 
 static inline void
@@ -2305,7 +2282,7 @@ lsrt_matrix(lua_State *L) {
 	case 4:
 		make_srt(LS,
 			extract_scale(L, LS, 2),
-			extract_rotation_mat(L, LS, 3),
+			extract_rotation(L, LS, 3),
 			extract_translate(L, LS, 4));
 		break;
 	default:
@@ -2723,7 +2700,7 @@ llhs_matrix(lua_State *L) {
 			lua_pop(L, 1);
 
 			lua_getfield(L, 2, "r");
-			const glm::mat4x4 rotMat = extract_rotation_mat(L, LS, -1);
+			const glm::quat rot = extract_rotation(L, LS, -1);
 			lua_pop(L, 1);
 
 			lua_getfield(L, 2, "t");
@@ -2734,7 +2711,7 @@ llhs_matrix(lua_State *L) {
 			r_mat[0][0] = scale[0];
 			r_mat[1][1] = scale[1];
 			r_mat[2][2] = scale[2];
-			r_mat = rotMat * r_mat;
+			r_mat = glm::mat4x4(rot) * r_mat;
 			r_mat[3] = glm::vec4(translate, 1);
 		} else {
 			for (int ii = 0; ii < 4; ++ii) {
@@ -2913,8 +2890,6 @@ lcommand_description(lua_State *L){
 
 	return 1;
 }
-
-#include <tuple>
 
 static int
 lconstant(lua_State *L) {
