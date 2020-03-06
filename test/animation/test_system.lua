@@ -42,13 +42,6 @@ function m:post_init()
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
 
-local function playAnimation(e, name)
-    e.animation.current = {
-        animation = e.animation.anilist[name],
-        ratio = 0,
-    }
-end
-
 local status = {
     Pause = false,
     Loop = true,
@@ -61,6 +54,19 @@ local status = {
         format = "",
     }
 }
+
+local function playAnimation(e, name)
+    local ani = e.animation.anilist[name]
+    if status.Loop then
+        ani.max_ratio = math.maxinteger
+    else
+        ani.max_ratio = 1
+    end
+    e.animation.current = {
+        animation = ani,
+        ratio = 0,
+    }
+end
 
 local function imguiBeginToolbar()
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.Button, 0, 0, 0, 0)
@@ -109,6 +115,12 @@ end
 function m:ui_update()
     local e = world[RoleEntityId]
 
+    if not status.Loop and not status.Pause and e.animation.current.ratio >= 1 then
+        world:enable_system("ant.animation|animation_system", false)
+        status.Pause = true
+        e.animation.current.ratio = 0
+    end
+
     for _ in imgui_util.windows("Animation", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }) do
         for name in sortpairs(e.animation.anilist) do
             if imgui.widget.Selectable(name, e.animation.current.animation.name == name) then
@@ -156,14 +168,11 @@ function m:ui_update()
         if imguiToolbar(status.Loop and "🔁" or "➡", nil, true) then
             if status.Loop then
                 status.Loop = false
-                for _, ani in pairs(e.animation.anilist) do
-                    ani.max_ratio = 1
-                end
+                e.animation.current.animation.max_ratio = 1
+                e.animation.current.ratio = e.animation.current.ratio % 1
             else
                 status.Loop = true
-                for _, ani in pairs(e.animation.anilist) do
-                    ani.max_ratio = math.maxinteger
-                end
+                e.animation.current.animation.max_ratio = math.maxinteger
             end
         end
         imguiEndToolbar()
