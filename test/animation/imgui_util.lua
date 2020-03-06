@@ -24,45 +24,7 @@ local function tooltip(text, wrap)
     end
 end
 
-local checkbox_mt = {}
-checkbox_mt.__index = checkbox_mt
-function checkbox_mt:update()
-    if self.selected then
-        if imgui.widget.Selectable("√ "..self.label, true) then
-            self.selected = false
-            self:disable()
-        end
-    else
-        if imgui.widget.Selectable("× "..self.label, false) then
-            self.selected = true
-            self:enable()
-        end
-    end
-    tooltip(self.label)
-end
-
-local function checkbox(t)
-    return setmetatable(t, checkbox_mt)
-end
-
-local list_mt = {}
-list_mt.__index = list_mt
-function list_mt:update()
-    for _, name in ipairs(self.lst) do
-        if imgui.widget.Selectable(name, self.selected == name) then
-            self.selected = name
-            self:select(name)
-        end
-    end
-end
-
-local function list(t)
-    return setmetatable(t, list_mt)
-end
-
 return {
     windows = windows,
-    checkbox = checkbox,
-    list = list,
     tooltip = tooltip,
 }

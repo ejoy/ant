@@ -100,8 +100,8 @@ function m:init()
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
 		font.Create {
+			{ Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
 			{ Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
-			{ Font "Segoe UI Emoji" , 18, glyphRanges { 0x1F300, 0x1F9EF }},
 		}
 	elseif platform.OS == "macOS" then
 		font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }

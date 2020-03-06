@@ -60,35 +60,44 @@ local timer = world:interface "ant.timer|timer"
 
 local fix_root <const> = true
 
+local function do_animation(task, delta_time)
+	if task.type == 'blend' then
+		for _, t in ipairs(task) do
+			do_animation(t)
+		end
+		ani_module.do_blend("blend", #task, task.weight)
+	else
+		local ani = task.animation
+		local delta = delta_time / ani.duration
+		local current_ratio = task.ratio + delta
+		task.ratio = current_ratio <= ani.max_ratio and current_ratio or ani.max_ratio
+		ani_module.do_sample(ani.sampling_cache, ani.handle, task.ratio % 1, task.weight)
+	end
+end
+
+local function update_animation(e, delta_time)
+	local animation = e.animation
+	local ske = asset.get_resource(e.skeleton.ref_path)
+	ani_module.setup(e.pose_result.result, ske.handle, fix_root)
+	do_animation(animation.current, delta_time)
+	ani_module.fetch_result()
+end
+
 function anisystem:sample_animation_pose()
 	local delta_time = timer.delta()
-
-	local function do_animation(task)
-		if task.type == 'blend' then
-			for _, t in ipairs(task) do
-				do_animation(t)
-			end
-			ani_module.do_blend("blend", #task, task.weight)
-		else
-			local ani = task.animation
-			local delta = delta_time / ani.duration
-			local current_ratio = task.ratio + delta
-			task.ratio = current_ratio <= ani.max_ratio and current_ratio or ani.max_ratio
-			ani_module.do_sample(ani.sampling_cache, ani.handle, task.ratio % 1, task.weight)
-		end
-	end
-
 	for _, eid in world:each "animation" do
 		local e = world[eid]
-		local animation = e.animation
-		local ske = asset.get_resource(e.skeleton.ref_path)
-
-		ani_module.setup(e.pose_result.result, ske.handle, fix_root)
-		do_animation(animation.current)
-		ani_module.fetch_result()
+		update_animation(e, delta_time)
 	end
 end
 
 function anisystem:end_animation()
 	ani_module.end_animation()
+end
+
+local m = ecs.interface "animation"
+
+function m.update(e, delta_time)
+	update_animation(e, delta_time or 0)
+	ani_module.clean_cache()
 end
