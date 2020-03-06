@@ -3129,7 +3129,7 @@ lforward_dir(lua_State *L){
 //		multipy those quaternions can recreate view direction vector
 static int
 ldir2radian(lua_State *L){
-	auto LS = getLS(L, 1);
+	auto LS = math3d_getLS(L, 1);
 	auto v = get_vec_value(L, LS, 2);
 	float radianX, radianY;
 	const float PI = float(M_PI);
