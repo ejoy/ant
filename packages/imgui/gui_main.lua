@@ -21,6 +21,7 @@ local gui_main  = {}
 local attribs   = {}
 local main = nil
 local initialized = false
+local imgui_context = nil
 
 local uieditor_viewid = viewidmgr.get "uieditor"
 
@@ -33,7 +34,8 @@ end
 
 
 function gui_main.init(nwh, context, width, height)
-	imgui.CreateContext(nwh)
+	imgui_context = imgui.CreateContext(nwh)
+    imgui.push_context(imgui_context)
     initialized = true
     rhwi.init {
         nwh = nwh,
@@ -167,6 +169,7 @@ end
 
 function gui_main.exit()
     log("Exit")
+    imgui.pop_context()
     imgui.DestroyContext()
     rhwi.shutdown()
     if main.exit then
