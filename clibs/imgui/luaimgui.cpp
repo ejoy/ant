@@ -157,7 +157,7 @@ sync_io(lua_State *L) {
 	int io_cache_index = lua_upvalueindex(2);
 	lua_imgui_io * io_cache =  (lua_imgui_io*)lua_touserdata(L, io_cache_index);
 	bool inited = io_cache->inited;
-
+	 
 	int io_index = lua_upvalueindex(1);
 	sync_io_val(WantCaptureMouse, inited);
 	sync_io_val(WantCaptureKeyboard, inited);
@@ -3244,6 +3244,62 @@ push_beginframe( lua_State * L ){
 	lua_pushcclosure(L, lbeginFrame, 2);
 }
 
+static int
+lpushContext(lua_State * L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	auto ctx = (ImGuiContext*)lua_touserdata(L, 1);
+	int stack_index = lua_upvalueindex(1);
+	lua_rawgeti(L, stack_index, 0);
+	int stacksize = lua_tointeger(L, -1);
+	lua_pop(L,1);
+	lua_pushinteger(L, ++stacksize);
+	lua_rawseti(L, stack_index, 0); //stack[0] = ++stack_size;
+	lua_pushvalue(L, 1);
+	lua_rawseti(L, stack_index, stacksize);//stack[stack_size] = ctx
+	ImGui::SetCurrentContext(ctx);
+	return 0;
+}
+
+static int
+lpopContext(lua_State* L) {
+	int stack_index = lua_upvalueindex(1);
+	lua_rawgeti(L, stack_index, 0);
+	int stacksize = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	if (stacksize <= 0)
+	{
+		luaL_error(L, ",Can not pop context because  stack size<=0");
+		return 0;
+	}
+	auto rest_size = stacksize - 1;
+	lua_pushinteger(L, rest_size);
+	lua_rawseti(L, stack_index, 0); //stack[0] = newsize;
+	lua_rawgeti(L, stack_index, stacksize);//get stack[stack_size]
+	luaL_checktype(L, -1, LUA_TLIGHTUSERDATA);
+	lua_pushnil(L);
+	lua_rawseti(L, stack_index, stacksize);//stack[stack_size] = nil
+	if (rest_size > 0)
+	{
+		lua_rawgeti(L, stack_index, rest_size);
+		luaL_checktype(L, -1, LUA_TLIGHTUSERDATA);
+		auto ctx = (ImGuiContext*)lua_touserdata(L, -1);
+		lua_pop(L, 1);
+		ImGui::SetCurrentContext(ctx);
+	}
+	return 1;
+}
+
+static void
+push_context_push_and_pop(lua_State* L){
+	lua_newtable(L); //stack
+	lua_pushinteger(L, 0); 
+	lua_rawseti(L, -2, 0);//stack size
+	lua_pushvalue(L,-1);
+	lua_pushcclosure(L, lpushContext, 1); //lua_stack:pushContext,tbl,...
+	lua_insert(L, -2);//lua_stack:tbl,pushContext,...
+	lua_pushcclosure(L, lpopContext, 1); //lua_stack:popContext,pushContext,tbl,...
+}
+
 
 static int
 lendFrame(lua_State* L) {
@@ -3283,6 +3339,10 @@ luaopen_imgui(lua_State *L) {
 
 	push_beginframe(L);
 	lua_setfield(L, -2, "begin_frame");
+	push_context_push_and_pop(L);//[pop,push,lib...]
+	lua_setfield(L, -3, "pop_context");
+	lua_setfield(L, -2, "push_context");
+
 	
 	luaL_Reg widgets[] = {
 		{ "Button", wButton },
