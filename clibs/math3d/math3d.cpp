@@ -3122,7 +3122,7 @@ lforward_dir(lua_State *L){
 		break;
 	case LUA_TLIGHTUSERDATA:{
 		if (lua_type(L, 3) != LUA_TSTRING){
-			return luaL_error(L, "light userdata in arg 2 must have data type describe in argument 3, argument 3 need to be:'mat'/'quat'/'euler'");
+			return luaL_error(L, "light userdata in arg 2 must have data type describe in argument 3, argument 3 need to be:'mat'/'quat'");
 		}
 
 		const char* datatype = lua_tostring(L, 3);
@@ -3143,6 +3143,46 @@ lforward_dir(lua_State *L){
 	lastack_pushvec4(LS, &forwarddir.x);
 	pushid(L, pop(L, LS));
 	return 1;
+}
+
+// input: view direction vector
+// output: 
+//		output radianX and radianY which can used to create quaternion that around x-axis and y-axis, 
+//		multipy those quaternions can recreate view direction vector
+static int
+ldir2radian(lua_State *L){
+	auto LS = getLS(L, 1);
+	auto v = get_vec_value(L, LS, 2);
+	float radianX, radianY;
+	const float PI = float(M_PI);
+	const float HALF_PI = 0.5f * PI;
+	
+	if (is_equal(v.y, 1.f)){
+		radianX = -HALF_PI;
+		radianY = 0.f;
+	} else if (is_equal(v.y, -1.f)){
+		radianX = HALF_PI;
+		radianY = 0.f;
+	} else if (is_equal(v.x, 1.f)){
+		radianX = 0.f;
+		radianY = HALF_PI;
+	} else if (is_equal(v.x, -1.f)){
+		radianX = 0.f;
+		radianY = -HALF_PI;
+	} else if (is_equal(v.z, 1.f)){
+		radianX = 0.f;
+		radianY = 0.f;
+	} else if (is_equal(v.z, -1.f)){
+		radianX = 0.f;
+		radianY = PI;
+	} else {
+		radianX = is_zero(v.y) ? 0.f : std::asin(-v.y);
+		radianY = is_zero(v.x) ? 0.f : std::atan2(v.x, v.z);
+	}
+
+	lua_pushnumber(L, radianX);
+	lua_pushnumber(L, radianY);
+	return 2;
 }
 
 static int
@@ -3234,6 +3274,7 @@ register_linalg_mt(lua_State *L, int debug_level) {
 			{ "elem_add", lelem_add},
 			{ "add_translate", ladd_translate},
 			{ "forward_dir", lforward_dir},
+			{ "dir2radian", ldir2radian},
 			{ "rotation", lrotation},
 			{ "euler2quat", leuler2quat},
 			{ "quat2euler", lquat2euler},

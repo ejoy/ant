@@ -2,8 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-local mc = mathpkg.constant
+local ms, mc, mu = mathpkg.stack, mathpkg.constant, mathpkg.util
 
 local renderpkg = import_package "ant.render"
 local hwi = renderpkg.hwi
@@ -50,6 +49,25 @@ function icamera_moition.rotate(cameraeid, delta)
     camera.viewdir, "D",    -- rotation = to_rotation(viewdir)
     delta, "+dn=")          -- rotation = rotation + value
                             -- viewdir = normalize(to_viewdir(rotation))
+end
+
+local halfpi<const> = math.pi * 0.5
+local n_halfpi = -halfpi
+
+function icamera_moition.rotate_around_point(cameraeid, targetpt, distance, dx, dy, threshold_around_x_axis)
+    threshold_around_x_axis = threshold_around_x_axis or 0.002
+    local camera = world[cameraeid].camera
+    local radianX, radianY = ms:dir2radian(camera.viewdir)
+    radianX = radianX + dx
+    radianY = radianY + dy
+
+    mu.limit(radianX, n_halfpi + threshold_around_x_axis, halfpi - threshold_around_x_axis)
+
+    local qx = ms:quaternion(mc.XAXIS, radianX)
+    local qy = ms:quaternion(mc.YAXIS, radianY)
+
+    ms(camera.viewdir, qy, qx, "*", mc.ZAXIS, "*=")
+    ms(camera.eyepos, targetpt, camera.viewdir, {distance}, "*-=")
 end
 
 local function to_ndc(pt2d, screensize)

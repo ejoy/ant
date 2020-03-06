@@ -83,14 +83,4 @@ end
 function util.to_radian(angles) return list_op(angles, math.rad) end
 function util.to_angle(radians) return list_op(radians, math.deg) end
 
-local AXISES = {
-	X = const.XAXIS,
-	Y = const.YAXIS,
-	Z = const.ZAXIS,
-}
-
-function util.AXIS(name)
-	return AXISES[name]
-end
-
 return util
