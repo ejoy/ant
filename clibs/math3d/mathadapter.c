@@ -234,7 +234,7 @@ lbind_vector(lua_State *L) {
 
 static int
 get_type(lua_State *L, struct lastack* LS, int index) {
-	int64_t id = get_stack_id(L, LS, index);
+	int64_t id = math3d_stack_id(L, LS, index);
 	return lastack_type(LS, id);
 }
 

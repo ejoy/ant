@@ -20,8 +20,8 @@ $(ODIR)/math3d.o : math3d.cpp | $(ODIR)
 $(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBS_INC)
 
-$(ODIR)/util.o : util.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBS_INC)
+$(ODIR)/util.o : util.c | $(ODIR)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(CLIBS_INC)
 
 $(ODIR)/mathadapter.o : mathadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)

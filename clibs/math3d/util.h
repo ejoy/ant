@@ -11,8 +11,6 @@ extern "C"{
 #include "glm/ext/scalar_relational.hpp"
 #include "glm/ext/vector_relational.hpp"
 
-const float * math3d_get_value(lua_State *L, struct lastack *LS, int index, int request_type);
-
 static inline const glm::vec4 &
 get_vec_value(lua_State *L, struct lastack *LS, int index) {
 	return *(const glm::vec4 *)math3d_get_value(L, LS, index, LINEAR_TYPE_VEC4);

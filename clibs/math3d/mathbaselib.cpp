@@ -529,7 +529,7 @@ lfrustum_intersect_list_aabb(lua_State *L) {
 		if (lua_getfield(L, -1, "AABB") == LUA_TNIL) {
 			return luaL_error(L, "Can't fetch AABB from index %d", idx);
 		}
-		int64_t AABB_id = get_stack_id(L, LS, -1);
+		int64_t AABB_id = math3d_stack_id(L, LS, -1);
 		lua_pop(L, 1);	// pop AABB
 		int type = 0;
 		const float * mat = lastack_value(LS, AABB_id, &type);
@@ -858,10 +858,10 @@ lfrustum_delete(lua_State *L){
 
 static int
 lfrustum_new(lua_State* L) {
-	auto LS = getLS(L, 1);
+	auto LS = math3d_getLS(L, 1);
 
 	int type;
-	const glm::mat4x4* trans = (const glm::mat4x4*)lastack_value(LS, get_stack_id(L, LS, 2), &type);
+	const glm::mat4x4* trans = (const glm::mat4x4*)lastack_value(LS, math3d_stack_id(L, LS, 2), &type);
 	return push_frustum(L, Frustum(*trans), 1);
 }
 
@@ -892,7 +892,7 @@ lbounding_transform(lua_State* L) {
 	auto LS = fetch_LS(L, 1);
 
 	int type;
-	const glm::mat4x4* trans = (const glm::mat4x4*)lastack_value(LS, get_stack_id(L, LS, 2), &type);
+	const glm::mat4x4* trans = (const glm::mat4x4*)lastack_value(LS, math3d_stack_id(L, LS, 2), &type);
 
 	b->Transform(*trans);
 	return 0;
@@ -939,7 +939,7 @@ lbounding_merge_list(lua_State *L){
 		if (has_trans){
 			lua_geti(L, 3, ii + 1);
 			int type;
-			auto trans = (glm::mat4x4*)lastack_value(LS, get_stack_id(L, LS, -1), &type);			
+			auto trans = (glm::mat4x4*)lastack_value(LS, math3d_stack_id(L, LS, -1), &type);			
 			lua_pop(L, 1);
 
 			AABB aabb = b->aabb;
@@ -980,7 +980,7 @@ lbounding_delete(lua_State *L){
 static int
 lbounding_new(lua_State* L) {
 	const int numarg = lua_gettop(L);
-	struct lastack* LS = getLS(L, 1);
+	struct lastack* LS = math3d_getLS(L, 1);
 
 	Bounding bounding;
 	for (int ii = 1; ii < numarg; ++ii) {
@@ -1157,7 +1157,7 @@ register_frustum_mt(lua_State *L){
 
 static int
 lplane_intersect(lua_State *L){
-	auto LS = getLS(L, 1);
+	auto LS = math3d_getLS(L, 1);
 	const glm::vec4 plane = get_vec_value(L, LS, 2);	
 	auto b = fetch_bounding(L, 3);
 	lua_pushinteger(L, plane_intersect(plane, b->aabb));
