@@ -61,7 +61,7 @@ function icamera_moition.rotate_around_point(cameraeid, targetpt, distance, dx, 
     radianX = radianX + dx
     radianY = radianY + dy
 
-    mu.limit(radianX, n_halfpi + threshold_around_x_axis, halfpi - threshold_around_x_axis)
+    radianX = mu.limit(radianX, n_halfpi + threshold_around_x_axis, halfpi - threshold_around_x_axis)
 
     local qx = ms:quaternion(mc.XAXIS, radianX)
     local qy = ms:quaternion(mc.YAXIS, radianY)
