@@ -71,10 +71,21 @@ local function replaceImguiCallback(t)
 	t.char = imgui.input_char
 end
 
+local function glyphRanges(t)
+	assert(#t % 2 == 0)
+	local s = {}
+	for i = 1, #t do
+		s[#s+1] = ("<I4"):pack(t[i])
+	end
+	s[#s+1] = "\x00\x00\x00"
+	return table.concat(s)
+end
+
 function m:init()
 	replaceImguiCallback(runtime.callback)
 
 	context = imgui.CreateContext(rhwi.native_window())
+	imgui.push_context(context)
 	imgui.ant.viewid(viewidmgr.generate "ui")
 	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
 	imgui.ant.font_program(
@@ -89,12 +100,17 @@ function m:init()
 	imgui.keymap(window.keymap)
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
-		font.Create { { Font "黑体" ,     18, "\x20\x00\xFF\xFF\x00"} }
+		font.Create {
+			{ Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
+			{ Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
+		}
 	elseif platform.OS == "macOS" then
-		font.Create { { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"} }
+		font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	else -- iOS
-		font.Create { { Font "Heiti SC" , 18, "\x20\x00\xFF\xFF\x00"} }
+		font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	end
+	imgui.pop_context()
+
 end
 
 function m:exit()
@@ -102,9 +118,11 @@ function m:exit()
 end
 
 function m:post_init()
+	imgui.push_context(context)
     local main_viewid = assert(viewidmgr.get "main_view")
     local vid = imgui.ant.viewid()
     fbmgr.bind(vid, assert(fbmgr.get_fb_idx(main_viewid)))
+    imgui.pop_context()
 end
 
 local function imgui_resize(width, height)
@@ -115,7 +133,7 @@ local function imgui_resize(width, height)
 end
 
 function m:ui_start()
-    imgui.SetCurrentContext(context)
+	imgui.push_context(context)
 	for _,w, h in eventResize:unpack() do
 		imgui_resize(w, h)
 	end
@@ -123,8 +141,21 @@ function m:ui_start()
     imgui.begin_frame(delta * 1000)
 end
 
+-- --test
+-- function m:ui_update()
+-- 	local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
+-- 	imgui.windows.SetNextWindowPos(0,0)
+-- 	imgui.windows.Begin("Testdsasd", wndflags)
+-- 	if imgui.widget.Button "rotate" then
+--         print("rotate")
+--     end
+--     imgui.windows.End()
+
+-- end
+
 function m:ui_end()
     imgui.end_frame()
     local vid = imgui.ant.viewid()
     renderutil.update_frame_buffer_view(vid, fbmgr.get_fb_idx(vid))
+    imgui.pop_context()
 end

@@ -59,11 +59,11 @@ function callback.init(nwh, context, width, height)
     imgui.keymap(window.keymap)
     window.set_ime(imgui.ime_handle())
     if platform.OS == "Windows" then
-        font.Create { { Font "黑体" ,     18, "\x20\x00\xFF\xFF\x00"} }
+        font.Create { { Font "黑体" ,     18, "ChineseFull"} }
     elseif platform.OS == "macOS" then
-        font.Create { { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"} }
+        font.Create { { Font "华文细黑" , 18, "ChineseFull"} }
     else -- iOS
-        font.Create { { Font "Heiti SC" , 18, "\x20\x00\xFF\xFF\x00"} }
+        font.Create { { Font "Heiti SC" , 18, "ChineseFull"} }
     end
     logic_cb.init(nwh, context, width, height)
 end

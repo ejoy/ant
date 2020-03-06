@@ -335,15 +335,15 @@ new_page(struct lastack *LS, void *page, size_t page_size) {
 	return page;
 }
 
-inline int
+inline static int
 get_type_size(int type) {
 	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 1, 4 };
-	assert(LINEAR_TYPE_MAT <= type && type < LINEAR_TYPE_COUNT);
+//	assert(LINEAR_TYPE_MAT <= type && type < LINEAR_TYPE_COUNT);
 	return sizes[type];
 }
 
-void
-lastack_pushmatrix(struct lastack *LS, const float *mat) {
+static float *
+check_matrix_pool(struct lastack *LS) {
 	if (LS->temp_matrix_top >= LS->temp_matrix_cap) {
 		size_t sz = LS->temp_matrix_cap * sizeof(float) * MATRIX;
 		void * p = new_page(LS, LS->temp_mat, sz);
@@ -351,7 +351,83 @@ lastack_pushmatrix(struct lastack *LS, const float *mat) {
 		memcpy(LS->temp_mat, p, sz);
 		LS->temp_matrix_cap *= 2;
 	}
-	memcpy(LS->temp_mat + LS->temp_matrix_top * MATRIX, mat, sizeof(float) * MATRIX);
+	return LS->temp_mat + LS->temp_matrix_top * MATRIX;
+}
+
+void
+lastack_pushmatrix(struct lastack *LS, const float *mat) {
+	float * pmat = check_matrix_pool(LS);
+	memcpy(pmat, mat, sizeof(float) * MATRIX);
+	union stackid sid;
+	sid.s.type = LINEAR_TYPE_MAT;
+	sid.s.persistent = 0;
+	sid.s.version = LS->version;
+	sid.s.id = LS->temp_matrix_top;
+	push_id(LS, sid);
+	++ LS->temp_matrix_top;
+}
+
+void
+lastack_pushsrt(struct lastack *LS, const float *s, const float *r, const float *t) {
+#define NOTIDENTITY (~0)
+	float * mat = check_matrix_pool(LS);
+	uint32_t * mark = (uint32_t *)&mat[3*4];
+	// scale
+	float *scale = &mat[0];
+	if (s == NULL) {
+		scale[0] = 1;
+		scale[1] = 1;
+		scale[2] = 1;
+		scale[3] = 0;
+		mark[0] = 0;
+	} else {
+		float sx = s[0];
+		float sy = s[1];
+		float sz = s[2];
+		scale[0] = sx;
+		scale[1] = sy;
+		scale[2] = sz;
+		scale[3] = 0;
+		if (sx == 1 && sy == 1 && sz == 1) {
+			mark[0] = NOTIDENTITY;
+		}
+	}
+	// rotation
+	float *rotation = &mat[4*1];
+	if (r == NULL || (r[0] == 0 && r[1] == 0 && r[2] == 0 && r[3] == 1)) {
+		rotation[0] = 0;
+		rotation[1] = 0;
+		rotation[2] = 0;
+		rotation[3] = 1;
+		mark[1] = 0;
+	} else {
+		rotation[0] = r[0];
+		rotation[1] = r[1];
+		rotation[2] = r[2];
+		rotation[3] = r[3];
+		mark[1] = NOTIDENTITY;
+	}
+	// translate
+	float *translate = &mat[4*2];
+	if (t == NULL || (t[0] == 0 && t[1] == 0 && t[2] == 0)) {
+		translate[0] = 0;
+		translate[1] = 0;
+		translate[2] = 0;
+		translate[3] = 1;
+		mark[2] = 0;
+	} else {
+		translate[0] = t[0];
+		translate[1] = t[1];
+		translate[2] = t[2];
+		translate[3] = 1;
+		mark[2] = NOTIDENTITY;
+	}
+	// mark identity
+	if (mark[0] == 0 && mark[1] == 0 && mark[2] == 0) {
+		mark[3] = 0;
+	} else {
+		mark[3] = NOTIDENTITY;
+	}
 	union stackid sid;
 	sid.s.type = LINEAR_TYPE_MAT;
 	sid.s.persistent = 0;
@@ -367,6 +443,7 @@ lastack_pushobject(struct lastack *LS, const float *v, int type) {
 		lastack_pushmatrix(LS, v);
 		return;
 	}
+	assert(type >= LINEAR_TYPE_VEC4 && type <= LINEAR_TYPE_QUAT);
 	const int size = get_type_size(type);
 	if (LS->temp_vector_top >= LS->temp_vector_cap) {
 		size_t sz = LS->temp_vector_cap * sizeof(float) * VECTOR4;
@@ -418,7 +495,7 @@ lastack_value(struct lastack *LS, int64_t ref, int *type) {
 			struct constant * c = &c_constant_table[id];
 			return c->ptr;
 		}
-		if (sid.s.type == LINEAR_TYPE_MAT) {
+		if (get_type_size(sid.s.type) == MATRIX) {
 			address = blob_address( LS->per_mat , id, ver);
 		} else {
 			address = blob_address( LS->per_vec , id, ver);
@@ -429,7 +506,7 @@ lastack_value(struct lastack *LS, int64_t ref, int *type) {
 			// version expired
 			return NULL;
 		}
-		if (sid.s.type == LINEAR_TYPE_MAT) {
+		if (get_type_size(sid.s.type) == MATRIX) {
 			if (id >= LS->temp_matrix_top) {
 				return NULL;
 			}
@@ -460,13 +537,13 @@ lastack_unmark(struct lastack *LS, int64_t markid) {
 	union stackid id;
 	id.i = markid;
 	if (id.s.persistent && id.s.version != 0) {
-		if (id.s.type != LINEAR_TYPE_MAT) {
+		if (get_type_size(id.s.type) != MATRIX) {
 			blob_dealloc(LS->per_vec, id.s.id, id.s.version);
 		} else {
 			blob_dealloc(LS->per_mat, id.s.id, id.s.version);
 		}
 	}
-	if (id.s.type != LINEAR_TYPE_NONE && id.s.type != LINEAR_TYPE_COUNT) {
+	if (id.s.type != LINEAR_TYPE_NONE && id.s.type < LINEAR_TYPE_COUNT) {
 		return lastack_constant(id.s.type);
 	}
 	
@@ -493,7 +570,7 @@ lastack_mark(struct lastack *LS, int64_t tempid) {
 	union stackid sid;
 	sid.s.version = LS->version;
 	sid.s.type = t;
-	if (t != LINEAR_TYPE_MAT) {
+	if (get_type_size(t) != MATRIX) {
 		id = blob_alloc(LS->per_vec, LS->version);
 		void * dest = blob_address(LS->per_vec, id, LS->version);
 		memcpy(dest, address, sizeof(float) * VECTOR4);

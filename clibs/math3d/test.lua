@@ -23,16 +23,11 @@ local math3d = require "math3d"
 
 	{ 1,2,3,4 }	  push vector4(1,2,3,4)
 	{ 1,2,3,4, .... 16 } push matrix4x4
-	{} push identity matrix
-	{ s = 2 } push scaled matrix (2,2,2)
-	{ sx = 1, sy = 2, sz = 3 }
-	{ rx = 1, ry = 0, rz = 0 }
-	{ tx = 0, ty = 0 , tz = 1 }
 
 	{ type = "mat", fov = 60, aspect = 1024/768 , n = 0.1, f = 100, }	-- proj mat
 	{ type = "mat", l = 0, r = 1, b = 1, t = 0, n = 0, f = 100, ortho = true, h = false } -- ortho mat
 	{ type = "quat", 0, 0, 0, 1}	-> quaternion, for x, y, z, w
-	{ type = "quat", axis = {0, 0, 0}, radian = 60} -> quaternion from axis and angle
+	{ type = "quat", axis = {0, 0, 0}, radian = {60}} -> quaternion from axis and angle
 	* matrix mul ( ..., 1,2 - > ..., 1*2 )
 	* vector4 * matrix4x4 / vec4 * vec4 / quat * quat / quat * vec4
 	+ vector4 + vector4 ( ..., 1,2 - > ..., 1+2 )
@@ -45,7 +40,6 @@ local math3d = require "math3d"
 	t transposed matrix ( ..., 1 -> ..., transpose(1) )
 	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
 	l generate lookat matrix ( ..., eye, at -> ..., lookat(eye,at) )
-	e vec4/vec3/matrix to euler angle (v, "e")
 	b extract matrix base orthogonal axis[xyz]
 ]]
 
@@ -55,7 +49,7 @@ local stack = stackobj:command()
 --	stack is the same as stackobj
 --  stack(...) is equivalent to debug.getmetatable(stackobj).__call(stackobj, ...)
 
--- NOTICE: don't use mathed.ref directly, or we should remember call math3d.unref(refobj) or refobj(nil)
+-- NOTICE: We should remember to call math3d.unref(refobj) or refobj(nil)
 
 local quat = stackobj:ref "quaternion" {type='q', 0, 0, 0, 1}
 math3d.reset(stackobj)
@@ -165,9 +159,11 @@ print(stack(math3d.constant "identmat", "V"))	-- R: remove top
 print(stack(">RRSRV"))	-- unpack ident mat, get 2st line, 1: RRR 2: RRSR 3:RSRSR 4:SRSRSR
 
 
--- matrix to srt
+-- srt object
 do
+	print "=====SRT====="
 	local srt = stack({type="srt", s={0.01}, r=stackobj:euler2quat{math.rad(60), math.rad(60), math.rad(-30)}, t={0, 0, 0}}, "P")
+	print("srt : ", stack(srt, "VR"))
 	stack(srt, "~")
 	local s = stack("P")
 	local r = stack("P")
@@ -179,14 +175,25 @@ do
 	local q1 = stack(srt, "qP")
 	local e1 = stackobj:quat2euler(q1)
 	print("e : ", stack(e1, "VR"))
+
+	local srtref = stackobj:ref "matrix"
+
+	srtref.s = { 0.1 , 0.2, 0.3 }
+	srtref.t = { 1,2,3 }
+
+	stack(srtref:srt())
+	print("Ref srt", stack("3VR2VR1VRRRR"))
+
+	srtref(nil)
 end
 
 -- direction to euler
+print "=====DIRECTION====="
 do
 	local rot = stack({1, 1, 1, 0}, "nDT")
 	local dir = stack(rot, "dT")
-	print(rot)
-	print(dir)
+	print(rot[1],rot[2],rot[3])
+	print(dir[1],dir[2],dir[3])
 end
 
 
@@ -225,10 +232,9 @@ print("Memory = ", stackobj:stacksize())
 do
 	local tempvec = math3d.ref "vector"
 	stack( tempvec, stackobj:vector( 1,2,3,4 ) , "=")
---	math3d.unref(tempvec)
+	tempvec(nil)
 end
 
--- tempvec is leak
 collectgarbage "collect"
 local leaks = stackobj:leaks()
 if leaks then
@@ -237,7 +243,8 @@ if leaks then
 	end
 end
 
-math3d.unref(vec0)
-math3d.unref(vec)
-math3d.unref(mat)
-math3d.unref(quat)
+vec(nil)
+vec0(nil)
+mat(nil)
+quat(nil)
+

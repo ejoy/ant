@@ -1,5 +1,7 @@
 #pragma once
 
+#define ImWchar ImWchar32
+
 #if !defined(NDEBUG)
 
 #include <assert.h>

@@ -31,6 +31,7 @@ void lastack_pushvec4(struct lastack *LS, const float *v);
 void lastack_pushquat(struct lastack *LS, const float *v);
 void lastack_pushnumber(struct lastack *LS, float number);
 void lastack_pushmatrix(struct lastack *LS, const float *mat);
+void lastack_pushsrt(struct lastack *LS, const float *s, const float *r, const float *t);
 const float * lastack_value(struct lastack *LS, int64_t id, int *type);
 int lastack_pushref(struct lastack *LS, int64_t id);
 int64_t lastack_mark(struct lastack *LS, int64_t tempid);

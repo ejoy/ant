@@ -21,6 +21,7 @@ local gui_main  = {}
 local attribs   = {}
 local main = nil
 local initialized = false
+local imgui_context = nil
 
 local uieditor_viewid = viewidmgr.get "uieditor"
 
@@ -33,7 +34,8 @@ end
 
 
 function gui_main.init(nwh, context, width, height)
-	imgui.CreateContext(nwh)
+	imgui_context = imgui.CreateContext(nwh)
+    imgui.push_context(imgui_context)
     initialized = true
     rhwi.init {
         nwh = nwh,
@@ -69,9 +71,9 @@ function gui_main.init(nwh, context, width, height)
         if platform.OS == "Windows" then
             font.Create { { Font "Arial" ,16, "Default"},{ Font "黑体" ,16, "ChineseFull"} }
         elseif platform.OS == "macOS" then
-            font.Create { { Font "华文细黑" , 16, "\x20\x00\xFF\xFF\x00"} }
+            font.Create { { Font "华文细黑" , 16, "ChineseFull"} }
         else -- iOS
-            font.Create { { Font "Heiti SC" ,    16, "\x20\x00\xFF\xFF\x00"} }
+            font.Create { { Font "Heiti SC" ,    16, "ChineseFull"} }
         end
         main.init(nwh, context, width, height)
     end
@@ -167,6 +169,7 @@ end
 
 function gui_main.exit()
     log("Exit")
+    imgui.pop_context()
     imgui.DestroyContext()
     rhwi.shutdown()
     if main.exit then

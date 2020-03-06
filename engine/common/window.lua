@@ -1,4 +1,3 @@
-local platform = require "platform"
 local thread = require "thread"
 thread.newchannel "WNDMSG"
 local channel = thread.channel_consume "WNDMSG"

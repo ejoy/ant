@@ -26,7 +26,7 @@
     <ClCompile Include="..\..\clibs\math3d\mathadapter.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\math3d\util.cpp">
+    <ClCompile Include="..\..\clibs\math3d\util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -609,7 +609,10 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		}
 		return 0;
 	}
-
+	int clean_cache(lua_State* L) {
+		m_data.erase(m_current_bp);
+		return 0;
+	}
 	int end_animation(lua_State*L){
 		m_data.clear();
 		return 0;
@@ -634,7 +637,10 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 		return base_type::get(L, lua_upvalueindex(1))
 			->fetch_result(L);
 	}
-
+	static int lclean_cache(lua_State* L) {
+		return base_type::get(L, lua_upvalueindex(1))
+			->clean_cache(L);
+	}
 	static int lend_animation(lua_State *L){
 		return base_type::get(L, lua_upvalueindex(1))
 			->end_animation(L);
@@ -642,11 +648,12 @@ struct ozzBlendingJob : public luaClass<ozzBlendingJob> {
 	static int init(lua_State* L) {
 		base_type::constructor(L);
 		luaL_Reg l[] = {
-			{ "setup",		lsetup},
-			{ "do_sample",	ldo_sample},
-			{ "do_blend",	ldo_blend},
-			{ "fetch_result",lfetch_result},
-			{ "do_ik",		ldo_ik},
+			{ "setup",		  lsetup},
+			{ "do_sample",	  ldo_sample},
+			{ "do_blend",	  ldo_blend},
+			{ "fetch_result", lfetch_result},
+			{ "do_ik",		  ldo_ik},
+			{ "clean_cache",  lclean_cache},
 			{ "end_animation",lend_animation},
 			{ nullptr, nullptr},
 		};
