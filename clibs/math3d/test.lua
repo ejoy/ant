@@ -191,12 +191,11 @@ do
 	print("scale(2) * scalemat(3) : ", stack(stackobj:srt { s = {2} } , stackobj:srtmat { s = {3} }, "*VR"))
 	print("scalemat(2) * scale(3) : ", stack(stackobj:srtmat { s = {2} } , stackobj:srt { s = {3} }, "*VR"))
 
-	local srtref = math3d.ref "srt"
+	local srtref = stackobj:ref "srt"
 
-	stack(srtref, srt, "=")
+	srtref.s = { 0.1 , 0.2, 0.3 }
 
-	stack(srtref:pack( {0.1}, nil , nil))
-	stack(srtref:unpack())
+	stack(srtref:srt())
 	print("Ref srt", stack("3VR2VR1VRRRR"))
 
 	math3d.unref(srtref)

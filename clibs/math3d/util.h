@@ -20,9 +20,6 @@ get_quat_value(lua_State* L, struct lastack* LS, int index);
 glm::mat4x4
 get_mat_value(lua_State* L, struct lastack* LS, int index);
 
-void
-assign_ref(lua_State* L, struct refobject* ref, int64_t rid);
-
 float
 get_table_item(lua_State* L, int tblidx, int idx);
 

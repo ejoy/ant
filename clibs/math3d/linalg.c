@@ -392,7 +392,7 @@ lastack_pushsrt(struct lastack *LS, const float *s, const float *r, const float 
 		float sx = s[0];
 		float sy = s[1];
 		float sz = s[2];
-		scale[0] = sz;
+		scale[0] = sx;
 		scale[1] = sy;
 		scale[2] = sz;
 		if (sx == sy && sy == sz) {
