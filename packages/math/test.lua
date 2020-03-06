@@ -8,7 +8,7 @@ local ms = math3d.new()
 
 do
     local bounding = mathbaselib.new_bounding(ms)
-    local p1, p2 = ms({0, 1, 0}, {2, 3, 4}, "PP")
+    local p1, p2 = ms({0, 1, 0, 0}, {2, 3, 4, 0}, "PP")
     local bounding2 = mathbaselib.new_bounding(ms, p2, p1)
     print("bounding2: ", bounding2)
 
@@ -40,8 +40,8 @@ do
 
     local b3 = mathbaselib.new_bounding(ms, {3000, 0, 0}, {1, 1, 1})
 
-    local boundings = {b1, b2, b3}
-    local vis = frustum:intersect_list(boundings)
+    local boundings = {{tb=b1}, {tb=b2}, {tb=b3}}
+    local vis = frustum:intersect_list(boundings, 3)
 
     for _, v in ipairs(vis)do
         print(v)
@@ -65,6 +65,52 @@ do
     for k, p in pairs(planes) do
         print(k, "result : ", mathbaselib.plane_interset(ms, p, b1))
     end
+end
+
+do
+    local radian = math.rad(75)
+    local q = ms({type="q", radian={radian}, axis={1, 0, 0, 0}}, "P")
+
+    local viewdir = ms:vector(0, 0, 1, 0)
+    local viewdir1 = ms(viewdir, q, "*nP")
+
+    local function rotate_point(distance, viewdir, radian)
+        local function where(distance, dir)
+            return ms(dir, {distance}, "*P")
+        end
+
+        local originpt = where(distance, viewdir)
+
+        local rightdir, updir = ms:base_axes(viewdir)
+        local q = ms({type="q", radian={radian}, axis=updir}, "P")
+        local newdir = ms(q, viewdir, "*nP")
+
+        local transformpt = where(distance, newdir)
+
+        return originpt, transformpt
+    end
+    local distance = 10
+    local p1, p2 = rotate_point(distance, viewdir, math.rad(10))
+    local p3, p4 = rotate_point(distance, viewdir1, math.rad(10))
+
+    print(ms(p1, "V"))
+    print(ms(p2, "V"))
+    print(ms(p3, "V"))
+    print(ms(p4, "V"))
+end
+
+do
+    local viewdir = ms:vector(0, 0, 1, 0)
+
+    local q = ms(viewdir, "DP")
+    print("origin q:", ms(q, "V"))
+
+    local delte_q = ms:quaterion(ms:vector(0, 1, 0, 0), math.rad(10))
+    local delte_q1 = ms:quaterion(ms:vector(0, 1, 0, 0), math.rad(10))
+    local delte_q2 = ms:quaterion(ms:vector(0, 1, 0, 0), math.rad(10))
+
+    local newviewdir = ms(viewdir, delte_q, delte_q1, delte_q2, "***P")
+    print()
 end
 
 do
