@@ -69,9 +69,9 @@ function gui_main.init(nwh, context, width, height)
         if platform.OS == "Windows" then
             font.Create { { Font "Arial" ,16, "Default"},{ Font "黑体" ,16, "ChineseFull"} }
         elseif platform.OS == "macOS" then
-            font.Create { { Font "华文细黑" , 16, "\x20\x00\xFF\xFF\x00"} }
+            font.Create { { Font "华文细黑" , 16, "ChineseFull"} }
         else -- iOS
-            font.Create { { Font "Heiti SC" ,    16, "\x20\x00\xFF\xFF\x00"} }
+            font.Create { { Font "Heiti SC" ,    16, "ChineseFull"} }
         end
         main.init(nwh, context, width, height)
     end

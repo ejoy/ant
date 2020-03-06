@@ -71,6 +71,16 @@ local function replaceImguiCallback(t)
 	t.char = imgui.input_char
 end
 
+local function glyphRanges(t)
+	assert(#t % 2 == 0)
+	local s = {}
+	for i = 1, #t do
+		s[#s+1] = ("<I4"):pack(t[i])
+	end
+	s[#s+1] = "\x00\x00\x00"
+	return table.concat(s)
+end
+
 function m:init()
 	replaceImguiCallback(runtime.callback)
 
@@ -89,11 +99,14 @@ function m:init()
 	imgui.keymap(window.keymap)
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
-		font.Create { { Font "黑体" ,     18, "\x20\x00\xFF\xFF\x00"} }
+		font.Create {
+			{ Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
+			{ Font "Segoe UI Emoji" , 18, glyphRanges { 0x1F300, 0x1F9EF }},
+		}
 	elseif platform.OS == "macOS" then
-		font.Create { { Font "华文细黑" , 18, "\x20\x00\xFF\xFF\x00"} }
+		font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	else -- iOS
-		font.Create { { Font "Heiti SC" , 18, "\x20\x00\xFF\xFF\x00"} }
+		font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	end
 end
 
