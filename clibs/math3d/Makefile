@@ -12,21 +12,24 @@ math3d.dll : $(ODIR)/math3d.dll
 	cp $< $@
 
 $(ODIR)/linalg.o : linalg.c | $(ODIR)
-	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-$(ODIR)/math3d.o : math3d.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -Wno-char-subscripts -o $@ $^ $(LUAINC) $(GLM_INC)
+$(ODIR)/math3d.o : math3d.c | $(ODIR)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-$(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
+$(ODIR)/mathfunc.o : mathfunc.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBS_INC)
-
-$(ODIR)/util.o : util.c | $(ODIR)
-	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(CLIBS_INC)
 
 $(ODIR)/mathadapter.o : mathadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-OBJS = $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathbaselib.o $(ODIR)/util.o $(ODIR)/mathadapter.o
+$(ODIR)/testadapter.o : testadapter.c | $(ODIR)
+	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
+
+$(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBS_INC)
+
+OBJS = $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/mathfunc.o $(ODIR)/mathadapter.o $(ODIR)/testadapter.o $(ODIR)/mathbaselib.o
 
 $(ODIR)/math3d.dll : $(OBJS)
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB)
@@ -39,3 +42,6 @@ $(ODIR) :
 
 clean :
 	rm -rf $(OROOT) *.dll *.a
+
+test:
+	../lua.exe test2.lua

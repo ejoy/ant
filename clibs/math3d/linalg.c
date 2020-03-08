@@ -20,10 +20,6 @@ static float c_ident_mat[16] = {
 	0,0,0,1,
 };
 
-static float c_ident_num[4] = {
-	0, 0, 0, 0
-};
-
 static float c_ident_quat[4] = {
 	0, 0, 0, 1,
 };
@@ -36,7 +32,6 @@ struct constant {
 static struct constant c_constant_table[LINEAR_TYPE_COUNT] = {
 	{ c_ident_mat, MATRIX },
 	{ c_ident_vec, VECTOR4 },	
-	{ c_ident_num, VECTOR4 },
 	{ c_ident_quat, VECTOR4 },
 };
 
@@ -335,12 +330,25 @@ new_page(struct lastack *LS, void *page, size_t page_size) {
 	return page;
 }
 
-inline static int
-get_type_size(int type) {
-	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 1, 4 };
+int
+lastack_typesize(int type) {
+	const int sizes[LINEAR_TYPE_COUNT] = { 16, 4, 4 };
 //	assert(LINEAR_TYPE_MAT <= type && type < LINEAR_TYPE_COUNT);
 	return sizes[type];
 }
+
+const char *
+lastack_typename(int t) {
+	static const char * type_names[] = {
+		"mat",
+		"v4",
+		"quat",
+	};
+	if (t < 0 || t >= sizeof(type_names)/sizeof(type_names[0]))
+		return "unknown";
+	return type_names[t];
+}
+
 
 static float *
 check_matrix_pool(struct lastack *LS) {
@@ -444,7 +452,7 @@ lastack_pushobject(struct lastack *LS, const float *v, int type) {
 		return;
 	}
 	assert(type >= LINEAR_TYPE_VEC4 && type <= LINEAR_TYPE_QUAT);
-	const int size = get_type_size(type);
+	const int size = lastack_typesize(type);
 	if (LS->temp_vector_top >= LS->temp_vector_cap) {
 		size_t sz = LS->temp_vector_cap * sizeof(float) * VECTOR4;
 		void * p = new_page(LS, LS->temp_vec, sz);
@@ -472,11 +480,6 @@ lastack_pushquat(struct lastack *LS, const float *v) {
 	lastack_pushobject(LS, v, LINEAR_TYPE_QUAT);
 }
 
-void
-lastack_pushnumber(struct lastack *LS, float n) {
-	lastack_pushobject(LS, &n, LINEAR_TYPE_NUM);
-}
-
 const float *
 lastack_value(struct lastack *LS, int64_t ref, int *type) {
 	union stackid sid;
@@ -495,7 +498,7 @@ lastack_value(struct lastack *LS, int64_t ref, int *type) {
 			struct constant * c = &c_constant_table[id];
 			return c->ptr;
 		}
-		if (get_type_size(sid.s.type) == MATRIX) {
+		if (lastack_typesize(sid.s.type) == MATRIX) {
 			address = blob_address( LS->per_mat , id, ver);
 		} else {
 			address = blob_address( LS->per_vec , id, ver);
@@ -506,7 +509,7 @@ lastack_value(struct lastack *LS, int64_t ref, int *type) {
 			// version expired
 			return NULL;
 		}
-		if (get_type_size(sid.s.type) == MATRIX) {
+		if (lastack_typesize(sid.s.type) == MATRIX) {
 			if (id >= LS->temp_matrix_top) {
 				return NULL;
 			}
@@ -532,23 +535,17 @@ lastack_pushref(struct lastack *LS, int64_t ref) {
 	return 0;
 }
 
-int64_t
+void
 lastack_unmark(struct lastack *LS, int64_t markid) {
 	union stackid id;
 	id.i = markid;
 	if (id.s.persistent && id.s.version != 0) {
-		if (get_type_size(id.s.type) != MATRIX) {
+		if (lastack_typesize(id.s.type) != MATRIX) {
 			blob_dealloc(LS->per_vec, id.s.id, id.s.version);
 		} else {
 			blob_dealloc(LS->per_mat, id.s.id, id.s.version);
 		}
 	}
-	if (id.s.type != LINEAR_TYPE_NONE && id.s.type < LINEAR_TYPE_COUNT) {
-		return lastack_constant(id.s.type);
-	}
-	
-	assert(0 && "not support type");
-	return lastack_constant(LINEAR_TYPE_VEC4);
 }
 
 int
@@ -560,6 +557,8 @@ lastack_isconstant(int64_t markid) {
 
 int64_t
 lastack_mark(struct lastack *LS, int64_t tempid) {
+	if (lastack_isconstant(tempid))
+		return tempid;
 	int t;
 	const float *address = lastack_value(LS, tempid, &t);
 	if (address == NULL) {
@@ -570,7 +569,7 @@ lastack_mark(struct lastack *LS, int64_t tempid) {
 	union stackid sid;
 	sid.s.version = LS->version;
 	sid.s.type = t;
-	if (get_type_size(t) != MATRIX) {
+	if (lastack_typesize(t) != MATRIX) {
 		id = blob_alloc(LS->per_vec, LS->version);
 		void * dest = blob_address(LS->per_vec, id, LS->version);
 		memcpy(dest, address, sizeof(float) * VECTOR4);
@@ -686,10 +685,6 @@ print_object(const float *address, int id, int type) {
 		printf("(Q%d: ",id);
 		print_float(address, 4);
 		break;
-	case LINEAR_TYPE_NUM:
-		printf("(N%d: ",id);
-		print_float(address, 1);
-		break;
 	default:
 		printf("(Invalid");
 		break;
@@ -766,9 +761,6 @@ lastack_idstring(int64_t id, char tmp[64]) {
 		break;	
 	case LINEAR_TYPE_QUAT:
 		flags[0] = 'Q';
-		break;
-	case LINEAR_TYPE_NUM:
-		flags[0] = 'N';
 		break;
 	default:
 		flags[0] = '?';

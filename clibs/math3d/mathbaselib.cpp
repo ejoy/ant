@@ -23,8 +23,6 @@ extern "C" {
 #include <string>
 #include <sstream>
 
-extern bool default_homogeneous_depth();
-
 #ifndef _STAT_MEMORY_
 #	ifdef _DEBUG
 #	define _STAT_MEMORY_
@@ -72,11 +70,21 @@ record_memory_used(int32_t size_bytes, memory_stat::MEMORY_RECORD_TYPE mrt){
 }
 #endif //_STAT_MEMORY_
 
-static inline struct lastack*
-fetch_LS(lua_State* L, int index) {
-	lua_getiuservalue(L, index, 1);
-	struct boxstack* BS = (struct boxstack*)luaL_checkudata(L, -1, LINALG);
-	return BS->LS;
+static inline struct lastack *
+GETLS(lua_State *L) {
+	return (struct lastack *)lua_touserdata(L, lua_upvalueindex(1));
+}
+
+static inline const glm::vec4 &
+get_vec_value(lua_State *L, struct lastack *LS, int index) {
+	const float * v = math3d_from_lua(L, LS, index, LINEAR_TYPE_VEC4);
+	return *(const glm::vec4 *)v;
+}
+
+static inline const glm::mat4x4 &
+get_mat_value(lua_State *L, struct lastack *LS, int index) {
+	const float * v = math3d_from_lua(L, LS, index, LINEAR_TYPE_MAT);
+	return *(const glm::mat4x4 *)v;
 }
 
 struct Frustum {
@@ -134,7 +142,7 @@ struct Frustum {
 		topplane[3] = c3[3] - c3[1];
 
 		auto& nearplane = planes[PlaneName::near];
-		if (default_homogeneous_depth()) {
+		if (math3d_homogeneous_depth()) {
 			nearplane[0] = c0[3] + c0[2];
 			nearplane[1] = c1[3] + c1[2];
 			nearplane[2] = c2[3] + c2[2];
@@ -165,7 +173,7 @@ struct Frustum {
 		frustum_planes_intersection_points(Points& points) {
 		auto invmat = glm::inverse(this->mat);
 
-		const float ndc_n = default_homogeneous_depth() ? -1.f : 0.f;
+		const float ndc_n = math3d_homogeneous_depth() ? -1.f : 0.f;
 
 		points = {
 			glm::vec4(-1.f,-1.f,ndc_n, 1.f),
@@ -221,36 +229,6 @@ get_aabb_points(const AABB& aabb, Frustum::Points& points) {
 	points[CN::rbf] = glm::vec4(aabb.max.x, aabb.min.y, aabb.max.z, 1.f);
 }
 
-
-//static float
-//which_plane_side(const glm::vec4& plane, const glm::vec4& p) {
-//	const glm::vec3* n = tov3(plane);
-//	return glm::dot(*n, *tov3(p)) + plane.w;
-//}
-//
-//static int
-//plane_intersect1(const glm::vec4& plane, const AABB& aabb) {
-//	Frustum::Points points;
-//	get_aabb_points(aabb, points);
-//
-//	int result = 0;
-//	for (const auto &pt : points){
-//		const float r = which_plane_side(plane, glm::vec4(pt.second, 1.f));
-//		if (r < 0){
-//			--result;
-//		} else if (r > 0){
-//			++result;
-//		}
-//	}
-//	if (result == 8)
-//		return 1;
-//
-//	if (result == -8)
-//		return -1;
-//
-//	return 0;
-//}
-
 static int
 plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
 	const glm::vec3& min = aabb.min;
@@ -291,12 +269,6 @@ plane_intersect(const glm::vec4 &plane, const AABB &aabb) {
 	}
 
 	// straddle of the plane
-	return 0;
-}
-
-static int
-plane_intersect(const glm::vec4 &plane, const BoundingSphere &sphere) {
-	
 	return 0;
 }
 
@@ -390,7 +362,7 @@ push_vec(lua_State *L, int num, const T& v){
 static int
 lfrustum_center(lua_State *L){
 	auto f = fetch_frustum(L, 1);
-	auto LS = fetch_LS(L, 1);
+	auto LS = GETLS(L);
 
 	Frustum::Points points;
 	fetch_frustum_points(L, LS, 2, f, points);
@@ -409,7 +381,7 @@ lfrustum_center(lua_State *L){
 static int
 lfrustum_extents(lua_State *L){
 	auto f = fetch_frustum(L, 1);
-	auto LS = fetch_LS(L, 1);
+	auto LS = GETLS(L);
 
 	Frustum::Points points;
 	fetch_frustum_points(L, LS, 2, f, points);
@@ -438,7 +410,7 @@ lfrustum_extents(lua_State *L){
 static int
 lfrustum_max_radius(lua_State *L){
 //	auto f = fetch_frustum(L, 1);
-	auto LS = fetch_LS(L, 1);
+	auto LS = GETLS(L);
 
 	auto center = get_vec_value(L, LS, 2);
 	const int numpoints = (int)lua_rawlen(L, 3);
@@ -514,7 +486,7 @@ lfrustum_intersect_list(lua_State* L) {
 static int
 lfrustum_intersect_list_aabb(lua_State *L) {
 	auto* f = fetch_frustum(L, 1);
-	struct lastack* LS = fetch_LS(L, 1);
+	struct lastack* LS = GETLS(L);
 
 	luaL_checktype(L, 2, LUA_TTABLE);
 	const int len = luaL_checkinteger(L, 3);
@@ -529,13 +501,8 @@ lfrustum_intersect_list_aabb(lua_State *L) {
 		if (lua_getfield(L, -1, "AABB") == LUA_TNIL) {
 			return luaL_error(L, "Can't fetch AABB from index %d", idx);
 		}
-		int64_t AABB_id = math3d_stack_id(L, LS, -1);
+		const float * mat = math3d_from_lua(L, LS, -1, LINEAR_TYPE_MAT);
 		lua_pop(L, 1);	// pop AABB
-		int type = 0;
-		const float * mat = lastack_value(LS, AABB_id, &type);
-		if (type != LINEAR_TYPE_MAT) {
-			return luaL_error(L, "Invalid AABB type at index %d", idx);
-		}
 		AABB tmp;
 		tmp.min.x = mat[0];
 		tmp.min.y = mat[1];
@@ -589,8 +556,8 @@ planenames[Frustum::PlaneName::far], f->planes[5][0], f->planes[5][1], f->planes
 }
 
 static inline int
-push_frustum(lua_State* L, const Frustum& f, int BS_index) {
-	auto* pf = (Frustum*)lua_newuserdatauv(L, sizeof(Frustum), 1);
+push_frustum(lua_State* L, const Frustum& f) {
+	auto* pf = (Frustum*)lua_newuserdatauv(L, sizeof(Frustum), 0);
 	*pf = f;
 
 	if (luaL_getmetatable(L, "FRUSTUM_MT")) {
@@ -598,10 +565,6 @@ push_frustum(lua_State* L, const Frustum& f, int BS_index) {
 	} else {
 		luaL_error(L, "no meta table BOUNDING_MT");
 	}
-
-	luaL_checkudata(L, BS_index, LINALG);
-	lua_pushvalue(L, BS_index);
-	lua_setiuservalue(L, -2, 1);
 
 #ifdef _STAT_MEMORY_
 	record_memory_used(sizeof(Frustum), memory_stat::MRT_Frusutm);
@@ -616,7 +579,7 @@ push_frustum(lua_State* L, const Frustum& f, int BS_index) {
 static int
 lfrustum_calc_near_far(lua_State* L) {
 	auto f = fetch_frustum(L, 1);
-	auto LS = fetch_LS(L, 1);
+	auto LS = GETLS(L);
 
 	glm::vec3 light_camera_orthographic_min = get_vec_value(L, LS, 2),
 		light_camera_orthographic_max = get_vec_value(L, LS, 3);
@@ -858,16 +821,13 @@ lfrustum_delete(lua_State *L){
 
 static int
 lfrustum_new(lua_State* L) {
-	auto LS = math3d_getLS(L, 1);
-
-	int type;
-	const glm::mat4x4* trans = (const glm::mat4x4*)lastack_value(LS, math3d_stack_id(L, LS, 2), &type);
-	return push_frustum(L, Frustum(*trans), 1);
+	auto trans = get_mat_value(L, GETLS(L), -1);
+	return push_frustum(L, Frustum(trans));
 }
 
 static int
-push_bounding(lua_State *L, const Bounding &bounding, int BS_index) {
-	auto b = (Bounding*)lua_newuserdatauv(L, sizeof(Bounding), 1);
+push_bounding(lua_State *L, const Bounding &bounding) {
+	auto b = (Bounding*)lua_newuserdatauv(L, sizeof(Bounding), 0);
 	memcpy(b, &bounding, sizeof(Bounding));
 
 	if (luaL_getmetatable(L, "BOUNDING_MT")){
@@ -875,10 +835,6 @@ push_bounding(lua_State *L, const Bounding &bounding, int BS_index) {
 	} else {
 		luaL_error(L, "no meta table BOUNDING_MT");
 	}
-
-	luaL_checkudata(L, BS_index, LINALG);
-	lua_pushvalue(L, BS_index);
-	lua_setiuservalue(L, -2, 1);
 
 #ifdef _STAT_MEMORY_
 	record_memory_used(sizeof(Frustum), memory_stat::MRT_Bounding);
@@ -889,12 +845,10 @@ push_bounding(lua_State *L, const Bounding &bounding, int BS_index) {
 static int
 lbounding_transform(lua_State* L) {
 	Bounding* b = fetch_bounding(L, 1);
-	auto LS = fetch_LS(L, 1);
+	auto LS = GETLS(L);
 
-	int type;
-	const glm::mat4x4* trans = (const glm::mat4x4*)lastack_value(LS, math3d_stack_id(L, LS, 2), &type);
-
-	b->Transform(*trans);
+	auto trans = get_mat_value(L, LS, 2);
+	b->Transform(trans);
 	return 0;
 }
 
@@ -918,7 +872,7 @@ lbounding_merge(lua_State *L) {
 static int
 lbounding_merge_list(lua_State *L){
 	Bounding* scenebounding = fetch_bounding(L, 1);
-	auto LS = fetch_LS(L, 1);
+	auto LS = GETLS(L);
 
 	const uint32_t len = (uint32_t)lua_rawlen(L, 2);
 
@@ -938,12 +892,11 @@ lbounding_merge_list(lua_State *L){
 
 		if (has_trans){
 			lua_geti(L, 3, ii + 1);
-			int type;
-			auto trans = (glm::mat4x4*)lastack_value(LS, math3d_stack_id(L, LS, -1), &type);			
+			auto trans = get_mat_value(L, LS, -1);
 			lua_pop(L, 1);
 
 			AABB aabb = b->aabb;
-			aabb.Transform(*trans);			
+			aabb.Transform(trans);
 			sceneaabb.Merge(aabb);
 		} else {
 			sceneaabb.Merge(b->aabb);
@@ -959,7 +912,7 @@ lbounding_append_points(lua_State* L) {
 	const int num_args = lua_gettop(L);
 
 	Bounding* b = fetch_bounding(L, 1);
-	auto LS = fetch_LS(L, 1);
+	auto LS = GETLS(L);
 
 	for (int ii = 1; ii < num_args; ++ii) {
 		auto pt = get_vec_value(L, LS, ii+1);
@@ -980,7 +933,7 @@ lbounding_delete(lua_State *L){
 static int
 lbounding_new(lua_State* L) {
 	const int numarg = lua_gettop(L);
-	struct lastack* LS = math3d_getLS(L, 1);
+	struct lastack* LS = GETLS(L);
 
 	Bounding bounding;
 	for (int ii = 1; ii < numarg; ++ii) {
@@ -991,7 +944,7 @@ lbounding_new(lua_State* L) {
 	bounding.sphere.Init(bounding.aabb);
 	bounding.obb.Init(bounding.aabb);
 
-	return push_bounding(L, bounding, 1);
+	return push_bounding(L, bounding);
 }
 
 static int
@@ -1035,7 +988,7 @@ static int
 lbounding_reset(lua_State *L){
 	const int numarg = lua_gettop(L);
 	auto bounding = fetch_bounding(L, 1);
-	auto LS = fetch_LS(L, 1);
+	auto LS = GETLS(L);
 
 	bounding->Reset();
 	if (numarg > 1){
@@ -1104,7 +1057,7 @@ lbounding_aabb_points(lua_State *L){
 }
 
 static void
-register_bounding_mt(lua_State* L) {
+register_bounding_mt(lua_State* L, struct lastack *LS) {
 	if (luaL_newmetatable(L, "BOUNDING_MT")) {
 		luaL_Reg l[] = {
 			{ "transform",	lbounding_transform},
@@ -1119,18 +1072,19 @@ register_bounding_mt(lua_State* L) {
 			#ifdef _STAT_MEMORY_
 			{ "__gc",		lbounding_delete},
 			#endif	// _STAT_MEMORY_
+			{ "__index", NULL },	// placeholder
 
 			{nullptr, nullptr}
 		};
-
-		luaL_setfuncs(L, l, 0);
+		lua_pushlightuserdata(L, (void *)LS);
+		luaL_setfuncs(L, l, 1);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 	}
 }
 
 static void
-register_frustum_mt(lua_State *L){
+register_frustum_mt(lua_State *L, struct lastack *LS){
 	if (luaL_newmetatable(L, "FRUSTUM_MT")) {
 		luaL_Reg l[] = {
 			{ "intersect",		lfrustum_intersect},
@@ -1145,11 +1099,14 @@ register_frustum_mt(lua_State *L){
 			#ifdef _STAT_MEMORY_
 			{"__gc", 			lfrustum_delete},
 			#endif //_STAT_MEMORY_
+			{ "__index", NULL },	// placeholder
 
 			{nullptr, nullptr}
 		};
 
-		luaL_setfuncs(L, l, 0);
+		lua_pushlightuserdata(L, (void *)LS);
+
+		luaL_setfuncs(L, l, 1);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 	}
@@ -1157,8 +1114,8 @@ register_frustum_mt(lua_State *L){
 
 static int
 lplane_intersect(lua_State *L){
-	auto LS = math3d_getLS(L, 1);
-	const glm::vec4 plane = get_vec_value(L, LS, 2);	
+	auto LS = GETLS(L);
+	auto plane = get_vec_value(L, LS, 2);
 	auto b = fetch_bounding(L, 3);
 	lua_pushinteger(L, plane_intersect(plane, b->aabb));
 	return 1;
@@ -1195,11 +1152,25 @@ lmemory_stat(lua_State *L){
 }
 #endif // _STAT_MEMORY_
 
+static struct lastack *
+global_LS(lua_State *L) {
+	if (lua_getfield(L, LUA_REGISTRYINDEX, MATH3D_STACK) != LUA_TUSERDATA) {
+		luaL_error(L, "request 'math3d' first");
+	}
+	struct boxstack * bs = (struct boxstack *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+
+	return bs->LS;
+}
+
 extern "C"{
 	LUAMOD_API int
 	luaopen_math3d_baselib(lua_State *L){
-		register_bounding_mt(L);
-		register_frustum_mt(L);
+		luaL_checkversion(L);
+		struct lastack *LS = global_LS(L);
+
+		register_bounding_mt(L, LS);
+		register_frustum_mt(L, LS);
 
 		luaL_Reg l[] = {			
 			{ "new_bounding",	lbounding_new},
@@ -1211,7 +1182,9 @@ extern "C"{
 			{ NULL, NULL },
 		};
 
-		luaL_newlib(L, l);
+		luaL_newlibtable(L, l);
+		lua_pushlightuserdata(L, (void *)LS);
+		luaL_setfuncs(L,l,1);
 
 		return 1;
 	}
