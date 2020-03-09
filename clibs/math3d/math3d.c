@@ -1006,11 +1006,7 @@ lview_proj(lua_State *L) {
 			luaL_error(L, "view/proj matrix need provided one of them");
 		}
 
-		if (viewmat && projmat == NULL) {
-			lua_pushvalue(L, -2);
-		} else if (viewmat == NULL && projmat) {
-			lua_pushvalue(L, -1);
-		} else {
+		if (viewmat && projmat) {
 			float mat[16];
 			math3d_mul_object(LS, projmat, viewmat, LINEAR_TYPE_MAT, LINEAR_TYPE_MAT, mat);
 			lastack_pushmatrix(LS, mat);

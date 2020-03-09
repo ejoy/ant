@@ -2,8 +2,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 
 extern "C" {
-	#include <lua.h>
-	#include <lauxlib.h>
 	#include "linalg.h"
 	#include "math3d.h"
 	#include "math.h"
