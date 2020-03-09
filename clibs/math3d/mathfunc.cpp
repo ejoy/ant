@@ -9,6 +9,7 @@ extern "C" {
 	#include "math.h"
 }
 
+#include "util.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -17,6 +18,15 @@ extern "C" {
 #include <glm/ext/scalar_relational.hpp>
 #include <glm/ext/vector_relational.hpp>
 #include <glm/gtx/euler_angles.hpp>
+
+static const glm::vec4 XAXIS(1, 0, 0, 0);
+static const glm::vec4 YAXIS(0, 1, 0, 0);
+static const glm::vec4 ZAXIS(0, 0, 1, 0);
+static const glm::vec4 WAXIS(0, 0, 0, 1);
+
+static const glm::vec4 NXAXIS = -XAXIS;
+static const glm::vec4 NYAXIS = -YAXIS;
+static const glm::vec4 NZAXIS = -ZAXIS;
 
 void
 math3d_make_srt(struct lastack *LS, const float *scale, const float *rot, const float *translate) {
@@ -95,12 +105,6 @@ math3d_mul_object(struct lastack *LS, const float *val0, const float *val1, int 
 		quat = QUAT(val0) * QUAT(val1);
 		return LINEAR_TYPE_QUAT;
 	}
-	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_VEC4):
-		vec = glm::rotate(QUAT(val0), VEC(val1));
-		return LINEAR_TYPE_VEC4;
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_QUAT):
-		vec = glm::rotate(QUAT(val1), VEC(val0));
-		return LINEAR_TYPE_VEC4;
 	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_VEC4):
 		vec = VEC(val0) * VEC(val1);
 		return LINEAR_TYPE_VEC4;
@@ -298,3 +302,31 @@ math3d_orthoLH(struct lastack *LS, float left, float right, float bottom, float 
 	lastack_pushmatrix(LS, &mat[0][0]);
 }
 
+void
+math3d_base_axes(struct lastack *LS, const float forward[4]) {
+	glm::vec4 right, up;
+
+	if (is_equal(VEC(forward), ZAXIS)) {
+		up = YAXIS;
+		right = XAXIS;
+	} else {
+		if (is_equal(VEC(forward), YAXIS)) {
+			up = NZAXIS;
+			right = XAXIS;
+		} else if (is_equal(VEC(forward), NYAXIS)) {
+			up = ZAXIS;
+			right = XAXIS;
+		} else {
+			right = glm::vec4(glm::normalize(glm::cross(VEC3(&YAXIS), VEC3(forward))), 0);
+			up = glm::vec4(glm::normalize(glm::cross(VEC3(forward), VEC3(&right.x))), 0);
+		}
+	}
+
+	lastack_pushvec4(LS, &up.x);
+	lastack_pushvec4(LS, &right.x);
+}
+
+void
+math3d_rotate_vector(struct lastack *LS, const float v[4]){
+	
+}

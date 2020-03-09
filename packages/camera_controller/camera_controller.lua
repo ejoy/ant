@@ -1,17 +1,16 @@
 local ecs = ...
 local world = ecs.world
 
-local ms = import_package "ant.math".stack
+local math3d = require "math3d"
 local rhwi = import_package "ant.render".hwi
 
 local camera_controller_system = ecs.system "camera_controller2"
 
 local function camera_move(forward_axis, position, dx, dy, dz)
-	local right_axis, up_axis = ms:base_axes(forward_axis)
-	ms(position, position, 
-			right_axis, {dx}, "*+", 
-			up_axis, {dy}, "*+", 
-			forward_axis, {dz}, "*+=")
+	local right_axis, up_axis = math3d.base_axes(forward_axis)
+	position.v = math3d.add(position, math3d.mul(forward_axis, dz))
+	position.v = math3d.add(position, math3d.mul(up_axis, dy))
+	position.v = math3d.add(position, math3d.mul(right_axis, dz))
 end
 
 local function get_camera()
@@ -73,8 +72,11 @@ function camera_controller_system:camera_control()
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-					local right, up = ms:base_axes(camera.viewdir)
-					ms(camera.viewdir, {type="q", axis=up, radian={ux}}, {type="q", axis=right, radian={uy}}, "3**n=")
+					local right, up = math3d.base_axes(camera.viewdir)
+					local qy = math3d.quaternion{axis=up, radian=ux}
+					local qx = math3d.quaternion{axis=right, radian=uy}
+					local q = math3d.mul(qy, qx)
+					camera.viewdir.v = math3d.rotate(q, camera.viewdir)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end

@@ -1,5 +1,5 @@
 local constant = {}; constant.__index = constant
-local ms = require "stack"
+local math3d = require "math3d"
 -- matrix
 constant.mat_identity = {
     1, 0, 0, 0,
@@ -7,6 +7,9 @@ constant.mat_identity = {
     0, 0, 1, 0,
     0, 0, 0, 1,
 }
+
+-- quaternion
+constant.quat_identity = {0, 0, 0, 1}
 
 -- color
 constant.RED    = {1, 0, 0, 1}
@@ -33,20 +36,20 @@ constant.T_NZAXIS = {0, 0, -1, 0}
 
 constant.W_AXIS = {0, 0, 0, 1}
 
-constant.ZERO    = ms:ref "vector"(constant.T_ZERO)
-constant.ZERO_PT = ms:ref "vector"(constant.T_ZERO_PT)
+constant.ZERO    = math3d.vector(constant.T_ZERO)
+constant.ZERO_PT = math3d.vector(constant.T_ZERO_PT)
 
-constant.XAXIS   = ms:ref "vector"(constant.T_XAXIS)
-constant.NXAXIS  = ms:ref "vector"(constant.T_NXAXIS)
+constant.XAXIS   = math3d.vector(constant.T_XAXIS)
+constant.NXAXIS  = math3d.vector(constant.T_NXAXIS)
 
-constant.YAXIS   = ms:ref "vector"(constant.T_YAXIS)
-constant.NYAXIS  = ms:ref "vector"(constant.T_NYAXIS)
+constant.YAXIS   = math3d.vector(constant.T_YAXIS)
+constant.NYAXIS  = math3d.vector(constant.T_NYAXIS)
 
-constant.ZAXIS   = ms:ref "vector"(constant.T_ZAXIS)
-constant.NZAXIS  = ms:ref "vector"(constant.T_NZAXIS)
+constant.ZAXIS   = math3d.vector(constant.T_ZAXIS)
+constant.NZAXIS  = math3d.vector(constant.T_NZAXIS)
 
-constant.IDENTITY_MAT = ms:ref "matrix"(constant.mat_identity)
+constant.IDENTITY_MAT = math3d.matrix(constant.mat_identity)
 
-constant.IDENTITY_QUAT = ms:ref "quaternion"({type='q', 0, 0, 0, 1})
+constant.IDENTITY_QUAT= math3d.quaternion(constant.quat_identity)
 
 return constant
