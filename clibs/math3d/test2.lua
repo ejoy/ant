@@ -55,6 +55,40 @@ print("inverse", ref2, "=", math3d.tostring(math3d.inverse(ref2)))
 print("inverse", ref3, "=", math3d.tostring(math3d.inverse(ref3)))
 print("reciprocal", ref2, "=", math3d.tostring(math3d.reciprocal(ref2)))
 
+print "===VIEW&PROJECTION MATRIX"
+do
+	local eyepos = math3d.vector{0, 5, -10}
+	local at = math3d.vector {0, 0, 0}
+	local direction = math3d.normalize(math3d.vector {1, 1, 1})
+	local updir = math3d.vector {0, 1, 0}
+
+	local mat1 = math3d.lookat(eyepos, at, updir)
+	local mat2 = math3d.lookto(eyepos, direction, updir)
+
+	print("lookat matrix:", math3d.tostring(mat1), "eyepos:", math3d.tostring(eyepos), "at:", math3d.tostring(at))
+
+	print("lookto matrix:", math3d.tostring(mat2), "eyepos:", math3d.tostring(eyepos), "direction:", math3d.tostring(direction))
+
+	local frustum = {
+		l=-1, r=1,
+		t=-1, b=1,
+		n=0.1, f=100
+	}
+
+	local perspective_mat = math3d.projmat(frustum)
+
+	local frustum_ortho = {
+		l=-1, r=1,
+		t=-1, b=1,
+		n=0.1, f=100,
+		ortho = true,
+	}
+	local ortho_mat = math3d.projmat(frustum_ortho)
+
+	print("perspective matrix:", math3d.tostring(perspective_mat))
+	print("ortho matrix:", math3d.tostring(ortho_mat))
+end
+
 print "===ROTATE VECTOR==="
 do
 	local v = math3d.vector{1, 2, 1}
