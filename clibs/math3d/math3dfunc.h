@@ -7,7 +7,6 @@
 
 // math functions
 
-int math3d_homogeneous_depth();
 void math3d_make_srt(struct lastack *LS, const float *s, const float *r, const float *t);
 void math3d_make_quat_from_euler(struct lastack *LS, float x, float y, float z);
 void math3d_make_quat_from_axis(struct lastack *LS, const float *axis, float radian);
@@ -35,5 +34,5 @@ void math3d_rotmat_to_viewdir(struct lastack *LS, const float m[16]);
 void math3d_viewdir_to_quat(struct lastack *LS, const float v[3]);
 void math3d_frustumLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
 void math3d_orthoLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
-
+void math3d_base_axes(struct lastack *LS, const float forward[4]);
 #endif
