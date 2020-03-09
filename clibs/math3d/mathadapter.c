@@ -25,7 +25,6 @@ get_id_type(lua_State *L, struct lastack *LS, int index) {
 	switch(ltype) {
 	case LUA_TLIGHTUSERDATA:
 		id = (int64_t)lua_touserdata(L, index);
-//		v = lastack_value(LS, id, type);
 		break;
 	case LUA_TUSERDATA: {
 		struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
