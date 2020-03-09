@@ -1,12 +1,12 @@
 #define LUA_LIB
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include <cmath>
+
 extern "C" {
 	#include "linalg.h"
-	#include "math3d.h"
-	#include "math.h"
+	#include "math3dfunc.h"
 }
-
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

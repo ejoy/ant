@@ -10,9 +10,11 @@
 #endif
 #endif // !_MSC_VER
 
+#include "string.h"
+
 #include "linalg.h"	
 #include "math3d.h"
-#include "string.h"
+#include "math3dfunc.h"
 
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
