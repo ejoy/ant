@@ -98,6 +98,7 @@ static int64_t
 assign_id(lua_State *L, struct lastack *LS, int index, int mtype, int ltype) {
 	switch (ltype) {
 	case LUA_TNIL:
+	case LUA_TNONE:
 		// identity matrix
 		return lastack_constant(mtype);
 	case LUA_TUSERDATA:
@@ -147,6 +148,7 @@ object_from_index(lua_State *L, struct lastack *LS, int index, int mtype, from_t
 	const float * result = NULL;
 	switch(ltype) {
 	case LUA_TNIL:
+	case LUA_TNONE:
 		break;
 	case LUA_TUSERDATA:
 	case LUA_TLIGHTUSERDATA: {
