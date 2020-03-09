@@ -160,7 +160,7 @@ object_from_index(lua_State *L, struct lastack *LS, int index, int mtype, from_t
 		}
 		break; }
 	case LUA_TTABLE:
-		result = lastack_value(LS, from_table(L, LS, -1), NULL);
+		result = lastack_value(LS, from_table(L, LS, index), NULL);
 		break;
 	default:
 		luaL_error(L, "Invalid lua type %s", lua_typename(L, ltype));
