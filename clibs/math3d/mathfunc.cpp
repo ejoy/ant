@@ -112,6 +112,19 @@ math3d_mul_object(struct lastack *LS, const float *val0, const float *val1, int 
 	return LINEAR_TYPE_NONE;
 }
 
+void
+math3d_add_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]){
+	*(glm::vec4*)r = VEC(lhs) + VEC(rhs);	// SIMD
+
+	r[3] = (const uint32_t *)lhs[3] | (const uint32_t *)rhs[3];	// check is point or vector
+}
+
+void
+math3d_sub_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]){
+	*(glm::vec4*)r = VEC(lhs) - VEC(rhs);	// SIMD
+	r[3] = (const uint32_t *)lhs[3] | (const uint32_t *)rhs[3];	// check is point or vector
+}
+
 int
 math3d_decompose_scale(const float mat[16], float scale[4]) {
 	int ii;
