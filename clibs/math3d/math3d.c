@@ -667,11 +667,11 @@ lmuladd(lua_State *L){
 	int ltype, rtype;
 	const float *v0 = get_object(L, LS, 1, &ltype);
 	if (ltype != LINEAR_TYPE_NUM && ltype != LINEAR_TYPE_VEC4){
-		return luaL_error(L, "argument 1 must be number/vec4:%s", lastack_typename(L, ltype));
+		return luaL_error(L, "argument 1 must be number/vec4:%s", lastack_typename(ltype));
 	}
 	const float *v1 = get_object(L, LS, 2, &rtype);
 	if (rtype != LINEAR_TYPE_NUM && rtype != LINEAR_TYPE_VEC4){
-		return luaL_error(L, "argument 1 must be number/vec4:%s", lastack_typename(L, rtype));
+		return luaL_error(L, "argument 1 must be number/vec4:%s", lastack_typename(rtype));
 	}
 
 	if ((ltype == LINEAR_TYPE_NUM && rtype == LINEAR_TYPE_VEC4) ||
@@ -679,7 +679,7 @@ lmuladd(lua_State *L){
 		(ltype == LINEAR_TYPE_VEC4 && rtype == LINEAR_TYPE_VEC4)){
 		float mulresult[16];
 		const int result_type = math3d_mul_object(LS, v0, v1, ltype, rtype, mulresult);
-		assert(result_type == LINEAR_TYPE_VEC4);
+		//assert(result_type == LINEAR_TYPE_VEC4);
 
 		const float * v2 = vector_from_index(L, LS, 3);
 
