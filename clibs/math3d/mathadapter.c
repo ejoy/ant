@@ -424,7 +424,7 @@ get_n(lua_State *L, int n, struct stack_buf *prev) {
 				lua_settop(L, ret);
 			}
 		}
-		luaL_checkstack(L, sz, NULL);
+		luaL_checkstack(L, (int)sz, NULL);
 		int i = (int)sz - 1;
 		while (prev) {
 			switch(format[i]) {
@@ -448,7 +448,7 @@ get_n(lua_State *L, int n, struct stack_buf *prev) {
 			prev = prev->prev;
 			--i;
 		}
-		return ret + sz;
+		return ret + (int)sz;
 	}
 	struct stack_buf buf;
 	buf.prev = prev;
@@ -460,7 +460,7 @@ static int
 lgetter(lua_State *L) {
 	size_t n = 0;
 	lua_tolstring(L, lua_upvalueindex(3), &n);
-	luaL_checkstack(L, n + LUA_MINSTACK, NULL);
+	luaL_checkstack(L, (int)(n + LUA_MINSTACK), NULL);
 	return get_n(L, (int)n, NULL);
 }
 

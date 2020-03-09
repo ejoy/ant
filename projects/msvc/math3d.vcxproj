@@ -177,10 +177,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\math3d\linalg.c" />
-    <ClCompile Include="..\..\clibs\math3d\math3d.cpp" />
+    <ClCompile Include="..\..\clibs\math3d\math3d.c" />
     <ClCompile Include="..\..\clibs\math3d\mathadapter.c" />
     <ClCompile Include="..\..\clibs\math3d\mathbaselib.cpp" />
-    <ClCompile Include="..\..\clibs\math3d\util.c" />
+    <ClCompile Include="..\..\clibs\math3d\mathfunc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\math3d\fastmath.h" />
