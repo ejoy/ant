@@ -1106,13 +1106,20 @@ const float *
 math3d_from_lua(lua_State *L, struct lastack *LS, int index, int type) {
 	switch(type) {
 	case LINEAR_TYPE_MAT:
-		return matrix_from_index(L, LS, type);
+		return matrix_from_index(L, LS, index);
 	case LINEAR_TYPE_VEC4:
-		return vector_from_index(L, LS, type);
+		return vector_from_index(L, LS, index);
 	case LINEAR_TYPE_QUAT:
-		return quat_from_index(L, LS, type);
+		return quat_from_index(L, LS, index);
 	default:
 		luaL_error(L, "Invalid math3d object type %d", type);
 	}
 	return NULL;
+}
+
+const float *
+math3d_from_lua_id(lua_State *L, struct lastack *LS, int index, int *type) {
+	int64_t id = get_id(L, index, lua_type(L, index));
+	*type = LINEAR_TYPE_NONE;
+	return lastack_value(LS, id, type);
 }
