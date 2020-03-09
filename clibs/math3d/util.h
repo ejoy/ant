@@ -1,17 +1,11 @@
 #ifndef math3d_util_h
 #define math3d_util_h
 
-extern "C"{
-	#include "math3d.h"
-};
-
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp"
 #include "glm/ext/scalar_constants.hpp"
 #include "glm/ext/scalar_relational.hpp"
 #include "glm/ext/vector_relational.hpp"
-
-#define tov3(v4)	((const glm::vec3*)(&(v4.x)))
 
 template<typename T>
 inline bool

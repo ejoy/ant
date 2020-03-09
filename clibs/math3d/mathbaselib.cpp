@@ -917,7 +917,7 @@ lbounding_append_points(lua_State* L) {
 	for (int ii = 1; ii < num_args; ++ii) {
 		auto pt = get_vec_value(L, LS, ii+1);
 
-		b->AppendPoint(*tov3(pt));
+		b->AppendPoint(*(const glm::vec3*)&pt.x);
 	}
 
 	return 0;

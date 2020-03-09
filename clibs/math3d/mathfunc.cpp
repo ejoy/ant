@@ -326,6 +326,13 @@ math3d_base_axes(struct lastack *LS, const float forward[4]) {
 }
 
 void
-math3d_rotate_vector(struct lastack *LS, const float v[4]){
+math3d_quat_rotate_vec(struct lastack *LS, const float quat[4], const float v[4]){
+	const glm::vec4 vv = glm::rotate(QUAT(quat), VEC(v));
+	lastack_pushvec4(LS, &vv.x);
+}
 
+void
+math3d_rotmat_rotate_vec(struct lastack *LS, const float mat[16], const float v[4]){
+	const glm::vec4 vv = MAT(mat) * VEC(v);
+	lastack_pushvec4(LS, &vv.x);
 }

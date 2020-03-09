@@ -922,25 +922,25 @@ lbase_axes(lua_State *L) {
 
 static int
 lrotate_vector(lua_State *L){
-	//struct lastack *LS = GETLS(L);
-	// const int64_t rotatorid = math3d_stack_id(L, LS, 1);
-	// const int64_t vectorid = math3d_stack_id(L, LS, 2);
+	struct lastack *LS = GETLS(L);
+	const int64_t rotatorid = get_id(L, 1, lua_type(L, 1));
+	const float* v = vector_from_index(L, LS, 2);
 
-	// int type;
-	// const float *rotator = (const float *)lastack_value(LS, rotatorid, &type);
+	int type;
+	const float *rotator = (const float *)lastack_value(LS, rotatorid, &type);
 
-	// switch (type){
-	// case LINEAR_TYPE_QUAT:
-	// 	math3d_matrix_rotate_vector();
-	// 	break;
-	// case LINEAR_TYPE_MAT:
-	// 	math3d_quat_rotate_vector(LS, )
-	// 	break;
-	// default: luaL_error(L, "only support quat/mat for rotate vector:%s", lastack_typename(type));
+	switch (type){
+	case LINEAR_TYPE_QUAT:
+		math3d_quat_rotate_vec(LS, rotator, v);
+		break;
+	case LINEAR_TYPE_MAT:
+		math3d_rotmat_rotate_vec(LS, rotator, v);
+		break;
+	default: 
+		return luaL_error(L, "only support quat/mat for rotate vector:%s", lastack_typename(type));
+	}
 
-	// }
-
-	//lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
 }
 
