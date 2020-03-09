@@ -71,10 +71,10 @@ math3d_make_quat_from_axis(struct lastack *LS, const float *axis, float radian) 
 }
 
 #define BINTYPE(v1, v2) (((v1) << LINEAR_TYPE_BITS_NUM) + (v2))
-#define MAT(v) (*(const glm::mat4x4 *)v)
-#define VEC(v) (*(const glm::vec4 *)v)
-#define VEC3(v) (*(const glm::vec3 *)v)
-#define QUAT(v) (*(const glm::quat *)v)
+#define MAT(v) (*(const glm::mat4x4 *)(v))
+#define VEC(v) (*(const glm::vec4 *)(v))
+#define VEC3(v) (*(const glm::vec3 *)(v))
+#define QUAT(v) (*(const glm::quat *)(v))
 
 int
 math3d_mul_object(struct lastack *LS, const float *val0, const float *val1, int ltype, int rtype, float tmp[16]) {
@@ -316,7 +316,7 @@ math3d_base_axes(struct lastack *LS, const float forward[4]) {
 			up = ZAXIS;
 			right = XAXIS;
 		} else {
-			right = glm::vec4(glm::normalize(glm::cross(VEC3(&YAXIS), VEC3(forward))), 0);
+			right = glm::vec4(glm::normalize(glm::cross(VEC3(&YAXIS.x), VEC3(forward))), 0);
 			up = glm::vec4(glm::normalize(glm::cross(VEC3(forward), VEC3(&right.x))), 0);
 		}
 	}
