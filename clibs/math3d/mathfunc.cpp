@@ -244,7 +244,7 @@ math3d_lookat_matrix(struct lastack *LS, int direction, const float at[3], const
 
 void
 math3d_quat_to_matrix(struct lastack *LS, const float quat[4]) {
-	glm::mat m = glm::mat4x4(QUAT(quat));
+	glm::mat4x4 m = glm::mat4x4(QUAT(quat));
 	lastack_pushmatrix(LS, &m[0][0]);
 }
 

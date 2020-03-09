@@ -10,6 +10,11 @@
 #endif
 #endif // !_MSC_VER
 
+#ifndef lua_newuserdata
+// lua_newuserdata is a macro in Lua 5.4 
+#define lua_newuserdatauv(L, sz, n) lua_newuserdata(L,sz)
+#endif
+
 #include "string.h"
 
 #include "linalg.h"	
@@ -834,8 +839,8 @@ static int
 llookat(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	const float * at = vector_from_index(L, LS, 1);
-	const float * eye = vector_from_index(L, LS, 1);
-	const float * up = object_from_index(L, LS, 2, LINEAR_TYPE_VEC4, vector_from_table);
+	const float * eye = vector_from_index(L, LS, 2);
+	const float * up = object_from_index(L, LS, 3, LINEAR_TYPE_VEC4, vector_from_table);
 
 	math3d_lookat_matrix(LS, 0, at, eye, up);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
@@ -846,8 +851,8 @@ static int
 llookfrom(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	const float * at = vector_from_index(L, LS, 1);
-	const float * eye = vector_from_index(L, LS, 1);
-	const float * up = object_from_index(L, LS, 2, LINEAR_TYPE_VEC4, vector_from_table);
+	const float * eye = vector_from_index(L, LS, 2);
+	const float * up = object_from_index(L, LS, 3, LINEAR_TYPE_VEC4, vector_from_table);
 
 	math3d_lookat_matrix(LS, 1, at, eye, up);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
