@@ -227,10 +227,10 @@ math3d_inverse_quat(struct lastack *LS, const float quat[4]) {
 }
 
 void
-math3d_lookat_matrix(struct lastack *LS, int direction, const float at[3], const float eye[3], const float *up) {
+math3d_lookat_matrix(struct lastack *LS, int direction, const float eye[3], const float at[3], const float *up) {
 	glm::mat4x4 m;
 	if (up == NULL) {
-		const float default_up[3] = {0,1,0};
+		static const float default_up[3] = {0,1,0};
 		up = default_up;
 	}
 	if (direction) {

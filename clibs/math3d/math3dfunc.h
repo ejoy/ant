@@ -28,7 +28,7 @@ void math3d_normalize_quat(struct lastack *LS, const float v[4]);
 void math3d_inverse_matrix(struct lastack *LS, const float mat[16]);
 void math3d_inverse_quat(struct lastack *LS, const float quat[4]);
 void math3d_transpose_matrix(struct lastack *LS, const float mat[16]);
-void math3d_lookat_matrix(struct lastack *LS, int direction, const float at[3], const float eye[3], const float *up);
+void math3d_lookat_matrix(struct lastack *LS, int direction, const float eye[3], const float at[3], const float *up);
 void math3d_reciprocal(struct lastack *LS, const float v[4]);
 void math3d_quat_to_viewdir(struct lastack *LS, const float q[4]);
 void math3d_rotmat_to_viewdir(struct lastack *LS, const float m[16]);
