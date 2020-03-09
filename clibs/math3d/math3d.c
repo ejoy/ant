@@ -71,15 +71,6 @@ boxstack_gc(lua_State *L) {
 	return 0;
 }
 
-static int
-lref(lua_State *L) {
-	struct refobject * R = lua_newuserdatauv(L, sizeof(struct refobject), 0);
-	R->id = 0;
-	lua_pushvalue(L, lua_upvalueindex(1));
-	lua_setmetatable(L, -2);
-	return 1;
-}
-
 static int64_t
 get_id(lua_State *L, int index, int ltype) {
 	if (ltype == LUA_TLIGHTUSERDATA) {
@@ -92,6 +83,20 @@ get_id(lua_State *L, int index, int ltype) {
 		return ref->id;
 	}
 	return luaL_argerror(L, index, "Need userdata");
+}
+
+static int
+lref(lua_State *L) {
+	struct refobject * R = lua_newuserdatauv(L, sizeof(struct refobject), 0);
+	if (lua_isnoneornil(L, 1)) {
+		R->id = 0;
+	} else {
+		int64_t id = get_id(L, 1, lua_type(L, 1));
+		R->id = lastack_mark(GETLS(L), id);
+	}
+	lua_pushvalue(L, lua_upvalueindex(2));
+	lua_setmetatable(L, -2);
+	return 1;
 }
 
 static int64_t
@@ -1101,11 +1106,13 @@ luaopen_math3d(lua_State *L) {
 		{ NULL, NULL },
 	};
 
+	lua_pushlightuserdata(L, bs->LS);
+
 	luaL_newlibtable(L,ref_mt);
 	lua_pushlightuserdata(L, bs->LS);
 	luaL_setfuncs(L,ref_mt,1);
 
-	lua_pushcclosure(L, lref, 1);
+	lua_pushcclosure(L, lref, 2);
 	lua_setfield(L, -2, "ref");
 
 	return 1;
