@@ -55,6 +55,25 @@ print("inverse", ref2, "=", math3d.tostring(math3d.inverse(ref2)))
 print("inverse", ref3, "=", math3d.tostring(math3d.inverse(ref3)))
 print("reciprocal", ref2, "=", math3d.tostring(math3d.reciprocal(ref2)))
 
+print "===ROTATE VECTOR==="
+do
+	local v = math3d.vector{1, 2, 1}
+	local q = math3d.quaternion {axis=math3d.vector{0, 1, 0}, r=math.pi * 0.5}
+	local vv = math3d.rotate_vector(q, v)
+	print("rotate vector with quaternion", math3d.tostring(v), "=", math3d.tostring(vv))
+
+	local mat = math3d.matrix {s=1, r=q, t=math3d.vector{0, 0, 0, 1}}
+	local vv2 = math3d.rotate_vector(mat, v)
+	print("rotate vector with matrix", math3d.tostring(v), "=", math3d.tostring(vv))
+end
+
+print "===construct coordinate from forward vector==="
+do
+	local forward = math3d.normalize(math3d.vector {1, 1, 1})
+	local right, up = math3d.base_axes(forward)
+	print("forward:", math3d.tostring(forward), "right:", math3d.tostring(right), "up:", math3d.tostring(up))
+end
+
 print "===VIEWPROJ===="
 local viewmat, projmat, p = math3d.view_proj({viewdir={0, 0, 1}, eyepos={0, 0, -8}}, {fov=90, aspect=1, n=1, f=1000}, true)
 print("VIEW", math3d.tostring(viewmat))
