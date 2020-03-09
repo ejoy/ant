@@ -13,47 +13,9 @@ typedef enum {
 	SET_Unknown,
 }StackElemType;
 
-static inline void
-typemismatch(lua_State *L, int t1, int t2) {
-	luaL_error(L, "Type mismatch, need %s, it's %s", lastack_typename(t1), lastack_typename(t2));
-}
-
-static int64_t
-get_id_type(lua_State *L, struct lastack *LS, int index) {
-	int ltype = lua_type(L, index);
-	int64_t id = 0;
-	switch(ltype) {
-	case LUA_TLIGHTUSERDATA:
-		id = (int64_t)lua_touserdata(L, index);
-//		v = lastack_value(LS, id, type);
-		break;
-	case LUA_TUSERDATA: {
-		struct refobject * ref = (struct refobject *)lua_touserdata(L, index);
-		if (lua_rawlen(L, index) != sizeof(struct refobject))
-			luaL_error(L, "Invalid math3d ref object");
-		id = ref->id;
-		break; }
-	}
-	if (id == 0) {
-		luaL_error(L, "Invalid math3d object");
-	}
-	return id;
-}
-
-static void *
-get_pointer_type(lua_State *L, struct lastack *LS, int index, int *type) {
-	int64_t id = get_id_type(L, LS, index);
-	return (void *)lastack_value(LS, id, type);
-}
-
-static void *
+static inline void *
 get_pointer(lua_State *L, struct lastack *LS, int index, int type) {
-	int t;
-	void *v = get_pointer_type(L, LS, index, &t);
-	if (type != t) {
-		typemismatch(L, type, t);
-	}
-	return v;
+	return (void *)math3d_from_lua(L, LS, index, type);
 }
 
 static void *
@@ -67,16 +29,11 @@ getopt_pointer(lua_State *L, struct lastack *LS, int index, int type) {
 
 static void *
 get_pointer_variant(lua_State *L, struct lastack *LS, int index, int elemtype) {
-	int type;
-	void *v = get_pointer_type(L, LS, index, &type);
-	if (type == LINEAR_TYPE_MAT) {
-		if (!(elemtype & SET_Mat))
-			typemismatch(L, LINEAR_TYPE_MAT, type);
+	if (elemtype & SET_Mat) {
+		return get_pointer(L, LS, index, LINEAR_TYPE_MAT);
 	} else {
-		if (elemtype & SET_Mat)
-			typemismatch(L, LINEAR_TYPE_VEC4, type);
+		return get_pointer(L, LS, index, LINEAR_TYPE_VEC4);
 	}
-	return v;
 }
 
 // upvalue1  mathstack
@@ -177,12 +134,7 @@ lvector(lua_State *L) {
 
 	for (ii = from; ii <= top; ++ii) {
 		if (!lua_isnil(L, ii)) {
-			int type;
-			void* p = get_pointer_type(L, LS, ii, &type);
-			if (p == NULL) {
-				luaL_error(L, "arg index:%d, could not convert to light userdata with math3d stack object", ii);
-			}
-
+			void* p = get_pointer(L, LS, ii, LINEAR_TYPE_VEC4);
 			lua_pushlightuserdata(L, p);
 			lua_replace(L, ii);
 		}
@@ -206,13 +158,6 @@ lbind_vector(lua_State *L) {
 	return 1;
 }
 
-static int
-get_type(lua_State *L, struct lastack* LS, int index) {
-	int64_t id = get_id_type(L, LS, index);
-	return lastack_type(LS, id);
-}
-
-
 static uint8_t
 check_elem_type(lua_State *L, struct lastack *LS, int index) {	
 	if (lua_type(L, index) == LUA_TTABLE) {
@@ -222,7 +167,8 @@ check_elem_type(lua_State *L, struct lastack *LS, int index) {
 		if (fieldtype != LUA_TNIL){
 			const int elemtype = lua_geti(L, index, 1);			
 			if (elemtype != LUA_TTABLE) {
-				int type = get_type(L, LS, -1);
+				int type;
+				math3d_from_lua_id(L, LS, -1, &type);
 				lua_pop(L, 1);
 				return SET_Array | (type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec);
 			} 
@@ -234,7 +180,7 @@ check_elem_type(lua_State *L, struct lastack *LS, int index) {
 	}
 
 	int type;
-	get_pointer_type(L, LS, index, &type);
+	math3d_from_lua_id(L, LS, index, &type);
 	return type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec;
 }
 
@@ -341,28 +287,20 @@ lformat(lua_State *L) {
 	lua_pop(L, 1);
 	int i;
 	int top = lua_gettop(L);
-	int type;
-	void *v;
+	void *v = NULL;
 	for (i=0;format[i];i++) {
 		int index = from + i;
 		if (index > top)
 			luaL_error(L, "Invalid format string %s", format);
-		v = get_pointer_type(L, LS, index, &type);
 		switch(format[i]) {
 		case 'm':
-			if (type != LINEAR_TYPE_MAT) {
-				typemismatch(L, LINEAR_TYPE_MAT, type);
-			}
+			v = get_pointer(L, LS, index, LINEAR_TYPE_MAT);
 			break;
 		case 'v':
-			if (type != LINEAR_TYPE_VEC4) {
-				typemismatch(L, LINEAR_TYPE_VEC4, type);
-			}
+			v = get_pointer(L, LS, index, LINEAR_TYPE_VEC4);
 			break;
 		case 'q':
-			if (type != LINEAR_TYPE_QUAT) {
-				typemismatch(L, LINEAR_TYPE_QUAT, type);
-			}
+			v = get_pointer(L, LS, index, LINEAR_TYPE_QUAT);
 			break;
 		default:
 			luaL_error(L, "Invalid format string %s", format);

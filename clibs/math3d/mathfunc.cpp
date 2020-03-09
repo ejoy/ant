@@ -1,12 +1,11 @@
 #define LUA_LIB
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include <cmath>
+
 extern "C" {
-	#include <lua.h>
-	#include <lauxlib.h>
 	#include "linalg.h"
-	#include "math3d.h"
-	#include "math.h"
+	#include "math3dfunc.h"
 }
 
 #include "util.h"
@@ -233,10 +232,10 @@ math3d_inverse_quat(struct lastack *LS, const float quat[4]) {
 }
 
 void
-math3d_lookat_matrix(struct lastack *LS, int direction, const float at[3], const float eye[3], const float *up) {
+math3d_lookat_matrix(struct lastack *LS, int direction, const float eye[3], const float at[3], const float *up) {
 	glm::mat4x4 m;
 	if (up == NULL) {
-		const float default_up[3] = {0,1,0};
+		static const float default_up[3] = {0,1,0};
 		up = default_up;
 	}
 	if (direction) {
@@ -250,7 +249,7 @@ math3d_lookat_matrix(struct lastack *LS, int direction, const float at[3], const
 
 void
 math3d_quat_to_matrix(struct lastack *LS, const float quat[4]) {
-	glm::mat m = glm::mat4x4(QUAT(quat));
+	glm::mat4x4 m = glm::mat4x4(QUAT(quat));
 	lastack_pushmatrix(LS, &m[0][0]);
 }
 
@@ -328,5 +327,5 @@ math3d_base_axes(struct lastack *LS, const float forward[4]) {
 
 void
 math3d_rotate_vector(struct lastack *LS, const float v[4]){
-	
+
 }

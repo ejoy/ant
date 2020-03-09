@@ -1,19 +1,9 @@
-#ifndef math3d_lua_binding_h
-#define math3d_lua_binding_h
+#ifndef math3d_func_h
+#define math3d_func_h
 
-struct boxstack {
-	struct lastack *LS;	
-};
+#include "linalg.h"
 
-struct refobject {
-	int64_t id;
-};
-
-#define MATH3D_STACK "_MATHSTACK"
-
-// binding functions
-
-const float * math3d_from_lua(lua_State *L, struct lastack *LS, int index, int type);
+#define LINEAR_TYPE_NUM LINEAR_TYPE_COUNT
 
 // math functions
 
@@ -38,14 +28,12 @@ void math3d_normalize_quat(struct lastack *LS, const float v[4]);
 void math3d_inverse_matrix(struct lastack *LS, const float mat[16]);
 void math3d_inverse_quat(struct lastack *LS, const float quat[4]);
 void math3d_transpose_matrix(struct lastack *LS, const float mat[16]);
-void math3d_lookat_matrix(struct lastack *LS, int direction, const float at[3], const float eye[3], const float *up);
+void math3d_lookat_matrix(struct lastack *LS, int direction, const float eye[3], const float at[3], const float *up);
 void math3d_reciprocal(struct lastack *LS, const float v[4]);
 void math3d_quat_to_viewdir(struct lastack *LS, const float q[4]);
 void math3d_rotmat_to_viewdir(struct lastack *LS, const float m[16]);
 void math3d_viewdir_to_quat(struct lastack *LS, const float v[3]);
 void math3d_frustumLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
 void math3d_orthoLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
-const float * math3d_from_lua_id(lua_State *L, struct lastack *LS, int index, int *type);
-void math3d_base_axes(struct lastack *LS, const float forward[4]);
 
 #endif
