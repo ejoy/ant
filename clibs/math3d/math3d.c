@@ -1073,6 +1073,15 @@ lview_proj(lua_State *L) {
 }
 
 static int
+lprojmat(lua_State *L) {
+	struct lastack *LS = GETLS(L);
+	luaL_checktype(L, 1, LUA_TTABLE);
+	create_proj_mat(L, LS, 1);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static int
 lhomogeneous_depth(lua_State *L){
 	int num = lua_gettop(L);
 	if (num > 0){
@@ -1121,6 +1130,7 @@ luaopen_math3d(lua_State *L) {
 		{ "totable", ltotable},
 		{ "base_axes", lbase_axes},
 		{ "rotate_vector", lrotate_vector},
+		{ "projmat", lprojmat },
 		{ "view_proj", lview_proj},
 		{ "homogeneous_depth", lhomogeneous_depth },
 		{ NULL, NULL },
