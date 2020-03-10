@@ -3155,47 +3155,57 @@ static struct enum_pair eMouseCursor[] = {
 #pragma endregion IMP_ENUM
 #endif
 
+static struct {
+	const char* name;
+	int value;
+} KeyMap[] = {
+#define KEYMAP(k) { #k, ImGuiKey_##k },
+		KEYMAP(Tab)
+		KEYMAP(LeftArrow)
+		KEYMAP(RightArrow)
+		KEYMAP(UpArrow)
+		KEYMAP(DownArrow)
+		KEYMAP(PageUp)
+		KEYMAP(PageDown)
+		KEYMAP(Home)
+		KEYMAP(End)
+		KEYMAP(Insert)
+		KEYMAP(Delete)
+		KEYMAP(Backspace)
+		KEYMAP(Space)
+		KEYMAP(Enter)
+		KEYMAP(Escape)
+		KEYMAP(KeyPadEnter)
+		KEYMAP(A)
+		KEYMAP(C)
+		KEYMAP(V)
+		KEYMAP(X)
+		KEYMAP(Y)
+		KEYMAP(Z)
+#undef  KEYMAP
+};
+static_assert(IM_ARRAYSIZE(KeyMap) == ImGuiKey_COUNT);
+
 static int
 lkeymap(lua_State *L) {
-	static struct {
-		const char* name;
-		int index;
-	} keymap[] = {
-		{ "Tab", ImGuiKey_Tab },
-		{ "Left", ImGuiKey_LeftArrow },
-		{ "Right", ImGuiKey_RightArrow },
-		{ "Up", ImGuiKey_UpArrow },
-		{ "Down", ImGuiKey_DownArrow },
-		{ "PageUp", ImGuiKey_PageUp },
-		{ "PageDown", ImGuiKey_PageDown },
-		{ "Home", ImGuiKey_Home },
-		{ "End", ImGuiKey_End },
-		{ "Insert", ImGuiKey_Insert },
-		{ "Delete", ImGuiKey_Delete },
-		{ "Backspace", ImGuiKey_Backspace },
-		{ "Space", ImGuiKey_Space },
-		{ "Enter", ImGuiKey_Enter },
-		{ "Escape", ImGuiKey_Escape },
-		{ NULL, ImGuiKey_KeyPadEnter},
-		{ "A", ImGuiKey_A },
-		{ "C", ImGuiKey_C },
-		{ "V", ImGuiKey_V },
-		{ "X", ImGuiKey_X },
-		{ "Y", ImGuiKey_Y },
-		{ "Z", ImGuiKey_Z },
-	};
+
+	if (lua_gettop(L) == 0) {
+		lua_createtable(L, ImGuiKey_COUNT, 0);
+		lua_Integer i = 0;
+		for (auto& key : KeyMap) {
+			lua_pushstring(L, key.name);
+			lua_rawseti(L, -2, ++i);
+		}
+		return 1;
+	}
 
 	luaL_checktype(L, 1, LUA_TTABLE);
 	ImGuiIO& io = ImGui::GetIO();
-	assert(IM_ARRAYSIZE(keymap) >= ImGuiKey_COUNT);
-	for (size_t i = 0; i < ImGuiKey_COUNT; ++i) {
-		assert(keymap[i].index == i);
-		if (keymap[i].name) {
-			if (LUA_TNUMBER == lua_getfield(L, 1, keymap[i].name)) {
-				io.KeyMap[i] = (int)lua_tointeger(L, -1);
-			}
-			lua_pop(L, 1);
+	for (auto& key : KeyMap) {
+		if (LUA_TNUMBER == lua_getfield(L, 1, key.name)) {
+			io.KeyMap[key.value] = (int)lua_tointeger(L, -1);
 		}
+		lua_pop(L, 1);
 	}
 	return 0;
 }

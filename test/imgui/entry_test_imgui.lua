@@ -9,6 +9,7 @@ local fs = require "filesystem"
 
 local assetutil = import_package "ant.asset".util
 local imgui   = import_package "ant.imgui".imgui
+local inputmgr = import_package "ant.imguibase".inputmgr
 -- local imgui = require "bgfx.imgui"
 local widget = imgui.widget
 local flags = imgui.flags
@@ -58,7 +59,7 @@ function callback.init(nwh, context, width, height)
         imgui_image.uniforms.s_tex.handle
     )
     imgui.resize(width, height)
-    imgui.keymap(window.keymap)
+    inputmgr.init_keymap(imgui)
 
     bgfx.set_view_rect(0, 0, 0, width, height)
     bgfx.set_view_clear(0, "CD", 0x303030ff, 1, 0)

@@ -12,6 +12,7 @@ local assetutil   = import_package "ant.asset".util
 local fs          = require "filesystem"
 local platform    = require "platform"
 local runtime     = require "runtime"
+local inputmgr    = require "inputmgr"
 local imguiIO     = imgui.IO
 local font        = imgui.font
 local Font        = platform.font
@@ -97,7 +98,7 @@ function m:init()
 		imgui_image.prog,
         imgui_image.uniforms.s_tex.handle
 	)
-	imgui.keymap(window.keymap)
+    inputmgr.init_keymap(imgui)
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
 		font.Create {

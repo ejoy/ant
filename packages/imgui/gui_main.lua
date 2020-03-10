@@ -12,6 +12,7 @@ local assetutil = assetpkg.util
 local assetmgr  = assetpkg.mgr
 local editor    = import_package "ant.editor"
 local rxpkg     = import_package "ant.rxlua"
+local inputmgr  = import_package "ant.imguibase".inputmgr
 local task      = editor.task
 local gui_mgr   = require "gui_mgr"
 local gui_input = require "gui_input"
@@ -58,7 +59,7 @@ function gui_main.init(nwh, context, width, height)
 	)
 	imgui_resize(width, height)
     gui_input.size(width,height)
-	imgui.keymap(window.keymap)
+    inputmgr.init_keymap(imgui)
 	window.set_ime(imgui.ime_handle())
     bgfx.set_view_rect(uieditor_viewid, 0, 0, width, height)
     bgfx.set_view_clear(uieditor_viewid, "CD", 0x303030ff, 1, 0)

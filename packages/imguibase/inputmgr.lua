@@ -31,6 +31,39 @@ function im.translate_key(key)
 	return keymap[key & 0x0FFFFFFF]
 end
 
+local translate = {
+	Tab        = "TAB",
+	LeftArrow  = "LEFT",
+	RightArrow = "RIGHT",
+	UpArrow    = "UP",
+	DownArrow  = "DOWN",
+	PageUp     = "PRIOR",
+	PageDown   = "NEXT",
+	Home       = "HOME",
+	End        = "END",
+	Insert     = "INSERT",
+	Delete     = "DELETE",
+	Backspace  = "BACK",
+	Space      = "SPACE",
+	Enter      = "RETURN",
+	Escape     = "ESCAPE",
+}
+
+function im.init_keymap(imgui)
+	local keys = imgui.keymap()
+	local rev_keymap = {}
+	for k, v in pairs(keymap) do
+		rev_keymap[v] = k
+	end
+	local res = {}
+	for _, key in ipairs(keys) do
+		if translate[key] then
+			res[key] = assert(rev_keymap[translate[key]])
+		end
+	end
+	imgui.keymap(res)
+end
+
 im.keymap = keymap
 
 return im

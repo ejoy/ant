@@ -6,6 +6,7 @@ local fs = require "filesystem"
 local thread = require "thread"
 local imgui = require "imgui.ant"
 local platform = require "platform"
+local inputmgr = require "inputmgr"
 
 local viewidmgr = renderpkg.viewidmgr
 local rhwi = renderpkg.hwi
@@ -56,7 +57,7 @@ function callback.init(nwh, context, width, height)
         imgui_image.uniforms.s_tex.handle
     )
     imgui_resize(width, height)
-    imgui.keymap(window.keymap)
+    inputmgr.init_keymap(imgui)
     window.set_ime(imgui.ime_handle())
     if platform.OS == "Windows" then
         font.Create { { Font "黑体" ,     18, "ChineseFull"} }
