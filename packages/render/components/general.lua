@@ -42,8 +42,6 @@ do
 		local num = #v
 		if num == 1 then
 			v[2], v[3] = v[1], v[1]
-		else
-			assert(num >= 3, "scale must provided 1/3 element")
 		end
 		v[4] = 0
 		return ms:ref "vector"(v)
