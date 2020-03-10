@@ -7,6 +7,8 @@ local ref2 = math3d.ref()
 ref2.v = math3d.vector(1,2,3,4)
 print("ref1", ref1)
 print(ref2)
+ref2.v = math3d.pack("dddd", 1,2,3,4)
+print(ref2)
 ref2.v = math3d.vector(ref2, 1)
 print("ref2", ref2)
 

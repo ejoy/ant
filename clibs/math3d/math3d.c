@@ -1129,6 +1129,45 @@ lhomogeneous_depth(lua_State *L){
 	return 1;
 }
 
+static int
+lpack(lua_State *L) {
+	size_t sz;
+	const char * format = luaL_checklstring(L, 1, &sz);
+	int n = lua_gettop(L);
+	int i;
+	if (n != 5 && n != 17) {
+		return luaL_error(L, "need 5 or 17 arguments , it's %d", n);
+	}
+	--n;
+	if (n != sz) {
+		return luaL_error(L, "Invalid format %s", format);
+	}
+	union {
+		float f[16];
+		uint32_t n[16];
+	} u;
+	for (i=0;i<n;i++) {
+		switch(format[i]) {
+		case 'f':
+			u.f[i] = luaL_checknumber(L, i+2);
+			break;
+		case 'd':
+			u.n[i] = luaL_checkinteger(L, i+2);
+			break;
+		default:
+			return luaL_error(L, "Invalid format %s", format);
+		}
+	}
+	struct lastack *LS = GETLS(L);
+	if (n == 4) {
+		lastack_pushvec4(LS, u.f);
+	} else {
+		lastack_pushmatrix(LS, u.f);
+	}
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
@@ -1170,6 +1209,7 @@ luaopen_math3d(lua_State *L) {
 		{ "transformH", ltransform_homogeneous_point },
 		{ "projmat", lprojmat },
 		{ "homogeneous_depth", lhomogeneous_depth },
+		{ "pack", lpack },
 		{ NULL, NULL },
 	};
 
