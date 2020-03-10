@@ -196,10 +196,18 @@ math3d_cross(struct lastack *LS, const float v1[4], const float v2[4]) {
 
 void
 math3d_mulH(struct lastack *LS, const float mat[16], const float vec[4]) {
-	glm::vec4 r = MAT(mat) * VEC(vec);	
+	glm::vec4 r;
+
+	if (vec[3] != 1.f){
+		float tmp[4] = { vec[0], vec[1], vec[2], 1 };
+		r = MAT(mat) * VEC(tmp);
+	} else {
+		r = MAT(mat) * VEC(vec);
+	}
+
 	if (!r.w != 0) {
 		r /= fabs(r.w);
-		r.w = 1.f;
+		r.w = 0.f;
 	}
 
 	lastack_pushvec4(LS, &r.x);
