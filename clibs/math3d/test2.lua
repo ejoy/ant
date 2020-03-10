@@ -6,7 +6,7 @@ ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
 
 local ref2 = math3d.ref()
 
-ref2.v = math3d.vector(1,2,3)
+ref2.v = math3d.vector(1,2,3,1)
 
 print(ref1)
 print(ref2)
@@ -46,7 +46,8 @@ print("length", ref2, "=", math3d.length(ref2))
 print("floor", ref2, "=", math3d.tostring(math3d.floor(ref2)))
 print("dot", ref2, ref2, "=", math3d.dot(ref2, ref2))
 print("cross", ref2, ref2, "=", math3d.tostring(math3d.cross(ref2, ref2)))
-print("transformH", ref1, ref2, "=", math3d.tostring(math3d.transformH(ref1, ref2)))
+local point = math3d.vector(1, 2, 3, 1)
+print("transformH", ref1, point, "=", math3d.tostring(math3d.transformH(ref1, point)))
 print("normalize", ref2, "=", math3d.tostring(math3d.normalize(ref2)))
 print("normalize", ref3, "=", math3d.tostring(math3d.normalize(ref3)))
 print("transpose", ref1, "=", math3d.tostring(math3d.transpose(ref1)))

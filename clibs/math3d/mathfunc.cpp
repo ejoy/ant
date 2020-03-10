@@ -168,24 +168,24 @@ math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 
 float
 math3d_length(const float *v) {
-	return glm::length(VEC(v));
+	return glm::length(VEC3(v));
 }
 
 void
 math3d_floor(struct lastack *LS, const float v[4]) {
-	glm::vec4 vv = glm::floor(VEC(v));
+	glm::vec4 vv(glm::floor(VEC3(v)), 0.f);
 	lastack_pushvec4(LS, &vv.x);
 }
 
 void
 math3d_ceil(struct lastack *LS, const float v[4]) {
-	glm::vec4 vv = glm::ceil(VEC(v));
+	glm::vec4 vv(glm::ceil(VEC3(v)), 0.f);
 	lastack_pushvec4(LS, &vv.x);
 }
 
 float
 math3d_dot(const float v1[4], const float v2[4]) {
-	return glm::dot(VEC(v1), VEC(v2));
+	return glm::dot(VEC3(v1), VEC3(v2));
 }
 
 void

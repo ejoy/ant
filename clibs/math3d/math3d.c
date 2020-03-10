@@ -984,6 +984,10 @@ ltransform_homogeneous_point(lua_State *L) {
 	const float * mat = matrix_from_index(L, LS, 1);
 	const float * vec = vector_from_index(L, LS, 2);
 
+	if (vec[3] != 1.f){
+		return luaL_error(L, "transform value is not a point");
+	}
+
 	math3d_mulH(LS, mat, vec);
 
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
