@@ -205,9 +205,9 @@ math3d_mulH(struct lastack *LS, const float mat[16], const float vec[4]) {
 		r = MAT(mat) * VEC(vec);
 	}
 
-	if (!r.w != 0) {
+	if (r.w != 0) {
 		r /= fabs(r.w);
-		r.w = 0.f;
+		r.w = 1.f;
 	}
 
 	lastack_pushvec4(LS, &r.x);
@@ -348,3 +348,4 @@ math3d_rotmat_transform(struct lastack *LS, const float mat[16], const float v[4
 	const glm::vec4 vv = MAT(mat) * VEC(v);
 	lastack_pushvec4(LS, &vv.x);
 }
+
