@@ -87,8 +87,9 @@ get_id(lua_State *L, int index, int ltype) {
 
 static int
 lref(lua_State *L) {
+	lua_settop(L, 1);
 	struct refobject * R = lua_newuserdatauv(L, sizeof(struct refobject), 0);
-	if (lua_isnoneornil(L, 1)) {
+	if (lua_isnil(L, 1)) {
 		R->id = 0;
 	} else {
 		int64_t id = get_id(L, 1, lua_type(L, 1));
@@ -605,7 +606,7 @@ lmul(lua_State *L) {
 		const float *rv = get_object(L, LS, i, &rt);
 		int result_type = math3d_mul_object(LS, lv, rv, lt, rt, tmp);
 		if (result_type == LINEAR_TYPE_NONE) {
-			return luaL_error(L, "Invalid mul arguments at %d, ltype = %d rtype = %d", i, lt, rt);
+			return luaL_error(L, "Invalid mul arguments at %d, ltype = %d rtype = %d\nmatrix or quaternion mul vector should use 'transform' function", i, lt, rt);
 		}
 		lt = result_type;
 		lv = tmp;
@@ -734,7 +735,7 @@ lmatrix(lua_State *L) {
 static int
 lvector(lua_State *L) {
 	if (lua_gettop(L) == 3) {
-		lua_pushnumber(L, 1.0f);
+		lua_pushnumber(L, 0.0f);
 	}
 	return new_object(L, LINEAR_TYPE_VEC4, vector_from_table, 4);
 }
@@ -803,18 +804,6 @@ lcross(lua_State *L) {
 	const float * v1 = vector_from_index(L, LS, 1);
 	const float * v2 = vector_from_index(L, LS, 2);
 	math3d_cross(LS, v1, v2);
-	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
-	return 1;
-}
-
-static int
-lmulH(lua_State *L) {
-	struct lastack *LS = GETLS(L);
-	const float * mat = matrix_from_index(L, LS, 1);
-	const float * vec = vector_from_index(L, LS, 2);
-
-	math3d_mulH(LS, mat, vec);
-
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
 }
@@ -955,24 +944,47 @@ lbase_axes(lua_State *L) {
 }
 
 static int
-lrotate_vector(lua_State *L){
+ltransform(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const int64_t rotatorid = get_id(L, 1, lua_type(L, 1));
+
+	if (lua_isnone(L, 3)){
+		return luaL_error(L, "need argument 3, 0 for vector, 1 for point, 'nil' will use vector[4] value");
+	}
+
 	const float* v = vector_from_index(L, LS, 2);
+	if (!lua_isnil(L, 3)){
+		const int ispoint = luaL_checkinteger(L, 3);
+		const float vv[4] = {v[0], v[1], v[2], ispoint ? 1.f : 0.f};
+		lastack_pushvec4(LS, vv);
+		v = lastack_value(LS, lastack_pop(LS), NULL);
+	}
 
 	int type;
 	const float *rotator = (const float *)lastack_value(LS, rotatorid, &type);
 
 	switch (type){
 	case LINEAR_TYPE_QUAT:
-		math3d_quat_rotate_vec(LS, rotator, v);
+		math3d_quat_transform(LS, rotator, v);
 		break;
 	case LINEAR_TYPE_MAT:
-		math3d_rotmat_rotate_vec(LS, rotator, v);
+		math3d_rotmat_transform(LS, rotator, v);
 		break;
 	default: 
 		return luaL_error(L, "only support quat/mat for rotate vector:%s", lastack_typename(type));
 	}
+
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static int
+ltransform_homogeneous_point(lua_State *L) {
+	struct lastack *LS = GETLS(L);
+	const float * mat = matrix_from_index(L, LS, 1);
+	const float * vec = vector_from_index(L, LS, 2);
+
+	math3d_mulH(LS, mat, vec);
 
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
@@ -1077,7 +1089,6 @@ luaopen_math3d(lua_State *L) {
 		{ "ceil", lceil },
 		{ "dot", ldot },
 		{ "cross", lcross },
-		{ "mulH", lmulH },
 		{ "normalize", lnormalize },
 		{ "transpose", ltranspose },
 		{ "inverse", linverse },
@@ -1088,7 +1099,8 @@ luaopen_math3d(lua_State *L) {
 		{ "torotation", ltorotation },
 		{ "totable", ltotable},
 		{ "base_axes", lbase_axes},
-		{ "rotate_vector", lrotate_vector},
+		{ "transform", ltransform},
+		{ "transformH", ltransform_homogeneous_point },
 		{ "projmat", lprojmat },
 		{ "homogeneous_depth", lhomogeneous_depth },
 		{ NULL, NULL },

@@ -46,7 +46,7 @@ print("length", ref2, "=", math3d.length(ref2))
 print("floor", ref2, "=", math3d.tostring(math3d.floor(ref2)))
 print("dot", ref2, ref2, "=", math3d.dot(ref2, ref2))
 print("cross", ref2, ref2, "=", math3d.tostring(math3d.cross(ref2, ref2)))
-print("mulH", ref1, ref2, "=", math3d.tostring(math3d.mulH(ref1, ref2)))
+print("transformH", ref1, ref2, "=", math3d.tostring(math3d.transformH(ref1, ref2)))
 print("normalize", ref2, "=", math3d.tostring(math3d.normalize(ref2)))
 print("normalize", ref3, "=", math3d.tostring(math3d.normalize(ref3)))
 print("transpose", ref1, "=", math3d.tostring(math3d.transpose(ref1)))
@@ -93,12 +93,17 @@ print "===ROTATE VECTOR==="
 do
 	local v = math3d.vector{1, 2, 1}
 	local q = math3d.quaternion {axis=math3d.vector{0, 1, 0}, r=math.pi * 0.5}
-	local vv = math3d.rotate_vector(q, v)
+	local vv = math3d.transform(q, v, 0)
 	print("rotate vector with quaternion", math3d.tostring(v), "=", math3d.tostring(vv))
 
 	local mat = math3d.matrix {s=1, r=q, t=math3d.vector{0, 0, 0, 1}}
-	local vv2 = math3d.rotate_vector(mat, v)
-	print("rotate vector with matrix", math3d.tostring(v), "=", math3d.tostring(vv))
+	local vv2 = math3d.transform(mat, v, 0)
+	print("transform vector with matrix", math3d.tostring(v), "=", math3d.tostring(vv2))
+
+	local p = math3d.vector{1, 2, 1, 1}
+	local mat2 = math3d.matrix {s=1, r=q, t=math3d.vector{0, 0, 5, 1}}
+	local r_p = math3d.transform(mat2, p, nil)
+	print("transform point with matrix", math3d.tostring(p), "=", math3d.tostring(r_p))
 end
 
 print "===construct coordinate from forward vector==="

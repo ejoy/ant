@@ -37,6 +37,6 @@ void math3d_viewdir_to_quat(struct lastack *LS, const float v[3]);
 void math3d_frustumLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
 void math3d_orthoLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
 void math3d_base_axes(struct lastack *LS, const float forward[4]);
-void math3d_quat_rotate_vec(struct lastack *LS, const float quat[4], const float v[4]);
-void math3d_rotmat_rotate_vec(struct lastack *LS, const float mat[16], const float v[4]);
+void math3d_quat_transform(struct lastack *LS, const float quat[4], const float v[4]);
+void math3d_rotmat_transform(struct lastack *LS, const float mat[16], const float v[4]);
 #endif

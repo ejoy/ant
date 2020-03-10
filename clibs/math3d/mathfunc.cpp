@@ -87,12 +87,6 @@ math3d_mul_object(struct lastack *LS, const float *val0, const float *val1, int 
 	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT):
 		mat = MAT(val0) * MAT(val1);
 		return LINEAR_TYPE_MAT;
-	case BINTYPE(LINEAR_TYPE_MAT, LINEAR_TYPE_VEC4):
-		vec = MAT(val0) * VEC(val1);
-		return LINEAR_TYPE_VEC4;
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_MAT):
-		vec = VEC(val0) *MAT(val1);			
-		return LINEAR_TYPE_VEC4;
 	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_NUM):
 		vec = VEC(val0) * val1[0];
 		return LINEAR_TYPE_VEC4;
@@ -114,15 +108,12 @@ math3d_mul_object(struct lastack *LS, const float *val0, const float *val1, int 
 
 void
 math3d_add_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]){
-	*(glm::vec4*)r = VEC(lhs) + VEC(rhs);	// SIMD
-
-	r[3] = (const uint32_t *)lhs[3] | (const uint32_t *)rhs[3];	// check is point or vector
+	*(glm::vec4*)r = VEC(lhs) + VEC(rhs);
 }
 
 void
 math3d_sub_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]){
-	*(glm::vec4*)r = VEC(lhs) - VEC(rhs);	// SIMD
-	r[3] = (const uint32_t *)lhs[3] | (const uint32_t *)rhs[3];	// check is point or vector
+	*(glm::vec4*)r = VEC(lhs) - VEC(rhs);
 }
 
 int
@@ -339,13 +330,13 @@ math3d_base_axes(struct lastack *LS, const float forward[4]) {
 }
 
 void
-math3d_quat_rotate_vec(struct lastack *LS, const float quat[4], const float v[4]){
+math3d_quat_transform(struct lastack *LS, const float quat[4], const float v[4]){
 	const glm::vec4 vv = glm::rotate(QUAT(quat), VEC(v));
 	lastack_pushvec4(LS, &vv.x);
 }
 
 void
-math3d_rotmat_rotate_vec(struct lastack *LS, const float mat[16], const float v[4]){
+math3d_rotmat_transform(struct lastack *LS, const float mat[16], const float v[4]){
 	const glm::vec4 vv = MAT(mat) * VEC(v);
 	lastack_pushvec4(LS, &vv.x);
 }
