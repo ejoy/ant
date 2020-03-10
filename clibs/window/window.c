@@ -211,7 +211,7 @@ get_callback(lua_State *L) {
 }
 
 static int
-lregistercallback(lua_State *L) {
+registercallback(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TFUNCTION);
 
 	if (lua_getfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK) != LUA_TUSERDATA) {
@@ -226,7 +226,7 @@ lregistercallback(lua_State *L) {
 	lua_setiuservalue(L, -2, 1);
 	context->functions = lua_newthread(L);
 	lua_setiuservalue(L, -2, 2);
-	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_ANT_WINDOW_CONTEXT");
+	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
 
 	lua_pushcfunction(context->callback, ltraceback);	// push traceback function
 	register_functions(L, 1, context->functions);
@@ -238,10 +238,10 @@ lregistercallback(lua_State *L) {
 
 static int
 lcreate(lua_State *L) {
-	lregistercallback(L);
+	registercallback(L);
 
-	int width = (int)luaL_optinteger(L, 2, 1334);
-	int height = (int)luaL_optinteger(L, 3, 750);
+	int width = (int)luaL_checkinteger(L, 2);
+	int height = (int)luaL_checkinteger(L, 3);
 	size_t sz;
 	const char* title = luaL_checklstring(L, 4, &sz);
 	if (0 != window_create(get_callback(L), width, height, title, sz)) {
