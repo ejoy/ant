@@ -3,15 +3,24 @@ local math3d = require "math3d"
 local ref1 = math3d.ref()
 
 ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
-
 local ref2 = math3d.ref()
-
-ref2.v = math3d.vector(1,2,3,1)
-
-print(ref1)
+ref2.v = math3d.vector(1,2,3,4)
+print("ref1", ref1)
 print(ref2)
+ref2.v = math3d.vector(ref2, 1)
+print("ref2", ref2)
+
+for i = 1,4 do
+	print("ref1 Line", i, math3d.tostring(ref1[i]))
+end
+
+for i = 1,4 do
+	print("ref2 index", i, math3d.index(ref2,i))
+end
 
 print "===SRT==="
+ref1.m = { s = 2, r = { 0, math.rad(60), 0 }, t = { 1,2,3} }
+print(ref1)
 local s,r,t = math3d.srt(ref1)
 print("S = ", math3d.tostring(s))
 print("R = ", math3d.tostring(r))
@@ -31,6 +40,8 @@ print_srt()
 
 print "===QUAT==="
 
+local q = math3d.quaternion { 0, math.rad(60, 0), 0 }
+print(math3d.tostring(q))
 local ref3 = math3d.ref()
 ref3.m = math3d.quaternion { axis = {1,0,0}, r = math.rad(60) } -- init mat with quat
 print(ref3)
@@ -114,11 +125,9 @@ do
 	print("forward:", math3d.tostring(forward), "right:", math3d.tostring(right), "up:", math3d.tostring(up))
 end
 
-print "===VIEWPROJ===="
-local viewmat, projmat, p = math3d.view_proj({viewdir={0, 0, 1}, eyepos={0, 0, -8}}, {fov=90, aspect=1, n=1, f=1000}, true)
-print("VIEW", math3d.tostring(viewmat))
+print "===PROJ===="
+local projmat = math3d.projmat {fov=90, aspect=1, n=1, f=1000}
 print("PROJ", math3d.tostring(projmat))
-print("VIEWPROJ", math3d.tostring(p))
 
 print "===ADAPTER==="
 local adapter = require "math3d.adapter"
