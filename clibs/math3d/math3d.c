@@ -796,11 +796,23 @@ lvector(lua_State *L) {
 		lua_pushnumber(L, 0.0f);
 	} else if (top == 2) {
 		struct lastack *LS = GETLS(L);
-		const float * vec3 = vector_from_index(L, LS, 1);
+		if (!lua_isuserdata(L, 1)) {
+			return luaL_error(L, "Should be (vector id , number)");
+		}
+		int64_t id = get_id(L, 1, lua_type(L, 1));
+		int type;
+		const float *vec3 = lastack_value(LS, id, &type);
+		if (vec3 == NULL || type != LINEAR_TYPE_VEC4) {
+			return luaL_error(L, "Need a vector, it's %s", vec3 == NULL? "Invalid" : lastack_typename(id));
+		}
 		float n4 = luaL_checknumber(L, 2);
-		float vec4 [4] = { vec3[0], vec3[1], vec3[2], n4 };
-		lastack_pushvec4(LS, vec4);
-		lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+		if (n4 == vec3[3]) {
+			lua_pushlightuserdata(L, STACKID(id));
+		} else {
+			float vec4 [4] = { vec3[0], vec3[1], vec3[2], n4 };
+			lastack_pushvec4(LS, vec4);
+			lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+		}
 		return 1;
 	}
 	return new_object(L, LINEAR_TYPE_VEC4, vector_from_table, 4);
@@ -1019,15 +1031,23 @@ ltransform(lua_State *L){
 	}
 
 	const float* v = vector_from_index(L, LS, 2);
+	float tmp[4];
 	if (!lua_isnil(L, 3)){
-		const int ispoint = luaL_checkinteger(L, 3);
-		const float vv[4] = {v[0], v[1], v[2], ispoint ? 1.f : 0.f};
-		lastack_pushvec4(LS, vv);
-		v = lastack_value(LS, lastack_pop(LS), NULL);
+		const float p = luaL_checknumber(L, 3);
+		if (p != v[3]) {
+			tmp[0] = v[0];
+			tmp[1] = v[1];
+			tmp[2] = v[2];
+			tmp[3] = p;
+			v = tmp;
+		}
 	}
 
 	int type;
 	const float *rotator = (const float *)lastack_value(LS, rotatorid, &type);
+	if (rotator == NULL) {
+		return luaL_error(L, "Invalid rotator id");
+	}
 
 	switch (type){
 	case LINEAR_TYPE_QUAT:
