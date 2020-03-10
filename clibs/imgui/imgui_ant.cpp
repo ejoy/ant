@@ -96,24 +96,22 @@ namespace plat {
 	void Render(lua_State* L) {
 		context* ctx = (context*)ImGui::GetIO().UserData;
 		ImDrawData* drawData = ImGui::GetDrawData();
-		const ImGuiIO& io = ImGui::GetIO();
-		const ImVec2& clip_off = drawData->DisplayPos;
+		const ImVec2& clip_size = drawData->DisplaySize;
+		const ImVec2& clip_offset = drawData->DisplayPos;
 		const ImVec2& clip_scale = drawData->FramebufferScale;
 
 		BGFX(set_view_name)(ctx->m_viewId, "ImGui");
 		BGFX(set_view_mode)(ctx->m_viewId, BGFX_VIEW_MODE_SEQUENTIAL);
 
-		const float width = io.DisplaySize.x;
-		const float height = io.DisplaySize.y;
 		const bgfx_caps_t* caps = BGFX(get_caps)();
 		auto ortho = caps->homogeneousDepth
-			? glm::orthoLH_NO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
-			: glm::orthoLH_ZO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
+			? glm::orthoLH_NO(0.0f, clip_size.x, clip_size.y, 0.0f, 0.0f, 1000.0f)
+			: glm::orthoLH_ZO(0.0f, clip_size.x, clip_size.y, 0.0f, 0.0f, 1000.0f)
 			;
 		BGFX(set_view_transform)(ctx->m_viewId, NULL, (const void*)&ortho[0]);
 
-		const float fb_width = io.DisplaySize.x * clip_scale.x;
-		const float fb_height = io.DisplaySize.y * clip_scale.y;
+		const float fb_width = clip_size.x * clip_scale.x;
+		const float fb_height = clip_size.y * clip_scale.y;
 		BGFX(set_view_rect)(ctx->m_viewId, 0, 0, uint16_t(fb_width), uint16_t(fb_height));
 
 		for (size_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii) {
@@ -143,8 +141,8 @@ namespace plat {
 				assert(NULL != cmd.TextureId);
 				ImGuiTexture texture = { cmd.TextureId };
 
-				const float x = (cmd.ClipRect.x - clip_off.x) * clip_scale.x;
-				const float y = (cmd.ClipRect.y - clip_off.y) * clip_scale.y;
+				const float x = (cmd.ClipRect.x - clip_offset.x) * clip_scale.x;
+				const float y = (cmd.ClipRect.y - clip_offset.y) * clip_scale.y;
 				const float w = (cmd.ClipRect.z - cmd.ClipRect.x) * clip_scale.x;
 				const float h = (cmd.ClipRect.w - cmd.ClipRect.y) * clip_scale.y;
 				BGFX(set_scissor)(

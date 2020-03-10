@@ -146,7 +146,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/imgui;../../3rd/glm;../../clibs/window;../../clibs/bgfx</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -204,7 +204,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/imgui;../../3rd/glm;../../clibs/bgfx;../../clibs/window</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
