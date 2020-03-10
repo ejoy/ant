@@ -199,7 +199,7 @@ math3d_mulH(struct lastack *LS, const float mat[16], const float vec[4]) {
 	glm::vec4 r;
 
 	if (vec[3] != 1.f){
-		float tmp[4] = { vec[0], vec[1], vec2[2], 1 };
+		float tmp[4] = { vec[0], vec[1], vec[2], 1 };
 		r = MAT(mat) * VEC(tmp);
 	} else {
 		r = MAT(mat) * VEC(vec);
