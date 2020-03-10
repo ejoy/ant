@@ -659,10 +659,6 @@ lsub(lua_State *L) {
 
 static int
 lmuladd(lua_State *L){
-	const int numarg = lua_gettop(L);
-	if (numarg != 3){
-		return luaL_error(L, "muladd need 2 argument for mul and 1 for add with mul result:%d", numarg);
-	}
 	struct lastack *LS = GETLS(L);
 	
 	int ltype, rtype;
@@ -678,14 +674,13 @@ lmuladd(lua_State *L){
 	if ((ltype == LINEAR_TYPE_NUM && rtype == LINEAR_TYPE_VEC4) ||
 		(ltype == LINEAR_TYPE_VEC4 && rtype == LINEAR_TYPE_NUM) ||
 		(ltype == LINEAR_TYPE_VEC4 && rtype == LINEAR_TYPE_VEC4)){
-		float mulresult[16];
-		const int result_type = math3d_mul_object(LS, v0, v1, ltype, rtype, mulresult);
-		//assert(result_type == LINEAR_TYPE_VEC4);
-
+		float result[16];
+		math3d_mul_object(LS, v0, v1, ltype, rtype, result);
 		const float * v2 = vector_from_index(L, LS, 3);
 
-		for (int ii = 0; ii < 3; ++ii)
-
+		math3d_add_vec(LS, result, v2, result);
+		lastack_pushvec4(LS, result);
+		lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 		return 1;
 	}
 

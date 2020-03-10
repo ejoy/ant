@@ -56,7 +56,15 @@ print("inverse", ref2, "=", math3d.tostring(math3d.inverse(ref2)))
 print("inverse", ref3, "=", math3d.tostring(math3d.inverse(ref3)))
 print("reciprocal", ref2, "=", math3d.tostring(math3d.reciprocal(ref2)))
 
-print "===VIEW&PROJECTION MATRIX"
+print "===MULADD==="
+do
+	local v1, v2 = math3d.vector(1, 2, 3, 0), math3d.vector(1, 0, 0, 0)
+	local p = math3d.vector(4, 1, 0, 1)
+	local r = math3d.muladd(v1, v2, p)
+	print("muladd:", math3d.tostring(v1), math3d.tostring(v2), math3d.tostring(p), "=", math3d.tostring(r))
+end
+
+print "===VIEW&PROJECTION MATRIX==="
 do
 	local eyepos = math3d.vector{0, 5, -10}
 	local at = math3d.vector {0, 0, 0}
