@@ -220,17 +220,15 @@ lregistercallback(lua_State *L) {
 	struct ant_window_callback *cb = (struct ant_window_callback *)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 
-	struct callback_context * context = lua_newuserdatauv(L, sizeof(*context), 0);
+	struct callback_context * context = lua_newuserdatauv(L, sizeof(*context), 2);
 	context->surrogate = 0;
-	lua_createtable(L, 2, 0);	// for callback and functions thread
 	context->callback = lua_newthread(L);
-	lua_pushcfunction(context->callback, ltraceback);	// push traceback function
-	lua_rawseti(L, -2, 1);
+	lua_setiuservalue(L, -2, 1);
 	context->functions = lua_newthread(L);
-	lua_rawseti(L, -2, 2);
-	lua_setuservalue(L, -2);	// ref 2 threads to context userdata
+	lua_setiuservalue(L, -2, 2);
 	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_ANT_WINDOW_CONTEXT");
 
+	lua_pushcfunction(context->callback, ltraceback);	// push traceback function
 	register_functions(L, 1, context->functions);
 
 	cb->message = message_callback;
