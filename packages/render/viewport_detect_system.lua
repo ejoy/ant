@@ -58,7 +58,9 @@ end
 function vp_detect:data_changed()
 	local new_fbw, new_fbh
 	for _, w, h in eventResize:unpack() do
-		new_fbw, new_fbh = w, h
+		if w ~= 0 and h ~= 0 then
+			new_fbw, new_fbh = w, h
+		end
 	end
 
 	if new_fbw then
