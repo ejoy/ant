@@ -21,9 +21,6 @@ function util.loop(world)
 	return function ()
 		update()
 		world:clear_removed()
-		if world.need_stop then
-			world.stop()
-		end
 	end
 end
 

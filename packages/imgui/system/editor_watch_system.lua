@@ -229,10 +229,8 @@ local function change_watch_entity(self,eids,focus,is_pick)
     --remove tag:editor_watching,show_operate_gizmo
     for id,_ in pairs(remove_map) do
         world:disable_tag(id,"editor_watching")
-        log.trace(">>remove_component [editor_watching] from:",id)
         if world[id].show_operate_gizmo then
-            world:remove_component(id,"show_operate_gizmo")
-            log.trace(">>remove_component [show_operate_gizmo] from:",id)
+            world:disable_tag(id,"show_operate_gizmo")
         end
     end
     --remove entity:outline_entity
@@ -291,10 +289,8 @@ local function start_watch_entitiy(eid,focus,is_pick)
         end
         for _,id in ipairs(old_eids) do
             world:disable_tag(id,"editor_watching")
-            log.trace(">>remove_component [editor_watching] from:",id)
             if world[id].show_operate_gizmo then
-                world:remove_component(id,"show_operate_gizmo")
-                log.trace(">>remove_component [show_operate_gizmo] from:",id)
+                world:disable_tag(id,"show_operate_gizmo")
             end
         end
         remove_all_outline()
