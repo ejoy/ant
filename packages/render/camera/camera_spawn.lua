@@ -9,8 +9,9 @@ local m = ecs.interface "camera"
 function m.create(info)
     local frustum = info.frustum
     if not frustum then
-        local fbsize = world.args.fb_size
-        frustum = defaultcomp.frustum(fbsize.w, fbsize.h)
+        local mq = world:singleton_entity "main_queue"
+        local vr = mq.render_target.viewport.rect
+        frustum = defaultcomp.frustum(vr.w, vr.h)
         frustum.f = 300
     end
     return world:create_entity {

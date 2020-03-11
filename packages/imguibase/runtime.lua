@@ -14,7 +14,7 @@ local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
 local callback = {}
 
-local conifg
+local config
 local world
 local world_update
 
@@ -26,7 +26,8 @@ function callback.init(nwh, context, width, height)
 		height = height,
 	}
 	local su = import_package "ant.scene".util
-	world = su.start_new_world(width, height, conifg)
+	config.init_viewsize = {w=width, h=height}
+	world = su.start_new_world(config)
 	world_update = su.loop(world)
 end
 
@@ -154,7 +155,7 @@ local function headlessMode()
 end
 
 local function start(cfg)
-	conifg = cfg
+	config = cfg
 	if argument.headless then
 		return headlessMode()
 	end
