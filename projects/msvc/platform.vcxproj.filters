@@ -27,10 +27,17 @@
     <ClCompile Include="..\..\clibs\platform\win32\wmi.cpp">
       <Filter>Source Files\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\platform\platform_timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\clibs\platform\platform_ios.mm" />
-    <None Include="..\..\clibs\platform\platform_osx.mm" />
+    <None Include="..\..\clibs\platform\platform_osx.mm">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\clibs\platform\platform_ios.mm">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\platform\win32\wmi.h">

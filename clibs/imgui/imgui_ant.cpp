@@ -76,7 +76,7 @@ namespace plat {
 		io.DeltaTime = (float)luaL_checknumber(L, 1);
 #if defined(_WIN32)
 		update_mousepos();
-#endif;
+#endif
 		ImGuiMouseCursor cursor_type = io.MouseDrawCursor ? ImGuiMouseCursor_None : ImGui::GetMouseCursor();
 		if (io.WantCaptureMouse && !(io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)) {
 			set_cursor(cursor_type);

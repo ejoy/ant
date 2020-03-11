@@ -1,5 +1,4 @@
 int luaopen_bgfx(lua_State* L);
-int luaopen_bgfx_baselib(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
 int luaopen_bullet(lua_State* L);
 int luaopen_crypt(lua_State* L);
@@ -17,6 +16,7 @@ int luaopen_math3d_adapter(lua_State* L);
 int luaopen_math3d_baselib(lua_State* L);
 int luaopen_meshconverter_gltf(lua_State* L);
 int luaopen_platform(lua_State* L);
+int luaopen_platform_timer(lua_State* L);
 int luaopen_protocol(lua_State* L);
 int luaopen_remotedebug(lua_State* L);
 int luaopen_remotedebug_hookmgr(lua_State* L);

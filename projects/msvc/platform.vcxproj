@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\platform\lplatform.cpp" />
     <ClCompile Include="..\..\clibs\platform\platform_mingw.cpp" />
+    <ClCompile Include="..\..\clibs\platform\platform_timer.cpp" />
     <ClCompile Include="..\..\clibs\platform\win32\wmi.cpp" />
   </ItemGroup>
   <ItemGroup>
