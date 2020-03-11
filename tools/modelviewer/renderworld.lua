@@ -88,7 +88,6 @@ local collider      = world:interface "ant.collision|collider"
 
 local eventKeyboard = world:sub {"keyboard"}
 local eventMouse    = world:sub {"mouse","RIGHT","DOWN"}
-local eventResize   = world:sub {"resize"}
 
 local PRESS    <const> = {[0]=-1,1,0}
 local DIR_NULL <const> = 5
@@ -137,10 +136,6 @@ local function moveEntity(e, distance)
 end
 
 local function mainloop(delta)
-	for _,w, h in eventResize:unpack() do
-		screensize.w = w
-		screensize.h = h
-	end
 	for _,what, press in eventKeyboard:unpack() do
 		local v = PRESS[press]
 		if what == "UP" then
@@ -176,7 +171,7 @@ local function mainloop(delta)
 	for _,_,_,x,y in eventMouse:unpack() do
 		mouse.x = x
 		mouse.y = y
-		local res = camera_motion.ray(camera_id, mouse, screensize)
+		local res = camera_motion.ray(camera_id, mouse)
 		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
