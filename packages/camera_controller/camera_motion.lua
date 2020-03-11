@@ -85,7 +85,7 @@ end
 local function main_queue_viewport_size()
     local mq = world:single_entity "main_queue"
     local vp_rt = mq.render_target.viewport.rect
-    return vp_rt.w, vp_rt.h
+    return {w=vp_rt.w, h=vp_rt.h}
 end
 
 function icamera_moition.ray(cameraeid, pt2d, vp_size)
