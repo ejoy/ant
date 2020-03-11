@@ -269,7 +269,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
             end
             world:enable_tag(eid,"editor_watching")
             if target_ent.transform then
-                world:add_component(eid,"show_operate_gizmo",true)
+                world:enable_tag(eid,"show_operate_gizmo")
             end
             table.insert(need_send,eid)
         end
@@ -315,9 +315,9 @@ local function start_watch_entitiy(eid,focus,is_pick)
             end
             world:enable_tag(eid,"editor_watching")
             if target_ent.transform then
-                world:add_component(eid,"show_operate_gizmo",true)
+                world:enable_tag(eid,"show_operate_gizmo")
             end
-            log.trace(">>add_component [editor_watching] to:",eid)
+            log.trace(">>enable_tag [editor_watching] to:",eid)
             send_entity({eid},( is_pick and "pick" or "editor"))
         end
     end
