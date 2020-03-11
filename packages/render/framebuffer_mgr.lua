@@ -115,6 +115,9 @@ end
 local generate_rb_idx = unique_idx_generator()
 
 local function create_rb_handle(rb)
+	if rb.w == 0 or rb.h == 0 then
+		error(string.format("render buffer width or height should not be 0:%d, %d", rb.w, rb.h))
+	end
 	return bgfx.create_texture2d(rb.w, rb.h, false, rb.layers, rb.format, rb.flags)
 end
 

@@ -159,3 +159,15 @@ function pp_sys:combine_postprocess()
         end
     end
 end
+
+local ipp = ecs.interface "postprocess"
+
+function ipp.main_rb_size(main_fbidx)
+    main_fbidx = main_fbidx or fbmgr.get_fb_idx(viewidmgr.get "main_view")
+
+    local fb = fbmgr.get(main_fbidx)
+    local rb = fbmgr.get_rb(fb[1])
+    
+    assert(rb.format:match "RGBA")
+    return {w=rb.w, h=rb.h}
+end
