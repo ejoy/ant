@@ -295,12 +295,8 @@ function Util.create_gizmo(world)
                 -- can_select = true,
             },
         }
-        if ignore_scale then
-            table.insert(args.policy,"ignore_parent_scale")
-            args.data.ignore_parent_scale = true
-        end
-        local eid = world:create_entity(args)
-        return eid
+
+        return world:create_entity(args)
     end
     local root = create_gizmo_object("gizmo",nil)
     local result = {eid = root}

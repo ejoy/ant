@@ -20,7 +20,6 @@ runtime.start {
 		"ant.render|light.directional",
 		"ant.render|light.ambient",
 		"ant.scene|hierarchy",
-		"ant.scene|ignore_parent_scale",
 		--editor
 		"ant.character|character",
 		"ant.objcontroller|select",

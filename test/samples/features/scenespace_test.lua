@@ -115,7 +115,6 @@ local function create_scene_node_test()
         policy = {
             "ant.render|name",
             "ant.scene|hierarchy",
-            "ant.scene|ignore_parent_scale",
             "ant.serialize|serialize",
         },
         data = {
@@ -128,7 +127,6 @@ local function create_scene_node_test()
             },
             --hierarchy = {ref_path = hie_refpath,},
             hierarchy = {},
-            ignore_parent_scale = true,
             name = 'hie_level2_1',
             serialize = seriazlizeutil.create(),
         }
@@ -569,12 +567,10 @@ local test_queue = {
         world:add_policy(eid, {
             policy = {
                 "ant.scene|hierarchy",
-                "ant.scene|ignore_parent_scale",
             },
             data = {
                 hierarchy = {},
                 hierarchy_visible = true,
-                ignore_parent_scale = true,
             }
         })
         world:create_entity {

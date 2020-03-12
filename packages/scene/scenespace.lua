@@ -233,13 +233,8 @@ end
 
 local trans_changed_mb = world:sub {"component_changed", "transform"}
 
-local ignore_parent_scale_changed_mb = world:sub {"component_changed", "ignore_parent_scale"}
-
 local register_remove_mb = {
 	world:sub {"component_register", "hierarchy"},
-	world:sub {"component_register", "ignore_parent_scale"},
-
-	world:sub {"component_removed", "ignore_parent_scale"},
 }
 
 local function get_check_mb_list()
@@ -247,9 +242,6 @@ local function get_check_mb_list()
 	for _, mb in ipairs(register_remove_mb) do
 		list[#list+1] = mb
 	end
-
-	list[#list+1] = ignore_parent_scale_changed_mb
-
 	return list
 end
 
