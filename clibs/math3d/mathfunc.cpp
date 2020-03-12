@@ -116,54 +116,63 @@ math3d_sub_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float
 	*(glm::vec4*)r = VEC(lhs) - VEC(rhs);
 }
 
+// epsilon for pow2
+#define EPSILON 0.00001f
+
 int
 math3d_decompose_scale(const float mat[16], float scale[4]) {
 	int ii;
-	for (ii = 0; ii < 3; ++ii)
-		scale[ii] = glm::length(MAT(mat)[ii]);
-	if (scale[0] == 0 || scale[1] == 0 || scale[2] == 0) {
+	scale[3] = 0;
+	for (ii = 0; ii < 3; ++ii) {
+		const float * v = (const float *)&MAT(mat)[ii];
+		float dot = glm::dot(VEC3(v),VEC3(v));
+		if (glm::equal(dot , 1.0f, EPSILON)) {
+			scale[ii] = 1.0f;
+		} else {
+			scale[ii] = sqrtf(dot);
+			if (scale[ii] == 0) {
+				// invalid scale, use 1 instead
+				scale[0] = scale[1] = scale[2] = 1.0f;
+				return 1;
+			}
+		}
+	}
+	if (scale[0] == 1.0f && scale[1] == 1.0f && scale[2] == 1.0f) {
 		return 1;
 	}
-	scale[3] = 0;
 	return 0;
 }
 
-int
+void
 math3d_decompose_rot(const float mat[16], float quat[4]) {
+	glm::quat &q = *(glm::quat *)quat;
+	glm::mat3x3 rotMat(MAT(mat));
 	float scale[4];
-	if (math3d_decompose_scale(mat, scale)) {
-		return 1;
-	} else {
-		glm::quat &q = *(glm::quat *)quat;
-		glm::mat3x3 rotMat(MAT(mat));
+	if (math3d_decompose_scale(mat, scale) == 0) {
 		int ii;
 		for (ii = 0; ii < 3; ++ii) {
 			rotMat[ii] /= scale[ii];
 		}
-		q = glm::quat_cast(rotMat);
-		return 0;
 	}
+	q = glm::quat_cast(rotMat);
 }
 
-int
+void
 math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 	const glm::mat4x4 &m = *(const glm::mat4x4 *)mat;
 	float trans[4] = { m[3][0] , m[3][1], m[3][2], 1 };
-	int ii;
 	float scale[4];
-	if (math3d_decompose_scale(mat, scale)) {
-		return 1;
-	}
-	
 	glm::mat3x3 rotMat(m);
-	for (ii = 0; ii < 3; ++ii) {
-		rotMat[ii] /= scale[ii];
+	if (!math3d_decompose_scale(mat, scale)) {
+		int ii;
+		for (ii = 0; ii < 3; ++ii) {
+			rotMat[ii] /= scale[ii];
+		}
 	}
 	glm::quat q = glm::quat_cast(rotMat);
 	lastack_pushvec4(LS, trans);
 	lastack_pushquat(LS, &q.x);
 	lastack_pushvec4(LS, scale);
-	return 0;
 }
 
 float

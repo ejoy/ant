@@ -13,8 +13,8 @@ void math3d_make_quat_from_axis(struct lastack *LS, const float *axis, float rad
 int math3d_mul_object(struct lastack *LS, const float *lval, const float *rval, int ltype, int rtype, float tmp[16]);
 void math3d_add_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]);
 void math3d_sub_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]);
-int math3d_decompose_matrix(struct lastack *LS, const float *mat);
-int math3d_decompose_rot(const float mat[16], float quat[4]);
+void math3d_decompose_matrix(struct lastack *LS, const float *mat);
+void math3d_decompose_rot(const float mat[16], float quat[4]);
 int math3d_decompose_scale(const float mat[16], float scale[4]);
 void math3d_quat_to_matrix(struct lastack *LS, const float quat[4]);
 void math3d_matrix_to_quat(struct lastack *LS, const float mat[16]);

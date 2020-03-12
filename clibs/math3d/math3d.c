@@ -311,9 +311,8 @@ assign_scale(lua_State *L, struct lastack *LS, int index, int64_t oid) {
 	}
 	copy_matrix(L, LS, oid, mat);
 	float *trans = &mat[3*4];
-	math3d_make_srt(LS, scale, 
-		math3d_decompose_rot(mat, quat) ? NULL : quat,
-		trans);
+	math3d_decompose_rot(mat, quat);
+	math3d_make_srt(LS, scale, quat, trans);
 	return lastack_mark(LS, lastack_pop(LS));
 }
 
@@ -413,11 +412,8 @@ extract_srt(struct lastack *LS, const float *mat, int what) {
 		lastack_pushvec4(LS, v);
 		break;
 	case 'r':
-		if (math3d_decompose_rot(mat, v)) {
-			return lastack_constant(LINEAR_TYPE_QUAT);
-		} else {
-			lastack_pushquat(LS, v);
-		}
+		math3d_decompose_rot(mat, v);
+		lastack_pushquat(LS, v);
 		break;
 	case 't':
 		v[0] = mat[3*4+0];
@@ -832,10 +828,7 @@ static int
 lsrt(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	const float * mat = matrix_from_index(L, LS, 1);
-	if (math3d_decompose_matrix(LS, mat)) {
-		// failed
-		return 0;
-	}
+	math3d_decompose_matrix(LS, mat);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
