@@ -27,9 +27,6 @@
     <ProjectReference Include="bgfx.vcxproj">
       <Project>{50b83d8c-7938-4814-bc5a-738cba9bf0e6}</Project>
     </ProjectReference>
-    <ProjectReference Include="bullet.vcxproj">
-      <Project>{457e974d-2c6d-44f9-a5fe-77f96c17c8e8}</Project>
-    </ProjectReference>
     <ProjectReference Include="crypt.vcxproj">
       <Project>{45cab35b-9a30-4657-93c1-4e676e4ea412}</Project>
     </ProjectReference>

@@ -1,6 +1,5 @@
 { "bgfx", luaopen_bgfx },
 { "bgfx.util", luaopen_bgfx_util },
-{ "bullet", luaopen_bullet },
 { "crypt", luaopen_crypt },
 { "datalist", luaopen_datalist },
 { "filesystem.cpp", luaopen_filesystem_cpp },
