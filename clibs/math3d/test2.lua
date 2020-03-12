@@ -21,7 +21,7 @@ for i = 1,4 do
 end
 
 print "===SRT==="
-ref1.m = { s = 2, r = { 0, math.rad(60), 0 }, t = { 1,2,3} }
+ref1.m = { s = 1, r = { 0, math.rad(60), 0 }, t = { 1,2,3} }
 print(ref1)
 local s,r,t = math3d.srt(ref1)
 print("S = ", math3d.tostring(s))

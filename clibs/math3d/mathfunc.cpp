@@ -117,7 +117,18 @@ math3d_sub_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float
 }
 
 // epsilon for pow2
-#define EPSILON 0.00001f
+//#define EPSILON 0.00001f
+// glm::equal(dot , 1.0f, EPSILON)
+
+static inline int
+equal_one(float f) {
+	union {
+		float f;
+		uint32_t n;
+	} u;
+	u.f = f;
+	return ((u.n + 0x3f) & ~0x3f) == 0x3f800000;	// float 1
+}
 
 int
 math3d_decompose_scale(const float mat[16], float scale[4]) {
@@ -126,7 +137,7 @@ math3d_decompose_scale(const float mat[16], float scale[4]) {
 	for (ii = 0; ii < 3; ++ii) {
 		const float * v = (const float *)&MAT(mat)[ii];
 		float dot = glm::dot(VEC3(v),VEC3(v));
-		if (glm::equal(dot , 1.0f, EPSILON)) {
+		if (equal_one(dot)) {
 			scale[ii] = 1.0f;
 		} else {
 			scale[ii] = sqrtf(dot);
