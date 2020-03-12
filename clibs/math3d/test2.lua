@@ -7,6 +7,8 @@ local ref2 = math3d.ref()
 ref2.v = math3d.vector(1,2,3,4)
 print("ref1", ref1)
 print(ref2)
+ref2.v = math3d.pack("dddd", 1,2,3,4)
+print(ref2)
 ref2.v = math3d.vector(ref2, 1)
 print("ref2", ref2)
 
@@ -19,7 +21,7 @@ for i = 1,4 do
 end
 
 print "===SRT==="
-ref1.m = { s = 2, r = { 0, math.rad(60), 0 }, t = { 1,2,3} }
+ref1.m = { s = 1, r = { 0, math.rad(60), 0 }, t = { 1,2,3} }
 print(ref1)
 local s,r,t = math3d.srt(ref1)
 print("S = ", math3d.tostring(s))

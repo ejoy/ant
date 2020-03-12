@@ -312,9 +312,8 @@ assign_scale(lua_State *L, struct lastack *LS, int index, int64_t oid) {
 	}
 	copy_matrix(L, LS, oid, mat);
 	float *trans = &mat[3*4];
-	math3d_make_srt(LS, scale, 
-		math3d_decompose_rot(mat, quat) ? NULL : quat,
-		trans);
+	math3d_decompose_rot(mat, quat);
+	math3d_make_srt(LS, scale, quat, trans);
 	return lastack_mark(LS, lastack_pop(LS));
 }
 
@@ -414,11 +413,8 @@ extract_srt(struct lastack *LS, const float *mat, int what) {
 		lastack_pushvec4(LS, v);
 		break;
 	case 'r':
-		if (math3d_decompose_rot(mat, v)) {
-			return lastack_constant(LINEAR_TYPE_QUAT);
-		} else {
-			lastack_pushquat(LS, v);
-		}
+		math3d_decompose_rot(mat, v);
+		lastack_pushquat(LS, v);
 		break;
 	case 't':
 		v[0] = mat[3*4+0];
@@ -792,11 +788,23 @@ lvector(lua_State *L) {
 		lua_pushnumber(L, 0.0f);
 	} else if (top == 2) {
 		struct lastack *LS = GETLS(L);
-		const float * vec3 = vector_from_index(L, LS, 1);
+		if (!lua_isuserdata(L, 1)) {
+			return luaL_error(L, "Should be (vector id , number)");
+		}
+		int64_t id = get_id(L, 1, lua_type(L, 1));
+		int type;
+		const float *vec3 = lastack_value(LS, id, &type);
+		if (vec3 == NULL || type != LINEAR_TYPE_VEC4) {
+			return luaL_error(L, "Need a vector, it's %s", vec3 == NULL? "Invalid" : lastack_typename(id));
+		}
 		float n4 = luaL_checknumber(L, 2);
-		float vec4 [4] = { vec3[0], vec3[1], vec3[2], n4 };
-		lastack_pushvec4(LS, vec4);
-		lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+		if (n4 == vec3[3]) {
+			lua_pushlightuserdata(L, STACKID(id));
+		} else {
+			float vec4 [4] = { vec3[0], vec3[1], vec3[2], n4 };
+			lastack_pushvec4(LS, vec4);
+			lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+		}
 		return 1;
 	}
 	return new_object(L, LINEAR_TYPE_VEC4, vector_from_table, 4);
@@ -816,10 +824,7 @@ static int
 lsrt(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	const float * mat = matrix_from_index(L, LS, 1);
-	if (math3d_decompose_matrix(LS, mat)) {
-		// failed
-		return 0;
-	}
+	math3d_decompose_matrix(LS, mat);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
@@ -1015,15 +1020,23 @@ ltransform(lua_State *L){
 	}
 
 	const float* v = vector_from_index(L, LS, 2);
+	float tmp[4];
 	if (!lua_isnil(L, 3)){
-		const int ispoint = luaL_checkinteger(L, 3);
-		const float vv[4] = {v[0], v[1], v[2], ispoint ? 1.f : 0.f};
-		lastack_pushvec4(LS, vv);
-		v = lastack_value(LS, lastack_pop(LS), NULL);
+		const float p = luaL_checknumber(L, 3);
+		if (p != v[3]) {
+			tmp[0] = v[0];
+			tmp[1] = v[1];
+			tmp[2] = v[2];
+			tmp[3] = p;
+			v = tmp;
+		}
 	}
 
 	int type;
 	const float *rotator = (const float *)lastack_value(LS, rotatorid, &type);
+	if (rotator == NULL) {
+		return luaL_error(L, "Invalid rotator id");
+	}
 
 	switch (type){
 	case LINEAR_TYPE_QUAT:
@@ -1171,6 +1184,45 @@ lhomogeneous_depth(lua_State *L){
 	return 1;
 }
 
+static int
+lpack(lua_State *L) {
+	size_t sz;
+	const char * format = luaL_checklstring(L, 1, &sz);
+	int n = lua_gettop(L);
+	int i;
+	if (n != 5 && n != 17) {
+		return luaL_error(L, "need 5 or 17 arguments , it's %d", n);
+	}
+	--n;
+	if (n != sz) {
+		return luaL_error(L, "Invalid format %s", format);
+	}
+	union {
+		float f[16];
+		uint32_t n[16];
+	} u;
+	for (i=0;i<n;i++) {
+		switch(format[i]) {
+		case 'f':
+			u.f[i] = luaL_checknumber(L, i+2);
+			break;
+		case 'd':
+			u.n[i] = luaL_checkinteger(L, i+2);
+			break;
+		default:
+			return luaL_error(L, "Invalid format %s", format);
+		}
+	}
+	struct lastack *LS = GETLS(L);
+	if (n == 4) {
+		lastack_pushvec4(LS, u.f);
+	} else {
+		lastack_pushmatrix(LS, u.f);
+	}
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
@@ -1215,6 +1267,7 @@ luaopen_math3d(lua_State *L) {
 		{ "lerp", llerp},
 		{ "stacksize", lstacksize},
 		{ "homogeneous_depth", lhomogeneous_depth },
+		{ "pack", lpack },
 		{ NULL, NULL },
 	};
 
