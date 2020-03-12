@@ -142,9 +142,11 @@ local matrix = adapter.matrix(testfunc.matrix2, 1)	-- convert all mat
 local var = adapter.variant(testfunc.vector, testfunc.matrix1, 1)
 local format = adapter.format(testfunc.variant, testfunc.format, 2)
 local mvq = adapter.getter(testfunc.getmvq, "mvq")	-- getmvq will return matrix, vector, quat
+local matrix2_v = adapter.format(testfunc.matrix2, "mm", 1)
 print(vector(ref2, math3d.vector{1,2,3}))
 print(matrix1(ref1))
 print(matrix2(ref1,ref1))
+print(matrix2_v(ref1,ref1))
 print(matrix(ref1,ref1))
 print(var(ref1))
 print(var(ref2))
