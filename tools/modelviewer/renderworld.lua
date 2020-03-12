@@ -6,10 +6,10 @@ local renderpkg = import_package "ant.render"
 local skypkg = import_package "ant.sky"
 local fs = require "filesystem"
 local task = require "task"
+local math3d = require "math3d"
 
 local skyutil = skypkg.util
 local mu = mathpkg.util
-local ms = mathpkg.stack
 
 local lu = renderpkg.light
 local cu = renderpkg.components
@@ -41,7 +41,7 @@ local animation = world:interface "ant.animation|animation"
 local camera_id
 
 local function create_light()
-	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, ms:euler2quat(mu.to_radian{60, 50, 0, 0}, true))
+	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, math3d.quaternion(math.rad(60), math.rad(50), 0))
 	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
@@ -112,7 +112,7 @@ local target
 local move_speed = 200
 
 local function setEntityFacing(e, facing)
-	e.transform.r(ms:euler2quat {0,facing,0})
+	e.transform.r.q = math3d.quaternion(0, facing, 0)
 end
 
 local function setEntityPosition(e, postion)
@@ -124,15 +124,15 @@ local function setEntityPosition(e, postion)
 	if collider.test(e, srt) then
 		return
 	end
-	ms(e.transform.t, postion, "=")
+	e.transform.t.v = postion
 	return true
 end
 
 local function moveEntity(e, distance)
-	local postion = ms(e.transform.t, {distance}, e.transform.r, "d*+P")
+	local postion = math3d.muladd(distance, math3d.todirection(e.transform.r), e.transform.t)
 	if setEntityPosition(e, postion) then
 		local camera_data = camera.get(camera_id)
-		camera_data.eyepos = ms(camera_data.eyepos, {distance}, e.transform.r, "d*+T")
+		camera_data.eyepos.v = math3d.muladd(math3d.todirection(e.transform.r), distance, camera_data.eyepos)
 	end
 end
 
@@ -180,7 +180,7 @@ local function mainloop(delta)
 		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
-			local postion = ms(player.transform.t, "T")
+			local postion = math3d.totable(player.transform.t)
 			local facing = math.atan(x0-postion[1], z0-postion[3])
 			setEntityFacing(player, facing)
 			target = {x0, 0, z0}
@@ -194,13 +194,13 @@ local function mainloop(delta)
 	local move_distance = delta * move_speed / 100000
 	if mode == "keyboard" then
 		local camera_data = camera.get(camera_id)
-		local viewdir = ms(camera_data.viewdir, "T")
+		local viewdir = math3d.totable(camera_data.viewdir)
 		local facing = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
 		animation.set_state(player, "move")
 		setEntityFacing(player, facing)
 		moveEntity(player, move_distance)
 	elseif mode == "mouse" then
-		local postion = ms(player.transform.t, "T")
+		local postion = math3d.totable(player.transform.t)
 		local dx = target[1] - postion[1]
 		local dy = target[3] - postion[3]
 		local dis = dx*dx+dy*dy

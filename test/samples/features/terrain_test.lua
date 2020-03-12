@@ -6,7 +6,8 @@ local fs = require "filesystem"
 local serialize = import_package "ant.serialize"
 
 local mathpkg = import_package "ant.math"
-local mu, ms, mc = mathpkg.util, mathpkg.stack, mathpkg.constant
+local mu = mathpkg.util
+local math3d = require "math3d"
 
 local terrain_test = ecs.system "terrain_test"
 terrain_test.require_system 'init_loader'
@@ -50,12 +51,12 @@ function terrain_test:init()
 		}
 	}
 
-	local p2, p1 = ms({0, 1, 0, 1}, {0, -1, 0, 1}, "PP")
+	local p2, p1 = math3d.vector(0, 1, 0, 1), math3d.vector(0, -1, 0, 1)
 	local hitpt, hitnormal = icollider.raycast {p1, p2}
 	if hitpt then
 		print("raycast terrain collider:")
-		print("\thitpt:", ms(hitpt, "V"))
-		print("\thitnormal:", ms(hitnormal, "V"))
+		print("\thitpt:", math3d.tostring(hitpt))
+		print("\thitnormal:", math3d.tostring(hitnormal))
 	else
 		print("not found hit point to terrain collider")
 	end

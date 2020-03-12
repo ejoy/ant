@@ -6,114 +6,11 @@ local assetmgr	= assetpkg.mgr
 
 local renderpkg = import_package 'ant.render'
 local declmgr 	= renderpkg.declmgr
-local computil 	= renderpkg.components
-
-local ms 		= import_package "ant.math".stack
 
 local mathbaselib=require "math3d.baselib"
 
 local fs 		= require "filesystem"
 local bgfx 		= require "bgfx"
-
--- local terrainshape = ecs.component "terrain_shape"
--- 	.up_axis 	"int" (0)
--- 	.flip_quad_edges "boolean" (false)
-
--- function terrainshape:delete()
--- 	local handle = self.handle
--- 	if handle then
--- 		Physics:del_shape(self.handle)
--- 	end
--- end
-
--- local terrain_collider = ecs.component "terrain_collider"
--- 	.shape "terrain_shape"
--- 	.collider "collider"
-
--- local function create_terrain_shape(shape, terraincomp)
--- 	local terraininfo = assetmgr.get_resource(terraincomp.ref_path)
--- 	local terrain = terraininfo.handle
--- 	local heightmap = terrain:heightmap_data()	
--- 	local bounding = terrain:bounding()
--- 	local aabb = bounding.aabb
--- 	shape.handle = Physics:new_shape("terrain", {
--- 		width = terraininfo.grid_width, height = terraininfo.grid_length, 
--- 		heightmap_scale = 1.0, 
--- 		min_height = aabb.min[2], max_height = aabb.max[2],
--- 		heightmapdata = heightmap,
--- 		up_axis = shape.up_axis, flip_quad_edges = shape.flip_quad_edges
--- 	})
-
--- 	local heightrange = aabb.max[2] - aabb.min[2]
-
--- 	local scale = {terraininfo.width / terraininfo.grid_width, terraininfo.height / heightrange, terraininfo.length / terraininfo.grid_length}
--- 	Physics:set_shape_scale(shape.handle, ms(scale, "P"))
--- end
-
--- function terrain_collider:delete()
--- 	self.shape.handle = nil -- collider own this handle, will delete in collider:delete function
--- end
-
--- ecs.component_alias('terrain', 'resource')
-
--- local terrainpolicy = ecs.policy "terrain"
--- terrainpolicy.require_component "rendermesh"
--- terrainpolicy.require_component "terrain"
--- terrainpolicy.require_transform "terrain"
-
--- local t = ecs.transform "terrain"
--- t.input "terrain"
--- t.output "rendermesh"
-
--- function t.process(e)
--- 	local rm = e.rendermesh
--- 	local terrain = e.terrain
---     local terraininfo = assetmgr.get_resource(terrain.ref_path)
---     local terrainhandle = terraininfo.handle
-
---     local numlayers = terraininfo.num_layers
---     if numlayers ~= 1 + #e.material then
---         error('terrain layer number is not equal material defined numbers')
--- 	end
-
--- 	local vb, ib = terrainhandle:buffer()
--- 	local vbsize, ibsize = terrainhandle:buffer_size()
--- 	local num_vertices, num_indices = terrainhandle:buffer_count()
--- 	local decl = declmgr.get(terraininfo.declname)
-
--- 	local dynamic = terraininfo.dynamic
-	
--- 	local create_vb = dynamic and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
--- 	local vbhandle = create_vb({"!", vb, 0, vbsize}, decl.handle, dynamic and "wa" or "")
-
--- 	local create_ib = dynamic and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer	
--- 	local ibhandle = create_ib({ib, 0, ibsize}, dynamic and "wad" or "d")
-
--- 	local group = {
--- 		vb = {
--- 			handles = {
--- 				vbhandle
--- 			},
--- 			start = 0,
--- 			num = num_vertices,
--- 		},
--- 		ib = {
--- 			handle = ibhandle,
--- 			start = 0,
--- 			num = num_indices,
--- 		}
--- 	}
-
--- 	local meshscene = computil.assign_group_as_mesh()	
--- 	-- using indirect draw can optimize this
--- 	local groups = {}
--- 	for _=1, numlayers do
--- 		groups[#groups+1] = group
--- 	end
-
--- 	meshscene.scenes[1][1] = groups
--- 	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/terrain.mesh", meshscene)
--- end
 
 local t = ecs.component "terrain"
 ["opt"].tile_width		"int" (2)
@@ -159,7 +56,7 @@ function t:init()
 
 		self.num_element = self.num_section * self.element_size * self.element_size
 		local tlen = tile_length(self)
-		self.bounding = mathbaselib.new_bounding(ms)
+		self.bounding = mathbaselib.new_bounding()
 		local gridwidth, gridheight = self.tile_width * tlen, self.tile_height * tlen
 		local hf_width, hf_height = gridwidth+1, gridheight+1
 		local heightfield = {hf_width, hf_height}

@@ -7,9 +7,11 @@ local asset      = import_package "ant.asset"
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
 local fs         = require 'filesystem'
-local ms, mu     = mathpkg.stack, mathpkg.util
+local mu         = mathpkg.util
 local lu         = renderpkg.light
 local rhwi       = renderpkg.hwi
+
+local math3d     = require "math3d"
 
 local drawer = world:interface "ant.render|iwidget_drawer"
 
@@ -32,7 +34,7 @@ local function load_file(file)
 end
 
 function m:init()
-    lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, ms:euler2quat(mu.to_radian{60, 50, 0, 0}, true))
+    lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, math3d.quaternion(mu.to_radian{60, 50, 0, 0}, true))
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     RoleEntityId = world:create_entity(load_file 'entity.txt')
 end

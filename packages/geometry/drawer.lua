@@ -1,12 +1,12 @@
 local draw = {}; draw.__index = {}
 
-local math3d = import_package "ant.math"
-local ms = math3d.stack
+local math3d = require "math3d"
+local mc = import_package "ant.math".constant
 
 local geo = require "geometry"
 
 local function gen_color_vertex(pt, color, transform)
-	local npt = ms(transform, {pt[1], pt[2], pt[3], 1}, "*T")
+	local npt = math3d.totable(math3d.transform(transform, pt, 1))
 	npt[4] = color
 	return npt
 end
@@ -20,7 +20,7 @@ local function gen_color_vertices(pts, color, transform, vb)
 			table.move(v, 1, #v, #vb+1, vb)
 		end
 	else
-		for i=1, vnum do			
+		for i=1, vnum do
 			table.move(pts[i], 1, 3, #vb+1, vb)
 			vb[#vb+1] = color
 		end
@@ -100,13 +100,14 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 	local updown_ratio = 0.3
 
 	local bonevb, boneib = create_bone(updown_ratio)
-	--local localtrans = ms({type="srt", r={-90, 0, 0}, t={0, 0, updown_ratio}}, "P")
-	local localtrans = ms:srtmat({1}, ms:euler2quat{math.rad(-90), 0, 0}, {0, 0, updown_ratio, 1})
+	local localtrans = math3d.transform(
+						math3d.matrix{r = math3d.quaternion(math.rad(-90), 0, 0)},
+						math3d.vector(0, 0, updown_ratio, 1),
+						nil)
 
 	local poitions = {}
-	local origin = ms({0 ,0, 0, 1}, "P")
 	for _, j in ipairs(joints) do
-		local p = ms(ms:matrix(j), origin, "*P")	-- extract poistion
+		local p = math3d.index(j, 4)
 		table.insert(poitions, p)
 	end
 
@@ -114,20 +115,19 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 	for i=1, #bones do
 		local b = bones[i]
 		local beg_pos, end_pos = poitions[b[1]], poitions[b[2]]
-		local vec = ms(end_pos, beg_pos, "-P")
-		local len = ms:length(vec)
-		local rotation = ms(vec, "nDP")
+		local vec = math3d.sub(end_pos, beg_pos)
+		local len = math3d.length(vec)
+		local rotation = math3d.torotation(math3d.normalize(vec))
 		
-		local finaltrans = ms({type="srt", r=rotation, s={len, len, len}, t=beg_pos}, localtrans, "*P")
+		local finaltrans = math3d.mul(math3d.matrix{r=rotation, s=len, t=beg_pos}, localtrans)
 		if transform then
-			finaltrans = ms(transform, finaltrans, "*P")
+			finaltrans = math3d.mul(transform, finaltrans)
 		end
 
 		local vstart = (#dvb - 1) // 4
 
 		for _, bb in ipairs(bonevb) do
-			local newbb = {bb[1], bb[2], bb[3], 1}
-			local t = ms(finaltrans, newbb, "*T")
+			local t = math3d.totable(math3d.transform(finaltrans, bb, 1))
 			t[4] = color
 			append_array(t, dvb)
 		end

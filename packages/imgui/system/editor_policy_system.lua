@@ -1,15 +1,8 @@
 local ecs = ...
 local world = ecs.world
 local WatcherEvent = require "hub_event"
-local serialize = import_package 'ant.serialize'
-local fs = require "filesystem"
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
-local ms = mathpkg.stack
-local assetmgr = import_package "ant.asset".mgr
-local Rx        = import_package "ant.rxlua".Rx
 
-local test_component = ecs.component_alias("test_component","boolean")
+ecs.component_alias("test_component", "boolean")
 
 local test_add_policy = ecs.policy "test_add_policy"
 test_add_policy.require_component "test_component"

@@ -4,9 +4,7 @@ local world = ecs.world
 local renderpkg = import_package "ant.render"
 local default_comp=renderpkg.default
 
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
-local ms = mathpkg.stack
+local math3d = require "math3d"
 
 -- TODO: will move to another stage, this lock can do with any entity with transform component
 local camerasys = ecs.system "camera_system"
@@ -19,14 +17,14 @@ function camerasys:lock_target()
             if locktype == "move" then
                 local targetentity = world[lock_target.target]
                 local transform = targetentity.transform
-                ms(camera.eyepos, transform.t, lock_target.offset, "+=")
+                camera.eyepos.v = math3d.add(transform.t, lock_target.offset)
             elseif locktype == "rotate" then
                 local targetentity = world[lock_target.target]
                 local transform = targetentity.transform
 
                 local eyepos = camera.eyepos
                 local targetpos = transform.t
-                ms(camera.viewdir, targetpos, eyepos, "-n=")
+                camera.viewdir.v = math3d.normalize(math3d.sub(targetpos, eyepos))
             else
                 error(string.format("not support locktype:%s", locktype))
             end

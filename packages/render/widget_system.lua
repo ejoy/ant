@@ -3,7 +3,7 @@ local world = ecs.world
 
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
-local ms = mathpkg.stack
+local math3d = require "math3d"
 
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
@@ -41,7 +41,7 @@ function m:init()
 			"ant.render|bounding_draw",
 		},
 		data = {
-			transform 		= mu.identity_transform(),
+			transform 		= math3d.matrix(),
 			material 		= {ref_path = "/pkg/ant.resources/depiction/materials/line.material"},
 			rendermesh 		= {},
 			name 			= "mesh's bounding renderer",
@@ -116,16 +116,14 @@ local function apply_srt(shape, srt)
 		return srt
 	end
 	if not srt then
-		return {
-			s = {1,1,1,0},
-			r = {0,0,0,1},
-			t = ms(shape.origin, "P"),
+		return math3d.matrix{
+			t = shape.origin,
 		}
 	end
-	return {
+	return math3d.matrix{
 		s = srt.s,
 		r = srt.r,
-		t = ms(srt.t, shape.origin, "+P"),
+		t = math3d.add(srt.t, shape.origin),
 	}
 end
 
@@ -209,23 +207,5 @@ function rmb:widget()
 	computil.calc_transform_boundings(world, transformed_boundings)
 	for _, tb in ipairs(transformed_boundings) do
 		iwd.draw_aabb_box(tb:get "aabb")
-	end
-end
-
-local ray_cast_hitted = world:sub {"ray_cast_hitted"}
-
-local draw_raycast_point = ecs.system "draw_raycast_point"
-draw_raycast_point.require_system "widget_drawer"
-
-function draw_raycast_point:widget()
-    for hitted in ray_cast_hitted:each() do
-        local result = hitted[3]
-        local pt = result.hit_pt_in_WS
-		local len = 0.5
-		local min = {-len, -len, -len,}
-		local max = {len, len, len}
-		min = ms(min, pt, "T")
-		max = ms(max, pt, "T")
-		iwd.draw_aabb_box {min=min, max=max}
 	end
 end

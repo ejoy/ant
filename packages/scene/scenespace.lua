@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg 	= import_package "ant.math"
-local ms 		= mathpkg.stack
+local math3d = require "math3d"
 
 local assetpkg 	= import_package "ant.asset"
 local assetmgr 	= assetpkg.mgr
@@ -10,10 +9,6 @@ local assetmgr 	= assetpkg.mgr
 local animodule = require "hierarchy.animation"
 
 ecs.component_alias("attach", "entityid")
-ecs.component_alias("ignore_parent_scale", "boolean")
-
-local ip = ecs.policy "ignore_parent_scale"
-ip.require_component "ignore_parent_scale"
 
 ecs.component "hierarchy_transform_result" {}
 ecs.singleton "hierarchy_transform_result" {}
@@ -114,17 +109,16 @@ local function tree_sort(tree)
 	return r
 end
 
-local function update_hirarchy_entity_world(trans, ignore_parentscale)
-	local srt = ms:srtmat(trans)
+local function update_hirarchy_entity_world(trans)
+	local srt = math3d.matrix(trans)
 	local peid = trans.parent
 	if peid and world[peid] then
 		local parent = world[peid]
 		local pt = parent.transform
 
-		local finalmat = ms:mul_srtmat(pt.world, srt, ignore_parentscale)
-		ms(trans.world, finalmat, "=")
+		trans.world.m = math3d.mul(pt.world, srt)
 	else
-		ms(trans.world, srt, "=")
+		trans.world.m = srt
 	end
 	return trans.world
 end
@@ -143,7 +137,7 @@ local function mark_cache(eid, cache_result)
 	local e = world[eid]
 	local t = e.transform
 	
-	local cachemat = update_hirarchy_entity_world(t, e.ignore_parent_scale)
+	local cachemat = update_hirarchy_entity_world(t)
 	assert(type(cachemat) == 'userdata')
 
 	local hiecomp = assert(e.hierarchy)
@@ -179,7 +173,7 @@ local function update_remove_subtree(remove_trees, cache_result)
 			local subentity = assert(world[subeid])
 
 			local trans = subentity.transform
-			trans.world(ms:srtmat(trans))
+			trans.world.m = trans
 			if subentity.hierarchy then
 				hierarchy_trees[subeid] = pseudoroot_eid
 			end

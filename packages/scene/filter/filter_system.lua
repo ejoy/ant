@@ -11,8 +11,8 @@ local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
 
 local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
 local mu = mathpkg.util
+local math3d = require "math3d"
 
 local filter_properties = ecs.system "filter_properties"
 filter_properties.require_singleton "render_properties"
@@ -105,7 +105,7 @@ end
 
 local function get_scale_mat(worldmat, scenescale)
 	if scenescale and scenescale ~= 1 then
-		return ms(worldmat, ms:srtmat(mu.scale_mat(scenescale)), "*P")
+		return math3d.mul(worldmat, math3d.matrix{s=scenescale})
 	end
 	return worldmat
 end
@@ -122,7 +122,7 @@ local function filter_element(eid, rendermesh, worldmat, materialcomp, filter)
 		if is_visible(name, submesh_refs) then
 			local trans = get_scale_mat(worldmat, meshscene.scenescale)
 			if meshnode.transform then
-				trans = ms(trans, meshnode.transform, "*P")
+				trans = math3d.mul(trans, meshnode.transform)
 			end
 
 			local material_refs = get_material_refs(name, submesh_refs)
@@ -169,7 +169,7 @@ local function update_entity_transform(hierarchy_cache, eid)
 	local transform = e.transform
 	local worldmat = transform.world
 	if e.hierarchy == nil then
-		ms(worldmat, ms:srtmat(transform), "=")
+		worldmat.m = transform
 		local peid = transform.parent
 		
 		if peid then
@@ -185,12 +185,11 @@ local function update_entity_transform(hierarchy_cache, eid)
 				-- if we want cache this result, we need to find all the children when hierarchy
 				-- node deleted, and update it's children at that moment, then we can save 
 				-- this calculation.
-				local localmat = ms:srtmat(transform)
 				if hie_result and slotname then
-					local hiemat = ms:matrix(hie_result[slotname])
-					ms(worldmat, parentmat, hiemat, localmat, "**=")
+					local hiemat = hie_result[slotname]
+					worldmat.m = math3d.mul(parentmat, math3d.mul(hiemat, worldmat))
 				else
-					ms(worldmat, parentmat, localmat, "*=")
+					worldmat.m = math3d.mul(parentmat, worldmat)
 				end
 			end
 		end

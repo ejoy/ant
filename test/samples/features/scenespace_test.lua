@@ -2,8 +2,9 @@ local ecs = ...
 local world = ecs.world
 
 local mathpkg       = import_package "ant.math"
-local ms            = mathpkg.stack
 local mu            = mathpkg.util
+
+local math3d        = require "math3d"
 
 local seriazlizeutil= import_package "ant.serialize"
 local renderpkg     = import_package "ant.render"
@@ -20,10 +21,9 @@ local hie_refpath = fs.path '/pkg/ant.resources' / 'hierarchy' / 'test_hierarchy
 local function add_hierarchy_file(hiepath)
     local hierarchy_module = require 'hierarchy'
     local root = hierarchy_module.new()
-    local s = ms({0.01, 0.01, 0.01}, "P")
-    local h1_node = root:add_child('h1', s, nil, ms({3, 4, 5}, "P"))
-    root:add_child('h2', s, nil, ms({1, 2, 3}, 'P'))
-    h1_node:add_child('h1_h1', nil, nil, ms({0, 2, 0}, 'P'))
+    local h1_node = root:add_child('h1', math3d.matrix{s=0.01, t={3, 4, 5}})
+    root:add_child('h2', math3d.matrix{s=0.01, t={1, 2, 3}})
+    h1_node:add_child('h1_h1', math3d.matrix{t={0, 2, 0}})
 
     local function save_rawdata(handle, respath)
         local realpath = respath:localpath()
@@ -513,12 +513,14 @@ end
 local function move_root_node(rootnodename)
     local eid = find_entity_by_name(rootnodename, 'hierarchy')
     local e = world[eid]
-    local oldvalue = ms(e.transform.t, "P")
-    ms(e.transform.t, {10, 0, 0, 1}, "=")
+    local t = e.transform.t
+    local oldvalue = math3d.vector(t)
+    local newvalue = math3d.vector(10, 0, 0, 1)
+    t.v = newvalue
     world:pub {"component_changed", "transform", eid, {
         field = "t",
         oldvalue = oldvalue,
-        newvalue = ms(e.transform.t, "P"),
+        newvalue = newvalue,
     }}
 end
 

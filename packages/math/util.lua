@@ -1,8 +1,7 @@
 local util = {}
 util.__index = util
 
-local const = require "constant"
-local ms = require "stack"
+local math3d = require "math3d"
 
 function util.limit(v, min, max)
     if v > max then return max end
@@ -64,10 +63,6 @@ function util.translate_mat(t)
 	return util.srt(nil, nil, t)
 end
 
-function util.identity_transform()
-	return util.srt()
-end
-
 function util.ratio(start, to, t)
 	return (t - start) / (to - start)
 end
@@ -78,6 +73,13 @@ local function list_op(l, op)
 		t[#t+1] = op(v)
 	end
 	return t
+end
+
+function util.view_proj(camera, frustum)
+	local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
+	frustum = frustum or camera.frusutm
+	local projmat = math3d.projmat(frustum)
+	return math3d.mul(projmat, viewmat)
 end
 
 function util.to_radian(angles) return list_op(angles, math.rad) end

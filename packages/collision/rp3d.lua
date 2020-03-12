@@ -47,19 +47,19 @@ local function shape_interning()
 	end
 end
 
-function lib.init(ms)
+function lib.init()
 	shape_interning()
 	local world_mt = lib.collision_world_mt
 
 	world_mt.__index = world_mt
 
-	world_mt.body_create = math3d_adapter.vector(ms, world_mt.body_create, 2)
-	world_mt.set_transform = math3d_adapter.vector(ms, world_mt.set_transform, 3)
-	world_mt.get_aabb = math3d_adapter.getter(ms, world_mt.get_aabb, "vv")
-	world_mt.add_shape = math3d_adapter.vector(ms, world_mt.add_shape, 5)
+	world_mt.body_create = math3d_adapter.vector(world_mt.body_create, 2)
+	world_mt.set_transform = math3d_adapter.vector(world_mt.set_transform, 3)
+	world_mt.get_aabb = math3d_adapter.getter(world_mt.get_aabb, "vv")
+	world_mt.add_shape = math3d_adapter.vector(world_mt.add_shape, 5)
 
-	local rayfilter = math3d_adapter.vector(ms, lib.rayfilter, 1)
-	local raycast = math3d_adapter.getter(ms, world_mt.raycast, "vv")
+	local rayfilter = math3d_adapter.vector(lib.rayfilter, 1)
+	local raycast = math3d_adapter.getter(world_mt.raycast, "vv")
 
 	function world_mt.raycast(world, p0, p1, maskbits)
 		p0,p1 = rayfilter(p0,p1)

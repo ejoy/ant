@@ -1,9 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg 	= import_package "ant.math"
-local ms 		= mathpkg.stack
-
 local component_util = require "components.util"
 
 local fs 		= require "filesystem"
@@ -17,24 +14,17 @@ do
 	local p = ecs.component_alias("position", "real[3]")
 	function p.init(v)
 		v[4] = 1
-		return ms:ref "vector"(v)
-	end
-
-	local function del(v)
-		assert(type(v) == "userdata")
-		v(nil)
-		return {}
+		return math3d.ref(math3d.vector(v))
 	end
 
 	local function save(v)
 		assert(type(v) == "userdata")
-		local t = ms(v, "T")
+		local t = math3d.totable(v)
 		assert(t.type)
 		t.type = nil
 		return t
 	end
 
-	p.delete = del
 	p.save = save
 
 	local s = ecs.component_alias("scale", 	"real[]")
@@ -46,10 +36,8 @@ do
 			assert(num >= 3, "scale must provided 1/3 element")
 		end
 		v[4] = 0
-		return ms:ref "vector"(v)
+		return math3d.ref(math3d.vector(v))
 	end
-
-	s.delete = del
 	s.save = save
 end
 
@@ -72,7 +60,7 @@ function trans:init()
 		end
 	end
 
-	self.world = ms:ref "matrix"(ms:srtmat(self))
+	self.world = math3d.ref(math3d.matrix(self))
 	return self
 end
 
@@ -157,7 +145,7 @@ local uniformdata = ecs.component_alias("uniformdata", "real[]")
 function uniformdata.save(v)
 	local tt = type(v)
 	if tt == "userdata" then
-		local d = ms(v, "T")
+		local d = math3d.totable(v)
 		assert(d.type)
 		d.type = nil
 		return d

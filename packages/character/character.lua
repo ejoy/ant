@@ -1,11 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg = import_package "ant.math"
-local ms, mu = mathpkg.stack, mathpkg.util
-
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
+local math3d = require "math3d"
+local mc = import_package "ant.math".constant
 
 ecs.component "character"
     .movespeed "real" (1.0)
@@ -37,9 +34,9 @@ local function generate_height_test_ray(e)
     local c_aabb_min, c_aabb_max = icollider(e)
 
     if c_aabb_min and c_aabb_max then
-        local center = ms({0.5}, c_aabb_min, c_aabb_max, "+*T")
-        local startpt = ms({center[1], c_aabb_min[2], center[2]}, "P")
-        local endpt = ms(startpt, height_raycast.dir, "+P")
+        local center = math3d.totable(math3d.mul(0.5, math3d.add(c_aabb_min, c_aabb_max)))
+        local startpt = math3d.vector(center[1], c_aabb_min[2], center[2], 1.0)
+        local endpt = math3d.add(startpt, height_raycast.dir)
         return {
             startpt, endpt,
         }
@@ -135,29 +132,28 @@ local iik = world:interface "ant.animation|ik"
 local function ankles_raycast_ray(ankle_pos_ws, dir)
     return {
         ankle_pos_ws,
-        ms(ankle_pos_ws, dir, "+P")
+        math3d.add(ankle_pos_ws, dir),
     }
 end
 
 local function ankles_target(ray, foot_height)
     local pos, normal = icollider.raycast(ray)
     if pos then
-        return ms(pos, normal, {foot_height}, "*+P"), normal
+        return math3d.muladd(normal, foot_height, pos), normal
     end
 end
 
 local function calc_pelvis_offset(leg_raycasts, cast_dir)
-    local normalize_cast_dir = ms(cast_dir, "nP")
+    local normalize_cast_dir = math3d.normalize(cast_dir)
     local max_dot
-    local offset
+    local offset = mc.ZERO_PT
     for _, l in ipairs(leg_raycasts) do
         local ankle_pos, target_pos = l[2], l[3]
 
-        local dot = ms(normalize_cast_dir, target_pos, ankle_pos, "-.T")
-        if max_dot == nil or dot[1] > max_dot then
-            max_dot = dot[1]
-            dot[2] = nil
-            offset = ms(normalize_cast_dir, dot, "*P")
+        local dot = math.dot(normalize_cast_dir, math3d.sub(target_pos, ankle_pos))
+        if max_dot == nil or dot > max_dot then
+            max_dot = dot
+            offset = math3d.mul(normalize_cast_dir, dot)
         end
     end
 
@@ -166,21 +162,19 @@ end
 
 local function refine_target(raystart, hitpt, hitnormal, foot_height)
     -- see ozz-animation samples:sample_foot_ik.cc:UpdateAnklesTarget for commonet
-    local ABl = ms(raystart, hitpt, "-", hitnormal, ".T")
-    if ABl[1] ~= 0 then
-        ABl[2] = nil
-        local ptB = ms(raystart, hitnormal, ABl, "*-P")
-        local IB = ms(ptB, hitpt, "-P")
-        local IBl = ms:length(IB)
+    local ABl = math3d.dot(math3d.sub(raystart, hitpt))
+    if ABl ~= 0 then
+        local ptB = math3d.sub(raystart, math3d.mul(hitnormal, ABl))
+        local IB = math3d.sub(ptB, hitpt)
+        local IBl = math3d.length(IB)
 
         if IBl <= 0 then
-            return ms(hitpt, hitnormal, {foot_height}, "*+P")
+            return math3d.muladd(hitnormal, foot_height, hitpt)
         end
 
-        local IHl = IBl * foot_height / ABl[1]
-        local IH = ms(IB, {IHl / IBl}, "*P")
-        local H = ms(hitpt, IH, "+P")
-        return ms(H, hitnormal, {foot_height}, "*+P")
+        local IHl = IBl * foot_height / ABl
+        local H = math3d.muladd(IB, IHl / IBl, hitpt)
+        return math3d.muladd(hitnormal, foot_height, H)
     end
 
     return hitpt
@@ -194,8 +188,10 @@ local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
     for _, tracker in ipairs(foot_rc.trackers) do
         local leg_ikdata = jobs[tracker.leg]
         local anklenidx = leg_ikdata.joint_indices[3]
-        local ankle_pos = ms:vector(pose_result:joint_trans(anklenidx, 4))
-        local ankle_pos_ws = ms(trans, ankle_pos, "*P")
+        local jointmat = pose_result:joint_trans(anklenidx) --pose_result:joint_trans(anklenidx, 4)
+        local ankle_pos = math3d.index(jointmat, 4)
+        local ispoint<const> = 1
+        local ankle_pos_ws = math3d.transform(trans, ankle_pos, ispoint)
 
         local castray = ankles_raycast_ray(ankle_pos_ws, cast_dir)
         local target_ws, hitnormal_ws = ankles_target(castray, foot_height)
@@ -212,7 +208,8 @@ end
 
 local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
     local function joint_y_vector(jointidx)
-        return ms:vector(pose_result:joint_trans(jointidx, 2))
+        local m = pose_result:joint_trans(jointidx)
+        return math3d.jointmat(m, 2)
     end
     local jobs = ik.jobs
     for _, leg in ipairs(leg_raycasts) do
@@ -221,7 +218,7 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
         local sole_ikdata = tracker.sole and jobs[tracker.sole] or nil
 
         local target_ws = leg[3]
-        ms(leg_ikdata.target, inv_trans, target_ws, "*=")
+        leg_ikdata.target.v = math3d.transform(inv_trans, target_ws, nil)
 
         local knee = leg_ikdata.joint_indices[2]
         leg_ikdata.pole_vector(joint_y_vector(knee))
@@ -230,7 +227,7 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
 
         if sole_ikdata then
             local hitnormal = leg[4]
-            ms(sole_ikdata.target, inv_trans, target_ws, hitnormal, "+*=")
+            sole_ikdata.target.v = math3d.transform(inv_trans, math3d.add(target_ws, hitnormal))
             sole_ikdata.pole_vector(joint_y_vector(sole_ikdata.joint_indices[1]))
             iik.do_ik(sole_ikdata)
         end
@@ -244,15 +241,15 @@ function char_foot_ik_sys:do_ik()
         
         local ik = e.ik
         local pose_result = e.pose_result.result
-        local trans = ms:srtmat(e.transform)
+        local trans = math3d.matrix(e.transform)
 
         local leg_raycasts = find_leg_raycast_target(pose_result, ik, foot_rc, trans)
 
         if next(leg_raycasts) then
             iik.setup(e)
             local pelvis_offset = calc_pelvis_offset(leg_raycasts, foot_rc.cast_dir)
-            local correct_trans = pelvis_offset and ms:add_translate(trans, pelvis_offset) or trans
-            local inv_correct_trans = ms(correct_trans, "iP")
+            local correct_trans = math3d.mul(trans, math3d.matrix{t=pelvis_offset})
+            local inv_correct_trans = math3d.inverse(correct_trans)
 
             do_foot_ik(pose_result, ik, inv_correct_trans, leg_raycasts)
         end

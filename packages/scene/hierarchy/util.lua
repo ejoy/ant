@@ -1,6 +1,6 @@
 local util = {}; util.__index = util
 
-local ms = import_package "ant.math".stack
+local math3d = require "math3d"
 
 local function load_world_trans(ske, idx, worldpos)
 	local srt = worldpos[idx]
@@ -25,7 +25,7 @@ local function load_world_trans(ske, idx, worldpos)
 			if fsrt then
 				return fsrt, true
 			end
-			return ms:matrix(ske:joint_matrix(ii)), false
+			return ske:joint_matrix(ii), false
 		end
 
 		local num_indices = #indices
@@ -36,7 +36,7 @@ local function load_world_trans(ske, idx, worldpos)
 			if isworld then
 				srt = csrt
 			else
-				srt = ms(srt, csrt, "*P")
+				srt = math3d.mul(srt, csrt)
 			end
 		end
 	

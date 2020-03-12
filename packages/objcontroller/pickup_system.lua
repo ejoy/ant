@@ -6,9 +6,8 @@ ecs.import "ant.inputmgr"
 ecs.import "ant.scene"
 local lua_math = math
 local mathpkg 	= import_package "ant.math"
-local point2d 	= mathpkg.point2d
-local ms 		= mathpkg.stack
-local mc 		= mathpkg.constant
+local mu 		= mathpkg.util
+local math3d	= require "math3d"
 
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
@@ -78,17 +77,21 @@ local function which_entity_hitted(blitdata, viewrect)
 	return traverse_from_center(blitdata,viewrect.w,viewrect.h)
 end
 
-local function update_viewinfo(e, clickpt) 
+local function update_viewinfo(e, clickx, clicky) 
 	local mq = world:singleton_entity "main_queue"
-	local cameracomp = world[mq.camera_eid].camera
-	local eye, at = ms:screenpt_to_3d(
-		cameracomp, mq.render_target.viewport.rect,
-		{clickpt.x, clickpt.y, 0,},
-		{clickpt.x, clickpt.y, 1,})
+	local camera = world[mq.camera_eid].camera
 
 	local pickupcamera = world[e.camera_eid].camera
-	pickupcamera.eyepos(eye)
-	pickupcamera.viewdir(ms(at, eye, "-nP"))
+
+	local eye = {clickx, clicky, 0}
+	local at =  {clickx, clicky, 1}
+
+	local ivp = math3d.inverse(mu.view_proj(camera))
+	eye = math3d.transformH(ivp, eye, 1)
+	at = math3d.transformH(ivp, at, 1)
+
+	pickupcamera.eyepos.v = eye
+	pickupcamera.viewdir.v= math3d.normalize(math3d.sub(at, eye))
 end
 
 -- update material system
@@ -365,7 +368,7 @@ function pickup_sys:pickup()
 		for _,_,state,x,y in leftmousepress_mb:unpack() do
 			if state == "DOWN" then
 				enable_pickup(true)
-				update_viewinfo(pickupentity, point2d(x, y))
+				update_viewinfo(pickupentity, x, y)
 				pickupcomp.nextstep = "blit"
 			end
 		end

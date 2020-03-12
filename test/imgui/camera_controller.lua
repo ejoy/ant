@@ -1,15 +1,16 @@
 -- local ecs = ...
 local world = ecs.world
 
+assert(false, "not world for new math3d")
+
 local math3d    = require "math3d"
-local mathpkg   = import_package "ant.math"
-local ms        = mathpkg.stack
-local point2d   = mathpkg.point2d
 
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 
 local camera_controller_system = ecs.system "editor_camera_controller"
+camera_controller_system.require_interface "ant.camera_controller|camera_motion"
+local icm = world:interface "ant.camera_controller|camera_motion"
 
 ecs.tag "test_remove_com"
 
@@ -17,52 +18,48 @@ ecs.tag "test_remove_com"
 --     .scale "boolean"
 --     .move "boolean"
 
-local function camera_move(forward_axis, position, dx, dy, dz)
-    --ms(position, rotation, "b", position, "S", {dx}, "*+S", {dy}, "*+S", {dz}, "*+=") 
-    local right_axis, up_axis = ms:base_axes(forward_axis)
-    ms(position, 
-        position, 
-            right_axis, {dx}, "*+", 
-            up_axis, {dy}, "*+", 
-            forward_axis, {dz}, "*+=")
-end
-
 local leftmouse_mb = world:sub {"mouse", "LEFT"}
 local rightmouse_mb = world:sub {"mouse", "RIGHT"}
 local mousewheel_mb = world:sub {"mouse_wheel", }
 
-local move_speed = 1
+local move_speed = 0.1
 local wheel_speed = 1
-local last_xy
+local last_x, last_y
 
-local target = math3d.ref "vector"
-ms(target, {0, 0, 0, 1}, "=")
+local target = math3d.ref(math3d.vector())
+
+local function delta_move(x, y)
+    return (x - last_x) * move_speed, (y - last_y) * move_speed
+end
 
 function camera_controller_system:update()
     for _,_, _, x, y in leftmouse_mb:unpack() do
-        local camera = camerautil.main_queue_camera(world)
-        local xy = point2d(x, y)
+        local mq = world:single_entity "main_queue"
+        local cameraeid = mq.camera_eid
+        local camera = world[cameraeid].camera
 
-        local speed = move_speed * 0.1
-        local delta = (xy - last_xy) * speed
-        local distance = math.sqrt(ms(target, camera.eyepos, "-1.T")[1])
-        camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
-        ms(camera.viewdir, target, camera.eyepos, "-n=")
-        ms(camera.eyepos, target, {-distance}, camera.viewdir, "*+=")
+        local dx, dy = delta_move(x, y)
+
+        local distance = math3d.length(math3d.sub(target, camera.eyepos))
+        icm.rotate_round_point(cameraeid, target, distance, dy, dx)
     end
 
     for _, _, _, x, y in rightmouse_mb:unpack() do
-        local camera = camerautil.main_queue_camera(world)
-        local xy = point2d(x, y)
+        local mq = world:single_entity "main_queue"
+        local cameraeid = mq.camera_eid
+        local camera = world[cameraeid].camera
 
-        local speed = move_speed * 0.1
-        local delta = (xy - last_xy) * speed
-        camera_move(camera.viewdir, target, -delta.x, delta.y, 0)
-        camera_move(camera.viewdir, camera.eyepos, -delta.x, delta.y, 0)
+        local dx, dy = delta_move(x, y)
+        local offset = math3d.sub(target, camera.eyepos)
+        icm.move_along(cameraeid, {-dx, dy})
+        target.v = math3d.add(camera.eyepos, offset)
     end
 
     for _, x, y, delta in mousewheel_mb:unpack() do
-        local camera = camerautil.main_queue_camera(world)
-        camera_move(camera.viewdir, camera.eyepos, 0, 0, delta * wheel_speed)
+        local mq = world:single_entity "main_queue"
+        local cameraeid = mq.camera_eid
+        local camera = world[cameraeid].camera
+
+        icm.move_along_axis(cameraeid, camera.viewdir, delta)
     end
 end

@@ -4,11 +4,12 @@ local world = ecs.world
 local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
 
-local mathpkg = import_package "ant.math"
-local ms, mu = mathpkg.stack, mathpkg.util
+local mathpkg   = import_package "ant.math"
+local mu        = mathpkg.util
+local math3d    = require "math3d"
 
 local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
+local computil  = renderpkg.components
 
 local iktest_sys = ecs.system "character_ik_test"
 iktest_sys.require_policy "ant.character|foot_ik_raycast"
@@ -139,7 +140,7 @@ local function create_plane_test()
     computil.create_plane_entity(world,
     mu.srt(
         {5, 1, 5, 0},
-        ms:euler2quat({math.rad(10), 0, 0, 0}, true),
+        math3d.quaternion(math.rad(10), 0, 0),
         {0, 0, -5, 1}),
     fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},
