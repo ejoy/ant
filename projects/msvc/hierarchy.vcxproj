@@ -121,7 +121,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/ozz-animation/msvc/$(Configuration)/src/base/$(Configuration);../../3rd/build/ozz-animation/msvc/$(Configuration)/src/animation/runtime/$(Configuration);../../3rd/build/ozz-animation/msvc/$(Configuration)/src/geometry/runtime/$(Configuration);../../3rd/build/ozz-animation/msvc/$(Configuration)/src/animation/offline/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;ozz_geometry_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ozz_base_d.lib;ozz_animation_d.lib;ozz_animation_offline_d.lib;ozz_geometry_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -183,7 +183,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/ozz-animation/msvc/$(Configuration)/src/base/$(Configuration);../../3rd/build/ozz-animation/msvc/$(Configuration)/src/animation/runtime/$(Configuration);../../3rd/build/ozz-animation/msvc/$(Configuration)/src/geometry/runtime/$(Configuration);../../3rd/build/ozz-animation/msvc/$(Configuration)/src/animation/offline/$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;sample_framework_r.lib;ozz_geometry_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ozz_base_r.lib;ozz_animation_r.lib;ozz_animation_offline_r.lib;ozz_geometry_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

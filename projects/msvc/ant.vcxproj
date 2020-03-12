@@ -178,7 +178,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\bgfx\.build\win64_vs2019\bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;bgfx-shared-lib$(Configuration).lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bgfx-shared-lib$(Configuration).lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -243,7 +243,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\bgfx\.build\win64_vs2019\bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;bgfx-shared-lib$(Configuration).lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bgfx-shared-lib$(Configuration).lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
