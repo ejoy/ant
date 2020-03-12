@@ -221,7 +221,7 @@ int window_init(struct ant_window_callback* cb) {
     return 0;
 }
 
-int window_create(struct ant_window_callback* cb, int w, int h, const char* title, size_t sz) {
+int window_create(struct ant_window_callback* cb, int w, int h) {
     (void)sz;
     NSRect rc = NSMakeRect(0, 0, w, h);
 	NSUInteger uiStyle = 0
@@ -235,15 +235,12 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
         backing:NSBackingStoreBuffered defer:NO
     ];
 
-    NSString* nsTitle = [[NSString alloc] initWithUTF8String:title];
-    [win setTitle:nsTitle];
     [win center];
     [win makeKeyAndOrderFront:win];
     [win makeMainWindow];
 
     g_wd = [WindowDelegate new];
     [g_wd windowCreated:win initCallback:cb];
-    [nsTitle release];
 
 	struct ant_window_message msg;
 	msg.type = ANT_WINDOW_INIT;
@@ -374,6 +371,8 @@ void window_ime(void* ime) {
 }
 
 int window_set_title(void* handle,const char* title,size_t sz){
-    // not implement
+    NSString* nsTitle = [[NSString alloc] initWithUTF8String:title];
+    [g_wd setTitle:nsTitle];
+    [nsTitle release];
     return 0;
 }

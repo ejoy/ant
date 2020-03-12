@@ -61,9 +61,8 @@ function scene_control.run_test_package(raw_path)
     --     packages,
     --     systems,
     --     {hub=hub,rxbus = rxbus})
-    local world = scene.start_new_world(
-        600, 400,
-        config,editor_world())
+	config.init_viewsize = {w=600, h=400}
+    local world = scene.start_new_world(config,editor_world())
     local world_update = scene.loop(world)
     -- task.safe_loop(scene.loop(world))
     gui_mgr.get("GuiScene"):bind_world(world,world_update,scene_control.input_queue)

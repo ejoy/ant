@@ -330,9 +330,7 @@ lmesh_skinning(lua_State *L){
 	out_vertex_data ovd = {0};
 	read_vertex_data(L, 3, ovd);
 
-	luaL_checktype(L, 4, LUA_TNUMBER);
-	const uint32_t num_vertices = (uint32_t)lua_tointeger(L, 4);
-
+	const uint32_t num_vertices = (uint32_t)luaL_checkinteger(L, 4);
 	const uint32_t influences_count = (uint32_t)luaL_optinteger(L, 5, 4);
 
 	ozz::geometry::SkinningJob skinning_job;

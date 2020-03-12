@@ -2,7 +2,7 @@ local thread = require "thread"
 thread.newchannel "WNDMSG"
 local channel = thread.channel_consume "WNDMSG"
 
-local function create(run, w, h, name)
+local function create(run, w, h)
 	local csearcher = package.searchers[3]
 	if csearcher then
 		if debug.getupvalue(csearcher, 1) then
@@ -26,9 +26,9 @@ local function dispatch(CMD,...)
 	end
 	channel:push(CMD,...)
 end
-window.create(dispatch, %d, %d, %q)
+window.create(dispatch, %d, %d)
 window.mainloop()
-]]):format(package.cpath, w, h, name), csearcher)
+]]):format(package.cpath, w, h), csearcher)
 end
 
 local recvmsg

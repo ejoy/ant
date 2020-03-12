@@ -219,7 +219,7 @@ local function create(m,args)
     main = m
 
 	local window = require "common.window"
-	window.create(run, args.screen_width or 1024,  args.screen_height or 728, args.name or "Ant")
+	window.create(run, args.screen_width or 1024,  args.screen_height or 728)
 end
 
 return {run = create}

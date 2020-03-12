@@ -242,9 +242,7 @@ lcreate(lua_State *L) {
 
 	int width = (int)luaL_checkinteger(L, 2);
 	int height = (int)luaL_checkinteger(L, 3);
-	size_t sz;
-	const char* title = luaL_checklstring(L, 4, &sz);
-	if (0 != window_create(get_callback(L), width, height, title, sz)) {
+	if (0 != window_create(get_callback(L), width, height)) {
 		return luaL_error(L, "Create window failed");
 	}
 	lua_pushboolean(L, 1);

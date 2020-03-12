@@ -102,7 +102,7 @@ end
 
 local function windowMode()
 	local window = require "common.window"
-	window.create(run, 1024, 768, "Hello")
+	window.create(run, 1024, 768)
 end
 
 local function savebmp(name, width, height, pitch, data)
