@@ -276,15 +276,10 @@ lbind_variant(lua_State *L) {
 }
 
 static int
-lformat(lua_State *L) {
+lformat(lua_State *L, const char *format) {
 	struct lastack *LS = lua_touserdata(L, lua_upvalueindex(1));
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
-	lua_CFunction getformat = lua_tocfunction(L, lua_upvalueindex(3));
 	int from = lua_tointeger(L, lua_upvalueindex(4));
-	if (getformat(L) != 1 || lua_type(L, -1) != LUA_TLIGHTUSERDATA)
-		luaL_error(L, "Invalid format C function");
-	const char *format = (const char *)lua_touserdata(L, -1);
-	lua_pop(L, 1);
 	int i;
 	int top = lua_gettop(L);
 	void *v = NULL;
@@ -312,6 +307,22 @@ lformat(lua_State *L) {
 	return f(L);
 }
 
+static int
+lformat_function(lua_State *L) {
+	lua_CFunction getformat = lua_tocfunction(L, lua_upvalueindex(3));
+	if (getformat(L) != 1 || lua_type(L, -1) != LUA_TLIGHTUSERDATA)
+		luaL_error(L, "Invalid format C function");
+	const char *format = (const char *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	return lformat(L, format);
+}
+
+static int
+lformat_string(lua_State *L) {
+	const char *format = lua_tostring(L, lua_upvalueindex(3));
+	return lformat(L, format);
+}
+
 // upvalue1: userdata mathstack
 // cfunction original function
 // cfunction function return (void *)format
@@ -322,8 +333,12 @@ lbind_format(lua_State *L) {
 		return luaL_error(L, "need a c function");
 	if (lua_getupvalue(L, 1, 1) != NULL)
 		luaL_error(L, "Only support light cfunction");
-	if (!lua_iscfunction(L, 2))
-		return luaL_error(L, "need a c function");
+	int string_version = 0;
+	if (lua_isstring(L, 2)) {
+		string_version = 1;
+	} else if (!lua_iscfunction(L, 2)) {
+		return luaL_error(L, "need a c format function or string");
+	}
 	if (lua_getupvalue(L, 2, 1) != NULL)
 		luaL_error(L, "Only support light cfunction");
 	luaL_checkinteger(L, 3);
@@ -333,7 +348,11 @@ lbind_format(lua_State *L) {
 	lua_pushvalue(L, 2);
 	lua_pushvalue(L, 3);
 
-	lua_pushcclosure(L, lformat, 4);
+	if (string_version) {
+		lua_pushcclosure(L, lformat_string, 4);
+	} else {
+		lua_pushcclosure(L, lformat_function, 4);
+	}
 	return 1;
 }
 
