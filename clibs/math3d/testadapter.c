@@ -95,6 +95,15 @@ lgetmvq(lua_State *L) {
 	return 0;
 }
 
+static int
+lretvector(lua_State *L) {
+	static const float v1[4] = { 1.0f, 2.0f, 3.0f, 4.0f };
+	static const float v2[4] = { 5.0f, 6.0f, 7.0f, 8.0f };
+	lua_pushlightuserdata(L, (void *)v1);
+	lua_pushlightuserdata(L, (void *)v2);
+	return 2;
+}
+
 LUAMOD_API int
 luaopen_math3d_adapter_test(lua_State *L) {
 	luaL_checkversion(L);
@@ -105,6 +114,7 @@ luaopen_math3d_adapter_test(lua_State *L) {
 		{ "format", lformat },
 		{ "variant", lvariant },
 		{ "getmvq", lgetmvq },
+		{ "retvec", lretvector },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
