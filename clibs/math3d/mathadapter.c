@@ -436,6 +436,77 @@ lbind_getter(lua_State *L) {
 	return 1;
 }
 
+static int
+loutput_object(lua_State *L, int ltype) {
+	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
+	int retn = f(L);
+	int from = lua_tointeger(L, lua_upvalueindex(3));
+	int top = lua_gettop(L);
+	if (retn > from) {
+		lua_settop(L, retn);
+		top = retn;
+	}
+	from = top - retn + from;
+	int i;
+	struct lastack *LS = (struct lastack *)lua_touserdata(L, lua_upvalueindex(1));
+
+	for (i=from;i<=top;i++) {
+		if (lua_type(L, i) != LUA_TLIGHTUSERDATA) {
+			return luaL_error(L, "ret %d should be a lightuserdata", i);
+		}
+		const float *v = (const float *)lua_touserdata(L, i);
+		lastack_pushobject(LS, v, ltype);
+		lua_pushlightuserdata(L, (void *)(lastack_pop(LS)));
+		lua_replace(L, i);
+	}
+	return retn;
+}
+
+static int
+loutput_matrix(lua_State *L) {
+	return loutput_object(L, LINEAR_TYPE_MAT);
+}
+
+static int
+loutput_vector(lua_State *L) {
+	return loutput_object(L, LINEAR_TYPE_VEC4);
+}
+
+static int
+loutput_quat(lua_State *L) {
+	return loutput_object(L, LINEAR_TYPE_QUAT);
+}
+
+// upvalue1 : userdata mathstack
+// cfunction original output
+// integer from
+static int
+lbind_output(lua_State *L, lua_CFunction output_func) {
+	if (!lua_iscfunction(L, 1))
+		return luaL_error(L, "need a c function");
+	luaL_checkinteger(L, 2);
+	lua_pushvalue(L, lua_upvalueindex(1));
+	lua_pushvalue(L, 1);
+	lua_pushvalue(L, 2);
+	lua_pushcclosure(L, output_func, 3);
+	return 1;
+}
+
+static int
+lbind_output_matrix(lua_State *L) {
+	return lbind_output(L, loutput_matrix);
+}
+
+static int
+lbind_output_vector(lua_State *L) {
+	return lbind_output(L, loutput_vector);
+}
+
+static int
+lbind_output_quat(lua_State *L) {
+	return lbind_output(L, loutput_quat);
+}
+
 LUAMOD_API int
 luaopen_math3d_adapter(lua_State *L) {
 	luaL_checkversion(L);
@@ -446,6 +517,9 @@ luaopen_math3d_adapter(lua_State *L) {
 		{ "variant", lbind_variant },
 		{ "format", lbind_format },
 		{ "getter", lbind_getter },
+		{ "output_matrix", lbind_output_matrix },
+		{ "output_vector", lbind_output_vector },
+		{ "output_quat", lbind_output_quat },
 		{ NULL, NULL },
 	};
 

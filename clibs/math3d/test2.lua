@@ -151,6 +151,7 @@ local var = adapter.variant(testfunc.vector, testfunc.matrix1, 1)
 local format = adapter.format(testfunc.variant, testfunc.format, 2)
 local mvq = adapter.getter(testfunc.getmvq, "mvq")	-- getmvq will return matrix, vector, quat
 local matrix2_v = adapter.format(testfunc.matrix2, "mm", 1)
+local retvec = adapter.output_vector(testfunc.retvec, 1)
 print(vector(ref2, math3d.vector{1,2,3}))
 print(matrix1(ref1))
 print(matrix2(ref1,ref1))
@@ -161,3 +162,7 @@ print(var(ref2))
 print(format("mv", ref1, ref2))
 local m,v, q = mvq()
 print(math3d.tostring(m), math3d.tostring(v), math3d.tostring(q))
+
+local v1,v2 =retvec()
+print(math3d.tostring(v1), math3d.tostring(v2))
+
