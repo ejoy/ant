@@ -9,6 +9,8 @@ local TimeStack = require "common.time_stack"
 local gui_input = require "gui_input"
 local dbgutil = import_package "ant.editor".debugutil
 
+local GuiBase  = require "gui_base"
+local MgrBase  = require "mgr_base"
 
 local gui_mgr = {}
 local test = false
@@ -27,6 +29,7 @@ gui_mgr.EditorName = "Ant"
 
 function gui_mgr.init()
     gui_mgr.gui_tbl = {}
+    gui_mgr.mgr_tbl = {}
     gui_mgr.mainmenu_list = {}
     gui_mgr.setting_tbl = CreateDefaultSetting()
     gui_mgr.setting_status = {
@@ -73,10 +76,10 @@ function gui_mgr.update(delta)
     if setting_can_save ~= nil then 
         gui_mgr._update_window(delta)
     end
+    gui_mgr._update_mgr(delta)
     time_stack:Push("update_list")
     gui_mgr._update_list(delta)
     time_stack:Pop("update_list")
-
 
     time_stack:Push("editor")
     gui_util.loop_popup()
@@ -111,6 +114,17 @@ function gui_mgr._update_window(delta)
         end
     end
     gui_mgr.focus_window = nil
+end
+
+function gui_mgr._update_mgr(delta)
+    local time_stack = gui_mgr.time_stack
+    for mgr_name,mgr_ins in pairs(gui_mgr.mgr_tbl) do
+        if mgr_ins.on_update then
+            time_stack:Push(mgr_name)
+            mgr_ins:on_update(delta)
+            time_stack:Pop(mgr_name)
+        end
+    end
 end
 
 function gui_mgr._update_list(delta)
@@ -199,30 +213,57 @@ function gui_mgr._update_mainmenu_view()
             end
         end
     end
+
 end
 
-function gui_mgr.register(name,gui_ins)
-    assert(type(name)=="string","ui name must be string!")
-    assert(gui_mgr.gui_tbl[name]==nil,"ui name registered:"..name)
-    gui_mgr.gui_tbl[name] = gui_ins
-    local cfg = gui_ins:get_mainmenu()
-    if cfg then
-        gui_mgr._register_mainmenu(gui_ins,cfg)
+function gui_mgr.register(name,ins)
+    assert(type(name)=="string","name must be string!")
+    if ins:is_instance(GuiBase) then
+        gui_mgr._register_view(name,ins)
+    elseif ins:is_instance(MgrBase) then
+        gui_mgr._register_mgr(name,ins)
+    else
+        log.error("ins is not class of gui_base or mgr_base")
     end
-    if gui_ins.load_setting_from_memory then
+    
+end
+
+function gui_mgr._register_view(name,view)
+    assert(gui_mgr.gui_tbl[name]==nil,"ui name registered:"..name)
+    gui_mgr.gui_tbl[name] = view
+    local cfg = view:get_mainmenu()
+    if cfg then
+        gui_mgr._register_mainmenu(view,cfg)
+    end
+    if view.load_setting_from_memory then
         local setting = gui_mgr.setting_tbl[name]
         if setting then
-            dbgutil.try( gui_ins.load_setting_from_memory,gui_ins,setting)
+            dbgutil.try( view.load_setting_from_memory,view,setting)
         end
         local setting_open = gui_mgr.setting_tbl[SettingGuiOpen][name]
         if setting_open~= nil then
-            if (not gui_ins:is_opened()) ~= (not setting_open) then
+            if (not view:is_opened()) ~= (not setting_open) then
                 if setting_open then
-                    gui_ins:on_open_click()
+                    view:on_open_click()
                 else
-                    gui_ins:on_close_click()
+                    view:on_close_click()
                 end
             end
+        end
+    end
+end
+
+function gui_mgr._register_mgr(name,mgr)
+    assert(gui_mgr.mgr_tbl[name]==nil,"ui name registered:"..name)
+    gui_mgr.mgr_tbl[name] = mgr
+    local cfg = mgr:get_mainmenu()
+    if cfg then
+        gui_mgr._register_mainmenu(mgr,cfg)
+    end
+    if mgr.load_setting_from_memory then
+        local setting = gui_mgr.setting_tbl[name]
+        if setting then
+            dbgutil.try( mgr.load_setting_from_memory,mgr,setting)
         end
     end
 end
@@ -230,6 +271,11 @@ end
 function gui_mgr.get(name)
     assert(type(name)=="string","ui name must be string!")
     return gui_mgr.gui_tbl[name]
+end
+
+function gui_mgr.getMgr(name)
+    assert(type(name)=="string","ui name must be string!")
+    return gui_mgr.mgr_tbl[name]
 end
 
 function gui_mgr.register_update(func,target)
@@ -303,6 +349,12 @@ function gui_mgr._load_setting_to_gui(tbl)
             end
         end
     end
+    for mgr_name,mgr_ins in pairs(gui_mgr.mgr_tbl) do
+        local gui_cfg = tbl[mgr_name]
+        if gui_cfg and mgr_ins.load_setting_from_memory then
+            dbgutil.try( mgr_ins.load_setting_from_memory,mgr_ins,gui_cfg)
+        end
+    end
 end
 
 function gui_mgr.check_can_save()
@@ -336,6 +388,14 @@ function gui_mgr.check_and_save_setting()
             local ok
             log.trace_a("Save setting:",ui_name)
             ok,setting_tbl[ui_name] =  dbgutil.try( ui_ins.save_setting_to_memory,ui_ins,true)
+        end
+    end
+    for mgr_name,mgr_ins in pairs(gui_mgr.mgr_tbl) do
+        if mgr_ins:is_setting_dirty() then
+            need_save = true
+            local ok
+            log.trace_a("Save setting:",mgr_name)
+            ok,setting_tbl[mgr_name] =  dbgutil.try( mgr_ins.save_setting_to_memory,mgr_ins,true)
         end
     end
     setting_tbl[SettingGuiOpen] =  setting_tbl[SettingGuiOpen] or {}
