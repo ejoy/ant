@@ -580,7 +580,7 @@ lref_gc(lua_State *L) {
 }
 
 static int
-new_object(lua_State *L, int type, from_table_func from_table, int narray) {
+new_object(lua_State *L, int type, from_table_func from_table, int narray) { 
 	int argn = lua_gettop(L);
 	int64_t id;
 	if (argn == narray) {
@@ -597,10 +597,18 @@ new_object(lua_State *L, int type, from_table_func from_table, int narray) {
 		case 0:
 			id = lastack_constant(type);
 			break;
-		case 1:
-			luaL_checktype(L, 1, LUA_TTABLE);
-			id = from_table(L, GETLS(L), 1);
-			break;
+		case 1: {
+			int ltype = lua_type(L, 1);
+			struct lastack *LS = GETLS(L);
+			if (ltype == LUA_TTABLE) {
+				id = from_table(L, LS, 1);
+			} else {
+				id = get_id(L,1,ltype);
+				if (lastack_type(LS, id) != type) {
+					return luaL_error(L, "type mismatch %s %s", lastack_typename(type), lastack_type(LS, id));
+				}
+			}
+			break; }
 		default:
 			return luaL_error(L, "Invalid %s argument number %d", lastack_typename(type), argn);
 		}
@@ -744,13 +752,6 @@ quat_from_index(lua_State *L, struct lastack *LS, int index) {
 }
 
 static int64_t
-quat_to_matrix(lua_State *L, struct lastack *LS, int index) {
-	const float * quat = quat_from_index(L, LS, index);
-	math3d_quat_to_matrix(LS, quat);
-	return lastack_pop(LS);
-}
-
-static int64_t
 object_to_quat(lua_State *L, struct lastack *LS, int index) {
 	int64_t id = get_id(L, index, lua_type(L, index));
 	int type;
@@ -773,9 +774,15 @@ object_to_quat(lua_State *L, struct lastack *LS, int index) {
 static int
 lmatrix(lua_State *L) {
 	if (lua_isuserdata(L, 1)) {
-		int64_t id = quat_to_matrix(L, GETLS(L), 1);
-		lua_pushlightuserdata(L, STACKID(id));
-		return 1;
+		struct lastack *LS = GETLS(L);
+		int64_t id = get_id(L, 1, lua_type(L, 1));
+		int type;
+		const float * quat = lastack_value(LS, id, &type);
+		if (quat && type == LINEAR_TYPE_QUAT) {
+			math3d_quat_to_matrix(LS, quat);
+			lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+			return 1;
+		}
 	}
 	return new_object(L, LINEAR_TYPE_MAT, matrix_from_table, 16);
 }
