@@ -113,6 +113,38 @@ local function mult_boolean(ui_cache,name,values)
     return change,value,active
 end
 
+local function tag(ui_cache,name,value)
+    local vt = ui_cache[name]
+    if not vt then
+        vt = {value}
+        ui_cache[name] = vt
+    end
+    BeginColunms()
+    widget.Text(name)
+    cursor.NextColumn()
+    cursor.SetNextItemWidth(-1)
+    local change = widget.Checkbox("###"..name, vt)
+    local active = util.IsItemActive()
+    EndColunms()
+    return change,vt[1] or nil,active
+end
+
+local function mult_tag(ui_cache,name,values)
+    local vt = ui_cache[name]
+    if not vt then
+        vt = {}
+        ui_cache[name] = vt
+    end
+    BeginColunms()
+    widget.Text(name)
+    cursor.NextColumn()
+    cursor.SetNextItemWidth(-1)
+    local change,value = mult_widget.Checkbox("###"..name,values,vt)
+    local active = util.IsItemActive()
+    EndColunms()
+    return change,value or nil,active
+end
+
 local String = string
 local function string(ui_cache,name,value)
     local vt = ui_cache[name]
@@ -285,7 +317,7 @@ return {
     single={
         real = real,
         boolean = boolean,
-        tag = boolean,
+        tag = tag,
         string = string,
         int = int,
         vector = vector,
@@ -298,7 +330,7 @@ return {
     mult = {
         real = mult_real,
         boolean = mult_boolean,
-        tag = mult_boolean,
+        tag = mult_tag,
         string = mult_string,
         int = mult_int,
         vector = mult_vector,
