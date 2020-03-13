@@ -226,7 +226,7 @@ end
 local DefaultComponentSettingPath = "editor.com_sytle.default.cfg"
 --schema_map to update component list
 function gui_util.read_component_setting(schema_map)
-    local ComponentSetting = require "editor.component_setting"
+    local ComponentSetting = require "editor.component.component_setting"
     local thread = require "thread"
     local f = gui_util.open_current_pkg_path(DefaultComponentSettingPath,"rb")
     local packed_data = f:read("*all")
@@ -343,6 +343,69 @@ function gui_util.remount_package(lfs_path)
     vfs.add_mount("pkg/"..name,lfs_path)
     pm.unregister_package(fs.path("pkg/"..name))
     pm.register_package(fs.path("pkg/"..name))
+end
+
+function gui_util.data_to_lua_file(data,indent)
+    local tconcat = table.concat
+    local tinsert = table.insert
+    local temp = { }
+    local need_indent = indent
+    local indent_str = indent or ""
+    local function output( ... )
+        local args = { ... }
+        for k = 1, #args do
+            tinsert( temp, args[ k ])
+        end
+    end
+    local function _dump( value, path,is_key,indent )
+        local my_indent = ""
+        if  is_key then
+            my_indent = indent
+        end
+        local typev = type( value )
+        if typev ~= "table" then
+            if is_key then
+                if typev == "string" then
+                    output( my_indent, value)
+                elseif typev == "function" then
+                    output( my_indent,"nil" )
+                else
+                    output( my_indent,"[",tostring( value ),"]")
+                end
+            else
+                if typev == "string" then
+                    output( my_indent,"\"", value, "\"" )
+                elseif typev == "function" then
+                    output( my_indent,"nil" )
+                else
+                    output( my_indent,tostring( value ))
+                end
+            end
+        else --table
+            output( my_indent,"{" )
+            if need_indent then
+                output("\n")
+            end
+            local next_indent = indent..indent_str
+            for k, v in pairs( value ) do
+                if not (type(k) == "string" and string.find(k,"raw")) then
+                    _dump( k,nil,true,next_indent ) --k is string or number
+                    output( " = " )
+                    _dump( v, path.."."..tostring( k ),false,next_indent)
+                    output( next( value, k ) and "," or "" )
+                    if need_indent then
+                        output("\n")
+                    end
+                end
+            end
+            output( indent,"}" )
+        end
+    end
+    if data then
+        output("return ")
+        output( _dump( data, "",false, "" ))
+    end
+    return tconcat( temp )
 end
 
 return gui_util
