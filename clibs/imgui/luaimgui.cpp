@@ -243,17 +243,15 @@ get_cond(lua_State *L, int index) {
 // key, press, state
 static int
 lkeyboard(lua_State *L) {
-	int key = (int)luaL_checkinteger(L, 1);
-	int press = (int)luaL_checkinteger(L, 2);
-	int state = (int)luaL_checkinteger(L, 3);
-
+	lua_Integer key = luaL_checkinteger(L, 1);
+	lua_Integer press = luaL_checkinteger(L, 2);
+	lua_Integer state = luaL_checkinteger(L, 3);
 	ImGuiIO& io = ImGui::GetIO();
 
 	io.KeyCtrl = (state & 0x01) != 0;
 	io.KeyAlt = (state & 0x02) != 0;
 	io.KeyShift = (state & 0x04) != 0;
 	io.KeySuper = (state & 0x08) != 0;
-
 	if (key >= 0 && key < 256) {
 		io.KeysDown[key] = press > 0;
 	}
@@ -282,9 +280,9 @@ lmouse(lua_State *L) {
 	if (state != 2) {
 		lua_Integer what = luaL_checkinteger(L, 3);
 		switch (what) {
-		case 1: io.MouseDown[0] = state == 1; break;
-		case 2: io.MouseDown[1] = state == 1; break;
-		case 3: io.MouseDown[2] = state == 1; break;
+		case 1: io.MouseDown[ImGuiMouseButton_Left] = state == 1; break;
+		case 2: io.MouseDown[ImGuiMouseButton_Right] = state == 1; break;
+		case 3: io.MouseDown[ImGuiMouseButton_Middle] = state == 1; break;
 		default: break;
 		}
 	}
@@ -2809,8 +2807,7 @@ uCalcTextSize(lua_State * L){
 
 static int
 uCalcItemWidth(lua_State* L) {
-	int w = ImGui::CalcItemWidth();
-	lua_pushinteger(L,w);
+	lua_pushnumber(L, ImGui::CalcItemWidth());
 	return 1;
 }
 
@@ -3158,58 +3155,55 @@ static struct enum_pair eMouseCursor[] = {
 #pragma endregion IMP_ENUM
 #endif
 
-struct keymap {
-	const char * name;
-	int index;
+static struct {
+	const char* name;
+	int value;
+} KeyMap[] = {
+#define KEYMAP(k) { #k, ImGuiKey_##k },
+		KEYMAP(Tab)
+		KEYMAP(LeftArrow)
+		KEYMAP(RightArrow)
+		KEYMAP(UpArrow)
+		KEYMAP(DownArrow)
+		KEYMAP(PageUp)
+		KEYMAP(PageDown)
+		KEYMAP(Home)
+		KEYMAP(End)
+		KEYMAP(Insert)
+		KEYMAP(Delete)
+		KEYMAP(Backspace)
+		KEYMAP(Space)
+		KEYMAP(Enter)
+		KEYMAP(Escape)
+		KEYMAP(KeyPadEnter)
+		KEYMAP(A)
+		KEYMAP(C)
+		KEYMAP(V)
+		KEYMAP(X)
+		KEYMAP(Y)
+		KEYMAP(Z)
+#undef  KEYMAP
 };
+static_assert(IM_ARRAYSIZE(KeyMap) == ImGuiKey_COUNT);
 
 static int
 lkeymap(lua_State *L) {
-	static struct keymap map[] = {
-		{ "Tab", ImGuiKey_Tab },
-		{ "Left", ImGuiKey_LeftArrow },
-		{ "Right", ImGuiKey_RightArrow },
-		{ "Up", ImGuiKey_UpArrow },
-		{ "Down", ImGuiKey_DownArrow },
-		{ "PageUp", ImGuiKey_PageUp },
-		{ "PageDown", ImGuiKey_PageDown },
-		{ "Home", ImGuiKey_Home },
-		{ "End", ImGuiKey_End },
-		{ "Insert", ImGuiKey_Insert },
-		{ "Delete", ImGuiKey_Delete },
-		{ "Backspace", ImGuiKey_Backspace },
-		{ "Space", ImGuiKey_Space },
-		{ "Enter", ImGuiKey_Enter },
-		{ "Escape", ImGuiKey_Escape },
-		{ "A", 'A' },
-		{ "C", 'C' },
-		{ "V", 'V' },
-		{ "X", 'X' },
-		{ "Y", 'Y' },
-		{ "Z", 'Z' },
-		{ NULL, 0 },
-	};
-	ImGuiIO& io = ImGui::GetIO();
-	io.KeyMap[ImGuiKey_A] = 'A';
-	io.KeyMap[ImGuiKey_C] = 'C';
-	io.KeyMap[ImGuiKey_V] = 'V';
-	io.KeyMap[ImGuiKey_X] = 'X';
-	io.KeyMap[ImGuiKey_Y] = 'Y';
-	io.KeyMap[ImGuiKey_Z] = 'Z';
+
+	if (lua_gettop(L) == 0) {
+		lua_createtable(L, ImGuiKey_COUNT, 0);
+		lua_Integer i = 0;
+		for (auto& key : KeyMap) {
+			lua_pushstring(L, key.name);
+			lua_rawseti(L, -2, ++i);
+		}
+		return 1;
+	}
 
 	luaL_checktype(L, 1, LUA_TTABLE);
-	lua_pushnil(L);
-	while (lua_next(L, 1) != 0) {
-		if (lua_type(L, -2) == LUA_TSTRING && lua_type(L, -1) == LUA_TNUMBER && lua_isinteger(L, -1)) {
-			const char * key = lua_tostring(L, -2);
-			int value = (int)lua_tointeger(L, -1);
-			int i;
-			for (i = 0; map[i].name; i++) {
-				if (strcmp(map[i].name, key) == 0) {
-					io.KeyMap[map[i].index] = value;
-					break;
-				}
-			}
+	ImGuiIO& io = ImGui::GetIO();
+	for (auto& key : KeyMap) {
+		if (LUA_TNUMBER == lua_getfield(L, 1, key.name)) {
+			io.KeyMap[key.value] = (int)lua_tointeger(L, -1);
 		}
 		lua_pop(L, 1);
 	}
@@ -3250,7 +3244,7 @@ lpushContext(lua_State * L) {
 	auto ctx = (ImGuiContext*)lua_touserdata(L, 1);
 	int stack_index = lua_upvalueindex(1);
 	lua_rawgeti(L, stack_index, 0);
-	int stacksize = lua_tointeger(L, -1);
+	int stacksize = (int)lua_tointeger(L, -1);
 	lua_pop(L,1);
 	lua_pushinteger(L, ++stacksize);
 	lua_rawseti(L, stack_index, 0); //stack[0] = ++stack_size;
@@ -3264,7 +3258,7 @@ static int
 lpopContext(lua_State* L) {
 	int stack_index = lua_upvalueindex(1);
 	lua_rawgeti(L, stack_index, 0);
-	int stacksize = lua_tointeger(L, -1);
+	int stacksize = (int)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	if (stacksize <= 0)
 	{

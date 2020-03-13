@@ -125,12 +125,18 @@ local function to_ndc(pt2d, screensize)
     }
 end
 
-function icamera_moition.ray(cameraeid, pt2d, screensize)
+local function main_queue_viewport_size()
+    local mq = world:single_entity "main_queue"
+    local vp_rt = mq.render_target.viewport.rect
+    return {w=vp_rt.w, h=vp_rt.h}
+end
+
+function icamera_moition.ray(cameraeid, pt2d, vp_size)
     local camera = camera_component(cameraeid)
 
-    screensize = screensize or world.args.fb_size
+    vp_size = vp_size or main_queue_viewport_size()
 
-    local ndc2d = to_ndc(pt2d, screensize)
+    local ndc2d = to_ndc(pt2d, vp_size)
     local ndc_near = {ndc2d[1], ndc2d[2], hwi.get_caps().homogeneousDepth and -1 or 0, 1}
     local ndc_far = {ndc2d[1], ndc2d[2], 1, 1}
 

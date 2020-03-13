@@ -30,7 +30,7 @@ function GuiSystemProfiler:_init()
 end
 
 function GuiSystemProfiler:_init_subcribe()
-    hub.subscribe(Event.SystemProfile,self._on_system_profile,self)
+    hub.subscribe(Event.RTE.SystemProfile,self._on_system_profile,self)
 end
 
 

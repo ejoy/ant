@@ -10,7 +10,7 @@ local project = {}
 function project_runner.run(project_dir)
     --get project path
     do
-        local pkg_name = pm.editor_register_package(lfs.path(project_dir))
+        local pkg_name = pm.editor_load_package(lfs.path(project_dir))
         assert(pkg_name == "project")
         pm.import "project"
     end
@@ -34,7 +34,7 @@ function project_runner.run(project_dir)
                 local _path = lfs.path(pkg_path)
                 local pkg_data = pm.get_registered(_path)
                 if not pkg_data then
-                    pm.editor_register_package(_path)
+                    pm.editor_load_package(_path)
                 end
             end
         end
@@ -45,7 +45,7 @@ function project_runner.run(project_dir)
                 local _path = lfs.path(project_dir.."/"..pkg_path)
                 local pkg_data = pm.get_registered(_path)
                 if not pkg_data then
-                    pm.editor_register_package(_path)
+                    pm.editor_load_package(_path)
                 end
             end
         end
@@ -94,7 +94,7 @@ end
 
 function project_runner._load_project(project_dir)
     do
-        local pkg_name = pm.editor_register_package(lfs.path(project_dir))
+        local pkg_name = pm.editor_load_package(lfs.path(project_dir))
         assert(pkg_name == "project")
         pm.import "project"
     end
@@ -118,7 +118,7 @@ function project_runner._load_project(project_dir)
                 local _path = lfs.path(pkg_path)
                 local pkg_data = pm.get_registered(_path)
                 if not pkg_data then
-                    pm.editor_register_package(_path)
+                    pm.editor_load_package(_path)
                 end
             end
         end
@@ -129,7 +129,7 @@ function project_runner._load_project(project_dir)
                 local _path = lfs.path(project_dir.."/"..pkg_path)
                 local pkg_data = pm.get_registered(_path)
                 if not pkg_data then
-                    pm.editor_register_package(_path)
+                    pm.editor_load_package(_path)
                 end
             end
         end

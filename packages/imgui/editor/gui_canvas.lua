@@ -82,7 +82,7 @@ function GuiCanvas:_update_title_btns()
         local change = widget.Selectable(str,self.gizmo_select)
         cursor.SameLine()
         if change then
-            hub.publish(Event.GizmoType,self.gizmo_select[1])
+            hub.publish(Event.ETR.GizmoType,self.gizmo_select[1])
         end
     end
     windows.PopStyleVar()

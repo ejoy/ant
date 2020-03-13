@@ -27,9 +27,6 @@
     <ProjectReference Include="bgfx.vcxproj">
       <Project>{50b83d8c-7938-4814-bc5a-738cba9bf0e6}</Project>
     </ProjectReference>
-    <ProjectReference Include="bullet.vcxproj">
-      <Project>{457e974d-2c6d-44f9-a5fe-77f96c17c8e8}</Project>
-    </ProjectReference>
     <ProjectReference Include="crypt.vcxproj">
       <Project>{45cab35b-9a30-4657-93c1-4e676e4ea412}</Project>
     </ProjectReference>
@@ -181,7 +178,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\bgfx\.build\win64_vs2019\bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;bgfx-shared-lib$(Configuration).lib;firmware.lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bgfx-shared-lib$(Configuration).lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>
@@ -246,7 +243,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);..\..\3rd\bgfx\.build\win64_vs2019\bin</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;math3d.lib;bgfx.lib;hierarchy.lib;bullet.lib;thread.lib;crypt.lib;lsocket.lib;protocol.lib;remotedebug.lib;terrain.lib;platform.lib;datalist.lib;filesystem.lib;bgfx-shared-lib$(Configuration).lib;window.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bgfx-shared-lib$(Configuration).lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
     </Link>

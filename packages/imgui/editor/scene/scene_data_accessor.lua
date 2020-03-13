@@ -240,7 +240,7 @@ function scene_data_accessor.start_new_world(raw_path)
 
     local pm = require "antpm"
     if not fs.exists(fs.path ("/pkg/"..pkgname)) then
-        pkgname = pm.editor_register_package(path:parent_path())
+        pkgname = pm.editor_load_package(path:parent_path())
     end
     
     packages[#packages+1] = pkgname

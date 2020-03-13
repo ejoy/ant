@@ -38,7 +38,7 @@ end
 
 ---event process
 function GuiProjectList:_init_subcribe()
-    hub.subscribe(Event.RequestAddPackageToProject,self.on_request_add_package_to_project,self)
+    hub.subscribe(Event.ETE.RequestAddPackageToProject,self.on_request_add_package_to_project,self)
 end
 
 function GuiProjectList:on_request_add_package_to_project(typ,path)
@@ -267,7 +267,7 @@ function GuiProjectList:open_project(pdata)
     self.project_details[pdata.path] = project_detail
     log.info_a(self.project_details[pdata.path])
     self.cur_open_project = pdata
-    hub.publish(Event.OpenProject)
+    hub.publish(Event.ETE.OpenProject)
 end
 
 function GuiProjectList:close_project(publish_event)
@@ -276,7 +276,7 @@ function GuiProjectList:close_project(publish_event)
         -- self.project_details[self.cur_open_project.path] = nil
         self.cur_open_project = nil
         if publish_event then
-            hub.publish(Event.CloseProject)
+            hub.publish(Event.ETE.CloseProject)
         end
     end
 end
@@ -298,7 +298,7 @@ function GuiProjectList:add_package_to_cur_project(typ,path)
     if success then
         project_data_accessor.save(pdata,project_detail)
         log.info("Project saved successfully:",pdata.name)
-        hub.publish(Event.ProjectModified)
+        hub.publish(Event.ETE.ProjectModified)
     end
 end
 

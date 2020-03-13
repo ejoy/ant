@@ -31,8 +31,8 @@ end
 
 
 function GuiWindowController:_init_subcribe()
-    hub.subscribe(Event.OpenProject,self._on_open_project,self)
-    hub.subscribe(Event.CloseProject,self._on_close_project,self)
+    hub.subscribe(Event.ETE.OpenProject,self._on_open_project,self)
+    hub.subscribe(Event.ETE.CloseProject,self._on_close_project,self)
 end
 
 function GuiWindowController:refresh_window_status()

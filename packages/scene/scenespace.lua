@@ -67,6 +67,14 @@ local function mark_tree(tree, componenttype)
 	end
 end
 
+local update_follow_mb = world:sub {"update_follow"}
+local function mark_follow_mb(tree)
+	for _,_,follow_by in update_follow_mb:unpack() do
+		assert(world[follow_by].transform)
+		local _ = tree[follow_by]
+	end
+end
+
 local function tree_sort(tree)
 	local r = {}
 
@@ -126,6 +134,7 @@ end
 local function fetch_sort_tree_result(tree, componenttype)
 	setmetatable(tree, mark_mt)
 	mark_tree(tree, componenttype)
+	mark_follow_mb(tree)
 	return tree_sort(tree)
 end
 
@@ -140,8 +149,8 @@ local function mark_cache(eid, cache_result)
 	local cachemat = update_hirarchy_entity_world(t)
 	assert(type(cachemat) == 'userdata')
 
-	local hiecomp = assert(e.hierarchy)
-	if hiecomp.ref_path then
+	local hiecomp = e.hierarchy
+	if hiecomp and hiecomp.ref_path then
 		local hiehandle = assetmgr.get_resource(hiecomp.ref_path).handle
 		if t.hierarchy_result == nil then
 			local bpresult = animodule.new_bind_pose(#hiehandle)
@@ -159,6 +168,7 @@ end
 
 local function update_hierarchy_tree(tree, cache_result)
 	local sort_result = fetch_hirarchy_tree(tree)
+	log.info_a("sort_result",sort_result)
 	for i = #sort_result, 1, -1 do
 		local eid = sort_result[i]
 		mark_cache(eid, cache_result)
@@ -246,12 +256,18 @@ local function get_check_mb_list()
 end
 
 local checklist = get_check_mb_list()
+local begin_follow_mb = world:sub {"update_follow"}
 
 function scene_space:scene_update()
 	local trees = {}
 
 	local function mark_parent(eid)
 		trees[eid] = world[eid].transform.parent or pseudoroot_eid
+	end
+
+	for _,follower,followby,old_followby in begin_follow_mb:unpack() do
+		parent_changed(follower,old_followby,trees)
+		mark_parent(followby)
 	end
 
 	for event in trans_changed_mb:each() do
@@ -268,7 +284,7 @@ function scene_space:scene_update()
 			mark_parent(eid)
 		end
 	end
-
+	
 	for _, mb in ipairs(checklist) do
 		for msg in mb:each() do
 			local eid = msg[3]
@@ -278,10 +294,13 @@ function scene_space:scene_update()
 		end
 	end
 
+	
+
 	local transform_result = world:singleton "hierarchy_transform_result"
 	if next(trees) then
 		update_hierarchy_tree(trees, transform_result)
 	end
+	log.info_a(transform_result)
 
 	hierarchy_del_handle(transform_result)
 end

@@ -25,10 +25,10 @@ GuiPackageView.GuiName  = "GuiPackageView"
 
 local FileOpenEvent = setmetatable(
     {
-        scene = Event.OpenScene,
+        scene = Event.ETE.OpenScene,
     },
     {   __index = function(tab,key)
-            return Event.OpenRes
+            return Event.ETE.OpenRes
         end
     })
 
@@ -50,8 +50,8 @@ function GuiPackageView:_init()
 end
 
 function GuiPackageView:_init_subcribe()
-    hub.subscribe(Event.OpenProject,self.on_project_change,self)
-    hub.subscribe(Event.CloseProject,self.on_project_change,self)
+    hub.subscribe(Event.ETE.OpenProject,self.on_project_change,self)
+    hub.subscribe(Event.ETE.CloseProject,self.on_project_change,self)
 end
 
 function GuiPackageView:on_project_change()
@@ -234,7 +234,7 @@ function GuiPackageView:on_path_click(path_obj)
         end
         map[path_str] = true
     end
-    hub.publish(Event.InspectRes,self.selection.list)
+    hub.publish(Event.ETE.InspectRes,self.selection.list)
 end
 
 
@@ -581,9 +581,9 @@ function GuiPackageView:open_new_package_box( )
         local success_path = create_package_at(name,location,entry)
         if inside_project then
             local package_relative_path = string.sub(location,#(project_data.path)+2)
-            hub.publish(Event.RequestAddPackageToProject,"inner",package_relative_path)
+            hub.publish(Event.ETE.RequestAddPackageToProject,"inner",package_relative_path)
         else
-            hub.publish(Event.RequestAddPackageToProject,"external",location)
+            hub.publish(Event.ETE.RequestAddPackageToProject,"external",location)
         end
         return success_path
     end

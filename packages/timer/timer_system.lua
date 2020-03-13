@@ -1,8 +1,8 @@
 local ecs = ...
 
-local baselib      = require "bgfx.baselib"
-local time_counter = baselib.HP_counter
-local time_freq    = baselib.HP_frequency / 1000
+local timer = require "platform.timer"
+local time_counter = timer.counter
+local time_freq    = timer.frequency() / 1000
 local function gettime()
 	return time_counter() / time_freq
 end

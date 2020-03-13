@@ -250,17 +250,7 @@ int window_init(struct ant_window_callback* cb) {
     return 0;
 }
 
-int window_create(struct ant_window_callback* cb, int w, int h, const char* title, size_t sz) {
-	wchar_t* wtitle = (wchar_t *)malloc((sz + 1) * sizeof(wchar_t));
-	if (wtitle == 0) {
-		return 1;
-	}
-	int wsz = MultiByteToWideChar(CP_UTF8, 0, title, (int)sz+1, wtitle, (int)sz+1);
-	if (wsz == 0) {
-		free(wtitle);
-		return 2;
-	}
-
+int window_create(struct ant_window_callback* cb, int w, int h) {
 	RECT rect;
 	rect.left=0;
 	rect.right=w;
@@ -268,13 +258,12 @@ int window_create(struct ant_window_callback* cb, int w, int h, const char* titl
 	rect.bottom=h;
 	AdjustWindowRect(&rect,WINDOWSTYLE,0);
 	register_class();
-	HWND wnd=CreateWindowExW(0,CLASSNAME,wtitle,
+	HWND wnd=CreateWindowExW(0,CLASSNAME,NULL,
 		WINDOWSTYLE, CW_USEDEFAULT,0,
 		rect.right-rect.left,rect.bottom-rect.top,
 		0,0,
 		GetModuleHandleW(0),
 		cb);
-	free(wtitle);
 	if (wnd == NULL) {
 		return 3;
 	}

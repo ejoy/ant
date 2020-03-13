@@ -247,8 +247,10 @@ local function on_gizmo_type_change(self,typ)
     if typ ~= operate_gizmo_cache.gizmo_type then
         local gizmo = operate_gizmo_cache.gizmo
         local old_typ = operate_gizmo_cache.gizmo_type
-        world:add_component(gizmo[old_typ].eid,"hierarchy_visible",false)
-        world:add_component(gizmo[typ].eid,"hierarchy_visible",true)
+        world[gizmo[old_typ].eid].hierarchy_visible = false
+        world[gizmo[typ].eid].hierarchy_visible = true
+        -- world:disable_tag(gizmo[old_typ].eid,"hierarchy_visible")
+        -- world:enable_tag(gizmo[typ].eid,"hierarchy_visible")
         operate_gizmo_cache.gizmo_type = typ
     end
 
@@ -265,7 +267,13 @@ function gizmo_sys:init()
     local gizmo = util.create_gizmo(world)
     for i,typ in ipairs(GizmoType) do
         local eid = gizmo[typ].eid
-        world:add_component(eid,"hierarchy_visible",typ ==operate_gizmo_cache.gizmo_type)
+        if typ == operate_gizmo_cache.gizmo_type then
+            -- world:enable_tag(eid,"hierarchy_visible")
+            world[eid].hierarchy_visible = true
+        else
+            -- world:disable_tag(eid,"hierarchy_visible")
+            world[eid].hierarchy_visible = false
+        end
     end
     operate_gizmo_cache.gizmo = gizmo
     operate_gizmo_cache.axis_map = {
@@ -288,7 +296,7 @@ function gizmo_sys:init()
     end
     -------------------
     local hub = world.args.hub
-    hub.subscribe(WatcherEvent.GizmoType,on_gizmo_type_change,self)
+    hub.subscribe(WatcherEvent.ETR.GizmoType,on_gizmo_type_change,self)
     --------------
     -- self.message.observers:add({
     --     mouse = function (_, x, y, what, state)
@@ -380,14 +388,17 @@ function gizmo_sys:editor_update()
         scale_gizmo_to_normal(gizmo_eid)
 
         if target_entity_id ~= operate_gizmo_cache.last_target_eid then
-            world:add_component(gizmo_eid,"hierarchy_visible",false)
+            -- world:disable_tag(gizmo_eid,"hierarchy_visible")
+            world[gizmo_eid].hierarchy_visible = false
             operate_gizmo_cache.last_target_eid = target_entity_id
         elseif not gizmo_entity.hierarchy_visible then
-            world:add_component(gizmo_eid,"hierarchy_visible",true)
+            world[gizmo_eid].hierarchy_visible = true
+            -- world:enable_tag(gizmo_eid,"hierarchy_visible")
         end
     else
         if operate_gizmo_cache.last_target_eid then
-            world:add_component(gizmo_eid,"hierarchy_visible",false)
+            -- world:disable_tag(gizmo_eid,"hierarchy_visible")
+            world[gizmo_eid].hierarchy_visible = false
             operate_gizmo_cache.last_target_eid = nil
         end
     end

@@ -19,6 +19,6 @@ function world_profile_system:editor_update()
         end
     end
     local hub = world.args.hub
-    hub.publish(WatcherEvent.SystemProfile, profile_cache)
+    hub.publish(WatcherEvent.RTE.SystemProfile, profile_cache)
     e.profile_cache = {}
 end

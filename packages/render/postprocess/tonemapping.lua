@@ -5,11 +5,16 @@ local viewidmgr = require "viewid_mgr"
 local fbmgr = require "framebuffer_mgr"
 local fs = require "filesystem"
 
+local cu = require "camera.util"
+
 local setting = require "setting"
 
 local tm = ecs.system "tonemapping"
 tm.require_singleton "postprocess"
 tm.require_system    "postprocess_system"
+tm.require_interface "postprocess"
+
+local ipp = world:interface "postprocess"
 
 function tm:post_init()
     local sd = setting.get()
@@ -18,7 +23,8 @@ function tm:post_init()
     if hdrsetting.enable then
         local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 
-        local fbsize = world.args.fb_size
+        local fbsize = ipp.main_rb_size(main_fbidx)
+        cu.main_queue_camera()
         local techniques = pp.techniques
         techniques[#techniques+1]
             {

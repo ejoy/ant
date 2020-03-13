@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
-local fbgmgr    = require "framebuffer_mgr"
+local fbmgr    = require "framebuffer_mgr"
 local renderutil= require "util"
 local computil  = require "components.util"
 local setting   = require "setting"
@@ -12,6 +12,9 @@ local fs        = require "filesystem"
 local bloom_sys = ecs.system "bloom_system"
 bloom_sys.require_singleton  "postprocess"
 bloom_sys.require_system     "postprocess_system"
+bloom_sys.require_interface "postprocess"
+
+local ipp = world:interface "postprocess"
 
 local bloom_chain_count = 4
 
@@ -28,18 +31,18 @@ local function create_framebuffers_container_obj(fbsize)
     local bloomsetting = sd.graphic.postprocess.bloom
     local fmt = bloomsetting.format
     return {
-        fbgmgr.create {
+        fbmgr.create {
             render_buffers = {
-                fbgmgr.create_rb {
+                fbmgr.create_rb {
                     format = fmt,
                     w = fbsize.w, h = fbsize.h,
                     layers = 1, flags = flags,
                 }
             },
         },
-        fbgmgr.create {
+        fbmgr.create {
             render_buffers = {
-                fbgmgr.create_rb {
+                fbmgr.create_rb {
                     format = fmt,
                     w = fbsize.w, h = fbsize.h,
                     layers = 1, flags = flags,
@@ -133,9 +136,10 @@ function bloom_sys:post_init()
     local sd = setting.get()
     local bloom = sd.graphic.postprocess.bloom
     if bloom.enable then
-        local main_fbidx = fbgmgr.get_fb_idx(viewidmgr.get "main_view")
+        local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 
-        local fbsize = world.args.fb_size
+        local fbsize = ipp.main_rb_size(main_fbidx)
+
         local techniques = pp.techniques
         techniques[#techniques+1] = {
             name = "bloom",

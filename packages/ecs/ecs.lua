@@ -63,18 +63,6 @@ function world:add_component(eid, component_type, args)
 	self:register_component(eid, component_type)
 end
 
-function world:remove_component(eid, c)
-	local e = assert(self[eid])
-	assert(e[c] ~= nil)
-	self._set[c] = nil
-	-- defer delete , see world:remove_reset
-	local removed = self._removed
-	removed[#removed+1] = { eid, e, c }
-
-	self:pub {"component_removed", c, eid, e}
-	e[c] = nil
-end
-
 function world:enable_tag(eid, c)
 	local e = self[eid]
 	local ti = assert(self._class.component[c], c)
@@ -169,7 +157,7 @@ function world:remove_entity(eid)
 	self._entity[eid] = nil
 
 	local removed = self._removed
-	removed[#removed+1] = { eid, e }
+	removed[#removed+1] = e
 
 	self:pub {"entity_removed", eid, e,}
 end
@@ -284,21 +272,15 @@ end
 function world:clear_removed()
 	local set = self._removed
 	for i = #set,1,-1 do
-		local item = set[i]
+		local e = set[i]
 		set[i] = nil
-		local e = item[2]
-		local component_type = item[3]
-		if component_type ~= nil then
-			remove_component(self, e, component_type, e[component_type])
-		else
-			remove_entity(self, e)
-		end
+		remove_entity(self, e)
 	end
 end
 
-local baselib = require "bgfx.baselib"
-local time_counter = baselib.HP_counter
-local time_freq    = baselib.HP_frequency / 1000
+local timer = require "platform.timer"
+local time_counter = timer.counter
+local time_freq    = timer.frequency() / 1000
 local function gettime()
 	return time_counter() / time_freq
 end

@@ -33,7 +33,7 @@ end
 
 ---event process
 function ProjectMgr:_init_subcribe()
-    hub.subscribe(Event.RequestAddPackageToProject,self.on_request_add_package_to_project,self)
+    hub.subscribe(Event.ETE.RequestAddPackageToProject,self.on_request_add_package_to_project,self)
 end
 
 function ProjectMgr:on_request_add_package_to_project(typ,path)

@@ -1,34 +1,45 @@
+--publish from Runtime, subscribe by Editor
+local RTE = {}
+RTE.HierarchyChange         = "RTE.HierarchyChange"
+RTE.EntityInfo              = "RTE.EntityInfo" --type ="pick" or "editor","auto"
+RTE.SceneEntityPick         = "RTE.SceneEntityPick"
+RTE.ResponseWorldInfo       = "RTE.ResponseWorldInfo"
+RTE.SendEntityPolicy        = "RTE.SendEntityPolicy"
+RTE.SystemProfile           = "RTE.SystemProfile"
+--(reason("editor"/""),eids)
+RTE.ResponseNewEntity       = "RTE.ResponseNewEntity"
 
-local Evt       ={
-    --Scene&Entity
-    HierarchyChange         = "Editor_HierarchyChange",
-    EntityInfo              = "Editor_EntityInfo", --type       ="pick" or "editor","auto"
-    SceneEntityPick         = "Editor_SceneEntityPick",
-    WatchEntity             = "Editor_WatchEntity",
-    ModifyComponent         = "Editor_ModifyComponent",
-    ModifyMultComponent     = "Editor_ModifyMultComponent",
-    ResponseWorldInfo       = "Editor_ResponseWorldInfo",
-    RequestWorldInfo        = "Editor_RequestWorldInfo",
-    RequestHierarchy        = "Editor_RequestHierarchy",
-    EntityOperate           = "Editor_EntityOperate",
-    RequestEntityPolicy     = "Editor_RequestEntityPolicy",
-    SendEntityPolicy        = "Editor_SendEntityPolicy",
-    RequestAddPolicy        = "Editor_RequestAddPolicy",
-    --Delete,{eid,...}
-    GizmoType               = "Editor_GizmoType",--"position"/"rotation"/"scale"
-    SystemProfile           = "Editor_SystemProfile",
+--publish from Editor, subscribe by Runtime
+local ETR = {}
+ETR.WatchEntity             = "ETR.WatchEntity"
+ETR.ModifyComponent         = "ETR.ModifyComponent"
+ETR.ModifyMultComponent     = "ETR.ModifyMultComponent"
+ETR.RequestWorldInfo        = "ETR.RequestWorldInfo"
+ETR.RequestHierarchy        = "ETR.RequestHierarchy"
+ETR.EntityOperate           = "ETR.EntityOperate"
+ETR.RequestEntityPolicy     = "ETR.RequestEntityPolicy"
+ETR.RequestAddPolicy        = "ETR.RequestAddPolicy"
+--("position"/"rotation"/"scale")
+ETR.GizmoType               = "ETR.GizmoType"
+ETR.RunScript               = "ETR.RunScript"
+--({parent=,policy=,data=,str=})
+ETR.NewEntity               = "ETR.NewEntity"
+--( eids )
+ETR.DuplicateEntity         = "ETR.NewEntity"
 
-    --tool
-    RunScript               = "Editor_RunScript",
+--publish from Editor, subscribe by Editor
+local ETE = {}
+ETE.InspectRes              = "ETE.InspectRes" -- (pkg_path_str)
+ETE.OpenRes                 = "ETE.OpenRes"
+ETE.OpenScene               = "ETE.OpenScene" -- (pkg_path_str)
+ETE.OpenProject             = "ETE.OpenProject" -- ()
+ETE.CloseProject            = "ETE.CloseProject" -- ()
+ETE.RequestAddPackageToProject  = "ETE.RequestAddPackageToProject"
+ETE.ProjectModified         = "ETE.ProjectModified"
+ETE.OpenAddPolicyView       = "ETE.OpenAddPolicyView"
 
-    --between editor
-    InspectRes              = "Editor_InspectRes", -- (pkg_path_str)
-    OpenRes                 = "Editor_OpenRes",
-    OpenScene               = "Editor_OpenScene", -- (pkg_path_str)
-    OpenProject             = "Editor_OpenProject", -- ()
-    CloseProject            = "Editor_CloseProject", -- ()
-    RequestAddPackageToProject  = "Editor_RequestAddPackageToProject",
-    ProjectModified         = "Editor_ProjectModified",
-    OpenAddPolicyView       = "Editor_OpenAddPolicyView",
+return {
+    RTE = RTE,
+    ETR = ETR,
+    ETE = ETE,
 }
-return Evt

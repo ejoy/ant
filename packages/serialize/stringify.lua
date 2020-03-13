@@ -41,7 +41,7 @@ local function stringify_basetype(name, v)
         return convertreal(v)
     elseif name == 'string' then
         return datalist.quote(v)
-    elseif name == 'boolean' then
+    elseif name == 'boolean' or name == 'tag' then
         if v then
             return 'true'
         else

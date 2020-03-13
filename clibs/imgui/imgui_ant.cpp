@@ -10,9 +10,6 @@
 #include "bgfx_interface.h"
 #include "luabgfx.h"
 
-#define IMGUI_FLAGS_NONE        UINT8_C(0x00)
-#define IMGUI_FLAGS_FONT        UINT8_C(0x01)
-
 void init_ime(void* window);
 void init_cursor();
 void set_cursor(ImGuiMouseCursor cursor);
@@ -79,37 +76,45 @@ namespace plat {
 		io.DeltaTime = (float)luaL_checknumber(L, 1);
 #if defined(_WIN32)
 		update_mousepos();
-#endif;
+#endif
 		ImGuiMouseCursor cursor_type = io.MouseDrawCursor ? ImGuiMouseCursor_None : ImGui::GetMouseCursor();
 		if (io.WantCaptureMouse && !(io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)) {
 			set_cursor(cursor_type);
 		}
 	}
 
+	constexpr uint16_t IMGUI_FLAGS_NONE = 0x00;
+	constexpr uint16_t IMGUI_FLAGS_FONT = 0x01;
+	union ImGuiTexture {
+		ImTextureID ptr;
+		struct {
+			bgfx_texture_handle_t handle;
+			uint16_t flags;
+		} s;
+	};
+
 	void Render(lua_State* L) {
 		context* ctx = (context*)ImGui::GetIO().UserData;
 		ImDrawData* drawData = ImGui::GetDrawData();
-		const ImGuiIO& io = ImGui::GetIO();
-		const float width = io.DisplaySize.x;
-		const float height = io.DisplaySize.y;
-		const float fb_width = io.DisplaySize.x * drawData->FramebufferScale.x;
-		const float fb_height = io.DisplaySize.y * drawData->FramebufferScale.y;
+		const ImVec2& clip_size = drawData->DisplaySize;
+		const ImVec2& clip_offset = drawData->DisplayPos;
+		const ImVec2& clip_scale = drawData->FramebufferScale;
 
 		BGFX(set_view_name)(ctx->m_viewId, "ImGui");
 		BGFX(set_view_mode)(ctx->m_viewId, BGFX_VIEW_MODE_SEQUENTIAL);
 
 		const bgfx_caps_t* caps = BGFX(get_caps)();
 		auto ortho = caps->homogeneousDepth
-			? glm::orthoLH_NO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
-			: glm::orthoLH_ZO(0.0f, width, height, 0.0f, 0.0f, 1000.0f)
+			? glm::orthoLH_NO(0.0f, clip_size.x, clip_size.y, 0.0f, 0.0f, 1000.0f)
+			: glm::orthoLH_ZO(0.0f, clip_size.x, clip_size.y, 0.0f, 0.0f, 1000.0f)
 			;
 		BGFX(set_view_transform)(ctx->m_viewId, NULL, (const void*)&ortho[0]);
+
+		const float fb_width = clip_size.x * clip_scale.x;
+		const float fb_height = clip_size.y * clip_scale.y;
 		BGFX(set_view_rect)(ctx->m_viewId, 0, 0, uint16_t(fb_width), uint16_t(fb_height));
 
-		ImVec2 clip_off = drawData->DisplayPos;
-		ImVec2 clip_scale = drawData->FramebufferScale;
-
-		for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii) {
+		for (size_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii) {
 			const ImDrawList* drawList = drawData->CmdLists[ii];
 			uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
 			uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
@@ -130,31 +135,24 @@ namespace plat {
 
 			uint32_t offset = 0;
 			for (const ImDrawCmd& cmd : drawList->CmdBuffer) {
-				if (cmd.UserCallback) {
-					cmd.UserCallback(drawList, &cmd);
-					offset += cmd.ElemCount;
-					continue;
-				}
 				if (0 == cmd.ElemCount) {
 					continue;
 				}
 				assert(NULL != cmd.TextureId);
-				union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture = { cmd.TextureId };
+				ImGuiTexture texture = { cmd.TextureId };
 
-				ImVec4 clip_rect;
-				clip_rect.x = (cmd.ClipRect.x - clip_off.x) * clip_scale.x;
-				clip_rect.y = (cmd.ClipRect.y - clip_off.y) * clip_scale.y;
-				clip_rect.z = (cmd.ClipRect.z - clip_off.x) * clip_scale.x;
-				clip_rect.w = (cmd.ClipRect.w - clip_off.y) * clip_scale.y;
-
-				const uint16_t xx = uint16_t(std::max(clip_rect.x, 0.0f));
-				const uint16_t yy = uint16_t(std::max(clip_rect.y, 0.0f));
-				BGFX(set_scissor)(xx, yy
-					, uint16_t(std::min(clip_rect.z, 65535.0f) - xx)
-					, uint16_t(std::min(clip_rect.w, 65535.0f) - yy)
+				const float x = (cmd.ClipRect.x - clip_offset.x) * clip_scale.x;
+				const float y = (cmd.ClipRect.y - clip_offset.y) * clip_scale.y;
+				const float w = (cmd.ClipRect.z - cmd.ClipRect.x) * clip_scale.x;
+				const float h = (cmd.ClipRect.w - cmd.ClipRect.y) * clip_scale.y;
+				BGFX(set_scissor)(
+					  uint16_t(std::min(std::max(x, 0.0f), 65535.0f))
+					, uint16_t(std::min(std::max(y, 0.0f), 65535.0f))
+					, uint16_t(std::min(std::max(w, 0.0f), 65535.0f))
+					, uint16_t(std::min(std::max(h, 0.0f), 65535.0f))
 					);
 
-				uint64_t state = 0
+				constexpr uint64_t state = 0
 					| BGFX_STATE_WRITE_RGB
 					| BGFX_STATE_WRITE_A
 					| BGFX_STATE_MSAA
@@ -164,7 +162,7 @@ namespace plat {
 
 				BGFX(set_transient_vertex_buffer)(0, &tvb, 0, numVertices);
 				BGFX(set_transient_index_buffer)(&tib, offset, cmd.ElemCount);
-				if (IMGUI_FLAGS_FONT & texture.s.flags) {
+				if (IMGUI_FLAGS_FONT == texture.s.flags) {
 					BGFX(set_texture)(0, ctx->s_fontTex, texture.s.handle, UINT32_MAX);
 					BGFX(submit)(ctx->m_viewId, ctx->m_fontProgram, 0, false);
 				}
@@ -184,7 +182,7 @@ namespace plat {
 		int32_t height;
 		atlas->GetTexDataAsAlpha8(&data, &width, &height);
 
-		union { ImTextureID ptr; struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; } texture;
+		ImGuiTexture texture;
 		texture.s.handle = BGFX(create_texture_2d)(
 			(uint16_t)width
 			, (uint16_t)height
@@ -195,7 +193,6 @@ namespace plat {
 			, BGFX(copy)(data, width * height)
 			);
 		texture.s.flags = IMGUI_FLAGS_FONT;
-		texture.s.mip = 0;
 		atlas->TexID = texture.ptr;
 		atlas->ClearInputData();
 		atlas->ClearTexData();
@@ -204,13 +201,11 @@ namespace plat {
 
 	ImTextureID GetTextureID(lua_State* L, int lua_handle) {
 		bgfx_texture_handle_t th = { BGFX_LUAHANDLE_ID(TEXTURE, lua_handle) };
-		union { struct { bgfx_texture_handle_t handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
+		ImGuiTexture texture;
 		texture.s.handle = th;
-		texture.s.flags = 0;
-		texture.s.mip = 0;
+		texture.s.flags = IMGUI_FLAGS_NONE;
 		return texture.ptr;
 	}
-
 
 	static int viewId(lua_State* L) {
 		context* ctx = (context*)ImGui::GetIO().UserData;

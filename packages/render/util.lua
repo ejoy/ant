@@ -426,23 +426,30 @@ function util.screen_capture(world, force_read)
 	local fb = fbmgr.get(fbidx)
 	local s = setting.get()
 	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
-	local handle, width, height, pitch = util.read_render_buffer_content(world.args.fb_size, format, fb[1], force_read)
+	local handle, width, height, pitch = util.read_render_buffer_content(format, fb[1], force_read)
 	return width, height, pitch, tostring(handle)
 end
 
-function util.read_render_buffer_content(size, format, rb_idx, force_read)
+function util.read_render_buffer_content(format, rb_idx, force_read, size)
 	local rb = fbmgr.get_rb(rb_idx)
+	local w, h
+	if size then
+		w, h = size.w, size.h
+	else
+		w, h = rb.w, rb.h
+	end
+
 	local elem_size_mapper = {
 		RGBA8 = 4,
 		RGBA16F = 8,
 	}
 
 	local elem_size = assert(elem_size_mapper[format])
-	
-	local memory_handle = bgfx.memory_texture(size.h * size.w * elem_size)
+
+	local memory_handle = bgfx.memory_texture(w * h * elem_size)
 	local rb_handle = fbmgr.get_rb(fbmgr.create_rb {
-		w = size.w,
-		h = size.h,
+		w = w,
+		h = h,
 		layers = 1,
 		format = format,
 		flags = util.generate_sampler_flag {

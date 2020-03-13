@@ -211,7 +211,7 @@ get_callback(lua_State *L) {
 }
 
 static int
-lregistercallback(lua_State *L) {
+registercallback(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TFUNCTION);
 
 	if (lua_getfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK) != LUA_TUSERDATA) {
@@ -220,17 +220,15 @@ lregistercallback(lua_State *L) {
 	struct ant_window_callback *cb = (struct ant_window_callback *)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 
-	struct callback_context * context = lua_newuserdatauv(L, sizeof(*context), 0);
+	struct callback_context * context = lua_newuserdatauv(L, sizeof(*context), 2);
 	context->surrogate = 0;
-	lua_createtable(L, 2, 0);	// for callback and functions thread
 	context->callback = lua_newthread(L);
-	lua_pushcfunction(context->callback, ltraceback);	// push traceback function
-	lua_rawseti(L, -2, 1);
+	lua_setiuservalue(L, -2, 1);
 	context->functions = lua_newthread(L);
-	lua_rawseti(L, -2, 2);
-	lua_setuservalue(L, -2);	// ref 2 threads to context userdata
-	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_ANT_WINDOW_CONTEXT");
+	lua_setiuservalue(L, -2, 2);
+	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
 
+	lua_pushcfunction(context->callback, ltraceback);	// push traceback function
 	register_functions(L, 1, context->functions);
 
 	cb->message = message_callback;
@@ -240,13 +238,11 @@ lregistercallback(lua_State *L) {
 
 static int
 lcreate(lua_State *L) {
-	lregistercallback(L);
+	registercallback(L);
 
-	int width = (int)luaL_optinteger(L, 2, 1334);
-	int height = (int)luaL_optinteger(L, 3, 750);
-	size_t sz;
-	const char* title = luaL_checklstring(L, 4, &sz);
-	if (0 != window_create(get_callback(L), width, height, title, sz)) {
+	int width = (int)luaL_checkinteger(L, 2);
+	int height = (int)luaL_checkinteger(L, 3);
+	if (0 != window_create(get_callback(L), width, height)) {
 		return luaL_error(L, "Create window failed");
 	}
 	lua_pushboolean(L, 1);
@@ -291,36 +287,6 @@ lexit(lua_State *L) {
 	return 0;
 }
 
-static void
-init_keymap(lua_State *L) {
-	typedef struct {
-		int code;
-		const char* name;
-	} keymap_t;
-	static keymap_t keymap[] = {
-		{VK_TAB, "Tab"},
-		{VK_LEFT, "Left"},
-		{VK_RIGHT, "Right"},
-		{VK_UP, "Up"},
-		{VK_DOWN, "Down"},
-		{VK_PRIOR, "PageUp"},
-		{VK_NEXT, "PageDown"},
-		{VK_HOME, "Home"},
-		{VK_END, "End"},
-		{VK_INSERT, "Insert"},
-		{VK_DELETE, "Delete"},
-		{VK_BACK, "Backspace"},
-		{VK_SPACE, "Space"},
-		{VK_RETURN, "Enter"},
-		{VK_ESCAPE, "Escape"},
-	};
-	lua_createtable(L, 0, sizeof(keymap) / sizeof(keymap[0]));
-	for (size_t i = 0; i < sizeof(keymap) / sizeof(keymap[0]); ++i) {
-		lua_pushinteger(L, keymap[i].code);
-		lua_setfield(L, -2, keymap[i].name);
-	}
-}
-
 LUAMOD_API int
 luaopen_window(lua_State *L) {
 	init(L);
@@ -334,9 +300,5 @@ luaopen_window(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
-
-	init_keymap(L);
-	lua_setfield(L, -2, "keymap");
-
 	return 1;
 }

@@ -34,7 +34,9 @@ local function pairs_by_sortkey(t)
 end
 
 -- local 
-function GuiAddPolicyView:_init()
+function GuiAddPolicyView:_init(default_value_cfg)
+    assert(default_value_cfg,"GuiAddPolicyView need default_value_cfg")
+    log.info_a(default_value_cfg)
     GuiBase._init(self)
     self.default_size = {350,450}
     self.title_id = string.format("AddPolicy###%s",self.GuiName)
@@ -46,11 +48,12 @@ function GuiAddPolicyView:_init()
         text = "",
         -- flags = flags.InputText { "CallbackCharFilter", "CallbackHistory", "CallbackCompletion" },
     }
+    self.default_value_cfg = default_value_cfg
     self:_init_subcribe()
 end
 
 function GuiAddPolicyView:_init_subcribe()
-    hub.subscribe(Event.OpenAddPolicyView,self.open_add_policy_view,self)
+    hub.subscribe(Event.ETE.OpenAddPolicyView,self.open_add_policy_view,self)
 end
 
 function GuiAddPolicyView:_init_schema_info()
@@ -58,7 +61,7 @@ function GuiAddPolicyView:_init_schema_info()
         local util = require "editor.gui_util"
         local schema_map = util.get_all_schema()
         local policies = schema_map.policies
-
+        log.info_a(policies)
         local policy_tree = {}
         for name,info in pairs(policies) do
             local pkg = info.package
@@ -75,6 +78,7 @@ function GuiAddPolicyView:_init_schema_info()
         self.policy_info = policies
         log.info_a(policies)
         log.info_a(policy_tree)
+
     end
 end
 
@@ -163,8 +167,8 @@ function GuiAddPolicyView:on_update()
             log.info_a("Add policy:",self.target_eids,self.policy_selected)
             self:request_add_policy(self.target_eids,self.policy_selected)
         end
+        log.info_a("PolicyDefault:",self:_create_default_value(self.policy_selected))
     end
-
 end
 
 function GuiAddPolicyView:request_add_policy(eids,policy_selected)
@@ -173,7 +177,28 @@ function GuiAddPolicyView:request_add_policy(eids,policy_selected)
         local pkg = self.policy_info[name].package
         table.insert(policies,pkg.."|"..name)
     end
-    hub.publish(Event.RequestAddPolicy,eids,policies,{test_component = true})
+    local components = self:_create_default_value(policy_selected)
+    log.info_a("default_value:",components)
+    hub.publish(Event.ETR.RequestAddPolicy,eids,policies,components)
+end
+
+function GuiAddPolicyView:_create_default_value(policy_selected)
+    --todo process policy cfg
+    local default_component_cfg = self.default_value_cfg.components
+    local components = {}
+    for name,_ in pairs(policy_selected) do
+        local policy_info = self.policy_info[name]
+        for _,component in ipairs(policy_info.require_component or {}) do
+            if not components[component] then
+                if default_component_cfg[component] == nil then
+                    log.warn("component don't has default_value:",component)
+                else
+                    components[component] = default_component_cfg[component]
+                end
+            end
+        end
+    end
+    return components
 end
 
 function GuiAddPolicyView:after_close()

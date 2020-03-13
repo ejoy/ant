@@ -63,7 +63,7 @@ local fix_root <const> = true
 local function do_animation(task, delta_time)
 	if task.type == 'blend' then
 		for _, t in ipairs(task) do
-			do_animation(t)
+			do_animation(t, delta_time)
 		end
 		ani_module.do_blend("blend", #task, task.weight)
 	else

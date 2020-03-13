@@ -24,7 +24,7 @@ function GuiScene:_init()
     GuiCanvas._init(self)
     self.message_shown = false
     self.recent_scenes = {}
-    hub.subscribe(Event.OpenScene,self.on_request_open_scene_file,self)
+    hub.subscribe(Event.ETE.OpenScene,self.on_request_open_scene_file,self)
 end
 
 function GuiScene:on_request_open_scene_file(path)
@@ -80,6 +80,7 @@ end
 function GuiScene:_open_scene(path)
     local status = dbgutil.try(function () scene_control.run_test_package(path) end)
     if status then
+        -- imgui.SetCurrentContext(gui_util.imgui_context)
         self:save_path_to_recent(path)
     end
 end

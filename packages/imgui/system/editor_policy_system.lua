@@ -22,7 +22,7 @@ local editor_policy_system = ecs.system "editor_policy_system"
 --         local eid = eids[i] 
 --         entity_policies[eid] = world:get_entity_policies(eid)
 --     end
---     hub.publish(WatcherEvent.SendEntityPolicy,entity_policies)
+--     hub.publish(WatcherEvent.RTE.SendEntityPolicy,entity_policies)
 -- end
 
 local function on_request_add_policy(eids,policies_list,data_set)
@@ -34,5 +34,5 @@ end
 
 function editor_policy_system:init()
     local hub = world.args.hub
-    hub.subscribe(WatcherEvent.RequestAddPolicy,on_request_add_policy)
+    hub.subscribe(WatcherEvent.ETR.RequestAddPolicy,on_request_add_policy)
 end

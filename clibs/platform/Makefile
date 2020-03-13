@@ -18,7 +18,7 @@ PLAT_LIB =
 PLAT_CXX = mm
 endif
 
-OBJS = $(ODIR)/lplatform.o $(ODIR)/platform_$(PLAT).o
+OBJS = $(ODIR)/lplatform.o $(ODIR)/platform_$(PLAT).o $(ODIR)/platform_timer.o
 
 ifeq "$(PLAT)" "mingw"
 $(ODIR)/win32_wmi.o : win32/wmi.cpp | $(ODIR)
@@ -31,6 +31,9 @@ $(ODIR)/osx_font_info.o : osx/font_info.mm | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<
 OBJS += $(ODIR)/osx_task_info.o $(ODIR)/osx_font_info.o
 endif
+
+$(ODIR)/platform_timer.o : platform_timer.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) -I$(BXSRC)/include
 
 $(ODIR)/platform_$(PLAT).o : platform_$(PLAT).$(PLAT_CXX) | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<

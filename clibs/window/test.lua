@@ -342,5 +342,5 @@ local function dispatch(CMD, ...)
 	end
 end
 
-window.create(dispatch, 1024, 768, "Hello")
+window.create(dispatch, 1024, 768)
 window.mainloop()

@@ -11,7 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\bgfx\baselib.cpp" />
     <ClCompile Include="..\..\clibs\bgfx\bgfx_alloc.cpp" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfx.c" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfxutil.c" />
@@ -24,6 +23,9 @@
     <ProjectReference Include="luadll.vcxproj">
       <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="copy_tools.bat" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -88,7 +90,7 @@
       <AdditionalDependencies>lua54.lib;../../3rd/bgfx/.build/win64_vs2019/bin/bx$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy_tools.bat</Command>
+      <Command>copy_tools.bat $(Configuration)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -113,6 +115,9 @@
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua54.lib;../../3rd/bgfx/.build/win64_vs2019/bin/bx$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy_tools.bat $(Configuration)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

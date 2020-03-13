@@ -8,7 +8,7 @@ local math3d 	= require "math3d"
 
 ecs.component_alias("parent", 	"entityid")
 ecs.component_alias("point", 	"vector")
-ecs.component_alias("rotation", "quaternion")
+ecs.component_alias("rotation", "quaternion",{0,0,0,1})
 
 do
 	local p = ecs.component_alias("position", "real[3]")
@@ -27,13 +27,11 @@ do
 
 	p.save = save
 
-	local s = ecs.component_alias("scale", 	"real[]")
+	local s = ecs.component_alias("scale", 	"real[]", {1,1,1,0})
 	function s.init(v)
 		local num = #v
 		if num == 1 then
 			v[2], v[3] = v[1], v[1]
-		else
-			assert(num >= 3, "scale must provided 1/3 element")
 		end
 		v[4] = 0
 		return math3d.ref(math3d.vector(v))
@@ -54,11 +52,12 @@ function trans:init()
 		local pe = world[self.parent]
 		if pe == nil then
 			error(string.format("tranform specified parent eid, but parent eid is not exist : %d", self.parent))
-		else
-			if pe.hierarchy == nil then
-				error(string.format("transform specified parent eid, but parent entity is not a hierarchy entity, parent eid: %d", self.parent))
-			end
 		end
+		-- else
+		-- 	if pe.hierarchy == nil then
+		-- 		error(string.format("transform specified parent eid, but parent entity is not a hierarchy entity, parent eid: %d", self.parent))
+		-- 	end
+		-- end
 	end
 
 	self.world = math3d.ref(math3d.matrix(self))

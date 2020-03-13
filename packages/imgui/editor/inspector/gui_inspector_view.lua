@@ -45,7 +45,7 @@ function GuiInspectorView:_register_inspector(inspector_ins)
 end
 
 function GuiInspectorView:_init_subcribe()
-    hub.subscribe(Event.InspectRes,self.on_inspect_res,self)
+    hub.subscribe(Event.ETE.InspectRes,self.on_inspect_res,self)
 end
 
 function GuiInspectorView:on_inspect_res(pkg_path_strs)

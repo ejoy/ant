@@ -1126,6 +1126,42 @@ lcreateProgram(lua_State *L) {
 	return 1;
 }
 
+/*
+	i BGFX_DISCARD_INDEX_BUFFER
+	v BGFX_DISCARD_VERTEX_STREAMS
+	t BGFX_DISCARD_TEXTURE_SAMPLERS
+	c BGFX_DISCARD_COMPUTE
+	s BGFX_DISCARD_STATE
+*/
+static uint8_t
+discard_flags(lua_State *L, int index) {
+	const char * flags_string = luaL_checkstring(L, index);
+	uint8_t flags = 0;
+	int i;
+	for (i=0;flags_string[i];i++) {
+		switch(flags_string[i]) {
+		case 'i':
+			flags |= BGFX_DISCARD_INDEX_BUFFER;
+			break;
+		case 'v':
+			flags |= BGFX_DISCARD_VERTEX_STREAMS;
+			break;
+		case 't':
+			flags |= BGFX_DISCARD_TEXTURE_SAMPLERS;
+			break;
+		case 'c':
+			flags |= BGFX_DISCARD_COMPUTE;
+			break;
+		case 's':
+			flags |= BGFX_DISCARD_STATE;
+			break;
+		default:
+			luaL_error(L, "Invalid discard string %s", flags_string);
+		}
+	}
+	return flags;
+}
+
 static int
 lsubmit(lua_State *L) {
 	bgfx_view_id_t id = luaL_checkinteger(L, 1);
@@ -1134,6 +1170,17 @@ lsubmit(lua_State *L) {
 	int preserveState = lua_toboolean(L, 4);
 	bgfx_program_handle_t ph = { progid };
 	BGFX(submit)(id, ph, depth, preserveState);
+	return 0;
+}
+
+static int
+ldiscard(lua_State *L) {
+	if (lua_isnoneornil(L, 1)) {
+		BGFX(discard)(BGFX_DISCARD_ALL);
+	} else {
+		uint8_t flags = discard_flags(L, 1);
+		BGFX(discard)(flags);
+	}
 	return 0;
 }
 
@@ -2072,7 +2119,7 @@ NORMALIZE(float v[3]) {
 
 static inline void
 copy_index_data(lua_State *L, const char* layout, int tableidx, int startidx, size_t num, uint8_t *addr){
-	const auto elemsize = layout[1] - '0';
+	const uint8_t elemsize = (uint8_t)(layout[1] - '0');
 	if (elemsize != 2 || elemsize != 4){
 		luaL_error(L, "copy index buffer failed, element size must 2 or 4", elemsize);
 	}
@@ -2094,10 +2141,10 @@ lcopy_data(lua_State *L){
 	uint8_t *addr = (uint8_t*)lua_touserdata(L, 1);
 	
 	luaL_checktype(L, 2, LUA_TTABLE);
-	const auto type = lua_geti(L, 2, 1);
+	const int type = lua_geti(L, 2, 1);
 	if (type != LUA_TSTRING){
-		return luaL_error(L, "first element of table must define vertex stride, \
-						if one vertex include position and color, it like:'fffd', mean 3 float data and 32bit integer");
+		return luaL_error(L, "first element of table must define vertex stride, "
+						"if one vertex include position and color, it like:'fffd', mean 3 float data and 32bit " "integer");
 	}
 	size_t layoutsize = 0;
 	const char* layout = lua_tolstring(L, -1, &layoutsize);
@@ -3220,7 +3267,6 @@ memory_write(lua_State *L) {
 static int
 lmemoryTexture(lua_State *L) {
 	const int intype = lua_type(L, 1);
-	void *data = NULL;
 	if (intype == LUA_TNUMBER){
 		int size = (int)lua_tointeger(L, 1);
 		void * data = lua_newuserdata(L, size);
@@ -4317,6 +4363,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "create_shader", lcreateShader },
 		{ "create_program", lcreateProgram },
 		{ "submit", lsubmit },
+		{ "discard", ldiscard },
 		{ "make_state", lmakeState },
 		{ "set_state", lsetState },
 		{ "vertex_layout", lnewVertexLayout },

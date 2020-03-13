@@ -37,23 +37,21 @@ local function offset_index_buffer(ib, istart, iend, offset)
 	end	
 end
 
-local function create_bone(ratio)
-	local radius = 0.25
+local function create_bone()
+	local ratio  <const> = 0.3
+	local radius <const> = 0.25
 	local vb = {
-		{0, ratio, 0},
-		{-radius, 0, -radius},
-		{radius, 0, -radius},
-		{radius, 0, radius},
-		{-radius, 0, radius},
-		{0, -(1-ratio), 0},
+		{0, 0, 0},
+		{-radius, -radius, ratio},
+		{radius, -radius, ratio},
+		{radius, radius, ratio},
+		{-radius, radius, ratio},
+		{0, 0, 1},
 	}
-
 	local ib = {
 		0, 1, 0, 2, 0, 3, 0, 4,
 		1, 2, 2, 3, 3, 4, 4, 1,
-
 		1, 3, 2, 4,
-
 		5, 1, 5, 2, 5, 3, 5, 4,
 	}
 	return vb, ib
@@ -75,7 +73,7 @@ end
 -- 		jend.t[1], jend.t[2], jend.t[3]))
 -- end
 
-local function generate_bones(ske)	
+local function generate_bones(ske)
 	local bones = {}
 	for i=1, #ske do
 		if not ske:isroot(i) then
@@ -85,33 +83,34 @@ local function generate_bones(ske)
 	return bones
 end
 
+local function get_ani_joints(ani)
+	local joints = {}
+	for ii=1, ani:count() do
+		joints[#joints+1] = ani:joint()
+	end
+	return joints
+end
+
 function draw.draw_skeleton(ske, ani, color, transform, desc)	
 	local hie_util = import_package "ant.scene".hierarchy
 	
 	local bones = generate_bones(ske)
 
-	local joints = ani and ani:joints() or hie_util.generate_joints_worldpos(ske)
+	local joints = ani and get_ani_joints(ani) or hie_util.generate_joints_worldpos(ske)
 	return draw.draw_bones(bones, joints, color, transform, desc)
 end
 
 function draw.draw_bones(bones, joints, color, transform, desc)
 	local dvb = desc.vb
 	local dib = desc.ib
-	local updown_ratio = 0.3
 
-	local bonevb, boneib = create_bone(updown_ratio)
-	local localtrans = math3d.transform(
-						math3d.matrix{r = math3d.quaternion{math.rad(-90), 0, 0}},
-						math3d.vector(0, 0, updown_ratio, 1),
-						nil)
+	local bonevb, boneib = create_bone()
 
 	local poitions = {}
 	for _, j in ipairs(joints) do
-		local p = math3d.index(j, 4)
-		table.insert(poitions, p)
+		poitions[#poitions+1] = math3d.index(j, 4)
 	end
 
-	--for _, b in ipairs(bones) do
 	for i=1, #bones do
 		local b = bones[i]
 		local beg_pos, end_pos = poitions[b[1]], poitions[b[2]]
@@ -119,7 +118,7 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 		local len = math3d.length(vec)
 		local rotation = math3d.torotation(math3d.normalize(vec))
 		
-		local finaltrans = math3d.mul(math3d.matrix{r=rotation, s=len, t=beg_pos}, localtrans)
+		local finaltrans = math3d.matrix{r=rotation, s=len, t=beg_pos}
 		if transform then
 			finaltrans = math3d.mul(transform, finaltrans)
 		end

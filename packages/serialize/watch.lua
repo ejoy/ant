@@ -100,21 +100,22 @@ function m.set(w, id, path, key, value)
         if key then
             local c = typeinfo[key]
             w:add_component(path,key, value)
+            return key
         else
             assert(id == nil)
             local eid = tonumber(path)
             w[eid] = {}
             w:set_entity(eid, value)
+            return
         end
-        return
     else
         local c = typeinfo[name]
         assert(not c.type)
         for _, v in ipairs(c) do
             if v.name == key then
                 component[key] = w:create_component(v.type, value)
-                w:pub {"component_changed", key, id}
-                return
+                -- w:pub {"component_changed", name, }
+                return name
             end
         end
         error('invalid key')

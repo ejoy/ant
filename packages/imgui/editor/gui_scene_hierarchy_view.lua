@@ -7,6 +7,7 @@ local cursor = imgui.cursor
 local enum = imgui.enum
 local IO = imgui.IO
 local gui_input = require "gui_input"
+local gui_mgr = require "gui_mgr"
 
 local GuiBase = require "gui_base"
 local GuiHierarchyView = GuiBase.derive("GuiHierarchyView")
@@ -37,22 +38,22 @@ end
 
 -------hub begin
 function GuiHierarchyView:_init_subcribe()
-    hub.subscribe(Event.HierarchyChange,self._on_refresh_hierarchy,self)
-    hub.subscribe(Event.SceneEntityPick, self._on_scene_pick,self)
-    local ob = rxbus.get_observable(Event.HierarchyChange)
+    hub.subscribe(Event.RTE.HierarchyChange,self._on_refresh_hierarchy,self)
+    hub.subscribe(Event.RTE.SceneEntityPick, self._on_scene_pick,self)
+    local ob = rxbus.get_observable(Event.RTE.HierarchyChange)
     ob:subscribe(function(...)
-        log("rxbus:",Event.HierarchyChange,...)
+        log("rxbus:",Event.RTE.HierarchyChange,...)
     end)
 end
 
 function GuiHierarchyView:publish_selected_entity(eids,focus)
-    local subject = rxbus:get_subject(Event.WatchEntity)
+    local subject = rxbus:get_subject(Event.ETR.WatchEntity)
     subject:onNext(eids,foucs)
-    -- hub.publish(Event.WatchEntity, eid, focus)
+    -- hub.publish(Event.ETR.WatchEntity, eid, focus)
 end
 
 function GuiHierarchyView:publish_operate_event(event,args)
-    hub.publish(Event.EntityOperate, event, args)
+    hub.publish(Event.ETR.EntityOperate, event, args)
 end
 -------hub end
 
@@ -78,7 +79,7 @@ end
 function GuiHierarchyView:_update_menu_bar()
     if widget.BeginMenuBar() then
         if widget.MenuItem("Sync") then
-            hub.publish(Event.RequestHierarchy)
+            hub.publish(Event.ETR.RequestHierarchy)
         end
         widget.EndMenuBar()
     end
@@ -95,9 +96,22 @@ function GuiHierarchyView:_render_children(children)
         self.sorted_map[children] = cache
         sorted = cache
     end
-    for _,id in ipairs(sorted) do
-        self:_render_entity(id,children[id])
+    if widget.TreeNode("Scene",flags.TreeNode.DefaultOpen) then
+        for _,id in ipairs(sorted) do
+            self:_render_entity(id,children[id])
+        end
+        widget.TreePop()
     end
+    if windows.BeginPopupContextWindow() then
+        if widget.MenuItem("New Entity") then
+            gui_mgr.getMgr("EntityMgr"):request_new_entity()
+        end
+        if widget.MenuItem("Duplicate Entity") then
+            gui_mgr.getMgr("EntityMgr"):request_duplicate_entity()
+        end
+        windows.EndPopup()
+    end
+
 end
 
 function GuiHierarchyView:_render_entity(id,entity)

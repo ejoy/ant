@@ -2,7 +2,7 @@ local m = {}
 
 local function get_pcall_return(ok,err,...)
     if not ok then
-        io.stderr:write(string.format("Error: " .. err .. "\n"))
+        io.stderr:write(string.format("Error: " .. tostring(err) .. "\n"))
         log.error("Error: " .. err)
         return false
     else

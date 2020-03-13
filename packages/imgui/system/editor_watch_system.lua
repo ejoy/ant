@@ -16,6 +16,7 @@ ecs.tag "outline_entity"
 
 ecs.component_alias("target_entity","entityid")
 
+
 local outline_policy = ecs.policy "outline"
 outline_policy.require_component "outline_entity"
 outline_policy.require_component "target_entity"
@@ -33,7 +34,6 @@ ecs.component "editor_watcher_cache" {}
 ecs.singleton "editor_watcher_cache" {}
 
 editor_watcher_system.require_singleton "editor_watcher_cache"
-
 
 local function send_hierarchy()
     local temp = {}
@@ -57,9 +57,9 @@ local function send_hierarchy()
         end
     end
     local hub = world.args.hub
-    hub.publish(WatcherEvent.HierarchyChange,result)
+    hub.publish(WatcherEvent.RTE.HierarchyChange,result)
     local rxbus = world.args.rxbus
-    local subject = rxbus.get_subject(WatcherEvent.HierarchyChange)
+    local subject = rxbus.get_subject(WatcherEvent.RTE.HierarchyChange)
     subject:onNext(result)
     return
 end
@@ -125,7 +125,7 @@ local function send_entity(eids,typ)
     local hub = world.args.hub
     local entity_info = {type = typ}
     if eids == nil or (not world[eids[1]]) then
-        hub.publish(WatcherEvent.EntityInfo,entity_info)
+        hub.publish(WatcherEvent.RTE.EntityInfo,entity_info)
         last_eid = nil
         last_tbl = nil
         log.info_a("send_entity","nothing")
@@ -151,7 +151,7 @@ local function send_entity(eids,typ)
         entity_info.entities = setialize_result
         entity_info.policies = get_entity_policies(eids)
         entity_info.eids = eids
-        hub.publish(WatcherEvent.EntityInfo,entity_info)
+        hub.publish(WatcherEvent.RTE.EntityInfo,entity_info)
         -- log.info_a("send_entity",eids)
     end
 end
@@ -168,15 +168,33 @@ local function remove_all_outline()
     end
 end
 
+
+-- local function make_follow(follower_id,target_id)
+    
+-- end
+
+--todo put to pipeline
+local function pub_follow_per_frame()
+    for _,id in world:each("outline_entity") do
+        local follower = world[id]
+        if follower then
+            world:pub({"update_follow",id,follower.transform.parent})
+        end
+    end
+end
+
+
 local function create_outline(seleid)
     local computil  = import_package "ant.render".components
     local se = world[seleid]
     if se then
-        if not se.hierarchy then
-            world:add_component(seleid,"hierarchy",{})
-        end
+        -- if not se.hierarchy then
+        --     world:add_component(seleid,"hierarchy",{})
+        -- end
 
-        local t = mu.matrix()
+        -- local trans = se.transform
+        -- local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
+        local t = mu.srt()
         t.parent = seleid
         local outlineeid = world:create_entity {
             policy={
@@ -202,6 +220,8 @@ local function create_outline(seleid)
         local oe = world[outlineeid]
         oe.rendermesh.reskey = se.rendermesh.reskey
         -- assetmgr.load(se.rendermesh.reskey)
+        -- world:pub({"begin_follow",outlineeid,seleid,nil})
+        -- world:pub({"update_follow",outlineeid,seleid})
     end
 end
 
@@ -227,10 +247,8 @@ local function change_watch_entity(self,eids,focus,is_pick)
     --remove tag:editor_watching,show_operate_gizmo
     for id,_ in pairs(remove_map) do
         world:disable_tag(id,"editor_watching")
-        log.trace(">>remove_component [editor_watching] from:",id)
         if world[id].show_operate_gizmo then
-            world:remove_component(id,"show_operate_gizmo")
-            log.trace(">>remove_component [show_operate_gizmo] from:",id)
+            world:disable_tag(id,"show_operate_gizmo")
         end
     end
     --remove entity:outline_entity
@@ -269,7 +287,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
             end
             world:enable_tag(eid,"editor_watching")
             if target_ent.transform then
-                world:add_component(eid,"show_operate_gizmo",true)
+                world:enable_tag(eid,"show_operate_gizmo")
             end
             table.insert(need_send,eid)
         end
@@ -289,10 +307,8 @@ local function start_watch_entitiy(eid,focus,is_pick)
         end
         for _,id in ipairs(old_eids) do
             world:disable_tag(id,"editor_watching")
-            log.trace(">>remove_component [editor_watching] from:",id)
             if world[id].show_operate_gizmo then
-                world:remove_component(id,"show_operate_gizmo")
-                log.trace(">>remove_component [show_operate_gizmo] from:",id)
+                world:disable_tag(id,"show_operate_gizmo")
             end
         end
         remove_all_outline()
@@ -317,9 +333,9 @@ local function start_watch_entitiy(eid,focus,is_pick)
             end
             world:enable_tag(eid,"editor_watching")
             if target_ent.transform then
-                world:add_component(eid,"show_operate_gizmo",true)
+                world:enable_tag(eid,"show_operate_gizmo")
             end
-            log.trace(">>add_component [editor_watching] to:",eid)
+            log.trace(">>enable_tag [editor_watching] to:",eid)
             send_entity({eid},( is_pick and "pick" or "editor"))
         end
     end
@@ -348,41 +364,59 @@ local function on_pick_entity(eid)
 end
 
 
-local function on_component_modified(eid,com_id,key,value)
-    log.trace_a("on_component_modified",eid,com_id,key,value)
+local function on_component_modified(eid,seid,com_id,key,value)
+    log.trace_a("on_component_modified",seid,com_id,key,value)
     if not com_id then
-        serialize.watch.set(world,nil,eid,key,value)
-        log.trace_a("after_component_modified:",serialize.watch.query(world,nil,eid))
+        local com = serialize.watch.set(world,nil,seid,key,value)
+        if com then
+            world:pub {"component_changed", com, eid, {}}
+        end
+        log.trace_a("after_component_modified:",serialize.watch.query(world,nil,seid))
     else
-        serialize.watch.set(world,com_id,"",key,value)
+        local com = serialize.watch.set(world,com_id,"",key,value)
+        if com then
+            world:pub {"component_changed", com, eid, {}}
+        end
         log.trace_a("after_component_modified:",serialize.watch.query(world,com_id,""))
     end
 end
 
 
-local function on_mult_component_modified(eids,com_ids,key,value,is_list)
-    log.trace_a("on_mult_component_modified",eids,com_ids,key,value)
+local function on_mult_component_modified(eids,seids,com_ids,key,value,is_list)
+    log.trace_a("on_mult_component_modified",seids,com_ids,key,value)
     if not com_ids then
         if not is_list then
-            for i,eid in ipairs(eids) do
-                serialize.watch.set(world,nil,eid,key,value)
+            for i,eid in ipairs(seids) do
+                local com = serialize.watch.set(world,nil,eid,key,value)
+                if com then
+                    world:pub {"component_changed", com, eids[i]}
+                end
                 log.trace_a("after_component_modified:",serialize.watch.query(world,nil,eid))
             end
         else
-            for i,eid in ipairs(eids) do
-                serialize.watch.set(world,nil,eid,key,value[i])
+            for i,eid in ipairs(seids) do
+                local com = serialize.watch.set(world,nil,eid,key,value[i])
+                if com then
+                    world:pub {"component_changed", com, eids[i]}
+                end
                 log.trace_a("after_component_modified:",serialize.watch.query(world,nil,eid))
             end
         end
     else
         if not is_list then
             for i,com_id in ipairs(com_ids) do
-                serialize.watch.set(world,com_id,"",key,value)
+                local com = serialize.watch.set(world,com_id,"",key,value)
+                if com then
+                    w:pub {"component_changed", com, seids[i]}
+                end
                 log.trace_a("after_component_modified:",serialize.watch.query(world,com_id,""))
             end
         else
             for i,com_id in ipairs(com_ids) do
-                serialize.watch.set(world,com_id,"",key,value[i])
+                local com = serialize.watch.set(world,com_id,"",key,value[i])
+                if com then
+                    w:pub {"component_changed", com, eids[i]}
+                end
                 log.trace_a("after_component_modified:",serialize.watch.query(world,com_id,""))
             end
         end
@@ -414,16 +448,16 @@ end
 
 function editor_watcher_system:init()
     local hub = world.args.hub
-    hub.subscribe(WatcherEvent.WatchEntity,on_editor_select_entity,self)
-    hub.subscribe(WatcherEvent.ModifyComponent,on_component_modified)
-    hub.subscribe(WatcherEvent.ModifyMultComponent,on_mult_component_modified)
-    hub.subscribe(WatcherEvent.EntityOperate,on_entity_operate,self)
-    hub.subscribe(WatcherEvent.RequestHierarchy,on_request_hierarchy,self)
+    hub.subscribe(WatcherEvent.ETR.WatchEntity,on_editor_select_entity,self)
+    hub.subscribe(WatcherEvent.ETR.ModifyComponent,on_component_modified)
+    hub.subscribe(WatcherEvent.ETR.ModifyMultComponent,on_mult_component_modified)
+    hub.subscribe(WatcherEvent.ETR.EntityOperate,on_entity_operate,self)
+    hub.subscribe(WatcherEvent.ETR.RequestHierarchy,on_request_hierarchy,self)
     local profile_cache = world:singleton "profile_cache"
-    -- hub.subscribe(WatcherEvent.RequestWorldInfo,publish_world_info)
+    -- hub.subscribe(WatcherEvent.ETR.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
     local rxbus = world.args.rxbus
-    local watchentity_ob = rxbus:get_observable(WatcherEvent.WatchEntity)
+    local watchentity_ob = rxbus:get_observable(WatcherEvent.ETR.WatchEntity)
     watchentity_ob:subscribe(Rx.handler(on_editor_select_entity,self))
 end
 
@@ -435,11 +469,11 @@ function editor_watcher_system:after_pickup()
         local hub = world.args.hub
         if eid and world[eid] then
             if not world[eid].gizmo_object then
-                hub.publish(WatcherEvent.SceneEntityPick,{eid})
+                hub.publish(WatcherEvent.RTE.SceneEntityPick,{eid})
                 on_pick_entity(eid)
             end
         else
-            hub.publish(WatcherEvent.SceneEntityPick,{})
+            hub.publish(WatcherEvent.RTE.SceneEntityPick,{})
             on_pick_entity(nil)
         end
     end
@@ -482,6 +516,7 @@ end
 function editor_watcher_system:editor_update()
     entity_create_handle()
     entity_delete_handle()
+    pub_follow_per_frame()
 end
 
 function editor_watcher_system:after_update()

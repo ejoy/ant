@@ -3,8 +3,6 @@ local window = require "window"
 local renderpkg = import_package "ant.render"
 local argument  = import_package "ant.argument"
 local thread    = require "thread"
-local inputmgr  = require "inputmgr"
-local keymap    = require "keymap"
 local rhwi      = renderpkg.hwi
 local debug_traceback = debug.traceback
 local thread_sleep = thread.sleep
@@ -14,7 +12,7 @@ local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
 local callback = {}
 
-local conifg
+local config
 local world
 local world_update
 
@@ -26,47 +24,37 @@ function callback.init(nwh, context, width, height)
 		height = height,
 	}
 	local su = import_package "ant.scene".util
-	world = su.start_new_world(width, height, conifg)
-	world_update = su.loop(world)
-end
-
-function callback.mouse_wheel(x, y, delta)
-	world:pub {"mouse_wheel", delta, x, y}
-end
-
-function callback.mouse(x, y, what, state)
-	world:pub {"mouse", inputmgr.translate_mouse_button(what), inputmgr.translate_mouse_state(state), x, y}
-end
-
-function callback.touch(x, y, id, state)
-	world:pub {"touch", inputmgr.translate_mouse_state(state), id, x, y }
-end
-
-function callback.keyboard(key, press, state)
-	world:pub {"keyboard", keymap[key], press, inputmgr.translate_key_state(state)}
+	world = su.create_world()
+	for k, v in pairs(world) do
+		if k == 'init' then
+			goto continue
+		end
+		if callback[k] then
+			local f = callback[k]
+			callback[k] = function(...)
+				v(...)
+				f(...)
+			end
+		else
+			callback[k] = v
+		end
+		::continue::
+	end
+	world.init(config, width, height)
 end
 
 function callback.size(width,height,_)
-	if world then
-		world:pub {"resize", width, height}
-	end
 	rhwi.reset(nil, width, height)
 end
 
 function callback.exit()
-	if world then
-		world:update_func "exit" ()
-	end
 	rhwi.shutdown()
     print "exit"
 end
 
 function callback.update()
 	if debug_update then debug_update() end
-	if world_update then
-		world_update()
-		rhwi.frame()
-	end
+	if world then rhwi.frame() end
 end
 
 local function dispatch(ok, CMD, ...)
@@ -101,7 +89,7 @@ end
 
 local function windowMode()
 	local window = require "common.window"
-	window.create(run, 1024, 768, "Hello")
+	window.create(run, 1024, 768)
 end
 
 local function savebmp(name, width, height, pitch, data)
@@ -154,7 +142,7 @@ local function headlessMode()
 end
 
 local function start(cfg)
-	conifg = cfg
+	config = cfg
 	if argument.headless then
 		return headlessMode()
 	end

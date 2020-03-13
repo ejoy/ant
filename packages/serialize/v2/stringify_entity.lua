@@ -58,12 +58,14 @@ local function stringify_basetype(name, v)
         else
             return datalist.quote(v)
         end
-    elseif name == 'boolean' then
+    elseif name == 'boolean'then
         if v then
             return 'true'
         else
             return 'false'
         end
+    elseif name == "tag" then
+        return v and 'true' or 'nil'
     elseif name == 'entityid' then
         error('`entityid` is not supported.')
     end
