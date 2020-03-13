@@ -36,26 +36,26 @@ function GuiPropertyView:_init()
     self:_init_subcribe()
 end
 
-function GuiPropertyView:on_component_value_change(eid,com_id,name,value)
-    hub.publish(Event.ModifyComponent,eid,com_id,name,value)
+function GuiPropertyView:on_component_value_change(eid,seid,com_id,name,value)
+    hub.publish(Event.ETR.ModifyComponent,eid,seid,com_id,name,value)
 end
 
-function GuiPropertyView:on_mult_component_value_change(eids,com_ids,name,value,is_list)
-    hub.publish(Event.ModifyMultComponent,eids,com_ids,name,value,is_list)
+function GuiPropertyView:on_mult_component_value_change(eids,seids,com_ids,name,value,is_list)
+    hub.publish(Event.ETR.ModifyMultComponent,eids,seids,com_ids,name,value,is_list)
 end
 
 
 -------hub begin
 function GuiPropertyView:_init_subcribe()
-    hub.subscribe(Event.EntityInfo,self._on_refresh_entity,self)
-    -- hub.subscribe(Event.SendEntityPolicy,self._on_refresh_policy,self)
-    -- hub.subscribe(Event.ResponseWorldInfo,
+    hub.subscribe(Event.RTE.EntityInfo,self._on_refresh_entity,self)
+    -- hub.subscribe(Event.RTE.SendEntityPolicy,self._on_refresh_policy,self)
+    -- hub.subscribe(Event.RTE.ResponseWorldInfo,
     --             self.on_response_world_info,
     --             self)
 end
 
 function GuiPropertyView:request_world_info()
-    hub.publish(Event.RequestWorldInfo)
+    hub.publish(Event.ETR.RequestWorldInfo)
 end
 -------hub end
 

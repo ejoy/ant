@@ -88,6 +88,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             can_select = true,
             gizmo_object = {dir = dir},
             hierarchy = {},
+            hierarchy_visible = true,
             --serialize = seriazlizeutil.create(),
         },
     }

@@ -35,5 +35,5 @@ end
 
 function editor_tool_system:init()
     local hub = world.args.hub
-    hub.subscribe(HubEvent.RunScript,on_receive_script)
+    hub.subscribe(HubEvent.ETR.RunScript,on_receive_script)
 end
