@@ -26,8 +26,8 @@ function gui_util.get_all_components()
             table.remove(packages,k)
         end
     end
-    local scene         = import_package "ant.scene".util
-    local world = scene.start_static_world(packages)
+    local ecs         = import_package "ant.ecs"
+    local world = ecs.get_schema({}, packages)
     -- world_update()
     -- log.info_a(world._schema.map)
     -- log(world._schema.map)
@@ -52,8 +52,8 @@ function gui_util.get_all_schema(force)
     -- local inputmgr      = import_package "ant.inputmgr"
     -- local scene         = import_package "ant.scene".util
     -- local input_queue = inputmgr.queue()
-    local scene         = import_package "ant.scene".util
-    local world = scene.start_static_world(packages)
+    local ecs         = import_package "ant.ecs"
+    local world = ecs.get_schema({}, packages)
         -- })
     -- world_update()
 
