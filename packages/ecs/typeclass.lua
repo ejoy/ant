@@ -51,7 +51,7 @@ local function gen_method(c, callback)
 end
 
 local function decl_basetype(schema)
-	schema:primtype("ant.ecs", "tag", "boolean", true)
+	schema:primtype("ant.ecs", "tag", true)
 	schema:primtype("ant.ecs", "entityid", -1)
 	schema:primtype("ant.ecs", "int", 0)
 	schema:primtype("ant.ecs", "real", 0.0)
