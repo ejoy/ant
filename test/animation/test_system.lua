@@ -34,7 +34,7 @@ local function load_file(file)
 end
 
 function m:init()
-    lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, math3d.quaternion(mu.to_radian{60, 50, 0, 0}, true))
+    lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, math3d.totable(math3d.quaternion(mu.to_radian{60, 50, 0, 0})))
     lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     RoleEntityId = world:create_entity(load_file 'entity.txt')
 end

@@ -41,4 +41,5 @@ void math3d_quat_transform(struct lastack *LS, const float quat[4], const float 
 void math3d_rotmat_transform(struct lastack *LS, const float mat[16], const float v[4]);
 void math3d_minmax(struct lastack *LS, const float mat[16], const float v[4], float minv[4], float maxv[4]);
 void math3d_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]);
+void math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]);
 #endif

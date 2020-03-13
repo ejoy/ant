@@ -129,7 +129,7 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 end
 
 local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap_size, stabilize, shadowcamera)
-	shadowcamera.viewdir = lightdir
+	shadowcamera.viewdir.v = lightdir
 
 	-- frustum_desc can cache, only camera distance changed or ratios change need recalculate
 	local frustum_desc = shadowutil.split_new_frustum(view_camera.frustum, split_ratios)

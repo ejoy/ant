@@ -40,11 +40,11 @@ local function cameraReset(eyepos, target)
 	cameraTarget.v = target
 	cameraDistance = math3d.length(math3d.sub(cameraTarget, eyepos))
 	camera.eyepos.v = eyepos
-	camera.viewdir = math3d.normalize(math3d.sub(cameraTarget, eyepos))
+	camera.viewdir.v = math3d.normalize(math3d.sub(cameraTarget, eyepos))
 end
 
 local function cameraInit()
-	cameraTarget = math3d.ref "vector"
+	cameraTarget = math3d.ref()
 	local camera = world:interface "ant.render|camera"
 	cameraId = camera.create {
 		eyepos = {0,0,0,1},

@@ -1231,6 +1231,21 @@ lpack(lua_State *L) {
 	return 1;
 }
 
+// input: view direction vector
+// output: 
+//		output radianX and radianY which can used to create quaternion that around x-axis and y-axis, 
+//		multipy those quaternions can recreate view direction vector
+static int
+ldir2radian(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float* v = vector_from_index(L, LS, 1);
+	float radians[2];
+	math3d_dir2radian(LS, v, radians);
+	lua_pushnumber(L, radians[0]);
+	lua_pushnumber(L, radians[1]);
+	return 2;
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
@@ -1273,6 +1288,7 @@ luaopen_math3d(lua_State *L) {
 		{ "projmat", lprojmat },
 		{ "minmax", lminmax},
 		{ "lerp", llerp},
+		{ "dir2radian", ldir2radian},
 		{ "stacksize", lstacksize},
 		{ "homogeneous_depth", lhomogeneous_depth },
 		{ "pack", lpack },

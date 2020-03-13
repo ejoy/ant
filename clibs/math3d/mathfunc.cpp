@@ -381,3 +381,32 @@ void
 math3d_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]){
 	*(glm::vec4*)r = glm::lerp(VEC(v0), VEC(v1), ratio);
 }
+
+void
+math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]){
+	const float PI = float(M_PI);
+	const float HALF_PI = 0.5f * PI;
+	
+	if (is_equal(v[1], 1.f)){
+		radians[0] = -HALF_PI;
+		radians[1] = 0.f;
+	} else if (is_equal(v[1], -1.f)){
+		radians[0] = HALF_PI;
+		radians[1] = 0.f;
+	} else if (is_equal(v[0], 1.f)){
+		radians[0] = 0.f;
+		radians[1] = HALF_PI;
+	} else if (is_equal(v[0], -1.f)){
+		radians[0] = 0.f;
+		radians[1] = -HALF_PI;
+	} else if (is_equal(v[2], 1.f)){
+		radians[0] = 0.f;
+		radians[1] = 0.f;
+	} else if (is_equal(v[2], -1.f)){
+		radians[0] = 0.f;
+		radians[1] = PI;
+	} else {
+		radians[0] = is_zero(v[1]) ? 0.f : std::asin(-v[1]);
+		radians[1] = is_zero(v[0]) ? 0.f : std::atan2(v[0], v[2]);
+	}
+}

@@ -92,7 +92,7 @@ local function rotate_vec(dir, rotateX, rotateY, threshold_around_x_axis)
     local qy = math3d.quaternion{axis=mc.YAXIS, r=radianY}
 
     local q = math3d.mul(qx, qy)
-    return math3d.rotate_vector(q, mc.ZAXIS)
+    return math3d.transform(q, mc.ZAXIS, 0)
 end
 
 function icamera_moition.rotate(cameraeid, rotateX, rotateY)
