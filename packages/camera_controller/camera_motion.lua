@@ -126,7 +126,7 @@ local function to_ndc(pt2d, screensize)
 end
 
 local function main_queue_viewport_size()
-    local mq = world:single_entity "main_queue"
+    local mq = world:singleton_entity "main_queue"
     local vp_rt = mq.render_target.viewport.rect
     return {w=vp_rt.w, h=vp_rt.h}
 end
@@ -142,8 +142,8 @@ function icamera_moition.ray(cameraeid, pt2d, vp_size)
 
     local viewproj = mu.view_proj(camera)
     local invviewproj = math3d.inverse(viewproj)
-    local pt_near_WS = math3d.mulH(invviewproj, ndc_near)
-    local pt_far_WS = math3d.mulH(invviewproj, ndc_far)
+    local pt_near_WS = math3d.transformH(invviewproj, ndc_near, 1)
+    local pt_far_WS = math3d.transformH(invviewproj, ndc_far, 1)
 
     local dir = math3d.normalize(math3d.sub(pt_far_WS, pt_near_WS))
     return {

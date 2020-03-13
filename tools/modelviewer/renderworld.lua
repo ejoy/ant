@@ -41,7 +41,7 @@ local animation = world:interface "ant.animation|animation"
 local camera_id
 
 local function create_light()
-	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, math3d.quaternion{math.rad(60), math.rad(50), 0})
+	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, math3d.totable(math3d.quaternion{math.rad(60), math.rad(50), 0}))
 	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
