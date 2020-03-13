@@ -9,7 +9,7 @@ local IO        = imgui.IO
 local hub       = import_package "ant.editor".hub
 local Event     = require "hub_event"
 
-local ComponentSetting = require "editor.component_setting"
+local ComponentSetting = require "editor.component.component_setting"
 local factory = require "widget.gui_basecomponent_widget"
 
 local class     = require "common.class"
@@ -49,6 +49,7 @@ function GuiEntityWidget:_init()
     self.com_setting = nil
     self.path_tbl_cache = {}
     self.state = "single" -- or "mult"
+    self.cur_eids = nil
 end
 
 function GuiEntityWidget:set_schema(schema)
@@ -168,15 +169,15 @@ function GuiEntityWidget:create_child_path( parent_path,schema)
     return child_path
 end
 
-function GuiEntityWidget:on_base_component_change(eid,com_id,name,value)
+function GuiEntityWidget:on_base_component_change(eid,seid,com_id,name,value)
     if self.change_cb then
-        return self.change_cb(eid,com_id,name,value)
+        return self.change_cb(eid,seid,com_id,name,value)
     end
 end
 
-function GuiEntityWidget:on_mult_component_change(eids,com_ids,name,value,is_list)
+function GuiEntityWidget:on_mult_component_change(eids,seids,com_ids,name,value,is_list)
     if self.mult_change_cb then
-        return self.mult_change_cb(eids,com_ids,name,value,is_list)
+        return self.mult_change_cb(eids,seids,com_ids,name,value,is_list)
     end
 end
 
@@ -207,17 +208,17 @@ function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_dat
         log.trace_a("base_component",display_name,new_value)
         if self.state == "single" then
             parent_tbl[alias_name] = new_value
-            local eid = parent_tbl.__id
-            if not eid then
+            local seid = parent_tbl.__id
+            if not seid then
                 --entity has nor __id,but has __entity_id
-                eid = parent_tbl.__entity_id
+                seid = parent_tbl.__entity_id
             end
-            self:on_base_component_change(eid,parent_tbl.__id,alias_name,new_value)
+            self:on_base_component_change(self.cur_eids[1],seid,parent_tbl.__id,alias_name,new_value)
         else --mult
             local com_ids = table_list_get(parent_tbl,"__id")
-            local eids
+            local seids
             if not com_ids then
-                eids = table_list_get(parent_tbl,"__entity_id")
+                seids = table_list_get(parent_tbl,"__entity_id")
             end
             local is_list = factory.WillReturnList[com_name]
             if is_list then
@@ -225,7 +226,7 @@ function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_dat
             else
                 table_list_set_single(parent_tbl,alias_name,new_value)
             end
-            self:on_mult_component_change(com_ids or eids,com_ids,alias_name,new_value,is_list)
+            self:on_mult_component_change(self.cur_eids,com_ids or seids,com_ids,alias_name,new_value,is_list)
         end
 
         --todo
@@ -464,6 +465,7 @@ function GuiEntityWidget:update_single(eids,entities,base_component_cache,policy
     local schema = self.schema
     local first_eid = eids[1]
     local entity = entities[first_eid]
+    self.cur_eids = eids
     assert(entity)
     entity.__entity_id = first_eid
     if self._last_entity ~= entity then
@@ -519,7 +521,7 @@ function GuiEntityWidget:show_policy_menu(id,eid,policy_name,policy_dic,entity_d
     local open = windows.BeginPopupContextItem("Selected_Menu###"..id,1)
     if open then
         if widget.Button("Add Policy") then
-            hub.publish(Event.OpenAddPolicyView,{eid},policy_dic)
+            hub.publish(Event.ETE.OpenAddPolicyView,{eid},policy_dic)
         end
         windows.EndPopup()
     end
@@ -536,6 +538,7 @@ function GuiEntityWidget:update_mult(eids,entities,base_component_cache)
     if self._last_eids ~= eids then
         self:_refresh_sorted_entity_mult(eids,entities)
     end
+    self.cur_eids = eids
     self.is_editing = false
     local entity_list = self._entity_list
     local sorted_coms_mult = self._sorted_coms_mult
