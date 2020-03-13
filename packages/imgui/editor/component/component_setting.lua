@@ -1,4 +1,4 @@
-local SettingDefine = require "editor.component_setting_define"
+local SettingDefine = require "editor.component.component_setting_define"
 local class = require "common.class"
 
 local function TAppend(a,b)
@@ -281,6 +281,64 @@ function ComponentSetting.Path2Desc(path_tbl)
     end
     return table.concat(con,".")
 end
+
+
+-------------------------create_default_value_dic---------------------
+--cache:cache all current results
+local function get_default_value_of_component(component,compoent_schema,cache)
+    if cache[component] then
+        return cache[component]
+    end
+    local component_info = compoent_schema[component]
+    assert(component_info)
+    if component_info.has_default then
+        cache[component] = component_info.default
+    elseif component_info.primtype then
+        assert(false,"primtype should has default value")
+    elseif component_info.array then
+        local list = {}
+        
+        for i = 1,component_info.array do
+            table.insert(list,get_default_value_of_component(component_info.type,compoent_schema,cache))
+        end
+        cache[component] = list
+    elseif component_info[1] then --is map
+        local dic = {}
+        for i,sub_info in ipairs(component_info) do
+            local name = sub_info.name
+            if sub_info.has_default then
+                dic[name] = sub_info.default
+            elseif sub_info.attrib and sub_info.attrib.opt then
+                --pass
+
+            elseif sub_info.type then
+                dic[name] = get_default_value_of_component(sub_info.type,compoent_schema,cache)
+            end
+        end
+        cache[component] = dic
+    elseif component_info.type then --alias
+        cache[component] = get_default_value_of_component(component_info.type,compoent_schema,cache)
+    else
+        log.info_a(component,component_info)
+    end
+    return cache[component] --todo log if nil
+end
+
+function ComponentSetting.create_default_value_dic()
+    local util = require "editor.gui_util"
+    local compoent_schema = util.get_all_components()
+    -- log.info_a("compoent_schema",compoent_schema)
+    local result = {}
+    for component,_ in pairs(compoent_schema) do
+        get_default_value_of_component(component,compoent_schema,result)
+    end
+    log.info_a("default_value",result)
+    --todo function
+    return result
+end
+
+-------------------------create_default_value_dic---------------------
+
 
 
 return ComponentSetting
