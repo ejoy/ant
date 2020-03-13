@@ -506,7 +506,6 @@ lindex(lua_State *L) {
 	int64_t id = get_id(L, 1, lua_type(L, 1));
 	int idx = luaL_checkinteger(L, 2);
 	return index_object(L, GETLS(L), id, idx);
-	return 0;
 }
 
 

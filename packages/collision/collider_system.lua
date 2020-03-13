@@ -3,9 +3,9 @@ local world = ecs.world
 
 local math3d = require "math3d"
 local rp3d = require "rp3d"
-local mathadapter_util = import_package "ant.math.adapter"
+local mathadapter = import_package "ant.math.adapter"
 
-mathadapter_util.bind("collision", function() rp3d.init() end)
+mathadapter.bind("collision", function() rp3d.init() end)
 
 local w = rp3d.collision_world {
 	worldName = "world",

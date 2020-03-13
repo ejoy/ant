@@ -70,14 +70,15 @@ w:body_destroy(object2)
 
 -- heightfield
 do
-	local heightfield = math3d.ref()
-	heightfield.m = math3d.matrix(
-		0, 0, 0, 0,
-		0, 0, 0, 0,
-		0, 0, 0, 0,
-		0, 0, 0, 0)
+	local heightfield = math3d.ref(
+		math3d.matrix(
+			0, 0, 0, 0,
+			0, 0, 0, 0,
+			0, 0, 0, 0,
+			0, 0, 0, 0))
+
 	local height_scaling = 1
-	local scaling = 1
+	local scaling = math3d.vector(1, 1, 2, 0)
 	local hf_shape = w:new_shape("heightfield", 4, 4, 0, 1, heightfield.p, height_scaling, scaling)
 
 	local hf_obj = w:body_create(math3d.vector(0, 0, 0, 1), math3d.quaternion(0, 0, 0, 1))

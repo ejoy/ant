@@ -6,7 +6,7 @@ ecs.import "ant.inputmgr"
 ecs.import "ant.scene"
 local lua_math = math
 local mathpkg 	= import_package "ant.math"
-local mu 		= mathpkg.util
+local mu, mc 	= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
 
 local renderpkg = import_package "ant.render"

@@ -3,7 +3,8 @@ local util = {}; util.__index = {}
 local renderpkg = import_package "ant.render"
 local computil 	= renderpkg.components
 
-local math3d	= require "math3d"
+local mathpkg	= import_package "ant.math"
+local mu		= mathpkg.util
 
 local assetpkg	= import_package "ant.asset"
 local assetmgr	= assetpkg.mgr
@@ -55,7 +56,7 @@ function util.create_procedural_sky(world, settings)
 			"ant.render|name",
 		},
 		data = {
-			transform = math3d.matrix(),
+			transform = mu.srt(),
 			rendermesh = {},
 			material = computil.assign_material(
 				fs.path "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",

@@ -140,7 +140,7 @@ local function create_plane_test()
     computil.create_plane_entity(world,
     mu.srt(
         {5, 1, 5, 0},
-        math3d.quaternion(math.rad(10), 0, 0),
+        math3d.totable(math3d.quaternion{math.rad(10), 0, 0}),
         {0, 0, -5, 1}),
     fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},

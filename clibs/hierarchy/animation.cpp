@@ -47,15 +47,7 @@ protected:
 	static T* constructor(lua_State* L, Args ...args) {
 		T* o = (T*)lua_newuserdatauv(L, sizeof(T), 0);
 		new (o) T(args...);
-		if (luaL_newmetatable(L, kLuaName)) {
-			lua_pushvalue(L, -1);
-			lua_setfield(L, -2, "__index");
-			luaL_Reg l[] = {
-				{"__gc", destructor},
-				{nullptr, nullptr},
-			};
-			luaL_setfuncs(L, l, 0);
-		}
+		reigister_mt(L, nullptr);
 		lua_setmetatable(L, -2);
 		return o;
 	}
@@ -65,8 +57,24 @@ protected:
 			lua_pop(L, 1);
 		}
 	}
-private:
+
+	static void reigister_mt(lua_State *L, luaL_Reg *ll){
+		if (luaL_newmetatable(L, kLuaName)) {
+			lua_pushvalue(L, -1);
+			lua_setfield(L, -2, "__index");
+			luaL_Reg l[] = {
+				{"__gc", destructor},
+				{nullptr, nullptr},
+			};
+			luaL_setfuncs(L, l, 0);
+
+			if (ll)
+				luaL_setfuncs(L, ll, 0);
+		}
+	}
+protected:
 	static const char kLuaName[];
+private:
 	static int destructor(lua_State* L) {
 		get(L, 1)->~T();
 		return 0;
@@ -74,6 +82,11 @@ private:
 public:
 	static T* get(lua_State* L, int idx) {
 		return (T*)luaL_testudata(L, idx, kLuaName);
+	}
+
+	static int get_mt(lua_State *L){
+		luaL_getmetatable(L, kLuaName);
+		return 1;
 	}
 };
 #define REGISTER_LUA_CLASS(C) template<> const char luaClass<C>::kLuaName[] = #C;
@@ -132,43 +145,18 @@ struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzB
 		return 1;
 	}
 
-	static int ljoints(lua_State *L){
-		auto self = get(L, 1);
-		int n = (int)self->size();
-		lua_createtable(L, n, 0);
-		for (int i = 0; i < n; ++i) {
-			auto const& joint = (*self)[i];
-			lua_createtable(L, 16, 0);
-			for (size_t icol = 0; icol < 4; ++icol) {
-				for (size_t ii = 0; ii < 4; ++ii) {
-					const float* col = (const float*)(&(joint.cols[icol]));
-					lua_pushnumber(L, col[ii]);
-					lua_rawseti(L, -2, icol * 4 + ii + 1);
-				}
-			}
-			lua_rawseti(L, -2, i + 1);
-		}
-		return 1;
-	}
-
-	static int ljoint_trans(lua_State *L){
+	static int ljoint(lua_State *L){
 		auto self = get(L, 1);
 		const auto jointidx = (uint32_t)lua_tointeger(L, 2) - 1;
 		if (jointidx < 0 || jointidx > self->size()){
 			luaL_error(L, "invalid joint index:%d", jointidx);
 		}
 
-		auto& trans = self->at(jointidx);
-		if (lua_isnoneornil(L, 3)) {
-			lua_pushlightuserdata(L, &trans);
-		} else {
-			const auto colidx = (uint32_t)lua_tointeger(L, 3) - 1;
-			if (colidx < 0 || colidx > 3) {
-				luaL_error(L, "invalid column index:%d, should be in [0, 3]", colidx);
-			}
-			lua_pushlightuserdata(L, &trans.cols[colidx]);
-		}
-		return 1;
+		float * r = (float*)lua_touserdata(L, 3);
+		const ozz::math::Float4x4& trans = (*self)[jointidx];
+		assert(sizeof(trans) <= sizeof(float) * 16);
+		memcpy(r, &trans, sizeof(trans));
+		return 0;
 	}
 
 	static int create(lua_State* L) {
@@ -200,14 +188,17 @@ struct ozzBindPose : public ozz::Vector<ozz::math::Float4x4>::Std, luaClass<ozzB
 		default:
 			return luaL_error(L, "argument 2 is not support type, only support string/userdata/light userdata");
 		}
-		luaL_Reg l[] = {
-			{"count",		lcount},
-			{"joints",		ljoints},
-			{"joint_trans", ljoint_trans},
-			{nullptr, nullptr},
-		};
-		base_type::set_method(L, l);
 		return 1;
+	}
+
+	static void registerBindposeMetatable(lua_State *L){
+		luaL_Reg l[] = {
+			"count", lcount,
+			"joint", ljoint,
+			nullptr, nullptr,
+		};
+		reigister_mt(L, l);
+		lua_pop(L, 1);
 	}
 };
 REGISTER_LUA_CLASS(ozzBindPose)
@@ -666,6 +657,7 @@ REGISTER_LUA_CLASS(ozzBlendingJob)
 extern "C" {
 LUAMOD_API int
 luaopen_hierarchy_animation(lua_State *L) {
+	ozzBindPose::registerBindposeMetatable(L);
 	lua_newtable(L);
 	luaL_Reg l[] = {
 		{ "mesh_skinning",				lmesh_skinning},
@@ -673,6 +665,7 @@ luaopen_hierarchy_animation(lua_State *L) {
 		{ "new_animation",				ozzAnimation::create},
 		{ "new_sampling_cache",			ozzSamplingCache::create},
 		{ "new_bind_pose",				ozzBindPose::create},
+		{ "bind_pose_mt",				ozzBindPose::get_mt},
 		{ "new_aligned_memory",			ozzAllocator::create},
 		{ "new_joint_remap",			ozzJointRemap::create},
 		{ NULL, NULL },

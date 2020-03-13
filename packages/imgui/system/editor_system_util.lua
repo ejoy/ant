@@ -111,7 +111,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = math3d.matrix(),
+            transform = mu.srt(),
             rendermesh = {},
             material = util.assign_material(fs.path "/pkg/ant.resources" /"depiction" / "materials" / "gizmo_line.material"),
             name = name,

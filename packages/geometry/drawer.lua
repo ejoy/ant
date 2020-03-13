@@ -101,7 +101,7 @@ function draw.draw_bones(bones, joints, color, transform, desc)
 
 	local bonevb, boneib = create_bone(updown_ratio)
 	local localtrans = math3d.transform(
-						math3d.matrix{r = math3d.quaternion(math.rad(-90), 0, 0)},
+						math3d.matrix{r = math3d.quaternion{math.rad(-90), 0, 0}},
 						math3d.vector(0, 0, updown_ratio, 1),
 						nil)
 

@@ -41,7 +41,7 @@ function m:init()
 			"ant.render|bounding_draw",
 		},
 		data = {
-			transform 		= math3d.matrix(),
+			transform 		= mu.srt(),
 			material 		= {ref_path = "/pkg/ant.resources/depiction/materials/line.material"},
 			rendermesh 		= {},
 			name 			= "mesh's bounding renderer",

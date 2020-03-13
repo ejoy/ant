@@ -188,7 +188,7 @@ local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
     for _, tracker in ipairs(foot_rc.trackers) do
         local leg_ikdata = jobs[tracker.leg]
         local anklenidx = leg_ikdata.joint_indices[3]
-        local jointmat = pose_result:joint_trans(anklenidx) --pose_result:joint_trans(anklenidx, 4)
+        local jointmat = pose_result:joint(anklenidx)
         local ankle_pos = math3d.index(jointmat, 4)
         local ispoint<const> = 1
         local ankle_pos_ws = math3d.transform(trans, ankle_pos, ispoint)
@@ -208,8 +208,8 @@ end
 
 local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
     local function joint_y_vector(jointidx)
-        local m = pose_result:joint_trans(jointidx)
-        return math3d.jointmat(m, 2)
+        local m = pose_result:joint(jointidx)
+        return math3d.index(m, 2)
     end
     local jobs = ik.jobs
     for _, leg in ipairs(leg_raycasts) do

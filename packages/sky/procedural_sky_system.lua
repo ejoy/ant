@@ -187,14 +187,14 @@ local function calc_sun_direction(skycomp)
 	local uxd  = math3d.cross(skycomp.updir, dir)
 	
 	local rot1 = math3d.quaternion(uxd, -altitude)
-	return math3d.transform(rot1, dir)
+	return math3d.transform(rot1, dir, 0)
 end
 
 function ps:init()
 	self.ecliptic_obliquity = math.rad(23.44)	--the earth's ecliptic obliquity is 23.44
 	self.northdir 	= math3d.ref(math3d.vector(1, 0, 0, 0))
 	self.updir  	= math3d.ref(math3d.vector(0, 1, 0, 0))
-	self.sundir 	= math3d.ref(math3d.vector(calc_sun_direction(self)))
+	self.sundir 	= math3d.ref(calc_sun_direction(self))
 	return self
 end
 
@@ -274,7 +274,7 @@ local function sync_directional_light(skyentity)
 	local sunlight_eid = skycomp.attached_sun_light
 	if sunlight_eid then
 		local dlight = world[sunlight_eid]
-		dlight.transform.r = math3d.torotation(skycomp.sundir)
+		dlight.transform.r.q = math3d.torotation(skycomp.sundir)
 	end
 end
 
