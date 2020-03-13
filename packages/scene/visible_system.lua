@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.tag "hierarchy_visible"
+ecs.component_alias ("hierarchy_visible","boolean",true)
 
 
 local visible_system = ecs.system "visible_system"
