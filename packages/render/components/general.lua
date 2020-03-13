@@ -11,7 +11,7 @@ local math3d 	= require "math3d"
 
 ecs.component_alias("parent", 	"entityid")
 ecs.component_alias("point", 	"vector")
-ecs.component_alias("rotation", "quaternion")
+ecs.component_alias("rotation", "quaternion",{0,0,0,1})
 
 do
 	local p = ecs.component_alias("position", "real[3]")
@@ -37,7 +37,7 @@ do
 	p.delete = del
 	p.save = save
 
-	local s = ecs.component_alias("scale", 	"real[]")
+	local s = ecs.component_alias("scale", 	"real[]", {1,1,1,0})
 	function s.init(v)
 		local num = #v
 		if num == 1 then
@@ -63,11 +63,12 @@ function trans:init()
 		local pe = world[self.parent]
 		if pe == nil then
 			error(string.format("tranform specified parent eid, but parent eid is not exist : %d", self.parent))
-		else
-			if pe.hierarchy == nil then
-				error(string.format("transform specified parent eid, but parent entity is not a hierarchy entity, parent eid: %d", self.parent))
-			end
 		end
+		-- else
+		-- 	if pe.hierarchy == nil then
+		-- 		error(string.format("transform specified parent eid, but parent entity is not a hierarchy entity, parent eid: %d", self.parent))
+		-- 	end
+		-- end
 	end
 
 	self.world = ms:ref "matrix"(ms:srtmat(self))
