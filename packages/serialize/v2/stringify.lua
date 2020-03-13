@@ -182,7 +182,7 @@ function stringify_component(name, typename, value, n)
     end
 end
 
-return function (w, policies, data)
+local function stringify_entity(w, policies, data)
     typeinfo = w._class.component
     out = {}
     out[#out+1] = '---------'
@@ -196,3 +196,7 @@ return function (w, policies, data)
     out[#out+1] = ''
     return table.concat(out, '\n')
 end
+
+return {
+    entity = stringify_entity,
+}

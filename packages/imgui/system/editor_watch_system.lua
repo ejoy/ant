@@ -117,6 +117,14 @@ local function get_entity_policies(eids)
     return entity_policies
 end
 
+local function entity2tbl(w, eid)
+    local res = {}
+    for _, v in ipairs(serialize.save_entity(w, eid)) do
+        res[v[1]] = v[2]
+    end
+    return res
+end
+
 local last_eid = nil
 local last_tbl = nil
 local timer = world:interface "ant.timer|timer"
@@ -134,7 +142,7 @@ local function send_entity(eids,typ)
         table.insert(profile_cache,{"editor_watcher_system","entity2tbl","begin",timer.current()})
         for i,eid in ipairs(eids) do
             if world[eid] then
-                setialize_result[eid] = serialize.entity2tbl(world,eid)
+                setialize_result[eid] = entity2tbl(world,eid)
             end
         end
         table.insert(profile_cache,{"editor_watcher_system","entity2tbl","end",timer.current()})

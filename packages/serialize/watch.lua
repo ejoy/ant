@@ -1,4 +1,4 @@
-local save = require "save"
+local save = require "v2.save"
 
 local m = {}
 
@@ -97,17 +97,9 @@ end
 function m.set(w, id, path, key, value)
     local component, name = getobject(w, id, path)
     if name == 'entity' then
-        if key then
-            local c = typeinfo[key]
-            w:add_component(path,key, value)
-            return key
-        else
-            assert(id == nil)
-            local eid = tonumber(path)
-            w[eid] = {}
-            w:set_entity(eid, value)
-            return
-        end
+        assert(key ~= nil)
+        component[key] = w:create_component(key, value)
+        return key
     else
         local c = typeinfo[name]
         assert(not c.type)
