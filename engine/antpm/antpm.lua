@@ -153,5 +153,5 @@ return {
     --editor
     get_entry_pkg = get_entry_pkg,
     get_registered = get_registered,
-    editor_register_package = editor_register_package,
+    editor_load_package = editor_load_package,
 }
