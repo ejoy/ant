@@ -142,7 +142,7 @@ local function compute_PerezCoeff(turbidity)
 	local result = {n=n}
 	for i=1, n do
 		local v0, v1 = ABCDE_t[i], ABCDE[i]
-		result[#result+1] = math3d.muladd(v1, turbidity, v0)
+		result[#result+1] = math3d.muladd(v0, turbidity, v1)
 	end
 	
 	return result
