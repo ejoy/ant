@@ -128,7 +128,7 @@ equal_one(float f) {
 		uint32_t n;
 	} u;
 	u.f = f;
-	return ((u.n + 0x3f) & ~0x3f) == 0x3f800000;	// float 1
+	return ((u.n + 0x1f) & ~0x3f) == 0x3f800000;	// float 1
 }
 
 int
