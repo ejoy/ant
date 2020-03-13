@@ -199,26 +199,15 @@ joint_matrix(const ozz::animation::Skeleton *ske, int jointidx) {
 }
 
 static int
-lbuilddata_jointmatrix(lua_State *L) {
+lbuilddata_joint(lua_State *L) {
 	const auto ske = get_ske(L);
 	const int jointidx = get_joint_index(L, ske, 2);
+	auto *r = (float*)lua_touserdata(L, 3);
 
 	const auto trans = joint_matrix(ske, jointidx);
-	auto* p = lua_newuserdatauv(L, sizeof(trans), 0);
-	memcpy(p, &trans, sizeof(trans));
-	return 1;
-}
-
-static int
-lbuilddata_jointpos(lua_State *L){
-	const auto ske = get_ske(L);
-	const int jointidx = get_joint_index(L, ske, 2);
-
-	const auto trans = joint_matrix(ske, jointidx);
-
-	auto *p = lua_newuserdatauv(L, sizeof(ozz::math::SimdFloat4), 0);
-	memcpy(p, &trans.cols[3], sizeof(ozz::math::SimdFloat4));
-	return 1;
+	assert(sizeof(trans) < sizeof(float) * 16);
+	memcpy(r, &trans, sizeof(trans));
+	return 0;
 }
 
 static int
@@ -615,37 +604,46 @@ lhnode_removechild(lua_State *L) {
 }
 
 static int
-lhnode_transform(lua_State *L) {
-	const int top = lua_gettop(L);
+lhnode_get_transform(lua_State *L) {
+	auto hnode = (struct hierarchy *)luaL_checkudata(L, 1, "HIERARCHY_NODE");
+	auto &trans = hnode->joint->transform;
+	auto s = (float*)lua_touserdata(L, 2);
+	auto r = (float*)lua_touserdata(L, 3);
+	auto t = (float*)lua_touserdata(L, 4);
 
-	luaL_checkudata(L, 1, "HIERARCHY_NODE");
-	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
-	auto trans = hnode->joint->transform;
-	if (top == 1) {		
-		lua_pushlightuserdata(L, &(trans.scale.x));
-		lua_pushlightuserdata(L, &(trans.rotation.x));
-		lua_pushlightuserdata(L, &(trans.translation.x));
+	auto copy_op = [](float *dst, const auto &v){
+		assert(sizeof(v) < sizeof(float) * 16);
+		memcpy(dst, &v, sizeof(v));
+	};
 
-		return 3;
-	} 
-	
-	fetch_srt(L, 2, 3, 4, trans);
+	copy_op(s, trans.scale);
+	copy_op(r, trans.rotation);
+	copy_op(t, trans.translation);
+	return 0;
+}
+
+static int
+lhnode_set_transform(lua_State *L){
+	auto hnode = (struct hierarchy *)luaL_checkudata(L, 1, "HIERARCHY_NODE");
+	auto &t = hnode->joint->transform;
+	t.scale = *((ozz::math::Float3*)lua_touserdata(L, 2));
+	t.rotation = *(ozz::math::Quaternion*)lua_touserdata(L, 3);
+	t.translation = *(ozz::math::Float3*)lua_touserdata(L, 4);
 	return 0;
 }
 
 static int
 lhnode_name(lua_State *L) {
-	const int top = lua_gettop(L);
-	luaL_checkudata(L, 1, "HIERARCHY_NODE");
+	auto hnode = (struct hierarchy *)luaL_checkudata(L, 1, "HIERARCHY_NODE");
+	lua_pushstring(L, hnode->joint->name.c_str());
+	return 0;
+}
 
-	struct hierarchy * hnode = (struct hierarchy *)lua_touserdata(L, 1);
-	if (top == 1) {
-		lua_pushstring(L, hnode->joint->name.c_str());
-		return 1;
-	}
-
+static int
+lhnode_set_name(lua_State *L){
+	auto hnode = (struct hierarchy *)luaL_checkudata(L, 1, "HIERARCHY_NODE");
 	const char* name = luaL_checkstring(L, 2);
-	hnode->joint->name = name;	
+	hnode->joint->name = name;
 	return 0;
 }
 
@@ -709,8 +707,7 @@ register_hierarchy_builddata(lua_State *L) {
 			{"parent", lbuilddata_parent},
 			{"isroot", lbuilddata_isroot},
 			{"joint_index", lbuilddata_jointindex},
-			{"joint_matrix", lbuilddata_jointmatrix},
-			{"joint_pos", lbuilddata_jointpos},
+			{"joint", lbuilddata_joint},
 			{"joint_name", lbuilddata_jointname},
 			{"bind_pose", lbuilddata_bindpose},
 			{"size", lbuilddata_size},
@@ -733,7 +730,8 @@ register_hierarchy_node(lua_State *L) {
 		{"load", lhnode_load},
 		{"add_child", lhnode_addchild},
 		{"remove_child", lhnode_removechild},
-		{"transform", lhnode_transform,	},
+		{"transform", lhnode_get_transform},
+		{"set_transform", lhnode_set_transform},
 		{"name", lhnode_name},
 		{"size", lhnode_size},
 		{nullptr, nullptr},

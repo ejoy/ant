@@ -28,7 +28,7 @@ return {
 			{name = 'keyboard', scale=-1, mouse=keyvalid_mousestate, 's'},
 		},
 
-		move_left = {			
+		move_right = {			
 			{name = 'keyboard', scale=-1, mouse=keyvalid_mousestate, 'A'},
 			{name = 'keyboard', scale=-1, mouse=keyvalid_mousestate, 'a'},
 			{name = 'keyboard', scale=1,  mouse=keyvalid_mousestate, 'D'},

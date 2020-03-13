@@ -2,7 +2,6 @@ local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
 
 local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
 local mc = mathpkg.constant
 local mu = mathpkg.util
 
@@ -113,7 +112,7 @@ local function add_tranformed_bounding(r, worldmat, bounding)
 	if bounding then
 		local tb = r.tb	-- transformed bounding
 		if tb == nil then
-			tb = mathbaselib.new_bounding(ms)
+			tb = mathbaselib.new_bounding()
 			r.tb = tb
 		end
 		tb:reset(bounding, worldmat)

@@ -1,7 +1,9 @@
 local util = {}; util.__index = util
 
 local mathpkg 	= import_package "ant.math"
-local ms, mu, mc= mathpkg.stack, mathpkg.util, mathpkg.constant
+local mu, mc	= mathpkg.util, mathpkg.constant
+
+local math3d	= require "math3d"
 
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
@@ -31,7 +33,8 @@ local function add_directional_light_properties(world, uniform_properties)
 		local dlight = world[eid]
 		local l = dlight.directional_light
 
-		local lightdir = ms(dlight.transform.r, "dinP")
+		-- TODO: add new component called 'direction', and keep this direction as light direction, then no more calucate it everytiem.
+		local lightdir = math3d.inverse(math3d.normalize(math3d.todirection(dlight.transform.r)))
 		table.insert(dlight_info.directional_lightdir.value, 	lightdir)
 		table.insert(dlight_info.directional_color.value, 		l.color)
 		table.insert(dlight_info.directional_intensity.value, 	{l.intensity, 0.28, 0, 0})
@@ -86,7 +89,7 @@ local function calc_viewport_crop_matrix(csm_idx)
 
 	local offset = spiltunit * (csm_idx - 1)
 
-	return ms:matrix(
+	return math3d.matrix(
 		spiltunit, 0.0, 0.0, 0.0,
 		0.0, 1.0, 0.0, 0.0, 
 		0.0, 0.0, 1.0, 0.0,
@@ -115,10 +118,10 @@ function util.load_shadow_properties(world, render_properties)
 		local split_distanceVS = csm.split_distance_VS
 		if split_distanceVS then
 			split_distances[idx] = split_distanceVS
-			local _, _, vp = ms:view_proj(camera, camera.frustum, true)
-			vp = ms(shadowutil.shadow_crop_matrix(), vp, "*P")
+			local vp = mu.view_proj(camera)
+			vp = math3d.mul(shadowutil.shadow_crop_matrix(), vp)
 			local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
-			csm_matrixs[csm.index] = ms(viewport_cropmatrix, vp, "*P")
+			csm_matrixs[csm.index] = math3d.mul(viewport_cropmatrix, vp)
 		end
 	end
 
@@ -171,7 +174,7 @@ function util.update_render_entity_transform(world, eid, hierarchy_cache)
 	local e = world[eid]
 	local transform = e.transform
 	local peid = transform.parent
-	local localmat = ms:srtmat(transform)
+	local localmat = math3d.matrix(transform)
 	if peid then
 		local parentresult = hierarchy_cache[peid]
 		local parentmat = parentresult.world
@@ -179,16 +182,15 @@ function util.update_render_entity_transform(world, eid, hierarchy_cache)
 			local hie_result = parentresult.hierarchy
 			local slotname = transform.slotname
 			if hie_result and slotname then
-				local hiemat = ms:matrix(hie_result[slotname])
-				localmat = ms(parentmat, hiemat, localmat, "**P")
+				local hiemat = hie_result[slotname]
+				localmat = math3d.mul(parentmat, math3d.mul(hiemat, localmat))
 			else
-				localmat = ms(parentmat, localmat, "*P")
+				localmat = math3d.mul(parentmat, localmat)
 			end
 		end
 	end
 
-	local w = transform.world
-	ms(w, localmat, "=")
-	return w
+	transform.world.m = localmat
+	return localmat
 end
 return util

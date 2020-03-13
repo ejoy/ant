@@ -2,11 +2,10 @@ local gltf = import_package "ant.glTF"
 local gltfutil = gltf.util
 local glbloader = gltf.glb
 
-local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
 local mathpkg = import_package "ant.math"
-local ms = mathpkg.stack
-local mu = mathpkg.util
+local mc = mathpkg.constant
+local math3d = require "math3d"
 
 local mathbaselib = require "math3d.baselib"
 
@@ -153,7 +152,7 @@ local function create_prim_bounding(meshscene, prim)
 	if posacc.min then
 		assert(#posacc.min == 3)
 		assert(#posacc.max == 3)
-		local bounding = mathbaselib.new_bounding(ms, assert(posacc.min), assert(posacc.max))
+		local bounding = mathbaselib.new_bounding(assert(posacc.min), assert(posacc.max))
 		prim.bounding = bounding
 		return bounding
 	end
@@ -161,17 +160,17 @@ end
 
 local function node_matrix(node)
 	if node.matrix then
-		return ms:matrix(node.matrix)
+		return math3d.matrix(node.matrix)
 	end
 
 	if node.scale or node.rotation or node.translation then
-		return ms:srtmat(node.scale, node.rotation, node.translation)
+		return math3d.matrix{s=node.scale, r=node.rotation, t=node.translation}
 	end
 end
 
 local function calc_node_transform(node, parentmat)
 	local nodetrans = node_matrix(node)
-	return nodetrans and ms(parentmat, nodetrans, "*P") or parentmat
+	return nodetrans and math3d.mul(parentmat, nodetrans) or parentmat
 end
 
 local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
@@ -213,11 +212,11 @@ local function init_scene(gltfscene, bindata, config)
 			if meshidx then
 				local meshnode = {
 					nodename = node.name,
-					transform = ms:ref "matrix" (nodetrans),
+					transform = math3d.ref(nodetrans),
 					inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
 				}
 				local mesh = gltfscene.meshes[meshidx+1]
-				local meshbounding = mathbaselib.new_bounding(ms)
+				local meshbounding = mathbaselib.new_bounding()
 
 				meshnode.meshname = mesh.name
 
@@ -297,7 +296,7 @@ local function init_scene(gltfscene, bindata, config)
 	local scenes = meshscene.scenes
 	for sceneidx, s in ipairs(gltfscene.scenes) do
 		local scene = {}
-		create_mesh_scene(s.nodes, ms(mu.srt(), "P"), scene)
+		create_mesh_scene(s.nodes, mc.IDENTITY_MAT, scene)
 		scenes[sceneidx] = scene
 	end
 

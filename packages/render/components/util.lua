@@ -15,7 +15,7 @@ local assetutil	= assetpkg.util
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
 local mc = mathpkg.constant
-local ms = mathpkg.stack
+local math3d = require "math3d"
 
 local geopkg 	= import_package "ant.geometry"
 local geodrawer	= geopkg.drawer
@@ -107,7 +107,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 			"ant.render|name",
 		},
 		data = {
-			transform = transform or mu.identity_transform(),
+			transform = transform or math3d.matrix(),
 			rendermesh = {},
 			material = util.assign_material(fs.path "/pkg/ant.resources" / "depiction" / "materials" / "line.material"),
 			name = name,
@@ -269,7 +269,7 @@ end
 
 local function check_add_bounding(b, trans, transformed_boundings)
 	if b then
-		local tb = mathbaselib.new_bounding(ms)
+		local tb = mathbaselib.new_bounding()
 		tb:reset(b, trans)
 		transformed_boundings[#transformed_boundings+1] = tb
 	end
@@ -283,14 +283,14 @@ function util.calc_transform_boundings(world, transformed_boundings)
 			local rm = e.rendermesh
 			local meshscene = assetmgr.get_resource(rm.reskey)
 
-			local worldmat = ms:srtmat(e.transform)
+			local worldmat = math3d.matrix(e.transform)
 
 			local selectscene = meshscene.scenes[meshscene.sceneidx]
 
 			for _, mn in ipairs(selectscene) do
 				local trans = worldmat
 				if mn.transform then
-					trans = ms(trans, mn.transform, "*P")
+					trans = math3d.mul(trans, mn.transform)
 				end
 
 				check_add_bounding(mn.bounding, trans, transformed_boundings)
@@ -498,20 +498,20 @@ function util.entity_bounding(entity)
 		local meshscene = rm.handle
 		local sceneidx = util.scene_index(rm.lodidx, meshscene)
 
-		local worldmat = ms:srtmat(entity.transform)
+		local worldmat = math3d.matrix(entity.transform)
 
 		local scene = meshscene.scenes[sceneidx]
-		local entitybounding = mathbaselib.new_bounding(ms)
+		local entitybounding = mathbaselib.new_bounding()
 		for _, mn in ipairs(scene)	do
 			local trans = worldmat
 			if mn.transform then
-				trans = ms(trans, mn.transform, "*P")
+				trans = math3d.mul(trans, mn.transform)
 			end
 
 			for _, g in ipairs(mn) do
 				local b = g.bounding
 				if b then
-					local tb = mathbaselib.new_bounding(ms)
+					local tb = mathbaselib.new_bounding()
 					tb:reset(b, trans)
 					entitybounding:merge(tb)
 				end

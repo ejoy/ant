@@ -1,11 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
-local ms = import_package "ant.math".stack
+local math3d = require "math3d"
 local rp3d = require "rp3d"
-local mathadapter_util = import_package "ant.math.adapter"
+local mathadapter = import_package "ant.math.adapter"
 
-mathadapter_util.bind("collision", function() rp3d.init(ms) end)
+mathadapter.bind("collision", function() rp3d.init() end)
 
 local w = rp3d.collision_world {
 	worldName = "world",
@@ -89,8 +89,8 @@ function tcb.process(e)
 
 	local scaling = shape.scaling
 	local terrain_grid_unit = terraincomp.grid_unit
-	local terrain_scaling = ms({terrain_grid_unit, 1, terrain_grid_unit, 0}, "P")
-	scaling = scaling and ms(scaling, terrain_scaling, "*P") or terrain_scaling
+	local terrain_scaling = math3d.vector(terrain_grid_unit, 1, terrain_grid_unit, 0)
+	scaling = scaling and math3d.mul(scaling, terrain_scaling) or terrain_scaling
 
 	local heightfield = terraincomp.heightfield
 	local hf_width, hf_height = heightfield[1], heightfield[2]

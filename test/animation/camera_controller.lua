@@ -1,9 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg = import_package "ant.math"
 local math3d  = require "math3d"
-local ms = mathpkg.stack
 
 local m = ecs.system "camera_controller"
 m.require_interface "ant.render|camera"
@@ -17,32 +15,32 @@ local cameraDistance
 local cameraId
 
 local function cameraUpdateEyepos(camera)
-	ms(camera.eyepos, cameraTarget, camera.viewdir, cameraDistance, '*-=')
+	camera.eyepos.v = math3d.sub(cameraTarget, math3d.mul(camera.viewdir, cameraDistance))
 end
 
 local function cameraRotate(dx, dy)
 	local camera_motion = world:interface "ant.camera_controller|camera_motion"
-	camera_motion.rotate_around_point(cameraId, cameraTarget, cameraDistance[1], dy, dx, 0.6)
+	camera_motion.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
 end
 
 local function cameraPan(dx, dy)
 	local camera = world[cameraId].camera
-	ms(cameraTarget, camera.viewdir, {dy,dx,0,1}, "x2+=")
+	cameraTarget.v = math3d.add(cameraTarget, math3d.cross(camera.viewdir, {dy,dx,0,1}))
 	cameraUpdateEyepos(camera)
 end
 
 local function cameraZoom(dx)
 	local camera = world[cameraId].camera
-	cameraDistance[1] = cameraDistance[1] + dx
+	cameraDistance = cameraDistance + dx
 	cameraUpdateEyepos(camera)
 end
 
 local function cameraReset(eyepos, target)
 	local camera = world[cameraId].camera
-	ms(cameraTarget, target, "=")
-	cameraDistance = {ms:length(cameraTarget, eyepos)}
-	ms(camera.eyepos, eyepos, "=")
-	ms(camera.viewdir, cameraTarget, eyepos, "-n=")
+	cameraTarget.v = target
+	cameraDistance = math3d.length(math3d.sub(cameraTarget, eyepos))
+	camera.eyepos.v = eyepos
+	camera.viewdir = math3d.normalize(math3d.sub(cameraTarget, eyepos))
 end
 
 local function cameraInit()

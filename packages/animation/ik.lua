@@ -81,20 +81,20 @@ end
 local ikdata_cache = {}
 local function prepare_ikdata(ikdata)
 	ikdata_cache.type		= ikdata.type
-	ikdata_cache.target 	= ~ikdata.target
-	ikdata_cache.pole_vector= ~ikdata.pole_vector
+	ikdata_cache.target 	= ikdata.target.p
+	ikdata_cache.pole_vector= ikdata.pole_vector.p
 	ikdata_cache.weight		= ikdata.weight
 	ikdata_cache.twist_angle= ikdata.twist_angle
 	ikdata_cache.joint_indices= ikdata.joint_indices
 
 	if ikdata.type == "aim" then
-		ikdata_cache.forward	= ~ikdata.forward
-		ikdata_cache.up_axis	= ~ikdata.up_axis
-		ikdata_cache.offset		= ~ikdata.offset
+		ikdata_cache.forward	= ikdata.forward.p
+		ikdata_cache.up_axis	= ikdata.up_axis.p
+		ikdata_cache.offset		= ikdata.offset.p
 	else
 		assert(ikdata.type == "two_bone")
 		ikdata_cache.soften		= ikdata.soften
-		ikdata_cache.mid_axis	= ~ikdata.mid_axis
+		ikdata_cache.mid_axis	= ikdata.mid_axis.p
 	end
 	return ikdata_cache
 end

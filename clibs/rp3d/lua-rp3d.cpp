@@ -435,11 +435,11 @@ lheightFieldShape(lua_State *L){
 	auto heightfield_data = (float*)lua_touserdata(L, 5);
 
 	auto height_scaling = (reactphysics3d::decimal)luaL_checknumber(L, 6);
-	auto scaling = (reactphysics3d::decimal)luaL_checknumber(L, 7);
+	auto scaling = (reactphysics3d::Vector3*)lua_touserdata(L, 7);
 
 	const uint32_t upaxis_Y = 1;
 	HeightFieldShape * hfs = new HeightFieldShape(grid_width, grid_height, min_height, max_height, heightfield_data, 
-	reactphysics3d::HeightFieldShape::HeightDataType::HEIGHT_FLOAT_TYPE, upaxis_Y, height_scaling, reactphysics3d::Vector3(scaling, scaling, scaling));
+	reactphysics3d::HeightFieldShape::HeightDataType::HEIGHT_FLOAT_TYPE, upaxis_Y, height_scaling, *scaling);
 	lua_pushlightuserdata(L, hfs);
 
 	return 1;

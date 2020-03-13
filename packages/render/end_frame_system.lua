@@ -3,7 +3,6 @@ local world = ecs.world
 
 local math3d 	= require "math3d"
 local math		= import_package "ant.math"
-local ms 		= math.stack
 
 ecs.component "frame_stat"
 	.frame_num "int"
@@ -20,5 +19,5 @@ end_frame_sys.require_singleton "frame_stat"
 function end_frame_sys:end_frame()
 	local stat = world:singleton "frame_stat"
 	stat.frame_num = stat.frame_num + 1
-	math3d.reset(ms)
+	math3d.reset()
 end

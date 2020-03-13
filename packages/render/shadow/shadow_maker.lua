@@ -14,8 +14,8 @@ local assetpkg 	= import_package "ant.asset"
 local assetmgr 	= assetpkg.mgr
 
 local mathpkg 	= import_package "ant.math"
-local ms 		= mathpkg.stack
-local mc 		= mathpkg.constant
+local mc, mu	= mathpkg.constant, mathpkg.util
+local math3d	= require "math3d"
 local fs 		= require "filesystem"
 local mathbaselib= require "math3d.baselib"
 
@@ -69,17 +69,16 @@ maker_camera.require_system "ant.scene|primitive_filter_system"
 -- 	local csm = shadow.csm
 -- 	local csmindex = csm.index
 -- 	local shadowcamera = world[shadow.camera_eid].camera
--- 	local shadow_viewmatrix = ms:view_proj(shadowcamera)
+-- 	local shadow_viewmatrix = mu.view_proj(shadowcamera)
 
 -- 	local bb_LS = get_frustum_points(view_camera, view_camera.frustum, shadow_viewmatrix, shadow.csm.split_ratios)
 -- 	local aabb = bb_LS:get "aabb"
 -- 	local min, max = aabb.min, aabb.max
--- 	min[4], max[4] = 1, 1	-- as point
 
--- 	local _, proj = ms:view_proj(nil, shadowcamera.frustum)
--- 	local minproj, maxproj = ms(min, proj, "%", max, proj, "%TT")
+-- 	local proj = math3d.projmat(shadowcamera.frustum)
+-- 	local minproj, maxproj = math3d.transformH(proj, min) math3d.transformH(proj, max)
 
--- 	local scalex, scaley = 2 / (maxproj[1] - minproj[1]), 2 / (maxproj[2] - minproj[2])
+-- 	local scalex, scaley = math3d.mul(2, math3d.reciprocal(math3d.sub(maxproj, minproj)))
 -- 	if csm.stabilize then
 -- 		local quantizer = shadow.shadowmap_size
 -- 		scalex = quantizer / math.ceil(quantizer / scalex);
@@ -111,14 +110,15 @@ maker_camera.require_system "ant.scene|primitive_filter_system"
 local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_size)
 	local texsize = 1 / shadowmap_size
 
-	local unit_pretexel = ms(maxextent, minextent, "-", {texsize, texsize, 0, 0}, "*P")
-	local invunit_pretexel = ms(unit_pretexel, "rP")
+	local unit_pretexel = math3d.mul(math3d.sub(maxextent, minextent), texsize)
+	local invunit_pretexel = math3d.reciprocal(unit_pretexel)
 
 	local function limit_move_in_one_texel(value)
 		-- value /= unit_pretexel;
 		-- value = floor( value );
 		-- value *= unit_pretexel;
-		return ms(value, invunit_pretexel, "*f", unit_pretexel, "*T")
+		return math3d.totable(
+			math3d.mul(math3d.floor(math3d.mul(value, invunit_pretexel)), unit_pretexel))
 	end
 
 	local newmin = limit_move_in_one_texel(minextent)
@@ -133,8 +133,8 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 
 	-- frustum_desc can cache, only camera distance changed or ratios change need recalculate
 	local frustum_desc = shadowutil.split_new_frustum(view_camera.frustum, split_ratios)
-	local _, _, vp = ms:view_proj(view_camera, frustum_desc, true)
-	local viewfrustum = mathbaselib.new_frustum(ms, vp)
+	local vp = mu.view_proj(view_camera, frustum_desc)
+	local viewfrustum = mathbaselib.new_frustum(vp)
 	local corners_WS = viewfrustum:points()
 
 	local center_WS = viewfrustum:center(corners_WS)
@@ -147,12 +147,12 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 	else
 		-- using camera world matrix right axis as light camera matrix up direction
 		-- look at matrix up direction should select one that not easy parallel with view direction
-		local shadow_viewmatrix = ms:lookat(center_WS, lightdir, nil, true)
-		local minv, maxv = ms:minmax(corners_WS, shadow_viewmatrix)
-		min_extent, max_extent = ms(minv, "T", maxv, "T")
+		local shadow_viewmatrix = math3d.lookto(center_WS, lightdir)
+		local minv, maxv = math3d.minmax(corners_WS, shadow_viewmatrix)
+		min_extent, max_extent = math3d.totable(minv), math3d.totable(maxv)
 	end
 
-	shadowcamera.eyepos = ms(center_WS, "T")--ms(center_WS, lightdir, {-min_extent[3]}, "*+P"))
+	shadowcamera.eyepos.v = center_WS
 	--shadowcamera.updir(updir)
 	shadowcamera.frustum = {
 		ortho=true,

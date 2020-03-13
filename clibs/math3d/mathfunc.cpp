@@ -17,6 +17,7 @@ extern "C" {
 #include <glm/ext/scalar_relational.hpp>
 #include <glm/ext/vector_relational.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/ext/vector_common.hpp>
 
 static const glm::vec4 XAXIS(1, 0, 0, 0);
 static const glm::vec4 YAXIS(0, 1, 0, 0);
@@ -369,3 +370,14 @@ math3d_rotmat_transform(struct lastack *LS, const float mat[16], const float v[4
 	lastack_pushvec4(LS, &vv.x);
 }
 
+void
+math3d_minmax(struct lastack *LS, const float mat[16], const float v[4], float minv[4], float maxv[4]){
+	const glm::vec4 vv = mat ? MAT(mat) * VEC(v) : VEC(v);
+	*(glm::vec4*)maxv = glm::max(vv, VEC(maxv));
+	*(glm::vec4*)minv = glm::min(vv, VEC(minv));
+}
+
+void 
+math3d_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]){
+	*(glm::vec4*)r = glm::lerp(VEC(v0), VEC(v1), ratio);
+}

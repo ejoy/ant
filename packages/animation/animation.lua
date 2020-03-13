@@ -101,3 +101,13 @@ function m.update(e, delta_time)
 	update_animation(e, delta_time or 0)
 	ani_module.clean_cache()
 end
+
+local mathadapter = import_package "ant.math.adapter"
+local math3d_adapter = require "math3d.adapter"
+
+mathadapter.bind(
+	"animation",
+	function ()
+		local bp_mt = ani_module.bind_pose_mt()
+		bp_mt.joint = math3d_adapter.getter(bp_mt.joint, "m", 3)
+	end)

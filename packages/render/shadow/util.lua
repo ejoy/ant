@@ -1,31 +1,24 @@
 local util = {}; util.__index = util
 
-local mathpkg   = import_package "ant.math"
-local ms        = mathpkg.stack
-
+local math3d = require "math3d"
 local hwi 		= require "hardware_interface"
 
-local bottomleft_cropmatrix = ms:ref "matrix" {
+local bottomleft_cropmatrix = math3d.ref(math3d.matrix{
 	0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
 	0.0, 0.0, 0.5, 0.0,
 	0.5, 0.5, 0.5, 1.0,
-}
+})
 
-local topleft_cropmatrix = ms:ref "matrix" {
+local topleft_cropmatrix = math3d.ref(math3d.matrix {
 	0.5, 0.0, 0.0, 0.0,
 	0.0, -0.5, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
 	0.5, 0.5, 0.0, 1.0,
-}
+})
 
-local homogeneous_depth_scale_offset = ms:ref "vector"{
-	0.5, 0.5, 0.0, 0.0,
-}
-
-local normal_depth_scale_offset = ms:ref "vector"{
-	1.0, 0.0, 0.0, 0.0,
-}
+local homogeneous_depth_scale_offset = math3d.ref(math3d.vector(0.5, 0.5, 0.0, 0.0))
+local normal_depth_scale_offset = math3d.ref(math3d.vector(1.0, 0.0, 0.0, 0.0))
 
 function util.shadow_depth_scale_offset()
 	local homogeneousDepth = hwi.get_caps().homogeneousDepth
@@ -69,7 +62,7 @@ end
 function util.get_directional_light_dir(world)
 	for _, eid in world:each "directional_light" do
 		local e = world[eid]
-		return ms(e.transform.r, "dP")
+		return math3d.todirection(e.transform.r)
 	end
 end
 

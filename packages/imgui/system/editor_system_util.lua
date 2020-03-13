@@ -1,7 +1,7 @@
 local Util = {}
 local mathpkg   = import_package "ant.math"
 local mu = mathpkg.util
-local ms = mathpkg.stack
+local math3d = require "math3d"
 local geopkg    = import_package "ant.geometry"
 local fs        = require "filesystem"
 local assetmgr = import_package "ant.asset".mgr
@@ -111,7 +111,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = mu.identity_transform(),
+            transform = mu.srt(),
             rendermesh = {},
             material = util.assign_material(fs.path "/pkg/ant.resources" /"depiction" / "materials" / "gizmo_line.material"),
             name = name,
@@ -295,12 +295,8 @@ function Util.create_gizmo(world)
                 -- can_select = true,
             },
         }
-        if ignore_scale then
-            table.insert(args.policy,"ignore_parent_scale")
-            args.data.ignore_parent_scale = true
-        end
-        local eid = world:create_entity(args)
-        return eid
+
+        return world:create_entity(args)
     end
     local root = create_gizmo_object("gizmo",nil)
     local result = {eid = root}
@@ -352,36 +348,26 @@ function Util.create_gizmo(world)
     return result
 end
 
-
-local function homogeneous_to_world(homogeneous,view_proj)
-    local inverse_pv = ms(view_proj,"iP")
-    homogeneous[4] = 1
-    local h_world_p = ms(inverse_pv,homogeneous,"*T")
-    local t = 1/h_world_p[4]
-    local world_p = {h_world_p[1]*t,h_world_p[2]*t,h_world_p[3]*t}
-    return world_p
-end
 local function project_screen_onto_plane(screen_pos,plane_point,plane_normal,view_proj)
     screen_pos[3] = 0
-    local ray_origin = homogeneous_to_world(screen_pos,view_proj)
+    local ray_origin = math3d.transform(view_proj, screen_pos, 1)
     screen_pos[3] = 1.0
-    local ray_end = homogeneous_to_world(screen_pos,view_proj)
-    local ray_normal = ms( ray_end,ray_origin,"-nT")
-    local b = ms(ray_normal,plane_normal,".T")
-    local a = ms(plane_normal,plane_point,ray_origin,"-.T")
-    local t = a[1]/b[1]
-    local rt = {t*ray_normal[1],t*ray_normal[2],t*ray_normal[3]}
-    local point = {ray_origin[1]+rt[1],ray_origin[2]+rt[2],ray_origin[3]+rt[3]}
-    return point
+    local ray_end   = math3d.transform(view_proj, screen_pos, 1)
+
+    local ray_normal = math3d.normalize(math3d.sub(ray_end, ray_origin))
+    local b = math3d.dot(ray_normal, plane_normal)
+    local a = math3d.dot(plane_normal, math3d.sub(plane_point, ray_origin))
+    return math.muladd(ray_normal, a / b, ray_origin)
 end
 
 function Util.mouse_project_onto_plane(world,mouse_pos,plane_point,plane_normal)
     local mq = world:singleton_entity "main_queue"
     local viewport = mq.render_target.viewport
     local win_w,win_h = viewport.rect.w,viewport.rect.h
-    local screen_pos = {2.0*mouse_pos[1]/win_w-1,1.0-2.0*mouse_pos[2]/win_h}
+    local screen_pos = {2.0*mouse_pos[1]/win_w-1, 1.0-2.0*mouse_pos[2]/win_h}
+
     local camera = world[mq.camera_eid].camera
-    local _, _, view_proj = ms:view_proj(camera, camera.frustum, true)
+    local view_proj = mu.view_proj(camera)
     local p = project_screen_onto_plane(screen_pos,plane_point,plane_normal,view_proj)
     return p
 end

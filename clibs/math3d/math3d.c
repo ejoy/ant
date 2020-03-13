@@ -3,6 +3,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <math.h>
+#include <float.h>
 
 #ifndef _MSC_VER
 #ifndef M_PI
@@ -505,7 +506,6 @@ lindex(lua_State *L) {
 	int64_t id = get_id(L, 1, lua_type(L, 1));
 	int idx = luaL_checkinteger(L, 2);
 	return index_object(L, GETLS(L), id, idx);
-	return 0;
 }
 
 
@@ -707,10 +707,6 @@ lsub(lua_State *L) {
 
 static int
 lmuladd(lua_State *L){
-	const int numarg = lua_gettop(L);
-	if (numarg != 3){
-		return luaL_error(L, "muladd need 2 argument for mul and 1 for add with mul result:%d", numarg);
-	}
 	struct lastack *LS = GETLS(L);
 	
 	int ltype, rtype;
@@ -726,14 +722,13 @@ lmuladd(lua_State *L){
 	if ((ltype == LINEAR_TYPE_NUM && rtype == LINEAR_TYPE_VEC4) ||
 		(ltype == LINEAR_TYPE_VEC4 && rtype == LINEAR_TYPE_NUM) ||
 		(ltype == LINEAR_TYPE_VEC4 && rtype == LINEAR_TYPE_VEC4)){
-		float mulresult[16];
-		const int result_type = math3d_mul_object(LS, v0, v1, ltype, rtype, mulresult);
-		//assert(result_type == LINEAR_TYPE_VEC4);
-
+		float result[16];
+		math3d_mul_object(LS, v0, v1, ltype, rtype, result);
 		const float * v2 = vector_from_index(L, LS, 3);
 
-		for (int ii = 0; ii < 3; ++ii)
-
+		math3d_add_vec(LS, result, v2, result);
+		lastack_pushvec4(LS, result);
+		lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 		return 1;
 	}
 
@@ -1138,6 +1133,54 @@ lprojmat(lua_State *L) {
 }
 
 static int
+lminmax(lua_State *L){
+	struct lastack *LS = GETLS(L);
+
+	luaL_checktype(L, 1, LUA_TTABLE);
+	const int numpoints = (int)lua_rawlen(L, 1);
+
+	const float* transform = lua_isnoneornil(L, 2) ? NULL : matrix_from_index(L, LS, 2);
+	float minv[4] = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};
+	float maxv[4] = {-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX};
+	for (int ii = 0; ii < numpoints; ++ii){
+		float v[4];
+		lua_geti(L, 1, ii+1);
+		unpack_numbers(L, -1, v, 4);
+		lua_pop(L, 1);
+		math3d_minmax(LS, transform, v, minv, maxv);
+	}
+
+	lastack_pushvec4(LS, minv);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	lastack_pushvec4(LS, maxv);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 2;
+}
+
+static int
+llerp(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *v0 = vector_from_index(L, LS, 1);
+	const float *v1 = vector_from_index(L, LS, 1);
+
+	const float ratio = luaL_checknumber(L, 3);
+
+	float r[4];
+	math3d_lerp(LS, v0, v1, ratio, r);
+	
+	lastack_pushvec4(LS, r);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static int
+lstacksize(lua_State *L) {
+	struct lastack *LS = GETLS(L);
+	lua_pushinteger(L, lastack_size(LS));
+	return 1;
+}
+
+static int
 lhomogeneous_depth(lua_State *L){
 	int num = lua_gettop(L);
 	if (num > 0){
@@ -1228,6 +1271,9 @@ luaopen_math3d(lua_State *L) {
 		{ "transform", ltransform},
 		{ "transformH", ltransform_homogeneous_point },
 		{ "projmat", lprojmat },
+		{ "minmax", lminmax},
+		{ "lerp", llerp},
+		{ "stacksize", lstacksize},
 		{ "homogeneous_depth", lhomogeneous_depth },
 		{ "pack", lpack },
 		{ NULL, NULL },

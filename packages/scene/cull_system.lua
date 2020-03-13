@@ -6,10 +6,6 @@ local mathbaselib = require "math3d.baselib"
 
 local math = import_package "ant.math"
 local mu = math.util
-local ms = math.stack
-
-local renderpkg = import_package "ant.render"
-local camerautil= renderpkg.camera
 
 local cull_sys = ecs.system "cull_system"
 cull_sys.require_system "primitive_filter_system"
@@ -21,8 +17,8 @@ function cull_sys:cull()
 			local filter = e.primitive_filter
 
 			local camera = world[e.camera_eid].camera
-			local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
-			local frustum = mathbaselib.new_frustum(ms, viewproj)
+			local vp = mu.view_proj(camera)
+			local frustum = mathbaselib.new_frustum(vp)
 			
 			local results = filter.result
 			for _, resulttarget in pairs(results) do

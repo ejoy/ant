@@ -5,8 +5,7 @@ local fs = require 'filesystem'
 
 local serialize = import_package 'ant.serialize'
 
-local mathpkg = import_package 'ant.math'
-local ms = mathpkg.stack
+local math3d = require "math3d"
 
 local skypkg = import_package 'ant.sky'
 local skyutil = skypkg.util
@@ -37,7 +36,6 @@ init_loader.require_system "ant.test.features|character_ik_test"
 init_loader.require_system "ant.test.features|terrain_test"
 init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
-init_loader.require_system "ant.render|draw_raycast_point"
 
 init_loader.require_interface "ant.render|camera"
 init_loader.require_interface "ant.camera_controller|camera_motion"
@@ -193,13 +191,6 @@ local function create_plane_test()
             color = {0.8, 0.8, 0.8, 1},
             material = fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
         },
-        -- {
-        --     transform = mu.srt({5, 1, 5, 1},
-        --                         ms:euler2quat({math.rad(10), 0, 0, 0}, true),
-        --                         {0, 0, -5, 1}),
-        --     color = {0.5, 0.5, 0, 1},
-        --     material = fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
-        -- }
     }
 
     for _, p in ipairs(planes) do
@@ -288,7 +279,7 @@ end
 function init_loader:init()
     do
         lu.create_directional_light_entity(world, "direction light", 
-		{1,1,1,1}, 2, ms:euler2quat(mu.to_radian{60, 50, 0, 0}, true))
+		{1,1,1,1}, 2, math3d.totable(math3d.quaternion(mu.to_radian{60, 50, 0, 0})))
         lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
@@ -305,10 +296,10 @@ function init_loader:init()
 end
 
 local function create_camera()
-    local rotation = ms:euler2quat{math.rad(30), math.rad(150), 0, 0}
+    local rotation = math3d.quaternion{math.rad(30), math.rad(150), 0}
     local id = camera.create {
         eyepos  = {-4.5, 2, -1.5, 1},
-        viewdir = ms(ms:forward_dir(rotation), "T"),
+        viewdir = math3d.totable(math3d.todirection(rotation)),
     }
     camera.bind(id, "main_queue")
     return id

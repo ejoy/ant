@@ -10,7 +10,8 @@ local fbmgr     = require "framebuffer_mgr"
 local uniforms  = world:interface "ant.render|uniforms"
 
 local mathpkg   = import_package "ant.math"
-local ms, mu, mc= mathpkg.stack, mathpkg.util, mathpkg.constant
+local mu, mc= mathpkg.util, mathpkg.constant
+local math3d	= require "math3d"
 
 
 local fs        = require "filesystem"
@@ -66,12 +67,12 @@ local function	csm_shadow_debug_frustum()
 	for _, seid in world:each "csm" do
 		local e = world[seid]
 		local camera = world[e.camera_eid].camera
-		local _, _, vp = ms:view_proj(camera, camera.frustum, true)
+		local vp = mu.view_proj(camera)
 
 		local color = frustum_colors[e.csm.index]
-		local frustum = mathbaselib.new_frustum(ms, vp)
+		local frustum = mathbaselib.new_frustum(vp)
 		computil.create_frustum_entity(world, frustum, "csm frusutm part" .. e.csm.index, nil, color, "shadow_debug")
-		computil.create_axis_entity(world, mu.srt(nil, ms(camera.viewdir, "DT"), ms(camera.eyepos, "T")), color, "shadow_debug")
+		computil.create_axis_entity(world, math3d.matrix{r=math3d.torotation(camera.viewdir), t=camera.eyepos}, color, "shadow_debug")
 	end
 end
 
@@ -83,8 +84,8 @@ local function main_view_debug_frustum()
 
 		local csm = s.csm
 		local frustum_desc = shadowutil.split_new_frustum(camera.frustum, csm.split_ratios)
-		local _, _, vp = ms:view_proj(camera, frustum_desc, true)
-		local frustum = mathbaselib.new_frustum(ms, vp)
+		local vp = mu.view_proj(camera)
+		local frustum = mathbaselib.new_frustum(vp)
 		computil.create_frustum_entity(world, frustum, "main view part" .. csm.index, nil, frustum_colors[csm.index], "shadow_debug")
 	end
 end
@@ -166,13 +167,13 @@ local function check_shadow_matrix()
 	local csm1 = world[find_csm_entity(1)]
 
 	local lightdir = shadowutil.get_directional_light_dir(world)
-	print("light direction:", ms(lightdir, "V"))
+	print("light direction:", math3d.tostring(lightdir))
 
 	local viewcamera = camerautil.main_queue_camera(world)
-	print("eye posision:", ms(viewcamera.eyepos, "V"))
-	print("view direction:", ms(viewcamera.viewdir, "V"))
+	print("eye posision:", math3d.tostring(viewcamera.eyepos))
+	print("view direction:", math3d.tostring(viewcamera.viewdir))
 
-	local camera_2_origin = ms:length(mc.T_ZERO_PT, viewcamera.eyepos)
+	local camera_2_origin = math3d.length(viewcamera.eyepos)
 	print("check eye position to [0, 0, 0] distance:", camera_2_origin)
 
 	local dis_n, dis_f = get_split_distance(1)
@@ -185,19 +186,19 @@ local function check_shadow_matrix()
 	end
 
 	local split_frustum_desc = shadowutil.split_new_frustum(viewcamera.frustum, csm1.csm.split_ratios)
-	local _, _, vp = ms:view_proj(viewcamera, split_frustum_desc, true)
-	local split_frustum = mathbaselib.new_frustum(ms, vp)
+	local vp = mu.view_proj(viewcamera, split_frustum_desc)
+	local split_frustum = mathbaselib.new_frustum(vp)
 
 	local center = calc_frustum_center(split_frustum)
 
 	print(string.format("view split frusutm corners, center:[%f, %f, %f]", center[1], center[2], center[3]))
 	print_frustum_points(split_frustum)
 
-	local lightmatrix = ms(center, lightdir, "LP")
+	local lightmatrix = math3d.lookto(center, lightdir)
 	local corners_LS = {}
 	local minextent, maxextent = {}, {}
 	for _, c in ipairs(split_frustum:points()) do
-		local c_LS = ms(lightmatrix, c, "*T")
+		local c_LS = math3d.transform(lightmatrix, c, 1)
 		corners_LS[#corners_LS+1] = c_LS
 		minextent[1] = minextent[1] and math.min(minextent[1], c_LS[1]) or c_LS[1]
 		minextent[2] = minextent[2] and math.min(minextent[2], c_LS[2]) or c_LS[2]
@@ -223,15 +224,15 @@ local function check_shadow_matrix()
 	frustum_desc.b, frustum_desc.t, 
 	frustum_desc.n, frustum_desc.f))
 
-	local _, _, newvp = ms:view_proj({eyepos=center, viewdir=lightdir}, frustum_desc, true)
-	local new_light_frustum = mathbaselib.new_frustum(ms, newvp)
+	local newvp = mu.view_proj({eyepos=center, viewdir=lightdir, up=mc.YAXIS}, frustum_desc)
+	local new_light_frustum = mathbaselib.new_frustum(newvp)
 	computil.create_frustum_entity(world, new_light_frustum, "lua calc view frustum", nil, 0xff0000ff)
 
 	---------------------------------------------------------------------------------------------------------
 
 	local shadowcamera = world[csm1.camera_eid].camera
-	print("shadow camera view direction:", ms(shadowcamera.viewdir, "V"))
-	print("shadow camera position:", ms(shadowcamera.eyepos, "V"))
+	print("shadow camera view direction:", math3d.tostring(shadowcamera.viewdir))
+	print("shadow camera position:", math3d.string(shadowcamera.eyepos))
 
 	local shadowcamera_frustum_desc = shadowcamera.frustum
 	print(string.format("shadow camera frustum:[l=%f, r=%f, b=%f, t=%f, n=%f, f=%f]", 
@@ -239,8 +240,8 @@ local function check_shadow_matrix()
 		shadowcamera_frustum_desc.b, shadowcamera_frustum_desc.t, 
 		shadowcamera_frustum_desc.n, shadowcamera_frustum_desc.f))
 
-	local _, _, shadow_viewproj = ms:view_proj(shadowcamera, shadowcamera.frustum, true)
-	local shadowcamera_frustum = mathbaselib.new_frustum(ms, shadow_viewproj)
+	local shadow_viewproj = mu.view_proj(shadowcamera)
+	local shadowcamera_frustum = mathbaselib.new_frustum(shadow_viewproj)
 
 	print("shadow view frustm point")
 	print_frustum_points(shadowcamera_frustum)
@@ -252,7 +253,7 @@ local function check_shadow_matrix()
 	local worldmat = {
 		0.0, 0.0, -20.02002, -20,
 	}
-	local origin_CS = ms(shadow_viewproj, mc.T_ZERO_PT, "*T")
+	local origin_CS = math3d.totable(shadow_viewproj.t)
 	print(string.format("origin clip space:[%f, %f, %f, %f]", origin_CS[1], origin_CS[2], origin_CS[3], origin_CS[4]))
 	local origin_NDC = {
 		origin_CS[1] / origin_CS[4], 
@@ -262,8 +263,8 @@ local function check_shadow_matrix()
 	}
 	print(string.format("origin ndc space:[%f, %f, %f, %f]", origin_NDC[1], origin_NDC[2], origin_NDC[3], origin_NDC[4]))
 
-	local shadow_matrix = ms(shadowutil.shadow_crop_matrix(), shadow_viewproj, "*P")
-	local origin_CS_With_Crop = ms(shadow_matrix, {0, 0, 0.55, 1}, "*T")
+	local shadow_matrix = math3d.mul(shadowutil.shadow_crop_matrix(), shadow_viewproj)
+	local origin_CS_With_Crop = math3d.transform(shadow_matrix, {0, 0, 0.55, 1})
 	print(string.format("origin clip space with corp:[%f, %f, %f, %f]", 
 		origin_CS_With_Crop[1], origin_CS_With_Crop[2], origin_CS_With_Crop[3], origin_CS_With_Crop[4]))
 

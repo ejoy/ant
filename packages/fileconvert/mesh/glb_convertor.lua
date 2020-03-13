@@ -328,25 +328,6 @@ local function convert_coord_system(scene, meshcfg)
 			for _, nodeidx in ipairs(rootnodes)do
 				local node = scene.nodes[nodeidx+1]
 				if node.matrix then
-					-- local function split_matrix(m)
-					-- 	local m3x3 = {}
-					-- 	for idx, v in ipairs(m) do
-					-- 		m3x3[idx] = v
-					-- 	end
-
-					-- 	for _, idx in ipairs {4, 8, 12, 13, 14, 15} do
-					-- 		m3x3[idx] = 0
-					-- 	end
-					-- 	m3x3[16] = 1
-
-					-- 	return m3x3, {m[13], m[14], m[15], 1}
-					-- end
-
-					-- local rot, translate = split_matrix(node.matrix)
-					-- local m = ms(convert_matrix, rot, convert_matrix, "**T")
-					-- m.type = nil
-					-- local t = ms(convert_matrix, translate, "*T")
-					-- m[13], m[14], m[15] = t[1], t[2], t[3]
 					local indices = {X=1, Y=6, Z=11}
 					local index = indices[meshcfg.negative_axis]
 					node.matrix[index] = -node.matrix[index]

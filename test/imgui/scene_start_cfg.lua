@@ -19,7 +19,6 @@ local runtime_config = {
         "ant.render|light.directional",
         "ant.render|light.ambient",
         "ant.scene|hierarchy",
-        "ant.scene|ignore_parent_scale",
         --editor
         "ant.character|character",
         "ant.objcontroller|select",
@@ -105,7 +104,6 @@ local editor_config = {
         "ant.render|light.directional",
         "ant.render|light.ambient",
         "ant.scene|hierarchy",
-        "ant.scene|ignore_parent_scale",
         "ant.imgui|gizmo_object",
         "ant.imgui|outline",
         "ant.imgui|test_add_policy",

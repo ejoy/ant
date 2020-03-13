@@ -1,7 +1,8 @@
 local ecs = ...
 local world = ecs.world
-local mathpkg   = import_package "ant.math"
-local ms        = mathpkg.stack
+local math3d = require "math3d"
+local mathpkg = require "ant.math"
+local mu, mc = mathpkg.util, mathpkg.constant
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 
@@ -37,8 +38,8 @@ ecs.singleton "operate_gizmo_cache" {
 }
 
 local function update_transform(eid, transform, field, value)
-    local oldvalue = ms(transform[field], "P")
-    ms(transform[field], value, "=")
+    local oldvalue = math3d.vector(transform.t)
+    transform.t.v = value
     world:pub {"component_changed", "transform", eid,
         {field = field, oldvalue = oldvalue, newvalue=value}
     }
@@ -49,34 +50,17 @@ local function scale_gizmo_to_normal(gizmo_eid)
     local et = gizmo.transform
     if et.world and et.parent then
         local camera = camerautil.main_queue_camera(world)
-        local _, _, vp = ms:view_proj(camera, camera.frustum, true)
-
-        local _,_,t = ms(et.world,"~PPP")
-        local tvp  = ms(vp,t,"*T")
+        local vp = mu:view_proj(camera)
+        local tvp  = math3d.totable(math3d.transform(vp, et.world.t))
 
         local scale = math.abs(tvp[4]/7)
         local parent_e = world[et.parent]
-        local parent_scale = ms(parent_e.transform.world,"~P")
-        local finalscale = ms(scale, parent_scale, "r*P")
+        local finalscale = math3d.mul(scale, parent_e.transform.world.s)
         update_transform(gizmo_eid, et, "s", finalscale)
     end
 end
 
 local function pos_to_screen(pos,trans,viewproj,w,h)
-    -- local scale = ms(trans.s,"T")
-    -- local vec4 = { pos[1]/scale[1],pos[2]/scale[2],pos[3]/scale[3],1}
-    -- -- log.info_a(vec4)
-    -- local trans_world = trans.world
-    -- local proj_pos = ms(viewproj,trans_world,vec4,"**T")
-    -- local x = proj_pos[1]/proj_pos[4]
-    -- local y = proj_pos[2]/proj_pos[4]
-    -- -- log.info_a("proj_pos",proj_pos[1]/proj_pos[4],proj_pos[2]/proj_pos[4])
-    -- -- local screen_pos = (x+1)/2*w,(y+1)/2*h
-    -- return {(x+1)/2*w,(y+1)/2*h}
-
-    local vec4 = ms(pos, trans.s, "r*P") --{ pos[1]/scale[1],pos[2]/scale[2],pos[3]/scale[3],1}
-
-    return 
     --[[
         vec4_WS = trans.wrold * vec4        --> *
         vec4_proj= viewproj * vec4          |   --> %
@@ -85,33 +69,25 @@ local function pos_to_screen(pos,trans,viewproj,w,h)
         vec4_map = (vec4_NDC + 1) * 0.5  |--> +*  transform from [-1, 1] ==>[0, 1]
         vec4_screen = vec4_map.xy * wh   |
     ]]
-    ms(viewproj, trans.world, vec4,        "*%",
-        {1, 1, 0, 0}, {0.5*w, 0.5*h, 0, 0}, "+*T")
 
+    local vec4 = math3d.mul(pos, math3d.reciprocal(trans.s))
+    local posNDC = math3d.transformH(math3d.mul(viewproj, trans.world), vec4)
+
+    return math3d.mul(
+            math3d.add(posNDC, {1, 1, 0, 0}),
+            {0.5 * w, 0.5 * h, 0, 0})
 end
 
-local function convert_to_model_axis(trans,axis_unit)
-    local r = trans.r
-    return  ms(axis_unit,r,"qS*T")
-end
+local function calc_drag_axis_unit(trans, viewproj, axis_unit, w, h, dx, dy)
+    local r_axis_unit = math3d.transform(trans.r, axis_unit)
+    local screen_pos0 = pos_to_screen(mc.ZERO_PT,trans,viewproj,w,h)
+    local screen_pos1 = pos_to_screen(axis_unit,trans,viewproj,w,h)
+    local screen_unit = math3d.sub(screen_pos1, screen_pos0)
+    local normalize_sceen_unit = math3d.normalize(screen_unit)
+    local sceen_unit_dis = math3d.length(screen_unit)
+    local effect_dis = math3d.dot({dx, dy, 0, 0}, normalize_sceen_unit)
 
-local function update_world(trans)
-    local srt = ms:srtmat(trans)
-    local base = trans.base
-    local worldmat = trans.world
-    if base then
-        srt = ms(trans.base, srt, "*P") 
-    end
-
-    local peid = trans.parent
-    if peid then
-        local parent = world[peid]
-        local pt = parent.transform
-        ms(worldmat, pt.world, srt, "*=")
-    else
-        ms(worldmat, srt, "=")
-    end
-    return worldmat
+    return math3d.mul(r_axis_unit, effect_dis/sceen_unit_dis)
 end
 
 local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
@@ -128,49 +104,26 @@ local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
         local camera = world[mq.camera_eid].camera
 
         -- log.info_a("mq",mq)
-        local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
+        local viewproj = mu.view_proj(camera)
+        local vp_rect = mq.render_target.viewport.rect
         local trans = target_entity.transform
-        local r_axis_unit = convert_to_model_axis(trans,axis_unit)
-        -- log.info_a("axis_unit:",r_axis_unit)
-        local cur_pos = ms(trans.t,"T")
-        local viewport = mq.render_target.viewport
-        -- log.info_a("viewport",viewport.rect)
-        local w,h = viewport.rect.w,viewport.rect.h
-        local screen_pos0 = pos_to_screen({0,0,0},trans,viewproj,w,h)
-        local screen_pos1= pos_to_screen(axis_unit,trans,viewproj,w,h)
-        local sceen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
-        -- log.info_a("sceen_unit:",sceen_unit)
-        local normalize_sceen_unit =  ms(sceen_unit,"nT")
-        local sceen_unit_dis = nil
-        if normalize_sceen_unit[1]~=0 then
-            sceen_unit_dis = sceen_unit[1]/normalize_sceen_unit[1]
-        else
-            sceen_unit_dis = sceen_unit[2]/normalize_sceen_unit[2]
-        end
-        local effect_dis = dx*normalize_sceen_unit[1]+dy*normalize_sceen_unit[2]
-        local t = effect_dis/sceen_unit_dis
-        local new_pos = {cur_pos[1]+r_axis_unit[1]*t,cur_pos[2]+r_axis_unit[2]*t,cur_pos[3]+r_axis_unit[3]*t}
-        -- local move_count = cache.move_count
-        -- move_count[1] = move_count[1] + r_axis_unit[1]*t
-        -- move_count[2] = move_count[2] + r_axis_unit[2]*t
-        -- move_count[3] = move_count[3] + r_axis_unit[3]*t
-        -- log.info_a("new_pos",new_pos)
-        -- ms(trans.t,new_pos,"=")
-        update_transform(target_entity_id, trans, "t", new_pos)
+        local drag_axis_unit = calc_drag_axis_unit(trans, viewproj, axis_unit, vp_rect.w. vp_rect.h, dx, dy)
+        local new_pos = math3d.add(drag_axis_unit, trans.t)
+        update_transform(target_entity_id, target_entity.transform, "t", new_pos)
         -- update_world(trans)
     end
 end
 
-local function add_gizmo_scale_length(scale_object,picked_dir,add_length)
+local function add_gizmo_scale_length(scale_object, picked_dir, tvec3)
     local scale_box_id = scale_object["box_"..picked_dir]
     local scale_box = world[scale_box_id]
     local scale_line_id = scale_object["line_"..picked_dir]
     local scale_line= world[scale_line_id]
-    local pos = ms(scale_box.transform.t,add_length,"+P")
-    
-    update_transform(scale_box_id, scale_box.transform, "t", pos)
-    update_transform(scale_line_id, scale_line, "s", ms(pos, {1 / scale_object.line_length}, "*P"))
-    return pos
+
+    local sbtran = scale_box.transform
+    local newpos = math3d.add(sbtran.t, tvec3)
+    update_transform(scale_box_id, sbtran, "t", newpos)
+    update_transform(scale_line_id, scale_line, "s", math3d.mul(newpos, 1 / scale_object.line_length))
 end
 
 local function gizmo_scale_on_release(cache)
@@ -182,7 +135,7 @@ local function gizmo_scale_on_release(cache)
     local scale_object = cache.gizmo.scale
     local scale_box_id = scale_object["box_"..picked_dir]
     local scale_box = world[scale_box_id]
-    local pos = ms(axis_unit, {scale_object.line_length}, "*P")
+    local pos = math3d.mul(axis_unit, scale_object.line_length)
     
     update_transform(scale_box_id, scale_box.transform, "t", pos)
 
@@ -206,49 +159,24 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
         
         local mq = world:singleton_entity "main_queue"
         local camera = world[mq.camera_eid].camera
-        local _, _, viewproj = ms:view_proj(camera, camera.frustum, true)
-        local viewport = mq.render_target.viewport
-        local w,h = viewport.rect.w,viewport.rect.h
-        local screen_pos0 = pos_to_screen({0,0,0},scale_box_trans,viewproj,w,h)
-        local screen_pos1= pos_to_screen(axis_unit,scale_box_trans,viewproj,w,h)
+        local viewproj = mu.view_proj(camera)
+        local vp_rect = mq.render_target.viewport.rect
 
-        local sceen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
-        local normalize_sceen_unit =  ms(sceen_unit,"nT")
-        local sceen_unit_dis = nil
-        if normalize_sceen_unit[1]~=0 then
-            sceen_unit_dis = sceen_unit[1]/normalize_sceen_unit[1]
-        else
-            sceen_unit_dis = sceen_unit[2]/normalize_sceen_unit[2]
-        end
-        local effect_dis = dx*normalize_sceen_unit[1]+dy*normalize_sceen_unit[2]
+        local tvec3 = calc_drag_axis_unit(scale_box_trans, viewproj, axis_unit, vp_rect.w, vp_rect.h, dx, dy)
+        add_gizmo_scale_length(scale_object, picked_dir, tvec3)
 
-        local tvec3 =  ms(axis_unit, {effect_dis/sceen_unit_dis}, "*P") --{axis_unit[1]*t,axis_unit[2]*t,axis_unit[3]*t}
-        add_gizmo_scale_length(scale_object,picked_dir,tvec3)
-
-        local line_length = scale_object.line_length
-        local scale_add = ms(tvec3, {1/line_length}, "*P")--{tvec3[1]/line_length,tvec3[2]/line_length,tvec3[3]/line_length}
+        local scale_add = math3d.mul(tvec3, 1 / scale_object.line_length)
         local trans = target_entity.transform
 
-        local newscale = ms(trans.s, scale_add, {1, 1, 1, 0}, "+*P")
-    
+        local newscale = math3d.mul(trans.s, math3d.add(scale_add, {1, 1, 1, 0}))
         update_transform(target_entity_id, trans, "s", newscale)
-        -- world:update_func("event_changed")()
-        -- local gizmo_eid =  cache.gizmo.eid
-        -- local gizmo_entity = world[gizmo_eid]
-        -- scale_gizmo_to_normal(gizmo_entity)
-        -- world:update_func("event_changed")()
-
     end
 end
 
 local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
     --旋转轴被自己的矩阵变化了
-    local function world_to_model(point,model_srt)
-        local t = point[4]
-        point[4] = 1
-        local mp = ms(point,model_srt,"iS*T")
-        point[4] = t
-        return mp
+    local function world_to_model(point, model_srt)
+        return math3d.transform(math3d.inverse(model_srt), point, 1)
     end
     local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
@@ -270,84 +198,41 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
             local rot_unit = cache.rot_axis_map[typ]
             local mq = world:singleton_entity "main_queue"
             local camera = world[mq.camera_eid].camera
-            
-            local _,_,viewproj = ms:view_proj(camera,camera.frustum,true)
-            r_axis_unit = convert_to_model_axis(trans,axis_unit)
-            rotat_unit_quat = ms({type="quat",axis=r_axis_unit,radian={0.02}},"T")
 
+            local viewproj = mu.view_proj(camera)
+            r_axis_unit = math3d.transform(trans.r, axis_unit)
             ------------------------
             local inject_pos_world
             do 
                 local gizmo_eid = cache.gizmo.eid
                 local gizmo_trans = world[gizmo_eid].transform
                 local gizmo_world = gizmo_trans.world
-                local _,_,point_world = ms(gizmo_world,"~TTT")
-                local axis_unit_p = {axis_unit[1],axis_unit[2],axis_unit[3],1}
-                local normal_world = ms(point_world,gizmo_trans.world,axis_unit_p,"*-nT")
+                local point_world = gizmo_world.t
+                local axis_unitWS = math3d.transform(gizmo_world, axis_unit, 1)
+                local normalWS = math3d.normalize(math3d.sub(point_world, axis_unitWS))
                 assert(cache.mouse_pos)
-                local click_pos = util.mouse_project_onto_plane(world,cache.mouse_pos,point_world,normal_world)
-                inject_pos_world = ms( point_world,click_pos,point_world,"-n+T" )
+                local click_pos = util.mouse_project_onto_plane(world,cache.mouse_pos,point_world,normalWS)
+                inject_pos_world = math3d.add(point_world, math3d.normalize(math3d.sub(click_pos,point_world)))
             end
             ------------------------
-            local click_in_model = world_to_model(inject_pos_world,trans.world)
-            local click_in_model_roted = ms(click_in_model,rot_unit,"qS*T")
-            local viewport = mq.render_target.viewport
-            local w,h = viewport.rect.w,viewport.rect.h
-            local screen_pos0 = pos_to_screen(click_in_model,trans,viewproj,w,h)
-            local screen_pos1= pos_to_screen(click_in_model_roted,trans,viewproj,w,h)
-            local screen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
-            normalize_sceen_unit =  ms(screen_unit,"nT")
-            -- log.info_a("inject_pos_world",inject_pos_world,
-            --     "click_in_model:",click_in_model,
-            --     "click_in_model_roted",click_in_model_roted,
-            --     "w,h",w,h,
-            --     "screen_pos0",screen_pos0,
-            --     "screen_pos1",screen_pos1,
-            --     "screen_unit",screen_unit,
-            --     "normalize_sceen_unit",normalize_sceen_unit
-            --     )
-            if normalize_sceen_unit[1]~=0 then
-                sceen_unit_dis = screen_unit[1]/normalize_sceen_unit[1]
-            else
-                sceen_unit_dis = screen_unit[2]/normalize_sceen_unit[2]
-            end
+            local click_in_model = world_to_model(inject_pos_world, trans.world)
+            local click_in_model_roted = math3d.transform(math3d.quaternion(rot_unit), click_in_model)
+            local vp_rt = mq.render_target.viewport.rect
+            local w,h = vp_rt.w, vp_rt.h
+            local screen_pos0 = pos_to_screen(click_in_model, trans,viewproj,w,h)
+            local screen_pos1 = pos_to_screen(click_in_model_roted,trans,viewproj,w,h)
+            local screen_unit = math3d.sub(screen_pos1, screen_pos0)
+            normalize_sceen_unit =  math3d.normalize(screen_unit)
+            sceen_unit_dis = math3d.length(screen_unit)
             cache.last_rotation = {
                 normalize_sceen_unit = normalize_sceen_unit,
                 sceen_unit_dis = sceen_unit_dis,
                 r_axis_unit = r_axis_unit,
             }
-
-
-            -- local viewport = mq.render_target.viewport
-            -- local w,h = viewport.rect.w,viewport.rect.h
-            -- local screen_pos0 = pos_to_screen({0,0,0},trans,viewproj,w,h)
-            -- local screen_pos1= pos_to_screen(axis_unit,trans,viewproj,w,h)
-            -- local screen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
-            ----------------------
-            -- local eyepos = camera.eyepos
-            -- local eyepos_in_model = ms(eyepos,trans.world,"i*nT")
-            -- local eyepos_in_model_roted = ms(eyepos_in_model,rot_unit,"qS*T")
-            -- local viewport = mq.render_target.viewport
-            -- local w,h = viewport.rect.w,viewport.rect.h
-            -- local screen_pos0 = pos_to_screen(eyepos_in_model,trans,viewproj,w,h)
-            -- local screen_pos1= pos_to_screen(eyepos_in_model_roted,trans,viewproj,w,h)
-            -- local screen_unit = {screen_pos1[1]-screen_pos0[1],screen_pos1[2]-screen_pos0[2],0}
-            -- normalize_sceen_unit =  ms(screen_unit,"nT")
-            -- if normalize_sceen_unit[1]~=0 then
-            --     sceen_unit_dis = screen_unit[1]/normalize_sceen_unit[1]
-            -- else
-            --     sceen_unit_dis = screen_unit[2]/normalize_sceen_unit[2]
-            -- end
-            -- cache.last_rotation = {
-            --     normalize_sceen_unit = normalize_sceen_unit,
-            --     sceen_unit_dis = sceen_unit_dis,
-            --     r_axis_unit = r_axis_unit,
-            -- }
         end
-        local effect_dis = dx*normalize_sceen_unit[1]+dy*normalize_sceen_unit[2]
+        local effect_dis = math3d.dot({dx, dy, 0}, normalize_sceen_unit)
         local t = effect_dis/sceen_unit_dis
-        local new_rot = 
-            ms({type="quat",axis=r_axis_unit,radian={0.01*t}}, trans.r, "q*eP")
+        local new_rot = math3d.mul(math3d.quaternion{axis=r_axis_unit, r=0.01*t}, trans.r)
         update_transform(target_entity_id, trans, "r", new_rot)
     end
 end
@@ -491,13 +376,7 @@ function gizmo_sys:editor_update()
         if operate_gizmo_cache.last_target_eid ~= target_entity_id then
             gizmo_entity.transform.parent = target_entity_id
         end
-        -- local trans = target_entity.transform
-        -- assert(trans and trans.world,"trans and trans.world is nil,trans is "..tostring(trans))
-        -- local s,r,t = ms(trans.world,"~TTT")
-        
-        -- world: gizmo_entity
-        -- update_transform(gizmo_entity.transform,"t",t)
-        -- update_transform(gizmo_entity.transform,"r",r)
+
         scale_gizmo_to_normal(gizmo_eid)
 
         if target_entity_id ~= operate_gizmo_cache.last_target_eid then

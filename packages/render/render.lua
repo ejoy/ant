@@ -2,14 +2,12 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "ant.math"
-local mathpkg 	= import_package "ant.math"
-local ms 		= mathpkg.stack
 
 local fbmgr 	= require "framebuffer_mgr"
-local camerautil= require "camera.util"
-
 local bgfx 		= require "bgfx"
 local ru 		= require "util"
+
+local math3d	= require "math3d"
 
 ecs.tag "main_queue"
 ecs.tag "blit_queue"
@@ -136,7 +134,8 @@ rendersys.require_policy "camera"
 rendersys.require_policy "name"
 
 local function update_view_proj(viewid, camera)
-	local view, proj = ms:view_proj(camera, camera.frustum)
+	local view = math3d.lookto(camera.eyepos, camera.viewdir)
+	local proj = math3d.projmat(camera.frustum)
 	bgfx.set_view_transform(viewid, view, proj)
 end
 
@@ -193,11 +192,11 @@ end
 local mathadapter_util = import_package "ant.math.adapter"
 local math3d_adapter = require "math3d.adapter"
 mathadapter_util.bind("bgfx", function ()
-	bgfx.set_transform = math3d_adapter.matrix(ms, bgfx.set_transform, 1, 1)
-	bgfx.set_view_transform = math3d_adapter.matrix(ms, bgfx.set_view_transform, 2, 2)
-	bgfx.set_uniform = math3d_adapter.variant(ms, bgfx.set_uniform_matrix, bgfx.set_uniform_vector, 2)
+	bgfx.set_transform = math3d_adapter.matrix(bgfx.set_transform, 1, 1)
+	bgfx.set_view_transform = math3d_adapter.matrix(bgfx.set_view_transform, 2, 2)
+	bgfx.set_uniform = math3d_adapter.variant(bgfx.set_uniform_matrix, bgfx.set_uniform_vector, 2)
 	local idb = bgfx.instance_buffer_metatable()
-	idb.pack = math3d_adapter.format(ms, idb.pack, idb.format, 3)
+	idb.pack = math3d_adapter.format(idb.pack, idb.format, 3)
 	idb.__call = idb.pack
 end)
 

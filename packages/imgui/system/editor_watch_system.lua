@@ -6,8 +6,7 @@ local serialize = import_package 'ant.serialize'
 local fs = require "filesystem"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
-local ms = mathpkg.stack
-local assetmgr = import_package "ant.asset".mgr
+
 local Rx        = import_package "ant.rxlua".Rx
 
 local OperateFunc = require "system.editor_operate_func"
@@ -176,9 +175,8 @@ local function create_outline(seleid)
         if not se.hierarchy then
             world:add_component(seleid,"hierarchy",{})
         end
-        -- local trans = se.transform
-        -- local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
-        local t = mu.identity_transform()
+
+        local t = mu.matrix()
         t.parent = seleid
         local outlineeid = world:create_entity {
             policy={

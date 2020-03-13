@@ -1,7 +1,6 @@
 local util = {}; util.__index = util
 
 local ecs 			= import_package "ant.ecs"
-local mathadapter 	= import_package "ant.math.adapter"
 
 function util.start_new_world(fbw, fbh, config,world_class)
 	config.fb_size = {w=fbw, h=fbh}
