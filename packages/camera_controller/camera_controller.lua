@@ -76,7 +76,7 @@ function camera_controller_system:camera_control()
 					local qy = math3d.quaternion{axis=up, r=ux}
 					local qx = math3d.quaternion{axis=right, r=uy}
 					local q = math3d.mul(qy, qx)
-					camera.viewdir.v = math3d.rotate(q, camera.viewdir)
+					camera.viewdir.v = math3d.transform(q, camera.viewdir, 0)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end

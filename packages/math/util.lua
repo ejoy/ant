@@ -77,7 +77,7 @@ end
 
 function util.view_proj(camera, frustum)
 	local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
-	frustum = frustum or camera.frusutm
+	frustum = frustum or camera.frustum
 	local projmat = math3d.projmat(frustum)
 	return math3d.mul(projmat, viewmat)
 end

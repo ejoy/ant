@@ -150,7 +150,7 @@ local function calc_pelvis_offset(leg_raycasts, cast_dir)
     for _, l in ipairs(leg_raycasts) do
         local ankle_pos, target_pos = l[2], l[3]
 
-        local dot = math.dot(normalize_cast_dir, math3d.sub(target_pos, ankle_pos))
+        local dot = math3d.dot(normalize_cast_dir, math3d.sub(target_pos, ankle_pos))
         if max_dot == nil or dot > max_dot then
             max_dot = dot
             offset = math3d.mul(normalize_cast_dir, dot)
@@ -162,7 +162,7 @@ end
 
 local function refine_target(raystart, hitpt, hitnormal, foot_height)
     -- see ozz-animation samples:sample_foot_ik.cc:UpdateAnklesTarget for commonet
-    local ABl = math3d.dot(math3d.sub(raystart, hitpt))
+    local ABl = math3d.dot(math3d.sub(raystart, hitpt), hitnormal)
     if ABl ~= 0 then
         local ptB = math3d.sub(raystart, math3d.mul(hitnormal, ABl))
         local IB = math3d.sub(ptB, hitpt)
@@ -221,14 +221,14 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
         leg_ikdata.target.v = math3d.transform(inv_trans, target_ws, nil)
 
         local knee = leg_ikdata.joint_indices[2]
-        leg_ikdata.pole_vector(joint_y_vector(knee))
+        leg_ikdata.pole_vector.v = joint_y_vector(knee)
 
         iik.do_ik(leg_ikdata)
 
         if sole_ikdata then
             local hitnormal = leg[4]
-            sole_ikdata.target.v = math3d.transform(inv_trans, math3d.add(target_ws, hitnormal))
-            sole_ikdata.pole_vector(joint_y_vector(sole_ikdata.joint_indices[1]))
+            sole_ikdata.target.v = math3d.transform(inv_trans, math3d.add(target_ws, hitnormal), 1)
+            sole_ikdata.pole_vector.v = joint_y_vector(sole_ikdata.joint_indices[1])
             iik.do_ik(sole_ikdata)
         end
     end

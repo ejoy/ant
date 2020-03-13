@@ -10,12 +10,7 @@ for _, t in ipairs {
     local typename, typedef = t[1], t[2]
     local m = ecs.component_alias(typename, typedef)
     function m.init(v)
-        local r = math3d[typename](v)
-        return r
-    end
-
-    function m.delete(v)
-        v(nil)
+        return math3d.ref(math3d[typename](v))
     end
 
     function m.save(v)

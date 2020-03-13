@@ -512,7 +512,7 @@ local function move_root_node(rootnodename)
     local eid = find_entity_by_name(rootnodename, 'hierarchy')
     local e = world[eid]
     local t = e.transform.t
-    local oldvalue = math3d.vector(t)
+    local oldvalue = t.id
     local newvalue = math3d.vector(10, 0, 0, 1)
     t.v = newvalue
     world:pub {"component_changed", "transform", eid, {

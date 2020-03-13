@@ -38,6 +38,7 @@ do
 		v[4] = 0
 		return math3d.ref(math3d.vector(v))
 	end
+	function s.delete() return {} end
 	s.save = save
 end
 
@@ -62,10 +63,6 @@ function trans:init()
 
 	self.world = math3d.ref(math3d.matrix(self))
 	return self
-end
-
-function trans:delete()
-	self.world(nil)
 end
 
 ecs.tag "editor"

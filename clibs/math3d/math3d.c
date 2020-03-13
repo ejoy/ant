@@ -1133,11 +1133,13 @@ lminmax(lua_State *L){
 	const int numpoints = (int)lua_rawlen(L, 1);
 
 	const float* transform = lua_isnoneornil(L, 2) ? NULL : matrix_from_index(L, LS, 2);
-	float minv[4] = {-FLT_MAX};
-	float maxv[4] = {FLT_MAX};
+	float minv[4] = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};
+	float maxv[4] = {-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX};
 	for (int ii = 0; ii < numpoints; ++ii){
 		float v[4];
-		unpack_numbers(L, 1, v, 4);
+		lua_geti(L, 1, ii+1);
+		unpack_numbers(L, -1, v, 4);
+		lua_pop(L, 1);
 		math3d_minmax(LS, transform, v, minv, maxv);
 	}
 

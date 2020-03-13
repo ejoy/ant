@@ -36,20 +36,20 @@ constant.T_NZAXIS = {0, 0, -1, 0}
 
 constant.W_AXIS = {0, 0, 0, 1}
 
-constant.ZERO    = math3d.vector(constant.T_ZERO)
-constant.ZERO_PT = math3d.vector(constant.T_ZERO_PT)
+constant.ZERO    = math3d.ref(math3d.vector(constant.T_ZERO))
+constant.ZERO_PT = math3d.ref(math3d.vector(constant.T_ZERO_PT))
 
-constant.XAXIS   = math3d.vector(constant.T_XAXIS)
-constant.NXAXIS  = math3d.vector(constant.T_NXAXIS)
+constant.XAXIS   = math3d.ref(math3d.vector(constant.T_XAXIS))
+constant.NXAXIS  = math3d.ref(math3d.vector(constant.T_NXAXIS))
 
-constant.YAXIS   = math3d.vector(constant.T_YAXIS)
-constant.NYAXIS  = math3d.vector(constant.T_NYAXIS)
+constant.YAXIS   = math3d.ref(math3d.vector(constant.T_YAXIS))
+constant.NYAXIS  = math3d.ref(math3d.vector(constant.T_NYAXIS))
 
-constant.ZAXIS   = math3d.vector(constant.T_ZAXIS)
-constant.NZAXIS  = math3d.vector(constant.T_NZAXIS)
+constant.ZAXIS   = math3d.ref(math3d.vector(constant.T_ZAXIS))
+constant.NZAXIS  = math3d.ref(math3d.vector(constant.T_NZAXIS))
 
-constant.IDENTITY_MAT = math3d.matrix(constant.mat_identity)
+constant.IDENTITY_MAT = math3d.ref(math3d.matrix(constant.mat_identity))
 
-constant.IDENTITY_QUAT= math3d.quaternion(constant.quat_identity)
+constant.IDENTITY_QUAT= math3d.ref(math3d.quaternion(constant.quat_identity))
 
 return constant
