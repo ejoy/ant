@@ -226,12 +226,12 @@ lbuilddata_bindpose(lua_State *L) {
 	auto ske = get_ske(L);
 
 	luaL_checktype(L, 2, LUA_TUSERDATA);
-	bind_pose* bpresult = (bind_pose*)lua_touserdata(L, 2);
+	bindpose* bpresult = (bindpose*)lua_touserdata(L, 2);
 
 	ozz::animation::LocalToModelJob job;
 	job.skeleton = ske;
 	job.input = ske->joint_bind_poses();
-	job.output = ozz::make_range(bpresult->pose);
+	job.output = ozz::make_range(*bpresult);
 
 	if (!job.Run()) {
 		luaL_error(L, "build local to model failed");

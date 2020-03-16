@@ -106,8 +106,8 @@ void fetch_ikdata(lua_State* L, int idx, ik_data& ikdata) {
 bool
 do_ik(lua_State* L,
 	const ozz::animation::Skeleton *ske,
-	bind_pose_soa::bind_pose_type &pose_soa, 
-	bind_pose::bind_pose_type &result_pose) {
+	bindpose_soa &pose_soa, 
+	bindpose &result_pose) {
 
 	ik_data ikdata;
 	fetch_ikdata(L, -1, ikdata);

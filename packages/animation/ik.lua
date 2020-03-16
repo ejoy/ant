@@ -104,9 +104,10 @@ local fix_root <const> = true
 local ik_i = ecs.interface "ik"
 function ik_i.setup(e)
 	local skehandle = asset.get_resource(e.skeleton.ref_path).handle
-	ani_module.setup(e.pose_result.result, skehandle, fix_root)
+	local pr = e.pose_result.result
+	pr:setup(skehandle, fix_root)
 end
 
-function ik_i.do_ik(ikdata)
-	ani_module.do_ik(prepare_ikdata(ikdata))
+function ik_i.do_ik(pr, ikdata)
+	pr:do_ik(prepare_ikdata(ikdata))
 end

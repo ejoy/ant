@@ -223,13 +223,13 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
         local knee = leg_ikdata.joint_indices[2]
         leg_ikdata.pole_vector.v = joint_y_vector(knee)
 
-        iik.do_ik(leg_ikdata)
+        iik.do_ik(pose_result, leg_ikdata)
 
         if sole_ikdata then
             local hitnormal = leg[4]
             sole_ikdata.target.v = math3d.transform(inv_trans, math3d.add(target_ws, hitnormal), 1)
             sole_ikdata.pole_vector.v = joint_y_vector(sole_ikdata.joint_indices[1])
-            iik.do_ik(sole_ikdata)
+            iik.do_ik(pose_result, sole_ikdata)
         end
     end
 end

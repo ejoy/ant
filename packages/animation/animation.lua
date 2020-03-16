@@ -19,7 +19,7 @@ pr_t.output "pose_result"
 function pr_t.process(e)
 	local ske = asset.get_resource(e.skeleton.ref_path)
 	local skehandle = ske.handle
-	e.pose_result.result = ani_module.new_bind_pose(#skehandle)
+	e.pose_result.result = ani_module.new_pose_result(#skehandle)
 end
 
 ecs.component "animation_content"
@@ -60,27 +60,28 @@ local timer = world:interface "ant.timer|timer"
 
 local fix_root <const> = true
 
-local function do_animation(task, delta_time)
+local function do_animation(poseresult, task, delta_time)
 	if task.type == 'blend' then
 		for _, t in ipairs(task) do
-			do_animation(t, delta_time)
+			do_animation(poseresult, t, delta_time)
 		end
-		ani_module.do_blend("blend", #task, task.weight)
+		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local ani = task.animation
 		local delta = delta_time / ani.duration
 		local current_ratio = task.ratio + delta
 		task.ratio = current_ratio <= ani.max_ratio and current_ratio or ani.max_ratio
-		ani_module.do_sample(ani.sampling_cache, ani.handle, task.ratio % 1, task.weight)
+		poseresult:do_sample(ani.sampling_cache, ani.handle, task.ratio % 1, task.weight)
 	end
 end
 
 local function update_animation(e, delta_time)
 	local animation = e.animation
 	local ske = asset.get_resource(e.skeleton.ref_path)
-	ani_module.setup(e.pose_result.result, ske.handle, fix_root)
-	do_animation(animation.current, delta_time)
-	ani_module.fetch_result()
+	local pr = e.pose_result.result
+	pr:setup(ske.handle, fix_root)
+	do_animation(pr, animation.current, delta_time)
+	pr:fetch_result()
 end
 
 function anisystem:sample_animation_pose()
@@ -91,15 +92,23 @@ function anisystem:sample_animation_pose()
 	end
 end
 
+local function clear_animation_cache()
+	for _, eid in world:each "pose_result" do
+		local e = world[eid]
+		local pr = e.pose_result.result
+		pr:end_animation()
+	end
+end
+
 function anisystem:end_animation()
-	ani_module.end_animation()
+	clear_animation_cache()
 end
 
 local m = ecs.interface "animation"
 
 function m.update(e, delta_time)
 	update_animation(e, delta_time or 0)
-	ani_module.clean_cache()
+	clear_animation_cache()
 end
 
 local mathadapter = import_package "ant.math.adapter"
@@ -110,4 +119,7 @@ mathadapter.bind(
 	function ()
 		local bp_mt = ani_module.bind_pose_mt()
 		bp_mt.joint = math3d_adapter.getter(bp_mt.joint, "m", 3)
+
+		local pr_mt = ani_module.pose_result_mt()
+		pr_mt.joint = math3d_adapter.getter(pr_mt.joint, "m", 3)
 	end)
