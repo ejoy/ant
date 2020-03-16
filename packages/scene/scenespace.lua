@@ -289,13 +289,10 @@ function scene_space:scene_update()
 		end
 	end
 
-	
-
 	local transform_result = world:singleton "hierarchy_transform_result"
 	if next(trees) then
 		update_hierarchy_tree(trees, transform_result)
 	end
-	log.info_a(transform_result)
 
 	hierarchy_del_handle(transform_result)
 end
