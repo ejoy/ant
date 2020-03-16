@@ -167,9 +167,8 @@ local function update_entity_transform(hierarchy_cache, eid)
 	local e = world[eid]
 
 	local transform = e.transform
-	local worldmat = transform.world
+	local worldmat = transform.srt
 	if e.hierarchy == nil then
-		worldmat.m = transform
 		local peid = transform.parent
 		
 		if peid then

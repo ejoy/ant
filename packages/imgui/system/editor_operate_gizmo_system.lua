@@ -38,8 +38,9 @@ ecs.singleton "operate_gizmo_cache" {
 }
 
 local function update_transform(eid, transform, field, value)
-    local oldvalue = math3d.vector(transform.t)
-    transform.t.v = value
+    local srt = transform.srt
+    local oldvalue = srt.t
+    srt.t = value
     world:pub {"component_changed", "transform", eid,
         {field = field, oldvalue = oldvalue, newvalue=value}
     }
@@ -48,14 +49,14 @@ end
 local function scale_gizmo_to_normal(gizmo_eid)
     local gizmo = world[gizmo_eid]
     local et = gizmo.transform
-    if et.world and et.parent then
+    if et.parent then
         local camera = camerautil.main_queue_camera(world)
         local vp = mu:view_proj(camera)
-        local tvp  = math3d.totable(math3d.transform(vp, et.world.t))
+        local tvp  = math3d.totable(math3d.transform(vp, et.srt.t))
 
         local scale = math.abs(tvp[4]/7)
         local parent_e = world[et.parent]
-        local finalscale = math3d.mul(scale, parent_e.transform.world.s)
+        local finalscale = math3d.mul(scale, parent_e.transform.srt.s)
         update_transform(gizmo_eid, et, "s", finalscale)
     end
 end

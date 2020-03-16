@@ -34,7 +34,7 @@ local function add_directional_light_properties(world, uniform_properties)
 		local l = dlight.directional_light
 
 		-- TODO: add new component called 'direction', and keep this direction as light direction, then no more calucate it everytiem.
-		local lightdir = math3d.inverse(math3d.normalize(math3d.todirection(dlight.transform.r)))
+		local lightdir = math3d.inverse(math3d.normalize(math3d.todirection(dlight.transform.srt.r)))
 		table.insert(dlight_info.directional_lightdir.value, 	lightdir)
 		table.insert(dlight_info.directional_color.value, 		l.color)
 		table.insert(dlight_info.directional_intensity.value, 	{l.intensity, 0.28, 0, 0})
@@ -190,7 +190,7 @@ function util.update_render_entity_transform(world, eid, hierarchy_cache)
 		end
 	end
 
-	transform.world.m = localmat
+	transform.srt.m = localmat
 	return localmat
 end
 return util

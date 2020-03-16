@@ -107,7 +107,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 			"ant.render|name",
 		},
 		data = {
-			transform = transform or math3d.matrix(),
+			transform = transform,
 			rendermesh = {},
 			material = util.assign_material(fs.path "/pkg/ant.resources" / "depiction" / "materials" / "line.material"),
 			name = name,
@@ -223,7 +223,7 @@ end
 
 local function create_simple_render_entity(world, transform, material, name, tag)
 	local dataset = {
-		transform = transform or mc.mat_identity,
+		transform = transform or {v=mc.mat_identity},
 		rendermesh = {},
 		material = material,
 		can_render = true,
@@ -364,7 +364,7 @@ function util.create_skybox(world, material)
 			"ant.render|name"
 		},
 		data = {
-			transform = mu.srt(),
+			transform = {srt=mu.srt()},
 			rendermesh = {},
 			material = material or util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skybox.material"),
 			can_render = true,

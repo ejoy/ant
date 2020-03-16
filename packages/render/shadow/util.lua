@@ -62,7 +62,7 @@ end
 function util.get_directional_light_dir(world)
 	for _, eid in world:each "directional_light" do
 		local e = world[eid]
-		return math3d.todirection(e.transform.r)
+		return math3d.todirection(e.transform.srt.r)
 	end
 end
 

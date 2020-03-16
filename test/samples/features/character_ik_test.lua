@@ -34,8 +34,7 @@ local function foot_ik_test()
             "ant.character|foot_ik_raycast",
         },
         data = {
-            transform = mu.translate_mat {-2.5, 0, -6, 1},
-            --transform = mu.translate_mat {-4.5, 0, -6, 1},
+            transform = {srt = {t= {-2.5, 0, -6, 1}}},
             rendermesh = {},
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
@@ -138,10 +137,11 @@ end
 
 local function create_plane_test()
     computil.create_plane_entity(world,
-    mu.srt(
-        {5, 1, 5, 0},
-        math3d.totable(math3d.quaternion{math.rad(10), 0, 0}),
-        {0, 0, -5, 1}),
+    {srt = {
+        s = {5, 1, 5, 0},
+        r = math3d.totable(math3d.quaternion{math.rad(10), 0, 0}),
+        t = {0, 0, -5, 1},
+    }},
     fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},
     "test shadow plane",

@@ -41,7 +41,7 @@ function m:init()
 			"ant.render|bounding_draw",
 		},
 		data = {
-			transform 		= mu.srt(),
+			transform 		= {srt = mu.srt()},
 			material 		= {ref_path = "/pkg/ant.resources/depiction/materials/line.material"},
 			rendermesh 		= {},
 			name 			= "mesh's bounding renderer",
@@ -179,7 +179,7 @@ function m:widget()
 	for _, eid in world:each "collider" do
 		local e = world[eid]
 		local collider = e.collider
-		local srt = e.transform
+		local srt = e.transform.srt
 		if collider.box then
 			for _, sh in ipairs(collider.box) do
 				iwd.draw_box(sh, srt)

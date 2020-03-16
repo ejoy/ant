@@ -194,7 +194,7 @@ local function create_outline(seleid)
 
         -- local trans = se.transform
         -- local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
-        local t = mu.srt()
+        local t = {srt = mu.srt()}
         t.parent = seleid
         local outlineeid = world:create_entity {
             policy={
@@ -274,7 +274,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
         if not camerautil.focus_obj(world, last_eid) then
             local transform = world[last_eid].transform
             if transform then
-                camerautil.focus_point(world,transform.t)
+                camerautil.focus_point(world,transform.srt.t)
             end
         end
     end
@@ -322,7 +322,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
             if not camerautil.focus_obj(world, eid) then
                 local transform = world[eid].transform
                 if transform then
-                    camerautil.focus_point(world, transform.t)
+                    camerautil.focus_point(world, transform.srt.t)
                 end
             end
         end

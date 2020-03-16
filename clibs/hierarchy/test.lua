@@ -5,9 +5,11 @@ local root = hierarchy.new()
 root[1] = { 
     name = "child",     
     transform = {
-        s={2, 1, 0.5}, 
-        r={math.cos(45), 0, 0, math.sin(45)}
-    } 
+        srt = {
+            s={2, 1, 0.5}, 
+            r={math.cos(45), 0, 0, math.sin(45)},
+        },
+    }
 }
 
 print(root[1].name)
@@ -24,9 +26,11 @@ local old = root[1]
 root[2] = { 
     name = "child2",
     transform = {
-        s={1, 3, 0.1}, 
-        r={math.cos(45), 0, 0, math.sin(45)},   -- quaternion
-        t={2, 2, 1}
+        srt = {
+            s={1, 3, 0.1}, 
+            r={math.cos(45), 0, 0, math.sin(45)},   -- quaternion
+            t={2, 2, 1}
+        }
     } 
 }
 

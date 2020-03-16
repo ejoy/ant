@@ -13,7 +13,7 @@ function util.create_directional_light_entity(world, name, color, intensity, rot
 			"ant.serialize|serialize",
 		},
 		data = {
-			transform = mu.srt(nil, rotation, nil),
+			transform = {srt={r=rotation}},
 			name = name,
 			serialize = seripkg.create(),
 			light = "",
@@ -34,7 +34,7 @@ function util.create_point_light_entity(world, name)
 			"ant.serialize|serialize",
 		},
 		data = {
-			transform = mu.srt(),
+			transform = {srt=mu.srt()},
 			name = name,
 			serialize = seripkg.create(),
 			light = "",
@@ -57,7 +57,7 @@ function util.create_spot_light_entity(world, name)
 			"ant.serialize|serialize",
 		},
 		data = {
-			transform = mu.srt(),
+			transform = {srt=mu.srt()},
 			name = name, 
 			serialize = seripkg.create(),
 			light = "",

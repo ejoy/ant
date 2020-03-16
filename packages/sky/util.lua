@@ -56,7 +56,7 @@ function util.create_procedural_sky(world, settings)
 			"ant.render|name",
 		},
 		data = {
-			transform = mu.srt(),
+			transform = {srt=mu.srt()},
 			rendermesh = {},
 			material = computil.assign_material(
 				fs.path "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",

@@ -70,7 +70,7 @@ function pbr_scene.create_scene(world)
         for col=1, num_samples do
             local roughness = col * roughness_step
             create_pbr_entity( world, "sphere",
-            mu.translate_mat {x, 0.0, z, 1.0},
+            {srt = {t = {x, 0.0, z, 1.0}}},
             sphere_meshpath,
             basecolor,
             metallic, roughness)

@@ -17,13 +17,13 @@ function camerasys:lock_target()
             if locktype == "move" then
                 local targetentity = world[lock_target.target]
                 local transform = targetentity.transform
-                camera.eyepos.v = math3d.add(transform.t, lock_target.offset)
+                camera.eyepos.v = math3d.add(transform.srt.t, lock_target.offset)
             elseif locktype == "rotate" then
                 local targetentity = world[lock_target.target]
                 local transform = targetentity.transform
 
                 local eyepos = camera.eyepos
-                local targetpos = transform.t
+                local targetpos = transform.srt.t
                 camera.viewdir.v = math3d.normalize(math3d.sub(targetpos, eyepos))
             else
                 error(string.format("not support locktype:%s", locktype))

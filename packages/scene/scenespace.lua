@@ -118,17 +118,15 @@ local function tree_sort(tree)
 end
 
 local function update_hirarchy_entity_world(trans)
-	local srt = math3d.matrix(trans)
+	local srt = trans.srt
 	local peid = trans.parent
 	if peid and world[peid] then
 		local parent = world[peid]
 		local pt = parent.transform
 
-		trans.world.m = math3d.mul(pt.world, srt)
-	else
-		trans.world.m = srt
+		trans.srt.m = math3d.mul(pt.srt, srt)
 	end
-	return trans.world
+	return trans.srt
 end
 
 local function fetch_sort_tree_result(tree, componenttype)
@@ -181,9 +179,6 @@ local function update_remove_subtree(remove_trees, cache_result)
 	for _, subtree in pairs(remove_trees) do
 		for _, subeid in ipairs(subtree) do
 			local subentity = assert(world[subeid])
-
-			local trans = subentity.transform
-			trans.world.m = trans
 			if subentity.hierarchy then
 				hierarchy_trees[subeid] = pseudoroot_eid
 			end

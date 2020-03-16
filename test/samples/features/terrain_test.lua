@@ -33,7 +33,7 @@ function terrain_test:init()
 			material = {
 				ref_path = fs.path "/pkg/ant.resources/depiction/terrain/test.material",
 			},
-			transform = mu.srt(),
+			transform = {srt = {}},
 			can_render = true,
 			terrain = {
 				tile_width = 2,

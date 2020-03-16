@@ -65,7 +65,7 @@ local function ozzmesh_animation_test()
             "ant.render|debug_mesh_bounding",
         },
         data = {
-            transform = mu.translate_mat{-5, 0, 5, 1},
+            transform = {srt = {t={-5, 0, 5, 1}}},
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material"
             },
@@ -119,7 +119,7 @@ local function gltf_animation_test()
             "ant.render|name",
         },
         data = {
-            transform = mu.translate_mat{-5, 0, 0, 1},
+            transform = {srt={t={-5, 0, 0, 1}}},
             rendermesh = {
                 submesh_refs = {
                     Beta_Joints = {
@@ -168,7 +168,7 @@ local function pbr_test()
             "ant.render|name",
         },
         data = {
-            transform = mu.translate_mat{3, 2, 0, 1},
+            transform = {srt={t={3, 2, 0, 1}}},
             rendermesh = {},
             mesh = {
                 ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
@@ -187,7 +187,7 @@ end
 local function create_plane_test()
     local planes = {
         {
-            transform = mu.scale_mat{50, 1, 50},
+            transform = {srt={s={50, 1, 50}}},
             color = {0.8, 0.8, 0.8, 1},
             material = fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
         },
@@ -246,7 +246,7 @@ local function simple_box()
             "ant.render|name",
         },
         data = {
-            transform = mu.srt(),
+            transform = {srt={}},
             rendermesh = {},
             can_render = true,
             material = {
@@ -285,14 +285,11 @@ function init_loader:init()
 
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
 
-    --computil.create_grid_entity(world, 'grid', 64, 64, 1, mu.translate_mat {0, 0, 0, 1})
-    --create_plane_test()
+    ozzmesh_animation_test()
+    pbr_test()
+    gltf_animation_test()
 
-    -- ozzmesh_animation_test()
-    -- pbr_test()
-    -- gltf_animation_test()
-
-    -- pbrscene.create_scene(world)
+    pbrscene.create_scene(world)
 end
 
 local function create_camera()

@@ -63,7 +63,7 @@ function m:init()
 	skyutil.create_procedural_sky(world)
 	cu.create_plane_entity(
 		world,
-		mu.srt{50, 1, 50, 0},
+		{srt = {s ={50, 1, 50, 0}}},
 		fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"
@@ -111,27 +111,30 @@ local target
 local move_speed = 200
 
 local function setEntityFacing(e, facing)
-	e.transform.r.q = math3d.quaternion{0, facing, 0}
+	e.transform.srt.r = math3d.quaternion{0, facing, 0}
 end
 
 local function setEntityPosition(e, postion)
-	local srt = {
-		s = e.transform.s,
-		r = e.transform.r,
+	local s, r, t = math3d.srt(e.transform.srt)
+	local srt_test = {
+		s = s,
+		r = r,
 		t = postion,
 	}
-	if collider.test(e, srt) then
+	if collider.test(e, srt_test) then
 		return
 	end
-	e.transform.t.v = postion
+	e.transform.srt.t = postion
 	return true
 end
 
 local function moveEntity(e, distance)
-	local postion = math3d.muladd(distance, math3d.todirection(e.transform.r), e.transform.t)
+	local s, r, t = math3d.srt(e.transform.srt)
+	local d = math3d.todirection(r)
+	local postion = math3d.muladd(distance, d, t)
 	if setEntityPosition(e, postion) then
 		local camera_data = camera.get(camera_id)
-		camera_data.eyepos.v = math3d.muladd(math3d.todirection(e.transform.r), distance, camera_data.eyepos)
+		camera_data.eyepos.v = math3d.muladd(d, distance, camera_data.eyepos)
 	end
 end
 
@@ -175,7 +178,7 @@ local function mainloop(delta)
 		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
-			local postion = math3d.totable(player.transform.t)
+			local postion = math3d.totable(player.transform.srt.t)
 			local facing = math.atan(x0-postion[1], z0-postion[3])
 			setEntityFacing(player, facing)
 			target = {x0, 0, z0}
@@ -195,7 +198,7 @@ local function mainloop(delta)
 		setEntityFacing(player, facing)
 		moveEntity(player, move_distance)
 	elseif mode == "mouse" then
-		local postion = math3d.totable(player.transform.t)
+		local postion = math3d.totable(player.transform.srt.t)
 		local dx = target[1] - postion[1]
 		local dy = target[3] - postion[3]
 		local dis = dx*dx+dy*dy

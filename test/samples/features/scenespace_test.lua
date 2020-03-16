@@ -69,7 +69,7 @@ local function create_scene_node_test()
             data = {
                 hierarchy = {},
                 hierarchy_visible = true,
-                transform = mu.translate_mat {0, 5, 0, 1},
+                transform = {srt=mu.translate_mat {0, 5, 0, 1}},
                 name = 'hie_root',
                 serialize = seriazlizeutil.create(),
             }
@@ -82,9 +82,9 @@ local function create_scene_node_test()
                 hierarchy_visible = true,
                 transform = {
                     parent = hie_root,
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {2, 0, 0, 1},
+                    srt = {
+                        t = {2, 0, 0, 1},
+                    },
                 },
                 name = 'hie_level1_1',
                 hierarchy = {},
@@ -100,9 +100,9 @@ local function create_scene_node_test()
                 hierarchy_visible = true,
                 transform = {
                     parent = hie_root,
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {2, 0, 4, 1},
+                    srt = {
+                        t = {2, 0, 4, 1},
+                    }
                 },
                 hierarchy = {},
                 name = 'hie_level1_2',
@@ -121,9 +121,9 @@ local function create_scene_node_test()
             hierarchy_visible = true,
             transform = {
                 parent = hie_level1_2,
-                s = {1, 1, 1, 0},
-                r = {0, 0, 0, 1},
-                t = {-2, 0, 0, 1},
+                srt = {
+                    t = {-2, 0, 0, 1},
+                }
             },
             --hierarchy = {ref_path = hie_refpath,},
             hierarchy = {},
@@ -142,10 +142,8 @@ local function create_scene_node_test()
             },
             data = {
                 transform = {
-                    parent = hie_level1_1, 
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {0, 0, 0, 1},
+                    parent = hie_level1_1,
+                    srt = {},
                 },
                 rendermesh = {},
                 mesh = {
@@ -172,9 +170,7 @@ local function create_scene_node_test()
             data = {
                 transform = {
                     parent = hie_level1_2, 
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {0, 0, 0, 1},
+                    srt = {},
                 },
                 name = 'render_child1_2',
                 rendermesh = {},
@@ -200,9 +196,9 @@ local function create_scene_node_test()
             data = {
                 transform = {
                     parent = hie_level2_1, 
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {0, 2, 0, 1},
+                    srt = {
+                        t = {0, 2, 0, 1},
+                    }
                 },
                 name = 'render_child2_1',
                 rendermesh = {},
@@ -234,7 +230,9 @@ local function create_scene_node_test()
         world:create_entity {
             policy = default_hie_policy,
             data = {
-                transform = mu.srt({2, 1, 1, 0}, nil, {3, 2, -3, 1}),
+                transform = {
+                    srt={s = {2, 1, 1, 0}, t = {3, 2, -3, 1}},
+                },
                 hierarchy = {},
                 hierarchy_visible = true,
                 serialize = seriazlizeutil.create(),
@@ -247,9 +245,7 @@ local function create_scene_node_test()
             policy = default_hie_policy,
             data = {
                 transform = {
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {0, 5, 0, 1},
+                    srt = {t = {0, 5, 0, 1},},
                     parent = hie_root2,
                 },
                 hierarchy = {},
@@ -279,10 +275,10 @@ local function create_scene_node_test()
             },
             data = {
                 transform = {
-                    parent = hie_root2, 
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {0, 2, -3, 1},
+                    parent = hie_root2,
+                    srt = {
+                        t = {0, 2, -3, 1},
+                    }
                 },
                 name = 'render2_rootchild',
                 rendermesh = {},
@@ -309,9 +305,7 @@ local function create_scene_node_test()
             data = {
                 transform = {
                     parent = hie2_level1_1,
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {0, 0, 0, 1},
+                    srt = {},
                 },
                 name = 'render2_child1',
                 rendermesh = {},
@@ -348,9 +342,7 @@ local function create_scene_node_test()
         data = {
             transform = {
                 parent = hie2_level1_1, 
-                s = {0.1, 0.1, 0.1, 0},
-                r = {0, 0, 0, 1},
-                t = {0, 0, 0, 1},
+                srt = {s = {0.1}},
             },
             name = 'submesh_child',
             rendermesh = {
@@ -511,10 +503,10 @@ end
 local function move_root_node(rootnodename)
     local eid = find_entity_by_name(rootnodename, 'hierarchy')
     local e = world[eid]
-    local t = e.transform.t
-    local oldvalue = t.id
+    local srt = e.transform.srt
+    local oldvalue = srt.t
     local newvalue = math3d.vector(10, 0, 0, 1)
-    t.v = newvalue
+    srt.t = newvalue
     world:pub {"component_changed", "transform", eid, {
         field = "t",
         oldvalue = oldvalue,
@@ -582,9 +574,7 @@ local test_queue = {
             },
             data = {
                 transform = {
-                    s = {1, 1, 1, 0},
-                    r = {0, 0, 0, 1},
-                    t = {1, 2, 3, 1},
+                    srt = {t = {1, 2, 3, 1}},
                     parent=eid,
                 },
                 rendermesh = {},

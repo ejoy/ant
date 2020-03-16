@@ -9,41 +9,11 @@ local math3d 	= require "math3d"
 ecs.component_alias("parent", 	"entityid")
 ecs.component_alias("point", 	"vector")
 ecs.component_alias("rotation", "quaternion",{0,0,0,1})
-
-do
-	local p = ecs.component_alias("position", "real[3]")
-	function p.init(v)
-		v[4] = 1
-		return math3d.ref(math3d.vector(v))
-	end
-
-	local function save(v)
-		assert(type(v) == "userdata")
-		local t = math3d.totable(v)
-		assert(t.type)
-		t.type = nil
-		return t
-	end
-
-	p.save = save
-
-	local s = ecs.component_alias("scale", 	"real[]", {1,1,1,0})
-	function s.init(v)
-		local num = #v
-		if num == 1 then
-			v[2], v[3] = v[1], v[1]
-		end
-		v[4] = 0
-		return math3d.ref(math3d.vector(v))
-	end
-	function s.delete() return {} end
-	s.save = save
-end
+ecs.component_alias("scale",	"vector")
+ecs.component_alias("position",	"vector")
 
 local trans = ecs.component "transform"
-	.s "scale"
-	.r "rotation"
-	.t "position"
+	.srt "matrix"
 	['opt'].slotname "string"
 	['opt'].parent "parent"
 
@@ -60,7 +30,6 @@ function trans:init()
 		-- end
 	end
 
-	self.world = math3d.ref(math3d.matrix(self))
 	return self
 end
 

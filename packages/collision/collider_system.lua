@@ -161,6 +161,6 @@ function collider_sys:update_collider_transform()
         local e = world[eid]
         -- TODO: world transform will not correct when this entity attach on hierarchy tree
         -- we need seprarte update transform from primitive_filter_system
-        set_obj_transform(e.collider.handle, e.transform)
+        set_obj_transform(e.collider.handle, e.transform.srt)
     end
 end

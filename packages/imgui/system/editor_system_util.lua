@@ -72,9 +72,11 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
         },
         data = {
             transform = {
-                s = size or {1, 1, 1,0},
-                r = rot or {0, 0, 0, 0},
-                t = pos or {0, 0, 0, 1},
+                srt = {
+                    s = size or {1, 1, 1,0},
+                    r = rot or {0, 0, 0, 0},
+                    t = {0, 0, 0, 1},
+                },
                 parent = parent,
             },
             rendermesh = {},
@@ -111,7 +113,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = mu.srt(),
+            transform = {srt = mu.srt()},
             rendermesh = {},
             material = util.assign_material(fs.path "/pkg/ant.resources" /"depiction" / "materials" / "gizmo_line.material"),
             name = name,
@@ -155,9 +157,11 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
         },
         data = {
             transform = {
-                s = {1, 1, 1,0},
-                r = rot or {0, 0, 0, 0},
-                t = {0, 0, 0, 1},
+                srt = {
+                    s = {1, 1, 1,0},
+                    r = rot or {0, 0, 0, 0},
+                    t = {0, 0, 0, 1},
+                },
                 parent = parent,
             },
             rendermesh = {},
@@ -203,9 +207,11 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         },
         data = {
             transform = {
-                s = size or {1, 1, 1,0},
-                r = rot or {0, 0, 0, 0},
-                t = pos or {0, 0, 0, 1},
+                srt = {
+                    s = size or {1, 1, 1,0},
+                    r = rot or {0, 0, 0, 0},
+                    t = pos or {0, 0, 0, 1},
+                },
                 parent = parent,
             },
             rendermesh = {},
@@ -236,9 +242,11 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
         },
         data = {
             transform = {
-                s = size or {1, 1, 1,0},
-                r = {0, 0, 0, 0},
-                t = pos or {0, 0, 0, 1},
+                srt = {
+                    s = size or {1},
+                    r = {0, 0, 0, 1},
+                    t = pos or {0, 0, 0, 1},
+                },
                 parent = parent,
             },
             rendermesh = {},
@@ -277,7 +285,7 @@ end
 function Util.create_gizmo(world)
     local seriazlizeutil = import_package "ant.serialize"
     local function create_gizmo_object(name,parent,ignore_scale)
-        local trans = mu.srt()
+        local trans = {srt = mu.srt()}
         trans.parent = parent
         local args = {
             policy={
