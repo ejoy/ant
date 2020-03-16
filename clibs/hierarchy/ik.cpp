@@ -46,12 +46,14 @@ void fetch_ikdata(lua_State* L, int idx, ik_data& ikdata) {
 	lua_pop(L, 1);
 
 	auto get_vec = [L](int idx, auto name, auto* result) {
-		if (LUA_TNIL != lua_getfield(L, idx, name)) {
+		if (LUA_TLIGHTUSERDATA == lua_getfield(L, idx, name)) {
 			auto p = (const float*)lua_touserdata(L, -1);
 			for (size_t ii = 0; ii < 4; ++ii) {
 				*result++ = p[ii];
 			}
 			lua_pop(L, 1);
+		} else {
+			luaL_error(L, "%s need light userdata!", name);
 		}
 	};
 
