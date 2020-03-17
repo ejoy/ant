@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
-local mathpkg = require "ant.math"
+local mathpkg = import_package "ant.math"
 local mu, mc = mathpkg.util, mathpkg.constant
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
