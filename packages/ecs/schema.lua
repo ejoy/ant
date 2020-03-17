@@ -36,7 +36,7 @@ function fields_mt:__index(name)
 	return self
 end
 
-local callback = {init=true, delete=true, save=true, postsave=true}
+local callback = {init=true, delete=true, save=true}
 
 function fields_mt:__newindex(key, func)
 	assert(type(key) == "string")

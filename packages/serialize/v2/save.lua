@@ -32,7 +32,7 @@ local function foreach_save_2(component, c)
         return
     end
     if c.method and c.method.save then
-        return c.method.save(component)
+        component = c.method.save(component)
     end
     if c.array then
         local n = c.array == 0 and #component or c.array
@@ -51,7 +51,10 @@ local function foreach_save_2(component, c)
 		end
         return ret
     end
-    return foreach_save_1(component, c.type)
+    if c.type then
+        return foreach_save_1(component, c.type)
+    end
+    return foreach_save_1(component, c.name)
 end
 
 function foreach_save_1(component, name)
@@ -81,7 +84,7 @@ function foreach_save_1(component, name)
                     if com[v.name] == nil and v.attrib and v.attrib.opt then
                         goto continue
                     end
-                    r[v.name] = foreach_save_2(com[v.name], v)
+                    r[v.name] = foreach_save_2(com[v.name], typeinfo[v.type])
                     ::continue::
                 end
             end
@@ -92,15 +95,12 @@ function foreach_save_1(component, name)
                 if component[v.name] == nil and v.attrib and v.attrib.opt then
                     goto continue
                 end
-                ret[v.name] = foreach_save_2(component[v.name], v)
+                ret[v.name] = foreach_save_2(component[v.name], typeinfo[v.type])
                 ::continue::
             end
         end
     else
         ret = foreach_save_2(component, c)
-    end
-    if c.method and c.method.postsave then
-        c.method.postsave(ret)
     end
     if c.ref then
         pool[component] = ret
