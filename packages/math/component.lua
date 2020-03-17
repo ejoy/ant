@@ -53,10 +53,7 @@ function srt:init()
     self.s = self.s or const.ONE
     self.r = self.r or const.IDENTITY_QUAT
     self.t = self.t or const.ZERO_PT
-    local r = math3d.ref(math3d.matrix(self))
-    -- s, r, t only for init
-    self.s, self.r, self.t = nil, nil, nil
-    return r
+    return math3d.ref(math3d.matrix(self))
 end
 
 function srt:save()
