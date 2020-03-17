@@ -63,8 +63,8 @@ function srt:save()
     assert(type(self) == "userdata")
     local s, r, t = math3d.srt(self)
     return {
-        s = math3d.totable(s),
-        r = math3d.totable(r),
-        t = math3d.totable(t),
+        s = s,
+        r = r,
+        t = t,
     }
 end
