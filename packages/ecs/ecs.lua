@@ -32,35 +32,18 @@ function world:create_component(c, args)
 	return res
 end
 
-function world:register_component(eid, c)
-	local set = self._set[c]
+local function register_component(w, eid, c)
+	local set = w._set[c]
 	if set then
 		set[#set+1] = eid
 	end
-	if self._class.unique[c] then
-		if self._uniques[c] then
+	if w._class.unique[c] then
+		if w._uniques[c] then
 			error "unique component already exists"
 		end
-		self._uniques[c] = eid
+		w._uniques[c] = eid
 	end
-	self:pub {"component_register", c, eid}
-end
-
-function world:add_component(eid, component_type, args)
-	local e = self[eid]
-	local ti = assert(self._class.component[component_type], component_type)
-	if not ti.type and ti.multiple then
-		local c = e[component_type]
-		if not c then
-			e[component_type] = self:create_component(component_type, args)
-			self:register_component(eid, component_type)
-		else
-			c[#c+1] = self:create_component(component_type, args)
-		end
-		return
-	end
-	e[component_type] = self:create_component(component_type, args)
-	self:register_component(eid, component_type)
+	w:pub {"component_register", c, eid}
 end
 
 function world:enable_tag(eid, c)
@@ -113,7 +96,7 @@ local function apply_policy(w, eid, component, transform, dataset)
 	local e = w[eid]
 	for _, c in ipairs(component) do
 		e[c] = w:create_component(c, dataset[c])
-		w:register_component(eid, c)
+		register_component(w, eid, c)
 	end
 	for _, f in ipairs(transform) do
 		f(e)
@@ -362,7 +345,7 @@ function m.new_world(config,world_class)
 	local e = w[eid]
 	for name, dataset in sortpairs(w._class.singleton) do
 		e[name] = w:create_component(name, dataset[1])
-		w:register_component(eid, name)
+		register_component(w, eid, name)
 	end
 
 	return w

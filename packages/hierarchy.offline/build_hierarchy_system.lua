@@ -3,7 +3,7 @@
 local ecs = ...
 local world = ecs.world
 
-local util = require "util"
+--local util = require "util"
 
 local build_system = ecs.system "build_hierarchy_system"
 local edit_hierarchy_mb = world:sub {"update_editable_hierarchy"}
