@@ -1,6 +1,7 @@
 local ecs = ...
 
 local math3d = require "math3d"
+local const = require "constant"
 
 local function save(v)
     assert(type(v) == "userdata")
@@ -36,23 +37,34 @@ end
 q.delete = del
 q.save = save
 
-local m = ecs.component "matrix"
-["opt"].s "vector"
-["opt"].r "quaternion"
-["opt"].t "vector"
-["opt"].v "real[16]"
-
+local m = ecs.component_alias("matrix", "real[16]")
 function m:init()
-    if self.v then
-        return math3d.ref(math3d.matrix(self.v))
-    end
-
-    if self.s or self.r or self.t then
-        local r = math3d.ref(math3d.matrix(self))
-        self.s, self.r, self.t = nil, nil, nil
-        return r
-    end
-    return math3d.ref(math3d.matrix())
+    return math3d.ref(math3d.matrix(self))
 end
 
 m.save = save
+
+local srt = ecs.component "srt"
+["opt"].s "vector"
+["opt"].r "quaternion"
+["opt"].t "vector"
+
+function srt:init()
+    self.s = self.s or const.ONE
+    self.r = self.r or const.IDENTITY_QUAT
+    self.t = self.t or const.ZERO_PT
+    local r = math3d.ref(math3d.matrix(self))
+    -- s, r, t only for init
+    self.s, self.r, self.t = nil, nil, nil
+    return r
+end
+
+function srt:save()
+    assert(type(self) == "userdata")
+    local s, r, t = math3d.srt(self)
+    return {
+        s = math3d.totable(s),
+        r = math3d.totable(r),
+        t = math3d.totable(t),
+    }
+end

@@ -13,7 +13,7 @@ ecs.component_alias("scale",	"vector")
 ecs.component_alias("position",	"vector")
 
 local trans = ecs.component "transform"
-	.srt "matrix"
+	.srt "srt"
 	['opt'].slotname "string"
 	['opt'].parent "parent"
 

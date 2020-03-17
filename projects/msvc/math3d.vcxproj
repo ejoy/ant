@@ -183,10 +183,9 @@
     <ClCompile Include="..\..\clibs\math3d\mathbaselib.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\math3d\fastmath.h" />
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />
     <ClInclude Include="..\..\clibs\math3d\math3d.h" />
-    <ClInclude Include="..\..\clibs\math3d\refstack.h" />
+    <ClInclude Include="..\..\clibs\math3d\math3dfunc.h" />
     <ClInclude Include="..\..\clibs\math3d\util.h" />
   </ItemGroup>
   <ItemGroup>

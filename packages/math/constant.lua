@@ -25,6 +25,9 @@ constant.GRAY   = {0.8, 0.8, 0.8, 1}
 constant.T_ZERO   = {0, 0, 0, 0}
 constant.T_ZERO_PT= {0, 0, 0, 1}
 
+constant.T_ONE    = {1, 1, 1, 0}
+constant.T_ONE_PT = {1, 1, 1, 1}
+
 constant.T_XAXIS = {1, 0, 0, 0}
 constant.T_NXAXIS = {-1, 0, 0, 0}
 
@@ -38,6 +41,9 @@ constant.W_AXIS = {0, 0, 0, 1}
 
 constant.ZERO    = math3d.ref(math3d.vector(constant.T_ZERO))
 constant.ZERO_PT = math3d.ref(math3d.vector(constant.T_ZERO_PT))
+
+constant.ONE    = math3d.ref(math3d.vector(constant.T_ONE))
+constant.ONE_PT = math3d.ref(math3d.vector(constant.T_ONE_PT))
 
 constant.XAXIS   = math3d.ref(math3d.vector(constant.T_XAXIS))
 constant.NXAXIS  = math3d.ref(math3d.vector(constant.T_NXAXIS))

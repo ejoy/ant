@@ -31,19 +31,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\clibs\math3d\refstack.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\clibs\math3d\linalg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\math3d\fastmath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\math3d\math3d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\math3d\util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\math3d\math3dfunc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
