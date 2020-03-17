@@ -53,18 +53,15 @@ function srt:init()
     self.s = self.s or const.ONE
     self.r = self.r or const.IDENTITY_QUAT
     self.t = self.t or const.ZERO_PT
-    local r = math3d.ref(math3d.matrix(self))
-    -- s, r, t only for init
-    self.s, self.r, self.t = nil, nil, nil
-    return r
+    return math3d.ref(math3d.matrix(self))
 end
 
 function srt:save()
     assert(type(self) == "userdata")
     local s, r, t = math3d.srt(self)
     return {
-        s = math3d.totable(s),
-        r = math3d.totable(r),
-        t = math3d.totable(t),
+        s = s,
+        r = r,
+        t = t,
     }
 end
