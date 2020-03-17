@@ -103,33 +103,90 @@ local function get_material_refs(meshname, submesh_refs)
 	end
 end
 
-local function get_scale_mat(worldmat, scenescale)
+local function get_scene_scale_mat(meshscene)
+	local scenescale = meshscene.scenescale
 	if scenescale and scenescale ~= 1 then
-		return math3d.mul(worldmat, math3d.matrix{s=scenescale})
+		local scalemat = meshscene.scalemat
+		if scalemat == nil then
+			scalemat = math3d.matrix{s=scenescale}
+			meshscene.scalemat = math3d.ref(scalemat)
+		end
+		return scalemat
 	end
-	return worldmat
 end
 
-local function filter_element(eid, rendermesh, worldmat, materialcomp, filter)
-	local meshscene = assetmgr.get_resource(assert(rendermesh.reskey))
+local function get_mesh_local_trans(meshnode, scalemat)
+	local meshtrans = meshnode.transform
+	if meshtrans then
+		local localtrans = meshnode.localtrans
+		if localtrans == nil then
+			localtrans = scalemat and math3d.mul(scalemat, meshtrans) or meshtrans
+			meshnode.localtrans = math3d.ref(localtrans)
+		end
+
+		return localtrans
+	end
+end
+
+local function transform_bounding_aabb(entitytrans, localtrans, aabb)
+	if aabb then
+		local worldtrans = math3d.mul(entitytrans, localtrans)
+		return math3d.aabb_transform(worldtrans, aabb)
+	end
+end
+
+local function add_result(eid, group, materialinfo, properties, worldmat, aabb, result)
+	local idx = result.cacheidx
+	local r = result[idx]
+	if r == nil then
+		r = {
+			mgroup 		= group,
+			material 	= assert(materialinfo),
+			properties 	= properties,
+			worldmat 	= worldmat,
+			aabb		= aabb,
+			eid 		= eid,
+		}
+		result[idx] = r
+	else
+		r.mgroup 	= group
+		r.material 	= assert(materialinfo)
+		r.properties= properties
+		r.worldmat 	= worldmat
+		r.bounding	= aabb
+		r.eid 		= eid
+	end
+	result.cacheidx = idx + 1
+	return r
+end
+
+local function insert_primitive(eid, group, material, worldmat, bounding, filter)
+	local refkey = material.ref_path
+	local mi = assert(assetmgr.get_resource(refkey))
+	local resulttarget = assert(filter.result[mi.fx.surface_type.transparency])
+	add_result(eid, group, mi, material.properties, worldmat, bounding, resulttarget)
+end
+
+local function filter_element(eid, rendermesh, etrans, materialcomp, filter)
+	local meshscene = assetmgr.get_resource(rendermesh.reskey)
 
 	local sceneidx = computil.scene_index(rendermesh.lodidx, meshscene)
+	local scalemat = get_scene_scale_mat(meshscene)
 
 	local scenes = meshscene.scenes[sceneidx]
 	local submesh_refs = rendermesh.submesh_refs
 	for _, meshnode in ipairs(scenes) do
 		local name = meshnode.meshname
 		if is_visible(name, submesh_refs) then
-			local trans = get_scale_mat(worldmat, meshscene.scenescale)
-			if meshnode.transform then
-				trans = math3d.mul(trans, meshnode.transform)
-			end
-
+			local localtrans = get_mesh_local_trans(meshnode, scalemat)
 			local material_refs = get_material_refs(name, submesh_refs)
 
 			for groupidx, group in ipairs(meshnode) do
 				local material = get_material(group, groupidx, materialcomp, material_refs)
-				ru.insert_primitive(eid, group, material, trans, filter)
+				--TODO: we will cache world transform and bounding transform
+				local worldtrans = localtrans and math3d.mul(etrans, localtrans) or etrans
+				local aabb = transform_bounding_aabb(etrans, localtrans, group.bounding and group.bounding.aabb or nil)
+				insert_primitive(eid, group, material, worldtrans, aabb, filter)
 			end
 		end
 	end

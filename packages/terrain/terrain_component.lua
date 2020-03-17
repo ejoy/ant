@@ -7,7 +7,7 @@ local assetmgr	= assetpkg.mgr
 local renderpkg = import_package 'ant.render'
 local declmgr 	= renderpkg.declmgr
 
-local mathbaselib=require "math3d.baselib"
+local math3d = require "math3d"
 
 local fs 		= require "filesystem"
 local bgfx 		= require "bgfx"
@@ -56,15 +56,18 @@ function t:init()
 
 		self.num_element = self.num_section * self.element_size * self.element_size
 		local tlen = tile_length(self)
-		self.bounding = mathbaselib.new_bounding()
+
 		local gridwidth, gridheight = self.tile_width * tlen, self.tile_height * tlen
 		local hf_width, hf_height = gridwidth+1, gridheight+1
 		local heightfield = {hf_width, hf_height}
+
+		--TODO: need init aabb with heightfield data
+		self.bounding = {aabb = math3d.ref(math3d.aabb({-hf_width, 0, -hf_height}, {hf_width, 0, hf_height}))}
 		heightfield[3] = terrain_module.alloc_heightfield(hf_width, hf_height)
 		self.grid_unit = self.grid_unit or 1
 
 		self.heightfield = heightfield
-		self.terrain_vertices, self.terrain_indices, self.terrain_normaldata = terrain_module.create(gridwidth, gridheight, self.grid_unit, self.bounding, heightfield)
+		self.terrain_vertices, self.terrain_indices, self.terrain_normaldata = terrain_module.create(gridwidth, gridheight, self.grid_unit, heightfield)
 	end
 	return self
 end

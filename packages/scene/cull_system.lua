@@ -18,16 +18,16 @@ function cull_sys:cull()
 
 			local camera = world[e.camera_eid].camera
 			local vp = mu.view_proj(camera)
-			local frustum = mathbaselib.new_frustum(vp)
+			-- local frustum = mathbaselib.new_frustum(vp)
 			
-			local results = filter.result
-			for _, resulttarget in pairs(results) do
-				local num = resulttarget.cacheidx - 1
-				if num > 0 then
-					local visible_set = frustum:intersect_list(resulttarget, num)
-					resulttarget.visible_set = visible_set
-				end
-			end
+			-- local results = filter.result
+			-- for _, resulttarget in pairs(results) do
+			-- 	local num = resulttarget.cacheidx - 1
+			-- 	if num > 0 then
+			-- 		local visible_set = frustum:intersect_list(resulttarget, num)
+			-- 		resulttarget.visible_set = visible_set
+			-- 	end
+			-- end
 		end
 	end
 end

@@ -162,12 +162,13 @@ function icamera_moition.focus_obj(cameraeid, eid)
 
 	local entity = world[eid]
 	local bounding = cu.entity_bounding(entity)
-	if bounding then
-        local sphere = bounding:get "sphere"
-        local center = math3d.vector(sphere[1], sphere[2], sphere[3], 1)
-        local radius = sphere[4]
+    if bounding then
+        local aabb = bounding.aabb
+        local center, extents = math3d.aabb_center_extents(aabb)
+        local radius = math3d.length(extents) * 0.5
 		camera.viewdir.v = math3d.normalize(math3d.sub(center, camera.eyepos))
         camera.eyepos.v = math3d.sub(center, math3d.mul(camera.viewdir, radius * 3.5))
-		return true
+    else
+        icamera_moition.focus_point(cameraeid, entity.transform.srt.t)
 	end
 end

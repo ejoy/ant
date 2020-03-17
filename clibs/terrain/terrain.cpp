@@ -47,19 +47,17 @@ lterrain_create(lua_State* L){
 
 	const float grid_unit = (float)lua_tonumber(L, 3);
 
-	Bounding *bounding = (Bounding*)luaL_checkudata(L, 4, "BOUNDING_MT");
-	
-	if (lua_isnoneornil(L, 5)){
+	if (lua_isnoneornil(L, 4)){
 		return luaL_error(L, "heightfield data must provided");
 	}
 
-	const heightfield_data hfdata = fetch_heightfield(L, 5);
+	const heightfield_data hfdata = fetch_heightfield(L, 4);
 
 	const uint32_t vertex_width = grid_width 	+ 1;
 	const uint32_t vertex_height = grid_height 	+ 1;  
 
-	const float offsetX = lua_isnoneornil(L, 6) ? grid_width * -0.5f : (float)lua_tonumber(L, 6);
-	const float offsetZ = lua_isnoneornil(L, 7) ? grid_height * -0.5f : (float)lua_tonumber(L, 7);
+	const float offsetX = lua_isnoneornil(L, 6) ? grid_width * -0.5f : (float)lua_tonumber(L, 5);
+	const float offsetZ = lua_isnoneornil(L, 7) ? grid_height * -0.5f : (float)lua_tonumber(L, 6);
 
 	const uint32_t buffersize = vertex_width * vertex_height * sizeof(glm::vec3);
 	auto positions = (glm::vec3*)lua_newuserdatauv(L, buffersize, 0);
@@ -79,13 +77,9 @@ lterrain_create(lua_State* L){
 
 			auto p = glm::vec3(x, y, z);
 			positions[ip] = p;
-			bounding->aabb.Append(p);
 		}
 	}
-
-	bounding->sphere.Init(bounding->aabb);
-	bounding->obb.Init(bounding->aabb);
-
+	
 	auto calc_normal = [positions](uint32_t idx0, uint32_t idx1, uint32_t idx2){
 			const auto& p0 = positions[idx0], 
 						p1 = positions[idx1], 

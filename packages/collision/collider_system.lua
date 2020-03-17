@@ -98,6 +98,10 @@ function tcb.process(e)
 	shape.handle = w:new_shape("heightfield", hf_width, hf_height, shape.min_height, shape.max_height, hf_data, shape.height_scaling, scaling)
 
 	w:add_shape(terraincollider.handle, shape.handle, 0, shape.origin)
+	local aabbmin, aabbmax = w:get_aabb(terraincollider.handle)
+	terraincomp.bounding = {
+		aabb = math3d.aabb(aabbmin, aabbmax)
+	}
 end
 
 local collcomp = ecs.component "collider"

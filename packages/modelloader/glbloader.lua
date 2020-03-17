@@ -152,7 +152,9 @@ local function create_prim_bounding(meshscene, prim)
 	if posacc.min then
 		assert(#posacc.min == 3)
 		assert(#posacc.max == 3)
-		local bounding = mathbaselib.new_bounding(assert(posacc.min), assert(posacc.max))
+		local bounding = {
+			aabb = math3d.ref(math3d.aabb(assert(posacc.min), assert(posacc.max))),
+		}
 		prim.bounding = bounding
 		return bounding
 	end
@@ -216,7 +218,7 @@ local function init_scene(gltfscene, bindata, config)
 					inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
 				}
 				local mesh = gltfscene.meshes[meshidx+1]
-				local meshbounding = mathbaselib.new_bounding()
+				local meshaabb = math3d.ref(math3d.aabb())
 
 				meshnode.meshname = mesh.name
 
@@ -266,14 +268,14 @@ local function init_scene(gltfscene, bindata, config)
 					local bb = create_prim_bounding(gltfscene, prim)
 					if bb then
 						group.bounding = bb
-						meshbounding:merge(bb)
+						math3d.aabb_merge(meshaabb, bb.aabb)
 					end
 
 					meshnode[#meshnode+1] = group
 				end
 
-				if meshbounding:isvalid() then
-					meshnode.bounding = meshbounding
+				if math3d.aabb_isvalid(meshaabb) then
+					meshnode.bounding = {aabb=meshaabb}
 				end
 
 				scenegroups[#scenegroups+1] = meshnode

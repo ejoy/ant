@@ -187,7 +187,9 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
 	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
 	local selectscene = meshscene.scenes[meshscene.sceneidx]
-	selectscene[1].bounding = mathbaselib.new_bounding(ms, {-0.5, 0, -0.5}, {0.5, 0, 0.5})
+	selectscene[1].bounding = {
+		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
+	}
 	return eid
 end
 
@@ -267,35 +269,24 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
     return quadid
 end
 
-local function check_add_bounding(b, trans, transformed_boundings)
-	if b then
-		local tb = mathbaselib.new_bounding()
-		tb:reset(b, trans)
-		transformed_boundings[#transformed_boundings+1] = tb
-	end
-end
-
-function util.calc_transform_boundings(world, transformed_boundings)
-	for _, eid in world:each "can_render" do
-		local e = world[eid]
-
-		if e.debug_mesh_bounding then
-			local rm = e.rendermesh
-			local meshscene = assetmgr.get_resource(rm.reskey)
-
-			local worldmat = math3d.matrix(e.transform)
-
-			local selectscene = meshscene.scenes[meshscene.sceneidx]
-
-			for _, mn in ipairs(selectscene) do
-				local trans = worldmat
-				if mn.transform then
-					trans = math3d.mul(trans, mn.transform)
+function util.get_mainqueue_transform_boundings(world, transformed_boundings)
+	local mq = world:singleton_entity "main_queue"
+	local filter = mq.primitive_filter
+	for _, fname in ipairs{"opaticy", "translucent"} do
+		local result = filter.result[fname]
+		if result.cacheidx then
+			local num = result.cacheidx - 1
+			local visibleset = result.visible_set
+			if visibleset then
+				for i=1, #visibleset do
+					local idx = visibleset[i]
+					local prim = result[idx]
+					transformed_boundings[#transformed_boundings+1] = prim.aabb
 				end
-
-				check_add_bounding(mn.bounding, trans, transformed_boundings)
-				for _, g in ipairs(mn) do
-					check_add_bounding(g.bounding, trans, transformed_boundings)
+			else
+				for i=1, num do
+					local prim = result[i]
+					transformed_boundings[#transformed_boundings+1] = prim.aabb
 				end
 			end
 		end
@@ -495,30 +486,23 @@ end
 function util.entity_bounding(entity)
 	if util.is_entity_visible(entity) then
 		local rm = entity.rendermesh
-		local meshscene = rm.handle
+		local meshscene = assetmgr.get_resource(rm.reskey)
 		local sceneidx = util.scene_index(rm.lodidx, meshscene)
-
-		local worldmat = math3d.matrix(entity.transform)
-
+		local etrans = entity.transform.srt
 		local scene = meshscene.scenes[sceneidx]
-		local entitybounding = mathbaselib.new_bounding()
+		local aabb = math3d.aabb()
 		for _, mn in ipairs(scene)	do
-			local trans = worldmat
-			if mn.transform then
-				trans = math3d.mul(trans, mn.transform)
-			end
-
+			local localtrans = mn.localtrans
 			for _, g in ipairs(mn) do
 				local b = g.bounding
 				if b then
-					local tb = mathbaselib.new_bounding()
-					tb:reset(b, trans)
-					entitybounding:merge(tb)
+					aabb = math3d.aabb_transform(localtrans, math3d.aabb_merge(aabb, b.aabb))
 				end
 			end
 		end
-		
-		return entitybounding:isvalid() and entitybounding or nil
+
+		aabb = math3d.aabb_transform(etrans, aabb)
+		return math3d.aabb_isvalid(aabb) and aabb or nil
 	end
 end
 

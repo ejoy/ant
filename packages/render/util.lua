@@ -4,6 +4,7 @@ local assetmgr = assetpkg.mgr
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local mu = mathpkg.util
+local math3d = require "math3d"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -106,51 +107,6 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 		bgfx.set_vertex_buffer(idx-1, handle, start_v, num_v)
 	end
 	bgfx.submit(vid, prog, 0, false)
-end
-
-local function add_tranformed_bounding(r, worldmat, bounding)
-	if bounding then
-		local tb = r.tb	-- transformed bounding
-		if tb == nil then
-			tb = mathbaselib.new_bounding()
-			r.tb = tb
-		end
-		tb:reset(bounding, worldmat)
-	else
-		r.tb = nil
-	end
-end
-
-local function add_result(eid, group, materialinfo, properties, worldmat, result)
-	local idx = result.cacheidx
-	local r = result[idx]
-	if r == nil then
-		r = {
-			mgroup 		= group,
-			material 	= assert(materialinfo),
-			properties 	= properties,
-			worldmat 	= worldmat,
-			eid 		= eid,
-		}
-		result[idx] = r
-	else
-		r.mgroup 	= group
-		r.material 	= assert(materialinfo)
-		r.properties= properties
-		r.worldmat 	= worldmat
-		r.eid 		= eid
-	end
-
-	add_tranformed_bounding(r, worldmat, group.bounding)
-	result.cacheidx = idx + 1
-	return r
-end
-
-function util.insert_primitive(eid, group, material, worldmat, filter)
-	local refkey = material.ref_path
-	local mi = assert(assetmgr.get_resource(refkey))
-	local resulttarget = assert(filter.result[mi.fx.surface_type.transparency])
-	add_result(eid, group, mi, material.properties, worldmat, resulttarget)
 end
 
 function util.create_main_queue(world, view_rect)

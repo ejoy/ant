@@ -204,8 +204,9 @@ rmb.require_system "widget_drawer"
 
 function rmb:widget()
 	local transformed_boundings = {}
-	computil.calc_transform_boundings(world, transformed_boundings)
+	computil.get_mainqueue_transform_boundings(world, transformed_boundings)
 	for _, tb in ipairs(transformed_boundings) do
-		iwd.draw_aabb_box(tb:get "aabb")
+		-- local aabbmin, aabbmax = math3d.aabb_get(tb)
+		-- iwd.draw_aabb_box(tb:get "aabb")
 	end
 end

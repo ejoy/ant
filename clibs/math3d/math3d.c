@@ -1246,6 +1246,112 @@ ldir2radian(lua_State *L){
 	return 2;
 }
 
+static inline void
+init_aabb(float *aabb, const float *oriaabb){
+	if (oriaabb){
+		memcpy(aabb, oriaabb, sizeof(float) * 8);	// matrix col0 and col1 is min and max value
+	} else {
+		memset(aabb, 0, sizeof(float) * 16);
+		for (int ii = 0; ii < 3; ++ii){
+			aabb[ii] = FLT_MAX;
+			aabb[ii+4] = -FLT_MAX;
+		}
+	}
+}
+
+static inline int
+push_aabb(lua_State *L, struct lastack *LS, const float *aabb){
+	lastack_pushmatrix(LS, aabb);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static inline int
+generate_aabb(lua_State *L, struct lastack *LS, const float *oriaabb){
+	const int num = lua_gettop(L);
+	float aabb[16];
+	init_aabb(aabb, oriaabb);
+
+	for (int ii = 0; ii < num; ++ii){
+		const float *v = vector_from_index(L, LS, ii+1);
+		math3d_aabb_append(LS, v, aabb);
+	}
+
+	return push_aabb(L, LS, aabb);
+}
+
+static int
+laabb(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	generate_aabb(L, LS, NULL);
+	return 1;
+}
+
+static int
+laabb_isvalid(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	lua_pushboolean(L, math3d_aabb_isvalid(LS, matrix_from_index(L, LS, 1)));
+	return 1;
+}
+
+static int
+laabb_append(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *aabb = matrix_from_index(L, LS, 1);
+	lua_settop(L, 2);
+	generate_aabb(L, LS, aabb);
+	return 1;
+}
+
+static int
+laabb_merge(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *lhsaabb = matrix_from_index(L, LS, 1);
+	const float *rhsaabb = matrix_from_index(L, LS, 1);
+	float aabb[16];
+	math3d_aabb_merge(LS, lhsaabb, rhsaabb, aabb);
+
+	return push_aabb(L, LS, aabb);
+}
+
+static int
+laabb_transform(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *trans = matrix_from_index(L, LS, 1);
+	const float *aabb = matrix_from_index(L, LS, 2);
+
+	float newaabb[16];
+	math3d_aabb_transform(LS, trans, aabb, newaabb);
+
+	return push_aabb(L, LS, newaabb);
+}
+
+static int
+laabb_center_extents(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *aabb = matrix_from_index(L, LS, 1);
+	float center[4], extents[4];
+	math3d_aabb_center_extents(LS, aabb, center, extents);
+
+	lastack_pushvec4(LS, center);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	lastack_pushvec4(LS, extents);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 2;
+}
+
+static int
+laabb_get(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *aabb = matrix_from_index(L, LS, 1);
+
+	lastack_pushvec4(LS, aabb);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	lastack_pushvec4(LS, aabb + 4);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 2;
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
@@ -1292,6 +1398,17 @@ luaopen_math3d(lua_State *L) {
 		{ "stacksize", lstacksize},
 		{ "homogeneous_depth", lhomogeneous_depth },
 		{ "pack", lpack },
+
+		//aabb
+		{ "aabb", laabb},
+		{ "aabb_isvalid", laabb_isvalid},
+		{ "aabb_append", laabb_append},
+		{ "aabb_merge", laabb_merge},
+		{ "aabb_transform", laabb_merge},
+		{ "aabb_center_extents", laabb_center_extents},
+		{ "aabb_get", laabb_get},
+
+		//frustum
 		{ NULL, NULL },
 	};
 

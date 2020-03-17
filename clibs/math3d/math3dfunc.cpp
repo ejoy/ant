@@ -410,3 +410,81 @@ math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]){
 		radians[1] = is_zero(v[0]) ? 0.f : std::atan2(v[0], v[2]);
 	}
 }
+
+//aabb
+#define AABB_MIN(_V) *((glm::vec4 *)(_V))
+#define AABB_MAX(_V) *((glm::vec4 *)(_V) + 1)
+
+#define CAABB_MIN(_V) *((const glm::vec4 *)(_V))
+#define CAABB_MAX(_V) *((const glm::vec4 *)(_V) + 1)
+
+void 
+math3d_aabb_append(struct lastack *LS, const float v[4], float *aabb){
+	auto &minv = AABB_MIN(aabb);
+	auto &maxv = AABB_MAX(aabb);
+
+	minv = glm::min(minv, VEC(v));
+	maxv = glm::max(maxv, VEC(v));
+}
+
+void 
+math3d_aabb_merge(struct lastack *LS, const float *lhsaabb, const float *rhsaabb, float *raabb){
+	auto &rmin = AABB_MIN(raabb);
+	auto &rmax = AABB_MAX(raabb);
+
+	rmin = glm::min(CAABB_MIN(lhsaabb), CAABB_MIN(rhsaabb));
+	rmax = glm::max(CAABB_MAX(lhsaabb), CAABB_MAX(rhsaabb));
+}
+
+int 
+math3d_aabb_isvalid(struct lastack *LS, const float *aabb){
+	const auto& minv = CAABB_MIN(aabb);
+	const auto& maxv = CAABB_MAX(aabb);
+
+	return (minv.x < maxv.x && minv.y < maxv.y && minv.z < maxv.z) ? 1 : 0;
+}
+
+void 
+math3d_aabb_transform(struct lastack *LS, const float *trans, const float *aabb, float *raabb){
+	const auto& t = MAT(trans);
+
+	const auto& minv = CAABB_MIN(aabb);
+	const auto& maxv = CAABB_MAX(aabb);
+
+	const glm::vec4 &right	= t[0];
+	const glm::vec4 &up 	= t[1];
+	const glm::vec4 &forward= t[2];
+	const glm::vec4 &pos 	= t[3];
+
+	const glm::vec4 xa = right * minv.x;
+	const glm::vec4 xb = right * maxv.x;
+
+	const glm::vec4 ya = up * minv.y;
+	const glm::vec4 yb = up * maxv.y;
+
+	const glm::vec4 za = forward * minv.z;
+	const glm::vec4 zb = forward * maxv.z;
+
+	auto &rmin = AABB_MIN(raabb);
+	auto &rmax = AABB_MAX(raabb);
+
+	rmin = glm::min(xa, xb) + glm::min(ya, yb) + glm::min(za, zb) + pos;
+	rmax = glm::max(xa, xb) + glm::max(ya, yb) + glm::max(za, zb) + pos;
+}
+
+void
+math3d_aabb_center_extents(struct lastack *LS, const float *aabb, float center[4], float extents[4]){
+	const auto & minv = AABB_MIN(aabb);
+	const auto & maxv = AABB_MIN(aabb);
+
+	*(glm::vec4*)center = (maxv+minv)*0.5f;
+	*(glm::vec4*)extents = (maxv-minv)*0.5f;
+}
+
+float
+math3d_aabb_diagonal_length(struct lastack *LS, const float *aabb){
+	const auto & minv = AABB_MIN(aabb);
+	const auto & maxv = AABB_MIN(aabb);
+
+	return glm::length(VEC3(&maxv.x) - VEC3(&minv.x));
+}
