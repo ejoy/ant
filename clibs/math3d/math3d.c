@@ -1413,9 +1413,10 @@ lfrustum_intersect_aabb_list(lua_State *L){
 
 	const int numaabb = luaL_checkinteger(L, 3);
 
-	lua_createtable(L, numaabb, 0);
-	const int result_stackidx = 3;
-	int result_idx = 1;
+	const int result_stackidx = 4;
+	luaL_checktype(L, result_stackidx, LUA_TTABLE);
+	
+	int result_idx = 0;
 	for (int ii = 0; ii < numaabb; ++ii){
 		lua_geti(L, 2, ii+1);{
 			lua_getfield(L, -1, "aabb");{
@@ -1423,7 +1424,7 @@ lfrustum_intersect_aabb_list(lua_State *L){
 				const int r = math3d_frustum_intersect_aabb(LS, planes, aabb);
 				if (r < 0){
 					lua_pushvalue(L, -1);
-					lua_seti(L, result_stackidx, result_idx++);
+					lua_seti(L, result_stackidx, ++result_idx);
 				}
 			}
 			lua_pop(L, 1);
@@ -1431,7 +1432,9 @@ lfrustum_intersect_aabb_list(lua_State *L){
 		lua_pop(L, 1);
 	}
 
-	return 1;
+	lua_pushinteger(L, result_idx);
+	lua_setfield(L, result_stackidx, "n");
+	return 0;
 }
 
 static int

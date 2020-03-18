@@ -23,8 +23,13 @@ function cull_sys:cull()
 			for _, resulttarget in pairs(results) do
 				local num = resulttarget.cacheidx - 1
 				if num > 0 then
-					local visible_set = math3d.frustum_intersect_aabb_list(frustum_planes, resulttarget, num)
-					resulttarget.visible_set = visible_set
+					local vs = resulttarget.visible_set
+					if vs == nil then
+						vs = {}
+						resulttarget.visible_set = vs
+					end
+
+					math3d.frustum_intersect_aabb_list(frustum_planes, resulttarget, num, resulttarget.visible_set)
 				end
 			end
 		end
