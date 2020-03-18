@@ -67,7 +67,7 @@ local function stringify_basetype(name, v)
     elseif name == "tag" then
         return v and 'true' or 'nil'
     elseif name == 'entityid' then
-        error('`entityid` is not supported.')
+        return v
     end
     error('unknown base type:'..name)
 end
