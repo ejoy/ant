@@ -1351,18 +1351,6 @@ laabb_center_extents(lua_State *L){
 	return 2;
 }
 
-static int
-laabb_get(lua_State *L){
-	struct lastack *LS = GETLS(L);
-	const float *aabb = matrix_from_index(L, LS, 1);
-
-	lastack_pushvec4(LS, aabb);
-	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
-	lastack_pushvec4(LS, aabb + 4);
-	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
-	return 2;
-}
-
 //frustum
 static int
 lfrustum_planes(lua_State *L){
@@ -1564,7 +1552,6 @@ luaopen_math3d(lua_State *L) {
 		{ "aabb_merge", laabb_merge},
 		{ "aabb_transform", laabb_merge},
 		{ "aabb_center_extents", laabb_center_extents},
-		{ "aabb_get", laabb_get},
 
 		//frustum
 		{ "frustum_planes", 		lfrustum_planes},
