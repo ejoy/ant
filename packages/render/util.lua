@@ -105,7 +105,7 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 		local handle = v.handle
 		bgfx.set_vertex_buffer(idx-1, handle, start_v, num_v)
 	end
-	bgfx.submit(vid, prog, 0, false)
+	bgfx.submit(vid, prog, 0)
 end
 
 function util.create_main_queue(world, view_rect)
