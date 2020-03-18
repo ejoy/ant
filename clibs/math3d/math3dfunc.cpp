@@ -449,7 +449,7 @@ math3d_aabb_isvalid(struct lastack *LS, const float *aabb){
 }
 
 void 
-math3d_aabb_transform(struct lastack *LS, const float trans[16], const float aabb[6], float raabb[6]){
+math3d_aabb_transform(struct lastack *LS, const float trans[16], const float aabb[16], float raabb[16]){
 	const auto& t = MAT(trans);
 
 	const auto& minv = CAABB_MIN(aabb);
