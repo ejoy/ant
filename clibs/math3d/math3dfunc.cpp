@@ -488,3 +488,204 @@ math3d_aabb_diagonal_length(struct lastack *LS, const float *aabb){
 
 	return glm::length(VEC3(&maxv.x) - VEC3(&minv.x));
 }
+
+// plane [left, right, bottom, top, near, far]
+enum PlaneName{
+	PN_left = 0,
+	PN_right,
+	PN_bottom,
+	PN_top,
+	PN_near,
+	PN_far,
+};
+
+void
+math3d_frustum_planes(struct lastack *LS, const float m[16], float planes[6][4]){
+	const auto &mat = MAT(m);
+	const auto& c0 = mat[0], &c1 = mat[1], & c2 = mat[2], & c3 = mat[3];
+
+	auto& leftplane = planes[PN_left];
+	leftplane[0] = c0[0] + c0[3];
+	leftplane[1] = c1[0] + c1[3];
+	leftplane[2] = c2[0] + c2[3];
+	leftplane[3] = c3[0] + c3[3];
+
+	auto& rightplane = planes[PN_right];
+	rightplane[0] = c0[3] - c0[0];
+	rightplane[1] = c1[3] - c1[0];
+	rightplane[2] = c2[3] - c2[0];
+	rightplane[3] = c3[3] - c3[0];
+
+	auto& bottomplane = planes[PN_bottom];
+	bottomplane[0] = c0[3] + c0[1];
+	bottomplane[1] = c1[3] + c1[1];
+	bottomplane[2] = c2[3] + c2[1];
+	bottomplane[3] = c3[3] + c3[1];
+
+	auto& topplane = planes[PN_top];
+	topplane[0] = c0[3] - c0[1];
+	topplane[1] = c1[3] - c1[1];
+	topplane[2] = c2[3] - c2[1];
+	topplane[3] = c3[3] - c3[1];
+
+	auto& nearplane = planes[PN_near];
+	if (math3d_homogeneous_depth()) {
+		nearplane[0] = c0[3] + c0[2];
+		nearplane[1] = c1[3] + c1[2];
+		nearplane[2] = c2[3] + c2[2];
+		nearplane[3] = c3[3] + c3[2];
+	} else {
+		nearplane[0] = c0[2];
+		nearplane[1] = c1[2];
+		nearplane[2] = c2[2];
+		nearplane[3] = c3[2];
+	}
+
+	auto& farplane = planes[PN_far];
+	farplane[0] = c0[3] - c0[2];
+	farplane[1] = c1[3] - c1[2];
+	farplane[2] = c2[3] - c2[2];
+	farplane[3] = c3[3] - c3[2];
+
+	// normalize
+	for (int ii = 0; ii < 6; ++ii){
+		auto& p = *((glm::vec4*)planes[ii]);
+		auto len = glm::length(VEC3(planes[ii]));
+		if (glm::abs(len) >= glm::epsilon<float>())
+			p /= len;
+	}
+}
+
+static const glm::vec4 ndc_points_ZO[8] = {
+	glm::vec4(-1.f,-1.f, 0.f, 1.f),
+	glm::vec4(-1.f, 1.f, 0.f, 1.f),
+	glm::vec4( 1.f,-1.f, 0.f, 1.f),
+	glm::vec4( 1.f, 1.f, 0.f, 1.f),
+
+	glm::vec4(-1.f,-1.f, 1.f, 1.f),
+	glm::vec4(-1.f,1.f,  1.f, 1.f),
+	glm::vec4(1.f, -1.f, 1.f, 1.f),
+	glm::vec4(1.f, 1.f,  1.f, 1.f),
+};
+
+static const glm::vec4 ndc_points_NO[8] = {
+	glm::vec4(-1.f,-1.f, -1.f, 1.f),
+	glm::vec4(-1.f, 1.f, -1.f, 1.f),
+	glm::vec4( 1.f, -1.f,-1.f, 1.f),
+	glm::vec4( 1.f,  1.f,-1.f, 1.f),
+
+	glm::vec4(-1.f,-1.f, 1.f, 1.f),
+	glm::vec4(-1.f, 1.f, 1.f, 1.f),
+	glm::vec4( 1.f,-1.f, 1.f, 1.f),
+	glm::vec4( 1.f, 1.f, 1.f, 1.f),
+};
+
+void 
+math3d_frustum_points(struct lastack *LS, const float m[16], float points[8][4]){
+	auto invmat = glm::inverse(MAT(m));
+	const auto &pp = math3d_homogeneous_depth() ? ndc_points_NO : ndc_points_ZO;
+	for (int ii = 0; ii < 8; ++ii){
+		auto &p = *((glm::vec4*)points[ii]);
+		p = invmat * pp[ii];
+		p /= p.w;
+	}
+}
+
+
+static inline int
+plane_intersect(const glm::vec4 &plane, const float* aabb) {
+	const auto& min = CAABB_MIN(aabb);
+	const auto& max = CAABB_MAX(aabb);
+	float minD, maxD;	
+	if (plane.x > 0.0f){
+		minD = plane.x * min.x;
+		maxD = plane.x * max.x;
+	} else {
+		minD = plane.x * max.x;
+		maxD = plane.x * min.x;
+	}
+
+	if (plane.y > 0.0f){
+		minD += plane.y * min.y;
+		maxD += plane.y * max.y;
+	} else {
+		minD += plane.y * max.y;
+		maxD += plane.y * min.y;
+	}
+
+	if (plane.z > 0.0f){
+		minD += plane.z * min.z;
+		maxD += plane.z * max.z;
+	} else {
+		minD += plane.z * max.z;
+		maxD += plane.z * min.z;
+	}
+
+	// in front of the plane
+	if (minD > -plane.w){
+		return 1;
+	}
+
+	// in back of the plane
+	if (maxD < -plane.w){
+		return -1;
+	}
+
+	// straddle of the plane
+	return 0;
+}
+
+// frustum
+int 
+math3d_frustum_intersect_aabb(struct lastack *LS, const float* planes[6], const float *aabb){
+	for (int ii = 0; ii < 6; ++ii){
+		const int r = plane_intersect(VEC(planes[ii]), aabb);
+		if (r >= 0){
+			return r;
+		}
+	}
+	return -1;
+}
+
+void
+math3d_frusutm_aabb(struct lastack *LS, const float* points[8], float *aabb){
+	auto& minv = AABB_MIN(aabb);
+	auto& maxv = AABB_MAX(aabb);
+	
+	minv = glm::vec4(std::numeric_limits<float>::max()), 
+	maxv = glm::vec4(std::numeric_limits<float>::lowest());
+
+	for (int ii = 0; ii < 8; ++ii){
+		const auto &p = VEC(points[ii]);
+		minv = glm::min(minv, p);
+		maxv = glm::max(maxv, p);
+	}
+}
+
+void
+math3d_frustum_center(struct lastack *LS, const float *points[8], float *center){
+	auto &c = *(glm::vec4*)center;
+	c = glm::vec4(0, 0, 0, 1);
+	for (int ii = 0; ii < 8; ++ii){
+		c += VEC(points[ii]);
+	}
+
+	c /= 8.f;
+	c.w = 1.f;
+}
+
+float
+math3d_frustum_max_radius(struct lastack *LS, const float *points[8], const float center[4]){
+	float maxradius = 0;
+	const auto &c = VEC(center);
+	for (int ii = 0; ii < 8; ++ii){
+		const auto &p = VEC(points[ii]);
+		maxradius = glm::max(glm::length(p - c), maxradius);
+	}
+
+	return maxradius;
+}
+
+void math3d_frustum_calc_near_far(struct lastack *LS, const float *planes[6], float nearfar[2]){
+
+}

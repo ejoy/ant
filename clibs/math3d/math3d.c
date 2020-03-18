@@ -1352,6 +1352,153 @@ laabb_get(lua_State *L){
 	return 2;
 }
 
+//frustum
+static int
+lfrustum_planes(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *m = matrix_from_index(L, LS, 1);
+	float planes[6][4];
+	math3d_frustum_planes(LS, m, planes);
+
+	lua_createtable(L, 6, 0);
+	for (int ii = 0; ii < 6; ++ii){
+		lastack_pushvec4(LS, planes[ii]);
+		lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+		lua_seti(L, -2, ii+1);
+	}
+
+	return 1;
+}
+
+static inline void
+fetch_vectors_from_table(lua_State *L, struct lastack *LS, int index, int checknum, const float** vectors){
+	const int num = lua_rawget(L, index);
+	if (num != checknum){
+		luaL_error(L, "table need contain %d planes:%d", checknum, num);
+	}
+	for (int ii = 0; ii < num; ++ii){
+		lua_geti(L, index, ii+1);
+		vectors[ii] = vector_from_index(L, LS, ii+1);
+		lua_pop(L, 1);
+	}
+}
+
+static inline void
+fetch_frustum_planes(lua_State *L, struct lastack *LS, int index, const float* planes[6]){
+	fetch_vectors_from_table(L, LS, index, 6, planes);
+}
+
+static inline void
+fetch_frustum_points(lua_State *L, struct lastack *LS, int index, const float *points[8]){
+	fetch_vectors_from_table(L, LS, index, 8, points);
+}
+
+static int
+lfrustum_intersect_aabb(lua_State *L){
+	struct lastack *LS = GETLS(L);
+
+	const float* planes[6];
+	fetch_frustum_planes(L, LS, 1, planes);
+
+	const float* aabb = matrix_from_index(L, LS, 2);
+	lua_pushinteger(L, math3d_frustum_intersect_aabb(LS, planes, aabb));
+	return 1;
+}
+
+static int
+lfrustum_intersect_aabb_list(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float* planes[6];
+	fetch_frustum_planes(L, LS, 1, planes);
+
+	const int numaabb = lua_rawlen(L, 2);
+
+	lua_createtable(L, numaabb, 0);
+	const int result_stackidx = 3;
+	int result_idx = 1;
+	for (int ii = 0; ii < numaabb; ++ii){
+		lua_geti(L, 2, ii+1);{
+			lua_getfield(L, -1, "aabb");{
+				const float *aabb = matrix_from_index(L, LS, -1);
+				const int r = math3d_frustum_intersect_aabb(LS, planes, aabb);
+				if (r < 0){
+					lua_pushvalue(L, -1);
+					lua_seti(L, result_stackidx, result_idx++);
+				}
+			}
+			lua_pop(L, 1);
+		}
+		lua_pop(L, 1);
+	}
+
+	return 1;
+}
+
+static int
+lfrustum_points(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *m = matrix_from_index(L, LS, 1);
+
+	lua_createtable(L, 8, 0);
+	float points[8][4];
+	math3d_frustum_points(LS, m, points);
+	for (int ii = 0; ii < 8; ++ii){
+		lastack_pushvec4(LS, points[ii]);
+		lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+		lua_seti(L, -2, ii+1);
+	}
+	return 1;
+}
+
+static int
+lfrustum_aabb(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *points[8];
+	fetch_frustum_points(L, LS, 1, points);
+
+	float aabb[16];
+	math3d_frusutm_aabb(LS, points, aabb);
+
+	return push_aabb(L, LS, aabb);
+}
+
+static int
+lfrustum_center(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *points[8];
+	fetch_frustum_points(L, LS, 1, points);
+	float center[4];
+	math3d_frustum_center(LS, points, center);
+
+	lastack_pushvec4(LS, center);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static int
+lfrustum_max_radius(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *points[8];
+	fetch_frustum_points(L, LS, 1, points);
+
+	const float *center = vector_from_index(L, LS, 2);
+	lua_pushnumber(L, math3d_frustum_max_radius(LS, points, center));
+	return 1;
+}
+
+static int
+lfrustum_calc_near_far(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float* planes[6];
+	fetch_frustum_planes(L, LS, 1, planes);
+
+	float nearfar[2];
+	math3d_frustum_calc_near_far(LS, planes, nearfar);
+	lua_pushnumber(L, nearfar[0]);
+	lua_pushnumber(L, nearfar[1]);
+	return 2;
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
@@ -1409,6 +1556,14 @@ luaopen_math3d(lua_State *L) {
 		{ "aabb_get", laabb_get},
 
 		//frustum
+		{ "frustum_planes", 		lfrustum_planes},
+		{ "frustum_intersect_aabb", lfrustum_intersect_aabb},
+		{ "frustum_intersect_aabb_list", lfrustum_intersect_aabb_list},
+		{ "frustum_points", 		lfrustum_points},
+		{ "frustum_aabb",			lfrustum_aabb},
+		{ "frustum_center",			lfrustum_center},
+		{ "frustum_max_radius",		lfrustum_max_radius},
+		{ "frustum_calc_near_far",  lfrustum_calc_near_far},
 		{ NULL, NULL },
 	};
 

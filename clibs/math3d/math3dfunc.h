@@ -5,6 +5,8 @@
 
 #define LINEAR_TYPE_NUM LINEAR_TYPE_COUNT
 
+int math3d_homogeneous_depth();
+
 // math functions
 
 void math3d_make_srt(struct lastack *LS, const float *s, const float *r, const float *t);
@@ -50,4 +52,12 @@ void math3d_aabb_transform(struct lastack *LS, const float *trans, const float *
 void math3d_aabb_center_extents(struct lastack *LS, const float *aabb, float center[4], float extents[4]);
 float math3d_aabb_diagonal_length(struct lastack *LS, const float *aabb);
 
+//frustum
+void math3d_frustum_planes(struct lastack *LS, const float m[16], float planes[6][4]);
+void math3d_frustum_points(struct lastack *LS, const float m[16], float points[8][4]);
+int math3d_frustum_intersect_aabb(struct lastack *LS, const float* planes[6], const float *aabb);
+void math3d_frusutm_aabb(struct lastack *LS, const float* points[8], float *aabb);
+void math3d_frustum_center(struct lastack *LS, const float *points[8], float *center);
+float math3d_frustum_max_radius(struct lastack *LS, const float *points[8], const float center[4]);
+void math3d_frustum_calc_near_far(struct lastack *LS, const float *planes[6], float nearfar[2]);
 #endif
