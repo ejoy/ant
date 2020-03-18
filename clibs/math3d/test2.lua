@@ -168,3 +168,26 @@ print(math3d.tostring(m), math3d.tostring(v), math3d.tostring(q))
 local v1,v2 =retvec()
 print(math3d.tostring(v1), math3d.tostring(v2))
 
+print "===AABBCACHE==="
+local aabbcache = require "math3d.aabbcache"
+local c = aabbcache.new()
+local worldmat = math3d.ref(math3d.matrix())
+local srt = math3d.ref(math3d.matrix { t = {1,2,3} })
+local aabb = math3d.ref(math3d.matrix {
+	0,0,0,0,
+	10,10,10,0,
+	0,0,0,0,
+	0,0,0,0, })
+
+local result = c:lookup(worldmat, math3d.matrix { t = { 4,5,6 }} , aabb)	-- temp id
+print(math3d.tostring(result))
+local result = c:lookup(worldmat, srt, aabb)
+print(math3d.tostring(result))
+local result = c:lookup(worldmat, nil, aabb)
+print(math3d.tostring(result))
+print(c:reset())
+local result = c:lookup(worldmat, srt, aabb)
+print(math3d.tostring(result))
+local result = c:lookup(worldmat, nil, aabb)
+print(math3d.tostring(result))
+print(c:reset())

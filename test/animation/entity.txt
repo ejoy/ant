@@ -50,6 +50,7 @@ skeleton:
 skinning: {}
 animation_birth: idle
 transform:
-  s: {1,1,1,0}
-  r: {0,0.92388,0,0.382683}
-  t: {0,0,0,1}
+  srt:
+    s: {1,1,1,0}
+    r: {0,0.92388,0,0.382683}
+    t: {0,0,0,1}

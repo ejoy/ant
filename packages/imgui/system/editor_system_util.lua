@@ -59,6 +59,7 @@ local function circle(color)
 end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
+    parent = parent and world[parent].seriazlize or nil
     local computil  = import_package "ant.render".components
     color[4] = 0.6
     return world:create_entity {
@@ -99,6 +100,7 @@ end
 
 
 local function create_line_entity(world, name, start_pos,end_pos,color,parent,dir)
+    parent = parent and world[parent].seriazlize or nil
     local util  = import_package "ant.render".components
     -- local geopkg = import_package "ant.geometry"
     -- local geolib = geopkg.geometry
@@ -144,6 +146,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
 end
 
 local function create_circle_entity(world, name,color,rot,parent,dir)
+    parent = parent and world[parent].seriazlize or nil
     local util  = import_package "ant.render".components
 
     local gridid = world:create_entity {
@@ -195,6 +198,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
 end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
+    parent = parent and world[parent].seriazlize or nil
     local computil  = import_package "ant.render".components
     return world:create_entity {
         policy = {
@@ -230,6 +234,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
 end
 
 local function create_box_entity(world, color, size, pos, name,parent,dir)
+    parent = parent and world[parent].seriazlize or nil
     local computil  = import_package "ant.render".components
     return world:create_entity {
         policy = {
@@ -286,7 +291,7 @@ function Util.create_gizmo(world)
     local seriazlizeutil = import_package "ant.serialize"
     local function create_gizmo_object(name,parent,ignore_scale)
         local trans = {srt = mu.srt()}
-        trans.parent = parent
+        trans.parent = parent and world[parent].seriazlize or nil
         local args = {
             policy={
                 "ant.render|name",

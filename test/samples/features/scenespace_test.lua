@@ -81,7 +81,7 @@ local function create_scene_node_test()
             data = {
                 hierarchy_visible = true,
                 transform = {
-                    parent = hie_root,
+                    parent = world[hie_root].serialize,
                     srt = {
                         t = {2, 0, 0, 1},
                     },
@@ -99,7 +99,7 @@ local function create_scene_node_test()
             data = {
                 hierarchy_visible = true,
                 transform = {
-                    parent = hie_root,
+                    parent = world[hie_root].serialize,
                     srt = {
                         t = {2, 0, 4, 1},
                     }
@@ -120,7 +120,7 @@ local function create_scene_node_test()
         data = {
             hierarchy_visible = true,
             transform = {
-                parent = hie_level1_2,
+                parent = world[hie_level1_2].serialize,
                 srt = {
                     t = {-2, 0, 0, 1},
                 }
@@ -142,7 +142,7 @@ local function create_scene_node_test()
             },
             data = {
                 transform = {
-                    parent = hie_level1_1,
+                    parent = world[hie_level1_1].serialize,
                     srt = {},
                 },
                 rendermesh = {},
@@ -169,7 +169,7 @@ local function create_scene_node_test()
             },
             data = {
                 transform = {
-                    parent = hie_level1_2, 
+                    parent = world[hie_level1_2].serialize, 
                     srt = {},
                 },
                 name = 'render_child1_2',
@@ -195,7 +195,7 @@ local function create_scene_node_test()
             },
             data = {
                 transform = {
-                    parent = hie_level2_1, 
+                    parent = world[hie_level2_1].serialize, 
                     srt = {
                         t = {0, 2, 0, 1},
                     }
@@ -246,7 +246,7 @@ local function create_scene_node_test()
             data = {
                 transform = {
                     srt = {t = {0, 5, 0, 1},},
-                    parent = hie_root2,
+                    parent = world[hie_root2].serialize,
                 },
                 hierarchy = {},
                 hierarchy_visible = true,
@@ -275,7 +275,7 @@ local function create_scene_node_test()
             },
             data = {
                 transform = {
-                    parent = hie_root2,
+                    parent = world[hie_root2].serialize,
                     srt = {
                         t = {0, 2, -3, 1},
                     }
@@ -304,7 +304,7 @@ local function create_scene_node_test()
             },
             data = {
                 transform = {
-                    parent = hie2_level1_1,
+                    parent = world[hie2_level1_1].serialize,
                     srt = {},
                 },
                 name = 'render2_child1',
@@ -341,7 +341,7 @@ local function create_scene_node_test()
         },
         data = {
             transform = {
-                parent = hie2_level1_1, 
+                parent = world[hie2_level1_1].serialize, 
                 srt = {s = {0.1}},
             },
             name = 'submesh_child',

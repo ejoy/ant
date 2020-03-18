@@ -14,6 +14,5 @@ end
 return {
     create = create,
     serialize_entity = serialize_entity,
-    save_entity = save_entity,
     watch = watch,
 }

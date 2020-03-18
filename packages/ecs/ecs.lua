@@ -11,23 +11,23 @@ local component_delete = component.delete
 local world = {}
 world.__index = world
 
-function world:create_component(c, args)
-	local ti = assert(self._class.component[c], c)
+local function create_component(w, c, args, disableSerialize)
+	local ti = assert(w._class.component[c], c)
 	if ti.type == 'tag' then
 		assert(args == true or args == nil)
 		return args
 	end
 	if not ti.type and ti.multiple then
-		local res = component_init(self, ti, args)
+		local res = component_init(w, ti, args, disableSerialize)
 		assert(res ~= nil)
 		for i = 1, #args do
-			local r = component_init(self, ti, args[i])
+			local r = component_init(w, ti, args[i], disableSerialize)
 			assert(r ~= nil)
 			res[i] = r
 		end
 		return res
 	end
-	local res = component_init(self, ti, args)
+	local res = component_init(w, ti, args, disableSerialize)
 	assert(res ~= nil)
 	return res
 end
@@ -86,16 +86,11 @@ local function sortcomponent(w, t)
     end
 end
 
-function world:register_entity()
-	local eid = self._entity_id + 1
-	self._entity_id = eid
-	return eid
-end
-
 local function apply_policy(w, eid, component, transform, dataset)
 	local e = w[eid]
+	local disableSerialize = dataset.serialize == nil
 	for _, c in ipairs(component) do
-		e[c] = w:create_component(c, dataset[c])
+		e[c] = create_component(w, c, dataset[c], disableSerialize)
 		register_component(w, eid, c)
 	end
 	for _, f in ipairs(transform) do
@@ -109,29 +104,56 @@ function world:add_policy(eid, t)
 	apply_policy(self, eid, component, transform, dataset)
 end
 
-function world:set_entity(eid, policies, dataset)
-	dataset = dataset or {}
-	if not dataset["serialize"] then
-		local seripkg = import_package 'ant.serialize'
-		dataset["serialize"] = seripkg.create()
+function world:register_entity(policies, dataset)
+	local eid = self._entity_id + 1
+	self._entity_id = eid
+	if dataset.serialize then
+		self._uuids[dataset.serialize] = eid
 	end
-
-	local component, transform = policy.create(self, policies)
 	self[eid] = {}
 	self._entity[eid] = true
+	self._policies[eid] = policies
+	self._dataset[eid] = dataset
+	return eid
+end
+
+function world:init_entity(eid)
+	local policies, dataset = self._policies[eid], self._dataset[eid]
+	local component, transform = policy.create(self, policies)
 	apply_policy(self, eid, component, transform, dataset)
+	self._dataset[eid] = nil
 	self:pub {"entity_created", eid}
 end
 
-function world:create_entity(t)
-	local eid = self:register_entity()
+local function registerEntityEx(w, t)
 	if type(t) == 'string' then
 		local d = datalist.parse(t)
-		self:set_entity(eid, d[1], d[2])
-	else
-		self:set_entity(eid, t.policy, t.data)
+		return w:register_entity(d[1], d[2])
 	end
+	return w:register_entity(t.policy, t.data)
+end
+
+function world:create_entity(t)
+	local eid = registerEntityEx(self, t)
+	self:init_entity(eid)
 	return eid
+end
+
+function world:create_entities(l)
+	local entities = {}
+	for _, t in ipairs(l) do
+		entities[#entities+1] = registerEntityEx(self, t)
+	end
+	for _, eid in ipairs(entities) do
+		self:init_entity(eid)
+	end
+end
+
+function world:reset_entity(eid, dataset)
+	local removed = self._removed
+	removed[#removed+1] = assert(self[eid])
+	self._dataset[eid] = dataset
+	self:init_entity(eid)
 end
 
 function world:remove_entity(eid)
@@ -143,6 +165,17 @@ function world:remove_entity(eid)
 	removed[#removed+1] = e
 
 	self:pub {"entity_removed", eid, e,}
+end
+
+function world:find_entity(uuid)
+	local eid = self._uuids[uuid]
+	if not eid then
+		return
+	end
+	if self[eid] then
+		return eid
+	end
+	self._uuids[uuid] = nil
 end
 
 local function component_next(set, index)
@@ -327,6 +360,9 @@ function m.new_world(config,world_class)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
+		_uuids = {},
+		_policies = {},
+		_dataset = {},
 	}, world_class or world)
 
 	--init event
@@ -344,7 +380,7 @@ function m.new_world(config,world_class)
 	local eid = w:create_entity {policy = {}, data = {}}
 	local e = w[eid]
 	for name, dataset in sortpairs(w._class.singleton) do
-		e[name] = w:create_component(name, dataset[1])
+		e[name] = create_component(w, name, dataset[1], true)
 		register_component(w, eid, name)
 	end
 

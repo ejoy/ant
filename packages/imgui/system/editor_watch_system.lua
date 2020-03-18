@@ -118,11 +118,7 @@ local function get_entity_policies(eids)
 end
 
 local function entity2tbl(w, eid)
-    local res = {}
-    for _, v in ipairs(serialize.save_entity(w, eid)) do
-        res[v[1]] = v[2]
-    end
-    return res
+    return serialize.watch.query(w, eid, "")
 end
 
 local last_eid = nil
@@ -375,11 +371,11 @@ end
 local function on_component_modified(eid,seid,com_id,key,value)
     log.trace_a("on_component_modified",seid,com_id,key,value)
     if not com_id then
-        local com = serialize.watch.set(world,nil,seid,key,value)
+        local com = serialize.watch.set(world,eid,"transform/srt/s/1",1)
         if com then
             world:pub {"component_changed", com, eid, {}}
         end
-        log.trace_a("after_component_modified:",serialize.watch.query(world,nil,seid))
+        log.trace_a("after_component_modified:",serialize.watch.query(world,eid,"transform/srt/s/1"))
     else
         local com = serialize.watch.set(world,com_id,"",key,value)
         if com then

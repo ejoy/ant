@@ -19,6 +19,14 @@ local function sortpairs(t)
     end
 end
 
+local MapMetatable <const> = {__name = 'serialize.map'}
+local function markMap(t)
+    if next(t) == nil then
+        return setmetatable(t, MapMetatable)
+    end
+    return t
+end
+
 local foreach_save_1
 
 local function foreach_save_2(component, c)
@@ -43,12 +51,13 @@ local function foreach_save_2(component, c)
         return ret
     end
     if c.map then
-		local ret = {}
+        local ret = {}
         for k, v in pairs(component) do
             if type(k) == "string" then
                 ret[k] = foreach_save_1(v, c.type)
             end
-		end
+        end
+        markMap(ret)
         return ret
     end
     if c.type then
@@ -79,7 +88,6 @@ function foreach_save_1(component, name)
             for i, com in world:each_component(component) do
                 local r = {}
                 ret[i] = r
-                com.__type = name
                 for _, v in ipairs(c) do
                     if com[v.name] == nil and v.attrib and v.attrib.opt then
                         goto continue
@@ -87,10 +95,10 @@ function foreach_save_1(component, name)
                     r[v.name] = foreach_save_2(com[v.name], typeinfo[v.type])
                     ::continue::
                 end
+                markMap(r)
             end
         else
             ret = {}
-            component.__type = name
             for _, v in ipairs(c) do
                 if component[v.name] == nil and v.attrib and v.attrib.opt then
                     goto continue
@@ -98,6 +106,7 @@ function foreach_save_1(component, name)
                 ret[v.name] = foreach_save_2(component[v.name], typeinfo[v.type])
                 ::continue::
             end
+            markMap(ret)
         end
     else
         ret = foreach_save_2(component, c)
@@ -112,22 +121,15 @@ local function save_entity(w, eid)
     world = w
     pool = {}
     typeinfo = w._class.component
-    local e = assert(w[eid])
+    local e = assert(w[eid], 'invalid eid')
     local t = {}
     for name, cv in sortpairs(e) do
-        t[#t+1] = { name, foreach_save_1(cv, name) }
+        t[name] = foreach_save_1(cv, name)
     end
+    markMap(t)
     return t
-end
-
-local function save_component(w, component, name)
-    world = w
-    pool = {}
-    typeinfo = w._class.component
-    return foreach_save_1(component, name)
 end
 
 return {
     entity = save_entity,
-    component = save_component,
 }

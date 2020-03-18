@@ -1,118 +1,89 @@
-local save = require "v2.save"
+local saveEntity = require "v2.save".entity
 
 local m = {}
 
-m.split = "/"
-
-local typeinfo
-
 local function split(s)
     local r = {}
-    s:gsub('[^/]*', function (w) r[#r+1] = w end)
+    s:gsub('[^/]*', function (w)
+        r[#r+1] = w:gsub("~1", "/"):gsub("~0", "~")
+    end)
     return r
 end
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
+local function isArray(t)
+    local first_value = next(t)
+    if first_value == nil then
+        local mt = getmetatable(t)
+        if mt and mt.__name == 'serialize.map' then
+            return false
         end
-        n = n + 1
-        return k, t[k]
+        return true
     end
+    if type(first_value) == "number" then
+        return true
+    end
+    return false
 end
 
-local function path2component(o, name, sp)
-    if #sp == 0 then
-        return o, name
+local function isValidEntity(e)
+    return type(e) == "table" and not isArray(e)
+end
+
+local function queryValue(data, pathlst, n)
+    if type(data) ~= "table" then
+        return
     end
-    local k = sp[1]
-    table.remove(sp, 1)
-    if k == '' then
-        return path2component(o, name, sp)
+    local k = pathlst[n]
+    if isArray(data) then
+        if k == "-" then
+            k = #data + 1
+        else
+            k = tonumber(k)
+        end
     end
-    local ti = typeinfo[name]
-    if ti.array then
+    if n == #pathlst then
+        return data[k]
+    end
+    return queryValue(data[k], pathlst, n + 1)
+end
+
+function m.query(w, eid, path)
+    local e = saveEntity(w, eid)
+    if path == '' then
+        return e
+    end
+    return queryValue(e, split(path), 1)
+end
+
+local function setValue(data, pathlst, value, n)
+    if type(data) ~= "table" then
+        return false
+    end
+    local k = pathlst[n]
+    if isArray(data) then
         k = tonumber(k)
-        return path2component(o[k], ti.type, sp)
     end
-    if not ti.type then
-        for _, v in ipairs(ti) do
-            if v.name == k then
-                return path2component(o[k], v.type, sp)
-            end
-        end
+    if n == #pathlst then
+        data[k] = value
+        return true
     end
-    return path2component(o[k], ti.type, sp)
+    return setValue(data[k], pathlst, value, n + 1)
 end
 
-local function path2entity(o, sp)
-    if #sp == 0 then
-        return o, 'entity'
-    end
-    local k = sp[1]
-    table.remove(sp, 1)
-    return path2component(o[k], k, sp)
-end
-
-local function getobject(w, id, path)
-    path = tostring(path)
-    typeinfo = w._class.component
-    local sp = split(path)
-    if id then
-        local ids = w.__deserialize
-        if not ids or not ids[id] then
-            error('invalid id')
+function m.set(w, eid, path, value)
+    local e = saveEntity(w, eid)
+    if path == '' then
+        if not isValidEntity(value) then
+            return false
         end
-        local t = ids[id]
-        return path2component(t, t.__type, sp)
+        w:reset_entity(eid, value)
+        return true
     end
-    local eid = tonumber(sp[1])
-    if not eid or not w[eid] then
-        error('invalid eid')
+    if not setValue(e, split(path), value, 1) then
+        return false
     end
-    table.remove(sp, 1)
-    return path2entity(w[eid], sp)
-end
-
-function m.query(w, id, path)
-    local component, name = getobject(w, id, path)
-    if name == 'entity' then
-        local t = {}
-        for name, cv in sortpairs(component) do
-            t[name] = save.component(w, cv, name)
-        end
-        return t
-    end
-    return save.component(w, component, name)
-end
-
-function m.set(w, id, path, key, value)
-    local component, name = getobject(w, id, path)
-    if name == 'entity' then
-        assert(key ~= nil)
-        component[key] = w:create_component(key, value)
-        return key
-    else
-        local c = typeinfo[name]
-        assert(not c.type)
-        for _, v in ipairs(c) do
-            if v.name == key then
-                component[key] = w:create_component(v.type, value)
-                -- w:pub {"component_changed", name, }
-                return name
-            end
-        end
-        error('invalid key')
-    end
-    
+    w:reset_entity(eid, e)
+    return true
 end
 
 return m
