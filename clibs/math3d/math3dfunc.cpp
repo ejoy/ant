@@ -382,6 +382,11 @@ math3d_lerp(struct lastack *LS, const float v0[4], const float v1[4], float rati
 	*(glm::vec4*)r = glm::lerp(VEC(v0), VEC(v1), ratio);
 }
 
+void 
+math3d_quat_to_euler(struct lastack *LS, const float q[4], float euler[4]){
+	*(glm::vec3*)euler = glm::eulerAngles(QUAT(q));
+}
+
 void
 math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]){
 	const float PI = float(M_PI);

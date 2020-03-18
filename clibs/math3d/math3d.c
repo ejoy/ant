@@ -1230,6 +1230,18 @@ lpack(lua_State *L) {
 	return 1;
 }
 
+static int
+lquat2euler(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *q = quat_from_index(L, LS, 1);
+	float euler[4];
+	math3d_quat_to_euler(LS, q, euler);
+
+	lastack_pushvec4(LS, euler);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
 // input: view direction vector
 // output: 
 //		output radianX and radianY which can used to create quaternion that around x-axis and y-axis, 
@@ -1539,6 +1551,7 @@ luaopen_math3d(lua_State *L) {
 		{ "projmat", lprojmat },
 		{ "minmax", lminmax},
 		{ "lerp", llerp},
+		{ "quat2euler", lquat2euler},
 		{ "dir2radian", ldir2radian},
 		{ "stacksize", lstacksize},
 		{ "homogeneous_depth", lhomogeneous_depth },

@@ -4,6 +4,7 @@ hw.__index = hw
 local platform = require "platform"
 local bgfx     = require "bgfx"
 local setting  = require "setting"
+local math3d   = require "math3d"
 
 local caps = nil
 function hw.get_caps()
@@ -58,6 +59,7 @@ local function bgfx_init(args)
 	bgfx.init(args)
 	assert(caps == nil)
 	caps = bgfx.get_caps()
+	math3d.homogeneous_depth(caps.homogeneousDepth)
 end
 
 function hw.init(args)
