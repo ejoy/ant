@@ -112,22 +112,14 @@ local function save_entity(w, eid)
     world = w
     pool = {}
     typeinfo = w._class.component
-    local e = assert(w[eid])
+    local e = assert(w[eid], 'invalid eid')
     local t = {}
     for name, cv in sortpairs(e) do
-        t[#t+1] = { name, foreach_save_1(cv, name) }
+        t[name] = foreach_save_1(cv, name)
     end
     return t
 end
 
-local function save_component(w, component, name)
-    world = w
-    pool = {}
-    typeinfo = w._class.component
-    return foreach_save_1(component, name)
-end
-
 return {
     entity = save_entity,
-    component = save_component,
 }

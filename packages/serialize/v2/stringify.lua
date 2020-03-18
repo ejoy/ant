@@ -182,7 +182,7 @@ function stringify_component(name, typename, value, n)
     end
 end
 
-local function stringify_entity(w, policies, data)
+local function stringify_entity(w, policies, dataset)
     typeinfo = w._class.component
     out = {}
     out[#out+1] = '---------'
@@ -190,8 +190,8 @@ local function stringify_entity(w, policies, data)
         out[#out+1] = p
     end
     out[#out+1] = '---------'
-    for _, c in ipairs(data) do
-        stringify_component(c[1]..':', c[1], c[2], 0)
+    for name, cv in pairs_sortk(dataset) do
+        stringify_component(name..':', name, cv, 0)
     end
     out[#out+1] = ''
     return table.concat(out, '\n')

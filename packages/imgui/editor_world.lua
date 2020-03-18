@@ -4,22 +4,13 @@ local function gen_editor_world(base_world)
     local serialize = import_package 'ant.serialize'
 
     local editor_world = {}
-    function editor_world:set_entity(eid, policies, dataset)
-        local h = false
-        for _,p in ipairs(policies) do
-            if p == "ant.serialize|serialize" then
-                h = true
-                break
-            end
-        end
-        if not h then
-            table.insert(policies,"ant.serialize|serialize")
-        end
-        base_world.set_entity(self,eid, policies, dataset)
+    function editor_world:register_entity(policies, dataset)
+        local eid = base_world.register_entity(self, policies, dataset)
         if self[eid] then
             self.entity_policies = self.entity_policies or {}
             self.entity_policies[eid] = policies
         end
+        return eid
     end
 
     -- create new serialize_id,otherwise,serialize_id may conflict with origin entity

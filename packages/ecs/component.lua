@@ -15,6 +15,8 @@ local function sortpairs(t)
     end
 end
 
+local w
+local disableSerialize
 local path
 local typeinfo
 local foreach_init_1
@@ -29,6 +31,15 @@ local function foreach_init_2(c, args)
     if c.type == 'primtype' then
         assert(args ~= nil)
         return args
+    end
+    if c.type == 'entityid' then
+        if disableSerialize then
+            assert(type(args) == "number")
+            return args
+        else
+            assert(type(args) == "string")
+            return w:find_entity(args) or args
+        end
     end
     local ti = typeinfo[c.type]
     assert(ti, "unknown type:" .. c.type)
@@ -84,7 +95,9 @@ function foreach_init_1(c, args)
     return ret
 end
 
-local function init(w, c, args)
+local function init(w_, c, args, disableSerialize_)
+    w = w_
+    disableSerialize = disableSerialize_
     typeinfo = w._class.component
     path = {}
     local _ <close> = pushpath(c.name)
@@ -133,7 +146,8 @@ function foreach_delete_1(c, component, e)
     foreach_delete_2(c, component)
 end
 
-local function delete(w, c, component, e)
+local function delete(w_, c, component, e)
+    w = w_
     typeinfo = w._class.component
     return foreach_delete_1(c, component, e)
 end

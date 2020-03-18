@@ -12,107 +12,115 @@ local function split(s)
     return r
 end
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
+local function query_value(data, pathlst, ctype)
+    if #pathlst == 0 then
+        return data
     end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
+    if type(data) ~= "table" then
+        return
     end
-end
-
-local function path2component(o, name, sp)
-    if #sp == 0 then
-        return o, name
-    end
-    local k = sp[1]
-    table.remove(sp, 1)
+    local k = pathlst[1]
+    table.remove(pathlst, 1)
     if k == '' then
-        return path2component(o, name, sp)
+        return query_value(data, pathlst, ctype)
     end
-    local ti = typeinfo[name]
-    if ti.array then
-        k = tonumber(k)
-        return path2component(o[k], ti.type, sp)
+    local ti = typeinfo[ctype]
+    if ti.array or ti.map then
+        if ti.array then
+            k = tonumber(k)
+        end
+        return query_value(data[k], pathlst, ti.type)
     end
     if not ti.type then
         for _, v in ipairs(ti) do
             if v.name == k then
-                return path2component(o[k], v.type, sp)
+                return query_value(data[k], pathlst, v.type)
             end
         end
+        return
     end
-    return path2component(o[k], ti.type, sp)
+    return query_value(data[k], pathlst, ti.type)
 end
 
-local function path2entity(o, sp)
-    if #sp == 0 then
-        return o, 'entity'
-    end
-    local k = sp[1]
-    table.remove(sp, 1)
-    return path2component(o[k], k, sp)
-end
-
-local function getobject(w, id, path)
-    path = tostring(path)
+local function query(w, data, path)
+    local pathlst = split(path)
+    assert(#pathlst > 0)
+    local k = pathlst[1]
+    table.remove(pathlst, 1)
     typeinfo = w._class.component
-    local sp = split(path)
-    if id then
-        local ids = w.__deserialize
-        if not ids or not ids[id] then
-            error('invalid id')
-        end
-        local t = ids[id]
-        return path2component(t, t.__type, sp)
-    end
-    local eid = tonumber(sp[1])
-    if not eid or not w[eid] then
-        error('invalid eid')
-    end
-    table.remove(sp, 1)
-    return path2entity(w[eid], sp)
+    return query_value(data[k], pathlst, k)
 end
 
-function m.query(w, id, path)
-    local component, name = getobject(w, id, path)
-    if name == 'entity' then
-        local t = {}
-        for name, cv in sortpairs(component) do
-            t[name] = save.component(w, cv, name)
-        end
-        return t
+local function set_value(data, pathlst, ctype, value)
+    if type(data) ~= "table" then
+        return false
     end
-    return save.component(w, component, name)
-end
-
-function m.set(w, id, path, key, value)
-    local component, name = getobject(w, id, path)
-    if name == 'entity' then
-        assert(key ~= nil)
-        component[key] = w:create_component(key, value)
-        return key
-    else
-        local c = typeinfo[name]
-        assert(not c.type)
-        for _, v in ipairs(c) do
-            if v.name == key then
-                component[key] = w:create_component(v.type, value)
-                -- w:pub {"component_changed", name, }
-                return name
+    local k = pathlst[1]
+    table.remove(pathlst, 1)
+    if k == '' then
+        if #pathlst == 0 then
+            return false
+        end
+        return set_value(data, pathlst, value)
+    end
+    local ti = typeinfo[ctype]
+    if ti.array or ti.map then
+        if ti.array then
+            k = tonumber(k)
+        end
+        if #pathlst == 0 then
+            data[k] = value
+            return true
+        end
+        return set_value(data[k], pathlst, ti.type, value)
+    end
+    if not ti.type then
+        for _, v in ipairs(ti) do
+            if v.name == k then
+                if #pathlst == 0 then
+                    data[k] = value
+                    return true
+                end
+                return set_value(data[k], pathlst, v.type, value)
             end
         end
-        error('invalid key')
+        return false
     end
-    
+    if #pathlst == 0 then
+        data[k] = value
+        return true
+    end
+    return set_value(data[k], pathlst, ti.type, value)
+end
+
+local function set(w, data, path, value)
+    local pathlst = split(path)
+    assert(#pathlst > 0)
+    local k = pathlst[1]
+    table.remove(pathlst, 1)
+    if #pathlst == 0 then
+        data[k] = value
+        return true
+    end
+    typeinfo = w._class.component
+    set_value(data[k], pathlst, k, value)
+end
+
+function m.query(w, eid, path)
+    local e = save.entity(w, eid)
+    if not path then
+        return e
+    end
+    return query(w, e, path)
+end
+
+function m.set(w, eid, path, value)
+    local e = save.entity(w, eid)
+    if set(w, e, path, value) then
+        w:reset_entity(eid, e)
+        return true
+    end
+    return false
 end
 
 return m
