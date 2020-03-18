@@ -1,126 +1,89 @@
-local save = require "v2.save"
+local saveEntity = require "v2.save".entity
 
 local m = {}
 
-m.split = "/"
-
-local typeinfo
-
 local function split(s)
     local r = {}
-    s:gsub('[^/]*', function (w) r[#r+1] = w end)
+    s:gsub('[^/]*', function (w)
+        r[#r+1] = w:gsub("~1", "/"):gsub("~0", "~")
+    end)
     return r
 end
 
-local function query_value(data, pathlst, ctype)
-    if #pathlst == 0 then
-        return data
-    end
-    if type(data) ~= "table" then
-        return
-    end
-    local k = pathlst[1]
-    table.remove(pathlst, 1)
-    if k == '' then
-        return query_value(data, pathlst, ctype)
-    end
-    local ti = typeinfo[ctype]
-    if ti.array or ti.map then
-        if ti.array then
-            k = tonumber(k)
-        end
-        return query_value(data[k], pathlst, ti.type)
-    end
-    if not ti.type then
-        for _, v in ipairs(ti) do
-            if v.name == k then
-                return query_value(data[k], pathlst, v.type)
-            end
-        end
-        return
-    end
-    return query_value(data[k], pathlst, ti.type)
-end
-
-local function query(w, data, path)
-    local pathlst = split(path)
-    assert(#pathlst > 0)
-    local k = pathlst[1]
-    table.remove(pathlst, 1)
-    typeinfo = w._class.component
-    return query_value(data[k], pathlst, k)
-end
-
-local function set_value(data, pathlst, ctype, value)
-    if type(data) ~= "table" then
-        return false
-    end
-    local k = pathlst[1]
-    table.remove(pathlst, 1)
-    if k == '' then
-        if #pathlst == 0 then
+local function isArray(t)
+    local first_value = next(t)
+    if first_value == nil then
+        local mt = getmetatable(t)
+        if mt and mt.__name == 'serialize.map' then
             return false
         end
-        return set_value(data, pathlst, value)
-    end
-    local ti = typeinfo[ctype]
-    if ti.array or ti.map then
-        if ti.array then
-            k = tonumber(k)
-        end
-        if #pathlst == 0 then
-            data[k] = value
-            return true
-        end
-        return set_value(data[k], pathlst, ti.type, value)
-    end
-    if not ti.type then
-        for _, v in ipairs(ti) do
-            if v.name == k then
-                if #pathlst == 0 then
-                    data[k] = value
-                    return true
-                end
-                return set_value(data[k], pathlst, v.type, value)
-            end
-        end
-        return false
-    end
-    if #pathlst == 0 then
-        data[k] = value
         return true
     end
-    return set_value(data[k], pathlst, ti.type, value)
-end
-
-local function set(w, data, path, value)
-    local pathlst = split(path)
-    assert(#pathlst > 0)
-    local k = pathlst[1]
-    table.remove(pathlst, 1)
-    if #pathlst == 0 then
-        data[k] = value
-        return true
-    end
-    typeinfo = w._class.component
-    set_value(data[k], pathlst, k, value)
-end
-
-function m.query(w, eid, path)
-    local e = save.entity(w, eid)
-    if not path then
-        return e
-    end
-    return query(w, e, path)
-end
-
-function m.set(w, eid, path, value)
-    local e = save.entity(w, eid)
-    if set(w, e, path, value) then
-        w:reset_entity(eid, e)
+    if type(first_value) == "number" then
         return true
     end
     return false
+end
+
+local function isValidEntity(e)
+    return type(e) == "table" and not isArray(e)
+end
+
+local function queryValue(data, pathlst, n)
+    if type(data) ~= "table" then
+        return
+    end
+    local k = pathlst[n]
+    if isArray(data) then
+        if k == "-" then
+            k = #data + 1
+        else
+            k = tonumber(k)
+        end
+    end
+    if n == #pathlst then
+        return data[k]
+    end
+    return queryValue(data[k], pathlst, n + 1)
+end
+
+function m.query(w, eid, path)
+    local e = saveEntity(w, eid)
+    if path == '' then
+        return e
+    end
+    return queryValue(e, split(path), 1)
+end
+
+local function setValue(data, pathlst, value, n)
+    if type(data) ~= "table" then
+        return false
+    end
+    local k = pathlst[n]
+    if isArray(data) then
+        k = tonumber(k)
+    end
+    if n == #pathlst then
+        data[k] = value
+        return true
+    end
+    return setValue(data[k], pathlst, value, n + 1)
+end
+
+function m.set(w, eid, path, value)
+    local e = saveEntity(w, eid)
+    if path == '' then
+        if not isValidEntity(value) then
+            return false
+        end
+        w:reset_entity(eid, value)
+        return true
+    end
+    if not setValue(e, split(path), value, 1) then
+        return false
+    end
+    w:reset_entity(eid, e)
+    return true
 end
 
 return m

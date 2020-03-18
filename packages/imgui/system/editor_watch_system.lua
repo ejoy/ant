@@ -118,7 +118,7 @@ local function get_entity_policies(eids)
 end
 
 local function entity2tbl(w, eid)
-    return serialize.watch.query(w, eid)
+    return serialize.watch.query(w, eid, "")
 end
 
 local last_eid = nil
