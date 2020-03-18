@@ -10,6 +10,10 @@ extern "C" {
 
 #include "util.h"
 
+#ifndef M_PI
+#define M_PI 3.1415926536
+#endif
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -445,7 +449,7 @@ math3d_aabb_isvalid(struct lastack *LS, const float *aabb){
 }
 
 void 
-math3d_aabb_transform(struct lastack *LS, const float *trans, const float *aabb, float *raabb){
+math3d_aabb_transform(struct lastack *LS, const float trans[16], const float aabb[6], float raabb[6]){
 	const auto& t = MAT(trans);
 
 	const auto& minv = CAABB_MIN(aabb);

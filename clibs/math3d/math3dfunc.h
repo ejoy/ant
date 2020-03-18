@@ -46,7 +46,7 @@ void math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]);
 void math3d_aabb_append(struct lastack *LS, const float v[4], float *raabb);
 void math3d_aabb_merge(struct lastack *LS, const float *aabblhs, const float *aabbrhs, float *raabb);
 int math3d_aabb_isvalid(struct lastack *LS, const float *aabb);
-void math3d_aabb_transform(struct lastack *LS, const float *trans, const float *aabb, float *raabb);
+void math3d_aabb_transform(struct lastack *LS, const float trans[16], const float aabb[6], float raabb[6]);
 void math3d_aabb_center_extents(struct lastack *LS, const float *aabb, float center[4], float extents[4]);
 float math3d_aabb_diagonal_length(struct lastack *LS, const float *aabb);
 
