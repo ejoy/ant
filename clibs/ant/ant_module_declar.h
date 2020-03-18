@@ -12,7 +12,6 @@ int luaopen_imgui_ant(lua_State* L);
 int luaopen_lsocket(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_adapter(lua_State* L);
-int luaopen_math3d_baselib(lua_State* L);
 int luaopen_meshconverter_gltf(lua_State* L);
 int luaopen_platform(lua_State* L);
 int luaopen_platform_timer(lua_State* L);
