@@ -16,7 +16,7 @@
 #include "bgfx_interface.h"
 #include "bgfx_alloc.h"
 
-#if BGFX_API_VERSION != 103
+#if BGFX_API_VERSION != 104
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -1167,9 +1167,14 @@ lsubmit(lua_State *L) {
 	bgfx_view_id_t id = luaL_checkinteger(L, 1);
 	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint32_t depth = luaL_optinteger(L, 3, 0);
-	int preserveState = lua_toboolean(L, 4);
+	uint8_t flags;
+	if (lua_isnoneornil(L, 4)) {
+		flags = BGFX_DISCARD_ALL;
+	} else {
+		flags = discard_flags(L, 1);
+	}
 	bgfx_program_handle_t ph = { progid };
-	BGFX(submit)(id, ph, depth, preserveState);
+	BGFX(submit)(id, ph, depth, flags);
 	return 0;
 }
 
