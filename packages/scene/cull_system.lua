@@ -9,19 +9,6 @@ local math3d = require "math3d"
 local cull_sys = ecs.system "cull_system"
 cull_sys.require_system "primitive_filter_system"
 
-function cull_sys:post_init()
-	for _, tag in ipairs {"main_queue", "csm", "pickup"} do
-		for _, queue_eid in world:each(tag) do
-			local e = world[queue_eid]
-			local filter = e.primitive_filter
-			local results = filter.result
-			for _, resulttarget in pairs(results) do
-				resulttarget.visible_set = {n=0}
-			end
-		end
-	end
-end
-
 function cull_sys:cull()
 	for _, tag in ipairs {"main_queue", "csm", "pickup"} do
 		for _, queue_eid in world:each(tag) do
@@ -38,7 +25,7 @@ function cull_sys:cull()
 				if num > 0 then
 					math3d.frustum_intersect_aabb_list(frustum_planes, resulttarget, num, resulttarget.visible_set)
 				else
-					resulttarget.visible_set.n = 0
+					resulttarget.visible_set.n = nil
 				end
 			end
 		end

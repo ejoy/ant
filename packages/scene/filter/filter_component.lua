@@ -7,8 +7,12 @@ local pf = ecs.component "primitive_filter"
 
 function pf:init()
 	self.result = {
-		translucent = {},
-		opaticy = {},
+		translucent = {
+			visible_set = {},
+		},
+		opaticy = {
+			visible_set = {},
+		},
 	}
 	return self
 end

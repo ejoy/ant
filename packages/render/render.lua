@@ -124,7 +124,7 @@ rendersys.require_singleton "render_properties"
 
 rendersys.require_system "ant.scene|primitive_filter_system"
 rendersys.require_system "ant.scene|filter_properties"
---rendersys.require_system "ant.scene|cull_system"
+rendersys.require_system "ant.scene|cull_system"
 rendersys.require_system "end_frame"
 rendersys.require_system "viewport_detect_system"
 rendersys.require_system "blit_render_system"
@@ -157,7 +157,7 @@ function rendersys:render_commit()
 			local results = filter.result
 
 			local function draw_primitives(result)
-				local visibleset = result.visible_set or result
+				local visibleset = result.visible_set.n and result.visible_set or result
 				for i=1, visibleset.n do
 					local prim = visibleset[i]
 					ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
