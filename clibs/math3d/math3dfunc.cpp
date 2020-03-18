@@ -644,11 +644,14 @@ int
 math3d_frustum_intersect_aabb(struct lastack *LS, const float* planes[6], const float *aabb){
 	for (int ii = 0; ii < 6; ++ii){
 		const int r = plane_intersect(VEC(planes[ii]), aabb);
-		if (r >= 0){
+		// intersect or outside frustum
+		if (r <= 0){
 			return r;
 		}
 	}
-	return -1;
+
+	// aabb in front of all planes, mean inside frustum
+	return 1;
 }
 
 void

@@ -100,7 +100,7 @@ function tcb.process(e)
 	w:add_shape(terraincollider.handle, shape.handle, 0, shape.origin)
 	local aabbmin, aabbmax = w:get_aabb(terraincollider.handle)
 	terraincomp.bounding = {
-		aabb = math3d.aabb(aabbmin, aabbmax)
+		aabb = math3d.ref(math3d.aabb(aabbmin, aabbmax))
 	}
 end
 

@@ -153,18 +153,18 @@ local function add_result(eid, group, materialinfo, properties, worldmat, aabb, 
 		r.material 	= assert(materialinfo)
 		r.properties= properties
 		r.worldmat 	= worldmat
-		r.bounding	= aabb
+		r.aabb		= aabb
 		r.eid 		= eid
 	end
 	result.n = idx
 	return r
 end
 
-local function insert_primitive(eid, group, material, worldmat, bounding, filter)
+local function insert_primitive(eid, group, material, worldmat, aabb, filter)
 	local refkey = material.ref_path
 	local mi = assert(assetmgr.get_resource(refkey))
 	local resulttarget = assert(filter.result[mi.fx.surface_type.transparency])
-	add_result(eid, group, mi, material.properties, worldmat, bounding, resulttarget)
+	add_result(eid, group, mi, material.properties, worldmat, aabb, resulttarget)
 end
 
 local function filter_element(eid, rendermesh, etrans, materialcomp, filter)

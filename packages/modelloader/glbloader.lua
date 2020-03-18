@@ -266,7 +266,7 @@ local function init_scene(gltfscene, bindata, config)
 					local bb = create_prim_bounding(gltfscene, prim)
 					if bb then
 						group.bounding = bb
-						math3d.aabb_merge(meshaabb, bb.aabb)
+						meshaabb.m = math3d.aabb_merge(meshaabb, bb.aabb)
 					end
 
 					meshnode[#meshnode+1] = group

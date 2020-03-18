@@ -1418,15 +1418,11 @@ lfrustum_intersect_aabb_list(lua_State *L){
 	int result_idx = 0;
 	for (int ii = 0; ii < numaabb; ++ii){
 		lua_geti(L, 2, ii+1);{
-			lua_getfield(L, -1, "aabb");{
-				const float *aabb = matrix_from_index(L, LS, -1);
-				const int r = math3d_frustum_intersect_aabb(LS, planes, aabb);
-				if (r < 0){
-					lua_pushvalue(L, -1);
-					lua_seti(L, result_stackidx, ++result_idx);
-				}
+			const float * aabb = object_from_field(L, LS, -1, "aabb", LINEAR_TYPE_MAT, matrix_from_table);
+			if (aabb != NULL && math3d_frustum_intersect_aabb(LS, planes, aabb) >= 0){
+				lua_pushvalue(L, -1);
+				lua_seti(L, result_stackidx, ++result_idx);
 			}
-			lua_pop(L, 1);
 		}
 		lua_pop(L, 1);
 	}
