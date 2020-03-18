@@ -273,20 +273,12 @@ function util.get_mainqueue_transform_boundings(world, transformed_boundings)
 	local filter = mq.primitive_filter
 	for _, fname in ipairs{"opaticy", "translucent"} do
 		local result = filter.result[fname]
-		if result.cacheidx then
-			local num = result.cacheidx - 1
-			local visibleset = result.visible_set
-			if visibleset then
-				for i=1, #visibleset do
-					local idx = visibleset[i]
-					local prim = result[idx]
-					transformed_boundings[#transformed_boundings+1] = prim.aabb
-				end
-			else
-				for i=1, num do
-					local prim = result[i]
-					transformed_boundings[#transformed_boundings+1] = prim.aabb
-				end
+		local visibleset = result.visible_set or result
+		local num = visibleset.n
+		if num > 0 then
+			for i=1, num do
+				local prim = visibleset[i]
+				transformed_boundings[#transformed_boundings+1] = prim.aabb
 			end
 		end
 	end

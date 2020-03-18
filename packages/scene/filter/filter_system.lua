@@ -33,7 +33,7 @@ primitive_filter_sys.require_singleton "hierarchy_transform_result"
 --luacheck: ignore self
 local function reset_results(results)
 	for k, result in pairs(results) do
-		result.cacheidx = 1
+		result.n = 0
 	end
 end
 
@@ -136,7 +136,7 @@ local function transform_bounding_aabb(entitytrans, localtrans, aabb)
 end
 
 local function add_result(eid, group, materialinfo, properties, worldmat, aabb, result)
-	local idx = result.cacheidx
+	local idx = result.n + 1
 	local r = result[idx]
 	if r == nil then
 		r = {
@@ -156,7 +156,7 @@ local function add_result(eid, group, materialinfo, properties, worldmat, aabb, 
 		r.bounding	= aabb
 		r.eid 		= eid
 	end
-	result.cacheidx = idx + 1
+	result.n = idx
 	return r
 end
 

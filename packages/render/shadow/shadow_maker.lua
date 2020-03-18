@@ -364,9 +364,8 @@ function sm:make_shadow()
 		local results = filter.result
 		local function replace_material(result, material)
 			local mi = assetmgr.get_resource(material.ref_path)	-- must only one material content
-			for i=1, result.cacheidx - 1 do
-				local r = result[i]
-				r.material = mi
+			for i=1, result.n do
+				result[i].material = mi
 			end
 		end
 	

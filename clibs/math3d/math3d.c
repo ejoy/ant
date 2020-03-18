@@ -1143,9 +1143,8 @@ lminmax(lua_State *L){
 	float minv[4] = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};
 	float maxv[4] = {-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX};
 	for (int ii = 0; ii < numpoints; ++ii){
-		float v[4];
 		lua_geti(L, 1, ii+1);
-		unpack_numbers(L, -1, v, 4);
+		const float *v = vector_from_index(L, LS, -1);
 		lua_pop(L, 1);
 		math3d_minmax(LS, transform, v, minv, maxv);
 	}
@@ -1372,13 +1371,13 @@ lfrustum_planes(lua_State *L){
 
 static inline void
 fetch_vectors_from_table(lua_State *L, struct lastack *LS, int index, int checknum, const float** vectors){
-	const int num = lua_rawget(L, index);
+	const int num = lua_rawlen(L, index);
 	if (num != checknum){
 		luaL_error(L, "table need contain %d planes:%d", checknum, num);
 	}
 	for (int ii = 0; ii < num; ++ii){
 		lua_geti(L, index, ii+1);
-		vectors[ii] = vector_from_index(L, LS, ii+1);
+		vectors[ii] = vector_from_index(L, LS, -1);
 		lua_pop(L, 1);
 	}
 }
@@ -1396,7 +1395,7 @@ fetch_frustum_points(lua_State *L, struct lastack *LS, int index, const float *p
 static int
 lfrustum_intersect_aabb(lua_State *L){
 	struct lastack *LS = GETLS(L);
-
+	luaL_checktype(L, 1, LUA_TTABLE);
 	const float* planes[6];
 	fetch_frustum_planes(L, LS, 1, planes);
 

@@ -156,19 +156,10 @@ function rendersys:render_commit()
 			local results = filter.result
 
 			local function draw_primitives(result)
-				local num = result.cacheidx - 1
-				local visibleset = result.visible_set
-				if visibleset then
-					for i=1, #visibleset do
-						local idx = visibleset[i]
-						local prim = result[idx]
-						ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
-					end
-				else
-					for i=1, num do
-						local prim = result[i]
-						ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
-					end
+				local visibleset = result.visible_set or result
+				for i=1, visibleset.n do
+					local prim = visibleset[i]
+					ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
 				end
 			end
 

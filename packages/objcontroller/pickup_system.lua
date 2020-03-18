@@ -114,10 +114,8 @@ end
 
 local function recover_material(result)
 	if result then
-		for i=1, result.cacheidx-1 do
-			local item = result[i]
-			local uniforms = assert(item.properties.uniforms)
-			uniforms.u_id = nil
+		for i=1, result.n do
+			result[i].properties.uniforms.u_id = nil
 		end
 	end
 end
