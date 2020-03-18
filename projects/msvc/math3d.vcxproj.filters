@@ -17,9 +17,6 @@
     <ClCompile Include="..\..\clibs\math3d\linalg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\math3d\mathbaselib.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\clibs\math3d\mathadapter.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -556,6 +556,10 @@ math3d_frustum_planes(struct lastack *LS, const float m[16], float planes[6][4])
 	}
 }
 
+// point: [
+//	lbn, ltn, rbn, rtn, 
+//	lbf, ltf, rbf, rtf, 
+//]
 static const glm::vec4 ndc_points_ZO[8] = {
 	glm::vec4(-1.f,-1.f, 0.f, 1.f),
 	glm::vec4(-1.f, 1.f, 0.f, 1.f),

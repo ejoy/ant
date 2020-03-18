@@ -180,7 +180,6 @@
     <ClCompile Include="..\..\clibs\math3d\math3d.c" />
     <ClCompile Include="..\..\clibs\math3d\math3dfunc.cpp" />
     <ClCompile Include="..\..\clibs\math3d\mathadapter.c" />
-    <ClCompile Include="..\..\clibs\math3d\mathbaselib.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />

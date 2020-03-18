@@ -7,8 +7,6 @@ local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local math3d = require "math3d"
 
-local mathbaselib = require "math3d.baselib"
-
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]

@@ -15,7 +15,6 @@ local math3d	= require "math3d"
 
 
 local fs        = require "filesystem"
-local mathbaselib= require "math3d.baselib"
 
 ----------------------------------------------------------------------------------------------------------
 local debug_sm = ecs.system "debug_shadow_maker"
@@ -70,8 +69,8 @@ local function	csm_shadow_debug_frustum()
 		local vp = mu.view_proj(camera)
 
 		local color = frustum_colors[e.csm.index]
-		local frustum = mathbaselib.new_frustum(vp)
-		computil.create_frustum_entity(world, frustum, "csm frusutm part" .. e.csm.index, nil, color, "shadow_debug")
+		local frustum_points = math3d.frustum_points(vp)
+		computil.create_frustum_entity(world, frustum_points, "csm frusutm part" .. e.csm.index, nil, color, "shadow_debug")
 		computil.create_axis_entity(world, math3d.matrix{r=math3d.torotation(camera.viewdir), t=camera.eyepos}, color, "shadow_debug")
 	end
 end
@@ -85,8 +84,8 @@ local function main_view_debug_frustum()
 		local csm = s.csm
 		local frustum_desc = shadowutil.split_new_frustum(camera.frustum, csm.split_ratios)
 		local vp = mu.view_proj(camera)
-		local frustum = mathbaselib.new_frustum(vp)
-		computil.create_frustum_entity(world, frustum, "main view part" .. csm.index, nil, frustum_colors[csm.index], "shadow_debug")
+		local frustum_points = math3d.frustum_points(vp)
+		computil.create_frustum_entity(world, frustum_points, "main view part" .. csm.index, nil, frustum_colors[csm.index], "shadow_debug")
 	end
 end
 
@@ -137,28 +136,13 @@ local function create_debug_entity(eid)
 end
 
 local function print_points(points)
-	for idx, c in ipairs(points) do
-		print(string.format("\tpoint[%d]:[%f, %f, %f]", idx, c[1], c[2], c[3]))
+	for idx, p in ipairs(points) do
+		print(string.format("\tpoint[%d]:[%s]", idx, math3d.tostring(p)))
 	end
 end
 
-local function print_frustum_points(frustum)
-	print_points(frustum:points())
-end
-
-local function calc_frustum_center(frustum)
-	local center = {0, 0, 0, 1}
-	for _, c in ipairs(frustum:points()) do
-		center[1] = center[1] + c[1]
-		center[2] = center[2] + c[2]
-		center[3] = center[3] + c[3]
-	end
-
-	center[1] = center[1] / 8
-	center[2] = center[2] / 8
-	center[3] = center[3] / 8
-
-	return center
+local function print_frustum_points(frustum_points)
+	print_points(frustum_points)
 end
 
 local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
@@ -187,17 +171,17 @@ local function check_shadow_matrix()
 
 	local split_frustum_desc = shadowutil.split_new_frustum(viewcamera.frustum, csm1.csm.split_ratios)
 	local vp = mu.view_proj(viewcamera, split_frustum_desc)
-	local split_frustum = mathbaselib.new_frustum(vp)
 
-	local center = calc_frustum_center(split_frustum)
+	local frustum_points = math3d.frusutm_points(vp)
+	local center = math3d.frustum_center(frustum_points)
 
 	print(string.format("view split frusutm corners, center:[%f, %f, %f]", center[1], center[2], center[3]))
-	print_frustum_points(split_frustum)
+	print_frustum_points(frustum_points)
 
 	local lightmatrix = math3d.lookto(center, lightdir)
 	local corners_LS = {}
 	local minextent, maxextent = {}, {}
-	for _, c in ipairs(split_frustum:points()) do
+	for _, c in ipairs(frustum_points) do
 		local c_LS = math3d.transform(lightmatrix, c, 1)
 		corners_LS[#corners_LS+1] = c_LS
 		minextent[1] = minextent[1] and math.min(minextent[1], c_LS[1]) or c_LS[1]
@@ -225,8 +209,8 @@ local function check_shadow_matrix()
 	frustum_desc.n, frustum_desc.f))
 
 	local newvp = mu.view_proj({eyepos=center, viewdir=lightdir, up=mc.YAXIS}, frustum_desc)
-	local new_light_frustum = mathbaselib.new_frustum(newvp)
-	computil.create_frustum_entity(world, new_light_frustum, "lua calc view frustum", nil, 0xff0000ff)
+	local new_light_frustum_points = math3d.frustum_points(newvp)
+	computil.create_frustum_entity(world, new_light_frustum_points, "lua calc view frustum", nil, 0xff0000ff)
 
 	---------------------------------------------------------------------------------------------------------
 
@@ -241,11 +225,11 @@ local function check_shadow_matrix()
 		shadowcamera_frustum_desc.n, shadowcamera_frustum_desc.f))
 
 	local shadow_viewproj = mu.view_proj(shadowcamera)
-	local shadowcamera_frustum = mathbaselib.new_frustum(shadow_viewproj)
+	local shadowcamera_frustum_points = math3d.frustum_points(shadow_viewproj)
 
 	print("shadow view frustm point")
-	print_frustum_points(shadowcamera_frustum)
-	computil.create_frustum_entity(world, shadowcamera_frustum, "view frustum", nil, 0xffffff00)
+	print_frustum_points(shadowcamera_frustum_points)
+	computil.create_frustum_entity(world, shadowcamera_frustum_points, "view frustum", nil, 0xffffff00)
 
 	-------------------------------------------------------------------------------------------------
 	-- test shadow matrix

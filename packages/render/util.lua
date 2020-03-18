@@ -14,7 +14,6 @@ local default_comp 	= require "components.default"
 local computil 		= require "components.util"
 
 local fs 			= require "filesystem"
-local mathbaselib 	= require "math3d.baselib"
 
 local setting		= require "setting"
 

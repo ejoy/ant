@@ -1411,7 +1411,7 @@ lfrustum_intersect_aabb_list(lua_State *L){
 	const float* planes[6];
 	fetch_frustum_planes(L, LS, 1, planes);
 
-	const int numaabb = lua_rawlen(L, 2);
+	const int numaabb = luaL_checkinteger(L, 3);
 
 	lua_createtable(L, numaabb, 0);
 	const int result_stackidx = 3;

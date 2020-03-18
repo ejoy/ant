@@ -4,13 +4,12 @@ util.__index = util
 local fs 		= require "filesystem"
 local bgfx 		= require "bgfx"
 local declmgr 	= require "vertexdecl_mgr"
-local mathbaselib = require "math3d.baselib"
+
 local animodule = require "hierarchy.animation"
 local hwi		= require "hardware_interface"
 
 local assetpkg 	= import_package "ant.asset"
 local assetmgr 	= assetpkg.mgr
-local assetutil	= assetpkg.util
 
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
@@ -293,18 +292,17 @@ function util.get_mainqueue_transform_boundings(world, transformed_boundings)
 	end
 end
 
-function util.create_frustum_entity(world, frustum, name, transform, color, tag)
+function util.create_frustum_entity(world, frustum_points, name, transform, color, tag)
 	local eid = create_simple_render_entity(world, transform, 
 	{ref_path = fs.path "/pkg/ant.resources/depiction/materials/line.material"},
 	name, tag)
 
-	local points = frustum:points()
 	local e = world[eid]
 	local m = e.rendermesh
 	local vb = {"fffd",}
 	color = color or 0xff00000f
-	for i=1, #points do
-		local p = points[i]
+	for i=1, #frustum_points do
+		local p = math3d.totable(frustum_points[i])
 		table.move(p, 1, 3, #vb+1, vb)
 		vb[#vb+1] = color
 	end

@@ -17,7 +17,6 @@ local mathpkg 	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
 local math3d	= require "math3d"
 local fs 		= require "filesystem"
-local mathbaselib= require "math3d.baselib"
 
 ecs.component "csm"
 	.split_ratios "real[2]"
@@ -134,13 +133,13 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 	-- frustum_desc can cache, only camera distance changed or ratios change need recalculate
 	local frustum_desc = shadowutil.split_new_frustum(view_camera.frustum, split_ratios)
 	local vp = mu.view_proj(view_camera, frustum_desc)
-	local viewfrustum = mathbaselib.new_frustum(vp)
-	local corners_WS = viewfrustum:points()
 
-	local center_WS = viewfrustum:center(corners_WS)
+	local corners_WS = math3d.frustum_points(vp)
+
+	local center_WS = math3d.frustum_center(corners_WS)
 	local min_extent, max_extent
 	if stabilize then
-		local radius = viewfrustum:max_radius(center_WS, corners_WS)
+		local radius = math3d.frusutm_max_radius(corners_WS, center_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadowmap_size)
