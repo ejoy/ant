@@ -185,10 +185,10 @@ do
 	local intersectresult = math3d.frustum_intersect_aabb(frustum_planes, aabb)
 
 	print("aabb:", math3d.tostring(aabb))
-	
+
 	local frustum_point_names = {
-		"lbn", "rbn", "ltn", "rtn", 
-		"lbf", "rbf", "ltf", "rtf", 
+		"lbn", "rbn", "ltn", "rtn",
+		"lbf", "rbf", "ltf", "rtf",
 	}
 	local frustuminfo={}
 	for i=1, 8 do
@@ -231,13 +231,13 @@ local aabb = math3d.ref(math3d.matrix {
 
 local result = c:lookup(worldmat, math3d.matrix { t = { 4,5,6 }} , aabb)	-- temp id
 print(math3d.tostring(result))
-local result = c:lookup(worldmat, srt, aabb)
-print(math3d.tostring(result))
-local result = c:lookup(worldmat, nil, aabb)
-print(math3d.tostring(result))
+local result_mat, result_aabb = c:lookup(worldmat, srt, aabb)
+print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
+local result_mat, result_aabb = c:lookup(worldmat, nil, aabb)
+print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
 print(c:reset())
-local result = c:lookup(worldmat, srt, aabb)
-print(math3d.tostring(result))
-local result = c:lookup(worldmat, nil, aabb)
-print(math3d.tostring(result))
+local result_mat, result_aabb = c:lookup(worldmat, srt, aabb)
+print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
+local result_mat, result_aabb = c:lookup(worldmat, nil, aabb)
+print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
 print(c:reset())

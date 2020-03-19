@@ -32,11 +32,8 @@ $(ODIR)/mathcache.o : mathcache.c | $(ODIR)
 $(ODIR)/testadapter.o : testadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-$(ODIR)/mathbaselib.o : mathbaselib.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(GLM_INC) $(CLIBS_INC)
-
 OBJS = $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/math3dfunc.o \
-  $(ODIR)/mathadapter.o $(ODIR)/testadapter.o $(ODIR)/mathbaselib.o \
+  $(ODIR)/mathadapter.o $(ODIR)/testadapter.o \
   $(ODIR)/aabbcache.o $(ODIR)/mathcache.o
 
 $(ODIR)/math3d.dll : $(OBJS)
