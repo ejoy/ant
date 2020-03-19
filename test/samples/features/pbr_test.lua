@@ -1,12 +1,12 @@
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
+local ecs = ...
+local world = ecs.world
 
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
 
 local fs = require "filesystem"
 
-local pbr_scene = {}
+local pbrtest = ecs.system "pbr_test"
 
 local feature_path = fs.path "/pkg/ant.test.features"
 local pbr_materialpath = feature_path / "assets/pbr_test.pbrm"
@@ -54,8 +54,7 @@ local function create_pbr_entity(world,
     }
 end
 
-function pbr_scene.create_scene(world)
-
+local function pbr_spheres()
     local num_samples = 4
     local metallic_step = 1.0 / num_samples
     local roughness_step = 1.0 / num_samples
@@ -82,4 +81,31 @@ function pbr_scene.create_scene(world)
     end
 end 
 
-return pbr_scene 
+
+
+function pbrtest:init()
+    world:create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.render|mesh",
+            "ant.render|shadow_cast",
+            "ant.render|name",
+        },
+        data = {
+            transform = {srt={t={3, 2, 0, 1}}},
+            rendermesh = {},
+            mesh = {
+                ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
+            },
+            material = {
+                ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
+            },
+            can_render = true,
+            can_cast = true,
+            name = "Damaged Helmet"
+        }
+
+    }
+
+    pbr_spheres()
+end

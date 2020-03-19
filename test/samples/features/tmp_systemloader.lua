@@ -15,15 +15,9 @@ local assetmgr = assetpkg.mgr
 
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components
-local defaultcomp=renderpkg.default
-local lu        = renderpkg.light
 
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
-local mc        = mathpkg.constant
-
-
-local pbrscene = require "pbr_scene"
 
 local init_loader = ecs.system 'init_loader'
 
@@ -34,6 +28,7 @@ init_loader.require_system "ant.sky|procedural_sky_system"
 init_loader.require_system "ant.test.features|scenespace_test"
 init_loader.require_system "ant.test.features|character_ik_test"
 init_loader.require_system "ant.test.features|terrain_test"
+init_loader.require_system "ant.test.features|pbr_test"
 init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
 
@@ -159,32 +154,6 @@ local function gltf_animation_test()
 end
 
 
-
-local function pbr_test()
-    world:create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.render|mesh",
-            "ant.render|shadow_cast",
-            "ant.render|name",
-        },
-        data = {
-            transform = {srt={t={3, 2, 0, 1}}},
-            rendermesh = {},
-            mesh = {
-                ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
-            },
-            material = {
-                ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
-            },
-            can_render = true,
-            can_cast = true,
-            name = "Damaged Helmet"
-        }
-
-    }
-end
-
 local function create_plane_test()
     local planes = {
         {
@@ -292,10 +261,7 @@ function init_loader:init()
 
     skyutil.create_procedural_sky(world)
     ozzmesh_animation_test()
-    pbr_test()
     gltf_animation_test()
-
-    pbrscene.create_scene(world)
 end
 
 local function create_camera()
