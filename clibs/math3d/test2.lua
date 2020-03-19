@@ -229,12 +229,14 @@ local aabb = math3d.ref(math3d.matrix {
 	0,0,0,0,
 	0,0,0,0, })
 
-local result = c:lookup(worldmat, math3d.matrix { t = { 4,5,6 }} , aabb)	-- temp id
-print(math3d.tostring(result))
+local result_mat, result_aabb = c:lookup(worldmat, math3d.matrix { t = { 4,5,6 }} , aabb)	-- temp id
+print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
 local result_mat, result_aabb = c:lookup(worldmat, srt, aabb)
 print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
 local result_mat, result_aabb = c:lookup(worldmat, nil, aabb)
 print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
+local result = c:lookup(worldmat, nil, nil)
+print(math3d.tostring(result))
 print(c:reset())
 local result_mat, result_aabb = c:lookup(worldmat, srt, aabb)
 print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
