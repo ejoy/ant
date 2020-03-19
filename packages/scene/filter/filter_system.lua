@@ -103,18 +103,6 @@ local function get_material_refs(meshname, submesh_refs)
 	end
 end
 
-local function get_scene_scale_mat(meshscene)
-	local scenescale = meshscene.scenescale
-	if scenescale and scenescale ~= 1 then
-		local scalemat = meshscene.scalemat
-		if scalemat == nil then
-			scalemat = math3d.matrix{s=scenescale}
-			meshscene.scalemat = math3d.ref(scalemat)
-		end
-		return scalemat
-	end
-end
-
 local function get_mesh_local_trans(meshnode, scalemat)
 	local meshtrans = meshnode.transform
 	if meshtrans then
@@ -171,20 +159,20 @@ local function filter_element(eid, rendermesh, etrans, materialcomp, filter)
 	local meshscene = assetmgr.get_resource(rendermesh.reskey)
 
 	local sceneidx = computil.scene_index(rendermesh.lodidx, meshscene)
-	local scalemat = get_scene_scale_mat(meshscene)
 
 	local scenes = meshscene.scenes[sceneidx]
 	local submesh_refs = rendermesh.submesh_refs
 	for _, meshnode in ipairs(scenes) do
 		local name = meshnode.meshname
 		if is_visible(name, submesh_refs) then
-			local localtrans = get_mesh_local_trans(meshnode, scalemat)
+			local localtrans = meshnode.transform
+			--TODO: we will cache world transform and bounding transform
+			local worldtrans = localtrans and math3d.mul(etrans, localtrans) or etrans
+
 			local material_refs = get_material_refs(name, submesh_refs)
 
 			for groupidx, group in ipairs(meshnode) do
 				local material = get_material(group, groupidx, materialcomp, material_refs)
-				--TODO: we will cache world transform and bounding transform
-				local worldtrans = localtrans and math3d.mul(etrans, localtrans) or etrans
 				local aabb = transform_bounding_aabb(etrans, localtrans, group.bounding and group.bounding.aabb or nil)
 				insert_primitive(eid, group, material, worldtrans, aabb, filter)
 			end

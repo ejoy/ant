@@ -303,7 +303,6 @@ local function get_scale(cfg)
 	if m then
 		return m.scale or 1
 	end
-	return 1
 end
 
 local function get_convert_matrix(negative_axis)

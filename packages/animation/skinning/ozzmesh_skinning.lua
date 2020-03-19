@@ -109,7 +109,6 @@ local function gen_mesh_assetinfo(ozzmesh)
 	local joint_remapp_pointer, count = meshhandle:joint_remap()
 	return {
 		sceneidx = 1,
-		scenescale = 1.0,
 		scenes = {
 			--scene
 			{

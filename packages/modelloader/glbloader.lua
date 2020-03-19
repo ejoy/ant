@@ -170,7 +170,10 @@ end
 
 local function calc_node_transform(node, parentmat)
 	local nodetrans = node_matrix(node)
-	return nodetrans and math3d.mul(parentmat, nodetrans) or parentmat
+	if nodetrans then
+		return parentmat and math3d.mul(parentmat, nodetrans) or nodetrans
+	end
+	return parentmat
 end
 
 local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
@@ -197,6 +200,7 @@ local function init_scene(gltfscene, bindata, config)
 		layout[i] = declmgr.correct_layout(layout[i])
 	end
 	local layout_types 	= config.config.layout_types
+	local scene_scalemat = gltfscene.scenescale and math3d.ref(math3d.matrix{s=gltfscene.scenescale}) or nil
 
 	local bvcaches = {}
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
@@ -212,7 +216,7 @@ local function init_scene(gltfscene, bindata, config)
 			if meshidx then
 				local meshnode = {
 					nodename = node.name,
-					transform = math3d.ref(nodetrans),
+					transform = nodetrans and math3d.ref(nodetrans) or nil,
 					inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
 				}
 				local mesh = gltfscene.meshes[meshidx+1]
@@ -284,7 +288,7 @@ local function init_scene(gltfscene, bindata, config)
 	local meshscene = {
 		sceneidx = gltfscene.scene+1,
 		scenelods = gltfscene.scenelods,
-		sccenescale = gltfscene.scenescale,
+		scenescale = gltfscene.scenescale,
 		scenes = {}
 	}
 
@@ -296,7 +300,7 @@ local function init_scene(gltfscene, bindata, config)
 	local scenes = meshscene.scenes
 	for sceneidx, s in ipairs(gltfscene.scenes) do
 		local scene = {}
-		create_mesh_scene(s.nodes, mc.IDENTITY_MAT, scene)
+		create_mesh_scene(s.nodes, scene_scalemat, scene)
 		scenes[sceneidx] = scene
 	end
 
