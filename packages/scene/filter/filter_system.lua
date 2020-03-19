@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local render = import_package "ant.render"
-local ru = render.util
 local computil = render.components
 
 local filterutil = require "filter.util"
@@ -10,9 +9,8 @@ local filterutil = require "filter.util"
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
 
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
 local math3d = require "math3d"
+local aabb_cache = require "math3d.aabbcache".new()
 
 local filter_properties = ecs.system "filter_properties"
 filter_properties.require_singleton "render_properties"
@@ -118,8 +116,9 @@ end
 
 local function transform_bounding_aabb(entitytrans, localtrans, aabb)
 	if aabb then
-		local worldtrans = math3d.mul(entitytrans, localtrans)
-		return math3d.aabb_transform(worldtrans, aabb)
+		return aabb_cache:lookup(entitytrans, localtrans, aabb)
+		-- local worldtrans = math3d.mul(entitytrans, localtrans)
+		-- return math3d.aabb_transform(worldtrans, aabb)
 	end
 end
 
@@ -173,6 +172,7 @@ local function filter_element(eid, rendermesh, etrans, materialcomp, filter)
 
 			for groupidx, group in ipairs(meshnode) do
 				local material = get_material(group, groupidx, materialcomp, material_refs)
+
 				local aabb = transform_bounding_aabb(etrans, localtrans, group.bounding and group.bounding.aabb or nil)
 				insert_primitive(eid, group, material, worldtrans, aabb, filter)
 			end

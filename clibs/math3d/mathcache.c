@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "mathcache.h"
 
-#define HASHID(C, id) ((id) % ((C)->hashsize - 1))
+#define HASHID(C, id) (((uint64_t)id) % ((C)->hashsize - 1))
 #define MINHASHSIZE 1024
 
 struct math_data {
