@@ -101,27 +101,6 @@ local function get_material_refs(meshname, submesh_refs)
 	end
 end
 
-local function get_mesh_local_trans(meshnode, scalemat)
-	local meshtrans = meshnode.transform
-	if meshtrans then
-		local localtrans = meshnode.localtrans
-		if localtrans == nil then
-			localtrans = scalemat and math3d.mul(scalemat, meshtrans) or meshtrans
-			meshnode.localtrans = math3d.ref(localtrans)
-		end
-
-		return localtrans
-	end
-end
-
-local function transform_bounding_aabb(entitytrans, localtrans, aabb)
-	if aabb then
-		return aabb_cache:lookup(entitytrans, localtrans, aabb)
-		-- local worldtrans = math3d.mul(entitytrans, localtrans)
-		-- return math3d.aabb_transform(worldtrans, aabb)
-	end
-end
-
 local function add_result(eid, group, materialinfo, properties, worldmat, aabb, result)
 	local idx = result.n + 1
 	local r = result[idx]
@@ -165,15 +144,12 @@ local function filter_element(eid, rendermesh, etrans, materialcomp, filter)
 		local name = meshnode.meshname
 		if is_visible(name, submesh_refs) then
 			local localtrans = meshnode.transform
-			--TODO: we will cache world transform and bounding transform
-			local worldtrans = localtrans and math3d.mul(etrans, localtrans) or etrans
-
 			local material_refs = get_material_refs(name, submesh_refs)
 
 			for groupidx, group in ipairs(meshnode) do
 				local material = get_material(group, groupidx, materialcomp, material_refs)
-
-				local aabb = transform_bounding_aabb(etrans, localtrans, group.bounding and group.bounding.aabb or nil)
+				-- worldtrans is etrans * localtrans
+				local worldtrans, aabb = aabb_cache:lookup(etrans, localtrans, group.bounding and group.bounding.aabb or nil)
 				insert_primitive(eid, group, material, worldtrans, aabb, filter)
 			end
 		end
@@ -266,5 +242,9 @@ function primitive_filter_sys:filter_primitive()
 	end
 
 	reset_hierarchy_transform_result(hierarchy_cache)
+end
+
+function primitive_filter_sys:end_frame()
+	aabb_cache:reset()
 end
 
