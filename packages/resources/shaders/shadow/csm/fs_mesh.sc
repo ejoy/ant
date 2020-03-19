@@ -29,7 +29,7 @@ void main()
 	vec3 normal 	= unproject_normal(remap_normal(ntexdata.xy));
 
 	vec4 basecolor  = texture2D_sRGB(s_basecolor, v_texcoord0.xy);
-	vec4 lightcolor = directional_color[0] * directional_intensity[0].x;
+	vec4 lightcolor = directional_color * directional_intensity.x;
 	
 	vec4 ambientcolor= calc_ambient_color(ambient_mode.x, v_normal_Y_angle) * basecolor;
 

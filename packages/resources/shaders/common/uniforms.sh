@@ -2,9 +2,9 @@
 #define __SHADER_UNIFORMS_SH__
 
 // lighting
-uniform vec4 directional_lightdir[1];
-uniform vec4 directional_color[1];
-uniform vec4 directional_intensity[1];
+uniform vec4 directional_lightdir;
+uniform vec4 directional_color;
+uniform vec4 directional_intensity;
 
 uniform vec4 ambient_mode;        // ambient_mode.x 
 							      //  = 0  ratio factor of main light,color use main light color 

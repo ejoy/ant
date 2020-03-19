@@ -23,25 +23,10 @@ local function update_uniforms(uniforms, properties)
 end
 
 local function add_directional_light_properties(world, uniform_properties)
-	local dlight_info = {
-		directional_lightdir = {name="Light Direction", type="v4", value={}},
-		directional_color = {name="Light Color", type="color", value={}},
-		directional_intensity = {name="Light Intensity", type="v4",value={}},
-	}
-
-	for _, eid in world:each "directional_light" do
-		local dlight = world[eid]
-		local l = dlight.directional_light
-
-		-- TODO: add new component called 'direction', and keep this direction as light direction, then no more calucate it everytiem.
-		local lightdir = math3d.inverse(math3d.normalize(math3d.todirection(dlight.transform.srt.r)))
-		table.insert(dlight_info.directional_lightdir.value, 	lightdir)
-		table.insert(dlight_info.directional_color.value, 		l.color)
-		table.insert(dlight_info.directional_intensity.value, 	{l.intensity, 0.28, 0, 0})
-	end
-
-	
-	update_uniforms(uniform_properties, dlight_info)
+	local dlight = world:singleton_entity "directional_light"
+	uniform_properties["directional_lightdir"]  = {name="Light Direction",	type="v4",   value=dlight.direction}
+	uniform_properties["directional_color"] 	= {name="Light Color",		type="color",value=dlight.directional_light.color}
+	uniform_properties["directional_intensity"] = {name="Light Intensity",	type="v4",	 value={dlight.directional_light.intensity, 0.28, 0, 0}}
 end
 
 local mode_type = {

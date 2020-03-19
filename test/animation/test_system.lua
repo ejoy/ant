@@ -8,7 +8,6 @@ local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
 local fs         = require 'filesystem'
 local mu         = mathpkg.util
-local lu         = renderpkg.light
 local rhwi       = renderpkg.hwi
 
 local math3d     = require "math3d"
@@ -21,6 +20,7 @@ m.require_system "ant.imguibase|imgui_system"
 m.require_system "camera_controller"
 m.require_interface "ant.render|iwidget_drawer"
 m.require_interface "ant.animation|animation"
+m.require_interface "ant.render|light"
 
 local RoleEntityId
 local eventResize = world:sub {"resize"}
@@ -33,9 +33,15 @@ local function load_file(file)
     return data
 end
 
+local ilight = world:interface "ant.render|light"
+
 function m:init()
-    lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, math3d.totable(math3d.quaternion(mu.to_radian{60, 50, 0, 0})))
-    lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
+    local dlightdir = math3d.totable(
+        math3d.normalize(math3d.inverse(math3d.todirection(
+            math3d.quaternion(mu.to_radian{60, 50, 0, 0})))
+    ))
+    ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir)
+    ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     RoleEntityId = world:create_entity(load_file 'entity.txt')
 end
 

@@ -9,6 +9,6 @@ void main()
 	vec3 viewdir = normalize(v_viewdir);
 
 	float shiness = 0.06;
-	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir[0].xyz, viewdir, shiness); 
+	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir.xyz, viewdir, shiness); 
 	gl_FragColor.w = 1.0;
 }

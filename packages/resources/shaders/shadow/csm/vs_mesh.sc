@@ -31,7 +31,7 @@ void main()
 	// tbn from world space to tangent space
 	mat3 tbn 	= calc_tbn_lh_ex(a_normal.xyz, a_tangent.xyz, a_tangent.w, u_model[0]);
 
-	v_lightdirTS= mul(directional_lightdir[0].xyz , tbn);
+	v_lightdirTS= mul(directional_lightdir.xyz , tbn);
 	v_viewdirTS = mul(normalize(u_eyepos - v_positionWS).xyz, tbn);	
 
 	v_texcoord0 = a_texcoord0;

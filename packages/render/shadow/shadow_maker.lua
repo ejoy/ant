@@ -162,8 +162,9 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 end
 
 function maker_camera:shadow_camera()
-	local lightdir = shadowutil.get_directional_light_dir(world)
-	if lightdir then
+	local l = world:singleton_entity "directional_light"
+	if l then
+		local lightdir = math3d.inverse(l.direction)
 		local shadowentity = world:singleton_entity "shadow"
 		local shadowcfg = shadowentity.shadow
 		local stabilize = shadowcfg.stabilize

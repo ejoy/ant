@@ -40,6 +40,7 @@ init_loader.require_system "ant.render|render_mesh_bounding"
 init_loader.require_interface "ant.render|camera"
 init_loader.require_interface "ant.camera_controller|camera_motion"
 init_loader.require_interface "ant.render|iwidget_drawer"
+init_loader.require_interface "ant.render|light"
 
 
 local ozzmeshdir = fs.path 'meshes' / 'ozz'
@@ -276,11 +277,17 @@ local function simple_box()
     return eid
 end
 
+local ilight = world:interface "ant.render|light"
+
 function init_loader:init()
     do
-        lu.create_directional_light_entity(world, "direction light", 
-		{1,1,1,1}, 2, math3d.totable(math3d.quaternion(mu.to_radian{60, 50, 0, 0})))
-        lu.create_ambient_light_entity(world, 'ambient_light', 'gradient', {1, 1, 1, 1})
+        local dlightdir = math3d.totable(
+            math3d.normalize(math3d.inverse(math3d.todirection(
+                math3d.quaternion(mu.to_radian{60, 50, 0, 0}))
+        )))
+        ilight.create_directional_light_entity("direction light", 
+		{1,1,1,1}, 2, dlightdir)
+        ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
     skyutil.create_procedural_sky(world, {follow_by_directional_light=false})

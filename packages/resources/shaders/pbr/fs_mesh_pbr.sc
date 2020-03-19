@@ -244,9 +244,9 @@ inline AntEnv MainEnv( vec2 st,vec3 camPos, vec3 worldPos,vec3 normal)
 inline AntLight MainLight()
 {
     AntLight l;
-    l.color = toLinearAcc(directional_color[0].rgb* directional_intensity[0].x*1.5) ;
-    l.type  = directional_color[0].w;
-    l.dir   = SafeNormalize( directional_lightdir[0].xyz);   
+    l.color = toLinearAcc(directional_color.rgb* directional_intensity.x*1.5) ;
+    l.type  = directional_color.w;
+    l.dir   = SafeNormalize( directional_lightdir.xyz);   
     l.att   = 1;
    
     return l;
@@ -255,9 +255,9 @@ inline AntLight MainLight()
 inline AntLight AddtiveLight(vec3 worldPos)
 {
     AntLight l;
-    l.color = toLinearAcc(directional_color[0].rgb* directional_intensity[0].x) ;
-    l.type  = directional_color[0].w;
-    vec3  dir = (directional_lightdir[0].xyz- l.type* worldPos);
+    l.color = toLinearAcc(directional_color.rgb* directional_intensity.x) ;
+    l.type  = directional_color.w;
+    vec3  dir = (directional_lightdir.xyz- l.type* worldPos);
     float distance = max(0.001,dot(dir,dir));
     float attenuation = 1.0 / distance ;
     l.dir   = dir*rsqrt(distance); 

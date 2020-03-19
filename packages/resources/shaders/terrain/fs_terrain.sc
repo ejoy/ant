@@ -11,9 +11,9 @@ $input v_normal, v_texcoord0, v_texcoord1, v_positionWS
 void main()
 {
 	// only diffuse?
-	float ntol 			= max(0, dot(v_normal.xyz, directional_lightdir[0].xyz));
-	float lightIntensity= ntol * directional_intensity[0].x;
-    vec4 lightColor 	= vec4(directional_color[0].xyz * lightIntensity, 1.0);
+	float ntol 			= max(0, dot(v_normal.xyz, directional_lightdir.xyz));
+	float lightIntensity= ntol * directional_intensity.x;
+    vec4 lightColor 	= vec4(directional_color.xyz * lightIntensity, 1.0);
 
 	vec4 textureColor 	= vec4(texture2D(s_baseTexture, v_texcoord0).rgb, 1.4);
 	vec4 maskColor    	= vec4(1.0, 1.0, 1.0, texture2D(s_maskTexture,v_texcoord1).r);

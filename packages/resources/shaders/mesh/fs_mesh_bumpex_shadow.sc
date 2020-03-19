@@ -39,7 +39,7 @@ void main()
 	// vec4 basecolor = toLinear(texture2D(s_basecolor, tc));   
 	vec4 basecolor = texture2D(s_basecolor, tc);
   
-	vec4 lightcolor = directional_color[0] * directional_intensity[0].x;
+	vec4 lightcolor = directional_color * directional_intensity.x;
 	   
 	float ambientMode   = ambient_mode.x;
 	float ambientFactor = ambient_mode.y;   // Factor not use

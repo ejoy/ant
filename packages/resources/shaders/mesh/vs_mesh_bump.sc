@@ -12,7 +12,7 @@ void main()
 	vec4 worldpos = mul(u_model[0], pos);
 	mat3 tbn = calc_tbn(a_normal, a_tangent.xyz, a_bitangent, u_model[0]);
 
-	v_lightdir 	= mul(directional_lightdir[0].xyz , tbn);
+	v_lightdir 	= mul(directional_lightdir.xyz , tbn);
 	v_viewdir 	= mul(normalize(u_eyepos.xyz - worldpos.xyz), tbn);
 	v_normal    = a_normal;
 	v_texcoord0 = a_texcoord0;

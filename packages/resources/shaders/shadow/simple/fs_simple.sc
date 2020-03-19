@@ -12,6 +12,6 @@ void main()
 	float visible = min(1.0, hard_shadow(s_shadowmap0, v_shadowcoord, 0) + 0.25);
 
 	float shiness = 0.06;
-	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir[0].xyz, viewdir, shiness) * visible; 
+	gl_FragColor.xyz = calc_directional_light(normal, directional_lightdir.xyz, viewdir, shiness) * visible; 
 	gl_FragColor.w = 1.0;
 }

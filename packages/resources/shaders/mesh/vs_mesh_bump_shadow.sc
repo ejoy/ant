@@ -32,7 +32,7 @@ void main()
 			   normalize(bitangent),
 			   (normal)));
   
-	v_lightdir 	= mul(directional_lightdir[0].xyz , tbn);
+	v_lightdir 	= mul(directional_lightdir.xyz , tbn);
 	v_viewdir 	= mul(normalize( u_eyepos - worldpos).xyz, tbn);	
 	v_normal    = normal;
 	 

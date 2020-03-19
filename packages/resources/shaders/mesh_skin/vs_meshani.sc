@@ -13,7 +13,7 @@ void main()
 	gl_Position = mul(u_viewProj, pos);
 
 	mat3 tbn = calc_tbn_lh(a_normal, a_tangent, worldMat);
-	v_lightdir 	= mul(directional_lightdir[0].xyz , tbn);
+	v_lightdir 	= mul(directional_lightdir.xyz , tbn);
 	v_viewdir 	= mul(normalize(u_eyepos.xyz - pos.xyz), tbn);	
 
 	v_texcoord0 = a_texcoord0;

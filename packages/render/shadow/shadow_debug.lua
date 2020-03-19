@@ -150,7 +150,7 @@ local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
 local function check_shadow_matrix()
 	local csm1 = world[find_csm_entity(1)]
 
-	local lightdir = shadowutil.get_directional_light_dir(world)
+	local lightdir = math3d.inverse(world:singleton_entity "directional_light".direction)
 	print("light direction:", math3d.tostring(lightdir))
 
 	local viewcamera = camerautil.main_queue_camera(world)

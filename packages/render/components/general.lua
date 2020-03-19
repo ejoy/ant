@@ -11,27 +11,12 @@ ecs.component_alias("point", 	"vector")
 ecs.component_alias("rotation", "quaternion",{0,0,0,1})
 ecs.component_alias("scale",	"vector")
 ecs.component_alias("position",	"vector")
+ecs.component_alias("direction", "vector")
 
-local trans = ecs.component "transform"
+ecs.component "transform"
 	.srt "srt"
 	['opt'].slotname "string"
 	['opt'].parent "parent"
-
-function trans:init()
-	if self.parent then
-		local pe = world[self.parent]
-		if pe == nil then
-			error(string.format("tranform specified parent eid, but parent eid is not exist : %d", self.parent))
-		end
-		-- else
-		-- 	if pe.hierarchy == nil then
-		-- 		error(string.format("transform specified parent eid, but parent entity is not a hierarchy entity, parent eid: %d", self.parent))
-		-- 	end
-		-- end
-	end
-
-	return self
-end
 
 ecs.tag "editor"
 

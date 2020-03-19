@@ -34,15 +34,24 @@ m.require_interface "ant.timer|timer"
 m.require_interface "ant.camera_controller|camera_motion"
 m.require_interface "ant.render|iwidget_drawer"
 m.require_interface "ant.collision|collider"
+m.require_interface "ant.render|light"
 
 local camera = world:interface "ant.render|camera"
 local iwd = world:interface "ant.render|iwidget_drawer"
 local animation = world:interface "ant.animation|animation"
 local camera_id
 
+local ilight = world:interface "ant.render|light"
+
 local function create_light()
-	lu.create_directional_light_entity(world, "direction light", {1,1,1,1}, 2, math3d.totable(math3d.quaternion{math.rad(60), math.rad(50), 0}))
-	lu.create_ambient_light_entity(world, "ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
+	local dlightdir = math3d.totable(
+		--from shading point to light position
+		math3d.inverse(
+			math3d.normalize(math3d.inverse(
+				math3d.todirection(math3d.quaternion{math.rad(60), math.rad(50), 0})
+	))))
+	ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir)
+	ilight.create_ambient_light_entity("ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
 local function create_camera()

@@ -59,13 +59,6 @@ function util.split_new_frustum(view_frustum, ratios)
 	return util.split_new_frustum_by_distance(view_frustum, n_dis, f_dis)
 end
 
-function util.get_directional_light_dir(world)
-	for _, eid in world:each "directional_light" do
-		local e = world[eid]
-		return math3d.todirection(e.transform.srt.r)
-	end
-end
-
 local function gen_ratios(distances)
 	local pre_dis = 0
 	local ratios = {}
