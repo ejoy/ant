@@ -69,7 +69,7 @@ local function create_scene_node_test()
             data = {
                 hierarchy = {},
                 hierarchy_visible = true,
-                transform = {srt=mu.translate_mat {0, 5, 0, 1}},
+                transform = {srt={t= {0, 5, 0, 1}}},
                 name = 'hie_root',
                 serialize = seriazlizeutil.create(),
             }
@@ -597,9 +597,9 @@ local test_queue = {
 }
 
 function scenespace_test:data_changed()
-    if test_queue.idx <= #test_queue then
-        local op = test_queue[test_queue.idx]
-        op()
-        test_queue.idx = test_queue.idx + 1
-    end
+    -- if test_queue.idx <= #test_queue then
+    --     local op = test_queue[test_queue.idx]
+    --     op()
+    --     test_queue.idx = test_queue.idx + 1
+    -- end
 end

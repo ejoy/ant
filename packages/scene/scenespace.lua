@@ -124,9 +124,9 @@ local function update_hirarchy_entity_world(trans)
 		local parent = world[peid]
 		local pt = parent.transform
 
-		trans.srt.m = math3d.mul(pt.srt, srt)
+		srt.m = math3d.mul(pt.srt, srt)
 	end
-	return trans.srt
+	return srt
 end
 
 local function fetch_sort_tree_result(tree, componenttype)
