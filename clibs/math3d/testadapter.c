@@ -55,7 +55,7 @@ lvariant(lua_State *L) {
 	if (sz+1 != top) {
 		return luaL_error(L, "%s need %d arguments", format, (int)sz);
 	}
-	luaL_checkstack(L, sz, NULL);
+	luaL_checkstack(L, (int)sz, NULL);
 	int i;
 	for (i=2;i<=top;i++) {
 		const float * v = (const float *)lua_touserdata(L, i);
@@ -74,7 +74,7 @@ lvariant(lua_State *L) {
 		}
 	}
 
-	return sz;
+	return (int)sz;
 }
 
 static int

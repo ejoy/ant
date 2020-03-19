@@ -182,6 +182,7 @@
     <ClCompile Include="..\..\clibs\math3d\math3dfunc.cpp" />
     <ClCompile Include="..\..\clibs\math3d\mathadapter.c" />
     <ClCompile Include="..\..\clibs\math3d\mathcache.c" />
+    <ClCompile Include="..\..\clibs\math3d\testadapter.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\math3d\linalg.h" />

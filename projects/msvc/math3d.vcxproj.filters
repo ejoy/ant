@@ -32,6 +32,9 @@
     <ClCompile Include="..\..\clibs\math3d\mathcache.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\math3d\testadapter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\math3d\linalg.h">

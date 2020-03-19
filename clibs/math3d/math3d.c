@@ -1552,7 +1552,7 @@ luaopen_math3d(lua_State *L) {
 		{ "aabb_isvalid", laabb_isvalid},
 		{ "aabb_append", laabb_append},
 		{ "aabb_merge", laabb_merge},
-		{ "aabb_transform", laabb_merge},
+		{ "aabb_transform", laabb_transform},
 		{ "aabb_center_extents", laabb_center_extents},
 
 		//frustum
