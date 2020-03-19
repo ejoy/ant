@@ -484,7 +484,7 @@ math3d_aabb_transform(struct lastack *LS, const float trans[16], const float aab
 void
 math3d_aabb_center_extents(struct lastack *LS, const float *aabb, float center[4], float extents[4]){
 	const auto & minv = AABB_MIN(aabb);
-	const auto & maxv = AABB_MIN(aabb);
+	const auto & maxv = AABB_MAX(aabb);
 
 	*(glm::vec4*)center = (maxv+minv)*0.5f;
 	*(glm::vec4*)extents = (maxv-minv)*0.5f;
