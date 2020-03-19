@@ -100,7 +100,9 @@ llookup(lua_State *L) {
 	if (!lua_isnil(L, 3)) {
 		key.srt = get_id(L, 3);
 	}
-	key.aabb = get_id(L, 4);
+	if (!lua_isnil(L, 4)) {
+		key.aabb = get_id(L, 4);
+	}
 	if (result || mathcache_lookup(MC, worldmat_id, &key, &result)) {
 		// cache miss
 		const float *worldmat = get_matrix(L, LS, worldmat_id);
@@ -114,19 +116,22 @@ llookup(lua_State *L) {
 		} else {
 			// srt is empty, so use worldmat_id
 			if (key.srt != 0) {
-				// Invalid srt matrix
-				memcpy(result->mat, worldmat, 16 * sizeof(float));
+				return luaL_error(L , "Invalid srt id");
 			}
 			lua_pushlightuserdata(L, (void *)worldmat_id);
 		}
-		float aabb_result[16];
-		math3d_aabb_transform(LS, worldmat, aabb, aabb_result);
-		result->minmax[0] = aabb_result[0];
-		result->minmax[1] = aabb_result[1];
-		result->minmax[2] = aabb_result[2];
-		result->minmax[3] = aabb_result[4];
-		result->minmax[4] = aabb_result[5];
-		result->minmax[5] = aabb_result[6];
+		if (aabb) {
+			float aabb_result[16];
+			math3d_aabb_transform(LS, worldmat, aabb, aabb_result);
+			result->minmax[0] = aabb_result[0];
+			result->minmax[1] = aabb_result[1];
+			result->minmax[2] = aabb_result[2];
+			result->minmax[3] = aabb_result[4];
+			result->minmax[4] = aabb_result[5];
+			result->minmax[5] = aabb_result[6];
+		} else if (key.aabb != 0) {
+			return luaL_error(L, "Invalid aabb id");
+		}
 	} else {
 		// cache hit
 		if (key.srt == 0) {
@@ -136,20 +141,24 @@ llookup(lua_State *L) {
 			lua_pushlightuserdata(L, (void *)lastack_pop(LS));
 		}
 	}
-	float tmp[16];
-	memset(tmp, 0, sizeof(tmp));
-	tmp[0] = result->minmax[0];
-	tmp[1] = result->minmax[1];
-	tmp[2] = result->minmax[2];
+	if (key.aabb != 0) {
+		float tmp[16];
+		memset(tmp, 0, sizeof(tmp));
+		tmp[0] = result->minmax[0];
+		tmp[1] = result->minmax[1];
+		tmp[2] = result->minmax[2];
 
-	tmp[4] = result->minmax[3];
-	tmp[5] = result->minmax[4];
-	tmp[6] = result->minmax[5];
+		tmp[4] = result->minmax[3];
+		tmp[5] = result->minmax[4];
+		tmp[6] = result->minmax[5];
 
-	lastack_pushmatrix(LS, tmp);
-	lua_pushlightuserdata(L, (void *)lastack_pop(LS));
+		lastack_pushmatrix(LS, tmp);
+		lua_pushlightuserdata(L, (void *)lastack_pop(LS));
 
-	return 2;
+		return 2;
+	} else {
+		return 1;
+	}
 }
 
 LUAMOD_API int
