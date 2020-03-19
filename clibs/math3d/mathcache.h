@@ -8,6 +8,7 @@ struct math_key {
 
 struct math_value {
 	float minmax[6];
+	float mat[16];
 };
 
 struct math_cache_info {

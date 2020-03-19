@@ -17,8 +17,8 @@ struct math_data_node {
 	struct math_data kv;
 };
 
-// 32K per page
-#define PAGESLOT ((32 * 1024 - 32) / sizeof(struct math_data_node))
+// 64K per page
+#define PAGESLOT ((64 * 1024 - 16) / sizeof(struct math_data_node))
 
 struct math_data_page {
 	struct math_data_page *nextpage;

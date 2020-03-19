@@ -101,15 +101,23 @@ llookup(lua_State *L) {
 		key.srt = get_id(L, 3);
 	}
 	key.aabb = get_id(L, 4);
-	float tmp[16];
 	if (result || mathcache_lookup(MC, worldmat_id, &key, &result)) {
 		// cache miss
 		const float *worldmat = get_matrix(L, LS, worldmat_id);
 		const float *srt = get_matrix(L, LS, key.srt);
 		const float *aabb = get_matrix(L, LS, key.aabb);
 		if (srt != NULL) {
-			math3d_mul_object(LS, worldmat, srt, LINEAR_TYPE_MAT, LINEAR_TYPE_MAT, tmp);
-			worldmat = tmp;
+			math3d_mul_object(LS, worldmat, srt, LINEAR_TYPE_MAT, LINEAR_TYPE_MAT, result->mat);
+			worldmat = result->mat;
+			lastack_pushmatrix(LS, result->mat);
+			lua_pushlightuserdata(L, (void *)lastack_pop(LS));
+		} else {
+			// srt is empty, so use worldmat_id
+			if (key.srt != 0) {
+				// Invalid srt matrix
+				memcpy(result->mat, worldmat, 16 * sizeof(float));
+			}
+			lua_pushlightuserdata(L, (void *)worldmat_id);
 		}
 		float aabb_result[16];
 		math3d_aabb_transform(LS, worldmat, aabb, aabb_result);
@@ -121,7 +129,14 @@ llookup(lua_State *L) {
 		result->minmax[5] = aabb_result[6];
 	} else {
 		// cache hit
+		if (key.srt == 0) {
+			lua_pushlightuserdata(L, (void *)worldmat_id);
+		} else {
+			lastack_pushmatrix(LS, result->mat);
+			lua_pushlightuserdata(L, (void *)lastack_pop(LS));
+		}
 	}
+	float tmp[16];
 	memset(tmp, 0, sizeof(tmp));
 	tmp[0] = result->minmax[0];
 	tmp[1] = result->minmax[1];
@@ -134,7 +149,7 @@ llookup(lua_State *L) {
 	lastack_pushmatrix(LS, tmp);
 	lua_pushlightuserdata(L, (void *)lastack_pop(LS));
 
-	return 1;
+	return 2;
 }
 
 LUAMOD_API int
