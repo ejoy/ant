@@ -49,6 +49,11 @@ end
 
 function util.create_procedural_sky(world, settings)
 	settings = settings or {}
+	local function attached_light(eid)
+		if eid then
+			return world[eid].serialize
+		end
+	end
     local skyeid = world:create_entity {
 		policy = {
 			"ant.render|render",
@@ -73,7 +78,7 @@ function util.create_procedural_sky(world, settings)
 			procedural_sky = {
 				grid_width = 32, 
 				grid_height = 32,
-				attached_sun_light = settings.attached_sun_light,
+				attached_sun_light = attached_light(settings.attached_sun_light),
 				which_hour 	= settings.whichhour or 12,	-- high noon
 				turbidity 	= settings.turbidity or 2.15,
 				month 		= settings.whichmonth or "June",

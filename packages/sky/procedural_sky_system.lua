@@ -274,7 +274,7 @@ local function sync_directional_light(skyentity)
 	local sunlight_eid = skycomp.attached_sun_light
 	if sunlight_eid then
 		local dlight = world[sunlight_eid]
-		dlight.transform.srt.r.q = math3d.torotation(skycomp.sundir)
+		dlight.direction.v = math3d.torotation(skycomp.sundir)
 	end
 end
 

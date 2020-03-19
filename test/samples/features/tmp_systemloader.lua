@@ -290,8 +290,7 @@ function init_loader:init()
         ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
-    skyutil.create_procedural_sky(world, {follow_by_directional_light=false})
-
+    skyutil.create_procedural_sky(world)
     ozzmesh_animation_test()
     pbr_test()
     gltf_animation_test()
