@@ -115,7 +115,7 @@ blitsys.require_policy "name"
 
 function blitsys:init_blit_render()
 	log.info("init blit system")
-    ru.create_blit_queue(world, world.args.init_viewsize)
+    ru.create_blit_queue(world, {w=world.args.width,h=world.args.height})
 end
 
 local rendersys = ecs.system "render_system"
@@ -141,7 +141,7 @@ local function update_view_proj(viewid, camera)
 end
 
 function rendersys:init()
-	ru.create_main_queue(world, world.args.init_viewsize)
+	ru.create_main_queue(world, {w=world.args.width,h=world.args.height})
 end
 
 function rendersys:render_commit()

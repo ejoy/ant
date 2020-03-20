@@ -7,6 +7,10 @@ local rhwi      = renderpkg.hwi
 local debug_traceback = debug.traceback
 local thread_sleep = thread.sleep
 
+local keymap    = require "keymap"
+local mouse_what = { 'LEFT', 'RIGHT', 'MIDDLE' }
+local mouse_state = { 'DOWN', 'MOVE', 'UP' }
+
 local LOGERROR = __ANT_RUNTIME__ and log.error or print
 local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
@@ -23,38 +27,44 @@ function callback.init(nwh, context, width, height)
 		width = width,
 		height = height,
 	}
+	config.width  = width
+	config.height = height
 	local su = import_package "ant.scene".util
 	world = su.create_world()
-	for k, v in pairs(world) do
-		if k == 'init' then
-			goto continue
-		end
-		if callback[k] then
-			local f = callback[k]
-			callback[k] = function(...)
-				v(...)
-				f(...)
-			end
-		else
-			callback[k] = v
-		end
-		::continue::
-	end
-	world.init(config, width, height)
+	world.init(config)
 end
 
+function callback.mouse(x, y, what, state)
+	world.mouse(x, y, mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN")
+end
+function callback.touch(x, y, id, state)
+	world.touch(x, y, mouse_state[state] or "UNKNOWN", id)
+end
+function callback.keyboard(key, press, state)
+	world.keyboard(keymap[key], press, {
+		CTRL 	= (state & 0x01) ~= 0,
+		ALT 	= (state & 0x02) ~= 0,
+		SHIFT 	= (state & 0x04) ~= 0,
+		SYS 	= (state & 0x08) ~= 0,
+	})
+end
 function callback.size(width,height,_)
+	world.size(width,height)
 	rhwi.reset(nil, width, height)
 end
 
 function callback.exit()
+	world.exit()
 	rhwi.shutdown()
     print "exit"
 end
 
 function callback.update()
 	if debug_update then debug_update() end
-	if world then rhwi.frame() end
+	if world then
+		world.update()
+		rhwi.frame()
+	end
 end
 
 local function dispatch(ok, CMD, ...)
@@ -141,8 +151,14 @@ local function headlessMode()
 	callback.exit()
 end
 
-local function start(cfg)
-	config = cfg
+local function initargs(package)
+	local fs = require "filesystem"
+	local package_config = fs.dofile(fs.path("/pkg/"..package.."/package.lua"))
+	return package_config.world
+end
+
+local function start(package)
+	config = initargs(package)
 	if argument.headless then
 		return headlessMode()
 	end

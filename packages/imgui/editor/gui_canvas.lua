@@ -53,9 +53,8 @@ function GuiCanvas:set_fps(fps)
     self.editor_frame = 0
 end
 
-function GuiCanvas:bind_world( world, world_update)
+function GuiCanvas:bind_world(world)
     self.world = world
-    self.world_update = world_update
 
     self.next_frame_time = 0
     self.time_count = 0
@@ -113,17 +112,14 @@ function GuiCanvas:on_update(delta)
         self.rect = {x=x,y=y,w=w,h=h}
     end
     if self.world then
-        local world_tex =  ru.get_main_view_rendertexture(self.world)
+        local world_tex =  ru.get_main_view_rendertexture(self.world:get_world())
         if world_tex then
             widget.ImageButton(world_tex,w,h,{frame_padding=0,bg_col={0,0,0,1}})
         end
     end
     if not self.is_pausing then
-        if IO.WantCaptureMouse then
-            --todo:split mouse and keyboard
+        if self.world then
             self:on_dispatch_msg()
-        end
-        if self.world_update then
             self:_update_world(delta)
         end
     end
@@ -153,7 +149,7 @@ function GuiCanvas:_update_world(delta)
             self.last_update = now
             --update world
             local now_clock = os.clock()
-            local success = dbgutil.try(self.world_update)
+            local success = dbgutil.try(self.world.update)
             if not success and self.pause_on_error then
                 self.is_pausing = true
             end
@@ -198,44 +194,30 @@ function GuiCanvas:on_dispatch_msg()
                 local btn = inputmgr.translate_mouse_button(what)
                 local state = inputmgr.translate_mouse_state(state)
                 if not self:check_is_left_click_outside(btn,state,rx,ry) then
-                    -- msgqueue:push("mouse", rx, ry,
-                    -- btn,
-                    -- state)
-                    self.world:pub({
-                        "mouse",
-                        btn,state,
-                        rx,ry,
-                    })
+                    self.world.mouse(rx,ry,btn,state)
                 end
             end
         end
     end
     
     if hovered and called.mouse_wheel then
-        -- msgqueue:push("mouse_wheel", rx, ry, in_mouse.scroll)
-        self.world:pub({
-            "mouse_wheel",
-            in_mouse.scroll,
-            rx, ry
-        })
+        self.world.mouse_wheel(rx, ry, in_mouse.scroll)
     end
     
     if focus and #key_down > 0 then
         for _,record in ipairs(key_down) do
-            -- msgqueue:push("keyboard", inputmgr.translate_key(record[1]), record[2], in_key)
-            self.world:pub({
+            self.world.keyboard(
                 "keyboard",
                 inputmgr.translate_key(record[1]),
                 record[2],
                 in_key
-            })
+            )
         end
     end
     local mouse_pressed =  gui_input.is_mouse_pressed(gui_input.MouseLeft)
     if not mouse_pressed and self.vp_dirty then
         self.vp_dirty = false
-        -- msgqueue:push("resize", rect.w, rect.h)
-        self.world:pub({"resize", rect.w, rect.h})
+        self.world.size(rect.w, rect.h)
     end
 end
 
