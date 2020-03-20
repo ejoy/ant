@@ -178,10 +178,10 @@ do
 	local transformmat = math3d.matrix(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 3, 1)
 	aabb = math3d.aabb_transform(transformmat, aabb)
 
-
 	local vp = math3d.mul(math3d.projmat{aspect=60, fov=1024/768, n=0.1, f=100}, math3d.lookto(math3d.vector(0, 0, -10), math3d.vector(0, 0, 1)))
 	local frustum_planes = math3d.frustum_planes(vp)
 	local frustum_points = math3d.frustum_points(vp)
+
 	local intersectresult = math3d.frustum_intersect_aabb(frustum_planes, aabb)
 
 	print("aabb:", math3d.tostring(aabb))
@@ -217,29 +217,3 @@ do
 	local f_aabb_center, f_aabb_extents = math3d.aabb_center_extents(frustum_aabb)
 	print("frusutm aabb center:", math3d.tostring(f_aabb_center), "extents:", math3d.tostring(f_aabb_extents), "radius:", math3d.length(f_aabb_extents))
 end
-
-print "===AABBCACHE==="
-local aabbcache = require "math3d.aabbcache"
-local c = aabbcache.new()
-local worldmat = math3d.ref(math3d.matrix())
-local srt = math3d.ref(math3d.matrix { t = {1,2,3} })
-local aabb = math3d.ref(math3d.matrix {
-	0,0,0,0,
-	10,10,10,0,
-	0,0,0,0,
-	0,0,0,0, })
-
-local result_mat, result_aabb = c:lookup(worldmat, math3d.matrix { t = { 4,5,6 }} , aabb)	-- temp id
-print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
-local result_mat, result_aabb = c:lookup(worldmat, srt, aabb)
-print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
-local result_mat, result_aabb = c:lookup(worldmat, nil, aabb)
-print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
-local result = c:lookup(worldmat, nil, nil)
-print(math3d.tostring(result))
-print(c:reset())
-local result_mat, result_aabb = c:lookup(worldmat, srt, aabb)
-print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
-local result_mat, result_aabb = c:lookup(worldmat, nil, aabb)
-print(math3d.tostring(result_mat), math3d.tostring(result_aabb))
-print(c:reset())

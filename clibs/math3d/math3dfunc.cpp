@@ -32,9 +32,27 @@ static const glm::vec4 NXAXIS = -XAXIS;
 static const glm::vec4 NYAXIS = -YAXIS;
 static const glm::vec4 NZAXIS = -ZAXIS;
 
+static inline glm::mat4x4 &
+allocmat(struct lastack *LS) {
+	float * buf = lastack_allocmatrix(LS);
+	return *(glm::mat4x4 *)buf;
+}
+
+static inline glm::quat &
+allocquat(struct lastack *LS) {
+	float * buf = lastack_allocquat(LS);
+	return *(glm::quat *)buf;
+}
+
+static inline glm::vec4 &
+allocvec4(struct lastack *LS) {
+	float * buf = lastack_allocvec4(LS);
+	return *(glm::vec4 *)buf;
+}
+
 void
 math3d_make_srt(struct lastack *LS, const float *scale, const float *rot, const float *translate) {
-	glm::mat4x4 srt;
+	glm::mat4x4 &srt = allocmat(LS);
 	if (scale) {
 		srt = glm::mat4x4(1);
 		srt[0][0] = scale[0];
@@ -57,7 +75,6 @@ math3d_make_srt(struct lastack *LS, const float *scale, const float *rot, const 
 		srt[3][2] = translate[2];
 		srt[3][3] = 1;
 	}
-	lastack_pushmatrix(LS, &srt[0][0]);
 }
 
 void
@@ -70,45 +87,32 @@ math3d_make_quat_from_euler(struct lastack *LS, float x, float y, float z) {
 void
 math3d_make_quat_from_axis(struct lastack *LS, const float *axis, float radian) {
 	glm::vec3 a(axis[0],axis[1],axis[2]);
-	glm::quat q = glm::angleAxis(radian, a);
-	
-	lastack_pushquat(LS, &q[0]);
+	glm::quat &q = allocquat(LS);
+
+	q = glm::angleAxis(radian, a);
 }
 
-#define BINTYPE(v1, v2) (((v1) << LINEAR_TYPE_BITS_NUM) + (v2))
 #define MAT(v) (*(const glm::mat4x4 *)(v))
 #define VEC(v) (*(const glm::vec4 *)(v))
 #define VEC3(v) (*(const glm::vec3 *)(v))
 #define QUAT(v) (*(const glm::quat *)(v))
 
-int
-math3d_mul_object(struct lastack *LS, const float *val0, const float *val1, int ltype, int rtype, float tmp[16]) {
-	int type = BINTYPE(ltype, rtype);
+void
+math3d_mul_matrix(struct lastack *LS, const float val0[16], const float val1[16], float result[16]) {
+	glm::mat4x4 &mat = *(glm::mat4x4 *)result;
+	mat = MAT(val0) * MAT(val1);
+}
 
-	glm::mat4x4 &mat = *(glm::mat4x4 *)tmp;
-	glm::vec4 &vec = *(glm::vec4 *)tmp;
+void
+math3d_mul_vec4(struct lastack *LS, const float val0[4], const float val1[4], float result[4]) {
+	glm::vec4 &vec = *(glm::vec4 *)result;
+	vec = VEC(val0) * VEC(val1);
+}
 
-	switch (type) {
-	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT):
-		mat = MAT(val0) * MAT(val1);
-		return LINEAR_TYPE_MAT;
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_NUM):
-		vec = VEC(val0) * val1[0];
-		return LINEAR_TYPE_VEC4;
-	case BINTYPE(LINEAR_TYPE_NUM, LINEAR_TYPE_VEC4):
-		vec = val0[0] * VEC(val1);
-		return LINEAR_TYPE_VEC4;
-	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_QUAT): {
-		glm::quat &quat = *(glm::quat *)tmp;
-		quat = QUAT(val0) * QUAT(val1);
-		return LINEAR_TYPE_QUAT;
-	}
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_VEC4):
-		vec = VEC(val0) * VEC(val1);
-		return LINEAR_TYPE_VEC4;
-	}
-
-	return LINEAR_TYPE_NONE;
+void
+math3d_mul_quat(struct lastack *LS, const float val0[4], const float val1[4], float result[4]) {
+	glm::quat &quat = *(glm::quat *)result;
+	quat = QUAT(val0) * QUAT(val1);
 }
 
 void
@@ -176,8 +180,15 @@ math3d_decompose_rot(const float mat[16], float quat[4]) {
 void
 math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 	const glm::mat4x4 &m = *(const glm::mat4x4 *)mat;
-	float trans[4] = { m[3][0] , m[3][1], m[3][2], 1 };
-	float scale[4];
+	float *trans = lastack_allocvec4(LS);
+	glm::quat &q = allocquat(LS);
+	float *scale = lastack_allocvec4(LS);
+
+	trans[0] = m[3][0];
+	trans[1] = m[3][1];
+	trans[2] = m[3][2];
+	trans[3] = 1;
+
 	glm::mat3x3 rotMat(m);
 	if (!math3d_decompose_scale(mat, scale)) {
 		int ii;
@@ -185,10 +196,7 @@ math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 			rotMat[ii] /= scale[ii];
 		}
 	}
-	glm::quat q = glm::quat_cast(rotMat);
-	lastack_pushvec4(LS, trans);
-	lastack_pushquat(LS, &q.x);
-	lastack_pushvec4(LS, scale);
+	q = glm::quat_cast(rotMat);
 }
 
 float
@@ -198,14 +206,20 @@ math3d_length(const float *v) {
 
 void
 math3d_floor(struct lastack *LS, const float v[4]) {
-	glm::vec4 vv(glm::floor(VEC3(v)), 0.f);
-	lastack_pushvec4(LS, &vv.x);
+	float *vv = lastack_allocvec4(LS);
+	vv[0] = floor(v[0]);
+	vv[1] = floor(v[1]);
+	vv[2] = floor(v[2]);
+	vv[3] = 0;
 }
 
 void
 math3d_ceil(struct lastack *LS, const float v[4]) {
-	glm::vec4 vv(glm::ceil(VEC3(v)), 0.f);
-	lastack_pushvec4(LS, &vv.x);
+	float *vv = lastack_allocvec4(LS);
+	vv[0] = ceil(v[0]);
+	vv[1] = ceil(v[1]);
+	vv[2] = ceil(v[2]);
+	vv[3] = 0;
 }
 
 float
@@ -215,13 +229,17 @@ math3d_dot(const float v1[4], const float v2[4]) {
 
 void
 math3d_cross(struct lastack *LS, const float v1[4], const float v2[4]) {
-	glm::vec4 r(glm::cross(VEC3(v1), VEC3(v2)), 0);
-	lastack_pushvec4(LS, &r.x);
+	glm::vec3 c = glm::cross(VEC3(v1), VEC3(v2));
+	glm::vec4 &r = allocvec4(LS);
+	r[0] = c[0];
+	r[1] = c[1];
+	r[2] = c[2];
+	r[3] = 0;
 }
 
 void
 math3d_mulH(struct lastack *LS, const float mat[16], const float vec[4]) {
-	glm::vec4 r;
+	glm::vec4 &r = allocvec4(LS);
 
 	if (vec[3] != 1.f){
 		float tmp[4] = { vec[0], vec[1], vec[2], 1 };
@@ -234,43 +252,45 @@ math3d_mulH(struct lastack *LS, const float mat[16], const float vec[4]) {
 		r /= fabs(r.w);
 		r.w = 1.f;
 	}
-
-	lastack_pushvec4(LS, &r.x);
 }
 
 void
 math3d_normalize_vector(struct lastack *LS, const float v[4]) {
-	glm::vec4 r(glm::normalize(VEC3(v)), v[3]);
-	lastack_pushvec4(LS, &r.x);
+	glm::vec3 v3 = glm::normalize(VEC3(v));
+	glm::vec4 &r = allocvec4(LS);
+	r[0] = v3[0];
+	r[1] = v3[1];
+	r[2] = v3[2];
+	r[3] = v[3];
 }
 
 void
 math3d_normalize_quat(struct lastack *LS, const float v[4]) {
-	glm::quat q = glm::normalize(QUAT(v));
-	lastack_pushquat(LS, &q.x);
+	glm::quat &q = allocquat(LS);
+	q = glm::normalize(QUAT(v));
 }
 
 void
 math3d_transpose_matrix(struct lastack *LS, const float mat[16]) {
-	glm::mat4x4 r = glm::transpose(MAT(mat));
-	lastack_pushmatrix(LS, &r[0][0]);
+	glm::mat4x4 &r = allocmat(LS);
+	r = glm::transpose(MAT(mat));
 }
 
 void
 math3d_inverse_matrix(struct lastack *LS, const float mat[16]) {
-	glm::mat4x4 r = glm::inverse(MAT(mat));		
-	lastack_pushmatrix(LS, &r[0][0]);
+	glm::mat4x4 &r = allocmat(LS);
+	r = glm::inverse(MAT(mat));
 }
 
 void
 math3d_inverse_quat(struct lastack *LS, const float quat[4]) {
-	glm::quat q = glm::inverse(QUAT(quat));
-	lastack_pushquat(LS, &q.x);
+	glm::quat &q = allocquat(LS);
+	q = glm::inverse(QUAT(quat));
 }
 
 void
 math3d_lookat_matrix(struct lastack *LS, int direction, const float eye[3], const float at[3], const float *up) {
-	glm::mat4x4 m;
+	glm::mat4x4 &m = allocmat(LS);
 	if (up == NULL) {
 		static const float default_up[3] = {0,1,0};
 		up = default_up;
@@ -281,66 +301,65 @@ math3d_lookat_matrix(struct lastack *LS, int direction, const float eye[3], cons
 	} else {
 		m = glm::lookAtLH(VEC3(eye), VEC3(at), VEC3(up));
 	}
-	lastack_pushmatrix(LS, &m[0][0]);
 }
 
 void
 math3d_quat_to_matrix(struct lastack *LS, const float quat[4]) {
-	glm::mat4x4 m = glm::mat4x4(QUAT(quat));
-	lastack_pushmatrix(LS, &m[0][0]);
+	glm::mat4x4 &m = allocmat(LS);
+	m = glm::mat4x4(QUAT(quat));
 }
 
 void
 math3d_matrix_to_quat(struct lastack *LS, const float mat[16]) {
-	glm::quat q = glm::quat_cast(MAT(mat));
-	lastack_pushquat(LS, &q.x);
+	glm::quat &q = allocquat(LS);
+	q = glm::quat_cast(MAT(mat));
 }
 
 void
 math3d_reciprocal(struct lastack *LS, const float v[4]) {
-	glm::vec4 vv = VEC(v);
-	vv = 1.f / vv;
+	glm::vec4 &vv = allocvec4(LS);
+	vv = 1.f / VEC(v);
 	vv[3] = v[3];
-	lastack_pushvec4(LS, &vv.x);
 }
 
 void
 math3d_quat_to_viewdir(struct lastack *LS, const float q[4]) {
-	glm::vec4 d = glm::rotate(QUAT(q), glm::vec4(0, 0, 1, 0));
-	lastack_pushvec4(LS, &d.x);
+	glm::vec4 &d = allocvec4(LS);
+	d = glm::rotate(QUAT(q), glm::vec4(0, 0, 1, 0));
 }
 
 void
 math3d_rotmat_to_viewdir(struct lastack *LS, const float m[16]) {
-	glm::vec4 d = MAT(m) * glm::vec4(0, 0, 1, 0);
-	lastack_pushvec4(LS, &d.x);
+	glm::vec4 &d = allocvec4(LS);
+	d = MAT(m) * glm::vec4(0, 0, 1, 0);
 }
 
 void
 math3d_viewdir_to_quat(struct lastack *LS, const float v[3]) {
-	glm::quat q(glm::vec3(0, 0, 1), VEC3(v));
-	lastack_pushquat(LS, &q.x);
+	glm::quat &q = allocquat(LS);
+	q = glm::quat(glm::vec3(0, 0, 1), VEC3(v));
 }
 
 void
 math3d_frustumLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth) {
-	glm::mat4x4 mat = homogeneous_depth ?
+	glm::mat4x4 &mat = allocmat(LS);
+	mat = homogeneous_depth ?
 		glm::frustumLH_NO(left, right, bottom, top, near, far) :
 		glm::frustumLH_ZO(left, right, bottom, top, near, far);
-	lastack_pushmatrix(LS, &mat[0][0]);
 }
 
 void
 math3d_orthoLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth) {
-	glm::mat4x4 mat = homogeneous_depth ?
+	glm::mat4x4 &mat = allocmat(LS);
+	mat = homogeneous_depth ?
 		glm::orthoLH_NO(left, right, bottom, top, near, far) :
 		glm::orthoLH_ZO(left, right, bottom, top, near, far);
-	lastack_pushmatrix(LS, &mat[0][0]);
 }
 
 void
 math3d_base_axes(struct lastack *LS, const float forward[4]) {
-	glm::vec4 right, up;
+	glm::vec4 &up = allocvec4(LS);
+	glm::vec4 &right = allocvec4(LS);
 
 	if (is_equal(VEC(forward), ZAXIS)) {
 		up = YAXIS;
@@ -357,21 +376,18 @@ math3d_base_axes(struct lastack *LS, const float forward[4]) {
 			up = glm::vec4(glm::normalize(glm::cross(VEC3(forward), VEC3(&right.x))), 0);
 		}
 	}
-
-	lastack_pushvec4(LS, &up.x);
-	lastack_pushvec4(LS, &right.x);
 }
 
 void
 math3d_quat_transform(struct lastack *LS, const float quat[4], const float v[4]){
-	const glm::vec4 vv = glm::rotate(QUAT(quat), VEC(v));
-	lastack_pushvec4(LS, &vv.x);
+	glm::vec4 &vv = allocvec4(LS);
+	vv = glm::rotate(QUAT(quat), VEC(v));
 }
 
 void
 math3d_rotmat_transform(struct lastack *LS, const float mat[16], const float v[4]){
-	const glm::vec4 vv = MAT(mat) * VEC(v);
-	lastack_pushvec4(LS, &vv.x);
+	glm::vec4 &vv = allocvec4(LS);
+	vv = MAT(mat) * VEC(v);
 }
 
 void
@@ -509,7 +525,7 @@ enum PlaneName{
 };
 
 void
-math3d_frustum_planes(struct lastack *LS, const float m[16], float planes[6][4]){
+math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6]){
 	const auto &mat = MAT(m);
 	const auto& c0 = mat[0], &c1 = mat[1], & c2 = mat[2], & c3 = mat[3];
 
@@ -594,7 +610,7 @@ static const glm::vec4 ndc_points_NO[8] = {
 };
 
 void 
-math3d_frustum_points(struct lastack *LS, const float m[16], float points[8][4]){
+math3d_frustum_points(struct lastack *LS, const float m[16], float *points[8]){
 	auto invmat = glm::inverse(MAT(m));
 	const auto &pp = math3d_homogeneous_depth() ? ndc_points_NO : ndc_points_ZO;
 	for (int ii = 0; ii < 8; ++ii){
