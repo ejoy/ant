@@ -456,7 +456,7 @@ function util.create_mesh(rendermesh, mesh)
 	local reskey = fs.path(ref_path:string():gsub("^/pkg", "//res.mesh/"))
 	local meshscene = assetmgr.get_resource(reskey)
 	if meshscene == nil then
-		local meshscene = util.create_mesh_buffers(res)
+		meshscene = util.create_mesh_buffers(res)
 		assetmgr.register_resource(reskey, meshscene, function ()
 			return util.create_mesh_buffers(assetmgr.get_resource(ref_path))
 		end)
