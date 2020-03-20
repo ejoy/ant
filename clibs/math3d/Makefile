@@ -23,18 +23,11 @@ $(ODIR)/math3dfunc.o : math3dfunc.cpp | $(ODIR)
 $(ODIR)/mathadapter.o : mathadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
-$(ODIR)/aabbcache.o : aabbcache.c | $(ODIR)
-	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
-
-$(ODIR)/mathcache.o : mathcache.c | $(ODIR)
-	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
-
 $(ODIR)/testadapter.o : testadapter.c | $(ODIR)
 	$(CC) -c $(CFLAGS) -o $@ $^ $(LUAINC)
 
 OBJS = $(ODIR)/linalg.o $(ODIR)/math3d.o $(ODIR)/math3dfunc.o \
-  $(ODIR)/mathadapter.o $(ODIR)/testadapter.o \
-  $(ODIR)/aabbcache.o $(ODIR)/mathcache.o
+  $(ODIR)/mathadapter.o $(ODIR)/testadapter.o
 
 $(ODIR)/math3d.dll : $(OBJS)
 	$(CC) $(LD_SHARED) $(CFLAGS) -o $@ $^ -lstdc++ $(LUALIB)

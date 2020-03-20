@@ -362,10 +362,9 @@ check_matrix_pool(struct lastack *LS) {
 	return LS->temp_mat + LS->temp_matrix_top * MATRIX;
 }
 
-void
-lastack_pushmatrix(struct lastack *LS, const float *mat) {
+float *
+lastack_allocmatrix(struct lastack *LS) {
 	float * pmat = check_matrix_pool(LS);
-	memcpy(pmat, mat, sizeof(float) * MATRIX);
 	union stackid sid;
 	sid.s.type = LINEAR_TYPE_MAT;
 	sid.s.persistent = 0;
@@ -373,6 +372,13 @@ lastack_pushmatrix(struct lastack *LS, const float *mat) {
 	sid.s.id = LS->temp_matrix_top;
 	push_id(LS, sid);
 	++ LS->temp_matrix_top;
+	return pmat;
+}
+
+void
+lastack_pushmatrix(struct lastack *LS, const float *mat) {
+	float * pmat = lastack_allocmatrix(LS);
+	memcpy(pmat, mat, sizeof(float) * MATRIX);
 }
 
 void
@@ -445,14 +451,9 @@ lastack_pushsrt(struct lastack *LS, const float *s, const float *r, const float 
 	++ LS->temp_matrix_top;
 }
 
-void
-lastack_pushobject(struct lastack *LS, const float *v, int type) {
-	if (type == LINEAR_TYPE_MAT) {
-		lastack_pushmatrix(LS, v);
-		return;
-	}
+static inline float *
+alloc_float4(struct lastack *LS, int type) {
 	assert(type >= LINEAR_TYPE_VEC4 && type <= LINEAR_TYPE_QUAT);
-	const int size = lastack_typesize(type);
 	if (LS->temp_vector_top >= LS->temp_vector_cap) {
 		size_t sz = LS->temp_vector_cap * sizeof(float) * VECTOR4;
 		void * p = new_page(LS, LS->temp_vec, sz);
@@ -460,7 +461,8 @@ lastack_pushobject(struct lastack *LS, const float *v, int type) {
 		memcpy(LS->temp_vec, p, sz);
 		LS->temp_vector_cap *= 2;
 	}
-	memcpy(LS->temp_vec + LS->temp_vector_top * VECTOR4, v, sizeof(float) * size);
+
+	float * result = LS->temp_vec + LS->temp_vector_top * VECTOR4;
 	union stackid sid;
 	sid.s.type = type;
 	sid.s.persistent = 0;
@@ -468,16 +470,40 @@ lastack_pushobject(struct lastack *LS, const float *v, int type) {
 	sid.s.id = LS->temp_vector_top;
 	push_id(LS, sid);
 	++ LS->temp_vector_top;
+	return result;
+}
+
+void
+lastack_pushobject(struct lastack *LS, const float *v, int type) {
+	if (type == LINEAR_TYPE_MAT) {
+		lastack_pushmatrix(LS, v);
+		return;
+	}
+	float * buf = alloc_float4(LS, type);
+	const int size = lastack_typesize(type);
+	memcpy(buf, v, sizeof(float) * size);
 }
 
 void
 lastack_pushvec4(struct lastack *LS, const float *vec4) {
-	lastack_pushobject(LS, vec4, LINEAR_TYPE_VEC4);
+	float * buf = alloc_float4(LS, LINEAR_TYPE_VEC4);
+	memcpy(buf, vec4, sizeof(float) * 4);
+}
+
+float *
+lastack_allocvec4(struct lastack *LS) {
+	return alloc_float4(LS, LINEAR_TYPE_VEC4);
 }
 
 void
 lastack_pushquat(struct lastack *LS, const float *v) {
-	lastack_pushobject(LS, v, LINEAR_TYPE_QUAT);
+	float * buf = alloc_float4(LS, LINEAR_TYPE_QUAT);
+	memcpy(buf, v, sizeof(float) * 4);
+}
+
+float *
+lastack_allocquat(struct lastack *LS) {
+	return alloc_float4(LS, LINEAR_TYPE_QUAT);
 }
 
 const float *
