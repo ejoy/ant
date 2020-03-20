@@ -592,14 +592,59 @@ local test_queue = {
         }
     end,
     function ()
+        local attacheid = find_entity_by_name("render2_rootchild", 'can_render')
+        local eid =         world:create_entity {
+            policy = {
+                "ant.objcontroller|select",
+                "ant.render|render",
+                "ant.render|mesh",
+                "ant.render|name",
+            },
+            data = {
+                transform = {
+                    srt = {t = {1, 2, 3, 1}},
+                },
+                rendermesh = {},
+                material = {
+                    ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
+                    properties = {
+                        uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
+                    }
+                },
+                mesh = {ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cone.mesh'},
+                can_render = true,
+                can_select = true,
+                name = 'follow_entity',
+            },
+        }
 
+        world:pub {"update_follow", eid, attacheid}
+        print(math3d.tostring(world[eid].transform.srt.t))
+        print(math3d.tostring(world[attacheid].transform.srt.t))
+    end,
+
+    function ()
+        local eid = find_entity_by_name("follow_entity", "can_render")
+        local attacheid = find_entity_by_name("render2_rootchild", 'can_render')
+        world:pub {"update_follow", eid, attacheid}
+
+        print(math3d.tostring(world[eid].transform.srt.t))
+        print(math3d.tostring(world[attacheid].transform.srt.t))
+    end,
+
+    function ()
+        local eid = find_entity_by_name("follow_entity", "can_render")
+        local attached_eid = find_entity_by_name("render2_rootchild", "can_render")
+
+        print(math3d.tostring(world[eid].transform.srt.t))
+        print(math3d.tostring(world[attached_eid].transform.srt.t))
     end,
 }
 
 function scenespace_test:data_changed()
-    -- if test_queue.idx <= #test_queue then
-    --     local op = test_queue[test_queue.idx]
-    --     op()
-    --     test_queue.idx = test_queue.idx + 1
-    -- end
+    if test_queue.idx <= #test_queue then
+        local op = test_queue[test_queue.idx]
+        op()
+        test_queue.idx = test_queue.idx + 1
+    end
 end
