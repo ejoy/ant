@@ -51,7 +51,7 @@ LUAID(lua_State *L, int index) {
 
 static inline struct lastack *
 GETLS(lua_State *L) {
-	return (struct lastack *)lua_touserdata(L, lua_upvalueindex(1));
+	return math3d_getLS(L);
 }
 
 static void
@@ -72,18 +72,22 @@ boxstack_gc(lua_State *L) {
 	return 0;
 }
 
+static const void *
+refobj_meta(lua_State *L) {
+	struct boxstack *bs = lua_touserdata(L, lua_upvalueindex(1));
+	return bs->refmeta;
+}
+
 static int64_t
 get_id(lua_State *L, int index, int ltype) {
 	if (ltype == LUA_TLIGHTUSERDATA) {
 		return (int64_t)lua_touserdata(L, index);
-	} else if (ltype == LUA_TUSERDATA) {
-		if (lua_rawlen(L, index) != sizeof(struct refobject)) {
-			luaL_error(L, "Invalid ref userdata");
-		}
+	} else if (lua_getmetatable(L, index) && lua_topointer(L, -1) == refobj_meta(L)) {
+		lua_pop(L, 1);	// pop metatable
 		struct refobject * ref = lua_touserdata(L, index);
 		return ref->id;
 	}
-	return luaL_argerror(L, index, "Need userdata");
+	return luaL_argerror(L, index, "Need ref userdata");
 }
 
 static int
@@ -1499,16 +1503,9 @@ lfrustum_calc_near_far(lua_State *L){
 	return 2;
 }
 
-LUAMOD_API int
-luaopen_math3d(lua_State *L) {
-	luaL_checkversion(L);
-
-	struct boxstack * bs = lua_newuserdatauv(L, sizeof(struct boxstack), 0);
-	bs->LS = lastack_new();
-	finalize(L, boxstack_gc);
-	lua_setfield(L, LUA_REGISTRYINDEX, MATH3D_STACK);
-
-	luaL_Reg l[] = {
+static void
+init_math3d_api(lua_State *L, struct boxstack *bs) {
+		luaL_Reg l[] = {
 		{ "ref", NULL },
 		{ "tostring", ltostring },
 		{ "matrix", lmatrix },
@@ -1568,8 +1565,13 @@ luaopen_math3d(lua_State *L) {
 	};
 
 	luaL_newlibtable(L,l);
-	lua_pushlightuserdata(L, bs->LS);
+	lua_pushlightuserdata(L, bs);
 	luaL_setfuncs(L,l,1);
+}
+
+LUAMOD_API int
+luaopen_math3d(lua_State *L) {
+	luaL_checkversion(L);
 
 	luaL_Reg ref_mt[] = {
 		{ "__newindex", lref_setter },
@@ -1578,12 +1580,23 @@ luaopen_math3d(lua_State *L) {
 		{ "__gc", lref_gc },
 		{ NULL, NULL },
 	};
-
-	lua_pushlightuserdata(L, bs->LS);
-
 	luaL_newlibtable(L,ref_mt);
-	lua_pushlightuserdata(L, bs->LS);
-	luaL_setfuncs(L,ref_mt,1);
+	int refmeta = lua_gettop(L);
+
+	struct boxstack * bs = lua_newuserdatauv(L, sizeof(struct boxstack), 0);
+	bs->LS = lastack_new();
+	bs->refmeta = lua_topointer(L, refmeta);
+	finalize(L, boxstack_gc);
+	lua_setfield(L, LUA_REGISTRYINDEX, MATH3D_STACK);
+
+	init_math3d_api(L, bs);
+
+	lua_pushlightuserdata(L, bs);	// upvalue 1 of .ref
+
+	// init reobject meta table, it's upvalue 2 of .ref
+	lua_pushvalue(L, refmeta);
+	lua_pushlightuserdata(L, bs);
+	luaL_setfuncs(L,ref_mt, 1);
 
 	lua_pushcclosure(L, lref, 2);
 	lua_setfield(L, -2, "ref");

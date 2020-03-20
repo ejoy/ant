@@ -57,13 +57,15 @@ lreset(lua_State *L) {
 }
 
 static int64_t
-get_id(lua_State *L, int index) {
+get_id(lua_State *L, int index, const void *metatable) {
 	int type = lua_type(L, index);
 	if (type == LUA_TUSERDATA) {
-		if (lua_rawlen(L, index) != sizeof(struct refobject))
-			luaL_error(L, "Need math refobject at %d", index);
-		struct refobject *refobj = lua_touserdata(L, index);
-		return refobj->id;
+		if (lua_getmetatable(L, index) && lua_topointer(L, -1) == metatable) {
+			lua_pop(L, 1);	// pop metatable
+			struct refobject *refobj = lua_touserdata(L, index);
+			return refobj->id;
+		}
+		return luaL_error(L, "Not a ref object");
 	} else if (type == LUA_TLIGHTUSERDATA) {
 		return (int64_t)lua_touserdata(L, index);
 	} else {
@@ -85,24 +87,39 @@ get_matrix(lua_State *L, struct lastack *LS, int64_t id) {
 static int
 llookup(lua_State *L) {
 	struct math_cache *MC = GETMC(L);
-	struct lastack *LS  = lua_touserdata(L, lua_upvalueindex(1));
+	struct lastack *LS = math3d_getLS(L);
 	int64_t worldmat_id;
 	struct math_key key = { 0,0 };
 	struct math_value *result = NULL;
 	struct math_value tmp_result;
 
-	if (lua_type(L, 2) == LUA_TLIGHTUSERDATA ||
-		lua_type(L, 3) == LUA_TLIGHTUSERDATA ||
-		lua_type(L, 4) == LUA_TLIGHTUSERDATA) {
+	int type_worldmat = lua_type(L, 2);
+	int type_srt = lua_type(L, 3);
+	int type_aabb = lua_type(L, 4);
+
+	if (type_srt == LUA_TNIL && type_aabb == LUA_TNIL) {
+		lua_pushvalue(L, 2);	// returns worldmat
+		return 1;
+	}
+
+	if (type_worldmat == LUA_TLIGHTUSERDATA ||
+		type_srt == LUA_TLIGHTUSERDATA ||
+		type_aabb == LUA_TLIGHTUSERDATA) {
+		// any lightuserdata would not enter the cache
 		result = &tmp_result;
 	}
-	worldmat_id = get_id(L, 2);
-	if (!lua_isnil(L, 3)) {
-		key.srt = get_id(L, 3);
+
+	struct boxstack *bs = lua_touserdata(L, lua_upvalueindex(1));
+	const void * metatable = bs->refmeta;
+
+	if (type_srt != LUA_TNIL) {
+		key.srt = get_id(L, 3, metatable);
 	}
-	if (!lua_isnil(L, 4)) {
-		key.aabb = get_id(L, 4);
+	if (type_aabb != LUA_TNIL) {
+		key.aabb = get_id(L, 4, metatable);
 	}
+
+	worldmat_id = get_id(L, 2, metatable);
 	if (result || mathcache_lookup(MC, worldmat_id, &key, &result)) {
 		// cache miss
 		const float *worldmat = get_matrix(L, LS, worldmat_id);
@@ -187,7 +204,8 @@ luaopen_math3d_aabbcache(lua_State *L) {
 	}
 	struct boxstack * bs = lua_touserdata(L, -1);
 	lua_pop(L, 1);
-	lua_pushlightuserdata(L, bs->LS);
+
+	lua_pushlightuserdata(L, bs);
 	lua_pushcclosure(L, llookup, 1);
 	lua_setfield(L, -2, "lookup");
 
