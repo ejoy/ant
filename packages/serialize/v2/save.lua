@@ -30,18 +30,6 @@ end
 local foreach_save_1
 
 local function foreach_save_2(component, c)
-    if c.attrib and c.attrib.tmp then
-        if c.has_default or c.type == 'primtype' then
-            if type(c.default) == 'function' then
-                return c.default()
-            end
-            return c.default
-        end
-        return
-    end
-    if c.method and c.method.save then
-        component = c.method.save(component)
-    end
     if c.array then
         local n = c.array == 0 and #component or c.array
         local ret = {}
@@ -60,10 +48,7 @@ local function foreach_save_2(component, c)
         markMap(ret)
         return ret
     end
-    if c.type then
-        return foreach_save_1(component, c.type)
-    end
-    return foreach_save_1(component, c.name)
+    return foreach_save_1(component, c.type)
 end
 
 function foreach_save_1(component, name)
@@ -81,6 +66,9 @@ function foreach_save_1(component, name)
     if c.ref and pool[component] then
         return pool[component]
     end
+    if c.method and c.method.save then
+        component = c.method.save(component)
+    end
     local ret
     if not c.type then
         if c.multiple then
@@ -92,7 +80,7 @@ function foreach_save_1(component, name)
                     if com[v.name] == nil and v.attrib and v.attrib.opt then
                         goto continue
                     end
-                    r[v.name] = foreach_save_2(com[v.name], typeinfo[v.type])
+                    r[v.name] = foreach_save_2(com[v.name], v)
                     ::continue::
                 end
                 markMap(r)
@@ -103,13 +91,13 @@ function foreach_save_1(component, name)
                 if component[v.name] == nil and v.attrib and v.attrib.opt then
                     goto continue
                 end
-                ret[v.name] = foreach_save_2(component[v.name], typeinfo[v.type])
+                ret[v.name] = foreach_save_2(component[v.name], v)
                 ::continue::
             end
             markMap(ret)
         end
     else
-        ret = foreach_save_2(component, c)
+        ret = foreach_save_1(component, c.type)
     end
     if c.ref then
         pool[component] = ret
