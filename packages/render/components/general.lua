@@ -5,6 +5,8 @@ local component_util = require "components.util"
 
 local fs 		= require "filesystem"
 local math3d 	= require "math3d"
+local mathpkg   = import_package "ant.math"
+local mc 		= mathpkg.constant
 
 ecs.component_alias("parent", 	"entityid")
 ecs.component_alias("point", 	"vector")
@@ -13,10 +15,16 @@ ecs.component_alias("scale",	"vector")
 ecs.component_alias("position",	"vector")
 ecs.component_alias("direction", "vector")
 
-ecs.component "transform"
+local trans = ecs.component "transform"
 	.srt "srt"
 	['opt'].slotname "string"
 	['opt'].parent "parent"
+function trans:init()
+	if self.parent or self.slotname then
+		self.world = math3d.ref(mc.IDENTITY_MAT)
+	end
+	return self
+end
 
 ecs.tag "editor"
 

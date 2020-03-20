@@ -188,34 +188,30 @@ local function update_entity_transform(hierarchy_cache, eid)
 	local e = world[eid]
 
 	local transform = e.transform
-	local worldmat = transform.srt
+	local srt = transform.srt
 	if e.hierarchy == nil then
 		local peid = transform.parent
 		
 		if peid then
+			local worldmat = transform.world
 			local parentresult = hierarchy_cache[peid]
 			if parentresult then
 				local parentmat = parentresult.world
 				local hie_result = parentresult.hierarchy
 				local slotname = transform.slotname
 
-				-- TODO: why need calculate one more time here.
-				-- when delete a hierarchy node, it's children will not know parent has gone
-				-- no update for 'transform.world', here will always calculate one more time
-				-- if we want cache this result, we need to find all the children when hierarchy
-				-- node deleted, and update it's children at that moment, then we can save 
-				-- this calculation.
 				if hie_result and slotname then
 					local hiemat = hie_result[slotname]
-					worldmat.m = math3d.mul(parentmat, math3d.mul(hiemat, worldmat))
+					worldmat.m = math3d.mul(parentmat, math3d.mul(hiemat, srt))
 				else
-					worldmat.m = math3d.mul(parentmat, worldmat)
+					worldmat.m = math3d.mul(parentmat, srt)
 				end
 			end
+			return worldmat
 		end
 	end
 
-	return worldmat
+	return srt
 end
 
 local function reset_hierarchy_transform_result(hierarchy_cache)
