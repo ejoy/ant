@@ -633,53 +633,6 @@ get_object(lua_State *L, struct lastack *LS, int index, int *type) {
 }
 
 static const float *
-get_object_or_numer(lua_State *L, struct lastack *LS, int index, int *type) {
-	if (lua_isnumber(L, index)) {
-		float *n = lastack_allocvec4(LS);
-		n[0] = lua_tonumber(L, index);
-		n[1] = n[1];
-		n[2] = n[1];
-		n[3] = n[1];
-		*type = LINEAR_TYPE_VEC4;
-		lastack_pop(LS);
-		return n;
-	}
-	return get_object(L, LS, index, type);
-}
-
-#define BINTYPE(v1, v2) (((v1) << LINEAR_TYPE_BITS_NUM) + (v2))
-
-static int
-lmul(lua_State *L) {
-	struct lastack *LS = GETLS(L);
-	int lt,rt;
-	const float *lv = get_object_or_numer(L, LS, 1, &lt);
-	const float *rv = get_object_or_numer(L, LS, 2, &rt);
-
-	int type = BINTYPE(lt, rt);
-	float *result;
-	switch (type) {
-	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT):
-		result = lastack_allocmatrix(LS);
-		math3d_mul_matrix(LS, lv, rv, result);
-		break;
-	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_QUAT):
-		result = lastack_allocquat(LS);
-		math3d_mul_quat(LS, lv,rv, result);
-		break;
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_VEC4):
-		result = lastack_allocvec4(LS);
-		math3d_mul_vec4(LS, lv, rv, result);
-		break;
-	default:
-		return luaL_error(L, "Invalid mul arguments ltype = %d rtype = %d\nmatrix or quaternion mul vector should use 'transform' function", lt, rt);
-	}
-
-	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
-	return 1;
-}
-
-static const float *
 vector_from_index(lua_State *L, struct lastack *LS, int index) {
 	const float * v = object_from_index(L, LS, index, LINEAR_TYPE_VEC4, vector_from_table);
 	if (v == NULL)
@@ -722,6 +675,8 @@ lsub(lua_State *L) {
 
 	return 1;
 }
+
+
 
 static const float *
 get_vec_or_number(lua_State *L, struct lastack *LS, int index, float tmp[4]) {
@@ -768,6 +723,48 @@ quat_from_index(lua_State *L, struct lastack *LS, int index) {
 	if (q == NULL)
 		luaL_error(L, "Need a quat");
 	return q;
+}
+
+static int
+lmul(lua_State *L) {
+	struct lastack *LS = GETLS(L);
+	if (lua_isnumber(L, 1)) {
+		// number * vertex
+		float r[4];
+		r[0] = lua_tonumber(L, 1);
+		r[1] = r[0];
+		r[2] = r[0];
+		r[3] = r[0];
+		math3d_mul_vec4(LS, r, vector_from_index(L, LS, 2), lastack_allocvec4(LS));
+	} else {
+		int type;
+		const float *lv = get_object(L, LS, 1, &type);
+		switch (type) {
+		case LINEAR_TYPE_MAT:
+			math3d_mul_matrix(LS, lv, matrix_from_index(L, LS, 2), lastack_allocmatrix(LS));
+			break;
+		case LINEAR_TYPE_QUAT:
+			math3d_mul_quat(LS, lv, quat_from_index(L, LS, 2), lastack_allocquat(LS));
+			break;
+		case LINEAR_TYPE_VEC4:
+			if (lua_isnumber(L, 2)) {
+				float r[4];
+				r[0] = lua_tonumber(L, 2);
+				r[1] = r[0];
+				r[2] = r[0];
+				r[3] = r[0];
+				math3d_mul_vec4(LS, lv, r, lastack_allocvec4(LS));
+			} else {
+				math3d_mul_vec4(LS, lv, vector_from_index(L, LS, 2), lastack_allocvec4(LS));
+			}
+			break;
+		default:
+			return luaL_error(L, "Invalid mul arguments %s or quaternion mul vector should use 'transform' function", lastack_typename(type));
+		}
+	}
+
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
 }
 
 static int64_t
