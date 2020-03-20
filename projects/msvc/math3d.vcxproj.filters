@@ -26,12 +26,6 @@
     <ClCompile Include="..\..\clibs\math3d\math3d.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\math3d\aabbcache.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\math3d\mathcache.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\clibs\math3d\testadapter.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,7 +43,6 @@
     <ClInclude Include="..\..\clibs\math3d\math3dfunc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\math3d\mathcache.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\clibs\math3d\test.lua" />

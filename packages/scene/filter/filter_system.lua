@@ -10,7 +10,6 @@ local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
 
 local math3d = require "math3d"
-local aabb_cache = require "math3d.aabbcache".new()
 
 local filter_properties = ecs.system "filter_properties"
 filter_properties.require_singleton "render_properties"
@@ -149,7 +148,7 @@ local function filter_element(eid, rendermesh, etrans, materialcomp, filter)
 			for groupidx, group in ipairs(meshnode) do
 				local material = get_material(group, groupidx, materialcomp, material_refs)
 				-- worldtrans is etrans * localtrans
-				local worldtrans, aabb = aabb_cache:lookup(etrans, localtrans, group.bounding and group.bounding.aabb or nil)
+				local aabb, worldtrans = math3d.aabb_transform(etrans, group.bounding and group.bounding.aabb or nil, localtrans)
 				insert_primitive(eid, group, material, worldtrans, aabb, filter)
 			end
 		end
@@ -242,9 +241,5 @@ function primitive_filter_sys:filter_primitive()
 	end
 
 	reset_hierarchy_transform_result(hierarchy_cache)
-end
-
-function primitive_filter_sys:end_frame()
-	aabb_cache:reset()
 end
 
