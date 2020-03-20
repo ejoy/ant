@@ -625,46 +625,56 @@ lreset(lua_State *L) {
 
 static const float *
 get_object(lua_State *L, struct lastack *LS, int index, int *type) {
-	int ltype = lua_type(L, index);
-	if (ltype == LUA_TNUMBER) {
-		float *n = lastack_allocvec4(LS);
-		n[0] = lua_tonumber(L, index);
-		n[1] = 0;
-		n[2] = 0;
-		n[3] = 0;
-		*type = LINEAR_TYPE_NUM;
-		return lastack_value(LS, lastack_pop(LS), NULL);
-	}
-	int64_t id = get_id(L, index, ltype);
+	int64_t id = get_id(L, index, lua_type(L, index));
 	const float * v = lastack_value(LS, id, type);
 	if (v == NULL)
 		luaL_error(L, "Invalid id at stack %d", index);
 	return v;
 }
 
-static float *
-alloc_buffer(struct lastack *LS, int type) {
-	switch(type) {
-	case LINEAR_TYPE_MAT:
-		return lastack_allocmatrix(LS);
-	case LINEAR_TYPE_QUAT:
-		return lastack_allocquat(LS);
-	default:
-		// may LINEAR_TYPE_NUM LINEAR_TYPE_VEC4
-		return lastack_allocvec4(LS);
+static const float *
+get_object_or_numer(lua_State *L, struct lastack *LS, int index, int *type) {
+	if (lua_isnumber(L, index)) {
+		float *n = lastack_allocvec4(LS);
+		n[0] = lua_tonumber(L, index);
+		n[1] = n[1];
+		n[2] = n[1];
+		n[3] = n[1];
+		*type = LINEAR_TYPE_VEC4;
+		lastack_pop(LS);
+		return n;
 	}
+	return get_object(L, LS, index, type);
 }
+
+#define BINTYPE(v1, v2) (((v1) << LINEAR_TYPE_BITS_NUM) + (v2))
 
 static int
 lmul(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	int lt,rt;
-	const float *lv = get_object(L, LS, 1, &lt);
-	float *tmp = alloc_buffer(LS, lt);
-	const float *rv = get_object(L, LS, 1, &rt);
-	if (math3d_mul_object(LS, lv, rv, lt, rt, tmp) == LINEAR_TYPE_NONE) {
+	const float *lv = get_object_or_numer(L, LS, 1, &lt);
+	const float *rv = get_object_or_numer(L, LS, 2, &rt);
+
+	int type = BINTYPE(lt, rt);
+	float *result;
+	switch (type) {
+	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT):
+		result = lastack_allocmatrix(LS);
+		math3d_mul_matrix(LS, lv, rv, result);
+		break;
+	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_QUAT):
+		result = lastack_allocquat(LS);
+		math3d_mul_quat(LS, lv,rv, result);
+		break;
+	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_VEC4):
+		result = lastack_allocvec4(LS);
+		math3d_mul_vec4(LS, lv, rv, result);
+		break;
+	default:
 		return luaL_error(L, "Invalid mul arguments ltype = %d rtype = %d\nmatrix or quaternion mul vector should use 'transform' function", lt, rt);
 	}
+
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
 }
@@ -713,34 +723,35 @@ lsub(lua_State *L) {
 	return 1;
 }
 
+static const float *
+get_vec_or_number(lua_State *L, struct lastack *LS, int index, float tmp[4]) {
+	if (lua_type(L, index) == LUA_TNUMBER) {
+		tmp[0] = lua_tonumber(L, index);
+		tmp[1] = tmp[0];
+		tmp[2] = tmp[0];
+		tmp[3] = tmp[0];
+		return tmp;
+	} else {
+		return vector_from_index(L, LS, index);
+	}
+}
+
 static int
-lmuladd(lua_State *L){
+lmuladd(lua_State *L) {
 	struct lastack *LS = GETLS(L);
-	
-	int ltype, rtype;
-	const float *v0 = get_object(L, LS, 1, &ltype);
-	if (ltype != LINEAR_TYPE_NUM && ltype != LINEAR_TYPE_VEC4){
-		return luaL_error(L, "argument 1 must be number/vec4:%s", lastack_typename(ltype));
-	}
-	const float *v1 = get_object(L, LS, 2, &rtype);
-	if (rtype != LINEAR_TYPE_NUM && rtype != LINEAR_TYPE_VEC4){
-		return luaL_error(L, "argument 1 must be number/vec4:%s", lastack_typename(rtype));
-	}
+	float n1[4];
+	float n2[4];
+	const float *v0 = get_vec_or_number(L, LS, 1, n1);
+	const float *v1 = get_vec_or_number(L, LS, 2, n2);
+	const float *v2 = vector_from_index(L, LS, 3);
 
-	if ((ltype == LINEAR_TYPE_NUM && rtype == LINEAR_TYPE_VEC4) ||
-		(ltype == LINEAR_TYPE_VEC4 && rtype == LINEAR_TYPE_NUM) ||
-		(ltype == LINEAR_TYPE_VEC4 && rtype == LINEAR_TYPE_VEC4)){
-		float *result = lastack_allocmatrix(LS);
-		void *result_id = STACKID(lastack_pop(LS));
-		math3d_mul_object(LS, v0, v1, ltype, rtype, result);
-		const float * v2 = vector_from_index(L, LS, 3);
+	float *result = lastack_allocvec4(LS);
+	void *result_id = STACKID(lastack_pop(LS));
+	math3d_mul_vec4(LS, v0, v1, result);
+	math3d_add_vec(LS, result, v2, result);
 
-		math3d_add_vec(LS, result, v2, result);
-		lua_pushlightuserdata(L, result_id);
-		return 1;
-	}
-
-	return luaL_error(L, "argumen 1/2 must be one of them as vec4, argument 1:%s, argument 2:%s", lastack_typename(ltype), lastack_typename(rtype));
+	lua_pushlightuserdata(L, result_id);
+	return 1;
 }
 
 static const float *
@@ -1362,7 +1373,7 @@ laabb_transform(lua_State *L) {
 	if (srt) {
 		float *mat = lastack_allocmatrix(LS);
 		result_matid = STACKID(lastack_pop(LS));
-		math3d_mul_object(LS, worldmat, srt, LINEAR_TYPE_MAT, LINEAR_TYPE_MAT, mat);
+		math3d_mul_matrix(LS, worldmat, srt, mat);
 		worldmat = mat;
 	}
 	if (aabb) {

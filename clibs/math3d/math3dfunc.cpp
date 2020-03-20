@@ -92,40 +92,27 @@ math3d_make_quat_from_axis(struct lastack *LS, const float *axis, float radian) 
 	q = glm::angleAxis(radian, a);
 }
 
-#define BINTYPE(v1, v2) (((v1) << LINEAR_TYPE_BITS_NUM) + (v2))
 #define MAT(v) (*(const glm::mat4x4 *)(v))
 #define VEC(v) (*(const glm::vec4 *)(v))
 #define VEC3(v) (*(const glm::vec3 *)(v))
 #define QUAT(v) (*(const glm::quat *)(v))
 
-int
-math3d_mul_object(struct lastack *LS, const float *val0, const float *val1, int ltype, int rtype, float tmp[16]) {
-	int type = BINTYPE(ltype, rtype);
+void
+math3d_mul_matrix(struct lastack *LS, const float val0[16], const float val1[16], float result[16]) {
+	glm::mat4x4 &mat = *(glm::mat4x4 *)result;
+	mat = MAT(val0) * MAT(val1);
+}
 
-	glm::mat4x4 &mat = *(glm::mat4x4 *)tmp;
-	glm::vec4 &vec = *(glm::vec4 *)tmp;
+void
+math3d_mul_vec4(struct lastack *LS, const float val0[4], const float val1[4], float result[4]) {
+	glm::vec4 &vec = *(glm::vec4 *)result;
+	vec = VEC(val0) * VEC(val1);
+}
 
-	switch (type) {
-	case BINTYPE(LINEAR_TYPE_MAT,LINEAR_TYPE_MAT):
-		mat = MAT(val0) * MAT(val1);
-		return LINEAR_TYPE_MAT;
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_NUM):
-		vec = VEC(val0) * val1[0];
-		return LINEAR_TYPE_VEC4;
-	case BINTYPE(LINEAR_TYPE_NUM, LINEAR_TYPE_VEC4):
-		vec = val0[0] * VEC(val1);
-		return LINEAR_TYPE_VEC4;
-	case BINTYPE(LINEAR_TYPE_QUAT, LINEAR_TYPE_QUAT): {
-		glm::quat &quat = *(glm::quat *)tmp;
-		quat = QUAT(val0) * QUAT(val1);
-		return LINEAR_TYPE_QUAT;
-	}
-	case BINTYPE(LINEAR_TYPE_VEC4, LINEAR_TYPE_VEC4):
-		vec = VEC(val0) * VEC(val1);
-		return LINEAR_TYPE_VEC4;
-	}
-
-	return LINEAR_TYPE_NONE;
+void
+math3d_mul_quat(struct lastack *LS, const float val0[4], const float val1[4], float result[4]) {
+	glm::quat &quat = *(glm::quat *)result;
+	quat = QUAT(val0) * QUAT(val1);
 }
 
 void
