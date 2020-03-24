@@ -51,6 +51,17 @@ local function foreach_save_2(component, c)
     return foreach_save_1(component, c.type)
 end
 
+local function save_component(res, typeinfo, value)
+    for _, v in ipairs(typeinfo) do
+        if value[v.name] == nil and v.attrib and v.attrib.opt then
+            goto continue
+        end
+        res[v.name] = foreach_save_2(value[v.name], v)
+        ::continue::
+    end
+    markMap(res)
+end
+
 function foreach_save_1(component, name)
     if name == 'primtype' then
         return component
@@ -73,28 +84,15 @@ function foreach_save_1(component, name)
     if not c.type then
         if c.multiple then
             ret = {}
-            for i, com in world:each_component(component) do
+            save_component(ret, c, component)
+            for i, com in ipairs(component) do
                 local r = {}
                 ret[i] = r
-                for _, v in ipairs(c) do
-                    if com[v.name] == nil and v.attrib and v.attrib.opt then
-                        goto continue
-                    end
-                    r[v.name] = foreach_save_2(com[v.name], v)
-                    ::continue::
-                end
-                markMap(r)
+                save_component(r, c, com)
             end
         else
             ret = {}
-            for _, v in ipairs(c) do
-                if component[v.name] == nil and v.attrib and v.attrib.opt then
-                    goto continue
-                end
-                ret[v.name] = foreach_save_2(component[v.name], v)
-                ::continue::
-            end
-            markMap(ret)
+            save_component(ret, c, component)
         end
     else
         ret = foreach_save_1(component, c.type)
