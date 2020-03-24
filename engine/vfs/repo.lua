@@ -53,14 +53,18 @@ local function init(rootpath, repopath, cachepath)
 	end
 end
 
-function repo.new(rootpath)
+function repo.new(rootpath, parentpath)
 	if not lfs.is_directory(rootpath) then
 		return nil, "Not a dir"
 	end
 	local cachepath = lfs.mydocs_path() / "ant" / "cache"
 	local repopath = rootpath / ".repo"
 	init(rootpath, repopath, cachepath)
-	local mountpoint = access.readmount(rootpath / ".mount")
+	local mountpoint = {}
+	if parentpath then
+		access.readmount(mountpoint, parentpath / ".mount")
+	end
+	access.readmount(mountpoint, rootpath / ".mount")
 	rootpath = mountpoint[''] or rootpath
 	local mountname = access.mountname(mountpoint)
 	local r = setmetatable({

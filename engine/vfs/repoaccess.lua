@@ -4,6 +4,23 @@ local lfs = require "filesystem.local"
 local vfsinternal = require "firmware.vfs"
 local crypt = require "crypt"
 
+local function load_package(path)
+    if not lfs.is_directory(path) then
+        error(('`%s` is not a directory.'):format(path:string()))
+    end
+    local cfgpath = path / "package.lua"
+    if not lfs.exists(cfgpath) then
+        error(('`%s` does not exist.'):format(cfgpath:string()))
+    end
+    local config = dofile(cfgpath:string())
+    for _, field in ipairs {'name'} do
+        if not config[field] then
+            error(('Missing `%s` field in `%s`.'):format(field, cfgpath:string()))
+        end
+    end
+    return config.name
+end
+
 function access.repopath(repo, hash, ext)
 	if ext then
 		return repo._repo /	hash:sub(1,2) / (hash .. ext)
@@ -12,12 +29,8 @@ function access.repopath(repo, hash, ext)
 	end
 end
 
-function access.readmount(filename)
-	local f = lfs.open(filename, "rb")
-	local ret = {}
-	if not f then
-		return ret
-	end
+function access.readmount(mountpoint, filename)
+	local f = assert(lfs.open(filename, "rb"))
 	for line in f:lines() do
 		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
 		if name == nil then
@@ -28,21 +41,18 @@ function access.readmount(filename)
 		end
 		path = lfs.path(path:gsub("%s*#.*$",""))	-- strip comment
 		if name == '@pkg-one' then
-			local pm = require "antpm"
-			local pkgname = pm.load_package(path)
-			ret['pkg/'..pkgname] = path
+			local pkgname = load_package(path)
+			mountpoint['pkg/'..pkgname] = path
 		elseif name == '@pkg' then
-			local pm = require "antpm"
 			for pkgpath in path:list_directory() do
-				local pkgname = pm.load_package(pkgpath)
-				ret['pkg/'..pkgname] = pkgpath
+				local pkgname = load_package(pkgpath)
+				mountpoint['pkg/'..pkgname] = pkgpath
 			end
 		else
-			ret[name] = path
+			mountpoint[name] = path
 		end
 	end
 	f:close()
-	return ret
 end
 
 function access.mountname(mountpoint)
