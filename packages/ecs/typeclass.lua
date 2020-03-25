@@ -129,6 +129,7 @@ local function importAll(w, ecs, class, policies, systems, loader)
 		interface = {},
 		component = class.component,
 		unique = {},
+		pipeline = class.pipeline,
 	}
 	w._class = cut
 	w._interface =  dyntable()
@@ -318,7 +319,7 @@ end
 return function (w, policies, systems, loader)
 	local schema_data = {}
 	local schema = createschema(schema_data)
-	local class = { component = schema_data.map, singleton = {} }
+	local class = { component = schema_data.map, singleton = {}, pipeline = {} }
 	local ecs = { world = w }
 
 	local function register(args)
@@ -378,9 +379,23 @@ return function (w, policies, systems, loader)
 			class.singleton[name] = {dataset}
 		end
 	end
-	ecs.pipeline = function (v)
-		assert(w._class.pipeline == nil)
-		w._class.pipeline = v
+	ecs.pipeline = function (name)
+		local r = class.pipeline[name]
+		if r == nil then
+			log.info("Register pipeline", name)
+			r = {name = name}
+			setmetatable(r, {
+				__call = function(_,v)
+					if r.value then
+						error(("duplicate pipleline `%s`."):format(name))
+					end
+					r.value = v
+					return r
+				end,
+			})
+			class.pipeline[name] = r
+		end
+		return r
 	end
 	decl_basetype(schema)
 	importAll(w, ecs, class, policies, systems, loader)
