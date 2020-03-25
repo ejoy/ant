@@ -1,12 +1,14 @@
 local lfs 	= require "filesystem.local"
-local fs	= require "filesystem"
 local util  = require "util"
-local vfs	= require "vfs"
 
 local assetpkg = import_package "ant.asset"
 local assetutil= assetpkg.util
 
-local toolpath = util.valid_tool_exe_path "texturec"
+local utilitypkg = import_package "ant.utility"
+local subprocess = utilitypkg.subprocess
+local fs_util = utilitypkg.fs_util
+
+local toolpath = fs_util.valid_tool_exe_path "texturec"
 
 local extensions = {
 	direct3d11 	= "dds",
@@ -104,12 +106,12 @@ return function (identity, sourcefile, outfile, localpath)
 
 	gen_commands(plat, texcontent, texpath, tmpoutfile, commands)
 
-	local success, msg = util.spawn_process(commands, function (info)
+	local success, msg = subprocess.spawn_process(commands, function (info)
 		local success, msg = true, ""
 		if info ~= "" then
 			local INFO = info:upper()
 			success = INFO:find("ERROR:", 1, true) == nil
-			msg = util.to_cmdline(commands) .. "\n" .. info .. "\n"
+			msg = subprocess.to_cmdline(commands) .. "\n" .. info .. "\n"
 		end
 		return success, msg
 	end)

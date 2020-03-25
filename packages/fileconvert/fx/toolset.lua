@@ -1,10 +1,11 @@
 local lfs = require "filesystem.local"
-local platform = require "platform"
-local OS = platform.OS
+local utilitypkg = import_package "ant.utility"
+local subprocess = utilitypkg.subprocess
+local fs_util = utilitypkg.fs_util
 
 local util = require "util"
 
-local shaderc = util.valid_tool_exe_path "shaderc"
+local shaderc = fs_util.valid_tool_exe_path "shaderc"
 local toolset = {}
 
 local stage_types = {
@@ -109,7 +110,7 @@ function toolset.compile(config)
 
 	add_optimizelevel(config.optimizelevel, default_level(shadertype, stagetype))
 
-	local ok, msg = util.spawn_process(commands, function (info)
+	local ok, msg = subprocess.spawn_process(commands, function (info)
 		local success, msg = true, ""
 		if info ~= "" then
 			local INFO = info:upper()
@@ -122,7 +123,7 @@ function toolset.compile(config)
 					break
 				end
 			end
-			msg = util.to_cmdline(commands) .. "\n" .. info .. "\n"
+			msg = subprocess.to_cmdline(commands) .. "\n" .. info .. "\n"
 		end
 
 		return success, msg

@@ -17,6 +17,6 @@ config = {
         "static",
     }
 }
-mesh_path = "/pkg/ant.resources.binary/simple_skin.glb"
+mesh_path = "/pkg/ant.resources.binary/meshes/simple_skin/simple_skin.glb"
 sourcetype = "glb"
 type = "mesh"
