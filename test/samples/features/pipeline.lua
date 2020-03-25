@@ -1,58 +1,60 @@
 local ecs = ...
+local pipeline = ecs.pipeline
 
-ecs.pipeline {
-    { name = "init",
-        "init",
-        "init_blit_render",
-        "post_init",
+pipeline "init" {
+    "init",
+    "init_blit_render",
+    "post_init",
+}
+
+pipeline "exit" {
+    "exit",
+}
+
+pipeline "update" {
+    "start",
+    "timer",
+    "data_changed",
+    "scene_update",
+    pipeline "collider" {
+        "update_collider_transform",
+        "update_collider",
     },
-    { name = "update",
-        "start",
-        "timer",
-        "data_changed",
-        "scene_update",
-        {name = "collider",
-            "update_collider_transform",
-            "update_collider",
-        },
-        { name = "animation",
-            "animation_state",
-            "sample_animation_pose",
-            "do_ik",
-            "skin_mesh",
-            "end_animation",
-        },
-        { name = "sky",
-            "update_sun",
-            "update_sky",
-        },
-        
-        "widget",
-        { name = "render",
-            "shadow_camera",
-            "load_render_properties",
-            "filter_primitive",
-            "make_shadow",
-            "debug_shadow",
-            "cull",
-            "render_commit",
-            { name = "postprocess",
-                "bloom",
-                "tonemapping",
-                "combine_postprocess",
-            }
-        },
-        -- editor
-        "camera_control",
-        "lock_target",
-        "pickup",
-        "update_editable_hierarchy",
-        { name = "ui",
-            "ui_start",
-            "ui_update",
-            "ui_end",
-        },
-        "end_frame",
-        "final",
+    pipeline "animation" {
+        "animation_state",
+        "sample_animation_pose",
+        "do_ik",
+        "skin_mesh",
+        "end_animation",
     },
+    pipeline "sky" {
+        "update_sun",
+        "update_sky",
+    },
+    "widget",
+    pipeline "render" {
+        "shadow_camera",
+        "load_render_properties",
+        "filter_primitive",
+        "make_shadow",
+        "debug_shadow",
+        "cull",
+        "render_commit",
+        pipeline "postprocess" {
+            "bloom",
+            "tonemapping",
+            "combine_postprocess",
+        }
+    },
+    "camera_control",
+    "lock_target",
+    "pickup",
+    "update_editable_hierarchy",
+    pipeline "ui" {
+        "ui_start",
+        "ui_update",
+        "ui_end",
+    },
+    "end_frame",
+    "final",
 }

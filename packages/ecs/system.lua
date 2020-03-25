@@ -30,22 +30,8 @@ local function solve_depend(res, step, pipeline)
 				table_append(res, step[v])
 				step[v] = false
 			end
-		elseif type(v) == "table" then
-			solve_depend(res, step, v)
-		end
-	end
-end
-
-local function find_entry(pipeline, what)
-	for _, v in ipairs(pipeline) do
-		if type(v) == "table" then
-			if v.name == what then
-				return v
-			end
-			local res = find_entry(v, what)
-			if res then
-				return res
-			end
+		elseif type(v) == "table" and v.value then
+			solve_depend(res, step, v.value)
 		end
 	end
 end
@@ -68,20 +54,19 @@ function system.init(sys, pipeline)
 	end
 	setmetatable(res, nil)
 
-	local function check(pl)
-		for _, v in ipairs(pl) do
-			if type(v) == "string" then
-				mark[v] = nil
-			elseif type(v) == "table" then
-				check(v)
+	for _, pl in pairs(pipeline) do
+		if pl.value then
+			for _, v in ipairs(pl.value) do
+				if type(v) == "string" then
+					mark[v] = nil
+				end
 			end
 		end
 	end
-	check(pipeline)
 
-	-- for name in pairs(mark) do
-	-- 	error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
-	-- end
+	for name in pairs(mark) do
+		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
+	end
 	return {
 		steps = res,
 		pipeline = pipeline,
@@ -89,12 +74,12 @@ function system.init(sys, pipeline)
 end
 
 function system.lists(sys, what)
-	local subpipeline = find_entry(sys.pipeline, what)
-	if not subpipeline then
+	local pl = sys.pipeline[what]
+	if not pl or not pl.value then
 		return
 	end
 	local res = {}
-	solve_depend(res, sys.steps, subpipeline)
+	solve_depend(res, sys.steps, pl.value)
 	return res
 end
 
