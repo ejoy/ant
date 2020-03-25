@@ -1,7 +1,7 @@
 local fs = require "filesystem.local"
 local glbloader = require "glb"
 
-local subprocess = require "utility.subprocess"
+local subprocess = require "utility.sb_util"
 local fs_util = require "utility.fs_util"
 
 return function (inputfile, output_folder)

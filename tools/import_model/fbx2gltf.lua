@@ -1,6 +1,6 @@
 local fs = require "filesystem.local"
 
-local subprocess = require "utility.subprocess"
+local subprocess = require "utility.sb_util"
 local fsutil = require "utility.fs_util"
 
 local function convert(filename)

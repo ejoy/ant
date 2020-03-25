@@ -4,7 +4,7 @@ local util  = require "util"
 local assetpkg = import_package "ant.asset"
 local assetutil= assetpkg.util
 
-local utilitypkg = import_package "ant.utility"
+local utilitypkg = import_package "ant.utility.local"
 local subprocess = utilitypkg.subprocess
 local fs_util = utilitypkg.fs_util
 
@@ -118,7 +118,7 @@ return function (identity, sourcefile, outfile, localpath)
 
 	if success then
 		if lfs.exists(tmpoutfile) then
-			util.embed_file(outfile, texcontent, {util.fetch_file_content(tmpoutfile)})
+			util.embed_file(outfile, texcontent, {fs_util.fetch_file_content(tmpoutfile)})
 			lfs.remove(tmpoutfile)
 			return success, msg
 		end

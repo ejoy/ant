@@ -1,5 +1,5 @@
 return {
     stringify = require "stringify",
     fs_util = require "fs_util",
-    subprocess = require "subprocess",
+    subprocess = require "sb_util",
 }

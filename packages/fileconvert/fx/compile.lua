@@ -1,10 +1,12 @@
 local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
-local fs		= require "filesystem"
 local util 		= require "util"
 
 local assetpkg  = import_package "ant.asset"
 local assetutil = assetpkg.util
+
+local utilitypkg = import_package "ant.utility.local"
+local fs_util = utilitypkg.fs_util
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
 local function check_compile_shader(identity, srcfilepath, outfilepath, macros)
@@ -125,7 +127,7 @@ return function (identity, srcfilepath, outfilepath, localpath)
 				for _, d in ipairs(depends) do
 					all_depends[d:string()] = d
 				end
-				binarys[stagename] = util.fetch_file_content(outfilepath)
+				binarys[stagename] = fs_util.fetch_file_content(outfilepath)
 			end
 		end
 	end
