@@ -3,19 +3,16 @@ local hub           = editor.hub
 local scene         = import_package "ant.scene".util
 local localfs = require "filesystem.local"
 local gui_mgr = import_package "ant.imgui".gui_mgr
-local gui_util = import_package "ant.imgui".editor.gui_util
 local editor_world = import_package "ant.imgui".editor_world
 local rxbus = import_package "ant.rxlua".RxBus
 local scene_control = {}
-local fs = require "filesystem"
 
 function scene_control.run_test_package(raw_path)
-    local path = fs.path(tostring(raw_path))
+    local path = localfs.path(tostring(raw_path))
     local mapcfg = localfs.dofile(path)
-    if not fs.exists(fs.path ("/pkg/"..mapcfg.name)) then
-        local lpath = localfs.path(path:string())
-        gui_util.remount_package(lpath:parent_path())
-    end
+
+    local vfs = require "vfs"
+    vfs.reset(path:parent_path())
 
     local config = {
         policy      = mapcfg.world.policy,

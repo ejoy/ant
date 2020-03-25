@@ -334,17 +334,6 @@ function gui_util.load_local_file(local_path_str)
     end
 end
 
-function gui_util.remount_package(lfs_path)
-    local fs = require "filesystem"
-    local pm = require "antpm"
-    local name = pm.load_package(lfs_path)
-    local vfs = require "vfs"
-    vfs.unmount("pkg/"..name)
-    vfs.add_mount("pkg/"..name,lfs_path)
-    pm.unregister_package(fs.path("pkg/"..name))
-    pm.register_package(fs.path("pkg/"..name))
-end
-
 function gui_util.data_to_lua_file(data,indent)
     local tconcat = table.concat
     local tinsert = table.insert
