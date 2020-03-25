@@ -51,8 +51,10 @@ local function layout_desc(elem_prefixs, layout_elems, layout_stride, pointer, o
 
 	for _, elem_prefix in ipairs(elem_prefixs) do
 		local elem = find_elem(elem_prefix, layout_elems)
-		local name = declmgr.name_mapper[elem_prefix]
-		desc[name], offset = create_node(elem, offset, layout_stride, pointer)
+		if elem then
+			local name = declmgr.name_mapper[elem_prefix]
+			desc[name], offset = create_node(elem, offset, layout_stride, pointer)
+		end
 	end
 	return desc
 end

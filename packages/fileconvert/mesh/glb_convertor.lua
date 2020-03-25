@@ -415,7 +415,7 @@ return function (srcname, dstname, cfg)
 	scene.scenescale = get_scale(cfg)
 	scene.asset = {
 		version = glbdata.info.asset.version,
-		generator = "ant(" .. glbdata.info.asset.generator .. ")",
+		generator = glbdata.info.asset.generator and "ant(" .. glbdata.info.asset.generator .. ")" or nil,
 	}
 
 	local new_binaries = {}

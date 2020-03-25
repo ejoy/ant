@@ -13,7 +13,7 @@ local function help_info()
     ]]
 end
 
-if #arg < 3 then
+if #arg < 2 then
     print(help_info())
     return
 end
@@ -186,43 +186,48 @@ local function export_pbrm(pbrm_path)
     end
 
     local pbrm_paths = {}
-    for matidx, mat in ipairs(glbscene.materials) do
-        local name = mat.name or tostring(matidx)
-        local pbr_mr = mat.pbrMetallicRoughness
-        local pbrm = {
-            basecolor = {
-                texture = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
-                factor = pbr_mr.baseColorFactor,
-            },
-            metallic_roughness = {
-                texture = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
-                roughness_factor = pbr_mr.roughnessFactor,
-                metallic_factor = pbr_mr.metallicFactor
-            },
-            normal = {
-                texture = handle_texture(mat.normalTexture, "normal", true, "linear"),
-            },
-            occlusion = {
-                texture = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
-            },
-            emissive = {
-                texture = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
-                factor  = mat.emissiveFactor,
-            },
-            alphaMode   = mat.alphaMode,
-            alphaCutoff = mat.alphaCutoff,
-            doubleSided = mat.doubleSided,
-        }
-
-        local function refine_name(name)
-            local newname = name:gsub("['\\/:*?\"<>|]", "_")
-            return newname
+    local materials = glbscene.materials
+    if materials then
+        for matidx, mat in ipairs(materials) do
+            local name = mat.name or tostring(matidx)
+            local pbr_mr = mat.pbrMetallicRoughness
+            local pbrm = {
+                basecolor = {
+                    texture = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
+                    factor = pbr_mr.baseColorFactor,
+                },
+                metallic_roughness = {
+                    texture = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
+                    roughness_factor = pbr_mr.roughnessFactor,
+                    metallic_factor = pbr_mr.metallicFactor
+                },
+                normal = {
+                    texture = handle_texture(mat.normalTexture, "normal", true, "linear"),
+                },
+                occlusion = {
+                    texture = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
+                },
+                emissive = {
+                    texture = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
+                    factor  = mat.emissiveFactor,
+                },
+                alphaMode   = mat.alphaMode,
+                alphaCutoff = mat.alphaCutoff,
+                doubleSided = mat.doubleSided,
+            }
+    
+            local function refine_name(name)
+                local newname = name:gsub("['\\/:*?\"<>|]", "_")
+                return newname
+            end
+            local filepath = pbrm_path / refine_name(name) .. ".pbrm"
+            write_file(filepath, stringify(pbrm, true, true))
+    
+            pbrm_paths[#pbrm_paths+1] = filepath
         end
-        local filepath = pbrm_path / refine_name(name) .. ".pbrm"
-        write_file(filepath, stringify(pbrm, true, true))
-
-        pbrm_paths[#pbrm_paths+1] = filepath
     end
+
+    return pbrm_paths
 end
 
 local filecvt_util = require "fileconvert.util"

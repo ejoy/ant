@@ -121,7 +121,8 @@ local function build_parent_tree(meshscene)
 			tree[nodeidx] = parentidx
 		end
 	end
-	build_parent_tree2(meshscene.scenes[meshscene.scene+1].nodes)
+	local sceneidx = meshscene.scene or 0
+	build_parent_tree2(meshscene.scenes[sceneidx+1].nodes)
 	return tree
 end
 
@@ -298,9 +299,9 @@ function filtermesh.filter_scene(scene, bin)
 	local parent_tree 			= build_parent_tree(scene)
 	local rootnodes, newnodes 	= fetch_nodes_relate_to_mesh(scene, parent_tree)
 
-	assert(scene.scene == 0)
+	--assert(scene.scene == 0)
 	local newscene = {
-		scene = 0,
+		scene = scene.scene or 0,
 		scenes = {
 			{nodes = rootnodes},
 		},

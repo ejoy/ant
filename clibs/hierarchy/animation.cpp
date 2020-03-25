@@ -279,20 +279,33 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 		OZZ_DELETE(ozz::memory::default_allocator(), v);
 	}
 
-	static int duration(lua_State *L) {
+	static int lduration(lua_State *L) {
 		lua_pushnumber(L, base_type::get(L, 1)->v->duration());
 		return 1;
 	}
-	static int size(lua_State *L) {
+	static int lsize(lua_State *L) {
 		lua_pushinteger(L, base_type::get(L, 1)->v->size());
 		return 1;
 	}
+
+	static int lnum_tracks(lua_State *L){
+		lua_pushinteger(L, base_type::get(L, 1)->v->num_tracks());
+		return 1;
+	}
+
+	static int lname(lua_State *L){
+		lua_pushstring(L, base_type::get(L, 1)->v->name());
+		return 1;
+	}
+	
 	static int create(lua_State* L) {
 		const char* path = luaL_checkstring(L, 1);
 		ozzAnimation* self = base_type::constructor(L);
 		luaL_Reg l[] = {		
-			{"duration", duration},
-			{"size", size},
+			{"duration", lduration},
+			{"num_tracks", lnum_tracks},
+			{"name", lname},
+			{"size", lsize},
 			{nullptr, nullptr},
 		};
 		base_type::set_method(L, l);
