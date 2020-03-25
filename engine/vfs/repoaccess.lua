@@ -327,6 +327,8 @@ local function sandbox_link(repo, srcfile, buildfile)
 	local ok, r1, r2 = pcall(link, repo, srcfile, buildfile)
 	if ok then
 		return r1, r2
+	else
+		print("link file error:", r1)
 	end
 end
 
