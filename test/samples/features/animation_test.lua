@@ -5,6 +5,8 @@ local fs = require "filesystem"
 local serializeutil = import_package "ant.serialize"
 
 local anitest = ecs.system "animation_test"
+local assetpkg = import_package "ant.asset"
+local assetmgr = assetpkg.mgr
 
 
 local ozzmeshdir = fs.path 'meshes' / 'ozz'
@@ -85,13 +87,7 @@ local function gltf_animation_test()
         },
         data = {
             transform = {srt={t={-5, 0, 0, 1}}},
-            rendermesh = {
-                submesh_refs = {
-                    Beta_Joints = {
-                        visible = false,
-                    },
-                }
-            },
+            rendermesh = {},
             mesh = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
             },
@@ -120,6 +116,24 @@ local function gltf_animation_test()
             }
         }
     }
+end
+
+local function print_ske(ske)
+    local trees = {}
+    for i=1, #ske do
+        local jname = ske:joint_name(i)
+        if ske:isroot(i) then
+            trees[i] = ""
+            print(jname)
+        else
+            local s = "  "
+            local p = ske:parent(i)
+            assert(trees[p])
+            s = s .. trees[p]
+            trees[i] = s
+            print(s .. jname)
+        end
+    end
 end
 
 function anitest:init()

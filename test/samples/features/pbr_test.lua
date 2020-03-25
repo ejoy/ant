@@ -4,6 +4,8 @@ local world = ecs.world
 local renderpkg = import_package "ant.render"
 local computil = renderpkg.components
 
+local serializeutil = import_package "ant.serialize"
+
 local fs = require "filesystem"
 
 local pbrtest = ecs.system "pbr_test"
@@ -21,6 +23,7 @@ local function create_pbr_entity(world,
             "ant.render|render",
             "ant.render|mesh",
             "ant.render|name",
+            "ant.serialize|serialize",
             "ant.objcontroller|select",
         },
         data = {
@@ -49,6 +52,7 @@ local function create_pbr_entity(world,
             mesh = {ref_path = meshpath,},
             can_render = true,
             can_select = true,
+            serialize = serializeutil.create(),
         }
 
     }

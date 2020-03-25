@@ -75,24 +75,6 @@ local camera = world:interface "ant.render|camera"
 local icm = world:interface "ant.camera_controller|camera_motion"
 local iwd = world:interface "ant.render|iwidget_drawer"
 
-local function print_ske(ske)
-    local trees = {}
-    for i=1, #ske do
-        local jname = ske:joint_name(i)
-        if ske:isroot(i) then
-            trees[i] = ""
-            print(jname)
-        else
-            local s = "  "
-            local p = ske:parent(i)
-            assert(trees[p])
-            s = s .. trees[p]
-            trees[i] = s
-            print(s .. jname)
-        end
-    end
-end
-
 local function simple_box()
     local eid = world:create_entity {
         policy = {
