@@ -7,12 +7,12 @@ local function create()
     return crypt.uuid()
 end
 
-local function serialize_entity(w, eid, policies)
-    return stringify_entity(w, policies, save_entity(w, eid))
+local function entity(w, eid)
+    return stringify_entity(w, w._policies[eid], save_entity(w, eid))
 end
 
 return {
     create = create,
-    serialize_entity = serialize_entity,
     watch = watch,
+    entity = entity,
 }

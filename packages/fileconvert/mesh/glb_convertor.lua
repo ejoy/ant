@@ -395,6 +395,16 @@ local function refine_mesh_buffers(scene, binary, cfg, newscene, new_binaries)
 	end
 end
 
+-- return function (srcname, dstname, cfg)
+-- 	local fslocal = require "filesystem.local"
+-- 	local fs = require "filesystem"
+-- 	local f = fslocal.open(fs.path(srcname), "rb")
+-- 	local content = f:read "a"
+-- 	f:close()
+-- 	local ff = fslocal.open(fs.path(dstname), "wb")
+-- 	ff:write(content)
+-- 	ff:close()
+-- end
 
 return function (srcname, dstname, cfg)
 	local glbdata = glbloader.decode(srcname)

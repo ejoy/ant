@@ -174,6 +174,7 @@ end
 function stringify_component(name, typename, value, n)
     local ti = typeinfo[typename]
     if ti.multiple then
+        stringify_component_value(name, typename, value, n)
         for _, vv in ipairs(value) do
             stringify_component_value(name, typename, vv, n)
         end

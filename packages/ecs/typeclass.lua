@@ -120,7 +120,7 @@ local function dyntable()
 	end})
 end
 
-local function importAll(w, ecs, class, config, loader)
+local function importAll(w, ecs, class, policies, systems, loader)
 	local cut = {
 		policy = {},
 		system = {},
@@ -132,8 +132,6 @@ local function importAll(w, ecs, class, config, loader)
 	}
 	w._class = cut
 	w._interface =  dyntable()
-	local policies = config.policy
-	local systems  = config.system
 	local imported = {}
 	local importPolicy
 	local importSystem
@@ -317,7 +315,7 @@ local function importAll(w, ecs, class, config, loader)
 	return cut
 end
 
-return function (w, config, loader)
+return function (w, policies, systems, loader)
 	local schema_data = {}
 	local schema = createschema(schema_data)
 	local class = { component = schema_data.map, singleton = {} }
@@ -380,8 +378,12 @@ return function (w, config, loader)
 			class.singleton[name] = {dataset}
 		end
 	end
+	ecs.pipeline = function (v)
+		assert(w._class.pipeline == nil)
+		w._class.pipeline = v
+	end
 	decl_basetype(schema)
-	importAll(w, ecs, class, config, loader)
+	importAll(w, ecs, class, policies, systems, loader)
 	require "component".solve(schema_data)
 	require "policy".solve(w)
 	singleton_solve(w)

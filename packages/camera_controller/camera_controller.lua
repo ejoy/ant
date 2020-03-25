@@ -10,7 +10,7 @@ local function camera_move(forward_axis, position, dx, dy, dz)
 	local right_axis, up_axis = math3d.base_axes(forward_axis)
 	position.v = math3d.add(position, math3d.mul(forward_axis, dz))
 	position.v = math3d.add(position, math3d.mul(up_axis, dy))
-	position.v = math3d.add(position, math3d.mul(right_axis, dz))
+	position.v = math3d.add(position, math3d.mul(right_axis, dx))
 end
 
 local function get_camera()

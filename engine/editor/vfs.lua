@@ -47,7 +47,16 @@ end
 
 function localvfs.new(path)
 	self = assert(repo.new(path))
+	self._parentpath = path
 	self:clean()
+end
+
+function localvfs.reset(path)
+	local old = self
+	self = assert(repo.new(path, old._parentpath))
+	self._parentpath = old._parentpath
+	self._link = old._link --TODO:
+	require "antpm".initialize()
 end
 
 function localvfs.clean_build(srcpath)

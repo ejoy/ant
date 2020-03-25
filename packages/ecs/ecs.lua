@@ -371,10 +371,10 @@ function m.new_world(config,world_class)
 	world.pub = event.pub
 
 	-- load systems and components from modules
-	typeclass(w, config, config.loader or require "packageloader")
+	typeclass(w, config.policy, config.system, config.loader or require "packageloader")
 
 	-- init system
-	w._systems = system.init(w._class.system, config.pipeline)
+	w._systems = system.init(w._class.system, w._class.pipeline)
 
 	-- init singleton
 	local eid = w:create_entity {policy = {}, data = {}}

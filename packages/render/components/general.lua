@@ -5,6 +5,8 @@ local component_util = require "components.util"
 
 local fs 		= require "filesystem"
 local math3d 	= require "math3d"
+local mathpkg   = import_package "ant.math"
+local mc 		= mathpkg.constant
 
 ecs.component_alias("parent", 	"entityid")
 ecs.component_alias("point", 	"vector")
@@ -13,10 +15,16 @@ ecs.component_alias("scale",	"vector")
 ecs.component_alias("position",	"vector")
 ecs.component_alias("direction", "vector")
 
-ecs.component "transform"
+local trans = ecs.component "transform"
 	.srt "srt"
 	['opt'].slotname "string"
 	['opt'].parent "parent"
+function trans:init()
+	if self.parent or self.slotname then
+		self.world = math3d.ref(mc.IDENTITY_MAT)
+	end
+	return self
+end
 
 ecs.tag "editor"
 
@@ -47,15 +55,9 @@ end
 ecs.component "resource"
 	.ref_path "respath"
 
-local sm_ref = ecs.component "submesh_ref"
+ecs.component "submesh_ref"
 	["opt"].material_refs "int[]"
 	.visible "boolean"
-function sm_ref:init()
-	if self.visible and self.material_refs == nil then
-		error(string.format("submesh is visible, but material_refs is nil"))
-	end
-	return self
-end
 
 local rendermesh = ecs.component "rendermesh"
 	["opt"].submesh_refs "submesh_ref{}"
