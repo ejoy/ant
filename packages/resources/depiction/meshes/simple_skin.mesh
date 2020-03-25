@@ -1,0 +1,22 @@
+config = {
+    animation = {
+        ani_list = "all",
+        cpu_skinning = true,
+        load_skeleton = true
+    },
+    flags = {
+        flip_uv = true,
+        ib_32 = false,
+        invert_normal = false
+    },
+    layout = {
+        "p3|w4|i40NIi"
+    },
+    layout_types = {
+        "dynamic",
+        "static",
+    }
+}
+mesh_path = "/pkg/ant.resources.binary/simple_skin.glb"
+sourcetype = "glb"
+type = "mesh"
