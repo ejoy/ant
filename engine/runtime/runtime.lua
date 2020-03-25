@@ -1,3 +1,5 @@
+debug.setcstacklimit(100)
+
 if not __ANT_RUNTIME__ then
     require "editor"
     return

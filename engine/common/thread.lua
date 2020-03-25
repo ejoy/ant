@@ -25,6 +25,7 @@ local function createThread(name, code)
 	__ANT_RUNTIME__ = %q
     package.searchers[3] = ...
 	package.searchers[4] = nil
+	debug.setcstacklimit(100)
 	local function init_thread()
         local f, err = io.open(%q)
         if not f then
