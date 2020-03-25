@@ -2586,6 +2586,19 @@ lsetTransform(lua_State *L) {
 }
 
 static int
+lsetMultiTransforms(lua_State *L){
+	int t = lua_type(L, 1);
+	int num = luaL_optinteger(L, 2, 1);
+	if (t == LUA_TUSERDATA || t == LUA_TLIGHTUSERDATA) {
+		void *mat = lua_touserdata(L, 1);
+		int id = BGFX(set_transform)(mat, num);
+		lua_pushinteger(L, id);
+		return 1;
+	}
+	return luaL_error(L, "invalid type, need userdata/lightuserdata:%d", t);
+}
+
+static int
 ldbgTextClear(lua_State *L) {
 	int attrib = luaL_optinteger(L, 1, 0);
 	int s = lua_toboolean(L, 2);
@@ -4375,6 +4388,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_index_buffer", lsetIndexBuffer },
 		{ "destroy", ldestroy },
 		{ "set_transform", lsetTransform },
+		{ "set_multi_transforms", lsetMultiTransforms},
 		{ "dbg_text_clear", ldbgTextClear },
 		{ "dbg_text_print", ldbgTextPrint },
 		{ "dbg_text_image", ldbgTextImage },
