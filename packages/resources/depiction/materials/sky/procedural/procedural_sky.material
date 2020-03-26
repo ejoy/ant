@@ -11,7 +11,7 @@ properties = {
     },
     u_perezCoeff = {
       name = "Perez coefficients",
-      type = "v4",
+      type = "v4_array",
       value = {
         {
           0, 0, 0, 0

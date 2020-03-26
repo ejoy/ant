@@ -71,7 +71,7 @@ function util.create_procedural_sky(world, settings)
 						u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value=mc.T_ZERO},
 						u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value=mc.T_ZERO},
 						u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", value=mc.T_ZERO},
-						u_perezCoeff = {type="v4", name="Perez coefficients", value_array = {mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO}},
+						u_perezCoeff = {type="v4_array", name="Perez coefficients", value_array = {mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO}},
 					}
 				}),
 			procedural_sky = {
