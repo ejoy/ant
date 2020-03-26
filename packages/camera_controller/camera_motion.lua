@@ -91,7 +91,7 @@ local function rotate_vec(dir, rotateX, rotateY, threshold_around_x_axis)
     local qx = math3d.quaternion{axis=mc.XAXIS, r=radianX}
     local qy = math3d.quaternion{axis=mc.YAXIS, r=radianY}
 
-    local q = math3d.mul(qx, qy)
+    local q = math3d.mul(qy, qx)
     return math3d.transform(q, mc.ZAXIS, 0)
 end
 

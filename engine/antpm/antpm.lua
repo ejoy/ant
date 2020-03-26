@@ -1,6 +1,5 @@
 local sandbox = require "antpm.sandbox"
 local vfs = require "vfs.simplefs"
-local lfs = require "filesystem.cpp"
 local fs  = require "filesystem"
 local dofile = dofile
 
@@ -10,46 +9,33 @@ local registered = {}
 local loaded = {}
 local entry_pkg = nil
 
+local function loadenv(name)
+    local info = registered[name]
+    if not info then
+        error(("\n\tno package '%s'"):format(name))
+    end
+    if not info.env then
+        info.env = sandbox.env("/pkg/"..name, name)
+    end
+    return info.env
+end
+
 local function import(name)
     entry_pkg = entry_pkg or name
     if loaded[name] then
         return loaded[name]
     end
-    if not registered[name] or not registered[name].config.entry then
+    local info = registered[name]
+    if not info or not info.config.entry then
         error(("\n\tno package '%s'"):format(name))
     end
-    local info = registered[name]
-    if not info.env then
-        info.env = sandbox.env("/pkg/"..name, name)
-    end
-    local res = info.env.require(info.config.entry)
+    local res = loadenv(name).require(info.config.entry)
     if res == nil then
         loaded[name] = false
     else
         loaded[name] = res
     end
     return loaded[name]
-end
-
-local function test(name, entry)
-    if not registered[name] then
-        error(("\n\tno package '%s'"):format(name))
-    end
-    local info = registered[name]
-    if not info.env then
-		info.env = sandbox.env("/pkg/"..name, name)
-    end
-    return info.env.require(entry or 'test')
-end
-
-local function pm_loadfile(filename)
-    local name = filename:package_name()
-    local info = registered[name]
-    if not info.env then
-        info.env = sandbox.env("/pkg/"..name, name)
-    end
-    local fs = require "filesystem"
-    return fs.loadfile(filename, 't', info.env)
 end
 
 local function register_package(path)
@@ -137,9 +123,9 @@ local function get_entry_pkg()
 end
 
 return {
+    loadenv = loadenv,
     import = import,
     test = test,
-    loadfile = pm_loadfile,
     register_package = register_package,
     unregister_package = unregister_package,
     initialize = initialize,

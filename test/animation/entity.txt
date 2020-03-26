@@ -39,10 +39,7 @@ material:
 mesh:
   ref_path: /pkg/ant.resources/depiction/meshes/female.mesh
 name: animation_sample
-rendermesh:
-  submesh_refs:
-    Beta_Joints:
-      visible: false
+rendermesh: {}
 serialize: 5e1c39ad369fa96c5bd44fc5
 pose_result: {}
 skeleton:
