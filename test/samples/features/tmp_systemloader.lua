@@ -142,7 +142,7 @@ end
 local firsttime = true
 function init_loader:data_changed()
     if not firsttime then
-        --serialize.entity(world, skyeid)
+        serialize.entity(world, skyeid)
     end
     firsttime = nil
 end
