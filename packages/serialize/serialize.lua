@@ -8,7 +8,7 @@ local function create()
 end
 
 local function entity(w, eid)
-    return stringify_entity(w, w._policies[eid], save_entity(w, eid))
+    return stringify_entity(w._policies[eid], save_entity(w, eid))
 end
 
 return {

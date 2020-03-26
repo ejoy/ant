@@ -64,8 +64,7 @@ local function foreach_init_2(c, args)
         end
         return res
     end
-    local res = foreach_init_1(ti, args)
-    return res
+    return foreach_init_1(ti, args)
 end
 
 function foreach_init_1(c, args)

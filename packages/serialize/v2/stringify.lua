@@ -1,14 +1,8 @@
 local datalist = require 'datalist'
 
-local ARRAY <const> = '--------------------'
 local out
-local typeinfo
 
-local function prefix(n)
-    return ("  "):rep(n)
-end
-
-local function pairs_sortk(t)
+local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
         if type(k) == "string" then
@@ -27,13 +21,31 @@ local function pairs_sortk(t)
     end
 end
 
-local function pairs_sortv(t)
-    local sort = {}
-    for _,v in pairs(t) do
-        sort[#sort+1] = v
+local function copytable(t)
+    local res = {}
+    for k, v in pairs(t) do
+        res[k] = v
     end
-    table.sort(sort)
-    return ipairs(sort)
+    return res
+end
+
+local function isMultipe(v)
+    if type(v) == "table" and v[1] ~= nil then
+        for k in pairs(v) do
+            if type(k) == "string" then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function isArray(v)
+    return v[1] ~= nil
+end
+
+local function indent(n)
+    return ("  "):rep(n)
 end
 
 local function convertreal(v)
@@ -47,153 +59,140 @@ end
 local PATTERN <const> = "%a%d/%-_."
 local PATTERN <const> = "^["..PATTERN.."]["..PATTERN.."]*$"
 
-local function stringify_basetype(name, v)
-    if name == 'int' then
-        return ('%d'):format(v)
-    elseif name == 'real' then
-        return convertreal(v)
-    elseif name == 'string' then
+local function stringify_basetype(v)
+    local t = type(v)
+    if t == 'number' then
+        if math.type(v) == "integer" then
+            return ('%d'):format(v)
+        else
+            return convertreal(v)
+        end 
+    elseif t == 'string' then
         if v:match(PATTERN) then
             return v
         else
             return datalist.quote(v)
         end
-    elseif name == 'boolean'then
+    elseif t == 'boolean'then
         if v then
             return 'true'
         else
             return 'false'
         end
-    elseif name == "tag" then
-        return v and 'true' or 'nil'
-    elseif name == 'entityid' then
-        return v
     end
-    error('unknown base type:'..name)
+    error('invalid type:'..t)
 end
 
-local function stringify_array_value(c, array, v)
-    if c.type ~= 'primtype' then
-        return stringify_array_value(typeinfo[c.type], array, v)
-    end
-    local n = array == 0 and #v or array
+local stringify_value
+
+local function stringify_array_simple(n, prefix, t)
     local s = {}
-    for i = 1, n do
-        s[i] = stringify_basetype(c.name, v[i])
+    for _, v in ipairs(t) do
+        s[#s+1] = stringify_basetype(v)
     end
-    return '{'..table.concat(s, ',')..'}'
+    out[#out+1] = indent(n)..prefix.."{"..table.concat(s, ", ").."}"
 end
 
-local function stringify_map_value(c, v)
-    if c.type ~= 'primtype' then
-        return stringify_map_value(typeinfo[c.type], v)
-    end
-    local s = {}
-    for k, o in pairs_sortk(v) do
-        s[#s+1] = k..':'..stringify_basetype(c.name, o)
-    end
-    return '{'..table.concat(s, ',')..'}'
-end
-
-local function stringify_value(c, v)
-    assert(c.type)
-    if c.array then
-        return stringify_array_value(c, c.array, v)
-    end
-    if c.map then
-        return stringify_map_value(c, v)
-    end
-    if c.type == 'primtype' then
-        return stringify_basetype(c.name, v)
-    end
-	return stringify_value(typeinfo[c.type], v)
-end
-
-local function is_empty_table(t)
-    local k = next(t)
-    if k then
-        return next(t, k) == nil
-    end
-    return true
-end
-
-local stringify_component
-
-local function stringify_component_ref(c, v, n)
-    if c.type then
-        return stringify_component_ref(typeinfo[c.type], v, n)
-    end
-    for _, cv in ipairs(c) do
-        if v[cv.name] == nil and cv.attrib and cv.attrib.opt then
-            goto continue
+local function stringify_array_map(n, t)
+    for _, tt in ipairs(t) do
+        out[#out+1] = indent(n).."---"
+        for k, v in sortpairs(tt) do
+            stringify_value(n, k..":", v)
         end
-        if cv.ref then
-            if cv.array then
-                local vv = v[cv.name]
-                out[#out+1] = prefix(n) .. ('%s:'):format(cv.name)
-                for i = 1, (cv.array == 0 and #vv or cv.array) do
-                    stringify_component(ARRAY, typeinfo[cv.type].name, vv[i], n+1)
-                end
-                goto continue
-            end
-            if cv.map then
-                local vv = v[cv.name]
-                if is_empty_table(vv) then
-                    out[#out+1] = prefix(n) .. ('%s: {}'):format(cv.name)
-                else
-                    out[#out+1] = prefix(n) .. ('%s:'):format(cv.name)
-                    for k, o in pairs_sortk(vv) do
-                        stringify_component(k..':', typeinfo[cv.type].name, o, n+1)
-                    end
-                end
-                goto continue
-            end
-            stringify_component(cv.name..':', cv.type, v[cv.name], n)
-        else
-            out[#out+1] = prefix(n) .. ('%s: %s'):format(cv.name, stringify_value(cv, v[cv.name]))
-        end
-        ::continue::
     end
 end
 
-local function stringify_component_value(name, typename, value, n)
-    assert(typeinfo[typename], "unknown type:" .. typename)
-    local c = typeinfo[typename]
-    if not c.ref then
-        out[#out+1] = prefix(n)..('%s %s'):format(name, stringify_value(c, value))
+local function stringify_array_array(n, t)
+    local first_value = t[1][1]
+    if type(first_value) ~= "table" then
+        for _, tt in ipairs(t) do
+            stringify_array_simple(n, "", tt)
+        end
         return
     end
-    if type(value) == "table" and next(value) == nil then
-        out[#out+1] = prefix(n)..('%s {}'):format(name)
-        return
-    end
-    out[#out+1] = prefix(n)..('%s'):format(name)
-    stringify_component_ref(c, value, name == ARRAY and n or (n+1))
-end
-
-function stringify_component(name, typename, value, n)
-    local ti = typeinfo[typename]
-    if ti.multiple then
-        stringify_component_value(name, typename, value, n)
-        for _, vv in ipairs(value) do
-            stringify_component_value(name, typename, vv, n)
+    if isArray(first_value) then
+        for _, tt in ipairs(t) do
+            out[#out+1] = indent(n).."---"
+            stringify_array_array(n+1, tt)
         end
     else
-        stringify_component_value(name, typename, value, n)
+        for _, tt in ipairs(t) do
+            out[#out+1] = indent(n).."---"
+            stringify_array_map(n+1, tt)
+        end
     end
 end
 
-local function stringify_entity(w, policies, dataset)
-    typeinfo = w._class.component
-    out = {}
-    out[#out+1] = '---------'
-    for _, p in pairs_sortv(policies) do
+local function stringify_array(n, prefix, t)
+    local first_value = t[1]
+    if type(first_value) ~= "table" then
+        stringify_array_simple(n, prefix.." ", t)
+        return
+    end
+    out[#out+1] = indent(n)..prefix
+    if isArray(first_value) then
+        stringify_array_array(n+1, t)
+        return
+    end
+    stringify_array_map(n+1, t)
+end
+
+local function stringify_map(n, prefix, t)
+    out[#out+1] = indent(n)..prefix
+    n = n + 1
+    for k, v in sortpairs(t) do
+        stringify_value(n, k..":", v)
+    end
+end
+
+function stringify_value(n, prefix, v)
+    if type(v) == "table" then
+        local first_value = next(v)
+        if first_value == nil then
+            out[#out+1] = indent(n)..prefix..' {}'
+            return
+        end
+        if type(first_value) == "number" then
+            stringify_array(n, prefix, v)
+        else
+            stringify_map(n, prefix, v)
+        end
+        return
+    end
+    out[#out+1] = indent(n)..prefix.." "..stringify_basetype(v)
+end
+
+local function stringify_component(prefix, v)
+    if isMultipe(v) then
+        stringify_map(0, prefix, v)
+        for _, vv in ipairs(v) do
+            stringify_map(0, prefix, vv)
+        end
+    else
+        stringify_value(0, prefix, v)
+    end
+end
+
+local function stringify_policy(policies)
+    local t = copytable(policies)
+    table.sort(t)
+    for _, p in pairs(t) do
         out[#out+1] = p
     end
-    out[#out+1] = '---------'
-    for name, cv in pairs_sortk(dataset) do
-        stringify_component(name..':', name, cv, 0)
+end
+
+local function stringify_dataset(dataset)
+    for name, v in sortpairs(dataset) do
+        stringify_component(name..':', v)
     end
+end
+
+local function stringify_entity(policies, dataset)
+    out = {}
+    out[#out+1] = '---------'
+    stringify_policy(policies)
+    out[#out+1] = '---------'
+    stringify_dataset(dataset)
     out[#out+1] = ''
     return table.concat(out, '\n')
 end
