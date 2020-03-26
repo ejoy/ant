@@ -4,7 +4,7 @@ local renderpkg = import_package "ant.render"
 local computil 	= renderpkg.components
 
 local mathpkg	= import_package "ant.math"
-local mu		= mathpkg.util
+local mu,mc		= mathpkg.util, mathpkg.constant
 
 local assetpkg	= import_package "ant.asset"
 local assetmgr	= assetpkg.mgr
@@ -67,12 +67,11 @@ function util.create_procedural_sky(world, settings)
 				fs.path "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",
 				{
 					uniforms = {
-						u_sunDirection = {type="v4", name="sub direction", value = {0, 0, 1, 0}},
-						u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value={0, 0, 0, 0}},
-						u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value={0, 0, 0, 0}},
-						u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", 
-							value={}},
-						u_perezCoeff = {type="v4", name="Perez coefficients", value = {}},
+						u_sunDirection = {type="v4", name="sub direction", value = mc.T_ZAXIS},
+						u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value=mc.T_ZERO},
+						u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value=mc.T_ZERO},
+						u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", value=mc.T_ZERO},
+						u_perezCoeff = {type="v4", name="Perez coefficients", value_array = {mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO}},
 					}
 				}),
 			procedural_sky = {
@@ -90,6 +89,7 @@ function util.create_procedural_sky(world, settings)
 	}
 
 	fill_procedural_sky_mesh(world[skyeid])
+	return skyeid
 end
 
 

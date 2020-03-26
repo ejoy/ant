@@ -23,7 +23,9 @@ util.__index = util
 local property_types = {
     color = "v4",
     v4 = "v4",
-    m4 = "m4",
+	m4 = "m4",
+	v4_array = "v4",
+	m4_array = "m4",
     texture = "s",
 }
 
@@ -76,7 +78,13 @@ local function update_properties(material, properties, render_properties)
 			if p.type == "texture" then
 				bgfx.set_texture(assert(p.stage), u.handle, p.handle)
 			else
-				bgfx.set_uniform(u.handle, p.value)
+				if p.value then
+					bgfx.set_uniform(u.handle, p.value)
+				else
+					local va = assert(p.value_array)
+					bgfx.set_uniform(u.handle, table.unpack(va))
+				end
+				
 			end
 		else
 			--log,info(string.format("uniform : %s, not privided, but shader program needed", name))

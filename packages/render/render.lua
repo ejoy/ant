@@ -9,6 +9,9 @@ local ru 		= require "util"
 
 local math3d	= require "math3d"
 
+local mathpkg	= import_package "ant.math"
+local mc		= mathpkg.constant
+
 ecs.tag "main_queue"
 ecs.tag "blit_queue"
 ecs.tag "blit_render"
@@ -95,17 +98,39 @@ ecs.component "render_properties"
 
 ecs.singleton "render_properties" {
 	lighting = {
-		uniforms = {},
+		uniforms = {
+			directional_lightdir 	= {type="v4", 	name="Direction Light", 		value=mc.T_ZERO},
+			directional_color 		= {type="color",name="Direction Color", 		value=mc.T_ZERO},
+			directional_intensity 	= {type="v4", 	name = "Direction Intensity", 	value=mc.T_ZERO},
+
+			ambient_mode 		= {type="v4", 	 name ="ambient_mode", 			value=mc.T_ZERO},
+			ambient_skycolor 	= {type="color", name ="ambient_skycolor", 		value=mc.T_ZERO},
+			ambient_midcolor 	= {type="color", name ="ambient_midcolor",		value=mc.T_ZERO},
+			ambient_groundcolor = {type="color", name ="ambient_groundcolor", 	value=mc.T_ZERO},
+
+			u_eyepos			= {type="v4", name="eye position", value=mc.T_ZERO_PT},
+		},
 		textures = {},
 	},
 	shadow = {
-		uniforms = {},
-		textures = {},
+		uniforms = {
+			u_csm_matrix 			= {type="m4_array", name="csm_matrices", value_array={mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT}},
+			u_csm_split_distances	= {type="v4", name="csm_split_distances", value=mc.T_ZERO},
+
+			u_depth_scale_offset	= {type="v4", name="depth_scale_offset", value=mc.T_ZERO},
+			u_shadow_param1			= {type="v4", name="shadow_param1(bais, normal_offset, shadowmap_texelsize, 0)", value=mc.T_ZERO},
+			u_shadow_param2			= {type="v4", name="shadow_param2(shadowcolor.xyz, 0)", value=mc.T_ZERO},
+		},
+		textures = {
+			s_shadowmap = {type="texture", name="csm_shadowmap", },
+		},
 	},
 	postprocess = {
 		uniforms = {},
-		textures = {},
-	}
+		textures = {
+			s_mainview = {type="texture", name="main_queue backbuffer", },
+		},
+	},
 }
 
 local blitsys = ecs.system "blit_render_system"

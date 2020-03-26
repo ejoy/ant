@@ -12,7 +12,6 @@ local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local renderutil= renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
-local camerautil= renderpkg.camera
 
 local assetmgr = import_package "ant.asset".mgr
 
@@ -107,7 +106,8 @@ local function replace_material(result, material)
 			if item.properties.uniforms == nil then
 				item.properties.uniforms = {}
 			end
-			item.properties.uniforms.u_id = {type="color", name = "select eid", value=packeid_as_rgba(assert(item.eid))}
+			item.properties.uniforms["u_id"] = world:create_component(
+				"uniform", {type="color", name = "select eid", value=packeid_as_rgba(assert(item.eid))})
 		end
 	end
 end

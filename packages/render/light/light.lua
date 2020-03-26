@@ -41,6 +41,8 @@ for _, lighttype in ipairs {
 	elseif lighttype == "point" or lighttype == "spot" then
 		p.require_component "direction"
 		p.require_component "position"
+	elseif lighttype == "ambient" then
+		p.unique_component(lightname)
 	end
 
 	local transname = lighttype .. "_transform"

@@ -1,5 +1,5 @@
-$input a_position, a_normal, a_color0
-$output v_normal, v_viewdir, v_color0
+$input a_position, a_normal
+$output v_normal, v_viewdir
 
 #include <bgfx_shader.sh>
 
@@ -12,6 +12,5 @@ void main()
 	vec4 wpos = mul(u_model[0], vec4(pos, 1.0));
 	
 	v_viewdir = (u_eyepos - wpos).xyz;	
-	v_normal = a_normal;
-	v_color0 = a_color0;
+	v_normal = a_normal;	
 }

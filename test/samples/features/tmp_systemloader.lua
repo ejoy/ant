@@ -114,6 +114,7 @@ end
 
 local ilight = world:interface "ant.render|light"
 
+local skyeid
 function init_loader:init()
     do
         local dlightdir = math3d.totable(
@@ -125,7 +126,7 @@ function init_loader:init()
         ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
-    skyutil.create_procedural_sky(world)
+    skyeid = skyutil.create_procedural_sky(world)
 end
 
 local function create_camera()
@@ -138,11 +139,12 @@ local function create_camera()
     return id
 end
 
+local firsttime = true
 function init_loader:data_changed()
-    -- iwd.draw_lines{
-    --     {5, 2, 5},
-    --     {5, 2, 15},
-    -- }
+    if not firsttime then
+        --serialize.entity(world, skyeid)
+    end
+    firsttime = nil
 end
 
 function init_loader:post_init()

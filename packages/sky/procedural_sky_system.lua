@@ -136,16 +136,13 @@ local ps = ecs.component "procedural_sky"
 	.latitude 	"real" (math.rad(50))
 	["opt"].attached_sun_light "entityid" (-1)
 
-local function compute_PerezCoeff(turbidity)
+local function compute_PerezCoeff(turbidity, values)
 	assert(#ABCDE == #ABCDE_t)
 	local n = #ABCDE
-	local result = {n=n}
 	for i=1, n do
 		local v0, v1 = ABCDE_t[i], ABCDE[i]
-		result[#result+1] = math3d.muladd(v0, turbidity, v1)
+		values[i].v = math3d.muladd(v0, turbidity, v1)
 	end
-	
-	return result
 end
 
 local function fetch_month_index_op()
@@ -261,12 +258,13 @@ local function update_sky_parameters(skyentity)
 
 	local hour = skycomp.which_hour
 
-	sky_uniforms["u_sunDirection"].value 	= skycomp.sundir
-	sky_uniforms["u_sunLuminance"].value 	= xyz2rgb(sun_luminance_fetch(hour))
-	sky_uniforms["u_skyLuminanceXYZ"].value = sky_luminance_fetch(hour)
-	sky_uniforms["u_perezCoeff"].value 		= compute_PerezCoeff(skycomp.turbidity)
+	sky_uniforms["u_sunDirection"].value.v 		= skycomp.sundir
+	sky_uniforms["u_sunLuminance"].value.v 		= xyz2rgb(sun_luminance_fetch(hour))
+	sky_uniforms["u_skyLuminanceXYZ"].value.v 	= sky_luminance_fetch(hour)
 	shader_parameters[4] = hour
-	sky_uniforms["u_parameters"].value 		= shader_parameters
+	sky_uniforms["u_parameters"].value.v		= shader_parameters
+
+	compute_PerezCoeff(skycomp.turbidity, sky_uniforms["u_perezCoeff"].value_array)
 end
 
 local function sync_directional_light(skyentity)

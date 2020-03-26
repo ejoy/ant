@@ -54,8 +54,10 @@ constant.NYAXIS  = math3d.ref(math3d.vector(constant.T_NYAXIS))
 constant.ZAXIS   = math3d.ref(math3d.vector(constant.T_ZAXIS))
 constant.NZAXIS  = math3d.ref(math3d.vector(constant.T_NZAXIS))
 
+constant.T_IDENTITY_MAT = constant.mat_identity
 constant.IDENTITY_MAT = math3d.ref(math3d.matrix(constant.mat_identity))
 
+constant.T_IDENTITY_QUAT = constant.quat_identity
 constant.IDENTITY_QUAT= math3d.ref(math3d.quaternion(constant.quat_identity))
 
 return constant

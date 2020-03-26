@@ -101,15 +101,11 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
     local function bind_input(slot)
         local pp_properties = render_properties.postprocess
         local fb = fbmgr.get(slot.fb_idx)
-        pp_properties.textures["s_postprocess_input"] = {
-            type = "texture", stage = ppinput_stage,
-            name = "post process input frame buffer",
-            handle = fbmgr.get_rb(fb[slot.rb_idx]).handle,
-        }
-        pp_properties.uniforms["u_bright_threshold"] = {
-            type = "v4", name = "bright threshold",
-            value = {0.8, 0.0, 0.0, 0.0}
-        }
+        pp_properties.textures["s_postprocess_input"] = world:create_component("texture",
+            {type="texture", stage=ppinput_stage, name="pp_input", handle=fbmgr.get_rb(fb[slot.rb_idx]).handle})
+        
+        pp_properties.uniforms["u_bright_threshold"] = world:create_component("uniform",
+            {type = "v4", name = "bright threshold", value={0.8, 0.0, 0.0, 0.0}})
     end
     bind_input(in_slot)
 

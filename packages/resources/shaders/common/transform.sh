@@ -40,6 +40,26 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	return wolrdMat;
 }
 
+mat4 calc_ozz_bone_transform(ivec4 indices, vec4 weights)
+{
+	mat4 wolrdMat = mat4(0, 0, 0, 0, 
+	0, 0, 0, 0, 
+	0, 0, 0, 0, 
+	0, 0, 0, 0);
+	float sum_weight = 0.0;
+	for (int ii = 0; ii < 3; ++ii)
+	{
+		int id = int(indices[ii]);
+		float weight = weights[ii];
+
+		sum_weight += weight;
+		wolrdMat += u_model[id] * weight;
+	}
+
+	wolrdMat += u_model[indices[3]] * (1.0 - sum_weight);
+	return wolrdMat;
+}
+
 mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
 {
 	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);

@@ -255,15 +255,6 @@ local function create_scene_node_test()
             }
         }
 
-    local function color_material(colorvalue)
-        return computil.assign_material(fs.path "/pkg/ant.resources/materials/simple_mesh.material",
-                {
-                    uniforms = {
-                        u_color = {type="color", name = "color", value=colorvalue},
-                    }
-                })
-    end
-
     local render2_rootchild =
         world:create_entity {
             policy = {

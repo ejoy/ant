@@ -82,9 +82,10 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             },
             rendermesh = {},
             mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/meshes/ring.mesh"},
-            material = computil.assign_material(
-                    fs.path "/pkg/ant.resources/depiction/materials/gizmo_front_singlecolor.material",
-                    {uniforms = {u_color = {type="v4", name="u_color", value=color}},}),
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_front_singlecolor.material",
+                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}},
+            },
             --can_cast = true,
             can_render = true,
             name = name,
@@ -220,9 +221,10 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             },
             rendermesh = {},
             mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/meshes/cone.mesh"},
-            material = computil.assign_material(
-                    fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
-                    {uniforms = {u_color = {type="v4", name="u_color", value=color}},}),
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
+                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}}
+            },
             can_render = true,
             can_select = true,
             name = name,
@@ -256,9 +258,10 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             },
             rendermesh = {},
             mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/meshes/cube.mesh"},
-            material = computil.assign_material(
-                    fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
-                    {uniforms = {u_color = {type="v4", name="u_color", value=color}},}),
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
+                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}},
+            },
             can_render = true,
             --can_cast = true,
             name = name,

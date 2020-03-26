@@ -11,23 +11,23 @@ local component_delete = component.delete
 local world = {}
 world.__index = world
 
-local function create_component(w, c, args, disableSerialize)
-	local ti = assert(w._class.component[c], c)
+function world:create_component(c, args, disableSerialize)
+	local ti = assert(self._class.component[c], c)
 	if ti.type == 'tag' then
 		assert(args == true or args == nil)
 		return args
 	end
 	if not ti.type and ti.multiple then
-		local res = component_init(w, ti, args, disableSerialize)
+		local res = component_init(self, ti, args, disableSerialize)
 		assert(res ~= nil)
 		for i = 1, #args do
-			local r = component_init(w, ti, args[i], disableSerialize)
+			local r = component_init(self, ti, args[i], disableSerialize)
 			assert(r ~= nil)
 			res[i] = r
 		end
 		return res
 	end
-	local res = component_init(w, ti, args, disableSerialize)
+	local res = component_init(self, ti, args, disableSerialize)
 	assert(res ~= nil)
 	return res
 end
@@ -90,7 +90,7 @@ local function apply_policy(w, eid, component, transform, dataset)
 	local e = w[eid]
 	local disableSerialize = dataset.serialize == nil
 	for _, c in ipairs(component) do
-		e[c] = create_component(w, c, dataset[c], disableSerialize)
+		e[c] = w:create_component(c, dataset[c], disableSerialize)
 		register_component(w, eid, c)
 	end
 	for _, f in ipairs(transform) do
@@ -380,7 +380,7 @@ function m.new_world(config,world_class)
 	local eid = w:create_entity {policy = {}, data = {}}
 	local e = w[eid]
 	for name, dataset in sortpairs(w._class.singleton) do
-		e[name] = create_component(w, name, dataset[1], true)
+		e[name] = w:create_component(name, dataset[1], true)
 		register_component(w, eid, name)
 	end
 

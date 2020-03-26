@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local component_util = require "components.util"
+local ru	= require "util"
 
 local fs 		= require "filesystem"
 local math3d 	= require "math3d"
@@ -84,41 +85,52 @@ function ml.process(e)
     component_util.create_mesh(e.rendermesh, e.mesh)
 end
 
---DO NOT define init/delete function to manager texture resource
---texture should only create/remove from material component, see material component definition
 ecs.component "texture"
 	.name "string"
 	.type "string"
-	.stage "int"
-	.ref_path "respath"
+	["opt"].stage "int"
+	["opt"].ref_path "respath"
 
 local uniformdata = ecs.component_alias("uniformdata", "real[]")
+function uniformdata:init()
+	local num = #self
+	if num == 4 then
+		return math3d.ref(math3d.vector(self))
+	elseif num == 16 then
+		return math3d.ref(math3d.matrix(self))
+	elseif num == 0 then
+		return math3d.ref()
+	else
+		error(string.format("invalid uniform data, only support 4/16 as vector/matrix:%d", num))
+	end
+end
 
 function uniformdata.save(v)
-	local tt = type(v)
-	if tt == "userdata" then
-		local d = math3d.totable(v)
-		assert(d.type)
-		d.type = nil
-		return d
-	elseif tt == "table" then
-		return v
-	else
-		error(string.format("not support type in uniformdata:%s", tt))
+	if type(v) ~= "userdata" then
+		error(string.format("must be math3d.ref data:%d", type(v)))
 	end
+
+	local d = math3d.totable(v)
+	if d == nil then
+		error("invalid math3d data, make sure math3d value is reference data")
+	end
+	assert(d.type)
+	d.type = nil
+	return d
 end
 
-function uniformdata.delete(v)
-	local tt = type(v)
-	if tt == "userdata" then
-		v(nil)
-	end
-end
-
-ecs.component "uniform"
+local u = ecs.component "uniform"
 	.name "string"
 	.type "string"
-	.value "uniformdata"
+	["opt"].value "uniformdata"
+	["opt"].value_array "uniformdata[]"
+
+function u:init()
+	if self.value == nil and self.value_array == nil then
+		error("uniform.value and uniform.value_array must define one of them")
+	end
+	return self
+end
 
 ecs.component "properties"
 	["opt"].textures "texture{}"
@@ -153,7 +165,7 @@ renderpolicy.require_policy "blitrender"
 
 ecs.tag "can_select"
 
-ecs.component_alias("color", "real[4]", {1,1,1,1})
+ecs.component_alias("color", "vector", {1,1,1,1})
 
 ecs.tag "dynamic_object"
 

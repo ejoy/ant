@@ -73,21 +73,20 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
         local passidx = #passes+1
         local properties = {
             uniforms = {
-                u_sample_param = {
-                    type = "v4", name = "sample param", value = sampleparam,
-                },
-            }
+                u_sample_param = world:create_component("uniform", 
+                {type = "v4", name = "sample param", value = sampleparam})
+            },
         }
-
         if intensity then
-            properties.uniforms["u_intensity"] = {
-                type = "v4", name = "up sample intensity", value = {intensity, 0.0, 0.0, 0.0},
-            }
+            properties.uniforms["u_intensity"] = world:create_component("uniform",
+            {type = "v4", name = "up sample intensity", value = {intensity, 0.0, 0.0, 0.0}})
         end
 
         passes[passidx] = {
             name = "bloom" .. passidx,
-            material = computil.assign_material(material, properties),
+            material = {
+                ref_path = material, properties = properties,
+            },
             viewport = get_viewport(fbw, fbh),
             output = {fb_idx=fbidx, rb_idx=1},
         }

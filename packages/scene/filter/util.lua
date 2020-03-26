@@ -10,23 +10,13 @@ local camerautil= renderpkg.camera
 local shadowutil= renderpkg.shadow
 local fbmgr     = renderpkg.fbmgr
 
-local function update_uniforms(uniforms, properties)
-	for k, v in pairs(properties) do
-		assert(type(v) == "table")
-		local value = v.value
-		local n = #value
-		if n > 0 then
-			value.n = #value
-			uniforms[k] = v
-		end
-	end
-end
-
 local function add_directional_light_properties(world, uniform_properties)
 	local dlight = world:singleton_entity "directional_light"
-	uniform_properties["directional_lightdir"]  = {name="Light Direction",	type="v4",   value=dlight.direction}
-	uniform_properties["directional_color"] 	= {name="Light Color",		type="color",value=dlight.directional_light.color}
-	uniform_properties["directional_intensity"] = {name="Light Intensity",	type="v4",	 value={dlight.directional_light.intensity, 0.28, 0, 0}}
+	if dlight then
+		uniform_properties["directional_lightdir"].value.v 	= dlight.direction
+		uniform_properties["directional_color"].value.v 	= dlight.directional_light.color
+		uniform_properties["directional_intensity"].value.v = {dlight.directional_light.intensity, 0.28, 0, 0}
+	end
 end
 
 local mode_type = {
@@ -36,25 +26,15 @@ local mode_type = {
 }
 
 --add ambient properties
-local function add_ambient_light_propertices(world, uniform_properties)		
-	local ambient_data = {		
-		ambient_mode = {name ="ambient_mode",type="v4",value ={}},
-		ambient_skycolor = {name ="ambient_skycolor",type="color",value={}},
-		ambient_midcolor = {name ="ambient_midcolor",type="color",value={}},
-		ambient_groundcolor = {name ="ambient_groundcolor",type="color",value={}},
-	}
-
-	for _,l_eid in world:each("ambient_light") do 
-		local  am_ent = world[l_eid]
-		local  l = am_ent.ambient_light 
-
-		table.insert( ambient_data.ambient_mode.value, 			{mode_type[l.mode], l.factor, 0, 0})
-		table.insert( ambient_data.ambient_skycolor.value,  	l.skycolor)
-		table.insert( ambient_data.ambient_midcolor.value, 		l.midcolor)
-		table.insert( ambient_data.ambient_groundcolor.value, 	l.groundcolor)
-	end 
-
-	update_uniforms(uniform_properties, ambient_data)
+local function add_ambient_light_propertices(world, uniform_properties)
+	local le = world:singleton_entity "ambient_light"
+	if le then
+		local ambient = le.ambient_light
+		uniform_properties["ambient_mode"].value.v			= {mode_type[ambient.mode], ambient.factor, 0, 0}
+		uniform_properties["ambient_skycolor"].value.v		= ambient.skycolor
+		uniform_properties["ambient_midcolor"].value.v		= ambient.midcolor
+		uniform_properties["ambient_groundcolor"].value.v	= ambient.groundcolor
+	end
 end 
 
 function util.load_lighting_properties(world, render_properties)
@@ -64,7 +44,7 @@ function util.load_lighting_properties(world, render_properties)
 	add_ambient_light_propertices(world, lighting_properties)
 
 	local camera = camerautil.main_queue_camera(world)
-	lighting_properties["u_eyepos"] = {name = "Eye Position", type="v4", value=camera.eyepos}
+	lighting_properties["u_eyepos"].value.v = camera.eyepos
 end
 
 local function calc_viewport_crop_matrix(csm_idx)
@@ -82,7 +62,7 @@ local function calc_viewport_crop_matrix(csm_idx)
 end
 
 local default_csm_matricies = {
-	n = 4, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT
+	mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT
 }
 
 local default_split_distance = mc.ZERO
@@ -91,8 +71,11 @@ function util.load_shadow_properties(world, render_properties)
 	local shadow_properties = render_properties.shadow
 	local uniforms, textures = shadow_properties.uniforms, shadow_properties.textures
 
-	local csm_matrixs = {n=nil, nil, nil, nil, nil}
-	local split_distances = {nil, nil, nil, nil}
+	--TODO: shadow matrix consist of lighting matrix, crop matrix and viewport offset matrix
+	-- but crop matrix and viewport offset matrix only depend csm split ratios
+	-- we can detect csm split ratios changed, and update those matrix two matrices, and combine as bias matrix
+	local csm_matrixs = uniforms.u_csm_matrix.value_array
+	local split_distances = {0, 0, 0, 0}
 	for _, eid in world:each "csm" do
 		local se = world[eid]
 		local csm = se.csm
@@ -106,36 +89,25 @@ function util.load_shadow_properties(world, render_properties)
 			local vp = mu.view_proj(camera)
 			vp = math3d.mul(shadowutil.shadow_crop_matrix(), vp)
 			local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
-			csm_matrixs[csm.index] = math3d.mul(viewport_cropmatrix, vp)
+			local m = assert(csm_matrixs[csm.index])
+			m.m = math3d.mul(viewport_cropmatrix, vp)
 		end
 	end
 
-	local num_matrixs = #csm_matrixs
-	if num_matrixs > 0 then
-		csm_matrixs.n = num_matrixs
-		uniforms["u_csm_matrix"] = {type="m4", name="csm matrix", value=csm_matrixs}
-		uniforms["u_csm_split_distances"] = {type="v4", name="csm split distances", value=split_distances}
-	else
-		uniforms["u_csm_matrix"] = {type="m4", name="csm matrix", value=default_csm_matricies}
-		uniforms["u_csm_split_distances"] = {type="v4", name="csm split distances", value=default_split_distance}
-	end
+	uniforms["u_csm_split_distances"].value.v = split_distances
 
 	local shadowentity = world:singleton_entity "shadow"
 	if shadowentity then
 		local fb = fbmgr.get(shadowentity.fb_index)
-		local smstage = world:interface "ant.render|uniforms".system_uniform("s_shadowmap").stage
-		textures["s_shadowmap"] = {type="texture", stage=smstage, name="csm shadow map", 
-							handle = fbmgr.get_rb(fb[1]).handle}
+		local sm = textures["s_shadowmap"]
+		sm.stage = world:interface "ant.render|uniforms".system_uniform("s_shadowmap").stage
+		sm.handle = fbmgr.get_rb(fb[1]).handle
 
-		uniforms["u_depth_scale_offset"] = {
-			type = "v4", name = "depth scale offset", value = shadowutil.shadow_depth_scale_offset(),
-		}
+		uniforms["u_depth_scale_offset"].value.v = shadowutil.shadow_depth_scale_offset()
 		local shadow = shadowentity.shadow
-		uniforms["u_shadow_param1"] = {type="v4", name="x=[shadow bias],y=[normal offset],z=[texel size],w=[not use]", 
-			value={shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}}
-		local shadowcolor = shadow.color or {0, 0, 0}
-		uniforms["u_shadow_param2"] = {type="v4", name="xyz=[shadow color],w=[not use]", 
-			value={shadowcolor[1], shadowcolor[2], shadowcolor[3], 0}}
+		uniforms["u_shadow_param1"].value.v = {shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}
+		local shadowcolor = shadow.color or {0, 0, 0, 0}
+		uniforms["u_shadow_param2"].value.v = shadowcolor
 	end
 end
 
@@ -148,10 +120,9 @@ function util.load_postprocess_properties(world, render_properties)
 		local rendertex = fbmgr.get_rb(fb[1]).handle
 		local mainview_name = "s_mainview"
 		local stage = assert(world:interface "ant.render|uniforms".system_uniform(mainview_name)).stage
-		postprocess.textures[mainview_name] = {
-			name = "Main view render texture", type = "texture",
-			stage = stage, handle = rendertex,
-		}
+		local mv = postprocess.textures[mainview_name]
+		mv.stage = stage
+		mv.handle = rendertex
 	end
 end
 

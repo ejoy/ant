@@ -136,7 +136,7 @@ local function foot_ik_test()
 end
 
 local function create_plane_test()
-    computil.create_plane_entity(world,
+    return computil.create_plane_entity(world,
     {srt = {
         s = {5, 1, 5, 0},
         r = math3d.totable(math3d.quaternion{math.rad(10), 0, 0}),
@@ -163,6 +163,11 @@ local function create_plane_test()
 end
 
 function iktest_sys:init()
-    create_plane_test()
+    local eid = create_plane_test()
+    local e = world[eid]
+    local p = e.material.properties
+    local c = p.uniforms.u_color.value
+    local tt = math3d.totable(c)
+    print(tt)
     foot_ik_test()
 end
