@@ -9,7 +9,6 @@
 typedef enum {
 	SET_Mat = 0x01,
 	SET_Vec = 0x02,
-	SET_Array = 0x10,
 	SET_Unknown,
 }StackElemType;
 
@@ -161,62 +160,12 @@ lbind_vector(lua_State *L) {
 static uint8_t
 check_elem_type(lua_State *L, struct lastack *LS, int index) {	
 	if (lua_type(L, index) == LUA_TTABLE) {
-		const int fieldtype = lua_getfield(L, index, "n");	
-		lua_pop(L, 1);
-
-		if (fieldtype != LUA_TNIL){
-			const int elemtype = lua_geti(L, index, 1);			
-			if (elemtype != LUA_TTABLE) {
-				int type;
-				math3d_from_lua_id(L, LS, -1, &type);
-				lua_pop(L, 1);
-				return SET_Array | (type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec);
-			} 
-
-			lua_pop(L, 1);
-			return SET_Array | (lua_rawlen(L, index) >= 12 ? SET_Mat : SET_Vec);
-		}
 		return lua_rawlen(L, index) >= 12 ? SET_Mat : SET_Vec;
 	}
 
 	int type;
 	math3d_from_lua_id(L, LS, index, &type);
 	return type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec;
-}
-
-static void
-unpack_table_on_stack(lua_State *L, struct lastack *LS, int from, int top, int elemtype) {
-	int stackidx;
-	for (stackidx = from; stackidx <= top; ++stackidx) {
-		if (lua_getfield(L, stackidx, "n") != LUA_TNIL) {
-			const int num = (int)lua_tointeger(L, -1);
-			lua_pop(L, 1);	// pop 'n'	
-
-			const int tablenum = (int)lua_rawlen(L, stackidx);
-			if (num != tablenum) {
-				luaL_error(L, "'n' field: %d not equal to table count: %d", num, tablenum);
-			}
-
-			int tblidx;
-			for (tblidx = 0; tblidx < num; ++tblidx) {
-				lua_geti(L, stackidx, tblidx + 1);				
-				void * v = get_pointer_variant(L, LS, -1, elemtype);
-				if (v) {
-					lua_pop(L, 1);	// pop lua_geti value
-					lua_pushlightuserdata(L, v);
-				} else {
-					luaL_checktype(L, -1, LUA_TTABLE);
-				}
-
-				// v == NULL will not pop, make it in the stack
-			}
-		}
-	}
-
-	int ii;
-	for (ii = 0; ii <= top - from; ++ii) {
-		lua_remove(L, from);
-	}
 }
 
 static void
@@ -241,12 +190,8 @@ lvariant(lua_State *L) {
 	const int from = lua_tointeger(L, lua_upvalueindex(4));
 	const int top = lua_gettop(L);
 	const uint8_t elemtype = check_elem_type(L, LS, from);	
-	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex((elemtype & SET_Mat) ? 2 : 3));
-	if (elemtype & SET_Array) {
-		unpack_table_on_stack(L, LS, from, top, elemtype);
-	} else {		
-		convert_stack_value(L, LS, from, top, elemtype);
-	}
+	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex((elemtype == SET_Mat) ? 2 : 3));
+	convert_stack_value(L, LS, from, top, elemtype);
 	return f(L);
 }
 
