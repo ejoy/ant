@@ -382,7 +382,7 @@ return function (w, policies, systems, loader)
 	ecs.pipeline = function (name)
 		local r = class.pipeline[name]
 		if r == nil then
-			log.info("Register pipeline", name)
+			log.info("Register", "pipeline", name)
 			r = {name = name}
 			setmetatable(r, {
 				__call = function(_,v)
