@@ -6,4 +6,4 @@ package.path = table.concat({
 
 require "runtime"
 local pm = require "antpm"
-pm.import "ant.modelviewer"
+pm.import "ant.imguibase".runtime.start "ant.modelviewer"

@@ -15,6 +15,8 @@ pipeline "update" {
     "start",
     "timer",
     "data_changed",
+    "camera_control",
+    "lock_target",
     "scene_update",
     pipeline "collider" {
         "update_collider_transform",
@@ -46,9 +48,11 @@ pipeline "update" {
             "combine_postprocess",
         }
     },
-    "camera_control",
-    "lock_target",
-    "pickup",
+    pipeline "select"{
+        "update_select_view",
+        "update_filter_material",
+        "pickup",
+    },
     "update_editable_hierarchy",
     pipeline "ui" {
         "ui_start",
