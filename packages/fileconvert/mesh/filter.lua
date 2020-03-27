@@ -297,10 +297,42 @@ end
 
 local cache_tree = {}
 
+local function find_skin_root_idx(scene, skin)
+	local joints = skin.joints
+	if joints == nil then
+		error(string.format("invalid mesh, skin node must have joints"))
+	end
+
+	if skin.skeleton then
+		return skin.skeleton;
+	end
+
+	local parents = {}
+	for _, nodeidx in ipairs(joints) do
+		local c = scene.nodes[nodeidx+1].children
+		if c then
+			for _,  cnodeidx in ipairs(c) do
+				parents[cnodeidx] = nodeidx
+			end
+		end
+	end
+
+	local root = skin.joints[1];
+	while (parents[root]) do
+		root = parents[root]
+	end
+
+	return root;
+end
+
 local function redirect_skin_joints(scene)
+	local skins = scene.skins
+	if skins == nil then
+		return
+	end
 	for _, skin in ipairs(scene.skins) do
 		local joints = skin.joints
-		local skeleton_nodeidx = skin.skeleton or 0
+		local skeleton_nodeidx = find_skin_root_idx(scene, skin)
 
 		if skeleton_nodeidx > 0 then
 			local mapper = cache_tree[skeleton_nodeidx]
