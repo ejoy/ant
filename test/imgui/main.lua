@@ -1,9 +1,9 @@
 package.path = table.concat({
+    "?.lua",
 	"engine/?.lua",
 	"engine/?/?.lua",
-	"?.lua",
 }, ";")
 
 require "runtime"
 local pm = require "antpm"
-pm.import "ant.testimgui"
+pm.import "ant.imgui_editor"

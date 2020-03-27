@@ -1,4 +1,4 @@
 return {
-    name = "ant.testimgui",
+    name = "ant.imgui_editor",
     entry = "entry_imgui",
 }
