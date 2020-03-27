@@ -363,15 +363,6 @@ local function refine_accessor(newscene, scene, binary, new_binaries, accidx)
 	return newaccidx
 end
 
-local function add_new_binaries(binaries, new_binaries)
-	local bytes = 0
-	for _, b in ipairs(new_binaries) do
-		bytes = bytes + #b
-		binaries[#binaries+1] = b
-	end
-	return bytes
-end
-
 local function refine_mesh_buffers(scene, binary, cfg, newscene, new_binaries)
 	for _, node in ipairs(scene.nodes) do
 		local meshidx = node.mesh

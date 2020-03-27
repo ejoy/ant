@@ -89,18 +89,21 @@ local function gltf_animation_test()
             transform = {srt={t={-5, 0, 0, 1}}},
             rendermesh = {},
             mesh = {
+                --ref_path = fs.path "/pkg/ant.resources/depiction/meshes/simple_skin.mesh",
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
             },
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
             },
             skeleton = {
+                --ref_path = fs.path "/pkg/ant.resources.binary/meshes/simple_skin/animation/skeleton.ozz"
                 ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/skeleton.ozz"
             },
             skinning = {},
             animation = {
                 anilist = {
                     idle = {
+                        --ref_path = fs.path "/pkg/ant.resources.binary/meshes/simple_skin/animation/animation_0.ozz",
                         ref_path = fs.path "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
                         scale = 1,
                         looptimes = 0,

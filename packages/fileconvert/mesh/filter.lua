@@ -295,7 +295,46 @@ local function generate_buffers(scene, newscene, bin)
 	}, newbin
 end
 
+local cache_tree = {}
+
+local function redirect_skin_joints(scene)
+	for _, skin in ipairs(scene.skins) do
+		local joints = skin.joints
+		local skeleton_nodeidx = skin.skeleton or 0
+
+		if skeleton_nodeidx > 0 then
+			local mapper = cache_tree[skeleton_nodeidx]
+			if mapper == nil then
+				mapper = {}
+				local node_index = 0
+				-- follow with ozz-animation:SkeleteBuilder, IterateJointsDF
+				local function iterate_hierarchy_DF(nodes)
+					for _, nidx in ipairs(nodes) do
+						mapper[nidx] = node_index
+						node_index = node_index + 1
+						local node = scene.nodes[nidx+1]
+						local c = node.children
+						if c then
+							iterate_hierarchy_DF(c)
+						end
+					end
+				end
+				iterate_hierarchy_DF{skeleton_nodeidx}
+
+				cache_tree[skeleton_nodeidx] = mapper
+			end
+
+			for i=1, #joints do
+				local joint_nodeidx = joints[i]
+				joints[i] = assert(mapper[joint_nodeidx])
+			end
+		end
+	end
+end
+
 function filtermesh.filter_scene(scene, bin)
+	redirect_skin_joints(scene)
+
 	local parent_tree 			= build_parent_tree(scene)
 	local rootnodes, newnodes 	= fetch_nodes_relate_to_mesh(scene, parent_tree)
 
@@ -315,6 +354,7 @@ function filtermesh.filter_scene(scene, bin)
 	newscene.bufferViews = generate_bufferViews(scene, newscene)
 	local newbin
 	newscene.buffers, newbin  = generate_buffers(scene, newscene, bin)
+
 	return newscene, newbin
 end
 
