@@ -192,29 +192,31 @@ local function update_entity_transform(hierarchy_cache, eid)
 	local e = world[eid]
 
 	local transform = e.transform
-	local srt = transform.srt
-	if e.hierarchy == nil then
-		local peid = transform.parent
-		
-		if peid then
-			local worldmat = transform.world
-			local parentresult = hierarchy_cache[peid]
-			if parentresult then
-				local parentmat = parentresult.world
-				local hie_result = parentresult.hierarchy
-				local slotname = transform.slotname
-
-				if hie_result and slotname then
-					local hiemat = hie_result[slotname]
-					worldmat.m = math3d.mul(parentmat, math3d.mul(hiemat, srt))
-				else
-					worldmat.m = math3d.mul(parentmat, srt)
-				end
-			end
-			return worldmat
-		end
+	
+	if e.hierarchy then
+		return transform.world
 	end
 
+	local srt = transform.srt
+	local peid = transform.parent
+	
+	if peid then
+		local worldmat = transform.world
+		local parentresult = hierarchy_cache[peid]
+		if parentresult then
+			local parentmat = parentresult.world
+			local hie_result = parentresult.hierarchy
+			local slotname = transform.slotname
+
+			if hie_result and slotname then
+				local hiemat = hie_result[slotname]
+				worldmat.m = math3d.mul(parentmat, math3d.mul(hiemat, srt))
+			else
+				worldmat.m = math3d.mul(parentmat, srt)
+			end
+		end
+		return worldmat
+	end
 	return srt
 end
 
