@@ -504,8 +504,8 @@ function geometry.grid(width, height, unit)
 	end
 
 	-- center lines
-	add_line(-hh_len, 0, hh_len, 0, 0x880000ff)		
-	add_line(0, -hw_len, 0, hw_len, 0x88ff0000)		
+	add_line(-hh_len, 0, hh_len, 0, color--[[0x880000ff]])
+	add_line(0, -hw_len, 0, hw_len, color--[[0x88ff0000]])
 
 	-- column lines
 	for i=0, width do
