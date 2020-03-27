@@ -16,6 +16,7 @@ local scenespace_test = ecs.system "scenespace_test"
 scenespace_test.require_singleton 'frame_stat'
 
 scenespace_test.require_system 'ant.scene|scene_space'
+scenespace_test.require_system 'ant.objcontroller|pickup_system'
 
 local hie_refpath = fs.path '/pkg/ant.resources' / 'hierarchy' / 'test_hierarchy.hierarchy'
 local function add_hierarchy_file(hiepath)

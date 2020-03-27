@@ -5,7 +5,9 @@ local const = require "constant"
 
 local function save(v)
     assert(type(v) == "userdata")
-    return math3d.totable(v)
+    local r = math3d.totable(v)
+    r.type = nil
+    return r
 end
 
 local v = ecs.component_alias("vector", "real[]")

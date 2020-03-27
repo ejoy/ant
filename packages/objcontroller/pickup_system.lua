@@ -127,7 +127,7 @@ local function recover_filter(filter)
 	recover_material(result.translucent)
 end
 
-function pickup_material_sys:pickup()
+function pickup_material_sys:update_filter_material()
 	local e = world:singleton_entity "pickup"
 	if e then
 		local filter = e.primitive_filter
@@ -136,6 +136,31 @@ function pickup_material_sys:pickup()
 		local result = filter.result
 		replace_material(result.opaticy, material)
 		replace_material(result.translucent, material[1])
+	end
+end
+
+--update pickup view
+local function enable_pickup(enable)
+	world:enable_system("pickup_system", enable)
+	local e = world:singleton_entity "pickup"
+	e.visible = enable
+
+	if not enable then
+		e.pickup.nextstep = nil
+	end
+end
+
+local leftmousepress_mb = world:sub {"mouse", "LEFT"}
+local detect_select_obj_sys = ecs.system "detect_select_obj_system"
+function detect_select_obj_sys:update_select_view()
+	for _,_,state,x,y in leftmousepress_mb:unpack() do
+		if state == "DOWN" then
+			enable_pickup(true)
+			local pickupentity = world:singleton_entity "pickup"
+			update_viewinfo(pickupentity, x, y)
+			local pickupcomp = pickupentity.pickup
+			pickupcomp.nextstep = "blit"
+		end
 	end
 end
 
@@ -175,6 +200,7 @@ local pup = ecs.policy "pickup"
 	
 local sp = ecs.policy "select"
 	sp.require_component "can_select"
+	sp.require_system "detect_select_obj_system"
 	sp.require_system "pickup_material_system"
 	sp.require_system "pickup_system"
 
@@ -298,14 +324,6 @@ local function add_pick_entity()
 	}
 end
 
-local function enable_pickup(enable)
-	world:enable_system("pickup_system", enable)
-	local e = world:singleton_entity "pickup"
-	e.visible = enable
-end
-
-local leftmousepress_mb = world:sub {"mouse", "LEFT"}
-
 function pickup_sys:init()
 	add_pick_entity()
 end
@@ -362,17 +380,9 @@ end
 
 function pickup_sys:pickup()
 	local pickupentity = world:singleton_entity "pickup"
-	for _,_,state,x,y in leftmousepress_mb:unpack() do
-		if state == "DOWN" then
-			enable_pickup(true)
-			update_viewinfo(pickupentity, x, y)
-			local pickupcomp = pickupentity.pickup
-			pickupcomp.nextstep = "blit"
-		end
-	end
+
 	if pickupentity.visible then
 		local pickupcomp = pickupentity.pickup
-
 		local nextstep = pickupcomp.nextstep
 		if nextstep == "blit" then
 			local fb = fbmgr.get(pickupentity.render_target.fb_idx)

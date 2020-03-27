@@ -65,17 +65,11 @@ ecs.component "viewport"
 	.clear_state "clear_state"
 	.rect "rect"
 
-ecs.component "camera_lock_target"
-	.type "string"
-	.target "entityid"
-	["opt"].offset "vector"
-
 ecs.component "camera"
 	.eyepos		"vector"
 	.viewdir	"vector"
 	.updir		"vector"
 	.frustum	"frustum"
-	["opt"].lock_target"camera_lock_target"
 
 local cp = ecs.policy "camera"
 cp.require_component "camera"
