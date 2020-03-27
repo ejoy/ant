@@ -5,7 +5,7 @@ local ru            = import_package "ant.render".util
 local bgfx = require "bgfx"
 local fs = require "filesystem"
 local pm = require "antpm"
-local vfs           = require "vfs"
+local vfs = require "vfs"
 
 local GuiShaderWatch = GuiBase.derive("GuiShaderWatch")
 GuiShaderWatch.GuiName = "GuiShaderWatch"

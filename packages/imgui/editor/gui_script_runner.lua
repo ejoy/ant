@@ -56,19 +56,17 @@ function GuiScriptRunner:create_file_watch()
         end
         self.file_modified_outside = true
     end
+    local Editor = require "editor_info"
     local fs = require "filesystem"
     local pm = require "antpm"
-    local pkg_path = fs.path(pm.get_entry_pkg().."/"..self.current_file_path)
+    local pkg_path = fs.path(Editor.PackageFSPath.."/"..self.current_file_path)
     self.file_watch = file_watch_mgr:add_pkg_path_watch(pkg_path,cb)
-
-
 end
 
 function GuiScriptRunner:refresh_file()
     if self.file_modified_outside then
         self:reset_file()
     end
-
 end
 
 function GuiScriptRunner:save_to_file()
@@ -98,7 +96,7 @@ function GuiScriptRunner:on_update(delta)
     self:refresh_file()
     if widget.Button("Run In Ecs") then
         self.input_cache.tab()
-        hub.publish(Event.RunScript, tostring(self.input_cache.text))
+        hub.publish(Event.ETR.RunScript, tostring(self.input_cache.text))
     end
     cursor.SameLine()
     if widget.Button("Sync") then
@@ -132,10 +130,10 @@ function GuiScriptRunner:is_setting_dirty()
 end
 
 function GuiScriptRunner:load_setting_from_memory(setting)
-        self.file_modified_inside = setting.file_modified_inside
-        if setting.file_modified_inside then
-            self.input_cache.text = setting.script
-        end
+    self.file_modified_inside = setting.file_modified_inside
+    if setting.file_modified_inside then
+        self.input_cache.text = setting.script
+    end
 end
 
 function GuiScriptRunner:save_setting_to_memory(clear_dirty_flag)
