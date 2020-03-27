@@ -71,9 +71,12 @@ end
 
 local item_inner_spacing = 4.0
 
-local function drag_vector(title_id,vals,arg_tbl)
+local function drag_vector(title_id,vals,arg_tbl,change_vector_length)
     local vector_num = #vals --3
     local vector_length = #(vals[1]) --4
+    if change_vector_length and change_vector_length > 0 then
+        vector_length = change_vector_length
+    end 
     local w = util.CalcItemWidth()
     -- print(w,cursor.GetCursorPos())
     local width = (w+item_inner_spacing) / vector_length - item_inner_spacing

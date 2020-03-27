@@ -14,7 +14,7 @@ function EntityMgr:_init()
 end
 
 function EntityMgr:_init_subcribe()
-
+    
 end
 
 --{parent=,policy=,data=,str=}
