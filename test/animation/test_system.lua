@@ -192,7 +192,7 @@ function m:widget()
     end
     local e = world[RoleEntityId]
     local ske = asset.mgr.get_resource(e.skeleton.ref_path)
-    drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform)
+    drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform.srt)
 end
 
 local eventMouse = world:sub {"mouse"}

@@ -159,7 +159,7 @@ protected:
 
 	static int ljoint(lua_State *L){
 		auto bp = (bindpose*)lua_touserdata(L, 1);
-		const auto jointidx = (uint32_t)lua_tointeger(L, 2) - 1;
+		const auto jointidx = (uint32_t)luaL_checkinteger(L, 2) - 1;
 		if (jointidx < 0 || jointidx > bp->size()){
 			luaL_error(L, "invalid joint index:%d", jointidx);
 		}
