@@ -546,7 +546,7 @@ return {
 			soften = 0.0
 		}
 	},
-	camera_lock_target = {
+	lock_target = {
 		type = "",
 		target = -1
 	},
