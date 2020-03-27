@@ -59,7 +59,10 @@ local function bgfx_init(args)
 	bgfx.init(args)
 	assert(caps == nil)
 	caps = bgfx.get_caps()
-	math3d.homogeneous_depth(caps.homogeneousDepth)
+	math3d.set_homogeneous_depth(caps.homogeneousDepth)
+	math3d.homogeneous_depth = caps.homogeneousDepth
+	math3d.set_origin_bottom_left(caps.originBottomLeft)
+	math3d.origin_bottom_left = caps.originBottomLeft
 end
 
 function hw.init(args)

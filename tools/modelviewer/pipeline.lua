@@ -37,8 +37,10 @@ pipeline "update" {
     pipeline "render" {
         "shadow_camera",
         "load_render_properties",
-        "filter_primitive",
-        "make_shadow",
+        pipeline "handle_primitive"{
+            "filter_primitive",
+            "refine_filter",
+        },
         "debug_shadow",
         "cull",
         "render_commit",
@@ -49,9 +51,8 @@ pipeline "update" {
         }
     },
     pipeline "select"{
-        "update_select_view",
-        "update_filter_material",
         "pickup",
+        "after_pickup"
     },
     "update_editable_hierarchy",
     pipeline "ui" {

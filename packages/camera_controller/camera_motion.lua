@@ -113,18 +113,6 @@ function icamera_moition.rotate_around_point(cameraeid, targetpt, distance, dx, 
 
 end
 
-local function to_ndc(pt2d, screensize)
-    local screen_y = pt2d.y / screensize.h
-    if not hwi.get_caps().originBottomLeft then
-        screen_y = 1 - screen_y
-    end
-
-    return {
-        (pt2d.x / screensize.w) * 2 - 1,
-        (screen_y) * 2 - 1,
-    }
-end
-
 local function main_queue_viewport_size()
     local mq = world:singleton_entity "main_queue"
     local vp_rt = mq.render_target.viewport.rect
@@ -136,8 +124,9 @@ function icamera_moition.ray(cameraeid, pt2d, vp_size)
 
     vp_size = vp_size or main_queue_viewport_size()
 
-    local ndc2d = to_ndc(pt2d, vp_size)
-    local ndc_near = {ndc2d[1], ndc2d[2], hwi.get_caps().homogeneousDepth and -1 or 0, 1}
+    local caps = hwi.get_caps()
+    local ndc2d = mu.pt2D_to_NDC(pt2d, vp_size, caps.originBottomLeft)
+    local ndc_near = {ndc2d[1], ndc2d[2], caps.homogeneousDepth and -1 or 0, 1}
     local ndc_far = {ndc2d[1], ndc2d[2], 1, 1}
 
     local viewproj = mu.view_proj(camera)

@@ -82,6 +82,30 @@ function util.view_proj(camera, frustum)
 	return math3d.mul(projmat, viewmat)
 end
 
+function util.pt2D_to_NDC(pt2d, screensize)
+    local screen_y = pt2d[2] / screensize.h
+    if not math3d.origin_bottom_left then
+        screen_y = 1 - screen_y
+    end
+
+    return {
+        (pt2d[1] / screensize.w) * 2 - 1,
+        (screen_y) * 2 - 1,
+    }
+end
+
+function util.NDC_near_pt(ndc2d)
+	return {
+		ndc2d[1], ndc2d[2], math3d.homogeneous_depth and -1 or 0
+	}
+end
+
+function util.NDC_near_far_pt(ndc2d)
+	return util.NDC_near_pt(ndc2d), {
+		ndc2d[1], ndc2d[2], 1
+	}
+end
+
 function util.to_radian(angles) return list_op(angles, math.rad) end
 function util.to_angle(radians) return list_op(radians, math.deg) end
 

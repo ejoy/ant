@@ -167,7 +167,6 @@ function scene_data_accessor._start_scene(config,serialize_str)
         end
     end
     local systems = {
-        --"pickup_material_system", 
         "pickup_system",
         -- "obj_transform_system",
         "build_hierarchy_system",
@@ -225,7 +224,6 @@ function scene_data_accessor.start_new_world(raw_path)
         "ant.hierarchy.offline",
     }
     local systems = {
-        --"pickup_material_system", 
         "pickup_system",
         -- "obj_transform_system",
         "build_hierarchy_system",

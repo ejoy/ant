@@ -12,11 +12,63 @@ local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local renderutil= renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
+local hwi		= renderpkg.hwi
 
 local assetmgr = import_package "ant.asset".mgr
 
 local bgfx 		= require "bgfx"
 local fs 		= require "filesystem"
+
+--update pickup view
+local function enable_pickup(enable)
+	local e = world:singleton_entity "pickup"
+	e.visible = enable
+
+	if not enable then
+		e.pickup.nextstep = nil
+	end
+end
+
+local function update_viewinfo(e, clickx, clicky) 
+	local mq = world:singleton_entity "main_queue"
+	local camera = world[mq.camera_eid].camera
+
+	local pickupcamera = world[e.camera_eid].camera
+
+	local rt = mq.render_target.viewport.rect
+
+	local ndc2D = mu.pt2D_to_NDC({clickx, clicky}, rt)
+	local eye, at = mu.NDC_near_far_pt(ndc2D)
+
+	local vp = mu.view_proj(camera)
+	local ivp = math3d.inverse(vp)
+	eye = math3d.transformH(ivp, eye, 1)
+	at = math3d.transformH(ivp, at, 1)
+	log.info_a("eye:",math3d.totable(eye))
+	log.info_a("at:",math3d.totable(at))
+	pickupcamera.eyepos.v = eye
+	pickupcamera.viewdir.v= math3d.normalize(math3d.sub(at, eye))
+end
+
+local leftmousepress_mb = world:sub {"mouse", "LEFT"}
+local pickup_watch_sys = ecs.system "pickup_watch_system"
+function pickup_watch_sys:data_changed()
+	for _,_,state,x,y in leftmousepress_mb:unpack() do
+		if state == "DOWN" then
+			enable_pickup(true)
+			local pickupentity = world:singleton_entity "pickup"
+			update_viewinfo(pickupentity, x, y)
+			local pickupcomp = pickupentity.pickup
+			pickupcomp.nextstep = "blit"
+		end
+	end
+end
+
+-- function pickup_watch_sys:end_frame()
+
+-- end
+
+
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
             ((eid & 0x0000ff00) >> 8) / 0xff,
@@ -75,27 +127,7 @@ local function which_entity_hitted(blitdata, viewrect)
 	return traverse_from_center(blitdata,viewrect.w,viewrect.h)
 end
 
-local function update_viewinfo(e, clickx, clicky) 
-	local mq = world:singleton_entity "main_queue"
-	local camera = world[mq.camera_eid].camera
-
-	local pickupcamera = world[e.camera_eid].camera
-
-	local eye = {clickx, clicky, 0}
-	local at =  {clickx, clicky, 1}
-
-	local ivp = math3d.inverse(mu.view_proj(camera))
-	eye = math3d.transformH(ivp, eye, 1)
-	at = math3d.transformH(ivp, at, 1)
-	log.info_a("eye:",math3d.totable(eye))
-	log.info_a("at:",math3d.totable(at))
-	pickupcamera.eyepos.v = eye
-	pickupcamera.viewdir.v= math3d.normalize(math3d.sub(at, eye))
-end
-
--- update material system
-local pickup_material_sys = ecs.system "pickup_material_system"
-
+local pickup_sys = ecs.system "pickup_system"
 local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
@@ -107,8 +139,9 @@ local function replace_material(result, material)
 			if item.properties.uniforms == nil then
 				item.properties.uniforms = {}
 			end
+			local vv = packeid_as_rgba(assert(item.eid))
 			item.properties.uniforms["u_id"] = world:create_component(
-				"uniform", {type="color", name = "select eid", value=packeid_as_rgba(assert(item.eid))})
+				"uniform", {type="color", name = "select eid", value=vv})
 		end
 	end
 end
@@ -127,9 +160,9 @@ local function recover_filter(filter)
 	recover_material(result.translucent)
 end
 
-function pickup_material_sys:update_filter_material()
+function pickup_sys:refine_filter()
 	local e = world:singleton_entity "pickup"
-	if e then
+	if e.visible then
 		local filter = e.primitive_filter
 
 		local material = e.material
@@ -139,35 +172,10 @@ function pickup_material_sys:update_filter_material()
 	end
 end
 
---update pickup view
-local function enable_pickup(enable)
-	world:enable_system("pickup_system", enable)
-	local e = world:singleton_entity "pickup"
-	e.visible = enable
-
-	if not enable then
-		e.pickup.nextstep = nil
-	end
-end
-
-local leftmousepress_mb = world:sub {"mouse", "LEFT"}
-local detect_select_obj_sys = ecs.system "detect_select_obj_system"
-function detect_select_obj_sys:update_select_view()
-	for _,_,state,x,y in leftmousepress_mb:unpack() do
-		if state == "DOWN" then
-			enable_pickup(true)
-			local pickupentity = world:singleton_entity "pickup"
-			update_viewinfo(pickupentity, x, y)
-			local pickupcomp = pickupentity.pickup
-			pickupcomp.nextstep = "blit"
-		end
-	end
-end
-
 -- pickup_system
 local raw_buf = ecs.component "raw_buffer"
-	.w "real" (1)
-	.h "real" (1)
+	.w "int" (1)
+	.h "int" (1)
 	.elemsize "int" (4)
 function raw_buf:init()
 	self.handle = bgfx.memory_texture(self.w*self.h * self.elemsize)
@@ -200,13 +208,11 @@ local pup = ecs.policy "pickup"
 	
 local sp = ecs.policy "select"
 	sp.require_component "can_select"
-	sp.require_system "detect_select_obj_system"
-	sp.require_system "pickup_material_system"
+	sp.require_system "pickup_watch_system"
 	sp.require_system "pickup_system"
 
 	sp.require_policy "pickup"
 
-local pickup_sys = ecs.system "pickup_system"
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
@@ -231,8 +237,8 @@ local function add_pick_entity()
 				updir = mc.T_YAXIS,
 				eyepos = mc.T_ZERO_PT,
 				frustum = {
-					type="mat", n=0.1, f=1000, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
-				}
+					type="mat", n=0.1, f=100, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
+				},
 			},
 			name = "camera.pickup"
 		}
@@ -292,7 +298,7 @@ local function add_pick_entity()
 					},
 					rb_idx = blit_rbidx,
 				},
-				blit_viewid = viewidmgr.get("pickup_blit"),
+				blit_viewid = viewidmgr.get "pickup_blit",
 				pickup_cache = {
 					last_pick = -1,
 					pick_ids = {},
@@ -333,14 +339,13 @@ local function blit(blitviewid, blit_buffer, colorbuffer)
 	local rbhandle = rb.handle
 	
 	bgfx.blit(blitviewid, rbhandle, 0, 0, assert(colorbuffer.handle))
-	return bgfx.read_texture(rbhandle, blit_buffer.raw_buffer.handle)	
+	return bgfx.read_texture(rbhandle, blit_buffer.raw_buffer.handle)
 end
 
 local function print_raw_buffer(rawbuffer)
 	local data = rawbuffer.handle
 	for i=1, pickup_buffer_w do
-		print("line:", i)
-		local t = {}
+		local t = {tostring(i) .. ":"}
 		for j=1, pickup_buffer_h do
 			t[#t+1] = data[(i-1)*pickup_buffer_w + j-1]
 		end
@@ -371,7 +376,7 @@ end
 
 local state_list = {
 	blit = "wait",
-	wait = "select_obj",	
+	wait = "select_obj",
 }
 
 local function check_next_step(pickupcomp)

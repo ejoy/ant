@@ -26,10 +26,16 @@
 #define MAT_ORTHO 1
 
 static int g_default_homogeneous_depth = 0;
+static int g_origin_bottom_left = 0;
 
 int
 math3d_homogeneous_depth() {
 	return g_default_homogeneous_depth;
+}
+
+int
+math3d_origin_bottom_left(){
+	return g_origin_bottom_left;
 }
 
 static inline void *
@@ -1206,15 +1212,15 @@ lstacksize(lua_State *L) {
 }
 
 static int
-lhomogeneous_depth(lua_State *L){
-	int num = lua_gettop(L);
-	if (num > 0){
-		g_default_homogeneous_depth = lua_toboolean(L, 1) != 0;	
-		return 0;
-	}
+lset_homogeneous_depth(lua_State *L){
+	g_default_homogeneous_depth = lua_toboolean(L, 1) ? 1 : 0;
+	return 0;
+}
 
-	lua_pushboolean(L, g_default_homogeneous_depth ? 1 : 0);
-	return 1;
+static int
+lset_origin_bottom_left(lua_State *L){
+	g_origin_bottom_left = lua_toboolean(L, 1) ? 1 : 0;
+	return 0;
 }
 
 static int
@@ -1583,7 +1589,8 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "quat2euler", lquat2euler},
 		{ "dir2radian", ldir2radian},
 		{ "stacksize", lstacksize},
-		{ "homogeneous_depth", lhomogeneous_depth },
+		{ "set_homogeneous_depth", lset_homogeneous_depth},
+		{ "set_origin_bottom_left", lset_origin_bottom_left},
 		{ "pack", lpack },
 
 		//aabb

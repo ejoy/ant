@@ -358,7 +358,7 @@ function sm:init()
 	end
 end
 
-function sm:make_shadow()
+function sm:refine_filter()
 	for _, eid in world:each "csm" do
 		local se = world[eid]
 		local filter = se.primitive_filter
