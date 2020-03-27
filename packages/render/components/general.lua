@@ -105,6 +105,10 @@ function uniformdata:init()
 	end
 end
 
+function uniformdata:delete()
+	return {}
+end
+
 function uniformdata.save(v)
 	if type(v) ~= "userdata" then
 		error(string.format("must be math3d.ref data:%d", type(v)))
