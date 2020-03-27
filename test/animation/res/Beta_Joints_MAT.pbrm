@@ -1,0 +1,17 @@
+
+alphaMode = "OPAQUE"
+basecolor = {
+  factor = {
+    0.266666680574417, 0.0996231064200401, 0.0808117836713791, 1
+  }
+}
+emissive = {
+}
+metallic_roughness = {
+  metallic_factor = 0.400000005960464,
+  roughness_factor = 0.70710676908493
+}
+normal = {
+}
+occlusion = {
+}
