@@ -85,6 +85,11 @@ function mailbox:unpack()
     return next_unpack, self
 end
 
+function mailbox:clear()
+    self[HEAD] = HEAD_INIT
+    self[TAIL] = TAIL_INIT
+end
+
 local world = {}
 
 function world:init()

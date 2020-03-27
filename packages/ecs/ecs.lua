@@ -122,7 +122,6 @@ function world:init_entity(eid)
 	local component, transform = policy.create(self, policies)
 	apply_policy(self, eid, component, transform, dataset)
 	self._dataset[eid] = nil
-	self:pub {"entity_created", eid}
 end
 
 local function registerEntityEx(w, t)
@@ -136,6 +135,7 @@ end
 function world:create_entity(t)
 	local eid = registerEntityEx(self, t)
 	self:init_entity(eid)
+	self:pub {"entity_created", eid}
 	return eid
 end
 
@@ -146,6 +146,7 @@ function world:create_entities(l)
 	end
 	for _, eid in ipairs(entities) do
 		self:init_entity(eid)
+		self:pub {"entity_created", eid}
 	end
 end
 
@@ -369,6 +370,7 @@ function m.new_world(config,world_class)
 	event.init(world)
 	world.sub = event.sub
 	world.pub = event.pub
+	world.unsub = event.unsub
 
 	-- load systems and components from modules
 	typeclass(w, config.policy, config.system, config.loader or require "packageloader")
