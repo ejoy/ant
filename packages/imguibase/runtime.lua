@@ -34,6 +34,9 @@ function callback.init(nwh, context, width, height)
 	world.init(config)
 end
 
+function callback.mouse_wheel(x, y, delta)
+	world.mouse_wheel(x, y, delta)
+end
 function callback.mouse(x, y, what, state)
 	world.mouse(x, y, mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN")
 end

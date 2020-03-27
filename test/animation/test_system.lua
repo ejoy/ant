@@ -2,15 +2,11 @@ local ecs = ...
 local world = ecs.world
 
 local renderpkg  = import_package 'ant.render'
-local mathpkg    = import_package "ant.math"
 local asset      = import_package "ant.asset"
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
 local fs         = require 'filesystem'
-local mu         = mathpkg.util
 local rhwi       = renderpkg.hwi
-
-local math3d     = require "math3d"
 
 local drawer = world:interface "ant.render|iwidget_drawer"
 
@@ -20,7 +16,6 @@ m.require_system "ant.imguibase|imgui_system"
 m.require_system "camera_controller"
 m.require_interface "ant.render|iwidget_drawer"
 m.require_interface "ant.animation|animation"
-m.require_interface "ant.render|light"
 
 local RoleEntityId
 local eventResize = world:sub {"resize"}
@@ -33,16 +28,9 @@ local function load_file(file)
     return data
 end
 
-local ilight = world:interface "ant.render|light"
-
 function m:init()
-    local dlightdir = math3d.totable(
-        math3d.normalize(math3d.inverse(math3d.todirection(
-            math3d.quaternion(mu.to_radian{60, 50, 0, 0})))
-    ))
-    ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir)
-    ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
-    RoleEntityId = world:create_entity(load_file 'entity.txt')
+    world:create_entity(load_file 'res/light_directional.txt')
+    RoleEntityId = world:create_entity(load_file 'res/entity.txt')
 end
 
 function m:post_init()
@@ -204,7 +192,7 @@ function m:widget()
     end
     local e = world[RoleEntityId]
     local ske = asset.mgr.get_resource(e.skeleton.ref_path)
-    drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform)
+    drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform.srt)
 end
 
 local eventMouse = world:sub {"mouse"}

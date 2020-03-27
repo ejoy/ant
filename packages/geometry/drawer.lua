@@ -85,13 +85,13 @@ end
 
 local function get_ani_joints(ani)
 	local joints = {}
-	for ii=1, ani:count() do
-		joints[#joints+1] = ani:joint()
+	for i = 1, ani:count() do
+		joints[#joints+1] = ani:joint(i)
 	end
 	return joints
 end
 
-function draw.draw_skeleton(ske, ani, color, transform, desc)	
+function draw.draw_skeleton(ske, ani, color, transform, desc)
 	local hie_util = import_package "ant.scene".hierarchy
 	
 	local bones = generate_bones(ske)

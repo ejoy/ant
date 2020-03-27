@@ -35,11 +35,20 @@ animation:
       looptimes: 0
 can_render: true
 material:
-  ref_path: /pkg/ant.resources/depiction/materials/skin_model_sample.material
+  ref_path: /pkg/ant.test.animation/res/Beta_Joints_MAT.pbrm
+material:
+  ref_path: /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
 mesh:
   ref_path: /pkg/ant.resources/depiction/meshes/female.mesh
 name: animation_sample
-rendermesh: {}
+rendermesh:
+  submesh_refs:
+    Beta_Joints:
+      material_refs: {1}
+      visible: true
+    Beta_Surface:
+      material_refs: {2}
+      visible: true
 serialize: 5e1c39ad369fa96c5bd44fc5
 pose_result: {}
 skeleton:
