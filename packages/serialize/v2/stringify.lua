@@ -66,7 +66,7 @@ local function stringify_basetype(v)
             return ('%d'):format(v)
         else
             return convertreal(v)
-        end 
+        end
     elseif t == 'string' then
         if v:match(PATTERN) then
             return v
@@ -176,7 +176,7 @@ end
 local function stringify_policy(policies)
     local t = copytable(policies)
     table.sort(t)
-    for _, p in pairs(t) do
+    for _, p in ipairs(t) do
         out[#out+1] = p
     end
 end
