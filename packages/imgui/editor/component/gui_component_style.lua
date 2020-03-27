@@ -182,7 +182,15 @@ function GuiComponentStyle:_render_a_custom_setting(path_tbl,field,value)
         self.selected._custom_cache = self.selected._custom_cache or {}
         self.selected._custom_cache[field] = self.selected._custom_cache[field] or {value}
         local vt = self.selected._custom_cache[field]
-        local change = widget.DragFloat(field,vt)
+        local change = widget.InputFloat(field,vt)
+        if change then
+            self.com_setting:setv(path_tbl,field,vt[1])
+        end
+    elseif setting_define.type == "int" then
+        self.selected._custom_cache = self.selected._custom_cache or {}
+        self.selected._custom_cache[field] = self.selected._custom_cache[field] or {value}
+        local vt = self.selected._custom_cache[field]
+        local change = widget.InputInt(field,vt)
         if change then
             self.com_setting:setv(path_tbl,field,vt[1])
         end
@@ -225,6 +233,11 @@ function GuiComponentStyle:_render_a_inherited_setting(from_path_tbl,target_path
         self.selected._cache[field] = self.selected._cache[field] or 
             {value,flags=flags.InputText.ReadOnly}
         widget.InputFloat(field,self.selected._cache[field])
+    elseif setting_define.type == "int" then
+        self.selected._cache = self.selected._cache or {}
+        self.selected._cache[field] = self.selected._cache[field] or 
+            {value,flags=flags.InputText.ReadOnly}
+        widget.InputInt(field,self.selected._cache[field])
     elseif setting_define.type == "enum" then
         local enumValue =  setting_define.enumValue
         if widget.BeginCombo(field,enumValue[value]) then

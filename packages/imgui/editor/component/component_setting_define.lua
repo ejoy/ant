@@ -26,6 +26,11 @@ define.ArrayAsVector = {
     type = "boolean",
 }
 
+define.ArrayChangeSize = {
+    defaultValue = 0,
+    type = "int",
+}
+
 define.IndexFormat = {
     defaultValue = "",
     type = "string",
