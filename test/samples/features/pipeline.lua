@@ -49,6 +49,8 @@ pipeline "update" {
     "camera_control",
     "lock_target",
     "pickup",
+    "after_pickup",
+	"editor_update",
     "update_editable_hierarchy",
     pipeline "ui" {
         "ui_start",
@@ -56,5 +58,6 @@ pipeline "update" {
         "ui_end",
     },
     "end_frame",
+    "after_update",
     "final",
 }
