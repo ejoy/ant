@@ -8,6 +8,10 @@ local assetmgr = import_package "ant.asset".mgr
 local camerautil = import_package "ant.render".camera
 local RES_IDX = 10080
 
+local function euler2quat(euler)
+    return math3d.totable(math3d.quaternion(euler))
+end
+
 local function line(start_pos, end_pos, color)  
     local vb, ib = {}, {}       
     local function add_vertex(pos, clr)
@@ -59,7 +63,7 @@ local function circle(color)
 end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
-    parent = parent and world[parent].seriazlize or nil
+    -- parent = parent and world[parent].serialize or nil
     local computil  = import_package "ant.render".components
     color[4] = 0.6
     return world:create_entity {
@@ -74,9 +78,9 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
         data = {
             transform = {
                 srt = {
-                    s = size or {1, 1, 1,0},
-                    r = rot or {0, 0, 0, 0},
-                    t = {0, 0, 0, 1},
+                    s = size or {1, 1, 1},
+                    r = euler2quat(rot or {0, 0, 0}),
+                    t = {0, 0, 0},
                 },
                 parent = parent,
             },
@@ -93,7 +97,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             gizmo_object = {dir = dir},
             hierarchy = {},
             hierarchy_visible = true,
-            --serialize = seriazlizeutil.create(),
+            --serialize = serializeutil.create(),
         },
     }
 end
@@ -101,7 +105,7 @@ end
 
 
 local function create_line_entity(world, name, start_pos,end_pos,color,parent,dir)
-    parent = parent and world[parent].seriazlize or nil
+    -- parent = parent and world[parent].serialize or nil
     local util  = import_package "ant.render".components
     -- local geopkg = import_package "ant.geometry"
     -- local geolib = geopkg.geometry
@@ -116,7 +120,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = {srt = mu.srt()},
+            transform = {srt = mu.srt(),parent = parent},
             rendermesh = {},
             material = util.assign_material(fs.path "/pkg/ant.resources" /"depiction" / "materials" / "gizmo_line.material"),
             name = name,
@@ -128,7 +132,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         },
     }
     local grid = world[gridid]
-    grid.transform.parent = parent
+    -- grid.transform.parent = parent
     local vb, ib = line(start_pos, end_pos, color)
     local gvb = {"fffd"}
     for _, v in ipairs(vb) do
@@ -147,7 +151,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
 end
 
 local function create_circle_entity(world, name,color,rot,parent,dir)
-    parent = parent and world[parent].seriazlize or nil
+    -- parent = parent and world[parent].serialize or nil
     local util  = import_package "ant.render".components
 
     local gridid = world:create_entity {
@@ -162,9 +166,9 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
         data = {
             transform = {
                 srt = {
-                    s = {1, 1, 1,0},
-                    r = rot or {0, 0, 0, 0},
-                    t = {0, 0, 0, 1},
+                    s = {1, 1, 1},
+                    r = euler2quat(rot or {0, 0, 0}),
+                    t = {0, 0, 0},
                 },
                 parent = parent,
             },
@@ -180,7 +184,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
         }
     }
     local grid = world[gridid]
-    grid.transform.parent = parent
+    -- grid.transform.parent = parent
     local vb, ib = circle(color)
     local gvb = {"fffd"}
     for _, v in ipairs(vb) do
@@ -199,7 +203,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
 end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
-    parent = parent and world[parent].seriazlize or nil
+    -- parent = parent and world[parent].serialize or nil
     local computil  = import_package "ant.render".components
     return world:create_entity {
         policy = {
@@ -213,9 +217,9 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         data = {
             transform = {
                 srt = {
-                    s = size or {1, 1, 1,0},
-                    r = rot or {0, 0, 0, 0},
-                    t = pos or {0, 0, 0, 1},
+                    s = size or {1, 1, 1},
+                    r = euler2quat(rot or {0, 0, 0}),
+                    t = pos or {0, 0, 0},
                 },
                 parent = parent,
             },
@@ -236,7 +240,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
 end
 
 local function create_box_entity(world, color, size, pos, name,parent,dir)
-    parent = parent and world[parent].seriazlize or nil
+    -- parent = parent and world[parent].serialize or nil
     local computil  = import_package "ant.render".components
     return world:create_entity {
         policy = {
@@ -251,8 +255,8 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             transform = {
                 srt = {
                     s = size or {1},
-                    r = {0, 0, 0, 1},
-                    t = pos or {0, 0, 0, 1},
+                    r = euler2quat({0, 0, 0}),
+                    t = pos or {0, 0, 0},
                 },
                 parent = parent,
             },
@@ -291,21 +295,22 @@ end
 --     }
 -- }
 function Util.create_gizmo(world)
-    local seriazlizeutil = import_package "ant.serialize"
+    local serializeutil = import_package "ant.serialize"
     local function create_gizmo_object(name,parent,ignore_scale)
-        local trans = {srt = mu.srt()}
-        trans.parent = parent and world[parent].seriazlize or nil
+        local trans = {srt = mu.srt(),parent = parent}
+        -- trans.parent = parent and world[parent].serialize or nil
         local args = {
             policy={
                 "ant.render|name",
                 "ant.scene|hierarchy",
-                "ant.imgui|gizmo_object"
+                "ant.imgui|gizmo_object",
+                "ant.serialize|serialize",
             },
             data={
                 transform = trans,
                 name = name,
                 hierarchy = {},
-                -- serialize = seriazlizeutil.create(),
+                serialize = serializeutil.create(),
                 hierarchy_visible = true,
                 gizmo_object = {},
                 -- can_select = true,
@@ -326,11 +331,11 @@ function Util.create_gizmo(world)
         local parent = create_gizmo_object("position",root)
         position.eid = parent
         position.line_x = create_line_entity(world,"line_x",{0,0,0},{line_length,0,0},0xff0000ff,parent,"x")
-        position.cone_x = create_cone_entity(world,{1,0,0,1},{0.1,0.13,0.1,0},{0,0,-0.5*math.pi,0,0}, {line_length,0,0,1}, "cone_x",parent,"x")
+        position.cone_x = create_cone_entity(world,{1,0,0,1},{0.1,0.13,0.1},{0,0,-0.5*math.pi,0}, {line_length,0,0}, "cone_x",parent,"x")
         position.line_y = create_line_entity(world,"line_y",{0,0,0},{0,line_length,0},0xff00ff00,parent,"y")
-        position.cone_y = create_cone_entity(world,{0,1,0,1},{0.1,0.13,0.1,0},{0,0,0,0},{0,line_length,0,1}, "cone_y",parent,"y")
+        position.cone_y = create_cone_entity(world,{0,1,0,1},{0.1,0.13,0.1},{0,0,0},{0,line_length,0}, "cone_y",parent,"y")
         position.line_z = create_line_entity(world,"line_z",{0,0,0},{0,0,line_length},0xffff0000,parent,"z")
-        position.cone_z = create_cone_entity(world,{0,0,1,1},{0.1,0.13,0.1,0},{0.5*math.pi,0,0,0}, {0,0,line_length,1}, "cone_z",parent,"z")
+        position.cone_z = create_cone_entity(world,{0,0,1,1},{0.1,0.13,0.1},{0.5*math.pi,0,0}, {0,0,line_length,1}, "cone_z",parent,"z")
         position.center = create_box_entity(world,{1,1,1,1},{0.15,0.15,0.15,0}, {0,0,0,1}, "box_o",parent)
     end
 
@@ -342,24 +347,24 @@ function Util.create_gizmo(world)
         local parent = create_gizmo_object("scale",root)
         scale.eid = parent
         scale.line_x = create_line_entity(world,"line_x",{0,0,0},{line_length,0,0},0xff0000ff,parent,"x")
-        scale.box_x = create_box_entity(world,{1,0,0,1},{0.15,0.15,0.15,0}, {line_length,0,0,1}, "box_x",parent,"x")
+        scale.box_x = create_box_entity(world,{1,0,0,1},{0.15,0.15,0.15}, {line_length,0,0}, "box_x",parent,"x")
         scale.line_y = create_line_entity(world,"line_y",{0,0,0},{0,line_length,0},0xff00ff00,parent,"y")
-        scale.box_y = create_box_entity(world,{0,1,0,1},{0.15,0.15,0.15,0},{0,line_length,0,1}, "box_y",parent,"y")
+        scale.box_y = create_box_entity(world,{0,1,0,1},{0.15,0.15,0.15},{0,line_length,0}, "box_y",parent,"y")
         scale.line_z = create_line_entity(world,"line_z",{0,0,0},{0,0,line_length},0xffff0000,parent,"z")
-        scale.box_z = create_box_entity(world,{0,0,1,1},{0.15,0.15,0.15,0}, {0,0,line_length,1}, "box_z",parent,"z")
-        scale.center = create_box_entity(world,{1,1,1,1},{0.18,0.18,0.18,0}, {0,0,0,1}, "box_o",parent)
+        scale.box_z = create_box_entity(world,{0,0,1,1},{0.15,0.15,0.15}, {0,0,line_length}, "box_z",parent,"z")
+        scale.center = create_box_entity(world,{1,1,1,1},{0.18,0.18,0.18}, {0,0,0}, "box_o",parent)
     end
     do
         local rotation = {}
         result.rotation = rotation
         local parent = create_gizmo_object("rotation",root)
         rotation.eid = parent
-        rotation.line_x = create_circle_entity(world,"line_x",0xff0000ff,{0,0,0,0},parent,"x")
-        rotation.ring_x = create_ring_entity(world,{1,0,0,1},{1,1,1,0},{0,0,0.5*math.pi,0,0}, "cylinder_x",parent,"x")
-        rotation.line_y = create_circle_entity(world,"line_y",0xff00ff00,{0,0,0.5*math.pi,0,0},parent,"y")
-        rotation.ring_y = create_ring_entity(world,{0,1,0,1},{1,1,1,0},{0,0,0,0}, "cylinder_y",parent,"y")
-        rotation.line_z = create_circle_entity(world,"line_z",0xffff0000,{0,-0.5*math.pi,0,0},parent,"z")
-        rotation.ring_z = create_ring_entity(world,{0,0,1,1},{1,1,1,0},{0.5*math.pi,0,0,0}, "cylinder_z",parent,"z")
+        rotation.line_x = create_circle_entity(world,"line_x",0xff0000ff,{0,0,0},parent,"x")
+        rotation.ring_x = create_ring_entity(world,{1,0,0,1},{1,1,1},{0,0,0.5*math.pi}, "cylinder_x",parent,"x")
+        rotation.line_y = create_circle_entity(world,"line_y",0xff00ff00,{0,0,0.5*math.pi},parent,"y")
+        rotation.ring_y = create_ring_entity(world,{0,1,0,1},{1,1,1},{0,0,0}, "cylinder_y",parent,"y")
+        rotation.line_z = create_circle_entity(world,"line_z",0xffff0000,{0,-0.5*math.pi,0},parent,"z")
+        rotation.ring_z = create_ring_entity(world,{0,0,1,1},{1,1,1},{0.5*math.pi,0, 0}, "cylinder_z",parent,"z")
     end
     return result
 end

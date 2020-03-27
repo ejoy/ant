@@ -8,6 +8,8 @@ RTE.SendEntityPolicy        = "RTE.SendEntityPolicy"
 RTE.SystemProfile           = "RTE.SystemProfile"
 --(reason("editor"/""),eids)
 RTE.ResponseNewEntity       = "RTE.ResponseNewEntity"
+RTE.ResponseDuplicateEntity       = "RTE.ResponseDuplicateEntity"
+RTE.ResponseWatchMsg       = "RTE.ResponseWatchMsg"
 
 --publish from Editor, subscribe by Runtime
 local ETR = {}
@@ -25,7 +27,9 @@ ETR.RunScript               = "ETR.RunScript"
 --({parent=,policy=,data=,str=})
 ETR.NewEntity               = "ETR.NewEntity"
 --( eids )
-ETR.DuplicateEntity         = "ETR.NewEntity"
+ETR.DuplicateEntity         = "ETR.DuplicateEntity"
+ETR.RequestGetWatchMsg      = "ETR.RequestGetWatchMsg"
+ETR.RequestModifyWatchMsg   = "ETR.RequestModifyWatchMsg"
 
 --publish from Editor, subscribe by Editor
 local ETE = {}
@@ -37,6 +41,7 @@ ETE.CloseProject            = "ETE.CloseProject" -- ()
 ETE.RequestAddPackageToProject  = "ETE.RequestAddPackageToProject"
 ETE.ProjectModified         = "ETE.ProjectModified"
 ETE.OpenAddPolicyView       = "ETE.OpenAddPolicyView"
+
 
 return {
     RTE = RTE,

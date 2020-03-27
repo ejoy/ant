@@ -148,7 +148,7 @@ function scene_data_accessor._start_scene(config,serialize_str)
         -- "ant.EditorLauncher",
         -- "ant.objcontroller",
         "ant.imgui",
-        "ant.testimgui",
+        "ant.imgui_editor",
         "ant.hierarchy.offline",
     }
     do -- fill packages
@@ -221,7 +221,7 @@ function scene_data_accessor.start_new_world(raw_path)
         -- "ant.EditorLauncher",
         -- "ant.objcontroller",
         "ant.imgui",
-        "ant.testimgui",
+        "ant.imgui_editor",
         "ant.hierarchy.offline",
     }
     local systems = {
