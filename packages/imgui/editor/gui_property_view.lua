@@ -11,7 +11,7 @@ local gui_util = require "editor.gui_util"
 local hub = import_package("ant.editor").hub
 local Event = require "hub_event"
 
-local EntityWidget = require "widget.gui_entity_widget"
+local EntityWidget = require "widget.entity_widget"
 
 local GuiBase = require "gui_base"
 local GuiPropertyView = GuiBase.derive("GuiPropertyView")
@@ -36,12 +36,12 @@ function GuiPropertyView:_init()
     self:_init_subcribe()
 end
 
-function GuiPropertyView:on_component_value_change(eid,seid,com_id,name,value)
-    hub.publish(Event.ETR.ModifyComponent,eid,seid,com_id,name,value)
+function GuiPropertyView:on_component_value_change(eid,parent_path,key,value)
+    hub.publish(Event.ETR.ModifyComponent,eid,parent_path,key,value)
 end
 
-function GuiPropertyView:on_mult_component_value_change(eids,seids,com_ids,name,value,is_list)
-    hub.publish(Event.ETR.ModifyMultComponent,eids,seids,com_ids,name,value,is_list)
+function GuiPropertyView:on_mult_component_value_change(eids,parent_path,key,value,is_list)
+    hub.publish(Event.ETR.ModifyMultComponent,eids,parent_path,key,value,is_list)
 end
 
 

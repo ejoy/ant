@@ -6,6 +6,7 @@ local windows = imgui.windows
 local util = imgui.util
 local cursor = imgui.cursor
 local enum = imgui.enum
+local Editor = require "editor_info"
 local gui_util = {}
 
 function gui_util.get_pkg_list()
@@ -217,7 +218,7 @@ function gui_util.open_current_pkg_path(path,...)
     local fs = require "filesystem"
     local localfs = require "filesystem.local"
     local pm = require "antpm"
-    local pkg_path = fs.path(pm.get_entry_pkg().."/"..path)
+    local pkg_path = fs.path(Editor.PackageFSPath.."/"..path)
     local local_path = pkg_path:localpath()
     local f = localfs.open(local_path,...)
     return f,local_path:string()
@@ -257,7 +258,7 @@ function gui_util.watch_current_package_file(file_path,cb)
     local localfs = require "filesystem.local"
     local current_path = localfs.current_path()
     local pm = require "antpm"
-    local pkg_path = fs.path(pm.get_entry_pkg().."/"..file_path)
+    local pkg_path = fs.path(Editor.FSPath.."/"..file_path)
     local local_path = pkg_path:localpath()
     local dir_path = local_path:parent_path():string()
     local local_path_str = local_path:string()

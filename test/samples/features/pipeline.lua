@@ -52,7 +52,9 @@ pipeline "update" {
         "update_select_view",
         "update_filter_material",
         "pickup",
+        "after_pickup",
     },
+	"editor_update",
     "update_editable_hierarchy",
     pipeline "ui" {
         "ui_start",
@@ -60,5 +62,6 @@ pipeline "update" {
         "ui_end",
     },
     "end_frame",
+    "after_update",
     "final",
 }

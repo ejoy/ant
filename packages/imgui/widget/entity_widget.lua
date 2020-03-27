@@ -10,7 +10,7 @@ local hub       = import_package "ant.editor".hub
 local Event     = require "hub_event"
 
 local ComponentSetting = require "editor.component.component_setting"
-local factory = require "widget.gui_basecomponent_widget"
+local factory = require "widget.property_widget"
 
 local class     = require "common.class"
 local GuiEntityWidget = class("GuiEntityWidget")
@@ -106,7 +106,7 @@ function GuiEntityWidget:CustomTreeNode(name,path_tbl,typ)
             end
             if schema.multiple then
                 --name is index
-                if cfg.IndexFormat and cfg.IndexFormat ~= "" then
+                if type(name) == "number" and cfg.IndexFormat and cfg.IndexFormat ~= "" then
                     name = string.format(cfg.IndexFormat,name)
                 end
             end
@@ -169,15 +169,15 @@ function GuiEntityWidget:create_child_path( parent_path,schema)
     return child_path
 end
 
-function GuiEntityWidget:on_base_component_change(eid,seid,com_id,name,value)
+function GuiEntityWidget:on_base_component_change(...)
     if self.change_cb then
-        return self.change_cb(eid,seid,com_id,name,value)
+        return self.change_cb(...)
     end
 end
 
-function GuiEntityWidget:on_mult_component_change(eids,seids,com_ids,name,value,is_list)
+function GuiEntityWidget:on_mult_component_change(...)
     if self.mult_change_cb then
-        return self.mult_change_cb(eids,seids,com_ids,name,value,is_list)
+        return self.mult_change_cb(...)
     end
 end
 
@@ -208,25 +208,25 @@ function GuiEntityWidget:render_base_component(parent_tbl,com_name,component_dat
         log.trace_a("base_component",display_name,new_value)
         if self.state == "single" then
             parent_tbl[alias_name] = new_value
-            local seid = parent_tbl.__id
-            if not seid then
-                --entity has nor __id,but has __entity_id
-                seid = parent_tbl.__entity_id
-            end
-            self:on_base_component_change(self.cur_eids[1],seid,parent_tbl.__id,alias_name,new_value)
+            -- local seid = parent_tbl.__id
+            -- if not seid then
+            --     --entity has nor __id,but has __entity_id
+            --     seid = parent_tbl.__entity_id
+            -- end
+            self:on_base_component_change(self.cur_eids[1],parent_tbl.__path,alias_name,new_value)
         else --mult
-            local com_ids = table_list_get(parent_tbl,"__id")
-            local seids
-            if not com_ids then
-                seids = table_list_get(parent_tbl,"__entity_id")
-            end
+            -- local com_ids = table_list_get(parent_tbl,"__id")
+            -- local seids
+            -- if not com_ids then
+            --     seids = table_list_get(parent_tbl,"__entity_id")
+            -- end
             local is_list = factory.WillReturnList[com_name]
             if is_list then
                 table_list_set_list(parent_tbl,alias_name,new_value)
             else
                 table_list_set_single(parent_tbl,alias_name,new_value)
             end
-            self:on_mult_component_change(self.cur_eids,com_ids or seids,com_ids,alias_name,new_value,is_list)
+            self:on_mult_component_change(self.cur_eids,parent_tbl[1].__path,alias_name,new_value,is_list)
         end
 
         --todo
@@ -265,7 +265,7 @@ function GuiEntityWidget:render_array_component(parent_tbl,com_name,component_da
         self:render_base_component(parent_tbl,"vector",component_data,alias_name,path_tbl)
     else
         if self.state == "mult" then
-            widget.Text("Array cannot be mult-edited.")
+            widget.Text("Array cannot be mult-edited yet.")
         else
             local show,popfunc = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Array)
             if show then
@@ -280,6 +280,10 @@ function GuiEntityWidget:render_array_component(parent_tbl,com_name,component_da
     return true
 end
 
+local function is_cache(name)
+    return (name == "__path")
+end
+
 function GuiEntityWidget:render_map_component(parent_tbl,com_name,component_data,alias_name,path_tbl)
     local schema = self.schema
     local com_schema = schema[com_name]
@@ -291,8 +295,10 @@ function GuiEntityWidget:render_map_component(parent_tbl,com_name,component_data
         local show,pop_func = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Map)
         if show then
             for child_name,data in pairs(component_data) do
-                local child_path_tbl = self:create_child_path(path_tbl,com_schema)
-                self:render_component(component_data,com_name,data,child_name,child_path_tbl)
+                if not is_cache(child_name) then
+                    local child_path_tbl = self:create_child_path(path_tbl,com_schema)
+                    self:render_component(component_data,com_name,data,child_name,child_path_tbl)
+                end
             end
             pop_func()
         end
@@ -350,6 +356,12 @@ function GuiEntityWidget:render_multiple_component(parent_tbl,com_name,component
     else
         local show_main,popfunc_main = self:CustomTreeNode(alias_name,path_tbl,ComponentSetting.ComType.Multiple)
         if show_main then
+            --self[0]
+            self:render_component(parent_tbl,com_name,component_data,alias_name,path_tbl,true)
+            if #component_data > 0 then
+                cursor.Separator()
+            end
+            --self[1,...]
             local len = #component_data
             for index,data in ipairs(component_data) do
                 self:render_component(component_data,typ,data,index,path_tbl,true)
@@ -401,7 +413,7 @@ function GuiEntityWidget:_refresh_sorted_entity(entity)
     self._last_entity = entity
 end
 
-function GuiEntityWidget:_refresh_sorted_entity_mult(eids,entities,entitys)
+function GuiEntityWidget:_refresh_sorted_entity_mult(eids,entities)
     assert(self.com_setting)
     local sort_cfg = self.com_setting:get_sort_cfg()
     local entity_list = {}
@@ -459,7 +471,25 @@ function GuiEntityWidget:clear_mult_temp()
     self._entity_list = nil -- {entity1,entity2,...}
     self._sorted_coms_mult = nil --{{com1_name,{com1_data1,com1_data2}},{com2_name,{com2_data1,com2_data2}}}
     self._last_eids = nil --eids
-end 
+end
+
+local function create_path_info(tbl,tbl_path)
+    if tbl.__path then
+        return
+    end
+    tbl.__path = tbl_path
+    local has_path = ( tbl_path ~= "")
+    for k,v in pairs(tbl) do
+        if type(v) == "table" then
+            if has_path then
+                v_path = tbl_path .."/"..k
+            else
+                v_path = tostring(k)
+            end
+            create_path_info(v,v_path)
+        end
+    end
+end
 
 function GuiEntityWidget:update_single(eids,entities,base_component_cache,policy_dic)
     local schema = self.schema
@@ -472,6 +502,7 @@ function GuiEntityWidget:update_single(eids,entities,base_component_cache,policy
         self:_refresh_sorted_entity(entities[first_eid])
     end
     self.is_editing = false
+    create_path_info(entity,"")
     self:update_policy(first_eid,policy_dic,entities,base_component_cache)
     factory.BeginProperty(base_component_cache)
     for i,data in ipairs(self._sorted_coms) do
@@ -541,6 +572,7 @@ function GuiEntityWidget:update_mult(eids,entities,base_component_cache)
     self.cur_eids = eids
     self.is_editing = false
     local entity_list = self._entity_list
+    create_path_info(entity_list[1],"")
     local sorted_coms_mult = self._sorted_coms_mult
     factory.BeginProperty(base_component_cache)
     for i,data in ipairs(sorted_coms_mult) do

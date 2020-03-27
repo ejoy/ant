@@ -207,7 +207,6 @@ function GuiCanvas:on_dispatch_msg()
     if focus and #key_down > 0 then
         for _,record in ipairs(key_down) do
             self.world.keyboard(
-                "keyboard",
                 inputmgr.translate_key(record[1]),
                 record[2],
                 in_key

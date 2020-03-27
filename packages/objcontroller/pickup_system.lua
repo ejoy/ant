@@ -30,7 +30,7 @@ local function traverse_from_center( blitdata,w,h )
         for i = 1,#v2a do
             v2a[i] =  v2a[i] +   v2b[i]
         end
-    end
+	end
     -- local function dosth(v2)
     --     log.info_a("trav:",v2)
     -- end
@@ -87,7 +87,8 @@ local function update_viewinfo(e, clickx, clicky)
 	local ivp = math3d.inverse(mu.view_proj(camera))
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
-
+	log.info_a("eye:",math3d.totable(eye))
+	log.info_a("at:",math3d.totable(at))
 	pickupcamera.eyepos.v = eye
 	pickupcamera.viewdir.v= math3d.normalize(math3d.sub(at, eye))
 end
@@ -270,7 +271,6 @@ local function add_pick_entity()
 			V="CLAMP",
 		}
 	}
-
 	return world:create_entity {
 		policy = {
 			"ant.render|name",
@@ -350,18 +350,21 @@ local function print_raw_buffer(rawbuffer)
 end
 
 local function select_obj(pickup_com,blit_buffer, viewrect)
+	print_raw_buffer(blit_buffer.raw_buffer)
 	local selecteid = which_entity_hitted(blit_buffer.raw_buffer.handle, viewrect)
-	if selecteid then
+	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)
 		pickup_com.pickup_cache.last_pick = selecteid
 		pickup_com.pickup_cache.pick_ids = {selecteid}
 		local name = assert(world[selecteid]).name
 		print("pick entity id : ", selecteid, ", name : ", name)
-		world:update_func("after_pickup")()
+		-- world:update_func("after_pickup")()
+		world:pub("pickup",selecteid,pickup_com.pickup_cache.pick_ids)
 	else
 		pickup_com.pickup_cache.last_pick = nil
 		pickup_com.pickup_cache.pick_ids = {}
-		world:update_func("after_pickup")()
+		-- world:update_func("after_pickup")()
+		world:pub("pickup",nil,{})
 		print("not found any eid")
 	end
 end

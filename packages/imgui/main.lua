@@ -1,4 +1,5 @@
 local editor = {
+    editor_info = require "editor_info",
     extend = require "common.extend",
     imgui = require "imgui_wrap",
     gui_mgr = require "gui_mgr",
@@ -35,6 +36,7 @@ local editor = {
         gui_window_controller = require "editor.gui_window_controller",
         gui_policy_component_pair = require "editor.component.gui_policy_component_pair",
         gui_add_policy_view = require "editor.gui_add_policy_view",
+        gui_msg_watch_view = require "editor.gui_msg_watch_view",
         scene = {
             scene_data_accessor = require "editor.scene.scene_data_accessor",
         }

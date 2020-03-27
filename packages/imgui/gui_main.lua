@@ -33,6 +33,15 @@ local function imgui_resize(width, height)
 	imgui.resize(width/xscale, height/yscale, xscale, yscale)
 end
 
+local function glyphRanges(t)
+    assert(#t % 2 == 0)
+    local s = {}
+    for i = 1, #t do
+        s[#s+1] = ("<I4"):pack(t[i])
+    end
+    s[#s+1] = "\x00\x00\x00"
+    return table.concat(s)
+end
 
 function gui_main.init(nwh, context, width, height)
 	imgui_context = imgui.CreateContext(nwh)
@@ -70,7 +79,10 @@ function gui_main.init(nwh, context, width, height)
     
     if main.init then
         if platform.OS == "Windows" then
-            font.Create { { Font "Arial" ,16, "Default"},{ Font "黑体" ,16, "ChineseFull"} }
+            font.Create {
+                { Font "黑体" , 16, glyphRanges { 0x0020, 0xFFFF }},
+                { Font "Segoe UI Emoji" , 16, glyphRanges { 0x1F300, 0x1F9EF }},
+            }
         elseif platform.OS == "macOS" then
             font.Create { { Font "华文细黑" , 16, "ChineseFull"} }
         else -- iOS

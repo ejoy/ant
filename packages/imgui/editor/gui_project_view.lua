@@ -517,6 +517,7 @@ end
 
 local function create_package_at(name,location,entry)
     local pm = require "antpm"
+    local Editor = require "editor_info"
     local dir_obj = lfs.path(location)
     if lfs.exists(dir_obj) then
         gui_util.notice({msg="create package failed,same name exists"})
@@ -524,7 +525,7 @@ local function create_package_at(name,location,entry)
     end
 
     -- local current_path = lfs.current_path()
-    local package_temp_path = fs.path(pm.get_entry_pkg().."/package_temp.lua")
+    local package_temp_path = fs.path(Editor.PackageFSPath.."/package_temp.lua")
     -- local local_path = package_temp_path:localpath()
     local package_temp_str = nil
     do

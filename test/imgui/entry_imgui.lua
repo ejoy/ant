@@ -13,6 +13,7 @@ local GuiProjectList = import_package "ant.imgui".editor.gui_project_list
 local GuiWindowController = import_package "ant.imgui".editor.gui_window_controller
 local GuiPolicyComponentPair = import_package "ant.imgui".editor.gui_policy_component_pair
 local GuiAddPolicyView = import_package "ant.imgui".editor.gui_add_policy_view
+local GuiMsgWatchView = import_package "ant.imgui".editor.gui_msg_watch_view
 local EntityMgr = import_package "ant.imgui".editor.entity_mgr
 local gui_mgr = import_package "ant.imgui".gui_mgr
 local args = {
@@ -21,6 +22,12 @@ local args = {
 }
 local main = {}
 function main.init()
+    local EditorInfo = import_package "ant.imgui".editor_info
+    EditorInfo.init({
+        Package = "ant.imgui_editor",
+        PackageFSPath = "/pkg/ant.imgui_editor",
+    })
+
     local TestGuiBase = require "test_gui_base"
     local GuiEditorMenu = require "gui_editor_menu"
     local GuiScene = require "gui_scene"
@@ -51,11 +58,8 @@ function main.init()
     gui_mgr.register(GuiPolicyComponentPair.GuiName,GuiPolicyComponentPair.new())
     local default_value_cfg = require "engine_data.default_value_override"
     gui_mgr.register(GuiAddPolicyView.GuiName,GuiAddPolicyView.new(default_value_cfg))
+    gui_mgr.register(GuiMsgWatchView.GuiName,GuiMsgWatchView.new())
 end
-
-pm = require "antpm"
-log.info_a(pm.get_entry_pkg())
-
 
 
 gui_main.run(main,args)

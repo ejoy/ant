@@ -1,7 +1,7 @@
 local imgui         = require "imgui_wrap"
 local widget        = imgui.widget
 local flags         = imgui.flags
-local windows       = imgui.windows
+local windows       = imgui.windows 
 local util          = imgui.util
 local cursor        = imgui.cursor
 local enum          = imgui.enum
@@ -43,9 +43,6 @@ local function EndColunms()
     windows.PopStyleColor()
 end
 
-local WillReturnList = {
-    vector = true,
-}
 
 local function real(ui_cache,name,value,cfg)
     local vt = ui_cache[name]
@@ -159,7 +156,7 @@ local function string(ui_cache,name,value)
     local change = widget.InputText("###"..name, vt)
     local active = util.IsItemActive()
     EndColunms()
-    return change,vt.text,active
+    return change,tostring(vt.text),active
 end
 
 local function mult_string(ui_cache,name,values)
@@ -199,12 +196,32 @@ local function mult_int(ui_cache,name,values)
     return change,vt[1],active
 end
 
+local function _fix_size(origin,num)
+    local new = {}
+    for i = 1,num do
+        new[i] = origin[i]
+    end
+    return new
+end
+
+local function _fill_size(new,origin,num)
+    --todo:may should not use origin
+    for i = 1,num do
+        origin[i] = new[i]
+    end
+    return origin
+end
 
 local function vector(ui_cache,name,value,cfg)
     local vt = ui_cache[name]
     if not vt then
         local speed = cfg.RealDragSpeed or 1.0
-        vt = {value[1],value[2],value[3],value[4],speed=speed}
+        if cfg.ArrayChangeSize >0 then
+            vt = _fix_size(value,cfg.ArrayChangeSize)
+            vt.speed = speed
+        else
+            vt = {value[1],value[2],value[3],value[4],speed=speed}
+        end
         ui_cache[name] = vt
     end
     BeginColunms()
@@ -214,7 +231,17 @@ local function vector(ui_cache,name,value,cfg)
     local change = widget.DragFloat("###DragFloat"..name,vt)
     local active = util.IsItemActive()
     EndColunms()
-    return change,{vt[1],vt[2],vt[3],vt[4]},active
+    if change then
+        if cfg.ArrayChangeSize > 0 then
+            value = _fill_size(vt,value,cfg.ArrayChangeSize)
+            return change,value,active
+        else
+            return change,{vt[1],vt[2],vt[3],vt[4]},active
+        end
+
+    else
+        return change,nil,active
+    end
 end
 
 local function mult_vector(ui_cache,name,values,cfg)
@@ -228,7 +255,7 @@ local function mult_vector(ui_cache,name,values,cfg)
     widget.Text(name)
     cursor.NextColumn()
     cursor.SetNextItemWidth(-1)
-    local change = mult_widget.DragVector("###DragFloat"..name,values,vt)
+    local change = mult_widget.DragVector("###DragFloat"..name,values,vt,cfg.ArrayChangeSize)
     local active = util.IsItemActive()
     EndColunms()
     return change,values,active
@@ -312,8 +339,17 @@ local function mult_primtype(ui_cache,name,values)
     return false
 end
 
+--Vector这种由多个元素组成的，多选编辑器的时候，只会改变其中某一项
+--所以需要返回一个数组,比如修改了y值，需要返回{{x1,y,z1},{x2,y,z2},{x3,y,z3},...}数组
+--其余单个值的，只需要返回一个value
+local WillReturnList = {
+    vector = true,
+    uniformdata = true,
+    matrix = true,
+}
 
-return {
+
+local factory =  {
     single={
         real = real,
         boolean = boolean,
@@ -344,3 +380,17 @@ return {
     EndProperty = EndProperty,
     WillReturnList = WillReturnList,
 }
+
+factory.CombineFactory = function(other)
+    for _,typ in ipairs({"single","mult","WillReturnList"}) do
+        local widgets = factory[typ]
+        local other_widgets = other[typ]
+        if other_widgets then
+            for n,wid in pairs(other_widgets) do
+                widgets[n] = wid
+            end
+        end
+    end 
+end
+
+return factory

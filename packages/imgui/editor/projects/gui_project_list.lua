@@ -147,13 +147,14 @@ end
 
 local function create_project_at(name,location)
     local pm = require "antpm"
+    local Editor = require "editor_info"
     local dir_obj = lfs.path(location)/name
     if lfs.exists(dir_obj) then
         gui_util.notice({msg="create project failed,same name exists"})
         return false
     end
     local current_path = lfs.current_path()
-    local project_path = fs.path(pm.get_entry_pkg().."/project_temp")
+    local project_path = fs.path(Editor.PackageFSPath.."/project_temp")
     local local_path = project_path:localpath()
     lfs.copy(local_path,dir_obj)
     return tostring(dir_obj)

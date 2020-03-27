@@ -73,7 +73,24 @@ end
 
 function GuiHierarchyView:on_update()
     self:_update_menu_bar()
-    self:_render_children(self.hierarchy_data)
+    if not self.hierarchy_data then
+        return 
+    end
+    if widget.TreeNode("Scene",flags.TreeNode.DefaultOpen) then
+        self:_render_children(self.hierarchy_data)
+        widget.TreePop()
+    end
+    self.context_menu_opened = false
+    if not self.context_menu_opened and windows.BeginPopupContextWindow() then
+        if widget.MenuItem("New Entity") then
+            gui_mgr.getMgr("EntityMgr"):request_new_entity()
+        end
+        if widget.MenuItem("Duplicate Entity") then
+            local eids = self.selected_map:get_list()
+            gui_mgr.getMgr("EntityMgr"):request_duplicate_entity(eids)
+        end
+        windows.EndPopup()
+    end
 end
 
 function GuiHierarchyView:_update_menu_bar()
@@ -96,23 +113,12 @@ function GuiHierarchyView:_render_children(children)
         self.sorted_map[children] = cache
         sorted = cache
     end
-    if widget.TreeNode("Scene",flags.TreeNode.DefaultOpen) then
-        for _,id in ipairs(sorted) do
-            self:_render_entity(id,children[id])
-        end
-        widget.TreePop()
-    end
-    if windows.BeginPopupContextWindow() then
-        if widget.MenuItem("New Entity") then
-            gui_mgr.getMgr("EntityMgr"):request_new_entity()
-        end
-        if widget.MenuItem("Duplicate Entity") then
-            gui_mgr.getMgr("EntityMgr"):request_duplicate_entity()
-        end
-        windows.EndPopup()
-    end
 
+    for _,id in ipairs(sorted) do
+        self:_render_entity(id,children[id])
+    end
 end
+
 
 function GuiHierarchyView:_render_entity(id,entity)
     local children = entity.children
@@ -132,17 +138,20 @@ function GuiHierarchyView:_render_entity(id,entity)
         windows.SetScrollHereY()
         self._scroll_flag = false
     end
-    self:_show_selected_entity_menu(id,entity)
 
-    if util.IsItemClicked() then
-        if gui_input.key_state.CTRL then
-            self.selected_map:insert(id)
-        else
-            self.selected_map:removeAll()
-            self.selected_map:insert(id)
-        end
+    if util.IsItemClicked(0) and gui_input.key_state.CTRL then
+        self.selected_map:insert(id)
+        self:publish_selected_entity(self.selected_map:get_list(),util.IsMouseDoubleClicked(0))
+    elseif util.IsItemClicked(0) or util.IsItemClicked(1) then
+        self.selected_map:removeAll()
+        self.selected_map:insert(id)
         self:publish_selected_entity(self.selected_map:get_list(),util.IsMouseDoubleClicked(0))
     end
+
+    if not self.context_menu_opened then
+        self.context_menu_opene = self:_show_selected_entity_menu(id,entity)
+    end
+
     if util.IsItemHovered() then
         widget.BeginTooltip()
         widget.Text("Detail")
@@ -163,6 +172,7 @@ end
 function GuiHierarchyView:_show_selected_entity_menu(id,entity)
     local open = windows.BeginPopupContextItem("Selected_Menu###"..id,1)
     if open then
+        widget.Text(string.format("Entity:%d",id))
         if widget.Button("Select children") then
             local select_children = nil
             select_children = function(children)

@@ -14,6 +14,7 @@ local NormalCfgList = {
     "ArrayAsVector",
     "IndexFormat",
     "RealDragSpeed",
+    "ArrayChangeSize",
 }
 
 local ArrayCfgList = {
