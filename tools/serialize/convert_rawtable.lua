@@ -54,6 +54,6 @@ local function convert_dir(dir)
     each_dir(fs.path(dir), convert)
 end
 
-convert_dir(fs.path "test")
-convert_dir(fs.path "tools")
-convert_dir(fs.path "packages")
+convert_dir "test"
+convert_dir "tools"
+convert_dir "packages"
