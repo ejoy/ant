@@ -79,9 +79,8 @@ local function update_animation(e, delta_time)
 	local animation = e.animation
 	local ske = asset.get_resource(e.skeleton.ref_path)
 	local pr = e.pose_result.result
-	pr:setup(ske.handle, fix_root)
+	pr:setup(ske.handle)
 	do_animation(pr, animation.current, delta_time)
-	pr:fetch_result()
 end
 
 function anisystem:sample_animation_pose()
@@ -96,7 +95,16 @@ local function clear_animation_cache()
 	for _, eid in world:each "pose_result" do
 		local e = world[eid]
 		local pr = e.pose_result.result
+		pr:fetch_result()
 		pr:end_animation()
+	end
+end
+
+function anisystem:do_refine()
+	for _, eid in world:each "pose_result" do
+		local e = world[eid]
+		local pr = e.pose_result.result
+		pr:fix_root_XZ()
 	end
 end
 

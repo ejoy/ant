@@ -170,6 +170,32 @@ protected:
 		memcpy(r, &trans, sizeof(trans));
 		return 0;
 	}
+
+	static int lsoa_count(lua_State *L){
+		return 1;
+	}
+
+	static int lsoa_joint(lua_State *L){
+		auto bp = (bindpose*)lua_touserdata(L, 1);
+		const auto jointidx = (uint32_t)luaL_checkinteger(L, 2) - 1;
+		if (jointidx < 0 || jointidx > bp->size()){
+			luaL_error(L, "invalid joint index:%d", jointidx);
+		}
+
+		float * r = (float*)lua_touserdata(L, 3);
+
+		return 0;
+	}
+
+	static int lset_soa_joint(lua_State *L){
+		auto bp = (bindpose*)lua_touserdata(L, 1);
+		const auto jointidx = (uint32_t)luaL_checkinteger(L, 2) - 1;
+		if (jointidx < 0 || jointidx > bp->size()){
+			luaL_error(L, "invalid joint index:%d", jointidx);
+		}
+
+		float * r = (float*)lua_touserdata(L, 3);
+	}
 public:
 	static int create(lua_State* L) {
 		lua_Integer numjoints = luaL_checkinteger(L, 1);
@@ -207,6 +233,8 @@ public:
 		luaL_Reg l[] = {
 			{"count", lcount},
 			{"joint", ljoint},
+			{"soa_count", lsoa_count},
+			{"soa_joint", lsoa_joint},
 			{nullptr, nullptr,}
 		};
 		base_type::reigister_mt(L, l);
@@ -332,17 +360,14 @@ public:
 	ozz::Vector<bindpose_soa>::Std  m_results;
 	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std m_layers;
 	ozz::animation::Skeleton*   m_ske;
-	bool	m_fix_root;
 	ozzPoseResult(size_t numjoints)
 		: ozzBindposeT<ozzPoseResult>(numjoints)
 		, m_ske(nullptr)
-		, m_fix_root(true)
 	{}
 
 	ozzPoseResult(size_t numjoints, const float *data)
 		: ozzBindposeT<ozzPoseResult>(numjoints, data)
 		, m_ske(nullptr)
-		, m_fix_root(true)
 	{}
 private:
 	void _push_pose(bindpose_soa const& pose, float weight) {
@@ -353,8 +378,9 @@ private:
 		m_layers.emplace_back(layer);
 	}
 
-	inline void 
-	_fix_root_translation(bindpose_soa& bp_soa) {
+	inline int 
+	fix_root_XZ(lua_State *L) {
+		auto &bp_soa = m_results.back();
 		size_t n = (size_t)m_ske->num_joints();
 		const auto& parents = m_ske->joint_parents();
 		for (size_t i = 0; i < n; ++i) {
@@ -363,25 +389,20 @@ private:
 				const auto newtrans = ozz::math::simd_float4::zero();
 				trans.translation.x = ozz::math::SetI(trans.translation.x, newtrans, 0);
 				trans.translation.z = ozz::math::SetI(trans.translation.z, newtrans, 0);
-				return;
+				return 0;
 			}
 		}
+		return 0;
 	}
 
 	int setup(lua_State* L) {
 		const auto hie = (hierarchy_build_data*)luaL_checkudata(L, 2, "HIERARCHY_BUILD_DATA");
-		const bool fr = lua_isnoneornil(L, 3) ? true : lua_toboolean(L, 3);
 		if (m_ske){
 			if (m_ske != hie->skeleton){
 				return luaL_error(L, "using sample pose_result but different skeleton");
 			}
-
-			if (m_fix_root != fr){
-				return luaL_error(L, "setup animiation step with different fix root argument, input:%s, cache:%s", (fr ? "true" : "false"), (m_fix_root ? "true" : "false"));
-			}
 		} else {
 			m_ske = hie->skeleton;
-			m_fix_root = fr;
 		}
 		return 0;
 	}
@@ -452,9 +473,6 @@ private:
 		if (m_results.empty()) {
 			return luaL_error(L, "no result");
 		}
-		if (m_fix_root) {
-			_fix_root_translation(m_results.back());
-		}
 		ozz::animation::LocalToModelJob job;
 		job.input = ozz::make_range(m_results.back());
 		job.skeleton = m_ske;
@@ -479,6 +497,7 @@ private:
 	STATIC_MEM_FUNC(fetch_result);
 	STATIC_MEM_FUNC(do_ik);
 	STATIC_MEM_FUNC(clear);
+	STATIC_MEM_FUNC(fix_root_XZ);
 #undef MEM_FUNC
 
 public:
@@ -491,6 +510,7 @@ public:
 			{ "do_ik",		  	ldo_ik},
 			{ "end_animation",	lclear},
 			{ "clear",			lclear},
+			{ "fix_root_XZ", 	lfix_root_XZ},
 			{ "count", 			lcount},
 			{ "joint", 			ljoint},
 			{ nullptr, 			nullptr},

@@ -99,13 +99,11 @@ local function prepare_ikdata(ikdata)
 	return ikdata_cache
 end
 
-local fix_root <const> = true
-
 local ik_i = ecs.interface "ik"
 function ik_i.setup(e)
 	local skehandle = asset.get_resource(e.skeleton.ref_path).handle
 	local pr = e.pose_result.result
-	pr:setup(skehandle, fix_root)
+	pr:setup(skehandle)
 end
 
 function ik_i.do_ik(pr, ikdata)

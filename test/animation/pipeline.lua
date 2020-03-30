@@ -25,7 +25,10 @@ pipeline "update" {
     pipeline "animation" {
         "animation_state",
         "sample_animation_pose",
-        "do_ik",
+        pipeline "refine_animation_pose" {
+            "do_refine",
+            "do_ik",
+        },
         "skin_mesh",
         "end_animation",
     },
