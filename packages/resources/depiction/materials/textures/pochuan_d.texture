@@ -1,11 +1,8 @@
-path = "/pkg/ant.resources.binary/textures/BH-ChiBi-Chuan-04-D.tga"
-
-sampler = {
-	U = "CLAMP",
-	V = "CLAMP",
-	MIN = "LINEAR",
-	MAG = "LINEAR",	
-}
-
-colorspace="sRGB"
-normalmap 	= false
+colorspace: sRGB
+normalmap: false
+path: /pkg/ant.resources.binary/textures/BH-ChiBi-Chuan-04-D.tga
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  U: CLAMP
+  V: CLAMP

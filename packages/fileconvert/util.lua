@@ -1,12 +1,13 @@
-local lfs       = require "filesystem.local"
+local lfs = require "filesystem.local"
+local datalist = require "datalist"
 
 local util = {}; util.__index = util
 
-function util.rawtable(filepath)
-	local env = {}
-	local r = assert(lfs.loadfile(filepath, "t", env))
-	r()
-	return env
+function util.datalist(filepath)
+	local f = assert(lfs.open(filepath, "r"))
+	local data = f:read "a"
+	f:close()
+	return datalist.parse(data)
 end
 
 function util.identify_info(identity)

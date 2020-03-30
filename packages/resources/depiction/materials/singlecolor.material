@@ -1,14 +1,8 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/singlecolor.fx"
-properties = {
-  uniforms = {
-    u_color = {
-      name = "u_color",
-      type = "v4",
-      value = {
-        1, 1, 1, 1
-      }
-    }
-  }
-}
-state = "/pkg/ant.resources/depiction/materials/states/default.state"
+fx: /pkg/ant.resources/depiction/materials/fx/singlecolor.fx
+properties:
+  uniforms:
+    u_color:
+      name: u_color
+      type: v4
+      value: {1, 1, 1, 1}
+state: /pkg/ant.resources/depiction/materials/states/default.state

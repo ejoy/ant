@@ -1,29 +1,16 @@
-
-basecolor = {
-  texture = {
-    path = "/pkg/ant.test.features/assets/textures/basecolor.texture"
-  }
-}
-emissive = {
-  factor = {
-    1, 1, 1, 1
-  },
-  texture = {
-    path = "/pkg/ant.test.features/assets/textures/emissive.texture"
-  }
-}
-metallic_roughness = {
-  texture = {
-    path = "/pkg/ant.test.features/assets/textures/metallic_roughness.texture"
-  }
-}
-normal = {
-  texture = {
-    path = "/pkg/ant.test.features/assets/textures/normal.texture"
-  }
-}
-occlusion = {
-  texture = {
-    path = "/pkg/ant.test.features/assets/textures/occlusion.texture"
-  }
-}
+basecolor:
+  texture:
+    path: /pkg/ant.test.features/assets/textures/basecolor.texture
+emissive:
+  factor: {1, 1, 1, 1}
+  texture:
+    path: /pkg/ant.test.features/assets/textures/emissive.texture
+metallic_roughness:
+  texture:
+    path: /pkg/ant.test.features/assets/textures/metallic_roughness.texture
+normal:
+  texture:
+    path: /pkg/ant.test.features/assets/textures/normal.texture
+occlusion:
+  texture:
+    path: /pkg/ant.test.features/assets/textures/occlusion.texture

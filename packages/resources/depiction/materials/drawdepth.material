@@ -1,8 +1,6 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/drawdepth.fx"
-state = {
-  CULL = "CCW",
-  DEPTH_TEST = "LESS",
-  MSAA = true,
-  WRITE_MASK = "RGBAZ"
-}
+fx: /pkg/ant.resources/depiction/materials/fx/drawdepth.fx
+state:
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ

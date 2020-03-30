@@ -1,23 +1,13 @@
-config = {
-    animation = {
-        cpu_skinning = true,
-        load_skeleton = true,
-    },
-    flags = {
-        flip_uv = true,
-        ib_32 = true,
-        invert_normal = true
-    },
-    layout = {
-        "p3|n30|T40|w4|i40NIi",
-        "t20",
-    },
-    layout_types = {
-        "dynamic",
-        "static",
-    }
-}
-
-mesh_path = "/pkg/ant.resources.binary/meshes/female/female.glb"
-sourcetype = "glb"
-type = "mesh"
+config:
+  animation:
+    cpu_skinning: true
+    load_skeleton: true
+  flags:
+    flip_uv: true
+    ib_32: true
+    invert_normal: true
+  layout: {"p3|n30|T40|w4|i40NIi", t20}
+  layout_types: {dynamic, static}
+mesh_path: /pkg/ant.resources.binary/meshes/female/female.glb
+sourcetype: glb
+type: mesh

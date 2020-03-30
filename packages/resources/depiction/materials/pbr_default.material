@@ -1,3 +1,2 @@
-local epath = "/pkg/ant.resources/depiction/"
-fx = epath .. "materials/fx/pbr_default.fx"
-state = epath .. "materials/states/default.state"
+fx: /pkg/ant.resources/depiction/materials/fx/pbr_default.fx
+state: /pkg/ant.resources/depiction/materials/states/default.state

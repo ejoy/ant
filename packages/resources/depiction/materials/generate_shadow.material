@@ -1,3 +1,2 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/generate_shadow.fx"
-state = "/pkg/ant.resources/depiction/materials/states/default.state"
+fx: /pkg/ant.resources/depiction/materials/fx/generate_shadow.fx
+state: /pkg/ant.resources/depiction/materials/states/default.state

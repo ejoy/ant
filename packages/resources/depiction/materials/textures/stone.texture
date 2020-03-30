@@ -1,17 +1,13 @@
-
-
-compress = {
-  android = "ASTC4x4",
-  ios = "ASTC4x4",
-  windows = "BC3"
-}
-maxsize = "1024x1024"
-mipmap = 0
-path = "/pkg/ant.resources.binary/textures/fieldstone-rgba.dds"
-sampler = {
-  MAG = "LINEAR",
-  MIN = "LINEAR",
-  U = "CLAMP",
-  V = "CLAMP"
-}
-type = "texture"
+compress:
+  android: ASTC4x4
+  ios: ASTC4x4
+  windows: BC3
+maxsize: 1024x1024
+mipmap: 0
+path: /pkg/ant.resources.binary/textures/fieldstone-rgba.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  U: CLAMP
+  V: CLAMP
+type: texture

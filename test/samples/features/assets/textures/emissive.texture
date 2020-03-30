@@ -1,18 +1,14 @@
-
-colorspace = "sRGB"
-compress = {
-  android = "ASTC6x6",
-  ios = "ASTC6x6",
-  windows = "BC1"
-}
-
-normalmap = false
-path = "/pkg/ant.resources.binary/test/tt/2.jpg"
-sampler = {
-  MAG = "LINEAR",
-  MIN = "LINEAR",
-  MIP = "POINT",
-  U = "WRAP",
-  V = "WRAP"
-}
-type = "texture"
+colorspace: sRGB
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC1
+normalmap: false
+path: /pkg/ant.resources.binary/test/tt/2.jpg
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: POINT
+  U: WRAP
+  V: WRAP
+type: texture

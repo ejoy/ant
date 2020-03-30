@@ -1,11 +1,8 @@
-path = "/pkg/ant.resources.binary/textures/pbr/bolonga_irr.dds"
-
-sampler = {
-	U = "MIRROR",
-	V = "MIRROR",
-	MIN = "ANISOTROPIC",
-	MAG = "ANISOTROPIC",
-}
-
-sRGB 		= false
-normalmap 	= false 
+normalmap: false
+path: /pkg/ant.resources.binary/textures/pbr/bolonga_irr.dds
+sRGB: false
+sampler:
+  MAG: ANISOTROPIC
+  MIN: ANISOTROPIC
+  U: MIRROR
+  V: MIRROR
