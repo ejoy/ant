@@ -197,6 +197,15 @@ local function stringify_entity(policies, dataset)
     return table.concat(out, '\n')
 end
 
+local function stringify_map_(data)
+    out = {}
+    for k, v in sortpairs(data) do
+        stringify_value(0, k..":", v)
+    end
+    return table.concat(out, '\n')
+end
+
 return {
     entity = stringify_entity,
+    map = stringify_map_,
 }

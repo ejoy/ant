@@ -1,3 +1,2 @@
-local pp_path = "/pkg/ant.resources/depiction/materials/postprocess/"
-fx      = pp_path .. "fx/downsample.fx"
-state   = pp_path .. "postprocess.state"
+fx: /pkg/ant.resources/depiction/materials/postprocess/fx/downsample.fx
+state: /pkg/ant.resources/depiction/materials/postprocess/postprocess.state

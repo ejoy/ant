@@ -7,7 +7,7 @@ local utilitypkg = import_package "ant.utility.local"
 local fs_util = utilitypkg.fs_util
 
 return function (identity, sourcefile, outfile, localpath)
-	local meshcontent = util.rawtable(sourcefile)
+	local meshcontent = util.datalist(sourcefile)
 	local meshpath = localpath(meshcontent.mesh_path)
 
 	glb_cvt(meshpath:string(), outfile:string(), meshcontent.config or config)

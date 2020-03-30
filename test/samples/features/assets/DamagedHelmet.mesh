@@ -1,12 +1,8 @@
-mesh_path = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb"
-config = {
-    layout = {
-      "p3|n30nIf|T|b|t20"
-    },
-    flags = {
-        flip_uv = true,
-        ib_32 = false,
-        invert_normal = false,
-    },
-}
-type = "mesh"
+config:
+  flags:
+    flip_uv: true
+    ib_32: false
+    invert_normal: false
+  layout: {"p3|n30nIf|T|b|t20"}
+mesh_path: /pkg/ant.resources.binary/meshes/DamagedHelmet.glb
+type: mesh

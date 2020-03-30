@@ -20,13 +20,6 @@ local function check_compile_shader(identity, srcfilepath, outfilepath, macros)
 	}
 end
 
-local function rawtable(filepath)
-	local env = {}
-	local r = assert(lfs.loadfile(filepath, "t", env))
-	r()
-	return env
-end
-
 local valid_shader_stage = {
 	"vs", "fs", "cs"
 }
@@ -102,7 +95,7 @@ local function depend_files(files)
 end
 
 return function (identity, srcfilepath, outfilepath, localpath)
-	local fxcontent = rawtable(srcfilepath)
+	local fxcontent = util.datalist(srcfilepath)
 
 	local mysetting	= read_linkconfig(localpath("settings"), identity)
 	local marcros 	= add_macros_from_surface_setting(identity, mysetting, fxcontent.surface_type, fxcontent.macros)

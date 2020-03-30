@@ -58,7 +58,7 @@ anisystem.require_interface "ant.timer|timer"
 
 local timer = world:interface "ant.timer|timer"
 
-local fix_root <const> = true
+local fix_root <const> = false
 
 local function do_animation(poseresult, task, delta_time)
 	if task.type == 'blend' then

@@ -1,27 +1,17 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/outline/scale.fx"
-properties = {
-  uniforms = {
-    u_outlinecolor = {
-      name = "outline color",
-      type = "v4",
-      value = {
-        0.8, 0.8, 0, 1
-      }
-    },
-    u_outlinescale = {
-      name = "outline scale",
-      type = "v4",
-      value = {
-        0.01, 0, 0, 0
-      }
-    }
-  }
-}
-state = {
-  ALPHA_REF = 0,
-  CULL = "CCW",
-  DEPTH_TEST = "LESS",
-  MSAA = true,
-  WRITE_MASK = "RGBAZ"
-}
+fx: /pkg/ant.resources/depiction/materials/fx/outline/scale.fx
+properties:
+  uniforms:
+    u_outlinecolor:
+      name: "outline color"
+      type: v4
+      value: {0.8, 0.8, 0, 1}
+    u_outlinescale:
+      name: "outline scale"
+      type: v4
+      value: {0.01, 0, 0, 0}
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ

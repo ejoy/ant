@@ -1,9 +1,8 @@
-local pp_path = "/pkg/ant.resources/depiction/materials/postprocess/"
-fx      = pp_path .. "fx/upsample.fx"
-state   = pp_path .. "postprocess.state"
-
-properties = {
-    uniforms = {
-        u_intensity = {type="v4", name = "upsample intensity(scale)", value = {1.2, 0.0, 0.0, 0.0}}
-    }
-}
+fx: /pkg/ant.resources/depiction/materials/postprocess/fx/upsample.fx
+properties:
+  uniforms:
+    u_intensity:
+      name: "upsample intensity(scale)"
+      type: v4
+      value: {1.2, 0, 0, 0}
+state: /pkg/ant.resources/depiction/materials/postprocess/postprocess.state

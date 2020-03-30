@@ -1,11 +1,10 @@
-path = "/pkg/ant.resources.binary/textures/1x1_white.png"
-colorspace="sRGB"
-format = "RGBA8"
-sampler = {
-  MAG = "LINEAR",
-  MIN = "LINEAR",
-  MIP = "LINEAR",
-  U = "CLAMP",
-  V = "CLAMP"
-}
-type = "texture"
+colorspace: sRGB
+format: RGBA8
+path: /pkg/ant.resources.binary/textures/1x1_white.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+type: texture

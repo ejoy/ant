@@ -10,7 +10,7 @@ local resdir = fs.path "packages/fileconvert/texture/resources"
 local sourcefile = resdir / "build_boat_01_a.dds"
 local lkfile = fs.path(sourcefile:string() .. ".lk")
 
-local lkcontent = util.rawtable(lkfile)
+local lkcontent = util.datalist(lkfile)
 
 local surcess, msg = cvttex("Window-D3D11", sourcefile, lkcontent, resdir / "test.tex.bin")
 

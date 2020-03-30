@@ -1,5 +1,3 @@
-local pbrpath = "/pkg/ant.resources/shaders/pbr/"
-shader = {
-    vs = pbrpath .. "vs_pbr.sc",
-    fs = pbrpath .. "fs_pbr.sc",
-}
+shader:
+  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc

@@ -1,16 +1,12 @@
-
-
-compress = {
-  android = "ASTC4x4",
-  ios = "ASTC4x4",
-  windows = "BC3"
-}
-maxsize = "1024x1024"
-mipmap = 0
-path = "/pkg/ant.resources.binary/terrain/Scene_Texture_Terrain_BD_ROCK_040_1.dds"
-sampler = {
-  MAG = "LINEAR",
-  MIN = "LINEAR",
-  MIP = "LINEAR"
-}
-type = "texture"
+compress:
+  android: ASTC4x4
+  ios: ASTC4x4
+  windows: BC3
+maxsize: 1024x1024
+mipmap: 0
+path: /pkg/ant.resources.binary/terrain/Scene_Texture_Terrain_BD_ROCK_040_1.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+type: texture

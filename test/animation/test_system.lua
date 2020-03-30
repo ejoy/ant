@@ -29,6 +29,13 @@ local function load_file(file)
 end
 
 function m:init()
+    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {
+        srt = {
+          s = {1,1,1,0},
+          r = {0,0.92388,0,0.382683},
+          t = {0,0,0,1},
+        }
+    })
     world:create_entity(load_file 'res/light_directional.txt')
     RoleEntityId = world:create_entity(load_file 'res/entity.txt')
 end

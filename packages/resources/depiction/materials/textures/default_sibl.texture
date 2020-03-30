@@ -1,11 +1,8 @@
-path = "/pkg/ant.resources.binary/textures/pbr/bolonga_lod.dds"
-
-sampler = {
-	U = "MIRROR",
-	V = "MIRROR",
-	MIN = "LINEAR",
-	MAG = "LINEAR",
-}
-
-sRGB 		= false
-normalmap 	= false 
+normalmap: false
+path: /pkg/ant.resources.binary/textures/pbr/bolonga_lod.dds
+sRGB: false
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  U: MIRROR
+  V: MIRROR

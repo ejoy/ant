@@ -1,20 +1,13 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/test_glb.fx"
-properties = {
-  uniforms = {
-    u_time = {
-      name = "u_time",
-      type = "v4",
-      value = {
-        1, 1, 1, 1
-      }
-    }
-  }
-}
-state = {
-  ALPHA_REF = 0,
-  CULL = "NONE",
-  DEPTH_TEST = "LESS",
-  MSAA = true,
-  WRITE_MASK = "RGBAZ"
-}
+fx: /pkg/ant.resources/depiction/materials/fx/test_glb.fx
+properties:
+  uniforms:
+    u_time:
+      name: u_time
+      type: v4
+      value: {1, 1, 1, 1}
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ

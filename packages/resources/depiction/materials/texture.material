@@ -1,20 +1,15 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/texture.fx"
-properties = {
-  textures = {
-    s_texColor = {
-      name = "tex color",
-      ref_path = "/pkg/ant.resources/depiction/PVPScene/siegeweapon_d.texture",
-      stage = 0,
-      type = "texture"
-    }
-  }
-}
-state = {
-  ALPHA_REF = 0,
-  CULL = "CCW",
-  DEPTH_TEST = "LESS",
-  MSAA = true,
-  PT = "TRISTRIP",
-  WRITE_MASK = "RGBAZ"
-}
+fx: /pkg/ant.resources/depiction/materials/fx/texture.fx
+properties:
+  textures:
+    s_texColor:
+      name: "tex color"
+      ref_path: /pkg/ant.resources/depiction/PVPScene/siegeweapon_d.texture
+      stage: 0
+      type: texture
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  PT: TRISTRIP
+  WRITE_MASK: RGBAZ

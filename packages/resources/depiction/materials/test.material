@@ -1,16 +1,10 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/test.fx"
-property = {
-  roughness = {
-    default = "/pkg/ant.resources/",
-    type = "texture"
-  },
-  u_color = {
-    name = "color",
-    type = "v4",
-    value = {
-      1, 0, 0, 1
-    }
-  }
-}
-state = "/pkg/ant.resources/depiction/materials/states/default.state"
+fx: /pkg/ant.resources/depiction/materials/fx/test.fx
+property:
+  roughness:
+    default: /pkg/ant.resources/
+    type: texture
+  u_color:
+    name: color
+    type: v4
+    value: {1, 0, 0, 1}
+state: /pkg/ant.resources/depiction/materials/states/default.state

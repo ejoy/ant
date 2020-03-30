@@ -1,5 +1,3 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/shadow/scene-mat-shadow.fx"
-properties = {
-}
-state = "/pkg/ant.resources/depiction/materials/states/default.state"
+fx: /pkg/ant.resources/depiction/materials/fx/shadow/scene-mat-shadow.fx
+properties: {}
+state: /pkg/ant.resources/depiction/materials/states/default.state

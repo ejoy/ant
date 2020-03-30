@@ -1,9 +1,8 @@
-fx = "/pkg/ant.modelviewer/res/quadtest/quadtest.fx"
-state = {
-    WRITE_MASK = "RGBAZ",
-    ALPHA_REF = 0,
-    CULL = "CCW",
-    MSAA = true,
-    DEPTH_TEST = "ALWAYS",
-    PT = "TRISTRIP"
-}
+fx: /pkg/ant.modelviewer/res/quadtest/quadtest.fx
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  PT: TRISTRIP
+  WRITE_MASK: RGBAZ

@@ -1,4 +1,5 @@
 local fs = require "filesystem"
+local datalist = require "datalist"
 
 local support_types = {
 	sc		= true,
@@ -55,14 +56,12 @@ function assetmgr.get_unloader(name)
 	return get_accessor(name).unloader
 end
 
-local function rawtable(filepath)
-	local env = {}
-	local r = assert(fs.loadfile(filepath, "t", env))
-	r()
-	return env
+function assetmgr.load_depiction(filepath)
+	local f = assert(fs.open(filepath, "r"))
+	local data = f:read "a"
+	f:close()
+	return datalist.parse(data)
 end
-
-assetmgr.load_depiction = rawtable
 
 assetmgr.res_key = res_key
 

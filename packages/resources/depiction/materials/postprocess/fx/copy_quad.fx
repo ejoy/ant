@@ -1,5 +1,3 @@
-local pp_path = "/pkg/ant.resources/depiction/materials/postprocess/fx/"
-shader = {
-    vs = pp_path .. "vs_pp_quad.sc",
-    fs = pp_path .. "fs_quad.sc",
-}
+shader:
+  fs: /pkg/ant.resources/depiction/materials/postprocess/fx/fs_quad.sc
+  vs: /pkg/ant.resources/depiction/materials/postprocess/fx/vs_pp_quad.sc

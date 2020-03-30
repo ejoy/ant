@@ -1,5 +1,3 @@
-local bloom_fx_path = "/pkg/ant.resources/depiction/materials/postprocess/fx/"
-shader = {
-    vs = bloom_fx_path .. "vs_pp_quad.sc",
-    fs = bloom_fx_path .. "fs_upsample.sc",
-}
+shader:
+  fs: /pkg/ant.resources/depiction/materials/postprocess/fx/fs_upsample.sc
+  vs: /pkg/ant.resources/depiction/materials/postprocess/fx/vs_pp_quad.sc

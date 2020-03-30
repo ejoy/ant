@@ -1,3 +1,2 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/terrain/terrain.fx"
-state = "/pkg/ant.resources/depiction/terrain/normal.state"
+fx: /pkg/ant.resources/depiction/materials/fx/terrain/terrain.fx
+state: /pkg/ant.resources/depiction/terrain/normal.state

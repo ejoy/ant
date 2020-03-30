@@ -1,10 +1,8 @@
-
-fx = "/pkg/ant.resources/depiction/materials/fx/shadow/mesh_receive_shadow.fx"
-state = {
-  ALPHA_REF = 0,
-  CULL = "CCW",
-  DEPTH_TEST = "LESS",
-  MSAA = true,
-  PT = "TRISTRIP",
-  WRITE_MASK = "RGBAZ"
-}
+fx: /pkg/ant.resources/depiction/materials/fx/shadow/mesh_receive_shadow.fx
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  PT: TRISTRIP
+  WRITE_MASK: RGBAZ

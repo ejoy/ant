@@ -100,7 +100,7 @@ return function (identity, sourcefile, outfile, localpath)
 		hideWindow  = true,
 	}
 
-	local texcontent = util.rawtable(sourcefile)
+	local texcontent = util.datalist(sourcefile)
 	
 	local texpath = localpath(assert(texcontent.path))
 
