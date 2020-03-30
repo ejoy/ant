@@ -9,8 +9,8 @@ local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 
 local camera_controller_system = ecs.system "editor_camera_controller"
-camera_controller_system.require_interface "ant.camera_controller|camera_motion"
-local icm = world:interface "ant.camera_controller|camera_motion"
+camera_controller_system.require_interface "ant.objcontroller|camera_motion"
+local icm = world:interface "ant.objcontroller|camera_motion"
 
 ecs.tag "test_remove_com"
 

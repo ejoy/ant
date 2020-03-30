@@ -21,8 +21,6 @@ local mu        = mathpkg.util
 
 local init_loader = ecs.system 'init_loader'
 
-init_loader.require_system 'ant.camera_controller|camera_controller2'
-init_loader.require_system "ant.camera_controller|camera_system"
 init_loader.require_system "ant.imguibase|imgui_system"
 init_loader.require_system "ant.sky|procedural_sky_system"
 init_loader.require_system "ant.test.features|scenespace_test"
@@ -30,11 +28,12 @@ init_loader.require_system "ant.test.features|character_ik_test"
 init_loader.require_system "ant.test.features|terrain_test"
 init_loader.require_system "ant.test.features|pbr_test"
 init_loader.require_system "ant.test.features|animation_test"
+init_loader.require_system 'ant.test.features|camera_controller'
 init_loader.require_system "ant.render|physic_bounding"
 init_loader.require_system "ant.render|render_mesh_bounding"
 
 init_loader.require_interface "ant.render|camera"
-init_loader.require_interface "ant.camera_controller|camera_motion"
+init_loader.require_interface "ant.objcontroller|camera_motion"
 init_loader.require_interface "ant.render|iwidget_drawer"
 init_loader.require_interface "ant.render|light"
 

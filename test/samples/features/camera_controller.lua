@@ -4,19 +4,10 @@ local world = ecs.world
 local math3d = require "math3d"
 local rhwi = import_package "ant.render".hwi
 
-local camera_controller_system = ecs.system "camera_controller2"
+local camera_controller_system = ecs.system "camera_controller"
+camera_controller_system.require_interface "ant.objcontroller|camera_motion"
 
-local function camera_move(forward_axis, position, dx, dy, dz)
-	local right_axis, up_axis = math3d.base_axes(forward_axis)
-	position.v = math3d.add(position, math3d.mul(forward_axis, dz))
-	position.v = math3d.add(position, math3d.mul(up_axis, dy))
-	position.v = math3d.add(position, math3d.mul(right_axis, dx))
-end
-
-local function get_camera()
-	local mq = world:singleton_entity "main_queue"
-	return world[mq.camera_eid].camera
-end
+local icm = world:interface "ant.objcontroller|camera_motion"
 
 local eventMouseLeft = world:sub {"mouse", "LEFT"}
 local eventMouseRight = world:sub {"mouse", "RIGHT"}
@@ -63,8 +54,8 @@ local function can_move(camera)
 end
 
 function camera_controller_system:camera_control()
-	local keyboard_dx, keyborad_dy, keyboard_dz = 0, 0, 0
-	local camera = get_camera()
+	local mq = world:singleton_entity "main_queue"
+	local camera = world[mq.camera_eid].camera
 	
 	if can_rotate(camera) then
 		for _, e in ipairs{eventMouseLeft, eventMouseRight} do
@@ -83,24 +74,25 @@ function camera_controller_system:camera_control()
 		end
 	end
 	if can_move(camera) then
+		local keyboard_delta = {0 , 0, 0}
 		for _,code,press in eventKeyboard:unpack() do
 			local delta = (press>0) and kKeyboardSpeed or 0
-			if code == "W" then
-				keyboard_dz = keyboard_dz + delta
-			elseif code == "S" then
-				keyboard_dz = keyboard_dz - delta
-			elseif code == "A" then
-				keyboard_dx = keyboard_dx - delta
+			if code == "A" then
+				keyboard_delta[1] = keyboard_delta[1] - delta
 			elseif code == "D" then
-				keyboard_dx = keyboard_dx + delta
+				keyboard_delta[1] = keyboard_delta[1] + delta
 			elseif code == "Q" then
-				keyborad_dy = keyborad_dy - delta
+				keyboard_delta[2] = keyboard_delta[2] - delta
 			elseif code == "E" then
-				keyborad_dy = keyborad_dy + delta
+				keyboard_delta[2] = keyboard_delta[2] + delta
+			elseif code == "W" then
+				keyboard_delta[3] = keyboard_delta[3] + delta
+			elseif code == "S" then
+				keyboard_delta[3] = keyboard_delta[3] - delta
 			end
 		end
-		if keyboard_dx ~= 0 or keyborad_dy ~= 0 or keyboard_dz ~= 0 then
-			camera_move(camera.viewdir, camera.eyepos, keyboard_dx, keyborad_dy, keyboard_dz)
+		if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
+			icm.move_along(mq.camera_eid, keyboard_delta)
 		end
 	end
 end

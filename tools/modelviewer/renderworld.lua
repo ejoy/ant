@@ -31,7 +31,7 @@ m.require_system "ant.imguibase|imgui_system"
 m.require_interface "ant.render|camera"
 m.require_interface "ant.animation|animation"
 m.require_interface "ant.timer|timer"
-m.require_interface "ant.camera_controller|camera_motion"
+m.require_interface "ant.objcontroller|camera_motion"
 m.require_interface "ant.render|iwidget_drawer"
 m.require_interface "ant.collision|collider"
 m.require_interface "ant.render|light"
@@ -92,7 +92,7 @@ function m:init()
 end
 
 local timer         = world:interface "ant.timer|timer"
-local camera_motion = world:interface "ant.camera_controller|camera_motion"
+local camera_motion = world:interface "ant.objcontroller|camera_motion"
 local collider      = world:interface "ant.collision|collider"
 
 local eventKeyboard = world:sub {"keyboard"}

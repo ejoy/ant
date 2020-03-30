@@ -5,7 +5,7 @@ local math3d  = require "math3d"
 
 local m = ecs.system "camera_controller"
 m.require_interface "ant.render|camera"
-m.require_interface "ant.camera_controller|camera_motion"
+m.require_interface "ant.objcontroller|camera_motion"
 
 local eventCameraControl = world:sub {"camera"}
 local cameraInitEyepos <const> = {1.6, 1.8,-1.8, 1}
@@ -19,7 +19,7 @@ local function cameraUpdateEyepos(camera)
 end
 
 local function cameraRotate(dx, dy)
-	local camera_motion = world:interface "ant.camera_controller|camera_motion"
+	local camera_motion = world:interface "ant.objcontroller|camera_motion"
 	camera_motion.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
 end
 
