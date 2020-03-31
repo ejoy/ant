@@ -1,5 +1,4 @@
 local assetutil	= require "util"
-local bgfx 		= require "bgfx"
 
 local mesh_loader 	= import_package "ant.modelloader".loader
 

@@ -1,5 +1,4 @@
 local assetmgr 	= require "asset"
-local assetutil = require "util"
 local fs = require "filesystem"
 
 local engine_resource_path = fs.path "/pkg/ant.resources/depiction"

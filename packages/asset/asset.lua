@@ -2,18 +2,15 @@ local fs = require "filesystem"
 local datalist = require "datalist"
 
 local support_types = {
-	sc		= true,
-	mesh 	= true,
-	state 	= true,
-	material= true,
-	texture = true,
-	hierarchy= true,--scene hierarchy info, using ozz-animation runtime struct
-	lk 		= true,
-	ozz 	= true,
-	sm 		= true,	--animation state machine
-	terrain = true,
-	fx		= true,
-	pbrm	= true,
+	mesh      = true,
+	state     = true,
+	material  = true,
+	texture   = true,
+	hierarchy = true,--scene hierarchy info, using ozz-animation runtime struct
+	ozz       = true,
+	terrain   = true,
+	fx        = true,
+	pbrm      = true,
 }
 
 local resources = {}

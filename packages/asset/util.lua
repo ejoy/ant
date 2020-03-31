@@ -1,13 +1,6 @@
 local util = {}; util.__index = util
 
-local shader_mgr = require "shader_mgr"
-local assetmgr = require "asset"
 local fs = require "filesystem"
-
-function util.create_shader_program_from_file(fxpath)
-    local fxloader = require "ext_fx".loader
-    return fxloader(fxpath)
-end
 
 local function mnext(tbl, index)
     if tbl then
@@ -48,7 +41,7 @@ function util.parse_embed_file(filepath)
     local magic = f:read(4)
     if magic ~= "res\0" then
         error(string.format("wrong format from file:%s",filepath:string()))
-        return 
+        return
     end
 
     local function read_pairs()

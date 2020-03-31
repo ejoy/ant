@@ -8,7 +8,6 @@ local rhwi      = renderpkg.hwi
 local viewidmgr = renderpkg.viewidmgr
 
 local assetpkg  = import_package "ant.asset"
-local assetutil = assetpkg.util
 local assetmgr  = assetpkg.mgr
 local editor    = import_package "ant.editor"
 local rxpkg     = import_package "ant.rxlua"
@@ -56,12 +55,12 @@ function gui_main.init(nwh, context, width, height)
     imgui.setDockEnable(true)
     imgui.ant.viewid(uieditor_viewid);
     gui_mgr.win_handle = nwh
-	local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
+	local imgui_font = assetmgr.get_resource(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
     imgui.ant.font_program(
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
-	local imgui_image = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
+	local imgui_image = assetmgr.get_resource(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
     imgui.ant.image_program(
         imgui_image.prog,
         imgui_image.uniforms.s_tex.handle

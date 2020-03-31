@@ -7,7 +7,7 @@ local viewidmgr = renderpkg.viewidmgr
 
 local fs = require "filesystem"
 
-local assetutil = import_package "ant.asset".util
+local assetmgr = import_package "ant.asset".mgr
 local imgui   = import_package "ant.imgui".imgui
 local inputmgr = import_package "ant.imguibase".inputmgr
 -- local imgui = require "bgfx.imgui"
@@ -42,7 +42,7 @@ function callback.init(nwh, context, width, height)
     }
     imgui.create(nwh);
     imgui.viewid(viewidmgr.generate "ui");
-    local imgui_font = assetutil.create_shader_program_from_file {
+    local imgui_font = assetmgr.get_resource {
         vs = fs.path "/pkg/ant.testimgui/shader/vs_imgui_font.sc",
         fs = fs.path "/pkg/ant.testimgui/shader/fs_imgui_font.sc",
     }
@@ -50,7 +50,7 @@ function callback.init(nwh, context, width, height)
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
-    local imgui_image = assetutil.create_shader_program_from_file {
+    local imgui_image = assetmgr.get_resource {
         vs = fs.path "/pkg/ant.testimgui/shader/vs_imgui_image.sc",
         fs = fs.path "/pkg/ant.testimgui/shader/fs_imgui_image.sc",
     }
