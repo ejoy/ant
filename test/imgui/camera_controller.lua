@@ -14,10 +14,6 @@ local icm = world:interface "ant.objcontroller|camera_motion"
 
 ecs.tag "test_remove_com"
 
--- ecs.component "camera_control"
---     .scale "boolean"
---     .move "boolean"
-
 local leftmouse_mb = world:sub {"mouse", "LEFT"}
 local rightmouse_mb = world:sub {"mouse", "RIGHT"}
 local mousewheel_mb = world:sub {"mouse_wheel", }

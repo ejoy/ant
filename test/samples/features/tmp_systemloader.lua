@@ -34,8 +34,12 @@ init_loader.require_system "ant.render|render_mesh_bounding"
 
 init_loader.require_interface "ant.render|camera"
 init_loader.require_interface "ant.objcontroller|camera_motion"
+init_loader.require_interface "ant.objcontroller|obj_motion"
 init_loader.require_interface "ant.render|iwidget_drawer"
 init_loader.require_interface "ant.render|light"
+
+init_loader.require_policy "ant.objcontroller|obj_lock"
+init_loader.require_policy "ant.objcontroller|camera_lock"
 
 local function create_plane_test()
     local planes = {
@@ -70,8 +74,10 @@ local function create_plane_test()
     end
 end
 
-local camera = world:interface "ant.render|camera"
-local icm = world:interface "ant.camera_controller|camera_motion"
+local icamera = world:interface "ant.render|camera"
+local icm = world:interface "ant.objcontroller|camera_motion"
+local iom = world:interface "ant.objcontroller|obj_motion"
+
 local iwd = world:interface "ant.render|iwidget_drawer"
 
 local function simple_box()
@@ -113,7 +119,66 @@ end
 
 local ilight = world:interface "ant.render|light"
 
-local skyeid
+local function target_lock_test()
+    local eid = world:create_entity{
+        policy = {
+            "ant.render|name",
+            "ant.render|render",
+            "ant.render|mesh",
+            "ant.serialize|serialize"
+        },
+        data = {
+            name = "lock_target",
+            can_render = true,
+            transform = {srt = {t = {6, 1, 6}},},
+            rendermesh = {},
+            mesh = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/meshes/sphere.mesh"
+            },
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
+            },
+            serialize = serialize.create(),
+        }
+    }
+
+    local lock_eid = world:create_entity {
+        policy = {
+            "ant.render|name",
+            "ant.render|render",
+            "ant.render|mesh",
+            "ant.objcontroller|obj_lock",
+            "ant.serialize|serialize"
+        },
+        data = {
+            name = "lock_obj",
+            can_render = true,
+            transform = {srt={t={0, 0, -1}}},
+            rendermesh = {},
+            mesh = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/meshes/cube.mesh"
+            },
+            material = {
+                ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
+            },
+            serialize = serialize.create(),
+            lock_target = {
+                type = "ignore_scale",
+                target = world[eid].serialize,
+                offset = {0, 0, 3},
+            },
+        },
+    }
+end
+
+local function find_entity(name, whichtype)
+    for _, eid in world:each(whichtype) do
+        if world[eid].name:match(name) then
+            return eid
+        end
+    end
+end
+
 function init_loader:init()
     do
         local dlightdir = math3d.totable(
@@ -125,25 +190,23 @@ function init_loader:init()
         ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
-    skyeid = skyutil.create_procedural_sky(world)
+    skyutil.create_procedural_sky(world)
+    target_lock_test()
 end
 
 local function create_camera()
     local rotation = math3d.quaternion{math.rad(30), math.rad(150), 0}
-    local id = camera.create {
+    local id = icamera.create {
         eyepos  = {-4.5, 2, -1.5, 1},
         viewdir = math3d.totable(math3d.todirection(rotation)),
+        name = "features_camera",
+        lock_target = {
+            type = "rotate",
+            target = "",
+        }
     }
-    camera.bind(id, "main_queue")
+    icamera.bind(id, "main_queue")
     return id
-end
-
-local firsttime = true
-function init_loader:data_changed()
-    if not firsttime then
-        serialize.entity(world, skyeid)
-    end
-    firsttime = nil
 end
 
 function init_loader:post_init()
@@ -159,24 +222,16 @@ function init_loader:ui_update()
 
     local widget = imgui.widget
     imgui.windows.Begin("Test", wndflags)
-    if widget.Button "rotate" then
+    if widget.Button "rotate_camera" then
         icm.rotate(cameraeid, {math.rad(10), 0, 0})
     end
 
-    if widget.Button "move" then
+    if widget.Button "move_camera" then
         icm.move(cameraeid, {1, 0, 0})
     end
 
-    local function find_entity(name, whichtype)
-        for _, eid in world:each(whichtype) do
-            if world[eid].name:match(name) then
-                return eid
-            end
-        end
-    end
-
-    if widget.Button "lock_target_for_move" then
-        local foundeid = find_entity("animation_sample", "character")
+    if widget.Button "camera_lock_target_for_move" then
+        local foundeid = find_entity("lock_target", "can_render")
         if foundeid then
             icm.target(cameraeid, "move", foundeid, {0, 1, 0})
         else
@@ -185,12 +240,26 @@ function init_loader:ui_update()
         
     end
 
-    if widget.Button "lock_target_for_rotate" then
-        local foundeid = find_entity("animation_sample", "character")
+    if widget.Button "camera_lock_target_for_rotate" then
+        local foundeid = find_entity("lock_target", "can_render")
         if foundeid then
             icm.target(cameraeid, "rotate", foundeid)
         else
             print "not found gltf entity"
+        end
+    end
+
+    if widget.Button "move_target" then
+        local foundeid = find_entity("lock_target", "can_render")
+        if foundeid then
+            iom.move(foundeid, {0, 0, 1})
+        end
+    end
+
+    if widget.Button "rotate_target" then
+        local foundeid = find_entity("lock_target", "can_render")
+        if foundeid then
+            iom.rotate(foundeid, math.rad(3), 0)
         end
     end
 

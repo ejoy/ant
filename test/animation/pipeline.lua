@@ -15,9 +15,11 @@ pipeline "update" {
     "start",
     "timer",
     "data_changed",
-    "camera_control",
-    "lock_target",
-    "scene_update",
+    pipeline "scene"{
+        "update_hierarchy_scene",
+        "lock_target",
+        "update_transform",
+    },
     pipeline "collider" {
         "update_collider_transform",
         "update_collider",

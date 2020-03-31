@@ -255,7 +255,7 @@ end
 local checklist = get_check_mb_list()
 local begin_follow_mb = world:sub {"update_follow"}
 
-function scene_space:scene_update()
+function scene_space:update_hierarchy_scene()
 	local trees = {}
 
 	local function mark_parent(eid)

@@ -4,6 +4,8 @@ local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local defaultcomp = require "components.default"
 
+local serialize = import_package "ant.serialize"
+
 local m = ecs.interface "camera"
 
 function m.create(info)
@@ -14,18 +16,33 @@ function m.create(info)
         frustum = defaultcomp.frustum(vr.w, vr.h)
         frustum.f = 300
     end
+
+    local locktarget = info.locktarget
+
+    local policy = {
+        "ant.render|camera",
+        "ant.render|name",
+        "ant.serialize|serialize",
+    }
+
+    if locktarget then
+        policy[#policy+1] = "ant.objcontroller|camera_lock"
+    end
+
+    local camera_data = {
+        type    = info.type     or "",
+        eyepos  = info.eyepos   or mc.T_ZERO_PT,
+        viewdir = info.viewdir  or mc.T_ZAXIS,
+        updir   = info.updir    or mc.T_YAXIS,
+        frustum = frustum,
+    }
     return world:create_entity {
-        policy = {
-            "ant.render|camera",
-        },
+        policy = policy,
         data = {
-            camera = {
-                type    = info.type     or "",
-                eyepos  = info.eyepos   or mc.T_ZERO_PT,
-                viewdir = info.viewdir  or mc.T_ZAXIS,
-                updir   = info.updir    or mc.T_YAXIS,
-                frustum = frustum,
-            },
+            camera = camera_data,
+            name = info.name or "DEFAULT_CAMERA",
+            lock_target = locktarget,
+            serialize = serialize.create(),
         }
     }
 end

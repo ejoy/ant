@@ -21,9 +21,7 @@ local trans = ecs.component "transform"
 	['opt'].slotname "string"
 	['opt'].parent "parent"
 function trans:init()
-	if self.parent or self.slotname then
-		self.world = math3d.ref(mc.IDENTITY_MAT)
-	end
+	self.world = math3d.ref(self.srt)
 	return self
 end
 

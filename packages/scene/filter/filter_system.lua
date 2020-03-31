@@ -190,18 +190,17 @@ end
 
 local function update_entity_transform(hierarchy_cache, eid)
 	local e = world[eid]
+	if e.hierarchy or e.lock_target then
+		return 
+	end
 
 	local transform = e.transform
-	
-	if e.hierarchy then
-		return transform.world
-	end
 
 	local srt = transform.srt
 	local peid = transform.parent
-	
+	local worldmat = transform.world
+
 	if peid then
-		local worldmat = transform.world
 		local parentresult = hierarchy_cache[peid]
 		if parentresult then
 			local parentmat = parentresult.world
@@ -214,10 +213,10 @@ local function update_entity_transform(hierarchy_cache, eid)
 			else
 				worldmat.m = math3d.mul(parentmat, srt)
 			end
+			return
 		end
-		return worldmat
 	end
-	return srt
+	worldmat.m = srt
 end
 
 local function reset_hierarchy_transform_result(hierarchy_cache)
@@ -226,8 +225,17 @@ local function reset_hierarchy_transform_result(hierarchy_cache)
 	end
 end
 
-function primitive_filter_sys:filter_primitive()
+function primitive_filter_sys:update_transform()
 	local hierarchy_cache = world:singleton "hierarchy_transform_result"
+	for _, eid in world:each "transform" do
+		--TODO: catch transform changed event, only update transform changed entity
+		update_entity_transform(hierarchy_cache, eid)
+	end
+
+	reset_hierarchy_transform_result(hierarchy_cache)
+end
+
+function primitive_filter_sys:filter_primitive()
 	for _, prim_eid in world:each "primitive_filter" do
 		local e = world[prim_eid]
 		local filter = e.primitive_filter
@@ -237,12 +245,9 @@ function primitive_filter_sys:filter_primitive()
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
 			if is_entity_prepared(ce) then
-				local worldmat = update_entity_transform(hierarchy_cache, eid)
-				filter_element(eid, ce.rendermesh, worldmat, ce.material, filter)
+				filter_element(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
 			end
 		end
 	end
-
-	reset_hierarchy_transform_result(hierarchy_cache)
 end
 

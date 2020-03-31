@@ -58,7 +58,7 @@ function m:post_init()
 	cameraReset(cameraInitEyepos, cameraInitTarget)
 end
 
-function m:camera_control()
+function m:data_changed()
 	for _,what,x,y in eventCameraControl:unpack() do
 		if what == "rotate" then
 			cameraRotate(x, y)

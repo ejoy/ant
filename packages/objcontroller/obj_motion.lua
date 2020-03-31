@@ -165,7 +165,7 @@ end
 
 init_motion_interface(iobj_motion, {
     get_position = function (_, e)
-        return math3d.index(e.transform.srt, 3)
+        return math3d.index(e.transform.srt, 4)
     end,
     set_position = function (_, e, pos)
         e.transform.srt.t = pos

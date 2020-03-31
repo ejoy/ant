@@ -53,7 +53,7 @@ local function can_move(camera)
 	return lock_target and lock_target.type ~= "move" or true
 end
 
-function camera_controller_system:camera_control()
+function camera_controller_system:data_changed()
 	local mq = world:singleton_entity "main_queue"
 	local camera = world[mq.camera_eid].camera
 	
