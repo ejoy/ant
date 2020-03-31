@@ -44,8 +44,6 @@ local function update_viewinfo(e, clickx, clicky)
 	local ivp = math3d.inverse(vp)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
-	log.info_a("eye:",math3d.totable(eye))
-	log.info_a("at:",math3d.totable(at))
 	pickupcamera.eyepos.v = eye
 	pickupcamera.viewdir.v= math3d.normalize(math3d.sub(at, eye))
 end
@@ -355,7 +353,7 @@ local function print_raw_buffer(rawbuffer)
 end
 
 local function select_obj(pickup_com,blit_buffer, viewrect)
-	print_raw_buffer(blit_buffer.raw_buffer)
+	--print_raw_buffer(blit_buffer.raw_buffer)
 	local selecteid = which_entity_hitted(blit_buffer.raw_buffer.handle, viewrect)
 	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)
