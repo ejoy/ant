@@ -1,4 +1,3 @@
-local assetutil = require "util"
 local assetmgr 	= require "asset"
 local fs 		= require "filesystem"
 local bgfx		= require "bgfx"

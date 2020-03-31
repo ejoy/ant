@@ -1,4 +1,3 @@
-local assetmgr  = require "asset"
 local bgfx      = require "bgfx"
 local shadermgr = require "shader_mgr"
 local assetutil = require "util"
@@ -7,7 +6,7 @@ local function load_shader(shaderbin, filename)
     local h = bgfx.create_shader(shaderbin)
     bgfx.set_name(h, filename)
     return {
-        handle = h, 
+        handle = h,
         uniforms = bgfx.get_shader_uniforms(h),
     }
 end

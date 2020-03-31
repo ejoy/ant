@@ -1,6 +1,6 @@
 local window = require "window"
 
-local assetutil = import_package "ant.asset".util
+local assetmgr = import_package "ant.asset".mgr
 local renderpkg = import_package "ant.render"
 local fs = require "filesystem"
 local thread = require "thread"
@@ -46,12 +46,12 @@ function callback.init(nwh, context, width, height)
         height = height,
     }
     imgui.ant.viewid(ui_viewid);
-    local imgui_font = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
+    local imgui_font = assetmgr.get_resource(fs.path "/pkg/ant.imguibase/shader/font.fx").shader
     imgui.ant.font_program(
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
-    local imgui_image = assetutil.create_shader_program_from_file(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
+    local imgui_image = assetmgr.get_resource(fs.path "/pkg/ant.imguibase/shader/image.fx").shader
     imgui.ant.image_program(
         imgui_image.prog,
         imgui_image.uniforms.s_tex.handle
