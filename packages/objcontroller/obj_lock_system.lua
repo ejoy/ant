@@ -78,7 +78,7 @@ function lock_target_sys:lock_target()
             end
 
             local te = world[lt.target]
-            local target_trans = te.transform
+            local target_trans = te.transform.srt
 
             local _, r, t = math3d.srt(target_trans)
             local m = math3d.matrix{s=1, r=r, t=t}

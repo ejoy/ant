@@ -130,7 +130,10 @@ local function target_lock_test()
         data = {
             name = "lock_target",
             can_render = true,
-            transform = {srt = {t = {6, 1, 6}},},
+            transform = {srt = {
+                s = {2, 1, 2, 0},
+                t = {16, 1, 6}},
+            },
             rendermesh = {},
             mesh = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/sphere.mesh"
@@ -153,13 +156,18 @@ local function target_lock_test()
         data = {
             name = "lock_obj",
             can_render = true,
-            transform = {srt={t={0, 0, -1}}},
+            transform = {srt={t={0, 0, -6}}},
             rendermesh = {},
             mesh = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/meshes/cube.mesh"
             },
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
+                properties = {
+                    uniforms = {
+                        u_color = {type="v4", name="vv", value={1, 0, 0, 1}}
+                    }
+                }
             },
             serialize = serialize.create(),
             lock_target = {
