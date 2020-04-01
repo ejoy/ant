@@ -27,8 +27,6 @@ function pf:init()
 end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
-
-primitive_filter_sys.require_system "filter_properties"
 primitive_filter_sys.require_singleton "hierarchy_transform_result"
 
 --luacheck: ignore self

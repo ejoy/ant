@@ -85,48 +85,6 @@ rqp.require_component "primitive_filter"
 rqp.require_component "visible"
 rqp.require_transform "render_target"
 
-ecs.component "render_properties"
-	.lighting "properties"
-	.shadow "properties"
-	.postprocess "properties"
-
-ecs.singleton "render_properties" {
-	lighting = {
-		uniforms = {
-			directional_lightdir 	= {type="v4", 	name="Direction Light", 		value=mc.T_ZERO},
-			directional_color 		= {type="color",name="Direction Color", 		value=mc.T_ZERO},
-			directional_intensity 	= {type="v4", 	name = "Direction Intensity", 	value=mc.T_ZERO},
-
-			ambient_mode 		= {type="v4", 	 name ="ambient_mode", 			value=mc.T_ZERO},
-			ambient_skycolor 	= {type="color", name ="ambient_skycolor", 		value=mc.T_ZERO},
-			ambient_midcolor 	= {type="color", name ="ambient_midcolor",		value=mc.T_ZERO},
-			ambient_groundcolor = {type="color", name ="ambient_groundcolor", 	value=mc.T_ZERO},
-
-			u_eyepos			= {type="v4", name="eye position", value=mc.T_ZERO_PT},
-		},
-		textures = {},
-	},
-	shadow = {
-		uniforms = {
-			u_csm_matrix 			= {type="m4_array", name="csm_matrices", value_array={mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT}},
-			u_csm_split_distances	= {type="v4", name="csm_split_distances", value=mc.T_ZERO},
-
-			u_depth_scale_offset	= {type="v4", name="depth_scale_offset", value=mc.T_ZERO},
-			u_shadow_param1			= {type="v4", name="shadow_param1(bais, normal_offset, shadowmap_texelsize, 0)", value=mc.T_ZERO},
-			u_shadow_param2			= {type="v4", name="shadow_param2(shadowcolor.xyz, 0)", value=mc.T_ZERO},
-		},
-		textures = {
-			s_shadowmap = {type="texture", name="csm_shadowmap", },
-		},
-	},
-	postprocess = {
-		uniforms = {},
-		textures = {
-			s_mainview = {type="texture", name="main_queue backbuffer", },
-		},
-	},
-}
-
 local blitsys = ecs.system "blit_render_system"
 blitsys.require_policy "blit_queue"
 blitsys.require_policy "blitrender"
@@ -142,8 +100,9 @@ local rendersys = ecs.system "render_system"
 rendersys.require_singleton "render_properties"
 
 rendersys.require_system "ant.scene|primitive_filter_system"
-rendersys.require_system "ant.scene|filter_properties"
+
 rendersys.require_system "ant.scene|cull_system"
+rendersys.require_system "load_properties"
 rendersys.require_system "end_frame"
 rendersys.require_system "viewport_detect_system"
 rendersys.require_system "blit_render_system"

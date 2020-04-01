@@ -1,5 +1,5 @@
 local ecs = ...
-
+local world = ecs.world
 local renderpkg = import_package "ant.render"
 local fbmgr = renderpkg.fbmgr
 local camerautil = renderpkg.camera
@@ -10,9 +10,47 @@ local mc, mu = mathpkg.constant, mathpkg.util
 
 local math3d = require "math3d"
 
-local filter_properties = ecs.system "filter_properties"
-filter_properties.require_singleton "render_properties"
-filter_properties.require_interface "ant.render|uniforms"
+ecs.component "render_properties"
+	.lighting "properties"
+	.shadow "properties"
+	.postprocess "properties"
+
+ecs.singleton "render_properties" {
+	lighting = {
+		uniforms = {
+			directional_lightdir 	= {type="v4", 	name="Direction Light", 		value=mc.T_ZERO},
+			directional_color 		= {type="color",name="Direction Color", 		value=mc.T_ZERO},
+			directional_intensity 	= {type="v4", 	name = "Direction Intensity", 	value=mc.T_ZERO},
+
+			ambient_mode 		= {type="v4", 	 name ="ambient_mode", 			value=mc.T_ZERO},
+			ambient_skycolor 	= {type="color", name ="ambient_skycolor", 		value=mc.T_ZERO},
+			ambient_midcolor 	= {type="color", name ="ambient_midcolor",		value=mc.T_ZERO},
+			ambient_groundcolor = {type="color", name ="ambient_groundcolor", 	value=mc.T_ZERO},
+
+			u_eyepos			= {type="v4", name="eye position", value=mc.T_ZERO_PT},
+		},
+		textures = {},
+	},
+	shadow = {
+		uniforms = {
+			u_csm_matrix 			= {type="m4_array", name="csm_matrices", value_array={mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT}},
+			u_csm_split_distances	= {type="v4", name="csm_split_distances", value=mc.T_ZERO},
+
+			u_depth_scale_offset	= {type="v4", name="depth_scale_offset", value=mc.T_ZERO},
+			u_shadow_param1			= {type="v4", name="shadow_param1(bais, normal_offset, shadowmap_texelsize, 0)", value=mc.T_ZERO},
+			u_shadow_param2			= {type="v4", name="shadow_param2(shadowcolor.xyz, 0)", value=mc.T_ZERO},
+		},
+		textures = {
+			s_shadowmap = {type="texture", name="csm_shadowmap", },
+		},
+	},
+	postprocess = {
+		uniforms = {},
+		textures = {
+			s_mainview = {type="texture", name="main_queue backbuffer", },
+		},
+	},
+}
 
 local function add_directional_light_properties(world, uniform_properties)
 	local dlight = world:singleton_entity "directional_light"
@@ -124,7 +162,11 @@ local function load_postprocess_properties(world, render_properties)
 	end
 end
 
-function filter_properties:load_render_properties()
+local load_properties_sys = ecs.system "load_properties"
+load_properties_sys.require_singleton "render_properties"
+load_properties_sys.require_interface "ant.render|uniforms"
+
+function load_properties_sys:load_render_properties()
 	local rp = world:singleton "render_properties"
 	load_lighting_properties(world, rp)
 	load_shadow_properties(world, rp)
