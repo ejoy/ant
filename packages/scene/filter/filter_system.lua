@@ -4,27 +4,26 @@ local world = ecs.world
 local render = import_package "ant.render"
 local computil = render.components
 
-local filterutil = require "filter.util"
-
 local assetpkg = import_package "ant.asset"
 local assetmgr = assetpkg.mgr
 
 local math3d = require "math3d"
 
-local filter_properties = ecs.system "filter_properties"
-filter_properties.require_singleton "render_properties"
-filter_properties.require_interface "ant.render|uniforms"
+ecs.component_alias("filter_tag", "string")
 
-function filter_properties:init()
-	local render_properties = world:singleton "render_properties"
+local pf = ecs.component "primitive_filter"
+	.filter_tag "filter_tag" ("can_render")	
 
-end
-
-function filter_properties:load_render_properties()
-	local render_properties = world:singleton "render_properties"
-	filterutil.load_lighting_properties(world, render_properties)
-	filterutil.load_shadow_properties(world, render_properties)
-	filterutil.load_postprocess_properties(world, render_properties)
+function pf:init()
+	self.result = {
+		translucent = {
+			visible_set = {},
+		},
+		opaticy = {
+			visible_set = {},
+		},
+	}
+	return self
 end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
