@@ -137,9 +137,16 @@ lterrain_alloc_heightfield(lua_State *L){
 	const uint32_t width = (uint32_t)luaL_checkinteger(L, 1);
 	const uint32_t height = (uint32_t)luaL_checkinteger(L, 2);
 
+	const float *p = lua_isnoneornil(L, 3) ? nullptr : (const float*)lua_touserdata(L, 3);
+
 	const uint32_t buffersize = width * height * sizeof(float);
 	float * hf = (float*)lua_newuserdatauv(L, buffersize, 0);
-	memset(hf, 0, buffersize);
+
+	if (p) {
+		memcpy(hf, p, buffersize);
+	} else {
+		memset(hf, 0, buffersize);
+	}
 	return 1;
 }
 

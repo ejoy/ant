@@ -41,8 +41,14 @@ function t:init()
 		self.section_size = self.section_size or 1
 		self.element_size = self.element_size or 7
 
-		local res = assetmgr.get_resource(self.ref_path)
-		
+		local tlen = tile_length(self)
+		local gridwidth, gridheight = self.tile_width * tlen, self.tile_height * tlen
+		local heightfield = assetmgr.get_resource(self.ref_path)
+		if heightfield == nil then
+			heightfield = {}
+			heightfield = terrain_module.alloc_heightfield(self.ref_path)
+			assetmgr.register_resource(self.ref_path, heightfield)
+		end
 	else
 		if self.tile_width == nil or self.tile_height == nil then
 			error(string.format("terrain data must provide if not from height field file"))
