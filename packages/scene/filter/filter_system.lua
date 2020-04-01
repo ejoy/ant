@@ -17,7 +17,7 @@ filter_properties.require_interface "ant.render|uniforms"
 
 function filter_properties:init()
 	local render_properties = world:singleton "render_properties"
-	
+
 end
 
 function filter_properties:load_render_properties()
@@ -42,7 +42,7 @@ end
 --[[	!NOTICE!
 	the material component defined with 'multiple' property which mean:
 	1. there is only one material, the 'material' component reference this material item;
-	2. there are more than one material, the 'material' component itself keep the first material item 
+	2. there are more than one material, the 'material' component itself keep the first material item
 		other items will store in array, start from 1 to n -1;
 	examples:
 	...
@@ -64,7 +64,7 @@ end
 		}
 	}
 	entity's material component same as above, but it will stay a array, and array[1] is 'def_path2' material item
-	
+
 	About the 'prim.material' field
 	prim.material field it come from glb data, it's a index start from [0, n-1] with n elements
 
@@ -130,20 +130,60 @@ local function add_result(eid, group, materialinfo, properties, worldmat, aabb, 
 	return r
 end
 
-local function insert_primitive(eid, group, material, worldmat, aabb, filter)
-	local refkey = material.ref_path
-	local mi = assert(assetmgr.get_resource(refkey))
-	local resulttarget = assert(filter.result[mi.fx.surface_type.transparency])
-	add_result(eid, group, mi, material.properties, worldmat, aabb, resulttarget)
+-- make a material cache
+local material_cache = setmetatable( {}, { __mode = "kv" } )
+
+local function cache_resource(cache, eid)
+	local e = world[eid]
+	local keys = {}
+	local n = 0
+	n=n+1; keys[n] = e.rendermesh.reskey
+	for _, m in world:each_component(e.material) do
+		n=n+1; keys[n] = m.ref_path
+
+		local p = m.properties
+		if p then
+			local t = p.textures
+			if t then
+				for k, tex in pairs(t) do
+					n=n+1; keys[n] = tex.ref_path
+				end
+			end
+		end
+	end
+	local func
+	if n == 1 then
+		keys = keys[1]
+		function func()
+			return assetmgr.get_resource(keys) ~= nil
+		end
+	else
+		function func()
+			local get_resource = assetmgr.get_resource
+			for i = 1, n do
+				if get_resource(keys[i]) == nil then
+					return false
+				end
+			end
+			return true
+		end
+	end
+	cache[eid] = func
+	return func
 end
 
-local function filter_element(eid, rendermesh, etrans, materialcomp, filter)
+local resource_cache = setmetatable( {}, { __mode = "kv" , __index = cache_resource } )
+
+local function invisible() end
+
+local function cache_material(rendermesh, materialcomp)
+	local cache = {}
 	local meshscene = assetmgr.get_resource(rendermesh.reskey)
-
 	local sceneidx = computil.scene_index(rendermesh.lodidx, meshscene)
-
 	local scenes = meshscene.scenes[sceneidx]
 	local submesh_refs = rendermesh.submesh_refs
+	local n = 0
+
 	for _, meshnode in ipairs(scenes) do
 		local name = meshnode.meshname
 		if is_visible(name, submesh_refs) then
@@ -152,46 +192,64 @@ local function filter_element(eid, rendermesh, etrans, materialcomp, filter)
 
 			for groupidx, group in ipairs(meshnode) do
 				local material = get_material(group, groupidx, materialcomp, material_refs)
-				-- worldtrans is etrans * localtrans
-				local aabb, worldtrans = math3d.aabb_transform(etrans, group.bounding and group.bounding.aabb or nil, localtrans)
-				insert_primitive(eid, group, material, worldtrans, aabb, filter)
+				local refkey = material.ref_path
+				local mi = assert(assetmgr.get_resource(refkey))
+				local transparency = mi.fx.surface_type.transparency
+
+				n = n + 1
+				cache[n] = {
+					group,	-- 1
+					material.ref_path,	-- 2
+					material.properties,	-- 3
+					transparency,	-- 4
+					group.bounding and group.bounding.aabb or nil,	-- 5
+					meshnode.transform,	-- 6
+				}
 			end
 		end
 	end
-end
 
--- TODO: we should optimize this code, it's too inefficient!
-local function is_entity_prepared(e)
-	local rm = e.rendermesh
-	if assetmgr.get_resource(rm.reskey) == nil then
-		return false
-	end
-
-	for _, m in world:each_component(e.material) do
-		if assetmgr.get_resource(m.ref_path) == nil then
-			return false
+	if n == 0 then
+		return invisible
+	elseif n == 1 then
+		cache = cache[1]
+		return function(eid, etrans, filter)
+			local group = cache[1]
+			local refkey = cache[2]
+			local properties = cache[3]
+			local transparency = cache[4]
+			local aabb = cache[5]
+			local localtrans = cache[6]
+			local resulttarget = assert(filter.result[transparency])
+			local mi = assert(assetmgr.get_resource(refkey))
+			local worldaabb, worldtrans = math3d.aabb_transform(etrans, aabb, localtrans)
+			add_result(eid, group, mi, properties, worldtrans, worldaabb, resulttarget)
 		end
-
-		local p = m.properties
-		if p then
-			local t = p.textures
-			if t then
-				for k, tex in pairs(t) do
-					if assetmgr.get_resource(tex.ref_path) == nil then
-						return false
-					end
-				end
+	else
+		return function(eid, etrans, filter)
+			local result = filter.result
+			local aabb_transform = math3d.aabb_transform
+			for i = 1,n do
+				local item = cache[i]
+				local group = item[1]
+				local refkey = item[2]
+				local properties = item[3]
+				local transparency = item[4]
+				local aabb = item[5]
+				local localtrans = item[6]
+				local resulttarget = assert(result[transparency])
+				local mi = assert(assetmgr.get_resource(refkey))
+				local worldaabb, worldtrans = aabb_transform(etrans, aabb, localtrans)
+				add_result(eid, group, mi, properties, worldtrans, worldaabb, resulttarget)
 			end
 		end
 	end
-	
-	return true
 end
 
 local function update_entity_transform(hierarchy_cache, eid)
 	local e = world[eid]
 	if e.hierarchy or e.lock_target then
-		return 
+		return
 	end
 
 	local transform = e.transform
@@ -235,7 +293,15 @@ function primitive_filter_sys:update_transform()
 	reset_hierarchy_transform_result(hierarchy_cache)
 end
 
+local material_change = world:sub { "material_change" }
+
 function primitive_filter_sys:filter_primitive()
+	for msg in material_change:each() do
+		local eid = msg[2]
+		material_cache[eid] = nil
+		resource_cache[eid] = nil
+	end
+
 	for _, prim_eid in world:each "primitive_filter" do
 		local e = world[prim_eid]
 		local filter = e.primitive_filter
@@ -244,8 +310,13 @@ function primitive_filter_sys:filter_primitive()
 
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
-			if is_entity_prepared(ce) then
-				filter_element(eid, ce.rendermesh, ce.transform.world, ce.material, filter)
+			local func = material_cache[eid]
+			if func then
+				func(eid, ce.transform.world, filter)
+			elseif resource_cache[eid]() then
+				func = cache_material(ce.rendermesh, ce.material)
+				material_cache[eid] = func
+				func(eid, ce.transform.world, filter)
 			end
 		end
 	end
