@@ -89,6 +89,10 @@ function TestGuiBase:on_update()
             self:tab_scroll_litem()
             windows.EndTabItem()
         end
+        if windows.BeginTabItem ("Tab_FastTree",tab_noclosed) then
+            self:tab_fast_tree()
+            windows.EndTabItem()
+        end
         if windows.BeginTabItem ("Tab_Temp",tab_noclosed) then
             self:tab_temp()
             windows.EndTabItem()
@@ -568,6 +572,53 @@ function TestGuiBase:tab_temp()
     widget.DragFloat("Vector1##test_show",mult_vector[1])
     mult_widget.DragVector("DragMultVector##test_mult",mult_vector,{})
     -- widget.LabelText("LabelOP1231231231231231231231231231231231231231231232","Value1231241231312312312312313123123123123123")
+end
+
+local FastTree = import_package "ant.imgui".controls.fast_tree
+function TestGuiBase:tab_fast_tree()
+    widget.Text("--")
+    if not self.fast_tree then
+        --create data
+        local root_node = {key = 1}
+        local cur_index = 2
+        local function fill_children(node,times)
+            if times == 0 then
+                return 
+            end
+            node.children = node.children or {}
+            for i = 1,10 do
+                local new_child = {key= cur_index}
+                cur_index = cur_index + 1
+                table.insert(node.children,new_child)
+                fill_children(new_child,times - 1)
+            end
+        end
+        fill_children(root_node,3)
+        print(dump_a({root_node}))
+        self.fast_tree = FastTree.new()
+        self.fast_tree:set_tree_data(root_node,true)
+        self.fast_tree:set_update_item_func(self.tab_update_tree_item,self)
+    end
+    self.fast_tree:update()
+end
+
+function TestGuiBase:tab_update_tree_item(node,open)
+    local flag = 0
+    if  (not node.children) or (not node.children[1]) then
+        flag = flags.TreeNode.Leaf
+    end
+    local name = string.format("%d -- size:%d",node.key,node.__cache.open_size)
+    widget.SetNextItemOpen(open)
+    local new_open =  widget.TreeNode(tostring(name),flag)
+    cursor.SameLine()
+    widget.Text(">>")
+    if new_open then
+        widget.TreePop()
+    end
+    return new_open
+
+    -- local _,opened = widget.Checkbox(string.format("%d -- size:%d",node.key,node.__cache.open_size),open)
+    -- return opened
 end
 
 return TestGuiBase
