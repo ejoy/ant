@@ -16,7 +16,7 @@ local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
 local callback = {}
 
-local config
+local config = {}
 local world
 local world_update
 

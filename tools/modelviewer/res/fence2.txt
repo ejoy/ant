@@ -22,6 +22,7 @@ rendermesh:
   lodidx: 1
 serialize: 5e1d2628369fa9fc11d5504d
 transform:
-  s: {1,1,1,0}
-  r: {0,0,0,1}
-  t: {2.2,0,-8,0}
+  srt:
+    s: {1,1,1,0}
+    r: {0,0,0,1}
+    t: {2.2,0,-8,0}

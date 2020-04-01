@@ -114,7 +114,7 @@ local RADIAN   <const> = {
 
 local cur_direction = DIR_NULL
 local screensize = {w=0,h=0}
-local mouse = {x=0,y=0}
+local mouse = {0,0}
 local mode
 local target
 local move_speed = 200
@@ -181,8 +181,8 @@ local function mainloop(delta)
 		end
 	end
 	for _,_,_,x,y in eventMouse:unpack() do
-		mouse.x = x
-		mouse.y = y
+		mouse[1] = x
+		mouse[2] = y
 		local res = camera_motion.ray(camera_id, mouse)
 		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]

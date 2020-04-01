@@ -150,7 +150,7 @@ function m.test(e, srt)
 	end
 	set_obj_transform(e.collider.handle, srt)
 	local hit = w:test_overlap(e.collider.handle)
-	set_obj_transform(e.collider.handle, e.transform)
+	set_obj_transform(e.collider.handle, e.transform.srt)
 	return hit
 end
 
