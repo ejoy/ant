@@ -261,6 +261,7 @@ local function parse_array()
     local res = {}
     local n = 1
     while true do
+        next_nonspace()
         res[n] = decode()
         n = n + 1
         next_nonspace()

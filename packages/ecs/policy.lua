@@ -44,7 +44,7 @@ local function create(w, policies)
             error(("policy `%s` is not defined."):format(name))
         end
         if policyset[name] then
-            error(("duplicate policy `%s`."):format(name))
+            goto continue
         end
         policyset[name] = name
         if class.union then
@@ -71,6 +71,7 @@ local function create(w, policies)
                 init_component[#init_component+1] = v
             end
         end
+        ::continue::
     end
     local function table_append(t, a)
         table.move(a, 1, #a, #t+1, t)

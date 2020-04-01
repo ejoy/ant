@@ -79,6 +79,8 @@ local function stringify_basetype(v)
         else
             return 'false'
         end
+    elseif t == 'function' then
+        return 'null'
     end
     error('invalid type:'..t)
 end
@@ -162,37 +164,37 @@ function stringify_value(n, prefix, v)
     out[#out+1] = indent(n)..prefix.." "..stringify_basetype(v)
 end
 
-local function stringify_component(prefix, v)
+local function stringify_component(n, prefix, v)
     if isMultipe(v) then
-        stringify_map(0, prefix, v)
+        stringify_map(n, prefix, v)
         for _, vv in ipairs(v) do
-            stringify_map(0, prefix, vv)
+            stringify_map(n, prefix, vv)
         end
     else
-        stringify_value(0, prefix, v)
+        stringify_value(n, prefix, v)
     end
 end
 
-local function stringify_policy(policies)
+local function stringify_policy(n, policies)
     local t = copytable(policies)
     table.sort(t)
     for _, p in ipairs(t) do
-        out[#out+1] = p
+        out[#out+1] = indent(n)..p
     end
 end
 
-local function stringify_dataset(dataset)
+local function stringify_dataset(n, dataset)
     for name, v in sortpairs(dataset) do
-        stringify_component(name..':', v)
+        stringify_component(n, name..':', v)
     end
 end
 
 local function stringify_entity(policies, dataset)
     out = {}
-    out[#out+1] = '---------'
-    stringify_policy(policies)
-    out[#out+1] = '---------'
-    stringify_dataset(dataset)
+    out[#out+1] = 'policy:'
+    stringify_policy(1, policies)
+    out[#out+1] = 'data:'
+    stringify_dataset(1, dataset)
     out[#out+1] = ''
     return table.concat(out, '\n')
 end
@@ -205,7 +207,22 @@ local function stringify_map_(data)
     return table.concat(out, '\n')
 end
 
+local function stringify_array_(data)
+    out = {}
+    local first_value = data[1]
+    if type(first_value) ~= "table" then
+        stringify_array_simple(0, "", data)
+        return
+    end
+    if isArray(first_value) then
+        stringify_array_array(0, data)
+        return
+    end
+    stringify_array_map(0, data)
+end
+
 return {
     entity = stringify_entity,
     map = stringify_map_,
+    array = stringify_array_,
 }

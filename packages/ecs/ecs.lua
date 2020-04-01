@@ -4,6 +4,7 @@ local component = require "component"
 local policy = require "policy"
 local event = require "event"
 local datalist = require "datalist"
+local serialize = import_package "ant.serialize"
 
 local component_init = component.init
 local component_delete = component.delete
@@ -126,8 +127,16 @@ end
 
 local function registerEntityEx(w, t)
 	if type(t) == 'string' then
-		local d = datalist.parse(t)
-		return w:register_entity(d[1], d[2])
+		t = datalist.parse(t)
+	end
+	if t.patch then
+		local patchs = t.patch
+		t.patch = nil
+		local ok, data = serialize.patch.apply(t, patchs)
+		if not ok then
+			error "The patch was not applied."
+		end
+		t = data
 	end
 	return w:register_entity(t.policy, t.data)
 end

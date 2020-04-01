@@ -1,5 +1,6 @@
 local crypt = require "crypt"
 local watch = require "watch"
+local patch = require "patch"
 local save_entity = require "v2.save".entity
 local stringify_entity = require "v2.stringify".entity
 
@@ -14,5 +15,6 @@ end
 return {
     create = create,
     watch = watch,
+    patch = patch,
     entity = entity,
 }
