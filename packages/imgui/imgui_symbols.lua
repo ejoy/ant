@@ -51,9 +51,10 @@ function widget.BeginCombo() end
 function widget.EndCombo() end
 --widget.Selectable(name,{[1]=select_name,item_flags=?,width=?,height=?},disable)
 --@return pressed
-function widget.Selectable(name,selected,  x,y,flags,disable) end
+function widget.Selectable(name,selected,x,y,flags,disable) end
 function widget.TreeNode(name,flags) end
 function widget.TreePush(name) end
+--@desc:call if TreePush or TreeNode Opened
 function widget.TreePop() end
 --@param title:string
 --@return bool

@@ -17,6 +17,7 @@ local editor = {
         scroll_list = require "controls.scroll_list",
         simple_plotline = require "controls.simple_plotline",
         mult_widget = require "controls.mult_widget",
+        fast_tree = require "controls.fast_tree",
     },
     editor = {
         entity_mgr = require "editor.component.entity_mgr",
