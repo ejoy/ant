@@ -18,12 +18,12 @@ end
 
 return {
 	loader = function (filename)
-		local tex, binary = assetutil.parse_embed_file(filename)
-		local sampler = tex.sampler
+		local config, binary = assetutil.parse_embed_file(filename)
+		local sampler = config.sampler
 		local flag = ru.generate_sampler_flag(sampler)
-		if tex.colorspace == "sRGB" then
+		if config.colorspace == "sRGB" then
 			local caps = rhwi.get_caps()
-			local texformat = assert(assetutil.which_format(OS, tex))
+			local texformat = config.format
 			local fmtinfo = assert(caps.formats[texformat])
 			if fmtinfo["2D_SRGB"] then
 				flag = flag .. 'Sg'	-- S for 'colorspace' and g/l for 'gamma'/'linear'
@@ -31,7 +31,7 @@ return {
 				log.warn(string.format("texture:%s, is sRGB space, but hardware not support sRGB", filename:string()))
 			end
 		end
-		local handle = texture_load(assert(binary), tex.path, flag)
+		local handle = texture_load(assert(binary), config.path, flag)
 		return {handle=handle, sampler=ru.fill_default_sampler(sampler)}, 0
 	end,
 	unloader = function (res)

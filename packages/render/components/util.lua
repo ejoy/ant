@@ -8,8 +8,7 @@ local declmgr 	= require "vertexdecl_mgr"
 local animodule = require "hierarchy.animation"
 local hwi		= require "hardware_interface"
 
-local assetpkg 	= import_package "ant.asset"
-local assetmgr 	= assetpkg.mgr
+local assetmgr 	= import_package "ant.asset"
 
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util

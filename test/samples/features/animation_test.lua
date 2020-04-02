@@ -5,8 +5,6 @@ local fs = require "filesystem"
 local serializeutil = import_package "ant.serialize"
 
 local anitest = ecs.system "animation_test"
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
 
 
 local ozzmeshdir = fs.path 'meshes' / 'ozz'

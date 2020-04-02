@@ -7,8 +7,7 @@ local renderpkg = import_package "ant.render"
 local rhwi      = renderpkg.hwi
 local viewidmgr = renderpkg.viewidmgr
 
-local assetpkg  = import_package "ant.asset"
-local assetmgr  = assetpkg.mgr
+local assetmgr  = import_package "ant.asset"
 local editor    = import_package "ant.editor"
 local rxpkg     = import_package "ant.rxlua"
 local inputmgr  = import_package "ant.imguibase".inputmgr

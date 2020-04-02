@@ -10,8 +10,7 @@ local math3d = require "math3d"
 local skypkg = import_package 'ant.sky'
 local skyutil = skypkg.util
 
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
+local assetmgr = import_package "ant.asset"
 
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components

@@ -4,7 +4,7 @@ local mu = mathpkg.util
 local math3d = require "math3d"
 local geopkg    = import_package "ant.geometry"
 local fs        = require "filesystem"
-local assetmgr = import_package "ant.asset".mgr
+local assetmgr = import_package "ant.asset"
 local camerautil = import_package "ant.render".camera
 local RES_IDX = 10080
 

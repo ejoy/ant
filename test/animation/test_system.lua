@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local renderpkg  = import_package 'ant.render'
-local asset      = import_package "ant.asset"
+local assetmgr   = import_package "ant.asset"
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
 local fs         = require 'filesystem'
@@ -198,7 +198,7 @@ function m:widget()
         return
     end
     local e = world[RoleEntityId]
-    local ske = asset.mgr.get_resource(e.skeleton.ref_path)
+    local ske = assetmgr.get_resource(e.skeleton.ref_path)
     drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform.srt)
 end
 

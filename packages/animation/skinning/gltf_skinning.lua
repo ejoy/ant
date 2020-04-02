@@ -3,8 +3,7 @@ local ecs = ...
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 
-local assetpkg  = import_package "ant.asset"
-local assetmgr  = assetpkg.mgr
+local assetmgr  = import_package "ant.asset"
 
 
 local s = ecs.policy "skinning"

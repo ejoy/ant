@@ -6,8 +6,7 @@ local computil = render.components
 
 local filterutil = require "filter.util"
 
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
+local assetmgr = import_package "ant.asset"
 
 local math3d = require "math3d"
 

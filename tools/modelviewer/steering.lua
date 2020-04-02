@@ -15,7 +15,7 @@ local touch = {
 }
 
 function steering_system:init()
-    local assetmgr = import_package "ant.asset".mgr
+    local assetmgr = import_package "ant.asset"
     local texloader = assetmgr.get_loader "texture"
     steeringTex = texloader(fs.path "/pkg/ant.modelviewer/res/steering.texture")
 

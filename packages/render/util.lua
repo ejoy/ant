@@ -1,15 +1,12 @@
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
+local assetmgr = import_package "ant.asset"
 
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local mu = mathpkg.util
-local math3d = require "math3d"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
-local camerautil	= require "camera.util"
 local default_comp 	= require "components.default"
 local computil 		= require "components.util"
 

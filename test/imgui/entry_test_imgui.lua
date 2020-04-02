@@ -7,7 +7,7 @@ local viewidmgr = renderpkg.viewidmgr
 
 local fs = require "filesystem"
 
-local assetmgr = import_package "ant.asset".mgr
+local assetmgr = import_package "ant.asset"
 local imgui   = import_package "ant.imgui".imgui
 local inputmgr = import_package "ant.imguibase".inputmgr
 -- local imgui = require "bgfx.imgui"

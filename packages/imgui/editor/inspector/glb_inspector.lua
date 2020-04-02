@@ -15,7 +15,7 @@ local localfs = require "filesystem.local"
 local glTF = import_package "ant.glTF"
 local glb = glTF.glb
 
-local assetmgr = import_package "ant.asset".mgr
+local assetmgr = import_package "ant.asset"
 
 local default_cfg = import_package "ant.fileconvert".default_cfg.mesh
 
