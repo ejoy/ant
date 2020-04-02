@@ -1,5 +1,4 @@
-local assetutil	= require "util"
-
+local assetutil = import_package "ant.fileconvert".util
 local mesh_loader 	= import_package "ant.modelloader".loader
 
 return { 
@@ -10,4 +9,3 @@ return {
 	unloader = function(res)
 	end,
 }
-

@@ -1,14 +1,9 @@
 
-local assetutil= require "util"
-
+local assetutil = import_package "ant.fileconvert".util
 local renderpkg = import_package "ant.render"
 local ru 		= renderpkg.util
 local rhwi 		= renderpkg.hwi
-
 local bgfx 		= require "bgfx"
-local platform 	= require "platform"
-local OS		= platform.OS:lower()
-
 
 local function texture_load(bin, texpath, info)
 	local h = bgfx.create_texture(bin, info)

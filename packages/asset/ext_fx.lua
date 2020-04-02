@@ -1,6 +1,6 @@
 local bgfx      = require "bgfx"
 local shadermgr = require "shader_mgr"
-local assetutil = require "util"
+local assetutil = import_package "ant.fileconvert".util
 
 local function load_shader(shaderbin, filename)
     local h = bgfx.create_shader(shaderbin)
