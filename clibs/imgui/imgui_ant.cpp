@@ -162,17 +162,17 @@ namespace plat {
 
 				BGFX(set_transient_vertex_buffer)(0, &tvb, 0, numVertices);
 				BGFX(set_transient_index_buffer)(&tib, offset, cmd.ElemCount);
-				if (IMGUI_FLAGS_FONT == texture.s.flags) {
+				if (IMGUI_FLAGS_FONT == texture.s.flags) {	
 					BGFX(set_texture)(0, ctx->s_fontTex, texture.s.handle, UINT32_MAX);
-					BGFX(submit)(ctx->m_viewId, ctx->m_fontProgram, 0, BGFX_DISCARD_ALL);
-				}
-				else {
+					BGFX(submit)(ctx->m_viewId, ctx->m_fontProgram, 0, BGFX_DISCARD_STATE);
+				} else {
 					BGFX(set_texture)(0, ctx->s_imageTex, texture.s.handle, UINT32_MAX);
-					BGFX(submit)(ctx->m_viewId, ctx->m_imageProgram, 0, BGFX_DISCARD_ALL);
+					BGFX(submit)(ctx->m_viewId, ctx->m_imageProgram, 0, BGFX_DISCARD_STATE);
 				}
 				offset += cmd.ElemCount;
 			}
 		}
+		BGFX(discard)(BGFX_DISCARD_ALL);
 	}
 
 	int BuildFont(lua_State* L) {
