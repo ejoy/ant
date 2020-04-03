@@ -482,7 +482,7 @@ function util.entity_bounding(entity)
 		local scene = meshscene.scenes[sceneidx]
 		local aabb = math3d.aabb()
 		for _, mn in ipairs(scene)	do
-			local localtrans = mn.localtrans
+			local localtrans = mn.transform
 			for _, g in ipairs(mn) do
 				local b = g.bounding
 				if b then

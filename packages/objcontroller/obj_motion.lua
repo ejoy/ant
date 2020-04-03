@@ -142,7 +142,7 @@ function iobj:focus_obj(eid, foucseid)
         self:set_direction(e, dir)
         self:set_position(e, math3d.sub(center, math3d.mul(dir, radius * 3.5)))
     else
-        iobj:focus_point(eid, fe.transform.srt.t)
+        self:focus_point(eid, fe.transform.srt.t)
 	end
 end
 
