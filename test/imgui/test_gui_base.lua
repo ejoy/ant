@@ -226,13 +226,16 @@ function TestGuiBase:tab1_update()
     end
     windows.PopStyleVar(2)
     windows.PushStyleColor(enum.StyleCol.Button,1,1,1,1)
-    if widget.Button "Test" then
+    if widget.Button "Test1" then
         log("test1")
     end
     windows.PopStyleColor()
 
-    if widget.Button "Test" then
+    if widget.Button "Test2" then
         log("test2")
+    end
+    if util.IsItemClicked(0) then
+        log( "util.IsMouseDoubleClicked(0):",util.IsMouseDoubleClicked(0) )
     end
     widget.SmallButton "Small"
     if widget.Checkbox("Checkbox", checkbox) then
