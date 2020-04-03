@@ -16,7 +16,7 @@
 #include "bgfx_interface.h"
 #include "bgfx_alloc.h"
 
-#if BGFX_API_VERSION != 104
+#if BGFX_API_VERSION != 105
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -1127,33 +1127,40 @@ lcreateProgram(lua_State *L) {
 }
 
 /*
+	b BGFX_DISCARD_BINDINGS
 	i BGFX_DISCARD_INDEX_BUFFER
-	v BGFX_DISCARD_VERTEX_STREAMS
-	t BGFX_DISCARD_TEXTURE_SAMPLERS
-	c BGFX_DISCARD_COMPUTE
+	d BGFX_DISCARD_INSTANCE_DATA
 	s BGFX_DISCARD_STATE
+	t BGFX_DISCARD_TRANSFORM
+	v BGFX_DISCARD_VERTEX_STREAMS
 */
 static uint8_t
 discard_flags(lua_State *L, int index) {
+	if (lua_isnoneornil(L, index)) {
+		return BGFX_DISCARD_ALL;
+	}
 	const char * flags_string = luaL_checkstring(L, index);
 	uint8_t flags = 0;
 	int i;
 	for (i=0;flags_string[i];i++) {
 		switch(flags_string[i]) {
+		case 'b':
+			flags |= BGFX_DISCARD_BINDINGS;
+			break;
 		case 'i':
 			flags |= BGFX_DISCARD_INDEX_BUFFER;
 			break;
-		case 'v':
-			flags |= BGFX_DISCARD_VERTEX_STREAMS;
-			break;
-		case 't':
-			flags |= BGFX_DISCARD_TEXTURE_SAMPLERS;
-			break;
-		case 'c':
-			flags |= BGFX_DISCARD_COMPUTE;
+		case 'd':
+			flags |= BGFX_DISCARD_INSTANCE_DATA;
 			break;
 		case 's':
 			flags |= BGFX_DISCARD_STATE;
+			break;
+		case 't':
+			flags |= BGFX_DISCARD_TRANSFORM;
+			break;
+		case 'v':
+			flags |= BGFX_DISCARD_VERTEX_STREAMS;
 			break;
 		default:
 			luaL_error(L, "Invalid discard string %s", flags_string);
@@ -1167,12 +1174,7 @@ lsubmit(lua_State *L) {
 	bgfx_view_id_t id = luaL_checkinteger(L, 1);
 	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint32_t depth = luaL_optinteger(L, 3, 0);
-	uint8_t flags;
-	if (lua_isnoneornil(L, 4)) {
-		flags = BGFX_DISCARD_ALL;
-	} else {
-		flags = discard_flags(L, 4);
-	}
+	uint8_t flags = discard_flags(L, 4);
 	bgfx_program_handle_t ph = { progid };
 	BGFX(submit)(id, ph, depth, flags);
 	return 0;
@@ -1180,12 +1182,8 @@ lsubmit(lua_State *L) {
 
 static int
 ldiscard(lua_State *L) {
-	if (lua_isnoneornil(L, 1)) {
-		BGFX(discard)(BGFX_DISCARD_ALL);
-	} else {
-		uint8_t flags = discard_flags(L, 1);
-		BGFX(discard)(flags);
-	}
+	uint8_t flags = discard_flags(L, 1);
+	BGFX(discard)(flags);
 	return 0;
 }
 
@@ -4186,36 +4184,18 @@ lsetInstanceCount(lua_State *L) {
 	return 0;
 }
 
-static void
-dispatch_opt(lua_State *L, int *num, int n, int index) {
-	int top = lua_gettop(L);
-	int i;
-	for (i=index;i<=top;i++) {
-		int t = lua_type(L, i);
-		int idx = i - index;
-		switch(t) {
-		case LUA_TNUMBER:
-			if (idx >= n) {
-				luaL_error(L, "Too many parm for dispatch");
-			}
-			num[i-index] = lua_tointeger(L, i);
-			break;
-		default:
-			luaL_error(L, "Invalid param type %s at %d", lua_typename(L, i), i);
-		}
-	}
-}
-
 static int
 ldispatch(lua_State *L) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
 	uint16_t pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
-	int num[3] = {1,1,1};
-	dispatch_opt(L, num, 3, 3);
+	uint32_t x = luaL_optinteger(L, 3, 1);
+	uint32_t y = luaL_optinteger(L, 4, 1);
+	uint32_t z = luaL_optinteger(L, 5, 1);
+	uint8_t flags = discard_flags(L, 6);
 
 	bgfx_program_handle_t  handle = { pid };
 
-	BGFX(dispatch)(viewid, handle, num[0], num[1], num[2]);
+	BGFX(dispatch)(viewid, handle, x, y, z, flags);
 
 	return 0;
 }
@@ -4225,12 +4205,13 @@ ldispatchIndirect(lua_State *L) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
 	uint16_t pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint16_t iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
-	int num[2] = { 0, 1 };
-	dispatch_opt(L, num, 2, 4);
+	uint16_t start = luaL_optinteger(L, 4, 0);
+	uint16_t num = luaL_optinteger(L, 5, 1);
+	uint8_t flags = discard_flags(L, 6);
 	bgfx_program_handle_t  phandle = { pid };
 	bgfx_indirect_buffer_handle_t  ihandle = { iid };
 
-	BGFX(dispatch_indirect)(viewid, phandle, ihandle, num[0], num[1]);
+	BGFX(dispatch_indirect)(viewid, phandle, ihandle, start, num, flags);
 
 	return 0;
 }
