@@ -309,7 +309,7 @@ function GuiPolicyComponentPair:policy_selectable(name,selected)
                 for i,trans in ipairs(transforms) do
                     if default_open_treenode(trans.name) then
                         if default_open_treenode("Input") then
-                            for i,input in ipairs(trans.input) do
+                            for i,input in ipairs(trans.input or {}) do
                                 widget.BulletText(input)
                             end
                             widget.TreePop()

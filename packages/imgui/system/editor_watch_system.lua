@@ -28,6 +28,10 @@ editor_watcher_system.require_system "editor_operate_gizmo_system"
 editor_watcher_system.require_system "editor_policy_system"
 editor_watcher_system.require_system 'ant.scene|scene_space' 
 editor_watcher_system.require_system 'editor_entity_system' 
+editor_watcher_system.require_interface "ant.objcontroller|camera_motion"
+
+local camera_motion = world:interface "ant.objcontroller|camera_motion"
+
 
 -- editor_watcher_system.require_system "before_render_system"
 editor_watcher_system.require_singleton "profile_cache"
@@ -60,9 +64,6 @@ local function send_hierarchy()
     end
     local hub = world.args.hub
     hub.publish(WatcherEvent.RTE.HierarchyChange,result)
-    local rxbus = world.args.rxbus
-    local subject = rxbus.get_subject(WatcherEvent.RTE.HierarchyChange)
-    subject:onNext(result)
     return
 end
 
@@ -174,7 +175,6 @@ local function remove_all_outline()
     end
 end
 
-
 -- local function make_follow(follower_id,target_id)
     
 -- end
@@ -227,13 +227,14 @@ local function create_outline(seleid)
         }
         local oe = world[outlineeid]
         oe.rendermesh.reskey = se.rendermesh.reskey
+        world:pub { "material_change",outlineeid }
         -- assetmgr.load(se.rendermesh.reskey)
         -- world:pub({"begin_follow",outlineeid,seleid,nil})
         world:pub({"update_follow",outlineeid,seleid})
     end
 end
 
-local function change_watch_entity(self,eids,focus,is_pick)
+local function change_watch_entity(eids,focus,is_pick)
     local adds = {}
     local remove_map = {}
     local olds_map = {}
@@ -241,7 +242,7 @@ local function change_watch_entity(self,eids,focus,is_pick)
         olds_map[id] = true
     end
     -- log.info_a(olds_map,olds_map)
-    for _,id in ipairs(eids) do
+    for _,id in ipairs(eids or {}) do
         if olds_map[id] then
             olds_map[id] = nil
         else
@@ -278,13 +279,9 @@ local function change_watch_entity(self,eids,focus,is_pick)
     local last_eid = eids[#eids]
     if focus then
         --todo calc multselect center
-        local camerautil = import_package "ant.render".camera
-        if not camerautil.focus_obj(world, last_eid) then
-            local transform = world[last_eid].transform
-            if transform then
-                camerautil.focus_point(world,transform.srt.t)
-            end
-        end
+        local mq = world:singleton_entity "main_queue"
+        local camera_id = mq.camera_eid
+        camera_motion.focus_obj(camera_id,last_eid)
     end
     local need_send = {}
     for _, eid in ipairs( eids ) do
@@ -347,7 +344,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
             send_entity({eid},( is_pick and "pick" or "editor"))
         end
     end
-    return change_watch_entity(self,{eid},focus,is_pick)
+    return change_watch_entity({eid},focus,is_pick)
 end
 
 local function on_editor_select_entity(self,eids,focus)
@@ -357,17 +354,17 @@ local function on_editor_select_entity(self,eids,focus)
     --         start_watch_entitiy(eid,focus,false)
     --     end
     -- end
-    change_watch_entity(self,eids,focus,false)
+    change_watch_entity(eids,focus,false)
 end
 
 local function on_pick_entity(eid)
     log.info_a("on_pick_entity",eid)
     if eid then
         if world[eid] and (not world[eid].gizmo_object) then
-            start_watch_entitiy({eid},false,true)
+            change_watch_entity({eid},false,true)
         end
     else
-        start_watch_entitiy(nil,false,true)
+        change_watch_entity(nil,false,true)
     end
 end
 
@@ -539,7 +536,7 @@ function editor_watcher_system:editor_update()
     end
 
     --check name
-    -- pub_follow_per_frame()
+    pub_follow_per_frame()
 end
 
 function editor_watcher_system:after_update()

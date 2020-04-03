@@ -44,15 +44,12 @@ end
 function GuiHierarchyView:_init_subcribe()
     hub.subscribe(Event.RTE.HierarchyChange,self._on_refresh_hierarchy,self)
     hub.subscribe(Event.RTE.SceneEntityPick, self._on_scene_pick,self)
-    local ob = rxbus.get_observable(Event.RTE.HierarchyChange)
-    ob:subscribe(function(...)
-        log("rxbus:",Event.RTE.HierarchyChange,...)
-    end)
 end
 
 function GuiHierarchyView:publish_selected_entity(eids,focus)
+    log.info_a("publish_selected_entity:",eids,focus)
     local subject = rxbus:get_subject(Event.ETR.WatchEntity)
-    subject:onNext(eids,foucs)
+    subject:onNext(eids,focus)
     -- hub.publish(Event.ETR.WatchEntity, eid, focus)
 end
 
@@ -64,7 +61,7 @@ end
 function GuiHierarchyView:_on_scene_pick(eid_list)
     self.selected_map:removeAll()
     for _,eid in ipairs(eid_list) do
-        self.selected_map:insert(eit)
+        self.selected_map:insert(eid)
         self._scroll_flag = true
     end
 end

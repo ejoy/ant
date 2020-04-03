@@ -126,7 +126,7 @@ end
 
 function iobj:focus_point(eid, pt)
     local e = world[eid]
-	self:set_direction(e, math3d.normalize(pt, self:get_position(e)))
+	self:set_direction(e, math3d.normalize(math3d.sub(pt, self:get_position(e))))
 end
 
 function iobj:focus_obj(eid, foucseid)
@@ -193,6 +193,7 @@ init_motion_interface(icameramotion, {
     end,
 
     set_direction = function (_, e, dir)
+        log.info_a("set_direction",e.camera.viewdir.v,math3d.totable(dir))
         e.camera.viewdir.v = dir
     end
 })
