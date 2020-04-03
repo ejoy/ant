@@ -1162,6 +1162,8 @@ discard_flags(lua_State *L, int index) {
 		case 'v':
 			flags |= BGFX_DISCARD_VERTEX_STREAMS;
 			break;
+		case 'a':
+			flags |= BGFX_DISCARD_ALL;
 		default:
 			luaL_error(L, "Invalid discard string %s", flags_string);
 		}
