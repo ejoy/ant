@@ -14,7 +14,7 @@ local renderutil= renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
 local hwi		= renderpkg.hwi
 
-local assetmgr = import_package "ant.asset".mgr
+local assetmgr = import_package "ant.asset"
 
 local bgfx 		= require "bgfx"
 local fs 		= require "filesystem"

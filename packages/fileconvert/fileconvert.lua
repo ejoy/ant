@@ -46,6 +46,7 @@ return {
 	depend = depend,
 	link = link,
 	converter = converter,
+	util = require "util",
 	shader_toolset = require "fx.toolset",
 	default_cfg = {
 		mesh = require "mesh.default_cfg"

@@ -3,8 +3,7 @@ local world = ecs.world
 
 local math3d = require "math3d"
 
-local assetpkg 	= import_package "ant.asset"
-local assetmgr 	= assetpkg.mgr
+local assetmgr 	= import_package "ant.asset"
 
 local animodule = require "hierarchy.animation"
 

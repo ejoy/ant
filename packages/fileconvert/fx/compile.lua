@@ -2,9 +2,6 @@ local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
 local util 		= require "util"
 
-local assetpkg  = import_package "ant.asset"
-local assetutil = assetpkg.util
-
 local utilitypkg = import_package "ant.utility.local"
 local fs_util = utilitypkg.fs_util
 
@@ -54,8 +51,7 @@ local function read_linkconfig(path, identity)
 	return settings:data()
 end
 
-local function add_macros_from_surface_setting(identity, mysetting, surfacetype, macros)
-	surfacetype = assetutil.load_surface_type(surfacetype)
+local function add_macros_from_surface_setting(mysetting, surfacetype, macros)
 	macros = macros or {}
 
 	if surfacetype.lighting == "on" then
@@ -94,11 +90,32 @@ local function depend_files(files)
 	return tt
 end
 
+local function load_surface_type(fxcontent)
+	local def_surface_type = {
+		lighting = "on",			-- "on"/"off"
+		transparency = "opaticy",	-- "opaticy"/"translucent"
+		shadow	= {
+			cast = "on",			-- "on"/"off"
+			receive = "on",			-- "on"/"off"
+		},
+		subsurface = "off",			-- "on"/"off"? maybe has other setting
+	}
+	if fxcontent.surface_type == nil then
+		fxcontent.surface_type = def_surface_type
+		return
+	end
+	for k, v in pairs(def_surface_type) do
+		if fxcontent.surface_type[k] == nil then
+			fxcontent.surface_type[k] = v
+		end
+	end
+end
+
 return function (identity, srcfilepath, outfilepath, localpath)
 	local fxcontent = util.datalist(srcfilepath)
-
+	load_surface_type(fxcontent)
 	local mysetting	= read_linkconfig(localpath("settings"), identity)
-	local marcros 	= add_macros_from_surface_setting(identity, mysetting, fxcontent.surface_type, fxcontent.macros)
+	local marcros 	= add_macros_from_surface_setting(mysetting, fxcontent.surface_type, fxcontent.macros)
 
 	local messages = {}
 	local all_depends = {}

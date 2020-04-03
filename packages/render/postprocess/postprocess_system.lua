@@ -3,8 +3,7 @@ local world = ecs.world
 
 local fs = require "filesystem"
 
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
+local assetmgr = import_package "ant.asset"
 
 local mathpkg  = import_package "ant.math"
 local mu       = mathpkg.util

@@ -4,15 +4,14 @@ local world = ecs.world
 local render = import_package "ant.render"
 local computil = render.components
 
-local assetpkg = import_package "ant.asset"
-local assetmgr = assetpkg.mgr
+local assetmgr = import_package "ant.asset"
 
 local math3d = require "math3d"
 
 ecs.component_alias("filter_tag", "string")
 
 local pf = ecs.component "primitive_filter"
-	.filter_tag "filter_tag" ("can_render")	
+	.filter_tag "filter_tag" ("can_render")
 
 function pf:init()
 	self.result = {

@@ -10,8 +10,7 @@ local shadowutil= require "shadow.util"
 local fbmgr 	= require "framebuffer_mgr"
 local setting	= require "setting"
 
-local assetpkg 	= import_package "ant.asset"
-local assetmgr 	= assetpkg.mgr
+local assetmgr 	= import_package "ant.asset"
 
 local mathpkg 	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util

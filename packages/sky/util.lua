@@ -6,8 +6,7 @@ local computil 	= renderpkg.components
 local mathpkg	= import_package "ant.math"
 local mu,mc		= mathpkg.util, mathpkg.constant
 
-local assetpkg	= import_package "ant.asset"
-local assetmgr	= assetpkg.mgr
+local assetmgr	= import_package "ant.asset"
 
 local fs 		= require "filesystem"
 

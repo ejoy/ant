@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local asset = import_package "ant.asset".mgr
+local assetmgr = import_package "ant.asset"
 local ani_module = require "hierarchy.animation"
 
 ecs.component "pose_result"
@@ -17,7 +17,7 @@ pr_t.input "skeleton"
 pr_t.output "pose_result"
 
 function pr_t.process(e)
-	local ske = asset.get_resource(e.skeleton.ref_path)
+	local ske = assetmgr.get_resource(e.skeleton.ref_path)
 	local skehandle = ske.handle
 	e.pose_result.result = ani_module.new_pose_result(#skehandle)
 end
@@ -42,7 +42,7 @@ local anicomp = ecs.component "animation"
 
 function anicomp:init()
 	for name, ani in pairs(self.anilist) do
-		ani.handle = asset.get_resource(ani.ref_path).handle
+		ani.handle = assetmgr.get_resource(ani.ref_path).handle
 		ani.sampling_cache = ani_module.new_sampling_cache()
 		ani.duration = ani.handle:duration() * 1000. / ani.scale
 		ani.max_ratio = ani.looptimes > 0 and ani.looptimes or math.maxinteger
@@ -77,7 +77,7 @@ end
 
 local function update_animation(e, delta_time)
 	local animation = e.animation
-	local ske = asset.get_resource(e.skeleton.ref_path)
+	local ske = assetmgr.get_resource(e.skeleton.ref_path)
 	local pr = e.pose_result.result
 	pr:setup(ske.handle)
 	do_animation(pr, animation.current, delta_time)

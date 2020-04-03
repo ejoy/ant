@@ -82,8 +82,7 @@ local function path2tex_handle(path)
     if type(path) == "string" then
         if not handle_cache[path] then
             local fs = require "filesystem"
-            local assetpkg = import_package "ant.asset"
-            local assetmgr = assetpkg.mgr
+            local assetmgr = import_package "ant.asset"
             local loader = assetmgr.get_loader "texture"
             local t = loader(fs.path(path) )
             log.info_a("load",path,t)

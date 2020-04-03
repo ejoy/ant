@@ -1,6 +1,6 @@
 local window = require "window"
 
-local assetmgr = import_package "ant.asset".mgr
+local assetmgr = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local fs = require "filesystem"
 local thread = require "thread"

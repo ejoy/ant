@@ -1,6 +1,6 @@
 local bgfx      = require "bgfx"
 local shadermgr = require "shader_mgr"
-local assetutil = require "util"
+local assetutil = import_package "ant.fileconvert".util
 
 local function load_shader(shaderbin, filename)
     local h = bgfx.create_shader(shaderbin)
@@ -28,25 +28,19 @@ end
 
 return {
     loader = function (fxpath)
-        local content, binary = assetutil.parse_embed_file(fxpath)
+        local config, binary = assetutil.parse_embed_file(fxpath)
         local shaderbins = fetch_shader_binarys(assert(binary))
-        local shader = content.shader
-
+        local shader = config.shader
         if shader.cs == nil then
             local vs = load_shader(assert(shaderbins.vs), shader.vs)
             local fs = load_shader(assert(shaderbins.fs), shader.fs)
-
             shader.prog, shader.uniforms = shadermgr.create_render_program(vs, fs)
         else
             local cs = load_shader(shaderbins.cs, shader.cs)
             shader.prog, shader.uniforms = shadermgr.create_compute_program(cs)
             shader.csbin = nil
         end
-
-        return {
-            shader      = shader,
-            surface_type= assetutil.load_surface_type(content.surface_type),
-        }, 0
+        return config, 0
     end,
 
     unloader = function (res)

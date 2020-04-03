@@ -6,7 +6,7 @@ local fs = require "filesystem"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 local ms = mathpkg.stack
-local assetmgr = import_package "ant.asset".mgr
+local assetmgr = import_package "ant.asset"
 local Rx        = import_package "ant.rxlua".Rx
 
 local editor_entity_system = ecs.system "editor_entity_system"
