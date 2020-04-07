@@ -1,5 +1,5 @@
 local patch = require "patch"
-local saveEntity = require "v2.save".entity
+local saveEntity = require "save".entity
 
 local m = {}
 

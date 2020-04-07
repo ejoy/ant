@@ -1,8 +1,8 @@
 local crypt = require "crypt"
 local watch = require "watch"
 local patch = require "patch"
-local save_entity = require "v2.save".entity
-local stringify_entity = require "v2.stringify".entity
+local save_entity = require "save".entity
+local stringify_entity = require "stringify".entity
 
 local function create()
     return crypt.uuid()
