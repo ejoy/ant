@@ -149,6 +149,10 @@ function assetmgr.get_resource(filename)
 	return res
 end
 
+function assetmgr.get_resource_v2(v)
+	return assetmgr.get_resource(fs.path(getmetatable(v).__file))
+end
+
 function assetmgr.register_resource(reffile, content, reloader)
 	local res = assetmgr.get_resource(reffile)
 	if res then

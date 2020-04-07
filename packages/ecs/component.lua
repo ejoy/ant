@@ -27,6 +27,23 @@ local function pushpath(v)
     return poppath
 end
 
+local function loadfile(filepath)
+    local fs = require "filesystem"
+    local assetutil = import_package "ant.fileconvert".util
+    local config, binary = assetutil.parse_embed_file(fs.path(filepath))
+    return config
+end
+
+local function create_proxy(file)
+    local mt = {__file = file}
+    function mt:__index(k)
+        local t = loadfile(file)
+        mt.__index = t
+        return t[k]
+    end
+    return setmetatable({}, mt)
+end
+
 local function foreach_init_2(c, args)
     if c.type == 'primtype' then
         assert(args ~= nil)
@@ -76,6 +93,8 @@ function foreach_init_1(c, args)
     local ret
     if c.type then
         ret = foreach_init_2(c, args)
+    elseif c.resource then
+        ret = create_proxy(args)
     else
         ret = {}
         for _, v in ipairs(c) do

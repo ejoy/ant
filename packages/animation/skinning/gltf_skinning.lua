@@ -60,7 +60,7 @@ end
 
 
 function mesh_skinning_transform.process(e)
-	local meshres = assetmgr.get_resource(e.mesh.ref_path)
+	local meshres = assetmgr.get_resource_v2(e.mesh)
 	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
 
 	local skinning = e.skinning

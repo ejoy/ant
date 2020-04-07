@@ -38,8 +38,7 @@ data:
     ref_path: /pkg/ant.test.animation/res/Beta_Joints_MAT.pbrm
   material:
     ref_path: /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
-  mesh:
-    ref_path: /pkg/ant.resources/depiction/meshes/female.mesh
+  mesh: /pkg/ant.resources/depiction/meshes/female.mesh
   name: animation_sample
   rendermesh:
     submesh_refs:

@@ -368,6 +368,11 @@ return function (w, policies, systems, loader)
 	ecs.component_alias = function (name, ...)
 		return schema:typedef(getCurrentPackage(), name, ...)
 	end
+	ecs.resource_component = function (name)
+		local c = schema:type(getCurrentPackage(), name)
+		c {}
+		c._object.resource = true
+	end
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
 	end

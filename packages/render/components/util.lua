@@ -449,15 +449,14 @@ function util.create_mesh_buffers(meshres)
 end
 
 function util.create_mesh(rendermesh, mesh)
-	local ref_path = mesh.ref_path
-	local res = assetmgr.get_resource(ref_path)
+	local res = assetmgr.get_resource_v2(mesh)
 	check_rendermesh_lod(res)
-	local reskey = fs.path(ref_path:string():gsub("^/pkg", "//res.mesh/"))
+	local reskey = fs.path(getmetatable(mesh).__file:gsub("^/pkg", "//res.mesh/"))
 	local meshscene = assetmgr.get_resource(reskey)
 	if meshscene == nil then
 		meshscene = util.create_mesh_buffers(res)
 		assetmgr.register_resource(reskey, meshscene, function ()
-			return util.create_mesh_buffers(assetmgr.get_resource(ref_path))
+			return util.create_mesh_buffers(assetmgr.get_resource_v2(mesh))
 		end)
 		-- just for debug
 		mesh.debug_meshscene_DOTNOT_DIRECTLY_USED 		= {meshscene, res}

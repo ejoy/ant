@@ -67,8 +67,7 @@ function rendermesh:init()
 	return self
 end
 
-ecs.component "mesh"
-	.ref_path "respath" ()
+ecs.resource_component "mesh"
 
 local meshpolicy = ecs.policy "mesh"
 meshpolicy.require_component "rendermesh"
