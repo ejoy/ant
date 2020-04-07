@@ -133,6 +133,9 @@ local function default_profile(sizebytes)
 end
 
 function assetmgr.get_resource(filename)
+	if type(filename) == "string" then
+		filename = fs.path(filename)
+	end
 	local reskey = res_key(filename)
 	local res = resources[reskey]
 	if res == nil then
@@ -147,10 +150,6 @@ function assetmgr.get_resource(filename)
 		record_resource_used(reskey)
 	end
 	return res
-end
-
-function assetmgr.get_resource_v2(v)
-	return assetmgr.get_resource(fs.path(getmetatable(v).__file))
 end
 
 function assetmgr.register_resource(reffile, content, reloader)

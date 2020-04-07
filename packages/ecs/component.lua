@@ -27,17 +27,11 @@ local function pushpath(v)
     return poppath
 end
 
-local function loadfile(filepath)
-    local fs = require "filesystem"
-    local assetutil = import_package "ant.fileconvert".util
-    local config, binary = assetutil.parse_embed_file(filepath)
-    return config
-end
-
 local function create_proxy(file)
     local mt = {__file = file}
     function mt:__index(k)
-        local t = loadfile(file)
+        local assetmgr = import_package "ant.asset"
+        local t = assetmgr.get_resource(file)
         mt.__index = t
         return t[k]
     end
