@@ -147,9 +147,7 @@ local function create_scene_node_test()
                     srt = {},
                 },
                 rendermesh = {},
-                mesh = {
-                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
-                },
+                mesh = '/pkg/ant.resources/depiction/meshes/sphere.mesh',
                 material = computil.assign_material(materialpath),
 
                 name = 'render_child1_1',
@@ -175,9 +173,7 @@ local function create_scene_node_test()
                 },
                 name = 'render_child1_2',
                 rendermesh = {},
-                mesh = {
-                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
-                },
+                mesh = '/pkg/ant.resources/depiction/meshes/sphere.mesh',
                 material = computil.assign_material(materialpath),
                 can_render = true,
                 can_select = true,
@@ -203,9 +199,7 @@ local function create_scene_node_test()
                 },
                 name = 'render_child2_1',
                 rendermesh = {},
-                mesh = {
-                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cube.mesh'
-                },
+                mesh = '/pkg/ant.resources/depiction/meshes/cube.mesh',
                 material = computil.assign_material(materialpath),
                 can_render = true,
                 can_select = true,
@@ -274,9 +268,7 @@ local function create_scene_node_test()
                 },
                 name = 'render2_rootchild',
                 rendermesh = {},
-                mesh = {
-                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cube.mesh'
-                },
+                mesh = '/pkg/ant.resources/depiction/meshes/cube.mesh',
                 material = computil.assign_material(materialpath),
                 can_render = true,
                 can_select = true,
@@ -301,9 +293,7 @@ local function create_scene_node_test()
                 },
                 name = 'render2_child1',
                 rendermesh = {},
-                mesh = {
-                    ref_path = fs.path '/pkg/ant.resources/depiction/meshes/sphere.mesh'
-                },
+                mesh = '/pkg/ant.resources/depiction/meshes/sphere.mesh',
                 material    = computil.assign_material(materialpath),
                 can_render  = true,
                 can_select  = true,
@@ -346,9 +336,7 @@ local function create_scene_node_test()
                     build_big_storage_01_straw_roof_002 = computil.create_submesh_item {5},
                 },
             },
-            mesh = {
-                ref_path = fs.path '/pkg/ant.resources/depiction/meshes/build_big_storage_01.mesh',
-            },
+            mesh = '/pkg/ant.resources/depiction/meshes/build_big_storage_01.mesh',
             material = {
                 ref_path = singlecolor_material,
                 properties = {uniforms = {
@@ -576,7 +564,7 @@ local test_queue = {
                         uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
                     }
                 },
-                mesh = {ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cone.mesh'},
+                mesh = '/pkg/ant.resources/depiction/meshes/cone.mesh',
                 can_render = true,
                 can_select = true,
                 name = 'test attach entity',
@@ -603,7 +591,7 @@ local test_queue = {
                         uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
                     }
                 },
-                mesh = {ref_path = fs.path '/pkg/ant.resources/depiction/meshes/cone.mesh'},
+                mesh = '/pkg/ant.resources/depiction/meshes/cone.mesh',
                 can_render = true,
                 can_select = true,
                 name = 'follow_entity',

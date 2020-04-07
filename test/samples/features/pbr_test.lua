@@ -49,7 +49,7 @@ local function create_pbr_entity(world,
                 }
             ),
             rendermesh = {},
-            mesh = {ref_path = meshpath,},
+            mesh = meshpath:string(),
             can_render = true,
             can_select = true,
             serialize = serializeutil.create(),
@@ -98,9 +98,7 @@ function pbrtest:init()
         data = {
             transform = {srt={t={3, 2, 0, 1}}},
             rendermesh = {},
-            mesh = {
-                ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
-            },
+            mesh = "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
             material = {
                 ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
             },

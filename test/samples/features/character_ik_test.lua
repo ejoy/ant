@@ -169,5 +169,5 @@ function iktest_sys:init()
     local c = p.uniforms.u_color.value
     local tt = math3d.totable(c)
     print(tt)
-    foot_ik_test()
+    --foot_ik_test()
 end

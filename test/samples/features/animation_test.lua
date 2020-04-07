@@ -86,10 +86,7 @@ local function gltf_animation_test()
         data = {
             transform = {srt={t={-5, 0, 0, 1}}},
             rendermesh = {},
-            mesh = {
-                --ref_path = fs.path "/pkg/ant.resources/depiction/meshes/simple_skin.mesh",
-                ref_path = fs.path "/pkg/ant.resources/depiction/meshes/female.mesh",
-            },
+            mesh = "/pkg/ant.resources/depiction/meshes/female.mesh",
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
             },
@@ -138,6 +135,6 @@ local function print_ske(ske)
 end
 
 function anitest:init()
-    ozzmesh_animation_test()
+    --ozzmesh_animation_test()
     gltf_animation_test()
 end
