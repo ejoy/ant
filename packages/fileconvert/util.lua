@@ -36,7 +36,10 @@ function util.embed_file(filepath, luacontent, binarys)
 end
 
 function util.parse_embed_file(filepath)
-	local fs = require "filesystem"
+    local fs = require "filesystem"
+    if type(filepath) == "string" then
+        filepath = fs.path(filepath)
+    end
     local f = fs.open(filepath, "rb")
     if f == nil then
         error(string.format("could not open file:%s", filepath:string()))

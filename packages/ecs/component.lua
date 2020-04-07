@@ -30,7 +30,7 @@ end
 local function loadfile(filepath)
     local fs = require "filesystem"
     local assetutil = import_package "ant.fileconvert".util
-    local config, binary = assetutil.parse_embed_file(fs.path(filepath))
+    local config, binary = assetutil.parse_embed_file(filepath)
     return config
 end
 
@@ -91,10 +91,10 @@ function foreach_init_1(c, args)
     end
 
     local ret
-    if c.type then
-        ret = foreach_init_2(c, args)
-    elseif c.resource then
+    if c.resource then
         ret = create_proxy(args)
+    elseif c.type then
+        ret = foreach_init_2(c, args)
     else
         ret = {}
         for _, v in ipairs(c) do
