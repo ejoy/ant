@@ -113,7 +113,7 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
 
     renderutil.draw_primitive(out_viewid, {
         mgroup 	    = meshgroup,
-        material 	= assert(assetmgr.get_resource(pass.material.ref_path)),
+        material 	= pass.material,
         properties  = pass.material.properties,
     }, mu.IDENTITY_MAT, render_properties)
 

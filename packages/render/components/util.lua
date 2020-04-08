@@ -19,7 +19,8 @@ local geopkg 	= import_package "ant.geometry"
 local geodrawer	= geopkg.drawer
 
 function util.assign_material(filepath, properties)
-	return {ref_path = filepath, properties = properties,}
+	--TODO
+	return filepath
 end
 
 function util.create_submesh_item(material_refs)
@@ -105,7 +106,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 		data = {
 			transform = transform,
 			rendermesh = {},
-			material = util.assign_material(fs.path "/pkg/ant.resources" / "depiction" / "materials" / "line.material"),
+			material = "/pkg/ant.resources/depiction/materials/line.material",
 			name = name,
 			can_render = true,
 		}
@@ -345,7 +346,7 @@ function util.create_skybox(world, material)
 		data = {
 			transform = {srt=mu.srt()},
 			rendermesh = {},
-			material = material or util.assign_material(fs.path "/pkg/ant.resources/depiction/materials/skybox.material"),
+			material = material or "/pkg/ant.resources/depiction/materials/skybox.material",
 			can_render = true,
 			name = "sky_box",
 		}

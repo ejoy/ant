@@ -40,7 +40,7 @@ local function add_hierarchy_file(hiepath)
 end
 
 local function create_scene_node_test()
-    local materialpath = fs.path '/pkg/ant.resources/depiction/materials/bunny.material'
+    local materialpath = '/pkg/ant.resources/depiction/materials/bunny.material'
 
     local default_hie_policy = {
         "ant.scene|hierarchy",
@@ -148,7 +148,7 @@ local function create_scene_node_test()
                 },
                 rendermesh = {},
                 mesh = '/pkg/ant.resources/depiction/meshes/sphere.mesh',
-                material = computil.assign_material(materialpath),
+                material = materialpath,
 
                 name = 'render_child1_1',
                 can_render = true,
@@ -174,7 +174,7 @@ local function create_scene_node_test()
                 name = 'render_child1_2',
                 rendermesh = {},
                 mesh = '/pkg/ant.resources/depiction/meshes/sphere.mesh',
-                material = computil.assign_material(materialpath),
+                material = materialpath,
                 can_render = true,
                 can_select = true,
                 serialize = seriazlizeutil.create(),
@@ -200,7 +200,7 @@ local function create_scene_node_test()
                 name = 'render_child2_1',
                 rendermesh = {},
                 mesh = '/pkg/ant.resources/depiction/meshes/cube.mesh',
-                material = computil.assign_material(materialpath),
+                material = materialpath,
                 can_render = true,
                 can_select = true,
                 serialize = seriazlizeutil.create(),
@@ -269,7 +269,7 @@ local function create_scene_node_test()
                 name = 'render2_rootchild',
                 rendermesh = {},
                 mesh = '/pkg/ant.resources/depiction/meshes/cube.mesh',
-                material = computil.assign_material(materialpath),
+                material = materialpath,
                 can_render = true,
                 can_select = true,
                 serialize = seriazlizeutil.create(),
@@ -294,7 +294,7 @@ local function create_scene_node_test()
                 name = 'render2_child1',
                 rendermesh = {},
                 mesh = '/pkg/ant.resources/depiction/meshes/sphere.mesh',
-                material    = computil.assign_material(materialpath),
+                material    = materialpath,
                 can_render  = true,
                 can_select  = true,
                 serialize   = seriazlizeutil.create(),

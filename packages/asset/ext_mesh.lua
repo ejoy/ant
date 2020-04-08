@@ -8,7 +8,7 @@ local function create_bounding(bounding)
 	end
 end
 
-return { 
+return {
 	loader = function (filename)
 		local _, binary = assetutil.parse_embed_file(filename)
 		local meshscene = thread.unpack(binary)

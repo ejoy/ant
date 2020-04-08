@@ -7,7 +7,7 @@ local support_types = {
 	state     = true,
 	material  = true,
 	texture   = true,
-	hierarchy = true,--scene hierarchy info, using ozz-animation runtime struct
+	hierarchy = true,
 	ozz       = true,
 	terrain   = true,
 	fx        = true,
@@ -54,8 +54,11 @@ function assetmgr.get_unloader(name)
 	return get_accessor(name).unloader
 end
 
-function assetmgr.load_depiction(filepath)
-	local f = assert(fs.open(filepath, "r"))
+function assetmgr.load_depiction(filename)
+	if type(filename) == "string" then
+		filename = fs.path(filename)
+	end
+	local f = assert(fs.open(filename, "r"))
 	local data = f:read "a"
 	f:close()
 	return datalist.parse(data)
@@ -191,12 +194,15 @@ function assetmgr.has_resource(filename)
 end
 
 local support_ext = {
-	mesh = true,
+	mesh     = true,
+	ozz      = true,
+	material = true,
+	pbrm     = true,
 }
 
 function assetmgr.init()
 	for name in pairs(support_ext) do
-		local accessor = require("ext_" .. name)
+		local accessor = get_accessor(name)
 		resource.register_ext(name, accessor.loader, accessor.unloader)
 	end
 end

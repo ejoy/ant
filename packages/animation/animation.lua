@@ -17,8 +17,7 @@ pr_t.input "skeleton"
 pr_t.output "pose_result"
 
 function pr_t.process(e)
-	local ske = assetmgr.get_resource(e.skeleton.ref_path)
-	local skehandle = ske.handle
+	local skehandle = e.skeleton.handle
 	e.pose_result.result = ani_module.new_pose_result(#skehandle)
 end
 
@@ -51,7 +50,7 @@ function anicomp:init()
 	return self
 end
 
-ecs.component_alias("skeleton", "resource")
+ecs.resource_component "skeleton"
 
 local anisystem = ecs.system "animation_system"
 anisystem.require_interface "ant.timer|timer"
@@ -77,7 +76,7 @@ end
 
 local function update_animation(e, delta_time)
 	local animation = e.animation
-	local ske = assetmgr.get_resource(e.skeleton.ref_path)
+	local ske = e.skeleton
 	local pr = e.pose_result.result
 	pr:setup(ske.handle)
 	do_animation(pr, animation.current, delta_time)

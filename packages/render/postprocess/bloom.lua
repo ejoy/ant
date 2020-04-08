@@ -119,7 +119,7 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 
     passes[#passes+1] = {
         name = "combine scene with bloom",
-        material = computil.assign_material(combine_material),
+        material = combine_material:string(),
         viewport = get_viewport(),
         output  = {fb_idx=next_fbidx(), rb_idx=1},
     }
