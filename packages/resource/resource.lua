@@ -391,7 +391,7 @@ function resource.clone(obj)
 		prefix = filename .. ":" .. path .. "."
 	end
 	for k,v in pairs(obj) do
-		if type(v) == "table" and v._path then
+		if type(v) == "table" and v._path == nil then
 			clone[k] = resource.proxy(prefix .. k)
 		else
 			clone[k] = v
