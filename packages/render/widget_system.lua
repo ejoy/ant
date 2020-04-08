@@ -57,7 +57,9 @@ function m:end_frame()
 	local dmesh = world:singleton_entity "widget_drawer"
 	if dmesh then
 		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
-		local group = meshscene.scenes[1][1][1]
+		local _, scene = next(meshscene.scenes)
+		local _, meshnode = next(scene)
+		local group = meshnode[1]
 		local vbdesc, ibdesc = group.vb, group.ib
 		vbdesc.start, vbdesc.num = 0, 0
 		ibdesc.start, ibdesc.num = 0, 0

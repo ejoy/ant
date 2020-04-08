@@ -58,14 +58,8 @@ ecs.component "submesh_ref"
 	["opt"].material_refs "int[]"
 	.visible "boolean"
 
-local rendermesh = ecs.component "rendermesh"
+ecs.component "rendermesh"
 	["opt"].submesh_refs "submesh_ref{}"
-	["opt"].lodidx "int" (1)
-
-function rendermesh:init()
-	self.lodidx = self.lodidx or 1
-	return self
-end
 
 ecs.resource_component "mesh"
 

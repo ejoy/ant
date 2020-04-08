@@ -67,9 +67,11 @@ function mesh_skinning_transform.process(e)
 
 	local jobs = {}
 	skinning.jobs = jobs
+	local scene = meshscene.scenes[meshscene.default_scene]
+	local res_scene = meshres.scenes[meshres.default_scene]
 
-	for meshidx, meshnode in ipairs(meshscene.scenes[meshscene.sceneidx]) do
-		local res_meshnode = meshres.scenes[meshres.sceneidx][meshidx]
+	for meshname, meshnode in pairs(scene) do	
+		local res_meshnode = res_scene[meshname]
 		for groupidx, group in ipairs(meshnode) do
 			local res_group = res_meshnode[groupidx]
 			local vb = group.vb

@@ -149,7 +149,7 @@ local function create_prim_bounding(meshscene, prim)
 		assert(#posacc.min == 3)
 		assert(#posacc.max == 3)
 		local bounding = {
-			aabb = math3d.aabb(posacc.min, posacc.max)
+			aabb = {posacc.min, posacc.max}
 		}
 		prim.bounding = bounding
 		return bounding
@@ -192,13 +192,21 @@ local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
 	end
 end
 
-local function to_bounding(meshaabb)
+local function to_aabb(meshaabb)
 	return {
 		aabb = {
-			min=math3d.tovalue(math3d.index(meshaabb, 1)),
-			max=math3d.tovalue(math3d.index(meshaabb, 2))
+			math3d.tovalue(math3d.index(meshaabb, 1)),
+			math3d.tovalue(math3d.index(meshaabb, 2))
 		}
 	}
+end
+
+local function get_obj_name(obj, idx, defname)
+	if obj.name then
+		return obj.name
+	end
+
+	return defname .. idx
 end
 
 return function (gltfscene, bindata, config)
@@ -210,6 +218,7 @@ return function (gltfscene, bindata, config)
 	local scene_scalemat = gltfscene.scenescale and math3d.ref(math3d.matrix{s=gltfscene.scenescale}) or nil
 
 	local bvcaches = {}
+	local nummesh = 1
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
 		for _, nodeidx in ipairs(gltfnodes) do
 			local node = gltfscene.nodes[nodeidx + 1]
@@ -220,16 +229,16 @@ return function (gltfscene, bindata, config)
 			end
 
 			local meshidx = node.mesh
+			local meshname
 			if meshidx then
 				local meshnode = {
-					nodename = node.name,
 					transform = nodetrans and math3d.tovalue(nodetrans) or nil,
 					inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
 				}
 				local mesh = gltfscene.meshes[meshidx+1]
-				local meshaabb = math3d.ref(math3d.aabb())
-
-				meshnode.meshname = mesh.name
+				meshname = get_obj_name(mesh, nummesh, "mesh")
+				nummesh = nummesh + 1
+				local meshaabb = math3d.aabb()
 
 				for _, prim in ipairs(mesh.primitives) do
 					local group = {
@@ -276,24 +285,23 @@ return function (gltfscene, bindata, config)
 
 					local bb = create_prim_bounding(gltfscene, prim)
 					if bb then
-						group.bounding = to_bounding(bb.aabb)
-						meshaabb.m = math3d.aabb_merge(meshaabb, bb.aabb)
+						group.bounding = bb
+						meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
 					end
 
 					meshnode[#meshnode+1] = group
 				end
 
 				if math3d.aabb_isvalid(meshaabb) then
-					meshnode.bounding = to_bounding(meshaabb)
+					meshnode.bounding = {aabb = to_aabb(meshaabb)}
 				end
 
-				scenegroups[#scenegroups+1] = meshnode
+				scenegroups[meshname] = meshnode
 			end
 		end
 	end
 
 	local meshscene = {
-		sceneidx = gltfscene.scene+1,
 		scenelods = gltfscene.scenelods,
 		scenescale = gltfscene.scenescale,
 		scenes = {}
@@ -307,9 +315,12 @@ return function (gltfscene, bindata, config)
 	local scenes = meshscene.scenes
 	for sceneidx, s in ipairs(gltfscene.scenes) do
 		local scene = {}
+		local scenename = get_obj_name(s, sceneidx, "scene")
 		create_mesh_scene(s.nodes, scene_scalemat, scene)
-		scenes[sceneidx] = scene
+		scenes[scenename] = scene
 	end
 
+	local def_sceneidx = gltfscene.scene+1
+	meshscene.default_scene = get_obj_name(gltfscene.scenes[def_sceneidx], def_sceneidx, "scene")
 	return meshscene
 end
