@@ -1,3 +1,5 @@
+local resource = import_package "ant.resource"
+
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -27,21 +29,9 @@ local function pushpath(v)
     return poppath
 end
 
-local function loadfile(filepath)
-    local fs = require "filesystem"
-    local assetutil = import_package "ant.fileconvert".util
-    local config, binary = assetutil.parse_embed_file(fs.path(filepath))
-    return config
-end
-
-local function create_proxy(file)
-    local mt = {__file = file}
-    function mt:__index(k)
-        local t = loadfile(file)
-        mt.__index = t
-        return t[k]
-    end
-    return setmetatable({}, mt)
+local function create_proxy(filename)
+    resource.load(filename, nil, true)
+    return resource.proxy(filename)
 end
 
 local function foreach_init_2(c, args)
@@ -91,10 +81,10 @@ function foreach_init_1(c, args)
     end
 
     local ret
-    if c.type then
-        ret = foreach_init_2(c, args)
-    elseif c.resource then
+    if c.resource then
         ret = create_proxy(args)
+    elseif c.type then
+        ret = foreach_init_2(c, args)
     else
         ret = {}
         for _, v in ipairs(c) do

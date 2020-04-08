@@ -134,9 +134,7 @@ local function target_lock_test()
                 t = {16, 1, 6}},
             },
             rendermesh = {},
-            mesh = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/meshes/sphere.mesh"
-            },
+            mesh = "/pkg/ant.resources/depiction/meshes/sphere.mesh",
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
             },
@@ -157,9 +155,7 @@ local function target_lock_test()
             can_render = true,
             transform = {srt={t={0, 0, -6}}},
             rendermesh = {},
-            mesh = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/meshes/cube.mesh"
-            },
+            mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
                 properties = {

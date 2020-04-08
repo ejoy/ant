@@ -1,5 +1,6 @@
 local fs = require "filesystem"
 local datalist = require "datalist"
+local resource = import_package "ant.resource"
 
 local support_types = {
 	mesh      = true,
@@ -133,6 +134,9 @@ local function default_profile(sizebytes)
 end
 
 function assetmgr.get_resource(filename)
+	if type(filename) == "string" then
+		filename = fs.path(filename)
+	end
 	local reskey = res_key(filename)
 	local res = resources[reskey]
 	if res == nil then
@@ -147,10 +151,6 @@ function assetmgr.get_resource(filename)
 		record_resource_used(reskey)
 	end
 	return res
-end
-
-function assetmgr.get_resource_v2(v)
-	return assetmgr.get_resource(fs.path(getmetatable(v).__file))
 end
 
 function assetmgr.register_resource(reffile, content, reloader)
@@ -188,6 +188,17 @@ end
 function assetmgr.has_resource(filename)
 	local key = res_key(filename)
 	return resources[key] ~= nil
+end
+
+local support_ext = {
+	mesh = true,
+}
+
+function assetmgr.init()
+	for name in pairs(support_ext) do
+		local accessor = require("ext_" .. name)
+		resource.register_ext(name, accessor.loader, accessor.unloader)
+	end
 end
 
 return assetmgr
