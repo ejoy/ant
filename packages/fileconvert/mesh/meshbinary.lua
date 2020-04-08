@@ -3,8 +3,6 @@ local gltfutil = gltf.util
 local glbloader = gltf.glb
 
 local declmgr = import_package "ant.render".declmgr
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
 local math3d = require "math3d"
 
 local function get_desc(name, accessor)
@@ -151,7 +149,7 @@ local function create_prim_bounding(meshscene, prim)
 		assert(#posacc.min == 3)
 		assert(#posacc.max == 3)
 		local bounding = {
-			aabb = math3d.ref(math3d.aabb(assert(posacc.min), assert(posacc.max))),
+			aabb = {posacc.min, posacc.max}
 		}
 		prim.bounding = bounding
 		return bounding
@@ -194,15 +192,33 @@ local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
 	end
 end
 
-local function init_scene(gltfscene, bindata, config)
-	local layout 		= config.config.layout
+local function to_aabb(meshaabb)
+	return {
+		aabb = {
+			math3d.tovalue(math3d.index(meshaabb, 1)),
+			math3d.tovalue(math3d.index(meshaabb, 2))
+		}
+	}
+end
+
+local function get_obj_name(obj, idx, defname)
+	if obj.name then
+		return obj.name
+	end
+
+	return defname .. idx
+end
+
+return function (gltfscene, bindata, config)
+	local layout 		= config.layout
 	for i=1, #layout do
 		layout[i] = declmgr.correct_layout(layout[i])
 	end
-	local layout_types 	= config.config.layout_types
+	local layout_types 	= config.layout_types
 	local scene_scalemat = gltfscene.scenescale and math3d.ref(math3d.matrix{s=gltfscene.scenescale}) or nil
 
 	local bvcaches = {}
+	local nummesh = 1
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
 		for _, nodeidx in ipairs(gltfnodes) do
 			local node = gltfscene.nodes[nodeidx + 1]
@@ -213,16 +229,16 @@ local function init_scene(gltfscene, bindata, config)
 			end
 
 			local meshidx = node.mesh
+			local meshname
 			if meshidx then
 				local meshnode = {
-					nodename = node.name,
-					transform = nodetrans and math3d.ref(nodetrans) or nil,
+					transform = nodetrans and math3d.tovalue(nodetrans) or nil,
 					inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
 				}
 				local mesh = gltfscene.meshes[meshidx+1]
-				local meshaabb = math3d.ref(math3d.aabb())
-
-				meshnode.meshname = mesh.name
+				meshname = get_obj_name(mesh, nummesh, "mesh")
+				nummesh = nummesh + 1
+				local meshaabb = math3d.aabb()
 
 				for _, prim in ipairs(mesh.primitives) do
 					local group = {
@@ -270,23 +286,22 @@ local function init_scene(gltfscene, bindata, config)
 					local bb = create_prim_bounding(gltfscene, prim)
 					if bb then
 						group.bounding = bb
-						meshaabb.m = math3d.aabb_merge(meshaabb, bb.aabb)
+						meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
 					end
 
 					meshnode[#meshnode+1] = group
 				end
 
 				if math3d.aabb_isvalid(meshaabb) then
-					meshnode.bounding = {aabb=meshaabb}
+					meshnode.bounding = {aabb = to_aabb(meshaabb)}
 				end
 
-				scenegroups[#scenegroups+1] = meshnode
+				scenegroups[meshname] = meshnode
 			end
 		end
 	end
 
 	local meshscene = {
-		sceneidx = gltfscene.scene+1,
 		scenelods = gltfscene.scenelods,
 		scenescale = gltfscene.scenescale,
 		scenes = {}
@@ -300,31 +315,12 @@ local function init_scene(gltfscene, bindata, config)
 	local scenes = meshscene.scenes
 	for sceneidx, s in ipairs(gltfscene.scenes) do
 		local scene = {}
+		local scenename = get_obj_name(s, sceneidx, "scene")
 		create_mesh_scene(s.nodes, scene_scalemat, scene)
-		scenes[sceneidx] = scene
+		scenes[scenename] = scene
 	end
 
+	local def_sceneidx = gltfscene.scene+1
+	meshscene.default_scene = get_obj_name(gltfscene.scenes[def_sceneidx], def_sceneidx, "scene")
 	return meshscene
-end
-
-local function file_wrapper(meshcontent)
-	local startiter = 1
-	local count = #meshcontent
-	return {
-		read = function (_, numbytes)
-			local enditer = startiter - 1 + numbytes
-			if enditer <= count then
-				local c = meshcontent:sub(startiter, enditer)
-				startiter = startiter + numbytes
-				return c
-			end
-		end,
-		close = function ()
-		end,
-	}
-end
-
-return function (meshcontent, config)
-	local glbdata = glbloader.decode_from_filehandle(file_wrapper(meshcontent))
-	return init_scene(glbdata.info, glbdata.bin, config), #glbdata.bin
 end

@@ -107,12 +107,10 @@ local function gen_mesh_assetinfo(ozzmesh)
 	local ibm_pointer, ibm_count = meshhandle:inverse_bind_matrices()
 	local joint_remapp_pointer, count = meshhandle:joint_remap()
 	return {
-		sceneidx = 1,
+		default_scene = "sceneroot",
 		scenes = {
-			--scene
-			{
-				--meshnode
-				{
+			sceneroot = {
+				meshnode = {
 					inverse_bind_pose 	= animodule.new_bind_pose(ibm_count, ibm_pointer),
 					joint_remap 		= animodule.new_joint_remap(joint_remapp_pointer, count),
 					primitive
@@ -137,9 +135,8 @@ function ozzmesh_skinning_transform.process(e)
 	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
 	local meshres 	= assetmgr.get_resource(e.mesh.ref_path).handle
 
-	local scene = meshscene.scenes[meshscene.sceneidx]
-	assert(#scene == 1 and #scene[1] == 1)
-	local meshnode = scene[1]
+	local scene = meshscene.scenes[meshscene.default_scene]
+	local _, meshnode = next(scene)
 
 	local primitive = meshnode[1]
 

@@ -392,7 +392,7 @@ lref_setter(lua_State *L) {
 }
 
 static void
-to_table(lua_State *L, struct lastack *LS, int64_t id) {
+to_table(lua_State *L, struct lastack *LS, int64_t id, int needtype) {
 	int type;
 	const float * v = lastack_value(LS, id, &type);
 	if (v == NULL) {
@@ -406,8 +406,10 @@ to_table(lua_State *L, struct lastack *LS, int64_t id) {
 		lua_pushnumber(L, v[i]);
 		lua_rawseti(L, -2, i+1);
 	}
-	lua_pushstring(L, lastack_typename(type));
-	lua_setfield(L, -2, "type");
+	if (needtype){
+		lua_pushstring(L, lastack_typename(type));
+		lua_setfield(L, -2, "type");
+	}
 }
 
 static int64_t
@@ -448,7 +450,7 @@ ref_get_key(lua_State *L) {
 		lua_pushlightuserdata(L, (void *)(lastack_value(LS, R->id, NULL)));
 		break;
 	case 'v':
-		to_table(L, LS, R->id);
+		to_table(L, LS, R->id, 1);
 		break;
 	case 's':
 	case 'r':
@@ -1026,7 +1028,15 @@ static int
 ltotable(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	int64_t id = get_id(L, 1, lua_type(L, 1));
-	to_table(L, LS, id);
+	to_table(L, LS, id, 1);
+	return 1;
+}
+
+static int
+ltovalue(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	int64_t id = get_id(L, 1, lua_type(L, 1));
+	to_table(L, LS, id, 0);
 	return 1;
 }
 
@@ -1580,6 +1590,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "todirection", ltodirection },
 		{ "torotation", ltorotation },
 		{ "totable", ltotable},
+		{ "tovalue", ltovalue},
 		{ "base_axes", lbase_axes},
 		{ "transform", ltransform},
 		{ "transformH", ltransform_homogeneous_point },

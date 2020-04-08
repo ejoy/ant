@@ -57,6 +57,12 @@ function util.fetch_file_content(filepath)
 	return c
 end
 
+function util.write_file(filepath, c)
+    local f = fs.open(filepath, "wb")
+    f:write(c)
+    f:close()
+end
+
 local OS        = platform.OS
 local CWD       = fs.current_path()
 

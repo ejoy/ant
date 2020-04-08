@@ -41,12 +41,10 @@ end
 
 function util.assign_group_as_mesh(group)
 	return {
-		sceneidx = 1,
+		default_scene = "sceneroot",
 		scenes = {
-			-- scene 1
-			{
-				-- node 1
-				{
+			sceneroot = {
+				meshnode = {
 					group,
 				}
 			}
@@ -184,14 +182,15 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	}
 	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
 	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
-	local selectscene = meshscene.scenes[meshscene.sceneidx]
-	selectscene[1].bounding = {
+	local selectscene = meshscene.scenes[meshscene.default_scene]
+	local _, meshnode = next(selectscene)
+	meshnode.bounding = {
 		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
 	}
 	return eid
 end
 
-local function quad_mesh(vb)	
+local function quad_mesh(vb)
 	return util.create_simple_mesh("p3|t2", vb, 4)
 end
 
@@ -364,32 +363,39 @@ function util.create_skybox(world, material)
     return eid
 end
 
-local function check_rendermesh_lod(meshscene, lodidx)
+local function check_rendermesh_lod(meshscene, lod_scene)
 	if meshscene.scenelods then
-		assert(1 <= meshscene.sceneidx and meshscene.sceneidx <= #meshscene.scenelods)
-		if lodidx < 1 or lodidx > #meshscene.scenelods then
-			log.warn("invalid lod:", lodidx, "max lod:", meshscene.scenelods)
+		if meshscene.scenelods[meshscene.default_scene] == nil then
+			log.warn("not found scene from scenelods", meshscene.default_scene)
 		end
 	else
-		if meshscene.sceneidx ~= lodidx then
+		if meshscene.default_scene ~= lod_scene then
 			log.warn("default lod scene is not equal to lodidx")
 		end
 	end
 end
 
+local function create_bounding(bounding)
+	if bounding then
+		local aabb = bounding.aabb
+		return {
+			aabb = math3d.ref(math3d.aabb(aabb[1], aabb[2]))
+		}
+	end
+end
+
 function util.create_mesh_buffers(meshres)
 	local meshscene = {
-		sceneidx = meshres.sceneidx,
+		default_scene = meshres.default_scene,
 		scenelods = meshres.scenelods,
 	}
 	local new_scenes = {}
-	for _, scene in ipairs(meshres.scenes) do
+	for scenename, scene in pairs(meshres.scenes) do
 		local new_scene = {}
-		for _, meshnode in ipairs(scene) do
+		for meshname, meshnode in pairs(scene) do
 			local new_meshnode = {
-				bounding = meshnode.bounding,
+				bounding = create_bounding(meshnode.bounding),
 				transform = meshnode.transform,
-				meshname = meshnode.meshname,
 			}
 			for _, group in ipairs(meshnode) do
 				local vb = group.vb
@@ -438,9 +444,9 @@ function util.create_mesh_buffers(meshres)
 				new_meshnode.inverse_bind_pose 	= animodule.new_bind_pose(ibm.num, ibm.value)
 				new_meshnode.joint_remap 		= animodule.new_joint_remap(ibm.joints)
 			end
-			new_scene[#new_scene+1] = new_meshnode
+			new_scene[meshname] = new_meshnode
 		end
-		new_scenes[#new_scenes+1] = new_scene
+		new_scenes[scenename] = new_scene
 	end
 
 	meshscene.scenes = new_scenes
@@ -465,20 +471,14 @@ function util.create_mesh(rendermesh, mesh)
 	rendermesh.reskey = reskey
 end
 
-function util.scene_index(lodidx, meshscene)
-	local lodlevel = lodidx or meshscene.sceneidx
-	return meshscene.scenelods and (meshscene.scenelods[lodlevel]) or meshscene.sceneidx
-end
-
 function util.entity_bounding(entity)
 	if util.is_entity_visible(entity) then
 		local rm = entity.rendermesh
 		local meshscene = assetmgr.get_resource(rm.reskey)
-		local sceneidx = util.scene_index(rm.lodidx, meshscene)
 		local etrans = entity.transform.srt
-		local scene = meshscene.scenes[sceneidx]
+		local scene = meshscene.scenes[meshscene.default_scene]
 		local aabb = math3d.aabb()
-		for _, mn in ipairs(scene)	do
+		for _, mn in pairs(scene)	do
 			local localtrans = mn.transform
 			for _, g in ipairs(mn) do
 				local b = g.bounding

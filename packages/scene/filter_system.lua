@@ -175,16 +175,13 @@ local function invisible() end
 local function cache_material(rendermesh, materialcomp)
 	local cache = {}
 	local meshscene = assetmgr.get_resource(rendermesh.reskey)
-	local sceneidx = computil.scene_index(rendermesh.lodidx, meshscene)
-	local scenes = meshscene.scenes[sceneidx]
+	local scene = meshscene.scenes[meshscene.default_scene]
 	local submesh_refs = rendermesh.submesh_refs
 	local n = 0
 
-	for _, meshnode in ipairs(scenes) do
-		local name = meshnode.meshname
-		if is_visible(name, submesh_refs) then
-			local localtrans = meshnode.transform
-			local material_refs = get_material_refs(name, submesh_refs)
+	for meshname, meshnode in pairs(scene) do
+		if is_visible(meshname, submesh_refs) then
+			local material_refs = get_material_refs(meshname, submesh_refs)
 
 			for groupidx, group in ipairs(meshnode) do
 				local material = get_material(group, groupidx, materialcomp, material_refs)
