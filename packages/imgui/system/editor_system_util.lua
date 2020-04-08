@@ -122,7 +122,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         data = {
             transform = {srt = mu.srt(),parent = parent},
             rendermesh = {},
-            material = util.assign_material(fs.path "/pkg/ant.resources" /"depiction" / "materials" / "gizmo_line.material"),
+            material = "/pkg/ant.resources/depiction/materials/gizmo_line.material",
             name = name,
             can_render = true,
             can_select = true,
@@ -173,7 +173,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
                 parent = parent,
             },
             rendermesh = {},
-            material = util.assign_material(fs.path "/pkg/ant.resources" /"depiction" / "materials" / "gizmo_front_line.material"),
+            material = "/pkg/ant.resources/depiction/materials/gizmo_front_line.material",
             name = name,
             can_render = true,
             can_select = true,

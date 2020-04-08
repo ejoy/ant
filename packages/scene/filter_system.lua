@@ -129,47 +129,6 @@ end
 -- make a material cache
 local material_cache = setmetatable( {}, { __mode = "kv" } )
 
-local function cache_resource(cache, eid)
-	local e = world[eid]
-	local keys = {}
-	local n = 0
-	n=n+1; keys[n] = e.rendermesh.reskey
-	for _, m in world:each_component(e.material) do
-		n=n+1; keys[n] = m.ref_path
-
-		local p = m.properties
-		if p then
-			local t = p.textures
-			if t then
-				for k, tex in pairs(t) do
-					n=n+1; keys[n] = tex.ref_path
-				end
-			end
-		end
-	end
-	local func
-	if n == 1 then
-		keys = keys[1]
-		function func()
-			return assetmgr.get_resource(keys) ~= nil
-		end
-	else
-		function func()
-			local get_resource = assetmgr.get_resource
-			for i = 1, n do
-				if get_resource(keys[i]) == nil then
-					return false
-				end
-			end
-			return true
-		end
-	end
-	cache[eid] = func
-	return func
-end
-
-local resource_cache = setmetatable( {}, { __mode = "kv" , __index = cache_resource } )
-
 local function invisible() end
 
 local function cache_material(rendermesh, materialcomp)
@@ -185,14 +144,11 @@ local function cache_material(rendermesh, materialcomp)
 
 			for groupidx, group in ipairs(meshnode) do
 				local material = get_material(group, groupidx, materialcomp, material_refs)
-				local refkey = material.ref_path
-				local mi = assert(assetmgr.get_resource(refkey))
-				local transparency = mi.fx.surface_type.transparency
-
+				local transparency = material.fx.surface_type.transparency
 				n = n + 1
 				cache[n] = {
 					group,	-- 1
-					material.ref_path,	-- 2
+					material,	-- 2
 					material.properties,	-- 3
 					transparency,	-- 4
 					group.bounding and group.bounding.aabb or nil,	-- 5
@@ -208,15 +164,14 @@ local function cache_material(rendermesh, materialcomp)
 		cache = cache[1]
 		return function(eid, etrans, filter)
 			local group = cache[1]
-			local refkey = cache[2]
+			local material = cache[2]
 			local properties = cache[3]
 			local transparency = cache[4]
 			local aabb = cache[5]
 			local localtrans = cache[6]
 			local resulttarget = assert(filter.result[transparency])
-			local mi = assert(assetmgr.get_resource(refkey))
 			local worldaabb, worldtrans = math3d.aabb_transform(etrans, aabb, localtrans)
-			add_result(eid, group, mi, properties, worldtrans, worldaabb, resulttarget)
+			add_result(eid, group, material, properties, worldtrans, worldaabb, resulttarget)
 		end
 	else
 		return function(eid, etrans, filter)
@@ -225,15 +180,14 @@ local function cache_material(rendermesh, materialcomp)
 			for i = 1,n do
 				local item = cache[i]
 				local group = item[1]
-				local refkey = item[2]
+				local material = item[2]
 				local properties = item[3]
 				local transparency = item[4]
 				local aabb = item[5]
 				local localtrans = item[6]
 				local resulttarget = assert(result[transparency])
-				local mi = assert(assetmgr.get_resource(refkey))
 				local worldaabb, worldtrans = aabb_transform(etrans, aabb, localtrans)
-				add_result(eid, group, mi, properties, worldtrans, worldaabb, resulttarget)
+				add_result(eid, group, material, properties, worldtrans, worldaabb, resulttarget)
 			end
 		end
 	end
@@ -292,7 +246,6 @@ function primitive_filter_sys:filter_primitive()
 	for msg in material_change:each() do
 		local eid = msg[2]
 		material_cache[eid] = nil
-		resource_cache[eid] = nil
 	end
 
 	for _, prim_eid in world:each "primitive_filter" do
@@ -306,7 +259,7 @@ function primitive_filter_sys:filter_primitive()
 			local func = material_cache[eid]
 			if func then
 				func(eid, ce.transform.world, filter)
-			elseif resource_cache[eid]() then
+			else
 				func = cache_material(ce.rendermesh, ce.material)
 				material_cache[eid] = func
 				func(eid, ce.transform.world, filter)

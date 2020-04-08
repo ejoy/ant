@@ -363,9 +363,8 @@ function sm:refine_filter()
 		local filter = se.primitive_filter
 		local results = filter.result
 		local function replace_material(result, material)
-			local mi = assetmgr.get_resource(material.ref_path)	-- must only one material content
 			for i=1, result.n do
-				result[i].material = mi
+				result[i].material = material
 			end
 		end
 	

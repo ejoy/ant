@@ -18,15 +18,22 @@ function world:create_component(c, args, disableSerialize)
 		assert(args == true or args == nil)
 		return args
 	end
-	if not ti.type and ti.multiple then
-		local res = component_init(self, ti, args, disableSerialize)
-		assert(res ~= nil)
-		for i = 1, #args do
-			local r = component_init(self, ti, args[i], disableSerialize)
-			assert(r ~= nil)
-			res[i] = r
+	if ti.multiple then
+		if ti.resource then
+			if type(args) ~= "table" then
+				return component_init(self, ti, args, disableSerialize)
+			end
+			return component_init(self, ti, args[1], disableSerialize)
+		elseif  not ti.type then
+			local res = component_init(self, ti, args, disableSerialize)
+			assert(res ~= nil)
+			for i = 1, #args do
+				local r = component_init(self, ti, args[i], disableSerialize)
+				assert(r ~= nil)
+				res[i] = r
+			end
+			return res
 		end
-		return res
 	end
 	local res = component_init(self, ti, args, disableSerialize)
 	assert(res ~= nil)

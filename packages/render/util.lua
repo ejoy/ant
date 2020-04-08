@@ -329,7 +329,7 @@ function util.create_blit_queue(world, viewrect)
 		data = {
 			transform = {srt = mu.srt()},
 			rendermesh = {},
-			material = {ref_path = fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material"},
+			material = "/pkg/ant.resources/depiction/materials/fullscreen.material",
 			blit_render = true,
 			name = "full_quad",
 		}
