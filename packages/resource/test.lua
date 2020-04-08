@@ -121,6 +121,7 @@ local mproxy = resource.multiple_proxy {
 }
 
 assert(resource.status(mproxy) == "multiple")
+assert(tostring(mproxy) == "a.code:a")	-- first one
 assert(mproxy.x == 1)	-- a.x
 assert(mproxy[1].y == 2)	-- b.y
 mproxy[2] = resource.proxy "a.code:x"

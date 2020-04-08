@@ -252,7 +252,7 @@ local multiple_mt = {
 	__index = function(self, key) return self._data[key] end,
 	__newindex = index_only,
 	__pairs = function(self) return pairs(self._data) end,
-	__tostring = function(self) return "[multiple proxy]" end,
+	__tostring = function(self) return tostring(self._data) end,
 }
 
 function resource.multiple_proxy(paths)
