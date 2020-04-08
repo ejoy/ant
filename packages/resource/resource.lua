@@ -104,6 +104,7 @@ local function get_file_object(filename)
 			meta = {
 				filename = filename,
 				__index = not_in_memory,
+				__pairs = not_in_memory,
 				__newindex = readonly,
 				__tostring = function (self)
 					return filename .. ":" .. self._path
@@ -145,11 +146,16 @@ function resource.load(filename, data, lazyload)
 				return data[key]
 			end
 		end
+		robj.meta.__pairs = function (self)
+			load_resource(robj, robj.filename, robj.source)
+			return pairs(self._data)
+		end
 		-- lazy load
 		return
 	else
 		robj.source = nil
 		robj.meta.__index = not_in_memory
+		robj.meta.__pairs = not_in_memory
 	end
 	if robj.object then
 		-- already in memory

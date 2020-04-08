@@ -100,4 +100,13 @@ assert(x[1] == 1)
 
 resource.unload "a.code"
 
-assert(x[2] == 2)	-- auto reload
+local result = {}
+
+-- pairs trigger auto reload
+for k,v in pairs(x) do
+	result[k] = v
+end
+
+assert(result[1] == 1)
+assert(result[2] == 2)
+assert(result[3] == 3)
