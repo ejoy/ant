@@ -196,8 +196,17 @@ function resource.reload(filename, data)
 	load_resource(robj, filename, data)
 end
 
-function resource.proxy(filename, path)
-	path = path or ""
+local function split_path(fullpath)
+	local filename, path = fullpath:match "(.*):(.*)$"
+	if filename == nil then
+		filename = fullpath
+		path = ""
+	end
+	return filename, path
+end
+
+function resource.proxy(fullpath)
+	local filename, path = split_path(fullpath)
 	local robj = get_file_object(filename)
 	local proxy = robj.proxy[path]
 	if proxy then
@@ -228,27 +237,83 @@ function resource.proxy(filename, path)
 	return proxy
 end
 
--- reture "runtime" / "data" / "ref" / "invalid"
+local MULTIPLE = {}
+
+local multiple_mt = {
+	__index = function(self, key) return self._data[key] end,
+	__newindex = not_in_memory,
+	__pairs = function(self) return pairs(self._data) end,
+	__tostring = function(self) return "[multiple proxy]" end,
+}
+
+function resource.multiple_proxy(paths)
+	assert(paths[1])
+	local mproxy = { _path = MULTIPLE, _data = resource.proxy(paths[1]) }
+	for i = 2, #paths do
+		mproxy[i-1] = resource.proxy(paths[i])
+	end
+
+	return setmetatable( mproxy , multiple_mt )
+end
+
+local function ipairs_multiple_proxy(proxy, index)
+	if index == 0 then
+		return 1, proxy._data
+	elseif index <= #proxy then
+		return index+1, proxy[index]
+	end
+end
+
+local function ipairs_single_proxy(proxy, index)
+	if index == 0 then
+		return 1, proxy
+	end
+end
+
+function resource.ipairs(proxy)
+	if proxy._path == MULTIPLE then
+		return ipairs_multiple_proxy, proxy, 0
+	else
+		return ipairs_single_proxy, proxy, 0
+	end
+end
+
+-- reture "runtime" / "data" / "ref" / "invalid" / "multiple"
 -- result : { filenames, ... }
 function resource.status(proxy, result)
-	if not proxy._path then
+	local path = proxy._path
+	if not path then
 		return "runtime"
 	end
 	local data = proxy._data
-	if data then
-		return "data"
-	end
 	if data == nil then
 		return "invalid"
 	end
+	if data and path ~= MULTIPLE then
+		return "data"
+	end
 	if result then
-		local filename = getmetatable(proxy).filename
-		if not result[filename] then
-			result[filename] = true
-			result[#result+1] = filename
+		local function add_result(p)
+			local filename = getmetatable(p).filename
+			if not result[filename] then
+				result[filename] = true
+				result[#result+1] = filename
+			end
+		end
+		if path == MULTIPLE then
+			add_result(proxy._data)
+			for _, p in ipairs(proxy) do
+				add_result(p)
+			end
+		else
+			add_result(proxy)
 		end
 	end
-	return "ref"
+	if path == MULTIPLE then
+		return "multiple"
+	else
+		return "ref"
+	end
 end
 
 -- returns a touched function if enable is true, this function would returns true if the filename is used
@@ -306,7 +371,7 @@ function resource.clone(obj)
 		path = path .. "."
 		for k,v in pairs(obj) do
 			if type(v) == "table" then
-				clone[k] = resource.proxy(filename, path .. k)
+				clone[k] = resource.proxy(filename .. ":" .. path .. k)
 			else
 				clone[k] = v
 			end

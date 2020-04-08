@@ -39,7 +39,7 @@ assert(proxy.a == 1)
 assert(proxy.b == 2)
 assert(proxy.c == 3)
 
-local a = resource.proxy("a.code", "a")
+local a = resource.proxy("a.code:a")
 
 make_resource("a.code", function()
 	return {
@@ -49,6 +49,8 @@ make_resource("a.code", function()
 			{ "hello" },
 			{ "world" },
 		},
+		a = { x = 1 },
+		b = { y = 2 },
 	}
 end)
 reload_code "a.code"	-- reload
@@ -67,17 +69,17 @@ assert(touched() == true)
 
 resource.monitor("a.code", false)	-- turn off monitor
 
-local x = resource.proxy("a.code", "x")
+local x = resource.proxy("a.code:x")
 
 assert(x[2] == 2)
 assert(x[3] == 3)
 
-local y_a = resource.proxy("a.code", "y.a")
+local y_a = resource.proxy("a.code:y.a")
 assert(y_a.b[1] == "hello")
 
-local z = resource.proxy("a.code", "z")
+local z = resource.proxy("a.code:z")
 
-local z_1 = resource.proxy("a.code", "z.1")
+local z_1 = resource.proxy("a.code:z.1")
 assert(z_1[1] == "hello")
 
 resource.unload "a.code"
@@ -112,3 +114,21 @@ zclone[3] = 3
 assert(zclone[1] == 1)
 assert(zclone[2][1] == "world")
 assert(zclone[3] == 3)
+
+local mproxy = resource.multiple_proxy {
+	"a.code:a",
+	"a.code:b",
+}
+
+assert(resource.status(mproxy) == "multiple")
+assert(mproxy.x == 1)	-- a.x
+assert(mproxy[1].y == 2)	-- b.y
+
+local result = {}
+
+for idx , p in resource.ipairs(mproxy) do
+	result[idx] = p
+end
+
+assert(tostring(result[1]) == "a.code:a")
+assert(tostring(result[2]) == "a.code:b")
