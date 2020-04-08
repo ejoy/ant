@@ -1,4 +1,4 @@
-local resource = import_package "ant.resource"
+local assetmgr = import_package "ant.asset"
 
 local function sortpairs(t)
     local sort = {}
@@ -27,18 +27,6 @@ local poppath = setmetatable({}, {__close=function() path[#path] = nil end})
 local function pushpath(v)
     path[#path+1] = v
     return poppath
-end
-
-local function create_proxy(filename)
-    resource.load(filename, nil, true)
-    return resource.proxy(filename)
-end
-
-local function create_multiple_proxy(filelist)
-    for _, filename in ipairs(filelist) do
-        resource.load(filename, nil, true)
-    end
-    return resource.multiple_proxy(filelist)
 end
 
 local function foreach_init_2(c, args)
@@ -91,12 +79,12 @@ function foreach_init_1(c, args)
     if c.resource then
         if c.multiple then
             if type(args) ~= "table" then
-                ret = create_multiple_proxy({args})
+                ret = assetmgr.load_multiple({args}, true)
             else
-                ret = create_multiple_proxy(args)
+                ret = assetmgr.load_multiple(args, true)
             end
         else
-            ret = create_proxy(args)
+            ret = assetmgr.load(args, true)
         end
     elseif c.type then
         ret = foreach_init_2(c, args)

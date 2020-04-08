@@ -2,36 +2,11 @@ local fs = require "filesystem"
 local datalist = require "datalist"
 local resource = import_package "ant.resource"
 
-local support_types = {
-	mesh      = true,
-	state     = true,
-	material  = true,
-	texture   = true,
-	hierarchy = true,
-	ozz       = true,
-	terrain   = true,
-	fx        = true,
-	pbrm      = true,
-}
-
 local resources = {}
 local accessors = {}
 
 local assetmgr = {}
 assetmgr.__index = assetmgr
-
-local function get_accessor(name)
-	local accessor = accessors[name]
-	if accessor == nil then
-		if support_types[name] then
-			accessor 		= require ("ext_" .. name)
-			accessors[name] = accessor
-		else
-			error("Unsupport asset type: " .. name)
-		end
-	end
-	return accessor
-end
 
 local function res_key(filename)
 	-- TODO, should use vfs to get the resource file unique key(resource hash), for cache same content file	
@@ -44,14 +19,6 @@ end
 
 local function is_file(filename)
 	return filename:string():sub(1, 2) ~= '//'
-end
-
-function assetmgr.get_loader(name)
-	return get_accessor(name).loader
-end
-
-function assetmgr.get_unloader(name)
-	return get_accessor(name).unloader
 end
 
 function assetmgr.load_depiction(filename)
@@ -103,9 +70,27 @@ local generate_resname = generate_resname_operation()
 
 local reloaders = {}
 
+local support_types = {
+	hierarchy = true,
+	terrain   = true,
+}
+
+local function get_loader(name)
+	local accessor = accessors[name]
+	if accessor == nil then
+		if support_types[name] then
+			accessor 		= require ("ext_" .. name)
+			accessors[name] = accessor
+		else
+			error("Unsupport asset type: " .. name)
+		end
+	end
+	return accessor.loader
+end
+
 local function load_resource(filename)
 	if is_file(filename) then
-		local loader = assetmgr.get_loader(module_name(filename))
+		local loader = get_loader(module_name(filename))
 		return loader(filename)
 	end
 
@@ -123,10 +108,6 @@ end
 
 function assetmgr.resource_profiles()
 	return resource_profiles
-end
-
-function assetmgr.each_resource()
-	return pairs(resources)
 end
 
 local function default_profile(sizebytes)
@@ -179,30 +160,59 @@ function assetmgr.register_resource(reffile, content, reloader)
 	return reffile
 end
 
-function assetmgr.get_all_resources()
-	return resources
-end
-
-function assetmgr.save(tree, filename)
-	local seri = import_package "ant.serialize"
-	seri.save(filename, tree)
-end
-
 function assetmgr.has_resource(filename)
 	local key = res_key(filename)
 	return resources[key] ~= nil
 end
 
 local support_ext = {
-	mesh     = true,
-	ozz      = true,
-	material = true,
-	pbrm     = true,
+	fx        = true,
+	hierarchy = true,
+	material  = true,
+	mesh      = true,
+	ozz       = true,
+	pbrm      = true,
+	state     = true,
+	terrain   = true,
+	texture   = true,
 }
+
+local function get_accessor(name)
+	local accessor = accessors[name]
+	if accessor == nil then
+		if support_ext[name] then
+			accessor 		= require ("ext_" .. name)
+			accessors[name] = accessor
+		else
+			error("Unsupport asset type: " .. name)
+		end
+	end
+	return accessor
+end
+
+function assetmgr.get_loader(name)
+	return get_accessor(name).loader
+end
+
+function assetmgr.get_unloader(name)
+	return get_accessor(name).unloader
+end
+
+function assetmgr.load(filename, lazyload)
+    resource.load(filename, nil, lazyload)
+    return resource.proxy(filename)
+end
+
+function assetmgr.load_multiple(filelist, lazyload)
+    for _, filename in ipairs(filelist) do
+        resource.load(filename, nil, lazyload)
+    end
+    return resource.multiple_proxy(filelist)
+end
 
 function assetmgr.init()
 	for name in pairs(support_ext) do
-		local accessor = get_accessor(name)
+		local accessor = require ("ext_" .. name)
 		resource.register_ext(name, accessor.loader, accessor.unloader)
 	end
 end

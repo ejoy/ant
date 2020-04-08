@@ -4,23 +4,14 @@ local bgfx		= require "bgfx"
 
 local function load_state(state)
 	if type(state) == "string" then
-		local filepath = fs.path(state)
-		local s = assetmgr.get_resource(filepath)
-		if s.ref_path then
-			assert(s.ref_path == filepath)
-		else
-			s.ref_path = filepath
-		end
-		
-		return s
+		return assetmgr.load(state)
 	end
-
 	assert(type(state) == "table")
 	return state
 end
 
 local function load_fx(fx)
-	return assetmgr.get_resource(fs.path(fx))
+	return assetmgr.load(fx)
 end
 
 local function load_properties(properties)
@@ -28,7 +19,7 @@ local function load_properties(properties)
 		local textures = properties.textures
 		if textures then
 			for _, tex in pairs(textures) do
-				tex.ref_path = fs.path(tex.ref_path)
+				tex.texture = assetmgr.load(tex.texture)
 			end
 		end
 	end

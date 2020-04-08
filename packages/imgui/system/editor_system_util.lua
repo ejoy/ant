@@ -85,7 +85,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
                 parent = parent,
             },
             rendermesh = {},
-            mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/meshes/ring.mesh"},
+            mesh = "/pkg/ant.resources/depiction/meshes/ring.mesh",
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_front_singlecolor.material",
                 properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}},
@@ -224,7 +224,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
                 parent = parent,
             },
             rendermesh = {},
-            mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/meshes/cone.mesh"},
+            mesh = "/pkg/ant.resources/depiction/meshes/cone.mesh",
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
                 properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}}
@@ -261,7 +261,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
                 parent = parent,
             },
             rendermesh = {},
-            mesh = {ref_path = fs.path "/pkg/ant.resources/depiction/meshes/cube.mesh"},
+            mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
             material = {
                 ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
                 properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}},

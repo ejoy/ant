@@ -126,7 +126,6 @@ local function create_scene_node_test()
                     t = {-2, 0, 0, 1},
                 }
             },
-            --hierarchy = {ref_path = hie_refpath,},
             hierarchy = {},
             name = 'hie_level2_1',
             serialize = seriazlizeutil.create(),
@@ -341,7 +340,7 @@ local function create_scene_node_test()
                 ref_path = singlecolor_material,
                 properties = {uniforms = {
                         u_color = {type = "color", name = "Color", value = {1, 0, 0, 0}},
-                    }},
+                }},
                 create_material_item(singlecolor_material, {0, 1, 0, 0}),
                 create_material_item(singlecolor_material, {1, 0, 1, 0}),
                 create_material_item(singlecolor_material, {1, 1, 0, 0}),
@@ -558,12 +557,10 @@ local test_queue = {
                     parent=eid,
                 },
                 rendermesh = {},
-                material = {
-                    ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                    properties = {
-                        uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
-                    }
-                },
+                material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
+                    --properties = {
+                    --    uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
+                    --}
                 mesh = '/pkg/ant.resources/depiction/meshes/cone.mesh',
                 can_render = true,
                 can_select = true,
@@ -585,12 +582,10 @@ local test_queue = {
                     srt = {t = {1, 2, 3, 1}},
                 },
                 rendermesh = {},
-                material = {
-                    ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                    properties = {
-                        uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
-                    }
-                },
+                material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
+                    --properties = {
+                    --    uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
+                    --}
                 mesh = '/pkg/ant.resources/depiction/meshes/cone.mesh',
                 can_render = true,
                 can_select = true,

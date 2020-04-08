@@ -10,27 +10,27 @@ data:
   animation:
     anilist:
       idle:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
         scale: 1
         looptimes: 0
       jumping:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
         scale: 1
         looptimes: 0
       punching:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
         scale: 1
         looptimes: 0
       running:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
         scale: 1
         looptimes: 0
       running_fast:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
         scale: 1
         looptimes: 0
       walking:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
         scale: 1
         looptimes: 0
   can_render: true

@@ -45,9 +45,8 @@ local function update_properties(material, properties, render_properties)
 			if textures then
 				local tex = textures[name]
 				if tex then
-					if tex.ref_path then
-						local texkey = assert(tex.ref_path)
-						tex.handle = assetmgr.get_resource(texkey).handle	--set texture handle every time
+					if tex.texture then
+						tex.handle = tex.texture.handle	--set texture handle every time
 					else
 						assert(tex.handle)
 					end
@@ -93,7 +92,7 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
     bgfx.set_transform(mat)
 
 	local material = primgroup.material
-	bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
+	bgfx.set_state(bgfx.make_state(material.state._data and material.state._data or material.state)) -- always convert to state str
 	update_properties(material, primgroup.properties, render_properties)
 
 	local prog = material.fx.shader.prog

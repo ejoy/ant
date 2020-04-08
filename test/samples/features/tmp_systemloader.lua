@@ -89,18 +89,16 @@ local function simple_box()
             transform = {srt={}},
             rendermesh = {},
             can_render = true,
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/simpletri.material",
-                properties = {
-                    uniforms = {
-                        u_color = {
-                            type = "color",
-                            value = {1, 0, 0, 1},
-                            name = "color"
-                        }
-                    }
-                }
-            },
+            material = "/pkg/ant.resources/depiction/materials/simpletri.material",
+                --properties = {
+                --    uniforms = {
+                --        u_color = {
+                --            type = "color",
+                --            value = {1, 0, 0, 1},
+                --            name = "color"
+                --        }
+                --    }
+                --}
             name = "simplebox"
         }
     }
@@ -135,9 +133,7 @@ local function target_lock_test()
             },
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/sphere.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/bunny.material",
-            },
+            material = "/pkg/ant.resources/depiction/materials/bunny.material",
             serialize = serialize.create(),
         }
     }
@@ -156,14 +152,12 @@ local function target_lock_test()
             transform = {srt={t={0, 0, -6}}},
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                properties = {
-                    uniforms = {
-                        u_color = {type="v4", name="vv", value={1, 0, 0, 1}}
-                    }
-                }
-            },
+            material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
+                --properties = {
+                --    uniforms = {
+                --        u_color = {type="v4", name="vv", value={1, 0, 0, 1}}
+                --    }
+                --}
             serialize = serialize.create(),
             lock_target = {
                 type = "ignore_scale",

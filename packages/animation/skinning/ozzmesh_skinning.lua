@@ -34,7 +34,7 @@ ozzmesh_skinning_transform.input 	"rendermesh"
 ozzmesh_skinning_transform.output 	"skinning"
 
 local function gen_mesh_assetinfo(ozzmesh)
-	local meshhandle = assetmgr.get_resource(ozzmesh.ref_path).handle
+	local meshhandle = ozzmesh.handle
 
 	local layouts = meshhandle:layout()
 	local num_vertices = meshhandle:num_vertices()
@@ -127,13 +127,13 @@ ozzmesh_loader.output "rendermesh"
 function ozzmesh_loader.process(e)
 	local rm 		= e.rendermesh
 	local mesh 		= e.mesh
-	local reskey 	= fs.path("//res.mesh/" .. mesh.ref_path:stem():string() .. ".mesh")
+	local reskey 	= fs.path("//res.mesh/" .. tostring(mesh) .. ".mesh")
 	rm.reskey 		= assetmgr.register_resource(reskey, gen_mesh_assetinfo(mesh))
 end
 
 function ozzmesh_skinning_transform.process(e)
 	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
-	local meshres 	= assetmgr.get_resource(e.mesh.ref_path).handle
+	local meshres 	= e.mesh.handle
 
 	local scene = meshscene.scenes[meshscene.default_scene]
 	local _, meshnode = next(scene)

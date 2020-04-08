@@ -3,32 +3,32 @@ properties:
   textures:
     s_basecolor:
       name: s_basecolor
-      ref_path: /pkg/ant.test.features/assets/basecolor.texture
+      texture: /pkg/ant.test.features/assets/basecolor.texture
       stage: 0
       type: texture
     s_detailcolor:
       name: s_detailcolor
-      ref_path: /pkg/ant.test.features/assets/detailcolor.texture
+      texture: /pkg/ant.test.features/assets/detailcolor.texture
       stage: 4
       type: texture
     s_detailnormal:
       name: s_detailnormal
-      ref_path: /pkg/ant.test.features/assets/detailnormal.texture
+      texture: /pkg/ant.test.features/assets/detailnormal.texture
       stage: 5
       type: texture
     s_metallic:
       name: s_metallic
-      ref_path: /pkg/ant.test.features/assets/metallic_roughness.texture
+      texture: /pkg/ant.test.features/assets/metallic_roughness.texture
       stage: 2
       type: texture
     s_normal:
       name: s_normal
-      ref_path: /pkg/ant.test.features/assets/normal.texture
+      texture: /pkg/ant.test.features/assets/normal.texture
       stage: 1
       type: texture
     s_texCube:
       name: s_texCube
-      ref_path: /pkg/ant.test.features/assets/irradiance.texture
+      texture: /pkg/ant.test.features/assets/irradiance.texture
       stage: 3
       type: texture
   uniforms:

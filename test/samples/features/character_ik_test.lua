@@ -15,8 +15,6 @@ local iktest_sys = ecs.system "character_ik_test"
 iktest_sys.require_policy "ant.character|foot_ik_raycast"
 
 local function foot_ik_test()
-    local tmp_ozzrespath = fs.path '/pkg/ant.test.features'
-    local tmp_assetpath = tmp_ozzrespath / 'assets' / 'tmp'
 
     local assetpath = fs.path '/pkg/ant.resources.binary/meshes/ozz'
     return world:create_entity {
@@ -36,19 +34,13 @@ local function foot_ik_test()
         data = {
             transform = {srt = {t= {-2.5, 0, -6, 1}}},
             rendermesh = {},
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
-            },
-            mesh = {
-                ref_path = assetpath / 'mesh.ozz'
-            },
-            skeleton = {
-                ref_path = assetpath / 'human_skeleton.ozz'
-            },
+            material = "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
+            mesh = '/pkg/ant.resources.binary/meshes/ozz/mesh.ozz',
+            skeleton = '/pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz',
             animation = {
                 anilist = {
                     idle = {
-                        ref_path = tmp_assetpath / 'animation.ozz',
+                        resource = '/pkg/ant.test.features/assets/tmp/animation.ozz',
                         scale = 1,
                         looptimes = 0,
                     },

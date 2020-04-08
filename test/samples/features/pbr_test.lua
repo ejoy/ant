@@ -99,9 +99,7 @@ function pbrtest:init()
             transform = {srt={t={3, 2, 0, 1}}},
             rendermesh = {},
             mesh = "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
-            },
+            material = "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
             can_render = true,
             can_cast = true,
             name = "Damaged Helmet"

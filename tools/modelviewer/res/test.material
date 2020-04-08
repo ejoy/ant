@@ -3,7 +3,7 @@ properties:
   textures:
     s_basecolor:
       name: "base color"
-      ref_path: /pkg/ant.modelviewer/res/steering.texture
+      texture: /pkg/ant.modelviewer/res/steering.texture
       stage: 0
       type: texture
 state: /pkg/ant.resources/depiction/materials/states/default.state

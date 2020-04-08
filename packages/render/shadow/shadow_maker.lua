@@ -227,7 +227,7 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 			"ant.render|name",
 		},
 		data = {
-			material = {ref_path = linear_shadow and linear_cast_material or cast_material},
+			material = linear_shadow and linear_cast_material or cast_material,
 			csm = {
 				split_ratios= {0, 0},
 				index 		= index,
