@@ -75,6 +75,8 @@ assert(x[3] == 3)
 local y_a = resource.proxy("a.code", "y.a")
 assert(y_a.b[1] == "hello")
 
+local z = resource.proxy("a.code", "z")
+
 local z_1 = resource.proxy("a.code", "z.1")
 assert(z_1[1] == "hello")
 
@@ -102,3 +104,11 @@ end
 assert(result[1] == 1)
 assert(result[2] == 2)
 assert(result[3] == 3)
+
+local zclone = resource.clone(z)
+zclone[1] = 1
+zclone[3] = 3
+
+assert(zclone[1] == 1)
+assert(zclone[2][1] == "world")
+assert(zclone[3] == 3)

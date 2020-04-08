@@ -27,11 +27,12 @@ local function data_pairs(self)
 	return pairs(self._data)
 end
 
-local function data_mt(data, tostring_func)
+local function data_mt(data, robj)
 	return {
+		filename = robj.filename,
 		__index = data,
 		__newindex = readonly,
-		__tostring = tostring_func,
+		__tostring = robj.meta.__tostring,
 		__pairs = data_pairs,
 	}
 end
@@ -70,7 +71,7 @@ local function reslove_invalid(robj)
 				format_error("Duplicate content %s", proxy)
 			end
 			rawset(proxy, "_data", data)	-- _data is nil, so use rawset
-			robj.proxy[path] = setmetatable(proxy, data_mt(data, robj.meta.__tostring))
+			robj.proxy[path] = setmetatable(proxy, data_mt(data, robj))
 		end
 	end
 end
@@ -78,13 +79,12 @@ end
 local function reslove_proxy(robj)
 	local object = robj.object
 	local proxy_set = robj.proxy
-	local tostring_func = robj.meta.__tostring
 
 	for path, proxy in pairs(proxy_set) do
 		local data = object[path]
 		if data then
 			proxy._data = data
-			setmetatable(proxy, data_mt(data, tostring_func))
+			setmetatable(proxy, data_mt(data, robj))
 		else
 			-- can't reslove path
 			assert(robj.invalid[path] == nil)
@@ -207,7 +207,7 @@ function resource.proxy(filename, path)
 		-- in memory
 		local data = robj.object[path]
 		if data then
-			proxy = setmetatable( { _path = path, _data = data }, data_mt(data, robj.meta.__tostring) )
+			proxy = setmetatable( { _path = path, _data = data }, data_mt(data, robj) )
 			robj.proxy[path] = proxy
 		elseif robj.invalid[path] then
 			return robj.invalid[path]
@@ -283,6 +283,36 @@ function resource.monitor(filename, enable)
 			meta.__pairs = data_pairs
 		end
 	end
+end
+
+function resource.clone(obj)
+	local path = obj._path
+	if not path then
+		-- it's a normal table
+		return obj
+	end
+	local clone = {}
+	local filename = getmetatable(obj).filename
+	if path == "" then
+		-- root
+		for k,v in pairs(obj) do
+			if type(v) == "table" then
+				clone[k] = resource.proxy(filename, k)
+			else
+				clone[k] = v
+			end
+		end
+	else
+		path = path .. "."
+		for k,v in pairs(obj) do
+			if type(v) == "table" then
+				clone[k] = resource.proxy(filename, path .. k)
+			else
+				clone[k] = v
+			end
+		end
+	end
+	return clone
 end
 
 return resource
