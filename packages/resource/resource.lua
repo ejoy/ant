@@ -386,7 +386,7 @@ function resource.clone(obj)
 	local filename = getmetatable(obj).filename
 	local prefix
 	if path == "" then
-		prefix = path
+		prefix = filename .. ":"
 	else
 		prefix = filename .. ":" .. path .. "."
 	end
