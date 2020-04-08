@@ -3,8 +3,6 @@ local gltfutil = gltf.util
 local glbloader = gltf.glb
 
 local declmgr = import_package "ant.render".declmgr
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
 local math3d = require "math3d"
 
 local function get_desc(name, accessor)
@@ -151,7 +149,7 @@ local function create_prim_bounding(meshscene, prim)
 		assert(#posacc.min == 3)
 		assert(#posacc.max == 3)
 		local bounding = {
-			aabb = math3d.ref(math3d.aabb(assert(posacc.min), assert(posacc.max))),
+			aabb = math3d.aabb(posacc.min, posacc.max)
 		}
 		prim.bounding = bounding
 		return bounding
@@ -194,12 +192,21 @@ local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
 	end
 end
 
-local function init_scene(gltfscene, bindata, config)
-	local layout 		= config.config.layout
+local function to_bounding(meshaabb)
+	return {
+		aabb = {
+			min=math3d.tovalue(math3d.index(meshaabb, 1)),
+			max=math3d.tovalue(math3d.index(meshaabb, 2))
+		}
+	}
+end
+
+return function (gltfscene, bindata, config)
+	local layout 		= config.layout
 	for i=1, #layout do
 		layout[i] = declmgr.correct_layout(layout[i])
 	end
-	local layout_types 	= config.config.layout_types
+	local layout_types 	= config.layout_types
 	local scene_scalemat = gltfscene.scenescale and math3d.ref(math3d.matrix{s=gltfscene.scenescale}) or nil
 
 	local bvcaches = {}
@@ -216,7 +223,7 @@ local function init_scene(gltfscene, bindata, config)
 			if meshidx then
 				local meshnode = {
 					nodename = node.name,
-					transform = nodetrans and math3d.ref(nodetrans) or nil,
+					transform = nodetrans and math3d.tovalue(nodetrans) or nil,
 					inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
 				}
 				local mesh = gltfscene.meshes[meshidx+1]
@@ -269,7 +276,7 @@ local function init_scene(gltfscene, bindata, config)
 
 					local bb = create_prim_bounding(gltfscene, prim)
 					if bb then
-						group.bounding = bb
+						group.bounding = to_bounding(bb.aabb)
 						meshaabb.m = math3d.aabb_merge(meshaabb, bb.aabb)
 					end
 
@@ -277,7 +284,7 @@ local function init_scene(gltfscene, bindata, config)
 				end
 
 				if math3d.aabb_isvalid(meshaabb) then
-					meshnode.bounding = {aabb=meshaabb}
+					meshnode.bounding = to_bounding(meshaabb)
 				end
 
 				scenegroups[#scenegroups+1] = meshnode
@@ -305,26 +312,4 @@ local function init_scene(gltfscene, bindata, config)
 	end
 
 	return meshscene
-end
-
-local function file_wrapper(meshcontent)
-	local startiter = 1
-	local count = #meshcontent
-	return {
-		read = function (_, numbytes)
-			local enditer = startiter - 1 + numbytes
-			if enditer <= count then
-				local c = meshcontent:sub(startiter, enditer)
-				startiter = startiter + numbytes
-				return c
-			end
-		end,
-		close = function ()
-		end,
-	}
-end
-
-return function (meshcontent, config)
-	local glbdata = glbloader.decode_from_filehandle(file_wrapper(meshcontent))
-	return init_scene(glbdata.info, glbdata.bin, config), #glbdata.bin
 end

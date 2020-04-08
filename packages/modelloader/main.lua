@@ -1,3 +1,0 @@
-return {
-	loader = require "modelloader",
-}

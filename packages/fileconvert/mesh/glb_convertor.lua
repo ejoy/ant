@@ -3,6 +3,12 @@ local glbloader = glTF.glb
 
 local gltf_converter = require "meshconverter.gltf"
 local filtermesh = require "mesh.filter"
+local meshbinary = require "mesh.meshbinary"
+
+local utility = import_package "ant.utility.local"
+local fs_util = utility.fs_util
+
+local fs = require "filesystem"
 
 local accessor_types = {
 	SCALAR = 0,
@@ -445,5 +451,8 @@ return function (srcname, dstname, cfg)
 		convert_coord_system(scene, meshcfg)
 	end
 
-	glbloader.encode(dstname, {version=glbdata.version, info=scene, bin=new_bindata})
+	--glbloader.encode(dstname, {version=glbdata.version, info=scene, bin=new_bindata})
+	local thread = require "thread"
+	local ss = thread.pack(meshbinary(scene, new_bindata, cfg))
+	fs_util.write_file(fs.path(dstname), ss)
 end

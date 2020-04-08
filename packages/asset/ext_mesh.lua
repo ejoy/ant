@@ -1,10 +1,11 @@
 local assetutil = import_package "ant.fileconvert".util
-local mesh_loader 	= import_package "ant.modelloader".loader
+local thread = require "thread"
+
 
 return { 
 	loader = function (filename)
-		local meshcontent, binary = assetutil.parse_embed_file(filename)
-		return mesh_loader.load(assert(binary), meshcontent)
+		local _, binary = assetutil.parse_embed_file(filename)
+		return thread.unpack(binary)
 	end,
 	unloader = function(res)
 	end,
