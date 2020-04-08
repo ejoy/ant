@@ -34,6 +34,13 @@ local function create_proxy(filename)
     return resource.proxy(filename)
 end
 
+local function create_multiple_proxy(filelist)
+    for _, filename in ipairs(filelist) do
+        resource.load(filename, nil, true)
+    end
+    return resource.multiple_proxy(filelist)
+end
+
 local function foreach_init_2(c, args)
     if c.type == 'primtype' then
         assert(args ~= nil)
@@ -82,7 +89,15 @@ function foreach_init_1(c, args)
 
     local ret
     if c.resource then
-        ret = create_proxy(args)
+        if c.multiple then
+            if type(args) ~= "table" then
+                ret = create_multiple_proxy({args})
+            else
+                ret = create_multiple_proxy(args)
+            end
+        else
+            ret = create_proxy(args)
+        end
     elseif c.type then
         ret = foreach_init_2(c, args)
     else
@@ -103,13 +118,38 @@ function foreach_init_1(c, args)
     return ret
 end
 
+local function foreach_init(c, args)
+    local ti = assert(typeinfo[c], "unknown type:" .. c)
+    if ti.type == 'tag' then
+        assert(args == true or args == nil)
+        return args
+    end
+    if ti.multiple then
+        if ti.resource then
+            return foreach_init_1(ti, args)
+        elseif not ti.type then
+            local res = foreach_init_1(ti, args)
+            assert(res ~= nil)
+            for i = 1, #args do
+                local r = foreach_init_1(ti, args)
+                assert(r ~= nil)
+                res[i] = r
+            end
+            return res
+        end
+    end
+    local res = foreach_init_1(ti, args)
+    assert(res ~= nil)
+    return res
+end
+
 local function init(w_, c, args, disableSerialize_)
     w = w_
     disableSerialize = disableSerialize_
     typeinfo = w._class.component
     path = {}
     local _ <close> = pushpath(c.name)
-    return foreach_init_1(c, args)
+    return foreach_init(c, args)
 end
 
 local foreach_delete_1

@@ -13,31 +13,7 @@ local world = {}
 world.__index = world
 
 function world:create_component(c, args, disableSerialize)
-	local ti = assert(self._class.component[c], c)
-	if ti.type == 'tag' then
-		assert(args == true or args == nil)
-		return args
-	end
-	if ti.multiple then
-		if ti.resource then
-			if type(args) ~= "table" then
-				return component_init(self, ti, args, disableSerialize)
-			end
-			return component_init(self, ti, args[1], disableSerialize)
-		elseif  not ti.type then
-			local res = component_init(self, ti, args, disableSerialize)
-			assert(res ~= nil)
-			for i = 1, #args do
-				local r = component_init(self, ti, args[i], disableSerialize)
-				assert(r ~= nil)
-				res[i] = r
-			end
-			return res
-		end
-	end
-	local res = component_init(self, ti, args, disableSerialize)
-	assert(res ~= nil)
-	return res
+	return component_init(self, c, args, disableSerialize)
 end
 
 local function register_component(w, eid, c)
