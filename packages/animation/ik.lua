@@ -49,7 +49,7 @@ local function check_joints_in_hierarchy_chain(ske, joint_indices)
 end
 
 function build_ik_tranform.process(e)
-	local ske = assetmgr.get_resource(e.skeleton.ref_path).handle
+	local ske = e.skeleton.handle
 	local ik = e.ik
 
 	for _, ikdata in pairs(ik.jobs) do
@@ -95,7 +95,7 @@ end
 
 local ik_i = ecs.interface "ik"
 function ik_i.setup(e)
-	local skehandle = assetmgr.get_resource(e.skeleton.ref_path).handle
+	local skehandle = e.skeleton.handle
 	local pr = e.pose_result.result
 	pr:setup(skehandle)
 end

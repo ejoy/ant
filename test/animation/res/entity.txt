@@ -43,8 +43,7 @@ data:
   rendermesh: {}
   serialize: 5e1c39ad369fa96c5bd44fc5
   pose_result: {}
-  skeleton:
-    ref_path: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
+  skeleton: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
   skinning: {}
   animation_birth: idle
   transform:

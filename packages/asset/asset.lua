@@ -7,7 +7,7 @@ local support_types = {
 	state     = true,
 	material  = true,
 	texture   = true,
-	hierarchy = true,--scene hierarchy info, using ozz-animation runtime struct
+	hierarchy = true,
 	ozz       = true,
 	terrain   = true,
 	fx        = true,
@@ -192,11 +192,12 @@ end
 
 local support_ext = {
 	mesh = true,
+	ozz = true,
 }
 
 function assetmgr.init()
 	for name in pairs(support_ext) do
-		local accessor = require("ext_" .. name)
+		local accessor = get_accessor(name)
 		resource.register_ext(name, accessor.loader, accessor.unloader)
 	end
 end

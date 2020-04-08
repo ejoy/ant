@@ -38,6 +38,9 @@ end
 
 return {
 	loader = function(filename)
+		if type(filename) == "string" then
+			filename = fs.path(filename)
+		end
 		local material = assetmgr.load_depiction(filename)
 		return {
 			fx			= load_fx(material.fx),
