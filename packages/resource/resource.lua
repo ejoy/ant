@@ -384,23 +384,17 @@ function resource.clone(obj)
 	end
 	local clone = {}
 	local filename = getmetatable(obj).filename
+	local prefix
 	if path == "" then
-		-- root
-		for k,v in pairs(obj) do
-			if type(v) == "table" then
-				clone[k] = resource.proxy(filename, k)
-			else
-				clone[k] = v
-			end
-		end
+		prefix = path
 	else
-		path = path .. "."
-		for k,v in pairs(obj) do
-			if type(v) == "table" then
-				clone[k] = resource.proxy(filename .. ":" .. path .. k)
-			else
-				clone[k] = v
-			end
+		prefix = filename .. ":" .. path .. "."
+	end
+	for k,v in pairs(obj) do
+		if type(v) == "table" and v._path then
+			clone[k] = resource.proxy(prefix .. k)
+		else
+			clone[k] = v
 		end
 	end
 	return clone
