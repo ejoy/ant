@@ -1,3 +1,5 @@
+local resource = import_package "ant.resource"
+
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -27,15 +29,9 @@ local function pushpath(v)
     return poppath
 end
 
-local function create_proxy(file)
-    local mt = {__file = file}
-    function mt:__index(k)
-        local assetmgr = import_package "ant.asset"
-        local t = assetmgr.get_resource(file)
-        mt.__index = t
-        return t[k]
-    end
-    return setmetatable({}, mt)
+local function create_proxy(filename)
+    resource.load(filename, nil, true)
+    return resource.proxy(filename)
 end
 
 local function foreach_init_2(c, args)

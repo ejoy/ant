@@ -112,7 +112,6 @@ local function get_file_object(filename)
 			},
 			proxy = {},
 			invalid = {},
-			memory = nil,
 			object = nil,
 		}
 	end
@@ -120,13 +119,12 @@ local function get_file_object(filename)
 end
 
 local function load_resource(robj, filename, data)
-	robj.memory = #data	-- estimate memory footprint
 	local ext = filename:match "[^.]*$"
 	local loader = LOADER[ext]
 	if not loader then
 		format_error("Unknown ext %s", ext)
 	end
-	local content = loader(data, filename)
+	local content = loader(filename, data)
 	robj.object = resolve_path(content)
 	reslove_invalid(robj)
 	reslove_proxy(robj)
@@ -251,18 +249,6 @@ function resource.status(proxy, result)
 		end
 	end
 	return "ref"
-end
-
-function resource.filelist()
-	local result = {}
-	for filename, robj in pairs(FILELIST) do
-		if robj.object == nil then
-			result[filename] = 0
-		else
-			result[filename] = robj.memory
-		end
-	end
-	return result
 end
 
 -- returns a touched function if enable is true, this function would returns true if the filename is used

@@ -1,5 +1,6 @@
 local fs = require "filesystem"
 local datalist = require "datalist"
+local resource = import_package "ant.resource"
 
 local support_types = {
 	mesh      = true,
@@ -187,6 +188,17 @@ end
 function assetmgr.has_resource(filename)
 	local key = res_key(filename)
 	return resources[key] ~= nil
+end
+
+local support_ext = {
+	mesh = true,
+}
+
+function assetmgr.init()
+	for name in pairs(support_ext) do
+		local accessor = require("ext_" .. name)
+		resource.register_ext(name, accessor.loader, accessor.unloader)
+	end
 end
 
 return assetmgr

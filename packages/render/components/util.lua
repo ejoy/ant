@@ -450,7 +450,7 @@ end
 
 function util.create_mesh(rendermesh, mesh)
 	check_rendermesh_lod(mesh)
-	local reskey = fs.path(getmetatable(mesh).__file:gsub("^/pkg", "//res.mesh/"))
+	local reskey = fs.path(tostring(mesh):gsub("^/pkg", "//res.mesh/"))
 	local meshscene = assetmgr.get_resource(reskey)
 	if meshscene == nil then
 		meshscene = util.create_mesh_buffers(mesh)
@@ -458,8 +458,8 @@ function util.create_mesh(rendermesh, mesh)
 			return util.create_mesh_buffers(mesh)
 		end)
 		-- just for debug
-		mesh.debug_meshscene_DOTNOT_DIRECTLY_USED 		= {meshscene, mesh}
-		rendermesh.debug_meshscene_DOTNOT_DIRECTLY_USED = mesh.debug_meshscene_DOTNOT_DIRECTLY_USED
+		--mesh.debug_meshscene_DOTNOT_DIRECTLY_USED 		= {meshscene, mesh}
+		--rendermesh.debug_meshscene_DOTNOT_DIRECTLY_USED = mesh.debug_meshscene_DOTNOT_DIRECTLY_USED
 	end
 
 	rendermesh.reskey = reskey

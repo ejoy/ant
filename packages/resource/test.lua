@@ -33,15 +33,7 @@ local result = {}
 resource.status(proxy, result)
 assert(result[1] == "a.code")
 
-local filelist = resource.filelist()
-
-assert(filelist["a.code"] == 0)
-
 reload_code "a.code"
-
-local filelist = resource.filelist()
-
-assert(filelist["a.code"] > 0)
 
 assert(proxy.a == 1)
 assert(proxy.b == 2)
