@@ -1,6 +1,6 @@
 local resource = {}
 
-local FILELIST = {}	-- filename -> { filename =, meta = , object =, proxy =, invalid = }
+local FILELIST = {}	-- filename -> { filename =, meta = , object =, proxy =, invalid = , source = }
 local LOADER = {}
 local UNLOADER = {}
 
@@ -131,8 +131,26 @@ local function load_resource(robj, filename, data)
 	reslove_proxy(robj)
 end
 
-function resource.load(filename, data)
+function resource.load(filename, data, lazyload)
 	local robj = get_file_object(filename)
+	if lazyload then
+		robj.source = data
+		-- auto loader
+		robj.meta.__index = function (self, key)
+			load_resource(robj, robj.filename, robj.source)
+			local data = self._data
+			if data == nil then
+				format_error("%s is invalid", self)
+			else
+				return data[key]
+			end
+		end
+		-- lazy load
+		return
+	else
+		robj.source = nil
+		robj.meta.__index = not_in_memory
+	end
 	if robj.object then
 		-- already in memory
 		return
@@ -167,6 +185,9 @@ function resource.reload(filename, data)
 	local robj = get_file_object(filename)
 	if robj.object then
 		resource.unload(filename)
+	end
+	if robj.source then
+		robj.source = data
 	end
 	load_resource(robj, filename, data)
 end

@@ -20,8 +20,8 @@ local function reload_code(name)
 	resource.reload(name, code[name])
 end
 
-local function load_code(name)
-	resource.load(name, code[name], false)
+local function load_code(name, lazyload)
+	resource.load(name, code[name], lazyload)
 end
 
 local proxy = resource.proxy "a.code"
@@ -94,6 +94,10 @@ assert(resource.status(x) == "ref")
 
 load_code "a.code"
 resource.unload "a.code"
-load_code "a.code"
+load_code ("a.code", true)	-- turn on autoload
 
 assert(x[1] == 1)
+
+resource.unload "a.code"
+
+assert(x[2] == 2)	-- auto reload
