@@ -13,27 +13,6 @@ function iobj.create(obj_accessor)
     return setmetatable(obj_accessor, iobj)
 end
 
-function iobj:target(eid, locktype, lock_eid, offset)
-    local ce = world[eid]
-    if ce.lock_target == nil then
-        error(string.format("%d already has 'lock_target'", eid))
-    end
-
-    if ce == nil then
-        error(string.format("invalid camera:%d", eid))
-    end
-
-    if world[lock_eid].transform == nil then
-        error(string.format("camera lock target entity must have transform component"));
-    end
-
-    ce["lock_target"] = world:create_component("lock_target", {
-        type    = locktype,
-        target  = lock_eid,
-        offset  = offset
-    })
-end
-
 function iobj:move(eid, delta_vec)
     local e = world[eid]
     local p = self:get_position(e)
