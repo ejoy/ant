@@ -22,10 +22,7 @@ local function is_file(filename)
 end
 
 function assetmgr.load_depiction(filename)
-	if type(filename) == "string" then
-		filename = fs.path(filename)
-	end
-	local f = assert(fs.open(filename, "r"))
+	local f = assert(fs.open(fs.path(filename), "r"))
 	local data = f:read "a"
 	f:close()
 	return datalist.parse(data)
@@ -198,14 +195,28 @@ function assetmgr.get_unloader(name)
 	return get_accessor(name).unloader
 end
 
-function assetmgr.load(filename, lazyload)
+local TMPFILE_INDEX = 0
+local function resource_load(filename, lazyload)
+	if filename:sub(1,1) ~= "/" then
+		TMPFILE_INDEX = TMPFILE_INDEX + 1
+		local serialize = import_package "ant.serialize"
+		local data = serialize.dl(filename)
+		local ext = filename:match("%.([^.\n]+)\n")
+		local filename = ("/tmp/%08d.%s"):format(TMPFILE_INDEX, ext)
+		resource.load(filename, data, lazyload)
+		return filename
+	end
     resource.load(filename, nil, lazyload)
-    return resource.proxy(filename)
+    return filename
+end
+
+function assetmgr.load(filename, lazyload)
+    return resource.proxy(resource_load(filename, lazyload))
 end
 
 function assetmgr.load_multiple(filelist, lazyload)
-    for _, filename in ipairs(filelist) do
-        resource.load(filename, nil, lazyload)
+    for i, filename in ipairs(filelist) do
+        filelist[i] = resource_load(filename, lazyload)
     end
     return resource.multiple_proxy(filelist)
 end

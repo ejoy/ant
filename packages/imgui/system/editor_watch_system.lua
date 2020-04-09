@@ -213,8 +213,7 @@ local function create_outline(seleid)
             data={
                 transform = t,
                 rendermesh = {},
-                material = computil.assign_material(
-                    fs.path "/pkg/ant.resources/depiction/materials/outline/scale.material"),
+                material = "/pkg/ant.resources/depiction/materials/outline/scale.material",
                 can_render = true,
                 outline_entity = true,
                 target_entity = world[seleid].serialize,

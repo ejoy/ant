@@ -300,17 +300,20 @@ local function create_scene_node_test()
             }
         }
 
-    local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
-
-    local function create_material_item(filepath, color)
-        return {
-            ref_path = filepath,
-            properties = {
-                uniforms = {
-                    u_color = {type = "color", name = "Color", value = color},
-                }
-            },
-        }
+    local function create_material_item(color)
+        return ([[
+---
+/pkg/ant.resources/depiction/materials/singlecolor.material
+---
+op: replace
+path: /properties/uniforms/u_color
+value:
+	type: color
+	name: Color
+	value: {%f,%f,%f,%f}
+]]):format(
+	color[1], color[2], color[3], color[4]
+)
     end
 
     local submesh_child = world:create_entity {
@@ -337,14 +340,11 @@ local function create_scene_node_test()
             },
             mesh = '/pkg/ant.resources/depiction/meshes/build_big_storage_01.mesh',
             material = {
-                ref_path = singlecolor_material,
-                properties = {uniforms = {
-                        u_color = {type = "color", name = "Color", value = {1, 0, 0, 0}},
-                }},
-                create_material_item(singlecolor_material, {0, 1, 0, 0}),
-                create_material_item(singlecolor_material, {1, 0, 1, 0}),
-                create_material_item(singlecolor_material, {1, 1, 0, 0}),
-                create_material_item(singlecolor_material, {1, 1, 1, 0}),
+                create_material_item {1, 0, 0, 0},
+                create_material_item {0, 1, 0, 0},
+                create_material_item {1, 0, 1, 0},
+                create_material_item {1, 1, 0, 0},
+                create_material_item {1, 1, 1, 0},
             },
             can_render = true,
             can_select = true,

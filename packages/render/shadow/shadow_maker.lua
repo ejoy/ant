@@ -191,8 +191,8 @@ sm.require_system "ant.scene|primitive_filter_system"
 sm.require_system "shadowmaker_camera"
 sm.require_system "render_system"
 
-local linear_cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
-local cast_material = fs.path "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
+local linear_cast_material = "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
+local cast_material = "/pkg/ant.resources/depiction/materials/shadow/csm_cast.material"
 
 local function default_csm_camera()
 	return {

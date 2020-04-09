@@ -17,4 +17,5 @@ return {
     watch = watch,
     patch = patch,
     entity = entity,
+    dl = require "dl",
 }

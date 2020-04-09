@@ -53,6 +53,50 @@ function util.create_procedural_sky(world, settings)
 			return world[eid].serialize
 		end
 	end
+	local material = [[
+---
+/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material
+---
+op: replace
+path: /properties/uniforms/u_sunDirection
+value:
+	type: v4
+	name: "sub direction"
+	value: {0, 0, 1, 0}
+---
+op: replace
+path: /properties/uniforms/u_sunLuminance
+value:
+	type: v4
+	name: "sky luminace in RGB color space"
+	value: {0, 0, 0, 0}
+---
+op: replace
+path: /properties/uniforms/u_skyLuminanceXYZ
+value:
+	type: v4
+	name: "sky luminance in XYZ color space"
+	value: {0, 0, 0, 0}
+---
+op: replace
+path: /properties/uniforms/u_parameters
+value:
+	type: v4
+	name: "parameter include: x=sun size, y=sun bloom, z=exposition, w=time"
+	value: {0, 0, 0, 0}
+---
+op: replace
+path: /properties/uniforms/u_perezCoeff
+value:
+	type: v4_array
+	name: "Perez coefficients"
+	value_array:
+		{0, 0, 0, 0}
+		{0, 0, 0, 0}
+		{0, 0, 0, 0}
+		{0, 0, 0, 0}
+		{0, 0, 0, 0}
+]]
     local skyeid = world:create_entity {
 		policy = {
 			"ant.render|render",
@@ -62,17 +106,7 @@ function util.create_procedural_sky(world, settings)
 		data = {
 			transform = {srt=mu.srt()},
 			rendermesh = {},
-			material = computil.assign_material(
-				fs.path "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",
-				{
-					uniforms = {
-						u_sunDirection = {type="v4", name="sub direction", value = mc.T_ZAXIS},
-						u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value=mc.T_ZERO},
-						u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value=mc.T_ZERO},
-						u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", value=mc.T_ZERO},
-						u_perezCoeff = {type="v4_array", name="Perez coefficients", value_array = {mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO}},
-					}
-				}),
+			material = material,
 			procedural_sky = {
 				grid_width = 32, 
 				grid_height = 32,

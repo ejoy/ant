@@ -218,9 +218,10 @@ function op:test(data)
     return (ok and equal(res, self.value)), data
 end
 
-function m.apply(data, patchs)
+function m.apply(data, patchs, n)
     local ok
-    for _, patch in ipairs(patchs) do
+    for i = n or 1, #patchs do
+        local patch = patchs[i]
         local method = op[patch.op]
         if not method then
             return false

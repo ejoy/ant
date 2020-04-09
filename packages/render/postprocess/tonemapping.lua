@@ -32,11 +32,7 @@ function tm:post_init()
                 passes = {
                     {
                         name = "main",
-                        material = {
-                            {
-                                ref_path = fs.path "/pkg/ant.resources/depiction/materials/postprocess/tonemapping.material",
-                            }
-                        },
+                        material = "/pkg/ant.resources/depiction/materials/postprocess/tonemapping.material",
                         output = {
                             fb_idx = main_fbidx,
                             rb_idx = 1,
