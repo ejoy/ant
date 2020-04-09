@@ -12,8 +12,16 @@ local Rx        = import_package "ant.rxlua".Rx
 local editor_entity_system = ecs.system "editor_entity_system"
 local hub = world.args.hub
 
-local parent_child_dic = {}
-local child_parent_dic = {} --for recording old parent
+ecs.component "entity_relation"
+    .parent_child_dic "int{}"
+    .child_parent_dic "int{}"
+ecs.singleton "entity_relation" {
+    parent_child_dic = {},
+    child_parent_dic = {},
+}
+editor_entity_system.require_singleton "entity_relation"
+
+
 local poll_parent_msg
 local refresh_parent_relation
 
@@ -23,6 +31,7 @@ local function on_request_new_entity(arg)
         local policy = arg.policy
         local data = arg.data
         local str = arg.str
+        --todo
     else
         local eid = world:instantiate_entity(
             {
@@ -45,6 +54,9 @@ local function on_request_new_entity(arg)
 end
 
 local function rename_duplicate_entity(eid)
+    local entity_relation = world:singleton "entity_relation"
+    local parent_child_dic = entity_relation.parent_child_dic
+    local child_parent_dic = entity_relation.child_parent_dic
     poll_parent_msg() --update parent-children info
     local entity = world[eid]
     if entity.name then
@@ -86,6 +98,9 @@ local function rename_duplicate_entity(eid)
 end
 
 local function on_request_duplicate_entity(eids)
+    local entity_relation = world:singleton "entity_relation"
+    local parent_child_dic = entity_relation.parent_child_dic
+    local child_parent_dic = entity_relation.child_parent_dic
     --when duplicate parent,need duplicate children too. 
     poll_parent_msg()
     local include_flag = {}
@@ -135,10 +150,6 @@ table.insert(relation_mb_list, {world:sub {"component_register","transform",eid}
 table.insert(relation_mb_list, {world:sub {"entity_created",eid},2}) --2
 table.insert(relation_mb_list, {world:sub {"entity_removed",eid},2}) --2
 
-local transform_mb = world:sub {"component_changed","transform",eid}
-local parent_mb = world:sub {"component_changed","parent",eid}
-local transform_mb = world:sub {"component_register","transform",eid}
-
 function editor_entity_system:init()
     hub.subscribe(Event.ETR.NewEntity,on_request_new_entity)
     hub.subscribe(Event.ETR.DuplicateEntity,on_request_duplicate_entity)
@@ -149,6 +160,10 @@ function editor_entity_system:init()
 end
 
 local function refresh_parent_relation(target)
+    local dirty = false
+    local entity_relation = world:singleton "entity_relation"
+    local parent_child_dic = entity_relation.parent_child_dic
+    local child_parent_dic = entity_relation.child_parent_dic
     if not world[target] then
         --when remove child
         local old_parent = child_parent_dic[target]
@@ -162,6 +177,7 @@ local function refresh_parent_relation(target)
                 end
             end
             child_parent_dic[target] = nil
+            dirty = true
         end
         --when remove parent
         --todo?
@@ -169,32 +185,37 @@ local function refresh_parent_relation(target)
         --change
         local new_parent_id = world[target].transform and world[target].transform.parent
         local old_parent_id = child_parent_dic[target]
-        if new_parent_id == old_parent_id then
-            return
-        end
-        child_parent_dic[target] = new_parent_id
-        if old_parent_id then
-            local old_child_list = parent_child_dic[old_parent_id]
-            assert(old_child_list,"child_parent_dic&parent_child_dic data conflict")
-            for i,eid in ipairs(old_child_list) do
-                if eid == target then
-                    table.remove(old_child_list,i)
-                    break
+        if new_parent_id ~= old_parent_id then
+            child_parent_dic[target] = new_parent_id
+            dirty = true
+            if old_parent_id then
+                local old_child_list = parent_child_dic[old_parent_id]
+                assert(old_child_list,"child_parent_dic&parent_child_dic data conflict")
+                for i,eid in ipairs(old_child_list) do
+                    if eid == target then
+                        table.remove(old_child_list,i)
+                        break
+                    end
                 end
             end
-        end
-        if new_parent_id then
-            parent_child_dic[new_parent_id] = parent_child_dic[new_parent_id] or {}
-            local new_children = parent_child_dic[new_parent_id] 
-            --check
-            for _,eid in ipairs(new_children) do
-                if eid == target then
-                    return
+            if new_parent_id then
+                parent_child_dic[new_parent_id] = parent_child_dic[new_parent_id] or {}
+                local new_children = parent_child_dic[new_parent_id] 
+                --check
+                local is_child = true
+                for _,eid in ipairs(new_children) do
+                    if eid == target then
+                        is_child = false
+                        break
+                    end
+                end
+                if is_child then
+                    table.insert(new_children,target)
                 end
             end
-            table.insert(new_children,target)
         end
     end
+    world:pub {"entity_relation_change"}
 end
 
 function poll_parent_msg()

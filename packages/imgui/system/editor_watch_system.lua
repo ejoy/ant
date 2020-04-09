@@ -492,6 +492,7 @@ local timer = world:interface "ant.timer|timer"
 local entity_delete_mb = world:sub {"entity_removed"}
 local entity_create_mb = world:sub {"entity_created"}
 local name_change_mb = world:sub {"component_changed","name"}
+local entity_relation_change_mb = world:sub {"entity_relation_change"}
 local function is_entity_delete()
     local hierarchy_dirty = false
     for msg in entity_delete_mb:each() do
@@ -527,14 +528,26 @@ local function is_entity_name_change()
     end
 end
 
-function editor_watcher_system:editor_update()
-    if is_entity_create() or
-        is_entity_delete() or
-        is_entity_name_change() 
-    then
-        send_hierarchy()
+local function is_entity_relation_change()
+    for _ in entity_relation_change_mb:each() do
+        entity_relation_change_mb:clear()
+        return true
     end
+end
 
+
+function editor_watcher_system:editor_update()
+    --这里本来应该条件短路掉，但是为了清空事件，还是全部调用一次
+    local conditions = {
+        is_entity_create(),
+        is_entity_delete(),
+        is_entity_name_change(),
+        is_entity_relation_change(),
+    }
+    for _,b in ipairs(conditions) do
+        send_hierarchy()
+        break
+    end
     --check name
     pub_follow_per_frame()
 end
