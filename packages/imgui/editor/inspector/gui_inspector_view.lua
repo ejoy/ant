@@ -34,8 +34,10 @@ end
 function GuiInspectorView:_init_res_inspector()
     local GLBInspector = require "editor.inspector.glb_inspector"
     local SceneInspector = require "editor.inspector.scene_inspector"
+    local MeshInspector = require "editor.inspector.mesh_inspector"
     self:_register_inspector(GLBInspector.new())
     self:_register_inspector(SceneInspector.new())
+    self:_register_inspector(MeshInspector.new())
 end
 
 function GuiInspectorView:_register_inspector(inspector_ins)

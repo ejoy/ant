@@ -326,13 +326,32 @@ function gui_util.pkg_path_to_local(pkg_path,is_full)
 end
 
 function gui_util.load_local_file(local_path_str)
-    local localfs = require "filesystem.local"
     local env = {}
     local r = loadfile(local_path_str,"t",env)
     if r then
         r()
         return env
     end
+end
+
+function gui_util.load_local_datalist(local_path_str)
+    local localfs = require "filesystem.local"
+    local datalist = require "datalist"
+    local fh
+    if type(local_path_str) == "string" then
+        fh = io.open(local_path_str,"r")
+    else
+        fh = localfs.open(local_path_str,"r")
+    end
+    if not fh then
+        return nil
+    end
+    local a = setclose(function()
+        fh:close()
+    end)
+    local s = fh:read("*all")
+    local t = datalist.parse(s)
+    return t
 end
 
 function gui_util.data_to_lua_file(data,indent)

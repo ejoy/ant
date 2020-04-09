@@ -140,7 +140,6 @@ function InspectorBase:show_one_cfg(data_tbl,cfg_item)
     else
         widget.Text("Unknown field type:"..type_cfg_field)
     end
-
 end
 
 function InspectorBase:show_cfg_of_boolean(data_tbl,cfg)
@@ -230,19 +229,64 @@ function InspectorBase:write_one_cfg(data,cfg_item,tbl,indent)
     end
 end
 
-function InspectorBase:write_cfg_of_boolean(data,cfg_item,tbl,indent)
+--type:"lua"/"datalist"
+function InspectorBase:write_cfg_of_boolean(data,cfg_item,tbl,indent,type)
     local name = cfg_item.name
     local bool_val = data[name]
     if bool_val ~= nil then
         table.insert(tbl,indent)
         table.insert(tbl,name)
-        table.insert(tbl," = ")
+        if type == "lua" then
+            table.insert(tbl," = ")
+        else
+            table.insert(tbl,": ")
+        end
         table.insert(tbl,bool_val and "true" or "false")
-        table.insert(tbl,",\n")
+        if type == "lua" then
+            table.insert(tbl,",\n")
+        else
+            table.insert(tbl,"\n")
+        end
     end
 end
 
+function InspectorBase:write_datalist(data,cfg,tbl,indent)
+    for _,cfg_item in ipairs(cfg) do
+        self:write_one_datalist(data,cfg_item,tbl,indent,"datalist")
+    end
+end
 
-
+function InspectorBase:write_one_datalist(data,cfg_item,tbl,indent)
+    local name = cfg_item.name
+    
+    local cfg_field = cfg_item.write or cfg_item.field
+    local type_cfg_field = type(cfg_field)
+        
+    if type_cfg_field == "string" then
+        local func = self.write_type_map[cfg_field]
+        if not func then
+            log.info_a("Unimplemented field type:",cfg_field)
+        else
+            func(self,data,cfg_item,tbl,indent)
+        end
+    elseif type_cfg_field == "function" then
+        local func = cfg_field
+        func(self,data,cfg_item,tbl,indent)
+    elseif type_cfg_field == "table" then
+        local sub_data = data[cfg_item.name]
+        table.insert(tbl,indent)
+        table.insert(tbl,name)
+        table.insert(tbl,":\n")
+        for _,citem in ipairs(cfg_item.field) do
+            self:write_one_datalist(sub_data,citem,tbl,indent.."\t","datalist")
+        end
+    else
+        table.insert(tbl,indent)
+        table.insert(tbl,name)
+        table.insert(tbl,":")
+        table.insert(tbl,"[Unknown field type:"..type_cfg_field.."]")
+        table.insert(tbl,"\n")
+    end
+end
 
 return InspectorBase
