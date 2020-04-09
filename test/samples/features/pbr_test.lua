@@ -1,4 +1,5 @@
 local ecs = ...
+local world = ecs.world
 local fs = require "filesystem"
 
 local assetmgr = import_package "ant.asset"

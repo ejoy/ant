@@ -45,14 +45,6 @@ local function fill_procedural_sky_mesh(skyentity)
 	skyentity.rendermesh = assetmgr.load("//res.mesh/procedural_sky.rendermesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib))
 end
 
-local function create_material(materialpath, uniforms)
-	local m = assetmgr.clone(assetmgr.load(materialpath), "/properties/uniforms")
-	local u = m.properties.uniforms
-	for k, v in pairs(uniforms) do
-
-	end
-end
-
 function util.create_procedural_sky(world, settings)
 	settings = settings or {}
 	local function attached_light(eid)

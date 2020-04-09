@@ -139,6 +139,7 @@ local function pick_material(material_template, eid)
 		"uniform", {type="color", name = "select eid", value=vv})
 
 	pick_material_cache[eid] = m
+	return m
 end
 
 local function replace_material(result, material)

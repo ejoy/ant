@@ -77,7 +77,7 @@ return {
 
 		local pbrm = data or assetmgr.load_depiction(filename)
 
-		refine_paths(pbrm)
+		--refine_paths(pbrm)
 
 		local metallic_factor, roughness_factor = get_metallic_roughness_factor(pbrm)
 

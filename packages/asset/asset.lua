@@ -46,17 +46,17 @@ end
 
 local TMPFILE_INDEX = 0
 local function resource_load(fullpath, resdata, lazyload)
-	local filename = fullpath:match "[^:]+"
-	if filename:sub(1,1) ~= "/" then
+	if fullpath:sub(1,1) ~= "/" then
 		TMPFILE_INDEX = TMPFILE_INDEX + 1
 		local serialize = import_package "ant.serialize"
-		local data = serialize.dl(filename)
-		local ext = filename:match("%.([^.\n]+)\n")
+		local data = serialize.dl(fullpath)
+		local ext = fullpath:match("%.([^.\n]+)\n")
 		local filename = ("/tmp/%08d.%s"):format(TMPFILE_INDEX, ext)
 		resource.load(filename, data, lazyload)
 		return filename
 	end
-	
+
+	local filename = fullpath:match "[^:]+"
 	resource.load(filename, resdata, lazyload)
 	return fullpath
 end
@@ -65,9 +65,9 @@ function assetmgr.load(fullpath, resdata, lazyload)
     return resource.proxy(resource_load(fullpath, resdata, lazyload))
 end
 
-function assetmgr.load_multiple(filelist, lazyload)
+function assetmgr.load_multiple(filelist, reslist, lazyload)
     for i, filename in ipairs(filelist) do
-        filelist[i] = resource_load(filename, lazyload)
+        filelist[i] = resource_load(filename, reslist[i], lazyload)
     end
     return resource.multiple_proxy(filelist)
 end
@@ -89,9 +89,12 @@ function assetmgr.clone(res_template, path)
 	for name in path:gmatch "[^/]+" do
 		local o = sub[name]
 		if o == nil then
-			error(string.format("invalid subpath %s in %s", name, path))
+			local t = {}
+			sub[name] = t
+			sub = t
+		else
+			sub = resource.clone(o)
 		end
-		sub = resource.clone(o)
 	end
 
 	return root
