@@ -378,10 +378,6 @@ function m.new_world(config,world_class)
 		register_component(w, eid, name)
 	end
 
-	--TODO
-	local assetmgr = import_package "ant.asset"
-	assetmgr.init()
-
 	return w
 end
 
