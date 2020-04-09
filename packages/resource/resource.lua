@@ -239,11 +239,20 @@ end
 
 local MULTIPLE = {}
 
+local function index_only(self, key, value)
+	local index = math.tointeger(key)
+	if index == nil then
+		format_error("You can only change index for %s, the key is %s", self, key)
+	else
+		rawset(self, index, value)
+	end
+end
+
 local multiple_mt = {
 	__index = function(self, key) return self._data[key] end,
-	__newindex = not_in_memory,
+	__newindex = index_only,
 	__pairs = function(self) return pairs(self._data) end,
-	__tostring = function(self) return "[multiple proxy]" end,
+	__tostring = function(self) return tostring(self._data) end,
 }
 
 function resource.multiple_proxy(paths)
@@ -270,11 +279,21 @@ local function ipairs_single_proxy(proxy, index)
 	end
 end
 
+local function ipairs_normal_table(proxy, index)
+	if index == 0 then
+		return 1, proxy
+	elseif index <= #proxy then
+		return index+1, proxy[index]
+	end
+end
+
 function resource.ipairs(proxy)
 	if proxy._path == MULTIPLE then
 		return ipairs_multiple_proxy, proxy, 0
-	else
+	elseif proxy._path then
 		return ipairs_single_proxy, proxy, 0
+	else
+		return ipairs_normal_table, proxy, 0
 	end
 end
 
@@ -356,25 +375,26 @@ function resource.clone(obj)
 		-- it's a normal table
 		return obj
 	end
+	if path == MULTIPLE then
+		local multiple = resource.clone(obj._data)
+		for i = 1, #obj do
+			multiple[i] = obj[i]
+		end
+		return multiple
+	end
 	local clone = {}
 	local filename = getmetatable(obj).filename
+	local prefix
 	if path == "" then
-		-- root
-		for k,v in pairs(obj) do
-			if type(v) == "table" then
-				clone[k] = resource.proxy(filename, k)
-			else
-				clone[k] = v
-			end
-		end
+		prefix = filename .. ":"
 	else
-		path = path .. "."
-		for k,v in pairs(obj) do
-			if type(v) == "table" then
-				clone[k] = resource.proxy(filename .. ":" .. path .. k)
-			else
-				clone[k] = v
-			end
+		prefix = filename .. ":" .. path .. "."
+	end
+	for k,v in pairs(obj) do
+		if type(v) == "table" and v._path == nil then
+			clone[k] = resource.proxy(prefix .. k)
+		else
+			clone[k] = v
 		end
 	end
 	return clone

@@ -10,41 +10,39 @@ data:
   animation:
     anilist:
       idle:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
         scale: 1
         looptimes: 0
       jumping:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
         scale: 1
         looptimes: 0
       punching:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
         scale: 1
         looptimes: 0
       running:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
         scale: 1
         looptimes: 0
       running_fast:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
         scale: 1
         looptimes: 0
       walking:
-        ref_path: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
+        resource: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
         scale: 1
         looptimes: 0
   can_render: true
-  material:
-    ref_path: /pkg/ant.test.animation/res/Beta_Joints_MAT.pbrm
-  material:
-    ref_path: /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
+  material: 
+    /pkg/ant.test.animation/res/Beta_Joints_MAT.pbrm
+    /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
   mesh: /pkg/ant.resources/depiction/meshes/female.mesh
   name: animation_sample
   rendermesh: {}
   serialize: 5e1c39ad369fa96c5bd44fc5
   pose_result: {}
-  skeleton:
-    ref_path: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
+  skeleton: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
   skinning: {}
   animation_birth: idle
   transform:

@@ -2,27 +2,25 @@ local assetmgr 	= require "asset"
 local fs = require "filesystem"
 
 local engine_resource_path = fs.path "/pkg/ant.resources/depiction"
-
 local pbr_material = engine_resource_path / "materials/pbr_default.material"
 
-local pbr_default_path = engine_resource_path / "textures/pbr/default"
 local default_pbr_param = {
 	basecolor = {
-		texture = pbr_default_path / "basecolor.texture",
+		texture = "/pkg/ant.resources/depiction/textures/pbr/default/basecolor.texture",
 		factor = {1, 1, 1, 1},
 	},
 	metallic_roughness = {
-		texture = pbr_default_path / "metallic_roughness.texture",
+		texture = "/pkg/ant.resources/depiction/textures/pbr/default/metallic_roughness.texture",
 		factor = {1, 1, 0, 0},
 	},
 	normal = {
-		texture = pbr_default_path / "normal.texture",
+		texture = "/pkg/ant.resources/depiction/textures/pbr/default/normal.texture",
 	},
 	occlusion = {
-		texture = pbr_default_path / "occlusion.texture",
+		texture = "/pkg/ant.resources/depiction/textures/pbr/default/occlusion.texture",
 	},
 	emissive = {
-		texture = pbr_default_path / "emissive.texture",
+		texture = "/pkg/ant.resources/depiction/textures/pbr/default/emissive.texture",
 		factor = {0, 0, 0, 0},
 	},
 }
@@ -47,7 +45,7 @@ local function texture_path(pbrm, name)
 end
 
 local function get_texture(pbrm, name)
-	return texture_path(pbrm, name) or default_pbr_param[name].texture
+	return assetmgr.load(texture_path(pbrm, name) or default_pbr_param[name].texture)
 end
 
 local function property_factor(pbrm, name)
@@ -85,30 +83,29 @@ return {
 
 		refine_paths(pbrm)
 
-		local metallic_factor, roughness_factor = 
-			get_metallic_roughness_factor(pbrm)
+		local metallic_factor, roughness_factor = get_metallic_roughness_factor(pbrm)
 
 		material.properties = {
 			textures = {
 				s_basecolor = {
 					type="texture", name="BaseColor texture", stage=0, 
-					ref_path=get_texture(pbrm, "basecolor")
+					texture=get_texture(pbrm, "basecolor")
 				},
 				s_metallic_roughness = {
 					type="texture", name="roughness metallic texutre", stage=1,
-					ref_path=get_texture(pbrm, "metallic_roughness")
+					texture=get_texture(pbrm, "metallic_roughness")
 				},
 				s_normal = {
 					type="texture", name="normal texture", stage=2,
-					ref_path=get_texture(pbrm, "normal")
+					texture=get_texture(pbrm, "normal")
 				},
 				s_occlusion = {
 					type="texture", name="occlusion texture", stage=3,
-					ref_path=get_texture(pbrm, "occlusion")
+					texture=get_texture(pbrm, "occlusion")
 				},
 				s_emissive = {
 					type="texture", name="emissive texture", stage=4,
-					ref_path=get_texture(pbrm, "emissive")
+					texture=get_texture(pbrm, "emissive")
 				},
 			},
 			uniforms = {

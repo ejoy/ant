@@ -84,7 +84,9 @@ end
 function fields_mt:__call(typename)
 	if type(typename) == 'table' then
 		local obj = self._schema.map[self._name]
-		obj.multiple = typename.multiple
+		for k, v in pairs(typename) do
+			obj[k] = v
+		end
 		return setmetatable(self, defaults_mt)
 	end
 	local attrib = self._current_field

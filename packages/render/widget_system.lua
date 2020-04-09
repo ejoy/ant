@@ -41,7 +41,7 @@ function m:init()
 		},
 		data = {
 			transform 		= {srt = mu.srt()},
-			material 		= {ref_path = "/pkg/ant.resources/depiction/materials/line.material"},
+			material 		= "/pkg/ant.resources/depiction/materials/line.material",
 			rendermesh 		= {},
 			name 			= "mesh's bounding renderer",
 			can_render 		= true,

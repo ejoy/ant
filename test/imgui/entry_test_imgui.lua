@@ -42,7 +42,7 @@ function callback.init(nwh, context, width, height)
     }
     imgui.create(nwh);
     imgui.viewid(viewidmgr.generate "ui");
-    local imgui_font = assetmgr.get_resource {
+    local imgui_font = assetmgr.load {
         vs = fs.path "/pkg/ant.testimgui/shader/vs_imgui_font.sc",
         fs = fs.path "/pkg/ant.testimgui/shader/fs_imgui_font.sc",
     }
@@ -50,7 +50,7 @@ function callback.init(nwh, context, width, height)
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
-    local imgui_image = assetmgr.get_resource {
+    local imgui_image = assetmgr.load {
         vs = fs.path "/pkg/ant.testimgui/shader/vs_imgui_image.sc",
         fs = fs.path "/pkg/ant.testimgui/shader/fs_imgui_image.sc",
     }

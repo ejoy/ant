@@ -3,12 +3,12 @@ properties:
   textures:
     s_basecolor:
       name: "base color"
-      ref_path: /pkg/ant.resources/depiction/pochuan_d.texture
+      texture: /pkg/ant.resources/depiction/pochuan_d.texture
       stage: 0
       type: texture
     s_normal:
       name: normal
-      ref_path: /pkg/ant.resources/depiction/pochuan_n.texture
+      texture: /pkg/ant.resources/depiction/pochuan_n.texture
       stage: 1
       type: texture
   uniforms:

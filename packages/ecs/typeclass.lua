@@ -371,6 +371,7 @@ return function (w, policies, systems, loader)
 	ecs.resource_component = function (name)
 		local c = ecs.component_alias(name, "string")
 		c._object.resource = true
+		return c
 	end
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")

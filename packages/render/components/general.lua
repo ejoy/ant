@@ -129,10 +129,7 @@ ecs.component "properties"
 	["opt"].textures "texture{}"
 	["opt"].uniforms "uniform{}"
 
-ecs.component "material" { multiple=true }
-	.ref_path "respath"
-	["opt"].properties "properties"
-
+ecs.resource_component "material" { multiple=true }
 
 ecs.tag "can_render"
 ecs.tag "can_cast"

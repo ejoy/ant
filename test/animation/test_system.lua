@@ -198,7 +198,7 @@ function m:widget()
         return
     end
     local e = world[RoleEntityId]
-    local ske = assetmgr.get_resource(e.skeleton.ref_path)
+    local ske = e.skeleton
     drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform.srt)
 end
 

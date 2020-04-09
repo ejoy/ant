@@ -101,15 +101,14 @@ local function cache_material(rendermesh, materialcomp)
 		cache = cache[1]
 		return function(eid, etrans, filter)
 			local group = cache[1]
-			local refkey = cache[2]
+			local material = cache[2]
 			local properties = cache[3]
 			local transparency = cache[4]
 			local aabb = cache[5]
 			local localtrans = cache[6]
 			local resulttarget = assert(filter.result[transparency])
-			local mi = assert(assetmgr.get_resource(refkey))
 			local worldaabb, worldtrans = math3d.aabb_transform(etrans, aabb, localtrans)
-			add_result(eid, group, mi, properties, worldtrans, worldaabb, resulttarget)
+			add_result(eid, group, material, properties, worldtrans, worldaabb, resulttarget)
 		end
 	else
 		return function(eid, etrans, filter)
@@ -118,15 +117,14 @@ local function cache_material(rendermesh, materialcomp)
 			for i = 1,n do
 				local item = cache[i]
 				local group = item[1]
-				local refkey = item[2]
+				local material = item[2]
 				local properties = item[3]
 				local transparency = item[4]
 				local aabb = item[5]
 				local localtrans = item[6]
 				local resulttarget = assert(result[transparency])
-				local mi = assert(assetmgr.get_resource(refkey))
 				local worldaabb, worldtrans = aabb_transform(etrans, aabb, localtrans)
-				add_result(eid, group, mi, properties, worldtrans, worldaabb, resulttarget)
+				add_result(eid, group, material, properties, worldtrans, worldaabb, resulttarget)
 			end
 		end
 	end

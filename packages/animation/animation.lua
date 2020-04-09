@@ -17,13 +17,14 @@ pr_t.input "skeleton"
 pr_t.output "pose_result"
 
 function pr_t.process(e)
-	local ske = assetmgr.get_resource(e.skeleton.ref_path)
-	local skehandle = ske.handle
+	local skehandle = e.skeleton.handle
 	e.pose_result.result = ani_module.new_pose_result(#skehandle)
 end
 
+ecs.resource_component "animation_resource"
+
 ecs.component "animation_content"
-	.ref_path "respath"
+	.resource "animation_resource"
 	.scale "real" (1)
 	.looptimes "int" (0)
 
@@ -42,7 +43,7 @@ local anicomp = ecs.component "animation"
 
 function anicomp:init()
 	for name, ani in pairs(self.anilist) do
-		ani.handle = assetmgr.get_resource(ani.ref_path).handle
+		ani.handle = ani.resource.handle
 		ani.sampling_cache = ani_module.new_sampling_cache()
 		ani.duration = ani.handle:duration() * 1000. / ani.scale
 		ani.max_ratio = ani.looptimes > 0 and ani.looptimes or math.maxinteger
@@ -51,7 +52,7 @@ function anicomp:init()
 	return self
 end
 
-ecs.component_alias("skeleton", "resource")
+ecs.resource_component "skeleton"
 
 local anisystem = ecs.system "animation_system"
 anisystem.require_interface "ant.timer|timer"
@@ -77,7 +78,7 @@ end
 
 local function update_animation(e, delta_time)
 	local animation = e.animation
-	local ske = assetmgr.get_resource(e.skeleton.ref_path)
+	local ske = e.skeleton
 	local pr = e.pose_result.result
 	pr:setup(ske.handle)
 	do_animation(pr, animation.current, delta_time)

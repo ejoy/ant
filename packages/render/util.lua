@@ -45,9 +45,8 @@ local function update_properties(material, properties, render_properties)
 			if textures then
 				local tex = textures[name]
 				if tex then
-					if tex.ref_path then
-						local texkey = assert(tex.ref_path)
-						tex.handle = assetmgr.get_resource(texkey).handle	--set texture handle every time
+					if tex.texture then
+						tex.handle = tex.texture.handle	--set texture handle every time
 					else
 						assert(tex.handle)
 					end
@@ -329,7 +328,7 @@ function util.create_blit_queue(world, viewrect)
 		data = {
 			transform = {srt = mu.srt()},
 			rendermesh = {},
-			material = {ref_path = fs.path "/pkg/ant.resources/depiction/materials/fullscreen.material"},
+			material = "/pkg/ant.resources/depiction/materials/fullscreen.material",
 			blit_render = true,
 			name = "full_quad",
 		}

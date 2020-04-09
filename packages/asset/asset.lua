@@ -5,21 +5,47 @@ local resource = import_package "ant.resource"
 local assetmgr = {}
 assetmgr.__index = assetmgr
 
-function assetmgr.load_depiction(filepath)
-	local f = assert(fs.open(filepath, "r"))
+function assetmgr.load_depiction(filename)
+	if type(filename) == "string" then
+		filename = fs.path(filename)
+	end
+	local f = assert(fs.open(filename, "r"))
 	local data = f:read "a"
 	f:close()
 	return datalist.parse(data)
 end
 
 local support_ext = {
-	mesh = true,
+	fx        = true,
+	hierarchy = true,
+	material  = true,
+	mesh      = true,
+	ozz       = true,
+	pbrm      = true,
+	state     = true,
+	terrain   = true,
+	texture   = true,
+
+	--
 	rendermesh = true,
+	glbmesh   = true,
 }
+
+function assetmgr.load(filename, lazyload)
+    resource.load(filename, nil, lazyload)
+    return resource.proxy(filename)
+end
+
+function assetmgr.load_multiple(filelist, lazyload)
+    for _, filename in ipairs(filelist) do
+        resource.load(filename, nil, lazyload)
+    end
+    return resource.multiple_proxy(filelist)
+end
 
 function assetmgr.init()
 	for name in pairs(support_ext) do
-		local accessor = require("ext_" .. name)
+		local accessor = require ("ext_" .. name)
 		resource.register_ext(name, accessor.loader, accessor.unloader)
 	end
 end

@@ -9,7 +9,7 @@ local function load_state(state)
 end
 
 local function load_fx(fx)
-	return assetmgr.get_resource(fs.path(fx))
+	return assetmgr.load(fx)
 end
 
 local function load_properties(properties)
@@ -17,7 +17,7 @@ local function load_properties(properties)
 		local textures = properties.textures
 		if textures then
 			for _, tex in pairs(textures) do
-				tex.ref_path = fs.path(tex.ref_path)
+				tex.texture = assetmgr.load(tex.texture)
 			end
 		end
 	end
@@ -27,6 +27,9 @@ end
 
 return {
 	loader = function(filename)
+		if type(filename) == "string" then
+			filename = fs.path(filename)
+		end
 		local material = assetmgr.load_depiction(filename)
 		return {
 			fx			= load_fx(material.fx),

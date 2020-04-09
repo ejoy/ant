@@ -60,9 +60,7 @@ return {
 		grid_width = 1,
 		which_hour = 12
 	},
-	material = {
-		ref_path = ""
-	},
+	material = ""
 	pass = {
 		name = "",
 		output = {
@@ -82,9 +80,7 @@ return {
 				depth = 1
 			}
 		},
-		material = {
-			ref_path = ""
-		}
+		material = ""
 	},
 	attach = -1,
 	box_shape = {
@@ -172,14 +168,12 @@ return {
 					depth = 1
 				}
 			},
-			material = {
-				ref_path = ""
-			}
+			material = ""
 		}
 	},
 	animation = {
 		anilist = {
-			ref_path = "",
+			resource = "",
 			scale = 1,
 			looptimes = 0
 		}
@@ -399,9 +393,7 @@ return {
 				depth = 1
 			}
 		},
-		material = {
-			ref_path = ""
-		}
+		material = ""
 	},
 	editor = true,
 	blit_viewid = 0,
@@ -451,9 +443,7 @@ return {
 	},
 	pickup_viewtag = false,
 	target_entity = -1,
-	editable_hierarchy = {
-		ref_path = ""
-	},
+	editable_hierarchy = "",
 	rendermesh = {
 		lodidx = 1
 	},
@@ -559,12 +549,8 @@ return {
 		radius = 0.0,
 		height = 0.0
 	},
-	skeleton = {
-		ref_path = ""
-	},
-	resource = {
-		ref_path = ""
-	},
+	skeleton = "",
+	resource = "",
 	terrain_shape = {
 		height_scaling = 1,
 		origin = {
@@ -634,7 +620,7 @@ return {
 		[4] = 0.0
 	},
 	animation_content = {
-		ref_path = "",
+		resource = "",
 		scale = 1,
 		looptimes = 0
 	},

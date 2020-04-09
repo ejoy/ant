@@ -129,8 +129,7 @@ local pickup_sys = ecs.system "pickup_system"
 local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
-			local mi = assetmgr.get_resource(material.ref_path)
-			item.material = mi
+			item.material = material
 			if item.properties == nil then
 				item.properties = {}
 			end
@@ -283,8 +282,8 @@ local function add_pick_entity()
 		},
 		data = {
 			material = {
-				ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_opacity.material',
-				{ref_path = fs.path '/pkg/ant.resources/depiction/materials/pickup_transparent.material'},
+				'/pkg/ant.resources/depiction/materials/pickup_opacity.material',
+				'/pkg/ant.resources/depiction/materials/pickup_transparent.material',
 			},
 			view_mode = "s",
 			pickup = {

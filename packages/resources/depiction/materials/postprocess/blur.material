@@ -3,7 +3,7 @@ properties:
   textures:
     s_basecolor:
       name: s_basecolor
-      ref_path: /pkg/ant.resources/depiction/materials/textures/Default.texture
+      texture: /pkg/ant.resources/depiction/materials/textures/Default.texture
       stage: 0
       type: texture
   uniforms:
