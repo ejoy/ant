@@ -93,7 +93,7 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
     bgfx.set_transform(mat)
 
 	local material = primgroup.material
-	bgfx.set_state(bgfx.make_state(material.state)) -- always convert to state str
+	bgfx.set_state(material.state)
 	update_properties(material, primgroup.properties, render_properties)
 
 	local prog = material.fx.shader.prog
@@ -335,9 +335,7 @@ function util.create_blit_queue(world, viewrect)
 		}
 	}
 
-	world[eid].rendermesh.reskey = assetmgr.register_resource(
-		fs.path "//res.mesh/quad.mesh",
-		computil.quad_mesh())
+	world[eid].rendermesh = computil.create_rendermesh("//res.mesh/quad.mesh", computil.quad_mesh())
 end
 
 local statemap = {

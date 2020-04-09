@@ -4,11 +4,10 @@ local world = ecs.world
 local assetmgr 	= import_package "ant.asset"
 
 local renderpkg = import_package 'ant.render'
-local declmgr 	= renderpkg.declmgr
+local declmgr	= renderpkg.declmgr
+local computil	= renderpkg.components
 
-local math3d = require "math3d"
-
-local fs 		= require "filesystem"
+local math3d	= require "math3d"
 local bgfx 		= require "bgfx"
 
 local t = ecs.component "terrain"
@@ -113,7 +112,6 @@ trt.output "rendermesh"
 trt.require_interface "ant.terrain|terrain"
 
 function trt.process(e)
-	local rm 			= e.rendermesh
 	local terraincomp 	= e.terrain
 
 	local meshscene = {
@@ -153,5 +151,5 @@ function trt.process(e)
 	}
 
 	meshscene.scenes = scenes
-	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/terrain.mesh", meshscene)
+	e.rendermesh = computil.create_rendermesh("//res.mesh/terrain.mesh", meshscene)
 end

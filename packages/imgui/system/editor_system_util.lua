@@ -5,7 +5,8 @@ local math3d = require "math3d"
 local geopkg    = import_package "ant.geometry"
 local fs        = require "filesystem"
 local assetmgr = import_package "ant.asset"
-local camerautil = import_package "ant.render".camera
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
 local RES_IDX = 10080
 
 local function euler2quat(euler)
@@ -144,9 +145,9 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
     local num_vertices = #vb
     local num_indices = #ib
 
-    local reskey = fs.path(string.format("//res.mesh/line_%s.mesh",RES_IDX))
+    local filename = string.format("//res.mesh/line_%s.mesh",RES_IDX)
     RES_IDX = RES_IDX + 1
-    grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+    grid.rendermesh = computil.create_rendermesh(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -196,9 +197,9 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
     local num_vertices = #vb
     local num_indices = #ib
 
-    local reskey = fs.path(string.format("//res.mesh/circle_%s.mesh",RES_IDX))
+    local filename = string.format("//res.mesh/circle_%s.mesh",RES_IDX)
     RES_IDX = RES_IDX + 1
-    grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+    grid.rendermesh = computil.create_rendermesh(filename,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 

@@ -1,8 +1,8 @@
 local ecs = ...
-local world = ecs.world
 
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
+local computil = renderpkg.component
 
 local assetmgr  = import_package "ant.asset"
 
@@ -34,10 +34,8 @@ ozzmesh_skinning_transform.input 	"rendermesh"
 ozzmesh_skinning_transform.output 	"skinning"
 
 local function gen_mesh_assetinfo(ozzmesh)
-	local meshhandle = assetmgr.get_resource(ozzmesh.ref_path).handle
-
-	local layouts = meshhandle:layout()
-	local num_vertices = meshhandle:num_vertices()
+	local layouts = ozzmesh:layout()
+	local num_vertices = ozzmesh:num_vertices()
 
 	local function find_layout(shortname, layouts)
 		for _, l in ipairs(layouts) do
@@ -66,7 +64,7 @@ local function gen_mesh_assetinfo(ozzmesh)
 	local static_buffersize = num_vertices * static_stride
 	local static_buffer = animodule.new_aligned_memory(static_buffersize, 4)
 	local static_pointer = static_buffer:pointer()
-	meshhandle:combine_buffer(static_layout, static_pointer)
+	ozzmesh:combine_buffer(static_layout, static_pointer)
 	local static_vbhandle = {
 		handle = bgfx.create_vertex_buffer({"!", static_pointer, 0, static_buffersize}, declmgr.get(static_layout).handle)
 	}
@@ -76,7 +74,7 @@ local function gen_mesh_assetinfo(ozzmesh)
 	local dynamic_buffersize = num_vertices * dynamic_stride
 	local dynamic_buffer = animodule.new_aligned_memory(dynamic_buffersize, 4)
 	local dynamic_pointer = dynamic_buffer:pointer()
-	meshhandle:combine_buffer(dynamic_layout, dynamic_pointer)
+	ozzmesh:combine_buffer(dynamic_layout, dynamic_pointer)
 	local dynamic_vbhandle = {
 		handle = bgfx.create_dynamic_vertex_buffer({"!", dynamic_pointer, 0, dynamic_buffersize}, declmgr.get(dynamic_layout).handle),
 		updatedata = dynamic_buffer,
@@ -93,10 +91,10 @@ local function gen_mesh_assetinfo(ozzmesh)
 		}
 	}
 
-	local num_indices = meshhandle:num_indices()
+	local num_indices = ozzmesh:num_indices()
 	
 	if num_indices ~= 0 then
-		local indices_buffer, stride = meshhandle:index_buffer()
+		local indices_buffer, stride = ozzmesh:index_buffer()
 		primitive.ib = {
 			start = 0,
 			num = num_indices,
@@ -104,8 +102,8 @@ local function gen_mesh_assetinfo(ozzmesh)
 		}
 	end
 
-	local ibm_pointer, ibm_count = meshhandle:inverse_bind_matrices()
-	local joint_remapp_pointer, count = meshhandle:joint_remap()
+	local ibm_pointer, ibm_count = ozzmesh:inverse_bind_matrices()
+	local joint_remapp_pointer, count = ozzmesh:joint_remap()
 	return {
 		default_scene = "sceneroot",
 		scenes = {
@@ -125,15 +123,16 @@ ozzmesh_loader.input "mesh"
 ozzmesh_loader.output "rendermesh"
 
 function ozzmesh_loader.process(e)
-	local rm 		= e.rendermesh
-	local mesh 		= e.mesh
-	local reskey 	= fs.path("//res.mesh/" .. mesh.ref_path:stem():string() .. ".mesh")
-	rm.reskey 		= assetmgr.register_resource(reskey, gen_mesh_assetinfo(mesh))
+	local meshfilename = tostring(e.mesh)
+	local stem, ext = meshfilename:match "[/\\]([%w_-]+)%.([%w_-]+)$"
+	assert(ext == "glb")
+	local filename 	= "//res.mesh/" .. stem .. ".rendermesh"
+	e.rendermesh	= computil.create_rendermesh(filename, gen_mesh_assetinfo(e.mesh.handle))
 end
 
 function ozzmesh_skinning_transform.process(e)
-	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
-	local meshres 	= assetmgr.get_resource(e.mesh.ref_path).handle
+	local meshscene = e.rendermesh
+	local meshres 	= e.mesh.handle
 
 	local scene = meshscene.scenes[meshscene.default_scene]
 	local _, meshnode = next(scene)

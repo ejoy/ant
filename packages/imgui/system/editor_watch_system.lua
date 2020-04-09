@@ -226,9 +226,8 @@ local function create_outline(seleid)
            
         }
         local oe = world[outlineeid]
-        oe.rendermesh.reskey = se.rendermesh.reskey
+        oe.rendermesh = se.rendermesh
         world:pub { "material_change",outlineeid }
-        -- assetmgr.load(se.rendermesh.reskey)
         -- world:pub({"begin_follow",outlineeid,seleid,nil})
         world:pub({"update_follow",outlineeid,seleid})
     end

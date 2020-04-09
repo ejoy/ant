@@ -61,7 +61,7 @@ end
 
 function mesh_skinning_transform.process(e)
 	local meshres = e.mesh
-	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
+	local meshscene = e.rendermesh
 
 	local skinning = e.skinning
 

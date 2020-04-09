@@ -6,8 +6,6 @@ local ru	= require "util"
 
 local fs 		= require "filesystem"
 local math3d 	= require "math3d"
-local mathpkg   = import_package "ant.math"
-local mc 		= mathpkg.constant
 
 ecs.component_alias("parent", 	"entityid")
 ecs.component_alias("point", 	"vector")
@@ -58,8 +56,7 @@ ecs.component "submesh_ref"
 	["opt"].material_refs "int[]"
 	.visible "boolean"
 
-ecs.component "rendermesh"
-	["opt"].submesh_refs "submesh_ref{}"
+ecs.component "rendermesh" {}
 
 ecs.resource_component "mesh"
 
@@ -73,7 +70,8 @@ ml.input    "mesh"
 ml.output   "rendermesh"
 
 function ml.process(e)
-    component_util.create_mesh(e.rendermesh, e.mesh)
+	local filename = tostring(e.mesh):gsub("[.]%w+$", ".glbmesh")
+	e.rendermesh = component_util.create_rendermesh(filename, e.mesh)
 end
 
 ecs.component "texture"

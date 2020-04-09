@@ -3,20 +3,9 @@ local fs 		= require "filesystem"
 local bgfx		= require "bgfx"
 
 local function load_state(state)
-	if type(state) == "string" then
-		local filepath = fs.path(state)
-		local s = assetmgr.get_resource(filepath)
-		if s.ref_path then
-			assert(s.ref_path == filepath)
-		else
-			s.ref_path = filepath
-		end
-		
-		return s
-	end
-
-	assert(type(state) == "table")
-	return state
+	return bgfx.make_state(type(state) == "string" and
+		assetmgr.get_resource(fs.path(state)) or
+		state)
 end
 
 local function load_fx(fx)

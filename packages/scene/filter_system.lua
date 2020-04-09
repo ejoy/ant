@@ -35,70 +35,10 @@ local function reset_results(results)
 	end
 end
 
---[[	!NOTICE!
-	the material component defined with 'multiple' property which mean:
-	1. there is only one material, the 'material' component reference this material item;
-	2. there are more than one material, the 'material' component itself keep the first material item
-		other items will store in array, start from 1 to n -1;
-	examples:
-	...
-	world:create_entity {
-		...
-		material = {
-			ref_path=def_path1,
-		}
-	}
-	...
-	this entity's material component itself represent 'def_path1' material item, and NO any array item
-
-	...
-	world:create_entity {
-		...
-		material = {
-			ref_path=def_path1,
-			{ref_path=def_path2},
-		}
-	}
-	entity's material component same as above, but it will stay a array, and array[1] is 'def_path2' material item
-
-	About the 'prim.material' field
-	prim.material field it come from glb data, it's a index start from [0, n-1] with n elements
-
-	Here 'primidx' stand for primitive index in mesh, it's a lua index, start from [1, n] with n elements
-]]
 local function get_material(prim, primidx, materialcomp, material_refs)
-	local materialidx
-	if material_refs then
-		local idx = material_refs[primidx] or material_refs[1]
-		materialidx = idx - 1
-	else
-		materialidx = prim.material or primidx - 1
-	end
-
+	-- prim.material index from 0 and material is multi component start from 0
+	local materialidx = prim.material or primidx - 1
 	return materialcomp[materialidx] or materialcomp
-end
-
-local function is_visible(meshname, submesh_refs)
-	if submesh_refs == nil then
-		return true
-	end
-
-	if submesh_refs then
-		local ref = submesh_refs[meshname]
-		if ref then
-			return ref.visible
-		end
-		return true
-	end
-end
-
-local function get_material_refs(meshname, submesh_refs)
-	if submesh_refs then
-		local ref = submesh_refs[meshname]
-		if ref then
-			return ref.material_refs
-		end
-	end
 end
 
 local function add_result(eid, group, materialinfo, properties, worldmat, aabb, result)
@@ -129,76 +69,29 @@ end
 -- make a material cache
 local material_cache = setmetatable( {}, { __mode = "kv" } )
 
-local function cache_resource(cache, eid)
-	local e = world[eid]
-	local keys = {}
-	local n = 0
-	n=n+1; keys[n] = e.rendermesh.reskey
-	for _, m in world:each_component(e.material) do
-		n=n+1; keys[n] = m.ref_path
-
-		local p = m.properties
-		if p then
-			local t = p.textures
-			if t then
-				for k, tex in pairs(t) do
-					n=n+1; keys[n] = tex.ref_path
-				end
-			end
-		end
-	end
-	local func
-	if n == 1 then
-		keys = keys[1]
-		function func()
-			return assetmgr.get_resource(keys) ~= nil
-		end
-	else
-		function func()
-			local get_resource = assetmgr.get_resource
-			for i = 1, n do
-				if get_resource(keys[i]) == nil then
-					return false
-				end
-			end
-			return true
-		end
-	end
-	cache[eid] = func
-	return func
-end
-
-local resource_cache = setmetatable( {}, { __mode = "kv" , __index = cache_resource } )
-
 local function invisible() end
 
 local function cache_material(rendermesh, materialcomp)
 	local cache = {}
-	local meshscene = assetmgr.get_resource(rendermesh.reskey)
+	local meshscene = rendermesh
 	local scene = meshscene.scenes[meshscene.default_scene]
-	local submesh_refs = rendermesh.submesh_refs
 	local n = 0
 
-	for meshname, meshnode in pairs(scene) do
-		if is_visible(meshname, submesh_refs) then
-			local material_refs = get_material_refs(meshname, submesh_refs)
+	for _, meshnode in pairs(scene) do
+		for groupidx, group in ipairs(meshnode) do
+			local material = get_material(group, groupidx, materialcomp)
+			local mi = assert(assetmgr.get_resource(material.ref_path))
+			local transparency = mi.fx.surface_type.transparency
 
-			for groupidx, group in ipairs(meshnode) do
-				local material = get_material(group, groupidx, materialcomp, material_refs)
-				local refkey = material.ref_path
-				local mi = assert(assetmgr.get_resource(refkey))
-				local transparency = mi.fx.surface_type.transparency
-
-				n = n + 1
-				cache[n] = {
-					group,	-- 1
-					material.ref_path,	-- 2
-					material.properties,	-- 3
-					transparency,	-- 4
-					group.bounding and group.bounding.aabb or nil,	-- 5
-					meshnode.transform,	-- 6
-				}
-			end
+			n = n + 1
+			cache[n] = {
+				group,	-- 1
+				material.ref_path,	-- 2
+				material.properties,	-- 3
+				transparency,	-- 4
+				group.bounding and group.bounding.aabb or nil,	-- 5
+				meshnode.transform,	-- 6
+			}
 		end
 	end
 
@@ -292,7 +185,6 @@ function primitive_filter_sys:filter_primitive()
 	for msg in material_change:each() do
 		local eid = msg[2]
 		material_cache[eid] = nil
-		resource_cache[eid] = nil
 	end
 
 	for _, prim_eid in world:each "primitive_filter" do
@@ -306,7 +198,7 @@ function primitive_filter_sys:filter_primitive()
 			local func = material_cache[eid]
 			if func then
 				func(eid, ce.transform.world, filter)
-			elseif resource_cache[eid]() then
+			else
 				func = cache_material(ce.rendermesh, ce.material)
 				material_cache[eid] = func
 				func(eid, ce.transform.world, filter)
