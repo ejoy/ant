@@ -1,9 +1,6 @@
 local assetmgr 	= require "asset"
 local fs = require "filesystem"
 
-local engine_resource_path = fs.path "/pkg/ant.resources/depiction"
-local pbr_material = engine_resource_path / "materials/pbr_default.material"
-
 local default_pbr_param = {
 	basecolor = {
 		texture = "/pkg/ant.resources/depiction/textures/pbr/default/basecolor.texture",
@@ -45,7 +42,7 @@ local function texture_path(pbrm, name)
 end
 
 local function get_texture(pbrm, name)
-	return assetmgr.load(texture_path(pbrm, name) or default_pbr_param[name].texture)
+	return texture_path(pbrm, name) or default_pbr_param[name].texture
 end
 
 local function property_factor(pbrm, name)
@@ -75,11 +72,10 @@ local function get_metallic_roughness_factor(pbrm)
 end
 
 return {
-	loader = function (filename)
-		local material_loader = assetmgr.get_loader "material"
-		local material = material_loader(pbr_material)	--we need multi instances
+	loader = function (filename, data)
+		local material = assetmgr.load_depiction("/pkg/ant.resources/depiction/materials/pbr_default.material")
 
-		local pbrm = assetmgr.load_depiction(filename)
+		local pbrm = data or assetmgr.load_depiction(filename)
 
 		refine_paths(pbrm)
 
@@ -154,7 +150,7 @@ return {
 			},
 		}
 
-		
-		return material, 0
+		local material_loader = assetmgr.get_loader "material"
+		return material_loader(nil, material)
 	end,
 }

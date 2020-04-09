@@ -372,7 +372,7 @@ local function write_layout(self,data_tbl,cfg,tbl,indent)
     local layout_str = table.concat(result_str_tbl,"|")
     table.insert(tbl,indent)
     table.insert(tbl,cfg.name)
-    table.insert(tbl," = {\n")
+    table.insert(tbl,": {\n")
     table.insert(tbl,indent .. '\t"')
     table.insert(tbl,layout_str)
     table.insert(tbl,'"\n'..indent..'},\n')
@@ -384,7 +384,7 @@ end
 
 local function write_ani_list(self,data_tbl,cfg,tbl,indent)
     table.insert(tbl,indent)
-    table.insert(tbl,'ani_list = "all",\n')
+    table.insert(tbl,'ani_list: "all",\n')
 end
 
 local GLB_LK_META = {
@@ -432,19 +432,33 @@ local GLB_LK_META = {
 
 local InspectorBase = require "editor.inspector.inspector_base"
 
-local GLBInspector = InspectorBase.derive("GLBInspector")
+local MeshInspector = InspectorBase.derive("MeshInspector")
 
-function GLBInspector:_init()
+function MeshInspector:_init()
     InspectorBase._init(self)
-    self.res_ext = "glb"
+    self.res_ext = "mesh"
     self.glb_info = nil
+    self.lk_info = nil
 end
 
-function GLBInspector:before_res_open()
+function MeshInspector:before_res_open()
     --glb
-    local glb_path = self.res_pkg_path
-    local local_path = gui_util.pkg_path_to_local(glb_path)
-    local glb_content = glb.decode(local_path)
+    local mesh_path = self.res_pkg_path
+    local local_path = gui_util.pkg_path_to_local(mesh_path)
+    log.info_a(local_path)
+    local mesh_info = gui_util.load_local_datalist(local_path)
+    local lk_cfg = (mesh_info and mesh_info.config) or {}
+    self.lk_info = set_metatable_r(lk_cfg,default_cfg)
+    self.glb_info_cache = nil
+    self.lk_info_cache = nil
+    self.glb_path = mesh_info.mesh_path
+    if not mesh_info or not mesh_info.config then
+        self.modified = true
+    end
+
+    local glb_local_path =  gui_util.pkg_path_to_local(mesh_info.mesh_path)
+
+    local glb_content = glb.decode(glb_local_path)
     local info = glb_content.info
     local version = glb_content.version
     local json = glb_content.json
@@ -455,19 +469,9 @@ function GLBInspector:before_res_open()
         version = version,
         layout = layout_info,
     }
-    --lk
-    local lk_path = local_path..".lk"
-    local lk_info = gui_util.load_local_file(lk_path)
-    local lk_cfg = (lk_info and lk_info.config) or {}
-    self.lk_info = set_metatable_r(lk_cfg,default_cfg)
-    self.glb_info_cache = nil
-    self.lk_info_cache = nil
-    if not lk_info or not lk_info.config then
-        self.modified = true
-    end
 end
 
-function GLBInspector:clean_modify()
+function MeshInspector:clean_modify()
     local local_path = gui_util.pkg_path_to_local(self.res_pkg_path)
     local lk_path = local_path..".lk"
     local lk_info = gui_util.load_local_file(lk_path)
@@ -477,17 +481,17 @@ function GLBInspector:clean_modify()
     self.modified = nil
 end
 
-function GLBInspector:on_apply_modify()
+function MeshInspector:on_apply_modify()
     local tbl = {}
-    table.insert(tbl,"config = {\n")
-    self:write_cfg(self.lk_info,GLB_LK_META,tbl,"\t")
-    table.insert(tbl,"}\n")
-    table.insert(tbl,'sourcetype = "glb"\n')
-    table.insert(tbl,'type = "mesh"')
+    table.insert(tbl,"config:\n")
+    self:write_datalist(self.lk_info,GLB_LK_META,tbl,"\t")
+    table.insert(tbl,'mesh_path: \"'..self.glb_path..'\"\n')
+    table.insert(tbl,'sourcetype: glb\n')
+    table.insert(tbl,'type: mesh')
     local str = table.concat(tbl)
     log(str)
     local local_path = gui_util.pkg_path_to_local(self.res_pkg_path)
-    local lk_path = local_path..".lk"
+    local lk_path = local_path
     local f = io.open(lk_path,"w")
     f:write(str)
     f:close()
@@ -497,7 +501,7 @@ function GLBInspector:on_apply_modify()
     assetmgr.unload(self.res_pkg_path)
 end
 
-function GLBInspector:on_update()
+function MeshInspector:on_update()
     self:BeginProperty()
     widget.Text(self.res_pkg_path:string())
     self:update_lk_info()
@@ -516,11 +520,11 @@ end
 
 
 
-function GLBInspector:update_lk_info()
+function MeshInspector:update_lk_info()
     self.modified = self:show_import_cfg(self.lk_info,GLB_LK_META) or self.modified
 end
 
-function GLBInspector:update_glb_info()
+function MeshInspector:update_glb_info()
     if widget.CollapsingHeader("GLB Info") then
         if not self.glb_info_cache then
             self.glb_info_cache = {
@@ -534,4 +538,4 @@ function GLBInspector:update_glb_info()
     end
 end
 
-return GLBInspector
+return MeshInspector

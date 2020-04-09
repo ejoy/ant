@@ -13,9 +13,6 @@ local mathpkg   = import_package "ant.math"
 local mu, mc= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
 
-
-local fs        = require "filesystem"
-
 ----------------------------------------------------------------------------------------------------------
 local debug_sm = ecs.system "debug_shadow_maker"
 debug_sm.require_system "shadowmaker_camera"
@@ -27,7 +24,7 @@ local quadsize = 192
 
 local function csm_shadow_debug_quad()
 	local smstage = uniforms.system_uniform("s_shadowmap").stage
-	local quadmaterial = {ref_path = fs.path "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"}
+	local quadmaterial = "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"
 
 	for _, eid in world:each "csm" do
 		local se = world[eid]

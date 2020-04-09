@@ -18,11 +18,6 @@ local math3d = require "math3d"
 local geopkg 	= import_package "ant.geometry"
 local geodrawer	= geopkg.drawer
 
-function util.assign_material(filepath, properties)
-	--TODO
-	return filepath
-end
-
 function util.create_submesh_item(material_refs)
 	return {material_refs=material_refs, visible=true}
 end
@@ -144,23 +139,24 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 		"ant.render|name",
 	}
 
+	local material = ([[
+---
+%s
+---
+op: replace
+path: /properties/uniforms/u_color
+value:
+	type: color
+	name: color
+	value: {%f,%f,%f,%f}
+]]):format(
+	materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+	color[1], color[2], color[3], color[4]
+)
 	local data = {
 		transform = trans,
 		rendermesh = {},
-		material = ([[
-				---
-				%s
-				---
-				op=relpace
-				path=/properties/uniforms/u_color
-				value:
-					type=color, 
-					name=color,
-					value={%f, %f, %f, %f}
-			]]):format(
-				materialpath or "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
-				color[1], color[2], color[3], color[4]
-		),
+		material = material,
 		can_render = true,
 		name = name or "Plane",
 	}
@@ -290,9 +286,7 @@ function util.get_mainqueue_transform_boundings(world, transformed_boundings)
 end
 
 function util.create_frustum_entity(world, frustum_points, name, transform, color, tag)
-	local eid = create_simple_render_entity(world, transform, 
-	{ref_path = fs.path "/pkg/ant.resources/depiction/materials/line.material"},
-	name, tag)
+	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/depiction/materials/line.material", name, tag)
 
 	local e = world[eid]
 	local vb = {"fffd",}
@@ -323,8 +317,7 @@ function util.create_frustum_entity(world, frustum_points, name, transform, colo
 end
 
 function util.create_axis_entity(world, transform, color, name, tag)
-	local eid = create_simple_render_entity(world, transform, 
-	{ref_path = fs.path "/pkg/ant.resources/depiction/materials/line.material"}, name, tag)
+	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/depiction/materials/line.material", name, tag)
 
 	local vb = {
 		"fffd",

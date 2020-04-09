@@ -19,9 +19,7 @@ end
 
 return {
 	loader = function(filename)
-		if type(filename) == "string" then
-			filename = fs.path(filename)
-		end
+		filename = fs.path(filename)
 		local readops = {
 			["ozz-animation"] = function (fn)
 				local animodule = require "hierarchy.animation"
