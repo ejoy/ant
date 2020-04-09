@@ -12,12 +12,10 @@ local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local renderutil= renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
-local hwi		= renderpkg.hwi
 
 local assetmgr = import_package "ant.asset"
 
 local bgfx 		= require "bgfx"
-local fs 		= require "filesystem"
 
 --update pickup view
 local function enable_pickup(enable)
@@ -126,19 +124,28 @@ local function which_entity_hitted(blitdata, viewrect)
 end
 
 local pickup_sys = ecs.system "pickup_system"
+
+local pick_material_cache = {}
+
+local function pick_material(material_template, eid)
+	local pm = pick_material_cache[eid]
+	if pm then
+		return pm
+	end
+
+	local vv = packeid_as_rgba(eid)
+	local m = assetmgr.clone(material_template, "/properties/uniforms")
+	m.properties.uniforms["u_id"] = world:create_component(
+		"uniform", {type="color", name = "select eid", value=vv})
+
+	pick_material_cache[eid] = m
+	return m
+end
+
 local function replace_material(result, material)
 	if result then
 		for _, item in ipairs(result) do
-			item.material = material
-			if item.properties == nil then
-				item.properties = {}
-			end
-			if item.properties.uniforms == nil then
-				item.properties.uniforms = {}
-			end
-			local vv = packeid_as_rgba(assert(item.eid))
-			item.properties.uniforms["u_id"] = world:create_component(
-				"uniform", {type="color", name = "select eid", value=vv})
+			item.material = pick_material(material, item.eid)
 		end
 	end
 end

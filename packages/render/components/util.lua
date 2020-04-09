@@ -8,7 +8,7 @@ local declmgr 	= require "vertexdecl_mgr"
 local animodule = require "hierarchy.animation"
 local hwi		= require "hardware_interface"
 
-local assetmgr 	= import_package "ant.asset"
+local assetmgr = import_package "ant.asset"
 
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
@@ -31,8 +31,6 @@ end
 
 function util.is_entity_visible(e)
 	return e.can_render
-		and assetmgr.has_resource(e.rendermesh.reskey)
-		or false
 end
 
 function util.assign_group_as_mesh(group)
@@ -121,7 +119,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	grid.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/grid.mesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+	grid.rendermesh = assetmgr.load("//res.mesh/grid.rendermesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -185,13 +183,14 @@ value:
 		-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
 		0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
 	}
-	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/plane.mesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
-	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
+	local meshscene = assetmgr.load("//res.mesh/plane.rendermesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
 	local selectscene = meshscene.scenes[meshscene.default_scene]
 	local _, meshnode = next(selectscene)
 	meshnode.bounding = {
 		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
 	}
+
+	e.rendermesh = meshscene
 	return eid
 end
 
@@ -247,8 +246,7 @@ end
 
 function util.create_quad_entity(world, rect, material, name, tag)
 	local eid = create_simple_render_entity(world, material, name, tag)
-	local e = world[eid]
-	e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/quad.mesh", util.quad_mesh(rect))
+	world[eid].rendermesh = assetmgr.load("//res.mesh/quad.rendermesh", util.quad_mesh(rect))
 	return eid
 end
 
@@ -267,7 +265,7 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
 		 3, -3, 0, 1, 1,
 	}
 	
-	quad.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/quad_scale3.mesh", quad_mesh(vb))
+	quad.rendermesh = assetmgr.load("//res.mesh/quad_scale3.rendermesh", quad_mesh(vb))
     return quadid
 end
 
@@ -291,7 +289,6 @@ function util.create_frustum_entity(world, frustum_points, name, transform, colo
 	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/depiction/materials/line.material", name, tag)
 
 	local e = world[eid]
-	local m = e.rendermesh
 	local vb = {"fffd",}
 	color = color or 0xff00000f
 	for i=1, #frustum_points do
@@ -315,7 +312,7 @@ function util.create_frustum_entity(world, frustum_points, name, transform, colo
 		2, 6, 3, 7,
 	}
 	
-	m.reskey = assetmgr.register_resource(fs.path "//res.mesh/frustum.mesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
+	e.rendermesh = assetmgr.load("//res.mesh/frustum.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
 	return eid
 end
 
@@ -334,7 +331,7 @@ function util.create_axis_entity(world, transform, color, name, tag)
 		0, 2, 
 		0, 3,
 	}
-	world[eid].rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/axis.mesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
+	world[eid].rendermesh = assetmgr.load("//res.mesh/axis.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
 	return eid
 end
 
@@ -353,7 +350,6 @@ function util.create_skybox(world, material)
 		}
     }
     local e = world[eid]
-    local rm = e.rendermesh
 
     local desc = {vb={}, ib={}}
     geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
@@ -361,11 +357,11 @@ function util.create_skybox(world, material)
     for _, v in ipairs(desc.vb)do
         table.move(v, 1, 3, #gvb+1, gvb)
     end
-    rm.handle = util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)
+    e.rendermesh = assetmgr.load("//res.mesh/skybox.rendermesh", util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib))
     return eid
 end
 
-local function check_rendermesh_lod(meshscene, lod_scene)
+function util.check_rendermesh_lod(meshscene, lod_scene)
 	if meshscene.scenelods then
 		if meshscene.scenelods[meshscene.default_scene] == nil then
 			log.warn("not found scene from scenelods", meshscene.default_scene)
@@ -377,106 +373,9 @@ local function check_rendermesh_lod(meshscene, lod_scene)
 	end
 end
 
-local function create_bounding(bounding)
-	if bounding then
-		local aabb = bounding.aabb
-		return {
-			aabb = math3d.ref(math3d.aabb(aabb[1], aabb[2]))
-		}
-	end
-end
-
-function util.create_mesh_buffers(meshres)
-	local meshscene = {
-		default_scene = meshres.default_scene,
-		scenelods = meshres.scenelods,
-	}
-	local new_scenes = {}
-	for scenename, scene in pairs(meshres.scenes) do
-		local new_scene = {}
-		for meshname, meshnode in pairs(scene) do
-			local new_meshnode = {
-				bounding = create_bounding(meshnode.bounding),
-				transform = meshnode.transform,
-			}
-			for _, group in ipairs(meshnode) do
-				local vb = group.vb
-				local handles = {}
-				for _, value in ipairs(vb.values) do
-					local create_vb = value.type == "dynamic" and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
-					local start_bytes = value.start
-					local end_bytes = start_bytes + value.num - 1
-
-					handles[#handles+1] = {
-						handle = create_vb({"!", value.value, start_bytes, end_bytes},
-											declmgr.get(value.declname).handle),
-						updatedata = value.type == "dynamic" and animodule.new_aligned_memory(value.num, 4) or nil,
-					}
-				end
-				local new_meshgroup = {
-					bounding = group.bounding,
-					material = group.material,
-					mode = group.mode,
-					vb = {
-						start = vb.start,
-						num = vb.num,
-						handles = handles,
-					}
-				}
-	
-				local ib = group.ib
-				if ib then
-					local v = ib.value
-					local create_ib = v.type == "dynamic" and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer
-					local startbytes = v.start
-					local endbytes = startbytes+v.num-1
-					new_meshgroup.ib = {
-						start = ib.start,
-						num = ib.num,
-						handle = create_ib({v.value, startbytes, endbytes}, v.flag),
-						updatedata = v.type == "dynamic" and animodule.new_aligned_memory(v.num) or nil
-					}
-				end
-	
-				new_meshnode[#new_meshnode+1] = new_meshgroup
-			end
-
-			local ibm = meshnode.inverse_bind_matries
-			if ibm then
-				new_meshnode.inverse_bind_pose 	= animodule.new_bind_pose(ibm.num, ibm.value)
-				new_meshnode.joint_remap 		= animodule.new_joint_remap(ibm.joints)
-			end
-			new_scene[meshname] = new_meshnode
-		end
-		new_scenes[scenename] = new_scene
-	end
-
-	meshscene.scenes = new_scenes
-		
-	return meshscene
-end
-
-function util.create_mesh(rendermesh, mesh)
-	check_rendermesh_lod(mesh)
-	local reskey = fs.path(tostring(mesh):gsub("^/pkg", "//res.mesh/"))
-	local meshscene = assetmgr.get_resource(reskey)
-	if meshscene == nil then
-		meshscene = util.create_mesh_buffers(mesh)
-		assetmgr.register_resource(reskey, meshscene, function ()
-			return util.create_mesh_buffers(mesh)
-		end)
-		-- just for debug
-		--mesh.debug_meshscene_DOTNOT_DIRECTLY_USED 		= {meshscene, mesh}
-		--rendermesh.debug_meshscene_DOTNOT_DIRECTLY_USED = mesh.debug_meshscene_DOTNOT_DIRECTLY_USED
-	end
-
-	rendermesh.reskey = reskey
-end
-
 function util.entity_bounding(entity)
 	if util.is_entity_visible(entity) then
-		local rm = entity.rendermesh
-		local meshscene = assetmgr.get_resource(rm.reskey)
+		local meshscene = entity.rendermesh
 		local etrans = entity.transform.srt
 		local scene = meshscene.scenes[meshscene.default_scene]
 		local aabb = math3d.aabb()

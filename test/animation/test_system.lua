@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local renderpkg  = import_package 'ant.render'
-local assetmgr   = import_package "ant.asset"
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
 local fs         = require 'filesystem'

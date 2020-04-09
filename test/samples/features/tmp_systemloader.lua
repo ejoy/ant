@@ -10,8 +10,6 @@ local math3d = require "math3d"
 local skypkg = import_package 'ant.sky'
 local skyutil = skypkg.util
 
-local assetmgr = import_package "ant.asset"
-
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components
 
@@ -45,7 +43,7 @@ local function create_plane_test()
         {
             transform = {srt={s={50, 1, 50}}},
             color = {0.8, 0.8, 0.8, 1},
-            material = fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
+            material = "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
         },
     }
 
@@ -76,43 +74,6 @@ end
 local icamera = world:interface "ant.render|camera"
 local icm = world:interface "ant.objcontroller|camera_motion"
 local iom = world:interface "ant.objcontroller|obj_motion"
-
-local iwd = world:interface "ant.render|iwidget_drawer"
-
-local function simple_box()
-    local eid = world:create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.render|name",
-        },
-        data = {
-            transform = {srt={}},
-            rendermesh = {},
-            can_render = true,
-            material = "/pkg/ant.resources/depiction/materials/simpletri.material",
-                --properties = {
-                --    uniforms = {
-                --        u_color = {
-                --            type = "color",
-                --            value = {1, 0, 0, 1},
-                --            name = "color"
-                --        }
-                --    }
-                --}
-            name = "simplebox"
-        }
-    }
-
-    local e = world[eid]
-
-    local geopkg 	= import_package "ant.geometry"
-    local geodrawer	= geopkg.drawer
-
-    local desc = {vb={"fff"}, ib={}}
-    geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
-    e.rendermesh.reskey = assetmgr.register_resource(fs.path "//res.mesh/simplebox.mesh", computil.create_simple_mesh("p3", desc.vb, 8, desc.ib, #desc.ib))
-    return eid
-end
 
 local ilight = world:interface "ant.render|light"
 
@@ -153,11 +114,6 @@ local function target_lock_test()
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
             material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                --properties = {
-                --    uniforms = {
-                --        u_color = {type="v4", name="vv", value={1, 0, 0, 1}}
-                --    }
-                --}
             serialize = serialize.create(),
             lock_target = {
                 type = "ignore_scale",

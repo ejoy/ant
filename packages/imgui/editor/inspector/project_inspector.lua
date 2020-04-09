@@ -9,7 +9,6 @@ local IO                = imgui.IO
 local gui_util          = require "editor.gui_util"
 local fs                = require "filesystem"
 local localfs           = require "filesystem.local"
-local assetmgr          = import_package "ant.asset"
 
 local scene_data_accessor = require "editor.scene.scene_data_accessor"
 local SceneMeta         = scene_data_accessor.SceneMeta

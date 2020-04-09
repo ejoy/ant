@@ -1,8 +1,9 @@
-local assetmgr = import_package "ant.asset"
 
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local mu = mathpkg.util
+
+local assetmgr = import_package "ant.asset"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -92,7 +93,7 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
     bgfx.set_transform(mat)
 
 	local material = primgroup.material
-	bgfx.set_state(bgfx.make_state(material.state._data and material.state._data or material.state)) -- always convert to state str
+	bgfx.set_state(material.state)
 	update_properties(material, primgroup.properties, render_properties)
 
 	local prog = material.fx.shader.prog
@@ -334,9 +335,7 @@ function util.create_blit_queue(world, viewrect)
 		}
 	}
 
-	world[eid].rendermesh.reskey = assetmgr.register_resource(
-		fs.path "//res.mesh/quad.mesh",
-		computil.quad_mesh())
+	world[eid].rendermesh = assetmgr.load("//res.mesh/quad.rendermesh", computil.quad_mesh())
 end
 
 local statemap = {

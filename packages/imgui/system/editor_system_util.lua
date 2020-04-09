@@ -2,10 +2,10 @@ local Util = {}
 local mathpkg   = import_package "ant.math"
 local mu = mathpkg.util
 local math3d = require "math3d"
-local geopkg    = import_package "ant.geometry"
 local fs        = require "filesystem"
 local assetmgr = import_package "ant.asset"
-local camerautil = import_package "ant.render".camera
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
 local RES_IDX = 10080
 
 local function euler2quat(euler)
@@ -64,7 +64,6 @@ end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
     -- parent = parent and world[parent].serialize or nil
-    local computil  = import_package "ant.render".components
     color[4] = 0.6
     return world:create_entity {
         policy={
@@ -86,10 +85,17 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             },
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/ring.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_front_singlecolor.material",
-                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}},
-            },
+            material = ([[
+                ---
+                /pkg/ant.resources/depiction/materials/gizmo_front_singlecolor.material
+                ---
+                op: replace
+                path: /properties/uniforms/u_color
+                value:
+                    type=v4
+                    name=u_color
+                    value={%f, %f, %f, %f}
+            ]]):format(color[1], color[2], color[3], color[4]),
             --can_cast = true,
             can_render = true,
             name = name,
@@ -144,9 +150,9 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
     local num_vertices = #vb
     local num_indices = #ib
 
-    local reskey = fs.path(string.format("//res.mesh/line_%s.mesh",RES_IDX))
+    local filename = string.format("//res.mesh/line_%s.rendermesh",RES_IDX)
     RES_IDX = RES_IDX + 1
-    grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+    grid.rendermesh = assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -196,9 +202,9 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
     local num_vertices = #vb
     local num_indices = #ib
 
-    local reskey = fs.path(string.format("//res.mesh/circle_%s.mesh",RES_IDX))
+    local filename = string.format("//res.mesh/circle_%s.rendermesh",RES_IDX)
     RES_IDX = RES_IDX + 1
-    grid.rendermesh.reskey = assetmgr.register_resource(reskey,util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+    grid.rendermesh = assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -225,10 +231,17 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             },
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cone.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
-                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}}
-            },
+            material = ([[
+                ---
+                /pkg/ant.resources/depiction/materials/gizmo_singlecolor.material
+                ---
+                op:replace
+                path:/properties/uniforms/u_color
+                value:
+                    type=v4
+                    name=u_color
+                    value={%f,%f,%f,%f}
+            ]]):format(color[1], color[2], color[3], color[3]),
             can_render = true,
             can_select = true,
             name = name,
@@ -262,12 +275,18 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             },
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
-                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}},
-            },
+            material = ([[
+                ---
+                /pkg/ant.resources/depiction/materials/gizmo_singlecolor.material
+                ---
+                op:replace
+                path:/properties/uniforms/u_color
+                value:
+                    type=v4
+                    name=u_color
+                    value={%f, %f, %f,%f}
+            ]]):format(color[1], color[2], color[3], color[4]),
             can_render = true,
-            --can_cast = true,
             name = name,
             can_select = true,
             gizmo_object = {dir=dir},

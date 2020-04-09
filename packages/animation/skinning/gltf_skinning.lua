@@ -3,9 +3,6 @@ local ecs = ...
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 
-local assetmgr  = import_package "ant.asset"
-
-
 local s = ecs.policy "skinning"
 s.require_component "animation"
 s.require_component "skeleton"
@@ -61,7 +58,7 @@ end
 
 function mesh_skinning_transform.process(e)
 	local meshres = e.mesh
-	local meshscene = assetmgr.get_resource(e.rendermesh.reskey)
+	local meshscene = e.rendermesh
 
 	local skinning = e.skinning
 

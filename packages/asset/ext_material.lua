@@ -7,11 +7,9 @@ local function load_fx(fx)
 end
 
 local function load_state(state)
-	if type(state) == "string" then
-		return assetmgr.load(state)
-	end
-	assert(type(state) == "table")
-	return state
+	return bgfx.make_state(type(state) == "string" and
+		assetmgr.load(state)._data or
+		state)
 end
 
 local function uniformdata_init(v)

@@ -1,11 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local render = import_package "ant.render"
-local computil = render.components
-
-local assetmgr = import_package "ant.asset"
-
 local math3d = require "math3d"
 
 ecs.component_alias("filter_tag", "string")
@@ -35,70 +30,10 @@ local function reset_results(results)
 	end
 end
 
---[[	!NOTICE!
-	the material component defined with 'multiple' property which mean:
-	1. there is only one material, the 'material' component reference this material item;
-	2. there are more than one material, the 'material' component itself keep the first material item
-		other items will store in array, start from 1 to n -1;
-	examples:
-	...
-	world:create_entity {
-		...
-		material = {
-			ref_path=def_path1,
-		}
-	}
-	...
-	this entity's material component itself represent 'def_path1' material item, and NO any array item
-
-	...
-	world:create_entity {
-		...
-		material = {
-			ref_path=def_path1,
-			{ref_path=def_path2},
-		}
-	}
-	entity's material component same as above, but it will stay a array, and array[1] is 'def_path2' material item
-
-	About the 'prim.material' field
-	prim.material field it come from glb data, it's a index start from [0, n-1] with n elements
-
-	Here 'primidx' stand for primitive index in mesh, it's a lua index, start from [1, n] with n elements
-]]
 local function get_material(prim, primidx, materialcomp, material_refs)
-	local materialidx
-	if material_refs then
-		local idx = material_refs[primidx] or material_refs[1]
-		materialidx = idx - 1
-	else
-		materialidx = prim.material or primidx - 1
-	end
-
+	-- prim.material index from 0 and material is multi component start from 0
+	local materialidx = prim.material or primidx - 1
 	return materialcomp[materialidx] or materialcomp
-end
-
-local function is_visible(meshname, submesh_refs)
-	if submesh_refs == nil then
-		return true
-	end
-
-	if submesh_refs then
-		local ref = submesh_refs[meshname]
-		if ref then
-			return ref.visible
-		end
-		return true
-	end
-end
-
-local function get_material_refs(meshname, submesh_refs)
-	if submesh_refs then
-		local ref = submesh_refs[meshname]
-		if ref then
-			return ref.material_refs
-		end
-	end
 end
 
 local function add_result(eid, group, materialinfo, properties, worldmat, aabb, result)
@@ -133,28 +68,24 @@ local function invisible() end
 
 local function cache_material(rendermesh, materialcomp)
 	local cache = {}
-	local meshscene = assetmgr.get_resource(rendermesh.reskey)
+	local meshscene = rendermesh
 	local scene = meshscene.scenes[meshscene.default_scene]
-	local submesh_refs = rendermesh.submesh_refs
 	local n = 0
 
-	for meshname, meshnode in pairs(scene) do
-		if is_visible(meshname, submesh_refs) then
-			local material_refs = get_material_refs(meshname, submesh_refs)
+	for _, meshnode in pairs(scene) do
+		for groupidx, group in ipairs(meshnode) do
+			local material = get_material(group, groupidx, materialcomp)
+			local transparency = material.fx.surface_type.transparency
 
-			for groupidx, group in ipairs(meshnode) do
-				local material = get_material(group, groupidx, materialcomp, material_refs)
-				local transparency = material.fx.surface_type.transparency
-				n = n + 1
-				cache[n] = {
-					group,	-- 1
-					material,	-- 2
-					material.properties,	-- 3
-					transparency,	-- 4
-					group.bounding and group.bounding.aabb or nil,	-- 5
-					meshnode.transform,	-- 6
-				}
-			end
+			n = n + 1
+			cache[n] = {
+				group,	-- 1
+				material,	-- 2
+				material.properties,	-- 3
+				transparency,	-- 4
+				group.bounding and group.bounding.aabb or nil,	-- 5
+				meshnode.transform,	-- 6
+			}
 		end
 	end
 

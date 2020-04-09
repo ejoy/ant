@@ -8,7 +8,7 @@ properties:
     u_perezCoeff:
       name: "Perez coefficients"
       type: v4_array
-      value:
+      value_array:
         {0, 0, 0, 0}
         {0, 0, 0, 0}
         {0, 0, 0, 0}

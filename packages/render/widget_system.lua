@@ -49,14 +49,13 @@ function m:init()
 		}
 	}
 
-	local rm = world[eid].rendermesh
-	rm.reskey = assetmgr.register_resource(fs.path "//res.mesh/bounding.mesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
+	world[eid].rendermesh = assetmgr.load("//res.mesh/bounding.rendermesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
 end
 
 function m:end_frame()
 	local dmesh = world:singleton_entity "widget_drawer"
 	if dmesh then
-		local meshscene = assetmgr.get_resource(dmesh.rendermesh.reskey)
+		local meshscene = dmesh.rendermesh
 		local _, scene = next(meshscene.scenes)
 		local _, meshnode = next(scene)
 		local group = meshnode[1]
@@ -89,9 +88,10 @@ local function append_buffers(vb, ib)
 		return
 	end
 	local dmesh = world:singleton_entity "widget_drawer"
-	local rm = dmesh.rendermesh
-	local meshscene = assetmgr.get_resource(rm.reskey)
-	local group = meshscene.scenes[1][1][1]
+	local meshscene = dmesh.rendermesh
+	local scene = meshscene.scenes[meshscene.default_scene]
+	local _, meshnode = next(scene)
+	local group = meshnode[1]
 
 	local vbdesc, ibdesc = group.vb, group.ib
 

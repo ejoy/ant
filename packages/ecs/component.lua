@@ -79,12 +79,12 @@ function foreach_init_1(c, args)
     if c.resource then
         if c.multiple then
             if type(args) ~= "table" then
-                ret = assetmgr.load_multiple({args}, true)
+                ret = assetmgr.load_multiple({args}, {}, true)
             else
-                ret = assetmgr.load_multiple(args, true)
+                ret = assetmgr.load_multiple(args, {}, true)
             end
         else
-            ret = assetmgr.load(args, true)
+            ret = assetmgr.load(args, nil, true)
         end
     elseif c.type then
         ret = foreach_init_2(c, args)
