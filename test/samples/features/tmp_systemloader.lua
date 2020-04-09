@@ -43,7 +43,7 @@ local function create_plane_test()
         {
             transform = {srt={s={50, 1, 50}}},
             color = {0.8, 0.8, 0.8, 1},
-            material = fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
+            material = "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
         },
     }
 
@@ -114,11 +114,6 @@ local function target_lock_test()
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
             material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                --properties = {
-                --    uniforms = {
-                --        u_color = {type="v4", name="vv", value={1, 0, 0, 1}}
-                --    }
-                --}
             serialize = serialize.create(),
             lock_target = {
                 type = "ignore_scale",

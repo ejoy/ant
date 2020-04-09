@@ -67,4 +67,22 @@ function assetmgr.init()
 	end
 end
 
+function assetmgr.clone(res_template, path)
+	if path == nil then
+		return resource.clone(res_template)
+	end
+
+	local root = resource.clone(res_template)
+	local sub = root
+	for name in path:gmatch "[^/]+" do
+		local o = sub[name]
+		if o == nil then
+			error(string.format("invalid subpath %s in %s", name, path))
+		end
+		sub = resource.clone(o)
+	end
+
+	return root
+end
+
 return assetmgr

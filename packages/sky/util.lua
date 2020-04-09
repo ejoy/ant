@@ -45,6 +45,14 @@ local function fill_procedural_sky_mesh(skyentity)
 	skyentity.rendermesh = assetmgr.load("//res.mesh/procedural_sky.rendermesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib))
 end
 
+local function create_material(materialpath, uniforms)
+	local m = assetmgr.clone(assetmgr.load(materialpath), "/properties/uniforms")
+	local u = m.properties.uniforms
+	for k, v in pairs(uniforms) do
+
+	end
+end
+
 function util.create_procedural_sky(world, settings)
 	settings = settings or {}
 	local function attached_light(eid)
@@ -61,17 +69,7 @@ function util.create_procedural_sky(world, settings)
 		data = {
 			transform = {srt=mu.srt()},
 			rendermesh = {},
-			material = computil.assign_material(
-				fs.path "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",
-				{
-					uniforms = {
-						u_sunDirection = {type="v4", name="sub direction", value = mc.T_ZAXIS},
-						u_sunLuminance = {type="v4", name="sky luminace in RGB color space", value=mc.T_ZERO},
-						u_skyLuminanceXYZ = {type="v4", name="sky luminance in XYZ color space", value=mc.T_ZERO},
-						u_parameters = {type="v4", name="parameter include: x=sun size, y=sun bloom, z=exposition, w=time", value=mc.T_ZERO},
-						u_perezCoeff = {type="v4_array", name="Perez coefficients", value_array = {mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO, mc.T_ZERO}},
-					}
-				}),
+			material = "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = {
 				grid_width = 32, 
 				grid_height = 32,
@@ -85,6 +83,20 @@ function util.create_procedural_sky(world, settings)
 			name = "procedural sky",
 		}
 	}
+
+	local sky = world[skyeid]
+	local m = assetmgr.clone(sky.material, "/properties/uniforms")
+	sky.material = m
+	local uniforms = m.properties.uniforms
+	for _, n in ipairs{
+		"u_sunDirection",
+		"u_sunLuminance",
+		"u_skyLuminanceXYZ",
+		"u_parameters",
+		"u_perezCoeff",
+	} do
+		uniforms[n] = assetmgr.clone(assert(uniforms[n]))
+	end
 
 	fill_procedural_sky_mesh(world[skyeid])
 	return skyeid

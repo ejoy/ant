@@ -4,10 +4,11 @@ local world = ecs.world
 local viewidmgr = require "viewid_mgr"
 local fbmgr    = require "framebuffer_mgr"
 local renderutil= require "util"
-local computil  = require "components.util"
 local setting   = require "setting"
 
 local fs        = require "filesystem"
+
+local assetmgr = import_package "ant.asset"
 
 local bloom_sys = ecs.system "bloom_system"
 bloom_sys.require_singleton  "postprocess"
@@ -71,22 +72,19 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 
     local function insert_blur_pass(fbidx, fbw, fbh, material, sampleparam, intensity)
         local passidx = #passes+1
-        local properties = {
-            uniforms = {
-                u_sample_param = world:create_component("uniform", 
+
+        local m = assetmgr.clone(assetmgr.load(material), "/properties/uniforms")
+        local uniforms = m.properties.uniforms
+        uniforms["u_sample_param"] = world:create_component("uniformdata", 
                 {type = "v4", name = "sample param", value = sampleparam})
-            },
-        }
         if intensity then
-            properties.uniforms["u_intensity"] = world:create_component("uniform",
+            uniforms["u_intensity"] = world:create_component("uniformdata",
             {type = "v4", name = "up sample intensity", value = {intensity, 0.0, 0.0, 0.0}})
         end
 
         passes[passidx] = {
             name = "bloom" .. passidx,
-            material = {
-                ref_path = material, properties = properties,
-            },
+            material = m,
             viewport = get_viewport(fbw, fbh),
             output = {fb_idx=fbidx, rb_idx=1},
         }
@@ -119,7 +117,7 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 
     passes[#passes+1] = {
         name = "combine scene with bloom",
-        material = combine_material:string(),
+        material = assetmgr.load(combine_material:string()),
         viewport = get_viewport(),
         output  = {fb_idx=next_fbidx(), rb_idx=1},
     }

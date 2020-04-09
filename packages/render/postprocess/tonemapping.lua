@@ -3,9 +3,10 @@ local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr = require "framebuffer_mgr"
-local fs = require "filesystem"
 
 local cu = require "camera.util"
+
+local assetmgr = import_package "ant.asset"
 
 local setting = require "setting"
 
@@ -32,11 +33,7 @@ function tm:post_init()
                 passes = {
                     {
                         name = "main",
-                        material = {
-                            {
-                                ref_path = fs.path "/pkg/ant.resources/depiction/materials/postprocess/tonemapping.material",
-                            }
-                        },
+                        material = assetmgr.load "/pkg/ant.resources/depiction/materials/postprocess/tonemapping.material",
                         output = {
                             fb_idx = main_fbidx,
                             rb_idx = 1,

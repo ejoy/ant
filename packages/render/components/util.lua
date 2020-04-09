@@ -147,12 +147,20 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	local data = {
 		transform = trans,
 		rendermesh = {},
-		material = {
-			ref_path = materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
-			properties = {
-				uniforms = {u_color = {type="color", name="color", value=color}},
-			}
-		},
+		material = ([[
+				---
+				%s
+				---
+				op=relpace
+				path=/properties/uniforms/u_color
+				value:
+					type=color, 
+					name=color,
+					value={%f, %f, %f, %f}
+			]]):format(
+				materialpath or "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+				color[1], color[2], color[3], color[4]
+		),
 		can_render = true,
 		name = name or "Plane",
 	}

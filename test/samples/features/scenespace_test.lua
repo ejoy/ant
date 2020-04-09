@@ -299,60 +299,6 @@ local function create_scene_node_test()
                 serialize   = seriazlizeutil.create(),
             }
         }
-
-    local singlecolor_material = fs.path "/pkg/ant.resources/depiction/materials/singlecolor.material"
-
-    local function create_material_item(filepath, color)
-        return {
-            ref_path = filepath,
-            properties = {
-                uniforms = {
-                    u_color = {type = "color", name = "Color", value = color},
-                }
-            },
-        }
-    end
-
-    local submesh_child = world:create_entity {
-        policy = {
-            "ant.serialize|serialize",
-            "ant.render|name",
-            "ant.render|render",
-            "ant.render|mesh",
-        },
-        data = {
-            transform = {
-                parent = world[hie2_level1_1].serialize, 
-                srt = {s = {0.1}},
-            },
-            name = 'submesh_child',
-            rendermesh = {
-                submesh_refs = {
-                    build_big_storage_01_pillars_01     = computil.create_submesh_item {1},
-                    build_big_storage_01_fence_02       = computil.create_submesh_item {2},
-                    build_big_storage_01_walls_up       = computil.create_submesh_item {3},
-                    build_big_storage_01_walls_down     = computil.create_submesh_item {4},
-                    build_big_storage_01_straw_roof_002 = computil.create_submesh_item {5},
-                },
-            },
-            mesh = '/pkg/ant.resources/depiction/meshes/build_big_storage_01.mesh',
-            material = {
-                ref_path = singlecolor_material,
-                properties = {uniforms = {
-                        u_color = {type = "color", name = "Color", value = {1, 0, 0, 0}},
-                }},
-                create_material_item(singlecolor_material, {0, 1, 0, 0}),
-                create_material_item(singlecolor_material, {1, 0, 1, 0}),
-                create_material_item(singlecolor_material, {1, 1, 0, 0}),
-                create_material_item(singlecolor_material, {1, 1, 1, 0}),
-            },
-            can_render = true,
-            can_select = true,
-            serialize = seriazlizeutil.create(),
-        },
-
-    }
-
 end
 
 function scenespace_test:init()
@@ -558,9 +504,6 @@ local test_queue = {
                 },
                 rendermesh = {},
                 material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                    --properties = {
-                    --    uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
-                    --}
                 mesh = '/pkg/ant.resources/depiction/meshes/cone.mesh',
                 can_render = true,
                 can_select = true,
@@ -583,9 +526,6 @@ local test_queue = {
                 },
                 rendermesh = {},
                 material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
-                    --properties = {
-                    --    uniforms = {u_color = {type="v4", name="color", value={1, 0.8, 0.8, 1}}}
-                    --}
                 mesh = '/pkg/ant.resources/depiction/meshes/cone.mesh',
                 can_render = true,
                 can_select = true,

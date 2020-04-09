@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
+local assetmgr = import_package "ant.asset"
 
 local serializeutil = import_package "ant.serialize"
 
@@ -18,7 +17,7 @@ local function create_pbr_entity(world,
     name, transform, meshpath,
     color, metallic, roughness)
 
-    return world:create_entity {
+    local eid = world:create_entity {
         policy = {
             "ant.render|render",
             "ant.render|mesh",
@@ -29,33 +28,30 @@ local function create_pbr_entity(world,
         data = {
             name = name,
             transform = transform,
-            material = computil.assign_material(
-                pbr_materialpath,
-                {
-                    uniforms = {
-                        u_basecolor_factor = {
-                            type="color", name = "base color",
-                            value = color,
-                        },
-                        u_metallic_roughness_factor = {
-                            type="v4", name = "metallic roughness",
-                            value = {0.0, roughness, metallic, 0.0},
-                        },
-                        u_emissive_factor = {
-                            type="color", name = "emissive",
-                            value = {0.0, 0.0 ,0.0 ,0.0},
-                        }
-                    }
-                }
-            ),
+            material = pbr_materialpath:string(),
             rendermesh = {},
             mesh = meshpath:string(),
             can_render = true,
             can_select = true,
             serialize = serializeutil.create(),
         }
-
     }
+
+    local e = world[eid]
+
+    local m = assetmgr.clone(e.material)
+    e.material = m
+
+    local u = m.properties.uniforms
+    for k, v in pairs{
+        u_basecolor_factor = color,
+        u_metallic_roughness_factor  = {0.0, roughness, metallic, 0.0},
+    } do
+        u[k] = assetmgr.clone(assert(u[k]))
+        u[k].value.v = v
+    end
+
+    return eid
 end
 
 local function pbr_spheres()

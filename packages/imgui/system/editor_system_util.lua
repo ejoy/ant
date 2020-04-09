@@ -64,7 +64,6 @@ end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
     -- parent = parent and world[parent].serialize or nil
-    local computil  = import_package "ant.render".components
     color[4] = 0.6
     return world:create_entity {
         policy={
@@ -86,10 +85,17 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             },
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/ring.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_front_singlecolor.material",
-                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}},
-            },
+            material = ([[
+                ---
+                /pkg/ant.resources/depiction/materials/gizmo_front_singlecolor.material
+                ---
+                op: replace
+                path: /properties/uniforms/u_color
+                value:
+                    type=v4
+                    name=u_color
+                    value={%f, %f, %f, %f}
+            ]]):format(color[1], color[2], color[3], color[4]),
             --can_cast = true,
             can_render = true,
             name = name,
@@ -225,10 +231,17 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             },
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cone.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
-                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}}
-            },
+            material = ([[
+                ---
+                /pkg/ant.resources/depiction/materials/gizmo_singlecolor.material
+                ---
+                op:replace
+                path:/properties/uniforms/u_color
+                value:
+                    type=v4
+                    name=u_color
+                    value={%f,%f,%f,%f}
+            ]]):format(color[1], color[2], color[3], color[3]),
             can_render = true,
             can_select = true,
             name = name,
@@ -262,12 +275,18 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             },
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
-            material = {
-                ref_path = fs.path "/pkg/ant.resources/depiction/materials/gizmo_singlecolor.material",
-                properties = {uniforms = {u_color = {type="v4", name="u_color", value=color}}},
-            },
+            material = ([[
+                ---
+                /pkg/ant.resources/depiction/materials/gizmo_singlecolor.material
+                ---
+                op:replace
+                path:/properties/uniforms/u_color
+                value:
+                    type=v4
+                    name=u_color
+                    value={%f, %f, %f,%f}
+            ]]):format(color[1], color[2], color[3], color[4]),
             can_render = true,
-            --can_cast = true,
             name = name,
             can_select = true,
             gizmo_object = {dir=dir},

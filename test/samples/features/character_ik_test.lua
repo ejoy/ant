@@ -134,7 +134,7 @@ local function create_plane_test()
         r = math3d.totable(math3d.quaternion{math.rad(10), 0, 0}),
         t = {0, 0, -5, 1},
     }},
-    fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+    "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},
     "test shadow plane",
     {
