@@ -3,10 +3,6 @@ local world = ecs.world
 
 local math3d = require "math3d"
 
-local assetmgr 	= import_package "ant.asset"
-
-local animodule = require "hierarchy.animation"
-
 ecs.component_alias("attach", "entityid")
 
 ecs.component "hierarchy_transform_result" {}
@@ -148,21 +144,7 @@ local function mark_cache(eid, cache_result)
 	local cachemat = update_hirarchy_entity_world(t)
 	assert(type(cachemat) == 'userdata')
 
-	local hiecomp = e.hierarchy
-	if hiecomp and hiecomp.ref_path then
-		local hiehandle = assetmgr.get_resource(hiecomp.ref_path).handle
-		if t.hierarchy_result == nil then
-			local bpresult = animodule.new_bind_pose(#hiehandle)
-			hiehandle:bind_pose(bpresult)
-			t.hierarchy_result = setmetatable({}, {__index=function(t, key)
-				local jointidx = hiehandle:joint_index(key)
-				local j = bpresult:joint(jointidx)
-				t[key] = j
-				return j
-			end})
-		end
-	end
-	cache_result[eid] = {world=cachemat, hierarchy=t.hierarchy_result}
+	cache_result[eid] = {world=cachemat}
 end
 
 local function update_hierarchy_tree(tree, cache_result)

@@ -8,8 +8,7 @@ local declmgr 	= require "vertexdecl_mgr"
 local animodule = require "hierarchy.animation"
 local hwi		= require "hardware_interface"
 
-local assetmgr 	= import_package "ant.asset"
-local resource = import_package "ant.resource"
+local assetmgr = import_package "ant.asset"
 
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
@@ -125,7 +124,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	grid.rendermesh = util.create_rendermesh("//res.mesh/grid.rendermesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+	grid.rendermesh = assetmgr.load("//res.mesh/grid.rendermesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -180,7 +179,7 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 		-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
 		0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
 	}
-	local meshscene = util.create_rendermesh("//res.mesh/plane.rendermesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
+	local meshscene = assetmgr.load("//res.mesh/plane.rendermesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
 	local selectscene = meshscene.scenes[meshscene.default_scene]
 	local _, meshnode = next(selectscene)
 	meshnode.bounding = {
@@ -243,7 +242,7 @@ end
 
 function util.create_quad_entity(world, rect, material, name, tag)
 	local eid = create_simple_render_entity(world, material, name, tag)
-	world[eid].rendermesh = util.create_rendermesh("//res.mesh/quad.rendermesh", util.quad_mesh(rect))
+	world[eid].rendermesh = assetmgr.load("//res.mesh/quad.rendermesh", util.quad_mesh(rect))
 	return eid
 end
 
@@ -262,7 +261,7 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
 		 3, -3, 0, 1, 1,
 	}
 	
-	quad.rendermesh = util.create_rendermesh("//res.mesh/quad_scale3.rendermesh", quad_mesh(vb))
+	quad.rendermesh = assetmgr.load("//res.mesh/quad_scale3.rendermesh", quad_mesh(vb))
     return quadid
 end
 
@@ -311,7 +310,7 @@ function util.create_frustum_entity(world, frustum_points, name, transform, colo
 		2, 6, 3, 7,
 	}
 	
-	e.rendermesh = util.create_rendermesh("//res.mesh/frustum.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
+	e.rendermesh = assetmgr.load("//res.mesh/frustum.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
 	return eid
 end
 
@@ -331,7 +330,7 @@ function util.create_axis_entity(world, transform, color, name, tag)
 		0, 2, 
 		0, 3,
 	}
-	world[eid].rendermesh = util.create_rendermesh("//res.mesh/axis.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
+	world[eid].rendermesh = assetmgr.load("//res.mesh/axis.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
 	return eid
 end
 
@@ -357,7 +356,7 @@ function util.create_skybox(world, material)
     for _, v in ipairs(desc.vb)do
         table.move(v, 1, 3, #gvb+1, gvb)
     end
-    e.rendermesh = util.create_rendermesh("//res.mesh/skybox.rendermesh", util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib))
+    e.rendermesh = assetmgr.load("//res.mesh/skybox.rendermesh", util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib))
     return eid
 end
 
@@ -371,11 +370,6 @@ function util.check_rendermesh_lod(meshscene, lod_scene)
 			log.warn("default lod scene is not equal to lodidx")
 		end
 	end
-end
-
-function util.create_rendermesh(filename, data)
-	resource.load(filename, data)
-	return resource.proxy(filename)
 end
 
 function util.entity_bounding(entity)

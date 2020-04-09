@@ -12,12 +12,8 @@ local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local renderutil= renderpkg.util
 local viewidmgr = renderpkg.viewidmgr
-local hwi		= renderpkg.hwi
-
-local assetmgr = import_package "ant.asset"
 
 local bgfx 		= require "bgfx"
-local fs 		= require "filesystem"
 
 --update pickup view
 local function enable_pickup(enable)

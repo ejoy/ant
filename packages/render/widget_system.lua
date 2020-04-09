@@ -49,7 +49,7 @@ function m:init()
 		}
 	}
 
-	world[eid].rendermesh = computil.create_rendermesh("//res.mesh/bounding.mesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
+	world[eid].rendermesh = assetmgr.load("//res.mesh/bounding.rendermesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
 end
 
 function m:end_frame()

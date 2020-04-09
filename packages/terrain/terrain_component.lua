@@ -1,11 +1,10 @@
 local ecs = ...
 local world = ecs.world
 
-local assetmgr 	= import_package "ant.asset"
+local assetmgr = import_package "ant.asset"
 
 local renderpkg = import_package 'ant.render'
 local declmgr	= renderpkg.declmgr
-local computil	= renderpkg.components
 
 local math3d	= require "math3d"
 local bgfx 		= require "bgfx"
@@ -41,12 +40,6 @@ function t:init()
 
 		local tlen = tile_length(self)
 		local gridwidth, gridheight = self.tile_width * tlen, self.tile_height * tlen
-		local heightfield = assetmgr.get_resource(self.ref_path)
-		if heightfield == nil then
-			heightfield = {}
-			heightfield = terrain_module.alloc_heightfield(self.ref_path)
-			assetmgr.register_resource(self.ref_path, heightfield)
-		end
 	else
 		if self.tile_width == nil or self.tile_height == nil then
 			error(string.format("terrain data must provide if not from height field file"))
@@ -151,5 +144,5 @@ function trt.process(e)
 	}
 
 	meshscene.scenes = scenes
-	e.rendermesh = computil.create_rendermesh("//res.mesh/terrain.mesh", meshscene)
+	e.rendermesh = assetmgr.load("//res.mesh/terrain.rendermesh", meshscene)
 end

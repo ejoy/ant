@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local assetmgr = import_package "ant.asset"
 local ani_module = require "hierarchy.animation"
 
 ecs.component "pose_result"

@@ -56,7 +56,7 @@ pp_sys.require_interface "uniforms"
 
 pp_sys.require_system "render_system"
 
-local quad_reskey = fs.path "//res.mesh/postprocess.mesh"
+local quad_meshgroup
 
 local function local_postprocess_views(num)
     local viewids = {}
@@ -80,7 +80,10 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    quad_reskey = assetmgr.register_resource(quad_reskey, computil.quad_mesh{x=-1, y=-1, w=2, h=2})
+    local rm = assetmgr.load("//res.mesh/postprocess.mesh", computil.quad_mesh{x=-1, y=-1, w=2, h=2})
+    local _, scene = next(rm)
+    local _, meshnode = next(scene)
+    quad_meshgroup = meshnode[1]
 end
 
 local function is_slot_equal(lhs, rhs)
@@ -143,14 +146,11 @@ function pp_sys:combine_postprocess()
             fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
             rb_idx = 1
         }
-        
-        local meshres = assetmgr.get_resource(quad_reskey)
-        local meshgroup = meshres.scenes[1][1][1]
 
         reset_viewid_idx()
         for i=1, #techniques do
             local tech = techniques[i]
-            lastslot = render_technique(tech, lastslot, meshgroup, render_properties)
+            lastslot = render_technique(tech, lastslot, quad_meshgroup, render_properties)
         end
     end
 end

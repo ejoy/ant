@@ -1,12 +1,12 @@
 local util = {}; util.__index = {}
 
+local assetmgr = import_package "ant.asset"
+
 local renderpkg = import_package "ant.render"
 local computil 	= renderpkg.components
 
 local mathpkg	= import_package "ant.math"
 local mu,mc		= mathpkg.util, mathpkg.constant
-
-local assetmgr	= import_package "ant.asset"
 
 local fs 		= require "filesystem"
 
@@ -42,7 +42,7 @@ local function fill_procedural_sky_mesh(skyentity)
 		end
 	end
 
-	skyentity.rendermesh = computil.create_rendermesh("//res.mesh/procedural_sky.rendermesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib))
+	skyentity.rendermesh = assetmgr.load("//res.mesh/procedural_sky.rendermesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib))
 end
 
 function util.create_procedural_sky(world, settings)

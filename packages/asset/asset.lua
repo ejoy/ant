@@ -31,8 +31,24 @@ local support_ext = {
 	glbmesh   = true,
 }
 
-function assetmgr.load(filename, lazyload)
-    resource.load(filename, nil, lazyload)
+local function get_accessor(name)
+	if support_ext[name] then
+		return require ("ext_" .. name)
+	end
+
+	error("Unsupport asset type: " .. name)
+end
+
+function assetmgr.get_loader(name)
+	return get_accessor(name).loader
+end
+
+function assetmgr.get_unloader(name)
+	return get_accessor(name).unloader
+end
+
+function assetmgr.load(filename, data, lazyload)
+    resource.load(filename, data, lazyload)
     return resource.proxy(filename)
 end
 
@@ -45,7 +61,7 @@ end
 
 function assetmgr.init()
 	for name in pairs(support_ext) do
-		local accessor = require ("ext_" .. name)
+		local accessor = get_accessor(name)
 		resource.register_ext(name, accessor.loader, accessor.unloader)
 	end
 end

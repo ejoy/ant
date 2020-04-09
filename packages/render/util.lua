@@ -1,8 +1,9 @@
-local assetmgr = import_package "ant.asset"
 
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local mu = mathpkg.util
+
+local assetmgr = import_package "ant.asset"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -334,7 +335,7 @@ function util.create_blit_queue(world, viewrect)
 		}
 	}
 
-	world[eid].rendermesh = computil.create_rendermesh("//res.mesh/quad.mesh", computil.quad_mesh())
+	world[eid].rendermesh = assetmgr.load("//res.mesh/quad.rendermesh", computil.quad_mesh())
 end
 
 local statemap = {

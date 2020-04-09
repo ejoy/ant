@@ -1,8 +1,5 @@
 local ecs = ...
-local world = ecs.world
-
-local component_util = require "components.util"
-local ru	= require "util"
+local assetmgr = import_package "ant.asset"
 
 local fs 		= require "filesystem"
 local math3d 	= require "math3d"
@@ -71,7 +68,7 @@ ml.output   "rendermesh"
 
 function ml.process(e)
 	local filename = tostring(e.mesh):gsub("[.]%w+$", ".glbmesh")
-	e.rendermesh = component_util.create_rendermesh(filename, e.mesh)
+	e.rendermesh = assetmgr.load(filename, e.mesh)
 end
 
 ecs.component "texture"

@@ -494,9 +494,7 @@ function GLBInspector:on_apply_modify()
     self.modified = nil
     local vfs           = require "vfs"
     vfs.clean_build(self.res_pkg_path:string())
-    if assetmgr.has_resource(self.res_pkg_path) then
-        assetmgr.unload(self.res_pkg_path)
-    end
+    assetmgr.unload(self.res_pkg_path)
 end
 
 function GLBInspector:on_update()

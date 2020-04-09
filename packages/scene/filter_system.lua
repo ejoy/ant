@@ -1,11 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local render = import_package "ant.render"
-local computil = render.components
-
-local assetmgr = import_package "ant.asset"
-
 local math3d = require "math3d"
 
 ecs.component_alias("filter_tag", "string")
@@ -80,8 +75,7 @@ local function cache_material(rendermesh, materialcomp)
 	for _, meshnode in pairs(scene) do
 		for groupidx, group in ipairs(meshnode) do
 			local material = get_material(group, groupidx, materialcomp)
-			local mi = assert(assetmgr.get_resource(material.ref_path))
-			local transparency = mi.fx.surface_type.transparency
+			local transparency = material.fx.surface_type.transparency
 
 			n = n + 1
 			cache[n] = {

@@ -2,11 +2,7 @@ local ecs = ...
 
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
-local computil = renderpkg.component
-
-local assetmgr  = import_package "ant.asset"
-
-local fs        = require "filesystem"
+local assetmgr = import_package "ant.asset"
 local animodule = require "hierarchy.animation"
 
 local bgfx      = require "bgfx"
@@ -127,7 +123,7 @@ function ozzmesh_loader.process(e)
 	local stem, ext = meshfilename:match "[/\\]([%w_-]+)%.([%w_-]+)$"
 	assert(ext == "glb")
 	local filename 	= "//res.mesh/" .. stem .. ".rendermesh"
-	e.rendermesh	= computil.create_rendermesh(filename, gen_mesh_assetinfo(e.mesh.handle))
+	e.rendermesh	= assetmgr.load(filename, gen_mesh_assetinfo(e.mesh.handle))
 end
 
 function ozzmesh_skinning_transform.process(e)

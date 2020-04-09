@@ -1,7 +1,5 @@
 local ecs = ...
 
-local assetmgr = import_package "ant.asset"
-
 --there are 2 types in ik_data, which are 'two_bone'(IKTwoBoneJob) and 'aim'(IKAimJob).
 ecs.component "ik_data"
 	.type		"string"("aim")			-- can be 'two_bone'/'aim'
