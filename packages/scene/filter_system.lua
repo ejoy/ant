@@ -80,7 +80,7 @@ local function cache_material(rendermesh, materialcomp)
 			n = n + 1
 			cache[n] = {
 				group,	-- 1
-				material.ref_path,	-- 2
+				material,	-- 2
 				material.properties,	-- 3
 				transparency,	-- 4
 				group.bounding and group.bounding.aabb or nil,	-- 5

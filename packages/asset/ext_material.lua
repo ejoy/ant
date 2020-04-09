@@ -4,7 +4,7 @@ local bgfx		= require "bgfx"
 
 local function load_state(state)
 	return bgfx.make_state(type(state) == "string" and
-		assetmgr.get_resource(fs.path(state)) or
+		assetmgr.load(state)._data or
 		state)
 end
 

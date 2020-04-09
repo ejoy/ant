@@ -47,9 +47,10 @@ function assetmgr.get_unloader(name)
 	return get_accessor(name).unloader
 end
 
-function assetmgr.load(filename, data, lazyload)
-    resource.load(filename, data, lazyload)
-    return resource.proxy(filename)
+function assetmgr.load(fullpath, data, lazyload)
+	local fn = fullpath:match "[^:]+"
+    resource.load(fn, data, lazyload)
+    return resource.proxy(fullpath)
 end
 
 function assetmgr.load_multiple(filelist, lazyload)

@@ -67,7 +67,7 @@ ml.input    "mesh"
 ml.output   "rendermesh"
 
 function ml.process(e)
-	local filename = tostring(e.mesh):gsub("[.]%w+$", ".glbmesh")
+	local filename = tostring(e.mesh):gsub("[.]%w+:", ".glbmesh:")
 	e.rendermesh = assetmgr.load(filename, e.mesh)
 end
 
