@@ -107,13 +107,15 @@ assert(result[1] == 1)
 assert(result[2] == 2)
 assert(result[3] == 3)
 
-local zclone = resource.clone(z)
-zclone[1] = 1
-zclone[3] = 3
+local zclone = resource.patch(z,
+	{
+			{ "hello_patched" },
+	}
+)
 
-assert(zclone[1] == 1)
+assert(zclone[1][1] == "hello_patched")
 assert(zclone[2][1] == "world")
-assert(zclone[3] == 3)
+assert(resource.status(zclone[2])=="data")
 
 local mproxy = resource.multiple_proxy {
 	"a.code:a",

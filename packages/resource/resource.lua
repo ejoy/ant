@@ -369,20 +369,46 @@ function resource.monitor(filename, enable)
 	end
 end
 
-function resource.clone(obj)
+local function apply_patch(obj, patch)
+	assert(patch._path == nil)	-- patch must be a normal table
+	for k,v in pairs(patch) do
+		local original = obj[k]
+		if original == nil then
+			format_error("the key %s in the patch is not exist in the original object", k)
+		end
+		if type(original) ~= "table" then
+			if type(v) == "table" then
+				format_error("patch a none-table key %s with a table", k)
+			end
+			obj[k] = v
+		else
+			-- it's sub tree
+			if type(v) ~= "table" then
+				format_error("patch a sub tree %s with a none-table", k)
+			end
+			obj[k] = resource.patch_table(original, v)
+		end
+	end
+end
+
+--it's a local function for apply_patch
+local function patch_table(obj, patch)
 	local path = obj._path
 	if not path then
 		-- it's a normal table
+		apply_patch(obj, patch)
 		return obj
 	end
 	if path == MULTIPLE then
-		local multiple = resource.clone(obj._data)
+		-- a multiple proxy, patch the first one, and copy others
+		local multiple = patch_table(obj._data, patch)
 		for i = 1, #obj do
 			multiple[i] = obj[i]
 		end
 		return multiple
 	end
-	local clone = {}
+	assert(patch._path == nil)
+
 	local filename = getmetatable(obj).filename
 	local prefix
 	if path == "" then
@@ -390,15 +416,38 @@ function resource.clone(obj)
 	else
 		prefix = filename .. ":" .. path .. "."
 	end
+
 	for k,v in pairs(obj) do
-		if type(v) == "table" and v._path == nil then
-			clone[k] = resource.proxy(prefix .. k)
+		local patch_value = patch[k]
+		if patch_value == nil then
+			-- clone original value into patch
+			if type(v) == "table" and v._path == nil then
+				-- a sub tree in resource
+				patch[k] = resource.proxy(prefix .. k)
+			else
+				patch[k] = v
+			end
+		elseif type(patch_value) == "table" then
+			-- patch sub tree
+			if type(v) ~= "table" then
+				format_error("patch a none-table key %s with a table", k)
+			end
+			local original_value = v
+			if v._path == nil then
+				original_value = resource.proxy(prefix .. k)
+			end
+			patch[k] = patch_table(original_value, patch_value)
+		elseif type(v) == "table" then
+			format_error("patch a sub tree %s with a none-table", k)
 		else
-			clone[k] = v
+			patch[k] = patch_value
 		end
 	end
-	return clone
+
+	return patch
 end
+
+resource.patch = patch_table
 
 return resource
 
