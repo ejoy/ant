@@ -13,7 +13,10 @@ else
 default : $(ODIR)/libhierarchy.a
 endif
 
-OBJ_FILES := $(ODIR)/hierarchy.o $(ODIR)/animation.o $(ODIR)/mesh.o	$(ODIR)/ik.o $(ODIR)/ozzmesh.o
+OBJ_FILES := $(ODIR)/hierarchy.o $(ODIR)/animation.o $(ODIR)/mesh.o $(ODIR)/ik.o $(ODIR)/ozzmesh.o $(ODIR)/scene.o
+
+$(ODIR)/scene.o : scene.c | $(ODIR)
+	$(CC) -c $(CFLAGS) -o $@ $< $(LUAINC)
 
 $(ODIR)/hierarchy.o: hierarchy.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
