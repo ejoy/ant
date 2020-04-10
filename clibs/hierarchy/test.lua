@@ -1,68 +1,56 @@
 local hierarchy = require "hierarchy"
+local math3d = require "math3d"
 
 local root = hierarchy.new()
 
-root[1] = { 
-    name = "child",     
-    transform = {
-        srt = {
-            s={2, 1, 0.5}, 
-            r={math.cos(45), 0, 0, math.sin(45)},
-        },
-    }
-}
+local s, r = math3d.ref(math3d.vector(2, 1, 0.5)), math3d.ref(math3d.quaternion(math.cos(45), 0, 0, math.sin(45)))
+local c = root:add_child("child", s.p, r.p)
+print(c:name())
+print(root:get_child(1):name())
 
-print(root[1].name)
-
-local child = root[1]
-child.name = "foobar"
+local child = root:get_child(1)
+child:set_name "foobar"
 collectgarbage "collect"
 
-print(child.name)
+print(child:name())
+local old = root:get_child(1)
 
-print(root[1].name)
-local old = root[1]
+local s1, r1, t1 = 
+    math3d.ref(math3d.vector(1, 3, 0.1)), 
+    math3d.ref(math3d.quaternion(math.cos(45), 0, 0, math.sin(45))), 
+    math3d.ref(math3d.vector(2, 2, 1))
 
-root[2] = { 
-    name = "child2",
-    transform = {
-        srt = {
-            s={1, 3, 0.1}, 
-            r={math.cos(45), 0, 0, math.sin(45)},   -- quaternion
-            t={2, 2, 1}
-        }
-    } 
-}
+root:add_child("child2", s1.p, r1.p, t1.p)
 
-local new = root[2]
+local new = root:get_child(2)
 
-root[1] = nil
+root:remove_child(1)
 
 print("root children num : ", #root)
 
-for i, v in ipairs(root) do
-	print("===>", i,v.name)
+for i=1, #root do
+	print("===>", i, root:get_child(i):name())
 end
 
-print(new.name)
-print(old)	-- Invalid node
+print(hierarchy.invalid(new))	-- Invalid node
+print(hierarchy.invalid(old))
 
 -- will rasie an error
 --print(old.name)	-- Invalid node
 
 --child[1] = { name = "child_1"}
 
-child = root[1]
+child = root:get_child(1)
 
-local child_1 = child[1]
+local child_1 = child:get_child(1)
 assert(child_1 == nil)
-child[1] = {name = "child_1"}
+child:add_child("child_1")
 
-child_1 = child[1]
-print(child_1.name)
+child_1 = child:get_child(1)
+print(child_1:name())
 
-child[2] = {name = "child_2"}
-child_1[1] = {name = "child_1_1"}
+child:add_child("child_2")
+child_1:add_child("child_1_1")
 
 
 local function print_tree(tr, offset_pr)
@@ -72,14 +60,15 @@ local function print_tree(tr, offset_pr)
     end
 
     for i=1, num do
-        local child = assert(tr[i])        
+        local child = assert(tr:get_child(i))
         local child_num = #child
 
-        print(offset_pr .. child.name)
-        local transform = child.transform
-        print(offset_pr .. "transform, scale : ", transform.s, 
-            ", rotation : ", transform.r, 
-            ", translation : ", transform.t)
+        print(offset_pr .. child:name())
+        -- need math_adpater
+        --local transform = child:transform()
+        -- print(offset_pr .. "transform, scale : ", transform.s, 
+        --     ", rotation : ", transform.r, 
+        --     ", translation : ", transform.t)
 
         if child_num ~= 0 then
             print_tree(child, offset_pr .. "\t")
@@ -105,4 +94,4 @@ local function print_build(tr)
 end
 
 print_build(root)
-assert(hierarchy.invalid(old))	-- Invalid node
+assert(hierarchy.invalid(new))	-- Invalid node

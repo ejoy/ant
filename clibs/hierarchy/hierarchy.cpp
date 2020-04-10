@@ -515,7 +515,7 @@ lhnode_load(lua_State *L) {
 
 static int
 lnewhierarchy(lua_State *L) {
-	struct hierarchy * node = (struct hierarchy *)lua_newuserdatauv(L, sizeof(*node), 0);
+	struct hierarchy * node = (struct hierarchy *)lua_newuserdatauv(L, sizeof(*node), 1);
 	node->joint = NULL;
 	luaL_getmetatable(L, "HIERARCHY_NODE");
 	lua_setmetatable(L, -2);
@@ -554,7 +554,7 @@ lnewhierarchy(lua_State *L) {
 static inline void
 fetch_srt(lua_State *L, int sidx, int ridx, int tidx, ozz::math::Transform &trans) {
 	auto fetchdata = [L](int idx, auto &value) {
-		if (!lua_isnil(L, idx)) {
+		if (!lua_isnoneornil(L, idx)) {
 			luaL_checktype(L, idx, LUA_TLIGHTUSERDATA);
 			const float* v = (const float*)lua_touserdata(L, idx);
 			memcpy(&value.x, v, sizeof(value));
@@ -577,16 +577,7 @@ lhnode_addchild(lua_State *L) {
 	const char* name = luaL_checkstring(L, 2);
 	joint->name = name;
 
-	switch (top) {
-	case 2:
-		break;
-	case 5:
-		fetch_srt(L, 3, 4, 5, joint->transform);
-		break;
-	default:
-		luaL_error(L, "invalid argument number:%d, need argument like: ([node], [name], opt[s], opt[r], opt[t])", top);
-	}
-
+	fetch_srt(L, 3, 4, 5, joint->transform);
 	return push_hierarchy_node(L, joint);
 }
 
@@ -636,7 +627,7 @@ static int
 lhnode_name(lua_State *L) {
 	auto hnode = (struct hierarchy *)luaL_checkudata(L, 1, "HIERARCHY_NODE");
 	lua_pushstring(L, hnode->joint->name.c_str());
-	return 0;
+	return 1;
 }
 
 static int
@@ -670,28 +661,28 @@ lhnode_size(lua_State *L){
 	return 1;
 }
 
-// static int
-// lhnode_getnode(lua_State *L) {
-// 	const size_t n = (int)lua_tointeger(L, 2);
-// 	if (n <= 0) {
-// 		return luaL_error(L, "Invalid children index %f", lua_tonumber(L, 2));
-// 	}
-// 	RawSkeleton::Joint::Children * c = get_children(L, 1);	
-// 	if (n > c->size()) {
-// 		return 0;
-// 	}
+static int
+lhnode_getchild(lua_State *L) {
+	const size_t n = (int)lua_tointeger(L, 2);
+	if (n <= 0) {
+		return luaL_error(L, "Invalid children index %f", lua_tonumber(L, 2));
+	}
+	RawSkeleton::Joint::Children * c = get_children(L, 1);	
+	if (n > c->size()) {
+		return 0;
+	}
 
-// 	RawSkeleton::Joint *joint = &c->at(n - 1);
-// 	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
-// 		return luaL_error(L, "Missing cache lhnodeget");
-// 	}
-// 	if (lua_rawgetp(L, -1, (const void *)joint) == LUA_TUSERDATA) {
-// 		return 1;
-// 	}
-// 	lua_pop(L, 1);
+	RawSkeleton::Joint *joint = &c->at(n - 1);
+	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
+		return luaL_error(L, "Missing cache lhnodeget");
+	}
+	if (lua_rawgetp(L, -1, (const void *)joint) == LUA_TUSERDATA) {
+		return 1;
+	}
+	lua_pop(L, 1);
 
-// 	return push_hierarchy_node(L, joint);
-// }
+	return push_hierarchy_node(L, joint);
+}
 
 static void
 register_hierarchy_builddata(lua_State *L) {
@@ -730,9 +721,11 @@ register_hierarchy_node(lua_State *L) {
 		{"load", lhnode_load},
 		{"add_child", lhnode_addchild},
 		{"remove_child", lhnode_removechild},
+		{"get_child", lhnode_getchild},
 		{"transform", lhnode_get_transform},
 		{"set_transform", lhnode_set_transform},
 		{"name", lhnode_name},
+		{"set_name", lhnode_set_name},
 		{"size", lhnode_size},
 		{nullptr, nullptr},
 	};
