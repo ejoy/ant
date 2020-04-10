@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\clibs\hierarchy\ik.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\hierarchy\scene.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\hierarchy\hierarchy.h">
