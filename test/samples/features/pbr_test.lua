@@ -38,7 +38,7 @@ local function create_pbr_entity(world,
 
     local e = world[eid]
 
-    local m = assetmgr.clone(e.material)
+    local m = assetmgr.patch(e.material, {properties={uniforms={}}})
     e.material = m
 
     local u = m.properties.uniforms
@@ -46,7 +46,7 @@ local function create_pbr_entity(world,
         u_basecolor_factor = color,
         u_metallic_roughness_factor  = {0.0, roughness, metallic, 0.0},
     } do
-        u[k] = assetmgr.clone(assert(u[k]))
+        u[k] = assetmgr.patch(assert(u[k]), {})
         u[k].value.v = v
     end
 

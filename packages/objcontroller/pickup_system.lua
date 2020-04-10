@@ -134,10 +134,14 @@ local function pick_material(material_template, eid)
 	end
 
 	local vv = packeid_as_rgba(eid)
-	local m = assetmgr.clone(material_template, "/properties/uniforms")
-	m.properties.uniforms["u_id"] = world:create_component(
-		"uniform", {type="color", name = "select eid", value=vv})
-
+	local m = assetmgr.patch(material_template, {
+		properties = {
+			uniforms = {
+				u_id = world:create_component(
+					"uniform", {type="color", name = "select eid", value=vv})
+			}
+		}
+	})
 	pick_material_cache[eid] = m
 	return m
 end

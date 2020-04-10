@@ -79,25 +79,6 @@ function assetmgr.init()
 	end
 end
 
-function assetmgr.clone(res_template, path)
-	if path == nil then
-		return resource.clone(res_template)
-	end
-
-	local root = resource.clone(res_template)
-	local sub = root
-	for name in path:gmatch "[^/]+" do
-		local o = sub[name]
-		if o == nil then
-			local t = {}
-			sub[name] = t
-			sub = t
-		else
-			sub = resource.clone(o)
-		end
-	end
-
-	return root
-end
+assetmgr.patch = resource.patch
 
 return assetmgr
