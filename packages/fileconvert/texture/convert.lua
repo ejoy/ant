@@ -128,7 +128,7 @@ return function (identity, sourcefile, outfile, localpath)
 
 	if success then
 		if lfs.exists(tmpoutfile) then
-			util.embed_file(outfile, texcontent, {fs_util.fetch_file_content(tmpoutfile)})
+			util.write_embed_file(outfile, texcontent, fs_util.fetch_file_content(tmpoutfile))
 			lfs.remove(tmpoutfile)
 			return success, msg
 		end

@@ -5,11 +5,6 @@ local gltf_converter = require "meshconverter.gltf"
 local filtermesh = require "mesh.filter"
 local meshbinary = require "mesh.meshbinary"
 
-local utility = import_package "ant.utility.local"
-local fs_util = utility.fs_util
-
-local fs = require "filesystem"
-
 local accessor_types = {
 	SCALAR = 0,
 	VEC2 = 1,
@@ -403,7 +398,7 @@ end
 -- 	ff:close()
 -- end
 
-return function (srcname, dstname, cfg)
+return function (srcname, cfg)
 	local glbdata = glbloader.decode(srcname)
 	
 	-- this filter can move to import tool
@@ -452,7 +447,5 @@ return function (srcname, dstname, cfg)
 	end
 
 	--glbloader.encode(dstname, {version=glbdata.version, info=scene, bin=new_bindata})
-	local thread = require "thread"
-	local ss = thread.pack(meshbinary(scene, new_bindata, cfg))
-	fs_util.write_file(fs.path(dstname), ss)
+	return meshbinary(scene, new_bindata, cfg)
 end
