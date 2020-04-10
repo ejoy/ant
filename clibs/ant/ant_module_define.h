@@ -6,6 +6,7 @@
 { "firmware", luaopen_firmware },
 { "hierarchy", luaopen_hierarchy },
 { "hierarchy.animation", luaopen_hierarchy_animation },
+{ "hierarchy.scene", luaopen_hierarchy_scene },
 { "imgui", luaopen_imgui },
 { "imgui.ant", luaopen_imgui_ant },
 { "lsocket", luaopen_lsocket },
