@@ -1,58 +1,62 @@
 local fs = require "filesystem"
-local function find_tagop(filepath, readops)
-	local f = fs.open(filepath, "rb")
-	
-	--print(endless)
-	for tag, op in pairs(readops) do
-		f:seek("set")
-		-- luacheck: ignore endless
-		local endless = f:read(1)
-		local c = f:read(#tag)
-		if c == tag then
-			f:close()
-			return op
-		end
+
+local loaders = {}
+
+loaders["ozz-animation"] = function (fn)
+	local animodule = require "hierarchy.animation"
+	local handle = animodule.new_animation(fn)
+	return {
+		handle = handle
+	}
+end
+
+loaders["ozz-raw_skeleton"] = function (fn)
+	local hiemodule = require "hierarchy"
+	local handle = hiemodule.new()
+	handle:load(fn)
+	return {
+		handle = handle
+	}
+end
+
+loaders["ozz-skeleton"] = function(fn)
+	local hiemodule = require "hierarchy"
+	local handle = hiemodule.build(fn)
+	return {
+		handle = handle
+	}
+end
+
+loaders["ozz-sample-Mesh"] = function(fn)
+	local animodule = require "hierarchy.ozzmesh"
+	local handle = animodule.new(fn)
+	return {
+		handle = handle
+	}
+end
+
+local function find_loader(filepath)
+	local f <close> = fs.open(filepath, "rb")
+	f:read(1)
+	local tag = ("z"):unpack(f:read(16))
+	return loaders[tag]
+end
+
+local function loader(filename)
+	local filepath = fs.path(filename)
+	local fn = find_loader(filepath)
+	if not fn then
+		error "not support type"
+		return
 	end
-	
-	f:close()
+	return fn(filepath:localpath():string())
+end
+
+local function unloader(res)
+	res.handle = nil
 end
 
 return {
-	loader = function(filename)
-		filename = fs.path(filename)
-		local readops = {
-			["ozz-animation"] = function (fn)
-				local animodule = require "hierarchy.animation"
-				return animodule.new_animation(fn)
-			end,
-			["ozz-raw_skeleton"] = function (fn)
-				local hiemodule = require "hierarchy"
-				local editable_hie = hiemodule.new()
-				editable_hie:load(fn)
-				return editable_hie
-			end,
-			["ozz-skeleton"] = function(fn)
-				local hiemodule = require "hierarchy"
-				return hiemodule.build(fn)
-			end,
-			["ozz-sample-Mesh"] = function(fn)
-				local animodule = require "hierarchy.ozzmesh"
-				return animodule.new(fn)
-			end,
-		}
-
-		local readop = find_tagop(filename, readops)
-		if readop then
-			local handle = readop(filename:localpath():string())
-			return {
-				handle = handle,
-			}, handle:size()
-		end
-		error("not support type")
-		return nil
-	end,
-
-	unloader = function(res)
-		res.handle = nil
-	end
+	loader = loader,
+	unloader = unloader
 }
