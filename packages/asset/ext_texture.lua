@@ -13,7 +13,7 @@ end
 
 return {
 	loader = function (filename)
-		local config, binary = assetutil.parse_embed_file(filename)
+		local config, binary = assetutil.read_embed_file(filename)
 		local sampler = config.sampler
 		local flag = ru.generate_sampler_flag(sampler)
 		if config.colorspace == "sRGB" then

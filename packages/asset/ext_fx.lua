@@ -11,25 +11,9 @@ local function load_shader(shaderbin, filename)
     }
 end
 
-local function fetch_shader_binarys(binary)
-    local pos = 1
-    local shaders = {}
-
-    while pos < #binary do
-        local stagename, stagelen = string.unpack("<c2I4", binary, pos)
-        pos = pos + 2 + 4
-
-        shaders[stagename] = binary:sub(pos, pos-1+stagelen)
-        pos = pos + stagelen
-    end
-
-    return shaders
-end
-
 return {
     loader = function (fxpath)
-        local config, binary = assetutil.parse_embed_file(fxpath)
-        local shaderbins = fetch_shader_binarys(assert(binary))
+        local config, shaderbins = assetutil.read_embed_file(fxpath)
         local shader = config.shader
         if shader.cs == nil then
             local vs = load_shader(assert(shaderbins.vs), shader.vs)

@@ -21,16 +21,6 @@ local valid_shader_stage = {
 	"vs", "fs", "cs"
 }
 
-local function embed_shader_bin(bins)
-	local t = {}
-	for k, b in pairs(bins)do
-		assert(#k == 2)
-		t[#t+1] = k .. string.pack("<I4", #b)
-		t[#t+1] = b
-	end
-	return t
-end
-
 local function need_linear_shadow(identity)
 	local plat, platinfo, renderer = util.identify_info(identity)
 	if plat == "ios" then
@@ -143,7 +133,7 @@ return function (identity, srcfilepath, outfilepath, localpath)
 	end
 
 	if build_success then
-		util.embed_file(outfilepath, fxcontent, embed_shader_bin(binarys))
+		util.write_embed_file(outfilepath, fxcontent, binarys)
 	end
 	return build_success, table.concat(messages, "\n"), depend_files(all_depends)
 end

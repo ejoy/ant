@@ -1,5 +1,4 @@
 local assetutil = import_package "ant.fileconvert".util
-local thread = require "thread"
 local math3d = require "math3d"
 
 local function create_bounding(bounding)
@@ -10,8 +9,7 @@ end
 
 return {
 	loader = function (filename)
-		local _, binary = assetutil.parse_embed_file(filename)
-		local meshscene = thread.unpack(binary)
+		local meshscene = assetutil.read_embed_file(filename)
 		for _, scene in pairs(meshscene.scenes) do
 			for _, meshnode in pairs(scene) do
 				create_bounding(meshnode.bounding)
