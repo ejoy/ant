@@ -21,7 +21,6 @@ function pf:init()
 end
 
 local primitive_filter_sys = ecs.system "primitive_filter_system"
-primitive_filter_sys.require_singleton "hierarchy_transform_result"
 
 --luacheck: ignore self
 local function reset_results(results)
@@ -122,53 +121,6 @@ local function cache_material(rendermesh, materialcomp)
 			end
 		end
 	end
-end
-
-local function update_entity_transform(hierarchy_cache, eid)
-	local e = world[eid]
-	if e.hierarchy or e.lock_target then
-		return
-	end
-
-	local transform = e.transform
-
-	local srt = transform.srt
-	local peid = transform.parent
-	local worldmat = transform.world
-
-	if peid then
-		local parentresult = hierarchy_cache[peid]
-		if parentresult then
-			local parentmat = parentresult.world
-			local hie_result = parentresult.hierarchy
-			local slotname = transform.slotname
-
-			if hie_result and slotname then
-				local hiemat = hie_result[slotname]
-				worldmat.m = math3d.mul(parentmat, math3d.mul(hiemat, srt))
-			else
-				worldmat.m = math3d.mul(parentmat, srt)
-			end
-			return
-		end
-	end
-	worldmat.m = srt
-end
-
-local function reset_hierarchy_transform_result(hierarchy_cache)
-	for k in pairs(hierarchy_cache) do
-		hierarchy_cache[k] = nil
-	end
-end
-
-function primitive_filter_sys:update_transform()
-	local hierarchy_cache = world:singleton "hierarchy_transform_result"
-	for _, eid in world:each "transform" do
-		--TODO: catch transform changed event, only update transform changed entity
-		update_entity_transform(hierarchy_cache, eid)
-	end
-
-	reset_hierarchy_transform_result(hierarchy_cache)
 end
 
 local material_change = world:sub { "material_change" }

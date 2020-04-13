@@ -46,6 +46,7 @@ function m:init()
 			name 			= "mesh's bounding renderer",
 			can_render 		= true,
 			widget_drawer = true,
+			scene_entity = true,
 		}
 	}
 

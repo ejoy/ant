@@ -122,6 +122,7 @@ local function foot_ik_test()
             name = "foot_ik_test",
             can_cast = true,
             can_render = true,
+            scene_entity = true,
         }
     }
     

@@ -207,7 +207,6 @@ local function create_outline(seleid)
             policy={
                 -- "ant.render|name",
                 "ant.render|render",
-                "ant.scene|hierarchy",
                 "ant.imgui|outline",
             },
             data={
@@ -217,9 +216,8 @@ local function create_outline(seleid)
                 can_render = true,
                 outline_entity = true,
                 target_entity = world[seleid].serialize,
-                hierarchy = {},
-                hierarchy_visible = true,
-                editor_object = true
+                editor_object = true,
+                scene_entity = true,
                 -- name = "outline_object"
             },
            

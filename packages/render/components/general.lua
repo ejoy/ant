@@ -11,10 +11,11 @@ ecs.component_alias("scale",	"vector")
 ecs.component_alias("position",	"vector")
 ecs.component_alias("direction", "vector")
 
+local tp = ecs.policy "transform"
+tp.require_component "transform"
+
 local trans = ecs.component "transform"
 	.srt "srt"
-	['opt'].slotname "string"
-	['opt'].parent "parent"
 function trans:init()
 	self.world = math3d.ref(self.srt)
 	return self
@@ -48,10 +49,6 @@ end
 
 ecs.component "resource"
 	.ref_path "respath"
-
-ecs.component "submesh_ref"
-	["opt"].material_refs "int[]"
-	.visible "boolean"
 
 ecs.component "rendermesh" {}
 
@@ -135,26 +132,21 @@ ecs.component_alias("name", "string", "")
 local gp = ecs.policy "name"
 gp.require_component "name"
 
-local blitpolicy = ecs.policy "blitrender"
-blitpolicy.require_component "blit_render"
-blitpolicy.require_component "rendermesh"
-blitpolicy.require_component "material"
-blitpolicy.require_component "transform"
+for _, item in ipairs {
+	{"blitrender", "blit_render"},
+	{"render", "can_render"}
+ } do
+	local name, tag = item[1], item[2]
+	local p = ecs.policy(name)
+	p.require_component(tag)
+	p.require_component "rendermesh"
+	p.require_component "material"
+	p.require_component "transform"
+	p.require_component "scene_entity"
 
-local renderpolicy = ecs.policy "render"
-renderpolicy.require_component "can_render"
-renderpolicy.require_component "rendermesh"
-renderpolicy.require_component "material"
-renderpolicy.require_component "transform"
-
-renderpolicy.require_system "render_system"
-renderpolicy.require_policy "blitrender"
+	p.require_system "render_system"
+end
 
 ecs.tag "can_select"
 
 ecs.component_alias("color", "vector", {1,1,1,1})
-
-ecs.tag "dynamic_object"
-
-ecs.component "physic_state"
-	.velocity "real[3]"

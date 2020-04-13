@@ -33,6 +33,7 @@ local function create_pbr_entity(world,
             can_render = true,
             can_select = true,
             serialize = serializeutil.create(),
+            scene_entity = true,
         }
     }
 
@@ -87,6 +88,7 @@ function pbrtest:init()
             material = "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
             can_render = true,
             can_cast = true,
+            scene_entity = true,
             name = "Damaged Helmet"
         }
 

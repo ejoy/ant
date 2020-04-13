@@ -96,6 +96,7 @@ local function target_lock_test()
             mesh = "/pkg/ant.resources/depiction/meshes/sphere.mesh",
             material = "/pkg/ant.resources/depiction/materials/bunny.material",
             serialize = serialize.create(),
+            scene_entity = true,
         }
     }
 
@@ -120,6 +121,7 @@ local function target_lock_test()
                 target = world[eid].serialize,
                 offset = {0, 0, 3},
             },
+            scene_entity = true,
         },
     }
 end

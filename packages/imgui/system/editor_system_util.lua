@@ -81,8 +81,8 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
                     r = euler2quat(rot or {0, 0, 0}),
                     t = {0, 0, 0},
                 },
-                parent = parent,
             },
+            parent = parent,
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/ring.mesh",
             material = ([[
@@ -103,6 +103,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             gizmo_object = {dir = dir},
             hierarchy = {},
             hierarchy_visible = true,
+            scene_entity = true,
             --serialize = serializeutil.create(),
         },
     }
@@ -126,15 +127,15 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = {srt = mu.srt(),parent = parent},
+            transform = {srt = mu.srt()},
+            parent = parent,
             rendermesh = {},
             material = "/pkg/ant.resources/depiction/materials/gizmo_line.material",
             name = name,
             can_render = true,
             can_select = true,
             gizmo_object = {dir = dir},
-            hierarchy_visible = true,
-            hierarchy = {},
+            scene_entity = true,
         },
     }
     local grid = world[gridid]
@@ -164,7 +165,6 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
         policy = {
             "ant.render|name",
             "ant.render|render",
-            -- "ant.render|mesh",
             "ant.scene|hierarchy",
             "ant.objcontroller|select",
             "ant.imgui|gizmo_object",
@@ -176,17 +176,15 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
                     r = euler2quat(rot or {0, 0, 0}),
                     t = {0, 0, 0},
                 },
-                parent = parent,
             },
+            parent = parent,
             rendermesh = {},
             material = "/pkg/ant.resources/depiction/materials/gizmo_front_line.material",
             name = name,
             can_render = true,
             can_select = true,
             gizmo_object = {dir = dir},
-            hierarchy_visible = true,
-            hierarchy = {},
-
+            scene_entity = true,
         }
     }
     local grid = world[gridid]
@@ -227,8 +225,8 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
                     r = euler2quat(rot or {0, 0, 0}),
                     t = pos or {0, 0, 0},
                 },
-                parent = parent,
             },
+            parent = parent,
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cone.mesh",
             material = ([[
@@ -246,8 +244,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             can_select = true,
             name = name,
             gizmo_object = {dir=dir},
-            hierarchy_visible = true,
-            hierarchy = {},
+            scene_entity = true,
         },
     }
 end
@@ -271,8 +268,8 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
                     r = euler2quat({0, 0, 0}),
                     t = pos or {0, 0, 0},
                 },
-                parent = parent,
             },
+            parent = parent,
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
             material = ([[
@@ -290,8 +287,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             name = name,
             can_select = true,
             gizmo_object = {dir=dir},
-            hierarchy_visible = true,
-            hierarchy = {},
+            scene_entity = true,
         },
 
     }

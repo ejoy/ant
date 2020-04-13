@@ -72,24 +72,54 @@ function util.create_procedural_sky(world, settings)
 				latitude 	= settings.whichlatitude or math.rad(50),
 			},
 			can_render = true,
+			scene_entity = true,
 			name = "procedural sky",
 		}
 	}
 
 	local sky = world[skyeid]
-	local m = assetmgr.clone(sky.material, "/properties/uniforms")
-	sky.material = m
-	local uniforms = m.properties.uniforms
-	for _, n in ipairs{
-		"u_sunDirection",
-		"u_sunLuminance",
-		"u_skyLuminanceXYZ",
-		"u_parameters",
-		"u_perezCoeff",
-	} do
-		uniforms[n] = assetmgr.clone(assert(uniforms[n]))
-	end
+	local patches = {
+		u_parameters = world:create_component("uniform", {
+			name = "parameter include: x=sun size, y=sun bloom, z=exposition, w=time",
+			type = "v4",
+			value = {0, 0, 0, 0},
+		}),
+    	u_perezCoeff = world:create_component("uniform", {
+			name = "Perez coefficients",
+			type = "v4_array",
+			value_array ={
+				{0, 0, 0, 0},
+				{0, 0, 0, 0},
+				{0, 0, 0, 0},
+				{0, 0, 0, 0},
+				{0, 0, 0, 0},
+			},
+		}),
+		u_skyLuminanceXYZ = world:create_component("uniform", {
+			name = "sky luminance in XYZ color space",
+			type = "v4",
+			value = {0, 0, 0, 0}
+		}),
 
+    	u_sunDirection = world:create_component("uniform", {
+			name = "sub direction",
+			type = "v4",
+			value = {0, 0, 1, 0},
+		}),
+		u_sunLuminance = world:create_component("uniform", {
+			name = "sky luminace in RGB color space",
+			type = "v4",
+			value = {0, 0, 0, 0},
+		})
+	}
+	local m = assetmgr.patch(sky.material, {
+		properties = {uniforms={}}})
+
+	local uniforms = m.properties.uniforms
+	for k, v in pairs(patches) do
+		uniforms[k] = v
+	end
+	sky.material = m
 	fill_procedural_sky_mesh(world[skyeid])
 	return skyeid
 end

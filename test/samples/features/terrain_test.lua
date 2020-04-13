@@ -44,6 +44,7 @@ function terrain_test:init()
 					origin = {0, 0, 0, 1},
 				}
 			},
+			scene_entity = true,
 			name = "terrain_test",
 			serialize = serialize.create(),
 		}

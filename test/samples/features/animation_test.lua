@@ -36,6 +36,7 @@ local function ozzmesh_animation_test()
             },
             animation_birth = "walk",
             can_render = true,
+            scene_entity = true,
             rendermesh = {},
             skinning = {},
             skeleton = '/pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz',
@@ -88,6 +89,7 @@ local function gltf_animation_test()
             },
             animation_birth = "idle",
             can_render = true,
+            scene_entity = true,
             can_cast = true,
             name = "gltf animation test",
             character = {

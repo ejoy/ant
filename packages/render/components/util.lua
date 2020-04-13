@@ -102,6 +102,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 			material = "/pkg/ant.resources/depiction/materials/line.material",
 			name = name,
 			can_render = true,
+			scene_entity = true,
 		}
     }
     local grid = world[gridid]
@@ -159,6 +160,7 @@ value:
 		material = material,
 		can_render = true,
 		name = name or "Plane",
+		scene_entity = true,
 	}
 
 	if info then
@@ -231,6 +233,7 @@ local function create_simple_render_entity(world, transform, material, name, tag
 		material = material,
 		can_render = true,
 		name = name or "frustum",
+		scene_entity = true,
 	}
 	if tag then
 		dataset[tag] = true
@@ -346,6 +349,7 @@ function util.create_skybox(world, material)
 			rendermesh = {},
 			material = material or "/pkg/ant.resources/depiction/materials/skybox.material",
 			can_render = true,
+			scene_entity = true,
 			name = "sky_box",
 		}
     }

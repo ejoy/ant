@@ -1,19 +1,13 @@
 local ecs = ...
 
-local mathpkg			= import_package "ant.math"
-
 local hiemodule 		= require "hierarchy"
 local math3d_adapter 	= require "math3d.adapter"
 
-ecs.component "hierarchy"
-	["opt"].ref_path "respath"
+ecs.tag "scene_entity"
 
-local hp = ecs.policy "hierarchy"
-hp.require_component "hierarchy"
-hp.require_component "hierarchy_visible"
-hp.require_component "transform"
-
-hp.require_system "ant.scene|scene_space"
+local hie = ecs.policy "hierarchy"
+hie.require_component "parent"
+hie.require_component "scene_entity"
 
 
 local mathadapter_util = import_package "ant.math.adapter"
