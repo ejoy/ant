@@ -1,28 +1,27 @@
----------
-ant.collision|collider
-ant.render|mesh
-ant.render|name
-ant.render|render
-ant.render|shadow_cast
-ant.serialize|serialize
----------
-can_cast: true
-can_render: true
-collider:
-  box:
-    ---
-    origin: {0,1,0,0}
-    size: {2.2,1,1}
-material:
-  ref_path: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
-mesh:
-  ref_path: /pkg/ant.resources/depiction/PVPScene/woodother-34.mesh
-name: door
-rendermesh:
-  lodidx: 1
-serialize: 5e1d2628369fa9fc11d5504d
-transform:
-  srt:
-    s: {1,1,1,0}
-    r: {0,0,0,1}
-    t: {2.2,0,-8,0}
+policy:
+  ant.collision|collider
+  ant.render|mesh
+  ant.render|name
+  ant.render|render
+  ant.render|shadow_cast
+  ant.serialize|serialize
+data:
+  can_cast: true
+  can_render: true
+  scene_entity: true
+  collider:
+    box:
+      ---
+      origin: {0,1,0,0}
+      size: {2.2,1,1}
+  material: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
+  mesh: /pkg/ant.resources/depiction/PVPScene/woodother-34.mesh
+  name: door
+  rendermesh:
+    lodidx: 1
+  serialize: 5e1d2628369fa9fc11d5504d
+  transform:
+    srt:
+      s: {1,1,1,0}
+      r: {0,0,0,1}
+      t: {2.2,0,-8,0}

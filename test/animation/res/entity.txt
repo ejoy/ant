@@ -34,6 +34,7 @@ data:
         scale: 1
         looptimes: 0
   can_render: true
+  scene_entity: true
   material: 
     /pkg/ant.test.animation/res/Beta_Joints_MAT.pbrm
     /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
