@@ -28,7 +28,7 @@ local function ozzmesh_animation_test()
             animation = {
                 anilist = {
                     walk = {
-                        resource = '/pkg/ant.resources.binary/ozzmeshdir/animation1.ozz',
+                        resource = '/pkg/ant.resources.binary/meshes/ozz/animation1.ozz',
                         scale = 1,
                         looptimes = 0,
                     },
@@ -118,6 +118,6 @@ local function print_ske(ske)
 end
 
 function anitest:init()
-    --ozzmesh_animation_test()
+    ozzmesh_animation_test()
     gltf_animation_test()
 end

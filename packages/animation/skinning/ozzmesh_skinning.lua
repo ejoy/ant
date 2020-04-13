@@ -120,8 +120,9 @@ ozzmesh_loader.output "rendermesh"
 
 function ozzmesh_loader.process(e)
 	local meshfilename = tostring(e.mesh)
-	local stem, ext = meshfilename:match "[/\\]([%w_-]+)%.([%w_-]+)$"
-	assert(ext == "glb")
+	local f, _ = meshfilename:match "([^:]+):"
+	local stem, ext = f:match "[/\\]([%w_-]+)%.([%w_-]+)$"
+	assert(ext == "ozz")
 	local filename 	= "//res.mesh/" .. stem .. ".rendermesh"
 	e.rendermesh	= assetmgr.load(filename, gen_mesh_assetinfo(e.mesh.handle))
 end
