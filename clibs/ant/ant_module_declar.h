@@ -7,6 +7,7 @@ int luaopen_firmware(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
 int luaopen_hierarchy_animation(lua_State* L);
 int luaopen_hierarchy_ik(lua_State* L);
+int luaopen_hierarchy_scene(lua_State *L);
 int luaopen_imgui(lua_State* L);
 int luaopen_imgui_ant(lua_State* L);
 int luaopen_lsocket(lua_State* L);
