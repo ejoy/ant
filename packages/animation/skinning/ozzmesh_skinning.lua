@@ -29,60 +29,64 @@ ozzmesh_skinning_transform.input 	"mesh"
 ozzmesh_skinning_transform.input 	"rendermesh"
 ozzmesh_skinning_transform.output 	"skinning"
 
-local function gen_mesh_assetinfo(ozzmesh)
-	local layouts = ozzmesh:layout()
-	local num_vertices = ozzmesh:num_vertices()
+local function find_layout(shortname, layouts)
+	for _, l in ipairs(layouts) do
+		if shortname == l:sub(1, 1) then
+			return l
+		end
+	end
+end
 
-	local function find_layout(shortname, layouts)
-		for _, l in ipairs(layouts) do
-			if shortname == l:sub(1, 1) then
-				return l
-			end
+local function generate_layout(shortnames, layouts)
+	local layout = {}
+	for _, sn in ipairs(shortnames) do
+		local l = find_layout(sn, layouts)
+		if l then
+			layout[#layout+1] = l
 		end
 	end
 
-	local function generate_layout(shortnames, layouts)
-		local layout = {}
-		for _, sn in ipairs(shortnames) do
-			local l = find_layout(sn, layouts)
-			if l then
-				layout[#layout+1] = l
-			end
-		end
-
-		if next(layout) then
-			return table.concat(layout, '|')
-		end
+	if next(layout) then
+		return table.concat(layout, '|')
 	end
+end
 
-	local static_layout = generate_layout({'c', 't'}, layouts)
-	local static_stride = declmgr.layout_stride(static_layout)
-	local static_buffersize = num_vertices * static_stride
-	local static_buffer = animodule.new_aligned_memory(static_buffersize, 4)
-	local static_pointer = static_buffer:pointer()
-	ozzmesh:combine_buffer(static_layout, static_pointer)
-	local static_vbhandle = {
-		handle = bgfx.create_vertex_buffer({"!", static_pointer, 0, static_buffersize}, declmgr.get(static_layout).handle)
-	}
-
+local function create_dynamic_buffer(layouts, num_vertices, ozzmesh)
 	local dynamic_layout = generate_layout({'p', 'n', 'T'}, layouts)
 	local dynamic_stride = declmgr.layout_stride(dynamic_layout)
 	local dynamic_buffersize = num_vertices * dynamic_stride
 	local dynamic_buffer = animodule.new_aligned_memory(dynamic_buffersize, 4)
 	local dynamic_pointer = dynamic_buffer:pointer()
 	ozzmesh:combine_buffer(dynamic_layout, dynamic_pointer)
-	local dynamic_vbhandle = {
+	return {
 		handle = bgfx.create_dynamic_vertex_buffer({"!", dynamic_pointer, 0, dynamic_buffersize}, declmgr.get(dynamic_layout).handle),
 		updatedata = dynamic_buffer,
 	}
+end
+
+local function create_static_buffer(layouts, num_vertices, ozzmesh)
+	local static_layout = generate_layout({'c', 't'}, layouts)
+	local static_stride = declmgr.layout_stride(static_layout)
+	local static_buffersize = num_vertices * static_stride
+	local static_buffer = animodule.new_aligned_memory(static_buffersize, 4)
+	local static_pointer = static_buffer:pointer()
+	ozzmesh:combine_buffer(static_layout, static_pointer)
+	return {
+		handle = bgfx.create_vertex_buffer({"!", static_pointer, 0, static_buffersize}, declmgr.get(static_layout).handle)
+	}
+end
+
+local function gen_mesh_assetinfo(ozzmesh)
+	local layouts = ozzmesh:layout()
+	local num_vertices = ozzmesh:num_vertices()
 
 	local primitive = {
 		vb = {
 			start = 0,
 			num = num_vertices,
 			handles = {
-				static_vbhandle,
-				dynamic_vbhandle,
+				create_static_buffer(layouts, num_vertices, ozzmesh),
+				create_dynamic_buffer(layouts, num_vertices, ozzmesh),
 			}
 		}
 	}
@@ -127,14 +131,42 @@ function ozzmesh_loader.process(e)
 	e.rendermesh	= assetmgr.load(filename, gen_mesh_assetinfo(e.mesh.handle))
 end
 
+local function patch_dynamic_buffer(ozzmesh, meshscene)
+	local scene = meshscene.scenes[meshscene.default_scene]
+	local meshname, meshnode = next(scene)
+
+	local patch_meshscene = {
+		scenes = {
+			[meshscene.default_scene] = {
+				[meshname] = {
+					{
+						vb = {handles = {}}
+					}
+				}
+			}
+		}
+	}
+
+	local new_meshscene = assetmgr.patch(meshscene, patch_meshscene)
+
+	local layouts = ozzmesh:layout()
+	local num_vertices = ozzmesh:num_vertices()
+
+	local s = new_meshscene.scenes[meshscene.default_scene]
+	local mn = s[meshname]
+	local g = mn[1]
+	g.vb.handles[2] = create_dynamic_buffer(layouts, num_vertices)
+end
+
 function ozzmesh_skinning_transform.process(e)
-	local meshscene = e.rendermesh
 	local meshres 	= e.mesh.handle
+	local meshscene = patch_dynamic_buffer(meshres, e.rendermesh)
+	e.rendermesh = meshscene
 
 	local scene = meshscene.scenes[meshscene.default_scene]
 	local _, meshnode = next(scene)
 
-	local primitive = meshnode[1]
+	local group = meshnode[1]
 
 	local skincomp = e.skinning
 	skincomp.jobs = {
@@ -148,11 +180,13 @@ function ozzmesh_skinning_transform.process(e)
 	local job = skincomp.jobs[1]
 	local parts = job.parts
 	
-	local vb = primitive.vb
+	local vb = group.vb
 
-	for _, handle in ipairs(vb.handles) do
+	for idx, handle in ipairs(vb.handles) do
 		local updatedata = handle.updatedata
+		-- dynamic buffer, need patch
 		if updatedata then
+
 			job.hwbuffer_handle = handle.handle
 			job.updatedata 		= updatedata
 

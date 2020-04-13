@@ -257,8 +257,10 @@ do_ik(lua_State* L,
 
 struct ozzAllocator : public luaClass<ozzAllocator> {
 	void* v;
+	size_t s;
 	ozzAllocator(size_t size, size_t alignment)
 	: v(ozz::memory::default_allocator()->Allocate(size, alignment))
+	, s(size)
 	{ }
 	~ozzAllocator() {
 		ozz::memory::default_allocator()->Deallocate(v);
@@ -268,12 +270,18 @@ struct ozzAllocator : public luaClass<ozzAllocator> {
 		lua_pushlightuserdata(L, base_type::get(L, 1)->v);
 		return 1;
 	}
+
+	static int lsize(lua_State *L){
+		lua_pushinteger(L, base_type::get(L, 1)->s);
+		return 1;
+	}
 	static int create(lua_State* L) {
 		const size_t sizebytes = (size_t)luaL_checkinteger(L, 1);
 		const size_t aligned = (size_t)luaL_optinteger(L, 2, 4);
 		base_type::constructor(L, sizebytes, aligned);
 		luaL_Reg l[] = {
 			{"pointer", lpointer},
+			{"size", lsize},
 			{nullptr, nullptr},
 		};
 		base_type::set_method(L, l);
