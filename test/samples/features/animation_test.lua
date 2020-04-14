@@ -4,7 +4,7 @@ local fs = require "filesystem"
 
 local serializeutil = import_package "ant.serialize"
 
-local anitest = ecs.system "animation_test"
+local anitest_sys = ecs.system "animation_test_system"
 
 local function ozzmesh_animation_test()
 
@@ -18,7 +18,7 @@ local function ozzmesh_animation_test()
             "ant.animation|ozz_skinning",
             "ant.serialize|serialize",
             "ant.render|name",
-            "ant.render|shadow_cast",
+            "ant.render|shadow_cast_policy",
             "ant.character|character",
             "ant.render|debug_mesh_bounding",
         },
@@ -68,7 +68,7 @@ local function gltf_animation_test()
             "ant.animation|animation",
             "ant.animation|skinning",
             "ant.animation|animation_controller.birth",
-            "ant.render|shadow_cast",
+            "ant.render|shadow_cast_policy",
             "ant.render|name",
         },
         data = {
@@ -117,7 +117,7 @@ local function print_ske(ske)
     end
 end
 
-function anitest:init()
+function anitest_sys:init()
     ozzmesh_animation_test()
     gltf_animation_test()
 end

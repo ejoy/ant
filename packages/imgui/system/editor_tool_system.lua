@@ -4,7 +4,7 @@ local HubEvent = require "hub_event"
 local serialize = import_package 'ant.serialize'
 local fs = require "filesystem"
 
-local editor_tool_system = ecs.system "editor_tool_system"
+local editor_tool_sys = ecs.system "editor_tool_system"
 
 local function run_script(str,env)
     local fun_str = str
@@ -33,7 +33,7 @@ local function on_receive_script(str)
     end
 end
 
-function editor_tool_system:init()
+function editor_tool_sys:init()
     local hub = world.args.hub
     hub.subscribe(HubEvent.ETR.RunScript,on_receive_script)
 end

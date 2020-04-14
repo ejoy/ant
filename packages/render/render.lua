@@ -85,32 +85,32 @@ rqp.require_component "primitive_filter"
 rqp.require_component "visible"
 rqp.require_transform "render_target"
 
-local blitsys = ecs.system "blit_render_system"
-blitsys.require_policy "blit_queue"
-blitsys.require_policy "blitrender"
-blitsys.require_policy "name"
+local blit_render_sys = ecs.system "blit_render_system"
+blit_render_sys.require_policy "blit_queue"
+blit_render_sys.require_policy "blitrender"
+blit_render_sys.require_policy "name"
 
-function blitsys:init_blit_render()
+function blit_render_sys:init_blit_render()
 	log.info("init blit system")
     ru.create_blit_queue(world, {w=world.args.width,h=world.args.height})
 end
 
-local rendersys = ecs.system "render_system"
+local render_sys = ecs.system "render_system"
 
-rendersys.require_singleton "render_properties"
+render_sys.require_singleton "render_properties"
 
-rendersys.require_system "ant.scene|primitive_filter_system"
+render_sys.require_system "ant.scene|primitive_filter_system"
 
-rendersys.require_system "ant.scene|cull_system"
-rendersys.require_system "load_properties"
-rendersys.require_system "end_frame"
-rendersys.require_system "viewport_detect_system"
-rendersys.require_system "blit_render_system"
+render_sys.require_system "ant.scene|cull_system"
+render_sys.require_system "load_properties_system"
+render_sys.require_system "end_frame_system"
+render_sys.require_system "viewport_detect_system"
+render_sys.require_system "blit_render_system"
 
-rendersys.require_policy "render_queue"
-rendersys.require_policy "main_queue"
-rendersys.require_policy "camera"
-rendersys.require_policy "name"
+render_sys.require_policy "render_queue"
+render_sys.require_policy "main_queue"
+render_sys.require_policy "camera"
+render_sys.require_policy "name"
 
 local function update_view_proj(viewid, camera)
 	local view = math3d.lookto(camera.eyepos, camera.viewdir)
@@ -118,11 +118,11 @@ local function update_view_proj(viewid, camera)
 	bgfx.set_view_transform(viewid, view, proj)
 end
 
-function rendersys:init()
+function render_sys:init()
 	ru.create_main_queue(world, {w=world.args.width,h=world.args.height})
 end
 
-function rendersys:render_commit()
+function render_sys:render_commit()
 	local render_properties = world:singleton "render_properties"
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
@@ -150,13 +150,6 @@ function rendersys:render_commit()
 		
 	end
 end
-
--- local before_render_system = ecs.system "before_render_system"
--- before_render_system.require_system "render_system"
-
--- function before_render_system:update()
--- 	world:update_func("before_render")()
--- end
 
 local mathadapter_util = import_package "ant.math.adapter"
 local math3d_adapter = require "math3d.adapter"

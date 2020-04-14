@@ -53,8 +53,8 @@ end
 
 ecs.resource_component "skeleton"
 
-local anisystem = ecs.system "animation_system"
-anisystem.require_interface "ant.timer|timer"
+local ani_sys = ecs.system "animation_system"
+ani_sys.require_interface "ant.timer|timer"
 
 local timer = world:interface "ant.timer|timer"
 
@@ -83,7 +83,7 @@ local function update_animation(e, delta_time)
 	do_animation(pr, animation.current, delta_time)
 end
 
-function anisystem:sample_animation_pose()
+function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
 	for _, eid in world:each "animation" do
 		local e = world[eid]
@@ -100,7 +100,7 @@ local function clear_animation_cache()
 	end
 end
 
-function anisystem:do_refine()
+function ani_sys:do_refine()
 	for _, eid in world:each "pose_result" do
 		local e = world[eid]
 		local pr = e.pose_result.result
@@ -108,7 +108,7 @@ function anisystem:do_refine()
 	end
 end
 
-function anisystem:end_animation()
+function ani_sys:end_animation()
 	clear_animation_cache()
 end
 

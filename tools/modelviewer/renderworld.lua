@@ -9,32 +9,30 @@ local task = require "task"
 local math3d = require "math3d"
 
 local skyutil = skypkg.util
-local mu = mathpkg.util
-
-local lu = renderpkg.light
 local cu = renderpkg.components
 
-local m = ecs.system "model_viewer"
+local model_viewer_sys = ecs.system "model_viewer_system"
 
-m.require_policy "ant.sky|procedural_sky"
-m.require_policy "ant.serialize|serialize"
-m.require_policy "ant.collision|collider"
-m.require_policy "ant.render|mesh"
-m.require_policy "ant.render|render"
-m.require_policy "ant.render|name"
-m.require_policy "ant.render|shadow_cast"
-m.require_policy "ant.render|light.directional"
-m.require_policy "ant.render|light.ambient"
+model_viewer_sys.require_policy "ant.sky|procedural_sky"
+model_viewer_sys.require_policy "ant.serialize|serialize"
+model_viewer_sys.require_policy "ant.collision|collider"
+model_viewer_sys.require_policy "ant.render|mesh"
+model_viewer_sys.require_policy "ant.render|render"
+model_viewer_sys.require_policy "ant.render|name"
+model_viewer_sys.require_policy "ant.render|shadow_cast_policy"
+model_viewer_sys.require_policy "ant.render|light.directional"
+model_viewer_sys.require_policy "ant.render|light.ambient"
 
-m.require_system "ant.render|physic_bounding"
-m.require_system "ant.imguibase|imgui_system"
-m.require_interface "ant.render|camera"
-m.require_interface "ant.animation|animation"
-m.require_interface "ant.timer|timer"
-m.require_interface "ant.objcontroller|camera_motion"
-m.require_interface "ant.render|iwidget_drawer"
-m.require_interface "ant.collision|collider"
-m.require_interface "ant.render|light"
+model_viewer_sys.require_system "ant.render|physic_bounding_system"
+model_viewer_sys.require_system "ant.imguibase|imgui_system"
+
+model_viewer_sys.require_interface "ant.render|camera"
+model_viewer_sys.require_interface "ant.animation|animation"
+model_viewer_sys.require_interface "ant.timer|timer"
+model_viewer_sys.require_interface "ant.objcontroller|camera_motion"
+model_viewer_sys.require_interface "ant.render|iwidget_drawer"
+model_viewer_sys.require_interface "ant.collision|collider"
+model_viewer_sys.require_interface "ant.render|light"
 
 local camera = world:interface "ant.render|camera"
 local iwd = world:interface "ant.render|iwidget_drawer"
@@ -242,15 +240,15 @@ end
 local imgui = require "imgui.ant"
 local imgui_util = require "imgui_util"
 
-local m = ecs.system "gui"
+local gui_sys = ecs.system "gui_system"
 
-m.require_system "ant.imguibase|imgui_system"
+gui_sys.require_system "ant.imguibase|imgui_system"
 
 local wndflags = imgui.flags.Window {  }
 
 local imguiMoveSpeed = {move_speed, min = 0, max = 600}
 
-function m:ui_update()
+function gui_sys:ui_update()
 	imgui.windows.SetNextWindowPos(800,0)
 	imgui.windows.SetNextWindowSize(200,200)
 	for _ in imgui_util.windows("GUI", wndflags) do

@@ -8,7 +8,7 @@ local mu = mathpkg.util
 local ms = mathpkg.stack
 local Rx        = import_package "ant.rxlua".Rx
 
-local editor_entity_system = ecs.system "editor_entity_system"
+local editor_entity_sys = ecs.system "editor_entity_system"
 local hub = world.args.hub
 
 ecs.component "entity_relation"
@@ -18,7 +18,7 @@ ecs.singleton "entity_relation" {
     parent_child_dic = {},
     child_parent_dic = {},
 }
-editor_entity_system.require_singleton "entity_relation"
+editor_entity_sys.require_singleton "entity_relation"
 
 
 local poll_parent_msg
@@ -149,7 +149,7 @@ table.insert(relation_mb_list, {world:sub {"component_register","transform",eid}
 table.insert(relation_mb_list, {world:sub {"entity_created",eid},2}) --2
 table.insert(relation_mb_list, {world:sub {"entity_removed",eid},2}) --2
 
-function editor_entity_system:init()
+function editor_entity_sys:init()
     hub.subscribe(Event.ETR.NewEntity,on_request_new_entity)
     hub.subscribe(Event.ETR.DuplicateEntity,on_request_duplicate_entity)
     --todo create parent_child_dic&child_parent_dic
@@ -229,6 +229,6 @@ function poll_parent_msg()
 
 end
 
-function editor_entity_system:editor_update()
+function editor_entity_sys:editor_update()
     poll_parent_msg()
 end

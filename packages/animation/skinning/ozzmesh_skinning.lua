@@ -133,15 +133,13 @@ end
 
 local function patch_dynamic_buffer(ozzmesh, meshscene)
 	local scene = meshscene.scenes[meshscene.default_scene]
-	local meshname, meshnode = next(scene)
+	local meshname = next(scene)
 
 	local patch_meshscene = {
-		scenes = {
-			[meshscene.default_scene] = {
-				[meshname] = {
-					{
-						vb = {handles = {}}
-					}
+		[meshscene.default_scene] = {
+			[meshname] = {
+				{
+					vb = {handles = {}}
 				}
 			}
 		}
@@ -152,10 +150,11 @@ local function patch_dynamic_buffer(ozzmesh, meshscene)
 	local layouts = ozzmesh:layout()
 	local num_vertices = ozzmesh:num_vertices()
 
-	local s = new_meshscene.scenes[meshscene.default_scene]
-	local mn = s[meshname]
+	local n_s = new_meshscene.scenes[meshscene.default_scene]
+	local mn = n_s[meshname]
 	local g = mn[1]
-	g.vb.handles[2] = create_dynamic_buffer(layouts, num_vertices)
+	g.vb.handles[2] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
+	return n_s
 end
 
 function ozzmesh_skinning_transform.process(e)

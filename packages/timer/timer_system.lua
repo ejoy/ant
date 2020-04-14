@@ -12,7 +12,7 @@ local current = 0
 local delta
 
 local timer = ecs.interface "timer"
-timer.require_system "timesystem"
+timer.require_system "time_system"
 function timer.current()
 	return current
 end
@@ -20,13 +20,13 @@ function timer.delta()
 	return delta
 end
 
-local timesystem = ecs.system "timesystem"
-function timesystem:init()
+local time_sys = ecs.system "time_system"
+function time_sys:init()
 	current = gettime()
 	previous = current
 	delta = 0
 end
-function timesystem:timer()
+function time_sys:timer()
 	previous = current
 	current = gettime()
 	delta = current - previous

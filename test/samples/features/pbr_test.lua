@@ -6,7 +6,7 @@ local assetmgr = import_package "ant.asset"
 
 local serializeutil = import_package "ant.serialize"
 
-local pbrtest = ecs.system "pbr_test"
+local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
 local pbr_materialpath = feature_path / "assets/pbr_test.pbrm"
@@ -73,12 +73,12 @@ local function pbr_spheres()
     end
 end
 
-function pbrtest:init()
+function pbr_test_sys:init()
     world:create_entity {
         policy = {
             "ant.render|render",
             "ant.render|mesh",
-            "ant.render|shadow_cast",
+            "ant.render|shadow_cast_policy",
             "ant.render|name",
         },
         data = {

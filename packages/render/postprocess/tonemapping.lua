@@ -10,14 +10,14 @@ local assetmgr = import_package "ant.asset"
 
 local setting = require "setting"
 
-local tm = ecs.system "tonemapping"
-tm.require_singleton "postprocess"
-tm.require_system    "postprocess_system"
-tm.require_interface "postprocess"
+local tm_sys = ecs.system "tonemapping_system"
+tm_sys.require_singleton "postprocess"
+tm_sys.require_system    "postprocess_system"
+tm_sys.require_interface "postprocess"
 
 local ipp = world:interface "postprocess"
 
-function tm:post_init()
+function tm_sys:post_init()
     local sd = setting.get()
     local hdrsetting = sd.graphic.hdr
     local pp = world:singleton "postprocess"

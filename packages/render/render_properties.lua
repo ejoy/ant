@@ -162,7 +162,7 @@ local function load_postprocess_properties(world, render_properties)
 	end
 end
 
-local load_properties_sys = ecs.system "load_properties"
+local load_properties_sys = ecs.system "load_properties_system"
 load_properties_sys.require_singleton "render_properties"
 load_properties_sys.require_interface "ant.render|uniforms"
 

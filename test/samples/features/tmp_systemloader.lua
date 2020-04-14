@@ -16,27 +16,27 @@ local computil  = renderpkg.components
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
 
-local init_loader = ecs.system 'init_loader'
+local init_loader_sys = ecs.system 'init_loader_system'
 
-init_loader.require_system "ant.imguibase|imgui_system"
-init_loader.require_system "ant.sky|procedural_sky_system"
-init_loader.require_system "ant.test.features|scenespace_test"
-init_loader.require_system "ant.test.features|character_ik_test"
-init_loader.require_system "ant.test.features|terrain_test"
-init_loader.require_system "ant.test.features|pbr_test"
-init_loader.require_system "ant.test.features|animation_test"
-init_loader.require_system 'ant.test.features|camera_controller'
-init_loader.require_system "ant.render|physic_bounding"
-init_loader.require_system "ant.render|render_mesh_bounding"
+init_loader_sys.require_system "ant.imguibase|imgui_system"
+init_loader_sys.require_system "ant.sky|procedural_sky_system"
+init_loader_sys.require_system "ant.test.features|scenespace_test_system"
+init_loader_sys.require_system "ant.test.features|character_ik_test_system"
+init_loader_sys.require_system "ant.test.features|terrain_test_system"
+init_loader_sys.require_system "ant.test.features|pbr_test_system"
+init_loader_sys.require_system "ant.test.features|animation_test_system"
+init_loader_sys.require_system 'ant.test.features|camera_controller_system'
+init_loader_sys.require_system "ant.render|physic_bounding_system"
+init_loader_sys.require_system "ant.render|render_mesh_bounding_system"
 
-init_loader.require_interface "ant.render|camera"
-init_loader.require_interface "ant.objcontroller|camera_motion"
-init_loader.require_interface "ant.objcontroller|obj_motion"
-init_loader.require_interface "ant.render|iwidget_drawer"
-init_loader.require_interface "ant.render|light"
+init_loader_sys.require_interface "ant.render|camera"
+init_loader_sys.require_interface "ant.objcontroller|camera_motion"
+init_loader_sys.require_interface "ant.objcontroller|obj_motion"
+init_loader_sys.require_interface "ant.render|iwidget_drawer"
+init_loader_sys.require_interface "ant.render|light"
 
-init_loader.require_policy "ant.objcontroller|obj_lock"
-init_loader.require_policy "ant.objcontroller|camera_lock"
+init_loader_sys.require_policy "ant.objcontroller|obj_lock"
+init_loader_sys.require_policy "ant.objcontroller|camera_lock"
 
 local function create_plane_test()
     local planes = {
@@ -134,7 +134,7 @@ local function find_entity(name, whichtype)
     end
 end
 
-function init_loader:init()
+function init_loader_sys:init()
     do
         local dlightdir = math3d.totable(
             math3d.normalize(math3d.inverse(math3d.todirection(
@@ -164,14 +164,14 @@ local function create_camera()
     return id
 end
 
-function init_loader:post_init()
+function init_loader_sys:post_init()
     create_camera()
 end
 
 local imgui      = require "imgui"
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
-function init_loader:ui_update()
+function init_loader_sys:ui_update()
     local mq = world:singleton_entity "main_queue"
     local cameraeid = mq.camera_eid
 

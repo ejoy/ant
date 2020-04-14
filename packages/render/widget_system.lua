@@ -24,15 +24,15 @@ ecs.component "debug_mesh_bounding"
 
 local bt = ecs.policy "debug_mesh_bounding"
 bt.require_component "debug_mesh_bounding"
-bt.require_system "render_mesh_bounding"
+bt.require_system "render_mesh_bounding_system"
 
-local m = ecs.system "widget_drawer"
+local widget_drawer_sys = ecs.system "widget_drawer_system"
 
-m.require_policy "name"
-m.require_policy "render"
-m.require_policy "bounding_draw"
+widget_drawer_sys.require_policy "name"
+widget_drawer_sys.require_policy "render"
+widget_drawer_sys.require_policy "bounding_draw"
 
-function m:init()
+function widget_drawer_sys:init()
 	local eid = world:create_entity {
 		policy = {
 			"ant.render|name",
@@ -53,7 +53,7 @@ function m:init()
 	world[eid].rendermesh = assetmgr.load("//res.mesh/bounding.rendermesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))
 end
 
-function m:end_frame()
+function widget_drawer_sys:end_frame()
 	local dmesh = world:singleton_entity "widget_drawer"
 	if dmesh then
 		local meshscene = dmesh.rendermesh
@@ -69,9 +69,9 @@ function m:end_frame()
 	end
 end
 
-local m = ecs.interface "iwidget_drawer"
+local iwd = ecs.interface "iwidget_drawer"
 
-m.require_system "widget_drawer"
+iwd.require_system "widget_drawer_system"
 
 local DEFAULT_COLOR <const> = 0xffffff00
 
@@ -129,19 +129,19 @@ local function apply_srt(shape, srt)
 	}
 end
 
-function m.draw_lines(shape, srt)
+function iwd.draw_lines(shape, srt)
 	local desc = {vb={"fffd"}, ib={}}
 	geometry_drawer.draw_line(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers(desc.vb, desc.ib)
 end
 
-function m.draw_box(shape, srt)
+function iwd.draw_box(shape, srt)
 	local desc={vb={"fffd"}, ib={}}
 	geometry_drawer.draw_box(shape.size, DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers(desc.vb, desc.ib)
 end
 
-function m.draw_capsule(shape, srt)
+function iwd.draw_capsule(shape, srt)
 	local desc={vb={"fffd"}, ib={}}
 	geometry_drawer.draw_capsule({
 		tessellation = 2,
@@ -151,7 +151,7 @@ function m.draw_capsule(shape, srt)
 	append_buffers(desc.vb, desc.ib)
 end
 
-function m.draw_sphere(shape, srt)
+function iwd.draw_sphere(shape, srt)
 	local desc={vb={"fffd"}, ib={}}
 	geometry_drawer.draw_sphere({
 		tessellation = 2,
@@ -160,24 +160,24 @@ function m.draw_sphere(shape, srt)
 	append_buffers(desc.vb, desc.ib)
 end
 
-function m.draw_aabb_box(shape, srt)
+function iwd.draw_aabb_box(shape, srt)
 	local desc={vb={"fffd"}, ib={}}
 	geometry_drawer.draw_aabb_box(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers(desc.vb, desc.ib)
 end
 
-function m.draw_skeleton(ske, ani, srt)
+function iwd.draw_skeleton(ske, ani, srt)
 	local desc={vb={"fffd"}, ib={}}
 	geometry_drawer.draw_skeleton(ske, ani, DEFAULT_COLOR, srt, desc)
 	append_buffers(desc.vb, desc.ib)
 end
 
-local m = ecs.system "physic_bounding"
-m.require_interface "iwidget_drawer"
+local physic_bounding_sys = ecs.system "physic_bounding_system"
+physic_bounding_sys.require_interface "iwidget_drawer"
 
 local iwd = world:interface "ant.render|iwidget_drawer"
 
-function m:widget()
+function physic_bounding_sys:widget()
 	for _, eid in world:each "collider" do
 		local e = world[eid]
 		local collider = e.collider
@@ -200,11 +200,11 @@ function m:widget()
 	end
 end
 
-local rmb = ecs.system "render_mesh_bounding"
+local rmb_sys = ecs.system "render_mesh_bounding_system"
 
-rmb.require_system "widget_drawer"
+rmb_sys.require_system "widget_drawer_system"
 
-function rmb:widget()
+function rmb_sys:widget()
 	-- local transformed_boundings = {}
 	-- computil.get_mainqueue_transform_boundings(world, transformed_boundings)
 	-- for _, tb in ipairs(transformed_boundings) do

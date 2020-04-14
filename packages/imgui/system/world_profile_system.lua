@@ -5,12 +5,12 @@ local WatcherEvent = require "hub_event"
 ecs.component "profile_cache" {}
 ecs.singleton "profile_cache" {}
 
-local world_profile_system =  ecs.system "world_profile_system"
-world_profile_system.require_singleton "profile_cache"
+local world_profile_sys =  ecs.system "world_profile_system"
+world_profile_sys.require_singleton "profile_cache"
 
 local eventSystemHook = world:sub {"system_hook"}
 
-function world_profile_system:editor_update()
+function world_profile_sys:editor_update()
     local e = world:singleton_entity "profile_cache"
     local profile_cache = e.profile_cache
     for _,typ,sys,what,stepname,time_ms in eventSystemHook:unpack() do

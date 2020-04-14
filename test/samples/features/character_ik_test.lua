@@ -11,8 +11,8 @@ local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
 local computil  = renderpkg.components
 
-local iktest_sys = ecs.system "character_ik_test"
-iktest_sys.require_policy "ant.character|foot_ik_raycast"
+local char_ik_test_sys = ecs.system "character_ik_test_system"
+char_ik_test_sys.require_policy "ant.character|foot_ik_raycast"
 
 local function foot_ik_test()
 
@@ -26,7 +26,7 @@ local function foot_ik_test()
             "ant.animation|ozzmesh",
             "ant.animation|ik",
             "ant.animation|ozz_skinning",
-            "ant.render|shadow_cast",
+            "ant.render|shadow_cast_policy",
             "ant.render|name",
             "ant.character|character",
             "ant.character|foot_ik_raycast",
@@ -155,7 +155,7 @@ local function create_plane_test()
     })
 end
 
-function iktest_sys:init()
+function char_ik_test_sys:init()
     local eid = create_plane_test()
     local e = world[eid]
     local p = e.material.properties

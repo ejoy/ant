@@ -8,8 +8,8 @@ local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 
-local camera_controller_system = ecs.system "editor_camera_controller"
-camera_controller_system.require_interface "ant.objcontroller|camera_motion"
+local editor_camera_ctrl_sys = ecs.system "editor_camera_controller_system"
+editor_camera_ctrl_sys.require_interface "ant.objcontroller|camera_motion"
 local icm = world:interface "ant.objcontroller|camera_motion"
 
 ecs.tag "test_remove_com"
@@ -28,7 +28,7 @@ local function delta_move(x, y)
     return (x - last_x) * move_speed, (y - last_y) * move_speed
 end
 
-function camera_controller_system:update()
+function editor_camera_ctrl_sys:update()
     for _,_, _, x, y in leftmouse_mb:unpack() do
         local mq = world:single_entity "main_queue"
         local cameraeid = mq.camera_eid

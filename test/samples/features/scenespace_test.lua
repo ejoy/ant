@@ -1,15 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-local math3d = require "math3d"
-
-local sp_test = ecs.system "scenespace_test"
-sp_test.require_policy "ant.render|transform"
-sp_test.require_policy "ant.render|render"
-sp_test.require_policy "ant.scene|hierarchy"
+local sp_test_sys = ecs.system "scenespace_test_system"
+sp_test_sys.require_policy "ant.render|transform"
+sp_test_sys.require_policy "ant.render|render"
+sp_test_sys.require_policy "ant.scene|hierarchy"
 
 
-function sp_test:init()
+function sp_test_sys:init()
     local rooteid = world:create_entity{
         policy = {
             "ant.render|name",

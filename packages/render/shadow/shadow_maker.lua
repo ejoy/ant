@@ -37,27 +37,27 @@ ecs.component "shadow"
 	.depth_type 	"string"("linear")		-- "inv_z" / "linear"
 	["opt"].split	"csm_split_config"
 
-local sp = ecs.policy "shadow_config"
-sp.unique_component "shadow"
-sp.require_component "fb_index"
+local shadow_cfg_policy = ecs.policy "shadow_config_policy"
+shadow_cfg_policy.unique_component "shadow"
+shadow_cfg_policy.require_component "fb_index"
 
-local smp = ecs.policy "shadow_make"
-smp.require_component "csm"
-smp.require_component "material"
+local sm_policy = ecs.policy "shadow_make_policy"
+sm_policy.require_component "csm"
+sm_policy.require_component "material"
 
-smp.require_policy "render_queue"
-smp.require_policy "name"
+sm_policy.require_policy "render_queue"
+sm_policy.require_policy "name"
 
-smp.require_system "shadowmaker_camera"
-smp.require_system "shadow_maker"
+sm_policy.require_system "shadowcamera_system"
+sm_policy.require_system "shadow_maker"
 
-local scp = ecs.policy "shadow_cast"
-scp.require_component "can_cast"
-scp.require_policy "shadow_make"
-scp.require_policy "shadow_config"
+local sc_policy = ecs.policy "shadow_cast_policy"
+sc_policy.require_component "can_cast"
+sc_policy.require_policy "shadow_make_policy"
+sc_policy.require_policy "shadow_config_policy"
 
-local maker_camera = ecs.system "shadowmaker_camera"
-maker_camera.require_system "ant.scene|primitive_filter_system"
+local sm_sys = ecs.system "shadowcamera_system"
+sm_sys.require_system "ant.scene|primitive_filter_system"
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -158,7 +158,7 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 	}
 end
 
-function maker_camera:shadow_camera()
+function sm_sys:shadow_camera()
 	local l = world:singleton_entity "directional_light"
 	if l then
 		local lightdir = math3d.inverse(l.direction)
@@ -186,7 +186,7 @@ function maker_camera:shadow_camera()
 end
 local sm = ecs.system "shadow_maker"
 sm.require_system "ant.scene|primitive_filter_system"
-sm.require_system "shadowmaker_camera"
+sm.require_system "shadowcamera_system"
 sm.require_system "render_system"
 
 local linear_cast_material = "/pkg/ant.resources/depiction/materials/shadow/csm_cast_linear.material"
@@ -220,7 +220,7 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 
 	return world:create_entity {
 		policy = {
-			"ant.render|shadow_make",
+			"ant.render|shadow_make_policy",
 			"ant.render|render_queue",
 			"ant.render|name",
 		},
@@ -310,7 +310,7 @@ local function create_shadow_entity(shadowmap_size, split_num, depth_type)
 
 	return world:create_entity {
 		policy = {
-			"ant.render|shadow_config"
+			"ant.render|shadow_config_policy"
 		},
 		data = {
 			shadow = {

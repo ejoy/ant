@@ -20,7 +20,7 @@ function pf:init()
 	return self
 end
 
-local primitive_filter_sys = ecs.system "primitive_filter_system"
+local prim_filter_sys = ecs.system "primitive_filter_system"
 
 --luacheck: ignore self
 local function reset_results(results)
@@ -125,7 +125,7 @@ end
 
 local material_change = world:sub { "material_change" }
 
-function primitive_filter_sys:filter_primitive()
+function prim_filter_sys:filter_primitive()
 	for msg in material_change:each() do
 		local eid = msg[2]
 		material_cache[eid] = nil

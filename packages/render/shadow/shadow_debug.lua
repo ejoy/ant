@@ -14,9 +14,9 @@ local mu, mc= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
 
 ----------------------------------------------------------------------------------------------------------
-local debug_sm = ecs.system "debug_shadow_maker"
-debug_sm.require_system "shadowmaker_camera"
-debug_sm.require_interface "uniforms"
+local dbg_sm_sys = ecs.system "debug_shadow_maker_system"
+dbg_sm_sys.require_system "shadowmaker_camera"
+dbg_sm_sys.require_interface "uniforms"
 
 ecs.tag "shadow_quad"
 
@@ -86,7 +86,7 @@ local function main_view_debug_frustum()
 	end
 end
 
-function debug_sm:post_init()
+function dbg_sm_sys:post_init()
 	csm_shadow_debug_quad()
 end
 
@@ -301,7 +301,7 @@ end
 
 local record_camera_state_mb = world:sub {"record_camera_state"}
 
-function debug_sm:debug_shadow()
+function dbg_sm_sys:debug_shadow()
 	for _, eid in record_camera_state_mb:unpack() do
 		log_split_distance()
 		create_debug_entity(eid)

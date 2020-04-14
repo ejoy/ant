@@ -14,7 +14,7 @@ function transform.process(e)
     e.test_component = true
 end
 
-local editor_policy_system = ecs.system "editor_policy_system"
+local editor_policy_sys = ecs.system "editor_policy_system"
 
 -- local function on_request_entity_policy(eids)
 --     local entity_policies = {}
@@ -32,7 +32,7 @@ local function on_request_add_policy(eids,policies_list,data_set)
     world:add_policy(eid,{policy = policies_list,data = data_set})
 end
 
-function editor_policy_system:init()
+function editor_policy_sys:init()
     local hub = world.args.hub
     hub.subscribe(WatcherEvent.ETR.RequestAddPolicy,on_request_add_policy)
 end

@@ -4,8 +4,8 @@ local world = ecs.world
 local math3d = require "math3d"
 local rhwi = import_package "ant.render".hwi
 
-local camera_controller_system = ecs.system "camera_controller"
-camera_controller_system.require_interface "ant.objcontroller|camera_motion"
+local camera_controller_sys = ecs.system "camera_controller_system"
+camera_controller_sys.require_interface "ant.objcontroller|camera_motion"
 
 local icm = world:interface "ant.objcontroller|camera_motion"
 
@@ -19,7 +19,7 @@ local eventKeyboard = world:sub {"keyboard"}
 local kKeyboardSpeed <const> = 0.5
 
 
-function camera_controller_system:post_init()
+function camera_controller_sys:post_init()
 	-- local camera = get_camera()
 	-- camera.frustum.f = 100	--set far distance to 100
 	-- camera_reset(camera)
@@ -53,7 +53,7 @@ local function can_move(camera)
 	return lock_target and lock_target.type ~= "move" or true
 end
 
-function camera_controller_system:data_changed()
+function camera_controller_sys:data_changed()
 	local mq = world:singleton_entity "main_queue"
 	local camera = world[mq.camera_eid].camera
 	

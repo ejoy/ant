@@ -2,9 +2,9 @@ local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
 
-local sp = ecs.system "scenespace"
-sp.require_interface "ant.objcontroller|obj_motion"
-sp.require_interface "ant.objcontroller|camera_motion"
+local sp_sys = ecs.system "scenespace_system"
+sp_sys.require_interface "ant.objcontroller|obj_motion"
+sp_sys.require_interface "ant.objcontroller|camera_motion"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
 local icm = world:interface "ant.objcontroller|camera_motion"
@@ -29,7 +29,7 @@ local function find_mount_target(e)
 	return 0
 end
 
-function sp:update_hierarchy_scene()
+function sp_sys:update_hierarchy_scene()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
 		
@@ -115,7 +115,7 @@ local function update_transform(e)
 	end
 end
 
-function sp:update_transform()
+function sp_sys:update_transform()
 	for _, eid in ipairs(scenequeue) do
 		local e = world[eid]
 

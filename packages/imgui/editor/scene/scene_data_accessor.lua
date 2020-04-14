@@ -175,7 +175,7 @@ function scene_data_accessor._start_scene(config,serialize_str)
         "editor_tool_system",
         "visible_system",
         "world_profile_system",
-        "init_loader",
+        "init_loader_system",
         "scenespace_test",
         -- "editor_system"
     }

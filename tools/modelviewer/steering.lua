@@ -5,7 +5,7 @@ local imgui = require "imgui"
 local fs = require "filesystem"
 local platform = require "platform"
 
-local steering_system = ecs.system "steering_system"
+local steering_sys = ecs.system "steering_system"
 
 
 local steeringTex
@@ -14,7 +14,7 @@ local touch = {
     r = {},
 }
 
-function steering_system:init()
+function steering_sys:init()
     local assetmgr = import_package "ant.asset"
     local texloader = assetmgr.get_loader "texture"
     steeringTex = texloader(fs.path "/pkg/ant.modelviewer/res/steering.texture")
@@ -79,7 +79,7 @@ local function hitpos(cx, cy, size, nx, ny)
     return cx + nx*size - size*0.25, cy + ny*size - size*0.25
 end
 
-function steering_system:ui_update()
+function steering_sys:ui_update()
     local windows = imgui.windows
     local widget = imgui.widget
     local cursor = imgui.cursor

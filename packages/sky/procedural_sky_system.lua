@@ -195,7 +195,7 @@ function ps:init()
 	return self
 end
 
-local sky_system = ecs.system "procedural_sky_system"
+local ps_sys = ecs.system "procedural_sky_system"
 
 local shader_parameters = {0.02, 3.0, 0.1, 0}
 
@@ -276,7 +276,7 @@ local function sync_directional_light(skyentity)
 	end
 end
 
-function sky_system:update_sky()
+function ps_sys:update_sky()
 	for _, eid in world:each "procedural_sky" do
 		local e = world[eid]
 		update_sky_parameters(e)
@@ -285,9 +285,9 @@ function sky_system:update_sky()
 end
 
 
-local sun_update_system = ecs.system "sun_update_system"
-sun_update_system.require_system "procedural_sky_system"
-sun_update_system.require_interface "ant.timer|timer"
+local sun_sys = ecs.system "sun_update_system"
+sun_sys.require_system "procedural_sky_system"
+sun_sys.require_interface "ant.timer|timer"
 
 local function update_hour(skycomp, deltatime, unit)
 	unit = unit or 24
@@ -296,7 +296,7 @@ end
 
 local timer = world:interface "ant.timer|timer"
 
-function sun_update_system:update_sun()
+function sun_sys:update_sun()
 	local delta = timer.delta()
 	for _, eid in world:each "procedural_sky" do
 		local e = world[eid]

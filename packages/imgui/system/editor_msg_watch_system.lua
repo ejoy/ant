@@ -8,7 +8,7 @@ local mu = mathpkg.util
 
 local Rx        = import_package "ant.rxlua".Rx
 
-local editor_msg_watch_system = ecs.system "editor_msg_watch_system"
+local editor_msg_watch_sys = ecs.system "editor_msg_watch_system"
 local sub_msg_tbl = {}
 local msgbox_tbl = {}
 local hub = world.args.hub
@@ -29,12 +29,12 @@ local function on_request_modify_watch_msg(new_sub_msg_tbl)
     end
 end
 
-function editor_msg_watch_system:init()
+function editor_msg_watch_sys:init()
     hub.subscribe(WatcherEvent.ETR.RequestGetWatchMsg,on_request_get_watch_msg)
     hub.subscribe(WatcherEvent.ETR.RequestModifyWatchMsg,on_request_modify_watch_msg)
 end
 
-function editor_msg_watch_system:editor_update()
+function editor_msg_watch_sys:editor_update()
     for i,mb in  ipairs(msgbox_tbl) do
         for msg in mb:each() do
             log.info_a("[WatchMsg]:",msg)

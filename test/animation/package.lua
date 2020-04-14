@@ -15,7 +15,7 @@ return {
             "ant.render|light.ambient",
         },
         system = {
-            "ant.test.animation|init_loader",
+            "ant.test.animation|init_loader_system",
         }
     }
 }

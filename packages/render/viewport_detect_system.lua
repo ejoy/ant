@@ -1,12 +1,9 @@
 local ecs = ...
 local world = ecs.world
-
-local rhwi 		= require "hardware_interface"
 local fbmgr 	= require "framebuffer_mgr"
-local camerautil= require "camera.util"
 
-local vp_detect = ecs.system "viewport_detect_system"
-vp_detect.require_system "ant.scene|primitive_filter_system"
+local vp_detect_sys = ecs.system "viewport_detect_system"
+vp_detect_sys.require_system "ant.scene|primitive_filter_system"
 
 local eventResize = world:sub {"resize"}
 
@@ -51,11 +48,11 @@ local function update_camera_viewrect(viewsize)
 	end
 end
 
-function vp_detect:post_init()
+function vp_detect_sys:post_init()
 	update_camera_viewrect()
 end
 
-function vp_detect:data_changed()
+function vp_detect_sys:data_changed()
 	local new_fbw, new_fbh
 	for _, w, h in eventResize:unpack() do
 		if w ~= 0 and h ~= 0 then

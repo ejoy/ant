@@ -9,12 +9,12 @@ local rhwi       = renderpkg.hwi
 
 local drawer = world:interface "ant.render|iwidget_drawer"
 
-local m = ecs.system 'init_loader'
+local init_loader_sys = ecs.system 'init_loader_system'
 
-m.require_system "ant.imguibase|imgui_system"
-m.require_system "camera_controller"
-m.require_interface "ant.render|iwidget_drawer"
-m.require_interface "ant.animation|animation"
+init_loader_sys.require_system "ant.imguibase|imgui_system"
+init_loader_sys.require_system "camera_controller_system"
+init_loader_sys.require_interface "ant.render|iwidget_drawer"
+init_loader_sys.require_interface "ant.animation|animation"
 
 local RoleEntityId
 local eventResize = world:sub {"resize"}
@@ -27,7 +27,7 @@ local function load_file(file)
     return data
 end
 
-function m:init()
+function init_loader_sys:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {
         srt = {
           s = {1,1,1,0},
@@ -39,7 +39,7 @@ function m:init()
     RoleEntityId = world:create_entity(load_file 'res/entity.txt')
 end
 
-function m:post_init()
+function init_loader_sys:post_init()
     local e = world:singleton_entity "main_queue"
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
@@ -114,7 +114,7 @@ local function sortpairs(t)
     end
 end
 
-function m:ui_update()
+function init_loader_sys:ui_update()
     local e = world[RoleEntityId]
 
     if not status.Loop and not status.Pause and e.animation.current.ratio >= 1 then
@@ -192,7 +192,7 @@ function m:ui_update()
     end
 end
 
-function m:widget()
+function init_loader_sys:widget()
     if not status.SkeletonView then
         return
     end
@@ -242,7 +242,7 @@ local function mouseEvent(what, dx, dy)
     end
 end
 
-function m:data_changed()
+function init_loader_sys:data_changed()
 	for _,w, h in eventResize:unpack() do
 		screensize.w = w
 		screensize.h = h

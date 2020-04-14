@@ -259,9 +259,9 @@ end
 
 local mouse_left_mb = world:sub {"mouse","LEFT"}
 
-local gizmo_sys =  ecs.system "editor_operate_gizmo_system"
-gizmo_sys.require_singleton "operate_gizmo_cache"
-function gizmo_sys:init()
+local editor_operate_gizmo_sys =  ecs.system "editor_operate_gizmo_system"
+editor_operate_gizmo_sys.require_singleton "operate_gizmo_cache"
+function editor_operate_gizmo_sys:init()
     --create gizmo
     local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
     assert(not operate_gizmo_cache.gizmo_eid)
@@ -373,7 +373,7 @@ local function update_mouse_event()
 end
 
 
-function gizmo_sys:editor_update()
+function editor_operate_gizmo_sys:editor_update()
     update_mouse_event()
     local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
@@ -434,7 +434,7 @@ function gizmo_sys:editor_update()
     end
 end
 
-function gizmo_sys:after_pickup()
+function editor_operate_gizmo_sys:after_pickup()
     local pickup_entity = world:singleton_entity "pickup"
     if pickup_entity then
         local picked_dir = nil

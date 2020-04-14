@@ -13,7 +13,7 @@ ecs.singleton "frame_stat" {
 	bgfx_frames = -1,
 }
 
-local end_frame_sys = ecs.system "end_frame"
+local end_frame_sys = ecs.system "end_frame_system"
 end_frame_sys.require_singleton "frame_stat"
 
 function end_frame_sys:end_frame()

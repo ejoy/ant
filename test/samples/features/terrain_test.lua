@@ -1,31 +1,26 @@
 local ecs = ...
 local world = ecs.world
 
-local fs = require "filesystem"
-
 local serialize = import_package "ant.serialize"
 
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
 local math3d = require "math3d"
 
-local terrain_test = ecs.system "terrain_test"
-terrain_test.require_system 'init_loader'
+local terrain_test_sys = ecs.system "terrain_test_system"
 
-terrain_test.require_policy "ant.terrain|terrain_render"
-terrain_test.require_policy "ant.collision|terrain_collider"
+terrain_test_sys.require_policy "ant.terrain|terrain_render"
+terrain_test_sys.require_policy "ant.collision|terrain_collider_policy"
 
-terrain_test.require_interface "ant.collision|collider"
+terrain_test_sys.require_interface "ant.collision|collider"
 
 local icollider = world:interface "ant.collision|collider"
 
-function terrain_test:init()
+function terrain_test_sys:init()
 	world:create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.terrain|terrain_render",
 			"ant.render|name",
-			"ant.collision|terrain_collider",
+			"ant.collision|terrain_collider_policy",
 			"ant.serialize|serialize",
 		},
 		data = {
@@ -45,7 +40,7 @@ function terrain_test:init()
 				}
 			},
 			scene_entity = true,
-			name = "terrain_test",
+			name = "terrain_test_sys",
 			serialize = serialize.create(),
 		}
 	}

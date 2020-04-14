@@ -60,13 +60,13 @@ end
 ecs.component "terrain_collider"
 .shape "terrain_shape"
 
-local tc_p = ecs.policy "terrain_collider"
-tc_p.require_component "terrain_collider"
-tc_p.require_component "terrain"
+local tc_policy = ecs.policy "terrain_collider_policy"
+tc_policy.require_component "terrain_collider"
+tc_policy.require_component "terrain"
 
-tc_p.require_transform "terrain_collider_build"
+tc_policy.require_transform "terrain_collider_transform"
 
-local tcb = ecs.transform "terrain_collider_build"
+local tcb = ecs.transform "terrain_collider_transform"
 tcb.input "terrain"
 tcb.output "terrain_collider"
 tcb.require_interface "ant.terrain|terrain"
@@ -136,14 +136,14 @@ cp.require_component "transform"
 cp.require_component "collider"
 cp.require_system "ant.collision|collider_system"
 
-local m = ecs.interface "collider"
-m.require_system "collider_system"
+local icoll = ecs.interface "collider"
+icoll.require_system "collider_system"
 
 local function set_obj_transform(obj, srt)
 	w:set_transform(obj, srt.t, srt.r)
 end
 
-function m.test(e, srt)
+function icoll.test(e, srt)
 	local collider = e.collider
 	if not collider then
 		return false
@@ -154,7 +154,7 @@ function m.test(e, srt)
 	return hit
 end
 
-function m.raycast(ray)
+function icoll.raycast(ray)
 	return w:raycast(ray[1], ray[2], ray.mask)
 end
 

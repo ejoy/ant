@@ -23,23 +23,23 @@ outline_policy.require_component "target_entity"
 outline_policy.require_component "editor_object"
 
 
-local editor_watcher_system = ecs.system "editor_watcher_system"
-editor_watcher_system.require_system "editor_operate_gizmo_system"
-editor_watcher_system.require_system "editor_policy_system"
-editor_watcher_system.require_system 'ant.scene|scene_space' 
-editor_watcher_system.require_system 'editor_entity_system' 
-editor_watcher_system.require_interface "ant.objcontroller|camera_motion"
+local editor_watcher_sys = ecs.system "editor_watcher_system"
+editor_watcher_sys.require_system "editor_operate_gizmo_system"
+editor_watcher_sys.require_system "editor_policy_system"
+editor_watcher_sys.require_system 'ant.scene|scene_space' 
+editor_watcher_sys.require_system 'editor_entity_system' 
+editor_watcher_sys.require_interface "ant.objcontroller|camera_motion"
 
 local camera_motion = world:interface "ant.objcontroller|camera_motion"
 
 
 -- editor_watcher_system.require_system "before_render_system"
-editor_watcher_system.require_singleton "profile_cache"
+editor_watcher_sys.require_singleton "profile_cache"
 
 ecs.component "editor_watcher_cache" {}
 ecs.singleton "editor_watcher_cache" {}
 
-editor_watcher_system.require_singleton "editor_watcher_cache"
+editor_watcher_sys.require_singleton "editor_watcher_cache"
 
 local function send_hierarchy()
     local temp = {}
@@ -451,7 +451,7 @@ local function on_request_hierarchy(self)
     send_hierarchy()
 end
 
-function editor_watcher_system:init()
+function editor_watcher_sys:init()
     local hub = world.args.hub
     hub.subscribe(WatcherEvent.ETR.WatchEntity,on_editor_select_entity,self)
     hub.subscribe(WatcherEvent.ETR.ModifyComponent,on_component_modified)
@@ -467,7 +467,7 @@ function editor_watcher_system:init()
 end
 
 local pickup_mb = world:sub {"pickup"}
-function editor_watcher_system:after_pickup()
+function editor_watcher_sys:after_pickup()
     for _,pick_id,pick_ids in pickup_mb:unpack() do
         local hub = world.args.hub
         local eid = pick_id
@@ -532,7 +532,7 @@ local function is_entity_relation_change()
 end
 
 
-function editor_watcher_system:editor_update()
+function editor_watcher_sys:editor_update()
     --这里本来应该条件短路掉，但是为了清空事件，还是全部调用一次
     local conditions = {
         is_entity_create(),
@@ -548,7 +548,7 @@ function editor_watcher_system:editor_update()
     pub_follow_per_frame()
 end
 
-function editor_watcher_system:after_update()
+function editor_watcher_sys:after_update()
     -----
     local need_send = world:singleton "editor_watcher_cache".need_send
     if not need_send then

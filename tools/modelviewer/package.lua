@@ -15,7 +15,7 @@ return {
             "ant.sky|procedural_sky",
             "ant.render|name",
             "ant.render|mesh",
-            "ant.render|shadow_cast",
+            "ant.render|shadow_cast_policy",
             "ant.render|render",
             "ant.render|bounding_draw",
             "ant.render|debug_mesh_bounding",

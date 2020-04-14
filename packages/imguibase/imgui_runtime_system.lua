@@ -20,10 +20,10 @@ local timer       = world:interface "ant.timer|timer"
 local eventResize = world:sub {"resize"}
 local context     = nil
 
-local m = ecs.system "imgui_system"
+local imgui_sys = ecs.system "imgui_system"
 
-m.require_system "ant.render|render_system"
-m.require_interface "ant.timer|timer"
+imgui_sys.require_system "ant.render|render_system"
+imgui_sys.require_interface "ant.timer|timer"
 
 local function replaceImguiCallback(t)
 	local l_mouse_wheel = t.mouse_wheel
@@ -82,7 +82,7 @@ local function glyphRanges(t)
 	return table.concat(s)
 end
 
-function m:init()
+function imgui_sys:init()
 	replaceImguiCallback(runtime.callback)
 
 	context = imgui.CreateContext(rhwi.native_window())
@@ -114,11 +114,11 @@ function m:init()
 
 end
 
-function m:exit()
+function imgui_sys:exit()
     imgui.DestroyContext()
 end
 
-function m:post_init()
+function imgui_sys:post_init()
 	imgui.push_context(context)
     local main_viewid = assert(viewidmgr.get "main_view")
     local vid = imgui.ant.viewid()
@@ -133,7 +133,7 @@ local function imgui_resize(width, height)
 	imgui.resize(width/xscale, height/yscale, xscale, yscale)
 end
 
-function m:ui_start()
+function imgui_sys:ui_start()
 	imgui.push_context(context)
 	for _,w, h in eventResize:unpack() do
 		imgui_resize(w, h)
@@ -154,7 +154,7 @@ end
 
 -- end
 
-function m:ui_end()
+function imgui_sys:ui_end()
     imgui.end_frame()
     local vid = imgui.ant.viewid()
     renderutil.update_frame_buffer_view(vid, fbmgr.get_fb_idx(vid))

@@ -5,9 +5,9 @@ local imgui = require "imgui.ant"
 local rp3d = require "rp3d.core"
 local imgui_util = require "imgui_util"
 
-local m = ecs.system "memory_stat"
+local memory_stat_sys = ecs.system "memory_stat_system"
 
-m.require_system "ant.imguibase|imgui_system"
+memory_stat_sys.require_system "ant.imguibase|imgui_system"
 
 local function memory_info()
 	local function bytestr(n)
@@ -48,7 +48,7 @@ end
 
 local wndflags = imgui.flags.Window { "NoResize", "NoScrollbar" }
 
-function m:ui_update()
+function memory_stat_sys:ui_update()
 	imgui.windows.SetNextWindowPos(0,0)
 	for _ in imgui_util.windows("Memory Stat", wndflags) do
 		imgui.widget.Text(memory_info())

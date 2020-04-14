@@ -82,18 +82,18 @@ local function set_state(e, name, time)
 	sm.current = name
 end
 
-local m = ecs.policy "animation_controller.state_machine"
-m.require_component "animation"
-m.require_component "state_machine"
-m.require_system "state_machine"
-m.require_transform "state_machine"
+local sm_policy = ecs.policy "animation_controller.state_machine"
+sm_policy.require_component "animation"
+sm_policy.require_component "state_machine"
+sm_policy.require_system "state_machine_system"
+sm_policy.require_transform "state_machine_transform"
 
-local m = ecs.component "state_machine"
+local sm = ecs.component "state_machine"
 		.current "string"
 ["opt"]	.file "respath"
 		.nodes "state_machine_node{}"
 
-function m:init()
+function sm:init()
 	if self.file then
 		assert(fs.loadfile(self.file))(self.nodes)
 	end
@@ -106,20 +106,20 @@ ecs.component "state_machine_node"
 ecs.component "state_machine_transmits"
 	.duration "real"
 
-local m = ecs.transform "state_machine"
-m.input "state_machine"
-m.output "animation"
+local sm_trans = ecs.transform "state_machine_transform"
+sm_trans.input "state_machine"
+sm_trans.output "animation"
 
-function m.process(e)
+function sm_trans.process(e)
 	e.animation.current = {}
 	set_state(e, e.state_machine.current, 0)
 end
 
-local m = ecs.system "state_machine"
-m.require_system "animation_system"
-m.require_interface "ant.timer|timer"
+local state_machine_sys = ecs.system "state_machine_system"
+state_machine_sys.require_system "animation_system"
+state_machine_sys.require_interface "ant.timer|timer"
 
-function m:animation_state()
+function state_machine_sys:animation_state()
 	local delta = timer.delta()
 	for _, eid in world:each "state_machine" do
 		local e = world[eid]
@@ -131,10 +131,10 @@ function m:animation_state()
 	end
 end
 
-local m = ecs.interface "animation"
-m.require_interface "ant.timer|timer"
+local iani = ecs.interface "animation"
+iani.require_interface "ant.timer|timer"
 
-function m.set_state(e, name)
+function iani.set_state(e, name)
 	local sm = e.state_machine
 	if e.animation and sm and sm.nodes[name] then
 		if sm.current == name then
@@ -152,7 +152,7 @@ function m.set_state(e, name)
 	end
 end
 
-function m.play(e, name, time)
+function iani.play(e, name, time)
 	if e.animation and e.animation.anilist[name]  then
 		if e.state_machine then
 			e.state_machine.current = nil
@@ -167,7 +167,7 @@ function m.play(e, name, time)
 	end
 end
 
-function m.set_value(e, name, key, value)
+function iani.set_value(e, name, key, value)
 	local sm = e.state_machine
 	if not sm or not sm.nodes then
 		return

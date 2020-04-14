@@ -3,9 +3,7 @@ local world = ecs.world
 
 ecs.component_alias ("hierarchy_visible","boolean",true)
 
-
-local visible_system = ecs.system "visible_system"
-
+local visible_sys = ecs.system "visible_system"
 
 local NotUpdated = nil
 local DontHave = 0
@@ -45,7 +43,7 @@ local function combine_and_return_visible(eid,updated_visible)
     return updated_visible[eid]
 end
 
-function visible_system:after_update()
+function visible_sys:after_update()
     -- local change_cache_list = self.visible_change_cache.list
     local updated_visible = {}
     for _,eid in world:each("can_render") do
