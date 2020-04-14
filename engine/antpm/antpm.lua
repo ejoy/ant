@@ -20,14 +20,14 @@ local function loadenv(name)
     return info.env
 end
 
-local function import(name)
+local function try_import(name)
     entry_pkg = entry_pkg or name
     if loaded[name] then
-        return loaded[name]
+        return true, loaded[name]
     end
     local info = registered[name]
     if not info or not info.config.entry then
-        error(("\n\tno package '%s'"):format(name))
+        return false, ("no package '%s'"):format(name)
     end
     local res = loadenv(name).require(info.config.entry)
     if res == nil then
@@ -35,7 +35,15 @@ local function import(name)
     else
         loaded[name] = res
     end
-    return loaded[name]
+    return true, loaded[name]
+end
+
+local function import(name)
+    local ok, res = try_import(name)
+    if not ok then
+        error(res)
+    end
+    return res
 end
 
 local function register_package(path)
@@ -125,7 +133,7 @@ end
 return {
     loadenv = loadenv,
     import = import,
-    test = test,
+    try_import = try_import,
     register_package = register_package,
     unregister_package = unregister_package,
     initialize = initialize,
