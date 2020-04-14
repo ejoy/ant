@@ -21,7 +21,7 @@ return {
             "ant.render|debug_mesh_bounding",
             "ant.render|light.directional",
             "ant.render|light.ambient",
-            "ant.scene|hierarchy",
+            "ant.scene|hierarchy_policy",
             --editor
             "ant.character|character",
             "ant.objcontroller|select",

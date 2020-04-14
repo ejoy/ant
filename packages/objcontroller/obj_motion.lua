@@ -63,6 +63,8 @@ local function rotate_vec(dir, rotateX, rotateY, threshold_around_x_axis)
     rotateX = rotateX or 0
     rotateY = rotateY or 0
 
+    threshold_around_x_axis = threshold_around_x_axis or 10e-6
+
     local radianX, radianY = math3d.dir2radian(dir)
 
     radianX = mu.limit(radianX + rotateX, n_halfpi + threshold_around_x_axis, halfpi - threshold_around_x_axis)

@@ -112,6 +112,8 @@ for _, item in ipairs {
 	p.require_component "scene_entity"
 
 	p.require_system "render_system"
+
+	p.require_policy "ant.scene|transform_policy"
 end
 
 ecs.tag "can_select"

@@ -4,8 +4,9 @@ local math3d = require "math3d"
 
 ecs.tag "scene_entity"
 
-local tp = ecs.policy "transform"
+local tp = ecs.policy "transform_policy"
 tp.require_component "transform"
+tp.require_transform "transform_transform"
 
 ecs.component "lock_target"
 	.type	"string"
@@ -24,16 +25,17 @@ local tt = ecs.transform "transform_transform"
 tt.output "transform"
 
 function tt.process(e)
-	local trans = e.transform
-	local lt = trans.lock_target
+	local lt = e.transform.lock_target
 	if lt and e.parent == nil then
 		error(string.format("'lock_target' defined in 'transform' component, but 'parent' component not define in entity"))
 	end
 end
 
-local hie = ecs.policy "hierarchy"
+local hie = ecs.policy "hierarchy_policy"
 hie.require_component "parent"
 hie.require_component "scene_entity"
+
+hie.require_system "scenespace_system"
 
 local sp_sys = ecs.system "scenespace_system"
 sp_sys.require_interface "ant.objcontroller|obj_motion"
@@ -127,7 +129,7 @@ local function update_transform(e)
 
 		--combine parent info
 		local im = e.camera and icm or iom
-		local lt = im:get_lock_target(e)
+		local lt = im.get_lock_target(e)
 
 		if lt then
 			update_lock_target_transform(e, lt, e.parent, im)

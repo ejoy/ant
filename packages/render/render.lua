@@ -111,8 +111,9 @@ local render_sys = ecs.system "render_system"
 render_sys.require_singleton "render_properties"
 
 render_sys.require_system "ant.scene|primitive_filter_system"
-
+render_sys.require_system "ant.scene|scenespace_system"
 render_sys.require_system "ant.scene|cull_system"
+
 render_sys.require_system "load_properties_system"
 render_sys.require_system "end_frame_system"
 render_sys.require_system "viewport_detect_system"

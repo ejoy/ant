@@ -3,8 +3,8 @@ local world = ecs.world
 
 local sp_test_sys = ecs.system "scenespace_test_system"
 sp_test_sys.require_policy "ant.render|render"
-sp_test_sys.require_policy "ant.scene|transform"
-sp_test_sys.require_policy "ant.scene|hierarchy"
+sp_test_sys.require_policy "ant.scene|transform_policy"
+sp_test_sys.require_policy "ant.scene|hierarchy_policy"
 
 
 function sp_test_sys:init()
@@ -19,7 +19,7 @@ function sp_test_sys:init()
 
     local child1 = world:create_entity{
         policy = {
-            "ant.scene|hierarchy",
+            "ant.scene|hierarchy_policy",
             "ant.render|render",
             "ant.render|name",
             "ant.render|mesh",
@@ -41,7 +41,7 @@ function sp_test_sys:init()
     local child1_1 = world:create_entity {
         policy = {
             "ant.render|render",
-            "ant.scene|hierarchy",
+            "ant.scene|hierarchy_policy",
             "ant.render|name",
             "ant.render|mesh",
         },
@@ -63,8 +63,8 @@ function sp_test_sys:init()
     local child2 = world:create_entity {
         policy = {
             "ant.render|name",
-            "ant.scene|hierarchy",
-            "ant.scene|transform",
+            "ant.scene|hierarchy_policy",
+            "ant.scene|transform_policy",
         },
         data = {
             name = "child2",
@@ -80,7 +80,7 @@ function sp_test_sys:init()
     local child2_1 = world:create_entity {
         policy = {
             "ant.render|render",
-            "ant.scene|hierarchy",
+            "ant.scene|hierarchy_policy",
             "ant.render|name",
             "ant.render|mesh",
         },

@@ -102,16 +102,17 @@ local function target_lock_test()
             "ant.render|name",
             "ant.render|render",
             "ant.render|mesh",
-            "ant.serialize|serialize"
+            "ant.serialize|serialize",
+            "ant.scene|hierarchy_policy",
         },
         data = {
             name = "lock_obj",
             can_render = true,
+            parent = world[eid].serialize,
             transform = {
                 srt={t={0, 0, -6}},
                 lock_target = {
                     type = "ignore_scale",
-                    target = world[eid].serialize,
                     offset = {0, 0, 3},
                 },
             },
