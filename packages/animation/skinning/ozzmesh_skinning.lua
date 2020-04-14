@@ -131,38 +131,34 @@ function ozzmesh_loader.process(e)
 	e.rendermesh	= assetmgr.load(filename, gen_mesh_assetinfo(e.mesh.handle))
 end
 
-local function patch_dynamic_buffer(ozzmesh, meshscene)
-	local scene = meshscene.scenes[meshscene.default_scene]
+local function patch_dynamic_buffer(ozzmesh, scene)
 	local meshname = next(scene)
 
-	local patch_meshscene = {
-		[meshscene.default_scene] = {
-			[meshname] = {
-				{
-					vb = {handles = {}}
-				}
+	local patch_scene = {
+		[meshname] = {
+			{
+				vb = {handles = {}}
 			}
 		}
 	}
 
-	local new_meshscene = assetmgr.patch(meshscene, patch_meshscene)
+	local new_scene = assetmgr.patch(scene, patch_scene)
 
 	local layouts = ozzmesh:layout()
 	local num_vertices = ozzmesh:num_vertices()
 
-	local n_s = new_meshscene.scenes[meshscene.default_scene]
-	local mn = n_s[meshname]
+	local mn = new_scene[meshname]
 	local g = mn[1]
 	g.vb.handles[2] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
-	return n_s
+	return new_scene
 end
 
 function ozzmesh_skinning_transform.process(e)
 	local meshres 	= e.mesh.handle
-	local meshscene = patch_dynamic_buffer(meshres, e.rendermesh)
-	e.rendermesh = meshscene
+	local meshscene = e.rendermesh
+	local scene = patch_dynamic_buffer(meshres, meshscene.scenes[meshscene.default_scene])
+	meshscene.scenes[meshscene.default_scene] = scene
 
-	local scene = meshscene.scenes[meshscene.default_scene]
 	local _, meshnode = next(scene)
 
 	local group = meshnode[1]
