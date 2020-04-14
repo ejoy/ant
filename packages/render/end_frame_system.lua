@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local math3d 	= require "math3d"
-local math		= import_package "ant.math"
 
 ecs.component "frame_stat"
 	.frame_num "int"

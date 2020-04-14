@@ -27,7 +27,7 @@ return {
             "ant.objcontroller|select",
         },
         system = {
-            "ant.modelviewer|model_viewer",
+            "ant.modelviewer|model_viewer_system",
         },
     }
 }

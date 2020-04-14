@@ -3,7 +3,7 @@ policy:
   ant.render|mesh
   ant.render|name
   ant.render|render
-  ant.render|shadow_cast
+  ant.render|shadow_cast_policy
   ant.serialize|serialize
 data:
   can_cast: true
