@@ -1298,6 +1298,16 @@ ldir2radian(lua_State *L){
 	return 2;
 }
 
+static int
+lforward_dir(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *mat = matrix_from_index(L, LS, 1);
+	const float v[4] = {0, 0, 1, 0};
+	math3d_rotmat_transform(LS, mat, v);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
 static inline void
 init_aabb(float *aabb, const float *oriaabb){
 	if (oriaabb){
@@ -1599,6 +1609,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "lerp", llerp},
 		{ "quat2euler", lquat2euler},
 		{ "dir2radian", ldir2radian},
+		{ "forward_dir",lforward_dir},
 		{ "stacksize", lstacksize},
 		{ "set_homogeneous_depth", lset_homogeneous_depth},
 		{ "set_origin_bottom_left", lset_origin_bottom_left},

@@ -6,8 +6,6 @@ import_package "ant.math"	--import math
 local fs 		= require "filesystem"
 local math3d 	= require "math3d"
 
-ecs.component_alias("parent", 	"entityid")
-
 local respath = ecs.component_alias("respath", "string")
 
 function respath:init()

@@ -4,6 +4,8 @@ local math3d = require "math3d"
 
 ecs.tag "scene_entity"
 
+ecs.component_alias("parent", 	"entityid")
+
 local tp = ecs.policy "transform_policy"
 tp.require_component "transform"
 tp.require_transform "transform_transform"
