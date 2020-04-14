@@ -386,7 +386,7 @@ local function apply_patch(obj, patch)
 			if type(v) ~= "table" then
 				format_error("patch a sub tree %s with a none-table", k)
 			end
-			obj[k] = resource.patch_table(original, v)
+			obj[k] = resource.patch(original, v)
 		end
 	end
 end
