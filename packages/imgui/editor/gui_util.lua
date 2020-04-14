@@ -51,7 +51,6 @@ function gui_util.get_all_schema(force)
     -- log.info_a("all_package:",packages)
     -- local systems = {"time_system", "message_system"}
     -- local inputmgr      = import_package "ant.inputmgr"
-    -- local scene         = import_package "ant.scene".util
     -- local input_queue = inputmgr.queue()
     local ecs         = import_package "ant.ecs"
     local world = ecs.get_schema({}, packages)

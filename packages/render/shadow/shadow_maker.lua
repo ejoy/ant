@@ -15,6 +15,8 @@ local mc, mu	= mathpkg.constant, mathpkg.util
 local math3d	= require "math3d"
 local fs 		= require "filesystem"
 
+ecs.tag "can_cast"
+
 ecs.component "csm"
 	.split_ratios "real[2]"
 	.index "int" (0)

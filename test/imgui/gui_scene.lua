@@ -2,16 +2,10 @@ local imguipkg      = import_package "ant.imgui"
 local dbgutil       = import_package "ant.editor".debugutil
 local imgui         = imguipkg.imgui
 local widget        = imgui.widget
-local flags         = imgui.flags
-local windows       = imgui.windows
-local util          = imgui.util
 local cursor        = imgui.cursor
 local scene_data_accessor  = imguipkg.editor.scene.scene_data_accessor
 local Event         = imguipkg.hub_event
 local GuiCanvas     = imguipkg.editor.gui_canvas
-local gui_util      = imguipkg.editor.gui_util
-local scene         = import_package "ant.scene".util
-local ru            = import_package "ant.render".util
 local scene_control = require "scene_control"
 local hub           = import_package "ant.editor".hub 
 

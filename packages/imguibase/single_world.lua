@@ -10,7 +10,8 @@ local single_world = {}
 local packages,system 
 
 function single_world.init(nwh, context, width, height)
-    local su = import_package "ant.scene".util
+    local su = import_package "ant.scene"
+    error("invalid code")
     world = su.start_new_world(width, height, packages, systems)
     world_update = su.loop(world)
     single_world.world = world

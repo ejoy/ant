@@ -1,10 +1,4 @@
-local dbgutil       = import_package "ant.editor".debugutil
 local GuiBase       = require "gui_base"
-local scene         = import_package "ant.scene".util
-local ru            = import_package "ant.render".util
-local bgfx = require "bgfx"
-local fs = require "filesystem"
-local pm = require "antpm"
 local gui_mgr       = require "gui_mgr"
 local hub           = import_package "ant.editor".hub
 local Event         = require "hub_event"

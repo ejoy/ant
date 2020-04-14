@@ -29,7 +29,7 @@ function callback.init(nwh, context, width, height)
 	}
 	config.width  = width
 	config.height = height
-	local su = import_package "ant.scene".util
+	local su = import_package "ant.scene"
 	world = su.create_world()
 	world.init(config)
 end

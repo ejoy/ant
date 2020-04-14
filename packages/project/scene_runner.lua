@@ -68,8 +68,8 @@ function scene_runner.start(scene_path,width, height)
     --start scene
     local serialize = import_package 'ant.serialize'
     local single_world = import_package "ant.imguibase".single_world
-    local su = import_package "ant.scene".util
-
+    local su = import_package "ant.scene"
+    error("invalid create world")
     local world = su.start_new_world(
             width, height, 
             packages, systems,

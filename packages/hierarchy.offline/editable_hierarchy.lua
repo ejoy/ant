@@ -1,3 +1,1 @@
 local ecs = ...
-
-ecs.component_alias("editable_hierarchy", "resource")

@@ -11,8 +11,7 @@ local accessor  = require "editor.config_accessor"
 local editor    = import_package "ant.editor"
 local task      = editor.task
 local hub       = editor.hub
-local vfs       = require "vfs"
-local scene     = import_package "ant.scene".util
+local scene     = import_package "ant.scene"
 local localfs   = require "filesystem.local"
 local gui_mgr   = require "gui_mgr"
 local fs        = require "filesystem"
@@ -194,11 +193,12 @@ function scene_data_accessor._start_scene(config,serialize_str)
             end
         end
     end
-    local world = scene.start_new_world(
-        600, 400, 
-        packages, 
-        systems,
-        {hub=hub,rxbus = rxbus})
+    local world = scene.create_world()
+    world:init{
+        width=600, height=400, 
+        world = {
+            policy = {}, system = {}
+        }}
     gui_mgr.get("GuiScene"):bind_world(world)
     for _, eid in world:each 'serialize' do
         world:remove_entity(eid)

@@ -1,54 +1,21 @@
 local ecs = ...
 local assetmgr = import_package "ant.asset"
 
+import_package "ant.math"	--import math
+
 local fs 		= require "filesystem"
 local math3d 	= require "math3d"
 
 ecs.component_alias("parent", 	"entityid")
-ecs.component_alias("point", 	"vector")
-ecs.component_alias("rotation", "quaternion",{0,0,0,1})
-ecs.component_alias("scale",	"vector")
-ecs.component_alias("position",	"vector")
-ecs.component_alias("direction", "vector")
-
-local tp = ecs.policy "transform"
-tp.require_component "transform"
-
-local trans = ecs.component "transform"
-	.srt "srt"
-function trans:init()
-	self.world = math3d.ref(self.srt)
-	return self
-end
-
-ecs.tag "editor"
-
-ecs.component "frustum"
-	['opt'].type "string" ("mat")
-	.n "real" (0.1)
-	.f "real" (10000)
-	['opt'].l "real" (-1)
-	['opt'].r "real" (1)
-	['opt'].t "real" (1)
-	['opt'].b "real" (-1)
-	['opt'].aspect "real" (1)
-	['opt'].fov "real" (1)
-	['opt'].ortho "boolean" (false)
 
 local respath = ecs.component_alias("respath", "string")
 
 function respath:init()
-	if self.string then
-		return self
-	end
 	return fs.path(self)
 end
 function respath:save()
 	return self:string()
 end
-
-ecs.component "resource"
-	.ref_path "respath"
 
 ecs.component "rendermesh" {}
 
@@ -126,11 +93,11 @@ ecs.component "properties"
 ecs.resource_component "material" { multiple=true }
 
 ecs.tag "can_render"
-ecs.tag "can_cast"
+
 ecs.component_alias("name", "string", "")
 
-local gp = ecs.policy "name"
-gp.require_component "name"
+local np = ecs.policy "name"
+np.require_component "name"
 
 for _, item in ipairs {
 	{"blitrender", "blit_render"},
@@ -148,5 +115,3 @@ for _, item in ipairs {
 end
 
 ecs.tag "can_select"
-
-ecs.component_alias("color", "vector", {1,1,1,1})

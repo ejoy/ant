@@ -14,7 +14,6 @@ local inputmgr = import_package "ant.imguibase".inputmgr
 local GuiBase = require "gui_base"
 local gui_input = require "gui_input"
 local GuiCanvas = GuiBase.derive("GuiCanvas")
-local scene         = import_package "ant.scene".util
 local ru = import_package "ant.render".util
 --local map_imgui   = import_package "ant.editor".map_imgui
 

@@ -1,10 +1,7 @@
 local dbgutil       = import_package "ant.editor".debugutil
 local GuiBase       = require "gui_base"
-local scene         = import_package "ant.scene".util
-local ru            = import_package "ant.render".util
 local bgfx = require "bgfx"
 local fs = require "filesystem"
-local pm = require "antpm"
 local vfs = require "vfs"
 
 local GuiShaderWatch = GuiBase.derive("GuiShaderWatch")
