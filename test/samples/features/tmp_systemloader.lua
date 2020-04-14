@@ -35,9 +35,6 @@ init_loader_sys.require_interface "ant.objcontroller|obj_motion"
 init_loader_sys.require_interface "ant.render|iwidget_drawer"
 init_loader_sys.require_interface "ant.render|light"
 
-init_loader_sys.require_policy "ant.objcontroller|obj_lock"
-init_loader_sys.require_policy "ant.objcontroller|camera_lock"
-
 local function create_plane_test()
     local planes = {
         {
@@ -105,22 +102,23 @@ local function target_lock_test()
             "ant.render|name",
             "ant.render|render",
             "ant.render|mesh",
-            "ant.objcontroller|obj_lock",
             "ant.serialize|serialize"
         },
         data = {
             name = "lock_obj",
             can_render = true,
-            transform = {srt={t={0, 0, -6}}},
+            transform = {
+                srt={t={0, 0, -6}},
+                lock_target = {
+                    type = "ignore_scale",
+                    target = world[eid].serialize,
+                    offset = {0, 0, 3},
+                },
+            },
             rendermesh = {},
             mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
             material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
             serialize = serialize.create(),
-            lock_target = {
-                type = "ignore_scale",
-                target = world[eid].serialize,
-                offset = {0, 0, 3},
-            },
             scene_entity = true,
         },
     }
@@ -188,7 +186,7 @@ function init_loader_sys:ui_update()
     if widget.Button "camera_lock_target_for_move" then
         local foundeid = find_entity("lock_target", "can_render")
         if foundeid then
-            icm.target(cameraeid, "move", foundeid, {0, 1, 0})
+            icm.set_lock_target(world[cameraeid], {type = "move", offset = {0, 1, 0}})
         else
             print "not found animation_sample"
         end
@@ -198,7 +196,7 @@ function init_loader_sys:ui_update()
     if widget.Button "camera_lock_target_for_rotate" then
         local foundeid = find_entity("lock_target", "can_render")
         if foundeid then
-            icm.target(cameraeid, "rotate", foundeid)
+            icm.set_lock_target(world[cameraeid], {type="rotate"})
         else
             print "not found gltf entity"
         end

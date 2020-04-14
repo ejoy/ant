@@ -4,6 +4,33 @@ local math3d = require "math3d"
 
 ecs.tag "scene_entity"
 
+local tp = ecs.policy "transform"
+tp.require_component "transform"
+
+ecs.component "lock_target"
+	.type	"string"
+    ["opt"].offset	"vector"
+
+local t = ecs.component "transform"
+	.srt "srt"
+	["opt"].lock_target "lock_target"
+
+function t:init()
+    self.world = math3d.ref(self.srt)
+    return self
+end
+
+local tt = ecs.transform "transform_transform"
+tt.output "transform"
+
+function tt.process(e)
+	local trans = e.transform
+	local lt = trans.lock_target
+	if lt and e.parent == nil then
+		error(string.format("'lock_target' defined in 'transform' component, but 'parent' component not define in entity"))
+	end
+end
+
 local hie = ecs.policy "hierarchy"
 hie.require_component "parent"
 hie.require_component "scene_entity"
@@ -21,26 +48,10 @@ local eremove_mb = world:sub {"entity_removed"}
 local hie_scene = require "hierarchy.scene"
 local scenequeue = hie_scene.queue()
 
-local function find_mount_target(e)
-	local p = e.parent
-	if p then
-		return p
-	end
-
-	local lt = e.lock_target
-	if lt then
-		return lt.target
-	end
-
-	return 0
-end
-
 function sp_sys:update_hierarchy_scene()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
-		
-		local mounttarget = find_mount_target(e)
-        scenequeue:mount(eid, mounttarget)
+        scenequeue:mount(eid, e.parent or 0)
     end
 
     local needclear
@@ -54,11 +65,10 @@ function sp_sys:update_hierarchy_scene()
     end
 end
 
-local function update_lock_target(e, lt)
-	local im = e.camera and icm or iom
+local function update_lock_target_transform(e, lt, target, im)
 	local locktype = lt.type
 	if locktype == "move" then
-		local te = world[lt.target]
+		local te = world[target]
 		local target_trans = te.transform
 		local pos = math3d.index(target_trans.world, 4)
 		if lt.offset then
@@ -68,7 +78,7 @@ local function update_lock_target(e, lt)
 		local trans = e.transform
 		trans.world.m = trans.srt
 	elseif locktype == "rotate" then
-		local te = world[lt.target]
+		local te = world[target]
 		local transform = te.transform
 
 		local pos = im.get_position(e)
@@ -85,7 +95,7 @@ local function update_lock_target(e, lt)
 			error(string.format("'ignore_scale' could not bind to entity without 'transform' component"))
 		end
 
-		local te = world[lt.target]
+		local te = world[target]
 		local target_trans = te.transform.srt
 
 		local _, r, t = math3d.srt(target_trans)
@@ -96,27 +106,33 @@ local function update_lock_target(e, lt)
 	end
 end
 
+local function combine_parent_transform(e, trans)
+	local peid = e.parent
+	if peid then
+		local pe = world[peid]
+		local ptrans = pe.transform
+		
+		if ptrans then
+			local pw = ptrans.world
+			trans.world.m = math3d.mul(pw, trans.world)
+		end
+	end
+end
+
 local function update_transform(e)
 	--update local info
 	local trans = e.transform
 	if trans then
 		trans.world.m = trans.srt
-	end
 
-	--combine parent info
-	local lt = e.lock_target
-	if lt then
-		update_lock_target(e)
-	else
-		local peid = e.parent
-		if peid then
-			local pe = world[peid]
-			local ptrans = pe.transform
-			
-			if ptrans then
-				local pw = ptrans.world
-				trans.world.m = math3d.mul(pw, trans.world)
-			end
+		--combine parent info
+		local im = e.camera and icm or iom
+		local lt = im:get_lock_target(e)
+
+		if lt then
+			update_lock_target_transform(e, lt, e.parent, im)
+		else
+			combine_parent_transform(e, trans)
 		end
 	end
 end

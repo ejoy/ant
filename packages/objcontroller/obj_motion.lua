@@ -155,7 +155,13 @@ init_motion_interface(iobj_motion, {
     end,
     set_direction = function (_, e, dir)
         e.transform.srt.r = math3d.torotation(dir)
-    end
+    end,
+    get_lock_target = function (_, e)
+        return e.transform.lock_target
+    end,
+    set_lock_target = function (_, e, lock_target)
+        e.transform.lock_traget = lock_target
+    end,
 })
 
 local icameramotion = ecs.interface "camera_motion"
@@ -172,9 +178,15 @@ init_motion_interface(icameramotion, {
     end,
 
     set_direction = function (_, e, dir)
-        log.info_a("set_direction",e.camera.viewdir.v,math3d.totable(dir))
         e.camera.viewdir.v = dir
-    end
+    end,
+
+    get_lock_target = function (_, e)
+        return e.camera.lock_target
+    end,
+    set_lock_target = function (_, e, lock_target)
+        e.camera.lock_traget = lock_target
+    end,
 })
 
 function icameramotion.ray(eid, pt2d, vp_size)

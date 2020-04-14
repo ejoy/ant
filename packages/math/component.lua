@@ -87,13 +87,3 @@ ecs.component "frustum"
 	['opt'].fov "real" (1)
     ['opt'].ortho "boolean" (false)
     
-
-local tp = ecs.policy "transform"
-tp.require_component "transform"
-
-local trans = ecs.component "transform"
-    .srt "srt"
-function trans:init()
-    self.world = math3d.ref(self.srt)
-    return self
-end

@@ -2,8 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local sp_test_sys = ecs.system "scenespace_test_system"
-sp_test_sys.require_policy "ant.math|transform"
 sp_test_sys.require_policy "ant.render|render"
+sp_test_sys.require_policy "ant.scene|transform"
 sp_test_sys.require_policy "ant.scene|hierarchy"
 
 
@@ -64,7 +64,7 @@ function sp_test_sys:init()
         policy = {
             "ant.render|name",
             "ant.scene|hierarchy",
-            "ant.math|transform",
+            "ant.scene|transform",
         },
         data = {
             name = "child2",

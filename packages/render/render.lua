@@ -70,9 +70,20 @@ ecs.component "camera"
 	.viewdir	"vector"
 	.updir		"vector"
 	.frustum	"frustum"
+	["opt"].lock_target "lock_target"
 
 local cp = ecs.policy "camera"
 cp.require_component "camera"
+
+local et= ecs.transform "camera_transfrom"
+et.output "camera"
+
+function et.process(e)
+	local lt = e.camera.lock_target
+	if lt and e.parent == nil then
+		error(string.format("'lock_target' defined in 'camera' component, but 'parent' component not define in entity"))
+	end
+end
 
 ecs.component_alias("camera_eid", "entityid")
 ecs.component_alias("visible", "boolean", true)
