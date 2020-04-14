@@ -322,6 +322,18 @@ function world:interface(name)
 	return self._interface[name]
 end
 
+function world:require(name)
+	local m = self._module_loaded[name]
+	if m then
+		return m
+	end
+	local loader = self.args.moduleloader or require "moduleloader"
+	local func = loader(name)
+	local m = func(self) or true
+	self._module_loaded[name] = m
+	return m
+end
+
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -356,6 +368,7 @@ function m.new_world(config,world_class)
 		_uuids = {},
 		_policies = {},
 		_dataset = {},
+		_module_loaded = {},	-- for world:require
 	}, world_class or world)
 
 	--init event
@@ -383,7 +396,7 @@ end
 
 function m.get_schema(...)
 	local extract_schema = require "extract_schema"
-	return extract_schema.run(world,...) 
+	return extract_schema.run(world,...)
 end
 
 return m
