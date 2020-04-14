@@ -173,6 +173,7 @@ local function importAll(w, ecs, class, policies, systems, loader)
 		if tableAt(cut.policy, package)[name] then
 			return
 		end
+		log.info("Import  ", "policy  ", package .. "|" .. name)
 		local v = class.policy[package][name]
 		if not v then
 			error(("invalid policy name: `%s` in package '%s'."):format(name,package))
@@ -210,6 +211,7 @@ local function importAll(w, ecs, class, policies, systems, loader)
 		if tableAt(cut.system, package)[name] then
 			return
 		end
+		log.info("Import  ", "system  ", package .. "|" .. name)
 		local v = class.system[package][name]
 		if not v then
 			error(("invalid system name: `%s`."):format(name))
@@ -253,6 +255,7 @@ local function importAll(w, ecs, class, policies, systems, loader)
 		if tableAt(cut.transform, package)[name] then
 			return
 		end
+		log.info("Import  ", "transform", package .. "|" .. name)
 		local v = class.transform[package][name]
 		if not v then
 			error(("invalid transform name: `%s`."):format(name))
@@ -279,6 +282,7 @@ local function importAll(w, ecs, class, policies, systems, loader)
 		if cut.singleton[name] then
 			return
 		end
+		log.info("Import  ", "singleton", name)
 		local v = class.singleton[name]
 		if not v then
 			error(("invalid singleton name: `%s`."):format(name))
@@ -290,6 +294,7 @@ local function importAll(w, ecs, class, policies, systems, loader)
 		if tableAt(cut.interface, package)[name] then
 			return
 		end
+		log.info("Import  ", "interface", package .. "|" .. name)
 		local v = class.interface[package][name]
 		if not v then
 			error(("invalid interface name: `%s`."):format(name))
@@ -331,7 +336,7 @@ return function (w, policies, systems, loader)
 			local package = getCurrentPackage()
 			local r = tableAt(class_set, package)[name]
 			if r == nil then
-				log.info("Register", what, package .. "|" .. name)
+				log.info("Register", #what<8 and what.."  " or what, package .. "|" .. name)
 				local c = { name = name, method = {}, source = {}, defined = sourceinfo(), package = package }
 				class_data[package][name] = c
 				r = {}

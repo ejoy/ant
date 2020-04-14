@@ -59,7 +59,11 @@ q:mount(1)	-- remove A
 print_q "2^0 5^2 . 3^1 4^1 6^2"
 q:mount(6,1)
 print_q "2^0 5^2 . 3^1 4^1 6^1"
-q:clear()
+local clear_objects = q:clear {}
 print_q "2^0 5^2"
+assert(clear_objects[1] == 1)
+assert(clear_objects[2] == 3)
+assert(clear_objects[3] == 4)
+assert(clear_objects[4] == 6)
 
 
