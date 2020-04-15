@@ -9,8 +9,10 @@ local math3d = require "math3d"
 local cull_sys = ecs.system "cull_system"
 cull_sys.require_system "primitive_filter_system"
 
+local CULLS = {"main_queue", "csm", "pickup"}
+
 function cull_sys:cull()
-	for _, tag in ipairs {"main_queue", "csm", "pickup"} do
+	for _, tag in ipairs(CULLS) do
 		for _, queue_eid in world:each(tag) do
 			local e = world[queue_eid]
 			local filter = e.primitive_filter

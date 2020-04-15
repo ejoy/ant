@@ -27,6 +27,10 @@ local function data_pairs(self)
 	return pairs(self._data)
 end
 
+local function data_len(self)
+	return #self._data
+end
+
 local function data_mt(data, robj)
 	return {
 		filename = robj.filename,
@@ -34,6 +38,7 @@ local function data_mt(data, robj)
 		__newindex = readonly,
 		__tostring = robj.meta.__tostring,
 		__pairs = data_pairs,
+		__len = data_len,
 	}
 end
 
@@ -105,6 +110,7 @@ local function get_file_object(filename)
 				filename = filename,
 				__index = not_in_memory,
 				__pairs = not_in_memory,
+				__len = not_in_memory,
 				__newindex = readonly,
 				__tostring = function (self)
 					return filename .. ":" .. self._path
@@ -148,12 +154,17 @@ function resource.load(filename, data, lazyload)
 			load_resource(robj, robj.filename, robj.source)
 			return pairs(self._data)
 		end
+		robj.meta.__len = function (self)
+			load_resource(robj, robj.filename, robj.source)
+			return #self._data
+		end
 		-- lazy load
 		return
 	else
 		robj.source = nil
 		robj.meta.__index = not_in_memory
 		robj.meta.__pairs = not_in_memory
+		robj.meta.__len = not_in_memory
 	end
 	if robj.object then
 		-- already in memory
@@ -251,7 +262,8 @@ end
 local multiple_mt = {
 	__index = function(self, key) return self._data[key] end,
 	__newindex = index_only,
-	__pairs = function(self) return pairs(self._data) end,
+	__pairs = data_pairs,
+	-- don't use data_len because multiple resource don't have integer keys
 	__tostring = function(self) return tostring(self._data) end,
 }
 
@@ -354,6 +366,10 @@ function resource.monitor(filename, enable)
 				touch = true
 				return pairs(self._data)
 			end
+			function meta:__len(key)
+				touch = true
+				return #self._data
+			end
 		end
 		return function() return touch end
 	elseif object == nil then
@@ -365,6 +381,7 @@ function resource.monitor(filename, enable)
 			local meta = getmetatable(proxy)
 			meta.__index = proxy._data
 			meta.__pairs = data_pairs
+			meta.__len = data_len
 		end
 	end
 end
