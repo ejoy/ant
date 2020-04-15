@@ -319,17 +319,27 @@ ltestOverlap(lua_State *L) {
 	return 1;
 }
 
+static int
+lgetId(lua_State *L){
+	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
+	CollisionBody *body = (CollisionBody*)lua_touserdata(L, 2);
+	lua_pushinteger(L, body->getId());
+	return 1;
+}
+
 struct luaRaycastCallback : RaycastCallback {
 	bool hit;
+	int id;
 	Vector3 worldPoint;
 	Vector3 worldNormal;
 
-	luaRaycastCallback() : hit (false) {}
+	luaRaycastCallback() : hit (false), id(0) {}
 
 	virtual decimal notifyRaycastHit(const RaycastInfo& raycastInfo) {
 		hit = true;
 		worldPoint = raycastInfo.worldPoint;
 		worldNormal = raycastInfo.worldNormal;
+		id = raycastInfo.body->getId();
 		// term
 		return 0;
 	}
@@ -369,6 +379,7 @@ lraycast(lua_State *L) {
 		normal[3] = 0;
 
 		lua_pushboolean(L, cb.hit);
+		lua_pushinteger(L, cb.id);
 	} else {
 		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);	// it's a body
 		CollisionBody *body = (CollisionBody *)lua_touserdata(L, 4);
@@ -386,8 +397,9 @@ lraycast(lua_State *L) {
 		normal[3] = 0;
 
 		lua_pushboolean(L, isHit);
+		lua_pushinteger(L, raycastInfo.body->getId());
 	}
-	return 1;
+	return 2;
 }
 
 static int
@@ -502,6 +514,7 @@ extern "C" {
 		{ "add_shape", laddCollisionShape },
 		{ "test_overlap", ltestOverlap },
 		{ "raycast", lraycast },
+		{ "getId", lgetId},
 		{ "__gc", lcollision_world_gc },
 		{ NULL, NULL },
 	};

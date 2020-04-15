@@ -137,9 +137,9 @@ local function ankles_raycast_ray(ankle_pos_ws, dir)
 end
 
 local function ankles_target(ray, foot_height)
-    local pos, normal = icollider.raycast(ray)
+    local pos, normal, id = icollider.raycast(ray)
     if pos then
-        return math3d.muladd(normal, foot_height, pos), normal
+        return math3d.muladd(normal, foot_height, pos), normal, id
     end
 end
 
@@ -194,12 +194,19 @@ local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
         local ankle_pos_ws = math3d.transform(trans, ankle_pos, ispoint)
 
         local castray = ankles_raycast_ray(ankle_pos_ws, cast_dir)
-        local target_ws, hitnormal_ws = ankles_target(castray, foot_height)
+        local target_ws, hitnormal_ws, id = ankles_target(castray, foot_height)
         if target_ws then
             target_ws = refine_target(castray[1], target_ws, hitnormal_ws, foot_height)
             leg_raycasts[#leg_raycasts+1] = {
                 tracker, ankle_pos_ws, target_ws, hitnormal_ws
             }
+
+            -- local eid = icollider.which_entity(id)
+            -- if eid then
+            --     print("raycast:", world[eid].name or eid)
+            -- else
+            --     print("raycast found, but body 'id' do not find entity", id)
+            -- end
         end
     end
 

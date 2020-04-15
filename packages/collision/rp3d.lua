@@ -65,9 +65,9 @@ function lib.init()
 
 	function world_mt.raycast(world, p0, p1, maskbits)
 		p0,p1 = rayfilter(p0,p1)
-		local hit, pos, norm = raycast(world, p0, p1, maskbits or 0)
+		local hit, id, pos, norm = raycast(world, p0, p1, maskbits or 0)
 		if hit then
-			return pos, norm
+			return pos, norm, id
 		end
 	end
 
