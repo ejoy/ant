@@ -47,8 +47,9 @@ local function create_pbr_entity(world,
         u_basecolor_factor = color,
         u_metallic_roughness_factor  = {0.0, roughness, metallic, 0.0},
     } do
-        u[k] = assetmgr.patch(assert(u[k]), {})
-        u[k].value.v = v
+        local nv = assetmgr.patch(assert(u[k]), {})
+        nv[1].v = v
+        u[k] = nv
     end
 
     return eid

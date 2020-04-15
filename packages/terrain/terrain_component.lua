@@ -16,7 +16,7 @@ local t = ecs.component "terrain"
 ["opt"].element_size	"int" (7)
 ["opt"].grid_unit		"real"(1)
 ["opt"].is_dynamic		"boolean"
-["opt"].ref_path 		"respath"
+["opt"].ref_path 		"string"
 
 local function is_power_of_2(n)
 	if n ~= 0 then

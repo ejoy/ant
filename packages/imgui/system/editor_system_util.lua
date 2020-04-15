@@ -92,9 +92,9 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
                 op: replace
                 path: /properties/uniforms/u_color
                 value:
-                    type=v4
-                    name=u_color
-                    value={%f, %f, %f, %f}
+                    type:v4
+                    value:
+                      {%f, %f, %f, %f}
             ]]):format(color[1], color[2], color[3], color[4]),
             --can_cast = true,
             can_render = true,
@@ -234,9 +234,9 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
                 op:replace
                 path:/properties/uniforms/u_color
                 value:
-                    type=v4
-                    name=u_color
-                    value={%f,%f,%f,%f}
+                    type:v4
+                    value:
+                      {%f,%f,%f,%f}
             ]]):format(color[1], color[2], color[3], color[3]),
             can_render = true,
             can_select = true,
@@ -277,9 +277,9 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
                 op:replace
                 path:/properties/uniforms/u_color
                 value:
-                    type=v4
-                    name=u_color
-                    value={%f, %f, %f,%f}
+                    type:v4
+                    value:
+                      {%f, %f, %f,%f}
             ]]):format(color[1], color[2], color[3], color[4]),
             can_render = true,
             name = name,

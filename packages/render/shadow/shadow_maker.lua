@@ -51,7 +51,7 @@ sm_policy.require_policy "render_queue"
 sm_policy.require_policy "name"
 
 sm_policy.require_system "shadowcamera_system"
-sm_policy.require_system "shadow_maker"
+sm_policy.require_system "shadow_system"
 
 local sc_policy = ecs.policy "shadow_cast_policy"
 sc_policy.require_component "can_cast"
@@ -186,7 +186,7 @@ function sm_sys:shadow_camera()
 		end
 	end
 end
-local sm = ecs.system "shadow_maker"
+local sm = ecs.system "shadow_system"
 sm.require_system "ant.scene|primitive_filter_system"
 sm.require_system "shadowcamera_system"
 sm.require_system "render_system"

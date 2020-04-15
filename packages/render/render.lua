@@ -9,12 +9,50 @@ local ru 		= require "util"
 
 local math3d	= require "math3d"
 
-local mathpkg	= import_package "ant.math"
-local mc		= mathpkg.constant
+local assetmgr  = import_package "ant.asset"
+
+ecs.component "rendermesh" {}
+
+ecs.resource_component "mesh"
+
+local meshpolicy = ecs.policy "mesh"
+meshpolicy.require_component "rendermesh"
+meshpolicy.require_component "mesh"
+meshpolicy.require_transform "mesh_loader"
+
+local ml = ecs.transform "mesh_loader"
+ml.input    "mesh"
+ml.output   "rendermesh"
+
+function ml.process(e)
+	local filename = tostring(e.mesh):gsub("[.]%w+:", ".glbmesh:")
+	e.rendermesh = assetmgr.load(filename, e.mesh)
+end
+
+ecs.resource_component "material" { multiple=true }
+
+ecs.tag "blit_render"
+ecs.tag "can_render"
+
+for _, item in ipairs {
+	{"blitrender", "blit_render"},
+	{"render", "can_render"}
+ } do
+	local name, tag = item[1], item[2]
+	local p = ecs.policy(name)
+	p.require_component(tag)
+	p.require_component "rendermesh"
+	p.require_component "material"
+	p.require_component "transform"
+	p.require_component "scene_entity"
+
+	p.require_system "render_system"
+
+	p.require_policy "ant.scene|transform_policy"
+end
 
 ecs.tag "main_queue"
 ecs.tag "blit_queue"
-ecs.tag "blit_render"
 
 local bq_p = ecs.policy "blit_queue"
 bq_p.unique_component "blit_queue"

@@ -36,6 +36,8 @@ local function get_accessor(name)
 	error("Unsupport asset type: " .. name)
 end
 
+assetmgr.get_accessor = get_accessor
+
 function assetmgr.get_loader(name)
 	return get_accessor(name).loader
 end

@@ -25,28 +25,47 @@ local function uniformdata_init(v)
 	end
 end
 
+local function load_uniform(uniform)
+	for i=1, #uniform do
+		uniform[i] = uniformdata_init(uniform[i])
+	end
+	return uniform
+end
+
+local function load_texture(tex)
+	tex.texture = assetmgr.load(tex.texture)
+end
+
 local function load_properties(properties)
 	if properties then
 		local textures = properties.textures
 		if textures then
 			for _, tex in pairs(textures) do
-				tex.texture = assetmgr.load(tex.texture)
+				load_texture(tex)
 			end
 		end
 		local uniforms = properties.uniforms
 		if uniforms then
 			for _, uniform in pairs(uniforms) do
-				if uniform.value then
-					uniform.value = uniformdata_init(uniform.value)
-				end
-				if uniform.value_array then
-					for i, value in ipairs(uniform.value_array) do
-						uniform.value_array[i] = uniformdata_init(value)
-					end
-				end
+				load_uniform(uniform)
 			end
 		end
 	end
+	return properties
+end
+
+local function refine_properties(properties)
+	if properties then
+		local uniforms = properties.uniforms
+		if uniforms then
+			for _, u in pairs(uniforms) do
+				local vl = u.value
+				table.move(vl, 1, #vl, 1, u)
+				u.value = nil
+			end
+		end
+	end
+
 	return properties
 end
 
@@ -54,7 +73,7 @@ local function loader(filename, data)
 	local res      = data or assetmgr.load_depiction(filename)
 	res.fx         = load_fx(res.fx)
 	res.state      = load_state(res.state)
-	res.properties = load_properties(res.properties)
+	res.properties = load_properties(refine_properties(res.properties))
 	return res
 end
 
@@ -68,4 +87,7 @@ end
 return {
 	loader = loader,
 	unloader = unloader,
+
+	load_properties = load_properties,
+	load_uniform = load_uniform,
 }

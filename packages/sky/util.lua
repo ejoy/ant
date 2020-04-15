@@ -6,9 +6,7 @@ local renderpkg = import_package "ant.render"
 local computil 	= renderpkg.components
 
 local mathpkg	= import_package "ant.math"
-local mu,mc		= mathpkg.util, mathpkg.constant
-
-local fs 		= require "filesystem"
+local mu = mathpkg.util
 
 local function fill_procedural_sky_mesh(skyentity)
 	local skycomp = skyentity.procedural_sky
@@ -77,40 +75,35 @@ function util.create_procedural_sky(world, settings)
 		}
 	}
 
+	local accessor = assetmgr.get_accessor "material"
+	local load_uniform = accessor.load_uniform
+
 	local sky = world[skyeid]
 	local patches = {
-		u_parameters = world:create_component("uniform", {
-			name = "parameter include: x=sun size, y=sun bloom, z=exposition, w=time",
+		u_parameters = load_uniform {
 			type = "v4",
-			value = {0, 0, 0, 0},
-		}),
-    	u_perezCoeff = world:create_component("uniform", {
-			name = "Perez coefficients",
+			{0, 0, 0, 0},
+		},
+    	u_perezCoeff = load_uniform {
 			type = "v4_array",
-			value_array ={
-				{0, 0, 0, 0},
-				{0, 0, 0, 0},
-				{0, 0, 0, 0},
-				{0, 0, 0, 0},
-				{0, 0, 0, 0},
-			},
-		}),
-		u_skyLuminanceXYZ = world:create_component("uniform", {
-			name = "sky luminance in XYZ color space",
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+		},
+		u_skyLuminanceXYZ = load_uniform {
 			type = "v4",
-			value = {0, 0, 0, 0}
-		}),
-
-    	u_sunDirection = world:create_component("uniform", {
-			name = "sub direction",
+			{0, 0, 0, 0}
+		},
+    	u_sunDirection = {
 			type = "v4",
-			value = {0, 0, 1, 0},
-		}),
-		u_sunLuminance = world:create_component("uniform", {
-			name = "sky luminace in RGB color space",
+			{0, 0, 1, 0},
+		},
+		u_sunLuminance = {
 			type = "v4",
-			value = {0, 0, 0, 0},
-		})
+			{0, 0, 0, 0},
+		},
 	}
 	local m = assetmgr.patch(sky.material, {
 		properties = {uniforms={}}})

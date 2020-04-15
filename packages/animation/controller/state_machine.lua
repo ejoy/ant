@@ -90,12 +90,12 @@ sm_policy.require_transform "state_machine_transform"
 
 local sm = ecs.component "state_machine"
 		.current "string"
-["opt"]	.file "respath"
+["opt"]	.file "string"
 		.nodes "state_machine_node{}"
 
 function sm:init()
 	if self.file then
-		assert(fs.loadfile(self.file))(self.nodes)
+		assert(fs.loadfile(fs.path(self.file)))(self.nodes)
 	end
 	return self
 end

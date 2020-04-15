@@ -2,7 +2,7 @@ fx: /pkg/ant.resources/materials/bloom/fetch_bright.material
 properties:
   uniforms:
     u_bright_threshold:
-      name: "bright threshold value"
       type: color
-      value: {0.75, 0, 0, 0}
+      value:
+        {0.75, 0, 0, 0}
 state: /pkg/ant.resources/materials/bloom/postprocess.state

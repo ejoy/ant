@@ -127,6 +127,9 @@ local pickup_sys = ecs.system "pickup_system"
 
 local pick_material_cache = {}
 
+local accessor = assetmgr.get_accessor "material"
+local load_uniform = accessor.load_uniform
+
 local function pick_material(material_template, eid)
 	local pm = pick_material_cache[eid]
 	if pm then
@@ -137,8 +140,7 @@ local function pick_material(material_template, eid)
 	local m = assetmgr.patch(material_template, {
 		properties = {
 			uniforms = {
-				u_id = world:create_component(
-					"uniform", {type="color", name = "select eid", value=vv})
+				u_id = load_uniform{type="color", vv,},
 			}
 		}
 	})
@@ -179,6 +181,8 @@ function pickup_sys:refine_filter()
 		replace_material(result.translucent, material[1])
 	end
 end
+
+ecs.tag "can_select"
 
 -- pickup_system
 local raw_buf = ecs.component "raw_buffer"

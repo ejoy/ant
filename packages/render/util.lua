@@ -73,15 +73,9 @@ local function update_properties(material, properties, render_properties)
 		if p then
 			assert(property_types[p.type] == u.type)
 			if p.type == "texture" then
-				bgfx.set_texture(assert(p.stage), u.handle, p.handle)
+				bgfx.set_texture(p.stage, u.handle, p.handle)
 			else
-				if p.value then
-					bgfx.set_uniform(u.handle, p.value)
-				else
-					local va = assert(p.value_array)
-					bgfx.set_uniform(u.handle, table.unpack(va))
-				end
-				
+				bgfx.set_uniform(u.handle, table.unpack(p))
 			end
 		else
 			--log,info(string.format("uniform : %s, not privided, but shader program needed", name))

@@ -628,5 +628,4 @@ return {
 		last_pick = -1,
 		pick_ids = 0
 	},
-	respath = ""
 }

@@ -84,68 +84,68 @@ return {
 		material.properties = {
 			textures = {
 				s_basecolor = {
-					type="texture", name="BaseColor texture", stage=0, 
+					type="texture", stage=0,
 					texture=get_texture(pbrm, "basecolor")
 				},
 				s_metallic_roughness = {
-					type="texture", name="roughness metallic texutre", stage=1,
+					type="texture", stage=1,
 					texture=get_texture(pbrm, "metallic_roughness")
 				},
 				s_normal = {
-					type="texture", name="normal texture", stage=2,
+					type="texture", stage=2,
 					texture=get_texture(pbrm, "normal")
 				},
 				s_occlusion = {
-					type="texture", name="occlusion texture", stage=3,
+					type="texture", stage=3,
 					texture=get_texture(pbrm, "occlusion")
 				},
 				s_emissive = {
-					type="texture", name="emissive texture", stage=4,
+					type="texture", stage=4,
 					texture=get_texture(pbrm, "emissive")
 				},
 			},
 			uniforms = {
 				u_basecolor_factor = {
-					type="color", name="base color factor",
-					value=get_property_factor(pbrm, "basecolor"),
+					type="color",
+					value={get_property_factor(pbrm, "basecolor")},
 				},
 				u_metallic_roughness_factor = {
-					type="v4", name="metalllic&roughness factor",
-					value={
+					type="v4",
+					value={{
 						0.0, -- keep for occlusion factor
 						roughness_factor,
 						metallic_factor,
 						texture_flag(pbrm, "metallic_roughness"),-- whether using metallic_roughtness texture or not
-					}
+					}}
 				},
 				u_emissive_factor = {
-					type="v4", name="emissive factor",
-					value=get_property_factor(pbrm, "emissive"),
+					type="v4",
+					value={get_property_factor(pbrm, "emissive")},
 				},
 				u_material_texture_flags = {
-					type="v4", name="texture flags",
-					value={
+					type="v4",
+					value={{
 						texture_flag(pbrm, "basecolor"),
 						texture_flag(pbrm, "normal"),
 						texture_flag(pbrm, "occlusion"),
 						texture_flag(pbrm, "emissive"),
-					},
+					}},
 				},
 				u_IBLparam = {
-					type="v4", name="IBL sample parameter",
-					value={
+					type="v4",
+					value={{
 						1.0, -- perfilter cubemap mip levels
 						1.0, -- IBL indirect lighting scale
 						0.0, 0.0,
-					}
+					}}
 				},
 				u_alpha_info = {
-					type="v4", name="alpha test/mask info",
-					value={
+					type="v4",
+					value={{
 						pbrm.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
 						pbrm.alphaCutoff or 0.0,
 						0.0, 0.0,
-					}
+					}}
 				}
 			},
 		}

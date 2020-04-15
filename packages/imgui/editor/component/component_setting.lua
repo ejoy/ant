@@ -192,7 +192,6 @@ end
 --     2 = {
 --         1= {name = "opaque",type="material_content"},
 --         2= {
---             1 = {name = "ref_path",type="respath"},
 --         }
 --     }
 -- }

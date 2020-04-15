@@ -2,9 +2,9 @@ fx: /pkg/ant.resources/depiction/materials/fx/gizmo_singlecolor.fx
 properties:
   uniforms:
     u_color:
-      default: {1, 1, 1, 1}
-      name: u_color
       type: v4
+      value: 
+        {1, 1, 1, 1}
 state:
   ALPHA_REF: 1
   CULL: CW

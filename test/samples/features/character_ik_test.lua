@@ -159,7 +159,7 @@ function char_ik_test_sys:init()
     local eid = create_plane_test()
     local e = world[eid]
     local p = e.material.properties
-    local c = p.uniforms.u_color.value
+    local c = p.uniforms.u_color[1]
     local tt = math3d.totable(c)
     print(tt)
     --foot_ik_test()
