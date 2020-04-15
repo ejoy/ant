@@ -241,7 +241,7 @@ function char_foot_ik_sys:do_ik()
         
         local ik = e.ik
         local pose_result = e.pose_result.result
-        local trans = math3d.matrix(e.transform)
+        local trans = e.transform.world
 
         local leg_raycasts = find_leg_raycast_target(pose_result, ik, foot_rc, trans)
 

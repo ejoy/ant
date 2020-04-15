@@ -15,8 +15,6 @@ local char_ik_test_sys = ecs.system "character_ik_test_system"
 char_ik_test_sys.require_policy "ant.character|foot_ik_raycast"
 
 local function foot_ik_test()
-
-    local assetpath = fs.path '/pkg/ant.resources.binary/meshes/ozz'
     return world:create_entity {
         policy = {
             "ant.serialize|serialize",
@@ -156,11 +154,6 @@ local function create_plane_test()
 end
 
 function char_ik_test_sys:init()
-    local eid = create_plane_test()
-    local e = world[eid]
-    local p = e.material.properties
-    local c = p.uniforms.u_color[1]
-    local tt = math3d.totable(c)
-    print(tt)
-    --foot_ik_test()
+    create_plane_test()
+    foot_ik_test()
 end
