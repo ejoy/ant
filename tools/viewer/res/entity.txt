@@ -1,0 +1,52 @@
+policy:
+  ant.animation|animation
+  ant.animation|skinning
+  ant.animation|animation_controller.birth
+  ant.render|mesh
+  ant.render|name
+  ant.render|render
+  ant.serialize|serialize
+data:
+  animation:
+    anilist:
+      idle:
+        resource: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+        scale: 1
+        looptimes: 0
+      jumping:
+        resource: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+        scale: 1
+        looptimes: 0
+      punching:
+        resource: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
+        scale: 1
+        looptimes: 0
+      running:
+        resource: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
+        scale: 1
+        looptimes: 0
+      running_fast:
+        resource: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
+        scale: 1
+        looptimes: 0
+      walking:
+        resource: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
+        scale: 1
+        looptimes: 0
+  can_render: true
+  material: 
+    /pkg/ant.test.animation/res/Beta_Joints_MAT.pbrm
+    /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
+  mesh: /pkg/ant.resources/depiction/meshes/female.mesh
+  name: animation_sample
+  rendermesh: {}
+  serialize: 5e1c39ad369fa96c5bd44fc5
+  pose_result: {}
+  skeleton: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
+  skinning: {}
+  animation_birth: idle
+  transform:
+    srt:
+      s: {1,1,1,0}
+      r: {0,0.92388,0,0.382683}
+      t: {0,0,0,1}

@@ -31,9 +31,7 @@ window.mainloop()
 ]]):format(package.cpath, w, h), csearcher)
 end
 
-local recvmsg
-
-function recvmsg()
+local function recvmsg()
 	return channel:pop()
 end
 

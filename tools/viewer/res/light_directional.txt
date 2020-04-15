@@ -1,0 +1,10 @@
+policy:
+  ant.render|light.directional
+  ant.serialize|serialize
+data:
+  direction: {-0.3830222487449646, 0.866025447845459, -0.3213938772678375, 0}
+  directional_light:
+    color: {1, 1, 1, 1}
+    intensity: 2
+  light: directional_light
+  serialize: 5e7da324369fa9dc5b2e9f43

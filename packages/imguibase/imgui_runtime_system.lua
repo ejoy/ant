@@ -9,7 +9,6 @@ local viewidmgr   = renderpkg.viewidmgr
 local rhwi        = renderpkg.hwi
 local window      = require "window"
 local assetmgr    = import_package "ant.asset"
-local fs          = require "filesystem"
 local platform    = require "platform"
 local runtime     = require "runtime"
 local inputmgr    = require "inputmgr"
@@ -111,7 +110,6 @@ function imgui_sys:init()
 		font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	end
 	imgui.pop_context()
-
 end
 
 function imgui_sys:exit()
