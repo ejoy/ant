@@ -132,8 +132,8 @@ end
 
 local function solve(w)
     local class = w._class
-    for _, package_transformy in pairs(class.transform) do
-        for name, v in pairs(package_transformy) do
+    for _, package_transform in pairs(class.transform) do
+        for name, v in pairs(package_transform) do
             if #v.output == 0 then
                 error(("transform `%s`'s output cannot be empty."):format(name))
             end

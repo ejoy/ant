@@ -25,6 +25,7 @@ local object = {
     "singleton",
     "policy",
     "transform",
+    "component",
 }
 
 local attribute = {
@@ -45,6 +46,14 @@ local function write_file(filename, data)
     f:write(res)
     f:close()
 end
+local primtype = {
+	tag = true,
+	entityid = true,
+	int = true,
+	real = true,
+	string = true,
+	boolean = true,
+}
 
 local function write_ecs(class, input, output)
     local imported = {}
@@ -70,6 +79,27 @@ local function write_ecs(class, input, output)
     s[#s+1] = ("implement %q"):format(input)
     s[#s+1] = ""
     for _, objname in ipairs(object) do
+        if objname == "component" then
+            for name, o in sortpairs(class[objname]) do
+                s[#s+1] = ("component %q"):format(name)
+                if o.type then
+                    if not primtype[o.type] then
+                        s[#s+1] = ("    .require_component %q"):format(o.type)
+                    end
+                else
+                    for _, c in ipairs(o) do
+                        if not primtype[c.type] then
+                            s[#s+1] = ("    .require_component %q"):format(c.type)
+                        end
+                    end
+                end
+                if o.method then
+                    write_method(s, o, "method")
+                end
+                s[#s+1] = ""
+            end
+            goto continue
+        end
         local objs = objname == "singleton" and class[objname] or class[objname][""]
         if objs then
             for name, o in sortpairs(objs) do
@@ -83,15 +113,12 @@ local function write_ecs(class, input, output)
                     end
                 end
                 if o.method then
-                    if objname == "system" then
-                        write_method(s, o, "stage")
-                    elseif objname == "interface" then
-                        write_method(s, o, "method")
-                    end
+                    write_method(s, o, "method")
                 end
                 s[#s+1] = ""
             end
         end
+        ::continue::
     end
     local n = 3
     if next(imported) ~= nil then
@@ -132,33 +159,29 @@ local function each_dir(self, dir, cb)
 end
 
 local convert_package
-local loaded = {}
 
 local function test(name)
     local interface = require "packages.ecs.interface"
     local function loader(packname, filename)
-        if not loaded[packname] then
-            loaded[packname] = true
-            convert_package(packname, packages[packname])
-        end
+        convert_package(packname)
         local f = loadfile((packages[packname] / filename):string())
         return f
     end
     local parser = interface.new(loader)
-    local function load_package(packname)
-        if loaded[packname] then
-            return false
-        end
-        loaded[packname] = true
-        convert_package(packname, packages[packname])
-        parser:load(packname, "package.ecs")
-        return true
-    end
-    load_package(name)
+    convert_package(name)
+    parser:load(name, "package.ecs")
     parser:check()
 end
 
-function convert_package(name, input)
+local loaded = {}
+
+function convert_package(name)
+    if loaded[name] then
+        return
+    end
+    loaded[name] = true
+
+    local input = packages[name]
     local o = {
         dir = input,
         lst = {}
@@ -177,8 +200,8 @@ function convert_package(name, input)
 end
 
 local function convert_all_package()
-    for name, path in sortpairs(packages) do
-        local ok, err = pcall(convert_package, name, path)
+    for name in sortpairs(packages) do
+        local ok, err = pcall(convert_package, name)
         if not ok then
             print(err)
         end

@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+ecs.import "ant.render"
+
 local assetmgr = import_package "ant.asset"
 
 local renderpkg = import_package 'ant.render'
