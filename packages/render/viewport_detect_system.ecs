@@ -1,0 +1,8 @@
+implement "viewport_detect_system.lua"
+
+import "@ant.scene"
+
+system "viewport_detect_system"
+    .require_system "ant.scene|primitive_filter_system"
+    .method "data_changed"
+    .method "post_init"

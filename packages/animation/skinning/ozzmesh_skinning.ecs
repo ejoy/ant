@@ -1,0 +1,28 @@
+implement "skinning/ozzmesh_skinning.lua"
+
+policy "ozz_skinning"
+    .require_system "skinning_system"
+    .require_transform "ozzmesh_skinning"
+    .require_transform "ozzmesh_loader"
+    .require_component "animation"
+    .require_component "skeleton"
+    .require_component "rendermesh"
+    .require_component "skinning"
+    .require_component "mesh"
+    .require_component "pose_result"
+
+policy "ozzmesh"
+    .require_transform "ozzmesh_loader"
+    .require_component "rendermesh"
+    .require_component "mesh"
+
+transform "ozzmesh_loader"
+    .input "mesh"
+    .output "rendermesh"
+    .method "process"
+
+transform "ozzmesh_skinning"
+    .input "mesh"
+    .input "rendermesh"
+    .output "skinning"
+    .method "process"

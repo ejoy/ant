@@ -1,0 +1,10 @@
+implement "terrain_test.lua"
+
+import "@ant.collision"
+import "@ant.terrain"
+
+system "terrain_test_system"
+    .require_policy "ant.terrain|terrain_policy"
+    .require_policy "ant.collision|terrain_collider_policy"
+    .require_interface "ant.collision|collider"
+    .method "init"

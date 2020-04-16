@@ -1,0 +1,48 @@
+implement "character.lua"
+
+import "@ant.animation"
+import "@ant.collision"
+
+system "character_foot_ik_system"
+    .require_policy "foot_ik_raycast"
+    .require_interface "ant.collision|collider"
+    .require_interface "ant.animation|ik"
+    .method "do_ik"
+
+system "character_height_system"
+    .require_system "ant.collision|collider_system"
+    .require_interface "ant.collision|collider"
+    .method "ik_target"
+
+policy "character"
+    .require_component "character"
+    .require_component "collider"
+
+policy "character_height_raycast"
+    .require_system "character_height_system"
+    .require_component "character_height_raycast"
+    .require_component "character"
+
+policy "foot_ik_raycast"
+    .require_system "character_foot_ik_system"
+    .require_policy "ant.animation|ik"
+    .require_transform "check_ik_data"
+    .require_component "character"
+    .require_component "foot_ik_raycast"
+    .require_component "ik"
+
+transform "check_ik_data"
+    .input "ik"
+    .output "foot_ik_raycast"
+    .method "process"
+
+component "character"
+
+component "character_height_raycast"
+    .require_component "vector"
+
+component "foot_ik_raycast"
+    .require_component "vector"
+    .require_component "ik_tracker"
+
+component "ik_tracker"

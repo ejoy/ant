@@ -32,4 +32,3 @@ _build
 editor.user.setting
 editor.user.ini
 script_runner.user.lua
-*.ecs

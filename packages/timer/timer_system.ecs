@@ -1,0 +1,10 @@
+implement "timer_system.lua"
+
+system "time_system"
+    .method "init"
+    .method "timer"
+
+interface "timer"
+    .require_system "time_system"
+    .method "current"
+    .method "delta"

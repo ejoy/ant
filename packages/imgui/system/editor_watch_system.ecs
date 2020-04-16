@@ -1,0 +1,32 @@
+implement "system/editor_watch_system.lua"
+
+import "@ant.objcontroller"
+
+system "editor_watcher_system"
+    .require_system "editor_operate_gizmo_system"
+    .require_system "editor_policy_system"
+    .require_system "editor_entity_system"
+    .require_interface "ant.objcontroller|camera_motion"
+    .require_singleton "profile_cache"
+    .require_singleton "editor_watcher_cache"
+    .method "after_pickup"
+    .method "after_update"
+    .method "editor_update"
+    .method "init"
+
+singleton "editor_watcher_cache"
+
+policy "outline"
+    .require_component "outline_entity"
+    .require_component "target_entity"
+    .require_component "editor_object"
+
+component "editor_object"
+
+component "editor_watcher_cache"
+
+component "editor_watching"
+
+component "outline_entity"
+
+component "target_entity"

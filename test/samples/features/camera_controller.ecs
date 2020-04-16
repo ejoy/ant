@@ -1,0 +1,8 @@
+implement "camera_controller.lua"
+
+import "@ant.objcontroller"
+
+system "camera_controller_system"
+    .require_interface "ant.objcontroller|camera_motion"
+    .method "data_changed"
+    .method "post_init"

@@ -1,0 +1,6 @@
+implement "camera/camera_spawn.lua"
+
+interface "camera"
+    .method "bind"
+    .method "create"
+    .method "get"

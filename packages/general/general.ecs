@@ -1,0 +1,6 @@
+implement "general.lua"
+
+policy "name"
+    .require_component "name"
+
+component "name"

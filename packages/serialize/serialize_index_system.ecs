@@ -1,0 +1,9 @@
+implement "serialize_index_system.lua"
+
+system "serialize_index_system"
+    .require_singleton "serialize2eid"
+    .method "update"
+
+singleton "serialize2eid"
+
+component "serialize2eid"

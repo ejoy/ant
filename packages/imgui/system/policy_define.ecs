@@ -1,0 +1,8 @@
+implement "system/policy_define.lua"
+
+import "@ant.serialize"
+
+policy "base_entity"
+    .require_component "name"
+    .require_component "transform"
+    .require_component "serialize"

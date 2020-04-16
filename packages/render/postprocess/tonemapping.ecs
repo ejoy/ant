@@ -1,0 +1,7 @@
+implement "postprocess/tonemapping.lua"
+
+system "tonemapping_system"
+    .require_system "postprocess_system"
+    .require_interface "postprocess"
+    .require_singleton "postprocess"
+    .method "post_init"

@@ -1,0 +1,38 @@
+implement "widget_system.lua"
+
+import "@ant.general"
+
+system "physic_bounding_system"
+    .require_interface "iwidget_drawer"
+    .method "widget"
+
+system "render_mesh_bounding_system"
+    .require_system "widget_drawer_system"
+    .method "widget"
+
+system "widget_drawer_system"
+    .require_policy "ant.general|name"
+    .require_policy "render"
+    .require_policy "bounding_draw"
+    .method "end_frame"
+    .method "init"
+
+interface "iwidget_drawer"
+    .require_system "widget_drawer_system"
+    .method "draw_aabb_box"
+    .method "draw_box"
+    .method "draw_capsule"
+    .method "draw_lines"
+    .method "draw_skeleton"
+    .method "draw_sphere"
+
+policy "bounding_draw"
+    .unique_component "widget_drawer"
+
+policy "debug_mesh_bounding"
+    .require_system "render_mesh_bounding_system"
+    .require_component "debug_mesh_bounding"
+
+component "debug_mesh_bounding"
+
+component "widget_drawer"

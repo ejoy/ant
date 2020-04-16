@@ -1,0 +1,24 @@
+implement "terrain_component.lua"
+
+import "@ant.render"
+import "@ant.terrain"
+
+interface "terrain"
+    .method "calc_min_max_height"
+    .method "grid_height"
+    .method "grid_width"
+    .method "heightfield"
+
+policy "terrain_policy"
+    .require_transform "terrain_transform"
+    .require_component "terrain"
+    .require_component "rendermesh"
+
+transform "terrain_transform"
+    .require_interface "ant.terrain|terrain"
+    .input "terrain"
+    .output "rendermesh"
+    .method "process"
+
+component "terrain"
+    .method "init"

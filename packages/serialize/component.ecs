@@ -1,0 +1,6 @@
+implement "component.lua"
+
+policy "serialize"
+    .require_component "serialize"
+
+component "serialize"

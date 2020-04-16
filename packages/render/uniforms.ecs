@@ -1,0 +1,4 @@
+implement "uniforms.lua"
+
+interface "uniforms"
+    .method "system_uniform"

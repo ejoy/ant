@@ -1,0 +1,10 @@
+implement "filter_system.lua"
+
+system "primitive_filter_system"
+    .method "filter_primitive"
+
+component "filter_tag"
+
+component "primitive_filter"
+    .require_component "filter_tag"
+    .method "init"

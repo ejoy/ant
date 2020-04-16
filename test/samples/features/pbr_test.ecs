@@ -1,0 +1,4 @@
+implement "pbr_test.lua"
+
+system "pbr_test_system"
+    .method "init"

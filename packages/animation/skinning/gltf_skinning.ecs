@@ -1,0 +1,21 @@
+implement "skinning/gltf_skinning.lua"
+
+import "@ant.animation"
+import "@ant.render"
+
+policy "skinning"
+    .require_system "ant.animation|skinning_system"
+    .require_transform "mesh_skinning"
+    .require_transform "ant.render|mesh_loader"
+    .require_component "animation"
+    .require_component "skeleton"
+    .require_component "skinning"
+    .require_component "pose_result"
+    .require_component "rendermesh"
+    .require_component "mesh"
+
+transform "mesh_skinning"
+    .input "mesh"
+    .input "rendermesh"
+    .output "skinning"
+    .method "process"

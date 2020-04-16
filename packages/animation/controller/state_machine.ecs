@@ -1,0 +1,34 @@
+implement "controller/state_machine.lua"
+
+import "@ant.timer"
+
+system "state_machine_system"
+    .require_system "animation_system"
+    .require_interface "ant.timer|timer"
+    .method "animation_state"
+
+interface "animation"
+    .require_interface "ant.timer|timer"
+    .method "play"
+    .method "set_state"
+    .method "set_value"
+
+policy "animation_controller.state_machine"
+    .require_system "state_machine_system"
+    .require_transform "state_machine_transform"
+    .require_component "animation"
+    .require_component "state_machine"
+
+transform "state_machine_transform"
+    .input "state_machine"
+    .output "animation"
+    .method "process"
+
+component "state_machine"
+    .require_component "state_machine_node"
+    .method "init"
+
+component "state_machine_node"
+    .require_component "state_machine_transmits"
+
+component "state_machine_transmits"

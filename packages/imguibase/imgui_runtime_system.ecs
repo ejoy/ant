@@ -1,0 +1,13 @@
+implement "imgui_runtime_system.lua"
+
+import "@ant.render"
+import "@ant.timer"
+
+system "imgui_system"
+    .require_system "ant.render|render_system"
+    .require_interface "ant.timer|timer"
+    .method "exit"
+    .method "init"
+    .method "post_init"
+    .method "ui_end"
+    .method "ui_start"

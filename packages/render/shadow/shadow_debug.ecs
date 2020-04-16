@@ -1,0 +1,11 @@
+implement "shadow/shadow_debug.lua"
+
+system "debug_shadow_maker_system"
+    .require_system "shadowcamera_system"
+    .require_interface "uniforms"
+    .method "debug_shadow"
+    .method "post_init"
+
+component "shadow_debug"
+
+component "shadow_quad"

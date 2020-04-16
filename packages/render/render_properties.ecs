@@ -1,0 +1,13 @@
+implement "render_properties.lua"
+
+import "@ant.render"
+
+system "load_properties_system"
+    .require_interface "ant.render|uniforms"
+    .require_singleton "render_properties"
+    .method "init"
+    .method "load_render_properties"
+
+singleton "render_properties"
+
+component "render_properties"

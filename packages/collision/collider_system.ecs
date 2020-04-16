@@ -1,0 +1,54 @@
+implement "collider_system.lua"
+
+import "@ant.collision"
+import "@ant.terrain"
+
+system "collider_system"
+    .method "data_changed"
+    .method "update_collider_transform"
+
+interface "collider"
+    .require_system "collider_system"
+    .method "raycast"
+    .method "test"
+    .method "which_entity"
+
+policy "collider"
+    .require_system "ant.collision|collider_system"
+    .require_component "transform"
+    .require_component "collider"
+
+policy "terrain_collider_policy"
+    .require_transform "terrain_collider_transform"
+    .require_component "collider"
+    .require_component "terrain"
+
+transform "terrain_collider_transform"
+    .require_interface "ant.terrain|terrain"
+    .input "terrain"
+    .output "collider"
+    .method "process"
+
+component "box_shape"
+    .require_component "position"
+    .method "init"
+
+component "capsule_shape"
+    .require_component "position"
+    .method "init"
+
+component "collider"
+    .require_component "sphere_shape"
+    .require_component "box_shape"
+    .require_component "capsule_shape"
+    .require_component "terrain_shape"
+    .method "delete"
+    .method "init"
+
+component "sphere_shape"
+    .require_component "position"
+    .method "init"
+
+component "terrain_shape"
+    .require_component "position"
+    .method "init"

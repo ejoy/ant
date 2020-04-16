@@ -1,0 +1,4 @@
+implement "system/editor_tool_system.lua"
+
+system "editor_tool_system"
+    .method "init"

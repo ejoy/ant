@@ -1,0 +1,4 @@
+implement "build_hierarchy_system.lua"
+
+system "build_hierarchy_system"
+    .method "update_editable_hierarchy"

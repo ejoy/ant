@@ -1,0 +1,7 @@
+implement "skinning/skinning_system.lua"
+
+system "skinning_system"
+    .require_system "animation_system"
+    .method "skin_mesh"
+
+component "skinning"

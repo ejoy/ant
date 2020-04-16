@@ -1,0 +1,29 @@
+implement "ik.lua"
+
+interface "ik"
+    .method "do_ik"
+    .method "setup"
+
+policy "ik"
+    .require_policy "pose_result"
+    .require_transform "build_pose_result"
+    .require_transform "build_ik"
+    .require_component "skeleton"
+    .require_component "ik"
+    .require_component "pose_result"
+
+transform "build_ik"
+    .input "skeleton"
+    .output "ik"
+    .method "process"
+
+component "ik"
+    .require_component "ik_data"
+
+component "ik_data"
+    .require_component "vector"
+    .require_component "vector"
+    .require_component "vector"
+    .require_component "vector"
+    .require_component "vector"
+    .require_component "vector"

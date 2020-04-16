@@ -1,0 +1,5 @@
+implement "cull_system.lua"
+
+system "cull_system"
+    .require_system "primitive_filter_system"
+    .method "cull"

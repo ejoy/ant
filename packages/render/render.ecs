@@ -1,0 +1,127 @@
+implement "render.lua"
+
+import "@ant.general"
+import "@ant.math"
+import "@ant.scene"
+
+system "blit_render_system"
+    .require_policy "blit_queue"
+    .require_policy "blitrender"
+    .require_policy "ant.general|name"
+    .method "init_blit_render"
+
+system "render_system"
+    .require_system "ant.scene|primitive_filter_system"
+    .require_system "ant.scene|scenespace_system"
+    .require_system "ant.scene|cull_system"
+    .require_system "load_properties_system"
+    .require_system "end_frame_system"
+    .require_system "viewport_detect_system"
+    .require_system "blit_render_system"
+    .require_policy "render_queue"
+    .require_policy "main_queue"
+    .require_policy "camera"
+    .require_policy "ant.general|name"
+    .require_singleton "render_properties"
+    .method "init"
+    .method "render_commit"
+
+policy "blit_queue"
+    .unique_component "blit_queue"
+
+policy "blitrender"
+    .require_system "render_system"
+    .require_policy "ant.scene|transform_policy"
+    .require_component "blit_render"
+    .require_component "rendermesh"
+    .require_component "material"
+    .require_component "transform"
+    .require_component "scene_entity"
+
+policy "camera"
+    .require_component "camera"
+
+policy "main_queue"
+    .unique_component "main_queue"
+
+policy "mesh"
+    .require_transform "mesh_loader"
+    .require_component "rendermesh"
+    .require_component "mesh"
+
+policy "render"
+    .require_system "render_system"
+    .require_policy "ant.scene|transform_policy"
+    .require_component "can_render"
+    .require_component "rendermesh"
+    .require_component "material"
+    .require_component "transform"
+    .require_component "scene_entity"
+
+policy "render_queue"
+    .require_transform "render_target"
+    .require_component "viewid"
+    .require_component "render_target"
+    .require_component "camera_eid"
+    .require_component "primitive_filter"
+    .require_component "visible"
+
+transform "camera_transfrom"
+    .output "camera"
+    .method "process"
+
+transform "mesh_loader"
+    .input "mesh"
+    .output "rendermesh"
+    .method "process"
+
+transform "render_target"
+    .input "viewid"
+    .output "render_target"
+    .method "process"
+
+component "blit_queue"
+
+component "blit_render"
+
+component "camera"
+    .require_component "vector"
+    .require_component "vector"
+    .require_component "vector"
+    .require_component "frustum"
+    .require_component "lock_target"
+
+component "camera_eid"
+
+component "can_render"
+
+component "clear_state"
+
+component "fb_index"
+
+component "main_queue"
+
+component "material"
+
+component "mesh"
+
+component "rb_index"
+
+component "rect"
+
+component "render_target"
+    .require_component "viewport"
+    .require_component "fb_index"
+    .method "delete"
+
+component "rendermesh"
+
+component "view_mode"
+
+component "viewid"
+
+component "viewport"
+    .require_component "clear_state"
+    .require_component "rect"
+
+component "visible"

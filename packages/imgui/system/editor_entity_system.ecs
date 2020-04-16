@@ -1,0 +1,10 @@
+implement "system/editor_entity_system.lua"
+
+system "editor_entity_system"
+    .require_singleton "entity_relation"
+    .method "editor_update"
+    .method "init"
+
+singleton "entity_relation"
+
+component "entity_relation"

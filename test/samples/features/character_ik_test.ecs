@@ -1,0 +1,7 @@
+implement "character_ik_test.lua"
+
+import "@ant.character"
+
+system "character_ik_test_system"
+    .require_policy "ant.character|foot_ik_raycast"
+    .method "init"

@@ -1,0 +1,43 @@
+implement "shadow/shadow_maker.lua"
+
+import "@ant.general"
+import "@ant.scene"
+
+system "shadow_system"
+    .require_system "ant.scene|primitive_filter_system"
+    .require_system "shadowcamera_system"
+    .require_system "render_system"
+    .method "init"
+    .method "refine_filter"
+
+system "shadowcamera_system"
+    .require_system "ant.scene|primitive_filter_system"
+    .method "shadow_camera"
+
+policy "shadow_cast_policy"
+    .require_policy "shadow_make_policy"
+    .require_policy "shadow_config_policy"
+    .require_component "can_cast"
+
+policy "shadow_config_policy"
+    .require_component "fb_index"
+    .unique_component "shadow"
+
+policy "shadow_make_policy"
+    .require_system "shadowcamera_system"
+    .require_system "shadow_system"
+    .require_policy "render_queue"
+    .require_policy "ant.general|name"
+    .require_component "csm"
+    .require_component "material"
+
+component "can_cast"
+
+component "csm"
+
+component "csm_split_config"
+
+component "omni"
+
+component "shadow"
+    .require_component "csm_split_config"

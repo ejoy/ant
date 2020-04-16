@@ -1,0 +1,41 @@
+implement "postprocess/postprocess_system.lua"
+
+system "postprocess_system"
+    .require_system "render_system"
+    .require_interface "uniforms"
+    .require_singleton "render_properties"
+    .require_singleton "postprocess"
+    .method "combine_postprocess"
+    .method "init"
+
+interface "postprocess"
+    .method "main_rb_size"
+
+singleton "postprocess"
+
+component "copy_pass"
+    .require_component "pass"
+
+component "pass"
+    .require_component "material"
+    .require_component "viewport"
+    .require_component "postprocess_input"
+    .require_component "postprocess_output"
+
+component "postprocess"
+
+component "postprocess_input"
+    .require_component "postprocess_slot"
+
+component "postprocess_output"
+    .require_component "postprocess_slot"
+
+component "postprocess_slot"
+    .require_component "fb_index"
+    .require_component "rb_index"
+    .method "init"
+
+component "technique"
+    .require_component "pass"
+
+component "technique_order"

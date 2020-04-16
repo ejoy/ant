@@ -1,0 +1,9 @@
+implement "system/world_profile_system.lua"
+
+system "world_profile_system"
+    .require_singleton "profile_cache"
+    .method "editor_update"
+
+singleton "profile_cache"
+
+component "profile_cache"

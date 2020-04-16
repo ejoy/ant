@@ -1,0 +1,14 @@
+implement "system/editor_policy_system.lua"
+
+system "editor_policy_system"
+    .method "init"
+
+policy "test_add_policy"
+    .require_transform "test_add_policy_transform"
+    .require_component "test_component"
+
+transform "test_add_policy_transform"
+    .output "test_component"
+    .method "process"
+
+component "test_component"
