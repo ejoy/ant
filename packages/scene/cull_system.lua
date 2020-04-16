@@ -7,7 +7,6 @@ local mu = math.util
 local math3d = require "math3d"
 
 local cull_sys = ecs.system "cull_system"
-cull_sys.require_system "primitive_filter_system"
 
 local CULLS = {"main_queue", "csm", "pickup"}
 

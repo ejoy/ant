@@ -4,12 +4,9 @@ local WatcherEvent = require "hub_event"
 
 ecs.component_alias("test_component", "boolean")
 
-local test_add_policy = ecs.policy "test_add_policy"
-test_add_policy.require_component "test_component"
-test_add_policy.require_transform "test_add_policy_transform"
 
 local transform = ecs.transform "test_add_policy_transform"
-transform.output "test_component"
+
 function transform.process(e)
     e.test_component = true
 end

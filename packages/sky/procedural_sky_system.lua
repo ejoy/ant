@@ -116,15 +116,6 @@ local ABCDE_t = {
 	math3d.ref(math3d.vector(-0.0033, -0.0109, -0.0670, 0)),
 }
 
-local psp = ecs.policy "procedural_sky"
-psp.require_component "procedural_sky"
-psp.require_system "procedural_sky_system"
-
-local psp_sun = ecs.policy "procedural_sky_follow_sun"
-psp_sun.require_component "procedural_sky"
-psp_sun.require_system "procedural_sky_system"
-psp_sun.require_system "sun_update_system"
-
 -- Controls sun position according to time, month, and observer's latitude.
 -- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 local ps = ecs.component "procedural_sky"
@@ -286,8 +277,6 @@ end
 
 
 local sun_sys = ecs.system "sun_update_system"
-sun_sys.require_system "procedural_sky_system"
-sun_sys.require_interface "ant.timer|timer"
 
 local function update_hour(skycomp, deltatime, unit)
 	unit = unit or 24

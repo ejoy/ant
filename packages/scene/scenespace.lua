@@ -6,10 +6,6 @@ ecs.tag "scene_entity"
 
 ecs.component_alias("parent", 	"entityid")
 
-local tp = ecs.policy "transform_policy"
-tp.require_component "transform"
-tp.require_transform "transform_transform"
-
 ecs.component "lock_target"
 	.type	"string"
     ["opt"].offset	"vector"
@@ -24,7 +20,6 @@ function t:init()
 end
 
 local tt = ecs.transform "transform_transform"
-tt.output "transform"
 
 function tt.process(e)
 	local lt = e.transform.lock_target
@@ -33,15 +28,7 @@ function tt.process(e)
 	end
 end
 
-local hie = ecs.policy "hierarchy_policy"
-hie.require_component "parent"
-hie.require_component "scene_entity"
-
-hie.require_system "scenespace_system"
-
 local sp_sys = ecs.system "scenespace_system"
-sp_sys.require_interface "ant.objcontroller|obj_motion"
-sp_sys.require_interface "ant.objcontroller|camera_motion"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
 local icm = world:interface "ant.objcontroller|camera_motion"

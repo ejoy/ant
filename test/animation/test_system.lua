@@ -11,23 +11,6 @@ local drawer = world:interface "ant.render|iwidget_drawer"
 
 local init_loader_sys = ecs.system 'init_loader_system'
 
-init_loader_sys.require_system "ant.imguibase|imgui_system"
-init_loader_sys.require_system "camera_controller_system"
-init_loader_sys.require_interface "ant.render|iwidget_drawer"
-init_loader_sys.require_interface "ant.animation|animation"
-
-init_loader_sys.require_policy "ant.animation|animation"
-init_loader_sys.require_policy "ant.animation|animation_controller.birth"
-init_loader_sys.require_policy "ant.animation|ozzmesh"
-init_loader_sys.require_policy "ant.animation|ozz_skinning"
-init_loader_sys.require_policy "ant.animation|skinning"
-init_loader_sys.require_policy "ant.serialize|serialize"
-init_loader_sys.require_policy "ant.render|mesh"
-init_loader_sys.require_policy "ant.render|render"
-init_loader_sys.require_policy "ant.general|name"
-init_loader_sys.require_policy "ant.render|light.directional"
-init_loader_sys.require_policy "ant.render|light.ambient"
-
 local RoleEntityId
 local eventResize = world:sub {"resize"}
 local screensize  = {w=0,h=0}

@@ -39,27 +39,7 @@ ecs.component "shadow"
 	.depth_type 	"string"("linear")		-- "inv_z" / "linear"
 	["opt"].split	"csm_split_config"
 
-local shadow_cfg_policy = ecs.policy "shadow_config_policy"
-shadow_cfg_policy.unique_component "shadow"
-shadow_cfg_policy.require_component "fb_index"
-
-local sm_policy = ecs.policy "shadow_make_policy"
-sm_policy.require_component "csm"
-sm_policy.require_component "material"
-
-sm_policy.require_policy "render_queue"
-sm_policy.require_policy "ant.general|name"
-
-sm_policy.require_system "shadowcamera_system"
-sm_policy.require_system "shadow_system"
-
-local sc_policy = ecs.policy "shadow_cast_policy"
-sc_policy.require_component "can_cast"
-sc_policy.require_policy "shadow_make_policy"
-sc_policy.require_policy "shadow_config_policy"
-
 local sm_sys = ecs.system "shadowcamera_system"
-sm_sys.require_system "ant.scene|primitive_filter_system"
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -187,9 +167,6 @@ function sm_sys:shadow_camera()
 	end
 end
 local sm = ecs.system "shadow_system"
-sm.require_system "ant.scene|primitive_filter_system"
-sm.require_system "shadowcamera_system"
-sm.require_system "render_system"
 
 local linear_cast_material = "/pkg/ant.resources/materials/shadow/csm_cast_linear.material"
 local cast_material = "/pkg/ant.resources/materials/shadow/csm_cast.material"

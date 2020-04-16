@@ -12,7 +12,7 @@ local current = 0
 local delta
 
 local timer = ecs.interface "timer"
-timer.require_system "time_system"
+
 function timer.current()
 	return current
 end

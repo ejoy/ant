@@ -12,7 +12,6 @@ local renderpkg = import_package "ant.render"
 local computil  = renderpkg.components
 
 local char_ik_test_sys = ecs.system "character_ik_test_system"
-char_ik_test_sys.require_policy "ant.character|foot_ik_raycast"
 
 local function foot_ik_test()
     return world:create_entity {

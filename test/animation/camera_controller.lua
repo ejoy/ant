@@ -4,8 +4,6 @@ local world = ecs.world
 local math3d  = require "math3d"
 
 local cc_sys = ecs.system "camera_controller_system"
-cc_sys.require_interface "ant.render|camera"
-cc_sys.require_interface "ant.objcontroller|camera_motion"
 
 local eventCameraControl = world:sub {"camera"}
 local cameraInitEyepos <const> = {1.6, 1.8,-1.8, 1}

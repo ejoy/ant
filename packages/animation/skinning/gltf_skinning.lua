@@ -5,28 +5,11 @@ local declmgr   = renderpkg.declmgr
 
 local assetmgr = import_package "ant.asset"
 
-local s = ecs.policy "skinning"
-s.require_component "animation"
-s.require_component "skeleton"
-s.require_component "skinning"
-s.require_component "pose_result"
-
-s.require_transform "mesh_skinning"
-
-s.require_component "rendermesh"
-s.require_component "mesh"
-
-s.require_transform "ant.render|mesh_loader"
-s.require_system "ant.animation|skinning_system"
-
 local bgfx = require "bgfx"
 
 local animodule = require "hierarchy.animation"
 
 local mesh_skinning_transform = ecs.transform "mesh_skinning"
-mesh_skinning_transform.input "mesh"
-mesh_skinning_transform.input "rendermesh"
-mesh_skinning_transform.output "skinning"
 
 local function find_elem(name, layout_elems)
 	assert(#name == 1)

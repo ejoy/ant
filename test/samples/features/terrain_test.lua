@@ -7,11 +7,6 @@ local math3d = require "math3d"
 
 local terrain_test_sys = ecs.system "terrain_test_system"
 
-terrain_test_sys.require_policy "ant.terrain|terrain_policy"
-terrain_test_sys.require_policy "ant.collision|terrain_collider_policy"
-
-terrain_test_sys.require_interface "ant.collision|collider"
-
 local icollider = world:interface "ant.collision|collider"
 
 function terrain_test_sys:init()

@@ -18,7 +18,6 @@ ecs.singleton "entity_relation" {
     parent_child_dic = {},
     child_parent_dic = {},
 }
-editor_entity_sys.require_singleton "entity_relation"
 
 
 local poll_parent_msg

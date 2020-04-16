@@ -8,7 +8,6 @@ ecs.component "skinning" {}
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
-skinning_sys.require_system "animation_system"
 
 local function build_skinning_matrices(skinningjob, aniresult)
 	local skinning_matrices = skinningjob.skinning_matrices

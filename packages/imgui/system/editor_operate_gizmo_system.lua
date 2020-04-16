@@ -9,14 +9,11 @@ local camerautil= renderpkg.camera
 local util = require "system.editor_system_util"
 local WatcherEvent = require "hub_event"
 
-local show_operate_gizmo = ecs.tag "show_operate_gizmo"
-local gizmo_object = ecs.component "gizmo_object"
+ecs.tag "show_operate_gizmo"
+ecs.component "gizmo_object"
     ["opt"].type "string"   --"position"/"rotation"/"scale"
     ["opt"].dir "string"    --"x"/"y"/"z"  *"xy"/"yz"/"xz"
 
-local policy_gizmo_object = ecs.policy "gizmo_object"
-policy_gizmo_object.require_component "gizmo_object"
---local transform_watcher = world:sub {"transform_changed", "transform"}
 
 local GizmoType = {"position","rotation","scale"}
 local GizmoDirection = {"x","y","z"}
@@ -260,7 +257,7 @@ end
 local mouse_left_mb = world:sub {"mouse","LEFT"}
 
 local editor_operate_gizmo_sys =  ecs.system "editor_operate_gizmo_system"
-editor_operate_gizmo_sys.require_singleton "operate_gizmo_cache"
+
 function editor_operate_gizmo_sys:init()
     --create gizmo
     local operate_gizmo_cache = world:singleton "operate_gizmo_cache"

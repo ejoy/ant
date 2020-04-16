@@ -6,7 +6,6 @@ ecs.component "profile_cache" {}
 ecs.singleton "profile_cache" {}
 
 local world_profile_sys =  ecs.system "world_profile_system"
-world_profile_sys.require_singleton "profile_cache"
 
 local eventSystemHook = world:sub {"system_hook"}
 

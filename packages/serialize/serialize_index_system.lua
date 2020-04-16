@@ -8,8 +8,6 @@ local serialize_index_sys = ecs.system 'serialize_index_system'
 local serialize_mb = world:sub {"component_register","serialize"}
 local serialize_delete_mb = world:sub {"component_removed", "serialize"}
 
-serialize_index_sys.require_singleton "serialize2eid"
-
 function serialize_index_sys:update()
     local serialize2eid = world:singleton "serialize2eid"
     for _,_,eid in serialize_mb:unpack() do

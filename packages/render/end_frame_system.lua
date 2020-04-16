@@ -13,7 +13,6 @@ ecs.singleton "frame_stat" {
 }
 
 local end_frame_sys = ecs.system "end_frame_system"
-end_frame_sys.require_singleton "frame_stat"
 
 function end_frame_sys:end_frame()
 	local stat = world:singleton "frame_stat"

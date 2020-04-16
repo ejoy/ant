@@ -223,7 +223,7 @@ return function (w, policies, systems, packname, implement)
 				if not decl then
 					--error(("%s `%s` in `%s` is not defined."):format(what, name, package))
 					setmetatable(r, {
-						__index = function() return function() end end,
+						__index = false,
 						__newindex = function() end,
 					})
 				else
@@ -233,12 +233,12 @@ return function (w, policies, systems, packname, implement)
 						decl.source = {}
 						decl.defined = sourceinfo()
 						setmetatable(r, {
-							__index = function() return function() end end,
+							__index = false,
 							__newindex = gen_method(decl),
 						})
 					else
 						setmetatable(r, {
-							__index = function() return function() end end,
+							__index = false,
 							__newindex = function() error(("%s `%s` in `%s` has no method."):format(what, name, package)) end,
 						})
 					end

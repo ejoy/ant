@@ -214,19 +214,6 @@ ecs.component "pickup"
 	.blit_viewid "blit_viewid"
 	.pickup_cache "pickup_cache"
 
-local pup = ecs.policy "pickup"
-	pup.unique_component "pickup"
-	pup.require_component "material"
-	pup.require_component "view_mode"
-	pup.require_system "pickup_system"
-	
-local sp = ecs.policy "select"
-	sp.require_component "can_select"
-	sp.require_system "pickup_watch_system"
-	sp.require_system "pickup_system"
-
-	sp.require_policy "pickup"
-
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"

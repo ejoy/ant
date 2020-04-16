@@ -5,7 +5,6 @@ local math3d = require "math3d"
 local rhwi = import_package "ant.render".hwi
 
 local camera_controller_sys = ecs.system "camera_controller_system"
-camera_controller_sys.require_interface "ant.objcontroller|camera_motion"
 
 local icm = world:interface "ant.objcontroller|camera_motion"
 

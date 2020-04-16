@@ -7,8 +7,6 @@ local imgui_util = require "imgui_util"
 
 local memory_stat_sys = ecs.system "memory_stat_system"
 
-memory_stat_sys.require_system "ant.imguibase|imgui_system"
-
 local function memory_info()
 	local function bytestr(n)
 		if n < 1024 then

@@ -13,27 +13,6 @@ local cu = renderpkg.components
 
 local m = ecs.system "model_viewer_system"
 
-m.require_policy "ant.sky|procedural_sky"
-m.require_policy "ant.serialize|serialize"
-m.require_policy "ant.collision|collider"
-m.require_policy "ant.render|mesh"
-m.require_policy "ant.render|render"
-m.require_policy "ant.general|name"
-m.require_policy "ant.render|shadow_cast_policy"
-m.require_policy "ant.render|light.directional"
-m.require_policy "ant.render|light.ambient"
-
-m.require_system "ant.render|physic_bounding_system"
-m.require_system "ant.imguibase|imgui_system"
-
-m.require_interface "ant.render|camera"
-m.require_interface "ant.animation|animation"
-m.require_interface "ant.timer|timer"
-m.require_interface "ant.objcontroller|camera_motion"
-m.require_interface "ant.render|iwidget_drawer"
-m.require_interface "ant.collision|collider"
-m.require_interface "ant.render|light"
-
 local camera = world:interface "ant.render|camera"
 local iwd = world:interface "ant.render|iwidget_drawer"
 local animation = world:interface "ant.animation|animation"
@@ -272,8 +251,6 @@ local imgui = require "imgui.ant"
 local imgui_util = require "imgui_util"
 
 local gui_sys = ecs.system "gui_system"
-
-gui_sys.require_system "ant.imguibase|imgui_system"
 
 local wndflags = imgui.flags.Window {  }
 

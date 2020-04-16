@@ -82,12 +82,6 @@ local function set_state(e, name, time)
 	sm.current = name
 end
 
-local sm_policy = ecs.policy "animation_controller.state_machine"
-sm_policy.require_component "animation"
-sm_policy.require_component "state_machine"
-sm_policy.require_system "state_machine_system"
-sm_policy.require_transform "state_machine_transform"
-
 local sm = ecs.component "state_machine"
 		.current "string"
 ["opt"]	.file "string"
@@ -107,8 +101,6 @@ ecs.component "state_machine_transmits"
 	.duration "real"
 
 local sm_trans = ecs.transform "state_machine_transform"
-sm_trans.input "state_machine"
-sm_trans.output "animation"
 
 function sm_trans.process(e)
 	e.animation.current = {}
@@ -116,8 +108,6 @@ function sm_trans.process(e)
 end
 
 local state_machine_sys = ecs.system "state_machine_system"
-state_machine_sys.require_system "animation_system"
-state_machine_sys.require_interface "ant.timer|timer"
 
 function state_machine_sys:animation_state()
 	local delta = timer.delta()
@@ -132,7 +122,6 @@ function state_machine_sys:animation_state()
 end
 
 local iani = ecs.interface "animation"
-iani.require_interface "ant.timer|timer"
 
 function iani.set_state(e, name)
 	local sm = e.state_machine

@@ -15,14 +15,8 @@ ecs.component "rendermesh" {}
 
 ecs.resource_component "mesh"
 
-local meshpolicy = ecs.policy "mesh"
-meshpolicy.require_component "rendermesh"
-meshpolicy.require_component "mesh"
-meshpolicy.require_transform "mesh_loader"
 
 local ml = ecs.transform "mesh_loader"
-ml.input    "mesh"
-ml.output   "rendermesh"
 
 function ml.process(e)
 	local filename = tostring(e.mesh):gsub("[.]%w+:", ".glbmesh:")
@@ -34,28 +28,8 @@ ecs.resource_component "material" { multiple=true }
 ecs.tag "blit_render"
 ecs.tag "can_render"
 
-for _, item in ipairs {
-	{"blitrender", "blit_render"},
-	{"render", "can_render"}
- } do
-	local name, tag = item[1], item[2]
-	local p = ecs.policy(name)
-	p.require_component(tag)
-	p.require_component "rendermesh"
-	p.require_component "material"
-	p.require_component "transform"
-	p.require_component "scene_entity"
-
-	p.require_system "render_system"
-
-	p.require_policy "ant.scene|transform_policy"
-end
-
 ecs.tag "main_queue"
 ecs.tag "blit_queue"
-
-local bq_p = ecs.policy "blit_queue"
-bq_p.unique_component "blit_queue"
 
 ecs.component_alias("viewid", "int", 0)
 ecs.component_alias("view_mode", "string", "")
@@ -63,12 +37,8 @@ ecs.component_alias("view_mode", "string", "")
 ecs.component_alias("fb_index", "int")
 ecs.component_alias("rb_index", "int")
 
-local mqp = ecs.policy "main_queue"
-mqp.unique_component "main_queue"
-
 local m = ecs.transform "render_target"
-m.input "viewid"
-m.output "render_target"
+
 function m.process(e)
 	local viewid = e.viewid
 	local fb_idx = e.render_target.fb_idx
@@ -110,11 +80,8 @@ ecs.component "camera"
 	.frustum	"frustum"
 	["opt"].lock_target "lock_target"
 
-local cp = ecs.policy "camera"
-cp.require_component "camera"
 
 local et= ecs.transform "camera_transfrom"
-et.output "camera"
 
 function et.process(e)
 	local lt = e.camera.lock_target
@@ -126,18 +93,8 @@ end
 ecs.component_alias("camera_eid", "entityid")
 ecs.component_alias("visible", "boolean", true)
 
-local rqp = ecs.policy "render_queue"
-rqp.require_component "viewid"
-rqp.require_component "render_target"
-rqp.require_component "camera_eid"
-rqp.require_component "primitive_filter"
-rqp.require_component "visible"
-rqp.require_transform "render_target"
 
 local blit_render_sys = ecs.system "blit_render_system"
-blit_render_sys.require_policy "blit_queue"
-blit_render_sys.require_policy "blitrender"
-blit_render_sys.require_policy "ant.general|name"
 
 function blit_render_sys:init_blit_render()
 	log.info("init blit system")
@@ -145,22 +102,6 @@ function blit_render_sys:init_blit_render()
 end
 
 local render_sys = ecs.system "render_system"
-
-render_sys.require_singleton "render_properties"
-
-render_sys.require_system "ant.scene|primitive_filter_system"
-render_sys.require_system "ant.scene|scenespace_system"
-render_sys.require_system "ant.scene|cull_system"
-
-render_sys.require_system "load_properties_system"
-render_sys.require_system "end_frame_system"
-render_sys.require_system "viewport_detect_system"
-render_sys.require_system "blit_render_system"
-
-render_sys.require_policy "render_queue"
-render_sys.require_policy "main_queue"
-render_sys.require_policy "camera"
-render_sys.require_policy "ant.general|name"
 
 local function update_view_proj(viewid, camera)
 	local view = math3d.lookto(camera.eyepos, camera.viewdir)

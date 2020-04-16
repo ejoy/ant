@@ -7,27 +7,7 @@ local animodule = require "hierarchy.animation"
 
 local bgfx      = require "bgfx"
 
-local s = ecs.policy "ozz_skinning"
-s.require_component "animation"
-s.require_component "skeleton"
-s.require_component "rendermesh"
-s.require_component "skinning"
-s.require_component "mesh"
-s.require_component "pose_result"
-s.require_transform "ozzmesh_skinning"
-s.require_transform "ozzmesh_loader"
-s.require_system "skinning_system"
-
-local ozzmesh_policy = ecs.policy "ozzmesh"
-ozzmesh_policy.require_component "rendermesh"
-ozzmesh_policy.require_component "mesh"
-
-ozzmesh_policy.require_transform "ozzmesh_loader"
-
 local ozzmesh_skinning_transform = ecs.transform "ozzmesh_skinning"
-ozzmesh_skinning_transform.input 	"mesh"
-ozzmesh_skinning_transform.input 	"rendermesh"
-ozzmesh_skinning_transform.output 	"skinning"
 
 local function find_layout(shortname, layouts)
 	for _, l in ipairs(layouts) do
@@ -119,8 +99,6 @@ local function gen_mesh_assetinfo(ozzmesh)
 end
 
 local ozzmesh_loader = ecs.transform "ozzmesh_loader"
-ozzmesh_loader.input "mesh"
-ozzmesh_loader.output "rendermesh"
 
 function ozzmesh_loader.process(e)
 	local meshfilename = tostring(e.mesh)

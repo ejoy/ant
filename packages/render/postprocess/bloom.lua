@@ -11,9 +11,6 @@ local fs        = require "filesystem"
 local assetmgr = import_package "ant.asset"
 
 local bloom_sys = ecs.system "bloom_system"
-bloom_sys.require_singleton  "postprocess"
-bloom_sys.require_system     "postprocess_system"
-bloom_sys.require_interface "postprocess"
 
 local ipp = world:interface "postprocess"
 

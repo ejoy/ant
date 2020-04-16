@@ -5,15 +5,7 @@ local ani_module = require "hierarchy.animation"
 
 ecs.component "pose_result"
 
-local pr_p = ecs.policy "pose_result"
-pr_p.require_component "skeleton"
-pr_p.require_component "pose_result"
-
-pr_p.require_transform "build_pose_result"
-
 local pr_t = ecs.transform "build_pose_result"
-pr_t.input "skeleton"
-pr_t.output "pose_result"
 
 function pr_t.process(e)
 	local skehandle = e.skeleton.handle
@@ -26,16 +18,6 @@ ecs.component "animation_content"
 	.resource "animation_resource"
 	.scale "real" (1)
 	.looptimes "int" (0)
-
-local ap = ecs.policy "animation"
-ap.require_component "skeleton"
-ap.require_component "animation"
-ap.require_component "pose_result"
-ap.require_transform "build_pose_result"
-
-ap.require_system "animation_system"
-
-ap.require_policy "pose_result"
 
 local anicomp = ecs.component "animation"
 	.anilist "animation_content{}"
@@ -54,7 +36,6 @@ end
 ecs.resource_component "skeleton"
 
 local ani_sys = ecs.system "animation_system"
-ani_sys.require_interface "ant.timer|timer"
 
 local timer = world:interface "ant.timer|timer"
 

@@ -57,16 +57,9 @@ function ts:init()
 	return self
 end
 
-local tc_policy = ecs.policy "terrain_collider_policy"
-tc_policy.require_component "collider"
-tc_policy.require_component "terrain"
-
-tc_policy.require_transform "terrain_collider_transform"
 
 local tcb = ecs.transform "terrain_collider_transform"
-tcb.input "terrain"
-tcb.output "collider"
-tcb.require_interface "ant.terrain|terrain"
+
 local iterrain = world:interface "ant.terrain|terrain"
 
 function tcb.process(e)
@@ -128,13 +121,7 @@ function collcomp:delete()
 	end
 end
 
-local cp = ecs.policy "collider"
-cp.require_component "transform"
-cp.require_component "collider"
-cp.require_system "ant.collision|collider_system"
-
 local icoll = ecs.interface "collider"
-icoll.require_system "collider_system"
 
 local function set_obj_transform(obj, srt)
 	w:set_transform(obj, srt.t, srt.r)

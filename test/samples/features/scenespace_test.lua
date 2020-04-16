@@ -2,10 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local sp_test_sys = ecs.system "scenespace_test_system"
-sp_test_sys.require_policy "ant.render|render"
-sp_test_sys.require_policy "ant.scene|transform_policy"
-sp_test_sys.require_policy "ant.scene|hierarchy_policy"
-
 
 function sp_test_sys:init()
     local rooteid = world:create_entity{

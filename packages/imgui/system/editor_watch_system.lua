@@ -17,28 +17,15 @@ ecs.component_alias("target_entity","entityid")
 ecs.tag "editor_object"
 
 
-local outline_policy = ecs.policy "outline"
-outline_policy.require_component "outline_entity"
-outline_policy.require_component "target_entity"
-outline_policy.require_component "editor_object"
 
 
 local editor_watcher_sys = ecs.system "editor_watcher_system"
-editor_watcher_sys.require_system "editor_operate_gizmo_system"
-editor_watcher_sys.require_system "editor_policy_system"
-editor_watcher_sys.require_system 'editor_entity_system' 
-editor_watcher_sys.require_interface "ant.objcontroller|camera_motion"
+
 
 local camera_motion = world:interface "ant.objcontroller|camera_motion"
 
-
--- editor_watcher_system.require_system "before_render_system"
-editor_watcher_sys.require_singleton "profile_cache"
-
 ecs.component "editor_watcher_cache" {}
 ecs.singleton "editor_watcher_cache" {}
-
-editor_watcher_sys.require_singleton "editor_watcher_cache"
 
 local function send_hierarchy()
     local temp = {}

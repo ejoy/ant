@@ -50,11 +50,6 @@ ecs.singleton "postprocess" {
 }
 
 local pp_sys = ecs.system "postprocess_system"
-pp_sys.require_singleton "render_properties"
-pp_sys.require_singleton "postprocess"
-pp_sys.require_interface "uniforms"
-
-pp_sys.require_system "render_system"
 
 local quad_meshgroup
 

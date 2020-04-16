@@ -30,29 +30,9 @@ for _, lighttype in ipairs {
 	"spot",
 	"ambient",
 } do
-	local policyname = "light." .. lighttype
-	local p = ecs.policy(policyname)
 	local lightname = lighttype .. "_light"
-	p.require_component(lightname)
-	p.require_component "light"
-	if lighttype == "directional" then
-		p.require_component "direction"
-		p.require_component "position"
-		p.unique_component(lightname)
-	elseif lighttype == "point" or lighttype == "spot" then
-		p.require_component "direction"
-		p.require_component "position"
-	elseif lighttype == "ambient" then
-		p.unique_component(lightname)
-	end
-
 	local transname = lighttype .. "_transform"
-	p.require_transform(transname)
-
 	local t = ecs.transform(transname)
-	t.input(lightname)
-	t.output "light"
-
 	function t.process(e)
 		e.light = lightname
 	end

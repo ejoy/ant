@@ -7,18 +7,9 @@ local mc = import_package "ant.math".constant
 ecs.component "character"
     .movespeed "real" (1.0)
 
-local character_policy = ecs.policy "character"
-character_policy.require_component "character"
-character_policy.require_component "collider"
 
 ecs.component "character_height_raycast"
     .dir "vector" (0, -2, 0, 0)
-
-local char_height_policy = ecs.policy "character_height_raycast"
-char_height_policy.require_component "character_height_raycast"
-char_height_policy.require_component "character"
-
-char_height_policy.require_system "character_height_system"
 
 local char_height_sys = ecs.system "character_height_system"
 char_height_sys.require_system     "ant.collision|collider_system"
@@ -63,19 +54,7 @@ ecs.component "foot_ik_raycast"
     .foot_height "real" (0)
     .trackers  "ik_tracker[]"
 
-local foot_ik_policy = ecs.policy "foot_ik_raycast"
-foot_ik_policy.require_component "character"
-foot_ik_policy.require_component "foot_ik_raycast"
-foot_ik_policy.require_component "ik"
-
-foot_ik_policy.require_policy "ant.animation|ik"
-
-foot_ik_policy.require_system "character_foot_ik_system"
-foot_ik_policy.require_transform "check_ik_data"
-
 local foot_t = ecs.transform "check_ik_data"
-foot_t.input "ik"
-foot_t.output "foot_ik_raycast"
 
 function foot_t.process(e)
     local r = e.foot_ik_raycast
@@ -123,9 +102,6 @@ function foot_t.process(e)
 end
 
 local char_foot_ik_sys = ecs.system "character_foot_ik_system"
-char_foot_ik_sys.require_interface "ant.collision|collider"
-char_foot_ik_sys.require_interface "ant.animation|ik"
-char_foot_ik_sys.require_policy "foot_ik_raycast"
 
 local iik = world:interface "ant.animation|ik"
 

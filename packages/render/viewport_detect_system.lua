@@ -3,7 +3,6 @@ local world = ecs.world
 local fbmgr 	= require "framebuffer_mgr"
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
-vp_detect_sys.require_system "ant.scene|primitive_filter_system"
 
 local eventResize = world:sub {"resize"}
 

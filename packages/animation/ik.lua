@@ -17,18 +17,8 @@ ecs.component "ik_data"
 ecs.component "ik"
 	.jobs 'ik_data{}'
 
-local ik_p = ecs.policy "ik"
-ik_p.require_component "skeleton"
-ik_p.require_component "ik"
-ik_p.require_component "pose_result"
-ik_p.require_transform "build_pose_result"
-ik_p.require_transform "build_ik"
-
-ik_p.require_policy "pose_result"
 
 local build_ik_tranform = ecs.transform "build_ik"
-build_ik_tranform.input "skeleton"
-build_ik_tranform.output "ik"
 
 local function check_joints_in_hierarchy_chain(ske, joint_indices)
 	for i=3, 2, -1 do

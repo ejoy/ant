@@ -17,20 +17,10 @@ local fs = require "filesystem"
 
 ecs.tag "widget_drawer"
 
-local bdp = ecs.policy "bounding_draw"
-bdp.unique_component "widget_drawer"
-
 ecs.component "debug_mesh_bounding"
 
-local bt = ecs.policy "debug_mesh_bounding"
-bt.require_component "debug_mesh_bounding"
-bt.require_system "render_mesh_bounding_system"
 
 local widget_drawer_sys = ecs.system "widget_drawer_system"
-
-widget_drawer_sys.require_policy "ant.general|name"
-widget_drawer_sys.require_policy "render"
-widget_drawer_sys.require_policy "bounding_draw"
 
 function widget_drawer_sys:init()
 	local eid = world:create_entity {
@@ -70,8 +60,6 @@ function widget_drawer_sys:end_frame()
 end
 
 local iwd = ecs.interface "iwidget_drawer"
-
-iwd.require_system "widget_drawer_system"
 
 local DEFAULT_COLOR <const> = 0xffffff00
 
@@ -173,7 +161,6 @@ function iwd.draw_skeleton(ske, ani, srt)
 end
 
 local physic_bounding_sys = ecs.system "physic_bounding_system"
-physic_bounding_sys.require_interface "iwidget_drawer"
 
 local iwd = world:interface "ant.render|iwidget_drawer"
 
@@ -201,8 +188,6 @@ function physic_bounding_sys:widget()
 end
 
 local rmb_sys = ecs.system "render_mesh_bounding_system"
-
-rmb_sys.require_system "widget_drawer_system"
 
 function rmb_sys:widget()
 	-- local transformed_boundings = {}

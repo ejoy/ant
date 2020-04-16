@@ -9,21 +9,6 @@ local rhwi       = renderpkg.hwi
 
 local m = ecs.system 'init_loader'
 
-m.require_system "ant.imguibase|imgui_system"
-m.require_system "camera_controller"
-
-m.require_policy "ant.animation|animation"
-m.require_policy "ant.animation|animation_controller.birth"
-m.require_policy "ant.animation|ozzmesh"
-m.require_policy "ant.animation|ozz_skinning"
-m.require_policy "ant.animation|skinning"
-m.require_policy "ant.serialize|serialize"
-m.require_policy "ant.render|mesh"
-m.require_policy "ant.render|render"
-m.require_policy "ant.general|name"
-m.require_policy "ant.render|light.directional"
-m.require_policy "ant.render|light.ambient"
-
 local function load_file(file)
     local f = assert(fs.open(fs.path(file), 'r'))
     local data = f:read 'a'

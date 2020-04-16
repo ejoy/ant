@@ -21,9 +21,6 @@ local context     = nil
 
 local imgui_sys = ecs.system "imgui_system"
 
-imgui_sys.require_system "ant.render|render_system"
-imgui_sys.require_interface "ant.timer|timer"
-
 local function replaceImguiCallback(t)
 	local l_mouse_wheel = t.mouse_wheel
 	local l_mouse = t.mouse
