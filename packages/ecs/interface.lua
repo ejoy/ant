@@ -221,7 +221,9 @@ end
 
 local function merge(output, input, list)
 	for name, item in pairs(input) do
-		local value = {}
+		local value = {
+			implement = item.implement,
+		}
 		for _, attrib in ipairs(list) do
 			value[attrib] = {}
 		end
