@@ -19,7 +19,7 @@ function terrain_test_sys:init()
 		policy = {
 			"ant.render|render",
 			"ant.terrain|terrain_policy",
-			"ant.render|name",
+			"ant.general|name",
 			"ant.collision|terrain_collider_policy",
 			"ant.serialize|serialize",
 		},

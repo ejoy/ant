@@ -241,7 +241,7 @@ local function add_pick_entity()
 	local cameraeid = world:create_entity {
 		policy = {
 			"ant.render|camera",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = {
 			camera = {
@@ -291,7 +291,7 @@ local function add_pick_entity()
 	}
 	return world:create_entity {
 		policy = {
-			"ant.render|name",
+			"ant.general|name",
 			"ant.render|render_queue",
 			"ant.objcontroller|pickup",
 		},

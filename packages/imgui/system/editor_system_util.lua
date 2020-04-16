@@ -67,7 +67,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
     color[4] = 0.6
     return world:create_entity {
         policy={
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|mesh",
             "ant.render|render",
             "ant.scene|hierarchy_policy",
@@ -117,7 +117,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
 
     local gridid = world:create_entity {
         policy = {
-            "ant.render|name",
+            "ant.general|name",
             -- "ant.render|mesh",
             "ant.render|render",
             "ant.scene|hierarchy_policy",
@@ -161,7 +161,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
 
     local gridid = world:create_entity {
         policy = {
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
@@ -209,7 +209,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
     local computil  = import_package "ant.render".components
     return world:create_entity {
         policy = {
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|render",
             "ant.render|mesh",
             "ant.scene|hierarchy_policy",
@@ -252,7 +252,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
     local computil  = import_package "ant.render".components
     return world:create_entity {
         policy = {
-            "ant.render|name",
+            "ant.general|name",
             "ant.scene|hierarchy_policy",
             "ant.render|render",
             "ant.render|mesh",
@@ -314,7 +314,7 @@ function Util.create_gizmo(world)
         -- trans.parent = parent and world[parent].serialize or nil
         local args = {
             policy={
-                "ant.render|name",
+                "ant.general|name",
                 "ant.scene|hierarchy_policy",
                 "ant.imgui|gizmo_object",
                 "ant.serialize|serialize",

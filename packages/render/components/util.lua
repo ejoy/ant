@@ -94,7 +94,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	local gridid = world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = {
 			transform = transform,
@@ -137,7 +137,7 @@ end
 function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	local policy = {
 		"ant.render|render",
-		"ant.render|name",
+		"ant.general|name",
 	}
 
 	local material = ([[
@@ -241,7 +241,7 @@ local function create_simple_render_entity(world, transform, material, name, tag
 	return world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = dataset,
 	}
@@ -342,7 +342,7 @@ function util.create_skybox(world, material)
     local eid = world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.render|name"
+			"ant.general|name"
 		},
 		data = {
 			transform = {srt=mu.srt()},

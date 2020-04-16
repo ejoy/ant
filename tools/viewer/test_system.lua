@@ -20,7 +20,7 @@ m.require_policy "ant.animation|skinning"
 m.require_policy "ant.serialize|serialize"
 m.require_policy "ant.render|mesh"
 m.require_policy "ant.render|render"
-m.require_policy "ant.render|name"
+m.require_policy "ant.general|name"
 m.require_policy "ant.render|light.directional"
 m.require_policy "ant.render|light.ambient"
 

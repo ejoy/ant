@@ -54,7 +54,7 @@ function util.create_procedural_sky(world, settings)
 		policy = {
 			"ant.render|render",
 			"ant.sky|procedural_sky",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = {
 			transform = {srt=mu.srt()},

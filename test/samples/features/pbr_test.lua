@@ -20,7 +20,7 @@ local function create_pbr_entity(world,
         policy = {
             "ant.render|render",
             "ant.render|mesh",
-            "ant.render|name",
+            "ant.general|name",
             "ant.serialize|serialize",
             "ant.objcontroller|select",
         },
@@ -80,7 +80,7 @@ function pbr_test_sys:init()
             "ant.render|render",
             "ant.render|mesh",
             "ant.render|shadow_cast_policy",
-            "ant.render|name",
+            "ant.general|name",
         },
         data = {
             transform = {srt={t={3, 2, 0, 1}}},

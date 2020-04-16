@@ -24,7 +24,7 @@ init_loader_sys.require_policy "ant.animation|skinning"
 init_loader_sys.require_policy "ant.serialize|serialize"
 init_loader_sys.require_policy "ant.render|mesh"
 init_loader_sys.require_policy "ant.render|render"
-init_loader_sys.require_policy "ant.render|name"
+init_loader_sys.require_policy "ant.general|name"
 init_loader_sys.require_policy "ant.render|light.directional"
 init_loader_sys.require_policy "ant.render|light.ambient"
 

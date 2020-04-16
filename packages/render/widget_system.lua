@@ -28,14 +28,14 @@ bt.require_system "render_mesh_bounding_system"
 
 local widget_drawer_sys = ecs.system "widget_drawer_system"
 
-widget_drawer_sys.require_policy "name"
+widget_drawer_sys.require_policy "ant.general|name"
 widget_drawer_sys.require_policy "render"
 widget_drawer_sys.require_policy "bounding_draw"
 
 function widget_drawer_sys:init()
 	local eid = world:create_entity {
 		policy = {
-			"ant.render|name",
+			"ant.general|name",
 			"ant.render|render",
 			"ant.render|bounding_draw",
 		},

@@ -137,7 +137,7 @@ rqp.require_transform "render_target"
 local blit_render_sys = ecs.system "blit_render_system"
 blit_render_sys.require_policy "blit_queue"
 blit_render_sys.require_policy "blitrender"
-blit_render_sys.require_policy "name"
+blit_render_sys.require_policy "ant.general|name"
 
 function blit_render_sys:init_blit_render()
 	log.info("init blit system")
@@ -160,7 +160,7 @@ render_sys.require_system "blit_render_system"
 render_sys.require_policy "render_queue"
 render_sys.require_policy "main_queue"
 render_sys.require_policy "camera"
-render_sys.require_policy "name"
+render_sys.require_policy "ant.general|name"
 
 local function update_view_proj(viewid, camera)
 	local view = math3d.lookto(camera.eyepos, camera.viewdir)

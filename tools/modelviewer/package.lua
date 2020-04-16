@@ -13,7 +13,7 @@ return {
             "ant.serialize|serialize",
             "ant.collision|collider",
             "ant.sky|procedural_sky",
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|mesh",
             "ant.render|shadow_cast_policy",
             "ant.render|render",

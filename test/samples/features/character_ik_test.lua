@@ -25,7 +25,7 @@ local function foot_ik_test()
             "ant.animation|ik",
             "ant.animation|ozz_skinning",
             "ant.render|shadow_cast_policy",
-            "ant.render|name",
+            "ant.general|name",
             "ant.character|character",
             "ant.character|foot_ik_raycast",
         },

@@ -37,6 +37,7 @@ for _, lighttype in ipairs {
 	p.require_component "light"
 	if lighttype == "directional" then
 		p.require_component "direction"
+		p.require_component "position"
 		p.unique_component(lightname)
 	elseif lighttype == "point" or lighttype == "spot" then
 		p.require_component "direction"
@@ -65,14 +66,15 @@ local mc		= mathpkg.constant
 
 local ilight 	= ecs.interface "light"
 
-function ilight.create_directional_light_entity(name, color, intensity, direction)
+function ilight.create_directional_light_entity(name, color, intensity, direction, position)
 	return world:create_entity {
 		policy = {
 			"ant.render|light.directional",
-			"ant.render|name",
+			"ant.general|name",
 			"ant.serialize|serialize",
 		},
 		data = {
+			position	= position,
 			direction 	= direction,
 			name		= name,
 			serialize 	= seripkg.create(),
@@ -89,7 +91,7 @@ function ilight.create_point_light_entity(name, dir, pos)
 	return world:create_entity {
 		policy = {
 			"ant.render|point_light",
-			"ant.render|name",
+			"ant.general|name",
 			"ant.serialize|serialize",
 		},
 		data = {
@@ -112,7 +114,7 @@ function ilight.create_spot_light_entity(name, dir, pos)
 	return world:create_entity {
 		policy = {
 			"ant.render|spot_light",
-			"ant.render|name",
+			"ant.general|name",
 			"ant.serialize|serialize",
 		},
 		data = {
@@ -136,7 +138,7 @@ function ilight.create_ambient_light_entity(name, mode, skycolor, midcolor, grou
 	return world:create_entity {
 		policy = {
 			"ant.render|light.ambient",
-			"ant.render|name",
+			"ant.general|name",
 			"ant.serialize|serialize",
 		},
 		data = {

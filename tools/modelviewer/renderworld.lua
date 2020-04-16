@@ -18,7 +18,7 @@ m.require_policy "ant.serialize|serialize"
 m.require_policy "ant.collision|collider"
 m.require_policy "ant.render|mesh"
 m.require_policy "ant.render|render"
-m.require_policy "ant.render|name"
+m.require_policy "ant.general|name"
 m.require_policy "ant.render|shadow_cast_policy"
 m.require_policy "ant.render|light.directional"
 m.require_policy "ant.render|light.ambient"
@@ -41,13 +41,45 @@ local camera_id
 
 local ilight = world:interface "ant.render|light"
 
+local function directional_light_arrow_widget(trans)
+	local s, r, t = math3d.srt(trans.srt)
+	s, r, t = math3d.tovalue(s), math3d.tovalue(r), math3d.tovalue(t)
+	local arroweid = world:create_entity{
+		policy = {
+			"ant.general|name",
+			"ant.scene|transform_policy",
+		},
+		data = {
+			transform = {
+				srt = {s=s, r=r, t=t},
+			},
+			name = "directional light arrow",
+		},
+	}
+
+	local cylinder = world:create_entity{
+		policy = {
+			"ant.render|render",
+			"ant.general|name",
+			"ant.scene|hierarchy",
+		},
+		data = {
+			scene_entity = true,
+			can_render = true,
+			transform = {
+				srt = {
+
+				}
+			},
+			material = '/pkg'
+		}
+	}
+end
+
 local function create_light()
-	local dlightdir = math3d.totable(
-		--from shading point to light position
-		math3d.inverse(
-			math3d.normalize(math3d.inverse(
-				math3d.todirection(math3d.quaternion{math.rad(60), math.rad(50), 0})
-	))))
+	local dir = math3d.todirection(math3d.quaternion{math.rad(60), 0, 0})
+	local dlightdir = math3d.totable(math3d.normalize(math3d.inverse(dir)))
+
 	ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir)
 	ilight.create_ambient_light_entity("ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end

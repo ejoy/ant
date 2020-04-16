@@ -48,7 +48,7 @@ sm_policy.require_component "csm"
 sm_policy.require_component "material"
 
 sm_policy.require_policy "render_queue"
-sm_policy.require_policy "name"
+sm_policy.require_policy "ant.general|name"
 
 sm_policy.require_system "shadowcamera_system"
 sm_policy.require_system "shadow_system"
@@ -212,7 +212,7 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 	local cameraeid = world:create_entity {
 		policy = {
 			"ant.render|camera",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = {
 			camera = default_csm_camera(),
@@ -224,7 +224,7 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 		policy = {
 			"ant.render|shadow_make_policy",
 			"ant.render|render_queue",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = {
 			material = linear_shadow and linear_cast_material or cast_material,

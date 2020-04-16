@@ -77,7 +77,7 @@ local ilight = world:interface "ant.render|light"
 local function target_lock_test()
     local eid = world:create_entity{
         policy = {
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|render",
             "ant.render|mesh",
             "ant.serialize|serialize"
@@ -99,7 +99,7 @@ local function target_lock_test()
 
     local lock_eid = world:create_entity {
         policy = {
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|render",
             "ant.render|mesh",
             "ant.serialize|serialize",

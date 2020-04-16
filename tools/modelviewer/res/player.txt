@@ -4,7 +4,7 @@ policy:
   ant.animation|animation_controller.state_machine
   ant.collision|collider
   ant.render|mesh
-  ant.render|name
+  ant.general|name
   ant.render|render
   ant.serialize|serialize
 data:

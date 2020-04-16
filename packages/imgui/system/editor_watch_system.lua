@@ -204,7 +204,7 @@ local function create_outline(seleid)
         t.parent = world[seleid].serialize
         local outlineeid = world:create_entity {
             policy={
-                -- "ant.render|name",
+                -- "ant.general|name",
                 "ant.render|render",
                 "ant.imgui|outline",
             },

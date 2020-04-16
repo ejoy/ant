@@ -10,7 +10,7 @@ sp_test_sys.require_policy "ant.scene|hierarchy_policy"
 function sp_test_sys:init()
     local rooteid = world:create_entity{
         policy = {
-            "ant.render|name",
+            "ant.general|name",
         },
         data = {
             name = "root",
@@ -21,7 +21,7 @@ function sp_test_sys:init()
         policy = {
             "ant.scene|hierarchy_policy",
             "ant.render|render",
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|mesh",
         },
         data = {
@@ -42,7 +42,7 @@ function sp_test_sys:init()
         policy = {
             "ant.render|render",
             "ant.scene|hierarchy_policy",
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|mesh",
         },
         data = {
@@ -62,7 +62,7 @@ function sp_test_sys:init()
 
     local child2 = world:create_entity {
         policy = {
-            "ant.render|name",
+            "ant.general|name",
             "ant.scene|hierarchy_policy",
             "ant.scene|transform_policy",
         },
@@ -81,7 +81,7 @@ function sp_test_sys:init()
         policy = {
             "ant.render|render",
             "ant.scene|hierarchy_policy",
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|mesh",
         },
         data = {

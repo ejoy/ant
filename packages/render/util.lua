@@ -144,7 +144,7 @@ function util.create_main_queue(world, view_rect)
 		policy = {
 			"ant.render|render_queue",
 			"ant.render|main_queue",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = {
 			camera_eid = 0,
@@ -281,7 +281,7 @@ function util.create_blit_queue(world, viewrect)
 	local cameraeid = world:create_entity {
 		policy = {
 			"ant.render|camera",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = {
 			camera = {
@@ -298,7 +298,7 @@ function util.create_blit_queue(world, viewrect)
 		policy = {
 			"ant.render|blit_queue",
 			"ant.render|render_queue",
-			"ant.render|name",
+			"ant.general|name",
 		},
 		data = {
 			camera_eid = cameraeid,
@@ -317,7 +317,7 @@ function util.create_blit_queue(world, viewrect)
 
 	local eid = world:create_entity {
 		policy = {
-			"ant.render|name",
+			"ant.general|name",
 			"ant.render|blitrender",
 		},
 		data = {

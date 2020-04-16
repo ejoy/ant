@@ -21,7 +21,7 @@ function m.create(info)
 
     local policy = {
         "ant.render|camera",
-        "ant.render|name",
+        "ant.general|name",
         "ant.serialize|serialize",
     }
 

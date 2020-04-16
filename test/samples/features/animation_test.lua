@@ -17,7 +17,7 @@ local function ozzmesh_animation_test()
             "ant.animation|animation_controller.birth",
             "ant.animation|ozz_skinning",
             "ant.serialize|serialize",
-            "ant.render|name",
+            "ant.general|name",
             "ant.render|shadow_cast_policy",
             "ant.character|character",
             "ant.render|debug_mesh_bounding",
@@ -71,7 +71,7 @@ local function gltf_animation_test()
             "ant.animation|skinning",
             "ant.animation|animation_controller.birth",
             "ant.render|shadow_cast_policy",
-            "ant.render|name",
+            "ant.general|name",
         },
         data = {
             transform = {srt={t={-5, 0, 0, 1}}},
