@@ -3,6 +3,8 @@ local ecs = ...
 local world = ecs.world
 
 ecs.import "ant.scene"
+ecs.import "ant.render"
+
 local lua_math = math
 local mathpkg 	= import_package "ant.math"
 local mu, mc 	= mathpkg.util, mathpkg.constant

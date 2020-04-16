@@ -59,7 +59,7 @@ local attribute = {
 		"require_interface",
 		"require_singleton",
 		"require_policy",
-		"stage",
+		"method",
 	},
 	policy = {
 		"require_system",
@@ -84,19 +84,44 @@ local attribute = {
 		"require_interface",
 		"input",
 		"output",
+		"method",
+	},
+	component = {
+		"require_component",
+		"method",
 	},
 }
 
-local type_list = {}
-local require_map = {}
+local no_packspace = {
+	singleton = true,
+	component = true,
+}
 
-do	-- init type_list and require_map
+local check_map = {
+	require_system = "system",
+	require_interface = "interface",
+	require_policy = "policy",
+	require_transform = "transform",
+
+	require_singleton = "singleton",
+	require_component = "component",
+	unique_component = "component",
+	input = "component",
+	output = "component",
+}
+
+local type_list = {}
+local packspace_map = {}
+
+do	-- init type_list
 	for attrib in pairs(attribute) do
 		table.insert(type_list, attrib)
 	end
 
-	for _, what in ipairs(type_list) do
-		require_map["require_" .. what] = what
+	for what, attrib in pairs(check_map) do
+		if not no_packspace[attrib] then
+			packspace_map[what] = true
+		end
 	end
 end
 
@@ -130,7 +155,7 @@ local function attribute_setter(attribs, packname, contents)
 	local setter = {}
 
 	for _, a in ipairs(attribs) do
-		if require_map[a] then
+		if packspace_map[a] then
 			setter[a] = function(what)
 				assert(type(what) == "string")
 				if not what:find("|",1,true) then
@@ -189,7 +214,8 @@ local load_interface do
 			api[attr] = function (name)
 				local contents = {}
 				local setter = attribute_setter(attribute[attr], packname, contents)
-				table.insert(result, { command = attr, name = fullname(packname, name), value = contents, implement = implement })
+				local fname = no_packspace[attr] and name or fullname(packname, name)
+				table.insert(result, { command = attr, name = fname, value = contents, implement = implement })
 				insert_fileinfo(result)
 				return setter
 			end
@@ -250,7 +276,7 @@ end
 local function check(tbl, r)
 	for name, content in pairs(tbl) do
 		for what, list in pairs(content) do
-			local check = require_map[what]
+			local check = check_map[what]
 			if check then
 				-- need check
 				for _, require_name in ipairs(list) do

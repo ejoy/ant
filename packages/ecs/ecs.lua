@@ -379,8 +379,8 @@ function m.new_world(config,world_class)
 	world.unsub = event.unsub
 
 	-- load systems and components from modules
-	typeclass(w, config.policy, config.system, config.loader or require "packageloader")
-	--typeclass_v2(w, config.policy, config.system, config.package, config.loader or require "packageloader")
+	--typeclass(w, config.policy, config.system, config.loader or require "packageloader")
+	typeclass_v2(w, config.policy, config.system, config.packname, config.implement)
 
 	-- init system
 	w._systems = system.init(w._class.system, w._class.pipeline)

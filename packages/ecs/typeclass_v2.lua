@@ -28,39 +28,21 @@ local function load_impl(files, ecs)
 end
 
 local function load_ecs(name)
+    local parser
     local loaded = {}
+    local function load_package(packname)
+        if not loaded[packname] then
+            loaded[packname] = true
+            parser:load(packname, "package.ecs")
+        end
+    end
     local function loader(packname, filename)
         local f = fs.loadfile(fs.path "/pkg" / packname / filename)
         return f
     end
-    local parser = interface.new(loader)
-    local function load_package(packname)
-        if loaded[packname] then
-            return false
-        end
-        loaded[packname] = true
-        parser:load(packname, "package.ecs")
-        return true
-    end
+    parser = interface.new(loader)
     load_package(name)
-    while true do
-        local errlst = parser:check_depend()
-        if #errlst == 0 then
-            break
-        end
-        local ok = false
-        for _, fullname in ipairs(errlst) do
-            local packname = fullname:match "^[^:]*:([^|]*)|.*$"
-            if load_package(packname) then
-                ok = true
-            end
-        end
-        if not ok then
-            for _, fullname in ipairs(errlst) do
-                error(string.format("Not found: %s (in %s)", fullname, name))
-            end
-        end
-    end
+    parser:check()
     return parser
 end
 
@@ -75,24 +57,6 @@ local function keys(tbl)
 		k[v] = true
 	end
 	return k
-end
-
-local function gen_set(c, setter)
-	local keys = keys(setter)
-	return function(_, key)
-		if not keys[key] then
-			error("Invalid set " .. key)
-		end
-		return function(value)
-			local list = c[key]
-			if list == nil then
-				list = { value }
-				c[key] = list
-			else
-				table.insert(list, value)
-			end
-		end
-	end
 end
 
 local function gen_method(c, callback)
@@ -173,59 +137,77 @@ local function interface_solve(w)
 	end
 end
 
-local function importAll(w, class, policies, systems)
-	local cut = {
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
+local check_map = {
+	require_system = "system",
+	require_interface = "interface",
+	require_policy = "policy",
+	require_transform = "transform",
+
+	require_singleton = "singleton",
+	require_component = "component",
+	unique_component = "component",
+	input = "component",
+	output = "component",
+}
+
+local function importAll(class, policies, systems)
+	local res = {
 		policy = {},
 		system = {},
 		transform = {},
 		singleton = {},
 		interface = {},
-		component = class.component,
+		component = {},
 		unique = {},
-		pipeline = class.pipeline,
-	}
-	w._class = cut
-	w._interface = dyntable()
+        implement = {},
+    }
+    local mark_implement = {}
     local import = {}
-    for _, objname in ipairs {"system","policy","transform","singleton","interface"} do
+    for _, objname in ipairs {"system","policy","transform","singleton","interface","component"} do
         import[objname] = function (name)
-            if cut[objname][name] then
+            if res[objname][name] then
                 return
             end
             local v = class[objname][name]
             if not v then
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
-            cut[objname][name] = v
             log.info("Import  ", objname, name)
-            if v.require_system then
-                for _, k in ipairs(v.require_system) do
-                    import.system(k)
+            res[objname][name] = v
+            for _, impl in ipairs(v.implement) do
+                local file = "/pkg/"..v.implement.packname.."/"..impl
+                if not mark_implement[file] then
+                    mark_implement[file] = true
+                    res.implement[#res.implement+1] = file
                 end
             end
-            if v.require_policy then
-                for _, k in ipairs(v.require_policy) do
-                    import.policy(k)
-                end
-            end
-            if v.require_transform then
-                for _, k in ipairs(v.require_transform) do
-                    import.transform(k)
-                end
-            end
-            if v.require_singleton then
-                for _, k in ipairs(v.require_singleton) do
-                    import.singleton(k)
-                end
-            end
-            if v.require_interface then
-                for _, k in ipairs(v.require_interface) do
-                    import.interface(k)
-                end
-            end
+			for what, attrib in sortpairs(check_map) do
+				if v[what] then
+					for _, k in ipairs(v[what]) do
+						import[attrib](k)
+					end
+				end
+			end
             if objname == "policy" and v.unique_component then
                 for _, k in ipairs(v.unique_component) do
-                    cut.unique[k] = true
+                    res.unique[k] = true
                 end
             end
         end
@@ -236,57 +218,65 @@ local function importAll(w, class, policies, systems)
 	for _, k in ipairs(systems) do
 		import.system(k)
 	end
-	return cut
+	return res
 end
 
-return function (w, policies, systems, name, loader)
-    local data = load_ecs(name)
-    
+return function (w, policies, systems, packname, implement)
 	local schema_data = {}
 	local schema = createschema(schema_data)
-	local class = { component = schema_data.map, singleton = {}, pipeline = {} }
-	local ecs = { world = w }
+    decl_basetype(schema)
+    local data = load_ecs(packname)
+	local declaration = importAll(data, policies, systems)
 
-	local function register(args)
-		local what = args.type
+	local class = {}
+	local ecs = { world = w }
+	w._class = {}
+	w._interface = dyntable()
+
+	local function register(what)
 		local class_set = {}
-		local class_data = class[what] or dyntable()
+		local class_data = {}
 		class[what] = class_data
 		ecs[what] = function(name)
 			local package = getCurrentPackage()
-			local r = tableAt(class_set, package)[name]
+			local fullname = package .. "|" .. name
+			local r = class_set[fullname]
 			if r == nil then
-				log.info("Register", #what<8 and what.."  " or what, package .. "|" .. name)
-				local c = { name = name, method = {}, source = {}, defined = sourceinfo(), package = package }
-				class_data[package][name] = c
+				log.info("Register", #what<8 and what.."  " or what, fullname)
 				r = {}
-				setmetatable(r, {
-					__index = args.setter and gen_set(c, args.setter),
-					__newindex = gen_method(c, args.callback),
-				})
-				tableAt(class_set, package)[name] = r
+				local decl = declaration[what][fullname]
+				if not decl then
+					--error(("%s `%s` in `%s` is not defined."):format(what, name, package))
+					setmetatable(r, {
+						__index = function() return function() end end,
+						__newindex = function() end,
+					})
+				else
+					if decl.method then
+						local c = { name = name, method = {}, source = {}, defined = sourceinfo(), package = package }
+						class_data[fullname] = c
+						setmetatable(r, {
+							__index = function() return function() end end,
+							__newindex = gen_method(c, decl.method),
+						})
+					else
+						setmetatable(r, {
+							__index = function() return function() end end,
+							__newindex = function() error(("%s `%s` in `%s` has no method."):format(what, name, package)) end,
+						})
+					end
+				end
+				class_set[fullname] = r
 			end
 			return r
 		end
 	end
-	register {
-		type = "system",
-		setter = { "require_policy", "require_system", "require_singleton", "require_interface" },
-	}
-	register {
-		type = "transform",
-		setter = { "input", "output", "require_interface" },
-		callback = { "process" },
-	}
-	register {
-		type = "policy",
-		setter = { "require_component", "require_transform", "require_system", "require_policy", "unique_component" },
-		callback = { },
-	}
-	register {
-		type = "interface",
-		setter = { "require_system", "require_interface" },
-	}
+	register "system"
+	register "transform"
+	register "policy"
+	register "interface"
+	local class_singleton = {}
+	local class_pipeline = {}
 	ecs.component = function (name)
 		return schema:type(getCurrentPackage(), name)
 	end
@@ -303,14 +293,14 @@ return function (w, policies, systems, name, loader)
 	end
 	ecs.singleton = function (name)
 		return function (dataset)
-			if class.singleton[name] then
+			if class_singleton[name] then
 				error(("singleton `%s` duplicate definition"):format(name))
 			end
-			class.singleton[name] = {dataset}
+			class_singleton[name] = {dataset}
 		end
 	end
 	ecs.pipeline = function (name)
-		local r = class.pipeline[name]
+		local r = class_pipeline[name]
 		if r == nil then
 			log.info("Register", "pipeline", name)
 			r = {name = name}
@@ -323,35 +313,39 @@ return function (w, policies, systems, name, loader)
 					return r
 				end,
 			})
-			class.pipeline[name] = r
+			class_pipeline[name] = r
 		end
 		return r
 	end
     ecs.import = function ()
     end
-    decl_basetype(schema)
-    load_impl(data.implement, ecs)
+    load_impl(declaration.implement, ecs)
+    load_impl(implement, ecs)
 
-    local cut = importAll(w, data, policies, systems)
-    local newclass = {}
-    for _, objname in ipairs {"system"} do
-        local class_ = {}
-        newclass[objname] = class_
-        for fullname, o in pairs(cut[objname]) do
+    for _, objname in ipairs {"system","policy","interface","transform"} do
+        local newclass = {}
+        for fullname, o in pairs(declaration[objname]) do
             local packname, name = splitname(fullname)
-            tableAt(class_, packname)[name] = o
+			tableAt(newclass, packname)[name] = o
+			if o.method then
+				local funcmap = class[objname][fullname].method
+				local newmethod = {}
+				for i = 1, #o.method do
+					local name = o.method[i]
+					newmethod[name] = funcmap[name]
+				end
+				o.method = newmethod
+			end
         end
-        cut[objname] = nil
+		w._class[objname] = newclass
     end
-    for k, v in pairs(cut) do
-        newclass[k] = v
-    end
-    w._class = newclass
+	w._class.component = schema_data.map
+	w._class.pipeline = class_pipeline
+	w._class.singleton = class_singleton
+	w._class.unique = declaration.unique
 
 	require "component".solve(schema_data)
 	require "policy".solve(w)
 	singleton_solve(w)
     interface_solve(w)
-    
-    print "ok"
 end
