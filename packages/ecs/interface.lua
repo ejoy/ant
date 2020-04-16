@@ -104,7 +104,6 @@ function parser.new(loader)
 	local p = {
 		loaded = {},
 		loader = loader,
-		implement = {},
 	}
 	for _, type in ipairs(type_list) do
 		p[type] = {}
@@ -168,6 +167,9 @@ local load_interface do
 
 	genenv = function (self, packname, result)
 		local api = {}
+		local implement = {
+			packname = packname,
+		}
 		function api.import(filename)
 			local pname, fname = packname, filename
 			if filename:sub(1,1) == "@" then
@@ -181,14 +183,13 @@ local load_interface do
 			load_interface(self, pname, fname, result)
 		end
 		function api.implement(filename)
-			table.insert(result, { command = "implement", value = "/pkg/"..packname.."/"..filename })
-			insert_fileinfo(result)
+			table.insert(implement, filename)
 		end
 		for _, attr in ipairs(type_list) do
 			api[attr] = function (name)
 				local contents = {}
 				local setter = attribute_setter(attribute[attr], packname, contents)
-				table.insert(result, { command = attr, name = fullname(packname, name), value = contents })
+				table.insert(result, { command = attr, name = fullname(packname, name), value = contents, implement = implement })
 				insert_fileinfo(result)
 				return setter
 			end
@@ -232,10 +233,6 @@ local function merge(output, input, list)
 end
 
 local function merge_result(self, result)
-	for _, item in ipairs(result.implement) do
-		table.insert(self.implement, item.value)
-	end
-
 	for _, what in ipairs(type_list) do
 		merge(self[what], result[what], attribute[what])
 	end
