@@ -15,7 +15,7 @@ local math3d	= require "math3d"
 
 ----------------------------------------------------------------------------------------------------------
 local dbg_sm_sys = ecs.system "debug_shadow_maker_system"
-dbg_sm_sys.require_system "shadowmaker_camera"
+dbg_sm_sys.require_system "shadowcamera_system"
 dbg_sm_sys.require_interface "uniforms"
 
 ecs.tag "shadow_quad"

@@ -57,6 +57,7 @@ local attribute = {
 	system = {
 		"require_system",
 		"require_interface",
+		"require_singleton",
 		"require_policy",
 		"stage",
 	},
@@ -65,6 +66,8 @@ local attribute = {
 		"require_interface",
 		"require_policy",
 		"require_transform",
+		"require_component",
+		"unique_component"
 	},
 	interface = {
 		"require_system",
@@ -78,6 +81,7 @@ local attribute = {
 		"require_policy",
 	},
 	transform = {
+		"require_interface",
 		"input",
 		"output",
 	},
@@ -98,6 +102,7 @@ end
 
 function parser.new(loader)
 	local p = {
+		loaded = {},
 		loader = loader,
 		implement = {},
 	}
@@ -150,7 +155,10 @@ end
 local load_interface do
 	local genenv
 	load_interface = function (self, packname, filename, result)
-		result.loaded[filename] = true
+		if self.loaded[packname.."/"..filename] then
+			return result
+		end
+		self.loaded[packname.."/"..filename] = true
 		local f = self.loader(packname, filename)
 		assert(debug.getupvalue(f,1) == "_ENV")
 		debug.setupvalue(f,1,genenv(self, packname, result))
@@ -161,21 +169,29 @@ local load_interface do
 	genenv = function (self, packname, result)
 		local api = {}
 		function api.import(filename)
-			if result.loaded[filename] then
-				return
+			local pname, fname = packname, filename
+			if filename:sub(1,1) == "@" then
+				if filename:find "/" then
+					pname, fname = filename:match "^@([^/]*)/(.*)$"
+				else
+					pname = filename:sub(2)
+					fname = "package.ecs"
+				end
 			end
-			load_interface(self, packname, filename, result)
+			load_interface(self, pname, fname, result)
 		end
 		function api.implement(filename)
-			table.insert(result, { command = "implement", value = fullname(packname, filename) })
+			table.insert(result, { command = "implement", value = "/pkg/"..packname.."/"..filename })
 			insert_fileinfo(result)
 		end
-		function api.system(name)
-			local contents = {}
-			local system_setter = attribute_setter(attribute.system, packname, contents)
-			table.insert(result, { command = "system", name = fullname(packname, name), value = contents })
-			insert_fileinfo(result)
-			return system_setter
+		for _, attr in ipairs(type_list) do
+			api[attr] = function (name)
+				local contents = {}
+				local setter = attribute_setter(attribute[attr], packname, contents)
+				table.insert(result, { command = attr, name = fullname(packname, name), value = contents })
+				insert_fileinfo(result)
+				return setter
+			end
 		end
 		return setmetatable( {}, { __index = api , __newindex = readonly } )
 	end
@@ -226,7 +242,7 @@ local function merge_result(self, result)
 end
 
 function interface:load(packname, filename)
-	local results = load_interface(self, packname, filename,  { loaded = {} })
+	local results = load_interface(self, packname, filename, {})
 	local r = merge_all_results(results)
 	merge_result(self, r)
 	return r

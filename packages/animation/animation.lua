@@ -112,12 +112,14 @@ function ani_sys:end_animation()
 	clear_animation_cache()
 end
 
-local m = ecs.interface "animation"
 
-function m.update(e, delta_time)
-	update_animation(e, delta_time or 0)
-	clear_animation_cache()
-end
+--TODO
+--local m = ecs.interface "animation"
+--
+--function m.update(e, delta_time)
+--	update_animation(e, delta_time or 0)
+--	clear_animation_cache()
+--end
 
 local mathadapter = import_package "ant.math.adapter"
 local math3d_adapter = require "math3d.adapter"

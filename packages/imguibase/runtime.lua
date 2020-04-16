@@ -157,6 +157,7 @@ end
 local function initargs(package)
 	local fs = require "filesystem"
 	local package_config = fs.dofile(fs.path("/pkg/"..package.."/package.lua"))
+	package_config.world.package = package_config.name
 	return package_config.world
 end
 

@@ -1,4 +1,5 @@
 local typeclass = require "typeclass"
+local typeclass_v2 = require "typeclass_v2"
 local system = require "system"
 local component = require "component"
 local policy = require "policy"
@@ -379,6 +380,7 @@ function m.new_world(config,world_class)
 
 	-- load systems and components from modules
 	typeclass(w, config.policy, config.system, config.loader or require "packageloader")
+	typeclass_v2(w, config.policy, config.system, config.package, config.loader or require "packageloader")
 
 	-- init system
 	w._systems = system.init(w._class.system, w._class.pipeline)
