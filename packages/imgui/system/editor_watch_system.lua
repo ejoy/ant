@@ -26,7 +26,6 @@ outline_policy.require_component "editor_object"
 local editor_watcher_sys = ecs.system "editor_watcher_system"
 editor_watcher_sys.require_system "editor_operate_gizmo_system"
 editor_watcher_sys.require_system "editor_policy_system"
-editor_watcher_sys.require_system 'ant.scene|scene_space' 
 editor_watcher_sys.require_system 'editor_entity_system' 
 editor_watcher_sys.require_interface "ant.objcontroller|camera_motion"
 
