@@ -12,12 +12,10 @@ pipeline "exit" {
 }
 
 pipeline "update" {
-    "start",
     "timer",
     "data_changed",
     pipeline "scene"{
         "update_hierarchy_scene",
-        "lock_target",
         "update_transform",
     },
     pipeline "collider" {

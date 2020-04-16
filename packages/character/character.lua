@@ -200,13 +200,6 @@ local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
             leg_raycasts[#leg_raycasts+1] = {
                 tracker, ankle_pos_ws, target_ws, hitnormal_ws
             }
-
-            -- local eid = icollider.which_entity(id)
-            -- if eid then
-            --     print("raycast:", world[eid].name or eid)
-            -- else
-            --     print("raycast found, but body 'id' do not find entity", id)
-            -- end
         end
     end
 

@@ -70,14 +70,11 @@ function t:init()
 end
 
 
-local t_p = ecs.policy "terrain_render"
+local t_p = ecs.policy "terrain_policy"
 t_p.require_component "terrain"
 t_p.require_component "rendermesh"
-t_p.require_component "transform"
-t_p.require_component "material"
-t_p.require_component "can_render"
 
-t_p.require_transform "terrain_render_transform"
+t_p.require_transform "terrain_transform"
 
 local iterrain_class = ecs.interface "terrain"
 local iterrain = world:interface "ant.terrain|terrain"
@@ -98,7 +95,7 @@ function iterrain_class.heightfield(tc)
 	return tc.heightfield
 end
 
-local trt = ecs.transform "terrain_render_transform"
+local trt = ecs.transform "terrain_transform"
 trt.input "terrain"
 trt.output "rendermesh"
 

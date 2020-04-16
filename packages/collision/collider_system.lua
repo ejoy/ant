@@ -57,29 +57,23 @@ function ts:init()
 	return self
 end
 
-ecs.component "terrain_collider"
-.shape "terrain_shape"
-
 local tc_policy = ecs.policy "terrain_collider_policy"
-tc_policy.require_component "terrain_collider"
+tc_policy.require_component "collider"
 tc_policy.require_component "terrain"
 
 tc_policy.require_transform "terrain_collider_transform"
 
 local tcb = ecs.transform "terrain_collider_transform"
 tcb.input "terrain"
-tcb.output "terrain_collider"
+tcb.output "collider"
 tcb.require_interface "ant.terrain|terrain"
 local iterrain = world:interface "ant.terrain|terrain"
 
 function tcb.process(e)
 	local terraincomp = e.terrain
-	local terraincollider = e.terrain_collider
+	local tc = e.collider
 
-	terraincollider.handle = w:body_create()
-	assert(terraincollider.shape.handle == nil)
-
-	local shape = terraincollider.shape
+	local shape = tc.terrain[1]
 
 	if shape.min_height == nil or  shape.max_height == nil then
 		 local min, max = iterrain.calc_min_max_height(terraincomp)
@@ -97,20 +91,22 @@ function tcb.process(e)
 	local hf_data = heightfield[3]
 	shape.handle = w:new_shape("heightfield", hf_width, hf_height, shape.min_height, shape.max_height, hf_data, shape.height_scaling, scaling)
 
-	w:add_shape(terraincollider.handle, shape.handle, 0, shape.origin)
-	local aabbmin, aabbmax = w:get_aabb(terraincollider.handle)
+	w:add_shape(tc.handle, shape.handle, 0, shape.origin)
+	local aabbmin, aabbmax = w:get_aabb(tc.handle)
 	terraincomp.bounding = {
 		aabb = math3d.ref(math3d.aabb(aabbmin, aabbmax))
 	}
 end
 
 local collcomp = ecs.component "collider"
-	["opt"].sphere "sphere_shape[]"
-	["opt"].box "box_shape[]"
+	["opt"].sphere 	"sphere_shape[]"
+	["opt"].box 	"box_shape[]"
 	["opt"].capsule "capsule_shape[]"
+	["opt"].terrain "terrain_shape[]"
 
 function collcomp:init()
 	self.handle = w:body_create()
+	print("collider id:", w:getId(self.handle))
 	local function add_shape(shape)
 		if not shape then
 			return
@@ -122,6 +118,7 @@ function collcomp:init()
 	add_shape(self.sphere)
 	add_shape(self.box)
 	add_shape(self.capsule)
+	--add_shape(self.terrain)
 	return self
 end
 
@@ -176,11 +173,13 @@ function collider_sys:data_changed()
 	end
 end
 
+local trans_changed_mb = world:sub {"component_changed", "transform"}
+
 function collider_sys:update_collider_transform()
-    for _, eid in world:each "collider" do
-        local e = world[eid]
-        -- TODO: world transform will not correct when this entity attach on hierarchy tree
-        -- we need seprarte update transform from primitive_filter_system
-        set_obj_transform(e.collider.handle, e.transform.srt)
+    for _, _, eid in trans_changed_mb:unpack() do
+		local e = world[eid]
+		if e.collider then
+			set_obj_transform(e.collider.handle, e.transform.world)
+		end
     end
 end

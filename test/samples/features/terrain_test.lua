@@ -7,7 +7,7 @@ local math3d = require "math3d"
 
 local terrain_test_sys = ecs.system "terrain_test_system"
 
-terrain_test_sys.require_policy "ant.terrain|terrain_render"
+terrain_test_sys.require_policy "ant.terrain|terrain_policy"
 terrain_test_sys.require_policy "ant.collision|terrain_collider_policy"
 
 terrain_test_sys.require_interface "ant.collision|collider"
@@ -18,7 +18,7 @@ function terrain_test_sys:init()
 	world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.terrain|terrain_render",
+			"ant.terrain|terrain_policy",
 			"ant.render|name",
 			"ant.collision|terrain_collider_policy",
 			"ant.serialize|serialize",
@@ -34,9 +34,11 @@ function terrain_test_sys:init()
 				section_size = 2,
 				element_size = 7,
 			},
-			terrain_collider = {
-				shape = {
-					origin = {0, 0, 0, 1},
+			collider = {
+				terrain = {
+					{
+						origin = {0, 0, 0, 1},
+					}
 				}
 			},
 			scene_entity = true,

@@ -45,10 +45,12 @@ local function ozzmesh_animation_test()
             serialize = serializeutil.create(),
             collider = {
                 capsule = {
-                    origin = {0, 1, 0, 1},
-                    radius = 0.5,
-                    height = 1,
-                    axis = "Y",
+                    {
+                        origin = {0, 1, 0, 1},
+                        radius = 0.5,
+                        height = 1,
+                        axis = "Y",
+                    }
                 }
             },
             can_cast = true,
