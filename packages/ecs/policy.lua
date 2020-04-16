@@ -1,32 +1,5 @@
-local function find_byruntime(class, fullname)
-    local package, name = fullname:match "^([^|]*)|(.*)$"
-    if not package then
-        return
-    end
-    local v = class[package]
-    if not v then
-        return
-    end
-    return v[name]
-end
-
-local function find(class, pkg, fullname)
-    local package, name = fullname:match "^([^|]*)|(.*)$"
-    if not package then
-        package, name = pkg, fullname
-    end
-    local v = class[package]
-    if not v then
-        return
-    end
-    return v[name]
-end
-
-local function merger_name(pkg, fullname)
-    if not fullname:match "^([^|]*)|(.*)$" then
-        return pkg .. "|" .. fullname
-    end
-    return fullname
+local function splitname(fullname)
+    return fullname:match "^([^|]*)|(.*)$"
 end
 
 local function create(w, policies)
@@ -39,7 +12,7 @@ local function create(w, policies)
     local policyset = {}
     local unionset = {}
     for _, name in ipairs(policies) do
-        local class = find_byruntime(policy_class, name)
+        local class = policy_class[name]
         if not class then
             error(("policy `%s` is not defined."):format(name))
         end
@@ -54,7 +27,6 @@ local function create(w, policies)
             unionset[class.union] = name
         end
         for _, v in ipairs(class.require_transform) do
-            v = merger_name(class.package, v)
             if not transform[v] then
                 transform[v] = {}
             end
@@ -78,7 +50,7 @@ local function create(w, policies)
     end
     local reflection = {}
     for name in pairs(transform) do
-        local class = find_byruntime(transform_class, name)
+        local class = transform_class[name]
         for _, v in ipairs(class.output) do
             if reflection[v] then
                 error(("transform `%s` and transform `%s` has same output."):format(name, reflection[v]))
@@ -95,7 +67,7 @@ local function create(w, policies)
         local name = reflection[c]
         if name and not mark[name] then
             mark[name] = true
-            init_transform[#init_transform+1] = find_byruntime(transform_class, name).method.process
+            init_transform[#init_transform+1] = transform_class[name].method.process
         end
     end
     table.sort(init_component)
@@ -108,9 +80,9 @@ local function add(w, eid, policies)
     local policy_class = w._class.policy
     local transform_class = w._class.transform
     for _, policy_name in ipairs(policies) do
-        local class = find_byruntime(policy_class, policy_name)
+        local class = policy_class[policy_name]
         for _, transform_name in ipairs(class.require_transform) do
-            local class = find(transform_class, class.package, transform_name)
+            local class = transform_class[transform_name]
             for _, v in ipairs(class.output) do
                 if e[v] ~= nil then
                     error(("component `%s` already exists, it conflicts with policy `%s`."):format(v, policy_name))
@@ -132,67 +104,65 @@ end
 
 local function solve(w)
     local class = w._class
-    for _, package_transform in pairs(class.transform) do
-        for name, v in pairs(package_transform) do
-            if #v.output == 0 then
-                error(("transform `%s`'s output cannot be empty."):format(name))
-            end
-            if type(v.method.process) ~= 'function' then
-                error(("transform `%s`'s process cannot be empty."):format(name))
-            end
+    for fullname, v in pairs(class.transform) do
+        local _, name = splitname(fullname)
+        if #v.output == 0 then
+            error(("transform `%s`'s output cannot be empty."):format(name))
+        end
+        if type(v.method.process) ~= 'function' then
+            error(("transform `%s`'s process cannot be empty."):format(name))
         end
     end
-    for _, package_policy in pairs(class.policy) do
-        for policy_name, v in pairs(package_policy) do
-            local union_name, name = policy_name:match "^([%a_][%w_]*)%.([%a_][%w_]*)$"
-            if not union_name then
-                name = policy_name:match "^([%a_][%w_]*)$"
+    for fullname, v in pairs(class.policy) do
+        local _, policy_name = splitname(fullname)
+        local union_name, name = policy_name:match "^([%a_][%w_]*)%.([%a_][%w_]*)$"
+        if not union_name then
+            name = policy_name:match "^([%a_][%w_]*)$"
+        end
+        if not name then
+            error(("invalid policy name: `%s`."):format(policy_name))
+        end
+        v.union = union_name
+        local components = {}
+        if not v.require_component and not v.unique_component then
+            error(("policy `%s`'s require_component or unique_component cannot be empty."):format(policy_name))
+        end
+        if not v.require_component then
+            v.require_component = {}
+        end
+        if not v.unique_component then
+            v.unique_component = {}
+        end
+        if not v.require_transform then
+            v.require_transform = {}
+        end
+        for _, component_name in ipairs(v.require_component) do
+            if not class.component[component_name] then
+                error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
             end
-            if not name then
-                error(("invalid policy name: `%s`."):format(policy_name))
+            components[component_name] = true
+        end
+        for _, component_name in ipairs(v.unique_component) do
+            if not class.component[component_name] then
+                error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
             end
-            v.union = union_name
-            local components = {}
-            if not v.require_component and not v.unique_component then
-                error(("policy `%s`'s require_component or unique_component cannot be empty."):format(policy_name))
+            components[component_name] = true
+        end
+        for _, transform_name in ipairs(v.require_transform) do
+            local c = class.transform[transform_name]
+            if not c then
+                error(("transform `%s` in policy `%s` is not defined."):format(transform_name, policy_name))
             end
-            if not v.require_component then
-                v.require_component = {}
-            end
-            if not v.unique_component then
-                v.unique_component = {}
-            end
-            if not v.require_transform then
-                v.require_transform = {}
-            end
-            for _, component_name in ipairs(v.require_component) do
-                if not class.component[component_name] then
-                    error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
-                end
-                components[component_name] = true
-            end
-            for _, component_name in ipairs(v.unique_component) do
-                if not class.component[component_name] then
-                    error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
-                end
-                components[component_name] = true
-            end
-            for _, transform_name in ipairs(v.require_transform) do
-                local c = find(class.transform, v.package, transform_name)
-                if not c then
-                    error(("transform `%s` in policy `%s` is not defined."):format(transform_name, policy_name))
-                end
-                if c.input then
-                    for _, v in ipairs(c.input) do
-                        if not components[v] then
-                            error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v,   policy_name))
-                        end
-                    end
-                end
-                for _, v in ipairs(c.output) do
+            if c.input then
+                for _, v in ipairs(c.input) do
                     if not components[v] then
-                        error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name)  )
+                        error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v,   policy_name))
                     end
+                end
+            end
+            for _, v in ipairs(c.output) do
+                if not components[v] then
+                    error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name)  )
                 end
             end
         end

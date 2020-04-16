@@ -21,6 +21,10 @@ local function table_append(t, a)
 	table.move(a, 1, #a, #t+1, t)
 end
 
+local function splitname(fullname)
+    return fullname:match "^([^|]*)|(.*)$"
+end
+
 local function solve_depend(res, step, pipeline)
 	for _, v in ipairs(pipeline) do
 		if type(v) == "string" then
@@ -44,12 +48,11 @@ function system.init(sys, pipeline)
 		mark[k] = true
 		return obj
 	end})
-	for pkg_name, pkg_system in sortpairs(sys) do
-		for sys_name, s in sortpairs(pkg_system) do
-			local proxy = {}
-			for step_name, func in pairs(s.method) do
-				table.insert(res[step_name], { func, proxy, sys_name, step_name, pkg_name })
-			end
+	for fullname, s in sortpairs(sys) do
+		local packname, name = splitname(fullname)
+		local proxy = {}
+		for step_name, func in pairs(s.method) do
+			table.insert(res[step_name], { func, proxy, name, step_name, packname })
 		end
 	end
 	setmetatable(res, nil)
