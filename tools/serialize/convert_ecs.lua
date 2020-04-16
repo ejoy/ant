@@ -220,6 +220,9 @@ local function init_all_package()
         end
     end
     init_package(fs.path("test/animation"))
+    init_package(fs.path("test/samples/features"))
+    init_package(fs.path("tools/modelviewer"))
+
 end
 
 init_all_package()

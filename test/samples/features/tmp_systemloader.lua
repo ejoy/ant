@@ -18,23 +18,6 @@ local mu        = mathpkg.util
 
 local init_loader_sys = ecs.system 'init_loader_system'
 
-init_loader_sys.require_system "ant.imguibase|imgui_system"
-init_loader_sys.require_system "ant.sky|procedural_sky_system"
-init_loader_sys.require_system "ant.test.features|scenespace_test_system"
-init_loader_sys.require_system "ant.test.features|character_ik_test_system"
-init_loader_sys.require_system "ant.test.features|terrain_test_system"
-init_loader_sys.require_system "ant.test.features|pbr_test_system"
-init_loader_sys.require_system "ant.test.features|animation_test_system"
-init_loader_sys.require_system 'ant.test.features|camera_controller_system'
-init_loader_sys.require_system "ant.render|physic_bounding_system"
-init_loader_sys.require_system "ant.render|render_mesh_bounding_system"
-
-init_loader_sys.require_interface "ant.render|camera"
-init_loader_sys.require_interface "ant.objcontroller|camera_motion"
-init_loader_sys.require_interface "ant.objcontroller|obj_motion"
-init_loader_sys.require_interface "ant.render|iwidget_drawer"
-init_loader_sys.require_interface "ant.render|light"
-
 local function create_plane_test()
     local planes = {
         {
