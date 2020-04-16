@@ -140,8 +140,7 @@ local function moveEntity(e, distance)
 	local d = math3d.todirection(r)
 	local postion = math3d.muladd(distance, d, t)
 	if setEntityPosition(e, postion) then
-		local camera_data = camera.get(camera_id)
-		camera_data.eyepos.v = math3d.muladd(d, distance, camera_data.eyepos)
+		camera_motion.move_along_axis(camera_id, d, distance)
 	end
 end
 
