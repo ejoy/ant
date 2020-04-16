@@ -12,8 +12,6 @@ ecs.component "character_height_raycast"
     .dir "vector" (0, -2, 0, 0)
 
 local char_height_sys = ecs.system "character_height_system"
-char_height_sys.require_system     "ant.collision|collider_system"
-char_height_sys.require_interface  "ant.collision|collider"
 
 local icollider = world:interface "ant.collision|collider"
 
