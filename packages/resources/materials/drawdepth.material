@@ -1,0 +1,6 @@
+fx: /pkg/ant.resources/materials/fx/drawdepth.fx
+state:
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ

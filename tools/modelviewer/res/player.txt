@@ -42,8 +42,8 @@ data:
       origin: {0,1,0,0}
       radius: 0.5
       height: 1
-  material: /pkg/ant.resources/depiction/materials/skin_model_sample.material
-  mesh: /pkg/ant.resources/depiction/meshes/female.mesh
+  material: /pkg/ant.resources/materials/skin_model_sample.material
+  mesh: /pkg/ant.resources/meshes/female.mesh
   name: animation_sample
   rendermesh:
     submesh_refs:

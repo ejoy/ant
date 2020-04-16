@@ -297,8 +297,8 @@ local function add_pick_entity()
 		},
 		data = {
 			material = {
-				'/pkg/ant.resources/depiction/materials/pickup_opacity.material',
-				'/pkg/ant.resources/depiction/materials/pickup_transparent.material',
+				'/pkg/ant.resources/materials/pickup_opacity.material',
+				'/pkg/ant.resources/materials/pickup_transparent.material',
 			},
 			view_mode = "s",
 			pickup = {

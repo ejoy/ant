@@ -37,7 +37,7 @@ data:
   material: 
     /pkg/ant.test.animation/res/Beta_Joints_MAT.pbrm
     /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
-  mesh: /pkg/ant.resources/depiction/meshes/female.mesh
+  mesh: /pkg/ant.resources/meshes/female.mesh
   name: animation_sample
   rendermesh: {}
   serialize: 5e1c39ad369fa96c5bd44fc5

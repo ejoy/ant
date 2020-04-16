@@ -1,0 +1,13 @@
+fx: /pkg/ant.resources/materials/fx/gizmo_front_singlecolor.fx
+properties:
+  uniforms:
+    u_color:
+      type: v4
+      value:
+        {1, 1, 1, 1}
+state:
+  ALPHA_REF: 1
+  CULL: CW
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  WRITE_MASK: RGBAZ

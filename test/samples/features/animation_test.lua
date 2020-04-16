@@ -24,7 +24,7 @@ local function ozzmesh_animation_test()
         },
         data = {
             transform = {srt = {t={-5, 0, 5, 1}}},
-            material = "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
+            material = "/pkg/ant.resources/materials/skin_model_sample.material",
             animation = {
                 anilist = {
                     walk = {
@@ -76,8 +76,8 @@ local function gltf_animation_test()
         data = {
             transform = {srt={t={-5, 0, 0, 1}}},
             rendermesh = {},
-            mesh = "/pkg/ant.resources/depiction/meshes/female.mesh",
-            material = "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
+            mesh = "/pkg/ant.resources/meshes/female.mesh",
+            material = "/pkg/ant.resources/materials/skin_model_sample.material",
             skeleton = "/pkg/ant.resources.binary/meshes/female/skeleton.ozz",
             skinning = {},
             animation = {

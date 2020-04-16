@@ -1,7 +1,0 @@
-fx: /pkg/ant.resources/depiction/materials/fx/shadow/shadowmap_quad.fx
-state:
-  ALPHA_REF: 0
-  CULL: CCW
-  DEPTH_TEST: ALWAYS
-  PT: TRISTRIP
-  WRITE_MASK: RGBA

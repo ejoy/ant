@@ -1,8 +1,0 @@
-fx: /pkg/ant.resources/depiction/materials/postprocess/fx/upsample.fx
-properties:
-  uniforms:
-    u_intensity:
-      type: v4
-      value:
-        {1.2, 0, 0, 0}
-state: /pkg/ant.resources/depiction/materials/postprocess/postprocess.state

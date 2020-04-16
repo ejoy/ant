@@ -1,0 +1,8 @@
+fx: /pkg/ant.resources/materials/fx/bunny.fx
+properties:
+  uniforms:
+    u_time:
+      type: v4
+      value:
+        {1, 1, 1, 1}
+state: /pkg/ant.resources/materials/states/default.state

@@ -53,7 +53,7 @@ local function create_framebuffers_container_obj(fbsize)
     }
 end
 
-local bloompath = fs.path "/pkg/ant.resources/depiction/materials/postprocess"
+local bloompath = fs.path "/pkg/ant.resources/materials/postprocess"
 
 local downsample_material   = bloompath / "downsample.material"
 local upsample_material     = bloompath / "upsample.material"

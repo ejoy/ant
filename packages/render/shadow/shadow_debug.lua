@@ -24,7 +24,7 @@ local quadsize = 192
 
 local function csm_shadow_debug_quad()
 	local smstage = uniforms.system_uniform("s_shadowmap").stage
-	local quadmaterial = "/pkg/ant.resources/depiction/materials/shadow/shadowmap_quad.material"
+	local quadmaterial = "/pkg/ant.resources/materials/shadow/shadowmap_quad.material"
 
 	for _, eid in world:each "csm" do
 		local se = world[eid]

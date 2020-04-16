@@ -40,7 +40,7 @@ local function create_plane_test()
         {
             transform = {srt={s={50, 1, 50}}},
             color = {0.8, 0.8, 0.8, 1},
-            material = "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
+            material = "/pkg/ant.resources/materials/test/mesh_shadow.material",
         },
     }
 
@@ -90,8 +90,8 @@ local function target_lock_test()
                 t = {16, 1, 6}},
             },
             rendermesh = {},
-            mesh = "/pkg/ant.resources/depiction/meshes/sphere.mesh",
-            material = "/pkg/ant.resources/depiction/materials/bunny.material",
+            mesh = "/pkg/ant.resources/meshes/sphere.mesh",
+            material = "/pkg/ant.resources/materials/bunny.material",
             serialize = serialize.create(),
             scene_entity = true,
         }
@@ -117,8 +117,8 @@ local function target_lock_test()
                 },
             },
             rendermesh = {},
-            mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
-            material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
+            mesh = "/pkg/ant.resources/meshes/cube.mesh",
+            material = "/pkg/ant.resources/materials/singlecolor.material",
             serialize = serialize.create(),
             scene_entity = true,
         },
@@ -140,7 +140,7 @@ function init_loader_sys:init()
                 math3d.quaternion(mu.to_radian{60, 50, 0, 0}))
         )))
         ilight.create_directional_light_entity("direction light", 
-		{1,1,1,1}, 2, dlightdir)
+		{1,1,1,1}, 2, dlightdir, {0, 0, 0, 1})
         ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     end
 

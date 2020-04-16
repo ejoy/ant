@@ -1,0 +1,5 @@
+fx: /pkg/ant.resources/materials/fx/shadow/shadow.fx
+state:
+  CULL: CCW
+  DEPTH_TEST: LESS
+  WRITE_MASK: RGBAZ

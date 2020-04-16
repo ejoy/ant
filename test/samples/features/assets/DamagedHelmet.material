@@ -46,4 +46,4 @@ properties:
       type: v4
       value:
         {1, 1, 12, 12}
-state: /pkg/ant.resources/depiction/materials/states/default.state
+state: /pkg/ant.resources/materials/states/default.state

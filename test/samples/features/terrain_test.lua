@@ -25,7 +25,7 @@ function terrain_test_sys:init()
 		},
 		data = {
 			rendermesh = {},
-			material = "/pkg/ant.resources/depiction/terrain/test.material",
+			material = "/pkg/ant.resources/terrain/test.material",
 			transform = {srt = {}},
 			can_render = true,
 			terrain = {

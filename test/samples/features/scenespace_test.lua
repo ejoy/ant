@@ -29,8 +29,8 @@ function sp_test_sys:init()
             parent = rooteid,
             can_render = true,
             rendermesh = {},
-            material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
-            mesh = "/pkg/ant.resources/depiction/meshes/sphere.mesh",
+            material = "/pkg/ant.resources/materials/singlecolor.material",
+            mesh = "/pkg/ant.resources/meshes/sphere.mesh",
             transform = {
                 srt = {t = {1, 2, 0, 1}},
             },
@@ -51,8 +51,8 @@ function sp_test_sys:init()
             scene_entity = true,
             can_render = true,
             rendermesh = {},
-            mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
-            material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
+            mesh = "/pkg/ant.resources/meshes/cube.mesh",
+            material = "/pkg/ant.resources/materials/singlecolor.material",
             transform = {srt={
                 r = {math.rad(math.cos(30)), 0, 0, math.rad(math.sin(30))}, --rotate 60 degree
                 t = {1, 2, 0, 1}
@@ -90,8 +90,8 @@ function sp_test_sys:init()
             can_render = true,
             scene_entity = true,
             rendermesh = {},
-            material = "/pkg/ant.resources/depiction/materials/singlecolor.material",
-            mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
+            material = "/pkg/ant.resources/materials/singlecolor.material",
+            mesh = "/pkg/ant.resources/meshes/cube.mesh",
             transform = {srt={
                 t = {1, 2, 0, 1}
             }},

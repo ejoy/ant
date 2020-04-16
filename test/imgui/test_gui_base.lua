@@ -25,7 +25,7 @@ function TestGuiBase:_init(default_collapsed)
     self.win_flags = flags.Window { "MenuBar" }
     self._is_opened = true
     local fs = require "filesystem"
-    self.texrefpath1 = "/pkg/ant.resources/depiction/textures/test/1x1_normal.texture"
+    self.texrefpath1 = "/pkg/ant.resources/textures/test/1x1_normal.texture"
     -- local f = assert(fs.open(texrefpath1, "rb"))
     -- local imgdata1 = f:read "a"
     -- f:close()
@@ -213,9 +213,9 @@ function TestGuiBase:tab1_update()
         log.info_a("testgui",gui_input.get_dropfiles() )
     end
 
-    local dds_path = "/pkg/ant.resources/depiction/PVPScene/siegeweapon_d.texture"
+    local dds_path = "/pkg/ant.resources/PVPScene/siegeweapon_d.texture"
     widget.Image(dds_path,200,200,{border_col={1.0,0.0,1.0,1.0},tint_col={0.0,1.0,1.0,0.5}})
-    local dds_path2 = "/pkg/ant.resources/depiction/PVPScene/siegeweapon_n.texture"
+    local dds_path2 = "/pkg/ant.resources/PVPScene/siegeweapon_n.texture"
     widget.Image(dds_path2,600,600,{border_col={1.0,1.0,1.0,1.0},tint_col={1.0,1.0,1.0,1}})
     if  widget.ImageButton(self.texrefpath1,50,50,
             {uv0={0.5,0.5},

@@ -32,7 +32,7 @@ local function foot_ik_test()
         data = {
             transform = {srt = {t= {-2.5, 0, -6, 1}}},
             rendermesh = {},
-            material = "/pkg/ant.resources/depiction/materials/skin_model_sample.material",
+            material = "/pkg/ant.resources/materials/skin_model_sample.material",
             mesh = '/pkg/ant.resources.binary/meshes/ozz/mesh.ozz',
             skeleton = '/pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz',
             animation = {
@@ -133,7 +133,7 @@ local function create_plane_test()
         r = math3d.totable(math3d.quaternion{math.rad(10), 0, 0}),
         t = {0, 0, -5, 1},
     }},
-    "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+    "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},
     "test shadow plane",
     {

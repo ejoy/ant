@@ -80,7 +80,7 @@ local function create_light()
 	local dir = math3d.todirection(math3d.quaternion{math.rad(60), 0, 0})
 	local dlightdir = math3d.totable(math3d.normalize(math3d.inverse(dir)))
 
-	ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir)
+	ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir, {0, 0, 0, 1})
 	ilight.create_ambient_light_entity("ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
@@ -103,7 +103,7 @@ function m:init()
 	cu.create_plane_entity(
 		world,
 		{srt = {s ={50, 1, 50, 0}}},
-		fs.path "/pkg/ant.resources/depiction/materials/test/mesh_shadow.material",
+		fs.path "/pkg/ant.resources/materials/test/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"
 	)

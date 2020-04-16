@@ -1,9 +1,0 @@
-fx: /pkg/ant.resources/depiction/materials/fx/line.fx
-state:
-  ALPHA_REF: 0
-  CULL: CCW
-  DEPTH_TEST: LESS
-  LINEAA: true
-  MSAA: true
-  PT: LINES
-  WRITE_MASK: RGBAZ

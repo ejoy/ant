@@ -1,0 +1,9 @@
+fx: /pkg/ant.resources/materials/fx/gizmo_front_line.fx
+state:
+  ALPHA_REF: 1
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  LINEAA: true
+  MSAA: true
+  PT: LINES
+  WRITE_MASK: RGBAZ

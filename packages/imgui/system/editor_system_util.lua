@@ -84,10 +84,10 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             },
             parent = parent,
             rendermesh = {},
-            mesh = "/pkg/ant.resources/depiction/meshes/ring.mesh",
+            mesh = "/pkg/ant.resources/meshes/ring.mesh",
             material = ([[
                 ---
-                /pkg/ant.resources/depiction/materials/gizmo_front_singlecolor.material
+                /pkg/ant.resources/materials/gizmo_front_singlecolor.material
                 ---
                 op: replace
                 path: /properties/uniforms/u_color
@@ -128,7 +128,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             transform = {srt = mu.srt()},
             parent = parent,
             rendermesh = {},
-            material = "/pkg/ant.resources/depiction/materials/gizmo_line.material",
+            material = "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
             can_render = true,
             can_select = true,
@@ -177,7 +177,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             },
             parent = parent,
             rendermesh = {},
-            material = "/pkg/ant.resources/depiction/materials/gizmo_front_line.material",
+            material = "/pkg/ant.resources/materials/gizmo_front_line.material",
             name = name,
             can_render = true,
             can_select = true,
@@ -226,10 +226,10 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             },
             parent = parent,
             rendermesh = {},
-            mesh = "/pkg/ant.resources/depiction/meshes/cone.mesh",
+            mesh = "/pkg/ant.resources/meshes/cone.mesh",
             material = ([[
                 ---
-                /pkg/ant.resources/depiction/materials/gizmo_singlecolor.material
+                /pkg/ant.resources/materials/gizmo_singlecolor.material
                 ---
                 op:replace
                 path:/properties/uniforms/u_color
@@ -269,10 +269,10 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             },
             parent = parent,
             rendermesh = {},
-            mesh = "/pkg/ant.resources/depiction/meshes/cube.mesh",
+            mesh = "/pkg/ant.resources/meshes/cube.mesh",
             material = ([[
                 ---
-                /pkg/ant.resources/depiction/materials/gizmo_singlecolor.material
+                /pkg/ant.resources/materials/gizmo_singlecolor.material
                 ---
                 op:replace
                 path:/properties/uniforms/u_color

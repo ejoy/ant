@@ -3,21 +3,21 @@ local fs = require "filesystem"
 
 local default_pbr_param = {
 	basecolor = {
-		texture = "/pkg/ant.resources/depiction/textures/pbr/default/basecolor.texture",
+		texture = "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
 		factor = {1, 1, 1, 1},
 	},
 	metallic_roughness = {
-		texture = "/pkg/ant.resources/depiction/textures/pbr/default/metallic_roughness.texture",
+		texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
 		factor = {1, 1, 0, 0},
 	},
 	normal = {
-		texture = "/pkg/ant.resources/depiction/textures/pbr/default/normal.texture",
+		texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
 	},
 	occlusion = {
-		texture = "/pkg/ant.resources/depiction/textures/pbr/default/occlusion.texture",
+		texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
 	},
 	emissive = {
-		texture = "/pkg/ant.resources/depiction/textures/pbr/default/emissive.texture",
+		texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
 		factor = {0, 0, 0, 0},
 	},
 }
@@ -73,7 +73,7 @@ end
 
 return {
 	loader = function (filename, data)
-		local material = assetmgr.load_depiction("/pkg/ant.resources/depiction/materials/pbr_default.material")
+		local material = assetmgr.load_depiction("/pkg/ant.resources/materials/pbr_default.material")
 
 		local pbrm = data or assetmgr.load_depiction(filename)
 

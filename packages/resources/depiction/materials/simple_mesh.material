@@ -1,8 +1,0 @@
-fx: /pkg/ant.resources/depiction/materials/fx/simple_mesh.fx
-properties:
-  uniforms:
-    u_color:
-      type: color
-      value: 
-        {1, 1, 1, 1}
-state: /pkg/ant.resources/depiction/materials/states/default.state

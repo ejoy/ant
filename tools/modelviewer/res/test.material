@@ -6,4 +6,4 @@ properties:
       texture: /pkg/ant.modelviewer/res/steering.texture
       stage: 0
       type: texture
-state: /pkg/ant.resources/depiction/materials/states/default.state
+state: /pkg/ant.resources/materials/states/default.state

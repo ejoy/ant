@@ -1,6 +1,0 @@
-fx: /pkg/ant.resources/depiction/materials/fx/shadow/shadow_linear.fx
-state:
-  CULL: CCW
-  DEPTH_TEST: LESS
-  MSAA: true
-  WRITE_MASK: RGBAZ

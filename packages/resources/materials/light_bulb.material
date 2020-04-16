@@ -1,0 +1,8 @@
+fx: /pkg/ant.resources/materials/fx/light_bulb.fx
+properties:
+  uniforms:
+    u_color:
+      type: color
+      value: 
+        {1, 1, 1, 1}
+state: /pkg/ant.resources/materials/states/default.state

@@ -59,7 +59,7 @@ function util.create_procedural_sky(world, settings)
 		data = {
 			transform = {srt=mu.srt()},
 			rendermesh = {},
-			material = "/pkg/ant.resources/depiction/materials/sky/procedural/procedural_sky.material",
+			material = "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = {
 				grid_width = 32, 
 				grid_height = 32,

@@ -99,7 +99,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 		data = {
 			transform = transform,
 			rendermesh = {},
-			material = "/pkg/ant.resources/depiction/materials/line.material",
+			material = "/pkg/ant.resources/materials/line.material",
 			name = name,
 			can_render = true,
 			scene_entity = true,
@@ -151,7 +151,7 @@ value:
 	value:
 	  {%f,%f,%f,%f}
 ]]):format(
-	materialpath or fs.path "/pkg/ant.resources/depiction/materials/test/singlecolor_tri_strip.material",
+	materialpath or fs.path "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
 	color[1], color[2], color[3], color[4]
 )
 	local data = {
@@ -289,7 +289,7 @@ function util.get_mainqueue_transform_boundings(world, transformed_boundings)
 end
 
 function util.create_frustum_entity(world, frustum_points, name, transform, color, tag)
-	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/depiction/materials/line.material", name, tag)
+	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, tag)
 
 	local e = world[eid]
 	local vb = {"fffd",}
@@ -320,7 +320,7 @@ function util.create_frustum_entity(world, frustum_points, name, transform, colo
 end
 
 function util.create_axis_entity(world, transform, color, name, tag)
-	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/depiction/materials/line.material", name, tag)
+	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, tag)
 
 	local vb = {
 		"fffd",
@@ -347,7 +347,7 @@ function util.create_skybox(world, material)
 		data = {
 			transform = {srt=mu.srt()},
 			rendermesh = {},
-			material = material or "/pkg/ant.resources/depiction/materials/skybox.material",
+			material = material or "/pkg/ant.resources/materials/skybox.material",
 			can_render = true,
 			scene_entity = true,
 			name = "sky_box",

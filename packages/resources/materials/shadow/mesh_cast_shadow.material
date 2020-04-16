@@ -1,0 +1,6 @@
+fx: /pkg/ant.resources/materials/fx/shadow/mesh_cast_shadow.fx
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  WRITE_MASK: Z

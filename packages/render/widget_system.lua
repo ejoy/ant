@@ -41,7 +41,7 @@ function widget_drawer_sys:init()
 		},
 		data = {
 			transform 		= {srt = mu.srt()},
-			material 		= "/pkg/ant.resources/depiction/materials/line.material",
+			material 		= "/pkg/ant.resources/materials/line.material",
 			rendermesh 		= {},
 			name 			= "mesh's bounding renderer",
 			can_render 		= true,

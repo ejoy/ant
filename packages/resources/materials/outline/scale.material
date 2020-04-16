@@ -1,0 +1,17 @@
+fx: /pkg/ant.resources/materials/fx/outline/scale.fx
+properties:
+  uniforms:
+    u_outlinecolor:
+      type: v4
+      value:
+        {0.8, 0.8, 0, 1}
+    u_outlinescale:
+      type: v4
+      value:
+        {0.01, 0, 0, 0}
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ

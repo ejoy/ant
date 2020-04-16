@@ -14,8 +14,8 @@ data:
       ---
       origin: {0,1,0,0}
       size: {2.2,1,1}
-  material: /pkg/ant.resources/depiction/PVPScene/scene-mat.material
-  mesh: /pkg/ant.resources/depiction/PVPScene/woodother-34.mesh
+  material: /pkg/ant.resources/PVPScene/scene-mat.material
+  mesh: /pkg/ant.resources/PVPScene/woodother-34.mesh
   name: door
   rendermesh:
     lodidx: 1
