@@ -1,0 +1,6 @@
+import "@ant.scene"
+
+system "game"
+	.implement "game.lua"
+	.require_policy "ant.scene|hierarchy_policy"
+	.method "init"
