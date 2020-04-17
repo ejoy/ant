@@ -34,16 +34,17 @@ local function csm_shadow_debug_quad()
 		local rect = {x=0, y=0, w=quadsize*#split_ratios, h=quadsize}
 		local q_eid = computil.create_quad_entity(world, rect, quadmaterial, "csm_quad", "shadow_quad")
 		local qe = world[q_eid]
-		local properties = {
-			textures = {
-				s_shadowmap = {
-					type = "texture", name = "csm render buffer", stage = smstage,
-					handle = fbmgr.get_rb(fb[1]).handle,
+
+		assetmgr.patch(qe.material, {
+			properties = {
+				textures = {
+					s_shadowmap = {
+						type = "texture", name = "csm render buffer", stage = smstage,
+						handle = fbmgr.get_rb(fb[1]).handle,
+					}
 				}
 			}
-		}
-
-		assetmgr.patch(qe.material, properties)
+		})
 	end
 end
 
@@ -73,7 +74,6 @@ local function main_view_debug_frustum()
 		local s = world[seid]
 
 		local csm = s.csm
-		local frustum_desc = shadowutil.split_new_frustum(camera.frustum, csm.split_ratios)
 		local vp = mu.view_proj(camera)
 		local frustum_points = math3d.frustum_points(vp)
 		computil.create_frustum_entity(world, frustum_points, "main view part" .. csm.index, nil, frustum_colors[csm.index], "shadow_debug")
