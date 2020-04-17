@@ -326,7 +326,8 @@ function world:interface(fullname)
 	local interface = self._interface
 	local res = interface[fullname]
 	if not res then
-		local object = typeclass.import_object(self, "interface", fullname)
+		typeclass.import_object(self, "interface", fullname)
+		local object = self._class.interface[fullname]
 		res = setmetatable({}, {__index = object.method})
 		interface[fullname] = res
 	end
@@ -378,9 +379,6 @@ function m.new_world(config,world_class)
 
 	-- load systems and components from modules
 	typeclass.init(w, config)
-
-	-- init system
-	w._systems = system.init(w._class.system, w._class.pipeline)
 
 	return w
 end
