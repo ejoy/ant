@@ -118,10 +118,11 @@ end
 
 function init_loader_sys:init()
     do
-        local dlightdir = math3d.totable(
-            math3d.normalize(math3d.inverse(math3d.todirection(
-                math3d.quaternion(mu.to_radian{60, 50, 0, 0}))
-        )))
+        local rotator = math3d.quaternion{math.rad(60), 0, 0}
+        local dlightdir = math3d.tovalue(
+            math3d.normalize(
+                math3d.inverse(math3d.todirection(rotator))
+        ))
         ilight.create_directional_light_entity("direction light", 
 		{1,1,1,1}, 2, dlightdir, {0, 0, 0, 1})
         ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
