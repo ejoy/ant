@@ -1,14 +1,14 @@
-implement "pickup_system.lua"
-
 import "@ant.render"
 import "@ant.scene"
 
 system "pickup_system"
+    .implement "pickup_system.lua"
     .method "init"
     .method "pickup"
     .method "refine_filter"
 
 system "pickup_watch_system"
+    .implement "pickup_system.lua"
     .method "data_changed"
 
 policy "pickup"
@@ -24,22 +24,29 @@ policy "select"
     .require_component "can_select"
 
 component "blit_buffer"
+    .implement "pickup_system.lua"
     .require_component "raw_buffer"
     .require_component "rb_index"
 
 component "blit_viewid"
+    .implement "pickup_system.lua"
     .require_component "viewid"
 
 component "can_select"
+    .implement "pickup_system.lua"
 
 component "pickup"
+    .implement "pickup_system.lua"
     .require_component "blit_buffer"
     .require_component "blit_viewid"
     .require_component "pickup_cache"
 
 component "pickup_cache"
+    .implement "pickup_system.lua"
 
 component "pickup_viewtag"
+    .implement "pickup_system.lua"
 
 component "raw_buffer"
+    .implement "pickup_system.lua"
     .method "init"

@@ -1,15 +1,15 @@
-implement "character.lua"
-
 import "@ant.animation"
 import "@ant.collision"
 
 system "character_foot_ik_system"
+    .implement "character.lua"
     .require_policy "foot_ik_raycast"
     .require_interface "ant.collision|collider"
     .require_interface "ant.animation|ik"
     .method "do_ik"
 
 system "character_height_system"
+    .implement "character.lua"
     .require_system "ant.collision|collider_system"
     .require_interface "ant.collision|collider"
     .method "ik_target"
@@ -32,17 +32,22 @@ policy "foot_ik_raycast"
     .require_component "ik"
 
 transform "check_ik_data"
+    .implement "character.lua"
     .input "ik"
     .output "foot_ik_raycast"
     .method "process"
 
 component "character"
+    .implement "character.lua"
 
 component "character_height_raycast"
+    .implement "character.lua"
     .require_component "vector"
 
 component "foot_ik_raycast"
+    .implement "character.lua"
     .require_component "vector"
     .require_component "ik_tracker"
 
 component "ik_tracker"
+    .implement "character.lua"

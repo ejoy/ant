@@ -1,16 +1,16 @@
-implement "render.lua"
-
 import "@ant.general"
 import "@ant.math"
 import "@ant.scene"
 
 system "blit_render_system"
+    .implement "render.lua"
     .require_policy "blit_queue"
     .require_policy "blitrender"
     .require_policy "ant.general|name"
     .method "init_blit_render"
 
 system "render_system"
+    .implement "render.lua"
     .require_system "ant.scene|primitive_filter_system"
     .require_system "ant.scene|scenespace_system"
     .require_system "ant.scene|cull_system"
@@ -67,24 +67,30 @@ policy "render_queue"
     .require_component "visible"
 
 transform "camera_transfrom"
+    .implement "render.lua"
     .output "camera"
     .method "process"
 
 transform "mesh_loader"
+    .implement "render.lua"
     .input "mesh"
     .output "rendermesh"
     .method "process"
 
 transform "render_target"
+    .implement "render.lua"
     .input "viewid"
     .output "render_target"
     .method "process"
 
 component "blit_queue"
+    .implement "render.lua"
 
 component "blit_render"
+    .implement "render.lua"
 
 component "camera"
+    .implement "render.lua"
     .require_component "vector"
     .require_component "vector"
     .require_component "vector"
@@ -92,36 +98,51 @@ component "camera"
     .require_component "lock_target"
 
 component "camera_eid"
+    .implement "render.lua"
 
 component "can_render"
+    .implement "render.lua"
 
 component "clear_state"
+    .implement "render.lua"
 
 component "fb_index"
+    .implement "render.lua"
 
 component "main_queue"
+    .implement "render.lua"
 
 component "material"
+    .implement "render.lua"
 
 component "mesh"
+    .implement "render.lua"
 
 component "rb_index"
+    .implement "render.lua"
 
 component "rect"
+    .implement "render.lua"
 
 component "render_target"
+    .implement "render.lua"
     .require_component "viewport"
     .require_component "fb_index"
     .method "delete"
 
 component "rendermesh"
+    .implement "render.lua"
 
 component "view_mode"
+    .implement "render.lua"
 
 component "viewid"
+    .implement "render.lua"
 
 component "viewport"
+    .implement "render.lua"
     .require_component "clear_state"
     .require_component "rect"
 
 component "visible"
+    .implement "render.lua"

@@ -1,9 +1,8 @@
-implement "imgui_runtime_system.lua"
-
 import "@ant.render"
 import "@ant.timer"
 
 system "imgui_system"
+    .implement "imgui_runtime_system.lua"
     .require_system "ant.render|render_system"
     .require_interface "ant.timer|timer"
     .method "exit"

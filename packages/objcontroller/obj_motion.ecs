@@ -1,6 +1,5 @@
-implement "obj_motion.lua"
-
 interface "camera_motion"
+    .implement "obj_motion.lua"
     .method "create"
     .method "focus_obj"
     .method "focus_point"
@@ -19,6 +18,7 @@ interface "camera_motion"
     .method "set_position"
 
 interface "obj_motion"
+    .implement "obj_motion.lua"
     .method "create"
     .method "focus_obj"
     .method "focus_point"

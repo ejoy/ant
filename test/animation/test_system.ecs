@@ -1,5 +1,3 @@
-implement "test_system.lua"
-
 import "@ant.animation"
 import "@ant.general"
 import "@ant.imguibase"
@@ -7,6 +5,7 @@ import "@ant.render"
 import "@ant.serialize"
 
 system "init_loader_system"
+    .implement "test_system.lua"
     .require_system "ant.imguibase|imgui_system"
     .require_system "camera_controller_system"
     .require_policy "ant.animation|animation"

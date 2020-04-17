@@ -117,35 +117,24 @@ local check_map = {
 	output = "component",
 }
 
-local function importAll(w, class, policies, systems)
-	local res = {
-		policy = {},
-		system = {},
-		transform = {},
-		interface = {},
-		component = {},
-    }
-	local implement = {}
-    local mark_implement = {}
+local function create_importor(w, ecs, declaration)
+	local import_component = {}
     local import = {}
     for _, objname in ipairs {"system","policy","transform","interface","component"} do
-        import[objname] = function (name)
-            if res[objname][name] then
+		if objname ~= "component" then
+			w._class[objname] = {}
+		end
+		import[objname] = function (name)
+			local res = objname == "component" and import_component or w._class[objname]
+            if res[name] then
                 return
             end
-            local v = class[objname][name]
+            local v = declaration[objname][name]
             if not v then
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
             log.info("Import  ", objname, name)
-            res[objname][name] = v
-            for _, impl in ipairs(v.implement) do
-                local file = "/pkg/"..v.implement.packname.."/"..impl
-                if not mark_implement[file] then
-                    mark_implement[file] = true
-                    implement[#implement+1] = file
-                end
-            end
+			res[name] = v
 			for what, attrib in sortpairs(check_map) do
 				if v[what] then
 					for _, k in ipairs(v[what]) do
@@ -158,18 +147,14 @@ local function importAll(w, class, policies, systems)
                     w._class.unique[k] = true
                 end
             end
+			if v.implement then
+				for _, impl in ipairs(v.implement) do
+					import_impl("/pkg/"..v.packname.."/"..impl, ecs)
+				end
+			end
         end
-    end
-	for _, k in ipairs(policies) do
-		import.policy(k)
 	end
-	for _, k in ipairs(systems) do
-		import.system(k)
-	end
-    for _, objname in ipairs {"system","policy","interface","transform"} do
-		w._class[objname] = res[objname]
-	end
-	return implement
+	return import
 end
 
 local function solve_object(w, type, fullname)
@@ -286,10 +271,13 @@ local function init(w, config)
 		end
 		return r
 	end
-	local implement = importAll(w, declaration, config.policy, config.system)
-    for _, file in ipairs(implement) do
-        import_impl(file, ecs)
-    end
+	w._import = create_importor(w, ecs, declaration) 
+	for _, k in ipairs(config.policy) do
+		w._import.policy(k)
+	end
+	for _, k in ipairs(config.system) do
+		w._import.system(k)
+	end
     for _, file in ipairs(config.implement) do
         import_impl(file, ecs)
     end
@@ -297,16 +285,7 @@ local function init(w, config)
 end
 
 local function import(w, type, name)
-	local decl = w._decl.interface[name]
-	if not decl then
-		error(("%s `%s` is not defined."):format(type, name))
-	end
-	if not decl.implement or #decl.implement == 0 then
-		error(("%s `%s` is not implement."):format(type, name))
-	end
-    for _, file in ipairs(decl.implement) do
-        import_impl("/pkg/"..decl.implement.packname.."/"..file, w._ecs)
-	end
+	w._import[type](name)
 	solve_object(w, type, name)
 end
 

@@ -1,6 +1,5 @@
-implement "system/editor_operate_gizmo_system.lua"
-
 system "editor_operate_gizmo_system"
+    .implement "system/editor_operate_gizmo_system.lua"
     .method "after_pickup"
     .method "editor_update"
     .method "init"
@@ -9,5 +8,7 @@ policy "gizmo_object"
     .require_component "gizmo_object"
 
 component "gizmo_object"
+    .implement "system/editor_operate_gizmo_system.lua"
 
 component "show_operate_gizmo"
+    .implement "system/editor_operate_gizmo_system.lua"

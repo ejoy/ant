@@ -1,7 +1,6 @@
-implement "memory_stat.lua"
-
 import "@ant.imguibase"
 
 system "memory_stat_system"
+    .implement "memory_stat.lua"
     .require_system "ant.imguibase|imgui_system"
     .method "ui_update"

@@ -1,8 +1,7 @@
-implement "scenespace.lua"
-
 import "@ant.objcontroller"
 
 system "scenespace_system"
+    .implement "scenespace.lua"
     .require_interface "ant.objcontroller|obj_motion"
     .require_interface "ant.objcontroller|camera_motion"
     .method "update_hierarchy_scene"
@@ -18,17 +17,22 @@ policy "transform_policy"
     .require_component "transform"
 
 transform "transform_transform"
+    .implement "scenespace.lua"
     .output "transform"
     .method "process"
 
 component "lock_target"
+    .implement "scenespace.lua"
     .require_component "vector"
 
 component "parent"
+    .implement "scenespace.lua"
 
 component "scene_entity"
+    .implement "scenespace.lua"
 
 component "transform"
+    .implement "scenespace.lua"
     .require_component "srt"
     .require_component "lock_target"
     .method "init"

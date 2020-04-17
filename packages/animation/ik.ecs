@@ -1,6 +1,5 @@
-implement "ik.lua"
-
 interface "ik"
+    .implement "ik.lua"
     .method "do_ik"
     .method "setup"
 
@@ -13,14 +12,17 @@ policy "ik"
     .require_component "pose_result"
 
 transform "build_ik"
+    .implement "ik.lua"
     .input "skeleton"
     .output "ik"
     .method "process"
 
 component "ik"
+    .implement "ik.lua"
     .require_component "ik_data"
 
 component "ik_data"
+    .implement "ik.lua"
     .require_component "vector"
     .require_component "vector"
     .require_component "vector"

@@ -1,5 +1,4 @@
-implement "system/editor_msg_watch_system.lua"
-
 system "editor_msg_watch_system"
+    .implement "system/editor_msg_watch_system.lua"
     .method "editor_update"
     .method "init"

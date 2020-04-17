@@ -1,13 +1,13 @@
-implement "controller/state_machine.lua"
-
 import "@ant.timer"
 
 system "state_machine_system"
+    .implement "controller/state_machine.lua"
     .require_system "animation_system"
     .require_interface "ant.timer|timer"
     .method "animation_state"
 
 interface "animation"
+    .implement "controller/state_machine.lua"
     .require_interface "ant.timer|timer"
     .method "play"
     .method "set_state"
@@ -20,15 +20,19 @@ policy "animation_controller.state_machine"
     .require_component "state_machine"
 
 transform "state_machine_transform"
+    .implement "controller/state_machine.lua"
     .input "state_machine"
     .output "animation"
     .method "process"
 
 component "state_machine"
+    .implement "controller/state_machine.lua"
     .require_component "state_machine_node"
     .method "init"
 
 component "state_machine_node"
+    .implement "controller/state_machine.lua"
     .require_component "state_machine_transmits"
 
 component "state_machine_transmits"
+    .implement "controller/state_machine.lua"

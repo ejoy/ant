@@ -1,6 +1,5 @@
-implement "light/light.lua"
-
 interface "light"
+    .implement "light/light.lua"
     .method "create_ambient_light_entity"
     .method "create_directional_light_entity"
     .method "create_point_light_entity"
@@ -35,37 +34,46 @@ policy "light.spot"
     .require_component "position"
 
 transform "ambient_transform"
+    .implement "light/light.lua"
     .input "ambient_light"
     .output "light"
     .method "process"
 
 transform "directional_transform"
+    .implement "light/light.lua"
     .input "directional_light"
     .output "light"
     .method "process"
 
 transform "point_transform"
+    .implement "light/light.lua"
     .input "point_light"
     .output "light"
     .method "process"
 
 transform "spot_transform"
+    .implement "light/light.lua"
     .input "spot_light"
     .output "light"
     .method "process"
 
 component "ambient_light"
+    .implement "light/light.lua"
     .require_component "color"
     .require_component "color"
     .require_component "color"
 
 component "directional_light"
+    .implement "light/light.lua"
     .require_component "color"
 
 component "light"
+    .implement "light/light.lua"
 
 component "point_light"
+    .implement "light/light.lua"
     .require_component "color"
 
 component "spot_light"
+    .implement "light/light.lua"
     .require_component "color"

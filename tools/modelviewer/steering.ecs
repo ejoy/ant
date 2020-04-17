@@ -1,5 +1,4 @@
-implement "steering.lua"
-
 system "steering_system"
+    .implement "steering.lua"
     .method "init"
     .method "ui_update"
