@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.import "ant.math"
-
 local fbmgr 	= require "framebuffer_mgr"
 local bgfx 		= require "bgfx"
 local ru 		= require "util"

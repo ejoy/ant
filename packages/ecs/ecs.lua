@@ -318,20 +318,15 @@ function world:enable_system(name, enable)
 	end
 end
 
-function world:interface(name)
-	return self._interface[name]
-end
-
-function world:require(name)
-	local m = self._module_loaded[name]
-	if m then
-		return m
+function world:interface(fullname)
+	typeclass.import(self, "interface", fullname)
+	local interface = self._interface
+	local res = interface[fullname]
+	if not res then
+		res = setmetatable({}, {__index = self._class.interface[fullname].method})
+		interface[fullname] = res
 	end
-	local loader = self.args.moduleloader or require "moduleloader"
-	local func = loader(name)
-	local m = func(self) or true
-	self._module_loaded[name] = m
-	return m
+	return res
 end
 
 local function sortpairs(t)
@@ -368,7 +363,7 @@ function m.new_world(config,world_class)
 		_uuids = {},
 		_policies = {},
 		_dataset = {},
-		_module_loaded = {},	-- for world:require
+		_interface = {},
 	}, world_class or world)
 
 	--init event
@@ -378,7 +373,7 @@ function m.new_world(config,world_class)
 	world.unsub = event.unsub
 
 	-- load systems and components from modules
-	typeclass(w, config.policy, config.system, config.packname, config.implement)
+	typeclass.init(w, config)
 
 	-- init system
 	w._systems = system.init(w._class.system, w._class.pipeline)
