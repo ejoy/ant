@@ -62,13 +62,20 @@ local function gen_method(c)
 	end
 end
 
-local function decl_basetype(schema)
+local function decl_basetype(w, schema, schema_data)
 	schema:primtype("ant.ecs", "tag", true)
 	schema:primtype("ant.ecs", "entityid", -1)
 	schema:primtype("ant.ecs", "int", 0)
 	schema:primtype("ant.ecs", "real", 0.0)
 	schema:primtype("ant.ecs", "string", "")
 	schema:primtype("ant.ecs", "boolean", false)
+	w._class.component = {}
+	w._class.component["tag"] = schema_data.map["tag"]
+	w._class.component["entityid"] = schema_data.map["entityid"]
+	w._class.component["int"] = schema_data.map["int"]
+	w._class.component["real"] = schema_data.map["real"]
+	w._class.component["string"] = schema_data.map["string"]
+	w._class.component["boolean"] = schema_data.map["boolean"]
 end
 
 local function sortpairs(t)
@@ -99,15 +106,12 @@ local check_map = {
 	output = "component",
 }
 
-local function create_importor(w, ecs, declaration)
-	local import_component = {}
+local function create_importor(w, ecs, schema_data, declaration)
     local import = {}
     for _, objname in ipairs {"system","policy","transform","interface","component"} do
-		if objname ~= "component" then
-			w._class[objname] = {}
-		end
+		w._class[objname] = w._class[objname] or {}
 		import[objname] = function (name)
-			local res = objname == "component" and import_component or w._class[objname]
+			local res = w._class[objname]
             if res[name] then
                 return
             end
@@ -116,7 +120,11 @@ local function create_importor(w, ecs, declaration)
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
             log.info("Import  ", objname, name)
-			res[name] = v
+			if objname == "component" then
+				res[name] = true
+			else
+				res[name] = v
+			end
 			for what, attrib in sortpairs(check_map) do
 				if v[what] then
 					for _, k in ipairs(v[what]) do
@@ -134,7 +142,10 @@ local function create_importor(w, ecs, declaration)
 					import_impl("/pkg/"..v.packname.."/"..impl, ecs)
 				end
 			end
-        end
+			if objname == "component" then
+				res[name] = schema_data.map[name]
+			end
+		end
 	end
 	return import
 end
@@ -166,7 +177,6 @@ end
 local function init(w, config)
 	local schema_data = {}
 	local schema = createschema(schema_data)
-	decl_basetype(schema)
 
 	local ecs = { world = w }
 	local declaration = interface.new(function(packname, filename)
@@ -176,7 +186,8 @@ local function init(w, config)
 	end)
 
 	w._decl = declaration
-	w._class = { component = schema_data.map, pipeline = {}, unique = {} }
+	w._schema_data = schema_data
+	w._class = { pipeline = {}, unique = {} }
 
 	local function register(what)
 		local class_set = {}
@@ -253,10 +264,12 @@ local function init(w, config)
 		return r
 	end
 
+	decl_basetype(w, schema, schema_data)
+
 	for _, k in ipairs(config.import) do
 		import_decl(w, k)
 	end
-	w._import = create_importor(w, ecs, declaration)
+	w._import = create_importor(w, ecs, schema_data, declaration)
 	for _, k in ipairs(config.policy) do
 		w._import.policy(k)
 	end
@@ -277,7 +290,8 @@ local function init(w, config)
 			end
         end
     end
-	require "component".solve(schema_data)
+	require "component".check(w, w._schema_data)
+	require "component".solve(w)
 	require "policy".solve(w)
 	w._systems = require "system".init(w._class.system, w._class.pipeline)
 end
@@ -285,6 +299,8 @@ end
 local function import_object(w, type, fullname)
 	w._import[type](fullname)
 	solve_object(w, type, fullname)
+	--require "component".check(w, w._schema_data)
+	--require "component".solve(w)
 end
 
 return {
