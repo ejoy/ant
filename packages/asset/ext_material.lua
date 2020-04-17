@@ -34,6 +34,7 @@ end
 
 local function load_texture(tex)
 	tex.texture = assetmgr.load(tex.texture)
+	tex.handle = tex.texture.handle
 end
 
 local function load_properties(properties)

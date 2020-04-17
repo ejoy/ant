@@ -149,24 +149,11 @@ end
 
 local function replace_material(result, material)
 	if result then
-		for _, item in ipairs(result) do
+		for i=1, result.n do
+			local item = result[i]
 			item.material = pick_material(material, item.eid)
 		end
 	end
-end
-
-local function recover_material(result)
-	if result then
-		for i=1, result.n do
-			result[i].properties.uniforms.u_id = nil
-		end
-	end
-end
-
-local function recover_filter(filter)
-	local result = filter.result
-	recover_material(result.opaticy)
-	recover_material(result.translucent)
 end
 
 function pickup_sys:refine_filter()
@@ -392,7 +379,6 @@ function pickup_sys:pickup()
 			local rb = fbmgr.get_rb(fb[1])
 			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, rb)
 		elseif nextstep	== "select_obj" then
-			recover_filter(pickupentity.primitive_filter)
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
 			--print_raw_buffer(pickupcomp.blit_buffer.raw_buffer)
 			enable_pickup(false)

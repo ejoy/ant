@@ -1,5 +1,5 @@
 policy:
-  ant.collision|collider
+  ant.collision|collider_policy
   ant.render|mesh
   ant.general|name
   ant.render|render

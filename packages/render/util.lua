@@ -46,13 +46,8 @@ local function update_properties(material, render_properties)
 			if textures then
 				local tex = textures[name]
 				if tex then
-					if tex.texture then
-						tex.handle = tex.texture.handle	--set texture handle every time
-					else
-						assert(tex.handle)
-					end
+					return tex
 				end
-				return tex
 			end
 		end
 

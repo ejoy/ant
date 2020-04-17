@@ -11,7 +11,7 @@ return {
             "ant.animation|skinning",
             "ant.animation|ik",
             "ant.serialize|serialize",
-            "ant.collision|collider",
+            "ant.collision|collider_policy",
             "ant.sky|procedural_sky",
             "ant.general|name",
             "ant.render|mesh",

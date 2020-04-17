@@ -136,7 +136,7 @@ local function create_plane_test()
     {0.5, 0.5, 0, 1},
     "test shadow plane",
     {
-        ["ant.collision|collider"] = {
+        ["ant.collision|collider_policy"] = {
             collider = {
                 box = {
                     {

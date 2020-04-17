@@ -13,7 +13,7 @@ interface "collider"
     .method "test"
     .method "which_entity"
 
-policy "collider"
+policy "collider_policy"
     .require_system "ant.collision|collider_system"
     .require_component "transform"
     .require_component "collider"
