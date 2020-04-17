@@ -1,0 +1,5 @@
+interface "sceneobject"
+	.implement "sceneobject.lua"
+	.method "root"
+	.method "find_object"
+	.method "clear"
