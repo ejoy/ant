@@ -1,3 +1,0 @@
-system "animation_test_system"
-    .implement "animation_test.lua"
-    .method "init"

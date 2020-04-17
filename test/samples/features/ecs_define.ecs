@@ -48,3 +48,49 @@ system "init_loader_system"
     .method "init"
     .method "post_init"
     .method "ui_update"
+
+
+system "animation_test_system"
+    .implement "animation_test.lua"
+    .method "init"
+
+system "camera_controller_system"
+    .implement "camera_controller.lua"
+    .require_interface "ant.objcontroller|camera_motion"
+    .method "data_changed"
+    .method "post_init"
+
+system "character_ik_test_system"
+    .implement "character_ik_test.lua"
+    .require_policy "ant.character|foot_ik_raycast"
+    .method "init"
+
+system "pbr_test_system"
+    .implement "pbr_test.lua"
+    .method "init"
+
+system "scenespace_test_system"
+    .implement "scenespace_test.lua"
+    .require_policy "ant.render|render"
+    .require_policy "ant.scene|transform_policy"
+    .require_policy "ant.scene|hierarchy_policy"
+    .method "init"
+
+
+system "shadow_test_system"
+    .implement "shadow_test.lua"
+    .require_policy "ant.render|shadow_make_policy"
+    .require_policy "ant.scene|hierarchy_policy"
+    .require_system "ant.render|shadowcamera_system"
+    .require_system "ant.render|shadow_system"
+    .method "init"
+    .method "post_init"
+
+
+
+system "terrain_test_system"
+    .implement "terrain_test.lua"
+    .require_policy "ant.terrain|terrain_policy"
+    .require_policy "ant.collision|terrain_collider_policy"
+    .require_interface "ant.collision|collider"
+    .method "init"
