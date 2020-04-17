@@ -378,14 +378,6 @@ function m.new_world(config,world_class)
 	-- init system
 	w._systems = system.init(w._class.system, w._class.pipeline)
 
-	-- init singleton
-	local eid = w:create_entity {policy = {}, data = {}}
-	local e = w[eid]
-	for name, dataset in sortpairs(w._class.singleton) do
-		e[name] = w:create_component(name, dataset[1], true)
-		register_component(w, eid, name)
-	end
-
 	return w
 end
 

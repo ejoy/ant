@@ -125,8 +125,6 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 end
 
 function bloom_sys:post_init()
-    local pp = world:singleton "postprocess"
-
     local sd = setting.get()
     local bloom = sd.graphic.postprocess.bloom
     if bloom.enable then
@@ -134,7 +132,7 @@ function bloom_sys:post_init()
 
         local fbsize = ipp.main_rb_size(main_fbidx)
 
-        local techniques = pp.techniques
+        local techniques = ipp.techniques()
         techniques[#techniques+1] = {
             name = "bloom",
             passes = get_passes_settings(main_fbidx, create_framebuffers_container_obj(fbsize), fbsize),

@@ -41,7 +41,7 @@ local function load_ecs(name)
         end
     end
     local function loader(packname, filename)
-        local f = fs.loadfile(fs.path "/pkg" / packname / filename)
+        local f = assert(fs.loadfile(fs.path "/pkg" / packname / filename))
         return f
     end
     parser = interface.new(loader)
@@ -89,25 +89,6 @@ local function decl_basetype(schema)
 	schema:primtype("ant.ecs", "boolean", false)
 end
 
-local function ecs_singleton(w, name, dataset)
-	local class = w._class
-	if class.singleton[name] then
-		error(("singleton `%s` duplicate definition"):format(name))
-	end
-	local ti = class.component[name]
-	if not ti then
-		error(("singleton `%s` is not defined in component"):format(name))
-	end
-	if not ti.type and ti.multiple then
-		error(("singleton `%s` does not support multiple component"):format(name))
-	end
-	if class.unique[name] then
-		error(("singleton `%s` does not support unique component"):format(name))
-	end
-	class.unique[name] = true
-	class.singleton[name] = {dataset}
-end
-
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -130,7 +111,6 @@ local check_map = {
 	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
-	require_singleton = "singleton",
 	require_component = "component",
 	unique_component = "component",
 	input = "component",
@@ -142,14 +122,13 @@ local function importAll(w, class, policies, systems)
 		policy = {},
 		system = {},
 		transform = {},
-		singleton = {},
 		interface = {},
 		component = {},
     }
 	local implement = {}
     local mark_implement = {}
     local import = {}
-    for _, objname in ipairs {"system","policy","transform","singleton","interface","component"} do
+    for _, objname in ipairs {"system","policy","transform","interface","component"} do
         import[objname] = function (name)
             if res[objname][name] then
                 return
@@ -227,7 +206,7 @@ local function init(w, config)
     local declaration = load_ecs(config.packname)
 
 	local ecs = { world = w }
-	w._class = { singleton = {}, pipeline = {}, unique = {} }
+	w._class = { pipeline = {}, unique = {} }
 	w._ecs = ecs
 	w._decl = declaration
 	w._schema_data = schema_data
@@ -288,11 +267,6 @@ local function init(w, config)
 	end
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
-	end
-	ecs.singleton = function (name)
-		return function (dataset)
-			ecs_singleton(w, name, dataset)
-		end
 	end
 	ecs.pipeline = function (name)
 		local r = w._class.pipeline[name]

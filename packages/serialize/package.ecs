@@ -1,2 +1,1 @@
 import "component.ecs"
-import "serialize_index_system.ecs"

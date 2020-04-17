@@ -18,8 +18,7 @@ ecs.component "gizmo_object"
 local GizmoType = {"position","rotation","scale"}
 local GizmoDirection = {"x","y","z"}
 
-ecs.component "operate_gizmo_cache" {}
-ecs.singleton "operate_gizmo_cache" {
+local operate_gizmo_cache = {
     last_target_eid = nil,
     picked_dir = nil, -- "x"/"y","z", not supported yet:("xy","xz","yz")
     picked_type = nil, -- "position"/"ratation","scale", not supported yet:("xy","xz","yz")
@@ -241,7 +240,6 @@ local function gizmo_rotation_on_release(cache)
 end
 
 local function on_gizmo_type_change(self,typ)
-    local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
     if typ ~= operate_gizmo_cache.gizmo_type then
         local gizmo = operate_gizmo_cache.gizmo
         local old_typ = operate_gizmo_cache.gizmo_type
@@ -260,7 +258,6 @@ local editor_operate_gizmo_sys =  ecs.system "editor_operate_gizmo_system"
 
 function editor_operate_gizmo_sys:init()
     --create gizmo
-    local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
     assert(not operate_gizmo_cache.gizmo_eid)
     local gizmo = util.create_gizmo(world)
     for i,typ in ipairs(GizmoType) do
@@ -335,7 +332,6 @@ function editor_operate_gizmo_sys:init()
 end
 
 local function update_mouse_event()
-    local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
     for mouse_event in mouse_left_mb:each() do
         local _,what,state,x,y = table.unpack(mouse_event)
         operate_gizmo_cache.cur_mouse_state = state
@@ -375,7 +371,6 @@ function editor_operate_gizmo_sys:editor_update()
     local target_entity_id = world:singleton_entity_id("show_operate_gizmo")
     local target_entity = target_entity_id and world[target_entity_id]
     --sync transform gizmo
-    local operate_gizmo_cache = world:singleton "operate_gizmo_cache"
     local gizmo_eid =  operate_gizmo_cache.gizmo.eid
     local gizmo_entity = world[gizmo_eid]
     if target_entity then
@@ -440,7 +435,7 @@ function editor_operate_gizmo_sys:after_pickup()
         if eid and world[eid] and world[eid].gizmo_object then
             picked_dir = world[eid].gizmo_object.dir
         end
-        world:singleton "operate_gizmo_cache".picked_dir = picked_dir
+        operate_gizmo_cache.picked_dir = picked_dir
     end
 end
 

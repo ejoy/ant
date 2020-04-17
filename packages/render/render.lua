@@ -112,7 +112,7 @@ function render_sys:init()
 end
 
 function render_sys:render_commit()
-	local render_properties = world:singleton "render_properties"
+	local render_properties = world:interface "ant.render|render_properties".data()
 	for _, eid in world:each "viewid" do
 		local rq = world[eid]
 		if rq.visible then

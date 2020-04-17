@@ -15,9 +15,6 @@ interface "interface_name"
 	.require_system "system_name"
 	.method "funcname"
 
-singleton "singleton_name"
-	.require_system "system_name"
-
 policy "policy_name"
 	.require_system "system_name"
 	.require_transform "transform_name"
@@ -57,7 +54,6 @@ local attribute = {
 	system = {
 		"require_system",
 		"require_interface",
-		"require_singleton",
 		"require_policy",
 		"method",
 	},
@@ -75,11 +71,6 @@ local attribute = {
 		"require_policy",
 		"method",
 	},
-	singleton = {
-		"require_system",
-		"require_interface",
-		"require_policy",
-	},
 	transform = {
 		"require_interface",
 		"input",
@@ -93,7 +84,6 @@ local attribute = {
 }
 
 local no_packspace = {
-	singleton = true,
 	component = true,
 }
 
@@ -103,7 +93,6 @@ local check_map = {
 	require_policy = "policy",
 	require_transform = "transform",
 
-	require_singleton = "singleton",
 	require_component = "component",
 	unique_component = "component",
 	input = "component",

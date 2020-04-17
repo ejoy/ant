@@ -43,14 +43,9 @@ ecs.component "technique_order"
 
 ecs.component_alias("copy_pass", "pass")
 
-ecs.component "postprocess"
-    .techniques "int[]"
-ecs.singleton "postprocess" {
-    techniques = {}
-}
-
 local pp_sys = ecs.system "postprocess_system"
 
+local techniques = {}
 local quad_meshgroup
 
 local function local_postprocess_views(num)
@@ -133,10 +128,8 @@ local function render_technique(tech, lastslot, meshgroup, render_properties)
 end
 
 function pp_sys:combine_postprocess()
-    local pp = world:singleton "postprocess"
-    local techniques = pp.techniques
     if next(techniques) then
-        local render_properties = world:singleton "render_properties"
+        local render_properties = world:interface "ant.render|render_properties".data()
         local lastslot = {
             fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
             rb_idx = 1
@@ -160,4 +153,8 @@ function ipp.main_rb_size(main_fbidx)
     
     assert(rb.format:match "RGBA")
     return {w=rb.w, h=rb.h}
+end
+
+function ipp.techniques()
+    return techniques
 end
