@@ -29,20 +29,19 @@ local function reset_results(results)
 	end
 end
 
-local function get_material(prim, primidx, materialcomp, material_refs)
+local function get_material(prim, primidx, materialcomp)
 	-- prim.material index from 0 and material is multi component start from 0
 	local materialidx = prim.material or primidx - 1
 	return materialcomp[materialidx] or materialcomp
 end
 
-local function add_result(eid, group, materialinfo, properties, worldmat, aabb, result)
+local function add_result(eid, group, materialinfo, worldmat, aabb, result)
 	local idx = result.n + 1
 	local r = result[idx]
 	if r == nil then
 		r = {
 			mgroup 		= group,
 			material 	= assert(materialinfo),
-			properties 	= properties,
 			worldmat 	= worldmat,
 			aabb		= aabb,
 			eid 		= eid,
@@ -51,7 +50,6 @@ local function add_result(eid, group, materialinfo, properties, worldmat, aabb, 
 	else
 		r.mgroup 	= group
 		r.material 	= assert(materialinfo)
-		r.properties= properties
 		r.worldmat 	= worldmat
 		r.aabb		= aabb
 		r.eid 		= eid
@@ -80,10 +78,9 @@ local function cache_material(rendermesh, materialcomp)
 			cache[n] = {
 				group,	-- 1
 				material,	-- 2
-				material.properties,	-- 3
-				transparency,	-- 4
-				group.bounding and group.bounding.aabb or nil,	-- 5
-				meshnode.transform,	-- 6
+				transparency,	-- 3
+				group.bounding and group.bounding.aabb or nil,	-- 4
+				meshnode.transform,	-- 5
 			}
 		end
 	end
@@ -95,13 +92,12 @@ local function cache_material(rendermesh, materialcomp)
 		return function(eid, etrans, filter)
 			local group = cache[1]
 			local material = cache[2]
-			local properties = cache[3]
-			local transparency = cache[4]
-			local aabb = cache[5]
-			local localtrans = cache[6]
+			local transparency = cache[3]
+			local aabb = cache[4]
+			local localtrans = cache[5]
 			local resulttarget = assert(filter.result[transparency])
 			local worldaabb, worldtrans = math3d.aabb_transform(etrans, aabb, localtrans)
-			add_result(eid, group, material, properties, worldtrans, worldaabb, resulttarget)
+			add_result(eid, group, material, worldtrans, worldaabb, resulttarget)
 		end
 	else
 		return function(eid, etrans, filter)
@@ -111,13 +107,12 @@ local function cache_material(rendermesh, materialcomp)
 				local item = cache[i]
 				local group = item[1]
 				local material = item[2]
-				local properties = item[3]
-				local transparency = item[4]
-				local aabb = item[5]
-				local localtrans = item[6]
+				local transparency = item[3]
+				local aabb = item[4]
+				local localtrans = item[5]
 				local resulttarget = assert(result[transparency])
 				local worldaabb, worldtrans = aabb_transform(etrans, aabb, localtrans)
-				add_result(eid, group, material, properties, worldtrans, worldaabb, resulttarget)
+				add_result(eid, group, material, worldtrans, worldaabb, resulttarget)
 			end
 		end
 	end

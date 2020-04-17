@@ -48,13 +48,13 @@ local function add_ambient_light_propertices(world, uniform_properties)
 end 
 
 local function load_lighting_properties(world, render_properties)
-	local lighting_properties = assert(render_properties.lighting.uniforms)
+	local uniforms = assert(render_properties.uniforms)
 
-	add_directional_light_properties(world, lighting_properties)
-	add_ambient_light_propertices(world, lighting_properties)
+	add_directional_light_properties(world, uniforms)
+	add_ambient_light_propertices(world, uniforms)
 
 	local camera = camerautil.main_queue_camera(world)
-	lighting_properties["u_eyepos"][1].v = camera.eyepos
+	uniforms["u_eyepos"][1].v = camera.eyepos
 end
 
 local function calc_viewport_crop_matrix(csm_idx)
@@ -72,8 +72,7 @@ local function calc_viewport_crop_matrix(csm_idx)
 end
 
 local function load_shadow_properties(world, render_properties)
-	local shadow_properties = render_properties.shadow
-	local uniforms, textures = shadow_properties.uniforms, shadow_properties.textures
+	local uniforms, textures = render_properties.uniforms, render_properties.textures
 
 	--TODO: shadow matrix consist of lighting matrix, crop matrix and viewport offset matrix
 	-- but crop matrix and viewport offset matrix only depend csm split ratios
@@ -93,8 +92,7 @@ local function load_shadow_properties(world, render_properties)
 			local vp = mu.view_proj(camera)
 			vp = math3d.mul(shadowutil.shadow_crop_matrix(), vp)
 			local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
-			local m = assert(csm_matrixs[csm.index])
-			m.m = math3d.mul(viewport_cropmatrix, vp)
+			csm_matrixs[csm.index].m = math3d.mul(viewport_cropmatrix, vp)
 		end
 	end
 
@@ -116,15 +114,15 @@ local function load_shadow_properties(world, render_properties)
 end
 
 local function load_postprocess_properties(world, render_properties)
-	local mq = assert(world:singleton_entity "main_queue")
-	local postprocess = render_properties.postprocess
+	local mq = world:singleton_entity "main_queue"
 	local fbidx = mq.render_target.fb_idx
 	if fbidx then
 		local fb = fbmgr.get(fbidx)
 		local rendertex = fbmgr.get_rb(fb[1]).handle
 		local mainview_name = "s_mainview"
 		local stage = assert(world:interface "ant.render|uniforms".system_uniform(mainview_name)).stage
-		local mv = postprocess.textures[mainview_name]
+		local textures = render_properties.textures
+		local mv = textures[mainview_name]
 		mv.stage = stage
 		mv.handle = rendertex
 	end
@@ -135,40 +133,30 @@ local load_properties_sys = ecs.system "load_properties_system"
 function  load_properties_sys:init()
 	local rp = world:interface "ant.render|render_properties".data()
 
-	rp.lighting = {
-		uniforms = {
-			directional_lightdir 	= load_uniform{type="v4", 	mc.T_ZERO},
-			directional_color 		= load_uniform{type="color",mc.T_ZERO},
-			directional_intensity 	= load_uniform{type="v4", 	mc.T_ZERO},
+	rp.uniforms = {
+	--lighting
+		directional_lightdir 	= load_uniform{type="v4", 	mc.T_ZERO},
+		directional_color 		= load_uniform{type="color",mc.T_ZERO},
+		directional_intensity 	= load_uniform{type="v4", 	mc.T_ZERO},
 
-			ambient_mode 		= load_uniform{type="v4", 	 mc.T_ZERO},
-			ambient_skycolor 	= load_uniform{type="color", mc.T_ZERO},
-			ambient_midcolor 	= load_uniform{type="color", mc.T_ZERO},
-			ambient_groundcolor = load_uniform{type="color", mc.T_ZERO},
+		ambient_mode 			= load_uniform{type="v4", 	 mc.T_ZERO},
+		ambient_skycolor 		= load_uniform{type="color", mc.T_ZERO},
+		ambient_midcolor 		= load_uniform{type="color", mc.T_ZERO},
+		ambient_groundcolor 	= load_uniform{type="color", mc.T_ZERO},
 
-			u_eyepos			= load_uniform{type="v4", mc.T_ZERO_PT},
-		},
-		textures = {},
+		u_eyepos				= load_uniform{type="v4", mc.T_ZERO_PT},
+
+		-- shadow
+		u_csm_matrix 			= load_uniform{type="m4_array", mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT},
+		u_csm_split_distances	= load_uniform{type="v4", mc.T_ZERO},
+
+		u_depth_scale_offset	= load_uniform{type="v4", mc.T_ZERO},
+		u_shadow_param1			= load_uniform{type="v4", mc.T_ZERO},
+		u_shadow_param2			= load_uniform{type="v4", mc.T_ZERO},
 	}
-	rp.shadow = {
-		uniforms = {
-			u_csm_matrix 			= load_uniform{type="m4_array", mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT},
-			u_csm_split_distances	= load_uniform{type="v4", mc.T_ZERO},
-
-			u_depth_scale_offset	= load_uniform{type="v4", mc.T_ZERO},
-			u_shadow_param1			= load_uniform{type="v4", mc.T_ZERO},
-			u_shadow_param2			= load_uniform{type="v4", mc.T_ZERO},
-		},
-		textures = {
-			s_shadowmap = {type="texture", },
-		},
-	}
-
-	rp.postprocess = {
-		uniforms = {},
-		textures = {
-			s_mainview = {type="texture", },
-		},
+	rp.textures = {
+		s_shadowmap = {type="texture", },
+		s_mainview = {type="texture", },
 	}
 end
 

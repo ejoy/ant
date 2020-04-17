@@ -27,7 +27,7 @@ local property_types = {
     texture = "s",
 }
 
-local function update_properties(material, properties, render_properties)
+local function update_properties(material, render_properties)
 	local su = material.fx.shader.uniforms
 	for name, u in pairs(su) do
 		local function find_property(name, properties)
@@ -56,18 +56,9 @@ local function update_properties(material, properties, render_properties)
 			end
 		end
 
-		local p = find_property(name, properties)
+		local p = find_property(name, material.properties)
 		if p == nil then
-			p = find_property(name, material.properties)
-
-			if p == nil then
-				for _, rp in pairs(render_properties) do
-					p = find_property(name, rp)
-					if p then
-						break
-					end
-				end
-			end
+			p = find_property(name, render_properties)
 		end
 
 		if p then
@@ -78,7 +69,7 @@ local function update_properties(material, properties, render_properties)
 				bgfx.set_uniform(u.handle, table.unpack(p))
 			end
 		else
-			--log,info(string.format("uniform : %s, not privided, but shader program needed", name))
+			log.info(string.format("uniform : %s, not privided, but shader program needed", name))
 		end
 	end
 end
@@ -88,7 +79,7 @@ function util.draw_primitive(vid, primgroup, mat, render_properties)
 
 	local material = primgroup.material
 	bgfx.set_state(material.state)
-	update_properties(material, primgroup.properties, render_properties)
+	update_properties(material, render_properties)
 
 	local prog = material.fx.shader.prog
 
