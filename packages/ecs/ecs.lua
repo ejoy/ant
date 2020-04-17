@@ -318,12 +318,16 @@ function world:enable_system(name, enable)
 	end
 end
 
+function world:import(fullname)
+	typeclass.import_decl(self, fullname)
+end
+
 function world:interface(fullname)
-	typeclass.import(self, "interface", fullname)
 	local interface = self._interface
 	local res = interface[fullname]
 	if not res then
-		res = setmetatable({}, {__index = self._class.interface[fullname].method})
+		local object = typeclass.import_object(self, "interface", fullname)
+		res = setmetatable({}, {__index = object.method})
 		interface[fullname] = res
 	end
 	return res

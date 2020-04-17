@@ -159,7 +159,10 @@ local function initargs(package)
 	local info = fs.dofile(fs.path("/pkg/"..package.."/package.lua"))
 	local packname = info.name
 	local config = info.world
-	config.packname = packname
+	config.import = {
+		"@"..packname,
+		"@"..packname.."/pipeline.ecs",
+	}
 	config.implement = {
 		"/pkg/"..packname.."/pipeline.lua"
 	}

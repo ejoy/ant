@@ -31,25 +31,6 @@ local function import_impl(file, ecs)
 	popCurrentPackage()
 end
 
-local function load_ecs(name)
-    local parser
-    local loaded = {}
-    local function load_package(packname)
-        if not loaded[packname] then
-            loaded[packname] = true
-            parser:load(packname, "package.ecs")
-        end
-    end
-    local function loader(packname, filename)
-        local f = assert(fs.loadfile(fs.path "/pkg" / packname / filename))
-        return f
-    end
-    parser = interface.new(loader)
-    load_package(name)
-    parser:check()
-    return parser
-end
-
 local function sourceinfo()
 	local info = debug.getinfo(3, "Sl")
 	return string.format("%s(%d)", info.source, info.currentline)
@@ -168,34 +149,31 @@ local function solve_object(w, type, fullname)
 	end
 end
 
-local function solve(w)
-    for _, objname in ipairs {"system","policy","interface","transform"} do
-        for fullname, o in pairs(w._class[objname]) do
-			if o.methodname then
-				for _, name in ipairs(o.methodname) do
-					if not o.method[name] then
-						error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-					end
-				end
-			end
-        end
-    end
-	require "component".solve(w._schema_data)
-	require "policy".solve(w)
+local function import_decl(w, fullname)
+	local packname, filename
+	assert(fullname:sub(1,1) == "@")
+	if fullname:find "/" then
+		packname, filename = fullname:match "^@([^/]*)/(.*)$"
+	else
+		packname = fullname:sub(2)
+		filename = "package.ecs"
+	end
+	w._decl:load(packname, filename)
+	w._decl:check()
 end
 
 local function init(w, config)
 	local schema_data = {}
 	local schema = createschema(schema_data)
-    decl_basetype(schema)
-    local declaration = load_ecs(config.packname)
+	decl_basetype(schema)
 
 	local ecs = { world = w }
-	w._class = { pipeline = {}, unique = {} }
-	w._ecs = ecs
+	local declaration = interface.new(function(packname, filename)
+        return assert(fs.loadfile(fs.path "/pkg" / packname / filename))
+	end)
+
 	w._decl = declaration
-	w._schema_data = schema_data
-	w._class.component = schema_data.map
+	w._class = { component = schema_data.map, pipeline = {}, unique = {} }
 
 	local function register(what)
 		local class_set = {}
@@ -271,7 +249,11 @@ local function init(w, config)
 		end
 		return r
 	end
-	w._import = create_importor(w, ecs, declaration) 
+
+	for _, k in ipairs(config.import) do
+		import_decl(w, k)
+	end
+	w._import = create_importor(w, ecs, declaration)
 	for _, k in ipairs(config.policy) do
 		w._import.policy(k)
 	end
@@ -281,16 +263,29 @@ local function init(w, config)
     for _, file in ipairs(config.implement) do
         import_impl(file, ecs)
     end
-	solve(w)
+    for _, objname in ipairs {"system","policy","interface","transform"} do
+        for fullname, o in pairs(w._class[objname]) do
+			if o.methodname then
+				for _, name in ipairs(o.methodname) do
+					if not o.method[name] then
+						error(("`%s`'s `%s` method is not defined."):format(fullname, name))
+					end
+				end
+			end
+        end
+    end
+	require "component".solve(schema_data)
+	require "policy".solve(w)
 end
 
-local function import(w, type, name)
-	w._import[type](name)
-	solve_object(w, type, name)
+local function import_object(w, type, fullname)
+	w._import[type](fullname)
+	solve_object(w, type, fullname)
+	return w._class.interface[fullname]
 end
 
 return {
 	init = init,
-	solve = solve,
-	import = import,
+	import_decl = import_decl,
+	import_object = import_object,
 }
