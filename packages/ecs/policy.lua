@@ -1,3 +1,5 @@
+local typeclass = require "typeclass"
+
 local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
@@ -14,7 +16,11 @@ local function create(w, policies)
     for _, name in ipairs(policies) do
         local class = policy_class[name]
         if not class then
-            error(("policy `%s` is not defined."):format(name))
+            typeclass.import_object(w, "policy", name)
+            class = policy_class[name]
+            if not class then
+                error(("policy `%s` is not defined."):format(name))
+            end
         end
         if policyset[name] then
             goto continue

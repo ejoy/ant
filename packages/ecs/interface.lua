@@ -268,7 +268,7 @@ local function check(tbl, r)
 				-- need check
 				for _, require_name in ipairs(list) do
 					if r[check][require_name] == nil then
-						error(string.format("Not found: %s",require_name))
+						error(string.format("Not found (%s) : %s",check, require_name))
 					end
 				end
 			end

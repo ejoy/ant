@@ -26,6 +26,7 @@ local function import_impl(file, ecs)
 	if not module then
 		error(("module '%s' load failed:%s"):format(file, err))
 	end
+	log.info(("Import impl %q"):format(path:string()))
 	pushCurrentPackage(packname)
 	module(ecs)
 	popCurrentPackage()
@@ -169,7 +170,9 @@ local function init(w, config)
 
 	local ecs = { world = w }
 	local declaration = interface.new(function(packname, filename)
-        return assert(fs.loadfile(fs.path "/pkg" / packname / filename))
+		local file = fs.path "/pkg" / packname / filename
+		log.info(("Import decl %q"):format(file:string()))
+        return assert(fs.loadfile(file))
 	end)
 
 	w._decl = declaration
@@ -276,12 +279,12 @@ local function init(w, config)
     end
 	require "component".solve(schema_data)
 	require "policy".solve(w)
+	w._systems = require "system".init(w._class.system, w._class.pipeline)
 end
 
 local function import_object(w, type, fullname)
 	w._import[type](fullname)
 	solve_object(w, type, fullname)
-	return w._class.interface[fullname]
 end
 
 return {
