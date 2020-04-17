@@ -9,6 +9,8 @@ import "@ant.render"
 import "@ant.serialize"
 import "@ant.sky"
 import "@ant.timer"
+import "@ant.character"
+import "@ant.scene"
 
 system "gui_system"
     .require_system "ant.imguibase|imgui_system"
@@ -26,6 +28,9 @@ system "model_viewer_system"
     .require_policy "ant.render|shadow_cast_policy"
     .require_policy "ant.render|light.directional"
     .require_policy "ant.render|light.ambient"
+    .require_policy 'ant.character|character'
+    .require_policy 'ant.scene|hierarchy_policy'
+    .require_policy 'ant.general|name'
     .require_interface "ant.render|camera"
     .require_interface "ant.animation|animation"
     .require_interface "ant.timer|timer"

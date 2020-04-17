@@ -70,7 +70,7 @@ function t:init()
 end
 
 local iterrain_class = ecs.interface "terrain"
-local iterrain = world:interface "ant.terrain|terrain"
+local iterrain
 
 function iterrain_class.grid_width(tc)
 	return tc.tile_width * tile_length(tc)
@@ -87,6 +87,8 @@ end
 function iterrain_class.heightfield(tc)
 	return tc.heightfield
 end
+
+iterrain = world:interface "ant.terrain|terrain"
 
 local trt = ecs.transform "terrain_transform"
 

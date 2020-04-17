@@ -15,7 +15,7 @@ function terrain_test_sys:init()
 			"ant.render|render",
 			"ant.terrain|terrain_policy",
 			"ant.general|name",
-			"ant.collision|terrain_collider_policy",
+			"ant.collision|collider_policy",
 			"ant.serialize|serialize",
 		},
 		data = {

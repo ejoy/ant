@@ -147,11 +147,11 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 op: replace
 path: /properties/uniforms/u_color
 value:
-	type: color
-	value:
-	  {%f,%f,%f,%f}
+  type: color
+  value:
+    {%f,%f,%f,%f}
 ]]):format(
-	materialpath or fs.path "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
+	materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
 	color[1], color[2], color[3], color[4]
 )
 	local data = {

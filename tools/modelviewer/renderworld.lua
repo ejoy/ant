@@ -1,12 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg = import_package "ant.math"
 local renderpkg = import_package "ant.render"
-local skypkg = import_package "ant.sky"
-local fs = require "filesystem"
-local task = require "task"
-local math3d = require "math3d"
+local skypkg 	= import_package "ant.sky"
+local serialize = import_package "ant.serialize"
+
+local fs 		= require "filesystem"
+local task 		= require "task"
+local math3d 	= require "math3d"
 
 local skyutil = skypkg.util
 local cu = renderpkg.components
@@ -20,46 +21,12 @@ local camera_id
 
 local ilight = world:interface "ant.render|light"
 
-local function directional_light_arrow_widget(trans)
-	local s, r, t = math3d.srt(trans.srt)
-	s, r, t = math3d.tovalue(s), math3d.tovalue(r), math3d.tovalue(t)
-	local arroweid = world:create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.scene|transform_policy",
-		},
-		data = {
-			transform = {
-				srt = {s=s, r=r, t=t},
-			},
-			name = "directional light arrow",
-		},
-	}
-
-	local cylinder = world:create_entity{
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-			"ant.scene|hierarchy",
-		},
-		data = {
-			scene_entity = true,
-			can_render = true,
-			transform = {
-				srt = {
-
-				}
-			},
-			material = '/pkg'
-		}
-	}
-end
-
 local function create_light()
-	local dir = math3d.todirection(math3d.quaternion{math.rad(60), 0, 0})
+	local rotator = math3d.quaternion{math.rad(60), 0, 0}
+	local dir = math3d.todirection(rotator)
 	local dlightdir = math3d.totable(math3d.normalize(math3d.inverse(dir)))
-
-	ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir, {0, 0, 0, 1})
+	local pos = {0, 0, 0, 1}
+	ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir, pos)
 	ilight.create_ambient_light_entity("ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
@@ -82,7 +49,7 @@ function m:init()
 	cu.create_plane_entity(
 		world,
 		{srt = {s ={50, 1, 50, 0}}},
-		fs.path "/pkg/ant.resources/materials/test/mesh_shadow.material",
+		"/pkg/ant.resources/materials/test/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"
 	)
