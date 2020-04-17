@@ -233,6 +233,7 @@ namespace plat {
 }
 
 extern "C" int luaopen_imgui(lua_State* L);
+extern "C" int luaopen_imnodes(lua_State* L);
 
 extern "C"
 #if defined(_WIN32)
@@ -251,6 +252,7 @@ luaopen_imgui_ant(lua_State* L) {
 		{NULL,NULL}
 	};
 	luaopen_imgui(L);
+	luaopen_imnodes(L);
 	luaL_newlib(L, l);
 	luaL_setfuncs(L,l,0);
 	lua_setfield(L, -2, "ant");

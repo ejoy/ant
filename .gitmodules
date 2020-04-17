@@ -31,3 +31,6 @@
 [submodule "3rd/reactphysics3d"]
 	path = 3rd/reactphysics3d
 	url = https://github.com/DanielChappuis/reactphysics3d.git
+[submodule "3rd/imnodes"]
+	path = 3rd/imnodes
+	url = https://github.com/Nelarius/imnodes.git
