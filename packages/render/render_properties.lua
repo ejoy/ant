@@ -14,9 +14,11 @@ local assetmgr = import_package "ant.asset"
 local ma = assetmgr.get_accessor "material"
 local load_uniform = ma.load_uniform
 
-ecs.component "render_properties" {}
-
-ecs.singleton "render_properties" {}
+local m = ecs.interface "render_properties"
+local render_properties = {}
+function m.data()
+	return render_properties
+end
 
 local function add_directional_light_properties(world, uniform_properties)
 	local dlight = world:singleton_entity "directional_light"
@@ -131,7 +133,7 @@ end
 local load_properties_sys = ecs.system "load_properties_system"
 
 function  load_properties_sys:init()
-	local rp = world:singleton "render_properties"
+	local rp = world:interface "ant.render|render_properties".data()
 
 	rp.lighting = {
 		uniforms = {
@@ -171,7 +173,7 @@ function  load_properties_sys:init()
 end
 
 function load_properties_sys:load_render_properties()
-	local rp = world:singleton "render_properties"
+	local rp = world:interface "ant.render|render_properties".data()
 	load_lighting_properties(world, rp)
 	load_shadow_properties(world, rp)
 	load_postprocess_properties(world, rp)

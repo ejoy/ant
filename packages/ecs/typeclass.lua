@@ -3,24 +3,32 @@ local fs = require "filesystem"
 local pm = require "antpm"
 local createschema = require "schema"
 
-local current_package
+local current_package = {}
 local function getCurrentPackage()
-	return current_package
+	return current_package[#current_package]
 end
-local function setCurrentPackage(package)
-	current_package = package
+local function pushCurrentPackage(package)
+	current_package[#current_package+1] = package
+end
+local function popCurrentPackage()
+	current_package[#current_package] = nil
 end
 
-local function load_impl(files, ecs)
-    for _, file in ipairs(files) do
-        local path = fs.path(file)
-        local module, err = fs.loadfile(path, 't', pm.loadenv(path:package_name()))
-        if not module then
-            error(("module '%s' load failed:%s"):format(file:string(), err))
-        end
-        setCurrentPackage(path:package_name())
-        module(ecs)
-    end
+local imported = {}
+local function import_impl(file, ecs)
+	if imported[file] then
+		return
+	end
+	imported[file] = true
+	local path = fs.path(file)
+	local packname = path:package_name()
+	local module, err = fs.loadfile(path, 't', pm.loadenv(packname))
+	if not module then
+		error(("module '%s' load failed:%s"):format(file, err))
+	end
+	pushCurrentPackage(packname)
+	module(ecs)
+	popCurrentPackage()
 end
 
 local function load_ecs(name)
@@ -33,7 +41,7 @@ local function load_ecs(name)
         end
     end
     local function loader(packname, filename)
-        local f = fs.loadfile(fs.path "/pkg" / packname / filename)
+        local f = assert(fs.loadfile(fs.path "/pkg" / packname / filename))
         return f
     end
     parser = interface.new(loader)
@@ -81,40 +89,6 @@ local function decl_basetype(schema)
 	schema:primtype("ant.ecs", "boolean", false)
 end
 
-local function dyntable()
-	return setmetatable({}, {__index=function(t,k)
-		local o = {}
-		t[k] = o
-		return o
-	end})
-end
-
-
-local function singleton_solve(w)
-	local class = w._class
-	for name in pairs(class.singleton) do
-		local ti = class.component[name]
-		if not ti then
-			error(("singleton `%s` is not defined in component"):format(name))
-		end
-		if not ti.type and ti.multiple then
-			error(("singleton `%s` does not support multiple component"):format(name))
-		end
-		if class.unique[name] then
-			error(("singleton `%s` does not support unique component"):format(name))
-		end
-		class.unique[name] = true
-	end
-end
-
-local function interface_solve(w)
-	local class = w._class
-	local interface = w._interface
-	for fullname, v in pairs(class.interface) do
-		setmetatable(interface[fullname], {__index = v.method})
-	end
-end
-
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -137,27 +111,24 @@ local check_map = {
 	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
-	require_singleton = "singleton",
 	require_component = "component",
 	unique_component = "component",
 	input = "component",
 	output = "component",
 }
 
-local function importAll(class, policies, systems)
+local function importAll(w, class, policies, systems)
 	local res = {
 		policy = {},
 		system = {},
 		transform = {},
-		singleton = {},
 		interface = {},
 		component = {},
-		unique = {},
-        implement = {},
     }
+	local implement = {}
     local mark_implement = {}
     local import = {}
-    for _, objname in ipairs {"system","policy","transform","singleton","interface","component"} do
+    for _, objname in ipairs {"system","policy","transform","interface","component"} do
         import[objname] = function (name)
             if res[objname][name] then
                 return
@@ -172,7 +143,7 @@ local function importAll(class, policies, systems)
                 local file = "/pkg/"..v.implement.packname.."/"..impl
                 if not mark_implement[file] then
                     mark_implement[file] = true
-                    res.implement[#res.implement+1] = file
+                    implement[#implement+1] = file
                 end
             end
 			for what, attrib in sortpairs(check_map) do
@@ -184,7 +155,7 @@ local function importAll(class, policies, systems)
 			end
             if objname == "policy" and v.unique_component then
                 for _, k in ipairs(v.unique_component) do
-                    res.unique[k] = true
+                    w._class.unique[k] = true
                 end
             end
         end
@@ -195,19 +166,51 @@ local function importAll(class, policies, systems)
 	for _, k in ipairs(systems) do
 		import.system(k)
 	end
-	return res
+    for _, objname in ipairs {"system","policy","interface","transform"} do
+		w._class[objname] = res[objname]
+	end
+	return implement
 end
 
-return function (w, policies, systems, packname, implement)
+local function solve_object(w, type, fullname)
+	local o = w._class[type][fullname]
+	if o and o.methodname then
+		for _, name in ipairs(o.methodname) do
+			if not o.method[name] then
+				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
+			end
+		end
+	end
+end
+
+local function solve(w)
+    for _, objname in ipairs {"system","policy","interface","transform"} do
+        for fullname, o in pairs(w._class[objname]) do
+			if o.methodname then
+				for _, name in ipairs(o.methodname) do
+					if not o.method[name] then
+						error(("`%s`'s `%s` method is not defined."):format(fullname, name))
+					end
+				end
+			end
+        end
+    end
+	require "component".solve(w._schema_data)
+	require "policy".solve(w)
+end
+
+local function init(w, config)
 	local schema_data = {}
 	local schema = createschema(schema_data)
     decl_basetype(schema)
-    local data = load_ecs(packname)
-	local declaration = importAll(data, policies, systems)
+    local declaration = load_ecs(config.packname)
 
 	local ecs = { world = w }
-	w._class = {}
-	w._interface = dyntable()
+	w._class = { pipeline = {}, unique = {} }
+	w._ecs = ecs
+	w._decl = declaration
+	w._schema_data = schema_data
+	w._class.component = schema_data.map
 
 	local function register(what)
 		local class_set = {}
@@ -251,8 +254,6 @@ return function (w, policies, systems, packname, implement)
 	register "transform"
 	register "policy"
 	register "interface"
-	local class_singleton = {}
-	local class_pipeline = {}
 	ecs.component = function (name)
 		return schema:type(getCurrentPackage(), name)
 	end
@@ -267,16 +268,8 @@ return function (w, policies, systems, packname, implement)
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
 	end
-	ecs.singleton = function (name)
-		return function (dataset)
-			if class_singleton[name] then
-				error(("singleton `%s` duplicate definition"):format(name))
-			end
-			class_singleton[name] = {dataset}
-		end
-	end
 	ecs.pipeline = function (name)
-		local r = class_pipeline[name]
+		local r = w._class.pipeline[name]
 		if r == nil then
 			log.info("Register", "pipeline", name)
 			r = {name = name}
@@ -289,34 +282,36 @@ return function (w, policies, systems, packname, implement)
 					return r
 				end,
 			})
-			class_pipeline[name] = r
+			w._class.pipeline[name] = r
 		end
 		return r
 	end
-    ecs.import = function ()
+	local implement = importAll(w, declaration, config.policy, config.system)
+    for _, file in ipairs(implement) do
+        import_impl(file, ecs)
     end
-    load_impl(declaration.implement, ecs)
-    load_impl(implement, ecs)
-
-    for _, objname in ipairs {"system","policy","interface","transform"} do
-        for fullname, o in pairs(declaration[objname]) do
-			if o.methodname then
-				for _, name in ipairs(o.methodname) do
-					if not o.method[name] then
-						error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-					end
-				end
-			end
-        end
-		w._class[objname] = declaration[objname]
+    for _, file in ipairs(config.implement) do
+        import_impl(file, ecs)
     end
-	w._class.component = schema_data.map
-	w._class.pipeline = class_pipeline
-	w._class.singleton = class_singleton
-	w._class.unique = declaration.unique
-
-	require "component".solve(schema_data)
-	require "policy".solve(w)
-	singleton_solve(w)
-    interface_solve(w)
+	solve(w)
 end
+
+local function import(w, type, name)
+	local decl = w._decl.interface[name]
+	if not decl then
+		error(("%s `%s` is not defined."):format(type, name))
+	end
+	if not decl.implement or #decl.implement == 0 then
+		error(("%s `%s` is not implement."):format(type, name))
+	end
+    for _, file in ipairs(decl.implement) do
+        import_impl("/pkg/"..decl.implement.packname.."/"..file, w._ecs)
+	end
+	solve_object(w, type, name)
+end
+
+return {
+	init = init,
+	solve = solve,
+	import = import,
+}

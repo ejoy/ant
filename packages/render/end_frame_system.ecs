@@ -1,9 +1,4 @@
 implement "end_frame_system.lua"
 
 system "end_frame_system"
-    .require_singleton "frame_stat"
     .method "end_frame"
-
-singleton "frame_stat"
-
-component "frame_stat"

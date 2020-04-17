@@ -24,8 +24,7 @@ local editor_watcher_sys = ecs.system "editor_watcher_system"
 
 local camera_motion = world:interface "ant.objcontroller|camera_motion"
 
-ecs.component "editor_watcher_cache" {}
-ecs.singleton "editor_watcher_cache" {}
+local editor_watcher_cache = {}
 
 local function send_hierarchy()
     local temp = {}
@@ -114,7 +113,7 @@ local last_eid = nil
 local last_tbl = nil
 local timer = world:interface "ant.timer|timer"
 local function send_entity(eids,typ)
-    local profile_cache = world:singleton "profile_cache"
+    local profile_cache = world:interface "ant.imgui|profile_cache".data()
     local hub = world.args.hub
     local entity_info = {type = typ}
     if eids == nil or (not world[eids[1]]) then
@@ -280,7 +279,7 @@ local function change_watch_entity(eids,focus,is_pick)
         end
     end
     log.info_a("eids",eids,"need_send",need_send)
-    world:singleton "editor_watcher_cache".need_send = need_send
+    editor_watcher_cache.need_send = need_send
     send_entity(need_send,(is_pick and "pick" or "editor"))
 end
 
@@ -444,7 +443,7 @@ function editor_watcher_sys:init()
     hub.subscribe(WatcherEvent.ETR.ModifyMultComponent,on_mult_component_modified)
     hub.subscribe(WatcherEvent.ETR.EntityOperate,on_entity_operate,self)
     hub.subscribe(WatcherEvent.ETR.RequestHierarchy,on_request_hierarchy,self)
-    local profile_cache = world:singleton "profile_cache"
+    local profile_cache = world:interface "ant.imgui|profile_cache".data()
     -- hub.subscribe(WatcherEvent.ETR.RequestWorldInfo,publish_world_info)
     -- publish_world_info()
     local rxbus = world.args.rxbus
@@ -536,7 +535,7 @@ end
 
 function editor_watcher_sys:after_update()
     -----
-    local need_send = world:singleton "editor_watcher_cache".need_send
+    local need_send = editor_watcher_cache.need_send
     if not need_send then
         return
     end

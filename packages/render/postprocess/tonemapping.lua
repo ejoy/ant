@@ -17,13 +17,12 @@ local ipp = world:interface "postprocess"
 function tm_sys:post_init()
     local sd = setting.get()
     local hdrsetting = sd.graphic.hdr
-    local pp = world:singleton "postprocess"
     if hdrsetting.enable then
         local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 
         local fbsize = ipp.main_rb_size(main_fbidx)
         cu.main_queue_camera()
-        local techniques = pp.techniques
+        local techniques = ipp.techniques()
         techniques[#techniques+1]
             {
                 name = "tonemapping",

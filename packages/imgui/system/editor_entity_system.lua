@@ -11,10 +11,7 @@ local Rx        = import_package "ant.rxlua".Rx
 local editor_entity_sys = ecs.system "editor_entity_system"
 local hub = world.args.hub
 
-ecs.component "entity_relation"
-    .parent_child_dic "int{}"
-    .child_parent_dic "int{}"
-ecs.singleton "entity_relation" {
+local entity_relation = {
     parent_child_dic = {},
     child_parent_dic = {},
 }
@@ -52,7 +49,6 @@ local function on_request_new_entity(arg)
 end
 
 local function rename_duplicate_entity(eid)
-    local entity_relation = world:singleton "entity_relation"
     local parent_child_dic = entity_relation.parent_child_dic
     local child_parent_dic = entity_relation.child_parent_dic
     poll_parent_msg() --update parent-children info
@@ -96,7 +92,6 @@ local function rename_duplicate_entity(eid)
 end
 
 local function on_request_duplicate_entity(eids)
-    local entity_relation = world:singleton "entity_relation"
     local parent_child_dic = entity_relation.parent_child_dic
     local child_parent_dic = entity_relation.child_parent_dic
     --when duplicate parent,need duplicate children too. 
@@ -159,7 +154,6 @@ end
 
 local function refresh_parent_relation(target)
     local dirty = false
-    local entity_relation = world:singleton "entity_relation"
     local parent_child_dic = entity_relation.parent_child_dic
     local child_parent_dic = entity_relation.child_parent_dic
     if not world[target] then

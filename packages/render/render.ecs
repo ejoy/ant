@@ -22,7 +22,7 @@ system "render_system"
     .require_policy "main_queue"
     .require_policy "camera"
     .require_policy "ant.general|name"
-    .require_singleton "render_properties"
+    .require_interface "render_properties"
     .method "init"
     .method "render_commit"
 

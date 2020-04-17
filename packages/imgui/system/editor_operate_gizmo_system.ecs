@@ -1,18 +1,13 @@
 implement "system/editor_operate_gizmo_system.lua"
 
 system "editor_operate_gizmo_system"
-    .require_singleton "operate_gizmo_cache"
     .method "after_pickup"
     .method "editor_update"
     .method "init"
-
-singleton "operate_gizmo_cache"
 
 policy "gizmo_object"
     .require_component "gizmo_object"
 
 component "gizmo_object"
-
-component "operate_gizmo_cache"
 
 component "show_operate_gizmo"

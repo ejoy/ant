@@ -3,11 +3,7 @@ local world = ecs.world
 
 local math3d 	= require "math3d"
 
-ecs.component "frame_stat"
-	.frame_num "int"
-	.bgfx_frames "int"
-
-ecs.singleton "frame_stat" {
+local stat = {
 	frame_num 	= 0,
 	bgfx_frames = -1,
 }
@@ -15,7 +11,6 @@ ecs.singleton "frame_stat" {
 local end_frame_sys = ecs.system "end_frame_system"
 
 function end_frame_sys:end_frame()
-	local stat = world:singleton "frame_stat"
 	stat.frame_num = stat.frame_num + 1
 	math3d.reset()
 end

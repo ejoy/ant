@@ -2,16 +2,18 @@ local ecs = ...
 local world = ecs.world
 local WatcherEvent = require "hub_event"
 
-ecs.component "profile_cache" {}
-ecs.singleton "profile_cache" {}
+local profile_cache = {}
+
+local m = ecs.interface "profile_cache"
+function m.data()
+    return profile_cache
+end
 
 local world_profile_sys =  ecs.system "world_profile_system"
 
 local eventSystemHook = world:sub {"system_hook"}
 
 function world_profile_sys:editor_update()
-    local e = world:singleton_entity "profile_cache"
-    local profile_cache = e.profile_cache
     for _,typ,sys,what,stepname,time_ms in eventSystemHook:unpack() do
         if sys ~= "world_profile_system" then
             profile_cache[#profile_cache+1] = {sys,stepname,typ,time_ms}
@@ -19,5 +21,5 @@ function world_profile_sys:editor_update()
     end
     local hub = world.args.hub
     hub.publish(WatcherEvent.RTE.SystemProfile, profile_cache)
-    e.profile_cache = {}
+    profile_cache = {}
 end
