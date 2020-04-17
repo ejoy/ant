@@ -13,6 +13,8 @@ local mathpkg   = import_package "ant.math"
 local mu, mc= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
 
+local assetmgr = import_package "ant.asset"
+
 ----------------------------------------------------------------------------------------------------------
 local dbg_sm_sys = ecs.system "debug_shadow_maker_system"
 
@@ -32,22 +34,16 @@ local function csm_shadow_debug_quad()
 		local rect = {x=0, y=0, w=quadsize*#split_ratios, h=quadsize}
 		local q_eid = computil.create_quad_entity(world, rect, quadmaterial, "csm_quad", "shadow_quad")
 		local qe = world[q_eid]
-		local quad_material = qe.material
-		local properties = quad_material.properties 
-		if properties == nil then
-			properties = {}
-			quad_material.properties = properties
-		end
-		local textures = properties.textures
-		if textures == nil then
-			textures = {}
-			properties.textures = textures
-		end
-
-		textures["s_shadowmap"] = {
-			type = "texture", name = "csm render buffer", stage = smstage,
-			handle = fbmgr.get_rb(fb[1]).handle,
+		local properties = {
+			textures = {
+				s_shadowmap = {
+					type = "texture", name = "csm render buffer", stage = smstage,
+					handle = fbmgr.get_rb(fb[1]).handle,
+				}
+			}
 		}
+
+		assetmgr.patch(qe.material, properties)
 	end
 end
 
