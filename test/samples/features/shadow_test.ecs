@@ -1,8 +1,7 @@
-implement "shadow_test.lua"
-
 import "@ant.render"
 
 system "shadow_test_system"
+.implement "shadow_test.lua"
 .require_policy "ant.render|shadow_make_policy"
 .require_system "ant.render|shadowcamera_system"
 .require_system "ant.render|shadow_system"
