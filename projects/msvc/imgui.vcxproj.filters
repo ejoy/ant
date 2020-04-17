@@ -7,6 +7,9 @@
     <Filter Include="binding">
       <UniqueIdentifier>{8c7e47fd-fe08-4aca-85f9-17a4bd24705d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="imnodes">
+      <UniqueIdentifier>{05d9b6ee-c1b1-4314-ab34-c860b6b8b4ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rd\imgui\imgui_widgets.cpp">
@@ -30,6 +33,12 @@
     <ClCompile Include="..\..\3rd\imgui\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\3rd\imnodes\imnodes.cpp">
+      <Filter>imnodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\luaimnodes.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\imgui\imgui_config.h">
@@ -52,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="..\..\clibs\imgui\imgui_ant.h">
       <Filter>binding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\imnodes\imnodes.h">
+      <Filter>imnodes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

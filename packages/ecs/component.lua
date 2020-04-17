@@ -208,19 +208,23 @@ local function gen_ref(c)
     return c.ref
 end
 
-local function solve(schema)
-    typeinfo = schema.map
+local function check(w, schema)
+    typeinfo = w._class.component
     for _,v in ipairs(schema.list) do
         if v.uncomplete then
             error(v.name .. " is uncomplete")
         end
     end
-    for k in pairs(schema._undefined) do
-        if not schema.map[k] then
-            error(k .. " is undefined in " .. schema._undefined[k])
+    for k, parent in pairs(schema._undefined) do
+        if typeinfo[parent] and not typeinfo[k] then
+            error(k .. " is undefined in " .. parent)
         end
     end
-    for _,v in pairs(schema.map) do
+end
+
+local function solve(w)
+    typeinfo = w._class.component
+    for _,v in pairs(typeinfo) do
         gen_ref(v)
     end
 end
@@ -228,5 +232,6 @@ end
 return {
     init = init,
     delete = delete,
+    check = check,
     solve = solve,
 }

@@ -20,23 +20,24 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rd\imgui\imgui.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\3rd\imgui\imgui_draw.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\..\3rd\imgui\imgui_widgets.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\3rd\imnodes\imnodes.cpp" />
     <ClCompile Include="..\..\clibs\imgui\imgui_ant.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -53,6 +54,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\luaimnodes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="luadll.vcxproj">
@@ -65,6 +67,7 @@
     <ClInclude Include="..\..\3rd\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\..\3rd\imgui\imstb_textedit.h" />
     <ClInclude Include="..\..\3rd\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\..\3rd\imnodes\imnodes.h" />
     <ClInclude Include="..\..\clibs\imgui\imgui_ant.h" />
     <ClInclude Include="..\..\clibs\imgui\imgui_config.h" />
   </ItemGroup>
@@ -146,9 +149,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;_DEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/imgui;../../3rd/glm;../../clibs/window;../../clibs/bgfx</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/imgui;../../3rd/glm;../../clibs/window;../../clibs/bgfx;../../3rd/imnodes</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -204,7 +207,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_DISABLE_FILE_FUNCTIONS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;NDEBUG;MEMORYFILE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/bgfx/3rdparty;../../3rd/imgui;../../3rd/glm;../../clibs/bgfx;../../clibs/window</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>

@@ -31,7 +31,10 @@ local m = ecs.system 'game'
 function m:init()
 	local eid = world:create_entity {
 		policy = { "ant.scene|hierarchy_policy" },
-		data = {},
+		data = {
+			parent = 1,
+			scene_entity = true,
+		},
 	}
 --	local obj = root:create(eid)
 --	print ("Game start", obj, obj.parent)
