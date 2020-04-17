@@ -1,5 +1,3 @@
-implement "renderworld.lua"
-
 import "@ant.animation"
 import "@ant.collision"
 import "@ant.general"
@@ -11,10 +9,12 @@ import "@ant.sky"
 import "@ant.timer"
 
 system "gui_system"
+    .implement "renderworld.lua"
     .require_system "ant.imguibase|imgui_system"
     .method "ui_update"
 
 system "model_viewer_system"
+    .implement "renderworld.lua"
     .require_system "ant.render|physic_bounding_system"
     .require_system "ant.imguibase|imgui_system"
     .require_policy "ant.sky|procedural_sky"

@@ -1,5 +1,3 @@
-implement "system/policy_define.lua"
-
 import "@ant.serialize"
 
 policy "base_entity"

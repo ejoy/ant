@@ -1,10 +1,10 @@
-implement "timer_system.lua"
-
 system "time_system"
+    .implement "timer_system.lua"
     .method "init"
     .method "timer"
 
 interface "timer"
+    .implement "timer_system.lua"
     .require_system "time_system"
     .method "current"
     .method "delta"

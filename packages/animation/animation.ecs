@@ -1,8 +1,7 @@
-implement "animation.lua"
-
 import "@ant.timer"
 
 system "animation_system"
+    .implement "animation.lua"
     .require_interface "ant.timer|timer"
     .method "do_refine"
     .method "end_animation"
@@ -22,19 +21,25 @@ policy "pose_result"
     .require_component "pose_result"
 
 transform "build_pose_result"
+    .implement "animation.lua"
     .input "skeleton"
     .output "pose_result"
     .method "process"
 
 component "animation"
+    .implement "animation.lua"
     .require_component "animation_content"
     .method "init"
 
 component "animation_content"
+    .implement "animation.lua"
     .require_component "animation_resource"
 
 component "animation_resource"
+    .implement "animation.lua"
 
 component "pose_result"
+    .implement "animation.lua"
 
 component "skeleton"
+    .implement "animation.lua"

@@ -1,5 +1,3 @@
-implement "skinning/ozzmesh_skinning.lua"
-
 policy "ozz_skinning"
     .require_system "skinning_system"
     .require_transform "ozzmesh_skinning"
@@ -17,11 +15,13 @@ policy "ozzmesh"
     .require_component "mesh"
 
 transform "ozzmesh_loader"
+    .implement "skinning/ozzmesh_skinning.lua"
     .input "mesh"
     .output "rendermesh"
     .method "process"
 
 transform "ozzmesh_skinning"
+    .implement "skinning/ozzmesh_skinning.lua"
     .input "mesh"
     .input "rendermesh"
     .output "skinning"

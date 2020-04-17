@@ -1,9 +1,8 @@
-implement "scenespace_test.lua"
-
 import "@ant.render"
 import "@ant.scene"
 
 system "scenespace_test_system"
+    .implement "scenespace_test.lua"
     .require_policy "ant.render|render"
     .require_policy "ant.scene|transform_policy"
     .require_policy "ant.scene|hierarchy_policy"

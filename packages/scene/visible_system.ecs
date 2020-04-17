@@ -1,6 +1,6 @@
-implement "visible_system.lua"
-
 system "visible_system"
+    .implement "visible_system.lua"
     .method "after_update"
 
 component "hierarchy_visible"
+    .implement "visible_system.lua"

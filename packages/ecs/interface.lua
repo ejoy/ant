@@ -52,6 +52,7 @@ local parser = {}
 
 local attribute = {
 	system = {
+		"implement",
 		"require_system",
 		"require_interface",
 		"require_policy",
@@ -66,18 +67,21 @@ local attribute = {
 		"unique_component"
 	},
 	interface = {
+		"implement",
 		"require_system",
 		"require_interface",
 		"require_policy",
 		"method",
 	},
 	transform = {
+		"implement",
 		"require_interface",
 		"input",
 		"output",
 		"method",
 	},
 	component = {
+		"implement",
 		"require_component",
 		"method",
 	},
@@ -181,9 +185,6 @@ local load_interface do
 
 	genenv = function (self, packname, result)
 		local api = {}
-		local implement = {
-			packname = packname,
-		}
 		function api.import(filename)
 			local pname, fname = packname, filename
 			if filename:sub(1,1) == "@" then
@@ -196,15 +197,12 @@ local load_interface do
 			end
 			load_interface(self, pname, fname, result)
 		end
-		function api.implement(filename)
-			table.insert(implement, filename)
-		end
 		for _, attr in ipairs(type_list) do
 			api[attr] = function (name)
 				local contents = {}
 				local setter = attribute_setter(attribute[attr], packname, contents)
 				local fname = no_packspace[attr] and name or fullname(packname, name)
-				table.insert(result, { command = attr, name = fname, value = contents, implement = implement })
+				table.insert(result, { command = attr, packname = packname, name = fname, value = contents })
 				insert_fileinfo(result)
 				return setter
 			end
@@ -237,7 +235,7 @@ end
 local function merge(output, input, list)
 	for name, item in pairs(input) do
 		local value = {
-			implement = item.implement,
+			packname = item.packname,
 		}
 		for _, attrib in ipairs(list) do
 			value[attrib] = {}

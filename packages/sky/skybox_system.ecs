@@ -1,6 +1,6 @@
-implement "skybox_system.lua"
-
 system "skybox_system"
+    .implement "skybox_system.lua"
     .method "init"
 
 component "skybox"
+    .implement "skybox_system.lua"

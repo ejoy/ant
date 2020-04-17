@@ -1,8 +1,7 @@
-implement "system/editor_watch_system.lua"
-
 import "@ant.objcontroller"
 
 system "editor_watcher_system"
+    .implement "system/editor_watch_system.lua"
     .require_system "editor_operate_gizmo_system"
     .require_system "editor_policy_system"
     .require_system "editor_entity_system"
@@ -19,9 +18,13 @@ policy "outline"
     .require_component "editor_object"
 
 component "editor_object"
+    .implement "system/editor_watch_system.lua"
 
 component "editor_watching"
+    .implement "system/editor_watch_system.lua"
 
 component "outline_entity"
+    .implement "system/editor_watch_system.lua"
 
 component "target_entity"
+    .implement "system/editor_watch_system.lua"

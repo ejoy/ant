@@ -1,9 +1,8 @@
-implement "shadow/shadow_maker.lua"
-
 import "@ant.general"
 import "@ant.scene"
 
 system "shadow_system"
+    .implement "shadow/shadow_maker.lua"
     .require_system "ant.scene|primitive_filter_system"
     .require_system "shadowcamera_system"
     .require_system "render_system"
@@ -11,6 +10,7 @@ system "shadow_system"
     .method "refine_filter"
 
 system "shadowcamera_system"
+    .implement "shadow/shadow_maker.lua"
     .require_system "ant.scene|primitive_filter_system"
     .method "shadow_camera"
 
@@ -32,12 +32,17 @@ policy "shadow_make_policy"
     .require_component "material"
 
 component "can_cast"
+    .implement "shadow/shadow_maker.lua"
 
 component "csm"
+    .implement "shadow/shadow_maker.lua"
 
 component "csm_split_config"
+    .implement "shadow/shadow_maker.lua"
 
 component "omni"
+    .implement "shadow/shadow_maker.lua"
 
 component "shadow"
+    .implement "shadow/shadow_maker.lua"
     .require_component "csm_split_config"

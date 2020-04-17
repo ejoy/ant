@@ -1,16 +1,17 @@
-implement "widget_system.lua"
-
 import "@ant.general"
 
 system "physic_bounding_system"
+    .implement "widget_system.lua"
     .require_interface "iwidget_drawer"
     .method "widget"
 
 system "render_mesh_bounding_system"
+    .implement "widget_system.lua"
     .require_system "widget_drawer_system"
     .method "widget"
 
 system "widget_drawer_system"
+    .implement "widget_system.lua"
     .require_policy "ant.general|name"
     .require_policy "render"
     .require_policy "bounding_draw"
@@ -18,6 +19,7 @@ system "widget_drawer_system"
     .method "init"
 
 interface "iwidget_drawer"
+    .implement "widget_system.lua"
     .require_system "widget_drawer_system"
     .method "draw_aabb_box"
     .method "draw_box"
@@ -34,5 +36,7 @@ policy "debug_mesh_bounding"
     .require_component "debug_mesh_bounding"
 
 component "debug_mesh_bounding"
+    .implement "widget_system.lua"
 
 component "widget_drawer"
+    .implement "widget_system.lua"

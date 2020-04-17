@@ -1,9 +1,8 @@
-implement "terrain_test.lua"
-
 import "@ant.collision"
 import "@ant.terrain"
 
 system "terrain_test_system"
+    .implement "terrain_test.lua"
     .require_policy "ant.terrain|terrain_policy"
     .require_policy "ant.collision|terrain_collider_policy"
     .require_interface "ant.collision|collider"

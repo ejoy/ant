@@ -1,11 +1,11 @@
-implement "procedural_sky_system.lua"
-
 import "@ant.timer"
 
 system "procedural_sky_system"
+    .implement "procedural_sky_system.lua"
     .method "update_sky"
 
 system "sun_update_system"
+    .implement "procedural_sky_system.lua"
     .require_system "procedural_sky_system"
     .require_interface "ant.timer|timer"
     .method "update_sun"
@@ -20,4 +20,5 @@ policy "procedural_sky_follow_sun"
     .require_component "procedural_sky"
 
 component "procedural_sky"
+    .implement "procedural_sky_system.lua"
     .method "init"

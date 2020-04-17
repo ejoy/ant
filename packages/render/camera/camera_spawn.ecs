@@ -1,6 +1,5 @@
-implement "camera/camera_spawn.lua"
-
 interface "camera"
+    .implement "camera/camera_spawn.lua"
     .method "bind"
     .method "create"
     .method "get"

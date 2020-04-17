@@ -138,14 +138,16 @@ local function importAll(w, class, policies, systems)
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
             log.info("Import  ", objname, name)
-            res[objname][name] = v
-            for _, impl in ipairs(v.implement) do
-                local file = "/pkg/"..v.implement.packname.."/"..impl
-                if not mark_implement[file] then
-                    mark_implement[file] = true
-                    implement[#implement+1] = file
-                end
-            end
+			res[objname][name] = v
+			if v.implement then
+				for _, impl in ipairs(v.implement) do
+					local file = "/pkg/"..v.packname.."/"..impl
+					if not mark_implement[file] then
+						mark_implement[file] = true
+						implement[#implement+1] = file
+					end
+				end
+			end
 			for what, attrib in sortpairs(check_map) do
 				if v[what] then
 					for _, k in ipairs(v[what]) do
@@ -301,11 +303,11 @@ local function import(w, type, name)
 	if not decl then
 		error(("%s `%s` is not defined."):format(type, name))
 	end
-	if not decl.implement or #decl.implement == 0 then
+	if not decl.implement then
 		error(("%s `%s` is not implement."):format(type, name))
 	end
     for _, file in ipairs(decl.implement) do
-        import_impl("/pkg/"..decl.implement.packname.."/"..file, w._ecs)
+        import_impl("/pkg/"..decl.packname.."/"..file, w._ecs)
 	end
 	solve_object(w, type, name)
 end
