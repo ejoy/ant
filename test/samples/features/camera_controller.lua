@@ -8,8 +8,11 @@ local camera_controller_sys = ecs.system "camera_controller_system"
 
 local icm = world:interface "ant.objcontroller|camera_motion"
 
-local eventMouseLeft = world:sub {"mouse", "LEFT"}
-local eventMouseRight = world:sub {"mouse", "RIGHT"}
+local mouse_events = {
+	world:sub {"mouse", "LEFT"},
+	world:sub {"mouse", "RIGHT"}
+}
+
 local kMouseSpeed <const> = 0.5
 local mouse_lastx, mouse_lasty
 local dpi_x, dpi_y
@@ -57,16 +60,12 @@ function camera_controller_sys:data_changed()
 	local camera = world[mq.camera_eid].camera
 	
 	if can_rotate(camera) then
-		for _, e in ipairs{eventMouseLeft, eventMouseRight} do
+		for _, e in ipairs(mouse_events) do
 			for _,_,state,x,y in e:unpack() do
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-					local right, up = math3d.base_axes(camera.viewdir)
-					local qy = math3d.quaternion{axis=up, r=ux}
-					local qx = math3d.quaternion{axis=right, r=uy}
-					local q = math3d.mul(qy, qx)
-					camera.viewdir.v = math3d.transform(q, camera.viewdir, 0)
+					icm.rotate(mq.camera_eid, uy, ux)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end
