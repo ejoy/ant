@@ -248,19 +248,19 @@ local function init(w, config)
 
 	decl_basetype(w, schema, schema_data)
 
-	for _, k in ipairs(config.import) do
+	for _, k in ipairs(config.ecs.import) do
 		import_decl(w, k)
 	end
 	w._import = create_importor(w, ecs, schema_data, declaration)
-	for _, k in ipairs(config.policy) do
-		w._import.policy(k)
+	
+	for _, objname in ipairs {"system","policy","transform","interface","component","pipeline"} do
+		if config.ecs[objname] then
+			for _, k in ipairs(config.ecs[objname]) do
+				w._import[objname](k)
+			end
+		end
 	end
-	for _, k in ipairs(config.system) do
-		w._import.system(k)
-	end
-	w._import.pipeline "init"
-	w._import.pipeline "update"
-	w._import.pipeline "exit"
+
     for _, objname in ipairs {"system","policy","interface","transform"} do
         for fullname, o in pairs(w._class[objname]) do
 			if o.methodname then
