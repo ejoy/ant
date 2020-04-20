@@ -77,8 +77,8 @@ function foreach_save_1(component, name)
     if c.ref and pool[component] then
         return pool[component]
     end
-    if c.method and c.method.save then
-        component = c.method.save(component)
+    if c.methodfunc and c.methodfunc.save then
+        component = c.methodfunc.save(component)
     end
     local ret
     if not c.type then

@@ -73,7 +73,7 @@ local function create(w, policies)
         local name = reflection[c]
         if name and not mark[name] then
             mark[name] = true
-            init_transform[#init_transform+1] = transform_class[name].method.process
+            init_transform[#init_transform+1] = transform_class[name].methodfunc.process
         end
     end
     table.sort(init_component)
@@ -115,7 +115,7 @@ local function solve(w)
         if #v.output == 0 then
             error(("transform `%s`'s output cannot be empty."):format(name))
         end
-        if type(v.method.process) ~= 'function' then
+        if type(v.methodfunc.process) ~= 'function' then
             error(("transform `%s`'s process cannot be empty."):format(name))
         end
     end

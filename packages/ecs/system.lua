@@ -56,7 +56,7 @@ function system.init(sys, pipeline)
 	for fullname, s in sortpairs(sys) do
 		local packname, name = splitname(fullname)
 		local proxy = {}
-		for step_name, func in pairs(s.method) do
+		for step_name, func in pairs(s.methodfunc) do
 			table.insert(res[step_name], { func, proxy, name, step_name, packname })
 		end
 	end
