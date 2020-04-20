@@ -18,7 +18,6 @@ local assetmgr = import_package "ant.asset"
 ----------------------------------------------------------------------------------------------------------
 local dbg_sm_sys = ecs.system "debug_shadow_maker_system"
 
-ecs.tag "shadow_quad"
 
 local quadsize = 192
 
@@ -31,7 +30,7 @@ local function csm_shadow_debug_quad()
 
 	local num_split = se.shadow.split.num_split
 	local rect = {x=0, y=0, w=quadsize*num_split, h=quadsize}
-	local q_eid = computil.create_quad_entity(world, rect, quadmaterial, "csm_quad", "shadow_quad")
+	local q_eid = computil.create_quad_entity(world, rect, quadmaterial, "csm_quad")
 	local qe = world[q_eid]
 
 	assetmgr.patch(qe.material, {
@@ -52,6 +51,17 @@ local frustum_colors = {
 	0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
 }
 
+local function add_shadow_debug_policy(eid)
+	world:add_policy(eid, {
+		policy = {
+			"ant.render|shadow_debug_policy",
+		},
+		data = {
+			shadow_debug = true,
+		}
+	})
+end
+
 local function	csm_shadow_debug_frustum()
 	for _, seid in world:each "csm" do
 		local e = world[seid]
@@ -60,8 +70,21 @@ local function	csm_shadow_debug_frustum()
 
 		local color = frustum_colors[e.csm.index]
 		local frustum_points = math3d.frustum_points(vp)
-		computil.create_frustum_entity(world, frustum_points, "csm frusutm part" .. e.csm.index, nil, color, "shadow_debug")
-		computil.create_axis_entity(world, math3d.matrix{r=math3d.torotation(camera.viewdir), t=camera.eyepos}, color, "shadow_debug")
+		
+		add_shadow_debug_policy(
+			computil.create_frustum_entity(world, frustum_points, "csm frusutm part" .. e.csm.index, nil, color)
+		)
+		add_shadow_debug_policy(
+			computil.create_axis_entity(world, 
+			{
+				srt={
+					r=math3d.tovalue(math3d.torotation(camera.viewdir)), 
+					t=math3d.tovalue(camera.eyepos)
+				}
+			},
+			color)
+		)
+
 	end
 end
 
@@ -74,7 +97,7 @@ local function main_view_debug_frustum()
 		local csm = s.csm
 		local vp = mu.view_proj(camera)
 		local frustum_points = math3d.frustum_points(vp)
-		computil.create_frustum_entity(world, frustum_points, "main view part" .. csm.index, nil, frustum_colors[csm.index], "shadow_debug")
+		computil.create_frustum_entity(world, frustum_points, "main view part" .. csm.index, nil, frustum_colors[csm.index])
 	end
 end
 
@@ -103,22 +126,10 @@ local function get_split_distance(index)
 	return n, f
 end
 
-local function create_debug_entity(eid)
-	local e = assert(world[eid])
-	assert(e.main_queue)
-
-	local function remove_eids(eids)
-		for _, eid in ipairs(eids)do
-			world:remove_entity(eid)
-		end
-	end
-
-	local debug_shadow_eids = {}
+local function create_debug_entity()
 	for _, seid in world:each "shadow_debug" do
-		debug_shadow_eids[#debug_shadow_eids+1] = seid
+		world:remove_entity(seid)
 	end
-
-	remove_eids(debug_shadow_eids)
 
 	main_view_debug_frustum()
 	csm_shadow_debug_frustum()

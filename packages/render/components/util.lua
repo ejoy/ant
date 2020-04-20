@@ -227,23 +227,19 @@ function util.quad_mesh(rect)
 end
 
 local function create_simple_render_entity(world, transform, material, name, tag)
-	local dataset = {
-		transform = transform,
-		rendermesh = {},
-		material = material,
-		can_render = true,
-		name = name or "frustum",
-		scene_entity = true,
-	}
-	if tag then
-		dataset[tag] = true
-	end
 	return world:create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
 		},
-		data = dataset,
+		data = {
+			transform = transform or {srt={}},
+			rendermesh = {},
+			material = material,
+			can_render = true,
+			name = name or "frustum",
+			scene_entity = true,
+		}
 	}
 end
 
@@ -259,8 +255,8 @@ local function generate_quad_mesh_name()
 
 	return name
 end
-function util.create_quad_entity(world, rect, material, name, tag)
-	local eid = create_simple_render_entity(world, {srt={}}, material, name, tag)
+function util.create_quad_entity(world, rect, material, name)
+	local eid = create_simple_render_entity(world, {srt={}}, material, name)
 	world[eid].rendermesh = assetmgr.load(generate_quad_mesh_name(), util.quad_mesh(rect))
 	return eid
 end
