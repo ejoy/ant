@@ -126,6 +126,14 @@ function util.create_main_queue(world, view_rect)
 		view_rect.w, view_rect.h, "D24S8", rb_flag)
 	)
 
+	local icamera = world:interface "ant.render|camera"
+	local camera_eid = icamera.create{
+		eyepos  = {0, 0, 0, 1},
+		viewdir = {0, 0, 1, 0},
+		frustum = default_comp.frustum(view_rect.w, view_rect.h),
+        name = "default_camera",
+	}
+
 	return world:create_entity {
 		policy = {
 			"ant.render|render_queue",
@@ -133,7 +141,7 @@ function util.create_main_queue(world, view_rect)
 			"ant.general|name",
 		},
 		data = {
-			camera_eid = 0,
+			camera_eid = camera_eid,
 			viewid = viewidmgr.get "main_view",
 			render_target = {
 				viewport = default_comp.viewport(view_rect),

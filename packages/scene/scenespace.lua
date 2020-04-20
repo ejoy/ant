@@ -56,8 +56,9 @@ function sp_sys:update_hierarchy_scene()
     end
 end
 
-local function update_lock_target_transform(e, lt, target, im)
+local function update_lock_target_transform(eid, lt, target, im)
 	local locktype = lt.type
+	local e = world[eid]
 	if locktype == "move" then
 		local te = world[target]
 		local target_trans = te.transform
@@ -65,18 +66,18 @@ local function update_lock_target_transform(e, lt, target, im)
 		if lt.offset then
 			pos = math3d.add(pos, lt.offset)
 		end
-		im.set_position(e, pos)
+		im.set_position(eid, pos)
 		local trans = e.transform
 		trans.world.m = trans.srt
 	elseif locktype == "rotate" then
 		local te = world[target]
 		local transform = te.transform
 
-		local pos = im.get_position(e)
+		local pos = im.get_position(eid)
 		local targetpos = math3d.index(transform.world, 4)
-		im.set_direction(e, math3d.normalize(math3d.sub(targetpos, pos)))
+		im.set_direction(eid, math3d.normalize(math3d.sub(targetpos, pos)))
 		if lt.offset then
-			im.set_position(e, math3d.add(pos, lt.offset))
+			im.set_position(eid, math3d.add(pos, lt.offset))
 		end
 		local trans = e.transform
 		trans.world.m = trans.srt
@@ -110,18 +111,19 @@ local function combine_parent_transform(e, trans)
 	end
 end
 
-local function update_transform(e)
+local function update_transform(eid)
 	--update local info
+	local e = world[eid]
 	local trans = e.transform
 	if trans then
 		trans.world.m = trans.srt
 
 		--combine parent info
 		local im = e.camera and icm or iom
-		local lt = im.get_lock_target(e)
+		local lt = im.get_lock_target(eid)
 
 		if lt then
-			update_lock_target_transform(e, lt, e.parent, im)
+			update_lock_target_transform(eid, lt, e.parent, im)
 		else
 			combine_parent_transform(e, trans)
 		end
@@ -130,11 +132,9 @@ end
 
 function sp_sys:update_transform()
 	for _, eid in ipairs(scenequeue) do
-		local e = world[eid]
-
 		-- hierarchy scene can do everything relative to hierarchy, such as:
 		-- hierarhcy visible/material/transform, and another reasonable data
-		update_transform(e)
+		update_transform(eid)
 	end
 end
 

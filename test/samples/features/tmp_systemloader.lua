@@ -133,18 +133,12 @@ function init_loader_sys:init()
 end
 
 local function create_camera()
-    local rotation = math3d.quaternion{math.rad(30), math.rad(150), 0}
-    local id = icamera.create {
-        eyepos  = {-4.5, 2, -1.5, 1},
-        viewdir = math3d.totable(math3d.todirection(rotation)),
-        name = "features_camera",
-        lock_target = {
-            type = "rotate",
-            target = "",
-        }
-    }
-    icamera.bind(id, "main_queue")
-    return id
+    local dir = math3d.todirection(math3d.quaternion{math.rad(30), math.rad(150), 0})
+    local mq = world:singleton_entity "main_queue"
+    local camera_eid = mq.camera_eid
+
+    icm.set_direction(camera_eid, dir)
+    icm.set_position(camera_eid, {-4.5, 2, -1.5, 1})
 end
 
 function init_loader_sys:post_init()
@@ -171,7 +165,7 @@ function init_loader_sys:ui_update()
     if widget.Button "camera_lock_target_for_move" then
         local foundeid = find_entity("lock_target", "can_render")
         if foundeid then
-            icm.set_lock_target(world[cameraeid], {type = "move", offset = {0, 1, 0}})
+            icm.set_lock_target(cameraeid, {type = "move", offset = {0, 1, 0}})
         else
             print "not found animation_sample"
         end
@@ -181,7 +175,7 @@ function init_loader_sys:ui_update()
     if widget.Button "camera_lock_target_for_rotate" then
         local foundeid = find_entity("lock_target", "can_render")
         if foundeid then
-            icm.set_lock_target(world[cameraeid], {type="rotate"})
+            icm.set_lock_target(cameraeid, {type="rotate"})
         else
             print "not found gltf entity"
         end

@@ -14,31 +14,27 @@ function iobj.create(obj_accessor)
 end
 
 function iobj:move(eid, delta_vec)
-    local e = world[eid]
-    local p = self:get_position(e)
-    self:set_position(e, math3d.add(p, delta_vec))
+    local p = self:get_position(eid)
+    self:set_position(eid, math3d.add(p, delta_vec))
 end
 
 function iobj:move_along_axis(eid, axis, delta)
-    local e = world[eid]
-    local p = self:get_position(e)
-    self:set_position(e, math3d.muladd(axis, delta, p))
+    local p = self:get_position(eid)
+    self:set_position(eid, math3d.muladd(axis, delta, p))
 end
 
 function iobj:move_along(eid, delta_vec)
-    local e = world[eid]
-    local dir = self:get_direction(e)
-    local pos = self:get_position(e)
+    local dir = self:get_direction(eid)
+    local pos = self:get_position(eid)
 
     local right, up = math3d.base_axes(dir)
     local x = math3d.muladd(right, delta_vec[1], pos)
     local y = math3d.muladd(up, delta_vec[2], x)
-    self:set_position(e, math3d.muladd(dir, delta_vec[3], y))
+    self:set_position(eid, math3d.muladd(dir, delta_vec[3], y))
 end
 
 function iobj:move_toward(eid, where, delta)
-    local e = world[eid]
-    local viewdir = self:get_direction(e)
+    local viewdir = self:get_direction(eid)
     local axisdir
     if where == "z" or where == "forward" then
         axisdir = viewdir
@@ -52,8 +48,8 @@ function iobj:move_toward(eid, where, delta)
         error(string.format("invalid direction: x/right for camera right; y/up for camera up; z/forward for camera viewdir:%s", where))
     end
 
-    local p = self:get_position(e)
-    self:set_position(e, math3d.muladd(axisdir, delta, p))
+    local p = self:get_position(eid)
+    self:set_position(eid, math3d.muladd(axisdir, delta, p))
 end
 
 local halfpi<const> = math.pi * 0.5
@@ -79,18 +75,16 @@ end
 
 function iobj:rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
-        local e = world[eid]
-        self:set_direction(e, rotate_vec(self:get_direction(e), rotateX, rotateY))
+        self:set_direction(eid, rotate_vec(self:get_direction(eid), rotateX, rotateY))
     end
 end
 
 function iobj:rotate_around_point(eid, targetpt, distance, dx, dy, threshold_around_x_axis)
-    local e = world[eid]
     threshold_around_x_axis = threshold_around_x_axis or 0.002
 
-    local dir = self:get_direction(e)
-    self:set_direction(e, math3d.normalize(rotate_vec(dir, dx, dy, threshold_around_x_axis)))
-    self:set_position(e, math3d.sub(targetpt, math3d.mul(dir, distance)))
+    local dir = self:get_direction(eid)
+    self:set_direction(eid, math3d.normalize(rotate_vec(dir, dx, dy, threshold_around_x_axis)))
+    self:set_position(eid, math3d.sub(targetpt, math3d.mul(dir, distance)))
 
 end
 
@@ -106,22 +100,20 @@ local function main_queue_viewport_size()
 end
 
 function iobj:focus_point(eid, pt)
-    local e = world[eid]
-	self:set_direction(e, math3d.normalize(math3d.sub(pt, self:get_position(e))))
+	self:set_direction(eid, math3d.normalize(math3d.sub(pt, self:get_position(e))))
 end
 
 function iobj:focus_obj(eid, foucseid)
 	local fe = world[foucseid]
 	local bounding = cu.entity_bounding(fe)
     if bounding then
-        local e = world[eid]
         local aabb = bounding.aabb
         local center, extents = math3d.aabb_center_extents(aabb)
         local radius = math3d.length(extents) * 0.5
         
-        local dir = math3d.normalize(math3d.sub(center, self:get_position(e)))
-        self:set_direction(e, dir)
-        self:set_position(e, math3d.sub(center, math3d.mul(dir, radius * 3.5)))
+        local dir = math3d.normalize(math3d.sub(center, self:get_position(eid)))
+        self:set_direction(eid, dir)
+        self:set_position(eid, math3d.sub(center, math3d.mul(dir, radius * 3.5)))
     else
         self:focus_point(eid, fe.transform.srt.t)
 	end
@@ -145,49 +137,55 @@ local function init_motion_interface(motion, accessor)
 end
 
 init_motion_interface(iobj_motion, {
-    get_position = function (_, e)
-        return math3d.index(e.transform.srt, 4)
+    get_position = function (_, eid)
+        return math3d.index(world[eid].transform.srt, 4)
     end,
-    set_position = function (_, e, pos)
-        e.transform.srt.t = pos
+    set_position = function (_, eid, pos)
+        world[eid].transform.srt.t = pos
+        world:pub{"component_changed", "transform", eid}
     end,
 
-    get_direction = function (_, e)
-        return math3d.forward_dir(e.transform.srt)
+    get_direction = function (_, eid)
+        return math3d.forward_dir(world[eid].transform.srt)
     end,
-    set_direction = function (_, e, dir)
-        e.transform.srt.r = math3d.torotation(dir)
+    set_direction = function (_, eid, dir)
+        world[eid].transform.srt.r = math3d.torotation(dir)
+        world:pub{"component_changed", "transform", eid}
     end,
-    get_lock_target = function (_, e)
-        return e.transform.lock_target
+    get_lock_target = function (_, eid)
+        return world[eid].transform.lock_target
     end,
-    set_lock_target = function (_, e, lock_target)
-        e.transform.lock_traget = lock_target
+    set_lock_target = function (_, eid, lock_target)
+        world[eid].transform.lock_traget = lock_target
+        world:pub{"component_changed", "transform", eid}
     end,
 })
 
 local icameramotion = ecs.interface "camera_motion"
 init_motion_interface(icameramotion, {
-    get_position = function (_, e)
-        return e.camera.eyepos
+    get_position = function (_, eid)
+        return world[eid].camera.eyepos
     end,
-    set_position = function (_, e, pos)
-        e.camera.eyepos.v = pos
-    end,
-
-    get_direction = function (_, e)
-        return e.camera.viewdir
+    set_position = function (_, eid, pos)
+        world[eid].camera.eyepos.v = pos
+        world:pub{"component_changed", "camera", eid}
     end,
 
-    set_direction = function (_, e, dir)
-        e.camera.viewdir.v = dir
+    get_direction = function (_, eid)
+        return world[eid].camera.viewdir
     end,
 
-    get_lock_target = function (_, e)
-        return e.camera.lock_target
+    set_direction = function (_, eid, dir)
+        world[eid].camera.viewdir.v = dir
+        world:pub{"component_changed", "camera", eid}
     end,
-    set_lock_target = function (_, e, lock_target)
-        e.camera.lock_traget = lock_target
+
+    get_lock_target = function (_, eid)
+        return world[eid].camera.lock_target
+    end,
+    set_lock_target = function (_, eid, lock_target)
+        world[eid].camera.lock_traget = lock_target
+        world:pub{"component_changed", "camera", eid}
     end,
 })
 

@@ -37,7 +37,6 @@ pipeline "update" {
     },
     "widget",
     pipeline "render" {
-        "shadow_camera",
         "load_render_properties",
         pipeline "handle_primitive"{
             "filter_primitive",

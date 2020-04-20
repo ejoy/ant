@@ -39,7 +39,6 @@ ecs.component "shadow"
 	.depth_type 	"string"("linear")		-- "inv_z" / "linear"
 	["opt"].split	"csm_split_config"
 
-local sm_sys = ecs.system "shadowcamera_system"
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -140,32 +139,29 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 	}
 end
 
-function sm_sys:shadow_camera()
-	local l = world:singleton_entity "directional_light"
-	if l then
-		local lightdir = math3d.inverse(l.direction)
-		local shadowentity = world:singleton_entity "shadow"
-		local shadowcfg = shadowentity.shadow
-		local stabilize = shadowcfg.stabilize
-		local shadowmap_size = shadowcfg.shadowmap_size
+local function update_shadow_camera(l, view_camera)
+	local lightdir = math3d.inverse(l.direction)
+	local shadowentity = world:singleton_entity "shadow"
+	local shadowcfg = shadowentity.shadow
+	local stabilize = shadowcfg.stabilize
+	local shadowmap_size = shadowcfg.shadowmap_size
 
-		local view_camera = camerautil.main_queue_camera(world)
-		local frustum = view_camera.frustum
+	local frustum = view_camera.frustum
 
-		local split = shadowcfg.split
-		local ratios = shadowutil.calc_split_distance_ratio(split.min_ratio, split.max_ratio, 
-			frustum.n, frustum.f, split.pssm_lambda, split.num_split)
+	local split = shadowcfg.split
+	local ratios = shadowutil.calc_split_distance_ratio(split.min_ratio, split.max_ratio, 
+		frustum.n, frustum.f, split.pssm_lambda, split.num_split)
 
-		for _, eid in world:each "csm" do
-			local csmentity = world[eid]
-			local shadowcamera = world[csmentity.camera_eid].camera
-			local csm = world[eid].csm
-			local ratio = ratios[csm.index]
-			calc_shadow_camera(view_camera, ratio, lightdir, shadowmap_size, stabilize, shadowcamera)
-			csm.split_distance_VS = shadowcamera.frustum.f - frustum.n
-		end
+	for _, eid in world:each "csm" do
+		local csmentity = world[eid]
+		local shadowcamera = world[csmentity.camera_eid].camera
+		local csm = world[eid].csm
+		local ratio = ratios[csm.index]
+		calc_shadow_camera(view_camera, ratio, lightdir, shadowmap_size, stabilize, shadowcamera)
+		csm.split_distance_VS = shadowcamera.frustum.f - frustum.n
 	end
 end
+
 local sm = ecs.system "shadow_system"
 
 local linear_cast_material = "/pkg/ant.resources/materials/shadow/csm_cast_linear.material"
@@ -331,6 +327,49 @@ function sm:init()
 		fbmgr.bind(csm_viewid, fbidx)
 		viewrect.x = (ii-1)*shadowmap_size
 		create_csm_entity(ii, viewrect, linear_shadow)
+	end
+end
+
+local dl_create_mb = world:sub{"component_register", "directional_light"}
+local dl_mb = world:sub{"component_changed", "directional_light"}
+local camera_changed_mb = world:sub{"component_changed", "camera"}
+
+function sm:post_init()
+	local updated
+	local mq = world:singleton_entity "main_queue"
+	local viewcamera = world[mq.camera_eid].camera
+	for _, _, eid in dl_create_mb:unpack() do
+		update_shadow_camera(world[eid], viewcamera)
+		updated = true
+	end
+
+	if not updated then
+		log.info("shadow camera not update")
+	end
+end
+
+function sm:data_changed()
+	local dl_eid
+	for _, _, eid in dl_mb:unpack() do
+		dl_eid = eid
+		break
+	end
+
+	if dl_eid == nil then
+		local mq = world:singleton_entity "main_queue"
+		for _, _, eid in camera_changed_mb:unpack() do
+			if mq.camera_eid == eid then
+				if dl_eid == nil then
+					dl_eid = world:singleton_entity_id "directional_light"
+				end
+				break
+			end
+		end
+	end
+
+	if dl_eid then
+		local mq = world:singleton_entity "main_queue"
+		update_shadow_camera(world[dl_eid], world[mq.camera_eid].camera)
 	end
 end
 

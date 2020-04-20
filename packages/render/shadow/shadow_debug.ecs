@@ -1,6 +1,5 @@
 system "debug_shadow_maker_system"
     .implement "shadow/shadow_debug.lua"
-    .require_system "shadowcamera_system"
     .require_interface "uniforms"
     .method "debug_shadow"
     .method "post_init"

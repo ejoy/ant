@@ -10,6 +10,26 @@ local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 
 function st_sys:init()
+	world:create_entity {
+		policy = {
+			"ant.render|render",
+			"ant.render|mesh",
+			"ant.render|shadow_cast_policy",
+			"ant.general|name",
+		},
+		data = {
+			can_cast = true,
+			scene_entity = true,
+			can_render = true,
+			transform = {srt={t={0, 2, 0, 0}}},
+			material = "/pkg/ant.resources/materials/bunny.material",
+			rendermesh = {},
+			mesh = "/pkg/ant.resources/meshes/cube.mesh",
+			name = "cast_shadow_cube",
+		}
+	}
+
+
     cu.create_plane_entity(
 		world,
 		{srt = {s ={50, 1, 50, 0}}},
@@ -32,8 +52,8 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		3. scale cylinder radius
 	]]
 
-	 local local_rotator = math3d.quaternion{math.rad(-90), 0, 0}
-	 srt.r = math3d.tovalue(srt.r and math3d.mul(math3d.quaternion(srt.r), local_rotator) or local_rotator)
+	local local_rotator = math3d.quaternion{math.rad(90), 0, 0}
+	srt.r = math3d.tovalue(srt.r and math3d.mul(math3d.quaternion(srt.r), local_rotator) or local_rotator)
 
 	local arroweid = world:create_entity{
 		policy = {
@@ -140,7 +160,7 @@ end
 
 function st_sys:post_init()
     local dl = world:singleton_entity "directional_light"
-	local rotator = math3d.torotation(math3d.inverse(dl.direction))
+	local rotator = math3d.inverse(math3d.torotation(dl.direction))
     local pos = math3d.tovalue(dl.position)
     directional_light_arrow_widget({s = {0.02}, r = math3d.tovalue(rotator), t = pos}, 8, 0.45)
 end
