@@ -104,11 +104,13 @@ local check_map = {
 	unique_component = "component",
 	input = "component",
 	output = "component",
+	pipeline = "pipeline",
+	stage = nil,
 }
 
 local function create_importor(w, ecs, schema_data, declaration)
     local import = {}
-    for _, objname in ipairs {"system","policy","transform","interface","component"} do
+    for _, objname in ipairs {"system","policy","transform","interface","component","pipeline"} do
 		w._class[objname] = w._class[objname] or {}
 		import[objname] = function (name)
 			local res = w._class[objname]
@@ -125,18 +127,16 @@ local function create_importor(w, ecs, schema_data, declaration)
 			else
 				res[name] = v
 			end
-			for what, attrib in sortpairs(check_map) do
-				if v[what] then
-					for _, k in ipairs(v[what]) do
-						import[attrib](k)
+			for _, tuple in ipairs(v.value) do
+				local what, k = tuple[1], tuple[2]
+				local attrib = check_map[what]
+				if attrib then
+					import[attrib](k)
+					if what == "unique_component" then
+						w._class.unique[k] = true
 					end
 				end
 			end
-            if objname == "policy" and v.unique_component then
-                for _, k in ipairs(v.unique_component) do
-                    w._class.unique[k] = true
-                end
-            end
 			if v.implement then
 				for _, impl in ipairs(v.implement) do
 					import_impl("/pkg/"..v.packname.."/"..impl, ecs)
@@ -187,7 +187,7 @@ local function init(w, config)
 
 	w._decl = declaration
 	w._schema_data = schema_data
-	w._class = { pipeline = {}, unique = {} }
+	w._class = { unique = {} }
 
 	local function register(what)
 		local class_set = {}
@@ -245,24 +245,6 @@ local function init(w, config)
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
 	end
-	ecs.pipeline = function (name)
-		local r = w._class.pipeline[name]
-		if r == nil then
-			log.info("Register", "pipeline", name)
-			r = {name = name}
-			setmetatable(r, {
-				__call = function(_,v)
-					if r.value then
-						error(("duplicate pipleline `%s`."):format(name))
-					end
-					r.value = v
-					return r
-				end,
-			})
-			w._class.pipeline[name] = r
-		end
-		return r
-	end
 
 	decl_basetype(w, schema, schema_data)
 
@@ -276,9 +258,9 @@ local function init(w, config)
 	for _, k in ipairs(config.system) do
 		w._import.system(k)
 	end
-    for _, file in ipairs(config.implement) do
-        import_impl(file, ecs)
-    end
+	w._import.pipeline "init"
+	w._import.pipeline "update"
+	w._import.pipeline "exit"
     for _, objname in ipairs {"system","policy","interface","transform"} do
         for fullname, o in pairs(w._class[objname]) do
 			if o.methodname then

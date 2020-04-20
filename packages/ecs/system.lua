@@ -25,17 +25,22 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local function solve_depend(res, step, pipeline)
-	for _, v in ipairs(pipeline) do
-		if type(v) == "string" then
-			if step[v] == false then
-				error(("pipeline has duplicate step `%s`"):format(v))
-			elseif step[v] ~= nil then
-				table_append(res, step[v])
-				step[v] = false
+local function solve_depend(res, step, pipeline, what)
+	local pl = pipeline[what]
+	if not pl or not pl.value then
+		return
+	end
+	for _, v in ipairs(pl.value) do
+		local type, name = v[1], v[2]
+		if type == "stage" then
+			if step[name] == false then
+				error(("pipeline has duplicate step `%s`"):format(name))
+			elseif step[name] ~= nil then
+				table_append(res, step[name])
+				step[name] = false
 			end
-		elseif type(v) == "table" and v.value then
-			solve_depend(res, step, v.value)
+		elseif type == "pipeline" then
+			solve_depend(res, step, pipeline, name)
 		end
 	end
 end
@@ -60,8 +65,8 @@ function system.init(sys, pipeline)
 	for _, pl in pairs(pipeline) do
 		if pl.value then
 			for _, v in ipairs(pl.value) do
-				if type(v) == "string" then
-					mark[v] = nil
+				if v[1] == "stage" then
+					mark[v[2]] = nil
 				end
 			end
 		end
@@ -77,12 +82,8 @@ function system.init(sys, pipeline)
 end
 
 function system.lists(sys, what)
-	local pl = sys.pipeline[what]
-	if not pl or not pl.value then
-		return
-	end
 	local res = {}
-	solve_depend(res, sys.steps, pl.value)
+	solve_depend(res, sys.steps, sys.pipeline, what)
 	return res
 end
 

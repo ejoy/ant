@@ -85,10 +85,16 @@ local attribute = {
 		"require_component",
 		"method",
 	},
+	pipeline = {
+		"pipeline",
+		"stage",
+	},
 }
 
 local no_packspace = {
 	component = true,
+	pipeline = true,
+	none = true,
 }
 
 local check_map = {
@@ -96,11 +102,12 @@ local check_map = {
 	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
-
 	require_component = "component",
 	unique_component = "component",
 	input = "component",
 	output = "component",
+	pipeline = "none",
+	stage = "none",
 }
 
 local type_list = {}
@@ -236,12 +243,16 @@ local function merge(output, input, list)
 	for name, item in pairs(input) do
 		local value = {
 			packname = item.packname,
+			value = {},
 		}
 		for _, attrib in ipairs(list) do
 			value[attrib] = {}
 		end
 		output[name] = value
 		for _, tuple in ipairs(item.value) do
+			if check_map[tuple[1]] then
+				table.insert(value.value, tuple)
+			end
 			table.insert(value[tuple[1]], tuple[2])
 		end
 	end
@@ -264,7 +275,7 @@ local function check(tbl, r)
 	for name, content in pairs(tbl) do
 		for what, list in pairs(content) do
 			local check = check_map[what]
-			if check then
+			if check and check ~= "none" then
 				-- need check
 				for _, require_name in ipairs(list) do
 					if r[check][require_name] == nil then
