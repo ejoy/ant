@@ -161,10 +161,6 @@ local function initargs(package)
 	local config = info.world
 	config.import = {
 		"@"..packname,
-		"@"..packname.."/pipeline.ecs",
-	}
-	config.implement = {
-		"/pkg/"..packname.."/pipeline.lua"
 	}
 	return config
 end
