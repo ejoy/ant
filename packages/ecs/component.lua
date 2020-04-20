@@ -100,8 +100,8 @@ function foreach_init_1(c, args)
             ::continue::
         end
     end
-    if c.method and c.method.init then
-        ret = c.method.init(ret)
+    if c.methodfunc and c.methodfunc.init then
+        ret = c.methodfunc.init(ret)
     end
     return ret
 end
@@ -150,8 +150,8 @@ local function foreach_delete_2(c, component)
 end
 
 function foreach_delete_1(c, component, e)
-    if c.method and c.method.delete then
-        component = c.method.delete(component, e) or component
+    if c.methodfunc and c.methodfunc.delete then
+        component = c.methodfunc.delete(component, e) or component
     end
     if not c.type then
         for _, v in ipairs(c) do

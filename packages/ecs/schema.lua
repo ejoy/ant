@@ -47,8 +47,8 @@ function fields_mt:__newindex(key, func)
 		error("Invalid callback function " .. key)
 	end
 	local obj = self._schema.map[self._name]
-	obj.method = obj.method or {}
-	obj.method[key] = func
+	obj.methodfunc = obj.methodfunc or {}
+	obj.methodfunc[key] = func
 end
 
 defaults_mt.__newindex = fields_mt.__newindex

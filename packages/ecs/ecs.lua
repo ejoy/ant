@@ -328,7 +328,7 @@ function world:interface(fullname)
 	if not res then
 		typeclass.import_object(self, "interface", fullname)
 		local object = self._class.interface[fullname]
-		res = setmetatable({}, {__index = object.method})
+		res = setmetatable({}, {__index = object.methodfunc})
 		interface[fullname] = res
 	end
 	return res

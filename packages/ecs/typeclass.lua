@@ -46,7 +46,7 @@ local function keys(tbl)
 end
 
 local function gen_method(c)
-	local callback = keys(c.methodname)
+	local callback = keys(c.method)
 	return function(_, key, func)
 		if type(func) ~= "function" then
 			error("Method should be a function")
@@ -58,7 +58,7 @@ local function gen_method(c)
 			error("Method " .. key .. " has already defined at " .. c.source[key])
 		end
 		c.source[key] = sourceinfo()
-		rawset(c.method, key, func)
+		rawset(c.methodfunc, key, func)
 	end
 end
 
@@ -152,9 +152,9 @@ end
 
 local function solve_object(w, type, fullname)
 	local o = w._class[type][fullname]
-	if o and o.methodname then
-		for _, name in ipairs(o.methodname) do
-			if not o.method[name] then
+	if o and o.method then
+		for _, name in ipairs(o.method) do
+			if not o.methodfunc[name] then
 				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
 			end
 		end
@@ -208,8 +208,7 @@ local function init(w, config)
 					})
 				else
 					if decl.method then
-						decl.methodname = decl.method
-						decl.method = {}
+						decl.methodfunc = {}
 						decl.source = {}
 						decl.defined = sourceinfo()
 						setmetatable(r, {
@@ -263,9 +262,9 @@ local function init(w, config)
 
     for _, objname in ipairs {"system","policy","interface","transform"} do
         for fullname, o in pairs(w._class[objname]) do
-			if o.methodname then
-				for _, name in ipairs(o.methodname) do
-					if not o.method[name] then
+			if o.method then
+				for _, name in ipairs(o.method) do
+					if not o.methodfunc[name] then
 						error(("`%s`'s `%s` method is not defined."):format(fullname, name))
 					end
 				end
