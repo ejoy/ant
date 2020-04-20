@@ -157,12 +157,9 @@ end
 local function initargs(package)
 	local fs = require "filesystem"
 	local info = fs.dofile(fs.path("/pkg/"..package.."/package.lua"))
-	local packname = info.name
-	local config = info.world
-	config.import = {
-		"@"..packname,
+	return {
+		ecs = info.ecs,
 	}
-	return config
 end
 
 local function start(package)
