@@ -43,7 +43,6 @@ pipeline "update" {
             "filter_primitive",
             "refine_filter",
         },
-        "debug_shadow",
         "cull",
         "render_commit",
         pipeline "postprocess" {

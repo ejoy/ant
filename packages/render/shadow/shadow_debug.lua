@@ -295,11 +295,11 @@ end
 
 local record_camera_state_mb = world:sub {"record_camera_state"}
 
-function dbg_sm_sys:debug_shadow()
+function dbg_sm_sys:data_changed()
 	for _, eid in record_camera_state_mb:unpack() do
 		log_split_distance()
 		create_debug_entity(eid)
 
-		check_shadow_matrix()
+		--check_shadow_matrix()
 	end
 end
