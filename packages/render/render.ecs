@@ -147,3 +147,10 @@ component "viewport"
 
 component "visible"
     .implement "render.lua"
+
+pipeline "render"
+    .stage "load_render_properties"
+    .pipeline "handle_primitive"
+    .stage "cull"
+    .stage "render_commit"
+    .pipeline "postprocess"

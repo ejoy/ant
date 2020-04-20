@@ -1,9 +1,17 @@
 return {
     name = "ant.test.features",
-    world = {
-        policy = {},
+    ecs = {
+        import = {
+            "@ant.test.features",
+        },
         system = {
             "ant.test.features|init_loader_system",
         },
+        pipeline = {
+            "init",
+            "update",
+            "exit",
+        },
+        policy = {},
     }
 }

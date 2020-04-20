@@ -58,3 +58,7 @@ component "terrain_shape"
     .implement "collider_system.lua"
     .require_component "position"
     .method "init"
+
+pipeline "collider"
+    .stage "update_collider_transform"
+    .stage "update_collider"

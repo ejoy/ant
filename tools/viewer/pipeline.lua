@@ -52,8 +52,6 @@ pipeline "update" {
         }
     },
     pipeline "select"{
-        "update_select_view",
-        "update_filter_material",
         "pickup",
         "after_pickup",
     },

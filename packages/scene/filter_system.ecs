@@ -9,3 +9,7 @@ component "primitive_filter"
     .implement "filter_system.lua"
     .require_component "filter_tag"
     .method "init"
+
+pipeline "handle_primitive"
+    .stage "filter_primitive"
+    .stage "refine_filter"

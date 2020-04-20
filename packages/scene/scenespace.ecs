@@ -37,3 +37,7 @@ component "transform"
     .require_component "srt"
     .require_component "lock_target"
     .method "init"
+
+pipeline "scene"
+    .stage "update_hierarchy_scene"
+    .stage "update_transform"

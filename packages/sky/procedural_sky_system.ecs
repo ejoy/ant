@@ -22,3 +22,7 @@ policy "procedural_sky_follow_sun"
 component "procedural_sky"
     .implement "procedural_sky_system.lua"
     .method "init"
+
+pipeline "sky"
+    .stage "update_sun"
+    .stage "update_sky"

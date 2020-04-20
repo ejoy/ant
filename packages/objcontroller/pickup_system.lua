@@ -45,24 +45,6 @@ local function update_viewinfo(e, clickx, clicky)
 	pickupcamera.viewdir.v= math3d.normalize(math3d.sub(at, eye))
 end
 
-local leftmousepress_mb = world:sub {"mouse", "LEFT"}
-local pickup_watch_sys = ecs.system "pickup_watch_system"
-function pickup_watch_sys:data_changed()
-	for _,_,state,x,y in leftmousepress_mb:unpack() do
-		if state == "DOWN" then
-			enable_pickup(true)
-			local pickupentity = world:singleton_entity "pickup"
-			update_viewinfo(pickupentity, x, y)
-			local pickupcomp = pickupentity.pickup
-			pickupcomp.nextstep = "blit"
-		end
-	end
-end
-
--- function pickup_watch_sys:end_frame()
-
--- end
-
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -317,6 +299,19 @@ end
 
 function pickup_sys:init()
 	add_pick_entity()
+end
+
+local leftmousepress_mb = world:sub {"mouse", "LEFT"}
+function pickup_sys:data_changed()
+	for _,_,state,x,y in leftmousepress_mb:unpack() do
+		if state == "DOWN" then
+			enable_pickup(true)
+			local pickupentity = world:singleton_entity "pickup"
+			update_viewinfo(pickupentity, x, y)
+			local pickupcomp = pickupentity.pickup
+			pickupcomp.nextstep = "blit"
+		end
+	end
 end
 
 local function blit(blitviewid, blit_buffer, colorbuffer)

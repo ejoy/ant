@@ -42,3 +42,8 @@ component "technique"
 
 component "technique_order"
     .implement "postprocess/postprocess_system.lua"
+
+pipeline "postprocess"
+    .stage "bloom"
+    .stage "tonemapping"
+    .stage "combine_postprocess"
