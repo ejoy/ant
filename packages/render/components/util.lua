@@ -228,7 +228,7 @@ end
 
 local function create_simple_render_entity(world, transform, material, name, tag)
 	local dataset = {
-		transform = transform or {v=mc.mat_identity},
+		transform = transform,
 		rendermesh = {},
 		material = material,
 		can_render = true,
@@ -247,9 +247,21 @@ local function create_simple_render_entity(world, transform, material, name, tag
 	}
 end
 
+local quadmesh_index
+local function generate_quad_mesh_name()
+	local name = "//res.mesh/quad.rendermesh"
+	if quadmesh_index == nil then
+		quadmesh_index = 1
+	else
+		name = name .. quadmesh_index
+		quadmesh_index = quadmesh_index + 1
+	end
+
+	return name
+end
 function util.create_quad_entity(world, rect, material, name, tag)
-	local eid = create_simple_render_entity(world, material, name, tag)
-	world[eid].rendermesh = assetmgr.load("//res.mesh/quad.rendermesh", util.quad_mesh(rect))
+	local eid = create_simple_render_entity(world, {srt={}}, material, name, tag)
+	world[eid].rendermesh = assetmgr.load(generate_quad_mesh_name(), util.quad_mesh(rect))
 	return eid
 end
 

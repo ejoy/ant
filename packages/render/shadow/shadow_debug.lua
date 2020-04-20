@@ -26,26 +26,24 @@ local function csm_shadow_debug_quad()
 	local smstage = uniforms.system_uniform("s_shadowmap").stage
 	local quadmaterial = "/pkg/ant.resources/materials/shadow/shadowmap_quad.material"
 
-	for _, eid in world:each "csm" do
-		local se = world[eid]
-		local fb = fbmgr.get(se.fb_index)
-	
-		local split_ratios = shadowutil.get_split_ratios()
-		local rect = {x=0, y=0, w=quadsize*#split_ratios, h=quadsize}
-		local q_eid = computil.create_quad_entity(world, rect, quadmaterial, "csm_quad", "shadow_quad")
-		local qe = world[q_eid]
+	local se = world:singleton_entity "shadow"
+	local fb = fbmgr.get(se.fb_index)
 
-		assetmgr.patch(qe.material, {
-			properties = {
-				textures = {
-					s_shadowmap = {
-						type = "texture", name = "csm render buffer", stage = smstage,
-						handle = fbmgr.get_rb(fb[1]).handle,
-					}
+	local num_split = se.shadow.split.num_split
+	local rect = {x=0, y=0, w=quadsize*num_split, h=quadsize}
+	local q_eid = computil.create_quad_entity(world, rect, quadmaterial, "csm_quad", "shadow_quad")
+	local qe = world[q_eid]
+
+	assetmgr.patch(qe.material, {
+		properties = {
+			textures = {
+				s_shadowmap = {
+					type = "texture", name = "csm render buffer", stage = smstage,
+					handle = fbmgr.get_rb(fb[1]).handle,
 				}
 			}
-		})
-	end
+		}
+	})
 end
 
 ecs.tag "shadow_debug"

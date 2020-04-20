@@ -222,6 +222,7 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 					}
 				},
 			},
+			view_mode = "s",
 			visible = true,
 			name = "direction light shadow maker:" .. index,
 		}

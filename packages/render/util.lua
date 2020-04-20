@@ -154,6 +154,7 @@ function util.create_main_queue(world, view_rect)
 			},
 			visible = true,
 			name = "main render queue",
+			view_mode = "s",
 			main_queue = true,
 		}
 	}
@@ -303,6 +304,7 @@ function util.create_blit_queue(world, viewrect)
 			primitive_filter = {
 				filter_tag = "blit_render",
 			},
+			view_mode = "",
 			visible = true,
 			blit_queue = true,
 			name = "blit main queue to window frame buffer",
@@ -323,7 +325,7 @@ function util.create_blit_queue(world, viewrect)
 		}
 	}
 
-	world[eid].rendermesh = assetmgr.load("//res.mesh/quad.rendermesh", computil.quad_mesh())
+	world[eid].rendermesh = assetmgr.load("//res.mesh/fullquad.rendermesh", computil.quad_mesh())
 end
 
 local statemap = {

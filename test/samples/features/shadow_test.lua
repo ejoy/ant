@@ -164,3 +164,13 @@ function st_sys:post_init()
     local pos = math3d.tovalue(dl.position)
     directional_light_arrow_widget({s = {0.02}, r = math3d.tovalue(rotator), t = pos}, 8, 0.45)
 end
+
+local keypress_mb = world:sub{"keyboard"}
+
+function st_sys:data_changed()
+	for _, key, press, state in keypress_mb:unpack() do
+		if key == "SPACE" and press == 0 then
+			world:pub{"record_camera_state"}
+		end
+	end
+end

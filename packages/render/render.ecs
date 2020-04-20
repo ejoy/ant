@@ -65,6 +65,7 @@ policy "render_queue"
     .require_component "camera_eid"
     .require_component "primitive_filter"
     .require_component "visible"
+    .require_component "view_mode"
 
 transform "camera_transfrom"
     .implement "render.lua"
