@@ -78,23 +78,6 @@ local function decl_basetype(w, schema, schema_data)
 	w._class.component["boolean"] = schema_data.map["boolean"]
 end
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
 local check_map = {
 	require_system = "system",
 	require_interface = "interface",
@@ -108,9 +91,11 @@ local check_map = {
 	stage = nil,
 }
 
+local OBJECT = {"system","policy","transform","interface","component","pipeline"}
+
 local function create_importor(w, ecs, schema_data, declaration)
     local import = {}
-    for _, objname in ipairs {"system","policy","transform","interface","component","pipeline"} do
+    for _, objname in ipairs(OBJECT) do
 		w._class[objname] = w._class[objname] or {}
 		import[objname] = function (name)
 			local res = w._class[objname]
@@ -239,11 +224,6 @@ local function init(w, config)
 	ecs.component_alias = function (name, ...)
 		return schema:typedef(getCurrentPackage(), name, ...)
 	end
-	ecs.resource_component = function (name)
-		local c = ecs.component_alias(name, "string")
-		c._object.resource = true
-		return c
-	end
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
 	end
@@ -255,7 +235,7 @@ local function init(w, config)
 	end
 	w._import = create_importor(w, ecs, schema_data, declaration)
 	
-	for _, objname in ipairs {"system","policy","transform","interface","component","pipeline"} do
+	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
 			for _, k in ipairs(config.ecs[objname]) do
 				w._import[objname](k)
@@ -263,7 +243,7 @@ local function init(w, config)
 		end
 	end
 
-    for _, objname in ipairs {"system","policy","interface","transform"} do
+    for _, objname in ipairs(OBJECT) do
         for fullname, o in pairs(w._class[objname]) do
 			if o.method then
 				for _, name in ipairs(o.method) do

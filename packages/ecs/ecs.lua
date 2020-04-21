@@ -12,8 +12,8 @@ local component_delete = component.delete
 local world = {}
 world.__index = world
 
-function world:create_component(c, args, disableSerialize)
-	return component_init(self, c, args, disableSerialize)
+function world:create_component(c, args)
+	return component_init(self, c, args)
 end
 
 local function register_component(w, eid, c)
@@ -72,9 +72,8 @@ end
 
 local function apply_policy(w, eid, component, transform, dataset)
 	local e = w[eid]
-	local disableSerialize = dataset.serialize == nil
 	for _, c in ipairs(component) do
-		e[c] = w:create_component(c, dataset[c], disableSerialize)
+		e[c] = w:create_component(c, dataset[c])
 		register_component(w, eid, c)
 	end
 	for _, f in ipairs(transform) do

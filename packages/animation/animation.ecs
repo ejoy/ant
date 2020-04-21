@@ -1,4 +1,5 @@
 import "@ant.timer"
+import "@ant.general"
 
 system "animation_system"
     .implement "animation.lua"
@@ -36,12 +37,14 @@ component "animation_content"
     .require_component "animation_resource"
 
 component "animation_resource"
+    .require_component "resource"
     .implement "animation.lua"
 
 component "pose_result"
     .implement "animation.lua"
 
 component "skeleton"
+    .require_component "resource"
     .implement "animation.lua"
 
 pipeline "animation"

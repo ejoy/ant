@@ -11,8 +11,7 @@ local assetmgr  = import_package "ant.asset"
 
 ecs.component "rendermesh" {}
 
-ecs.resource_component "mesh"
-
+ecs.component_alias("mesh", "resource")
 
 local ml = ecs.transform "mesh_loader"
 
@@ -21,7 +20,7 @@ function ml.process(e)
 	e.rendermesh = assetmgr.load(filename, e.mesh)
 end
 
-ecs.resource_component "material" { multiple=true }
+ecs.component_alias("material", "multiple_resource")
 
 ecs.tag "blit_render"
 ecs.tag "can_render"
