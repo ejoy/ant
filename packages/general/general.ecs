@@ -6,6 +6,3 @@ component "name"
 
 component "resource"
     .implement "general.lua"
-
-component "multiple_resource"
-    .implement "general.lua"

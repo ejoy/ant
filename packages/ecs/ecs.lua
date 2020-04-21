@@ -204,22 +204,6 @@ function world:each(component_type)
 	return component_next, s, 0
 end
 
-local function each_component(t)
-    return function(_, n)
-        if n == 0 then
-			return 1, t
-        end
-        if not t[n] then
-            return
-        end
-        return n + 1, t[n]
-    end, t, 0
-end
-
-function world:each_component(t)
-    return each_component(t)
-end
-
 function world:singleton_entity_id(c_type)
 	return self._uniques[c_type]
 end
@@ -260,20 +244,10 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
-local function remove_component(w, component_type, c)
-	local ti = assert(w._class.component[component_type], component_type)
-	if not ti.type and ti.multiple then
-		for _, component in each_component(c) do
-			component_delete(ti, component)
-		end
-	else
-		component_delete(ti, c)
-	end
-end
-
 local function remove_entity(w, e)
 	for component_type, c in sortcomponent(w, e) do
-		remove_component(w, component_type, c)
+		local ti = assert(w._class.component[component_type], component_type)
+		component_delete(ti, c)
 	end
 end
 

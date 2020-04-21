@@ -105,7 +105,7 @@ component "main_queue"
     .implement "render.lua"
 
 component "material"
-    .require_component "multiple_resource"
+    .require_component "resource"
     .implement "render.lua"
 
 component "mesh"
