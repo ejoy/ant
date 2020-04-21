@@ -248,68 +248,7 @@ function resource.proxy(fullpath)
 	return proxy
 end
 
-local MULTIPLE = {}
-
-local function index_only(self, key, value)
-	local index = math.tointeger(key)
-	if index == nil then
-		format_error("You can only change index for %s, the key is %s", self, key)
-	else
-		rawset(self, index, value)
-	end
-end
-
-local multiple_mt = {
-	__index = function(self, key) return self._data[key] end,
-	__newindex = index_only,
-	__pairs = data_pairs,
-	-- don't use data_len because multiple resource don't have integer keys
-	__tostring = function(self) return tostring(self._data) end,
-}
-
-function resource.multiple_proxy(paths)
-	assert(paths[1])
-	local mproxy = { _path = MULTIPLE, _data = resource.proxy(paths[1]) }
-	for i = 2, #paths do
-		mproxy[i-1] = resource.proxy(paths[i])
-	end
-
-	return setmetatable( mproxy , multiple_mt )
-end
-
-local function ipairs_multiple_proxy(proxy, index)
-	if index == 0 then
-		return 1, proxy._data
-	elseif index <= #proxy then
-		return index+1, proxy[index]
-	end
-end
-
-local function ipairs_single_proxy(proxy, index)
-	if index == 0 then
-		return 1, proxy
-	end
-end
-
-local function ipairs_normal_table(proxy, index)
-	if index == 0 then
-		return 1, proxy
-	elseif index <= #proxy then
-		return index+1, proxy[index]
-	end
-end
-
-function resource.ipairs(proxy)
-	if proxy._path == MULTIPLE then
-		return ipairs_multiple_proxy, proxy, 0
-	elseif proxy._path then
-		return ipairs_single_proxy, proxy, 0
-	else
-		return ipairs_normal_table, proxy, 0
-	end
-end
-
--- reture "runtime" / "data" / "ref" / "invalid" / "multiple"
+-- reture "runtime" / "data" / "ref" / "invalid"
 -- result : { filenames, ... }
 function resource.status(proxy, result)
 	local path = proxy._path
@@ -320,31 +259,17 @@ function resource.status(proxy, result)
 	if data == nil then
 		return "invalid"
 	end
-	if data and path ~= MULTIPLE then
+	if data then
 		return "data"
 	end
 	if result then
-		local function add_result(p)
-			local filename = getmetatable(p).filename
-			if not result[filename] then
-				result[filename] = true
-				result[#result+1] = filename
-			end
-		end
-		if path == MULTIPLE then
-			add_result(proxy._data)
-			for _, p in ipairs(proxy) do
-				add_result(p)
-			end
-		else
-			add_result(proxy)
+		local filename = getmetatable(proxy).filename
+		if not result[filename] then
+			result[filename] = true
+			result[#result+1] = filename
 		end
 	end
-	if path == MULTIPLE then
-		return "multiple"
-	else
-		return "ref"
-	end
+	return "ref"
 end
 
 -- returns a touched function if enable is true, this function would returns true if the filename is used
@@ -415,14 +340,6 @@ local function patch_table(obj, patch)
 		-- it's a normal table
 		apply_patch(obj, patch)
 		return obj
-	end
-	if path == MULTIPLE then
-		-- a multiple proxy, patch the first one, and copy others
-		local multiple = patch_table(obj._data, patch)
-		for i = 1, #obj do
-			multiple[i] = obj[i]
-		end
-		return multiple
 	end
 	assert(patch._path == nil)
 
