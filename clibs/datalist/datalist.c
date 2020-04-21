@@ -18,15 +18,16 @@ typedef uintptr_t objectid;
 enum token_type {
 	TOKEN_OPEN,	// 0 { [
 	TOKEN_CLOSE,	// 1 } ]
-	TOKEN_MAP,	// 2 = :
-	TOKEN_LIST,	// 3 ---
-	TOKEN_STRING,	// 4
-	TOKEN_ESCAPESTRING,	// 5
-	TOKEN_ATOM,	// 6
-	TOKEN_NEWLINE,	// 7 space \t
-	TOKEN_TAG,	// 8	&badf00d  (64bit hex number)
-	TOKEN_REF,	// 9	*badf00d
-	TOKEN_EOF,	// 10 end of file
+	TOKEN_CONVERTER, // 2 $ ( $name something == [name, something] )
+	TOKEN_MAP,	// 3 = :
+	TOKEN_LIST,	// 4 ---
+	TOKEN_STRING,	// 5
+	TOKEN_ESCAPESTRING,	// 6
+	TOKEN_ATOM,	// 7
+	TOKEN_NEWLINE,	// 8 space \t
+	TOKEN_TAG,	// 9	&badf00d  (64bit hex number)
+	TOKEN_REF,	// 10	*badf00d
+	TOKEN_EOF,	// 11 end of file
 };
 
 struct token {
@@ -106,7 +107,7 @@ is_hexnumber(struct lex_state *LS) {
 
 static void
 parse_atom(struct lex_state *LS) {
-	static const char * separator = " \t\r\n,{}[]:=\"'";
+	static const char * separator = " \t\r\n,{}[]$:=\"'";
 	const char * ptr = LS->source + LS->position;
 	const char * endptr = LS->source + LS->sz;
 	char head = *ptr;
@@ -200,6 +201,11 @@ next_token(struct lex_state *LS) {
 		case '{':
 		case '[':
 			LS->n.type = TOKEN_OPEN;
+			LS->n.from = LS->position;
+			LS->n.to = ++LS->position;
+			return 1;
+		case '$':
+			LS->n.type = TOKEN_CONVERTER;
 			LS->n.from = LS->position;
 			LS->n.to = ++LS->position;
 			return 1;
@@ -565,6 +571,7 @@ parse_ref(lua_State *L, struct lex_state *LS) {
 }
 
 static void parse_bracket(lua_State *L, struct lex_state *LS, int layer, objectid tag);
+static void parse_converter(lua_State *L, struct lex_state *LS, int layer);
 
 static int
 closed_bracket(lua_State *L, struct lex_state *LS, int bracket) {
@@ -639,6 +646,9 @@ parse_bracket_map(lua_State *L, struct lex_state *LS, int layer, int bracket) {
 		case TOKEN_OPEN:
 			parse_bracket(L, LS, layer+1, tag);
 			break;
+		case TOKEN_CONVERTER:
+			parse_converter(L, LS, layer+1);
+			break;
 		default:
 			push_token(L, LS, &LS->c);
 			read_token(L, LS);
@@ -674,6 +684,9 @@ parse_bracket_sequence(lua_State *L, struct lex_state *LS, int layer, int bracke
 		case TOKEN_OPEN:
 			// No tag in sequence
 			parse_bracket(L, LS, layer, 0);
+			break;
+		case TOKEN_CONVERTER:
+			parse_converter(L, LS, layer);
 			break;
 		default:
 			push_token(L, LS, &LS->c);
@@ -720,6 +733,48 @@ parse_bracket(lua_State *L, struct lex_state *LS, int layer, objectid ref) {
 	} else {
 		parse_bracket_(L, LS, layer, ref, '}');
 	}
+}
+
+static void
+parse_converter(lua_State *L, struct lex_state *LS, int layer) {
+	new_table(L, layer, 0);
+	if (read_token(L, LS) != TOKEN_ATOM) {
+		invalid(L, LS, "$ need an atom");
+	}
+	push_key(L, LS);
+	lua_rawseti(L, -2, 1);	// $atom xxx === [ "atom",  xxx ]
+
+	read_token(L, LS);
+
+	for (;;) {
+		switch (LS->c.type) {
+		case TOKEN_NEWLINE:
+			read_token(L, LS);
+			continue;	// skip ident
+		case TOKEN_CLOSE:
+			invalid(L, LS, "Invalid close bracket");
+			break;
+		case TOKEN_REF:
+			parse_ref(L, LS);
+			break;
+		case TOKEN_OPEN:
+			parse_bracket(L, LS, layer, 0);
+			break;
+		case TOKEN_CONVERTER:
+			parse_converter(L, LS, layer);
+			break;
+		default:
+			push_token(L, LS, &LS->c);
+			read_token(L, LS);
+			break;
+		}
+		lua_seti(L, -2, 2);
+		break;
+	}
+
+	lua_pushvalue(L, CONVERTER);
+	lua_insert(L, -2);
+	lua_call(L, 1, 1);
 }
 
 static int
@@ -774,6 +829,9 @@ parse_section_map(lua_State *L, struct lex_state *LS, int ident, int layer) {
 		case TOKEN_OPEN:
 			parse_bracket(L, LS, layer+1, tag);
 			break;
+		case TOKEN_CONVERTER:
+			parse_converter(L, LS, layer+1);
+			break;
 		case TOKEN_NEWLINE: {
 			int next_ident = token_length(&LS->c);
 			if (next_ident <= ident) {
@@ -808,6 +866,9 @@ parse_section_sequence(lua_State *L, struct lex_state *LS, int ident, int layer)
 			break;
 		case TOKEN_OPEN:
 			parse_bracket(L, LS, layer+1, 0);
+			break;
+		case TOKEN_CONVERTER:
+			parse_converter(L, LS, layer+1);
 			break;
 		case TOKEN_LIST:
 			// end of this section
@@ -875,6 +936,9 @@ parse_section_list(lua_State *L, struct lex_state *LS, int ident, int layer) {
 		case TOKEN_OPEN:
 			parse_bracket(L, LS, layer+1, tag);
 			break;
+		case TOKEN_CONVERTER:
+			parse_converter(L, LS, layer+1);
+			break;
 		case TOKEN_NEWLINE: {
 			int next_ident = token_length(&LS->c);
 			if (next_ident >= ident) {
@@ -919,6 +983,7 @@ parse_section(lua_State *L, struct lex_state *LS, int layer) {
 	case TOKEN_ESCAPESTRING:
 	case TOKEN_OPEN:
 	case TOKEN_REF:
+	case TOKEN_CONVERTER:
 		break;
 	case TOKEN_LIST:
 		parse_section_list(L, LS, ident, layer);

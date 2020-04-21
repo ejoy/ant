@@ -205,3 +205,9 @@ local v = datalist.parse([[ [1,2,3,4] ]], function(v)
 end)
 
 print(v[1])
+
+local v = datalist.parse([[ $obj 1 ]], function(v)
+	return string.format("%s=%d", v[1],v[2])
+end)
+
+print(v[1])
