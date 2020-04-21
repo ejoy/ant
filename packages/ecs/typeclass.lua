@@ -63,12 +63,12 @@ local function gen_method(c)
 end
 
 local function decl_basetype(w, schema, schema_data)
-	schema:primtype("ant.ecs", "tag", true)
-	schema:primtype("ant.ecs", "entityid", -1)
-	schema:primtype("ant.ecs", "int", 0)
-	schema:primtype("ant.ecs", "real", 0.0)
-	schema:primtype("ant.ecs", "string", "")
-	schema:primtype("ant.ecs", "boolean", false)
+	schema:primtype("tag", true)
+	schema:primtype("entityid", -1)
+	schema:primtype("int", 0)
+	schema:primtype("real", 0.0)
+	schema:primtype("string", "")
+	schema:primtype("boolean", false)
 	w._class.component = {}
 	w._class.component["tag"] = schema_data.map["tag"]
 	w._class.component["entityid"] = schema_data.map["entityid"]
@@ -101,7 +101,10 @@ local function create_importor(w, ecs, schema_data, declaration)
 			local res = w._class[objname]
             if res[name] then
                 return
-            end
+			end
+			if not w._initializing and objname == "system" then
+                error(("system `%s` can only be imported during initialization."):format(name))
+			end
             local v = declaration[objname][name]
 			if not v then
 				if objname == "pipeline" then
@@ -138,8 +141,7 @@ local function create_importor(w, ecs, schema_data, declaration)
 	return import
 end
 
-local function solve_object(w, type, fullname)
-	local o = w._class[type][fullname]
+local function solve_object(o, fullname)
 	if o and o.method then
 		for _, name in ipairs(o.method) do
 			if not o.methodfunc[name] then
@@ -176,6 +178,7 @@ local function init(w, config)
 	w._decl = declaration
 	w._schema_data = schema_data
 	w._class = { unique = {} }
+	w._initializing = true
 
 	local function register(what)
 		local class_set = {}
@@ -219,10 +222,10 @@ local function init(w, config)
 	register "policy"
 	register "interface"
 	ecs.component = function (name)
-		return schema:type(getCurrentPackage(), name)
+		return schema:type(name)
 	end
 	ecs.component_alias = function (name, ...)
-		return schema:typedef(getCurrentPackage(), name, ...)
+		return schema:typedef(name, ...)
 	end
 	ecs.tag = function (name)
 		ecs.component_alias(name, "tag")
@@ -242,29 +245,21 @@ local function init(w, config)
 			end
 		end
 	end
+	w._initializing = false
 
     for _, objname in ipairs(OBJECT) do
-        for fullname, o in pairs(w._class[objname]) do
-			if o.method then
-				for _, name in ipairs(o.method) do
-					if not o.methodfunc[name] then
-						error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-					end
-				end
-			end
+		for fullname, o in pairs(w._class[objname]) do
+			solve_object(o, fullname)
         end
     end
-	require "component".check(w, w._schema_data)
-	require "component".solve(w)
-	require "policy".solve(w)
-	w._systems = require "system".init(w._class.system, w._class.pipeline)
+	require "component".solve(w) -- TODO
+	require "policy".solve(w)    -- TODO
+	require "system".solve(w)
 end
 
 local function import_object(w, type, fullname)
 	w._import[type](fullname)
-	solve_object(w, type, fullname)
-	--require "component".check(w, w._schema_data)
-	--require "component".solve(w)
+	solve_object(w._class[type][fullname], fullname)
 end
 
 return {

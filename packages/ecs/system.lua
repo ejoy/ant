@@ -45,7 +45,9 @@ local function solve_depend(res, step, pipeline, what)
 	end
 end
 
-function system.init(sys, pipeline)
+function system.solve(w)
+	local sys = w._class.system
+	local pipeline = w._class.pipeline
 	local mark = {}
 	local res = setmetatable({}, {__index = function(t,k)
 		local obj = {}
@@ -75,15 +77,15 @@ function system.init(sys, pipeline)
 	for name in pairs(mark) do
 		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
 	end
-	return {
+	w._systems = {
 		steps = res,
 		pipeline = pipeline,
 	}
 end
 
-function system.lists(sys, what)
+function system.lists(w, what)
 	local res = {}
-	solve_depend(res, sys.steps, sys.pipeline, what)
+	solve_depend(res, w._systems.steps, w._systems.pipeline, what)
 	return res
 end
 

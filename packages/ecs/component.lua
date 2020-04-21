@@ -200,8 +200,9 @@ local function gen_ref(c)
     return c.ref
 end
 
-local function check(w, schema)
+local function solve(w)
     typeinfo = w._class.component
+    local schema = w._schema_data
     for _,v in ipairs(schema.list) do
         if v.uncomplete then
             error(v.name .. " is uncomplete")
@@ -212,10 +213,6 @@ local function check(w, schema)
             error(k .. " is undefined in " .. parent)
         end
     end
-end
-
-local function solve(w)
-    typeinfo = w._class.component
     for _,v in pairs(typeinfo) do
         gen_ref(v)
     end
@@ -224,6 +221,5 @@ end
 return {
     init = init,
     delete = delete,
-    check = check,
     solve = solve,
 }

@@ -293,7 +293,7 @@ local function gettime()
 	return time_counter() / time_freq
 end
 function world:update_func(what)
-	local list = system.lists(self._systems, what)
+	local list = system.lists(self, what)
 	if not list then
 		return function() end
 	end
@@ -331,23 +331,6 @@ function world:interface(fullname)
 		interface[fullname] = res
 	end
 	return res
-end
-
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
 end
 
 local m = {}
