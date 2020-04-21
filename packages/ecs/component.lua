@@ -107,18 +107,6 @@ local function foreach_init(c, args)
         assert(args == true or args == nil)
         return args
     end
-    if ti.multiple then
-        if not ti.type then
-            local res = foreach_init_1(ti, args)
-            assert(res ~= nil)
-            for i = 1, #args do
-                local r = foreach_init_1(ti, args)
-                assert(r ~= nil)
-                res[i] = r
-            end
-            return res
-        end
-    end
     local res = foreach_init_1(ti, args)
     assert(res ~= nil)
     return res

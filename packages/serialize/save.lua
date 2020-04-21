@@ -82,18 +82,8 @@ function foreach_save_1(component, name)
     end
     local ret
     if not c.type then
-        if c.multiple then
-            ret = {}
-            save_component(ret, c, component)
-            for i, com in ipairs(component) do
-                local r = {}
-                ret[i] = r
-                save_component(r, c, com)
-            end
-        else
-            ret = {}
-            save_component(ret, c, component)
-        end
+        ret = {}
+        save_component(ret, c, component)
     else
         ret = foreach_save_1(component, c.type)
     end
