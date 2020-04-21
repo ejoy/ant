@@ -170,7 +170,7 @@ local cast_material = "/pkg/ant.resources/materials/shadow/csm_cast.material"
 local function default_csm_camera()
 	return {
 		type = "csm", 
-		updir = mc.T_NXAXIS, 
+		updir = mc.T_YAXIS, 
 		viewdir = mc.T_ZAXIS,
 		eyepos = mc.T_ZERO_PT,
 		frustum = {
