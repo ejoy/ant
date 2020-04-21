@@ -12,7 +12,7 @@ function pr_t.process(e)
 	e.pose_result.result = ani_module.new_pose_result(#skehandle)
 end
 
-ecs.resource_component "animation_resource"
+ecs.component_alias("animation_resource", "resource")
 
 ecs.component "animation_content"
 	.resource "animation_resource"
@@ -33,7 +33,7 @@ function anicomp:init()
 	return self
 end
 
-ecs.resource_component "skeleton"
+ecs.component_alias("skeleton", "resource")
 
 local ani_sys = ecs.system "animation_system"
 

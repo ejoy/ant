@@ -18,7 +18,6 @@ local function sortpairs(t)
 end
 
 local w
-local disableSerialize
 local path
 local typeinfo
 local foreach_init_1
@@ -35,24 +34,30 @@ local function foreach_init_2(c, args)
         return args
     end
     if c.type == 'entityid' then
-        if disableSerialize then
-            assert(type(args) == "number")
+        if type(args) == "number" then
             return args
         else
-            assert(type(args) == "string")
             return w:find_entity(args) or args
         end
     end
     local ti = typeinfo[c.type]
     assert(ti, "unknown type:" .. c.type)
     if c.array then
-        local n = c.array == 0 and (args and #args or 0) or c.array
-        local res = {}
-        for i = 1, n do
-            local _ <close> = pushpath(i)
-            res[i] = foreach_init_1(ti, args[i])
+        if type (args) == "table" then
+            local n = c.array == 0 and (args and #args or 0) or c.array
+            local res = {}
+            for i = 1, n do
+                local _ <close> = pushpath(i)
+                res[i] = foreach_init_1(ti, args[i])
+            end
+            return res
+        else
+            --TODO
+            local res = {}
+            local _ <close> = pushpath(1)
+            res[1] = foreach_init_1(ti, args)
+            return res
         end
-        return res
     end
     if c.map then
         local res = {}
@@ -76,17 +81,7 @@ function foreach_init_1(c, args)
     end
 
     local ret
-    if c.resource then
-        if c.multiple then
-            if type(args) ~= "table" then
-                ret = assetmgr.load_multiple({args}, {}, true)
-            else
-                ret = assetmgr.load_multiple(args, {}, true)
-            end
-        else
-            ret = assetmgr.load(args, nil, true)
-        end
-    elseif c.type then
+    if c.type then
         ret = foreach_init_2(c, args)
     else
         ret = {}
@@ -113,9 +108,7 @@ local function foreach_init(c, args)
         return args
     end
     if ti.multiple then
-        if ti.resource then
-            return foreach_init_1(ti, args)
-        elseif not ti.type then
+        if not ti.type then
             local res = foreach_init_1(ti, args)
             assert(res ~= nil)
             for i = 1, #args do
@@ -131,9 +124,8 @@ local function foreach_init(c, args)
     return res
 end
 
-local function init(w_, c, args, disableSerialize_)
+local function init(w_, c, args)
     w = w_
-    disableSerialize = disableSerialize_
     typeinfo = w._class.component
     path = {}
     local _ <close> = pushpath(c.name)
