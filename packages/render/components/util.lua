@@ -120,7 +120,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	grid.rendermesh = assetmgr.load("//res.mesh/grid.rendermesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+	grid.rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/grid.rendermesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -185,7 +185,7 @@ value:
 		-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
 		0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
 	}
-	local meshscene = assetmgr.load("//res.mesh/plane.rendermesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
+	local meshscene = assetmgr.load(util.generate_resource_name "//res.mesh/plane.rendermesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
 	local selectscene = meshscene.scenes[meshscene.default_scene]
 	local _, meshnode = next(selectscene)
 	meshnode.bounding = {
@@ -243,21 +243,24 @@ local function create_simple_render_entity(world, transform, material, name, tag
 	}
 end
 
-local quadmesh_index
-local function generate_quad_mesh_name()
-	local name = "//res.mesh/quad.rendermesh"
-	if quadmesh_index == nil then
-		quadmesh_index = 1
-	else
-		name = name .. quadmesh_index
-		quadmesh_index = quadmesh_index + 1
+local resource_tag = {}
+function util.generate_resource_name(name)
+	local idx = resource_tag[name]
+	if idx == nil then
+		resource_tag[name] = 0
+		return name
 	end
 
-	return name
+	idx = idx + 1
+	resource_tag[name] = idx
+	local n = fs.path(name)
+	local nf = n:parent_path() / n:stem():string() .. idx .. n:extension():string()
+	return nf:string()
 end
+
 function util.create_quad_entity(world, rect, material, name)
 	local eid = create_simple_render_entity(world, {srt={}}, material, name)
-	world[eid].rendermesh = assetmgr.load(generate_quad_mesh_name(), util.quad_mesh(rect))
+	world[eid].rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/quad.rendermesh", util.quad_mesh(rect))
 	return eid
 end
 
@@ -276,7 +279,7 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
 		 3, -3, 0, 1, 1,
 	}
 	
-	quad.rendermesh = assetmgr.load("//res.mesh/quad_scale3.rendermesh", quad_mesh(vb))
+	quad.rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/quad_scale3.rendermesh", quad_mesh(vb))
     return quadid
 end
 
@@ -323,7 +326,7 @@ function util.create_frustum_entity(world, frustum_points, name, transform, colo
 		2, 6, 3, 7,
 	}
 	
-	e.rendermesh = assetmgr.load("//res.mesh/frustum.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
+	e.rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/frustum.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
 	return eid
 end
 
@@ -342,7 +345,7 @@ function util.create_axis_entity(world, transform, color, name, tag)
 		0, 2, 
 		0, 3,
 	}
-	world[eid].rendermesh = assetmgr.load("//res.mesh/axis.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
+	world[eid].rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/axis.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
 	return eid
 end
 
@@ -369,7 +372,7 @@ function util.create_skybox(world, material)
     for _, v in ipairs(desc.vb)do
         table.move(v, 1, 3, #gvb+1, gvb)
     end
-    e.rendermesh = assetmgr.load("//res.mesh/skybox.rendermesh", util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib))
+    e.rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/skybox.rendermesh", util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib))
     return eid
 end
 
