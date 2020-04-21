@@ -99,7 +99,6 @@ local collcomp = ecs.component "collider"
 
 function collcomp:init()
 	self.handle = w:body_create()
-	print("collider id:", w:getId(self.handle))
 	local function add_shape(shape)
 		if not shape then
 			return
@@ -123,8 +122,8 @@ end
 
 local icoll = ecs.interface "collider"
 
-local function set_obj_transform(obj, srt)
-	w:set_transform(obj, srt.t, srt.r)
+local function set_obj_transform(obj, t, r)
+	w:set_transform(obj, t, r)
 end
 
 function icoll.test(e, srt)
@@ -132,9 +131,10 @@ function icoll.test(e, srt)
 	if not collider then
 		return false
 	end
-	set_obj_transform(e.collider.handle, srt)
+	set_obj_transform(e.collider.handle, srt.t, srt.r)
 	local hit = w:test_overlap(e.collider.handle)
-	set_obj_transform(e.collider.handle, e.transform.srt)
+	local _, r, t = math3d.srt(e.transform.srt)
+	set_obj_transform(e.collider.handle, t, r)
 	return hit
 end
 
@@ -166,7 +166,8 @@ function collider_sys:update_collider_transform()
     for _, _, eid in trans_changed_mb:unpack() do
 		local e = world[eid]
 		if e.collider then
-			set_obj_transform(e.collider.handle, e.transform.world)
+			local _, r, t = math3d.srt(e.transform.world)
+			set_obj_transform(e.collider.handle, t, r)
 		end
     end
 end
