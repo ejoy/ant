@@ -142,8 +142,10 @@ function util.create_main_queue(world, view_rect)
 		},
 		data = {
 			camera_eid = camera_eid,
-			viewid = viewidmgr.get "main_view",
+			
 			render_target = {
+				viewid = viewidmgr.get "main_view",
+				view_mode = "s",
 				viewport = default_comp.viewport(view_rect),
 				fb_idx = fbmgr.create {
 					render_buffers = render_buffers
@@ -154,7 +156,6 @@ function util.create_main_queue(world, view_rect)
 			},
 			visible = true,
 			name = "main render queue",
-			view_mode = "s",
 			main_queue = true,
 		}
 	}
@@ -297,8 +298,8 @@ function util.create_blit_queue(world, viewrect)
 		},
 		data = {
 			camera_eid = cameraeid,
-			viewid = blitviewid,
 			render_target = {
+				viewid = blitviewid,
 				viewport = default_comp.viewport(viewrect),
 			},
 			primitive_filter = {

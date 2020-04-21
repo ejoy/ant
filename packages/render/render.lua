@@ -35,24 +35,27 @@ ecs.component_alias("view_mode", "string", "")
 ecs.component_alias("fb_index", "int")
 ecs.component_alias("rb_index", "int")
 
-local m = ecs.transform "render_target"
+local rt = ecs.component "render_target"
+	.viewport 			"viewport"
+	.viewid				"viewid"
+	["opt"].view_mode	"view_mode"
+	["opt"].fb_idx 		"fb_index"
 
-function m.process(e)
-	local viewid = e.viewid
-	local fb_idx = e.render_target.fb_idx
+function rt:init()
+	self.view_mode = self.view_mode or ""
+
+	local viewid = self.viewid
+	local fb_idx = self.fb_idx
 	if fb_idx then
 		fbmgr.bind(viewid, fb_idx)
 	else
-		e.render_target.fb_idx = fbmgr.get_fb_idx(viewid)
+		self.fb_idx = fbmgr.get_fb_idx(viewid)
 	end
+	return self
 end
 
-local rt = ecs.component "render_target"
-	.viewport 	"viewport"
-	["opt"].fb_idx 	"fb_index"
-
-function rt:delete(e)
-	fbmgr.unbind(e.viewid)
+function rt:delete()
+	fbmgr.unbind(self.viewid)
 end
 
 local cs = ecs.component "clear_state"
@@ -113,11 +116,12 @@ end
 
 function render_sys:render_commit()
 	local render_properties = world:interface "ant.render|render_properties".data()
-	for _, eid in world:each "viewid" do
+	for _, eid in world:each "render_target" do
 		local rq = world[eid]
 		if rq.visible then
-			local viewid = rq.viewid
-			ru.update_render_target(viewid, rq.render_target)
+			local rt = rq.render_target
+			local viewid = rt.viewid
+			ru.update_render_target(viewid, rt)
 			update_view_proj(viewid, world[rq.camera_eid].camera)
 
 			local filter = rq.primitive_filter
@@ -131,7 +135,7 @@ function render_sys:render_commit()
 				end
 			end
 
-			bgfx.set_view_mode(viewid, rq.view_mode)
+			bgfx.set_view_mode(viewid, rt.view_mode)
 
 			draw_primitives(results.opaticy)
 			draw_primitives(results.translucent)

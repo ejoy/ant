@@ -162,10 +162,10 @@ function raw_buf:init()
 	return self
 end
 
-ecs.component_alias("blit_viewid", "viewid") 
 ecs.component "blit_buffer"
 	.raw_buffer "raw_buffer"
 	.rb_idx 	"rb_index"
+	.blit_viewid "viewid"
 
 ecs.component_alias("pickup_viewtag", "boolean")
 
@@ -177,7 +177,6 @@ ecs.component "pickup_cache"
 
 ecs.component "pickup"
 	.blit_buffer "blit_buffer"
-	.blit_viewid "blit_viewid"
 	.pickup_cache "pickup_cache"
 
 
@@ -255,7 +254,6 @@ local function add_pick_entity()
 				'/pkg/ant.resources/materials/pickup_opacity.material',
 				'/pkg/ant.resources/materials/pickup_transparent.material',
 			},
-			view_mode = "s",
 			pickup = {
 				blit_buffer = {
 					raw_buffer = {
@@ -264,8 +262,8 @@ local function add_pick_entity()
 						elemsize = 4,
 					},
 					rb_idx = blit_rbidx,
+					blit_viewid = viewidmgr.get "pickup_blit",
 				},
-				blit_viewid = viewidmgr.get "pickup_blit",
 				pickup_cache = {
 					last_pick = -1,
 					pick_ids = {},
@@ -273,6 +271,8 @@ local function add_pick_entity()
 			},
 			camera_eid = cameraeid,
 			render_target = {
+				viewid = pickupviewid,
+				view_mode = "s",
 				viewport = {
 					rect = {
 						x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
@@ -286,12 +286,11 @@ local function add_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			viewid = pickupviewid,
 			primitive_filter = {
 				filter_tag = "can_select"
 			},
-			visible = false,
 			name = "pickup_renderqueue",
+			visible = false,
 		}
 
 	}
@@ -314,11 +313,11 @@ function pickup_sys:data_changed()
 	end
 end
 
-local function blit(blitviewid, blit_buffer, colorbuffer)
+local function blit(blit_buffer, colorbuffer)
 	local rb = fbmgr.get_rb(blit_buffer.rb_idx)
 	local rbhandle = rb.handle
 	
-	bgfx.blit(blitviewid, rbhandle, 0, 0, assert(colorbuffer.handle))
+	bgfx.blit(blit_buffer.blit_viewid, rbhandle, 0, 0, assert(colorbuffer.handle))
 	return bgfx.read_texture(rbhandle, blit_buffer.raw_buffer.handle)
 end
 
@@ -372,7 +371,7 @@ function pickup_sys:pickup()
 		if nextstep == "blit" then
 			local fb = fbmgr.get(pickupentity.render_target.fb_idx)
 			local rb = fbmgr.get_rb(fb[1])
-			blit(pickupcomp.blit_viewid, pickupcomp.blit_buffer, rb)
+			blit(pickupcomp.blit_buffer, rb)
 		elseif nextstep	== "select_obj" then
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
 			--print_raw_buffer(pickupcomp.blit_buffer.raw_buffer)

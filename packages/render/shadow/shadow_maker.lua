@@ -180,7 +180,7 @@ local function default_csm_camera()
 	}
 end
 
-local function create_csm_entity(index, viewrect, linear_shadow)
+local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 	local cameraname = "csm" .. index
 	local cameraeid = world:create_entity {
 		policy = {
@@ -206,12 +206,13 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 				index 		= index,
 				stabilize 	= false,
 			},
-			viewid = viewidmgr.get(cameraname),
 			primitive_filter = {
 				filter_tag = "can_cast",
 			},
 			camera_eid = cameraeid,
 			render_target = {
+				viewid = viewidmgr.get(cameraname),
+				view_mode = "s",
 				viewport = {
 					rect = viewrect,
 					clear_state = {
@@ -221,10 +222,10 @@ local function create_csm_entity(index, viewrect, linear_shadow)
 						clear = linear_shadow and "colordepth" or "depth",
 					}
 				},
+				fb_idx = fbidx,
 			},
-			view_mode = "s",
 			visible = true,
-			name = "direction light shadow maker:" .. index,
+			name = "csm" .. index,
 		}
 	}
 end
@@ -323,11 +324,8 @@ function sm:init()
 
 	local viewrect = {x=0, y=0, w=shadowmap_size, h=shadowmap_size}
 	for ii=1, split_num do
-		local tagname = "csm" .. ii
-		local csm_viewid = viewidmgr.get(tagname)
-		fbmgr.bind(csm_viewid, fbidx)
 		viewrect.x = (ii-1)*shadowmap_size
-		create_csm_entity(ii, viewrect, linear_shadow)
+		create_csm_entity(ii, viewrect, fbidx, linear_shadow)
 	end
 end
 
