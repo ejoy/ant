@@ -118,7 +118,10 @@ local function create_importor(w, ecs, schema_data, declaration)
                 return
             end
             local v = declaration[objname][name]
-            if not v then
+			if not v then
+				if objname == "pipeline" then
+					return
+				end
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
             log.info("Import  ", objname, name)
