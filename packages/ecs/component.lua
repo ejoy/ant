@@ -132,52 +132,10 @@ local function init(w_, c, args)
     return foreach_init(c, args)
 end
 
-local foreach_delete_1
-local function foreach_delete_2(c, component)
-    if c.type == 'primtype' then
-        return
-    end
-    assert(typeinfo[c.type], "unknown type:" .. c.type)
-    foreach_delete_1(typeinfo[c.type], component)
-end
-
-function foreach_delete_1(c, component, e)
+local function delete(c, component)
     if c.methodfunc and c.methodfunc.delete then
-        component = c.methodfunc.delete(component, e) or component
+        c.methodfunc.delete(component)
     end
-    if not c.type then
-        for _, v in ipairs(c) do
-            if component[v.name] == nil and v.attrib and v.attrib.opt then
-                goto continue
-            end
-            assert(v.type)
-            foreach_delete_1(v, component[v.name])
-            ::continue::
-        end
-        return
-    end
-    if c.array then
-        local n = c.array == 0 and #component or c.array
-        for i = 1, n do
-            foreach_delete_2(c, component[i])
-        end
-        return
-    end
-    if c.map then
-        for k, v in pairs(component) do
-            if type(k) == "string" then
-                foreach_delete_2(c, v)
-            end
-        end
-        return
-    end
-    foreach_delete_2(c, component)
-end
-
-local function delete(w_, c, component, e)
-    w = w_
-    typeinfo = w._class.component
-    return foreach_delete_1(c, component, e)
 end
 
 local function gen_ref(c)

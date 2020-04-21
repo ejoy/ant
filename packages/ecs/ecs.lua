@@ -260,20 +260,20 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
-local function remove_component(w, e, component_type, c)
+local function remove_component(w, component_type, c)
 	local ti = assert(w._class.component[component_type], component_type)
 	if not ti.type and ti.multiple then
 		for _, component in each_component(c) do
-			component_delete(w, ti, component, e)
+			component_delete(ti, component)
 		end
 	else
-		component_delete(w, ti, c, e)
+		component_delete(ti, c)
 	end
 end
 
 local function remove_entity(w, e)
 	for component_type, c in sortcomponent(w, e) do
-		remove_component(w, e, component_type, c)
+		remove_component(w, component_type, c)
 	end
 end
 
