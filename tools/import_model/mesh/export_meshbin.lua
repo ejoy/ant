@@ -1,9 +1,11 @@
-local gltf = import_package "ant.glTF"
-local gltfutil = gltf.util
-local glbloader = gltf.glb
+local glb_cvt	= require "mesh.glb_convertor"
 
-local declmgr = import_package "ant.render".declmgr
-local math3d = require "math3d"
+local gltfutil	= require "glTF.util"
+local declmgr	= require "render.vertexdecl_mgr"
+local fs_util	= require "utility.fs_util"
+
+local math3d	= require "math3d"
+local thread	= require "thread"
 
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
@@ -209,7 +211,7 @@ local function get_obj_name(obj, idx, defname)
 	return defname .. idx
 end
 
-return function (gltfscene, bindata, config)
+local function export_meshbin(gltfscene, bindata, config)
 	local layout 		= config.layout
 	for i=1, #layout do
 		layout[i] = declmgr.correct_layout(layout[i])
@@ -218,7 +220,7 @@ return function (gltfscene, bindata, config)
 	local scene_scalemat = gltfscene.scenescale and math3d.ref(math3d.matrix{s=gltfscene.scenescale}) or nil
 
 	local bvcaches = {}
-	local nummesh = 1
+
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
 		for _, nodeidx in ipairs(gltfnodes) do
 			local node = gltfscene.nodes[nodeidx + 1]
@@ -231,72 +233,75 @@ return function (gltfscene, bindata, config)
 			local meshidx = node.mesh
 			local meshname
 			if meshidx then
-				local meshnode = {
-					transform = nodetrans and math3d.tovalue(nodetrans) or nil,
-					inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
-				}
 				local mesh = gltfscene.meshes[meshidx+1]
-				meshname = get_obj_name(mesh, nummesh, "mesh")
-				nummesh = nummesh + 1
-				local meshaabb = math3d.aabb()
+				meshname = get_obj_name(mesh, meshidx, "mesh")
 
-				for _, prim in ipairs(mesh.primitives) do
-					local group = {
-						mode = prim.mode,
-						material = prim.material,
+				if scenegroups[meshname] == nil then
+					local meshnode = {
+						transform = nodetrans and math3d.tovalue(nodetrans) or nil,
+						inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
 					}
-					local attribclass 	= classfiy_attri(prim.attributes, gltfscene.accessors)
-					local decls 		= create_decl(attribclass, layout, layout_types)
-
-					local values = {}
-					for bvidx, declinfo in pairs(decls) do
-						local vbcache = bvcaches[bvidx+1]
-						local bv = gltfscene.bufferViews[bvidx+1]
-						if vbcache == nil then
-							vbcache = fetch_vb_info(bv, declinfo, bindata, gltfscene.buffers)
-							bvcaches[bvidx+1] = vbcache
-						end
-						values[#values+1] = vbcache
-					end
-
-					group.vb = {
-						values 	= values,
-						start 	= 0,
-						num 	= gltfutil.num_vertices(prim, gltfscene),
-					}
-
-					local indices_accidx = prim.indices
-					if indices_accidx then
-						local idxacc = gltfscene.accessors[indices_accidx+1]
-						local bv = gltfscene.bufferViews[idxacc.bufferView+1]
-
-						local cache = bvcaches[idxacc.bufferView+1]
-						if cache == nil then
-							cache = fetch_ib_info(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
-							bvcaches[idxacc.bufferView+1] = cache
-						end
-
-						group.ib = {
-							value 	= cache,
-							start 	= 0,
-							num 	= idxacc.count,
+	
+					local meshaabb = math3d.aabb()
+	
+					for _, prim in ipairs(mesh.primitives) do
+						local group = {
+							mode = prim.mode,
+							material = prim.material,
 						}
+						local attribclass 	= classfiy_attri(prim.attributes, gltfscene.accessors)
+						local decls 		= create_decl(attribclass, layout, layout_types)
+	
+						local values = {}
+						for bvidx, declinfo in pairs(decls) do
+							local vbcache = bvcaches[bvidx+1]
+							local bv = gltfscene.bufferViews[bvidx+1]
+							if vbcache == nil then
+								vbcache = fetch_vb_info(bv, declinfo, bindata, gltfscene.buffers)
+								bvcaches[bvidx+1] = vbcache
+							end
+							values[#values+1] = vbcache
+						end
+	
+						group.vb = {
+							values 	= values,
+							start 	= 0,
+							num 	= gltfutil.num_vertices(prim, gltfscene),
+						}
+	
+						local indices_accidx = prim.indices
+						if indices_accidx then
+							local idxacc = gltfscene.accessors[indices_accidx+1]
+							local bv = gltfscene.bufferViews[idxacc.bufferView+1]
+	
+							local cache = bvcaches[idxacc.bufferView+1]
+							if cache == nil then
+								cache = fetch_ib_info(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
+								bvcaches[idxacc.bufferView+1] = cache
+							end
+	
+							group.ib = {
+								value 	= cache,
+								start 	= 0,
+								num 	= idxacc.count,
+							}
+						end
+	
+						local bb = create_prim_bounding(gltfscene, prim)
+						if bb then
+							group.bounding = bb
+							meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
+						end
+	
+						meshnode[#meshnode+1] = group
 					end
-
-					local bb = create_prim_bounding(gltfscene, prim)
-					if bb then
-						group.bounding = bb
-						meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
+	
+					if math3d.aabb_isvalid(meshaabb) then
+						meshnode.bounding = {aabb = to_aabb(meshaabb)}
 					end
-
-					meshnode[#meshnode+1] = group
+	
+					scenegroups[meshname] = meshnode
 				end
-
-				if math3d.aabb_isvalid(meshaabb) then
-					meshnode.bounding = {aabb = to_aabb(meshaabb)}
-				end
-
-				scenegroups[meshname] = meshnode
 			end
 		end
 	end
@@ -323,4 +328,16 @@ return function (gltfscene, bindata, config)
 	local def_sceneidx = gltfscene.scene+1
 	meshscene.default_scene = get_obj_name(gltfscene.scenes[def_sceneidx], def_sceneidx, "scene")
 	return meshscene
+end
+
+return function (glbscene, bindata, outfile, cfg)
+	local new_glbscene, new_bindata = glb_cvt(glbscene, bindata, cfg)
+	local result = export_meshbin(new_glbscene, new_bindata, cfg)
+
+	if result then
+		fs_util.write_file(outfile, thread.pack(result))
+		return true
+	end
+
+	return nil, "convert file failed"
 end

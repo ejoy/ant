@@ -4,8 +4,14 @@ local glbloader = require "glb"
 local subprocess = require "utility.sb_util"
 local fs_util = require "utility.fs_util"
 
-return function (inputfile, output_folder)
-    
+local math3d = require "math3d"
+
+local seri_stringfiy = require "serialize.stringify"
+local seri = require "serialize.serialize"
+
+local export_meshbin = require "mesh.export_meshbin"
+
+return function (inputfile, output_folder, config)
     local glbinfo = glbloader.decode(inputfile:string())
 
     local glbbin = glbinfo.bin
@@ -16,14 +22,164 @@ return function (inputfile, output_folder)
     local textures = glbscene.textures
     local images = glbscene.images
 
-    local function export_meshes(meshpath)
-        fs.create_directories(meshpath)
-    end
+    local materialfiles = {}
 
-    local function write_file(filepath, c)
-        local f = fs.open(filepath, "wb")
-        f:write(c)
-        f:close()
+    local function export_meshes(meshfolder)
+        fs.create_directories(meshfolder)
+
+        local function get_obj_name(obj, meshidx, def_name)
+            if obj.name then
+                return obj.name
+            end
+            return def_name .. meshidx
+        end
+
+        local function default_mesh_cfg(mesh_path)
+            return  {
+                skinning_type = "cpu",
+                mesh_path = mesh_path,
+                type = "mesh",
+            }
+        end
+        
+        local meshbin_file = fs.path(inputfile):replace_extenstion ".meshbin"
+        local success, err = export_meshbin(glbscene, glbbin, meshbin_file, config.mesh)
+
+        if not success then
+            error(("export to 'meshbin' file failed:\n%s\n%s\n%s"):format(inputfile:string(), meshbin_file:string(), err))
+        end
+
+        local meshfile = fs.path(meshbin_file):replace_extenstion ".mesh"
+        fs_util.write_file(meshfile, seri_stringfiy.map(default_mesh_cfg(meshbin_file)))
+
+        local function get_srt(node)
+            if node.matrix then
+                local s, r, t = math3d.srt(math3d.matrix(node.matrix))
+                return {
+                    s = math3d.tovalue(s),
+                    r = math3d.tovalue(r),
+                    t = math3d.tovalue(t),
+                }
+            end
+
+            return {
+                s = node.scale or {1, 1, 1, 0},
+                r = node.rotation or {0, 0, 0, 1},
+                t = node.translation or {0, 0, 0, 1}
+            }
+        end
+
+        local function create_hierarchy_entity(parent, node)
+            local policy = {
+                "ant.scene|transform_policy",
+                "ant.general|name",
+            }
+            if parent then
+                policy[#policy+1] = "ant.scene|hierarchy_policy"
+            end
+            return {
+                policy = policy,
+                data = {
+                    transform = {srt=get_srt(node)},
+                    parent = parent,
+                    name = node.name,
+                    scene_entity = true,
+                }
+            }
+        end
+
+        local function create_mesh_entity(parent, node, meshname)
+            local policy = {
+                "ant.general|name",
+                "ant.render|mesh",
+                "ant.render|render",
+            }
+
+            local data = {
+                scene_entity = true,
+                can_render = true,
+                transform = {srt=get_srt(node)},
+                mesh        = meshfile:string() .. ":" .. meshname,
+                material    = materialfiles[node.material],
+                rendermesh = {},
+                name = node.name,
+                parent = parent,
+            }
+
+            if parent then
+                policy[#policy+1] = "ant.scene|hierarchy_policy"
+            end
+
+            return {
+                policy = policy,
+                data = data,
+            }
+        end
+
+        local scenenodes = glbscene.nodes
+        local tree = {}
+        local meshes = {}
+        local function traverse_scene_tree()
+            for _, scene in ipairs(glbscene.scenes) do
+                local function build_tree(nodes, parentidx)
+                    for _, nodeidx in ipairs(nodes) do
+                        tree[nodeidx] = parentidx
+                        local node = scenenodes[nodeidx+1]
+                        if node.mesh then
+                            meshes[node.mesh] = nodeidx
+                        end
+
+                        if node.children then
+                            build_tree(node.children, nodeidx)
+                        end
+                    end
+                end
+
+                build_tree(scene.nodes, 0)
+            end
+        end
+
+        traverse_scene_tree()
+
+        local cache = {}
+
+        local function find_hierarchy_chain(nodeidx, chain)
+            if cache[nodeidx] then
+                return
+            end
+
+            cache[nodeidx] = seri.create()
+            chain[#chain+1] = nodeidx
+            local parent = tree[nodeidx]
+            if parent ~= 0 then
+                find_hierarchy_chain(parent, chain)
+            end
+        end
+
+
+        local scenemeshes = glbscene.meshes
+        for meshidx, mesh in ipairs(scenemeshes) do
+            local nodeidx = meshes[meshidx]
+
+            local chain = {}
+            find_hierarchy_chain(nodeidx, chain)
+
+            for i=1, #chain do
+                local node = scenenodes[i]
+                local parent = chain[i+1] and cache[chain[i+1]] or nil
+                local entity
+                local entityname
+                if node.mesh then
+                    entity = create_mesh_entity(parent, node, get_obj_name(mesh, meshidx, "mesh"))
+                    entityname = get_obj_name(node, i, "mesh_entity")
+                else
+                    entity = create_hierarchy_entity(parent, node)
+                    entityname = get_obj_name(node, i, "hie_entity")
+                end
+
+                fs_util.write_file(meshfolder / entityname .. ".txt", seri_stringfiy.map(entity))
+            end
+        end
     end
 
     local image_extension = {
@@ -53,7 +209,7 @@ return function (inputfile, output_folder)
             assert(endidx <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
     
-            write_file(imgpath, c)
+            fs_util.write_file(imgpath, c)
         end
         return imgpath
         
@@ -153,7 +309,7 @@ return function (inputfile, output_folder)
             }
     
             local texpath = imgpath:parent_path() / name .. ".texture"
-            write_file(texpath, stringify(texture_desc, true, true))
+            fs_util.write_file(texpath, stringify(texture_desc, true, true))
             return texpath:string()
         end
     
@@ -164,8 +320,7 @@ return function (inputfile, output_folder)
                 return tex_desc
             end
         end
-    
-        local pbrm_paths = {}
+
         local materials = glbscene.materials
         if materials then
             for matidx, mat in ipairs(materials) do
@@ -201,13 +356,11 @@ return function (inputfile, output_folder)
                     return newname
                 end
                 local filepath = pbrm_path / refine_name(name) .. ".pbrm"
-                write_file(filepath, stringify(pbrm, true, true))
+                fs_util.write_file(filepath, stringify(pbrm, true, true))
         
-                pbrm_paths[#pbrm_paths+1] = filepath
+                materialfiles[#materialfiles+1] = filepath
             end
         end
-    
-        return pbrm_paths
     end
     
     local gltf2ozz = fs_util.valid_tool_exe_path "gltf2ozz"

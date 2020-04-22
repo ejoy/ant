@@ -1,9 +1,7 @@
-local glTF = import_package "ant.glTF"
-local glbloader = glTF.glb
-
-local gltf_converter = require "meshconverter.gltf"
-local filtermesh = require "mesh.filter"
-local meshbinary = require "mesh.meshbinary"
+local glbloader 		= require "packages.glTF.glb"
+local gltf_converter 	= require "meshconverter.gltf"
+local filtermesh 		= require "mesh.filter"
+local meshbinary 		= require "mesh.meshbinary"
 
 local accessor_types = {
 	SCALAR = 0,
@@ -387,29 +385,10 @@ local function refine_mesh_buffers(scene, binary, cfg, newscene, new_binaries)
 	end
 end
 
--- return function (srcname, dstname, cfg)
--- 	local fslocal = require "filesystem.local"
--- 	local fs = require "filesystem"
--- 	local f = fslocal.open(fs.path(srcname), "rb")
--- 	local content = f:read "a"
--- 	f:close()
--- 	local ff = fslocal.open(fs.path(dstname), "wb")
--- 	ff:write(content)
--- 	ff:close()
--- end
-
-return function (srcname, cfg)
-	local glbdata = glbloader.decode(srcname)
-	
-	-- this filter can move to import tool
-	local scene, binary = filtermesh.filter_scene(glbdata.info, glbdata.bin)
+return function (glbscene, bindata, cfg)
+	local scene, binary = filtermesh.filter_scene(glbscene, bindata)
 
 	scene.scenescale = get_scale(cfg)
-	scene.asset = {
-		version = glbdata.info.asset.version,
-		generator = glbdata.info.asset.generator and "ant(" .. glbdata.info.asset.generator .. ")" or nil,
-	}
-
 	local new_binaries = {}
 	local newscene = {
 		accessors = {},
@@ -446,6 +425,5 @@ return function (srcname, cfg)
 		convert_coord_system(scene, meshcfg)
 	end
 
-	--glbloader.encode(dstname, {version=glbdata.version, info=scene, bin=new_bindata})
-	return meshbinary(scene, new_bindata, cfg)
+	return scene, new_bindata
 end

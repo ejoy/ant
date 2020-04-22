@@ -25,7 +25,7 @@ local inputfile, output_folder = fs.path(arg[1]), fs.path(arg[2])
 
 if inputfile:extension():string():upper() == ".FBX" then
     local fbx2gltf = require "fbx2gltf"
-    local results = fbx2gltf({inputfile})
+    local results = fbx2gltf {inputfile}
     if not next(results) then
         print("failed to convert file:", inputfile:string(), "from fbx to gltf file")
     end
