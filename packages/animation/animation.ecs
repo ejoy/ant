@@ -29,11 +29,6 @@ transform "build_pose_result"
 
 component "animation"
     .implement "animation.lua"
-    .require_component "animation_content"
-    .method "init"
-
-component "animation_content"
-    .implement "animation.lua"
     .require_component "animation_resource"
 
 component "animation_resource"
