@@ -73,7 +73,7 @@ end
 local function apply_policy(w, eid, component, transform, dataset)
 	local e = w[eid]
 	for _, c in ipairs(component) do
-		e[c] = w:create_component(c, dataset[c])
+		e[c] = dataset[c]
 		register_component(w, eid, c)
 	end
 	for _, f in ipairs(transform) do
@@ -109,7 +109,9 @@ end
 
 local function registerEntityEx(w, t)
 	if type(t) == 'string' then
-		t = datalist.parse(t)
+		t = datalist.parse(t, function(args)
+			return component_init(w, args[1], args[2])
+		end)
 	end
 	if t.patch then
 		local patchs = t.patch
@@ -332,6 +334,12 @@ function m.new_world(config,world_class)
 	world.sub = event.sub
 	world.pub = event.pub
 	world.unsub = event.unsub
+
+	w.component = setmetatable({}, {__index = function(_, name)
+		return function (_, args)
+			return component_init(w, name, args)
+		end
+	end})
 
 	-- load systems and components from modules
 	typeclass.init(w, config)

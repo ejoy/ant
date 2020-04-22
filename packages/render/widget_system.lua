@@ -30,8 +30,8 @@ function widget_drawer_sys:init()
 			"ant.render|bounding_draw",
 		},
 		data = {
-			transform 		= {srt = mu.srt()},
-			material 		= "/pkg/ant.resources/materials/line.material",
+			transform 		= world.component:transform {srt = mu.srt()},
+			material 		= world.component:resource "/pkg/ant.resources/materials/line.material",
 			rendermesh 		= {},
 			name 			= "mesh's bounding renderer",
 			can_render 		= true,

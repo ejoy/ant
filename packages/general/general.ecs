@@ -6,3 +6,6 @@ component "name"
 
 component "resource"
     .implement "general.lua"
+
+component "entityid"
+    .implement "general.lua"

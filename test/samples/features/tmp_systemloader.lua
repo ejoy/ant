@@ -68,13 +68,13 @@ local function target_lock_test()
         data = {
             name = "lock_target",
             can_render = true,
-            transform = {srt = {
-                s = {2, 1, 2, 0},
-                t = {16, 1, 6}},
+            transform = world.component:transform {srt = world.component:srt {
+                s = world.component:vector {2, 1, 2, 0},
+                t = world.component:vector {16, 1, 6}},
             },
             rendermesh = {},
-            mesh = "/pkg/ant.resources/meshes/sphere.mesh",
-            material = "/pkg/ant.resources/materials/bunny.material",
+            mesh = world.component:resource "/pkg/ant.resources/meshes/sphere.mesh",
+            material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
             serialize = serialize.create(),
             scene_entity = true,
         }
@@ -91,17 +91,17 @@ local function target_lock_test()
         data = {
             name = "lock_obj",
             can_render = true,
-            parent = world[eid].serialize,
-            transform = {
-                srt={t={0, 0, -6}},
+            parent = eid,
+            transform = world.component:transform {
+                srt= world.component:srt {t= world.component:vector {0, 0, -6}},
                 lock_target = {
                     type = "ignore_scale",
                     offset = {0, 0, 3},
                 },
             },
             rendermesh = {},
-            mesh = "/pkg/ant.resources/meshes/cube.mesh",
-            material = "/pkg/ant.resources/materials/singlecolor.material",
+            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
+            material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
             serialize = serialize.create(),
             scene_entity = true,
         },

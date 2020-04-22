@@ -1,5 +1,6 @@
 import "@ant.objcontroller"
 import "@ant.math"
+import "@ant.general"
 
 system "scenespace_system"
     .implement "scenespace.lua"
@@ -28,6 +29,7 @@ component "lock_target"
 
 component "parent"
     .implement "scenespace.lua"
+    .require_component "entityid"
 
 component "scene_entity"
     .implement "scenespace.lua"

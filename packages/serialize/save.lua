@@ -1,5 +1,4 @@
 local world
-local pool
 local typeinfo
 
 local function sortpairs(t)
@@ -66,17 +65,8 @@ function foreach_save_1(component, name)
     if name == 'primtype' then
         return component
     end
-    if name == 'entityid' then
-        local entity = world[component]
-        assert(entity, "unknown entityid: "..component)
-        assert(entity.serialize, "entity("..component..") doesn't allow serialization.")
-        return entity.serialize
-    end
     assert(typeinfo[name], "unknown type:" .. name)
     local c = typeinfo[name]
-    if c.ref and pool[component] then
-        return pool[component]
-    end
     if c.methodfunc and c.methodfunc.save then
         component = c.methodfunc.save(component)
     end
@@ -87,15 +77,14 @@ function foreach_save_1(component, name)
     else
         ret = foreach_save_1(component, c.type)
     end
-    if c.ref then
-        pool[component] = ret
+    if c.methodfunc and c.methodfunc.init then
+        ret = setmetatable({ret}, {__component = name})
     end
     return ret
 end
 
 local function save_entity(w, eid)
     world = w
-    pool = {}
     typeinfo = w._class.component
     local e = assert(w[eid], 'invalid eid')
     local t = {}

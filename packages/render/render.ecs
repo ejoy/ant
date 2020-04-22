@@ -91,6 +91,7 @@ component "camera"
 
 component "camera_eid"
     .implement "render.lua"
+    .require_component "entityid"
 
 component "can_render"
     .implement "render.lua"

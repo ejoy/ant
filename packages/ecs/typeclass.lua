@@ -64,14 +64,12 @@ end
 
 local function decl_basetype(w, schema, schema_data)
 	schema:primtype("tag", true)
-	schema:primtype("entityid", -1)
 	schema:primtype("int", 0)
 	schema:primtype("real", 0.0)
 	schema:primtype("string", "")
 	schema:primtype("boolean", false)
 	w._class.component = {}
 	w._class.component["tag"] = schema_data.map["tag"]
-	w._class.component["entityid"] = schema_data.map["entityid"]
 	w._class.component["int"] = schema_data.map["int"]
 	w._class.component["real"] = schema_data.map["real"]
 	w._class.component["string"] = schema_data.map["string"]

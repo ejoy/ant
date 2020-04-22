@@ -21,10 +21,10 @@ function st_sys:init()
 			can_cast = true,
 			scene_entity = true,
 			can_render = true,
-			transform = {srt={t={0, 2, 0, 0}}},
-			material = "/pkg/ant.resources/materials/bunny.material",
+			transform = world.component:transform {srt=world.component:srt{t=world.component:vector{0, 2, 0, 0}}},
+			material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
 			rendermesh = {},
-			mesh = "/pkg/ant.resources/meshes/cube.mesh",
+			mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
 			name = "cast_shadow_cube",
 		}
 	}
@@ -32,7 +32,7 @@ function st_sys:init()
 
     cu.create_plane_entity(
 		world,
-		{srt = {s ={50, 1, 50, 0}}},
+		world.component:transform {srt = world.component:srt {s = world.component:vector{50, 1, 50, 0}}},
 		"/pkg/ant.resources/materials/test/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"
@@ -53,7 +53,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 	]]
 
 	local local_rotator = math3d.quaternion{math.rad(90), 0, 0}
-	srt.r = math3d.tovalue(srt.r and math3d.mul(math3d.quaternion(srt.r), local_rotator) or local_rotator)
+	srt.r = srt.r and math3d.mul(srt.r, local_rotator) or local_rotator
 
 	local arroweid = world:create_entity{
 		policy = {
@@ -61,8 +61,8 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform = {
-				srt = srt,
+			transform = world.component:transform {
+				srt = world.component:srt(srt),
 			},
 			name = "directional light arrow",
 		},
@@ -100,13 +100,13 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		data = {
 			scene_entity = true,
 			can_render = true,
-			transform = {
-				srt = {
-					s = {cylinder_radius, cylinder_scaleY, cylinder_radius},
-					t = math3d.tovalue(cylinder_offset),
+			transform = world.component:transform {
+				srt = world.component:srt {
+					s = world.component:vector {cylinder_radius, cylinder_scaleY, cylinder_radius},
+					t = cylinder_offset,
 				}
 			},
-			material = [[
+			material = world.component:resource [[
 ---
 /pkg/ant.resources/materials/singlecolor.material
 ---
@@ -117,7 +117,7 @@ value:
   value:
     {1, 0, 0, 1}
 ]],
-			mesh = '/pkg/ant.resources/meshes/cylinder.mesh',
+			mesh = world.component:resource '/pkg/ant.resources/meshes/cylinder.mesh',
 			parent = arroweid,
 			name = "arrow.cylinder",
 			rendermesh = {},
@@ -135,12 +135,12 @@ value:
 			scene_entity = true,
 			can_render = true,
 			rendermesh = {},
-			transform = {
-				srt = {
-					t = math3d.tovalue(cone_offset)
+			transform = world.component:transform {
+				srt = world.component:srt {
+					t = cone_offset
 				}
 			},
-			material = [[
+			material = world.component:resource [[
 ---
 /pkg/ant.resources/materials/singlecolor.material
 ---
@@ -151,7 +151,7 @@ value:
   value:
     {1, 0, 0, 1}
 ]],
-			mesh = '/pkg/ant.resources/meshes/cone.mesh',
+			mesh = world.component:resource '/pkg/ant.resources/meshes/cone.mesh',
 			parent = arroweid,
 			name = "arrow.cone"
 		}
@@ -161,8 +161,7 @@ end
 function st_sys:post_init()
     local dl = world:singleton_entity "directional_light"
 	local rotator = math3d.inverse(math3d.torotation(dl.direction))
-    local pos = math3d.tovalue(dl.position)
-    directional_light_arrow_widget({s = {0.02}, r = math3d.tovalue(rotator), t = pos}, 8, 0.45)
+    directional_light_arrow_widget({s = world.component:vector{0.02,0.02,0.02,0}, r = rotator, t = dl.position}, 8, 0.45)
 end
 
 local keypress_mb = world:sub{"keyboard"}

@@ -200,17 +200,17 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 			"ant.general|name",
 		},
 		data = {
-			material = linear_shadow and linear_cast_material or cast_material,
+			material = world.component:resource(linear_shadow and linear_cast_material or cast_material),
 			csm = {
 				split_ratios= {0, 0},
 				index 		= index,
 				stabilize 	= false,
 			},
-			primitive_filter = {
+			primitive_filter = world.component:primitive_filter {
 				filter_tag = "can_cast",
 			},
 			camera_eid = cameraeid,
-			render_target = {
+			render_target = world.component:render_target {
 				viewid = viewidmgr.get(cameraname),
 				view_mode = "s",
 				viewport = {
