@@ -110,15 +110,6 @@ end
 
 local function solve(w)
     local class = w._class
-    for fullname, v in pairs(class.transform) do
-        local _, name = splitname(fullname)
-        if #v.output == 0 then
-            error(("transform `%s`'s output cannot be empty."):format(name))
-        end
-        if type(v.methodfunc.process) ~= 'function' then
-            error(("transform `%s`'s process cannot be empty."):format(name))
-        end
-    end
     for fullname, v in pairs(class.policy) do
         local _, policy_name = splitname(fullname)
         local union_name, name = policy_name:match "^([%a_][%w_]*)%.([%a_][%w_]*)$"
@@ -129,49 +120,6 @@ local function solve(w)
             error(("invalid policy name: `%s`."):format(policy_name))
         end
         v.union = union_name
-        local components = {}
-        if not v.require_component and not v.unique_component then
-            error(("policy `%s`'s require_component or unique_component cannot be empty."):format(policy_name))
-        end
-        if not v.require_component then
-            v.require_component = {}
-        end
-        if not v.unique_component then
-            v.unique_component = {}
-        end
-        if not v.require_transform then
-            v.require_transform = {}
-        end
-        for _, component_name in ipairs(v.require_component) do
-            if not class.component[component_name] then
-                error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
-            end
-            components[component_name] = true
-        end
-        for _, component_name in ipairs(v.unique_component) do
-            if not class.component[component_name] then
-                error(("component `%s` in policy `%s` is not defined."):format(component_name, policy_name))
-            end
-            components[component_name] = true
-        end
-        for _, transform_name in ipairs(v.require_transform) do
-            local c = class.transform[transform_name]
-            if not c then
-                error(("transform `%s` in policy `%s` is not defined."):format(transform_name, policy_name))
-            end
-            if c.input then
-                for _, v in ipairs(c.input) do
-                    if not components[v] then
-                        error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v,   policy_name))
-                    end
-                end
-            end
-            for _, v in ipairs(c.output) do
-                if not components[v] then
-                    error(("transform `%s` requires component `%s`, but policy `%s` does not requires it."):format(transform_name, v, policy_name)  )
-                end
-            end
-        end
     end
 end
 

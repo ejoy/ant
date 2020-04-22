@@ -62,19 +62,13 @@ local function gen_method(c)
 	end
 end
 
-local function decl_basetype(w, schema, schema_data)
-	schema:primtype("tag", true)
-	schema:primtype("int", 0)
-	schema:primtype("real", 0.0)
-	schema:primtype("string", "")
-	schema:primtype("boolean", false)
-	w._class.component = {}
-	w._class.component["tag"] = schema_data.map["tag"]
-	w._class.component["int"] = schema_data.map["int"]
-	w._class.component["real"] = schema_data.map["real"]
-	w._class.component["string"] = schema_data.map["string"]
-	w._class.component["boolean"] = schema_data.map["boolean"]
-end
+local basetype = {
+	tag = true,
+	int = true,
+	real = true,
+	string = true,
+	boolean = true,
+}
 
 local check_map = {
 	require_system = "system",
@@ -108,6 +102,9 @@ local function create_importor(w, ecs, schema_data, declaration)
 				if objname == "pipeline" then
 					return
 				end
+				if objname == "component" and basetype[name] then
+					return
+				end
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
             log.info("Import  ", objname, name)
@@ -132,7 +129,7 @@ local function create_importor(w, ecs, schema_data, declaration)
 				end
 			end
 			if objname == "component" then
-				res[name] = schema_data.map[name]
+				res[name] = schema_data[name]
 			end
 		end
 	end
@@ -174,7 +171,6 @@ local function init(w, config)
 	end)
 
 	w._decl = declaration
-	w._schema_data = schema_data
 	w._class = { unique = {} }
 	w._initializing = true
 
@@ -219,17 +215,9 @@ local function init(w, config)
 	register "transform"
 	register "policy"
 	register "interface"
-	ecs.component = function (name)
-		return schema:type(name)
-	end
-	ecs.component_alias = function (name, ...)
-		return schema:typedef(name, ...)
-	end
-	ecs.tag = function (name)
-		ecs.component_alias(name, "tag")
-	end
-
-	decl_basetype(w, schema, schema_data)
+	ecs.component = schema
+	ecs.component_alias = schema
+	ecs.tag = schema
 
 	for _, k in ipairs(config.ecs.import) do
 		import_decl(w, k)
@@ -250,7 +238,6 @@ local function init(w, config)
 			solve_object(o, fullname)
         end
     end
-	require "component".solve(w) -- TODO
 	require "policy".solve(w)    -- TODO
 	require "system".solve(w)
 end
