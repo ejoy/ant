@@ -206,8 +206,17 @@ end)
 
 print(v[1])
 
-local v = datalist.parse([[ $obj 1 ]], function(v)
-	return string.format("%s=%d", v[1],v[2])
+
+local v = datalist.parse([[
+transform: $transform
+	srt :
+		s = $vector {1,1,1,0}
+		r = $vector {0,0.92388,0,0.382683}
+		t= $vector {0,0,0,1}
+]], function(v)
+	v[2].type = v[1]
+	return v[2]
 end)
 
-print(v[1])
+assert(v.transform.type == "transform")
+assert(v.transform.srt.s.type == "vector")
