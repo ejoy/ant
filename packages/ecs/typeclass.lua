@@ -62,6 +62,22 @@ local function gen_method(c)
 	end
 end
 
+local function splitname(fullname)
+    return fullname:match "^([^|]*)|(.*)$"
+end
+
+local function solve_policy(fullname, v)
+	local _, policy_name = splitname(fullname)
+	local union_name, name = policy_name:match "^([%a_][%w_]*)%.([%a_][%w_]*)$"
+	if not union_name then
+		name = policy_name:match "^([%a_][%w_]*)$"
+	end
+	if not name then
+		error(("invalid policy name: `%s`."):format(policy_name))
+	end
+	v.union = union_name
+end
+
 local check_map = {
 	require_system = "system",
 	require_interface = "interface",
@@ -72,7 +88,7 @@ local check_map = {
 
 local OBJECT = {"system","policy","transform","interface","component","pipeline"}
 
-local function create_importor(w, ecs, schema_data, declaration)
+local function create_importor(w, ecs, declaration)
     local import = {}
     for _, objname in ipairs(OBJECT) do
 		w._class[objname] = w._class[objname] or {}
@@ -95,11 +111,7 @@ local function create_importor(w, ecs, schema_data, declaration)
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
             log.info("Import  ", objname, name)
-			if objname == "component" then
-				res[name] = true
-			else
-				res[name] = v
-			end
+			res[name] = v
 			for _, tuple in ipairs(v.value) do
 				local what, k = tuple[1], tuple[2]
 				local attrib = check_map[what]
@@ -110,13 +122,13 @@ local function create_importor(w, ecs, schema_data, declaration)
 					w._class.unique[k] = true
 				end
 			end
+			if objname == "policy" then
+				solve_policy(name, v)
+			end
 			if v.implement then
 				for _, impl in ipairs(v.implement) do
 					import_impl("/pkg/"..v.packname.."/"..impl, ecs)
 				end
-			end
-			if objname == "component" then
-				res[name] = schema_data[name]
 			end
 		end
 	end
@@ -147,8 +159,8 @@ local function import_decl(w, fullname)
 end
 
 local function init(w, config)
-	local schema_data = {}
-	local schema = createschema(schema_data)
+	w._class = { component = {}, unique = {} }
+	local schema = createschema(w._class.component)
 
 	local ecs = { world = w }
 	local declaration = interface.new(function(packname, filename)
@@ -158,7 +170,6 @@ local function init(w, config)
 	end)
 
 	w._decl = declaration
-	w._class = { unique = {} }
 	w._initializing = true
 
 	local function register(what)
@@ -209,7 +220,7 @@ local function init(w, config)
 	for _, k in ipairs(config.ecs.import) do
 		import_decl(w, k)
 	end
-	w._import = create_importor(w, ecs, schema_data, declaration)
+	w._import = create_importor(w, ecs, declaration)
 	
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
@@ -225,7 +236,6 @@ local function init(w, config)
 			solve_object(o, fullname)
         end
     end
-	require "policy".solve(w)    -- TODO
 	require "system".solve(w)
 end
 

@@ -1,9 +1,5 @@
 local typeclass = require "typeclass"
 
-local function splitname(fullname)
-    return fullname:match "^([^|]*)|(.*)$"
-end
-
 local function create(w, policies)
     local policy_class = w._class.policy
     local transform_class = w._class.transform
@@ -108,23 +104,7 @@ local function add(w, eid, policies)
     return component, transform
 end
 
-local function solve(w)
-    local class = w._class
-    for fullname, v in pairs(class.policy) do
-        local _, policy_name = splitname(fullname)
-        local union_name, name = policy_name:match "^([%a_][%w_]*)%.([%a_][%w_]*)$"
-        if not union_name then
-            name = policy_name:match "^([%a_][%w_]*)$"
-        end
-        if not name then
-            error(("invalid policy name: `%s`."):format(policy_name))
-        end
-        v.union = union_name
-    end
-end
-
 return {
     create = create,
     add = add,
-    solve = solve,
 }

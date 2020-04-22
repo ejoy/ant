@@ -101,10 +101,7 @@ local check_map = {
 	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
-	component = "none",
 	unique_component = "none",
-	input = "none",
-	output = "none",
 	pipeline = "none",
 	stage = "none",
 }
