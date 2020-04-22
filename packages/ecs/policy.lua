@@ -37,7 +37,7 @@ local function create(w, policies)
                 transform[v] = {}
             end
         end
-        for _, v in ipairs(class.require_component) do
+        for _, v in ipairs(class.component) do
             if not component[v] then
                 component[v] = {depend={}}
                 init_component[#init_component+1] = v

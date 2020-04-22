@@ -5,10 +5,4 @@ system "editor_operate_gizmo_system"
     .method "init"
 
 policy "gizmo_object"
-    .require_component "gizmo_object"
-
-component "gizmo_object"
-    .implement "system/editor_operate_gizmo_system.lua"
-
-component "show_operate_gizmo"
-    .implement "system/editor_operate_gizmo_system.lua"
+    .component "gizmo_object"

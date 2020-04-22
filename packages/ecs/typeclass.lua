@@ -62,25 +62,12 @@ local function gen_method(c)
 	end
 end
 
-local basetype = {
-	tag = true,
-	int = true,
-	real = true,
-	string = true,
-	boolean = true,
-}
-
 local check_map = {
 	require_system = "system",
 	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
-	require_component = "component",
-	unique_component = "component",
-	input = "component",
-	output = "component",
 	pipeline = "pipeline",
-	stage = nil,
 }
 
 local OBJECT = {"system","policy","transform","interface","component","pipeline"}
@@ -102,7 +89,7 @@ local function create_importor(w, ecs, schema_data, declaration)
 				if objname == "pipeline" then
 					return
 				end
-				if objname == "component" and basetype[name] then
+				if objname == "component" then
 					return
 				end
                 error(("invalid %s name: `%s`."):format(objname, name))
@@ -118,9 +105,9 @@ local function create_importor(w, ecs, schema_data, declaration)
 				local attrib = check_map[what]
 				if attrib then
 					import[attrib](k)
-					if what == "unique_component" then
-						w._class.unique[k] = true
-					end
+				end
+				if what == "unique_component" then
+					w._class.unique[k] = true
 				end
 			end
 			if v.implement then

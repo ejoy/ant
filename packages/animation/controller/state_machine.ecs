@@ -16,8 +16,8 @@ interface "animation"
 policy "animation_controller.state_machine"
     .require_system "state_machine_system"
     .require_transform "state_machine_transform"
-    .require_component "animation"
-    .require_component "state_machine"
+    .component "animation"
+    .component "state_machine"
 
 transform "state_machine_transform"
     .implement "controller/state_machine.lua"
@@ -27,12 +27,4 @@ transform "state_machine_transform"
 
 component "state_machine"
     .implement "controller/state_machine.lua"
-    .require_component "state_machine_node"
     .method "init"
-
-component "state_machine_node"
-    .implement "controller/state_machine.lua"
-    .require_component "state_machine_transmits"
-
-component "state_machine_transmits"
-    .implement "controller/state_machine.lua"

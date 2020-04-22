@@ -13,16 +13,15 @@ system "sun_update_system"
 
 policy "procedural_sky"
     .require_system "procedural_sky_system"
-    .require_component "procedural_sky"
+    .component "procedural_sky"
 
 policy "procedural_sky_follow_sun"
     .require_system "procedural_sky_system"
     .require_system "sun_update_system"
-    .require_component "procedural_sky"
+    .component "procedural_sky"
 
 component "procedural_sky"
     .implement "procedural_sky_system.lua"
-    .require_component "entityid"
     .method "init"
 
 pipeline "sky"

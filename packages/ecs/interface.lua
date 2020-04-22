@@ -63,7 +63,7 @@ local attribute = {
 		"require_interface",
 		"require_policy",
 		"require_transform",
-		"require_component",
+		"component",
 		"unique_component"
 	},
 	interface = {
@@ -82,7 +82,6 @@ local attribute = {
 	},
 	component = {
 		"implement",
-		"require_component",
 		"method",
 	},
 	pipeline = {
@@ -102,10 +101,10 @@ local check_map = {
 	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
-	require_component = "component",
-	unique_component = "component",
-	input = "component",
-	output = "component",
+	component = "none",
+	unique_component = "none",
+	input = "none",
+	output = "none",
 	pipeline = "none",
 	stage = "none",
 }

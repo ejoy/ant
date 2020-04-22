@@ -10,36 +10,15 @@ system "pickup_system"
 
 policy "pickup"
     .require_system "pickup_system"
-    .require_component "material"
+    .component "material"
     .unique_component "pickup"
 
 policy "select"
     .require_system "pickup_system"
     .require_policy "pickup"
-    .require_component "can_select"
-
-component "blit_buffer"
-    .implement "pickup_system.lua"
-    .require_component "raw_buffer"
-    .require_component "rb_index"
-    .require_component "viewid"
-
-component "can_select"
-    .implement "pickup_system.lua"
-
-component "pickup"
-    .implement "pickup_system.lua"
-    .require_component "blit_buffer"
-    .require_component "pickup_cache"
-
-component "pickup_cache"
-    .implement "pickup_system.lua"
-
-component "pickup_viewtag"
-    .implement "pickup_system.lua"
+    .component "can_select"
 
 component "raw_buffer"
-    .implement "pickup_system.lua"
     .method "init"
 
 pipeline "select"

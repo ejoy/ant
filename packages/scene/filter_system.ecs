@@ -2,12 +2,8 @@ system "primitive_filter_system"
     .implement "filter_system.lua"
     .method "filter_primitive"
 
-component "filter_tag"
-    .implement "filter_system.lua"
-
 component "primitive_filter"
     .implement "filter_system.lua"
-    .require_component "filter_tag"
     .method "init"
 
 pipeline "handle_primitive"

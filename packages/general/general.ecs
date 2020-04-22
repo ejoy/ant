@@ -1,11 +1,12 @@
 policy "name"
-    .require_component "name"
-
-component "name"
-    .implement "general.lua"
+    .component "name"
 
 component "resource"
     .implement "general.lua"
+    .method "init"
+    .method "save"
 
 component "entityid"
     .implement "general.lua"
+    .method "init"
+    .method "save"
