@@ -57,8 +57,11 @@ local function sortpairs(t)
     end
 end
 
-function world:create_component(c, args)
-	return component_init(self, c, args)
+function world:add_component(eid, c, data)
+	local e = assert(self[eid])
+	assert(e[c] == nil)
+	e[c] = data
+	register_component(self, eid, c)
 end
 
 function world:enable_tag(eid, c)
@@ -87,7 +90,7 @@ local function apply_policy(w, eid, component, transform, dataset)
 		register_component(w, eid, c)
 	end
 	for _, f in ipairs(transform) do
-		f(e)
+		f(e, eid)
 	end
 end
 
@@ -97,89 +100,54 @@ function world:add_policy(eid, t)
 	apply_policy(self, eid, component, transform, dataset)
 end
 
-function world:register_entity(policies, dataset)
-	local eid = self._entity_id + 1
-	self._entity_id = eid
-	if dataset.serialize then
-		self._uuids[dataset.serialize] = eid
-	end
-	self[eid] = {}
-	self._entity[eid] = true
-	self._policies[eid] = policies
-	self._dataset[eid] = dataset
-	return eid
+function world:init_entity(eid, dataset)
+	local args = self._initargs[eid]
+	apply_policy(self, eid, args.component, args.transform, dataset)
 end
 
-function world:init_entity(eid)
-	local policies, dataset = self._policies[eid], self._dataset[eid]
-	local component, transform = policy.create(self, policies)
-	apply_policy(self, eid, component, transform, dataset)
-	self._dataset[eid] = nil
-end
-
-local function registerEntityEx(w, t)
+local function register_entity(w, t)
 	if type(t) == 'string' then
 		t = datalist.parse(t, function(args)
 			return component_init(w, args[1], args[2])
 		end)
 	end
-	if t.patch then
-		local patchs = t.patch
-		t.patch = nil
-		local ok, data = serialize.patch.apply(t, patchs)
-		if not ok then
-			error "The patch was not applied."
-		end
-		t = data
-	end
-	return w:register_entity(t.policy, t.data)
+	local eid = w._entity_id + 1
+	w._entity_id = eid
+	w[eid] = {}
+	w._entity[eid] = true
+
+	local component, transform = policy.create(w, t.policy)
+	w._initargs[eid] = {
+		policy = t.policy,
+		component = component,
+		transform = transform,
+	}
+	return eid, t.data
 end
 
 function world:create_entity(t)
-	local eid = registerEntityEx(self, t)
-	self:init_entity(eid)
+	local eid, dataset = register_entity(self, t)
+	self:init_entity(eid, dataset)
 	self:pub {"entity_created", eid}
 	return eid
-end
-
-function world:create_entities(l)
-	local entities = {}
-	for _, t in ipairs(l) do
-		entities[#entities+1] = registerEntityEx(self, t)
-	end
-	for _, eid in ipairs(entities) do
-		self:init_entity(eid)
-		self:pub {"entity_created", eid}
-	end
 end
 
 function world:reset_entity(eid, dataset)
 	local removed = self._removed
 	removed[#removed+1] = assert(self[eid])
-	self._dataset[eid] = dataset
-	self:init_entity(eid)
+	self:init_entity(eid, dataset)
 end
 
 function world:remove_entity(eid)
 	local e = assert(self[eid])
 	self[eid] = nil
 	self._entity[eid] = nil
+	self._initargs[eid] = nil
 
 	local removed = self._removed
 	removed[#removed+1] = e
 
 	self:pub {"entity_removed", eid, e,}
-end
-
-function world:find_entity(uuid)
-	local eid = self._uuids[uuid]
-	if not eid then
-		return
-	end
-	if self[eid] then
-		return eid
-	end
-	self._uuids[uuid] = nil
 end
 
 local function component_next(set, index)
@@ -315,9 +283,7 @@ function m.new_world(config,world_class)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
-		_uuids = {},
-		_policies = {},
-		_dataset = {},
+		_initargs = {},
 		_interface = {},
 		_typeclass = setmetatable({}, { __mode = "kv" }),
 	}, world_class or world)

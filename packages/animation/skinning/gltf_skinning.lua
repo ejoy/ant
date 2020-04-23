@@ -1,4 +1,5 @@
 local ecs = ...
+local world = ecs.world
 
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
@@ -89,13 +90,14 @@ local function patch_dynamic_buffer(meshres, meshscene)
 	return new_meshscene
 end
 
-function mesh_skinning_transform.process(e)
+function mesh_skinning_transform.process(e, eid)
+	world:add_component(eid, "skinning", {})
 	local meshres = e.mesh
 
 	local skinning = e.skinning
 
 	local jobs = {}
-	skinning._jobs = jobs
+	skinning.jobs = jobs
 
 	e.rendermesh = patch_dynamic_buffer(meshres, e.rendermesh)
 
