@@ -3,7 +3,7 @@ local datalist = require 'datalist'
 local world
 local out
 
-local function sortpairs(t)
+local function sort_pairs(t)
     local sort = {}
     for k in pairs(t) do
         if type(k) == "string" then
@@ -22,12 +22,13 @@ local function sortpairs(t)
     end
 end
 
-local function copytable(t)
+local function sort_ipairs(t)
     local res = {}
     for k, v in pairs(t) do
         res[k] = v
     end
-    return res
+    table.sort(res)
+    return ipairs(res)
 end
 
 local function isArray(v)
@@ -91,7 +92,7 @@ end
 local function stringify_array_map(n, t)
     for _, tt in ipairs(t) do
         out[#out+1] = indent(n).."---"
-        for k, v in sortpairs(tt) do
+        for k, v in sort_pairs(tt) do
             stringify_value(n, k..":", v)
         end
     end
@@ -135,7 +136,7 @@ end
 local function stringify_map(n, prefix, t)
     out[#out+1] = indent(n)..prefix
     n = n + 1
-    for k, v in sortpairs(t) do
+    for k, v in sort_pairs(t) do
         if k:sub(1,1) ~= "_" then
             stringify_value(n, k..":", v)
         end
@@ -168,35 +169,30 @@ function stringify_value(n, prefix, v)
     out[#out+1] = indent(n)..prefix.." "..stringify_basetype(v)
 end
 
-local function stringify_policy(n, policies)
-    local t = copytable(policies)
-    table.sort(t)
-    for _, p in ipairs(t) do
-        out[#out+1] = indent(n)..p
-    end
-end
-
-local function stringify_dataset(n, dataset)
-    for name, v in sortpairs(dataset) do
-        stringify_value(n, name..':', v)
-    end
-end
-
-local function stringify_entity(policies, dataset)
-    out = {}
+local function stringify_policy(eid)
     out[#out+1] = 'policy:'
-    stringify_policy(1, policies)
+    for _, p in sort_ipairs(world._initargs[eid].policy) do
+        out[#out+1] = indent(1)..p
+    end
+end
+
+local function stringify_data(eid)
     out[#out+1] = 'data:'
-    stringify_dataset(1, dataset)
+    local dataset = world[eid]
+    for _, name in sort_ipairs(world._initargs[eid].component) do
+        stringify_value(1, name..':', dataset[name])
+    end
+end
+
+local function stringify_entity(w, eid)
+    world = w
+    out = {}
+    stringify_policy(eid)
+    stringify_data(eid)
     out[#out+1] = ''
     return table.concat(out, '\n')
 end
 
-local function entity(w, eid)
-    world = w
-    return stringify_entity(w._policies[eid], w[eid])
-end
-
 return {
-    entity = entity,
+    entity = stringify_entity,
 }

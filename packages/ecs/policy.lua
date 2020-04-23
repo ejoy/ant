@@ -59,6 +59,9 @@ local function create(w, policies)
             end
             reflection[v] = name
             if class.input then
+                if not component[v] then
+                    component[v] = {depend={}}
+                end
                 table_append(component[v].depend, class.input)
             end
         end
