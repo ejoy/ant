@@ -1649,9 +1649,12 @@ luaopen_math3d(lua_State *L) {
 		{ "__index", lref_getter },
 		{ "__tostring", lref_tostring },
 		{ "__gc", lref_gc },
+		{ "type", NULL },
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L,ref_mt);
+	lua_pushstring(L, "math3d");
+	lua_setfield(L, -2, "type");
 	int refmeta = lua_gettop(L);
 
 	struct boxstack * bs = lua_newuserdatauv(L, sizeof(struct boxstack), 0);
