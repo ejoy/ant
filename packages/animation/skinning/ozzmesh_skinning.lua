@@ -142,7 +142,7 @@ function ozzmesh_skinning_transform.process(e)
 	local group = meshnode[1]
 
 	local skincomp = e.skinning
-	skincomp.jobs = {
+	skincomp._jobs = {
 		{
 			inverse_bind_pose = meshnode.inverse_bind_pose,
 			joint_remap = meshnode.joint_remap,
@@ -150,7 +150,7 @@ function ozzmesh_skinning_transform.process(e)
 		}
 	}
 
-	local job = skincomp.jobs[1]
+	local job = skincomp._jobs[1]
 	local parts = job.parts
 	
 	local vb = group.vb

@@ -26,7 +26,7 @@ function skinning_sys:skin_mesh()
 		local skincomp = e.skinning
 		local aniresult = e.pose_result.result
 
-		for _, job in ipairs(skincomp.jobs) do
+		for _, job in ipairs(skincomp._jobs) do
 			local skinning_matrices = build_skinning_matrices(job, aniresult)
 			local handle = job.hwbuffer_handle
 			local updatedata = job.updatedata

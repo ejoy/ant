@@ -18,19 +18,4 @@ function m:save()
     return tostring(self):match "[^:]+"
 end
 
-local m = ecs.component_alias("entityid", "string")
-
-function m:init()
-    if type(self) == "number" then
-        return self
-    else
-        return world:find_entity(self) or self
-    end
-end
-
-function m:save()
-    local entity = world[self]
-    assert(entity, "unknown entityid: "..self)
-    assert(entity.serialize, "entity("..self..") doesn't allow serialization.")
-    return entity.serialize
-end
+ecs.component_alias("entityid", "int")

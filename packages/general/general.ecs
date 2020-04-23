@@ -5,8 +5,3 @@ component "resource"
     .implement "general.lua"
     .method "init"
     .method "save"
-
-component "entityid"
-    .implement "general.lua"
-    .method "init"
-    .method "save"
