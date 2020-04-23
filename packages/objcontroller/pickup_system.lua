@@ -153,45 +153,56 @@ end
 ecs.tag "can_select"
 
 -- pickup_system
-local raw_buf = ecs.component "raw_buffer"
+local bb = ecs.component "blit_buffer"
 	.w "int" (1)
 	.h "int" (1)
 	.elemsize "int" (4)
-function raw_buf:init()
+
+function bb:init()
 	self.handle = bgfx.memory_texture(self.w*self.h * self.elemsize)
+	self.rb_idx = fbmgr.create_rb {
+		w = self.w,
+		h = self.h,
+		layers = 1,
+		format = "RGBA8",
+		flags = renderutil.generate_sampler_flag {
+			BLIT="BLIT_AS_DST",
+			BLIT_READBACK="BLIT_READBACK_ON",
+			MIN="POINT",
+			MAG="POINT",
+			U="CLAMP",
+			V="CLAMP",
+		}
+	}
+	self.blit_viewid = viewidmgr.get "pickup_blit"
 	return self
 end
 
-ecs.component "blit_buffer"
-	.raw_buffer "raw_buffer"
-	.rb_idx 	"rb_index"
-	.blit_viewid "viewid"
-
 ecs.component_alias("pickup_viewtag", "boolean")
 
---pick_ids:array of pick_eid
---last_pick:last pick id when mult pick supported
-ecs.component "pickup_cache"
-	.last_pick "int" (-1)
-	.pick_ids "int[]"
-
-ecs.component "pickup"
+local pu = ecs.component "pickup"
 	.blit_buffer "blit_buffer"
-	.pickup_cache "pickup_cache"
+function pu:init()
+	self.pickup_cache = {
+		last_pick = -1,
+		pick_ids = {},
+	}
+	return self
+end
 
 
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
 
-local function add_pick_entity()
-	local fb_renderbuffer_flag = renderutil.generate_sampler_flag {
-		RT="RT_ON",
-		MIN="POINT",
-		MAG="POINT",
-		U="CLAMP",
-		V="CLAMP"
-	}
+local fb_renderbuffer_flag = renderutil.generate_sampler_flag {
+	RT="RT_ON",
+	MIN="POINT",
+	MAG="POINT",
+	U="CLAMP",
+	V="CLAMP"
+}
 
+local function add_pick_entity()
 	local cameraeid = world:create_entity {
 		policy = {
 			"ant.render|camera",
@@ -229,20 +240,6 @@ local function add_pick_entity()
 		}
 	}
 
-	local blit_rbidx = fbmgr.create_rb {
-		w = pickup_buffer_w,
-		h = pickup_buffer_h,
-		layers = 1,
-		format = "RGBA8",
-		flags = renderutil.generate_sampler_flag {
-			BLIT="BLIT_AS_DST",
-			BLIT_READBACK="BLIT_READBACK_ON",
-			MIN="POINT",
-			MAG="POINT",
-			U="CLAMP",
-			V="CLAMP",
-		}
-	}
 	return world:create_entity {
 		policy = {
 			"ant.general|name",
@@ -256,17 +253,9 @@ local function add_pick_entity()
 			},
 			pickup = {
 				blit_buffer = {
-					raw_buffer = {
-						w = pickup_buffer_w,
-						h = pickup_buffer_h,
-						elemsize = 4,
-					},
-					rb_idx = blit_rbidx,
-					blit_viewid = viewidmgr.get "pickup_blit",
-				},
-				pickup_cache = {
-					last_pick = -1,
-					pick_ids = {},
+					w = pickup_buffer_w,
+					h = pickup_buffer_h,
+					elemsize = 4,
 				},
 			},
 			camera_eid = cameraeid,
@@ -318,7 +307,7 @@ local function blit(blit_buffer, colorbuffer)
 	local rbhandle = rb.handle
 	
 	bgfx.blit(blit_buffer.blit_viewid, rbhandle, 0, 0, assert(colorbuffer.handle))
-	return bgfx.read_texture(rbhandle, blit_buffer.raw_buffer.handle)
+	return bgfx.read_texture(rbhandle, blit_buffer.handle)
 end
 
 local function print_raw_buffer(rawbuffer)
@@ -333,9 +322,9 @@ local function print_raw_buffer(rawbuffer)
 	end
 end
 
-local function select_obj(pickup_com,blit_buffer, viewrect)
+local function select_obj(pickup_com, blit_buffer, viewrect)
 	--print_raw_buffer(blit_buffer.raw_buffer)
-	local selecteid = which_entity_hitted(blit_buffer.raw_buffer.handle, viewrect)
+	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect)
 	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)
 		pickup_com.pickup_cache.last_pick = selecteid
