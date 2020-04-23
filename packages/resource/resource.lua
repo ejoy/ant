@@ -33,13 +33,12 @@ end
 
 local function data_mt(data, robj)
 	return {
+		filename = robj.filename,
 		__index = data,
 		__newindex = readonly,
 		__tostring = robj.meta.__tostring,
 		__pairs = data_pairs,
 		__len = data_len,
-		filename = robj.filename,
-		type = "resource",
 	}
 end
 
@@ -108,6 +107,7 @@ local function get_file_object(filename)
 		FILELIST[filename] = {
 			filename = filename,
 			meta = {
+				filename = filename,
 				__index = not_in_memory,
 				__pairs = not_in_memory,
 				__len = not_in_memory,
@@ -115,8 +115,6 @@ local function get_file_object(filename)
 				__tostring = function (self)
 					return filename .. ":" .. self._path
 				end,
-				filename = filename,
-				type = "resource",
 			},
 			proxy = {},
 			invalid = {},
