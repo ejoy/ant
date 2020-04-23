@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include <imgui.h>
+#include <vector>
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>

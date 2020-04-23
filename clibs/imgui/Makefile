@@ -9,16 +9,21 @@ endif
 
 IMGUI_INC=-I$(ANT3RD)/imgui
 IMGUI_SRC=$(ANT3RD)/imgui
+
 IMGUI_MACRO  = -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS
 IMGUI_MACRO += -DIMGUI_DISABLE_METRICS_WINDOW
 IMGUI_MACRO += -DIMGUI_DISABLE_DEMO_WINDOWS
 IMGUI_MACRO += -DIMGUI_DISABLE_DEFAULT_ALLOCATORS
-IMGUI_MACRO += -DIMGUI_DISABLE_FILE_FUNCTIONS
 IMGUI_MACRO += -I. -DIMGUI_USER_CONFIG=\"imgui_config.h\"
+
+IMNODES_DIR=$(ANT3RD)/imnodes
+IMNODES_SRC=$(IMNODES_DIR)
+IMNODES_INC=-I$(IMNODES_DIR)
 
 WINDOW_INC=-I$(ANTCLIBS)/window
 
-OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_ant.o $(ODIR)/imgui_config.o $(ODIR)/imgui.o $(ODIR)/imgui_draw.o $(ODIR)/imgui_widgets.o
+OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_ant.o $(ODIR)/imgui_config.o $(ODIR)/imgui.o $(ODIR)/imgui_widgets.o $(ODIR)/imgui_draw.o
+OBJS += $(ODIR)/luaimnode.o $(ODIR)/imnodes.o
 
 ifeq "$(PLAT)" "mingw"
 CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
@@ -49,6 +54,9 @@ $(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
 $(ODIR)/imgui_ant.o : imgui_ant.cpp imgui_ant.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
+$(ODIR)/luaimnode.o: luaimnodes.cpp | $(ODIR)
+	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(IMNODES_INC)
+
 $(ODIR)/imgui_config.o : imgui_config.cpp imgui_ant.h $(IMGUI_SRC)/imgui.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx
 
@@ -60,6 +68,9 @@ $(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)/imstb_truetype.h
 
 $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
+
+$(ODIR)/imnodes.o : $(IMNODES_SRC)/imnodes.cpp $(IMNODES_SRC)/imnodes.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(IMNODES_INC) $(IMGUI_INC)
 
 $(ODIR)/imgui.dll : $(OBJS)
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++ $(LIBS)
