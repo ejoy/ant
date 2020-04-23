@@ -5,10 +5,16 @@ local event = require "event"
 local datalist = require "datalist"
 local serialize = import_package "ant.serialize"
 
+local world = {}
+world.__index = world
+
 local function component_init(w, c, component)
-    local tc = w:import_component(c)
-    if tc and tc.methodfunc and tc.methodfunc.init then
-        return tc.methodfunc.init(component)
+	local tc = w:import_component(c)
+	if tc and tc.methodfunc and tc.methodfunc.init then
+		local res = tc.methodfunc.init(component)
+		assert(type(res) == "table" or type(res) == "userdata")
+		w._typeclass[res] = c
+		return res
 	end
 	error(("component `%s` has no init function."):format(c))
 end
@@ -18,13 +24,6 @@ local function component_delete(w, c, component)
     if tc and tc.methodfunc and tc.methodfunc.delete then
         tc.methodfunc.delete(component)
     end
-end
-
-local world = {}
-world.__index = world
-
-function world:create_component(c, args)
-	return component_init(self, c, args)
 end
 
 local function register_component(w, eid, c)
@@ -39,6 +38,27 @@ local function register_component(w, eid, c)
 		w._uniques[c] = eid
 	end
 	w:pub {"component_register", c, eid}
+end
+
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
+function world:create_component(c, args)
+	return component_init(self, c, args)
 end
 
 function world:enable_tag(eid, c)
@@ -58,23 +78,6 @@ function world:disable_tag(eid, c)
 		self._set[c] = nil
 		e[c] = nil
 	end
-end
-
-local function sortcomponent(w, t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
 end
 
 local function apply_policy(w, eid, component, transform, dataset)
@@ -231,30 +234,8 @@ function world:singleton(c_type)
 	end
 end
 
-local function component_filter(world, minor_type)
-	return function(set, index)
-		local eid
-		while true do
-			index, eid = component_next(set, index)
-			if eid then
-				local e = world[eid]
-				if e[minor_type] then
-					return index, eid
-				end
-			else
-				return
-			end
-		end
-	end
-end
-
-function world:each2(ct1, ct2)
-	local _,s = self:each(ct1)
-	return component_filter(self, ct2), s, 0
-end
-
 local function remove_entity(w, e)
-	for c, component in sortcomponent(w, e) do
+	for c, component in sortpairs(e) do
 		component_delete(w, c, component)
 	end
 end
@@ -338,6 +319,7 @@ function m.new_world(config,world_class)
 		_policies = {},
 		_dataset = {},
 		_interface = {},
+		_typeclass = setmetatable({}, { __mode = "kv" }),
 	}, world_class or world)
 
 	--init event

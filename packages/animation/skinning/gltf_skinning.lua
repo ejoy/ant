@@ -95,7 +95,7 @@ function mesh_skinning_transform.process(e)
 	local skinning = e.skinning
 
 	local jobs = {}
-	skinning.jobs = jobs
+	skinning._jobs = jobs
 
 	e.rendermesh = patch_dynamic_buffer(meshres, e.rendermesh)
 
