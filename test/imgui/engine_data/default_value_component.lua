@@ -187,7 +187,7 @@ return {
 	postprocess = {
 		techniques = 0
 	},
-	primitive_filter = {
+	primitive_filter = world.component:primitive_filter {
 		filter_tag = "can_render"
 	},
 	blit_queue = true,

@@ -125,7 +125,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = {srt = mu.srt()},
+            transform = world.component:transform {srt = mu.srt()},
             parent = parent,
             rendermesh = {},
             material = "/pkg/ant.resources/materials/gizmo_line.material",
@@ -310,7 +310,7 @@ end
 function Util.create_gizmo(world)
     local serializeutil = import_package "ant.serialize"
     local function create_gizmo_object(name,parent,ignore_scale)
-        local trans = {srt = mu.srt(),parent = parent}
+        local trans = world.component:transform {srt = mu.srt(),parent = parent}
         -- trans.parent = parent and world[parent].serialize or nil
         local args = {
             policy={

@@ -33,10 +33,4 @@ policy "bounding_draw"
 
 policy "debug_mesh_bounding"
     .require_system "render_mesh_bounding_system"
-    .require_component "debug_mesh_bounding"
-
-component "debug_mesh_bounding"
-    .implement "widget_system.lua"
-
-component "widget_drawer"
-    .implement "widget_system.lua"
+    .component "debug_mesh_bounding"

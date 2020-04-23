@@ -205,3 +205,18 @@ local v = datalist.parse([[ [1,2,3,4] ]], function(v)
 end)
 
 print(v[1])
+
+
+local v = datalist.parse([[
+transform: $transform
+	srt :
+		s = $vector {1,1,1,0}
+		r = $vector {0,0.92388,0,0.382683}
+		t= $vector {0,0,0,1}
+]], function(v)
+	v[2].type = v[1]
+	return v[2]
+end)
+
+assert(v.transform.type == "transform")
+assert(v.transform.srt.s.type == "vector")

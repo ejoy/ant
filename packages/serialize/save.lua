@@ -1,5 +1,4 @@
-local world
-local pool
+local w
 local typeinfo
 
 local function sortpairs(t)
@@ -51,8 +50,8 @@ local function foreach_save_2(component, c)
     return foreach_save_1(component, c.type)
 end
 
-local function save_component(res, typeinfo, value)
-    for _, v in ipairs(typeinfo) do
+local function save_component(res, ti, value)
+    for _, v in ipairs(ti) do
         if value[v.name] == nil and v.attrib and v.attrib.opt then
             goto continue
         end
@@ -66,47 +65,27 @@ function foreach_save_1(component, name)
     if name == 'primtype' then
         return component
     end
-    if name == 'entityid' then
-        local entity = world[component]
-        assert(entity, "unknown entityid: "..component)
-        assert(entity.serialize, "entity("..component..") doesn't allow serialization.")
-        return entity.serialize
+    local tc = w:import_component(name)
+    if tc and tc.methodfunc and tc.methodfunc.save then
+        component = tc.methodfunc.save(component)
     end
-    assert(typeinfo[name], "unknown type:" .. name)
-    local c = typeinfo[name]
-    if c.ref and pool[component] then
-        return pool[component]
-    end
-    if c.methodfunc and c.methodfunc.save then
-        component = c.methodfunc.save(component)
-    end
+    local ti = assert(typeinfo[name], "unknown type:" .. name)
     local ret
-    if not c.type then
-        if c.multiple then
-            ret = {}
-            save_component(ret, c, component)
-            for i, com in ipairs(component) do
-                local r = {}
-                ret[i] = r
-                save_component(r, c, com)
-            end
-        else
-            ret = {}
-            save_component(ret, c, component)
-        end
+    if not ti.type then
+        ret = {}
+        save_component(ret, ti, component)
     else
-        ret = foreach_save_1(component, c.type)
+        ret = foreach_save_1(component, ti.type)
     end
-    if c.ref then
-        pool[component] = ret
+    if ti.methodfunc and ti.methodfunc.init then
+        ret = setmetatable({ret}, {__component = name})
     end
     return ret
 end
 
-local function save_entity(w, eid)
-    world = w
-    pool = {}
-    typeinfo = w._class.component
+local function save_entity(w_, eid)
+    w = w_
+    typeinfo = require "schema.typeinfo" ()
     local e = assert(w[eid], 'invalid eid')
     local t = {}
     for name, cv in sortpairs(e) do

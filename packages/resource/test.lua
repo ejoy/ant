@@ -116,25 +116,3 @@ local zclone = resource.patch(z,
 assert(zclone[1][1] == "hello_patched")
 assert(zclone[2][1] == "world")
 assert(resource.status(zclone[2])=="data")
-
-local mproxy = resource.multiple_proxy {
-	"a.code:a",
-	"a.code:b",
-}
-
-assert(resource.status(mproxy) == "multiple")
-assert(tostring(mproxy) == "a.code:a")	-- first one
-assert(mproxy.x == 1)	-- a.x
-assert(mproxy[1].y == 2)	-- b.y
-mproxy[2] = resource.proxy "a.code:x"
-
-local result = {}
-
-for idx , p in resource.ipairs(mproxy) do
-	result[idx] = p
-end
-
-assert(tostring(result[1]) == "a.code:a")
-assert(tostring(result[2]) == "a.code:b")
-assert(tostring(result[3]) == "a.code:x")
-

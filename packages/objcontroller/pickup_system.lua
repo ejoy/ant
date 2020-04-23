@@ -199,9 +199,9 @@ local function add_pick_entity()
 		},
 		data = {
 			camera = {
-				viewdir = mc.T_ZAXIS,
-				updir = mc.T_YAXIS,
-				eyepos = mc.T_ZERO_PT,
+				viewdir = world.component:vector(mc.T_ZAXIS),
+				updir = world.component:vector(mc.T_YAXIS),
+				eyepos = world.component:vector(mc.T_ZERO_PT),
 				frustum = {
 					type="mat", n=0.1, f=100, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
 				},
@@ -270,7 +270,7 @@ local function add_pick_entity()
 				},
 			},
 			camera_eid = cameraeid,
-			render_target = {
+			render_target = world.component:render_target {
 				viewid = pickupviewid,
 				view_mode = "s",
 				viewport = {
@@ -286,7 +286,7 @@ local function add_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			primitive_filter = {
+			primitive_filter = world.component:primitive_filter {
 				filter_tag = "can_select"
 			},
 			name = "pickup_renderqueue",

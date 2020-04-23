@@ -1,13 +1,24 @@
 local typeclass = require "typeclass"
 local system = require "system"
-local component = require "component"
 local policy = require "policy"
 local event = require "event"
 local datalist = require "datalist"
 local serialize = import_package "ant.serialize"
 
-local component_init = component.init
-local component_delete = component.delete
+local function component_init(w, c, component)
+    local tc = w:import_component(c)
+    if tc and tc.methodfunc and tc.methodfunc.init then
+        return tc.methodfunc.init(component)
+	end
+	error(("component `%s` has no init function."):format(c))
+end
+
+local function component_delete(w, c, component)
+    local tc = w:import_component(c)
+    if tc and tc.methodfunc and tc.methodfunc.delete then
+        tc.methodfunc.delete(component)
+    end
+end
 
 local world = {}
 world.__index = world
@@ -32,8 +43,6 @@ end
 
 function world:enable_tag(eid, c)
 	local e = self[eid]
-	local ti = assert(self._class.component[c], c)
-	assert(ti.type == 'tag')
 	if not e[c] then
 		e[c] = true
 		local set = self._set[c]
@@ -45,8 +54,6 @@ end
 
 function world:disable_tag(eid, c)
 	local e = assert(self[eid])
-	local ti = assert(self._class.component[c], c)
-	assert(ti.type == 'tag')
 	if e[c] then
 		self._set[c] = nil
 		e[c] = nil
@@ -73,7 +80,7 @@ end
 local function apply_policy(w, eid, component, transform, dataset)
 	local e = w[eid]
 	for _, c in ipairs(component) do
-		e[c] = w:create_component(c, dataset[c])
+		e[c] = dataset[c]
 		register_component(w, eid, c)
 	end
 	for _, f in ipairs(transform) do
@@ -109,7 +116,9 @@ end
 
 local function registerEntityEx(w, t)
 	if type(t) == 'string' then
-		t = datalist.parse(t)
+		t = datalist.parse(t, function(args)
+			return component_init(w, args[1], args[2])
+		end)
 	end
 	if t.patch then
 		local patchs = t.patch
@@ -204,22 +213,6 @@ function world:each(component_type)
 	return component_next, s, 0
 end
 
-local function each_component(t)
-    return function(_, n)
-        if n == 0 then
-			return 1, t
-        end
-        if not t[n] then
-            return
-        end
-        return n + 1, t[n]
-    end, t, 0
-end
-
-function world:each_component(t)
-    return each_component(t)
-end
-
 function world:singleton_entity_id(c_type)
 	return self._uniques[c_type]
 end
@@ -260,20 +253,9 @@ function world:each2(ct1, ct2)
 	return component_filter(self, ct2), s, 0
 end
 
-local function remove_component(w, e, component_type, c)
-	local ti = assert(w._class.component[component_type], component_type)
-	if not ti.type and ti.multiple then
-		for _, component in each_component(c) do
-			component_delete(w, ti, component, e)
-		end
-	else
-		component_delete(w, ti, c, e)
-	end
-end
-
 local function remove_entity(w, e)
-	for component_type, c in sortcomponent(w, e) do
-		remove_component(w, e, component_type, c)
+	for c, component in sortcomponent(w, e) do
+		component_delete(w, c, component)
 	end
 end
 
@@ -293,7 +275,7 @@ local function gettime()
 	return time_counter() / time_freq
 end
 function world:update_func(what)
-	local list = system.lists(self._systems, what)
+	local list = system.lists(self, what)
 	if not list then
 		return function() end
 	end
@@ -333,21 +315,9 @@ function world:interface(fullname)
 	return res
 end
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
+function world:import_component(name)
+	typeclass.import_object(self, "component", name)
+	return self._class.component[name]
 end
 
 local m = {}
@@ -376,15 +346,16 @@ function m.new_world(config,world_class)
 	world.pub = event.pub
 	world.unsub = event.unsub
 
+	w.component = setmetatable({}, {__index = function(_, name)
+		return function (_, args)
+			return component_init(w, name, args)
+		end
+	end})
+
 	-- load systems and components from modules
 	typeclass.init(w, config)
 
 	return w
-end
-
-function m.get_schema(...)
-	local extract_schema = require "extract_schema"
-	return extract_schema.run(world,...)
 end
 
 return m

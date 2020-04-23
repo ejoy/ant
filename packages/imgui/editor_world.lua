@@ -27,7 +27,7 @@ local function gen_editor_world(base_world)
         if dataset.serialize then
             if dataset.transform and dataset.transform.parent then
                 if type(dataset.transform.parent) == "number" then
-                    dataset.transform.parent = self[dataset.transform.parent].serialize
+                    dataset.transform.parent = dataset.transform.parent
                 end
             end
             if dataset.camera_eid and dataset.camera_eid then
@@ -35,7 +35,7 @@ local function gen_editor_world(base_world)
                     if dataset.camera_eid == 0 then
                         dataset.camera_eid = ""
                     else
-                        dataset.camera_eid = self[dataset.camera_eid].serialize
+                        dataset.camera_eid = dataset.camera_eid
                     end
                 end
             end

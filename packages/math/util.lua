@@ -38,29 +38,13 @@ function util.print_srt(e, numtab)
 	print(tab .. "position : ", t_str)
 end
 
-function util.srt(s, r, t)
-	return {
-		s = s or {1, 1, 1, 0},
-		r = r or {0, 0, 0, 1},
-		t = t or {0, 0, 0, 1},
-	}
-end
-
-function util.scale_mat(s)
-	local stype = type(s)
-	if type(s) == "number" then
-		return util.srt {s, s, s, 0}
-	end
-	assert(stype == "table")
-	return util.srt(s)
-end
-
-function util.rotation_mat(r)
-	return util.srt(nil, r)
-end
-
-function util.translate_mat(t)
-	return util.srt(nil, nil, t)
+function util.srt()
+	--TODO
+	return math3d.ref(math3d.matrix( {
+		s = math3d.ref(math3d.vector {1, 1, 1, 0}),
+		r = math3d.ref(math3d.quaternion {0, 0, 0, 1}),
+		t = math3d.ref(math3d.vector {0, 0, 0, 1}),
+	}))
 end
 
 function util.ratio(start, to, t)

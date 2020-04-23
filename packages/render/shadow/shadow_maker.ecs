@@ -14,31 +14,15 @@ system "shadow_system"
 policy "shadow_cast_policy"
     .require_policy "shadow_make_policy"
     .require_policy "shadow_config_policy"
-    .require_component "can_cast"
+    .component "can_cast"
 
 policy "shadow_config_policy"
-    .require_component "fb_index"
+    .component "fb_index"
     .unique_component "shadow"
 
 policy "shadow_make_policy"
     .require_system "shadow_system"
     .require_policy "render_queue"
     .require_policy "ant.general|name"
-    .require_component "csm"
-    .require_component "material"
-
-component "can_cast"
-    .implement "shadow/shadow_maker.lua"
-
-component "csm"
-    .implement "shadow/shadow_maker.lua"
-
-component "csm_split_config"
-    .implement "shadow/shadow_maker.lua"
-
-component "omni"
-    .implement "shadow/shadow_maker.lua"
-
-component "shadow"
-    .implement "shadow/shadow_maker.lua"
-    .require_component "csm_split_config"
+    .component "csm"
+    .component "material"

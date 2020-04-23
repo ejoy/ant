@@ -4,9 +4,6 @@ system "debug_shadow_maker_system"
     .method "post_init"
     .method "data_changed"
 
-component "shadow_debug"
-    .implement "shadow/shadow_debug.lua"
-
 policy "shadow_debug_policy"
     .require_system "debug_shadow_maker_system"
-    .require_component "shadow_debug"
+    .component "shadow_debug"

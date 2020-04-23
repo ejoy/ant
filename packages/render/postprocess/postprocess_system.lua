@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local fs = require "filesystem"
-
 local assetmgr = import_package "ant.asset"
 
 local mathpkg  = import_package "ant.math"
@@ -22,26 +20,6 @@ function pps:init()
     self.rb_idx = self.rb_idx or 1
     return self
 end
-
-ecs.component_alias("postprocess_input",    "postprocess_slot")
-ecs.component_alias("postprocess_output",   "postprocess_slot")
-
-ecs.component "pass"
-    .name           "string" ("")
-    .material       "material"
-    .viewport       "viewport"
-    ["opt"].input   "postprocess_input"
-    .output         "postprocess_output"
-
-ecs.component "technique" {multiple=true}
-    .name           "string"
-    .passes         "pass[]"
-    ["opt"].reorders"int[]"
-
-ecs.component "technique_order"
-    .orders "string[]"
-
-ecs.component_alias("copy_pass", "pass")
 
 local pp_sys = ecs.system "postprocess_system"
 

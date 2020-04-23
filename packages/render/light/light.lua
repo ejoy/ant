@@ -54,8 +54,8 @@ function ilight.create_directional_light_entity(name, color, intensity, directio
 			"ant.serialize|serialize",
 		},
 		data = {
-			position	= position,
-			direction 	= direction,
+			position	= world.component:vector(position),
+			direction 	= world.component:vector(direction),
 			name		= name,
 			serialize 	= seripkg.create(),
 			light 		= "",
@@ -75,8 +75,8 @@ function ilight.create_point_light_entity(name, dir, pos)
 			"ant.serialize|serialize",
 		},
 		data = {
-			direction = dir or mc.T_NYAXIS,
-			position = pos or mc.T_ZERO_PT,
+			direction = world.component:vector(dir or mc.T_NYAXIS),
+			position = world.component:vector(pos or mc.T_ZERO_PT),
 			name = name,
 			serialize = seripkg.create(),
 			light = "",
@@ -98,9 +98,9 @@ function ilight.create_spot_light_entity(name, dir, pos)
 			"ant.serialize|serialize",
 		},
 		data = {
-			direction = dir or mc.T_NYAXIS,
-			position = pos or mc.T_ZERO_PT,
-			name = name, 
+			direction = world.component:vector(dir or mc.T_NYAXIS),
+			position = world.component:vector(pos or mc.T_ZERO_PT),
+			name = name,
 			serialize = seripkg.create(),
 			light = "",
 			spot_light = {

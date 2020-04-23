@@ -1,5 +1,2 @@
 policy "serialize"
-    .require_component "serialize"
-
-component "serialize"
-    .implement "component.lua"
+    .component "serialize"

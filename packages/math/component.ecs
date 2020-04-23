@@ -1,26 +1,7 @@
-component "color"
-    .implement "component.lua"
-    .require_component "vector"
-
-component "direction"
-    .implement "component.lua"
-    .require_component "vector"
-
-component "frustum"
-    .implement "component.lua"
-
 component "matrix"
     .implement "component.lua"
     .method "init"
     .method "save"
-
-component "point"
-    .implement "component.lua"
-    .require_component "vector"
-
-component "position"
-    .implement "component.lua"
-    .require_component "vector"
 
 component "quaternion"
     .implement "component.lua"
@@ -28,19 +9,8 @@ component "quaternion"
     .method "init"
     .method "save"
 
-component "rotation"
-    .implement "component.lua"
-    .require_component "quaternion"
-
-component "scale"
-    .implement "component.lua"
-    .require_component "vector"
-
 component "srt"
     .implement "component.lua"
-    .require_component "vector"
-    .require_component "quaternion"
-    .require_component "vector"
     .method "init"
     .method "save"
 

@@ -1,5 +1,6 @@
 import "@ant.objcontroller"
 import "@ant.math"
+import "@ant.general"
 
 system "scenespace_system"
     .implement "scenespace.lua"
@@ -10,32 +11,20 @@ system "scenespace_system"
 
 policy "hierarchy_policy"
     .require_system "scenespace_system"
-    .require_component "parent"
-    .require_component "scene_entity"
+    .component "parent"
+    .component "scene_entity"
 
 policy "transform_policy"
     .require_transform "transform_transform"
-    .require_component "transform"
+    .component "transform"
 
 transform "transform_transform"
     .implement "scenespace.lua"
     .output "transform"
     .method "process"
 
-component "lock_target"
-    .implement "scenespace.lua"
-    .require_component "vector"
-
-component "parent"
-    .implement "scenespace.lua"
-
-component "scene_entity"
-    .implement "scenespace.lua"
-
 component "transform"
     .implement "scenespace.lua"
-    .require_component "srt"
-    .require_component "lock_target"
     .method "init"
 
 pipeline "scene"

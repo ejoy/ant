@@ -5,8 +5,13 @@ local loaders = {}
 loaders["ozz-animation"] = function (fn)
 	local animodule = require "hierarchy.animation"
 	local handle = animodule.new_animation(fn)
+	local scale = 1     -- TODO
+	local looptimes = 0 -- TODO
 	return {
-		handle = handle
+		handle = handle,
+		sampling_cache = animodule.new_sampling_cache(),
+		duration = handle:duration() * 1000. / scale,
+		max_ratio = looptimes > 0 and looptimes or math.maxinteger,
 	}
 end
 

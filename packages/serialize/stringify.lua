@@ -29,17 +29,6 @@ local function copytable(t)
     return res
 end
 
-local function isMultipe(v)
-    if type(v) == "table" and v[1] ~= nil then
-        for k in pairs(v) do
-            if type(k) == "string" then
-                return true
-            end
-        end
-    end
-    return false
-end
-
 local function isArray(v)
     return v[1] ~= nil
 end
@@ -149,6 +138,10 @@ end
 
 function stringify_value(n, prefix, v)
     if type(v) == "table" then
+        local mt = getmetatable(v)
+        if mt and mt.__component then
+            return stringify_value(n, prefix.." $"..mt.__component, v[1])
+        end
         local first_value = next(v)
         if first_value == nil then
             out[#out+1] = indent(n)..prefix..' {}'
@@ -164,17 +157,6 @@ function stringify_value(n, prefix, v)
     out[#out+1] = indent(n)..prefix.." "..stringify_basetype(v)
 end
 
-local function stringify_component(n, prefix, v)
-    if isMultipe(v) then
-        stringify_map(n, prefix, v)
-        for _, vv in ipairs(v) do
-            stringify_map(n, prefix, vv)
-        end
-    else
-        stringify_value(n, prefix, v)
-    end
-end
-
 local function stringify_policy(n, policies)
     local t = copytable(policies)
     table.sort(t)
@@ -185,7 +167,7 @@ end
 
 local function stringify_dataset(n, dataset)
     for name, v in sortpairs(dataset) do
-        stringify_component(n, name..':', v)
+        stringify_value(n, name..':', v)
     end
 end
 

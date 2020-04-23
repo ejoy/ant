@@ -20,7 +20,7 @@ function ml.process(e)
 	e.rendermesh = assetmgr.load(filename, e.mesh)
 end
 
-ecs.component_alias("material", "multiple_resource")
+ecs.component_alias("material", "resource")
 
 ecs.tag "blit_render"
 ecs.tag "can_render"

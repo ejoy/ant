@@ -57,11 +57,11 @@ function util.create_procedural_sky(world, settings)
 			"ant.general|name",
 		},
 		data = {
-			transform = {srt=mu.srt()},
+			transform = world.component:transform {srt=mu.srt()},
 			rendermesh = {},
-			material = "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
-			procedural_sky = {
-				grid_width = 32, 
+			material = world.component:resource "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
+			procedural_sky = world.component:procedural_sky {
+				grid_width = 32,
 				grid_height = 32,
 				attached_sun_light = attached_light(settings.attached_sun_light),
 				which_hour 	= settings.whichhour or 12,	-- high noon

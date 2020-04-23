@@ -99,7 +99,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 		data = {
 			transform = transform,
 			rendermesh = {},
-			material = "/pkg/ant.resources/materials/line.material",
+			material = world.component:resource "/pkg/ant.resources/materials/line.material",
 			name = name,
 			can_render = true,
 			scene_entity = true,
@@ -157,7 +157,7 @@ value:
 	local data = {
 		transform = trans,
 		rendermesh = {},
-		material = material,
+		material = world.component:resource(material),
 		can_render = true,
 		name = name or "Plane",
 		scene_entity = true,
@@ -226,6 +226,16 @@ function util.quad_mesh(rect)
 	}
 end
 
+local function create_transform(world, transform)
+	return world.component:transform {
+		srt = world.component:srt {
+			s = transform.srt.s and world.component:vector(transform.srt.s) or nil,
+			r = transform.srt.r and world.component:quaternion(transform.srt.r) or nil,
+			t = transform.srt.t and world.component:vector(transform.srt.t) or nil,
+		}
+	}
+end
+
 local function create_simple_render_entity(world, transform, material, name, tag)
 	return world:create_entity {
 		policy = {
@@ -233,9 +243,9 @@ local function create_simple_render_entity(world, transform, material, name, tag
 			"ant.general|name",
 		},
 		data = {
-			transform = transform or {srt={}},
+			transform = create_transform(world, transform or {srt={}}),
 			rendermesh = {},
-			material = material,
+			material = world.component:resource(material),
 			can_render = true,
 			name = name or "frustum",
 			scene_entity = true,
@@ -356,9 +366,9 @@ function util.create_skybox(world, material)
 			"ant.general|name"
 		},
 		data = {
-			transform = {srt=mu.srt()},
+			transform = world.component:transform {srt=mu.srt()},
 			rendermesh = {},
-			material = material or "/pkg/ant.resources/materials/skybox.material",
+			material = world.component:resource(material or "/pkg/ant.resources/materials/skybox.material"),
 			can_render = true,
 			scene_entity = true,
 			name = "sky_box",

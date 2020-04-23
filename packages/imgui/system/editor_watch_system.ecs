@@ -1,4 +1,5 @@
 import "@ant.objcontroller"
+import "@ant.general"
 
 system "editor_watcher_system"
     .implement "system/editor_watch_system.lua"
@@ -13,18 +14,6 @@ system "editor_watcher_system"
     .method "init"
 
 policy "outline"
-    .require_component "outline_entity"
-    .require_component "target_entity"
-    .require_component "editor_object"
-
-component "editor_object"
-    .implement "system/editor_watch_system.lua"
-
-component "editor_watching"
-    .implement "system/editor_watch_system.lua"
-
-component "outline_entity"
-    .implement "system/editor_watch_system.lua"
-
-component "target_entity"
-    .implement "system/editor_watch_system.lua"
+    .component "outline_entity"
+    .component "target_entity"
+    .component "editor_object"

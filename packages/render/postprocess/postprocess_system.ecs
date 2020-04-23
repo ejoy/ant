@@ -11,38 +11,6 @@ interface "postprocess"
     .method "main_rb_size"
     .method "techniques"
 
-component "copy_pass"
-    .implement "postprocess/postprocess_system.lua"
-    .require_component "pass"
-
-component "pass"
-    .implement "postprocess/postprocess_system.lua"
-    .require_component "material"
-    .require_component "viewport"
-    .require_component "postprocess_input"
-    .require_component "postprocess_output"
-
-component "postprocess_input"
-    .implement "postprocess/postprocess_system.lua"
-    .require_component "postprocess_slot"
-
-component "postprocess_output"
-    .implement "postprocess/postprocess_system.lua"
-    .require_component "postprocess_slot"
-
-component "postprocess_slot"
-    .implement "postprocess/postprocess_system.lua"
-    .require_component "fb_index"
-    .require_component "rb_index"
-    .method "init"
-
-component "technique"
-    .implement "postprocess/postprocess_system.lua"
-    .require_component "pass"
-
-component "technique_order"
-    .implement "postprocess/postprocess_system.lua"
-
 pipeline "postprocess"
     .stage "bloom"
     .stage "tonemapping"
