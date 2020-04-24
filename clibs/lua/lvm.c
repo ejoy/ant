@@ -577,14 +577,14 @@ int luaV_equalobj (lua_State *L, const TValue *t1, const TValue *t2) {
   }
   /* values have same type and same variant */
   switch (ttypetag(t1)) {
-    case LUA_TNIL: case LUA_TFALSE: case LUA_TTRUE: return 1;
-    case LUA_TNUMINT: return (ivalue(t1) == ivalue(t2));
-    case LUA_TNUMFLT: return luai_numeq(fltvalue(t1), fltvalue(t2));
-    case LUA_TLIGHTUSERDATA: return pvalue(t1) == pvalue(t2);
-    case LUA_TLCF: return fvalue(t1) == fvalue(t2);
-    case LUA_TSHRSTR: return eqshrstr(tsvalue(t1), tsvalue(t2));
-    case LUA_TLNGSTR: return luaS_eqlngstr(tsvalue(t1), tsvalue(t2));
-    case LUA_TUSERDATA: {
+    case LUA_VNIL: case LUA_VFALSE: case LUA_VTRUE: return 1;
+    case LUA_VNUMINT: return (ivalue(t1) == ivalue(t2));
+    case LUA_VNUMFLT: return luai_numeq(fltvalue(t1), fltvalue(t2));
+    case LUA_VLIGHTUSERDATA: return pvalue(t1) == pvalue(t2);
+    case LUA_VLCF: return fvalue(t1) == fvalue(t2);
+    case LUA_VSHRSTR: return eqshrstr(tsvalue(t1), tsvalue(t2));
+    case LUA_VLNGSTR: return luaS_eqlngstr(tsvalue(t1), tsvalue(t2));
+    case LUA_VUSERDATA: {
       if (uvalue(t1) == uvalue(t2)) return 1;
       else if (L == NULL) return 0;
       tm = fasttm(L, uvalue(t1)->metatable, TM_EQ);
@@ -592,7 +592,7 @@ int luaV_equalobj (lua_State *L, const TValue *t1, const TValue *t2) {
         tm = fasttm(L, uvalue(t2)->metatable, TM_EQ);
       break;  /* will try TM */
     }
-    case LUA_TTABLE: {
+    case LUA_VTABLE: {
       if (hvalue(t1) == hvalue(t2)) return 1;
       else if (L == NULL) return 0;
       tm = fasttm(L, hvalue(t1)->metatable, TM_EQ);
@@ -680,18 +680,18 @@ void luaV_concat (lua_State *L, int total) {
 void luaV_objlen (lua_State *L, StkId ra, const TValue *rb) {
   const TValue *tm;
   switch (ttypetag(rb)) {
-    case LUA_TTABLE: {
+    case LUA_VTABLE: {
       Table *h = hvalue(rb);
       tm = fasttm(L, h->metatable, TM_LEN);
       if (tm) break;  /* metamethod? break switch to call it */
       setivalue(s2v(ra), luaH_getn(h));  /* else primitive len */
       return;
     }
-    case LUA_TSHRSTR: {
+    case LUA_VSHRSTR: {
       setivalue(s2v(ra), tsvalue(rb)->shrlen);
       return;
     }
-    case LUA_TLNGSTR: {
+    case LUA_VLNGSTR: {
       setivalue(s2v(ra), tsvalue(rb)->u.lnglen);
       return;
     }
@@ -980,11 +980,11 @@ void luaV_finishOp (lua_State *L) {
 
 
 /*
-** Order operations with register operands. 'opf' actually works
+** Order operations with register operands. 'opn' actually works
 ** for all numbers, but the fast track improves performance for
 ** integers.
 */
-#define op_order(L,opi,opf,other) {  \
+#define op_order(L,opi,opn,other) {  \
         int cond;  \
         TValue *rb = vRB(i);  \
         if (ttisinteger(s2v(ra)) && ttisinteger(rb)) {  \
@@ -993,7 +993,7 @@ void luaV_finishOp (lua_State *L) {
           cond = opi(ia, ib);  \
         }  \
         else if (ttisnumber(s2v(ra)) && ttisnumber(rb))  \
-          cond = opf(s2v(ra), rb);  \
+          cond = opn(s2v(ra), rb);  \
         else  \
           Protect(cond = other(L, s2v(ra), rb));  \
         docondjump(); }
@@ -1183,7 +1183,11 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
       }
       vmcase(OP_LOADFALSE) {
         setbfvalue(s2v(ra));
-        if (GETARG_B(i)) pc++;  /* if B, skip next instruction */
+        vmbreak;
+      }
+      vmcase(OP_LFALSESKIP) {
+        setbfvalue(s2v(ra));
+        pc++;  /* skip next instruction */
         vmbreak;
       }
       vmcase(OP_LOADTRUE) {
@@ -1319,8 +1323,9 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         Table *t;
         if (b > 0)
           b = 1 << (b - 1);  /* size is 2^(b - 1) */
-        if (TESTARG_k(i))
-          c += GETARG_Ax(*pc) * (MAXARG_C + 1);
+        lua_assert((!TESTARG_k(i)) == (GETARG_Ax(*pc) == 0));
+        if (TESTARG_k(i))  /* non-zero extra argument? */
+          c += GETARG_Ax(*pc) * (MAXARG_C + 1);  /* add it to size */
         pc++;  /* skip extra argument */
         L->top = ra + 1;  /* correct top in case of emergency GC */
         t = luaH_new(L);  /* memory allocation */
@@ -1554,7 +1559,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
       vmcase(OP_EQK) {
         TValue *rb = KB(i);
         /* basic types do not use '__eq'; we can use raw equality */
-        int cond = luaV_equalobj(NULL, s2v(ra), rb);
+        int cond = luaV_rawequalobj(s2v(ra), rb);
         docondjump();
         vmbreak;
       }
