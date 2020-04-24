@@ -40,9 +40,10 @@
 #endif
 
 #include "utf8_prefix.h"
-#include "luai_userstate.h"
 
 #endif			/* } */
+
+#include "luai_userstate.h"
 
 #if !defined(NDEBUG)
 
