@@ -22,9 +22,7 @@ data:
     /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
   mesh: $resource /pkg/ant.resources/meshes/female.mesh
   name: animation_sample
-  rendermesh: {}
   serialize: 5e1c39ad369fa96c5bd44fc5
-  pose_result: {}
   skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
   skinning: {}
   animation_birth: idle

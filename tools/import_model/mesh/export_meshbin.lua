@@ -2,7 +2,7 @@ local glb_cvt	= require "mesh.glb_convertor"
 
 local gltfutil	= require "glTF.util"
 local declmgr	= require "render.vertexdecl_mgr"
-local fs_util	= require "utility.fs_util"
+local fs_local	= require "utility.fs_local"
 
 local math3d	= require "math3d"
 local thread	= require "thread"
@@ -335,7 +335,7 @@ return function (glbscene, bindata, outfile, cfg)
 	local result = export_meshbin(new_glbscene, new_bindata, cfg)
 
 	if result then
-		fs_util.write_file(outfile, thread.pack(result))
+		fs_local.write_file(outfile, thread.pack(result))
 		return true
 	end
 

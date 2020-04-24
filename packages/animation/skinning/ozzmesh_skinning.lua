@@ -1,5 +1,5 @@
 local ecs = ...
-
+local world = ecs.world
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 local assetmgr = import_package "ant.asset"
@@ -102,11 +102,11 @@ local ozzmesh_loader = ecs.transform "ozzmesh_loader"
 
 function ozzmesh_loader.process(e)
 	local meshfilename = tostring(e.mesh)
-	local f, _ = meshfilename:match "([^:]+):"
+	local f = meshfilename:match "([^:]+)"
 	local stem, ext = f:match "[/\\]([%w_-]+)%.([%w_-]+)$"
 	assert(ext == "ozz")
 	local filename 	= "//res.mesh/" .. stem .. ".rendermesh"
-	e.rendermesh	= assetmgr.load(filename, gen_mesh_assetinfo(e.mesh.handle))
+	e.rendermesh	= assetmgr.load(filename, gen_mesh_assetinfo(e.mesh._handle))
 end
 
 local function patch_dynamic_buffer(ozzmesh, scene)
@@ -131,9 +131,12 @@ local function patch_dynamic_buffer(ozzmesh, scene)
 	return new_scene
 end
 
-function ozzmesh_skinning_transform.process(e)
-	local meshres 	= e.mesh.handle
+function ozzmesh_skinning_transform.process(e, eid)
+	local meshres 	= e.mesh._handle
 	local meshscene = e.rendermesh
+
+	world:add_component(eid, "skinning", {})
+
 	local scene = patch_dynamic_buffer(meshres, meshscene.scenes[meshscene.default_scene])
 	meshscene.scenes[meshscene.default_scene] = scene
 

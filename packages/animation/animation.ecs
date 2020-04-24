@@ -10,16 +10,9 @@ system "animation_system"
 
 policy "animation"
     .require_system "animation_system"
-    .require_policy "pose_result"
     .require_transform "build_pose_result"
     .component "skeleton"
     .component "animation"
-    .component "pose_result"
-
-policy "pose_result"
-    .require_transform "build_pose_result"
-    .component "skeleton"
-    .component "pose_result"
 
 transform "build_pose_result"
     .implement "animation.lua"

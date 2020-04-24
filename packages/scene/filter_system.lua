@@ -136,11 +136,11 @@ function prim_filter_sys:filter_primitive()
 			local ce = world[eid]
 			local func = material_cache[eid]
 			if func then
-				func(eid, ce.transform.world, filter)
+				func(eid, ce.transform._world, filter)
 			else
 				func = cache_material(ce.rendermesh, ce.material)
 				material_cache[eid] = func
-				func(eid, ce.transform.world, filter)
+				func(eid, ce.transform._world, filter)
 			end
 		end
 	end

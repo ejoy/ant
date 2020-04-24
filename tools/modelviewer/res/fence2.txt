@@ -14,14 +14,10 @@ data:
       ---
       origin: {0,1,0,0}
       size: {2.2,1,1}
-  material: /pkg/ant.resources/PVPScene/scene-mat.material
-  mesh: /pkg/ant.resources/PVPScene/woodother-34.mesh
+  material: $resource /pkg/ant.resources/PVPScene/scene-mat.material
+  mesh: $resource /pkg/ant.resources/PVPScene/woodother-34.mesh
   name: door
-  rendermesh:
-    lodidx: 1
   serialize: 5e1d2628369fa9fc11d5504d
-  transform:
-    srt:
-      s: {1,1,1,0}
-      r: {0,0,0,1}
-      t: {2.2,0,-8,0}
+  transform: $transform
+    srt: $srt
+      t: $vector {2.2,0,-8,0}

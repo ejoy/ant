@@ -5,6 +5,9 @@ local renderpkg = import_package "ant.render"
 local skypkg 	= import_package "ant.sky"
 local serialize = import_package "ant.serialize"
 
+local mathpkg	= import_package "ant.math"
+local mu		= mathpkg.util
+
 local fs 		= require "filesystem"
 local task 		= require "task"
 local math3d 	= require "math3d"
@@ -48,7 +51,7 @@ function m:init()
 	skyutil.create_procedural_sky(world)
 	cu.create_plane_entity(
 		world,
-		{srt = {s ={50, 1, 50, 0}}},
+		{srt = {s = {50, 1, 50, 0}}},
 		"/pkg/ant.resources/materials/test/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"

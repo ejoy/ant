@@ -97,7 +97,8 @@ local function main_view_debug_frustum()
 		local csm = s.csm
 		local vp = mu.view_proj(camera)
 		local frustum_points = math3d.frustum_points(vp)
-		computil.create_frustum_entity(world, frustum_points, "main view part" .. csm.index, nil, frustum_colors[csm.index])
+		add_shadow_debug_policy(
+		computil.create_frustum_entity(world, frustum_points, "main view part" .. csm.index, nil, frustum_colors[csm.index]))
 	end
 end
 
@@ -210,7 +211,8 @@ local function check_shadow_matrix()
 
 	local newvp = mu.view_proj({eyepos=center, viewdir=lightdir, up=mc.YAXIS}, frustum_desc)
 	local new_light_frustum_points = math3d.frustum_points(newvp)
-	computil.create_frustum_entity(world, new_light_frustum_points, "lua calc view frustum", nil, 0xff0000ff)
+	add_shadow_debug_policy(
+	computil.create_frustum_entity(world, new_light_frustum_points, "lua calc view frustum", nil, 0xff0000ff))
 
 	---------------------------------------------------------------------------------------------------------
 
@@ -229,7 +231,8 @@ local function check_shadow_matrix()
 
 	print("shadow view frustm point")
 	print_frustum_points(shadowcamera_frustum_points)
-	computil.create_frustum_entity(world, shadowcamera_frustum_points, "view frustum", nil, 0xffffff00)
+	add_shadow_debug_policy(
+	computil.create_frustum_entity(world, shadowcamera_frustum_points, "view frustum", nil, 0xffffff00))
 
 	-------------------------------------------------------------------------------------------------
 	-- test shadow matrix

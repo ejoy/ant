@@ -3,6 +3,12 @@ local world = ecs.world
 
 local sp_test_sys = ecs.system "scenespace_test_system"
 
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
+
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
+
 function sp_test_sys:init()
     local rooteid = world:create_entity{
         policy = {
@@ -12,6 +18,8 @@ function sp_test_sys:init()
             name = "root",
         }
     }
+
+    local material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material"
 
     local child1 = world:create_entity{
         policy = {
@@ -24,12 +32,9 @@ function sp_test_sys:init()
             name = "child1",
             parent = rooteid,
             can_render = true,
-            rendermesh = {},
-            material = "/pkg/ant.resources/materials/singlecolor.material",
-            mesh = "/pkg/ant.resources/meshes/sphere.mesh",
-            transform = {
-                srt = {t = {1, 2, 0, 1}},
-            },
+            material = material,
+            mesh = world.component:resource "/pkg/ant.resources/meshes/sphere.mesh",
+            transform = computil.create_transform(world, {srt={t={1, 2, 0, 1}}}),
             scene_entity = true,
         }
     }
@@ -46,13 +51,12 @@ function sp_test_sys:init()
             parent = child1,
             scene_entity = true,
             can_render = true,
-            rendermesh = {},
-            mesh = "/pkg/ant.resources/meshes/cube.mesh",
-            material = "/pkg/ant.resources/materials/singlecolor.material",
-            transform = {srt={
+            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
+            material = material,
+            transform = computil.create_transform(world,
+                {srt={
                 r = {math.rad(math.cos(30)), 0, 0, math.rad(math.sin(30))}, --rotate 60 degree
-                t = {1, 2, 0, 1}
-            }}
+                t = {1, 2, 0, 1}}}),
         }
     }
 
@@ -64,10 +68,9 @@ function sp_test_sys:init()
         },
         data = {
             name = "child2",
-            transform = {srt={
-                s = {1, 2, 1, 0},
-                t = {3, 3, 5},
-            }},
+            transform = computil.create_transform(world,
+                { srt = {s = {1, 2, 1, 0},
+                t = {3, 3, 5}}}),
             parent = rooteid,
             scene_entity = true,
         }
@@ -85,12 +88,9 @@ function sp_test_sys:init()
             parent = child2,
             can_render = true,
             scene_entity = true,
-            rendermesh = {},
-            material = "/pkg/ant.resources/materials/singlecolor.material",
-            mesh = "/pkg/ant.resources/meshes/cube.mesh",
-            transform = {srt={
-                t = {1, 2, 0, 1}
-            }},
+            material = material,
+            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
+            transform = computil.create_transform(world, {srt={t ={1, 2, 0, 1}}}),
         }
     }
 end

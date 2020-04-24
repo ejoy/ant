@@ -9,8 +9,8 @@ local serializeutil = import_package "ant.serialize"
 local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
-local pbr_materialpath = feature_path / "assets/pbr_test.pbrm"
-local sphere_meshpath = feature_path / "assets/sphere.mesh"
+local pbr_material = world.component:resource((feature_path / "assets/pbr_test.pbrm"):string())
+local sphere_mesh = world.component:resource((feature_path / "assets/sphere.mesh"):string())
 
 local function create_pbr_entity(world, 
     name, transform, 
@@ -27,9 +27,8 @@ local function create_pbr_entity(world,
         data = {
             name = name,
             transform = transform,
-            material = pbr_materialpath:string(),
-            rendermesh = {},
-            mesh = sphere_meshpath:string(),
+            material = pbr_material,
+            mesh = sphere_mesh,
             can_render = true,
             can_select = true,
             serialize = serializeutil.create(),
@@ -67,7 +66,11 @@ local function pbr_spheres()
         local z = 0.0
         for col=1, num_samples do
             local roughness = col * roughness_step
-            create_pbr_entity(world, "sphere", {srt = {t = {x, 0.0, z, 1.0}}}, basecolor, metallic, roughness)
+            create_pbr_entity(world, "sphere", 
+            world.component:transform{
+                srt = world.component:srt {t = {x, 0.0, z, 1.0}}
+            }, basecolor, metallic, roughness)
+
             z = z + movestep
         end
         x = x + movestep
@@ -83,10 +86,11 @@ function pbr_test_sys:init()
             "ant.general|name",
         },
         data = {
-            transform = {srt={t={3, 2, 0, 1}}},
-            rendermesh = {},
-            mesh = "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
-            material = "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
+            transform = world.component:transform {
+                srt = world.component:srt {t={3, 2, 0, 1}}
+            },
+            mesh = world.component:resource "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
+            material = world.component:resource "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
             can_render = true,
             can_cast = true,
             scene_entity = true,

@@ -8,10 +8,10 @@ loaders["ozz-animation"] = function (fn)
 	local scale = 1     -- TODO
 	local looptimes = 0 -- TODO
 	return {
-		handle = handle,
-		sampling_cache = animodule.new_sampling_cache(),
-		duration = handle:duration() * 1000. / scale,
-		max_ratio = looptimes > 0 and looptimes or math.maxinteger,
+		_handle = handle,
+		_sampling_cache = animodule.new_sampling_cache(),
+		_duration = handle:duration() * 1000. / scale,
+		_max_ratio = looptimes > 0 and looptimes or math.maxinteger,
 	}
 end
 
@@ -20,7 +20,7 @@ loaders["ozz-raw_skeleton"] = function (fn)
 	local handle = hiemodule.new()
 	handle:load(fn)
 	return {
-		handle = handle
+		_handle = handle
 	}
 end
 
@@ -28,7 +28,7 @@ loaders["ozz-skeleton"] = function(fn)
 	local hiemodule = require "hierarchy"
 	local handle = hiemodule.build(fn)
 	return {
-		handle = handle
+		_handle = handle
 	}
 end
 
@@ -36,7 +36,7 @@ loaders["ozz-sample-Mesh"] = function(fn)
 	local animodule = require "hierarchy.ozzmesh"
 	local handle = animodule.new(fn)
 	return {
-		handle = handle
+		_handle = handle
 	}
 end
 

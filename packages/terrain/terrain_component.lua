@@ -32,6 +32,7 @@ local function tile_length(tc)
 end
 
 function t:init()
+	
 	if self.ref_path then
 		self.tile_width = self.tile_width or 1
 		self.tile_height = self.tile_height or 1
@@ -59,12 +60,15 @@ function t:init()
 		local heightfield = {hf_width, hf_height}
 
 		--TODO: need init aabb with heightfield data
-		self.bounding = {aabb = math3d.ref(math3d.aabb({-hf_width, 0, -hf_height}, {hf_width, 0, hf_height}))}
+		local data = {}
+		data.bounding = {aabb = math3d.ref(math3d.aabb({-hf_width, 0, -hf_height}, {hf_width, 0, hf_height}))}
 		heightfield[3] = terrain_module.alloc_heightfield(hf_width, hf_height)
 		self.grid_unit = self.grid_unit or 1
 
-		self.heightfield = heightfield
-		self.terrain_vertices, self.terrain_indices, self.terrain_normaldata = terrain_module.create(gridwidth, gridheight, self.grid_unit, heightfield)
+		data.heightfield = heightfield
+		data.terrain_vertices, data.terrain_indices, data.terrain_normaldata = terrain_module.create(gridwidth, gridheight, self.grid_unit, heightfield)
+
+		self._data = data
 	end
 	return self
 end
@@ -92,8 +96,9 @@ iterrain = world:interface "ant.terrain|terrain"
 
 local trt = ecs.transform "terrain_transform"
 
-function trt.process(e)
+function trt.process(e, eid)
 	local terraincomp 	= e.terrain
+	local terraindata = terraincomp._data
 
 	local meshscene = {
 		default_scene = "sceneroot",
@@ -114,17 +119,17 @@ function trt.process(e)
 						num = numvertices,
 						handles = {
 							{
-								handle = bgfx.create_vertex_buffer({"!", terraincomp.terrain_vertices, 0, numvertices * pos_decl.stride}, pos_decl.handle),
+								handle = bgfx.create_vertex_buffer({"!", terraindata.terrain_vertices, 0, numvertices * pos_decl.stride}, pos_decl.handle),
 							},
 							{
-								handle = bgfx.create_vertex_buffer({"!", terraincomp.terrain_normaldata, 0, numvertices * normal_decl.stride}, normal_decl.handle)
+								handle = bgfx.create_vertex_buffer({"!", terraindata.terrain_normaldata, 0, numvertices * normal_decl.stride}, normal_decl.handle)
 							}
 						},
 					},
 					ib = {
 						start = 0,
 						num = numindices,
-						handle = bgfx.create_index_buffer({terraincomp.terrain_indices, 0, numindices * 4}, "d"),
+						handle = bgfx.create_index_buffer({terraindata.terrain_indices, 0, numindices * 4}, "d"),
 					}
 				}
 			}
@@ -132,5 +137,5 @@ function trt.process(e)
 	}
 
 	meshscene.scenes = scenes
-	e.rendermesh = assetmgr.load("//res.mesh/terrain.rendermesh", meshscene)
+	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/terrain.rendermesh", meshscene))
 end

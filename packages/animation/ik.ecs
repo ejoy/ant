@@ -4,12 +4,10 @@ interface "ik"
     .method "setup"
 
 policy "ik"
-    .require_policy "pose_result"
     .require_transform "build_pose_result"
     .require_transform "build_ik"
     .component "skeleton"
     .component "ik"
-    .component "pose_result"
 
 transform "build_ik"
     .implement "ik.lua"

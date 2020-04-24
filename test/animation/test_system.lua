@@ -7,6 +7,9 @@ local imgui_util = require "imgui_util"
 local fs         = require 'filesystem'
 local rhwi       = renderpkg.hwi
 
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
+
 local drawer = world:interface "ant.render|iwidget_drawer"
 
 local init_loader_sys = ecs.system 'init_loader_system'
@@ -23,13 +26,7 @@ local function load_file(file)
 end
 
 function init_loader_sys:init()
-    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, world.component:transform {
-        srt = world.component:srt {
-          s = world.component:vector {1,1,1,0},
-          r = world.component:quaternion {0,0.92388,0,0.382683},
-          t = world.component:vector {0,0,0,1},
-        }
-    })
+    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt = {r = {0,0.92388,0,0.382683}}})
     world:create_entity(load_file 'res/light_directional.txt')
     RoleEntityId = world:create_entity(load_file 'res/entity.txt')
     local info = import_package "ant.serialize".entity(world, RoleEntityId)
@@ -57,11 +54,11 @@ local status = {
 local function playAnimation(e, name)
     local ani = e.animation.anilist[name]
     if status.Loop then
-        ani.max_ratio = math.maxinteger
+        ani._max_ratio = math.maxinteger
     else
-        ani.max_ratio = 1
+        ani._max_ratio = 1
     end
-    e.animation.current = {
+    e.animation._current = {
         animation = ani,
         ratio = 0,
     }
@@ -114,15 +111,15 @@ end
 function init_loader_sys:ui_update()
     local e = world[RoleEntityId]
 
-    if not status.Loop and not status.Pause and e.animation.current.ratio >= 1 then
+    if not status.Loop and not status.Pause and e.animation._current.ratio >= 1 then
         world:enable_system("ant.animation|animation_system", false)
         status.Pause = true
-        e.animation.current.ratio = 0
+        e.animation._current.ratio = 0
     end
 
     for _ in imgui_util.windows("Animation", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }) do
         for name in sortpairs(e.animation.anilist) do
-            if imgui.widget.Selectable(name, e.animation.current.animation.name == name) then
+            if imgui.widget.Selectable(name, e.animation._current.animation.name == name) then
                 playAnimation(e, name)
             end
         end
@@ -167,20 +164,20 @@ function init_loader_sys:ui_update()
         if imguiToolbar(status.Loop and "🔁" or "➡", nil, true) then
             if status.Loop then
                 status.Loop = false
-                e.animation.current.animation.max_ratio = 1
-                e.animation.current.ratio = e.animation.current.ratio % 1
+                e.animation._current.animation.max_ratio = 1
+                e.animation._current.ratio = e.animation._current.ratio % 1
             else
                 status.Loop = true
-                e.animation.current.animation.max_ratio = math.maxinteger
+                e.animation._current.animation.max_ratio = math.maxinteger
             end
         end
         imguiEndToolbar()
         imgui.cursor.SameLine()
         imgui.cursor.SetNextItemWidth(screensize.w-80)
         local e = world[RoleEntityId]
-        status.AnimationRatio[1] = e.animation.current.ratio % 1
+        status.AnimationRatio[1] = e.animation._current.ratio % 1
         if imgui.widget.SliderFloat("", status.AnimationRatio) then
-            e.animation.current.ratio = status.AnimationRatio[1]
+            e.animation._current.ratio = status.AnimationRatio[1]
             if status.Pause then
                 local animation = world:interface "ant.animation|animation"
                 animation.update(e)
@@ -195,7 +192,7 @@ function init_loader_sys:widget()
     end
     local e = world[RoleEntityId]
     local ske = e.skeleton
-    drawer.draw_skeleton(ske.handle, e.pose_result.result, e.transform.srt)
+    drawer.draw_skeleton(ske._handle, e.pose_result, e.transform.srt)
 end
 
 local eventMouse = world:sub {"mouse"}

@@ -37,7 +37,7 @@ local function check_joints_in_hierarchy_chain(ske, joint_indices)
 end
 
 function build_ik_tranform.process(e)
-	local ske = e.skeleton.handle
+	local ske = e.skeleton._handle
 	local ik = e.ik
 
 	for _, ikdata in pairs(ik.jobs) do
@@ -56,7 +56,7 @@ function build_ik_tranform.process(e)
 
 			check_joints_in_hierarchy_chain(joint_indices)
 		end
-		ikdata.joint_indices = joint_indices
+		ikdata._joint_indices = joint_indices
 	end
 end
 
@@ -67,7 +67,7 @@ local function prepare_ikdata(ikdata)
 	ikdata_cache.pole_vector= ikdata.pole_vector.p
 	ikdata_cache.weight		= ikdata.weight
 	ikdata_cache.twist_angle= ikdata.twist_angle
-	ikdata_cache.joint_indices= ikdata.joint_indices
+	ikdata_cache.joint_indices= ikdata._joint_indices
 
 	if ikdata.type == "aim" then
 		ikdata_cache.forward	= ikdata.forward.p
@@ -83,9 +83,8 @@ end
 
 local ik_i = ecs.interface "ik"
 function ik_i.setup(e)
-	local skehandle = e.skeleton.handle
-	local pr = e.pose_result.result
-	pr:setup(skehandle)
+	local skehandle = e.skeleton._handle
+	e.pose_result:setup(skehandle)
 end
 
 function ik_i.do_ik(pr, ikdata)

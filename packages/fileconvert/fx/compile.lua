@@ -2,7 +2,7 @@ local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
 local util 		= require "util"
 
-local utilitypkg = import_package "ant.utility.local"
+local utilitypkg = import_package "ant.utility"
 local fs_util = utilitypkg.fs_util
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
@@ -102,7 +102,7 @@ local function load_surface_type(fxcontent)
 end
 
 return function (identity, srcfilepath, outfilepath, localpath)
-	local fxcontent = util.datalist(srcfilepath)
+	local fxcontent = fs_util.datalist(srcfilepath)
 	load_surface_type(fxcontent)
 	local mysetting	= read_linkconfig(localpath("settings"), identity)
 	local marcros 	= add_macros_from_surface_setting(mysetting, fxcontent.surface_type, fxcontent.macros)

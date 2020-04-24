@@ -1,7 +1,7 @@
 local lfs 	= require "filesystem.local"
 local util  = require "util"
 
-local utilitypkg = import_package "ant.utility.local"
+local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
 local fs_util = utilitypkg.fs_util
 
@@ -110,7 +110,7 @@ return function (identity, sourcefile, outfile, localpath)
 		hideWindow  = true,
 	}
 
-	local texcontent = util.datalist(sourcefile)
+	local texcontent = fs_util.datalist(sourcefile)
 	local texpath = localpath(assert(texcontent.path))
 
 	texcontent.format = assert(which_format(plat, texcontent))

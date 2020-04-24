@@ -7,9 +7,9 @@ ecs.component "pose_result"
 
 local pr_t = ecs.transform "build_pose_result"
 
-function pr_t.process(e)
-	local skehandle = e.skeleton.handle
-	e.pose_result.result = ani_module.new_pose_result(#skehandle)
+function pr_t.process(e, eid)
+	local skehandle = e.skeleton._handle
+	world:add_component(eid, "pose_result", ani_module.new_pose_result(#skehandle))
 end
 
 ecs.component_alias("animation_resource", "resource")
@@ -33,19 +33,19 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local ani = task.animation
-		local delta = delta_time / ani.duration
+		local delta = delta_time / ani._duration
 		local current_ratio = task.ratio + delta
-		task.ratio = current_ratio <= ani.max_ratio and current_ratio or ani.max_ratio
-		poseresult:do_sample(ani.sampling_cache, ani.handle, task.ratio % 1, task.weight)
+		task.ratio = current_ratio <= ani._max_ratio and current_ratio or ani._max_ratio
+		poseresult:do_sample(ani._sampling_cache, ani._handle, task.ratio % 1, task.weight)
 	end
 end
 
 local function update_animation(e, delta_time)
 	local animation = e.animation
 	local ske = e.skeleton
-	local pr = e.pose_result.result
-	pr:setup(ske.handle)
-	do_animation(pr, animation.current, delta_time)
+	local pr = e.pose_result
+	pr:setup(ske._handle)
+	do_animation(pr, animation._current, delta_time)
 end
 
 function ani_sys:sample_animation_pose()
@@ -59,7 +59,7 @@ end
 local function clear_animation_cache()
 	for _, eid in world:each "pose_result" do
 		local e = world[eid]
-		local pr = e.pose_result.result
+		local pr = e.pose_result
 		pr:fetch_result()
 		pr:end_animation()
 	end
@@ -68,8 +68,7 @@ end
 function ani_sys:do_refine()
 	for _, eid in world:each "pose_result" do
 		local e = world[eid]
-		local pr = e.pose_result.result
-		pr:fix_root_XZ()
+		e.pose_result:fix_root_XZ()
 	end
 end
 

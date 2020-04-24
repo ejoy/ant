@@ -90,22 +90,7 @@ end
 function util.create_grid_entity(world, name, w, h, unit, transform)
     local geopkg = import_package "ant.geometry"
     local geolib = geopkg.geometry
-
-	local gridid = world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-		},
-		data = {
-			transform = transform,
-			rendermesh = {},
-			material = world.component:resource "/pkg/ant.resources/materials/line.material",
-			name = name,
-			can_render = true,
-			scene_entity = true,
-		}
-    }
-    local grid = world[gridid]
+    
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
@@ -120,8 +105,14 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	grid.rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/grid.rendermesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
-    return gridid
+	
+	return util.create_simple_render_entity(world, 
+		transform, 
+		world.component:resource "/pkg/ant.resources/materials/line.material",
+		name,
+		assetmgr.load(
+			util.generate_resource_name "//res.mesh/grid.rendermesh", 
+			util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
 end
 
 function util.quad_vertices(rect)
@@ -131,6 +122,13 @@ function util.quad_vertices(rect)
 		rect.x, 		 rect.y + rect.h, 
 		rect.x + rect.w, rect.y, 		
 		rect.x + rect.w, rect.y + rect.h, 
+	}
+end
+
+function util.create_transform(world, transform)
+	local srt = transform and transform.srt or {}
+	return world.component:transform {
+		srt = world.component:srt(srt and mu.srt(srt.s, srt.r, srt.t) or {}),
 	}
 end
 
@@ -155,8 +153,7 @@ value:
 	color[1], color[2], color[3], color[4]
 )
 	local data = {
-		transform = trans,
-		rendermesh = {},
+		transform = util.create_transform(world, trans),
 		material = world.component:resource(material),
 		can_render = true,
 		name = name or "Plane",
@@ -192,7 +189,7 @@ value:
 		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
 	}
 
-	e.rendermesh = meshscene
+	world:add_component(eid, "rendermesh", meshscene)
 	return eid
 end
 
@@ -226,31 +223,25 @@ function util.quad_mesh(rect)
 	}
 end
 
-local function create_transform(world, transform)
-	return world.component:transform {
-		srt = world.component:srt {
-			s = transform.srt.s and world.component:vector(transform.srt.s) or nil,
-			r = transform.srt.r and world.component:quaternion(transform.srt.r) or nil,
-			t = transform.srt.t and world.component:vector(transform.srt.t) or nil,
-		}
-	}
-end
-
-local function create_simple_render_entity(world, transform, material, name, tag)
-	return world:create_entity {
+function util.create_simple_render_entity(world, transform, material, name, rendermesh)
+	local eid = world:create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
 		},
 		data = {
-			transform = create_transform(world, transform or {srt={}}),
-			rendermesh = {},
+			transform = util.create_transform(world, transform or {srt={}}),
 			material = world.component:resource(material),
 			can_render = true,
 			name = name or "frustum",
 			scene_entity = true,
 		}
 	}
+
+	if rendermesh then
+		world:add_component(eid, "rendermesh", rendermesh)
+	end
+	return eid
 end
 
 local resource_tag = {}
@@ -269,18 +260,11 @@ function util.generate_resource_name(name)
 end
 
 function util.create_quad_entity(world, rect, material, name)
-	local eid = create_simple_render_entity(world, {srt={}}, material, name)
-	world[eid].rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/quad.rendermesh", util.quad_mesh(rect))
-	return eid
+	return util.create_simple_render_entity(world, {srt={}}, material, name, 
+	assetmgr.load(util.generate_resource_name "//res.mesh/quad.rendermesh", util.quad_mesh(rect)))
 end
 
 function util.create_texture_quad_entity(world, texture_tbl, name)
-	local quadid = create_simple_render_entity( world, nil, {
-		ref_path = fs.path "/pkg/ant.resources/materials/texture.material",
-		properties = texture_tbl,
-	}, name)
-
-    local quad = world[quadid]
 	local vb = {
 		"fffff",
 		-3,  3, 0, 0, 0,
@@ -288,9 +272,14 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
 		-3, -3, 0, 0, 1,
 		 3, -3, 0, 1, 1,
 	}
-	
-	quad.rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/quad_scale3.rendermesh", quad_mesh(vb))
-    return quadid
+
+	local eid = util.create_simple_render_entity(world, 
+		nil, "/pkg/ant.resources/materials/texture.material", 
+		name, assetmgr.load(util.generate_resource_name "//res.mesh/quad_scale3.rendermesh", quad_mesh(vb)))
+
+	local e = world[eid]
+	assetmgr.patch(e.material, {properties = texture_tbl})
+	return eid
 end
 
 function util.get_mainqueue_transform_boundings(world, transformed_boundings)
@@ -309,10 +298,7 @@ function util.get_mainqueue_transform_boundings(world, transformed_boundings)
 	end
 end
 
-function util.create_frustum_entity(world, frustum_points, name, transform, color, tag)
-	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, tag)
-
-	local e = world[eid]
+function util.create_frustum_entity(world, frustum_points, name, transform, color)
 	local vb = {"fffd",}
 	color = color or 0xff00000f
 	for i=1, #frustum_points do
@@ -336,13 +322,11 @@ function util.create_frustum_entity(world, frustum_points, name, transform, colo
 		2, 6, 3, 7,
 	}
 	
-	e.rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/frustum.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib))
-	return eid
+	return util.create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, 
+	assetmgr.load(util.generate_resource_name "//res.mesh/frustum.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib)))
 end
 
-function util.create_axis_entity(world, transform, color, name, tag)
-	local eid = create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, tag)
-
+function util.create_axis_entity(world, transform, color, name)
 	local vb = {
 		"fffd",
 		0, 0, 0, color or 0xffffffff,
@@ -355,19 +339,20 @@ function util.create_axis_entity(world, transform, color, name, tag)
 		0, 2, 
 		0, 3,
 	}
-	world[eid].rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/axis.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib))
-	return eid
+	return util.create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, 
+		assetmgr.load(
+			util.generate_resource_name "//res.mesh/axis.rendermesh", 
+			util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib)))
 end
 
 function util.create_skybox(world, material)
     local eid = world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.general|name"
+			"ant.general|name",
 		},
 		data = {
 			transform = world.component:transform {srt=mu.srt()},
-			rendermesh = {},
 			material = world.component:resource(material or "/pkg/ant.resources/materials/skybox.material"),
 			can_render = true,
 			scene_entity = true,
@@ -382,7 +367,7 @@ function util.create_skybox(world, material)
     for _, v in ipairs(desc.vb)do
         table.move(v, 1, 3, #gvb+1, gvb)
     end
-    e.rendermesh = assetmgr.load(util.generate_resource_name "//res.mesh/skybox.rendermesh", util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib))
+    world:add_component(eid, "rendermesh", assetmgr.load(util.generate_resource_name "//res.mesh/skybox.rendermesh", util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)))
     return eid
 end
 

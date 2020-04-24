@@ -1,9 +1,11 @@
 local config= require "mesh.default_cfg"
 local glb_cvt= require "mesh.glb_convertor"
-local util 	= require "util"
+local utilitypkg = import_package "ant.utility"
+local fs_util = utilitypkg.fs_util
+local util = require "util"
 
 return function (identity, sourcefile, outfile, localpath)
-	local meshcontent = util.datalist(sourcefile)
+	local meshcontent = fs_util.datalist(sourcefile)
 	local meshpath = localpath(meshcontent.mesh_path)
 
 	local result = glb_cvt(meshpath:string(), meshcontent.config or config)

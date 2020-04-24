@@ -15,7 +15,7 @@ local t = ecs.component "transform"
 	["opt"].lock_target "lock_target"
 
 function t:init()
-    self.world = math3d.ref(self.srt)
+    self._world = math3d.ref(self.srt)
     return self
 end
 
@@ -68,7 +68,7 @@ local function update_lock_target_transform(eid, lt, target, im)
 		end
 		im.set_position(eid, pos)
 		local trans = e.transform
-		trans.world.m = trans.srt
+		trans._world.m = trans.srt
 	elseif locktype == "rotate" then
 		local te = world[target]
 		local transform = te.transform
@@ -80,7 +80,7 @@ local function update_lock_target_transform(eid, lt, target, im)
 			im.set_position(eid, math3d.add(pos, lt.offset))
 		end
 		local trans = e.transform
-		trans.world.m = trans.srt
+		trans._world.m = trans.srt
 	elseif locktype == "ignore_scale" then
 		local trans = e.transform
 		if trans == nil then
@@ -92,7 +92,7 @@ local function update_lock_target_transform(eid, lt, target, im)
 
 		local _, r, t = math3d.srt(target_trans)
 		local m = math3d.matrix{s=1, r=r, t=t}
-		trans.world.m = math3d.mul(m, trans.srt)
+		trans._world.m = math3d.mul(m, trans.srt)
 	else
 		error(string.format("not support locktype:%s", locktype))
 	end
@@ -105,8 +105,8 @@ local function combine_parent_transform(e, trans)
 		local ptrans = pe.transform
 		
 		if ptrans then
-			local pw = ptrans.world
-			trans.world.m = math3d.mul(pw, trans.world)
+			local pw = ptrans._world
+			trans._world.m = math3d.mul(pw, trans._world)
 		end
 	end
 end
@@ -116,7 +116,7 @@ local function update_transform(eid)
 	local e = world[eid]
 	local trans = e.transform
 	if trans then
-		trans.world.m = trans.srt
+		trans._world.m = trans.srt
 
 		--combine parent info
 		local im = e.camera and icm or iom
