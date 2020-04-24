@@ -1,5 +1,5 @@
 /*
-** $Id: luac.c,v 1.75 2015/03/12 01:58:27 lhf Exp $
+** $Id: luac.c $
 ** Lua compiler (saves bytecodes to files; also lists bytecodes)
 ** See Copyright Notice in lua.h
 */
@@ -268,21 +268,22 @@ static void PrintType(const Proto* f, int i)
  const TValue* o=&f->k[i];
  switch (ttypetag(o))
  {
-  case LUA_TNIL:
-  	printf("N");
+  case LUA_VNIL:
+	printf("N");
 	break;
-  case LUA_TBOOLEAN:
-  	printf("B");
+  case LUA_VFALSE:
+  case LUA_VTRUE:
+	printf("B");
 	break;
-  case LUA_TNUMFLT:
-  	printf("F");
+  case LUA_VNUMFLT:
+	printf("F");
 	break;
-  case LUA_TNUMINT:
-  	printf("I");
+  case LUA_VNUMINT:
+	printf("I");
 	break;
-  case LUA_TSHRSTR:
-  case LUA_TLNGSTR:
-  	printf("S");
+  case LUA_VSHRSTR:
+  case LUA_VLNGSTR:
+	printf("S");
 	break;
   default:				/* cannot happen */
 	printf("?%d",ttypetag(o));
@@ -296,13 +297,16 @@ static void PrintConstant(const Proto* f, int i)
  const TValue* o=&f->k[i];
  switch (ttypetag(o))
  {
-  case LUA_TNIL:
+  case LUA_VNIL:
 	printf("nil");
 	break;
-  case LUA_TBOOLEAN:
-	printf(bvalue(o) ? "true" : "false");
+  case LUA_VFALSE:
+	printf("false");
 	break;
-  case LUA_TNUMFLT:
+  case LUA_VTRUE:
+	printf("true");
+	break;
+  case LUA_VNUMFLT:
 	{
 	char buff[100];
 	sprintf(buff,LUA_NUMBER_FMT,fltvalue(o));
@@ -310,11 +314,11 @@ static void PrintConstant(const Proto* f, int i)
 	if (buff[strspn(buff,"-0123456789")]=='\0') printf(".0");
 	break;
 	}
-  case LUA_TNUMINT:
+  case LUA_VNUMINT:
 	printf(LUA_INTEGER_FMT,ivalue(o));
 	break;
-  case LUA_TSHRSTR:
-  case LUA_TLNGSTR:
+  case LUA_VSHRSTR:
+  case LUA_VLNGSTR:
 	PrintString(tsvalue(o));
 	break;
   default:				/* cannot happen */
@@ -323,7 +327,10 @@ static void PrintConstant(const Proto* f, int i)
  }
 }
 
-#define COMMENT	"\t; "
+#define COMMENT		"\t; "
+#define EXTRAARG	GETARG_Ax(code[pc+1])
+#define EXTRAARGC	EXTRAARG*(MAXARG_C+1)
+#define ISK		(isk ? "k" : "")
 
 static void PrintCode(const Proto* f)
 {
@@ -363,10 +370,16 @@ static void PrintCode(const Proto* f)
 	break;
    case OP_LOADKX:
 	printf("%d",a);
+	printf(COMMENT); PrintConstant(f,EXTRAARG);
 	break;
-   case OP_LOADBOOL:
-	printf("%d %d %d",a,b,c);
-	if (c) printf(COMMENT "to %d",pc+2);
+   case OP_LOADFALSE:
+	printf("%d",a);
+	break;
+   case OP_LFALSESKIP:
+	printf("%d",a);
+	break;
+   case OP_LOADTRUE:
+	printf("%d",a);
 	break;
    case OP_LOADNIL:
 	printf("%d %d",a,b);
@@ -396,36 +409,37 @@ static void PrintCode(const Proto* f)
 	printf(COMMENT); PrintConstant(f,c);
 	break;
    case OP_SETTABUP:
-	printf("%d %d %d%s",a,b,c, isk ? "k" : "");
+	printf("%d %d %d%s",a,b,c,ISK);
 	printf(COMMENT "%s",UPVALNAME(a));
 	printf(" "); PrintConstant(f,b);
 	if (isk) { printf(" "); PrintConstant(f,c); }
 	break;
    case OP_SETTABLE:
-	printf("%d %d %d%s",a,b,c, isk ? "k" : "");
+	printf("%d %d %d%s",a,b,c,ISK);
 	if (isk) { printf(COMMENT); PrintConstant(f,c); }
 	break;
    case OP_SETI:
-	printf("%d %d %d%s",a,b,c, isk ? "k" : "");
+	printf("%d %d %d%s",a,b,c,ISK);
 	if (isk) { printf(COMMENT); PrintConstant(f,c); }
 	break;
    case OP_SETFIELD:
-	printf("%d %d %d%s",a,b,c, isk ? "k" : "");
+	printf("%d %d %d%s",a,b,c,ISK);
 	printf(COMMENT); PrintConstant(f,b);
 	if (isk) { printf(" "); PrintConstant(f,c); }
 	break;
    case OP_NEWTABLE:
 	printf("%d %d %d",a,b,c);
+	printf(COMMENT "%d",c+EXTRAARG);
 	break;
    case OP_SELF:
-	printf("%d %d %d%s",a,b,c, isk ? "k" : "");
+	printf("%d %d %d%s",a,b,c,ISK);
 	if (isk) { printf(COMMENT); PrintConstant(f,c); }
 	break;
    case OP_ADDI:
-	printf("%d %d %d %s",a,b,sc,isk ? "F" : "");
+	printf("%d %d %d",a,b,sc);
 	break;
    case OP_ADDK:
-	printf("%d %d %d %s",a,b,c,isk ? "F" : "");
+	printf("%d %d %d",a,b,c);
 	printf(COMMENT); PrintConstant(f,c);
 	break;
    case OP_SUBK:
@@ -433,7 +447,7 @@ static void PrintCode(const Proto* f)
 	printf(COMMENT); PrintConstant(f,c);
 	break;
    case OP_MULK:
-	printf("%d %d %d %s",a,b,c,isk ? "F" : "");
+	printf("%d %d %d",a,b,c);
 	printf(COMMENT); PrintConstant(f,c);
 	break;
    case OP_MODK:
@@ -511,12 +525,14 @@ static void PrintCode(const Proto* f)
 	printf(COMMENT "%s",eventname(c));
 	break;
    case OP_MMBINI:
-	printf("%d %d %d",a,sb,c);
+	printf("%d %d %d %d",a,sb,c,isk);
 	printf(COMMENT "%s",eventname(c));
+	if (isk) printf(" flip");
 	break;
    case OP_MMBINK:
-	printf("%d %d %d",a,b,c);
+	printf("%d %d %d %d",a,b,c,isk);
 	printf(COMMENT "%s ",eventname(c)); PrintConstant(f,b);
+	if (isk) printf(" flip");
 	break;
    case OP_UNM:
 	printf("%d %d",a,b);
@@ -618,6 +634,7 @@ static void PrintCode(const Proto* f)
 	break;
    case OP_SETLIST:
 	printf("%d %d %d",a,b,c);
+	if (isk) printf(COMMENT "%d",c+EXTRAARG);
 	break;
    case OP_CLOSURE:
 	printf("%d %d",a,bx);
@@ -633,7 +650,6 @@ static void PrintCode(const Proto* f)
 	break;
    case OP_EXTRAARG:
 	printf("%d",ax);
-	printf(COMMENT); PrintConstant(f,ax);
 	break;
 #if 0
    default:

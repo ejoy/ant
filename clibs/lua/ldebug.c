@@ -31,7 +31,7 @@
 
 
 
-#define noLuaClosure(f)		((f) == NULL || (f)->c.tt == LUA_TCCL)
+#define noLuaClosure(f)		((f) == NULL || (f)->c.tt == LUA_VCCL)
 
 
 /* Active Lua function (given call info) */
@@ -101,7 +101,7 @@ int luaG_getfuncline (const Proto *f, int pc) {
 }
 
 
-static int currentline (CallInfo *ci) {
+static int getcurrentline (CallInfo *ci) {
   return luaG_getfuncline(ci_func(ci)->p, currentpc(ci));
 }
 
@@ -218,7 +218,7 @@ const char *luaG_findlocal (lua_State *L, CallInfo *ci, int n, StkId *pos) {
       return NULL;  /* no name */
   }
   if (pos)
-  *pos = base + (n - 1);
+    *pos = base + (n - 1);
   return name;
 }
 
@@ -339,7 +339,7 @@ static int auxgetinfo (lua_State *L, const char *what, lua_Debug *ar,
         break;
       }
       case 'l': {
-        ar->currentline = (ci && isLua(ci)) ? currentline(ci) : -1;
+        ar->currentline = (ci && isLua(ci)) ? getcurrentline(ci) : -1;
         break;
       }
       case 'u': {
@@ -529,7 +529,7 @@ static const char *gxf (const Proto *p, int pc, Instruction i, int isup) {
 
 
 static const char *getobjname (const Proto *p, int lastpc, int reg,
-                         const char **name) {
+                               const char **name) {
   int pc;
   *name = luaF_getlocalname(p, reg + 1, lastpc);
   if (*name)  /* is a local? */
@@ -777,7 +777,7 @@ l_noret luaG_runerror (lua_State *L, const char *fmt, ...) {
   msg = luaO_pushvfstring(L, fmt, argp);  /* format message */
   va_end(argp);
   if (isLua(ci))  /* if Lua function, add source:line information */
-    luaG_addinfo(L, msg, ci_func(ci)->p->source, currentline(ci));
+    luaG_addinfo(L, msg, ci_func(ci)->p->source, getcurrentline(ci));
   luaG_errormsg(L);
 }
 

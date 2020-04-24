@@ -1266,13 +1266,15 @@ static int str_format (lua_State *L) {
         case 'e': case 'E': case 'g': case 'G': {
           lua_Number n = luaL_checknumber(L, arg);
           addlenmod(form, LUA_NUMBER_FRMLEN);
-          nb = snprintf(buff, maxitem, form, (LUAI_UACNUMBER)n);
+          nb = l_sprintf(buff, maxitem, form, (LUAI_UACNUMBER)n);
           break;
         }
         case 'p': {
           const void *p = lua_topointer(L, arg);
-          if (p == NULL)
-            p = "(null)";  /* NULL not a valid parameter in ISO C 'printf' */
+          if (p == NULL) {  /* avoid calling 'printf' with argument NULL */
+            p = "(null)";  /* result */
+            form[strlen(form) - 1] = 's';  /* format it as a string */
+          }
           nb = l_sprintf(buff, maxitem, form, p);
           break;
         }

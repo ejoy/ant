@@ -33,16 +33,17 @@
 /*
 ** Windows stuff
 */
-#if defined(_WIN32) 	/* { */
+#if defined(_WIN32)	/* { */
 
 #if !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS  /* avoid warnings about ISO C functions */
 #endif
 
 #include "utf8_prefix.h"
-#include "luai_userstate.h"
 
 #endif			/* } */
+
+#include "luai_userstate.h"
 
 #if !defined(NDEBUG)
 
