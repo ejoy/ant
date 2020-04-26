@@ -52,10 +52,11 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
             }
         end
 
-        local function create_hierarchy_entity(parent, node)
+        local function create_hierarchy_entity(parent, node, uuid)
             local policy = {
                 "ant.scene|transform_policy",
                 "ant.general|name",
+                "ant.serialize|serialize",
             }
             if parent then
                 policy[#policy+1] = "ant.scene|hierarchy_policy"
@@ -67,15 +68,17 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
                     parent = parent,
                     name = node.name,
                     scene_entity = true,
+                    serialize = uuid,
                 }
             }
         end
 
-        local function create_mesh_entity(parent, node, meshname)
+        local function create_mesh_entity(parent, node, meshname, uuid)
             local policy = {
                 "ant.general|name",
                 "ant.render|mesh",
                 "ant.render|render",
+                "ant.serialize|serialize",
             }
 
             local data = {
@@ -85,6 +88,7 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
                 mesh        = meshfile:string() .. ":" .. meshname,
                 material    = materialfiles[node.material],
                 name = node.name,
+                serialize = uuid,
                 parent = parent,
             }
 
@@ -117,7 +121,7 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
                     end
                 end
 
-                build_tree(scene.nodes, 0)
+                build_tree(scene.nodes, -1)
             end
         end
 
@@ -130,33 +134,37 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
                 return
             end
 
-            cache[nodeidx] = seri.create()
             chain[#chain+1] = nodeidx
             local parent = tree[nodeidx]
-            if parent ~= 0 then
+            cache[nodeidx] = {
+                uuid = seri.create(),
+                parent = parent,
+            }
+            if parent ~= -1 then
                 find_hierarchy_chain(parent, chain)
             end
         end
 
-
-        local scenemeshes = glbscene.meshes
-        for meshidx, mesh in ipairs(scenemeshes) do
-            local nodeidx = meshes[meshidx]
+        for meshidx, mesh in ipairs(glbscene.meshes) do
+            local mesh_nodeidx = meshes[meshidx-1]
 
             local chain = {}
-            find_hierarchy_chain(nodeidx, chain)
+            find_hierarchy_chain(mesh_nodeidx, chain)
 
-            for i=1, #chain do
-                local node = scenenodes[i]
-                local parent = chain[i+1] and cache[chain[i+1]] or nil
+            for idx, nodeidx in ipairs(chain) do
+                local node = scenenodes[nodeidx+1]
+                local c = cache[nodeidx]
+                local pc = cache[c.parent]
+                local parent_uuid = pc and pc.uuid or nil
+
                 local entity
                 local entityname
                 if node.mesh then
-                    entity = create_mesh_entity(parent, node, get_obj_name(mesh, meshidx, "mesh"))
-                    entityname = get_obj_name(node, i, "mesh_entity")
+                    entity = create_mesh_entity(parent_uuid, node, get_obj_name(mesh, meshidx, "mesh"), c.uuid)
+                    entityname = get_obj_name(node, idx, "mesh_entity")
                 else
-                    entity = create_hierarchy_entity(parent, node)
-                    entityname = get_obj_name(node, i, "hie_entity")
+                    entity = create_hierarchy_entity(parent_uuid, node, c.uuid)
+                    entityname = get_obj_name(node, idx, "hie_entity")
                 end
 
                 fs_local.write_file(meshfolder / entityname .. ".txt", seri_stringfiy.map(entity))

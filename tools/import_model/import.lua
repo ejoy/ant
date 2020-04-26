@@ -5,6 +5,7 @@ package.path = table.concat(
         "packages/?.lua",
         "packages/glTF/?.lua",
         "packages/serialize/?.lua",
+        "packages/utility/?.lua",
     }, ";"
 )
 

@@ -192,7 +192,7 @@ end
 
 local function export_animation(inputfile, animation_folder)
     fs.create_directories(animation_folder)
-    local gltf2ozz = fs_util.valid_tool_exe_path "gltf2ozz"
+    local gltf2ozz = fs_local.valid_tool_exe_path "gltf2ozz"
     local commands = {
         gltf2ozz:string(),
         "--file=" .. (fs.current_path() / inputfile):string(),

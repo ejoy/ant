@@ -1,5 +1,5 @@
 local fs_util = require "fs_util"
-local u = {}; u.__index = fs_util
+local u = setmetatable({}, fs_util)
 
 local fs = require "filesystem.local"
 
