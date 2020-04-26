@@ -151,8 +151,9 @@ function stringify_value(n, prefix, v)
             if tc and tc.methodfunc and tc.methodfunc.init then
                 if tc.methodfunc.save then
                     v = tc.methodfunc.save(v)
+                    return stringify_value(n, prefix.." $"..typename, v)
                 end
-                return stringify_value(n, prefix.." $"..typename, v)
+                prefix = prefix.." $"..typename
             end
         end
     end
