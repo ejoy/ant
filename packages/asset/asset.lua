@@ -83,4 +83,19 @@ end
 
 assetmgr.patch = resource.patch
 
+local resource_cache = {}
+function assetmgr.generate_resource_name(restype, name)
+	local key = ("//res.%s/%s"):format(restype, name)
+	local idx = resource_cache[key]
+	if idx == nil then
+		resource_cache[key] = 0
+		return key
+	end
+
+	idx = idx + 1
+	resource_cache[key] = idx
+	local n, ext = name:match "([^.]+)%.(.+)$"
+	return ("//res.%s/%s%d.%s"):format(restype, n, idx, ext)
+end
+
 return assetmgr

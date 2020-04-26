@@ -137,5 +137,5 @@ function trt.process(e, eid)
 	}
 
 	meshscene.scenes = scenes
-	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/terrain.rendermesh", meshscene))
+	world:add_component(eid, "rendermesh", assetmgr.load(assetmgr.generate_resource_name("mesh", "terrain.rendermesh"), meshscene))
 end

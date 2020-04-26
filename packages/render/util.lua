@@ -327,7 +327,7 @@ function util.create_blit_queue(world, viewrect)
 		}
 	}
 
-	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/fullquad.rendermesh", computil.quad_mesh()))
+	world:add_component(eid, "rendermesh", computil.fullquad_mesh())
 end
 
 local statemap = {

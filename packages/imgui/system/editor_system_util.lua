@@ -113,7 +113,6 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
     local gridid = world:create_entity {
         policy = {
             "ant.general|name",
-            -- "ant.render|mesh",
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
@@ -130,8 +129,6 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             scene_entity = true,
         },
     }
-    local grid = world[gridid]
-    -- grid.transform.parent = parent
     local vb, ib = line(start_pos, end_pos, color)
     local gvb = {"fffd"}
     for _, v in ipairs(vb) do
@@ -143,8 +140,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
     local num_vertices = #vb
     local num_indices = #ib
 
-    local filename = string.format("//res.mesh/line_%s.rendermesh",RES_IDX)
-    RES_IDX = RES_IDX + 1
+    local filename = assetmgr.generate_resource_name("mesh", "line.rendermesh")
     world:add_component(gridid, "rendermesh", assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
     return gridid
 end
@@ -174,7 +170,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             scene_entity = true,
         }
     }
-    local grid = world[gridid]
+
     -- grid.transform.parent = parent
     local vb, ib = circle(color)
     local gvb = {"fffd"}
@@ -187,8 +183,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
     local num_vertices = #vb
     local num_indices = #ib
 
-    local filename = string.format("//res.mesh/circle_%s.rendermesh",RES_IDX)
-    RES_IDX = RES_IDX + 1
+    local filename = assetmgr.generate_resource_name("mesh", "circle.rendermesh")
     world:add_component(gridid, "rendermesh", assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
     return gridid
 end

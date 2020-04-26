@@ -105,8 +105,8 @@ function ozzmesh_loader.process(e)
 	local f = meshfilename:match "([^:]+)"
 	local stem, ext = f:match "[/\\]([%w_-]+)%.([%w_-]+)$"
 	assert(ext == "ozz")
-	local filename 	= "//res.mesh/" .. stem .. ".rendermesh"
-	e.rendermesh	= assetmgr.load(filename, gen_mesh_assetinfo(e.mesh._handle))
+	local resname = assetmgr.generate_resource_name("mesh", stem .. ".rendermesh")
+	e.rendermesh = assetmgr.load(resname, gen_mesh_assetinfo(e.mesh._handle))
 end
 
 local function patch_dynamic_buffer(ozzmesh, scene)
