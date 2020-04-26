@@ -60,9 +60,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform = world.component:transform {
-				srt = world.component:srt(srt),
-			},
+			transform = cu.create_transform(world, {srt=srt}),
 			name = "directional light arrow",
 		},
 	}
@@ -99,12 +97,12 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		data = {
 			scene_entity = true,
 			can_render = true,
-			transform = world.component:transform {
-				srt = world.component:srt {
-					s = world.component:vector {cylinder_radius, cylinder_scaleY, cylinder_radius},
-					t = cylinder_offset,
-				}
-			},
+			transform = cu.create_transform(world,{
+				srt = {
+					s = math3d.ref(math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius)),
+					t = math3d.ref(cylinder_offset),
+				},
+			}),
 			material = world.component:resource [[
 ---
 /pkg/ant.resources/materials/singlecolor.material
@@ -132,11 +130,7 @@ value:
 		data = {
 			scene_entity = true,
 			can_render = true,
-			transform = world.component:transform {
-				srt = world.component:srt {
-					t = cone_offset
-				}
-			},
+			transform = cu.create_transform(world, {srt={t=cone_offset}}),
 			material = world.component:resource [[
 ---
 /pkg/ant.resources/materials/singlecolor.material
@@ -158,7 +152,7 @@ end
 function st_sys:post_init()
     local dl = world:singleton_entity "directional_light"
 	local rotator = math3d.inverse(math3d.torotation(dl.direction))
-    directional_light_arrow_widget({s = world.component:vector{0.02,0.02,0.02,0}, r = rotator, t = dl.position}, 8, 0.45)
+    directional_light_arrow_widget({s = {0.02,0.02,0.02,0}, r = rotator, t = dl.position}, 8, 0.45)
 end
 
 local keypress_mb = world:sub{"keyboard"}

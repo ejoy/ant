@@ -72,7 +72,7 @@ function util.create_procedural_sky(world, settings)
 	end
 
 	world:add_component(skyeid, "rendermesh", 
-		assetmgr.load("//res.mesh/procedural_sky.rendermesh", computil.create_simple_mesh("p2", vb, w * h, ib, #ib)))
+		assetmgr.load(assetmgr.generate_resource_name("mesh", "procedural_sky.rendermesh"), computil.create_simple_mesh("p2", vb, w * h, ib, #ib)))
 	return skyeid
 end
 

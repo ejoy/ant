@@ -105,13 +105,12 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	local num_vertices = #vb
 	local num_indices = #ib
 
-	
 	return util.create_simple_render_entity(world, 
 		transform, 
 		world.component:resource "/pkg/ant.resources/materials/line.material",
 		name,
 		assetmgr.load(
-			util.generate_resource_name "//res.mesh/grid.rendermesh", 
+			assetmgr.generate_resource_name("mesh", "grid.rendermesh"), 
 			util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
 end
 
@@ -128,8 +127,24 @@ end
 function util.create_transform(world, transform)
 	local srt = transform and transform.srt or {}
 	return world.component:transform {
-		srt = world.component:srt(srt and mu.srt(srt.s, srt.r, srt.t) or {}),
+		srt = world.component:srt(srt)
 	}
+end
+
+local plane_meshres
+local function get_plane_meshres()
+	if plane_meshres == nil then
+		local vb = {
+			"fffffffff",
+			-0.5, 0, 0.5, 0, 1, 0, 1, 0, 0,
+			0.5,  0, 0.5, 0, 1, 0, 1, 0, 0,
+			-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
+			0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
+		}
+	
+		plane_meshres = util.create_simple_mesh("p3|n3|T3", vb, 4)
+	end
+	return plane_meshres
 end
 
 function util.create_plane_entity(world, trans, materialpath, color, name, info)
@@ -173,16 +188,8 @@ value:
 		policy = policy,
 		data = data,
 	}
-	
-	local e = world[eid]
-	local vb = {
-		"fffffffff",
-		-0.5, 0, 0.5, 0, 1, 0, 1, 0, 0,
-		0.5,  0, 0.5, 0, 1, 0, 1, 0, 0,
-		-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
-		0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
-	}
-	local meshscene = assetmgr.load(util.generate_resource_name "//res.mesh/plane.rendermesh", util.create_simple_mesh("p3|n3|T3", vb, 4))
+
+	local meshscene = assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres())
 	local selectscene = meshscene.scenes[meshscene.default_scene]
 	local _, meshnode = next(selectscene)
 	meshnode.bounding = {
@@ -244,24 +251,21 @@ function util.create_simple_render_entity(world, transform, material, name, rend
 	return eid
 end
 
-local resource_tag = {}
-function util.generate_resource_name(name)
-	local idx = resource_tag[name]
-	if idx == nil then
-		resource_tag[name] = 0
-		return name
+local fullquad_meshres
+local function get_fullquad_meshres()
+	if fullquad_meshres == nil then
+		fullquad_meshres = util.quad_mesh()
 	end
+	return fullquad_meshres
+end
 
-	idx = idx + 1
-	resource_tag[name] = idx
-	local n = fs.path(name)
-	local nf = n:parent_path() / n:stem():string() .. idx .. n:extension():string()
-	return nf:string()
+function util.fullquad_mesh()
+	return assetmgr.load("//res.mesh/fullquad.rendermesh", get_fullquad_meshres())
 end
 
 function util.create_quad_entity(world, rect, material, name)
 	return util.create_simple_render_entity(world, {srt={}}, material, name, 
-	assetmgr.load(util.generate_resource_name "//res.mesh/quad.rendermesh", util.quad_mesh(rect)))
+	assetmgr.load(assetmgr.generate_resource_name("mesh", "quad.rendermesh"), util.quad_mesh(rect)))
 end
 
 function util.create_texture_quad_entity(world, texture_tbl, name)
@@ -273,9 +277,10 @@ function util.create_texture_quad_entity(world, texture_tbl, name)
 		 3, -3, 0, 1, 1,
 	}
 
+	local resname = assetmgr.generate_resource_name("mesh", "quad_scale3.rendermesh")
 	local eid = util.create_simple_render_entity(world, 
 		nil, "/pkg/ant.resources/materials/texture.material", 
-		name, assetmgr.load(util.generate_resource_name "//res.mesh/quad_scale3.rendermesh", quad_mesh(vb)))
+		name, assetmgr.load(resname, quad_mesh(vb)))
 
 	local e = world[eid]
 	assetmgr.patch(e.material, {properties = texture_tbl})
@@ -298,7 +303,22 @@ function util.get_mainqueue_transform_boundings(world, transformed_boundings)
 	end
 end
 
-function util.create_frustum_entity(world, frustum_points, name, transform, color)
+local frustum_ib = {
+	-- front
+	0, 1, 2, 3,
+	0, 2, 1, 3,
+
+	-- back
+	4, 5, 6, 7,
+	4, 6, 5, 7,
+
+	-- left
+	0, 4, 1, 5,
+	-- right
+	2, 6, 3, 7,
+}
+
+function util.create_frustum_entity(world, frustum_points, name, color)
 	local vb = {"fffd",}
 	color = color or 0xff00000f
 	for i=1, #frustum_points do
@@ -306,43 +326,48 @@ function util.create_frustum_entity(world, frustum_points, name, transform, colo
 		table.move(p, 1, 3, #vb+1, vb)
 		vb[#vb+1] = color
 	end
-
-	local ib = {
-		-- front
-		0, 1, 2, 3,
-		0, 2, 1, 3,
-
-		-- back
-		4, 5, 6, 7,
-		4, 6, 5, 7,
-
-		-- left
-		0, 4, 1, 5,
-		-- right
-		2, 6, 3, 7,
-	}
 	
-	return util.create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, 
-	assetmgr.load(util.generate_resource_name "//res.mesh/frustum.rendermesh", util.create_simple_mesh("p3|c40niu", vb, 8, ib, #ib)))
+	local resname = assetmgr.generate_resource_name("mesh", "frustum.rendermesh")
+	return util.create_simple_render_entity(world, nil, "/pkg/ant.resources/materials/line.material", name, 
+	assetmgr.load(resname, util.create_simple_mesh("p3|c40niu", vb, 8, frustum_ib, #frustum_ib)))
 end
 
+local axis_ib = {
+	0, 1,
+	0, 2, 
+	0, 3,
+}
 function util.create_axis_entity(world, transform, color, name)
-	local vb = {
+	local axis_vb = {
 		"fffd",
-		0, 0, 0, color or 0xffffffff,
+		0, 0, 0, color or 0xff0000ff,
 		1, 0, 0, color or 0xff0000ff,
+		0, 0, 0, color or 0xff00ff00,
 		0, 1, 0, color or 0xff00ff00,
+		0, 0, 0, color or 0xffff0000,
 		0, 0, 1, color or 0xffff0000,
 	}
-	local ib = {
-		0, 1,
-		0, 2, 
-		0, 3,
-	}
+	local resname = assetmgr.generate_resource_name("mesh", "axis.rendermesh")
 	return util.create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, 
-		assetmgr.load(
-			util.generate_resource_name "//res.mesh/axis.rendermesh", 
-			util.create_simple_mesh("p3|c40niu", vb, 4, ib, #ib)))
+		assetmgr.load(resname,
+			util.create_simple_mesh("p3|c40niu", axis_vb, 4, axis_ib, #axis_ib)))
+end
+
+
+local skybox_meshres
+local function get_skybox_mesh()
+	if skybox_meshres == nil then
+		local desc = {vb={}, ib={}}
+		geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
+		local gvb = {"fff",}
+		for _, v in ipairs(desc.vb)do
+			table.move(v, 1, 3, #gvb+1, gvb)
+		end
+	
+		skybox_meshres = util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)
+	end
+
+	return skybox_meshres
 end
 
 function util.create_skybox(world, material)
@@ -358,16 +383,9 @@ function util.create_skybox(world, material)
 			scene_entity = true,
 			name = "sky_box",
 		}
-    }
-    local e = world[eid]
-
-    local desc = {vb={}, ib={}}
-    geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
-    local gvb = {"fff",}
-    for _, v in ipairs(desc.vb)do
-        table.move(v, 1, 3, #gvb+1, gvb)
-    end
-    world:add_component(eid, "rendermesh", assetmgr.load(util.generate_resource_name "//res.mesh/skybox.rendermesh", util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)))
+	}
+	
+    world:add_component(eid, "rendermesh", assetmgr.load(assetmgr.generate_resource_name("mesh", "skybox.rendermesh"), get_skybox_mesh()))
     return eid
 end
 

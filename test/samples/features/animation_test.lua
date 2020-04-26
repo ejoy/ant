@@ -26,7 +26,7 @@ local function ozzmesh_animation_test()
             "ant.render|debug_mesh_bounding",
         },
         data = {
-            transform = computil.create_transform(world, {srt = {s={-5, 0, 5, 1}}}),
+            transform = computil.create_transform(world, {srt = {t={-5, 0, 5, 1}}}),
             material = world.component:resource "/pkg/ant.resources/materials/skin_model_sample.material",
             animation = {
                 anilist = {
