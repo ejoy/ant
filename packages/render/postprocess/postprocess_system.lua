@@ -12,15 +12,6 @@ local renderutil= require "util"
 local computil  = require "components.util"
 local uniforms  = world:interface "ant.render|uniforms"
 
-local pps = ecs.component "postprocess_slot"
-    .fb_idx         "fb_index"
-    ["opt"].rb_idx  "rb_index"
-
-function pps:init()
-    self.rb_idx = self.rb_idx or 1
-    return self
-end
-
 local pp_sys = ecs.system "postprocess_system"
 
 local techniques = {}

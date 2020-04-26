@@ -1,7 +1,5 @@
-local glbloader 		= require "packages.glTF.glb"
 local gltf_converter 	= require "meshconverter.gltf"
 local filtermesh 		= require "mesh.filter"
-local meshbinary 		= require "mesh.meshbinary"
 
 local accessor_types = {
 	SCALAR = 0,
@@ -297,13 +295,6 @@ local function refine_prim_offset(newprim, newacc, newbvs, newbuf, newscene, new
 	table.move(newbvs, 1, #newbvs, #newscene.bufferViews+1, newscene.bufferViews)
 end
 
-local function get_scale(cfg)
-	local m = cfg.mesh
-	if m then
-		return m.scale or 1
-	end
-end
-
 local function get_convert_matrix(negative_axis)
 	local reverse_matrix = {
 		1, 0, 0, 0,
@@ -388,7 +379,7 @@ end
 return function (glbscene, bindata, cfg)
 	local scene, binary = filtermesh.filter_scene(glbscene, bindata)
 
-	scene.scenescale = get_scale(cfg)
+	scene.scenescale = cfg.scale or 1
 	local new_binaries = {}
 	local newscene = {
 		accessors = {},

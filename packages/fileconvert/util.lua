@@ -1,15 +1,7 @@
 local lfs = require "filesystem.local"
-local datalist = require "datalist"
 local thread = require "thread"
 
 local util = {}; util.__index = util
-
-function util.datalist(filepath)
-	local f = assert(lfs.open(filepath, "r"))
-	local data = f:read "a"
-	f:close()
-	return datalist.parse(data)
-end
 
 function util.identify_info(identity)
     return identity:match "%.(%w+)%[([%s%w]+)%]_(%w+)$"

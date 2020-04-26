@@ -2,6 +2,7 @@ local util = {}; util.__index = util
 local fs = require "filesystem.local"
 
 local platform  = require "platform"
+local datalist = require "datalist"
 
 function util.list_files(subpath, filter, excludes)
 	local prefilter = {}
@@ -61,6 +62,13 @@ function util.write_file(filepath, c)
     local f = fs.open(filepath, "wb")
     f:write(c)
     f:close()
+end
+
+function util.datalist(filepath)
+	local f = assert(fs.open(filepath, "r"))
+	local data = f:read "a"
+	f:close()
+	return datalist.parse(data)
 end
 
 local OS        = platform.OS

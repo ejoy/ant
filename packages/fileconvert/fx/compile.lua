@@ -102,7 +102,7 @@ local function load_surface_type(fxcontent)
 end
 
 return function (identity, srcfilepath, outfilepath, localpath)
-	local fxcontent = util.datalist(srcfilepath)
+	local fxcontent = fs_util.datalist(srcfilepath)
 	load_surface_type(fxcontent)
 	local mysetting	= read_linkconfig(localpath("settings"), identity)
 	local marcros 	= add_macros_from_surface_setting(mysetting, fxcontent.surface_type, fxcontent.macros)

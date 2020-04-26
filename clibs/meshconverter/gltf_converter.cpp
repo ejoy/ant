@@ -102,13 +102,19 @@ void
 fetch_load_config(lua_State *L, int idx, load_config &config) {
 	luaL_checktype(L, idx, LUA_TTABLE);
 
-	verify(lua_getfield(L, idx, "layout") == LUA_TTABLE);
+	verify(lua_getfield(L, idx, "layouts") == LUA_TTABLE);
 	const size_t numStreams = lua_rawlen(L, -1);
 	config.layouts.resize(numStreams);
 	for (size_t ii = 0; ii < numStreams; ++ii) {
-		lua_geti(L, -1, ii + 1);
-		std::string elem = lua_tostring(L, -1);
-		config.layouts[ii] = refine_layouts(elem);
+		lua_geti(L, -1, ii + 1);{
+			if (LUA_TSTRING == lua_getfield(L, -1, "format")){
+				std::string elem = lua_tostring(L, -1);
+				config.layouts[ii] = refine_layouts(elem);
+			} else {
+				luaL_error(L, "need 'format' field in 'layouts'");
+			}
+			lua_pop(L, 1);
+		}
 		lua_pop(L, 1);
 	}
 	lua_pop(L, 1);

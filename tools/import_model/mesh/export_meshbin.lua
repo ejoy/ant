@@ -35,18 +35,16 @@ local function classfiy_attri(attributes, accessors)
 	return attri_class
 end
 
-local function which_layout_type(name, layout, layout_types)
-	if layout_types then
-		for i=1, #layout do
-			if layout[i] == name then
-				return layout_types[i]
-			end
+local function which_layout_type(name, layouts)
+	for _, layout in ipairs(layouts) do
+		if layout.format == name then
+			return layout.type or "static"
 		end
 	end
 	return "static"
 end
 
-local function create_decl(attri_class, layout, layout_types)
+local function create_decl(attri_class, layouts)
 	local decls = {}
 	for bvidx, class in pairs(attri_class) do
 		local sorted_class = {}
@@ -68,7 +66,7 @@ local function create_decl(attri_class, layout, layout_types)
 		local declname = table.concat(decl_descs, "|")
 		decls[bvidx] = {
 			declname = declname,
-			type = assert(which_layout_type(declname, layout, layout_types)),
+			type = assert(which_layout_type(declname, layouts)),
 		}
 	end
 
@@ -212,12 +210,11 @@ local function get_obj_name(obj, idx, defname)
 end
 
 local function export_meshbin(gltfscene, bindata, config)
-	local layout 		= config.layout
-	for i=1, #layout do
-		layout[i] = declmgr.correct_layout(layout[i])
+	local layouts 		= config.layouts
+	for _, l in ipairs(layouts) do
+		l.format = declmgr.correct_layout(l.format)
 	end
-	local layout_types 	= config.layout_types
-	local scene_scalemat = gltfscene.scenescale and math3d.ref(math3d.matrix{s=gltfscene.scenescale}) or nil
+	local scene_scalemat = math3d.ref(math3d.matrix{s=gltfscene.scenescale})
 
 	local bvcaches = {}
 
@@ -250,7 +247,7 @@ local function export_meshbin(gltfscene, bindata, config)
 							material = prim.material,
 						}
 						local attribclass 	= classfiy_attri(prim.attributes, gltfscene.accessors)
-						local decls 		= create_decl(attribclass, layout, layout_types)
+						local decls 		= create_decl(attribclass, layouts)
 	
 						local values = {}
 						for bvidx, declinfo in pairs(decls) do

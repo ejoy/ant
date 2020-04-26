@@ -1,7 +1,5 @@
 local mgr = {}; mgr.__index = mgr
 
-local bgfx = require "bgfx"
-
 local declmapper = {}
 
 local name_mapper = {
@@ -84,6 +82,7 @@ local function create_decl(vb_layout)
 		decl[#decl+1] = decl_name(e)
 	end
 
+	local bgfx = require "bgfx"
 	local d, stride = bgfx.vertex_layout(decl)
 	return {handle=d, stride=stride}
 end
@@ -98,7 +97,7 @@ end
 
 function mgr.correct_layout(layout)
 	local t = {}
-	for e in layout:gmatch("%w+") do
+	for e in layout:gmatch "%w+" do
 		t[#t+1] = mgr.correct_elem(e)
 	end
 

@@ -69,7 +69,6 @@ function hw.init(args)
 	bgfx_init(args)
 	local vfs = require "vfs"
 	vfs.identity(".fx",      hw.identity())
-	vfs.identity(".mesh",    hw.identity())
 	vfs.identity(".texture", hw.identity())
 	setting.init()
 end

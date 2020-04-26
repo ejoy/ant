@@ -1,4 +1,4 @@
-local fs = require "filesystem"
+local fs = require "filesystem.local"
 local export_meshbin = require "mesh.export_meshbin"
 
 local fs_util = require "utility.fs_util"
@@ -17,23 +17,23 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
             return def_name .. meshidx
         end
 
-        local function default_mesh_cfg(mesh_path)
+        local function default_mesh_cfg(mesh_path, layouts)
             return  {
-                skinning_type = "cpu",
-                mesh_path = mesh_path,
-                type = "mesh",
+                layouts         = layouts,
+                mesh_path       = mesh_path:string(),
+                type            = "mesh",
             }
         end
         
-        local meshbin_file = meshfolder / inputfile:filename():replace_extenstion ".meshbin"
+        local meshbin_file = meshfolder / inputfile:filename():replace_extension ".meshbin"
         local success, err = export_meshbin(glbscene, glbbin, meshbin_file, meshconfig)
 
         if not success then
             error(("export to 'meshbin' file failed:\n%s\n%s\n%s"):format(inputfile:string(), meshbin_file:string(), err))
         end
 
-        local meshfile = fs.path(meshbin_file):replace_extenstion ".mesh"
-        fs_util.write_file(meshfile, seri_stringfiy.map(default_mesh_cfg(meshbin_file)))
+        local meshfile = fs.path(meshbin_file):replace_extension ".mesh"
+        fs_util.write_file(meshfile, seri_stringfiy.map(default_mesh_cfg(meshbin_file, meshconfig.layouts)))
 
         local function get_srt(node)
             if node.matrix then

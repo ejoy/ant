@@ -1,43 +1,74 @@
-package.cpath = "projects/msvc/vs_bin/Debug/?.dll"
 package.path = table.concat(
     {
         "tools/import_model/?.lua",
         "engine/?.lua",
         "packages/?.lua",
         "packages/glTF/?.lua",
+        "packages/serialize/?.lua",
     }, ";"
 )
 
 local function help_info()
     return [[
-        At least two argument, one for import file, one for export folder
+        we need at least to argument: input and outfolder, each for input file and output folder.
+        we will output files included:
+            1. ['pbrm']-pbrm files: for pbr material
+            2. ['ozz']-animation relative files: included skeleton and animation file['ozz']
+            3. ['meshbin']-meshbin files: mesh consist of vb and ib info
+            4. ['txt']-entity files: entity for runtime, it included 'hierarchy' and 'mesh' entity
+        argument:
+            input: for input file
+            outfolder: for file to output
+            config: config file, a datalist file
+        examples:
+            cd to [antfolder], and run:
+            {luafolder}/lua.exe tools/import_model/import.lua input=d:/abc/female.fbx outfolder=d:/abc/female \
+            config=d:/abc/config.txt
     ]]
 end
 
-if #arg < 2 then
+local fs = require "filesystem.local"
+package.loaded["filesystem"] = fs
+local fs_util = require "utility.fs_util"
+
+local function read_arguments()
+    local arguments = {}
+    for _, a in ipairs(arg) do
+        local name, value = a:match "([^=]+)%s*=([^%s]+)"
+        arguments[name] = value
+    end
+
+    return arguments
+end
+
+local arguments = read_arguments()
+
+if not (arguments and arguments.input and arguments.outfolder and arguments.config) then
     print(help_info())
     return
 end
 
-local fs = require "filesystem.local"
+arguments.config = fs.path(arguments.config)
+arguments.input = fs.path(arguments.input)
+arguments.outfolder = fs.path(arguments.outfolder)
 
-local inputfile, output_folder = fs.path(arg[1]), fs.path(arg[2])
+local cfg = fs.exists(arguments.config) and fs_util.datalist(arguments.config) or nil
 
-if inputfile:extension():string():upper() == ".FBX" then
+if arguments.input:extension():string():upper() == ".FBX" then
     local fbx2gltf = require "fbx2gltf"
-    local results = fbx2gltf {inputfile}
+    local results = fbx2gltf {arguments.input}
     if not next(results) then
-        print("failed to convert file:", inputfile:string(), "from fbx to gltf file")
+        print("failed to convert file:", arguments.input:string(), "from fbx to gltf file")
     end
 
-    local glbfile = fs.path(inputfile):replace_extension "glb"
+    local glbfile = fs.path(arguments.input):replace_extension "glb"
     if not fs.exists(glbfile) then
-        error(string.format("glb file is not exist, but fbx2gltf progrom return true:%s", inputfile:string()))
+        error(string.format("glb file is not exist, but fbx2gltf progrom return true:%s", arguments.input:string()))
     end
-    inputfile = glbfile
+    arguments.input = glbfile
 end
 
 
 local importgltf = require "import_gltf"
 
-importgltf(inputfile, output_folder)
+importgltf(arguments.input, arguments.outfolder, cfg)

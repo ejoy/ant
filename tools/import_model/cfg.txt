@@ -1,0 +1,25 @@
+mesh:
+    layouts:
+        ---
+        format: p3|n30NIf|T|b
+        type: dynamic
+        ---
+        format: t20
+        type = static
+    flags:
+        invert_normal: false
+        flip_uv: true
+        ib_32: false
+    scale: 1
+animation:
+    load_skeleton: true
+    load_animation: true
+    #ani_list: {walk, stand}
+
+#fbx2gltf:
+
+#glb_import:
+
+
+
+
