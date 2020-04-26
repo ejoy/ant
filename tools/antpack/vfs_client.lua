@@ -79,7 +79,6 @@ local function prefetch(identity)
         end
     end
     vfs.identity(".fx",      identity)
-    vfs.identity(".mesh",    identity)
     vfs.identity(".texture", identity)
     vfs.fetchall ''
     getall ''
