@@ -108,7 +108,7 @@ function util.create_grid_entity(world, name, w, h, unit, transform)
 	
 	return util.create_simple_render_entity(world, 
 		transform, 
-		world.component:resource "/pkg/ant.resources/materials/line.material",
+		"/pkg/ant.resources/materials/line.material",
 		name,
 		assetmgr.load(
 			util.generate_resource_name "//res.mesh/grid.rendermesh", 
