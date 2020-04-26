@@ -13,7 +13,10 @@ local computil  = renderpkg.components
 
 local char_ik_test_sys = ecs.system "character_ik_test_system"
 
+local function v4(...)return world.component:vector(...)end
+
 local function foot_ik_test()
+
     return world:create_entity {
         policy = {
             "ant.serialize|serialize",
@@ -29,18 +32,13 @@ local function foot_ik_test()
             "ant.character|foot_ik_raycast",
         },
         data = {
-            transform = {srt = {t= {-2.5, 0, -6, 1}}},
-            rendermesh = {},
-            material = "/pkg/ant.resources/materials/skin_model_sample.material",
-            mesh = '/pkg/ant.resources.binary/meshes/ozz/mesh.ozz',
-            skeleton = '/pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz',
+            transform = computil.create_transform(world, {srt = { t= {-2.5, 0, -6, 1}}}),
+            material = world.component:resource "/pkg/ant.resources/materials/skin_model_sample.material",
+            mesh = world.component:resource '/pkg/ant.resources.binary/meshes/ozz/mesh.ozz',
+            skeleton = world.component:resource '/pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz',
             animation = {
                 anilist = {
-                    idle = {
-                        resource = '/pkg/ant.test.features/assets/tmp/animation.ozz',
-                        scale = 1,
-                        looptimes = 0,
-                    },
+                    idle = world.component:resource '/pkg/ant.test.features/assets/tmp/animation.ozz',
                 },
             },
             animation_birth = "idle",
@@ -48,9 +46,9 @@ local function foot_ik_test()
                 jobs = {
                     left_leg = {
                         type        = "two_bone",
-                        target      = {0, 0, 0, 1},
-                        pole_vector = {0, 1, 0, 0},
-                        mid_axis    = {0, 0, 1, 0},
+                        target      = v4{0, 0, 0, 1},
+                        pole_vector = v4{0, 1, 0, 0},
+                        mid_axis    = v4{0, 0, 1, 0},
                         weight      = 1.0,
                         twist_angle = 0,
                         soften      = 1.0,
@@ -58,20 +56,20 @@ local function foot_ik_test()
                     },
                     left_sole = {
                         type        = "aim",
-                        target      = {0, 0, 0, 1},
-                        pole_vector = {0, 1, 0, 0},
-                        up_axis     = {0, 1, 0, 0},
-                        forward     = {-1, 0, 0, 0},
-                        offset      = {0, 0, 0, 0},
+                        target      = v4{0, 0, 0, 1},
+                        pole_vector = v4{0, 1, 0, 0},
+                        up_axis     = v4{0, 1, 0, 0},
+                        forward     = v4{-1, 0, 0, 0},
+                        offset      = v4{0, 0, 0, 0},
                         weight      = 1.0,
                         twist_angle = 0,
                         joints      = {"LeftFoot",}
                     },
                     right_leg = {
                         type        = "two_bone",
-                        target      = {0, 0, 0, 1},
-                        pole_vector = {0, 1, 0, 0},
-                        mid_axis    = {0, 0, 1, 0},
+                        target      = v4{0, 0, 0, 1},
+                        pole_vector = v4{0, 1, 0, 0},
+                        mid_axis    = v4{0, 0, 1, 0},
                         weight      = 1.0,
                         twist_angle = 0,
                         soften      = 1.0,
@@ -79,11 +77,11 @@ local function foot_ik_test()
                     },
                     right_sole = {
                         type        = "aim",
-                        target      = {0, 0, 0, 1},
-                        pole_vector = {0, 1, 0, 0},
-                        up_axis     = {0, 1, 0, 0},
-                        forward     = {-1, 0, 0, 0},
-                        offset      = {0, 0, 0, 0},
+                        target      = v4{0, 0, 0, 1},
+                        pole_vector = v4{0, 1, 0, 0},
+                        up_axis     = v4{0, 1, 0, 0},
+                        forward     = v4{-1, 0, 0, 0},
+                        offset      = v4{0, 0, 0, 0},
                         weight      = 1.0,
                         twist_angle = 0,
                         joints      = {"RightFoot",}
@@ -91,7 +89,7 @@ local function foot_ik_test()
                 }
             },
             foot_ik_raycast = {
-                cast_dir = {0, -2, 0, 0},
+                cast_dir = v4{0, -2, 0, 0},
                 foot_height = 0.5,
                 trackers = {
                     {
@@ -105,10 +103,10 @@ local function foot_ik_test()
                 },
             },
             character = {movespeed = 1.0,},
-            collider = {
+            collider = world.component:collider{
                 capsule = {
-                    {
-                        origin = {0, 1, 0, 1},
+                    world.component:capsule_shape{
+                        origin = v4{0, 1, 0, 1},
                         radius = 0.5,
                         height = 1,
                         axis = "Y",
@@ -129,18 +127,18 @@ local function create_plane_test()
     return computil.create_plane_entity(world,
     {srt = {
         s = {5, 1, 5, 0},
-        r = math3d.totable(math3d.quaternion{math.rad(10), 0, 0}),
-        t = {0, 0, -5, 1},
+        r = math3d.tovalue(math3d.quaternion{math.rad(10), 0, 0}),
+        t = {0, 0, -5, 1}
     }},
     "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},
     "test shadow plane",
     {
         ["ant.collision|collider_policy"] = {
-            collider = {
+            collider = world.component:collider{
                 box = {
-                    {
-                        origin = {0, 0, 0, 1},
+                    world.component:box_shape{
+                        origin = v4{0, 0, 0, 1},
                         size = {5, 0.001, 5},
                     }
                 }

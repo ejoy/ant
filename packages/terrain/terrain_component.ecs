@@ -11,7 +11,6 @@ interface "terrain"
 policy "terrain_policy"
     .require_transform "terrain_transform"
     .component "terrain"
-    .component "rendermesh"
 
 transform "terrain_transform"
     .implement "terrain_component.lua"

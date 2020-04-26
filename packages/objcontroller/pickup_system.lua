@@ -138,15 +138,17 @@ local function replace_material(result, material)
 	end
 end
 
+local opacity_material = world.component:resource '/pkg/ant.resources/materials/pickup_opacity.material'
+local translucent_material = world.component:resource '/pkg/ant.resources/materials/pickup_transparent.material'
+
 function pickup_sys:refine_filter()
 	local e = world:singleton_entity "pickup"
 	if e.visible then
 		local filter = e.primitive_filter
 
-		local material = e.material
 		local result = filter.result
-		replace_material(result.opaticy, material)
-		replace_material(result.translucent, material[1])
+		replace_material(result.opaticy, opacity_material)
+		replace_material(result.translucent, translucent_material)
 	end
 end
 
@@ -247,12 +249,8 @@ local function add_pick_entity()
 			"ant.objcontroller|pickup",
 		},
 		data = {
-			material = {
-				'/pkg/ant.resources/materials/pickup_opacity.material',
-				'/pkg/ant.resources/materials/pickup_transparent.material',
-			},
-			pickup = {
-				blit_buffer = {
+			pickup = world.component:pickup{
+				blit_buffer = world.component:blit_buffer {
 					w = pickup_buffer_w,
 					h = pickup_buffer_h,
 					elemsize = 4,

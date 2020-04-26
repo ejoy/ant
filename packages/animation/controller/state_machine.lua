@@ -7,9 +7,9 @@ local function get_transmit_merge(e, tt_duration)
 	local timepassed = 0
 	return function (deltatime)
 		timepassed = timepassed + deltatime
-		local current_pose = e.animation.current
+		local current_pose = e.animation._current
 		if timepassed > tt_duration then
-			e.animation.current = current_pose[#current_pose]
+			e.animation._current = current_pose[#current_pose]
 			return true
 		end
 		local scale = math.max(0, math.min(1, timepassed / tt_duration))
@@ -30,11 +30,11 @@ local function current_animation(current)
 end
 
 local function play_animation(e, name, duration)
-	local current_ani = current_animation(e.animation.current)
+	local current_ani = current_animation(e.animation._current)
 	if current_ani and current_ani.name == name then
 		return
 	end
-	local current_pose = e.animation.current
+	local current_pose = e.animation._current
 	if current_pose.type == "blend" then
 		for i = 1, #current_pose do
 			current_pose[i].init_weight = current_pose[i].weight
@@ -46,7 +46,7 @@ local function play_animation(e, name, duration)
             ratio = 0,
 		}
 	elseif current_pose.animation then
-		e.animation.current = {
+		e.animation._current = {
 			type = "blend",
 			{
 				animation = current_pose.animation,
@@ -62,7 +62,7 @@ local function play_animation(e, name, duration)
 			}
 		}
 	else
-		e.animation.current = {
+		e.animation._current = {
 			animation = e.animation.anilist[name],
             ratio = 0,
 		}
@@ -103,7 +103,7 @@ ecs.component "state_machine_transmits"
 local sm_trans = ecs.transform "state_machine_transform"
 
 function sm_trans.process(e)
-	e.animation.current = {}
+	e.animation._current = {}
 	set_state(e, e.state_machine.current, 0)
 end
 
@@ -144,10 +144,10 @@ end
 function iani.play(e, name, time)
 	if e.animation and e.animation.anilist[name]  then
 		if e.state_machine then
-			e.state_machine.current = nil
+			e.state_machine._current = nil
 			play_animation(e, name, time)
 		else
-			e.animation.current = {
+			e.animation._current = {
 				animation = e.animation.anilist[name],
 				ratio = 0,
 			}

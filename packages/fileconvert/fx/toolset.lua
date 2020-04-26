@@ -1,5 +1,5 @@
 local lfs = require "filesystem.local"
-local utilitypkg = import_package "ant.utility.local"
+local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
 local fs_util = utilitypkg.fs_util
 

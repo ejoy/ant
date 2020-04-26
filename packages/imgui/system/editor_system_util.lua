@@ -75,17 +75,12 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = {
-                srt = {
-                    s = size or {1, 1, 1},
-                    r = euler2quat(rot or {0, 0, 0}),
-                    t = {0, 0, 0},
-                },
+            transform = world.component:transform{
+                srt = mu.srt(size or {1, 1, 1}, euler2quat(rot or {0, 0, 0}), {0, 0, 0}),
             },
             parent = parent,
-            rendermesh = {},
-            mesh = "/pkg/ant.resources/meshes/ring.mesh",
-            material = ([[
+            mesh = world.component:resource "/pkg/ant.resources/meshes/ring.mesh",
+            material = world.component:resource ([[
                 ---
                 /pkg/ant.resources/materials/gizmo_front_singlecolor.material
                 ---
@@ -127,8 +122,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         data = {
             transform = world.component:transform {srt = mu.srt()},
             parent = parent,
-            rendermesh = {},
-            material = "/pkg/ant.resources/materials/gizmo_line.material",
+            material = world.component:resource "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
             can_render = true,
             can_select = true,
@@ -151,7 +145,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
 
     local filename = string.format("//res.mesh/line_%s.rendermesh",RES_IDX)
     RES_IDX = RES_IDX + 1
-    grid.rendermesh = assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+    world:add_component(gridid, "rendermesh", assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
     return gridid
 end
 
@@ -168,16 +162,11 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = {
-                srt = {
-                    s = {1, 1, 1},
-                    r = euler2quat(rot or {0, 0, 0}),
-                    t = {0, 0, 0},
-                },
+            transform = world.component:transform{
+                srt = mu.srt(nil, euler2quat(rot or {0, 0, 0})),
             },
             parent = parent,
-            rendermesh = {},
-            material = "/pkg/ant.resources/materials/gizmo_front_line.material",
+            material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_line.material",
             name = name,
             can_render = true,
             can_select = true,
@@ -200,7 +189,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
 
     local filename = string.format("//res.mesh/circle_%s.rendermesh",RES_IDX)
     RES_IDX = RES_IDX + 1
-    grid.rendermesh = assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+    world:add_component(gridid, "rendermesh", assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
     return gridid
 end
 
@@ -217,17 +206,12 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = {
-                srt = {
-                    s = size or {1, 1, 1},
-                    r = euler2quat(rot or {0, 0, 0}),
-                    t = pos or {0, 0, 0},
-                },
+            transform = world.component:transform{
+                srt = mu.srt(size or {1, 1, 1}, euler2quat(rot or {0, 0, 0}), pos or {0, 0, 0}),
             },
             parent = parent,
-            rendermesh = {},
-            mesh = "/pkg/ant.resources/meshes/cone.mesh",
-            material = ([[
+            mesh = world.component:resource"/pkg/ant.resources/meshes/cone.mesh",
+            material = world.component:resource ([[
                 ---
                 /pkg/ant.resources/materials/gizmo_singlecolor.material
                 ---
@@ -260,17 +244,12 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = {
-                srt = {
-                    s = size or {1},
-                    r = euler2quat({0, 0, 0}),
-                    t = pos or {0, 0, 0},
-                },
+            transform = world.component:transform{
+                srt = mu.srt(size or {1}, euler2quat({0, 0, 0}), pos or {0, 0, 0}),
             },
             parent = parent,
-            rendermesh = {},
-            mesh = "/pkg/ant.resources/meshes/cube.mesh",
-            material = ([[
+            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
+            material = world.component:resource ([[
                 ---
                 /pkg/ant.resources/materials/gizmo_singlecolor.material
                 ---
@@ -310,7 +289,7 @@ end
 function Util.create_gizmo(world)
     local serializeutil = import_package "ant.serialize"
     local function create_gizmo_object(name,parent,ignore_scale)
-        local trans = world.component:transform {srt = mu.srt(),parent = parent}
+        local trans = world.component:transform {srt = mu.srt()}
         -- trans.parent = parent and world[parent].serialize or nil
         local args = {
             policy={
@@ -325,8 +304,13 @@ function Util.create_gizmo(world)
                 serialize = serializeutil.create(),
                 gizmo_object = {},
                 -- can_select = true,
+                parent = parent,
             },
         }
+
+        if parent then
+            args.policy[#args.policy+1] = "ant.scene|hierarchy_policy"
+        end
 
         return world:create_entity(args)
     end

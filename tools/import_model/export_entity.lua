@@ -1,7 +1,7 @@
 local fs = require "filesystem.local"
 local export_meshbin = require "mesh.export_meshbin"
 
-local fs_util = require "utility.fs_util"
+local fs_local = require "utility.fs_local"
 
 local math3d = require "math3d"
 
@@ -33,7 +33,7 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
         end
 
         local meshfile = fs.path(meshbin_file):replace_extension ".mesh"
-        fs_util.write_file(meshfile, seri_stringfiy.map(default_mesh_cfg(meshbin_file, meshconfig.layouts)))
+        fs_local.write_file(meshfile, seri_stringfiy.map(default_mesh_cfg(meshbin_file, meshconfig.layouts)))
 
         local function get_srt(node)
             if node.matrix then
@@ -84,7 +84,6 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
                 transform = {srt=get_srt(node)},
                 mesh        = meshfile:string() .. ":" .. meshname,
                 material    = materialfiles[node.material],
-                rendermesh = {},
                 name = node.name,
                 parent = parent,
             }
@@ -160,7 +159,7 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
                     entityname = get_obj_name(node, i, "hie_entity")
                 end
 
-                fs_util.write_file(meshfolder / entityname .. ".txt", seri_stringfiy.map(entity))
+                fs_local.write_file(meshfolder / entityname .. ".txt", seri_stringfiy.map(entity))
             end
         end
 end

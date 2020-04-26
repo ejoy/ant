@@ -16,15 +16,11 @@ data:
       ---
       origin: {10,12,0,0}
       size: {4,12,4}
-  material: /pkg/ant.resources/PVPScene/scene-mat.material
-  mesh: /pkg/ant.resources/PVPScene/campsite-door.mesh
+  material: $resource /pkg/ant.resources/PVPScene/scene-mat.material
+  mesh: $resource /pkg/ant.resources/PVPScene/campsite-door.mesh
   name: door
-  rendermesh:
     lodidx: 1
   serialize: 5e1d264e369fa92007d55026
   scene_entity: true
-  transform:
-    srt:
-      s: {1,1,1,0}
-      r: {0,0,0,1}
-      t: {0,0,0,1}
+  transform: $transform
+    srt: $srt

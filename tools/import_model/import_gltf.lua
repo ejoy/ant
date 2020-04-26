@@ -2,7 +2,7 @@ local fs = require "filesystem.local"
 local glbloader = require "glb"
 
 local subprocess = require "utility.sb_util"
-local fs_util = require "utility.fs_util"
+local fs_local = require "utility.fs_local"
 
 local export_entity = require "export_entity"
 
@@ -39,7 +39,7 @@ local function export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
             assert(endidx <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
     
-            fs_util.write_file(imgpath, c)
+            fs_local.write_file(imgpath, c)
         end
         return imgpath
         
@@ -134,7 +134,7 @@ local function export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
         }
 
         local texpath = imgpath:parent_path() / name .. ".texture"
-        fs_util.write_file(texpath, seri_stringify(texture_desc, true, true))
+        fs_local.write_file(texpath, seri_stringify(texture_desc, true, true))
         return texpath:string()
     end
 
@@ -181,7 +181,7 @@ local function export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
                 return newname
             end
             local filepath = pbrm_folder / refine_name(name) .. ".pbrm"
-            fs_util.write_file(filepath, seri_stringify.map(pbrm))
+            fs_local.write_file(filepath, seri_stringify.map(pbrm))
     
             materialfiles[matidx] = filepath
         end

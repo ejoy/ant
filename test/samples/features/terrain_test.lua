@@ -19,20 +19,19 @@ function terrain_test_sys:init()
 			"ant.serialize|serialize",
 		},
 		data = {
-			rendermesh = {},
-			material = "/pkg/ant.resources/terrain/test.material",
-			transform = {srt = {}},
+			material = world.component:resource "/pkg/ant.resources/terrain/test.material",
+			transform = world.component:transform{srt = world.component:srt{}},
 			can_render = true,
-			terrain = {
+			terrain = world.component:terrain{
 				tile_width = 2,
 				tile_height = 2,
 				section_size = 2,
 				element_size = 7,
 			},
-			collider = {
+			collider = world.component:collider{
 				terrain = {
-					{
-						origin = {0, 0, 0, 1},
+					world.component:terrain_shape {
+						origin = world.component:vector{0, 0, 0, 1},
 					}
 				}
 			},

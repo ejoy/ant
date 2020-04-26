@@ -39,16 +39,6 @@ function default.ortho_frustum(n, f, l, r, t, b)
 	}
 end
 
-function default.camera(eyepos, viewdir, frustum, camtype)
-	return {
-		type = camtype or "",
-		eyepos = eyepos or {0, 0, 0, 1},
-		viewdir = viewdir or {0, 0, 1, 0},
-		updir = {0, 1, 0, 0},
-		frustum = assert(frustum),
-	}
-end
-
 function default.render_buffer(w, h, format, flags)
 	return {
 		w = w,

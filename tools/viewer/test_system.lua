@@ -17,13 +17,7 @@ local function load_file(file)
 end
 
 function m:init()
-    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, world.component:transform {
-        srt = world.component:srt {
-          s = world.component:vector {1,1,1,0},
-          r = world.component:quaternion {0,0.92388,0,0.382683},
-          t = world.component:vector {0,0,0,1},
-        }
-    })
+    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
     world:create_entity(load_file 'res/light_directional.txt')
     world:create_entity(load_file 'res/entity.txt')
 end

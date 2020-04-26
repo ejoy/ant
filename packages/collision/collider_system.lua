@@ -19,7 +19,7 @@ local s = ecs.component "sphere_shape"
 	.origin "position"
 	.radius "real"
 function s:init()
-	self.handle = w:new_shape("sphere", self.radius)
+	self._handle = w:new_shape("sphere", self.radius)
 	return self
 end
 
@@ -27,7 +27,7 @@ local b = ecs.component "box_shape"
 	.origin "position"
 	.size "real[3]"
 function b:init()
-	self.handle = w:new_shape("box", table.unpack(self.size))
+	self._handle = w:new_shape("box", table.unpack(self.size))
 	return self
 end
 
@@ -36,7 +36,7 @@ local c = ecs.component "capsule_shape"
 	.radius "real"
 	.height "real"
 function c:init()
-	self.handle = w:new_shape("capsule", self.radius, self.height)
+	self._handle = w:new_shape("capsule", self.radius, self.height)
 	return self
 end
 
@@ -82,9 +82,9 @@ function tcb.process(e)
 	local heightfield = terraincomp.heightfield
 	local hf_width, hf_height = heightfield[1], heightfield[2]
 	local hf_data = heightfield[3]
-	shape.handle = w:new_shape("heightfield", hf_width, hf_height, shape.min_height, shape.max_height, hf_data, shape.height_scaling, scaling)
+	shape._handle = w:new_shape("heightfield", hf_width, hf_height, shape.min_height, shape.max_height, hf_data, shape.height_scaling, scaling)
 
-	w:add_shape(tc.handle, shape.handle, 0, shape.origin)
+	w:add_shape(tc._handle, shape._handle, 0, shape.origin)
 	local aabbmin, aabbmax = w:get_aabb(tc.handle)
 	terraincomp.bounding = {
 		aabb = math3d.ref(math3d.aabb(aabbmin, aabbmax))
@@ -98,13 +98,13 @@ local collcomp = ecs.component "collider"
 	["opt"].terrain "terrain_shape[]"
 
 function collcomp:init()
-	self.handle = w:body_create()
+	self._handle = w:body_create()
 	local function add_shape(shape)
 		if not shape then
 			return
 		end
 		for _, sh in ipairs(shape) do
-			w:add_shape(self.handle, sh.handle, 0, sh.origin)
+			w:add_shape(self._handle, sh._handle, 0, sh.origin)
 		end
 	end
 	add_shape(self.sphere)
@@ -115,8 +115,8 @@ function collcomp:init()
 end
 
 function collcomp:delete()
-	if self.handle then
-		w:body_destroy(self.handle)
+	if self._handle then
+		w:body_destroy(self._handle)
 	end
 end
 
@@ -131,10 +131,10 @@ function icoll.test(e, srt)
 	if not collider then
 		return false
 	end
-	set_obj_transform(e.collider.handle, srt.t, srt.r)
-	local hit = w:test_overlap(e.collider.handle)
+	set_obj_transform(e.collider._handle, srt.t, srt.r)
+	local hit = w:test_overlap(e.collider._handle)
 	local _, r, t = math3d.srt(e.transform.srt)
-	set_obj_transform(e.collider.handle, t, r)
+	set_obj_transform(e.collider._handle, t, r)
 	return hit
 end
 
@@ -154,7 +154,7 @@ local new_coll_mb = world:sub{"component_register", "collider"}
 function collider_sys:data_changed()
 	for _, _, eid in new_coll_mb:unpack() do
 		local e = world[eid]
-		local obj = e.collider.handle
+		local obj = e.collider._handle
 		local id = w:getId(obj)
 		collider_entity_mapper[id] = eid
 	end
@@ -166,8 +166,8 @@ function collider_sys:update_collider_transform()
     for _, _, eid in trans_changed_mb:unpack() do
 		local e = world[eid]
 		if e.collider then
-			local _, r, t = math3d.srt(e.transform.world)
-			set_obj_transform(e.collider.handle, t, r)
+			local _, r, t = math3d.srt(e.transform._world)
+			set_obj_transform(e.collider._handle, t, r)
 		end
     end
 end

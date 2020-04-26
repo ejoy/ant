@@ -23,7 +23,6 @@ function st_sys:init()
 			can_render = true,
 			transform = world.component:transform {srt=world.component:srt{t=world.component:vector{0, 2, 0, 0}}},
 			material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
-			rendermesh = {},
 			mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
 			name = "cast_shadow_cube",
 		}
@@ -32,7 +31,7 @@ function st_sys:init()
 
     cu.create_plane_entity(
 		world,
-		world.component:transform {srt = world.component:srt {s = world.component:vector{50, 1, 50, 0}}},
+		{srt = {s = {50, 1, 50, 0}}},
 		"/pkg/ant.resources/materials/test/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"
@@ -120,7 +119,6 @@ value:
 			mesh = world.component:resource '/pkg/ant.resources/meshes/cylinder.mesh',
 			parent = arroweid,
 			name = "arrow.cylinder",
-			rendermesh = {},
 		}
 	}
 
@@ -134,7 +132,6 @@ value:
 		data = {
 			scene_entity = true,
 			can_render = true,
-			rendermesh = {},
 			transform = world.component:transform {
 				srt = world.component:srt {
 					t = cone_offset

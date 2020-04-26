@@ -167,12 +167,14 @@ local sm = ecs.system "shadow_system"
 local linear_cast_material = "/pkg/ant.resources/materials/shadow/csm_cast_linear.material"
 local cast_material = "/pkg/ant.resources/materials/shadow/csm_cast.material"
 
+local function v4(...) return world.component:vector(...) end
+
 local function default_csm_camera()
 	return {
-		type = "csm", 
-		updir = mc.T_YAXIS, 
-		viewdir = mc.T_ZAXIS,
-		eyepos = mc.T_ZERO_PT,
+		type 	= "csm", 
+		updir 	= v4(mc.T_YAXIS),
+		viewdir = v4(mc.T_ZAXIS),
+		eyepos 	= v4(mc.T_ZERO_PT),
 		frustum = {
 			l = -1, r = 1, t = -1, b = 1,
 			n = 1, f = 100, ortho = true,

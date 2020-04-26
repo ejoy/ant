@@ -9,44 +9,21 @@ policy:
 data:
   animation:
     anilist:
-      idle:
-        resource: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
-        scale: 1
-        looptimes: 0
-      jumping:
-        resource: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
-        scale: 1
-        looptimes: 0
-      punching:
-        resource: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
-        scale: 1
-        looptimes: 0
-      running:
-        resource: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
-        scale: 1
-        looptimes: 0
-      running_fast:
-        resource: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
-        scale: 1
-        looptimes: 0
-      walking:
-        resource: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
-        scale: 1
-        looptimes: 0
+      idle: $resource /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+      jumping: $resource /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+      punching: $resource /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
+      running: $resource /pkg/ant.resources.binary/meshes/female/animations/running.ozz
+      running_fast: $resource /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
+      walking: $resource /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
   can_render: true
-  material: 
+  material: $resource
     /pkg/ant.test.animation/res/Beta_Joints_MAT.pbrm
     /pkg/ant.test.animation/res/asdf1_Beta_HighLimbsGeoSG2.pbrm
-  mesh: /pkg/ant.resources/meshes/female.mesh
+  mesh:  $resource /pkg/ant.resources/meshes/female.mesh
   name: animation_sample
-  rendermesh: {}
   serialize: 5e1c39ad369fa96c5bd44fc5
-  pose_result: {}
-  skeleton: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
-  skinning: {}
+  skeleton:  $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
   animation_birth: idle
-  transform:
-    srt:
-      s: {1,1,1,0}
-      r: {0,0.92388,0,0.382683}
-      t: {0,0,0,1}
+  transform: $transform
+    srt: $srt
+      r: $quaternion {0,0.92388,0,0.382683}

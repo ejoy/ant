@@ -1,13 +1,16 @@
 local ecs = ...
 local world = ecs.world
-local fs = require "filesystem"
-
 local serializeutil = import_package "ant.serialize"
 
 local anitest_sys = ecs.system "animation_test_system"
 
-local function ozzmesh_animation_test()
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
 
+local math3d = require "math3d"
+
+local function ozzmesh_animation_test()
+    local function v4(...) return world.component:vector(...) end
     return
         world:create_entity {
         policy = {
@@ -23,30 +26,24 @@ local function ozzmesh_animation_test()
             "ant.render|debug_mesh_bounding",
         },
         data = {
-            transform = {srt = {t={-5, 0, 5, 1}}},
-            material = "/pkg/ant.resources/materials/skin_model_sample.material",
+            transform = computil.create_transform(world, {srt = {s={-5, 0, 5, 1}}}),
+            material = world.component:resource "/pkg/ant.resources/materials/skin_model_sample.material",
             animation = {
                 anilist = {
-                    walk = {
-                        resource = '/pkg/ant.resources.binary/meshes/ozz/animation1.ozz',
-                        scale = 1,
-                        looptimes = 0,
-                    },
+                    walk = world.component:resource '/pkg/ant.resources.binary/meshes/ozz/animation1.ozz',
                 },
             },
             animation_birth = "walk",
             can_render = true,
             scene_entity = true,
-            rendermesh = {},
-            skinning = {},
-            skeleton = '/pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz',
-            mesh = '/pkg/ant.resources.binary/meshes/ozz/mesh.ozz',
+            skeleton = world.component:resource '/pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz',
+            mesh = world.component:resource '/pkg/ant.resources.binary/meshes/ozz/mesh.ozz',
             name = 'animation_sample',
             serialize = serializeutil.create(),
-            collider = {
+            collider = world.component:collider {
                 capsule = {
-                    {
-                        origin = {0, 1, 0, 1},
+                    world.component:capsule_shape {
+                        origin = v4{0, 1, 0, 1},
                         radius = 0.5,
                         height = 1,
                         axis = "Y",
@@ -74,19 +71,15 @@ local function gltf_animation_test()
             "ant.general|name",
         },
         data = {
-            transform = {srt={t={-5, 0, 0, 1}}},
-            rendermesh = {},
-            mesh = "/pkg/ant.resources/meshes/female.mesh",
-            material = "/pkg/ant.resources/materials/skin_model_sample.material",
-            skeleton = "/pkg/ant.resources.binary/meshes/female/skeleton.ozz",
-            skinning = {},
+            transform = computil.create_transform(world, {
+                srt = {t = {-5, 0, 0, 1}}
+            }),
+            mesh = world.component:resource "/pkg/ant.resources/meshes/female.mesh",
+            material = world.component:resource "/pkg/ant.resources/materials/skin_model_sample.material",
+            skeleton = world.component:resource "/pkg/ant.resources.binary/meshes/female/skeleton.ozz",
             animation = {
                 anilist = {
-                    idle = {
-                        resource = "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
-                        scale = 1,
-                        looptimes = 0,
-                    },
+                    idle = world.component:resource "/pkg/ant.resources.binary/meshes/female/animations/idle.ozz",
                 },
             },
             animation_birth = "idle",

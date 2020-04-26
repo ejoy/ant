@@ -70,7 +70,7 @@ function foot_t.process(e)
             error(string.format("leg ik job must be two_bone:%s", leg_ikdata.type))
         end
 
-        local joint_indices = leg_ikdata.joint_indices
+        local joint_indices = leg_ikdata._joint_indices
         if #joint_indices ~= 3 then
             error(string.format("joints number must be 3 for two_bone ik type, %d provided", #joint_indices))
         end
@@ -87,7 +87,7 @@ function foot_t.process(e)
                 error(string.foramt("sole ik job must aim type:%s", sole_ikdata.type))
             end
 
-            local sole_joint_indices = sole_ikdata.joint_indices
+            local sole_joint_indices = sole_ikdata._joint_indices
             if #sole_joint_indices ~= 1 then
                 error(string.format("joints number must be 1 for aim ik type, %d provided", #sole_joint_indices))
             end
@@ -161,7 +161,7 @@ local function find_leg_raycast_target(pose_result, ik, foot_rc, trans)
     local jobs = ik.jobs
     for _, tracker in ipairs(foot_rc.trackers) do
         local leg_ikdata = jobs[tracker.leg]
-        local anklenidx = leg_ikdata.joint_indices[3]
+        local anklenidx = leg_ikdata._joint_indices[3]
         local jointmat = pose_result:joint(anklenidx)
         local ankle_pos = math3d.index(jointmat, 4)
         local ispoint<const> = 1
@@ -194,7 +194,7 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
         local target_ws = leg[3]
         leg_ikdata.target.v = math3d.transform(inv_trans, target_ws, nil)
 
-        local knee = leg_ikdata.joint_indices[2]
+        local knee = leg_ikdata._joint_indices[2]
         leg_ikdata.pole_vector.v = joint_y_vector(knee)
 
         iik.do_ik(pose_result, leg_ikdata)
@@ -202,7 +202,7 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
         if sole_ikdata then
             local hitnormal = leg[4]
             sole_ikdata.target.v = math3d.transform(inv_trans, math3d.add(target_ws, hitnormal), 1)
-            sole_ikdata.pole_vector.v = joint_y_vector(sole_ikdata.joint_indices[1])
+            sole_ikdata.pole_vector.v = joint_y_vector(sole_ikdata._joint_indices[1])
             iik.do_ik(pose_result, sole_ikdata)
         end
     end
@@ -214,8 +214,8 @@ function char_foot_ik_sys:do_ik()
         local foot_rc = e.foot_ik_raycast
         
         local ik = e.ik
-        local pose_result = e.pose_result.result
-        local trans = e.transform.world
+        local pose_result = e.pose_result
+        local trans = e.transform._world
 
         local leg_raycasts = find_leg_raycast_target(pose_result, ik, foot_rc, trans)
 

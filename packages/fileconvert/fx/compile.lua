@@ -2,7 +2,7 @@ local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
 local util 		= require "util"
 
-local utilitypkg = import_package "ant.utility.local"
+local utilitypkg = import_package "ant.utility"
 local fs_util = utilitypkg.fs_util
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"

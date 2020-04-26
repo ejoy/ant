@@ -21,7 +21,7 @@ local init_loader_sys = ecs.system 'init_loader_system'
 local function create_plane_test()
     local planes = {
         {
-            transform = {srt={s={50, 1, 50}}},
+            transform = {srt={s ={50, 1, 50}}},
             color = {0.8, 0.8, 0.8, 1},
             material = "/pkg/ant.resources/materials/test/mesh_shadow.material",
         },
@@ -35,10 +35,10 @@ local function create_plane_test()
             "test shadow plane",
             {
                 ["ant.collision|collider_policy"] = {
-                    collider = {
+                    collider = world.component:collider{
                         box = {
-                            {
-                                origin = {0, 0, 0, 1},
+                            world.component:box_shape{
+                                origin = math3d.ref(math3d.vector(0, 0, 0, 1)),
                                 size = {50, 0.001, 50},
                             }
                         }
@@ -72,7 +72,6 @@ local function target_lock_test()
                 s = world.component:vector {2, 1, 2, 0},
                 t = world.component:vector {16, 1, 6}},
             },
-            rendermesh = {},
             mesh = world.component:resource "/pkg/ant.resources/meshes/sphere.mesh",
             material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
             serialize = serialize.create(),
@@ -99,7 +98,6 @@ local function target_lock_test()
                     offset = {0, 0, 3},
                 },
             },
-            rendermesh = {},
             mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
             material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
             serialize = serialize.create(),
@@ -143,6 +141,20 @@ end
 
 function init_loader_sys:post_init()
     create_camera()
+end
+
+local seri = import_package "ant.serialize"
+
+local kb_mb = world:sub {"keyboard"}
+function init_loader_sys:data_changed()
+    for _, key, press, what in kb_mb:unpack() do
+        if key == "SPACE" then
+            for _, eid in world:each "can_render" do
+                local r = seri.entity(world, eid)
+                print(r)
+            end
+        end
+    end
 end
 
 local imgui      = require "imgui"

@@ -24,10 +24,10 @@ function skinning_sys:skin_mesh()
 	for _, eid in world:each "skinning" do
 		local e = world[eid]
 		local skincomp = e.skinning
-		local aniresult = e.pose_result.result
+		local pr = e.pose_result
 
 		for _, job in ipairs(skincomp.jobs) do
-			local skinning_matrices = build_skinning_matrices(job, aniresult)
+			local skinning_matrices = build_skinning_matrices(job, pr)
 			local handle = job.hwbuffer_handle
 			local updatedata = job.updatedata
 			for _, part in ipairs(job.parts) do
