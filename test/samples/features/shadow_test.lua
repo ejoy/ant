@@ -60,9 +60,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform = world.component:transform {
-				srt = world.component:srt(srt),
-			},
+			transform = cu.create_transform(world, srt),
 			name = "directional light arrow",
 		},
 	}
@@ -102,7 +100,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			transform = world.component:transform {
 				srt = world.component:srt {
 					s = world.component:vector {cylinder_radius, cylinder_scaleY, cylinder_radius},
-					t = cylinder_offset,
+					t = math3d.ref(cylinder_offset),
 				}
 			},
 			material = world.component:resource [[
@@ -134,7 +132,7 @@ value:
 			can_render = true,
 			transform = world.component:transform {
 				srt = world.component:srt {
-					t = cone_offset
+					t = math3d.ref(cone_offset),
 				}
 			},
 			material = world.component:resource [[

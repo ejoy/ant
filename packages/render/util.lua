@@ -318,7 +318,9 @@ function util.create_blit_queue(world, viewrect)
 			"ant.render|blitrender",
 		},
 		data = {
-			transform = world.component:transform {srt = mu.srt()},
+			transform = world.component:transform {
+				world.component:srt {srt = {}}
+			},
 			material = world.component:resource "/pkg/ant.resources/materials/fullscreen.material",
 			blit_render = true,
 			name = "full_quad",

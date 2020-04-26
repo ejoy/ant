@@ -128,7 +128,7 @@ end
 function util.create_transform(world, transform)
 	local srt = transform and transform.srt or {}
 	return world.component:transform {
-		srt = world.component:srt(srt and mu.srt(srt.s, srt.r, srt.t) or {}),
+		srt = world.component:srt(srt)
 	}
 end
 

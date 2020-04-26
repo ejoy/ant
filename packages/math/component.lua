@@ -75,6 +75,7 @@ local srt = ecs.component "srt"
 ["opt"].t "real[]"
 
 function srt:init()
+    assert(type(self) == "table")
     self.s = vector_init(self.s or const.ONE)
     self.r = quaternion_init(self.r or const.IDENTITY_QUAT)
     self.t = vector_init(self.t or const.ZERO_PT)
