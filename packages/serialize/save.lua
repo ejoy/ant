@@ -71,8 +71,6 @@ local function stringify_basetype(v)
         else
             return 'false'
         end
-    elseif t == 'function' then
-        return 'null'
     elseif t == 'userdata' then
         return "userdata" -- TODO
     end
@@ -93,7 +91,9 @@ local function stringify_array_map(n, t)
     for _, tt in ipairs(t) do
         out[#out+1] = indent(n).."---"
         for k, v in sort_pairs(tt) do
-            stringify_value(n, k..":", v)
+            if k:sub(1,1) ~= "_" then
+                stringify_value(n, k..":", v)
+            end
         end
     end
 end
@@ -148,8 +148,12 @@ function stringify_value(n, prefix, v)
         local typename = world._typeclass[v]
         if typename then
             local tc = world:import_component(typename)
-            if tc and tc.methodfunc and tc.methodfunc.save then
-                return stringify_value(n, prefix.." $"..typename, tc.methodfunc.save(v))
+            if tc and tc.methodfunc and tc.methodfunc.init then
+                if tc.methodfunc.save then
+                    v = tc.methodfunc.save(v)
+                    return stringify_value(n, prefix.." $"..typename, v)
+                end
+                prefix = prefix.." $"..typename
             end
         end
     end

@@ -1,0 +1,13 @@
+import "@ant.objcontroller"
+
+system "editor_operate_gizmo_system"
+    .implement "editor_operate_gizmo_system.lua"
+    .require_policy "gizmo_object"
+    .require_policy "ant.objcontroller|select"
+    .method "after_pickup"
+    .method "data_changed"
+    .method "init"
+
+policy "gizmo_object"
+    .component "gizmo_object"
+    .component "transform"

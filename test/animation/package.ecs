@@ -1,3 +1,4 @@
 import "camera_controller.ecs"
 import "pipeline.ecs"
 import "test_system.ecs"
+import "editor_operate_gizmo_system.ecs"

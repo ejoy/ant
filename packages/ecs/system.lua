@@ -75,7 +75,7 @@ function system.solve(w)
 	end
 
 	for name in pairs(mark) do
-		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][1]))
+		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][3]))
 	end
 	w._systems = {
 		steps = res,

@@ -1,5 +1,7 @@
 ECS Entity-Component-System 框架
 
+TODO: 这一篇已经有非常大的变化，需要重写。
+
 引擎及编辑器基于 ECS 框架构建，依赖 libs/ecs 目录下的框架模块。
 
 Entity

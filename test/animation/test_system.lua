@@ -31,6 +31,7 @@ function init_loader_sys:init()
     RoleEntityId = world:create_entity(load_file 'res/entity.txt')
     local info = import_package "ant.serialize".entity(world, RoleEntityId)
     print(info)
+    world:enable_tag(RoleEntityId, "show_operate_gizmo")
 end
 
 function init_loader_sys:post_init()
@@ -241,16 +242,16 @@ function init_loader_sys:data_changed()
 		screensize.w = w
 		screensize.h = h
 	end
-    for _,what,state,x,y in eventMouse:unpack() do
-        if state == "DOWN" then
-            lastX, lastY = x, y
-            lastMouse = what
-        elseif state == "MOVE" and lastMouse == what then
-            local dpiX, dpiY = rhwi.dpi()
-            mouseEvent(what, (x - lastX) / dpiX, (y - lastY) / dpiY)
-            lastX, lastY = x, y
-        end
-    end
+    --for _,what,state,x,y in eventMouse:unpack() do
+    --    if state == "DOWN" then
+    --        lastX, lastY = x, y
+    --        lastMouse = what
+    --    elseif state == "MOVE" and lastMouse == what then
+    --        local dpiX, dpiY = rhwi.dpi()
+    --        mouseEvent(what, (x - lastX) / dpiX, (y - lastY) / dpiY)
+    --        lastX, lastY = x, y
+    --    end
+    --end
     for _,delta in eventMouseWheel:unpack() do
         world:pub { "camera", "zoom", -delta*kWheelSpeed }
     end

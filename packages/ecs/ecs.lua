@@ -3,7 +3,6 @@ local system = require "system"
 local policy = require "policy"
 local event = require "event"
 local datalist = require "datalist"
-local serialize = import_package "ant.serialize"
 
 local world = {}
 world.__index = world
