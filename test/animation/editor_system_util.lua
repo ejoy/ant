@@ -4,8 +4,11 @@ local math3d = require "math3d"
 local assetmgr = import_package "ant.asset"
 local RES_IDX = 10080
 
+local renderpkg = import_package "ant.render"
+local computil = renderpkg.components
+
 local function euler2quat(euler)
-    return math3d.totable(math3d.quaternion(euler))
+    return math3d.tovalue(math3d.quaternion(euler))
 end
 
 local function line(start_pos, end_pos, color)
@@ -68,9 +71,9 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component:transform{
-                srt = mu.srt(size or {1, 1, 1}, euler2quat(rot or {0, 0, 0}), {0, 0, 0}),
-            },
+            transform = computil.create_transform(world,{
+                srt = {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
+            }),
             parent = parent,
             mesh = world.component:resource "/pkg/ant.resources/meshes/ring.mesh",
             material = world.component:resource (([[
@@ -107,7 +110,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component:transform {srt = mu.srt()},
+            transform = computil.create_transform(world),
             parent = parent,
             material = world.component:resource "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
@@ -146,9 +149,9 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component:transform{
-                srt = mu.srt(nil, euler2quat(rot or {0, 0, 0})),
-            },
+            transform = computil.create_transform(world,{
+                srt = {r = euler2quat(rot or {0, 0, 0})},
+            }),
             parent = parent,
             material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_line.material",
             name = name,
@@ -186,9 +189,9 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component:transform{
-                srt = mu.srt(size or {1, 1, 1}, euler2quat(rot or {0, 0, 0}), pos or {0, 0, 0}),
-            },
+            transform = computil.create_transform(world,{
+                srt = {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
+            }),
             parent = parent,
             mesh = world.component:resource"/pkg/ant.resources/meshes/cone.mesh",
             material = world.component:resource (([[
@@ -222,9 +225,9 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component:transform{
-                srt = mu.srt(size or {1}, euler2quat({0, 0, 0}), pos or {0, 0, 0}),
-            },
+            transform = computil.create_transform(world,{
+                srt = {s=size, t=pos},
+            }),
             parent = parent,
             mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
             material = world.component:resource (([[
@@ -251,7 +254,7 @@ end
 local Util = {}
 function Util.create_gizmo(world)
     local function create_gizmo_object(name,parent)
-        local trans = world.component:transform {srt = mu.srt()}
+        local trans = computil.create_transform(world)
         local args = {
             policy={
                 "ant.general|name",
