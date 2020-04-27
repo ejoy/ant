@@ -3,6 +3,7 @@ local lfs = require "filesystem.local"
 local vfs = require "vfs"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
+local stringify = import_package "ant.serialize".stringify
 local link = {}
 local cache = {}
 
@@ -24,9 +25,13 @@ end
 
 local function readfile(filename)
 	local f = assert(lfs.open(filename))
-	local str = f:read "a"
+	local data = f:read "a"
 	f:close()
-	return str
+	return data
+end
+
+local function readconfig(filename)
+    return datalist.parse(readfile(filename))
 end
 
 local function register(ext, compiler)
@@ -56,7 +61,7 @@ local function do_build(ext, pathname)
     if not lfs.exists(deppath) then
         return
     end
-	for _, dep in ipairs(datalist.parse(readfile(deppath))) do
+	for _, dep in ipairs(readconfig(deppath)) do
 		local timestamp, filename = dep[1], lfs.path(dep[2])
 		if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
 			return
@@ -76,7 +81,7 @@ end
 local function do_compile(ext, pathname, outpath)
     local info = link[ext]
     lfs.create_directory(outpath)
-    local ok, err, deps = info.compiler(readfile(info.binpath / ".config"), pathname,  outpath / "main.index", function (path)
+    local ok, err, deps = info.compiler(readconfig(info.binpath / ".config").identity, pathname,  outpath / "main.index", function (path)
         return fs.path(path):localpath()
     end)
     if not ok then
@@ -117,9 +122,9 @@ local function init()
     register("fx", fc.converter.fx)
     register("mesh", fc.converter.mesh)
     register("texture", fc.converter.texture)
-    set_config("fx", "win", hw.identity())
-    set_config("mesh", "win", hw.identity())
-    set_config("texture", "win", hw.identity())
+    set_config("fx", "win", stringify {identity=hw.identity()})
+    set_config("mesh", "win", stringify {identity=hw.identity()})
+    set_config("texture", "win", stringify {identity=hw.identity()})
 end
 
 return {

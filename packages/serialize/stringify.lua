@@ -21,14 +21,6 @@ local function sortpairs(t)
     end
 end
 
-local function copytable(t)
-    local res = {}
-    for k, v in pairs(t) do
-        res[k] = v
-    end
-    return res
-end
-
 local function isArray(v)
     return v[1] ~= nil
 end
@@ -138,10 +130,6 @@ end
 
 function stringify_value(n, prefix, v)
     if type(v) == "table" then
-        local mt = getmetatable(v)
-        if mt and mt.__component then
-            return stringify_value(n, prefix.." $"..mt.__component, v[1])
-        end
         local first_value = next(v)
         if first_value == nil then
             out[#out+1] = indent(n)..prefix..' {}'
@@ -157,54 +145,25 @@ function stringify_value(n, prefix, v)
     out[#out+1] = indent(n)..prefix.." "..stringify_basetype(v)
 end
 
-local function stringify_policy(n, policies)
-    local t = copytable(policies)
-    table.sort(t)
-    for _, p in ipairs(t) do
-        out[#out+1] = indent(n)..p
-    end
-end
-
-local function stringify_dataset(n, dataset)
-    for name, v in sortpairs(dataset) do
-        stringify_value(n, name..':', v)
-    end
-end
-
-local function stringify_entity(policies, dataset)
+local function stringify(data)
     out = {}
-    out[#out+1] = 'policy:'
-    stringify_policy(1, policies)
-    out[#out+1] = 'data:'
-    stringify_dataset(1, dataset)
-    out[#out+1] = ''
-    return table.concat(out, '\n')
-end
-
-local function stringify_map_(data)
-    out = {}
-    for k, v in sortpairs(data) do
-        stringify_value(0, k..":", v)
+    if isArray(data) then
+        local first_value = data[1]
+        if type(first_value) ~= "table" then
+            stringify_array_simple(0, "", data)
+            return
+        end
+        if isArray(first_value) then
+            stringify_array_array(0, data)
+            return
+        end
+        stringify_array_map(0, data)
+    else
+        for k, v in sortpairs(data) do
+            stringify_value(0, k..":", v)
+        end
     end
     return table.concat(out, '\n')
 end
 
-local function stringify_array_(data)
-    out = {}
-    local first_value = data[1]
-    if type(first_value) ~= "table" then
-        stringify_array_simple(0, "", data)
-        return
-    end
-    if isArray(first_value) then
-        stringify_array_array(0, data)
-        return
-    end
-    stringify_array_map(0, data)
-end
-
-return {
-    entity = stringify_entity,
-    map = stringify_map_,
-    array = stringify_array_,
-}
+return stringify
