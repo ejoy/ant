@@ -11,6 +11,7 @@ return {
         },
         system = {
             "ant.test.animation|init_loader_system",
+            "ant.test.animation|editor_operate_gizmo_system",
         }
     }
 }
