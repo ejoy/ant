@@ -1,3 +1,6 @@
+关于原始资源编译
+================
+
 资源编译结果放在项目的特定目录 _build 下：
 
 _build 目录按文件类型、平台编译配置、文件名做三层结构，保存实际的编译目标文件。
@@ -13,13 +16,18 @@ _build 目录按文件类型、平台编译配置、文件名做三层结构，�
 
 最终，编译目标的索引会放在：
 
-/_build/shader/win_HASH/foo_PATHHASH/main.index 下，其余文件会放在同一目录下。
-其中 /_build/shader/win_HASH/config 是该目录下所有文件共有的编译配置文件。
+> /_build/shader/win_HASH/foo_PATHHASH/main.index
+
+其余文件会放在同一目录下。
+
+其中 `/_build/shader/win_HASH/config` 是该目录下所有文件共有的编译配置文件。
 
 由于 PATHHASH 值往往过长，大多数情况下，我们并不需要太长的 HASH 防止冲突，所以，我们一开始只取 sha1 的前四个字母。当发生冲突的时候，增加一个字母的 PATHHASH ，直到不出现冲突。同时，main.index 文件中应该保存源文件完整的 path 串。
 
 一个典型的 main.index 大概是这样：
 
+```
 fullname : /path/foo.shader
 part1 : filename1
 part2 : filename2
+```
