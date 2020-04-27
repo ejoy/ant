@@ -10,12 +10,14 @@ function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
 	local ext = rp:extension():string():lower()
 	if self._link[ext] then
-		pathname = pathname:match "^/?(.-)/?$"
-		local realpath = access.link_loc(self, pathname)
-		if realpath == nil then
-			error(string.format("build from path failed, pathname:%s, log file can found in log folder", pathname))
-		end
-		return realpath:string()
+		local compile_resource = import_package "ant.compile_resource".compile
+		return compile_resource(rp)
+		--	pathname = pathname:match "^/?(.-)/?$"
+		--	local realpath = access.link_loc(self, pathname)
+		--	if realpath == nil then
+		--		error(string.format("build from path failed, pathname:%s, log file can found in log folder", pathname))
+		--	end
+		--	return realpath:string()
 	end
 	return rp:string()
 end
@@ -48,7 +50,7 @@ end
 function localvfs.new(path)
 	self = assert(repo.new(path))
 	self._parentpath = path
-	self:clean()
+	--self:clean()
 end
 
 function localvfs.reset(path)
@@ -94,6 +96,10 @@ function localvfs.unmount(name)
 			end
 		end
 	end
+end
+
+function localvfs.repo()
+	return self
 end
 
 package.loaded.vfs = localvfs

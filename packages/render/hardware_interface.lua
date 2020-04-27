@@ -72,6 +72,7 @@ function hw.init(args)
 	vfs.identity(".mesh",    hw.identity())
 	vfs.identity(".texture", hw.identity())
 	setting.init()
+	import_package "ant.compile_resource".init()
 end
 
 function hw.dpi()

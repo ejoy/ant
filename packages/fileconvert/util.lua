@@ -9,7 +9,7 @@ function util.identify_info(identity)
 end
 
 function util.write_embed_file(filepath, ...)
-    local f = lfs.open(filepath, "wb")
+    local f = assert(lfs.open(filepath, "wb"))
     f:write(thread.pack(...))
     f:close()
 end

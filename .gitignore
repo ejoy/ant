@@ -17,6 +17,7 @@
 .vs
 .repo
 _build
+.dep
 
 /clibs/shaderc[Rr]elease
 /clibs/shaderc[Dd]ebug
