@@ -22,7 +22,7 @@ function util.raw_table(filepath, fetchresult)
 end
 
 function util.fetch_file_content(filepath)
-    local f = fs.open(filepath)
+    local f = fs.open(filepath, "rb")
     local c = f:read "a"
     f:close()
     return c
