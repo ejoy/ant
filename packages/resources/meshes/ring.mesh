@@ -7,7 +7,11 @@ config:
     flip_uv: true
     ib_32: false
     invert_normal: false
-  layout: {p3}
+  layouts:
+    ---
+    format:p3
+    type: static
+
 mesh_path: /pkg/ant.resources.binary/meshes/base/ring.glb
 sourcetype: glb
 type: mesh

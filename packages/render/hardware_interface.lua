@@ -70,6 +70,7 @@ function hw.init(args)
 	local vfs = require "vfs"
 	vfs.identity(".fx",      hw.identity())
 	vfs.identity(".texture", hw.identity())
+	vfs.identity(".mesh",    hw.identity())
 	setting.init()
 end
 

@@ -7,8 +7,10 @@ config:
     flip_uv: true
     ib_32: false
     invert_normal: false
-  layout: {"p3|w4|i40NIi"}
-  layout_types: {dynamic, static}
+  layouts:
+    ---
+    format:"p3|w4|i40NIi"
+    type: dynamic
 mesh_path: /pkg/ant.resources.binary/meshes/simple_skin/simple_skin.glb
 sourcetype: glb
 type: mesh

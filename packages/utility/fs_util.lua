@@ -21,6 +21,13 @@ function util.raw_table(filepath, fetchresult)
 	return env
 end
 
+function util.fetch_file_content(filepath)
+    local f = fs.open(filepath)
+    local c = f:read "a"
+    f:close()
+    return c
+end
+
 local OS        = platform.OS
 local CWD       = fs.current_path()
 
