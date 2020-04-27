@@ -21,13 +21,7 @@ _build 目录按文件类型、平台编译配置、文件名做三层结构，�
 其余文件会放在同一目录下。
 
 其中 `/_build/shader/win_HASH/.config` 是该目录下所有文件共有的编译配置文件。
-而 `/_build/shader/win_HASH/foo_PATHHASH/.config` 则是对该目录的描述（下面解释）。
-
-由于 PATHHASH 值往往过长，大多数情况下，我们并不需要太长的 HASH 防止冲突，所以，我们一开始只取 sha1 的前四个字母。当发生冲突的时候，增加一个字母的 PATHHASH ，直到不出现冲突。
-
-同时，保存一个 .config 文件记录完整的目录名。
-
-一个 .config 大概是这样：
+而 `/_build/shader/win_HASH/foo_PATHHASH/.config` 则是对该目录的完整的目录名，大概是这样：
 
 ```
 fullname : /path/foo.shader

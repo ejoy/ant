@@ -213,20 +213,7 @@ function repo:rebuild()
 	return self:build()
 end
 
-function repo:clean()
-	if not lfs.exists(self._build) then
-		return
-	end
-	for hash in self._build:list_directory() do
-		for file in hash:list_directory() do
-			access.check_build(self, file)
-		end
-	end
-end
-
 function repo:build()
-	self:clean()
-
 	local cache = {}
 	self._namecache[''] = undef
 	local roothash = repo_build_dir(self, "", cache, self._namecache)
@@ -403,15 +390,6 @@ function repo:dir(hash)
 	end
 	f:close()
 	return { dir = dir, file = file }
-end
-
-function repo:link(path, hash)
-	local binhash, buildhash = access.link(self, path, hash)
-	if not binhash then
-		if _DEBUG then print ("LINKFAIL", path, hash) end
-		return
-	end
-	return binhash, buildhash
 end
 
 return repo
