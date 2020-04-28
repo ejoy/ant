@@ -2,8 +2,8 @@ local bgfx      = require "bgfx"
 local shadermgr = require "shader_mgr"
 local fs        = require "filesystem"
 local cr        = import_package "ant.compile_resource"
-local assetutil = cr.util
 local lfs       = require "filesystem.local"
+local thread    = require "thread"
 
 local function load_shader(shaderbin, filename)
     local h = bgfx.create_shader(shaderbin)
@@ -24,7 +24,7 @@ end
 return {
     loader = function (fxpath)
         local outpath = cr.compile(fs.path(fxpath):localpath())
-        local config = assetutil.read_embed_file(outpath / "main.index")
+        local config = thread.unpack(readfile(outpath / "main.index"))
         local shader = config.shader
         if shader.cs == nil then
             local vs = load_shader(readfile(outpath / "vs"), shader.vs)

@@ -1,6 +1,5 @@
 local lfs = require "filesystem.local"
 local thread = require "thread"
-local compile_resource = require "compile".compile
 
 local util = {}; util.__index = util
 
