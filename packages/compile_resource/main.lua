@@ -81,7 +81,7 @@ end
 local function do_compile(ext, pathname, outpath)
     local info = link[ext]
     lfs.create_directory(outpath)
-    local ok, err, deps = info.compiler(readconfig(info.binpath / ".config").identity, pathname,  outpath / "main.index", function (path)
+    local ok, err, deps = info.compiler(readconfig(info.binpath / ".config"), pathname,  outpath / "main.index", function (path)
         return fs.path(path):localpath()
     end)
     if not ok then
@@ -115,16 +115,36 @@ local function compile(pathname)
     return respath
 end
 
+local function load_fx_setting()
+    local renderpkg = import_package "ant.render"
+    local setting = renderpkg.setting.get()
+
+    return {
+        graphic = {
+            shadow = {
+                type = setting.graphic.shadow.type,
+            },
+            postprocess = {
+                bloom = {
+                    enable = setting.graphic.postprocess.bloom.enable,
+                }
+            }
+        }
+    }
+end
+
 --TODO
 local function init()
     local fc = import_package "ant.fileconvert"
-    local hw = import_package "ant.render".hwi
+    local renderpkg = import_package "ant.render"
+    local hw = renderpkg.hwi
     register("fx", fc.converter.fx)
     register("mesh", fc.converter.mesh)
     register("texture", fc.converter.texture)
-    set_config("fx", "win", stringify {identity=hw.identity()})
-    set_config("mesh", "win", stringify {identity=hw.identity()})
-    set_config("texture", "win", stringify {identity=hw.identity()})
+
+    set_config("fx", "win", stringify {identity=hw.identity(), setting=load_fx_setting()})
+    set_config("mesh", "win", stringify {identity=hw.identity(),})
+    set_config("texture", "win", stringify {identity=hw.identity(),})
 end
 
 return {

@@ -21,25 +21,25 @@ local valid_shader_stage = {
 	"vs", "fs", "cs"
 }
 
-local function need_linear_shadow(identity)
-	local plat, platinfo, renderer = util.identify_info(identity)
-	if plat == "ios" then
-		local a_series = platinfo:match "apple a(%d)"
-		if a_series then
-			return tonumber(a_series) <= 8
-		end
-	end
-end
+-- local function need_linear_shadow(identity)
+-- 	local plat, platinfo, renderer = util.identify_info(identity)
+-- 	if plat == "ios" then
+-- 		local a_series = platinfo:match "apple a(%d)"
+-- 		if a_series then
+-- 			return tonumber(a_series) <= 8
+-- 		end
+-- 	end
+-- end
 
-local function read_linkconfig(path, identity)
-	local os = util.identify_info(identity)
-	local settings = import_package "ant.settings".create(path, "r")
-	settings:use(os)
-	if settings:get 'graphic/shadow/type' ~= "linear" and need_linear_shadow(identity) then
-		settings:set('_'..os..'/graphic/shadow/type', 'linear')
-	end
-	return settings:data()
-end
+-- local function read_linkconfig(path, identity)
+-- 	local os = util.identify_info(identity)
+-- 	local settings = import_package "ant.settings".create(path, "r")
+-- 	settings:use(os)
+-- 	if settings:get 'graphic/shadow/type' ~= "linear" and need_linear_shadow(identity) then
+-- 		settings:set('_'..os..'/graphic/shadow/type', 'linear')
+-- 	end
+-- 	return settings:data()
+-- end
 
 local function add_macros_from_surface_setting(mysetting, surfacetype, macros)
 	macros = macros or {}
@@ -101,11 +101,11 @@ local function load_surface_type(fxcontent)
 	end
 end
 
-return function (identity, srcfilepath, outfilepath, localpath)
+return function (config, srcfilepath, outfilepath, localpath)
 	local fxcontent = fs_util.datalist(srcfilepath)
 	load_surface_type(fxcontent)
-	local mysetting	= read_linkconfig(localpath("settings"), identity)
-	local marcros 	= add_macros_from_surface_setting(mysetting, fxcontent.surface_type, fxcontent.macros)
+	local setting = config.setting
+	local marcros 	= add_macros_from_surface_setting(setting, fxcontent.surface_type, fxcontent.macros)
 
 	local messages = {}
 	local all_depends = {}
@@ -119,7 +119,7 @@ return function (identity, srcfilepath, outfilepath, localpath)
 		if stage_file then
 			local shader_srcpath = localpath(stage_file)
 			all_depends[shader_srcpath:string()] = shader_srcpath
-			local success, msg, depends = check_compile_shader(identity, shader_srcpath, outfilepath, marcros)
+			local success, msg, depends = check_compile_shader(config.identity, shader_srcpath, outfilepath, marcros)
 			build_success = build_success and success
 			messages[#messages+1] = msg
 
