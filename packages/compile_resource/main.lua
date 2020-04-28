@@ -129,7 +129,12 @@ local function load_fx_setting()
                     enable = setting.graphic.postprocess.bloom.enable,
                 }
             }
-        }
+        },
+        animation = {
+            skinning = {
+                type = "GPU", --setting.animtion.skinning.type
+            },
+        },
     }
 end
 

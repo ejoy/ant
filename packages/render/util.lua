@@ -69,8 +69,8 @@ local function update_properties(material, render_properties)
 	end
 end
 
-function util.draw_primitive(vid, primgroup, mat, render_properties)
-    bgfx.set_transform(mat)
+function util.draw_primitive(vid, primgroup, render_properties)
+    bgfx.set_transform(primgroup.worldmat)
 
 	local material = primgroup.material
 	bgfx.set_state(material.state)

@@ -136,7 +136,7 @@ function render_sys:render_commit()
 				local visibleset = result.visible_set.n and result.visible_set or result
 				for i=1, visibleset.n do
 					local prim = visibleset[i]
-					ru.draw_primitive(viewid, prim, prim.worldmat, render_properties)
+					ru.draw_primitive(viewid, prim, render_properties)
 				end
 			end
 

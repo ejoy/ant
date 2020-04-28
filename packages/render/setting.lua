@@ -15,9 +15,10 @@ local function is_hw_support_depth_sample()
     return true
 end
 
+local OS = platform.OS:lower()
+
 function m.init()
-    local os = platform.OS:lower()
-    settings:use(os)
+    settings:use(OS)
     if settings:get 'graphic/shadow/type' == 'inv_z' and not is_hw_support_depth_sample() then
         settings:set('_'..os..'/graphic/shadow/type', 'linear')
     end
@@ -25,6 +26,30 @@ end
 
 function m.get()
     return settings:data()
+end
+
+function m.rawtable(os)
+    os = os or OS
+    settings:use(OS)
+    local proxy = m.get()
+    local function deepcopy(t)
+        local r = {}
+        for k, v in pairs(t) do
+            local tt = type(v)
+            if tt == "table" then
+                r[k] = deepcopy(v)
+            elseif tt == "userdata" then
+                error("not support userdata")
+            else
+                r[k] = v
+            end
+        end
+
+        return r
+    end
+
+    return deepcopy(proxy)
+    
 end
 
 return m
