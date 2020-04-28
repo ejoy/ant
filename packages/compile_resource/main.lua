@@ -132,7 +132,7 @@ local function load_fx_setting()
         },
         animation = {
             skinning = {
-                type = "GPU", --setting.animtion.skinning.type
+                type = setting.animation.skinning.type
             },
         },
     }
