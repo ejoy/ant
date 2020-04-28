@@ -1,36 +1,73 @@
 local bgfx      = require "bgfx"
-local shadermgr = require "shader_mgr"
-local assetutil = import_package "ant.fileconvert".util
+local cr        = import_package "ant.compile_resource"
+local lfs       = require "filesystem.local"
+local thread    = require "thread"
 
-local function load_shader(shaderbin, filename)
-    local h = bgfx.create_shader(shaderbin)
-    bgfx.set_name(h, filename)
-    return {
-        handle = h,
-        uniforms = bgfx.get_shader_uniforms(h),
-    }
+local function uniform_info(uniforms, shader)
+    for _, h in ipairs(bgfx.get_shader_uniforms(shader)) do
+        local name, type, num = bgfx.get_uniform_info(h)
+        if uniforms[name] == nil then
+            uniforms[name] = { handle = h, name = name, type = type, num = num }
+        end
+    end
+end
+
+local function create_render_program(vs, fs)
+    local prog = bgfx.create_program(vs, fs, false)
+    if prog then
+        local uniforms = {}
+        uniform_info(uniforms, vs)
+        uniform_info(uniforms, fs)
+        return prog, uniforms
+    else
+        error(string.format("create program failed, vs:%d, fs:%d", vs, fs))
+    end
+end
+
+local function create_compute_program(cs)
+    local prog = bgfx.create_program(cs, false)
+    if prog then
+        local uniforms = {}
+        uniform_info(uniforms, cs)
+        return prog, uniforms
+    else
+        error(string.format("create program failed, cs:%d", cs))
+    end
+end
+
+local function readfile(filename)
+	local f = assert(lfs.open(filename, "rb"))
+	local data = f:read "a"
+	f:close()
+	return data
+end
+
+local function load_shader(path, name)
+    local h = bgfx.create_shader(readfile(path))
+    bgfx.set_name(h, name)
+    return h
+end
+
+local function loader(filename)
+    local outpath = cr.compile(filename)
+    local config = thread.unpack(readfile(outpath / "main.index"))
+    local shader = config.shader
+    if shader.cs == nil then
+        local vs = load_shader(outpath / "vs", shader.vs)
+        local fs = load_shader(outpath / "fs", shader.fs)
+        shader.prog, shader.uniforms = create_render_program(vs, fs)
+    else
+        local cs = load_shader(outpath / "cs", shader.cs)
+        shader.prog, shader.uniforms = create_compute_program(cs)
+    end
+    return config, 0
+end
+
+local function unloader(res)
+    bgfx.destroy(assert(res.shader.prog))
 end
 
 return {
-    loader = function (fxpath)
-        local config, shaderbins = assetutil.read_embed_file(fxpath)
-        local shader = config.shader
-        if shader.cs == nil then
-            local vs = load_shader(assert(shaderbins.vs), shader.vs)
-            local fs = load_shader(assert(shaderbins.fs), shader.fs)
-            shader.prog, shader.uniforms = shadermgr.create_render_program(vs, fs)
-        else
-            local cs = load_shader(shaderbins.cs, shader.cs)
-            shader.prog, shader.uniforms = shadermgr.create_compute_program(cs)
-            shader.csbin = nil
-        end
-        return config, 0
-    end,
-
-    unloader = function (res)
-        local shader = res.shader
-        bgfx.destroy(shader.prog)
-        res.shader = nil
-        res.surface_type = nil
-    end
+    loader = loader,
+    unloader = unloader,
 }

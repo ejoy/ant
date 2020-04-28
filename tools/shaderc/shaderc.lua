@@ -6,7 +6,7 @@
 ]]
 
 local fs = require "filesystem.local"
-local fvpkg = import_package "ant.fileconvert"
+local fvpkg = import_package "ant.compile_resource"
 local toolset = fvpkg.shader_toolset
 
 local macros
@@ -35,7 +35,7 @@ includes[#includes+1] = fs.current_path() / "packages/resources/shaders"
 local srcfile = fs.path(input)
 
 if srcfile:extension():string():lower() == ".fx" then
-	local success, msg = fvpkg.converter.fx(identity, srcfile, fs.path(output), function(filename)
+	local success, msg = fvpkg.compiler.fx(identity, srcfile, fs.path(output), function(filename)
 		local vfs = require "vfs"
 		return fs.path(vfs.realpath(filename))
 	end)

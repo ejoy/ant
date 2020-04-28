@@ -105,25 +105,21 @@ local function load_surface_type(fxcontent)
 	end
 end
 
-return function (config, srcfilepath, outfilepath, localpath)
+return function (config, srcfilepath, outpath, localpath)
 	local fxcontent = fs_util.datalist(srcfilepath)
 	load_surface_type(fxcontent)
 	local setting = config.setting
 	local marcros 	= add_macros_from_surface_setting(setting, fxcontent.surface_type, fxcontent.macros)
-
 	local messages = {}
 	local all_depends = {}
 	local build_success = true
-
-	local binarys = {}
-	
 	local shader 	= assert(fxcontent.shader)
 	for _, stagename in ipairs(valid_shader_stage) do
 		local stage_file = shader[stagename]
 		if stage_file then
 			local shader_srcpath = localpath(stage_file)
 			all_depends[shader_srcpath:string()] = shader_srcpath
-			local success, msg, depends = check_compile_shader(config.identity, shader_srcpath, outfilepath, marcros)
+			local success, msg, depends = check_compile_shader(config.identity, shader_srcpath, outpath / stagename, marcros)
 			build_success = build_success and success
 			messages[#messages+1] = msg
 
@@ -131,13 +127,12 @@ return function (config, srcfilepath, outfilepath, localpath)
 				for _, d in ipairs(depends) do
 					all_depends[d:string()] = d
 				end
-				binarys[stagename] = fs_util.fetch_file_content(outfilepath)
 			end
 		end
 	end
 
 	if build_success then
-		util.write_embed_file(outfilepath, fxcontent, binarys)
+		util.write_embed_file(outpath / "main.index", fxcontent)
 	end
 	return build_success, table.concat(messages, "\n"), depend_files(all_depends)
 end

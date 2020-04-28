@@ -8,11 +8,6 @@ local self
 
 function localvfs.realpath(pathname)
 	local rp = access.realpath(self, pathname)
-	local ext = rp:extension():string():lower()
-	if self._link[ext] then
-		local compile_resource = import_package "ant.compile_resource".compile
-		return compile_resource(rp)
-	end
 	return rp:string()
 end
 

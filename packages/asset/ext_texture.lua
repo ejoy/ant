@@ -1,5 +1,6 @@
-
-local assetutil = import_package "ant.fileconvert".util
+local fs        = require "filesystem"
+local cr        = import_package "ant.compile_resource"
+local assetutil = cr.util
 local renderpkg = import_package "ant.render"
 local ru 		= renderpkg.util
 local rhwi 		= renderpkg.hwi
@@ -13,7 +14,8 @@ end
 
 return {
 	loader = function (filename)
-		local config, binary = assetutil.read_embed_file(filename)
+        local outpath = cr.compile(filename)
+		local config, binary = assetutil.read_embed_file(outpath / "main.index")
 		local sampler = config.sampler
 		local flag = ru.generate_sampler_flag(sampler)
 		if config.colorspace == "sRGB" then
