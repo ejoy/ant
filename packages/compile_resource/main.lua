@@ -1,119 +1,4 @@
-local fs = require "filesystem"
-local lfs = require "filesystem.local"
-local vfs = require "vfs"
-local sha1 = require "hash".sha1
-local datalist = require "datalist"
-local stringify = import_package "ant.serialize".stringify
-local link = {}
-local cache = {}
-
-local function get_platname(name, config)
-    return name.."_"..sha1(config):sub(1,7)
-end
-
-local function get_filename(pathname)
-    local stem = pathname:stem():string()
-    local parent = pathname:parent_path():string()
-    return stem.."_"..sha1(parent)
-end
-
-local function writefile(filename, data)
-	local f = assert(lfs.open(filename, "wb"))
-	f:write(data)
-	f:close()
-end
-
-local function readfile(filename)
-	local f = assert(lfs.open(filename))
-	local data = f:read "a"
-	f:close()
-	return data
-end
-
-local function readconfig(filename)
-    return datalist.parse(readfile(filename))
-end
-
-local function register(ext, compiler)
-    link[ext] = {
-        compiler = compiler
-    }
-end
-
-local function set_config(ext, name, config)
-    local info = link[ext]
-    if not info then
-        error("invalid type: " .. ext)
-    end
-    local root = vfs.repo()._root
-    local plathash = get_platname(name, config)
-    info.name = name
-    info.binpath = root / "_build" / ext / plathash
-    info.deppath = root / ".dep" / ext / plathash
-	lfs.create_directories(info.binpath)
-	lfs.create_directories(info.deppath)
-    writefile(info.binpath / ".config", config)
-end
-
-local function do_build(ext, pathname)
-    local info = link[ext]
-    local deppath = info.deppath / (get_filename(pathname) .. ".dep")
-    if not lfs.exists(deppath) then
-        return
-    end
-	for _, dep in ipairs(readconfig(deppath)) do
-		local timestamp, filename = dep[1], lfs.path(dep[2])
-		if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
-			return
-		end
-	end
-	return true
-end
-
-local function create_depfile(filename, deps)
-    local w = {}
-    for _, file in ipairs(deps) do
-        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file), file:string())
-    end
-    writefile(filename, table.concat(w, "\n"))
-end
-
-local function do_compile(ext, pathname, outpath)
-    local info = link[ext]
-    lfs.create_directory(outpath)
-    local ok, err, deps = info.compiler(readconfig(info.binpath / ".config"), pathname,  outpath / "main.index", function (path)
-        return fs.path(path):localpath()
-    end)
-    if not ok then
-        error("compile failed: " .. pathname:string() .. "\n" .. err)
-    end
-    if deps then
-        table.insert(deps, 1, pathname)
-    else
-        deps = {pathname}
-    end
-    create_depfile(info.deppath / (get_filename(pathname) .. ".dep"), deps)
-end
-
-local function compile(pathname)
-    local ext = pathname:extension():string():sub(2):lower()
-    local pathstring = pathname:string()
-    local info = link[ext]
-    if not info then
-        return pathstring
-    end
-    local cachepath = cache[pathstring]
-    if cachepath then
-        return cachepath
-    end
-    local outpath = info.binpath / get_filename(pathname)
-    if not do_build(ext, pathname) or not lfs.exists(outpath) then
-        do_compile(ext, pathname, outpath)
-    end
-    local respath = (outpath / "main.index"):string()
-    cache[pathstring] = respath
-    return respath
-end
+local compile = require "compile"
 
 local function load_fx_setting()
     local renderpkg = import_package "ant.render"
@@ -133,23 +18,32 @@ local function load_fx_setting()
     }
 end
 
+local compiler = {
+	fx		= require "fx.compile",
+	mesh 	= require "mesh.convert",
+	texture = require "texture.convert",
+}
+
 --TODO
 local function init()
-    local fc = import_package "ant.fileconvert"
     local renderpkg = import_package "ant.render"
     local hw = renderpkg.hwi
-    register("fx", fc.converter.fx)
-    register("mesh", fc.converter.mesh)
-    register("texture", fc.converter.texture)
+    compile.register("fx", compiler.fx)
+    compile.register("mesh", compiler.mesh)
+    compile.register("texture", compiler.texture)
 
-    set_config("fx", "win", stringify {identity=hw.identity(), setting=load_fx_setting()})
-    set_config("mesh", "win", stringify {identity=hw.identity(),})
-    set_config("texture", "win", stringify {identity=hw.identity(),})
+    compile.set_config("fx", "win", {identity=hw.identity(), setting=load_fx_setting()})
+    compile.set_config("mesh", "win", {identity=hw.identity(),})
+    compile.set_config("texture", "win", {identity=hw.identity(),})
 end
 
 return {
     init = init,
-    register = register,
-    set_config = set_config,
-    compile = compile,
+    register = compile.register,
+    set_config = compile.set_config,
+    compile = compile.compile,
+    ------
+    util = require "util",
+	compiler = compiler,
+	shader_toolset = require "fx.toolset",
 }

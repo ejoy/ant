@@ -1,4 +1,4 @@
-local assetutil = import_package "ant.fileconvert".util
+local assetutil = import_package "ant.compile_resource".util
 local math3d = require "math3d"
 
 local function create_bounding(bounding)

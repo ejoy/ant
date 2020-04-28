@@ -1,5 +1,6 @@
 local lfs = require "filesystem.local"
 local thread = require "thread"
+local compile_resource = require "compile".compile
 
 local util = {}; util.__index = util
 
@@ -18,7 +19,9 @@ function util.read_embed_file(filepath)
     if type(filepath) == "string" then
         filepath = fs.path(filepath)
     end
-    local f <close> = fs.open(filepath, "rb")
+
+    local realpath = compile_resource(filepath:localpath())
+    local f <close> = lfs.open(lfs.path(realpath), "rb")
     if f == nil then
         error(string.format("could not open file:%s", filepath:string()))
         return

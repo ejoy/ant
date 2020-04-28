@@ -1,5 +1,5 @@
 
-local assetutil = import_package "ant.fileconvert".util
+local assetutil = import_package "ant.compile_resource".util
 local renderpkg = import_package "ant.render"
 local ru 		= renderpkg.util
 local rhwi 		= renderpkg.hwi
