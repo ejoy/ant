@@ -6,7 +6,7 @@ local util = require "util"
 
 return function (config, sourcefile, outpath, localpath)
 	local outfile = outpath / "main.index"
-	local meshcontent = fs_util.datalist(sourcefile)
+	local meshcontent = fs_util.datalist(sourcefile:localpath())
 	local meshpath = localpath(meshcontent.mesh_path)
 
 	local result = glb_cvt(meshpath:string(), meshcontent.config or def_config)
