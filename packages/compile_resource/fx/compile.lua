@@ -107,7 +107,7 @@ local function writefile(filename, data)
 end
 
 return function (config, srcfilepath, outpath, localpath)
-	local fxcontent = fs_util.datalist(srcfilepath)
+	local fxcontent = fs_util.datalist(srcfilepath:localpath())
 	load_surface_type(fxcontent)
 	local setting = config.setting
 	local marcros 	= add_macros_from_surface_setting(setting, fxcontent.surface_type, fxcontent.macros)
