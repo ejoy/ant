@@ -1,6 +1,7 @@
 local lfs 	= require "filesystem.local"
 local util  = require "util"
 
+local stringify = import_package "ant.serialize".stringify
 local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
 local fs_util = utilitypkg.fs_util
@@ -26,10 +27,6 @@ local function which_format(plat, param)
 	end
 
 	return param.format
-end
-
-local function outfile_extension(renderer)
-	return extensions[renderer]
 end
 
 local function add_option(commands, name, value)
@@ -98,11 +95,16 @@ end
 -- 	add_option(commands, nil, outfile:string())
 -- end
 
+local function writefile(filename, data)
+	local f = assert(lfs.open(filename, "wb"))
+	f:write(data)
+	f:close()
+end
+
 return function (config, sourcefile, outpath, localpath)
-	local outfile = outpath / "main.index"
-	local plat, platinfo, renderer = util.identify_info(config.identity)
-	local ext = assert(outfile_extension(renderer))
-	local tmpoutfile = lfs.path(outfile):replace_extension(ext)
+	local plat, _, renderer = util.identify_info(config.identity)
+	local ext = assert(extensions[renderer])
+	local binfile = (outpath / "main.bin"):replace_extension(ext)
 
 	local commands = {
 		toolpath:string(),
@@ -115,7 +117,7 @@ return function (config, sourcefile, outpath, localpath)
 	local texpath = localpath(assert(texcontent.path))
 
 	texcontent.format = assert(which_format(plat, texcontent))
-	gen_commands(plat, texcontent, texpath, tmpoutfile, commands)
+	gen_commands(plat, texcontent, texpath, binfile, commands)
 
 	local success, msg = subprocess.spawn_process(commands, function (info)
 		local success, msg = true, ""
@@ -128,13 +130,13 @@ return function (config, sourcefile, outpath, localpath)
 	end)
 
 	if success then
-		if lfs.exists(tmpoutfile) then
-			util.write_embed_file(outfile, texcontent, fs_util.fetch_file_content(tmpoutfile))
-			lfs.remove(tmpoutfile)
+		if lfs.exists(binfile) then
+			writefile(outpath / "main.texture", stringify(texcontent))
+			lfs.rename(binfile, outpath / "main.bin")
 			return success, msg
 		end
 
-		msg = msg .. "\nconvert texture return success, but not found file:" .. tmpoutfile:string()
+		msg = msg .. "\nconvert texture return success, but not found file:" .. binfile:string()
 	end
 
 	return false, msg

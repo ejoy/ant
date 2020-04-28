@@ -1,10 +1,10 @@
-local fs        = require "filesystem"
 local cr        = import_package "ant.compile_resource"
-local assetutil = cr.util
 local renderpkg = import_package "ant.render"
 local ru 		= renderpkg.util
 local rhwi 		= renderpkg.hwi
 local bgfx 		= require "bgfx"
+local lfs       = require "filesystem.local"
+local datalist  = require "datalist"
 
 local function texture_load(bin, texpath, info)
 	local h = bgfx.create_texture(bin, info)
@@ -12,10 +12,18 @@ local function texture_load(bin, texpath, info)
 	return h
 end
 
+local function readfile(filename)
+	local f = assert(lfs.open(filename, "rb"))
+	local data = f:read "a"
+	f:close()
+	return data
+end
+
 return {
 	loader = function (filename)
-        local outpath = cr.compile(filename)
-		local config, binary = assetutil.read_embed_file(outpath / "main.index")
+		local outpath = cr.compile(filename)
+		local config = datalist.parse(readfile(outpath / "main.texture"))
+		local binary = readfile(outpath / "main.bin")
 		local sampler = config.sampler
 		local flag = ru.generate_sampler_flag(sampler)
 		if config.colorspace == "sRGB" then

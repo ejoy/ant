@@ -1,7 +1,7 @@
 local bgfx      = require "bgfx"
 local cr        = import_package "ant.compile_resource"
 local lfs       = require "filesystem.local"
-local thread    = require "thread"
+local datalist  = require "datalist"
 
 local function uniform_info(uniforms, shader)
     for _, h in ipairs(bgfx.get_shader_uniforms(shader)) do
@@ -50,7 +50,7 @@ end
 
 local function loader(filename)
     local outpath = cr.compile(filename)
-    local config = thread.unpack(readfile(outpath / "main.index"))
+    local config = datalist.parse(readfile(outpath / "main.fx"))
     local shader = config.shader
     if shader.cs == nil then
         local vs = load_shader(outpath / "vs", shader.vs)
