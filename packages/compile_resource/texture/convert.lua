@@ -98,7 +98,8 @@ end
 -- 	add_option(commands, nil, outfile:string())
 -- end
 
-return function (config, sourcefile, outfile, localpath)
+return function (config, sourcefile, outpath, localpath)
+	local outfile = outpath / "main.index"
 	local plat, platinfo, renderer = util.identify_info(config.identity)
 	local ext = assert(outfile_extension(renderer))
 	local tmpoutfile = lfs.path(outfile):replace_extension(ext)

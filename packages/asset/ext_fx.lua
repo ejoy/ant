@@ -1,6 +1,9 @@
 local bgfx      = require "bgfx"
 local shadermgr = require "shader_mgr"
-local assetutil = import_package "ant.compile_resource".util
+local fs        = require "filesystem"
+local cr        = import_package "ant.compile_resource"
+local assetutil = cr.util
+local lfs       = require "filesystem.local"
 
 local function load_shader(shaderbin, filename)
     local h = bgfx.create_shader(shaderbin)
@@ -11,16 +14,24 @@ local function load_shader(shaderbin, filename)
     }
 end
 
+local function readfile(filename)
+	local f = assert(lfs.open(filename, "rb"))
+	local data = f:read "a"
+	f:close()
+	return data
+end
+
 return {
     loader = function (fxpath)
-        local config, shaderbins = assetutil.read_embed_file(fxpath)
+        local outpath = cr.compile(fs.path(fxpath):localpath())
+        local config = assetutil.read_embed_file(outpath / "main.index")
         local shader = config.shader
         if shader.cs == nil then
-            local vs = load_shader(assert(shaderbins.vs), shader.vs)
-            local fs = load_shader(assert(shaderbins.fs), shader.fs)
+            local vs = load_shader(readfile(outpath / "vs"), shader.vs)
+            local fs = load_shader(readfile(outpath / "fs"), shader.fs)
             shader.prog, shader.uniforms = shadermgr.create_render_program(vs, fs)
         else
-            local cs = load_shader(shaderbins.cs, shader.cs)
+            local cs = load_shader(readfile(outpath / "cs"), shader.cs)
             shader.prog, shader.uniforms = shadermgr.create_compute_program(cs)
             shader.csbin = nil
         end

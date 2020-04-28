@@ -82,7 +82,7 @@ end
 local function do_compile(ext, pathname, outpath)
     local info = link[ext]
     lfs.create_directory(outpath)
-    local ok, err, deps = info.compiler(readconfig(info.binpath / ".config"), pathname,  outpath / "main.index", function (path)
+    local ok, err, deps = info.compiler(readconfig(info.binpath / ".config"), pathname,  outpath, function (path)
         return fs.path(path):localpath()
     end)
     if not ok then
@@ -111,9 +111,8 @@ local function compile(pathname)
     if not do_build(ext, pathname) or not lfs.exists(outpath) then
         do_compile(ext, pathname, outpath)
     end
-    local respath = (outpath / "main.index"):string()
-    cache[pathstring] = respath
-    return respath
+    cache[pathstring] = outpath
+    return outpath
 end
 
 return {

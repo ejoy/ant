@@ -4,7 +4,8 @@ local utilitypkg = import_package "ant.utility"
 local fs_util = utilitypkg.fs_util
 local util = require "util"
 
-return function (config, sourcefile, outfile, localpath)
+return function (config, sourcefile, outpath, localpath)
+	local outfile = outpath / "main.index"
 	local meshcontent = fs_util.datalist(sourcefile)
 	local meshpath = localpath(meshcontent.mesh_path)
 

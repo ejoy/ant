@@ -15,13 +15,7 @@ function util.write_embed_file(filepath, ...)
 end
 
 function util.read_embed_file(filepath)
-    local fs = require "filesystem"
-    if type(filepath) == "string" then
-        filepath = fs.path(filepath)
-    end
-
-    local realpath = compile_resource(filepath:localpath())
-    local f <close> = lfs.open(lfs.path(realpath), "rb")
+    local f <close> = lfs.open(filepath, "rb")
     if f == nil then
         error(string.format("could not open file:%s", filepath:string()))
         return
