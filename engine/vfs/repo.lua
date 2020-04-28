@@ -72,7 +72,6 @@ function repo.new(rootpath, parentpath)
 		_mountpoint = mountpoint,
 		_root = rootpath,
 		_repo = repopath,
-		_build = rootpath / "_build",
 		_cache = cachepath,
 		_namecache = {},
 		_link = {},

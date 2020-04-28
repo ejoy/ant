@@ -49,7 +49,7 @@ local function set_config(ext, name, config)
     local root = vfs.repo()._root
     local plathash = get_platname(name, config)
     info.name = name
-    info.binpath = root / "_build" / ext / plathash
+    info.binpath = root / ".build" / ext / plathash
     info.deppath = root / ".dep" / ext / plathash
 	lfs.create_directories(info.binpath)
 	lfs.create_directories(info.deppath)

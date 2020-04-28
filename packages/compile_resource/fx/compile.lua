@@ -1,9 +1,8 @@
 local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
-local util 		= require "util"
-
+local stringify = import_package "ant.serialize".stringify
 local utilitypkg = import_package "ant.utility"
-local fs_util = utilitypkg.fs_util
+local fs_util    = utilitypkg.fs_util
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
 local function check_compile_shader(identity, srcfilepath, outfilepath, macros)
@@ -101,6 +100,12 @@ local function load_surface_type(fxcontent)
 	end
 end
 
+local function writefile(filename, data)
+	local f = assert(lfs.open(filename, "wb"))
+	f:write(data)
+	f:close()
+end
+
 return function (config, srcfilepath, outpath, localpath)
 	local fxcontent = fs_util.datalist(srcfilepath)
 	load_surface_type(fxcontent)
@@ -128,7 +133,7 @@ return function (config, srcfilepath, outpath, localpath)
 	end
 
 	if build_success then
-		util.write_embed_file(outpath / "main.index", fxcontent)
+		writefile(outpath / "main.fx", stringify(fxcontent))
 	end
 	return build_success, table.concat(messages, "\n"), depend_files(all_depends)
 end

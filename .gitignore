@@ -16,8 +16,9 @@
 .vscode
 .vs
 .repo
-_build
+.build
 .dep
+_build
 
 /clibs/shaderc[Rr]elease
 /clibs/shaderc[Dd]ebug
