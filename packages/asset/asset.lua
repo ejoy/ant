@@ -14,13 +14,11 @@ end
 
 local support_ext = {
 	fx        = true,
-	hierarchy = true,
 	material  = true,
 	mesh      = true,
 	ozz       = true,
 	pbrm      = true,
 	state     = true,
-	terrain   = true,
 	texture   = true,
 
 	--
