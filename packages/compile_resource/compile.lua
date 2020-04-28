@@ -96,7 +96,8 @@ local function do_compile(ext, pathname, outpath)
     create_depfile(info.deppath / (get_filename(pathname) .. ".dep"), deps)
 end
 
-local function compile(pathname)
+local function compile(filename)
+    local pathname = fs.path(filename):localpath()
     local ext = pathname:extension():string():sub(2):lower()
     local pathstring = pathname:string()
     local info = link[ext]

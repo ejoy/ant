@@ -22,8 +22,8 @@ local function readfile(filename)
 end
 
 return {
-    loader = function (fxpath)
-        local outpath = cr.compile(fs.path(fxpath):localpath())
+    loader = function (filename)
+        local outpath = cr.compile(filename)
         local config = thread.unpack(readfile(outpath / "main.index"))
         local shader = config.shader
         if shader.cs == nil then

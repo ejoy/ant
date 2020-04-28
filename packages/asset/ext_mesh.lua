@@ -11,7 +11,7 @@ end
 
 return {
 	loader = function (filename)
-        local outpath = cr.compile(fs.path(filename):localpath())
+        local outpath = cr.compile(filename)
 		local meshscene = assetutil.read_embed_file(outpath / "main.index")
 		for _, scene in pairs(meshscene.scenes) do
 			for _, meshnode in pairs(scene) do

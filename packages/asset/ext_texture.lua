@@ -14,7 +14,7 @@ end
 
 return {
 	loader = function (filename)
-        local outpath = cr.compile(fs.path(filename):localpath())
+        local outpath = cr.compile(filename)
 		local config, binary = assetutil.read_embed_file(outpath / "main.index")
 		local sampler = config.sampler
 		local flag = ru.generate_sampler_flag(sampler)
