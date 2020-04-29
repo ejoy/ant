@@ -55,9 +55,6 @@ policy "render"
     .component "transform"
     .component "scene_entity"
 
-policy "rendermesh"
-    .require_transform "create_rendermesh"
-
 transform "create_rendermesh"
     .implement "render.lua"
     .output "rendermesh"
