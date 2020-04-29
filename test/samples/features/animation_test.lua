@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local serializeutil = import_package "ant.serialize"
 
 local anitest_sys = ecs.system "animation_test_system"
 
@@ -19,7 +18,6 @@ local function ozzmesh_animation_test()
             "ant.animation|animation",
             "ant.animation|animation_controller.birth",
             "ant.animation|ozz_skinning",
-            "ant.serialize|serialize",
             "ant.general|name",
             "ant.render|shadow_cast_policy",
             "ant.character|character",
@@ -39,7 +37,6 @@ local function ozzmesh_animation_test()
             skeleton = world.component:resource '/pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz',
             mesh = world.component:resource '/pkg/ant.resources.binary/meshes/ozz/mesh.ozz',
             name = 'animation_sample',
-            serialize = serializeutil.create(),
             collider = world.component:collider {
                 capsule = {
                     world.component:capsule_shape {

@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local serialize = import_package "ant.serialize"
-
 local math3d = require "math3d"
 
 local terrain_test_sys = ecs.system "terrain_test_system"
@@ -16,7 +14,6 @@ function terrain_test_sys:init()
 			"ant.terrain|terrain_policy",
 			"ant.general|name",
 			"ant.collision|collider_policy",
-			"ant.serialize|serialize",
 		},
 		data = {
 			material = world.component:resource "/pkg/ant.resources/terrain/test.material",
@@ -37,7 +34,6 @@ function terrain_test_sys:init()
 			},
 			scene_entity = true,
 			name = "terrain_test_sys",
-			serialize = serialize.create(),
 		}
 	}
 

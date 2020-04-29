@@ -4,8 +4,6 @@ local fs = require "filesystem"
 
 local assetmgr = import_package "ant.asset"
 
-local serializeutil = import_package "ant.serialize"
-
 local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
@@ -21,7 +19,6 @@ local function create_pbr_entity(world,
             "ant.render|render",
             "ant.render|mesh",
             "ant.general|name",
-            "ant.serialize|serialize",
             "ant.objcontroller|select",
         },
         data = {
@@ -31,7 +28,6 @@ local function create_pbr_entity(world,
             mesh = sphere_mesh,
             can_render = true,
             can_select = true,
-            serialize = serializeutil.create(),
             scene_entity = true,
         }
     }

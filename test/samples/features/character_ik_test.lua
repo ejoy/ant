@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
 
 local mathpkg   = import_package "ant.math"
@@ -19,7 +18,6 @@ local function foot_ik_test()
 
     return world:create_entity {
         policy = {
-            "ant.serialize|serialize",
             "ant.render|render",
             "ant.animation|animation",
             "ant.animation|animation_controller.birth",
@@ -113,7 +111,6 @@ local function foot_ik_test()
                     }
                 }
             },
-            serialize = serialize.create(),
             name = "foot_ik_test",
             can_cast = true,
             can_render = true,

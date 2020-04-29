@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 local WatcherEvent = require "hub_event"
-local serialize = import_package 'ant.serialize'
 local fs = require "filesystem"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util

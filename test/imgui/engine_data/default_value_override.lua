@@ -7,12 +7,7 @@ local policies = {
     --     }        
     -- }
 }
-local components = setmetatable({
-    serialize = function()
-        local seriazlizeutil= import_package "ant.serialize"
-        return seriazlizeutil.create()
-    end,
-},{__index = default_component_value})
+local components = setmetatable({},{__index = default_component_value})
 return {
     policies = policies,
     components = components,

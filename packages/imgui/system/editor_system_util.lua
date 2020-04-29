@@ -97,7 +97,6 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             can_select = true,
             gizmo_object = {dir = dir},
             scene_entity = true,
-            --serialize = serializeutil.create(),
         },
     }
 end
@@ -282,7 +281,6 @@ end
 --     }
 -- }
 function Util.create_gizmo(world)
-    local serializeutil = import_package "ant.serialize"
     local function create_gizmo_object(name,parent,ignore_scale)
         local trans = world.component:transform {srt = mu.srt()}
         -- trans.parent = parent and world[parent].serialize or nil
@@ -291,12 +289,10 @@ function Util.create_gizmo(world)
                 "ant.general|name",
                 "ant.scene|hierarchy_policy",
                 "ant.imgui|gizmo_object",
-                "ant.serialize|serialize",
             },
             data={
                 transform = trans,
                 name = name,
-                serialize = serializeutil.create(),
                 gizmo_object = {},
                 -- can_select = true,
                 parent = parent,

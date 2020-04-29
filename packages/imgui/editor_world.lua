@@ -2,26 +2,12 @@ local DEBUG_ALL_SERIALIZE = true
 
 local function gen_editor_world(base_world)
     local datalist = require "datalist"
-    local serialize = import_package 'ant.serialize'
 
     local editor_world = {}
 	
 	function editor_world:register_entity(policies, dataset)
         if DEBUG_ALL_SERIALIZE then
-            local h = false
-            for _,p in ipairs(policies) do
-                if p == "ant.serialize|serialize" then
-                    h = true
-                    break
-                end
-            end
-            if not h then
-                table.insert(policies,"ant.serialize|serialize")
-            end
             dataset = dataset or {}
-            if not dataset["serialize"] then
-                dataset["serialize"] = serialize.create()
-            end
         end
         ---test code
         if dataset.serialize then
@@ -67,10 +53,6 @@ local function gen_editor_world(base_world)
             local d = datalist.parse(t)
             return self:instantiate_entity({policy=d[1],data=d[2]})
         elseif type(t) == 'table' then -- {policy={},data={}}
-            local component = t.data
-            if component and component.serialize then
-                component.serialize = serialize.create()
-            end
             return self:create_entity(t)
         else
             log.error("Instantiate_entity support str/tbl only")

@@ -4,7 +4,6 @@ policy:
   ant.general|name
   ant.render|render
   ant.render|shadow_cast_policy
-  ant.serialize|serialize
 data:
   can_cast: true
   can_render: true
@@ -17,7 +16,6 @@ data:
   material: $resource /pkg/ant.resources/PVPScene/scene-mat.material
   mesh: $resource /pkg/ant.resources/PVPScene/woodother-34.mesh
   name: door
-  serialize: 5e1d2628369fa9fc11d5504d
   transform: $transform
     srt:
       s: $vector {-1,1,-1,0}

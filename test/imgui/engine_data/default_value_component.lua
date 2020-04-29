@@ -128,7 +128,6 @@ return {
 	},
 	boolean = false,
 	light = "",
-	serialize = nil,
 	viewport = {
 		rect = {
 			w = 1,
