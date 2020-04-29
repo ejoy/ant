@@ -1,4 +1,4 @@
-local config = {
+return {
     --[[
         layout element inlcude 6 char, like : n30nif
         first char is attribute type, includes:
@@ -24,7 +24,8 @@ local config = {
         layout string can be used to create bgfx_vertex_layout_t
     ]]
     layout = {
-        "p3|n30nIf|T|b|t20|c40",
+        {format = "p3|n30nIf|T|b",  type = "dynamic"},
+        {fotmat = "t20|c40",        type = "static"},
     },
     flags = {
         invert_normal   = false,
@@ -34,7 +35,5 @@ local config = {
     animation = {
         load_skeleton   = true,
         ani_list        = "all",    -- or {"walk", "stand"}
-        cpu_skinning    = false,
     },
 }
-return config

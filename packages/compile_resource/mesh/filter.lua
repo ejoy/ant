@@ -109,20 +109,19 @@ function filtermesh.dupicate_node(node)
 	return n
 end
 
-local function build_parent_tree(meshscene)
+function filtermesh.build_scene_tree(scene, scenenodes)
 	local tree = {}
-	local function build_parent_tree2(scenenodes, parentidx)
-		for _, nodeidx in ipairs(scenenodes) do
-			local node = meshscene.nodes[nodeidx+1]
+	local function build_tree(nodes, parentidx)
+		for _, nodeidx in ipairs(nodes) do
+			local node = scenenodes[nodeidx+1]
 			if node.children then
-				build_parent_tree2(node.children, nodeidx)
+				build_tree(node.children, nodeidx)
 			end
 	
 			tree[nodeidx] = parentidx
 		end
 	end
-	local sceneidx = meshscene.scene or 0
-	build_parent_tree2(meshscene.scenes[sceneidx+1].nodes)
+	build_tree(scene.nodes)
 	return tree
 end
 
@@ -367,12 +366,13 @@ end
 function filtermesh.filter_scene(scene, bin)
 	redirect_skin_joints(scene)
 
-	local parent_tree 			= build_parent_tree(scene)
-	local rootnodes, newnodes 	= fetch_nodes_relate_to_mesh(scene, parent_tree)
+	local sceneidx 				= scene.scene or 0
+	local scenetree 			= filtermesh.build_scene_tree(scene.scenes[sceneidx + 1], scene.nodes)
+	local rootnodes, newnodes 	= fetch_nodes_relate_to_mesh(scene, scenetree)
 
 	--assert(scene.scene == 0)
 	local newscene = {
-		scene = scene.scene or 0,
+		scene = sceneidx,
 		scenes = {
 			{nodes = rootnodes},
 		},
