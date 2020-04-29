@@ -756,7 +756,7 @@ parse_converter(lua_State *L, struct lex_state *LS, int layer, int ident) {
 		if (ident < 0)
 			invalid(L, LS, "Invalid newline , Use { } for a struct instead");
 		int next_ident = token_length(&LS->c);
-		if (next_ident <= ident) {
+		if (next_ident < ident) {
 			invalid(L, LS, "Invalid new section ident");
 		}
 		new_table(L, layer+1, 0);
@@ -772,7 +772,7 @@ parse_converter(lua_State *L, struct lex_state *LS, int layer, int ident) {
 		parse_bracket(L, LS, layer, 0);
 		break;
 	case TOKEN_CONVERTER:
-		parse_converter(L, LS, layer, ident);
+		parse_converter(L, LS, layer, ident+1);
 		break;
 	default:
 		push_token(L, LS, &LS->c);
@@ -837,7 +837,7 @@ parse_section_map(lua_State *L, struct lex_state *LS, int ident, int layer) {
 			parse_bracket(L, LS, layer+1, tag);
 			break;
 		case TOKEN_CONVERTER:
-			parse_converter(L, LS, layer+1, ident);
+			parse_converter(L, LS, layer+1, ident+1);
 			break;
 		case TOKEN_NEWLINE: {
 			int next_ident = token_length(&LS->c);
@@ -875,7 +875,7 @@ parse_section_sequence(lua_State *L, struct lex_state *LS, int ident, int layer)
 			parse_bracket(L, LS, layer+1, 0);
 			break;
 		case TOKEN_CONVERTER:
-			parse_converter(L, LS, layer+1, ident);
+			parse_converter(L, LS, layer+1, ident+1);
 			break;
 		case TOKEN_LIST:
 			// end of this section
