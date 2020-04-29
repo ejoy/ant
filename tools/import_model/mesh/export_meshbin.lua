@@ -323,7 +323,7 @@ local function export_meshbin(gltfscene, bindata, config)
 	end
 
 	local def_sceneidx = gltfscene.scene+1
-	meshscene.default_scene = get_obj_name(gltfscene.scenes[def_sceneidx], def_sceneidx, "scene")
+	meshscene.scene = get_obj_name(gltfscene.scenes[def_sceneidx], def_sceneidx, "scene")
 	return meshscene
 end
 

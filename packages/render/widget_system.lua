@@ -70,7 +70,7 @@ local function append_buffers(vb, ib)
 	end
 	local dmesh = world:singleton_entity "widget_drawer"
 	local meshscene = dmesh.rendermesh
-	local scene = meshscene.scenes[meshscene.default_scene]
+	local scene = meshscene.scenes[meshscene.scene]
 	local _, meshnode = next(scene)
 	local group = meshnode[1]
 

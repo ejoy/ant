@@ -101,7 +101,7 @@ function trt.process(e, eid)
 	local terraindata = terraincomp._data
 
 	local meshscene = {
-		default_scene = "sceneroot",
+		scene = "sceneroot",
 	}
 
 	local gridwidth, gridheight = iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp)

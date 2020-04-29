@@ -66,7 +66,7 @@ local function invisible() end
 local function cache_material(rendermesh, materialcomp)
 	local cache = {}
 	local meshscene = rendermesh
-	local scene = meshscene.scenes[meshscene.default_scene]
+	local scene = meshscene.scenes[meshscene.scene]
 	local n = 0
 
 	for _, meshnode in pairs(scene) do

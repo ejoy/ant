@@ -14,7 +14,7 @@ end
 
 local function create_mesh_buffers(meshres)
 	local meshscene = {
-		default_scene = meshres.default_scene,
+		scene = meshres.scene,
         scenelods = meshres.scenelods,
         scenescale = meshres.scenescale,
 	}

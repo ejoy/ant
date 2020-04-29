@@ -85,7 +85,7 @@ local function gen_mesh_assetinfo(ozzmesh)
 	local ibm_pointer, ibm_count = ozzmesh:inverse_bind_matrices()
 	local joint_remapp_pointer, count = ozzmesh:joint_remap()
 	return {
-		default_scene = "sceneroot",
+		scene = "sceneroot",
 		scenes = {
 			sceneroot = {
 				meshnode = {
@@ -137,8 +137,8 @@ function ozzmesh_skinning_transform.process(e, eid)
 
 	world:add_component(eid, "skinning", {})
 
-	local scene = patch_dynamic_buffer(meshres, meshscene.scenes[meshscene.default_scene])
-	meshscene.scenes[meshscene.default_scene] = scene
+	local scene = patch_dynamic_buffer(meshres, meshscene.scenes[meshscene.scene])
+	meshscene.scenes[meshscene.scene] = scene
 
 	local _, meshnode = next(scene)
 

@@ -35,7 +35,7 @@ end
 
 function util.assign_group_as_mesh(group)
 	return {
-		default_scene = "sceneroot",
+		scene = "sceneroot",
 		scenes = {
 			sceneroot = {
 				meshnode = {
@@ -190,7 +190,7 @@ value:
 	}
 
 	local meshscene = assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres())
-	local selectscene = meshscene.scenes[meshscene.default_scene]
+	local selectscene = meshscene.scenes[meshscene.scene]
 	local _, meshnode = next(selectscene)
 	meshnode.bounding = {
 		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
@@ -391,11 +391,11 @@ end
 
 function util.check_rendermesh_lod(meshscene, lod_scene)
 	if meshscene.scenelods then
-		if meshscene.scenelods[meshscene.default_scene] == nil then
-			log.warn("not found scene from scenelods", meshscene.default_scene)
+		if meshscene.scenelods[meshscene.scene] == nil then
+			log.warn("not found scene from scenelods", meshscene.scene)
 		end
 	else
-		if meshscene.default_scene ~= lod_scene then
+		if meshscene.scene ~= lod_scene then
 			log.warn("default lod scene is not equal to lodidx")
 		end
 	end
@@ -405,7 +405,7 @@ function util.entity_bounding(entity)
 	if util.is_entity_visible(entity) then
 		local meshscene = entity.rendermesh
 		local etrans = entity.transform.srt
-		local scene = meshscene.scenes[meshscene.default_scene]
+		local scene = meshscene.scenes[meshscene.scene]
 		local aabb = math3d.aabb()
 		for _, mn in pairs(scene)	do
 			local localtrans = mn.transform
