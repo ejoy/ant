@@ -1,0 +1,25 @@
+policy:
+    ant.render|render
+    ant.render|mesh
+    ant.animation|animation
+    ant.animation|skinning
+    ant.animation|animation_controller.birth
+    ant.render|shadow_cast_policy
+    ant.general|name
+data:
+    transform: $transform
+        srt: $srt
+            t: {-5, 0, 0, 1}
+    mesh: $resource /pkg/ant.resources/meshes/female.mesh
+    material: $resource /pkg/ant.resources/materials/skin_model_sample.material
+    skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
+    animation:
+        anilist:
+            idle: $resource /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+    animation_birth: idle
+    can_render: true
+    scene_entity: true
+    can_cast: true
+    name: gltf_animation_sample
+    character:
+        movespeed: 1.0

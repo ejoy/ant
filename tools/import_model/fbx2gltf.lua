@@ -1,10 +1,10 @@
 local fs = require "filesystem.local"
 
 local subprocess = require "utility.sb_util"
-local fsutil = require "utility.fs_util"
+local fs_local = require "utility.fs_local"
 
 local function convert(filename)
-	local toolexe = fsutil.valid_tool_exe_path "FBX2glTF-windows-x64"
+	local toolexe = fs_local.valid_tool_exe_path "FBX2glTF-windows-x64"
 	local outfile = fs.path(filename):replace_extension("")	-- should not pass filename with extension, just filename without any extension
 	local commands = {
 		toolexe:string(),

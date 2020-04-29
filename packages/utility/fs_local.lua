@@ -2,6 +2,7 @@ local fs_util = require "fs_util"
 local u = setmetatable({}, fs_util)
 
 local fs = require "filesystem.local"
+local platform = require "platform"
 
 function u.list_files(subpath, filter, excludes)
 	local prefilter = {}
@@ -44,6 +45,70 @@ function u.write_file(filepath, c)
     local f = fs.open(filepath, "wb")
     f:write(c)
     f:close()
+end
+
+local OS = platform.OS
+local vspath    = "projects/msvc/vs_bin"
+
+local function is_msvc()
+    -- TODO
+    return package.cpath:match 'projects[\\/]msvc[\\/]vs_bin' ~= nil
+end
+
+local function which_platfrom_type()
+    if OS == "Windows" then
+        return is_msvc() and "msvc" or "mingw"
+    else
+        return "osx"
+    end
+end
+local plattype = which_platfrom_type()
+
+local toolsuffix = OS == "OSX" and "" or ".exe"
+
+local function to_execute_path(pathname)
+    local CWD       = fs.current_path()
+    return CWD / (pathname .. toolsuffix)
+end
+
+local function tool_paths(toolbasename)
+    local toolnameDebug = toolbasename .. "Debug"
+    local toolnameRelease = toolbasename .. "Release"
+    local function to_binpath(name)
+        return "bin/" .. plattype .. "/" .. name
+    end
+
+    if plattype == "msvc" then
+        return {
+            vspath .. "/Release/" .. toolnameRelease,
+            vspath .. "/Debug/" .. toolnameDebug,
+            vspath .. "/Release/" .. toolbasename,
+            vspath .. "/Debug/" .. toolbasename,
+            to_binpath(toolbasename),
+        }
+    end
+
+    return {
+        "clibs/" .. toolbasename,
+        "clibs/" .. toolnameRelease,
+        "clibs/" .. toolnameDebug,
+        to_binpath(toolnameRelease),
+        to_binpath(toolnameDebug),
+        to_binpath(toolbasename),
+    }
+end
+
+function u.valid_tool_exe_path(toolname)
+    local toolpaths = tool_paths(toolname)
+
+    for _, name in ipairs(toolpaths) do
+        local exepath = to_execute_path(name)
+        if fs.exists(exepath) then
+            return exepath
+        end
+    end
+
+    error(string.format("not found any valid texturec path. update bin folder or compile from 3rd/bgfx [texturec] project"))
 end
 
 return u

@@ -77,27 +77,9 @@ local function pbr_spheres()
     end
 end
 
+local entitydir = fs.path "/pkg/ant.test.feature/assets/entities"
+
 function pbr_test_sys:init()
-    world:create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.render|mesh",
-            "ant.render|shadow_cast_policy",
-            "ant.general|name",
-        },
-        data = {
-            transform = world.component:transform {
-                srt = world.component:srt {t={3, 2, 0, 1}}
-            },
-            mesh = world.component:resource "/pkg/ant.test.features/assets/DamagedHelmet.mesh",
-            material = world.component:resource "/pkg/ant.test.features/assets/DamagedHelmet.pbrm",
-            can_render = true,
-            can_cast = true,
-            scene_entity = true,
-            name = "Damaged Helmet"
-        }
-
-    }
-
+    world:create_entity(entitydir / "DamagedHelmet.txt")
     pbr_spheres()
 end

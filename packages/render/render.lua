@@ -10,7 +10,9 @@ local math3d	= require "math3d"
 local assetmgr  = import_package "ant.asset"
 
 ecs.component "rendermesh" {}
-
+-- ecs.component "mesh"
+-- .res "resource"
+-- .ref "string"
 ecs.component_alias("mesh", "resource")
 
 local ml = ecs.transform "mesh_loader"

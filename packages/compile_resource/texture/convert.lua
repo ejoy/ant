@@ -4,9 +4,9 @@ local util  = require "util"
 local stringify = import_package "ant.serialize".stringify
 local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
-local fs_util = utilitypkg.fs_util
+local fs_local = utilitypkg.fs_local
 
-local toolpath = fs_util.valid_tool_exe_path "texturec"
+local toolpath = fs_local.valid_tool_exe_path "texturec"
 
 local extensions = {
 	direct3d11 	= "dds",

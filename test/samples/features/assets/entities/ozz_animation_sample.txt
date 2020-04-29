@@ -1,0 +1,37 @@
+policy:
+    ant.render|render
+    ant.animation|ozzmesh
+    ant.animation|animation
+    ant.animation|animation_controller.birth
+    ant.animation|ozz_skinning
+    ant.serialize|serialize
+    ant.general|name
+    ant.render|shadow_cast_policy
+    ant.character|character
+    ant.render|debug_mesh_bounding
+data:
+    transform: $transform
+        srt: $srt
+            t: {-5, 0, 5, 1}
+    material: $resource /pkg/ant.resources/materials/skin_model_sample.material
+    animation:
+        anilist:
+            walk: $resource /pkg/ant.resources.binary/meshes/ozz/animation1.ozz
+    animation_birth: walk
+    can_render: true
+    scene_entity: true
+    skeleton: $resource /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz
+    mesh: $resource /pkg/ant.resources.binary/meshes/ozz/mesh.ozz
+    name: ozz_animation_sample
+    collider: $collider
+        capsule:
+            --- $capsule_shape
+            origin: {0, 1, 0, 1}
+            radius: 0.5
+            height: 1
+            axis: "Y"
+    can_cast: true
+    character:
+        movespeed: 1.0
+    debug_mesh_bounding: true
+}

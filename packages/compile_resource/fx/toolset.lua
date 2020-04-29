@@ -1,11 +1,11 @@
 local lfs = require "filesystem.local"
 local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
-local fs_util = utilitypkg.fs_util
+local fs_local = utilitypkg.fs_local
 
 local util = require "util"
 
-local shaderc = fs_util.valid_tool_exe_path "shaderc"
+local shaderc = fs_local.valid_tool_exe_path "shaderc"
 local toolset = {}
 
 local stage_types = {

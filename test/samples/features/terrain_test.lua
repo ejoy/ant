@@ -1,7 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
-local serialize = import_package "ant.serialize"
+local utilitypkg= import_package "ant.utility"
+local fs_util = utilitypkg.fs_util
+local fs = require "filesystem"
 
 local math3d = require "math3d"
 
@@ -10,37 +12,7 @@ local terrain_test_sys = ecs.system "terrain_test_system"
 local icollider = world:interface "ant.collision|collider"
 
 function terrain_test_sys:init()
-	world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.terrain|terrain_policy",
-			"ant.general|name",
-			"ant.collision|collider_policy",
-			"ant.serialize|serialize",
-		},
-		data = {
-			material = world.component:resource "/pkg/ant.resources/terrain/test.material",
-			transform = world.component:transform{srt = world.component:srt{}},
-			can_render = true,
-			terrain = world.component:terrain{
-				tile_width = 2,
-				tile_height = 2,
-				section_size = 2,
-				element_size = 7,
-			},
-			collider = world.component:collider{
-				terrain = {
-					world.component:terrain_shape {
-						origin = world.component:vector{0, 0, 0, 1},
-					}
-				}
-			},
-			scene_entity = true,
-			name = "terrain_test_sys",
-			serialize = serialize.create(),
-		}
-	}
-
+	world:create_entity(fs_util.read_file(fs.path "/pkg/ant.test.features/assets/entites/terrain.txt"))
 	local p2, p1 = math3d.vector(0, 1, 0, 1), math3d.vector(0, -1, 0, 1)
 	local hitpt, hitnormal, id = icollider.raycast {p1, p2}
 	if hitpt then
