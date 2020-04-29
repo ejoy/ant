@@ -196,8 +196,7 @@ end
 
 print(datalist.quote "hello\\\tworld\n\1\0")
 
-local v = datalist.parse([[ [1,2,3,4] ]], function(v, c , key)
-	assert(key == 1)
+local v = datalist.parse([[ [1,2,3,4] ]], function(v)
 	local s = 0
 	for _, v in ipairs(v) do
 		s = s + v
@@ -214,13 +213,10 @@ transform: $transform
 		s = $vector {1,1,1,0}
 		r = $vector {0,0.92388,0,0.382683}
 		t= $vector {0,0,0,1}
-]], function(v, container, key)
+]], function(v)
 	v[2].type = v[1]
-	v[2].key = key
 	return v[2]
 end)
 
 assert(v.transform.type == "transform")
-assert(v.transform.key == "transform")
 assert(v.transform.srt.s.type == "vector")
-assert(v.transform.srt.s.key == "s")
