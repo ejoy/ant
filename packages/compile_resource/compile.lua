@@ -74,7 +74,7 @@ end
 local function create_depfile(filename, deps)
     local w = {}
     for _, file in ipairs(deps) do
-        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file), file:string())
+        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file:localpath()), file:localpath():string())
     end
     writefile(filename, table.concat(w, "\n"))
 end
@@ -97,7 +97,7 @@ local function do_compile(ext, pathname, outpath)
 end
 
 local function compile(filename)
-    local pathname = fs.path(filename):localpath()
+    local pathname = fs.path(filename)
     local ext = pathname:extension():string():sub(2):lower()
     local pathstring = pathname:string()
     local info = link[ext]

@@ -30,7 +30,7 @@ end
 
 local fs = require "filesystem.local"
 package.loaded["filesystem"] = fs
-local fs_util = require "utility.fs_util"
+local fs_local = require "utility.fs_local"
 
 local function read_arguments()
     local arguments = {}
@@ -53,7 +53,7 @@ arguments.config = fs.path(arguments.config)
 arguments.input = fs.path(arguments.input)
 arguments.outfolder = fs.path(arguments.outfolder)
 
-local cfg = fs.exists(arguments.config) and fs_util.datalist(arguments.config) or nil
+local cfg = fs.exists(arguments.config) and fs_local.datalist(arguments.config) or nil
 
 if arguments.input:extension():string():upper() == ".FBX" then
     local fbx2gltf = require "fbx2gltf"

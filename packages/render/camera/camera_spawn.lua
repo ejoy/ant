@@ -4,8 +4,6 @@ local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local defaultcomp = require "components.default"
 
-local serialize = import_package "ant.serialize"
-
 local m = ecs.interface "camera"
 
 function m.create(info)
@@ -22,7 +20,6 @@ function m.create(info)
     local policy = {
         "ant.render|camera",
         "ant.general|name",
-        "ant.serialize|serialize",
     }
 
     if locktarget then
@@ -42,7 +39,6 @@ function m.create(info)
             camera = camera_data,
             name = info.name or "DEFAULT_CAMERA",
             lock_target = locktarget,
-            serialize = serialize.create(),
         }
     }
 end

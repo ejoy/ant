@@ -1,5 +1,4 @@
 policy:
-    ant.serialize|serialize
     ant.render|render
     ant.animation|animation
     ant.animation|animation_controller.birth
@@ -17,7 +16,7 @@ data:
     material : $resource /pkg/ant.resources/materials/skin_model_sample.material
     mesh : $resource /pkg/ant.resources.binary/meshes/ozz/mesh.ozz
     skeleton : $resource /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz
-    animatio
+    animation:
         anilist:
             idle : $resource /pkg/ant.test.features/assets/tmp/animation.ozz
     animation_birth: idle
@@ -75,12 +74,11 @@ data:
         movespeed: 1.0
     collider: $collider
         capsule:
-            ---
-            capsule:
-                origin : v4{0, 1, 0, 1}
-                radius : 0.5
-                height : 1
-                axis : "Y"
+            --- $capsule_shape
+            origin : $vector {0, 1, 0, 1}
+            radius : 0.5
+            height : 1
+            axis : "Y"
     name: foot_ik_test
     can_cast: true
     can_render: true

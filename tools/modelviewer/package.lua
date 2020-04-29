@@ -10,7 +10,6 @@ return {
             -- "ant.animation|ozz_skinning",
             -- "ant.animation|skinning",
             -- "ant.animation|ik",
-            -- "ant.serialize|serialize",
             -- "ant.collision|collider_policy",
             -- "ant.sky|procedural_sky",
             -- "ant.general|name",

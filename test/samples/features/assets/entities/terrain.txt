@@ -4,13 +4,13 @@ policy:
     ant.terrain|terrain_policy
     ant.general|name
     ant.collision|collider_policy
-    ant.serialize|serialize
 data:
     material:$resource /pkg/ant.resources/terrain/test.material
     transform: $transform
         srt:$srt
             s: {1, 1, 1, 0}
-    can_render:
+    scene_entity: true
+    can_render: true
     terrain: $terrain
         tile_width  : 2
         tile_height : 2
@@ -19,6 +19,5 @@ data:
     collider: $collider
         terrain:
             --- $terrain_shape
-                origin = $vector{0, 0, 0, 1}
-    scene_entity: true
-    name = terrain_test
+                origin: $vector{0, 0, 0, 1}
+    name: terrain_test

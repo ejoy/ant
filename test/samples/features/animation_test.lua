@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local utilitypkg = import_package "ant.utility"
-local fs_util = utilitypkg.fs_util
+local fs_rt = utilitypkg.fs_rt
 
 local fs = require "filesystem"
 local anitest_sys = ecs.system "animation_test_system"
@@ -14,11 +14,11 @@ local math3d = require "math3d"
 local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 
 local function ozzmesh_animation_test()
-    return world:create_entity(fs_util.read_file(entitydir / "ozz_animation_sample.txt"))
+    return world:create_entity(fs_rt.read_file(entitydir / "ozz_animation_sample.txt"))
 end
 
 local function gltf_animation_test()
-    world:create_entity(fs_util.read_file(entitydir / "gltf_animation_sample.txt"))
+    world:create_entity(fs_rt.read_file(entitydir / "gltf_animation_sample.txt"))
 end
 
 local function print_ske(ske)

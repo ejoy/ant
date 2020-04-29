@@ -220,3 +220,22 @@ end)
 
 assert(v.transform.type == "transform")
 assert(v.transform.srt.s.type == "vector")
+
+local v = datalist.parse([[
+--- $obj
+x = 1
+y = $subobj
+	z = 2
+---
+z = 3
+---
+]], function (v)
+	v[2].type = v[1]
+	return v[2]
+end)
+
+assert(v[1].type == "obj")
+assert(v[1].x == 1)
+assert(v[1].y.type == "subobj")
+assert(v[1].y.z == 2)
+assert(v[2].z == 3)

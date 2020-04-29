@@ -56,7 +56,6 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
             local policy = {
                 "ant.scene|transform_policy",
                 "ant.general|name",
-                "ant.serialize|serialize",
             }
             if parent then
                 policy[#policy+1] = "ant.scene|hierarchy_policy"
@@ -78,7 +77,6 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
                 "ant.general|name",
                 "ant.render|mesh",
                 "ant.render|render",
-                "ant.serialize|serialize",
             }
 
             local data = {

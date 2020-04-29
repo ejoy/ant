@@ -1,8 +1,21 @@
 local fs_util = require "fs_util"
-local u = setmetatable({}, fs_util)
 
 local fs = require "filesystem.local"
 local platform = require "platform"
+
+local u = {}; u.__index = u
+
+function u.datalist(filepath)
+	return fs_util.datalist(fs, filepath)
+end
+
+function u.raw_table(filepath, fetchresult)
+	return fs_util.raw_table(fs, filepath, fetchresult)
+end
+
+function u.read_file(filepath)
+    return fs_util.read_file(fs, filepath)
+end
 
 function u.list_files(subpath, filter, excludes)
 	local prefilter = {}

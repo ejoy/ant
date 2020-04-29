@@ -40,7 +40,6 @@ local function on_request_new_entity(arg)
                         r = {0, 0, 0, 1},
                         t = {0, 0, 0, 1},
                     },
-                    serialize = -1,
                 }
             }
         )

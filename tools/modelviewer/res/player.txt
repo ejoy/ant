@@ -6,7 +6,6 @@ policy:
   ant.render|mesh
   ant.general|name
   ant.render|render
-  ant.serialize|serialize
 data:
   animation:
     anilist:
@@ -27,7 +26,6 @@ data:
   material: $resource /pkg/ant.resources/materials/skin_model_sample.material
   mesh: $resource /pkg/ant.resources/meshes/female.mesh
   name: animation_sample
-  serialize: 5e1c39ad369fa96c5bd44fc5
   skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
   state_machine:
     current: idle

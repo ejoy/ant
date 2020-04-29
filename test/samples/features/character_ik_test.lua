@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
 
 local mathpkg   = import_package "ant.math"
@@ -12,7 +11,7 @@ local renderpkg = import_package "ant.render"
 local computil  = renderpkg.components
 
 local utilitypkg= import_package "ant.utility"
-local fs_util = utilitypkg.fs_util
+local fs_rt = utilitypkg.fs_rt
 
 local char_ik_test_sys = ecs.system "character_ik_test_system"
 
@@ -21,7 +20,7 @@ local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 local function v4(...)return world.component:vector(...)end
 
 local function foot_ik_test()
-    return world:create_entity(fs_util.read_file(entitydir / "character_ik_test.txt"))
+    return world:create_entity(fs_rt.read_file(entitydir / "character_ik_test.txt"))
 end
 
 local function create_plane_test()

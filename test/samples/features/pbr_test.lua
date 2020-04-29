@@ -4,8 +4,6 @@ local fs = require "filesystem"
 
 local assetmgr = import_package "ant.asset"
 
-local serializeutil = import_package "ant.serialize"
-
 local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
@@ -21,7 +19,6 @@ local function create_pbr_entity(world,
             "ant.render|render",
             "ant.render|mesh",
             "ant.general|name",
-            "ant.serialize|serialize",
             "ant.objcontroller|select",
         },
         data = {
@@ -31,7 +28,6 @@ local function create_pbr_entity(world,
             mesh = sphere_mesh,
             can_render = true,
             can_select = true,
-            serialize = serializeutil.create(),
             scene_entity = true,
         }
     }
@@ -77,9 +73,9 @@ local function pbr_spheres()
     end
 end
 
-local entitydir = fs.path "/pkg/ant.test.feature/assets/entities"
-
+local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
+local fs_rt = import_package "ant.utility".fs_rt
 function pbr_test_sys:init()
-    world:create_entity(entitydir / "DamagedHelmet.txt")
+    world:create_entity(fs_rt.read_file(entitydir / "DamagedHelmet.txt"))
     pbr_spheres()
 end

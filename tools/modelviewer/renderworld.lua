@@ -3,7 +3,6 @@ local world = ecs.world
 
 local renderpkg = import_package "ant.render"
 local skypkg 	= import_package "ant.sky"
-local serialize = import_package "ant.serialize"
 
 local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util

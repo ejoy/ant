@@ -4,7 +4,6 @@ policy:
   ant.general|name
   ant.render|render
   ant.render|shadow_cast_policy
-  ant.serialize|serialize
 data:
   can_cast: true
   can_render: true
@@ -20,7 +19,6 @@ data:
   mesh: $resource /pkg/ant.resources/PVPScene/campsite-door.mesh
   name: door
     lodidx: 1
-  serialize: 5e1d264e369fa92007d55026
   scene_entity: true
   transform: $transform
     srt: $srt

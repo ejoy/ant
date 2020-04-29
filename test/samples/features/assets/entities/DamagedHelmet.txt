@@ -13,4 +13,3 @@ data:
     can_cast: true
     scene_entity: true
     name: Damaged_Helmet
-}

@@ -2,7 +2,7 @@ local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
 local stringify = import_package "ant.serialize".stringify
 local utilitypkg = import_package "ant.utility"
-local fs_util    = utilitypkg.fs_util
+local fs_local    = utilitypkg.fs_local
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
 local function check_compile_shader(identity, srcfilepath, outfilepath, macros)
@@ -111,7 +111,7 @@ local function writefile(filename, data)
 end
 
 return function (config, srcfilepath, outpath, localpath)
-	local fxcontent = fs_util.datalist(srcfilepath)
+	local fxcontent = fs_local.datalist(srcfilepath:localpath())
 	load_surface_type(fxcontent)
 	local setting = config.setting
 	local marcros 	= add_macros_from_surface_setting(setting, fxcontent.surface_type, fxcontent.macros)

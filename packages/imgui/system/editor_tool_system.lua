@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 local HubEvent = require "hub_event"
-local serialize = import_package 'ant.serialize'
 local fs = require "filesystem"
 
 local editor_tool_sys = ecs.system "editor_tool_system"

@@ -3,8 +3,6 @@ local world = ecs.world
 
 local fs = require 'filesystem'
 
-local serialize = import_package 'ant.serialize'
-
 local math3d = require "math3d"
 
 local skypkg = import_package 'ant.sky'
@@ -63,7 +61,6 @@ local function target_lock_test()
             "ant.general|name",
             "ant.render|render",
             "ant.render|mesh",
-            "ant.serialize|serialize"
         },
         data = {
             name = "lock_target",
@@ -74,7 +71,6 @@ local function target_lock_test()
             },
             mesh = world.component:resource "/pkg/ant.resources/meshes/sphere.mesh",
             material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
-            serialize = serialize.create(),
             scene_entity = true,
         }
     }
@@ -84,7 +80,6 @@ local function target_lock_test()
             "ant.general|name",
             "ant.render|render",
             "ant.render|mesh",
-            "ant.serialize|serialize",
             "ant.scene|hierarchy_policy",
         },
         data = {
@@ -100,7 +95,6 @@ local function target_lock_test()
             },
             mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
             material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
-            serialize = serialize.create(),
             scene_entity = true,
         },
     }

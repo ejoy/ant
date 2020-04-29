@@ -40,7 +40,6 @@ end
 
 -- light interface
 
-local seripkg	= import_package 'ant.serialize'
 local mathpkg 	= import_package 'ant.math'
 local mc		= mathpkg.constant
 
@@ -51,13 +50,11 @@ function ilight.create_directional_light_entity(name, color, intensity, directio
 		policy = {
 			"ant.render|light.directional",
 			"ant.general|name",
-			"ant.serialize|serialize",
 		},
 		data = {
 			position	= world.component:vector(position),
 			direction 	= world.component:vector(direction),
 			name		= name,
-			serialize 	= seripkg.create(),
 			light 		= "",
 			directional_light = {
 				color 	= color or {1, 1, 1, 1},
@@ -72,13 +69,11 @@ function ilight.create_point_light_entity(name, dir, pos)
 		policy = {
 			"ant.render|point_light",
 			"ant.general|name",
-			"ant.serialize|serialize",
 		},
 		data = {
 			direction = world.component:vector(dir or mc.T_NYAXIS),
 			position = world.component:vector(pos or mc.T_ZERO_PT),
 			name = name,
-			serialize = seripkg.create(),
 			light = "",
 			point_light = {
 				color = {0.8, 0.8, 0.8, 1},
@@ -95,13 +90,11 @@ function ilight.create_spot_light_entity(name, dir, pos)
 		policy = {
 			"ant.render|spot_light",
 			"ant.general|name",
-			"ant.serialize|serialize",
 		},
 		data = {
 			direction = world.component:vector(dir or mc.T_NYAXIS),
 			position = world.component:vector(pos or mc.T_ZERO_PT),
 			name = name,
-			serialize = seripkg.create(),
 			light = "",
 			spot_light = {
 				color = {0.8, 0.8, 0.8, 1},
@@ -119,11 +112,9 @@ function ilight.create_ambient_light_entity(name, mode, skycolor, midcolor, grou
 		policy = {
 			"ant.render|light.ambient",
 			"ant.general|name",
-			"ant.serialize|serialize",
 		},
 		data = {
 			name = name,
-			serialize = seripkg.create(),
 			light = "",
 			ambient_light = {
 				mode = mode or 'color',

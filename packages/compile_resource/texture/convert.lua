@@ -113,7 +113,7 @@ return function (config, sourcefile, outpath, localpath)
 		hideWindow  = true,
 	}
 
-	local texcontent = fs_util.datalist(sourcefile)
+	local texcontent = fs_local.datalist(sourcefile:localpath())
 	local texpath = localpath(assert(texcontent.path))
 
 	texcontent.format = assert(which_format(plat, texcontent))

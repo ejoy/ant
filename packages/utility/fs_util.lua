@@ -1,17 +1,14 @@
 local util = {}; util.__index = util
-local fs = require "filesystem"
-
-local platform  = require "platform"
 local datalist = require "datalist"
 
-function util.datalist(filepath)
+function util.datalist(fs, filepath)
 	local f = assert(fs.open(filepath, "r"))
 	local data = f:read "a"
 	f:close()
 	return datalist.parse(data)
 end
 
-function util.raw_table(filepath, fetchresult)
+function util.raw_table(fs, filepath, fetchresult)
 	local env = {}
 	local r = assert(fs.loadfile(filepath, "t", env))
 	local result = r()
@@ -21,7 +18,7 @@ function util.raw_table(filepath, fetchresult)
 	return env
 end
 
-function util.read_file(filepath)
+function util.read_file(fs, filepath)
     local f = fs.open(filepath, "rb")
     local c = f:read "a"
     f:close()
