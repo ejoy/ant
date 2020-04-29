@@ -2,17 +2,11 @@ local ecs = ...
 local world = ecs.world
 
 local renderpkg = import_package "ant.render"
-local skypkg 	= import_package "ant.sky"
-
-local mathpkg	= import_package "ant.math"
-local mu		= mathpkg.util
+local cu = renderpkg.components
 
 local fs 		= require "filesystem"
 local task 		= require "task"
 local math3d 	= require "math3d"
-
-local skyutil = skypkg.util
-local cu = renderpkg.components
 
 local m = ecs.system "model_viewer_system"
 
@@ -47,7 +41,7 @@ end
 local player
 function m:init()
 	create_light()
-	skyutil.create_procedural_sky(world)
+	cu.create_procedural_sky(world)
 	cu.create_plane_entity(
 		world,
 		{srt = {s = {50, 1, 50, 0}}},
