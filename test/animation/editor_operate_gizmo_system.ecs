@@ -1,9 +1,11 @@
 import "@ant.objcontroller"
+import "@ant.scene"
 
 system "editor_operate_gizmo_system"
     .implement "editor_operate_gizmo_system.lua"
     .require_policy "gizmo_object"
     .require_policy "ant.objcontroller|select"
+    .require_policy "ant.scene|hierarchy_policy"
     .method "after_pickup"
     .method "data_changed"
     .method "init"

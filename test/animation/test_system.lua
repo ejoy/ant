@@ -4,11 +4,6 @@ local world = ecs.world
 local renderpkg  = import_package 'ant.render'
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
-local fs         = require 'filesystem'
-local rhwi       = renderpkg.hwi
-
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
 
 local drawer = world:interface "ant.render|iwidget_drawer"
 
@@ -18,17 +13,10 @@ local RoleEntityId
 local eventResize = world:sub {"resize"}
 local screensize  = {w=0,h=0}
 
-local function load_file(file)
-    local f = assert(fs.open(fs.path(file), 'r'))
-    local data = f:read 'a'
-    f:close()
-    return data
-end
-
 function init_loader_sys:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt = {r = {0,0.92388,0,0.382683}}})
-    world:create_entity(load_file 'res/light_directional.txt')
-    RoleEntityId = world:create_entity(load_file 'res/entity.txt')
+    world:create_entity 'res/light_directional.txt'
+    RoleEntityId = world:create_entity 'res/entity.txt'
     local info = import_package "ant.serialize".entity(world, RoleEntityId)
     print(info)
     world:enable_tag(RoleEntityId, "show_operate_gizmo")

@@ -4,7 +4,13 @@ local math3d = require "math3d"
 
 ecs.tag "scene_entity"
 
-ecs.component_alias("parent", 	"entityid")
+local m = ecs.connection "mount"
+function m.init(e, v)
+    e.parent = v
+end
+function m.save(e)
+    return e.parent
+end
 
 ecs.component "lock_target"
 	.type	"string"

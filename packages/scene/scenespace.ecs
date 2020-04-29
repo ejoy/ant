@@ -11,8 +11,13 @@ system "scenespace_system"
 
 policy "hierarchy_policy"
     .require_system "scenespace_system"
-    .component "parent"
     .component "scene_entity"
+    .connection "mount"
+
+connection "mount"
+    .implement "scenespace.lua"
+    .method "init"
+    .method "save"
 
 policy "transform_policy"
     .require_transform "transform_transform"
