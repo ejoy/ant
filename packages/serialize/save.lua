@@ -190,15 +190,28 @@ local function stringify_data(eid)
     end
 end
 
-local function stringify_entity(w, eid)
+local function stringify_entity(w, eid, out_)
     world = w
-    out = {}
+    out = out_ or {}
     stringify_policy(eid)
     stringify_data(eid)
     out[#out+1] = ''
     return table.concat(out, '\n')
 end
 
+local function stringify_prefab(w, entities, out_)
+    world = w
+    out = out_ or {}
+	for _, eid in ipairs(entities) do
+        out[#out+1] = '---'
+        stringify_policy(eid)
+        stringify_data(eid)
+    end
+    out[#out+1] = ''
+    return table.concat(out, '\n')
+end
+
 return {
     entity = stringify_entity,
+    prefab = stringify_prefab,
 }

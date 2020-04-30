@@ -120,15 +120,21 @@ local function register_entity(w)
 	return eid
 end
 
-function world:create_entity(args)
-	local t = read_data(self, args)
-	local eid = register_entity(self)
-	local component, transform = policy.create(self, t.policy)
-	self._initargs[eid] = {
-		policy = t.policy,
+local function prebuild_entity(w, policy)
+	local eid = register_entity(w)
+	local component, transform, connection = policy.create(w, policy)
+	w._initargs[eid] = {
+		policy = policy,
 		component = component,
 		transform = transform,
+		connection = connection,
 	}
+	return eid, component, transform
+end
+
+function world:create_entity(args)
+	local t = read_data(self, args)
+	local eid, component, transform = prebuild_entity(self, t.policy)
 	apply_policy(self, eid, component, transform, t.data)
 	if t.connection then
 		local e = self[eid]
@@ -142,8 +148,20 @@ function world:create_entity(args)
 	return eid
 end
 
-function world:create_prefab()
-	--TODO
+function world:instance(prefab, args)
+	local t = read_data(self, prefab)
+	local entities = {}
+	for i = 2, #t do
+		local eid, component, transform = prebuild_entity(self, t[i].policy)
+		apply_policy(self, eid, component, transform, t[i].data)
+		entities[i-1] = eid
+	end
+	for _, connection in ipairs(t[1]) do
+		local name, source, target = connection[1], connection[2], connection[3]
+		local object = self._class.connection[name]
+		assert(object and object.methodfunc and object.methodfunc.init)
+		object.methodfunc.init(self[entities[source]], assert(entities[target] or args[target]))
+	end
 end
 
 function world:remove_entity(eid)

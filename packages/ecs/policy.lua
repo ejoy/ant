@@ -7,6 +7,8 @@ local function create(w, policies)
     local transform = {}
     local component = {}
     local init_component = {}
+    local connection = {}
+    local init_connection = {}
     local policyset = {}
     local unionset = {}
     for _, name in ipairs(policies) do
@@ -45,6 +47,12 @@ local function create(w, policies)
                 init_component[#init_component+1] = v
             end
         end
+        for _, v in ipairs(class.connection) do
+            if not connection[v] then
+                connection[v] = true
+                init_connection[#init_connection+1] = v
+            end
+        end
         ::continue::
     end
     local function table_append(t, a)
@@ -76,7 +84,8 @@ local function create(w, policies)
         end
     end
     table.sort(init_component)
-    return init_component, init_transform
+    table.sort(init_connection)
+    return init_component, init_transform, init_connection
 end
 
 local function add(w, eid, policies)
