@@ -83,9 +83,56 @@ local function create_mesh_buffers(meshres)
 	return meshscene
 end
 
+local function build_skin(skin)
+	if skin then
+		local ibm = skin.inverse_bind_matrices
+		return {
+			inverse_bind_pose = animodule.new_bind_pose(ibm.num, ibm.value),
+			joints = animodule.new_joint_remap(skin.joints)
+		}
+	end
+end
+
 return {
-    loader = function (filename, data)
-        return create_mesh_buffers(data)
+    loader = function (filename, group)
+		local vb = group.vb
+		local handles = {}
+		for _, value in ipairs(vb.values) do
+			local create_vb = value.type == "dynamic" and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
+			local start_bytes = value.start
+			local end_bytes = start_bytes + value.num - 1
+	
+			handles[#handles+1] = {
+				handle = create_vb({"!", value.value, start_bytes, end_bytes},
+									declmgr.get(value.declname).handle),
+				updatedata = value.type == "dynamic" and animodule.new_aligned_memory(value.num, 4) or nil,
+			}
+		end
+		local meshgroup = {
+			bounding = group.bounding,
+			skin = build_skin(group.skin),
+			vb = {
+				start 	= vb.start,
+				num 	= vb.num,
+				handles = handles,
+			}
+		}
+	
+		local ib = group.ib
+		if ib then
+			local v = ib.value
+			local create_ib = v.type == "dynamic" and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer
+			local startbytes = v.start
+			local endbytes = startbytes+v.num-1
+			meshgroup.ib = {
+				start = ib.start,
+				num = ib.num,
+				handle = create_ib({v.value, startbytes, endbytes}, v.flag),
+				updatedata = v.type == "dynamic" and animodule.new_aligned_memory(v.num) or nil
+			}
+		end
+	
+		return meshgroup
     end,
     unloader = function (res, filename)
     end,

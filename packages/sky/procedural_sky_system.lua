@@ -16,7 +16,14 @@ local world = ecs.world
 
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
+
+local assetmgr = import_package "ant.asset"
+
+local renderpkg = import_package "ant.render"
+local declmgr = renderpkg.declmgr
+
 local math3d = require "math3d"
+local bgfx = require "bgfx"
 
 local MONTHS = {
 	"January",
@@ -185,6 +192,58 @@ function ps:init()
 	self._sundir 	= math3d.ref(calc_sun_direction(self))
 	return self
 end
+
+local ps_trans = ecs.transform "procedural_sky_transform"
+function ps_trans.process(e, eid)
+	local skycomp = e.procedural_sky
+	local w, h = skycomp.grid_width, skycomp.grid_height
+
+	local vb = {"ff",}
+	local ib = {}
+
+	local w_count, h_count = w - 1, h - 1
+	for j=0, h_count do
+		for i=0, w_count do
+			local x = i / w_count * 2.0 - 1.0
+			local y = j / h_count * 2.0 - 1.0
+			vb[#vb+1] = x
+			vb[#vb+1] = y
+		end
+	end
+
+	for j=0, h_count - 1 do
+		for i=0, w_count - 1 do
+			local lineoffset = w * j
+			local nextlineoffset = w*j + w
+
+			ib[#ib+1] = i + lineoffset
+			ib[#ib+1] = i + 1 + lineoffset
+			ib[#ib+1] = i + nextlineoffset
+
+			ib[#ib+1] = i + 1 + lineoffset
+			ib[#ib+1] = i + 1 + nextlineoffset
+			ib[#ib+1] = i + nextlineoffset
+		end
+	end
+
+	local group = {
+		vb = {
+			handles = {
+				{handle = bgfx.create_vertex_buffer(vb, declmgr.get("p2").handle)},
+			},
+			start = 0, num = #vb - 1,
+		},
+		ib = {
+			handle = bgfx.create_index_buffer(ib),
+			start = 0, num = #ib,
+		},
+	}
+
+	world:add_component(eid, "rendermesh", 
+		assetmgr.load(assetmgr.generate_resource_name("mesh", "procedural_sky.rendermesh"), 
+		group))
+end
+
 
 local ps_sys = ecs.system "procedural_sky_system"
 

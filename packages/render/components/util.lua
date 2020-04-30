@@ -47,7 +47,7 @@ function util.assign_group_as_mesh(group)
 end
 
 function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
-	return util.assign_group_as_mesh {
+	return {
 		vb = {
 			handles = {
 				{handle = bgfx.create_vertex_buffer(vb, declmgr.get(vertex_desc).handle)},
@@ -85,6 +85,45 @@ function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 			num = num_indices,
 		}
 	}
+end
+
+function util.create_grid_entity2(world, name, w, h, unit)
+	local geopkg = import_package "ant.geometry"
+    local geolib = geopkg.geometry
+    
+	w = w or 64
+	h = h or 64
+	unit = unit or 1
+	local vb, ib = geolib.grid(w, h, unit)
+	local gvb = {"fffd"}
+	for _, v in ipairs(vb) do
+		for _, vv in ipairs(v) do
+			table.insert(gvb, vv)
+		end
+	end
+
+	local num_vertices = #vb
+	local num_indices = #ib
+
+	local group = {
+		vb = {
+			handles = {
+				{handle = bgfx.create_vertex_buffer(gvb, declmgr.get("p3|c40niu").handle)},
+			},
+			start = 0, num = num_vertices,
+		},
+		ib = ib and {
+			handle = bgfx.create_index_buffer(ib),
+			start = 0, num = num_indices,
+		} or nil
+	}
+
+	local resname = assetmgr.generate_resource_name("mesh", "grid.rendermesh")
+	return util.create_simple_render_entity(world,
+		transform,
+		"/pkg/ant.resources/materials/line.material",
+		name,
+		assetmgr.load(resname, group))
 end
 
 function util.create_grid_entity(world, name, w, h, unit, transform)
@@ -429,7 +468,7 @@ function util.create_procedural_sky(world, settings)
 			return world[eid].serialize
 		end
 	end
-    local skyeid = world:create_entity {
+    return world:create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.sky|procedural_sky",
@@ -452,42 +491,6 @@ function util.create_procedural_sky(world, settings)
 			name = "procedural sky",
 		}
 	}
-
-	local skyentity = world[skyeid]
-	local skycomp = skyentity.procedural_sky
-	local w, h = skycomp.grid_width, skycomp.grid_height
-
-	local vb = {"ff",}
-	local ib = {}
-
-	local w_count, h_count = w - 1, h - 1
-	for j=0, h_count do
-		for i=0, w_count do
-			local x = i / w_count * 2.0 - 1.0
-			local y = j / h_count * 2.0 - 1.0
-			vb[#vb+1] = x
-			vb[#vb+1] = y
-		end
-	end
-
-	for j=0, h_count - 1 do
-		for i=0, w_count - 1 do
-			local lineoffset = w * j
-			local nextlineoffset = w*j + w
-
-			ib[#ib+1] = i + lineoffset
-			ib[#ib+1] = i + 1 + lineoffset
-			ib[#ib+1] = i + nextlineoffset
-
-			ib[#ib+1] = i + 1 + lineoffset
-			ib[#ib+1] = i + 1 + nextlineoffset
-			ib[#ib+1] = i + nextlineoffset
-		end
-	end
-
-	world:add_component(skyeid, "rendermesh", 
-		assetmgr.load(assetmgr.generate_resource_name("mesh", "procedural_sky.rendermesh"), util.create_simple_mesh("p2", vb, w * h, ib, #ib)))
-	return skyeid
 end
 
 return util

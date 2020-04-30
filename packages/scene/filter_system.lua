@@ -134,13 +134,23 @@ function prim_filter_sys:filter_primitive()
 
 		for _, eid in world:each(filtertag) do
 			local ce = world[eid]
-			local func = material_cache[eid]
-			if func then
-				func(eid, ce.transform._world, filter)
-			else
-				func = cache_material(ce.rendermesh, ce.material)
-				material_cache[eid] = func
-				func(eid, ce.transform._world, filter)
+			-- local func = material_cache[eid]
+			-- if func then
+			-- 	func(eid, ce.transform._world, filter)
+			-- else
+			-- 	func = cache_material(ce.rendermesh, ce.material)
+			-- 	material_cache[eid] = func
+			-- 	func(eid, ce.transform._world, filter)
+			-- end
+
+			if ce[filtertag] then
+				local primgroup = ce.rendermesh
+
+				local m = ce.material
+				local resulttarget = assert(filter.result[m.fx.surface_type.transparency])
+
+				local worldaabb, worldtrans = math3d.aabb_transform(ce.transform._world, primgroup.bounding and primgroup.bounding.aabb or nil)
+				add_result(eid, primgroup, m, worldtrans, worldaabb, resulttarget)
 			end
 		end
 	end

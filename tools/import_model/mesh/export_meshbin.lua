@@ -174,7 +174,7 @@ local function calc_node_transform(node, parentmat)
 	return parentmat
 end
 
-local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
+local function fetch_skin(gltfscene, skinidx, bindata)
 	if skinidx then
 		local skin 		= gltfscene.skins[skinidx+1]
 		local ibm_idx 	= skin.inverseBindMatrices
@@ -185,9 +185,11 @@ local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
 		local end_offset = start_offset + ibm_bv.byteLength
 
 		return {
-			num		= ibm.count,
+			inverse_bind_matries = {
+				num = ibm.count,
+				value 	= bindata:sub(start_offset, end_offset-1),
+			},
 			joints 	= skin.joints,
-			value 	= bindata:sub(start_offset, end_offset-1),
 		}
 	end
 end
@@ -236,7 +238,7 @@ local function export_meshbin(gltfscene, bindata, config)
 				if scenegroups[meshname] == nil then
 					local meshnode = {
 						transform = nodetrans and math3d.tovalue(nodetrans) or nil,
-						inverse_bind_matries = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
+						skin = fetch_skin(gltfscene, node.skin, bindata),
 					}
 	
 					local meshaabb = math3d.aabb()

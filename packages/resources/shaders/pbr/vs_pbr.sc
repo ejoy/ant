@@ -1,4 +1,8 @@
+#ifdef GPU_SKINNING
 $input  a_position, a_normal, a_texcoord0, a_indices, a_weight
+#else //!GPU_SKINNING
+$input  a_position, a_normal, a_texcoord0
+#endif //GPU_SKINNING
 $output v_texcoord0, v_normal, v_posWS
 
 #include <bgfx_shader.sh>
@@ -8,11 +12,11 @@ $output v_texcoord0, v_normal, v_posWS
 void main()
 {
     vec4 pos      = vec4(a_position, 1.0);
-	#ifdef GPU_SKINNING
+#ifdef GPU_SKINNING
 	mat4 worldtrans = calc_ozz_bone_transform(a_indices, a_weight);
-	#else
+#else //!GPU_SKINNING
 	mat4 worldtrans = u_model[0];
-	#endif
+#endif //GPU_SKINNING
 
 	vec4 worldpos = mul(worldtrans, pos);
 	gl_Position   = mul(u_viewProj, worldpos);

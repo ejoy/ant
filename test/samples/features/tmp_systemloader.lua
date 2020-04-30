@@ -5,9 +5,6 @@ local fs = require 'filesystem'
 
 local math3d = require "math3d"
 
-local skypkg = import_package 'ant.sky'
-local skyutil = skypkg.util
-
 local renderpkg = import_package 'ant.render'
 local computil  = renderpkg.components
 
@@ -120,8 +117,10 @@ function init_loader_sys:init()
         ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
+    computil.create_grid_entity2(world)
+
     computil.create_procedural_sky(world)
-    target_lock_test()
+    --target_lock_test()
 end
 
 local function create_camera()
