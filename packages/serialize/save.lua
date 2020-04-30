@@ -170,7 +170,9 @@ function stringify_value(n, prefix, v)
         end
         return
     end
-    out[#out+1] = indent(n)..prefix.." "..stringify_basetype(v)
+    if v ~= nil then
+        out[#out+1] = indent(n)..prefix.." "..stringify_basetype(v)
+    end
 end
 
 local function stringify_policy(eid)
