@@ -100,42 +100,29 @@ function trt.process(e, eid)
 	local terraincomp 	= e.terrain
 	local terraindata = terraincomp._data
 
-	local meshscene = {
-		scene = "sceneroot",
-	}
-
 	local gridwidth, gridheight = iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp)
 	local numvertices = (gridwidth + 1) * (gridheight + 1)
 	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
 	local numindices = gridwidth * gridheight * 2 * 3
-	local scenes = {
-		sceneroot = 
-		{
-			meshnode =
-			{
+	local group = {
+		vb = {
+			start = 0,
+			num = numvertices,
+			handles = {
 				{
-					vb = {
-						start = 0,
-						num = numvertices,
-						handles = {
-							{
-								handle = bgfx.create_vertex_buffer({"!", terraindata.terrain_vertices, 0, numvertices * pos_decl.stride}, pos_decl.handle),
-							},
-							{
-								handle = bgfx.create_vertex_buffer({"!", terraindata.terrain_normaldata, 0, numvertices * normal_decl.stride}, normal_decl.handle)
-							}
-						},
-					},
-					ib = {
-						start = 0,
-						num = numindices,
-						handle = bgfx.create_index_buffer({terraindata.terrain_indices, 0, numindices * 4}, "d"),
-					}
+					handle = bgfx.create_vertex_buffer({"!", terraindata.terrain_vertices, 0, numvertices * pos_decl.stride}, pos_decl.handle),
+				},
+				{
+					handle = bgfx.create_vertex_buffer({"!", terraindata.terrain_normaldata, 0, numvertices * normal_decl.stride}, normal_decl.handle)
 				}
-			}
+			},
+		},
+		ib = {
+			start = 0,
+			num = numindices,
+			handle = bgfx.create_index_buffer({terraindata.terrain_indices, 0, numindices * 4}, "d"),
 		}
 	}
 
-	meshscene.scenes = scenes
-	world:add_component(eid, "rendermesh", assetmgr.load(assetmgr.generate_resource_name("mesh", "terrain.rendermesh"), meshscene))
+	world:add_component(eid, "rendermesh", assetmgr.load(assetmgr.generate_resource_name("mesh", "terrain.rendermesh"), group))
 end

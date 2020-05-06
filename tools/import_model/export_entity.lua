@@ -33,7 +33,7 @@ return function(inputfile, meshfolder, glbscene, glbbin, materialfiles, meshconf
         end
 
         local meshfile = fs.path(meshbin_file):replace_extension ".mesh"
-        fs_local.write_file(meshfile, seri_stringfiy.map(default_mesh_cfg(meshbin_file, meshconfig.layouts)))
+        fs_local.write_file(meshfile, seri_stringfiy(default_mesh_cfg(meshbin_file, meshconfig.layouts)))
 
         local function get_srt(node)
             if node.matrix then

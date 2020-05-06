@@ -10,7 +10,7 @@ data:
     transform: $transform
         srt: $srt
             t: {-5, 0, 0, 1}
-    mesh: $resource /pkg/ant.resources/meshes/female.mesh
+    mesh: $resource "/pkg/ant.resources/meshes/female.mesh:scenes.scene1.Beta_Joints.1"
     material: $resource /pkg/ant.resources/materials/skin_model_sample.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:

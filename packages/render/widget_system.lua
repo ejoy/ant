@@ -38,11 +38,8 @@ end
 function widget_drawer_sys:end_frame()
 	local dmesh = world:singleton_entity "widget_drawer"
 	if dmesh then
-		local meshscene = dmesh.rendermesh
-		local _, scene = next(meshscene.scenes)
-		local _, meshnode = next(scene)
-		local group = meshnode[1]
-		local vbdesc, ibdesc = group.vb, group.ib
+		local primgroup = dmesh.rendermesh
+		local vbdesc, ibdesc = primgroup.vb, primgroup.ib
 		vbdesc.start, vbdesc.num = 0, 0
 		ibdesc.start, ibdesc.num = 0, 0
 
@@ -69,12 +66,8 @@ local function append_buffers(vb, ib)
 		return
 	end
 	local dmesh = world:singleton_entity "widget_drawer"
-	local meshscene = dmesh.rendermesh
-	local scene = meshscene.scenes[meshscene.scene]
-	local _, meshnode = next(scene)
-	local group = meshnode[1]
-
-	local vbdesc, ibdesc = group.vb, group.ib
+	local primgroup = dmesh.rendermesh
+	local vbdesc, ibdesc = primgroup.vb, primgroup.ib
 
 	vbdesc.num = vbdesc.num + numvertices
 

@@ -88,7 +88,7 @@ local function build_skin(skin)
 		local ibm = skin.inverse_bind_matrices
 		return {
 			inverse_bind_pose = animodule.new_bind_pose(ibm.num, ibm.value),
-			joints = animodule.new_joint_remap(skin.joints)
+			joint_remap = animodule.new_joint_remap(skin.joints)
 		}
 	end
 end
@@ -98,15 +98,17 @@ return {
 		local vb = group.vb
 		local handles = {}
 		for _, value in ipairs(vb.values) do
-			local create_vb = value.type == "dynamic" and bgfx.create_dynamic_vertex_buffer or bgfx.create_vertex_buffer
 			local start_bytes = value.start
 			local end_bytes = start_bytes + value.num - 1
 	
-			handles[#handles+1] = {
-				handle = create_vb({"!", value.value, start_bytes, end_bytes},
-									declmgr.get(value.declname).handle),
-				updatedata = value.type == "dynamic" and animodule.new_aligned_memory(value.num, 4) or nil,
-			}
+			if value.type == "dynamic" then
+				handles[#handles+1] = value
+			else
+				handles[#handles+1] = {
+					handle = bgfx.create_vertex_buffer({"!", value.value, start_bytes, end_bytes},
+										declmgr.get(value.declname).handle),
+				}
+			end
 		end
 		local meshgroup = {
 			bounding = group.bounding,

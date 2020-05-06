@@ -33,19 +33,6 @@ function util.is_entity_visible(e)
 	return e.can_render
 end
 
-function util.assign_group_as_mesh(group)
-	return {
-		scene = "sceneroot",
-		scenes = {
-			sceneroot = {
-				meshnode = {
-					group,
-				}
-			}
-		}
-	}
-end
-
 function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
 	return {
 		vb = {
@@ -67,7 +54,7 @@ function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 
 	assert(num_vertices <= 65535)
 	local ib_size = num_indices * 2
-	return util.assign_group_as_mesh {
+	return {
 		vb = {
 			handles = {
 				{
@@ -87,7 +74,7 @@ function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
 	}
 end
 
-function util.create_grid_entity2(world, name, w, h, unit)
+function util.create_grid_entity(world, name, w, h, unit)
 	local geopkg = import_package "ant.geometry"
     local geolib = geopkg.geometry
     
@@ -126,33 +113,6 @@ function util.create_grid_entity2(world, name, w, h, unit)
 		assetmgr.load(resname, group))
 end
 
-function util.create_grid_entity(world, name, w, h, unit, transform)
-    local geopkg = import_package "ant.geometry"
-    local geolib = geopkg.geometry
-    
-	w = w or 64
-	h = h or 64
-	unit = unit or 1
-	local vb, ib = geolib.grid(w, h, unit)
-	local gvb = {"fffd"}
-	for _, v in ipairs(vb) do
-		for _, vv in ipairs(v) do
-			table.insert(gvb, vv)
-		end
-	end
-
-	local num_vertices = #vb
-	local num_indices = #ib
-
-	return util.create_simple_render_entity(world, 
-		transform, 
-		"/pkg/ant.resources/materials/line.material",
-		name,
-		assetmgr.load(
-			assetmgr.generate_resource_name("mesh", "grid.rendermesh"), 
-			util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
-end
-
 function util.quad_vertices(rect)
 	rect = rect or {x=0, y=0, w=1, h=1}
 	return {
@@ -182,6 +142,9 @@ local function get_plane_meshres()
 		}
 	
 		plane_meshres = util.create_simple_mesh("p3|n3|T3", vb, 4)
+		plane_meshres.bounding = {
+			aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
+		}
 	end
 	return plane_meshres
 end
@@ -228,14 +191,7 @@ value:
 		data = data,
 	}
 
-	local meshscene = assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres())
-	local selectscene = meshscene.scenes[meshscene.scene]
-	local _, meshnode = next(selectscene)
-	meshnode.bounding = {
-		aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
-	}
-
-	world:add_component(eid, "rendermesh", meshscene)
+	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres()))
 	return eid
 end
 
@@ -491,6 +447,53 @@ function util.create_procedural_sky(world, settings)
 			name = "procedural sky",
 		}
 	}
+end
+
+function util.print_glb_hierarchy(glbfile)
+    local assetmgr = import_package "ant.asset"
+    local res = assetmgr.load(glbfile)
+    print("default_scene:", res.scene)
+    print "scenes:"
+    local function sort_pairs(t)
+        local s = {}
+        for k in pairs(t) do
+            s[#s+1] = k
+        end
+
+        table.sort(s)
+
+        local n = 1
+        return function ()
+            local k = s[n]
+            if k == nil then
+                return
+            end
+            n = n + 1
+            return k, t[k]
+        end
+	end
+	
+	local function node_matrix(node)
+		if node.transform then
+			return math3d.tostring(math3d.matrix(node.transform))
+		end
+
+		return ""
+	end
+
+    for k, scene in sort_pairs(res.scenes) do
+        print("  scene:", k)
+        for name, node in sort_pairs(scene) do
+			print("    mesh node:", name)
+			print("    mesh transform:")
+			print(("    [%s]"):format(node_matrix(node)))
+            for idx, prim in ipairs(node) do
+                print("      primitive index:", idx)
+                print("      material index:", prim.material or "NONE")
+                print("      primitive mode:", prim.mode or "NONE")
+            end
+        end
+    end
 end
 
 return util

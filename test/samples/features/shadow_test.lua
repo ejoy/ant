@@ -21,9 +21,14 @@ function st_sys:init()
 			can_cast = true,
 			scene_entity = true,
 			can_render = true,
-			transform = world.component:transform {srt=world.component:srt{t=world.component:vector{0, 2, 0, 0}}},
+			transform = cu.create_transform(world, {
+				srt={
+					s={100},
+					t={0, 2, 0, 0}
+				}
+			}),
 			material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
-			mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
+			mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1",
 			name = "cast_shadow_cube",
 		}
 	}
@@ -99,7 +104,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			can_render = true,
 			transform = cu.create_transform(world,{
 				srt = {
-					s = math3d.ref(math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius)),
+					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
 					t = math3d.ref(cylinder_offset),
 				},
 			}),
@@ -114,7 +119,7 @@ value:
   value:
     {1, 0, 0, 1}
 ]],
-			mesh = world.component:resource '/pkg/ant.resources/meshes/cylinder.mesh',
+			mesh = world.component:resource '/pkg/ant.resources/meshes/cylinder.mesh:scenes.scene1.pCylinder1.1',
 			parent = arroweid,
 			name = "arrow.cylinder",
 		}
@@ -130,7 +135,7 @@ value:
 		data = {
 			scene_entity = true,
 			can_render = true,
-			transform = cu.create_transform(world, {srt={t=cone_offset}}),
+			transform = cu.create_transform(world, {srt={s={100}, t=cone_offset}}),
 			material = world.component:resource [[
 ---
 /pkg/ant.resources/materials/singlecolor.material
@@ -142,7 +147,7 @@ value:
   value:
     {1, 0, 0, 1}
 ]],
-			mesh = world.component:resource '/pkg/ant.resources/meshes/cone.mesh',
+			mesh = world.component:resource '/pkg/ant.resources/meshes/cone.mesh:scenes.scene1.pCone1.1',
 			parent = arroweid,
 			name = "arrow.cone"
 		}

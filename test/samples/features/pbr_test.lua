@@ -8,7 +8,7 @@ local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
 local pbr_material = world.component:resource((feature_path / "assets/pbr_test.pbrm"):string())
-local sphere_mesh = world.component:resource((feature_path / "assets/sphere.mesh"):string())
+local sphere_mesh = world.component:resource((feature_path / "assets/sphere.mesh:scenes.scene1.pSphere1.1"):string())
 
 local function create_pbr_entity(world, 
     name, transform, 
@@ -62,9 +62,9 @@ local function pbr_spheres()
         local z = 0.0
         for col=1, num_samples do
             local roughness = col * roughness_step
-            create_pbr_entity(world, "sphere", 
+            create_pbr_entity(world, "sphere" .. row .. "x" .. col, 
             world.component:transform{
-                srt = world.component:srt {t = {x, 0.0, z, 1.0}}
+                srt = world.component:srt {s = {100, 100, 100, 0}, t = {x, 0.0, z, 1.0}}
             }, basecolor, metallic, roughness)
 
             z = z + movestep
@@ -77,5 +77,5 @@ local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 local fs_rt = import_package "ant.utility".fs_rt
 function pbr_test_sys:init()
     world:create_entity(fs_rt.read_file(entitydir / "DamagedHelmet.txt"))
-    --pbr_spheres()
+    pbr_spheres()
 end

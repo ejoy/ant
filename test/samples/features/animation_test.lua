@@ -18,7 +18,9 @@ local function ozzmesh_animation_test()
 end
 
 local function gltf_animation_test()
-    world:create_entity(fs_rt.read_file(entitydir / "gltf_animation_sample.txt"))
+    computil.print_glb_hierarchy "/pkg/ant.resources/meshes/female.mesh"
+    world:create_entity(fs_rt.read_file(entitydir / "gltf_animation_sample_Beta_Joints.txt"))
+    world:create_entity(fs_rt.read_file(entitydir / "gltf_animation_sample_Beta_Surface.txt"))
 end
 
 local function print_ske(ske)

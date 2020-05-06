@@ -15,8 +15,14 @@ ecs.component_alias("mesh", "resource")
 local ml = ecs.transform "mesh_loader"
 
 function ml.process(e, eid)
-	local filename = tostring(e.mesh):match "[^:]+"
-	filename = filename:gsub("%.[%w_-]+$", ".glbmesh")
+	local filename, subname = tostring(e.mesh):match "([^:]+):(.+)$"
+
+	local extname = ".glbmesh"
+	if subname ~= "" then
+		extname = ".".. subname .. extname
+	end
+
+	filename = filename:gsub("%.[%w_-]+$", extname)
 	world:add_component(eid, "rendermesh", assetmgr.load(filename, e.mesh))
 end
 

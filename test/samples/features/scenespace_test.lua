@@ -13,13 +13,23 @@ function sp_test_sys:init()
     local rooteid = world:create_entity{
         policy = {
             "ant.general|name",
+            "ant.scene|transform_policy",
         },
         data = {
             name = "root",
+            transform = computil.create_transform(world, {
+                srt={t={0, 1, 0, 1}}
+            })
         }
     }
 
     local material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material"
+
+    -- local fs = require "filesystem"
+    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/sphere.mesh"
+    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/cone.mesh"
+    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/cylinder.mesh"
+    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/cube.mesh"
 
     local child1 = world:create_entity{
         policy = {
@@ -33,8 +43,13 @@ function sp_test_sys:init()
             parent = rooteid,
             can_render = true,
             material = material,
-            mesh = world.component:resource "/pkg/ant.resources/meshes/sphere.mesh",
-            transform = computil.create_transform(world, {srt={t={1, 2, 0, 1}}}),
+            mesh = world.component:resource "/pkg/ant.resources/meshes/sphere.mesh:scenes.scene1.pSphere1.1",
+            transform = computil.create_transform(world, {
+                srt={
+                    s = {100,},
+                    t={1, 2, 0, 1},
+                }
+            }),
             scene_entity = true,
         }
     }
@@ -51,12 +66,15 @@ function sp_test_sys:init()
             parent = child1,
             scene_entity = true,
             can_render = true,
-            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
+            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1",
             material = material,
-            transform = computil.create_transform(world,
-                {srt={
-                r = {math.rad(math.cos(30)), 0, 0, math.rad(math.sin(30))}, --rotate 60 degree
-                t = {1, 2, 0, 1}}}),
+            transform = computil.create_transform(world, {
+                srt = {
+                    s = {100,},
+                    r = {math.rad(math.cos(30)), 0, 0, math.rad(math.sin(30))}, --rotate 60 degree
+                    t = {1, 2, 0, 1}
+                }
+            }),
         }
     }
 
@@ -89,8 +107,13 @@ function sp_test_sys:init()
             can_render = true,
             scene_entity = true,
             material = material,
-            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
-            transform = computil.create_transform(world, {srt={t ={1, 2, 0, 1}}}),
+            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1",
+            transform = computil.create_transform(world, {
+                srt={
+                    s = {100,},
+                    t ={1, 2, 0, 1}
+                }
+            }),
         }
     }
 end

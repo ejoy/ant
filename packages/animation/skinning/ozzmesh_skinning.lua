@@ -65,8 +65,8 @@ local function gen_mesh_assetinfo(ozzmesh)
 			start = 0,
 			num = num_vertices,
 			handles = {
+				false,	--will generate in ozzmesh_skinning_transform.process
 				create_static_buffer(layouts, num_vertices, ozzmesh),
-				create_dynamic_buffer(layouts, num_vertices, ozzmesh),
 			}
 		}
 	}
@@ -84,18 +84,13 @@ local function gen_mesh_assetinfo(ozzmesh)
 
 	local ibm_pointer, ibm_count = ozzmesh:inverse_bind_matrices()
 	local joint_remapp_pointer, count = ozzmesh:joint_remap()
-	return {
-		scene = "sceneroot",
-		scenes = {
-			sceneroot = {
-				meshnode = {
-					inverse_bind_pose 	= animodule.new_bind_pose(ibm_count, ibm_pointer),
-					joint_remap 		= animodule.new_joint_remap(joint_remapp_pointer, count),
-					primitive
-				}
-			}
-		}
+
+	primitive.skin = {
+		inverse_bind_pose 	= animodule.new_bind_pose(ibm_count, ibm_pointer),
+		joint_remap 		= animodule.new_joint_remap(joint_remapp_pointer, count)
 	}
+
+	return primitive
 end
 
 local ozzmesh_loader = ecs.transform "ozzmesh_loader"
@@ -109,46 +104,27 @@ function ozzmesh_loader.process(e)
 	e.rendermesh = assetmgr.load(resname, gen_mesh_assetinfo(e.mesh._handle))
 end
 
-local function patch_dynamic_buffer(ozzmesh, scene)
-	local meshname = next(scene)
-
-	local patch_scene = {
-		[meshname] = {
-			{
-				vb = {handles = {}}
-			}
-		}
-	}
-
-	local new_scene = assetmgr.patch(scene, patch_scene)
+local function patch_dynamic_buffer(ozzmesh, meshscene)
+	local newmeshscene = assetmgr.patch(meshscene, {vb={handles={}}})
 
 	local layouts = ozzmesh:layout()
 	local num_vertices = ozzmesh:num_vertices()
 
-	local mn = new_scene[meshname]
-	local g = mn[1]
-	g.vb.handles[2] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
-	return new_scene
+	newmeshscene.vb.handles[1] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
+	return newmeshscene
 end
 
 function ozzmesh_skinning_transform.process(e, eid)
-	local meshres 	= e.mesh._handle
-	local meshscene = e.rendermesh
-
 	world:add_component(eid, "skinning", {})
 
-	local scene = patch_dynamic_buffer(meshres, meshscene.scenes[meshscene.scene])
-	meshscene.scenes[meshscene.scene] = scene
-
-	local _, meshnode = next(scene)
-
-	local group = meshnode[1]
+	local meshres 	= e.mesh._handle
+	e.rendermesh = patch_dynamic_buffer(meshres, e.rendermesh)
+	local meshscene = e.rendermesh
 
 	local skincomp = e.skinning
+	skincomp.skin = meshscene.skin
 	skincomp.jobs = {
 		{
-			inverse_bind_pose = meshnode.inverse_bind_pose,
-			joint_remap = meshnode.joint_remap,
 			parts = {},
 		}
 	}
@@ -156,7 +132,7 @@ function ozzmesh_skinning_transform.process(e, eid)
 	local job = skincomp.jobs[1]
 	local parts = job.parts
 	
-	local vb = group.vb
+	local vb = meshscene.vb
 
 	for idx, handle in ipairs(vb.handles) do
 		local updatedata = handle.updatedata
