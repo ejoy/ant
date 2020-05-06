@@ -120,9 +120,9 @@ local function register_entity(w)
 	return eid
 end
 
-local function prebuild_entity(w, policy)
+local function prebuild_entity(w, policies)
 	local eid = register_entity(w)
-	local component, transform, connection = policy.create(w, policy)
+	local component, transform, connection = policy.create(w, policies)
 	w._initargs[eid] = {
 		policy = policy,
 		component = component,
