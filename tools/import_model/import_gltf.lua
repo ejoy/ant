@@ -181,7 +181,7 @@ local function export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
                 return newname
             end
             local filepath = pbrm_folder / refine_name(name) .. ".pbrm"
-            fs_local.write_file(filepath, seri_stringify.map(pbrm))
+            fs_local.write_file(filepath, seri_stringify(pbrm))
     
             materialfiles[matidx] = filepath
         end
@@ -206,6 +206,19 @@ local function export_animation(inputfile, animation_folder)
     print((success and "success" or "failed"), msg)
 end
 
+local function create_meshfile(arguments)
+    local c = {
+        mesh_path = arguments.input:string(),
+        sourcetype = "glb",
+        type = "mesh",
+        config = arguments.config.mesh,
+    }
+
+    local outfile = arguments.outfolder / arguments.input:stem():replace_extension ".mesh"
+    fs_local.write_file(outfile, seri_stringify(c))
+    return outfile
+end
+
 return function (arguments)
     local inputfile, output_folder, config = arguments.input, arguments.outfolder, arguments.config
     local glbinfo = glbloader.decode(inputfile:string())
@@ -222,6 +235,7 @@ return function (arguments)
     local materialfiles = export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
     export_animation(inputfile, animation_folder)
 
-    export_prefab(inputfile, mesh_folder, glbscene, glbbin, materialfiles, config.mesh)
+    local meshfile = create_meshfile(arguments)
+    export_prefab(meshfile, materialfiles, arguments.outfolder)
 end
 

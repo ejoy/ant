@@ -92,7 +92,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 
 	local cone_offset = math3d.sub(cone_centerpos, arrow_center)
 
-	world:create_entity{
+	local cylindereid = world:create_entity{
 		policy = {
 			"ant.render|mesh",
 			"ant.render|render",
@@ -127,7 +127,7 @@ value:
         }
 	}
 
-	world:create_entity{
+	local coneeid = world:create_entity{
 		policy = {
 			"ant.render|mesh",
 			"ant.render|render",
@@ -156,6 +156,12 @@ value:
             {"mount", arroweid}
         }
 	}
+
+	local seri = import_package "ant.serialize"
+
+	local entities = {arroweid, cylindereid, coneeid}
+	local result = {}
+	seri.prefab(world, entities, result)
 end
 
 function st_sys:post_init()

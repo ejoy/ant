@@ -6,8 +6,31 @@ package.path = table.concat(
         "packages/glTF/?.lua",
         "packages/serialize/?.lua",
         "packages/utility/?.lua",
+        "packages/compile_resource/?.lua",
     }, ";"
 )
+
+local packages = {
+    ["ant.glTF"] = {
+        util = require "glTF.util",
+        glb = require "glTF.glb",
+    },
+    ["ant.render"] = {
+        declmgr = require "render.vertexdecl_mgr",
+    },
+    ["ant.utility"] = {
+        fs_local = require "utility.fs_local",
+    }
+}
+
+function import_package(pkgname)
+    local pkg = packages[pkgname]
+    if pkg == nil then
+        error(("invalid package name:%s"):format(pkgname))
+    end
+
+    return pkg
+end
 
 local function help_info()
     return [[
