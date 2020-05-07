@@ -32,6 +32,7 @@ function callback.init(nwh, context, width, height)
 	local su = import_package "ant.scene"
 	world = su.create_world()
 	world.init(config)
+    renderpkg.util.create_blit_queue(world:get_world(), {w=width,h=height})
 end
 
 function callback.mouse_wheel(x, y, delta)

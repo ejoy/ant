@@ -1,6 +1,5 @@
 pipeline "init"
     .stage "init"
-    .stage "init_blit_render"
     .stage "post_init"
 
 pipeline "exit"

@@ -99,14 +99,6 @@ end
 ecs.component_alias("camera_eid", "entityid")
 ecs.component_alias("visible", "boolean", true)
 
-
-local blit_render_sys = ecs.system "blit_render_system"
-
-function blit_render_sys:init_blit_render()
-	log.info("init blit system")
-    ru.create_blit_queue(world, {w=world.args.width,h=world.args.height})
-end
-
 local render_sys = ecs.system "render_system"
 
 local function update_view_proj(viewid, camera)

@@ -29,7 +29,8 @@ function cb.init()
 end
 function cb.update()
     world.update()
-    imgui.windows.Begin "TEST"
+    imgui.windows.SetNextWindowPos(0, 0)
+    imgui.windows.Begin("TEST", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" })
     local world_tex = ru.get_main_view_rendertexture(world:get_world())
     if world_tex then
         imgui.widget.ImageButton(world_tex,1024,768,{frame_padding=0,bg_col={0,0,0,1}})
