@@ -61,5 +61,8 @@ end
 function cb.size(w, h)
     world.size(w, h)
 end
+function cb.dropfiles(filelst)
+    world:get_world():pub {"dropfiles", filelst}
+end
 
 editor.start(cb)

@@ -1,9 +1,0 @@
-alphaMode: OPAQUE
-basecolor:
-  factor: {0.669600009918213, 0.241846427321434, 0.21092401444912, 1}
-emissive: {}
-metallic_roughness:
-  metallic_factor: 0.400000005960464
-  roughness_factor: 0.593640983104706
-normal: {}
-occlusion: {}
