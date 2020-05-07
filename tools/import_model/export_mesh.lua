@@ -5,6 +5,7 @@ local fs_local = require "utility.fs_local"
 local math3d = require "math3d"
 
 local seri = require "serialize.serialize"
+local seri_stringify = require "serialize.stringify"
 
 local def_class = {
     methodfunc = {
@@ -190,17 +191,35 @@ local function sort_pairs(t)
     end
 end
 
-return function(meshpath, materialfiles, outfolder, visualpath)
-    local meshfolder = outfolder / "meshes"
+local function create_meshfile(arguments, meshfolder)
+    fs.create_directories(meshfolder)
+    local c = {
+        mesh_path = arguments:to_visualpath(arguments.input):string(),
+        sourcetype = "glb",
+        type = "mesh",
+        config = arguments.config.mesh,
+    }
+
+    local outfile = meshfolder / arguments.input:stem():string() .. ".mesh"
+    local cc = seri_stringify(c)
+    fs_local.write_file(outfile, cc)
+    print("output .mesh file:", outfile, ", success!")
+
+    if _VERBOSE then
+        print(cc)
+    end
+    return outfile
+end
+
+return function(arguments, materialfiles)
+    local meshfolder = arguments.outfolder / "meshes"
     fs.create_directories(meshfolder)
 
-    local mc = fs_local.datalist(meshpath)
-    local success, err = meshcvt(mc, meshpath, meshfolder, 
+    local meshpath = create_meshfile(arguments, meshfolder)
+
+    local success, err = meshcvt(_, meshpath, meshfolder, 
         function (filename) 
-            if type(filename) == "string" then
-                return fs.path(filename)
-            end
-            return filename
+            return arguments:to_localpath(fs.path(filename))
         end)
     if not success then
         error(("convert: %s, failed, error: %s"):format(meshpath:string(), err))
@@ -225,18 +244,14 @@ return function(meshpath, materialfiles, outfolder, visualpath)
         rootid,
     }
 
-    local function get_visual_path(path)
-        return path:gsub(outfolder:string(), visualpath:string())
-    end
-
-    local visualmesh_path = get_visual_path(meshpath:string())
+    local visualmesh_path = arguments:to_visualpath(meshpath):string()
     for meshname, meshnode in sort_pairs(scene) do
         local parent = create_hierarchy_entity(meshname, get_transform(meshnode), rootid)
         entities[#entities+1] = parent
         for primidx, prim in ipairs(meshnode) do
             local meshres = visualmesh_path .. ":" .. get_submesh_name(meshname, primidx)
-            local mf = materialfiles[prim.material+1]:string()
-            entities[#entities+1] = create_mesh_entity(parent, meshres, get_visual_path(mf), meshname .. "." .. primidx)
+            local mf = materialfiles[prim.material+1]
+            entities[#entities+1] = create_mesh_entity(parent, meshres, arguments:to_visualpath(mf):string(), meshname .. "." .. primidx)
         end
     end
     local prefabconetent = seri.prefab(pseudo_world, entities, {
@@ -245,5 +260,11 @@ return function(meshpath, materialfiles, outfolder, visualpath)
 
     prefabconetent = prefabconetent:gsub("([^.])mesh:", "%1mesh: $resource")
     prefabconetent = prefabconetent:gsub("material:", "material: $resource")
-    fs_local.write_file(fs.path(meshpath):replace_extension ".prefab", prefabconetent)
+    local prefabpath = fs.path(meshpath):replace_extension ".prefab"
+    fs_local.write_file(prefabpath, prefabconetent)
+    print("create .prefab: ", prefabpath:string(), ", success!")
+
+    if _VERBOSE then
+        print(prefabconetent)
+    end
 end

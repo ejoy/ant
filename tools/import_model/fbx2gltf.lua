@@ -3,9 +3,10 @@ local fs = require "filesystem.local"
 local subprocess = require "utility.sb_util"
 local fs_local = require "utility.fs_local"
 
-local function convert(filename)
+local function convert(filename, outfile)
 	local toolexe = fs_local.valid_tool_exe_path "FBX2glTF-windows-x64"
-	local outfile = fs.path(filename):replace_extension("")	-- should not pass filename with extension, just filename without any extension
+	outfile = outfile or filename
+	outfile = fs.path(outfile):replace_extension("")	-- should not pass filename with extension, just filename without any extension
 	local commands = {
 		toolexe:string(),
 		"-i", filename:string(),
@@ -23,9 +24,10 @@ end
 
 return function(files, postconvert)
 	local progs = {}
-	for _, f in ipairs(files) do
-		if f and fs.is_regular_file(f) then
-			progs[#progs+1] = {convert(f), f}
+	for _, filepair in ipairs(files) do
+		local inputfile, outfile = filepair[1], filepair[2]
+		if fs.is_regular_file(inputfile) then
+			progs[#progs+1] = {convert(inputfile, outfile), inputfile}
 		end
 	end
 

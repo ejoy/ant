@@ -4,7 +4,7 @@ local glbloader = require "glb"
 local subprocess = require "utility.sb_util"
 local fs_local = require "utility.fs_local"
 
-local export_prefab = require "export_prefab"
+local export_mesh = require "export_mesh"
 
 local seri_stringify = require "serialize.stringify"
 
@@ -13,7 +13,15 @@ local image_extension = {
     ["image/png"] = ".png",
 }
 
-local function export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
+local function export_pbrm(arguments)
+    local glbinfo = glbloader.decode(arguments.input:string())
+
+    local glbbin = glbinfo.bin
+    local glbscene = glbinfo.info
+
+    local image_folder = arguments.outfolder / "images"
+    local pbrm_folder = arguments.outfolder / "pbrm"
+
     fs.create_directories(pbrm_folder)
     local images = glbscene.images
     local bufferviews = glbscene.bufferviews
@@ -190,12 +198,13 @@ local function export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
     return materialfiles
 end
 
-local function export_animation(inputfile, animation_folder)
+local function export_animation(arguments)
+    local animation_folder = arguments.outfolder / "animation"
     fs.create_directories(animation_folder)
     local gltf2ozz = fs_local.valid_tool_exe_path "gltf2ozz"
     local commands = {
         gltf2ozz:string(),
-        "--file=" .. (fs.current_path() / inputfile):string(),
+        "--file=" .. (fs.current_path() / arguments.input):string(),
         stdout = true,
         stderr = true,
         hideWindow = true,
@@ -206,37 +215,9 @@ local function export_animation(inputfile, animation_folder)
     print((success and "success" or "failed"), msg)
 end
 
-local function create_meshfile(arguments, meshfolder)
-    fs.create_directories(meshfolder)
-    local c = {
-        mesh_path = arguments.input:string(),
-        sourcetype = "glb",
-        type = "mesh",
-        config = arguments.config.mesh,
-    }
-
-    local outfile = meshfolder / arguments.input:stem():replace_extension ".mesh"
-    fs_local.write_file(outfile, seri_stringify(c))
-    return outfile
-end
-
 return function (arguments)
-    local inputfile, output_folder, config = arguments.input, arguments.outfolder, arguments.config
-    local glbinfo = glbloader.decode(inputfile:string())
-
-    local glbbin = glbinfo.bin
-    local glbscene = glbinfo.info
-    
-
-    local image_folder = output_folder / "images"
-    local pbrm_folder = output_folder / "pbrm"
-    local mesh_folder = output_folder / "meshes"
-    local animation_folder = output_folder / "animation"
-
-    local materialfiles = export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
-    export_animation(inputfile, animation_folder)
-
-    local meshfile = create_meshfile(arguments, arguments.outfolder / "meshes")
-    export_prefab(meshfile, materialfiles, arguments.outfolder, arguments.visualpath)
+    local materialfiles = export_pbrm(arguments)
+    export_animation(arguments)
+    export_mesh(arguments, materialfiles)
 end
 

@@ -119,7 +119,8 @@ function init_loader_sys:init()
 
     --computil.create_grid_entity(world)
 
-    computil.create_procedural_sky(world)
+    local eid = computil.create_procedural_sky(world)
+    world:instance("/pkg/ant.resources/female_idle/meshes/female_idle.prefab", {root=eid})
     --target_lock_test()
 end
 

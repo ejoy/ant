@@ -83,20 +83,36 @@ else
     error(("config file not found:%s"):format(arguments.config:string()))
 end
 
-if arguments.input:extension():string():upper() == ".FBX" then
+arguments.outfolder = arguments.outfolder / arguments.input:stem()
+arguments.visualpath = arguments.visualpath / arguments.input:stem()
+
+function arguments:to_visualpath(localpath)
+    return fs.path(localpath:string():gsub(self.outfolder:string(), self.visualpath:string()))
+end
+
+function arguments:to_localpath(visualpath)
+    return fs.path(visualpath:string():gsub(self.visualpath:string(), self.outfolder:string()))
+end
+
+local extname = arguments.input:extension():string():upper()
+local outfile = arguments.outfolder / "meshes" / arguments.input:filename()
+if extname == ".FBX" then
     local fbx2gltf = require "fbx2gltf"
-    local results = fbx2gltf {arguments.input}
+    fs.create_directories(outfile:parent_path())
+    outfile:replace_extension ".glb"
+    local results = fbx2gltf { {arguments.input, outfile}}
     if not next(results) then
         print("failed to convert file:", arguments.input:string(), "from fbx to gltf file")
     end
 
-    local glbfile = fs.path(arguments.input):replace_extension "glb"
-    if not fs.exists(glbfile) then
+    if not fs.exists(outfile) then
         error(string.format("glb file is not exist, but fbx2gltf progrom return true:%s", arguments.input:string()))
     end
-    arguments.input = glbfile
+elseif extname == ".GLB" then
+    fs.copy_file(arguments.input, outfile)
 end
 
+arguments.input = outfile
 
 local importgltf = require "import_gltf"
 importgltf(arguments)
