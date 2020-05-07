@@ -25,12 +25,6 @@ function sp_test_sys:init()
 
     local material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material"
 
-    -- local fs = require "filesystem"
-    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/sphere.mesh"
-    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/cone.mesh"
-    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/cylinder.mesh"
-    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/cube.mesh"
-
     local child1 = world:create_entity{
         policy = {
             "ant.scene|hierarchy_policy",
@@ -40,7 +34,6 @@ function sp_test_sys:init()
         },
         data = {
             name = "child1",
-            parent = rooteid,
             can_render = true,
             material = material,
             mesh = world.component:resource "/pkg/ant.resources/meshes/sphere.mesh:scenes.scene1.pSphere1.1",
@@ -51,6 +44,9 @@ function sp_test_sys:init()
                 }
             }),
             scene_entity = true,
+        },
+        connection = {
+            {"mount", rooteid}
         }
     }
 
@@ -63,7 +59,6 @@ function sp_test_sys:init()
         },
         data = {
             name = "child1_1",
-            parent = child1,
             scene_entity = true,
             can_render = true,
             mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1",
@@ -75,6 +70,9 @@ function sp_test_sys:init()
                     t = {1, 2, 0, 1}
                 }
             }),
+        },
+        connection = {
+            {"mount", child1}
         }
     }
 
@@ -89,8 +87,10 @@ function sp_test_sys:init()
             transform = computil.create_transform(world,
                 { srt = {s = {1, 2, 1, 0},
                 t = {3, 3, 5}}}),
-            parent = rooteid,
             scene_entity = true,
+        },
+        connection = {
+            {"mount", rooteid}
         }
     }
 
@@ -103,7 +103,6 @@ function sp_test_sys:init()
         },
         data = {
             name = "child2_1",
-            parent = child2,
             can_render = true,
             scene_entity = true,
             material = material,
@@ -114,6 +113,9 @@ function sp_test_sys:init()
                     t ={1, 2, 0, 1}
                 }
             }),
+        },
+        connection = {
+            {"mount", child2},
         }
     }
 end

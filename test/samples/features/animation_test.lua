@@ -1,26 +1,18 @@
 local ecs = ...
 local world = ecs.world
-local utilitypkg = import_package "ant.utility"
-local fs_rt = utilitypkg.fs_rt
 
 local fs = require "filesystem"
 local anitest_sys = ecs.system "animation_test_system"
 
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
-
-local math3d = require "math3d"
-
 local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 
 local function ozzmesh_animation_test()
-    return world:create_entity(fs_rt.read_file(entitydir / "ozz_animation_sample.txt"))
+    return world:create_entity((entitydir / "ozz_animation_sample.txt"):string())
 end
 
 local function gltf_animation_test()
-    computil.print_glb_hierarchy "/pkg/ant.resources/meshes/female.mesh"
-    world:create_entity(fs_rt.read_file(entitydir / "gltf_animation_sample_Beta_Joints.txt"))
-    world:create_entity(fs_rt.read_file(entitydir / "gltf_animation_sample_Beta_Surface.txt"))
+    world:create_entity((entitydir / "gltf_animation_sample_Beta_Joints.txt"):string())
+    world:create_entity((entitydir / "gltf_animation_sample_Beta_Surface.txt"):string())
 end
 
 local function print_ske(ske)

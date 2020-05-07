@@ -120,9 +120,11 @@ value:
     {1, 0, 0, 1}
 ]],
 			mesh = world.component:resource '/pkg/ant.resources/meshes/cylinder.mesh:scenes.scene1.pCylinder1.1',
-			parent = arroweid,
 			name = "arrow.cylinder",
-		}
+		},
+		connection = {
+            {"mount", arroweid}
+        }
 	}
 
 	world:create_entity{
@@ -148,9 +150,11 @@ value:
     {1, 0, 0, 1}
 ]],
 			mesh = world.component:resource '/pkg/ant.resources/meshes/cone.mesh:scenes.scene1.pCone1.1',
-			parent = arroweid,
 			name = "arrow.cone"
-		}
+		},
+		connection = {
+            {"mount", arroweid}
+        }
 	}
 end
 

@@ -74,8 +74,7 @@ local function pbr_spheres()
 end
 
 local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
-local fs_rt = import_package "ant.utility".fs_rt
 function pbr_test_sys:init()
-    world:create_entity(fs_rt.read_file(entitydir / "DamagedHelmet.txt"))
+    world:create_entity((entitydir / "DamagedHelmet.txt"):string())
     pbr_spheres()
 end

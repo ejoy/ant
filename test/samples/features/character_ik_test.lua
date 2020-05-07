@@ -10,9 +10,6 @@ local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
 local computil  = renderpkg.components
 
-local utilitypkg= import_package "ant.utility"
-local fs_rt = utilitypkg.fs_rt
-
 local char_ik_test_sys = ecs.system "character_ik_test_system"
 
 local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
@@ -20,7 +17,7 @@ local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 local function v4(...)return world.component:vector(...)end
 
 local function foot_ik_test()
-    return world:create_entity(fs_rt.read_file(entitydir / "character_ik_test.txt"))
+    return world:create_entity((entitydir / "character_ik_test.txt"):string())
 end
 
 local function create_plane_test()
