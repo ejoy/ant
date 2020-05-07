@@ -1,6 +1,6 @@
 local editor = import_package "ant.imguibase".editor
 local ru     = import_package "ant.render".util
-local su     = import_package "ant.scene".util
+local su     = import_package "ant.scene"
 local imgui  = require "imgui.ant"
 
 local cb = {}
@@ -12,9 +12,18 @@ function cb.init()
     world.init {
         width  = 1024,
         height = 768,
-        policy = {},
-        system = {
-            "ant.tools.viewer|init_loader",
+        ecs = {
+            import = {
+                "@ant.tools.viewer",
+            },
+            pipeline = {
+                "init",
+                "update",
+                "exit",
+            },
+            system = {
+                "ant.tools.viewer|init_loader",
+            }
         }
     }
 end

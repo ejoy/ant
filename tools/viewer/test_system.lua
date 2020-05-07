@@ -4,17 +4,9 @@ local world = ecs.world
 local renderpkg  = import_package 'ant.render'
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
-local fs         = require 'filesystem'
 local rhwi       = renderpkg.hwi
 
 local m = ecs.system 'init_loader'
-
-local function load_file(file)
-    local f = assert(fs.open(fs.path(file), 'r'))
-    local data = f:read 'a'
-    f:close()
-    return data
-end
 
 function m:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
