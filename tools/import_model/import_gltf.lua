@@ -4,7 +4,7 @@ local glbloader = require "glb"
 local subprocess = require "utility.sb_util"
 local fs_local = require "utility.fs_local"
 
-local export_entity = require "export_entity"
+local export_prefab = require "export_prefab"
 
 local seri_stringify = require "serialize.stringify"
 
@@ -206,7 +206,8 @@ local function export_animation(inputfile, animation_folder)
     print((success and "success" or "failed"), msg)
 end
 
-return function (inputfile, output_folder, config)
+return function (arguments)
+    local inputfile, output_folder, config = arguments.input, arguments.outfolder, arguments.config
     local glbinfo = glbloader.decode(inputfile:string())
 
     local glbbin = glbinfo.bin
@@ -221,6 +222,6 @@ return function (inputfile, output_folder, config)
     local materialfiles = export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
     export_animation(inputfile, animation_folder)
 
-    export_entity(inputfile, mesh_folder, glbscene, glbbin, materialfiles, config.mesh)
+    export_prefab(inputfile, mesh_folder, glbscene, glbbin, materialfiles, config.mesh)
 end
 

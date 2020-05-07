@@ -53,7 +53,11 @@ arguments.config = fs.path(arguments.config)
 arguments.input = fs.path(arguments.input)
 arguments.outfolder = fs.path(arguments.outfolder)
 
-local cfg = fs.exists(arguments.config) and fs_local.datalist(arguments.config) or nil
+if fs.exists(arguments.config) then
+    arguments.config = fs_local.datalist(arguments.config)
+else
+    error(("config file not found:%s"):format(arguments.config:string()))
+end
 
 if arguments.input:extension():string():upper() == ".FBX" then
     local fbx2gltf = require "fbx2gltf"
@@ -71,5 +75,4 @@ end
 
 
 local importgltf = require "import_gltf"
-
-importgltf(arguments.input, arguments.outfolder, cfg)
+importgltf(arguments)
