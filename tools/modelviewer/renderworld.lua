@@ -56,10 +56,10 @@ function m:init()
 		f:close()
 		return data
 	end
-	world:create_entity(load_file 'res/door.txt')
-	world:create_entity(load_file 'res/fence1.txt')
-	world:create_entity(load_file 'res/fence2.txt')
-	local eid = world:create_entity(load_file 'res/player.txt')
+	world:create_entity 'res/door.txt'
+	world:create_entity 'res/fence1.txt'
+	world:create_entity 'res/fence2.txt'
+	local eid = world:create_entity 'res/player.txt'
 	player = world[eid]
 end
 

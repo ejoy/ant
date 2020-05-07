@@ -460,8 +460,6 @@ luaopen_thread_worker(lua_State *L) {
 		return luaL_error(L, "No THREADID in registry");
 	}
 	lua_setfield(L, -2, "id");
-	lua_pushnil(L);
-	lua_setfield(L, LUA_REGISTRYINDEX, "THREADID");
 	return 1;
 }
 

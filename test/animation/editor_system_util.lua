@@ -74,7 +74,6 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
             }),
-            parent = parent,
             mesh = world.component:resource "/pkg/ant.resources/meshes/ring.mesh",
             material = world.component:resource (([[
                 ---
@@ -94,10 +93,11 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             gizmo_object = {dir = dir},
             scene_entity = true,
         },
+        connection = {
+            {"mount", parent}
+        }
     }
 end
-
-
 
 local function create_line_entity(world, name, start_pos,end_pos,color,parent,dir)
     local util  = import_package "ant.render".components
@@ -111,7 +111,6 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         },
         data = {
             transform = computil.create_transform(world),
-            parent = parent,
             material = world.component:resource "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
             can_render = true,
@@ -119,6 +118,9 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             gizmo_object = {dir = dir},
             scene_entity = true,
         },
+        connection = {
+            {"mount", parent}
+        }
     }
     local vb, ib = line(start_pos, end_pos, color)
     local gvb = {"fffd"}
@@ -152,13 +154,15 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {r = euler2quat(rot or {0, 0, 0})},
             }),
-            parent = parent,
             material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_line.material",
             name = name,
             can_render = true,
             can_select = true,
             gizmo_object = {dir = dir},
             scene_entity = true,
+        },
+        connection = {
+            {"mount", parent}
         }
     }
     local vb, ib = circle(color)
@@ -192,7 +196,6 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
             }),
-            parent = parent,
             mesh = world.component:resource"/pkg/ant.resources/meshes/cone.mesh",
             material = world.component:resource (([[
                 ---
@@ -211,6 +214,9 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             gizmo_object = {dir=dir},
             scene_entity = true,
         },
+        connection = {
+            {"mount", parent}
+        }
     }
 end
 
@@ -228,7 +234,6 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size, t=pos},
             }),
-            parent = parent,
             mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
             material = world.component:resource (([[
                 ---
@@ -247,7 +252,9 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             gizmo_object = {dir=dir},
             scene_entity = true,
         },
-
+        connection = {
+            {"mount", parent}
+        }
     }
 end
 
@@ -265,8 +272,10 @@ function Util.create_gizmo(world)
                 transform = trans,
                 name = name,
                 gizmo_object = {},
-                parent = parent,
             },
+            connection = {
+                {"mount", parent}
+            }
         }
 
         if parent then

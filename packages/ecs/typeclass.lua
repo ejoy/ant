@@ -84,9 +84,10 @@ local check_map = {
 	require_policy = "policy",
 	require_transform = "transform",
 	pipeline = "pipeline",
+	connection = "connection",
 }
 
-local OBJECT = {"system","policy","transform","interface","component","pipeline"}
+local OBJECT = {"system","policy","transform","interface","component","pipeline","connection"}
 
 local function create_importor(w, ecs, declaration)
     local import = {}
@@ -176,7 +177,7 @@ local function init(w, config)
 		local class_set = {}
 		ecs[what] = function(name)
 			local package = getCurrentPackage()
-			local fullname = package .. "|" .. name
+			local fullname = what == "connection" and name or package .. "|" .. name
 			local r = class_set[fullname]
 			if r == nil then
 				log.info("Register", #what<8 and what.."  " or what, fullname)
@@ -211,8 +212,8 @@ local function init(w, config)
 	end
 	register "system"
 	register "transform"
-	register "policy"
 	register "interface"
+	register "connection"
 	ecs.component = schema
 	ecs.component_alias = schema
 	ecs.tag = schema

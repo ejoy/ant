@@ -18,8 +18,8 @@ end
 
 function m:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
-    world:create_entity(load_file 'res/light_directional.txt')
-    world:create_entity(load_file 'res/entity.txt')
+    world:create_entity 'res/light_directional.txt'
+    world:create_entity 'res/entity.txt'
 end
 
 function m:post_init()

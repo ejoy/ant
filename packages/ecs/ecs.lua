@@ -3,6 +3,7 @@ local system = require "system"
 local policy = require "policy"
 local event = require "event"
 local datalist = require "datalist"
+local fs = require "filesystem"
 
 local world = {}
 world.__index = world
@@ -99,42 +100,68 @@ function world:add_policy(eid, t)
 	apply_policy(self, eid, component, transform, dataset)
 end
 
-function world:init_entity(eid, dataset)
-	local args = self._initargs[eid]
-	apply_policy(self, eid, args.component, args.transform, dataset)
-end
-
-local function register_entity(w, t)
-	if type(t) == 'string' then
-		t = datalist.parse(t, function(args)
-			return component_init(w, args[1], args[2])
+local function read_data(w, args)
+	if type(args) == 'string' then
+		local f = assert(fs.open(fs.path(args), 'rb'))
+		local data = f:read 'a'
+		f:close()
+		return datalist.parse(data, function(v)
+			return component_init(w, v[1], v[2])
 		end)
 	end
+	return args
+end
+
+local function register_entity(w)
 	local eid = w._entity_id + 1
 	w._entity_id = eid
 	w[eid] = {}
 	w._entity[eid] = true
-
-	local component, transform = policy.create(w, t.policy)
-	w._initargs[eid] = {
-		policy = t.policy,
-		component = component,
-		transform = transform,
-	}
-	return eid, t.data
-end
-
-function world:create_entity(t)
-	local eid, dataset = register_entity(self, t)
-	self:init_entity(eid, dataset)
-	self:pub {"entity_created", eid}
 	return eid
 end
 
-function world:reset_entity(eid, dataset)
-	local removed = self._removed
-	removed[#removed+1] = assert(self[eid])
-	self:init_entity(eid, dataset)
+local function prebuild_entity(w, policies)
+	local eid = register_entity(w)
+	local component, transform, connection = policy.create(w, policies)
+	w._initargs[eid] = {
+		policy = policy,
+		component = component,
+		transform = transform,
+		connection = connection,
+	}
+	return eid, component, transform
+end
+
+function world:create_entity(args)
+	local t = read_data(self, args)
+	local eid, component, transform = prebuild_entity(self, t.policy)
+	apply_policy(self, eid, component, transform, t.data)
+	if t.connection then
+		local e = self[eid]
+		for _, l in ipairs(t.connection) do
+			local object = self._class.connection[l[1]]
+			assert(object and object.methodfunc and object.methodfunc.init)
+			l[1] = e
+			object.methodfunc.init(table.unpack(l))
+		end
+	end
+	return eid
+end
+
+function world:instance(prefab, args)
+	local t = read_data(self, prefab)
+	local entities = {}
+	for i = 2, #t do
+		local eid, component, transform = prebuild_entity(self, t[i].policy)
+		apply_policy(self, eid, component, transform, t[i].data)
+		entities[i-1] = eid
+	end
+	for _, connection in ipairs(t[1]) do
+		local name, source, target = connection[1], connection[2], connection[3]
+		local object = self._class.connection[name]
+		assert(object and object.methodfunc and object.methodfunc.init)
+		object.methodfunc.init(self[entities[source]], assert(entities[target] or args[target]))
+	end
 end
 
 function world:remove_entity(eid)
@@ -261,6 +288,13 @@ function world:interface(fullname)
 		interface[fullname] = res
 	end
 	return res
+end
+
+function world:connection(fullname, ...)
+	typeclass.import_object(self, "connection", fullname)
+	local object = self._class.connection[fullname]
+	assert(object and object.methodfunc and object.methodfunc.init)
+	object.methodfunc.init(...)
 end
 
 function world:import_component(name)
