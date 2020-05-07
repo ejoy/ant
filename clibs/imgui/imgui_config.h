@@ -1,6 +1,6 @@
 #pragma once
 
-#define ImWchar ImWchar32
+#define IMGUI_USE_WCHAR32 1
 
 #if !defined(NDEBUG)
 
