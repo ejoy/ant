@@ -11,8 +11,10 @@ local function ozzmesh_animation_test()
 end
 
 local function gltf_animation_test()
-    world:create_entity((entitydir / "gltf_animation_sample_Beta_Joints.txt"):string())
-    world:create_entity((entitydir / "gltf_animation_sample_Beta_Surface.txt"):string())
+    -- world:create_entity((entitydir / "gltf_animation_sample_Beta_Joints.txt"):string())
+    -- world:create_entity((entitydir / "gltf_animation_sample_Beta_Surface.txt"):string())
+
+    world:instance((entitydir / "gltf_animation.prefab"):string())
 end
 
 local function print_ske(ske)
