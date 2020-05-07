@@ -75,6 +75,7 @@ end
 arguments.config = fs.path(arguments.config)
 arguments.input = fs.path(arguments.input)
 arguments.outfolder = fs.path(arguments.outfolder)
+arguments.visualpath = fs.path(arguments.visualpath)
 
 if fs.exists(arguments.config) then
     arguments.config = fs_local.datalist(arguments.config)

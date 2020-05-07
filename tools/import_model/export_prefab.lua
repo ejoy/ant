@@ -190,7 +190,8 @@ local function sort_pairs(t)
     end
 end
 
-return function(meshpath, materialfiles, meshfolder)
+return function(meshpath, materialfiles, outfolder, visualpath)
+    local meshfolder = outfolder / "meshes"
     fs.create_directories(meshfolder)
 
     local mc = fs_local.datalist(meshpath)
@@ -223,19 +224,26 @@ return function(meshpath, materialfiles, meshfolder)
     local entities = {
         rootid,
     }
+
+    local function get_visual_path(path)
+        return path:gsub(outfolder:string(), visualpath:string())
+    end
+
+    local visualmesh_path = get_visual_path(meshpath:string())
     for meshname, meshnode in sort_pairs(scene) do
         local parent = create_hierarchy_entity(meshname, get_transform(meshnode), rootid)
         entities[#entities+1] = parent
         for primidx, prim in ipairs(meshnode) do
-            local meshres = meshpath:string() .. ":" .. get_submesh_name(meshname, primidx)
-            entities[#entities+1] = create_mesh_entity(parent, meshres, materialfiles[prim.material+1]:string(), meshname .. "." .. primidx)
+            local meshres = visualmesh_path .. ":" .. get_submesh_name(meshname, primidx)
+            local mf = materialfiles[prim.material+1]:string()
+            entities[#entities+1] = create_mesh_entity(parent, meshres, get_visual_path(mf), meshname .. "." .. primidx)
         end
     end
     local prefabconetent = seri.prefab(pseudo_world, entities, {
         {mount="root"}
     })
 
-    prefabconetent = prefabconetent:gsub("[^.]mesh:", " mesh: $resource ")
-    prefabconetent = prefabconetent:gsub("material:", "material: $resource ")
+    prefabconetent = prefabconetent:gsub("([^.])mesh:", "%1mesh: $resource")
+    prefabconetent = prefabconetent:gsub("material:", "material: $resource")
     fs_local.write_file(fs.path(meshpath):replace_extension ".prefab", prefabconetent)
 end

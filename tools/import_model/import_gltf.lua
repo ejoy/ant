@@ -206,7 +206,8 @@ local function export_animation(inputfile, animation_folder)
     print((success and "success" or "failed"), msg)
 end
 
-local function create_meshfile(arguments)
+local function create_meshfile(arguments, meshfolder)
+    fs.create_directories(meshfolder)
     local c = {
         mesh_path = arguments.input:string(),
         sourcetype = "glb",
@@ -214,7 +215,7 @@ local function create_meshfile(arguments)
         config = arguments.config.mesh,
     }
 
-    local outfile = arguments.outfolder / arguments.input:stem():replace_extension ".mesh"
+    local outfile = meshfolder / arguments.input:stem():replace_extension ".mesh"
     fs_local.write_file(outfile, seri_stringify(c))
     return outfile
 end
@@ -235,7 +236,7 @@ return function (arguments)
     local materialfiles = export_pbrm(pbrm_folder, image_folder, glbscene, glbbin)
     export_animation(inputfile, animation_folder)
 
-    local meshfile = create_meshfile(arguments)
-    export_prefab(meshfile, materialfiles, arguments.outfolder)
+    local meshfile = create_meshfile(arguments, arguments.outfolder / "meshes")
+    export_prefab(meshfile, materialfiles, arguments.outfolder, arguments.visualpath)
 end
 
