@@ -1,6 +1,6 @@
 local editor = import_package "ant.imguibase".editor
 local ru     = import_package "ant.render".util
-local su     = import_package "ant.scene".util
+local su     = import_package "ant.scene"
 local imgui  = require "imgui.ant"
 
 local cb = {}
@@ -12,15 +12,25 @@ function cb.init()
     world.init {
         width  = 1024,
         height = 768,
-        policy = {},
-        system = {
-            "ant.tools.viewer|init_loader",
+        ecs = {
+            import = {
+                "@ant.tools.viewer",
+            },
+            pipeline = {
+                "init",
+                "update",
+                "exit",
+            },
+            system = {
+                "ant.tools.viewer|init_loader",
+            }
         }
     }
 end
 function cb.update()
     world.update()
-    imgui.windows.Begin "TEST"
+    imgui.windows.SetNextWindowPos(0, 0)
+    imgui.windows.Begin("TEST", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" })
     local world_tex = ru.get_main_view_rendertexture(world:get_world())
     if world_tex then
         imgui.widget.ImageButton(world_tex,1024,768,{frame_padding=0,bg_col={0,0,0,1}})
