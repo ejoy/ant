@@ -83,8 +83,8 @@ else
     error(("config file not found:%s"):format(arguments.config:string()))
 end
 
-arguments.outfolder = arguments.outfolder / arguments.input:stem()
-arguments.visualpath = arguments.visualpath / arguments.input:stem()
+arguments.outfolder = arguments.outfolder
+arguments.visualpath = arguments.visualpath
 
 function arguments:to_visualpath(localpath)
     return fs.path(localpath:string():gsub(self.outfolder:string(), self.visualpath:string()))

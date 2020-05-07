@@ -260,7 +260,7 @@ return function(arguments, materialfiles)
 
     prefabconetent = prefabconetent:gsub("([^.])mesh:", "%1mesh: $resource")
     prefabconetent = prefabconetent:gsub("material:", "material: $resource")
-    local prefabpath = fs.path(meshpath):replace_extension ".prefab"
+    local prefabpath = arguments.outfolder / "mesh.prefab"
     fs_local.write_file(prefabpath, prefabconetent)
     print("create .prefab: ", prefabpath:string(), ", success!")
 
