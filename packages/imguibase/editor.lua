@@ -6,7 +6,6 @@ local rhwi        = renderpkg.hwi
 local window      = require "window"
 local platform    = require "platform"
 local inputmgr    = require "inputmgr"
-local imguiIO     = imgui.IO
 local font        = imgui.font
 local Font        = platform.font
 local context     = nil
@@ -21,7 +20,7 @@ local _timer = require "platform.timer"
 local _time_counter = _timer.counter
 local _time_freq    = _timer.frequency() / 1000
 local _timer_previous
-local _timer_current = 0
+local _timer_current = _time_counter() / _time_freq
 local _timer_delta
 local function timer_delta()
 	_timer_previous = _timer_current
@@ -77,13 +76,9 @@ local function imgui_resize(width, height)
 end
 
 local function imgui_start()
-	imgui.push_context(context)
-    imgui.begin_frame(timer_delta() * 1000)
 end
 
 local function imgui_end()
-    imgui.end_frame()
-    imgui.pop_context()
 end
 
 function message.init(nwh, context, width, height)
@@ -100,69 +95,40 @@ end
 
 function message.mouse_wheel(x, y, delta)
     imgui.mouse_wheel(x, y, delta)
-    if not imguiIO.WantCaptureMouse then
-        cb.mouse_wheel(x, y, delta)
-    end
+	cb.mouse_wheel(x, y, delta)
 end
 function message.mouse(x, y, what, state)
     imgui.mouse(x, y, what, state)
-    if not imguiIO.WantCaptureMouse then
-        cb.mouse(x, y, what, state)
-    end
-end
-local touchid
-function message.touch(x, y, id, state)
-    if state == 1 then
-        if not touchid then
-            touchid = id
-            imgui.mouse(x, y, 1, state)
-        end
-    elseif state == 2 then
-        if touchid == id then
-            imgui.mouse(x, y, 1, state)
-        end
-    elseif state == 3 then
-        if touchid == id then
-            imgui.mouse(x, y, 1, state)
-            touchid = nil
-        end
-    end
-    if not imguiIO.WantCaptureMouse then
-        cb.touch(x, y, id, state)
-    end
+	cb.mouse(x, y, what, state)
 end
 function message.keyboard(key, press, state)
     imgui.keyboard(key, press, state)
-    if not imguiIO.WantCaptureKeyboard then
-        cb.keyboard(key, press, state)
-    end
+	cb.keyboard(key, press, state)
 end
 message.char = imgui.input_char
-
-function message.dropfiles(...)
-	cb.dropfiles(...)
+function message.dropfiles(filelst)
+	cb.dropfiles(filelst)
 end
-
 function message.size(width,height,_)
 	imgui.push_context(context)
 	imgui_resize(width, height)
 	imgui.pop_context()
-	cb.size(width, height)
 	rhwi.reset(nil, width, height)
 end
-
 function message.exit()
     imgui.DestroyContext()
 	rhwi.shutdown()
     print "exit"
 end
-
 function message.update()
     if debug_update then debug_update() end
-    if initialized then
-        imgui_start()
-        cb.update()
-        imgui_end()
+	if initialized then
+		local delta = timer_delta()
+		imgui.push_context(context)
+		imgui.begin_frame(delta * 1000)
+        cb.update(delta)
+		imgui.end_frame()
+		imgui.pop_context()
         rhwi.frame()
     end
 end
@@ -185,5 +151,4 @@ end
 
 return {
 	start = start,
-	callback = message,
 }
