@@ -29,7 +29,8 @@ function access.repopath(repo, hash, ext)
 	end
 end
 
-function access.readmount(mountpoint, filename)
+function access.readmount(filename)
+	local mountpoint = {}
 	local f = assert(lfs.open(filename, "rb"))
 	for line in f:lines() do
 		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
@@ -53,6 +54,7 @@ function access.readmount(mountpoint, filename)
 		end
 	end
 	f:close()
+	return mountpoint
 end
 
 function access.mountname(mountpoint)
