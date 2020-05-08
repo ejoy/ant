@@ -1,4 +1,4 @@
 return {
-    entry = "entry",
+    entry = "main",
     name = "ant.tools.viewer",
 }

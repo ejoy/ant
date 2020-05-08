@@ -162,6 +162,7 @@ function world:instance(prefab, args)
 		assert(object and object.methodfunc and object.methodfunc.init)
 		object.methodfunc.init(self[entities[source]], assert(entities[target] or args[target]))
 	end
+	return entities
 end
 
 function world:remove_entity(eid)

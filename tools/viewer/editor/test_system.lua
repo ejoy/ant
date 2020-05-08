@@ -38,7 +38,7 @@ end
 
 function m:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
-    world:create_entity 'light_directional.txt'
+    world:create_entity '/pkg/ant.tools.viewer/light_directional.txt'
 end
 
 function m:post_init()
@@ -138,6 +138,16 @@ local function mouseEvent(what, dx, dy)
     end
 end
 
+local entities = {}
+local function createPrefab(filename)
+    for _, eid in ipairs(entities) do
+        world:remove_entity(eid)
+    end
+    local output = fs.path "/pkg/ant.tools.viewer/res/"
+    import(lfs.path(filename), output)
+    entities = world:instance((output / "mesh.prefab"):string(), {root=0})
+end
+
 function m:data_changed()
     for _,what,state,x,y in eventMouse:unpack() do
         if state == "DOWN" then
@@ -153,8 +163,6 @@ function m:data_changed()
         world:pub { "camera", "zoom", -delta*kWheelSpeed }
     end
     for _, filelst in eventDropFiles:unpack() do
-        local output = fs.path "/pkg/ant.tools.viewer/res/running/"
-        import(lfs.path(filelst[1]), output)
-        world:instance((output / "mesh.prefab"):string(), {root=0})
+        createPrefab(filelst[1])
     end
 end
