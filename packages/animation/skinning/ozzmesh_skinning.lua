@@ -95,23 +95,33 @@ end
 
 local ozzmesh_loader = ecs.transform "ozzmesh_loader"
 
+local ozzmesh_cache = {}
 function ozzmesh_loader.process(e)
 	local meshfilename = tostring(e.mesh)
 	local f = meshfilename:match "([^:]+)"
-	local stem, ext = f:match "[/\\]([%w_-]+)%.([%w_-]+)$"
-	assert(ext == "ozz")
-	local resname = assetmgr.generate_resource_name("mesh", stem .. ".rendermesh")
-	e.rendermesh = assetmgr.load(resname, gen_mesh_assetinfo(e.mesh._handle))
+	local pathname = f:match("/pkg([%w_-%d%s/\\.]+)%.ozz")
+	if pathname == nil then
+		error(("invalid ozz mesh file, should be .ozz extension:%s").format(meshfilename))
+	end
+	local resname = "//res.mesh" .. pathname .. ".rendermesh"
+	local ozzmesh = ozzmesh_cache[resname]
+	if ozzmesh == nil then
+		ozzmesh = assetmgr.load(resname, gen_mesh_assetinfo(e.mesh._handle))
+		ozzmesh_cache[resname] = ozzmesh
+	end
+
+	e.rendermesh = ozzmesh
 end
 
 local function patch_dynamic_buffer(ozzmesh, meshscene)
-	local newmeshscene = assetmgr.patch(meshscene, {vb={handles={}}})
-
-	local layouts = ozzmesh:layout()
-	local num_vertices = ozzmesh:num_vertices()
-
-	newmeshscene.vb.handles[1] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
-	return newmeshscene
+	if not meshscene.vb.handles[1] then
+		local layouts = ozzmesh:layout()
+		local num_vertices = ozzmesh:num_vertices()
+		local newmeshscene = assetmgr.patch(meshscene, {vb={handles={}}})
+		newmeshscene.vb.handles[1] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
+		return newmeshscene
+	end
+	return meshscene
 end
 
 function ozzmesh_skinning_transform.process(e, eid)
