@@ -7,81 +7,15 @@ local math3d = require "math3d"
 local seri = require "serialize.serialize"
 local seri_stringify = require "serialize.stringify"
 
-local def_class = {
-    methodfunc = {
-        init = true
-    },
-}
-local resource_class = {
-    class = def_class,
-    type = "resource"
-}
-
 local pseudo_world = {
     eid_count = 0,
-    _initargs = {},
-    _class = {
-        connection = {
-            mount = {
-                methodfunc = {
-                    save = function (e)
-                        return e.parent
-                    end
-                }
-            }
-        }
-    },
-    _typeclass = {},
-    typemapper = {
-        transform = {
-            class = def_class,
-            type = "transform",
-        },
-        srt = {
-            class = def_class,
-            type = "srt",
-        }
-    },
-
+    create_entity = function (w, args)
+        w.eid_count = w.eid_count + 1
+        local eid = w.eid_count
+        w[eid] = args
+        return eid
+    end
 }
-
-function pseudo_world:import_component(typename)
-    local m = self.typemapper[typename]
-    if m then
-        return m.class
-    end
-end
-
-function pseudo_world:create_entity(args)
-    self.eid_count = self.eid_count + 1
-    local eid = self.eid_count
-
-    local function fetch_component_list(data)
-        local t = {}
-        for k, v in pairs(data) do
-            if k ~= "parent" then
-                t[#t+1] = k
-                local m = self.typemapper[k]
-                if m then
-                    self._typeclass[v] = m.type
-                    assert(k == "transform")
-                    self._typeclass[v.srt] = self.typemapper.srt.type
-                end
-            end
-        end
-
-        table.sort(t)
-        return t
-    end
-
-    self._initargs[eid] = {
-        policy = args.policy,
-        component = fetch_component_list(args.data),
-        connection = {"mount"}, --only "mount"
-    }
-    pseudo_world[eid] = args.data
-    return eid
-end
 
 local function get_transform(node)
     if node.matrix then
@@ -104,9 +38,191 @@ local function get_transform(node)
     end
 end
 
+
+local function sort_pairs(t)
+    local s = {}
+    for k in pairs(t) do
+        s[#s+1] = k
+    end
+
+    table.sort(s)
+
+    local n = 1
+    return function ()
+        local k = s[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
+local depth_cache = {}
+local function get_depth(d)
+    if d == 0 then
+        return ""
+    end
+    local dc = depth_cache[d]
+    if dc then
+        return dc
+    end
+
+    local t = {}
+    local tab<const> = "  "
+    for i=1, d do
+        t[#t+1] = tab
+    end
+    local dd = table.concat(t)
+    depth_cache[d] = dd
+    return dd
+end
+
+local function convertreal(v)
+    local g = ('%.16g'):format(v)
+    if tonumber(g) == v then
+        return g
+    end
+    return ('%.17g'):format(v)
+end
+
+local PATTERN <const> = "%a%d/%-_."
+local PATTERN <const> = "^["..PATTERN.."]["..PATTERN.."]*$"
+
+local datalist = require "datalist"
+
+local function stringify_basetype(v)
+    local t = type(v)
+    if t == 'number' then
+        if math.type(v) == "integer" then
+            return ('%d'):format(v)
+        else
+            return convertreal(v)
+        end
+    elseif t == 'string' then
+        if v:match(PATTERN) then
+            return v
+        else
+            return datalist.quote(v)
+        end
+    elseif t == 'boolean'then
+        if v then
+            return 'true'
+        else
+            return 'false'
+        end
+    elseif t == 'function' then
+        return 'null'
+    end
+    error('invalid type:'..t)
+end
+
+local function seri_vector(v, lastv)
+    lastv = lastv or 0
+    if #v == 1 then
+        return ("{%d, %d, %d, %d"):format(v[1], v[1], v[1], lastv)
+    end
+
+    if #v == 3 then
+        return ("{%d, %d, %d, %d"):format(v[1], v[2], v[3], lastv)
+    end
+
+    if #v == 4 then
+        return ("{%d, %d, %d, %d"):format(v[1], v[2], v[3], v[4])
+    end
+
+    error("invalid vector")
+end
+
+local function resource_type(prefix, v)
+    assert(type(v) == "string")
+    return prefix .. "$resource " .. stringify_basetype(v)
+end
+
+local typeclass = {
+    mesh = function (depth, v)
+        return get_depth(depth) .. resource_type("mesh: ", v)
+    end,
+    material = function (depth, v)
+        return get_depth(depth) .. resource_type("material: ", v)
+    end,
+    transform = function (depth, v)
+        assert(type(v) == "table")
+        local tt = {get_depth(depth) .. "transform: $transform"}
+        if v.srt then
+            local seri_srt = get_depth(depth+1) .. "srt: $srt"
+            local s, r, t = v.srt.s, v.srt.r, v.srt.t
+            if s == nil or r == nil or t == nil then
+                tt[#tt+1] = seri_srt .. " {}"
+            else
+                tt[#tt+1] = seri_srt
+                if s then
+                    tt[#tt+1] = get_depth(depth+2) .. "s:" .. seri_vector(s)
+                end
+                if r then
+                    tt[#tt+1] = get_depth(depth+2) .. "r:" .. seri_vector(r)
+                end
+                if t then
+                    tt[#tt+1] = get_depth(depth+2) .. "t:" .. seri_vector(t)
+                end
+            end
+            
+        end
+
+        return table.concat(tt, "\n")
+    end
+}
+
+local function seri_perfab(entities)
+    local out = {"---"}
+    out[#out+1] = "{mount 1 root}"
+    local map = {}
+    for idx, eid in ipairs(entities) do
+        map[eid] = idx
+    end
+    for idx=2, #entities do
+        local e = pseudo_world[entities[idx]]
+        local connection = e.connection
+        if connection then
+            for _, c in ipairs(connection) do
+                local target_eid = c[2]
+                assert(pseudo_world[target_eid])
+                out[#out+1] = ("{mount %d %d}"):format(idx, map[target_eid])
+            end
+        end
+    end
+
+    local depth = 0
+    for _, eid in ipairs(entities) do
+        local e = pseudo_world[eid]
+
+        out[#out+1] = "---"
+        out[#out+1] = "policy:"
+        for _, pn in ipairs(e.policy) do
+            out[#out+1] = get_depth(depth+1) .. pn
+        end
+
+        out[#out+1] = "data:"
+        for compname, comp in sort_pairs(e.data) do
+            local tc = typeclass[compname]
+            if tc == nil then
+                assert(type(comp) ~= "table" and type(comp) ~= "userdata")
+                out[#out+1] = get_depth(depth+1) .. compname .. ":" .. stringify_basetype(comp)
+            else
+                out[#out+1] = tc(depth+1, comp)
+            end
+        end
+    end
+
+    return table.concat(out, "\n")
+end
+
 local function create_hierarchy_entity(name, transform, parent)
-    local policy = {
+local policy = {
         "ant.general|name",
+    }
+    local data = {
+        name        = name,
     }
     local connection
     if parent then
@@ -114,20 +230,18 @@ local function create_hierarchy_entity(name, transform, parent)
         connection = {
             {"mount", parent}
         }
+
+        data["scene_entity"] = true
     end
 
     if transform then
         policy[#policy+1] = "ant.scene|transform_policy"
+        data["scene_entity"] = true
     end
 
     return pseudo_world:create_entity {
         policy = policy,
-        data = {
-            transform   = transform,
-            name        = name,
-            scene_entity= true,
-            parent      = parent,
-        },
+        data = data,
         connection = connection,
     }
 end
@@ -143,11 +257,7 @@ local function create_mesh_entity(parent, meshres, materialfile, name)
         scene_entity= true,
         can_render  = true,
         transform   = {
-            srt={
-                s = {1, 1, 1, 0},
-                r = {0, 0, 0, 1},
-                t = {0, 0, 0, 1},
-            }
+            srt={}
         },
         mesh        = meshres,
         material    = materialfile,
@@ -171,25 +281,6 @@ local function create_mesh_entity(parent, meshres, materialfile, name)
 end
 
 local meshcvt = require "compile_resource.mesh.convert"
-
-local function sort_pairs(t)
-    local s = {}
-    for k in pairs(t) do
-        s[#s+1] = k
-    end
-
-    table.sort(s)
-
-    local n = 1
-    return function ()
-        local k = s[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
 
 local function create_meshfile(arguments, meshfolder)
     fs.create_directories(meshfolder)
@@ -254,12 +345,8 @@ return function(arguments, materialfiles)
             entities[#entities+1] = create_mesh_entity(parent, meshres, arguments:to_visualpath(mf):string(), meshname .. "." .. primidx)
         end
     end
-    local prefabconetent = seri.prefab(pseudo_world, entities, {
-        {mount="root"}
-    })
+    local prefabconetent = seri_perfab(entities)
 
-    prefabconetent = prefabconetent:gsub("([^.])mesh:", "%1mesh: $resource")
-    prefabconetent = prefabconetent:gsub("material:", "material: $resource")
     local prefabpath = arguments.outfolder / "mesh.prefab"
     fs_local.write_file(prefabpath, prefabconetent)
     print("create .prefab: ", prefabpath:string(), ", success!")
