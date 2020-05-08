@@ -10,7 +10,7 @@ local sp         = require "subprocess"
 local rhwi       = renderpkg.hwi
 
 local eventDropFiles = world:sub {"dropfiles"}
-local m = ecs.system 'init_loader'
+local m = ecs.system 'gui_system'
 
 local function import(input, voutput)
     local function luaexe()
@@ -34,16 +34,6 @@ local function import(input, voutput)
         hideWindow = true,
     }
     assert(p:wait() == 0, p.stderr:read "a")
-end
-
-function m:init()
-    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
-    world:create_entity '/pkg/ant.tools.viewer/light_directional.txt'
-end
-
-function m:post_init()
-    local e = world:singleton_entity "main_queue"
-    e.render_target.viewport.clear_state.color = 0xa0a0a0ff
 end
 
 local status = {

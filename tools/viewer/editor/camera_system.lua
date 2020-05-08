@@ -3,7 +3,7 @@ local world = ecs.world
 
 local math3d  = require "math3d"
 
-local m = ecs.system "camera_controller"
+local m = ecs.system "camera_system"
 
 local eventCameraControl = world:sub {"camera"}
 local cameraInitEyepos <const> = {1.6, 1.8,-1.8, 1}

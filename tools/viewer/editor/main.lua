@@ -22,7 +22,9 @@ function cb.init()
                 "exit",
             },
             system = {
-                "ant.tools.viewer|init_loader",
+                "ant.tools.viewer|init_system",
+                "ant.tools.viewer|camera_system",
+                "ant.tools.viewer|gui_system",
             }
         }
     }
