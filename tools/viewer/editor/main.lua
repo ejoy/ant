@@ -22,7 +22,9 @@ function cb.init()
                 "exit",
             },
             system = {
-                "ant.tools.viewer|init_loader",
+                "ant.tools.viewer|init_system",
+                "ant.tools.viewer|camera_system",
+                "ant.tools.viewer|gui_system",
             }
         }
     }
@@ -60,6 +62,9 @@ function cb.keyboard(key, press, state)
 end
 function cb.size(w, h)
     world.size(w, h)
+end
+function cb.dropfiles(filelst)
+    world:get_world():pub {"dropfiles", filelst}
 end
 
 editor.start(cb)

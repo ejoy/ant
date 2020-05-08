@@ -4,19 +4,36 @@ local world = ecs.world
 local renderpkg  = import_package 'ant.render'
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
+local lfs        = require "filesystem.local"
+local fs         = require "filesystem"
+local sp         = require "subprocess"
 local rhwi       = renderpkg.hwi
 
-local m = ecs.system 'init_loader'
+local eventDropFiles = world:sub {"dropfiles"}
+local m = ecs.system 'gui_system'
 
-function m:init()
-    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
-    world:create_entity 'res/light_directional.txt'
-    world:create_entity 'res/entity.txt'
-end
-
-function m:post_init()
-    local e = world:singleton_entity "main_queue"
-    e.render_target.viewport.clear_state.color = 0xa0a0a0ff
+local function import(input, voutput)
+    local function luaexe()
+        local i = -1
+        while arg[i] ~= nil do
+            i= i - 1
+        end
+        return arg[i + 1]
+    end
+    local loutput = voutput:localpath()
+    lfs.remove_all(loutput)
+    lfs.create_directories(loutput)
+    local p = sp.spawn {
+        luaexe(),
+        "./tools/import_model/import.lua",
+        "input="..input:string(),
+        "outfolder="..loutput:string(),
+        "visualpath="..voutput:string(),
+        "config=tools/import_model/cfg.txt",
+        stderr = true,
+        hideWindow = true,
+    }
+    assert(p:wait() == 0, p.stderr:read "a")
 end
 
 local status = {
@@ -111,6 +128,16 @@ local function mouseEvent(what, dx, dy)
     end
 end
 
+local entities = {}
+local function createPrefab(filename)
+    for _, eid in ipairs(entities) do
+        world:remove_entity(eid)
+    end
+    local output = fs.path "/pkg/ant.tools.viewer/res/"
+    import(lfs.path(filename), output)
+    entities = world:instance((output / "mesh.prefab"):string(), {root=0})
+end
+
 function m:data_changed()
     for _,what,state,x,y in eventMouse:unpack() do
         if state == "DOWN" then
@@ -124,5 +151,8 @@ function m:data_changed()
     end
     for _,delta in eventMouseWheel:unpack() do
         world:pub { "camera", "zoom", -delta*kWheelSpeed }
+    end
+    for _, filelst in eventDropFiles:unpack() do
+        createPrefab(filelst[1])
     end
 end

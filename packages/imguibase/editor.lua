@@ -139,6 +139,10 @@ function message.keyboard(key, press, state)
 end
 message.char = imgui.input_char
 
+function message.dropfiles(...)
+	cb.dropfiles(...)
+end
+
 function message.size(width,height,_)
 	imgui.push_context(context)
 	imgui_resize(width, height)
