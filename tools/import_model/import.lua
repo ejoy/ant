@@ -41,13 +41,14 @@ local function help_info()
             3. ['meshbin']-meshbin files: mesh consist of vb and ib info
             4. ['txt']-entity files: entity for runtime, it included 'hierarchy' and 'mesh' entity
         argument:
-            input: for input file
-            outfolder: for file to output
-            config: config file, a datalist file
+            -i, --input: for input file
+            -o, --outfolder: for file to output
+            -v, --visualpath: outfolder's visual path
+            --config: config file, a datalist file
         examples:
             cd to [antfolder], and run:
-            {luafolder}/lua.exe tools/import_model/import.lua input=d:/abc/female.fbx outfolder=d:/abc/female \
-            config=d:/abc/config.txt
+            {luafolder}/lua.exe tools/import_model/import.lua --input "d:/abc/female.fbx" --outfolder "d:/Work/ant/packages/resources/test" \
+            --visualpath "/pkg/ant.resources/test" --config "d:/abc/config.txt"
     ]]
 end
 
@@ -55,13 +56,107 @@ local fs = require "filesystem.local"
 package.loaded["filesystem"] = fs
 local fs_local = require "utility.fs_local"
 
+local function refine_path(p)
+    local pp = p:match "(.+)[/\\]$"
+    return fs.path(pp or p)
+end
+
+local function print_help(idx)
+    print(help_info())
+    return idx
+end
+
+local function throw_error(fmt, ...)
+    print(fmt:format(...))
+    error(print_help())
+end
+
 local function read_arguments()
     local arguments = {}
-    for _, a in ipairs(arg) do
-        local name, value = a:match "([^=]+)%s*=([^%s]+)"
-        arguments[name] = value
+    local function read_input(idx)
+        local na = arg[idx+1]
+        if na == nil then
+            throw_error("need argument for input:%d", idx+1)
+        end
+
+        local inputfile = fs.path(na)
+        if not fs.is_regular_file(inputfile) then
+            throw_error("input argument must be a file:%d %s", idx+1, inputfile:string())
+        end
+
+        local ext = inputfile:extension():string():upper()
+        if ext ~= ".FBX" and ext ~= ".GLB" then
+            throw_error("input file only support FBX or GLB file:%d %s", idx+1, inputfile:string())
+        end
+
+        arguments.input = inputfile
+        return idx+1
     end
 
+    local function read_outfolder(idx)
+        local na = arg[idx+1]
+        if na == nil then
+            throw_error("need argument for outfolder:%d", idx+1)
+        end
+        local outfolder = fs.path(na)
+        if not fs.is_directory(outfolder) then
+            throw_error("outfolder argument must be a directory:%d, %s", idx+1, outfolder:string())
+        end
+        arguments.outfolder = refine_path(outfolder:string())
+        return idx+1
+    end
+
+    local function read_config(idx)
+        local na = arg[idx+1]
+        if na == nil then
+            throw_error("need argument for config:%d", idx+1)
+        end
+
+        local cfgfile = fs.path(na)
+        if not fs.is_regular_file(cfgfile) then
+            throw_error("config file must be a file:%d %s", idx+1, arguments.config:string())
+        end
+
+        arguments.config = fs_local.datalist(cfgfile)
+        return idx+1
+    end
+
+    local function read_visualpath(idx)
+        local na = arg[idx+1]
+        if na == nil then
+            throw_error("need argument for visualpath:%d", idx+1)
+        end
+
+        arguments.visualpath = refine_path(na)
+        return idx+1
+    end
+
+    local commands = {
+        ["--input"]     = read_input,
+        ["-i"]          = read_input,
+        ["--outfolder"] = read_outfolder,
+        ["-o"]          = read_outfolder,
+        ["--config"]    = read_config,
+        ["--visualpath"]= read_visualpath,
+        ["-v"]          = read_visualpath,
+        ["--help"]      = print_help,
+        ["-h"]          = print_help,
+    }
+
+    local idx = 1
+    while idx < #arg do
+        local a = arg[idx]
+        if a:match "-" or a:match "--" then
+            local cmd = commands[a]
+            if cmd == nil then
+                throw_error("not support command:%s", cmd)
+            end
+
+            idx = cmd(idx)
+        end
+
+        idx = idx + 1
+    end
     return arguments
 end
 
@@ -71,26 +166,6 @@ if not (arguments and arguments.input and arguments.outfolder and arguments.conf
     print(help_info())
     return
 end
-
-arguments.config    = fs.path(arguments.config)
-arguments.input     = fs.path(arguments.input)
-
-local function refine_path(p)
-    local pp = p:match "(.+)[/\\]$"
-    return fs.path(pp or p)
-end
-
-arguments.outfolder = refine_path(arguments.outfolder)
-arguments.visualpath= refine_path(arguments.visualpath)
-
-if fs.exists(arguments.config) then
-    arguments.config = fs_local.datalist(arguments.config)
-else
-    error(("config file not found:%s"):format(arguments.config:string()))
-end
-
-arguments.outfolder = arguments.outfolder
-arguments.visualpath = arguments.visualpath
 
 function arguments:to_visualpath(localpath)
     return fs.path(localpath:string():gsub(self.outfolder:string(), self.visualpath:string()))
