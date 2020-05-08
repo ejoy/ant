@@ -1,3 +1,4 @@
 @pkg packages
 @pkg-one tools/viewer/editor
+@pkg-one tools/viewer/prefab_viewer
 engine engine

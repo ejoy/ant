@@ -13,8 +13,6 @@ local cb          = nil
 local message     = {}
 local initialized = false
 local debug_traceback = debug.traceback
-local LOGERROR        = __ANT_RUNTIME__ and log.error or print
-local debug_update    = __ANT_RUNTIME__ and require 'runtime.debug'
 
 local _timer = require "platform.timer"
 local _time_counter = _timer.counter
@@ -75,12 +73,6 @@ local function imgui_resize(width, height)
 	imgui.resize(width/xscale, height/yscale, xscale, yscale)
 end
 
-local function imgui_start()
-end
-
-local function imgui_end()
-end
-
 function message.init(nwh, context, width, height)
 	rhwi.init {
 		nwh = nwh,
@@ -121,7 +113,6 @@ function message.exit()
     print "exit"
 end
 function message.update()
-    if debug_update then debug_update() end
 	if initialized then
 		local delta = timer_delta()
 		imgui.push_context(context)
@@ -138,14 +129,14 @@ local function dispatch(CMD, ...)
 	if f then
 		local ok, err = xpcall(f, debug_traceback, ...)
 		if not ok then
-			LOGERROR(err)
+			print(err)
 		end
 	end
 end
 
-local function start(callback)
+local function start(w, h, callback)
     cb = callback
-    window.create(dispatch, 1024, 768)
+    window.create(dispatch, w, h)
     window.mainloop(true)
 end
 
