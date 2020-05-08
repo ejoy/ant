@@ -72,10 +72,16 @@ if not (arguments and arguments.input and arguments.outfolder and arguments.conf
     return
 end
 
-arguments.config = fs.path(arguments.config)
-arguments.input = fs.path(arguments.input)
-arguments.outfolder = fs.path(arguments.outfolder)
-arguments.visualpath = fs.path(arguments.visualpath)
+arguments.config    = fs.path(arguments.config)
+arguments.input     = fs.path(arguments.input)
+
+local function refine_path(p)
+    local pp = p:match "(.+)[/\\]$"
+    return fs.path(pp or p)
+end
+
+arguments.outfolder = refine_path(arguments.outfolder)
+arguments.visualpath= refine_path(arguments.visualpath)
 
 if fs.exists(arguments.config) then
     arguments.config = fs_local.datalist(arguments.config)
