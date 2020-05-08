@@ -64,7 +64,7 @@ namespace ant::lua {
             return lua::string_type(to_string(L, idx));
 #ifdef ENABLE_FILESYSTEM
         case LUA_TUSERDATA:
-            return (*(fs::path*)luaL_checkudata(L, idx, "filesystem")).string<string_type::value_type>();
+            return (*(fs::path*)luaL_checkudata(L, idx, "ant::filesystem")).string<string_type::value_type>();
 #endif
         default:
             return std::optional<string_type>();
@@ -77,7 +77,7 @@ namespace ant::lua_subprocess {
 
 #ifdef ENABLE_FILESYSTEM
     static fs::path& topath(lua_State* L, int idx) {
-        return *(fs::path*)luaL_checkudata(L, idx, "filesystem");
+        return *(fs::path*)luaL_checkudata(L, idx, "ant::filesystem");
     }
 #endif
 

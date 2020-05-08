@@ -26,10 +26,10 @@ local function import(input, voutput)
     local p = sp.spawn {
         luaexe(),
         "./tools/import_model/import.lua",
-        "input="..input:string(),
-        "outfolder="..loutput:string(),
-        "visualpath="..voutput:string(),
-        "config=tools/import_model/cfg.txt",
+        "-i", input,
+        "-o", loutput,
+        "-v", voutput:string(),
+        "--config", "tools/import_model/cfg.txt",
         stderr = true,
         hideWindow = true,
     }
