@@ -225,11 +225,6 @@ function repo:build()
 	return roothash
 end
 
-function repo:rebuild()
-	self._namecache = {}	-- clear cache
-	self:build()
-end
-
 function repo:close()
 	self._lock:close()
 	self._lock = nil
