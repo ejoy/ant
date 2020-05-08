@@ -319,6 +319,8 @@ return function(arguments, materialfiles)
     local cr_util = require "compile_resource.util"
     local meshscene = cr_util.read_embed_file(meshfolder / "main.index")
 
+    fs.remove(meshfolder / "main.index")
+
     local scene = meshscene.scenes[meshscene.scene]
     
     local function get_submesh_name(meshname, primidx)
