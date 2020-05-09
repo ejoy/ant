@@ -22,6 +22,7 @@ local function createPrefab(filename)
         world:remove_entity(eid)
     end
     entities = world:instance(filename, {root=0})
+    world:pub {"editor", "prefab", entities}
 end
 
 function m:data_changed()

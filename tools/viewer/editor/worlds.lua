@@ -5,7 +5,7 @@ local imgui       = require "imgui.ant"
 local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
 local mouse_state = { 'DOWN', 'MOVE', 'UP' }
 
-return function(config)
+local function create_world(config)
     local rect_x, rect_y = 0, 0
     local rect_w, rect_h = config.width, config.height
     local function isInRect(x, y)
@@ -48,8 +48,17 @@ return function(config)
             SYS 	= (state & 0x08) ~= 0,
         }}
     end
-    function m.pub(_, data)
-        world:pub(data)
-    end
-    return m
+    return m, world
 end
+
+local worlds = {}
+
+function worlds.create(name)
+    return function (config)
+        local w, world = create_world(config)
+        worlds[#worlds+1] = w
+        return w, world
+    end
+end
+
+return worlds
