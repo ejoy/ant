@@ -55,7 +55,9 @@ function mesh_skinning_transform.process(e, eid)
 	e.rendermesh = assetmgr.patch(e.rendermesh, {vb={handles={}}})
 	local primgroup = e.rendermesh
 	skinning.skin = primgroup.skin
-	
+	local poseresult = e.pose_result
+	skinning.skinning_matrices = animodule.new_bind_pose(poseresult:count())
+
 	for idx, h in ipairs(primgroup.vb.handles) do
 		if h.handle == nil then
 			local start_bytes = h.start

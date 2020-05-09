@@ -133,6 +133,8 @@ function ozzmesh_skinning_transform.process(e, eid)
 
 	local skincomp = e.skinning
 	skincomp.skin = meshscene.skin
+	local poseresult = e.pose_result
+	skincomp.skinning_matrices = animodule.new_bind_pose(poseresult:count())
 	skincomp.jobs = {
 		{
 			parts = {},
