@@ -70,7 +70,13 @@ local function update_properties(material, render_properties)
 end
 
 function util.draw_primitive(vid, primgroup, render_properties)
-    bgfx.set_transform(primgroup.worldmat)
+	local trans = primgroup.transform
+	if trans._world then
+		bgfx.set_transform(trans._world)
+	else
+		local sm = trans._skinning_matrices
+		bgfx.set_multi_transform(sm:pointer(), sm:count())
+	end
 
 	local material = primgroup.material
 	bgfx.set_state(material.state)

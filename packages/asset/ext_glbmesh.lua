@@ -100,15 +100,12 @@ return {
 		for _, value in ipairs(vb.values) do
 			local start_bytes = value.start
 			local end_bytes = start_bytes + value.num - 1
-	
-			if value.type == "dynamic" then
-				handles[#handles+1] = value
-			else
-				handles[#handles+1] = {
-					handle = bgfx.create_vertex_buffer({"!", value.value, start_bytes, end_bytes},
-										declmgr.get(value.declname).handle),
-				}
-			end
+
+			handles[#handles+1] = {
+				handle = bgfx.create_vertex_buffer({"!", value.value, start_bytes, end_bytes},
+									declmgr.get(value.declname).handle),
+				vertex_data = value,
+			}
 		end
 		local meshgroup = {
 			bounding = group.bounding,

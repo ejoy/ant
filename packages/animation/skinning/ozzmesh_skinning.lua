@@ -127,11 +127,12 @@ end
 function ozzmesh_skinning_transform.process(e, eid)
 	world:add_component(eid, "skinning", {})
 
+	local skincomp = e.skinning
+	skincomp.type = "CPU"
 	local meshres 	= e.mesh._handle
 	e.rendermesh = patch_dynamic_buffer(meshres, e.rendermesh)
 	local meshscene = e.rendermesh
 
-	local skincomp = e.skinning
 	skincomp.skin = meshscene.skin
 	local poseresult = e.pose_result
 	skincomp.skinning_matrices = animodule.new_bind_pose(poseresult:count())

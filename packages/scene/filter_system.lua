@@ -29,23 +29,23 @@ local function reset_results(results)
 	end
 end
 
-local function add_result(eid, group, materialinfo, worldmat, aabb, result)
+local function add_result(eid, group, materialinfo, trans, result)
 	local idx = result.n + 1
 	local r = result[idx]
 	if r == nil then
 		r = {
 			mgroup 		= group,
 			material 	= assert(materialinfo),
-			worldmat 	= worldmat,
-			aabb		= aabb,
+			transform 	= trans,
+			aabb		= trans._aabb,
 			eid 		= eid,
 		}
 		result[idx] = r
 	else
 		r.mgroup 	= group
 		r.material 	= assert(materialinfo)
-		r.worldmat 	= worldmat
-		r.aabb		= aabb
+		r.transform	= trans
+		r.aabb		= trans._aabb
 		r.eid 		= eid
 	end
 	result.n = idx
@@ -67,7 +67,7 @@ function prim_filter_sys:filter_primitive()
 				local m = ce.material
 				local resulttarget = assert(filter.result[m.fx.surface_type.transparency])
 				local trans = ce.transform
-				add_result(eid, primgroup, m, trans._world, trans._aabb, resulttarget)
+				add_result(eid, primgroup, m, trans, resulttarget)
 			end
 		end
 	end

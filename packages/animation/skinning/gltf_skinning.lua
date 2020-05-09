@@ -3,6 +3,7 @@ local world = ecs.world
 
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
+local setting	= renderpkg.setting
 
 local assetmgr = import_package "ant.asset"
 
@@ -44,28 +45,29 @@ local function layout_desc(elem_prefixs, layout_elems, layout_stride, pointer, o
 	return desc
 end
 
-function mesh_skinning_transform.process(e, eid)
-	world:add_component(eid, "skinning", {})
+local function need_dynamic_buffer(declname)
+	return declname:match "p....." ~= nil
+end
 
-	local skinning = e.skinning
-
+local function build_cpu_skinning_jobs(e, skinning)
 	local jobs = {}
 	skinning.jobs = jobs
 
 	e.rendermesh = assetmgr.patch(e.rendermesh, {vb={handles={}}})
 	local primgroup = e.rendermesh
 	skinning.skin = primgroup.skin
-	local poseresult = e.pose_result
-	skinning.skinning_matrices = animodule.new_bind_pose(poseresult:count())
 
 	for idx, h in ipairs(primgroup.vb.handles) do
-		if h.handle == nil then
-			local start_bytes = h.start
-			local end_bytes = start_bytes + h.num - 1
+		local vd = h.vertex_data
+		local declname = vd.declname
+		if need_dynamic_buffer(declname) then
+			local num_bytes = vd.num
+			local start_bytes = vd.start
+			local end_bytes = start_bytes + num_bytes - 1
 
-			local updatedata = animodule.new_aligned_memory(h.num, 4)
-			local vbhandle = bgfx.create_dynamic_vertex_buffer({"!", h.value, start_bytes, end_bytes},
-			declmgr.get(h.declname).handle)
+			local updatedata = animodule.new_aligned_memory(num_bytes, 4)
+			local vbhandle = bgfx.create_dynamic_vertex_buffer({"!", vd.value, start_bytes, end_bytes},
+			declmgr.get(declname).handle)
 
 			primgroup.vb.handles[idx] = {
 				handle = vbhandle,
@@ -73,9 +75,6 @@ function mesh_skinning_transform.process(e, eid)
 			}
 
 			local outptr = updatedata:pointer()
-
-			local declname = h.declname
-
 			local layout_stride = declmgr.get(declname).stride
 			local layout_elems = {}
 			for elem in declname:gmatch "%w+" do
@@ -85,17 +84,32 @@ function mesh_skinning_transform.process(e, eid)
 			jobs[#jobs+1] = {
 				hwbuffer_handle = vbhandle,
 				updatedata = updatedata,
-				buffersize = h.num,
+				buffersize = num_bytes,
 				parts = {
 					{
-						inputdesc = layout_desc({'p', 'n', 'T', 'w', 'i'}, layout_elems, layout_stride, h.value, start_bytes),
+						inputdesc = layout_desc({'p', 'n', 'T', 'w', 'i'}, layout_elems, layout_stride, vd.value, start_bytes),
 						outputdesc = layout_desc({'p', 'n', 'T'}, layout_elems, layout_stride, outptr),
-						num = h.num / layout_stride,
+						num = num_bytes / layout_stride,
 						layout_stride = layout_stride,
 						influences_count = 4,
 					}
 				}
 			}
 		end
+	end
+end
+
+function mesh_skinning_transform.process(e, eid)
+	world:add_component(eid, "skinning", {})
+
+	local skinning = e.skinning
+	local skinningtype = setting.get().animation.skinning.type
+	skinning.type = skinningtype
+
+	local poseresult = e.pose_result
+	skinning.skinning_matrices = animodule.new_bind_pose(poseresult:count())
+
+	if skinningtype == "CPU" then
+		build_cpu_skinning_jobs(e, skinning)
 	end
 end

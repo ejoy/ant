@@ -60,10 +60,6 @@ local function add_macros_from_surface_setting(mysetting, surfacetype, macros)
 		macros[#macros+1] = "BLOOM_ENABLE"
 	end
 
-	if mysetting.animation.skinning.type == "GPU" then
-		macros[#macros+1] = "GPU_SKINNING"
-	end
-
 	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"
 	macros[#macros+1] = "ENABLE_FB_SRGB"
 	

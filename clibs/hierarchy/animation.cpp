@@ -609,16 +609,32 @@ static void
 build_skinning_matrices(bindpose* skinning_matrices,
 	const bindpose* current_pose,
 	const bindpose* inverse_bind_matrices,
-	const ozzJointRemap *jarray){
+	const ozzJointRemap *jarray,
+	const ozz::math::Float4x4 *worldmat){
 	if (jarray){
 		assert(jarray->joints.size() == inverse_bind_matrices->size());
-		for (size_t ii = 0; ii < jarray->joints.size(); ++ii){
-			(*skinning_matrices)[ii] = (*current_pose)[jarray->joints[ii]] * (*inverse_bind_matrices)[ii];
+		if (worldmat){
+			for (size_t ii = 0; ii < jarray->joints.size(); ++ii){
+				const auto m = (*current_pose)[jarray->joints[ii]] * (*inverse_bind_matrices)[ii];
+				(*skinning_matrices)[ii] = (*worldmat) * m;
+			}
+		} else {
+			for (size_t ii = 0; ii < jarray->joints.size(); ++ii){
+				(*skinning_matrices)[ii] = (*current_pose)[jarray->joints[ii]] * (*inverse_bind_matrices)[ii];
+			}
 		}
+
 	} else {
 		assert(current_pose->size() == inverse_bind_matrices->size() && skinning_matrices->size() == current_pose->size());
-		for (size_t ii = 0; ii < inverse_bind_matrices->size(); ++ii){
-			(*skinning_matrices)[ii] = (*current_pose)[ii] * (*inverse_bind_matrices)[ii];
+		if (worldmat){
+			for (size_t ii = 0; ii < inverse_bind_matrices->size(); ++ii){
+				const auto m = (*current_pose)[ii] * (*inverse_bind_matrices)[ii];
+				(*skinning_matrices)[ii] = (*worldmat) * m;
+			}
+		} else {
+			for (size_t ii = 0; ii < inverse_bind_matrices->size(); ++ii){
+				(*skinning_matrices)[ii] = (*current_pose)[ii] * (*inverse_bind_matrices)[ii];
+			}
 		}
 	}
 }
@@ -632,7 +648,8 @@ lbuild_skinning_matrices(lua_State *L){
 	if (skinning_matrices->size() < inverse_bind_matrices->size()){
 		return luaL_error(L, "invalid skinning matrices and inverse bind matrices, skinning matrices must larger than inverse bind matrices");
 	}
-	build_skinning_matrices(skinning_matrices, current_bind_pose, inverse_bind_matrices, jarray);
+	auto worldmat = lua_isnoneornil(L, 5) ? nullptr : (const ozz::math::Float4x4*)(lua_touserdata(L, 5));
+	build_skinning_matrices(skinning_matrices, current_bind_pose, inverse_bind_matrices, jarray, worldmat);
 	return 0;
 }
 
