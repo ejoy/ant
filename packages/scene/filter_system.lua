@@ -66,9 +66,8 @@ function prim_filter_sys:filter_primitive()
 
 				local m = ce.material
 				local resulttarget = assert(filter.result[m.fx.surface_type.transparency])
-
-				local worldaabb, worldtrans = math3d.aabb_transform(ce.transform._world, primgroup.bounding and primgroup.bounding.aabb or nil)
-				add_result(eid, primgroup, m, worldtrans, worldaabb, resulttarget)
+				local trans = ce.transform
+				add_result(eid, primgroup, m, trans._world, trans._aabb, resulttarget)
 			end
 		end
 	end

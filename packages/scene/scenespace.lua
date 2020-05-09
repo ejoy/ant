@@ -136,11 +136,24 @@ local function update_transform(eid)
 	end
 end
 
+local function update_bounding(eid)
+	local ce = world[eid]
+	local primgroup = ce.rendermesh
+	if primgroup then
+		local bounding = primgroup.bounding
+		if bounding then
+			local trans = ce.transform
+			trans._aabb = math3d.aabb_transform(ce.transform._world, bounding.aabb)
+		end
+	end
+end
+
 function sp_sys:update_transform()
 	for _, eid in ipairs(scenequeue) do
 		-- hierarchy scene can do everything relative to hierarchy, such as:
 		-- hierarhcy visible/material/transform, and another reasonable data
 		update_transform(eid)
+		update_bounding(eid)
 	end
 end
 
