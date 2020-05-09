@@ -2,50 +2,43 @@ local ru          = import_package "ant.render".util
 local ecs         = import_package "ant.ecs"
 local keymap      = import_package "ant.imguibase".keymap
 local imgui       = require "imgui.ant"
-local imgui_util  = require "imgui_util"
 local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
 local mouse_state = { 'DOWN', 'MOVE', 'UP' }
 
-local function isInRect(x, y, rect)
-    return (x >= rect.x)
-        and (x <= rect.x + rect.w)
-        and (y >= rect.y)
-        and (y <= rect.y + rect.h)
-end
-
 return function(config)
-    local rect = config.rect
-    local world = ecs.new_world {
-        width  = rect.w,
-        height = rect.h,
-        ecs = config.ecs,
-    }
+    local rect_x, rect_y = 0, 0
+    local rect_w, rect_h = config.width, config.height
+    local function isInRect(x, y)
+        return (x >= rect_x)
+            and (x <= rect_x + rect_w)
+            and (y >= rect_y)
+            and (y <= rect_y + rect_h)
+    end
+    local world = ecs.new_world (config)
     world:update_func "init" ()
-    world:pub {"resize", rect.w, rect.h}
+    world:pub {"resize", rect_w, rect_h}
     local world_update = world:update_func "update"
     local world_tex = assert(ru.get_main_view_rendertexture(world))
-
     local m = {}
+    function m.show()
+        rect_x, rect_y = imgui.cursor.GetCursorScreenPos()
+        imgui.widget.ImageButton(world_tex,rect_w,rect_h,{frame_padding=0,bg_col={0,0,0,1}})
+    end
     function m.update()
         world_update()
         world:clear_removed()
-
-        imgui.windows.SetNextWindowPos(rect.x, rect.y)
-        for _ in imgui_util.windows(config.name, imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
-            imgui.widget.ImageButton(world_tex,rect.w,rect.h,{frame_padding=0,bg_col={0,0,0,1}})
-        end
     end
     function m.mouse_wheel(x, y, delta)
-        if not isInRect(x, y, rect) then
+        if not isInRect(x, y) then
             return
         end
-        world:pub {"mouse_wheel", delta, x - rect.x, y - rect.y}
+        world:pub {"mouse_wheel", delta, x - rect_x, y - rect_y}
     end
     function m.mouse(x, y, what, state)
-        if not isInRect(x, y, rect) then
+        if not isInRect(x, y) then
             return
         end
-        world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x - rect.x, y - rect.y}
+        world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x - rect_x, y - rect_y}
     end
     function m.keyboard(key, press, state)
         world:pub {"keyboard", keymap[key], press, {
@@ -55,8 +48,8 @@ return function(config)
             SYS 	= (state & 0x08) ~= 0,
         }}
     end
-    function m.get_world()
-        return world
+    function m.pub(_, data)
+        world:pub(data)
     end
     return m
 end

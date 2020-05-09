@@ -415,7 +415,7 @@ wProgressBar(lua_State *L) {
 	float w = -1;
 	float h = 0; 
 	const char *overlay = NULL;
-	if (lua_isstring(L, 2)) {
+	if (lua_type(L, 2) == LUA_TSTRING) {
 		overlay = lua_tostring(L, 2);
 	} else {
 		w = (float)luaL_optnumber(L, 2, -1);
