@@ -216,6 +216,25 @@ local function get_obj_name(obj, idx, defname)
 	return defname .. idx
 end
 
+local function sort_pairs(t)
+	local s = {}
+	for k in pairs(t) do
+		s[#s+1] = k
+	end
+
+	table.sort(s)
+
+	local n = 1
+	return function ()
+		local k = s[n]
+		if k == nil then
+			return
+		end
+		n = n + 1
+		return k, t[k]
+	end
+end
+
 local function export_meshbin(gltfscene, bindata, config)
 	local layouts 		= config.layouts
 	for _, l in ipairs(layouts) do
@@ -257,7 +276,7 @@ local function export_meshbin(gltfscene, bindata, config)
 						local decls 		= create_decl(attribclass, layouts)
 	
 						local values = {}
-						for bvidx, declinfo in pairs(decls) do
+						for bvidx, declinfo in sort_pairs(decls) do
 							local vbcache = bvcaches[bvidx+1]
 							local bv = gltfscene.bufferViews[bvidx+1]
 							if vbcache == nil then
