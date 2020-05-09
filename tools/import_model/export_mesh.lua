@@ -262,7 +262,6 @@ local function create_mesh_entity(parent, meshres, materialfile, name)
         mesh        = meshres,
         material    = materialfile,
         name        = name,
-        parent      = parent,
     }
 
     local connection
