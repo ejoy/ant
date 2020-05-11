@@ -10,7 +10,6 @@ local rhwi        = renderpkg.hwi
 local window      = require "window"
 local assetmgr    = import_package "ant.asset"
 local platform    = require "platform"
-local runtime     = require "runtime"
 local inputmgr    = require "inputmgr"
 local imguiIO     = imgui.IO
 local font        = imgui.font
@@ -21,25 +20,22 @@ local context     = nil
 
 local imgui_sys = ecs.system "imgui_system"
 
-local function replaceImguiCallback(t)
-	local l_mouse_wheel = t.mouse_wheel
-	local l_mouse = t.mouse
-	local l_touch = t.touch
-	local l_keyboard = t.keyboard
-	function t.mouse_wheel(x, y, delta)
-		imgui.mouse_wheel(x, y, delta)
-		if not imguiIO.WantCaptureMouse then
-			l_mouse_wheel(x, y, delta)
-		end
-	end
-	function t.mouse(x, y, what, state)
-		imgui.mouse(x, y, what, state)
-		if not imguiIO.WantCaptureMouse then
-			l_mouse(x, y, what, state)
-		end
-	end
+local function hookEvent()
 	local touchid
-	function t.touch(x, y, id, state)
+	world:signal_hook("mouse_wheel", function(x, y, delta)
+		imgui.push_context(context)
+		imgui.mouse_wheel(x, y, delta)
+		imgui.pop_context(context)
+		return imguiIO.WantCaptureMouse
+	end)
+	world:signal_hook("mouse", function(x, y, what, state)
+		imgui.push_context(context)
+		imgui.mouse(x, y, what, state)
+		imgui.pop_context(context)
+		return imguiIO.WantCaptureMouse
+	end)
+	world:signal_hook("touch", function(x, y, id, state)
+		imgui.push_context(context)
 		if state == 1 then
 			if not touchid then
 				touchid = id
@@ -55,17 +51,16 @@ local function replaceImguiCallback(t)
 				touchid = nil
 			end
 		end
-		if not imguiIO.WantCaptureMouse then
-			l_touch(x, y, id, state)
-		end
-	end
-	function t.keyboard(key, press, state)
+		imgui.pop_context(context)
+		return imguiIO.WantCaptureMouse
+	end)
+	world:signal_hook("keyboard", function(key, press, state)
+		imgui.push_context(context)
 		imgui.keyboard(key, press, state)
-		if not imguiIO.WantCaptureKeyboard then
-			l_keyboard(key, press, state)
-		end
-	end
-	t.char = imgui.input_char
+		imgui.pop_context(context)
+		return imguiIO.WantCaptureKeyboard
+	end)
+	world:signal_hook("char", imgui.input_char)
 end
 
 local function glyphRanges(t)
@@ -79,7 +74,7 @@ local function glyphRanges(t)
 end
 
 function imgui_sys:init()
-	replaceImguiCallback(runtime.callback)
+	hookEvent()
 
 	context = imgui.CreateContext(rhwi.native_window())
 	imgui.push_context(context)

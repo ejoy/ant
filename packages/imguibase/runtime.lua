@@ -2,14 +2,12 @@ local window = require "window"
 
 local renderpkg = import_package "ant.render"
 local argument  = import_package "ant.argument"
+local ecs       = import_package "ant.ecs"
 local thread    = require "thread"
+local common    = require "common"
 local rhwi      = renderpkg.hwi
 local debug_traceback = debug.traceback
 local thread_sleep = thread.sleep
-
-local keymap    = require "keymap"
-local mouse_what = { 'LEFT', 'RIGHT', 'MIDDLE' }
-local mouse_state = { 'DOWN', 'MOVE', 'UP' }
 
 local LOGERROR = __ANT_RUNTIME__ and log.error or print
 local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
@@ -19,6 +17,7 @@ local callback = {}
 local config = {}
 local world
 local world_update
+local world_exit
 
 function callback.init(nwh, context, width, height)
 	rhwi.init {
@@ -29,44 +28,46 @@ function callback.init(nwh, context, width, height)
 	}
 	config.width  = width
 	config.height = height
-	local su = import_package "ant.scene"
-	world = su.create_world()
-	world.init(config)
-    renderpkg.util.create_blit_queue(world:get_world(), {w=width,h=height})
+	world = ecs.new_world(config, config.world_class)
+	common.init_world(world)
+	world:update_func "init" ()
+	world_update = world:update_func "update"
+	world_exit   = world:update_func "exit"
+    renderpkg.util.create_blit_queue(world, {w=width,h=height})
 end
 
 function callback.mouse_wheel(x, y, delta)
-	world.mouse_wheel(x, y, delta)
+	world:signal_emit("mouse_wheel", x, y, delta)
 end
 function callback.mouse(x, y, what, state)
-	world.mouse(x, y, mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN")
+	world:signal_emit("mouse", x, y, what, state)
 end
 function callback.touch(x, y, id, state)
-	world.touch(x, y, mouse_state[state] or "UNKNOWN", id)
+	world:signal_emit("touch", x, y, id, state)
 end
 function callback.keyboard(key, press, state)
-	world.keyboard(keymap[key], press, {
-		CTRL 	= (state & 0x01) ~= 0,
-		ALT 	= (state & 0x02) ~= 0,
-		SHIFT 	= (state & 0x04) ~= 0,
-		SYS 	= (state & 0x08) ~= 0,
-	})
+	world:signal_emit("keyboard", key, press, state)
 end
 function callback.size(width,height,_)
-	world.size(width,height)
+	if world then
+		world:pub {"resize", width, height}
+	end
 	rhwi.reset(nil, width, height)
 end
 
 function callback.exit()
-	world.exit()
+	if world_exit then
+		world_exit()
+	end
 	rhwi.shutdown()
     print "exit"
 end
 
 function callback.update()
 	if debug_update then debug_update() end
-	if world then
-		world.update()
+	if world_update then
+		world_update()
+		world:clear_removed()
 		rhwi.frame()
 	end
 end
