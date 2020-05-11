@@ -4,12 +4,19 @@ local vfs = require "vfs"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
 local stringify = import_package "ant.serialize".stringify
-local link = {}
 local cache = {}
+local link = {}
 
-local function get_platname(name, config)
-    return name.."_"..sha1(config):sub(1,7)
+local function init(ext, compiler)
+    link[ext] = {
+        compiler = compiler,
+        config = {},
+    }
 end
+
+init("fx",      require "fx.compile")
+init("mesh",    require "mesh.convert")
+init("texture", require "texture.convert")
 
 local function get_filename(pathname)
     local stem = pathname:stem():string()
@@ -34,31 +41,80 @@ local function readconfig(filename)
     return datalist.parse(readfile(filename))
 end
 
-local function register(ext, compiler)
-    link[ext] = {
-        compiler = compiler
-    }
-end
-
-local function set_config(ext, name, config)
-    config = stringify(config)
+local function set_config(ext, config)
+    local config_string = stringify(config)
     local info = link[ext]
     if not info then
         error("invalid type: " .. ext)
     end
+    local hash = sha1(config_string):sub(1,7)
+    local cfg = info.config[hash]
+    if cfg then
+        return cfg
+    end
+    cfg = {}
+    if not info.default then
+        info.default = cfg
+    end
+    info.config[hash] = cfg
     local root = vfs.repo()._root
-    local plathash = get_platname(name, config)
-    info.name = name
-    info.binpath = root / ".build" / ext / plathash
-    info.deppath = root / ".dep" / ext / plathash
-	lfs.create_directories(info.binpath)
-	lfs.create_directories(info.deppath)
-    writefile(info.binpath / ".config", config)
+    cfg.compiler = info.compiler
+    cfg.binpath = root / ".build" / ext / (info.name.."_"..hash)
+    cfg.deppath = root / ".dep" / ext / (info.name.."_"..hash)
+    lfs.create_directories(cfg.binpath)
+    lfs.create_directories(cfg.deppath)
+    writefile(cfg.binpath / ".config", config_string)
+    return cfg
 end
 
-local function do_build(ext, pathname)
+local function register(ext, name, config)
     local info = link[ext]
-    local deppath = info.deppath / (get_filename(pathname) .. ".dep")
+    if not info then
+        error("invalid type: " .. ext)
+    end
+    info.name = name
+    return set_config(ext, config)
+end
+
+local function copytable(a, b)
+    for k,v in pairs(b) do
+        if type(v) == "table" then
+            local ak = a[k]
+            if ak == nil then
+                local t = {}
+                copytable(t, v)
+                a[k] = t
+            else
+                assert(type(ak) == "table")
+                copytable(ak, v)
+            end
+        else
+            a[k] = v
+        end
+    end
+end
+
+local function mergetable(a, b)
+    local t = {}
+    copytable(t, a)
+    copytable(t, b)
+    return t
+end
+
+local function get_config(ext, config)
+    local info = link[ext]
+    if not info then
+        return
+    end
+    local defalut = assert(info.default)
+    if not config then
+        return defalut
+    end
+    return set_config(ext, mergetable(config, defalut))
+end
+
+local function do_build(cfg, pathname)
+    local deppath = cfg.deppath / (get_filename(pathname) .. ".dep")
     if not lfs.exists(deppath) then
         return
     end
@@ -79,10 +135,9 @@ local function create_depfile(filename, deps)
     writefile(filename, table.concat(w, "\n"))
 end
 
-local function do_compile(ext, pathname, outpath)
-    local info = link[ext]
+local function do_compile(cfg, pathname, outpath)
     lfs.create_directory(outpath)
-    local ok, err, deps = info.compiler(readconfig(info.binpath / ".config"), pathname,  outpath, function (path)
+    local ok, err, deps = cfg.compiler(readconfig(cfg.binpath / ".config"), pathname,  outpath, function (path)
         return fs.path(path):localpath()
     end)
     if not ok then
@@ -93,24 +148,24 @@ local function do_compile(ext, pathname, outpath)
     else
         deps = {pathname}
     end
-    create_depfile(info.deppath / (get_filename(pathname) .. ".dep"), deps)
+    create_depfile(cfg.deppath / (get_filename(pathname) .. ".dep"), deps)
 end
 
-local function compile(filename)
+local function compile(filename, config)
     local pathname = fs.path(filename)
     local ext = pathname:extension():string():sub(2):lower()
     local pathstring = pathname:string()
-    local info = link[ext]
-    if not info then
+    local cfg = get_config(ext, config)
+    if not cfg then
         return pathstring
     end
     local cachepath = cache[pathstring]
     if cachepath then
         return cachepath
     end
-    local outpath = info.binpath / get_filename(pathname)
-    if not do_build(ext, pathname) or not lfs.exists(outpath) then
-        do_compile(ext, pathname, outpath)
+    local outpath = cfg.binpath / get_filename(pathname)
+    if not do_build(cfg, pathname) or not lfs.exists(outpath) then
+        do_compile(cfg, pathname, outpath)
     end
     cache[pathstring] = outpath
     return outpath
@@ -118,6 +173,5 @@ end
 
 return {
     register = register,
-    set_config = set_config,
     compile = compile,
 }

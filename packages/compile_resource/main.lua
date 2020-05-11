@@ -34,32 +34,21 @@ local function load_fx_setting()
     return r
 end
 
-local compiler = {
-	fx		= require "fx.compile",
-	mesh 	= require "mesh.convert",
-	texture = require "texture.convert",
-}
-
 --TODO
 local function init()
     local renderpkg = import_package "ant.render"
     local hw = renderpkg.hwi
-    compile.register("fx", compiler.fx)
-    compile.register("mesh", compiler.mesh)
-    compile.register("texture", compiler.texture)
-
-    compile.set_config("fx", "win", {identity=hw.identity(), setting=load_fx_setting()})
-    compile.set_config("mesh", "win", {identity=hw.identity(),})
-    compile.set_config("texture", "win", {identity=hw.identity(),})
+    compile.register("fx", "win", {identity=hw.identity(), setting=load_fx_setting()})
+    compile.register("mesh", "win", {identity=hw.identity(),})
+    compile.register("texture", "win", {identity=hw.identity(),})
 end
 
 return {
     init = init,
     register = compile.register,
-    set_config = compile.set_config,
     compile = compile.compile,
     ------
     util = require "util",
-	compiler = compiler,
+	compile_fx = require "fx.compile",
 	shader_toolset = require "fx.toolset",
 }
