@@ -14,11 +14,11 @@ vec4 texture2D_sRGB(sampler2D tex, vec2 coord)
 
 vec4 output_color_sRGB(vec4 outcolor)
 {
-#ifdef  ENABLE_FB_SRGB
+#ifdef  ENABLE_SRGB_FB
     return outcolor;
-#else   //!ENABLE_FB_SRGB
+#else   //!ENABLE_SRGB_FB
     return vec4(toGamma(outcolor.rgb), outcolor.a);
-#endif  //ENABLE_FB_SRGB
+#endif  //ENABLE_SRGB_FB
 }
 
 #endif //__SHADER_UTILS_SH__

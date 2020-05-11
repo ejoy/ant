@@ -61,7 +61,7 @@ local function add_macros_from_surface_setting(mysetting, surfacetype, macros)
 	end
 
 	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"
-	macros[#macros+1] = "ENABLE_FB_SRGB"
+	macros[#macros+1] = "ENABLE_SRGB_FB"
 	
 	return macros
 end
