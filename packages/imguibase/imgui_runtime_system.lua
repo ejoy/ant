@@ -16,26 +16,20 @@ local font        = imgui.font
 local Font        = platform.font
 local timer       = world:interface "ant.timer|timer"
 local eventResize = world:sub {"resize"}
-local context     = nil
 
 local imgui_sys = ecs.system "imgui_system"
 
 local function hookEvent()
 	local touchid
 	world:signal_hook("mouse_wheel", function(x, y, delta)
-		imgui.push_context(context)
 		imgui.mouse_wheel(x, y, delta)
-		imgui.pop_context(context)
 		return imguiIO.WantCaptureMouse
 	end)
 	world:signal_hook("mouse", function(x, y, what, state)
-		imgui.push_context(context)
 		imgui.mouse(x, y, what, state)
-		imgui.pop_context(context)
 		return imguiIO.WantCaptureMouse
 	end)
 	world:signal_hook("touch", function(x, y, id, state)
-		imgui.push_context(context)
 		if state == 1 then
 			if not touchid then
 				touchid = id
@@ -51,13 +45,10 @@ local function hookEvent()
 				touchid = nil
 			end
 		end
-		imgui.pop_context(context)
 		return imguiIO.WantCaptureMouse
 	end)
 	world:signal_hook("keyboard", function(key, press, state)
-		imgui.push_context(context)
 		imgui.keyboard(key, press, state)
-		imgui.pop_context(context)
 		return imguiIO.WantCaptureKeyboard
 	end)
 	world:signal_hook("char", imgui.input_char)
@@ -76,8 +67,7 @@ end
 function imgui_sys:init()
 	hookEvent()
 
-	context = imgui.CreateContext(rhwi.native_window())
-	imgui.push_context(context)
+	world.imgui_context = imgui.CreateContext(rhwi.native_window())
 	imgui.ant.viewid(viewidmgr.generate "ui")
 	local imgui_font = assetmgr.load "/pkg/ant.imguibase/shader/font.fx".shader
 	imgui.ant.font_program(
@@ -101,7 +91,6 @@ function imgui_sys:init()
 	else -- iOS
 		font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	end
-	imgui.pop_context()
 end
 
 function imgui_sys:exit()
@@ -109,11 +98,9 @@ function imgui_sys:exit()
 end
 
 function imgui_sys:post_init()
-	imgui.push_context(context)
     local main_viewid = assert(viewidmgr.get "main_view")
     local vid = imgui.ant.viewid()
     fbmgr.bind(vid, assert(fbmgr.get_fb_idx(main_viewid)))
-    imgui.pop_context()
 end
 
 local function imgui_resize(width, height)
@@ -124,7 +111,6 @@ local function imgui_resize(width, height)
 end
 
 function imgui_sys:ui_start()
-	imgui.push_context(context)
 	for _,w, h in eventResize:unpack() do
 		imgui_resize(w, h)
 	end
@@ -148,5 +134,4 @@ function imgui_sys:ui_end()
     imgui.end_frame()
     local vid = imgui.ant.viewid()
     renderutil.update_frame_buffer_view(vid, fbmgr.get_fb_idx(vid))
-    imgui.pop_context()
 end
