@@ -35,7 +35,7 @@ includes[#includes+1] = fs.current_path() / "packages/resources/shaders"
 local srcfile = fs.path(input)
 
 if srcfile:extension():string():lower() == ".fx" then
-	local success, msg = fvpkg.compiler.fx(identity, srcfile, fs.path(output), function(filename)
+	local success, msg = fvpkg.compile_fx(identity, srcfile, fs.path(output), function(filename)
 		local vfs = require "vfs"
 		return fs.path(vfs.realpath(filename))
 	end)
