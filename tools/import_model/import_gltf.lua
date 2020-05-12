@@ -24,7 +24,7 @@ local function export_pbrm(arguments)
 
     fs.create_directories(pbrm_folder)
     local images = glbscene.images
-    local bufferviews = glbscene.bufferviews
+    local bufferviews = glbscene.bufferViews
     local buffers = glbscene.buffers
     local textures = glbscene.textures
     local samplers = glbscene.samplers

@@ -99,7 +99,7 @@ local function read_arguments()
             throw_error("need argument for outfolder:%d", idx+1)
         end
         local outfolder = fs.path(na)
-        if not fs.is_directory(outfolder) then
+        if fs.is_regular_file(outfolder) then
             throw_error("outfolder argument must be a directory:%d, %s", idx+1, outfolder:string())
         end
         arguments.outfolder = refine_path(outfolder:string())
@@ -176,10 +176,12 @@ function arguments:to_localpath(visualpath)
 end
 
 local extname = arguments.input:extension():string():upper()
-local outfile = arguments.outfolder / "meshes" / arguments.input:filename()
+local meshfolder = arguments.outfolder / "meshes"
+fs.create_directories(meshfolder)
+
+local outfile = meshfolder / arguments.input:filename()
 if extname == ".FBX" then
     local fbx2gltf = require "fbx2gltf"
-    fs.create_directories(outfile:parent_path())
     outfile:replace_extension ".glb"
     local results = fbx2gltf { {arguments.input, outfile}}
     if not next(results) then
@@ -190,7 +192,7 @@ if extname == ".FBX" then
         error(string.format("glb file is not exist, but fbx2gltf progrom return true:%s", arguments.input:string()))
     end
 elseif extname == ".GLB" then
-    fs.copy_file(arguments.input, outfile)
+    fs.copy_file(arguments.input, outfile, true)
 end
 
 arguments.input = outfile
