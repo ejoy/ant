@@ -303,6 +303,31 @@ function world:import_component(name)
 	return self._class.component[name]
 end
 
+function world:signal_on(name, f)
+	self._slots[name] = f
+end
+
+function world:signal_hook(name, newf)
+    local f = self._slots[name]
+	if f then
+		self._slots[name] = function(...)
+			if not newf(...) then
+				f(...)
+			end
+		end
+	else
+		self._slots[name] = newf
+    end
+end
+
+function world:signal_emit(name, ...)
+	local f = self._slots[name]
+	if f then
+		f(...)
+	end
+end
+
+
 local m = {}
 
 m.world_base = world
@@ -319,6 +344,7 @@ function m.new_world(config,world_class)
 		_uniques = {},
 		_initargs = {},
 		_interface = {},
+		_slots = {},
 		_typeclass = setmetatable({}, { __mode = "kv" }),
 	}, world_class or world)
 

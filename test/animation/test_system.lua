@@ -16,9 +16,8 @@ local screensize  = {w=0,h=0}
 function init_loader_sys:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt = {r = {0,0.92388,0,0.382683}}})
     world:create_entity 'res/light_directional.txt'
-    RoleEntityId = world:create_entity 'res/entity.txt'
-    local info = import_package "ant.serialize".entity(world, RoleEntityId)
-    print(info)
+    local res = world:instance "res/gltf_animation.prefab"
+    RoleEntityId = res[2]
     world:enable_tag(RoleEntityId, "show_operate_gizmo")
 end
 

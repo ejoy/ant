@@ -1,11 +1,11 @@
+local editor      = import_package "ant.imguibase".editor
 local ru          = import_package "ant.render".util
 local ecs         = import_package "ant.ecs"
-local keymap      = import_package "ant.imguibase".keymap
+local init_world  = import_package "ant.imguibase".init_world
 local imgui       = require "imgui.ant"
-local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
-local mouse_state = { 'DOWN', 'MOVE', 'UP' }
 
 local function create_world(config)
+    local context = editor.get_context()
     local rect_x, rect_y = 0, 0
     local rect_w, rect_h = config.width, config.height
     local function isInRect(x, y)
@@ -15,7 +15,9 @@ local function create_world(config)
             and (y <= rect_y + rect_h)
     end
     local world = ecs.new_world (config)
+    init_world(world)
     world:update_func "init" ()
+    imgui.SetCurrentContext(context)
     world:pub {"resize", rect_w, rect_h}
     local world_update = world:update_func "update"
     local world_tex = assert(ru.get_main_view_rendertexture(world))
@@ -25,28 +27,31 @@ local function create_world(config)
         imgui.widget.ImageButton(world_tex,rect_w,rect_h,{frame_padding=0,bg_col={0,0,0,1}})
     end
     function m.update()
+        imgui.SetCurrentContext(world.imgui_context)
         world_update()
         world:clear_removed()
+        imgui.SetCurrentContext(context)
     end
     function m.mouse_wheel(x, y, delta)
         if not isInRect(x, y) then
             return
         end
-        world:pub {"mouse_wheel", delta, x - rect_x, y - rect_y}
+        imgui.SetCurrentContext(world.imgui_context)
+        world:signal_emit("mouse_wheel", x - rect_x, y - rect_y, delta)
+        imgui.SetCurrentContext(context)
     end
     function m.mouse(x, y, what, state)
         if not isInRect(x, y) then
             return
         end
-        world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x - rect_x, y - rect_y}
+        imgui.SetCurrentContext(world.imgui_context)
+        world:signal_emit("mouse", x - rect_x, y - rect_y, what, state)
+        imgui.SetCurrentContext(context)
     end
     function m.keyboard(key, press, state)
-        world:pub {"keyboard", keymap[key], press, {
-            CTRL 	= (state & 0x01) ~= 0,
-            ALT 	= (state & 0x02) ~= 0,
-            SHIFT 	= (state & 0x04) ~= 0,
-            SYS 	= (state & 0x08) ~= 0,
-        }}
+        imgui.SetCurrentContext(world.imgui_context)
+        world:signal_emit("keyboard", key, press, state)
+        imgui.SetCurrentContext(context)
     end
     return m, world
 end

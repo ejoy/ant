@@ -39,7 +39,6 @@ end
 
 local function imgui_init()
 	context = imgui.CreateContext(rhwi.native_window())
-	imgui.push_context(context)
 	imgui.ant.viewid(viewidmgr.get "uieditor")
 	local imgui_font = assetmgr.load "/pkg/ant.imguibase/shader/font.fx".shader
 	imgui.ant.font_program(
@@ -63,7 +62,6 @@ local function imgui_init()
 	else -- iOS
 		font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	end
-	imgui.pop_context()
 end
 
 local function imgui_resize(width, height)
@@ -102,9 +100,7 @@ function message.dropfiles(filelst)
 	cb.dropfiles(filelst)
 end
 function message.size(width,height,_)
-	imgui.push_context(context)
 	imgui_resize(width, height)
-	imgui.pop_context()
 	rhwi.reset(nil, width, height)
 end
 function message.exit()
@@ -115,11 +111,9 @@ end
 function message.update()
 	if initialized then
 		local delta = timer_delta()
-		imgui.push_context(context)
 		imgui.begin_frame(delta * 1000)
         cb.update(delta)
 		imgui.end_frame()
-		imgui.pop_context()
         rhwi.frame()
     end
 end
@@ -140,6 +134,11 @@ local function start(w, h, callback)
     window.mainloop(true)
 end
 
+local function get_context()
+    return context
+end
+
 return {
 	start = start,
+	get_context = get_context,
 }
