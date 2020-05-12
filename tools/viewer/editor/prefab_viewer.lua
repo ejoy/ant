@@ -31,6 +31,7 @@ function event.init()
         }
     }
     eventPrefab = world:sub {"editor", "prefab"}
+    w.init()
 end
 
 function event.dropfiles(filelst)
