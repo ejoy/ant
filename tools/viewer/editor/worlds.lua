@@ -16,12 +16,15 @@ local function create_world(config)
     end
     local world = ecs.new_world (config)
     init_world(world)
-    world:update_func "init" ()
-    imgui.SetCurrentContext(context)
-    world:pub {"resize", rect_w, rect_h}
     local world_update = world:update_func "update"
-    local world_tex = assert(ru.get_main_view_rendertexture(world))
+    local world_tex
     local m = {}
+    function m.init()
+        world:pub {"resize", rect_w, rect_h}
+        world:update_func "init" ()
+        imgui.SetCurrentContext(context)
+        world_tex = assert(ru.get_main_view_rendertexture(world))
+    end
     function m.show()
         rect_x, rect_y = imgui.cursor.GetCursorScreenPos()
         imgui.widget.ImageButton(world_tex,rect_w,rect_h,{frame_padding=0,bg_col={0,0,0,1}})

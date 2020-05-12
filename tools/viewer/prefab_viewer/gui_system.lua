@@ -8,7 +8,7 @@ local rhwi       = import_package 'ant.render'.hwi
 local m = ecs.system 'gui_system'
 
 local status = {
-    CameraMode = "rotate",
+    CameraMode = "disable",
 }
 
 local function imguiBeginToolbar()
@@ -42,6 +42,9 @@ function m:ui_update()
     imgui.windows.SetNextWindowPos(0, 50)
     for _ in imgui_util.windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
         imguiBeginToolbar()
+        if imguiToolbar("🚫", "Disable", status.CameraMode == "disable") then
+            status.CameraMode = "disable"
+        end
         if imguiToolbar("🔄", "Rotate", status.CameraMode == "rotate") then
             status.CameraMode = "rotate"
         end

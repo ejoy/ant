@@ -59,6 +59,7 @@ local function set_config(ext, config)
     info.config[hash] = cfg
     local root = vfs.repo()._root
     cfg.compiler = info.compiler
+    cfg.config = config
     cfg.binpath = root / ".build" / ext / (info.name.."_"..hash)
     cfg.deppath = root / ".dep" / ext / (info.name.."_"..hash)
     lfs.create_directories(cfg.binpath)
@@ -137,7 +138,7 @@ end
 
 local function do_compile(cfg, pathname, outpath)
     lfs.create_directory(outpath)
-    local ok, err, deps = cfg.compiler(readconfig(cfg.binpath / ".config"), pathname,  outpath, function (path)
+    local ok, err, deps = cfg.compiler(cfg.config, pathname,  outpath, function (path)
         return fs.path(path):localpath()
     end)
     if not ok then
