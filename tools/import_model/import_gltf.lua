@@ -134,7 +134,7 @@ local function export_pbrm(arguments)
         local imgpath = export_image(image_folder, tex.source)
         local sampler = samplers[tex.sampler+1]
         local texture_desc = {
-            path = imgpath:string(),
+            path = arguments:to_visualpath(imgpath):string(),
             sampler = to_sampler(sampler),
             normalmap = normalmap,
             colorspace = colorspace,
@@ -148,7 +148,7 @@ local function export_pbrm(arguments)
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            tex_desc.path = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
+            tex_desc.path = arguments:to_visualpath(fs.path(fetch_texture_info(tex_desc.index, name, normalmap, colorspace))):string()
             tex_desc.index = nil
             return tex_desc
         end

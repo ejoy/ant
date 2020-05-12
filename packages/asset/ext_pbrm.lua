@@ -22,15 +22,6 @@ local default_pbr_param = {
 	},
 }
 
-local function refine_paths(pbrm)
-	for k, v in pairs(pbrm) do
-		local tex = v.texture
-		if tex then
-			tex.path = fs.path(tex.path)
-		end
-	end
-end
-
 local function texture_path(pbrm, name)
 	local p = pbrm[name]
 	if p then
