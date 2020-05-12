@@ -64,9 +64,9 @@ end
 
 return {
 	loader = function (filename, data)
-		local material = assetmgr.load_depiction("/pkg/ant.resources/materials/pbr_default.material")
-
 		local pbrm = data or assetmgr.load_depiction(filename)
+		local materialfile = pbrm.materialfile or "/pkg/ant.resources/materials/pbr_default.material"
+		local material = assetmgr.load_depiction(materialfile)
 
 		--refine_paths(pbrm)
 
