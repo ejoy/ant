@@ -44,11 +44,12 @@ local function help_info()
             -i, --input: for input file
             -o, --outfolder: for file to output
             -v, --visualpath: outfolder's visual path
+            --disable: specify which type resource not output, can be: animation/mesh/pbrm
             --config: config file, a datalist file
         examples:
             cd to [antfolder], and run:
             {luafolder}/lua.exe tools/import_model/import.lua --input "d:/abc/female.fbx" --outfolder "d:/Work/ant/packages/resources/test" \
-            --visualpath "/pkg/ant.resources/test" --config "d:/abc/config.txt"
+            --visualpath "/pkg/ant.resources/test" --config "d:/abc/config.txt" --disable "animation"
     ]]
 end
 
@@ -131,6 +132,31 @@ local function read_arguments()
         return idx+1
     end
 
+    local function read_disable_output(idx)
+        local na = arg[idx+1]
+        if na == nil then
+            throw_error("need argument for visualpath:%d", idx+1)
+        end
+
+        local valid_features = {
+            mesh = true,
+            pbrm = true,
+            animation = true,
+        }
+
+        local disables = {}
+        for m in na:gmatch "[^|]+" do
+            if valid_features[m] then
+                disables[m] = true
+            else
+                throw_error("unknow feature:%d %s %s", idx+1, m, na)
+            end
+        end
+
+        arguments.disable_output = disables
+        return idx+1
+    end
+
     local commands = {
         ["--input"]     = read_input,
         ["-i"]          = read_input,
@@ -139,6 +165,7 @@ local function read_arguments()
         ["--config"]    = read_config,
         ["--visualpath"]= read_visualpath,
         ["-v"]          = read_visualpath,
+        ["--disable"]   = read_disable_output,
         ["--help"]      = print_help,
         ["-h"]          = print_help,
     }
@@ -149,7 +176,7 @@ local function read_arguments()
         if a:match "-" or a:match "--" then
             local cmd = commands[a]
             if cmd == nil then
-                throw_error("not support command:%s", cmd)
+                throw_error(("not support command:%s"):format(a))
             end
 
             idx = cmd(idx)

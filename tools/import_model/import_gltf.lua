@@ -146,7 +146,7 @@ local function export_pbrm(arguments)
         local imgpath = export_image(image_folder, tex.source)
         local sampler = samplers[tex.sampler+1]
         local texture_desc = {
-            path = arguments:to_visualpath(imgpath):string(),
+            texture = arguments:to_visualpath(imgpath):string(),
             sampler = to_sampler(sampler),
             normalmap = normalmap,
             colorspace = colorspace,
@@ -232,8 +232,18 @@ local function export_animation(arguments)
 end
 
 return function (arguments)
-    local materialfiles = export_pbrm(arguments)
-    export_animation(arguments)
-    export_mesh(arguments, materialfiles)
+    local disable_output = arguments.disable_output
+    local materialfiles
+    if not disable_output.pbrm then
+        materialfiles = export_pbrm(arguments)
+    end
+    
+    if not disable_output.animation then
+        export_animation(arguments)
+    end
+
+    if not disable_output.mesh then
+        export_mesh(arguments, materialfiles)
+    end
 end
 

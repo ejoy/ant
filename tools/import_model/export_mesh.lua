@@ -342,8 +342,19 @@ return function(arguments, materialfiles)
         entities[#entities+1] = parent
         for primidx, prim in ipairs(meshnode) do
             local meshres = visualmesh_path .. ":" .. get_submesh_name(meshname, primidx)
-            local mf = materialfiles[prim.material+1]
-            entities[#entities+1] = create_mesh_entity(parent, meshres, arguments:to_visualpath(mf):string(), meshname .. "." .. primidx)
+            local mf
+            if materialfiles then
+                mf = materialfiles[prim.material+1]
+            else
+                error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
+            end
+
+            if mf then
+                mf = arguments:to_visualpath():string()
+            else
+                error(("material index not found in output material files:%d"):format(prim.material))
+            end
+            entities[#entities+1] = create_mesh_entity(parent, meshres, mf, meshname .. "." .. primidx)
         end
     end
     local prefabconetent = seri_perfab(entities)
