@@ -128,6 +128,18 @@ local function export_pbrm(arguments)
         }
     end
 
+    local function add_texture_format(texture_desc, need_compress)
+        if need_compress then
+            texture_desc.compress = {
+                    android = "ASTC4x4",
+                    ios = "ASTC4x4",
+                    windows = "BC3",
+                }
+        else
+            texture_desc.format = "RGBA8"
+        end
+    end
+
     local function fetch_texture_info(texidx, name, normalmap, colorspace)
         local tex = textures[texidx+1]
 
@@ -141,8 +153,12 @@ local function export_pbrm(arguments)
             type = "texture",
         }
 
+        --TODO: check texture if need compress
+        local need_compress<const> = true
+        add_texture_format(texture_desc, need_compress)
+
         local texpath = imgpath:parent_path() / name .. ".texture"
-        fs_local.write_file(texpath, seri_stringify(texture_desc, true, true))
+        fs_local.write_file(texpath, seri_stringify(texture_desc))
         return texpath:string()
     end
 
