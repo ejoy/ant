@@ -350,7 +350,7 @@ return function(arguments, materialfiles)
             end
 
             if mf then
-                mf = arguments:to_visualpath():string()
+                mf = arguments:to_visualpath(mf):string()
             else
                 error(("material index not found in output material files:%d"):format(prim.material))
             end
