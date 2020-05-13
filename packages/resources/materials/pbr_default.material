@@ -1,2 +1,2 @@
-fx: /pkg/ant.resources/materials/fx/pbr_default.fx
+fx: $resource /pkg/ant.resources/materials/fx/pbr_default.fx
 state: /pkg/ant.resources/materials/states/default.state

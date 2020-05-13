@@ -1,18 +1,12 @@
+local ecs = ...
+
+local math3d = require "math3d"
+local bgfx = require "bgfx"
 local assetmgr 	= require "asset"
-local bgfx		= require "bgfx"
-local math3d 	= require "math3d"
 
-local function load_fx(fx)
-	return assetmgr.load(fx)
-end
+local m = ecs.component "uniform"
 
-local function load_state(state)
-	return bgfx.make_state(type(state) == "string" and
-		assetmgr.load(state)._data or
-		state)
-end
-
-local function uniformdata_init(v)
+local function uniform_data(v)
 	local num = #v
 	if num == 4 then
 		return math3d.ref(math3d.vector(v))
@@ -25,67 +19,33 @@ local function uniformdata_init(v)
 	end
 end
 
-local function load_uniform(uniform)
-	for i=1, #uniform do
-		uniform[i] = uniformdata_init(uniform[i])
+function m:init()
+	local input = self.value or self
+	for i = 1, #input do
+		self[i] = uniform_data(input[i])
 	end
-	return uniform
+	return self
 end
 
-local function load_texture(tex)
-	tex.texture = assetmgr.load(tex.texture)
-	tex.handle = tex.texture.handle
+function m:save()
+    return math3d.totable(self)
 end
 
-local function load_properties(properties)
-	if properties then
-		local textures = properties.textures
-		if textures then
-			for _, tex in pairs(textures) do
-				load_texture(tex)
-			end
-		end
-		local uniforms = properties.uniforms
-		if uniforms then
-			for _, uniform in pairs(uniforms) do
-				load_uniform(uniform)
-			end
-		end
+local m = ecs.component "mat_texture"
+
+function m:init()
+	self.handle = self.texture.handle
+	return self
+end
+
+local m = ecs.component "material"
+
+function m:init()
+	assert(type(self.fx) ~= "string")
+	if type(self.state) == "string" then
+		self.state = bgfx.make_state(assetmgr.load_component(world, self.state))
+	else
+		self.state = bgfx.make_state(self.state)
 	end
-	return properties
+	return self
 end
-
-local function refine_properties(properties)
-	if properties then
-		local uniforms = properties.uniforms
-		if uniforms then
-			for _, u in pairs(uniforms) do
-				local vl = u.value
-				table.move(vl, 1, #vl, 1, u)
-				u.value = nil
-			end
-		end
-	end
-
-	return properties
-end
-
-local function loader(filename, data)
-	local res      = data or assetmgr.load_depiction(filename)
-	res.fx         = load_fx(res.fx)
-	res.state      = load_state(res.state)
-	res.properties = load_properties(refine_properties(res.properties))
-	return res
-end
-
-local function unloader(res)
-	bgfx.destroy(res.fx.shader.prog)
-	res.fx 			= nil
-	res.state 		= nil
-	res.properties 	= nil
-end
-
-return {
-	loader = loader,
-	unloader = unloader,
-}

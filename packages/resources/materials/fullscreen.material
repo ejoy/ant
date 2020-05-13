@@ -1,2 +1,2 @@
-fx: /pkg/ant.resources/materials/fx/fullscreen.fx
+fx: $resource /pkg/ant.resources/materials/fx/fullscreen.fx
 state: /pkg/ant.resources/materials/states/quad.state

@@ -1,3 +1,5 @@
+local ecs = ...
+
 local fs = require "filesystem"
 
 local loaders = {}
@@ -47,8 +49,10 @@ local function find_loader(filepath)
 	return loaders[tag]
 end
 
-local function loader(filename)
-	local filepath = fs.path(filename)
+local m = ecs.component "ozz"
+
+function m:init()
+	local filepath = fs.path(self)
 	local fn = find_loader(filepath)
 	if not fn then
 		error "not support type"
@@ -56,12 +60,3 @@ local function loader(filename)
 	end
 	return fn(filepath:localpath():string())
 end
-
-local function unloader(res)
-	res.handle = nil
-end
-
-return {
-	loader = loader,
-	unloader = unloader
-}

@@ -1,3 +1,5 @@
+local ecs = ...
+
 local bgfx      = require "bgfx"
 local cr        = import_package "ant.compile_resource"
 local lfs       = require "filesystem.local"
@@ -48,7 +50,10 @@ local function load_shader(path, name)
     return h
 end
 
-local function loader(filename)
+local m = ecs.component "fx"
+
+function m:init()
+    local filename = self
     local outpath = cr.compile(filename)
     local config = datalist.parse(readfile(outpath / "main.fx"))
     local shader = config.shader
@@ -60,14 +65,9 @@ local function loader(filename)
         local cs = load_shader(outpath / "cs", shader.cs)
         shader.prog, shader.uniforms = create_compute_program(cs)
     end
-    return config, 0
+    return config
 end
 
-local function unloader(res)
-    bgfx.destroy(assert(res.shader.prog))
+function m:delete()
+    bgfx.destroy(assert(self.shader.prog))
 end
-
-return {
-    loader = loader,
-    unloader = unloader,
-}

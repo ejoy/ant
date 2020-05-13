@@ -46,12 +46,12 @@ function callback.init(nwh, context, width, height)
         height = height,
     }
     imgui.ant.viewid(ui_viewid);
-    local imgui_font = assetmgr.load "/pkg/ant.imguibase/shader/font.fx".shader
+    local imgui_font = assetmgr.resource(world, "/pkg/ant.imguibase/shader/font.fx").shader
     imgui.ant.font_program(
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
-    local imgui_image = assetmgr.load "/pkg/ant.imguibase/shader/image.fx".shader
+    local imgui_image = assetmgr.resource(world, "/pkg/ant.imguibase/shader/image.fx").shader
     imgui.ant.image_program(
         imgui_image.prog,
         imgui_image.uniforms.s_tex.handle

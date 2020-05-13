@@ -182,7 +182,7 @@ function resource.unload(filename)
 
 	local ext = robj.filename:match "[^.]*$"
 	if UNLOADER[ext] then
-		UNLOADER[ext](robj.object[""], filename)
+		UNLOADER[ext](robj.object[""], filename, robj.source)
 	end
 
 	local meta = robj.meta

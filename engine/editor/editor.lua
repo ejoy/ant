@@ -22,7 +22,6 @@ local pm = require "antpm"
 pm.initialize()
 import_package = pm.import
 require "common.log"
-import_package "ant.asset".init()
 
 print_r 	= require "editor.print_r".print_r
 dump_a 		= require "editor.print_r".dump_a

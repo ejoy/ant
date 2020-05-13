@@ -1,7 +1,7 @@
-fx: /pkg/ant.resources/materials/fx/gizmo_singlecolor.fx
+fx: $resource /pkg/ant.resources/materials/fx/gizmo_singlecolor.fx
 properties:
   uniforms:
-    u_color:
+    u_color: $uniform
       type: v4
       value: 
         {1, 1, 1, 1}

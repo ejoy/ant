@@ -61,6 +61,12 @@ end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
     color[4] = 0.6
+    local material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_singlecolor.material"
+    material = assetmgr.patch(material, {})
+    material.properties.uniforms.u_color = world.component:uniform {
+        type= "v4",
+        value = {color},
+    }
     return world:create_entity {
         policy={
             "ant.general|name",
@@ -75,17 +81,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
                 srt = {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
             }),
             mesh = world.component:resource "/pkg/ant.resources/meshes/ring.mesh:scenes.scene1.mesh0.1",
-            material = world.component:resource (([[
-                ---
-                /pkg/ant.resources/materials/gizmo_front_singlecolor.material
-                ---
-                op: replace
-                path: /properties/uniforms/u_color
-                value:
-                    type:v4
-                    value:
-                      {%f, %f, %f, %f}
-            ]]):format(color[1], color[2], color[3], color[4])),
+            material = material,
             --can_cast = true,
             can_render = true,
             name = name,
@@ -183,6 +179,12 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
 end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
+    local material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material"
+    material = assetmgr.patch(material, {})
+    material.properties.uniforms.u_color = world.component:uniform {
+        type= "v4",
+        value = {color},
+    }
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -197,17 +199,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
                 srt = {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
             }),
             mesh = world.component:resource"/pkg/ant.resources/meshes/cone.mesh:scenes.scene1.pCone1.1",
-            material = world.component:resource (([[
-                ---
-                /pkg/ant.resources/materials/gizmo_singlecolor.material
-                ---
-                op:replace
-                path:/properties/uniforms/u_color
-                value:
-                    type:v4
-                    value:
-                      {%f,%f,%f,%f}
-            ]]):format(color[1], color[2], color[3], color[3])),
+            material = material,
             can_render = true,
             can_select = true,
             name = name,
@@ -221,6 +213,12 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
 end
 
 local function create_box_entity(world, color, size, pos, name,parent,dir)
+    local material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material"
+    material = assetmgr.patch(material, {})
+    material.properties.uniforms.u_color = world.component:uniform {
+        type= "v4",
+        value = {color},
+    }
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -235,17 +233,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
                 srt = {s=size, t=pos},
             }),
             mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1",
-            material = world.component:resource (([[
-                ---
-                /pkg/ant.resources/materials/gizmo_singlecolor.material
-                ---
-                op:replace
-                path:/properties/uniforms/u_color
-                value:
-                    type:v4
-                    value:
-                      {%f, %f, %f,%f}
-            ]]):format(color[1], color[2], color[3], color[4])),
+            material = material,
             can_render = true,
             name = name,
             can_select = true,

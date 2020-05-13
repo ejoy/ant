@@ -100,6 +100,17 @@ function world:add_policy(eid, t)
 	apply_policy(self, eid, component, transform, dataset)
 end
 
+function world:component_init(name, v)
+	return component_init(self, name, v)
+end
+
+function world:component_delete(name, v)
+	local tc = self:import_component(name)
+	if tc and tc.methodfunc and tc.methodfunc.delete then
+		tc.methodfunc.delete(v)
+	end
+end
+
 local function read_data(w, args)
 	if type(args) == 'string' then
 		local f = assert(fs.open(fs.path(args), 'rb'))

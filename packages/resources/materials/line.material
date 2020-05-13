@@ -1,4 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/line.fx
+fx: $resource /pkg/ant.resources/materials/fx/line.fx
 state:
   ALPHA_REF: 1
   CULL: CCW

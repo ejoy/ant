@@ -1,24 +1,24 @@
-fx: /pkg/ant.resources/materials/fx/test/mesh_shadow.fx
+fx: $resource /pkg/ant.resources/materials/fx/test/mesh_shadow.fx
 properties:
   textures:
-    s_basecolor:
-      texture: /pkg/ant.resources/textures/test/1x1_gray.texture
+    s_basecolor: $mat_texture
+      texture: $resource /pkg/ant.resources/textures/test/1x1_gray.texture
       stage: 0
       type: texture
-    s_normal:
-      texture: /pkg/ant.resources/textures/test/1x1_normal.texture
+    s_normal: $mat_texture
+      texture: $resource /pkg/ant.resources/textures/test/1x1_normal.texture
       stage: 1
       type: texture
   uniforms:
-    u_fog_color:
+    u_fog_color: $uniform
       type: color
       value: 
         {0.95, 0.95, 0.95, 1}
-    u_specularColor:
+    u_specularColor: $uniform
       type: color
       value:
         {0.1, 0.1, 0.1, 1}
-    u_specularLight:
+    u_specularLight: $uniform
       type: v4
       value:
         {1, 0, 0, 1}

@@ -7,7 +7,7 @@ ecs.component_alias("name", "string", "")
 local m = ecs.component_alias("resource", "string")
 
 function m:init()
-    return assetmgr.load(self, nil, true)
+    return assetmgr.resource(world, self)
 end
 
 function m:save()

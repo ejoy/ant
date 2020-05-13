@@ -29,7 +29,7 @@ function tm_sys:post_init()
                 passes = {
                     {
                         name = "main",
-                        material = assetmgr.load "/pkg/ant.resources/materials/postprocess/tonemapping.material",
+                        material = assetmgr.resource(world, "/pkg/ant.resources/materials/postprocess/tonemapping.material"),
                         output = {
                             fb_idx = main_fbidx,
                             rb_idx = 1,
