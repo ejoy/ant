@@ -88,7 +88,4 @@ end
 return {
 	loader = loader,
 	unloader = unloader,
-
-	load_properties = load_properties,
-	load_uniform = load_uniform,
 }

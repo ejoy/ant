@@ -1,0 +1,4 @@
+component "uniform"
+    .implement "res_material.lua"
+    .method "init"
+    .method "save"

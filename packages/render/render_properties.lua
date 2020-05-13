@@ -10,10 +10,6 @@ local mc, mu = mathpkg.constant, mathpkg.util
 
 local math3d = require "math3d"
 
-local assetmgr = import_package "ant.asset"
-local ma = assetmgr.get_accessor "material"
-local load_uniform = ma.load_uniform
-
 local m = ecs.interface "render_properties"
 local render_properties = {}
 function m.data()
@@ -135,24 +131,24 @@ function  load_properties_sys:init()
 
 	rp.uniforms = {
 	--lighting
-		directional_lightdir 	= load_uniform{type="v4", 	mc.T_ZERO},
-		directional_color 		= load_uniform{type="color",mc.T_ZERO},
-		directional_intensity 	= load_uniform{type="v4", 	mc.T_ZERO},
+		directional_lightdir 	= world.component:uniform{type="v4", 	mc.T_ZERO},
+		directional_color 		= world.component:uniform{type="color",mc.T_ZERO},
+		directional_intensity 	= world.component:uniform{type="v4", 	mc.T_ZERO},
 
-		ambient_mode 			= load_uniform{type="v4", 	 mc.T_ZERO},
-		ambient_skycolor 		= load_uniform{type="color", mc.T_ZERO},
-		ambient_midcolor 		= load_uniform{type="color", mc.T_ZERO},
-		ambient_groundcolor 	= load_uniform{type="color", mc.T_ZERO},
+		ambient_mode 			= world.component:uniform{type="v4", 	 mc.T_ZERO},
+		ambient_skycolor 		= world.component:uniform{type="color", mc.T_ZERO},
+		ambient_midcolor 		= world.component:uniform{type="color", mc.T_ZERO},
+		ambient_groundcolor 	= world.component:uniform{type="color", mc.T_ZERO},
 
-		u_eyepos				= load_uniform{type="v4", mc.T_ZERO_PT},
+		u_eyepos				= world.component:uniform{type="v4", mc.T_ZERO_PT},
 
 		-- shadow
-		u_csm_matrix 			= load_uniform{type="m4_array", mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT},
-		u_csm_split_distances	= load_uniform{type="v4", mc.T_ZERO},
+		u_csm_matrix 			= world.component:uniform{type="m4_array", mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT},
+		u_csm_split_distances	= world.component:uniform{type="v4", mc.T_ZERO},
 
-		u_depth_scale_offset	= load_uniform{type="v4", mc.T_ZERO},
-		u_shadow_param1			= load_uniform{type="v4", mc.T_ZERO},
-		u_shadow_param2			= load_uniform{type="v4", mc.T_ZERO},
+		u_depth_scale_offset	= world.component:uniform{type="v4", mc.T_ZERO},
+		u_shadow_param1			= world.component:uniform{type="v4", mc.T_ZERO},
+		u_shadow_param2			= world.component:uniform{type="v4", mc.T_ZERO},
 	}
 	rp.textures = {
 		s_shadowmap = {type="texture", },

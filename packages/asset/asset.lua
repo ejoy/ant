@@ -34,8 +34,6 @@ local function get_accessor(name)
 	error("Unsupport asset type: " .. name)
 end
 
-assetmgr.get_accessor = get_accessor
-
 function assetmgr.get_loader(name)
 	return get_accessor(name).loader
 end
@@ -63,13 +61,6 @@ end
 
 function assetmgr.load(fullpath, resdata, lazyload)
     return resource.proxy(resource_load(fullpath, resdata, lazyload))
-end
-
-function assetmgr.load_multiple(filelist, reslist, lazyload)
-    for i, filename in ipairs(filelist) do
-        filelist[i] = resource_load(filename, reslist[i], lazyload)
-    end
-    return resource.multiple_proxy(filelist)
 end
 
 function assetmgr.init()
