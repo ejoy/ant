@@ -52,12 +52,21 @@ local function add_macros_from_surface_setting(mysetting, surfacetype, macros)
 		macros[#macros+1] = "ENABLE_SHADOW"
 	end
 
+	local skinning = surfacetype.skinning
+	if skinning.type == "GPU" then
+		macros[#macros+1] = "GPU_SKINNING"
+	end
+
 	if mysetting.graphic.shadow.type == "linear" then
 		macros[#macros+1] = "SM_LINEAR"
 	end
 
 	if mysetting.graphic.postprocess.bloom.enable then
 		macros[#macros+1] = "BLOOM_ENABLE"
+	end
+
+	if mysetting.macros then
+		table.move(mysetting.macros, 1, #mysetting.macros, 1, macros)
 	end
 
 	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"
@@ -87,6 +96,9 @@ local function load_surface_type(fxcontent)
 			cast = "on",			-- "on"/"off"
 			receive = "on",			-- "on"/"off"
 		},
+		skinning = {
+			type = "GPU",
+		},
 		subsurface = "off",			-- "on"/"off"? maybe has other setting
 	}
 	if fxcontent.surface_type == nil then
@@ -98,12 +110,6 @@ local function load_surface_type(fxcontent)
 			fxcontent.surface_type[k] = v
 		end
 	end
-end
-
-local function writefile(filename, data)
-	local f = assert(lfs.open(filename, "wb"))
-	f:write(data)
-	f:close()
 end
 
 return function (config, srcfilepath, outpath, localpath)
@@ -133,7 +139,7 @@ return function (config, srcfilepath, outpath, localpath)
 	end
 
 	if build_success then
-		writefile(outpath / "main.fx", stringify(fxcontent))
+		fs_local.write_file(outpath / "main.fx", stringify(fxcontent))
 	end
 	return build_success, table.concat(messages, "\n"), depend_files(all_depends)
 end

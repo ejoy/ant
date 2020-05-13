@@ -48,8 +48,24 @@ local function load_shader(path, name)
     return h
 end
 
-local function loader(filename)
-    local outpath = cr.compile(filename)
+local function compile(filename, setting)
+    if setting == nil then
+        return cr.compile(filename)
+    end
+
+    local macros = {}
+    local config = {
+        macros = macros
+    }
+    if setting.gpu_skinning then
+        macros[#macros+1] = "GPU_SKINNING"
+    end
+
+    return cr.compile(filename, config)
+end
+
+local function loader(filename, setting)
+    local outpath = compile(filename, setting)
     local config = datalist.parse(readfile(outpath / "main.fx"))
     local shader = config.shader
     if shader.cs == nil then
@@ -60,7 +76,7 @@ local function loader(filename)
         local cs = load_shader(outpath / "cs", shader.cs)
         shader.prog, shader.uniforms = create_compute_program(cs)
     end
-    return config, 0
+    return config
 end
 
 local function unloader(res)

@@ -14,6 +14,8 @@ require "common.init_bgfx"
 require "common.window"
 require "filesystem"
 
+require "common.sort_pairs"
+
 local fs = require "filesystem.local"
 local vfs = require "vfs"
 vfs.new(fs.path(arg[0]):remove_filename())

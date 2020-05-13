@@ -2,6 +2,8 @@ local fs = require "filesystem.local"
 
 local fs_local = require "utility.fs_local"
 
+local sort_pairs = require "sort_pairs"
+
 local math3d = require "math3d"
 
 local seri = require "serialize.serialize"
@@ -35,26 +37,6 @@ local function get_transform(node)
             r = node.rotation or {0, 0, 0, 1},
             t = node.translation or {0, 0, 0, 1}
         }}
-    end
-end
-
-
-local function sort_pairs(t)
-    local s = {}
-    for k in pairs(t) do
-        s[#s+1] = k
-    end
-
-    table.sort(s)
-
-    local n = 1
-    return function ()
-        local k = s[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
     end
 end
 

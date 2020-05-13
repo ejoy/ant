@@ -453,26 +453,10 @@ function util.print_glb_hierarchy(glbfile)
     local assetmgr = import_package "ant.asset"
     local res = assetmgr.load(glbfile)
     print("default_scene:", res.scene)
-    print "scenes:"
-    local function sort_pairs(t)
-        local s = {}
-        for k in pairs(t) do
-            s[#s+1] = k
-        end
-
-        table.sort(s)
-
-        local n = 1
-        return function ()
-            local k = s[n]
-            if k == nil then
-                return
-            end
-            n = n + 1
-            return k, t[k]
-        end
-	end
+	print "scenes:"
 	
+	local sort_pairs = require "common.sort_pairs"
+
 	local function node_matrix(node)
 		if node.transform then
 			return math3d.tostring(math3d.matrix(node.transform))

@@ -9,6 +9,8 @@ local declmgr	= renderpkg.declmgr
 local utilitypkg= import_package "ant.utility"
 local fs_local	= utilitypkg.fs_local
 
+local sort_pairs = require "common.sort_pairs"
+
 local math3d	= require "math3d"
 local thread	= require "thread"
 
@@ -214,25 +216,6 @@ local function get_obj_name(obj, idx, defname)
 	end
 
 	return defname .. idx
-end
-
-local function sort_pairs(t)
-	local s = {}
-	for k in pairs(t) do
-		s[#s+1] = k
-	end
-
-	table.sort(s)
-
-	local n = 1
-	return function ()
-		local k = s[n]
-		if k == nil then
-			return
-		end
-		n = n + 1
-		return k, t[k]
-	end
 end
 
 local function export_meshbin(gltfscene, bindata, config)
