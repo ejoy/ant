@@ -13,10 +13,9 @@ local animodule = require "hierarchy.animation"
 
 local mesh_skinning_transform = ecs.transform "mesh_skinning"
 
-local function find_elem(name, layout_elems)
-	assert(#name == 1)
+local function find_elem(namecode, layout_elems)
 	for _, elem in ipairs(layout_elems) do
-		if elem:sub(1, 1) == name then
+		if utf8.codepoint(elem:sub(1, 1)) == namecode then
 			return elem
 		end
 	end
@@ -31,14 +30,24 @@ local function create_node(elem, offset, layout_stride, pointer)
 	}, offset + elemsize
 end
 
+local name_mapper = {
+	[utf8.codepoint 'p'] = declmgr.name_mapper['p'],
+	[utf8.codepoint 'n'] = declmgr.name_mapper['n'],
+	[utf8.codepoint 'T'] = declmgr.name_mapper['T'],
+	[utf8.codepoint 'i'] = declmgr.name_mapper['i'],
+	[utf8.codepoint 'w'] = declmgr.name_mapper['w'],
+	[utf8.codepoint 'c'] = declmgr.name_mapper['c'],
+	[utf8.codepoint 't'] = declmgr.name_mapper['t'],
+}
+
 local function layout_desc(elem_prefixs, layout_elems, layout_stride, pointer, offset)
 	local desc = {}
 	offset = offset or 1
 
-	for _, elem_prefix in ipairs(elem_prefixs) do
-		local elem = find_elem(elem_prefix, layout_elems)
+	for _, p in utf8.codes(elem_prefixs) do
+		local elem = find_elem(p, layout_elems)
 		if elem then
-			local name = declmgr.name_mapper[elem_prefix]
+			local name = name_mapper[p]
 			desc[name], offset = create_node(elem, offset, layout_stride, pointer)
 		end
 	end
@@ -87,8 +96,8 @@ local function build_cpu_skinning_jobs(e, skinning)
 				buffersize = num_bytes,
 				parts = {
 					{
-						inputdesc = layout_desc({'p', 'n', 'T', 'w', 'i'}, layout_elems, layout_stride, vd.value, start_bytes),
-						outputdesc = layout_desc({'p', 'n', 'T'}, layout_elems, layout_stride, outptr),
+						inputdesc = layout_desc("pnTwi", layout_elems, layout_stride, vd.value, start_bytes),
+						outputdesc = layout_desc("pnT", layout_elems, layout_stride, outptr),
 						num = num_bytes / layout_stride,
 						layout_stride = layout_stride,
 						influences_count = 4,
