@@ -194,7 +194,7 @@ function ps:init()
 end
 
 local ps_trans = ecs.transform "procedural_sky_transform"
-function ps_trans.process(e, eid)
+function ps_trans.process(e)
 	local skycomp = e.procedural_sky
 	local w, h = skycomp.grid_width, skycomp.grid_height
 
@@ -239,9 +239,7 @@ function ps_trans.process(e, eid)
 		},
 	}
 
-	world:add_component(eid, "rendermesh", 
-		assetmgr.load(assetmgr.generate_resource_name("mesh", "procedural_sky.rendermesh"), 
-		group))
+	e.rendermesh = assetmgr.load(assetmgr.generate_resource_name("mesh", "procedural_sky.rendermesh"), group)
 end
 
 

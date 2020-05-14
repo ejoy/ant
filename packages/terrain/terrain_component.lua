@@ -96,7 +96,7 @@ iterrain = world:interface "ant.terrain|terrain"
 
 local trt = ecs.transform "terrain_transform"
 
-function trt.process(e, eid)
+function trt.process(e)
 	local terraincomp 	= e.terrain
 	local terraindata = terraincomp._data
 
@@ -124,5 +124,5 @@ function trt.process(e, eid)
 		}
 	}
 
-	world:add_component(eid, "rendermesh", assetmgr.load(assetmgr.generate_resource_name("mesh", "terrain.rendermesh"), group))
+	e.rendermesh = assetmgr.load(assetmgr.generate_resource_name("mesh", "terrain.rendermesh"), group)
 end

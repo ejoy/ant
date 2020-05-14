@@ -90,7 +90,7 @@ local function apply_policy(w, eid, component, transform, dataset)
 		register_component(w, eid, c)
 	end
 	for _, f in ipairs(transform) do
-		f(e, eid)
+		f(e)
 	end
 end
 

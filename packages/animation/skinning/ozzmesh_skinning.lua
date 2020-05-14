@@ -124,8 +124,8 @@ local function patch_dynamic_buffer(ozzmesh, meshscene)
 	return meshscene
 end
 
-function ozzmesh_skinning_transform.process(e, eid)
-	world:add_component(eid, "skinning", {})
+function ozzmesh_skinning_transform.process(e)
+	e.skinning = {}
 
 	local skincomp = e.skinning
 	skincomp.type = "CPU"

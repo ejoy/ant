@@ -62,6 +62,10 @@ local function create(w, policies)
     for name in pairs(transform) do
         local class = transform_class[name]
         for _, v in ipairs(class.output) do
+            if not component[v] then
+                component[v] = {depend={}}
+                init_component[#init_component+1] = v
+            end
             if reflection[v] then
                 error(("transform `%s` and transform `%s` has same output."):format(name, reflection[v]))
             end
