@@ -177,8 +177,7 @@ end
 
 local function stringify_policy(eid)
     out[#out+1] = 'policy:'
-    local info = world._prefabs[eid]
-    for _, p in sort_ipairs(info[1].initargs[info[2]].policy) do
+    for _, p in sort_ipairs(world._prefabs[eid].policy) do
         out[#out+1] = indent(1)..p
     end
 end
@@ -186,8 +185,7 @@ end
 local function stringify_data(eid)
     out[#out+1] = 'data:'
     local dataset = world[eid]
-    local info = world._prefabs[eid]
-    for _, name in sort_ipairs(info[1].initargs[info[2]].component) do
+    for _, name in sort_ipairs(world._prefabs[eid].component) do
         stringify_value(1, name..':', dataset[name])
     end
 end

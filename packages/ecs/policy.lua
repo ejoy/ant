@@ -84,7 +84,9 @@ local function create(w, policies)
         local name = reflection[c]
         if name and not mark[name] then
             mark[name] = true
-            init_transform[#init_transform+1] = transform_class[name].methodfunc.process
+            init_transform[#init_transform+1] = 
+                transform_class[name].methodfunc.process
+                or transform_class[name].methodfunc.process_prefab
         end
     end
     table.sort(init_component)

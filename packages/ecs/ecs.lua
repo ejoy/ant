@@ -107,15 +107,6 @@ function world:component_delete(name, v)
 	end
 end
 
-local function read_data(w, filename)
-	local f = assert(fs.open(fs.path(filename), 'rb'))
-	local data = f:read 'a'
-	f:close()
-	return datalist.parse(data, function(v)
-		return component_init(w, v[1], v[2])
-	end)
-end
-
 local function register_entity(w)
 	local eid = w._entity_id + 1
 	w._entity_id = eid
@@ -139,21 +130,29 @@ local function create_prefab_from_entity(w, t)
 		e[c] = dataset[c]
 	end
 	return {
-		initargs = {{
+		entities = {{
 			policy = policies,
 			component = component,
 			transform = transform,
 			connection = connection,
+			dataset = e,
 		}},
-		entities = {e},
 		connection = action,
 	}, args
+end
+
+local function read_data(w, filename)
+	local f = assert(fs.open(fs.path(filename), 'rb'))
+	local data = f:read 'a'
+	f:close()
+	return datalist.parse(data, function(v)
+		return component_init(w, v[1], v[2])
+	end)
 end
 
 local function create_prefab(w, filename)
 	local t = read_data(w, filename)
 	local prefab = {
-		initargs = {},
 		entities = {},
 		connection = t[1],
 	}
@@ -164,25 +163,25 @@ local function create_prefab(w, filename)
 		for _, c in ipairs(component) do
 			e[c] = dataset[c]
 		end
-		prefab.entities[i-1] = dataset
-		prefab.initargs[i-1] = {
+		prefab.entities[i-1] = {
 			policy = policies,
 			component = component,
 			transform = transform,
 			connection = connection,
+			dataset = dataset,
 		}
 	end
 	return prefab
 end
 
 local function instance(w, prefab, args)
-	local entities = {}
-	for i = 1, #prefab.entities do
+	local res = {}
+	for i, entity in ipairs(prefab.entities) do
 		local eid = register_entity(w)
 		local e = w[eid]
-		local component = prefab.initargs[i].component
-		local transform = prefab.initargs[i].transform
-		local dataset = prefab.entities[i]
+		local component = entity.component
+		local transform = entity.transform
+		local dataset = entity.dataset
 		for _, c in ipairs(component) do
 			register_component(w, eid, c)
 		end
@@ -192,16 +191,16 @@ local function instance(w, prefab, args)
 		for _, f in ipairs(transform) do
 			f(e)
 		end
-		w._prefabs[eid] = {prefab, i}
-		entities[i] = eid
+		w._prefabs[eid] = entity
+		res[i] = eid
 	end
 	for _, connection in ipairs(prefab.connection) do
 		local name, source, target = connection[1], connection[2], connection[3]
 		local object = w._class.connection[name]
 		assert(object and object.methodfunc and object.methodfunc.init)
-		object.methodfunc.init(w[entities[source]], entities[target] or args[target] or nil)
+		object.methodfunc.init(w[res[source]], res[target] or args[target] or nil)
 	end
-	return entities
+	return res
 end
 
 function world:create_entity(data)
