@@ -8,7 +8,8 @@ local function prefab(w, entities, args)
         slot[eid] = i
     end
     for i, eid in ipairs(entities) do
-        local connections = w._initargs[eid].connection
+        local info = w._prefabs[eid]
+        local connections = info[1].initargs[info[2]].connection
         for _, name in ipairs(connections) do
             local object = w._class.connection[name]
             assert(object and object.methodfunc and object.methodfunc.save)

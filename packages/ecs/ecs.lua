@@ -83,21 +83,17 @@ function world:disable_tag(eid, c)
 	end
 end
 
-local function apply_policy(w, eid, component, transform, dataset)
-	local e = w[eid]
+function world:add_policy(eid, t)
+	local policies, dataset = t.policy, t.data
+	local component, transform = policy.add(self, eid, policies)
+	local e = self[eid]
 	for _, c in ipairs(component) do
 		e[c] = dataset[c]
-		register_component(w, eid, c)
+		register_component(self, eid, c)
 	end
 	for _, f in ipairs(transform) do
 		f(e)
 	end
-end
-
-function world:add_policy(eid, t)
-	local policies, dataset = t.policy, t.data
-	local component, transform = policy.add(self, eid, policies)
-	apply_policy(self, eid, component, transform, dataset)
 end
 
 function world:component_init(name, v)
@@ -111,16 +107,13 @@ function world:component_delete(name, v)
 	end
 end
 
-local function read_data(w, args)
-	if type(args) == 'string' then
-		local f = assert(fs.open(fs.path(args), 'rb'))
-		local data = f:read 'a'
-		f:close()
-		return datalist.parse(data, function(v)
-			return component_init(w, v[1], v[2])
-		end)
-	end
-	return args
+local function read_data(w, filename)
+	local f = assert(fs.open(fs.path(filename), 'rb'))
+	local data = f:read 'a'
+	f:close()
+	return datalist.parse(data, function(v)
+		return component_init(w, v[1], v[2])
+	end)
 end
 
 local function register_entity(w)
@@ -131,56 +124,102 @@ local function register_entity(w)
 	return eid
 end
 
-local function prebuild_entity(w, policies)
-	local eid = register_entity(w)
+local function create_prefab_from_entity(w, t)
+	local policies, dataset = t.policy, t.data
 	local component, transform, connection = policy.create(w, policies)
-	w._initargs[eid] = {
-		policy = policies,
-		component = component,
-		transform = transform,
-		connection = connection,
+	local action = t.connection or {}
+	local args = {}
+	for i, v in ipairs(action) do
+		args["value_"..i] = v[2]
+		v[3] = "value_"..i
+		v[2] = 1
+	end
+	local e = {}
+	for _, c in ipairs(component) do
+		e[c] = dataset[c]
+	end
+	return {
+		initargs = {{
+			policy = policies,
+			component = component,
+			transform = transform,
+			connection = connection,
+		}},
+		entities = {e},
+		connection = action,
+	}, args
+end
+
+local function create_prefab(w, filename)
+	local t = read_data(w, filename)
+	local prefab = {
+		initargs = {},
+		entities = {},
+		connection = t[1],
 	}
-	return eid, component, transform
-end
-
-function world:create_entity(args)
-	local t = read_data(self, args)
-	local eid, component, transform = prebuild_entity(self, t.policy)
-	apply_policy(self, eid, component, transform, t.data)
-	if t.connection then
-		local e = self[eid]
-		for _, l in ipairs(t.connection) do
-			local object = self._class.connection[l[1]]
-			assert(object and object.methodfunc and object.methodfunc.init)
-			l[1] = e
-			object.methodfunc.init(table.unpack(l))
-		end
-	end
-	return eid
-end
-
-function world:instance(prefab, args)
-	local t = read_data(self, prefab)
-	local entities = {}
 	for i = 2, #t do
-		local eid, component, transform = prebuild_entity(self, t[i].policy)
-		apply_policy(self, eid, component, transform, t[i].data)
-		entities[i-1] = eid
+		local policies, dataset = t[i].policy, t[i].data
+		local component, transform, connection = policy.create(w, policies)
+		local e = {}
+		for _, c in ipairs(component) do
+			e[c] = dataset[c]
+		end
+		prefab.entities[i-1] = dataset
+		prefab.initargs[i-1] = {
+			policy = policies,
+			component = component,
+			transform = transform,
+			connection = connection,
+		}
 	end
-	for _, connection in ipairs(t[1]) do
+	return prefab
+end
+
+local function instance(w, prefab, args)
+	local entities = {}
+	for i = 1, #prefab.entities do
+		local eid = register_entity(w)
+		local e = w[eid]
+		local component = prefab.initargs[i].component
+		local transform = prefab.initargs[i].transform
+		local dataset = prefab.entities[i]
+		for _, c in ipairs(component) do
+			register_component(w, eid, c)
+		end
+		for k, v in pairs(dataset) do
+			e[k] = v
+		end
+		for _, f in ipairs(transform) do
+			f(e)
+		end
+		w._prefabs[eid] = {prefab, i}
+		entities[i] = eid
+	end
+	for _, connection in ipairs(prefab.connection) do
 		local name, source, target = connection[1], connection[2], connection[3]
-		local object = self._class.connection[name]
+		local object = w._class.connection[name]
 		assert(object and object.methodfunc and object.methodfunc.init)
-		object.methodfunc.init(self[entities[source]], assert(entities[target] or args[target]))
+		object.methodfunc.init(w[entities[source]], entities[target] or args[target] or nil)
 	end
 	return entities
+end
+
+function world:create_entity(data)
+	local prefab, args = create_prefab_from_entity(self, data)
+	local entities = instance(self, prefab, args)
+	return entities[1]
+end
+
+function world:instance(filename, args)
+	local prefab = create_prefab(self, filename)
+	return instance(self, prefab, args)
 end
 
 function world:remove_entity(eid)
 	local e = assert(self[eid])
 	self[eid] = nil
 	self._entity[eid] = nil
-	self._initargs[eid] = nil
+	self._prefabs[eid] = nil
 
 	local removed = self._removed
 	removed[#removed+1] = e
@@ -353,7 +392,7 @@ function m.new_world(config,world_class)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
-		_initargs = {},
+		_prefabs = {},
 		_interface = {},
 		_slots = {},
 		_typeclass = setmetatable({}, { __mode = "kv" }),
