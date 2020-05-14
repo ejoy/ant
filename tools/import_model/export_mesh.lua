@@ -2,7 +2,7 @@ local fs = require "filesystem.local"
 
 local fs_local = require "utility.fs_local"
 
-local sort_pairs = require "sort_pairs"
+local sort_pairs = require "common.sort_pairs"
 
 local math3d = require "math3d"
 

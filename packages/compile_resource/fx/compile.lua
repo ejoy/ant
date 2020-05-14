@@ -97,7 +97,7 @@ local function load_surface_type(fxcontent)
 			receive = "on",			-- "on"/"off"
 		},
 		skinning = {
-			type = "CPU",
+			type = "UNKNOWN",
 		},
 		subsurface = "off",			-- "on"/"off"? maybe has other setting
 	}
