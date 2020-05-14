@@ -72,7 +72,7 @@ end
 
 local function loader(filename, data)
 	local res      = data or assetmgr.load_depiction(filename)
-	res.fx         = load_fx(res.fx)
+	res.fx         = load_fx(res.fx, data)
 	res.state      = load_state(res.state)
 	res.properties = load_properties(refine_properties(res.properties))
 	return res

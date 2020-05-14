@@ -71,11 +71,11 @@ end
 
 function util.draw_primitive(vid, primgroup, render_properties)
 	local trans = primgroup.transform
-	if trans._world then
+	local sm = trans._skinning_matrices
+	if sm == nil then
 		bgfx.set_transform(trans._world)
 	else
-		local sm = trans._skinning_matrices
-		bgfx.set_multi_transform(sm:pointer(), sm:count())
+		bgfx.set_multi_transforms(sm:pointer(), sm:count())
 	end
 
 	local material = primgroup.material

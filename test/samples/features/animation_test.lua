@@ -11,7 +11,9 @@ local function ozzmesh_animation_test()
 end
 
 local function gltf_animation_test()
-    world:instance((entitydir / "gltf_animation.prefab"):string())
+    -- local computil = import_package "ant.render".components
+    -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/simple_skin.mesh"
+    world:instance((entitydir / "simple_skin.prefab"):string())
 end
 
 local function print_ske(ske)

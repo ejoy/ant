@@ -148,14 +148,6 @@ local function update_renderdata(eid)
 		if bounding then
 			trans._aabb = math3d.aabb_transform(trans._world, bounding.aabb)
 		end
-
-		local skinning = e.skinning
-		if skinning then
-			local skinning_matrices = skinning.skinning_matrices
-			local skin = primgroup.skin
-			animoudle.build_skinning_matrices(skinning_matrices, e.pose_result, skin.inverse_bind_pose, skin.joint_remap, worldmat)
-			trans._skinning_matrices = skinning_matrices
-		end
 	end
 end
 

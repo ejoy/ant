@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local math3d = require "math3d"
+local animoudle = require "hierarchy.animation"
 
 ecs.component_alias("filter_tag", "string")
 
@@ -67,6 +67,13 @@ function prim_filter_sys:filter_primitive()
 				local m = ce.material
 				local resulttarget = assert(filter.result[m.fx.surface_type.transparency])
 				local trans = ce.transform
+				local skinning = ce.skinning
+				if skinning and skinning.type == "GPU" then
+					local skin = primgroup.skin
+					local sm = skinning.skinning_matrices
+					animoudle.build_skinning_matrices(sm, ce.pose_result, skin.inverse_bind_pose, skin.joint_remap)--, trans._world)
+					trans._skinning_matrices = sm
+				end
 				add_result(eid, primgroup, m, trans, resulttarget)
 			end
 		end

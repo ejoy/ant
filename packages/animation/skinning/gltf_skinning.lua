@@ -64,7 +64,6 @@ local function build_cpu_skinning_jobs(e, skinning)
 
 	e.rendermesh = assetmgr.patch(e.rendermesh, {vb={handles={}}})
 	local primgroup = e.rendermesh
-	skinning.skin = primgroup.skin
 
 	for idx, h in ipairs(primgroup.vb.handles) do
 		local vd = h.vertex_data
@@ -112,11 +111,12 @@ function mesh_skinning_transform.process(e, eid)
 	world:add_component(eid, "skinning", {})
 
 	local skinning = e.skinning
-	local skinningtype = setting.get().animation.skinning.type
+	local skinningtype = "CPU"--"GPU" --setting.get().animation.skinning.type
 	skinning.type = skinningtype
 
 	local poseresult = e.pose_result
 	skinning.skinning_matrices = animodule.new_bind_pose(poseresult:count())
+	skinning.skin = e.rendermesh.skin
 
 	if skinningtype == "CPU" then
 		build_cpu_skinning_jobs(e, skinning)
