@@ -102,7 +102,7 @@ ecs.component "state_machine_transmits"
 
 local sm_trans = ecs.transform "state_machine_transform"
 
-function sm_trans.process(e)
+function sm_trans.process_prefab(e)
 	e.animation._current = {}
 	set_state(e, e.state_machine.current, 0)
 end

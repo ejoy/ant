@@ -21,13 +21,10 @@ local sm = ecs.transform "skinning_material"
 -- 	end
 -- end
 
-function sm.process(e)
+function sm.process_prefab(e)
 	local skinning = e.skinning
 	if skinning.type == "GPU" then
-		e.material = assetmgr.patch(e.material, {fx={macros={}}})
-		local material = e.material
-		local macros = material.fx.macros
-		macros[#macros+1] = "GPU_SKINNING"
+		e.material = assetmgr.patch(e.material, {fx=assetmgr.load(tostring(e.material.fx), {gpu_skinning=true})})
 	end
 end
 
@@ -41,10 +38,10 @@ function skinning_sys:skin_mesh()
 		local skin = skinning.skin
 		local skinning_matrices = skinning.skinning_matrices
 		local pr = e.pose_result
+		animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap)
 
 		if skinning.type == "CPU" then
 			for _, job in ipairs(skinning.jobs) do
-				animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap)
 				local handle = job.hwbuffer_handle
 				local updatedata = job.updatedata
 				for _, part in ipairs(job.parts) do

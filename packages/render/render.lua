@@ -87,9 +87,9 @@ ecs.component "camera"
 	["opt"].lock_target "lock_target"
 
 
-local et= ecs.transform "camera_transfrom"
+local ct= ecs.transform "camera_transfrom"
 
-function et.process(e)
+function ct.process_prefab(e)
 	local lt = e.camera.lock_target
 	if lt and e.parent == nil then
 		error(string.format("'lock_target' defined in 'camera' component, but 'parent' component not define in entity"))

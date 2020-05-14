@@ -23,7 +23,7 @@ transform "state_machine_transform"
     .implement "controller/state_machine.lua"
     .input "state_machine"
     .output "animation"
-    .method "process"
+    .method "process_prefab"
 
 component "state_machine"
     .implement "controller/state_machine.lua"

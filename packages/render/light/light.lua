@@ -33,7 +33,7 @@ for _, lighttype in ipairs {
 	local lightname = lighttype .. "_light"
 	local transname = lighttype .. "_transform"
 	local t = ecs.transform(transname)
-	function t.process(e)
+	function t.process_prefab(e)
 		e.light = lightname
 	end
 end

@@ -36,7 +36,7 @@ local function check_joints_in_hierarchy_chain(ske, joint_indices)
 	end
 end
 
-function build_ik_tranform.process(e)
+function build_ik_tranform.process_prefab(e)
 	local ske = e.skeleton._handle
 	local ik = e.ik
 

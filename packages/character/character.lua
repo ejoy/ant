@@ -54,7 +54,7 @@ ecs.component "foot_ik_raycast"
 
 local foot_t = ecs.transform "check_ik_data"
 
-function foot_t.process(e)
+function foot_t.process_prefab(e)
     local r = e.foot_ik_raycast
     local ik = e.ik
 
