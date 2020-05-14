@@ -1,5 +1,3 @@
-local ecs = ...
-
 local cr     = import_package "ant.compile_resource"
 local math3d = require "math3d"
 
@@ -9,10 +7,7 @@ local function create_bounding(bounding)
 	end
 end
 
-local m = ecs.component "mesh"
-
-function m:init()
-	local filename = self
+local function loader(filename)
 	local outpath = cr.compile(filename)
 	local meshscene = cr.util.read_embed_file(outpath / "main.index")
 	for _, scene in pairs(meshscene.scenes) do
@@ -27,3 +22,11 @@ function m:init()
 	end
 	return meshscene
 end
+
+local function unloader()
+end
+
+return {
+    loader = loader,
+    unloader = unloader,
+}

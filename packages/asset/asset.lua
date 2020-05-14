@@ -5,8 +5,13 @@ local resource = import_package "ant.resource"
 local assetmgr = {}
 assetmgr.__index = assetmgr
 
+local function valid_component(world, name)
+	local tc = world:import_component(name)
+	return tc and tc.methodfunc and tc.methodfunc.init
+end
+
 function assetmgr.load_component(world, name, filename)
-	if not filename then
+	if not filename or not valid_component(world, name) then
 		local f = assert(fs.open(fs.path(name), 'rb'))
 		local data = f:read 'a'
 		f:close()
@@ -21,11 +26,6 @@ function assetmgr.load_component(world, name, filename)
 		return world:component_init(v[1], v[2])
 	end))
 end
-
-local ext_ref = {
-	material  = true,
-	pbrm      = true,
-}
 
 local ext_bin = {
 	fx      = true,
@@ -54,28 +54,27 @@ function assetmgr.resource(world, fullpath)
 end
 
 function assetmgr.init()
-	for name in pairs(ext_ref) do
-		local function loader(filename, world)
-			return assetmgr.load_component(world, name, filename)
+	local function loader(ext, filename, data)
+		if ext_bin[ext] then
+			return require("ext_" .. ext).loader(filename)
+		elseif ext_tmp[ext] then
+			return require("ext_" .. ext).loader(data)
+		else
+			local world = data
+			return assetmgr.load_component(world, ext, filename)
 		end
-		local function unloader(res, _, world)
-			world:component_delete(name, res)
-		end
-		resource.register_ext(name, loader, unloader)
 	end
-	for name in pairs(ext_bin) do
-		local function loader(filename, world)
-			return world:component_init(name, filename)
+	local function unloader(ext, res, data)
+		if ext_bin[ext] then
+			require("ext_" .. ext).unloader(res)
+		elseif ext_tmp[ext] then
+			require("ext_" .. ext).unloader(res)
+		else
+			local world = data
+			world:component_delete(ext, res)
 		end
-		local function unloader(res, _, world)
-			world:component_delete(name, res)
-		end
-		resource.register_ext(name, loader, unloader)
 	end
-	for name in pairs(ext_tmp) do
-		local accessor = require("ext_" .. name)
-		resource.register_ext(name, accessor.loader, accessor.unloader)
-	end
+	resource.register(loader, unloader)
 end
 
 assetmgr.patch = resource.patch

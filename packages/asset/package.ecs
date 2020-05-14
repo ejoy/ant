@@ -14,21 +14,3 @@ component "material"
 component "pbrm"
     .implement "ext_pbrm.lua"
     .method "init"
-
-component "fx"
-    .implement "ext_fx.lua"
-    .method "init"
-    .method "delete"
-    
-component "texture"
-    .implement "ext_texture.lua"
-    .method "init"
-    .method "delete"
-
-component "mesh"
-    .implement "ext_mesh.lua"
-    .method "init"
-
-component "ozz"
-    .implement "ext_ozz.lua"
-    .method "init"

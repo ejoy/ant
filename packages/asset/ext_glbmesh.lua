@@ -94,7 +94,7 @@ local function build_skin(skin)
 end
 
 return {
-    loader = function (filename, group)
+    loader = function (group)
 		local vb = group.vb
 		local handles = {}
 		for _, value in ipairs(vb.values) do
@@ -133,6 +133,6 @@ return {
 	
 		return meshgroup
     end,
-    unloader = function (res, filename)
+    unloader = function (res)
     end,
 }

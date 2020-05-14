@@ -1,8 +1,8 @@
 local resource = {}
 
 local FILELIST = {}	-- filename -> { filename =, meta = , object =, proxy =, invalid = , source = }
-local LOADER = {}
-local UNLOADER = {}
+local LOADER
+local UNLOADER
 
 -- util functions
 local function format_error(format, ...)
@@ -43,11 +43,11 @@ local function data_mt(data, robj)
 end
 
 -- function loader(data) -> table
-function resource.register_ext(ext, loader, unloader)
-	assert(LOADER[ext] == nil)
+function resource.register(loader, unloader)
+	assert(LOADER == nil)
 	assert(type(loader) == "function")
-	LOADER[ext] = loader
-	UNLOADER[ext] = unloader
+	LOADER = loader
+	UNLOADER = unloader
 end
 
 local function resolve_path(content)
@@ -126,11 +126,10 @@ end
 
 local function load_resource(robj, filename, data)
 	local ext = filename:match "[^.]*$"
-	local loader = LOADER[ext]
-	if not loader then
-		format_error("Unknown ext %s", ext)
+	if not LOADER then
+		format_error("Unknown loader")
 	end
-	local content = loader(filename, data)
+	local content = LOADER(ext, filename, data)
 	robj.object = resolve_path(content)
 	reslove_invalid(robj)
 	reslove_proxy(robj)
@@ -181,8 +180,8 @@ function resource.unload(filename)
 	end
 
 	local ext = robj.filename:match "[^.]*$"
-	if UNLOADER[ext] then
-		UNLOADER[ext](robj.object[""], filename, robj.source)
+	if UNLOADER then
+		UNLOADER(ext, robj.object[""], robj.source)
 	end
 
 	local meta = robj.meta
