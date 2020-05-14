@@ -152,13 +152,13 @@ public:
 
 protected:
 	static int lcount(lua_State* L) {
-		auto bp = (bindpose*)lua_touserdata(L, 1);
+		auto bp = getBP(L, 1);
 		lua_pushinteger(L, bp->size());
 		return 1;
 	}
 
 	static int ljoint(lua_State *L){
-		auto bp = (bindpose*)lua_touserdata(L, 1);
+		auto bp = getBP(L, 1);
 		const auto jointidx = (uint32_t)luaL_checkinteger(L, 2) - 1;
 		if (jointidx < 0 || jointidx > bp->size()){
 			luaL_error(L, "invalid joint index:%d", jointidx);
@@ -171,30 +171,10 @@ protected:
 		return 0;
 	}
 
-	static int lsoa_count(lua_State *L){
+	static int lpointer(lua_State *L){
+		auto bp = getBP(L, 1);
+		lua_pushlightuserdata(L, &(*bp)[0]);
 		return 1;
-	}
-
-	static int lsoa_joint(lua_State *L){
-		auto bp = (bindpose*)lua_touserdata(L, 1);
-		const auto jointidx = (uint32_t)luaL_checkinteger(L, 2) - 1;
-		if (jointidx < 0 || jointidx > bp->size()){
-			luaL_error(L, "invalid joint index:%d", jointidx);
-		}
-
-		float * r = (float*)lua_touserdata(L, 3);
-
-		return 0;
-	}
-
-	static int lset_soa_joint(lua_State *L){
-		auto bp = (bindpose*)lua_touserdata(L, 1);
-		const auto jointidx = (uint32_t)luaL_checkinteger(L, 2) - 1;
-		if (jointidx < 0 || jointidx > bp->size()){
-			luaL_error(L, "invalid joint index:%d", jointidx);
-		}
-
-		float * r = (float*)lua_touserdata(L, 3);
 	}
 public:
 	static int create(lua_State* L) {
@@ -233,8 +213,7 @@ public:
 		luaL_Reg l[] = {
 			{"count", lcount},
 			{"joint", ljoint},
-			{"soa_count", lsoa_count},
-			{"soa_joint", lsoa_joint},
+			{"pointer",lpointer},
 			{nullptr, nullptr,}
 		};
 		base_type::reigister_mt(L, l);
