@@ -12,11 +12,11 @@ data:
         srt: $srt {}
     mesh: $resource "/pkg/ant.resources/meshes/simple_skin.mesh:scenes.scene1.mesh0.1"
     material: $resource /pkg/ant.resources/materials/gpu_skin.pbrm
-    skeleton: $resource /pkg/ant.resources.binary/meshes/simple_skin/animation/skeleton.ozz
-    animation:
-        anilist:
-            idle: $resource /pkg/ant.resources.binary/meshes/simple_skin/animation/animation_0.ozz
-    animation_birth: idle
+    #skeleton: $resource /pkg/ant.resources.binary/meshes/simple_skin/animation/skeleton.ozz
+    #animation:
+    #    anilist:
+    #        idle: $resource /pkg/ant.resources.binary/meshes/simple_skin/animation/animation_0.ozz
+    #animation_birth: idle
     can_render: true
     scene_entity: true
     name: simple_skin_sample

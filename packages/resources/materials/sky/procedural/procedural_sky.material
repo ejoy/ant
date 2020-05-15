@@ -13,15 +13,15 @@ properties:
         {0, 0, 0, 0}
         {0, 0, 0, 0}
         {0, 0, 0, 0}
-    u_skyLuminanceXYZ:
+    u_skyLuminanceXYZ: $uniform
       type: v4
       value:
         {0, 0, 0, 0}
-    u_sunDirection:
+    u_sunDirection: $uniform
       type: v4
       value:
         {0, 0, 1, 0}
-    u_sunLuminance:
+    u_sunLuminance: $uniform
       type: v4
       value:
         {0, 0, 0, 0}
