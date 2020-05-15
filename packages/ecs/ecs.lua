@@ -202,7 +202,6 @@ local function instance(w, prefab, args)
 	end
 	for _, connection in ipairs(prefab.connection) do
 		local name, source, target = connection[1], connection[2], connection[3]
-		typeclass.import_object(w, "connection", name)
 		local object = w._class.connection[name]
 		assert(object and object.methodfunc and object.methodfunc.init)
 		object.methodfunc.init(w[res[source]], res[target] or args[target] or nil)
@@ -339,7 +338,6 @@ function world:interface(fullname)
 	local interface = self._interface
 	local res = interface[fullname]
 	if not res then
-		typeclass.import_object(self, "interface", fullname)
 		local object = self._class.interface[fullname]
 		res = setmetatable({}, {__index = object.methodfunc})
 		interface[fullname] = res
@@ -348,14 +346,12 @@ function world:interface(fullname)
 end
 
 function world:connection(fullname, ...)
-	typeclass.import_object(self, "connection", fullname)
 	local object = self._class.connection[fullname]
 	assert(object and object.methodfunc and object.methodfunc.init)
 	object.methodfunc.init(...)
 end
 
 function world:import_component(name)
-	typeclass.import_object(self, "component", name)
 	return self._class.component[name]
 end
 

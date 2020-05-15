@@ -14,11 +14,7 @@ local function create(w, policies)
     for _, name in ipairs(policies) do
         local class = policy_class[name]
         if not class then
-            typeclass.import_object(w, "policy", name)
-            class = policy_class[name]
-            if not class then
-                error(("policy `%s` is not defined."):format(name))
-            end
+            error(("policy `%s` is not defined."):format(name))
         end
         if policyset[name] then
             goto continue

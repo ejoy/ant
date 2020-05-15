@@ -46,8 +46,6 @@ local function solve_depend(res, step, pipeline, what)
 end
 
 function system.solve(w)
-	local sys = w._class.system
-	local pipeline = w._class.pipeline
 	local mark = {}
 	local res = setmetatable({}, {__index = function(t,k)
 		local obj = {}
@@ -55,7 +53,7 @@ function system.solve(w)
 		mark[k] = true
 		return obj
 	end})
-	for fullname, s in sortpairs(sys) do
+	for fullname, s in sortpairs(w._class.system) do
 		local packname, name = splitname(fullname)
 		local proxy = {}
 		for step_name, func in pairs(s.methodfunc) do
@@ -64,7 +62,7 @@ function system.solve(w)
 	end
 	setmetatable(res, nil)
 
-	for _, pl in pairs(pipeline) do
+	for _, pl in pairs(w._class.pipeline) do
 		if pl.value then
 			for _, v in ipairs(pl.value) do
 				if v[1] == "stage" then
@@ -79,7 +77,7 @@ function system.solve(w)
 	end
 	w._systems = {
 		steps = res,
-		pipeline = pipeline,
+		pipeline = w._class.pipeline,
 	}
 end
 
