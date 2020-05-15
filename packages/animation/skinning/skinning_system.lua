@@ -4,7 +4,8 @@ local world = ecs.world
 local animodule = require "hierarchy.animation"
 local bgfx 		= require "bgfx"
 
-local assetmgr = import_package "ant.asset"
+local assetmgr 	= import_package "ant.asset"
+local fs 		= require "filesystem"
 
 ecs.component "skinning" {}
 
@@ -24,7 +25,11 @@ local sm = ecs.transform "skinning_material"
 function sm.process_prefab(e)
 	local skinning = e.skinning
 	if skinning.type == "GPU" then
-		e.material = assetmgr.patch(e.material, {fx=assetmgr.load(tostring(e.material.fx), {gpu_skinning=true})})
+		local fxname = tostring(e.material.fx):match"[^:]+"
+		local fxpath = fs.path(fxname)
+		local gpufxpath = fxpath:parent_path() / (fxpath:stem() .. "_GPU" .. fxpath:extension())
+		local gpufx = assetmgr.load(gpufxpath:string(), {gpu_skinning=true, filename = fxname})
+		e.material = assetmgr.patch(e.material, {fx=gpufx})
 	end
 end
 

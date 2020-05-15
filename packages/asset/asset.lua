@@ -35,8 +35,9 @@ local ext_bin = {
 }
 
 local ext_tmp = {
-	rendermesh = true,
-	glbmesh   = true,
+	rendermesh 	= true,
+	glbmesh   	= true,
+	gpufx		= true,
 }
 
 local function resource_load(fullpath, resdata, lazyload)
@@ -56,7 +57,7 @@ end
 function assetmgr.init()
 	local function loader(ext, filename, data)
 		if ext_bin[ext] then
-			return require("ext_" .. ext).loader(filename)
+			return require("ext_" .. ext).loader(filename, data)
 		elseif ext_tmp[ext] then
 			return require("ext_" .. ext).loader(data)
 		else

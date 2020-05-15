@@ -117,7 +117,7 @@ function init_loader_sys:init()
         ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
-    --computil.create_grid_entity(world)
+    computil.create_grid_entity(world)
 
     local eid = computil.create_procedural_sky(world)
     --target_lock_test()
