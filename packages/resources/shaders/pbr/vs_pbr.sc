@@ -12,13 +12,13 @@ $output v_texcoord0, v_normal, v_posWS
 void main()
 {
     vec4 pos      = vec4(a_position, 1.0);
+	vec4 worldpos =
 #ifdef GPU_SKINNING
-	mat4 worldtrans = calc_ozz_bone_transform(a_indices, a_weight);
+	transform_skin_position(pos, a_indices, a_weight);
 #else //!GPU_SKINNING
-	mat4 worldtrans = u_model[0];
+	mul(u_model[0], pos);
 #endif //GPU_SKINNING
-
-	vec4 worldpos = mul(worldtrans, pos);
+	
 	gl_Position   = mul(u_viewProj, worldpos);
 	v_posWS       = vec4(worldpos.xyz, mul(u_view, worldpos).z);
 	v_texcoord0   = a_texcoord0;

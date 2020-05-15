@@ -23,41 +23,17 @@ mat3 to_tbn(vec3 t, vec3 b, vec3 n)
 #endif
 }
 
-mat4 calc_bone_transform(ivec4 indices, vec4 weights)
+vec4 transform_skin_position(vec4 pos, ivec4 indices, vec4 weights)
 {
-	mat4 wolrdMat = mat4(0, 0, 0, 0, 
-	0, 0, 0, 0, 
-	0, 0, 0, 0, 
-	0, 0, 0, 0);
+	vec4 worldpos = vec4(0.0, 0.0, 0.0, 0.0);
 	for (int ii = 0; ii < 4; ++ii)
 	{
-		int id = int(indices[ii]);
 		float weight = weights[ii];
-
-		wolrdMat += u_model[id] * weight;
+		vec4 p = mul(u_model[int(indices[ii])], pos);
+		worldpos += p * weight;
 	}
-
-	return wolrdMat;
-}
-
-mat4 calc_ozz_bone_transform(ivec4 indices, vec4 weights)
-{
-	mat4 wolrdMat = mat4(0, 0, 0, 0, 
-	0, 0, 0, 0, 
-	0, 0, 0, 0, 
-	0, 0, 0, 0);
-	float sum_weight = 0.0;
-	for (int ii = 0; ii < 3; ++ii)
-	{
-		int id = int(indices[ii]);
-		float weight = weights[ii];
-
-		sum_weight += weight;
-		wolrdMat += u_model[id] * weight;
-	}
-
-	wolrdMat += u_model[indices[3]] * (1.0 - sum_weight);
-	return wolrdMat;
+	worldpos.w = 1.0;
+	return worldpos;
 }
 
 mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
