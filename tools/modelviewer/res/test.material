@@ -1,9 +1,9 @@
-fx: /pkg/ant.modelviewer/res/test.fx
+fx: $resource /pkg/ant.modelviewer/res/test.fx
 properties:
   textures:
-    s_basecolor:
+    s_basecolor: $mat_texture
       name: "base color"
-      texture: /pkg/ant.modelviewer/res/steering.texture
+      texture: $resource /pkg/ant.modelviewer/res/steering.texture
       stage: 0
       type: texture
 state: /pkg/ant.resources/materials/states/default.state

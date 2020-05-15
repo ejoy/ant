@@ -15,4 +15,3 @@ pm.initialize()
 import_package = pm.import
 require 'runtime.debug'
 require "filesystem"
-import_package "ant.asset".init()

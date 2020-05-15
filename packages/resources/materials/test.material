@@ -1,4 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/test.fx
+fx: $resource /pkg/ant.resources/materials/fx/test.fx
 property:
   roughness:
     default: /pkg/ant.resources/

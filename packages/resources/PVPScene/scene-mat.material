@@ -1,20 +1,20 @@
-fx: /pkg/ant.resources/materials/fx/PVPScene/scene-mat.fx
+fx: $resource /pkg/ant.resources/materials/fx/PVPScene/scene-mat.fx
 properties:
   textures:
-    s_basecolor:
-      texture: /pkg/ant.resources/PVPScene/siegeweapon_d.texture
+    s_basecolor: $mat_texture
+      texture: $resource /pkg/ant.resources/PVPScene/siegeweapon_d.texture
       stage: 0
       type: texture
-    s_normal:
-      texture: /pkg/ant.resources/PVPScene/siegeweapon_n.texture
+    s_normal: $mat_texture
+      texture: $resource /pkg/ant.resources/PVPScene/siegeweapon_n.texture
       stage: 1
       type: texture
   uniforms:
-    u_specularColor:
+    u_specularColor: $uniform
       type: v4
       value: 
         {0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03}
-    u_specularLight:
+    u_specularLight: $uniform
       type: v4
       value:
         {5.5, 0, 0, 0}

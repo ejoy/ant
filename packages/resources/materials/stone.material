@@ -1,14 +1,14 @@
-fx: /pkg/ant.resources/materials/fx/stone.fx
+fx: $resource /pkg/ant.resources/materials/fx/stone.fx
 properties:
   textures:
-    s_basecolor:
+    s_basecolor: $mat_texture
       name: "base color"
-      texture: /pkg/ant.resources/stone.texture
+      texture: $resource /pkg/ant.resources/stone.texture
       stage: 0
       type: texture
-    s_normal:
+    s_normal: $mat_texture
       name: normal
-      texture: /pkg/ant.resources/stone_normal.texture
+      texture: $resource /pkg/ant.resources/stone_normal.texture
       stage: 1
       type: texture
 state:

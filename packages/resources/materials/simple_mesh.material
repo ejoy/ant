@@ -1,7 +1,7 @@
-fx: /pkg/ant.resources/materials/fx/simple_mesh.fx
+fx: $resource /pkg/ant.resources/materials/fx/simple_mesh.fx
 properties:
   uniforms:
-    u_color:
+    u_color: $uniform
       type: color
       value: 
         {1, 1, 1, 1}

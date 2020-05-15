@@ -25,18 +25,13 @@ function v:init()
 
     return math3d.ref(math3d.vector(self))
 end
-local function del(v)
-    assert(type(v) == "userdata")
-    return {}
-end
-v.delete = del
+
 v.save = save
 
 local q = ecs.component_alias("quaternion", "real[4]")
 function q:init()
     return math3d.ref(math3d.quaternion(self))
 end
-q.delete = del
 q.save = save
 
 local m = ecs.component_alias("matrix", "real[16]")
@@ -110,4 +105,3 @@ ecs.component "frustum"
 	['opt'].aspect "real" (1)
 	['opt'].fov "real" (1)
     ['opt'].ortho "boolean" (false)
-    

@@ -1,5 +1,7 @@
+local ecs = ...
+local world = ecs.world
+
 local assetmgr 	= require "asset"
-local fs = require "filesystem"
 
 local default_pbr_param = {
 	basecolor = {
@@ -33,7 +35,7 @@ local function texture_path(pbrm, name)
 end
 
 local function get_texture(pbrm, name)
-	return texture_path(pbrm, name) or default_pbr_param[name].texture
+	return world.component:resource (texture_path(pbrm, name) or default_pbr_param[name].texture)
 end
 
 local function property_factor(pbrm, name)
@@ -62,86 +64,81 @@ local function get_metallic_roughness_factor(pbrm)
 	return 1.0, 1.0
 end
 
-return {
-	loader = function (filename, data)
-		local pbrm = data or assetmgr.load_depiction(filename)
-		local materialfile = pbrm.materialfile or "/pkg/ant.resources/materials/pbr_default.material"
-		local material = assetmgr.load_depiction(materialfile)
+local m = ecs.component "pbrm"
 
-		--refine_paths(pbrm)
-
-		local metallic_factor, roughness_factor = get_metallic_roughness_factor(pbrm)
-
-		material.properties = {
-			textures = {
-				s_basecolor = {
-					type="texture", stage=0,
-					texture=get_texture(pbrm, "basecolor")
-				},
-				s_metallic_roughness = {
-					type="texture", stage=1,
-					texture=get_texture(pbrm, "metallic_roughness")
-				},
-				s_normal = {
-					type="texture", stage=2,
-					texture=get_texture(pbrm, "normal")
-				},
-				s_occlusion = {
-					type="texture", stage=3,
-					texture=get_texture(pbrm, "occlusion")
-				},
-				s_emissive = {
-					type="texture", stage=4,
-					texture=get_texture(pbrm, "emissive")
-				},
+function m:init()
+	local pbrm = self
+	local materialfile = pbrm.materialfile or "/pkg/ant.resources/materials/pbr_default.material"
+	local material = assetmgr.load_component(world, "material", materialfile)
+	--refine_paths(pbrm)
+	local metallic_factor, roughness_factor = get_metallic_roughness_factor(pbrm)
+	material.properties = {
+		textures = {
+			s_basecolor = world.component:mat_texture {
+				type="texture", stage=0,
+				texture=get_texture(pbrm, "basecolor")
 			},
-			uniforms = {
-				u_basecolor_factor = {
-					type="color",
-					value={get_property_factor(pbrm, "basecolor")},
-				},
-				u_metallic_roughness_factor = {
-					type="v4",
-					value={{
-						0.0, -- keep for occlusion factor
-						roughness_factor,
-						metallic_factor,
-						texture_flag(pbrm, "metallic_roughness"),-- whether using metallic_roughtness texture or not
-					}}
-				},
-				u_emissive_factor = {
-					type="v4",
-					value={get_property_factor(pbrm, "emissive")},
-				},
-				u_material_texture_flags = {
-					type="v4",
-					value={{
-						texture_flag(pbrm, "basecolor"),
-						texture_flag(pbrm, "normal"),
-						texture_flag(pbrm, "occlusion"),
-						texture_flag(pbrm, "emissive"),
-					}},
-				},
-				u_IBLparam = {
-					type="v4",
-					value={{
-						1.0, -- perfilter cubemap mip levels
-						1.0, -- IBL indirect lighting scale
-						0.0, 0.0,
-					}}
-				},
-				u_alpha_info = {
-					type="v4",
-					value={{
-						pbrm.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
-						pbrm.alphaCutoff or 0.0,
-						0.0, 0.0,
-					}}
-				}
+			s_metallic_roughness = world.component:mat_texture {
+				type="texture", stage=1,
+				texture=get_texture(pbrm, "metallic_roughness")
 			},
-		}
-
-		local material_loader = assetmgr.get_loader "material"
-		return material_loader(nil, material)
-	end,
-}
+			s_normal = world.component:mat_texture {
+				type="texture", stage=2,
+				texture=get_texture(pbrm, "normal")
+			},
+			s_occlusion = world.component:mat_texture {
+				type="texture", stage=3,
+				texture=get_texture(pbrm, "occlusion")
+			},
+			s_emissive = world.component:mat_texture {
+				type="texture", stage=4,
+				texture=get_texture(pbrm, "emissive")
+			},
+		},
+		uniforms = {
+			u_basecolor_factor = world.component:uniform {
+				type="color",
+				value={get_property_factor(pbrm, "basecolor")},
+			},
+			u_metallic_roughness_factor = world.component:uniform {
+				type="v4",
+				value={{
+					0.0, -- keep for occlusion factor
+					roughness_factor,
+					metallic_factor,
+					texture_flag(pbrm, "metallic_roughness"),-- whether using metallic_roughtness texture or not
+				}}
+			},
+			u_emissive_factor = world.component:uniform {
+				type="v4",
+				value={get_property_factor(pbrm, "emissive")},
+			},
+			u_material_texture_flags = world.component:uniform {
+				type="v4",
+				value={{
+					texture_flag(pbrm, "basecolor"),
+					texture_flag(pbrm, "normal"),
+					texture_flag(pbrm, "occlusion"),
+					texture_flag(pbrm, "emissive"),
+				}},
+			},
+			u_IBLparam = world.component:uniform {
+				type="v4",
+				value={{
+					1.0, -- perfilter cubemap mip levels
+					1.0, -- IBL indirect lighting scale
+					0.0, 0.0,
+				}}
+			},
+			u_alpha_info = world.component:uniform {
+				type="v4",
+				value={{
+					pbrm.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
+					pbrm.alphaCutoff or 0.0,
+					0.0, 0.0,
+				}}
+			}
+		},
+	}
+	return material
+end

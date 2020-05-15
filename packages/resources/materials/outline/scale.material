@@ -1,11 +1,11 @@
-fx: /pkg/ant.resources/materials/fx/outline/scale.fx
+fx: $resource /pkg/ant.resources/materials/fx/outline/scale.fx
 properties:
   uniforms:
-    u_outlinecolor:
+    u_outlinecolor: $uniform
       type: v4
       value:
         {0.8, 0.8, 0, 1}
-    u_outlinescale:
+    u_outlinescale: $uniform
       type: v4
       value:
         {0.01, 0, 0, 0}

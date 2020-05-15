@@ -1,9 +1,9 @@
-fx: /pkg/ant.resources/materials/fx/texture.fx
+fx: $resource /pkg/ant.resources/materials/fx/texture.fx
 properties:
   textures:
-    s_texColor:
+    s_texColor: $mat_texture
       name: "tex color"
-      texture: /pkg/ant.resources/PVPScene/siegeweapon_d.texture
+      texture: $resource /pkg/ant.resources/PVPScene/siegeweapon_d.texture
       stage: 0
       type: texture
 state:

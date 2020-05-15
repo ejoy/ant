@@ -62,6 +62,10 @@ local function create(w, policies)
     for name in pairs(transform) do
         local class = transform_class[name]
         for _, v in ipairs(class.output) do
+            if not component[v] then
+                component[v] = {depend={}}
+                init_component[#init_component+1] = v
+            end
             if reflection[v] then
                 error(("transform `%s` and transform `%s` has same output."):format(name, reflection[v]))
             end
@@ -80,7 +84,9 @@ local function create(w, policies)
         local name = reflection[c]
         if name and not mark[name] then
             mark[name] = true
-            init_transform[#init_transform+1] = transform_class[name].methodfunc.process
+            init_transform[#init_transform+1] = 
+                transform_class[name].methodfunc.process
+                or transform_class[name].methodfunc.process_prefab
         end
     end
     table.sort(init_component)

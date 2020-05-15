@@ -1,2 +1,2 @@
-fx: /pkg/ant.resources/materials/fx/terrain/terrain.fx
+fx: $resource /pkg/ant.resources/materials/fx/terrain/terrain.fx
 state: /pkg/ant.resources/terrain/normal.state

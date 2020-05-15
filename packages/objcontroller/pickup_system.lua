@@ -108,9 +108,6 @@ local pickup_sys = ecs.system "pickup_system"
 
 local pick_material_cache = {}
 
-local accessor = assetmgr.get_accessor "material"
-local load_uniform = accessor.load_uniform
-
 local function pick_material(material_template, eid)
 	local pm = pick_material_cache[eid]
 	if pm then
@@ -121,7 +118,7 @@ local function pick_material(material_template, eid)
 	local m = assetmgr.patch(material_template, {
 		properties = {
 			uniforms = {
-				u_id = load_uniform{type="color", vv,},
+				u_id = world.component:uniform{type="color", vv,},
 			}
 		}
 	})

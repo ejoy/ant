@@ -1,15 +1,15 @@
-fx: /pkg/ant.resources/materials/fx/bloom/bloom.fx
+fx: $resource /pkg/ant.resources/materials/fx/bloom/bloom.fx
 properties:
   textures:
-    s_basecolor:
-      texture: /pkg/ant.resources/materials/textures/Default.texture
+    s_basecolor: $mat_texture
+      texture: $resource /pkg/ant.resources/materials/textures/Default.texture
       stage: 0
       type: texture
-    s_bloomcolor:
-      texture: /pkg/ant.resources/materials/textures/Default.texture
+    s_bloomcolor: $mat_texture
+      texture: $resource /pkg/ant.resources/materials/textures/Default.texture
       stage: 1
       type: texture
-  uniforms:
+  uniforms: $uniform
     u_params:
       type: v4
       value:

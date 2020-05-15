@@ -5,7 +5,6 @@ component "matrix"
 
 component "quaternion"
     .implement "component.lua"
-    .method "delete"
     .method "init"
     .method "save"
 
@@ -16,6 +15,5 @@ component "srt"
 
 component "vector"
     .implement "component.lua"
-    .method "delete"
     .method "init"
     .method "save"

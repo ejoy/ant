@@ -1,9 +1,7 @@
-
 return {
-    loader = function (filename, data)
+    loader = function (data)
         return data
     end,
-    unloader = function (res, filename)
-
+    unloader = function (res)
     end
 }

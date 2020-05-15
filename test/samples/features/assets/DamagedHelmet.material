@@ -1,48 +1,48 @@
-fx: /pkg/ant.test.features/assets/DamagedHelmet.fx
+fx: $resource /pkg/ant.test.features/assets/DamagedHelmet.fx
 properties:
   textures:
-    s_basecolor:
-      texture: /pkg/ant.test.features/assets/basecolor.texture
+    s_basecolor: $mat_texture
+      texture: $resource /pkg/ant.test.features/assets/basecolor.texture
       stage: 0
       type: texture
-    s_detailcolor:
-      texture: /pkg/ant.test.features/assets/detailcolor.texture
+    s_detailcolor: $mat_texture
+      texture: $resource /pkg/ant.test.features/assets/detailcolor.texture
       stage: 4
       type: texture
-    s_detailnormal:
-      texture: /pkg/ant.test.features/assets/detailnormal.texture
+    s_detailnormal: $mat_texture
+      texture: $resource /pkg/ant.test.features/assets/detailnormal.texture
       stage: 5
       type: texture
-    s_metallic:
-      texture: /pkg/ant.test.features/assets/metallic_roughness.texture
+    s_metallic: $mat_texture
+      texture: $resource /pkg/ant.test.features/assets/metallic_roughness.texture
       stage: 2
       type: texture
-    s_normal:
-      texture: /pkg/ant.test.features/assets/normal.texture
+    s_normal: $mat_texture
+      texture: $resource /pkg/ant.test.features/assets/normal.texture
       stage: 1
       type: texture
-    s_texCube:
-      texture: /pkg/ant.test.features/assets/irradiance.texture
+    s_texCube: $mat_texture
+      texture: $resource /pkg/ant.test.features/assets/irradiance.texture
       stage: 3
       type: texture
   uniforms:
-    u_diffuseColor:
+    u_diffuseColor: $uniform
       type: v4
       value:
         {0.6305734, 0.6953977, 0.8014734, 1}
-    u_misc:
+    u_misc: $uniform
       type: v4
       value:
         {0, 0.58, 0, 0}
-    u_params:
+    u_params: $uniform
       name: u_params
       type: v4
       value: {0, 1, 0, 0.104}
-    u_specularColor:
+    u_specularColor: $uniform
       type: v4
       value:
         {1, 1, 1, 1}
-    u_tiling:
+    u_tiling: $uniform
       type: v4
       value:
         {1, 1, 12, 12}

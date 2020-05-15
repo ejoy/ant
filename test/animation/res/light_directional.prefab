@@ -1,7 +1,10 @@
+---
+---
 policy:
   ant.render|light.directional
 data:
   direction: $vector {-0.3830222487449646, 0.866025447845459, -0.3213938772678375, 0}
+  position: {0, 0, 0, 1}
   directional_light:
     color: {1, 1, 1, 1}
     intensity: 2

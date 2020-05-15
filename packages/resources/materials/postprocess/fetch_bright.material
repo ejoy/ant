@@ -1,7 +1,7 @@
-fx: /pkg/ant.resources/materials/bloom/fetch_bright.material
+fx: $resource /pkg/ant.resources/materials/bloom/fetch_bright.material
 properties:
   uniforms:
-    u_bright_threshold:
+    u_bright_threshold: $uniform
       type: color
       value:
         {0.75, 0, 0, 0}

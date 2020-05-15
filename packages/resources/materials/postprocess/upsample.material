@@ -1,7 +1,7 @@
-fx: /pkg/ant.resources/materials/postprocess/fx/upsample.fx
+fx: $resource /pkg/ant.resources/materials/postprocess/fx/upsample.fx
 properties:
   uniforms:
-    u_intensity:
+    u_intensity: $uniform
       type: v4
       value:
         {1.2, 0, 0, 0}

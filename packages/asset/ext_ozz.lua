@@ -57,11 +57,10 @@ local function loader(filename)
 	return fn(filepath:localpath():string())
 end
 
-local function unloader(res)
-	res.handle = nil
+local function unloader()
 end
 
 return {
-	loader = loader,
-	unloader = unloader
+    loader = loader,
+    unloader = unloader,
 }

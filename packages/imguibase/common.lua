@@ -1,6 +1,8 @@
 local m = {}
 
 function m.init_world(w)
+	import_package "ant.asset".init()
+
 	local keymap      = import_package "ant.imguibase".keymap
 	local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
 	local mouse_state = { 'DOWN', 'MOVE', 'UP' }

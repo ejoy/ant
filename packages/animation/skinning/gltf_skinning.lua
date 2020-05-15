@@ -107,8 +107,8 @@ local function build_cpu_skinning_jobs(e, skinning)
 	end
 end
 
-function mesh_skinning_transform.process(e, eid)
-	world:add_component(eid, "skinning", {})
+function mesh_skinning_transform.process(e)
+	e.skinning = {}
 
 	local skinning = e.skinning
 	local skinningtype = "CPU"--"GPU" --setting.get().animation.skinning.type
