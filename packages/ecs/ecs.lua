@@ -9,7 +9,7 @@ local world = {}
 world.__index = world
 
 local function component_init(w, c, component)
-	local tc = w:import_component(c)
+	local tc = w._class.component[c]
 	if tc and tc.methodfunc and tc.methodfunc.init then
 		local res = tc.methodfunc.init(component)
 		assert(type(res) == "table" or type(res) == "userdata")
@@ -20,7 +20,7 @@ local function component_init(w, c, component)
 end
 
 local function component_delete(w, c, component)
-    local tc = w:import_component(c)
+    local tc = w._class.component[c]
     if tc and tc.methodfunc and tc.methodfunc.delete then
         tc.methodfunc.delete(component)
     end
@@ -104,7 +104,7 @@ function world:component_init(name, v)
 end
 
 function world:component_delete(name, v)
-	local tc = self:import_component(name)
+	local tc = self._class.component[name]
 	if tc and tc.methodfunc and tc.methodfunc.delete then
 		tc.methodfunc.delete(v)
 	end
@@ -349,10 +349,6 @@ function world:connection(fullname, ...)
 	local object = self._class.connection[fullname]
 	assert(object and object.methodfunc and object.methodfunc.init)
 	object.methodfunc.init(...)
-end
-
-function world:import_component(name)
-	return self._class.component[name]
 end
 
 function world:signal_on(name, f)

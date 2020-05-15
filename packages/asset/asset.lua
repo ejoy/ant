@@ -6,7 +6,7 @@ local assetmgr = {}
 assetmgr.__index = assetmgr
 
 local function valid_component(world, name)
-	local tc = world:import_component(name)
+	local tc = world._class.component[name]
 	return tc and tc.methodfunc and tc.methodfunc.init
 end
 
