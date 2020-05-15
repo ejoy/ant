@@ -45,8 +45,6 @@ local function csm_shadow_debug_quad()
 	})
 end
 
-ecs.tag "shadow_debug"
-
 local frustum_colors = {
 	0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
 }

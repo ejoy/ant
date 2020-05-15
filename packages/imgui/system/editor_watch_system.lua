@@ -10,15 +10,6 @@ local Rx        = import_package "ant.rxlua".Rx
 
 local OperateFunc = require "system.editor_operate_func"
 
-ecs.tag "editor_watching"
-ecs.tag "outline_entity"
-
-ecs.component_alias("target_entity","entityid")
-ecs.tag "editor_object"
-
-
-
-
 local editor_watcher_sys = ecs.system "editor_watcher_system"
 
 

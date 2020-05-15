@@ -2,9 +2,6 @@ local ecs = ...
 local world = ecs.world
 local WatcherEvent = require "hub_event"
 
-ecs.component_alias("test_component", "boolean")
-
-
 local transform = ecs.transform "test_add_policy_transform"
 
 function transform.process(e)

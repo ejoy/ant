@@ -15,11 +15,6 @@ local geometry_drawer = import_package "ant.geometry".drawer
 local bgfx = require "bgfx"
 local fs = require "filesystem"
 
-ecs.tag "widget_drawer"
-
-ecs.component "debug_mesh_bounding"
-
-
 local widget_drawer_sys = ecs.system "widget_drawer_system"
 
 function widget_drawer_sys:init()

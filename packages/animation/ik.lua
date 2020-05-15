@@ -1,23 +1,5 @@
 local ecs = ...
 
---there are 2 types in ik_data, which are 'two_bone'(IKTwoBoneJob) and 'aim'(IKAimJob).
-ecs.component "ik_data"
-	.type		"string"("aim")			-- can be 'two_bone'/'aim'
-	.target 	"vector"{0, 0, 0, 1}	-- model space
-	.pole_vector"vector"{0, 0, 0, 0}	-- model space
-	.twist_angle"real" 	(0.0)
-	.weight		"real"  (0.0)
-	.joints		"string[]"{}			-- type == 'aim', #joints == 1, type == 'two_bone', #joints == 3, with start/mid/end
-	["opt"].mid_axis"vector" {0, 0, 1, 0}
-	["opt"].soften "real" 	(0.0)
-	["opt"].up_axis"vector" {0, 1, 0, 0}
-	["opt"].forward "vector"{0, 0, 1, 0}-- local space
-	["opt"].offset "vector" {0, 0, 0, 0}-- local space
-
-ecs.component "ik"
-	.jobs 'ik_data{}'
-
-
 local build_ik_tranform = ecs.transform "build_ik"
 
 local function check_joints_in_hierarchy_chain(ske, joint_indices)

@@ -1,28 +1,5 @@
 local ecs = ...
 local world = ecs.world
-ecs.component_alias("light", "string")
-
-ecs.component "directional_light"
-		.intensity "int"	(50)
-		.color "color"
-
-ecs.component "point_light"
-		.intensity "int" (50)
-		.color "color"
-		.range "real"	(100)
-
-ecs.component "spot_light"
-		.intensity "int"	(50)
-		.color "color"
-		.range "real"	(100)
-		.angle "real"	(60)
-
-ecs.component "ambient_light"
-		.mode "string"	("color")
-		.factor "real"	(0.3)
-		.skycolor "color"
-		.midcolor "color"
-		.groundcolor "color"
 
 for _, lighttype in ipairs {
 	"directional",

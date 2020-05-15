@@ -6,8 +6,6 @@ local bgfx 		= require "bgfx"
 
 local assetmgr = import_package "ant.asset"
 
-ecs.component "skinning" {}
-
 local sm = ecs.transform "skinning_material"
 -- local function path_table(path, t)
 -- 	local last = t

@@ -2,8 +2,6 @@ local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
 
-ecs.tag "scene_entity"
-
 local m = ecs.connection "mount"
 function m.init(e, v)
     e.parent = v
@@ -12,13 +10,8 @@ function m.save(e)
     return e.parent
 end
 
-ecs.component "lock_target"
-	.type	"string"
-    ["opt"].offset	"vector"
 
 local t = ecs.component "transform"
-	.srt "srt"
-	["opt"].lock_target "lock_target"
 
 function t:init()
     self._world = math3d.ref(self.srt)

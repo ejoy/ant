@@ -4,13 +4,6 @@ local world = ecs.world
 local math3d = require "math3d"
 local mc = import_package "ant.math".constant
 
-ecs.component "character"
-    .movespeed "real" (1.0)
-
-
-ecs.component "character_height_raycast"
-    .dir "vector" (0, -2, 0, 0)
-
 local char_height_sys = ecs.system "character_height_system"
 
 local icollider = world:interface "ant.collision|collider"
@@ -42,15 +35,6 @@ function char_height_sys:ik_target()
         end
     end
 end
-
-ecs.component "ik_tracker"
-    .leg            "string"
-    ["opt"].sole    "string"
-
-ecs.component "foot_ik_raycast"
-    .cast_dir "vector" (0, -2, 0, 0)
-    .foot_height "real" (0)
-    .trackers  "ik_tracker[]"
 
 local foot_t = ecs.transform "check_ik_data"
 

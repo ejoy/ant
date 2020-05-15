@@ -1,7 +1,5 @@
 local ecs = ...
 
-ecs.component_alias("animation_birth", "string")
-
 local m = ecs.transform "animation_birth"
 
 function m.process_prefab(e)

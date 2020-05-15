@@ -1,7 +1,6 @@
 local interface = require "interface"
 local fs = require "filesystem"
 local pm = require "antpm"
-local createschema = require "schema"
 
 local current_package = {}
 local function getCurrentPackage()
@@ -161,7 +160,6 @@ end
 
 local function init(w, config)
 	w._class = { component = {}, unique = {} }
-	local schema = createschema(w._class.component)
 
 	local ecs = { world = w }
 	local declaration = interface.new(function(packname, filename)
@@ -177,7 +175,7 @@ local function init(w, config)
 		local class_set = {}
 		ecs[what] = function(name)
 			local package = getCurrentPackage()
-			local fullname = what == "connection" and name or package .. "|" .. name
+			local fullname = (what == "connection" or what == "component") and name or package .. "|" .. name
 			local r = class_set[fullname]
 			if r == nil then
 				log.info("Register", #what<8 and what.."  " or what, fullname)
@@ -214,9 +212,7 @@ local function init(w, config)
 	register "transform"
 	register "interface"
 	register "connection"
-	ecs.component = schema
-	ecs.component_alias = schema
-	ecs.tag = schema
+	register "component"
 
 	for _, k in ipairs(config.ecs.import) do
 		import_decl(w, k)

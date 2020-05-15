@@ -12,7 +12,6 @@ local editor_camera_ctrl_sys = ecs.system "editor_camera_controller_system"
 
 local icm = world:interface "ant.objcontroller|camera_motion"
 
-ecs.tag "test_remove_com"
 
 local leftmouse_mb = world:sub {"mouse", "LEFT"}
 local rightmouse_mb = world:sub {"mouse", "RIGHT"}

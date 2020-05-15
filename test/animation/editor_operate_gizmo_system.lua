@@ -9,11 +9,6 @@ local camerautil= renderpkg.camera
 
 local util = require "editor_system_util"
 
-ecs.tag "show_operate_gizmo"
-ecs.component "gizmo_object"
-    ["opt"].type "string"   --"position"/"rotation"/"scale"
-    ["opt"].dir "string"    --"x"/"y"/"z"  *"xy"/"yz"/"xz"
-
 
 local GizmoType = {"position","rotation","scale"}
 

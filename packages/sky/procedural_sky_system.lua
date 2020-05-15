@@ -126,13 +126,6 @@ local ABCDE_t = {
 -- Controls sun position according to time, month, and observer's latitude.
 -- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 local ps = ecs.component "procedural_sky"
-	.grid_width	"int" (1)
-	.grid_height"int" (1)
-	.which_hour "real" (12)
-	.turbidity 	"real" (2.15)
-	.month 		"string" ("June")
-	.latitude 	"real" (math.rad(50))
-	["opt"].attached_sun_light "entityid" (-1)
 
 local function compute_PerezCoeff(turbidity, values)
 	assert(#ABCDE == #ABCDE_t)

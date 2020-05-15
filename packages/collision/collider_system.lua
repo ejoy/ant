@@ -16,36 +16,27 @@ local w = rp3d.collision_world {
 }
 
 local s = ecs.component "sphere_shape"
-	.origin "position"
-	.radius "real"
+
 function s:init()
 	self._handle = w:new_shape("sphere", self.radius)
 	return self
 end
 
 local b = ecs.component "box_shape"
-	.origin "position"
-	.size "real[3]"
+
 function b:init()
 	self._handle = w:new_shape("box", table.unpack(self.size))
 	return self
 end
 
 local c = ecs.component "capsule_shape"
-	.origin "position"
-	.radius "real"
-	.height "real"
+
 function c:init()
 	self._handle = w:new_shape("capsule", self.radius, self.height)
 	return self
 end
 
 local ts = ecs.component "terrain_shape"
-	.origin "position"
-	["opt"].min_height 		"real"
-	["opt"].max_height 		"real"
-	["opt"].height_scaling	"real"(1)
-	["opt"].scaling 		"real"(1)
 
 function ts:init()
 	self.up_axis 		= self.up_axis or "Y"
@@ -92,10 +83,6 @@ function tcb.process(e)
 end
 
 local collcomp = ecs.component "collider"
-	["opt"].sphere 	"sphere_shape[]"
-	["opt"].box 	"box_shape[]"
-	["opt"].capsule "capsule_shape[]"
-	["opt"].terrain "terrain_shape[]"
 
 function collcomp:init()
 	self._handle = w:body_create()

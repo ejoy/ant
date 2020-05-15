@@ -149,13 +149,9 @@ function pickup_sys:refine_filter()
 	end
 end
 
-ecs.tag "can_select"
 
 -- pickup_system
 local bb = ecs.component "blit_buffer"
-	.w "int" (1)
-	.h "int" (1)
-	.elemsize "int" (4)
 
 function bb:init()
 	self.handle = bgfx.memory_texture(self.w*self.h * self.elemsize)
@@ -177,10 +173,8 @@ function bb:init()
 	return self
 end
 
-ecs.component_alias("pickup_viewtag", "boolean")
-
 local pu = ecs.component "pickup"
-	.blit_buffer "blit_buffer"
+
 function pu:init()
 	self.pickup_cache = {
 		last_pick = -1,

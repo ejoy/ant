@@ -9,12 +9,6 @@ local camerautil= renderpkg.camera
 local util = require "system.editor_system_util"
 local WatcherEvent = require "hub_event"
 
-ecs.tag "show_operate_gizmo"
-ecs.component "gizmo_object"
-    ["opt"].type "string"   --"position"/"rotation"/"scale"
-    ["opt"].dir "string"    --"x"/"y"/"z"  *"xy"/"yz"/"xz"
-
-
 local GizmoType = {"position","rotation","scale"}
 local GizmoDirection = {"x","y","z"}
 

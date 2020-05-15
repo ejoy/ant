@@ -3,21 +3,12 @@ local world = ecs.world
 
 local ani_module = require "hierarchy.animation"
 
-ecs.component "pose_result"
-
 local pr_t = ecs.transform "build_pose_result"
 
 function pr_t.process(e)
 	local skehandle = e.skeleton._handle
 	e.pose_result = ani_module.new_pose_result(#skehandle)
 end
-
-ecs.component_alias("animation_resource", "resource")
-
-ecs.component "animation"
-	.anilist "animation_resource{}"
-
-ecs.component_alias("skeleton", "resource")
 
 local ani_sys = ecs.system "animation_system"
 

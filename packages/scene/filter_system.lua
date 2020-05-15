@@ -3,10 +3,7 @@ local world = ecs.world
 
 local animoudle = require "hierarchy.animation"
 
-ecs.component_alias("filter_tag", "string")
-
 local pf = ecs.component "primitive_filter"
-	.filter_tag "filter_tag" ("can_render")
 
 function pf:init()
 	self.result = {

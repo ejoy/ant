@@ -10,7 +10,8 @@ local function save(v)
     return r
 end
 
-local v = ecs.component_alias("vector", "real[]")
+local v = ecs.component "vector"
+
 function v:init()
     local n = #self
     if n == 0 or n > 4 then
@@ -28,13 +29,15 @@ end
 
 v.save = save
 
-local q = ecs.component_alias("quaternion", "real[4]")
+local q = ecs.component "quaternion"
+
 function q:init()
     return math3d.ref(math3d.quaternion(self))
 end
 q.save = save
 
-local m = ecs.component_alias("matrix", "real[16]")
+local m = ecs.component "matrix"
+
 function m:init()
     return math3d.ref(math3d.matrix(self))
 end
@@ -65,9 +68,6 @@ local function quaternion_init(self)
 end
 
 local srt = ecs.component "srt"
-["opt"].s "real[]"
-["opt"].r "real[4]"
-["opt"].t "real[]"
 
 function srt:init()
     assert(type(self) == "table")
@@ -87,21 +87,3 @@ function srt:save()
     }
 end
 
-ecs.component_alias("point", 	"vector")
-ecs.component_alias("rotation", "quaternion")
-ecs.component_alias("scale",	"vector")
-ecs.component_alias("position",	"vector")
-ecs.component_alias("direction","vector")
-ecs.component_alias("color",    "vector")
-
-ecs.component "frustum"
-	['opt'].type "string" ("mat")
-	.n "real" (0.1)
-	.f "real" (10000)
-	['opt'].l "real" (-1)
-	['opt'].r "real" (1)
-	['opt'].t "real" (1)
-	['opt'].b "real" (-1)
-	['opt'].aspect "real" (1)
-	['opt'].fov "real" (1)
-    ['opt'].ortho "boolean" (false)

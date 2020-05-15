@@ -83,9 +83,6 @@ local function set_state(e, name, time)
 end
 
 local sm = ecs.component "state_machine"
-		.current "string"
-["opt"]	.file "string"
-		.nodes "state_machine_node{}"
 
 function sm:init()
 	if self.file then
@@ -93,12 +90,6 @@ function sm:init()
 	end
 	return self
 end
-
-ecs.component "state_machine_node"
-	.transmits "state_machine_transmits{}"
-
-ecs.component "state_machine_transmits"
-	.duration "real"
 
 local sm_trans = ecs.transform "state_machine_transform"
 
