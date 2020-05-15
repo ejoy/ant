@@ -28,7 +28,7 @@ function callback.init(nwh, context, width, height)
 	}
 	config.width  = width
 	config.height = height
-	world = ecs.new_world(config, config.world_class)
+	world = ecs.new_world(config)
 	common.init_world(world)
 	world:update_func "init" ()
 	world_update = world:update_func "update"

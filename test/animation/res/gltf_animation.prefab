@@ -1,4 +1,6 @@
 ---
+{mount 1 root}
+{mount 2 root}
 ---
 policy:
     ant.render|render
@@ -8,6 +10,7 @@ policy:
     ant.animation|animation_controller.birth
     ant.render|shadow_cast_policy
     ant.general|name
+    ant.scene|hierarchy_policy
 data:
     transform: $transform
         srt: $srt {}
@@ -38,6 +41,7 @@ policy:
     ant.animation|animation_controller.birth
     ant.render|shadow_cast_policy
     ant.general|name
+    ant.scene|hierarchy_policy
 data:
     transform: $transform
         srt: $srt {}
