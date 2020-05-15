@@ -44,7 +44,7 @@ local function keys(tbl)
 	return k
 end
 
-local function gen_method(c)
+local function gen_method(c, o)
 	local callback = keys(c.method)
 	return function(_, key, func)
 		if type(func) ~= "function" then
@@ -57,7 +57,7 @@ local function gen_method(c)
 			error("Method " .. key .. " has already defined at " .. c.source[key])
 		end
 		c.source[key] = sourceinfo()
-		rawset(c.methodfunc, key, func)
+		rawset(o, key, func)
 	end
 end
 
@@ -88,15 +88,47 @@ local check_map = {
 
 local OBJECT = {"system","policy","transform","interface","component","pipeline","connection"}
 
-local function solve_object(o, fullname)
-	if o and o.method then
-		for _, name in ipairs(o.method) do
-			if not o.methodfunc[name] then
+local function solve_object(o, w, what, fullname)
+	local decl = w._decl[what][fullname]
+	if decl and decl.method then
+		for _, name in ipairs(decl.method) do
+			if not o[name] then
 				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
 			end
 		end
 	end
 end
+
+local function table_append(t, a)
+	table.move(a, 1, #a, #t+1, t)
+end
+
+local copy = {}
+function copy.policy(v)
+	local t = {}
+	table_append(t, v.component)
+	table_append(t, v.unique_component)
+	return {
+		transform = v.require_transform,
+		component = t,
+		connection = v.connection,
+	}
+end
+function copy.transform(v)
+	return {
+		input = v.input,
+		output = v.output,
+	}
+end
+function copy.pipeline(v)
+	return {
+		value = v.value
+	}
+end
+function copy.system() return {} end
+function copy.interface() return {} end
+function copy.component() return {} end
+function copy.connection() return {} end
 
 local function create_importor(w, ecs, declaration)
 	local import = {}
@@ -104,13 +136,13 @@ local function create_importor(w, ecs, declaration)
 		w._class[objname] = setmetatable({}, {__index=function(_, name)
 			local res = import[objname](name)
 			if res then
-				solve_object(res, name)
+				solve_object(res, w, objname, name)
 			end
 			return res
 		end})
 		import[objname] = function (name)
-			local res = w._class[objname]
-			local v = rawget(res, name)
+			local class = w._class[objname]
+			local v = rawget(class, name)
             if v then
                 return v
 			end
@@ -127,8 +159,9 @@ local function create_importor(w, ecs, declaration)
 				end
                 error(("invalid %s name: `%s`."):format(objname, name))
             end
-            log.info("Import  ", objname, name)
-			res[name] = v
+			log.info("Import  ", objname, name)
+			local res = copy[objname](v)
+			class[name] = res
 			for _, tuple in ipairs(v.value) do
 				local what, k = tuple[1], tuple[2]
 				local attrib = check_map[what]
@@ -140,14 +173,14 @@ local function create_importor(w, ecs, declaration)
 				end
 			end
 			if objname == "policy" then
-				solve_policy(name, v)
+				solve_policy(name, res)
 			end
 			if v.implement then
 				for _, impl in ipairs(v.implement) do
 					import_impl("/pkg/"..v.packname.."/"..impl, ecs)
 				end
 			end
-			return v
+			return res
 		end
 	end
 	return import
@@ -179,11 +212,15 @@ local function init(w, config)
 	w._decl = declaration
 	w._initializing = true
 
+	local import = create_importor(w, ecs, declaration)
+
 	local function register(what)
 		local class_set = {}
 		ecs[what] = function(name)
-			local package = getCurrentPackage()
-			local fullname = (what == "connection" or what == "component") and name or package .. "|" .. name
+			local fullname = name
+			if what ~= "connection" and what ~= "component" then
+				fullname = getCurrentPackage() .. "|" .. name
+			end
 			local r = class_set[fullname]
 			if r == nil then
 				log.info("Register", #what<8 and what.."  " or what, fullname)
@@ -191,24 +228,22 @@ local function init(w, config)
 				class_set[fullname] = r
 				local decl = declaration[what][fullname]
 				if not decl then
-					--error(("%s `%s` in `%s` is not defined."):format(what, name, package))
 					setmetatable(r, {
 						__index = false,
 						__newindex = function() end,
 					})
 				else
 					if decl.method then
-						decl.methodfunc = {}
 						decl.source = {}
 						decl.defined = sourceinfo()
 						setmetatable(r, {
 							__index = false,
-							__newindex = gen_method(decl),
+							__newindex = gen_method(decl, import[what](fullname)),
 						})
 					else
 						setmetatable(r, {
 							__index = false,
-							__newindex = function() error(("%s `%s` in `%s` has no method."):format(what, name, package)) end,
+							__newindex = function() error(("%s `%s` has no method."):format(what, fullname)) end,
 						})
 					end
 				end
@@ -226,7 +261,6 @@ local function init(w, config)
 		import_decl(w, k)
 	end
 
-	local import = create_importor(w, ecs, declaration)
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
 			for _, k in ipairs(config.ecs[objname]) do
@@ -238,7 +272,7 @@ local function init(w, config)
 
     for _, objname in ipairs(OBJECT) do
 		for fullname, o in pairs(w._class[objname]) do
-			solve_object(o, fullname)
+			solve_object(o, w, objname, fullname)
         end
     end
 	require "system".solve(w)

@@ -56,7 +56,7 @@ function system.solve(w)
 	for fullname, s in sortpairs(w._class.system) do
 		local packname, name = splitname(fullname)
 		local proxy = {}
-		for step_name, func in pairs(s.methodfunc) do
+		for step_name, func in pairs(s) do
 			table.insert(res[step_name], { func, proxy, name, step_name, packname })
 		end
 	end

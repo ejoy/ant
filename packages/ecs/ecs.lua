@@ -10,8 +10,8 @@ world.__index = world
 
 local function component_init(w, c, component)
 	local tc = w._class.component[c]
-	if tc and tc.methodfunc and tc.methodfunc.init then
-		local res = tc.methodfunc.init(component)
+	if tc and tc.init then
+		local res = tc.init(component)
 		assert(type(res) == "table" or type(res) == "userdata")
 		w._typeclass[res] = c
 		return res
@@ -21,8 +21,8 @@ end
 
 local function component_delete(w, c, component)
     local tc = w._class.component[c]
-    if tc and tc.methodfunc and tc.methodfunc.delete then
-        tc.methodfunc.delete(component)
+    if tc and tc.delete then
+        tc.delete(component)
     end
 end
 
@@ -105,8 +105,8 @@ end
 
 function world:component_delete(name, v)
 	local tc = self._class.component[name]
-	if tc and tc.methodfunc and tc.methodfunc.delete then
-		tc.methodfunc.delete(v)
+	if tc and tc.delete then
+		tc.delete(v)
 	end
 end
 
@@ -203,8 +203,8 @@ local function instance(w, prefab, args)
 	for _, connection in ipairs(prefab.connection) do
 		local name, source, target = connection[1], connection[2], connection[3]
 		local object = w._class.connection[name]
-		assert(object and object.methodfunc and object.methodfunc.init)
-		object.methodfunc.init(w[res[source]], res[target] or args[target] or nil)
+		assert(object and object.init)
+		object.init(w[res[source]], res[target] or args[target] or nil)
 	end
 	return res
 end
@@ -335,20 +335,13 @@ function world:import(fullname)
 end
 
 function world:interface(fullname)
-	local interface = self._interface
-	local res = interface[fullname]
-	if not res then
-		local object = self._class.interface[fullname]
-		res = setmetatable({}, {__index = object.methodfunc})
-		interface[fullname] = res
-	end
-	return res
+	return self._class.interface[fullname]
 end
 
 function world:connection(fullname, ...)
 	local object = self._class.connection[fullname]
-	assert(object and object.methodfunc and object.methodfunc.init)
-	object.methodfunc.init(...)
+	assert(object and object.init)
+	object.init(...)
 end
 
 function world:signal_on(name, f)
@@ -388,7 +381,6 @@ function m.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
 		_prefabs = {},
-		_interface = {},
 		_slots = {},
 		_typeclass = setmetatable({}, { __mode = "kv" }),
 	}, world)
