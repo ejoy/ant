@@ -91,7 +91,7 @@ local OBJECT = {"system","policy","transform","interface","component","pipeline"
 local function create_importor(w, ecs, declaration)
     local import = {}
     for _, objname in ipairs(OBJECT) do
-		w._class[objname] = w._class[objname] or {}
+		w._class[objname] = {}
 		import[objname] = function (name)
 			local res = w._class[objname]
             if res[name] then
@@ -159,7 +159,7 @@ local function import_decl(w, fullname)
 end
 
 local function init(w, config)
-	w._class = { component = {}, unique = {} }
+	w._class = { unique = {} }
 
 	local ecs = { world = w }
 	local declaration = interface.new(function(packname, filename)
