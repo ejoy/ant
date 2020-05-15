@@ -69,7 +69,8 @@ local m = ecs.component "pbrm"
 function m:init()
 	local pbrm = self
 	local materialfile = pbrm.materialfile or "/pkg/ant.resources/materials/pbr_default.material"
-	local material = assetmgr.load_component(world, "material", materialfile)
+	local material = assetmgr.patch(world.component:resource(materialfile), {})
+
 	--refine_paths(pbrm)
 	local metallic_factor, roughness_factor = get_metallic_roughness_factor(pbrm)
 	material.properties = {

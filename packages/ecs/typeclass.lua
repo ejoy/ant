@@ -1,7 +1,6 @@
 local interface = require "interface"
 local fs = require "filesystem"
 local pm = require "antpm"
-local createschema = require "schema"
 
 local current_package = {}
 local function getCurrentPackage()
@@ -89,14 +88,31 @@ local check_map = {
 
 local OBJECT = {"system","policy","transform","interface","component","pipeline","connection"}
 
+local function solve_object(o, fullname)
+	if o and o.method then
+		for _, name in ipairs(o.method) do
+			if not o.methodfunc[name] then
+				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
+			end
+		end
+	end
+end
+
 local function create_importor(w, ecs, declaration)
-    local import = {}
+	local import = {}
     for _, objname in ipairs(OBJECT) do
-		w._class[objname] = w._class[objname] or {}
+		w._class[objname] = setmetatable({}, {__index=function(_, name)
+			local res = import[objname](name)
+			if res then
+				solve_object(res, name)
+			end
+			return res
+		end})
 		import[objname] = function (name)
 			local res = w._class[objname]
-            if res[name] then
-                return
+			local v = rawget(res, name)
+            if v then
+                return v
 			end
 			if not w._initializing and objname == "system" then
                 error(("system `%s` can only be imported during initialization."):format(name))
@@ -131,19 +147,10 @@ local function create_importor(w, ecs, declaration)
 					import_impl("/pkg/"..v.packname.."/"..impl, ecs)
 				end
 			end
+			return v
 		end
 	end
 	return import
-end
-
-local function solve_object(o, fullname)
-	if o and o.method then
-		for _, name in ipairs(o.method) do
-			if not o.methodfunc[name] then
-				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-			end
-		end
-	end
 end
 
 local function import_decl(w, fullname)
@@ -160,8 +167,7 @@ local function import_decl(w, fullname)
 end
 
 local function init(w, config)
-	w._class = { component = {}, unique = {} }
-	local schema = createschema(w._class.component)
+	w._class = { unique = {} }
 
 	local ecs = { world = w }
 	local declaration = interface.new(function(packname, filename)
@@ -177,7 +183,7 @@ local function init(w, config)
 		local class_set = {}
 		ecs[what] = function(name)
 			local package = getCurrentPackage()
-			local fullname = what == "connection" and name or package .. "|" .. name
+			local fullname = (what == "connection" or what == "component") and name or package .. "|" .. name
 			local r = class_set[fullname]
 			if r == nil then
 				log.info("Register", #what<8 and what.."  " or what, fullname)
@@ -214,19 +220,17 @@ local function init(w, config)
 	register "transform"
 	register "interface"
 	register "connection"
-	ecs.component = schema
-	ecs.component_alias = schema
-	ecs.tag = schema
+	register "component"
 
 	for _, k in ipairs(config.ecs.import) do
 		import_decl(w, k)
 	end
-	w._import = create_importor(w, ecs, declaration)
-	
+
+	local import = create_importor(w, ecs, declaration)
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
 			for _, k in ipairs(config.ecs[objname]) do
-				w._import[objname](k)
+				import[objname](k)
 			end
 		end
 	end
@@ -240,13 +244,7 @@ local function init(w, config)
 	require "system".solve(w)
 end
 
-local function import_object(w, type, fullname)
-	w._import[type](fullname)
-	solve_object(w._class[type][fullname], fullname)
-end
-
 return {
 	init = init,
 	import_decl = import_decl,
-	import_object = import_object,
 }

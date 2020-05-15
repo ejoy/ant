@@ -15,30 +15,6 @@ local mc, mu	= mathpkg.constant, mathpkg.util
 local math3d	= require "math3d"
 local fs 		= require "filesystem"
 
-ecs.tag "can_cast"
-
-ecs.component "csm"
-	.split_ratios "real[2]"
-	.index "int" (0)
-	.stabilize "boolean" (true)
-
-ecs.component "omni"	-- for point/spot light
-
-ecs.component "csm_split_config"
-	.min_ratio		"real"(0.0)
-	.max_ratio		"real"(1.0)
-	.pssm_lambda	"real"(1.0)
-	.num_split		"int" (4)
-	.ratios	 		"real[]"
-
-
-ecs.component "shadow"
-	.shadowmap_size "int" 	(1024)
-	.bias 			"real"	(0.003)
-	.normal_offset 	"real" (0)
-	.depth_type 	"string"("linear")		-- "inv_z" / "linear"
-	["opt"].split	"csm_split_config"
-
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)

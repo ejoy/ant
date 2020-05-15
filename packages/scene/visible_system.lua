@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-ecs.component_alias ("hierarchy_visible","boolean",true)
-
 local visible_sys = ecs.system "visible_system"
 
 local NotUpdated = nil

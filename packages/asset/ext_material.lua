@@ -2,7 +2,8 @@ local ecs = ...
 
 local math3d = require "math3d"
 local bgfx = require "bgfx"
-local assetmgr 	= require "asset"
+local fs = require "filesystem"
+local datalist = require "datalist"
 
 local m = ecs.component "uniform"
 
@@ -40,10 +41,17 @@ end
 
 local m = ecs.component "material"
 
+local function load_state(filename)
+	local f = assert(fs.open(fs.path(filename), 'rb'))
+	local data = f:read 'a'
+	f:close()
+	return datalist.parse(data)
+end
+
 function m:init()
 	assert(type(self.fx) ~= "string")
 	if type(self.state) == "string" then
-		self.state = bgfx.make_state(assetmgr.load_component(world, self.state))
+		self.state = bgfx.make_state(load_state(self.state))
 	else
 		self.state = bgfx.make_state(self.state)
 	end

@@ -18,7 +18,12 @@ policy "select"
     .require_policy "pickup"
     .component "can_select"
 
-component "raw_buffer"
+component "blit_buffer"
+    .implement "pickup_system.lua"
+    .method "init"
+
+component "pickup"
+    .implement "pickup_system.lua"
     .method "init"
 
 pipeline "select"

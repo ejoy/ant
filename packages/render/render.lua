@@ -9,9 +9,6 @@ local math3d	= require "math3d"
 
 local assetmgr  = import_package "ant.asset"
 
-ecs.component "rendermesh" {}
-ecs.component_alias("mesh", "resource")
-
 local ml = ecs.transform "mesh_loader"
 
 function ml.process(e)
@@ -26,25 +23,7 @@ function ml.process(e)
 	e.rendermesh = assetmgr.load(filename, e.mesh)
 end
 
-ecs.component_alias("material", "resource")
-
-ecs.tag "blit_render"
-ecs.tag "can_render"
-
-ecs.tag "main_queue"
-ecs.tag "blit_queue"
-
-ecs.component_alias("viewid", "int", 0)
-ecs.component_alias("view_mode", "string", "")
-
-ecs.component_alias("fb_index", "int")
-ecs.component_alias("rb_index", "int")
-
 local rt = ecs.component "render_target"
-	.viewport 			"viewport"
-	.viewid				"viewid"
-	["opt"].view_mode	"view_mode"
-	["opt"].fb_idx 		"fb_index"
 
 function rt:init()
 	self.view_mode = self.view_mode or ""
@@ -63,30 +42,6 @@ function rt:delete()
 	fbmgr.unbind(self.viewid)
 end
 
-local cs = ecs.component "clear_state"
-    .color "int" (0x303030ff)
-    .depth "real" (1)
-	.stencil "int" (0)
-	.clear "string" ("all")
-
-ecs.component "rect"
-	.x "real" (0)
-	.y "real" (0)
-	.w "real" (1)
-	.h "real" (1)
-
-ecs.component "viewport"
-	.clear_state "clear_state"
-	.rect "rect"
-
-ecs.component "camera"
-	.eyepos		"vector"
-	.viewdir	"vector"
-	.updir		"vector"
-	.frustum	"frustum"
-	["opt"].lock_target "lock_target"
-
-
 local ct= ecs.transform "camera_transfrom"
 
 function ct.process_prefab(e)
@@ -95,9 +50,6 @@ function ct.process_prefab(e)
 		error(string.format("'lock_target' defined in 'camera' component, but 'parent' component not define in entity"))
 	end
 end
-
-ecs.component_alias("camera_eid", "entityid")
-ecs.component_alias("visible", "boolean", true)
 
 local render_sys = ecs.system "render_system"
 

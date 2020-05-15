@@ -7,8 +7,6 @@ local bgfx 		= require "bgfx"
 local assetmgr 	= import_package "ant.asset"
 local fs 		= require "filesystem"
 
-ecs.component "skinning" {}
-
 local sm = ecs.transform "skinning_material"
 -- local function path_table(path, t)
 -- 	local last = t
@@ -22,7 +20,7 @@ local sm = ecs.transform "skinning_material"
 -- 	end
 -- end
 
-function sm.process_prefab(e)
+function sm.process(e)
 	local skinning = e.skinning
 	if skinning.type == "GPU" then
 		local fxname = tostring(e.material.fx):match"[^:]+"

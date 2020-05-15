@@ -13,10 +13,35 @@ local RoleEntityId
 local eventResize = world:sub {"resize"}
 local screensize  = {w=0,h=0}
 
+local function create_prefab(prefab, srt)
+    local eid = world:create_entity {
+        policy = {
+            "ant.scene|transform_policy",
+        },
+        data = {
+            transform = world.component:transform {
+                srt = world.component:srt (srt)
+            }
+        }
+    }
+    return world:instance("res/gltf_animation.prefab", {root = eid})
+end
+
 function init_loader_sys:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt = {r = {0,0.92388,0,0.382683}}})
-    world:instance 'res/light_directional.prefab'
-    local res = world:instance "res/gltf_animation.prefab"
+    world:instance "res/light_directional.prefab"
+
+    create_prefab("res/gltf_animation.prefab", {
+        t = {0,0,2}
+    })
+
+    create_prefab("res/gltf_animation.prefab", {
+        t = {2,0,0}
+    })
+
+    local res = create_prefab("res/gltf_animation.prefab", {
+        t = {0,0,0}
+    })
     RoleEntityId = res[2]
     world:enable_tag(RoleEntityId, "show_operate_gizmo")
 end

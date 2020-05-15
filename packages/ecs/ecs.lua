@@ -85,13 +85,16 @@ end
 
 function world:add_policy(eid, t)
 	local policies, dataset = t.policy, t.data
-	local component, transform = policy.add(self, eid, policies)
+	local component, process_prefab, process_entity = policy.add(self, eid, policies)
 	local e = self[eid]
 	for _, c in ipairs(component) do
 		e[c] = dataset[c]
 		register_component(self, eid, c)
 	end
-	for _, f in ipairs(transform) do
+	for _, f in ipairs(process_prefab) do
+		f(e)
+	end
+	for _, f in ipairs(process_entity) do
 		f(e)
 	end
 end
@@ -117,7 +120,7 @@ end
 
 local function create_prefab_from_entity(w, t)
 	local policies, dataset = t.policy, t.data
-	local component, transform, connection = policy.create(w, policies)
+	local component, process_prefab, process_entity, connection = policy.create(w, policies)
 	local action = t.connection or {}
 	local args = {}
 	for i, v in ipairs(action) do
@@ -129,11 +132,14 @@ local function create_prefab_from_entity(w, t)
 	for _, c in ipairs(component) do
 		e[c] = dataset[c]
 	end
+	for _, f in ipairs(process_prefab) do
+		f(e)
+	end
 	return {
 		entities = {{
 			policy = policies,
 			component = component,
-			transform = transform,
+			process_entity = process_entity,
 			connection = connection,
 			dataset = e,
 		}},
@@ -158,17 +164,20 @@ local function create_prefab(w, filename)
 	}
 	for i = 2, #t do
 		local policies, dataset = t[i].policy, t[i].data
-		local component, transform, connection = policy.create(w, policies)
+		local component, process_prefab, process_entity, connection = policy.create(w, policies)
 		local e = {}
 		for _, c in ipairs(component) do
 			e[c] = dataset[c]
 		end
+		for _, f in ipairs(process_prefab) do
+			f(e)
+		end
 		prefab.entities[i-1] = {
 			policy = policies,
 			component = component,
-			transform = transform,
+			process_entity = process_entity,
 			connection = connection,
-			dataset = dataset,
+			dataset = e,
 		}
 	end
 	return prefab
@@ -179,16 +188,13 @@ local function instance(w, prefab, args)
 	for i, entity in ipairs(prefab.entities) do
 		local eid = register_entity(w)
 		local e = w[eid]
-		local component = entity.component
-		local transform = entity.transform
-		local dataset = entity.dataset
-		for _, c in ipairs(component) do
+		for _, c in ipairs(entity.component) do
 			register_component(w, eid, c)
 		end
-		for k, v in pairs(dataset) do
+		for k, v in pairs(entity.dataset) do
 			e[k] = v
 		end
-		for _, f in ipairs(transform) do
+		for _, f in ipairs(entity.process_entity) do
 			f(e)
 		end
 		w._prefabs[eid] = entity
@@ -332,7 +338,6 @@ function world:interface(fullname)
 	local interface = self._interface
 	local res = interface[fullname]
 	if not res then
-		typeclass.import_object(self, "interface", fullname)
 		local object = self._class.interface[fullname]
 		res = setmetatable({}, {__index = object.methodfunc})
 		interface[fullname] = res
@@ -341,14 +346,12 @@ function world:interface(fullname)
 end
 
 function world:connection(fullname, ...)
-	typeclass.import_object(self, "connection", fullname)
 	local object = self._class.connection[fullname]
 	assert(object and object.methodfunc and object.methodfunc.init)
 	object.methodfunc.init(...)
 end
 
 function world:import_component(name)
-	typeclass.import_object(self, "component", name)
 	return self._class.component[name]
 end
 
@@ -379,10 +382,7 @@ end
 
 local m = {}
 
-m.world_base = world
-
-function m.new_world(config,world_class)
-	-- print(world_class.name)
+function m.new_world(config)
 	local w = setmetatable({
 		args = config,
 		_entity = {},	-- entity id set
@@ -395,7 +395,7 @@ function m.new_world(config,world_class)
 		_interface = {},
 		_slots = {},
 		_typeclass = setmetatable({}, { __mode = "kv" }),
-	}, world_class or world)
+	}, world)
 
 	--init event
 	event.init(world)

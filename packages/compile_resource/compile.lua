@@ -111,7 +111,7 @@ local function get_config(ext, config)
     if not config then
         return defalut
     end
-    return set_config(ext, mergetable(config, defalut))
+    return set_config(ext, mergetable(config, defalut.config))
 end
 
 local function do_build(cfg, pathname)

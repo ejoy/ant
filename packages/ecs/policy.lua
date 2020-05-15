@@ -14,11 +14,7 @@ local function create(w, policies)
     for _, name in ipairs(policies) do
         local class = policy_class[name]
         if not class then
-            typeclass.import_object(w, "policy", name)
-            class = policy_class[name]
-            if not class then
-                error(("policy `%s` is not defined."):format(name))
-            end
+            error(("policy `%s` is not defined."):format(name))
         end
         if policyset[name] then
             goto continue
@@ -78,24 +74,29 @@ local function create(w, policies)
             end
         end
     end
+    table.sort(init_component)
+    table.sort(init_connection)
+
     local mark = {}
-    local init_transform = {}
+    local init_process_entity = {}
+    local init_process_prefab = {}
     for _, c in ipairs(solve_depend(component)) do
         local name = reflection[c]
         if name and not mark[name] then
             mark[name] = true
-            init_transform[#init_transform+1] = 
-                transform_class[name].methodfunc.process
-                or transform_class[name].methodfunc.process_prefab
+            init_process_entity[#init_process_entity+1] = transform_class[name].methodfunc.process
+            init_process_prefab[#init_process_prefab+1] = transform_class[name].methodfunc.process_prefab
         end
     end
-    table.sort(init_component)
-    table.sort(init_connection)
-    return init_component, init_transform, init_connection
+
+    return init_component, init_process_prefab, init_process_entity, init_connection
 end
 
 local function add(w, eid, policies)
-    local component, transform = create(w, policies)
+    local component, process_prefab, process_entity, connection = create(w, policies)
+    if #connection > 0 then
+        error "connection can only be imported during instance."
+    end
     local e = w[eid]
     local policy_class = w._class.policy
     local transform_class = w._class.transform
@@ -119,7 +120,7 @@ local function add(w, eid, policies)
             i = i + 1
         end
     end
-    return component, transform
+    return component, process_prefab, process_entity
 end
 
 return {

@@ -10,21 +10,17 @@ local function valid_component(world, name)
 	return tc and tc.methodfunc and tc.methodfunc.init
 end
 
-function assetmgr.load_component(world, name, filename)
-	if not filename or not valid_component(world, name) then
-		local f = assert(fs.open(fs.path(name), 'rb'))
-		local data = f:read 'a'
-		f:close()
-		return datalist.parse(data, function(v)
-			return world:component_init(v[1], v[2])
-		end)
-	end
+local function load_component(world, name, filename)
 	local f = assert(fs.open(fs.path(filename), 'rb'))
 	local data = f:read 'a'
 	f:close()
-	return world:component_init(name, datalist.parse(data, function(v)
+	local res = datalist.parse(data, function(v)
 		return world:component_init(v[1], v[2])
-	end))
+	end)
+	if valid_component(world, name) then
+		return world:component_init(name, res)
+	end
+	return res
 end
 
 local ext_bin = {
@@ -62,7 +58,7 @@ function assetmgr.init()
 			return require("ext_" .. ext).loader(data)
 		else
 			local world = data
-			return assetmgr.load_component(world, ext, filename)
+			return load_component(world, ext, filename)
 		end
 	end
 	local function unloader(ext, res, data)
