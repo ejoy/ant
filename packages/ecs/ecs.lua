@@ -168,7 +168,7 @@ local function create_prefab(w, filename)
 			component = component,
 			transform = transform,
 			connection = connection,
-			dataset = dataset,
+			dataset = e,
 		}
 	end
 	return prefab
