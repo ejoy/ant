@@ -24,10 +24,8 @@ function sm.process(e)
 	local skinning = e.skinning
 	if skinning.type == "GPU" then
 		local fxname = tostring(e.material.fx):match"[^:]+"
-		local fxpath = fs.path(fxname)
-		local gpufxpath = fxpath:parent_path() / (fxpath:stem() .. "_GPU" .. fxpath:extension())
-		local gpufx = assetmgr.load(gpufxpath:string(), {gpu_skinning=true, filename = fxname})
-		e.material = assetmgr.patch(e.material, {fx=gpufx})
+		e.material = assetmgr.patch(e.material, {})
+		e.material.fx = assetmgr.load(fs.path(fxname):replace_extension ".dynamicfx":string(), {gpu_skinning=true, filename = fxname})
 	end
 end
 

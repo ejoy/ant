@@ -33,7 +33,7 @@ local ext_bin = {
 local ext_tmp = {
 	rendermesh 	= true,
 	glbmesh   	= true,
-	gpufx		= true,
+	dynamicfx   = true,
 }
 
 local function resource_load(fullpath, resdata, lazyload)

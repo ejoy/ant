@@ -111,7 +111,7 @@ function mesh_skinning_transform.process(e)
 	e.skinning = {}
 
 	local skinning = e.skinning
-	local skinningtype = "CPU"--"GPU" --setting.get().animation.skinning.type
+	local skinningtype = "GPU" --setting.get().animation.skinning.type
 	skinning.type = skinningtype
 
 	local poseresult = e.pose_result
