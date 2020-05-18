@@ -36,6 +36,23 @@ vec4 transform_skin_position(vec4 pos, ivec4 indices, vec4 weights)
 	return worldpos;
 }
 
+mat4 calc_bone_transform(ivec4 indices, vec4 weights)
+{
+	mat4 wolrdMat = mat4(0, 0, 0, 0, 
+	0, 0, 0, 0, 
+	0, 0, 0, 0, 
+	0, 0, 0, 0);
+	for (int ii = 0; ii < 4; ++ii)
+	{
+		int id = int(indices[ii]);
+		float weight = weights[ii];
+
+		wolrdMat += u_model[id] * weight;
+	}
+
+	return wolrdMat;
+}
+
 mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
 {
 	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
