@@ -61,13 +61,7 @@ end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
     color[4] = 0.6
-    local material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_singlecolor.material"
-    material = assetmgr.patch(material, {})
-    material.properties.uniforms.u_color = world.component:uniform {
-        type= "v4",
-        value = {color},
-    }
-    return world:create_entity {
+    local eid = world:create_entity {
         policy={
             "ant.general|name",
             "ant.render|mesh",
@@ -81,7 +75,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
                 srt = {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
             }),
             mesh = world.component:resource "/pkg/ant.resources/meshes/ring.mesh:scenes.scene1.mesh0.1",
-            material = material,
+            material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_singlecolor.material",
             --can_cast = true,
             can_render = true,
             name = name,
@@ -91,8 +85,17 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
         },
         connection = {
             {"mount", parent}
+        },
+        writable = {
+            material = true,
         }
     }
+    local e = world[eid]
+    e.material.properties.uniforms.u_color = world.component:uniform {
+        type= "v4",
+        value = {color},
+    }
+    return eid
 end
 
 local function create_line_entity(world, name, start_pos,end_pos,color,parent,dir)
@@ -179,13 +182,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
 end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
-    local material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material"
-    material = assetmgr.patch(material, {})
-    material.properties.uniforms.u_color = world.component:uniform {
-        type= "v4",
-        value = {color},
-    }
-    return world:create_entity {
+    local eid = world:create_entity {
         policy = {
             "ant.general|name",
             "ant.render|render",
@@ -199,7 +196,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
                 srt = {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
             }),
             mesh = world.component:resource"/pkg/ant.resources/meshes/cone.mesh:scenes.scene1.pCone1.1",
-            material = material,
+            material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material",
             can_render = true,
             can_select = true,
             name = name,
@@ -208,18 +205,21 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         },
         connection = {
             {"mount", parent}
+        },
+        writable = {
+            material = true,
         }
     }
-end
-
-local function create_box_entity(world, color, size, pos, name,parent,dir)
-    local material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material"
-    material = assetmgr.patch(material, {})
-    material.properties.uniforms.u_color = world.component:uniform {
+    local e = world[eid]
+    e.material.properties.uniforms.u_color = world.component:uniform {
         type= "v4",
         value = {color},
     }
-    return world:create_entity {
+    return eid
+end
+
+local function create_box_entity(world, color, size, pos, name,parent,dir)
+    local eid = world:create_entity {
         policy = {
             "ant.general|name",
             "ant.scene|hierarchy_policy",
@@ -233,7 +233,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
                 srt = {s=size, t=pos},
             }),
             mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1",
-            material = material,
+            material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material",
             can_render = true,
             name = name,
             can_select = true,
@@ -242,8 +242,17 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
         },
         connection = {
             {"mount", parent}
+        },
+        writable = {
+            material = true,
         }
     }
+    local e = world[eid]
+    e.material.properties.uniforms.u_color = world.component:uniform {
+        type= "v4",
+        value = {color},
+    }
+    return eid
 end
 
 local Util = {}

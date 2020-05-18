@@ -24,7 +24,12 @@ local function create_prefab(prefab, srt)
             }
         }
     }
-    return world:instance("res/gltf_animation.prefab", {root = eid})
+    return world:instance(prefab, {
+        connection = {root = eid},
+        writable = {
+            {}
+        },
+    })
 end
 
 function init_loader_sys:init()

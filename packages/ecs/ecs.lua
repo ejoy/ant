@@ -8,6 +8,16 @@ local fs = require "filesystem"
 local world = {}
 world.__index = world
 
+local function deepcopy(t)
+    if type(t) ~= "table" then return t end
+    assert(getmetatable(t) == nil)
+    local copy = {}
+    for k, v in pairs(t) do
+        copy[k] = deepcopy(v)
+    end
+    return copy
+end
+
 local function component_init(w, c, component)
 	local tc = w._class.component[c]
 	if tc and tc.init then
@@ -24,6 +34,22 @@ local function component_delete(w, c, component)
     if tc and tc.delete then
         tc.delete(component)
     end
+end
+
+local function component_copy(w, component)
+	local name = w._typeclass[component]
+	if name then
+		local tc = w._class.component[name]
+		if tc and tc.copy then
+			local res = tc.copy(component)
+			assert(type(res) == "table" or type(res) == "userdata")
+			w._typeclass[res] = name
+			return res
+		end
+		return component
+	else
+		return deepcopy(component)
+	end
 end
 
 local function register_component(w, eid, c)
@@ -85,16 +111,18 @@ end
 
 function world:add_policy(eid, t)
 	local policies, dataset = t.policy, t.data
-	local component, process_prefab, process_entity = policy.add(self, eid, policies)
+	local res = policy.add(self, eid, policies)
 	local e = self[eid]
-	for _, c in ipairs(component) do
+	for _, c in ipairs(res.component) do
 		e[c] = dataset[c]
-		register_component(self, eid, c)
 	end
-	for _, f in ipairs(process_prefab) do
+	for _, f in ipairs(res.process_prefab) do
 		f(e)
 	end
-	for _, f in ipairs(process_entity) do
+	for c in pairs(res.register_component) do
+		register_component(self, eid, c)
+	end
+	for _, f in ipairs(res.process_entity) do
 		f(e)
 	end
 end
@@ -104,10 +132,7 @@ function world:component_init(name, v)
 end
 
 function world:component_delete(name, v)
-	local tc = self._class.component[name]
-	if tc and tc.delete then
-		tc.delete(v)
-	end
+	component_delete(self, name, v)
 end
 
 local function register_entity(w)
@@ -120,27 +145,26 @@ end
 
 local function create_prefab_from_entity(w, t)
 	local policies, dataset = t.policy, t.data
-	local component, process_prefab, process_entity, connection = policy.create(w, policies)
+	local info = policy.create(w, policies)
 	local action = t.connection or {}
-	local args = {}
+	local args = {
+		connection = {}
+	}
 	for i, v in ipairs(action) do
-		args["value_"..i] = v[2]
+		args.connection["value_"..i] = v[2]
 		v[3] = "value_"..i
 		v[2] = 1
 	end
 	local e = {}
-	for _, c in ipairs(component) do
+	for _, c in ipairs(info.component) do
 		e[c] = dataset[c]
 	end
-	for _, f in ipairs(process_prefab) do
+	for _, f in ipairs(info.process_prefab) do
 		f(e)
 	end
 	return {
 		entities = {{
-			policy = policies,
-			component = component,
-			process_entity = process_entity,
-			connection = connection,
+			policy = info,
 			dataset = e,
 		}},
 		connection = action,
@@ -164,19 +188,16 @@ local function create_prefab(w, filename)
 	}
 	for i = 2, #t do
 		local policies, dataset = t[i].policy, t[i].data
-		local component, process_prefab, process_entity, connection = policy.create(w, policies)
+		local info = policy.create(w, policies)
 		local e = {}
-		for _, c in ipairs(component) do
+		for _, c in ipairs(info.component) do
 			e[c] = dataset[c]
 		end
-		for _, f in ipairs(process_prefab) do
+		for _, f in ipairs(info.process_prefab) do
 			f(e)
 		end
 		prefab.entities[i-1] = {
-			policy = policies,
-			component = component,
-			process_entity = process_entity,
-			connection = connection,
+			policy = info,
 			dataset = e,
 		}
 	end
@@ -188,13 +209,17 @@ local function instance(w, prefab, args)
 	for i, entity in ipairs(prefab.entities) do
 		local eid = register_entity(w)
 		local e = w[eid]
-		for _, c in ipairs(entity.component) do
+		for c in pairs(entity.policy.register_component) do
 			register_component(w, eid, c)
 		end
 		for k, v in pairs(entity.dataset) do
-			e[k] = v
+			if entity.policy.writable[k] or (args and args.writable and args.writable[i] and args.writable[i][k]) then
+				e[k] = component_copy(w, v)
+			else
+				e[k] = v
+			end
 		end
-		for _, f in ipairs(entity.process_entity) do
+		for _, f in ipairs(entity.policy.process_entity) do
 			f(e)
 		end
 		w._prefabs[eid] = entity
@@ -204,7 +229,7 @@ local function instance(w, prefab, args)
 		local name, source, target = connection[1], connection[2], connection[3]
 		local object = w._class.connection[name]
 		assert(object and object.init)
-		object.init(w[res[source]], res[target] or args[target] or nil)
+		object.init(w[res[source]], res[target] or args.connection[target] or nil)
 	end
 	return res
 end
