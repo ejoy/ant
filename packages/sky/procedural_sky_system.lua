@@ -336,11 +336,11 @@ end
 local timer = world:interface "ant.timer|timer"
 
 function sun_sys:update_sun()
-	local delta = timer.delta()
-	for _, eid in world:each "procedural_sky" do
-		local e = world[eid]
-		local skycomp = e.procedural_sky
-		update_hour(skycomp, delta)
-		calc_sun_direction(skycomp)
-	end
+	-- local delta = timer.delta()
+	-- for _, eid in world:each "procedural_sky" do
+	-- 	local e = world[eid]
+	-- 	local skycomp = e.procedural_sky
+	-- 	update_hour(skycomp, delta)
+	-- 	skycomp._sundir.v = calc_sun_direction(skycomp)
+	-- end
 end
