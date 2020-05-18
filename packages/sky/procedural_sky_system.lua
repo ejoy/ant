@@ -283,7 +283,7 @@ local function fetch_value_operation(t)
 				result = math3d.lerp(t[li], t[hi], mu.ratio(li, hi, time))
 			end
 
-			cache[time] = result
+			cache[time] = math3d.ref(result)
 		end
 		
 		return result
@@ -299,8 +299,8 @@ local function update_sky_parameters(skyentity)
 
 	local hour = skycomp.which_hour
 
-	sky_uniforms["u_sunDirection"][1].v 		= skycomp._sundir
-	sky_uniforms["u_sunLuminance"][1].v 		= xyz2rgb(sun_luminance_fetch(hour))
+	sky_uniforms["u_sunDirection"][1].v 	= skycomp._sundir
+	sky_uniforms["u_sunLuminance"][1].v 	= xyz2rgb(sun_luminance_fetch(hour))
 	sky_uniforms["u_skyLuminanceXYZ"][1].v 	= sky_luminance_fetch(hour)
 	shader_parameters[4] = hour
 	sky_uniforms["u_parameters"][1].v		= shader_parameters
