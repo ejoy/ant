@@ -1,18 +1,21 @@
-local typeclass = require "typeclass"
-
 local function create(w, policies)
-    local policy_class = w._class.policy
-    local transform_class = w._class.transform
     local solve_depend = require "solve_depend"
+    local res = {
+        policy = policies,
+        component = {},
+        register_component = {},
+        connection = {},
+        process_entity = {},
+        process_prefab = {},
+        readonly = {},
+        writable = {},
+    }
     local transform = {}
-    local component = {}
-    local init_component = {}
     local connection = {}
-    local init_connection = {}
     local policyset = {}
     local unionset = {}
     for _, name in ipairs(policies) do
-        local class = policy_class[name]
+        local class = w._class.policy[name]
         if not class then
             error(("policy `%s` is not defined."):format(name))
         end
@@ -32,15 +35,15 @@ local function create(w, policies)
             end
         end
         for _, v in ipairs(class.component) do
-            if not component[v] then
-                component[v] = {depend={}}
-                init_component[#init_component+1] = v
+            if not res.register_component[v] then
+                res.register_component[v] = true
+                res.component[#res.component+1] = v
             end
         end
         for _, v in ipairs(class.connection) do
             if not connection[v] then
                 connection[v] = true
-                init_connection[#init_connection+1] = v
+                res.connection[#res.connection+1] = v
             end
         end
         ::continue::
@@ -50,54 +53,73 @@ local function create(w, policies)
     end
     local reflection = {}
     for name in pairs(transform) do
-        local class = transform_class[name]
+        local class = w._class.transform[name]
+        for _, v in ipairs(class.input) do
+            if not reflection[v] then
+                reflection[v] = {depend={}}
+            end
+        end
         for _, v in ipairs(class.output) do
-            if not component[v] then
-                component[v] = {depend={}}
-                init_component[#init_component+1] = v
+            if not reflection[v] then
+                reflection[v] = {depend={}}
             end
-            if reflection[v] then
-                error(("transform `%s` and transform `%s` has same output."):format(name, reflection[v]))
+            if reflection[v].name then
+                error(("transform `%s` and transform `%s` has same output."):format(name, reflection[v].name))
+            else
+                reflection[v].name = name
             end
-            reflection[v] = name
             if class.input then
-                if not component[v] then
-                    component[v] = {depend={}}
-                end
-                table_append(component[v].depend, class.input)
+                table_append(reflection[v].depend, class.input)
             end
         end
     end
-    table.sort(init_component)
-    table.sort(init_connection)
 
     local mark = {}
-    local init_process_entity = {}
-    local init_process_prefab = {}
-    for _, c in ipairs(solve_depend(component)) do
-        local name = reflection[c]
+    for _, c in ipairs(solve_depend(reflection)) do
+        local name = reflection[c].name
         if name and not mark[name] then
             mark[name] = true
-            init_process_entity[#init_process_entity+1] = transform_class[name].process
-            init_process_prefab[#init_process_prefab+1] = transform_class[name].process_prefab
+            local class = w._class.transform[name]
+            if class.process_prefab then
+                res.process_prefab[#res.process_prefab+1] = class.process_prefab
+                for _, v in ipairs(class.input) do
+                    res.readonly[v] = true
+                end
+                for _, v in ipairs(class.output) do
+                    res.readonly[v] = true
+                    res.register_component[v] = true
+                end
+            end
+            if class.process then
+                res.process_entity[#res.process_entity+1] = class.process
+                for _, v in ipairs(class.output) do
+                    res.register_component[v] = true
+                end
+            end
         end
     end
 
-    return init_component, init_process_prefab, init_process_entity, init_connection
+    for v in pairs(res.writable) do
+        if res.readonly[v] then
+            error(("component `%s` cannot be writable."):format(v))
+        end
+    end
+
+    table.sort(res.component)
+    table.sort(res.connection)
+    return res
 end
 
 local function add(w, eid, policies)
-    local component, process_prefab, process_entity, connection = create(w, policies)
-    if #connection > 0 then
+    local res = create(w, policies)
+    if #res.connection > 0 then
         error "connection can only be imported during instance."
     end
     local e = w[eid]
-    local policy_class = w._class.policy
-    local transform_class = w._class.transform
     for _, policy_name in ipairs(policies) do
-        local class = policy_class[policy_name]
+        local class = w._class.policy[policy_name]
         for _, transform_name in ipairs(class.transform) do
-            local class = transform_class[transform_name]
+            local class = w._class.transform[transform_name]
             for _, v in ipairs(class.output) do
                 if e[v] ~= nil then
                     error(("component `%s` already exists, it conflicts with policy `%s`."):format(v, policy_name))
@@ -106,15 +128,15 @@ local function add(w, eid, policies)
         end
     end
     local i = 1
-    while i <= #component do
-        local c = component[i]
+    while i <= #res.component do
+        local c = res.component[i]
         if e[c] ~= nil then
-            table.remove(component, i)
+            table.remove(res.component, i)
         else
             i = i + 1
         end
     end
-    return component, process_prefab, process_entity
+    return res
 end
 
 return {
