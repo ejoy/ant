@@ -56,7 +56,7 @@ function system.solve(w)
 	for fullname, s in sortpairs(w._class.system) do
 		local packname, name = splitname(fullname)
 		local proxy = {}
-		for step_name, func in pairs(s.methodfunc) do
+		for step_name, func in pairs(s) do
 			table.insert(res[step_name], { func, proxy, name, step_name, packname })
 		end
 	end
@@ -75,15 +75,12 @@ function system.solve(w)
 	for name in pairs(mark) do
 		error(("pipeline is missing step `%s`, which is defined in system `%s`"):format(name, res[name][1][3]))
 	end
-	w._systems = {
-		steps = res,
-		pipeline = w._class.pipeline,
-	}
+	w._systems = res
 end
 
 function system.lists(w, what)
 	local res = {}
-	solve_depend(res, w._systems.steps, w._systems.pipeline, what)
+	solve_depend(res, w._systems, w._class.pipeline, what)
 	return res
 end
 

@@ -147,10 +147,10 @@ function stringify_value(n, prefix, v)
     if type(v) == "table" or type(v) == "userdata" then
         local typename = world._typeclass[v]
         if typename then
-            local tc = world:import_component(typename)
-            if tc and tc.methodfunc and tc.methodfunc.init then
-                if tc.methodfunc.save then
-                    v = tc.methodfunc.save(v)
+            local tc = world._class.component[typename]
+            if tc and tc.init then
+                if tc.save then
+                    v = tc.save(v)
                     return stringify_value(n, prefix.." $"..typename, v)
                 end
                 prefix = prefix.." $"..typename

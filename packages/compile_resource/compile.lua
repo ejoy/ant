@@ -60,6 +60,7 @@ local function set_config(ext, config)
     local root = vfs.repo()._root
     cfg.compiler = info.compiler
     cfg.config = config
+    cfg.hash = hash
     cfg.binpath = root / ".build" / ext / (info.name.."_"..hash)
     cfg.deppath = root / ".dep" / ext / (info.name.."_"..hash)
     lfs.create_directories(cfg.binpath)
@@ -160,7 +161,8 @@ local function compile(filename, config)
     if not cfg then
         return pathstring
     end
-    local cachepath = cache[pathstring]
+    local keystring = cfg.hash .. pathstring
+    local cachepath = cache[keystring]
     if cachepath then
         return cachepath
     end
@@ -168,7 +170,7 @@ local function compile(filename, config)
     if not do_build(cfg, pathname) or not lfs.exists(outpath) then
         do_compile(cfg, pathname, outpath)
     end
-    cache[pathstring] = outpath
+    cache[keystring] = outpath
     return outpath
 end
 

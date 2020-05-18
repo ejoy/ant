@@ -26,18 +26,12 @@ local function create(w, policies)
             end
             unionset[class.union] = name
         end
-        for _, v in ipairs(class.require_transform) do
+        for _, v in ipairs(class.transform) do
             if not transform[v] then
                 transform[v] = {}
             end
         end
         for _, v in ipairs(class.component) do
-            if not component[v] then
-                component[v] = {depend={}}
-                init_component[#init_component+1] = v
-            end
-        end
-        for _, v in ipairs(class.unique_component) do
             if not component[v] then
                 component[v] = {depend={}}
                 init_component[#init_component+1] = v
@@ -84,8 +78,8 @@ local function create(w, policies)
         local name = reflection[c]
         if name and not mark[name] then
             mark[name] = true
-            init_process_entity[#init_process_entity+1] = transform_class[name].methodfunc.process
-            init_process_prefab[#init_process_prefab+1] = transform_class[name].methodfunc.process_prefab
+            init_process_entity[#init_process_entity+1] = transform_class[name].process
+            init_process_prefab[#init_process_prefab+1] = transform_class[name].process_prefab
         end
     end
 
@@ -102,7 +96,7 @@ local function add(w, eid, policies)
     local transform_class = w._class.transform
     for _, policy_name in ipairs(policies) do
         local class = policy_class[policy_name]
-        for _, transform_name in ipairs(class.require_transform) do
+        for _, transform_name in ipairs(class.transform) do
             local class = transform_class[transform_name]
             for _, v in ipairs(class.output) do
                 if e[v] ~= nil then

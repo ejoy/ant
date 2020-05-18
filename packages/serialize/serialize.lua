@@ -11,8 +11,8 @@ local function prefab(w, entities, args)
         local connections = w._prefabs[eid].connection
         for _, name in ipairs(connections) do
             local object = w._class.connection[name]
-            assert(object and object.methodfunc and object.methodfunc.save)
-            local res = object.methodfunc.save(w[eid])
+            assert(object and object.save)
+            local res = object.save(w[eid])
             if args[i] and args[i][name] then
                 out[#out+1] = ("{%s %d %s}"):format(name, i, args[i][name])
             elseif slot[res] then
