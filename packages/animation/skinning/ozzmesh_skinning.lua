@@ -7,6 +7,11 @@ local animodule = require "hierarchy.animation"
 
 local bgfx      = require "bgfx"
 
+local ozz_st_transform = ecs.transform "ozz_skinning_type_transform"
+function ozz_st_transform.process_prefab(e)
+	e.skinning_type = "CPU"
+end
+
 local ozzmesh_skinning_transform = ecs.transform "ozzmesh_skinning"
 
 local function find_layout(shortname, layouts)
@@ -125,10 +130,11 @@ local function patch_dynamic_buffer(ozzmesh, meshscene)
 end
 
 function ozzmesh_skinning_transform.process(e)
+	assert(e.skinning_type == "CPU")
+
 	e.skinning = {}
 
 	local skincomp = e.skinning
-	skincomp.type = "CPU"
 	local meshres 	= e.mesh._handle
 	e.rendermesh = patch_dynamic_buffer(meshres, e.rendermesh)
 	local meshscene = e.rendermesh

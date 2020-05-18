@@ -8,21 +8,9 @@ local assetmgr 	= import_package "ant.asset"
 local fs 		= require "filesystem"
 
 local sm = ecs.transform "skinning_material"
--- local function path_table(path, t)
--- 	local last = t
--- 	for m in path:gmatch "[^/]+" do
--- 		local c = last[m]
--- 		if c == nil then
--- 			c = {}
--- 			last[m] = c
--- 		end
--- 		last = c
--- 	end
--- end
 
-function sm.process(e)
-	local skinning = e.skinning
-	if skinning.type == "GPU" then
+function sm.process_prefab(e)
+	if e.skinning_type == "GPU" then
 		local fxname = tostring(e.material.fx):match"[^:]+"
 		e.material = assetmgr.patch(e.material, {})
 		e.material.fx = assetmgr.load(fs.path(fxname):replace_extension ".dynamicfx":string(), {gpu_skinning=true, filename = fxname})
@@ -41,7 +29,7 @@ function skinning_sys:skin_mesh()
 		local pr = e.pose_result
 		animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap)
 
-		if skinning.type == "CPU" then
+		if e.skinning_type == "CPU" then
 			for _, job in ipairs(skinning.jobs) do
 				local handle = job.hwbuffer_handle
 				local updatedata = job.updatedata

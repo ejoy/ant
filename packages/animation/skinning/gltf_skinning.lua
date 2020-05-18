@@ -11,6 +11,11 @@ local bgfx = require "bgfx"
 
 local animodule = require "hierarchy.animation"
 
+local st_trans = ecs.transform "skinning_type_transform"
+function st_trans.process_prefab(e)
+	e.skinning_type  = setting.get().animation.skinning.type
+end
+
 local mesh_skinning_transform = ecs.transform "mesh_skinning"
 
 local function find_elem(namecode, layout_elems)
@@ -111,14 +116,12 @@ function mesh_skinning_transform.process(e)
 	e.skinning = {}
 
 	local skinning = e.skinning
-	local skinningtype = "GPU" --setting.get().animation.skinning.type
-	skinning.type = skinningtype
 
 	local poseresult = e.pose_result
 	skinning.skinning_matrices = animodule.new_bind_pose(poseresult:count())
 	skinning.skin = e.rendermesh.skin
 
-	if skinningtype == "CPU" then
+	if e.skinning_type == "CPU" then
 		build_cpu_skinning_jobs(e, skinning)
 	end
 end

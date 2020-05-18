@@ -5,6 +5,6 @@ system "skinning_system"
 
 transform "skinning_material"
     .implement "skinning/skinning_system.lua"
-    .input "skinning"
+    .input "skinning_type"
     .output "material"
-    .method "process"
+    .method "process_prefab"
