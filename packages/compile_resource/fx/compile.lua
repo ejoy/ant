@@ -65,8 +65,9 @@ local function add_macros_from_surface_setting(mysetting, surfacetype, macros)
 		macros[#macros+1] = "BLOOM_ENABLE"
 	end
 
-	if mysetting.macros then
-		table.move(mysetting.macros, 1, #mysetting.macros, 1, macros)
+	local compile_macros = mysetting.graphic.compile.macros
+	if compile_macros and #compile_macros > 0 then
+		table.move(compile_macros, 1, #compile_macros, 1, macros)
 	end
 
 	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"

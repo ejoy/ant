@@ -48,20 +48,27 @@ local function load_shader(path, name)
     return h
 end
 
+local compile_setting = {}
+local compile_config = {
+    setting = {
+        graphic = {
+            compile = compile_setting
+        }
+    }
+}
+
 local function compile(filename, setting)
     if setting == nil then
         return cr.compile(filename)
     end
 
     local macros = {}
-    local config = {
-        macros = macros
-    }
     if setting.gpu_skinning then
         macros[#macros+1] = "GPU_SKINNING"
     end
+    compile_setting.macros = macros
 
-    return cr.compile(filename, config)
+    return cr.compile(filename, compile_config)
 end
 
 local function loader(filename, setting)
