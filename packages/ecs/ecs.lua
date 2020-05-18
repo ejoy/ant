@@ -41,7 +41,10 @@ local function component_copy(w, component)
 	if name then
 		local tc = w._class.component[name]
 		if tc and tc.copy then
-			return tc.copy(component)
+			local res = tc.copy(component)
+			assert(type(res) == "table" or type(res) == "userdata")
+			w._typeclass[res] = name
+			return res
 		end
 		return component
 	else
