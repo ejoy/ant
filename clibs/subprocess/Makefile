@@ -4,7 +4,7 @@ default : subprocess.dll
 
 OBJS = $(ODIR)/lsubprocess.o $(ODIR)/file_helper.o 
 ifeq "$(PLAT)" "mingw"
-OBJS += $(ODIR)/subprocess_win.o
+OBJS += $(ODIR)/subprocess_win.o  -lole32
 else ifeq "$(PLAT)" "osx"
 OBJS += $(ODIR)/subprocess_posix.o
 endif
@@ -24,7 +24,7 @@ $(ODIR)/subprocess_posix.o : subprocess_posix.cpp subprocess.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/subprocess.dll : $(OBJS)
-	$(CC) $(CFLAGS) $(LD_SHARED) $(LUALIB) -o $@ $^ -lstdc++ -lole32
+	$(CC) $(CFLAGS) $(LD_SHARED) $(LUALIB) -o $@ $^ -lstdc++
 
 subprocess.dll: $(ODIR)/subprocess.dll | $(ODIR)
 	cp $^ $@
