@@ -29,6 +29,7 @@ vfs.new(fs.path(arg[0]):remove_filename())
 local pm = require "antpm"
 pm.initialize()
 import_package = pm.import
+import_package "ant.asset".init()
 require "common.log"
 
 print_r 	= require "editor.print_r".print_r
