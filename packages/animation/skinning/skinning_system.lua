@@ -23,13 +23,13 @@ local skinning_sys = ecs.system "skinning_system"
 function skinning_sys:skin_mesh()
 	for _, eid in world:each "skinning" do
 		local e = world[eid]
-		local skinning = e.skinning
-		local skin = skinning.skin
-		local skinning_matrices = skinning.skinning_matrices
-		local pr = e.pose_result
-		animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap)
-
 		if e.skinning_type == "CPU" then
+			local skinning = e.skinning
+			local skin = skinning.skin
+			local skinning_matrices = skinning.skinning_matrices
+			local pr = e.pose_result
+			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap)
+
 			for _, job in ipairs(skinning.jobs) do
 				local handle = job.hwbuffer_handle
 				local updatedata = job.updatedata

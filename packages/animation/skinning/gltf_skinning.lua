@@ -13,7 +13,7 @@ local animodule = require "hierarchy.animation"
 
 local st_trans = ecs.transform "skinning_type_transform"
 function st_trans.process_prefab(e)
-	e.skinning_type  = setting.get().animation.skinning.type
+	e.skinning_type  = "GPU" --setting.get().animation.skinning.type
 end
 
 local mesh_skinning_transform = ecs.transform "mesh_skinning"

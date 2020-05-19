@@ -119,7 +119,7 @@ function init_loader_sys:init()
 
     computil.create_grid_entity(world)
 
-    local eid = computil.create_procedural_sky(world)
+    computil.create_procedural_sky(world)
     --target_lock_test()
 end
 

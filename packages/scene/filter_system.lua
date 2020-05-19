@@ -65,10 +65,10 @@ function prim_filter_sys:filter_primitive()
 				local resulttarget = assert(filter.result[m.fx.surface_type.transparency])
 				local trans = ce.transform
 				local skinning = ce.skinning
-				if skinning and skinning.type == "GPU" then
+				if skinning and ce.skinning_type == "GPU" then
 					local skin = primgroup.skin
 					local sm = skinning.skinning_matrices
-					animoudle.build_skinning_matrices(sm, ce.pose_result, skin.inverse_bind_pose, skin.joint_remap, trans._world)
+					animoudle.build_skinning_matrices(sm, ce.pose_result, skin.inverse_bind_pose, skin.joint_remap, trans._world.p)
 					trans._skinning_matrices = sm
 				end
 				add_result(eid, primgroup, m, trans, resulttarget)
