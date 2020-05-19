@@ -30,11 +30,4 @@ local pm = require "antpm"
 pm.initialize()
 import_package = pm.import
 import_package "ant.asset".init()
-require "common.log"
-
-print_r 	= require "editor.print_r".print_r
-dump_a 		= require "editor.print_r".dump_a
-print_a 	= require "editor.print_r".print_a
-
-log 		= require "editor.log"
-
+require "editor.log"
