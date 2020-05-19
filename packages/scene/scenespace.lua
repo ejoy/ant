@@ -10,7 +10,6 @@ function m.save(e)
     return e.parent
 end
 
-
 local t = ecs.component "transform"
 
 function t:init()
@@ -23,7 +22,20 @@ local tt = ecs.transform "transform_transform"
 function tt.process(e)
 	local lt = e.transform.lock_target
 	if lt and e.parent == nil then
-		error(string.format("'lock_target' defined in 'transform' component, but 'parent' component not define in entity"))
+		error("'lock_target' defined in 'transform' component, but 'parent' component not define in entity")
+	end
+
+	local slot = e.transform.slot
+	if slot then
+		if e.parent == nil then
+			error("'slot' defined in 'transform' component, but 'parent' component not define")
+		end
+
+		local pe = world[e.parent]
+		if pe.skeleton == nil then
+			error("'slot' defined in 'transform' component, it need parent entity define 'skeleton' componet")
+		end
+		e.transform._slot_jointidx = pe.skeleton:joint_index(slot)
 	end
 end
 
@@ -106,6 +118,13 @@ local function combine_parent_transform(e, trans)
 		if ptrans then
 			local pw = ptrans._world
 			trans._world.m = math3d.mul(pw, trans._world)
+		end
+
+		local s = trans._slot_jointidx
+		if s then
+			local ske = e.skeleton
+			local t = ske:joint(s)
+			trans._world.m = math3d.mul(t, trans._world)
 		end
 	end
 end
