@@ -111,9 +111,11 @@ local function combine_parent_transform(e, trans)
 end
 
 local function update_bounding(trans, e)
-	local bounding = e.rendermesh.bounding
-	if bounding then
-		trans._aabb = math3d.aabb_transform(trans._world, bounding.aabb)
+	if e.rendermesh then
+		local bounding = e.rendermesh.bounding
+		if bounding then
+			trans._aabb = math3d.aabb_transform(trans._world, bounding.aabb)
+		end
 	end
 end
 
