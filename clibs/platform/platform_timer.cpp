@@ -19,10 +19,10 @@ static int64_t get_frequency() {
 static int64_t get_counter() {
 	struct timeval now;
 	gettimeofday(&now, 0);
-	return now.tv_sec * 1000000i64 + now.tv_usec;
+	return now.tv_sec * 1000000ll + now.tv_usec;
 }
 static int64_t get_frequency() {
-	return 1000000i64;
+	return 1000000ll;
 }
 #endif
 
