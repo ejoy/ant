@@ -222,7 +222,6 @@ int window_init(struct ant_window_callback* cb) {
 }
 
 int window_create(struct ant_window_callback* cb, int w, int h) {
-    (void)sz;
     NSRect rc = NSMakeRect(0, 0, w, h);
 	NSUInteger uiStyle = 0
 		| NSWindowStyleMaskTitled
