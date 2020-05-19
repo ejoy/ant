@@ -7,7 +7,7 @@ local anitest_sys = ecs.system "animation_test_system"
 local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 
 local function ozzmesh_animation_test()
-    return world:create_entity((entitydir / "ozz_animation_sample.txt"):string())
+    return world:instance((entitydir / "ozz_animation_sample.prefab"):string())
 end
 
 local function gltf_animation_test()
@@ -36,6 +36,6 @@ local function print_ske(ske)
 end
 
 function anitest_sys:init()
-    --ozzmesh_animation_test()
+    ozzmesh_animation_test()
     gltf_animation_test()
 end
