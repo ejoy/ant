@@ -13,7 +13,7 @@ end
 local function gltf_animation_test()
     -- local computil = import_package "ant.render".components
     -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/simple_skin.mesh"
-    world:instance((entitydir / "gltf_animation.prefab"):string())
+    return world:instance((entitydir / "gltf_animation.prefab"):string())
     --world:instance((entitydir / "simple_skin.prefab"):string())
 end
 
@@ -35,7 +35,14 @@ local function print_ske(ske)
     end
 end
 
+local function bind_slot_entity(parenteid)
+    local e = world[parenteid]
+    print_ske(e.skeleton._handle)
+    world:instance((entitydir / "cube.prefab"):string(), {connection= {root=parenteid}})
+end
+
 function anitest_sys:init()
     ozzmesh_animation_test()
-    gltf_animation_test()
+    local res = gltf_animation_test()
+    bind_slot_entity(res[1])
 end

@@ -17,28 +17,6 @@ function t:init()
     return self
 end
 
-local tt = ecs.transform "transform_transform"
-
-function tt.process(e)
-	local lt = e.transform.lock_target
-	if lt and e.parent == nil then
-		error("'lock_target' defined in 'transform' component, but 'parent' component not define in entity")
-	end
-
-	local slot = e.transform.slot
-	if slot then
-		if e.parent == nil then
-			error("'slot' defined in 'transform' component, but 'parent' component not define")
-		end
-
-		local pe = world[e.parent]
-		if pe.skeleton == nil then
-			error("'slot' defined in 'transform' component, it need parent entity define 'skeleton' componet")
-		end
-		e.transform._slot_jointidx = pe.skeleton:joint_index(slot)
-	end
-end
-
 local sp_sys = ecs.system "scenespace_system"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
@@ -50,10 +28,25 @@ local eremove_mb = world:sub {"entity_removed"}
 local hie_scene = require "hierarchy.scene"
 local scenequeue = hie_scene.queue()
 
+local function bind_slot_entity(e)
+	local trans = e.transform
+	local peid = e.parent
+	if peid and trans and trans.slot then
+		local pe = world[peid]
+		local pr = pe.pose_result
+		if pr and pe.skeleton then
+			local ske = assert(pe.skeleton)._handle
+			trans._slot_jointidx = ske:joint_index(trans.slot)
+		end
+	end
+end
+
 function sp_sys:update_hierarchy_scene()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
-        scenequeue:mount(eid, e.parent or 0)
+		scenequeue:mount(eid, e.parent or 0)
+
+		bind_slot_entity(e)
     end
 
     local needclear
@@ -114,25 +107,28 @@ local function combine_parent_transform(e, trans)
 	if peid then
 		local pe = world[peid]
 		local ptrans = pe.transform
-		
+		-- need before ptrans._world applied
+		local s = trans._slot_jointidx
+		local pr = pe.pose_result
+		if s and pr then
+			local t = pr:joint(s)
+			trans._world.m = math3d.mul(t, trans._world)
+		end
+
 		if ptrans then
 			local pw = ptrans._world
 			trans._world.m = math3d.mul(pw, trans._world)
-		end
-
-		local s = trans._slot_jointidx
-		if s then
-			local ske = e.skeleton
-			local t = ske:joint(s)
-			trans._world.m = math3d.mul(t, trans._world)
 		end
 	end
 end
 
 local function update_bounding(trans, e)
-	local bounding = e.rendermesh.bounding
-	if bounding then
-		trans._aabb = math3d.aabb_transform(trans._world, bounding.aabb)
+	local primgroup = e.rendermesh
+	if primgroup then
+		local bounding = primgroup.bounding
+		if bounding then
+			trans._aabb = math3d.aabb_transform(trans._world, bounding.aabb)
+		end
 	end
 end
 

@@ -57,9 +57,6 @@ get_joint_index(lua_State *L, const ozz::animation::Skeleton *ske, int index) {
 	int jointidx = -1;
 	if (type == LUA_TNUMBER) {
 		jointidx = (int)lua_tointeger(L, 2) - 1;
-	} else if (type == LUA_TSTRING) {
-		const char* slotname = lua_tostring(L, 2);
-		jointidx = find_joint_index(ske, slotname);
 	} else {
 		luaL_error(L, "only support integer[joint index] or string[joint name], type : %d", type);
 		return -1;
@@ -205,7 +202,7 @@ lbuilddata_joint(lua_State *L) {
 	auto *r = (float*)lua_touserdata(L, 3);
 
 	const auto trans = joint_matrix(ske, jointidx);
-	assert(sizeof(trans) < sizeof(float) * 16);
+	assert(sizeof(trans) <= sizeof(float) * 16);
 	memcpy(r, &trans, sizeof(trans));
 	return 0;
 }

@@ -1,0 +1,20 @@
+---
+{mount 1 root}
+---
+policy:
+    ant.render|render
+    ant.render|mesh
+    ant.scene|hierarchy_policy
+    ant.scene|transform_policy
+    ant.general|name
+data:
+    transform: $transform
+        srt: $srt
+            s: {10, 10, 10, 0}
+            t: {0, 0, 8, 1}
+        slot: "mixamorig:Head"
+    material: $resource /pkg/ant.resources/materials/bunny.material
+    mesh: $resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1"
+    can_render: true
+    scene_entity: true
+    name: slot_cube

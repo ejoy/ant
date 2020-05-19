@@ -20,13 +20,7 @@ connection "mount"
     .method "save"
 
 policy "transform_policy"
-    .require_transform "transform_transform"
     .component "transform"
-
-transform "transform_transform"
-    .implement "scenespace.lua"
-    .output "transform"
-    .method "process"
 
 component "transform"
     .implement "scenespace.lua"
