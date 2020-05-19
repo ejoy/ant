@@ -107,7 +107,7 @@ local function combine_parent_transform(e, trans)
 	if peid then
 		local pe = world[peid]
 		local ptrans = pe.transform
-		-- need before ptrans._world applied
+		-- need apply before ptrans._world
 		local s = trans._slot_jointidx
 		local pr = pe.pose_result
 		if s and pr then
