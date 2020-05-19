@@ -25,7 +25,7 @@ $(ODIR)/ik.o: ik.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
 
 $(ODIR)/animation.o: animation.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
+	$(CXX) -c $(CFLAGS) -fdeclspec -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
 
 $(ODIR)/ozzmesh.o: ozzmesh.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
