@@ -110,6 +110,13 @@ local function combine_parent_transform(e, trans)
 	end
 end
 
+local function update_bounding(trans, e)
+	local bounding = e.rendermesh.bounding
+	if bounding then
+		trans._aabb = math3d.aabb_transform(trans._world, bounding.aabb)
+	end
+end
+
 local function update_transform(eid)
 	--update local info
 	local e = world[eid]
@@ -126,21 +133,8 @@ local function update_transform(eid)
 		else
 			combine_parent_transform(e, trans)
 		end
-	end
-end
 
-local animoudle = require "hierarchy.animation"
-
-local function update_renderdata(eid)
-	local e = world[eid]
-	local primgroup = e.rendermesh
-	if primgroup then
-		local bounding = primgroup.bounding
-		local trans = e.transform
-		local worldmat = trans._world
-		if bounding then
-			trans._aabb = math3d.aabb_transform(trans._world, bounding.aabb)
-		end
+		update_bounding(trans, e)
 	end
 end
 
@@ -149,7 +143,6 @@ function sp_sys:update_transform()
 		-- hierarchy scene can do everything relative to hierarchy, such as:
 		-- hierarhcy visible/material/transform, and another reasonable data
 		update_transform(eid)
-		update_renderdata(eid)
 	end
 end
 
