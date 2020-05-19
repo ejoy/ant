@@ -379,6 +379,29 @@ namespace ant::posix::subprocess {
         return pid;
     }
 
+#if defined(__APPLE__)
+    static bool no_inherit(int s) {
+        int r;
+        do
+            r = ioctl(s, FIOCLEX);
+        while (r == -1 && errno == EINTR);
+        return !r;
+    }
+#endif
+
+    static bool blockpair(int sv[2]) {
+#if defined(__APPLE__)
+        bool ok = 0 == ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+        if (ok) {
+            no_inherit(sv[0]);
+            no_inherit(sv[1]);
+        }
+        return ok;
+#else
+        return 0 == ::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv);
+#endif
+    }
+
     namespace pipe {
         FILE* open_result::open_read() {
             return file::open_read(rd);
@@ -388,7 +411,7 @@ namespace ant::posix::subprocess {
         }
         open_result open() {
             int fds[2];
-            if (!net::socket::blockpair(fds)) {
+            if (!blockpair(fds)) {
                 return { file::handle::invalid(), file::handle::invalid() };
             }
             return { file::handle(fds[0]), file::handle(fds[1]) };

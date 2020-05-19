@@ -1,6 +1,5 @@
 include $(ANT3RD)/../clibs/bgfx/bgfx_define.mk
 include $(ANT3RD)/../clibs/hierarchy/ozz_define.mk
-include $(ANT3RD)/../clibs/bullet/bullet.mk
 include $(ANT3RD)/../clibs/rp3d/rp3d.mk
 
 ifeq "$(PLAT)" "mingw"

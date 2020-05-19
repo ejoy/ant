@@ -30,6 +30,7 @@ function callback.init(nwh, context, width, height)
 	config.height = height
 	world = ecs.new_world(config)
 	common.init_world(world)
+	world:pub {"resize", width, height}
 	world:update_func "init" ()
 	world_update = world:update_func "update"
 	world_exit   = world:update_func "exit"
