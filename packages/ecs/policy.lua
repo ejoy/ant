@@ -93,6 +93,7 @@ local function create(w, policies)
             if class.process then
                 res.process_entity[#res.process_entity+1] = class.process
                 for _, v in ipairs(class.output) do
+                    res.writable[v] = true
                     res.register_component[v] = true
                 end
             end
