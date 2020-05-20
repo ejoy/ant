@@ -65,9 +65,11 @@ local function add_macros_from_surface_setting(mysetting, surfacetype, macros)
 		macros[#macros+1] = "BLOOM_ENABLE"
 	end
 
-	local compile_macros = mysetting.graphic.compile.macros
-	if compile_macros and #compile_macros > 0 then
-		table.move(compile_macros, 1, #compile_macros, 1, macros)
+	if mysetting.graphic.compile then
+		local compile_macros = mysetting.graphic.compile.macros
+		if compile_macros and #compile_macros > 0 then
+			table.move(compile_macros, 1, #compile_macros, 1, macros)
+		end
 	end
 
 	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"
@@ -114,7 +116,7 @@ local function load_surface_type(fxcontent)
 end
 
 return function (config, srcfilepath, outpath, localpath)
-	local fxcontent = fs_local.datalist(srcfilepath:localpath())
+	local fxcontent = fs_local.datalist(srcfilepath)
 	load_surface_type(fxcontent)
 	local setting = config.setting
 	local marcros 	= add_macros_from_surface_setting(setting, fxcontent.surface_type, fxcontent.macros)

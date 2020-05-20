@@ -234,15 +234,15 @@ end
 return function (arguments)
     local disable_output = arguments.disable_output
     local materialfiles
-    if not disable_output.pbrm then
+    if not disable_output or not disable_output.pbrm then
         materialfiles = export_pbrm(arguments)
     end
     
-    if not disable_output.animation then
+    if not disable_output or not disable_output.animation then
         export_animation(arguments)
     end
 
-    if not disable_output.mesh then
+    if not disable_output or not disable_output.mesh then
         export_mesh(arguments, materialfiles)
     end
 end

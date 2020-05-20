@@ -115,8 +115,8 @@ local function get_config(ext, config)
     return set_config(ext, mergetable(config, defalut.config))
 end
 
-local function do_build(cfg, pathname)
-    local deppath = cfg.deppath / (get_filename(pathname) .. ".dep")
+local function do_build(cfg, input)
+    local deppath = cfg.deppath / (get_filename(input) .. ".dep")
     if not lfs.exists(deppath) then
         return
     end
@@ -132,46 +132,59 @@ end
 local function create_depfile(filename, deps)
     local w = {}
     for _, file in ipairs(deps) do
-        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file:localpath()), file:localpath():string())
+        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file:localpath()), lfs.absolute(file):string())
     end
     writefile(filename, table.concat(w, "\n"))
 end
 
-local function do_compile(cfg, pathname, outpath)
-    lfs.create_directory(outpath)
-    local ok, err, deps = cfg.compiler(cfg.config, pathname,  outpath, function (path)
+local function do_compile(cfg, input, output)
+    lfs.create_directory(output)
+    local ok, err, deps = cfg.compiler(cfg.config, input, output, function (path)
         return fs.path(path):localpath()
     end)
     if not ok then
-        error("compile failed: " .. pathname:string() .. "\n" .. err)
+        error("compile failed: " .. input:string() .. "\n" .. err)
     end
     if deps then
-        table.insert(deps, 1, pathname)
+        table.insert(deps, 1, input)
     else
-        deps = {pathname}
+        deps = {input}
     end
-    create_depfile(cfg.deppath / (get_filename(pathname) .. ".dep"), deps)
+    create_depfile(cfg.deppath / (get_filename(input) .. ".dep"), deps)
 end
 
-local function compile(filename, config)
-    local pathname = fs.path(filename)
-    local ext = pathname:extension():string():sub(2):lower()
-    local pathstring = pathname:string()
+local function compile_file(input, config)
+    local ext = input:extension():string():sub(2):lower()
     local cfg = get_config(ext, config)
     if not cfg then
-        return pathstring
+        return input
     end
-    local keystring = cfg.hash .. pathstring
+    local keystring = cfg.hash .. input:string()
     local cachepath = cache[keystring]
     if cachepath then
         return cachepath
     end
-    local outpath = cfg.binpath / get_filename(pathname)
-    if not do_build(cfg, pathname) or not lfs.exists(outpath) then
-        do_compile(cfg, pathname, outpath)
+    local output = cfg.binpath / get_filename(input)
+    if not do_build(cfg, input) or not lfs.exists(output) then
+        do_compile(cfg, input, output)
     end
-    cache[keystring] = outpath
-    return outpath
+    cache[keystring] = output
+    return output
+end
+
+local function split(str)
+    local r = {}
+    str:gsub('[^|]*', function (w) r[#r+1] = w end)
+    return r
+end
+
+local function compile(pathstring, config)
+    local pathlst = split(pathstring)
+    local path = fs.path(pathlst[1]):localpath()
+    for i = 2, #pathlst do
+        path = compile_file(path) / pathlst[i]
+    end
+    return compile_file(path, config)
 end
 
 return {

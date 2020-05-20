@@ -42,8 +42,8 @@ local function resource_load(fullpath, resdata, lazyload)
 	return fullpath
 end
 
-function assetmgr.load(fullpath, resdata)
-    return resource.proxy(resource_load(fullpath, resdata, false))
+function assetmgr.load(key, resdata)
+    return resource.proxy(resource_load(key, resdata, false))
 end
 
 function assetmgr.resource(world, fullpath)
@@ -52,24 +52,22 @@ end
 
 function assetmgr.init()
 	local function loader(ext, filename, data)
-		if ext_bin[ext] then
-			return require("ext_" .. ext).loader(filename, data)
-		elseif ext_tmp[ext] then
+		if ext_tmp[ext] then
 			return require("ext_" .. ext).loader(data)
-		else
-			local world = data
-			return load_component(world, ext, filename)
 		end
+		if ext_bin[ext] then
+			return require("ext_" .. ext).loader(filename)
+		end
+		local world = data
+		return load_component(world, ext, filename)
 	end
 	local function unloader(ext, res, data)
-		if ext_bin[ext] then
+		if ext_tmp[ext] or ext_bin[ext] then
 			require("ext_" .. ext).unloader(res)
-		elseif ext_tmp[ext] then
-			require("ext_" .. ext).unloader(res)
-		else
-			local world = data
-			world:component_delete(ext, res)
+			return
 		end
+		local world = data
+		world:component_delete(ext, res)
 	end
 	resource.register(loader, unloader)
 end
