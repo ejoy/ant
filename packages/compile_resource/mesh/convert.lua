@@ -338,7 +338,7 @@ end
 
 return function (config, sourcefile, outpath, localpath)
 	local outfile = outpath / "main.index"
-	local meshcfg = fs_local.datalist(sourcefile:localpath())
+	local meshcfg = fs_local.datalist(sourcefile)
 	local glbdata = glbloader.decode(localpath(meshcfg.mesh_path):string())
 
 	local new_glbscene, new_bindata = glb_cvt(glbdata.info, glbdata.bin, meshcfg.config)
