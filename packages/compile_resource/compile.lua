@@ -153,8 +153,7 @@ local function do_compile(cfg, input, output)
     create_depfile(cfg.deppath / (get_filename(input) .. ".dep"), deps)
 end
 
-local function compile(filename, config)
-    local input = fs.path(filename):localpath()
+local function compile_file(input, config)
     local ext = input:extension():string():sub(2):lower()
     local cfg = get_config(ext, config)
     if not cfg then
@@ -171,6 +170,21 @@ local function compile(filename, config)
     end
     cache[keystring] = output
     return output
+end
+
+local function split(str)
+    local r = {}
+    str:gsub('[^|]*', function (w) r[#r+1] = w end)
+    return r
+end
+
+local function compile(pathstring, config)
+    local pathlst = split(pathstring)
+    local path = fs.path(pathlst[1]):localpath()
+    for i = 2, #pathlst do
+        path = compile_file(path) / pathlst[i]
+    end
+    return compile_file(path, config)
 end
 
 return {
