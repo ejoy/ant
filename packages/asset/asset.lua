@@ -42,8 +42,8 @@ local function resource_load(fullpath, resdata, lazyload)
 	return fullpath
 end
 
-function assetmgr.load(fullpath, resdata)
-    return resource.proxy(resource_load(fullpath, resdata, false))
+function assetmgr.load(key, resdata)
+    return resource.proxy(resource_load(key, resdata, false))
 end
 
 function assetmgr.resource(world, fullpath)

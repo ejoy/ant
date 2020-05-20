@@ -71,7 +71,7 @@ local function compile(filename, setting)
     return cr.compile(filename, compile_config)
 end
 
-local function loader(filename, setting)
+local function loader(filename, _, setting)
     local outpath = compile(filename, setting)
     local config = datalist.parse(readfile(outpath / "main.fx"))
     local shader = config.shader
