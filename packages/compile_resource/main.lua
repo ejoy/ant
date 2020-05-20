@@ -30,7 +30,6 @@ local function load_fx_setting()
     local r = {}
     get_setting("graphic/shadow/type", r)
     get_setting("graphic/postprocess/bloom/enable", r)
-    get_setting("animation/skinning/type", r)
     return r
 end
 
@@ -38,8 +37,8 @@ end
 local function init()
     local renderpkg = import_package "ant.render"
     local hw = renderpkg.hwi
-    compile.register("fx", "win", {identity=hw.identity(), setting=load_fx_setting()})
-    compile.register("mesh", "win", {identity=hw.identity(),})
+    compile.register("fx",      "win", {identity=hw.identity(), setting=load_fx_setting()})
+    compile.register("glb",     "win", {identity=hw.identity(),})
     compile.register("texture", "win", {identity=hw.identity(),})
 end
 

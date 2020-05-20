@@ -15,7 +15,7 @@ local function init(ext, compiler)
 end
 
 init("fx",      require "fx.compile")
-init("mesh",    require "mesh.convert")
+init("glb",     require "model.convert")
 init("texture", require "texture.convert")
 
 local function get_filename(pathname)
