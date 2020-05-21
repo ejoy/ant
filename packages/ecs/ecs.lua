@@ -3,7 +3,7 @@ local system = require "system"
 local policy = require "policy"
 local event = require "event"
 local datalist = require "datalist"
-local fs = require "filesystem"
+local lfs = require "filesystem.local"
 
 local world = {}
 world.__index = world
@@ -171,12 +171,25 @@ local function create_prefab_from_entity(w, t)
 	}, args
 end
 
+local function absolute_path(base, path)
+	if path:sub(1,1) == "/" then
+		return path
+	end
+	return base .. (path:match "^%./(.+)$" or path)
+end
+
 local function read_data(w, filename)
-	local f = assert(fs.open(fs.path(filename), 'rb'))
+	local filepath = import_package "ant.compile_resource".compile(filename)
+	local f = assert(lfs.open(filepath, 'rb'))
 	local data = f:read 'a'
 	f:close()
+	local current_path = filename:match "^(.-)[^/|]*$"
 	return datalist.parse(data, function(v)
-		return component_init(w, v[1], v[2])
+		local name, value = v[1], v[2]
+		if name == "resource" then
+			value = absolute_path(current_path, value)
+		end
+		return component_init(w, name, value)
 	end)
 end
 

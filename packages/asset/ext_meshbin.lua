@@ -1,4 +1,4 @@
-local fs_rt = import_package "ant.utility".fs_rt
+local utility = require "utility"
 local thread = require "thread"
 local math3d = require "math3d"
 local function create_bounding(bounding)
@@ -8,7 +8,7 @@ local function create_bounding(bounding)
 end
 return {
     loader = function (filename)
-        local c = fs_rt.read_file(filename)
+        local c = utility.read_file(filename)
         local meshscene = thread.unpack(c)
         for _, scene in pairs(meshscene.scenes) do
             for _, meshnode in pairs(scene) do

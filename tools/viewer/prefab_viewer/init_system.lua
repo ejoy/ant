@@ -39,9 +39,9 @@ function m:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
     world:instance '/pkg/tools.viewer.prefab_viewer/light_directional.prefab'
 
-    local prefab = "/pkg/tools.viewer.prefab_viewer/res/mesh.prefab"
-    if fs.exists(fs.path(prefab)) then
-        createPrefab(prefab)
+    local glb = "/pkg/tools.viewer.prefab_viewer/res/root.glb"
+    if fs.exists(fs.path(glb)) then
+        createPrefab(glb .. "|mesh.prefab")
     end
 end
 
