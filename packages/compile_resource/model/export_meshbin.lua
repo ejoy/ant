@@ -284,13 +284,13 @@ local function fetch_attri_buffers(gltfscene, gltfbin, attributes)
 				local c = cacheclass[jj]
 				local acc_offset, bv_offset, elemsize, stride = c[1], c[2], c[3], c[4]
 				local elemoffset = bv_offset + ii * stride + acc_offset + 1
-				buffer[#buffer+1] = gltfbin:sub(elemoffset, elemoffset + elemsize)
+				buffer[#buffer+1] = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
 			end
 		end
 
 		local bindata = table.concat(buffer, "")
 		attribuffers[idx] = {
-			start 	= 0,
+			start 	= 1,
 			declname= table.concat(declname, "|"),
 			value 	= bindata,
 			num 	= #bindata,
