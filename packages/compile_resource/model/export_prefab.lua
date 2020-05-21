@@ -8,6 +8,7 @@ local fs = require "filesystem.local"
 local sort_pairs = require "common.sort_pairs"
 
 local math3d = require "math3d"
+local thread = require "thread"
 local export_meshbin = require "model.export_meshbin"
 
 
@@ -263,33 +264,15 @@ local function create_mesh_entity(parent, meshres, materialfile, name)
     }
 end
 
-local meshcvt = require "mesh.convert"
-
-local function create_meshfile(arguments, meshfolder)
-    fs.create_directories(meshfolder)
-    local c = {
-        mesh_path = arguments:to_visualpath(arguments.input):string(),
-        sourcetype = "glb",
-        type = "mesh",
-        config = arguments.config.mesh,
-    }
-
-    local outfile = meshfolder / arguments.input:stem():string() .. ".mesh"
-    local cc = seri_stringify(c)
-    fs_local.write_file(outfile, cc)
-    print("output .mesh file:", outfile, ", success!")
-
-    if _VERBOSE then
-        print(cc)
-    end
-    return outfile
-end
-
 return function(arguments, materialfiles, glbdata)
     local meshscene = export_meshbin(glbdata)
+    if meshscene == nil then
+        error("export meshbin failed")
+    end
+    local meshbinpath = arguments.outfolder / "mesh.meshbin"
+    fs_local.write_file(meshbinpath, thread.pack(meshscene))
 
     local scene = meshscene.scenes[meshscene.scene]
-    
     local function get_submesh_name(meshname, primidx)
         return table.concat({
             "scenes",
@@ -304,12 +287,11 @@ return function(arguments, materialfiles, glbdata)
         rootid,
     }
 
-    local visualmesh_path = arguments:make_subrespath "mesh.meshbin":string()
     for meshname, meshnode in sort_pairs(scene) do
         local parent = create_hierarchy_entity(meshname, get_transform(meshnode), rootid)
         entities[#entities+1] = parent
         for primidx, prim in ipairs(meshnode) do
-            local meshres = visualmesh_path .. ":" .. get_submesh_name(meshname, primidx)
+            local meshres = "./mesh.meshbin:" .. get_submesh_name(meshname, primidx)
             local mf
             if materialfiles then
                 mf = materialfiles[prim.material+1]
@@ -317,12 +299,10 @@ return function(arguments, materialfiles, glbdata)
                 error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
             end
 
-            if mf then
-                mf = arguments:to_visualpath(mf):string()
-            else
+            if mf == nil then
                 error(("material index not found in output material files:%d"):format(prim.material))
             end
-            entities[#entities+1] = create_mesh_entity(parent, meshres, mf, meshname .. "." .. primidx)
+            entities[#entities+1] = create_mesh_entity(parent, meshres, mf:string(), meshname .. "." .. primidx)
         end
     end
     local prefabconetent = seri_perfab(entities)

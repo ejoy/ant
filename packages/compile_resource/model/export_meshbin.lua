@@ -403,7 +403,6 @@ local function export_meshbin(gltfscene, bindata)
 	return meshscene
 end
 
-return function (glbdata, config)
-	--local new_glbscene, new_bindata = glb_cvt(glbdata.info, glbdata.bin, config)
+return function (glbdata)
 	return export_meshbin(glbdata.info, glbdata.bin)
 end

@@ -148,7 +148,7 @@ local function export_pbrm(arguments, glbdata)
         local imgpath = export_image(image_folder, tex.source)
         local sampler = samplers[tex.sampler+1]
         local texture_desc = {
-            texture = arguments:to_visualpath(imgpath):string(),
+            texture = arguments:localpath2subrespath(imgpath):string(),
             sampler = to_sampler(sampler),
             normalmap = normalmap,
             colorspace = colorspace,
@@ -166,7 +166,7 @@ local function export_pbrm(arguments, glbdata)
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            tex_desc.path = arguments:to_visualpath(fs.path(fetch_texture_info(tex_desc.index, name, normalmap, colorspace))):string()
+            tex_desc.path = arguments:localpath2subrespath(fs.path(fetch_texture_info(tex_desc.index, name, normalmap, colorspace))):string()
             tex_desc.index = nil
             return tex_desc
         end
@@ -209,7 +209,7 @@ local function export_pbrm(arguments, glbdata)
             local filepath = pbrm_folder / refine_name(name) .. ".pbrm"
             fs_local.write_file(filepath, seri_stringify(pbrm))
     
-            materialfiles[matidx] = filepath
+            materialfiles[matidx] = arguments:localpath2subrespath(filepath)
         end
     end
 
