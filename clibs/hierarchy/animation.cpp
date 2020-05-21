@@ -338,8 +338,7 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 };
 REGISTER_LUA_CLASS(ozzAnimation)
 
-__declspec (align(8))
-struct ozzPoseResult : public ozzBindposeT<ozzPoseResult> {
+struct alignas(8) ozzPoseResult : public ozzBindposeT<ozzPoseResult> {
 public:
 	typedef luaClass<ozzPoseResult> luaClassType;
 
