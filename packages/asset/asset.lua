@@ -28,6 +28,7 @@ local ext_bin = {
 	texture = true,
 	mesh    = true,
 	ozz     = true,
+	meshbin = true,
 }
 
 local ext_tmp = {
