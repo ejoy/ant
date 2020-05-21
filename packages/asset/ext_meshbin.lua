@@ -20,6 +20,7 @@ return {
                 end
             end
         end
+        return meshscene
     end,
     unloader = function ()
     end,

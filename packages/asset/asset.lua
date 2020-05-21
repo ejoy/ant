@@ -1,4 +1,4 @@
-local fs = require "filesystem"
+local lfs = require "filesystem.local"
 local datalist = require "datalist"
 local resource = import_package "ant.resource"
 
@@ -10,12 +10,25 @@ local function valid_component(world, name)
 	return tc and tc.init
 end
 
+local function absolute_path(base, path)
+	if path:sub(1,1) == "/" then
+		return path
+	end
+	return base .. (path:match "^%./(.+)$" or path)
+end
+
 local function load_component(world, name, filename)
-	local f = assert(fs.open(fs.path(filename), 'rb'))
+	local filepath = import_package "ant.compile_resource".compile(filename)
+	local f = assert(lfs.open(filepath, 'rb'))
 	local data = f:read 'a'
 	f:close()
+	local current_path = filename:match "^(.-)[^/|]*$"
 	local res = datalist.parse(data, function(v)
-		return world:component_init(v[1], v[2])
+		local name, value = v[1], v[2]
+		if name == "resource" then
+			value = absolute_path(current_path, value)
+		end
+		return world:component_init(name, value)
 	end)
 	if valid_component(world, name) then
 		return world:component_init(name, res)
