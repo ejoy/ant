@@ -53,55 +53,49 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-local function traverse_from_center( blitdata,w,h )
-	assert(w==h)
-    local function incr(v2a,v2b)
-        for i = 1,#v2a do
-            v2a[i] =  v2a[i] +   v2b[i]
-        end
-	end
-    -- local function dosth(v2)
-    --     log.info_a("trav:",v2)
-    -- end
-    local start_move = {1,-1}
-    local move_count=nil
-    local step_incr = 2
-    local step = {
-        {-1,0},
-        {0,1},
-        {1,0},
-        {0,-1}
-    }
-    if w%2==0 then
-        move_count = 1
-    else
-        move_count = 0
-    end
-    local  cur_pos = {lua_math.floor(w/2)-1,lua_math.floor(w/2)}
-    log.trace_a(cur_pos)
-    local found_eid = nil
-    while true do
-        incr(cur_pos,start_move)
-        if cur_pos[2]<0 then
-            break
-        end
-        if move_count >0 then
-            for i = 1,4 do
-                for j = 1,move_count do
-                    incr(cur_pos,step[i])
-                    found_eid = blitdata[cur_pos[1]*w+cur_pos[2]]
-                    if found_eid ~= 0 then
-                        return found_eid
-                    end
-                end
-            end
-        end
-        move_count = move_count + step_incr
-    end
-end
-
 local function which_entity_hitted(blitdata, viewrect)
-	return traverse_from_center(blitdata,viewrect.w,viewrect.h)
+	local floor = math.floor
+	local w, h = viewrect.w, viewrect.h
+	local center = {floor(w * 0.5), floor(h * 0.5)}
+
+	local function found_eid(pt)
+		if  0 < pt[1] and pt[1] <= w and
+			0 < pt[2] and pt[2] <= h then
+
+			local feid = blitdata[pt[1]*w+pt[2]]
+			if feid ~= 0 then
+				return feid
+			end
+		end
+	end
+
+	local feid = found_eid(center)
+	if feid then
+		return feid
+	end
+
+	local radius = 1
+	local directions<const> = {
+		{1, 0}, {0, 1}, {-1, 0}, {0, -1}
+	}
+	while true do
+		local pt = {center[1] - radius, center[2] - radius}
+		for i=1, 4 do
+			local dir = directions[i]
+
+			local range = radius * 2 + 1
+			for j=1, range do
+				pt[1] = pt[1] + dir[1]
+				pt[2] = pt[2] + dir[2]
+	
+				feid = found_eid(pt)
+				if feid then
+					return feid
+				end
+			end
+		end
+		radius = radius + 1
+	end
 end
 
 local pickup_sys = ecs.system "pickup_system"
