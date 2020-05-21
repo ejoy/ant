@@ -564,8 +564,6 @@ fetch_srt(lua_State *L, int sidx, int ridx, int tidx, ozz::math::Transform &tran
 
 static int
 lhnode_addchild(lua_State *L) {
-	const int top = lua_gettop(L);
-
 	RawSkeleton::Joint::Children * c = get_children(L, 1);
 	size_t n = c->size();
 	expand_children(L, 1, c, n + 1);
