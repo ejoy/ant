@@ -46,8 +46,7 @@ return {
     init = init,
     register = compile.register,
     compile = compile.compile,
+    read_file = require "utility".read_file,
     ------
     util = require "util",
-	compile_fx = require "fx.compile",
-	shader_toolset = require "fx.toolset",
 }

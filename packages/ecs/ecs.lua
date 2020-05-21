@@ -3,7 +3,7 @@ local system = require "system"
 local policy = require "policy"
 local event = require "event"
 local datalist = require "datalist"
-local lfs = require "filesystem.local"
+local cr = import_package "ant.compile_resource"
 
 local world = {}
 world.__index = world
@@ -127,14 +127,6 @@ function world:add_policy(eid, t)
 	end
 end
 
-function world:component_init(name, v)
-	return component_init(self, name, v)
-end
-
-function world:component_delete(name, v)
-	component_delete(self, name, v)
-end
-
 local function register_entity(w)
 	local eid = w._entity_id + 1
 	w._entity_id = eid
@@ -178,11 +170,8 @@ local function absolute_path(base, path)
 	return base .. (path:match "^%./(.+)$" or path)
 end
 
-local function read_data(w, filename)
-	local filepath = import_package "ant.compile_resource".compile(filename)
-	local f = assert(lfs.open(filepath, 'rb'))
-	local data = f:read 'a'
-	f:close()
+local function load_prefab(w, filename)
+	local data = cr.read_file(filename)
 	local current_path = filename:match "^(.-)[^/|]*$"
 	return datalist.parse(data, function(v)
 		local name, value = v[1], v[2]
@@ -193,8 +182,25 @@ local function read_data(w, filename)
 	end)
 end
 
+local function valid_component(w, name)
+	local tc = w._class.component[name]
+	return tc and tc.init
+end
+
+function world:prefab_init(name, filename)
+	local res = load_prefab(self, filename)
+	if valid_component(self, name) then
+		return component_init(self, name, res)
+	end
+	return res
+end
+
+function world:prefab_delete(name, v)
+	component_delete(self, name, v)
+end
+
 local function create_prefab(w, filename)
-	local t = read_data(w, filename)
+	local t = load_prefab(w, filename)
 	local prefab = {
 		entities = {},
 		connection = t[1],

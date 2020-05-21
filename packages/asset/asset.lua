@@ -1,40 +1,7 @@
-local lfs = require "filesystem.local"
-local datalist = require "datalist"
 local resource = import_package "ant.resource"
 
 local assetmgr = {}
 assetmgr.__index = assetmgr
-
-local function valid_component(world, name)
-	local tc = world._class.component[name]
-	return tc and tc.init
-end
-
-local function absolute_path(base, path)
-	if path:sub(1,1) == "/" then
-		return path
-	end
-	return base .. (path:match "^%./(.+)$" or path)
-end
-
-local function load_component(world, name, filename)
-	local filepath = import_package "ant.compile_resource".compile(filename)
-	local f = assert(lfs.open(filepath, 'rb'))
-	local data = f:read 'a'
-	f:close()
-	local current_path = filename:match "^(.-)[^/|]*$"
-	local res = datalist.parse(data, function(v)
-		local name, value = v[1], v[2]
-		if name == "resource" then
-			value = absolute_path(current_path, value)
-		end
-		return world:component_init(name, value)
-	end)
-	if valid_component(world, name) then
-		return world:component_init(name, res)
-	end
-	return res
-end
 
 local ext_bin = {
 	fx      = true,
@@ -73,7 +40,7 @@ function assetmgr.init()
 			return require("ext_" .. ext).loader(filename)
 		end
 		local world = data
-		return load_component(world, ext, filename)
+		return world:prefab_init(ext, filename)
 	end
 	local function unloader(ext, res, data)
 		if ext_tmp[ext] or ext_bin[ext] then
@@ -81,7 +48,7 @@ function assetmgr.init()
 			return
 		end
 		local world = data
-		world:component_delete(ext, res)
+		world:prefab_delete(ext, res)
 	end
 	resource.register(loader, unloader)
 end
