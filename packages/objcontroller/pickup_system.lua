@@ -54,14 +54,16 @@ local function packeid_as_rgba(eid)
 end
 
 local function which_entity_hitted(blitdata, viewrect)
-	local floor = math.floor
+	local ceil = math.ceil
 	local w, h = viewrect.w, viewrect.h
-	local center = {floor(w * 0.5), floor(h * 0.5)}
+	local hw, hh = w * 0.5, h * 0.5
+	local center = {ceil(hw), ceil(hh)}
 
 	local function found_eid(pt)
 		if  0 < pt[1] and pt[1] <= w and
 			0 < pt[2] and pt[2] <= h then
 
+			raw_print(pt[1], pt[2])
 			local feid = blitdata[pt[1]*w+pt[2]]
 			if feid ~= 0 then
 				return feid
@@ -78,20 +80,20 @@ local function which_entity_hitted(blitdata, viewrect)
 	local directions<const> = {
 		{1, 0}, {0, 1}, {-1, 0}, {0, -1}
 	}
-	while true do
+	while radius <= hw and radius <= hh do
 		local pt = {center[1] - radius, center[2] - radius}
 		for i=1, 4 do
 			local dir = directions[i]
 
 			local range = radius * 2 + 1
-			for j=1, range do
-				pt[1] = pt[1] + dir[1]
-				pt[2] = pt[2] + dir[2]
-	
+			for j=1, range-1 do	
 				feid = found_eid(pt)
 				if feid then
 					return feid
 				end
+
+				pt[1] = pt[1] + dir[1]
+				pt[2] = pt[2] + dir[2]
 			end
 		end
 		radius = radius + 1
