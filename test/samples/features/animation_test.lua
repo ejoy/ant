@@ -6,6 +6,8 @@ local anitest_sys = ecs.system "animation_test_system"
 
 local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 
+local cr = import_package "ant.compile_resource"
+
 local function ozzmesh_animation_test()
     return world:instance((entitydir / "ozz_animation_sample.prefab"):string())
 end
@@ -13,7 +15,8 @@ end
 local function gltf_animation_test()
     -- local computil = import_package "ant.render".components
     -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/simple_skin.mesh"
-    return world:instance((entitydir / "gltf_animation.prefab"):string())
+    --return world:instance((entitydir / "gltf_animation.prefab"):string())
+    return world:instance("/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab", {})
     --world:instance((entitydir / "simple_skin.prefab"):string())
 end
 
@@ -42,7 +45,7 @@ local function bind_slot_entity(parenteid)
 end
 
 function anitest_sys:init()
-    ozzmesh_animation_test()
+    -- ozzmesh_animation_test()
     local res = gltf_animation_test()
-    bind_slot_entity(res[1])
+    --bind_slot_entity(res[1])
 end
