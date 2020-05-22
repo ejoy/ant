@@ -4,6 +4,5 @@ package.path = table.concat({
     "?.lua",
 }, ";")
 
-require "runtime"
-local pm = require "antpm"
-pm.import "project"
+require "bootstrap"
+import_package "project"

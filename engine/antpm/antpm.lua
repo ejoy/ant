@@ -18,13 +18,13 @@ local function loadenv(name)
     return info.env
 end
 
-local function try_import(name)
+local function import(name)
     if loaded[name] then
-        return true, loaded[name]
+        return loaded[name]
     end
     local info = registered[name]
     if not info or not info.config.entry then
-        return false, ("no package '%s'"):format(name)
+        return error(("no package '%s'"):format(name))
     end
     local res = loadenv(name).require(info.config.entry)
     if res == nil then
@@ -32,15 +32,7 @@ local function try_import(name)
     else
         loaded[name] = res
     end
-    return true, loaded[name]
-end
-
-local function import(name)
-    local ok, res = try_import(name)
-    if not ok then
-        error(res)
-    end
-    return res
+    return loaded[name]
 end
 
 local function register_package(path)
@@ -70,15 +62,6 @@ local function register_package(path)
     return config.name
 end
 
-local function unregister_package(path)
-    local name = pathtoname[path]
-    if not name then
-        return
-    end
-    loaded[name] = nil
-    registered[name] = nil
-end
-
 local function initialize()
     if initialized then
         for path in fs.path'/pkg':list_directory() do
@@ -97,8 +80,5 @@ end
 return {
     loadenv = loadenv,
     import = import,
-    try_import = try_import,
-    register_package = register_package,
-    unregister_package = unregister_package,
     initialize = initialize,
 }

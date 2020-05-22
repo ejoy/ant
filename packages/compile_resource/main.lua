@@ -1,4 +1,5 @@
 local compile = require "compile"
+local lfs = require "filesystem.local"
 
 local function load_fx_setting()
     local renderpkg = import_package "ant.render"
@@ -51,9 +52,16 @@ local function init()
     })
 end
 
+local function read_file(filename)
+    local f = lfs.open(compile.compile(filename), "rb")
+    local c = f:read "a"
+    f:close()
+    return c
+end
+
 return {
     init = init,
     register = compile.register,
     compile = compile.compile,
-    read_file = require "utility".read_file,
+    read_file = read_file,
 }

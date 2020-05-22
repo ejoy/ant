@@ -4,7 +4,7 @@ local gltfutil	= gltfpkg.util
 local renderpkg = import_package "ant.render"
 local declmgr	= renderpkg.declmgr
 
-local sort_pairs = require "common.sort_pairs"
+local sort_pairs = require "sort_pairs"
 
 local math3d	= require "math3d"
 

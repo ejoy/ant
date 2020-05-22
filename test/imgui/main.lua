@@ -4,6 +4,5 @@ package.path = table.concat({
 	"engine/?/?.lua",
 }, ";")
 
-require "runtime"
-local pm = require "antpm"
-pm.import "ant.imgui_editor"
+require "bootstrap"
+import_package "ant.imgui_editor"

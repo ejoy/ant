@@ -4,6 +4,5 @@ package.path = table.concat({
 	"?.lua",
 }, ";")
 
-require "runtime"
-local pm = require "antpm"
-pm.import "ant.imguibase".runtime.start "ant.test.features"
+require "bootstrap"
+import_package "ant.imguibase".runtime.start "ant.test.features"
