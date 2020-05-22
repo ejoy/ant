@@ -98,13 +98,13 @@ local function dispatch(ok, CMD, ...)
 end
 
 local function run()
-	local window = require "common.window"
+	local window = require "window_thread"
 	while dispatch(window.recvmsg()) do
 	end
 end
 
 local function windowMode()
-	local window = require "common.window"
+	local window = require "window_thread"
 	window.create(run, 1024, 768)
 end
 

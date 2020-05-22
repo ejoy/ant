@@ -10,7 +10,6 @@ else
 end
 
 require "common.init_bgfx"
-require "common.window"
 require "filesystem"
 
 local pm = require "antpm"
