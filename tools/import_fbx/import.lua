@@ -3,41 +3,16 @@ package.path = table.concat(
         "tools/import_fbx/?.lua",
         "engine/?.lua",
         "packages/?.lua",
-        "packages/glTF/?.lua",
-        "packages/serialize/?.lua",
         "packages/utility/?.lua",
-        "packages/compile_resource/?.lua",
     }, ";"
 )
-
-local packages = {
-    ["ant.glTF"] = {
-        util = require "glTF.util",
-        glb = require "glTF.glb",
-    },
-    ["ant.render"] = {
-        declmgr = require "render.vertexdecl_mgr",
-    },
-    ["ant.utility"] = {
-        fs_local = require "utility.fs_local",
-    }
-}
-
-function import_package(pkgname)
-    local pkg = packages[pkgname]
-    if pkg == nil then
-        error(("invalid package name:%s"):format(pkgname))
-    end
-
-    return pkg
-end
 
 local function help_info()
     return [[
 only support fbx to glb file
 examples:
     cd to [antfolder], and run:
-    {luafolder}/lua.exe tools/import_model/import.lua --input "d:/abc/female.fbx" --outfolder "d:/Work/ant/packages/resources/test"
+    {luafolder}/lua.exe tools/import_fbx/import.lua --input "d:/abc/female.fbx" --output "d:/Work/ant/packages/resources/test/female.glb"
     ]]
 end
 
@@ -128,8 +103,8 @@ end
 fs.create_directories(fs.path(arguments.output):parent_path())
 
 local fbx2gltf = require "fbx2gltf"
-local results = fbx2gltf { {arguments.input, arguments.output}}
-if not next(results) then
+local ok = fbx2gltf(arguments.input, arguments.output)
+if not ok then
     print("failed to convert file:", arguments.input:string(), "from fbx to gltf file")
 end
 
