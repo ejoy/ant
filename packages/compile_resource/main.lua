@@ -63,5 +63,6 @@ return {
     init = init,
     register = compile.register,
     compile = compile.compile,
+    clean = compile.clean,
     read_file = read_file,
 }

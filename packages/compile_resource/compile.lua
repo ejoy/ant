@@ -159,7 +159,7 @@ local function compile_file(input, config)
     if not cfg then
         return input
     end
-    local keystring = cfg.hash .. input:string()
+    local keystring = input:string() .. "_" .. cfg.hash
     local cachepath = cache[keystring]
     if cachepath then
         return cachepath
@@ -187,7 +187,33 @@ local function compile(pathstring, config)
     return compile_file(path, config)
 end
 
+local function clean_file(input)
+    local ext = input:extension():string():sub(2):lower()
+    local cfg = get_config(ext)
+    if not cfg then
+        return input
+    end
+    local keystring = input:string() .. "_" .. cfg.hash
+    local cachepath = cache[keystring]
+    if cachepath then
+        cache[keystring] = nil
+        lfs.remove_all(cachepath)
+    else
+        lfs.remove_all(cfg.binpath / get_filename(input))
+    end
+end
+
+local function clean(pathstring)
+    local pathlst = split(pathstring)
+    local path = fs.path(pathlst[1]):localpath()
+    for i = 2, #pathlst do
+        path = compile_file(path) / pathlst[i]
+    end
+    return clean_file(path)
+end
+
 return {
     register = register,
     compile = compile,
+    clean = clean,
 }

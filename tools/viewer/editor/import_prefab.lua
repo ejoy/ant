@@ -2,6 +2,7 @@ local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
 local sp   = require "subprocess"
 local task = require "task"
+local cr   = import_package "ant.compile_resource"
 
 local function import_fbx(input, output)
     local function luaexe()
@@ -36,5 +37,6 @@ return function (filename)
     else
         lfs.copy_file(linput, loutput, true)
     end
+    cr.clean(output)
     return output .. "|mesh.prefab"
 end
