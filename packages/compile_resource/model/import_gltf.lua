@@ -18,6 +18,21 @@ local image_extension = {
     ["image/bmp"] = ".bmp",
 }
 
+local function tov4(v)
+    if #v == 4 then
+        return v
+    end
+    
+    if #v < 4 then
+        local vv = {0, 0, 0, 0}
+        for i=1, #v do
+            vv[i] = v[i]
+        end
+        return vv
+    end
+    return {v[1], v[2], v[3], v[4]}
+end
+
 local function export_pbrm(arguments, glbdata)
     local glbscene, glbbin = glbdata.info, glbdata.bin
 
@@ -195,7 +210,7 @@ local function export_pbrm(arguments, glbdata)
                 },
                 emissive = {
                     texture = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
-                    factor  = mat.emissiveFactor,
+                    factor  = tov4(mat.emissiveFactor),
                 },
                 alphaMode   = mat.alphaMode,
                 alphaCutoff = mat.alphaCutoff,
