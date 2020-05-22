@@ -6,10 +6,12 @@ local rhwi        = renderpkg.hwi
 local window      = require "window"
 local platform    = require "platform"
 local inputmgr    = require "inputmgr"
+local bgfx        = require "bgfx"
 local font        = imgui.font
 local Font        = platform.font
 local context     = nil
 local cb          = nil
+local viewid      = nil
 local message     = {}
 local initialized = false
 local debug_traceback = debug.traceback
@@ -38,14 +40,15 @@ local function glyphRanges(t)
 end
 
 local function imgui_init()
+	viewid = viewidmgr.get "uieditor"
 	context = imgui.CreateContext(rhwi.native_window())
-	imgui.ant.viewid(viewidmgr.get "uieditor")
-	local imgui_font = assetmgr.resource(world, "/pkg/ant.imguibase/shader/font.fx").shader
+	imgui.ant.viewid(viewid)
+	local imgui_font = assetmgr.resource(nil, "/pkg/ant.imguibase/shader/font.fx").shader
 	imgui.ant.font_program(
 		imgui_font.prog,
 		imgui_font.uniforms.s_tex.handle
 	)
-	local imgui_image = assetmgr.resource(world, "/pkg/ant.imguibase/shader/image.fx").shader
+	local imgui_image = assetmgr.resource(nil, "/pkg/ant.imguibase/shader/image.fx").shader
 	imgui.ant.image_program(
 		imgui_image.prog,
         imgui_image.uniforms.s_tex.handle
@@ -110,6 +113,7 @@ function message.exit()
 end
 function message.update()
 	if initialized then
+		bgfx.set_view_clear(viewid, "CD", 0x000000FF, 1, 0)
 		local delta = timer_delta()
 		imgui.begin_frame(delta * 1000)
         cb.update(delta)
