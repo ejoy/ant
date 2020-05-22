@@ -4,6 +4,5 @@ package.path = table.concat({
 	"?.lua",
 }, ";")
 
-require "runtime"
-local pm = require "antpm"
-pm.import "ant.test_rxlua"
+require "bootstrap"
+import_package "ant.test_rxlua"

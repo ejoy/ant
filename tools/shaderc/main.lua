@@ -8,7 +8,7 @@ package.cpath = table.concat({
     "clibs/?.dll",
 }, ";")
 
-require "runtime"
+require "bootstrap"
 require "fx.toolset"
 require "fx.compile"
 import_package "ant.shaderc"

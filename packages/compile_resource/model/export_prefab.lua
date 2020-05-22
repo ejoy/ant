@@ -5,7 +5,7 @@ local seripkg = import_package "ant.serialize"
 local seri_stringify = seripkg.stringify
 
 local fs = require "filesystem.local"
-local sort_pairs = require "common.sort_pairs"
+local sort_pairs = require "sort_pairs"
 
 local math3d = require "math3d"
 local thread = require "thread"
