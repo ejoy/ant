@@ -7,6 +7,8 @@ local utilitypkg= import_package "ant.utility"
 local subprocess= utilitypkg.subprocess
 local fs_local  = utilitypkg.fs_local
 
+local seri_util = require "model.seri_util"
+
 local seripkg = import_package "ant.serialize"
 local seri_stringify = seripkg.stringify
 
@@ -163,7 +165,7 @@ local function export_pbrm(arguments, glbdata)
         local imgpath = export_image(image_folder, tex.source)
         local sampler = samplers[tex.sampler+1]
         local texture_desc = {
-            texture = "$resource " .. arguments:localpath2subrespath(imgpath):string(),
+            texture = arguments:localpath2subrespath(imgpath):string(),
             sampler = to_sampler(sampler),
             normalmap = normalmap,
             colorspace = colorspace,
@@ -181,9 +183,7 @@ local function export_pbrm(arguments, glbdata)
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            tex_desc.path = arguments:localpath2subrespath(fs.path(fetch_texture_info(tex_desc.index, name, normalmap, colorspace))):string()
-            tex_desc.index = nil
-            return tex_desc
+            return arguments:localpath2subrespath(fs.path(fetch_texture_info(tex_desc.index, name, normalmap, colorspace))):string()
         end
     end
 
@@ -195,7 +195,7 @@ local function export_pbrm(arguments, glbdata)
             local pbrm = {
                 basecolor = {
                     texture = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
-                    factor = pbr_mr.baseColorFactor,
+                    factor = tov4(pbr_mr.baseColorFactor),
                 },
                 metallic_roughness = {
                     texture = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
@@ -222,7 +222,8 @@ local function export_pbrm(arguments, glbdata)
                 return newname
             end
             local filepath = pbrm_folder / refine_name(name) .. ".pbrm"
-            fs_local.write_file(filepath, seri_stringify(pbrm))
+
+            fs_local.write_file(filepath, seri_util.seri_pbrm(pbrm))
     
             materialfiles[matidx] = arguments:localpath2subrespath(filepath)
         end

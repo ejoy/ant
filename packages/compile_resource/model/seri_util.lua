@@ -167,4 +167,72 @@ function seri_util.seri_perfab(world, entities)
     return table.concat(out, "\n")
 end
 
+function seri_util.seri_pbrm(pbrm)
+    local out = {}
+    local depth = 0
+    local function seri_texture(tex, depth, r)
+        if tex then
+            r[#r+1] = seri_util.get_depth(depth) .. "texutre: $resource " .. tex
+        end
+    end
+
+    local function seri_basetype(name, v)
+        return name .. ": " .. seri_util.stringify_basetype(v)
+    end
+
+    local function seri_child(name, v, depth, r, op)
+        local f = v[name]
+        if f then
+            r[#r+1] = seri_util.get_depth(depth) .. name .. ":" .. op(f)
+        end
+    end
+
+    local function seri_pbrm_elem(compname, op)
+        local s = {}
+        op(s)
+        if next(s) then
+            return compname .. ":\n" .. table.concat(s, "\n")
+        end
+    end
+
+    local function seri_comp_texture_factor(compname, comp, depth)
+        return seri_pbrm_elem(compname, function (s)
+            seri_texture(comp.texture, depth, s)
+            seri_child("factor", comp, depth, s, seri_util.seri_vector)
+        end)
+    end
+
+    local function seri_comp_texture(compname, comp, depth)
+        return seri_pbrm_elem(compname, function (s)
+            seri_texture(comp.texture, depth, s)
+        end)
+    end
+
+    local typeclass = {
+        basecolor = seri_comp_texture_factor,
+        metallic_roughness = function(compname, comp, depth)
+            return seri_pbrm_elem(compname, function(s)
+                seri_texture(comp.texture, depth, s)
+                
+                seri_child("roughness_factor", comp, depth, s, seri_util.stringify_basetype)
+                seri_child("metallic_factor", comp, depth, s, seri_util.stringify_basetype)
+            end)
+        end,
+        normal      = seri_comp_texture,
+        occlusion   = seri_comp_texture,
+        emissive    = seri_comp_texture_factor,
+    }
+
+    for name, comp in sort_pairs(pbrm) do
+        local tc = typeclass[name]
+        if tc == nil then
+            out[#out+1] = seri_basetype(name, comp)
+        else
+            out[#out+1] = tc(name, comp, depth+1)
+        end
+    end
+
+    return table.concat(out, "\n")
+end
+
 return seri_util

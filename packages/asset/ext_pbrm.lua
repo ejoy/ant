@@ -5,21 +5,21 @@ local assetmgr 	= require "asset"
 
 local default_pbr_param = {
 	basecolor = {
-		texture = "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
+		texture = world.component:resource "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
 		factor = {1, 1, 1, 1},
 	},
 	metallic_roughness = {
-		texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
+		texture = world.component:resource "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
 		factor = {1, 1, 0, 0},
 	},
 	normal = {
-		texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
+		texture = world.component:resource "/pkg/ant.resources/textures/pbr/default/normal.texture",
 	},
 	occlusion = {
-		texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
+		texture = world.component:resource "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
 	},
 	emissive = {
-		texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
+		texture = world.component:resource "/pkg/ant.resources/textures/pbr/default/emissive.texture",
 		factor = {0, 0, 0, 0},
 	},
 }
@@ -27,15 +27,12 @@ local default_pbr_param = {
 local function texture_path(pbrm, name)
 	local p = pbrm[name]
 	if p then
-		local t = pbrm[name].texture
-		if t then
-			return t.path
-		end
+		return pbrm[name].texture
 	end
 end
 
 local function get_texture(pbrm, name)
-	return world.component:resource (texture_path(pbrm, name) or default_pbr_param[name].texture)
+	return texture_path(pbrm, name) or default_pbr_param[name].texture
 end
 
 local function property_factor(pbrm, name)
