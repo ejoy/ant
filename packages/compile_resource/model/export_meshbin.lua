@@ -311,9 +311,7 @@ end
 
 local function export_meshbin(gltfscene, bindata)
 	redirect_skin_joints(gltfscene)
-	local scene_scalemat = math3d.ref(math3d.matrix{s=gltfscene.scenescale})
-
-	local bvcaches = {}
+	local scene_scalemat = gltfscene.scenescale and math3d.ref(math3d.matrix{s=gltfscene.scenescale}) or nil
 
 	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
 		for _, nodeidx in ipairs(gltfnodes) do
@@ -356,15 +354,8 @@ local function export_meshbin(gltfscene, bindata)
 						if indices_accidx then
 							local idxacc = gltfscene.accessors[indices_accidx+1]
 							local bv = gltfscene.bufferViews[idxacc.bufferView+1]
-	
-							local cache = bvcaches[idxacc.bufferView+1]
-							if cache == nil then
-								cache = fetch_ib_info(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers)
-								bvcaches[idxacc.bufferView+1] = cache
-							end
-	
 							group.ib = {
-								value 	= cache,
+								value 	= fetch_ib_info(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers),
 								start 	= 0,
 								num 	= idxacc.count,
 							}
