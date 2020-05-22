@@ -353,7 +353,7 @@ static int
 lbounding_ozzmesh(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TUSERDATA);
 	auto om = (ozzmesh*)lua_touserdata(L, 1);
-	om;
+	(void)om;
 
 	auto push_vec = [L](auto name, auto num, auto obj) {
 		lua_createtable(L, num, 0);
@@ -363,8 +363,7 @@ lbounding_ozzmesh(lua_State *L) {
 		}
 		lua_setfield(L, -2, name);
 	};
-
-	push_vec;
+	(void)push_vec;
 	
 	lua_createtable(L, 0, 3);
 	assert(false && "need calculate bounding");

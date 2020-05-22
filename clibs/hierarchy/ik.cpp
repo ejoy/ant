@@ -114,7 +114,7 @@ do_ik(lua_State* L,
 	ik_data ikdata;
 	fetch_ikdata(L, -1, ikdata);
 
-	auto get_joint = [&result_pose](int jointidx) {
+	auto get_joint = [&result_pose](uint16_t jointidx) {
 		if (jointidx < 0 || jointidx > result_pose.size()){
 			return (ozz::math::Float4x4*)nullptr;
 		}

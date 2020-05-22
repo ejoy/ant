@@ -321,7 +321,6 @@ ltestOverlap(lua_State *L) {
 
 static int
 lgetId(lua_State *L){
-	struct collision_world * world = (struct collision_world *)lua_touserdata(L, 1);
 	CollisionBody *body = (CollisionBody*)lua_touserdata(L, 2);
 	lua_pushinteger(L, body->getId());
 	return 1;

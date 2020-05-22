@@ -187,7 +187,7 @@ nGetSelectedLinks(lua_State* L) {
 		selected_links.resize(static_cast<size_t>(num), -1);
 		imnodes::GetSelectedLinks(selected_links.data());
 		lua_newtable(L);
-		for (int i = 0; i < selected_links.size(); i++) {
+		for (size_t i = 0; i < selected_links.size(); i++) {
 			lua_pushinteger(L, selected_links[i]);
 			lua_rawseti(L, -2, (lua_Integer)i + 1);
 		}
@@ -214,7 +214,7 @@ nGetSelectedNodes(lua_State* L) {
 		selected_nodes.resize(static_cast<size_t>(num), -1);
 		imnodes::GetSelectedNodes(selected_nodes.data());
 		lua_newtable(L);
-		for (int i = 0; i < selected_nodes.size(); i++) {
+		for (size_t i = 0; i < selected_nodes.size(); i++) {
 			lua_pushinteger(L, selected_nodes[i]);
 			lua_rawseti(L, -2, (lua_Integer)i + 1);
 		}

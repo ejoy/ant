@@ -4,10 +4,6 @@ include bgfx_define.mk
 THREADINC=-I ../thread
 
 ifeq "$(PLAT)" "mingw"
-CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
-endif
-
-ifeq "$(PLAT)" "mingw"
 default : bgfx.dll
 else
 default : $(ODIR)/libbgfx.a

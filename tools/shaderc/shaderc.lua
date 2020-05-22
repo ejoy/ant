@@ -1,13 +1,13 @@
 --[[
-    lua.exe .\tools\shaderc\main.lua 
-        .Windows_DIRECT3D11
+    lua.exe .\tools\shaderc\main.lua
+        ".Windows[ ]_DIRECT3D11"
         .\packages\resources\shaders\mesh\fs_colormesh.sc 
         .\abc.bin 
 ]]
 
 local fs = require "filesystem.local"
-local fvpkg = import_package "ant.compile_resource"
-local toolset = fvpkg.shader_toolset
+local toolset = require "fx.toolset"
+local compile_fx = require "fx.compile"
 
 local macros
 local includes
@@ -35,7 +35,7 @@ includes[#includes+1] = fs.current_path() / "packages/resources/shaders"
 local srcfile = fs.path(input)
 
 if srcfile:extension():string():lower() == ".fx" then
-	local success, msg = fvpkg.compile_fx(identity, srcfile, fs.path(output), function(filename)
+	local success, msg = compile_fx(identity, srcfile, fs.path(output), function(filename)
 		local vfs = require "vfs"
 		return fs.path(vfs.realpath(filename))
 	end)

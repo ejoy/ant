@@ -196,9 +196,9 @@ lterrain_aabb(lua_State *L){
 
 static int
 lterrain_update_buffer(lua_State *L){
-	const auto hf = fetch_heightfield(L, 1);
-	auto positions = (glm::vec3*)lua_touserdata(L, 2);
-	auto normals = (glm::vec3*)lua_touserdata(L, 3);
+	//const auto hf = fetch_heightfield(L, 1);
+	//auto positions = (glm::vec3*)lua_touserdata(L, 2);
+	//auto normals = (glm::vec3*)lua_touserdata(L, 3);
 
 	
 	return 0;

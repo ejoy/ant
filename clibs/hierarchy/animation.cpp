@@ -221,8 +221,7 @@ public:
 	}
 };
 
-__declspec (align(8))
-struct ozzBindpose : public ozzBindposeT<ozzBindpose>{
+struct alignas(8) ozzBindpose : public ozzBindposeT<ozzBindpose>{
 	ozzBindpose(size_t numjoints):ozzBindposeT<ozzBindpose>(numjoints){}
 	ozzBindpose(size_t numjoints, const float *data):ozzBindposeT<ozzBindpose>(numjoints, data){}
 };
@@ -339,8 +338,7 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 };
 REGISTER_LUA_CLASS(ozzAnimation)
 
-__declspec (align(8))
-struct ozzPoseResult : public ozzBindposeT<ozzPoseResult> {
+struct alignas(8) ozzPoseResult : public ozzBindposeT<ozzPoseResult> {
 public:
 	typedef luaClass<ozzPoseResult> luaClassType;
 

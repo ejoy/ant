@@ -9,10 +9,8 @@ OZZ_SAMPLE_DIR=$(ANT3RD)/ozz-animation/samples
 
 ifeq "$(PLAT)" "mingw"
 default : hierarchy.dll
-DECLSPEC=
 else
 default : $(ODIR)/libhierarchy.a
-DECLSPEC= -fdeclspec
 endif
 
 OBJ_FILES := $(ODIR)/hierarchy.o $(ODIR)/animation.o $(ODIR)/mesh.o $(ODIR)/ik.o $(ODIR)/ozzmesh.o $(ODIR)/scene.o
@@ -27,7 +25,7 @@ $(ODIR)/ik.o: ik.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
 
 $(ODIR)/animation.o: animation.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) $(DECLSPEC) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
+	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)
 
 $(ODIR)/ozzmesh.o: ozzmesh.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $< $(LUAINC) $(GLM_DIR) $(CLIBS) $(OZZINC)

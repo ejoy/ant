@@ -1,4 +1,4 @@
-local utility = require "utility"
+local cr = import_package "ant.compile_resource"
 local thread = require "thread"
 local math3d = require "math3d"
 local function create_bounding(bounding)
@@ -8,7 +8,7 @@ local function create_bounding(bounding)
 end
 return {
     loader = function (filename)
-        local c = utility.read_file(filename)
+        local c = cr.read_file(filename)
         local meshscene = thread.unpack(c)
         for _, scene in pairs(meshscene.scenes) do
             for _, meshnode in pairs(scene) do
