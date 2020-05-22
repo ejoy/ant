@@ -11,16 +11,21 @@ local assetmgr  = import_package "ant.asset"
 
 local ml = ecs.transform "mesh_loader"
 
-function ml.process(e)
-	local filename, subname = tostring(e.mesh):match "([^:]+):(.+)$"
+local function gen_glbmesh_key(mesh_fielname)
+	local filename, subname = mesh_fielname:match "([^:]+):(.+)$"
+	filename = filename:gsub("[|:]", ".")
 
 	local extname = ".glbmesh"
 	if subname ~= "" then
 		extname = ".".. subname .. extname
 	end
 
-	filename = filename:gsub("%.[%w_-]+$", extname)
-	e.rendermesh = assetmgr.load(filename, e.mesh)
+	return filename .. extname
+end
+
+function ml.process(e)
+	local key = gen_glbmesh_key(tostring(e.mesh))
+	e.rendermesh = assetmgr.load(key, e.mesh)
 end
 
 local rt = ecs.component "render_target"

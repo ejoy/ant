@@ -14,7 +14,7 @@ policy:
 data:
     transform: $transform
         srt: $srt {}
-    mesh: $resource "/pkg/ant.resources/meshes/female.mesh:scenes.scene1.Beta_Joints.1"
+    mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.meshbin:scenes.Root Scene.Beta_Joints.1"
     material: $resource /pkg/ant.resources/materials/gpu_skin.pbrm
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
@@ -45,7 +45,7 @@ policy:
 data:
     transform: $transform
         srt: $srt {}
-    mesh: $resource "/pkg/ant.resources/meshes/female.mesh:scenes.scene1.Beta_Surface.1"
+    mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.meshbin:scenes.scene1.Beta_Surface.1"
     material: $resource /pkg/ant.resources/materials/gpu_skin.pbrm
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:

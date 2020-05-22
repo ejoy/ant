@@ -8,7 +8,7 @@ local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
 local pbr_material = world.component:resource((feature_path / "assets/pbr_test.pbrm"):string())
-local sphere_mesh = world.component:resource((feature_path / "assets/sphere.mesh:scenes.scene1.pSphere1.1"):string())
+local sphere_mesh = world.component:resource("/pkg/ant.resources.binary/meshes/base/sphere.glb|mesh.meshbin:scenes.Root Scene.pSphere1.1")
 
 local function create_pbr_entity(world, 
     name, transform, 
@@ -75,6 +75,6 @@ end
 
 local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 function pbr_test_sys:init()
-    world:create_entity((entitydir / "DamagedHelmet.txt"):string())
+    world:instance((entitydir / "DamagedHelmet.prefab"):string(), {})
     pbr_spheres()
 end

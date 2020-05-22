@@ -79,7 +79,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
                 srt = mu.srt(size or {1, 1, 1}, euler2quat(rot or {0, 0, 0}), {0, 0, 0}),
             },
             parent = parent,
-            mesh = world.component:resource "/pkg/ant.resources/meshes/ring.mesh",
+            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/ring.glb|mesh.meshbin",
             material = world.component:resource ([[
                 ---
                 /pkg/ant.resources/materials/gizmo_front_singlecolor.material
@@ -204,7 +204,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
                 srt = mu.srt(size or {1, 1, 1}, euler2quat(rot or {0, 0, 0}), pos or {0, 0, 0}),
             },
             parent = parent,
-            mesh = world.component:resource"/pkg/ant.resources/meshes/cone.mesh",
+            mesh = world.component:resource"/pkg/ant.resources.binary/meshes/base/cone.glb|mesh.meshbin",
             material = world.component:resource ([[
                 ---
                 /pkg/ant.resources/materials/gizmo_singlecolor.material
@@ -242,7 +242,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
                 srt = mu.srt(size or {1}, euler2quat({0, 0, 0}), pos or {0, 0, 0}),
             },
             parent = parent,
-            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
+            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.meshbin",
             material = world.component:resource ([[
                 ---
                 /pkg/ant.resources/materials/gizmo_singlecolor.material

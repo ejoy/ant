@@ -14,7 +14,7 @@ data:
             t: {0, 0, 8, 1}
         slot: "mixamorig:Head"
     material: $resource /pkg/ant.resources/materials/bunny.material
-    mesh: $resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1"
+    mesh: $resource "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.meshbin:scenes.Root Scene.pCube1.1"
     can_render: true
     scene_entity: true
     name: slot_cube

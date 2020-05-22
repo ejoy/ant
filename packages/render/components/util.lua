@@ -155,23 +155,9 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 		"ant.general|name",
 	}
 
-	local material = ([[
----
-%s
----
-op: replace
-path: /properties/uniforms/u_color
-value:
-  type: color
-  value:
-    {%f,%f,%f,%f}
-]]):format(
-	materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
-	color[1], color[2], color[3], color[4]
-)
 	local data = {
 		transform = util.create_transform(world, trans),
-		material = world.component:resource(material),
+		material = world.component:resource(materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material"),
 		can_render = true,
 		name = name or "Plane",
 		scene_entity = true,
@@ -192,6 +178,12 @@ value:
 	}
 
 	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres()))
+
+	local e = world[eid]
+	e.material.properties.uniforms.u_color = world.component:uniform {
+        type= "v4",
+        value = {color},
+    }
 	return eid
 end
 

@@ -17,7 +17,7 @@ local glb = glTF.glb
 
 local assetmgr = import_package "ant.asset"
 
-local default_cfg = import_package "ant.fileconvert".default_cfg.mesh
+local default_cfg
 
 local LAYOUT_CFG = {
     primTypeC2S = {

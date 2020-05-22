@@ -12,7 +12,6 @@
 { "lsocket", luaopen_lsocket },
 { "math3d", luaopen_math3d },
 { "math3d.adapter", luaopen_math3d_adapter },
-{ "meshconverter.gltf", luaopen_meshconverter_gltf },
 { "platform", luaopen_platform },
 { "platform,timer", luaopen_platform_timer },
 { "protocol", luaopen_protocol },

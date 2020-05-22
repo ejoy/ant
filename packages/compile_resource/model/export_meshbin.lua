@@ -1,18 +1,12 @@
-local glb_cvt	= require "mesh.glb_convertor"
 
 local gltfpkg   = import_package "ant.glTF"
 local gltfutil	= gltfpkg.util
-local glbloader = gltfpkg.glb
 local renderpkg = import_package "ant.render"
 local declmgr	= renderpkg.declmgr
-
-local utilitypkg= import_package "ant.utility"
-local fs_local	= utilitypkg.fs_local
 
 local sort_pairs = require "common.sort_pairs"
 
 local math3d	= require "math3d"
-local thread	= require "thread"
 
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)

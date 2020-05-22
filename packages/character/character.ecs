@@ -12,7 +12,7 @@ system "character_height_system"
     .implement "character.lua"
     .require_system "ant.collision|collider_system"
     .require_interface "ant.collision|collider"
-    .method "ik_target"
+    .method "do_ik"
 
 policy "character"
     .component "character"

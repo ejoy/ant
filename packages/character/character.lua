@@ -25,7 +25,7 @@ local function generate_height_test_ray(e)
     end
 end
 
-function char_height_sys:ik_target()
+function char_height_sys:do_ik()
     for _, eid in world:each "character_height_raycast" do
         local e = world[eid]
 

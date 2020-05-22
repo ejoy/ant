@@ -28,7 +28,7 @@ function st_sys:init()
 				}
 			}),
 			material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
-			mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh:scenes.scene1.pCube1.1",
+			mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.meshbin:scenes.Root Scene.pCube1.1",
 			name = "cast_shadow_cube",
 		}
 	}
@@ -108,24 +108,20 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 					t = math3d.ref(cylinder_offset),
 				},
 			}),
-			material = world.component:resource [[
----
-/pkg/ant.resources/materials/singlecolor.material
----
-op:replace
-path:/properties/uniforms/u_color
-value:
-  type:v4
-  value:
-    {1, 0, 0, 1}
-]],
-			mesh = world.component:resource '/pkg/ant.resources/meshes/cylinder.mesh:scenes.scene1.pCylinder1.1',
+			material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = world.component:resource '/pkg/ant.resources.binary/meshes/base/cylinder.glb|mesh.meshbin:scenes.Root Scene.pCylinder1.1',
 			name = "arrow.cylinder",
 		},
 		connection = {
             {"mount", arroweid}
         }
 	}
+
+	local cylinder = world[cylindereid]
+	cylinder.material.properties.uniforms.u_color = world.component:uniform {
+        type= "v4",
+        value = {{1, 0, 0, 1}},
+    }
 
 	local coneeid = world:create_entity{
 		policy = {
@@ -138,24 +134,23 @@ value:
 			scene_entity = true,
 			can_render = true,
 			transform = cu.create_transform(world, {srt={s={100}, t=cone_offset}}),
-			material = world.component:resource [[
----
-/pkg/ant.resources/materials/singlecolor.material
----
-op:replace
-path:/properties/uniforms/u_color
-value:
-  type:v4
-  value:
-    {1, 0, 0, 1}
-]],
-			mesh = world.component:resource '/pkg/ant.resources/meshes/cone.mesh:scenes.scene1.pCone1.1',
+			material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = world.component:resource '/pkg/ant.resources.binary/meshes/base/cone.glb|mesh.meshbin:scenes.Root Scene.pCone1.1',
 			name = "arrow.cone"
 		},
 		connection = {
             {"mount", arroweid}
-        }
+		},
+		writable = {
+			material = true,
+		}
 	}
+
+	local cone = world[coneeid]
+	cone.material.properties.uniforms.u_color = world.component:uniform {
+        type= "v4",
+        value = {{1, 0, 0, 1}},
+    }
 
 	-- local seri = import_package "ant.serialize"
 
