@@ -3,10 +3,20 @@ local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
 local fs_local = utilitypkg.fs_local
 
-local util = require "util"
-
 local shaderc = fs_local.valid_tool_exe_path "shaderc"
 local toolset = {}
+
+local shadertypes = {
+	NOOP       = "d3d9",
+	DIRECT3D9  = "d3d9",
+	DIRECT3D11 = "d3d11",
+	DIRECT3D12 = "d3d11",
+	GNM        = "pssl",
+	METAL      = "metal",
+	OPENGL     = "glsl",
+	OPENGLES   = "essl",
+	VULKAN     = "spirv",
+}
 
 local stage_types = {
 	f = "fragment",
@@ -37,8 +47,7 @@ local function default_level(shadertype, stagetype)
 end
 
 function toolset.compile(config)
-	local plat, plat_info, renderer = util.identify_info(config.identity)
-	local shadertype = util.shadertypes[renderer:upper()]
+	local shadertype = shadertypes[config.renderer]
 
 	local filepath 		= config.srcfile
 	local outfilepath 	= config.outfile
@@ -72,7 +81,7 @@ function toolset.compile(config)
 
 	local commands = {
 		shaderc:string(),
-		"--platform", assert(plat),
+		"--platform", assert(config.os),
 		"--type", stagetype,
 		"-p", shader_opt,
 		"-f", srcfilename,

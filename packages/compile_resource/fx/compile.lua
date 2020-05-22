@@ -5,10 +5,11 @@ local utilitypkg = import_package "ant.utility"
 local fs_local    = utilitypkg.fs_local
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
-local function check_compile_shader(identity, srcfilepath, outfilepath, macros)
+local function check_compile_shader(config, srcfilepath, outfilepath, macros)
 	lfs.create_directories(outfilepath:parent_path())
 	return toolset.compile {
-		identity = identity,
+		os = config.os,
+		renderer = config.renderer,
 		srcfile = srcfilepath,
 		outfile = outfilepath,
 		includes = {engine_shader_srcpath},
@@ -129,7 +130,7 @@ return function (config, srcfilepath, outpath, localpath)
 		if stage_file then
 			local shader_srcpath = localpath(stage_file)
 			all_depends[shader_srcpath:string()] = shader_srcpath
-			local success, msg, depends = check_compile_shader(config.identity, shader_srcpath, outpath / stagename, marcros)
+			local success, msg, depends = check_compile_shader(config, shader_srcpath, outpath / stagename, marcros)
 			build_success = build_success and success
 			messages[#messages+1] = msg
 

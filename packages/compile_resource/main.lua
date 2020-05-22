@@ -35,11 +35,20 @@ end
 
 --TODO
 local function init()
-    local renderpkg = import_package "ant.render"
-    local hw = renderpkg.hwi
-    compile.register("fx",      "win", {identity=hw.identity(), setting=load_fx_setting()})
-    compile.register("glb",     "win", {identity=hw.identity(),})
-    compile.register("texture", "win", {identity=hw.identity(),})
+    local render = import_package "ant.render"
+    local os = require "platform".OS:lower()
+    local renderer = render.hwi.get_caps().rendererType:upper()
+    compile.register("fx",      "win", {
+        os = os,
+        renderer = renderer,
+        setting = load_fx_setting()
+    })
+    compile.register("glb",     "win", {
+    })
+    compile.register("texture", "win", {
+        os = os,
+        renderer = renderer,
+    })
 end
 
 return {
@@ -47,6 +56,4 @@ return {
     register = compile.register,
     compile = compile.compile,
     read_file = require "utility".read_file,
-    ------
-    util = require "util",
 }

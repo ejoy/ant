@@ -141,16 +141,6 @@ function hw.shutdown()
 	bgfx.shutdown()
 end
 
-function hw.identity()
-	local plat = platform.OS
-	local plat_depend_info = " "
-	if plat == "iOS" then
-		local iosinfo = import_package "ant.ios"
-		plat_depend_info = iosinfo.cpu
-	end
-	return string.format(".%s[%s]_%s", plat, plat_depend_info, caps.rendererType):lower()
-end
-
 hw.frames = nil
 local _ui_dirty = false
 

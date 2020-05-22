@@ -1,5 +1,4 @@
 local lfs 	= require "filesystem.local"
-local util  = require "util"
 
 local stringify = import_package "ant.serialize".stringify
 local utilitypkg = import_package "ant.utility"
@@ -9,11 +8,11 @@ local fs_local = utilitypkg.fs_local
 local toolpath = fs_local.valid_tool_exe_path "texturec"
 
 local extensions = {
-	direct3d11 	= "dds",
-	direct3d12 	= "dds",
-	metal 		= "ktx",
-	vulkan 		= "ktx",
-	opengl 		= "ktx",
+	DIRECT3D11 	= "dds",
+	DIRECT3D12 	= "dds",
+	METAL 		= "ktx",
+	VULKAN 		= "ktx",
+	OPENGL 		= "ktx",
 }
 
 local function which_format(plat, param)
@@ -102,8 +101,7 @@ local function writefile(filename, data)
 end
 
 return function (config, sourcefile, outpath, localpath)
-	local plat, _, renderer = util.identify_info(config.identity)
-	local ext = assert(extensions[renderer])
+	local ext = assert(extensions[config.renderer])
 	local binfile = (outpath / "main.bin"):replace_extension(ext)
 
 	local commands = {
@@ -116,8 +114,8 @@ return function (config, sourcefile, outpath, localpath)
 	local texcontent = fs_local.datalist(sourcefile)
 	local texpath = localpath(assert(texcontent.path))
 
-	texcontent.format = assert(which_format(plat, texcontent))
-	gen_commands(plat, texcontent, texpath, binfile, commands)
+	texcontent.format = assert(which_format(config.os, texcontent))
+	gen_commands(config.os, texcontent, texpath, binfile, commands)
 
 	local success, msg = subprocess.spawn_process(commands, function (info)
 		local success, msg = true, ""
