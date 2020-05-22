@@ -20,60 +20,6 @@ local function get_desc(name, accessor)
 			gltfutil.decl_comptype_mapper[comptype_name]
 end
 
-local function classfiy_attri(attributes, accessors)
-	local attri_class = {}
-	for attriname, accidx in pairs(attributes) do
-		local acc = accessors[accidx+1]
-		local bvidx = acc.bufferView
-		local class = attri_class[bvidx]
-		if class == nil then
-			class = {}
-			attri_class[bvidx] = class
-		end
-
-		class[attriname] = acc
-	end
-	return attri_class
-end
-
-local function which_layout_type(name, layouts)
-	for _, layout in ipairs(layouts) do
-		if layout.format == name then
-			return layout.type or "static"
-		end
-	end
-	return "static"
-end
-
-local function create_decl(attri_class, layouts)
-	local decls = {}
-	for bvidx, class in pairs(attri_class) do
-		local sorted_class = {}
-		for attriname in pairs(class) do
-			sorted_class[#sorted_class+1] = attriname
-		end
-
-		table.sort(sorted_class, function (lhs, rhs)
-			local lhsacc, rhsacc = class[lhs], class[rhs]
-			return lhsacc.byteOffset < rhsacc.byteOffset
-		end)
-
-		local decl_descs = {}
-		for _, attriname in ipairs(sorted_class) do
-			local acc = class[attriname]
-			decl_descs[#decl_descs+1] = get_desc(attriname, acc)
-		end
-
-		local declname = table.concat(decl_descs, "|")
-		decls[bvidx] = {
-			declname = declname,
-			type = assert(which_layout_type(declname, layouts)),
-		}
-	end
-
-	return decls
-end
-
 local function gen_indices_flags(accessor)
 	local elemsize = gltfutil.accessor_elemsize(accessor)
 	local flags = ""
@@ -294,7 +240,77 @@ local function fetch_attri_buffers(gltfscene, gltfbin, attributes)
 	return attribuffers
 end
 
+local function find_skin_root_idx(scene, skin)
+	local joints = skin.joints
+	if joints == nil then
+		error(string.format("invalid mesh, skin node must have joints"))
+	end
+
+	if skin.skeleton then
+		return skin.skeleton;
+	end
+
+	local parents = {}
+	for _, nodeidx in ipairs(joints) do
+		local c = scene.nodes[nodeidx+1].children
+		if c then
+			for _,  cnodeidx in ipairs(c) do
+				parents[cnodeidx] = nodeidx
+			end
+		end
+	end
+
+	local root = skin.joints[1];
+	while (parents[root]) do
+		root = parents[root]
+	end
+
+	return root;
+end
+
+local cache_tree = {}
+
+local function redirect_skin_joints(scene)
+	local skins = scene.skins
+	if skins == nil then
+		return
+	end
+	for _, skin in ipairs(scene.skins) do
+		local joints = skin.joints
+		local skeleton_nodeidx = find_skin_root_idx(scene, skin)
+
+		if skeleton_nodeidx > 0 then
+			local mapper = cache_tree[skeleton_nodeidx]
+			if mapper == nil then
+				mapper = {}
+				local node_index = 0
+				-- follow with ozz-animation:SkeleteBuilder, IterateJointsDF
+				local function iterate_hierarchy_DF(nodes)
+					for _, nidx in ipairs(nodes) do
+						mapper[nidx] = node_index
+						node_index = node_index + 1
+						local node = scene.nodes[nidx+1]
+						local c = node.children
+						if c then
+							iterate_hierarchy_DF(c)
+						end
+					end
+				end
+				iterate_hierarchy_DF{skeleton_nodeidx}
+
+				cache_tree[skeleton_nodeidx] = mapper
+			end
+
+			for i=1, #joints do
+				local joint_nodeidx = joints[i]
+				joints[i] = assert(mapper[joint_nodeidx])
+			end
+		end
+	end
+end
+
 local function export_meshbin(gltfscene, bindata)
+	redirect_skin_joints(gltfscene)
 	local scene_scalemat = math3d.ref(math3d.matrix{s=gltfscene.scenescale})
 
 	local bvcaches = {}
