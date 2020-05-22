@@ -62,8 +62,6 @@ local function which_entity_hitted(blitdata, viewrect)
 	local function found_eid(pt)
 		if  0 < pt[1] and pt[1] <= w and
 			0 < pt[2] and pt[2] <= h then
-
-			raw_print(pt[1], pt[2])
 			local feid = blitdata[pt[1]*w+pt[2]]
 			if feid ~= 0 then
 				return feid
