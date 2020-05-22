@@ -1,6 +1,6 @@
 package.path = table.concat(
     {
-        "tools/import_model/?.lua",
+        "tools/import_fbx/?.lua",
         "engine/?.lua",
         "packages/?.lua",
         "packages/glTF/?.lua",
@@ -82,26 +82,23 @@ local function read_arguments()
         return idx+1
     end
 
-    local function read_outfolder(idx)
+    local function read_output(idx)
         local na = arg[idx+1]
         if na == nil then
             throw_error("need argument for outfolder:%d", idx+1)
         end
-        local outfolder = fs.path(na)
-        if fs.is_regular_file(outfolder) then
-            throw_error("outfolder argument must be a directory:%d, %s", idx+1, outfolder:string())
-        end
-        arguments.outfolder = refine_path(outfolder:string())
+        local output = fs.path(na)
+        arguments.output = refine_path(output:string())
         return idx+1
     end
 
     local commands = {
-        ["--input"]     = read_input,
-        ["-i"]          = read_input,
-        ["--outfolder"] = read_outfolder,
-        ["-o"]          = read_outfolder,
-        ["--help"]      = print_help,
-        ["-h"]          = print_help,
+        ["--input"]  = read_input,
+        ["-i"]       = read_input,
+        ["--output"] = read_output,
+        ["-o"]       = read_output,
+        ["--help"]   = print_help,
+        ["-h"]       = print_help,
     }
 
     local idx = 1
@@ -123,22 +120,19 @@ end
 
 local arguments = read_arguments()
 
-if not (arguments and arguments.input and arguments.outfolder) then
+if not (arguments and arguments.input and arguments.output) then
     print(help_info())
     return
 end
 
-local extname = arguments.input:extension():string():upper()
-local outfile = arguments.outfolder / arguments.input:filename()
-if extname == ".FBX" then
-    local fbx2gltf = require "fbx2gltf"
-    outfile:replace_extension ".glb"
-    local results = fbx2gltf { {arguments.input, outfile}}
-    if not next(results) then
-        print("failed to convert file:", arguments.input:string(), "from fbx to gltf file")
-    end
+fs.create_directories(fs.path(arguments.output):parent_path())
 
-    if not fs.exists(outfile) then
-        error(string.format("glb file is not exist, but fbx2gltf progrom return true:%s", arguments.input:string()))
-    end
+local fbx2gltf = require "fbx2gltf"
+local results = fbx2gltf { {arguments.input, arguments.output}}
+if not next(results) then
+    print("failed to convert file:", arguments.input:string(), "from fbx to gltf file")
+end
+
+if not fs.exists(fs.path(arguments.output)) then
+    error(string.format("glb file is not exist, but fbx2gltf progrom return true:%s", arguments.input:string()))
 end
