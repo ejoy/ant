@@ -19,7 +19,7 @@ local image_extension = {
 }
 
 local function tov4(v)
-    if #v == 4 then
+    if v == nil or #v == 4 then
         return v
     end
     
