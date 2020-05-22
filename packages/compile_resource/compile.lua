@@ -195,11 +195,12 @@ local function clean_file(input)
     end
     local keystring = input:string() .. "_" .. cfg.hash
     local cachepath = cache[keystring]
-    if not cachepath then
-        return
+    if cachepath then
+        cache[keystring] = nil
+        lfs.remove_all(cachepath)
+    else
+        lfs.remove_all(cfg.binpath / get_filename(input))
     end
-    lfs.remove_all(cachepath)
-    cache[keystring] = nil
 end
 
 local function clean(pathstring)
