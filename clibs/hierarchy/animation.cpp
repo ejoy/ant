@@ -2,7 +2,7 @@
 #include <lua.hpp>
 
 #include "hierarchy.h"
-#include "meshbase/meshbase.h"
+//#include "meshbase/meshbase.h"
 
 #include <ozz/animation/runtime/animation.h>
 #include <ozz/animation/runtime/sampling_job.h>

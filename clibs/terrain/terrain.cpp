@@ -1,6 +1,6 @@
 #define LUA_LIB
 
-#include "meshbase/meshbase.h"
+//#include "meshbase/meshbase.h"
 #include "glm/glm.hpp"
 
 extern "C" {
@@ -180,16 +180,16 @@ static int
 lterrain_aabb(lua_State *L){
 	const auto positions = (glm::vec3*)lua_touserdata(L, 1);
 	const auto num = (uint32_t)lua_tointeger(L, 2);
-	auto bounding = (Bounding*)luaL_checkudata(L, 3, "BOUNDING_MT");
+	//auto bounding = (Bounding*)luaL_checkudata(L, 3, "BOUNDING_MT");
 
-	bounding->Reset();
+	//bounding->Reset();
 
-	for (uint32_t ii = 0; ii < num; ++ii){
-		bounding->aabb.Append(positions[ii]);
-	}
+	//for (uint32_t ii = 0; ii < num; ++ii){
+	//	bounding->aabb.Append(positions[ii]);
+	//}
 
-	bounding->sphere.Init(bounding->aabb);
-	bounding->obb.Init(bounding->aabb);
+	//bounding->sphere.Init(bounding->aabb);
+	//bounding->obb.Init(bounding->aabb);
 	
 	return 1;
 }
