@@ -26,7 +26,6 @@ OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_ant.o $(ODIR)/imgui_config.o $(ODIR)/img
 OBJS += $(ODIR)/luaimnode.o $(ODIR)/imnodes.o
 
 ifeq "$(PLAT)" "mingw"
-CFLAGS += -Wno-misleading-indentation -Wno-unused-but-set-variable
 OBJS += $(ODIR)/imgui_win32.o
 LIBS = -limm32
 
