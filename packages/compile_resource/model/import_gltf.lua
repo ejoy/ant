@@ -61,7 +61,7 @@ local function export_pbrm(arguments, glbdata)
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
     
-            local begidx = bv.byteOffset+1
+            local begidx = (bv.byteOffset or 0)+1
             local endidx = begidx + bv.byteLength
             assert(endidx <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
@@ -106,7 +106,9 @@ local function export_pbrm(arguments, glbdata)
         wrapT       = address_tags["REPEAT"],
     }
     
-    local function to_sampler(gltfsampler)
+    local function to_sampler(gltfscene, sampleidx)
+        local gltfsampler = sampleidx and gltfscene.samplers[sampleidx + 1] or default_sampler_flags
+    
         local minfilter = gltfsampler.minFilter or default_sampler_flags.minFilter
         local maxFilter = gltfsampler.maxFilter or default_sampler_flags.maxFilter
     
@@ -163,10 +165,9 @@ local function export_pbrm(arguments, glbdata)
         local tex = textures[texidx+1]
 
         local imgpath = export_image(image_folder, tex.source)
-        local sampler = samplers[tex.sampler+1]
         local texture_desc = {
             texture = arguments:localpath2subrespath(imgpath):string(),
-            sampler = to_sampler(sampler),
+            sampler = to_sampler(tex.sampler),
             normalmap = normalmap,
             colorspace = colorspace,
             type = "texture",
