@@ -15,8 +15,8 @@ struct hierarchy_build_data {
 	ozz::animation::Skeleton *skeleton;
 };
 
-using bindpose_soa = ozz::Vector<ozz::math::SoaTransform>::Std;
-using bindpose = ozz::Vector<ozz::math::Float4x4>::Std;
+using bindpose_soa = ozz::vector<ozz::math::SoaTransform>;
+using bindpose = ozz::vector<ozz::math::Float4x4>;
 
 struct ik_data{
 	std::string 				type;

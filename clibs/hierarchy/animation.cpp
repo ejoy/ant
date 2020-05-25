@@ -92,7 +92,7 @@ public:
 #define REGISTER_LUA_CLASS(C) template<> const char luaClass<C>::kLuaName[] = #C;
 
 struct ozzJointRemap : public luaClass<ozzJointRemap> {
-	ozz::Vector<uint16_t>::Std joints;
+	ozz::vector<uint16_t> joints;
 	ozzJointRemap()
 	: joints()
 	{ }
@@ -271,10 +271,10 @@ REGISTER_LUA_CLASS(ozzAllocator)
 struct ozzSamplingCache : public luaClass<ozzSamplingCache> {
 	ozz::animation::SamplingCache* v;
 	ozzSamplingCache(int max_tracks)
-	: v(OZZ_NEW(ozz::memory::default_allocator(), ozz::animation::SamplingCache)(max_tracks))
+	: v(ozz::New<ozz::animation::SamplingCache>(max_tracks))
 	{ }
 	~ozzSamplingCache() {
-		OZZ_DELETE(ozz::memory::default_allocator(), v);
+		ozz::Delete(v);
 	}
 	static int create(lua_State* L) {
 		int max_tracks = (int)luaL_optinteger(L, 1, 0);
@@ -287,10 +287,10 @@ REGISTER_LUA_CLASS(ozzSamplingCache)
 struct ozzAnimation : public luaClass<ozzAnimation> {
 	ozz::animation::Animation* v;
 	ozzAnimation()
-	: v(OZZ_NEW(ozz::memory::default_allocator(), ozz::animation::Animation)())
+	: v(ozz::New<ozz::animation::Animation>())
 	{ }
 	~ozzAnimation() {
-		OZZ_DELETE(ozz::memory::default_allocator(), v);
+		ozz::Delete(v);
 	}
 
 	static int lduration(lua_State *L) {
@@ -342,8 +342,8 @@ struct alignas(8) ozzPoseResult : public ozzBindposeT<ozzPoseResult> {
 public:
 	typedef luaClass<ozzPoseResult> luaClassType;
 
-	ozz::Vector<bindpose_soa>::Std  m_results;
-	ozz::Vector<ozz::animation::BlendingJob::Layer>::Std m_layers;
+	ozz::vector<bindpose_soa>  m_results;
+	ozz::vector<ozz::animation::BlendingJob::Layer> m_layers;
 	ozz::animation::Skeleton*   m_ske;
 	ozzPoseResult(size_t numjoints)
 		: ozzBindposeT<ozzPoseResult>(numjoints)
@@ -359,7 +359,7 @@ private:
 		m_results.emplace_back(pose);
 		ozz::animation::BlendingJob::Layer layer;
 		layer.weight = weight;
-		layer.transform = ozz::make_range(m_results.back());
+		layer.transform = ozz::make_span(m_results.back());
 		m_layers.emplace_back(layer);
 	}
 
@@ -406,7 +406,7 @@ private:
 		job.animation = animation->v;
 		job.cache = sampling->v;
 		job.ratio = ratio;
-		job.output = ozz::make_range(bp_soa);
+		job.output = ozz::make_span(bp_soa);
 		if (!job.Run()) {
 			return luaL_error(L, "sampling animation failed!");
 		}
@@ -429,15 +429,15 @@ private:
 		ozz::animation::BlendingJob job;
 		bindpose_soa bp_soa(m_ske->num_soa_joints());
 		if (strcmp(blendtype, "blend") == 0) {
-			job.layers = ozz::Range(&(m_layers[max-n]), n);
+			job.layers = ozz::span(&(m_layers[max-n]), n);
 		} else if (strcmp(blendtype, "additive") == 0) {
-			job.additive_layers = ozz::Range(&(m_layers[max-n]), n);
+			job.additive_layers = ozz::span(&(m_layers[max-n]), n);
 		} else {
 			return luaL_error(L, "invalid blend type: %s", blendtype);
 		}
 		job.bind_pose = m_ske->joint_bind_poses();
 		job.threshold = threshold;
-		job.output = ozz::make_range(bp_soa);
+		job.output = ozz::make_span(bp_soa);
 		if (!job.Run()) {
 			return luaL_error(L, "blend failed");
 		}
@@ -459,9 +459,9 @@ private:
 			return luaL_error(L, "no result");
 		}
 		ozz::animation::LocalToModelJob job;
-		job.input = ozz::make_range(m_results.back());
+		job.input = ozz::make_span(m_results.back());
 		job.skeleton = m_ske;
-		job.output = ozz::make_range(*(bindpose*)this);
+		job.output = ozz::make_span(*(bindpose*)this);
 		if (!job.Run()) {
 			return luaL_error(L, "doing blend result to ltm job failed!");
 		}
@@ -575,10 +575,9 @@ read_in_vertex_data(lua_State *L, int index, in_vertex_data &vd){
 
 template<typename T, typename DataT>
 static void
-fill_skinning_job_field(uint32_t num_vertices, const DataT &d, ozz::Range<T> &r, size_t &stride) {
+fill_skinning_job_field(uint32_t num_vertices, const DataT &d, ozz::span<T> &r, size_t &stride) {
 	const uint8_t* begin_data = (const uint8_t*)d.data + d.offset;
-	r.begin = (T*)(begin_data);
-	r.end	= (T*)(begin_data + d.stride * num_vertices);
+	r = ozz::span<T>((T*)(begin_data), (T*)(begin_data + d.stride * num_vertices));
 	stride = d.stride;
 }
 
@@ -648,7 +647,7 @@ lmesh_skinning(lua_State *L){
 	ozz::geometry::SkinningJob skinning_job;
 	skinning_job.vertex_count = num_vertices;
 	skinning_job.influences_count = influences_count;
-	skinning_job.joint_matrices = ozz::make_range(*skinning_matrices);
+	skinning_job.joint_matrices = ozz::make_span(*skinning_matrices);
 	
 	assert(vd.positions.data && "skinning system must provide 'position' attribute");
 

@@ -24,7 +24,7 @@ ldel_ozzmesh(lua_State *L) {
 	ozzmesh *om = (ozzmesh*)lua_touserdata(L, 1);
 
 	if (om->mesh) {
-		OZZ_DELETE(ozz::memory::default_allocator(), om->mesh);
+		ozz::Delete(om->mesh);
 	}
 
 	return 0;
@@ -63,7 +63,7 @@ lnew_ozzmesh(lua_State *L) {
 	luaL_getmetatable(L, "OZZMESH");
 	lua_setmetatable(L, -2);
 
-	om->mesh = OZZ_NEW(ozz::memory::default_allocator(), ozz::sample::Mesh);
+	om->mesh = ozz::New<ozz::sample::Mesh>();
 	LoadOzzMesh(filename, om->mesh);
 	return 1;
 }
