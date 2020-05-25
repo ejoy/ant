@@ -363,9 +363,12 @@ lref_setter(lua_State *L) {
 	int64_t oid = R->id;
 	switch(key[0]) {
 	case 'i': { // value id
-		int64_t oid = get_id(L, 3, lua_type(L, 3));
-		if (oid != R->id) {
-			R->id = lastack_mark(LS, oid);
+		int64_t nid = get_id(L, 3, lua_type(L, 3));
+		if (nid != oid) {
+			R->id = lastack_mark(LS, nid);
+		} else {
+			// do not unmark oid
+			return 0;
 		}
 		break; }
 	case 'v':	// should be vector
@@ -389,7 +392,6 @@ lref_setter(lua_State *L) {
 	default:
 		return luaL_error(L, "Invalid set key %s with ref object", key); 
 	}
-	// we must unmark old id after assign, because 'v.i = v'
 	lastack_unmark(LS, oid);
 	return 0;
 }
