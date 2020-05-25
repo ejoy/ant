@@ -3,12 +3,21 @@ local worlds        = require "worlds"
 local task          = require "task"
 local imgui         = require "imgui.ant"
 local import_prefab = require "import_prefab"
-local imgui_util    = require "imgui_util"
 local w
 local world
 local eventPrefab
 local entities = {}
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar", "NoBringToFrontOnFocus" }
+
+local function ONCE(t, s)
+    if not s then return t end
+end
+local windiwsBegin = imgui.windows.Begin
+local windiwsEnd = setmetatable({}, { __close = imgui.windows.End })
+local function imgui_windows(...)
+	windiwsBegin(...)
+	return ONCE, windiwsEnd, nil, windiwsEnd
+end
 
 function event.init()
     w, world = worlds.create "PrefabViewer" {
@@ -48,13 +57,13 @@ function event.update()
 end
 
 function event.prefab_viewer()
-    for _ in imgui_util.windows("prefab_viewer", wndflags) do
+    for _ in imgui_windows("prefab_viewer", wndflags) do
         w.show()
     end
 end
 
 function event.prefab_editor()
-    for _ in imgui_util.windows("prefab_editor", wndflags) do
+    for _ in imgui_windows("prefab_editor", wndflags) do
         for _, eid in ipairs(entities) do
             local e = world[eid]
             if e.rendermesh then

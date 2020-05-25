@@ -41,20 +41,17 @@ function seri_util.stringify_basetype(v)
 end
 
 function seri_util.seri_vector(v, lastv)
-    lastv = lastv or 0
+    local v1, v2, v3, v4
     if #v == 1 then
-        return ("{%d, %d, %d, %d"):format(v[1], v[1], v[1], lastv)
+        v1, v2, v3, v4 = v[1], v[1], v[1], lastv or 0
+    elseif #v == 3 then
+        v1, v2, v3, v4 = v[1], v[2], v[3], lastv or 0
+    elseif #v == 4 then
+        v1, v2, v3, v4 = v[1], v[2], v[3], v[4]
+    else
+        error("invalid vector")
     end
-
-    if #v == 3 then
-        return ("{%d, %d, %d, %d"):format(v[1], v[2], v[3], lastv)
-    end
-
-    if #v == 4 then
-        return ("{%d, %d, %d, %d"):format(v[1], v[2], v[3], v[4])
-    end
-
-    error("invalid vector")
+    return ("{%s, %s, %s, %s}"):format(seri_util.stringify_basetype(v1), seri_util.stringify_basetype(v2), seri_util.stringify_basetype(v3), seri_util.stringify_basetype(v4))
 end
 
 local depth_cache = {}

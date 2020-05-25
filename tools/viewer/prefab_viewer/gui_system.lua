@@ -2,8 +2,25 @@ local ecs = ...
 local world = ecs.world
 
 local imgui      = require "imgui"
-local imgui_util = require "imgui_util"
 local rhwi       = import_package 'ant.render'.hwi
+
+local function ONCE(t, s)
+    if not s then return t end
+end
+local windiwsBegin = imgui.windows.Begin
+local windiwsEnd = setmetatable({}, { __close = imgui.windows.End })
+local function imgui_windows(...)
+	windiwsBegin(...)
+	return ONCE, windiwsEnd, nil, windiwsEnd
+end
+
+local function imgui_tooltip(text, wrap)
+    if imgui.util.IsItemHovered() then
+        imgui.widget.BeginTooltip()
+        imgui.widget.TextWrapped(text, wrap or 200)
+        imgui.widget.EndTooltip()
+    end
+end
 
 local m = ecs.system 'gui_system'
 
@@ -33,14 +50,14 @@ local function imguiToolbar(text, tooltip, active)
     local r = imgui.widget.Button(text)
     imgui.windows.PopStyleColor()
     if tooltip then
-        imgui_util.tooltip(tooltip)
+        imgui_tooltip(tooltip)
     end
     return r
 end
 
 function m:ui_update()
     imgui.windows.SetNextWindowPos(0, 50)
-    for _ in imgui_util.windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
+    for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
         imguiBeginToolbar()
         if imguiToolbar("🚫", "Disable", status.CameraMode == "disable") then
             status.CameraMode = "disable"

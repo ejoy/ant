@@ -6,8 +6,8 @@ local math3d  = require "math3d"
 local m = ecs.system "camera_system"
 
 local eventCameraControl = world:sub {"camera"}
-local cameraInitEyepos <const> = {1.6, 1.8,-1.8, 1}
-local cameraInitTarget <const> = {0, 0.9, 0, 1}
+local cameraInitEyepos <const> = {2, 2, -2, 1}
+local cameraInitTarget <const> = {0, 1,  0, 1}
 local cameraTarget
 local cameraDistance
 local cameraId

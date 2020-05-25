@@ -25,12 +25,16 @@ local function createPrefab(filename)
             aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
         end
     end
-    local size = math3d.tovalue(math3d.sub(math3d.index(aabb, 2), math3d.index(aabb, 1)))
-    local scale = 1/math.max(table.unpack(size))
+    local aabb_mat = math3d.tovalue(aabb)
+    local min_x, min_y, min_z = aabb_mat[1], aabb_mat[2], aabb_mat[3]
+    local max_x, max_y, max_z = aabb_mat[5], aabb_mat[6], aabb_mat[7]
+    local s = 1/math.max(max_x - min_x, max_y - min_y, max_z - min_z)
+    local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
+    local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
     for _, eid in ipairs(entities) do
         local e = world[eid]
         if e.transform then
-            e.transform.srt.s = math3d.mul(scale, e.transform.srt.s)
+            e.transform.srt.m = math3d.mul(transform, e.transform.srt)
         end
     end
 end

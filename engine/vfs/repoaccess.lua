@@ -1,7 +1,6 @@
 local access = {}
 
 local lfs = require "filesystem.local"
-local vfsinternal = require "firmware.vfs"
 local crypt = require "crypt"
 
 local function load_package(path)
@@ -97,19 +96,6 @@ function access.virtualpath(repo, pathname)
 		if pathname:sub(1,n) == mpath .. '/' then
 			return name .. '/' .. pathname:sub(n+1)
 		end
-	end
-end
-
-function access.hash(repo, path)
-	if repo._loc then
-		local rpath = access.realpath(repo, path)
-		return access.sha1_from_file(rpath)
-	else
-		if not repo._internal then
-			repo._internal = vfsinternal.new(repo._root:string())
-		end
-		local _, hash = repo._internal:realpath(path)
-		return hash
 	end
 end
 
