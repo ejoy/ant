@@ -166,7 +166,7 @@ local function export_pbrm(arguments, glbdata)
         local imgname = export_image(image_folder, tex.source)
         local sampler = samplers[tex.sampler+1]
         local texture_desc = {
-            texture = "./"..imgname,
+            path = "./"..imgname,
             sampler = to_sampler(sampler),
             normalmap = normalmap,
             colorspace = colorspace,

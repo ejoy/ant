@@ -169,7 +169,7 @@ function seri_util.seri_pbrm(pbrm)
     local depth = 0
     local function seri_texture(tex, depth, r)
         if tex then
-            r[#r+1] = seri_util.get_depth(depth) .. "path: $resource " .. tex
+            r[#r+1] = seri_util.get_depth(depth) .. "texture: $resource " .. tex
         end
     end
 
