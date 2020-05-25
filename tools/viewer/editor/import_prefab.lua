@@ -26,17 +26,15 @@ local function import_fbx(input, output)
     assert(p:wait() == 0, p.stderr:read "a")
 end
 
-return function (filename)
-    local output = "/pkg/tools.viewer.prefab_viewer/res/root.glb"
-    local linput = lfs.path(filename)
-    local loutput = fs.path(output):localpath()
-    lfs.remove_all(loutput)
-    lfs.create_directories(loutput:parent_path())
-    if linput:equal_extension ".fbx" then
-        import_fbx(linput, loutput)
+return function (input, output)
+    local inputPath = lfs.path(input)
+    local outputPath = fs.path(output):localpath()
+    lfs.remove_all(outputPath)
+    lfs.create_directories(outputPath:parent_path())
+    if inputPath:equal_extension ".fbx" then
+        import_fbx(inputPath, outputPath)
     else
-        lfs.copy_file(linput, loutput, true)
+        lfs.copy_file(inputPath, outputPath, true)
     end
     cr.clean(output)
-    return output .. "|mesh.prefab"
 end

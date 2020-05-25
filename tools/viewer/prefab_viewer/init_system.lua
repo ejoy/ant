@@ -2,21 +2,19 @@ local ecs = ...
 local world = ecs.world
 
 local fs = require "filesystem"
+local lfs = require "filesystem.local"
 
 local renderpkg  = import_package 'ant.render'
 local math3d  = require 'math3d'
 
-local eventResetPrefab = world:sub {"reset_prefab"}
+local eventInstancePrefab = world:sub {"instance_prefab"}
+local eventSerializePrefab = world:sub {"serialize_prefab"}
 
 local m = ecs.system 'init_system'
 
 local entities = {}
-local function createPrefab(filename)
-    for _, eid in ipairs(entities) do
-        world:remove_entity(eid)
-    end
-    entities = world:instance(filename, {root=0})
-    world:pub {"editor", "prefab", entities}
+
+local function normalizeAabb()
     local aabb
     for _, eid in ipairs(entities) do
         local e = world[eid]
@@ -39,13 +37,38 @@ local function createPrefab(filename)
     end
 end
 
+local function instancePrefab(filename)
+    for _, eid in ipairs(entities) do
+        world:remove_entity(eid)
+    end
+    entities = world:instance(filename, {root=0})
+    normalizeAabb()
+    world:pub {"editor", "prefab", entities}
+end
+
+local function write_file(filename, data)
+    local f = assert(lfs.open(fs.path(filename):localpath(), "wb"))
+    f:write(data)
+    f:close()
+end
+
+local function serializePrefab(filename)
+    local serialize = import_package "ant.serialize"
+    local data = serialize.prefab(world, entities, {})
+    write_file(filename, data)
+end
+
 function m:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
     world:instance '/pkg/tools.viewer.prefab_viewer/light_directional.prefab'
 
-    local glb = "/pkg/tools.viewer.prefab_viewer/res/root.glb"
-    if fs.exists(fs.path(glb)) then
-        createPrefab(glb .. "|mesh.prefab")
+    if fs.exists(fs.path "/pkg/tools.viewer.prefab_viewer/res/root.prefab") then
+        instancePrefab "/pkg/tools.viewer.prefab_viewer/res/root.prefab"
+        return
+    end
+    if fs.exists(fs.path "/pkg/tools.viewer.prefab_viewer/res/root.glb") then
+        instancePrefab "/pkg/tools.viewer.prefab_viewer/res/root.glb|mesh.prefab"
+        return
     end
 end
 
@@ -55,7 +78,10 @@ function m:post_init()
 end
 
 function m:data_changed()
-    for _, filename in eventResetPrefab:unpack() do
-        createPrefab(filename)
+    for _, filename in eventInstancePrefab:unpack() do
+        instancePrefab(filename)
+    end
+    for _, filename in eventSerializePrefab:unpack() do
+        serializePrefab(filename)
     end
 end

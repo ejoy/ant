@@ -9,7 +9,7 @@ function m:init()
 end
 
 function m:save()
-    return tostring(self):match "[^:]+"
+    return tostring(self):match "^(.-):?$"
 end
 
 function m:copy()
