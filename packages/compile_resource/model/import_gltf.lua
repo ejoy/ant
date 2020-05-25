@@ -61,7 +61,7 @@ local function export_pbrm(arguments, glbdata)
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
     
-            local begidx = bv.byteOffset+1
+            local begidx = (bv.byteOffset or 0)+1
             local endidx = begidx + bv.byteLength
             assert(endidx <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
