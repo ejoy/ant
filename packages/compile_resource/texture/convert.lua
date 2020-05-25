@@ -100,6 +100,13 @@ local function writefile(filename, data)
 	f:close()
 end
 
+local function absolute_path(base, path, convert)
+	if path:sub(1,1) == "/" then
+		return convert(path)
+	end
+	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
+end
+
 return function (config, sourcefile, outpath, localpath)
 	local ext = assert(extensions[config.renderer])
 	local binfile = (outpath / "main.bin"):replace_extension(ext)
@@ -112,7 +119,7 @@ return function (config, sourcefile, outpath, localpath)
 	}
 
 	local texcontent = fs_local.datalist(sourcefile)
-	local texpath = localpath(assert(texcontent.path))
+	local texpath = absolute_path(sourcefile, assert(texcontent.path), localpath)
 
 	texcontent.format = assert(which_format(config.os, texcontent))
 	gen_commands(config.os, texcontent, texpath, binfile, commands)

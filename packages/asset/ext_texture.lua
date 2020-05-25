@@ -19,6 +19,13 @@ local function readfile(filename)
 	return data
 end
 
+local function absolute_path(base, path)
+	if path:sub(1,1) == "/" then
+		return path
+	end
+	return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
+end
+
 local function loader(filename)
 	local outpath = cr.compile(filename)
 	local config = datalist.parse(readfile(outpath / "main.texture"))
@@ -35,7 +42,7 @@ local function loader(filename)
 			log.warn(string.format("texture:%s, is sRGB space, but hardware not support sRGB", filename:string()))
 		end
 	end
-	local handle = texture_load(assert(binary), config.path, flag)
+	local handle = texture_load(assert(binary), absolute_path(filename, config.path), flag)
 	return {handle=handle, sampler=ru.fill_default_sampler(sampler)}, 0
 end
 

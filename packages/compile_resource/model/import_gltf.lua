@@ -54,7 +54,8 @@ local function export_pbrm(arguments, glbdata)
 
         local img = images[imgidx+1]
         local name = img.name or tostring(imgidx)
-        local imgpath = image_folder / name .. image_extension[img.mimeType]
+        local imgname = name .. image_extension[img.mimeType]
+        local imgpath = image_folder / imgname
     
         if not fs.exists(imgpath) then
     
@@ -68,7 +69,7 @@ local function export_pbrm(arguments, glbdata)
     
             fs_local.write_file(imgpath, c)
         end
-        return imgpath
+        return imgname
         
     end
 
@@ -162,10 +163,10 @@ local function export_pbrm(arguments, glbdata)
     local function fetch_texture_info(texidx, name, normalmap, colorspace)
         local tex = textures[texidx+1]
 
-        local imgpath = export_image(image_folder, tex.source)
+        local imgname = export_image(image_folder, tex.source)
         local sampler = samplers[tex.sampler+1]
         local texture_desc = {
-            texture = arguments:localpath2subrespath(imgpath):string(),
+            texture = "./"..imgname,
             sampler = to_sampler(sampler),
             normalmap = normalmap,
             colorspace = colorspace,
@@ -176,14 +177,15 @@ local function export_pbrm(arguments, glbdata)
         local need_compress<const> = true
         add_texture_format(texture_desc, need_compress)
 
-        local texpath = imgpath:parent_path() / name .. ".texture"
+        local texpath = arguments.outfolder / "images" / name .. ".texture"
         fs_local.write_file(texpath, seri_stringify(texture_desc))
-        return texpath:string()
+        return name .. ".texture"
     end
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            return arguments:localpath2subrespath(fs.path(fetch_texture_info(tex_desc.index, name, normalmap, colorspace))):string()
+            local filename = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
+            return "./../images/" .. filename
         end
     end
 
