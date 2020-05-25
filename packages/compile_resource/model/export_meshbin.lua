@@ -20,74 +20,38 @@ local function get_desc(name, accessor)
 			gltfutil.decl_comptype_mapper[comptype_name]
 end
 
-local function gen_indices_flags(accessor)
-	local elemsize = gltfutil.accessor_elemsize(accessor)
-	local flags = ""
-	if elemsize == 4 then
-		flags = 'd'
+local function fetch_ib_buffer(gltfscene, bindata, index_accessor)
+	local bv = gltfscene.bufferViews[index_accessor.bufferView + 1]
+	local elemsize = gltfutil.accessor_elemsize(index_accessor)
+
+	local accoffset = index_accessor.byteOffset or 0
+	local bvoffset = bv.byteOffset or 0
+	local offset = accoffset + bvoffset + 1
+	assert((bv.byteStride or elemsize) == elemsize)
+	local value
+	if elemsize == 1 then
+		local buffers = {}
+		local begidx = offset
+		for i=1, index_accessor.count do
+			local endidx = begidx+elemsize-1
+			local v = bindata:sub(begidx, endidx)
+			begidx = endidx + 1
+			local idx = string.unpack("<B", v)
+			buffers[#buffers+1] = string.pack("H", idx)
+		end
+		value = table.concat(buffers, "")
+	elseif elemsize == 2 or elemsize == 4 then
+		local numbytes = elemsize * index_accessor.count
+		value = bindata:sub(offset, offset + numbytes -1)
+	else
+		error(("invalid index buffer elemenet size: %d"):format(elemsize))
 	end
-
-	return flags
-end
-
-local function fetch_ib_info(bv, bufferflag, bindata, buffers)
-	if bindata then
-		local start_offset = bv.byteOffset + 1
-		return {
-			type = "static",
-			value = bindata,
-			start = start_offset,
-			num = bv.byteLength,
-			flag = bufferflag,
-		}
-	end
-
-	assert(buffers)
-	local buffer = buffers[assert(bv.buffer)+1]
-	local appdata = buffer.extras
-	if buffer.extras then
-		return {
-			type = "static",
-			value = appdata[1],
-			start = appdata[2],
-			num = appdata[3] - appdata[2],
-			flag = bufferflag,
-		}
-	end
-
-	assert("not implement from uri")
-end
-
-local function fetch_vb_info(bv, declinfo, bindata, buffers)
-	local buffertype = declinfo.type
-	local declname = declinfo.declname
-
-	if bindata then
-		local start_offset = bv.byteOffset + 1
-		return {
-			type = buffertype,
-			declname = declname,
-			value 	= bindata,
-			start 	= start_offset,
-			num 	= bv.byteLength,
-		}
-	end
-
-	assert(buffers)
-	local buffer = buffers[assert(bv.buffer)+1]
-	local appdata = buffer.extras
-	if buffer.extras then
-		assert(appdata[1] == "!")
-		return {
-			type = buffertype,
-			declname = declname,
-			value = appdata[2],
-			start = appdata[3],
-			num = appdata[4] - appdata[3],
-		}
-	end
-
-	assert("not implement from uri")
+	return {
+		value = value,
+		start = 1,
+		num = #value,
+		flag = (elemsize == 4 and 'd' or ''),
+	}
 end
 
 local function create_prim_bounding(meshscene, prim)	
@@ -181,7 +145,7 @@ local default_layouts = {
 	TEXCOORD_7 	= 3,
 }
 
-local function fetch_attri_buffers(gltfscene, gltfbin, attributes)
+local function fetch_vb_buffers(gltfscene, gltfbin, attributes)
 	local attribclasses = {}
 	for attribname, accidx in pairs(attributes) do
 		local which_layout = default_layouts[attribname]
@@ -224,7 +188,13 @@ local function fetch_attri_buffers(gltfscene, gltfbin, attributes)
 				local c = cacheclass[jj]
 				local acc_offset, bv_offset, elemsize, stride = c[1], c[2], c[3], c[4]
 				local elemoffset = bv_offset + ii * stride + acc_offset + 1
-				buffer[#buffer+1] = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
+				local buf = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
+				local size = elemsize / 4
+				local formats = {[1] = "f", [2] = "ff", [3] = "fff", [4] = "ffff"}
+
+				local t = table.pack(string.unpack(formats[size], buf))
+				print(table.concat(t, " "))
+				buffer[#buffer+1] = buf
 			end
 		end
 
@@ -342,10 +312,8 @@ local function export_meshbin(gltfscene, bindata)
 							material = prim.material,
 						}
 
-						local attirbbuffers = fetch_attri_buffers(gltfscene, bindata, prim.attributes)
-
 						group.vb = {
-							values 	= attirbbuffers,
+							values 	= fetch_vb_buffers(gltfscene, bindata, prim.attributes),
 							start 	= 0,
 							num 	= gltfutil.num_vertices(prim, gltfscene),
 						}
@@ -355,7 +323,7 @@ local function export_meshbin(gltfscene, bindata)
 							local idxacc = gltfscene.accessors[indices_accidx+1]
 							local bv = gltfscene.bufferViews[idxacc.bufferView+1]
 							group.ib = {
-								value 	= fetch_ib_info(bv, gen_indices_flags(idxacc), bindata, gltfscene.buffers),
+								value 	= fetch_ib_buffer(gltfscene, bindata, idxacc),
 								start 	= 0,
 								num 	= idxacc.count,
 							}
