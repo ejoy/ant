@@ -26,7 +26,7 @@
 
 static inline void 
 mul_quaternion(size_t jointidx, const ozz::math::SimdQuaternion& quat,
-	ozz::Vector<ozz::math::SoaTransform>::Std& transforms) {	
+	ozz::vector<ozz::math::SoaTransform>& transforms) {	
 
 	ozz::math::SoaTransform& soa_transform_ref = transforms[jointidx / 4];
 	ozz::math::SimdQuaternion aos_quats[4];
@@ -123,9 +123,9 @@ do_ik(lua_State* L,
 	};
 
 	ozz::animation::LocalToModelJob ltm_job;
-	ltm_job.input = ozz::make_range(pose_soa);
+	ltm_job.input = ozz::make_span(pose_soa);
 	ltm_job.skeleton = ske;
-	ltm_job.output = ozz::make_range(result_pose);
+	ltm_job.output = ozz::make_span(result_pose);
 	ltm_job.from = ikdata.joints[0];
 
 	if (ikdata.type == "two_bone"){

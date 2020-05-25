@@ -42,7 +42,7 @@ get_ske(lua_State *L, int index = 1){
 static int
 find_joint_index(const ozz::animation::Skeleton *ske, const char*name) {
 	const auto& joint_names = ske->joint_names();
-	for (int ii = 0; ii < (int)joint_names.count(); ++ii) {
+	for (int ii = 0; ii < (int)joint_names.size(); ++ii) {
 		if (strcmp(name, joint_names[ii]) == 0) {
 			return ii;
 		}
@@ -72,7 +72,7 @@ get_joint_index(lua_State *L, const ozz::animation::Skeleton *ske, int index) {
 static int
 lbuilddata_del(lua_State *L){
 	struct hierarchy_build_data *builddata = (struct hierarchy_build_data*)lua_touserdata(L, 1);
-	OZZ_DELETE(ozz::memory::default_allocator(), builddata->skeleton);	
+	ozz::Delete(builddata->skeleton);
 	builddata->skeleton = NULL;
 	return 0;
 }
@@ -228,7 +228,7 @@ lbuilddata_bindpose(lua_State *L) {
 	ozz::animation::LocalToModelJob job;
 	job.skeleton = ske;
 	job.input = ske->joint_bind_poses();
-	job.output = ozz::make_range(*bpresult);
+	job.output = ozz::make_span(*bpresult);
 
 	if (!job.Run()) {
 		luaL_error(L, "build local to model failed");
@@ -243,11 +243,11 @@ lbuilddata_size(lua_State *L){
 	size_t buffersize = 0;
 
 	auto bind_poses = ske->joint_bind_poses();
-	buffersize += bind_poses.size() * sizeof(*bind_poses.begin);
+	buffersize += bind_poses.size_bytes();
 	buffersize += ske->joint_parents().size() * sizeof(uint16_t);
 
 	auto names = ske->joint_names();
-	for (size_t ii = 0; ii < names.count(); ++ii){
+	for (size_t ii = 0; ii < names.size(); ++ii){
 		buffersize += strlen(names[ii]);
 	}
 
@@ -279,7 +279,7 @@ lbuild(lua_State *L){
 		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
 
 		ozz::animation::offline::SkeletonBuilder builder;
-		builddata->skeleton = builder(*(tree->skl));	
+		builddata->skeleton = builder(*(tree->skl)).release();
 		return 1;
 	}
 
@@ -314,14 +314,14 @@ lbuild(lua_State *L){
 		}
 
 		ozz::animation::offline::SkeletonBuilder builder;
-		builddata->skeleton = builder(rawskeleton);
+		builddata->skeleton = builder(rawskeleton).release();
 		return 1;
 	}
 
 	if (type == LUA_TSTRING) {
 		const char* filepath = lua_tostring(L, 1);
 		struct hierarchy_build_data *builddata = create_builddata_userdata(L);
-		builddata->skeleton = OZZ_NEW(ozz::memory::default_allocator(), ozz::animation::Skeleton);
+		builddata->skeleton = ozz::New<ozz::animation::Skeleton>();
 		ozz::io::File ff(filepath, "rb");
 		if (!ff.opened()) {
 			luaL_error(L, "could not open file : %s", filepath);
