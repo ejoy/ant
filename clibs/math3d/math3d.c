@@ -362,9 +362,12 @@ lref_setter(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	int64_t oid = R->id;
 	switch(key[0]) {
-	case 'i':	// value id
-		R->id = lastack_mark(LS, get_id(L, 3, lua_type(L, 3)));
-		break;
+	case 'i': { // value id
+		int64_t oid = get_id(L, 3, lua_type(L, 3));
+		if (oid != R->id) {
+			R->id = lastack_mark(LS, oid);
+		}
+		break; }
 	case 'v':	// should be vector
 		R->id = assign_vector(L, LS, 3);
 		break;

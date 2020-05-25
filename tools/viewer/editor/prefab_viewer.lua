@@ -8,6 +8,7 @@ local world
 local eventPrefab
 local entities = {}
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar", "NoBringToFrontOnFocus" }
+local VIEWER <const> = "/pkg/tools.viewer.prefab_viewer/res/"
 
 local function ONCE(t, s)
     if not s then return t end
@@ -45,8 +46,8 @@ end
 
 function event.dropfiles(filelst)
     task.create(function()
-        local res = import_prefab(filelst[1])
-        world:pub {"reset_prefab", res}
+        import_prefab(filelst[1], VIEWER .. "root.glb")
+        world:pub {"instance_prefab", VIEWER .. "root.glb|mesh.prefab"}
     end)
 end
 
@@ -64,6 +65,9 @@ end
 
 function event.prefab_editor()
     for _ in imgui_windows("prefab_editor", wndflags) do
+        if imgui.widget.Button "Save" then
+            world:pub {"serialize_prefab", VIEWER .. "root.prefab"}
+        end
         for _, eid in ipairs(entities) do
             local e = world[eid]
             if e.rendermesh then
