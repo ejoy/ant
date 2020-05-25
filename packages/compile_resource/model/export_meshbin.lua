@@ -188,13 +188,15 @@ local function fetch_vb_buffers(gltfscene, gltfbin, attributes)
 				local c = cacheclass[jj]
 				local acc_offset, bv_offset, elemsize, stride = c[1], c[2], c[3], c[4]
 				local elemoffset = bv_offset + ii * stride + acc_offset + 1
-				local buf = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
-				local size = elemsize / 4
-				local formats = {[1] = "f", [2] = "ff", [3] = "fff", [4] = "ffff"}
+				buffer[#buffer+1] = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
 
-				local t = table.pack(string.unpack(formats[size], buf))
-				print(table.concat(t, " "))
-				buffer[#buffer+1] = buf
+				-- local buf = gltfbin:sub(elemoffset, elemoffset + elemsize - 1)
+				-- local size = elemsize / 4
+				-- local formats = {[1] = "f", [2] = "ff", [3] = "fff", [4] = "ffff"}
+
+				-- local t = table.pack(string.unpack(formats[size], buf))
+				-- print(table.concat(t, " "))
+				-- buffer[#buffer+1] = buf
 			end
 		end
 
