@@ -63,7 +63,7 @@ local function export_pbrm(arguments, glbdata)
     
             local begidx = (bv.byteOffset or 0)+1
             local endidx = begidx + bv.byteLength
-            assert(endidx <= buf.byteLength)
+            assert((endidx - 1) <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
     
             fs_local.write_file(imgpath, c)
