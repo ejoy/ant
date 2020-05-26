@@ -103,22 +103,19 @@ local function update_lock_target_transform(eid, lt, target, im)
 end
 
 local function combine_parent_transform(e, trans)
-	local peid = e.parent
-	if peid then
-		local pe = world[peid]
-		local ptrans = pe.transform
-		-- need apply before ptrans._world
-		local s = trans._slot_jointidx
-		local pr = pe.pose_result
-		if s and pr then
-			local t = pr:joint(s)
-			trans._world.m = math3d.mul(t, trans._world)
-		end
-
-		if ptrans then
-			local pw = ptrans._world
-			trans._world.m = math3d.mul(pw, trans._world)
-		end
+	local ptrans = e.transform
+	-- need apply before ptrans._world
+	local s = trans._slot_jointidx
+	local pr = e.pose_result
+	if s and pr then
+		local t = pr:joint(s)
+		trans._world.m = math3d.mul(t, trans._world)
+	end
+	if ptrans then
+		local pw = ptrans._world
+		trans._world.m = math3d.mul(pw, trans._world)
+	elseif e.parent then
+		combine_parent_transform(world[e.parent], trans)
 	end
 end
 
@@ -146,7 +143,9 @@ local function update_transform(eid)
 		if lt then
 			update_lock_target_transform(eid, lt, e.parent, im)
 		else
-			combine_parent_transform(e, trans)
+			if e.parent then
+				combine_parent_transform(world[e.parent], trans)
+			end
 		end
 
 		update_bounding(trans, e)

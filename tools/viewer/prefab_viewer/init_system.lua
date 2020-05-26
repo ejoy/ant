@@ -12,6 +12,7 @@ local eventSerializePrefab = world:sub {"serialize_prefab"}
 
 local m = ecs.system 'init_system'
 
+local root
 local entities = {}
 
 local function normalizeAabb()
@@ -29,19 +30,28 @@ local function normalizeAabb()
     local s = 1/math.max(max_x - min_x, max_y - min_y, max_z - min_z)
     local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
     local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
-    for _, eid in ipairs(entities) do
-        local e = world[eid]
-        if e.transform then
-            e.transform.srt.m = math3d.mul(transform, e.transform.srt)
-        end
-    end
+
+    local e = world[root]
+    e.transform.srt.m = math3d.mul(transform, e.transform.srt)
 end
 
 local function instancePrefab(filename)
+    if root then world:remove_entity(root) end
     for _, eid in ipairs(entities) do
         world:remove_entity(eid)
     end
-    entities = world:instance(filename, {root=0})
+
+    root = world:create_entity {
+        policy = {
+            "ant.scene|transform_policy",
+        },
+        data = {
+            transform = world.component:transform {
+                srt = world.component:srt {}
+            }
+        }
+    }
+    entities = world:instance(filename, {connection={root=root}})
     normalizeAabb()
     world:pub {"editor", "prefab", entities}
 end
@@ -54,7 +64,7 @@ end
 
 local function serializePrefab(filename)
     local serialize = import_package "ant.serialize"
-    write_file(filename, serialize.prefab(world, entities, {}))
+    write_file(filename, serialize.prefab(world, entities, {{mount="root"}}))
 end
 
 function m:init()
