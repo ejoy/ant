@@ -15,22 +15,33 @@ local m = ecs.system 'init_system'
 local root
 local entities = {}
 
+local function get_matrix(eid)
+    local e = world[eid]
+    if e.parent and eid ~= root then
+        if not e.transform then
+            return get_matrix(e.parent)
+        end
+        return math3d.mul(e.transform.srt, get_matrix(e.parent))
+    end
+    return e.transform.srt
+end
+
 local function normalizeAabb()
     local aabb
     for _, eid in ipairs(entities) do
         local e = world[eid]
         if e.mesh and e.mesh.bounding then
-            local newaabb = math3d.aabb_transform(e.transform.srt, e.mesh.bounding.aabb)
+            local newaabb = math3d.aabb_transform(get_matrix(eid), e.mesh.bounding.aabb)
             aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
         end
     end
+
     local aabb_mat = math3d.tovalue(aabb)
     local min_x, min_y, min_z = aabb_mat[1], aabb_mat[2], aabb_mat[3]
     local max_x, max_y, max_z = aabb_mat[5], aabb_mat[6], aabb_mat[7]
     local s = 1/math.max(max_x - min_x, max_y - min_y, max_z - min_z)
     local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
     local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
-
     local e = world[root]
     e.transform.srt.m = math3d.mul(transform, e.transform.srt)
 end
