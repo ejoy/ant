@@ -36,9 +36,6 @@ local function prefab(w, entities, args)
 end
 
 return {
-    watch = require "watch",
-    patch = require "patch",
     prefab = prefab,
-    dl = require "dl",
     stringify = require "stringify",
 }
