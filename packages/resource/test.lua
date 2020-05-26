@@ -6,7 +6,7 @@ local function make_resource(name, func)
 	code[name] = string.dump(func)
 end
 
-local function loader(filename, data)
+local function loader(ext, filename, data)
 	print("Load", filename)
 	local func = load(data)
 	return func()
@@ -14,7 +14,7 @@ end
 
 make_resource("a.code", function() return { a = 1, b = 2, c = 3 } end)
 
-resource.register_ext("code", loader, function(tbl, filename) print("Unload", filename) end)
+resource.register(loader, function(tbl, filename) print("Unload", filename) end)
 
 local function reload_code(name)
 	resource.reload(name, code[name])
@@ -41,6 +41,8 @@ assert(proxy.c == 3)
 
 local a = resource.proxy("a.code:a")
 
+assert(resource.status(a) == "invalid")
+
 make_resource("a.code", function()
 	return {
 		x = { 1,2,3 },
@@ -53,6 +55,7 @@ make_resource("a.code", function()
 		b = { y = 2 },
 	}
 end)
+
 reload_code "a.code"	-- reload
 
 local touched = resource.monitor("a.code", true)

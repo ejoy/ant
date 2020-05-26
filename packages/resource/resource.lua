@@ -232,7 +232,7 @@ function resource.proxy(fullpath)
 			return robj.invalid[path]
 		else
 			-- invalid
-			proxy = setmetatable( { _path = path } , robj.meta )
+			proxy = setmetatable( { _path = path, _data = false } , robj.meta )
 			robj.invalid[path] = proxy
 		end
 	else
@@ -258,12 +258,14 @@ function resource.status(proxy, result)
 	if data then
 		return "data"
 	end
-	if result then
-		local filename = getmetatable(proxy).filename
-		if not result[filename] then
-			result[filename] = true
-			result[#result+1] = filename
-		end
+	local filename = getmetatable(proxy).filename
+	local robj = get_file_object(filename)
+	if robj.invalid[path] then
+		return "invalid"
+	end
+	if result and not result[filename] then
+		result[filename] = true
+		result[#result+1] = filename
 	end
 	return "ref"
 end
