@@ -9,8 +9,7 @@ local fs_local  = utilitypkg.fs_local
 
 local seri_util = require "model.seri_util"
 
-local seripkg = import_package "ant.serialize"
-local seri_stringify = seripkg.stringify
+local stringify = import_package "ant.serialize".stringify
 
 local fs = require "filesystem.local"
 
@@ -178,7 +177,7 @@ local function export_pbrm(arguments, glbdata)
         add_texture_format(texture_desc, need_compress)
 
         local texpath = arguments.outfolder / "images" / name .. ".texture"
-        fs_local.write_file(texpath, seri_stringify(texture_desc))
+        fs_local.write_file(texpath, stringify(texture_desc))
         return name .. ".texture"
     end
 

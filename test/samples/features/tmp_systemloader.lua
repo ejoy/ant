@@ -136,20 +136,6 @@ function init_loader_sys:post_init()
     create_camera()
 end
 
-local seri = import_package "ant.serialize"
-
-local kb_mb = world:sub {"keyboard"}
-function init_loader_sys:data_changed()
-    for _, key, press, what in kb_mb:unpack() do
-        if key == "SPACE" then
-            for _, eid in world:each "can_render" do
-                local r = seri.entity(world, eid)
-                print(r)
-            end
-        end
-    end
-end
-
 local imgui      = require "imgui"
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 

@@ -23,7 +23,11 @@ local function component_init(w, c, component)
 	if tc and tc.init then
 		local res = tc.init(component)
 		assert(type(res) == "table" or type(res) == "userdata")
-		w._typeclass[res] = c
+		w._typeclass[res] = {
+			name = c,
+			save = tc.save,
+			copy = tc.copy,
+		}
 		return res
 	end
 	error(("component `%s` has no init function."):format(c))
@@ -37,13 +41,12 @@ local function component_delete(w, c, component)
 end
 
 local function component_copy(w, component)
-	local name = w._typeclass[component]
-	if name then
-		local tc = w._class.component[name]
-		if tc and tc.copy then
-			local res = tc.copy(component)
+	local class = w._typeclass[component]
+	if class then
+		if class.copy then
+			local res = class.copy(component)
 			assert(type(res) == "table" or type(res) == "userdata")
-			w._typeclass[res] = name
+			w._typeclass[res] = class
 			return res
 		end
 		return component
@@ -426,7 +429,7 @@ function m.new_world(config)
 		_uniques = {},
 		_prefabs = {},
 		_slots = {},
-		_typeclass = setmetatable({}, { __mode = "kv" }),
+		_typeclass = setmetatable({}, { __mode = "k" }),
 	}, world)
 
 	--init event
