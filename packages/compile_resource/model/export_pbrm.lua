@@ -157,8 +157,11 @@ return function (output, glbdata)
 
     local function fetch_texture_info(texidx, name, normalmap, colorspace)
         local tex = textures[texidx+1]
-
-        local imgname = export_image(image_folder, tex.source)
+        if not tex.sampler then
+            --TODO
+            return
+        end
+        local imgname = export_image(tex.source)
         local sampler = samplers[tex.sampler+1]
         local texture_desc = {
             path = "./"..imgname,
@@ -180,6 +183,10 @@ return function (output, glbdata)
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
             local filename = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
+            if not filename then
+                --TODO
+                return
+            end
             return proxy "resource" ("./../images/" .. filename)
         end
     end
