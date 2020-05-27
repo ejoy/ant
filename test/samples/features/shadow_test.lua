@@ -151,12 +151,6 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
         type= "v4",
         value = {{1, 0, 0, 1}},
     }
-
-	-- local seri = import_package "ant.serialize"
-
-	-- local entities = {arroweid, cylindereid, coneeid}
-	-- local result = {}
-	-- seri.prefab(world, entities, result)
 end
 
 function st_sys:post_init()

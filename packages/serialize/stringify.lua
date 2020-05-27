@@ -1,6 +1,7 @@
 local datalist = require 'datalist'
 
 local out
+local conv
 
 local function sortpairs(t)
     local sort = {}
@@ -37,7 +38,7 @@ local function convertreal(v)
     return ('%.17g'):format(v)
 end
 
-local PATTERN <const> = "%a%d/%-_."
+local PATTERN <const> = "%a%d/%-_.|"
 local PATTERN <const> = "^["..PATTERN.."]["..PATTERN.."]*$"
 
 local function stringify_basetype(v)
@@ -66,6 +67,7 @@ local function stringify_basetype(v)
     error('invalid type:'..t)
 end
 
+local stringify_
 local stringify_value
 
 local function stringify_array_simple(n, prefix, t)
@@ -80,7 +82,9 @@ local function stringify_array_map(n, t)
     for _, tt in ipairs(t) do
         out[#out+1] = indent(n).."---"
         for k, v in sortpairs(tt) do
-            stringify_value(n, k..":", v)
+            if k:sub(1,1) ~= "_" then
+                stringify_value(n, k..":", v)
+            end
         end
     end
 end
@@ -96,39 +100,55 @@ local function stringify_array_array(n, t)
     if isArray(first_value) then
         for _, tt in ipairs(t) do
             out[#out+1] = indent(n).."---"
-            stringify_array_array(n+1, tt)
+            stringify_(n, tt)
         end
     else
         for _, tt in ipairs(t) do
             out[#out+1] = indent(n).."---"
-            stringify_array_map(n+1, tt)
+            stringify_array_map(n, tt)
         end
     end
 end
 
 local function stringify_array(n, prefix, t)
     local first_value = t[1]
-    if type(first_value) ~= "table" then
+    if type(first_value) == "table" then
+        out[#out+1] = indent(n)..prefix
+        if isArray(first_value) then
+            stringify_array_array(n+1, t)
+            return
+        end
+        stringify_array_map(n+1, t)
+    elseif type(first_value) == "string" then
+        out[#out+1] = indent(n)..prefix
+        for _, v in ipairs(t) do
+            out[#out+1] = indent(n+1)..stringify_basetype(v)
+        end
+    else
         stringify_array_simple(n, prefix.." ", t)
-        return
     end
-    out[#out+1] = indent(n)..prefix
-    if isArray(first_value) then
-        stringify_array_array(n+1, t)
-        return
-    end
-    stringify_array_map(n+1, t)
 end
 
 local function stringify_map(n, prefix, t)
     out[#out+1] = indent(n)..prefix
     n = n + 1
     for k, v in sortpairs(t) do
-        stringify_value(n, k..":", v)
+        if k:sub(1,1) ~= "_" then
+            stringify_value(n, k..":", v)
+        end
     end
 end
 
 function stringify_value(n, prefix, v)
+    if type(v) == "table" or type(v) == "userdata" then
+        local class = conv[v]
+        if class then
+            prefix = prefix.." $"..class.name
+            if class.save then
+                v = class.save(v)
+            end
+        end
+    end
     if type(v) == "table" then
         local first_value = next(v)
         if first_value == nil then
@@ -145,24 +165,29 @@ function stringify_value(n, prefix, v)
     out[#out+1] = indent(n)..prefix.." "..stringify_basetype(v)
 end
 
-local function stringify(data)
-    out = {}
+function stringify_(n, data)
     if isArray(data) then
         local first_value = data[1]
         if type(first_value) ~= "table" then
-            stringify_array_simple(0, "", data)
+            stringify_array_simple(n, "", data)
             return
         end
         if isArray(first_value) then
-            stringify_array_array(0, data)
+            stringify_array_array(n, data)
             return
         end
-        stringify_array_map(0, data)
+        stringify_array_map(n, data)
     else
         for k, v in sortpairs(data) do
-            stringify_value(0, k..":", v)
+            stringify_value(n, k..":", v)
         end
     end
+end
+
+local function stringify(data, conv_)
+    out = {}
+    conv = conv_ or {}
+    stringify_(0, data)
     return table.concat(out, '\n')
 end
 

@@ -1,16 +1,5 @@
-local export_prefab = require "model.export_prefab"
-
-local glbpkg    = import_package "ant.glTF"
-local glbloader = glbpkg.glb
-
-local utilitypkg= import_package "ant.utility"
-local subprocess= utilitypkg.subprocess
-local fs_local  = utilitypkg.fs_local
-
-local seri_util = require "model.seri_util"
-
-local seripkg = import_package "ant.serialize"
-local seri_stringify = seripkg.stringify
+local fs_local = import_package "ant.utility".fs_local
+local stringify = import_package "ant.serialize".stringify
 
 local fs = require "filesystem.local"
 
@@ -35,11 +24,23 @@ local function tov4(v)
     return {v[1], v[2], v[3], v[4]}
 end
 
-local function export_pbrm(arguments, glbdata)
+return function (output, glbdata)
+    local conv = {}
+    local function proxy(name)
+        return function (v)
+            local o = {v}
+            conv[o] = {
+                name = name,
+                save = function() return v end
+            }
+            return o
+        end
+    end
+
     local glbscene, glbbin = glbdata.info, glbdata.bin
 
-    local image_folder = arguments.outfolder / "images"
-    local pbrm_folder = arguments.outfolder / "pbrm"
+    local image_folder = output / "images"
+    local pbrm_folder = output / "pbrm"
 
     fs.create_directories(pbrm_folder)
     local images = glbscene.images
@@ -49,27 +50,22 @@ local function export_pbrm(arguments, glbdata)
     local samplers = glbscene.samplers
     local materials = glbscene.materials
 
-    local function export_image(image_folder, imgidx)
+    local function export_image(imgidx)
         fs.create_directories(image_folder)
-
         local img = images[imgidx+1]
         local name = img.name or tostring(imgidx)
-        local imgpath = image_folder / name .. image_extension[img.mimeType]
-    
+        local imgname = name .. image_extension[img.mimeType]
+        local imgpath = image_folder / imgname
         if not fs.exists(imgpath) then
-    
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
-    
             local begidx = (bv.byteOffset or 0)+1
             local endidx = begidx + bv.byteLength
-            assert(endidx <= buf.byteLength)
+            assert((endidx - 1) <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
-    
             fs_local.write_file(imgpath, c)
         end
-        return imgpath
-        
+        return imgname
     end
 
     local filter_tags = {
@@ -106,8 +102,8 @@ local function export_pbrm(arguments, glbdata)
         wrapT       = address_tags["REPEAT"],
     }
     
-    local function to_sampler(gltfscene, sampleidx)
-        local gltfsampler = sampleidx and gltfscene.samplers[sampleidx + 1] or default_sampler_flags
+    local function to_sampler(sampleidx)
+        local gltfsampler = sampleidx and samplers[sampleidx + 1] or default_sampler_flags
     
         local minfilter = gltfsampler.minFilter or default_sampler_flags.minFilter
         local maxFilter = gltfsampler.maxFilter or default_sampler_flags.maxFilter
@@ -163,10 +159,9 @@ local function export_pbrm(arguments, glbdata)
 
     local function fetch_texture_info(texidx, name, normalmap, colorspace)
         local tex = textures[texidx+1]
-
-        local imgpath = export_image(image_folder, tex.source)
+        local imgname = export_image(tex.source)
         local texture_desc = {
-            texture = arguments:localpath2subrespath(imgpath):string(),
+            path = "./"..imgname,
             sampler = to_sampler(tex.sampler),
             normalmap = normalmap,
             colorspace = colorspace,
@@ -177,14 +172,19 @@ local function export_pbrm(arguments, glbdata)
         local need_compress<const> = true
         add_texture_format(texture_desc, need_compress)
 
-        local texpath = imgpath:parent_path() / name .. ".texture"
-        fs_local.write_file(texpath, seri_stringify(texture_desc))
-        return texpath:string()
+        local texpath = output / "images" / name .. ".texture"
+        fs_local.write_file(texpath, stringify(texture_desc))
+        return name .. ".texture"
     end
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            return arguments:localpath2subrespath(fs.path(fetch_texture_info(tex_desc.index, name, normalmap, colorspace))):string()
+            local filename = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
+            if not filename then
+                --TODO
+                return
+            end
+            return proxy "resource" ("./../images/" .. filename)
         end
     end
 
@@ -224,36 +224,11 @@ local function export_pbrm(arguments, glbdata)
             end
             local filepath = pbrm_folder / refine_name(name) .. ".pbrm"
 
-            fs_local.write_file(filepath, seri_util.seri_pbrm(pbrm))
+            fs_local.write_file(filepath, stringify(pbrm, conv))
     
-            materialfiles[matidx] = arguments:localpath2subrespath(filepath)
+            materialfiles[matidx] = "./pbrm/" .. refine_name(name) .. ".pbrm"
         end
     end
 
     return materialfiles
 end
-
-local function export_animation(arguments)
-    local animation_folder = arguments.outfolder / "animation"
-    fs.create_directories(animation_folder)
-    local gltf2ozz = fs_local.valid_tool_exe_path "gltf2ozz"
-    local commands = {
-        gltf2ozz:string(),
-        "--file=" .. (fs.current_path() / arguments.input):string(),
-        stdout = true,
-        stderr = true,
-        hideWindow = true,
-        cwd = animation_folder:string(),
-    }
-
-    local success, msg = subprocess.spawn_process(commands)
-    print((success and "success" or "failed"), msg)
-end
-
-return function (arguments)
-    local glbdata = glbloader.decode(arguments.input:string())
-    local materialfiles = export_pbrm(arguments, glbdata)
-    export_animation(arguments)
-    export_prefab(arguments, materialfiles, glbdata, {})
-end
-

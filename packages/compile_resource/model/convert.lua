@@ -1,23 +1,14 @@
-local import_gltf = require "model.import_gltf"
-local fs = require "filesystem.local"
+local export_prefab = require "model.export_prefab"
+local export_meshbin = require "model.export_meshbin"
+local export_animation = require "model.export_animation"
+local export_pbrm = require "model.export_pbrm"
+local glbloader    = import_package "ant.glTF".glb
 
-return function (config, sourcefile, outpath, localpath)
-    local arguments = {
-        input       = sourcefile,
-        outfolder   = outpath,
-        to_localpath= function (self, virualpath)
-            return fs.path(virualpath:string():gsub(self.outfolder:string(), self.input:string()))
-        end,
-        to_virualpath=function (self, localpath)
-            return fs.path(localpath:string():gsub(self.input:string(), self.outfolder:string()))
-        end,
-        localpath2subrespath = function (self, localpath)
-            return fs.path(localpath:string():gsub(self.outfolder:string(), "."))
-        end,
-        make_subrespath = function (self, subrespath)
-            return fs.path(self.input:string() .. "|" .. subrespath)
-        end
-    }
-    import_gltf(arguments)
+return function (_, input, output)
+    local glbdata = glbloader.decode(input:string())
+    local meshscene = export_meshbin(output, glbdata)
+    local materialfiles = export_pbrm(output, glbdata)
+    export_animation(input, output)
+    export_prefab(output, meshscene, materialfiles)
     return true, ""
 end

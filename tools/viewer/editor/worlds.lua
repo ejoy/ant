@@ -27,6 +27,7 @@ local function create_world(config)
     end
     function m.show()
         rect_x, rect_y = imgui.cursor.GetCursorScreenPos()
+        rect_x, rect_y = math.max(rect_x, 0), math.max(rect_y, 0)
         imgui.widget.ImageButton(world_tex,rect_w,rect_h,{frame_padding=0,bg_col={0,0,0,1}})
     end
     function m.update()

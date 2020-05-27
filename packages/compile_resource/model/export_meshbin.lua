@@ -1,11 +1,10 @@
-
+local fs_local  = import_package "ant.utility".fs_local
+local thread    = require "thread"
 local gltfpkg   = import_package "ant.glTF"
 local gltfutil	= gltfpkg.util
 local renderpkg = import_package "ant.render"
 local declmgr	= renderpkg.declmgr
-
 local sort_pairs = require "sort_pairs"
-
 local math3d	= require "math3d"
 
 local function get_desc(name, accessor)
@@ -374,6 +373,11 @@ local function export_meshbin(gltfscene, bindata)
 	return meshscene
 end
 
-return function (glbdata)
-	return export_meshbin(glbdata.info, glbdata.bin)
+return function (output, glbdata)
+	local meshscene = export_meshbin(glbdata.info, glbdata.bin)
+    if meshscene == nil then
+        error("export meshbin failed")
+    end
+	fs_local.write_file(output / "mesh.meshbin", thread.pack(meshscene))
+	return meshscene
 end

@@ -75,7 +75,7 @@ local function reslove_invalid(robj)
 			if robj.proxy[path] then
 				format_error("Duplicate content %s", proxy)
 			end
-			rawset(proxy, "_data", data)	-- _data is nil, so use rawset
+			proxy._data = data
 			robj.proxy[path] = setmetatable(proxy, data_mt(data, robj))
 		end
 	end
@@ -94,7 +94,7 @@ local function reslove_proxy(robj)
 			-- can't reslove path
 			assert(robj.invalid[path] == nil)
 			proxy_set[path] = nil
-			proxy._data = nil	-- mark invalid
+			proxy._data = false	-- mark invalid
 			robj.invalid[path] = setmetatable(proxy, robj.meta)
 		end
 	end
@@ -143,7 +143,7 @@ function resource.load(filename, data, lazyload)
 		robj.meta.__index = function (self, key)
 			load_resource(robj, robj.filename, robj.source)
 			local data = self._data
-			if data == nil then
+			if not data then
 				format_error("%s is invalid", self)
 			else
 				return data[key]
@@ -232,7 +232,7 @@ function resource.proxy(fullpath)
 			return robj.invalid[path]
 		else
 			-- invalid
-			proxy = setmetatable( { _path = path } , robj.meta )
+			proxy = setmetatable( { _path = path, _data = false } , robj.meta )
 			robj.invalid[path] = proxy
 		end
 	else
@@ -255,18 +255,17 @@ function resource.status(proxy, result)
 		return "runtime"
 	end
 	local data = proxy._data
-	if data == nil then
-		return "invalid"
-	end
 	if data then
 		return "data"
 	end
-	if result then
-		local filename = getmetatable(proxy).filename
-		if not result[filename] then
-			result[filename] = true
-			result[#result+1] = filename
-		end
+	local filename = getmetatable(proxy).filename
+	local robj = get_file_object(filename)
+	if robj.invalid[path] then
+		return "invalid"
+	end
+	if result and not result[filename] then
+		result[filename] = true
+		result[#result+1] = filename
 	end
 	return "ref"
 end

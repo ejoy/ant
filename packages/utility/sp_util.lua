@@ -6,10 +6,10 @@ function util.to_cmdline(commands)
     for _, v in ipairs(commands) do
         if type(v) == "table" then
             for _, vv in ipairs(v) do
-                s = s .. vv .. " "
+                s = s .. tostring(vv) .. " "
             end
         else
-            s = s .. v .. " "
+            s = s .. tostring(v) .. " "
         end
     end
 
