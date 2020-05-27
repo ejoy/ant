@@ -2,7 +2,7 @@ local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
 local sp   = require "subprocess"
 local task = require "task"
-local cr   = import_package "ant.compile_resource"
+local assetmgr = import_package "ant.asset"
 
 local function import_fbx(input, output)
     local function luaexe()
@@ -36,5 +36,5 @@ return function (input, output)
     else
         lfs.copy_file(inputPath, outputPath, true)
     end
-    cr.clean(output)
+    assetmgr.unload_glb(output)
 end
