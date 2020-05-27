@@ -164,7 +164,8 @@ local function fetch_vb_buffers(gltfscene, gltfbin, attributes)
 	local bufferviews = gltfscene.bufferViews
 	local attribuffers = {}
 	local numv = accessors[attributes.POSITION+1].count
-	for idx, attribclass in sort_pairs(attribclasses) do
+	local bufferidx = 1
+	for _, attribclass in sort_pairs(attribclasses) do
 		
 		local declname = {}
 		local cacheclass = {}
@@ -200,12 +201,13 @@ local function fetch_vb_buffers(gltfscene, gltfbin, attributes)
 		end
 
 		local bindata = table.concat(buffer, "")
-		attribuffers[idx] = {
+		attribuffers[bufferidx] = {
 			start 	= 1,
 			declname= table.concat(declname, "|"),
 			value 	= bindata,
 			num 	= #bindata,
 		}
+		bufferidx = bufferidx+1
 	end
 
 	return attribuffers
