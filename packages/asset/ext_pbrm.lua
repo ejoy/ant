@@ -24,7 +24,7 @@ local default_pbr_param = {
 	},
 }
 
-local function texture_path(pbrm, name)
+local function get_texture_obj(pbrm, name)
 	local p = pbrm[name]
 	if p then
 		return pbrm[name].texture
@@ -32,7 +32,7 @@ local function texture_path(pbrm, name)
 end
 
 local function get_texture(pbrm, name)
-	return texture_path(pbrm, name) or default_pbr_param[name].texture
+	return get_texture_obj(pbrm, name) or default_pbr_param[name].texture
 end
 
 local function property_factor(pbrm, name)
@@ -48,7 +48,7 @@ local function get_property_factor(pbrm, name)
 end
 
 local function texture_flag(pbrm, name)
-	return texture_path(pbrm, name) and 1.0 or 0.0
+	return get_texture_obj(pbrm, name) and 1.0 or 0.0
 end
 
 local function get_metallic_roughness_factor(pbrm)
@@ -68,7 +68,6 @@ function m:init()
 	local materialfile = pbrm.materialfile or "/pkg/ant.resources/materials/pbr_default.material"
 	local material = assetmgr.patch(world.component:resource(materialfile), {})
 
-	--refine_paths(pbrm)
 	local metallic_factor, roughness_factor = get_metallic_roughness_factor(pbrm)
 	material.properties = {
 		textures = {
