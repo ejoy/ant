@@ -67,7 +67,13 @@ iOS:
 目前基于包管理，每个包是可以理解为一个工程，而引擎中默认的包存放在$(antfolder)/packages，默认是都会载入的。
 > 需要注意的是，如果$(antfolder)/packages/*packagename*，*packagename*目前下如果没有package.lua文件，会报错。所以不用的包文件夹要及时清理
 ```
-clibs/lua.exe test/simple/main.lua	#运行一个最简单的示例
+#运行一个最简单的示例
+#mingw
+clibs/lua.exe test/simple/main.lua
+#msvc
+projects/msvc/vs_bin/Debug/lua.exe test/simple/main.lua
+#OSX
+clibs/ant/ant.exe test/simple/main.lua
 ```
 
 #### 编辑器模式
