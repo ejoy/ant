@@ -91,15 +91,20 @@ else
 COPY_SHADER_FILES_CMD += echo ok
 endif
 
-WITH_OZZ_SAMPLES := OFF
-OZZ_ENABLE_EMSCRIPTEN := FALSE
-
 CMAKE_PROJ_BUILD_SUB_PATH = $(PLAT)/$(MODE)
 CMAKE_PROJ_SRC_RELATIVE_PATH = ../../../..
 
-CMAKE_OPT_ozz-animation=-Dozz_build_samples=$(WITH_OZZ_SAMPLES) -Dozz_build_fbx=$(WITH_OZZ_SAMPLES) -Dozz_build_howtos=$(WITH_OZZ_SAMPLES) -Dozz_build_gltf=ON -Dozz_build_cpp11=ON -DEMSCRIPTEN=$(OZZ_ENABLE_EMSCRIPTEN)
+CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF -Dozz_build_gltf=ON -Dozz_build_cpp11=ON -DEMSCRIPTEN=FALSE
+
+ifeq "$(PLAT)" "mingw"
+TOOL_EXT_NAME=.exe
+endif
+
+CMAKE_COPY_ozz-animation= cp src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) ../../../../../clibs/gltf2ozz$(MODE)$(TOOL_EXT_NAME)
 
 CMAKE_OPT_reactphysics3d=-DRP3D_LOGS_ENABLED=ON
+
+CMAKE_COPY_reactphysics3d= echo ok
 
 .PHONY: info init all clean
 
@@ -140,11 +145,10 @@ define CMAKE_TEMP
 	cd $$(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH) && cmake $(CMAKE_BUILD) $$(CMAKE_OPT_$(1)) -G "$(CMAKE_PROJ_TYPE)" $(CMAKE_OPT) $(CMAKE_PROJ_SRC_RELATIVE_PATH)/$(1)
 
   $(1)_make : | $(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH)
-	cd $$(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH) && make $(MP)
+	cd $$(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH) && make $(MP) && $$(CMAKE_COPY_$(1))
 
   $(1)_clean : | $(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH)
 	cd $$(BUILD_PATH)/$(1)/$(CMAKE_PROJ_BUILD_SUB_PATH) && make clean
 endef
 
 $(foreach v, $(CMAKE_PROJ), $(eval $(call CMAKE_TEMP,$(v))))
-#$(foreach v, $(CMAKE_PROJ), $(warning $(call CMAKE_TEMP,$(v))))

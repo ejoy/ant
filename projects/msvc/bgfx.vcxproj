@@ -89,9 +89,6 @@
       <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua54.lib;../../3rd/bgfx/.build/win64_vs2019/bin/bx$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy_tools.bat $(Configuration)</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -115,9 +112,6 @@
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>lua54.lib;../../3rd/bgfx/.build/win64_vs2019/bin/bx$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy_tools.bat $(Configuration)</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
