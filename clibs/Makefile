@@ -9,7 +9,7 @@ include common.mk
 
 .PHONY: $(ALL_LIBS) $(foreach v,$(ALL_LIBS),build_$(v) clean_$(v) copy_$(v)) copy_tools
 
-all: $(ALL_LIBS)
+all: $(ALL_LIBS) copy_tools
 
 LUA_TARGETS = $(ODIR)/lua.exe
 ifeq "$(PLAT)" "msvc"
