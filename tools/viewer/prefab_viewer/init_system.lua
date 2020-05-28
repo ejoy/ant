@@ -75,8 +75,7 @@ local function write_file(filename, data)
 end
 
 local function serializePrefab(filename)
-    local serialize = import_package "ant.serialize"
-    write_file(filename, serialize.prefab(world, entities, {{mount="root"}}))
+    write_file(filename, world:serialize(entities, {{mount="root"}}))
 end
 
 function m:init()

@@ -74,19 +74,33 @@ end
 local function resource_load(fullpath, resdata, lazyload)
 	local filename = fullpath:match "[^:]+"
 	resource.load(filename, resdata, lazyload)
-	return fullpath
+    return resource.proxy(fullpath)
 end
 
 function assetmgr.load(key, resdata)
-    return resource.proxy(resource_load(key, resdata, false))
+    return resource_load(key, resdata, false)
 end
 
-function assetmgr.resource(world, fullpath)
-    return resource.proxy(resource_load(fullpath, world, true))
+local function absolute_path(base, path)
+	if path:sub(1,1) == "/" or not base then
+		return path
+	end
+	return base .. (path:match "^%./(.+)$" or path)
+end
+
+function assetmgr.resource(world, path)
+	local fullpath = absolute_path(world._current_path, path)
+    return resource_load(fullpath, world, true)
+end
+
+--TODO
+function assetmgr.load_fx(fullpath)
+    return resource_load(fullpath, nil, true)
 end
 
 function assetmgr.init()
-	local function loader(ext, filename, data)
+	local function loader(filename, data)
+		local ext = filename:match "[^.]*$"
 		if ext_tmp[ext] then
 			return require("ext_" .. ext).loader(data)
 		end
@@ -97,7 +111,8 @@ function assetmgr.init()
 		local world = data
 		return world:prefab_init(ext, filename)
 	end
-	local function unloader(ext, res, filename, data)
+	local function unloader(filename, data, res)
+		local ext = filename:match "[^.]*$"
 		if ext_tmp[ext] then
 			require("ext_" .. ext).unloader(res)
 			return

@@ -79,7 +79,7 @@ function util.draw_primitive(vid, primgroup, render_properties)
 	end
 
 	local material = primgroup.material
-	bgfx.set_state(material.state)
+	bgfx.set_state(material._state)
 	update_properties(material, render_properties)
 
 	local prog = material.fx.shader.prog

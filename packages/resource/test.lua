@@ -6,7 +6,7 @@ local function make_resource(name, func)
 	code[name] = string.dump(func)
 end
 
-local function loader(ext, filename, data)
+local function loader(filename, data)
 	print("Load", filename)
 	local func = load(data)
 	return func()

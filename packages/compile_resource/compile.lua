@@ -68,9 +68,7 @@ local function set_config(ext, config)
     cfg.config = config
     cfg.hash = hash
     cfg.binpath = root / ".build" / ext / (info.name.."_"..hash)
-    cfg.deppath = root / ".dep" / ext / (info.name.."_"..hash)
     lfs.create_directories(cfg.binpath)
-    lfs.create_directories(cfg.deppath)
     writefile(cfg.binpath / ".config", config_string)
     return cfg
 end
@@ -121,12 +119,12 @@ local function get_config(ext, config)
     return set_config(ext, mergetable(config, defalut.config))
 end
 
-local function do_build(cfg, input)
-    local deppath = cfg.deppath / (get_filename(input) .. ".dep")
-    if not lfs.exists(deppath) then
+local function do_build(output)
+    local depfile = output / ".dep"
+    if not lfs.exists(depfile) then
         return
     end
-	for _, dep in ipairs(readconfig(deppath)) do
+	for _, dep in ipairs(readconfig(depfile)) do
 		local timestamp, filename = dep[1], lfs.path(dep[2])
 		if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
 			return
@@ -156,7 +154,7 @@ local function do_compile(cfg, input, output)
     else
         deps = {input}
     end
-    create_depfile(cfg.deppath / (get_filename(input) .. ".dep"), deps)
+    create_depfile(output / ".dep", deps)
 end
 
 local function clean_file(input)
@@ -187,7 +185,7 @@ local function compile_file(input, config)
         return cachepath
     end
     local output = cfg.binpath / get_filename(input)
-    if not do_build(cfg, input) or not lfs.exists(output) then
+    if not lfs.exists(output) or not do_build(output) then
         do_compile(cfg, input, output)
     end
     cache[keystring] = output

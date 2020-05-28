@@ -4,6 +4,7 @@ local policy = require "policy"
 local event = require "event"
 local datalist = require "datalist"
 local cr = import_package "ant.compile_resource"
+local stringify = import_package "ant.serialize".stringify
 
 local world = {}
 world.__index = world
@@ -166,23 +167,14 @@ local function create_prefab_from_entity(w, t)
 	}, args
 end
 
-local function absolute_path(base, path)
-	if path:sub(1,1) == "/" then
-		return path
-	end
-	return base .. (path:match "^%./(.+)$" or path)
-end
-
 local function load_prefab(w, filename)
 	local data = cr.read_file(filename)
-	local current_path = filename:match "^(.-)[^/|]*$"
-	return datalist.parse(data, function(v)
-		local name, value = v[1], v[2]
-		if name == "resource" then
-			value = absolute_path(current_path, value)
-		end
-		return component_init(w, name, value)
+	w._current_path = filename:match "^(.-)[^/|]*$"
+	local res = datalist.parse(data, function(v)
+		return component_init(w, v[1], v[2])
 	end)
+	w._current_path = nil
+	return res
 end
 
 local function valid_component(w, name)
@@ -265,6 +257,45 @@ end
 function world:instance(filename, args)
 	local prefab = create_prefab(self, filename)
 	return instance(self, prefab, args)
+end
+
+local function serialize_prefab(w, entities, args)
+    local t = {{}}
+    local actions = t[1]
+    local slot = {}
+    for i, eid in ipairs(entities) do
+        slot[eid] = i
+    end
+    for i, eid in ipairs(entities) do
+        local template = w._prefabs[eid].policy
+        local e = {policy={},data={}}
+        t[#t+1] = e
+        local dataset = w[eid]
+        for _, name in ipairs(template.connection) do
+            local object = w._class.connection[name]
+            assert(object and object.save)
+            local res = object.save(w[eid])
+            if args[i] and args[i][name] then
+                actions[#actions+1] = {name, i, args[i][name]}
+            elseif slot[res] then
+                actions[#actions+1] = {name, i, slot[res]}
+            else
+                error(("entity %d connection `%s` cannot be serialized."):format(eid, name))
+            end
+        end
+        for _, p in ipairs(template.policy) do
+            e.policy[#e.policy+1] = p
+        end
+        for _, name in ipairs(template.component) do
+            e.data[name] = dataset[name]
+        end
+        table.sort(e.policy)
+    end
+    return stringify(t, w._typeclass)
+end
+
+function world:serialize(entities, args)
+	return serialize_prefab(self, entities, args)
 end
 
 function world:remove_entity(eid)

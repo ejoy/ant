@@ -179,7 +179,9 @@ function stringify_(n, data)
         stringify_array_map(n, data)
     else
         for k, v in sortpairs(data) do
-            stringify_value(n, k..":", v)
+            if k:sub(1,1) ~= "_" then
+                stringify_value(n, k..":", v)
+            end
         end
     end
 end
