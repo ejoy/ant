@@ -21,6 +21,7 @@ connection "mount"
 
 policy "transform_policy"
     .component "transform"
+    .component "scene_entity"
 
 component "transform"
     .implement "scenespace.lua"

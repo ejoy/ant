@@ -102,15 +102,50 @@ local function update_lock_target_transform(eid, lt, target, im)
 	end
 end
 
-local function combine_parent_transform(e, trans)
-	local ptrans = e.transform
+local attri_cache = {
+	transform = {},
+	material = {},
+}
+local function get_attribute(eid, attribname)
+	local e = world[eid]
+	local t = e[attribname]
+	if t then
+		return t
+	end
+
+	local ac = attri_cache[attribname]
+	if ac == nil then
+		error(("not support attribute:%s"):format(attribname))
+	end
+
+	local c = ac[eid]
+	if c then
+		return c
+	end
+
+	local peid = e.parent
+	while peid and (not t) do
+		local pe = world[peid]
+		t = pe[attribname]
+		peid = pe.parent
+	end
+
+	ac[eid] = t
+
+	return t
+end
+
+local function combine_parent_transform(peid, trans)
+	local pe = world[peid]
 	-- need apply before ptrans._world
 	local s = trans._slot_jointidx
-	local pr = e.pose_result
+	local pr = pe.pose_result
 	if s and pr then
 		local t = pr:joint(s)
 		trans._world.m = math3d.mul(t, trans._world)
 	end
+
+	local ptrans = get_attribute(peid, "transform")
 	if ptrans then
 		local pw = ptrans._world
 		trans._world.m = math3d.mul(pw, trans._world)
@@ -142,7 +177,7 @@ local function update_transform(eid)
 			update_lock_target_transform(eid, lt, e.parent, im)
 		else
 			if e.parent then
-				combine_parent_transform(world[e.parent], trans)
+				combine_parent_transform(e.parent, trans)
 			end
 		end
 

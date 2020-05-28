@@ -59,7 +59,8 @@ local function instancePrefab(filename)
         data = {
             transform = world.component:transform {
                 srt = world.component:srt {}
-            }
+            },
+            scene_entity = true,
         }
     }
     entities = world:instance(filename, {connection={root=root}})
