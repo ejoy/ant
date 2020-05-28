@@ -251,7 +251,7 @@ local function instance(w, prefab, args)
 		local name, source, target = connection[1], connection[2], connection[3]
 		local object = w._class.connection[name]
 		assert(object and object.init)
-		object.init(w[res[source]], res[target] or (args.connection and args.connection[target]) or nil)
+		object.init(w[res[source]], res[target] or (args and args.connection and args.connection[target]) or nil)
 	end
 	return res
 end
