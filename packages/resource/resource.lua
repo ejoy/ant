@@ -241,5 +241,15 @@ function resource.patch(obj, patch)
 	return obj
 end
 
+function resource.edit(obj)
+	local data = obj._data
+	if not data then
+		pairs(obj)	-- trigger lazyload
+		return obj._data
+	else
+		return data
+	end
+end
+
 return resource
 
