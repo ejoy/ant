@@ -229,15 +229,13 @@ end
 
 function resource.patch(obj, patch)
 	local data = obj._data
-	if data == false then
-		error "Not in memory"
-	end
-	if data then
+	if data ~= nil then
 		-- It's a proxy, clone data
-		obj = {}
-		for k,v in pairs(data) do
-			obj[k] = v
+		local newobj = {}
+		for k,v in pairs(obj) do
+			newobj[k] = v
 		end
+		obj = newobj
 	end
 	apply_patch(obj, patch)
 	return obj
