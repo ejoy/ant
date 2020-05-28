@@ -68,12 +68,10 @@ iOS:
 > 需要注意的是，如果$(antfolder)/packages/*packagename*，*packagename*目前下如果没有package.lua文件，会报错。所以不用的包文件夹要及时清理
 ```
 #运行一个最简单的示例
-#mingw
+#mingw, OSX
 clibs/lua.exe test/simple/main.lua
 #msvc
 projects/msvc/vs_bin/Debug/lua.exe test/simple/main.lua
-#OSX
-clibs/ant/ant.exe test/simple/main.lua
 ```
 
 #### 编辑器模式
@@ -82,11 +80,11 @@ clibs/ant/ant.exe test/simple/main.lua
 
 #### 使用fileserver运行runtime程序到iOS设备
 1. 启动fileserver，OSX和window环境下都能够运行 
-> clibs/ant/ant.exe tools/fileserver/main.lua tools/modelviewer  
+> clibs/lua.exe tools/fileserver/main.lua tools/modelviewer  
 > 这里的*tools/modelviewer*表示要运行的例子程序
 
 2. 启动proxy连接程序
-> clibs/ant/ant.exe tools/fileserver/mobiledevice/proxy.lua
+> clibs/lua.exe tools/fileserver/mobiledevice/proxy.lua
 
 3. 使用xcode，安装ant app到iOS设备上
 
