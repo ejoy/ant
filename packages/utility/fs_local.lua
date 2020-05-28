@@ -43,12 +43,10 @@ function u.list_files(subpath, filter, excludes)
 							files[#files+1] = p
 						end
 					end
-					
 				end
 			end
-		end		
+		end
 	end
-
     local files = {}
     list_fiels_1(subpath, prefilter, excludes, files)
     return files
@@ -121,7 +119,13 @@ function u.valid_tool_exe_path(toolname)
         end
     end
 
-    error(string.format("not found any valid texturec path. update bin folder or compile from 3rd/bgfx [texturec] project"))
+	local dirs = { "Can't found tools in : " }
+    for _, name in ipairs(toolpaths) do
+        local exepath = to_execute_path(name)
+		table.insert(dirs, "\t" .. tostring(exepath))
+    end
+
+    error(table.concat(dirs, "\n"))
 end
 
 return u
