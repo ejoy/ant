@@ -27,7 +27,7 @@ end
 local proxy = resource.proxy "a.code"
 
 assert(resource.status(proxy) == "ref")
-assert(tostring(proxy) == "a.code:")
+assert(tostring(proxy) == "a.code")
 
 local result = {}
 resource.status(proxy, result)
@@ -38,10 +38,6 @@ reload_code "a.code"
 assert(proxy.a == 1)
 assert(proxy.b == 2)
 assert(proxy.c == 3)
-
-local a = resource.proxy("a.code:a")
-
-assert(resource.status(a) == "invalid")
 
 make_resource("a.code", function()
 	return {
@@ -72,50 +68,22 @@ assert(touched() == true)
 
 resource.monitor("a.code", false)	-- turn off monitor
 
-local x = resource.proxy("a.code:x")
-
-assert(x[2] == 2)
-assert(x[3] == 3)
-
-local y_a = resource.proxy("a.code:y.a")
-assert(y_a.b[1] == "hello")
-
-local z = resource.proxy("a.code:z")
-
-local z_1 = resource.proxy("a.code:z.1")
-assert(z_1[1] == "hello")
-
 resource.unload "a.code"
-
-assert(tostring(x) == "a.code:x")
-assert(x._data == false)	-- unload
-assert(resource.status(x) == "ref")
 
 load_code "a.code"
 resource.unload "a.code"
 load_code ("a.code", true)	-- turn on autoload
 
-assert(x[1] == 1)
-
 resource.unload "a.code"
 
-local result = {}
-
--- pairs trigger auto reload
-for k,v in pairs(x) do
-	result[k] = v
-end
-
-assert(result[1] == 1)
-assert(result[2] == 2)
-assert(result[3] == 3)
-
-local zclone = resource.patch(z,
+local clone = resource.patch(proxy,
 	{
-			{ "hello_patched" },
+			z =  {
+				{ "hello_patched" },
+			},
 	}
 )
 
-assert(zclone[1][1] == "hello_patched")
-assert(zclone[2][1] == "world")
-assert(resource.status(zclone[2])=="data")
+assert(clone.x[1] == 1)
+assert(clone.z[1][1] == "hello_patched")
+print(clone.z[2][1]	== "world")
