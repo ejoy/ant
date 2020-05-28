@@ -36,99 +36,119 @@ local function proxy(name)
 end
 
 local function get_transform(node)
-    if node.transform then
-        return proxy "transform" {
-            srt = proxy "matrix" (node.transform)
-        }
-    end
-    if node.scale or node.rotation or node.translation then
+    if node.matrix then
+        local s, r, t = math3d.srt(math3d.matrix(node.matrix))
         return proxy "transform" {
             srt = proxy "srt" {
-                s = node.scale or {1, 1, 1, 0},
-                r = node.rotation or {0, 0, 0, 1},
-                t = node.translation or {0, 0, 0, 1}
+                s = math3d.tovalue(s),
+                r = math3d.tovalue(r),
+                t = math3d.tovalue(t),
             }
         }
     end
+
+    return proxy "transform" {
+        srt = proxy "srt" {
+            s = node.scale,
+            r = node.rotation,
+            t = node.translation,
+        }
+    }
 end
 
-return function(output, meshscene, materialfiles)
+return function(output, glbdata, exports)
     prefab = {{}}
     conv = {}
     actions = prefab[1]
 
-    local scene = meshscene.scenes[meshscene.scene]
-    local function get_submesh_name(meshname, primidx)
-        return table.concat({
-            "scenes",
-            meshscene.scene,
-            meshname,
-            primidx
-        }, ".")
-    end
-
+    local gltfscene = glbdata.info
+    local scene = gltfscene.scenes[gltfscene.scene+1]
     local rootid = create_entity {
         policy = {
             "ant.general|name",
         },
         data = {
-            name = meshscene.scene,
+            name = scene.name or "Rootscene",
         },
         parent = "root",
     }
-    for meshname, meshnode in sort_pairs(scene) do
-        local transform = get_transform(meshnode)
-        local parent
-        if transform then
-            parent = create_entity {
-                policy = {
-                    "ant.general|name",
-                    "ant.scene|transform_policy"
-                },
-                data = {
-                    name = meshname,
-                    scene_entity = true,
-                    transform = transform,
-                },
-                parent = rootid,
-            }
-        else
-            parent = create_entity {
-                policy = { "ant.general|name" },
-                data = { name = meshname },
-                parent = rootid,
-            }
-        end
-        for primidx, prim in ipairs(meshnode) do
-            local mf
-            if materialfiles then
-                mf = materialfiles[prim.material+1]
-            else
-                error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
-            end
 
-            if mf == nil then
-                error(("material index not found in output material files:%d"):format(prim.material))
-            end
-            create_entity {
-                policy = {
-                    "ant.general|name",
-                    "ant.render|mesh",
-                    "ant.render|render",
-                },
-                data = {
-                    scene_entity= true,
-                    can_render  = true,
-                    transform   = proxy "transform" {
-                        srt = proxy "srt" {}
+    local materialfiles, meshfiles, skinfiles = exports.material, exports.mesh, exports.skin
+    local function get_submesh_name(meshidx, primidx)
+        return meshfiles[meshidx][primidx][1]
+    end
+
+    local function export_entity(scensnodes, parent)
+        for _, nodeidx in ipairs(scensnodes) do
+            local node = gltfscene.nodes[nodeidx+1]
+            local transform = get_transform(node)
+            if node.mesh == nil then
+                local newnode = create_entity {
+                    policy = {
+                        "ant.general|name",
+                        "ant.scene|transform_policy"
                     },
-                    mesh        = proxy "resource" ("./mesh.meshbin:" .. get_submesh_name(meshname, primidx)),
-                    material    = proxy "resource" (mf),
-                    name        = meshname .. "." .. primidx,
-                },
-                parent = parent,
-            }
+                    data = {
+                        name = node.name or ("node" .. nodeidx),
+                        scene_entity = true,
+                        transform = transform,
+                    },
+                    parent = parent,
+                }
+
+                if node.children then
+                    export_entity(node.children, newnode)
+                end
+            else
+                local meshidx = node.mesh
+                local mesh = gltfscene.meshes[meshidx+1]
+
+                for primidx, prim in ipairs(mesh.primitives) do
+                    local meshname = mesh.name or ("mesh" .. meshidx)
+                    local mf
+                    if materialfiles then
+                        mf = materialfiles[prim.material+1]
+                    else
+                        error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
+                    end
+        
+                    if mf == nil then
+                        error(("material index not found in output material files:%d"):format(prim.material))
+                    end
+
+                    local meshskin
+                    if mesh.skin then
+                        local f = skinfiles[mesh.skin+1]
+                        if f then
+                            error(("mesh need skin data, but no skin file output:%d"):format(mesh.skin))
+                        end
+
+                        meshskin = proxy "resource" ("./" .. meshskin)
+                    end
+
+                    create_entity {
+                        policy = {
+                            "ant.general|name",
+                            "ant.render|mesh",
+                            "ant.render|render",
+                        },
+                        data = {
+                            scene_entity= true,
+                            can_render  = true,
+                            transform   = transform,
+                            mesh        = proxy "resource" ("./meshes/" .. get_submesh_name(meshidx+1, primidx)),
+                            material    = proxy "resource" (mf),
+                            meshskin    = meshskin,
+                            name        = meshname .. "." .. primidx,
+                        },
+                        parent = parent,
+                    }
+                end
+            end
         end
     end
+
+    export_entity(scene.nodes, rootid)
+
     fs_local.write_file(output / "mesh.prefab", stringify(prefab, conv))
 end

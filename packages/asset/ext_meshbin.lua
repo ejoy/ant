@@ -9,18 +9,9 @@ end
 return {
     loader = function (filename)
         local c = cr.read_file(filename)
-        local meshscene = thread.unpack(c)
-        for _, scene in pairs(meshscene.scenes) do
-            for _, meshnode in pairs(scene) do
-                local skin = meshnode.skin
-                create_bounding(meshnode.bounding)
-                for _, prim in ipairs(meshnode) do
-                    create_bounding(prim.bounding)
-                    prim.skin = skin
-                end
-            end
-        end
-        return meshscene
+        local group = thread.unpack(c)
+        create_bounding(group.bounding)
+        return group
     end,
     unloader = function ()
     end,

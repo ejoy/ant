@@ -1,9 +1,7 @@
 local ecs = ...
-local world = ecs.world
 
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
-local setting	= renderpkg.setting
 
 local assetmgr = import_package "ant.asset"
 
@@ -13,7 +11,7 @@ local animodule = require "hierarchy.animation"
 
 local st_trans = ecs.transform "skinning_type_transform"
 function st_trans.process_prefab(e)
-	e.skinning_type  = "GPU" --setting.get().animation.skinning.type
+	e.skinning_type  = "GPU"
 end
 
 local mesh_skinning_transform = ecs.transform "mesh_skinning"
@@ -113,13 +111,10 @@ local function build_cpu_skinning_jobs(e, skinning)
 end
 
 function mesh_skinning_transform.process(e)
-	e.skinning = {}
-
 	local skinning = e.skinning
 
 	local poseresult = e.pose_result
 	skinning.skinning_matrices = animodule.new_bind_pose(poseresult:count())
-	skinning.skin = e.rendermesh.skin
 
 	if e.skinning_type == "CPU" then
 		build_cpu_skinning_jobs(e, skinning)

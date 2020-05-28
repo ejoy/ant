@@ -12,15 +12,9 @@ local assetmgr  = import_package "ant.asset"
 local ml = ecs.transform "mesh_loader"
 
 local function gen_glbmesh_key(mesh_fielname)
-	local filename, subname = mesh_fielname:match "([^:]+):(.+)$"
-	filename = filename:gsub("[|:]", ".")
-
-	local extname = ".glbmesh"
-	if subname ~= "" then
-		extname = ".".. subname .. extname
-	end
-
-	return filename .. extname
+	local filename = mesh_fielname:match "[^:]+"
+	filename = filename:gsub("[|:]", "/")
+	return filename:gsub("%.meshbin$", ".glbmesh")
 end
 
 function ml.process(e)

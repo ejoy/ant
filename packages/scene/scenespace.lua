@@ -114,8 +114,6 @@ local function combine_parent_transform(e, trans)
 	if ptrans then
 		local pw = ptrans._world
 		trans._world.m = math3d.mul(pw, trans._world)
-	elseif e.parent then
-		combine_parent_transform(world[e.parent], trans)
 	end
 end
 

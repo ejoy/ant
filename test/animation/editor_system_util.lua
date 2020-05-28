@@ -74,7 +74,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
             }),
-            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/ring.glb|mesh.meshbin:scenes.scene1.mesh0.1",
+            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/ring.glb|meshes/mesh0_P1.meshbin",
             material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_singlecolor.material",
             --can_cast = true,
             can_render = true,
@@ -195,7 +195,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
             }),
-            mesh = world.component:resource"/pkg/ant.resources.binary/meshes/base/cone.glb|mesh.meshbin:scenes.Root Scene.pCone1.1",
+            mesh = world.component:resource"/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
             material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material",
             can_render = true,
             can_select = true,
@@ -232,7 +232,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size, t=pos},
             }),
-            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.meshbin:scenes.Root Scene.pCube1.1",
+            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material",
             can_render = true,
             name = name,

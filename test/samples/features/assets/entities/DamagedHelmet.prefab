@@ -9,7 +9,7 @@ data:
     transform: $transform
         srt: $srt 
             t:{3, 2, 0, 1}
-    mesh: $resource "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.meshbin:scenes.Scene.mesh_helmet_LP_13930damagedHelmet.1"
+    mesh: $resource "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|meshes/mesh_helmet_LP_13930damagedHelmet_P1.meshbin"
     material: $resource /pkg/ant.test.features/assets/DamagedHelmet.pbrm
     can_render: true
     can_cast: true

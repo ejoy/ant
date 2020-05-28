@@ -36,7 +36,7 @@ function sp_test_sys:init()
             name = "child1",
             can_render = true,
             material = material,
-            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/sphere.glb|mesh.meshbin:scenes.Root Scene.pSphere1.1",
+            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
             transform = computil.create_transform(world, {
                 srt={
                     s = {100,},
@@ -61,7 +61,7 @@ function sp_test_sys:init()
             name = "child1_1",
             scene_entity = true,
             can_render = true,
-            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.meshbin:scenes.Root Scene.pCube1.1",
+            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = material,
             transform = computil.create_transform(world, {
                 srt = {
@@ -106,7 +106,7 @@ function sp_test_sys:init()
             can_render = true,
             scene_entity = true,
             material = material,
-            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.meshbin:scenes.Root Scene.pCube1.1",
+            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             transform = computil.create_transform(world, {
                 srt={
                     s = {100,},

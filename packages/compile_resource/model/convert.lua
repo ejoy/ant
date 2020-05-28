@@ -6,9 +6,10 @@ local glbloader    = import_package "ant.glTF".glb
 
 return function (_, input, output)
     local glbdata = glbloader.decode(input:string())
-    local meshscene = export_meshbin(output, glbdata)
+    local mesh_exports = export_meshbin(output / "meshes", glbdata)
     local materialfiles = export_pbrm(output, glbdata)
+    mesh_exports.material = materialfiles
     export_animation(input, output)
-    export_prefab(output, meshscene, materialfiles)
+    export_prefab(output, glbdata, mesh_exports)
     return true, ""
 end

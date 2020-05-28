@@ -28,7 +28,7 @@ function st_sys:init()
 				}
 			}),
 			material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
-			mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.meshbin:scenes.Root Scene.pCube1.1",
+			mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 			name = "cast_shadow_cube",
 		}
 	}
@@ -109,7 +109,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 				},
 			}),
 			material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = world.component:resource '/pkg/ant.resources.binary/meshes/base/cylinder.glb|mesh.meshbin:scenes.Root Scene.pCylinder1.1',
+			mesh = world.component:resource '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder",
 		},
 		connection = {
@@ -135,7 +135,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			can_render = true,
 			transform = cu.create_transform(world, {srt={s={100}, t=cone_offset}}),
 			material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = world.component:resource '/pkg/ant.resources.binary/meshes/base/cone.glb|mesh.meshbin:scenes.Root Scene.pCone1.1',
+			mesh = world.component:resource '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"
 		},
 		connection = {

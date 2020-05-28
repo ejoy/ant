@@ -6,6 +6,7 @@ local renderpkg = import_package "ant.render"
 local declmgr	= renderpkg.declmgr
 local sort_pairs = require "sort_pairs"
 local math3d	= require "math3d"
+local lfs		= require "filesystem.local"
 
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
@@ -66,7 +67,7 @@ local function create_prim_bounding(meshscene, prim)
 	end
 end
 
-local function node_matrix(node)
+local function get_transform(node)
 	if node.matrix then
 		return math3d.matrix(node.matrix)
 	end
@@ -76,32 +77,21 @@ local function node_matrix(node)
 	end
 end
 
-local function calc_node_transform(node, parentmat)
-	local nodetrans = node_matrix(node)
-	if nodetrans then
-		return parentmat and math3d.mul(parentmat, nodetrans) or nodetrans
-	end
-	return parentmat
-end
+local function fetch_skininfo(gltfscene, skin, bindata)
+	local ibm_idx 	= skin.inverseBindMatrices
+	local ibm 		= gltfscene.accessors[ibm_idx+1]
+	local ibm_bv 	= gltfscene.bufferViews[ibm.bufferView+1]
 
-local function fetch_inverse_bind_matrices(gltfscene, skinidx, bindata)
-	if skinidx then
-		local skin 		= gltfscene.skins[skinidx+1]
-		local ibm_idx 	= skin.inverseBindMatrices
-		local ibm 		= gltfscene.accessors[ibm_idx+1]
-		local ibm_bv 	= gltfscene.bufferViews[ibm.bufferView+1]
+	local start_offset = ibm_bv.byteOffset + 1
+	local end_offset = start_offset + ibm_bv.byteLength
 
-		local start_offset = ibm_bv.byteOffset + 1
-		local end_offset = start_offset + ibm_bv.byteLength
-
-		return {
-			inverse_bind_matrices = {
-				num		= ibm.count,
-				value 	= bindata:sub(start_offset, end_offset-1),
-			},
-			joints 	= skin.joints,
-		}
-	end
+	return {
+		inverse_bind_matrices = {
+			num		= ibm.count,
+			value 	= bindata:sub(start_offset, end_offset-1),
+		},
+		joints 	= skin.joints,
+	}
 end
 
 local function to_aabb(meshaabb)
@@ -243,143 +233,114 @@ end
 
 local cache_tree = {}
 
-local function redirect_skin_joints(scene)
-	local skins = scene.skins
+local function redirect_skin_joints(gltfscene, skin)
+	local joints = skin.joints
+	local skeleton_nodeidx = find_skin_root_idx(gltfscene, skin)
+
+	if skeleton_nodeidx > 0 then
+		local mapper = cache_tree[skeleton_nodeidx]
+		if mapper == nil then
+			mapper = {}
+			local node_index = 0
+			-- follow with ozz-animation:SkeleteBuilder, IterateJointsDF
+			local function iterate_hierarchy_DF(nodes)
+				for _, nidx in ipairs(nodes) do
+					mapper[nidx] = node_index
+					node_index = node_index + 1
+					local node = gltfscene.nodes[nidx+1]
+					local c = node.children
+					if c then
+						iterate_hierarchy_DF(c)
+					end
+				end
+			end
+			iterate_hierarchy_DF{skeleton_nodeidx}
+
+			cache_tree[skeleton_nodeidx] = mapper
+		end
+
+		for i=1, #joints do
+			local joint_nodeidx = joints[i]
+			joints[i] = assert(mapper[joint_nodeidx])
+		end
+	end
+end
+
+local function export_skinbin(gltfscene, bindata, exports)
+	local skins = gltfscene.skins
 	if skins == nil then
 		return
 	end
-	for _, skin in ipairs(scene.skins) do
-		local joints = skin.joints
-		local skeleton_nodeidx = find_skin_root_idx(scene, skin)
 
-		if skeleton_nodeidx > 0 then
-			local mapper = cache_tree[skeleton_nodeidx]
-			if mapper == nil then
-				mapper = {}
-				local node_index = 0
-				-- follow with ozz-animation:SkeleteBuilder, IterateJointsDF
-				local function iterate_hierarchy_DF(nodes)
-					for _, nidx in ipairs(nodes) do
-						mapper[nidx] = node_index
-						node_index = node_index + 1
-						local node = scene.nodes[nidx+1]
-						local c = node.children
-						if c then
-							iterate_hierarchy_DF(c)
-						end
-					end
-				end
-				iterate_hierarchy_DF{skeleton_nodeidx}
-
-				cache_tree[skeleton_nodeidx] = mapper
-			end
-
-			for i=1, #joints do
-				local joint_nodeidx = joints[i]
-				joints[i] = assert(mapper[joint_nodeidx])
-			end
-		end
+	for skinidx, skin in ipairs(gltfscene.skins) do
+		redirect_skin_joints(gltfscene, skin)
+		local skinname = get_obj_name(skin, skinidx, "skin")
+		local resname = skinname .. ".skinbin"
+		exports[resname] = fetch_skininfo(gltfscene, skin, bindata)
 	end
 end
 
-local function export_meshbin(gltfscene, bindata)
-	redirect_skin_joints(gltfscene)
-	local scene_scalemat = gltfscene.scenescale and math3d.ref(math3d.matrix{s=gltfscene.scenescale}) or nil
+local function export_meshbin(gltfscene, bindata, exports)
+	local meshes = gltfscene.meshes
+	if meshes == nil then
+		return 
+	end
 
-	local function create_mesh_scene(gltfnodes, parentmat, scenegroups)
-		for _, nodeidx in ipairs(gltfnodes) do
-			local node = gltfscene.nodes[nodeidx + 1]
-			local nodetrans = calc_node_transform(node, parentmat)
+	for meshidx, mesh in ipairs(meshes) do
+		local meshname = get_obj_name(mesh, meshidx, "mesh")
+		local meshaabb = math3d.aabb()
+		local export_primitives = {}
+		for primidx, prim in ipairs(mesh.primitives) do
+			local primname = "P" .. primidx
+			local resname = meshname .. "_" .. primname .. ".meshbin"
+			local group = {
+				mode 		= prim.mode,
+				material 	= prim.material,
+			}
 
-			if node.children then
-				create_mesh_scene(node.children, nodetrans, scenegroups)
+			group.vb = {
+				values 	= fetch_vb_buffers(gltfscene, bindata, prim.attributes),
+				start 	= 0,
+				num 	= gltfutil.num_vertices(prim, gltfscene),
+			}
+
+			local indices_accidx = prim.indices
+			if indices_accidx then
+				local idxacc = gltfscene.accessors[indices_accidx+1]
+				group.ib = {
+					value 	= fetch_ib_buffer(gltfscene, bindata, idxacc),
+					start 	= 0,
+					num 	= idxacc.count,
+				}
 			end
 
-			local meshidx = node.mesh
-			local meshname
-			if meshidx then
-				local mesh = gltfscene.meshes[meshidx+1]
-				meshname = get_obj_name(mesh, meshidx, "mesh")
-
-				if scenegroups[meshname] == nil then
-					local meshnode = {
-						transform = nodetrans and math3d.tovalue(nodetrans) or nil,
-						skin = fetch_inverse_bind_matrices(gltfscene, node.skin, bindata),
-					}
-	
-					local meshaabb = math3d.aabb()
-	
-					for _, prim in ipairs(mesh.primitives) do
-						local group = {
-							mode = prim.mode,
-							material = prim.material,
-						}
-
-						group.vb = {
-							values 	= fetch_vb_buffers(gltfscene, bindata, prim.attributes),
-							start 	= 0,
-							num 	= gltfutil.num_vertices(prim, gltfscene),
-						}
-	
-						local indices_accidx = prim.indices
-						if indices_accidx then
-							local idxacc = gltfscene.accessors[indices_accidx+1]
-							local bv = gltfscene.bufferViews[idxacc.bufferView+1]
-							group.ib = {
-								value 	= fetch_ib_buffer(gltfscene, bindata, idxacc),
-								start 	= 0,
-								num 	= idxacc.count,
-							}
-						end
-	
-						local bb = create_prim_bounding(gltfscene, prim)
-						if bb then
-							group.bounding = bb
-							meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
-						end
-	
-						meshnode[#meshnode+1] = group
-					end
-	
-					if math3d.aabb_isvalid(meshaabb) then
-						meshnode.bounding = {aabb = to_aabb(meshaabb)}
-					end
-	
-					scenegroups[meshname] = meshnode
-				end
+			local bb = create_prim_bounding(gltfscene, prim)
+			if bb then
+				group.bounding = bb
+				meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
 			end
+
+			export_primitives[primidx] = {resname, group}
 		end
+		exports[meshidx] = export_primitives
 	end
-
-	local meshscene = {
-		scenelods = gltfscene.scenelods,
-		scenescale = gltfscene.scenescale,
-		scenes = {}
-	}
-
-	if meshscene.scenelods then
-		for idx, lod in ipairs(meshscene.scenelods) do
-			meshscene.scenelods[idx] = lod + 1
-		end
-	end
-	local scenes = meshscene.scenes
-	for sceneidx, s in ipairs(gltfscene.scenes) do
-		local scene = {}
-		local scenename = get_obj_name(s, sceneidx, "scene")
-		create_mesh_scene(s.nodes, scene_scalemat, scene)
-		scenes[scenename] = scene
-	end
-
-	local def_sceneidx = gltfscene.scene+1
-	meshscene.scene = get_obj_name(gltfscene.scenes[def_sceneidx], def_sceneidx, "scene")
-	return meshscene
 end
 
 return function (output, glbdata)
-	local meshscene = export_meshbin(glbdata.info, glbdata.bin)
-    if meshscene == nil then
-        error("export meshbin failed")
-    end
-	fs_local.write_file(output / "mesh.meshbin", thread.pack(meshscene))
-	return meshscene
+	lfs.create_directories(output)
+	local exports = {mesh={}, skin={}}
+	export_meshbin(glbdata.info, glbdata.bin, exports.mesh)
+	export_skinbin(glbdata.info, glbdata.bin, exports.skin)
+
+	for _, groups in ipairs(exports.mesh) do
+		for _, group in ipairs(groups) do
+			fs_local.write_file(output / group[1], thread.pack(group[2]))
+		end
+	end
+
+	for name, value in pairs(exports.skin) do
+		fs_local.write_file(output / name, thread.pack(value))
+	end
+
+	return exports
 end

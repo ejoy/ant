@@ -87,14 +87,6 @@ local function gen_mesh_assetinfo(ozzmesh)
 		}
 	end
 
-	local ibm_pointer, ibm_count = ozzmesh:inverse_bind_matrices()
-	local joint_remapp_pointer, count = ozzmesh:joint_remap()
-
-	primitive.skin = {
-		inverse_bind_pose 	= animodule.new_bind_pose(ibm_count, ibm_pointer),
-		joint_remap 		= animodule.new_joint_remap(joint_remapp_pointer, count)
-	}
-
 	return primitive
 end
 
@@ -132,14 +124,17 @@ end
 function ozzmesh_skinning_transform.process(e)
 	assert(e.skinning_type == "CPU")
 
-	e.skinning = {}
-
-	local skincomp = e.skinning
+	local skincomp	= e.skinning
 	local meshres 	= e.mesh._handle
-	e.rendermesh = patch_dynamic_buffer(meshres, e.rendermesh)
+	e.rendermesh 	= patch_dynamic_buffer(meshres, e.rendermesh)
 	local meshscene = e.rendermesh
 
-	skincomp.skin = meshscene.skin
+	local ibm_pointer, ibm_count = meshres:inverse_bind_matrices()
+	local joint_remapp_pointer, count = meshres:joint_remap()
+	skincomp.meshskin= {
+		inverse_bind_pose 	= animodule.new_bind_pose(ibm_count, ibm_pointer),
+		joint_remap 		= animodule.new_joint_remap(joint_remapp_pointer, count)
+	}
 	local poseresult = e.pose_result
 	skincomp.skinning_matrices = animodule.new_bind_pose(poseresult:count())
 	skincomp.jobs = {
