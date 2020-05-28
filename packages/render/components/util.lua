@@ -460,33 +460,4 @@ local function sort_pairs(t)
     end
 end
 
-function util.print_glb_hierarchy(glbfile)
-    local assetmgr = import_package "ant.asset"
-    local res = assetmgr.load(glbfile)
-    print("default_scene:", res.scene)
-	print "scenes:"
-
-	local function node_matrix(node)
-		if node.transform then
-			return math3d.tostring(math3d.matrix(node.transform))
-		end
-
-		return ""
-	end
-
-    for k, scene in sort_pairs(res.scenes) do
-        print("  scene:", k)
-        for name, node in sort_pairs(scene) do
-			print("    mesh node:", name)
-			print("    mesh transform:")
-			print(("    [%s]"):format(node_matrix(node)))
-            for idx, prim in ipairs(node) do
-                print("      primitive index:", idx)
-                print("      material index:", prim.material or "NONE")
-                print("      primitive mode:", prim.mode or "NONE")
-            end
-        end
-    end
-end
-
 return util

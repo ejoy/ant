@@ -128,4 +128,21 @@ function u.valid_tool_exe_path(toolname)
     error(table.concat(dirs, "\n"))
 end
 
+function u.print_glb_compile_result(glbfile)
+	local cr = import_package "compile_resource"
+	local outpath = cr.compile(glbfile)
+
+    local skinbin_files = u.list_files(fs.path(outpath) / "meshes", ".skinbin", {})
+    print("skinbin files")
+    for _, f in ipairs(skinbin_files) do
+        print("  " .. f:string())
+    end
+
+    local meshbin_files = u.list_files(fs.path(outpath) / "meshes", ".meshbin", {})
+    print("meshbin files")
+    for _, f in ipairs(skinbin_files) do
+        print("  " .. f:string())
+    end
+end
+
 return u
