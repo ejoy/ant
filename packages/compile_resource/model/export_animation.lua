@@ -7,7 +7,7 @@ return function (input, output)
     local animation_folder = output / "animation"
     fs.create_directories(animation_folder)
     local success, msg = subprocess.spawn_process {
-        fs_local.valid_tool_exe_path "gltf2ozz",
+        tostring(fs_local.valid_tool_exe_path "gltf2ozz"),
         "--file=" .. input:string(),
         stdout = true,
         stderr = true,
