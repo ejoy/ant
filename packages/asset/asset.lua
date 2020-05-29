@@ -1,4 +1,5 @@
 local resource = import_package "ant.resource"
+local datalist = require "datalist"
 
 local assetmgr = {}
 assetmgr.__index = assetmgr
@@ -98,6 +99,29 @@ function assetmgr.load_fx(fullpath)
     return resource_load(fullpath, nil, true)
 end
 
+local function valid_component(w, name)
+	local tc = w._class.component[name]
+	return tc and tc.init
+end
+
+local function resource_init(w, name, filename)
+	local cr = import_package "ant.compile_resource"
+	local data = cr.read_file(filename)
+	w._current_path = filename:match "^(.-)[^/|]*$"
+	local res = datalist.parse(data, function(v)
+		return w:component_init(v[1], v[2])
+	end)
+	w._current_path = nil
+	if valid_component(w, name) then
+		return w:component_init(name, res)
+	end
+	return res
+end
+
+local function resource_delete(w, name, v)
+	w:component_delete(name, v)
+end
+
 function assetmgr.init()
 	local function loader(filename, data)
 		local ext = filename:match "[^.]*$"
@@ -109,7 +133,7 @@ function assetmgr.init()
 			return require("ext_" .. ext).loader(filename)
 		end
 		local world = data
-		return world:prefab_init(ext, filename)
+		return resource_init(world, ext, filename)
 	end
 	local function unloader(filename, data, res)
 		local ext = filename:match "[^.]*$"
@@ -123,7 +147,7 @@ function assetmgr.init()
 			return
 		end
 		local world = data
-		world:prefab_delete(ext, res)
+		resource_delete(world, ext, res)
 	end
 	resource.register(loader, unloader)
 end

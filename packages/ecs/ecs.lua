@@ -2,8 +2,6 @@ local typeclass = require "typeclass"
 local system = require "system"
 local policy = require "policy"
 local event = require "event"
-local datalist = require "datalist"
-local cr = import_package "ant.compile_resource"
 local stringify = import_package "ant.serialize".stringify
 
 local world = {}
@@ -167,55 +165,12 @@ local function create_prefab_from_entity(w, t)
 	}, args
 end
 
-local function load_prefab(w, filename)
-	local data = cr.read_file(filename)
-	w._current_path = filename:match "^(.-)[^/|]*$"
-	local res = datalist.parse(data, function(v)
-		return component_init(w, v[1], v[2])
-	end)
-	w._current_path = nil
-	return res
+function world:component_init(name, v)
+	return component_init(self, name, v)
 end
 
-local function valid_component(w, name)
-	local tc = w._class.component[name]
-	return tc and tc.init
-end
-
-function world:prefab_init(name, filename)
-	local res = load_prefab(self, filename)
-	if valid_component(self, name) then
-		return component_init(self, name, res)
-	end
-	return res
-end
-
-function world:prefab_delete(name, v)
+function world:component_delete(name, v)
 	component_delete(self, name, v)
-end
-
-local function create_prefab(w, filename)
-	local t = load_prefab(w, filename)
-	local prefab = {
-		entities = {},
-		connection = t[1],
-	}
-	for i = 2, #t do
-		local policies, dataset = t[i].policy, t[i].data
-		local info = policy.create(w, policies)
-		local e = {}
-		for _, c in ipairs(info.component) do
-			e[c] = dataset[c]
-		end
-		for _, f in ipairs(info.process_prefab) do
-			f(e)
-		end
-		prefab.entities[i-1] = {
-			policy = info,
-			dataset = e,
-		}
-	end
-	return prefab
 end
 
 local function instance(w, prefab, args)
@@ -255,7 +210,7 @@ function world:create_entity(data)
 end
 
 function world:instance(filename, args)
-	local prefab = create_prefab(self, filename)
+	local prefab = component_init(self, "resource", filename)
 	return instance(self, prefab, args)
 end
 
@@ -480,5 +435,7 @@ function m.new_world(config)
 
 	return w
 end
+
+m.policy = policy
 
 return m
