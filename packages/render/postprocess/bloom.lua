@@ -72,9 +72,9 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 
         local m = assetmgr.patch(assetmgr.load(material), {properties={uniforms={}}})
         local uniforms = m.properties.uniforms
-        uniforms["u_sample_param"] = world.component:uniform {type = "v4", name = "sample param", value = sampleparam}
+        uniforms["u_sample_param"] = world.component "uniform" {type = "v4", name = "sample param", value = sampleparam}
         if intensity then
-            uniforms["u_intensity"] = world.component:uniform {type = "v4", name = "up sample intensity", value = {intensity, 0.0, 0.0, 0.0}}
+            uniforms["u_intensity"] = world.component "uniform" {type = "v4", name = "up sample intensity", value = {intensity, 0.0, 0.0, 0.0}}
         end
 
         passes[passidx] = {

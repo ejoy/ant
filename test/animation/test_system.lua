@@ -19,8 +19,8 @@ local function create_prefab(prefab, srt)
             "ant.scene|transform_policy",
         },
         data = {
-            transform = world.component:transform {
-                srt = world.component:srt (srt)
+            transform = world.component "transform" {
+                srt = world.component "srt" (srt)
             }
         }
     }

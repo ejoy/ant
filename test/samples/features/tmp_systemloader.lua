@@ -30,9 +30,9 @@ local function create_plane_test()
             "test shadow plane",
             {
                 ["ant.collision|collider_policy"] = {
-                    collider = world.component:collider{
+                    collider = world.component "collider" {
                         box = {
-                            world.component:box_shape{
+                            world.component "box_shape" {
                                 origin = math3d.ref(math3d.vector(0, 0, 0, 1)),
                                 size = {50, 0.001, 50},
                             }
@@ -62,12 +62,12 @@ local function target_lock_test()
         data = {
             name = "lock_target",
             can_render = true,
-            transform = world.component:transform {srt = world.component:srt {
-                s = world.component:vector {2, 1, 2, 0},
-                t = world.component:vector {16, 1, 6}},
+            transform = world.component "transform" {srt = world.component "srt" {
+                s = world.component "vector" {2, 1, 2, 0},
+                t = world.component "vector" {16, 1, 6}},
             },
-            mesh = world.component:resource "/pkg/ant.resources/meshes/sphere.mesh",
-            material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
+            mesh = world.component "resource" "/pkg/ant.resources/meshes/sphere.mesh",
+            material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",
             scene_entity = true,
         }
     }
@@ -83,15 +83,15 @@ local function target_lock_test()
             name = "lock_obj",
             can_render = true,
             parent = eid,
-            transform = world.component:transform {
-                srt= world.component:srt {t= world.component:vector {0, 0, -6}},
+            transform = world.component "transform" {
+                srt= world.component "srt" {t= world.component "vector" {0, 0, -6}},
                 lock_target = {
                     type = "ignore_scale",
                     offset = {0, 0, 3},
                 },
             },
-            mesh = world.component:resource "/pkg/ant.resources/meshes/cube.mesh",
-            material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
+            mesh = world.component "resource" "/pkg/ant.resources/meshes/cube.mesh",
+            material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
             scene_entity = true,
         },
     }

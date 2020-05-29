@@ -177,7 +177,7 @@ local function create_outline(seleid)
 
         -- local trans = se.transform
         -- local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
-        local t = world.component:transform {srt = mu.srt()}
+        local t = world.component "transform" {srt = mu.srt()}
         t.parent = seleid
         local outlineeid = world:create_entity {
             policy={
@@ -187,7 +187,7 @@ local function create_outline(seleid)
             },
             data={
                 transform = t,
-                material = world.component:resource "/pkg/ant.resources/materials/outline/scale.material",
+                material = world.component "resource" "/pkg/ant.resources/materials/outline/scale.material",
                 can_render = true,
                 outline_entity = true,
                 target_entity = world[seleid].serialize,

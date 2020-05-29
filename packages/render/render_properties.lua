@@ -131,24 +131,24 @@ function  load_properties_sys:init()
 
 	rp.uniforms = {
 	--lighting
-		directional_lightdir 	= world.component:uniform{type="v4", 	mc.T_ZERO},
-		directional_color 		= world.component:uniform{type="color",mc.T_ZERO},
-		directional_intensity 	= world.component:uniform{type="v4", 	mc.T_ZERO},
+		directional_lightdir 	= world.component "uniform"{type="v4", 	mc.T_ZERO},
+		directional_color 		= world.component "uniform"{type="color",mc.T_ZERO},
+		directional_intensity 	= world.component "uniform"{type="v4", 	mc.T_ZERO},
 
-		ambient_mode 			= world.component:uniform{type="v4", 	 mc.T_ZERO},
-		ambient_skycolor 		= world.component:uniform{type="color", mc.T_ZERO},
-		ambient_midcolor 		= world.component:uniform{type="color", mc.T_ZERO},
-		ambient_groundcolor 	= world.component:uniform{type="color", mc.T_ZERO},
+		ambient_mode 			= world.component "uniform"{type="v4", 	 mc.T_ZERO},
+		ambient_skycolor 		= world.component "uniform"{type="color", mc.T_ZERO},
+		ambient_midcolor 		= world.component "uniform"{type="color", mc.T_ZERO},
+		ambient_groundcolor 	= world.component "uniform"{type="color", mc.T_ZERO},
 
-		u_eyepos				= world.component:uniform{type="v4", mc.T_ZERO_PT},
+		u_eyepos				= world.component "uniform"{type="v4", mc.T_ZERO_PT},
 
 		-- shadow
-		u_csm_matrix 			= world.component:uniform{type="m4_array", mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT},
-		u_csm_split_distances	= world.component:uniform{type="v4", mc.T_ZERO},
+		u_csm_matrix 			= world.component "uniform"{type="m4_array", mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT},
+		u_csm_split_distances	= world.component "uniform"{type="v4", mc.T_ZERO},
 
-		u_depth_scale_offset	= world.component:uniform{type="v4", mc.T_ZERO},
-		u_shadow_param1			= world.component:uniform{type="v4", mc.T_ZERO},
-		u_shadow_param2			= world.component:uniform{type="v4", mc.T_ZERO},
+		u_depth_scale_offset	= world.component "uniform"{type="v4", mc.T_ZERO},
+		u_shadow_param1			= world.component "uniform"{type="v4", mc.T_ZERO},
+		u_shadow_param2			= world.component "uniform"{type="v4", mc.T_ZERO},
 	}
 	rp.textures = {
 		s_shadowmap = {type="texture", },

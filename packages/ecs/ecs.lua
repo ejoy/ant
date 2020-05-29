@@ -424,11 +424,11 @@ function m.new_world(config)
 	world.pub = event.pub
 	world.unsub = event.unsub
 
-	w.component = setmetatable({}, {__index = function(_, name)
-		return function (_, args)
+	w.component = function(name)
+		return function (args)
 			return component_init(w, name, args)
 		end
-	end})
+	end
 
 	-- load systems and components from modules
 	typeclass.init(w, config)

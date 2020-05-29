@@ -28,9 +28,9 @@ function m.create(info)
 
     local camera_data = {
         type    = info.type     or "",
-        eyepos  = world.component:vector(info.eyepos   or mc.T_ZERO_PT),
-        viewdir = world.component:vector(info.viewdir  or mc.T_ZAXIS),
-        updir   = world.component:vector(info.updir    or mc.T_YAXIS),
+        eyepos  = world.component "vector"(info.eyepos   or mc.T_ZERO_PT),
+        viewdir = world.component "vector"(info.viewdir  or mc.T_ZAXIS),
+        updir   = world.component "vector"(info.updir    or mc.T_YAXIS),
         frustum = frustum,
     }
     return world:create_entity {

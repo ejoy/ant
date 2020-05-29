@@ -27,8 +27,8 @@ function st_sys:init()
 					t={0, 2, 0, 0}
 				}
 			}),
-			material = world.component:resource "/pkg/ant.resources/materials/bunny.material",
-			mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+			material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",
+			mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 			name = "cast_shadow_cube",
 		}
 	}
@@ -108,8 +108,8 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 					t = math3d.ref(cylinder_offset),
 				},
 			}),
-			material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = world.component:resource '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
+			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder",
 		},
 		connection = {
@@ -118,7 +118,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 	}
 
 	local cylinder = world[cylindereid]
-	cylinder.material.properties.uniforms.u_color = world.component:uniform {
+	cylinder.material.properties.uniforms.u_color = world.component "uniform" {
         type= "v4",
         value = {{1, 0, 0, 1}},
     }
@@ -134,8 +134,8 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			scene_entity = true,
 			can_render = true,
 			transform = cu.create_transform(world, {srt={s={100}, t=cone_offset}}),
-			material = world.component:resource "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = world.component:resource '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
+			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"
 		},
 		connection = {
@@ -147,7 +147,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 	}
 
 	local cone = world[coneeid]
-	cone.material.properties.uniforms.u_color = world.component:uniform {
+	cone.material.properties.uniforms.u_color = world.component "uniform" {
         type= "v4",
         value = {{1, 0, 0, 1}},
     }

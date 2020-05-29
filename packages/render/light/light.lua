@@ -29,8 +29,8 @@ function ilight.create_directional_light_entity(name, color, intensity, directio
 			"ant.general|name",
 		},
 		data = {
-			position	= world.component:vector(position),
-			direction 	= world.component:vector(direction),
+			position	= world.component "vector"(position),
+			direction 	= world.component "vector"(direction),
 			name		= name,
 			light 		= "",
 			directional_light = {
@@ -48,8 +48,8 @@ function ilight.create_point_light_entity(name, dir, pos)
 			"ant.general|name",
 		},
 		data = {
-			direction = world.component:vector(dir or mc.T_NYAXIS),
-			position = world.component:vector(pos or mc.T_ZERO_PT),
+			direction = world.component "vector"(dir or mc.T_NYAXIS),
+			position = world.component "vector"(pos or mc.T_ZERO_PT),
 			name = name,
 			light = "",
 			point_light = {
@@ -69,8 +69,8 @@ function ilight.create_spot_light_entity(name, dir, pos)
 			"ant.general|name",
 		},
 		data = {
-			direction = world.component:vector(dir or mc.T_NYAXIS),
-			position = world.component:vector(pos or mc.T_ZERO_PT),
+			direction = world.component "vector"(dir or mc.T_NYAXIS),
+			position = world.component "vector"(pos or mc.T_ZERO_PT),
 			name = name,
 			light = "",
 			spot_light = {
