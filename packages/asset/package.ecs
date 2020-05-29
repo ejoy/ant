@@ -14,3 +14,7 @@ component "material"
 component "pbrm"
     .implement "ext_pbrm.lua"
     .method "init"
+
+component "prefab"
+    .implement "ext_prefab.lua"
+    .method "init"

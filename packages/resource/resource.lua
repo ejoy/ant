@@ -75,11 +75,10 @@ local function get_file_object(filename)
 end
 
 local function load_resource(robj, filename, data)
-	local ext = filename:match "[^.]*$"
 	if not LOADER then
 		format_error("Unknown loader")
 	end
-	robj.object = LOADER(ext, filename, data)
+	robj.object = LOADER(filename, data)
 	robj.proxy._data = robj.object
 	setmetatable(robj.proxy, data_mt(robj))
 end
@@ -129,9 +128,8 @@ function resource.unload(filename)
 	end
 	setmetatable(robj.proxy, robj.meta)
 
-	local ext = robj.filename:match "[^.]*$"
 	if UNLOADER then
-		UNLOADER(ext, robj.object, robj.filename, robj.source)
+		UNLOADER(robj.filename, robj.source, robj.object)
 	end
 	robj.object = nil
 end

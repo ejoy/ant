@@ -7,7 +7,3 @@ for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio
 call "%InstallDir%\Common7\Tools\vsdevcmd.bat" -arch=x64 -host_arch=x64
 
 @echo on
-
-msbuild build\ozz-animation\msvc\%1\ozz.sln      /m /v:m /t:build /p:Configuration="%1",Platform="x64"
-msbuild build\reactphysics3d\msvc\%1\REACTPHYSICS3D.sln /m /v:m /t:build /p:Configuration="%1",Platform="x64"
-msbuild bgfx\.build\projects\vs2019\bgfx.sln     /m /v:m /t:build /p:Configuration="%1",Platform="x64"

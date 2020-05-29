@@ -14,7 +14,7 @@ local char_ik_test_sys = ecs.system "character_ik_test_system"
 
 local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 
-local function v4(...)return world.component:vector(...)end
+local function v4(...)return world.component "vector"(...)end
 
 local function foot_ik_test()
     return world:instance((entitydir / "character_ik_test.prefab"):string())
@@ -32,9 +32,9 @@ local function create_plane_test()
     "test shadow plane",
     {
         ["ant.collision|collider_policy"] = {
-            collider = world.component:collider{
+            collider = world.component "collider" {
                 box = {
-                    world.component:box_shape{
+                    world.component "box_shape" {
                         origin = v4{0, 0, 0, 1},
                         size = {5, 0.001, 5},
                     }

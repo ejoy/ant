@@ -79,7 +79,7 @@ function util.draw_primitive(vid, primgroup, render_properties)
 	end
 
 	local material = primgroup.material
-	bgfx.set_state(material.state)
+	bgfx.set_state(material._state)
 	update_properties(material, render_properties)
 
 	local prog = material.fx.shader.prog
@@ -149,7 +149,7 @@ function util.create_main_queue(world, view_rect)
 		data = {
 			camera_eid = camera_eid,
 			
-			render_target = world.component:render_target {
+			render_target = world.component "render_target" {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
 				viewport = default_comp.viewport(view_rect),
@@ -157,7 +157,7 @@ function util.create_main_queue(world, view_rect)
 					render_buffers = render_buffers
 				},
 			},
-			primitive_filter = world.component:primitive_filter {
+			primitive_filter = world.component "primitive_filter" {
 				filter_tag = "can_render",
 			},
 			visible = true,
@@ -287,9 +287,9 @@ function util.create_blit_queue(world, viewrect)
 		},
 		data = {
 			camera = {
-				eyepos = world.component:vector(mc.T_ZERO_PT),
-				viewdir = world.component:vector(mc.T_ZAXIS),
-				updir = world.component:vector(mc.T_YAXIS),
+				eyepos = world.component "vector"(mc.T_ZERO_PT),
+				viewdir = world.component "vector"(mc.T_ZAXIS),
+				updir = world.component "vector"(mc.T_YAXIS),
 				frustum = default_comp.frustum(viewrect.w, viewrect.h),
 			},
 			name = "blit_camera",
@@ -304,11 +304,11 @@ function util.create_blit_queue(world, viewrect)
 		},
 		data = {
 			camera_eid = cameraeid,
-			render_target = world.component:render_target {
+			render_target = world.component "render_target" {
 				viewid = blitviewid,
 				viewport = default_comp.viewport(viewrect),
 			},
-			primitive_filter = world.component:primitive_filter {
+			primitive_filter = world.component "primitive_filter" {
 				filter_tag = "blit_render",
 			},
 			view_mode = "",
@@ -324,10 +324,10 @@ function util.create_blit_queue(world, viewrect)
 			"ant.render|blitrender",
 		},
 		data = {
-			transform = world.component:transform {
-				world.component:srt {srt = {}}
+			transform = world.component "transform" {
+				world.component "srt" {srt = {}}
 			},
-			material = world.component:resource "/pkg/ant.resources/materials/fullscreen.material",
+			material = world.component "resource" "/pkg/ant.resources/materials/fullscreen.material",
 			blit_render = true,
 			name = "full_quad",
 		}

@@ -54,12 +54,12 @@ function gui_main.init(nwh, context, width, height)
     imgui.setDockEnable(true)
     imgui.ant.viewid(uieditor_viewid);
     gui_mgr.win_handle = nwh
-	local imgui_font = assetmgr.resource(world, "/pkg/ant.imguibase/shader/font.fx").shader
+	local imgui_font = assetmgr.load_fx "/pkg/ant.imguibase/shader/font.fx".shader
     imgui.ant.font_program(
         imgui_font.prog,
         imgui_font.uniforms.s_tex.handle
     )
-	local imgui_image = assetmgr.resource(world, "/pkg/ant.imguibase/shader/image.fx").shader
+	local imgui_image = assetmgr.load_fx "/pkg/ant.imguibase/shader/image.fx".shader
     imgui.ant.image_program(
         imgui_image.prog,
         imgui_image.uniforms.s_tex.handle

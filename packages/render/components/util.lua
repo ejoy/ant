@@ -125,8 +125,8 @@ end
 
 function util.create_transform(world, transform)
 	local srt = transform and transform.srt or {}
-	return world.component:transform {
-		srt = world.component:srt(srt)
+	return world.component "transform" {
+		srt = world.component "srt"(srt)
 	}
 end
 
@@ -157,7 +157,7 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 
 	local data = {
 		transform = util.create_transform(world, trans),
-		material = world.component:resource(materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material"),
+		material = world.component "resource"(materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material"),
 		can_render = true,
 		name = name or "Plane",
 		scene_entity = true,
@@ -180,7 +180,7 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres()))
 
 	local e = world[eid]
-	e.material.properties.uniforms.u_color = world.component:uniform {
+	e.material.properties.uniforms.u_color = world.component "uniform" {
         type= "v4",
         value = {color},
     }
@@ -225,7 +225,7 @@ function util.create_simple_render_entity(world, transform, material, name, rend
 		},
 		data = {
 			transform = util.create_transform(world, transform or {srt={}}),
-			material = world.component:resource(material),
+			material = world.component "resource"(material),
 			can_render = true,
 			name = name or "frustum",
 			scene_entity = true,
@@ -364,8 +364,8 @@ function util.create_skybox(world, material)
 			"ant.general|name",
 		},
 		data = {
-			transform = world.component:transform {srt=mu.srt()},
-			material = world.component:resource(material or "/pkg/ant.resources/materials/skybox.material"),
+			transform = world.component "transform" {srt=mu.srt()},
+			material = world.component "resource"(material or "/pkg/ant.resources/materials/skybox.material"),
 			can_render = true,
 			scene_entity = true,
 			name = "sky_box",
@@ -424,8 +424,8 @@ function util.create_procedural_sky(world, settings)
 		},
 		data = {
 			transform = util.create_transform(world),
-			material = world.component:resource "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
-			procedural_sky = world.component:procedural_sky {
+			material = world.component "resource" "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
+			procedural_sky = world.component "procedural_sky" {
 				grid_width = 32,
 				grid_height = 32,
 				--attached_sun_light = attached_light(settings.attached_sun_light),

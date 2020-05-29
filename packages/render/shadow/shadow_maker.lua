@@ -143,7 +143,7 @@ local sm = ecs.system "shadow_system"
 local linear_cast_material = "/pkg/ant.resources/materials/shadow/csm_cast_linear.material"
 local cast_material = "/pkg/ant.resources/materials/shadow/csm_cast.material"
 
-local function v4(...) return world.component:vector(...) end
+local function v4(...) return world.component "vector"(...) end
 
 local function default_csm_camera()
 	return {
@@ -178,17 +178,17 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 			"ant.general|name",
 		},
 		data = {
-			material = world.component:resource(linear_shadow and linear_cast_material or cast_material),
+			material = world.component "resource"(linear_shadow and linear_cast_material or cast_material),
 			csm = {
 				split_ratios= {0, 0},
 				index 		= index,
 				stabilize 	= false,
 			},
-			primitive_filter = world.component:primitive_filter {
+			primitive_filter = world.component "primitive_filter" {
 				filter_tag = "can_cast",
 			},
 			camera_eid = cameraeid,
-			render_target = world.component:render_target {
+			render_target = world.component "render_target" {
 				viewid = viewidmgr.get(cameraname),
 				view_mode = "s",
 				viewport = {

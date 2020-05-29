@@ -57,8 +57,8 @@ local function instancePrefab(filename)
             "ant.scene|transform_policy",
         },
         data = {
-            transform = world.component:transform {
-                srt = world.component:srt {}
+            transform = world.component "transform" {
+                srt = world.component "srt" {}
             },
             scene_entity = true,
         }
@@ -75,16 +75,20 @@ local function write_file(filename, data)
 end
 
 local function serializePrefab(filename)
-    local serialize = import_package "ant.serialize"
-    write_file(filename, serialize.prefab(world, entities, {{mount="root"}}))
+    lfs.create_directories(filename:parent_path())
+
+    write_file(filename, world:serialize(entities, {{mount="root"}}))
+    local stringify = import_package "ant.serialize".stringify
+    local e = world[entities[3]]
+    write_file('/pkg/tools.viewer.prefab_viewer/res/root/test.material', stringify(e.material, world._typeclass))
 end
 
 function m:init()
     renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
     world:instance '/pkg/tools.viewer.prefab_viewer/light_directional.prefab'
 
-    if fs.exists(fs.path "/pkg/tools.viewer.prefab_viewer/res/root.prefab") then
-        instancePrefab "/pkg/tools.viewer.prefab_viewer/res/root.prefab"
+    if fs.exists(fs.path "/pkg/tools.viewer.prefab_viewer/res/root/mesh.prefab") then
+        instancePrefab "/pkg/tools.viewer.prefab_viewer/res/root/mesh.prefab"
         return
     end
     if fs.exists(fs.path "/pkg/tools.viewer.prefab_viewer/res/root.glb") then

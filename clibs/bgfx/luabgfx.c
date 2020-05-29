@@ -1281,25 +1281,14 @@ combine_state(lua_State *L, uint64_t *state) {
 			luaL_error(L, "Invalid BLEND FUNC : %s", func);
 		}
 	}
-	else if CASE(BLEND_FUNC_RT) {
-		size_t sz;
-		const char *func = luaL_checklstring(L, -1, &sz);
-		if (sz != 3) {
-			luaL_error(L, "Invalid BLEND FUNC RT : %s", func);
-		}
-		return 1;
-	}
 	else if CASE(BLEND_EQUATION) {
 		*state &= ~BGFX_STATE_BLEND_EQUATION_MASK;
 		size_t sz;
 		const char * eq = luaL_checklstring(L, -1, &sz);
 		if (sz == 3) {
-			uint64_t e = get_equation(L, eq);
-			*state |= BGFX_STATE_BLEND_EQUATION(e);
+			*state |= BGFX_STATE_BLEND_EQUATION(get_equation(L, eq));
 		} else if (sz == 6) {
-			uint64_t ergb = get_equation(L, eq);
-			uint64_t ra = get_equation(L, eq+3);
-			*state |= BGFX_STATE_BLEND_EQUATION_SEPARATE(ergb, ra);
+			*state |= BGFX_STATE_BLEND_EQUATION_SEPARATE(get_equation(L, eq), get_equation(L, eq+3));
 		} else {
 			luaL_error(L, "Invalid BLEND EQUATION mode : %s", eq);
 		}
@@ -1338,6 +1327,16 @@ combine_state(lua_State *L, uint64_t *state) {
 			*state |= BGFX_STATE_LINEAA;
 		else
 			*state &= ~BGFX_STATE_LINEAA;
+	} else if CASE(CONSERVATIVE_RASTER) {
+		if (lua_toboolean(L, -1))
+			*state |= BGFX_STATE_CONSERVATIVE_RASTER;
+		else
+			*state &= ~BGFX_STATE_CONSERVATIVE_RASTER;
+	} else if CASE (FRONT_CCW) {
+		if (lua_toboolean(L, -1))
+			*state |= BGFX_STATE_FRONT_CCW;
+		else
+			*state &= ~BGFX_STATE_FRONT_CCW;
 	} else if CASE(WRITE_MASK) {
 		*state &= ~BGFX_STATE_WRITE_MASK;
 		const char * mask = luaL_checkstring(L, -1);
@@ -1376,8 +1375,7 @@ combine_state(lua_State *L, uint64_t *state) {
 		else if CASE(LESS) *state |= BGFX_STATE_DEPTH_TEST_LESS;
 		else if CASE(NONE) ;
 		else luaL_error(L, "Invalid DEPTH_TEST mode : %s", what);
-	}
-	else if CASE(CULL) {
+	} else if CASE(CULL) {
 		*state &= ~BGFX_STATE_CULL_MASK;
 		const char * what = luaL_checkstring(L, -1);
 		if CASE(CCW) *state |= BGFX_STATE_CULL_CCW;
@@ -1385,7 +1383,16 @@ combine_state(lua_State *L, uint64_t *state) {
 		else if CASE(NONE) ;
 		else luaL_error(L, "Invalid CULL mode : %s", what);
 	} else if CASE(BLEND_FACTOR) {
+		return -1;
+	}
+	else if CASE(BLEND_FUNC_RT1) {
 		return 1;
+	}
+	else if CASE(BLEND_FUNC_RT2) {
+		return 2;
+	}
+	else if CASE(BLEND_FUNC_RT3) {
+		return 3;
 	}
 	return 0;
 }
@@ -1395,6 +1402,43 @@ byte2hex(uint8_t c, uint8_t *t) {
 	static char *hex = "0123456789ABCDEF";
 	t[0] = hex[c>>4];
 	t[1] = hex[c&0xf];
+}
+
+static int inline
+hex2n(lua_State *L, char c) {
+	if (c>='0' && c<='9')
+		return c-'0';
+	else if (c>='A' && c<='F')
+		return c-'A' + 10;
+	else if (c>='a' && c<='f')
+		return c-'a' + 10;
+	return luaL_error(L, "Invalid state %c", c);
+}
+
+static inline void
+get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
+	size_t sz;
+	const uint8_t * data = (const uint8_t *)luaL_checklstring(L, idx, &sz);
+	if (sz != 16 && sz != 24) {
+		luaL_error(L, "Invalid state length %d", sz);
+	}
+	uint64_t state = 0;
+	uint32_t rgba = 0;
+	int i;
+	for (i=0;i<15;i++) {
+		state |= hex2n(L,data[i]);
+		state <<= 4;
+	}
+	state |= hex2n(L,data[15]);
+	if (sz == 24) {
+		for (i=0;i<7;i++) {
+			rgba |= hex2n(L,data[16+i]);
+			rgba <<= 4;
+		}
+		rgba |= hex2n(L,data[23]);
+	}
+	*pstate = state;
+	*prgba = rgba;
 }
 
 static int
@@ -1423,30 +1467,43 @@ lmakeState(lua_State *L) {
 	lua_pushnil(L);
 	int blend_factor = 0;
 	while (lua_next(L, 1) != 0) {
-		if (combine_state(L, &state)) {
+		int rt = combine_state(L, &state);
+		if (rt) {
 			blend_factor = 1;
-			if (lua_type(L, -1) == LUA_TNUMBER) {
-				rgba = lua_tointeger(L, -1);
+			if (rt < 0) {
+				rgba = luaL_checkinteger(L, -1);
 			} else {
 				size_t sz;
 				const char *func = luaL_checklstring(L, -1, &sz);
-				if (sz != 3) {
-					luaL_error(L, "Invalid BLEND FUNC RT : %s", func);
-				}
-				uint64_t c1 = get_blend_func(L, func[1]);
-				uint64_t c2 = get_blend_func(L, func[2]);
-				switch (func[0]) {
-				case '1':
-					rgba = BGFX_STATE_BLEND_FUNC_RT_1(c1,c2);
-					break;
-				case '2':
-					rgba = BGFX_STATE_BLEND_FUNC_RT_2(c1,c2);
-					break;
-				case '3':
-					rgba = BGFX_STATE_BLEND_FUNC_RT_3(c1,c2);
-					break;
-				default:
-					luaL_error(L, "Invalid BLEND FUNC RT : %s", func);
+				if (sz == 2) {
+					uint64_t c1 = get_blend_func(L, func[0]);
+					uint64_t c2 = get_blend_func(L, func[1]);
+					switch (rt) {
+					case 1:
+						rgba |= BGFX_STATE_BLEND_FUNC_RT_1(c1,c2);
+						break;
+					case 2:
+						rgba |= BGFX_STATE_BLEND_FUNC_RT_2(c1,c2);
+						break;
+					case 3:
+						rgba |= BGFX_STATE_BLEND_FUNC_RT_3(c1,c2);
+						break;
+					}
+				} else if (sz == 5) {
+					uint64_t c1 = get_blend_func(L, func[0]);
+					uint64_t c2 = get_blend_func(L, func[1]);
+					uint64_t eq = get_equation(L, func+2);
+					switch (rt) {
+					case 1:
+						rgba |= BGFX_STATE_BLEND_FUNC_RT_1E(c1,c2,eq);
+						break;
+					case 2:
+						rgba |= BGFX_STATE_BLEND_FUNC_RT_1E(c1,c2,eq);
+						break;
+					case 3:
+						rgba |= BGFX_STATE_BLEND_FUNC_RT_1E(c1,c2,eq);
+						break;
+					}
 				}
 			}
 		}
@@ -1479,6 +1536,271 @@ lsetState(lua_State *L) {
 		BGFX(set_state)(state, rgba);
 	}
 	return 0;
+}
+
+static void
+parse_depth_test(lua_State *L, uint64_t state) {
+	const char * value = NULL;
+	switch (state & BGFX_STATE_DEPTH_TEST_MASK) {
+		case BGFX_STATE_DEPTH_TEST_LESS    : value = "LESS"; break;
+		case BGFX_STATE_DEPTH_TEST_LEQUAL  : value = "LEQUAL"; break;
+		case BGFX_STATE_DEPTH_TEST_EQUAL   : value = "EQUAL"; break;
+		case BGFX_STATE_DEPTH_TEST_GEQUAL  : value = "GEQUAL"; break;
+		case BGFX_STATE_DEPTH_TEST_GREATER : value = "GREATER"; break;
+		case BGFX_STATE_DEPTH_TEST_NOTEQUAL: value = "NOTEQUAL"; break;
+		case BGFX_STATE_DEPTH_TEST_NEVER   : value = "NEVER"; break;
+		case BGFX_STATE_DEPTH_TEST_ALWAYS  : value = "ALWAYS"; break;
+	}
+	if (value) {
+		lua_pushstring(L, value);
+		lua_setfield(L, -2, "DEPTH_TEST");
+	}
+}
+
+static void
+parse_cull(lua_State *L, uint64_t state) {
+	const char * value = NULL;
+	switch((state & BGFX_STATE_CULL_MASK)) {
+		case BGFX_STATE_CULL_CW  : value = "CW"; break;
+		case BGFX_STATE_CULL_CCW : value = "CCW"; break;
+	}
+	if (value) {
+		lua_pushstring(L, value);
+		lua_setfield(L, -2, "CULL");
+	}
+}
+
+static void
+parse_write(lua_State *L, uint64_t state) {
+	char write[6];
+	int idx = 0;
+	if (state & BGFX_STATE_WRITE_R) {
+		write[idx++] = 'R';
+	}
+	if (state & BGFX_STATE_WRITE_G) {
+		write[idx++] = 'G';
+	}
+	if (state & BGFX_STATE_WRITE_B) {
+		write[idx++] = 'B';
+	}
+	if (state & BGFX_STATE_WRITE_A) {
+		write[idx++] = 'A';
+	}
+	if (state & BGFX_STATE_WRITE_Z) {
+		write[idx++] = 'Z';
+	}
+	write[idx++] = 0;
+	if (idx > 1) {
+		lua_pushstring(L, write);
+		lua_setfield(L, -2, "WRITE");
+	}
+}
+
+static void
+parse_alpha_ref(lua_State *L, uint64_t state) {
+	uint64_t ref = (state & BGFX_STATE_ALPHA_REF_MASK) >> BGFX_STATE_ALPHA_REF_SHIFT;
+	if (ref > 0) {
+		lua_pushinteger(L, ref);
+		lua_setfield(L, -2, "ALPHA_REF");
+	}
+}
+
+static void
+parse_point_size(lua_State *L, uint64_t state) {
+	uint64_t psize = (state & BGFX_STATE_POINT_SIZE_MASK) >> BGFX_STATE_POINT_SIZE_SHIFT;
+	if (psize > 0) {
+		lua_pushinteger(L, psize);
+		lua_setfield(L, -2, "POINT_SIZE");
+	}
+}
+
+static void
+parse_pt(lua_State *L, uint64_t state) {
+	const char * value = NULL;
+	switch (state & BGFX_STATE_PT_MASK) {
+		case BGFX_STATE_PT_TRISTRIP : value = "TRISTRIP"; break;
+		case BGFX_STATE_PT_LINES    : value = "LINES"; break;
+		case BGFX_STATE_PT_POINTS   : value = "POINTS"; break;
+		case BGFX_STATE_PT_LINESTRIP: value = "LINESTRIP"; break;
+	}
+	if (value) {
+		lua_pushstring(L, value);
+		lua_setfield(L, -2, "PT");
+	}
+}
+
+static char
+parse_blend_func(lua_State *L, uint64_t v) {
+	v <<= BGFX_STATE_BLEND_SHIFT;
+	switch(v) {
+		case BGFX_STATE_BLEND_ZERO         : return '0';
+		case BGFX_STATE_BLEND_ONE          : return '1';
+		case BGFX_STATE_BLEND_SRC_COLOR    : return 's';
+		case BGFX_STATE_BLEND_INV_SRC_COLOR: return 'S';
+		case BGFX_STATE_BLEND_SRC_ALPHA    : return 'a';
+		case BGFX_STATE_BLEND_INV_SRC_ALPHA: return 'A';
+		case BGFX_STATE_BLEND_DST_ALPHA    : return 'b';
+		case BGFX_STATE_BLEND_INV_DST_ALPHA: return 'B';
+		case BGFX_STATE_BLEND_DST_COLOR    : return 'd';
+		case BGFX_STATE_BLEND_INV_DST_COLOR: return 'D';
+		case BGFX_STATE_BLEND_SRC_ALPHA_SAT: return 't';
+		case BGFX_STATE_BLEND_FACTOR       : return 'f';
+		case BGFX_STATE_BLEND_INV_FACTOR   : return 'F';
+		default :
+			luaL_error(L, "Invalid blend func");
+			return 0;
+	}
+}
+
+static void
+parse_equation(lua_State *L, char name[4], uint64_t v) {
+	v <<= BGFX_STATE_BLEND_EQUATION_SHIFT;
+	switch (v) {
+	case BGFX_STATE_BLEND_EQUATION_ADD:
+		name[0] = 'A'; name[1] = 'D'; name[2] = 'D'; name[3] = 0;
+		break;
+	case BGFX_STATE_BLEND_EQUATION_SUB:
+		name[0] = 'S'; name[1] = 'U'; name[2] = 'B'; name[3] = 0;
+		break;
+	case BGFX_STATE_BLEND_EQUATION_REVSUB:
+		name[0] = 'R'; name[1] = 'E'; name[2] = 'V'; name[3] = 0;
+		break;
+	case BGFX_STATE_BLEND_EQUATION_MIN:
+		name[0] = 'M'; name[1] = 'I'; name[2] = 'N'; name[3] = 0;
+		break;
+	case BGFX_STATE_BLEND_EQUATION_MAX:
+		name[0] = 'M'; name[1] = 'A'; name[2] = 'X'; name[3] = 0;
+		break;
+	default:
+		luaL_error(L, "Invalid blend equation");
+	}
+}
+
+static void
+parse_blend(lua_State *L, uint64_t state, uint32_t rgba) {
+	const char * value = NULL;
+	uint64_t blend_state = state & BGFX_STATE_BLEND_MASK;
+	int blend_factor = 0;
+	switch (blend_state) {
+		case BGFX_STATE_BLEND_ADD : value = "ADD"; break;
+		case BGFX_STATE_BLEND_ALPHA : value = "ALPHA"; break;
+		case BGFX_STATE_BLEND_DARKEN : value = "DARKEN"; break;
+		case BGFX_STATE_BLEND_LIGHTEN : value = "LIGHTEN"; break;
+		case BGFX_STATE_BLEND_MULTIPLY : value = "MULTIPLY"; break;
+		case BGFX_STATE_BLEND_NORMAL : value = "NORMAL"; break;
+		case BGFX_STATE_BLEND_SCREEN : value = "SCREEN"; break;
+		case BGFX_STATE_BLEND_LINEAR_BURN : value = "LINEAR_BURN"; break;
+	}
+	if (value) {
+		lua_pushstring(L, value);
+		lua_setfield(L, -2, "BLEND");
+	} else {
+		char blend_func[5];
+		int i;
+		blend_state >>= BGFX_STATE_BLEND_SHIFT;
+		if (blend_state) {
+			for (i=0;i<4;i++) {
+				blend_func[i] = parse_blend_func(L, (blend_state >> (i * 4)) & 0xf);
+				if (blend_func[i] == 'f' || blend_func[i] == 'F') {
+					blend_factor = 1;
+				}
+			}
+			if (blend_func[0] == blend_func[2] && blend_func[1] == blend_func[3]) {
+				// BGFX_STATE_BLEND_FUNC
+				blend_func[2] = 0;
+			} else {
+				// BGFX_STATE_BLEND_FUNC_SEPARATE
+				blend_func[4] = 0;
+			}
+			lua_pushstring(L, blend_func);
+			lua_setfield(L, -2, "BLEND_FUNC");
+			if (blend_factor) {
+				lua_pushinteger(L, rgba);
+				lua_setfield(L, -2, "BLEND_FACTOR");
+			}
+		}
+	}
+	if (blend_factor == 0) {
+		// BLEND_FUNC_RT
+		int i;
+		static const char * func_rt[3] = {
+			"BLEND_FUNC_RT1",
+			"BLEND_FUNC_RT2",
+			"BLEND_FUNC_RT3",
+		};
+		for (i=0;i<3;i++) {
+			int blend_func_rt = (rgba >> (i*11)) & 0x7ff;
+			if (blend_func_rt) {
+				char func[7];
+				func[0] = parse_blend_func(L, blend_func_rt & 0xf);
+				func[1] = parse_blend_func(L, (blend_func_rt >> 4) & 0xf);
+				int eq = (blend_func_rt >> 8) & 0x7;
+				if (eq) {
+					parse_equation(L, func+2, eq);
+				} else {
+					func[2] = 0;
+				}
+				lua_pushstring(L, func);
+				lua_setfield(L, -2, func_rt[i]);
+			}
+		}
+	}
+	int blend_equation = (int)((state & BGFX_STATE_BLEND_EQUATION_MASK) >> BGFX_STATE_BLEND_EQUATION_SHIFT);
+	if (blend_equation) {
+		char eq[7];
+		parse_equation(L, eq, blend_equation & 0x7);
+		parse_equation(L, eq+3, (blend_equation >> 3) & 0x7);
+		lua_pushstring(L, eq);
+		lua_setfield(L, -2, "BLEND_EQUATION");
+	}
+
+	char blend_enable[3];
+	int idx = 0;
+	if (state & BGFX_STATE_BLEND_INDEPENDENT) {
+		blend_enable[idx++] = 'i';
+	}
+	if (state & BGFX_STATE_BLEND_ALPHA_TO_COVERAGE) {
+		blend_enable[idx++] = 'a';
+	}
+	blend_enable[idx++] = 0;
+	if (idx > 1) {
+		lua_pushstring(L, blend_enable);
+		lua_setfield(L, -2, "BLEND_ENABLE");
+	}
+}
+
+static int
+lparseState(lua_State *L) {
+	uint64_t state;
+	uint32_t rgba;
+	get_state(L, 1, &state, &rgba);
+	lua_newtable(L);
+	parse_depth_test(L, state);
+	parse_cull(L, state);
+	parse_write(L, state);
+	parse_blend(L, state, rgba);
+	parse_alpha_ref(L, state);
+	parse_pt(L, state);
+	parse_point_size(L, state);
+
+	if (state & BGFX_STATE_MSAA) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "MSAA");
+	}
+	if (state & BGFX_STATE_LINEAA) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "LINEAA");
+	}
+	if (state & BGFX_STATE_CONSERVATIVE_RASTER) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "CONSERVATIVE_RASTER");
+	}
+	if (state & BGFX_STATE_FRONT_CCW) {
+		lua_pushboolean(L, 1);
+		lua_setfield(L, -2, "FRONT_CCW");
+	}
+
+	return 1;
 }
 
 struct AttribNamePairs {
@@ -4390,6 +4712,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "discard", ldiscard },
 		{ "make_state", lmakeState },
 		{ "set_state", lsetState },
+		{ "parse_state", lparseState },
 		{ "vertex_layout", lnewVertexLayout },
 		{ "create_vertex_buffer", lcreateVertexBuffer },
 		{ "create_dynamic_vertex_buffer", lcreateDynamicVertexBuffer },

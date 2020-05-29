@@ -66,7 +66,7 @@ end
 function event.prefab_editor()
     for _ in imgui_windows("prefab_editor", wndflags) do
         if imgui.widget.Button "Save" then
-            world:pub {"serialize_prefab", VIEWER .. "root.prefab"}
+            world:pub {"serialize_prefab", VIEWER .. "root/mesh.prefab"}
         end
         for _, eid in ipairs(entities) do
             local e = world[eid]

@@ -74,8 +74,8 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
             }),
-            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/ring.glb|meshes/mesh0_P1.meshbin",
-            material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_singlecolor.material",
+            mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/ring.glb|meshes/mesh0_P1.meshbin",
+            material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_singlecolor.material",
             --can_cast = true,
             can_render = true,
             name = name,
@@ -91,7 +91,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.uniforms.u_color = world.component:uniform {
+    e.material.properties.uniforms.u_color = world.component "uniform" {
         type= "v4",
         value = {color},
     }
@@ -110,7 +110,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         },
         data = {
             transform = computil.create_transform(world),
-            material = world.component:resource "/pkg/ant.resources/materials/gizmo_line.material",
+            material = world.component "resource" "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
             can_render = true,
             can_select = true,
@@ -153,7 +153,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {r = euler2quat(rot or {0, 0, 0})},
             }),
-            material = world.component:resource "/pkg/ant.resources/materials/gizmo_front_line.material",
+            material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_line.material",
             name = name,
             can_render = true,
             can_select = true,
@@ -195,8 +195,8 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
             }),
-            mesh = world.component:resource"/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
-            material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material",
+            mesh = world.component "resource""/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
+            material = world.component "resource" "/pkg/ant.resources/materials/gizmo_singlecolor.material",
             can_render = true,
             can_select = true,
             name = name,
@@ -211,7 +211,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.uniforms.u_color = world.component:uniform {
+    e.material.properties.uniforms.u_color = world.component "uniform" {
         type= "v4",
         value = {color},
     }
@@ -232,8 +232,8 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size, t=pos},
             }),
-            mesh = world.component:resource "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-            material = world.component:resource "/pkg/ant.resources/materials/gizmo_singlecolor.material",
+            mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+            material = world.component "resource" "/pkg/ant.resources/materials/gizmo_singlecolor.material",
             can_render = true,
             name = name,
             can_select = true,
@@ -248,7 +248,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.uniforms.u_color = world.component:uniform {
+    e.material.properties.uniforms.u_color = world.component "uniform" {
         type= "v4",
         value = {color},
     }
