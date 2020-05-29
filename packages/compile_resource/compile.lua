@@ -14,9 +14,9 @@ local function init(ext, compiler)
     }
 end
 
-init("fx",      require "fx.compile")
-init("glb",     require "model.convert")
-init("texture", require "texture.convert")
+init("fx",      "fx.compile")
+init("glb",     "model.convert")
+init("texture", "texture.convert")
 
 local function split(str)
     local r = {}
@@ -143,7 +143,7 @@ end
 
 local function do_compile(cfg, input, output)
     lfs.create_directory(output)
-    local ok, err, deps = cfg.compiler(cfg.config, input, output, function (path)
+    local ok, err, deps = require(cfg.compiler)(cfg.config, input, output, function (path)
         return fs.path(path):localpath()
     end)
     if not ok then

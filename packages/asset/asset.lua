@@ -1,4 +1,5 @@
 local resource = import_package "ant.resource"
+local cr = import_package "ant.compile_resource"
 local datalist = require "datalist"
 
 local assetmgr = {}
@@ -26,7 +27,6 @@ end
 local glb = {}
 
 function assetmgr.unload_glb(filename)
-	local cr  = import_package "ant.compile_resource"
 	local lst = glb[filename]
 	if not lst then
 		return
@@ -105,7 +105,6 @@ local function valid_component(w, name)
 end
 
 local function resource_init(w, name, filename)
-	local cr = import_package "ant.compile_resource"
 	local data = cr.read_file(filename)
 	w._current_path = filename:match "^(.-)[^/|]*$"
 	local res = datalist.parse(data, function(v)
