@@ -131,7 +131,7 @@ function ozzmesh_skinning_transform.process(e)
 
 	local ibm_pointer, ibm_count = meshres:inverse_bind_matrices()
 	local joint_remapp_pointer, count = meshres:joint_remap()
-	skincomp.meshskin= {
+	skincomp.skin = {
 		inverse_bind_pose 	= animodule.new_bind_pose(ibm_count, ibm_pointer),
 		joint_remap 		= animodule.new_joint_remap(joint_remapp_pointer, count)
 	}

@@ -1,6 +1,6 @@
 local fs_local = import_package "ant.utility".fs_local
 local stringify = import_package "ant.serialize".stringify
-
+local util = require "model.util"
 local fs = require "filesystem.local"
 
 local image_extension = {
@@ -24,7 +24,7 @@ local function tov4(v)
     return {v[1], v[2], v[3], v[4]}
 end
 
-return function (output, glbdata)
+return function (output, glbdata, exports)
     local conv = {}
     local function proxy(name)
         return function (v)
@@ -223,12 +223,11 @@ return function (output, glbdata)
                 return newname
             end
             local filepath = pbrm_folder / refine_name(name) .. ".pbrm"
-
             fs_local.write_file(filepath, stringify(pbrm, conv))
-    
-            materialfiles[matidx] = "./pbrm/" .. refine_name(name) .. ".pbrm"
+
+            materialfiles[matidx] = util.subrespath(output, filepath)
         end
     end
 
-    return materialfiles
+    exports.material = materialfiles
 end

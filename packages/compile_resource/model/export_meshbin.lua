@@ -7,6 +7,7 @@ local declmgr	= renderpkg.declmgr
 local sort_pairs = require "sort_pairs"
 local math3d	= require "math3d"
 local lfs		= require "filesystem.local"
+local util		= require "model.util"
 
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
@@ -276,7 +277,7 @@ local function export_skinbin(gltfscene, bindata, exports)
 		redirect_skin_joints(gltfscene, skin)
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = skinname .. ".skinbin"
-		exports[resname] = fetch_skininfo(gltfscene, skin, bindata)
+		exports[skinidx] = {resname, fetch_skininfo(gltfscene, skin, bindata)}
 	end
 end
 
@@ -294,8 +295,7 @@ local function export_meshbin(gltfscene, bindata, exports)
 			local primname = "P" .. primidx
 			local resname = meshname .. "_" .. primname .. ".meshbin"
 			local group = {
-				mode 		= prim.mode,
-				material 	= prim.material,
+				mode = prim.mode
 			}
 
 			group.vb = {
@@ -326,21 +326,33 @@ local function export_meshbin(gltfscene, bindata, exports)
 	end
 end
 
-return function (output, glbdata)
-	lfs.create_directories(output)
-	local exports = {mesh={}, skin={}}
-	export_meshbin(glbdata.info, glbdata.bin, exports.mesh)
-	export_skinbin(glbdata.info, glbdata.bin, exports.skin)
+return function (output, glbdata, exports)
+	local meshfolder = output / "meshes"
+	lfs.create_directories(meshfolder)
+	local meshes = {}
+	export_meshbin(glbdata.info, glbdata.bin, meshes)
+	local skins = {}
+	export_skinbin(glbdata.info, glbdata.bin, skins)
 
-	for _, groups in ipairs(exports.mesh) do
-		for _, group in ipairs(groups) do
-			fs_local.write_file(output / group[1], thread.pack(group[2]))
+	local meshfiles = {}
+	for meshidx, primitives in ipairs(meshes) do
+		meshfiles[meshidx] = {}
+		for groupidx, prim in ipairs(primitives) do
+			local filepath = meshfolder / prim[1]
+			fs_local.write_file(filepath, thread.pack(prim[2]))
+			meshfiles[meshidx][groupidx] = util.subrespath(output, filepath)
 		end
 	end
 
-	for name, value in pairs(exports.skin) do
-		fs_local.write_file(output / name, thread.pack(value))
+	local skinfiles = {}
+	for skinidx, value in ipairs(skins) do
+		local filepath = meshfolder / value[1]
+		fs_local.write_file(filepath, thread.pack(value[2]))
+		skinfiles[skinidx] = util.subrespath(output, filepath)
 	end
+
+	exports.mesh = meshfiles
+	exports.skin = skinfiles
 
 	return exports
 end

@@ -24,7 +24,7 @@ function skinning_sys:skin_mesh()
 	for _, eid in world:each "skinning" do
 		local e = world[eid]
 		local skinning = e.skinning
-		local skin = skinning.meshskin
+		local skin = skinning.skin
 		local skinning_matrices = skinning.skinning_matrices
 		local pr = e.pose_result
 		if e.skinning_type == "CPU" then

@@ -111,10 +111,13 @@ local function build_cpu_skinning_jobs(e, skinning)
 end
 
 function mesh_skinning_transform.process(e)
+	e.skinning = {}
 	local skinning = e.skinning
 
 	local poseresult = e.pose_result
 	skinning.skinning_matrices = animodule.new_bind_pose(poseresult:count())
+
+	skinning.skin = e.meshskin
 
 	if e.skinning_type == "CPU" then
 		build_cpu_skinning_jobs(e, skinning)

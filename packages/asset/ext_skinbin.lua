@@ -10,7 +10,8 @@ end
 return {
     loader = function (filename)
         local c = read_file(filename)
-        return thread.unpack(c)
+        local data = thread.unpack(c)
+        return data
     end,
     unloader = function (res)
     end

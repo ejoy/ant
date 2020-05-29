@@ -1,5 +1,5 @@
 local fs = require "filesystem"
-
+local cr = import_package "ant.compile_resource"
 local loaders = {}
 
 loaders["ozz-animation"] = function (fn)
@@ -48,13 +48,13 @@ local function find_loader(filepath)
 end
 
 local function loader(filename)
-	local filepath = fs.path(filename)
-	local fn = find_loader(filepath)
+	local localfilename = cr.compile(filename)
+	local fn = find_loader(localfilename)
 	if not fn then
 		error "not support type"
 		return
 	end
-	return fn(filepath:localpath():string())
+	return fn(localfilename:string())
 end
 
 local function unloader()

@@ -8,6 +8,7 @@ policy "ozz_skinning"
     .component "animation"
     .component "skeleton"
     .component "mesh"
+    .component "skinning"
 
 policy "ozzmesh"
     .require_transform "ozzmesh_loader"

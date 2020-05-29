@@ -17,14 +17,16 @@ function u.read_file(filepath)
     return fs_util.read_file(fs, filepath)
 end
 
-function u.list_files(subpath, filter, excludes)
+function u.list_files(subpath, filter, excludes, add_path)
 	local prefilter = {}
 	if type(filter) == "string" then
 		for f in filter:gmatch("([.%w]+)") do
 			local ext = f:upper()
 			prefilter[ext] = true
 		end
-	end
+    end
+    
+    add_path = add_path or function (p) return p end
 
 	local function list_fiels_1(subpath, filter, excludes, files)
 		for p in subpath:list_directory() do
@@ -35,12 +37,12 @@ function u.list_files(subpath, filter, excludes)
 				else
 					if type(filter) == "function" then
 						if filter(p) then
-							files[#files+1] = p
+							files[#files+1] = add_path(p)
 						end
 					else
 						local fileext = p:extension():string():upper()
 						if filter[fileext] then
-							files[#files+1] = p
+							files[#files+1] = add_path(p)
 						end
 					end
 				end
