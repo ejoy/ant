@@ -8,6 +8,7 @@ local ext_bin = {
 	texture = true,
 	ozz     = true,
 	meshbin = true,
+	skinbin = true,
 }
 
 local ext_tmp = {
