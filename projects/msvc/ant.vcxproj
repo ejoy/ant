@@ -57,9 +57,6 @@
     <ProjectReference Include="math3d.vcxproj">
       <Project>{42edbe70-a46d-4ab7-bdfa-c608c06ac1f0}</Project>
     </ProjectReference>
-    <ProjectReference Include="meshconverter.vcxproj">
-      <Project>{6941669e-1992-4f61-8f0e-c0617175597c}</Project>
-    </ProjectReference>
     <ProjectReference Include="platform.vcxproj">
       <Project>{c1f1965c-b68c-4cdf-87a8-89f5aae79d60}</Project>
     </ProjectReference>

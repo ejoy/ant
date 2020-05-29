@@ -12,7 +12,6 @@ BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/$(PLAT) -I$(BXSRC)/incl
 BGFX3RDINC = -I$(BGFXSRC)/3rdparty -I$(BGFXSRC)/examples/common
 
 BXLIB = -lbx$(MODE)
-BIMG_DECODELIB = -lbimg_decode$(MODE)
 BIMGLIB = -lbimg$(MODE)
 
 ifeq "$(PLAT)" "mingw"
