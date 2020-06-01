@@ -73,8 +73,7 @@ local function pbr_spheres()
     end
 end
 
-local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 function pbr_test_sys:init()
-    world:instance((entitydir / "DamagedHelmet.prefab"):string(), {})
+    world:instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", {})
     pbr_spheres()
 end

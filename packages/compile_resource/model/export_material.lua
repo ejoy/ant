@@ -226,7 +226,7 @@ return function (output, glbdata, exports)
                         {
                             0.0, -- keep for occlusion factor
                             pbr_mr.roughnessFactor or 0.0,
-                            pbr_mr.metallicFactor,
+                            pbr_mr.metallicFactor or 0.0,
                             pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
                         }
                     },

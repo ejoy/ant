@@ -15,8 +15,7 @@ end
 local function gltf_animation_test()
     -- local computil = import_package "ant.render".components
     -- computil.print_glb_hierarchy "/pkg/ant.resources/meshes/simple_skin.mesh"
-    -- return world:instance((entitydir / "gltf_animation.prefab"):string())
-    return world:instance("/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab", {})
+    return world:instance((entitydir / "gltf_animation.prefab"):string())
     --world:instance((entitydir / "simple_skin.prefab"):string())
 end
 
@@ -45,7 +44,7 @@ local function bind_slot_entity(parenteid)
 end
 
 function anitest_sys:init()
-    -- ozzmesh_animation_test()
+    ozzmesh_animation_test()
     local res = gltf_animation_test()
-    --bind_slot_entity(res[1])
+    bind_slot_entity(res[1])
 end

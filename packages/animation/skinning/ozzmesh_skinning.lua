@@ -123,7 +123,7 @@ end
 
 function ozzmesh_skinning_transform.process(e)
 	assert(e.skinning_type == "CPU")
-
+	e.skinning = {}
 	local skincomp	= e.skinning
 	local meshres 	= e.mesh._handle
 	e.rendermesh 	= patch_dynamic_buffer(meshres, e.rendermesh)
