@@ -50,7 +50,11 @@ function u.list_files(subpath, filter, excludes, add_path)
 		end
 	end
     local files = {}
-    list_fiels_1(subpath, prefilter, excludes, files)
+    local excludemap = {}
+    for _, e in ipairs(excludes) do
+        excludemap[e] = true
+    end
+    list_fiels_1(subpath, prefilter, excludemap, files)
     return files
 end
 
