@@ -140,14 +140,13 @@ end
 local function create_prefab_from_entity(w, t)
 	local policies, dataset = t.policy, t.data
 	local info = policy.create(w, policies)
-	local action = t.connection or {}
+	local action = t.action or {}
 	local args = {
-		connection = {}
+		import = {}
 	}
-	for i, v in ipairs(action) do
-		args.connection["value_"..i] = v[2]
-		v[3] = "value_"..i
-		v[2] = 1
+	if action.mount then
+		args.import["mount"] = action.mount
+		action.mount = "mount"
 	end
 	local e = {}
 	for _, c in ipairs(info.component) do
@@ -160,8 +159,8 @@ local function create_prefab_from_entity(w, t)
 		entities = {{
 			policy = info,
 			dataset = e,
+			action = action,
 		}},
-		connection = action,
 	}, args
 end
 
@@ -174,6 +173,8 @@ function world:component_delete(name, v)
 end
 
 local function instance(w, prefab, args)
+	local import = args and args.import and args.import or {}
+	local writable = args and args.writable and args.writable or {}
 	local res = {}
 	for i, entity in ipairs(prefab.entities) do
 		local eid = register_entity(w)
@@ -182,7 +183,7 @@ local function instance(w, prefab, args)
 			register_component(w, eid, c)
 		end
 		for k, v in pairs(entity.dataset) do
-			if entity.policy.writable[k] or (args and args.writable and args.writable[i] and args.writable[i][k]) then
+			if entity.policy.writable[k] or (writable[i] and writable[i][k]) then
 				e[k] = component_copy(w, v)
 			else
 				e[k] = v
@@ -194,12 +195,15 @@ local function instance(w, prefab, args)
 		w._prefabs[eid] = entity
 		res[i] = eid
 	end
-	for _, connection in ipairs(prefab.connection) do
-		local name, source, target = connection[1], connection[2], connection[3]
-		local object = w._class.connection[name]
-		assert(object and object.init)
-		object.init(w[res[source]], res[target] or (args and args.connection and args.connection[target]) or nil)
+	setmetatable(res, {__index=import})
+	for i, entity in ipairs(prefab.entities) do
+		for name, target in sortpairs(entity.action) do
+			local object = w._class.action[name]
+			assert(object and object.init)
+			object.init(w[res[i]], res[target])
+		end
 	end
+	setmetatable(res, nil)
 	return res
 end
 
@@ -215,8 +219,7 @@ function world:instance(filename, args)
 end
 
 local function serialize_prefab(w, entities, args)
-    local t = {{}}
-    local actions = t[1]
+    local t = {}
     local slot = {}
     for i, eid in ipairs(entities) do
         slot[eid] = i
@@ -226,18 +229,22 @@ local function serialize_prefab(w, entities, args)
         local e = {policy={},data={}}
         t[#t+1] = e
         local dataset = w[eid]
-        for _, name in ipairs(template.connection) do
-            local object = w._class.connection[name]
+		local action = {}
+        for _, name in ipairs(template.action) do
+            local object = w._class.action[name]
             assert(object and object.save)
             local res = object.save(w[eid])
             if args[i] and args[i][name] then
-                actions[#actions+1] = {name, i, args[i][name]}
+                action[name] = args[i][name]
             elseif slot[res] then
-                actions[#actions+1] = {name, i, slot[res]}
+                action[name] = slot[res]
             else
-                error(("entity %d connection `%s` cannot be serialized."):format(eid, name))
+                error(("entity %d action `%s` cannot be serialized."):format(eid, name))
             end
-        end
+		end
+		if next(action) ~= nil then
+			e.action = action
+		end
         for _, p in ipairs(template.policy) do
             e.policy[#e.policy+1] = p
         end
@@ -371,8 +378,8 @@ function world:interface(fullname)
 	return self._class.interface[fullname]
 end
 
-function world:connection(fullname, ...)
-	local object = self._class.connection[fullname]
+function world:action(fullname, ...)
+	local object = self._class.action[fullname]
 	assert(object and object.init)
 	object.init(...)
 end

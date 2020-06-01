@@ -112,7 +112,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder",
 		},
-		connection = {
+		action = {
             {"mount", arroweid}
         }
 	}
@@ -138,7 +138,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"
 		},
-		connection = {
+		action = {
             {"mount", arroweid}
 		},
 		writable = {

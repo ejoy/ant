@@ -64,7 +64,7 @@ local attribute = {
 		"require_policy",
 		"require_transform",
 		"component",
-		"connection",
+		"action",
 		"unique_component"
 	},
 	interface = {
@@ -81,7 +81,7 @@ local attribute = {
 		"output",
 		"method",
 	},
-	connection = {
+	action = {
 		"implement",
 		"require_interface",
 		"method",
@@ -99,7 +99,7 @@ local attribute = {
 local no_packspace = {
 	component = true,
 	pipeline = true,
-	connection = true,
+	action = true,
 	none = true,
 }
 
@@ -108,7 +108,7 @@ local check_map = {
 	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
-	connection = "connection",
+	action = "action",
 	unique_component = "none",
 	pipeline = "none",
 	stage = "none",

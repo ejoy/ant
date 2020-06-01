@@ -83,10 +83,10 @@ local check_map = {
 	require_policy = "policy",
 	require_transform = "transform",
 	pipeline = "pipeline",
-	connection = "connection",
+	action = "action",
 }
 
-local OBJECT = {"system","policy","transform","interface","component","pipeline","connection"}
+local OBJECT = {"system","policy","transform","interface","component","pipeline","action"}
 
 local function solve_object(o, w, what, fullname)
 	local decl = w._decl[what][fullname]
@@ -111,7 +111,7 @@ function copy.policy(v)
 	return {
 		transform = v.require_transform,
 		component = t,
-		connection = v.connection,
+		action = v.action,
 	}
 end
 function copy.transform(v)
@@ -128,7 +128,7 @@ end
 function copy.system() return {} end
 function copy.interface() return {} end
 function copy.component() return {} end
-function copy.connection() return {} end
+function copy.action() return {} end
 
 local function create_importor(w, ecs, declaration)
 	local import = {}
@@ -218,7 +218,7 @@ local function init(w, config)
 		local class_set = {}
 		ecs[what] = function(name)
 			local fullname = name
-			if what ~= "connection" and what ~= "component" then
+			if what ~= "action" and what ~= "component" then
 				fullname = getCurrentPackage() .. "|" .. name
 			end
 			local r = class_set[fullname]
@@ -254,7 +254,7 @@ local function init(w, config)
 	register "system"
 	register "transform"
 	register "interface"
-	register "connection"
+	register "action"
 	register "component"
 
 	for _, k in ipairs(config.ecs.import) do

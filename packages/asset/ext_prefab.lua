@@ -1,17 +1,16 @@
 local ecs = ...
 local world = ecs.world
-local policy = import_package "ant.ecs".policy
+local ecs_policy = import_package "ant.ecs".policy
 
 local m = ecs.component "prefab"
 
 function m:init()
 	local prefab = {
 		entities = {},
-		connection = self[1],
 	}
-	for i = 2, #self do
-		local policies, dataset = self[i].policy, self[i].data
-		local info = policy.create(world, policies)
+	for i = 1, #self do
+		local policy, dataset, action = self[i].policy, self[i].data, self[i].action
+		local info = ecs_policy.create(world, policy)
 		local e = {}
 		for _, c in ipairs(info.component) do
 			e[c] = dataset[c]
@@ -19,9 +18,10 @@ function m:init()
 		for _, f in ipairs(info.process_prefab) do
 			f(e)
 		end
-		prefab.entities[i-1] = {
+		prefab.entities[i] = {
 			policy = info,
 			dataset = e,
+			action = action or {},
 		}
 	end
 	return prefab

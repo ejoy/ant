@@ -4,14 +4,14 @@ local function create(w, policies)
         policy = policies,
         component = {},
         register_component = {},
-        connection = {},
+        action = {},
         process_entity = {},
         process_prefab = {},
         readonly = {},
         writable = {},
     }
     local transform = {}
-    local connection = {}
+    local action = {}
     local policyset = {}
     local unionset = {}
     for _, name in ipairs(policies) do
@@ -40,10 +40,10 @@ local function create(w, policies)
                 res.component[#res.component+1] = v
             end
         end
-        for _, v in ipairs(class.connection) do
-            if not connection[v] then
-                connection[v] = true
-                res.connection[#res.connection+1] = v
+        for _, v in ipairs(class.action) do
+            if not action[v] then
+                action[v] = true
+                res.action[#res.action+1] = v
             end
         end
         ::continue::
@@ -107,14 +107,14 @@ local function create(w, policies)
     end
 
     table.sort(res.component)
-    table.sort(res.connection)
+    table.sort(res.action)
     return res
 end
 
 local function add(w, eid, policies)
     local res = create(w, policies)
-    if #res.connection > 0 then
-        error "connection can only be imported during instance."
+    if #res.action > 0 then
+        error "action can only be imported during instance."
     end
     local e = w[eid]
     for _, policy_name in ipairs(policies) do
