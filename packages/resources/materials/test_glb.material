@@ -1,10 +1,7 @@
 fx: $resource /pkg/ant.resources/materials/fx/test_glb.fx
 properties:
-  uniforms:
-    u_time: $uniform
-      type: v4
-      value:
-        {1, 1, 1, 1}
+  u_time: $property
+      {1, 1, 1, 1}
 state:
   ALPHA_REF: 0
   CULL: NONE

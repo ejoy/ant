@@ -70,11 +70,11 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
     local function insert_blur_pass(fbidx, fbw, fbh, material, sampleparam, intensity)
         local passidx = #passes+1
 
-        local m = assetmgr.patch(assetmgr.load(material), {properties={uniforms={}}})
-        local uniforms = m.properties.uniforms
-        uniforms["u_sample_param"] = world.component "uniform" {type = "v4", name = "sample param", value = sampleparam}
+        local m = assetmgr.patch(assetmgr.load(material), {properties={}})
+        local properties = m.properties
+        properties["u_sample_param"] = world.component "uniform" {type = "v4", name = "sample param", value = sampleparam}
         if intensity then
-            uniforms["u_intensity"] = world.component "uniform" {type = "v4", name = "up sample intensity", value = {intensity, 0.0, 0.0, 0.0}}
+            properties["u_intensity"] = world.component "uniform" {type = "v4", name = "up sample intensity", value = {intensity, 0.0, 0.0, 0.0}}
         end
 
         passes[passidx] = {

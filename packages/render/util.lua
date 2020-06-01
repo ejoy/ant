@@ -1,9 +1,6 @@
 
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
-local mu = mathpkg.util
-
-local assetmgr = import_package "ant.asset"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -11,71 +8,43 @@ local fbmgr			= require "framebuffer_mgr"
 local default_comp 	= require "components.default"
 local computil 		= require "components.util"
 
-local fs 			= require "filesystem"
-
 local setting		= require "setting"
 
 local util = {}
 util.__index = util
 
-local property_types = {
-    color = "v4",
-    v4 = "v4",
-	m4 = "m4",
-	v4_array = "v4",
-	m4_array = "m4",
-    texture = "s",
-}
-
 local function update_properties(material, render_properties)
-	local su = material.fx.shader.uniforms
-	for name, u in pairs(su) do
-		local function find_property(name, properties)
-			if properties == nil then
-				return nil
-			end
-
-			local uniforms = properties.uniforms
-			if uniforms then
-				local p = uniforms[name]
-				if p then
-					return p
-				end
-			end
-			local textures = properties.textures
-			if textures then
-				local tex = textures[name]
-				if tex then
-					return tex
-				end
-			end
+	for name, u in pairs(material.fx.shader.uniforms) do
+		local p
+		if material.properties then
+			p = material.properties[name]
 		end
-
-		local p = find_property(name, material.properties)
 		if p == nil then
-			p = find_property(name, render_properties)
+			p = render_properties[name]
 		end
 
 		if p then
-			assert(property_types[p.type] == u.type)
-			if p.type == "texture" then
-				bgfx.set_texture(p.stage, u.handle, p.handle)
+			if p.texture then
+				--TODO: if property not provide 'stage', use 'stage' from fx uniform
+				bgfx.set_texture(p.stage, u.handle, p.texture.handle)
 			else
 				bgfx.set_uniform(u.handle, table.unpack(p))
 			end
 		else
-			log.info(string.format("uniform : %s, not privided, but shader program needed", name))
+			log.warn(string.format("property: %s, not privided, but shader program needed", name))
 		end
 	end
 end
 
 function util.draw_primitive(vid, primgroup, render_properties)
 	local trans = primgroup.transform
-	local sm = trans._skinning_matrices
-	if sm == nil then
-		bgfx.set_transform(trans._world)
-	else
-		bgfx.set_multi_transforms(sm:pointer(), sm:count())
+	if trans then
+		local sm = trans._skinning_matrices
+		if sm == nil then
+			bgfx.set_transform(trans._world)
+		else
+			bgfx.set_multi_transforms(sm:pointer(), sm:count())
+		end
 	end
 
 	local material = primgroup.material
@@ -124,7 +93,7 @@ function util.create_main_queue(world, view_rect)
 		assert(fmt == "RGBA16F" or fmt == "RGBA32F")
 		render_buffers[#render_buffers+1] = fbmgr.create_rb(
 			default_comp.render_buffer(
-			view_rect.w, view_rect.h, bloom.format, rb_flag)
+			view_rect.w, view_rect.h, fmt, rb_flag)
 		)
 	end
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(

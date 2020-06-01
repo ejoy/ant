@@ -1,28 +1,17 @@
 fx: $resource /pkg/ant.resources/materials/fx/sky/procedural/procedural_sky.fx
 properties:
-  uniforms:
-    u_parameters: $uniform
-      type: v4
-      value:
-        {0, 0, 0, 0}
-    u_perezCoeff: $uniform
-      type: v4_array
-      value:
-        {0, 0, 0, 0}
-        {0, 0, 0, 0}
-        {0, 0, 0, 0}
-        {0, 0, 0, 0}
-        {0, 0, 0, 0}
-    u_skyLuminanceXYZ: $uniform
-      type: v4
-      value:
-        {0, 0, 0, 0}
-    u_sunDirection: $uniform
-      type: v4
-      value:
-        {0, 0, 1, 0}
-    u_sunLuminance: $uniform
-      type: v4
-      value:
-        {0, 0, 0, 0}
+  u_parameters: $property
+    {0, 0, 0, 0}
+  u_perezCoeff: $property
+    {0, 0, 0, 0}
+    {0, 0, 0, 0}
+    {0, 0, 0, 0}
+    {0, 0, 0, 0}
+    {0, 0, 0, 0}
+  u_skyLuminanceXYZ: $property
+    {0, 0, 0, 0}
+  u_sunDirection: $property
+    {0, 0, 1, 0}
+  u_sunLuminance: $property
+    {0, 0, 0, 0}
 state: /pkg/ant.resources/materials/states/procedural_sky.state

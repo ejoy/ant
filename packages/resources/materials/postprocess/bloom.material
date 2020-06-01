@@ -1,19 +1,13 @@
 fx: $resource /pkg/ant.resources/materials/fx/bloom/bloom.fx
 properties:
-  textures:
-    s_basecolor: $mat_texture
-      texture: $resource /pkg/ant.resources/materials/textures/Default.texture
-      stage: 0
-      type: texture
-    s_bloomcolor: $mat_texture
-      texture: $resource /pkg/ant.resources/materials/textures/Default.texture
-      stage: 1
-      type: texture
-  uniforms: $uniform
-    u_params:
-      type: v4
-      value:
-        {1, 0, 0, 0}
+  s_basecolor: $property
+    texture: $resource /pkg/ant.resources/materials/textures/Default.texture
+    stage: 0
+  s_bloomcolor: $property
+    texture: $resource /pkg/ant.resources/materials/textures/Default.texture
+    stage: 1
+  u_params: $property
+    {1, 0, 0, 0}
 state:
   CULL: CCW
   DEPTH_TEST: LESS

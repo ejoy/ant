@@ -44,13 +44,11 @@ local function add_ambient_light_propertices(world, uniform_properties)
 end 
 
 local function load_lighting_properties(world, render_properties)
-	local uniforms = assert(render_properties.uniforms)
-
-	add_directional_light_properties(world, uniforms)
-	add_ambient_light_propertices(world, uniforms)
+	add_directional_light_properties(world, render_properties)
+	add_ambient_light_propertices(world, render_properties)
 
 	local camera = camerautil.main_queue_camera(world)
-	uniforms["u_eyepos"][1].v = camera.eyepos
+	render_properties["u_eyepos"][1].v = camera.eyepos
 end
 
 local function calc_viewport_crop_matrix(csm_idx)
@@ -68,12 +66,10 @@ local function calc_viewport_crop_matrix(csm_idx)
 end
 
 local function load_shadow_properties(world, render_properties)
-	local uniforms, textures = render_properties.uniforms, render_properties.textures
-
 	--TODO: shadow matrix consist of lighting matrix, crop matrix and viewport offset matrix
 	-- but crop matrix and viewport offset matrix only depend csm split ratios
 	-- we can detect csm split ratios changed, and update those matrix two matrices, and combine as bias matrix
-	local csm_matrixs = uniforms.u_csm_matrix
+	local csm_matrixs = render_properties.u_csm_matrix
 	local split_distances = {0, 0, 0, 0}
 	for _, eid in world:each "csm" do
 		local se = world[eid]
@@ -92,20 +88,20 @@ local function load_shadow_properties(world, render_properties)
 		end
 	end
 
-	uniforms["u_csm_split_distances"][1].v = split_distances
+	render_properties["u_csm_split_distances"][1].v = split_distances
 
 	local shadowentity = world:singleton_entity "shadow"
 	if shadowentity then
 		local fb = fbmgr.get(shadowentity.fb_index)
-		local sm = textures["s_shadowmap"]
+		local sm = render_properties["s_shadowmap"]
 		sm.stage = world:interface "ant.render|uniforms".system_uniform("s_shadowmap").stage
 		sm.handle = fbmgr.get_rb(fb[1]).handle
 
-		uniforms["u_depth_scale_offset"][1].v = shadowutil.shadow_depth_scale_offset()
+		render_properties["u_depth_scale_offset"][1].v = shadowutil.shadow_depth_scale_offset()
 		local shadow = shadowentity.shadow
-		uniforms["u_shadow_param1"][1].v = {shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}
+		render_properties["u_shadow_param1"][1].v = {shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}
 		local shadowcolor = shadow.color or {0, 0, 0, 0}
-		uniforms["u_shadow_param2"][1].v = shadowcolor
+		render_properties["u_shadow_param2"][1].v = shadowcolor
 	end
 end
 

@@ -1,23 +1,13 @@
 fx: $resource /pkg/ant.resources/materials/fx/pochuan.fx
 properties:
-  textures:
-    s_basecolor: $mat_texture
-      name: "base color"
-      texture: $resource /pkg/ant.resources/pochuan_d.texture
-      stage: 0
-      type: texture
-    s_normal: $mat_texture
-      name: normal
-      texture: $resource /pkg/ant.resources/pochuan_n.texture
-      stage: 1
-      type: texture
-  uniforms:
-    u_specularColor: $uniform
-      type: v4
-      value: 
-        {0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03}
-    u_specularLight: $uniform
-      type: v4
-      value:
-        {5.5, 0, 0, 0}
+  s_basecolor: $property
+    texture: $resource /pkg/ant.resources/pochuan_d.texture
+    stage: 0
+  s_normal: $property
+    texture: $resource /pkg/ant.resources/pochuan_n.texture
+    stage: 1
+  u_specularColor: $property
+    {0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03}
+  u_specularLight: $property
+    {5.5, 0, 0, 0}
 state: /pkg/ant.resources/materials/states/default.state

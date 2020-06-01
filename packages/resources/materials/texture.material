@@ -1,11 +1,8 @@
 fx: $resource /pkg/ant.resources/materials/fx/texture.fx
 properties:
-  textures:
-    s_texColor: $mat_texture
-      name: "tex color"
-      texture: $resource /pkg/ant.resources/PVPScene/siegeweapon_d.texture
-      stage: 0
-      type: texture
+  s_texColor: $property
+    texture: $resource /pkg/ant.resources/PVPScene/siegeweapon_d.texture
+    stage: 0
 state:
   ALPHA_REF: 0
   CULL: CCW

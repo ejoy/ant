@@ -5,8 +5,6 @@ local bgfx = require "bgfx"
 local fs = require "filesystem"
 local datalist = require "datalist"
 
-local m = ecs.component "uniform"
-
 local function uniform_data(v)
 	local num = #v
 	if num == 4 then
@@ -20,29 +18,23 @@ local function uniform_data(v)
 	end
 end
 
-function m:init()
-	local input = self.value or self
-	for i = 1, #input do
-		self[i] = uniform_data(input[i])
+local p = ecs.component "property"
+function p:init()
+	for i=1, #self do
+		self[i] = uniform_data(self[i])
 	end
 	return self
 end
 
-function m:save()
-	local res = {}
-	for i = 1, #self do
-		res[i] = math3d.totable(self[i])
+function p:save()
+	if self.stage == nil then
+		local res = {}
+		for i=1, #self do
+			res[i] = math3d.tovalue(self[i])
+		end
+		return res
 	end
-    return {
-		type = "v4",
-		value = res
-	}
-end
 
-local m = ecs.component "mat_texture"
-
-function m:init()
-	self.handle = self.texture.handle
 	return self
 end
 

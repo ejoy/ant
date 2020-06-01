@@ -2,17 +2,13 @@ local ecs = ...
 local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
-local fbmgr = require "framebuffer_mgr"
+local fbmgr     = require "framebuffer_mgr"
+local cu        = require "camera.util"
+local setting   = require "setting"
 
-local cu = require "camera.util"
+local tm_sys    = ecs.system "tonemapping_system"
 
-local assetmgr = import_package "ant.asset"
-
-local setting = require "setting"
-
-local tm_sys = ecs.system "tonemapping_system"
-
-local ipp = world:interface "postprocess"
+local ipp       = world:interface "postprocess"
 
 function tm_sys:post_init()
     local sd = setting.get()

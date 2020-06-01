@@ -15,7 +15,7 @@ local uniforms  = world:interface "ant.render|uniforms"
 local pp_sys = ecs.system "postprocess_system"
 
 local techniques = {}
-local quad_meshgroup
+local quad_mesh
 
 local function local_postprocess_views(num)
     local viewids = {}
@@ -39,10 +39,7 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    local rm = assetmgr.load("//res.mesh/postprocess.mesh", computil.quad_mesh{x=-1, y=-1, w=2, h=2})
-    local _, scene = next(rm)
-    local _, meshnode = next(scene)
-    quad_meshgroup = meshnode[1]
+    quad_mesh = assetmgr.load("//res.mesh/postprocess.mesh", computil.quad_mesh{x=-1, y=-1, w=2, h=2})
 end
 
 local function is_slot_equal(lhs, rhs)
@@ -60,15 +57,12 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
     end
 
     local function bind_input(slot)
-        local pp_textures = render_properties.textures
         local fb = fbmgr.get(slot.fb_idx)
-        pp_textures["s_postprocess_input"] = {
-            type="texture", stage=ppinput_stage, name="pp_input", handle=fbmgr.get_rb(fb[slot.rb_idx]).handle
+        render_properties["s_postprocess_input"] = {
+            stage=ppinput_stage, name="pp_input", texture={handle=fbmgr.get_rb(fb[slot.rb_idx]).handle}
         }
-
-        local pp_uniforms = render_properties.uniforms
-        pp_uniforms["u_bright_threshold"] = {
-            type = "v4", {0.8, 0.0, 0.0, 0.0}
+        render_properties["u_bright_threshold"] = {
+            {0.8, 0.0, 0.0, 0.0}
         }
     end
     bind_input(in_slot)
@@ -79,7 +73,6 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
     renderutil.draw_primitive(out_viewid, {
         mgroup 	    = meshgroup,
         material 	= pass.material,
-        properties  = pass.material.properties,
     }, mu.IDENTITY_MAT, render_properties)
 
     return out_slot
@@ -110,7 +103,7 @@ function pp_sys:combine_postprocess()
         reset_viewid_idx()
         for i=1, #techniques do
             local tech = techniques[i]
-            lastslot = render_technique(tech, lastslot, quad_meshgroup, render_properties)
+            lastslot = render_technique(tech, lastslot, quad_mesh, render_properties)
         end
     end
 end

@@ -1,8 +1,5 @@
 fx: $resource /pkg/ant.resources/materials/fx/bunny.fx
 properties:
-  uniforms:
-    u_time: $uniform
-      type: v4
-      value:
-        {1, 1, 1, 1}
+    u_time: $property
+      {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

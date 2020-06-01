@@ -1,14 +1,9 @@
 fx: $resource /pkg/ant.resources/materials/fx/outline/scale.fx
 properties:
-  uniforms:
-    u_outlinecolor: $uniform
-      type: v4
-      value:
-        {0.8, 0.8, 0, 1}
-    u_outlinescale: $uniform
-      type: v4
-      value:
-        {0.01, 0, 0, 0}
+  u_outlinecolor: $property
+    {0.8, 0.8, 0, 1}
+  u_outlinescale: $property
+    {0.01, 0, 0, 0}
 state:
   ALPHA_REF: 0
   CULL: CCW

@@ -1,16 +1,11 @@
 fx: $resource /pkg/ant.resources/materials/fx/stone.fx
 properties:
-  textures:
-    s_basecolor: $mat_texture
-      name: "base color"
-      texture: $resource /pkg/ant.resources/stone.texture
-      stage: 0
-      type: texture
-    s_normal: $mat_texture
-      name: normal
-      texture: $resource /pkg/ant.resources/stone_normal.texture
-      stage: 1
-      type: texture
+  s_basecolor: $property
+    texture: $resource /pkg/ant.resources/stone.texture
+    stage: 0
+  s_normal: $property
+    texture: $resource /pkg/ant.resources/stone_normal.texture
+    stage: 1
 state:
   ALPHA_REF: 0
   CULL: CW
