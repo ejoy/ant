@@ -10,20 +10,14 @@ local function decode_chunk(f, checktype)
 end
 
 local function aligh_data(data, alignbytes, align_char)
-	local length = #data	
+	local length = #data
 	local align_length = ((length // alignbytes) + 1) * alignbytes
 	local padding_length = align_length - length
-
-	if padding_length < alignbytes then
-		local t = {data}
-		for _=1, padding_length do
-			t[#t+1] = align_char
-		end
-		return table.concat(t, ""), align_length
+	if padding_length == alignbytes then
+		return data, length
 	end
-
-	assert(padding_length > 0)
-	return data, length
+	assert(padding_length < alignbytes and padding_length > 0)
+	return data..string.rep(align_char, padding_length), align_length
 end
 
 local function encode_chunk(f, datatype, data, length)

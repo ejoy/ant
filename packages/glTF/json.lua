@@ -133,7 +133,7 @@ local function encode_number(val)
   if val ~= val or val <= -Inf or val >= Inf then
     error("unexpected number value '" .. tostring(val) .. "'")
   end
-  return ("%.14g"):format(val):gsub(',', '.')
+  return ("%.17g"):format(val):gsub(',', '.')
 end
 
 
