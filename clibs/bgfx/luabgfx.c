@@ -16,7 +16,7 @@
 #include "bgfx_interface.h"
 #include "bgfx_alloc.h"
 
-#if BGFX_API_VERSION != 106
+#if BGFX_API_VERSION != 107
 #   error BGFX_API_VERSION mismatch
 #endif
 
