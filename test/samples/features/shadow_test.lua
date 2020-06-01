@@ -113,7 +113,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			name = "arrow.cylinder",
 		},
 		action = {
-            {"mount", arroweid}
+            mount = arroweid,
         }
 	}
 
@@ -136,7 +136,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			name = "arrow.cone"
 		},
 		action = {
-            {"mount", arroweid}
+            mount = arroweid,
 		},
 		writable = {
 			material = true,

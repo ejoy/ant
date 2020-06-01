@@ -1,6 +1,4 @@
 ---
-{mount 1 root}
----
 policy:
     ant.render|render
     ant.render|mesh
@@ -18,3 +16,5 @@ data:
     can_render: true
     scene_entity: true
     name: slot_cube
+action:
+    mount: rooteid
