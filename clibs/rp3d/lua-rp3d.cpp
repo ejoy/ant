@@ -293,13 +293,15 @@ struct luaRaycastCallback : RaycastCallback {
 	bool hit;
 	Vector3 worldPoint;
 	Vector3 worldNormal;
+	CollisionBody *body;
 
-	luaRaycastCallback() : hit (false) {}
+	luaRaycastCallback() : hit (false), body(NULL) {}
 
 	virtual decimal notifyRaycastHit(const RaycastInfo& raycastInfo) {
 		hit = true;
 		worldPoint = raycastInfo.worldPoint;
 		worldNormal = raycastInfo.worldNormal;
+		body = raycastInfo.body;
 		// term
 		return 0;
 	}
@@ -339,6 +341,7 @@ lraycast(lua_State *L) {
 		normal[3] = 0;
 
 		lua_pushboolean(L, cb.hit);
+		lua_pushlightuserdata(L, cb.body);
 	} else {
 		luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);	// it's a body
 		CollisionBody *body = (CollisionBody *)lua_touserdata(L, 4);
@@ -356,8 +359,9 @@ lraycast(lua_State *L) {
 		normal[3] = 0;
 
 		lua_pushboolean(L, isHit);
+		lua_pushlightuserdata(L, raycastInfo.body);
 	}
-	return 1;
+	return 2;
 }
 
 static int

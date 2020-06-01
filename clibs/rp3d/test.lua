@@ -48,16 +48,21 @@ print(math3d.tostring(o))
 
 print(w:test_overlap(object))	-- test all layer
 
-local hit, norm = w:raycast(math3d.vector(100,100,100), math3d.vector(0,0,0))
+print("Object:", object)
+print("Object2:", object2)
+
+local hit, norm, body = w:raycast(math3d.vector(100,100,100), math3d.vector(0,0,0))
 if hit then
 	print("Hit position", math3d.tostring(hit))
 	print("Hit normal", math3d.tostring(norm))
+	print("Hit body", body)
 end
 
-local hit, norm = w:raycast(math3d.vector(100,100,100), math3d.vector(0,0,0), object)
+local hit, norm, body = w:raycast(math3d.vector(100,100,100), math3d.vector(0,0,0), object)
 if hit then
 	print("Hit sphere position", math3d.tostring(hit))
 	print("Hit sphere normal", math3d.tostring(norm))
+	print("Hit body", body)
 end
 
 w:body_destroy(object)
