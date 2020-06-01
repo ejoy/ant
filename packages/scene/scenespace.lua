@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
 
-local m = ecs.connection "mount"
+local m = ecs.action "mount"
 function m.init(e, v)
     e.parent = v
 end

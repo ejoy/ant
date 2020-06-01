@@ -29,7 +29,7 @@ end
 return function (input, output)
     local inputPath = lfs.path(input)
     local outputPath = fs.path(output):localpath()
-    lfs.remove_all(outputPath)
+    lfs.remove_all(outputPath:parent_path())
     lfs.create_directories(outputPath:parent_path())
     if inputPath:equal_extension ".fbx" then
         import_fbx(inputPath, outputPath)

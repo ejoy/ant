@@ -45,7 +45,7 @@ function sp_test_sys:init()
             }),
             scene_entity = true,
         },
-        connection = {
+        action = {
             {"mount", rooteid}
         }
     }
@@ -71,7 +71,7 @@ function sp_test_sys:init()
                 }
             }),
         },
-        connection = {
+        action = {
             {"mount", child1}
         }
     }
@@ -89,7 +89,7 @@ function sp_test_sys:init()
                 t = {3, 3, 5}}}),
             scene_entity = true,
         },
-        connection = {
+        action = {
             {"mount", rooteid}
         }
     }
@@ -114,7 +114,7 @@ function sp_test_sys:init()
                 }
             }),
         },
-        connection = {
+        action = {
             {"mount", child2},
         }
     }

@@ -63,7 +63,7 @@ local function instancePrefab(filename)
             scene_entity = true,
         }
     }
-    entities = world:instance(filename, {connection={root=root}})
+    entities = world:instance(filename, {import={root=root}})
     normalizeAabb()
     world:pub {"editor", "prefab", entities}
 end
@@ -75,7 +75,7 @@ local function write_file(filename, data)
 end
 
 local function serializePrefab(filename)
-    lfs.create_directories(filename:parent_path())
+    lfs.create_directories(fs.path(filename):localpath():parent_path())
 
     write_file(filename, world:serialize(entities, {{mount="root"}}))
     local stringify = import_package "ant.serialize".stringify

@@ -32,12 +32,15 @@ function assetmgr.unload_glb(filename)
 	if not lst then
 		return
 	end
-	for _, f in ipairs(lst) do
+	local tmp = {}
+	for i, f in ipairs(lst) do
+		tmp[i] = f
+	end
+	for _, f in ipairs(tmp) do
 		resource.unload(f)
 		cr.clean(f)
 	end
     cr.clean(filename)
-	glb[filename] = nil
 end
 
 local function glb_load(path)

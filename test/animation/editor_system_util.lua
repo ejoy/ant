@@ -83,7 +83,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             gizmo_object = {dir = dir},
             scene_entity = true,
         },
-        connection = {
+        action = {
             {"mount", parent}
         },
         writable = {
@@ -114,7 +114,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             gizmo_object = {dir = dir},
             scene_entity = true,
         },
-        connection = {
+        action = {
             {"mount", parent}
         }
     }
@@ -157,7 +157,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             gizmo_object = {dir = dir},
             scene_entity = true,
         },
-        connection = {
+        action = {
             {"mount", parent}
         }
     }
@@ -200,7 +200,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             gizmo_object = {dir=dir},
             scene_entity = true,
         },
-        connection = {
+        action = {
             {"mount", parent}
         },
         writable = {
@@ -234,7 +234,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             gizmo_object = {dir=dir},
             scene_entity = true,
         },
-        connection = {
+        action = {
             {"mount", parent}
         },
         writable = {
@@ -261,7 +261,7 @@ function Util.create_gizmo(world)
                 name = name,
                 gizmo_object = {},
             },
-            connection = {
+            action = {
                 {"mount", parent}
             }
         }

@@ -1,25 +1,23 @@
 local fs_local = import_package "ant.utility".fs_local
-local sort_pairs = require "sort_pairs"
 local math3d = require "math3d"
 local stringify = import_package "ant.serialize".stringify
 
-local prefab = {{}}
+local prefab = {}
 local conv = {}
-local actions = prefab[1]
 
 local function create_entity(t)
-    local slot = #prefab
     if t.parent then
         t.policy[#t.policy+1] = "ant.scene|hierarchy_policy"
-        actions[#actions+1] = {"mount", slot, t.parent}
+        t.action = {mount = t.parent}
         t.data["scene_entity"] = true
     end
     table.sort(t.policy)
     prefab[#prefab+1] = {
         policy = t.policy,
         data = t.data,
+        action = t.action,
     }
-    return slot
+    return #prefab
 end
 
 local function proxy(name)
@@ -182,9 +180,8 @@ local function find_mesh_nodes(gltfscene, scenenodes)
 end
 
 return function(output, glbdata, exports)
-    prefab = {{}}
+    prefab = {}
     conv = {}
-    actions = prefab[1]
 
     local gltfscene = glbdata.info
     local scene = gltfscene.scenes[gltfscene.scene+1]

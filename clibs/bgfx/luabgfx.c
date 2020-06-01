@@ -16,7 +16,7 @@
 #include "bgfx_interface.h"
 #include "bgfx_alloc.h"
 
-#if BGFX_API_VERSION != 106
+#if BGFX_API_VERSION != 107
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -3619,7 +3619,7 @@ memory_write(lua_State *L) {
 	if (index < 0 || index * sizeof(uint32_t) >=sz) {
 		return luaL_error(L, "out of range %d/[1-%d]", index+1, sz / sizeof(uint32_t));
 	}
-	uint32_t v = luaL_checkinteger(L, 2);
+	uint32_t v = luaL_checkinteger(L, 3);
 	data[index] = v;
 	return 0;
 }
