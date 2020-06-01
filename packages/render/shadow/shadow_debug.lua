@@ -35,11 +35,9 @@ local function csm_shadow_debug_quad()
 
 	assetmgr.patch(qe.material, {
 		properties = {
-			textures = {
-				s_shadowmap = {
-					type = "texture", name = "csm render buffer", stage = smstage,
-					handle = fbmgr.get_rb(fb[1]).handle,
-				}
+			s_shadowmap = {
+				stage = smstage,
+				handle = {handle=fbmgr.get_rb(fb[1]).handle},
 			}
 		}
 	})

@@ -74,7 +74,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             transform = computil.create_transform(world,{
                 srt = {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
             }),
-            mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/ring.glb|meshes/mesh0_P1.meshbin",
+            mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/ring.glb|meshes/mesh1_P1.meshbin",
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_singlecolor.material",
             --can_cast = true,
             can_render = true,
@@ -91,10 +91,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.uniforms.u_color = world.component "uniform" {
-        type= "v4",
-        value = {color},
-    }
+    e.material.properties.u_color = world.component"property" {color}
     return eid
 end
 
@@ -211,10 +208,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.uniforms.u_color = world.component "uniform" {
-        type= "v4",
-        value = {color},
-    }
+    e.material.properties.u_color = world.component"property" {color}
     return eid
 end
 
@@ -248,10 +242,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.uniforms.u_color = world.component "uniform" {
-        type= "v4",
-        value = {color},
-    }
+    e.material.properties.u_color = world.component "property" {color}
     return eid
 end
 

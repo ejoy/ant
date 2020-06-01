@@ -1,18 +1,10 @@
-component "uniform"
+component "property"
     .implement "ext_material.lua"
     .method "init"
     .method "save"
 
-component "mat_texture"
-    .implement "ext_material.lua"
-    .method "init"
-
 component "material"
     .implement "ext_material.lua"
-    .method "init"
-
-component "pbrm"
-    .implement "ext_pbrm.lua"
     .method "init"
 
 component "prefab"

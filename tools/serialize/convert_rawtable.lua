@@ -36,7 +36,6 @@ local allow = {
     fx = true,
     material = true,
     mesh = true,
-    pbrm = true,
     state = true,
     terrain = true,
     texture = true,

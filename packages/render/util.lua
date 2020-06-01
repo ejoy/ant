@@ -24,7 +24,7 @@ local function update_properties(material, render_properties)
 		end
 
 		if p then
-			if p.texture then
+			if p.stage then
 				--TODO: if property not provide 'stage', use 'stage' from fx uniform
 				bgfx.set_texture(p.stage, u.handle, p.texture.handle)
 			else

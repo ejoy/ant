@@ -11,7 +11,7 @@ data:
     transform: $transform
         srt: $srt {}
     mesh: $resource "/pkg/ant.resources.binary/meshes/simple_skin/simple_skin.glb|meshes/mesh0_P1.meshbin"
-    material: $resource /pkg/ant.resources/materials/gpu_skin.pbrm
+    material: $resource /pkg/ant.resources/materials/gpu_skin.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/simple_skin/animation/skeleton.ozz
     animation:
         anilist:

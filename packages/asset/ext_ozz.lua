@@ -1,4 +1,4 @@
-local fs = require "filesystem"
+local lfs = require "filesystem.local"
 local cr = import_package "ant.compile_resource"
 local loaders = {}
 
@@ -40,8 +40,8 @@ loaders["ozz-sample-Mesh"] = function(fn)
 	}
 end
 
-local function find_loader(filepath)
-	local f <close> = fs.open(filepath, "rb")
+local function find_loader(localfilepath)
+	local f <close> = lfs.open(localfilepath, "rb")
 	f:read(1)
 	local tag = ("z"):unpack(f:read(16))
 	return loaders[tag]

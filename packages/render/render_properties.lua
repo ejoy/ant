@@ -95,7 +95,7 @@ local function load_shadow_properties(world, render_properties)
 		local fb = fbmgr.get(shadowentity.fb_index)
 		local sm = render_properties["s_shadowmap"]
 		sm.stage = world:interface "ant.render|uniforms".system_uniform("s_shadowmap").stage
-		sm.handle = fbmgr.get_rb(fb[1]).handle
+		sm.texture = {handle=fbmgr.get_rb(fb[1]).handle}
 
 		render_properties["u_depth_scale_offset"][1].v = shadowutil.shadow_depth_scale_offset()
 		local shadow = shadowentity.shadow
@@ -113,10 +113,9 @@ local function load_postprocess_properties(world, render_properties)
 		local rendertex = fbmgr.get_rb(fb[1]).handle
 		local mainview_name = "s_mainview"
 		local stage = assert(world:interface "ant.render|uniforms".system_uniform(mainview_name)).stage
-		local textures = render_properties.textures
-		local mv = textures[mainview_name]
+		local mv = render_properties[mainview_name]
 		mv.stage = stage
-		mv.handle = rendertex
+		mv.texture = {handle = rendertex}
 	end
 end
 
@@ -125,31 +124,27 @@ local load_properties_sys = ecs.system "load_properties_system"
 function  load_properties_sys:init()
 	local rp = world:interface "ant.render|render_properties".data()
 
-	rp.uniforms = {
 	--lighting
-		directional_lightdir 	= world.component "uniform"{type="v4", 	mc.T_ZERO},
-		directional_color 		= world.component "uniform"{type="color",mc.T_ZERO},
-		directional_intensity 	= world.component "uniform"{type="v4", 	mc.T_ZERO},
+	rp.directional_lightdir = world.component "property"{mc.T_ZERO}
+	rp.directional_color 	= world.component "property"{mc.T_ZERO}
+	rp.directional_intensity= world.component "property"{mc.T_ZERO}
+	rp.ambient_mode 		= world.component "property"{mc.T_ZERO}
+	rp.ambient_skycolor 	= world.component "property"{mc.T_ZERO}
+	rp.ambient_midcolor 	= world.component "property"{mc.T_ZERO}
+	rp.ambient_groundcolor 	= world.component "property"{mc.T_ZERO}
+	rp.u_eyepos				= world.component "property"{mc.T_ZERO_PT}
 
-		ambient_mode 			= world.component "uniform"{type="v4", 	 mc.T_ZERO},
-		ambient_skycolor 		= world.component "uniform"{type="color", mc.T_ZERO},
-		ambient_midcolor 		= world.component "uniform"{type="color", mc.T_ZERO},
-		ambient_groundcolor 	= world.component "uniform"{type="color", mc.T_ZERO},
+	-- shadow
+	rp.u_csm_matrix 		= world.component "property"{mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT}
+	rp.u_csm_split_distances= world.component "property"{mc.T_ZERO}
 
-		u_eyepos				= world.component "uniform"{type="v4", mc.T_ZERO_PT},
+	rp.u_depth_scale_offset	= world.component "property"{mc.T_ZERO}
+	rp.u_shadow_param1		= world.component "property"{mc.T_ZERO}
+	rp.u_shadow_param2		= world.component "property"{mc.T_ZERO}
 
-		-- shadow
-		u_csm_matrix 			= world.component "uniform"{type="m4_array", mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT},
-		u_csm_split_distances	= world.component "uniform"{type="v4", mc.T_ZERO},
-
-		u_depth_scale_offset	= world.component "uniform"{type="v4", mc.T_ZERO},
-		u_shadow_param1			= world.component "uniform"{type="v4", mc.T_ZERO},
-		u_shadow_param2			= world.component "uniform"{type="v4", mc.T_ZERO},
-	}
-	rp.textures = {
-		s_shadowmap = {type="texture", },
-		s_mainview = {type="texture", },
-	}
+	local iuniform = world:interface "ant.render|uniforms"
+	rp.s_shadowmap			= world.component "property"{stage=iuniform.system_uniform "s_shadowmap".stage}
+	rp.s_mainview			= world.component "property"{stage=iuniform.system_uniform "s_mainview".stage}
 end
 
 function load_properties_sys:load_render_properties()

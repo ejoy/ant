@@ -295,17 +295,17 @@ local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
 local function update_sky_parameters(skyentity)
 	local skycomp = skyentity.procedural_sky
-	local sky_uniforms = skyentity.material.properties.uniforms
+	local properties = skyentity.material.properties
 
 	local hour = skycomp.which_hour
 
-	sky_uniforms["u_sunDirection"][1].v 	= skycomp._sundir
-	sky_uniforms["u_sunLuminance"][1].v 	= xyz2rgb(sun_luminance_fetch(hour))
-	sky_uniforms["u_skyLuminanceXYZ"][1].v 	= sky_luminance_fetch(hour)
+	properties["u_sunDirection"][1].v 	= skycomp._sundir
+	properties["u_sunLuminance"][1].v 	= xyz2rgb(sun_luminance_fetch(hour))
+	properties["u_skyLuminanceXYZ"][1].v 	= sky_luminance_fetch(hour)
 	shader_parameters[4] = hour
-	sky_uniforms["u_parameters"][1].v		= shader_parameters
+	properties["u_parameters"][1].v		= shader_parameters
 
-	compute_PerezCoeff(skycomp.turbidity, sky_uniforms["u_perezCoeff"])
+	compute_PerezCoeff(skycomp.turbidity, properties["u_perezCoeff"])
 end
 
 local function sync_directional_light(skyentity)

@@ -1,0 +1,9 @@
+fx: $resource /pkg/ant.resources/materials/fx/pbr_default.fx
+state: /pkg/ant.resources/materials/state/default.state
+properties:
+  u_basecolor:
+    {0.2, 0.2, 0.2, 1}
+  u_emissive:
+    {0, 0, 0, 0}
+  u_metallic_roughness:
+    {0, 1, 0, 0}

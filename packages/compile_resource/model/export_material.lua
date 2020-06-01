@@ -1,5 +1,6 @@
 local fs_local = import_package "ant.utility".fs_local
 local stringify = import_package "ant.serialize".stringify
+local mc = import_package "ant.math".constant
 local util = require "model.util"
 local fs = require "filesystem.local"
 
@@ -9,8 +10,11 @@ local image_extension = {
     ["image/bmp"] = ".bmp",
 }
 
-local function tov4(v)
-    if v == nil or #v == 4 then
+local function tov4(v, def)
+    if v == nil then
+        return def
+    end
+    if #v == 4 then
         return v
     end
     
@@ -40,7 +44,7 @@ return function (output, glbdata, exports)
     local glbscene, glbbin = glbdata.info, glbdata.bin
 
     local image_folder = output / "images"
-    local pbrm_folder = output / "pbrm"
+    local pbrm_folder = output / "materials"
 
     fs.create_directories(pbrm_folder)
     local images = glbscene.images
@@ -177,6 +181,14 @@ return function (output, glbdata, exports)
         return name .. ".texture"
     end
 
+    local stages = {
+        basecolor = 0,
+        metallic_roughness = 1,
+        normal = 2,
+        occlusion = 3,
+        emissive = 4,
+    }
+
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
             local filename = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
@@ -184,7 +196,10 @@ return function (output, glbdata, exports)
                 --TODO
                 return
             end
-            return proxy "resource" ("./../images/" .. filename)
+            return {
+                texture = proxy "resource" ("./../images/" .. filename),
+                stage = stages[name]
+            }
         end
     end
 
@@ -193,37 +208,55 @@ return function (output, glbdata, exports)
         for matidx, mat in ipairs(materials) do
             local name = mat.name or tostring(matidx)
             local pbr_mr = mat.pbrMetallicRoughness
-            local pbrm = {
-                basecolor = {
-                    texture = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
-                    factor = tov4(pbr_mr.baseColorFactor),
-                },
-                metallic_roughness = {
-                    texture = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
-                    roughness_factor = pbr_mr.roughnessFactor,
-                    metallic_factor = pbr_mr.metallicFactor
-                },
-                normal = {
-                    texture = handle_texture(mat.normalTexture, "normal", true, "linear"),
-                },
-                occlusion = {
-                    texture = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
-                },
-                emissive = {
-                    texture = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
-                    factor  = tov4(mat.emissiveFactor),
-                },
-                alphaMode   = mat.alphaMode,
-                alphaCutoff = mat.alphaCutoff,
-                doubleSided = mat.doubleSided,
+
+            local material = {
+                fx          = proxy "resource" ("/pkg/ant.resources/materials/fx/pbr_default.fx"),
+                state       = "/pkg/ant.resources/materials/states/default.state",
+                properties  = {
+                    s_basecolor = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
+                    s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
+                    s_normal = handle_texture(mat.normalTexture, "normal", true, "linear"),
+                    s_occlusion = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
+                    s_emissive = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
+    
+                    u_basecolor_factor = {
+                        tov4(pbr_mr.baseColorFactor, mc.T_ZERO),
+                    },
+                    u_metallic_roughness_factor = {
+                        {
+                            0.0, -- keep for occlusion factor
+                            pbr_mr.roughnessFactor or 0.0,
+                            pbr_mr.metallicFactor,
+                            pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
+                        }
+                    },
+                    u_emissive_factor = {
+                        tov4(mat.emissiveFactor, mc.T_ZERO),
+                    },
+                    u_IBLparam = {
+                        {
+                            1.0, -- perfilter cubemap mip levels
+                            1.0, -- IBL indirect lighting scale
+                            0.0, 0.0,
+                        }
+                    },
+                    u_alpha_info = {
+                        {
+                            mat.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
+                            mat.alphaCutoff or 0.0,
+                            0.0, 0.0,
+                        }
+                    },
+                }
+    ,
             }
     
             local function refine_name(name)
                 local newname = name:gsub("['\\/:*?\"<>|]", "_")
                 return newname
             end
-            local filepath = pbrm_folder / refine_name(name) .. ".pbrm"
-            fs_local.write_file(filepath, stringify(pbrm, conv))
+            local filepath = pbrm_folder / refine_name(name) .. ".material"
+            fs_local.write_file(filepath, stringify(material, conv))
 
             materialfiles[matidx] = util.subrespath(output, filepath)
         end

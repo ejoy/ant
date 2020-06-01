@@ -7,7 +7,7 @@ local assetmgr = import_package "ant.asset"
 local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
-local pbr_material = world.component "resource"((feature_path / "assets/pbr_test.pbrm"):string())
+local pbr_material = world.component "resource"((feature_path / "assets/pbr_test.material"):string())
 local sphere_mesh = world.component "resource"("/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin")
 
 local function create_pbr_entity(world, 
@@ -34,17 +34,17 @@ local function create_pbr_entity(world,
 
     local e = world[eid]
 
-    local m = assetmgr.patch(e.material, {properties={uniforms={}}})
+    local m = assetmgr.patch(e.material, {properties={}})
     e.material = m
 
-    local u = m.properties.uniforms
+    local properties = m.properties
     for k, v in pairs{
         u_basecolor_factor = color,
         u_metallic_roughness_factor  = {0.0, roughness, metallic, 0.0},
     } do
-        local nv = assetmgr.patch(assert(u[k]), {})
+        local nv = assetmgr.patch(assert(properties[k]), {})
         nv[1].v = v
-        u[k] = nv
+        properties[k] = nv
     end
 
     return eid

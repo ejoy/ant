@@ -22,13 +22,6 @@ function util.create_submesh_item(material_refs)
 	return {material_refs=material_refs, visible=true}
 end
 
-function util.change_textures(content, texture_tbl)
-	if content.properties == nil then
-		content.properties = {}
-	end
-	content.properties.textures = texture_tbl
-end
-
 function util.is_entity_visible(e)
 	return e.can_render
 end
@@ -180,10 +173,7 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres()))
 
 	local e = world[eid]
-	e.material.properties.uniforms.u_color = world.component "uniform" {
-        type= "v4",
-        value = {color},
-    }
+	e.material.properties.u_color = world.component"property" {color}
 	return eid
 end
 

@@ -13,7 +13,7 @@ data:
         srt: $srt
             t: {-5, 0, 0, 1}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Joints_P1.meshbin"
-    material: $resource /pkg/ant.resources/materials/gpu_skin.pbrm
+    material: $resource /pkg/ant.resources/materials/gpu_skin.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
         anilist:
@@ -39,7 +39,7 @@ data:
         srt: $srt
             t: {-5, 0, 0, 1}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"
-    material: $resource /pkg/ant.resources/materials/gpu_skin.pbrm
+    material: $resource /pkg/ant.resources/materials/gpu_skin.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
         anilist:

@@ -15,7 +15,7 @@ data:
     transform: $transform
         srt: $srt {}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Joints_P1.meshbin"
-    material: $resource /pkg/ant.resources/materials/gpu_skin.pbrm
+    material: $resource /pkg/ant.resources/materials/gpu_skin.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
         anilist:
@@ -25,6 +25,7 @@ data:
             running: $resource /pkg/ant.resources.binary/meshes/female/animations/running.ozz
             running_fast: $resource /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
             walking: $resource /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
+    meshskin: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin1.skinbin"
     animation_birth: idle
     can_render: true
     scene_entity: true
@@ -46,7 +47,7 @@ data:
     transform: $transform
         srt: $srt {}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"
-    material: $resource /pkg/ant.resources/materials/gpu_skin.pbrm
+    material: $resource /pkg/ant.resources/materials/gpu_skin.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
         anilist:
@@ -57,6 +58,7 @@ data:
             running_fast: $resource /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
             walking: $resource /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
     animation_birth: idle
+    meshskin: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin"
     can_render: true
     scene_entity: true
     can_cast: true
