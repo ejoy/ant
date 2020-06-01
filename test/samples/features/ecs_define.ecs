@@ -47,7 +47,6 @@ system "init_loader_system"
     .method "init"
     .method "post_init"
     .method "ui_update"
-    .method "data_changed"
 
 
 system "animation_test_system"
