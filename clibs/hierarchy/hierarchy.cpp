@@ -62,7 +62,7 @@ get_joint_index(lua_State *L, const ozz::animation::Skeleton *ske, int index) {
 		return -1;
 	}
 
-	if (jointidx < 0 || jointidx >= (int)ske->joint_bind_poses().size()) {
+	if (jointidx < 0 || jointidx >= (int)ske->num_joints()) {
 		luaL_error(L, "invalid joint index : %d", jointidx);
 		return -1;
 	}
