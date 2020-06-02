@@ -8,11 +8,15 @@ local m = ecs.interface "camera"
 
 function m.create(info)
     local frustum = info.frustum
+    local default_frustum = defaultcomp.frustum()
     if not frustum then
-        local mq = world:singleton_entity "main_queue"
-        local vr = mq.render_target.viewport.rect
-        frustum = defaultcomp.frustum(vr.w, vr.h)
-        frustum.f = 300
+        frustum = default_frustum
+    else
+        for k ,v in pairs(default_frustum) do
+            if not frustum[k] then
+                frustum[k] = v
+            end
+        end
     end
 
     local locktarget = info.locktarget
@@ -49,6 +53,9 @@ function m.bind(id, which_queue)
         error(string.format("not find queue:%s", which_queue))
     end
     q.camera_eid = id
+    local vr = q.render_target.viewport.rect
+    local camera = world[id]
+    camera.camera.frustum.aspect = vr.w / vr.h
 end
 
 function m.get(id)
