@@ -152,12 +152,11 @@ local collider_sys = ecs.system "collider_system"
 
 local new_coll_mb = world:sub{"component_register", "collider"}
 function collider_sys:data_changed()
-	-- for _, _, eid in new_coll_mb:unpack() do
-	-- 	local e = world[eid]
-	-- 	local obj = e.collider._handle
-	-- 	local id = w:getId(obj)
-	-- 	collider_entity_mapper[id] = eid
-	-- end
+	for _, _, eid in new_coll_mb:unpack() do
+		local e = world[eid]
+		local obj = e.collider._handle
+		collider_entity_mapper[obj] = eid
+	end
 end
 
 local trans_changed_mb = world:sub {"component_changed", "transform"}
