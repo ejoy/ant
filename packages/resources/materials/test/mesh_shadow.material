@@ -6,12 +6,9 @@ properties:
   s_normal:
     texture: $resource /pkg/ant.resources/textures/test/1x1_normal.texture
     stage: 1
-  u_fog_color:
-    $vector {0.95, 0.95, 0.95, 1}
-  u_specularColor:
-    $vector {0.1, 0.1, 0.1, 1}
-  u_specularLight:
-    $vector {1, 0, 0, 1}
+  u_fog_color: $vector {0.95, 0.95, 0.95, 1}
+  u_specularColor: $vector {0.1, 0.1, 0.1, 1}
+  u_specularLight: $vector {1, 0, 0, 1}
 state:
   ALPHA_REF: 0
   CULL: CCW

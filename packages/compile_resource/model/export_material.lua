@@ -238,42 +238,30 @@ return function (output, glbdata, exports)
                     s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
                     s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
     
-                    u_basecolor_factor = {
-                        proxy "vector" (tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor)),
+                    u_basecolor_factor = proxy "vector" (tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor)),
+                    u_metallic_roughness_factor = proxy "vector" {
+                        0.0, -- keep for occlusion factor
+                        pbr_mr.roughnessFactor or 1.0,
+                        pbr_mr.metallicFactor or 0.0,
+                        pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
                     },
-                    u_metallic_roughness_factor = {
-                        proxy "vector" {
-                            0.0, -- keep for occlusion factor
-                            pbr_mr.roughnessFactor or 1.0,
-                            pbr_mr.metallicFactor or 0.0,
-                            pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
-                        }
+                    u_emissive_factor = proxy "vector" (tov4(mat.emissiveFactor, default_pbr_param.emissive.factor)),
+                    u_material_texture_flags = proxy "vector" {
+                        pbr_mr.baseColorTexture and 1.0 or 0.0,
+                        mat.normalTexture and 1.0 or 0.0,
+                        mat.emissiveTexture and 1.0 or 0.0,
+                        mat.occlusionTexture and 1.0 or 0.0,
                     },
-                    u_emissive_factor = {
-                        proxy "vector" (tov4(mat.emissiveFactor, default_pbr_param.emissive.factor)),
-                    },
-                    u_material_texture_flags = {
-                        proxy "vector" {
-                            pbr_mr.baseColorTexture and 1.0 or 0.0,
-                            mat.normalTexture and 1.0 or 0.0,
-                            mat.emissiveTexture and 1.0 or 0.0,
-                            mat.occlusionTexture and 1.0 or 0.0,
-                        }
-                    },
-                    u_IBLparam = {
-                        proxy "vector" {
+                    u_IBLparam = proxy "vector" {
                             1.0, -- perfilter cubemap mip levels
                             1.0, -- IBL indirect lighting scale
                             0.0, 0.0,
-                        }
-                    },
-                    u_alpha_info = {
-                        proxy "vector" {
-                            mat.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
-                            mat.alphaCutoff or 0.0,
-                            0.0, 0.0,
-                        }
-                    },
+                        },
+                    u_alpha_info = proxy "vector" {
+                        mat.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
+                        mat.alphaCutoff or 0.0,
+                        0.0, 0.0,
+                    }
                 },
             }
 

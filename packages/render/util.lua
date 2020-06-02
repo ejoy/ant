@@ -14,24 +14,12 @@ local util = {}
 util.__index = util
 
 local function update_properties(material, render_properties)
-	for name, u in pairs(material.fx.shader.uniforms) do
-		local p
-		if material.properties then
-			p = material.properties[name]
-		end
-		if p == nil then
-			p = render_properties[name]
-		end
-
+	for _, u in ipairs(material.fx.uniforms) do
+		local p = material.properties[u.name] or render_properties[u.name]
 		if p then
-			if p.stage then
-				--TODO: if property not provide 'stage', use 'stage' from fx uniform
-				bgfx.set_texture(p.stage, u.handle, p.texture.handle)
-			else
-				bgfx.set_uniform(u.handle, table.unpack(p))
-			end
+			u:set(p)
 		else
-			log.warn(string.format("property: %s, not privided, but shader program needed", name))
+			--log.warn(string.format("property: %s, not privided, but shader program needed", name))
 		end
 	end
 end
@@ -51,7 +39,7 @@ function util.draw_primitive(vid, primgroup, render_properties)
 	bgfx.set_state(material._state)
 	update_properties(material, render_properties)
 
-	local prog = material.fx.shader.prog
+	local prog = material.fx.prog
 
 	local mg = assert(primgroup.mgroup)
 	local ib, vb = mg.ib, mg.vb	

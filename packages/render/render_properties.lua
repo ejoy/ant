@@ -19,9 +19,9 @@ end
 local function add_directional_light_properties(world, uniform_properties)
 	local dlight = world:singleton_entity "directional_light"
 	if dlight then
-		uniform_properties["directional_lightdir"][1].v 	= dlight.direction
-		uniform_properties["directional_color"][1].v 	= dlight.directional_light.color
-		uniform_properties["directional_intensity"][1].v = {dlight.directional_light.intensity, 0.28, 0, 0}
+		uniform_properties["directional_lightdir"].v 	= dlight.direction
+		uniform_properties["directional_color"].v 	= dlight.directional_light.color
+		uniform_properties["directional_intensity"].v = {dlight.directional_light.intensity, 0.28, 0, 0}
 	end
 end
 
@@ -36,10 +36,10 @@ local function add_ambient_light_propertices(world, uniform_properties)
 	local le = world:singleton_entity "ambient_light"
 	if le then
 		local ambient = le.ambient_light
-		uniform_properties["ambient_mode"][1].v			= {mode_type[ambient.mode], ambient.factor, 0, 0}
-		uniform_properties["ambient_skycolor"][1].v		= ambient.skycolor
-		uniform_properties["ambient_midcolor"][1].v		= ambient.midcolor
-		uniform_properties["ambient_groundcolor"][1].v	= ambient.groundcolor
+		uniform_properties["ambient_mode"].v			= {mode_type[ambient.mode], ambient.factor, 0, 0}
+		uniform_properties["ambient_skycolor"].v		= ambient.skycolor
+		uniform_properties["ambient_midcolor"].v		= ambient.midcolor
+		uniform_properties["ambient_groundcolor"].v	= ambient.groundcolor
 	end
 end 
 
@@ -48,7 +48,7 @@ local function load_lighting_properties(world, render_properties)
 	add_ambient_light_propertices(world, render_properties)
 
 	local camera = camerautil.main_queue_camera(world)
-	render_properties["u_eyepos"][1].v = camera.eyepos
+	render_properties["u_eyepos"].v = camera.eyepos
 end
 
 local function calc_viewport_crop_matrix(csm_idx)
@@ -88,7 +88,7 @@ local function load_shadow_properties(world, render_properties)
 		end
 	end
 
-	render_properties["u_csm_split_distances"][1].v = split_distances
+	render_properties["u_csm_split_distances"].v = split_distances
 
 	local shadowentity = world:singleton_entity "shadow"
 	if shadowentity then
@@ -97,11 +97,11 @@ local function load_shadow_properties(world, render_properties)
 		sm.stage = world:interface "ant.render|uniforms".system_uniform("s_shadowmap").stage
 		sm.texture = {handle=fbmgr.get_rb(fb[1]).handle}
 
-		render_properties["u_depth_scale_offset"][1].v = shadowutil.shadow_depth_scale_offset()
+		render_properties["u_depth_scale_offset"].v = shadowutil.shadow_depth_scale_offset()
 		local shadow = shadowentity.shadow
-		render_properties["u_shadow_param1"][1].v = {shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}
+		render_properties["u_shadow_param1"].v = {shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}
 		local shadowcolor = shadow.color or {0, 0, 0, 0}
-		render_properties["u_shadow_param2"][1].v = shadowcolor
+		render_properties["u_shadow_param2"].v = shadowcolor
 	end
 end
 
@@ -125,14 +125,14 @@ function  load_properties_sys:init()
 	local rp = world:interface "ant.render|render_properties".data()
 
 	--lighting
-	rp.directional_lightdir = { world.component "vector" (mc.T_ZERO)}
-	rp.directional_color 	= { world.component "vector" (mc.T_ZERO)}
-	rp.directional_intensity= { world.component "vector" (mc.T_ZERO)}
-	rp.ambient_mode 		= { world.component "vector" (mc.T_ZERO)}
-	rp.ambient_skycolor 	= { world.component "vector" (mc.T_ZERO)}
-	rp.ambient_midcolor 	= { world.component "vector" (mc.T_ZERO)}
-	rp.ambient_groundcolor 	= { world.component "vector" (mc.T_ZERO)}
-	rp.u_eyepos				= { world.component "vector" (mc.T_ZERO_PT)}
+	rp.directional_lightdir = world.component "vector" (mc.T_ZERO)
+	rp.directional_color 	= world.component "vector" (mc.T_ZERO)
+	rp.directional_intensity= world.component "vector" (mc.T_ZERO)
+	rp.ambient_mode 		= world.component "vector" (mc.T_ZERO)
+	rp.ambient_skycolor 	= world.component "vector" (mc.T_ZERO)
+	rp.ambient_midcolor 	= world.component "vector" (mc.T_ZERO)
+	rp.ambient_groundcolor 	= world.component "vector" (mc.T_ZERO)
+	rp.u_eyepos				= world.component "vector" (mc.T_ZERO_PT)
 
 	-- shadow
 	rp.u_csm_matrix 		= {
@@ -141,10 +141,10 @@ function  load_properties_sys:init()
 		world.component "matrix" (mc.T_IDENTITY_MAT),
 		world.component "matrix" (mc.T_IDENTITY_MAT),
 	}
-	rp.u_csm_split_distances= { world.component "vector" (mc.T_ZERO)}
-	rp.u_depth_scale_offset	= { world.component "vector" (mc.T_ZERO)}
-	rp.u_shadow_param1		= { world.component "vector" (mc.T_ZERO)}
-	rp.u_shadow_param2		= { world.component "vector" (mc.T_ZERO)}
+	rp.u_csm_split_distances= world.component "vector" (mc.T_ZERO)
+	rp.u_depth_scale_offset	= world.component "vector" (mc.T_ZERO)
+	rp.u_shadow_param1		= world.component "vector" (mc.T_ZERO)
+	rp.u_shadow_param2		= world.component "vector" (mc.T_ZERO)
 
 	local iuniform = world:interface "ant.render|uniforms"
 	rp.s_shadowmap			= {stage=iuniform.system_uniform "s_shadowmap".stage}

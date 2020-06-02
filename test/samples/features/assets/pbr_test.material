@@ -16,15 +16,9 @@ properties:
   s_occlusion:
     stage: 3
     texture: $resource /pkg/ant.resources/textures/pbr/default/occlusion.texture
-  u_IBLparam:
-    $vector {1, 1, 0, 0}
-  u_alpha_info:
-    $vector {0, 0, 0, 0}
-  u_basecolor_factor:
-    $vector {0.2, 0.2, 0.2, 1}
-  u_emissive_factor:
-    $vector {1, 1, 1, 1}
-  u_material_texture_flags:
-    $vector {0, 0, 0, 0}
-  u_metallic_roughness_factor:
-    $vector {0, 1, 0, 0}
+  u_IBLparam: $vector {1, 1, 0, 0}
+  u_alpha_info: $vector {0, 0, 0, 0}
+  u_basecolor_factor: $vector {0.2, 0.2, 0.2, 1}
+  u_emissive_factor: $vector {1, 1, 1, 1}
+  u_material_texture_flags: $vector {0, 0, 0, 0}
+  u_metallic_roughness_factor: $vector {0, 1, 0, 0}
