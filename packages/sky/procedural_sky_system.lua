@@ -299,11 +299,11 @@ local function update_sky_parameters(skyentity)
 
 	local hour = skycomp.which_hour
 
-	properties["u_sunDirection"][1].v 	= skycomp._sundir
-	properties["u_sunLuminance"][1].v 	= xyz2rgb(sun_luminance_fetch(hour))
-	properties["u_skyLuminanceXYZ"][1].v 	= sky_luminance_fetch(hour)
+	properties["u_sunDirection"].v 	= skycomp._sundir
+	properties["u_sunLuminance"].v 	= xyz2rgb(sun_luminance_fetch(hour))
+	properties["u_skyLuminanceXYZ"].v 	= sky_luminance_fetch(hour)
 	shader_parameters[4] = hour
-	properties["u_parameters"][1].v		= shader_parameters
+	properties["u_parameters"].v		= shader_parameters
 
 	compute_PerezCoeff(skycomp.turbidity, properties["u_perezCoeff"])
 end

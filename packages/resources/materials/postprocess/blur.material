@@ -1,12 +1,10 @@
 fx: $resource /pkg/ant.resources/materials/fx/bloom/blur.fx
 properties:
-    s_basecolor:
-      texture: $resource /pkg/ant.resources/materials/textures/Default.texture
-      stage: 0
-    u_blur:
-      $vector {5, 0.75, 0, 0}
-    u_params:
-      $vector {1, 25, 0, 0}
+  s_basecolor:
+    texture: $resource /pkg/ant.resources/materials/textures/Default.texture
+    stage: 0
+  u_blur: $vector {5, 0.75, 0, 0}
+  u_params: $vector {1, 25, 0, 0}
 state:
   CULL: CCW
   DEPTH_TEST: LESS

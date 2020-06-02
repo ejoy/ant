@@ -118,7 +118,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 	}
 
 	local cylinder = world[cylindereid]
-	cylinder.material.properties.u_color = {world.component "vector"{1, 0, 0, 1}}
+	cylinder.material.properties.u_color = world.component "vector"{1, 0, 0, 1}
 
 	local coneeid = world:create_entity{
 		policy = {
@@ -144,7 +144,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 	}
 
 	local cone = world[coneeid]
-	cone.material.properties.u_color = { world.component "vector" {1, 0, 0, 1}}
+	cone.material.properties.u_color = world.component "vector" {1, 0, 0, 1}
 end
 
 function st_sys:post_init()

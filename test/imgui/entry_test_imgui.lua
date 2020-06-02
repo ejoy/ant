@@ -48,7 +48,7 @@ function callback.init(nwh, context, width, height)
     }
     imgui.font_program(
         imgui_font.prog,
-        imgui_font.uniforms.s_tex.handle
+        imgui_font.uniforms[1].handle
     )
     local imgui_image = assetmgr.load {
         vs = fs.path "/pkg/ant.testimgui/shader/vs_imgui_image.sc",
@@ -56,7 +56,7 @@ function callback.init(nwh, context, width, height)
     }
     imgui.image_program(
         imgui_image.prog,
-        imgui_image.uniforms.s_tex.handle
+        imgui_image.uniforms[1].handle
     )
     imgui.resize(width, height)
     inputmgr.init_keymap(imgui)

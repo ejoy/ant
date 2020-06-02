@@ -173,7 +173,7 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres()))
 
 	local e = world[eid]
-	e.material.properties.u_color = {world.component "vector"(color)}
+	e.material.properties.u_color = world.component "vector"(color)
 	return eid
 end
 

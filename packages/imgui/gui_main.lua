@@ -54,15 +54,15 @@ function gui_main.init(nwh, context, width, height)
     imgui.setDockEnable(true)
     imgui.ant.viewid(uieditor_viewid);
     gui_mgr.win_handle = nwh
-	local imgui_font = assetmgr.load_fx "/pkg/ant.imguibase/shader/font.fx".shader
+	local imgui_font = assetmgr.load_fx "/pkg/ant.imguibase/shader/font.fx"
     imgui.ant.font_program(
         imgui_font.prog,
-        imgui_font.uniforms.s_tex.handle
+        imgui_font.uniforms[1].handle
     )
-	local imgui_image = assetmgr.load_fx "/pkg/ant.imguibase/shader/image.fx".shader
+	local imgui_image = assetmgr.load_fx "/pkg/ant.imguibase/shader/image.fx"
     imgui.ant.image_program(
         imgui_image.prog,
-        imgui_image.uniforms.s_tex.handle
+        imgui_image.uniforms[1].handle
 	)
 	imgui_resize(width, height)
     gui_input.size(width,height)
