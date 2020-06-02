@@ -284,7 +284,7 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
 
 LUALIB_API int luaL_execresult (lua_State *L, int stat) {
   const char *what = "exit";  /* type of termination */
-  if (stat == -1)  /* error? */
+  if (stat != 0 && errno != 0)  /* error with an 'errno'? */
     return luaL_fileresult(L, 0, NULL);
   else {
     l_inspectstat(stat, what);  /* interpret result */
@@ -476,7 +476,7 @@ static void *resizebox (lua_State *L, int idx, size_t newsize) {
   UBox *box = (UBox *)lua_touserdata(L, idx);
   void *temp = allocf(ud, box->box, box->bsize, newsize);
   if (temp == NULL && newsize > 0)  /* allocation error? */
-    luaL_error(L, "not enough memory for buffer allocation");
+    luaL_error(L, "not enough memory");
   box->box = temp;
   box->bsize = newsize;
   return temp;

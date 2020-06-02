@@ -19,7 +19,7 @@ local function update_properties(material, render_properties)
 		if p then
 			u:set(p)
 		else
-			--log.warn(string.format("property: %s, not privided, but shader program needed", name))
+			log.warn(string.format("property: %s, not privided, but shader program needed", u.name))
 		end
 	end
 end
