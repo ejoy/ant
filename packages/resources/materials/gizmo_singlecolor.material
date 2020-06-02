@@ -1,7 +1,7 @@
 fx: $resource /pkg/ant.resources/materials/fx/gizmo_singlecolor.fx
 properties:
-    u_color: $property
-      {1, 1, 1, 1}
+    u_color:
+      $vector {1, 1, 1, 1}
 state:
   ALPHA_REF: 1
   CULL: CW

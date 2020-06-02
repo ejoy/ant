@@ -1,17 +1,17 @@
 fx: $resource /pkg/ant.resources/materials/fx/sky/procedural/procedural_sky.fx
 properties:
-  u_parameters: $property
-    {0, 0, 0, 0}
-  u_perezCoeff: $property
-    {0, 0, 0, 0}
-    {0, 0, 0, 0}
-    {0, 0, 0, 0}
-    {0, 0, 0, 0}
-    {0, 0, 0, 0}
-  u_skyLuminanceXYZ: $property
-    {0, 0, 0, 0}
-  u_sunDirection: $property
-    {0, 0, 1, 0}
-  u_sunLuminance: $property
-    {0, 0, 0, 0}
+  u_parameters:
+    $vector {0, 0, 0, 0}
+  u_perezCoeff:
+    $vector {0, 0, 0, 0}
+    $vector {0, 0, 0, 0}
+    $vector {0, 0, 0, 0}
+    $vector {0, 0, 0, 0}
+    $vector {0, 0, 0, 0}
+  u_skyLuminanceXYZ:
+    $vector {0, 0, 0, 0}
+  u_sunDirection:
+    $vector {0, 0, 1, 0}
+  u_sunLuminance:
+    $vector {0, 0, 0, 0}
 state: /pkg/ant.resources/materials/states/procedural_sky.state

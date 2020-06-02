@@ -2,8 +2,8 @@ fx: $resource /pkg/ant.resources/materials/fx/pbr_default.fx
 state: /pkg/ant.resources/materials/states/default.state
 properties:
   u_basecolor_factor:
-    {0.2, 0.2, 0.2, 1}
+    $vector {0.2, 0.2, 0.2, 1}
   u_emissive_factor:
-    {0, 0, 0, 0}
+    $vector {0, 0, 0, 0}
   u_metallic_roughness_factor:
-    {0, 1, 0, 0}
+    $vector {0, 1, 0, 0}

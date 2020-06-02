@@ -215,7 +215,7 @@ return function (output, glbdata, exports)
                     s_emissive = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
     
                     u_basecolor_factor = {
-                        proxy "vector" (tov4(pbr_mr.baseColorFactor, mc.T_ZERO)),
+                        proxy "vector" (tov4(pbr_mr.baseColorFactor, mc.T_ONE_PT)),
                     },
                     u_metallic_roughness_factor = {
                         proxy "vector" {
@@ -227,6 +227,14 @@ return function (output, glbdata, exports)
                     },
                     u_emissive_factor = {
                         proxy "vector" (tov4(mat.emissiveFactor, mc.T_ZERO)),
+                    },
+                    u_material_texture_flags = {
+                        proxy "vector" {
+                            pbr_mr.baseColorTexture and 1.0 or 0.0,
+                            mat.normalTexture and 1.0 or 0.0,
+                            mat.emissiveTexture and 1.0 or 0.0,
+                            mat.occlusionTexture and 1.0 or 0.0,
+                        }
                     },
                     u_IBLparam = {
                         proxy "vector" {

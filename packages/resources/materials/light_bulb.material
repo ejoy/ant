@@ -1,5 +1,5 @@
 fx: $resource /pkg/ant.resources/materials/fx/light_bulb.fx
 properties:
-    u_color: $property
-      {1, 1, 1, 1}
+    u_color:
+      $vector {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

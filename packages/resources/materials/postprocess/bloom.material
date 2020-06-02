@@ -1,13 +1,13 @@
 fx: $resource /pkg/ant.resources/materials/fx/bloom/bloom.fx
 properties:
-  s_basecolor: $property
+  s_basecolor:
     texture: $resource /pkg/ant.resources/materials/textures/Default.texture
     stage: 0
-  s_bloomcolor: $property
+  s_bloomcolor:
     texture: $resource /pkg/ant.resources/materials/textures/Default.texture
     stage: 1
-  u_params: $property
-    {1, 0, 0, 0}
+  u_params:
+    $vector {1, 0, 0, 0}
 state:
   CULL: CCW
   DEPTH_TEST: LESS

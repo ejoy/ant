@@ -1,17 +1,17 @@
 fx: $resource /pkg/ant.resources/materials/fx/test/mesh_shadow.fx
 properties:
-  s_basecolor: $property
+  s_basecolor:
     texture: $resource /pkg/ant.resources/textures/test/1x1_gray.texture
     stage: 0
-  s_normal: $property
+  s_normal:
     texture: $resource /pkg/ant.resources/textures/test/1x1_normal.texture
     stage: 1
-  u_fog_color: $property
-    {0.95, 0.95, 0.95, 1}
-  u_specularColor: $property
-    {0.1, 0.1, 0.1, 1}
-  u_specularLight: $property
-    {1, 0, 0, 1}
+  u_fog_color:
+    $vector {0.95, 0.95, 0.95, 1}
+  u_specularColor:
+    $vector {0.1, 0.1, 0.1, 1}
+  u_specularLight:
+    $vector {1, 0, 0, 1}
 state:
   ALPHA_REF: 0
   CULL: CCW

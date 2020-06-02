@@ -1,5 +1,5 @@
 fx: $resource /pkg/ant.resources/materials/bloom/fetch_bright.material
 properties:
-  u_bright_threshold: $property
-    {0.75, 0, 0, 0}
+  u_bright_threshold:
+    $vector {0.75, 0, 0, 0}
 state: /pkg/ant.resources/materials/bloom/postprocess.state
