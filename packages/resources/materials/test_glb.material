@@ -1,7 +1,7 @@
 fx: $resource /pkg/ant.resources/materials/fx/test_glb.fx
 properties:
-  u_time: $property
-      {1, 1, 1, 1}
+  u_time:
+      $vector {1, 1, 1, 1}
 state:
   ALPHA_REF: 0
   CULL: NONE

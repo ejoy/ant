@@ -1,9 +1,9 @@
 fx: $resource /pkg/ant.resources/materials/fx/stone.fx
 properties:
-  s_basecolor: $property
+  s_basecolor:
     texture: $resource /pkg/ant.resources/stone.texture
     stage: 0
-  s_normal: $property
+  s_normal:
     texture: $resource /pkg/ant.resources/stone_normal.texture
     stage: 1
 state:

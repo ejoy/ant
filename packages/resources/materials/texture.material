@@ -1,6 +1,6 @@
 fx: $resource /pkg/ant.resources/materials/fx/texture.fx
 properties:
-  s_texColor: $property
+  s_texColor:
     texture: $resource /pkg/ant.resources/PVPScene/siegeweapon_d.texture
     stage: 0
 state:
