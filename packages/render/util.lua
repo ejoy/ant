@@ -31,7 +31,7 @@ local function update_properties(material, render_properties)
 				bgfx.set_uniform(u.handle, table.unpack(p))
 			end
 		else
-			log.warn(string.format("property: %s, not privided, but shader program needed", name))
+			--log.warn(string.format("property: %s, not privided, but shader program needed", name))
 		end
 	end
 end
