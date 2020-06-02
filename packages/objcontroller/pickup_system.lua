@@ -111,7 +111,7 @@ local function pick_material(material_template, eid)
 	local vv = packeid_as_rgba(eid)
 	local m = assetmgr.patch(material_template, {})
 	m.properties = {
-		u_id = world.component "property"{vv,}
+		u_id = {world.component "vector"(vv)}
 	}
 	pick_material_cache[eid] = m
 	return m

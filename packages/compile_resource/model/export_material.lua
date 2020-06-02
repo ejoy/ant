@@ -17,7 +17,6 @@ local function tov4(v, def)
     if #v == 4 then
         return v
     end
-    
     if #v < 4 then
         local vv = {0, 0, 0, 0}
         for i=1, #v do
@@ -192,10 +191,6 @@ return function (output, glbdata, exports)
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
             local filename = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
-            if not filename then
-                --TODO
-                return
-            end
             return {
                 texture = proxy "resource" ("./../images/" .. filename),
                 stage = stages[name]
@@ -220,10 +215,10 @@ return function (output, glbdata, exports)
                     s_emissive = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
     
                     u_basecolor_factor = {
-                        tov4(pbr_mr.baseColorFactor, mc.T_ZERO),
+                        proxy "vector" (tov4(pbr_mr.baseColorFactor, mc.T_ZERO)),
                     },
                     u_metallic_roughness_factor = {
-                        {
+                        proxy "vector" {
                             0.0, -- keep for occlusion factor
                             pbr_mr.roughnessFactor or 0.0,
                             pbr_mr.metallicFactor or 0.0,
@@ -231,26 +226,25 @@ return function (output, glbdata, exports)
                         }
                     },
                     u_emissive_factor = {
-                        tov4(mat.emissiveFactor, mc.T_ZERO),
+                        proxy "vector" (tov4(mat.emissiveFactor, mc.T_ZERO)),
                     },
                     u_IBLparam = {
-                        {
+                        proxy "vector" {
                             1.0, -- perfilter cubemap mip levels
                             1.0, -- IBL indirect lighting scale
                             0.0, 0.0,
                         }
                     },
                     u_alpha_info = {
-                        {
+                        proxy "vector" {
                             mat.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
                             mat.alphaCutoff or 0.0,
                             0.0, 0.0,
                         }
                     },
-                }
-    ,
+                },
             }
-    
+
             local function refine_name(name)
                 local newname = name:gsub("['\\/:*?\"<>|]", "_")
                 return newname

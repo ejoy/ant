@@ -91,7 +91,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.u_color = world.component"property" {color}
+    e.material.properties.u_color = {world.component "vector"(color)}
     return eid
 end
 
@@ -208,7 +208,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.u_color = world.component"property" {color}
+    e.material.properties.u_color = {world.component "vector"(color)}
     return eid
 end
 
@@ -242,7 +242,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
         }
     }
     local e = world[eid]
-    e.material.properties.u_color = world.component "property" {color}
+    e.material.properties.u_color = {world.component "vector"(color)}
     return eid
 end
 

@@ -1,8 +1,3 @@
-component "property"
-    .implement "ext_material.lua"
-    .method "init"
-    .method "save"
-
 component "material"
     .implement "ext_material.lua"
     .method "init"

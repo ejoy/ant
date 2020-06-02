@@ -67,6 +67,19 @@ local function stringify_basetype(v)
     error('invalid type:'..t)
 end
 
+local function try_conv(prefix, v)
+    if type(v) == "table" or type(v) == "userdata" then
+        local class = conv[v]
+        if class then
+            prefix = prefix.." $"..class.name
+            if class.save then
+                v = class.save(v)
+            end
+        end
+    end
+    return prefix, v
+end
+
 local stringify_
 local stringify_value
 
@@ -90,23 +103,19 @@ local function stringify_array_map(n, t)
 end
 
 local function stringify_array_array(n, t)
-    local first_value = t[1][1]
+    local _, t1 = try_conv('', t[1])
+    local first_value = t1[1]
     if type(first_value) ~= "table" then
         for _, tt in ipairs(t) do
-            stringify_array_simple(n, "", tt)
+            local prefix, tt = try_conv('', tt)
+            prefix = prefix == '' and prefix or (prefix:sub(2) .. ' ')
+            stringify_array_simple(n, prefix, tt)
         end
         return
     end
-    if isArray(first_value) then
-        for _, tt in ipairs(t) do
-            out[#out+1] = indent(n).."---"
-            stringify_(n, tt)
-        end
-    else
-        for _, tt in ipairs(t) do
-            out[#out+1] = indent(n).."---"
-            stringify_array_map(n, tt)
-        end
+    for _, tt in ipairs(t) do
+        out[#out+1] = indent(n).."---"
+        stringify_(n, tt)
     end
 end
 
@@ -140,15 +149,7 @@ local function stringify_map(n, prefix, t)
 end
 
 function stringify_value(n, prefix, v)
-    if type(v) == "table" or type(v) == "userdata" then
-        local class = conv[v]
-        if class then
-            prefix = prefix.." $"..class.name
-            if class.save then
-                v = class.save(v)
-            end
-        end
-    end
+    prefix, v = try_conv(prefix, v)
     if type(v) == "table" then
         local first_value = next(v)
         if first_value == nil then

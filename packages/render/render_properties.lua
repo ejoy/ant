@@ -125,26 +125,30 @@ function  load_properties_sys:init()
 	local rp = world:interface "ant.render|render_properties".data()
 
 	--lighting
-	rp.directional_lightdir = world.component "property"{mc.T_ZERO}
-	rp.directional_color 	= world.component "property"{mc.T_ZERO}
-	rp.directional_intensity= world.component "property"{mc.T_ZERO}
-	rp.ambient_mode 		= world.component "property"{mc.T_ZERO}
-	rp.ambient_skycolor 	= world.component "property"{mc.T_ZERO}
-	rp.ambient_midcolor 	= world.component "property"{mc.T_ZERO}
-	rp.ambient_groundcolor 	= world.component "property"{mc.T_ZERO}
-	rp.u_eyepos				= world.component "property"{mc.T_ZERO_PT}
+	rp.directional_lightdir = { world.component "vector" (mc.T_ZERO)}
+	rp.directional_color 	= { world.component "vector" (mc.T_ZERO)}
+	rp.directional_intensity= { world.component "vector" (mc.T_ZERO)}
+	rp.ambient_mode 		= { world.component "vector" (mc.T_ZERO)}
+	rp.ambient_skycolor 	= { world.component "vector" (mc.T_ZERO)}
+	rp.ambient_midcolor 	= { world.component "vector" (mc.T_ZERO)}
+	rp.ambient_groundcolor 	= { world.component "vector" (mc.T_ZERO)}
+	rp.u_eyepos				= { world.component "vector" (mc.T_ZERO_PT)}
 
 	-- shadow
-	rp.u_csm_matrix 		= world.component "property"{mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT, mc.T_IDENTITY_MAT}
-	rp.u_csm_split_distances= world.component "property"{mc.T_ZERO}
-
-	rp.u_depth_scale_offset	= world.component "property"{mc.T_ZERO}
-	rp.u_shadow_param1		= world.component "property"{mc.T_ZERO}
-	rp.u_shadow_param2		= world.component "property"{mc.T_ZERO}
+	rp.u_csm_matrix 		= {
+		world.component "matrix" (mc.T_IDENTITY_MAT),
+		world.component "matrix" (mc.T_IDENTITY_MAT),
+		world.component "matrix" (mc.T_IDENTITY_MAT),
+		world.component "matrix" (mc.T_IDENTITY_MAT),
+	}
+	rp.u_csm_split_distances= { world.component "vector" (mc.T_ZERO)}
+	rp.u_depth_scale_offset	= { world.component "vector" (mc.T_ZERO)}
+	rp.u_shadow_param1		= { world.component "vector" (mc.T_ZERO)}
+	rp.u_shadow_param2		= { world.component "vector" (mc.T_ZERO)}
 
 	local iuniform = world:interface "ant.render|uniforms"
-	rp.s_shadowmap			= world.component "property"{stage=iuniform.system_uniform "s_shadowmap".stage}
-	rp.s_mainview			= world.component "property"{stage=iuniform.system_uniform "s_mainview".stage}
+	rp.s_shadowmap			= {stage=iuniform.system_uniform "s_shadowmap".stage}
+	rp.s_mainview			= {stage=iuniform.system_uniform "s_mainview".stage}
 end
 
 function load_properties_sys:load_render_properties()
