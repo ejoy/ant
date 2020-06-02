@@ -1,14 +1,28 @@
 local ecs = ...
 local world = ecs.world
 
+local mathpkg = import_package "ant.math"
+local mc = mathpkg.constant
+
 local math3d = require "math3d"
 local rp3d = require "rp3d"
 local mathadapter = import_package "ant.math.adapter"
 
 mathadapter.bind("collision", function() rp3d.init() end)
 
-local w = rp3d.collision_world {
+local w = rp3d.create_world {
 	worldName = "world",
+	persistentContactDistanceThreshold = 0.03,
+	defaultFrictionCoefficient = 0.3,
+	defaultBounciness = 0.5,
+	restitutionVelocityThreshold = 1.0,
+	defaultRollingRestistance = 0,
+	isSleepingEnabled = true,
+	defaultVelocitySolverNbIterations = 10,
+	defaultPositionSolverNbIterations = 5,
+	defaultTimeBeforeSleep = 1.0,
+	defaultSleepLinearVelocity = 0.02,
+	defaultSleepAngularVelocity = 3.0 * (math.pi / 180),
 	nbMaxContactManifolds = 3,
 	cosAngleSimilarContactManifold = 0.95,
 --	logger = { Level = "Error", Format = "Text" },
@@ -84,13 +98,13 @@ end
 local collcomp = ecs.component "collider"
 
 function collcomp:init()
-	self._handle = w:body_create()
+	self._handle = w:body_create(mc.ZERO_PT, mc.IDENTITY_QUAT)
 	local function add_shape(shape)
 		if not shape then
 			return
 		end
 		for _, sh in ipairs(shape) do
-			w:add_shape(self._handle, sh._handle, 0, sh.origin)
+			w:add_shape(self._handle, sh._handle, sh.origin)
 		end
 	end
 	add_shape(self.sphere)
@@ -138,12 +152,12 @@ local collider_sys = ecs.system "collider_system"
 
 local new_coll_mb = world:sub{"component_register", "collider"}
 function collider_sys:data_changed()
-	for _, _, eid in new_coll_mb:unpack() do
-		local e = world[eid]
-		local obj = e.collider._handle
-		local id = w:getId(obj)
-		collider_entity_mapper[id] = eid
-	end
+	-- for _, _, eid in new_coll_mb:unpack() do
+	-- 	local e = world[eid]
+	-- 	local obj = e.collider._handle
+	-- 	local id = w:getId(obj)
+	-- 	collider_entity_mapper[id] = eid
+	-- end
 end
 
 local trans_changed_mb = world:sub {"component_changed", "transform"}
