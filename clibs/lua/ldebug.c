@@ -145,7 +145,7 @@ LUA_API void lua_sethook (lua_State *L, lua_Hook func, int mask, int count) {
   L->basehookcount = count;
   resethookcount(L);
   L->hookmask = cast_byte(mask);
-  if (mask)
+  if (mask & (LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT))
     settraps(L->ci);  /* to trace inside 'luaV_execute' */
 }
 

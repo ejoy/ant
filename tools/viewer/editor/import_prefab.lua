@@ -33,8 +33,11 @@ return function (input, output)
     lfs.create_directories(outputPath:parent_path())
     if inputPath:equal_extension ".fbx" then
         import_fbx(inputPath, outputPath)
-    else
+    elseif inputPath:equal_extension ".glb" then
         lfs.copy_file(inputPath, outputPath, true)
+    else
+        error "unsupport file format"
+        return
     end
     assetmgr.unload_glb(output)
 end
