@@ -621,24 +621,34 @@ luaopen_rp3d_core(lua_State* L) {
 	lua_setfield(L, world_mt, "__gc");
 
 	luaL_Reg worldcommon[] = {
-		{ "rayfilter", lrayfilter },
-		{ "memory", NULL },
-		{ "logger", NULL },
+		{ "rayfilter", NULL },
+		{ "memory", lmemory },
+		{ "logger", llogger },
 		{ "create_world", NULL },
 		{ "collision_world_mt", NULL },
-		{ "shape", NULL },
+
+		{ "create_sphere", lsphereShape },
+		{ "create_box", lboxShape },
+		{ "create_capsule", lcapsuleShape },
+
+		{ "destroy_sphere", ldestroySphereShape },
+		{ "destroy_box", ldestroyBoxShape },
+		{ "destroy_capsule", ldestroyCapsuleShape },
+		{ "destroy_heightfield",  ldestroyHeightFieldShape},
+
 		{ NULL, NULL },
 	};
-	luaL_newlib(L, worldcommon);
+	luaL_newlibtable(L, worldcommon);
+	lua_pushvalue(L, pc_index);
+	luaL_setfuncs(L, worldcommon, 1);
 	int lib_index = lua_gettop(L);
 
-	lua_pushvalue(L, pc_index);
-	lua_pushcclosure(L, llogger, 1);
-	lua_setfield(L, lib_index, "logger");
+	lua_pushcfunction(L, lrayfilter);
+	lua_setfield(L, lib_index, "rayfilter");
 
-	lua_pushvalue(L, pc_index);
-	lua_pushcclosure(L, lmemory, 1);
-	lua_setfield(L, lib_index, "memory");
+	// lheightFieldShape should be a cfunction
+	lua_pushcfunction(L, lheightFieldShape);
+	lua_setfield(L, lib_index, "create_heightfield");
 
 	lua_pushvalue(L, pc_index);
 	lua_pushvalue(L, world_mt);
@@ -647,37 +657,6 @@ luaopen_rp3d_core(lua_State* L) {
 
 	lua_pushvalue(L, world_mt);
 	lua_setfield(L, lib_index, "collision_world_mt");
-
-	luaL_Reg collision_shape[] = {
-		{ "sphere", lsphereShape },
-		{ "box", lboxShape },
-		{ "capsule", lcapsuleShape },
-		{ "heightfield", NULL},
-		{ NULL, NULL },
-	};
-
-	luaL_newlibtable(L, collision_shape);
-	lua_pushvalue(L, pc_index);
-	luaL_setfuncs(L, collision_shape, 1);
-
-	// lheightFieldShape should be a cfunction
-	lua_pushcfunction(L, lheightFieldShape);
-	lua_setfield(L, -2, "heightfield");
-
-	lua_setfield(L, lib_index, "shape");
-
-	luaL_Reg destroy_shape[] = {
-		{ "sphere", ldestroySphereShape },
-		{ "box", ldestroyBoxShape },
-		{ "capsule", ldestroyCapsuleShape },
-		{ "heightfield", ldestroyHeightFieldShape},
-		{ NULL, NULL },
-	};
-
-	luaL_newlibtable(L, destroy_shape);
-	lua_pushvalue(L, pc_index);
-	luaL_setfuncs(L, destroy_shape, 1);
-	lua_setfield(L, lib_index, "destroy_shape");
 	
 	return 1;
 }}

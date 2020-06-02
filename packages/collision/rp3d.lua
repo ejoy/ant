@@ -1,17 +1,8 @@
 local lib = require "rp3d.core"
 local math3d_adapter = require "math3d.adapter"
 
-local function shape_interning()
-	local shape = lib.shape
+local function shape_interning(shape)
 	local all_shapes = {}
-	local function all_shapes_gc(self)
-		for key , shape in pairs(all_shapes) do
-			all_shapes[key] = nil
-			local what = (key:match "[^:]*") or key
-			lib.destroy_shape[what](shape)
-		end
-	end
-	setmetatable(all_shapes, { __gc = all_shapes_gc })
 
 	local world_mt = lib.collision_world_mt
 
@@ -52,7 +43,6 @@ function lib.init(logger)
 	if logger then
 		lib.logger(logger)
 	end
-	shape_interning()
 	local world_mt = lib.collision_world_mt
 
 	world_mt.__index = world_mt
@@ -62,7 +52,13 @@ function lib.init(logger)
 	world_mt.get_aabb 		= math3d_adapter.getter(world_mt.get_aabb, "vv")
 	world_mt.add_shape 		= math3d_adapter.vector(world_mt.add_shape, 4)
 
-	lib.shape.heightfield	= math3d_adapter.vector(lib.shape.heightfield, 7)
+	local shape = {
+		sphere = lib.create_sphere,
+		box = lib.create_box,
+		capsule = lib.create_capsule,
+		heightfield	= math3d_adapter.vector(lib.create_heightfield, 7),
+	}
+	shape_interning(shape)
 
 	local rayfilter 		= math3d_adapter.vector(lib.rayfilter, 1)
 	local raycast 			= math3d_adapter.getter(world_mt.raycast, "vv")
