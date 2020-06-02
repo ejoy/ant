@@ -4,7 +4,8 @@ local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
 
 local function set_uniform_texture(u, property)
-    --TODO: if property not provide 'stage', use 'stage' from fx uniform
+    --TODO: 'stage' info has been written in shader compiled file by bgfx, but it does not keep in memory after reload shader binary file
+    -- see: bgfx_p.h:createShader function
     bgfx.set_texture(property.stage, u.handle, property.texture.handle)
 end
 
