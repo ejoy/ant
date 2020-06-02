@@ -38,8 +38,8 @@ local function print_ske(ske)
 end
 
 local function bind_slot_entity(parenteid)
-    local e = world[parenteid]
-    print_ske(e.skeleton._handle)
+    --local e = world[parenteid]
+    --print_ske(e.skeleton._handle)
     world:instance((entitydir / "cube.prefab"):string(), {import= {root=parenteid}})
 end
 
