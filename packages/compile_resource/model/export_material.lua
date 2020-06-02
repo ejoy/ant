@@ -180,20 +180,44 @@ return function (output, glbdata, exports)
         return name .. ".texture"
     end
 
-    local stages = {
-        basecolor = 0,
-        metallic_roughness = 1,
-        normal = 2,
-        occlusion = 3,
-        emissive = 4,
+    local default_pbr_param = {
+        basecolor = {
+            texture = "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
+            factor = {1, 1, 1, 1},
+            stage = 0,
+        },
+        metallic_roughness = {
+            texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
+            factor = {1, 1, 0, 0},
+            stage = 1,
+        },
+        normal = {
+            texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
+            stage = 2,
+        },
+        occlusion = {
+            texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
+            stage = 3,
+        },
+        emissive = {
+            texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
+            factor = {0, 0, 0, 0},
+            stage = 4,
+        },
     }
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
+        local stage = default_pbr_param[name].stage
         if tex_desc then
             local filename = fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
             return {
                 texture = proxy "resource" ("./../images/" .. filename),
-                stage = stages[name]
+                stage = stage,
+            }
+        else
+            return {
+                texture = proxy "resource"(default_pbr_param[name].texture),
+                stage = stage,
             }
         end
     end
@@ -208,25 +232,25 @@ return function (output, glbdata, exports)
                 fx          = proxy "resource" ("/pkg/ant.resources/materials/fx/pbr_default.fx"),
                 state       = "/pkg/ant.resources/materials/states/default.state",
                 properties  = {
-                    s_basecolor = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
+                    s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                     s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
-                    s_normal = handle_texture(mat.normalTexture, "normal", true, "linear"),
-                    s_occlusion = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
-                    s_emissive = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
+                    s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
+                    s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
+                    s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
     
                     u_basecolor_factor = {
-                        proxy "vector" (tov4(pbr_mr.baseColorFactor, mc.T_ONE_PT)),
+                        proxy "vector" (tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor)),
                     },
                     u_metallic_roughness_factor = {
                         proxy "vector" {
                             0.0, -- keep for occlusion factor
-                            pbr_mr.roughnessFactor or 0.0,
+                            pbr_mr.roughnessFactor or 1.0,
                             pbr_mr.metallicFactor or 0.0,
                             pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
                         }
                     },
                     u_emissive_factor = {
-                        proxy "vector" (tov4(mat.emissiveFactor, mc.T_ZERO)),
+                        proxy "vector" (tov4(mat.emissiveFactor, default_pbr_param.emissive.factor)),
                     },
                     u_material_texture_flags = {
                         proxy "vector" {
