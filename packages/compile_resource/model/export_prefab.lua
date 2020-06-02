@@ -1,6 +1,7 @@
 local fs_local = import_package "ant.utility".fs_local
 local math3d = require "math3d"
 local stringify = import_package "ant.serialize".stringify
+local fs = require "filesystem.local"
 
 local prefab = {}
 local conv = {}
@@ -63,14 +64,14 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     for primidx, prim in ipairs(mesh.primitives) do
         local meshname = mesh.name or ("mesh" .. meshidx)
         local materialfile
-        if exports.material then
-            materialfile = exports.material[prim.material+1]
+        if prim.material then 
+            if exports.material and next(exports.material) then
+                materialfile = exports.material[prim.material+1]
+            else
+                error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
+            end
         else
-            error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
-        end
-
-        if materialfile == nil then
-            error(("material index not found in output material files:%d"):format(prim.material))
+            materialfile = fs.path "/pkg/ant.resources/materials/pbr_default.material"
         end
 
         local meshfile = exports.mesh[meshidx+1][primidx]
@@ -184,7 +185,8 @@ return function(output, glbdata, exports)
     conv = {}
 
     local gltfscene = glbdata.info
-    local scene = gltfscene.scenes[gltfscene.scene+1]
+    local sceneidx = gltfscene.scene or 0
+    local scene = gltfscene.scenes[sceneidx+1]
     local rootid = create_entity {
         policy = {
             "ant.general|name",
