@@ -9,8 +9,7 @@ mathadapter.bind("collision", function() rp3d.init() end)
 
 local w = rp3d.collision_world {
 	worldName = "world",
-	nbMaxContactManifoldsConvexShape = 1,
-	nbMaxContactManifoldsConcaveShape = 3,
+	nbMaxContactManifolds = 3,
 	cosAngleSimilarContactManifold = 0.95,
 --	logger = { Level = "Error", Format = "Text" },
 }
