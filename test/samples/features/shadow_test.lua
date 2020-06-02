@@ -36,7 +36,7 @@ function st_sys:init()
 
     cu.create_plane_entity(
 		world,
-		{srt = {s = {50, 1, 50, 0}}},
+		{srt = {t = {35, 0, 35, 1}, s = {50, 1, 50, 0}}},
 		"/pkg/ant.resources/materials/test/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"
