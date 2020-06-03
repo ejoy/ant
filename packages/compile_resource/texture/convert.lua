@@ -1,5 +1,6 @@
 local lfs 	= require "filesystem.local"
 
+local ru = import_package "ant.render".util
 local stringify = import_package "ant.serialize".stringify
 local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
@@ -41,7 +42,7 @@ end
 local function gen_commands(plat, param, sourcefile, outfile, commands)
 	add_option(commands, "-f", sourcefile:string())
 	add_option(commands, "-o", outfile:string())
-	add_option(commands, "-t", assert(which_format(plat, param)))
+	add_option(commands, "-t", param.format)
 	add_option(commands, "-q", "fastest")
 
 	if param.maxsize then
@@ -52,10 +53,10 @@ local function gen_commands(plat, param, sourcefile, outfile, commands)
 		add_option(commands, "-n")
 	end
 
-	local colorspace = param.colorspace or "sRGB"
-	if colorspace == "linear" then
+	param.colorspace = param.colorspace or "sRGB"
+	if param.colorspace == "linear" then
 		add_option(commands, "--linear")
-	elseif colorspace == "HDR" then
+	elseif param.colorspace == "HDR" then
 		print("not support HDR format right now")
 	end
 
@@ -118,11 +119,11 @@ return function (config, sourcefile, outpath, localpath)
 		hideWindow  = true,
 	}
 
-	local texcontent = fs_local.datalist(sourcefile)
-	local texpath = absolute_path(sourcefile, assert(texcontent.path), localpath)
+	local param = fs_local.datalist(sourcefile)
+	local texpath = absolute_path(sourcefile, assert(param.path), localpath)
 
-	texcontent.format = assert(which_format(config.os, texcontent))
-	gen_commands(config.os, texcontent, texpath, binfile, commands)
+	param.format = assert(which_format(config.os, param))
+	gen_commands(config.os, param, texpath, binfile, commands)
 
 	local success, msg = subprocess.spawn_process(commands, function (info)
 		local success, msg = true, ""
@@ -136,7 +137,15 @@ return function (config, sourcefile, outpath, localpath)
 
 	if success then
 		if lfs.exists(binfile) then
-			writefile(outpath / "main.texture", stringify(texcontent))
+			local config = {
+				name = texpath:string(),
+				sampler = ru.fill_default_sampler(param.sampler),
+				flag = ru.generate_sampler_flag(param.sampler),
+			}
+			if param.colorspace == "sRGB" then
+				config.flag = config.flag .. 'Sg'
+			end
+			writefile(outpath / "main.cfg", stringify(config))
 			lfs.rename(binfile, outpath / "main.bin")
 			return success, msg
 		end
