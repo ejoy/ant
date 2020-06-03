@@ -17,15 +17,15 @@ function default.viewport(vr)
 	}
 end
 
-local default_far_distance = 1000
+local default_far_distance = 300
 local default_near_distance = 0.1
-function default.frustum(w, h)
-	w = w or 800
-	h = h or 600
+function default.frustum(aspect)
 	return {
 		type = "mat",
-		n = default_near_distance, f = default_far_distance,
-		fov = 60, aspect = w / h,
+		n = default_near_distance,
+		f = default_far_distance,
+		fov = 60,
+		aspect = aspect or (4 / 3),
 	}
 end
 

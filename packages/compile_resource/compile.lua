@@ -177,6 +177,7 @@ local function compile_file(input, config)
     local ext = input:extension():string():sub(2):lower()
     local cfg = get_config(ext, config)
     if not cfg then
+        assert(lfs.exists(input))
         return input
     end
     local keystring = input:string() .. "_" .. cfg.hash

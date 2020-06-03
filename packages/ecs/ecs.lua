@@ -200,7 +200,7 @@ local function instance(w, prefab, args)
 		for name, target in sortpairs(entity.action) do
 			local object = w._class.action[name]
 			assert(object and object.init)
-			object.init(w[res[i]], res[target])
+			object.init(w[res[i]], res, target)
 		end
 	end
 	setmetatable(res, nil)
@@ -218,28 +218,21 @@ function world:instance(filename, args)
 	return instance(self, prefab, args)
 end
 
-local function serialize_prefab(w, entities, args)
+local function serialize_prefab(w, prefab, args)
     local t = {}
-    local slot = {}
-    for i, eid in ipairs(entities) do
-        slot[eid] = i
-    end
-    for i, eid in ipairs(entities) do
+    for i, eid in ipairs(prefab) do
         local template = w._prefabs[eid].policy
         local e = {policy={},data={}}
         t[#t+1] = e
         local dataset = w[eid]
 		local action = {}
         for _, name in ipairs(template.action) do
-            local object = w._class.action[name]
-            assert(object and object.save)
-            local res = object.save(w[eid])
             if args[i] and args[i][name] then
                 action[name] = args[i][name]
-            elseif slot[res] then
-                action[name] = slot[res]
             else
-                error(("entity %d action `%s` cannot be serialized."):format(eid, name))
+				local object = w._class.action[name]
+				assert(object and object.save)
+                action[name] =  object.save(w[eid], prefab)
             end
 		end
 		if next(action) ~= nil then

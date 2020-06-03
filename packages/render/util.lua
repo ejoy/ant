@@ -93,7 +93,7 @@ function util.create_main_queue(world, view_rect)
 	local camera_eid = icamera.create{
 		eyepos  = {0, 0, 0, 1},
 		viewdir = {0, 0, 1, 0},
-		frustum = default_comp.frustum(view_rect.w, view_rect.h),
+		frustum = default_comp.frustum(view_rect.w / view_rect.h),
         name = "default_camera",
 	}
 
@@ -247,7 +247,7 @@ function util.create_blit_queue(world, viewrect)
 				eyepos = world.component "vector"(mc.T_ZERO_PT),
 				viewdir = world.component "vector"(mc.T_ZAXIS),
 				updir = world.component "vector"(mc.T_YAXIS),
-				frustum = default_comp.frustum(viewrect.w, viewrect.h),
+				frustum = default_comp.frustum(viewrect.w / viewrect.h),
 			},
 			name = "blit_camera",
 		}

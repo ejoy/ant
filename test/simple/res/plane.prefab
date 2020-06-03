@@ -1,0 +1,14 @@
+---
+data:
+  can_render: true
+  material: $resource /pkg/ant.resources/materials/test/mesh_shadow.material
+  mesh: $resource ./plane.meshbin
+  scene_entity: true
+  transform: $transform
+    srt: $srt
+      r: {0, 0, 0, 1}
+      s: {500, 1, 500, 0}
+      t: {0, 0, 0, 1}
+policy:
+  ant.render|render
+  ant.render|mesh

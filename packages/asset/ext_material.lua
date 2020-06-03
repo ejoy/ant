@@ -18,8 +18,8 @@ local function load_state(filename)
 end
 
 function m:init()
-	if #self.fx.uniforms > 0 then
-		assert(self.properties)
+	if #self.fx.uniforms > 0 and not self.properties then
+		self.properties = {}
 	end
 	self._state = bgfx.make_state(load_state(self.state))
 	return self
