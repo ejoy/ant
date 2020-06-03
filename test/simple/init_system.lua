@@ -11,19 +11,11 @@ function m:init()
         viewdir = {2,-1,-2,0},
         frustum = {f = 1000}
     }, "main_queue")
+    world:instance "res/plane.prefab"
     world:instance "res/light_directional.prefab"
     local res = world:instance "res/fox.glb|mesh.prefab"
     world:add_policy(res[3], {
         policy = {"ant.render|shadow_cast_policy"},
         data = {can_cast = true},
     })
-    local renderpkg = import_package "ant.render"
-    local cu = renderpkg.components
-    cu.create_plane_entity(
-		world,
-		{srt = {t = {35, 0, 35, 1}, s = {500, 1, 500, 0}}},
-		"/pkg/ant.resources/materials/test/mesh_shadow.material",
-		{0.8, 0.8, 0.8, 1},
-		"test shadow plane"
-	)
 end
