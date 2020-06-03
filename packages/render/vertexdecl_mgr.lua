@@ -104,6 +104,33 @@ function mgr.correct_layout(layout)
 	return table.concat(t, "|")
 end
 
+function mgr.vertex_desc_str(correct_layout)
+	local s = ""
+	for e in correct_layout:gmatch(correct_layout) do
+		if #e ~= 6 then
+			error(("layout should be corrected, use declmgr.correct_layout:%s, %s"):format(e, correct_layout))
+		end
+		local n = e:sub(2, 2)
+		local t = e:sub(6, 6)
+
+		if t == 'f' then
+			s = s .. ('f'):rep(n)
+		else
+			if t ~= 'u' then
+				error(("unsupport decl format attribute type, only support 'u':%s"):format(e))
+			end
+
+			if n ~= 4 then
+				error(("invalid attribute number for 'u' type, must be 4: %d"):format(n))
+			end
+
+			s = s .. "d"
+		end
+	end
+
+	return s
+end
+
 function mgr.get(layout)
 	local decl = declmapper[layout]
 	if decl then
