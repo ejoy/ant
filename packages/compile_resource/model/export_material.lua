@@ -54,11 +54,22 @@ return function (output, glbdata, exports)
     local materials = glbscene.materials
 
     local function export_image(imgidx)
-        fs.create_directories(image_folder)
         local img = images[imgidx+1]
+        local ext = image_extension[img.mimeType]
+        if ext == nil then
+            if img.uri then
+                error("not support base64 format")
+            end
+            error(("not support image type:%d"):format(img.mimeType))
+        end
+
         local name = img.name or tostring(imgidx)
-        local imgname = name .. image_extension[img.mimeType]
-        local imgpath = image_folder / imgname
+        if fs.path(name):extension() == "" then
+            name = name .. ext
+        end
+
+        local imgpath = image_folder / name
+        fs.create_directories(imgpath:parent_path())
         if not fs.exists(imgpath) then
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
@@ -68,7 +79,7 @@ return function (output, glbdata, exports)
             local c = glbbin:sub(begidx, endidx)
             fs_local.write_file(imgpath, c)
         end
-        return imgname
+        return name
     end
 
     local filter_tags = {
