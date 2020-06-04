@@ -70,7 +70,7 @@ function event.prefab_editor()
         end
         for _, eid in ipairs(entities) do
             local e = world[eid]
-            if e.rendermesh then
+            if e.mesh then
                 local change, value = imgui.widget.Checkbox(e.name, e.can_render == true)
                 if change then
                     e.can_render = value

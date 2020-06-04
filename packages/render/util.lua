@@ -41,17 +41,15 @@ function util.draw_primitive(vid, primgroup, render_properties)
 
 	local prog = material.fx.prog
 
-	local mg = assert(primgroup.mgroup)
-	local ib, vb = mg.ib, mg.vb	
+	local mg = assert(primgroup.mesh)
+	local ib, vb = mg.ib, mg.vb
 
 	if ib then
 		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
 	end
-
 	local start_v, num_v = vb.start, vb.num
 	for idx, v in ipairs(vb.handles) do
-		local handle = v.handle
-		bgfx.set_vertex_buffer(idx-1, handle, start_v, num_v)
+		bgfx.set_vertex_buffer(idx-1, v.handle, start_v, num_v)
 	end
 	bgfx.submit(vid, prog, 0)
 end

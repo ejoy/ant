@@ -366,24 +366,24 @@ function util.check_rendermesh_lod(meshscene, lod_scene)
 end
 
 function util.entity_bounding(entity)
-	if util.is_entity_visible(entity) then
-		local meshscene = entity.rendermesh
-		local etrans = entity.transform.srt
-		local scene = meshscene.scenes[meshscene.scene]
-		local aabb = math3d.aabb()
-		for _, mn in pairs(scene)	do
-			local localtrans = mn.transform
-			for _, g in ipairs(mn) do
-				local b = g.bounding
-				if b then
-					aabb = math3d.aabb_transform(localtrans, math3d.aabb_merge(aabb, b.aabb))
-				end
-			end
-		end
-
-		aabb = math3d.aabb_transform(etrans, aabb)
-		return math3d.aabb_isvalid(aabb) and aabb or nil
-	end
+	assert(false, "TODO")
+	--if util.is_entity_visible(entity) then
+	--	local meshscene = entity.render-mesh
+	--	local etrans = entity.transform.srt
+	--	local scene = meshscene.scenes[meshscene.scene]
+	--	local aabb = math3d.aabb()
+	--	for _, mn in pairs(scene)	do
+	--		local localtrans = mn.transform
+	--		for _, g in ipairs(mn) do
+	--			local b = g.bounding
+	--			if b then
+	--				aabb = math3d.aabb_transform(localtrans, math3d.aabb_merge(aabb, b.aabb))
+	--			end
+	--		end
+	--	end
+	--	aabb = math3d.aabb_transform(etrans, aabb)
+	--	return math3d.aabb_isvalid(aabb) and aabb or nil
+	--end
 end
 
 function util.create_procedural_sky(world, settings)
