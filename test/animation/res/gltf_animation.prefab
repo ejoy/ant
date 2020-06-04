@@ -1,7 +1,6 @@
 ---
-{mount 1 root}
-{mount 2 root}
----
+action:
+    mount: root
 policy:
     ant.render|render
     ant.render|mesh
@@ -34,6 +33,8 @@ data:
     character:
         movespeed: 1.0
 ---
+action:
+    mount: root
 policy:
     ant.render|render
     ant.render|mesh

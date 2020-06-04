@@ -19,8 +19,7 @@ local widget_drawer_sys = ecs.system "widget_drawer_system"
 
 function widget_drawer_sys:init()
 	world:add_policy(
-		computil.create_simple_render_entity(world, nil, "/pkg/ant.resources/materials/line.material", "mesh_bounding_renderer",
-			assetmgr.load("//res.mesh/bounding.rendermesh", computil.create_simple_dynamic_mesh("p3|c40niu", 1024, 2048))),
+		computil.create_simple_render_entity(world, nil, "/pkg/ant.resources/materials/line.material", "mesh_bounding_renderer", computil.create_dynamic_mesh("//res.mesh/bounding.meshbin", "p3|c40niu", 1024, 2048)),
 		{
 			policy = {"ant.render|bounding_draw"},
 			data = {

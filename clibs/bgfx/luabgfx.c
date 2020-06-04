@@ -16,7 +16,7 @@
 #include "bgfx_interface.h"
 #include "bgfx_alloc.h"
 
-#if BGFX_API_VERSION != 107
+#if BGFX_API_VERSION != 108
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -393,6 +393,7 @@ linit(lua_State *L) {
 	init.resolution.maxFrameLatency = 0;
 
 	init.limits.maxEncoders     = 8;	// BGFX_CONFIG_DEFAULT_MAX_ENCODERS;
+	init.limits.minResourceCbSize = (64<<10); // BGFX_CONFIG_MIN_RESOURCE_COMMAND_BUFFER_SIZE
 	init.limits.transientVbSize = (6<<20);	// BGFX_CONFIG_TRANSIENT_VERTEX_BUFFER_SIZE
 	init.limits.transientIbSize = (2<<20);	// BGFX_CONFIG_TRANSIENT_INDEX_BUFFER_SIZE;
 
@@ -436,6 +437,7 @@ linit(lua_State *L) {
 			init.limits.maxEncoders = luaL_checkinteger(L, -1);
 		}
 		lua_pop(L, 1);
+		read_uint32(L, 1, "minResourceCbSize", &init.limits.minResourceCbSize);
 		read_uint32(L, 1, "transientVbSize", &init.limits.transientVbSize);
 		read_uint32(L, 1, "transientIbSize", &init.limits.transientIbSize);
 		read_boolean(L, 1, "debug", &init.debug);

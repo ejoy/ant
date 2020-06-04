@@ -7,7 +7,6 @@ local renderpkg = import_package 'ant.render'
 local declmgr	= renderpkg.declmgr
 
 local math3d	= require "math3d"
-local bgfx 		= require "bgfx"
 
 local t = ecs.component "terrain"
 
@@ -97,25 +96,31 @@ function trt.process(e)
 	local numvertices = (gridwidth + 1) * (gridheight + 1)
 	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
 	local numindices = gridwidth * gridheight * 2 * 3
-	local group = {
+	e.mesh = {
+		filename = assetmgr.generate_resource_name("mesh", "terrain.meshbin"),
 		vb = {
 			start = 0,
 			num = numvertices,
-			handles = {
-				{
-					handle = bgfx.create_vertex_buffer({"!", terraindata.terrain_vertices, 0, numvertices * pos_decl.stride}, pos_decl.handle),
-				},
-				{
-					handle = bgfx.create_vertex_buffer({"!", terraindata.terrain_normaldata, 0, numvertices * normal_decl.stride}, normal_decl.handle)
-				}
-			},
+			values = {{
+				declname = "p3",
+				start = 0,
+				num = numvertices * pos_decl.stride,
+				value = terraindata.terrain_vertices,
+			},{
+				declname = "n3",
+				start = 0,
+				num = 1 + numvertices * normal_decl.stride,
+				value = terraindata.terrain_normaldata,
+			}},
 		},
 		ib = {
 			start = 0,
 			num = numindices,
-			handle = bgfx.create_index_buffer({terraindata.terrain_indices, 0, numindices * 4}, "d"),
+			value = {
+				start = 0,
+				num = 1 + numindices * 4,
+				value = terraindata.terrain_indices,
+			},
 		}
 	}
-
-	e.rendermesh = assetmgr.load(assetmgr.generate_resource_name("mesh", "terrain.rendermesh"), group)
 end

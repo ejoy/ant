@@ -191,7 +191,7 @@ function ps_trans.process(e)
 	local skycomp = e.procedural_sky
 	local w, h = skycomp.grid_width, skycomp.grid_height
 
-	local vb = {"ff",}
+	local vb = {}
 	local ib = {}
 
 	local w_count, h_count = w - 1, h - 1
@@ -219,20 +219,8 @@ function ps_trans.process(e)
 		end
 	end
 
-	local group = {
-		vb = {
-			handles = {
-				{handle = bgfx.create_vertex_buffer(vb, declmgr.get("p2").handle)},
-			},
-			start = 0, num = #vb - 1,
-		},
-		ib = {
-			handle = bgfx.create_index_buffer(ib),
-			start = 0, num = #ib,
-		},
-	}
-
-	e.rendermesh = assetmgr.load(assetmgr.generate_resource_name("mesh", "procedural_sky.rendermesh"), group)
+    local util  = import_package "ant.render".components
+	e.mesh = util.create_mesh(assetmgr.generate_resource_name("mesh", "procedural_sky.meshbin"), {"p2", vb}, ib)
 end
 
 

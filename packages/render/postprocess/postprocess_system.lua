@@ -39,7 +39,7 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    quad_mesh = assetmgr.load("//res.mesh/postprocess.mesh", computil.quad_mesh{x=-1, y=-1, w=2, h=2})
+    quad_mesh = computil.quad_mesh("//res.mesh/postprocess.mesh", {x=-1, y=-1, w=2, h=2})
 end
 
 local function is_slot_equal(lhs, rhs)

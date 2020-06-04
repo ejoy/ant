@@ -1,22 +1,97 @@
 local util = {}
 util.__index = util
 
-local fs 		= require "filesystem"
-local bgfx 		= require "bgfx"
 local declmgr 	= require "vertexdecl_mgr"
 
-local animodule = require "hierarchy.animation"
 local hwi		= require "hardware_interface"
 
 local assetmgr = import_package "ant.asset"
 
 local mathpkg 	= import_package "ant.math"
 local mu = mathpkg.util
-local mc = mathpkg.constant
 local math3d = require "math3d"
 
 local geopkg 	= import_package "ant.geometry"
 local geodrawer	= geopkg.drawer
+
+local function create_vb_buffer(flag, vb)
+	return ("<"..flag:gsub("d", "I4"):rep(#vb/#flag)):pack(table.unpack(vb))
+end
+
+local function create_ib_buffer(ib)
+	return ("<"..("I4"):rep(#ib)):pack(table.unpack(ib))
+end
+
+local function create_mesh(filename, vb_lst, ib)
+	local mesh = {
+		filename = filename,
+		vb = {
+			start = 0,
+			values = {
+			}
+		}
+	}
+	local num = 0
+	for i = 1, #vb_lst, 2 do
+		local layout, vb = vb_lst[i], vb_lst[i+1]
+		local correct_layout = declmgr.correct_layout(layout)
+		local flag = declmgr.vertex_desc_str(correct_layout)
+		local vb_value = create_vb_buffer(flag, vb)
+		mesh.vb.values[#mesh.vb.values+1] = {
+			declname = correct_layout,
+			start = 1,
+			num = #vb_value,
+			value = vb_value,
+		}
+		num = num + #vb
+	end
+	mesh.vb.num = num
+	if ib then
+		local ib_value = ib and create_ib_buffer(ib)
+		mesh.ib = {
+			start = 0, num = #ib,
+			value = {
+				flag = "d",
+				start = 1,
+				num = #ib_value,
+				value = ib_value,
+			}
+		}
+	end
+	return mesh
+end
+
+function util.create_mesh(filename, vb, ib)
+	return create_mesh(filename, vb, ib)
+end
+
+function util.create_dynamic_mesh(filename, layout, num_vertices, num_indices)
+	local decl = declmgr.get(layout)
+	local vb_size = num_vertices * decl.stride
+
+	assert(num_vertices <= 65535)
+	local ib_size = num_indices * 2
+	return {
+		filename = filename,
+		vb = {
+			start = 0,
+			num = num_vertices,
+			values = {
+				{
+					declname = layout,
+					dynamic = vb_size,
+				}
+			},
+		},
+		ib = num_indices and {
+			start = 0,
+			num = num_indices,
+			value = {
+				dynamic = ib_size,
+			}
+		}
+	}
+end
 
 function util.create_submesh_item(material_refs)
 	return {material_refs=material_refs, visible=true}
@@ -26,84 +101,21 @@ function util.is_entity_visible(e)
 	return e.can_render
 end
 
-function util.create_simple_mesh(vertex_desc, vb, num_vertices, ib, num_indices)
-	return {
-		vb = {
-			handles = {
-				{handle = bgfx.create_vertex_buffer(vb, declmgr.get(vertex_desc).handle)},
-			},
-			start = 0, num = num_vertices,
-		},
-		ib = ib and {
-			handle = bgfx.create_index_buffer(ib),
-			start = 0, num = num_indices,
-		} or nil
-	}
-end
-
-function util.create_simple_dynamic_mesh(vertex_desc, num_vertices, num_indices)
-	local decl = declmgr.get(vertex_desc)
-	local vb_size = num_vertices * decl.stride
-
-	assert(num_vertices <= 65535)
-	local ib_size = num_indices * 2
-	return {
-		vb = {
-			handles = {
-				{
-					handle = bgfx.create_dynamic_vertex_buffer(vb_size, decl.handle, "a"),
-					updatedata = animodule.new_aligned_memory(vb_size),
-				}
-			},
-			start = 0,
-			num = num_vertices,
-		},
-		ib = num_indices and {
-			handle = bgfx.create_dynamic_index_buffer(ib_size, "a"),
-			updatedata = animodule.new_aligned_memory(ib_size),
-			start = 0,
-			num = num_indices,
-		}
-	}
-end
-
 function util.create_grid_entity(world, name, w, h, unit)
 	local geopkg = import_package "ant.geometry"
     local geolib = geopkg.geometry
-    
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
 	local vb, ib = geolib.grid(w, h, unit)
-	local gvb = {"fffd"}
+	local gvb = {}
 	for _, v in ipairs(vb) do
 		for _, vv in ipairs(v) do
-			table.insert(gvb, vv)
+			gvb[#gvb+1] = vv
 		end
 	end
-
-	local num_vertices = #vb
-	local num_indices = #ib
-
-	local group = {
-		vb = {
-			handles = {
-				{handle = bgfx.create_vertex_buffer(gvb, declmgr.get("p3|c40niu").handle)},
-			},
-			start = 0, num = num_vertices,
-		},
-		ib = ib and {
-			handle = bgfx.create_index_buffer(ib),
-			start = 0, num = num_indices,
-		} or nil
-	}
-
-	local resname = assetmgr.generate_resource_name("mesh", "grid.rendermesh")
-	return util.create_simple_render_entity(world,
-		transform,
-		"/pkg/ant.resources/materials/line.material",
-		name,
-		assetmgr.load(resname, group))
+	local mesh = create_mesh(assetmgr.generate_resource_name("mesh", "grid.meshbin"), {"p3|c40niu", gvb}, ib)
+	return util.create_simple_render_entity(world, nil, "/pkg/ant.resources/materials/line.material", name, mesh)
 end
 
 function util.quad_vertices(rect)
@@ -123,28 +135,27 @@ function util.create_transform(world, transform)
 	}
 end
 
-local plane_meshres
-local function get_plane_meshres()
-	if plane_meshres == nil then
+local plane_mesh
+local function get_plane_mesh()
+	if plane_mesh == nil then
 		local vb = {
-			"fffffffff",
 			-0.5, 0, 0.5, 0, 1, 0, 1, 0, 0,
 			0.5,  0, 0.5, 0, 1, 0, 1, 0, 0,
 			-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
 			0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
 		}
-	
-		plane_meshres = util.create_simple_mesh("p3|n3|T3", vb, 4)
-		plane_meshres.bounding = {
+		plane_mesh = create_mesh("//res.mesh/plane.meshbin", {"p3|n3|T3", vb})
+		plane_mesh.bounding = {
 			aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
 		}
 	end
-	return plane_meshres
+	return plane_mesh
 end
 
 function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	local policy = {
 		"ant.render|render",
+		"ant.render|mesh",
 		"ant.general|name",
 	}
 
@@ -154,6 +165,7 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 		can_render = true,
 		name = name or "Plane",
 		scene_entity = true,
+		mesh = get_plane_mesh(),
 	}
 
 	if info then
@@ -170,18 +182,12 @@ function util.create_plane_entity(world, trans, materialpath, color, name, info)
 		data = data,
 	}
 
-	world:add_component(eid, "rendermesh", assetmgr.load("//res.mesh/plane.rendermesh", get_plane_meshres()))
-
 	local e = world[eid]
 	e.material.properties.u_color = world.component "vector"(color)
 	return eid
 end
 
-local function quad_mesh(vb)
-	return util.create_simple_mesh("p3|t2", vb, 4)
-end
-
-function util.quad_mesh(rect)
+function util.quad_mesh(filename, rect)
 	local origin_bottomleft = hwi.get_caps().originBottomLeft
 	local minv, maxv
 	if origin_bottomleft then
@@ -197,68 +203,54 @@ function util.quad_mesh(rect)
 		x, y = -1, -1
 		w, h = 2, 2
 	end
-
-	return quad_mesh{
-		"fffff",
+	return create_mesh(filename, {"p3|t2", {
 		x, 		y, 		0, 	0, minv,	--bottom left
 		x,		y + h, 	0, 	0, maxv,	--top left
 		x + w, 	y, 		0, 	1, minv,	--bottom right
 		x + w, 	y + h, 	0, 	1, maxv,	--top right
-	}
+	}})
 end
 
-function util.create_simple_render_entity(world, transform, material, name, rendermesh)
-	local eid = world:create_entity {
+function util.create_simple_render_entity(world, transform, material, name, mesh)
+	return world:create_entity {
 		policy = {
 			"ant.render|render",
+			"ant.render|mesh",
 			"ant.general|name",
 		},
 		data = {
 			transform = util.create_transform(world, transform or {srt={}}),
 			material = world.component "resource"(material),
+			mesh = mesh,
 			can_render = true,
 			name = name or "frustum",
 			scene_entity = true,
 		}
 	}
-
-	if rendermesh then
-		world:add_component(eid, "rendermesh", rendermesh)
-	end
-	return eid
 end
 
 local fullquad_meshres
-local function get_fullquad_meshres()
+function util.fullquad_mesh()
 	if fullquad_meshres == nil then
-		fullquad_meshres = util.quad_mesh()
+		fullquad_meshres = util.quad_mesh("//res.mesh/fullquad.meshbin")
 	end
 	return fullquad_meshres
 end
 
-function util.fullquad_mesh()
-	return assetmgr.load("//res.mesh/fullquad.rendermesh", get_fullquad_meshres())
-end
-
 function util.create_quad_entity(world, rect, material, name)
-	return util.create_simple_render_entity(world, {srt={}}, material, name, 
-	assetmgr.load(assetmgr.generate_resource_name("mesh", "quad.rendermesh"), util.quad_mesh(rect)))
+	local mesh = util.quad_mesh(assetmgr.generate_resource_name("mesh", "quad.meshbin"), rect)
+	return util.create_simple_render_entity(world, {srt={}}, material, name, mesh)
 end
 
 function util.create_texture_quad_entity(world, texture_tbl, name)
 	local vb = {
-		"fffff",
 		-3,  3, 0, 0, 0,
 		 3,  3, 0, 1, 0,
 		-3, -3, 0, 0, 1,
 		 3, -3, 0, 1, 1,
 	}
-
-	local resname = assetmgr.generate_resource_name("mesh", "quad_scale3.rendermesh")
-	local eid = util.create_simple_render_entity(world, 
-		nil, "/pkg/ant.resources/materials/texture.material", 
-		name, assetmgr.load(resname, quad_mesh(vb)))
-
+	local mesh = create_mesh(assetmgr.generate_resource_name("mesh", "quad_scale3.meshbin"), {"p3|t2", vb})
+	local eid = util.create_simple_render_entity(world, nil, "/pkg/ant.resources/materials/texture.material",  name, mesh)
 	local e = world[eid]
 	assetmgr.patch(e.material, {properties = texture_tbl})
 	return eid
@@ -296,17 +288,16 @@ local frustum_ib = {
 }
 
 function util.create_frustum_entity(world, frustum_points, name, color)
-	local vb = {"fffd",}
+	local vb = {}
 	color = color or 0xff00000f
 	for i=1, #frustum_points do
 		local p = math3d.totable(frustum_points[i])
 		table.move(p, 1, 3, #vb+1, vb)
 		vb[#vb+1] = color
 	end
-	
-	local resname = assetmgr.generate_resource_name("mesh", "frustum.rendermesh")
-	return util.create_simple_render_entity(world, nil, "/pkg/ant.resources/materials/line.material", name, 
-	assetmgr.load(resname, util.create_simple_mesh("p3|c40niu", vb, 8, frustum_ib, #frustum_ib)))
+	local resname = assetmgr.generate_resource_name("mesh", "frustum.meshbin")
+	local mesh = create_mesh(resname, {"p3|c40niu", vb}, frustum_ib)
+	return util.create_simple_render_entity(world, nil, "/pkg/ant.resources/materials/line.material", name, mesh)
 end
 
 local axis_ib = {
@@ -316,7 +307,6 @@ local axis_ib = {
 }
 function util.create_axis_entity(world, transform, color, name)
 	local axis_vb = {
-		"fffd",
 		0, 0, 0, color or 0xff0000ff,
 		1, 0, 0, color or 0xff0000ff,
 		0, 0, 0, color or 0xff00ff00,
@@ -324,33 +314,32 @@ function util.create_axis_entity(world, transform, color, name)
 		0, 0, 0, color or 0xffff0000,
 		0, 0, 1, color or 0xffff0000,
 	}
-	local resname = assetmgr.generate_resource_name("mesh", "axis.rendermesh")
-	return util.create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, 
-		assetmgr.load(resname,
-			util.create_simple_mesh("p3|c40niu", axis_vb, 4, axis_ib, #axis_ib)))
+	local resname = assetmgr.generate_resource_name("mesh", "axis.meshbin")
+	local mesh = create_mesh(resname, {"p3|c40niu", axis_vb}, axis_ib)
+	return util.create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, mesh)
 end
 
 
-local skybox_meshres
+local skybox_mesh
 local function get_skybox_mesh()
-	if skybox_meshres == nil then
+	if skybox_mesh == nil then
 		local desc = {vb={}, ib={}}
 		geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
-		local gvb = {"fff",}
+		local gvb = {}
 		for _, v in ipairs(desc.vb)do
 			table.move(v, 1, 3, #gvb+1, gvb)
 		end
-	
-		skybox_meshres = util.create_simple_mesh("p3", gvb, 8, desc.ib, #desc.ib)
+		skybox_mesh = create_mesh("skybox.meshbin", {"p3", gvb}, desc.ib)
 	end
 
-	return skybox_meshres
+	return skybox_mesh
 end
 
 function util.create_skybox(world, material)
-    local eid = world:create_entity {
+    return world:create_entity {
 		policy = {
 			"ant.render|render",
+			"ant.render|mesh",
 			"ant.general|name",
 		},
 		data = {
@@ -359,11 +348,9 @@ function util.create_skybox(world, material)
 			can_render = true,
 			scene_entity = true,
 			name = "sky_box",
+			mesh = get_skybox_mesh(),
 		}
 	}
-	
-    world:add_component(eid, "rendermesh", assetmgr.load(assetmgr.generate_resource_name("mesh", "skybox.rendermesh"), get_skybox_mesh()))
-    return eid
 end
 
 function util.check_rendermesh_lod(meshscene, lod_scene)
@@ -379,24 +366,24 @@ function util.check_rendermesh_lod(meshscene, lod_scene)
 end
 
 function util.entity_bounding(entity)
-	if util.is_entity_visible(entity) then
-		local meshscene = entity.rendermesh
-		local etrans = entity.transform.srt
-		local scene = meshscene.scenes[meshscene.scene]
-		local aabb = math3d.aabb()
-		for _, mn in pairs(scene)	do
-			local localtrans = mn.transform
-			for _, g in ipairs(mn) do
-				local b = g.bounding
-				if b then
-					aabb = math3d.aabb_transform(localtrans, math3d.aabb_merge(aabb, b.aabb))
-				end
-			end
-		end
-
-		aabb = math3d.aabb_transform(etrans, aabb)
-		return math3d.aabb_isvalid(aabb) and aabb or nil
-	end
+	assert(false, "TODO")
+	--if util.is_entity_visible(entity) then
+	--	local meshscene = entity.render-mesh
+	--	local etrans = entity.transform.srt
+	--	local scene = meshscene.scenes[meshscene.scene]
+	--	local aabb = math3d.aabb()
+	--	for _, mn in pairs(scene)	do
+	--		local localtrans = mn.transform
+	--		for _, g in ipairs(mn) do
+	--			local b = g.bounding
+	--			if b then
+	--				aabb = math3d.aabb_transform(localtrans, math3d.aabb_merge(aabb, b.aabb))
+	--			end
+	--		end
+	--	end
+	--	aabb = math3d.aabb_transform(etrans, aabb)
+	--	return math3d.aabb_isvalid(aabb) and aabb or nil
+	--end
 end
 
 function util.create_procedural_sky(world, settings)

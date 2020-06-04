@@ -198,7 +198,7 @@ local function create_outline(seleid)
            
         }
         local oe = world[outlineeid]
-        oe.rendermesh = se.rendermesh
+        oe.render_mesh = se.render_mesh
         world:pub { "material_change",outlineeid }
         -- world:pub({"begin_follow",outlineeid,seleid,nil})
         world:pub({"update_follow",outlineeid,seleid})
