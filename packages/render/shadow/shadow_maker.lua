@@ -204,6 +204,9 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 			},
 			visible = true,
 			name = "csm" .. index,
+		},
+		writeable = {
+			render_target = true,
 		}
 	}
 end
@@ -300,10 +303,9 @@ function sm:init()
 	local se 	= world[seid]
 	local fbidx = se.fb_index
 
-	local viewrect = {x=0, y=0, w=shadowmap_size, h=shadowmap_size}
 	for ii=1, split_num do
-		viewrect.x = (ii-1)*shadowmap_size
-		create_csm_entity(ii, viewrect, fbidx, linear_shadow)
+		local vr = {x=(ii-1)*shadowmap_size, y=0, w=shadowmap_size, h=shadowmap_size}
+		create_csm_entity(ii, vr, fbidx, linear_shadow)
 	end
 end
 
