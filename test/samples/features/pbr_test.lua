@@ -42,9 +42,7 @@ local function create_pbr_entity(world,
         u_basecolor_factor = color,
         u_metallic_roughness_factor  = {0.0, roughness, metallic, 0.0},
     } do
-        local nv = assetmgr.patch(assert(properties[k]), {})
-        nv[1].v = v
-        properties[k] = nv
+        properties[k] = world.component "vector"(v)
     end
 
     return eid
