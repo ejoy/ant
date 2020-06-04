@@ -10,13 +10,14 @@ interface "terrain"
 
 policy "terrain_policy"
     .require_transform "terrain_transform"
+    .require_transform "ant.render|mesh_loader"
     .component "terrain"
 
 transform "terrain_transform"
     .implement "terrain_component.lua"
     .require_interface "ant.terrain|terrain"
     .input "terrain"
-    .output "rendermesh"
+    .output "mesh"
     .method "process"
 
 component "terrain"

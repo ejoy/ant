@@ -275,10 +275,11 @@ function util.create_blit_queue(world, viewrect)
 		}
 	}
 
-	local eid = world:create_entity {
+	world:create_entity {
 		policy = {
 			"ant.general|name",
 			"ant.render|blitrender",
+			"ant.render|mesh",
 		},
 		data = {
 			transform = world.component "transform" {
@@ -287,10 +288,9 @@ function util.create_blit_queue(world, viewrect)
 			material = world.component "resource" "/pkg/ant.resources/materials/fullscreen.material",
 			blit_render = true,
 			name = "full_quad",
+			mesh = computil.fullquad_mesh(),
 		}
 	}
-
-	world:add_component(eid, "rendermesh", computil.fullquad_mesh())
 end
 
 local statemap = {

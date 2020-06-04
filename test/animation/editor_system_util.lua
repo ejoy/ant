@@ -84,7 +84,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             scene_entity = true,
         },
         action = {
-            {"mount", parent}
+            mount = parent
         },
         writable = {
             material = true,
@@ -97,10 +97,22 @@ end
 
 local function create_line_entity(world, name, start_pos,end_pos,color,parent,dir)
     local util  = import_package "ant.render".components
-    local gridid = world:create_entity {
+    local vb, ib = line(start_pos, end_pos, color)
+    local gvb = {}
+    for _, v in ipairs(vb) do
+        for _, vv in ipairs(v) do
+            table.insert(gvb, vv)
+        end
+    end
+
+    local filename = string.format("//res.mesh/line_%s.meshbin",RES_IDX)
+    RES_IDX = RES_IDX + 1
+    
+    return world:create_entity {
         policy = {
             "ant.general|name",
             "ant.render|render",
+            "ant.render|mesh",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
             "ant.test.animation|gizmo_object",
@@ -113,35 +125,31 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             can_select = true,
             gizmo_object = {dir = dir},
             scene_entity = true,
+            mesh = util.create_mesh(filename, {"p3|c40niu", gvb}, ib),
         },
         action = {
-            {"mount", parent}
-        }
+            mount = parent
+        },
     }
-    local vb, ib = line(start_pos, end_pos, color)
-    local gvb = {"fffd"}
-    for _, v in ipairs(vb) do
-        for _, vv in ipairs(v) do
-            table.insert(gvb, vv)
-        end
-    end
-
-    local num_vertices = #vb
-    local num_indices = #ib
-
-    local filename = string.format("//res.mesh/line_%s.rendermesh",RES_IDX)
-    RES_IDX = RES_IDX + 1
-    world:add_component(gridid, "rendermesh", assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
-    return gridid
 end
 
 local function create_circle_entity(world, name,color,rot,parent,dir)
     local util  = import_package "ant.render".components
 
-    local gridid = world:create_entity {
+    local vb, ib = circle(color)
+    local gvb = {}
+    for _, v in ipairs(vb) do
+        for _, vv in ipairs(v) do
+            table.insert(gvb, vv)
+        end
+    end
+    local filename = string.format("//res.mesh/circle_%s.meshbin",RES_IDX)
+    RES_IDX = RES_IDX + 1
+    return world:create_entity {
         policy = {
             "ant.general|name",
             "ant.render|render",
+            "ant.render|mesh",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
             "ant.test.animation|gizmo_object",
@@ -156,26 +164,12 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             can_select = true,
             gizmo_object = {dir = dir},
             scene_entity = true,
+            mesh = util.create_mesh(filename, {"p3|c40niu", gvb}, ib),
         },
         action = {
-            {"mount", parent}
-        }
+            mount = parent
+        },
     }
-    local vb, ib = circle(color)
-    local gvb = {"fffd"}
-    for _, v in ipairs(vb) do
-        for _, vv in ipairs(v) do
-            table.insert(gvb, vv)
-        end
-    end
-
-    local num_vertices = #vb
-    local num_indices = #ib
-
-    local filename = string.format("//res.mesh/circle_%s.rendermesh",RES_IDX)
-    RES_IDX = RES_IDX + 1
-    world:add_component(gridid, "rendermesh", assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
-    return gridid
 end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
@@ -201,7 +195,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             scene_entity = true,
         },
         action = {
-            {"mount", parent}
+            mount = parent
         },
         writable = {
             material = true,
@@ -235,7 +229,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             scene_entity = true,
         },
         action = {
-            {"mount", parent}
+            mount = parent
         },
         writable = {
             material = true,
@@ -262,7 +256,7 @@ function Util.create_gizmo(world)
                 gizmo_object = {},
             },
             action = {
-                {"mount", parent}
+                mount = parent
             }
         }
 

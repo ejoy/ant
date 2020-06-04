@@ -106,7 +106,7 @@ end
 
 function mgr.vertex_desc_str(correct_layout)
 	local s = ""
-	for e in correct_layout:gmatch(correct_layout) do
+	for e in correct_layout:gmatch "%w+" do
 		if #e ~= 6 then
 			error(("layout should be corrected, use declmgr.correct_layout:%s, %s"):format(e, correct_layout))
 		end
@@ -120,7 +120,7 @@ function mgr.vertex_desc_str(correct_layout)
 				error(("unsupport decl format attribute type, only support 'u':%s"):format(e))
 			end
 
-			if n ~= 4 then
+			if n ~= '4' then
 				error(("invalid attribute number for 'u' type, must be 4: %d"):format(n))
 			end
 

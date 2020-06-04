@@ -98,14 +98,19 @@ return {
 		local vb = group.vb
 		local handles = {}
 		for _, value in ipairs(vb.values) do
-			local start_bytes = value.start
-			local end_bytes = start_bytes + value.num - 1
-
-			handles[#handles+1] = {
-				handle = bgfx.create_vertex_buffer({"!", value.value, start_bytes, end_bytes},
-									declmgr.get(value.declname).handle),
-				vertex_data = value,
-			}
+			if value.dynamic then
+				handles[#handles+1] = {
+					handle = bgfx.create_dynamic_vertex_buffer(value.dynamic, declmgr.get(value.declname).handle, "a"),
+					updatedata = animodule.new_aligned_memory(value.dynamic),
+				}
+			else
+				local start_bytes = value.start
+				local end_bytes = start_bytes + value.num - 1
+				handles[#handles+1] = {
+					handle = bgfx.create_vertex_buffer({"!", value.value, start_bytes, end_bytes}, declmgr.get(value.declname).handle),
+					vertex_data = value,
+				}
+			end
 		end
 		local meshgroup = {
 			bounding = group.bounding,
@@ -120,15 +125,22 @@ return {
 		local ib = group.ib
 		if ib then
 			local v = ib.value
-			local create_ib = v.type == "dynamic" and bgfx.create_dynamic_index_buffer or bgfx.create_index_buffer
-			local startbytes = v.start
-			local endbytes = startbytes+v.num-1
-			meshgroup.ib = {
-				start = ib.start,
-				num = ib.num,
-				handle = create_ib({v.value, startbytes, endbytes}, v.flag),
-				updatedata = v.type == "dynamic" and animodule.new_aligned_memory(v.num) or nil
-			}
+			if v.dynamic then
+				meshgroup.ib = {
+					start = ib.start,
+					num = ib.num,
+					handle = bgfx.create_dynamic_index_buffer(v.dynamic, "a"),
+					updatedata = animodule.new_aligned_memory(v.dynamic),
+				}
+			else
+				local startbytes = v.start
+				local endbytes = startbytes+v.num-1
+				meshgroup.ib = {
+					start = ib.start,
+					num = ib.num,
+					handle = bgfx.create_index_buffer({v.value, startbytes, endbytes}, v.flag),
+				}
+			end
 		end
 	
 		return meshgroup

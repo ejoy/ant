@@ -11,14 +11,14 @@ local assetmgr  = import_package "ant.asset"
 
 local ml = ecs.transform "mesh_loader"
 
-local function gen_glbmesh_key(mesh_fielname)
-	local filename = mesh_fielname:match "[^:]+"
-	filename = filename:gsub("[|:]", "/")
-	return filename:gsub("%.meshbin$", ".glbmesh")
-end
-
 function ml.process(e)
-	local key = gen_glbmesh_key(tostring(e.mesh))
+	local mesh_fielname = tostring(e.mesh)
+	local filename = mesh_fielname:match "[^:]+"
+	if filename == "table" then
+		filename = e.mesh.filename:match "[^:]+"
+	end
+	filename = filename:gsub("[|:]", "/")
+	local key = filename:gsub("%.meshbin$", ".glbmesh")
 	e.rendermesh = assetmgr.load(key, e.mesh)
 end
 
