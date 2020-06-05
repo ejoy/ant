@@ -139,12 +139,12 @@ local plane_mesh
 local function get_plane_mesh()
 	if plane_mesh == nil then
 		local vb = {
-			-0.5, 0, 0.5, 0, 1, 0, 1, 0, 0,
-			0.5,  0, 0.5, 0, 1, 0, 1, 0, 0,
-			-0.5, 0,-0.5, 0, 1, 0, 1, 0, 0,
-			0.5,  0,-0.5, 0, 1, 0, 1, 0, 0,
+			-0.5, 0, 0.5, 0, 1, 0, 0, 1,
+			 0.5, 0, 0.5, 0, 1, 0, 1, 1,
+			-0.5, 0,-0.5, 0, 1, 0, 0, 0,
+			 0.5, 0,-0.5, 0, 1, 0, 1, 0,
 		}
-		plane_mesh = create_mesh("//res.mesh/plane.meshbin", {"p3|n3|T3", vb})
+		plane_mesh = create_mesh("//res.mesh/plane.meshbin", {"p3|n3|t2", vb})
 		plane_mesh.bounding = {
 			aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
 		}

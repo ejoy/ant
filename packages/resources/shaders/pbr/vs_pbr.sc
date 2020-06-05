@@ -23,7 +23,11 @@ void main()
 #endif //GPU_SKINNING
 	
 	gl_Position   = mul(u_viewProj, worldpos);
+#ifdef ENABLE_SHADOW
 	v_posWS       = vec4(worldpos.xyz, mul(u_view, worldpos).z);
+#else //!ENABLE_SHADOW
+	v_posWS       = worldpos;
+#endif //ENABLE_SHADOW
 	v_texcoord0   = a_texcoord0;
 
 	// normal need recalculate after tranform to world space

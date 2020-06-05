@@ -1,14 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/test/mesh_shadow.fx
-properties:
-  s_basecolor:
-    texture: $resource /pkg/ant.resources/textures/test/1x1_gray.texture
-    stage: 0
-  s_normal:
-    texture: $resource /pkg/ant.resources/textures/test/1x1_normal.texture
-    stage: 1
-  u_fog_color: $vector {0.95, 0.95, 0.95, 1}
-  u_specularColor: $vector {0.1, 0.1, 0.1, 1}
-  u_specularLight: $vector {1, 0, 0, 1}
+fx: $resource /pkg/ant.resources/materials/fx/mesh_shadow.fx
 state:
   ALPHA_REF: 0
   CULL: CCW
@@ -16,3 +6,25 @@ state:
   MSAA: true
   PT: TRISTRIP
   WRITE_MASK: RGBAZ
+properties:
+  s_basecolor:
+    stage: 0
+    texture: $resource /pkg/ant.resources/textures/pbr/default/basecolor.texture
+  s_emissive:
+    stage: 4
+    texture: $resource /pkg/ant.resources/textures/pbr/default/emissive.texture
+  s_metallic_roughness:
+    stage: 1
+    texture: $resource /pkg/ant.resources/textures/pbr/default/metallic_roughness.texture
+  s_normal:
+    stage: 2
+    texture: $resource /pkg/ant.resources/textures/pbr/default/normal.texture
+  s_occlusion:
+    stage: 3
+    texture: $resource /pkg/ant.resources/textures/pbr/default/occlusion.texture
+  u_IBLparam: $vector {1, 1, 0, 0}
+  u_alpha_info: $vector {0, 0, 0, 0}
+  u_basecolor_factor: $vector {1, 1, 1, 1}
+  u_emissive_factor: $vector {0, 0, 0, 0}
+  u_material_texture_flags: $vector {0, 0, 1, 0}
+  u_metallic_roughness_factor: $vector {0, 1, 0, 0}

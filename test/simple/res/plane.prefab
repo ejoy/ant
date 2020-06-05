@@ -1,7 +1,7 @@
 ---
 data:
   can_render: true
-  material: $resource /pkg/ant.resources/materials/test/mesh_shadow.material
+  material: $resource /pkg/ant.resources/materials/mesh_shadow.material
   mesh: $resource ./plane.meshbin
   scene_entity: true
   transform: $transform

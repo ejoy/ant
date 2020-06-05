@@ -6,6 +6,11 @@ $input v_normal, v_posWS, v_texcoord0
 #include "common/transform.sh"
 #include "common/utils.sh"
 
+#ifdef ENABLE_SHADOW
+#include "common/shadow.sh"
+#define v_distanceVS v_posWS.w
+#endif //ENABLE_SHADOW
+
 uniform vec4 u_IBLparam;
 #define u_prefiltered_cube_mip_levels u_IBLparam.x
 #define u_scaleIBLAmbient u_IBLparam.y
@@ -246,5 +251,12 @@ void main()
 
 	add_emissive(v_texcoord0, color);
 
-	gl_FragColor = output_color_sRGB(vec4(color, basecolor.a));
+#ifdef ENABLE_SHADOW
+	float visibility = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0));
+	vec4 finalcolor = vec4(mix(u_shadow_color.rgb, color.rgb, visibility), basecolor.a);
+#else //!ENABLE_SHADOW
+	vec4 finalcolor = vec4(color, basecolor.a);
+#endif //ENABLE_SHADOW
+
+	gl_FragColor = output_color_sRGB(finalcolor);
 }

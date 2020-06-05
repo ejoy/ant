@@ -98,7 +98,7 @@ local function load_surface_type(fxcontent)
 		transparency = "opaticy",	-- "opaticy"/"translucent"
 		shadow	= {
 			cast = "on",			-- "on"/"off"
-			receive = "on",			-- "on"/"off"
+			receive = "off",			-- "on"/"off"
 		},
 		skinning = {
 			type = "UNKNOWN",
