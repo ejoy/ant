@@ -165,7 +165,7 @@ end
 
 function st_sys:post_init()
     local dl = world:singleton_entity "directional_light"
-	local rotator = math3d.inverse(math3d.torotation(dl.direction))
+	local rotator = math3d.torotation(math3d.inverse(dl.direction))
     directional_light_arrow_widget({s = {0.02,0.02,0.02,0}, r = rotator, t = dl.position}, 8, 0.45)
 end
 
