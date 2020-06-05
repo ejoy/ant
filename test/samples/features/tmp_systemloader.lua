@@ -18,7 +18,7 @@ local function create_plane_test()
         {
             transform = {srt={s ={50, 1, 50}}},
             color = {0.8, 0.8, 0.8, 1},
-            material = "/pkg/ant.resources/materials/test/mesh_shadow.material",
+            material = "/pkg/ant.resources/materials/mesh_shadow.material",
         },
     }
 
