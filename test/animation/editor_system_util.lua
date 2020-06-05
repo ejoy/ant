@@ -64,7 +64,6 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
     local eid = world:create_entity {
         policy={
             "ant.general|name",
-            "ant.render|mesh",
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
@@ -112,7 +111,6 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         policy = {
             "ant.general|name",
             "ant.render|render",
-            "ant.render|mesh",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
             "ant.test.animation|gizmo_object",
@@ -149,7 +147,6 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
         policy = {
             "ant.general|name",
             "ant.render|render",
-            "ant.render|mesh",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
             "ant.test.animation|gizmo_object",
@@ -177,7 +174,6 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         policy = {
             "ant.general|name",
             "ant.render|render",
-            "ant.render|mesh",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
             "ant.test.animation|gizmo_object",
@@ -212,7 +208,6 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             "ant.general|name",
             "ant.scene|hierarchy_policy",
             "ant.render|render",
-            "ant.render|mesh",
             "ant.objcontroller|select",
             "ant.test.animation|gizmo_object",
         },

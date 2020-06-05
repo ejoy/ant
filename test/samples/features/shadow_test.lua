@@ -13,7 +13,6 @@ function st_sys:init()
 	world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.render|mesh",
 			"ant.render|shadow_cast_policy",
 			"ant.general|name",
 		},
@@ -110,7 +109,6 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 
 	local cylindereid = world:create_entity{
 		policy = {
-			"ant.render|mesh",
 			"ant.render|render",
 			"ant.general|name",
 			"ant.scene|hierarchy_policy",
@@ -138,7 +136,6 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 
 	local coneeid = world:create_entity{
 		policy = {
-			"ant.render|mesh",
 			"ant.render|render",
 			"ant.general|name",
 			"ant.scene|hierarchy_policy",

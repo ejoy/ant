@@ -13,7 +13,6 @@ return {
             -- "ant.collision|collider_policy",
             -- "ant.sky|procedural_sky",
             -- "ant.general|name",
-            -- "ant.render|mesh",
             -- "ant.render|shadow_cast_policy",
             -- "ant.render|render",
             -- "ant.render|bounding_draw",

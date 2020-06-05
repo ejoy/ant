@@ -15,7 +15,6 @@ local ext_bin = {
 
 local ext_tmp = {
 	rendermesh 	= true,
-	glbmesh   	= true,
 	dynamicfx   = true,
 }
 

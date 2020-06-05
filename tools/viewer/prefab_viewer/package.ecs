@@ -23,7 +23,6 @@ system "gui_system"
     .method "data_changed"
     .method "ui_update"
     .require_system "ant.imguibase|imgui_system"
-    .require_policy "ant.render|mesh"
     .require_policy "ant.render|render"
     .require_policy "ant.general|name"
 

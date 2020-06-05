@@ -9,7 +9,7 @@ local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 local cr = import_package "ant.compile_resource"
 
 local function ozzmesh_animation_test()
-    return world:instance((entitydir / "ozz_animation_sample.prefab"):string())
+    --return world:instance((entitydir / "ozz_animation_sample.prefab"):string())
 end
 
 local function gltf_animation_test()

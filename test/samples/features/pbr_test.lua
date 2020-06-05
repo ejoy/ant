@@ -17,7 +17,6 @@ local function create_pbr_entity(world,
     local eid = world:create_entity {
         policy = {
             "ant.render|render",
-            "ant.render|mesh",
             "ant.general|name",
             "ant.objcontroller|select",
         },

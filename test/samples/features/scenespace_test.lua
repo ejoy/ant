@@ -30,7 +30,6 @@ function sp_test_sys:init()
             "ant.scene|hierarchy_policy",
             "ant.render|render",
             "ant.general|name",
-            "ant.render|mesh",
         },
         data = {
             name = "child1",
@@ -55,7 +54,6 @@ function sp_test_sys:init()
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.general|name",
-            "ant.render|mesh",
         },
         data = {
             name = "child1_1",
@@ -99,7 +97,6 @@ function sp_test_sys:init()
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.general|name",
-            "ant.render|mesh",
         },
         data = {
             name = "child2_1",

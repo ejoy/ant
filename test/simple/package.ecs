@@ -1,16 +1,17 @@
 import "@ant.general"
 import "@ant.render"
 import "@ant.animation"
+import "@ant.sky"
 
 system "init_system"
     .implement "init_system.lua"
     .require_policy "ant.general|name"
-    .require_policy "ant.render|mesh"
     .require_policy "ant.render|render"
     .require_policy "ant.render|light.directional"
     .require_policy "ant.render|shadow_cast_policy"
     .require_policy "ant.animation|animation"
     .require_policy "ant.animation|skinning"
+    .require_policy "ant.sky|procedural_sky"
     .require_interface "ant.render|camera"
     .method "init"
 

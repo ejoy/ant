@@ -1,9 +1,11 @@
 local ecs = ...
 local world = ecs.world
 local camera = world:interface "ant.render|camera"
+local render  = import_package 'ant.render'
 local m = ecs.system 'init_system'
 
 function m:init()
+    render.components.create_procedural_sky(world)
     local e = world:singleton_entity "main_queue"
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
     camera.bind(camera.create {
