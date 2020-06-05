@@ -57,7 +57,6 @@ local function target_lock_test()
         policy = {
             "ant.general|name",
             "ant.render|render",
-            "ant.render|mesh",
         },
         data = {
             name = "lock_target",
@@ -76,7 +75,6 @@ local function target_lock_test()
         policy = {
             "ant.general|name",
             "ant.render|render",
-            "ant.render|mesh",
             "ant.scene|hierarchy_policy",
         },
         data = {

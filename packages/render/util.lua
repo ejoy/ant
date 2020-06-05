@@ -277,7 +277,6 @@ function util.create_blit_queue(world, viewrect)
 		policy = {
 			"ant.general|name",
 			"ant.render|blitrender",
-			"ant.render|mesh",
 		},
 		data = {
 			transform = world.component "transform" {

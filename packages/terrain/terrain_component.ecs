@@ -10,7 +10,6 @@ interface "terrain"
 
 policy "terrain_policy"
     .require_transform "terrain_transform"
-    .require_transform "ant.render|mesh_loader"
     .component "terrain"
 
 transform "terrain_transform"

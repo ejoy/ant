@@ -89,7 +89,6 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
 
         local policy = {
             "ant.general|name",
-            "ant.render|mesh",
             "ant.render|render",
         }
 

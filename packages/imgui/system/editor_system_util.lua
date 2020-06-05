@@ -68,7 +68,6 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
     return world:create_entity {
         policy={
             "ant.general|name",
-            "ant.render|mesh",
             "ant.render|render",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
@@ -194,7 +193,6 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         policy = {
             "ant.general|name",
             "ant.render|render",
-            "ant.render|mesh",
             "ant.scene|hierarchy_policy",
             "ant.objcontroller|select",
             "ant.imgui|gizmo_object",
@@ -233,7 +231,6 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             "ant.general|name",
             "ant.scene|hierarchy_policy",
             "ant.render|render",
-            "ant.render|mesh",
             "ant.objcontroller|select",
             "ant.imgui|gizmo_object",
         },

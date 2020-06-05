@@ -17,7 +17,7 @@ local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 local function v4(...)return world.component "vector"(...)end
 
 local function foot_ik_test()
-    return world:instance((entitydir / "character_ik_test.prefab"):string())
+    --return world:instance((entitydir / "character_ik_test.prefab"):string())
 end
 
 local function create_plane_test()

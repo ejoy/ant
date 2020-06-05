@@ -18,7 +18,7 @@ function ml.process(e)
 		filename = e.mesh.filename:match "[^:]+"
 	end
 	filename = filename:gsub("[|:]", "/")
-	local key = filename:gsub("%.meshbin$", ".glbmesh")
+	local key = filename:gsub("%.meshbin$", ".rendermesh")
 	e.rendermesh = assetmgr.load(key, e.mesh)
 end
 

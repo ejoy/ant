@@ -155,7 +155,6 @@ end
 function util.create_plane_entity(world, trans, materialpath, color, name, info)
 	local policy = {
 		"ant.render|render",
-		"ant.render|mesh",
 		"ant.general|name",
 	}
 
@@ -215,7 +214,6 @@ function util.create_simple_render_entity(world, transform, material, name, mesh
 	return world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.render|mesh",
 			"ant.general|name",
 		},
 		data = {
@@ -339,7 +337,6 @@ function util.create_skybox(world, material)
     return world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.render|mesh",
 			"ant.general|name",
 		},
 		data = {
@@ -427,7 +424,6 @@ function util.create_procedural_sky(world, settings)
     return world:create_entity {
 		policy = {
 			"ant.render|render",
-			"ant.render|mesh",
 			"ant.sky|procedural_sky",
 			"ant.general|name",
 		},
