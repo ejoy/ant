@@ -31,7 +31,7 @@ local function add_result(eid, mesh, material, trans, result)
 	local r = result[idx]
 	if r == nil then
 		r = {
-			mgroup 		= mesh,
+			mesh 		= mesh,
 			material 	= material,
 			transform 	= trans,
 			aabb		= trans._aabb,
