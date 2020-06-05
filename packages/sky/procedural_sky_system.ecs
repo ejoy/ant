@@ -13,15 +13,7 @@ system "sun_update_system"
 
 policy "procedural_sky"
     .require_system "procedural_sky_system"
-    .require_transform "procedural_sky_transform"
-    .require_transform "ant.render|mesh_loader"
     .component "procedural_sky"
-
-transform "procedural_sky_transform"
-    .implement "procedural_sky_system.lua"
-    .input "procedural_sky"
-    .output "mesh"
-    .method "process"
 
 policy "procedural_sky_follow_sun"
     .require_system "procedural_sky_system"

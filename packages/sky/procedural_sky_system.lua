@@ -186,44 +186,6 @@ function ps:init()
 	return self
 end
 
-local ps_trans = ecs.transform "procedural_sky_transform"
-function ps_trans.process(e)
-	local skycomp = e.procedural_sky
-	local w, h = skycomp.grid_width, skycomp.grid_height
-
-	local vb = {}
-	local ib = {}
-
-	local w_count, h_count = w - 1, h - 1
-	for j=0, h_count do
-		for i=0, w_count do
-			local x = i / w_count * 2.0 - 1.0
-			local y = j / h_count * 2.0 - 1.0
-			vb[#vb+1] = x
-			vb[#vb+1] = y
-		end
-	end
-
-	for j=0, h_count - 1 do
-		for i=0, w_count - 1 do
-			local lineoffset = w * j
-			local nextlineoffset = w*j + w
-
-			ib[#ib+1] = i + lineoffset
-			ib[#ib+1] = i + 1 + lineoffset
-			ib[#ib+1] = i + nextlineoffset
-
-			ib[#ib+1] = i + 1 + lineoffset
-			ib[#ib+1] = i + 1 + nextlineoffset
-			ib[#ib+1] = i + nextlineoffset
-		end
-	end
-
-    local util  = import_package "ant.render".components
-	e.mesh = util.create_mesh(assetmgr.generate_resource_name("mesh", "procedural_sky.meshbin"), {"p2", vb}, ib)
-end
-
-
 local ps_sys = ecs.system "procedural_sky_system"
 
 local shader_parameters = {0.02, 3.0, 0.1, 0}
