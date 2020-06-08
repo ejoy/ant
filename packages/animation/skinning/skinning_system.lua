@@ -11,9 +11,8 @@ local sm = ecs.transform "skinning_material"
 
 function sm.process_prefab(e)
 	if e.skinning_type == "GPU" then
-		local fxname = tostring(e.material.fx):match"[^:]+"
 		e.material = assetmgr.patch(e.material, {})
-		e.material.fx = assetmgr.load(fs.path(fxname):replace_extension ".dynamicfx":string(), {gpu_skinning=true, filename = fxname})
+		e.material.fx = assetmgr.load_fx(tostring(e.material.fx), {gpu_skinning=true})
 	end
 end
 

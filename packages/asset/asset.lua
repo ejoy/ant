@@ -6,15 +6,10 @@ local assetmgr = {}
 assetmgr.__index = assetmgr
 
 local ext_bin = {
-	fx      = true,
 	texture = true,
 	ozz     = true,
 	meshbin = true,
 	skinbin = true,
-}
-
-local ext_tmp = {
-	dynamicfx   = true,
 }
 
 local function split(str)
@@ -92,13 +87,17 @@ local function absolute_path(base, path)
 end
 
 function assetmgr.resource(world, path)
+	if path:match "[^.]*$" == "fx" then
+		return assetmgr.load_fx(path)
+	end
 	local fullpath = absolute_path(world._current_path, path)
     return resource_load(fullpath, world, true)
 end
 
 --TODO
-function assetmgr.load_fx(fullpath)
-    return resource_load(fullpath, nil, true)
+function assetmgr.load_fx(fullpath, setting)
+	local res = require "ext_fx".loader(fullpath, setting)
+	return setmetatable(res, {__tostring=function() return fullpath end})
 end
 
 local function valid_component(w, name)
@@ -126,9 +125,6 @@ end
 function assetmgr.init()
 	local function loader(filename, data)
 		local ext = filename:match "[^.]*$"
-		if ext_tmp[ext] then
-			return require("ext_" .. ext).loader(data)
-		end
 		glb_load(filename)
 		local world = data
 		if ext_bin[ext] then
@@ -138,10 +134,6 @@ function assetmgr.init()
 	end
 	local function unloader(filename, data, res)
 		local ext = filename:match "[^.]*$"
-		if ext_tmp[ext] then
-			require("ext_" .. ext).unloader(res)
-			return
-		end
 		glb_unload(filename)
 		local world = data
 		if ext_bin[ext] then

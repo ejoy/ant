@@ -25,7 +25,6 @@ end
 
 function m:init()
     local vb = self.vb
-    local handles = {}
     for _, v in ipairs(vb) do
         setmetatable(v, proxy_vb)
     end
