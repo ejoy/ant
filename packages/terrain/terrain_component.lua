@@ -100,20 +100,18 @@ function trt.process(e)
 		vb = {
 			start = 0,
 			num = numvertices,
-			values = {{
+			{
 				declname = "p3",
 				memory = {"!", terraindata.terrain_vertices, 0, numvertices * pos_decl.stride},
 			},{
 				declname = "n3",
 				memory = {"!", terraindata.terrain_normaldata, 0, numvertices * normal_decl.stride},
-			}},
+			},
 		},
 		ib = {
 			start = 0,
 			num = numindices,
-			value = {
-				memory = {terraindata.terrain_indices, 0, numvertices * 4},
-			},
+			memory = {terraindata.terrain_indices, 0, numvertices * 4},
 		}
 	}
 end

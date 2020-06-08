@@ -25,8 +25,6 @@ local function create_mesh(vb_lst, ib)
 	local mesh = {
 		vb = {
 			start = 0,
-			values = {
-			}
 		}
 	}
 	local num = 0
@@ -35,7 +33,7 @@ local function create_mesh(vb_lst, ib)
 		local correct_layout = declmgr.correct_layout(layout)
 		local flag = declmgr.vertex_desc_str(correct_layout)
 		local vb_value = create_vb_buffer(flag, vb)
-		mesh.vb.values[#mesh.vb.values+1] = {
+		mesh.vb[#mesh.vb+1] = {
 			declname = correct_layout,
 			memory = {"!",vb_value,1,#vb_value},
 		}
@@ -46,10 +44,8 @@ local function create_mesh(vb_lst, ib)
 		local ib_value = create_ib_buffer(ib)
 		mesh.ib = {
 			start = 0, num = #ib,
-			value = {
-				flag = "d",
-				memory = {ib_value,1,#ib_value},
-			}
+			flag = "d",
+			memory = {ib_value,1,#ib_value},
 		}
 	end
 	return world.component "mesh"(mesh)
@@ -324,7 +320,7 @@ function util.create_procedural_sky(settings)
 			"ant.general|name",
 		},
 		data = {
-			transform = world.component "transform" {world.component "srt"{}},
+			transform = world.component "transform" {srt=world.component "srt"{}},
 			material = world.component "resource" "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = world.component "procedural_sky" {
 				--attached_sun_light = attached_light(settings.attached_sun_light),

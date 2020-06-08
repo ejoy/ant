@@ -10,7 +10,26 @@ local math3d	= require "math3d"
 local ml = ecs.transform "mesh_loader"
 
 function ml.process(e)
-	e.rendermesh = e.mesh
+	if not e.mesh then
+		return
+	end
+	local rendermesh = {}
+	rendermesh.vb = {
+		start = e.mesh.vb.start,
+		num = e.mesh.vb.num,
+		handles = {},
+	}
+    for _, v in ipairs(e.mesh.vb) do
+        rendermesh.vb.handles[#rendermesh.vb.handles+1] = v.handle
+	end
+	if e.mesh.ib then
+		rendermesh.ib = {
+			start = e.mesh.ib.start,
+			num = e.mesh.ib.num,
+			handle = e.mesh.ib.handle,
+		}
+	end
+	e.rendermesh = rendermesh
 end
 
 local rt = ecs.component "render_target"
