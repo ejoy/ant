@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local renderpkg = import_package "ant.render"
-local cu = renderpkg.components
+local computil = world:interface "ant.render|entity"
 
 local fs 		= require "filesystem"
 local task 		= require "task"
@@ -41,9 +40,8 @@ end
 local player
 function m:init()
 	create_light()
-	cu.create_procedural_sky(world)
-	cu.create_plane_entity(
-		world,
+	computil.create_procedural_sky()
+	computil.create_plane_entity(
 		{srt = {s = {50, 1, 50, 0}}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},

@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local computil  = require "components.util"
+local computil = world:interface "ant.render|entity"
 local camerautil= require "camera.util"
 local shadowutil= require "shadow.util"
 local viewidmgr = require "viewid_mgr"
@@ -30,7 +30,7 @@ local function csm_shadow_debug_quad()
 
 	local num_split = se.shadow.split.num_split
 	local rect = {x=0, y=0, w=quadsize*num_split, h=quadsize}
-	local q_eid = computil.create_quad_entity(world, rect, quadmaterial, "csm_quad")
+	local q_eid = computil.create_quad_entity(rect, quadmaterial, "csm_quad")
 	local qe = world[q_eid]
 
 	local m = assetmgr.patch(qe.material, {})
@@ -68,10 +68,10 @@ local function	csm_shadow_debug_frustum()
 		local frustum_points = math3d.frustum_points(vp)
 		
 		add_shadow_debug_policy(
-			computil.create_frustum_entity(world, frustum_points, "csm frusutm part" .. e.csm.index, color)
+			computil.create_frustum_entity(frustum_points, "csm frusutm part" .. e.csm.index, color)
 		)
 		add_shadow_debug_policy(
-			computil.create_axis_entity(world, 
+			computil.create_axis_entity(
 			{
 				srt={
 					r=math3d.tovalue(math3d.torotation(camera.viewdir)), 
@@ -94,7 +94,7 @@ local function main_view_debug_frustum()
 		local vp = mu.view_proj(camera)
 		local frustum_points = math3d.frustum_points(vp)
 		add_shadow_debug_policy(
-		computil.create_frustum_entity(world, frustum_points, "main view part" .. csm.index, frustum_colors[csm.index]))
+		computil.create_frustum_entity(frustum_points, "main view part" .. csm.index, frustum_colors[csm.index]))
 	end
 end
 
@@ -208,7 +208,7 @@ local function check_shadow_matrix()
 	local newvp = mu.view_proj({eyepos=center, viewdir=lightdir, up=mc.YAXIS}, frustum_desc)
 	local new_light_frustum_points = math3d.frustum_points(newvp)
 	add_shadow_debug_policy(
-	computil.create_frustum_entity(world, new_light_frustum_points, "lua calc view frustum",  0xff0000ff))
+	computil.create_frustum_entity(new_light_frustum_points, "lua calc view frustum",  0xff0000ff))
 
 	---------------------------------------------------------------------------------------------------------
 
@@ -228,7 +228,7 @@ local function check_shadow_matrix()
 	print("shadow view frustm point")
 	print_frustum_points(shadowcamera_frustum_points)
 	add_shadow_debug_policy(
-	computil.create_frustum_entity(world, shadowcamera_frustum_points, "view frustum", 0xffffff00))
+	computil.create_frustum_entity(shadowcamera_frustum_points, "view frustum", 0xffffff00))
 
 	-------------------------------------------------------------------------------------------------
 	-- test shadow matrix

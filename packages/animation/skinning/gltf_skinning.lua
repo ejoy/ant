@@ -68,22 +68,16 @@ local function build_cpu_skinning_jobs(e, skinning)
 	e.rendermesh = assetmgr.patch(e.rendermesh, {vb={handles={}}})
 	local primgroup = e.rendermesh
 
-	for idx, h in ipairs(primgroup.vb.handles) do
-		local vd = h.vertex_data
+	for idx, vd in ipairs(primgroup.vb.values) do
 		local declname = vd.declname
 		if need_dynamic_buffer(declname) then
-			local num_bytes = vd.num
-			local start_bytes = vd.start
-			local end_bytes = start_bytes + num_bytes - 1
+			local start_bytes = vd.memory[3] --TODO
+			local num_bytes   = vd.memory[4] --TODO
 
 			local updatedata = animodule.new_aligned_memory(num_bytes, 4)
-			local vbhandle = bgfx.create_dynamic_vertex_buffer({"!", vd.value, start_bytes, end_bytes},
-			declmgr.get(declname).handle)
+			local vbhandle = bgfx.create_dynamic_vertex_buffer(vd.memory, declmgr.get(declname).handle)
 
-			primgroup.vb.handles[idx] = {
-				handle = vbhandle,
-				updatedata = updatedata,
-			}
+			primgroup.vb.handles[idx] = vbhandle
 
 			local outptr = updatedata:pointer()
 			local layout_stride = declmgr.get(declname).stride

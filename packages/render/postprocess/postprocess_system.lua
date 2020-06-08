@@ -9,8 +9,8 @@ local mu       = mathpkg.util
 local fbmgr     = require "framebuffer_mgr"
 local viewidmgr = require "viewid_mgr"
 local renderutil= require "util"
-local computil  = require "components.util"
 local uniforms  = world:interface "ant.render|uniforms"
+local computil = world:interface "ant.render|entity"
 
 local pp_sys = ecs.system "postprocess_system"
 
@@ -39,7 +39,7 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    quad_mesh = computil.quad_mesh("//res.mesh/postprocess.mesh", {x=-1, y=-1, w=2, h=2})
+    quad_mesh = computil.quad_mesh {x=-1, y=-1, w=2, h=2}
 end
 
 local function is_slot_equal(lhs, rhs)

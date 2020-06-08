@@ -48,8 +48,8 @@ function util.draw_primitive(vid, primgroup, render_properties)
 		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
 	end
 	local start_v, num_v = vb.start, vb.num
-	for idx, v in ipairs(vb.handles) do
-		bgfx.set_vertex_buffer(idx-1, v.handle, start_v, num_v)
+	for idx, h in ipairs(vb.handles) do
+		bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
 	end
 	bgfx.submit(vid, prog, 0)
 end
@@ -285,7 +285,7 @@ function util.create_blit_queue(world, viewrect)
 			material = world.component "resource" "/pkg/ant.resources/materials/fullscreen.material",
 			blit_render = true,
 			name = "full_quad",
-			mesh = computil.fullquad_mesh(),
+			mesh = world:interface "ant.render|entity".fullquad_mesh(),
 		}
 	}
 end

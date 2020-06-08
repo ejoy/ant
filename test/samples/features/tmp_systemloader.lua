@@ -5,8 +5,7 @@ local fs = require 'filesystem'
 
 local math3d = require "math3d"
 
-local renderpkg = import_package 'ant.render'
-local computil  = renderpkg.components
+local computil = world:interface "ant.render|entity"
 
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
@@ -23,7 +22,7 @@ local function create_plane_test()
     }
 
     for _, p in ipairs(planes) do
-        computil.create_plane_entity(world,
+        computil.create_plane_entity(
             p.transform,
             p.material,
             p.color,
@@ -109,9 +108,9 @@ function init_loader_sys:init()
         ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
     end
 
-    computil.create_grid_entity(world)
+    computil.create_grid_entity()
 
-    computil.create_procedural_sky(world)
+    computil.create_procedural_sky()
     --target_lock_test()
 end
 

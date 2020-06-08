@@ -70,7 +70,7 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
     local function insert_blur_pass(fbidx, fbw, fbh, material, sampleparam, intensity)
         local passidx = #passes+1
 
-        local m = assetmgr.patch(assetmgr.load(material), {properties={}})
+        local m = assetmgr.patch(world.component "resource" (material), {properties={}})
         local properties = m.properties
         properties["u_sample_param"] = world.component "uniform" {type = "v4", name = "sample param", value = sampleparam}
         if intensity then
@@ -112,7 +112,7 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 
     passes[#passes+1] = {
         name = "combine scene with bloom",
-        material = assetmgr.load(combine_material:string()),
+        material = world.component "resource"(combine_material:string()),
         viewport = get_viewport(),
         output  = {fb_idx=next_fbidx(), rb_idx=1},
     }

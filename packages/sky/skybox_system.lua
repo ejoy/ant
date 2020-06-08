@@ -7,5 +7,5 @@ local computil = renderpkg.components
 local skybox_sys = ecs.system "skybox_system"
 
 function skybox_sys:init()
-    computil.create_skybox(world)
+    computil.create_skybox()
 end

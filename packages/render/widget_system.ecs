@@ -15,6 +15,7 @@ system "widget_drawer_system"
     .require_policy "ant.general|name"
     .require_policy "render"
     .require_policy "bounding_draw"
+    .require_interface "entity"
     .method "end_frame"
     .method "init"
 

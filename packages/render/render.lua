@@ -7,19 +7,10 @@ local ru 		= require "util"
 
 local math3d	= require "math3d"
 
-local assetmgr  = import_package "ant.asset"
-
 local ml = ecs.transform "mesh_loader"
 
 function ml.process(e)
-	local mesh_fielname = tostring(e.mesh)
-	local filename = mesh_fielname:match "[^:]+"
-	if filename == "table" then
-		filename = e.mesh.filename:match "[^:]+"
-	end
-	filename = filename:gsub("[|:]", "/")
-	local key = filename:gsub("%.meshbin$", ".rendermesh")
-	e.rendermesh = assetmgr.load(key, e.mesh)
+	e.rendermesh = e.mesh
 end
 
 local rt = ecs.component "render_target"

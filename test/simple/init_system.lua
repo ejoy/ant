@@ -1,11 +1,11 @@
 local ecs = ...
 local world = ecs.world
 local camera = world:interface "ant.render|camera"
-local render  = import_package 'ant.render'
+local entity = world:interface "ant.render|entity"
 local m = ecs.system 'init_system'
 
 function m:init()
-    render.components.create_procedural_sky(world)
+    entity.create_procedural_sky()
     local e = world:singleton_entity "main_queue"
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
     camera.bind(camera.create {
@@ -15,8 +15,7 @@ function m:init()
     }, "main_queue")
     --world:instance "res/plane.prefab"
     local cu = import_package "ant.render".components
-    cu.create_plane_entity(
-		world,
+    entity.create_plane_entity(
 		{srt = {t = {0, 0, 0, 1}, s = {50, 1, 50, 0}}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},

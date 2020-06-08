@@ -1,11 +1,6 @@
 local mathpkg   = import_package "ant.math"
 local mu = mathpkg.util
 local math3d = require "math3d"
-local assetmgr = import_package "ant.asset"
-local RES_IDX = 10080
-
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
 
 local function euler2quat(euler)
     return math3d.tovalue(math3d.quaternion(euler))
@@ -70,9 +65,9 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = computil.create_transform(world,{
-                srt = {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
-            }),
+            transform = world.component "transform" {
+                srt = world.component "srt" {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
+            },
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/ring.glb|meshes/mesh1_P1.meshbin",
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_singlecolor.material",
             --can_cast = true,
@@ -95,7 +90,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
 end
 
 local function create_line_entity(world, name, start_pos,end_pos,color,parent,dir)
-    local util  = import_package "ant.render".components
+    local computil = world:interface "ant.render|entity"
     local vb, ib = line(start_pos, end_pos, color)
     local gvb = {}
     for _, v in ipairs(vb) do
@@ -104,9 +99,6 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         end
     end
 
-    local filename = string.format("//res.mesh/line_%s.meshbin",RES_IDX)
-    RES_IDX = RES_IDX + 1
-    
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -116,14 +108,14 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = computil.create_transform(world),
+            transform = world.component "transform" {world.component "srt" {}},
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
             can_render = true,
             can_select = true,
             gizmo_object = {dir = dir},
             scene_entity = true,
-            mesh = util.create_mesh(filename, {"p3|c40niu", gvb}, ib),
+            mesh = computil.create_mesh({"p3|c40niu", gvb}, ib),
         },
         action = {
             mount = parent
@@ -132,8 +124,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
 end
 
 local function create_circle_entity(world, name,color,rot,parent,dir)
-    local util  = import_package "ant.render".components
-
+    local computil = world:interface "ant.render|entity"
     local vb, ib = circle(color)
     local gvb = {}
     for _, v in ipairs(vb) do
@@ -141,8 +132,6 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             table.insert(gvb, vv)
         end
     end
-    local filename = string.format("//res.mesh/circle_%s.meshbin",RES_IDX)
-    RES_IDX = RES_IDX + 1
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -152,16 +141,16 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = computil.create_transform(world,{
-                srt = {r = euler2quat(rot or {0, 0, 0})},
-            }),
+            transform = world.component "transform" {
+                srt = world.component "srt" {r = euler2quat(rot or {0, 0, 0})},
+            },
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_line.material",
             name = name,
             can_render = true,
             can_select = true,
             gizmo_object = {dir = dir},
             scene_entity = true,
-            mesh = util.create_mesh(filename, {"p3|c40niu", gvb}, ib),
+            mesh = computil.create_mesh({"p3|c40niu", gvb}, ib),
         },
         action = {
             mount = parent
@@ -179,9 +168,9 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = computil.create_transform(world,{
-                srt = {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
-            }),
+            transform = world.component "transform" {
+                srt = world.component "srt" {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
+            },
             mesh = world.component "resource""/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_singlecolor.material",
             can_render = true,
@@ -212,9 +201,9 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = computil.create_transform(world,{
-                srt = {s=size, t=pos},
-            }),
+            transform = world.component "transform" {
+                srt = world.component "srt" {s=size, t=pos},
+            },
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_singlecolor.material",
             can_render = true,
@@ -238,7 +227,6 @@ end
 local Util = {}
 function Util.create_gizmo(world)
     local function create_gizmo_object(name,parent)
-        local trans = computil.create_transform(world)
         local args = {
             policy={
                 "ant.general|name",
@@ -246,7 +234,7 @@ function Util.create_gizmo(world)
                 "ant.test.animation|gizmo_object",
             },
             data={
-                transform = trans,
+                transform = world.component "transform" {world.component "srt" {}},
                 name = name,
                 gizmo_object = {},
             },

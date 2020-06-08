@@ -48,9 +48,7 @@ local function fetch_ib_buffer(gltfscene, bindata, index_accessor)
 		error(("invalid index buffer elemenet size: %d"):format(elemsize))
 	end
 	return {
-		value = value,
-		start = 1,
-		num = #value,
+		memory = {value, 1, #value},
 		flag = (elemsize == 4 and 'd' or ''),
 	}
 end
@@ -193,10 +191,8 @@ local function fetch_vb_buffers(gltfscene, gltfbin, attributes)
 
 		local bindata = table.concat(buffer, "")
 		attribuffers[bufferidx] = {
-			start 	= 1,
-			declname= table.concat(declname, "|"),
-			value 	= bindata,
-			num 	= #bindata,
+			declname = table.concat(declname, "|"),
+			memory = {"!", bindata, 1, #bindata},
 		}
 		bufferidx = bufferidx+1
 	end
@@ -294,9 +290,7 @@ local function export_meshbin(gltfscene, bindata, exports)
 		for primidx, prim in ipairs(mesh.primitives) do
 			local primname = "P" .. primidx
 			local resname = meshname .. "_" .. primname .. ".meshbin"
-			local group = {
-				mode = prim.mode
-			}
+			local group = {}
 
 			group.vb = {
 				values 	= fetch_vb_buffers(gltfscene, bindata, prim.attributes),

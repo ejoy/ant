@@ -4,8 +4,8 @@ local world = ecs.world
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
 
-local renderpkg  = import_package 'ant.render'
 local math3d  = require 'math3d'
+local computil = world:interface "ant.render|entity"
 
 local eventInstancePrefab = world:sub {"instance_prefab"}
 local eventSerializePrefab = world:sub {"serialize_prefab"}
@@ -84,7 +84,7 @@ local function serializePrefab(filename)
 end
 
 function m:init()
-    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
+    computil.create_grid_entity("", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
     world:instance '/pkg/tools.viewer.prefab_viewer/light_directional.prefab'
 
     if fs.exists(fs.path "/pkg/tools.viewer.prefab_viewer/res/root/mesh.prefab") then

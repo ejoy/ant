@@ -2,8 +2,7 @@ local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
 
-local renderpkg = import_package "ant.render"
-local cu = renderpkg.components
+local computil = world:interface "ant.render|entity"
 local st_sys = ecs.system "shadow_test_system"
 
 local mathpkg = import_package "ant.math"
@@ -20,12 +19,12 @@ function st_sys:init()
 			can_cast = true,
 			scene_entity = true,
 			can_render = true,
-			transform = cu.create_transform(world, {
-				srt={
+			transform = world.component "transform" {
+				srt= world.component "srt" {
 					s={100},
 					t={0, 2, 0, 0}
 				}
-			}),
+			},
 			material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",
 			mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 			name = "cast_shadow_cube",
@@ -49,8 +48,7 @@ function st_sys:init()
 	}
 	world:instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab", {import={root=rooteid}})
 
-    cu.create_plane_entity(
-		world,
+    computil.create_plane_entity(
 		{srt = {t = {0, 0, 0, 1}, s = {50, 1, 50, 0}}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
@@ -80,7 +78,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform = cu.create_transform(world, {srt=srt}),
+			transform = world.component "transform" {srt= world.component "srt"(srt)},
 			name = "directional light arrow",
 		},
 	}
@@ -116,12 +114,12 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		data = {
 			scene_entity = true,
 			can_render = true,
-			transform = cu.create_transform(world,{
-				srt = {
+			transform = world.component "transform" {
+				srt = world.component "srt" {
 					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
 					t = math3d.ref(cylinder_offset),
 				},
-			}),
+			},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder",
@@ -143,7 +141,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		data = {
 			scene_entity = true,
 			can_render = true,
-			transform = cu.create_transform(world, {srt={s={100}, t=cone_offset}}),
+			transform = world.component "transform" {srt=world.component "srt"{s={100}, t=cone_offset}},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"

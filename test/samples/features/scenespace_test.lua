@@ -17,9 +17,9 @@ function sp_test_sys:init()
         },
         data = {
             name = "root",
-            transform = computil.create_transform(world, {
-                srt={t={0, 1, 0, 1}}
-            })
+            transform = world.component "transform" {
+                srt=world.component "srt"{t={0, 1, 0, 1}}
+            }
         }
     }
 
@@ -36,12 +36,12 @@ function sp_test_sys:init()
             can_render = true,
             material = material,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
-            transform = computil.create_transform(world, {
-                srt={
+            transform = world.component "transform" {
+                srt=world.component "srt"{
                     s = {100,},
                     t={1, 2, 0, 1},
                 }
-            }),
+            },
             scene_entity = true,
         },
         action = {
@@ -61,13 +61,13 @@ function sp_test_sys:init()
             can_render = true,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = material,
-            transform = computil.create_transform(world, {
-                srt = {
+            transform = world.component "transform" {
+                srt = world.component "srt" {
                     s = {100,},
                     r = {math.rad(math.cos(30)), 0, 0, math.rad(math.sin(30))}, --rotate 60 degree
                     t = {1, 2, 0, 1}
                 }
-            }),
+            },
         },
         action = {
             mount= child1
@@ -82,9 +82,12 @@ function sp_test_sys:init()
         },
         data = {
             name = "child2",
-            transform = computil.create_transform(world,
-                { srt = {s = {1, 2, 1, 0},
-                t = {3, 3, 5}}}),
+            transform = world.component "transform" {
+                srt = world.component "srt" {
+                    s = {1, 2, 1, 0},
+                    t = {3, 3, 5}
+                }
+            },
             scene_entity = true,
         },
         action = {
@@ -104,12 +107,12 @@ function sp_test_sys:init()
             scene_entity = true,
             material = material,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-            transform = computil.create_transform(world, {
-                srt={
+            transform = world.component "transform" {
+                srt = world.component "srt" {
                     s = {100,},
                     t ={1, 2, 0, 1}
                 }
-            }),
+            },
         },
         action = {
             mount = child2,

@@ -96,30 +96,23 @@ function trt.process(e)
 	local numvertices = (gridwidth + 1) * (gridheight + 1)
 	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
 	local numindices = gridwidth * gridheight * 2 * 3
-	e.mesh = {
-		filename = assetmgr.generate_resource_name("mesh", "terrain.meshbin"),
+	e.mesh = world.component "mesh" {
 		vb = {
 			start = 0,
 			num = numvertices,
 			values = {{
 				declname = "p3",
-				start = 0,
-				num = numvertices * pos_decl.stride,
-				value = terraindata.terrain_vertices,
+				memory = {"!", terraindata.terrain_vertices, 0, numvertices * pos_decl.stride},
 			},{
 				declname = "n3",
-				start = 0,
-				num = 1 + numvertices * normal_decl.stride,
-				value = terraindata.terrain_normaldata,
+				memory = {"!", terraindata.terrain_normaldata, 0, numvertices * normal_decl.stride},
 			}},
 		},
 		ib = {
 			start = 0,
 			num = numindices,
 			value = {
-				start = 0,
-				num = 1 + numindices * 4,
-				value = terraindata.terrain_indices,
+				memory = {terraindata.terrain_indices, 0, numvertices * 4},
 			},
 		}
 	}

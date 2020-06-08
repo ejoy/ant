@@ -1,32 +1,54 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
 local math3d = require "math3d"
-
-local assetmgr = import_package "ant.asset"
-
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
-
 local geometry_drawer = import_package "ant.geometry".drawer
-
 local bgfx = require "bgfx"
-local fs = require "filesystem"
-
 local widget_drawer_sys = ecs.system "widget_drawer_system"
 
-function widget_drawer_sys:init()
-	world:add_policy(
-		computil.create_simple_render_entity(world, nil, "/pkg/ant.resources/materials/line.material", "mesh_bounding_renderer", computil.create_dynamic_mesh("//res.mesh/bounding.meshbin", "p3|c40niu", 1024, 2048)),
-		{
-			policy = {"ant.render|bounding_draw"},
-			data = {
-				widget_drawer = true,
-			}
+local function create_dynamic_mesh(layout, num_vertices, num_indices)
+	local declmgr = import_package "ant.render".declmgr
+	local decl = declmgr.get(layout)
+	local vb_size = num_vertices * decl.stride
+	assert(num_vertices <= 65535)
+	local ib_size = num_indices * 2
+	return {
+		vb = {
+			start = 0,
+			num = num_vertices,
+			handles = {
+				bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")
+			},
+		},
+		ib = {
+			start = 0,
+			num = num_indices,
+			handle = bgfx.create_dynamic_index_buffer(ib_size, "a")
 		}
-	)
+	}
+end
+
+function widget_drawer_sys:init()
+	world:create_entity {
+		policy = {
+			"ant.render|render",
+			"ant.render|bounding_draw",
+		},
+		data = {
+			transform = world.component "transform" {srt = world.component "srt" {}},
+			material = world.component "resource" "/pkg/ant.resources/materials/line.material",
+			mesh = nil,
+			can_render = true,
+			scene_entity = true,
+			widget_drawer = true,
+		}
+	}
+	local dmesh = world:singleton_entity "widget_drawer"
+	dmesh.rendermesh = create_dynamic_mesh("p3|c40niu", 1024, 2048)
+	dmesh.bounding_draw = {
+		vertex_offset = 0,
+		index_offset = 0,
+	}
 end
 
 function widget_drawer_sys:end_frame()
@@ -37,8 +59,8 @@ function widget_drawer_sys:end_frame()
 		vbdesc.start, vbdesc.num = 0, 0
 		ibdesc.start, ibdesc.num = 0, 0
 
-		vbdesc.handles[1].updateoffset = 0
-		ibdesc.updateoffset = 0
+		dmesh.bounding_draw.vertex_offset = 0
+		dmesh.bounding_draw.index_offset = 0
 	end
 end
 
@@ -60,23 +82,24 @@ local function append_buffers(vb, ib)
 		return
 	end
 	local dmesh = world:singleton_entity "widget_drawer"
+	local bounding_draw = dmesh.bounding_draw
 	local primgroup = dmesh.rendermesh
 	local vbdesc, ibdesc = primgroup.vb, primgroup.ib
 
 	vbdesc.num = vbdesc.num + numvertices
 
 	local vbhandle = vbdesc.handles[1]
-	local vertex_offset = vbhandle.updateoffset or 0
-	bgfx.update(vbhandle.handle, vertex_offset, vb);
-	vbhandle.updateoffset = vertex_offset + numvertices
+	local vertex_offset = bounding_draw.vertex_offset
+	bgfx.update(vbhandle, vertex_offset, vb);
+	bounding_draw.vertex_offset = vertex_offset + numvertices
 
 	local numindices = #ib
 	if numindices ~= 0 then
 		ibdesc.num = ibdesc.num + numindices
-		local index_offset = ibdesc.updateoffset or 0
+		local index_offset = bounding_draw.index_offset
 		local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
 		bgfx.update(ibdesc.handle, index_offset, newib)
-		ibdesc.updateoffset = index_offset + numindices
+		bounding_draw.index_offset = index_offset + numindices
 	end
 end
 

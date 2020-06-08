@@ -1,18 +1,11 @@
 local ecs = ...
 local world = ecs.world
 
-local fs = require "filesystem"
-
-local mathpkg   = import_package "ant.math"
-local mu        = mathpkg.util
 local math3d    = require "math3d"
 
-local renderpkg = import_package "ant.render"
-local computil  = renderpkg.components
+local computil = world:interface "ant.render|entity"
 
 local char_ik_test_sys = ecs.system "character_ik_test_system"
-
-local entitydir = fs.path "/pkg/ant.test.features/assets/entities"
 
 local function v4(...)return world.component "vector"(...)end
 
@@ -21,7 +14,7 @@ local function foot_ik_test()
 end
 
 local function create_plane_test()
-    return computil.create_plane_entity(world,
+    return computil.create_plane_entity(
     {srt = {
         s = {5, 1, 5, 0},
         r = math3d.tovalue(math3d.quaternion{math.rad(10), 0, 0}),

@@ -1,9 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
-local renderpkg  = import_package 'ant.render'
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
+local computil = world:interface "ant.render|entity"
 
 local drawer = world:interface "ant.render|iwidget_drawer"
 
@@ -33,7 +33,7 @@ local function create_prefab(prefab, srt)
 end
 
 function init_loader_sys:init()
-    renderpkg.components.create_grid_entity(world, "", nil, nil, nil, {srt = {r = {0,0.92388,0,0.382683}}})
+    computil.create_grid_entity( "", nil, nil, nil, {srt = {r = {0,0.92388,0,0.382683}}})
     world:instance "res/light_directional.prefab"
 
     create_prefab("res/gltf_animation.prefab", {

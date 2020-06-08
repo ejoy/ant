@@ -5,3 +5,7 @@ component "material"
 component "prefab"
     .implement "ext_prefab.lua"
     .method "init"
+
+component "mesh"
+    .implement "mesh.lua"
+    .method "init"

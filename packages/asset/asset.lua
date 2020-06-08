@@ -14,7 +14,6 @@ local ext_bin = {
 }
 
 local ext_tmp = {
-	rendermesh 	= true,
 	dynamicfx   = true,
 }
 
@@ -131,10 +130,10 @@ function assetmgr.init()
 			return require("ext_" .. ext).loader(data)
 		end
 		glb_load(filename)
-		if ext_bin[ext] then
-			return require("ext_" .. ext).loader(filename)
-		end
 		local world = data
+		if ext_bin[ext] then
+			return require("ext_" .. ext).loader(filename, world)
+		end
 		return resource_init(world, ext, filename)
 	end
 	local function unloader(filename, data, res)
@@ -144,31 +143,16 @@ function assetmgr.init()
 			return
 		end
 		glb_unload(filename)
+		local world = data
 		if ext_bin[ext] then
-			require("ext_" .. ext).unloader(res)
+			require("ext_" .. ext).unloader(res, world)
 			return
 		end
-		local world = data
 		resource_delete(world, ext, res)
 	end
 	resource.register(loader, unloader)
 end
 
 assetmgr.patch = resource.patch
-
-local resource_cache = {}
-function assetmgr.generate_resource_name(restype, name)
-	local key = ("//res.%s/%s"):format(restype, name)
-	local idx = resource_cache[key]
-	if idx == nil then
-		resource_cache[key] = 0
-		return key
-	end
-
-	idx = idx + 1
-	resource_cache[key] = idx
-	local n, ext = name:match "([^.]+)%.(.+)$"
-	return ("//res.%s/%s%d.%s"):format(restype, n, idx, ext)
-end
 
 return assetmgr

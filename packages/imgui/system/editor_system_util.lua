@@ -138,8 +138,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
     local num_vertices = #vb
     local num_indices = #ib
 
-    local filename = assetmgr.generate_resource_name("mesh", "line.meshbin")
-    world:add_component(gridid, "mesh", assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
+    world:add_component(gridid, "mesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
@@ -181,8 +180,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
     local num_vertices = #vb
     local num_indices = #ib
 
-    local filename = assetmgr.generate_resource_name("mesh", "circle.meshbin")
-    world:add_component(gridid, "mesh", assetmgr.load(filename, util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices)))
+    world:add_component(gridid, "mesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
