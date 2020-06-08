@@ -48,6 +48,6 @@ function localvfs.repo()
 	return repo
 end
 
-localvfs.new(lfs.path(arg[0]):remove_filename())
+localvfs.new(lfs.absolute(lfs.path(arg[0])):remove_filename())
 
 package.loaded.vfs = localvfs
