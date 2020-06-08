@@ -6,10 +6,24 @@ Ant 游戏引擎
 > git submodule update --init
 
 ### 搭建MINGW环境
-*由于3rd工程需要make命令，如果在msvc中使用cmake手动生成的话，理论上不需要搭建这个环境*
-- 下载msys2：https://www.msys2.org/；
-- 下载完后安装，安装完成后（假设安装目录在d:/msys64)，在d:/msys64/etc/pacman.d下，可以见到：mirrorlist.mingw32/mirrorlist.mingw64/mirrorlist.msys。其中mingw32对应32位的mingw，而mingw64对应64位的mingw。而msys对应的是两者。次序分别是ming32/ming64，然后才是msys。添加下面的镜像：Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/x86_64/；
-- 需要安装：gcc/make/cmake至少这三个命令，需要注意的是，使用pacman安装某些包，如gcc和cmake，都需要指定到mingw（因为msys下，有gnu的包）。gcc：mingw-w64-x86_64-gcc cmake： mingw-w64-x86_64-cmake。（经验就是，gun下的包，都需要添加'mingw-w64-x86_64-'后带对应的包名）；
+- 下载并安装[msys2](https://www.msys2.org/)
+
+- 修改镜像服务器
+``` bash
+echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/i686/" > /etc/pacman.d/mirrorlist.mingw32
+echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/x86_64/" > /etc/pacman.d/mirrorlist.mingw64
+echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/msys/$arch/" > /etc/pacman.d/mirrorlist.msys
+```
+
+- 把ming64的路径加到环境变量
+``` bash
+echo "export PATH=/mingw64/bin:$PATH" >> ~/.bash_profile
+```
+
+- 安装gcc/make/cmake
+``` bash
+pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
+```
 
 
 ### 编译
@@ -20,9 +34,11 @@ Ant 游戏引擎
 
 #### 编译3rd
 
-> $cd 3rd  
-> $make init MODE=debug #PLAT=mingw/msvc/osx/ios, MODE默认是release  
-> $make all MODE=debug -j8	#PLAT=xxx, msvc目前无法直接通过命令行编译  
+``` bash
+cd 3rd  
+make init MODE=debug/release PLAT=mingw/msvc/osx/ios
+make all -j8 MODE=debug/release	PLAT=mingw/msvc/osx/ios
+```
 
 此外，如果要重新生成指定3rd中的库可以：
 > $cd 3rd  
