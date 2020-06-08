@@ -42,16 +42,18 @@ make all -j8 MODE=debug/release	PLAT=mingw/msvc/osx/ios
 
 也可以单独编译一个项目
 ``` bash
-> cd 3rd  
-> make $(ProjectName)_init MODE=debug/release PLAT=mingw/msvc/osx/ios
-> make $(ProjectName)_make MODE=debug/release PLAT=mingw/msvc/osx/ios
+cd 3rd  
+make $(ProjectName)_init MODE=debug/release PLAT=mingw/msvc/osx/ios
+make $(ProjectName)_make MODE=debug/release PLAT=mingw/msvc/osx/ios
 ```
 #### 编译clibs  
 
 *OSX平台下面的文件名称与window下面的文件名称一致，即动态库的后缀仍然是dll，可执行文件的后缀仍然是ant.exe*
 
-> $cd clibs  
-> $make $(foldername) -jn BIN=../bin	PLAT=$(PLAT) MODE=debug #其中make *$(foldername)*可以编译其中指定文件夹下的binding库。其中BIN的宏用于指定编译后的lib存放的位置
+``` bash
+cd clibs  
+make -j8 MODE=debug/release
+```
 
 如果需要编译msvc，那么直接打开：
 > $(antfolder)/projects/msvc/ant.sln  
