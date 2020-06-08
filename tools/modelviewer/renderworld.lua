@@ -42,7 +42,7 @@ function m:init()
 	create_light()
 	computil.create_procedural_sky()
 	computil.create_plane_entity(
-		{srt = {s = {50, 1, 50, 0}}},
+		{s = {50, 1, 50, 0}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"

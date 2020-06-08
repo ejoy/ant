@@ -15,7 +15,7 @@ local init_loader_sys = ecs.system 'init_loader_system'
 local function create_plane_test()
     local planes = {
         {
-            transform = {srt={s ={50, 1, 50}}},
+            srt = {s ={50, 1, 50}},
             color = {0.8, 0.8, 0.8, 1},
             material = "/pkg/ant.resources/materials/mesh_shadow.material",
         },
@@ -23,7 +23,7 @@ local function create_plane_test()
 
     for _, p in ipairs(planes) do
         computil.create_plane_entity(
-            p.transform,
+            p.srt,
             p.material,
             p.color,
             "test shadow plane",

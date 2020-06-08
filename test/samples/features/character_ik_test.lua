@@ -15,11 +15,11 @@ end
 
 local function create_plane_test()
     return computil.create_plane_entity(
-    {srt = {
+    {
         s = {5, 1, 5, 0},
         r = math3d.tovalue(math3d.quaternion{math.rad(10), 0, 0}),
         t = {0, 0, -5, 1}
-    }},
+    },
     "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
     {0.5, 0.5, 0, 1},
     "test shadow plane",

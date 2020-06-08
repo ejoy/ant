@@ -39,7 +39,7 @@ local function create_mesh(vb_lst, ib)
 			declname = correct_layout,
 			memory = {"!",vb_value,1,#vb_value},
 		}
-		num = num + #vb
+		num = num + #vb / #flag
 	end
 	mesh.vb.num = num
 	if ib then
@@ -109,20 +109,22 @@ local function get_plane_mesh()
 	return plane_mesh
 end
 
-function util.create_plane_entity(trans, materialpath, color, name, info)
+function util.create_plane_entity(srt, materialpath, color, name, info)
 	local policy = {
 		"ant.render|render",
 		"ant.general|name",
 	}
 
 	local data = {
-		transform = world.component "transform" {world.component "srt"(trans and trans.srt or {})},
+		transform = world.component "transform" {srt = world.component "srt"(srt or {})},
 		material = world.component "resource"(materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material"),
 		can_render = true,
 		name = name or "Plane",
 		scene_entity = true,
 		mesh = get_plane_mesh(),
 	}
+
+	local t = data.transform
 
 	if info then
 		for policy_name, dd in pairs(info) do

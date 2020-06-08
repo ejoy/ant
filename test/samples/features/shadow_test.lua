@@ -49,7 +49,7 @@ function st_sys:init()
 	world:instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab", {import={root=rooteid}})
 
     computil.create_plane_entity(
-		{srt = {t = {0, 0, 0, 1}, s = {50, 1, 50, 0}}},
+		{t = {0, 0, 0, 1}, s = {50, 1, 50, 0}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"
