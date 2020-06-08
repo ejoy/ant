@@ -300,8 +300,8 @@ end
 
 local axis_ib = {
 	0, 1,
-	0, 2, 
-	0, 3,
+	2, 3, 
+	4, 5,
 }
 function util.create_axis_entity(world, transform, color, name)
 	local axis_vb = {
@@ -314,6 +314,16 @@ function util.create_axis_entity(world, transform, color, name)
 	}
 	local resname = assetmgr.generate_resource_name("mesh", "axis.meshbin")
 	local mesh = create_mesh(resname, {"p3|c40niu", axis_vb}, axis_ib)
+	return util.create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, mesh)
+end
+
+function util.create_aabb_entity(world, aabb, transform, color, name)
+	local drawer = import_package "ant.geometry".drawer
+	local desc={vb={}, ib={}}
+	drawer.draw_aabb_box(aabb, color, transform, desc)
+	
+	local resname = assetmgr.generate_resource_name("mesh", "test_aabb.meshbin")
+	local mesh = create_mesh(resname, {"p3|c40niu", desc.vb}, desc.ib)
 	return util.create_simple_render_entity(world, transform, "/pkg/ant.resources/materials/line.material", name, mesh)
 end
 
