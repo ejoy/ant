@@ -108,7 +108,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component "transform" {world.component "srt" {}},
+            transform = world.component "transform" {srt=world.component "srt" {}},
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
             can_render = true,
@@ -234,7 +234,7 @@ function Util.create_gizmo(world)
                 "ant.test.animation|gizmo_object",
             },
             data={
-                transform = world.component "transform" {world.component "srt" {}},
+                transform = world.component "transform" {srt=world.component "srt" {}},
                 name = name,
                 gizmo_object = {},
             },

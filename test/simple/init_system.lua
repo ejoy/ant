@@ -14,9 +14,8 @@ function m:init()
         frustum = {f = 1000}
     }, "main_queue")
     --world:instance "res/plane.prefab"
-    local cu = import_package "ant.render".components
     entity.create_plane_entity(
-		{t = {0, 0, 0, 1}, s = {5000, 1, 5000, 0}},
+		{t = {0, 0, 0, 1}, s = {500, 1, 500, 0}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
 		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"

@@ -50,6 +50,8 @@ local function fetch_ib_buffer(gltfscene, bindata, index_accessor)
 	return {
 		memory = {value, 1, #value},
 		flag = (elemsize == 4 and 'd' or ''),
+		start 	= 0,
+		num 	= index_accessor.count,
 	}
 end
 
@@ -133,7 +135,8 @@ local default_layouts = {
 	TEXCOORD_7 	= 3,
 }
 
-local function fetch_vb_buffers(gltfscene, gltfbin, attributes)
+local function fetch_vb_buffers(gltfscene, gltfbin, prim)
+	local attributes = prim.attributes
 	local attribclasses = {}
 	for attribname, accidx in pairs(attributes) do
 		local which_layout = default_layouts[attribname]
@@ -197,6 +200,8 @@ local function fetch_vb_buffers(gltfscene, gltfbin, attributes)
 		bufferidx = bufferidx+1
 	end
 
+	attribuffers.start 	= 0
+	attribuffers.num 	= gltfutil.num_vertices(prim, gltfscene)
 	return attribuffers
 end
 
@@ -292,20 +297,12 @@ local function export_meshbin(gltfscene, bindata, exports)
 			local resname = meshname .. "_" .. primname .. ".meshbin"
 			local group = {}
 
-			group.vb = {
-				values 	= fetch_vb_buffers(gltfscene, bindata, prim.attributes),
-				start 	= 0,
-				num 	= gltfutil.num_vertices(prim, gltfscene),
-			}
+			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
 
 			local indices_accidx = prim.indices
 			if indices_accidx then
 				local idxacc = gltfscene.accessors[indices_accidx+1]
-				group.ib = {
-					value 	= fetch_ib_buffer(gltfscene, bindata, idxacc),
-					start 	= 0,
-					num 	= idxacc.count,
-				}
+				group.ib = fetch_ib_buffer(gltfscene, bindata, idxacc)
 			end
 
 			local bb = create_prim_bounding(gltfscene, prim)
