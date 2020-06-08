@@ -40,14 +40,12 @@ make init MODE=debug/release PLAT=mingw/msvc/osx/ios
 make all -j8 MODE=debug/release	PLAT=mingw/msvc/osx/ios
 ```
 
-此外，如果要重新生成指定3rd中的库可以：
-> $cd 3rd  
-> $make *$(project)*_init PLAT=ios MODE=debug	#初始化指定的project，如：make bgfx_init，此外， PLAT宏依然可用  
-> $make *$(project)*_make	#生成指定的project，如：make bgfx_make  
-
-生成的工程文件会在：
-> 3rd/build/*$(project)*/*(mingw|OSX|msvc)*	#分别对应不同平台（通过PLAT宏来指定）
-
+也可以单独编译一个项目
+``` bash
+> cd 3rd  
+> make $(ProjectName)_init MODE=debug/release PLAT=mingw/msvc/osx/ios
+> make $(ProjectName)_make MODE=debug/release PLAT=mingw/msvc/osx/ios
+```
 #### 编译clibs  
 
 *OSX平台下面的文件名称与window下面的文件名称一致，即动态库的后缀仍然是dll，可执行文件的后缀仍然是ant.exe*
