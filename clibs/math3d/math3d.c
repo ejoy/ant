@@ -1365,7 +1365,7 @@ static int
 laabb_append(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *aabb = matrix_from_index(L, LS, 1);
-	lua_settop(L, 2);
+	lua_remove(L, 1);
 	generate_aabb(L, LS, aabb);
 	return 1;
 }
