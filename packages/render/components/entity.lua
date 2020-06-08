@@ -43,7 +43,7 @@ local function create_mesh(vb_lst, ib)
 	end
 	mesh.vb.num = num
 	if ib then
-		local ib_value = ib and create_ib_buffer(ib)
+		local ib_value = create_ib_buffer(ib)
 		mesh.ib = {
 			start = 0, num = #ib,
 			value = {
