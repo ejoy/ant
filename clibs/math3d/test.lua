@@ -1,250 +1,219 @@
-_DEBUG = 100 -- dectect memory leak
-
 local math3d = require "math3d"
---[[
-	local vec = math3d.ref "vector"	-- new vector ref object
-	local mat = math3d.ref "matrix"	-- new matrix ref object
 
-	= : assign an object to a ref object
-	P : pop and return id ( ... , 1 -> ... )
-	m : pop and return matrix pointer ( ... , 1 -> ... )
-	V : top to string for debug ( ... -> ... )
-	T : pop stack elem to lua
-	1-9 : dup stack index (..., 1 -> ..., 1,1)
-		1 : (..., 1 -> ..., 1,1)
-		2 : (..., 2, 1 -> ..., 2, 1, 2)
-		...
-		9 : (...,9,8,7,6,5,4,3,2,1 -> ... , 9,8,7,6,5,4,3,2,1,9)
-		22 means ( ..., a, b -> ..., a, b, a, b)
-	S : swap stack top (..., 1,2 -> ..., 2,1 )
-	R : remove stack top ( ..., 1 -> ... )
-	d : convert rotation vec to view direcion	-- rotation vec is vec4 and x for rotating x-axis, y for rotatiing y-axis, z for rotatiing z-axis
-	D : convert view direction to rotation vec
+local ref1 = math3d.ref()
 
-	{ 1,2,3,4 }	  push vector4(1,2,3,4)
-	{ 1,2,3,4, .... 16 } push matrix4x4
+ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
+local ref2 = math3d.ref()
+ref2.v = math3d.vector(1,2,3,4)
+print("ref1", ref1)
+print("ref1 value", math3d.tostring(math3d.matrix(ref1)))
+print(ref2)
+print("ref2 value", math3d.tostring(math3d.vector(ref2)))
+ref2.v = math3d.pack("dddd", 1,2,3,4)
+print(ref2)
+ref2.v = math3d.vector(ref2, 1)
+print("ref2", ref2)
 
-	{ type = "mat", fov = 60, aspect = 1024/768 , n = 0.1, f = 100, }	-- proj mat
-	{ type = "mat", l = 0, r = 1, b = 1, t = 0, n = 0, f = 100, ortho = true, h = false } -- ortho mat
-	{ type = "quat", 0, 0, 0, 1}	-> quaternion, for x, y, z, w
-	{ type = "quat", axis = {0, 0, 0}, radian = {60}} -> quaternion from axis and angle
-	* matrix mul ( ..., 1,2 - > ..., 1*2 )
-	* vector4 * matrix4x4 / vec4 * vec4 / quat * quat / quat * vec4
-	+ vector4 + vector4 ( ..., 1,2 - > ..., 1+2 )
-	- vec4 - vec4 ( ..., 1,2 - > ..., 1-2 )
-	. vec3 * vec3  ( ..., 1,2 -> ..., { dot(1,2) , 0 , 0 ,1 } )
-	% vec4 * matrix4x4 -> vec4 /= vec4.w
-	~ matrix to scale/rotation(rad)/tranlste (..., mat -> ... t, r, s)
-	x cross (vec3 , vec3) ( ..., 1, 2, -> ... , cross(1,2) )
-	i inverted matrix  ( ..., 1 -> ..., invert(1) )
-	t transposed matrix ( ..., 1 -> ..., transpose(1) )
-	n normalize vector3 ( ..., 1 -> ..., {normalize(1) , 1} )
-	l generate lookat matrix ( ..., eye, at -> ..., lookat(eye,at) )
-	b extract matrix base orthogonal axis[xyz]
-]]
+for i = 1,4 do
+	print("ref1 Line", i, math3d.tostring(ref1[i]))
+end
 
-local stackobj = math3d.new()
+for i = 1,4 do
+	print("ref2 index", i, math3d.index(ref2,i))
+end
 
-local stack = stackobj:command()
---	stack is the same as stackobj
---  stack(...) is equivalent to debug.getmetatable(stackobj).__call(stackobj, ...)
+print "===SRT==="
+ref1.m = { s = 1, r = { 0, math.rad(60), 0 }, t = { 1,2,3} }
+print(ref1)
+local s,r,t = math3d.srt(ref1)
+print("S = ", math3d.tostring(s))
+print("R = ", math3d.tostring(r))
+print("T = ", math3d.tostring(t))
 
--- NOTICE: We should remember to call math3d.unref(refobj) or refobj(nil)
+local function print_srt()
+	print("S = ", math3d.tostring(ref1.s))
+	print("R = ", math3d.tostring(ref1.r))
+	print("T = ", math3d.tostring(ref1.t))
+end
 
-local quat = stackobj:ref "quaternion" {type='q', 0, 0, 0, 1}
-math3d.reset(stackobj)
-print(stack(quat, "V"))
+print_srt()
+ref1.s = 1
+print_srt()
+ref1.s = { 3,2,1 }
+print_srt()
 
-local vec = math3d.ref "vector"
-local mat = math3d.ref "matrix"	-- matrix ref
+print "===QUAT==="
 
+local q = math3d.quaternion { 0, math.rad(60, 0), 0 }
+print(math3d.tostring(q))
+local ref3 = math3d.ref()
+ref3.m = math3d.quaternion { axis = {1,0,0}, r = math.rad(60) } -- init mat with quat
+print(ref3)
+ref3.q = ref3	-- convert mat to quat
+print(ref3)
+
+print "===FUNC==="
+print(ref2)
+ref2.v = math3d.add(ref2,ref2,ref2)
+print(ref2)
+ref2.v = math3d.mul(ref2, 2.5)
+print("length", ref2, "=", math3d.length(ref2))
+print("floor", ref2, "=", math3d.tostring(math3d.floor(ref2)))
+print("dot", ref2, ref2, "=", math3d.dot(ref2, ref2))
+print("cross", ref2, ref2, "=", math3d.tostring(math3d.cross(ref2, ref2)))
+local point = math3d.vector(1, 2, 3, 1)
+print("transformH", ref1, point, "=", math3d.tostring(math3d.transformH(ref1, point)))
+print("normalize", ref2, "=", math3d.tostring(math3d.normalize(ref2)))
+print("normalize", ref3, "=", math3d.tostring(math3d.normalize(ref3)))
+print("transpose", ref1, "=", math3d.tostring(math3d.transpose(ref1)))
+print("inverse", ref1, "=", math3d.tostring(math3d.inverse(ref1)))
+print("inverse", ref2, "=", math3d.tostring(math3d.inverse(ref2)))
+print("inverse", ref3, "=", math3d.tostring(math3d.inverse(ref3)))
+print("reciprocal", ref2, "=", math3d.tostring(math3d.reciprocal(ref2)))
+
+print "===MULADD==="
 do
-	local line1 = stackobj:vector()	-- (0,0,0,1)
-	local line2 = stackobj:vector(1,2,3)	-- (1,2,3,0)
-	local line3 = stackobj:vector(4,5,6,7)
-	local line4 = stackobj:vector(8,9,10,11)
-	local mat1 = stackobj:matrix(line1,line2,line3,line4)
-	print(stack(mat1, "VR"))
-	local mat1 = stackobj:matrix(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
-	print(stack(mat1, "VR"))
-
-	mat1 = stackobj:matrix() -- (1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
-	print(stack(mat1, "VR"))
-
-
-	local q0 = stackobj:quaternion(0, 0, 0, 1)
-	local q1 = stackobj:quaternion()
-	print(stack(q0, "VR"))
-	print(stack(q1, "VR"))
+	local v1, v2 = math3d.vector(1, 2, 3, 0), math3d.vector(1, 0, 0, 0)
+	local p = math3d.vector(4, 1, 0, 1)
+	local r = math3d.muladd(v1, v2, p)
+	print("muladd:", math3d.tostring(v1), math3d.tostring(v2), math3d.tostring(p), "=", math3d.tostring(r))
 end
 
--- # turn on log
-local v = stack("#", { type = "mat", fov = 60, aspect = 1024/768 } , "VR")	-- make a proj mat
-print(v)
-
-local orthmat = stack({type="m", l=-1, r=1, t=1, b=-1, n=1, f=1000, ortho=true}, "V")	-- make a ortho mat
-print(orthmat)
-
-stack( "#", vec, stackobj:vector( 1,2,3,1 ) , "1+=")	-- dup {1,2,3,4} add self and then assign to vec
-
-local vv = stack({1, 2, 3, 1}, {2}, "*V")
-print("vec4 mul : " .. vv)
-print("unpack", stack("#>VRVRVRVR"))	-- unpack top {1*2,2*2,3*2,1*2} -> 2,4,6,2
-
--- pop to lua
-stack({1, 2, 3, 1})
-local data = stack("T")
-assert(type(data) == "table")
-assert(data.type ~= nil)
-print("data.type : ", data.type)
-for k,v in ipairs(data) do
-	print("k : ", k, ", v : ", v)
-end
-
---rotation view vector
+print "===VIEW&PROJECTION MATRIX==="
 do
-	local zdir = stack(stackobj:euler2quat{math.rad(60), math.rad(30), 0, 0}, "dP")
-	print("zdir : ", stack(zdir, "V"))
-	local rot = stack(zdir, "DP")
-	print("rot : ", stack(rot, "V"))
+	local eyepos = math3d.vector{0, 5, -10}
+	local at = math3d.vector {0, 0, 0}
+	local direction = math3d.normalize(math3d.vector {1, 1, 1})
+	local updir = math3d.vector {0, 1, 0}
 
-	print(stack(stackobj:forward_dir(stackobj:matrix(), "V")))
+	local mat1 = math3d.lookat(eyepos, at, updir)
+	local mat2 = math3d.lookto(eyepos, direction, updir)
+
+	print("lookat matrix:", math3d.tostring(mat1), "eyepos:", math3d.tostring(eyepos), "at:", math3d.tostring(at))
+
+	print("lookto matrix:", math3d.tostring(mat2), "eyepos:", math3d.tostring(eyepos), "direction:", math3d.tostring(direction))
+
+	local frustum = {
+		l=-1, r=1,
+		t=-1, b=1,
+		n=0.1, f=100
+	}
+
+	local perspective_mat = math3d.projmat(frustum)
+
+	local frustum_ortho = {
+		l=-1, r=1,
+		t=-1, b=1,
+		n=0.1, f=100,
+		ortho = true,
+	}
+	local ortho_mat = math3d.projmat(frustum_ortho)
+
+	print("perspective matrix:", math3d.tostring(perspective_mat))
+	print("ortho matrix:", math3d.tostring(ortho_mat))
 end
 
---quaternion
-local quat_aa = stack({type = "quat", axis = {0, 1, 0}, radian = {math.rad(60)}}, "V")	--
-print("quaternion with axis and angle : " .. quat_aa)
-
-local quat_mul = stack({type = "quat", 0, 1, 0, 1}, {type = "quat", 1, 0, 0, 0.5}, "*V")	-- define an indentity quaternion
-print("q * q : " .. quat_mul)
-
-local quat_vec_mul = stack({1, 2, 3, 0}, {type = "quat", 0, 1, 0, 0.5}, "*V")
-print("q * v : " .. quat_vec_mul)
-
-local axisid = stack({1, 0, 0, 0}, "P")
-print("axisid : ", axisid)
-local qq = stack({type = "quat", axis = axisid, radian = {math.rad(60)}}, "V")
-print("quaternion axis angle : ", qq)
-
-
---quaternion and euler
-local q = stackobj:euler2quat {math.rad(90), 0, 0}
-local e = stackobj:quat2euler(q)
-
-print(stack(e, "V"))
-
---lookat
-stack(mat, "1=")	-- init mat to an indentity matrix (dup self and assign)
-
-local vH = stack(mat, {2, 4, 5, 1}, "%P")
-print("vector homogeneous divide : ", stack(vH, "%V"))
-
-local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "lP")	-- calc lookat matrix
-mat(lookat) -- assign lookat matrix to mat
-print("lookat matrix : " , mat)
-print(math3d.type(mat))	-- matrix true (true means marked)
-
-local vec0 = math3d.ref "vector"
-stack(vec0, {1, 2, 3, 4}, "=")	-- assign value to vec0
-
-math3d.reset(stack)
-print(vec, ~vec)	-- string and lightuserdata
-mat(nil)	-- clear mat
-
-local t = stack(vec, "P")
-print(math3d.type(t))	-- vector true
-
-print(stack(math3d.constant "identvec", "VR"))
-print(stack(math3d.constant "identmat", "V"))	-- R: remove top
-print(stack(">RRSRV"))	-- unpack ident mat, get 2st line, 1: RRR 2: RRSR 3:RSRSR 4:SRSRSR
-
-
--- srt object
+print "===ROTATE VECTOR==="
 do
-	print "=====SRT====="
-	local srt = stack({type="srt", s={0.01}, r=stackobj:euler2quat{math.rad(60), math.rad(60), math.rad(-30)}, t={0, 0, 0}}, "P")
-	print("srt : ", stack(srt, "VR"))
-	stack(srt, "~")
-	local s = stack("P")
-	local r = stack("P")
-	local t = stack("P")
-	print("s : ", stack(s, "VR"))
-	print("r : ", stack(r, "VR"))
-	print("t : ", stack(t, "VR"))
+	local v = math3d.vector{1, 2, 1}
+	local q = math3d.quaternion {axis=math3d.vector{0, 1, 0}, r=math.pi * 0.5}
+	local vv = math3d.transform(q, v, 0)
+	print("rotate vector with quaternion", math3d.tostring(v), "=", math3d.tostring(vv))
 
-	local q1 = stack(srt, "qP")
-	local e1 = stackobj:quat2euler(q1)
-	print("e : ", stack(e1, "VR"))
+	local mat = math3d.matrix {s=1, r=q, t=math3d.vector{0, 0, 0, 1}}
+	local vv2 = math3d.transform(mat, v, 0)
+	print("transform vector with matrix", math3d.tostring(v), "=", math3d.tostring(vv2))
 
-	local srtref = stackobj:ref "matrix"
-
-	srtref.s = { 0.1 , 0.2, 0.3 }
-	srtref.t = { 1,2,3 }
-
-	stack(srtref:srt())
-	print("Ref srt", stack("3VR2VR1VRRRR"))
-
-	srtref(nil)
+	local p = math3d.vector{1, 2, 1, 1}
+	local mat2 = math3d.matrix {s=1, r=q, t=math3d.vector{0, 0, 5, 1}}
+	local r_p = math3d.transform(mat2, p, nil)
+	print("transform point with matrix", math3d.tostring(p), "=", math3d.tostring(r_p))
 end
 
--- direction to euler
-print "=====DIRECTION====="
+print "===construct coordinate from forward vector==="
 do
-	local rot = stack({1, 1, 1, 0}, "nDT")
-	local dir = stack(rot, "dT")
-	print(rot[1],rot[2],rot[3])
-	print(dir[1],dir[2],dir[3])
+	local forward = math3d.normalize(math3d.vector {1, 1, 1})
+	local right, up = math3d.base_axes(forward)
+	print("forward:", math3d.tostring(forward), "right:", math3d.tostring(right), "up:", math3d.tostring(up))
 end
 
+print "===PROJ===="
+local projmat = math3d.projmat {fov=90, aspect=1, n=1, f=1000}
+print("PROJ", math3d.tostring(projmat))
+
+print "===ADAPTER==="
+local adapter = require "math3d.adapter"
+local testfunc = require "math3d.adapter.test"
+
+local vector = adapter.vector(testfunc.vector, 1)	-- convert arguments to vector pointer from 1
+local matrix1 = adapter.matrix(testfunc.matrix1, 1, 1)	-- convert 1 mat
+local matrix2 = adapter.matrix(testfunc.matrix2, 1, 2)	-- convert 2 mat
+local matrix = adapter.matrix(testfunc.matrix2, 1)	-- convert all mat
+local var = adapter.variant(testfunc.vector, testfunc.matrix1, 1)
+local format = adapter.format(testfunc.variant, testfunc.format, 2)
+local mvq = adapter.getter(testfunc.getmvq, "mvq")	-- getmvq will return matrix, vector, quat
+local matrix2_v = adapter.format(testfunc.matrix2, "mm", 1)
+local retvec = adapter.output_vector(testfunc.retvec, 1)
+print(vector(ref2, math3d.vector{1,2,3}))
+print(matrix1(ref1))
+print(matrix2(ref1,ref1))
+print(matrix2_v(ref1,ref1))
+print(matrix(ref1,ref1))
+print(var(ref1))
+print(var(ref2))
+print(format("mv", ref1, ref2))
+local m,v, q = mvq()
+print(math3d.tostring(m), math3d.tostring(v), math3d.tostring(q))
+
+local v1,v2 =retvec()
+print(math3d.tostring(v1), math3d.tostring(v2))
 
 
---euler to quaternion
+print "===AABB&FRUSTUM==="
 do
-	local q1 = stackobj:euler2quat{0, math.rad(90), 0}
-	print("quaternion", stack(q1, "VR"))
+	local aabb = math3d.ref(math3d.aabb(math3d.vector(-1, 2, 3), math3d.vector(1, 2, -3), math3d.vector(-2, 3, 6)))
+	local minv, maxv = math3d.index(aabb, 1), math3d.index(aabb, 2)
+	print("aabb.min:", math3d.tostring(minv), "aabb.max:", math3d.tostring(maxv))
 
-	local q2 = stack({type="q", axis={0, 1, 0}, radian={math.rad(90)}}, "P")
-	print("quaternion 1 : ", stack(q2, "VR"))
+	local transformmat = math3d.matrix(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 3, 1)
+	aabb = math3d.aabb_transform(transformmat, aabb)
 
-	local e1 = stackobj:quat2euler(q1)
-	print("euler : ", stack(e1, "VR"))
-end
+	local vp = math3d.mul(math3d.projmat{aspect=60, fov=1024/768, n=0.1, f=100}, math3d.lookto(math3d.vector(0, 0, -10), math3d.vector(0, 0, 1)))
+	local frustum_planes = math3d.frustum_planes(vp)
+	local frustum_points = math3d.frustum_points(vp)
 
-do
-	-- extract base axis
-	local lookat = stack({0, 0, 0, 1}, {0, 0, 1, 0}, "LP")
-	local x, y, z = stack(lookat, "bPPP")
-	print(stack(x, y, z, "VRVRVR"))
-end
+	local intersectresult = math3d.frustum_intersect_aabb(frustum_planes, aabb)
 
-do
-	-- AABB
-	print("AABB", stack( {-1,-2,-3, 1}, "V", {4,5,6,1} , "V", stackobj.fromAABB , "V" ))
-	print("AABB", stack( {1,1,1, 1}, "V", {5,5,5,1} , "V", stackobj.fromAABB , "V" ))
-	print("Insect", stack( "22", stackobj.intersectAABB))
-	print("Insert Plane {0,1,0,0}", stack( "2V", { 0,1,0,0 }, stackobj.intersectAABB))
-	print("Insert Plane {0,1,0,0}", stack( "1V", { 0,1,0,0 }, stackobj.intersectAABB))
-	print("mergeAABB (min,max)", stack( stackobj.mergeAABB, stackobj.toAABB , "SVRVR" ))
-end
+	print("aabb:", math3d.tostring(aabb))
 
-print("Memory = ", stackobj:stacksize())
-
-do
-	local tempvec = math3d.ref "vector"
-	stack( tempvec, stackobj:vector( 1,2,3,4 ) , "=")
-	tempvec(nil)
-end
-
-collectgarbage "collect"
-local leaks = stackobj:leaks()
-if leaks then
-	for _, id in ipairs(leaks) do
-		print("Leaks : ", stack(id, "V"))
+	local frustum_point_names = {
+		"lbn", "rbn", "ltn", "rtn",
+		"lbf", "rbf", "ltf", "rtf",
+	}
+	local frustuminfo={}
+	for i=1, 8 do
+		frustuminfo[#frustuminfo+1] = frustum_point_names[i] .. ":" .. math3d.tostring(frustum_points[i])
 	end
+	print("frustum:\n", table.concat(frustuminfo, ",\n\t"))
+
+	if intersectresult > 0 then
+		print("aabb inside frustum")
+	elseif intersectresult == 0 then
+		print("aabb intersect with frustum")
+	else
+		print("aabb outside frustum")
+	end
+
+	local center = math3d.frustum_center(frustum_points)
+	local maxradius = math3d.frustum_max_radius(frustum_points, center)
+
+	local frustum_aabb = math3d.frustum_aabb(frustum_points)
+
+	print("frusutm center:", math3d.tostring(center))
+	print("frustum max radius:", maxradius)
+
+	local f_aabb_min, f_aabb_max = math3d.index(frustum_aabb, 1), math3d.index(frustum_aabb, 2)
+	print("frusutm aabb min:", math3d.tostring(f_aabb_min), "max:", math3d.tostring(f_aabb_max))
+	local f_aabb_center, f_aabb_extents = math3d.aabb_center_extents(frustum_aabb)
+	print("frusutm aabb center:", math3d.tostring(f_aabb_center), "extents:", math3d.tostring(f_aabb_extents), "radius:", math3d.length(f_aabb_extents))
 end
-
-vec(nil)
-vec0(nil)
-mat(nil)
-quat(nil)
-
