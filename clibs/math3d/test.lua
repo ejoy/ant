@@ -216,4 +216,20 @@ do
 	print("frusutm aabb min:", math3d.tostring(f_aabb_min), "max:", math3d.tostring(f_aabb_max))
 	local f_aabb_center, f_aabb_extents = math3d.aabb_center_extents(frustum_aabb)
 	print("frusutm aabb center:", math3d.tostring(f_aabb_center), "extents:", math3d.tostring(f_aabb_extents), "radius:", math3d.length(f_aabb_extents))
+
+	print "\t===AABB&minmax===="
+	local points = {
+		{1, 0, -1, -10},
+		{1, 2, -1, 1},
+		{1, 4, -5, 1},
+		{-2, 0, -1, 1},
+	}
+
+	local min, max = math3d.minmax(points)
+	local aabb = math3d.aabb(min, max)
+	local aabb2 = math3d.aabb()
+	aabb2 = math3d.aabb_append(aabb2, table.unpack(points))
+
+	print("minmax-aabb:", math3d.tostring(math3d.index(aabb, 1)), math3d.tostring(math3d.index(aabb, 2)))
+	print("aabb-append:", math3d.tostring(math3d.index(aabb2, 1)), math3d.tostring(math3d.index(aabb2, 2)))
 end
