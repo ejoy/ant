@@ -2,7 +2,7 @@ local export_prefab = require "model.export_prefab"
 local export_meshbin = require "model.export_meshbin"
 local export_animation = require "model.export_animation"
 local export_material = require "model.export_material"
-local glbloader    = import_package "ant.glTF".glb
+local glbloader = require "model.glTF.glb"
 
 return function (_, input, output)
     local glbdata = glbloader.decode(input:string())

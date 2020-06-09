@@ -1,7 +1,6 @@
 local fs_local  = import_package "ant.utility".fs_local
 local thread    = require "thread"
-local gltfpkg   = import_package "ant.glTF"
-local gltfutil	= gltfpkg.util
+local gltfutil  = require "model.glTF.util"
 local renderpkg = import_package "ant.render"
 local declmgr	= renderpkg.declmgr
 local sort_pairs = require "sort_pairs"
