@@ -30,7 +30,7 @@ pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
 工程分为三部分：
 - 3rd为引用的第三方库的目录所在；
 - clibs为引擎使用到的c模块所在的位置，会使用3rd中的第三方库；
-- engine为纯lua的库，会使用clibs编译的c模块；
+- engine/packages为纯lua的库，会使用clibs编译的c模块；
 
 #### 编译3rd
 
@@ -58,54 +58,31 @@ make -j8 MODE=debug/release
 如果需要编译msvc，那么直接打开：
 > $(antfolder)/projects/msvc/ant.sln  
 
-#### 运行时库的编译
-运行时库的目录位于clibs/ant下，其包括两种形态，如果是iOS/Android的话，需要编译成lib文件；如果是OSX/Window，则需要编译生成出一个ant.exe。原因是，iOS和Android都会被编译紧相应平台的框架下，需要以静态库的形式存在；而OSX/Window则没有这种要求，并且不存在所谓的框架，直接生成可执行文件即可。
-
-##### iOS编译
-> cd 3rd  
-> make init PLAT=ios MODE=debug  
-> make all PLAT=ios MODE=debug -j8  
-> cd ../clibs/ant
-> make PLAT=ios MODE=debug -j8
+##### runtime:iOS
+``` bash
+cd 3rd  
+make init PLAT=ios MODE=debug/release
+make all -j8 PLAT=ios MODE=debug/release
+cd ../clibs/ant
+make -j8 PLAT=ios MODE=debug/release
+```
 
 这里需要定位到目录：*../clibs/ant*下，该目录用于生成运行时所需要的lib文件
 
 编译成功后，使用xcode打开runtime/ios/ant.xcodeproj工程后，编译运行即可
 
-##### OSX/Window
-> cd 3rd
-> make init PLAT=osx MODE=debug
-> make all PLAT=osx MODE=debug
-> cd ../clibs/ant
-> make ant.exe PLAT=osx MODE=debug
+##### runtime:OSX/Window
+``` bash
+cd 3rd
+make init PLAT=osx MODE=debug
+make all PLAT=osx MODE=debug
+cd runtime/$(PLAT)/ 
+make
+```
 
 ### 运行
-编辑器模式和运行时模式的不同点在于，编辑器模式不需要fileserver的服务，能够实时的修改资源后自动编译等，其只运行在OSX/Window下；而运行时模式并不会在运行的过程中编译资源文件，需要fileserver提供的文件服务，能够运行在OSX/Window/iOS下。
-
-#### 编辑器模式
-目前基于包管理，每个包是可以理解为一个工程，而引擎中默认的包存放在$(antfolder)/packages，默认是都会载入的。
-> 需要注意的是，如果$(antfolder)/packages/*packagename*，*packagename*目前下如果没有package.lua文件，会报错。所以不用的包文件夹要及时清理
->
->
-> #运行一个最简单的示例
-> #mingw/OSX
-> clibs/lua.exe test/simple/main.lua
-> #msvc
-> projects/msvc/vs_bin/Debug/lua.exe test/simple/main.lua
-
-#### 使用fileserver运行runtime程序到iOS设备
-1. 启动fileserver，OSX和window环境下都能够运行 
-> clibs/ant/ant.exe tools/fileserver/main.lua test/simple
-> 这里的*tools/modelviewer*表示要运行的例子程序
-
-2. 如果是iOS的话：
-> #启动proxy连接程序
-> clibs/ant/ant.exe tools/fileserver/mobiledevice/proxy.lua
-
-最后，使用xcode，安装ant app到iOS设备上；
-
-3. 如果是OSX/Window的话：
-> clibs/ant/ant.exe test/simple/main.lua
+运行一个最简单的示例
+> bin/msvc/debug/lua.exe test/simple/main.lua
 
 ### 关于ant目录结构
 - **bin**：用于存放mingw下的dll
