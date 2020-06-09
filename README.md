@@ -71,12 +71,12 @@ make -j8 PLAT=ios MODE=debug/release
 
 编译成功后，使用xcode打开runtime/ios/ant.xcodeproj工程后，编译运行即可
 
-##### runtime:OSX/Window
+##### runtime:OSX
 ``` bash
 cd 3rd
 make init PLAT=osx MODE=debug
 make all PLAT=osx MODE=debug
-cd runtime/$(PLAT)/ 
+cd runtime/osx
 make
 ```
 
@@ -85,7 +85,7 @@ make
 > bin/msvc/debug/lua.exe test/simple/main.lua
 
 ### 关于ant目录结构
-- **bin**：用于存放mingw下的dll
+- **bin**：用于存放dll
 - **libs**：用于存放lua程序必要的lua文件
 - **clibs**：存放lua binding的c/c++库
 - **packages**：引擎提供的系统包（包与包之间有依赖）
