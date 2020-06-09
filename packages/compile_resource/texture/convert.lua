@@ -9,11 +9,11 @@ local fs_local = utilitypkg.fs_local
 local toolpath = fs_local.valid_tool_exe_path "texturec"
 
 local extensions = {
-	DIRECT3D11 	= "dds",
-	DIRECT3D12 	= "dds",
-	METAL 		= "ktx",
-	VULKAN 		= "ktx",
-	OPENGL 		= "ktx",
+	direct3d11 	= "dds",
+	direct3d12 	= "dds",
+	metal 		= "ktx",
+	vulkan 		= "ktx",
+	opengl 		= "ktx",
 }
 
 local function which_format(plat, param)
@@ -109,7 +109,8 @@ local function absolute_path(base, path, convert)
 end
 
 return function (config, sourcefile, outpath, localpath)
-	local ext = assert(extensions[config.renderer])
+	local os, renderer = config:match "(%w+)_(%w+)"
+	local ext = assert(extensions[renderer])
 	local binfile = (outpath / "main.bin"):replace_extension(ext)
 
 	local commands = {
@@ -122,8 +123,8 @@ return function (config, sourcefile, outpath, localpath)
 	local param = fs_local.datalist(sourcefile)
 	local texpath = absolute_path(sourcefile, assert(param.path), localpath)
 
-	param.format = assert(which_format(config.os, param))
-	gen_commands(config.os, param, texpath, binfile, commands)
+	param.format = assert(which_format(os, param))
+	gen_commands(os, param, texpath, binfile, commands)
 
 	local success, msg = subprocess.spawn_process(commands, function (info)
 		local success, msg = true, ""

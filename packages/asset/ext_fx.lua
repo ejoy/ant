@@ -93,7 +93,7 @@ local compile_config = {
 
 local function compile(filename, setting)
     if setting == nil then
-        return cr.compile(filename)
+        return cr.compile_fx(filename)
     end
 
     local macros = {}
@@ -102,7 +102,7 @@ local function compile(filename, setting)
     end
     compile_setting.macros = macros
 
-    return cr.compile(filename, compile_config)
+    return cr.compile_fx(filename, compile_config)
 end
 
 local function loader(filename, setting)

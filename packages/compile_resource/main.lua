@@ -1,4 +1,5 @@
 local compile = require "compile"
+local compile_fx = require "compile_fx"
 local lfs = require "filesystem.local"
 
 local function load_fx_setting()
@@ -38,18 +39,14 @@ end
 local function init()
     local render = import_package "ant.render"
     local os = require "platform".OS:lower()
-    local renderer = render.hwi.get_caps().rendererType:upper()
-    compile.register("fx",      "win", {
+    local renderer = render.hwi.get_caps().rendererType:lower()
+    compile_fx.register("win", {
         os = os,
-        renderer = renderer,
+        renderer = renderer:upper(),
         setting = load_fx_setting()
     })
-    compile.register("glb",     "win", {
-    })
-    compile.register("texture", "win", {
-        os = os,
-        renderer = renderer,
-    })
+    compile.register("glb")
+    compile.register("texture", os.."_"..renderer)
 end
 
 local function read_file(filename)
@@ -63,6 +60,7 @@ return {
     init = init,
     register = compile.register,
     compile = compile.compile,
+    compile_fx = compile_fx.compile,
     clean = compile.clean,
     read_file = read_file,
 }

@@ -3,18 +3,10 @@ local lfs = require "filesystem.local"
 local vfs = require "vfs"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
+local stringify = import_package "ant.serialize".stringify
 local cache = {}
-local link = {}
-
-local function init(ext, compiler)
-    link[ext] = {
-        compiler = compiler,
-        config = {},
-    }
-end
-
-init("glb",     "model.convert")
-init("texture", "texture.convert")
+local info = {config = {}}
+local c = require "compile"
 
 local function split(str)
     local r = {}
@@ -45,23 +37,30 @@ local function readconfig(filename)
     return datalist.parse(readfile(filename))
 end
 
-local function register(ext, config)
-    local info = link[ext]
-    if not info then
-        error("invalid type: " .. ext)
+local function set_config(config)
+    local config_string = stringify(config)
+    local hash = sha1(config_string):sub(1,7)
+    local cfg = info.config[hash]
+    if cfg then
+        return cfg
     end
+    cfg = {}
+    if not info.default then
+        info.default = cfg
+    end
+    info.config[hash] = cfg
     local root = vfs.repo()._root
-    info.compiler = info.compiler
-    info.config = config
-    if config then
-        info.binpath = root / ".build" / ext / config
-        lfs.create_directories(info.binpath)
-        writefile(info.binpath / ".config", config)
-    else
-        info.binpath = root / ".build" / ext
-        lfs.create_directories(info.binpath)
-    end
-    return info
+    cfg.config = config
+    cfg.hash = hash
+    cfg.binpath = root / ".build" / "fx" / (info.name.."_"..hash)
+    lfs.create_directories(cfg.binpath)
+    writefile(cfg.binpath / ".config", config_string)
+    return cfg
+end
+
+local function register(name, config)
+    info.name = name
+    return set_config(config)
 end
 
 local function copytable(a, b)
@@ -80,6 +79,21 @@ local function copytable(a, b)
             a[k] = v
         end
     end
+end
+
+local function mergetable(a, b)
+    local t = {}
+    copytable(t, a)
+    copytable(t, b)
+    return t
+end
+
+local function get_config(config)
+    local defalut = assert(info.default)
+    if not config then
+        return defalut
+    end
+    return set_config(mergetable(config, defalut.config))
 end
 
 local function do_build(output)
@@ -106,22 +120,22 @@ end
 
 local function do_compile(cfg, input, output)
     lfs.create_directory(output)
-    local ok, err = require(cfg.compiler)(cfg.config, input, output, function (path)
+    local ok, err, deps = require "fx.compile" (cfg.config, input, output, function (path)
         return fs.path(path):localpath()
     end)
     if not ok then
         error("compile failed: " .. input:string() .. "\n" .. err)
     end
-    create_depfile(output / ".dep", {input})
+    table.insert(deps, 1, input)
+    create_depfile(output / ".dep", deps)
 end
 
 local function clean_file(input)
-    local ext = input:extension():string():sub(2):lower()
-    local cfg = link[ext]
+    local cfg = get_config()
     if not cfg then
         return input
     end
-    local keystring = input:string()
+    local keystring = input:string() .. "_" .. cfg.hash
     local cachepath = cache[keystring]
     if cachepath then
         cache[keystring] = nil
@@ -131,14 +145,13 @@ local function clean_file(input)
     end
 end
 
-local function compile_file(input)
-    local ext = input:extension():string():sub(2):lower()
-    local cfg = link[ext]
+local function compile_file(input, config)
+    local cfg = get_config(config)
     if not cfg then
         assert(lfs.exists(input))
         return input
     end
-    local keystring = input:string()
+    local keystring = input:string() .. "_" .. cfg.hash
     local cachepath = cache[keystring]
     if cachepath then
         return cachepath
@@ -155,23 +168,22 @@ local function clean(pathstring)
     local pathlst = split(pathstring)
     local path = fs.path(pathlst[1]):localpath()
     for i = 2, #pathlst do
-        path = compile_file(path) / pathlst[i]
+        path = c.compile_file(path) / pathlst[i]
     end
     return clean_file(path)
 end
 
-local function compile(pathstring)
+local function compile(pathstring, config)
     local pathlst = split(pathstring)
     local path = fs.path(pathlst[1]):localpath()
     for i = 2, #pathlst do
-        path = compile_file(path) / pathlst[i]
+        path = c.compile_file(path) / pathlst[i]
     end
-    return compile_file(path)
+    return compile_file(path, config)
 end
 
 return {
     register = register,
     compile = compile,
-    compile_file = compile_file,
     clean = clean,
 }
