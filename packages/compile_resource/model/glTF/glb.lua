@@ -1,4 +1,4 @@
-local JSON = require "model.glTF.json"
+local JSON = import_package "ant.json"
 local jsonDecode = JSON.decode
 local jsonEncode = JSON.encode
 
