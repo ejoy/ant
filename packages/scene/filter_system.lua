@@ -67,3 +67,58 @@ function prim_filter_sys:filter_primitive()
 	end
 end
 
+-- local filter_primitive_mb = world:sub{"filter_primitive"}
+
+-- local register_pf_mb = world:sub{"component_register", "primitive_filter"}
+
+-- local filter_group_mask = {
+-- 	visible 	= 0x00000001,
+-- 	cast_shadow = 0x00000002,
+-- 	selectable 	= 0x00000004,
+-- }
+
+-- local filters = {}
+-- function prim_filter_sys:data_changed()
+-- 	for _, _, eid in ipairs (register_pf_mb) do
+-- 		local e = world[eid]
+-- 		local pf = e.primitive_filter
+-- 		local mask = filter_group_mask[pf.filter_tag]
+-- 		filters[mask] = pf
+-- 	end
+-- end
+
+-- local function update_render_item(eid)
+-- 	local e = world[eid]
+
+-- 	local gs = e.group_state
+
+-- 	for i=0, 31 do
+-- 		local t = gs & (1 << i)
+-- 		if t ~= 0 then
+-- 			local filter = filters[t]
+-- 			local ri = {}
+-- 			local function fetch_meshinfo(e, ri)
+-- 				local mesh = e.mesh
+				
+-- 			end
+
+-- 			local function fetch_materialinfo(e, ri)
+-- 			end
+
+-- 			local function fetch_transform(e, ri)
+-- 			end
+
+-- 			fetch_meshinfo(e, ri)
+-- 			fetch_materialinfo(e, ri)
+-- 			fetch_transform(e, ri)
+
+-- 			filter[eid] = ri
+-- 		end
+-- 	end
+-- end
+
+-- function prim_filter_sys:filter_primitive2()
+-- 	for _, eid in filter_primitive_mb:unpack() do
+-- 		update_render_item(eid)
+-- 	end
+-- end

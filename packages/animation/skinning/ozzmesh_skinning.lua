@@ -56,8 +56,9 @@ local function create_static_buffer(layouts, num_vertices, ozzmesh)
 	local static_buffer = animodule.new_aligned_memory(static_buffersize, 4)
 	local static_pointer = static_buffer:pointer()
 	ozzmesh:combine_buffer(static_layout, static_pointer)
+	local memorybuf = bgfx.memory_buffer{"!", static_pointer, 0, static_buffersize}
 	return {
-		handle = bgfx.create_vertex_buffer({"!", static_pointer, 0, static_buffersize}, declmgr.get(static_layout).handle)
+		handle = bgfx.create_vertex_buffer(memorybuf, declmgr.get(static_layout).handle)
 	}
 end
 
