@@ -1,16 +1,10 @@
-*.o
-*.a
-*.exe
-*.dll
-*.so
 *.dSYM
 *.user
-*.log
 **/*.xcworkspace
 *.xcscheme
 *.xcbkptlist
-*.o.d
-*.lib
+*.dll
+*.exe
 
 .cache
 .vscode
@@ -18,9 +12,9 @@
 .repo
 .build
 
+/3rd/bin
 /bin
 /log
-/projects/msvc/vs_bin
 /clibs/*/o
 
 editor.user.setting
