@@ -2685,7 +2685,7 @@ lcreateDynamicVertexBuffer(lua_State *L) {
 		uint32_t num = luaL_checkinteger(L, 1);
 		handle = BGFX(create_dynamic_vertex_buffer)(num, vd, flags);
 	} else {
-		const bgfx_memory_t *mem = luaL_checkudata(L, 1, "BGFX_MEMORY");
+		const bgfx_memory_t *mem = (const bgfx_memory_t *)lua_touserdata(L, 1);
 		handle = BGFX(create_dynamic_vertex_buffer_mem)(mem, vd, flags);
 	}
 
