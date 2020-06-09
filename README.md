@@ -12,7 +12,7 @@ Ant 游戏引擎
 ``` bash
 echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/i686/" > /etc/pacman.d/mirrorlist.mingw32
 echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/x86_64/" > /etc/pacman.d/mirrorlist.mingw64
-echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/msys/$arch/" > /etc/pacman.d/mirrorlist.msys
+echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/msys/\$arch/" > /etc/pacman.d/mirrorlist.msys
 ```
 
 - 把ming64的路径加到环境变量
