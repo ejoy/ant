@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/shadow/shadow_linear.fx
+fx: /pkg/ant.resources/materials/fx/shadow/shadow_linear.fx
 state:
   CULL: CCW
   DEPTH_TEST: LESS

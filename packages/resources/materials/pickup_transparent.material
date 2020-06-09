@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/pickup_transparent.fx
+fx: /pkg/ant.resources/materials/fx/pickup_transparent.fx
 state:
   DEPTH_TEST: ALWAYS
   WRITE_MASK: RGBA

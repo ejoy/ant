@@ -1,2 +1,2 @@
-fx: $resource /pkg/ant.resources/materials/fx/shadow/scene-mat-shadow.fx
+fx: /pkg/ant.resources/materials/fx/shadow/scene-mat-shadow.fx
 state: /pkg/ant.resources/materials/states/default.state

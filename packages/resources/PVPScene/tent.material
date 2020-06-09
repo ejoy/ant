@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/PVPScene/tent.fx
+fx: /pkg/ant.resources/materials/fx/PVPScene/tent.fx
 properties:
   s_basecolor:
     texture: $resource /pkg/ant.resources/PVPScene/tent_d.texture

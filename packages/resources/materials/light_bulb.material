@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/light_bulb.fx
+fx: /pkg/ant.resources/materials/fx/light_bulb.fx
 properties:
     u_color: $vector {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

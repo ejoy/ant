@@ -87,9 +87,6 @@ local function absolute_path(base, path)
 end
 
 function assetmgr.resource(world, path)
-	if path:match "[^.]*$" == "fx" then
-		return assetmgr.load_fx(path)
-	end
 	local fullpath = absolute_path(world._current_path, path)
     return resource_load(fullpath, world, true)
 end

@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/sky/procedural/procedural_sky.fx
+fx: /pkg/ant.resources/materials/fx/sky/procedural/procedural_sky.fx
 properties:
   u_parameters: $vector {0, 0, 0, 0}
   u_perezCoeff:
