@@ -1,4 +1,4 @@
-BIN = .
+BIN = ../bin/$(PLAT)/$(MODE)
 LIBS := math3d lsocket bgfx filesystem remotedebug \
  crypt hierarchy thread protocol \
  window filewatch platform subprocess datalist imgui terrain firmware rp3d

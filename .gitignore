@@ -17,19 +17,11 @@
 .vs
 .repo
 .build
-.dep
-_build
 
-/clibs/shaderc[Rr]elease
-/clibs/shaderc[Dd]ebug
-/clibs/texturec[Rr]elease
-/clibs/texturec[Dd]ebug
+/bin
 /log
-
 /projects/msvc/vs_bin
-/projects/msvc/x64
-/projects/msvc/Debug
-/projects/msvc/Release
+/clibs/*/o
 
 editor.user.setting
 editor.user.ini

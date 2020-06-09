@@ -30,7 +30,7 @@ CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_
 ifeq "$(PLAT)" "mingw"
 TOOL_EXT_NAME=.exe
 endif
-CMAKE_COPY_ozz-animation= cp src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) ../../../../../clibs/gltf2ozz$(MODE)$(TOOL_EXT_NAME)
+CMAKE_COPY_ozz-animation= mkdir -p ../../../../../bin/$(PLAT)/$(MODE)/ && cp src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) ../../../../../bin/$(PLAT)/$(MODE)/gltf2ozz$(TOOL_EXT_NAME)
 CMAKE_OPT_reactphysics3d=-DRP3D_LOGS_ENABLED=ON
 CMAKE_COPY_reactphysics3d= echo ok
 

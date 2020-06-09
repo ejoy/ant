@@ -38,14 +38,19 @@ tools: bgfx
 
 runtime_make: bx bimg bgfx
 
-editor_make: runtime_make bgfx-shared-lib tools
+TOOLSDIR = ../bin/$(PLAT)/$(MODE)
+
+toolsdir:
+	mkdir -p $(TOOLSDIR)
+
+editor_make: runtime_make bgfx-shared-lib tools | toolsdir
 	cp -f bgfx/src/bgfx_shader.sh ../packages/resources/shaders/bgfx_shader.sh
 	cp -f bgfx/src/bgfx_compute.sh ../packages/resources/shaders/bgfx_compute.sh
 	cp -f bgfx/examples/common/common.sh ../packages/resources/shaders/common.sh
 	cp -f bgfx/examples/common/shaderlib.sh ../packages/resources/shaders/shaderlib.sh
-	cp $(BGFX_BIN)shaderc$(MODE) ../clibs/
-	cp $(BGFX_BIN)texturec$(MODE) ../clibs/
-	cp $(BGFX_BIN)$(BGFX_SHARED_LIB) ../clibs/bgfx-core.dll
+	cp $(BGFX_BIN)shaderc$(MODE) $(TOOLSDIR)/shaderc
+	cp $(BGFX_BIN)texturec$(MODE) $(TOOLSDIR)/texturec
+	cp $(BGFX_BIN)$(BGFX_SHARED_LIB) $(TOOLSDIR)/bgfx-core.dll
 
 ifeq "$(PLAT)" "msvc"
 GENIE_PLATFORM= --with-windows=10.0 vs2019
