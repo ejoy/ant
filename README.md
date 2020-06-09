@@ -25,6 +25,10 @@ echo "export PATH=/mingw64/bin:$PATH" >> ~/.bash_profile
 pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
 ```
 
+### 下载FBX2glTF
+
+下载[FBX2glTF](https://github.com/facebookincubator/FBX2glTF/releases),并放到3rd/bin目录下
+
 
 ### 编译
 工程分为三部分：
