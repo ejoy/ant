@@ -1,6 +1,5 @@
 local fs_local = import_package "ant.utility".fs_local
 local stringify = import_package "ant.serialize".stringify
-local mc = import_package "ant.math".constant
 local util = require "model.util"
 local fs = require "filesystem.local"
 
