@@ -113,7 +113,8 @@ end
 local function create_depfile(filename, deps)
     local w = {}
     for _, file in ipairs(deps) do
-        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file:localpath()), lfs.absolute(file):string())
+        local path = lfs.path(file)
+        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(path), lfs.absolute(path):string())
     end
     writefile(filename, table.concat(w, "\n"))
 end
@@ -133,7 +134,6 @@ local function do_compile(cfg, input, output)
     if not ok then
         error("compile failed: " .. input:string() .. "\n\n" .. err)
     end
-    table.insert(deps, 1, input)
     create_depfile(output / ".dep", deps)
 end
 

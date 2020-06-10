@@ -50,6 +50,7 @@ function toolset.compile(config)
 	local filepath 		= config.srcfile
 	local outfilepath 	= config.outfile
 
+	lfs.create_directories(outfilepath:parent_path())
 	assert(lfs.exists(filepath), filepath:string())
 	
 	local srcfilename = filepath:string()
@@ -138,11 +139,13 @@ function toolset.compile(config)
 		for line in f:lines() do
 			local path = line:match "^%s*(.-)%s*\\?$"
 			if path then
-				depends[#depends+1] = lfs.path(path)
+				depends[#depends+1] = path
 			end
 		end
 		f:close()
 		os.remove(dependpath:string())
+
+		depends[#depends+1] = filepath:string()
 	end
 	return true, msg, depends
 end
