@@ -1,8 +1,7 @@
 local toolset 	= require "fx.toolset"
 local lfs 		= require "filesystem.local"
 local stringify = import_package "ant.serialize".stringify
-local utilitypkg = import_package "ant.utility"
-local fs_local    = utilitypkg.fs_local
+local fs_local  = import_package "ant.utility".fs_local
 
 local engine_shader_srcpath = lfs.current_path() / "packages/resources/shaders"
 local function check_compile_shader(config, srcfilepath, outfilepath, macros)
