@@ -1,5 +1,7 @@
 local util = {}
 local subprocess = require "subprocess"
+local fs = require "filesystem.local"
+local platform = require "platform"
 
 local function quote_arg(s)
     if type(s) ~= 'string' then
@@ -53,6 +55,9 @@ local function to_cmdline(commands)
 end
 
 function util.spawn_process(commands)
+    commands.stdout     = true
+    commands.stderr     = true
+    commands.hideWindow = true
 	local prog = subprocess.spawn(commands)
 	local msg = {}
 	msg[#msg+1] = to_cmdline(commands)
@@ -86,6 +91,20 @@ function util.spawn_process(commands)
 	msg[#msg+1] = "Success"
 	msg[#msg+1] = "----------------------------"
 	return true, table.concat(msg, "\n")
+end
+
+local BINDIR = fs.current_path() / package.cpath:sub(1,-6)
+local TOOLSUFFIX = platform.OS == "OSX" and "" or ".exe"
+
+function util.tool_exe_path(toolname)
+    local exepath = BINDIR / (toolname .. TOOLSUFFIX)
+    if fs.exists(exepath) then
+        return exepath
+    end
+    error(table.concat({
+        "Can't found tools in : ",
+        "\t" .. tostring(exepath)
+    }, "\n"))
 end
 
 return util

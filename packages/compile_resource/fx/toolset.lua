@@ -1,9 +1,7 @@
 local lfs = require "filesystem.local"
-local utilitypkg = import_package "ant.utility"
-local subprocess = utilitypkg.subprocess
-local fs_local = utilitypkg.fs_local
+local subprocess = import_package "ant.utility".subprocess
 
-local shaderc = fs_local.valid_tool_exe_path "shaderc"
+local SHADERC = subprocess.tool_exe_path "shaderc"
 local toolset = {}
 
 local shadertypes = {
@@ -80,7 +78,7 @@ function toolset.compile(config)
 	local stagetype = stage_types[st]
 
 	local commands = {
-		shaderc:string(),
+		SHADERC,
 		"--platform", assert(config.os),
 		"--type", stagetype,
 		"-p", shader_opt,
@@ -88,9 +86,6 @@ function toolset.compile(config)
 		"-o", outfilename,
 		"--depends",
 		includes,
-		stdout = true,
-		stderr = true,
-		hideWindow = true,
 	}
 
 	local function add_defines(macros)

@@ -118,10 +118,17 @@ local function create_depfile(filename, deps)
     writefile(filename, table.concat(w, "\n"))
 end
 
+local function absolute_path(base, path)
+	if path:sub(1,1) == "/" then
+		return fs.path(path):localpath()
+	end
+	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
+end
+
 local function do_compile(cfg, input, output)
     lfs.create_directory(output)
     local ok, err, deps = require "fx.compile" (cfg.config, input, output, function (path)
-        return fs.path(path):localpath()
+        return absolute_path(input, path)
     end)
     if not ok then
         error("compile failed: " .. input:string() .. "\n\n" .. err)

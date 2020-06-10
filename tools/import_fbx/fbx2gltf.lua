@@ -26,9 +26,6 @@ return function (input, output)
 		"-b",
 		"--compute-normals", "missing",
 		"--pbr-metallic-roughness",
-		stdout = true,
-		stderr = true,
-		hideWindow = true,
 	}
 	local success, msg = subprocess.spawn_process(commands)
 	print(msg)
