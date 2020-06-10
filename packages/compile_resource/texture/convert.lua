@@ -6,7 +6,7 @@ local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
 local fs_local = utilitypkg.fs_local
 
-local toolpath = fs_local.valid_tool_exe_path "texturec"
+local TEXTUREC = subprocess.tool_exe_path "texturec"
 
 local extensions = {
 	direct3d11 	= "dds",
@@ -39,9 +39,9 @@ local function add_option(commands, name, value)
 	end
 end
 
-local function gen_commands(plat, param, sourcefile, outfile, commands)
-	add_option(commands, "-f", sourcefile:string())
-	add_option(commands, "-o", outfile:string())
+local function gen_commands(commands, param, input, output)
+	add_option(commands, "-f", input:string())
+	add_option(commands, "-o", output:string())
 	add_option(commands, "-t", param.format)
 	add_option(commands, "-q", "fastest")
 
@@ -69,43 +69,10 @@ local function gen_commands(plat, param, sourcefile, outfile, commands)
 	end
 end
 
--- local function gen_compressor_commands(plat, param, sourcefile, outfile, commands)
--- 	local function add_format_option()
--- 		local format = which_format(plat, param)
--- 		if plat == "window" then
--- 			add_option(commands, "-fd", format)
--- 		else
--- 			local astc, block = format:match "ASTC[%d.%w]+"
--- 			add_option(commands, "-fd", astc)
--- 			add_option(commands, "-BlockRate", block)
--- 		end
--- 	end
-
--- 	local mipmap = param.mipmap
--- 	if mipmap then
--- 		if mipmap == 0 then
--- 			add_option(commands, "-mipsize", 1)	--mean generate all mipmap
--- 		else
--- 			add_option(commands, "-miplevels", mipmap)
--- 		end
--- 	end
-
--- 	add_format_option()
--- 	add_option(commands, nil, sourcefile:string())
--- 	add_option(commands, nil, outfile:string())
--- end
-
 local function writefile(filename, data)
 	local f = assert(lfs.open(filename, "wb"))
 	f:write(data)
 	f:close()
-end
-
-local function absolute_path(base, path, convert)
-	if path:sub(1,1) == "/" then
-		return convert(path)
-	end
-	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
 return function (config, sourcefile, outpath, localpath)
@@ -114,17 +81,14 @@ return function (config, sourcefile, outpath, localpath)
 	local binfile = (outpath / "main.bin"):replace_extension(ext)
 
 	local commands = {
-		toolpath:string(),
-		stdout      = true,
-		stderr      = true,
-		hideWindow  = true,
+		TEXTUREC,
 	}
 
 	local param = fs_local.datalist(sourcefile)
-	local texpath = absolute_path(sourcefile, assert(param.path), localpath)
+	local texpath = localpath(assert(param.path))
 
 	param.format = assert(which_format(os, param))
-	gen_commands(os, param, texpath, binfile, commands)
+	gen_commands(commands, param, texpath, binfile)
 
 	local success, msg = subprocess.spawn_process(commands)
 	if success then
@@ -133,22 +97,17 @@ return function (config, sourcefile, outpath, localpath)
 		end
 	end
 	if success then
-		if lfs.exists(binfile) then
-			local config = {
-				name = texpath:string(),
-				sampler = ru.fill_default_sampler(param.sampler),
-				flag = ru.generate_sampler_flag(param.sampler),
-			}
-			if param.colorspace == "sRGB" then
-				config.flag = config.flag .. 'Sg'
-			end
-			writefile(outpath / "main.cfg", stringify(config))
-			lfs.rename(binfile, outpath / "main.bin")
-			return success, msg
+		assert(lfs.exists(binfile))
+		local config = {
+			name = texpath:string(),
+			sampler = ru.fill_default_sampler(param.sampler),
+			flag = ru.generate_sampler_flag(param.sampler),
+		}
+		if param.colorspace == "sRGB" then
+			config.flag = config.flag .. 'Sg'
 		end
-
-		msg = msg .. "\nconvert texture return success, but not found file:" .. binfile:string()
+		writefile(outpath / "main.cfg", stringify(config))
+		lfs.rename(binfile, outpath / "main.bin")
 	end
-
-	return false, msg
+	return success, msg
 end

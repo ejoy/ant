@@ -1,9 +1,7 @@
 local lfs = require "filesystem.local"
-local utilitypkg = import_package "ant.utility"
-local subprocess = utilitypkg.subprocess
-local fs_local = utilitypkg.fs_local
+local subprocess = import_package "ant.utility".subprocess
 
-local shaderc = fs_local.valid_tool_exe_path "shaderc"
+local SHADERC = subprocess.tool_exe_path "shaderc"
 local toolset = {}
 
 local shadertypes = {
@@ -52,6 +50,7 @@ function toolset.compile(config)
 	local filepath 		= config.srcfile
 	local outfilepath 	= config.outfile
 
+	lfs.create_directories(outfilepath:parent_path())
 	assert(lfs.exists(filepath), filepath:string())
 	
 	local srcfilename = filepath:string()
@@ -80,7 +79,7 @@ function toolset.compile(config)
 	local stagetype = stage_types[st]
 
 	local commands = {
-		shaderc:string(),
+		SHADERC,
 		"--platform", assert(config.os),
 		"--type", stagetype,
 		"-p", shader_opt,
@@ -88,9 +87,6 @@ function toolset.compile(config)
 		"-o", outfilename,
 		"--depends",
 		includes,
-		stdout = true,
-		stderr = true,
-		hideWindow = true,
 	}
 
 	local function add_defines(macros)
@@ -143,11 +139,13 @@ function toolset.compile(config)
 		for line in f:lines() do
 			local path = line:match "^%s*(.-)%s*\\?$"
 			if path then
-				depends[#depends+1] = lfs.path(path)
+				depends[#depends+1] = path
 			end
 		end
 		f:close()
 		os.remove(dependpath:string())
+
+		depends[#depends+1] = filepath:string()
 	end
 	return true, msg, depends
 end

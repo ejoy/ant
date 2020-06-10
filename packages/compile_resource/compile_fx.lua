@@ -113,20 +113,27 @@ end
 local function create_depfile(filename, deps)
     local w = {}
     for _, file in ipairs(deps) do
-        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file:localpath()), lfs.absolute(file):string())
+        local path = lfs.path(file)
+        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(path), lfs.absolute(path):string())
     end
     writefile(filename, table.concat(w, "\n"))
+end
+
+local function absolute_path(base, path)
+	if path:sub(1,1) == "/" then
+		return fs.path(path):localpath()
+	end
+	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
 local function do_compile(cfg, input, output)
     lfs.create_directory(output)
     local ok, err, deps = require "fx.compile" (cfg.config, input, output, function (path)
-        return fs.path(path):localpath()
+        return absolute_path(input, path)
     end)
     if not ok then
         error("compile failed: " .. input:string() .. "\n\n" .. err)
     end
-    table.insert(deps, 1, input)
     create_depfile(output / ".dep", deps)
 end
 

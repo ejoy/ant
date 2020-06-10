@@ -3,10 +3,27 @@ local thread    = require "thread"
 local gltfutil  = require "model.glTF.util"
 local renderpkg = import_package "ant.render"
 local declmgr	= renderpkg.declmgr
-local sort_pairs = require "sort_pairs"
 local math3d	= require "math3d"
 local lfs		= require "filesystem.local"
-local util		= require "model.util"
+
+local function sort_pairs(t)
+    local s = {}
+    for k in pairs(t) do
+        s[#s+1] = k
+    end
+
+    table.sort(s)
+
+    local n = 1
+    return function ()
+        local k = s[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
 
 local function get_desc(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
@@ -330,7 +347,7 @@ return function (output, glbdata, exports)
 		for groupidx, prim in ipairs(primitives) do
 			local filepath = meshfolder / prim[1]
 			fs_local.write_file(filepath, thread.pack(prim[2]))
-			meshfiles[meshidx][groupidx] = util.subrespath(output, filepath)
+			meshfiles[meshidx][groupidx] = "./meshes/"..prim[1]
 		end
 	end
 
@@ -338,7 +355,7 @@ return function (output, glbdata, exports)
 	for skinidx, value in ipairs(skins) do
 		local filepath = meshfolder / value[1]
 		fs_local.write_file(filepath, thread.pack(value[2]))
-		skinfiles[skinidx] = util.subrespath(output, filepath)
+		skinfiles[skinidx] = "./meshes/"..value[1]
 	end
 
 	exports.mesh = meshfiles

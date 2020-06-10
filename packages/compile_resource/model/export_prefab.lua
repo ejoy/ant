@@ -1,7 +1,6 @@
 local fs_local = import_package "ant.utility".fs_local
 local math3d = require "math3d"
 local stringify = import_package "ant.serialize".stringify
-local fs = require "filesystem.local"
 
 local prefab = {}
 local conv = {}
@@ -71,7 +70,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
                 error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
             end
         else
-            materialfile = fs.path "/pkg/ant.resources/materials/pbr_default.material"
+            materialfile = "/pkg/ant.resources/materials/pbr_default.material"
         end
 
         local meshfile = exports.mesh[meshidx+1][primidx]
@@ -82,8 +81,8 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
             scene_entity= true,
             can_render  = true,
             transform   = transform,
-            mesh        = proxy "resource" (meshfile:string()),
-            material    = proxy "resource" (materialfile:string()),
+            mesh        = proxy "resource" (meshfile),
+            material    = proxy "resource" (materialfile),
             name        = meshname .. "." .. primidx,
         }
 
@@ -99,7 +98,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
                 error(("mesh need skin data, but no skin file output:%d"):format(node.skin))
             end
 
-            meshskin = proxy "resource" (f:string())
+            meshskin = proxy "resource" (f)
         end
 
         if meshskin then
@@ -107,23 +106,25 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
                 error("mesh has skin info, but skeleton not export correctly")
             end
 
-            data.skeleton = proxy "resource" (exports.skeleton:string())
+            data.skeleton = proxy "resource" (exports.skeleton)
 
             --skinning
             data.meshskin = meshskin
             policy[#policy+1] = "ant.animation|skinning"
 
             --animation
-            if #exports.animations > 0 then
+            if next(exports.animations) ~= nil then
+                local lst = {}
                 local anilist = {}
-                for _, anifile in ipairs(exports.animations) do
-                    local stem = anifile:stem()
-                    anilist[stem:string()] = proxy "resource"(anifile:string())
+                for name, file in pairs(exports.animations) do
+                    anilist[name] = proxy "resource"(file)
+                    lst[#lst+1] = name
                 end
                 data.animation = {
                     anilist = anilist,
                 }
-                data.animation_birth = exports.animations[1]:stem():string()
+                table.sort(lst)
+                data.animation_birth = lst[1]
                 policy[#policy+1] = "ant.animation|animation"
                 policy[#policy+1] = "ant.animation|animation_controller.birth"
             end
