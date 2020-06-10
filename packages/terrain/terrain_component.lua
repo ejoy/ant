@@ -58,6 +58,7 @@ function t:init()
 		self.grid_unit = self.grid_unit or 1
 
 		data.heightfield = heightfield
+		assert("terrain_module.create should create terrain object, it should include terrain data")
 		data.terrain_vertices, data.terrain_indices, data.terrain_normaldata = terrain_module.create(gridwidth, gridheight, self.grid_unit, heightfield)
 
 		self._data = data
@@ -98,20 +99,21 @@ function trt.process(e)
 	local numindices = gridwidth * gridheight * 2 * 3
 	e.mesh = world.component "mesh" {
 		vb = {
-			start = 0,
+			start = 1,
 			num = numvertices,
 			{
 				declname = "p3",
-				memory = {"!", terraindata.terrain_vertices, 0, numvertices * pos_decl.stride},
-			},{
+				memory = {terraindata.terrain_vertices, numvertices * pos_decl.stride},
+			},
+			{
 				declname = "n3",
-				memory = {"!", terraindata.terrain_normaldata, 0, numvertices * normal_decl.stride},
+				memory = {terraindata.terrain_normaldata, numvertices * normal_decl.stride},
 			},
 		},
 		ib = {
-			start = 0,
+			start = 1,
 			num = numindices,
-			memory = {terraindata.terrain_indices, 0, numvertices * 4},
+			memory = {terraindata.terrain_indices, numvertices * 4},
 		}
 	}
 end

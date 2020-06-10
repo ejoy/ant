@@ -36,7 +36,7 @@ function skinning_sys:skin_mesh()
 					animodule.mesh_skinning(skinning_matrices, part.inputdesc, part.outputdesc, part.num, part.influences_count)
 				end
 	
-				bgfx.update(handle, 0, {"!", updatedata:pointer(), 0, job.buffersize})
+				bgfx.update(handle, 0, {updatedata:pointer(), 0, job.buffersize})
 			end
 		else
 			local trans = e.transform

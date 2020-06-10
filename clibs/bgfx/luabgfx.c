@@ -219,7 +219,7 @@ static const bgfx_memory_t *
 bgfxMemory(lua_State *L, int idx) {
 	struct memory *mem = (struct memory *)luaL_checkudata(L, idx, "BGFX_MEMORY");
 	atom_inc(&mem->ref);
-	return bgfx_make_ref_release(mem->data, mem->size, releaseMemory, (void *)mem);
+	return BGFX(make_ref_release)(mem->data, mem->size, releaseMemory, (void *)mem);
 }
 
 static void *
@@ -2716,7 +2716,7 @@ index_buffer_flags(lua_State *L, int index) {
 
 static const bgfx_memory_t *
 getIndexBuffer(lua_State *L, int idx, int index32) {
-	if (lua_type(L, 1) == LUA_TTABLE) {
+	if (lua_type(L, idx) == LUA_TTABLE) {
 		int n = lua_rawlen(L, 1);
 		if (index32) {
 			void *data = newMemory(L, NULL, n*sizeof(uint32_t));
@@ -2728,7 +2728,7 @@ getIndexBuffer(lua_State *L, int idx, int index32) {
 		}
 		return bgfxMemory(L, -1);
 	} else {
-		return getMemory(L, 1);
+		return getMemory(L, idx);
 	}
 }
 

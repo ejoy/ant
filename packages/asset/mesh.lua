@@ -8,7 +8,8 @@ local declmgr = import_package "ant.render".declmgr
 local proxy_vb = {}
 function proxy_vb:__index(k)
     if k == "handle" then
-        local membuf = bgfx.memory_buffer(self.memory)
+        assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
+        local membuf = bgfx.memory_buffer(table.unpack(self.memory))
         local h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)
         self.handle = h
         return h
@@ -18,7 +19,9 @@ end
 local proxy_ib = {}
 function proxy_ib:__index(k)
     if k == "handle" then
-        local h = bgfx.create_index_buffer(self.memory, self.flag)
+        assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
+        local membuf = bgfx.memory_buffer(table.unpack(self.memory))
+        local h = bgfx.create_index_buffer(membuf, self.flag)
         self.handle = h
         return h
     end

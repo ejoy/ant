@@ -44,7 +44,7 @@ local function create_dynamic_buffer(layouts, num_vertices, ozzmesh)
 	local dynamic_pointer = dynamic_buffer:pointer()
 	ozzmesh:combine_buffer(dynamic_layout, dynamic_pointer)
 	return {
-		handle = bgfx.create_dynamic_vertex_buffer({"!", dynamic_pointer, 0, dynamic_buffersize}, declmgr.get(dynamic_layout).handle),
+		handle = bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer(dynamic_pointer, dynamic_buffersize, ozzmesh), declmgr.get(dynamic_layout).handle),
 		updatedata = dynamic_buffer,
 	}
 end
@@ -56,9 +56,10 @@ local function create_static_buffer(layouts, num_vertices, ozzmesh)
 	local static_buffer = animodule.new_aligned_memory(static_buffersize, 4)
 	local static_pointer = static_buffer:pointer()
 	ozzmesh:combine_buffer(static_layout, static_pointer)
-	local memorybuf = bgfx.memory_buffer{"!", static_pointer, 0, static_buffersize}
 	return {
-		handle = bgfx.create_vertex_buffer(memorybuf, declmgr.get(static_layout).handle)
+		handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(
+			static_pointer, static_buffersize, ozzmesh
+		), declmgr.get(static_layout).handle)
 	}
 end
 
@@ -80,11 +81,12 @@ local function gen_mesh_assetinfo(ozzmesh)
 	local num_indices = ozzmesh:num_indices()
 	
 	if num_indices ~= 0 then
+		-- must be 16bit index
 		local indices_buffer, stride = ozzmesh:index_buffer()
 		primitive.ib = {
 			start = 0,
 			num = num_indices,
-			handle = bgfx.create_index_buffer({indices_buffer, 0, num_indices * stride})
+			handle = bgfx.create_index_buffer(bgfx.memory_buffer(indices_buffer, num_indices * stride, ozzmesh), "")
 		}
 	end
 

@@ -35,7 +35,7 @@ local function create_mesh(vb_lst, ib)
 		local vb_value = create_vb_buffer(flag, vb)
 		mesh.vb[#mesh.vb+1] = {
 			declname = correct_layout,
-			memory = {"!",vb_value,1,#vb_value},
+			memory = {vb_value,1,#vb_value},
 		}
 		num = num + #vb / #flag
 	end

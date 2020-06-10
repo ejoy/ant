@@ -194,7 +194,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 		local bindata = table.concat(buffer, "")
 		attribuffers[bufferidx] = {
 			declname = table.concat(declname, "|"),
-			memory = {"!", bindata, 1, #bindata},
+			memory = {bindata, 1, #bindata},
 		}
 		bufferidx = bufferidx+1
 	end

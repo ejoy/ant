@@ -76,8 +76,8 @@ local function offset_ib(start_vertex, ib)
 	return newib
 end
 
-local function append_buffers(vb, ib)
-	local numvertices = (#vb - 1) // 4
+local function append_buffers(vbfmt, vb, ibfmt, ib)
+	local numvertices = #vb // 4
 	if numvertices == 0 then
 		return
 	end
@@ -90,7 +90,8 @@ local function append_buffers(vb, ib)
 
 	local vbhandle = vbdesc.handles[1]
 	local vertex_offset = bounding_draw.vertex_offset
-	bgfx.update(vbhandle, vertex_offset, vb);
+	
+	bgfx.update(vbhandle, vertex_offset, bgfx.memory_buffer(vbfmt, vb));
 	bounding_draw.vertex_offset = vertex_offset + numvertices
 
 	local numindices = #ib
@@ -98,7 +99,7 @@ local function append_buffers(vb, ib)
 		ibdesc.num = ibdesc.num + numindices
 		local index_offset = bounding_draw.index_offset
 		local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
-		bgfx.update(ibdesc.handle, index_offset, newib)
+		bgfx.update(ibdesc.handle, index_offset, bgfx.memory_buffer(ibfmt, newib))
 		bounding_draw.index_offset = index_offset + numindices
 	end
 end
@@ -120,46 +121,46 @@ local function apply_srt(shape, srt)
 end
 
 function iwd.draw_lines(shape, srt)
-	local desc = {vb={"fffd"}, ib={}}
+	local desc = {vb={}, ib={}}
 	geometry_drawer.draw_line(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers(desc.vb, desc.ib)
+	append_buffers("fffd", desc.vb, "s", desc.ib)
 end
 
 function iwd.draw_box(shape, srt)
-	local desc={vb={"fffd"}, ib={}}
+	local desc={vb={}, ib={}}
 	geometry_drawer.draw_box(shape.size, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers(desc.vb, desc.ib)
+	append_buffers("fffd", desc.vb, "s", desc.ib)
 end
 
 function iwd.draw_capsule(shape, srt)
-	local desc={vb={"fffd"}, ib={}}
+	local desc={vb={}, ib={}}
 	geometry_drawer.draw_capsule({
 		tessellation = 2,
 		height = shape.height,
 		radius = shape.radius,
 	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers(desc.vb, desc.ib)
+	append_buffers("fffd", desc.vb, "s", desc.ib)
 end
 
 function iwd.draw_sphere(shape, srt)
-	local desc={vb={"fffd"}, ib={}}
+	local desc={vb={}, ib={}}
 	geometry_drawer.draw_sphere({
 		tessellation = 2,
 		radius = shape.radius,
 	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers(desc.vb, desc.ib)
+	append_buffers("fffd", desc.vb, "s", desc.ib)
 end
 
 function iwd.draw_aabb_box(shape, srt)
-	local desc={vb={"fffd"}, ib={}}
+	local desc={vb={}, ib={}}
 	geometry_drawer.draw_aabb_box(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers(desc.vb, desc.ib)
+	append_buffers("fffd", desc.vb, "s", desc.ib)
 end
 
 function iwd.draw_skeleton(ske, ani, srt)
-	local desc={vb={"fffd"}, ib={}}
+	local desc={vb={}, ib={}}
 	geometry_drawer.draw_skeleton(ske, ani, DEFAULT_COLOR, srt, desc)
-	append_buffers(desc.vb, desc.ib)
+	append_buffers("fffd", desc.vb, "s", desc.ib)
 end
 
 local physic_bounding_sys = ecs.system "physic_bounding_system"
