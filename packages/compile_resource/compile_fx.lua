@@ -124,7 +124,7 @@ local function do_compile(cfg, input, output)
         return fs.path(path):localpath()
     end)
     if not ok then
-        error("compile failed: " .. input:string() .. "\n" .. err)
+        error("compile failed: " .. input:string() .. "\n\n" .. err)
     end
     table.insert(deps, 1, input)
     create_depfile(output / ".dep", deps)

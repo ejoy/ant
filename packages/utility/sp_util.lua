@@ -1,71 +1,91 @@
-local util = {}; util.__index = util
+local util = {}
 local subprocess = require "subprocess"
 
-function util.to_cmdline(commands)
-    local s = ""
+local function quote_arg(s)
+    if type(s) ~= 'string' then
+        s = tostring(s)
+    end
+    if #s == 0 then
+        return '""'
+    end
+    if not s:find('[ \t\"]', 1) then
+        return s
+    end
+    if not s:find('[\"\\]', 1) then
+        return '"'..s..'"'
+    end
+    local quote_hit = true
+    local t = {}
+    t[#t+1] = '"'
+    for i = #s, 1, -1 do
+        local c = s:sub(i,i)
+        t[#t+1] = c
+        if quote_hit and c == '\\' then
+            t[#t+1] = '\\'
+        elseif c == '"' then
+            quote_hit = true
+            t[#t+1] = '\\'
+        else
+            quote_hit = false
+        end
+    end
+    t[#t+1] = '"'
+    for i = 1, #t // 2 do
+        local tmp = t[i]
+        t[i] = t[#t-i+1]
+        t[#t-i+1] = tmp
+    end
+    return table.concat(t)
+end
+
+local function to_cmdline(commands)
+    local s = {}
     for _, v in ipairs(commands) do
         if type(v) == "table" then
             for _, vv in ipairs(v) do
-                s = s .. tostring(vv) .. " "
+                s[#s+1] = quote_arg(vv)
             end
         else
-            s = s .. tostring(v) .. " "
+            s[#s+1] = quote_arg(v)
         end
     end
-
-    return s
+    return table.concat(s, " ")
 end
 
-local function def_check_msg(msg)
-    return true, msg
-end
-
-function util.spawn_process(commands, checkmsg, notwait)
-    checkmsg = checkmsg or def_check_msg
-    local prog = subprocess.spawn(commands)
-	print(util.to_cmdline(commands))
-
-	if prog then
-		local function wait_process()
-			local stds = {
-				{fd=prog.stdout, info="[stdout info]:"},
-				{fd=prog.stderr, info="[stderr info]:"}
-			}
-	
-			local success, msg = true, ""
-			while #stds > 0 do
-				for idx, std in ipairs(stds) do
-					local fd = std.fd
-					local num = subprocess.peek(fd)
-					if num == nil then
-						local s, m = checkmsg(std.info)
-						success = success and s
-						msg = msg .. "\n\n" .. m
-						table.remove(stds, idx)
-						break
-					end
-	
-					if num ~= 0 then
-						std.info = std.info .. fd:read(num)
-					end
-				end
-			end
-
-			local errcode = prog:wait()
-			if errcode == 0 then
-				return success, msg
-			end
-			return false, msg .. string.format("\nsubprocess failed, error code:%x", errcode)
+function util.spawn_process(commands)
+	local prog = subprocess.spawn(commands)
+	local msg = {}
+	msg[#msg+1] = to_cmdline(commands)
+	if not prog then
+		msg[#msg+1] = "----------------------------"
+		msg[#msg+1] = "Failed"
+		msg[#msg+1] = "----------------------------"
+		return false, table.concat(msg, "\n")
+	end
+	if prog.stdout then
+		local s = prog.stdout:read "a"
+		if #s > 0 then
+			msg[#msg+1] = "========== stdout =========="
+			msg[#msg+1] = s
 		end
-		
-		if notwait then
-			return {prog = prog, wait = wait_process}
-		else
-			return wait_process()
+	end
+	if prog.stderr then
+		local s = prog.stderr:read "a"
+		if #s > 0 then
+			msg[#msg+1] = "========== stderr =========="
+			msg[#msg+1] = s
 		end
-    end
-    
-    return false, "Create process failed."
+	end
+	msg[#msg+1] = "----------------------------"
+	local errcode = prog:wait()
+	if errcode ~= 0 then
+		msg[#msg+1] = string.format("Failed, error code:%x", errcode)
+		msg[#msg+1] = "----------------------------"
+		return false, table.concat(msg, "\n")
+	end
+	msg[#msg+1] = "Success"
+	msg[#msg+1] = "----------------------------"
+	return true, table.concat(msg, "\n")
 end
 
 return util

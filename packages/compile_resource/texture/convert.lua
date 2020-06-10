@@ -126,16 +126,12 @@ return function (config, sourcefile, outpath, localpath)
 	param.format = assert(which_format(os, param))
 	gen_commands(os, param, texpath, binfile, commands)
 
-	local success, msg = subprocess.spawn_process(commands, function (info)
-		local success, msg = true, ""
-		if info ~= "" then
-			local INFO = info:upper()
-			success = INFO:find("ERROR:", 1, true) == nil
-			msg = subprocess.to_cmdline(commands) .. "\n" .. info .. "\n"
+	local success, msg = subprocess.spawn_process(commands)
+	if success then
+		if msg:upper():find("ERROR:", 1, true) then
+			success = false
 		end
-		return success, msg
-	end)
-
+	end
 	if success then
 		if lfs.exists(binfile) then
 			local config = {

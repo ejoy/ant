@@ -30,10 +30,7 @@ return function (input, output)
 		stderr = true,
 		hideWindow = true,
 	}
-	local notwait <const> = true
-	local process = subprocess.spawn_process(commands, nil, notwait)
-	local success, msg = process.wait()
-	print("convert file:", input:string(), success and "success" or "failed")
+	local success, msg = subprocess.spawn_process(commands)
 	print(msg)
 	return success
 end

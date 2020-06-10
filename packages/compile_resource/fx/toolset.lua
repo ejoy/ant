@@ -119,24 +119,19 @@ function toolset.compile(config)
 
 	add_optimizelevel(config.optimizelevel, default_level(shadertype, stagetype))
 
-	local ok, msg = subprocess.spawn_process(commands, function (info)
-		local success, msg = true, ""
-		if info ~= "" then
-			local INFO = info:upper()
-			for _, term in ipairs {
-				"ERROR",
-				"FAILED TO BUILD SHADER"
-			} do
-				success = INFO:find(term, 1, true) == nil
-				if not success then
-					break
-				end
+	local ok, msg = subprocess.spawn_process(commands)
+	if ok then
+		local INFO = msg:upper()
+		for _, term in ipairs {
+			"ERROR",
+			"FAILED TO BUILD SHADER"
+		} do
+			if INFO:find(term, 1, true) then
+				ok = false
+				break
 			end
-			msg = subprocess.to_cmdline(commands) .. "\n" .. info .. "\n"
 		end
-
-		return success, msg
-	end)
+	end
 	if not ok then
 		return false, msg
 	end
