@@ -1,3 +1,4 @@
+local lfs = require "filesystem.local"
 local JSON = import_package "ant.json"
 local jsonDecode = JSON.decode
 local jsonEncode = JSON.encode
@@ -21,54 +22,42 @@ local function aligh_data(data, alignbytes, align_char)
 end
 
 local function encode_chunk(f, datatype, data, length)
-	local chunkinfo = string.pack("<I4c4", length, datatype)
+	local chunkinfo = ("<I4c4"):pack(length, datatype)
 	f:write(chunkinfo)
 	f:write(data)
 end
 
-local function decode_from_filehandle(f)
+local function decode(filename)
+    local f = assert(lfs.open(filename, "rb"))
     local header = f:read(12)
     local magic, version, _ = ("<c4I4I4"):unpack(header)
     assert(magic == "glTF")
     local json = decode_chunk(f, "JSON")
 	local bin = decode_chunk(f, "BIN\0")
 	assert(f:read(1) == nil)
+	f:close()
     return {
         version = version,
         info 	= jsonDecode(json),
-        json 	= json,
         bin 	= bin,
     }
 end
 
-local function decode(filename)
-    local f = assert(io.open(filename, "rb"))
-	local c = decode_from_filehandle(f)
-	f:close()
-	return c
-end
-
 local function encode(filename, data)
-	local f = assert(io.open(filename, "wb"))
-	local headersize = 12
-	local chunk_headersize = 8
-
+	local f = assert(lfs.open(filename, "wb"))
 	local jsondata = jsonEncode(data.info)
 	local align_json, align_json_length = aligh_data(jsondata, 4, " ")
-	local align_bindata, align_bindata_length = aligh_data(data.bin, 4, "\0")
-
-	local header = string.pack("<c4I4I4", "glTF", data.version, 
-		headersize + 
-		chunk_headersize + align_json_length + 
-		chunk_headersize + align_bindata_length)
-	f:write(header)
+	local align_bin, align_bin_length = aligh_data(data.bin, 4, "\0")
+	local headersize <const> = 12
+	local chunk_headersize <const> = 8
+	local size = headersize + chunk_headersize + align_json_length + chunk_headersize + align_bin_length
+	f:write(("<c4I4I4"):pack("glTF", data.version, size))
 	encode_chunk(f, "JSON", align_json, align_json_length)
-	encode_chunk(f, "BIN\0", align_bindata, align_bindata_length)
+	encode_chunk(f, "BIN\0", align_bin, align_bin_length)
 	f:close()
 end
 
 return {
 	decode = decode,
-	decode_from_filehandle = decode_from_filehandle,
 	encode = encode,
 }

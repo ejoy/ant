@@ -5,11 +5,12 @@ local export_material = require "model.export_material"
 local glbloader = require "model.glTF.glb"
 
 return function (_, input, output)
-    local glbdata = glbloader.decode(input:string())
+    local glbdata = glbloader.decode(input)
     local exports = {}
+    assert(glbdata.version == 2)
     export_meshbin(output, glbdata, exports)
     export_material(output, glbdata, exports)
     export_animation(input, output, exports)
     export_prefab(output, glbdata, exports)
-    return true, ""
+    return true
 end
