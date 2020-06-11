@@ -21,6 +21,22 @@ function t:init()
     return self
 end
 
+local pf = ecs.component "primitive_filter"
+
+function pf:init()
+	self.result = {
+		translucent = {
+			visible_set = {},
+			items = {},
+		},
+		opaticy = {
+			visible_set = {},
+			items = {},
+		},
+	}
+	return self
+end
+
 local sp_sys = ecs.system "scenespace_system"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
