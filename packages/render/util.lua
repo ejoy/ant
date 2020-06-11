@@ -113,7 +113,7 @@ function util.create_main_queue(world, view_rect)
 				},
 			},
 			primitive_filter = world.component "primitive_filter" {
-				filter_tag = "can_render",
+				filter_type = "visible",
 			},
 			visible = true,
 			name = "main render queue",
@@ -264,7 +264,7 @@ function util.create_blit_queue(world, viewrect)
 				viewport = default_comp.viewport(viewrect),
 			},
 			primitive_filter = world.component "primitive_filter" {
-				filter_tag = "blit_render",
+				filter_type = "blit_view",
 			},
 			view_mode = "",
 			visible = true,
@@ -273,18 +273,20 @@ function util.create_blit_queue(world, viewrect)
 		}
 	}
 
+	local ies = world:interface "ant.scene|entity_state"
 	world:create_entity {
 		policy = {
 			"ant.general|name",
-			"ant.render|blitrender",
+			"ant.render|render",
 		},
 		data = {
 			transform = world.component "transform" {
 				world.component "srt" {srt = {}}
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/fullscreen.material",
-			blit_render = true,
+			state = ies.create_state "blit_view",
 			name = "full_quad",
+			scene_entity = true,
 			mesh = world:interface "ant.render|entity".fullquad_mesh(),
 		}
 	}

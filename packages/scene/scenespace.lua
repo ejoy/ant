@@ -25,6 +25,7 @@ local sp_sys = ecs.system "scenespace_system"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
 local icm = world:interface "ant.objcontroller|camera_motion"
+local ies = world:interface "ant.scene|entity_state"
 
 local se_mb = world:sub {"component_register", "scene_entity"}
 local eremove_mb = world:sub {"entity_removed"}
@@ -106,39 +107,6 @@ local function update_lock_target_transform(eid, lt, target, im)
 	end
 end
 
-local attri_cache = {
-	transform = {},
-	material = {},
-}
-local function get_attribute(eid, attribname)
-	local e = world[eid]
-	local t = e[attribname]
-	if t then
-		return t
-	end
-
-	local ac = attri_cache[attribname]
-	if ac == nil then
-		error(("not support attribute:%s"):format(attribname))
-	end
-
-	local c = ac[eid]
-	if c then
-		return c
-	end
-
-	local peid = e.parent
-	while peid and (not t) do
-		local pe = world[peid]
-		t = pe[attribname]
-		peid = pe.parent
-	end
-
-	ac[eid] = t
-
-	return t
-end
-
 local function combine_parent_transform(peid, trans)
 	local pe = world[peid]
 	-- need apply before ptrans._world
@@ -149,7 +117,7 @@ local function combine_parent_transform(peid, trans)
 		trans._world.m = math3d.mul(t, trans._world)
 	end
 
-	local ptrans = get_attribute(peid, "transform")
+	local ptrans = ies.component(peid, "transform")
 	if ptrans then
 		local pw = ptrans._world
 		trans._world.m = math3d.mul(pw, trans._world)
@@ -187,13 +155,64 @@ local function update_transform(eid)
 
 		update_bounding(trans, e)
 	end
+	return trans
+end
+
+local function update_rendermesh(eid)
+	local mesh = ies.component(eid, "mesh")
+	if mesh then
+		local handles = {}
+		local rendermesh = {
+			vb = {
+				start = mesh.vb.start,
+				num = mesh.vb.num,
+				handles = handles,
+			}
+		}
+		for _, v in ipairs(mesh.vb) do
+			handles[#handles+1] = v.handle
+		end
+		if mesh.ib then
+			rendermesh.ib = {
+				start = mesh.ib.start,
+				num = mesh.ib.num,
+				handle = mesh.ib.handle,
+			}
+		end
+
+		return rendermesh
+	end
+end
+
+local function update_material(eid)
+	return ies.component(eid, "material")
 end
 
 function sp_sys:update_transform()
 	for _, eid in ipairs(scenequeue) do
-		-- hierarchy scene can do everything relative to hierarchy, such as:
-		-- hierarhcy visible/material/transform, and another reasonable data
-		update_transform(eid)
+		local transform	= update_transform(eid)
+		local rendermesh= update_rendermesh(eid)
+		local material 	= update_material(eid)
+
+		if transform and rendermesh and material then
+			local ri = {
+				vb 		= rendermesh.vb,
+				ib 		= rendermesh.ib,
+				state	= material._state,
+				fx 		= material.fx,
+				properties = material.properties,
+				worldmat= transform._world,
+				skinning_matrices = transform._skinning_matrices,
+				aabb 	= transform._aabb,
+			}
+			
+			local filterlist = ies.filter_list(eid)
+			
+			for _, f in ipairs(filterlist) do
+				local resulttarget = f.result[material.fx.surface_type.transparency]
+				resulttarget.items[eid] = ri
+			end
+		end
 	end
 end
 

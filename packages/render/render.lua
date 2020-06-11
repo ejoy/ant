@@ -10,26 +10,26 @@ local math3d	= require "math3d"
 local ml = ecs.transform "mesh_loader"
 
 function ml.process(e)
-	if not e.mesh then
-		return
-	end
-	local rendermesh = {}
-	rendermesh.vb = {
-		start = e.mesh.vb.start,
-		num = e.mesh.vb.num,
-		handles = {},
-	}
-    for _, v in ipairs(e.mesh.vb) do
-        rendermesh.vb.handles[#rendermesh.vb.handles+1] = v.handle
-	end
-	if e.mesh.ib then
-		rendermesh.ib = {
-			start = e.mesh.ib.start,
-			num = e.mesh.ib.num,
-			handle = e.mesh.ib.handle,
-		}
-	end
-	e.rendermesh = rendermesh
+	-- if not e.mesh then
+	-- 	return
+	-- end
+	-- local rendermesh = {}
+	-- rendermesh.vb = {
+	-- 	start = e.mesh.vb.start,
+	-- 	num = e.mesh.vb.num,
+	-- 	handles = {},
+	-- }
+    -- for _, v in ipairs(e.mesh.vb) do
+    --     rendermesh.vb.handles[#rendermesh.vb.handles+1] = v.handle
+	-- end
+	-- if e.mesh.ib then
+	-- 	rendermesh.ib = {
+	-- 		start = e.mesh.ib.start,
+	-- 		num = e.mesh.ib.num,
+	-- 		handle = e.mesh.ib.handle,
+	-- 	}
+	-- end
+	-- e.rendermesh = rendermesh
 end
 
 local rt = ecs.component "render_target"
@@ -85,18 +85,46 @@ function render_sys:render_commit()
 			local filter = rq.primitive_filter
 			local results = filter.result
 
-			local function draw_primitives(result)
-				local visibleset = result.visible_set.n and result.visible_set or result
-				for i=1, visibleset.n do
-					local prim = visibleset[i]
-					ru.draw_primitive(viewid, prim, render_properties)
+			bgfx.set_view_mode(viewid, rt.view_mode)
+
+			local function update_properties(fx, properties, render_properties)
+				for _, u in ipairs(fx.uniforms) do
+					local p = properties[u.name] or render_properties[u.name]
+					if p then
+						u:set(p)
+					else
+						log.warn(string.format("property: %s, not privided, but shader program needed", u.name))
+					end
 				end
 			end
 
-			bgfx.set_view_mode(viewid, rt.view_mode)
+			local function draw_items(result)
+				for eid, ri in pairs(result.items) do
+					local sm = ri.skinning_matrices
+					if sm then
+						bgfx.set_multi_transforms(sm:pointer(), sm:count())
+					else
+						bgfx.set_transform(ri.worldmat)
+					end
 
-			draw_primitives(results.opaticy)
-			draw_primitives(results.translucent)
+					bgfx.set_state(ri.state)
+					update_properties(ri.fx, ri.properties, render_properties)
+				
+					local ib, vb = ri.ib, ri.vb
+				
+					if ib then
+						bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
+					end
+					local start_v, num_v = vb.start, vb.num
+					for idx, h in ipairs(vb.handles) do
+						bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
+					end
+					bgfx.submit(viewid, ri.fx.prog, 0)
+				end
+			end
+
+			draw_items(results.opaticy)
+			draw_items(results.translucent)
 		end
 		
 	end

@@ -185,7 +185,7 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 				stabilize 	= false,
 			},
 			primitive_filter = world.component "primitive_filter" {
-				filter_tag = "can_cast",
+				filter_type = "cast_shadow",
 			},
 			camera_eid = cameraeid,
 			render_target = world.component "render_target" {
@@ -358,8 +358,16 @@ function sm:refine_filter()
 		local filter = se.primitive_filter
 		local results = filter.result
 		local function replace_material(result, material)
-			for i=1, result.n do
-				result[i].material = material
+			local items = result.items
+			for eid, item in pairs(items) do
+				local newitem = {}
+				for n, v in pairs(item) do
+					newitem[n] = v
+				end
+				newitem.fx 			= material.fx
+				newitem.properties 	= material.properties
+				newitem.state 		= material._state
+				items[eid] = newitem
 			end
 		end
 	

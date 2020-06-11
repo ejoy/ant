@@ -100,29 +100,27 @@ end
 
 local pickup_sys = ecs.system "pickup_system"
 
-local pick_material_cache = {}
-
-local function pick_material(material_template, eid)
-	local pm = pick_material_cache[eid]
-	if pm then
-		return pm
+local uid_cache = {}
+local function get_properties(eid)
+	local uid = uid_cache[eid]
+	if uid then
+		return uid
 	end
 
-	local vv = packeid_as_rgba(eid)
-	local m = assetmgr.patch(material_template, {})
-	m.properties = {
-		u_id = world.component "vector"(vv)
+	uid = {
+		u_id = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
 	}
-	pick_material_cache[eid] = m
-	return m
+	uid_cache[eid] = uid
 end
 
 local function replace_material(result, material)
-	if result then
-		for i=1, result.n do
-			local item = result[i]
-			item.material = pick_material(material, item.eid)
-		end
+	local items = result.items
+	for eid, item in pairs(items) do
+		local ni = {}; for k, v in pairs(item) do ni[k] = v end
+		ni.fx = material.fx
+		ni.properties = get_properties(eid)
+		ni.state = material._state
+		items[eid] = ni
 	end
 end
 
@@ -256,7 +254,7 @@ local function add_pick_entity()
 				fb_idx = fbidx,
 			},
 			primitive_filter = world.component "primitive_filter" {
-				filter_tag = "can_select"
+				filter_type = "selectable"
 			},
 			name = "pickup_renderqueue",
 			visible = false,

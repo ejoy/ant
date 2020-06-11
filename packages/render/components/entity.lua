@@ -3,7 +3,6 @@ local world = ecs.world
 
 local util = ecs.interface "entity"
 
-local bgfx      = require "bgfx"
 local declmgr   = require "vertexdecl_mgr"
 local hwi       = require "hardware_interface"
 local math3d    = require "math3d"
@@ -12,6 +11,8 @@ local mu        = import_package "ant.math".util
 local geopkg    = import_package "ant.geometry"
 local geodrawer = geopkg.drawer
 local geolib    = geopkg.geometry
+
+local ies = world:interface "ant.scene|entity_state"
 
 local function create_vb_buffer(flag, vb)
 	return ("<"..flag:gsub("d", "I4"):rep(#vb/#flag)):pack(table.unpack(vb))
@@ -114,7 +115,7 @@ function util.create_plane_entity(srt, materialpath, color, name, info)
 	local data = {
 		transform = world.component "transform" {srt = world.component "srt"(srt or {})},
 		material = world.component "resource"(materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material"),
-		can_render = true,
+		--state = ies.create_state "visible|selectable",
 		name = name or "Plane",
 		scene_entity = true,
 		mesh = get_plane_mesh(),
@@ -329,8 +330,8 @@ function util.create_procedural_sky(settings)
 				month 		= settings.whichmonth or "June",
 				latitude 	= settings.whichlatitude or math.rad(50),
 			},
+			state = ies.create_state "visible",
 			mesh = create_sky_mesh(32, 32),
-			can_render = true,
 			scene_entity = true,
 			name = "procedural sky",
 		}

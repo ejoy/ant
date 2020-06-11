@@ -9,9 +9,11 @@ function pf:init()
 	self.result = {
 		translucent = {
 			visible_set = {},
+			items = {},
 		},
 		opaticy = {
 			visible_set = {},
+			items = {},
 		},
 	}
 	return self
@@ -50,21 +52,21 @@ local function add_result(eid, mesh, material, trans, result)
 end
 
 function prim_filter_sys:filter_primitive()
-	for _, prim_eid in world:each "primitive_filter" do
-		local e = world[prim_eid]
-		local filter = e.primitive_filter
-		reset_results(filter.result)
-		local filtertag = filter.filter_tag
+	-- for _, prim_eid in world:each "primitive_filter" do
+	-- 	local e = world[prim_eid]
+	-- 	local filter = e.primitive_filter
+	-- 	reset_results(filter.result)
+	-- 	local filtertag = filter.filter_type
 
-		for _, eid in world:each(filtertag) do
-			local ce = world[eid]
-			if ce[filtertag] then
-				local material = ce.material
-				local resulttarget = assert(filter.result[material.fx.surface_type.transparency])
-				add_result(eid, ce.rendermesh, material, ce.transform, resulttarget)
-			end
-		end
-	end
+	-- 	for _, eid in world:each(filtertag) do
+	-- 		local ce = world[eid]
+	-- 		if ce[filtertag] then
+	-- 			local material = ce.material
+	-- 			local resulttarget = assert(filter.result[material.fx.surface_type.transparency])
+	-- 			add_result(eid, ce.rendermesh, material, ce.transform, resulttarget)
+	-- 		end
+	-- 	end
+	-- end
 end
 
 -- local filter_primitive_mb = world:sub{"filter_primitive"}
