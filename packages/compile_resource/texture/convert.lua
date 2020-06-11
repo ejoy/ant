@@ -75,8 +75,8 @@ local function writefile(filename, data)
 	f:close()
 end
 
-return function (config, sourcefile, outpath, localpath)
-	local os, renderer = config:match "(%w+)_(%w+)"
+return function (sourcefile, outpath, identity, localpath)
+	local os, renderer = identity:match "(%w+)_(%w+)"
 	local ext = assert(extensions[renderer])
 	local binfile = (outpath / "main.bin"):replace_extension(ext)
 

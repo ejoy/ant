@@ -25,7 +25,7 @@ local function create_framebuffers_container_obj(fbsize)
         V="CLAMP",
     }
 
-    local sd = setting.get()
+    local sd = setting:data()
     local bloomsetting = sd.graphic.postprocess.bloom
     local fmt = bloomsetting.format
     return {
@@ -123,7 +123,7 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 end
 
 function bloom_sys:post_init()
-    local sd = setting.get()
+    local sd = setting:data()
     local bloom = sd.graphic.postprocess.bloom
     if bloom.enable then
         local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")

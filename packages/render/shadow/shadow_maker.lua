@@ -292,7 +292,7 @@ local function create_shadow_entity(shadowmap_size, split_num, depth_type)
 end
 
 function sm:init()
-	local sd = setting.get()
+	local sd = setting:data()
 	local shadowsetting = sd.graphic.shadow
 	local shadowmap_size= shadowsetting.size
 	local depth_type 	= shadowsetting.type

@@ -60,7 +60,7 @@ function prim_filter_sys:filter_primitive()
 			local ce = world[eid]
 			if ce[filtertag] then
 				local material = ce.material
-				local resulttarget = assert(filter.result[material.fx.surface_type.transparency])
+				local resulttarget = assert(filter.result[material.fx.setting.transparency])
 				add_result(eid, ce.rendermesh, material, ce.transform, resulttarget)
 			end
 		end

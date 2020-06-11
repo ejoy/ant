@@ -93,7 +93,7 @@ end
 
 --TODO
 function assetmgr.load_fx(fullpath, setting)
-	local res = require "ext_fx".loader(fullpath, setting)
+	local res = cr.compile_fx(fullpath, setting)
 	return setmetatable(res, {__tostring=function() return fullpath end})
 end
 

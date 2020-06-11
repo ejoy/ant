@@ -3,7 +3,6 @@ hw.__index = hw
 
 local platform = require "platform"
 local bgfx     = require "bgfx"
-local setting  = require "setting"
 local math3d   = require "math3d"
 
 local caps = nil
@@ -67,7 +66,6 @@ end
 
 function hw.init(args)
 	bgfx_init(args)
-	setting.init()
 	import_package "ant.compile_resource".init()
 end
 

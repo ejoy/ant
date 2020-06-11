@@ -11,7 +11,7 @@ local tm_sys    = ecs.system "tonemapping_system"
 local ipp       = world:interface "postprocess"
 
 function tm_sys:post_init()
-    local sd = setting.get()
+    local sd = setting:data()
     local hdrsetting = sd.graphic.hdr
     if hdrsetting.enable then
         local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
