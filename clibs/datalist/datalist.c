@@ -461,10 +461,10 @@ push_token(lua_State *L, struct lex_state *LS, struct token *t) {
 	}
 
 	if (t->type == TOKEN_ATOM) {
-		if (IS_KEYWORD(ptr, sz, "true") || IS_KEYWORD(ptr, sz, "yes") || IS_KEYWORD(ptr, sz, "on")) {
+		if (IS_KEYWORD(ptr, sz, "true")) {
 			lua_pushboolean(L, 1);
 			return;
-		} else if (IS_KEYWORD(ptr, sz, "false") || IS_KEYWORD(ptr, sz, "no") || IS_KEYWORD(ptr, sz, "off")) {
+		} else if (IS_KEYWORD(ptr, sz, "false")) {
 			lua_pushboolean(L, 0);
 			return;
 		} else if (IS_KEYWORD(ptr, sz, "nil")) {
