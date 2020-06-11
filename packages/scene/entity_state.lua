@@ -14,8 +14,8 @@ local STATE_TYPE = {
 	blit_view	= 0x80000000,
 }
 
-local ies_class = ecs.interface "entity_state"
-local ies = world:interface "ant.scene|entity_state"
+local ies_class = ecs.interface "ientity_state"
+local ies = world:interface "ant.scene|ientity_state"
 
 function ies_class.full_state(eid)
 	local e = world[eid]
@@ -74,7 +74,6 @@ function ies_class.filter_list(eid)
 		if (fs & mask) ~= 0 then
 			local f = filters[n]
 			if f then
-				print(world[eid].name or eid, n)
 				l[#l+1] = f
 			end
         end

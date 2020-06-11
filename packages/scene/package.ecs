@@ -1,4 +1,3 @@
 import "cull_system.ecs"
-import "filter_system.ecs"
-import "scenespace.ecs"
+import "scene.ecs"
 import "visible_system.ecs"

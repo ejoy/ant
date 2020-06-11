@@ -4,7 +4,7 @@ local ecs = ...
 local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
-local renderutil= require "util"
+local samplerutil= require "sampler"
 local camerautil= require "camera.util"
 local shadowutil= require "shadow.util"
 local fbmgr 	= require "framebuffer_mgr"
@@ -213,7 +213,7 @@ end
 
 local function get_render_buffers(width, height, linear_shadow)
 	if linear_shadow then
-		local flags = renderutil.generate_sampler_flag {
+		local flags = samplerutil.sampler_flag {
 			RT="RT_ON",
 			MIN="LINEAR",
 			MAG="LINEAR",
@@ -246,7 +246,7 @@ local function get_render_buffers(width, height, linear_shadow)
 			w=width,
 			h=height,
 			layers=1,
-			flags=renderutil.generate_sampler_flag{
+			flags=samplerutil.sampler_flag{
 				RT="RT_ON",
 				MIN="LINEAR",
 				MAG="LINEAR",

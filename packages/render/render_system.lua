@@ -3,7 +3,6 @@ local world = ecs.world
 
 local fbmgr 	= require "framebuffer_mgr"
 local bgfx 		= require "bgfx"
-local ru 		= require "util"
 
 local math3d	= require "math3d"
 
@@ -27,15 +26,6 @@ end
 
 function rt:delete()
 	fbmgr.unbind(self.viewid)
-end
-
-local ct= ecs.transform "camera_transfrom"
-
-function ct.process_prefab(e)
-	local lt = e.camera.lock_target
-	if lt and e.parent == nil then
-		error(string.format("'lock_target' defined in 'camera' component, but 'parent' component not define in entity"))
-	end
 end
 
 local render_sys = ecs.system "render_system"

@@ -12,7 +12,7 @@ local geopkg    = import_package "ant.geometry"
 local geodrawer = geopkg.drawer
 local geolib    = geopkg.geometry
 
-local ies = world:interface "ant.scene|entity_state"
+local ies = world:interface "ant.scene|ientity_state"
 
 local function create_vb_buffer(flag, vb)
 	return ("<"..flag:gsub("d", "I4"):rep(#vb/#flag)):pack(table.unpack(vb))

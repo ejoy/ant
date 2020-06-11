@@ -158,7 +158,7 @@ function irender_class.create_blit_queue(viewrect)
 		}
 	}
 
-	local ies = world:interface "ant.scene|entity_state"
+	local ies = world:interface "ant.scene|ientity_state"
 	world:create_entity {
 		policy = {
 			"ant.general|name",

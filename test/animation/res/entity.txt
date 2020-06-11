@@ -2,7 +2,6 @@ policy:
   ant.animation|animation
   ant.animation|skinning
   ant.animation|animation_controller.birth
-  ant.render|mesh
   ant.general|name
   ant.render|render
 data:

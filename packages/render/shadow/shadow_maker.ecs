@@ -3,7 +3,6 @@ import "@ant.scene"
 
 system "shadow_system"
     .implement "shadow/shadow_maker.lua"
-    .require_system "ant.scene|primitive_filter_system"
     .require_system "ant.render|render_system"
     --.require_policy "ant.render|shadow_debug_policy"
     .method "init"
