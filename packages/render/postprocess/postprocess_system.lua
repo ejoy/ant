@@ -45,7 +45,7 @@ end
 local function is_slot_equal(lhs, rhs)
     return lhs.fb_idx == rhs.fb_idx and lhs.rb_idx == rhs.rb_idx
 end
-
+local irender = world:interface "ant.render|irender"
 local function render_pass(lastslot, out_viewid, pass, meshgroup, render_properties)
     local ppinput_stage = uniforms.system_uniform("s_postprocess_input").stage
 
@@ -70,9 +70,13 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
     renderutil.update_frame_buffer_view(out_viewid, out_slot.fb_idx)
     renderutil.update_viewport(out_viewid, pass.viewport)
 
-    renderutil.draw_primitive(out_viewid, {
-        mgroup 	    = meshgroup,
-        material 	= pass.material,
+    local material = pass.material
+    irender.draw(out_viewid, {
+        ib = meshgroup.ib,
+        vb = meshgroup.vb,
+        fx  = material.fx,
+        properties = material.properties,
+        state = material._state,
     }, mu.IDENTITY_MAT, render_properties)
 
     return out_slot

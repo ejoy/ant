@@ -72,6 +72,8 @@ function render_sys:init()
 	ru.create_main_queue(world, {w=world.args.width,h=world.args.height})
 end
 
+local irender = world:interface "ant.render|irender"
+
 function render_sys:render_commit()
 	local render_properties = world:interface "ant.render|render_properties".data()
 	for _, eid in world:each "render_target" do
@@ -87,39 +89,9 @@ function render_sys:render_commit()
 
 			bgfx.set_view_mode(viewid, rt.view_mode)
 
-			local function update_properties(fx, properties, render_properties)
-				for _, u in ipairs(fx.uniforms) do
-					local p = properties[u.name] or render_properties[u.name]
-					if p then
-						u:set(p)
-					else
-						log.warn(string.format("property: %s, not privided, but shader program needed", u.name))
-					end
-				end
-			end
-
 			local function draw_items(result)
 				for eid, ri in pairs(result.items) do
-					local sm = ri.skinning_matrices
-					if sm then
-						bgfx.set_multi_transforms(sm:pointer(), sm:count())
-					else
-						bgfx.set_transform(ri.worldmat)
-					end
-
-					bgfx.set_state(ri.state)
-					update_properties(ri.fx, ri.properties, render_properties)
-				
-					local ib, vb = ri.ib, ri.vb
-				
-					if ib then
-						bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
-					end
-					local start_v, num_v = vb.start, vb.num
-					for idx, h in ipairs(vb.handles) do
-						bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
-					end
-					bgfx.submit(viewid, ri.fx.prog, 0)
+					irender.draw(viewid, ri, render_properties)
 				end
 			end
 

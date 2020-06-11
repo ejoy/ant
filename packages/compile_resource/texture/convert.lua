@@ -1,6 +1,6 @@
 local lfs 	= require "filesystem.local"
 
-local ru = import_package "ant.render".util
+local samplerutil = import_package "ant.render".sampler
 local stringify = import_package "ant.serialize".stringify
 local utilitypkg = import_package "ant.utility"
 local subprocess = utilitypkg.subprocess
@@ -75,6 +75,32 @@ local function writefile(filename, data)
 	f:close()
 end
 
+local function default_sampler()
+	return {
+		U="WRAP",
+		V="WRAP",
+		W="WRAP",
+		MIN="LINEAR",
+		MAG="LINEAR",
+		MIP="POINT",
+	}
+end
+
+local function fill_default_sampler(sampler)
+	local d = default_sampler()
+	if sampler == nil then
+		return d
+	end
+
+	for k, v in pairs(d) do
+		if sampler[k] == nil then
+			sampler[k] = v
+		end
+	end
+
+	return sampler
+end
+
 return function (config, sourcefile, outpath, localpath)
 	local os, renderer = config:match "(%w+)_(%w+)"
 	local ext = assert(extensions[renderer])
@@ -99,9 +125,9 @@ return function (config, sourcefile, outpath, localpath)
 	if success then
 		assert(lfs.exists(binfile))
 		local config = {
-			name = texpath:string(),
-			sampler = ru.fill_default_sampler(param.sampler),
-			flag = ru.generate_sampler_flag(param.sampler),
+			name	= texpath:string(),
+			sampler = fill_default_sampler(param.sampler),
+			flag	= samplerutil.sampler_flag(param.sampler),
 		}
 		if param.colorspace == "sRGB" then
 			config.flag = config.flag .. 'Sg'

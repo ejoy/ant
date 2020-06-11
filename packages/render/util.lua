@@ -1,4 +1,5 @@
-
+local ecs = ...
+local world = ecs.world
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 
@@ -6,43 +7,31 @@ local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local default_comp 	= require "components.default"
-local computil 		= require "components.util"
+local samplerutil	= require "sampler"
 
 local setting		= require "setting"
 
-local util = {}
-util.__index = util
+local irender_class = ecs.interface "irender"
+local irender = world:interface "ant.render|irender"
+function irender_class.draw(vid, ri, render_properties)
+	local sm = ri.skinning_matrices
+	if sm then
+		bgfx.set_multi_transforms(sm:pointer(), sm:count())
+	else
+		bgfx.set_transform(ri.worldmat)
+	end
 
-local function update_properties(material, render_properties)
-	for _, u in ipairs(material.fx.uniforms) do
-		local p = material.properties[u.name] or render_properties[u.name]
+	bgfx.set_state(ri.state)
+	local properties = ri.properties
+	for _, u in ipairs(ri.fx.uniforms) do
+		local p = properties[u.name] or render_properties[u.name]
 		if p then
 			u:set(p)
 		else
-			log.warn(string.format("property: %s, not privided, but shader program needed", u.name))
+			log.warn(("property: %s, not privided, but shader program needed"):format(u.name))
 		end
 	end
-end
-
-function util.draw_primitive(vid, primgroup, render_properties)
-	local trans = primgroup.transform
-	if trans then
-		local sm = trans._skinning_matrices
-		if sm == nil then
-			bgfx.set_transform(trans._world)
-		else
-			bgfx.set_multi_transforms(sm:pointer(), sm:count())
-		end
-	end
-
-	local material = primgroup.material
-	bgfx.set_state(material._state)
-	update_properties(material, render_properties)
-
-	local prog = material.fx.prog
-
-	local mg = assert(primgroup.mesh)
-	local ib, vb = mg.ib, mg.vb
+	local ib, vb = ri.ib, ri.vb
 
 	if ib then
 		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
@@ -51,11 +40,17 @@ function util.draw_primitive(vid, primgroup, render_properties)
 	for idx, h in ipairs(vb.handles) do
 		bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
 	end
-	bgfx.submit(vid, prog, 0)
+	bgfx.submit(vid, ri.fx.prog, 0)
 end
 
-function util.create_main_queue(world, view_rect)
-	local rb_flag = util.generate_sampler_flag {
+function irender_class.get_main_view_rendertexture()
+	local mq = world:singleton_entity "main_queue"
+	local fb = fbmgr.get(mq.render_target.fb_idx)
+	return fbmgr.get_rb(fb[1]).handle
+end
+
+function irender_class.create_main_queue(view_rect)
+	local rb_flag = samplerutil.sampler_flag {
 		RT="RT_MSAA2",
 		MIN="LINEAR",
 		MAG="LINEAR",
@@ -122,119 +117,9 @@ function util.create_main_queue(world, view_rect)
 	}
 end
 
-function util.default_sampler()
-	return {
-		U="WRAP",
-		V="WRAP",
-		W="WRAP",
-		MIN="LINEAR",
-		MAG="LINEAR",
-		MIP="POINT",
-	}
-end
-
-function util.fill_default_sampler(sampler)
-	local d = util.default_sampler()
-	if sampler == nil then
-		return d
-	end
-
-	for k, v in pairs(d) do
-		if sampler[k] == nil then
-			sampler[k] = v
-		end
-	end
-
-	return sampler
-end
-
-local sample_types = {
-	U="u", V="v", W="w", 
-	MIN="-", MAG="+", MIP="*",
-
-	COMPARE="c",
-	BOARD_COLOR="c",
-
-	RT = "r", 
-	RT_READWRITE = "r", 
-	RT_MSAA="r",
-
-	BLIT = "b",
-	BLIT_READBACK = "b", 
-	BLIT_COMPUTE = "b",
-
-	SAMPLE = "s",
-}
-
-local sample_value = {
-	-- filter mode
-	CLAMP="c", MIRROR = "m", BORDER="b", WRAP="w",	--default
-	-- filter address
-	POINT="p", ANISOTROPIC="a", LINEAR="l", --default,
-
-	-- compare
-	COMPARE_LESS = '<',
-	COMPARE_LEQUAL = '[',
-	COMPARE_EQUAL = '=',
-	COMPARE_GEQUAL = ']',
-	COMPARE_GREATER = '>',
-	COMPARE_NOTEQUAL = '!',
-	COMPARE_NEVER = '-',
-	COMPARE_ALWAYS = '+',
-
-	-- RT
-	RT_ON='t', 
-	RT_READ="", RT_WRITE="w",
-	RT_MSAA2="2", RT_MSAA4="4", RT_MSAA8="8", RT_MSAAX="x",
-
-	-- BLIT
-	BLIT_AS_DST = 'w', 
-	BLIT_READBACK_ON = 'r',
-	BLIT_COMPUTEREAD = '',
-	BLIT_COMPUTEWRITE = 'c',	
-
-	--SAMPLE
-	SAMPLE_STENCIL='s', SAMPLE_DEPTH='d',
-}
-
-function util.generate_sampler_flag(sampler)
-	if sampler == nil then
-		return nil
-	end
-	local flag = ""
-
-	for k, v in pairs(sampler) do
-		if k == "BOARD_COLOR" then
-			flag = flag .. sample_types[k] .. v
-		else
-			local value = sample_value[v]
-			if value == nil then
-				error("not support data, sample value : %s", v)
-			end
-	
-			if #value ~= 0 then
-				local type = sample_types[k]
-				if type == nil then
-					error("not support data, sample type : %s", k)
-				end
-				
-				flag = flag .. type .. value
-			end
-		end
-	end
-
-	return flag
-end
-
 local blitviewid = viewidmgr.get "blit"
 
-function util.get_main_view_rendertexture(world)
-	local mq = world:singleton_entity "main_queue"
-	local fb = fbmgr.get(mq.render_target.fb_idx)
-	return fbmgr.get_rb(fb[1]).handle
-end
-
-function util.create_blit_queue(world, viewrect)
+function irender_class.create_blit_queue(viewrect)
 	local cameraeid = world:create_entity {
 		policy = {
 			"ant.render|camera",
@@ -308,14 +193,14 @@ local statemap = {
 	DS 				= "DS",
 }
 
-function util.update_frame_buffer_view(viewid, fbidx)
+function irender_class.update_frame_buffer_view(viewid, fbidx)
 	local fb = fbmgr.get(fbidx)
 	if fb then
 		bgfx.set_view_frame_buffer(viewid, fb.handle)
 	end
 end
 
-function util.update_viewport(viewid, viewport)
+function irender_class.update_viewport(viewid, viewport)
 	local cs = viewport.clear_state
 	local clear_what = cs.clear
 	local state = statemap[clear_what]
@@ -327,22 +212,22 @@ function util.update_viewport(viewid, viewport)
 	bgfx.set_view_rect(viewid, rt.x, rt.y, rt.w, rt.h)
 end
 
-function util.update_render_target(viewid, rt)
-	util.update_frame_buffer_view(viewid, rt.fb_idx)
-	util.update_viewport(viewid, rt.viewport)
+function irender_class.update_render_target(viewid, rt)
+	irender.update_frame_buffer_view(viewid, rt.fb_idx)
+	irender.update_viewport(viewid, rt.viewport)
 end
 
-function util.screen_capture(world, force_read)
+function irender_class.screen_capture(world, force_read)
 	local mq = world:singleton_entity "main_queue"
 	local fbidx = mq.render_target.fb_idx
 	local fb = fbmgr.get(fbidx)
 	local s = setting.get()
 	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
-	local handle, width, height, pitch = util.read_render_buffer_content(format, fb[1], force_read)
+	local handle, width, height, pitch = irender.read_render_buffer_content(format, fb[1], force_read)
 	return width, height, pitch, tostring(handle)
 end
 
-function util.read_render_buffer_content(format, rb_idx, force_read, size)
+function irender_class.read_render_buffer_content(format, rb_idx, force_read, size)
 	local rb = fbmgr.get_rb(rb_idx)
 	local w, h
 	if size then
@@ -364,7 +249,7 @@ function util.read_render_buffer_content(format, rb_idx, force_read, size)
 		h = h,
 		layers = 1,
 		format = format,
-		flags = util.generate_sampler_flag {
+		flags = samplerutil.sampler_flag {
 			BLIT="BLIT_AS_DST",
 			BLIT_READBACK="BLIT_READBACK_ON",
 			MIN="POINT",
@@ -388,5 +273,3 @@ function util.read_render_buffer_content(format, rb_idx, force_read, size)
 
 	return memory_handle, size.w, size.h, size.w * elem_size
 end
-
-return util

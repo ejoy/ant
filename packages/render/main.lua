@@ -1,5 +1,4 @@
 return {
-    util        = require "util",
     camera      = require "camera.util",
     hwi         = require "hardware_interface",
     components  = require "components.util",
@@ -8,5 +7,6 @@ return {
     declmgr     = require "vertexdecl_mgr",
     default     = require "components.default",
     shadow      = require "shadow.util",
+    sampler     = require "sampler",
     setting     = require "setting",
 }
