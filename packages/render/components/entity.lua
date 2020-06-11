@@ -226,8 +226,8 @@ end
 
 local axis_ib = {
 	0, 1,
-	0, 2, 
-	0, 3,
+	2, 3,
+	4, 5,
 }
 function util.create_axis_entity(transform, color, name)
 	local axis_vb = {
