@@ -1,5 +1,4 @@
 local editor      = import_package "ant.imguibase".editor
-local ru          = import_package "ant.render".util
 local ecs         = import_package "ant.ecs"
 local init_world  = import_package "ant.imguibase".init_world
 local imgui       = require "imgui.ant"
@@ -23,7 +22,8 @@ local function create_world(config)
         world:pub {"resize", rect_w, rect_h}
         world:update_func "init" ()
         imgui.SetCurrentContext(context)
-        world_tex = assert(ru.get_main_view_rendertexture(world))
+        local irender = world:interface "ant.render|irender"
+        world_tex = assert(irender.get_main_view_rendertexture())
     end
     function m.show()
         rect_x, rect_y = imgui.cursor.GetCursorScreenPos()

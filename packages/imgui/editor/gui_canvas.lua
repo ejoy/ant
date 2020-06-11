@@ -14,7 +14,6 @@ local inputmgr = import_package "ant.imguibase".inputmgr
 local GuiBase = require "gui_base"
 local gui_input = require "gui_input"
 local GuiCanvas = GuiBase.derive("GuiCanvas")
-local ru = import_package "ant.render".util
 --local map_imgui   = import_package "ant.editor".map_imgui
 
 local dbgutil = import_package "ant.editor".debugutil
@@ -111,7 +110,9 @@ function GuiCanvas:on_update(delta)
         self.rect = {x=x,y=y,w=w,h=h}
     end
     if self.world then
-        local world_tex =  ru.get_main_view_rendertexture(self.world:get_world())
+        local w = self.world:get_world()
+        local irender = w:interface "ant.render|irender"
+        local world_tex =  irender.get_main_view_rendertexture()
         if world_tex then
             widget.ImageButton(world_tex,w,h,{frame_padding=0,bg_col={0,0,0,1}})
         end

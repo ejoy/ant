@@ -9,7 +9,7 @@ local math3d	= require "math3d"
 
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
-local renderutil= renderpkg.util
+local samplerutil= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local assetmgr = import_package "ant.asset"
@@ -149,7 +149,7 @@ function bb:init()
 		h = self.h,
 		layers = 1,
 		format = "RGBA8",
-		flags = renderutil.generate_sampler_flag {
+		flags = samplerutil.sampler_flag {
 			BLIT="BLIT_AS_DST",
 			BLIT_READBACK="BLIT_READBACK_ON",
 			MIN="POINT",
@@ -176,7 +176,7 @@ end
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
 
-local fb_renderbuffer_flag = renderutil.generate_sampler_flag {
+local fb_renderbuffer_flag = samplerutil.generate_sampler_flag {
 	RT="RT_ON",
 	MIN="POINT",
 	MAG="POINT",

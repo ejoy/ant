@@ -5,10 +5,9 @@ local computil = world:interface "ant.render|entity"
 local camerautil= require "camera.util"
 local shadowutil= require "shadow.util"
 local viewidmgr = require "viewid_mgr"
-local renderutil= require "util"
 local fbmgr     = require "framebuffer_mgr"
 local uniforms  = world:interface "ant.render|uniforms"
-
+local irender	= world:interface "ant.render|irender"
 local mathpkg   = import_package "ant.math"
 local mu, mc= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
@@ -265,7 +264,7 @@ local function check_shadow_matrix()
 
 		local size = csm1.shadow.shadowmap_size
 		local fb = fbmgr.get(csm1.render_target.fb_idx)
-		local memory_handle, width, height, pitch = renderutil.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1], true)
+		local memory_handle, width, height, pitch = irender.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1], true)
 
 		local depth = pt[3]
 		local x, y = pt[1], pt[2]

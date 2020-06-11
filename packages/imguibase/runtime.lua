@@ -34,7 +34,8 @@ function callback.init(nwh, context, width, height)
 	world:update_func "init" ()
 	world_update = world:update_func "update"
 	world_exit   = world:update_func "exit"
-    renderpkg.util.create_blit_queue(world, {w=width,h=height})
+	local irender = world:interface "ant.render|irender"
+    irender.create_blit_queue{w=width,h=height}
 end
 
 function callback.mouse_wheel(x, y, delta)
@@ -141,7 +142,8 @@ local function savebmp(name, width, height, pitch, data)
 end
 
 local function screenshot(name)
-	savebmp(name, renderpkg.util.screen_capture(world, true))
+	local irender = world:interface "ant.render|irender"
+	savebmp(name, irender.screen_capture(true))
 	--local bgfx = require "bgfx"
 	--bgfx.request_screenshot(nil, name)
 	--bgfx.frame()

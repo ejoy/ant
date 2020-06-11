@@ -3,7 +3,6 @@ local world = ecs.world
 
 local imgui       = require "imgui.ant"
 local renderpkg   = import_package "ant.render"
-local renderutil  = renderpkg.util
 local fbmgr       = renderpkg.fbmgr
 local viewidmgr   = renderpkg.viewidmgr
 local rhwi        = renderpkg.hwi
@@ -129,9 +128,12 @@ end
 --     imgui.windows.End()
 
 -- end
-
+local bgfx = require "bgfx"
 function imgui_sys:ui_end()
     imgui.end_frame()
-    local vid = imgui.ant.viewid()
-    renderutil.update_frame_buffer_view(vid, fbmgr.get_fb_idx(vid))
+	local vid = imgui.ant.viewid()
+	local fb = fbmgr.get(fbmgr.get_fb_idx(vid))
+	if fb then
+		bgfx.set_view_frame_buffer(vid, fb.handle)
+	end
 end

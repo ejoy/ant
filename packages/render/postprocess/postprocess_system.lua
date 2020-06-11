@@ -1,8 +1,6 @@
 local ecs = ...
 local world = ecs.world
 
-local assetmgr = import_package "ant.asset"
-
 local mathpkg  = import_package "ant.math"
 local mu       = mathpkg.util
 
@@ -67,8 +65,8 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
     end
     bind_input(in_slot)
 
-    renderutil.update_frame_buffer_view(out_viewid, out_slot.fb_idx)
-    renderutil.update_viewport(out_viewid, pass.viewport)
+    irender.update_frame_buffer_view(out_viewid, out_slot.fb_idx)
+    irender.update_viewport(out_viewid, pass.viewport)
 
     local material = pass.material
     irender.draw(out_viewid, {
