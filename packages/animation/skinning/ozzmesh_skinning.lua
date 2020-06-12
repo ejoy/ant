@@ -117,9 +117,7 @@ local function patch_dynamic_buffer(ozzmesh, meshscene)
 	if not meshscene.vb.handles[1] then
 		local layouts = ozzmesh:layout()
 		local num_vertices = ozzmesh:num_vertices()
-		local newmeshscene = assetmgr.patch(meshscene, {vb={handles={}}})
-		newmeshscene.vb.handles[1] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
-		return newmeshscene
+		meshscene.vb.handles[1] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
 	end
 	return meshscene
 end
@@ -129,8 +127,8 @@ function ozzmesh_skinning_transform.process_entity(e)
 	e.skinning = {}
 	local skincomp	= e.skinning
 	local meshres 	= e.mesh._handle
-	e.rendermesh 	= patch_dynamic_buffer(meshres, e.rendermesh)
 	local meshscene = e.rendermesh
+	patch_dynamic_buffer(meshres, meshscene)
 
 	local ibm_pointer, ibm_count = meshres:inverse_bind_matrices()
 	local joint_remapp_pointer, count = meshres:joint_remap()

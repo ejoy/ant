@@ -142,6 +142,4 @@ function assetmgr.init()
 	resource.register(loader, unloader)
 end
 
-assetmgr.patch = resource.patch
-
 return assetmgr

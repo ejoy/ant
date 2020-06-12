@@ -31,18 +31,15 @@ local function create_pbr_entity(world,
         }
     }
 
-    local e = world[eid]
-
-    local m = assetmgr.patch(e.material, {properties={}})
-    e.material = m
-
-    local properties = m.properties
+    local properties = {}
     for k, v in pairs{
         u_basecolor_factor = color,
         u_metallic_roughness_factor  = {0.0, roughness, metallic, 0.0},
     } do
         properties[k] = world.component "vector"(v)
     end
+
+    world:set(eid, "material", {properties=properties})
 
     return eid
 end

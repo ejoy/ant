@@ -1,5 +1,5 @@
 local ecs = ...
-
+local world = ecs.world
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 
@@ -61,11 +61,10 @@ local function need_dynamic_buffer(declname)
 	return declname:match "p....." ~= nil
 end
 
-local function build_cpu_skinning_jobs(e, skinning)
+local function build_cpu_skinning_jobs(eid, skinning)
 	local jobs = {}
 	skinning.jobs = jobs
-
-	e.rendermesh = assetmgr.patch(e.rendermesh, {vb={handles={}}})
+	local e = world[eid]
 	local primgroup = e.rendermesh
 
 	for idx, vd in ipairs(primgroup.vb.values) do

@@ -191,8 +191,7 @@ function util.create_texture_quad_entity(texture_tbl, name)
 	}
 	local mesh = create_mesh({"p3|t2", vb})
 	local eid = create_simple_render_entity(nil, "/pkg/ant.resources/materials/texture.material",  name, mesh)
-	local e = world[eid]
-	assetmgr.patch(e.material, {properties = texture_tbl})
+	world:set(eid, "material", {properties = texture_tbl})
 	return eid
 end
 
