@@ -401,7 +401,7 @@ function world:signal_emit(name, ...)
 	end
 end
 
-local function patch_table; do
+local patch_table; do
 
 	local function format_error(format, ...)
 		error(format:format(...))
@@ -429,24 +429,23 @@ local function patch_table; do
 	end
 
 	function patch_table(src, patch)
-		local pfunc = src._patch
-		if pfunc then
-			return pfunc(src, patch)
-		else
-			local obj
-			if pfunc == nil then
-				-- It's shared, clone it
-				obj = { _patch = false }
-				for k,v in pairs(src) do
-					obj[k] = v
-				end
-			ele
-				obj = src
-			end
-			-- pfunc == false
-			apply_patch(obj, patch)
-			return obj
+		if patch._data ~= nil then
+			-- patch is a resource proxy
+			return patch
 		end
+		local obj
+		if src._data ~= nil or src._patch == nil then
+			-- src is shared
+			obj = { _patch = false }
+			for k,v in pairs(src) do
+				obj[k] = v
+			end
+		else
+			-- src._patch == false
+			obj = src
+		end
+		apply_patch(obj, patch)
+		return obj
 	end
 end
 
