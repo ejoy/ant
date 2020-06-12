@@ -9,7 +9,7 @@ local math3d	= require "math3d"
 
 local ml = ecs.transform "mesh_loader"
 
-function ml.process(e)
+function ml.process_entity(e)
 	if not e.mesh then
 		return
 	end

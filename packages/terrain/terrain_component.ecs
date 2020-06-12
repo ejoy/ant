@@ -17,7 +17,7 @@ transform "terrain_transform"
     .require_interface "ant.terrain|terrain"
     .input "terrain"
     .output "mesh"
-    .method "process"
+    .method "process_entity"
 
 component "terrain"
     .implement "terrain_component.lua"

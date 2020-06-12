@@ -104,7 +104,7 @@ local function build_cpu_skinning_jobs(e, skinning)
 	end
 end
 
-function mesh_skinning_transform.process(e)
+function mesh_skinning_transform.process_entity(e)
 	e.skinning = {}
 	local skinning = e.skinning
 

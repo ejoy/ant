@@ -4,7 +4,7 @@ local WatcherEvent = require "hub_event"
 
 local transform = ecs.transform "test_add_policy_transform"
 
-function transform.process(e)
+function transform.process_entity(e)
     e.test_component = true
 end
 

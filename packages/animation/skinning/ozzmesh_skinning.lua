@@ -72,7 +72,7 @@ local function gen_mesh_assetinfo(ozzmesh)
 			start = 0,
 			num = num_vertices,
 			handles = {
-				false,	--will generate in ozzmesh_skinning_transform.process
+				false,	--will generate in ozzmesh_skinning_transform.process_entity
 				create_static_buffer(layouts, num_vertices, ozzmesh),
 			}
 		}
@@ -96,7 +96,7 @@ end
 local ozzmesh_loader = ecs.transform "ozzmesh_loader"
 
 local ozzmesh_cache = {}
-function ozzmesh_loader.process(e)
+function ozzmesh_loader.process_entity(e)
 	local meshfilename = tostring(e.mesh)
 	local f = meshfilename:match "([^:]+)"
 	local pathname = f:match("/pkg([%w_-%d%s/\\.]+)%.ozz")
@@ -124,7 +124,7 @@ local function patch_dynamic_buffer(ozzmesh, meshscene)
 	return meshscene
 end
 
-function ozzmesh_skinning_transform.process(e)
+function ozzmesh_skinning_transform.process_entity(e)
 	assert(e.skinning_type == "CPU")
 	e.skinning = {}
 	local skincomp	= e.skinning
