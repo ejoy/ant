@@ -7,8 +7,6 @@ local function create(w, policies)
         action = {},
         process_entity = {},
         process_prefab = {},
-        readonly = {},
-        writable = {},
     }
     local transform = {}
     local action = {}
@@ -82,27 +80,16 @@ local function create(w, policies)
             local class = w._class.transform[name]
             if class.process_prefab then
                 res.process_prefab[#res.process_prefab+1] = class.process_prefab
-                for _, v in ipairs(class.input) do
-                    res.readonly[v] = true
-                end
                 for _, v in ipairs(class.output) do
-                    res.readonly[v] = true
                     res.register_component[v] = true
                 end
             end
             if class.process_entity then
                 res.process_entity[#res.process_entity+1] = class.process_entity
                 for _, v in ipairs(class.output) do
-                    res.writable[v] = true
                     res.register_component[v] = true
                 end
             end
-        end
-    end
-
-    for v in pairs(res.writable) do
-        if res.readonly[v] then
-            error(("component `%s` cannot be writable."):format(v))
         end
     end
 

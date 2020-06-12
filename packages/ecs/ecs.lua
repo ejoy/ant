@@ -7,16 +7,6 @@ local stringify = import_package "ant.serialize".stringify
 local world = {}
 world.__index = world
 
-local function deepcopy(t)
-    if type(t) ~= "table" then return t end
-    assert(getmetatable(t) == nil)
-    local copy = {}
-    for k, v in pairs(t) do
-        copy[k] = deepcopy(v)
-    end
-    return copy
-end
-
 local function component_init(w, c, component)
 	local tc = w._class.component[c]
 	if tc and tc.init then
@@ -37,21 +27,6 @@ local function component_delete(w, c, component)
     if tc and tc.delete then
         tc.delete(component)
     end
-end
-
-local function component_copy(w, component)
-	local class = w._typeclass[component]
-	if class then
-		if class.copy then
-			local res = class.copy(component)
-			assert(type(res) == "table" or type(res) == "userdata")
-			w._typeclass[res] = class
-			return res
-		end
-		return component
-	else
-		return deepcopy(component)
-	end
 end
 
 local function register_component(w, eid, c)
@@ -174,7 +149,6 @@ end
 
 local function instance(w, prefab, args)
 	local import = args and args.import and args.import or {}
-	local writable = args and args.writable and args.writable or {}
 	local res = {}
 	for i, entity in ipairs(prefab.entities) do
 		local eid = register_entity(w)
@@ -183,11 +157,7 @@ local function instance(w, prefab, args)
 			register_component(w, eid, c)
 		end
 		for k, v in pairs(entity.dataset) do
-			if entity.policy.writable[k] or (writable[i] and writable[i][k]) then
-				e[k] = component_copy(w, v)
-			else
-				e[k] = v
-			end
+			e[k] = v
 		end
 		for _, f in ipairs(entity.policy.process_entity) do
 			f(e)

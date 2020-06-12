@@ -26,9 +26,6 @@ local function create_prefab(prefab, srt)
     }
     return world:instance(prefab, {
         action = {root = eid},
-        writable = {
-            {}
-        },
     })
 end
 
