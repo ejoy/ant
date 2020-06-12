@@ -113,13 +113,13 @@ local function create_arrow_widget(axis_root, axis_str)
 	local local_rotator
 	if axis_str == "x" then
 		local_rotator = math3d.ref(math3d.quaternion{0, 0, math.rad(-90)})
-		cylinder_t = math3d.ref(math3d.vector(cylinder_halflen, 0, 0))
+		cylindere_t = math3d.ref(math3d.vector(cylinder_halflen, 0, 0))
 	elseif axis_str == "y" then
 		local_rotator = math3d.ref(math3d.quaternion{0, 0, 0})
-		cylinder_t = math3d.ref(math3d.vector(0, cylinder_halflen, 0))
+		cylindere_t = math3d.ref(math3d.vector(0, cylinder_halflen, 0))
 	elseif axis_str == "z" then
 		local_rotator = math3d.ref(math3d.quaternion{math.rad(90), 0, 0})
-		cylinder_t = math3d.ref(math3d.vector(0, 0, cylinder_halflen))
+		cylindere_t = math3d.ref(math3d.vector(0, 0, cylinder_halflen))
 	end
 	local cylindereid = world:create_entity{
 		policy = {
@@ -134,7 +134,7 @@ local function create_arrow_widget(axis_root, axis_str)
 				srt = world.component "srt" {
 					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
 					r = local_rotator,
-					t = cylinder_t,
+					t = cylindere_t,
 				},
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
@@ -144,13 +144,9 @@ local function create_arrow_widget(axis_root, axis_str)
 		action = {
             mount = axis_root,
 		},
-		writable = {
-			material = true,
-		}
 	}
 
-	local cylinder = world[cylindereid]
-	cylinder.material.properties.u_color = world.component "vector" {1, 0, 0, 1}
+	world:set(cylindereid, "material", {properties={u_color=world.component "vector" {1, 0, 0, 1}}})
 
 	local cone_t
 	if axis_str == "x" then
@@ -177,13 +173,9 @@ local function create_arrow_widget(axis_root, axis_str)
 		action = {
             mount = axis_root,
 		},
-		writable = {
-			material = true,
-		}
 	}
 
-	local cone = world[coneeid]
-	cone.material = assetmgr.patch(cylinder.material, {properties = {u_color = world.component "vector" {0, 1, 0, 1}}})
+	world:set(coneeid, "material", {properties={u_color=world.component "vector" {0, 1, 0, 1}}})
 end
 
 function gizmo_sys:post_init()
