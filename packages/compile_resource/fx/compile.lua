@@ -106,12 +106,22 @@ local function set_uniform_texture(u, property)
     bgfx.set_texture(property.stage, u.handle, property.texture.handle)
 end
 
-local function set_uniform(u, property)
-    bgfx.set_uniform(u.handle, property)
+local function set_uniform_matrix(u, property)
+    if type(property) == "table" then
+        assert(u.num >= #property * 4)
+        bgfx.set_uniform(u.handle, table.unpack(property))
+    else
+        bgfx.set_uniform(u.handle, property)
+    end
 end
 
-local function set_uniform_array(u, property)
-    bgfx.set_uniform(u.handle, table.unpack(property))
+local function set_uniform_vector(u, property)
+    if type(property) == "table" then
+        assert(u.num >= #property)
+        bgfx.set_uniform(u.handle, table.unpack(property))
+    else
+        bgfx.set_uniform(u.handle, property)
+    end
 end
 
 local function create_uniform(h, mark)
@@ -124,13 +134,14 @@ local function create_uniform(h, mark)
     if type == "s" then
         assert(num == 1)
         uniform.set = set_uniform_texture
+    elseif type == "m4" then
+        assert(num >= 1)
+        uniform.set = set_uniform_matrix
+    elseif type == "v4" then
+        assert(num >= 1)
+        uniform.set = set_uniform_vector
     else
-        assert(type == "v4" or type == "m4")
-        if num == 1 then
-            uniform.set = set_uniform
-        else
-            uniform.set = set_uniform_array
-        end
+        assert(false, "invalid uniform type:"..type)
     end
     return uniform
 end
