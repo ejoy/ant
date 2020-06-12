@@ -366,7 +366,8 @@ function sm:refine_filter()
 				end
 				newitem.fx 			= material.fx
 				newitem.properties 	= material.properties
-				newitem.state 		= material._state
+				--TODO: primitive mode should follow origin material setting
+				--newitem.state 		= material._state
 				items[eid] = newitem
 			end
 		end
