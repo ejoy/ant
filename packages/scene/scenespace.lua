@@ -52,9 +52,8 @@ end
 
 local function bind_slot_entity(e)
 	local trans = e.transform
-	local peid = e.parent
-	if peid and trans and trans.slot then
-		local pe = world[peid]
+	if trans and trans.slot then
+		local pe = world[e.parent]
 		local pr = pe.pose_result
 		if pr and pe.skeleton then
 			local ske = assert(pe.skeleton)._handle
@@ -63,12 +62,41 @@ local function bind_slot_entity(e)
 	end
 end
 
+local function merge_parent_state(e)
+	local state = e.state
+	if state then
+		local pe = world[e.parent]
+		local pstate = pe.state
+		if pstate then
+			local mask = state >> 32
+			state = (pstate & (mask~0xffffffff) | (state & mask) | (mask << 32))
+			e.state = state
+		end
+	end
+end
+
+local function follow_parent_material(e)
+	if e.material then
+		return
+	end
+
+	e.material = world[e.parent].material
+end
+
+local function follow_parent_state(e)
+	if e.parent then
+		bind_slot_entity(e)
+		merge_parent_state(e)
+		follow_parent_material(e)
+	end
+end
+
 function sp_sys:update_hierarchy_scene()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
 		scenequeue:mount(eid, e.parent or 0)
 
-		bind_slot_entity(e)
+		follow_parent_state(e)
     end
 
     local needclear

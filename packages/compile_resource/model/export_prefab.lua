@@ -79,7 +79,6 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
         end
         local data = {
             scene_entity= true,
-            can_render  = true,
             transform   = transform,
             mesh        = proxy "resource" (meshfile),
             material    = proxy "resource" (materialfile),

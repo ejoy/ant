@@ -52,6 +52,17 @@ local function update_lock_target_transform(eid, lt, target, im)
 	end
 end
 
+local function get_transform(eid)
+	while eid do
+		local e = world[eid]
+		local trans = e.transform
+		if trans then
+			return trans
+		end
+		eid = e.parent
+	end
+end
+
 local function combine_parent_transform(peid, trans)
 	local pe = world[peid]
 	-- need apply before ptrans._world
@@ -62,7 +73,7 @@ local function combine_parent_transform(peid, trans)
 		trans._world.m = math3d.mul(t, trans._world)
 	end
 
-	local ptrans = ies.component(peid, "transform")
+	local ptrans = get_transform(peid)
 	if ptrans then
 		local pw = ptrans._world
 		trans._world.m = math3d.mul(pw, trans._world)
@@ -103,8 +114,9 @@ local function update_transform(eid)
 	return trans
 end
 
-local function update_rendermesh(eid)
-	local mesh = ies.component(eid, "mesh")
+local function get_rendermesh(eid)
+	local mesh = world[eid].mesh
+	--TODO: need cache rendermesh
 	if mesh then
 		local handles = {}
 		local rendermesh = {
@@ -129,34 +141,34 @@ local function update_rendermesh(eid)
 	end
 end
 
-local function update_material(eid)
-	return ies.component(eid, "material")
+local function push_render_item(eid, transform, rendermesh, material)
+	if transform and rendermesh and material then
+		local ri = {
+			--
+			vb 		= rendermesh.vb,
+			ib 		= rendermesh.ib,
+			--
+			state	= material._state,
+			fx 		= material.fx,
+			properties = material.properties,
+			--
+			worldmat= transform._world,
+			skinning_matrices = transform._skinning_matrices,
+			aabb 	= transform._aabb,
+		}
+		
+		local filterlist = ies.filter_list(eid)
+		
+		for _, f in ipairs(filterlist) do
+			local resulttarget = f.result[material.fx.surface_type.transparency]
+			resulttarget.items[eid] = ri
+		end
+	end
 end
 
 function filter_system:filter_render_items()
 	for _, eid in ipairs(iss.scenequeue()) do
-		local transform	= update_transform(eid)
-		local rendermesh= update_rendermesh(eid)
-		local material 	= update_material(eid)
-
-		if transform and rendermesh and material then
-			local ri = {
-				vb 		= rendermesh.vb,
-				ib 		= rendermesh.ib,
-				state	= material._state,
-				fx 		= material.fx,
-				properties = material.properties,
-				worldmat= transform._world,
-				skinning_matrices = transform._skinning_matrices,
-				aabb 	= transform._aabb,
-			}
-			
-			local filterlist = ies.filter_list(eid)
-			
-			for _, f in ipairs(filterlist) do
-				local resulttarget = f.result[material.fx.surface_type.transparency]
-				resulttarget.items[eid] = ri
-			end
-		end
+		local e = world[eid]
+		push_render_item(eid, update_transform(eid), get_rendermesh(eid), e.material)
 	end
 end

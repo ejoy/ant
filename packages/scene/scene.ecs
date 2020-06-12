@@ -37,12 +37,10 @@ component "primitive_filter"
 
 interface "ientity_state"
     .implement "entity_state.lua"
-    .method "full_state"
     .method "has_state"
     .method "can_visible"
     .method "can_cast"
     .method "can_select"
-    .method "component"
     .method "filter_list"
     .method "create_state"
 

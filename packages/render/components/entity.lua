@@ -115,7 +115,7 @@ function util.create_plane_entity(srt, materialpath, color, name, info)
 	local data = {
 		transform = world.component "transform" {srt = world.component "srt"(srt or {})},
 		material = world.component "resource"(materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material"),
-		--state = ies.create_state "visible|selectable",
+		state = ies.create_state "visible|selectable",
 		name = name or "Plane",
 		scene_entity = true,
 		mesh = get_plane_mesh(),
