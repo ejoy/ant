@@ -1,6 +1,5 @@
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
-local vfs = require "vfs"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
 local bgfx = require "bgfx"
@@ -8,7 +7,7 @@ local c = require "compile"
 local stringify = require "fx.stringify"
 local toolset = require "fx.toolset"
 local render = import_package "ant.render"
-local CACHE = {}
+local FX_CACHE = {}
 local IDENTITY
 local PLATFORM
 local RENDERER
@@ -16,10 +15,9 @@ local BINPATH
 local SHARER_INC = lfs.current_path() / "packages/resources/shaders"
 
 local function get_filename(pathname)
-    pathname = fs.path(pathname)
-    local stem = pathname:stem():string():lower()
-    local parent = pathname:parent_path():string():lower()
-    return stem.."_"..sha1(parent)
+    pathname = pathname:lower()
+    local filename = pathname:match "[/]?([^/]*)$"
+    return filename.."_"..sha1(pathname)
 end
 
 local function writefile(filename, data)
@@ -36,10 +34,9 @@ local function readfile(filename)
 end
 
 local function register(identity)
-    local root = vfs.repo()._root
     IDENTITY = identity
     PLATFORM, RENDERER = IDENTITY:match "(%w+)_(%w+)"
-    BINPATH = root / ".build" / "fx" / identity
+    BINPATH = fs.path ".build/fx":localpath() / identity
 end
 
 local function do_build(depfile)
@@ -88,7 +85,6 @@ end
 
 local function do_compile(input, output, stage, setting)
     input = fs.path(input):localpath():string()
-	local macros = get_macros(setting)
     local ok, err, deps = toolset.compile {
         platform = PLATFORM,
         renderer = RENDERER,
@@ -96,13 +92,11 @@ local function do_compile(input, output, stage, setting)
         output = output,
         includes = {SHARER_INC},
         stage = stage,
-        macros = macros,
+        macros = get_macros(setting),
     }
     if not ok then
         error("compile failed: " .. input .. "\n\n" .. err)
     end
-	table.sort(deps)
-    table.insert(deps, 1, input)
     return deps
 end
 
@@ -183,10 +177,12 @@ local default_setting = {
     bloom_enable = render.setting:get 'graphic/postprocess/bloom/enable',
 }
 
-local function merge_setting(fx, s)
+local function read_fx(filename, setting)
+    local path = c.compile_path(filename)
+	local fx = datalist.parse(readfile(path))
     local t = fx.setting or {}
-    if s then
-        for k, v in pairs(s) do
+    if setting then
+        for k, v in pairs(setting) do
             t[k] = v
         end
     end
@@ -196,35 +192,29 @@ local function merge_setting(fx, s)
         end
     end
     fx.setting = t
-end
-
-local function read_fx(filename, setting)
-    local path = c.compile_path(filename)
-	local fx = datalist.parse(readfile(path))
-    merge_setting(fx, setting)
     return fx
 end
 
-local function get_setting_cache(setting)
+local function get_fx_cache(setting)
     local setting_string = stringify(setting)
     local hash = sha1(setting_string):sub(1,7)
     local path = BINPATH / hash
-    if CACHE[hash] then
-        return CACHE[hash], path
+    if FX_CACHE[hash] then
+        return FX_CACHE[hash], path
     end
-    CACHE[hash] = {}
+    FX_CACHE[hash] = {}
     lfs.create_directories(path)
     lfs.create_directories(path / ".dep")
     writefile(path / ".setting", setting_string)
-    return CACHE[hash], path
+    return FX_CACHE[hash], path
 end
 
 local function get_hash(fx)
     local shader = fx.shader
     if shader.cs then
-        return sha1(shader.cs)
+        return shader.cs
     end
-    return sha1(shader.vs..shader.fs)
+    return shader.vs..shader.fs
 end
 
 local function load_shader(output, fx, stage)
@@ -241,29 +231,29 @@ local function load_shader(output, fx, stage)
     return h
 end
 
-local function load_fx(output, fx)
+local function create_program(output, fx)
     local shader = fx.shader
-    if shader.cs == nil then
-        fx.prog, fx.uniforms = create_render_program(
-            load_shader(output, fx, "vs"),
-            load_shader(output, fx, "fs")
+    if shader.cs then
+        return create_compute_program(
+            load_shader(output, fx, "cs")
         )
     else
-        fx.prog, fx.uniforms = create_compute_program(
-            load_shader(output, fx, "cs")
+        return create_render_program(
+            load_shader(output, fx, "vs"),
+            load_shader(output, fx, "fs")
         )
     end
 end
 
 local function loader(filename, setting)
     local fx = read_fx(filename, setting)
-    local cache, output = get_setting_cache(fx.setting)
+    local cache, output = get_fx_cache(fx.setting)
     local hash = get_hash(fx)
     local res = cache[hash]
     if res then
         return res
     end
-    load_fx(output, fx)
+    fx.prog, fx.uniforms = create_program(output, fx)
     cache[hash] = fx
     return fx
 end

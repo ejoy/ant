@@ -109,8 +109,8 @@ function toolset.compile(config)
 		end
 		f:close()
 		os.remove(dependpath:string())
-
-		depends[#depends+1] = config.input
+		table.sort(depends)
+		table.insert(depends, 1, config.input)
 	end
 	return true, msg, depends
 end
