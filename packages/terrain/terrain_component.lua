@@ -89,7 +89,7 @@ iterrain = world:interface "ant.terrain|terrain"
 
 local trt = ecs.transform "terrain_transform"
 
-function trt.process(e)
+function trt.process_entity(e)
 	local terraincomp 	= e.terrain
 	local terraindata = terraincomp._data
 

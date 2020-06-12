@@ -72,7 +72,7 @@ transform "mesh_loader"
     .implement "render.lua"
     .input "mesh"
     .output "rendermesh"
-    .method "process"
+    .method "process_entity"
 
 component "render_target"
     .implement "render.lua"

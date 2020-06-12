@@ -28,7 +28,7 @@ transform "terrain_collider_transform"
     .require_interface "ant.terrain|terrain"
     .input "terrain"
     .output "collider"
-    .method "process"
+    .method "process_entity"
 
 component "box_shape"
     .implement "collider_system.lua"

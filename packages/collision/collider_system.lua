@@ -66,7 +66,7 @@ local tcb = ecs.transform "terrain_collider_transform"
 
 local iterrain = world:interface "ant.terrain|terrain"
 
-function tcb.process(e)
+function tcb.process_entity(e)
 	local terraincomp = e.terrain
 	local tc = e.collider
 
