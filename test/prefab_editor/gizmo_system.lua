@@ -11,7 +11,7 @@ local mc = mathpkg.constant
 local cylinder_cone_ratio = 8
 local cylinder_rawradius = 0.25
 
-local cube
+local gizmo
 local switch = true
 local function onChangeColor(obj)
 	if switch then
@@ -111,15 +111,19 @@ local function create_arrow_widget(axis_root, axis_str)
 
 	local cylindere_t
 	local local_rotator
+	local color
 	if axis_str == "x" then
 		local_rotator = math3d.ref(math3d.quaternion{0, 0, math.rad(-90)})
 		cylindere_t = math3d.ref(math3d.vector(cylinder_halflen, 0, 0))
+		color = world.component "vector" {1, 0, 0, 1}
 	elseif axis_str == "y" then
 		local_rotator = math3d.ref(math3d.quaternion{0, 0, 0})
 		cylindere_t = math3d.ref(math3d.vector(0, cylinder_halflen, 0))
+		color = world.component "vector" {0, 1, 0, 1}
 	elseif axis_str == "z" then
 		local_rotator = math3d.ref(math3d.quaternion{math.rad(90), 0, 0})
 		cylindere_t = math3d.ref(math3d.vector(0, 0, cylinder_halflen))
+		color = world.component "vector" {0, 0, 1, 1}
 	end
 	local cylindereid = world:create_entity{
 		policy = {
@@ -137,7 +141,7 @@ local function create_arrow_widget(axis_root, axis_str)
 					t = cylindere_t,
 				},
 			},
-			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+			material = world.component "resource" "/pkg/ant.resources/materials/gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder",
 		},
@@ -146,7 +150,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 	}
 
-	world:set(cylindereid, "material", {properties={u_color=world.component "vector" {1, 0, 0, 1}}})
+	world:set(cylindereid, "material", {properties={u_color=color}})
 
 	local cone_t
 	if axis_str == "x" then
@@ -166,7 +170,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			scene_entity = true,
 			can_render = true,
 			transform = world.component "transform" {srt=world.component "srt"{s = {100}, r = local_rotator, t = cone_t}},
-			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+			material = world.component "resource" "/pkg/ant.resources/materials/gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"
 		},
@@ -175,13 +179,57 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 	}
 
-	world:set(coneeid, "material", {properties={u_color=world.component "vector" {0, 1, 0, 1}}})
+	world:set(coneeid, "material", {properties={u_color=color}})
 end
 
 function gizmo_sys:post_init()
-	local dl = world:singleton_entity "directional_light"
-	local rotator = math3d.torotation(math3d.inverse(dl.direction))
-	--directional_light_arrow_widget({s = {0.02,0.02,0.02,0}, r = rotator, t = dl.position}, 8, 0.45)
+	local cubeid = world:create_entity {
+		policy = {
+			"ant.render|render",
+			"ant.general|name",
+			"ant.objcontroller|select",
+		},
+		data = {
+			scene_entity = true,
+			can_render = true,
+			can_select = true,
+			transform = world.component "transform" {
+				srt= world.component "srt" {
+					s={50},
+					t={0, 0.5, 1, 0}
+				}
+			},
+			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+			name = "test_cube",
+		}
+	}
+
+	local coneeid = world:create_entity{
+		policy = {
+			"ant.render|render",
+			"ant.general|name",
+			"ant.scene|hierarchy_policy",
+			"ant.objcontroller|select",
+		},
+		data = {
+			scene_entity = true,
+			can_render = true,
+			can_select = true,
+			transform = world.component "transform" {
+				srt= world.component "srt" {
+					s={50},
+					t={-1, 0.5, 0}
+				}
+			},
+			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
+			name = "test_cone"
+		},
+	}
+
+	world:set(coneeid, "material", {properties={u_color=world.component "vector" {0, 0.5, 0.5, 1}}})
+
 	local srt = {s = {0.02,0.02,0.02,0}, r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
 		policy = {
@@ -194,8 +242,9 @@ function gizmo_sys:post_init()
 		},
 	}
 	create_arrow_widget(axis_root, "x")
-	-- create_arrow_widget(axis_root, "y")
-	-- create_arrow_widget(axis_root, "z")
+	create_arrow_widget(axis_root, "y")
+	create_arrow_widget(axis_root, "z")
+	gizmo = world[axis_root]
 end
 
 local keypress_mb = world:sub{"keyboard"}
@@ -218,7 +267,8 @@ function gizmo_sys:data_changed()
             --     hub.publish(WatcherEvent.RTE.SceneEntityPick,{eid})
             --     on_pick_entity(eid)
 			-- end
-			onChangeColor(world[eid])
+			--onChangeColor(world[eid])
+			gizmo.transform.srt.t = world[eid].transform.srt.t
         else
             -- hub.publish(WatcherEvent.RTE.SceneEntityPick,{})
             -- on_pick_entity(nil)
