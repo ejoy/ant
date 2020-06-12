@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local util = ecs.interface "entity"
+local ientity = ecs.interface "entity"
 
 local declmgr   = require "vertexdecl_mgr"
 local hwi       = require "hardware_interface"
@@ -52,7 +52,7 @@ local function create_mesh(vb_lst, ib)
 	return world.component "mesh"(mesh)
 end
 
-function util.create_mesh(vb, ib)
+function ientity.create_mesh(vb, ib)
 	return create_mesh(vb, ib)
 end
 
@@ -67,14 +67,14 @@ local function create_simple_render_entity(transform, material, name, mesh)
 			transform = world.component "transform" {srt = world.component "srt"(srt)},
 			material = world.component "resource"(material),
 			mesh = mesh,
-			can_render = true,
+			state = ies.create_state "selectable|visible",
 			name = name or "frustum",
 			scene_entity = true,
 		}
 	}
 end
 
-function util.create_grid_entity(name, w, h, unit)
+function ientity.create_grid_entity(name, w, h, unit)
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
@@ -106,7 +106,7 @@ local function get_plane_mesh()
 	return plane_mesh
 end
 
-function util.create_plane_entity(srt, materialpath, color, name, info)
+function ientity.create_plane_entity(srt, materialpath, color, name, info)
 	local policy = {
 		"ant.render|render",
 		"ant.general|name",
@@ -166,24 +166,24 @@ local function quad_mesh(rect)
 	}})
 end
 
-function util.quad_mesh(rect)
+function ientity.quad_mesh(rect)
 	return quad_mesh(rect)
 end
 
 local fullquad_meshres
-function util.fullquad_mesh()
+function ientity.fullquad_mesh()
 	if fullquad_meshres == nil then
 		fullquad_meshres = quad_mesh()
 	end
 	return fullquad_meshres
 end
 
-function util.create_quad_entity(rect, material, name)
+function ientity.create_quad_entity(rect, material, name)
 	local mesh = quad_mesh(rect)
 	return create_simple_render_entity({srt={}}, material, name, mesh)
 end
 
-function util.create_texture_quad_entity(texture_tbl, name)
+function ientity.create_texture_quad_entity(texture_tbl, name)
 	local vb = {
 		-3,  3, 0, 0, 0,
 		 3,  3, 0, 1, 0,
@@ -213,7 +213,7 @@ local frustum_ib = {
 	2, 6, 3, 7,
 }
 
-function util.create_frustum_entity(frustum_points, name, color)
+function ientity.create_frustum_entity(frustum_points, name, color)
 	local vb = {}
 	color = color or 0xff00000f
 	for i=1, #frustum_points do
@@ -230,7 +230,7 @@ local axis_ib = {
 	0, 2, 
 	0, 3,
 }
-function util.create_axis_entity(transform, color, name)
+function ientity.create_axis_entity(transform, color, name)
 	local axis_vb = {
 		0, 0, 0, color or 0xff0000ff,
 		1, 0, 0, color or 0xff0000ff,
@@ -259,7 +259,7 @@ local function get_skybox_mesh()
 	return skybox_mesh
 end
 
-function util.create_skybox(material)
+function ientity.create_skybox(material)
     return world:create_entity {
 		policy = {
 			"ant.render|render",
@@ -268,7 +268,7 @@ function util.create_skybox(material)
 		data = {
 			transform = world.component "transform" {srt=mu.srt()},
 			material = world.component "resource"(material or "/pkg/ant.resources/materials/skybox.material"),
-			can_render = true,
+			state = ies.create_state "selectable|visible",
 			scene_entity = true,
 			name = "sky_box",
 			mesh = get_skybox_mesh(),
@@ -307,7 +307,7 @@ local function create_sky_mesh(w, h)
 	return create_mesh({"p2", vb}, ib)
 end
 
-function util.create_procedural_sky(settings)
+function ientity.create_procedural_sky(settings)
 	settings = settings or {}
 	local function attached_light(eid)
 		if eid then
@@ -336,4 +336,16 @@ function util.create_procedural_sky(settings)
 			name = "procedural sky",
 		}
 	}
+end
+
+function ientity.entity_bounding(eid)
+	local e = world[eid]
+	local m = e.mesh
+	if m and ies.can_visible(eid) then
+		local wm = e.transform._world
+		local b = m.bounding
+		if b then
+			return math3d.aabb_transform(b.aabb, wm)
+		end
+	end
 end

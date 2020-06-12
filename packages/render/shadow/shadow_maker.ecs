@@ -13,7 +13,7 @@ system "shadow_system"
 policy "shadow_cast_policy"
     .require_policy "shadow_make_policy"
     .require_policy "shadow_config_policy"
-    .component "can_cast"
+    .component "state"
 
 policy "shadow_config_policy"
     .component "fb_index"

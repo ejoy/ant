@@ -19,9 +19,8 @@ data:
         anilist:
             idle: $resource /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
     animation_birth: idle
-    can_render: true
+    state = 0x00000005
     scene_entity: true
-    can_cast: true
     name: gltf_animation_sample
     character:
         movespeed: 1.0
@@ -46,9 +45,8 @@ data:
         anilist:
             idle: $resource /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
     animation_birth: idle
-    can_render: true
+    state: 0x00000005
     scene_entity: true
-    can_cast: true
     name: gltf_animation_sample
     character:
         movespeed: 1.0

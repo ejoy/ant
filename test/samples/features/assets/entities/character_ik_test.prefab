@@ -81,6 +81,5 @@ data:
             height : 1
             axis : "Y"
     name: foot_ik_test
-    can_cast: true
-    can_render: true
+    state: 0x00000005
     scene_entity: true

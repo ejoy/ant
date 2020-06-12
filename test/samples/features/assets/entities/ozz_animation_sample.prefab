@@ -18,7 +18,6 @@ data:
         anilist:
             walk: $resource /pkg/ant.resources.binary/meshes/ozz/animation1.ozz
     animation_birth: walk
-    can_render: true
     scene_entity: true
     skeleton: $resource /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz
     mesh: $resource /pkg/ant.resources.binary/meshes/ozz/mesh.ozz
@@ -30,7 +29,7 @@ data:
             radius: 0.5
             height: 1
             axis: "Y"
-    can_cast: true
+    state: 0x00000005
     character:
         movespeed: 1.0
     debug_mesh_bounding: true

@@ -5,8 +5,7 @@ policy:
   ant.render|render
   ant.render|shadow_cast_policy
 data:
-  can_cast: true
-  can_render: true
+  state: 0x00000005
   scene_entity: true
   collider:
     box:

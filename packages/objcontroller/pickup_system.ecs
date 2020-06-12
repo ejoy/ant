@@ -17,7 +17,7 @@ policy "pickup"
 policy "select"
     .require_system "pickup_system"
     .require_policy "pickup"
-    .component "can_select"
+    .component "state"
 
 component "blit_buffer"
     .implement "pickup_system.lua"

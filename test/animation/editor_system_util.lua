@@ -55,6 +55,7 @@ local function circle(color)
 end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
+    local ies = world:interface "ant.scene|ientity_state"
     color[4] = 0.6
     local eid = world:create_entity {
         policy={
@@ -70,10 +71,8 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             },
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/ring.glb|meshes/mesh1_P1.meshbin",
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_singlecolor.material",
-            --can_cast = true,
-            can_render = true,
+            state = ies.create_state "visible|selectable",
             name = name,
-            can_select = true,
             gizmo_object = {dir = dir},
             scene_entity = true,
         },
@@ -99,6 +98,8 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         end
     end
 
+    local ies = world:interface "ant.scene|ientity_state"
+
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -111,8 +112,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             transform = world.component "transform" {srt=world.component "srt" {}},
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
-            can_render = true,
-            can_select = true,
+            state = ies.create_state "visible|selectable",
             gizmo_object = {dir = dir},
             scene_entity = true,
             mesh = computil.create_mesh({"p3|c40niu", gvb}, ib),
@@ -132,6 +132,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             table.insert(gvb, vv)
         end
     end
+    local ies = world:interface "ant.scene|ientity_state"
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -146,8 +147,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             },
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_line.material",
             name = name,
-            can_render = true,
-            can_select = true,
+            state = ies.create_state "visible|selectable",
             gizmo_object = {dir = dir},
             scene_entity = true,
             mesh = computil.create_mesh({"p3|c40niu", gvb}, ib),
@@ -159,6 +159,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
 end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
+    local ies = world:interface "ant.scene|ientity_state"
     local eid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -173,8 +174,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             },
             mesh = world.component "resource""/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_singlecolor.material",
-            can_render = true,
-            can_select = true,
+            state = ies.create_state "visible|selectable",
             name = name,
             gizmo_object = {dir=dir},
             scene_entity = true,
@@ -192,6 +192,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
 end
 
 local function create_box_entity(world, color, size, pos, name,parent,dir)
+    local ies = world:interface "ant.scene|ientity_state"
     local eid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -206,9 +207,8 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             },
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_singlecolor.material",
-            can_render = true,
+            state = ies.create_state "visible|selectable",
             name = name,
-            can_select = true,
             gizmo_object = {dir=dir},
             scene_entity = true,
         },

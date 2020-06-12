@@ -3,12 +3,6 @@ local world = ecs.world
 
 local sp_test_sys = ecs.system "scenespace_test_system"
 
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
-
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
-
 function sp_test_sys:init()
     local rooteid = world:create_entity{
         policy = {

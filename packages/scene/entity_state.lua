@@ -15,7 +15,10 @@ local ies_class = ecs.interface "ientity_state"
 local ies = world:interface "ant.scene|ientity_state"
 
 function ies_class.has_state(eid, name)
-	return (world[eid].state & STATE_TYPE[name]) ~= 0
+	local s = world[eid].state
+	if s then
+		return (s& STATE_TYPE[name]) ~= 0
+	end
 end
 
 function ies_class.can_visible(eid)

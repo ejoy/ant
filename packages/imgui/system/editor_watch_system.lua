@@ -168,7 +168,6 @@ end
 
 
 local function create_outline(seleid)
-    local computil  = import_package "ant.render".components
     local se = world[seleid]
     if se then
         -- if not se.hierarchy then
@@ -177,6 +176,7 @@ local function create_outline(seleid)
 
         -- local trans = se.transform
         -- local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
+        local ies = world:interface "ant.scene|ientity_state"
         local t = world.component "transform" {srt = mu.srt()}
         t.parent = seleid
         local outlineeid = world:create_entity {
@@ -188,7 +188,7 @@ local function create_outline(seleid)
             data={
                 transform = t,
                 material = world.component "resource" "/pkg/ant.resources/materials/outline/scale.material",
-                can_render = true,
+                state = ies.create_state "selectable|visible",
                 outline_entity = true,
                 target_entity = world[seleid].serialize,
                 editor_object = true,
@@ -258,9 +258,10 @@ local function change_watch_entity(eids,focus,is_pick)
     for _, eid in ipairs( eids ) do
         local target_ent = world[eid]
         if target_ent.serialize then
-            if target_ent.can_select then
-                create_outline(eid)
-            end
+            assert(false, "not can select")
+            -- if target_ent.can_select then
+            --     create_outline(eid)
+            -- end
             world:enable_tag(eid,"editor_watching")
             if target_ent.transform then
                 world:enable_tag(eid,"show_operate_gizmo")
@@ -304,9 +305,9 @@ local function start_watch_entitiy(eid,focus,is_pick)
         end
         local target_ent = world[eid]
         if target_ent then
-            if target_ent.can_select then
-                create_outline(eid)
-            end
+            -- if target_ent.can_select then
+            --     create_outline(eid)
+            -- end
             world:enable_tag(eid,"editor_watching")
             if target_ent.transform then
                 world:enable_tag(eid,"show_operate_gizmo")

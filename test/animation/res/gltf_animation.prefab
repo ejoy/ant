@@ -26,9 +26,8 @@ data:
             walking: $resource /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
     meshskin: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin1.skinbin"
     animation_birth: idle
-    can_render: true
+    state: 0x00000005
     scene_entity: true
-    can_cast: true
     name: gltf_animation_sample
     character:
         movespeed: 1.0
@@ -60,9 +59,8 @@ data:
             walking: $resource /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
     animation_birth: idle
     meshskin: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin"
-    can_render: true
     scene_entity: true
-    can_cast: true
+    state: 0x00000005
     name: gltf_animation_sample
     character:
         movespeed: 1.0

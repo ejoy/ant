@@ -5,8 +5,7 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mu, mc = mathpkg.util, mathpkg.constant
 
-local renderpkg = import_package "ant.render"
-local cu = renderpkg.components
+local ie = world:interface "ant.render|entity"
 
 local iobj = {}; iobj.__index = iobj
 function iobj.create(obj_accessor)
@@ -105,7 +104,7 @@ end
 
 function iobj:focus_obj(eid, foucseid)
 	local fe = world[foucseid]
-	local bounding = cu.entity_bounding(fe)
+	local bounding = ie.entity_bounding(fe)
     if bounding then
         local aabb = bounding.aabb
         local center, extents = math3d.aabb_center_extents(aabb)

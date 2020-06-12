@@ -54,6 +54,14 @@ local function get_transform(node)
     }
 end
 
+local STATE_TYPE = {
+    visible     = 0x00000001,
+    cast_shadow = 0x00000002,
+    selectable  = 0x00000004,
+}
+
+local DEFAULT_STATE = STATE_TYPE.visible|STATE_TYPE.cast_shadow|STATE_TYPE.selectable
+
 local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
     local transform = get_transform(node)
@@ -77,12 +85,14 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
         if meshfile == nil then
             error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
         end
+
         local data = {
             scene_entity= true,
             transform   = transform,
             mesh        = proxy "resource" (meshfile),
             material    = proxy "resource" (materialfile),
             name        = meshname .. "." .. primidx,
+            state       = DEFAULT_STATE,
         }
 
         local policy = {

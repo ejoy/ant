@@ -2,11 +2,6 @@ local Util = {}
 local mathpkg   = import_package "ant.math"
 local mu = mathpkg.util
 local math3d = require "math3d"
-local fs        = require "filesystem"
-local assetmgr = import_package "ant.asset"
-local renderpkg = import_package "ant.render"
-local computil = renderpkg.components
-local RES_IDX = 10080
 
 local function euler2quat(euler)
     return math3d.totable(math3d.quaternion(euler))
@@ -63,6 +58,8 @@ local function circle(color)
 end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
+
+    local ies = world:interface "ant.scene|ientity_state"
     -- parent = parent and world[parent].serialize or nil
     color[4] = 0.6
     return world:create_entity {
@@ -90,10 +87,8 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
                     value:
                       {%f, %f, %f, %f}
             ]]):format(color[1], color[2], color[3], color[4]),
-            --can_cast = true,
-            can_render = true,
+            state = ies.create_state "visible|selectable",
             name = name,
-            can_select = true,
             gizmo_object = {dir = dir},
             scene_entity = true,
         },
@@ -104,10 +99,10 @@ end
 
 local function create_line_entity(world, name, start_pos,end_pos,color,parent,dir)
     -- parent = parent and world[parent].serialize or nil
-    local util  = import_package "ant.render".components
+    local ie  = world:interface "ant.render|entity"
     -- local geopkg = import_package "ant.geometry"
     -- local geolib = geopkg.geometry
-
+    local ies = world:interface "ant.scene|ientity_state"
     local gridid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -121,8 +116,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             parent = parent,
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
-            can_render = true,
-            can_select = true,
+            state = ies.create "visible|selectable",
             gizmo_object = {dir = dir},
             scene_entity = true,
         },
@@ -138,14 +132,14 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
     local num_vertices = #vb
     local num_indices = #ib
 
-    world:add_component(gridid, "mesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+    world:add_component(gridid, "mesh", ie.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
 local function create_circle_entity(world, name,color,rot,parent,dir)
     -- parent = parent and world[parent].serialize or nil
-    local util  = import_package "ant.render".components
-
+    local ie  = world:interface "ant.render|entity"
+    local ies = world:interface "ant.scene|ientity_state"
     local gridid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -161,8 +155,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             parent = parent,
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_line.material",
             name = name,
-            can_render = true,
-            can_select = true,
+            state = ies.create_state "selectable|visible",
             gizmo_object = {dir = dir},
             scene_entity = true,
         }
@@ -180,13 +173,13 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
     local num_vertices = #vb
     local num_indices = #ib
 
-    world:add_component(gridid, "mesh", util.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
+    world:add_component(gridid, "mesh", ie.create_simple_mesh( "p3|c40niu", gvb, num_vertices, ib, num_indices))
     return gridid
 end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
     -- parent = parent and world[parent].serialize or nil
-    local computil  = import_package "ant.render".components
+    local ies = world:interface "ant.scene|ientity_state"
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -212,8 +205,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
                     value:
                       {%f,%f,%f,%f}
             ]]):format(color[1], color[2], color[3], color[3]),
-            can_render = true,
-            can_select = true,
+            state = ies.create_state "selectable|visible",
             name = name,
             gizmo_object = {dir=dir},
             scene_entity = true,
@@ -223,7 +215,7 @@ end
 
 local function create_box_entity(world, color, size, pos, name,parent,dir)
     -- parent = parent and world[parent].serialize or nil
-    local computil  = import_package "ant.render".components
+    local ies = world:interface "ant.scene|ientity_state"
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -249,9 +241,8 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
                     value:
                       {%f, %f, %f,%f}
             ]]):format(color[1], color[2], color[3], color[4]),
-            can_render = true,
+            state = ies.create_state "selectable|visible",
             name = name,
-            can_select = true,
             gizmo_object = {dir=dir},
             scene_entity = true,
         },
@@ -289,7 +280,6 @@ function Util.create_gizmo(world)
                 transform = trans,
                 name = name,
                 gizmo_object = {},
-                -- can_select = true,
                 parent = parent,
             },
         }

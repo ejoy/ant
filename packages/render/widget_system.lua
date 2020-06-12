@@ -28,6 +28,7 @@ local function create_dynamic_mesh(layout, num_vertices, num_indices)
 	}
 end
 
+local ies = world:interface "ant.scene|ientity_state"
 function widget_drawer_sys:init()
 	world:create_entity {
 		policy = {
@@ -38,7 +39,7 @@ function widget_drawer_sys:init()
 			transform = world.component "transform" {srt = world.component "srt" {}},
 			material = world.component "resource" "/pkg/ant.resources/materials/line.material",
 			mesh = nil,
-			can_render = true,
+			state = ies.create_state "selectable|visible",
 			scene_entity = true,
 			widget_drawer = true,
 		}
