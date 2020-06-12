@@ -66,7 +66,10 @@ local function get_file_object(filename)
 					return filename
 				end,
 			},
-			proxy = { _data = false },
+			proxy = {
+				_data = false,
+				_patch = resource.patch,
+			},
 		}
 		setmetatable(robj.proxy, robj.meta)
 		FILELIST[filename] = robj
@@ -80,6 +83,7 @@ local function load_resource(robj, filename, data)
 	end
 	robj.object = LOADER(filename, data)
 	robj.proxy._data = robj.object
+	robj.proxy._patch = resource.patch
 	setmetatable(robj.proxy, data_mt(robj))
 end
 
@@ -226,10 +230,13 @@ local function apply_patch(obj, patch)
 end
 
 function resource.patch(obj, patch)
+	if patch._data ~= nil then
+		return patch
+	end
 	local data = obj._data
 	if data ~= nil then
 		-- It's a proxy, clone data
-		local newobj = {}
+		local newobj = { _patch = false }
 		for k,v in pairs(obj) do
 			newobj[k] = v
 		end

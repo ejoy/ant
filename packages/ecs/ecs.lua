@@ -401,6 +401,60 @@ function world:signal_emit(name, ...)
 	end
 end
 
+local function patch_table; do
+
+	local function format_error(format, ...)
+		error(format:format(...))
+	end
+
+	local function apply_patch(obj, patch)
+		for k,v in pairs(patch) do
+			local original = obj[k]
+			if original == nil then
+				format_error("the key %s in the patch is not exist in the original object", k)
+			end
+			if type(original) ~= "table" then
+				if type(v) == "table" then
+					format_error("patch a none-table key %s with a table", k)
+				end
+				obj[k] = v
+			else
+				-- it's sub tree
+				if type(v) ~= "table" then
+					format_error("patch a sub tree %s with a none-table", k)
+				end
+				obj[k] = patch_table(original, v)
+			end
+		end
+	end
+
+	function patch_table(src, patch)
+		local pfunc = src._patch
+		if pfunc then
+			return pfunc(src, patch)
+		else
+			local obj
+			if pfunc == nil then
+				-- It's shared, clone it
+				obj = { _patch = false }
+				for k,v in pairs(src) do
+					obj[k] = v
+				end
+			ele
+				obj = src
+			end
+			-- pfunc == false
+			apply_patch(obj, patch)
+			return obj
+		end
+	end
+end
+
+function world:set(eid, cname, patch)
+	local e = self[eid]
+	local oldc = e[cname]
+	e[cname] = patch_table(oldc, patch)
+end
 
 local m = {}
 
