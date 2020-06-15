@@ -1,8 +1,7 @@
 shader:
   fs: /pkg/ant.resources/materials/postprocess/fx/fs_tonemapping.sc
   vs: /pkg/ant.resources/materials/postprocess/fx/vs_pp_quad.sc
-surface_type:
+setting:
   lighting: off
-  shadow:
-    cast: off
-    receive: off
+  shadow_cast: off
+  shadow_receive: off

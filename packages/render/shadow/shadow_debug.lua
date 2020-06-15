@@ -32,14 +32,16 @@ local function csm_shadow_debug_quad()
 	local q_eid = computil.create_quad_entity(rect, quadmaterial, "csm_quad")
 	local qe = world[q_eid]
 
-	local m = assetmgr.patch(qe.material, {})
-	m.properties = {
-		s_shadowmap = {
-			stage = smstage,
-			texture = {handle=fbmgr.get_rb(fb[1]).handle},
-		}
-	}
-	qe.material = m
+	--TODO
+	assert(false, "can not patch anymore")
+	-- local m = assetmgr.patch(qe.material, {})
+	-- m.properties = {
+	-- 	s_shadowmap = {
+	-- 		stage = smstage,
+	-- 		texture = {handle=fbmgr.get_rb(fb[1]).handle},
+	-- 	}
+	-- }
+	-- qe.material = m
 end
 
 local frustum_colors = {

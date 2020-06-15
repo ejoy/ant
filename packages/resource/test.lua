@@ -75,15 +75,3 @@ resource.unload "a.code"
 load_code ("a.code", true)	-- turn on autoload
 
 resource.unload "a.code"
-
-local clone = resource.patch(proxy,
-	{
-			z =  {
-				{ "hello_patched" },
-			},
-	}
-)
-
-assert(clone.x[1] == 1)
-assert(clone.z[1][1] == "hello_patched")
-print(clone.z[2][1]	== "world")

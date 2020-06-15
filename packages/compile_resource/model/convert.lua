@@ -4,7 +4,7 @@ local export_animation = require "model.export_animation"
 local export_material = require "model.export_material"
 local glbloader = require "model.glTF.glb"
 
-return function (_, input, output)
+return function (input, output)
     local glbdata = glbloader.decode(input)
     local exports = {}
     assert(glbdata.version == 2)

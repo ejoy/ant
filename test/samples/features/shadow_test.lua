@@ -148,9 +148,6 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		},
 		action = {
             mount = arroweid,
-		},
-		writable = {
-			material = true,
 		}
 	}
 

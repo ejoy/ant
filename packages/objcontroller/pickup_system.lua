@@ -108,7 +108,7 @@ local function get_properties(eid)
 	end
 
 	p = {
-		u_id = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
+		u_id = world.component "vector"(packeid_as_rgba(eid))
 	}
 	uid_cache[eid] = p
 	return p

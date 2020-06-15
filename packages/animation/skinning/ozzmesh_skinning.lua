@@ -72,7 +72,7 @@ local function gen_mesh_assetinfo(ozzmesh)
 			start = 0,
 			num = num_vertices,
 			handles = {
-				false,	--will generate in ozzmesh_skinning_transform.process
+				false,	--will generate in ozzmesh_skinning_transform.process_entity
 				create_static_buffer(layouts, num_vertices, ozzmesh),
 			}
 		}
@@ -96,7 +96,7 @@ end
 local ozzmesh_loader = ecs.transform "ozzmesh_loader"
 
 local ozzmesh_cache = {}
-function ozzmesh_loader.process(e)
+function ozzmesh_loader.process_entity(e)
 	local meshfilename = tostring(e.mesh)
 	local f = meshfilename:match "([^:]+)"
 	local pathname = f:match("/pkg([%w_-%d%s/\\.]+)%.ozz")
@@ -117,20 +117,18 @@ local function patch_dynamic_buffer(ozzmesh, meshscene)
 	if not meshscene.vb.handles[1] then
 		local layouts = ozzmesh:layout()
 		local num_vertices = ozzmesh:num_vertices()
-		local newmeshscene = assetmgr.patch(meshscene, {vb={handles={}}})
-		newmeshscene.vb.handles[1] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
-		return newmeshscene
+		meshscene.vb.handles[1] = create_dynamic_buffer(layouts, num_vertices, ozzmesh)
 	end
 	return meshscene
 end
 
-function ozzmesh_skinning_transform.process(e)
+function ozzmesh_skinning_transform.process_entity(e)
 	assert(e.skinning_type == "CPU")
 	e.skinning = {}
 	local skincomp	= e.skinning
 	local meshres 	= e.mesh._handle
-	e.rendermesh 	= patch_dynamic_buffer(meshres, e.rendermesh)
 	local meshscene = e.rendermesh
+	patch_dynamic_buffer(meshres, meshscene)
 
 	local ibm_pointer, ibm_count = meshres:inverse_bind_matrices()
 	local joint_remapp_pointer, count = meshres:joint_remap()

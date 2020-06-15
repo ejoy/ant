@@ -9,7 +9,6 @@ local link = {}
 local function init(ext, compiler)
     link[ext] = {
         compiler = compiler,
-        config = {},
     }
 end
 
@@ -23,8 +22,8 @@ local function split(str)
 end
 
 local function get_filename(pathname)
-    local stem = pathname:stem():string()
-    local parent = pathname:parent_path():string()
+    local stem = pathname:stem():string():lower()
+    local parent = pathname:parent_path():string():lower()
     return stem.."_"..sha1(parent)
 end
 
@@ -45,41 +44,21 @@ local function readconfig(filename)
     return datalist.parse(readfile(filename))
 end
 
-local function register(ext, config)
+local function register(ext, identity)
     local info = link[ext]
     if not info then
         error("invalid type: " .. ext)
     end
     local root = vfs.repo()._root
     info.compiler = info.compiler
-    info.config = config
-    if config then
-        info.binpath = root / ".build" / ext / config
-        lfs.create_directories(info.binpath)
-        writefile(info.binpath / ".config", config)
+    if identity then
+        info.identity = identity
+        info.binpath = root / ".build" / ext / identity
     else
         info.binpath = root / ".build" / ext
-        lfs.create_directories(info.binpath)
     end
+    lfs.create_directories(info.binpath)
     return info
-end
-
-local function copytable(a, b)
-    for k,v in pairs(b) do
-        if type(v) == "table" then
-            local ak = a[k]
-            if ak == nil then
-                local t = {}
-                copytable(t, v)
-                a[k] = t
-            else
-                assert(type(ak) == "table")
-                copytable(ak, v)
-            end
-        else
-            a[k] = v
-        end
-    end
 end
 
 local function do_build(output)
@@ -113,7 +92,7 @@ end
 
 local function do_compile(cfg, input, output)
     lfs.create_directory(output)
-    local ok, err = require(cfg.compiler)(cfg.config, input, output, function (path)
+    local ok, err = require(cfg.compiler)(input, output, cfg.identity, function (path)
         return absolute_path(input, path)
     end)
     if not ok then
@@ -145,7 +124,7 @@ local function compile_file(input)
         assert(lfs.exists(input))
         return input
     end
-    local keystring = input:string()
+    local keystring = input:string():lower()
     local cachepath = cache[keystring]
     if cachepath then
         return cachepath
@@ -158,27 +137,26 @@ local function compile_file(input)
     return output
 end
 
-local function clean(pathstring)
+local function compile_path(pathstring)
     local pathlst = split(pathstring)
     local path = fs.path(pathlst[1]):localpath()
     for i = 2, #pathlst do
         path = compile_file(path) / pathlst[i]
     end
-    return clean_file(path)
+    return path
+end
+
+local function clean(pathstring)
+    return clean_file(compile_path(pathstring))
 end
 
 local function compile(pathstring)
-    local pathlst = split(pathstring)
-    local path = fs.path(pathlst[1]):localpath()
-    for i = 2, #pathlst do
-        path = compile_file(path) / pathlst[i]
-    end
-    return compile_file(path)
+    return compile_file(compile_path(pathstring))
 end
 
 return {
     register = register,
     compile = compile,
-    compile_file = compile_file,
+    compile_path = compile_path,
     clean = clean,
 }

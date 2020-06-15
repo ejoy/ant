@@ -58,7 +58,7 @@ function irender_class.create_main_queue(view_rect)
 		V="CLAMP"
 	}
 
-	local sd = setting.get()
+	local sd = setting:data()
 	local render_buffers = {}
 
 	local main_display_format = sd.graphic.hdr.enable and "RGBA16F" or "RGBA8"
@@ -221,7 +221,7 @@ function irender_class.screen_capture(world, force_read)
 	local mq = world:singleton_entity "main_queue"
 	local fbidx = mq.render_target.fb_idx
 	local fb = fbmgr.get(fbidx)
-	local s = setting.get()
+	local s = setting:data()
 	local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
 	local handle, width, height, pitch = irender.read_render_buffer_content(format, fb[1], force_read)
 	return width, height, pitch, tostring(handle)

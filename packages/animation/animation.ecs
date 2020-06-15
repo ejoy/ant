@@ -18,7 +18,7 @@ transform "build_pose_result"
     .implement "animation.lua"
     .input "skeleton"
     .output "pose_result"
-    .method "process"
+    .method "process_entity"
 
 pipeline "animation"
     .stage "animation_state"

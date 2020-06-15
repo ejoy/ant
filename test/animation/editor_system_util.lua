@@ -79,9 +79,6 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
         action = {
             mount = parent
         },
-        writable = {
-            material = true,
-        }
     }
     local e = world[eid]
     e.material.properties.u_color = world.component "vector"(color)
@@ -182,9 +179,6 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
         action = {
             mount = parent
         },
-        writable = {
-            material = true,
-        }
     }
     local e = world[eid]
     e.material.properties.u_color = world.component "vector"(color)
@@ -215,9 +209,6 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
         action = {
             mount = parent
         },
-        writable = {
-            material = true,
-        }
     }
     local e = world[eid]
     e.material.properties.u_color = world.component "vector"(color)

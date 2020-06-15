@@ -204,50 +204,5 @@ function resource.monitor(filename, enable)
 	end
 end
 
-local function apply_patch(obj, patch)
-	for k,v in pairs(patch) do
-		local original = obj[k]
-		if original == nil then
-			format_error("the key %s in the patch is not exist in the original object", k)
-		end
-		if type(original) ~= "table" then
-			if type(v) == "table" then
-				format_error("patch a none-table key %s with a table", k)
-			end
-			obj[k] = v
-		else
-			-- it's sub tree
-			if type(v) ~= "table" then
-				format_error("patch a sub tree %s with a none-table", k)
-			end
-			obj[k] = resource.patch(original, v)
-		end
-	end
-end
-
-function resource.patch(obj, patch)
-	local data = obj._data
-	if data ~= nil then
-		-- It's a proxy, clone data
-		local newobj = {}
-		for k,v in pairs(obj) do
-			newobj[k] = v
-		end
-		obj = newobj
-	end
-	apply_patch(obj, patch)
-	return obj
-end
-
-function resource.edit(obj)
-	local data = obj._data
-	if not data then
-		pairs(obj)	-- trigger lazyload
-		return obj._data
-	else
-		return data
-	end
-end
-
 return resource
 

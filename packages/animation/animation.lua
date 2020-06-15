@@ -5,7 +5,7 @@ local ani_module = require "hierarchy.animation"
 
 local pr_t = ecs.transform "build_pose_result"
 
-function pr_t.process(e)
+function pr_t.process_entity(e)
 	local skehandle = e.skeleton._handle
 	e.pose_result = ani_module.new_pose_result(#skehandle)
 end

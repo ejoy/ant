@@ -1,0 +1,16 @@
+---
+data:
+  can_render: true
+  material: $resource /pkg/ant.resources/materials/mesh_shadow.material
+  mesh: $resource ./plane.meshbin
+  scene_entity: true
+  transform: $transform
+    srt: $srt
+      r: {0, 0, 0, 1}
+      s: {500, 1, 500, 0}
+      t: {0, 0, 0, 1}
+  name: shadow_plane
+policy:
+  ant.render|render
+  ant.render|mesh
+  ant.general|name

@@ -7,16 +7,6 @@ local stringify = import_package "ant.serialize".stringify
 local world = {}
 world.__index = world
 
-local function deepcopy(t)
-    if type(t) ~= "table" then return t end
-    assert(getmetatable(t) == nil)
-    local copy = {}
-    for k, v in pairs(t) do
-        copy[k] = deepcopy(v)
-    end
-    return copy
-end
-
 local function component_init(w, c, component)
 	local tc = w._class.component[c]
 	if tc and tc.init then
@@ -37,21 +27,6 @@ local function component_delete(w, c, component)
     if tc and tc.delete then
         tc.delete(component)
     end
-end
-
-local function component_copy(w, component)
-	local class = w._typeclass[component]
-	if class then
-		if class.copy then
-			local res = class.copy(component)
-			assert(type(res) == "table" or type(res) == "userdata")
-			w._typeclass[res] = class
-			return res
-		end
-		return component
-	else
-		return deepcopy(component)
-	end
 end
 
 local function register_component(w, eid, c)
@@ -174,7 +149,6 @@ end
 
 local function instance(w, prefab, args)
 	local import = args and args.import and args.import or {}
-	local writable = args and args.writable and args.writable or {}
 	local res = {}
 	for i, entity in ipairs(prefab.entities) do
 		local eid = register_entity(w)
@@ -183,11 +157,7 @@ local function instance(w, prefab, args)
 			register_component(w, eid, c)
 		end
 		for k, v in pairs(entity.dataset) do
-			if entity.policy.writable[k] or (writable[i] and writable[i][k]) then
-				e[k] = component_copy(w, v)
-			else
-				e[k] = v
-			end
+			e[k] = v
 		end
 		for _, f in ipairs(entity.policy.process_entity) do
 			f(e)
@@ -401,6 +371,59 @@ function world:signal_emit(name, ...)
 	end
 end
 
+local patch_table; do
+
+	local function format_error(format, ...)
+		error(format:format(...))
+	end
+
+	local function apply_patch(obj, patch)
+		for k,v in pairs(patch) do
+			local original = obj[k]
+			if original == nil then
+				format_error("the key %s in the patch is not exist in the original object", k)
+			end
+			if type(original) ~= "table" then
+				if type(v) == "table" then
+					format_error("patch a none-table key %s with a table", k)
+				end
+				obj[k] = v
+			else
+				-- it's sub tree
+				if type(v) ~= "table" then
+					format_error("patch a sub tree %s with a none-table", k)
+				end
+				obj[k] = patch_table(original, v)
+			end
+		end
+	end
+
+	function patch_table(src, patch)
+		if patch._data ~= nil then
+			-- patch is a resource proxy
+			return patch
+		end
+		local obj
+		if src._data ~= nil or src._patch == nil then
+			-- src is shared
+			obj = { _patch = false }
+			for k,v in pairs(src) do
+				obj[k] = v
+			end
+		else
+			-- src._patch == false
+			obj = src
+		end
+		apply_patch(obj, patch)
+		return obj
+	end
+end
+
+function world:set(eid, cname, patch)
+	local e = self[eid]
+	local oldc = e[cname]
+	e[cname] = patch_table(oldc, patch)
+end
 
 local m = {}
 
