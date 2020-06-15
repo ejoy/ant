@@ -11,8 +11,13 @@ local sm = ecs.transform "skinning_material"
 
 function sm.process_prefab(e)
 	if e.skinning_type == "GPU" then
-		e.material = assetmgr.patch(e.material, {})
-		e.material.fx = assetmgr.load_fx(tostring(e.material.fx), {skinning="GPU"})
+		local m = e.material
+		e.material = {
+			fx = assetmgr.load_fx(tostring(e.material.fx), {skinning="GPU"}),
+			properties = m.properties,
+			_state = m._state,
+			state = m.state,
+		}
 	end
 end
 
