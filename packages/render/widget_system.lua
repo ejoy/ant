@@ -16,9 +16,7 @@ local function create_dynamic_mesh(layout, num_vertices, num_indices)
 		vb = {
 			start = 0,
 			num = num_vertices,
-			handles = {
-				bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")
-			},
+			{handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")}
 		},
 		ib = {
 			start = 0,
@@ -89,7 +87,7 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 
 	vbdesc.num = vbdesc.num + numvertices
 
-	local vbhandle = vbdesc.handles[1]
+	local vbhandle = vbdesc[1].handle
 	local vertex_offset = bounding_draw.vertex_offset
 	
 	bgfx.update(vbhandle, vertex_offset, bgfx.memory_buffer(vbfmt, vb));
