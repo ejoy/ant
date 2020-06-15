@@ -117,7 +117,6 @@ end
 local function replace_material(result, material)
 	local items = result.items
 	for eid, item in pairs(items) do
-		print(eid)
 		local ni = {}; for k, v in pairs(item) do ni[k] = v end
 		ni.fx = material.fx
 		ni.properties = get_properties(eid)
@@ -303,7 +302,7 @@ local function print_raw_buffer(rawbuffer)
 end
 
 local function select_obj(pickup_com, blit_buffer, viewrect)
-	print_raw_buffer(blit_buffer)
+	--print_raw_buffer(blit_buffer)
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect)
 	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)
