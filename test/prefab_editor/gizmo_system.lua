@@ -145,7 +145,7 @@ local function create_arrow_widget(axis_root, axis_str)
 					t = cylindere_t,
 				},
 			},
-			material = world.component "resource" "/pkg/ant.resources/materials/gizmos.material",
+			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str
 		},
@@ -167,7 +167,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			scene_entity = true,
 			state = ies.create_state "visible|selectable",
 			transform = world.component "transform" {srt=world.component "srt"{s = {100}, r = local_rotator, t = cone_t}},
-			material = world.component "resource" "/pkg/ant.resources/materials/gizmos.material",
+			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
 		},

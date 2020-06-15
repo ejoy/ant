@@ -117,6 +117,7 @@ end
 local function replace_material(result, material)
 	local items = result.items
 	for eid, item in pairs(items) do
+		print(eid)
 		local ni = {}; for k, v in pairs(item) do ni[k] = v end
 		ni.fx = material.fx
 		ni.properties = get_properties(eid)
@@ -197,7 +198,7 @@ local function add_pick_entity()
 				updir = world.component "vector"(mc.T_YAXIS),
 				eyepos = world.component "vector"(mc.T_ZERO_PT),
 				frustum = {
-					type="mat", n=0.1, f=100, fov=1, aspect=pickup_buffer_w / pickup_buffer_h
+					type="mat", n=0.1, f=100, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
 				},
 			},
 			name = "camera.pickup"
@@ -302,7 +303,7 @@ local function print_raw_buffer(rawbuffer)
 end
 
 local function select_obj(pickup_com, blit_buffer, viewrect)
-	--print_raw_buffer(blit_buffer)
+	print_raw_buffer(blit_buffer)
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect)
 	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)

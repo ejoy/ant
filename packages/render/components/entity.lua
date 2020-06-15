@@ -56,7 +56,7 @@ function ientity.create_mesh(vb, ib)
 	return create_mesh(vb, ib)
 end
 
-local function create_simple_render_entity(transform, material, name, mesh)
+local function create_simple_render_entity(transform, material, name, mesh, state)
 	local srt = transform and transform.srt or {}
 	return world:create_entity {
 		policy = {
@@ -67,7 +67,7 @@ local function create_simple_render_entity(transform, material, name, mesh)
 			transform = world.component "transform" {srt = world.component "srt"(srt)},
 			material = world.component "resource"(material),
 			mesh = mesh,
-			state = ies.create_state "selectable|visible",
+			state = state or ies.create_state "selectable|visible",
 			name = name or "frustum",
 			scene_entity = true,
 		}
@@ -86,7 +86,7 @@ function ientity.create_grid_entity(name, w, h, unit)
 		end
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, ib)
-	return create_simple_render_entity(nil, "/pkg/ant.resources/materials/line.material", name, mesh)
+	return create_simple_render_entity(nil, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
 end
 
 local plane_mesh
