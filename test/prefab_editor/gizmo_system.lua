@@ -34,8 +34,7 @@ function gizmo_sys:init()
 	-- 	},
 	-- 	data = {
 	-- 		scene_entity = true,
-	-- 		can_render = true,
-	-- 		can_select = true,
+	--		state = ies.create_state "visible|selectable",
 	-- 		transform = world.component "transform" {
 	-- 			srt= world.component "srt" {
 	-- 				s={100},
@@ -74,6 +73,8 @@ function gizmo_sys:init()
 	-- -- 	"test shadow plane"
 	-- -- )
 end
+
+local ies = world:interface "ant.scene|ientity_state"
 
 local function create_arrow_widget(axis_root, axis_str)
 	--[[
@@ -136,8 +137,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			scene_entity = true,
-			can_render = true,
-			can_select = true,
+			state = ies.create_state "visible|selectable",
 			transform = world.component "transform" {
 				srt = world.component "srt" {
 					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
@@ -165,8 +165,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			scene_entity = true,
-			can_render = true,
-			can_select = true,
+			state = ies.create_state "visible|selectable",
 			transform = world.component "transform" {srt=world.component "srt"{s = {100}, r = local_rotator, t = cone_t}},
 			material = world.component "resource" "/pkg/ant.resources/materials/gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
@@ -201,8 +200,7 @@ function gizmo_sys:post_init()
 		},
 		data = {
 			scene_entity = true,
-			can_render = true,
-			can_select = true,
+			state = ies.create_state "visible|selectable",
 			transform = world.component "transform" {
 				srt= world.component "srt" {
 					s={50},
@@ -224,8 +222,7 @@ function gizmo_sys:post_init()
 		},
 		data = {
 			scene_entity = true,
-			can_render = true,
-			can_select = true,
+			state = ies.create_state "visible|selectable",
 			transform = world.component "transform" {
 				srt= world.component "srt" {
 					s={50},

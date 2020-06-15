@@ -48,8 +48,7 @@ function m:init()
 	-- 	},
 	-- 	data = {
 	-- 		scene_entity = true,
-	-- 		can_render = true,
-	-- 		can_select = true,
+	--		state = ies.create_state "visible|selectable",
 	-- 		transform = world.component "transform" {
 	-- 			srt= world.component "srt" {
 	-- 				s={100},
