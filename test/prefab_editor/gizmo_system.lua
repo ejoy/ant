@@ -12,6 +12,7 @@ local cylinder_cone_ratio = 8
 local cylinder_rawradius = 0.25
 
 local gizmo
+local gizmo_eid = {x = {}, y = {}, z ={}}
 local switch = true
 local function onChangeColor(obj)
 	if switch then
@@ -96,31 +97,32 @@ local function create_arrow_widget(axis_root, axis_str)
 	local cylinder_radius = cylinder_rawradius or 0.65
 
 	local cone_raw_centerpos = mc.ZERO_PT
-	--local cone_centerpos = math3d.add(math3d.add({0, cylinder_halflen, 0, 1}, cone_raw_centerpos), {0, cone_raw_halflen, 0, 1})
 	local cone_centerpos = math3d.add(math3d.add({0, cylinder_len, 0, 1}, cone_raw_centerpos), {0, cone_raw_halflen, 0, 1})
-	--local cylinder_bottom_pos = math3d.vector(0, -cylinder_halflen, 0, 1)
 	local cylinder_bottom_pos = math3d.vector(0, 0, 0, 1)
 	local cone_top_pos = math3d.add(cone_centerpos, {0, cone_raw_halflen, 0, 1})
 
-	--local arrow_center = math3d.mul(0.5, math3d.add(cylinder_bottom_pos, cone_top_pos))
 	local arrow_center = math3d.add(cylinder_bottom_pos, cone_top_pos)
 	local cylinder_raw_centerpos = mc.ZERO_PT
 	local cylinder_offset = math3d.sub(cylinder_raw_centerpos, arrow_center)
 
 	local cone_offset = math3d.sub(cone_centerpos, arrow_center)
 
+	local cone_t
 	local cylindere_t
 	local local_rotator
 	local color
 	if axis_str == "x" then
+		cone_t = math3d.ref(math3d.add(math3d.vector(cylinder_len, 0, 0), math3d.vector(cone_raw_halflen, 0, 0)))
 		local_rotator = math3d.ref(math3d.quaternion{0, 0, math.rad(-90)})
 		cylindere_t = math3d.ref(math3d.vector(cylinder_halflen, 0, 0))
 		color = world.component "vector" {1, 0, 0, 1}
 	elseif axis_str == "y" then
+		cone_t = math3d.ref(math3d.add(math3d.vector(0, cylinder_len, 0), math3d.vector(0, cone_raw_halflen, 0)))
 		local_rotator = math3d.ref(math3d.quaternion{0, 0, 0})
 		cylindere_t = math3d.ref(math3d.vector(0, cylinder_halflen, 0))
 		color = world.component "vector" {0, 1, 0, 1}
 	elseif axis_str == "z" then
+		cone_t = math3d.ref(math3d.add(math3d.vector(0, 0, cylinder_len), math3d.vector(0, 0, cone_raw_halflen)))
 		local_rotator = math3d.ref(math3d.quaternion{math.rad(90), 0, 0})
 		cylindere_t = math3d.ref(math3d.vector(0, 0, cylinder_halflen))
 		color = world.component "vector" {0, 0, 1, 1}
@@ -130,10 +132,12 @@ local function create_arrow_widget(axis_root, axis_str)
 			"ant.render|render",
 			"ant.general|name",
 			"ant.scene|hierarchy_policy",
+			"ant.objcontroller|select",
 		},
 		data = {
 			scene_entity = true,
 			can_render = true,
+			can_select = true,
 			transform = world.component "transform" {
 				srt = world.component "srt" {
 					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
@@ -143,7 +147,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
-			name = "arrow.cylinder",
+			name = "arrow.cylinder" .. axis_str
 		},
 		action = {
             mount = axis_root,
@@ -152,27 +156,21 @@ local function create_arrow_widget(axis_root, axis_str)
 
 	world:set(cylindereid, "material", {properties={u_color=color}})
 
-	local cone_t
-	if axis_str == "x" then
-		cone_t = math3d.ref(math3d.add(math3d.vector(cylinder_len, 0, 0), math3d.vector(cone_raw_halflen, 0, 0)))
-	elseif axis_str == "y" then
-		cone_t = math3d.ref(math3d.add(math3d.vector(0, cylinder_len, 0), math3d.vector(0, cone_raw_halflen, 0)))
-	elseif axis_str == "z" then
-		cone_t = math3d.ref(math3d.add(math3d.vector(0, 0, cylinder_len), math3d.vector(0, 0, cone_raw_halflen)))
-	end
 	local coneeid = world:create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
 			"ant.scene|hierarchy_policy",
+			"ant.objcontroller|select",
 		},
 		data = {
 			scene_entity = true,
 			can_render = true,
+			can_select = true,
 			transform = world.component "transform" {srt=world.component "srt"{s = {100}, r = local_rotator, t = cone_t}},
 			material = world.component "resource" "/pkg/ant.resources/materials/gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
-			name = "arrow.cone"
+			name = "arrow.cone" .. axis_str
 		},
 		action = {
             mount = axis_root,
@@ -180,6 +178,17 @@ local function create_arrow_widget(axis_root, axis_str)
 	}
 
 	world:set(coneeid, "material", {properties={u_color=color}})
+
+	if axis_str == "x" then
+		gizmo_eid.x[1] = cylindereid
+		gizmo_eid.x[2] = coneeid
+	elseif axis_str == "y" then
+		gizmo_eid.y[1] = cylindereid
+		gizmo_eid.y[2] = coneeid
+	elseif axis_str == "z" then
+		gizmo_eid.z[1] = cylindereid
+		gizmo_eid.z[2] = coneeid
+	end
 end
 
 function gizmo_sys:post_init()
@@ -187,6 +196,7 @@ function gizmo_sys:post_init()
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
+			"ant.scene|hierarchy_policy",
 			"ant.objcontroller|select",
 		},
 		data = {
@@ -251,11 +261,23 @@ local keypress_mb = world:sub{"keyboard"}
 
 local pickup_mb = world:sub {"pickup"}
 
+local function isGizmoSelect(eid)
+	if eid == gizmo_eid.x[1] or eid == gizmo_eid.x[2] then
+		return true
+	elseif eid == gizmo_eid.y[1] or eid == gizmo_eid.y[2] then
+		return true
+	elseif eid == gizmo_eid.z[1] or eid == gizmo_eid.z[2] then
+		return true
+	else
+		return false
+	end
+end
+
 function gizmo_sys:data_changed()
 	for _, key, press, state in keypress_mb:unpack() do
 		if key == "SPACE" and press == 0 then
-			world:pub{"record_camera_state"}
-			onChangeColor(cube)
+			-- world:pub{"record_camera_state"}
+			-- onChangeColor(cube)
 		end
 	end
 	for _,pick_id,pick_ids in pickup_mb:unpack() do
@@ -268,7 +290,9 @@ function gizmo_sys:data_changed()
             --     on_pick_entity(eid)
 			-- end
 			--onChangeColor(world[eid])
-			gizmo.transform.srt.t = world[eid].transform.srt.t
+			if not isGizmoSelect(eid) then
+				gizmo.transform.srt.t = world[eid].transform.srt.t
+			end
         else
             -- hub.publish(WatcherEvent.RTE.SceneEntityPick,{})
             -- on_pick_entity(nil)
