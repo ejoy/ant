@@ -188,9 +188,10 @@ local default_setting = {
     bloom_enable = render.setting:get 'graphic/postprocess/bloom/enable',
 }
 
-local function read_fx(filename, setting)
-    local path = c.compile_path(filename)
-	local fx = datalist.parse(readfile(path))
+local function read_fx(fx, setting)
+    if type(fx) == "string" then
+        fx = datalist.parse(readfile(c.compile_path(fx)))
+    end
     local t = fx.setting or {}
     if setting then
         for k, v in pairs(setting) do
@@ -256,8 +257,8 @@ local function create_program(output, fx)
     end
 end
 
-local function loader(filename, setting)
-    local fx = read_fx(filename, setting)
+local function loader(input, setting)
+    local fx = read_fx(input, setting)
     local cache, output = get_fx_cache(fx.setting)
     local hash = get_hash(fx)
     local res = cache[hash]
