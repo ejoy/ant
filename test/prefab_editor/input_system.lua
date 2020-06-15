@@ -13,6 +13,8 @@ local kWheelSpeed <const> = 0.5
 local lastMouse
 local lastX, lastY
 
+local keypress_mb = world:sub{"keyboard"}
+
 function m:data_changed()
     for _,what,state,x,y in eventMouse:unpack() do
         if state == "DOWN" then
@@ -32,4 +34,15 @@ function m:data_changed()
     for _,delta in eventMouseWheel:unpack() do
         world:pub { "camera", "zoom", -delta*kWheelSpeed }
     end
+    for _, key, press, state in keypress_mb:unpack() do
+		if key == "W" and press == 2 then
+			
+		elseif key == "S" and press == 2 then
+			
+		elseif key == "A" and press == 2 then
+			
+		elseif key == "D" and press == 2 then
+			
+		end
+	end
 end
