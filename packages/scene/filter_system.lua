@@ -160,7 +160,7 @@ local function push_render_item(eid, transform, rendermesh, material)
 		local filterlist = ies.filter_list(eid)
 		
 		for _, f in ipairs(filterlist) do
-			local resulttarget = f.result[material.fx.surface_type.transparency]
+			local resulttarget = f.result[material.fx.setting.transparency]
 			resulttarget.items[eid] = ri
 		end
 	end
