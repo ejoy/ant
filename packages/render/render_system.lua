@@ -56,8 +56,11 @@ function render_sys:render_commit()
 			bgfx.set_view_mode(viewid, rt.view_mode)
 
 			local function draw_items(result)
-				for eid, ri in pairs(result.items) do
-					irender.draw(viewid, ri, render_properties)
+				local items = result.visible_set
+				if items then
+					for eid, ri in pairs(items) do
+						irender.draw(viewid, ri, render_properties)
+					end
 				end
 			end
 

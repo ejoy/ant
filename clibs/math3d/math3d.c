@@ -1489,28 +1489,27 @@ lfrustum_intersect_aabb_list(lua_State *L){
 	const float* planes[6];
 	fetch_frustum_planes(L, LS, 1, planes);
 
-	const int numaabb = luaL_checkinteger(L, 3);
+	const int resultidx = lua_gettop(L)+1;
+	lua_newtable(L);
 
-	const int result_stackidx = 4;
-	luaL_checktype(L, result_stackidx, LUA_TTABLE);
-	
-	int result_idx = 0;
-	for (int ii = 0; ii < numaabb; ++ii){
-		lua_geti(L, 2, ii+1);{
-			const float * aabb = object_from_field(L, LS, -1, "aabb", LINEAR_TYPE_MAT, matrix_from_table);
-			if (aabb == NULL || math3d_frustum_intersect_aabb(LS, planes, aabb) >= 0){
-				lua_pushvalue(L, -1);
-				lua_seti(L, result_stackidx, ++result_idx);
-			}
+	int haselem = 0;
+	lua_pushnil(L);
+	while (lua_next(L, 2) != 0){
+		//	table: eid=value
+		//		value: {aabb=...}
+		const lua_Integer eid = lua_tointeger(L, -2);	//table key
+		const float * aabb = object_from_field(L, LS, -1, "aabb", LINEAR_TYPE_MAT, matrix_from_table);
+
+		if (aabb == NULL || math3d_frustum_intersect_aabb(LS, planes, aabb) >= 0){
+			lua_pushvalue(L, -1);	//-1 is table value
+			lua_seti(L, resultidx, eid);
+			haselem = 1;
 		}
+
 		lua_pop(L, 1);
 	}
 
-	if (0 != result_idx){
-		lua_pushinteger(L, result_idx);
-		lua_setfield(L, result_stackidx, "n");
-	}
-	return 0;
+	return haselem;
 }
 
 static int
