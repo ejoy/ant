@@ -308,10 +308,9 @@ local function print_raw_buffer(rawbuffer)
 		local t = {tostring(i) .. ":"}
 		for j=1, pickup_buffer_h do
 			local idx = (i-1)*step+(j-1)*elemsize
-			t[#t+1] = data[idx+1]
-			t[#t+1] = data[idx+2]
-			t[#t+1] = data[idx+3]
-			t[#t+1] = data[idx+4]
+			for ii=1, elemsize do
+				t[#t+1] = data[idx+ii]
+			end
 		end
 
 		print(table.concat(t, ' '))
