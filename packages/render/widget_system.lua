@@ -28,9 +28,9 @@ local function create_dynamic_mesh(layout, num_vertices, num_indices)
 	}
 end
 
-local ies = world:interface "ant.scene|ientity_state"
+local ies = world:interface "ant.render|ientity_state"
 function widget_drawer_sys:init()
-	world:create_entity {
+	local eid = world:create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.render|bounding_draw",
@@ -39,13 +39,13 @@ function widget_drawer_sys:init()
 			transform = world.component "transform" {srt = world.component "srt" {}},
 			material = world.component "resource" "/pkg/ant.resources/materials/line.material",
 			mesh = nil,
-			state = ies.create_state "selectable|visible",
+			state = ies.create_state "visible",
 			scene_entity = true,
 			widget_drawer = true,
 		}
 	}
-	local dmesh = world:singleton_entity "widget_drawer"
-	dmesh.rendermesh = create_dynamic_mesh("p3|c40niu", 1024, 2048)
+	local dmesh = world[eid]
+	dmesh.mesh = create_dynamic_mesh("p3|c40niu", 1024, 2048)
 	dmesh.bounding_draw = {
 		vertex_offset = 0,
 		index_offset = 0,
@@ -55,8 +55,8 @@ end
 function widget_drawer_sys:end_frame()
 	local dmesh = world:singleton_entity "widget_drawer"
 	if dmesh then
-		local primgroup = dmesh.rendermesh
-		local vbdesc, ibdesc = primgroup.vb, primgroup.ib
+		local mesh = dmesh.mesh
+		local vbdesc, ibdesc = mesh.vb, mesh.ib
 		vbdesc.start, vbdesc.num = 0, 0
 		ibdesc.start, ibdesc.num = 0, 0
 
@@ -84,8 +84,8 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	end
 	local dmesh = world:singleton_entity "widget_drawer"
 	local bounding_draw = dmesh.bounding_draw
-	local primgroup = dmesh.rendermesh
-	local vbdesc, ibdesc = primgroup.vb, primgroup.ib
+	local mesh = dmesh.mesh
+	local vbdesc, ibdesc = mesh.vb, mesh.ib
 
 	vbdesc.num = vbdesc.num + numvertices
 

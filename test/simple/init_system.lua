@@ -22,7 +22,7 @@ function m:init()
 	)
     world:instance "res/light_directional.prefab"
     local res = world:instance "res/fox.glb|mesh.prefab"
-    local ies = world:interface "ant.scene|ientity_state"
+    local ies = world:interface "ant.render|ientity_state"
     local e = world[res[3]]
     e.state = e.state | ies.create_state "cast_shadow"
 end

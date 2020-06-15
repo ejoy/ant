@@ -3,7 +3,7 @@ import "@ant.scene"
 
 system "pickup_system"
     .implement "pickup_system.lua"
-    .require_system "ant.scene|filter_system"
+    .require_system "ant.render|filter_system"
     .method "init"
     .method "data_changed"
     .method "pickup"

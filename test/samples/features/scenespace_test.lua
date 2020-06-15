@@ -3,7 +3,7 @@ local world = ecs.world
 
 local sp_test_sys = ecs.system "scenespace_test_system"
 
-local ies = world:interface "ant.scene|ientity_state"
+local ies = world:interface "ant.render|ientity_state"
 
 function sp_test_sys:init()
     local rooteid = world:create_entity{

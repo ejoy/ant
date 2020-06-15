@@ -55,7 +55,7 @@ local function circle(color)
 end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
-    local ies = world:interface "ant.scene|ientity_state"
+    local ies = world:interface "ant.render|ientity_state"
     color[4] = 0.6
     local eid = world:create_entity {
         policy={
@@ -95,7 +95,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
         end
     end
 
-    local ies = world:interface "ant.scene|ientity_state"
+    local ies = world:interface "ant.render|ientity_state"
 
     return world:create_entity {
         policy = {
@@ -129,7 +129,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             table.insert(gvb, vv)
         end
     end
-    local ies = world:interface "ant.scene|ientity_state"
+    local ies = world:interface "ant.render|ientity_state"
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -156,7 +156,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
 end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
-    local ies = world:interface "ant.scene|ientity_state"
+    local ies = world:interface "ant.render|ientity_state"
     local eid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -186,7 +186,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
 end
 
 local function create_box_entity(world, color, size, pos, name,parent,dir)
-    local ies = world:interface "ant.scene|ientity_state"
+    local ies = world:interface "ant.render|ientity_state"
     local eid = world:create_entity {
         policy = {
             "ant.general|name",

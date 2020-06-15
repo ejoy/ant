@@ -1,0 +1,17 @@
+system "filter_system"
+    .implement "filter/filter_system.lua"
+    .method "post_init"
+    .method "filter_render_items"
+
+interface "ientity_state"
+    .implement "filter/entity_state.lua"
+    .method "has_state"
+    .method "can_visible"
+    .method "can_cast"
+    .method "can_select"
+    .method "add_filter_list"
+    .method "create_state"
+
+pipeline "filter_items"
+    .stage "filter_render_items"
+    .stage "refine_filter"

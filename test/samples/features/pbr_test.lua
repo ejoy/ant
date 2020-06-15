@@ -9,7 +9,7 @@ local pbr_test_sys = ecs.system "pbr_test_system"
 local feature_path = fs.path "/pkg/ant.test.features"
 local pbr_material = world.component "resource"((feature_path / "assets/pbr_test.material"):string())
 local sphere_mesh = world.component "resource"("/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin")
-local ies = world:interface "ant.scene|ientity_state"
+local ies = world:interface "ant.render|ientity_state"
 local function create_pbr_entity(name, transform, 
     color, metallic, roughness)
 

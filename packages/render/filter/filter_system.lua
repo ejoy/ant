@@ -6,7 +6,7 @@ local math3d = require "math3d"
 local filter_system = ecs.system "filter_system"
 
 local iss = world:interface "ant.scene|iscenespace"
-local ies = world:interface "ant.scene|ientity_state"
+local ies = world:interface "ant.render|ientity_state"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local icm = world:interface "ant.objcontroller|camera_motion"
 
