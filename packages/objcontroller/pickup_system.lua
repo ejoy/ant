@@ -53,17 +53,28 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-local function which_entity_hitted(blitdata, viewrect)
+local function which_entity_hitted(blitdata, viewrect, elemsize)
 	local ceil = math.ceil
+	local x, y = viewrect.x or 0, viewrect.y or 0
+	assert(x == 0 and y == 0)
 	local w, h = viewrect.w, viewrect.h
 	local hw, hh = w * 0.5, h * 0.5
 	local center = {ceil(hw), ceil(hh)}
 
+	assert(elemsize == 4)
+	local step = w * 4
+
 	local function found_eid(pt)
-		if  0 < pt[1] and pt[1] <= w and
-			0 < pt[2] and pt[2] <= h then
-			local feid = blitdata[pt[1]*w+pt[2]]
-			if feid ~= 0 then
+		local x, y = pt[1], pt[2]
+		if  0 < x and x <= w and
+			0 < y and y <= h then
+
+			local offset = (pt[1]-1)*step+(pt[2]-1)*elemsize
+			local feid = blitdata[offset+1]|
+						blitdata[offset+2] << 8|
+						blitdata[offset+3] << 16|
+						blitdata[offset+4] << 24
+			if feid ~= 0 and world[feid] then
 				return feid
 			end
 		end
@@ -291,10 +302,16 @@ end
 
 local function print_raw_buffer(rawbuffer)
 	local data = rawbuffer.handle
+	local elemsize = rawbuffer.elemsize
+	local step = pickup_buffer_w * elemsize
 	for i=1, pickup_buffer_w do
 		local t = {tostring(i) .. ":"}
 		for j=1, pickup_buffer_h do
-			t[#t+1] = data[(i-1)*pickup_buffer_w + j]
+			local idx = (i-1)*step+(j-1)*elemsize
+			t[#t+1] = data[idx+1]
+			t[#t+1] = data[idx+2]
+			t[#t+1] = data[idx+3]
+			t[#t+1] = data[idx+4]
 		end
 
 		print(table.concat(t, ' '))
@@ -303,7 +320,7 @@ end
 
 local function select_obj(pickup_com, blit_buffer, viewrect)
 	--print_raw_buffer(blit_buffer)
-	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect)
+	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)
 		pickup_com.pickup_cache.last_pick = selecteid
