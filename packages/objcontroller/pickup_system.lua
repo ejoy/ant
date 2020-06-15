@@ -294,7 +294,7 @@ local function print_raw_buffer(rawbuffer)
 	for i=1, pickup_buffer_w do
 		local t = {tostring(i) .. ":"}
 		for j=1, pickup_buffer_h do
-			t[#t+1] = data[(i-1)*pickup_buffer_w + j-1]
+			t[#t+1] = data[(i-1)*pickup_buffer_w + j]
 		end
 
 		print(table.concat(t, ' '))
@@ -302,7 +302,7 @@ local function print_raw_buffer(rawbuffer)
 end
 
 local function select_obj(pickup_com, blit_buffer, viewrect)
-	--print_raw_buffer(blit_buffer.raw_buffer)
+	--print_raw_buffer(blit_buffer)
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect)
 	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)
@@ -342,7 +342,6 @@ function pickup_sys:pickup()
 			blit(pickupcomp.blit_buffer, rb)
 		elseif nextstep	== "select_obj" then
 			select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
-			--print_raw_buffer(pickupcomp.blit_buffer.raw_buffer)
 			enable_pickup(false)
 		end
 
