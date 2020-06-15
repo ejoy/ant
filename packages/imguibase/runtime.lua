@@ -31,11 +31,12 @@ function callback.init(nwh, context, width, height)
 	world = ecs.new_world(config)
 	common.init_world(world)
 	world:pub {"resize", width, height}
+	local irender = world:interface "ant.render|irender"
+	irender.create_blit_queue{w=width,h=height}
+
 	world:update_func "init" ()
 	world_update = world:update_func "update"
 	world_exit   = world:update_func "exit"
-	local irender = world:interface "ant.render|irender"
-    irender.create_blit_queue{w=width,h=height}
 end
 
 function callback.mouse_wheel(x, y, delta)

@@ -11,6 +11,7 @@ system "scenespace_system"
 
 system "filter_system"
     .implement "filter_system.lua"
+    .method "post_init"
     .method "filter_render_items"
 
 policy "hierarchy_policy"
@@ -41,7 +42,7 @@ interface "ientity_state"
     .method "can_visible"
     .method "can_cast"
     .method "can_select"
-    .method "filter_list"
+    .method "add_filter_list"
     .method "create_state"
 
 interface "iscenespace"

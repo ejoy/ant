@@ -33,26 +33,17 @@ function ies_class.can_select(eid)
 	return ies.has_state(eid, "selectable")
 end
 
-function ies_class.filter_list(eid)
+function ies_class.add_filter_list(eid, filters, filter_found)
     local state = world[eid].state
-	local filters = {}
-	--TODO: filter_groups needed!
-    for _, eid in world:each "primitive_filter" do
-        local pf = world[eid].primitive_filter
-        filters[pf.filter_type] = pf
-    end
-
-    local l = {}
-    for n, mask in pairs(STATE_TYPE) do
-		if (state & mask) ~= 0 then
-			local f = filters[n]
-			if f then
-				l[#l+1] = f
+	for n, eid in pairs(filters) do
+		local e = world[eid]
+		if e.visible then
+			local mask = assert(STATE_TYPE[n])
+			if (state & mask) ~= 0 then
+				filter_found(e.primitive_filter)
 			end
-        end
-    end
-
-    return l
+		end
+	end
 end
 
 function ies_class.create_state(namelist)

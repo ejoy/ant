@@ -141,6 +141,15 @@ local function get_rendermesh(eid)
 	end
 end
 
+local filters = {}
+function filter_system:post_init()
+	for _, eid in world:each "primitive_filter" do
+		local e = world[eid]
+		local pf = e.primitive_filter
+		filters[pf.filter_type] = eid
+	end
+end
+
 local function push_render_item(eid, transform, rendermesh, material)
 	if transform and rendermesh and material then
 		local ri = {
@@ -156,13 +165,11 @@ local function push_render_item(eid, transform, rendermesh, material)
 			skinning_matrices = transform._skinning_matrices,
 			aabb 	= transform._aabb,
 		}
-		
-		local filterlist = ies.filter_list(eid)
-		
-		for _, f in ipairs(filterlist) do
-			local resulttarget = f.result[material.fx.setting.transparency]
+
+		ies.add_filter_list(eid, filters, function (filter)
+			local resulttarget = filter.result[material.fx.setting.transparency]
 			resulttarget.items[eid] = ri
-		end
+		end)
 	end
 end
 
