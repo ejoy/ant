@@ -92,9 +92,13 @@ function assetmgr.resource(world, path)
 end
 
 --TODO
-function assetmgr.load_fx(fullpath, setting)
-	local res = cr.compile_fx(fullpath, setting)
-	return setmetatable(res, {__tostring=function() return fullpath end})
+function assetmgr.load_fx(fx, setting)
+	local mt = getmetatable(fx)
+	if mt and mt.__data then
+		fx = mt.__data
+	end
+	local res = cr.compile_fx(fx, setting)
+	return setmetatable(res, {__data=fx})
 end
 
 local function valid_component(w, name)

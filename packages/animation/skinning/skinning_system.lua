@@ -13,7 +13,7 @@ function sm.process_prefab(e)
 	if e.skinning_type == "GPU" then
 		local m = e.material
 		e.material = {
-			fx = assetmgr.load_fx(tostring(e.material.fx), {skinning="GPU"}),
+			fx = assetmgr.load_fx(e.material.fx, {skinning="GPU"}),
 			properties = m.properties,
 			_state = m._state,
 			state = m.state,
