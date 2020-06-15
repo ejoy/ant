@@ -3,6 +3,8 @@ local world = ecs.world
 
 local sp_test_sys = ecs.system "scenespace_test_system"
 
+local ies = world:interface "ant.scene|ientity_state"
+
 function sp_test_sys:init()
     local rooteid = world:create_entity{
         policy = {
@@ -27,7 +29,6 @@ function sp_test_sys:init()
         },
         data = {
             name = "child1",
-            can_render = true,
             material = material,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
             transform = world.component "transform" {
@@ -36,6 +37,7 @@ function sp_test_sys:init()
                     t={1, 2, 0, 1},
                 }
             },
+            state = ies.create_state "visible|selectable",
             scene_entity = true,
         },
         action = {
@@ -52,7 +54,7 @@ function sp_test_sys:init()
         data = {
             name = "child1_1",
             scene_entity = true,
-            can_render = true,
+            state = ies.create_state "visible|selectable",
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = material,
             transform = world.component "transform" {
@@ -97,7 +99,7 @@ function sp_test_sys:init()
         },
         data = {
             name = "child2_1",
-            can_render = true,
+            state = ies.create_state "visible|selectable",
             scene_entity = true,
             material = material,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",

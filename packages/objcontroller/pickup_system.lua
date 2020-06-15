@@ -102,15 +102,16 @@ local pickup_sys = ecs.system "pickup_system"
 
 local uid_cache = {}
 local function get_properties(eid)
-	local uid = uid_cache[eid]
-	if uid then
-		return uid
+	local p = uid_cache[eid]
+	if p then
+		return p
 	end
 
-	uid = {
+	p = {
 		u_id = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
 	}
-	uid_cache[eid] = uid
+	uid_cache[eid] = p
+	return p
 end
 
 local function replace_material(result, material)
@@ -176,7 +177,7 @@ end
 local pickup_buffer_w, pickup_buffer_h = 8, 8
 local pickupviewid = viewidmgr.get "pickup"
 
-local fb_renderbuffer_flag = samplerutil.generate_sampler_flag {
+local fb_renderbuffer_flag = samplerutil.sampler_flag {
 	RT="RT_ON",
 	MIN="POINT",
 	MAG="POINT",

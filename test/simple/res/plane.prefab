@@ -12,5 +12,4 @@ data:
   name: shadow_plane
 policy:
   ant.render|render
-  ant.render|mesh
   ant.general|name

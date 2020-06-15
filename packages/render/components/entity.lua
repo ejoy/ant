@@ -121,8 +121,6 @@ function ientity.create_plane_entity(srt, materialpath, color, name, info)
 		mesh = get_plane_mesh(),
 	}
 
-	local t = data.transform
-
 	if info then
 		for policy_name, dd in pairs(info) do
 			policy[#policy+1] = policy_name

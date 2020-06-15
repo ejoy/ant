@@ -2,7 +2,6 @@
 ---
 policy:
     ant.render|render
-    ant.render|mesh
     ant.animation|animation
     ant.animation|skinning
     ant.animation|animation_controller.birth

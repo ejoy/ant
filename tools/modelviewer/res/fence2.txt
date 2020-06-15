@@ -1,6 +1,5 @@
 policy:
   ant.collision|collider_policy
-  ant.render|mesh
   ant.general|name
   ant.render|render
   ant.render|shadow_cast_policy

@@ -113,7 +113,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		},
 		data = {
 			scene_entity = true,
-			can_render = true,
+			state = ies.create_state "visible",
 			transform = world.component "transform" {
 				srt = world.component "srt" {
 					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
@@ -140,7 +140,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		},
 		data = {
 			scene_entity = true,
-			can_render = true,
+			state = ies.create_state "visible",
 			transform = world.component "transform" {srt=world.component "srt"{s={100}, t=cone_offset}},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',

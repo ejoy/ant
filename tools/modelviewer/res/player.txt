@@ -3,7 +3,6 @@ policy:
   ant.animation|skinning
   ant.animation|animation_controller.state_machine
   ant.collision|collider_policy
-  ant.render|mesh
   ant.general|name
   ant.render|render
 data:
@@ -15,7 +14,6 @@ data:
       running: $resource /pkg/ant.resources.binary/meshes/female/animations/running.ozz
       running_fast: $resource /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
       walking: $resource /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
-  can_render: true
   scene_entity: true
   collider:
     capsule:

@@ -1,9 +1,7 @@
 ---
 policy:
     ant.render|render
-    ant.render|mesh
     ant.scene|hierarchy_policy
-    ant.scene|transform_policy
     ant.general|name
 data:
     transform: $transform
@@ -13,7 +11,7 @@ data:
         slot: "mixamorig:Head"
     material: $resource /pkg/ant.resources/materials/bunny.material
     mesh: $resource "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    can_render: true
+    state: 0x00000005
     scene_entity: true
     name: slot_cube
 action:
