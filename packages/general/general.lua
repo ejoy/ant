@@ -11,7 +11,3 @@ end
 function m:save()
     return tostring(self):match "^(.-):?$"
 end
-
-function m:copy()
-    return assetmgr.patch(self, {})
-end

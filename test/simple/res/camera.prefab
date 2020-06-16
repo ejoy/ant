@@ -1,0 +1,17 @@
+---
+data:
+  camera:
+    eyepos: $vector {-200, 100, 200, 1}
+    frustum:
+      aspect: 1.3333333333333333
+      f: 1000
+      fov: 60
+      n: 0.1
+      type: mat
+    type: ""
+    updir: $vector {0, 1, 0, 0}
+    viewdir: $vector {2, -1, -2, 0}
+  name: DEFAULT_CAMERA
+policy:
+  ant.general|name
+  ant.render|camera

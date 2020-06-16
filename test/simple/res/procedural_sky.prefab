@@ -1,0 +1,21 @@
+---
+data:
+  material: $resource /pkg/ant.resources/materials/sky/procedural/procedural_sky.material
+  mesh: $resource /pkg/ant.test.simple/res/procedural_sky.meshbin
+  name: "procedural sky"
+  procedural_sky: $procedural_sky
+    latitude: 0.8726646259971648
+    month: June
+    turbidity: 2.15
+    which_hour: 12
+  scene_entity: true
+  state: 1
+  transform: $transform
+    srt: $srt
+      r: {0, 0, 0, 1}
+      s: {1, 1, 1, 0}
+      t: {0, 0, 0, 1}
+policy:
+  ant.general|name
+  ant.render|render
+  ant.sky|procedural_sky
