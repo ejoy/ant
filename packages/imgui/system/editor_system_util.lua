@@ -59,7 +59,7 @@ end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
 
-    local ies = world:interface "ant.render|ientity_state"
+    local ies = world:interface "ant.scene|ientity_state"
     -- parent = parent and world[parent].serialize or nil
     color[4] = 0.6
     return world:create_entity {
@@ -102,7 +102,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
     local ie  = world:interface "ant.render|entity"
     -- local geopkg = import_package "ant.geometry"
     -- local geolib = geopkg.geometry
-    local ies = world:interface "ant.render|ientity_state"
+    local ies = world:interface "ant.scene|ientity_state"
     local gridid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -139,7 +139,7 @@ end
 local function create_circle_entity(world, name,color,rot,parent,dir)
     -- parent = parent and world[parent].serialize or nil
     local ie  = world:interface "ant.render|entity"
-    local ies = world:interface "ant.render|ientity_state"
+    local ies = world:interface "ant.scene|ientity_state"
     local gridid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -179,7 +179,7 @@ end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
     -- parent = parent and world[parent].serialize or nil
-    local ies = world:interface "ant.render|ientity_state"
+    local ies = world:interface "ant.scene|ientity_state"
     return world:create_entity {
         policy = {
             "ant.general|name",
@@ -215,7 +215,7 @@ end
 
 local function create_box_entity(world, color, size, pos, name,parent,dir)
     -- parent = parent and world[parent].serialize or nil
-    local ies = world:interface "ant.render|ientity_state"
+    local ies = world:interface "ant.scene|ientity_state"
     return world:create_entity {
         policy = {
             "ant.general|name",

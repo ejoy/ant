@@ -74,7 +74,7 @@ function gizmo_sys:init()
 	-- -- )
 end
 
-local ies = world:interface "ant.render|ientity_state"
+local ies = world:interface "ant.scene|ientity_state"
 
 local function create_arrow_widget(axis_root, axis_str)
 	--[[

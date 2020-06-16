@@ -26,7 +26,7 @@ local function create_dynamic_mesh(layout, num_vertices, num_indices)
 	}
 end
 
-local ies = world:interface "ant.render|ientity_state"
+local ies = world:interface "ant.scene|ientity_state"
 function widget_drawer_sys:init()
 	local eid = world:create_entity {
 		policy = {

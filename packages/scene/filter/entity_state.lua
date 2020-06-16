@@ -12,7 +12,7 @@ local STATE_TYPE = {
 }
 
 local ies_class = ecs.interface "ientity_state"
-local ies = world:interface "ant.render|ientity_state"
+local ies = world:interface "ant.scene|ientity_state"
 
 function ies_class.has_state(eid, name)
 	local s = world[eid].state

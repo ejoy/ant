@@ -11,7 +11,3 @@ interface "ientity_state"
     .method "can_select"
     .method "get_state_type"
     .method "create_state"
-
-pipeline "filter_items"
-    .stage "filter_render_items"
-    .stage "refine_filter"

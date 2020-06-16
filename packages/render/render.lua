@@ -158,7 +158,7 @@ function irender_class.create_blit_queue(viewrect)
 		}
 	}
 
-	local ies = world:interface "ant.render|ientity_state"
+	local ies = world:interface "ant.scene|ientity_state"
 	world:create_entity {
 		policy = {
 			"ant.general|name",
@@ -166,7 +166,7 @@ function irender_class.create_blit_queue(viewrect)
 		},
 		data = {
 			transform =  {
-				world.component "srt" {srt = {}}
+				srt = world.component "srt" {}
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/fullscreen.material",
 			state = ies.create_state "blit_view",

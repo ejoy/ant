@@ -7,7 +7,7 @@ local st_sys = ecs.system "shadow_test_system"
 
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
-local ies = world:interface "ant.render|ientity_state"
+local ies = world:interface "ant.scene|ientity_state"
 
 function st_sys:init()
 	world:create_entity {
