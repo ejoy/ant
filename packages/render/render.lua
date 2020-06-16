@@ -165,7 +165,7 @@ function irender_class.create_blit_queue(viewrect)
 			"ant.render|render",
 		},
 		data = {
-			transform = world.component "transform" {
+			transform =  {
 				world.component "srt" {srt = {}}
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/fullscreen.material",

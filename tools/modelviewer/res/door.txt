@@ -18,5 +18,5 @@ data:
   name: door
     lodidx: 1
   scene_entity: true
-  transform: $transform
+  transform: 
     srt: $srt

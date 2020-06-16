@@ -47,7 +47,7 @@ data:
             duration: 0.5
           move:
             duration: 0.5
-  transform: $transform
+  transform: 
     srt: $srt
       s: $vector {1,1,1,0}
       r: $quaternion {0,0,0,1}

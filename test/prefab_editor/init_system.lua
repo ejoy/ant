@@ -25,7 +25,7 @@ function m:init()
     --world:instance '/pkg/tools.viewer.prefab_viewer/light_directional.prefab'
     world:instance "res/light_directional.prefab"
 	-- local res = world:instance "res/fox.glb|mesh.prefab"
-	-- world[res[3]].transform = world.component "transform" {
+	-- world[res[3]].transform =  {
 	-- 	srt= world.component "srt" {s={0.01}}
 	-- }
     -- world:add_policy(res[3], {
@@ -47,7 +47,7 @@ function m:init()
 	-- 	data = {
 	-- 		scene_entity = true,
 	--		state = ies.create_state "visible|selectable",
-	-- 		transform = world.component "transform" {
+	-- 		transform =  {
 	-- 			srt= world.component "srt" {
 	-- 				s={100},
 	-- 				t={0, 2, 0, 0}

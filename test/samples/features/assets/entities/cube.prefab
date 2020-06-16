@@ -4,7 +4,7 @@ policy:
     ant.scene|hierarchy_policy
     ant.general|name
 data:
-    transform: $transform
+    transform: 
         srt: $srt
             s: {100, 100, 100, 0}
             t: {0, 0, 8, 1}

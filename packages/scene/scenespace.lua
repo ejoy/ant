@@ -14,13 +14,6 @@ function m.save(e, prefab)
 	end
 end
 
-local t = ecs.component "transform"
-
-function t:init()
-    self._world = math3d.ref(self.srt)
-    return self
-end
-
 local pf = ecs.component "primitive_filter"
 
 function pf:init()

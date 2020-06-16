@@ -60,7 +60,7 @@ local function target_lock_test()
         data = {
             name = "lock_target",
             can_render = true,
-            transform = world.component "transform" {srt = world.component "srt" {
+            transform =  {srt = world.component "srt" {
                 s = world.component "vector" {2, 1, 2, 0},
                 t = world.component "vector" {16, 1, 6}},
             },
@@ -80,7 +80,7 @@ local function target_lock_test()
             name = "lock_obj",
             can_render = true,
             parent = eid,
-            transform = world.component "transform" {
+            transform =  {
                 srt= world.component "srt" {t= world.component "vector" {0, 0, -6}},
                 lock_target = {
                     type = "ignore_scale",

@@ -66,7 +66,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component "transform" {
+            transform =  {
                 srt = world.component "srt" {s=size or {1, 1, 1}, r=euler2quat(rot or {0, 0, 0})},
             },
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/ring.glb|meshes/mesh1_P1.meshbin",
@@ -106,7 +106,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component "transform" {srt=world.component "srt" {}},
+            transform =  {srt=world.component "srt" {}},
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
             state = ies.create_state "visible|selectable",
@@ -139,7 +139,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component "transform" {
+            transform =  {
                 srt = world.component "srt" {r = euler2quat(rot or {0, 0, 0})},
             },
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_front_line.material",
@@ -166,7 +166,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component "transform" {
+            transform =  {
                 srt = world.component "srt" {s=size, r=euler2quat(rot or {0, 0, 0}), t=pos,}
             },
             mesh = world.component "resource""/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
@@ -196,7 +196,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = world.component "transform" {
+            transform =  {
                 srt = world.component "srt" {s=size, t=pos},
             },
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
@@ -225,7 +225,7 @@ function Util.create_gizmo(world)
                 "ant.test.animation|gizmo_object",
             },
             data={
-                transform = world.component "transform" {srt=world.component "srt" {}},
+                transform =  {srt=world.component "srt" {}},
                 name = name,
                 gizmo_object = {},
             },

@@ -7,7 +7,7 @@ policy:
     ant.render|shadow_cast_policy
     ant.general|name
 data:
-    transform: $transform
+    transform: 
         srt: $srt
             t: {-5, 0, 0, 1}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Joints_P1.meshbin"
@@ -32,7 +32,7 @@ policy:
     ant.render|shadow_cast_policy
     ant.general|name
 data:
-    transform: $transform
+    transform: 
         srt: $srt
             t: {-5, 0, 0, 1}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"

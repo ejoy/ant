@@ -57,7 +57,7 @@ local function instancePrefab(filename)
             "ant.scene|transform_policy",
         },
         data = {
-            transform = world.component "transform" {
+            transform =  {
                 srt = world.component "srt" {}
             },
             scene_entity = true,

@@ -11,3 +11,7 @@ system "load_properties_system"
 interface "render_properties"
     .implement "render_properties.lua"
     .method "data"
+
+interface "uniforms"
+    .implement "render_properties.lua"
+    .method "system_uniform"

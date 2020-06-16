@@ -34,7 +34,7 @@ function widget_drawer_sys:init()
 			"ant.render|bounding_draw",
 		},
 		data = {
-			transform = world.component "transform" {srt = world.component "srt" {}},
+			transform =  {srt = world.component "srt" {}},
 			material = world.component "resource" "/pkg/ant.resources/materials/line.material",
 			mesh = nil,
 			state = ies.create_state "visible",

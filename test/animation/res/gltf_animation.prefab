@@ -10,7 +10,7 @@ policy:
     ant.general|name
     ant.scene|hierarchy_policy
 data:
-    transform: $transform
+    transform: 
         srt: $srt {}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Joints_P1.meshbin"
     material: $resource /pkg/ant.resources/materials/gpu_skin.material
@@ -42,7 +42,7 @@ policy:
     ant.general|name
     ant.scene|hierarchy_policy
 data:
-    transform: $transform
+    transform: 
         srt: $srt {}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"
     material: $resource /pkg/ant.resources/materials/gpu_skin.material

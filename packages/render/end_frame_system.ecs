@@ -1,3 +1,0 @@
-system "end_frame_system"
-    .implement "end_frame_system.lua"
-    .method "end_frame"

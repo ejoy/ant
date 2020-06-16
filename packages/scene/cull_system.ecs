@@ -1,4 +1,0 @@
-system "cull_system"
-    .implement "cull_system.lua"
-    .require_system "ant.render|filter_system"
-    .method "cull"

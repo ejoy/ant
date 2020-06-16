@@ -71,7 +71,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = world.component "transform"{
+            transform = {
                 srt = mu.srt(size or {1, 1, 1}, euler2quat(rot or {0, 0, 0}), {0, 0, 0}),
             },
             parent = parent,
@@ -112,7 +112,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = world.component "transform" {srt = mu.srt()},
+            transform = {srt = mu.srt()},
             parent = parent,
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
@@ -149,7 +149,7 @@ local function create_circle_entity(world, name,color,rot,parent,dir)
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = world.component "transform"{
+            transform = {
                 srt = mu.srt(nil, euler2quat(rot or {0, 0, 0})),
             },
             parent = parent,
@@ -189,7 +189,7 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = world.component "transform"{
+            transform = {
                 srt = mu.srt(size or {1, 1, 1}, euler2quat(rot or {0, 0, 0}), pos or {0, 0, 0}),
             },
             parent = parent,
@@ -225,7 +225,7 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             "ant.imgui|gizmo_object",
         },
         data = {
-            transform = world.component "transform"{
+            transform = {
                 srt = mu.srt(size or {1}, euler2quat({0, 0, 0}), pos or {0, 0, 0}),
             },
             parent = parent,
@@ -268,7 +268,7 @@ end
 -- }
 function Util.create_gizmo(world)
     local function create_gizmo_object(name,parent,ignore_scale)
-        local trans = world.component "transform" {srt = mu.srt()}
+        local trans = {srt = mu.srt()}
         -- trans.parent = parent and world[parent].serialize or nil
         local args = {
             policy={

@@ -14,7 +14,7 @@ data:
   material: $resource /pkg/ant.resources/PVPScene/scene-mat.material
   mesh: $resource /pkg/ant.resources/PVPScene/woodother-34.mesh
   name: door
-  transform: $transform
+  transform: 
     srt:
       s: $vector {-1,1,-1,0}
       t: $vector {-2.2,0,-8,0}

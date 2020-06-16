@@ -55,7 +55,7 @@ local function pbr_spheres()
         for col=1, num_samples do
             local roughness = col * roughness_step
             create_pbr_entity("sphere" .. row .. "x" .. col, 
-            world.component "transform"{
+            {
                 srt = world.component "srt" {s = {100, 100, 100, 0}, t = {x, 0.0, z, 1.0}}
             }, basecolor, metallic, roughness)
 

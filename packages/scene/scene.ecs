@@ -22,10 +22,6 @@ policy "transform_policy"
     .component "transform"
     .component "scene_entity"
 
-component "transform"
-    .implement "scenespace.lua"
-    .method "init"
-
 component "primitive_filter"
     .implement "scenespace.lua"
     .method "init"
@@ -33,6 +29,10 @@ component "primitive_filter"
 interface "iscenespace"
     .implement "scenespace.lua"
     .method "scenequeue"
+
+interface "itransform"
+    .implement "scenespace.lua"
+    .method "worldmat"
 
 pipeline "scene"
     .stage "update_hierarchy_scene"

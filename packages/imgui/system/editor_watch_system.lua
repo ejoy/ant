@@ -177,7 +177,7 @@ local function create_outline(seleid)
         -- local trans = se.transform
         -- local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
         local ies = world:interface "ant.render|ientity_state"
-        local t = world.component "transform" {srt = mu.srt()}
+        local t = {srt = mu.srt()}
         t.parent = seleid
         local outlineeid = world:create_entity {
             policy={

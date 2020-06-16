@@ -5,7 +5,46 @@ local sp_test_sys = ecs.system "scenespace_test_system"
 
 local ies = world:interface "ant.render|ientity_state"
 
-function sp_test_sys:init()
+local function material_hierarchy_test()
+    local root = world:create_entity {
+        policy = {
+            "ant.general|name",
+            "ant.render|render"
+        },
+        data = {
+            name = "hierarhcy_root",
+            material = world.component "resource"("/pkg/ant.resources/material/bunny.material")
+        }
+    }
+
+    local ceid = world:create_entity{
+        policy = {
+            "ant.general|name",
+            "ant.render|render",
+        },
+        data = {
+            name = "hierarchy_child",
+            mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
+            state = ies.create_state "visible",
+            transform = {
+                world.component "srt" {
+                    s = {10}, t = {5, 0, 0}
+                }
+            }
+        },
+        action = {
+            mount=root,
+        }
+    }
+
+    setmetatable(world[ceid], {
+        __newindex  = function (t, k)
+            return t[k]
+        end
+    })
+end
+
+local function space_test()
     local rooteid = world:create_entity{
         policy = {
             "ant.general|name",
@@ -13,7 +52,7 @@ function sp_test_sys:init()
         },
         data = {
             name = "root",
-            transform = world.component "transform" {
+            transform =  {
                 srt=world.component "srt"{t={0, 1, 0, 1}}
             }
         }
@@ -31,7 +70,7 @@ function sp_test_sys:init()
             name = "child1",
             material = material,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
-            transform = world.component "transform" {
+            transform =  {
                 srt=world.component "srt"{
                     s = {100,},
                     t={1, 2, 0, 1},
@@ -57,7 +96,7 @@ function sp_test_sys:init()
             state = ies.create_state "visible|selectable",
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = material,
-            transform = world.component "transform" {
+            transform =  {
                 srt = world.component "srt" {
                     s = {100,},
                     r = {math.rad(math.cos(30)), 0, 0, math.rad(math.sin(30))}, --rotate 60 degree
@@ -78,7 +117,7 @@ function sp_test_sys:init()
         },
         data = {
             name = "child2",
-            transform = world.component "transform" {
+            transform =  {
                 srt = world.component "srt" {
                     s = {1, 2, 1, 0},
                     t = {3, 3, 5}
@@ -103,7 +142,7 @@ function sp_test_sys:init()
             scene_entity = true,
             material = material,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-            transform = world.component "transform" {
+            transform =  {
                 srt = world.component "srt" {
                     s = {100,},
                     t ={1, 2, 0, 1}
@@ -114,4 +153,9 @@ function sp_test_sys:init()
             mount = child2,
         }
     }
+end
+
+function sp_test_sys:init()
+    --space_test()
+    material_hierarchy_test()
 end

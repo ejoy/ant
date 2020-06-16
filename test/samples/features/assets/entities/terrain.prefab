@@ -6,7 +6,7 @@ policy:
     ant.collision|collider_policy
 data:
     material:$resource /pkg/ant.resources/terrain/test.material
-    transform: $transform
+    transform: 
         srt:$srt
             s: {1, 1, 1, 0}
     scene_entity: true

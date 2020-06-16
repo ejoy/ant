@@ -35,7 +35,7 @@ function gizmo_sys:init()
 	-- 	data = {
 	-- 		scene_entity = true,
 	--		state = ies.create_state "visible|selectable",
-	-- 		transform = world.component "transform" {
+	-- 		transform =  {
 	-- 			srt= world.component "srt" {
 	-- 				s={100},
 	-- 				t={0, 2, 0, 0}
@@ -55,7 +55,7 @@ function gizmo_sys:init()
 	-- 		"ant.general|name",
 	-- 	},
 	-- 	data = {
-	-- 		transform = world.component "transform" {
+	-- 		transform =  {
 	-- 			srt = world.component "srt" {
 	-- 				t = {0, 0, 3, 1}
 	-- 			}
@@ -138,7 +138,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible|selectable",
-			transform = world.component "transform" {
+			transform =  {
 				srt = world.component "srt" {
 					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
 					r = local_rotator,
@@ -166,7 +166,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible|selectable",
-			transform = world.component "transform" {srt=world.component "srt"{s = {100}, r = local_rotator, t = cone_t}},
+			transform =  {srt=world.component "srt"{s = {100}, r = local_rotator, t = cone_t}},
 			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
@@ -201,7 +201,7 @@ function gizmo_sys:post_init()
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible|selectable",
-			transform = world.component "transform" {
+			transform =  {
 				srt= world.component "srt" {
 					s={50},
 					t={0, 0.5, 1, 0}
@@ -223,7 +223,7 @@ function gizmo_sys:post_init()
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible|selectable",
-			transform = world.component "transform" {
+			transform =  {
 				srt= world.component "srt" {
 					s={50},
 					t={-1, 0.5, 0}
@@ -244,7 +244,7 @@ function gizmo_sys:post_init()
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform = world.component "transform" {srt= world.component "srt"(srt)},
+			transform =  {srt= world.component "srt"(srt)},
 			name = "directional light arrow",
 		},
 	}

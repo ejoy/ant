@@ -1,5 +1,0 @@
-system "bloom_system"
-    .implement "postprocess/bloom.lua"
-    .require_system "postprocess_system"
-    .require_interface "postprocess"
-    .method "post_init"

@@ -10,7 +10,7 @@ local ies = world:interface "ant.render|ientity_state"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local icm = world:interface "ant.objcontroller|camera_motion"
 
-local function update_lock_target_transform(eid, lt, im)
+local function update_lock_target_transform(eid, lt, im, tr)
 	local e = world[eid]
 	local trans = e.transform
 	if trans == nil then
@@ -28,7 +28,7 @@ local function update_lock_target_transform(eid, lt, im)
 			pos = math3d.add(pos, lt.offset)
 		end
 		im.set_position(eid, pos)
-		trans._world.m = trans.srt
+		tr.worldmat = math3d.matrix(trans.srt)
 	elseif locktype == "rotate" then
 		local te = world[target]
 		local transform = te.transform
@@ -39,7 +39,7 @@ local function update_lock_target_transform(eid, lt, im)
 		if lt.offset then
 			im.set_position(eid, math3d.add(pos, lt.offset))
 		end
-		trans._world.m = trans.srt
+		tr.worldmat = math3d.matrix(trans.srt)
 	elseif locktype == "ignore_scale" then
 		if trans == nil then
 			error(string.format("'ignore_scale' could not bind to entity without 'transform' component"))
@@ -50,7 +50,7 @@ local function update_lock_target_transform(eid, lt, im)
 
 		local _, r, t = math3d.srt(target_trans)
 		local m = math3d.matrix{s=1, r=r, t=t}
-		trans._world.m = math3d.mul(m, trans.srt)
+		tr.worldmat = math3d.mul(m, trans.srt)
 	else
 		error(("not support locktype:%s"):format(locktype))
 	end
@@ -76,53 +76,55 @@ local renderinfo_cache = {
 	end,
 }
 
-local function combine_parent_transform(peid, trans)
+local function combine_parent_transform(peid, trans, tr)
 	local pe = world[peid]
-	-- need apply before ptrans._world
+	-- need apply before tr.worldmat
 	local s = trans._slot_jointidx
 	local pr = pe.pose_result
 	if s and pr then
 		local t = pr:joint(s)
-		trans._world.m = math3d.mul(t, trans._world)
+		tr.worldmat = math3d.mul(t, tr.worldmat)
 	end
 
 	local ptrans = renderinfo_cache:get(peid, "transform")
 	if ptrans then
-		local pw = ptrans._world
-		trans._world.m = math3d.mul(pw, trans._world)
+		tr.worldmat = math3d.mul(ptrans.worldmat, tr.worldmat)
 	end
 end
 
-local function update_bounding(trans, e)
-	local primgroup = e.rendermesh
-	if primgroup then
-		local bounding = primgroup.bounding
+local function update_bounding(tr, e)
+	local mesh = e.mesh
+	if mesh then
+		local bounding = mesh.bounding
 		if bounding then
-			trans._aabb = math3d.aabb_transform(trans._world, bounding.aabb)
+			tr.aabb = math3d.aabb_transform(tr.worldmat, bounding.aabb)
 		end
 	end
 end
 
 local function update_transform(eid)
+	local c = renderinfo_cache:get(eid, "transfrom")
+	local tr = c.transform or {}
+
 	local e = world[eid]
-	local trans = e.transform
-	if trans then
-		trans._world.m = trans.srt
+	local etrans = e.transform
+	if etrans then
+		tr.worldmat = math3d.matrix(etrans.srt)
 	end
 
 	if e.parent then
 		local im = e.camera and icm or iom
 		local lt = im.get_lock_target(eid)
 		if lt then
-			update_lock_target_transform(eid, lt, im)
+			update_lock_target_transform(eid, lt, im, tr)
 		else
-			combine_parent_transform(e.parent, trans)
+			combine_parent_transform(e.parent, etrans, tr)
 		end
 	end
 
-	if trans then
-		update_bounding(trans, e)
-		renderinfo_cache:cache(eid, "transform", trans)
+	if tr.worldmat then
+		update_bounding(tr, e)
+		renderinfo_cache:cache(eid, "transform", tr)
 	end
 end
 
@@ -213,8 +215,8 @@ local function add_filter_list(eid, filters, renderinfo)
 					ri.state	= m._state
 					ri.fx 		= m.fx
 					ri.properties = m.properties
-					ri.aabb 	= t._aabb
-					ri.worldmat = t._world
+					ri.aabb 	= t.aabb
+					ri.worldmat = t.worldmat
 					ri.skinning_matrices = t._skinning_matrices
 				else
 					resulttarget.items[eid] = {
@@ -226,8 +228,8 @@ local function add_filter_list(eid, filters, renderinfo)
 						fx 		= m.fx,
 						properties = m.properties,
 						--
-						aabb 	= t._aabb,
-						worldmat= t._world,
+						aabb 	= t.aabb,
+						worldmat= t.worldmat,
 						skinning_matrices = t._skinning_matrices,
 					}
 				end

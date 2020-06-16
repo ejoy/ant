@@ -11,7 +11,7 @@ policy:
     ant.character|character
     ant.character|foot_ik_raycast
 data:
-    transform : $transform
+    transform : 
         srt: $srt
             t: {-2.5, 0, -6, 1}
     material : $resource /pkg/ant.resources/materials/skin_model_sample.material

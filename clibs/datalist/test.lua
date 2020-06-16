@@ -208,7 +208,7 @@ print(v[1])
 
 
 local v = datalist.parse([[
-transform: $transform
+transform:
 	srt :
 		s = $vector {1,1,1,0}
 		r = $vector {0,0.92388,0,0.382683}
