@@ -152,23 +152,33 @@ end
 
 local function push_render_item(eid, transform, rendermesh, material)
 	if transform and rendermesh and material then
-		local ri = {
-			--
-			vb 		= rendermesh.vb,
-			ib 		= rendermesh.ib,
-			--
-			state	= material._state,
-			fx 		= material.fx,
-			properties = material.properties,
-			--
-			worldmat= transform._world,
-			skinning_matrices = transform._skinning_matrices,
-			aabb 	= transform._aabb,
-		}
-
 		ies.add_filter_list(eid, filters, function (filter)
 			local resulttarget = filter.result[material.fx.setting.transparency]
-			resulttarget.items[eid] = ri
+			local ri = resulttarget.items[eid]
+			if ri then
+				ri.vb 		= rendermesh.vb
+				ri.ib 		= rendermesh.ib
+				ri.state	= material._state
+				ri.fx 		= material.fx
+				ri.properties = material.properties
+				ri.aabb 	= transform._aabb
+				ri.worldmat = transform._world
+				ri.skinning_matrices = transform._skinning_matrices
+			else
+				resulttarget.items[eid] = {
+					--
+					vb 		= rendermesh.vb,
+					ib 		= rendermesh.ib,
+					--
+					state	= material._state,
+					fx 		= material.fx,
+					properties = material.properties,
+					--
+					aabb 	= transform._aabb,
+					worldmat= transform._world,
+					skinning_matrices = transform._skinning_matrices,
+				}
+			end
 		end)
 	end
 end
