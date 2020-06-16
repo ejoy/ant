@@ -59,20 +59,19 @@ end
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
-local function create_simple_render_entity(transform, material, name, mesh, state)
-	local srt = transform and transform.srt or {}
+local function create_simple_render_entity(srt, material, name, mesh, state)
 	return world:create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
 		},
 		data = {
-			transform = world.component "transform" {srt = world.component "srt"(srt)},
-			material = world.component "resource"(material),
-			mesh = mesh,
-			state = state or ies.create_state "visible",
-			name = name or gen_test_name(),
-			scene_entity = true,
+			transform	= world.component "transform" {srt = world.component "srt"(srt or {})},
+			material	= world.component "resource"(material),
+			mesh		= mesh,
+			state		= state or ies.create_state "visible",
+			name		= name or gen_test_name(),
+			scene_entity= true,
 		}
 	}
 end
@@ -181,7 +180,7 @@ end
 
 function ientity.create_quad_entity(rect, material, name)
 	local mesh = quad_mesh(rect)
-	return create_simple_render_entity({srt={}}, material, name, mesh)
+	return create_simple_render_entity(nil, material, name, mesh)
 end
 
 function ientity.create_texture_quad_entity(texture_tbl, name)
@@ -230,7 +229,7 @@ local axis_ib = {
 	2, 3,
 	4, 5,
 }
-function ientity.create_axis_entity(transform, color, name)
+function ientity.create_axis_entity(srt, color, name)
 	local axis_vb = {
 		0, 0, 0, color or 0xff0000ff,
 		1, 0, 0, color or 0xff0000ff,
@@ -240,7 +239,7 @@ function ientity.create_axis_entity(transform, color, name)
 		0, 0, 1, color or 0xffff0000,
 	}
 	local mesh = create_mesh({"p3|c40niu", axis_vb}, axis_ib)
-	return create_simple_render_entity(transform, "/pkg/ant.resources/materials/line.material", name, mesh)
+	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh)
 end
 
 

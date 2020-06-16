@@ -74,10 +74,8 @@ local function	csm_shadow_debug_frustum()
 		add_shadow_debug_policy(
 			computil.create_axis_entity(
 			{
-				srt={
-					r=math3d.tovalue(math3d.torotation(camera.viewdir)), 
-					t=math3d.tovalue(camera.eyepos)
-				}
+				r=math3d.tovalue(math3d.torotation(camera.viewdir)), 
+				t=math3d.tovalue(camera.eyepos)
 			},
 			color)
 		)
