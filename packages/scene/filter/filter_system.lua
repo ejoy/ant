@@ -10,6 +10,8 @@ local ies = world:interface "ant.scene|ientity_state"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local icm = world:interface "ant.objcontroller|camera_motion"
 
+local caches = require "filter.filter_cache"
+
 local function update_lock_target_transform(eid, lt, im, tr)
 	local e = world[eid]
 	local trans = e.transform
@@ -56,26 +58,6 @@ local function update_lock_target_transform(eid, lt, im, tr)
 	end
 end
 
-local renderinfo_cache = {
-	check_add_cache = function (self, eid)
-		local c = self[eid]
-		if  c == nil then
-			c = {}
-			self[eid] = c
-		end
-		return c
-	end,
-	cache = function (self, eid, what, value)
-		self[eid][what] = value
-	end,
-	get = function (self, eid, what)
-		local c = self[eid]
-		if c then
-			return c[what]
-		end
-	end,
-}
-
 local function combine_parent_transform(peid, trans, tr)
 	local pe = world[peid]
 	-- need apply before tr.worldmat
@@ -86,7 +68,7 @@ local function combine_parent_transform(peid, trans, tr)
 		tr.worldmat = math3d.mul(t, tr.worldmat)
 	end
 
-	local ptrans = renderinfo_cache:get(peid, "transform")
+	local ptrans = caches.current:get(peid, "transform")
 	if ptrans then
 		tr.worldmat = math3d.mul(ptrans.worldmat, tr.worldmat)
 	end
@@ -123,7 +105,7 @@ local function update_transform(eid)
 
 	if tr.worldmat then
 		update_bounding(tr, e)
-		renderinfo_cache:cache(eid, "transform", tr)
+		caches.current:cache(eid, "transform", tr)
 	end
 end
 
@@ -150,7 +132,7 @@ local function update_rendermesh(eid)
 			}
 		end
 
-		renderinfo_cache:cache(eid, "rendermesh", rendermesh)
+		caches.current:cache(eid, "rendermesh", rendermesh)
 	end
 end
 
@@ -159,12 +141,12 @@ local function update_material(eid)
 	local m = e.material
 	if m == nil then
 		local peid = e.parent
-		m = renderinfo_cache:get(peid, "material")
+		m = caches.current:get(peid, "material")
 		if m == nil then
 			return
 		end
 	end
-	renderinfo_cache:cache(eid, "material", m)
+	caches.current:cache(eid, "material", m)
 end
 
 local function update_state(eid)
@@ -172,12 +154,12 @@ local function update_state(eid)
 	local s = e.state
 	if s then
 		local peid = e.parent
-		local ps = renderinfo_cache:get(peid, "state")
+		local ps = caches.current:get(peid, "state")
 		if ps then
 			local m = s & 0xffffffff00000000
 			s = (m | (s & 0xffffffff)|(ps & 0xfffffff))
 		end
-		renderinfo_cache:cache(eid, "state", s)
+		caches.current:cache(eid, "state", s)
 	end
 end
 
@@ -238,7 +220,7 @@ local function add_filter_list(eid, filters, renderinfo)
 end
 
 local function update_renderinfo(eid)
-	local c = renderinfo_cache:check_add_cache(eid)
+	local c = caches.current:check_add_cache(eid)
 	--TODO: need cache all this render information, and watch entity changed, then clean cache
 	update_transform(eid)
 	update_rendermesh(eid)
@@ -250,5 +232,13 @@ end
 function filter_system:filter_render_items()
 	for _, eid in ipairs(iss.scenequeue()) do
 		add_filter_list(eid, filters, update_renderinfo(eid))
+	end
+end
+
+local it = ecs.interface "itransform"
+function it.worldmat(eid)
+	local c = caches.current:get(eid, "transform")
+	if c then
+		return c.worldmat
 	end
 end

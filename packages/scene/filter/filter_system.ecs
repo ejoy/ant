@@ -3,6 +3,10 @@ system "filter_system"
     .method "post_init"
     .method "filter_render_items"
 
+interface "itransform"
+    .implement "filter/filter_system.lua"
+    .method "worldmat"
+
 interface "ientity_state"
     .implement "filter/entity_state.lua"
     .method "has_state"

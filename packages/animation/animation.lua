@@ -87,4 +87,6 @@ mathadapter.bind(
 
 		local pr_mt = ani_module.pose_result_mt()
 		pr_mt.joint = math3d_adapter.getter(pr_mt.joint, "m", 3)
+
+		ani_module.build_skinning_matrices = math3d_adapter.matrix(ani_module.build_skinning_matrices, 5)
 	end)

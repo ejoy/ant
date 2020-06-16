@@ -24,6 +24,8 @@ end
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
 
+local itransform = world:interface "ant.scene|itransform"
+
 function skinning_sys:skin_mesh()
 	for _, eid in world:each "skinning" do
 		local e = world[eid]
@@ -45,7 +47,7 @@ function skinning_sys:skin_mesh()
 			end
 		else
 			local trans = e.transform
-			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, trans._world.p)
+			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, itransform.worldmat(eid))
 			trans._skinning_matrices = skinning_matrices
 		end
 	end
