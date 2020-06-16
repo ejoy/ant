@@ -1,15 +1,15 @@
 ---
 data:
-  can_render: true
   material: $resource /pkg/ant.resources/materials/mesh_shadow.material
-  mesh: $resource ./plane.meshbin
+  mesh: $resource /pkg/ant.test.simple/res/plane.meshbin
+  name: "test shadow plane"
   scene_entity: true
-  transform: 
+  state: 5
+  transform:
     srt: $srt
       r: {0, 0, 0, 1}
       s: {500, 1, 500, 0}
       t: {0, 0, 0, 1}
-  name: shadow_plane
 policy:
-  ant.render|render
   ant.general|name
+  ant.render|render

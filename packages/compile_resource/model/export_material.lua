@@ -234,7 +234,7 @@ return function (output, glbdata, exports)
         local pbr_mr = mat.pbrMetallicRoughness
 
         local material = {
-            fx          = "/pkg/ant.resources/materials/fx/pbr_default.fx",
+            fx          = proxy "resource" "/pkg/ant.resources/materials/fx/pbr_default.fx",
             state       = "/pkg/ant.resources/materials/states/default.state",
             properties  = {
                 s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),

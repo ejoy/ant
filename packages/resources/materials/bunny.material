@@ -1,4 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/bunny.fx
+fx: $resource /pkg/ant.resources/materials/fx/bunny.fx
 properties:
     u_time: $vector {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

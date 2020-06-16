@@ -1,2 +1,2 @@
-fx: /pkg/ant.resources/materials/fx/pickup_opacity.fx
+fx: $resource /pkg/ant.resources/materials/fx/pickup_opacity.fx
 state: /pkg/ant.resources/materials/states/default.state

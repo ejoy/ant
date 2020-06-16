@@ -3,7 +3,6 @@ local fs = require "filesystem"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
 local bgfx = require "bgfx"
-local c = require "compile"
 local stringify = require "fx.stringify"
 local toolset = require "fx.toolset"
 local render = import_package "ant.render"
@@ -188,23 +187,24 @@ local default_setting = {
     bloom_enable = render.setting:get 'graphic/postprocess/bloom/enable',
 }
 
+local function merge(a, b)
+    for k, v in pairs(b) do
+        if not a[k] then
+            a[k] = v
+        end
+    end
+end
+
 local function read_fx(fx, setting)
-    if type(fx) == "string" then
-        fx = datalist.parse(readfile(c.compile_path(fx)))
+    setting = setting or {}
+    if fx.setting then
+        merge(setting, fx.setting)
     end
-    local t = fx.setting or {}
-    if setting then
-        for k, v in pairs(setting) do
-            t[k] = v
-        end
-    end
-    for k, v in pairs(default_setting) do
-        if not t[k] then
-            t[k] = v
-        end
-    end
-    fx.setting = t
-    return fx
+    merge(setting, default_setting)
+    return {
+        shader = fx.shader,
+        setting = setting
+    }
 end
 
 local function get_fx_cache(setting)

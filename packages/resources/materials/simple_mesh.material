@@ -1,4 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/simple_mesh.fx
+fx: $resource /pkg/ant.resources/materials/fx/simple_mesh.fx
 properties:
   u_color:
     $vector {1, 1, 1, 1}

@@ -284,82 +284,60 @@ local function redirect_skin_joints(gltfscene, skin)
 	end
 end
 
-local function export_skinbin(gltfscene, bindata, exports)
+local function write_file(path, data)
+	fs_local.write_file(path, thread.pack(data))
+end
+
+local function export_skinbin(gltfscene, bindata, output, exports)
+	exports.skin = {}
 	local skins = gltfscene.skins
 	if skins == nil then
 		return
 	end
-
 	for skinidx, skin in ipairs(gltfscene.skins) do
 		redirect_skin_joints(gltfscene, skin)
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = skinname .. ".skinbin"
-		exports[skinidx] = {resname, fetch_skininfo(gltfscene, skin, bindata)}
+		write_file(output / resname, fetch_skininfo(gltfscene, skin, bindata))
+		exports.skin[skinidx] = "./meshes/"..resname
 	end
 end
 
-local function export_meshbin(gltfscene, bindata, exports)
+local function export_meshbin(gltfscene, bindata, output, exports)
+	exports.mesh = {}
 	local meshes = gltfscene.meshes
 	if meshes == nil then
-		return 
+		return
 	end
-
 	for meshidx, mesh in ipairs(meshes) do
 		local meshname = get_obj_name(mesh, meshidx, "mesh")
 		local meshaabb = math3d.aabb()
-		local export_primitives = {}
+		exports.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local primname = "P" .. primidx
 			local resname = meshname .. "_" .. primname .. ".meshbin"
 			local group = {}
-
 			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
-
 			local indices_accidx = prim.indices
 			if indices_accidx then
 				local idxacc = gltfscene.accessors[indices_accidx+1]
 				group.ib = fetch_ib_buffer(gltfscene, bindata, idxacc)
 			end
-
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
 				group.bounding = bb
 				meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
 			end
-
-			export_primitives[primidx] = {resname, group}
+			write_file(output / resname, group)
+			exports.mesh[meshidx][primidx] = "./meshes/"..resname
 		end
-		exports[meshidx] = export_primitives
 	end
 end
 
 return function (output, glbdata, exports)
 	local meshfolder = output / "meshes"
 	lfs.create_directories(meshfolder)
-	local meshes = {}
-	export_meshbin(glbdata.info, glbdata.bin, meshes)
-	local skins = {}
-	export_skinbin(glbdata.info, glbdata.bin, skins)
-
-	local meshfiles = {}
-	for meshidx, primitives in ipairs(meshes) do
-		meshfiles[meshidx] = {}
-		for groupidx, prim in ipairs(primitives) do
-			local filepath = meshfolder / prim[1]
-			fs_local.write_file(filepath, thread.pack(prim[2]))
-			meshfiles[meshidx][groupidx] = "./meshes/"..prim[1]
-		end
-	end
-
-	local skinfiles = {}
-	for skinidx, value in ipairs(skins) do
-		local filepath = meshfolder / value[1]
-		fs_local.write_file(filepath, thread.pack(value[2]))
-		skinfiles[skinidx] = "./meshes/"..value[1]
-	end
-
-	exports.mesh = meshfiles
-	exports.skin = skinfiles
-
+	export_meshbin(glbdata.info, glbdata.bin, meshfolder, exports)
+	export_skinbin(glbdata.info, glbdata.bin, meshfolder, exports)
 	return exports
 end

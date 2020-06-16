@@ -100,21 +100,16 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
             "ant.render|render",
         }
 
-        local meshskin
         if node.skin then
             local f = exports.skin[node.skin+1]
             if f == nil then
                 error(("mesh need skin data, but no skin file output:%d"):format(node.skin))
             end
-
-            meshskin = proxy "resource" (f)
-        end
-
-        if meshskin then
             if exports.skeleton == nil then
                 error("mesh has skin info, but skeleton not export correctly")
             end
 
+            local meshskin = proxy "resource" (f)
             data.skeleton = proxy "resource" (exports.skeleton)
 
             --skinning

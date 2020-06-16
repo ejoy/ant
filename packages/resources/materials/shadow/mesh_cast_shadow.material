@@ -1,4 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/shadow/mesh_cast_shadow.fx
+fx: $resource /pkg/ant.resources/materials/fx/shadow/mesh_cast_shadow.fx
 state:
   ALPHA_REF: 0
   CULL: CCW

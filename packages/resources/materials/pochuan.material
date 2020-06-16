@@ -1,4 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/pochuan.fx
+fx: $resource /pkg/ant.resources/materials/fx/pochuan.fx
 properties:
   s_basecolor:
     texture: $resource /pkg/ant.resources/pochuan_d.texture
