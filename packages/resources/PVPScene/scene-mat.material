@@ -1,4 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/PVPScene/scene-mat.fx
+fx: $resource /pkg/ant.resources/materials/fx/PVPScene/scene-mat.fx
 properties:
   s_basecolor:
     texture: $resource /pkg/ant.resources/PVPScene/siegeweapon_d.texture

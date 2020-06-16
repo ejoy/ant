@@ -1,4 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/test_glb.fx
+fx: $resource /pkg/ant.resources/materials/fx/test_glb.fx
 properties:
   u_time: $vector {1, 1, 1, 1}
 state:

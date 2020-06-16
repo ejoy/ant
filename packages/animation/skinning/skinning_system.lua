@@ -3,9 +3,7 @@ local world = ecs.world
 
 local animodule = require "hierarchy.animation"
 local bgfx 		= require "bgfx"
-
 local assetmgr 	= import_package "ant.asset"
-local fs 		= require "filesystem"
 
 local sm = ecs.transform "skinning_material"
 

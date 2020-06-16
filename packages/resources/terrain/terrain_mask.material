@@ -1,2 +1,2 @@
-fx: /pkg/ant.resources/materials/fx/terrain/terrain_mask.fx
+fx: $resource /pkg/ant.resources/materials/fx/terrain/terrain_mask.fx
 state: /pkg/ant.resources/terrain/mask.state
