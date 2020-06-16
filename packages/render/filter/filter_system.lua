@@ -54,8 +54,6 @@ local function update_lock_target_transform(eid, lt, im)
 	else
 		error(("not support locktype:%s"):format(locktype))
 	end
-
-	return trans
 end
 
 local renderinfo_cache = {
@@ -93,8 +91,6 @@ local function combine_parent_transform(peid, trans)
 		local pw = ptrans._world
 		trans._world.m = math3d.mul(pw, trans._world)
 	end
-
-	return trans
 end
 
 local function update_bounding(trans, e)
@@ -118,9 +114,9 @@ local function update_transform(eid)
 		local im = e.camera and icm or iom
 		local lt = im.get_lock_target(eid)
 		if lt then
-			trans = update_lock_target_transform(eid, lt, im)
+			update_lock_target_transform(eid, lt, im)
 		else
-			trans = combine_parent_transform(eid, trans)
+			combine_parent_transform(eid, trans)
 		end
 	end
 
