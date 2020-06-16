@@ -56,6 +56,9 @@ function ientity.create_mesh(vb, ib)
 	return create_mesh(vb, ib)
 end
 
+local nameidx = 0
+local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
+
 local function create_simple_render_entity(transform, material, name, mesh, state)
 	local srt = transform and transform.srt or {}
 	return world:create_entity {
@@ -67,8 +70,8 @@ local function create_simple_render_entity(transform, material, name, mesh, stat
 			transform = world.component "transform" {srt = world.component "srt"(srt)},
 			material = world.component "resource"(material),
 			mesh = mesh,
-			state = state or ies.create_state "selectable|visible",
-			name = name or "frustum",
+			state = state or ies.create_state "visible",
+			name = name or gen_test_name(),
 			scene_entity = true,
 		}
 	}
