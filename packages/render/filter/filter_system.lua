@@ -116,7 +116,7 @@ local function update_transform(eid)
 		if lt then
 			update_lock_target_transform(eid, lt, im)
 		else
-			combine_parent_transform(eid, trans)
+			combine_parent_transform(e.parent, trans)
 		end
 	end
 

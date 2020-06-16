@@ -76,7 +76,7 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 	}
 end
 
-function ientity.create_grid_entity(name, w, h, unit)
+function ientity.create_grid_entity(name, w, h, unit, srt)
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
@@ -88,7 +88,7 @@ function ientity.create_grid_entity(name, w, h, unit)
 		end
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, ib)
-	return create_simple_render_entity(nil, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
+	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
 end
 
 local plane_mesh
