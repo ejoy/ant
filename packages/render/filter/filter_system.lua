@@ -238,6 +238,7 @@ end
 
 local function update_renderinfo(eid)
 	local c = renderinfo_cache:check_add_cache(eid)
+	--TODO: need cache all this render information, and watch entity changed, then clean cache
 	update_transform(eid)
 	update_rendermesh(eid)
 	update_material(eid)
