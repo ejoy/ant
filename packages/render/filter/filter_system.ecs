@@ -9,7 +9,7 @@ interface "ientity_state"
     .method "can_visible"
     .method "can_cast"
     .method "can_select"
-    .method "add_filter_list"
+    .method "get_state_type"
     .method "create_state"
 
 pipeline "filter_items"

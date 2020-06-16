@@ -10,9 +10,16 @@ local ies = world:interface "ant.render|ientity_state"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local icm = world:interface "ant.objcontroller|camera_motion"
 
-local function update_lock_target_transform(eid, lt, target, im)
-	local locktype = lt.type
+local function update_lock_target_transform(eid, lt, im)
 	local e = world[eid]
+	local trans = e.transform
+	if trans == nil then
+		error("lock target need, but transform not provide")
+	end
+
+	local locktype = lt.type
+	local target = e.parent
+	
 	if locktype == "move" then
 		local te = world[target]
 		local target_trans = te.transform
@@ -21,7 +28,6 @@ local function update_lock_target_transform(eid, lt, target, im)
 			pos = math3d.add(pos, lt.offset)
 		end
 		im.set_position(eid, pos)
-		local trans = e.transform
 		trans._world.m = trans.srt
 	elseif locktype == "rotate" then
 		local te = world[target]
@@ -33,10 +39,8 @@ local function update_lock_target_transform(eid, lt, target, im)
 		if lt.offset then
 			im.set_position(eid, math3d.add(pos, lt.offset))
 		end
-		local trans = e.transform
 		trans._world.m = trans.srt
 	elseif locktype == "ignore_scale" then
-		local trans = e.transform
 		if trans == nil then
 			error(string.format("'ignore_scale' could not bind to entity without 'transform' component"))
 		end
@@ -48,8 +52,10 @@ local function update_lock_target_transform(eid, lt, target, im)
 		local m = math3d.matrix{s=1, r=r, t=t}
 		trans._world.m = math3d.mul(m, trans.srt)
 	else
-		error(string.format("not support locktype:%s", locktype))
+		error(("not support locktype:%s"):format(locktype))
 	end
+
+	return trans
 end
 
 local function get_transform(eid)
@@ -62,6 +68,20 @@ local function get_transform(eid)
 		eid = e.parent
 	end
 end
+
+local renderinfo_cache = {
+	check_add_cache = function (self, eid)
+		local c = self[eid]
+		if  c == nil then
+			c = {}
+			self[eid] = c
+		end
+		return c
+	end,
+	cache = function (self, eid, name, value)
+		self[eid][name] = value
+	end
+}
 
 local function combine_parent_transform(peid, trans)
 	local pe = world[peid]
@@ -91,30 +111,29 @@ local function update_bounding(trans, e)
 end
 
 local function update_transform(eid)
-	--update local info
 	local e = world[eid]
 	local trans = e.transform
 	if trans then
 		trans._world.m = trans.srt
+	end
 
-		--combine parent info
+	if e.parent then
 		local im = e.camera and icm or iom
 		local lt = im.get_lock_target(eid)
-
 		if lt then
-			update_lock_target_transform(eid, lt, e.parent, im)
+			trans = update_lock_target_transform(eid, lt, im)
 		else
-			if e.parent then
-				combine_parent_transform(e.parent, trans)
-			end
+			trans = combine_parent_transform(eid, trans)
 		end
-
-		update_bounding(trans, e)
 	end
-	return trans
+
+	if trans then
+		update_bounding(trans, e)
+		renderinfo_cache:cache(eid, "transform", trans)
+	end
 end
 
-local function get_rendermesh(eid)
+local function update_rendermesh(eid)
 	local mesh = world[eid].mesh
 	--TODO: need cache rendermesh
 	if mesh then
@@ -137,7 +156,37 @@ local function get_rendermesh(eid)
 			}
 		end
 
-		return rendermesh
+		renderinfo_cache:cache(eid, "rendermesh", rendermesh)
+	end
+end
+
+local function update_material(eid)
+	local e = world[eid]
+	local m = e.material
+	if m == nil then
+		local peid = e.parent
+		local pc = renderinfo_cache[peid]
+		if pc == nil or pc.material == nil then
+			return 
+		end
+		m = pc.material
+		
+	end
+	renderinfo_cache:cache(eid, "material", m)
+end
+
+local function update_state(eid)
+	local e = world[eid]
+	local s = e.state
+	if s then
+		local peid = e.parent
+		local pc = renderinfo_cache[peid]
+		if pc and pc.state then
+			local m = s & 0xffffffff00000000
+			local ps = pc.state
+			s = (m | (s & 0xffffffff)|(ps & 0xfffffff))
+		end
+		renderinfo_cache:cache(eid, "state", s)
 	end
 end
 
@@ -150,42 +199,64 @@ function filter_system:post_init()
 	end
 end
 
-local function push_render_item(eid, transform, rendermesh, material)
-	if transform and rendermesh and material then
-		ies.add_filter_list(eid, filters, function (filter)
-			local resulttarget = filter.result[material.fx.setting.transparency]
-			local ri = resulttarget.items[eid]
-			if ri then
-				ri.vb 		= rendermesh.vb
-				ri.ib 		= rendermesh.ib
-				ri.state	= material._state
-				ri.fx 		= material.fx
-				ri.properties = material.properties
-				ri.aabb 	= transform._aabb
-				ri.worldmat = transform._world
-				ri.skinning_matrices = transform._skinning_matrices
-			else
-				resulttarget.items[eid] = {
-					--
-					vb 		= rendermesh.vb,
-					ib 		= rendermesh.ib,
-					--
-					state	= material._state,
-					fx 		= material.fx,
-					properties = material.properties,
-					--
-					aabb 	= transform._aabb,
-					worldmat= transform._world,
-					skinning_matrices = transform._skinning_matrices,
-				}
-			end
-		end)
+local function add_filter_list(eid, filters, renderinfo)
+	local w = world
+
+	local rm, m, t = renderinfo.rendermesh, renderinfo.material, renderinfo.transform
+	if rm == nil or m == nil or t == nil then
+		return
 	end
+	local state = renderinfo.state
+	local stattypes = ies.get_state_type()
+	for n, filtereid in pairs(filters) do
+		local fe = world[filtereid]
+		if fe.visible then
+			local mask = assert(stattypes[n])
+			if (state & mask) ~= 0 then
+				local filter = fe.primitive_filter
+				
+				local resulttarget = filter.result[m.fx.setting.transparency]
+				local ri = resulttarget.items[eid]
+				if ri then
+					ri.vb 		= rm.vb
+					ri.ib 		= rm.ib
+					ri.state	= m._state
+					ri.fx 		= m.fx
+					ri.properties = m.properties
+					ri.aabb 	= t._aabb
+					ri.worldmat = t._world
+					ri.skinning_matrices = t._skinning_matrices
+				else
+					resulttarget.items[eid] = {
+						--
+						vb 		= rm.vb,
+						ib 		= rm.ib,
+						--
+						state	= m._state,
+						fx 		= m.fx,
+						properties = m.properties,
+						--
+						aabb 	= t._aabb,
+						worldmat= t._world,
+						skinning_matrices = t._skinning_matrices,
+					}
+				end
+			end
+		end
+	end
+end
+
+local function update_renderinfo(eid)
+	local c = renderinfo_cache:check_add_cache(eid)
+	update_transform(eid)
+	update_rendermesh(eid)
+	update_material(eid)
+	update_state(eid)
+	return c
 end
 
 function filter_system:filter_render_items()
 	for _, eid in ipairs(iss.scenequeue()) do
-		local e = world[eid]
-		push_render_item(eid, update_transform(eid), get_rendermesh(eid), e.material)
+		add_filter_list(eid, filters, update_renderinfo(eid))
 	end
 end
