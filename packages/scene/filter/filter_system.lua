@@ -7,8 +7,6 @@ local filter_system = ecs.system "filter_system"
 
 local iss = world:interface "ant.scene|iscenespace"
 local ies = world:interface "ant.scene|ientity_state"
-local iom = world:interface "ant.objcontroller|obj_motion"
-local icm = world:interface "ant.objcontroller|camera_motion"
 
 local caches = require "filter.filter_cache"
 
@@ -94,7 +92,9 @@ local function update_transform(eid)
 	end
 
 	if e.parent then
-		local im = e.camera and icm or iom
+		local im = e.camera and 
+					world:interface "ant.objcontroller|camera_motion" or
+					world:interface "ant.objcontroller|obj_motion"
 		local lt = im.get_lock_target(eid)
 		if lt then
 			update_lock_target_transform(eid, lt, im, tr)
