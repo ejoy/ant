@@ -46,9 +46,7 @@ function skinning_sys:skin_mesh()
 				bgfx.update(handle, 0, {updatedata:pointer(), 0, job.buffersize})
 			end
 		else
-			local trans = e.transform
 			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, itransform.worldmat(eid))
-			trans._skinning_matrices = skinning_matrices
 		end
 	end
 end

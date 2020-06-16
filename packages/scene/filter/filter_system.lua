@@ -101,6 +101,10 @@ local function update_transform(eid)
 		else
 			combine_parent_transform(e.parent, etrans, tr)
 		end
+
+		if e.skinning then
+			tr.skinning_matrices = e.skinning.skinning_matrices
+		end
 	end
 
 	if tr.worldmat then
@@ -198,7 +202,7 @@ local function add_filter_list(eid, filters, renderinfo)
 					ri.properties = m.properties
 					ri.aabb 	= t.aabb
 					ri.worldmat = t.worldmat
-					ri.skinning_matrices = t._skinning_matrices
+					ri.skinning_matrices = t.skinning_matrices
 				else
 					resulttarget.items[eid] = {
 						--
@@ -211,7 +215,7 @@ local function add_filter_list(eid, filters, renderinfo)
 						--
 						aabb 	= t.aabb,
 						worldmat= t.worldmat,
-						skinning_matrices = t._skinning_matrices,
+						skinning_matrices = t.skinning_matrices,
 					}
 				end
 			end
