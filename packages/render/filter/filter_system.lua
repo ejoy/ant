@@ -58,17 +58,6 @@ local function update_lock_target_transform(eid, lt, im)
 	return trans
 end
 
-local function get_transform(eid)
-	while eid do
-		local e = world[eid]
-		local trans = e.transform
-		if trans then
-			return trans
-		end
-		eid = e.parent
-	end
-end
-
 local renderinfo_cache = {
 	check_add_cache = function (self, eid)
 		local c = self[eid]
@@ -78,9 +67,15 @@ local renderinfo_cache = {
 		end
 		return c
 	end,
-	cache = function (self, eid, name, value)
-		self[eid][name] = value
-	end
+	cache = function (self, eid, what, value)
+		self[eid][what] = value
+	end,
+	get = function (self, eid, what)
+		local c = self[eid]
+		if c then
+			return c[what]
+		end
+	end,
 }
 
 local function combine_parent_transform(peid, trans)
@@ -93,11 +88,13 @@ local function combine_parent_transform(peid, trans)
 		trans._world.m = math3d.mul(t, trans._world)
 	end
 
-	local ptrans = get_transform(peid)
+	local ptrans = renderinfo_cache:get(peid, "transform")
 	if ptrans then
 		local pw = ptrans._world
 		trans._world.m = math3d.mul(pw, trans._world)
 	end
+
+	return trans
 end
 
 local function update_bounding(trans, e)
@@ -165,12 +162,10 @@ local function update_material(eid)
 	local m = e.material
 	if m == nil then
 		local peid = e.parent
-		local pc = renderinfo_cache[peid]
-		if pc == nil or pc.material == nil then
-			return 
+		m = renderinfo_cache:get(peid, "material")
+		if m == nil then
+			return
 		end
-		m = pc.material
-		
 	end
 	renderinfo_cache:cache(eid, "material", m)
 end
@@ -180,10 +175,9 @@ local function update_state(eid)
 	local s = e.state
 	if s then
 		local peid = e.parent
-		local pc = renderinfo_cache[peid]
-		if pc and pc.state then
+		local ps = renderinfo_cache:get(peid, "state")
+		if ps then
 			local m = s & 0xffffffff00000000
-			local ps = pc.state
 			s = (m | (s & 0xffffffff)|(ps & 0xfffffff))
 		end
 		renderinfo_cache:cache(eid, "state", s)
