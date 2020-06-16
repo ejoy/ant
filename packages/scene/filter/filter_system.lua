@@ -59,16 +59,18 @@ end
 local function combine_parent_transform(peid, trans, tr)
 	local pe = world[peid]
 	-- need apply before tr.worldmat
-	local s = trans._slot_jointidx
-	local pr = pe.pose_result
-	if s and pr then
-		local t = pr:joint(s)
-		tr.worldmat = math3d.mul(t, tr.worldmat)
+	if trans then
+		local s = trans._slot_jointidx
+		local pr = pe.pose_result
+		if s and pr then
+			local t = pr:joint(s)
+			tr.worldmat = math3d.mul(t, tr.worldmat)
+		end
 	end
 
 	local ptrans = caches.current:get(peid, "transform")
 	if ptrans then
-		tr.worldmat = math3d.mul(ptrans.worldmat, tr.worldmat)
+		tr.worldmat = tr.worldmat and math3d.mul(ptrans.worldmat, tr.worldmat) or math3d.matrix(ptrans.worldmat)
 	end
 end
 
@@ -95,16 +97,16 @@ local function update_transform(eid)
 		local im = e.camera and 
 					world:interface "ant.objcontroller|camera_motion" or
 					world:interface "ant.objcontroller|obj_motion"
-		local lt = im.get_lock_target(eid)
+		local lt = etrans and im.get_lock_target(eid) or nil
 		if lt then
 			update_lock_target_transform(eid, lt, im, tr)
 		else
 			combine_parent_transform(e.parent, etrans, tr)
 		end
+	end
 
-		if e.skinning then
-			tr.skinning_matrices = e.skinning.skinning_matrices
-		end
+	if e.skinning then
+		tr.skinning_matrices = e.skinning.skinning_matrices
 	end
 
 	if tr.worldmat then

@@ -13,7 +13,7 @@ local function material_hierarchy_test()
         },
         data = {
             name = "hierarhcy_root",
-            material = world.component "resource"("/pkg/ant.resources/material/bunny.material")
+            material = world.component "resource"("/pkg/ant.resources/materials/bunny.material")
         }
     }
 
@@ -27,7 +27,7 @@ local function material_hierarchy_test()
             mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
             state = ies.create_state "visible",
             transform = {
-                world.component "srt" {
+                srt = world.component "srt" {
                     s = {10}, t = {5, 0, 0}
                 }
             }
