@@ -337,11 +337,13 @@ function ientity.create_procedural_sky(settings)
 	}
 end
 
+local itransform = world:interface "ant.scene|itransform"
+
 function ientity.entity_bounding(eid)
 	local e = world[eid]
 	local m = e.mesh
 	if m and ies.can_visible(eid) then
-		local wm = e.transform._world
+		local wm = itransform.worldmat(eid)
 		local b = m.bounding
 		if b then
 			return math3d.aabb_transform(b.aabb, wm)

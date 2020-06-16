@@ -160,12 +160,12 @@ function collider_sys:data_changed()
 end
 
 local trans_changed_mb = world:sub {"component_changed", "transform"}
-
+local itransform = world:interface "ant.scene|itransform"
 function collider_sys:update_collider_transform()
     for _, _, eid in trans_changed_mb:unpack() do
 		local e = world[eid]
 		if e.collider then
-			local _, r, t = math3d.srt(e.transform._world)
+			local _, r, t = math3d.srt(itransform.worldmat(eid))
 			set_obj_transform(e.collider._handle, t, r)
 		end
     end

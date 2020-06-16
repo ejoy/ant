@@ -192,6 +192,8 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
     end
 end
 
+local itransform = world:interface "ant.scene|itransform"
+
 function char_foot_ik_sys:do_ik()
     for _, eid in world:each "foot_ik_raycast" do
         local e = world[eid]
@@ -199,14 +201,14 @@ function char_foot_ik_sys:do_ik()
         
         local ik = e.ik
         local pose_result = e.pose_result
-        local trans = e.transform._world
+        local worldmat = itransform.worldmat(eid)
 
-        local leg_raycasts = find_leg_raycast_target(pose_result, ik, foot_rc, trans)
+        local leg_raycasts = find_leg_raycast_target(pose_result, ik, foot_rc, worldmat)
 
         if next(leg_raycasts) then
             iik.setup(e)
             local pelvis_offset = calc_pelvis_offset(leg_raycasts, foot_rc.cast_dir)
-            local correct_trans = math3d.mul(trans, math3d.matrix{t=pelvis_offset})
+            local correct_trans = math3d.mul(worldmat, math3d.matrix{t=pelvis_offset})
             local inv_correct_trans = math3d.inverse(correct_trans)
 
             do_foot_ik(pose_result, ik, inv_correct_trans, leg_raycasts)
