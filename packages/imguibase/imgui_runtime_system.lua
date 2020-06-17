@@ -68,12 +68,12 @@ function imgui_sys:init()
 
 	world.imgui_context = imgui.CreateContext(rhwi.native_window())
 	imgui.ant.viewid(viewidmgr.generate "ui")
-	local imgui_font = assetmgr.load_fx "/pkg/ant.imguibase/shader/font.fx"
+	local imgui_font = assetmgr.load_fx_file "/pkg/ant.imguibase/shader/font.fx"
 	imgui.ant.font_program(
 		imgui_font.prog,
 		imgui_font.uniforms[1].handle
 	)
-	local imgui_image = assetmgr.load_fx "/pkg/ant.imguibase/shader/image.fx"
+	local imgui_image = assetmgr.load_fx_file "/pkg/ant.imguibase/shader/image.fx"
 	imgui.ant.image_program(
 		imgui_image.prog,
         imgui_image.uniforms[1].handle

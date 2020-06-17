@@ -1,6 +1,10 @@
 local resource = import_package "ant.resource"
 local cr = import_package "ant.compile_resource"
 local datalist = require "datalist"
+local fs = require "filesystem"
+
+local utilitypkg = import_package "ant.utility"
+local fs_local = utilitypkg.fs_local
 
 local assetmgr = {}
 assetmgr.__index = assetmgr
@@ -99,6 +103,10 @@ function assetmgr.load_fx(fx, setting)
 	end
 	local res = cr.compile_fx(fx, setting)
 	return setmetatable(res, {__data=fx})
+end
+
+function assetmgr.load_fx_file(fxfile, setting)
+	return assetmgr.load_fx(fs_local.datalist(fs.path(fxfile):localpath()), setting)
 end
 
 local function valid_component(w, name)
