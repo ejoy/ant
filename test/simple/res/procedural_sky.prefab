@@ -10,7 +10,7 @@ data:
     which_hour: 12
   scene_entity: true
   state: 1
-  transform: $transform
+  transform:
     srt: $srt
       r: {0, 0, 0, 1}
       s: {1, 1, 1, 0}
