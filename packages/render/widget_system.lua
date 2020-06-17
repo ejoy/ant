@@ -119,9 +119,9 @@ local function apply_srt(shape, srt)
 	}
 end
 
-function iwd.draw_lines(shape, srt)
+function iwd.draw_lines(shape, srt, color)
 	local desc = {vb={}, ib={}}
-	geometry_drawer.draw_line(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
+	geometry_drawer.draw_line(shape, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
 	append_buffers("fffd", desc.vb, "s", desc.ib)
 end
 

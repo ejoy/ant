@@ -77,6 +77,10 @@ function hw.native_window()
 	return nwh
 end
 
+function hw.screen_size()
+	return w, h
+end
+
 function hw.reset(t, w_, h_)
 	if t then flags = t end
 	local bgfx = require "bgfx"

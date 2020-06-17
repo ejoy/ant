@@ -11,6 +11,20 @@ local cameraInitTarget <const> = {0, 1,  0, 1}
 local cameraTarget
 local cameraDistance
 local cameraId
+local kZoomSpeed <const> = 1
+local kWheelSpeed <const> = 0.5
+local kPanSpeed <const> = 0.5
+local kRotationSpeed <const> = 1
+function view_to_world(view_pos)
+	local camera = world[cameraId].camera
+	local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
+	local inv_viewmat = math3d.inverse(viewmat)
+	return math3d.transform(inv_viewmat, view_pos, 0)
+end
+
+function world_to_screen(world_pos)
+
+end
 
 local function cameraUpdateEyepos(camera)
 	camera.eyepos.v = math3d.sub(cameraTarget, math3d.mul(camera.viewdir, cameraDistance))
@@ -19,28 +33,22 @@ end
 local function cameraRotate(dx, dy)
 	local camera_motion = world:interface "ant.objcontroller|camera_motion"
 	--camera_motion.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
-	camera_motion.rotate(cameraId, dy, dx)
+	camera_motion.rotate(cameraId, dy * kRotationSpeed, dx * kRotationSpeed)
 	local camera = world[cameraId].camera
 	cameraUpdateEyepos(camera)
 end
 
-local function viewToWorld(view_vec)
-	local camera = world[cameraId].camera
-	local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
-	local inv_viewmat = math3d.inverse(viewmat)
-	return math3d.transform(inv_viewmat, view_vec, 0)
-end
 
 local function cameraPan(dx, dy)
 	local camera = world[cameraId].camera
-	local world_dir = viewToWorld({dy,dx,0})
+	local world_dir = view_to_world({dy * kPanSpeed, dx * kPanSpeed, 0})
 	cameraTarget.v = math3d.add(cameraTarget, math3d.cross(camera.viewdir, world_dir))
 	cameraUpdateEyepos(camera)
 end
 
 local function cameraZoom(dx)
 	local camera = world[cameraId].camera
-	cameraDistance = cameraDistance + dx
+	cameraDistance = cameraDistance + dx * kWheelSpeed
 	cameraUpdateEyepos(camera)
 end
 
