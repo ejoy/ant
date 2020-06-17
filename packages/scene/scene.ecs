@@ -30,10 +30,6 @@ interface "iscenespace"
     .implement "scenespace.lua"
     .method "scenequeue"
 
--- interface "itransform"
---     .implement "scenespace.lua"
---     .method "worldmat"
-
 import "filter/filter_system.ecs"
 pipeline "scene"
     .stage "update_hierarchy_scene"

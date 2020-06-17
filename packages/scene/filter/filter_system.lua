@@ -8,7 +8,7 @@ local filter_system = ecs.system "filter_system"
 local iss = world:interface "ant.scene|iscenespace"
 local ies = world:interface "ant.scene|ientity_state"
 
-local caches = require "filter.filter_cache"
+local icaches = world:interface "ant.scene|ifilter_cache"
 
 local function update_lock_target_transform(eid, lt, im, tr)
 	local e = world[eid]
@@ -68,7 +68,7 @@ local function combine_parent_transform(peid, trans, tr)
 		end
 	end
 
-	local ptrans = caches.current:get(peid, "transform")
+	local ptrans = icaches.get(peid, "transform")
 	if ptrans then
 		tr.worldmat = tr.worldmat and math3d.mul(ptrans.worldmat, tr.worldmat) or math3d.matrix(ptrans.worldmat)
 	end
@@ -111,7 +111,7 @@ local function update_transform(eid)
 
 	if tr.worldmat then
 		update_bounding(tr, e)
-		caches.current:cache(eid, "transform", tr)
+		icaches.cache(eid, "transform", tr)
 	end
 end
 
@@ -138,7 +138,7 @@ local function update_rendermesh(eid)
 			}
 		end
 
-		caches.current:cache(eid, "rendermesh", rendermesh)
+		icaches.cache(eid, "rendermesh", rendermesh)
 	end
 end
 
@@ -147,12 +147,12 @@ local function update_material(eid)
 	local m = e.material
 	if m == nil then
 		local peid = e.parent
-		m = caches.current:get(peid, "material")
+		m = peid and icaches.get(peid, "material") or nil
 		if m == nil then
 			return
 		end
 	end
-	caches.current:cache(eid, "material", m)
+	icaches.cache(eid, "material", m)
 end
 
 local function update_state(eid)
@@ -160,12 +160,12 @@ local function update_state(eid)
 	local s = e.state
 	if s then
 		local peid = e.parent
-		local ps = caches.current:get(peid, "state")
+		local ps = peid and icaches.get(peid, "state") or nil
 		if ps then
 			local m = s & 0xffffffff00000000
 			s = (m | (s & 0xffffffff)|(ps & 0xfffffff))
 		end
-		caches.current:cache(eid, "state", s)
+		icaches.cache(eid, "state", s)
 	end
 end
 
@@ -226,7 +226,7 @@ local function add_filter_list(eid, filters, renderinfo)
 end
 
 local function update_renderinfo(eid)
-	local c = caches.current:check_add_cache(eid)
+	local c = icaches.check_add_cache(eid)
 	--TODO: need cache all this render information, and watch entity changed, then clean cache
 	update_transform(eid)
 	update_rendermesh(eid)
@@ -243,7 +243,7 @@ end
 
 local it = ecs.interface "itransform"
 function it.worldmat(eid)
-	local c = caches.current:get(eid, "transform")
+	local c = world[eid]._caches
 	if c then
 		return c.worldmat
 	end

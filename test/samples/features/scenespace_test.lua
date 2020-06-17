@@ -36,12 +36,6 @@ local function material_hierarchy_test()
             mount=root,
         }
     }
-
-    setmetatable(world[ceid], {
-        __newindex  = function (t, k)
-            return t[k]
-        end
-    })
 end
 
 local function space_test()
