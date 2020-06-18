@@ -157,6 +157,5 @@ end
 return {
     register = register,
     compile = compile,
-    compile_path = compile_path,
     clean = clean,
 }
