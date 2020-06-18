@@ -1,7 +1,7 @@
 ---
 data:
   material: $resource /pkg/ant.resources/materials/mesh_shadow.material
-  mesh: $resource /pkg/ant.test.simple/res/plane.meshbin
+  mesh: $resource ./plane.meshbin
   name: "test shadow plane"
   scene_entity: true
   state: 5

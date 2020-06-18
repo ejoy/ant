@@ -130,13 +130,11 @@ local function create_prefab_from_entity(w, t)
 	for _, f in ipairs(info.process_prefab) do
 		f(e)
 	end
-	return {
-		entities = {{
-			policy = info,
-			dataset = e,
-			action = action,
-		}},
-	}, args
+	return {{
+		policy = info,
+		dataset = e,
+		action = action,
+	}}, args
 end
 
 function world:component_init(name, v)
@@ -150,7 +148,7 @@ end
 local function instance(w, prefab, args)
 	local import = args and args.import and args.import or {}
 	local res = {}
-	for i, entity in ipairs(prefab.entities) do
+	for i, entity in ipairs(prefab) do
 		local eid = register_entity(w)
 		local e = w[eid]
 		for c in pairs(entity.policy.register_component) do
@@ -166,7 +164,7 @@ local function instance(w, prefab, args)
 		res[i] = eid
 	end
 	setmetatable(res, {__index=import})
-	for i, entity in ipairs(prefab.entities) do
+	for i, entity in ipairs(prefab) do
 		for name, target in sortpairs(entity.action) do
 			local object = w._class.action[name]
 			assert(object and object.init)
@@ -438,6 +436,7 @@ function m.new_world(config)
 		_uniques = {},
 		_prefabs = {},
 		_slots = {},
+		_current_path = {},
 		_typeclass = setmetatable({}, { __mode = "k" }),
 	}, world)
 

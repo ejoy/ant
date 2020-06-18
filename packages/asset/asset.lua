@@ -73,6 +73,18 @@ local function glb_unload(path)
 	end
 end
 
+local function push_current_path(w, path)
+	w._current_path[#w._current_path+1] = path
+end
+
+local function pop_current_path(w)
+	w._current_path[#w._current_path] = nil
+end
+
+local function get_current_path(w)
+	return w._current_path[#w._current_path]
+end
+
 local function resource_load(fullpath, resdata, lazyload)
 	local filename = fullpath:match "[^:]+"
 	resource.load(filename, resdata, lazyload)
@@ -91,7 +103,7 @@ local function absolute_path(base, path)
 end
 
 function assetmgr.resource(world, path)
-	local fullpath = absolute_path(world._current_path, path)
+	local fullpath = absolute_path(get_current_path(world), path)
     return resource_load(fullpath, world, true)
 end
 
@@ -116,14 +128,14 @@ end
 
 local function resource_init(w, name, filename)
 	local data = cr.read_file(filename)
-	w._current_path = filename:match "^(.-)[^/|]*$"
+	push_current_path(w, filename:match "^(.-)[^/|]*$")
 	local res = datalist.parse(data, function(v)
 		return w:component_init(v[1], v[2])
 	end)
-	w._current_path = nil
 	if valid_component(w, name) then
-		return w:component_init(name, res)
+		res = w:component_init(name, res)
 	end
+	pop_current_path(w)
 	return res
 end
 
