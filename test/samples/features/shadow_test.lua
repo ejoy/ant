@@ -48,12 +48,12 @@ function st_sys:init()
 	}
 	world:instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab", {import={root=rooteid}})
 
-    computil.create_plane_entity(
+    local eid = computil.create_plane_entity(
 		{t = {0, 0, 0, 1}, s = {50, 1, 50, 0}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
-		{0.8, 0.8, 0.8, 1},
-		"test shadow plane"
-	)
+		"test shadow plane")
+
+	world:set(eid, "material", {properties={u_basecolor_factor=world.component "vector"{0.8, 0.8, 0.8, 1}}})
 end
 
 local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder_rawradius)
@@ -129,8 +129,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
         }
 	}
 
-	local cylinder = world[cylindereid]
-	cylinder.material.properties.u_color = world.component "vector"{1, 0, 0, 1}
+	world:set(cylindereid, "material", {properties={u_color=world.component "vector"{1, 0, 0, 1}}})
 
 	local coneeid = world:create_entity{
 		policy = {
@@ -151,8 +150,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		}
 	}
 
-	local cone = world[coneeid]
-	cone.material.properties.u_color = world.component "vector" {1, 0, 0, 1}
+	world:set(coneeid, "material", {properties={u_color=world.component "vector"{1, 0, 0, 1}}})
 end
 
 function st_sys:post_init()

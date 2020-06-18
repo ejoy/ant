@@ -13,17 +13,6 @@ local cylinder_rawradius = 0.25
 
 local gizmo
 local gizmo_eid = {x = {}, y = {}, z ={}}
-local switch = true
-local function onChangeColor(obj)
-	if switch then
-		obj.material.properties.u_color = world.component "vector" {1, 0, 0, 1}
-		switch = false
-	else
-		obj.material.properties.u_color = world.component "vector" {1, 1, 1, 1}
-		switch = true
-	end
-	
-end
 
 function gizmo_sys:init()
 	-- local cubeid = world:create_entity {
@@ -46,8 +35,7 @@ function gizmo_sys:init()
 	-- 		name = "test_cube",
 	-- 	}
 	-- }
-	-- cube = world[cubeid]
-	-- cube.material.properties.u_color = world.component "vector" {1, 1, 1, 1}
+	--world:set(cubeid, "material", {properties={u_color=world.component "vector"{1, 1, 1, 1}}})
 
 	-- local rooteid = world:create_entity {
 	-- 	policy = {

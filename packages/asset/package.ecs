@@ -1,7 +1,3 @@
-component "material"
-    .implement "ext_material.lua"
-    .method "init"
-
 component "prefab"
     .implement "ext_prefab.lua"
     .method "init"
@@ -9,3 +5,9 @@ component "prefab"
 component "mesh"
     .implement "mesh.lua"
     .method "init"
+
+transform "material_transform"
+    .implement "ext_material.lua"
+    .input "material"
+    .output "_cache.material"
+    .method "process_prefab"

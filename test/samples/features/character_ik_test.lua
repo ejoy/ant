@@ -14,14 +14,13 @@ local function foot_ik_test()
 end
 
 local function create_plane_test()
-    return computil.create_plane_entity(
+    local eid = computil.create_plane_entity(
     {
         s = {5, 1, 5, 0},
         r = math3d.tovalue(math3d.quaternion{math.rad(10), 0, 0}),
         t = {0, 0, -5, 1}
     },
     "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material",
-    {0.5, 0.5, 0, 1},
     "test shadow plane",
     {
         ["ant.collision|collider_policy"] = {
@@ -38,6 +37,9 @@ local function create_plane_test()
             debug_mesh_bounding = true,
         }
     })
+
+    world:set(eid, "material", {properties={u_color={0.5, 0.5, 0, 1}}})
+    return eid
 end
 
 function char_ik_test_sys:init()

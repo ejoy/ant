@@ -41,19 +41,13 @@ local player
 function m:init()
 	create_light()
 	computil.create_procedural_sky()
-	computil.create_plane_entity(
+	local eid = computil.create_plane_entity(
 		{s = {50, 1, 50, 0}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
-		{0.8, 0.8, 0.8, 1},
 		"test shadow plane"
 	)
 
-	local function load_file(file)
-		local f = assert(fs.open(fs.path(file), 'r'))
-		local data = f:read 'a'
-		f:close()
-		return data
-	end
+	world:set(eid, "material", {properties={u_basecolor_factor={0.8, 0.8, 0.8, 1}}})
 	world:create_entity 'res/door.txt'
 	world:create_entity 'res/fence1.txt'
 	world:create_entity 'res/fence2.txt'

@@ -2,27 +2,28 @@ local ecs = ...
 
 local bgfx = require "bgfx"
 local fs = require "filesystem"
-local datalist = require "datalist"
 local assetmgr = require "asset"
 
-local m = ecs.component "material"
+local utilitypkg = import_package "ant.utility"
+local fs_local = utilitypkg.fs_local
 
+local mt = ecs.transform "material_transform"
 local function load_state(filename)
-	if type(filename) == "string" then
-		local f = assert(fs.open(fs.path(filename), 'rb'))
-		local data = f:read 'a'
-		f:close()
-		return datalist.parse(data)
-	else
-		return filename
-	end
+	return type(filename) == "string" and fs_local.datalist(fs.path(filename):localpath()) or filename
 end
 
-function m:init()
-	self.fx = assetmgr.load_fx(self.fx)
-	if #self.fx.uniforms > 0 and not self.properties then
-		self.properties = {}
+function mt.process_prefab(e)
+	local m = e.material
+	if m then
+		local c = e._cache
+		local fx = assetmgr.load_fx(m.fx, c.material_setting)
+		local properties = m.properties
+		if not properties and #fx.uniforms > 0 then
+			properties = {}
+		end
+	
+		c.fx			= fx
+		c.properties	= properties
+		c.state         = bgfx.make_state(load_state(m.state))
 	end
-	self._state = bgfx.make_state(load_state(self.state))
-	return self
 end

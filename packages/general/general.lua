@@ -11,3 +11,8 @@ end
 function m:save()
     return tostring(self):match "^(.-):?$"
 end
+
+local ct = ecs.transform "cache_transform"
+function ct.process_prefab(e)
+	e._cache = {}
+end

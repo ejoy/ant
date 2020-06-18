@@ -244,6 +244,7 @@ local sun_luminance_fetch = fetch_value_operation(sun_luminance_XYZ)
 local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
 local function update_sky_parameters(skyentity)
+	--TODO: material data should not modify directly
 	local skycomp = skyentity.procedural_sky
 	local properties = skyentity.material.properties
 

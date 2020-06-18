@@ -117,7 +117,7 @@ end
 
 local function update_rendermesh(eid)
 	local mesh = world[eid].mesh
-	--TODO: need cache rendermesh
+	--TODO: need cache
 	if mesh then
 		local handles = {}
 		local rendermesh = {
@@ -143,16 +143,18 @@ local function update_rendermesh(eid)
 end
 
 local function update_material(eid)
-	local e = world[eid]
-	local m = e.material
+	local m = icaches.get(eid, "material")
 	if m == nil then
-		local peid = e.parent
-		m = peid and icaches.get(peid, "material") or nil
-		if m == nil then
+		local peid = world[eid].parent
+		if peid == nil then
+			return
+		end
+		m = icaches.get(peid, "material")
+		if m then
+			icaches.cache(eid, "material", m)
 			return
 		end
 	end
-	icaches.cache(eid, "material", m)
 end
 
 local function update_state(eid)

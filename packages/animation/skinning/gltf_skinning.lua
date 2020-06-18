@@ -61,22 +61,29 @@ local function need_dynamic_buffer(declname)
 	return declname:match "p....." ~= nil
 end
 
-local function build_cpu_skinning_jobs(eid, skinning)
+local function build_cpu_skinning_jobs(e, skinning)
 	local jobs = {}
 	skinning.jobs = jobs
-	local e = world[eid]
-	local primgroup = e.rendermesh
+	local m = e.mesh
+	local newmesh = {
+		ib = m.ib,
+		vb = {}
+	}
 
-	for idx, vd in ipairs(primgroup.vb.values) do
-		local declname = vd.declname
+	local vb = newmesh.vb
+	for idx, v in ipairs(m.vb) do
+		local declname = v.declname
 		if need_dynamic_buffer(declname) then
-			local start_bytes = vd.memory[3] --TODO
-			local num_bytes   = vd.memory[4] --TODO
+			local start_bytes = v.memory[2]
+			local num_bytes   = v.memory[3]
 
 			local updatedata = animodule.new_aligned_memory(num_bytes, 4)
-			local vbhandle = bgfx.create_dynamic_vertex_buffer(vd.memory, declmgr.get(declname).handle)
+			local vbhandle = bgfx.create_dynamic_vertex_buffer(num_bytes, declmgr.get(declname).handle)
 
-			primgroup.vb.handles[idx] = vbhandle
+			vb[idx] = {
+				memory = v.memory,
+				handle=vbhandle,
+			}
 
 			local outptr = updatedata:pointer()
 			local layout_stride = declmgr.get(declname).stride
@@ -91,7 +98,7 @@ local function build_cpu_skinning_jobs(eid, skinning)
 				buffersize = num_bytes,
 				parts = {
 					{
-						inputdesc = layout_desc("pnTwi", layout_elems, layout_stride, vd.value, start_bytes),
+						inputdesc = layout_desc("pnTwi", layout_elems, layout_stride, v.memory[1], start_bytes),
 						outputdesc = layout_desc("pnT", layout_elems, layout_stride, outptr),
 						num = num_bytes / layout_stride,
 						layout_stride = layout_stride,
@@ -99,6 +106,8 @@ local function build_cpu_skinning_jobs(eid, skinning)
 					}
 				}
 			}
+		else
+			vb[idx] = v
 		end
 	end
 end

@@ -11,7 +11,6 @@ system "pickup_system"
 
 policy "pickup"
     .require_system "pickup_system"
-    .component "material"
     .unique_component "pickup"
 
 policy "select"

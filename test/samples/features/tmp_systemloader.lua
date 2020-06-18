@@ -22,10 +22,9 @@ local function create_plane_test()
     }
 
     for _, p in ipairs(planes) do
-        computil.create_plane_entity(
+        local eid = computil.create_plane_entity(
             p.srt,
             p.material,
-            p.color,
             "test shadow plane",
             {
                 ["ant.collision|collider_policy"] = {
@@ -42,6 +41,7 @@ local function create_plane_test()
                     debug_mesh_bounding = true,
                 }
             })
+        world:set(eid, "material", {u_basecolor_factor=p.color})
     end
 end
 

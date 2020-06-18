@@ -43,12 +43,12 @@ local function imgui_init()
 	viewid = viewidmgr.get "uieditor"
 	context = imgui.CreateContext(rhwi.native_window())
 	imgui.ant.viewid(viewid)
-	local imgui_font = assetmgr.load_fx "/pkg/ant.imguibase/shader/font.fx"
+	local imgui_font = assetmgr.load_fx_file "/pkg/ant.imguibase/shader/font.fx"
 	imgui.ant.font_program(
 		imgui_font.prog,
 		imgui_font.uniforms[1].handle
 	)
-	local imgui_image = assetmgr.load_fx "/pkg/ant.imguibase/shader/image.fx"
+	local imgui_image = assetmgr.load_fx_file "/pkg/ant.imguibase/shader/image.fx"
 	imgui.ant.image_program(
 		imgui_image.prog,
         imgui_image.uniforms[1].handle

@@ -108,7 +108,7 @@ local function get_plane_mesh()
 	return plane_mesh
 end
 
-function ientity.create_plane_entity(srt, materialpath, color, name, info)
+function ientity.create_plane_entity(srt, materialpath, name, entity_info)
 	local policy = {
 		"ant.render|render",
 		"ant.general|name",
@@ -116,15 +116,15 @@ function ientity.create_plane_entity(srt, materialpath, color, name, info)
 
 	local data = {
 		transform =  {srt = world.component "srt"(srt or {})},
-		material = world.component "resource"(materialpath or "/pkg/ant.resources/materials/test/singlecolor_tri_strip.material"),
+		material = world.component "resource" (materialpath),
 		state = ies.create_state "visible|selectable",
 		name = name or "Plane",
 		scene_entity = true,
 		mesh = get_plane_mesh(),
 	}
 
-	if info then
-		for policy_name, dd in pairs(info) do
+	if entity_info then
+		for policy_name, dd in pairs(entity_info) do
 			policy[#policy+1] = policy_name
 			for k, d in pairs(dd) do
 				data[k] = d
@@ -132,14 +132,10 @@ function ientity.create_plane_entity(srt, materialpath, color, name, info)
 		end
 	end
 
-	local eid = world:create_entity{
+	return world:create_entity{
 		policy = policy,
 		data = data,
 	}
-
-	local e = world[eid]
-	e.material.properties.u_color = world.component "vector"(color)
-	return eid
 end
 
 local function quad_mesh(rect)

@@ -3,19 +3,12 @@ local world = ecs.world
 
 local animodule = require "hierarchy.animation"
 local bgfx 		= require "bgfx"
-local assetmgr 	= import_package "ant.asset"
 
 local sm = ecs.transform "skinning_material"
 
 function sm.process_prefab(e)
 	if e.skinning_type == "GPU" then
-		local m = e.material
-		e.material = {
-			fx = assetmgr.load_fx(e.material.fx, {skinning="GPU"}),
-			properties = m.properties,
-			_state = m._state,
-			state = m.state,
-		}
+		e._cache.material_setting = {skinning = "GPU"}
 	end
 end
 
@@ -41,7 +34,7 @@ function skinning_sys:skin_mesh()
 					animodule.mesh_skinning(skinning_matrices, part.inputdesc, part.outputdesc, part.num, part.influences_count)
 				end
 	
-				bgfx.update(handle, 0, {updatedata:pointer(), 0, job.buffersize})
+				bgfx.update(handle, 0, bgfx.memory_buffer(updatedata:pointer(), job.buffersize, updatedata))
 			end
 		else
 			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, itransform.worldmat(eid))

@@ -9,7 +9,7 @@ local function material_hierarchy_test()
     local root = world:create_entity {
         policy = {
             "ant.general|name",
-            "ant.render|render"
+            "ant.render|render",
         },
         data = {
             name = "hierarhcy_root",
