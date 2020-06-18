@@ -158,6 +158,8 @@ local function default_csm_camera()
 	}
 end
 
+local shadow_material
+
 local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 	local cameraname = "csm" .. index
 	local cameraeid = world:create_entity {
@@ -171,6 +173,7 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 		}
 	}
 
+	shadow_material = world.component "resource"(linear_shadow and linear_cast_material or cast_material)
 	return world:create_entity {
 		policy = {
 			"ant.render|shadow_make_policy",
@@ -178,7 +181,6 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 			"ant.general|name",
 		},
 		data = {
-			material = world.component "resource"(linear_shadow and linear_cast_material or cast_material),
 			csm = {
 				split_ratios= {0, 0},
 				index 		= index,
@@ -352,28 +354,29 @@ function sm:data_changed()
 	end
 end
 
+local function replace_material(result, material)
+	local items = result.items
+	for eid, item in pairs(items) do
+		local newitem = {}
+		for n, v in pairs(item) do
+			newitem[n] = v
+		end
+		newitem.fx 			= material.fx
+		newitem.properties 	= material.properties
+		--TODO: primitive mode should follow origin material setting
+		--newitem.state 		= material._state
+		items[eid]			= newitem
+	end
+end
+
 function sm:refine_filter()
 	for _, eid in world:each "csm" do
 		local se = world[eid]
 		local filter = se.primitive_filter
 		local results = filter.result
-		local function replace_material(result, material)
-			local items = result.items
-			for eid, item in pairs(items) do
-				local newitem = {}
-				for n, v in pairs(item) do
-					newitem[n] = v
-				end
-				newitem.fx 			= material.fx
-				newitem.properties 	= material.properties
-				--TODO: primitive mode should follow origin material setting
-				--newitem.state 		= material._state
-				items[eid] = newitem
-			end
-		end
-	
-		local shadowmaterial = se.material
-		replace_material(results.opaticy, 		shadowmaterial)
-		replace_material(results.translucent, 	shadowmaterial)
+
+
+		replace_material(results.opaticy, 		shadow_material)
+		replace_material(results.translucent, 	shadow_material)
 	end
 end
