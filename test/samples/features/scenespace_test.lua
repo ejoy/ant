@@ -192,6 +192,6 @@ local function space_test()
 end
 
 function sp_test_sys:init()
-    --space_test()
-    material_hierarchy_test()
+    space_test()
+    --material_hierarchy_test()
 end
