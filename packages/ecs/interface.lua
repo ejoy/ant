@@ -64,21 +64,24 @@ local attribute = {
 		"require_policy",
 		"require_transform",
 		"component",
+		"unique_component",
 		"action",
-		"unique_component"
+	},
+	transform = {
+		"implement",
+		"require_system",
+		"require_interface",
+		"require_policy",
+		"require_transform",
+		"input",
+		"output",
+		"method",
 	},
 	interface = {
 		"implement",
 		"require_system",
 		"require_interface",
 		"require_policy",
-		"method",
-	},
-	transform = {
-		"implement",
-		"require_interface",
-		"input",
-		"output",
 		"method",
 	},
 	action = {

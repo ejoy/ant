@@ -238,7 +238,7 @@ register_class()
 	wndclass.lpfnWndProc = WndProc;
 	wndclass.hInstance = GetModuleHandleW(0);
 	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	//wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.lpszClassName = CLASSNAME;
 	wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 

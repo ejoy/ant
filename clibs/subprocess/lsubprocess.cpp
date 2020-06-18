@@ -11,26 +11,7 @@
 #include <unistd.h>
 #endif
 
-#if __has_include(<filesystem>)
-#   if defined(__MINGW32__)
-#   elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
-#       if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
-            #include <filesystem>
-            namespace fs = std::filesystem;
-            #define ENABLE_FILESYSTEM
-#       endif
-#   elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
-#       if __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__ >= 130000
-            #include <filesystem>
-            namespace fs = std::filesystem;
-            #define ENABLE_FILESYSTEM
-#       endif
-#   else
-        #include <filesystem>
-        namespace fs = std::filesystem;
-        #define ENABLE_FILESYSTEM
-#   endif
-#endif
+#include "../filesystem/filesystem.h"
 
 namespace ant::lua {
 #if defined(_WIN32)
@@ -62,10 +43,8 @@ namespace ant::lua {
         switch (lua_type(L, idx)) {
         case LUA_TSTRING:
             return lua::string_type(to_string(L, idx));
-#ifdef ENABLE_FILESYSTEM
         case LUA_TUSERDATA:
             return (*(fs::path*)luaL_checkudata(L, idx, "ant::filesystem")).string<string_type::value_type>();
-#endif
         default:
             return std::optional<string_type>();
         }
@@ -74,12 +53,6 @@ namespace ant::lua {
 
 namespace ant::lua_subprocess {
     typedef lua::string_type nativestring;
-
-#ifdef ENABLE_FILESYSTEM
-    static fs::path& topath(lua_State* L, int idx) {
-        return *(fs::path*)luaL_checkudata(L, idx, "ant::filesystem");
-    }
-#endif
 
     namespace process {
         static subprocess::process& to(lua_State* L, int idx) {

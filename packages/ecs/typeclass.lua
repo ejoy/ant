@@ -109,6 +109,7 @@ function copy.policy(v)
 	table_append(t, v.component)
 	table_append(t, v.unique_component)
 	return {
+		policy = v.require_policy,
 		transform = v.require_transform,
 		component = t,
 		action = v.action,
@@ -116,6 +117,8 @@ function copy.policy(v)
 end
 function copy.transform(v)
 	return {
+		policy = v.require_policy,
+		transform = v.require_transform,
 		input = v.input,
 		output = v.output,
 	}

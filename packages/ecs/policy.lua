@@ -8,50 +8,28 @@ local function create(w, policies)
         process_entity = {},
         process_prefab = {},
     }
-    local transform = {}
-    local action = {}
-    local policyset = {}
     local unionset = {}
-    for _, name in ipairs(policies) do
-        local class = w._class.policy[name]
-        if not class then
-            error(("policy `%s` is not defined."):format(name))
-        end
-        if policyset[name] then
-            goto continue
-        end
-        policyset[name] = name
-        if class.union then
-            if unionset[class.union] then
-                error(("duplicate union `%s` in `%s` and `%s`."):format(class.union, name, unionset[class.union]))
-            end
-            unionset[class.union] = name
-        end
-        for _, v in ipairs(class.transform) do
-            if not transform[v] then
-                transform[v] = {}
-            end
-        end
-        for _, v in ipairs(class.component) do
-            if not res.register_component[v] then
-                res.register_component[v] = true
-                res.component[#res.component+1] = v
-            end
-        end
-        for _, v in ipairs(class.action) do
-            if not action[v] then
-                action[v] = true
-                res.action[#res.action+1] = v
-            end
-        end
-        ::continue::
-    end
+    local policyset = {}
+    local transformset = {}
+    local actionset = {}
+    local reflection = {}
     local function table_append(t, a)
         table.move(a, 1, #a, #t+1, t)
     end
-    local reflection = {}
-    for name in pairs(transform) do
+    local import_policy
+    local import_transform
+    function import_transform(name)
+        if transformset[name] then
+            return
+        end
+        transformset[name] = true
         local class = w._class.transform[name]
+        for _, v in ipairs(class.policy) do
+            import_policy(v)
+        end
+        for _, v in ipairs(class.transform) do
+            import_transform(v)
+        end
         for _, v in ipairs(class.input) do
             if not reflection[v] then
                 reflection[v] = {depend={}}
@@ -71,7 +49,43 @@ local function create(w, policies)
             end
         end
     end
-
+    function import_policy(name)
+        if policyset[name] then
+            return
+        end
+        policyset[name] = true
+        local class = w._class.policy[name]
+        if not class then
+            error(("policy `%s` is not defined."):format(name))
+        end
+        if class.union then
+            if unionset[class.union] then
+                error(("duplicate union `%s` in `%s` and `%s`."):format(class.union, name, unionset[class.union]))
+            end
+            unionset[class.union] = name
+        end
+        for _, v in ipairs(class.policy) do
+            import_policy(v)
+        end
+        for _, v in ipairs(class.transform) do
+            import_transform(v)
+        end
+        for _, v in ipairs(class.component) do
+            if not res.register_component[v] then
+                res.register_component[v] = true
+                res.component[#res.component+1] = v
+            end
+        end
+        for _, v in ipairs(class.action) do
+            if not actionset[v] then
+                actionset[v] = true
+                res.action[#res.action+1] = v
+            end
+        end
+    end
+    for _, name in ipairs(policies) do
+        import_policy(name)
+    end
     local mark = {}
     for _, c in ipairs(solve_depend(reflection)) do
         local name = reflection[c].name
