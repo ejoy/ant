@@ -38,7 +38,7 @@ local function create_plane_test()
         }
     })
 
-    world:set(eid, "material", {properties={u_color={0.5, 0.5, 0, 1}}})
+    world:set(eid, "material", {properties={u_color=world.component "vector"{0.5, 0.5, 0, 1}}})
     return eid
 end
 

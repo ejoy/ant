@@ -19,6 +19,7 @@ action "mount"
     .method "save"
 
 policy "transform_policy"
+    .require_transform "ant.general|rendercache_transform"
     .component "transform"
     .component "scene_entity"
 

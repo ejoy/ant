@@ -9,6 +9,25 @@ local math3d	= require "math3d"
 local irender = world:interface "ant.render|irender"
 local irender_properties = world:interface "ant.render|render_properties"
 
+local rt = ecs.transform "render_transform"
+function rt.process_entity(e)
+	local c = e._cache
+
+	local properties
+	if c.properties then
+		properties = {}
+		for k, v in pairs(c.properties) do
+			properties[k] = v
+		end
+	end
+
+	e._rendercache.fx = c.fx
+	e._rendercache.properties = properties
+	e._rendercache.state = c.state
+	e._rendercache.vb = c.vb
+	e._rendercache.ib = c.ib
+end
+
 local rt = ecs.component "render_target"
 
 function rt:init()

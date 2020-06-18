@@ -21,7 +21,8 @@ local function create_prefab(prefab, srt)
         data = {
             transform =  {
                 srt = world.component "srt" (srt)
-            }
+            },
+            scene_entity = true,
         }
     }
     return world:instance(prefab, {

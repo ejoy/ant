@@ -2,7 +2,6 @@
 local ecs = ...
 local world = ecs.world
 
-local lua_math = math
 local mathpkg 	= import_package "ant.math"
 local mu, mc 	= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
@@ -136,20 +135,6 @@ local function replace_material(result, material)
 	end
 end
 
-local opacity_material = world.component "resource" '/pkg/ant.resources/materials/pickup_opacity.material'
-local translucent_material = world.component "resource" '/pkg/ant.resources/materials/pickup_transparent.material'
-
-function pickup_sys:refine_filter()
-	local e = world:singleton_entity "pickup"
-	if e.visible then
-		local filter = e.primitive_filter
-
-		local result = filter.result
-		replace_material(result.opaticy, opacity_material)
-		replace_material(result.translucent, translucent_material)
-	end
-end
-
 
 -- pickup_system
 local bb = ecs.component "blit_buffer"
@@ -275,8 +260,24 @@ local function add_pick_entity()
 	}
 end
 
+local opacity_material, translucent_material
+local imaterial = world:interface "ant.asset|imaterial"
+
 function pickup_sys:init()
 	add_pick_entity()
+	opacity_material = imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
+	translucent_material = imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
+end
+
+function pickup_sys:refine_filter()
+	local e = world:singleton_entity "pickup"
+	if e.visible then
+		local filter = e.primitive_filter
+
+		local result = filter.result
+		replace_material(result.opaticy, opacity_material)
+		replace_material(result.translucent, translucent_material)
+	end
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}

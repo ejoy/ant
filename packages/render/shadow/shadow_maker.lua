@@ -140,9 +140,6 @@ end
 
 local sm = ecs.system "shadow_system"
 
-local linear_cast_material = "/pkg/ant.resources/materials/shadow/csm_cast_linear.material"
-local cast_material = "/pkg/ant.resources/materials/shadow/csm_cast.material"
-
 local function v4(...) return world.component "vector"(...) end
 
 local function default_csm_camera()
@@ -158,8 +155,7 @@ local function default_csm_camera()
 	}
 end
 
-local shadow_material
-
+local imateral = world:interface "ant.asset|imaterial"
 local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 	local cameraname = "csm" .. index
 	local cameraeid = world:create_entity {
@@ -173,7 +169,6 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 		}
 	}
 
-	shadow_material = world.component "resource"(linear_shadow and linear_cast_material or cast_material)
 	return world:create_entity {
 		policy = {
 			"ant.render|shadow_make_policy",
@@ -293,6 +288,7 @@ local function create_shadow_entity(shadowmap_size, split_num, depth_type)
 	}
 end
 
+local shadow_material
 function sm:init()
 	local sd = setting:data()
 	local shadowsetting = sd.graphic.shadow
@@ -300,6 +296,10 @@ function sm:init()
 	local depth_type 	= shadowsetting.type
 	local linear_shadow = depth_type == "linear"
 	local split_num 	= shadowsetting.split_num
+
+	shadow_material = imateral.load(linear_shadow and 
+		"/pkg/ant.resources/materials/shadow/csm_cast_linear.material" or 
+		"/pkg/ant.resources/materials/shadow/csm_cast.material")
 
 	local seid 	= create_shadow_entity(shadowmap_size, split_num, depth_type)
 	local se 	= world[seid]
@@ -311,8 +311,8 @@ function sm:init()
 	end
 end
 
-local dl_create_mb = world:sub{"component_register", "directional_light"}
-local dl_mb = world:sub{"component_changed", "directional_light"}
+local dl_create_mb 		= world:sub{"component_register", "directional_light"}
+local dl_mb 			= world:sub{"component_changed", "directional_light"}
 local camera_changed_mb = world:sub{"component_changed", "camera"}
 
 function sm:post_init()

@@ -7,12 +7,6 @@ interface "itransform"
     .implement "filter/filter_system.lua"
     .method "worldmat"
 
-interface "ifilter_cache"
-    .implement "filter/filter_cache.lua"
-    .method "check_add_cache"
-    .method "cache"
-    .method "get"
-
 interface "ientity_state"
     .implement "filter/entity_state.lua"
     .method "has_state"

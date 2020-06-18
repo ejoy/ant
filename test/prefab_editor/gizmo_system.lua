@@ -257,7 +257,8 @@ function gizmo_sys:post_init()
 		},
 		data = {
 			transform =  {srt= world.component "srt"(srt)},
-			name = "directional light arrow",
+			scene_entity = true,
+			name = "axis_root",
 		},
 	}
 	create_arrow_widget(axis_root, "x")

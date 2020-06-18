@@ -10,3 +10,8 @@ transform "cache_transform"
     .implement "general.lua"
     .output "_cache"
     .method "process_prefab"
+
+transform "rendercache_transform"
+    .implement "general.lua"
+    .output "_rendercache"
+    .method "process_entity"

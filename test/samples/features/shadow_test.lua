@@ -79,6 +79,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		},
 		data = {
 			transform =  {srt= world.component "srt"(srt)},
+			scene_entity = true,
 			name = "directional light arrow",
 		},
 	}

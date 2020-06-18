@@ -36,6 +36,47 @@ local function material_hierarchy_test()
             mount=root,
         }
     }
+
+    
+    local ceid2 = world:create_entity{
+        policy = {
+            "ant.general|name",
+            "ant.render|render",
+        },
+        data = {
+            name = "hierarchy_child_2",
+            mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
+            state = ies.create_state "visible",
+            transform = {
+                srt = world.component "srt" {
+                    s = {10}, t = {5, 0, 0}
+                }
+            }
+        },
+        action = {
+            mount=root,
+        }
+    }
+
+    local ceid2_1 = world:create_entity{
+        policy = {
+            "ant.general|name",
+            "ant.render|render",
+        },
+        data = {
+            name = "hierarchy_child",
+            mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
+            state = ies.create_state "visible",
+            transform = {
+                srt = world.component "srt" {
+                    s = {10}, t = {5, 0, 0}
+                }
+            }
+        },
+        action = {
+            mount=ceid2,
+        }
+    }
 end
 
 local function space_test()
@@ -48,7 +89,8 @@ local function space_test()
             name = "root",
             transform =  {
                 srt=world.component "srt"{t={0, 1, 0, 1}}
-            }
+            },
+            scene_entity = true,
         }
     }
 

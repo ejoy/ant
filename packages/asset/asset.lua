@@ -2,7 +2,7 @@ local resource = import_package "ant.resource"
 local cr = import_package "ant.compile_resource"
 local datalist = require "datalist"
 local fs = require "filesystem"
-
+local bgfx = require "bgfx"
 local utilitypkg = import_package "ant.utility"
 local fs_local = utilitypkg.fs_local
 
@@ -152,6 +152,28 @@ function assetmgr.init()
 		resource_delete(world, ext, res)
 	end
 	resource.register(loader, unloader)
+end
+
+local function load_state(filename)
+	return type(filename) == "string" and fs_local.datalist(fs.path(filename):localpath()) or filename
+end
+
+function assetmgr.load_material(m, setting)
+	local fx = assetmgr.load_fx(m.fx, setting)
+	local properties = m.properties
+	if not properties and #fx.uniforms > 0 then
+		properties = {}
+	end
+
+	return {
+		fx = fx,
+		properties = properties, 
+		state = bgfx.make_state(load_state(m.state))
+	}
+end
+
+function assetmgr.load_material_file(filepath)
+	return assetmgr.load_material(fs_local.datalist(filepath))
 end
 
 return assetmgr

@@ -8,7 +8,6 @@ local filter_system = ecs.system "filter_system"
 local iss = world:interface "ant.scene|iscenespace"
 local ies = world:interface "ant.scene|ientity_state"
 
-local icaches = world:interface "ant.scene|ifilter_cache"
 
 local function update_lock_target_transform(eid, lt, im, tr)
 	local e = world[eid]
@@ -56,7 +55,7 @@ local function update_lock_target_transform(eid, lt, im, tr)
 	end
 end
 
-local function combine_parent_transform(peid, trans, tr)
+local function combine_parent_transform(peid, trans, rc)
 	local pe = world[peid]
 	-- need apply before tr.worldmat
 	if trans then
@@ -64,34 +63,45 @@ local function combine_parent_transform(peid, trans, tr)
 		local pr = pe.pose_result
 		if s and pr then
 			local t = pr:joint(s)
-			tr.worldmat = math3d.mul(t, tr.worldmat)
+			rc.worldmat = math3d.mul(t, rc.worldmat)
 		end
 	end
 
-	local ptrans = icaches.get(peid, "transform")
-	if ptrans then
-		tr.worldmat = tr.worldmat and math3d.mul(ptrans.worldmat, tr.worldmat) or math3d.matrix(ptrans.worldmat)
+	if rc then
+		local p_rc = pe._rendercache
+		if p_rc and p_rc.worldmat then
+			rc.worldmat = rc.worldmat and math3d.mul(p_rc.worldmat, rc.worldmat) or math3d.matrix(p_rc.worldmat)
+		end
 	end
 end
 
-local function update_bounding(tr, e)
+local function update_bounding(rc, e)
 	local mesh = e.mesh
 	if mesh then
 		local bounding = mesh.bounding
 		if bounding then
-			tr.aabb = math3d.aabb_transform(tr.worldmat, bounding.aabb)
+			rc.aabb = math3d.aabb_transform(rc.worldmat, bounding.aabb)
+			return
 		end
 	end
+
+	rc.aabb = nil
 end
 
 local function update_transform(eid)
-	local tr = {}
-
 	local e = world[eid]
 	local etrans = e.transform
-	if etrans then
-		tr.worldmat = math3d.matrix(etrans.srt)
+
+	if etrans == nil and e.parent == nil then
+		return
 	end
+
+	--entity with no transform but parent have, we need to cache a matrix that copy from parent
+	if etrans == nil and e.parent and e._rendercache == nil then
+		e._rendercache = {}
+	end
+	local rc = e._rendercache
+	rc.worldmat = etrans and math3d.matrix(etrans.srt) or nil
 
 	if e.parent then
 		local im = e.camera and 
@@ -99,60 +109,35 @@ local function update_transform(eid)
 					world:interface "ant.objcontroller|obj_motion"
 		local lt = etrans and im.get_lock_target(eid) or nil
 		if lt then
-			update_lock_target_transform(eid, lt, im, tr)
+			update_lock_target_transform(eid, lt, im, rc)
 		else
-			combine_parent_transform(e.parent, etrans, tr)
+			combine_parent_transform(e.parent, etrans, rc)
 		end
 	end
 
-	if e.skinning then
-		tr.skinning_matrices = e.skinning.skinning_matrices
-	end
+	rc.skinning_matrices = e.skinning and e.skinning.skinning_matrices or nil
 
-	if tr.worldmat then
-		update_bounding(tr, e)
-		icaches.cache(eid, "transform", tr)
-	end
-end
-
-local function update_rendermesh(eid)
-	local mesh = world[eid].mesh
-	--TODO: need cache
-	if mesh then
-		local handles = {}
-		local rendermesh = {
-			vb = {
-				start = mesh.vb.start,
-				num = mesh.vb.num,
-				handles = handles,
-			}
-		}
-		for _, v in ipairs(mesh.vb) do
-			handles[#handles+1] = v.handle
-		end
-		if mesh.ib then
-			rendermesh.ib = {
-				start = mesh.ib.start,
-				num = mesh.ib.num,
-				handle = mesh.ib.handle,
-			}
-		end
-
-		icaches.cache(eid, "rendermesh", rendermesh)
+	if rc.worldmat then
+		update_bounding(rc, e)
 	end
 end
 
 local function update_material(eid)
-	local m = icaches.get(eid, "material")
-	if m == nil then
-		local peid = world[eid].parent
-		if peid == nil then
-			return
+	local e = world[eid]
+	if e.parent then
+		local pe = world[e.parent]
+		local rc = e._rendercache
+		local p_rc = pe._rendercache
+		if rc.fx == nil then
+			rc.fx = p_rc.fx
 		end
-		m = icaches.get(peid, "material")
-		if m then
-			icaches.cache(eid, "material", m)
-			return
+
+		if rc.state == nil then
+			rc.state = p_rc.state
+		end
+
+		if rc.properties == nil then
+			rc.properties = p_rc.properties
 		end
 	end
 end
@@ -161,13 +146,16 @@ local function update_state(eid)
 	local e = world[eid]
 	local s = e.state
 	if s then
-		local peid = e.parent
-		local ps = peid and icaches.get(peid, "state") or nil
-		if ps then
-			local m = s & 0xffffffff00000000
-			s = (m | (s & 0xffffffff)|(ps & 0xfffffff))
+		if e.parent then
+			local pe = world[e.parent]
+			local ps = pe.state
+			if ps then
+				local m = s & 0xffffffff00000000
+				s = (m | (s & 0xffffffff)|(ps & 0xfffffff))
+			end
 		end
-		icaches.cache(eid, "state", s)
+
+		e._rendercache.entity_state = s
 	end
 end
 
@@ -180,73 +168,49 @@ function filter_system:post_init()
 	end
 end
 
-local function add_filter_list(eid, filters, renderinfo)
-	local w = world
+local function can_render(rc)
+	return rc and rc.entity_state ~= 0 and rc.vb and rc.fx and rc.state and rc.worldmat
+end
 
-	local rm, m, t = renderinfo.rendermesh, renderinfo.material, renderinfo.transform
-	if rm == nil or m == nil or t == nil then
+local function add_filter_list(eid, filters)
+	local rc = world[eid]._rendercache
+	if not can_render(rc) then
 		return
 	end
-	local state = renderinfo.state
+
+	local entity_state = rc.entity_state
 	local stattypes = ies.get_state_type()
 	for n, filtereid in pairs(filters) do
 		local fe = world[filtereid]
 		if fe.visible then
 			local mask = assert(stattypes[n])
-			if (state & mask) ~= 0 then
+			if (entity_state & mask) ~= 0 then
 				local filter = fe.primitive_filter
 				
-				local resulttarget = filter.result[m.fx.setting.transparency]
-				local ri = resulttarget.items[eid]
-				if ri then
-					ri.vb 		= rm.vb
-					ri.ib 		= rm.ib
-					ri.state	= m._state
-					ri.fx 		= m.fx
-					ri.properties = m.properties
-					ri.aabb 	= t.aabb
-					ri.worldmat = t.worldmat
-					ri.skinning_matrices = t.skinning_matrices
-				else
-					resulttarget.items[eid] = {
-						--
-						vb 		= rm.vb,
-						ib 		= rm.ib,
-						--
-						state	= m._state,
-						fx 		= m.fx,
-						properties = m.properties,
-						--
-						aabb 	= t.aabb,
-						worldmat= t.worldmat,
-						skinning_matrices = t.skinning_matrices,
-					}
-				end
+				local resulttarget = filter.result[rc.fx.setting.transparency]
+				resulttarget.items[eid] = rc
 			end
 		end
 	end
 end
 
 local function update_renderinfo(eid)
-	local c = icaches.check_add_cache(eid)
-	--TODO: need cache all this render information, and watch entity changed, then clean cache
 	update_transform(eid)
-	update_rendermesh(eid)
 	update_material(eid)
 	update_state(eid)
-	return c
 end
 
 function filter_system:filter_render_items()
 	for _, eid in ipairs(iss.scenequeue()) do
-		add_filter_list(eid, filters, update_renderinfo(eid))
+		update_renderinfo(eid)
+		add_filter_list(eid, filters)
 	end
 end
 
 local it = ecs.interface "itransform"
 function it.worldmat(eid)
-	local c = world[eid]._caches
-	if c then
-		return c.worldmat
+	local rc = world[eid]._rendercache
+	if rc then
+		return rc.worldmat
 	end
 end
