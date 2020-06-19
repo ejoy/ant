@@ -378,6 +378,7 @@ function pickup_sys:pickup()
 			if needcheck then
 				select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
 			else
+				world:pub {"pickup",nil,{}}
 				print("not found any eid")
 			end
 			enable_pickup(false)
