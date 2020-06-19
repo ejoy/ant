@@ -111,14 +111,22 @@ end
 local pickup_sys = ecs.system "pickup_system"
 
 local uid_cache = {}
-local function get_properties(eid)
+local function get_properties(eid, fx)
 	local p = uid_cache[eid]
 	if p then
 		return p
 	end
 
+	local u = fx.uniforms[1]
+	assert(u.name == "u_id")
+	if u == nil then
+		error("pickup material not define 'u_id' uniform")
+	end
 	p = {
-		u_id = world.component "vector"(packeid_as_rgba(eid))
+		u_id = {
+			value = world.component "vector" (packeid_as_rgba(eid)),
+			u=u,
+		},
 	}
 	uid_cache[eid] = p
 	return p
@@ -129,7 +137,7 @@ local function replace_material(result, material)
 	for eid, item in pairs(items) do
 		local ni = {}; for k, v in pairs(item) do ni[k] = v end
 		ni.fx = material.fx
-		ni.properties = get_properties(eid)
+		ni.properties = get_properties(eid, material.fx)
 		ni.state = material._state
 		items[eid] = ni
 	end

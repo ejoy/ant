@@ -14,18 +14,22 @@ function rt.process_entity(e)
 	local c = e._cache
 
 	local properties
-	if c.properties then
+	local rp = irender_properties.data()
+	local cp = c.properties or rp
+	local uniforms = c.fx.uniforms
+	if uniforms and #uniforms > 0 then
 		properties = {}
-		for k, v in pairs(c.properties) do
-			properties[k] = v
+		for _, u in ipairs(uniforms) do
+			local n = u.name
+			properties[n] = {value = cp[n] or rp[n], u=u}
 		end
 	end
 
-	e._rendercache.fx = c.fx
-	e._rendercache.properties = properties
-	e._rendercache.state = c.state
-	e._rendercache.vb = c.vb
-	e._rendercache.ib = c.ib
+	e._rendercache.fx 			= c.fx
+	e._rendercache.properties 	= properties
+	e._rendercache.state 		= c.state
+	e._rendercache.vb 			= c.vb
+	e._rendercache.ib 			= c.ib
 end
 
 local rt = ecs.component "render_target"
@@ -60,7 +64,6 @@ function render_sys:init()
 end
 
 function render_sys:render_commit()
-	local render_properties = irender_properties.data()
 	for _, eid in world:each "render_target" do
 		local rq = world[eid]
 		if rq.visible then
@@ -78,7 +81,7 @@ function render_sys:render_commit()
 				local items = result.visible_set
 				if items then
 					for eid, ri in pairs(items) do
-						irender.draw(viewid, ri, render_properties)
+						irender.draw(viewid, ri)
 					end
 				end
 			end

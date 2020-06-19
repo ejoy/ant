@@ -5,7 +5,6 @@ system "load_properties_system"
     .implement "render_properties.lua"
     .require_interface "ant.render|uniforms"
     .require_interface "render_properties"
-    .method "init"
     .method "load_render_properties"
 
 interface "render_properties"

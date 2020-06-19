@@ -13,7 +13,7 @@ local setting		= require "setting"
 
 local irender_class = ecs.interface "irender"
 local irender = world:interface "ant.render|irender"
-function irender_class.draw(vid, ri, render_properties)
+function irender_class.draw(vid, ri)
 	local sm = ri.skinning_matrices
 	if sm then
 		bgfx.set_multi_transforms(sm:pointer(), sm:count())
@@ -23,12 +23,9 @@ function irender_class.draw(vid, ri, render_properties)
 
 	bgfx.set_state(ri.state)
 	local properties = ri.properties
-	for _, u in ipairs(ri.fx.uniforms) do
-		local p = properties[u.name] or render_properties[u.name]
-		if p then
-			u:set(p)
-		else
-			log.warn(("property: %s, not privided, but shader program needed"):format(u.name))
+	if properties then
+		for n, v in pairs(properties) do
+			v.u:set(v.value)
 		end
 	end
 	local ib, vb = ri.ib, ri.vb

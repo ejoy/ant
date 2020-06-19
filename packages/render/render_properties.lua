@@ -8,10 +8,41 @@ local shadowutil = renderpkg.shadow
 local mathpkg = import_package "ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
 
+local system_uniforms = {
+    s_mainview          = {stage=6},
+    s_postprocess_input = {stage=7},
+    s_shadowmap         = {stage=7},
+}
+
 local math3d = require "math3d"
 
 local m = ecs.interface "render_properties"
-local render_properties = {}
+local render_properties = {
+	--lighting
+	directional_lightdir= math3d.ref(mc.ZERO),
+	directional_color 	= math3d.ref(mc.ZERO),
+	directional_intensity= math3d.ref(mc.ZERO),
+	ambient_mode 		= math3d.ref(mc.ZERO),
+	ambient_skycolor 	= math3d.ref(mc.ZERO),
+	ambient_midcolor 	= math3d.ref(mc.ZERO),
+	ambient_groundcolor = math3d.ref(mc.ZERO),
+	u_eyepos			= math3d.ref(mc.ZERO_PT),
+
+	-- shadow
+	u_csm_matrix 		= {
+		math3d.ref(mc.IDENTITY_MAT),
+		math3d.ref(mc.IDENTITY_MAT),
+		math3d.ref(mc.IDENTITY_MAT),
+		math3d.ref(mc.IDENTITY_MAT),
+	},
+	u_csm_split_distances= math3d.ref(mc.ZERO),
+	u_depth_scale_offset= math3d.ref(mc.ZERO),
+	u_shadow_param1		= math3d.ref(mc.ZERO),
+	u_shadow_param2		= math3d.ref(mc.ZERO),
+
+	s_shadowmap			= {stage=system_uniforms["s_shadowmap"].stage},
+	s_mainview			= {stage=system_uniforms["s_mainview"].stage},
+}
 function m.data()
 	return render_properties
 end
@@ -121,36 +152,6 @@ end
 
 local load_properties_sys = ecs.system "load_properties_system"
 
-function  load_properties_sys:init()
-	local rp = world:interface "ant.render|render_properties".data()
-
-	--lighting
-	rp.directional_lightdir = world.component "vector" (mc.T_ZERO)
-	rp.directional_color 	= world.component "vector" (mc.T_ZERO)
-	rp.directional_intensity= world.component "vector" (mc.T_ZERO)
-	rp.ambient_mode 		= world.component "vector" (mc.T_ZERO)
-	rp.ambient_skycolor 	= world.component "vector" (mc.T_ZERO)
-	rp.ambient_midcolor 	= world.component "vector" (mc.T_ZERO)
-	rp.ambient_groundcolor 	= world.component "vector" (mc.T_ZERO)
-	rp.u_eyepos				= world.component "vector" (mc.T_ZERO_PT)
-
-	-- shadow
-	rp.u_csm_matrix 		= {
-		world.component "matrix" (mc.T_IDENTITY_MAT),
-		world.component "matrix" (mc.T_IDENTITY_MAT),
-		world.component "matrix" (mc.T_IDENTITY_MAT),
-		world.component "matrix" (mc.T_IDENTITY_MAT),
-	}
-	rp.u_csm_split_distances= world.component "vector" (mc.T_ZERO)
-	rp.u_depth_scale_offset	= world.component "vector" (mc.T_ZERO)
-	rp.u_shadow_param1		= world.component "vector" (mc.T_ZERO)
-	rp.u_shadow_param2		= world.component "vector" (mc.T_ZERO)
-
-	local iuniform = world:interface "ant.render|uniforms"
-	rp.s_shadowmap			= {stage=iuniform.system_uniform "s_shadowmap".stage}
-	rp.s_mainview			= {stage=iuniform.system_uniform "s_mainview".stage}
-end
-
 function load_properties_sys:load_render_properties()
 	local rp = world:interface "ant.render|render_properties".data()
 	load_lighting_properties(world, rp)
@@ -160,12 +161,6 @@ end
 
 
 local m = ecs.interface "uniforms"
-
-local system_uniforms = {
-    s_mainview          = {stage=6},
-    s_postprocess_input = {stage=7},
-    s_shadowmap         = {stage=7},
-}
 
 function m.system_uniform(name)
     return system_uniforms[name]

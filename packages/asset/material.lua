@@ -40,6 +40,10 @@ function im.load(materialpath, setting)
 end
 
 function im.set_property(eid, who, what)
+	local rp = world:interface "ant.render|render_properties".data()
+	if rp[who] then
+		error(("should not update golbal uniform from imaterial:set_property: %s"):format(who))
+	end
 	local rc = world[eid]._rendercache
-	rc.properties[who] = what
+	rc.properties[who].value = what
 end
