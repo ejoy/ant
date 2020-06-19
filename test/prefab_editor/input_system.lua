@@ -39,14 +39,15 @@ function m:data_changed()
         world:pub { "camera", "zoom", -delta }
     end
     for _, key, press, state in keypress_mb:unpack() do
-		if key == "W" and press == 2 then
-			
-		elseif key == "S" and press == 2 then
-			
+        if key == "W" and press == 2 then
+
+        elseif key == "S" and press == 2 then
+
 		elseif key == "A" and press == 2 then
 			
 		elseif key == "D" and press == 2 then
 			
-		end
+        end
+        --print(key, press)
 	end
 end

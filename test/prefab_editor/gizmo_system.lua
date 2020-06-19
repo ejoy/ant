@@ -38,7 +38,6 @@ local gizmo_obj = {
 
 
 local function showMoveGizmo(show)
-	print("showMoveGizmo", show)
 	ies.set_state(gizmo_obj.tx.eid[1], "visible", show)
 	ies.set_state(gizmo_obj.tx.eid[2], "visible", show)
 	ies.set_state(gizmo_obj.ty.eid[1], "visible", show)
@@ -263,7 +262,6 @@ function gizmo_sys:post_init()
 		},
 	}
 
-	--world:set(coneeid, "material", {properties={u_color=world.component "vector" {0, 0.5, 0.5, 1}}})
 	imaterial.set_property(coneeid, "u_color", world.component "vector" {0, 0.5, 0.5, 1})
 	local srt = {s = {1}, r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
@@ -296,7 +294,7 @@ function gizmo_sys:post_init()
 	imaterial.set_property(rot_eid, "u_color", world.component "vector" {0, 0, 1, 1})
 	world[rot_eid].parent = axis_root
 	gizmo_obj.rz.eid = rot_eid
-	--showGizmoByState(false)
+	showGizmoByState(false)
 	gizmo_obj.root = world[axis_root]
 end
 
@@ -368,6 +366,9 @@ end
 local rotateHitRadius = 0.02
 local moveHitRadiusPixel = 10
 local function selectAxis(x, y)
+	if not gizmo_obj.target_eid then
+		return
+	end
 	local hp = {x, y, 0}
 	local highlight = world.component "vector" {1, 1, 0, 1}
 	resetAxisColor()
@@ -546,14 +547,15 @@ end
 local function scaleGizmo(x, y)
 
 end
-
-function gizmo_obj:onLeftButtonDown(x, y)
+local gizmo_seleted = false
+function gizmo_obj:selectGizmo(x, y)
 	if self.mode == MOVE then
 		move_axis = selectAxis(x, y)
 		if move_axis then
 			lastGizmoPos = {gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3]}
 			lastMousePos = {x, y}
 			initOffset = viewToAxisConstraint(lastMousePos, move_axis.dir, lastGizmoPos)
+			return true
 		end
 	elseif self.mode == ROTATE then
 		rotate_axis, lastHit.v = selectRotateAxis(x, y)
@@ -561,16 +563,19 @@ function gizmo_obj:onLeftButtonDown(x, y)
 			updateClockwise = true
 			lastRotateAxis.v = math3d.transform(math3d.inverse(world[gizmo_obj.target_eid].transform.srt.r), rotate_axis.dir, 0)
 			lastRotate.q = world[gizmo_obj.target_eid].transform.srt.r
+			return true
 		end
 	elseif self.mode == SCALE then
-
+		return false
 	end
+	return false
 end
-local switch = false
+
 function gizmo_sys:data_changed()
 	for _ in cameraZoom:unpack() do
 		updateGizmoScale()
 	end
+
 	for _, what in gizmoState:unpack() do
 		if what == "select" then
 			onGizmoMode(SELECT)
@@ -582,33 +587,36 @@ function gizmo_sys:data_changed()
 			onGizmoMode(SCALE)
 		end
 	end
+
 	for _, what, x, y in mouseDown:unpack() do
 		if what == "LEFT" then
-			gizmo_obj:onLeftButtonDown(x, y)
-			switch = not switch
-			showMoveGizmo(switch)
+			gizmo_seleted = gizmo_obj:selectGizmo(x, y)
 		end
 	end
 
 	for _, what, x, y in mouseUp:unpack() do
 		if what == "LEFT" then
+			gizmo_seleted = false
 		end
 	end
 
 	for _, what, x, y in mouseMove:unpack() do
 		if what == "UNKNOWN" then
-			selectAxis(x, y)
-			selectRotateAxis(x, y)
+			if gizmo_obj.mode == MOVE then
+				selectAxis(x, y)
+			elseif gizmo_obj.mode == ROTATE then
+				selectRotateAxis(x, y)
+			end
 		end
 	end
 	
 	for _, what, x, y, dx, dy in mouseDrag:unpack() do
 		if what == "LEFT" then
-			if move_axis then
+			if gizmo_obj.mode == MOVE and move_axis then
 				moveGizmo(x, y)
-			elseif rotate_axis then
+			elseif gizmo_obj.mode == ROTATE and rotate_axis then
 				rotateGizmo(x, y)
-			elseif scale_axis then
+			elseif gizmo_obj.mode == SCALE and scale_axis then
 				scaleGizmo(x, y)
 			else
 				world:pub { "camera", "pan", dx, dy }
@@ -626,11 +634,13 @@ function gizmo_sys:data_changed()
 				gizmo_obj.root.transform.srt.t = world[eid].transform.srt.t
 				gizmo_obj.target_eid = eid
 				updateGizmoScale()
-				-- showGizmoByState(true)
+				showGizmoByState(true)
 			end
 		else
-			-- gizmo_obj.target_eid = nil
-			-- showGizmoByState(false)
+			if not gizmo_seleted then
+				gizmo_obj.target_eid = nil
+				showGizmoByState(false)
+			end
 		end
 	end
 end

@@ -28,7 +28,6 @@ function ies_class.set_state(eid, name, v)
 	else
 		world[eid].state = state & (~STATE_TYPE[name])
 	end
-	print("set_state", eid, name, world[eid].state)
 end
 
 function ies_class.can_visible(eid)
