@@ -2,7 +2,7 @@ fx: $resource /pkg/ant.resources/materials/fx/line.fx
 state:
   ALPHA_REF: 1
   CULL: CCW
-  DEPTH_TEST: ALWAYS
+  DEPTH_TEST: LESS
   LINEAA: true
   MSAA: true
   PT: LINES

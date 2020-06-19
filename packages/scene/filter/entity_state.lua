@@ -21,6 +21,19 @@ function ies_class.has_state(eid, name)
 	end
 end
 
+function ies_class.set_state(eid, name, v)
+	if not ies.has_state(eid, name) then
+		return
+	end
+	local state = world[eid].state
+	if v then
+		world[eid].state = state | STATE_TYPE[name]
+	else
+		world[eid].state = state & (~STATE_TYPE[name])
+	end
+	print("after set_state", world[eid].state)
+end
+
 function ies_class.can_visible(eid)
 	return ies.has_state(eid, "visible")
 end

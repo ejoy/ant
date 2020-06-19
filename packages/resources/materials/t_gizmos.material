@@ -7,3 +7,4 @@ state:
   DEPTH_TEST: ALWAYS
   MSAA: true
   WRITE_MASK: RGB
+  BLEND: ALPHA

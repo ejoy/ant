@@ -105,9 +105,9 @@ local function run()
 	end
 end
 
-local function windowMode()
+local function windowMode(w, h)
 	local window = require "window_thread"
-	window.create(run, 1024, 768)
+	window.create(run, w or 1024, h or 768)
 end
 
 local function savebmp(name, width, height, pitch, data)
@@ -168,12 +168,12 @@ local function initargs(package)
 	}
 end
 
-local function start(package)
+local function start(package, w, h)
 	config = initargs(package)
 	if argument.headless then
 		return headlessMode()
 	end
-	return windowMode()
+	return windowMode(w, h)
 end
 
 return {

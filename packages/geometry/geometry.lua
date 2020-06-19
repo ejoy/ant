@@ -115,6 +115,14 @@ local function gen_cricle_indices(ib, slices, baseidx)
 	end
 end
 
+function geometry.cricle(radius, slices)
+	local vb = {}
+	local ib = {}
+	gen_cricle_vertices(vb, slices, 0, radius)
+	gen_cricle_indices(ib, slices, 0)
+	return vb, ib
+end
+
 function geometry.cone(slices, height, radius, needib, line)
 	local function create_vb()
 		if height and radius then			

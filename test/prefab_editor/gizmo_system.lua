@@ -11,17 +11,75 @@ local gizmo_sys = ecs.system "gizmo_system"
 local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 local camera_motion = world:interface "ant.objcontroller|camera_motion"
+local ies = world:interface "ant.scene|ientity_state"
 
-local axis_length = 0.4
-local cylinder_cone_ratio = 8
-local cylinder_rawradius = 0.2
-local selected_axis
+local gizmo_scale = 1.0
+local axis_radius = 0.2
+local move_axis
+local rotate_axis
+local scale_axis
+local SELECT = 0
+local MOVE = 1
+local ROTATE = 2
+local SCALE = 3
+
 local gizmo_obj = {
+	mode = SELECT,
 	position = {0,0,0},
-	x = {eid = {}, dir = {1, 0, 0}},
-	y = {eid = {}, dir = {0, 1, 0}},
-	z = {eid = {}, dir = {0, 0, 1}},
+	highlight = world.component "vector" {1, 1, 0, 1},
+	tx = {dir = {1, 0, 0}, color = world.component "vector" {1, 0, 0, 1}},
+	ty = {dir = {0, 1, 0}, color = world.component "vector" {0, 1, 0, 1}},
+	tz = {dir = {0, 0, 1}, color = world.component "vector" {0, 0, 1, 1}},
+
+	rx = {dir = {1, 0, 0}, color = world.component "vector" {1, 0, 0, 1}},
+	ry = {dir = {0, 1, 0}, color = world.component "vector" {0, 1, 0, 1}},
+	rz = {dir = {0, 0, 1}, color = world.component "vector" {0, 0, 1, 1}},
 }
+
+local function showMoveGizmo(show)
+	ies.set_state(gizmo_obj.tx.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.tx.eid[2], "visible", show)
+	ies.set_state(gizmo_obj.ty.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.ty.eid[2], "visible", show)
+	ies.set_state(gizmo_obj.tz.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.tz.eid[2], "visible", show)
+end
+
+local function showRotateGizmo(show)
+	ies.set_state(gizmo_obj.rx.eid, "visible", show)
+	ies.set_state(gizmo_obj.ry.eid, "visible", show)
+	ies.set_state(gizmo_obj.rz.eid, "visible", show)
+end
+
+local function showScaleGizmo(show)
+
+end
+
+local function showGizmoByState()
+	if gizmo_obj.mode == MOVE then
+		showMoveGizmo(true)
+	elseif gizmo_obj.mode == ROTATE then
+		showRotateGizmo(true)
+	elseif gizmo_obj.mode == SCALE then
+		showScaleGizmo(true)
+	else
+		showMoveGizmo(false)
+		showRotateGizmo(false)
+		showScaleGizmo(false)
+	end
+end
+
+local imaterial = world:interface "ant.asset|imaterial"
+
+local function resetAxisColor()
+	--imaterial.set_property(eid, "u_color", gizmo_obj.tx.color)
+	world:set(gizmo_obj.tx.eid[1], "material", {properties={u_color = gizmo_obj.tx.color}})
+	world:set(gizmo_obj.tx.eid[2], "material", {properties={u_color = gizmo_obj.tx.color}})
+	world:set(gizmo_obj.ty.eid[1], "material", {properties={u_color = gizmo_obj.ty.color}})
+	world:set(gizmo_obj.ty.eid[2], "material", {properties={u_color = gizmo_obj.ty.color}})
+	world:set(gizmo_obj.tz.eid[1], "material", {properties={u_color = gizmo_obj.tz.color}})
+	world:set(gizmo_obj.tz.eid[2], "material", {properties={u_color = gizmo_obj.tz.color}})
+end
 
 function gizmo_sys:init()
 	-- local cubeid = world:create_entity {
@@ -71,88 +129,42 @@ function gizmo_sys:init()
 	-- -- )
 end
 
-local ies = world:interface "ant.scene|ientity_state"
-
-local function resetAxisColor()
-	local xc = world.component "vector" {1, 0, 0, 1}
-	local yc = world.component "vector" {0, 1, 0, 1}
-	local zc = world.component "vector" {0, 0, 1, 1}
-	world:set(gizmo_obj.x.eid[1], "material", {properties={u_color = xc}})
-	world:set(gizmo_obj.x.eid[2], "material", {properties={u_color = xc}})
-	world:set(gizmo_obj.y.eid[1], "material", {properties={u_color = yc}})
-	world:set(gizmo_obj.y.eid[2], "material", {properties={u_color = yc}})
-	world:set(gizmo_obj.z.eid[1], "material", {properties={u_color = zc}})
-	world:set(gizmo_obj.z.eid[2], "material", {properties={u_color = zc}})
-end
 
 local function create_arrow_widget(axis_root, axis_str)
-	--[[
-		cylinde & cone
-		1. center in (0, 0, 0, 1)
-		2. size is 2
-		3. pointer to (0, 1, 0)
-
-		we need to:
-		1. rotate arrow, make it rotate to (0, 0, 1)
-		2. scale cylinder as it match cylinder_cone_ratio
-		3. scale cylinder radius
-	]]
-	local cone_rawlen<const> = 2
-	local cone_raw_halflen = cone_rawlen * 0.5
-	local cylinder_rawlen = cone_rawlen
-	local cylinder_len = cone_rawlen * cylinder_cone_ratio
-	local cylinder_halflen = cylinder_len * 0.5
-	local cylinder_scaleY = cylinder_len / cylinder_rawlen
-
-	local cylinder_radius = cylinder_rawradius or 0.65
-
-	local cone_raw_centerpos = mc.ZERO_PT
-	local cone_centerpos = math3d.add(math3d.add({0, cylinder_len, 0, 1}, cone_raw_centerpos), {0, cone_raw_halflen, 0, 1})
-	local cylinder_bottom_pos = math3d.vector(0, 0, 0, 1)
-	local cone_top_pos = math3d.add(cone_centerpos, {0, cone_raw_halflen, 0, 1})
-
-	local arrow_center = math3d.add(cylinder_bottom_pos, cone_top_pos)
-	local cylinder_raw_centerpos = mc.ZERO_PT
-	local cylinder_offset = math3d.sub(cylinder_raw_centerpos, arrow_center)
-
-	local cone_offset = math3d.sub(cone_centerpos, arrow_center)
+	local cylinder_len = 0.1
+	local cylinder_halflen = 0.1
+	local cone_raw_halflen = 0.1
 
 	local cone_t
 	local cylindere_t
 	local local_rotator
-	--local color
-	
-	--print("cylinder_halflen", cylinder_halflen)
-
 	if axis_str == "x" then
-		cone_t = math3d.ref(math3d.add(math3d.vector(cylinder_len, 0, 0), math3d.vector(cone_raw_halflen, 0, 0)))
-		local_rotator = math3d.ref(math3d.quaternion{0, 0, math.rad(-90)})
-		cylindere_t = math3d.ref(math3d.vector(cylinder_halflen, 0, 0))
-		--color = world.component "vector" {1, 0, 0, 1}
+		cone_t = math3d.add(math3d.vector(cylinder_len, 0, 0), math3d.vector(cone_raw_halflen, 0, 0))
+		local_rotator = math3d.quaternion{0, 0, math.rad(-90)}
+		cylindere_t = math3d.vector(cylinder_halflen, 0, 0)
 	elseif axis_str == "y" then
-		cone_t = math3d.ref(math3d.add(math3d.vector(0, cylinder_len, 0), math3d.vector(0, cone_raw_halflen, 0)))
-		local_rotator = math3d.ref(math3d.quaternion{0, 0, 0})
-		cylindere_t = math3d.ref(math3d.vector(0, cylinder_halflen, 0))
-		--color = world.component "vector" {0, 1, 0, 1}
+		cone_t = math3d.add(math3d.vector(0, cylinder_len, 0), math3d.vector(0, cone_raw_halflen, 0))
+		local_rotator = math3d.quaternion{0, 0, 0}
+		cylindere_t = math3d.vector(0, cylinder_halflen, 0)
 	elseif axis_str == "z" then
-		cone_t = math3d.ref(math3d.add(math3d.vector(0, 0, cylinder_len), math3d.vector(0, 0, cone_raw_halflen)))
-		local_rotator = math3d.ref(math3d.quaternion{math.rad(90), 0, 0})
-		cylindere_t = math3d.ref(math3d.vector(0, 0, cylinder_halflen))
-		--color = world.component "vector" {0, 0, 1, 1}
+		cone_t = math3d.add(math3d.vector(0, 0, cylinder_len), math3d.vector(0, 0, cone_raw_halflen))
+		local_rotator = math3d.quaternion{math.rad(90), 0, 0}
+		cylindere_t = math3d.vector(0, 0, cylinder_halflen)
 	end
 	local cylindereid = world:create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
 			"ant.scene|hierarchy_policy",
-			"ant.objcontroller|select",
+			--"ant.objcontroller|select",
 		},
 		data = {
 			scene_entity = true,
-			state = ies.create_state "visible|selectable",
+			--state = ies.create_state "visible|selectable",
+			state = ies.create_state "visible",
 			transform =  {
 				srt = world.component "srt" {
-					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
+					s = math3d.ref(math3d.vector(0.2, 10, 0.2)),
 					r = local_rotator,
 					t = cylindere_t,
 				},
@@ -166,19 +178,18 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 	}
 
-	--world:set(cylindereid, "material", {properties={u_color=color}})
-
 	local coneeid = world:create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
 			"ant.scene|hierarchy_policy",
-			"ant.objcontroller|select",
+			--"ant.objcontroller|select",
 		},
 		data = {
 			scene_entity = true,
-			state = ies.create_state "visible|selectable",
-			transform =  {srt=world.component "srt"{s = {100}, r = local_rotator, t = cone_t}},
+			--state = ies.create_state "visible|selectable",
+			state = ies.create_state "visible",
+			transform =  {srt=world.component "srt"{s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t}},
 			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
@@ -188,17 +199,12 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 	}
 
-	--world:set(coneeid, "material", {properties={u_color=color}})
-
 	if axis_str == "x" then
-		gizmo_obj.x.eid[1] = cylindereid
-		gizmo_obj.x.eid[2] = coneeid
+		gizmo_obj.tx.eid = {cylindereid, coneeid}
 	elseif axis_str == "y" then
-		gizmo_obj.y.eid[1] = cylindereid
-		gizmo_obj.y.eid[2] = coneeid
+		gizmo_obj.ty.eid = {cylindereid, coneeid}
 	elseif axis_str == "z" then
-		gizmo_obj.z.eid[1] = cylindereid
-		gizmo_obj.z.eid[2] = coneeid
+		gizmo_obj.tz.eid = {cylindereid, coneeid}
 	end
 end
 
@@ -249,7 +255,7 @@ function gizmo_sys:post_init()
 
 	world:set(coneeid, "material", {properties={u_color=world.component "vector" {0, 0.5, 0.5, 1}}})
 
-	local srt = {s = {0.02,0.02,0.02,0}, r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
+	local srt = {s = {1}, r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
 		policy = {
 			"ant.general|name",
@@ -257,14 +263,31 @@ function gizmo_sys:post_init()
 		},
 		data = {
 			transform =  {srt= world.component "srt"(srt)},
-			scene_entity = true,
-			name = "axis_root",
+			name = "axis root",
 		},
 	}
+
 	create_arrow_widget(axis_root, "x")
 	create_arrow_widget(axis_root, "y")
 	create_arrow_widget(axis_root, "z")
 	resetAxisColor()
+	 
+	local rot_eid = computil.create_circle_entity(axis_radius, 72, {t = {0, 0, 0, 1}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})}, "rotate_gizmo_x")
+	world:set(rot_eid, "material", {properties={u_color=world.component "vector" {1, 0, 0, 1}}})
+	world[rot_eid].parent = axis_root
+	gizmo_obj.rx.eid = rot_eid
+
+	rot_eid = computil.create_circle_entity(axis_radius, 72, {t = {0, 0, 0, 1}}, "rotate_gizmo_y")
+	world:set(rot_eid, "material", {properties={u_color=world.component "vector" {0, 1, 0, 1}}})
+	world[rot_eid].parent = axis_root
+	gizmo_obj.ry.eid = rot_eid
+
+	rot_eid = computil.create_circle_entity(axis_radius, 72, {t = {0, 0, 0, 1}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "rotate_gizmo_z")
+	world:set(rot_eid, "material", {properties={u_color=world.component "vector" {0, 0, 1, 1}}})
+	world[rot_eid].parent = axis_root
+	gizmo_obj.rz.eid = rot_eid
+	--showGizmoByState()
+	showMoveGizmo(false)
 	gizmo_obj.root = world[axis_root]
 end
 
@@ -273,18 +296,16 @@ local keypress_mb = world:sub{"keyboard"}
 local pickup_mb = world:sub {"pickup"}
 
 local function isGizmo(eid)
-	if eid == gizmo_obj.x.eid[1] or eid == gizmo_obj.x.eid[2] then
+	if eid == gizmo_obj.tx.eid[1] or eid == gizmo_obj.tx.eid[2] then
 		return true
-	elseif eid == gizmo_obj.y.eid[1] or eid == gizmo_obj.y.eid[2] then
+	elseif eid == gizmo_obj.ty.eid[1] or eid == gizmo_obj.ty.eid[2] then
 		return true
-	elseif eid == gizmo_obj.z.eid[1] or eid == gizmo_obj.z.eid[2] then
+	elseif eid == gizmo_obj.tz.eid[1] or eid == gizmo_obj.tz.eid[2] then
 		return true
 	else
 		return false
 	end
 end
-
-
 
 local function worldToScreen(world_pos)
 	local camera = camerautil.main_queue_camera(world)
@@ -335,35 +356,37 @@ local function viewToAxisConstraint(point, axis, origin)
 	return math3d.totable(math3d.mul(factor, axisVec))
 end
 
-local function selectAxis(x, y, hit_radius)
+local rotateHitRadius = 0.02
+local moveHitRadiusPixel = 10
+local function selectAxis(x, y)
 	local hp = {x, y, 0}
 	local highlight = world.component "vector" {1, 1, 0, 1}
 	resetAxisColor()
 
 	local start = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3]))
-	local end_x = worldToScreen(math3d.vector(gizmo_obj.position[1] + axis_length, gizmo_obj.position[2], gizmo_obj.position[3]))
+	local end_x = worldToScreen(math3d.vector(gizmo_obj.position[1] + axis_radius * gizmo_scale, gizmo_obj.position[2], gizmo_obj.position[3]))
 	
 	local ret = pointToLineDistance2D(start, end_x, hp)
-	if ret < hit_radius then
-		world:set(gizmo_obj.x.eid[1], "material", {properties={u_color=highlight}})
-		world:set(gizmo_obj.x.eid[2], "material", {properties={u_color=highlight}})
-		return gizmo_obj.x
+	if ret < moveHitRadiusPixel then
+		world:set(gizmo_obj.tx.eid[1], "material", {properties={u_color=highlight}})
+		world:set(gizmo_obj.tx.eid[2], "material", {properties={u_color=highlight}})
+		return gizmo_obj.tx
 	end
 
-	local end_y = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2] + axis_length, gizmo_obj.position[3]))
+	local end_y = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2] + axis_radius * gizmo_scale, gizmo_obj.position[3]))
 	ret = pointToLineDistance2D(start, end_y, hp)
-	if ret < hit_radius then
-		world:set(gizmo_obj.y.eid[1], "material", {properties={u_color=highlight}})
-		world:set(gizmo_obj.y.eid[2], "material", {properties={u_color=highlight}})
-		return gizmo_obj.y
+	if ret < moveHitRadiusPixel then
+		world:set(gizmo_obj.ty.eid[1], "material", {properties={u_color=highlight}})
+		world:set(gizmo_obj.ty.eid[2], "material", {properties={u_color=highlight}})
+		return gizmo_obj.ty
 	end
 
-	local end_z = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3] + axis_length))
+	local end_z = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3] + axis_radius * gizmo_scale))
 	ret = pointToLineDistance2D(start, end_z, hp)
-	if ret < hit_radius then
-		world:set(gizmo_obj.z.eid[1], "material", {properties={u_color=highlight}})
-		world:set(gizmo_obj.z.eid[2], "material", {properties={u_color=highlight}})
-		return gizmo_obj.z
+	if ret < moveHitRadiusPixel then
+		world:set(gizmo_obj.tz.eid[1], "material", {properties={u_color=highlight}})
+		world:set(gizmo_obj.tz.eid[2], "material", {properties={u_color=highlight}})
+		return gizmo_obj.tz
 	end
 	return nil
 end
@@ -371,26 +394,62 @@ end
 local function updateGizmoScale()
 	local camera = camerautil.main_queue_camera(world)
 	local gizmo_dist = math3d.length(math3d.sub(camera.eyepos, math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3])))
-	local scale = gizmo_dist * 0.007
-	gizmo_obj.root.transform.srt.s = math3d.vector(scale, scale, scale)
+	gizmo_scale = gizmo_dist * 0.6
+	gizmo_obj.root.transform.srt.s = math3d.vector(gizmo_scale, gizmo_scale, gizmo_scale)
 end
 
-local function drawRotateGizmo()
-	-- -- x axis
-	-- local lx = {math3d.vector(0,0,0), math3d.vector(1,0,0)}
-	-- iwd.draw_lines(lx, world.component "srt" {s = {1.0}, t = {0.0, 0.5, 0.0, 1}}, 0xff0000ff)
-	-- -- y axis
-	-- local ly = {math3d.vector(0,0,0), math3d.vector(0,1,0)}
-	-- iwd.draw_lines(ly, world.component "srt" {s = {1.0}, t = {0.0, 0.5, 0.0, 1}}, 0xff00ff00)
-	-- -- z axis
-	-- local lz = {math3d.vector(0,0,0), math3d.vector(0,0,1)}
-	-- iwd.draw_lines(lz, world.component "srt" {s = {1.0}, t = {0.0, 0.5, 0.0, 1}}, 0xffff0000)
-	-- local seg = 72
-	-- local radius = 0.5
-	-- for i = 1, seg do
-	-- 	local lz = {math3d.vector(0,0,0), math3d.vector(0,0,1)}
-	-- 	iwd.draw_lines(lz, world.component "srt" {s = {1.0}, t = {gizmo_position[1], gizmo_position[2], gizmo_position[3], 1}}, 0xffff0000)
-	-- end
+local function distanceBetweenLines(p1, dir1, p2, dir2)
+	local cross = math3d.cross(math3d.vector(dir2[1], dir2[2], dir2[3]), math3d.vector(dir1[1], dir1[2], dir1[3]))
+	return math3d.dot(cross, math3d.sub(math3d.vector(p2[1], p2[2], p2[3]), math3d.vector(p1[1], p1[2], p1[3])))
+end
+
+local function rayHitPlane(ray, plane)
+	local rayOriginVec = math3d.vector(ray.origin[1], ray.origin[2], ray.origin[3])
+	local rayDirVec = math3d.vector(ray.dir[1], ray.dir[2], ray.dir[3])
+	local planeDirVec = math3d.vector(plane.n[1], plane.n[2], plane.n[3])
+	
+	local d = math3d.dot(planeDirVec, rayDirVec)
+	if math.abs(d) > 0.00001 then
+		local t = -(math3d.dot(planeDirVec, rayOriginVec) + plane.d) / d
+		if t >= 0.0 then
+			return t
+		end	
+	end
+	return 0
+end
+
+local function selectRotateAxis(x, y)
+	local q = world:singleton_entity("main_queue")
+	local ray = camera_motion.ray(q.camera_eid, {x, y})
+	local gizmoPosVec = math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3])
+	
+	local function hittestRotateAxis(axis)
+		local t = rayHitPlane(ray, {n = axis.dir, d = -math3d.dot(math3d.vector(axis.dir[1], axis.dir[2], axis.dir[3]), gizmoPosVec)})
+		local hitPosVec = math3d.vector(ray.origin[1] + t * ray.dir[1], ray.origin[2] + t * ray.dir[2], ray.origin[3] + t * ray.dir[3])
+		local dist = math3d.length(math3d.sub(gizmoPosVec, hitPosVec))
+		if math.abs(dist - gizmo_scale * axis_radius) < rotateHitRadius * gizmo_scale then
+			world:set(axis.eid, "material", {properties={u_color=gizmo_obj.highlight}})
+			return hitPosVec
+		else
+			world:set(axis.eid, "material", {properties={u_color=axis.color}})
+			return nil
+		end
+	end
+
+	local hit = hittestRotateAxis(gizmo_obj.rx)
+	if hit then
+		return gizmo_obj.rx, hit
+	end
+
+	hit = hittestRotateAxis(gizmo_obj.ry)
+	if hit then
+		return gizmo_obj.ry, hit
+	end
+
+	hit = hittestRotateAxis(gizmo_obj.rz)
+	if hit then
+		return gizmo_obj.rz, hit
+	end
 end
 
 local cameraZoom = world:sub {"camera", "zoom"}
@@ -399,17 +458,20 @@ local mouseMove = world:sub {"mousemove"}
 local mouseDown = world:sub {"mousedown"}
 local mouseUp = world:sub {"mouseup"}
 
-local lastGizmoPos
+local gizmoState = world:sub {"gizmo"}
+
 local lastMousePos
+
+local lastGizmoPos
 local initOffset
 local function moveGizmo(x, y)
-	local newOffset = viewToAxisConstraint({x, y}, selected_axis.dir, lastGizmoPos)
+	local newOffset = viewToAxisConstraint({x, y}, move_axis.dir, lastGizmoPos)
 	local deltaOffset = {newOffset[1] - initOffset[1], newOffset[2] - initOffset[2], newOffset[3] - initOffset[3]}
 	gizmo_obj.position = {
 		lastGizmoPos[1] + deltaOffset[1],
 		lastGizmoPos[2] + deltaOffset[2],
 		lastGizmoPos[3] + deltaOffset[3]
-	}	--math3d.totable(world[eid].transform.srt.t)
+	}
 	local new_pos = math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3])
 	gizmo_obj.root.transform.srt.t = new_pos
 	if gizmo_obj.target_eid then
@@ -417,28 +479,96 @@ local function moveGizmo(x, y)
 	end
 	updateGizmoScale()
 end
+local lastRotateAxis = math3d.ref()
+local lastRotate = math3d.ref()
+local lastHit = math3d.ref()
+local updateClockwise = false
+local clockwise = false
+local function rotateGizmo(x, y)
+
+	local q = world:singleton_entity("main_queue")
+	local ray = camera_motion.ray(q.camera_eid, {x, y})
+
+	local gizmoPosVec = math3d.vector(gizmo_obj.position)
+	local t = rayHitPlane(ray, {n = rotate_axis.dir, d = -math3d.dot(math3d.vector(rotate_axis.dir), gizmoPosVec)})
+	local hitPosVec = math3d.vector(ray.origin[1] + t * ray.dir[1], ray.origin[2] + t * ray.dir[2], ray.origin[3] + t * ray.dir[3])
+	
+	local v0 = math3d.normalize(math3d.sub(lastHit, gizmoPosVec))
+	local v1 = math3d.normalize(math3d.sub(hitPosVec, gizmoPosVec))
+	local deltaAngle = math.acos(math3d.dot(v0, v1)) * 180 / math.pi
+	local dir = math3d.dot(math3d.cross(v0, v1), rotate_axis.dir)
+
+	if updateClockwise then
+		updateClockwise = false
+		if dir < 0 then
+			clockwise = false
+		else
+			clockwise = true
+		end
+	end
+
+	if clockwise then
+		if dir < 0 then
+			deltaAngle = deltaAngle - 360
+		else
+			deltaAngle = -deltaAngle
+		end
+	else
+		if dir > 0 then
+			deltaAngle = 360 - deltaAngle
+		end
+	end
+
+	local quat
+	if rotate_axis == gizmo_obj.rx then
+		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(-deltaAngle) }
+	elseif rotate_axis == gizmo_obj.ry then
+		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(-deltaAngle) }
+	elseif rotate_axis == gizmo_obj.rz then
+		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(-deltaAngle) }
+	end
+	
+	world[gizmo_obj.target_eid].transform.srt.r = math3d.mul(lastRotate, quat)
+end
+
+local function scaleGizmo(x, y)
+
+end
 
 function gizmo_sys:data_changed()
 	for _ in cameraZoom:unpack() do
 		updateGizmoScale()
 	end
-
+	for _, what in gizmoState:unpack() do
+		if what == "select" then
+			gizmo_obj.mode = SELECT
+		elseif what == "rotate" then
+			gizmo_obj.mode = ROTATE
+		elseif what == "move" then
+			gizmo_obj.mode = MOVE
+		elseif what == "scale" then
+			gizmo_obj.mode = SCALE
+		end
+	end
 	for _, what, x, y in mouseDown:unpack() do
 		if what == "LEFT" then
-			selected_axis = selectAxis(x, y, 10)
-			if selected_axis then
+			move_axis = selectAxis(x, y)
+			if move_axis then
 				lastGizmoPos = {gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3]}
 				lastMousePos = {x, y}
-				initOffset = viewToAxisConstraint(lastMousePos, selected_axis.dir, lastGizmoPos)
+				initOffset = viewToAxisConstraint(lastMousePos, move_axis.dir, lastGizmoPos)
 			else
-				gizmo_obj.target_eid = nil
+				rotate_axis, lastHit.v = selectRotateAxis(x, y)
+				if rotate_axis and gizmo_obj.target_eid then
+					updateClockwise = true
+					--math3d.inverse(world[gizmo_obj.target_eid].transform.srt)
+					lastRotateAxis.v = math3d.transform(math3d.inverse(world[gizmo_obj.target_eid].transform.srt.r), rotate_axis.dir, 0)
+					lastRotate.q = world[gizmo_obj.target_eid].transform.srt.r
+				end
 			end
-			-- local sw, sh = rhwi.screen_size()
-			-- local camera = camerautil.main_queue_camera(world)
-			-- local q = world:singleton_entity("main_queue")
-			-- local ray = camera_motion.ray(q.camera_eid, {x, y})
-			-- print("ray.origin",ray.origin[1], ray.origin[2], ray.origin[3], ray.origin[4])
-			-- print("ray.dir",ray.dir[1], ray.dir[2], ray.dir[3])
+			print("LEFT DOWN")
+			showMoveGizmo(true)
+			--gizmo_obj.target_eid = nil
 		end
 	end
 
@@ -450,14 +580,19 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouseMove:unpack() do
 		if what == "UNKNOWN" then
-			selectAxis(x, y, 10)
+			selectAxis(x, y)
+			selectRotateAxis(x, y)
 		end
 	end
 	
 	for _, what, x, y, dx, dy in mouseDrag:unpack() do
 		if what == "LEFT" then
-			if selected_axis then
+			if move_axis then
 				moveGizmo(x, y)
+			elseif rotate_axis then
+				rotateGizmo(x, y)
+			elseif scale_axis then
+				scaleGizmo(x, y)
 			else
 				world:pub { "camera", "pan", dx, dy }
 			end
@@ -469,21 +604,16 @@ function gizmo_sys:data_changed()
 	for _,pick_id,pick_ids in pickup_mb:unpack() do
         local eid = pick_id
         if eid and world[eid] then
-            -- if not world[eid].gizmo_object then
-            --     hub.publish(WatcherEvent.RTE.SceneEntityPick,{eid})
-            --     on_pick_entity(eid)
-			-- end
-			--onChangeColor(world[eid])
-			if not isGizmo(eid) and gizmo_obj.target_eid ~= eid then
+			if gizmo_obj.target_eid ~= eid then
 				gizmo_obj.position = math3d.totable(world[eid].transform.srt.t)
 				gizmo_obj.root.transform.srt.t = world[eid].transform.srt.t
 				gizmo_obj.target_eid = eid
 				updateGizmoScale()
+				showGizmoByState()
 			end
         else
             -- hub.publish(WatcherEvent.RTE.SceneEntityPick,{})
             -- on_pick_entity(nil)
 		end
 	end
-	drawRotateGizmo()
 end

@@ -5,4 +5,4 @@ package.path = table.concat({
 }, ";")
 
 require "bootstrap"
-import_package "ant.imguibase".runtime.start "ant.test.prefab_editor"
+import_package "ant.imguibase".runtime.start("ant.test.prefab_editor", 1280, 720)

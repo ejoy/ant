@@ -15,6 +15,7 @@ return {
             "ant.test.prefab_editor|gizmo_system",
             "ant.test.prefab_editor|input_system",
             "ant.test.prefab_editor|camera_system",
+            "ant.test.prefab_editor|gui_system",
             "ant.objcontroller|pickup_system"
         }
     }

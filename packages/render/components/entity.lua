@@ -238,6 +238,19 @@ function ientity.create_axis_entity(srt, color, name)
 	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh)
 end
 
+function ientity.create_circle_entity(radius, slices, srt, name)
+	local circle_vb, circle_ib = geolib.cricle(radius, slices)
+	local gvb = {}
+	--color = color or 0xffffffff
+	for _, v in ipairs(circle_vb) do
+		for _, vv in ipairs(v) do
+			gvb[#gvb+1] = vv
+		end
+		gvb[#gvb+1] = 0xffffffff
+	end
+	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
+	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_singlecolor.material", name, mesh)
+end
 
 local skybox_mesh
 local function get_skybox_mesh()
