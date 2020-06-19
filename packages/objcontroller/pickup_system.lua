@@ -355,10 +355,18 @@ local function check_next_step(pickupcomp)
 	pickupcomp.nextstep = state_list[pickupcomp.nextstep]	
 end
 
+local function has_any_visible_set(results)
+	for _, f in pairs(results) do
+		if f.visible_set then
+			return true
+		end
+	end
+end
+
 function pickup_sys:pickup()
 	local pickupentity = world:singleton_entity "pickup"
 
-	if pickupentity.visible then
+	if pickupentity.visible and has_any_visible_set(pickupentity.primitive_filter.result) then
 		local pickupcomp = pickupentity.pickup
 		local nextstep = pickupcomp.nextstep
 		if nextstep == "blit" then
