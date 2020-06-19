@@ -367,21 +367,22 @@ function pickup_sys:pickup()
 	local pickupentity = world:singleton_entity "pickup"
 
 	if pickupentity.visible then 
-		if has_any_visible_set(pickupentity.primitive_filter.result) then
-			local pickupcomp = pickupentity.pickup
-			local nextstep = pickupcomp.nextstep
-			if nextstep == "blit" then
-				local fb = fbmgr.get(pickupentity.render_target.fb_idx)
-				local rb = fbmgr.get_rb(fb[1])
-				blit(pickupcomp.blit_buffer, rb)
-			elseif nextstep	== "select_obj" then
+		local needcheck = has_any_visible_set(pickupentity.primitive_filter.result)
+		local pickupcomp = pickupentity.pickup
+		local nextstep = pickupcomp.nextstep
+		if nextstep == "blit" and needcheck then
+			local fb = fbmgr.get(pickupentity.render_target.fb_idx)
+			local rb = fbmgr.get_rb(fb[1])
+			blit(pickupcomp.blit_buffer, rb)
+		elseif nextstep	== "select_obj" then
+			if needcheck then
 				select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
-				enable_pickup(false)
+			else
+				print("not found any eid")
 			end
-
-			check_next_step(pickupcomp)
-		else
-			print("not found any eid")
+			enable_pickup(false)
 		end
+
+		check_next_step(pickupcomp)
 	end
 end
