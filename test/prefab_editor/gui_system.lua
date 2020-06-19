@@ -60,74 +60,25 @@ function m:ui_update()
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
         imguiBeginToolbar()
         if imguiToolbar("🚫", "Select", status.GizmoMode == "select") then
-            world:pub { "gizmo", "select" }--status.CameraMode = "disable"
+            status.GizmoMode = "select"
+            world:pub { "gizmo", "select" }
         end
         if imguiToolbar("🔄", "Rotate", status.GizmoMode == "rotate") then
-            world:pub { "gizmo", "rotate" }--status.CameraMode = "rotate"
+            status.GizmoMode = "rotate"
+            world:pub { "gizmo", "rotate" }
         end
-        if imguiToolbar("🤚", "move", status.GizmoMode == "move") then
-            world:pub { "gizmo", "move" }--status.CameraMode = "pan"
+        if imguiToolbar("🤚", "Move", status.GizmoMode == "move") then
+            status.GizmoMode = "move"
+            world:pub { "gizmo", "move" }
         end
         if imguiToolbar("🔍", "Scale", status.GizmoMode == "scale") then
-            world:pub { "gizmo", "scale" }--status.CameraMode = "zoom"
+            status.GizmoMode = "scale"
+            world:pub { "gizmo", "scale" }
         end
         imguiEndToolbar()
     end
 end
 
--- local eventMouse = world:sub {"mouse"}
--- local eventMouseWheel = world:sub {"mouse_wheel"}
--- local kRotationSpeed <const> = 1
--- local kZoomSpeed <const> = 1
--- local kPanSpeed <const> = 1
--- local kWheelSpeed <const> = 0.5
--- local lastMouse
--- local lastX, lastY
-
--- local function mouseRotate(dx, dy)
---     world:pub { "camera", "rotate", dx*kRotationSpeed, dy*kRotationSpeed }
--- end
-
--- local function mouseZoom(_, dy)
---     world:pub { "camera", "zoom", -dy*kZoomSpeed }
--- end
-
--- local function mousePan(dx, dy)
---     world:pub { "camera", "pan", dx*kPanSpeed, dy*kPanSpeed }
--- end
-
--- local function mouseEvent(what, dx, dy)
---     if status.CameraMode == "rotate" then
---         if what == "LEFT" then
---             mouseRotate(dx, dy)
---         else
---             mouseZoom(dx, dy)
---         end
---     elseif status.CameraMode == "pan" then
---         if what == "LEFT" then
---             mousePan(dx, dy)
---         else
---             mouseZoom(dx, dy)
---         end
---     elseif status.CameraMode == "zoom" then
---         if what == "LEFT" then
---             mouseZoom(dx, dy)
---         end
---     end
--- end
-
 function m:data_changed()
-    -- for _,what,state,x,y in eventMouse:unpack() do
-    --     if state == "DOWN" then
-    --         lastX, lastY = x, y
-    --         lastMouse = what
-    --     elseif state == "MOVE" and lastMouse == what then
-    --         local dpiX, dpiY = rhwi.dpi()
-    --         mouseEvent(what, (x - lastX) / dpiX, (y - lastY) / dpiY)
-    --         lastX, lastY = x, y
-    --     end
-    -- end
-    -- for _,delta in eventMouseWheel:unpack() do
-    --     world:pub { "camera", "zoom", -delta*kWheelSpeed }
-    -- end
+
 end

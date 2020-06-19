@@ -14,26 +14,36 @@ local camera_motion = world:interface "ant.objcontroller|camera_motion"
 local ies = world:interface "ant.scene|ientity_state"
 
 local gizmo_scale = 1.0
-local axis_radius = 0.2
+local axis_len = 0.2
 local move_axis
 local rotate_axis
 local scale_axis
-local SELECT = 0
-local MOVE = 1
-local ROTATE = 2
-local SCALE = 3
-
+local SELECT <const> = 0
+local MOVE <const> = 1
+local ROTATE <const> = 2
+local SCALE <const> = 3
+local DIR_X <const> = {1, 0, 0}
+local DIR_Y <const> = {0, 1, 0}
+local DIR_Z <const> = {0, 0, 1}
+local COLOR_X = world.component "vector" {1, 0, 0, 1}
+local COLOR_Y = world.component "vector" {0, 1, 0, 1}
+local COLOR_Z = world.component "vector" {0, 0, 1, 1}
 local gizmo_obj = {
 	mode = SELECT,
 	position = {0,0,0},
 	highlight = world.component "vector" {1, 1, 0, 1},
-	tx = {dir = {1, 0, 0}, color = world.component "vector" {1, 0, 0, 1}},
-	ty = {dir = {0, 1, 0}, color = world.component "vector" {0, 1, 0, 1}},
-	tz = {dir = {0, 0, 1}, color = world.component "vector" {0, 0, 1, 1}},
-
-	rx = {dir = {1, 0, 0}, color = world.component "vector" {1, 0, 0, 1}},
-	ry = {dir = {0, 1, 0}, color = world.component "vector" {0, 1, 0, 1}},
-	rz = {dir = {0, 0, 1}, color = world.component "vector" {0, 0, 1, 1}},
+	--move
+	tx = {dir = DIR_X, color = COLOR_X},
+	ty = {dir = DIR_Y, color = COLOR_Y},
+	tz = {dir = DIR_Z, color = COLOR_Z},
+	--rotate
+	rx = {dir = DIR_X, color = COLOR_X},
+	ry = {dir = DIR_Y, color = COLOR_Y},
+	rz = {dir = DIR_Z, color = COLOR_Z},
+	--scale
+	sx = {dir = DIR_X, color = COLOR_X},
+	sy = {dir = DIR_Y, color = COLOR_Y},
+	sz = {dir = DIR_Z, color = COLOR_Z},
 }
 
 
@@ -47,13 +57,21 @@ local function showMoveGizmo(show)
 end
 
 local function showRotateGizmo(show)
-	ies.set_state(gizmo_obj.rx.eid, "visible", show)
-	ies.set_state(gizmo_obj.ry.eid, "visible", show)
-	ies.set_state(gizmo_obj.rz.eid, "visible", show)
+	ies.set_state(gizmo_obj.rx.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.rx.eid[2], "visible", show)
+	ies.set_state(gizmo_obj.ry.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.ry.eid[2], "visible", show)
+	ies.set_state(gizmo_obj.rz.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.rz.eid[2], "visible", show)
 end
 
 local function showScaleGizmo(show)
-
+	ies.set_state(gizmo_obj.sx.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.sx.eid[2], "visible", show)
+	ies.set_state(gizmo_obj.sy.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.sy.eid[2], "visible", show)
+	ies.set_state(gizmo_obj.sz.eid[1], "visible", show)
+	ies.set_state(gizmo_obj.sz.eid[2], "visible", show)
 end
 
 local function showGizmoByState(show)
@@ -91,45 +109,6 @@ local function resetAxisColor()
 end
 
 function gizmo_sys:init()
-	-- local cubeid = world:create_entity {
-	-- 	policy = {
-	-- 		"ant.render|render",
-	-- 		"ant.general|name",
-	-- 		"ant.objcontroller|select",
-	-- 	},
-	-- 	data = {
-	-- 		scene_entity = true,
-	--		state = ies.create_state "visible|selectable",
-	-- 		transform =  {
-	-- 			srt= world.component "srt" {
-	-- 				s={100},
-	-- 				t={0, 2, 0, 0}
-	-- 			}
-	-- 		},
-	-- 		material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
-	-- 		mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-	-- 		name = "test_cube",
-	-- 	}
-	-- }
-	--world:set(cubeid, "material", {properties={u_color=world.component "vector"{1, 1, 1, 1}}})
-
-	-- local rooteid = world:create_entity {
-	-- 	policy = {
-	-- 		"ant.scene|transform_policy",
-	-- 		"ant.general|name",
-	-- 	},
-	-- 	data = {
-	-- 		transform =  {
-	-- 			srt = world.component "srt" {
-	-- 				t = {0, 0, 3, 1}
-	-- 			}
-	-- 		},
-	-- 		name = "mesh_root",
-	-- 		scene_entity = true,
-	-- 	}
-	-- }
-	-- -- world:instance("/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab", {import={root=rooteid}})
-
     -- -- computil.create_plane_entity(
 	-- -- 	{t = {0, 0, 0, 1}, s = {50, 1, 50, 0}},
 	-- -- 	"/pkg/ant.resources/materials/mesh_shadow.material",
@@ -138,38 +117,31 @@ function gizmo_sys:init()
 	-- -- )
 end
 
-
 local function create_arrow_widget(axis_root, axis_str)
-	local cylinder_len = 0.1
-	local cylinder_halflen = 0.1
-	local cone_raw_halflen = 0.1
-
 	local cone_t
 	local cylindere_t
 	local local_rotator
 	if axis_str == "x" then
-		cone_t = math3d.add(math3d.vector(cylinder_len, 0, 0), math3d.vector(cone_raw_halflen, 0, 0))
+		cone_t = math3d.vector(axis_len, 0, 0)
 		local_rotator = math3d.quaternion{0, 0, math.rad(-90)}
-		cylindere_t = math3d.vector(cylinder_halflen, 0, 0)
+		cylindere_t = math3d.vector(0.5 * axis_len, 0, 0)
 	elseif axis_str == "y" then
-		cone_t = math3d.add(math3d.vector(0, cylinder_len, 0), math3d.vector(0, cone_raw_halflen, 0))
+		cone_t = math3d.vector(0, axis_len, 0)
 		local_rotator = math3d.quaternion{0, 0, 0}
-		cylindere_t = math3d.vector(0, cylinder_halflen, 0)
+		cylindere_t = math3d.vector(0, 0.5 * axis_len, 0)
 	elseif axis_str == "z" then
-		cone_t = math3d.add(math3d.vector(0, 0, cylinder_len), math3d.vector(0, 0, cone_raw_halflen))
+		cone_t = math3d.vector(0, 0, axis_len)
 		local_rotator = math3d.quaternion{math.rad(90), 0, 0}
-		cylindere_t = math3d.vector(0, 0, cylinder_halflen)
+		cylindere_t = math3d.vector(0, 0, 0.5 * axis_len)
 	end
 	local cylindereid = world:create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
 			"ant.scene|hierarchy_policy",
-			--"ant.objcontroller|select",
 		},
 		data = {
 			scene_entity = true,
-			--state = ies.create_state "visible|selectable",
 			state = ies.create_state "visible",
 			transform =  {
 				srt = world.component "srt" {
@@ -192,11 +164,9 @@ local function create_arrow_widget(axis_root, axis_str)
 			"ant.render|render",
 			"ant.general|name",
 			"ant.scene|hierarchy_policy",
-			--"ant.objcontroller|select",
 		},
 		data = {
 			scene_entity = true,
-			--state = ies.create_state "visible|selectable",
 			state = ies.create_state "visible",
 			transform =  {srt=world.component "srt"{s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t}},
 			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
@@ -274,45 +244,91 @@ function gizmo_sys:post_init()
 			name = "axis root",
 		},
 	}
-
+	gizmo_obj.root = world[axis_root]
 	create_arrow_widget(axis_root, "x")
 	create_arrow_widget(axis_root, "y")
 	create_arrow_widget(axis_root, "z")
 	resetAxisColor()
-	 
-	local rot_eid = computil.create_circle_entity(axis_radius, 72, {t = {0, 0, 0, 1}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})}, "rotate_gizmo_x")
-	imaterial.set_property(rot_eid, "u_color", world.component "vector" {1, 0, 0, 1})
-	world[rot_eid].parent = axis_root
-	gizmo_obj.rx.eid = rot_eid
 
-	rot_eid = computil.create_circle_entity(axis_radius, 72, {t = {0, 0, 0, 1}}, "rotate_gizmo_y")
-	imaterial.set_property(rot_eid, "u_color", world.component "vector" {0, 1, 0, 1})
+	-- roate axis
+	local rot_eid = computil.create_circle_entity(axis_len, 72, {r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})}, "rotate_gizmo_x")
+	imaterial.set_property(rot_eid, "u_color", gizmo_obj.rx.color)
 	world[rot_eid].parent = axis_root
-	gizmo_obj.ry.eid = rot_eid
+	local line_eid = computil.create_line_entity({}, {0, 0, 0}, {axis_len, 0, 0})
+	imaterial.set_property(line_eid, "u_color", gizmo_obj.rx.color)
+	world[line_eid].parent = axis_root
+	gizmo_obj.rx.eid = {rot_eid, line_eid}
 
-	rot_eid = computil.create_circle_entity(axis_radius, 72, {t = {0, 0, 0, 1}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "rotate_gizmo_z")
-	imaterial.set_property(rot_eid, "u_color", world.component "vector" {0, 0, 1, 1})
+	rot_eid = computil.create_circle_entity(axis_len, 72, {}, "rotate_gizmo_y")
+	imaterial.set_property(rot_eid, "u_color", gizmo_obj.ry.color)
 	world[rot_eid].parent = axis_root
-	gizmo_obj.rz.eid = rot_eid
+	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, axis_len, 0})
+	imaterial.set_property(line_eid, "u_color", gizmo_obj.ry.color)
+	world[line_eid].parent = axis_root
+	gizmo_obj.ry.eid = {rot_eid, line_eid}
+
+	rot_eid = computil.create_circle_entity(axis_len, 72, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "rotate_gizmo_z")
+	imaterial.set_property(rot_eid, "u_color", gizmo_obj.rz.color)
+	world[rot_eid].parent = axis_root
+	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, axis_len})
+	imaterial.set_property(line_eid, "u_color", gizmo_obj.rz.color)
+	world[line_eid].parent = axis_root
+	gizmo_obj.rz.eid = {rot_eid, line_eid}
+
+	-- scale axis
+	local function create_scale_cube(srt, color, axis_name)
+		local eid = world:create_entity {
+			policy = {
+				"ant.render|render",
+				"ant.general|name",
+				"ant.scene|hierarchy_policy",
+				"ant.objcontroller|select",
+			},
+			data = {
+				scene_entity = true,
+				state = ies.create_state "visible|selectable",
+				transform =  {
+					srt= world.component "srt"(srt or {})
+				},
+				material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+				mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+				name = "scale_cube" .. axis_name
+			}
+		}
+		imaterial.set_property(eid, "u_color", color)
+		return eid
+	end
+	local cubeScale = 2.5
+	local cube_eid = create_scale_cube({s = {cubeScale}}, world.component "vector" {0.5, 0.5, 0.5, 1}, "0")
+	world[cube_eid].parent = axis_root
+
+	cube_eid = create_scale_cube({t = {axis_len, 0, 0, 1}, s = {cubeScale}}, COLOR_X, "x")
+	world[cube_eid].parent = axis_root
+	line_eid = computil.create_line_entity({}, {0, 0, 0}, {axis_len, 0, 0})
+	imaterial.set_property(line_eid, "u_color", COLOR_X)
+	world[line_eid].parent = axis_root
+	gizmo_obj.sx.eid = {cube_eid, line_eid}
+
+	cube_eid = create_scale_cube({t = {0, axis_len, 0, 1}, s = {cubeScale}}, COLOR_Y, "y")
+	world[cube_eid].parent = axis_root
+	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, axis_len, 0})
+	imaterial.set_property(line_eid, "u_color", COLOR_Y)
+	world[line_eid].parent = axis_root
+	gizmo_obj.sy.eid = {cube_eid, line_eid}
+
+	cube_eid = create_scale_cube({t = {0, 0, axis_len, 1}, s = {cubeScale}}, COLOR_Z, "z")
+	world[cube_eid].parent = axis_root
+	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, axis_len})
+	imaterial.set_property(line_eid, "u_color", COLOR_Z)
+	world[line_eid].parent = axis_root
+	gizmo_obj.sz.eid = {cube_eid, line_eid}
 	showGizmoByState(false)
-	gizmo_obj.root = world[axis_root]
+	--showScaleGizmo(true)
 end
 
 local keypress_mb = world:sub{"keyboard"}
 
 local pickup_mb = world:sub {"pickup"}
-
-local function isGizmo(eid)
-	if eid == gizmo_obj.tx.eid[1] or eid == gizmo_obj.tx.eid[2] then
-		return true
-	elseif eid == gizmo_obj.ty.eid[1] or eid == gizmo_obj.ty.eid[2] then
-		return true
-	elseif eid == gizmo_obj.tz.eid[1] or eid == gizmo_obj.tz.eid[2] then
-		return true
-	else
-		return false
-	end
-end
 
 local function worldToScreen(world_pos)
 	local camera = camerautil.main_queue_camera(world)
@@ -374,7 +390,7 @@ local function selectAxis(x, y)
 	resetAxisColor()
 
 	local start = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3]))
-	local end_x = worldToScreen(math3d.vector(gizmo_obj.position[1] + axis_radius * gizmo_scale, gizmo_obj.position[2], gizmo_obj.position[3]))
+	local end_x = worldToScreen(math3d.vector(gizmo_obj.position[1] + axis_len * gizmo_scale, gizmo_obj.position[2], gizmo_obj.position[3]))
 	
 	local ret = pointToLineDistance2D(start, end_x, hp)
 	if ret < moveHitRadiusPixel then
@@ -383,7 +399,7 @@ local function selectAxis(x, y)
 		return gizmo_obj.tx
 	end
 
-	local end_y = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2] + axis_radius * gizmo_scale, gizmo_obj.position[3]))
+	local end_y = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2] + axis_len * gizmo_scale, gizmo_obj.position[3]))
 	ret = pointToLineDistance2D(start, end_y, hp)
 	if ret < moveHitRadiusPixel then
 		imaterial.set_property(gizmo_obj.ty.eid[1], "u_color", highlight)
@@ -391,7 +407,7 @@ local function selectAxis(x, y)
 		return gizmo_obj.ty
 	end
 
-	local end_z = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3] + axis_radius * gizmo_scale))
+	local end_z = worldToScreen(math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3] + axis_len * gizmo_scale))
 	ret = pointToLineDistance2D(start, end_z, hp)
 	if ret < moveHitRadiusPixel then
 		imaterial.set_property(gizmo_obj.tz.eid[1], "u_color", highlight)
@@ -440,12 +456,13 @@ local function selectRotateAxis(x, y)
 		local t = rayHitPlane(ray, {n = axis.dir, d = -math3d.dot(math3d.vector(axis.dir[1], axis.dir[2], axis.dir[3]), gizmoPosVec)})
 		local hitPosVec = math3d.vector(ray.origin[1] + t * ray.dir[1], ray.origin[2] + t * ray.dir[2], ray.origin[3] + t * ray.dir[3])
 		local dist = math3d.length(math3d.sub(gizmoPosVec, hitPosVec))
-		if math.abs(dist - gizmo_scale * axis_radius) < rotateHitRadius * gizmo_scale then
-			imaterial.set_property(axis.eid, "u_color", gizmo_obj.highlight)
-			
+		if math.abs(dist - gizmo_scale * axis_len) < rotateHitRadius * gizmo_scale then
+			imaterial.set_property(axis.eid[1], "u_color", gizmo_obj.highlight)
+			imaterial.set_property(axis.eid[2], "u_color", gizmo_obj.highlight)
 			return hitPosVec
 		else
-			imaterial.set_property(axis.eid, "u_color", axis.color)
+			imaterial.set_property(axis.eid[1], "u_color", axis.color)
+			imaterial.set_property(axis.eid[2], "u_color", axis.color)
 			return nil
 		end
 	end
