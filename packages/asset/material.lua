@@ -33,17 +33,81 @@ function mt.process_prefab(e)
 	end
 end
 
-local im = ecs.interface "imaterial"
-function im.load(materialpath, setting)
+local im_class = ecs.interface "imaterial"
+function im_class.load(materialpath, setting)
 	local m = world.component "resource"(materialpath)
 	return load_material(m, setting)
 end
 
-function im.set_property(eid, who, what)
-	local rp = world:interface "ant.render|render_properties".data()
-	if rp[who] then
-		error(("should not update golbal uniform from imaterial:set_property: %s"):format(who))
+local math3d = require "math3d"
+local bgfx = require "bgfx"
+local function set_uniform(src, dst)
+	if type(dst) == "table" then
+		local t = type(dst[1])
+		local function t2mid(v)
+			return #v == 4 and math3d.vector(v) or math3d.matrix(v)
+		end
+		if t == "table" or t == "userdata" then
+			if #src ~= #dst then
+				error(("invalid uniform data, #src:%d ~= #dst:%d"):format(#src, #dst))
+			end
+			local to_v = t == "table" and t2mid or function(dv) return dv end
+
+			for i=1, #src do
+				src[i].id = to_v(dst[i])
+			end
+		else
+			src.id = t2mid(dst)
+		end
+	else
+		src.id = dst
 	end
+end
+
+function im_class.set_property(eid, who, what)
+	if world:interface "ant.render|render_properties".get(who) then
+		error(("global property could not been set:%s"):format(who))
+	end
+
 	local rc = world[eid]._rendercache
-	rc.properties[who].value = what
+	local p = rc.properties[who]
+	if p == nil then
+		log.warn(("entity:%s, do not have property:%s"):format(world[eid].name or tostring(eid), who))
+		return
+	end
+	if p.u.type == "s" then
+		if type(what) ~= "number" then
+			error(("texture property should pass texture handle%s"):fromat(who))
+		end
+
+		if p.ref then
+			p.ref = nil
+			local v = p.value
+			p.value = {
+				stage = v.stage,
+				texture = {},
+			}
+		end
+		p.value.texture.handle = what
+	else
+		--must be uniform: vector or matrix
+		if p.ref then
+			p.ref = nil
+			local v = p.value
+			if type(v) == "table" then
+				p.value = {}
+				for i=1, #v do
+					p.value[i] = math3d.ref(v[i])
+				end
+			else
+				p.value = math3d.ref(v)
+			end
+		end
+
+		set_uniform(p.value, what)
+	end
+end
+
+function im_class.submit(p)
+	p.u:set(p.value)
 end

@@ -132,7 +132,7 @@ local function compute_PerezCoeff(turbidity, values)
 	local n = #ABCDE
 	for i=1, n do
 		local v0, v1 = ABCDE_t[i], ABCDE[i]
-		values[i].v = math3d.muladd(v0, turbidity, v1)
+		values[i] = math3d.muladd(v0, turbidity, v1)
 	end
 end
 
@@ -243,23 +243,26 @@ end
 local sun_luminance_fetch = fetch_value_operation(sun_luminance_XYZ)
 local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
-local function update_sky_parameters(skyentity)
-	--TODO: material data should not modify directly
-	local skycomp = skyentity.procedural_sky
-	local properties = skyentity.material.properties
+local imaterial = world:interface "ant.asset|imaterial"
 
+local function update_sky_parameters(eid)
+	local e = world[eid]
+	local skycomp = e.procedural_sky
 	local hour = skycomp.which_hour
-
-	properties["u_sunDirection"].v 	= skycomp._sundir
-	properties["u_sunLuminance"].v 	= xyz2rgb(sun_luminance_fetch(hour))
-	properties["u_skyLuminanceXYZ"].v 	= sky_luminance_fetch(hour)
+	imaterial.set_property(eid, "u_sunDirection", skycomp._sundir)
+	
+	imaterial.set_property(eid, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
+	imaterial.set_property(eid, "u_skyLuminanceXYZ", sky_luminance_fetch(hour))
 	shader_parameters[4] = hour
-	properties["u_parameters"].v		= shader_parameters
+	imaterial.set_property(eid, "u_parameters", shader_parameters)
 
-	compute_PerezCoeff(skycomp.turbidity, properties["u_perezCoeff"])
+	local values = {}
+	compute_PerezCoeff(skycomp.turbidity, values)
+	imaterial.set_property(eid, "u_perezCoeff", values)
 end
 
-local function sync_directional_light(skyentity)
+local function sync_directional_light(eid)
+	local skyentity = world[eid]
 	local skycomp = skyentity.procedural_sky
 	local sunlight_eid = skycomp.attached_sun_light
 	if sunlight_eid then
@@ -268,16 +271,10 @@ local function sync_directional_light(skyentity)
 	end
 end
 
-function ps_sys:update_sky()
-	for _, eid in world:each "procedural_sky" do
-		local e = world[eid]
-		update_sky_parameters(e)
-		sync_directional_light(e)
-	end
-end
-
-
-local sun_sys = ecs.system "sun_update_system"
+local updatesky_mb = {
+	world:sub{"component_register", "procedural_sky"},
+	world:sub{"component_changed", "procedural_sky"}
+}
 
 local function update_hour(skycomp, deltatime, unit)
 	unit = unit or 24
@@ -286,12 +283,23 @@ end
 
 local timer = world:interface "ant.timer|timer"
 
-function sun_sys:update_sun()
-	-- local delta = timer.delta()
-	-- for _, eid in world:each "procedural_sky" do
-	-- 	local e = world[eid]
-	-- 	local skycomp = e.procedural_sky
-	-- 	update_hour(skycomp, delta)
-	-- 	skycomp._sundir.v = calc_sun_direction(skycomp)
-	-- end
+local function update_sun()
+	local delta = timer.delta()
+	for _, eid in world:each "procedural_sky" do
+		local e = world[eid]
+		local skycomp = e.procedural_sky
+		update_hour(skycomp, delta)
+		skycomp._sundir.v = calc_sun_direction(skycomp)
+	end
+end
+
+function ps_sys:data_changed()
+	for _, mb in ipairs(updatesky_mb) do
+		for _, _, eid in mb:unpack() do
+			update_sky_parameters(eid)
+			sync_directional_light(eid)
+		end
+	end
+
+	--update_sun()
 end

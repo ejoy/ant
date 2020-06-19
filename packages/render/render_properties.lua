@@ -47,6 +47,10 @@ function m.data()
 	return render_properties
 end
 
+function m.get(who)
+	return render_properties[who]
+end
+
 local function add_directional_light_properties(world, uniform_properties)
 	local dlight = world:singleton_entity "directional_light"
 	if dlight then

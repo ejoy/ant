@@ -4,6 +4,8 @@ local world = ecs.world
 local fbmgr 	= require "framebuffer_mgr"
 local bgfx 		= require "bgfx"
 
+local mathpkg = import_package "ant.math"
+local mc = mathpkg.constant
 local math3d	= require "math3d"
 
 local irender = world:interface "ant.render|irender"
@@ -15,13 +17,13 @@ function rt.process_entity(e)
 
 	local properties
 	local rp = irender_properties.data()
-	local cp = c.properties or rp
 	local uniforms = c.fx.uniforms
 	if uniforms and #uniforms > 0 then
 		properties = {}
+		local pp = c.properties or rp
 		for _, u in ipairs(uniforms) do
 			local n = u.name
-			properties[n] = {value = cp[n] or rp[n], u=u}
+			properties[n] = {value=pp[n] or rp[n], u=u, ref=true}
 		end
 	end
 

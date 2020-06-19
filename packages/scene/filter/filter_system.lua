@@ -125,7 +125,9 @@ end
 local function update_state(eid)
 	--TODO: need update by event
 	local e = world[eid]
-	e._rendercache.entity_state = e.state
+	if e._rendercache then
+		e._rendercache.entity_state = e.state
+	end
 end
 
 local filters = {}
@@ -138,11 +140,14 @@ function filter_system:post_init()
 end
 
 local function can_render(rc)
-	return rc and rc.entity_state ~= 0 and rc.vb and rc.fx and rc.state and rc.worldmat
+	return rc.entity_state ~= 0 and rc.vb and rc.fx and rc.state and rc.worldmat
 end
 
 local function add_filter_list(eid, filters)
 	local rc = world[eid]._rendercache
+	if rc == nil then
+		return
+	end
 	local needset = can_render(rc)
 
 	local entity_state = rc.entity_state

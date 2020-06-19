@@ -13,6 +13,7 @@ local setting		= require "setting"
 
 local irender_class = ecs.interface "irender"
 local irender = world:interface "ant.render|irender"
+local imaterial = world:interface "ant.asset|imaterial"
 function irender_class.draw(vid, ri)
 	local sm = ri.skinning_matrices
 	if sm then
@@ -25,7 +26,7 @@ function irender_class.draw(vid, ri)
 	local properties = ri.properties
 	if properties then
 		for n, v in pairs(properties) do
-			v.u:set(v.value)
+			imaterial.submit(v)
 		end
 	end
 	local ib, vb = ri.ib, ri.vb
