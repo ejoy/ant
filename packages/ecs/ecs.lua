@@ -145,30 +145,40 @@ function world:component_delete(name, v)
 	component_delete(self, name, v)
 end
 
+local function instance_entity(w, entity, args)
+	local eid = register_entity(w)
+	local e = w[eid]
+	for c in pairs(entity.policy.register_component) do
+		register_component(w, eid, c)
+	end
+	for k, v in pairs(entity.dataset) do
+		e[k] = v
+	end
+	for _, f in ipairs(entity.policy.process_entity) do
+		f(e)
+	end
+	w._prefabs[eid] = entity
+	return eid
+end
+
 local function instance(w, prefab, args)
 	local import = args and args.import and args.import or {}
 	local res = {}
 	for i, entity in ipairs(prefab) do
-		local eid = register_entity(w)
-		local e = w[eid]
-		for c in pairs(entity.policy.register_component) do
-			register_component(w, eid, c)
+		if entity.dataset then
+			res[i] = instance_entity(w, entity)
+		else
+			res[i] = instance(w, entity, {}--[[TODO]])
 		end
-		for k, v in pairs(entity.dataset) do
-			e[k] = v
-		end
-		for _, f in ipairs(entity.policy.process_entity) do
-			f(e)
-		end
-		w._prefabs[eid] = entity
-		res[i] = eid
 	end
 	setmetatable(res, {__index=import})
 	for i, entity in ipairs(prefab) do
-		for name, target in sortpairs(entity.action) do
-			local object = w._class.action[name]
-			assert(object and object.init)
-			object.init(w[res[i]], res, target)
+		if entity.action then
+			for name, target in sortpairs(entity.action) do
+				local object = w._class.action[name]
+				assert(object and object.init)
+				object.init(w[res[i]], res, target)
+			end
 		end
 	end
 	setmetatable(res, nil)

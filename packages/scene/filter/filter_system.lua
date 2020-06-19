@@ -123,21 +123,24 @@ local function update_transform(eid)
 end
 
 local function update_material(eid)
+	--TODO: need move to 'mount' action
 	local e = world[eid]
 	if e.parent then
 		local pe = world[e.parent]
-		local rc = e._rendercache
 		local p_rc = pe._rendercache
-		if rc.fx == nil then
-			rc.fx = p_rc.fx
-		end
-
-		if rc.state == nil then
-			rc.state = p_rc.state
-		end
-
-		if rc.properties == nil then
-			rc.properties = p_rc.properties
+		if p_rc then
+			local rc = e._rendercache
+			if rc.fx == nil then
+				rc.fx = p_rc.fx
+			end
+	
+			if rc.state == nil then
+				rc.state = p_rc.state
+			end
+	
+			if rc.properties == nil then
+				rc.properties = p_rc.properties
+			end
 		end
 	end
 end

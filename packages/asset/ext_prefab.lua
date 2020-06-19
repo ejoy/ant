@@ -21,19 +21,12 @@ local function load_entity(v)
 	}
 end
 
-local function table_append(t, a)
-	table.move(a, 1, #a, #t+1, t)
-end
-
 function m:init()
 	local prefab = {}
 	for _, v in ipairs(self) do
-		if v.prefab then
-			local subprefab = world.component "resource"(v.prefab)
-			table_append(prefab, subprefab)
-		else
-			prefab[#prefab+1] = load_entity(v)
-		end
+		prefab[#prefab+1] = v.prefab
+			and world.component "resource"(v.prefab)
+			or load_entity(v)
 	end
 	return prefab
 end
