@@ -143,9 +143,7 @@ end
 
 local function add_filter_list(eid, filters)
 	local rc = world[eid]._rendercache
-	if not can_render(rc) then
-		return
-	end
+	local needset = can_render(rc)
 
 	local entity_state = rc.entity_state
 	local stattypes = ies.get_state_type()
@@ -153,11 +151,13 @@ local function add_filter_list(eid, filters)
 		local fe = world[filtereid]
 		if fe.visible then
 			local mask = assert(stattypes[n])
-			if (entity_state & mask) ~= 0 then
-				local filter = fe.primitive_filter
-				
+			local filter = fe.primitive_filter
+			if needset and ((entity_state & mask) ~= 0) then
 				local resulttarget = filter.result[rc.fx.setting.transparency]
 				resulttarget.items[eid] = rc
+			else
+				filter.result.opaticy.items[eid] = nil
+				filter.result.translucent.items[eid] = nil
 			end
 		end
 	end
