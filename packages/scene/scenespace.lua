@@ -53,6 +53,35 @@ local function bind_slot_entity(e)
 	end
 end
 
+local function inherit_entity_state(e)
+	local s = e.state
+	local pe = world[e.parent]
+	local ps = pe.state
+	if ps then
+		local m = s & 0xffffffff00000000
+		e.state = (m | (s & 0xffffffff)|(ps & 0xfffffff))
+	end
+end
+
+local function inherit_material(e)
+	local pe = world[e.parent]
+	local p_rc = pe._rendercache
+	if p_rc then
+		local rc = e._rendercache
+		if rc.fx == nil then
+			rc.fx = p_rc.fx
+		end
+
+		if rc.state == nil then
+			rc.state = p_rc.state
+		end
+
+		if rc.properties == nil then
+			rc.properties = p_rc.properties
+		end
+	end
+end
+
 function sp_sys:update_hierarchy_scene()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
@@ -60,6 +89,8 @@ function sp_sys:update_hierarchy_scene()
 
 		if e.parent then
 			bind_slot_entity(e)
+			inherit_entity_state(e)
+			inherit_material(e)
 		end
     end
 

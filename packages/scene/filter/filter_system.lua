@@ -122,44 +122,10 @@ local function update_transform(eid)
 	end
 end
 
-local function update_material(eid)
-	--TODO: need move to 'mount' action
-	local e = world[eid]
-	if e.parent then
-		local pe = world[e.parent]
-		local p_rc = pe._rendercache
-		if p_rc then
-			local rc = e._rendercache
-			if rc.fx == nil then
-				rc.fx = p_rc.fx
-			end
-	
-			if rc.state == nil then
-				rc.state = p_rc.state
-			end
-	
-			if rc.properties == nil then
-				rc.properties = p_rc.properties
-			end
-		end
-	end
-end
-
 local function update_state(eid)
+	--TODO: need update by event
 	local e = world[eid]
-	local s = e.state
-	if s then
-		if e.parent then
-			local pe = world[e.parent]
-			local ps = pe.state
-			if ps then
-				local m = s & 0xffffffff00000000
-				s = (m | (s & 0xffffffff)|(ps & 0xfffffff))
-			end
-		end
-
-		e._rendercache.entity_state = s
-	end
+	e._rendercache.entity_state = e.state
 end
 
 local filters = {}
@@ -199,7 +165,6 @@ end
 
 local function update_renderinfo(eid)
 	update_transform(eid)
-	update_material(eid)
 	update_state(eid)
 end
 
