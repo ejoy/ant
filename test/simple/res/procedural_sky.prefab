@@ -1,7 +1,7 @@
 ---
 data:
   material: $resource /pkg/ant.resources/materials/sky/procedural/procedural_sky.material
-  mesh: $resource /pkg/ant.test.simple/res/procedural_sky.meshbin
+  mesh: $resource ./procedural_sky.meshbin
   name: "procedural sky"
   procedural_sky: $procedural_sky
     latitude: 0.8726646259971648
