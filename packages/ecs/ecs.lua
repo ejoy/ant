@@ -117,11 +117,10 @@ local function create_prefab_from_entity(w, t)
 	local info = policy.create(w, policies)
 	local action = t.action or {}
 	local args = {
-		import = {}
 	}
 	if action.mount then
-		args.import["mount"] = action.mount
-		action.mount = "mount"
+		args["_mount"] = action.mount
+		action.mount = "_mount"
 	end
 	local e = {}
 	for _, c in ipairs(info.component) do
@@ -145,7 +144,7 @@ function world:component_delete(name, v)
 	component_delete(self, name, v)
 end
 
-local function instance_entity(w, entity, args)
+local function instance_entity(w, entity)
 	local eid = register_entity(w)
 	local e = w[eid]
 	for c in pairs(entity.policy.register_component) do
@@ -157,13 +156,12 @@ local function instance_entity(w, entity, args)
 	for _, f in ipairs(entity.policy.process_entity) do
 		f(e)
 	end
-	w._prefabs[eid] = entity
 	return eid
 end
 
 local function instance(w, prefab, args)
-	local import = args and args.import and args.import or {}
-	local res = {}
+	args = args or {}
+	local res = {__class = prefab}
 	for i, entity in ipairs(prefab) do
 		if entity.dataset then
 			res[i] = instance_entity(w, entity)
@@ -171,7 +169,7 @@ local function instance(w, prefab, args)
 			res[i] = instance(w, entity, {}--[[TODO]])
 		end
 	end
-	setmetatable(res, {__index=import})
+	setmetatable(res, {__index=args})
 	for i, entity in ipairs(prefab) do
 		if entity.action then
 			for name, target in sortpairs(entity.action) do
@@ -187,8 +185,8 @@ end
 
 function world:create_entity(data)
 	local prefab, args = create_prefab_from_entity(self, data)
-	local entities = instance(self, prefab, args)
-	return entities[1]
+	local res = instance(self, prefab, args)
+	return res[1], res
 end
 
 function world:instance(filename, args)
@@ -196,46 +194,56 @@ function world:instance(filename, args)
 	return instance(self, prefab, args)
 end
 
+local function serialize_entity(w, prefab, template, eid, args)
+	local e = {policy={},data={}}
+	local dataset = w[eid]
+	local action = {}
+	for _, name in ipairs(template.action) do
+		if args and args[name] then
+			action[name] = args[name]
+		else
+			local object = w._class.action[name]
+			assert(object and object.save)
+			action[name] =  object.save(dataset, prefab)
+		end
+	end
+	if next(action) ~= nil then
+		e.action = action
+	end
+	for _, p in ipairs(template.policy) do
+		e.policy[#e.policy+1] = p
+	end
+	for _, name in ipairs(template.component) do
+		e.data[name] = dataset[name]
+	end
+	table.sort(e.policy)
+	return e
+end
+
 local function serialize_prefab(w, prefab, args)
-    local t = {}
+	local t = {}
+	local class = prefab.__class
     for i, eid in ipairs(prefab) do
-        local template = w._prefabs[eid].policy
-        local e = {policy={},data={}}
-        t[#t+1] = e
-        local dataset = w[eid]
-		local action = {}
-        for _, name in ipairs(template.action) do
-            if args[i] and args[i][name] then
-                action[name] = args[i][name]
-            else
-				local object = w._class.action[name]
-				assert(object and object.save)
-                action[name] =  object.save(w[eid], prefab)
-            end
+		local template = class[i].policy
+		if template then
+			t[#t+1] = serialize_entity(w, prefab, template, eid, args[i])
+		else
+			t[#t+1] = {
+				prefab = tostring(class[i])
+			}
 		end
-		if next(action) ~= nil then
-			e.action = action
-		end
-        for _, p in ipairs(template.policy) do
-            e.policy[#e.policy+1] = p
-        end
-        for _, name in ipairs(template.component) do
-            e.data[name] = dataset[name]
-        end
-        table.sort(e.policy)
     end
     return stringify(t, w._typeclass)
 end
 
 function world:serialize(entities, args)
-	return serialize_prefab(self, entities, args)
+	return serialize_prefab(self, entities, args or {})
 end
 
 function world:remove_entity(eid)
 	local e = assert(self[eid])
 	self[eid] = nil
 	self._entity[eid] = nil
-	self._prefabs[eid] = nil
 
 	local removed = self._removed
 	removed[#removed+1] = e
@@ -444,7 +452,6 @@ function m.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
-		_prefabs = {},
 		_slots = {},
 		_current_path = {},
 		_typeclass = setmetatable({}, { __mode = "k" }),
