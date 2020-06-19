@@ -114,7 +114,7 @@ end
 
 local function create_prefab_from_entity(w, t)
 	local policies, dataset = t.policy, t.data
-	local info = policy.create(w, policies)
+	local template = policy.create(w, policies)
 	local action = t.action or {}
 	local args = {
 	}
@@ -123,14 +123,14 @@ local function create_prefab_from_entity(w, t)
 		action.mount = "_mount"
 	end
 	local e = {}
-	for _, c in ipairs(info.component) do
+	for _, c in ipairs(template.component) do
 		e[c] = dataset[c]
 	end
-	for _, f in ipairs(info.process_prefab) do
+	for _, f in ipairs(template.process_prefab) do
 		f(e)
 	end
 	return {{
-		policy = info,
+		template = template,
 		dataset = e,
 		action = action,
 	}}, args
@@ -147,26 +147,26 @@ end
 local function instance_entity(w, entity)
 	local eid = register_entity(w)
 	local e = w[eid]
-	for c in pairs(entity.policy.register_component) do
+	for c in pairs(entity.template.register_component) do
 		register_component(w, eid, c)
 	end
 	for k, v in pairs(entity.dataset) do
 		e[k] = v
 	end
-	for _, f in ipairs(entity.policy.process_entity) do
+	for _, f in ipairs(entity.template.process_entity) do
 		f(e)
 	end
 	return eid
 end
 
-local function instance(w, prefab, args)
+local function instance_prefab(w, prefab, args)
 	args = args or {}
 	local res = {__class = prefab}
-	for i, entity in ipairs(prefab) do
-		if entity.dataset then
-			res[i] = instance_entity(w, entity)
+	for i, v in ipairs(prefab) do
+		if v.prefab then
+			res[i] = instance_prefab(w, v.prefab, prefab.args)
 		else
-			res[i] = instance(w, entity, {}--[[TODO]])
+			res[i] = instance_entity(w, v)
 		end
 	end
 	setmetatable(res, {__index=args})
@@ -185,18 +185,19 @@ end
 
 function world:create_entity(data)
 	local prefab, args = create_prefab_from_entity(self, data)
-	local res = instance(self, prefab, args)
+	local res = instance_prefab(self, prefab, args)
 	return res[1], res
 end
 
 function world:instance(filename, args)
 	local prefab = component_init(self, "resource", filename)
-	return instance(self, prefab, args)
+	return instance_prefab(self, prefab, args)
 end
 
-local function serialize_entity(w, prefab, template, eid, args)
+local function serialize_entity(w, class, prefab, args)
 	local e = {policy={},data={}}
-	local dataset = w[eid]
+	local template = class.template
+	local dataset = class.dataset
 	local action = {}
 	for _, name in ipairs(template.action) do
 		if args and args[name] then
@@ -222,15 +223,14 @@ end
 
 local function serialize_prefab(w, prefab, args)
 	local t = {}
-	local class = prefab.__class
-    for i, eid in ipairs(prefab) do
-		local template = class[i].policy
-		if template then
-			t[#t+1] = serialize_entity(w, prefab, template, eid, args[i])
-		else
+	for i, class in ipairs(prefab.__class) do
+		if class.prefab then
 			t[#t+1] = {
-				prefab = tostring(class[i])
+				prefab = tostring(class.prefab),
+				args = next(class.args) ~= nil and class.args or nil,
 			}
+		else
+			t[#t+1] = serialize_entity(w, class, prefab, args[i])
 		end
     end
     return stringify(t, w._typeclass)
