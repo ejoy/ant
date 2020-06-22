@@ -161,11 +161,19 @@ end
 
 local function set_readonly(w, prefab)
 	local readonly = require "readonly"
-	for _, v in ipairs(prefab) do
-		if type(v) == "table" then
-			set_readonly(w, v)
+	for _, data in ipairs(prefab) do
+		if data.prefab then
+			set_readonly(w, data.prefab)
 		else
-			w[v] = readonly(w[v])
+			local e = {}
+			for k, v in pairs(data.dataset) do
+				if type(v) == "table" then
+					e[k] = readonly(v)
+				else
+					e[k] = v
+				end
+			end
+			data.dataset = e
 		end
 	end
 end
@@ -203,8 +211,8 @@ end
 
 function world:instance(filename, args)
 	local prefab = component_init(self, "resource", filename)
+	set_readonly(self, prefab)
 	local res = instance_prefab(self, prefab, args)
-	--set_readonly(self, res)
 	return res
 end
 
