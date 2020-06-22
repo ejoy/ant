@@ -14,7 +14,7 @@ end
 
 local ct = ecs.transform "cache_transform"
 function ct.process_prefab(e)
-	e._cache = {}
+	e._cache_prefab = {}
 end
 
 local rct = ecs.transform "rendercache_transform"

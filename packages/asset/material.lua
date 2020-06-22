@@ -27,7 +27,7 @@ end
 function mt.process_prefab(e)
 	local m = e.material
 	if m then
-		local c = e._cache
+		local c = e._cache_prefab
 		local m = load_material(m, c.material_setting)
 		c.fx, c.properties, c.state = m.fx, m.properties, m.state
 	end

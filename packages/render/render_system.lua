@@ -13,7 +13,7 @@ local isys_properties = world:interface "ant.render|system_properties"
 local imaterial = world:interface "ant.asset|imaterial"
 local rt = ecs.transform "render_transform"
 function rt.process_entity(e)
-	local c = e._cache
+	local c = e._cache_prefab
 
 	local properties
 	local uniforms = c.fx.uniforms

@@ -42,7 +42,7 @@ end
 local mt = ecs.transform "mesh_transform"
 function mt.process_prefab(e)
 	local mesh = e.mesh
-	local c = e._cache
+	local c = e._cache_prefab
 	if mesh then
 		local handles = {}
 		c.vb = {

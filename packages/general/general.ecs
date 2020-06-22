@@ -8,7 +8,7 @@ component "resource"
 
 transform "cache_transform"
     .implement "general.lua"
-    .output "_cache"
+    .output "_cache_prefab"
     .method "process_prefab"
 
 transform "rendercache_transform"
