@@ -235,7 +235,17 @@ function ientity.create_axis_entity(srt, color, name)
 		0, 0, 1, color or 0xffff0000,
 	}
 	local mesh = create_mesh({"p3|c40niu", axis_vb}, axis_ib)
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh)
+	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_singlecolor.material", name, mesh)
+end
+
+function ientity.create_line_entity(srt, p0, p1, name, color)
+	local vb = {
+		p0[1], p0[2], p0[3], color or 0xffffffff,
+		p1[1], p1[2], p1[3], color or 0xffffffff,
+	}
+	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
+	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_singlecolor.material", name, mesh)
+	
 end
 
 function ientity.create_circle_entity(radius, slices, srt, name)
