@@ -211,7 +211,7 @@ end
 
 function world:instance(filename, args)
 	local prefab = component_init(self, "resource", filename)
-	set_readonly(self, prefab)
+	--set_readonly(self, prefab)
 	local res = instance_prefab(self, prefab, args)
 	return res
 end
