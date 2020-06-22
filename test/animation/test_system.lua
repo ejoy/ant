@@ -74,7 +74,7 @@ local function playAnimation(e, name)
     else
         ani._max_ratio = 1
     end
-    e.animation._current = {
+    e._animation._current = {
         animation = ani,
         ratio = 0,
     }
@@ -127,15 +127,15 @@ end
 function init_loader_sys:ui_update()
     local e = world[RoleEntityId]
 
-    if not status.Loop and not status.Pause and e.animation._current.ratio >= 1 then
+    if not status.Loop and not status.Pause and e._animation._current.ratio >= 1 then
         world:enable_system("ant.animation|animation_system", false)
         status.Pause = true
-        e.animation._current.ratio = 0
+        e._animation._current.ratio = 0
     end
 
     for _ in imgui_util.windows("Animation", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }) do
         for name in sortpairs(e.animation.anilist) do
-            if imgui.widget.Selectable(name, e.animation._current.animation.name == name) then
+            if imgui.widget.Selectable(name, e._animation._current.animation.name == name) then
                 playAnimation(e, name)
             end
         end
@@ -180,20 +180,20 @@ function init_loader_sys:ui_update()
         if imguiToolbar(status.Loop and "🔁" or "➡", nil, true) then
             if status.Loop then
                 status.Loop = false
-                e.animation._current.animation.max_ratio = 1
-                e.animation._current.ratio = e.animation._current.ratio % 1
+                e._animation._current.animation.max_ratio = 1
+                e._animation._current.ratio = e._animation._current.ratio % 1
             else
                 status.Loop = true
-                e.animation._current.animation.max_ratio = math.maxinteger
+                e._animation._current.animation.max_ratio = math.maxinteger
             end
         end
         imguiEndToolbar()
         imgui.cursor.SameLine()
         imgui.cursor.SetNextItemWidth(screensize.w-80)
         local e = world[RoleEntityId]
-        status.AnimationRatio[1] = e.animation._current.ratio % 1
+        status.AnimationRatio[1] = e._animation._current.ratio % 1
         if imgui.widget.SliderFloat("", status.AnimationRatio) then
-            e.animation._current.ratio = status.AnimationRatio[1]
+            e._animation._current.ratio = status.AnimationRatio[1]
             if status.Pause then
                 local animation = world:interface "ant.animation|animation"
                 animation.update(e)

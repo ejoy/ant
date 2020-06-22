@@ -1,10 +1,10 @@
 policy "animation_controller.birth"
     .require_transform "animation_birth"
-    .component "animation"
+    .component "_animation"
     .component "animation_birth"
 
 transform "animation_birth"
     .implement "controller/birth.lua"
     .input "animation_birth"
-    .output "animation"
-    .method "process_prefab"
+    .output "_animation.birth"
+    .method "process_entity"

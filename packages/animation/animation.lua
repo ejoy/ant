@@ -3,6 +3,11 @@ local world = ecs.world
 
 local ani_module = require "hierarchy.animation"
 
+local ani_cache = ecs.transform "animation_transform"
+function ani_cache.process_entity(e)
+	e._animation = {}
+end
+
 local pr_t = ecs.transform "build_pose_result"
 
 function pr_t.process_entity(e)
@@ -32,11 +37,10 @@ local function do_animation(poseresult, task, delta_time)
 end
 
 local function update_animation(e, delta_time)
-	local animation = e.animation
 	local ske = e.skeleton
 	local pr = e.pose_result
 	pr:setup(ske._handle)
-	do_animation(pr, animation._current, delta_time)
+	do_animation(pr, e._animation._current, delta_time)
 end
 
 function ani_sys:sample_animation_pose()
