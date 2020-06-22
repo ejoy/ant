@@ -9,21 +9,26 @@ local mc = mathpkg.constant
 local math3d	= require "math3d"
 
 local irender = world:interface "ant.render|irender"
-local irender_properties = world:interface "ant.render|render_properties"
-
+local isys_properties = world:interface "ant.render|system_properties"
+local imaterial = world:interface "ant.asset|imaterial"
 local rt = ecs.transform "render_transform"
 function rt.process_entity(e)
 	local c = e._cache
 
 	local properties
-	local rp = irender_properties.data()
 	local uniforms = c.fx.uniforms
+	local pp = c.properties or {}
 	if uniforms and #uniforms > 0 then
 		properties = {}
-		local pp = c.properties or rp
 		for _, u in ipairs(uniforms) do
 			local n = u.name
-			properties[n] = {value=pp[n] or rp[n], u=u, ref=true}
+			local v = pp[n] or isys_properties.get(n)
+			properties[n] = {
+				value=v,
+				handle = u.handle,
+				type = u.type,
+				set = imaterial.which_set_func(v),
+				ref=true}
 		end
 	end
 

@@ -7,7 +7,7 @@ local mu       = mathpkg.util
 local fbmgr     = require "framebuffer_mgr"
 local viewidmgr = require "viewid_mgr"
 local renderutil= require "util"
-local uniforms  = world:interface "ant.render|uniforms"
+local isys_properties  = world:interface "ant.render|system_properties"
 local computil = world:interface "ant.render|entity"
 
 local pp_sys = ecs.system "postprocess_system"
@@ -44,8 +44,8 @@ local function is_slot_equal(lhs, rhs)
     return lhs.fb_idx == rhs.fb_idx and lhs.rb_idx == rhs.rb_idx
 end
 local irender = world:interface "ant.render|irender"
-local function render_pass(lastslot, out_viewid, pass, meshgroup, render_properties)
-    local ppinput_stage = uniforms.system_uniform("s_postprocess_input").stage
+local function render_pass(lastslot, out_viewid, pass, meshgroup)
+    local ppinput = isys_properties.get "s_postprocess_input"
 
     local in_slot = pass.input or lastslot
     local out_slot = pass.output
@@ -56,9 +56,7 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
 
     local function bind_input(slot)
         local fb = fbmgr.get(slot.fb_idx)
-        render_properties["s_postprocess_input"] = {
-            stage=ppinput_stage, name="pp_input", texture={handle=fbmgr.get_rb(fb[slot.rb_idx]).handle}
-        }
+        ppinput.texture.handle = fbmgr.get_rb(fb[slot.rb_idx]).handle
         render_properties["u_bright_threshold"] = {
             {0.8, 0.0, 0.0, 0.0}
         }
@@ -75,19 +73,19 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup, render_propert
         fx  = material.fx,
         properties = material.properties,
         state = material._state,
-    }, mu.IDENTITY_MAT, render_properties)
+    }, mu.IDENTITY_MAT)
 
     return out_slot
 end
 
-local function render_technique(tech, lastslot, meshgroup, render_properties)
+local function render_technique(tech, lastslot, meshgroup)
     if tech.reorders then
         for _, passidx in ipairs(tech.reorders) do
-            lastslot = render_pass(lastslot, next_viewid(), assert(tech.passes[passidx]), meshgroup, render_properties)
+            lastslot = render_pass(lastslot, next_viewid(), assert(tech.passes[passidx]), meshgroup)
         end
     else
         for _, pass in ipairs(tech.passes) do
-            lastslot = render_pass(lastslot, next_viewid(), pass, meshgroup, render_properties)
+            lastslot = render_pass(lastslot, next_viewid(), pass, meshgroup)
         end
     end
 
@@ -96,7 +94,6 @@ end
 
 function pp_sys:combine_postprocess()
     if next(techniques) then
-        local render_properties = world:interface "ant.render|render_properties".data()
         local lastslot = {
             fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
             rb_idx = 1
@@ -105,7 +102,7 @@ function pp_sys:combine_postprocess()
         reset_viewid_idx()
         for i=1, #techniques do
             local tech = techniques[i]
-            lastslot = render_technique(tech, lastslot, quad_mesh, render_properties)
+            lastslot = render_technique(tech, lastslot, quad_mesh)
         end
     end
 end

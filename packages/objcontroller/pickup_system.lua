@@ -116,16 +116,16 @@ local function get_properties(eid, fx)
 	if p then
 		return p
 	end
-
+	local imaterial = world:interface "ant.asset|imaterial"
+	local v = world.component "vector" (packeid_as_rgba(eid))
 	local u = fx.uniforms[1]
 	assert(u.name == "u_id")
-	if u == nil then
-		error("pickup material not define 'u_id' uniform")
-	end
 	p = {
 		u_id = {
-			value = world.component "vector" (packeid_as_rgba(eid)),
-			u=u,
+			value = v,
+			handle = u.handle,
+			type = u.type,
+			set = imaterial.which_set_func(v)
 		},
 	}
 	uid_cache[eid] = p

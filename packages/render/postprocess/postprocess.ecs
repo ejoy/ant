@@ -1,8 +1,7 @@
 system "postprocess_system"
     .implement "postprocess/postprocess.lua"
     .require_system "render_system"
-    .require_interface "uniforms"
-    .require_interface "render_properties"
+    .require_interface "system_properties"
     .method "combine_postprocess"
     .method "init"
 

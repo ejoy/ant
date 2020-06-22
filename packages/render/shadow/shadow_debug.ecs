@@ -1,6 +1,6 @@
 system "debug_shadow_maker_system"
     .implement "shadow/shadow_debug.lua"
-    .require_interface "uniforms"
+    .require_interface "system_properties"
     .method "post_init"
     .method "data_changed"
 

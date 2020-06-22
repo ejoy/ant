@@ -99,50 +99,13 @@ local function do_compile(input, output, stage, setting)
     return deps
 end
 
-local function set_uniform_texture(u, property)
-    --TODO: 'stage' info has been written in shader compiled file by bgfx, but it does not keep in memory after reload shader binary file
-    -- see: bgfx_p.h:createShader function
-    bgfx.set_texture(property.stage, u.handle, property.texture.handle)
-end
-
-local function set_uniform_matrix(u, property)
-    if type(property) == "table" then
-        assert(u.num >= #property * 4)
-        bgfx.set_uniform(u.handle, table.unpack(property))
-    else
-        bgfx.set_uniform(u.handle, property)
-    end
-end
-
-local function set_uniform_vector(u, property)
-    if type(property) == "table" then
-        assert(u.num >= #property)
-        bgfx.set_uniform(u.handle, table.unpack(property))
-    else
-        bgfx.set_uniform(u.handle, property)
-    end
-end
-
 local function create_uniform(h, mark)
     local name, type, num = bgfx.get_uniform_info(h)
     if mark[name] then
         return
     end
     mark[name] = true
-    local uniform = { handle = h, name = name, type = type, num = num }
-    if type == "s" then
-        assert(num == 1)
-        uniform.set = set_uniform_texture
-    elseif type == "m4" then
-        assert(num >= 1)
-        uniform.set = set_uniform_matrix
-    elseif type == "v4" then
-        assert(num >= 1)
-        uniform.set = set_uniform_vector
-    else
-        assert(false, "invalid uniform type:"..type)
-    end
-    return uniform
+    return { handle = h, name = name, type = type, num = num }
 end
 
 local function uniform_info(shader, uniforms, mark)

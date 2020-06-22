@@ -8,16 +8,10 @@ local shadowutil = renderpkg.shadow
 local mathpkg = import_package "ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
 
-local system_uniforms = {
-    s_mainview          = {stage=6},
-    s_postprocess_input = {stage=7},
-    s_shadowmap         = {stage=7},
-}
-
 local math3d = require "math3d"
 
-local m = ecs.interface "render_properties"
-local render_properties = {
+local m = ecs.interface "system_properties"
+local system_properties = {
 	--lighting
 	directional_lightdir= math3d.ref(mc.ZERO),
 	directional_color 	= math3d.ref(mc.ZERO),
@@ -40,23 +34,21 @@ local render_properties = {
 	u_shadow_param1		= math3d.ref(mc.ZERO),
 	u_shadow_param2		= math3d.ref(mc.ZERO),
 
-	s_shadowmap			= {stage=system_uniforms["s_shadowmap"].stage},
-	s_mainview			= {stage=system_uniforms["s_mainview"].stage},
+	s_mainview			= {stage=6, texture={handle=nil}},
+	s_shadowmap			= {stage=7, texture={handle=nil}},
+	s_postprocess_input	= {stage=7, texture={handle=nil}},
 }
-function m.data()
-	return render_properties
+
+function m.get(n)
+	return system_properties[n]
 end
 
-function m.get(who)
-	return render_properties[who]
-end
-
-local function add_directional_light_properties(world, uniform_properties)
+local function add_directional_light_properties()
 	local dlight = world:singleton_entity "directional_light"
 	if dlight then
-		uniform_properties["directional_lightdir"].v 	= dlight.direction
-		uniform_properties["directional_color"].v 	= dlight.directional_light.color
-		uniform_properties["directional_intensity"].v = {dlight.directional_light.intensity, 0.28, 0, 0}
+		system_properties["directional_lightdir"].v 	= dlight.direction
+		system_properties["directional_color"].v 	= dlight.directional_light.color
+		system_properties["directional_intensity"].v = {dlight.directional_light.intensity, 0.28, 0, 0}
 	end
 end
 
@@ -67,23 +59,23 @@ local mode_type = {
 }
 
 --add ambient properties
-local function add_ambient_light_propertices(world, uniform_properties)
+local function add_ambient_light_propertices()
 	local le = world:singleton_entity "ambient_light"
 	if le then
 		local ambient = le.ambient_light
-		uniform_properties["ambient_mode"].v			= {mode_type[ambient.mode], ambient.factor, 0, 0}
-		uniform_properties["ambient_skycolor"].v		= ambient.skycolor
-		uniform_properties["ambient_midcolor"].v		= ambient.midcolor
-		uniform_properties["ambient_groundcolor"].v	= ambient.groundcolor
+		system_properties["ambient_mode"].v			= {mode_type[ambient.mode], ambient.factor, 0, 0}
+		system_properties["ambient_skycolor"].v		= ambient.skycolor
+		system_properties["ambient_midcolor"].v		= ambient.midcolor
+		system_properties["ambient_groundcolor"].v	= ambient.groundcolor
 	end
 end 
 
-local function load_lighting_properties(world, render_properties)
-	add_directional_light_properties(world, render_properties)
-	add_ambient_light_propertices(world, render_properties)
+local function update_lighting_properties()
+	add_directional_light_properties()
+	add_ambient_light_propertices()
 
 	local camera = camerautil.main_queue_camera(world)
-	render_properties["u_eyepos"].v = camera.eyepos
+	system_properties["u_eyepos"].v = camera.eyepos
 end
 
 local function calc_viewport_crop_matrix(csm_idx)
@@ -100,11 +92,11 @@ local function calc_viewport_crop_matrix(csm_idx)
 		offset, 0.0, 0.0, 1.0)
 end
 
-local function load_shadow_properties(world, render_properties)
+local function update_shadow_properties()
 	--TODO: shadow matrix consist of lighting matrix, crop matrix and viewport offset matrix
 	-- but crop matrix and viewport offset matrix only depend csm split ratios
 	-- we can detect csm split ratios changed, and update those matrix two matrices, and combine as bias matrix
-	local csm_matrixs = render_properties.u_csm_matrix
+	local csm_matrixs = system_properties.u_csm_matrix
 	local split_distances = {0, 0, 0, 0}
 	for _, eid in world:each "csm" do
 		local se = world[eid]
@@ -123,49 +115,37 @@ local function load_shadow_properties(world, render_properties)
 		end
 	end
 
-	render_properties["u_csm_split_distances"].v = split_distances
+	system_properties["u_csm_split_distances"].v = split_distances
 
 	local shadowentity = world:singleton_entity "shadow"
 	if shadowentity then
 		local fb = fbmgr.get(shadowentity.fb_index)
-		local sm = render_properties["s_shadowmap"]
-		sm.stage = world:interface "ant.render|uniforms".system_uniform("s_shadowmap").stage
-		sm.texture = {handle=fbmgr.get_rb(fb[1]).handle}
+		local sm = system_properties["s_shadowmap"]
+		sm.texture.handle = fbmgr.get_rb(fb[1]).handle
 
-		render_properties["u_depth_scale_offset"].v = shadowutil.shadow_depth_scale_offset()
+		system_properties["u_depth_scale_offset"].v = shadowutil.shadow_depth_scale_offset()
 		local shadow = shadowentity.shadow
-		render_properties["u_shadow_param1"].v = {shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}
+		system_properties["u_shadow_param1"].v = {shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}
 		local shadowcolor = shadow.color or {0, 0, 0, 0}
-		render_properties["u_shadow_param2"].v = shadowcolor
+		system_properties["u_shadow_param2"].v = shadowcolor
 	end
 end
 
-local function load_postprocess_properties(world, render_properties)
+local function update_postprocess_properties()
 	local mq = world:singleton_entity "main_queue"
 	local fbidx = mq.render_target.fb_idx
 	if fbidx then
 		local fb = fbmgr.get(fbidx)
-		local rendertex = fbmgr.get_rb(fb[1]).handle
 		local mainview_name = "s_mainview"
-		local stage = assert(world:interface "ant.render|uniforms".system_uniform(mainview_name)).stage
-		local mv = render_properties[mainview_name]
-		mv.stage = stage
-		mv.texture = {handle = rendertex}
+		local mv = system_properties[mainview_name]
+		mv.texture.handle = fbmgr.get_rb(fb[1]).handle
 	end
 end
 
-local load_properties_sys = ecs.system "load_properties_system"
+local usp = ecs.system "update_system_properties"
 
-function load_properties_sys:load_render_properties()
-	local rp = world:interface "ant.render|render_properties".data()
-	load_lighting_properties(world, rp)
-	load_shadow_properties(world, rp)
-	load_postprocess_properties(world, rp)
-end
-
-
-local m = ecs.interface "uniforms"
-
-function m.system_uniform(name)
-    return system_uniforms[name]
+function usp:update_system_properties()
+	update_lighting_properties()
+	update_shadow_properties()
+	update_postprocess_properties()
 end

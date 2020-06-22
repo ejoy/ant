@@ -1,7 +1,7 @@
 import "render.ecs"
 import "viewport_detect_system.ecs"
 import "widget_system.ecs"
-import "render_properties.ecs"
+import "system_properties.ecs"
 import "camera/camera_spawn.ecs"
 import "light/light.ecs"
 import "postprocess/postprocess.ecs"

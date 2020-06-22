@@ -41,7 +41,22 @@ end
 
 local math3d = require "math3d"
 local bgfx = require "bgfx"
-local function set_uniform(src, dst)
+
+local function set_uniform(p)
+	return bgfx.set_uniform(p.handle, p.value)
+end
+
+local function set_uniform_array(p)
+	return bgfx.set_uniform(p.handle, table.unpack(p.value))
+end
+
+local function set_texture(p)
+	local v = p.value
+	return bgfx.set_texture(v.stage, p.handle, v.texture.handle)
+end
+
+local function update_uniform(p, dst)
+	local src = p.value
 	if type(dst) == "table" then
 		local t = type(dst[1])
 		local function t2mid(v)
@@ -56,16 +71,19 @@ local function set_uniform(src, dst)
 			for i=1, #src do
 				src[i].id = to_v(dst[i])
 			end
+			p.set = set_uniform_array
 		else
 			src.id = t2mid(dst)
+			p.set = set_uniform
 		end
 	else
 		src.id = dst
+		p.set = set_uniform
 	end
 end
 
 function im_class.set_property(eid, who, what)
-	if world:interface "ant.render|render_properties".get(who) then
+	if world:interface "ant.render|system_properties".get(who) then
 		error(("global property could not been set:%s"):format(who))
 	end
 
@@ -75,7 +93,7 @@ function im_class.set_property(eid, who, what)
 		log.warn(("entity:%s, do not have property:%s"):format(world[eid].name or tostring(eid), who))
 		return
 	end
-	if p.u.type == "s" then
+	if p.type == "s" then
 		if type(what) ~= "number" then
 			error(("texture property should pass texture handle%s"):fromat(who))
 		end
@@ -89,6 +107,7 @@ function im_class.set_property(eid, who, what)
 			}
 		end
 		p.value.texture.handle = what
+		p.set = set_texture
 	else
 		--must be uniform: vector or matrix
 		if p.ref then
@@ -104,10 +123,29 @@ function im_class.set_property(eid, who, what)
 			end
 		end
 
-		set_uniform(p.value, what)
+		update_uniform(p, what)
 	end
 end
 
+local function which_type(u)
+	local t = type(u)
+	if t == "table" then
+		return u.stage and "s" or "array"
+	end
+
+	assert(t == "userdata")
+	return "v"
+end
+
+function im_class.which_set_func(u)
+	local t = which_type(u)
+	if t == "s" then
+		return set_texture
+	end
+
+	return t == "array" and set_uniform_array or set_uniform
+end
+
 function im_class.submit(p)
-	p.u:set(p.value)
+	p:set()
 end

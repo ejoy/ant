@@ -1,0 +1,11 @@
+import "@ant.render"
+import "@ant.asset"
+
+system "update_system_properties"
+    .implement "system_properties.lua"
+    .require_interface "system_properties"
+    .method "update_system_properties"
+
+interface "system_properties"
+    .implement "system_properties.lua"
+    .method "get"
