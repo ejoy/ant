@@ -159,6 +159,25 @@ local function instance_entity(w, entity)
 	return eid
 end
 
+local function set_readonly(w, prefab)
+	local readonly = require "readonly"
+	for _, data in ipairs(prefab) do
+		if data.prefab then
+			set_readonly(w, data.prefab)
+		else
+			local e = {}
+			for k, v in pairs(data.dataset) do
+				if type(v) == "table" then
+					e[k] = readonly(v)
+				else
+					e[k] = v
+				end
+			end
+			data.dataset = e
+		end
+	end
+end
+
 local function instance_prefab(w, prefab, args)
 	args = args or {}
 	local res = {__class = prefab}
@@ -189,9 +208,12 @@ function world:create_entity(data)
 	return res[1], res
 end
 
+
 function world:instance(filename, args)
 	local prefab = component_init(self, "resource", filename)
-	return instance_prefab(self, prefab, args)
+	--set_readonly(self, prefab)
+	local res = instance_prefab(self, prefab, args)
+	return res
 end
 
 local function serialize_entity(w, class, prefab, args)
