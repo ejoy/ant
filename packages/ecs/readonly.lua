@@ -19,7 +19,7 @@ local function readonly(t)
     return setmetatable({}, {
         __index = proxy,
         __newindex = function()
-            error "readonly"
+            error("readonly", 2)
         end,
         __pairs = function()
             return readonly_next
