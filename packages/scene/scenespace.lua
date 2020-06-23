@@ -66,19 +66,18 @@ end
 local function inherit_material(e)
 	local pe = world[e.parent]
 	local p_rc = pe._rendercache
-	if p_rc then
-		local rc = e._rendercache
-		if rc.fx == nil then
-			rc.fx = p_rc.fx
-		end
 
-		if rc.state == nil then
-			rc.state = p_rc.state
-		end
+	local rc = e._rendercache
+	if rc.fx == nil then
+		rc.fx = p_rc.fx
+	end
 
-		if rc.properties == nil then
-			rc.properties = p_rc.properties
-		end
+	if rc.state == nil then
+		rc.state = p_rc.state
+	end
+
+	if rc.properties == nil then
+		rc.properties = p_rc.properties
 	end
 end
 

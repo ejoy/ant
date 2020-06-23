@@ -96,10 +96,6 @@ local function update_transform(eid)
 		return
 	end
 
-	--entity with no transform but parent have, we need to cache a matrix that copy from parent
-	if etrans == nil and e.parent and e._rendercache == nil then
-		e._rendercache = {}
-	end
 	local rc = e._rendercache
 	rc.worldmat = etrans and math3d.matrix(etrans.srt) or nil
 
