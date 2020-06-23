@@ -11,7 +11,7 @@ local animodule = require "hierarchy.animation"
 
 local st_trans = ecs.transform "skinning_type_transform"
 function st_trans.process_prefab(e)
-	e.skinning_type  = "GPU"
+	e.skinning_type  = "CPU"
 end
 
 local mesh_skinning_transform = ecs.transform "mesh_skinning"
@@ -89,17 +89,30 @@ local function build_cpu_skinning_jobs(e, skinning)
 	local jobs = {}
 	skinning.jobs = jobs
 	jobs[#jobs+1] = create_job(pnT_buffer, m.vb[2])
-	e.mesh = {
+
+	local nm = {
 		ib = m.ib,
 		vb = {
 			start=m.vb.start,
 			num=m.vb.num,
-			handles={
-				pnT_buffer.handle,
-				m.vb[3] and m.vb[3].handle or nil,
-			},
+			pnT_buffer,
+			m.vb[3],
 		}
 	}
+	e.mesh = nm
+
+	local function build_rendermesh(rc, m)
+		rc.ib = m.ib
+		rc.vb = {
+			start = nm.vb.start,
+			num = nm.vb.num,
+			handles = {
+				nm.vb[1].handle,
+				nm.vb[2] and nm.vb[2].handle or nil,
+			}
+		}
+	end
+	build_rendermesh(e._rendercache, e.mesh)
 end
 
 function mesh_skinning_transform.process_entity(e)
@@ -114,13 +127,4 @@ function mesh_skinning_transform.process_entity(e)
 	if e.skinning_type == "CPU" then
 		build_cpu_skinning_jobs(e, skinning)
 	end
-end
-
-
-local sknning_render = ecs.transform "skinning_rendermesh"
-function sknning_render.process_entity(e)
-	local m = e.mesh
-	local rc = e._rendercache
-	rc.vb = m.vb
-	rc.ib = m.ib
 end
