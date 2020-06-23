@@ -115,7 +115,9 @@ local function update_transform(eid)
 		end
 	end
 
-	rc.skinning_matrices = e.skinning and e.skinning.skinning_matrices or nil
+	if e.skinning_type and e.skinning_type == "GPU" then
+		rc.skinning_matrices = e.skinning.skinning_matrices
+	end
 
 	if rc.worldmat then
 		update_bounding(rc, e)
