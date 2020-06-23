@@ -21,7 +21,7 @@ local function create_pbr_entity(name, srt, material,
         },
         data = {
             name        = name,
-            transform   = {srt=world.component "srt"(srt)},
+            transform   = srt,
             material    = material,
             state       = ies.create_state "visible|selectable",
             mesh        = sphere_mesh,
@@ -49,7 +49,7 @@ local function pbr_spheres()
         for col=1, num_samples do
             local roughness = col * roughness_step
             create_pbr_entity("sphere" .. row .. "x" .. col, 
-            {s = {100, 100, 100, 0}, t = {x, 0.0, z, 1.0}}, 
+            {s = 100, t = {x, 0.0, z, 1.0}}, 
             material, basecolor, metallic, roughness)
 
             z = z + movestep

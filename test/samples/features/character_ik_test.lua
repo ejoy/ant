@@ -6,7 +6,7 @@ local math3d    = require "math3d"
 local computil = world:interface "ant.render|entity"
 
 local char_ik_test_sys = ecs.system "character_ik_test_system"
-
+local imaterial = world:interface "ant.asset|imaterial"
 local function v4(...)return world.component "vector"(...)end
 
 local function foot_ik_test()
@@ -38,7 +38,7 @@ local function create_plane_test()
         }
     })
 
-    world:set(eid, "material", {properties={u_color=world.component "vector"{0.5, 0.5, 0, 1}}})
+    imaterial.set_property(eid, "u_color", {0.5, 0.5, 0, 1})
     return eid
 end
 

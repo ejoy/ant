@@ -227,14 +227,13 @@ function gizmo_sys:post_init()
 	}
 
 	imaterial.set_property(coneeid, "u_color", world.component "vector" {0, 0.5, 0.5, 1})
-	local srt = {s = {1}, r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform = srt,
+			transform = {},
 			name = "axis root",
 		},
 	}
@@ -281,7 +280,7 @@ function gizmo_sys:post_init()
 			data = {
 				scene_entity = true,
 				state = ies.create_state "visible|selectable",
-				transform =  {},
+				transform = srt,
 				material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 				mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name
@@ -291,24 +290,24 @@ function gizmo_sys:post_init()
 		return eid
 	end
 	local cubeScale = 2.5
-	local cube_eid = create_scale_cube({s = {cubeScale}}, world.component "vector" {0.5, 0.5, 0.5, 1}, "0")
+	local cube_eid = create_scale_cube({s = cubeScale}, {0.5, 0.5, 0.5, 1}, "0")
 	world[cube_eid].parent = axis_root
 
-	cube_eid = create_scale_cube({t = {axis_len, 0, 0, 1}, s = {cubeScale}}, COLOR_X, "x")
+	cube_eid = create_scale_cube({t = {axis_len, 0, 0, 1}, s = cubeScale}, COLOR_X, "x")
 	world[cube_eid].parent = axis_root
 	line_eid = computil.create_line_entity({}, {0, 0, 0}, {axis_len, 0, 0})
 	imaterial.set_property(line_eid, "u_color", COLOR_X)
 	world[line_eid].parent = axis_root
 	gizmo_obj.sx.eid = {cube_eid, line_eid}
 
-	cube_eid = create_scale_cube({t = {0, axis_len, 0, 1}, s = {cubeScale}}, COLOR_Y, "y")
+	cube_eid = create_scale_cube({t = {0, axis_len, 0, 1}, s = cubeScale}, COLOR_Y, "y")
 	world[cube_eid].parent = axis_root
 	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, axis_len, 0})
 	imaterial.set_property(line_eid, "u_color", COLOR_Y)
 	world[line_eid].parent = axis_root
 	gizmo_obj.sy.eid = {cube_eid, line_eid}
 
-	cube_eid = create_scale_cube({t = {0, 0, axis_len, 1}, s = {cubeScale}}, COLOR_Z, "z")
+	cube_eid = create_scale_cube({t = {0, 0, axis_len, 1}, s = cubeScale}, COLOR_Z, "z")
 	world[cube_eid].parent = axis_root
 	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, axis_len})
 	imaterial.set_property(line_eid, "u_color", COLOR_Z)

@@ -54,5 +54,5 @@ function m:init()
 	-- 		name = "test_cube",
 	-- 	}
 	-- }
-	--world:set(cubeid, "material", {properties={u_color=world.component "vector"{1, 1, 1, 1}}})
+	--imaterial.set_property(cubeid, "u_color", {1, 1, 1, 1})
 end

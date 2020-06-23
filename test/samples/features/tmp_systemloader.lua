@@ -11,6 +11,7 @@ local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
 
 local init_loader_sys = ecs.system 'init_loader_system'
+local imaterial = world:interface "ant.asset|imaterial"
 
 local function create_plane_test()
     local planes = {
@@ -41,7 +42,7 @@ local function create_plane_test()
                     debug_mesh_bounding = true,
                 }
             })
-        world:set(eid, "material", {u_basecolor_factor=p.color})
+        imaterial.set_property(eid, "u_basecolor_factor", p.color)
     end
 end
 

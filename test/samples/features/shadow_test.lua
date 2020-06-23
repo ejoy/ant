@@ -8,6 +8,7 @@ local st_sys = ecs.system "shadow_test_system"
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local ies = world:interface "ant.scene|ientity_state"
+local imaterial = world:interface "ant.asset|imaterial"
 
 function st_sys:init()
 	world:create_entity {
@@ -20,7 +21,7 @@ function st_sys:init()
 			state = ies.create_state "visible|selectable|cast_shadow",
 			scene_entity = true,
 			transform =  {
-				s={100},
+				s=100,
 				t={0, 2, 0, 0}
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",
@@ -47,7 +48,7 @@ function st_sys:init()
 		"/pkg/ant.resources/materials/mesh_shadow.material",
 		"test shadow plane")
 
-	world:set(eid, "material", {properties={u_basecolor_factor=world.component "vector"{0.8, 0.8, 0.8, 1}}})
+	imaterial.set_property(eid, "u_basecolor_factor", {0.8, 0.8, 0.8, 1})
 end
 
 local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder_rawradius)
@@ -122,7 +123,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
         }
 	}
 
-	world:set(cylindereid, "material", {properties={u_color=world.component "vector"{1, 0, 0, 1}}})
+	imaterial.set_property(cylindereid, "u_color", {1, 0, 0, 1})
 
 	local coneeid = world:create_entity{
 		policy = {
@@ -133,7 +134,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible",
-			transform =  {s={100}, t=cone_offset},
+			transform =  {s=100, t=cone_offset},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"
@@ -143,13 +144,13 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		}
 	}
 
-	world:set(coneeid, "material", {properties={u_color=world.component "vector"{1, 0, 0, 1}}})
+	imaterial.set_property(coneeid, "u_color", {1, 0, 0, 1})
 end
 
 function st_sys:post_init()
     local dl = world:singleton_entity "directional_light"
 	local rotator = math3d.torotation(math3d.inverse(dl.direction))
-    directional_light_arrow_widget({s = {0.02,0.02,0.02,0}, r = rotator, t = dl.position}, 8, 0.45)
+    directional_light_arrow_widget({s = 0.02, r = rotator, t = dl.position}, 8, 0.45)
 end
 
 local keypress_mb = world:sub{"keyboard"}

@@ -15,6 +15,7 @@ local animation = world:interface "ant.animation|animation"
 local camera_id
 
 local ilight = world:interface "ant.render|light"
+local imaterial = world:interface "ant.asset|imaterial"
 
 local function create_light()
 	local rotator = math3d.quaternion{math.rad(60), 0, 0}
@@ -47,7 +48,7 @@ function m:init()
 		"test shadow plane"
 	)
 
-	world:set(eid, "material", {properties={u_basecolor_factor={0.8, 0.8, 0.8, 1}}})
+	imaterial.set_property(eid, "u_basecolor_factor", {0.8, 0.8, 0.8, 1})
 	world:create_entity 'res/door.txt'
 	world:create_entity 'res/fence1.txt'
 	world:create_entity 'res/fence2.txt'

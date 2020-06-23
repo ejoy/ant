@@ -12,6 +12,7 @@ local geodrawer = geopkg.drawer
 local geolib    = geopkg.geometry
 
 local ies = world:interface "ant.scene|ientity_state"
+local imaterial = world:interface "ant.asset|imaterial"
 
 local function create_vb_buffer(flag, vb)
 	return ("<"..flag:gsub("d", "I4"):rep(#vb/#flag)):pack(table.unpack(vb))
@@ -187,7 +188,10 @@ function ientity.create_texture_quad_entity(texture_tbl, name)
 	}
 	local mesh = create_mesh({"p3|t2", vb})
 	local eid = create_simple_render_entity(nil, "/pkg/ant.resources/materials/texture.material",  name, mesh)
-	world:set(eid, "material", {properties = texture_tbl})
+	
+	for k, v in pairs(texture_tbl) do
+		imaterial.set_property(eid, k, v.handle)
+	end
 	return eid
 end
 

@@ -68,14 +68,12 @@ end
 
 local function update_transform(eid)
 	local e = world[eid]
-	local etrans = e.transform
-
-	if etrans == nil and e.parent == nil then
+	local rc = e._rendercache
+	if rc.srt == nil and e.parent == nil then
 		return
 	end
 
-	local rc = e._rendercache
-	rc.worldmat = etrans and math3d.matrix(etrans) or nil
+	rc.worldmat = rc.srt and math3d.matrix(rc.srt) or nil
 
 	if e.parent then
 		local im = e.camera and 

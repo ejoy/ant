@@ -56,6 +56,7 @@ end
 
 local function create_ring_entity(world,color,size,rot,name,parent,dir)
     local ies = world:interface "ant.scene|ientity_state"
+    local imaterial = world:interface "ant.asset|imaterial"
     color[4] = 0.6
     local eid = world:create_entity {
         policy={
@@ -81,7 +82,7 @@ local function create_ring_entity(world,color,size,rot,name,parent,dir)
             mount = parent
         },
     }
-    world:set(eid, "material", {properties={u_color=world.component "vector"(color)}})
+    imaterial.set_property(eid, "u_color", color)
     return eid
 end
 
@@ -157,6 +158,7 @@ end
 
 local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
     local ies = world:interface "ant.scene|ientity_state"
+    local imaterial = world:interface "ant.asset|imaterial"
     local eid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -182,12 +184,13 @@ local function create_cone_entity(world, color, size,rot,pos, name,parent,dir)
             mount = parent
         },
     }
-    world:set(eid, "material", {properties={u_color=world.component "vector"(color)}})
+    imaterial.set_property(eid, "u_color", color)
     return eid
 end
 
 local function create_box_entity(world, color, size, pos, name,parent,dir)
     local ies = world:interface "ant.scene|ientity_state"
+    local imaterial = world:interface "ant.asset|imaterial"
     local eid = world:create_entity {
         policy = {
             "ant.general|name",
@@ -209,7 +212,8 @@ local function create_box_entity(world, color, size, pos, name,parent,dir)
             mount = parent
         },
     }
-    world:set(eid, "material", {properties={u_color=world.component "vector"(color)}})
+    
+    imaterial.set_property(eid, "u_color", color)
     return eid
 end
 
