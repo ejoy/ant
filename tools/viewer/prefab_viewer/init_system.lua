@@ -63,7 +63,7 @@ local function instancePrefab(filename)
             scene_entity = true,
         }
     }
-    entities = world:instance(filename, {import={root=root}})
+    entities = world:instance(filename, {root=root})
     normalizeAabb()
     world:pub {"editor", "prefab", entities}
 end
