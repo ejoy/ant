@@ -88,6 +88,16 @@ local function update_bounding(rc, e)
 	rc.aabb = nil
 end
 
+local bgfx = require "bgfx"
+local function set_skinning_transform(rc)
+	local sm = rc.skinning_matrices
+	bgfx.set_multi_transform(sm:pointer(), sm:count())
+end
+
+local function set_world_matrix(rc)
+	bgfx.set_transform(rc.worldmat)
+end
+
 local function update_transform(eid)
 	local e = world[eid]
 	local etrans = e.transform
@@ -117,6 +127,9 @@ local function update_transform(eid)
 
 	if e.skinning_type and e.skinning_type == "GPU" then
 		rc.skinning_matrices = e.skinning.skinning_matrices
+		rc.set_transform = set_skinning_transform
+	else
+		rc.set_transform = set_world_matrix
 	end
 
 	if rc.worldmat then

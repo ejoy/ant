@@ -13,20 +13,14 @@ local setting		= require "setting"
 
 local irender_class = ecs.interface "irender"
 local irender = world:interface "ant.render|irender"
-local imaterial = world:interface "ant.asset|imaterial"
 function irender_class.draw(vid, ri)
-	local sm = ri.skinning_matrices
-	if sm then
-		bgfx.set_multi_transforms(sm:pointer(), sm:count())
-	else
-		bgfx.set_transform(ri.worldmat)
-	end
+	ri:set_transform()
 
 	bgfx.set_state(ri.state)
 	local properties = ri.properties
 	if properties then
-		for n, v in pairs(properties) do
-			imaterial.submit(v)
+		for n, p in pairs(properties) do
+			p:set()
 		end
 	end
 	local ib, vb = ri.ib, ri.vb

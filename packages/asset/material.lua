@@ -145,7 +145,3 @@ function im_class.which_set_func(u)
 
 	return t == "array" and set_uniform_array or set_uniform
 end
-
-function im_class.submit(p)
-	p:set()
-end
