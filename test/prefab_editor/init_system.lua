@@ -25,9 +25,7 @@ function m:init()
     --world:instance '/pkg/tools.viewer.prefab_viewer/light_directional.prefab'
     world:instance "res/light_directional.prefab"
 	-- local res = world:instance "res/fox.glb|mesh.prefab"
-	-- world[res[3]].transform =  {
-	-- 	srt= world.component "srt" {s={0.01}}
-	-- }
+	-- world[res[3]].transform =  {s={0.01}}
     -- world:add_policy(res[3], {
     --     policy = {
 	-- 		"ant.objcontroller|select"
@@ -48,10 +46,8 @@ function m:init()
 	-- 		scene_entity = true,
 	--		state = ies.create_state "visible|selectable",
 	-- 		transform =  {
-	-- 			srt= world.component "srt" {
-	-- 				s={100},
-	-- 				t={0, 2, 0, 0}
-	-- 			}
+	-- 			s={100},
+	-- 			t={0, 2, 0, 0}
 	-- 		},
 	-- 		material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 	-- 		mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",

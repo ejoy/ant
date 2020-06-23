@@ -84,7 +84,12 @@ function iobj:rotate_around_point(eid, targetpt, distance, dx, dy, threshold_aro
     local dir = self:get_direction(eid)
     self:set_direction(eid, math3d.normalize(rotate_vec(dir, dx, dy, threshold_around_x_axis)))
     self:set_position(eid, math3d.sub(targetpt, math3d.mul(dir, distance)))
+end
 
+--TODO: should not modify component directly
+function iobj:set_lock_target(eid, lt)
+    world[eid].lock_target = lt
+    world:pub{"component_changed", "lock_target", eid}
 end
 
 local iobj_interfaces = {}
@@ -114,7 +119,7 @@ function iobj:focus_obj(eid, foucseid)
         self:set_direction(eid, dir)
         self:set_position(eid, math3d.sub(center, math3d.mul(dir, radius * 3.5)))
     else
-        self:focus_point(eid, fe.transform.srt.t)
+        self:focus_point(eid, fe.transform.t)
 	end
 end
 
@@ -137,25 +142,18 @@ end
 
 init_motion_interface(iobj_motion, {
     get_position = function (_, eid)
-        return math3d.index(world[eid].transform.srt, 4)
+        return math3d.index(world[eid].transform, 4)
     end,
     set_position = function (_, eid, pos)
-        world[eid].transform.srt.t = pos
+        world[eid].transform.t = pos
         world:pub{"component_changed", "transform", eid}
     end,
 
     get_direction = function (_, eid)
-        return math3d.forward_dir(world[eid].transform.srt)
+        return math3d.forward_dir(world[eid].transform)
     end,
     set_direction = function (_, eid, dir)
-        world[eid].transform.srt.r = math3d.torotation(dir)
-        world:pub{"component_changed", "transform", eid}
-    end,
-    get_lock_target = function (_, eid)
-        return world[eid].transform.lock_target
-    end,
-    set_lock_target = function (_, eid, lock_target)
-        world[eid].transform.lock_traget = lock_target
+        world[eid].transform.r = math3d.torotation(dir)
         world:pub{"component_changed", "transform", eid}
     end,
 })
@@ -176,14 +174,6 @@ init_motion_interface(icameramotion, {
 
     set_direction = function (_, eid, dir)
         world[eid].camera.viewdir.v = dir
-        world:pub{"component_changed", "camera", eid}
-    end,
-
-    get_lock_target = function (_, eid)
-        return world[eid].camera.lock_target
-    end,
-    set_lock_target = function (_, eid, lock_target)
-        world[eid].camera.lock_traget = lock_target
         world:pub{"component_changed", "camera", eid}
     end,
 })

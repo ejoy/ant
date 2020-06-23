@@ -1,6 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
+local mathpkg = import_package "ant.math"
+local mu = mathpkg.util
+
 local math3d = require "math3d"
 local geometry_drawer = import_package "ant.geometry".drawer
 local bgfx = require "bgfx"
@@ -34,7 +37,7 @@ function widget_drawer_sys:init()
 			"ant.render|bounding_draw",
 		},
 		data = {
-			transform =  {srt = world.component "srt" {}},
+			transform = mu.srt(),
 			material = world.component "resource" "/pkg/ant.resources/materials/line.material",
 			mesh = nil,
 			state = ies.create_state "visible",

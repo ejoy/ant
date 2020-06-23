@@ -144,11 +144,9 @@ local function create_arrow_widget(axis_root, axis_str)
 			scene_entity = true,
 			state = ies.create_state "visible",
 			transform =  {
-				srt = world.component "srt" {
-					s = math3d.ref(math3d.vector(0.2, 10, 0.2)),
-					r = local_rotator,
-					t = cylindere_t,
-				},
+				s = math3d.ref(math3d.vector(0.2, 10, 0.2)),
+				r = local_rotator,
+				t = cylindere_t,
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
@@ -168,7 +166,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible",
-			transform =  {srt=world.component "srt"{s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t}},
+			transform =  {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
 			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
@@ -199,10 +197,8 @@ function gizmo_sys:post_init()
 			scene_entity = true,
 			state = ies.create_state "visible|selectable",
 			transform =  {
-				srt= world.component "srt" {
-					s={50},
-					t={0, 0.5, 1, 0}
-				}
+				s={50},
+				t={0, 0.5, 1, 0}
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
@@ -220,11 +216,9 @@ function gizmo_sys:post_init()
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible|selectable",
-			transform =  {
-				srt= world.component "srt" {
-					s={50},
-					t={-1, 0.5, 0}
-				}
+			transform = {
+				s={50},
+				t={-1, 0.5, 0}
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
@@ -240,7 +234,7 @@ function gizmo_sys:post_init()
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform =  {srt= world.component "srt"(srt)},
+			transform = srt,
 			name = "axis root",
 		},
 	}
@@ -287,9 +281,7 @@ function gizmo_sys:post_init()
 			data = {
 				scene_entity = true,
 				state = ies.create_state "visible|selectable",
-				transform =  {
-					srt= world.component "srt"(srt or {})
-				},
+				transform =  {},
 				material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 				mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name
@@ -421,7 +413,7 @@ local function updateGizmoScale()
 	local camera = camerautil.main_queue_camera(world)
 	local gizmo_dist = math3d.length(math3d.sub(camera.eyepos, math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3])))
 	gizmo_scale = gizmo_dist * 0.6
-	gizmo_obj.root.transform.srt.s = math3d.vector(gizmo_scale, gizmo_scale, gizmo_scale)
+	gizmo_obj.root.transform.s = math3d.vector(gizmo_scale, gizmo_scale, gizmo_scale)
 end
 
 local function distanceBetweenLines(p1, dir1, p2, dir2)
@@ -503,9 +495,9 @@ local function moveGizmo(x, y)
 		lastGizmoPos[3] + deltaOffset[3]
 	}
 	local new_pos = math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3])
-	gizmo_obj.root.transform.srt.t = new_pos
+	gizmo_obj.root.transform.t = new_pos
 	if gizmo_obj.target_eid then
-		world[gizmo_obj.target_eid].transform.srt.t = new_pos
+		world[gizmo_obj.target_eid].transform.t = new_pos
 	end
 	updateGizmoScale()
 end
@@ -558,7 +550,7 @@ local function rotateGizmo(x, y)
 		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(-deltaAngle) }
 	end
 	
-	world[gizmo_obj.target_eid].transform.srt.r = math3d.mul(lastRotate, quat)
+	world[gizmo_obj.target_eid].transform.r = math3d.mul(lastRotate, quat)
 end
 
 local function scaleGizmo(x, y)
@@ -578,8 +570,8 @@ function gizmo_obj:selectGizmo(x, y)
 		rotate_axis, lastHit.v = selectRotateAxis(x, y)
 		if rotate_axis then
 			updateClockwise = true
-			lastRotateAxis.v = math3d.transform(math3d.inverse(world[gizmo_obj.target_eid].transform.srt.r), rotate_axis.dir, 0)
-			lastRotate.q = world[gizmo_obj.target_eid].transform.srt.r
+			lastRotateAxis.v = math3d.transform(math3d.inverse(world[gizmo_obj.target_eid].transform.r), rotate_axis.dir, 0)
+			lastRotate.q = world[gizmo_obj.target_eid].transform.r
 			return true
 		end
 	elseif self.mode == SCALE then
@@ -647,8 +639,8 @@ function gizmo_sys:data_changed()
         local eid = pick_id
         if eid and world[eid] then
 			if gizmo_obj.mode ~= SELECT and gizmo_obj.target_eid ~= eid then
-				gizmo_obj.position = math3d.totable(world[eid].transform.srt.t)
-				gizmo_obj.root.transform.srt.t = world[eid].transform.srt.t
+				gizmo_obj.position = math3d.totable(world[eid].transform.t)
+				gizmo_obj.root.transform.t = world[eid].transform.t
 				gizmo_obj.target_eid = eid
 				updateGizmoScale()
 				showGizmoByState(true)

@@ -7,7 +7,7 @@ local filter_system = ecs.system "filter_system"
 
 local iss = world:interface "ant.scene|iscenespace"
 local ies = world:interface "ant.scene|ientity_state"
-
+local itransform = world:interface "ant.scene|itransform"
 
 local function update_lock_target_transform(eid, lt, im, tr)
 	local e = world[eid]
@@ -20,58 +20,36 @@ local function update_lock_target_transform(eid, lt, im, tr)
 	local target = e.parent
 	
 	if locktype == "move" then
-		local te = world[target]
-		local target_trans = te.transform
-		local pos = math3d.index(target_trans.world, 4)
+		local worldmat = itransform.worldmat(eid)
+		local pos = math3d.index(worldmat, 4)
 		if lt.offset then
 			pos = math3d.add(pos, lt.offset)
 		end
 		im.set_position(eid, pos)
-		tr.worldmat = math3d.matrix(trans.srt)
+		tr.worldmat = math3d.matrix(trans)
 	elseif locktype == "rotate" then
-		local te = world[target]
-		local transform = te.transform
+		local worldmat = itransform.worldmat(eid)
 
 		local pos = im.get_position(eid)
-		local targetpos = math3d.index(transform.world, 4)
+		local targetpos = math3d.index(worldmat, 4)
 		im.set_direction(eid, math3d.normalize(math3d.sub(targetpos, pos)))
 		if lt.offset then
 			im.set_position(eid, math3d.add(pos, lt.offset))
 		end
-		tr.worldmat = math3d.matrix(trans.srt)
+		tr.worldmat = math3d.matrix(trans)
 	elseif locktype == "ignore_scale" then
 		if trans == nil then
 			error(string.format("'ignore_scale' could not bind to entity without 'transform' component"))
 		end
 
 		local te = world[target]
-		local target_trans = te.transform.srt
+		local target_trans = te.transform
 
 		local _, r, t = math3d.srt(target_trans)
 		local m = math3d.matrix{s=1, r=r, t=t}
-		tr.worldmat = math3d.mul(m, trans.srt)
+		tr.worldmat = math3d.mul(m, trans)
 	else
 		error(("not support locktype:%s"):format(locktype))
-	end
-end
-
-local function combine_parent_transform(peid, trans, rc)
-	local pe = world[peid]
-	-- need apply before tr.worldmat
-	if trans then
-		local s = trans._slot_jointidx
-		local pr = pe.pose_result
-		if s and pr then
-			local t = pr:joint(s)
-			rc.worldmat = math3d.mul(t, rc.worldmat)
-		end
-	end
-
-	if rc then
-		local p_rc = pe._rendercache
-		if p_rc and p_rc.worldmat then
-			rc.worldmat = rc.worldmat and math3d.mul(p_rc.worldmat, rc.worldmat) or math3d.matrix(p_rc.worldmat)
-		end
 	end
 end
 
@@ -96,22 +74,28 @@ local function update_transform(eid)
 		return
 	end
 
-	--entity with no transform but parent have, we need to cache a matrix that copy from parent
-	if etrans == nil and e.parent and e._rendercache == nil then
-		e._rendercache = {}
-	end
 	local rc = e._rendercache
-	rc.worldmat = etrans and math3d.matrix(etrans.srt) or nil
+	rc.worldmat = etrans and math3d.matrix(etrans) or nil
 
 	if e.parent then
 		local im = e.camera and 
 					world:interface "ant.objcontroller|camera_motion" or
 					world:interface "ant.objcontroller|obj_motion"
-		local lt = etrans and im.get_lock_target(eid) or nil
+		local lt = e.lock_target
 		if lt then
 			update_lock_target_transform(eid, lt, im, rc)
-		else
-			combine_parent_transform(e.parent, etrans, rc)
+		else	-- combine parent transform
+			local pe = world[e.parent]
+			-- need apply before tr.worldmat
+			local bs_idx = e._bind_slot_idx
+			if bs_idx then
+				local t = pe.pose_result:joint(bs_idx)
+				rc.worldmat = math3d.mul(t, rc.worldmat)
+			end
+			local p_rc = pe._rendercache
+			if p_rc.worldmat then
+				rc.worldmat = rc.worldmat and math3d.mul(p_rc.worldmat, rc.worldmat) or math3d.matrix(p_rc.worldmat)
+			end
 		end
 	end
 
@@ -123,9 +107,7 @@ end
 local function update_state(eid)
 	--TODO: need update by event
 	local e = world[eid]
-	if e._rendercache then
-		e._rendercache.entity_state = e.state
-	end
+	e._rendercache.entity_state = e.state
 end
 
 local filters = {}

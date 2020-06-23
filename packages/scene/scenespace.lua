@@ -42,13 +42,13 @@ function iss.scenequeue()
 end
 
 local function bind_slot_entity(e)
-	local trans = e.transform
-	if trans and trans.slot then
+	local slot = e.bind_slot
+	if slot then
 		local pe = world[e.parent]
 		local pr = pe.pose_result
 		if pr and pe.skeleton then
 			local ske = assert(pe.skeleton)._handle
-			trans._slot_jointidx = ske:joint_index(trans.slot)
+			e._bind_slot_idx = ske:joint_index(trans.slot)
 		end
 	end
 end

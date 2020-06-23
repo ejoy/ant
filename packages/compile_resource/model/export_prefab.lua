@@ -37,20 +37,16 @@ local function get_transform(node)
     if node.matrix then
         local s, r, t = math3d.srt(math3d.matrix(node.matrix))
         return {
-            srt = proxy "srt" {
-                s = math3d.tovalue(s),
-                r = math3d.tovalue(r),
-                t = math3d.tovalue(t),
-            }
+            s = math3d.tovalue(s),
+            r = math3d.tovalue(r),
+            t = math3d.tovalue(t),
         }
     end
 
     return {
-        srt = proxy "srt" {
-            s = node.scale,
-            r = node.rotation,
-            t = node.translation,
-        }
+        s = node.scale,
+        r = node.rotation,
+        t = node.translation,
     }
 end
 

@@ -6,7 +6,6 @@ local ientity = ecs.interface "entity"
 local declmgr   = require "vertexdecl_mgr"
 local hwi       = require "hardware_interface"
 local math3d    = require "math3d"
-local assetmgr  = import_package "ant.asset"
 local mu        = import_package "ant.math".util
 local geopkg    = import_package "ant.geometry"
 local geodrawer = geopkg.drawer
@@ -115,7 +114,7 @@ function ientity.create_plane_entity(srt, materialpath, name, entity_info)
 	}
 
 	local data = {
-		transform =  {srt = world.component "srt"(srt or {})},
+		transform = mu.srt(),
 		material = world.component "resource" (materialpath),
 		state = ies.create_state "visible|selectable",
 		name = name or "Plane",
@@ -339,7 +338,7 @@ function ientity.create_procedural_sky(settings)
 			"ant.general|name",
 		},
 		data = {
-			transform =  {srt=world.component "srt"{}},
+			transform = mu.srt(),
 			material = world.component "resource" "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = world.component "procedural_sky" {
 				--attached_sun_light = attached_light(settings.attached_sun_light),

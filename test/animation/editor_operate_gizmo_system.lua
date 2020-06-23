@@ -28,9 +28,8 @@ local cache = {
 }
 
 local function update_transform(eid, transform, field, value)
-    local srt = transform.srt
-    local oldvalue = srt[field]
-    srt[field] = value
+    local oldvalue = transform[field]
+    transform[field] = value
     world:pub {"component_changed", "transform", eid,
         {field = field, oldvalue = oldvalue, newvalue=value}
     }
@@ -42,11 +41,11 @@ local function scale_gizmo_to_normal(gizmo_eid)
     if et.parent then
         local camera = camerautil.main_queue_camera(world)
         local vp = mu.view_proj(camera)
-        local tvp  = math3d.totable(math3d.transform(vp, et.srt.t, 1))
+        local tvp  = math3d.totable(math3d.transform(vp, et.t, 1))
 
         local scale = math.abs(tvp[4]/7)
         local parent_e = world[et.parent]
-        local finalscale = math3d.mul(scale, parent_e.transform.srt.s)
+        local finalscale = math3d.mul(scale, parent_e.transform.s)
         update_transform(gizmo_eid, et, "s", finalscale)
     end
 end
@@ -61,7 +60,7 @@ local function pos_to_screen(pos,trans,viewproj,w,h)
         vec4_screen = vec4_map.xy * wh   |
     ]]
 
-    local vec4 = math3d.mul(math3d.vector(pos), math3d.reciprocal(trans.srt.s))
+    local vec4 = math3d.mul(math3d.vector(pos), math3d.reciprocal(trans.s))
     local posNDC = math3d.transformH(math3d.mul(viewproj, trans._world), vec4)
 
     return math3d.mul(
@@ -70,7 +69,7 @@ local function pos_to_screen(pos,trans,viewproj,w,h)
 end
 
 local function calc_drag_axis_unit(trans, viewproj, axis_unit, w, h, dx, dy)
-    local r_axis_unit = math3d.transform(trans.srt.r, axis_unit, 0)
+    local r_axis_unit = math3d.transform(trans.r, axis_unit, 0)
     local screen_pos0 = pos_to_screen(mc.ZERO_PT,trans,viewproj,w,h)
     local screen_pos1 = pos_to_screen(axis_unit,trans,viewproj,w,h)
     local screen_unit = math3d.sub(screen_pos1, screen_pos0)
@@ -96,7 +95,7 @@ local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
         local vp_rect = mq.render_target.viewport.rect
         local trans = target_entity.transform
         local drag_axis_unit = calc_drag_axis_unit(trans, viewproj, axis_unit, vp_rect.w, vp_rect.h, dx, dy)
-        local new_pos = math3d.add(drag_axis_unit, trans.srt.t)
+        local new_pos = math3d.add(drag_axis_unit, trans.t)
         update_transform(target_entity_id, target_entity.transform, "t", new_pos)
     end
 end
@@ -108,7 +107,7 @@ local function add_gizmo_scale_length(scale_object, picked_dir, tvec3)
     local scale_line= world[scale_line_id]
 
     local sbtran = scale_box.transform
-    local newpos = math3d.add(sbtran.srt.t, tvec3)
+    local newpos = math3d.add(sbtran.t, tvec3)
     update_transform(scale_box_id, sbtran, "t", newpos)
     update_transform(scale_line_id, scale_line.transform, "s", math3d.mul(newpos, 1 / scale_object.line_length))
 end
@@ -152,7 +151,7 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
         local scale_add = math3d.mul(tvec3, 1 / scale_object.line_length)
         local trans = target_entity.transform
 
-        local newscale = math3d.mul(trans.srt.s, math3d.add(scale_add, {1, 1, 1, 0}))
+        local newscale = math3d.mul(trans.s, math3d.add(scale_add, {1, 1, 1, 0}))
         update_transform(target_entity_id, trans, "s", newscale)
     end
 end
@@ -181,7 +180,7 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
             local camera = world[mq.camera_eid].camera
 
             local viewproj = mu.view_proj(camera)
-            r_axis_unit = math3d.transform(trans.srt.r, axis_unit, 0)
+            r_axis_unit = math3d.transform(trans.r, axis_unit, 0)
             ------------------------
             local inject_pos_world
             do 
@@ -213,7 +212,7 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
         end
         local effect_dis = math3d.dot(math3d.vector(dx, dy, 0), normalize_sceen_unit)
         local t = effect_dis/sceen_unit_dis
-        local new_rot = math3d.mul(math3d.quaternion{axis=r_axis_unit, r=0.01*t}, trans.srt.r)
+        local new_rot = math3d.mul(math3d.quaternion{axis=r_axis_unit, r=0.01*t}, trans.r)
         update_transform(target_entity_id, trans, "r", new_rot)
     end
 end

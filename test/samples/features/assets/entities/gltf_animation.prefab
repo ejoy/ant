@@ -8,8 +8,7 @@ policy:
     ant.general|name
 data:
     transform: 
-        srt: $srt
-            t: {-5, 0, 0, 1}
+        t: {-5, 0, 0, 1}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Joints_P1.meshbin"
     meshskin: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin1.skinbin"
     material: $resource /pkg/ant.resources/materials/gpu_skin.material
@@ -33,8 +32,7 @@ policy:
     ant.general|name
 data:
     transform: 
-        srt: $srt
-            t: {-5, 0, 0, 1}
+        t: {-5, 0, 0, 1}
     mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"
     meshskin: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin"
     material: $resource /pkg/ant.resources/materials/gpu_skin.material

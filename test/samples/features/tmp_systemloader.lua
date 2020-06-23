@@ -60,9 +60,9 @@ local function target_lock_test()
         data = {
             name = "lock_target",
             can_render = true,
-            transform =  {srt = world.component "srt" {
+            transform =  {
                 s = world.component "vector" {2, 1, 2, 0},
-                t = world.component "vector" {16, 1, 6}},
+                t = world.component "vector" {16, 1, 6},
             },
             mesh = world.component "resource" "/pkg/ant.resources/meshes/sphere.mesh",
             material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",
@@ -75,17 +75,16 @@ local function target_lock_test()
             "ant.general|name",
             "ant.render|render",
             "ant.scene|hierarchy_policy",
+            "ant.scene|lock_target_policy",
         },
         data = {
             name = "lock_obj",
             can_render = true,
             parent = eid,
-            transform =  {
-                srt= world.component "srt" {t= world.component "vector" {0, 0, -6}},
-                lock_target = {
-                    type = "ignore_scale",
-                    offset = {0, 0, 3},
-                },
+            transform =  {t={0, 0, -6}},
+            lock_target = {
+                type = "ignore_scale",
+                offset = {0, 0, 3},
             },
             mesh = world.component "resource" "/pkg/ant.resources/meshes/cube.mesh",
             material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",

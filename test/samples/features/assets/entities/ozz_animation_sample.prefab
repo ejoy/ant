@@ -11,8 +11,7 @@ policy:
     ant.render|debug_mesh_bounding
 data:
     transform: 
-        srt: $srt
-            t: {-5, 0, 5, 1}
+        t: {-5, 0, 5, 1}
     material: $resource /pkg/ant.resources/materials/skin_model_sample.material
     animation:
         anilist:

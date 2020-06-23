@@ -26,11 +26,7 @@ local function material_hierarchy_test()
             name = "hierarchy_child",
             mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
             state = ies.create_state "visible",
-            transform = {
-                srt = world.component "srt" {
-                    s = {10}, t = {5, 0, 0}
-                }
-            }
+            transform = {s = {10}, t = {5, 0, 0}}
         },
         action = {
             mount=root,
@@ -47,11 +43,7 @@ local function material_hierarchy_test()
             name = "hierarchy_child_2",
             mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
             state = ies.create_state "visible",
-            transform = {
-                srt = world.component "srt" {
-                    s = {10}, t = {5, 0, 0}
-                }
-            }
+            transform = {s = {10}, t = {5, 0, 0}},
         },
         action = {
             mount=root,
@@ -67,11 +59,7 @@ local function material_hierarchy_test()
             name = "hierarchy_child",
             mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
             state = ies.create_state "visible",
-            transform = {
-                srt = world.component "srt" {
-                    s = {10}, t = {5, 0, 0}
-                }
-            }
+            transform = {s = {10}, t = {5, 0, 0}},
         },
         action = {
             mount=ceid2,
@@ -87,9 +75,7 @@ local function space_test()
         },
         data = {
             name = "root",
-            transform =  {
-                srt=world.component "srt"{t={0, 1, 0, 1}}
-            },
+            transform =  {t={0, 1, 0, 1}},
             scene_entity = true,
         }
     }
@@ -107,10 +93,8 @@ local function space_test()
             material = material,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
             transform =  {
-                srt=world.component "srt"{
-                    s = {100,},
-                    t={1, 2, 0, 1},
-                }
+                s = {100,},
+                t={1, 2, 0, 1},
             },
             state = ies.create_state "visible|selectable",
             scene_entity = true,
@@ -133,11 +117,9 @@ local function space_test()
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = material,
             transform =  {
-                srt = world.component "srt" {
-                    s = {100,},
-                    r = {math.rad(math.cos(30)), 0, 0, math.rad(math.sin(30))}, --rotate 60 degree
-                    t = {1, 2, 0, 1}
-                }
+                s = {100,},
+                r = {math.rad(math.cos(30)), 0, 0, math.rad(math.sin(30))}, --rotate 60 degree
+                t = {1, 2, 0, 1}
             },
         },
         action = {
@@ -154,10 +136,8 @@ local function space_test()
         data = {
             name = "child2",
             transform =  {
-                srt = world.component "srt" {
-                    s = {1, 2, 1, 0},
-                    t = {3, 3, 5}
-                }
+                s = {1, 2, 1, 0},
+                t = {3, 3, 5}
             },
             scene_entity = true,
         },
@@ -179,10 +159,8 @@ local function space_test()
             material = material,
             mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             transform =  {
-                srt = world.component "srt" {
-                    s = {100,},
-                    t ={1, 2, 0, 1}
-                }
+                s = {100,},
+                t ={1, 2, 0, 1}
             },
         },
         action = {

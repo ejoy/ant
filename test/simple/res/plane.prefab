@@ -6,7 +6,6 @@ data:
   scene_entity: true
   state: 5
   transform:
-    srt: $srt
       r: {0, 0, 0, 1}
       s: {500, 1, 500, 0}
       t: {0, 0, 0, 1}

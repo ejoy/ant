@@ -7,8 +7,7 @@ policy:
 data:
     material:$resource /pkg/ant.resources/terrain/test.material
     transform: 
-        srt:$srt
-            s: {1, 1, 1, 0}
+        s: {1, 1, 1, 0}
     scene_entity: true
     can_render: true
     terrain: $terrain

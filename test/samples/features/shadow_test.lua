@@ -20,10 +20,8 @@ function st_sys:init()
 			state = ies.create_state "visible|selectable|cast_shadow",
 			scene_entity = true,
 			transform =  {
-				srt= world.component "srt" {
-					s={100},
-					t={0, 2, 0, 0}
-				}
+				s={100},
+				t={0, 2, 0, 0}
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",
 			mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
@@ -37,11 +35,7 @@ function st_sys:init()
 			"ant.general|name",
 		},
 		data = {
-			transform =  {
-				srt = world.component "srt" {
-					t = {0, 0, 3, 1}
-				}
-			},
+			transform =  {t = {0, 0, 3, 1}},
 			name = "mesh_root",
 			scene_entity = true,
 		}
@@ -78,7 +72,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform =  {srt= world.component "srt"(srt)},
+			transform = srt,
 			scene_entity = true,
 			name = "directional light arrow",
 		},
@@ -116,10 +110,8 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 			scene_entity = true,
 			state = ies.create_state "visible",
 			transform =  {
-				srt = world.component "srt" {
-					s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
-					t = math3d.ref(cylinder_offset),
-				},
+				s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
+				t = math3d.ref(cylinder_offset),
 			},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
@@ -141,7 +133,7 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible",
-			transform =  {srt=world.component "srt"{s={100}, t=cone_offset}},
+			transform =  {s={100}, t=cone_offset},
 			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"

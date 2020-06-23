@@ -21,9 +21,9 @@ local function get_matrix(eid)
         if not e.transform then
             return get_matrix(e.parent)
         end
-        return math3d.mul(e.transform.srt, get_matrix(e.parent))
+        return math3d.mul(e.transform, get_matrix(e.parent))
     end
-    return e.transform.srt
+    return e.transform
 end
 
 local function normalizeAabb()
@@ -43,7 +43,7 @@ local function normalizeAabb()
     local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
     local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
     local e = world[root]
-    e.transform.srt.m = math3d.mul(transform, e.transform.srt)
+    e.transform.m = math3d.mul(transform, e.transform)
 end
 
 local function instancePrefab(filename)
@@ -57,9 +57,7 @@ local function instancePrefab(filename)
             "ant.scene|transform_policy",
         },
         data = {
-            transform =  {
-                srt = world.component "srt" {}
-            },
+            transform = {},
             scene_entity = true,
         }
     }

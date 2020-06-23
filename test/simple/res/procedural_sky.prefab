@@ -11,7 +11,6 @@ data:
   scene_entity: true
   state: 1
   transform:
-    srt: $srt
       r: {0, 0, 0, 1}
       s: {1, 1, 1, 0}
       t: {0, 0, 0, 1}

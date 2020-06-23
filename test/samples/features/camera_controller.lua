@@ -45,21 +45,20 @@ function camera_controller_sys:post_init()
 	--self.message.observers:add(message)
 end
 
-local function can_rotate(camera)
-	local lock_target = camera.lock_target
+local function can_rotate(eid)
+	local lock_target = world[eid].lock_target
 	return lock_target and lock_target.type ~= "rotate" or true
 end
 
-local function can_move(camera)
-	local lock_target = camera.lock_target
+local function can_move(eid)
+	local lock_target = world[eid].lock_target
 	return lock_target and lock_target.type ~= "move" or true
 end
 
 function camera_controller_sys:data_changed()
 	local mq = world:singleton_entity "main_queue"
-	local camera = world[mq.camera_eid].camera
-	
-	if can_rotate(camera) then
+
+	if can_rotate(mq.camera_eid) then
 		for _, e in ipairs(mouse_events) do
 			for _,_,state,x,y in e:unpack() do
 				if state == "MOVE" and mouse_lastx then
@@ -71,7 +70,7 @@ function camera_controller_sys:data_changed()
 			end
 		end
 	end
-	if can_move(camera) then
+	if can_move(mq.camera_eid) then
 		local keyboard_delta = {0 , 0, 0}
 		for _,code,press in eventKeyboard:unpack() do
 			local delta = (press>0) and kKeyboardSpeed or 0

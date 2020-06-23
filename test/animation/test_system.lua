@@ -19,9 +19,7 @@ local function create_prefab(prefab, srt)
             "ant.scene|transform_policy",
         },
         data = {
-            transform =  {
-                srt = world.component "srt" (srt)
-            },
+            transform = srt,
             scene_entity = true,
         }
     }
@@ -208,7 +206,7 @@ function init_loader_sys:widget()
     end
     local e = world[RoleEntityId]
     local ske = e.skeleton
-    drawer.draw_skeleton(ske._handle, e.pose_result, e.transform.srt)
+    drawer.draw_skeleton(ske._handle, e.pose_result, e.transform)
 end
 
 local eventMouse = world:sub {"mouse"}

@@ -177,7 +177,7 @@ local function create_outline(seleid)
         -- local trans = se.transform
         -- local s, r, t = ms(trans.t, trans.r, trans.s, "TTT")
         local ies = world:interface "ant.scene|ientity_state"
-        local t = {srt = mu.srt()}
+
         t.parent = seleid
         local outlineeid = world:create_entity {
             policy={
@@ -186,7 +186,7 @@ local function create_outline(seleid)
                 "ant.imgui|outline",
             },
             data={
-                transform = t,
+                transform = mu.srt(),
                 material = world.component "resource" "/pkg/ant.resources/materials/outline/scale.material",
                 state = ies.create_state "selectable|visible",
                 outline_entity = true,
@@ -299,7 +299,7 @@ local function start_watch_entitiy(eid,focus,is_pick)
             if not camerautil.focus_obj(world, eid) then
                 local transform = world[eid].transform
                 if transform then
-                    camerautil.focus_point(world, transform.srt.t)
+                    camerautil.focus_point(world, transform.t)
                 end
             end
         end

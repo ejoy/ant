@@ -133,7 +133,7 @@ function icoll.test(e, srt)
 	end
 	set_obj_transform(e.collider._handle, srt.t, srt.r)
 	local hit = w:test_overlap(e.collider._handle)
-	local _, r, t = math3d.srt(e.transform.srt)
+	local _, r, t = math3d.srt(e.transform)
 	set_obj_transform(e.collider._handle, t, r)
 	return hit
 end

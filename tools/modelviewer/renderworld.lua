@@ -84,11 +84,11 @@ local target
 local move_speed = 200
 
 local function setEntityFacing(e, facing)
-	e.transform.srt.r = math3d.quaternion{0, facing, 0}
+	e.transform.r = math3d.quaternion{0, facing, 0}
 end
 
 local function setEntityPosition(e, postion)
-	local s, r, t = math3d.srt(e.transform.srt)
+	local s, r, t = math3d.srt(e.transform)
 	local srt_test = {
 		s = s,
 		r = r,
@@ -97,12 +97,12 @@ local function setEntityPosition(e, postion)
 	if collider.test(e, srt_test) then
 		return
 	end
-	e.transform.srt.t = postion
+	e.transform.t = postion
 	return true
 end
 
 local function moveEntity(e, distance)
-	local s, r, t = math3d.srt(e.transform.srt)
+	local s, r, t = math3d.srt(e.transform)
 	local d = math3d.todirection(r)
 	local postion = math3d.muladd(distance, d, t)
 	if setEntityPosition(e, postion) then
@@ -150,7 +150,7 @@ local function mainloop(delta)
 		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
-			local postion = math3d.totable(player.transform.srt.t)
+			local postion = math3d.totable(player.transform.t)
 			local facing = math.atan(x0-postion[1], z0-postion[3])
 			setEntityFacing(player, facing)
 			target = {x0, 0, z0}
@@ -170,7 +170,7 @@ local function mainloop(delta)
 		setEntityFacing(player, facing)
 		moveEntity(player, move_distance)
 	elseif mode == "mouse" then
-		local postion = math3d.totable(player.transform.srt.t)
+		local postion = math3d.totable(player.transform.t)
 		local dx = target[1] - postion[1]
 		local dy = target[3] - postion[3]
 		local dis = dx*dx+dy*dy

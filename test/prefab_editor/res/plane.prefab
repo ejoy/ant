@@ -4,8 +4,7 @@ data:
   material: $resource /pkg/ant.resources/materials/mesh_shadow.material
   mesh: $resource ./plane.meshbin
   scene_entity: true
-  transform: 
-    srt: $srt
+  transform:
       s: {500, 1, 500, 0}
   name: shadow_plane
 policy:
