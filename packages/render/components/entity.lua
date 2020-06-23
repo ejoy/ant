@@ -108,6 +108,55 @@ local function get_plane_mesh()
 	return plane_mesh
 end
 
+local prim_plane_mesh
+local function get_prim_plane_mesh()
+	if prim_plane_mesh == nil then
+		local vb = {
+			-0.5, 0, 0.5, 0, 1, 0,	--left top
+			0.5,  0, 0.5, 0, 1, 0,	--right top
+			-0.5, 0,-0.5, 0, 1, 0,	--left bottom
+			-0.5, 0,-0.5, 0, 1, 0,
+			0.5,  0, 0.5, 0, 1, 0,
+			0.5,  0,-0.5, 0, 1, 0,	--right bottom
+		}
+		prim_plane_mesh = create_mesh({"p3|n3", vb})
+		prim_plane_mesh.bounding = {
+			aabb = math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))
+		}
+	end
+	return prim_plane_mesh
+end
+
+function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
+	local policy = {
+		"ant.render|render",
+		"ant.general|name",
+	}
+
+	local data = {
+		transform =  {srt = world.component "srt"(srt or {})},
+		material = world.component "resource" (materialpath),
+		state = ies.create_state "visible",
+		name = name or "Plane",
+		scene_entity = true,
+		mesh = get_prim_plane_mesh(),
+	}
+
+	if entity_info then
+		for policy_name, dd in pairs(entity_info) do
+			policy[#policy+1] = policy_name
+			for k, d in pairs(dd) do
+				data[k] = d
+			end
+		end
+	end
+
+	return world:create_entity{
+		policy = policy,
+		data = data,
+	}
+end
+
 function ientity.create_plane_entity(srt, materialpath, name, entity_info)
 	local policy = {
 		"ant.render|render",

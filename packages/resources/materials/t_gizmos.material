@@ -3,8 +3,8 @@ properties:
   u_color: $vector {1, 1, 1, 1}
 state:
   ALPHA_REF: 0
-  CULL: CCW
+  CULL: NONE
   DEPTH_TEST: ALWAYS
   MSAA: true
-  WRITE_MASK: RGB
+  WRITE_MASK: RGBA
   BLEND: ALPHA

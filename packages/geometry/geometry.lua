@@ -104,6 +104,18 @@ local function gen_cricle_vertices(vb, slices, height, radius)
 	end
 end
 
+local function gen_cricle_vertices_facez(vb, slices, zvalue, radius)
+	local radian_step = 2 * math.pi / slices
+	for s=0, slices-1 do
+		local radian = radian_step * s
+		table.insert(vb, {
+			math.cos(radian) * radius,
+			math.sin(radian) * radius,
+			zvalue,
+		})
+	end
+end
+
 local function gen_cricle_indices(ib, slices, baseidx)
 	local last_idx = baseidx
 	for i=1, slices do
@@ -118,7 +130,7 @@ end
 function geometry.cricle(radius, slices)
 	local vb = {}
 	local ib = {}
-	gen_cricle_vertices(vb, slices, 0, radius)
+	gen_cricle_vertices_facez(vb, slices, 0, radius)
 	gen_cricle_indices(ib, slices, 0)
 	return vb, ib
 end
