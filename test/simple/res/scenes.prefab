@@ -1,4 +1,6 @@
 ---
+action:
+    name: camera
 prefab: ./camera.prefab
 ---
 prefab: ./procedural_sky.prefab

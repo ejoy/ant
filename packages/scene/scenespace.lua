@@ -1,17 +1,10 @@
 local ecs = ...
 local world = ecs.world
-local math3d = require "math3d"
 
 local m = ecs.action "mount"
-function m.init(e, prefab, value)
+function m.init(prefab, i, value)
+	local e = world[prefab[i]]
     e.parent = prefab[value]
-end
-function m.save(e, prefab)
-	for i, v in ipairs(prefab) do
-		if v == e.parent then
-			return i
-		end
-	end
 end
 
 local pf = ecs.component "primitive_filter"
@@ -48,7 +41,7 @@ local function bind_slot_entity(e)
 		local pr = pe.pose_result
 		if pr and pe.skeleton then
 			local ske = assert(pe.skeleton)._handle
-			e._bind_slot_idx = ske:joint_index(trans.slot)
+			e._bind_slot_idx = ske:joint_index(slot)
 		end
 	end
 end
@@ -66,19 +59,18 @@ end
 local function inherit_material(e)
 	local pe = world[e.parent]
 	local p_rc = pe._rendercache
-	if p_rc then
-		local rc = e._rendercache
-		if rc.fx == nil then
-			rc.fx = p_rc.fx
-		end
 
-		if rc.state == nil then
-			rc.state = p_rc.state
-		end
+	local rc = e._rendercache
+	if rc.fx == nil then
+		rc.fx = p_rc.fx
+	end
 
-		if rc.properties == nil then
-			rc.properties = p_rc.properties
-		end
+	if rc.state == nil then
+		rc.state = p_rc.state
+	end
+
+	if rc.properties == nil then
+		rc.properties = p_rc.properties
 	end
 end
 

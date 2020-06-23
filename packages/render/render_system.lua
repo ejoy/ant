@@ -4,18 +4,12 @@ local world = ecs.world
 local fbmgr 	= require "framebuffer_mgr"
 local bgfx 		= require "bgfx"
 
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
 local math3d	= require "math3d"
 
 local irender = world:interface "ant.render|irender"
 local isys_properties = world:interface "ant.render|system_properties"
 local imaterial = world:interface "ant.asset|imaterial"
 local rt = ecs.transform "render_transform"
-
-local function set_world_matrix(rc)
-	bgfx.set_transform(rc.worldmat)
-end
 
 function rt.process_entity(e)
 	local c = e._cache_prefab
@@ -33,7 +27,8 @@ function rt.process_entity(e)
 				handle = u.handle,
 				type = u.type,
 				set = imaterial.which_set_func(v),
-				ref=true}
+				ref=true
+			}
 		end
 	end
 
@@ -42,7 +37,6 @@ function rt.process_entity(e)
 	e._rendercache.state 		= c.state
 	e._rendercache.vb 			= c.vb
 	e._rendercache.ib 			= c.ib
-	e._rendercache.set_transform= set_world_matrix
 end
 
 local rt = ecs.component "render_target"

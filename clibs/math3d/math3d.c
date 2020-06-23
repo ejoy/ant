@@ -28,6 +28,17 @@
 static int g_default_homogeneous_depth = 0;
 static int g_origin_bottom_left = 0;
 
+static size_t
+getlen(lua_State *L, int index) {
+	lua_len(L, index);
+	if (lua_isinteger(L, -1)) {
+		size_t len = lua_tointeger(L, -1);
+		lua_pop(L, 1);
+		return len;
+	}
+	return luaL_error(L, "lua_len returns %s", lua_typename(L, lua_type(L, -1)));
+}
+
 int
 math3d_homogeneous_depth() {
 	return g_default_homogeneous_depth;
@@ -156,7 +167,7 @@ typedef int64_t (*from_table_func)(lua_State *L, struct lastack *LS, int index);
 
 static int64_t
 vector_from_table(lua_State *L, struct lastack *LS, int index) {
-	int n = lua_rawlen(L, index);
+	int n = getlen(L, index);
 	if (n != 3 && n != 4)
 		return luaL_error(L, "Vector need a array of 3/4 (%d)", n);
 	float *v = lastack_allocvec4(LS);
@@ -221,7 +232,7 @@ quat_from_axis(lua_State *L, struct lastack *LS, int index, const char *key) {
 
 static int64_t
 quat_from_table(lua_State *L, struct lastack *LS, int index) {
-	int n = lua_rawlen(L, index);
+	int n = getlen(L, index);
 	if (n == 0) {
 		if (quat_from_axis(L, LS, index, "axis"))
 			return luaL_error(L, "Quat invalid arguments");
@@ -241,7 +252,7 @@ quat_from_table(lua_State *L, struct lastack *LS, int index) {
 
 static int64_t
 matrix_from_table(lua_State *L, struct lastack *LS, int index) {
-	int n = lua_rawlen(L, index);
+	int n = getlen(L, index);
 	if (n == 0) {
 		const float *s;
 		float tmp[4];
@@ -1179,7 +1190,7 @@ lminmax(lua_State *L){
 	struct lastack *LS = GETLS(L);
 
 	luaL_checktype(L, 1, LUA_TTABLE);
-	const int numpoints = (int)lua_rawlen(L, 1);
+	const int numpoints = (int)getlen(L, 1);
 
 	const float* transform = lua_isnoneornil(L, 2) ? NULL : matrix_from_index(L, LS, 2);
 
@@ -1450,7 +1461,7 @@ lfrustum_planes(lua_State *L){
 
 static inline void
 fetch_vectors_from_table(lua_State *L, struct lastack *LS, int index, int checknum, const float** vectors){
-	const int num = lua_rawlen(L, index);
+	const int num = getlen(L, index);
 	if (num != checknum){
 		luaL_error(L, "table need contain %d planes:%d", checknum, num);
 	}

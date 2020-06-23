@@ -15,15 +15,19 @@ local m = ecs.system 'init_system'
 local root
 local entities = {}
 
+local itransform = world:interface "ant.scene|itransform"
+
 local function get_matrix(eid)
     local e = world[eid]
+    local srt = itransform.srt(eid)
     if e.parent and eid ~= root then
-        if not e.transform then
+        if not srt then
             return get_matrix(e.parent)
         end
-        return math3d.mul(e.transform, get_matrix(e.parent))
+        local psrt = get_matrix(e.parent)
+        return math3d.mul(srt, psrt)
     end
-    return e.transform
+    return srt
 end
 
 local function normalizeAabb()
@@ -42,8 +46,7 @@ local function normalizeAabb()
     local s = 1/math.max(max_x - min_x, max_y - min_y, max_z - min_z)
     local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
     local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
-    local e = world[root]
-    e.transform.m = math3d.mul(transform, e.transform)
+    itransform.set_srt(root, math3d.mul(transform, itransform.srt(root)))
 end
 
 local function instancePrefab(filename)
@@ -61,7 +64,7 @@ local function instancePrefab(filename)
             scene_entity = true,
         }
     }
-    entities = world:instance(filename, {import={root=root}})
+    entities = world:instance(filename, {root=root})
     normalizeAabb()
     world:pub {"editor", "prefab", entities}
 end

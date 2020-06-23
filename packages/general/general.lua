@@ -21,3 +21,8 @@ local rct = ecs.transform "rendercache_transform"
 function rct.process_entity(e)
     e._rendercache = {}
 end
+
+local m = ecs.action "name"
+function m.init(prefab, i, value)
+    prefab[value] = prefab[i]
+end

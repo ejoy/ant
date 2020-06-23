@@ -159,11 +159,3 @@ function filter_system:filter_render_items()
 		add_filter_list(eid, filters)
 	end
 end
-
-local it = ecs.interface "itransform"
-function it.worldmat(eid)
-	local rc = world[eid]._rendercache
-	if rc then
-		return rc.worldmat
-	end
-end
