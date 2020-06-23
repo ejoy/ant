@@ -194,7 +194,7 @@ local function instance_prefab(w, prefab, args)
 			for name, target in sortpairs(entity.action) do
 				local object = w._class.action[name]
 				assert(object and object.init)
-				object.init(w[res[i]], res, target)
+				object.init(res, i, target)
 			end
 		end
 	end
@@ -212,26 +212,15 @@ end
 function world:instance(filename, args)
 	local prefab = component_init(self, "resource", filename)
 	--set_readonly(self, prefab)
-	local res = instance_prefab(self, prefab, args)
-	return res
+	return instance_prefab(self, prefab, args)
 end
 
-local function serialize_entity(w, class, prefab, args)
+local function serialize_entity(class)
 	local e = {policy={},data={}}
 	local template = class.template
 	local dataset = class.dataset
-	local action = {}
-	for _, name in ipairs(template.action) do
-		if args and args[name] then
-			action[name] = args[name]
-		else
-			local object = w._class.action[name]
-			assert(object and object.save)
-			action[name] =  object.save(dataset, prefab)
-		end
-	end
-	if next(action) ~= nil then
-		e.action = action
+	if next(class.action) ~= nil then
+		e.action = class.action
 	end
 	for _, p in ipairs(template.policy) do
 		e.policy[#e.policy+1] = p
@@ -243,23 +232,23 @@ local function serialize_entity(w, class, prefab, args)
 	return e
 end
 
-local function serialize_prefab(w, prefab, args)
+local function serialize_prefab(w, prefab)
 	local t = {}
-	for i, class in ipairs(prefab.__class) do
+	for _, class in ipairs(prefab.__class) do
 		if class.prefab then
 			t[#t+1] = {
 				prefab = tostring(class.prefab),
 				args = next(class.args) ~= nil and class.args or nil,
 			}
 		else
-			t[#t+1] = serialize_entity(w, class, prefab, args[i])
+			t[#t+1] = serialize_entity(class)
 		end
     end
     return stringify(t, w._typeclass)
 end
 
-function world:serialize(entities, args)
-	return serialize_prefab(self, entities, args or {})
+function world:serialize(entities)
+	return serialize_prefab(self, entities)
 end
 
 function world:remove_entity(eid)

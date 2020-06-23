@@ -7,5 +7,5 @@ function m:init()
     local e = world:singleton_entity "main_queue"
     e.render_target.viewport.clear_state.color = 0xa0a0a0ff
     local res = world:instance "res/scenes.prefab"
-    camera.bind(res[1][1], "main_queue")
+    camera.bind(res.camera[1], "main_queue")
 end

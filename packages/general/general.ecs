@@ -15,3 +15,7 @@ transform "rendercache_transform"
     .implement "general.lua"
     .output "_rendercache"
     .method "process_entity"
+
+action "name"
+    .implement "general.lua"
+    .method "init"

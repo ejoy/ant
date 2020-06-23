@@ -8,15 +8,15 @@ local function load_prefab(v)
 	return {
 		prefab = world.component "resource"(v.prefab),
 		args = v.args or {},
+		action = v.action or {},
 	}
 end
 
 local function load_entity(v)
-	local policy, dataset, action = v.policy, v.data, v.action
-	local template = ecs_policy.create(world, policy)
+	local template = ecs_policy.create(world, v.policy)
 	local e = {}
 	for _, c in ipairs(template.component) do
-		e[c] = dataset[c]
+		e[c] = v.data[c]
 	end
 	for _, f in ipairs(template.process_prefab) do
 		f(e)
@@ -24,7 +24,7 @@ local function load_entity(v)
 	return {
 		template = template,
 		dataset = e,
-		action = action or {},
+		action = v.action or {},
 	}
 end
 

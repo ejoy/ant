@@ -17,7 +17,6 @@ policy "hierarchy_policy"
 action "mount"
     .implement "scenespace.lua"
     .method "init"
-    .method "save"
 
 policy "transform_policy"
     .require_transform "ant.general|rendercache_transform"

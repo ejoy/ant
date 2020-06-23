@@ -1,17 +1,10 @@
 local ecs = ...
 local world = ecs.world
-local math3d = require "math3d"
 
 local m = ecs.action "mount"
-function m.init(e, prefab, value)
+function m.init(prefab, i, value)
+	local e = world[prefab[i]]
     e.parent = prefab[value]
-end
-function m.save(e, prefab)
-	for i, v in ipairs(prefab) do
-		if v == e.parent then
-			return i
-		end
-	end
 end
 
 local pf = ecs.component "primitive_filter"
