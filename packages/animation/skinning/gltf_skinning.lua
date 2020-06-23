@@ -11,7 +11,7 @@ local animodule = require "hierarchy.animation"
 
 local st_trans = ecs.transform "skinning_type_transform"
 function st_trans.process_prefab(e)
-	e.skinning_type  = "CPU"
+	e.skinning_type  = "GPU"
 end
 
 local mesh_skinning_transform = ecs.transform "mesh_skinning"
@@ -69,6 +69,29 @@ local function create_job(pnT_buffer, wi_buffer)
 	}
 end
 
+local bgfx = require "bgfx"
+local function set_skinning_transform(rc)
+	local sm = rc.skinning_matrices
+	bgfx.set_multi_transforms(sm:pointer(), sm:count())
+end
+
+local function build_rendermesh(rc, m)
+	rc.ib = m.ib
+	rc.vb = {
+		start = m.vb.start,
+		num = m.vb.num,
+		handles = {
+			m.vb[1].handle,
+			m.vb[2] and m.vb[2].handle or nil,
+		}
+	}
+end
+
+local function build_transform(rc, skinning)
+	rc.skinning_matrices = skinning.skinning_matrices
+	rc.set_transform = set_skinning_transform
+end
+
 local function build_cpu_skinning_jobs(e, skinning)
 	local m = e.mesh
 	if #m.vb < 2 then
@@ -101,17 +124,6 @@ local function build_cpu_skinning_jobs(e, skinning)
 	}
 	e.mesh = nm
 
-	local function build_rendermesh(rc, m)
-		rc.ib = m.ib
-		rc.vb = {
-			start = nm.vb.start,
-			num = nm.vb.num,
-			handles = {
-				nm.vb[1].handle,
-				nm.vb[2] and nm.vb[2].handle or nil,
-			}
-		}
-	end
 	build_rendermesh(e._rendercache, e.mesh)
 end
 
@@ -126,5 +138,7 @@ function mesh_skinning_transform.process_entity(e)
 
 	if e.skinning_type == "CPU" then
 		build_cpu_skinning_jobs(e, skinning)
+	else
+		build_transform(e._rendercache, e.skinning)
 	end
 end
