@@ -23,7 +23,10 @@ local function readonly(t)
         end,
         __pairs = function()
             return readonly_next
-        end
+        end,
+        __len = function()
+            return #t
+        end,
     })
 end
 
