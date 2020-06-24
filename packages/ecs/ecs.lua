@@ -88,16 +88,17 @@ end
 
 function world:add_policy(eid, t)
 	local policies, dataset = t.policy, t.data
+    if t.action and next(t.action) ~= nil then
+        error "action can only be imported during instance."
+    end
 	local res = policy.add(self, eid, policies)
 	local e = self[eid]
 	for _, c in ipairs(res.component) do
 		e[c] = dataset[c]
+		register_component(self, eid, c)
 	end
 	for _, f in ipairs(res.process_prefab) do
 		f(e)
-	end
-	for c in pairs(res.register_component) do
-		register_component(self, eid, c)
 	end
 	for _, f in ipairs(res.process_entity) do
 		f(e)
@@ -147,7 +148,7 @@ end
 local function instance_entity(w, entity)
 	local eid = register_entity(w)
 	local e = w[eid]
-	for c in pairs(entity.template.register_component) do
+	for _, c in ipairs(entity.template.component) do
 		register_component(w, eid, c)
 	end
 	for k, v in pairs(entity.dataset) do

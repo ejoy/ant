@@ -65,7 +65,6 @@ local attribute = {
 		"require_transform",
 		"component",
 		"unique_component",
-		"action",
 	},
 	transform = {
 		"implement",
