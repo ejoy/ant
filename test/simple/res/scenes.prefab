@@ -1,6 +1,6 @@
 ---
 action:
-    name: camera
+    import: {camera, 1}
 prefab: ./camera.prefab
 ---
 prefab: ./procedural_sky.prefab
