@@ -8,8 +8,9 @@ local filter_system = ecs.system "filter_system"
 local iss = world:interface "ant.scene|iscenespace"
 local ies = world:interface "ant.scene|ientity_state"
 local itransform = world:interface "ant.scene|itransform"
+local iom = world:interface "ant.objcontroller|obj_motion"
 
-local function update_lock_target_transform(eid, lt, im, tr)
+local function update_lock_target_transform(eid, lt, tr)
 	local e = world[eid]
 	local trans = e.transform
 	if trans == nil then
@@ -25,16 +26,16 @@ local function update_lock_target_transform(eid, lt, im, tr)
 		if lt.offset then
 			pos = math3d.add(pos, lt.offset)
 		end
-		im.set_position(eid, pos)
+		iom.set_position(eid, pos)
 		tr.worldmat = math3d.matrix(trans)
 	elseif locktype == "rotate" then
 		local worldmat = itransform.worldmat(eid)
 
-		local pos = im.get_position(eid)
+		local pos = iom.get_position(eid)
 		local targetpos = math3d.index(worldmat, 4)
-		im.set_direction(eid, math3d.normalize(math3d.sub(targetpos, pos)))
+		iom.set_direction(eid, math3d.normalize(math3d.sub(targetpos, pos)))
 		if lt.offset then
-			im.set_position(eid, math3d.add(pos, lt.offset))
+			iom.set_position(eid, math3d.add(pos, lt.offset))
 		end
 		tr.worldmat = math3d.matrix(trans)
 	elseif locktype == "ignore_scale" then
@@ -76,12 +77,9 @@ local function update_transform(eid)
 	rc.worldmat = rc.srt and math3d.matrix(rc.srt) or nil
 
 	if e.parent then
-		local im = e.camera and 
-					world:interface "ant.objcontroller|camera_motion" or
-					world:interface "ant.objcontroller|obj_motion"
 		local lt = e.lock_target
 		if lt then
-			update_lock_target_transform(eid, lt, im, rc)
+			update_lock_target_transform(eid, lt, rc)
 		else	-- combine parent transform
 			local pe = world[e.parent]
 			-- need apply before tr.worldmat

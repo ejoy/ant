@@ -3,7 +3,6 @@ local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
-local cu        = require "camera.util"
 local setting   = require "setting"
 
 local tm_sys    = ecs.system "tonemapping_system"
@@ -17,7 +16,6 @@ function tm_sys:post_init()
         local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 
         local fbsize = ipp.main_rb_size(main_fbidx)
-        cu.main_queue_camera()
         local techniques = ipp.techniques()
         techniques[#techniques+1]
             {

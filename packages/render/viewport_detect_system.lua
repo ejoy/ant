@@ -4,6 +4,8 @@ local fbmgr 	= require "framebuffer_mgr"
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
+local icamera = world:interface "ant.render|camera"
+
 local eventResize = world:sub {"resize"}
 
 local function resize_framebuffer(w, h, fbidx)
@@ -29,12 +31,8 @@ local function update_render_queue(q, viewsize)
 		rt.w, rt.h = viewsize.w, viewsize.h
 	end
 
-	local ce = world[q.camera_eid]
-	if ce then
-		local camera = ce.camera
-		camera.frustum.aspect = rt.w / rt.h
-		resize_framebuffer(rt.w, rt.h, q.render_target.fb_idx)
-	end
+	icamera.set_frustum_aspect(q.camera_eid, rt.w/rt.h)
+	resize_framebuffer(rt.w, rt.h, q.render_target.fb_idx)
 end
 
 local function update_camera_viewrect(viewsize)

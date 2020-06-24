@@ -56,9 +56,9 @@ function m:init()
 	player = world[eid]
 end
 
-local timer         = world:interface "ant.timer|timer"
-local camera_motion = world:interface "ant.objcontroller|camera_motion"
-local collider      = world:interface "ant.collision|collider"
+local timer     = world:interface "ant.timer|timer"
+local iom 		= world:interface "ant.objcontroller|obj_motion"
+local collider  = world:interface "ant.collision|collider"
 
 local eventKeyboard = world:sub {"keyboard"}
 local eventMouse    = world:sub {"mouse","RIGHT","DOWN"}
@@ -107,7 +107,7 @@ local function moveEntity(e, distance)
 	local d = math3d.todirection(r)
 	local postion = math3d.muladd(distance, d, t)
 	if setEntityPosition(e, postion) then
-		camera_motion.move_along_axis(camera_id, d, distance)
+		iom.move_along_axis(camera_id, d, distance)
 	end
 end
 
@@ -147,7 +147,7 @@ local function mainloop(delta)
 	for _,_,_,x,y in eventMouse:unpack() do
 		mouse[1] = x
 		mouse[2] = y
-		local res = camera_motion.ray(camera_id, mouse)
+		local res = iom.ray(camera_id, mouse)
 		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]

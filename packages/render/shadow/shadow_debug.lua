@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local computil = world:interface "ant.render|entity"
-local camerautil= require "camera.util"
 local shadowutil= require "shadow.util"
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
@@ -11,7 +10,7 @@ local mathpkg   = import_package "ant.math"
 local mu, mc= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
 
-local assetmgr = import_package "ant.asset"
+local icamera = world:interface "ant.render|camera"
 
 ----------------------------------------------------------------------------------------------------------
 local dbg_sm_sys = ecs.system "debug_shadow_maker_system"
@@ -82,13 +81,11 @@ local function	csm_shadow_debug_frustum()
 end
 
 local function main_view_debug_frustum()
-	local camera = camerautil.main_queue_camera(world)
-
 	for _, seid in world:each "csm" do
 		local s = world[seid]
 
 		local csm = s.csm
-		local vp = mu.view_proj(camera)
+		local vp  = icamera.viewproj(s.camera_eid)
 		local frustum_points = math3d.frustum_points(vp)
 		add_shadow_debug_policy(
 		computil.create_frustum_entity(frustum_points, "main view part" .. csm.index, frustum_colors[csm.index]))

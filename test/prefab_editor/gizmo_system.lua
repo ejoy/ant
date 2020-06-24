@@ -8,9 +8,7 @@ local mu, mc = mathpkg.util, mathpkg.constant
 local iwd = world:interface "ant.render|iwidget_drawer"
 local computil = world:interface "ant.render|entity"
 local gizmo_sys = ecs.system "gizmo_system"
-local renderpkg = import_package "ant.render"
-local camerautil= renderpkg.camera
-local camera_motion = world:interface "ant.objcontroller|camera_motion"
+local iom = world:interface "ant.objcontroller|obj_motion"
 local ies = world:interface "ant.scene|ientity_state"
 
 local gizmo_scale = 1.0
@@ -321,9 +319,10 @@ local keypress_mb = world:sub{"keyboard"}
 
 local pickup_mb = world:sub {"pickup"}
 
+local icamera = world:interface "ant.render|camera"
 local function worldToScreen(world_pos)
-	local camera = camerautil.main_queue_camera(world)
-	local vp = mu.view_proj(camera)
+	local mq = world:singleton_entity "main_queue"
+	local vp = icamera.viewproj(mq.camera_eid)
 	local proj_pos = math3d.totable(math3d.transform(vp, world_pos, 1))
 	local sw, sh = rhwi.screen_size()
 	return {(1 + proj_pos[1] / proj_pos[4]) * sw * 0.5, (1 - proj_pos[2] / proj_pos[4]) * sh * 0.5, 0}
@@ -349,7 +348,7 @@ end
 
 local function viewToAxisConstraint(point, axis, origin)
 	local q = world:singleton_entity("main_queue")
-	local ray = camera_motion.ray(q.camera_eid, point)
+	local ray = iom.ray(q.camera_eid, point)
 	local raySrc = math3d.vector(ray.origin[1], ray.origin[2], ray.origin[3])
 	local camera = camerautil.main_queue_camera(world)
 	local cameraPos = camera.eyepos
@@ -440,7 +439,7 @@ local function selectRotateAxis(x, y)
 		return
 	end
 	local q = world:singleton_entity("main_queue")
-	local ray = camera_motion.ray(q.camera_eid, {x, y})
+	local ray = iom.ray(q.camera_eid, {x, y})
 	local gizmoPosVec = math3d.vector(gizmo_obj.position[1], gizmo_obj.position[2], gizmo_obj.position[3])
 	
 	local function hittestRotateAxis(axis)
@@ -508,7 +507,7 @@ local clockwise = false
 local function rotateGizmo(x, y)
 
 	local q = world:singleton_entity("main_queue")
-	local ray = camera_motion.ray(q.camera_eid, {x, y})
+	local ray = iom.ray(q.camera_eid, {x, y})
 
 	local gizmoPosVec = math3d.vector(gizmo_obj.position)
 	local t = rayHitPlane(ray, {n = rotate_axis.dir, d = -math3d.dot(math3d.vector(rotate_axis.dir), gizmoPosVec)})

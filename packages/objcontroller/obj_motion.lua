@@ -6,34 +6,48 @@ local mathpkg = import_package "ant.math"
 local mu, mc = mathpkg.util, mathpkg.constant
 
 local ie = world:interface "ant.render|entity"
+local iobj_motion = ecs.interface "obj_motion"
 
-local iobj = {}; iobj.__index = iobj
-function iobj.create(obj_accessor)
-    return setmetatable(obj_accessor, iobj)
+function iobj_motion.get_position(eid)
+    return math3d.index(world[eid]._rendercache.srt, 4)
 end
 
-function iobj:move(eid, delta_vec)
-    local p = self:get_position(eid)
-    self:set_position(eid, math3d.add(p, delta_vec))
+function iobj_motion.set_position(eid, pos)
+    world[eid]._rendercache.srt.t = pos
+    world:pub{"component_changed", "transform", eid}
 end
 
-function iobj:move_along_axis(eid, axis, delta)
-    local p = self:get_position(eid)
-    self:set_position(eid, math3d.muladd(axis, delta, p))
+function iobj_motion.get_direction(eid)
+    return math3d.forward_dir(world[eid]._rendercache.srt)
 end
 
-function iobj:move_along(eid, delta_vec)
-    local dir = self:get_direction(eid)
-    local pos = self:get_position(eid)
+function iobj_motion.set_direction(eid, dir)
+    world[eid]._rendercache.srt.r = math3d.torotation(dir)
+    world:pub{"component_changed", "transform", eid}
+end
+
+function iobj_motion.move(eid, delta_vec)
+    local p = iobj_motion.get_position(eid)
+    iobj_motion.set_position(eid, math3d.add(p, delta_vec))
+end
+
+function iobj_motion.move_along_axis(eid, axis, delta)
+    local p = iobj_motion.get_position(eid)
+    iobj_motion.set_position(eid, math3d.muladd(axis, delta, p))
+end
+
+function iobj_motion.move_along(eid, delta_vec)
+    local dir = iobj_motion.get_direction(eid)
+    local pos = iobj_motion.get_position(eid)
 
     local right, up = math3d.base_axes(dir)
     local x = math3d.muladd(right, delta_vec[1], pos)
     local y = math3d.muladd(up, delta_vec[2], x)
-    self:set_position(eid, math3d.muladd(dir, delta_vec[3], y))
+    iobj_motion.set_position(eid, math3d.muladd(dir, delta_vec[3], y))
 end
 
-function iobj:move_toward(eid, where, delta)
-    local viewdir = self:get_direction(eid)
+function iobj_motion.move_toward(eid, where, delta)
+    local viewdir = iobj_motion.get_direction(eid)
     local axisdir
     if where == "z" or where == "forward" then
         axisdir = viewdir
@@ -47,8 +61,8 @@ function iobj:move_toward(eid, where, delta)
         error(string.format("invalid direction: x/right for camera right; y/up for camera up; z/forward for camera viewdir:%s", where))
     end
 
-    local p = self:get_position(eid)
-    self:set_position(eid, math3d.muladd(axisdir, delta, p))
+    local p = iobj_motion.get_position(eid)
+    iobj_motion.set_position(eid, math3d.muladd(axisdir, delta, p))
 end
 
 local halfpi<const> = math.pi * 0.5
@@ -72,29 +86,25 @@ local function rotate_vec(dir, rotateX, rotateY, threshold_around_x_axis)
     return math3d.transform(q, mc.ZAXIS, 0)
 end
 
-function iobj:rotate(eid, rotateX, rotateY)
+function iobj_motion.rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
-        self:set_direction(eid, rotate_vec(self:get_direction(eid), rotateX, rotateY))
+        iobj_motion.set_direction(eid, rotate_vec(iobj_motion.get_direction(eid), rotateX, rotateY))
     end
 end
 
-function iobj:rotate_around_point(eid, targetpt, distance, dx, dy, threshold_around_x_axis)
+function iobj_motion.rotate_around_point(eid, targetpt, distance, dx, dy, threshold_around_x_axis)
     threshold_around_x_axis = threshold_around_x_axis or 0.002
 
-    local dir = self:get_direction(eid)
-    self:set_direction(eid, math3d.normalize(rotate_vec(dir, dx, dy, threshold_around_x_axis)))
-    self:set_position(eid, math3d.sub(targetpt, math3d.mul(dir, distance)))
+    local dir = iobj_motion.get_direction(eid)
+    iobj_motion.set_direction(eid, math3d.normalize(rotate_vec(dir, dx, dy, threshold_around_x_axis)))
+    iobj_motion.set_position(eid, math3d.sub(targetpt, math3d.mul(dir, distance)))
 end
 
 --TODO: should not modify component directly
-function iobj:set_lock_target(eid, lt)
-    world[eid].lock_target = lt
+function iobj_motion.set_lock_target(eid, lt)
+    local nlt = {}; for k, v in pairs(lt) do nlt[k] = v end
+    world[eid]._rendercache.lock_target = nlt
     world:pub{"component_changed", "lock_target", eid}
-end
-
-local iobj_interfaces = {}
-for k in pairs(iobj) do
-    iobj_interfaces[#iobj_interfaces+1] = k
 end
 
 local function main_queue_viewport_size()
@@ -103,97 +113,41 @@ local function main_queue_viewport_size()
     return {w=vp_rt.w, h=vp_rt.h}
 end
 
-function iobj:focus_point(eid, pt)
-	self:set_direction(eid, math3d.normalize(math3d.sub(pt, self:get_position(e))))
+function iobj_motion.focus_point(eid, pt)
+	iobj_motion.set_direction(eid, math3d.normalize(math3d.sub(pt, iobj_motion.get_position(eid))))
 end
 
-function iobj:focus_obj(eid, foucseid)
-	local fe = world[foucseid]
-	local bounding = ie.entity_bounding(fe)
+function iobj_motion.focus_obj(eid, foucseid)
+	local bounding = ie.entity_bounding(foucseid)
     if bounding then
         local aabb = bounding.aabb
         local center, extents = math3d.aabb_center_extents(aabb)
         local radius = math3d.length(extents) * 0.5
         
-        local dir = math3d.normalize(math3d.sub(center, self:get_position(eid)))
-        self:set_direction(eid, dir)
-        self:set_position(eid, math3d.sub(center, math3d.mul(dir, radius * 3.5)))
+        local dir = math3d.normalize(math3d.sub(center, iobj_motion.get_position(eid)))
+        iobj_motion.set_direction(eid, dir)
+        iobj_motion.set_position(eid, math3d.sub(center, math3d.mul(dir, radius * 3.5)))
     else
-        self:focus_point(eid, fe.transform.t)
+        local wm = ie.calc_worldmat(foucseid)
+        iobj_motion.focus_point(eid, math3d.index(wm, 4))
 	end
 end
 
-local iobj_motion = ecs.interface "obj_motion"
+local icamera = world:interface "ant.render|camera"
 
-local function init_motion_interface(motion, accessor)
-    local base_interface = iobj.create(accessor)
-
-    for _, v in ipairs{accessor, iobj} do
-        for k in pairs(v) do
-            if k ~= '__index' then
-                local f = base_interface[k]
-                motion[k] = function (...)
-                    return f(base_interface, ...)
-                end
-            end
-        end
-    end
-end
-
-init_motion_interface(iobj_motion, {
-    get_position = function (_, eid)
-        return math3d.index(world[eid].transform, 4)
-    end,
-    set_position = function (_, eid, pos)
-        world[eid].transform.t = pos
-        world:pub{"component_changed", "transform", eid}
-    end,
-
-    get_direction = function (_, eid)
-        return math3d.forward_dir(world[eid].transform)
-    end,
-    set_direction = function (_, eid, dir)
-        world[eid].transform.r = math3d.torotation(dir)
-        world:pub{"component_changed", "transform", eid}
-    end,
-})
-
-local icameramotion = ecs.interface "camera_motion"
-init_motion_interface(icameramotion, {
-    get_position = function (_, eid)
-        return world[eid].camera.eyepos
-    end,
-    set_position = function (_, eid, pos)
-        world[eid].camera.eyepos.v = pos
-        world:pub{"component_changed", "camera", eid}
-    end,
-
-    get_direction = function (_, eid)
-        return world[eid].camera.viewdir
-    end,
-
-    set_direction = function (_, eid, dir)
-        world[eid].camera.viewdir.v = dir
-        world:pub{"component_changed", "camera", eid}
-    end,
-})
-
-function icameramotion.ray(eid, pt2d, vp_size)
-    local e = world[eid]
-    local camera = e.camera
-    
+function iobj_motion.ray(eid, pt2d, vp_size)
     vp_size = vp_size or main_queue_viewport_size()
 
     local ndc_near, ndc_far = mu.NDC_near_far_pt(mu.pt2D_to_NDC(pt2d, vp_size))
 
-    local viewproj = mu.view_proj(camera)
+    local viewproj = icamera.viewproj(eid)
     local invviewproj = math3d.inverse(viewproj)
     local pt_near_WS = math3d.transformH(invviewproj, ndc_near, 1)
     local pt_far_WS = math3d.transformH(invviewproj, ndc_far, 1)
 
     local dir = math3d.normalize(math3d.sub(pt_far_WS, pt_near_WS))
     return {
-        origin = math3d.totable(pt_near_WS),
-        dir = math3d.totable(dir),
+        origin = math3d.tovalue(pt_near_WS),
+        dir = math3d.tovalue(dir),
     }
 end

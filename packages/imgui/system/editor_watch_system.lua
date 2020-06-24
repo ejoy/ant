@@ -13,7 +13,7 @@ local OperateFunc = require "system.editor_operate_func"
 local editor_watcher_sys = ecs.system "editor_watcher_system"
 
 
-local camera_motion = world:interface "ant.objcontroller|camera_motion"
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 local editor_watcher_cache = {}
 
@@ -252,7 +252,7 @@ local function change_watch_entity(eids,focus,is_pick)
         --todo calc multselect center
         local mq = world:singleton_entity "main_queue"
         local camera_id = mq.camera_eid
-        camera_motion.focus_obj(camera_id,last_eid)
+        iom.focus_obj(camera_id,last_eid)
     end
     local need_send = {}
     for _, eid in ipairs( eids ) do

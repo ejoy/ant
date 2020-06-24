@@ -10,8 +10,7 @@ local camerautil= renderpkg.camera
 
 local editor_camera_ctrl_sys = ecs.system "editor_camera_controller_system"
 
-local icm = world:interface "ant.objcontroller|camera_motion"
-
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 local leftmouse_mb = world:sub {"mouse", "LEFT"}
 local rightmouse_mb = world:sub {"mouse", "RIGHT"}
@@ -36,7 +35,7 @@ function editor_camera_ctrl_sys:update()
         local dx, dy = delta_move(x, y)
 
         local distance = math3d.length(math3d.sub(target, camera.eyepos))
-        icm.rotate_round_point(cameraeid, target, distance, dy, dx)
+        iom.rotate_round_point(cameraeid, target, distance, dy, dx)
     end
 
     for _, _, _, x, y in rightmouse_mb:unpack() do
@@ -46,7 +45,7 @@ function editor_camera_ctrl_sys:update()
 
         local dx, dy = delta_move(x, y)
         local offset = math3d.sub(target, camera.eyepos)
-        icm.move_along(cameraeid, {-dx, dy})
+        iom.move_along(cameraeid, {-dx, dy})
         target.v = math3d.add(camera.eyepos, offset)
     end
 
@@ -55,6 +54,6 @@ function editor_camera_ctrl_sys:update()
         local cameraeid = mq.camera_eid
         local camera = world[cameraeid].camera
 
-        icm.move_along_axis(cameraeid, camera.viewdir, delta)
+        iom.move_along_axis(cameraeid, camera.viewdir, delta)
     end
 end

@@ -38,7 +38,6 @@ system "init_loader_system"
     .require_policy "ant.objcontroller|select"
     .require_policy "ant.scene|hierarchy_policy"
     .require_interface "ant.render|camera"
-    .require_interface "ant.objcontroller|camera_motion"
     .require_interface "ant.objcontroller|obj_motion"
     
     .require_interface "ant.render|light"
@@ -54,7 +53,8 @@ system "animation_test_system"
 
 system "camera_controller_system"
     .implement "camera_controller.lua"
-    .require_interface "ant.objcontroller|camera_motion"
+    .require_interface "ant.objcontroller|obj_motion"
+    .require_interface "ant.render|camera"
     .method "data_changed"
     .method "post_init"
 

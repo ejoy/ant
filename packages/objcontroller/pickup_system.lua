@@ -11,8 +11,6 @@ local fbmgr 	= renderpkg.fbmgr
 local samplerutil= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
-local assetmgr = import_package "ant.asset"
-
 local bgfx 		= require "bgfx"
 
 --update pickup view
@@ -25,23 +23,22 @@ local function enable_pickup(enable)
 	end
 end
 
+local icamera = world:interface "ant.render|camera"
+
 local function update_viewinfo(e, clickx, clicky) 
 	local mq = world:singleton_entity "main_queue"
-	local camera = world[mq.camera_eid].camera
-
-	local pickupcamera = world[e.camera_eid].camera
-
 	local rt = mq.render_target.viewport.rect
 
 	local ndc2D = mu.pt2D_to_NDC({clickx, clicky}, rt)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
 
-	local vp = mu.view_proj(camera)
+	local vp = icamera.viewproj(mq.camera_eid)
 	local ivp = math3d.inverse(vp)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
-	pickupcamera.eyepos.v = eye
-	pickupcamera.viewdir.v= math3d.normalize(math3d.sub(at, eye))
+
+	icamera.set_eyepos(e.camera_eid, eye)
+	icamera.set_viewdir(e.camera_eid, math3d.normalize(math3d.sub(at, eye)))
 end
 
 
@@ -189,23 +186,17 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 	V="CLAMP"
 }
 
+local icamera = world:interface "ant.render|camera"
+
 local function add_pick_entity()
-	local cameraeid = world:create_entity {
-		policy = {
-			"ant.render|camera",
-			"ant.general|name",
+	local cameraeid = icamera.create {
+		viewdir = mc.ZAXIS,
+		updir = mc.YAXIS,
+		eyepos = mc.ZERO_PT,
+		frustum = {
+			type="mat", n=0.1, f=100, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
 		},
-		data = {
-			camera = {
-				viewdir = world.component "vector"(mc.T_ZAXIS),
-				updir = world.component "vector"(mc.T_YAXIS),
-				eyepos = world.component "vector"(mc.T_ZERO_PT),
-				frustum = {
-					type="mat", n=0.1, f=100, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h
-				},
-			},
-			name = "camera.pickup"
-		}
+		name = "camera.pickup",
 	}
 
 	local fbidx = fbmgr.create {

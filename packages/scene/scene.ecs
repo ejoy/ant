@@ -5,7 +5,6 @@ import "@ant.general"
 system "scenespace_system"
     .implement "scenespace.lua"
     .require_interface "ant.objcontroller|obj_motion"
-    .require_interface "ant.objcontroller|camera_motion"
     .method "update_hierarchy_scene"
 
 policy "hierarchy_policy"

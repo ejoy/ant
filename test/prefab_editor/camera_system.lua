@@ -31,9 +31,9 @@ local function cameraUpdateEyepos(camera)
 end
 
 local function cameraRotate(dx, dy)
-	local camera_motion = world:interface "ant.objcontroller|camera_motion"
-	--camera_motion.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
-	camera_motion.rotate(cameraId, dy * kRotationSpeed, dx * kRotationSpeed)
+	local iom = world:interface "ant.objcontroller|obj_motion"
+	--iom.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
+	iom.rotate(cameraId, dy * kRotationSpeed, dx * kRotationSpeed)
 	local camera = world[cameraId].camera
 	cameraUpdateEyepos(camera)
 end

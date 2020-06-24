@@ -110,22 +110,14 @@ function irender_class.create_main_queue(view_rect)
 end
 
 local blitviewid = viewidmgr.get "blit"
-
+local icamera = world:interface "ant.render|camera"
 function irender_class.create_blit_queue(viewrect)
-	local cameraeid = world:create_entity {
-		policy = {
-			"ant.render|camera",
-			"ant.general|name",
-		},
-		data = {
-			camera = {
-				eyepos = world.component "vector"(mc.T_ZERO_PT),
-				viewdir = world.component "vector"(mc.T_ZAXIS),
-				updir = world.component "vector"(mc.T_YAXIS),
-				frustum = default_comp.frustum(viewrect.w / viewrect.h),
-			},
-			name = "blit_camera",
-		}
+	local cameraeid = icamera.create {
+		eyepos = mc.ZERO_PT,
+		viewdir = mc.ZAXIS,
+		updir = mc.YAXIS,
+		frustum = default_comp.frustum(viewrect.w / viewrect.h),
+		name = "blit_camera",
 	}
 
 	world:create_entity {

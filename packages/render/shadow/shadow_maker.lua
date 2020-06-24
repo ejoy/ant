@@ -5,16 +5,14 @@ local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
 local samplerutil= require "sampler"
-local camerautil= require "camera.util"
 local shadowutil= require "shadow.util"
 local fbmgr 	= require "framebuffer_mgr"
 local setting	= require "setting"
 
 local mathpkg 	= import_package "ant.math"
-local mc, mu	= mathpkg.constant, mathpkg.util
+local mc		= mathpkg.constant
 local math3d	= require "math3d"
-local fs 		= require "filesystem"
-
+local icamera	= world:interface "ant.render|camera"
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -81,12 +79,10 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 	maxextent[1], maxextent[2] = newmax[1], newmax[2]
 end
 
-local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap_size, stabilize, shadowcamera)
-	shadowcamera.viewdir.v = lightdir
-
+local function calc_shadow_camera(viewmat, frustum, split_ratios, lightdir, shadowmap_size, stabilize, sc_eid)
 	-- frustum_desc can cache, only camera distance changed or ratios change need recalculate
-	local frustum_desc = shadowutil.split_new_frustum(view_camera.frustum, split_ratios)
-	local vp = mu.view_proj(view_camera, frustum_desc)
+	local newfrustum = shadowutil.split_new_frustum(frustum, split_ratios)
+	local vp = math3d.mul(math3d.projmat(newfrustum), viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
 
@@ -105,69 +101,57 @@ local function calc_shadow_camera(view_camera, split_ratios, lightdir, shadowmap
 		min_extent, max_extent = math3d.totable(minv), math3d.totable(maxv)
 	end
 
-	shadowcamera.eyepos.v = center_WS
+	icamera.lookto(sc_eid, center_WS, lightdir)
+
 	--shadowcamera.updir(updir)
-	shadowcamera.frustum = {
+	icamera.set_frustum(sc_eid, {
 		ortho=true,
 		l = min_extent[1], r = max_extent[1],
 		b = min_extent[2], t = max_extent[2],
 		n = min_extent[3], f = max_extent[3],
-	}
+	})
 end
 
-local function update_shadow_camera(l, view_camera)
+local function update_shadow_camera(l, view_camera_eid)
 	local lightdir = math3d.inverse(l.direction)
 	local shadowentity = world:singleton_entity "shadow"
 	local shadowcfg = shadowentity.shadow
 	local stabilize = shadowcfg.stabilize
 	local shadowmap_size = shadowcfg.shadowmap_size
 
-	local frustum = view_camera.frustum
-
+	local frustum = icamera.get_frustum(view_camera_eid)
+	local viewmat = icamera.viewmat(view_camera_eid)
 	local split = shadowcfg.split
 	local ratios = shadowutil.calc_split_distance_ratio(split.min_ratio, split.max_ratio, 
 		frustum.n, frustum.f, split.pssm_lambda, split.num_split)
 
 	for _, eid in world:each "csm" do
 		local csmentity = world[eid]
-		local shadowcamera = world[csmentity.camera_eid].camera
+		local sc_eid = csmentity.camera_eid
+		local csmfrustum = icamera.get_frustum(sc_eid)
 		local csm = world[eid].csm
 		local ratio = ratios[csm.index]
-		calc_shadow_camera(view_camera, ratio, lightdir, shadowmap_size, stabilize, shadowcamera)
-		csm.split_distance_VS = shadowcamera.frustum.f - frustum.n
+		calc_shadow_camera(viewmat, frustum, ratio, lightdir, shadowmap_size, stabilize, sc_eid)
+		csm.split_distance_VS = csmfrustum.f - frustum.n
 	end
 end
 
 local sm = ecs.system "shadow_system"
 
-local function v4(...) return world.component "vector"(...) end
-
-local function default_csm_camera()
-	return {
-		type 	= "csm", 
-		updir 	= v4(mc.T_YAXIS),
-		viewdir = v4(mc.T_ZAXIS),
-		eyepos 	= v4(mc.T_ZERO_PT),
-		frustum = {
-			l = -1, r = 1, t = -1, b = 1,
-			n = 1, f = 100, ortho = true,
-		}
-	}
-end
-
 local imateral = world:interface "ant.asset|imaterial"
+local icamera = world:interface "ant.render|camera"
 local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 	local cameraname = "csm" .. index
-	local cameraeid = world:create_entity {
-		policy = {
-			"ant.render|camera",
-			"ant.general|name",
-		},
-		data = {
-			camera = default_csm_camera(),
+	local cameraeid = icamera.create {
+			updir 	= mc.YAXIS,
+			viewdir = mc.ZAXIS,
+			eyepos 	= mc.ZERO_PT,
+			frustum = {
+				l = -1, r = 1, t = -1, b = 1,
+				n = 1, f = 100, ortho = true,
+			},
 			name = cameraname
 		}
-	}
 
 	return world:create_entity {
 		policy = {
@@ -318,9 +302,9 @@ local camera_changed_mb = world:sub{"component_changed", "camera"}
 function sm:post_init()
 	local updated
 	local mq = world:singleton_entity "main_queue"
-	local viewcamera = world[mq.camera_eid].camera
+	local cameraeid = mq.camera_eid
 	for _, _, eid in dl_create_mb:unpack() do
-		update_shadow_camera(world[eid], viewcamera)
+		update_shadow_camera(world[eid], cameraeid)
 		updated = true
 	end
 

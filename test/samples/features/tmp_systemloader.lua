@@ -47,7 +47,6 @@ local function create_plane_test()
 end
 
 local icamera = world:interface "ant.render|camera"
-local icm = world:interface "ant.objcontroller|camera_motion"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 local ilight = world:interface "ant.render|light"
@@ -119,8 +118,8 @@ local function create_camera()
     local mq = world:singleton_entity "main_queue"
     local camera_eid = mq.camera_eid
 
-    icm.set_direction(camera_eid, dir)
-    icm.set_position(camera_eid, {-4.5, 2, -1.5, 1})
+    iom.set_direction(camera_eid, dir)
+    iom.set_position(camera_eid, {-4.5, 2, -1.5, 1})
 end
 
 function init_loader_sys:post_init()
@@ -137,17 +136,17 @@ function init_loader_sys:ui_update()
     local widget = imgui.widget
     imgui.windows.Begin("Test", wndflags)
     if widget.Button "rotate_camera" then
-        icm.rotate(cameraeid, {math.rad(10), 0, 0})
+        iom.rotate(cameraeid, {math.rad(10), 0, 0})
     end
 
     if widget.Button "move_camera" then
-        icm.move(cameraeid, {1, 0, 0})
+        iom.move(cameraeid, {1, 0, 0})
     end
 
     if widget.Button "camera_lock_target_for_move" then
         local foundeid = find_entity("lock_target", "can_render")
         if foundeid then
-            icm.set_lock_target(cameraeid, {type = "move", offset = {0, 1, 0}})
+            iom.set_lock_target(cameraeid, {type = "move", offset = {0, 1, 0}})
         else
             print "not found animation_sample"
         end
@@ -157,7 +156,7 @@ function init_loader_sys:ui_update()
     if widget.Button "camera_lock_target_for_rotate" then
         local foundeid = find_entity("lock_target", "can_render")
         if foundeid then
-            icm.set_lock_target(cameraeid, {type="rotate"})
+            iom.set_lock_target(cameraeid, {type="rotate"})
         else
             print "not found gltf entity"
         end

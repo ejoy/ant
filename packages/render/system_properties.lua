@@ -2,13 +2,13 @@ local ecs = ...
 local world = ecs.world
 local renderpkg = import_package "ant.render"
 local fbmgr = renderpkg.fbmgr
-local camerautil = renderpkg.camera
 local shadowutil = renderpkg.shadow
 
 local mathpkg = import_package "ant.math"
-local mc, mu = mathpkg.constant, mathpkg.util
+local mc = mathpkg.constant
 
 local math3d = require "math3d"
+local icamera = world:interface "ant.render|camera"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
@@ -74,8 +74,8 @@ local function update_lighting_properties()
 	add_directional_light_properties()
 	add_ambient_light_propertices()
 
-	local camera = camerautil.main_queue_camera(world)
-	system_properties["u_eyepos"].v = camera.eyepos
+	local mq = world:singleton_entity "main_queue"
+	system_properties["u_eyepos"].v = icamera.eyepos(mq.camera_eid)
 end
 
 local function calc_viewport_crop_matrix(csm_idx)
@@ -102,13 +102,11 @@ local function update_shadow_properties()
 		local se = world[eid]
 		local csm = se.csm
 
-		local camera = world[se.camera_eid].camera
-
 		local idx = csm.index
 		local split_distanceVS = csm.split_distance_VS
 		if split_distanceVS then
 			split_distances[idx] = split_distanceVS
-			local vp = mu.view_proj(camera)
+			local vp = icamera.viewproj(se.camera_eid)
 			vp = math3d.mul(shadowutil.shadow_crop_matrix(), vp)
 			local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
 			csm_matrixs[csm.index].m = math3d.mul(viewport_cropmatrix, vp)

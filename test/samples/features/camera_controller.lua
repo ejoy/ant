@@ -6,7 +6,7 @@ local rhwi = import_package "ant.render".hwi
 
 local camera_controller_sys = ecs.system "camera_controller_system"
 
-local icm = world:interface "ant.objcontroller|camera_motion"
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 local mouse_events = {
 	world:sub {"mouse", "LEFT"},
@@ -64,7 +64,7 @@ function camera_controller_sys:data_changed()
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-					icm.rotate(mq.camera_eid, uy, ux)
+					iom.rotate(mq.camera_eid, uy, ux)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end
@@ -89,7 +89,7 @@ function camera_controller_sys:data_changed()
 			end
 		end
 		if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
-			icm.move_along(mq.camera_eid, keyboard_delta)
+			iom.move_along(mq.camera_eid, keyboard_delta)
 		end
 	end
 end

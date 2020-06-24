@@ -60,10 +60,9 @@ end
 
 local render_sys = ecs.system "render_system"
 
-local function update_view_proj(viewid, camera)
-	local view = math3d.lookto(camera.eyepos, camera.viewdir)
-	local proj = math3d.projmat(camera.frustum)
-	bgfx.set_view_transform(viewid, view, proj)
+local icamera = world:interface "ant.render|camera"
+local function update_view_proj(viewid, cameraeid)
+	bgfx.set_view_transform(viewid, icamera.viewmat(cameraeid), icamera.projmat(cameraeid))
 end
 
 function render_sys:init()
@@ -77,7 +76,7 @@ function render_sys:render_commit()
 			local rt = rq.render_target
 			local viewid = rt.viewid
 			irender.update_render_target(viewid, rt)
-			update_view_proj(viewid, world[rq.camera_eid].camera)
+			update_view_proj(viewid, rq.camera_eid)
 
 			local filter = rq.primitive_filter
 			local results = filter.result
