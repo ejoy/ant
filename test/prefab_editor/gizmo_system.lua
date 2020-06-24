@@ -203,8 +203,9 @@ end
 
 local function updateGizmoScale()
 	local camera = camerautil.main_queue_camera(world)
-	local gizmo_dist = math3d.length(math3d.sub(camera.eyepos, math3d.vector(gizmo_obj.position)))
-	gizmo_scale = gizmo_dist * 0.6
+	--local gizmo_dist = math3d.length(math3d.sub(camera.eyepos, math3d.vector(gizmo_obj.position)))
+	local project_dist = math3d.dot(math3d.normalize(camera.viewdir), math3d.sub(math3d.vector(gizmo_obj.position), camera.eyepos))
+	gizmo_scale = project_dist * 0.6
 	gizmo_obj.root.transform.srt.s = math3d.vector(gizmo_scale, gizmo_scale, gizmo_scale)
 end
 
