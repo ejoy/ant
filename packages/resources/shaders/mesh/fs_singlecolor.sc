@@ -17,6 +17,6 @@ void main()
 	//gl_FragColor.xyz = 
     vec3 light = calc_directional_light(normal, viewdir, viewdir, shiness);
     gl_FragColor.xyz = (clamp(light.x,0.0,1.0)+1.0)*color.xyz*0.5;
-	gl_FragColor.w = 1.0;
+	gl_FragColor.w = color.w;
     gl_FragColor = toGamma(gl_FragColor);
 }

@@ -44,23 +44,6 @@ local function keys(tbl)
 	return k
 end
 
-local function gen_method(c, o)
-	local callback = keys(c.method)
-	return function(_, key, func)
-		if type(func) ~= "function" then
-			error("Method should be a function")
-		end
-		if callback and callback[key] == nil then
-			error("Invalid callback function " .. key)
-		end
-		if c.source[key] ~= nil then
-			error("Method " .. key .. " has already defined at " .. c.source[key])
-		end
-		c.source[key] = sourceinfo()
-		rawset(o, key, func)
-	end
-end
-
 local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
@@ -231,25 +214,31 @@ local function init(w, config)
 				class_set[fullname] = r
 				local decl = declaration[what][fullname]
 				if not decl then
-					setmetatable(r, {
-						__index = false,
-						__newindex = function() end,
-					})
-				else
-					if decl.method then
-						decl.source = {}
-						decl.defined = sourceinfo()
-						setmetatable(r, {
-							__index = false,
-							__newindex = gen_method(decl, import[what](fullname)),
-						})
-					else
-						setmetatable(r, {
-							__index = false,
-							__newindex = function() error(("%s `%s` has no method."):format(what, fullname)) end,
-						})
-					end
+					error(("%s `%s` has no declaration."):format(what, fullname))
 				end
+				if not decl.method then
+					error(("%s `%s` has no method."):format(what, fullname))
+				end
+				decl.source = {}
+				decl.defined = sourceinfo()
+				local callback = keys(decl.method)
+				local object = import[what](fullname)
+				setmetatable(r, {
+					__index = object,
+					__newindex = function(_, key, func)
+						if type(func) ~= "function" then
+							error("Method should be a function")
+						end
+						if callback[key] == nil then
+							error("Invalid callback function " .. key)
+						end
+						if decl.source[key] ~= nil then
+							error("Method " .. key .. " has already defined at " .. decl.source[key])
+						end
+						decl.source[key] = sourceinfo()
+						object[key] = func
+					end,
+				})
 			end
 			return r
 		end

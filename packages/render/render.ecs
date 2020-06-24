@@ -100,6 +100,7 @@ interface "entity"
     .method "create_circle_entity"
     .method "create_line_entity"
     .method "calc_worldmat"
+    .method "create_prim_plane_entity"
 
 pipeline "render"
     .stage "update_system_properties"
