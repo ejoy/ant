@@ -829,7 +829,6 @@ local lastHit = math3d.ref()
 local function showRotateFan(rotAxis, startAngle, deltaAngle)
 	world[rotAxis.eid[3]]._rendercache.ib.num = 0
 	world[rotAxis.eid[4]]._rendercache.ib.num = 0
-	local eid = rotAxis.eid[3]
 	local start
 	local num
 	local stepAngle = rotate_slices / 360
@@ -855,11 +854,8 @@ local function showRotateFan(rotAxis, startAngle, deltaAngle)
 			start = math.floor(startAngle * stepAngle) * 3 - num
 		end
 	end
-	print("startAngle", startAngle)
-	print("deltaAngle", deltaAngle)
-	print("num", num)
-	world[eid]._rendercache.ib.start = start
-	world[eid]._rendercache.ib.num = num
+	world[rotAxis.eid[3]]._rendercache.ib.start = start
+	world[rotAxis.eid[3]]._rendercache.ib.num = num
 end
 
 local function rotateGizmo(x, y)
@@ -871,11 +867,13 @@ local function rotateGizmo(x, y)
 	local tangent = math3d.normalize(math3d.cross(rotate_axis.dir, gizmoToLastHit))
 	local proj_len = math3d.dot(tangent, math3d.sub(hitPosVec, lastHit))
 	
-	local basedir = math3d.vector(1, 0, 0)
+	local angleBaseDir = math3d.vector(1, 0, 0)
 	if rotate_axis == gizmo_obj.rx then
-		basedir = math3d.vector(0, 0, -1)
+		angleBaseDir = math3d.vector(0, 0, -1)
+	elseif rotate_axis == gizmo_obj.rw then
+		angleBaseDir = math3d.normalize(math3d.cross(math3d.vector(0, 1, 0), rotate_axis.dir))
 	end
-	local angle = math.deg(math.acos(math3d.dot(gizmoToLastHit, basedir)))
+	local angle = math.deg(math.acos(math3d.dot(gizmoToLastHit, angleBaseDir)))
 	
 	local deltaAngle = proj_len * 200 / gizmo_scale
 	if deltaAngle > 360 then
