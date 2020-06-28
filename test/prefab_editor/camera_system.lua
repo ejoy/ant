@@ -75,6 +75,10 @@ function m:post_init()
 	cameraReset(cameraInitEyepos, cameraInitTarget)
 end
 local keypress_mb = world:sub{"keyboard"}
+local PAN_LEFT = false
+local PAN_RIGHT = false
+local ZOOM_FORWARD = false
+local ZOOM_BACK = false
 function m:data_changed()
 	for _,what,x,y in eventCameraControl:unpack() do
 		if what == "rotate" then
@@ -90,26 +94,39 @@ function m:data_changed()
 	
 	for _, key, press, state in keypress_mb:unpack() do
         if key == "W" then
-			if press == 2 then
-				cameraZoom(-1)
+			if press == 1 then
+				ZOOM_FORWARD = true
 			elseif press == 0 then
+				ZOOM_FORWARD = false
 			end
         elseif key == "S" then
-			if press == 2 then
-				cameraZoom(1)
+			if press == 1 then
+				ZOOM_BACK = true
 			elseif press == 0 then
+				ZOOM_BACK = false
 			end
 		elseif key == "A" then
-			if press == 2 then
-				cameraPan(1, 0)
+			if press == 1 then
+				PAN_LEFT = true
 			elseif press == 0 then
+				PAN_LEFT = false
 			end
 		elseif key == "D" then
-			if press == 2 then
-				cameraPan(-1, 0)
+			if press == 1 then
+				PAN_RIGHT = true
 			elseif press == 0 then
+				PAN_RIGHT = false
 			end
         end
-        --print(key, press)
+	end
+
+	if PAN_LEFT then
+		cameraPan(0.05, 0)
+	elseif PAN_RIGHT then
+		cameraPan(-0.05, 0)
+	elseif ZOOM_FORWARD then
+		cameraZoom(-0.05)
+	elseif ZOOM_BACK then
+		cameraZoom(0.05)
 	end
 end
