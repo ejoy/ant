@@ -5,7 +5,7 @@ import "@ant.general"
 system "scenespace_system"
     .implement "scenespace.lua"
     .require_interface "ant.objcontroller|obj_motion"
-    .method "update_hierarchy_scene"
+    .method "update_hierarchy"
 
 policy "hierarchy_policy"
     .require_system "scenespace_system"
@@ -46,8 +46,14 @@ interface "iscenespace"
     .method "scenequeue"
 
 import "filter/filter_system.ecs"
+
+pipeline "update_scene_entities"
+    .stage "update_hierarchy"
+    .stage "refine_entity_transform"
+    .stage "update_camera"
+
 pipeline "scene"
-    .stage "update_hierarchy_scene"
+    .pipeline "update_scene_entities"
     .stage "filter_render_items"
 
 interface "itransform"

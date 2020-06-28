@@ -74,7 +74,7 @@ local function inherit_material(e)
 	end
 end
 
-function sp_sys:update_hierarchy_scene()
+function sp_sys:update_hierarchy()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
 		scenequeue:mount(eid, e.parent or 0)

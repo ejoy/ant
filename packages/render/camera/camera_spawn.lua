@@ -75,7 +75,7 @@ function ic.projmat(eid)
 end
 
 function ic.viewproj(eid)
-    return math3d.mul(world[eid]._rendercache.projmat, world[eid]._rendercache.viewmat)
+    return world[eid]._rendercache.viewprojmat
 end
 
 function ic.get_frustum(eid)
