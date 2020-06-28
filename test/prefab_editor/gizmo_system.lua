@@ -49,7 +49,8 @@ local RIGHT_TOP <const> = 0
 local RIGHT_BOTTOM <const> = 1
 local LEFT_BOTTOM <const> = 2
 local LEFT_TOP <const> = 3
-
+local globalTransform = true
+ 
 local axis_plane_area
 local gizmo_obj = {
 	mode = SELECT,
@@ -203,7 +204,6 @@ end
 
 local function updateGizmoScale()
 	local camera = camerautil.main_queue_camera(world)
-	--local gizmo_dist = math3d.length(math3d.sub(camera.eyepos, math3d.vector(gizmo_obj.position)))
 	local project_dist = math3d.dot(math3d.normalize(camera.viewdir), math3d.sub(math3d.vector(gizmo_obj.position), camera.eyepos))
 	gizmo_scale = project_dist * 0.6
 	gizmo_obj.root.transform.srt.s = math3d.vector(gizmo_scale, gizmo_scale, gizmo_scale)
@@ -366,6 +366,20 @@ function gizmo_sys:post_init()
 		},
 	}
 	gizmo_obj.root = world[axis_root]
+	-- local rot_root = world:create_entity{
+	-- 	policy = {
+	-- 		"ant.general|name",
+	-- 		"ant.scene|transform_policy",
+	-- 	},
+	-- 	data = {
+	-- 		transform =  {srt= world.component "srt"(srt)},
+	-- 		name = "rot root",
+	-- 	},
+	-- }
+
+	-- world[rot_root].parent = axis_root
+	-- gizmo_obj.rot_root = world[rot_root]
+
 	create_arrow_widget(axis_root, "x")
 	create_arrow_widget(axis_root, "y")
 	create_arrow_widget(axis_root, "z")
@@ -415,7 +429,7 @@ function gizmo_sys:post_init()
 	rot_eid = computil.create_circle_entity(axis_len, rotate_slices, {r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "rotate_gizmo_x")
 	imaterial.set_property(rot_eid, "u_color", gizmo_obj.rx.color)
 	world[rot_eid].parent = axis_root
-	local line_eid = computil.create_line_entity({}, {0, 0, 0}, {axis_len, 0, 0})
+	local line_eid = computil.create_line_entity({}, {0, 0, 0}, {axis_len * 0.5, 0, 0})
 	imaterial.set_property(line_eid, "u_color", gizmo_obj.rx.color)
 	world[line_eid].parent = axis_root
 	-- counterclockwise mesh
@@ -433,7 +447,7 @@ function gizmo_sys:post_init()
 	rot_eid = computil.create_circle_entity(axis_len, rotate_slices, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "rotate_gizmo_y")
 	imaterial.set_property(rot_eid, "u_color", gizmo_obj.ry.color)
 	world[rot_eid].parent = axis_root
-	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, axis_len, 0})
+	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, axis_len * 0.5, 0})
 	imaterial.set_property(line_eid, "u_color", gizmo_obj.ry.color)
 	world[line_eid].parent = axis_root
 	rot_ccw_mesh_eid = computil.create_circle_mesh_entity(axis_len, rotate_slices, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "/pkg/ant.resources/materials/t_gizmos.material", "rotate_mesh_gizmo_y")
@@ -449,7 +463,7 @@ function gizmo_sys:post_init()
 	rot_eid = computil.create_circle_entity(axis_len, rotate_slices, {}, "rotate_gizmo_z")
 	imaterial.set_property(rot_eid, "u_color", gizmo_obj.rz.color)
 	world[rot_eid].parent = axis_root
-	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, axis_len})
+	line_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, axis_len * 0.5})
 	imaterial.set_property(line_eid, "u_color", gizmo_obj.rz.color)
 	world[line_eid].parent = axis_root
 	rot_ccw_mesh_eid = computil.create_circle_mesh_entity(axis_len, rotate_slices, {}, "/pkg/ant.resources/materials/t_gizmos.material", "rotate_mesh_gizmo_z")
@@ -822,6 +836,8 @@ local function moveGizmo(x, y)
 	gizmo_obj.root.transform.srt.t = new_pos
 	world[gizmo_obj.target_eid].transform.srt.t = new_pos
 	updateGizmoScale()
+
+	world:pub {"Gizmo", gizmo_obj.target_eid}
 end
 local lastRotateAxis = math3d.ref()
 local lastRotate = math3d.ref()
@@ -895,19 +911,20 @@ local function rotateGizmo(x, y)
 		angle = 360 - angle
 	end
 	showRotateFan(rotate_axis, angle, deltaAngle)
+	
 	local quat
-	if rotate_axis == gizmo_obj.rx then
-		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(deltaAngle) }
-	elseif rotate_axis == gizmo_obj.ry then
-		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(deltaAngle) }
-	elseif rotate_axis == gizmo_obj.rz then
-		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(deltaAngle) }
-	elseif rotate_axis == gizmo_obj.rw then
+	if rotate_axis == gizmo_obj.rw then
 		local camera = camerautil.main_queue_camera(world)
 		quat = math3d.quaternion { axis = math3d.normalize(camera.viewdir), r = math.rad(deltaAngle) }
+	else
+		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(deltaAngle) }
 	end
 	
 	world[gizmo_obj.target_eid].transform.srt.r = math3d.mul(lastRotate, quat)
+	if not globalTransform then
+		gizmo_obj.root.transform.srt.r = math3d.mul(lastRotate, quat)
+	end
+	world:pub {"Gizmo", gizmo_obj.target_eid}
 end
 
 local function scaleGizmo(x, y)
@@ -953,6 +970,7 @@ local function scaleGizmo(x, y)
 	if gizmo_obj.target_eid then
 		world[gizmo_obj.target_eid].transform.srt.s = newScale
 	end
+	world:pub {"Gizmo", gizmo_obj.target_eid}
 end
 
 local gizmo_seleted = false
@@ -971,7 +989,11 @@ function gizmo_obj:selectGizmo(x, y)
 	elseif self.mode == ROTATE then
 		rotate_axis, lastHit.v = selectRotateAxis(x, y)
 		if rotate_axis then
-			lastRotateAxis.v = math3d.transform(math3d.inverse(world[gizmo_obj.target_eid].transform.srt.r), rotate_axis.dir, 0)
+			if globalTransform then
+				lastRotateAxis.v = math3d.transform(math3d.inverse(world[gizmo_obj.target_eid].transform.srt.r), rotate_axis.dir, 0)
+			else
+				lastRotateAxis.v = rotate_axis.dir
+			end
 			lastRotate.q = world[gizmo_obj.target_eid].transform.srt.r
 			showRotateMeshByAxis(true, rotate_axis)
 			return true
@@ -1053,6 +1075,12 @@ function gizmo_sys:data_changed()
 				updateGizmoScale()
 				updateAxisPlane()
 				showGizmoByState(true)
+				if not globalTransform then
+					gizmo_obj.root.transform.srt.r = world[eid].transform.srt.r
+				else
+					gizmo_obj.root.transform.srt.r = math3d.quaternion {}
+				end
+				world:pub {"Gizmo", eid}
 			end
 		else
 			if not gizmo_seleted then
