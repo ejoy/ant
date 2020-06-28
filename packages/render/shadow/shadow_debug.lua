@@ -10,7 +10,7 @@ local mathpkg   = import_package "ant.math"
 local mu, mc= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
 
-local icamera = world:interface "ant.render|camera"
+local icamera = world:interface "ant.scene|camera"
 
 ----------------------------------------------------------------------------------------------------------
 local dbg_sm_sys = ecs.system "debug_shadow_maker_system"

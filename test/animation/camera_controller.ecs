@@ -3,7 +3,7 @@ import "@ant.render"
 
 system "camera_controller_system"
     .implement "camera_controller.lua"
-    .require_interface "ant.render|camera"
+    .require_interface "ant.scene|camera"
     .require_interface "ant.objcontroller|obj_motion"
     .method "data_changed"
     .method "post_init"

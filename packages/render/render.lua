@@ -74,7 +74,7 @@ function irender_class.create_main_queue(view_rect)
 		view_rect.w, view_rect.h, "D24S8", rb_flag)
 	)
 
-	local icamera = world:interface "ant.render|camera"
+	local icamera = world:interface "ant.scene|camera"
 	local camera_eid = icamera.create{
 		eyepos  = {0, 0, 0, 1},
 		viewdir = {0, 0, 1, 0},
@@ -110,7 +110,7 @@ function irender_class.create_main_queue(view_rect)
 end
 
 local blitviewid = viewidmgr.get "blit"
-local icamera = world:interface "ant.render|camera"
+local icamera = world:interface "ant.scene|camera"
 function irender_class.create_blit_queue(viewrect)
 	local cameraeid = icamera.create {
 		eyepos = mc.ZERO_PT,

@@ -7,7 +7,7 @@ local mu = math.util
 local math3d = require "math3d"
 
 local cull_sys = ecs.system "cull_system"
-local icamera = world:interface "ant.render|camera"
+local icamera = world:interface "ant.scene|camera"
 function cull_sys:cull()
 	for _, eid in world:each "primitive_filter" do
 		local e = world[eid]

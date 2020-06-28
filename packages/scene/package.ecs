@@ -1,2 +1,5 @@
 import "scene.ecs"
+import "filter/filter_system.ecs"
+import "camera/camera.ecs"
+
 import "visible_system.ecs"

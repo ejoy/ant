@@ -31,7 +31,7 @@ system "model_viewer_system"
     .require_policy 'ant.character|character'
     .require_policy 'ant.scene|hierarchy_policy'
     .require_policy 'ant.general|name'
-    .require_interface "ant.render|camera"
+    .require_interface "ant.scene|camera"
     .require_interface "ant.animation|animation"
     .require_interface "ant.timer|timer"
     .require_interface "ant.render|iwidget_drawer"

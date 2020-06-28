@@ -9,7 +9,7 @@ local math3d 	= require "math3d"
 
 local m = ecs.system "model_viewer_system"
 
-local camera = world:interface "ant.render|camera"
+local camera = world:interface "ant.scene|camera"
 local iwd = world:interface "ant.render|iwidget_drawer"
 local animation = world:interface "ant.animation|animation"
 local camera_id

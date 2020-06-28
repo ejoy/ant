@@ -23,7 +23,7 @@ local function enable_pickup(enable)
 	end
 end
 
-local icamera = world:interface "ant.render|camera"
+local icamera = world:interface "ant.scene|camera"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 local function update_viewinfo(e, clickx, clicky) 
@@ -186,7 +186,7 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 	V="CLAMP"
 }
 
-local icamera = world:interface "ant.render|camera"
+local icamera = world:interface "ant.scene|camera"
 
 local function add_pick_entity()
 	local cameraeid = icamera.create {

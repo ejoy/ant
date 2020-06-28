@@ -8,7 +8,7 @@ local renderpkg = import_package "ant.render"
 local camerautil= renderpkg.camera
 
 local util = require "editor_system_util"
-local icamera = world:interface "ant.render|camera"
+local icamera = world:interface "ant.scene|camera"
 
 local GizmoType = {"position","rotation","scale"}
 

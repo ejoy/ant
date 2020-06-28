@@ -439,7 +439,7 @@ local keypress_mb = world:sub{"keyboard"}
 
 local pickup_mb = world:sub {"pickup"}
 
-local icamera = world:interface "ant.render|camera"
+local icamera = world:interface "ant.scene|camera"
 local function worldToScreen(world_pos)
 	local mq = world:singleton_entity "main_queue"
 	local vp = icamera.viewproj(mq.camera_eid)

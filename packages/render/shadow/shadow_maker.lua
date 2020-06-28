@@ -12,7 +12,7 @@ local setting	= require "setting"
 local mathpkg 	= import_package "ant.math"
 local mc		= mathpkg.constant
 local math3d	= require "math3d"
-local icamera	= world:interface "ant.render|camera"
+local icamera	= world:interface "ant.scene|camera"
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -139,7 +139,7 @@ end
 local sm = ecs.system "shadow_system"
 
 local imateral = world:interface "ant.asset|imaterial"
-local icamera = world:interface "ant.render|camera"
+local icamera = world:interface "ant.scene|camera"
 local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 	local cameraname = "csm" .. index
 	local cameraeid = icamera.create {

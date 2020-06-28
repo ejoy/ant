@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local camera = world:interface "ant.render|camera"
+local camera = world:interface "ant.scene|camera"
 local m = ecs.system 'init_system'
 
 function m:init()

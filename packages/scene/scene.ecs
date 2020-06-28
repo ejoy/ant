@@ -45,8 +45,6 @@ interface "iscenespace"
     .implement "scenespace.lua"
     .method "scenequeue"
 
-import "filter/filter_system.ecs"
-
 pipeline "update_scene_entities"
     .stage "update_hierarchy"
     .stage "refine_entity_transform"
