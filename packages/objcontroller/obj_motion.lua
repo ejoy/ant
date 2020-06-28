@@ -46,8 +46,9 @@ function iobj_motion.lookto(eid, eyepos, viewdir, updir)
 end
 
 function iobj_motion.move(eid, delta_vec)
-    local p = iobj_motion.get_position(eid)
-    iobj_motion.set_position(eid, math3d.add(p, delta_vec))
+    local srt = world[eid]._rendercache.srt
+    local pos = math3d.add(math3d.index(srt, 4), delta_vec)
+    iobj_motion.set_position(eid, pos)
 end
 
 function iobj_motion.move_along_axis(eid, axis, delta)
@@ -55,36 +56,6 @@ function iobj_motion.move_along_axis(eid, axis, delta)
     iobj_motion.set_position(eid, math3d.muladd(axis, delta, p))
 end
 
-function iobj_motion.move_along(eid, delta_vec)
-    local dir = iobj_motion.get_direction(eid)
-    local pos = iobj_motion.get_position(eid)
-
-    local right, up = math3d.base_axes(dir)
-    local x = math3d.muladd(right, delta_vec[1], pos)
-    local y = math3d.muladd(up, delta_vec[2], x)
-    iobj_motion.set_position(eid, math3d.muladd(dir, delta_vec[3], y))
-end
-
-function iobj_motion.move_toward(eid, where, delta)
-    local viewdir = iobj_motion.get_direction(eid)
-    local axisdir
-    if where == "z" or where == "forward" then
-        axisdir = viewdir
-    elseif where == "x" or where == "right" then
-        local right = math3d.base_axes(viewdir)
-        axisdir = right
-    elseif where == "y" or where == "up" then
-        local _, up = math3d.base_axes(viewdir)
-        axisdir = up
-    else
-        error(string.format("invalid direction: x/right for camera right; y/up for camera up; z/forward for camera viewdir:%s", where))
-    end
-
-    local p = iobj_motion.get_position(eid)
-    iobj_motion.set_position(eid, math3d.muladd(axisdir, delta, p))
-end
-
---TODO: should not modify component directly
 function iobj_motion.set_lock_target(eid, lt)
     local nlt = {}; for k, v in pairs(lt) do nlt[k] = v end
     world[eid]._rendercache.lock_target = nlt

@@ -11,9 +11,7 @@ interface "obj_motion"
     .method "lookto"
 
     .method "move"
-    .method "move_along"
     .method "move_along_axis"
-    .method "move_toward"
 
     .method "rotate"
     .method "rotate_around_point"
