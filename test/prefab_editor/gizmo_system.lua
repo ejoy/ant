@@ -469,9 +469,9 @@ end
 local function viewToAxisConstraint(point, axis, origin)
 	local q = world:singleton_entity("main_queue")
 	local ray = iom.ray(q.camera_eid, point)
-	local raySrc = math3d.vector(ray.origin[1], ray.origin[2], ray.origin[3])
+	local raySrc = ray.origin
 	local mq = world:singleton_entity "main_queue"
-	local cameraPos = icamera.eyepos(mq.camera_eid)
+	local cameraPos = iom.get_position(mq.camera_eid)
 
 	-- find plane between camera and initial position and direction
 	--local cameraToOrigin = math3d.sub(cameraPos - math3d.vector(origin[1], origin[2], origin[3]))
@@ -496,8 +496,8 @@ local moveHitRadiusPixel = 10
 local function rayHitPlane(ray, plane_info)
 	local plane = {n = plane_info.dir, d = -math3d.dot(math3d.vector(plane_info.dir), math3d.vector(plane_info.pos))}
 
-	local rayOriginVec = math3d.vector(ray.origin[1], ray.origin[2], ray.origin[3])
-	local rayDirVec = math3d.vector(ray.dir[1], ray.dir[2], ray.dir[3])
+	local rayOriginVec = ray.origin
+	local rayDirVec = ray.dir
 	local planeDirVec = math3d.vector(plane.n[1], plane.n[2], plane.n[3])
 	
 	local d = math3d.dot(planeDirVec, rayDirVec)
@@ -512,7 +512,7 @@ end
 
 local function mouseHitPlane(screen_pos, plane_info)
 	local q = world:singleton_entity("main_queue")
-	return rayHitPlane(camera_motion.ray(q.camera_eid, screen_pos), plane_info)
+	return rayHitPlane(iom.ray(q.camera_eid, screen_pos), plane_info)
 end
 
 local function selectAxisPlane(x, y)
@@ -770,7 +770,7 @@ local function rotateGizmo(x, y)
 		quat = math3d.quaternion { axis = lastRotateAxis, r = math.rad(deltaAngle) }
 	elseif rotate_axis == gizmo_obj.rw then
 		local mq = world:singleton_entity "main_queue"
-		local viewdir = icamera.viewdir(mq.camera_eid)
+		local viewdir = iom.get_direction(mq.camera_eid)
 		quat = math3d.quaternion { axis = math3d.normalize(viewdir), r = math.rad(deltaAngle) }
 	end
 	
@@ -928,7 +928,7 @@ function gizmo_sys:data_changed()
 
 	if gizmo_obj.rw.eid[1] then
 		local mq = world:singleton_entity "main_queue"
-		gizmo_obj.rw.dir = icamera.viewdir(mq.camera_eid)
+		gizmo_obj.rw.dir = iom.get_direction(mq.camera_eid)
 
 		local iv = icamera.worldmat(mq.camera_eid)
 		local s,r,t = math3d.srt(iv)

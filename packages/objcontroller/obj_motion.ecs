@@ -1,16 +1,24 @@
 interface "obj_motion"
     .implement "obj_motion.lua"
-    .method "focus_obj"
-    .method "focus_point"
+    .method "set_direction"
+    .method "set_position"
     .method "get_direction"
     .method "get_position"
+
+    .method "lookto"
+
     .method "move"
     .method "move_along"
     .method "move_along_axis"
     .method "move_toward"
+
     .method "rotate"
     .method "rotate_around_point"
+
     .method "ray"
-    .method "set_direction"
+
+    .method "focus_obj"
+    .method "focus_point"
+
     .method "set_lock_target"
-    .method "set_position"
+    .method "calc_worldmat"

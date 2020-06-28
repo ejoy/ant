@@ -23,13 +23,9 @@ function it.srt(eid)
 end
 
 function it.set(eid, s, r, t)
-    local srt = world[eid]._rendercache.srt
-    srt.m = math3d.matrix{s=s, r=r, t=t}
+    world[eid]._rendercache.srt.m = {s=s, r=r, t=t}
 end
 
 function it.set_srt(eid, srt)
-    if type(srt) == "table" then
-        srt = math3d.matrix(srt)
-    end
-    world[eid]._rendercache.srt.id = srt
+    world[eid]._rendercache.srt.m = srt
 end

@@ -152,8 +152,8 @@ assign_id(lua_State *L, struct lastack *LS, int index, int mtype, int ltype) {
 }
 
 static void
-unpack_numbers(lua_State *L, int index, float *v, int n) {
-	int i;
+unpack_numbers(lua_State *L, int index, float *v, size_t n) {
+	size_t i;
 	for (i=0;i<n;i++) {
 		if (lua_geti(L, index, i+1) != LUA_TNUMBER) {
 			luaL_error(L, "Need a number from index %d", i+1);
@@ -167,7 +167,7 @@ typedef int64_t (*from_table_func)(lua_State *L, struct lastack *LS, int index);
 
 static int64_t
 vector_from_table(lua_State *L, struct lastack *LS, int index) {
-	int n = getlen(L, index);
+	size_t n = getlen(L, index);
 	if (n != 3 && n != 4)
 		return luaL_error(L, "Vector need a array of 3/4 (%d)", n);
 	float *v = lastack_allocvec4(LS);
@@ -232,7 +232,7 @@ quat_from_axis(lua_State *L, struct lastack *LS, int index, const char *key) {
 
 static int64_t
 quat_from_table(lua_State *L, struct lastack *LS, int index) {
-	int n = getlen(L, index);
+	size_t n = getlen(L, index);
 	if (n == 0) {
 		if (quat_from_axis(L, LS, index, "axis"))
 			return luaL_error(L, "Quat invalid arguments");
@@ -252,7 +252,7 @@ quat_from_table(lua_State *L, struct lastack *LS, int index) {
 
 static int64_t
 matrix_from_table(lua_State *L, struct lastack *LS, int index) {
-	int n = getlen(L, index);
+	size_t n = getlen(L, index);
 	if (n == 0) {
 		const float *s;
 		float tmp[4];
@@ -979,6 +979,16 @@ linverse(lua_State *L) {
 }
 
 static int
+linverse_fast(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float * mat = matrix_from_index(L, LS, 1);
+	math3d_inverse_matrix_fast(LS, mat);
+
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static int
 llookat(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	const float * eye = vector_from_index(L, LS, 1);
@@ -1461,7 +1471,7 @@ lfrustum_planes(lua_State *L){
 
 static inline void
 fetch_vectors_from_table(lua_State *L, struct lastack *LS, int index, int checknum, const float** vectors){
-	const int num = getlen(L, index);
+	const size_t num = getlen(L, index);
 	if (num != checknum){
 		luaL_error(L, "table need contain %d planes:%d", checknum, num);
 	}
@@ -1609,6 +1619,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "normalize", lnormalize },
 		{ "transpose", ltranspose },
 		{ "inverse", linverse },
+		{ "inverse_fast", linverse_fast},
 		{ "lookat", llookat },
 		{ "lookto", llookto },
 		{ "reciprocal", lreciprocal },

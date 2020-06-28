@@ -1,7 +1,7 @@
 local ecs       = ...
 local world     = ecs.world
 local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
+local mc, mu    = mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
 local defaultcomp = require "components.default"
 
@@ -9,8 +9,6 @@ local cm = ecs.transform "camera_transform"
 
 function cm.process_entity(e)
     local rc = e._rendercache
-    rc.viewmat = math3d.ref(math3d.transpose(rc.srt))
-    rc.projmat = math3d.ref(math3d.projmat(e.frustum))
     local f = {}
     for k, v in pairs(e.frustum) do f[k] = v end
     rc.frustum = f
@@ -25,10 +23,9 @@ function cm.process_entity(e)
     end
 end
 
-local ic_class = ecs.interface "camera"
-local ic = world:interface "ant.render|camera"
+local ic = ecs.interface "camera"
 
-function ic_class.create(info)
+function ic.create(info)
     local frustum = info.frustum
     local default_frustum = defaultcomp.frustum()
     if not frustum then
@@ -50,15 +47,16 @@ function ic_class.create(info)
     return world:create_entity {
         policy = policy,
         data = {
-            transform   = math3d.ref(math3d.transpose(viewmat)),
+            transform   = math3d.ref(math3d.inverse_fast(viewmat)),
             frustum     = frustum,
             lock_target = info.locktarget,
             name        = info.name or "DEFAULT_CAMERA",
+            camera      = true,
         }
     }
 end
 
-function ic_class.bind(eid, which_queue)
+function ic.bind(eid, which_queue)
     local q = world:singleton_entity(which_queue)
     if q == nil then
         error(string.format("not find queue:%s", which_queue))
@@ -68,65 +66,29 @@ function ic_class.bind(eid, which_queue)
     ic.set_frustum_aspect(eid, vr.w / vr.h)
 end
 
-function ic_class.eyepos(eid)
-    local rc = world[eid]._rendercache
-    return math3d.index(rc.srt, 4)
-end
-
-function ic_class.viewdir(eid)
-    local rc = world[eid]._rendercache
-    return math3d.transform(rc.srt, mc.ZAXIS, 0)
-end
-
-function ic_class.viewmat(eid)
+function ic.viewmat(eid)
     return world[eid]._rendercache.viewmat
 end
 
-function ic_class.projmat(eid)
+function ic.projmat(eid)
     return world[eid]._rendercache.projmat
 end
 
-function ic_class.viewproj(eid)
+function ic.viewproj(eid)
     return math3d.mul(world[eid]._rendercache.projmat, world[eid]._rendercache.viewmat)
 end
 
-function ic_class.get_frustum(eid)
+function ic.get_frustum(eid)
     return world[eid]._rendercache.frustum
 end
 
-function ic_class.set_frustum(eid, frustum)
+function ic.set_frustum(eid, frustum)
     local rc = world[eid]._rendercache
-    rc.projmat.id = math3d.projmat(frustum)
     for k, v in pairs(frustum) do rc.frustum[k] = v end
     world:pub {"camera_changed", "frustum", eid}
 end
 
-function ic_class.set_eyepos(eid, pos)
-    local rc = world[eid]._rendercache
-    rc.srt.t = pos
-    rc.viewmat.id = math3d.transpose(rc.srt)
-
-    world:pub{"camcera_changed", "transform", eid}
-end
-
-function ic_class.lookto(eid, eyepos, viewdir, updir)
-    updir = updir or mc.YAXIS
-    local viewmat = math3d.lookto(eyepos, viewdir, updir)
-    local rc = world[eid]._rendercache
-    rc.srt.id = math3d.transpose(viewmat)
-    rc.viewmat.id = viewmat
-
-    world:pub{"camera_changed", "transform", eid}
-end
-
-function ic_class.set_viewdir(eid, viewdir)
-    local rc = world[eid]._rendercache
-    rc.srt.r = math3d.torotation(viewdir)
-    rc.viewmat.id = math3d.transpose(rc.srt)
-    world:pub{"camcera_changed", "transform", eid}
-end
-
-function ic_class.set_frustum_aspect(eid, aspect)
+local function frustum_changed(eid, name, value)
     local e = world[eid]
     local rc = e._rendercache
     local f = rc.frustum
@@ -136,10 +98,22 @@ function ic_class.set_frustum_aspect(eid, aspect)
     end
     
     if f.aspect then
-        f.aspect = aspect
-        rc.projmat.id = math3d.projmat(f)
+        f[name] = value
         world:pub {"camera_changed", "frustum", eid}
     else
         error("Not implement")
-    end 
+    end
+end
+
+function ic.set_frustum_aspect(eid, aspect)
+    frustum_changed(eid, "aspect", aspect)
+end
+
+function ic.set_frustum_fov(eid, fov)
+    frustum_changed(eid, "fov", fov)
+end
+
+local iom = world:interface "ant.objcontroller|obj_motion"
+function ic.lookto(eid, ...)
+    iom.lookto(eid, ...)
 end

@@ -29,6 +29,7 @@ void math3d_mulH(struct lastack *LS, const float mat[16], const float vec[4]);
 void math3d_normalize_vector(struct lastack *LS, const float v[4]);
 void math3d_normalize_quat(struct lastack *LS, const float v[4]);
 void math3d_inverse_matrix(struct lastack *LS, const float mat[16]);
+void math3d_inverse_matrix_fast(struct lastack *LS, const float mat[16]);
 void math3d_inverse_quat(struct lastack *LS, const float quat[4]);
 void math3d_transpose_matrix(struct lastack *LS, const float mat[16]);
 void math3d_lookat_matrix(struct lastack *LS, int direction, const float eye[3], const float at[3], const float *up);

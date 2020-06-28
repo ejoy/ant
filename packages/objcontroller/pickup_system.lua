@@ -24,6 +24,7 @@ local function enable_pickup(enable)
 end
 
 local icamera = world:interface "ant.render|camera"
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 local function update_viewinfo(e, clickx, clicky) 
 	local mq = world:singleton_entity "main_queue"
@@ -37,8 +38,7 @@ local function update_viewinfo(e, clickx, clicky)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
 
-	icamera.set_eyepos(e.camera_eid, eye)
-	icamera.set_viewdir(e.camera_eid, math3d.normalize(math3d.sub(at, eye)))
+	iom.lookto(e.camera_eid, eye, math3d.normalize(math3d.sub(at, eye)))
 end
 
 

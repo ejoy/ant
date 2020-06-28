@@ -113,17 +113,10 @@ function init_loader_sys:init()
     --target_lock_test()
 end
 
-local function create_camera()
+function init_loader_sys:post_init()
     local dir = math3d.todirection(math3d.quaternion{math.rad(30), math.rad(150), 0})
     local mq = world:singleton_entity "main_queue"
-    local camera_eid = mq.camera_eid
-
-    iom.set_direction(camera_eid, dir)
-    iom.set_position(camera_eid, {-4.5, 2, -1.5, 1})
-end
-
-function init_loader_sys:post_init()
-    create_camera()
+    icamera.lookto(mq.camera_eid, {-4.5, 2, -1.5, 1}, dir)
 end
 
 local imgui      = require "imgui"
@@ -136,7 +129,7 @@ function init_loader_sys:ui_update()
     local widget = imgui.widget
     imgui.windows.Begin("Test", wndflags)
     if widget.Button "rotate_camera" then
-        iom.rotate(cameraeid, {math.rad(10), 0, 0})
+        iom.rotate(cameraeid, 1, 0)
     end
 
     if widget.Button "move_camera" then

@@ -15,15 +15,14 @@ local kZoomSpeed <const> = 1
 local kWheelSpeed <const> = 0.5
 local kPanSpeed <const> = 0.5
 local kRotationSpeed <const> = 1
-function view_to_world(view_pos)
-	local camera = world[cameraId].camera
-	local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
-	local inv_viewmat = math3d.inverse(viewmat)
-	return math3d.transform(inv_viewmat, view_pos, 0)
+local itransform = world:interface "ant.scene|itransform"
+local function view_to_world(view_pos)
+	local camerasrt = itransform.srt(cameraId)
+	return math3d.transform(camerasrt, view_pos, 0)
 end
 
-function world_to_screen(world_pos)
-
+local function world_to_screen(world_pos)
+	
 end
 
 local function cameraUpdateEyepos(camera)

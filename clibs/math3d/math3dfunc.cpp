@@ -283,6 +283,16 @@ math3d_inverse_matrix(struct lastack *LS, const float mat[16]) {
 }
 
 void
+math3d_inverse_matrix_fast(struct lastack *LS, const float mat[16]) {
+	glm::mat4x4 &r = allocmat(LS);
+	auto &m = MAT(mat);
+	r = m;
+	glm::transpose(r);
+	r[3] = -m[3];
+	r[3].w = 1.f;
+}
+
+void
 math3d_inverse_quat(struct lastack *LS, const float quat[4]) {
 	glm::quat &q = allocquat(LS);
 	q = glm::inverse(QUAT(quat));

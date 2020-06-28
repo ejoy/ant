@@ -8,7 +8,7 @@ local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 
 local math3d = require "math3d"
-local icamera = world:interface "ant.render|camera"
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
@@ -75,7 +75,7 @@ local function update_lighting_properties()
 	add_ambient_light_propertices()
 
 	local mq = world:singleton_entity "main_queue"
-	system_properties["u_eyepos"].v = icamera.eyepos(mq.camera_eid)
+	system_properties["u_eyepos"].v = iom.get_position(mq.camera_eid)
 end
 
 local function calc_viewport_crop_matrix(csm_idx)
