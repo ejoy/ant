@@ -8,29 +8,36 @@ local mu, mc = mathpkg.util, mathpkg.constant
 local ie = world:interface "ant.render|entity"
 local iobj_motion = ecs.interface "obj_motion"
 
-local itransform = world:interface "ant.scene|itransform"
-
 function iobj_motion.get_position(eid)
-    return math3d.index(itransform.srt(eid), 4)
+    local rc = world[eid]._rendercache
+    return math3d.index(rc.srt, 4)
 end
 
 function iobj_motion.set_position(eid, pos)
-    itransform.srt(eid).t = pos
+    local rc = world[eid]._rendercache
+    rc.srt.t = pos
     world:pub{"component_changed", "transform", eid}
 end
 
 function iobj_motion.get_direction(eid)
-    return math3d.index(itransform.srt(eid), 3)
+    local rc = world[eid]._rendercache
+    return math3d.index(rc.srt, 3)
 end
 
 function iobj_motion.set_direction(eid, dir)
-    itransform.srt(eid).r = math3d.torotation(dir)
+    local rc = world[eid]._rendercache
+    rc.srt.r = math3d.torotation(dir)
+    
     world:pub{"component_changed", "transform", eid}
 end
 
+function iobj_motion.srt(eid)
+    return world[eid]._rendercache.srt
+end
+
 function iobj_motion.lookto(eid, eyepos, viewdir, updir)
-    local v = math3d.lookto(eyepos, viewdir, updir)
-    itransform.set_srt(eid, math3d.inverse_fast(v))
+    local rc = world[eid]._rendercache
+    rc.srt.id = math3d.inverse_fast(math3d.lookto(eyepos, viewdir, updir))
     world:pub{"component_changed", "transform", eid}
 end
 

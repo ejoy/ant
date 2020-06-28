@@ -14,12 +14,10 @@ local m = ecs.system 'init_system'
 
 local root
 local entities = {}
-
-local itransform = world:interface "ant.scene|itransform"
-
+local iom = world:interface "ant.objcontroller|obj_motion"
 local function get_matrix(eid)
     local e = world[eid]
-    local srt = itransform.srt(eid)
+    local srt = iom.srt(eid)
     if e.parent and eid ~= root then
         if not srt then
             return get_matrix(e.parent)

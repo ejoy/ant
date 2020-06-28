@@ -15,9 +15,10 @@ local kZoomSpeed <const> = 1
 local kWheelSpeed <const> = 0.5
 local kPanSpeed <const> = 0.5
 local kRotationSpeed <const> = 1
-local itransform = world:interface "ant.scene|itransform"
+local iom = world:interface "ant.objcontroller|obj_motion"
 local function view_to_world(view_pos)
-	local camerasrt = itransform.srt(cameraId)
+	-- iom.srt only camera srt, not camera world matrix
+	local camerasrt = iom.srt(cameraId)
 	return math3d.transform(camerasrt, view_pos, 0)
 end
 
@@ -30,7 +31,6 @@ local function cameraUpdateEyepos(camera)
 end
 
 local function cameraRotate(dx, dy)
-	local iom = world:interface "ant.objcontroller|obj_motion"
 	--iom.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
 	iom.rotate(cameraId, dy * kRotationSpeed, dx * kRotationSpeed)
 	local camera = world[cameraId].camera

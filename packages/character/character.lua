@@ -192,7 +192,7 @@ local function do_foot_ik(pose_result, ik, inv_trans, leg_raycasts)
     end
 end
 
-local itransform = world:interface "ant.scene|itransform"
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 function char_foot_ik_sys:do_ik()
     for _, eid in world:each "foot_ik_raycast" do
@@ -201,7 +201,7 @@ function char_foot_ik_sys:do_ik()
         
         local ik = e.ik
         local pose_result = e.pose_result
-        local worldmat = itransform.worldmat(eid)
+        local worldmat = iom.worldmat(eid)
 
         local leg_raycasts = find_leg_raycast_target(pose_result, ik, foot_rc, worldmat)
 

@@ -15,7 +15,7 @@ end
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
 
-local itransform = world:interface "ant.scene|itransform"
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 function skinning_sys:skin_mesh()
 	for _, eid in world:each "skinning" do
@@ -37,7 +37,7 @@ function skinning_sys:skin_mesh()
 				bgfx.update(handle, 0, bgfx.memory_buffer(updatedata:pointer(), job.buffersize, updatedata))
 			end
 		else
-			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, itransform.worldmat(eid))
+			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, iom.worldmat(eid))
 		end
 	end
 end
