@@ -853,6 +853,10 @@ local function showRotateFan(rotAxis, startAngle, deltaAngle)
 		else
 			num = math.floor(-deltaAngle * stepAngle + 1) * 3
 			start = math.floor(startAngle * stepAngle) * 3 - num
+			if start < 0 then
+				num = num + start
+				start = 0
+			end
 		end
 	end
 	world[rotAxis.eid[3]]._rendercache.ib.start = start
