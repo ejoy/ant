@@ -14,4 +14,4 @@ data:
   name: DEFAULT_CAMERA
 policy:
   ant.general|name
-  ant.scene|camera
+  ant.camera|camera

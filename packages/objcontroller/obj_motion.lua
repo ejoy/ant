@@ -35,6 +35,10 @@ function iobj_motion.srt(eid)
     return world[eid]._rendercache.srt
 end
 
+function iobj_motion.worldmat(eid)
+    return world[eid]._rendercache.worldmat
+end
+
 function iobj_motion.lookto(eid, eyepos, viewdir, updir)
     local rc = world[eid]._rendercache
     rc.srt.id = math3d.inverse_fast(math3d.lookto(eyepos, viewdir, updir))

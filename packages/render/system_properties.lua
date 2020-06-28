@@ -9,6 +9,7 @@ local mc = mathpkg.constant
 
 local math3d = require "math3d"
 local iom = world:interface "ant.objcontroller|obj_motion"
+local icamera = world:interface "ant.camera|camera"
 
 local m = ecs.interface "system_properties"
 local system_properties = {

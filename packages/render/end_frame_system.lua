@@ -11,6 +11,7 @@ function end_frame_sys:end_frame()
 		rc.worldmat = nil
 		rc.viewmat = nil
 		rc.projmat = nil
+		rc.viewprojmat = nil
 	end
 
 	math3d.reset()

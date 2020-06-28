@@ -60,7 +60,7 @@ end
 
 local render_sys = ecs.system "render_system"
 
-local icamera = world:interface "ant.scene|camera"
+local icamera = world:interface "ant.camera|camera"
 local function update_view_proj(viewid, cameraeid)
 	bgfx.set_view_transform(viewid, icamera.viewmat(cameraeid), icamera.projmat(cameraeid))
 end

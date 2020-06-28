@@ -1,10 +1,10 @@
 local ecs = ...
 local world = ecs.world
-local assetmgr = import_package "ant.asset"
 
 local m = ecs.component "resource"
 
 function m:init()
+    local assetmgr = import_package "ant.asset"
     return assetmgr.resource(world, self)
 end
 

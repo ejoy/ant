@@ -4,7 +4,9 @@ interface "obj_motion"
     .method "set_position"
     .method "get_direction"
     .method "get_position"
+
     .method "srt"
+    .method "worldmat"
 
     .method "lookto"
 

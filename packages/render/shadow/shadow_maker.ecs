@@ -9,7 +9,7 @@ system "shadow_system"
     --.require_policy "ant.render|shadow_debug_policy"
     .method "init"
     .method "post_init"
-    .method "data_changed"
+    .method "create_camera_from_mainview"
     .method "refine_filter"
 
 policy "shadow_cast_policy"

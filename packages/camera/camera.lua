@@ -1,9 +1,7 @@
 local ecs       = ...
 local world     = ecs.world
-local mathpkg   = import_package "ant.math"
-local mc, mu    = mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
-local defaultcomp = require "components.default"
+local default_comp 	= import_package "ant.general".default
 
 local cm = ecs.transform "camera_transform"
 
@@ -27,7 +25,7 @@ local ic = ecs.interface "camera"
 
 function ic.create(info)
     local frustum = info.frustum
-    local default_frustum = defaultcomp.frustum()
+    local default_frustum = default_comp.frustum()
     if not frustum then
         frustum = default_frustum
     else
@@ -39,7 +37,7 @@ function ic.create(info)
     end
 
     local policy = {
-        "ant.scene|camera",
+        "ant.camera|camera",
         "ant.general|name",
     }
 
@@ -51,6 +49,7 @@ function ic.create(info)
             frustum     = frustum,
             lock_target = info.locktarget,
             name        = info.name or "DEFAULT_CAMERA",
+            scene_entity= true,
             camera      = true,
         }
     }
@@ -85,7 +84,7 @@ end
 function ic.set_frustum(eid, frustum)
     local rc = world[eid]._rendercache
     for k, v in pairs(frustum) do rc.frustum[k] = v end
-    world:pub {"camera_changed", "frustum", eid}
+    world:pub {"component_changed", "frustum", eid}
 end
 
 local function frustum_changed(eid, name, value)
@@ -99,7 +98,7 @@ local function frustum_changed(eid, name, value)
     
     if f.aspect then
         f[name] = value
-        world:pub {"camera_changed", "frustum", eid}
+        world:pub {"component_changed", "frustum", eid}
     else
         error("Not implement")
     end
@@ -120,11 +119,23 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
+local function update_camera(eid)
+    local rc = world[eid]._rendercache
+    rc.viewmat = math3d.inverse_fast(rc.worldmat)
+    rc.projmat = math3d.projmat(rc.frustum)
+    rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+end
+
+function cameraview_sys:update_mainview_camera()
+    local mq = world:singleton_entity "main_queue"
+    update_camera(mq.camera_eid)
+end
+
 function cameraview_sys:update_camera()
+    local main_cameraeid = world:singleton_entity "main_queue".camera_eid
     for _, eid in world:each "camera" do
-        local rc = world[eid]._rendercache
-        rc.viewmat = math3d.inverse_fast(rc.worldmat)
-        rc.projmat = math3d.projmat(rc.frustum)
-        rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+        if eid ~= main_cameraeid then
+            update_camera(eid)
+        end
     end
 end

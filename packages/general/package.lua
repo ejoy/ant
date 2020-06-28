@@ -1,3 +1,4 @@
 return {
-    name = "ant.general"
+    name = "ant.general",
+    entry = "main",
 }

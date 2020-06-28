@@ -9,7 +9,7 @@ local camerautil= renderpkg.camera
 local util = require "system.editor_system_util"
 local WatcherEvent = require "hub_event"
 
-local icamera = world:interface "ant.scene|camera"
+local icamera = world:interface "ant.camera|camera"
 
 local GizmoType = {"position","rotation","scale"}
 local GizmoDirection = {"x","y","z"}

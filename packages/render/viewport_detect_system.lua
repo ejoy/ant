@@ -4,7 +4,7 @@ local fbmgr 	= require "framebuffer_mgr"
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
-local icamera = world:interface "ant.scene|camera"
+local icamera = world:interface "ant.camera|camera"
 
 local eventResize = world:sub {"resize"}
 

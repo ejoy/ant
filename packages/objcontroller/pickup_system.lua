@@ -23,8 +23,7 @@ local function enable_pickup(enable)
 	end
 end
 
-local icamera = world:interface "ant.scene|camera"
-local iom = world:interface "ant.objcontroller|obj_motion"
+local icamera = world:interface "ant.camera|camera"
 
 local function update_viewinfo(e, clickx, clicky) 
 	local mq = world:singleton_entity "main_queue"
@@ -38,7 +37,10 @@ local function update_viewinfo(e, clickx, clicky)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
 
-	iom.lookto(e.camera_eid, eye, math3d.normalize(math3d.sub(at, eye)))
+	local rc = world[e.camera_eid]._rendercache
+	local viewdir = math3d.normalize(math3d.sub(at, eye))
+	rc.worldmat = math3d.matrix{r=math3d.torotation(viewdir), t=eye}
+	rc.srt.m = rc.worldmat
 end
 
 
@@ -186,7 +188,7 @@ local fb_renderbuffer_flag = samplerutil.sampler_flag {
 	V="CLAMP"
 }
 
-local icamera = world:interface "ant.scene|camera"
+local icamera = world:interface "ant.camera|camera"
 
 local function add_pick_entity()
 	local cameraeid = icamera.create {
@@ -280,7 +282,7 @@ function pickup_sys:refine_filter()
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}
-function pickup_sys:data_changed()
+function pickup_sys:create_camera_from_mainview()
 	for _,_,state,x,y in leftmousepress_mb:unpack() do
 		if state == "DOWN" then
 			enable_pickup(true)

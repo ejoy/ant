@@ -46,7 +46,7 @@ local function create_plane_test()
     end
 end
 
-local icamera = world:interface "ant.scene|camera"
+local icamera = world:interface "ant.camera|camera"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 local ilight = world:interface "ant.render|light"

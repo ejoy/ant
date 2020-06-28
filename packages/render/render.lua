@@ -3,10 +3,11 @@ local world = ecs.world
 local mathpkg = import_package "ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
 
+local default_comp 	= import_package "ant.general".default
+
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
-local default_comp 	= require "components.default"
 local samplerutil	= require "sampler"
 
 local setting		= require "setting"
@@ -74,7 +75,7 @@ function irender_class.create_main_queue(view_rect)
 		view_rect.w, view_rect.h, "D24S8", rb_flag)
 	)
 
-	local icamera = world:interface "ant.scene|camera"
+	local icamera = world:interface "ant.camera|camera"
 	local camera_eid = icamera.create{
 		eyepos  = {0, 0, 0, 1},
 		viewdir = {0, 0, 1, 0},
@@ -110,7 +111,7 @@ function irender_class.create_main_queue(view_rect)
 end
 
 local blitviewid = viewidmgr.get "blit"
-local icamera = world:interface "ant.scene|camera"
+local icamera = world:interface "ant.camera|camera"
 function irender_class.create_blit_queue(viewrect)
 	local cameraeid = icamera.create {
 		eyepos = mc.ZERO_PT,

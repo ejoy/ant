@@ -12,7 +12,7 @@ local setting	= require "setting"
 local mathpkg 	= import_package "ant.math"
 local mc		= mathpkg.constant
 local math3d	= require "math3d"
-local icamera	= world:interface "ant.scene|camera"
+local icamera	= world:interface "ant.camera|camera"
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -101,15 +101,15 @@ local function calc_shadow_camera(viewmat, frustum, split_ratios, lightdir, shad
 		min_extent, max_extent = math3d.totable(minv), math3d.totable(maxv)
 	end
 
-	icamera.lookto(sc_eid, center_WS, lightdir)
-
-	--shadowcamera.updir(updir)
-	icamera.set_frustum(sc_eid, {
+	local rc = world[sc_eid]._rendercache
+	rc.worldmat = math3d.matrix{r=math3d.torotation(lightdir), t=center_WS}
+	rc.srt.m = rc.worldmat
+	rc.frustum = {
 		ortho=true,
 		l = min_extent[1], r = max_extent[1],
 		b = min_extent[2], t = max_extent[2],
 		n = min_extent[3], f = max_extent[3],
-	})
+	}
 end
 
 local function update_shadow_camera(l, view_camera_eid)
@@ -139,7 +139,7 @@ end
 local sm = ecs.system "shadow_system"
 
 local imateral = world:interface "ant.asset|imaterial"
-local icamera = world:interface "ant.scene|camera"
+local icamera = world:interface "ant.camera|camera"
 local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 	local cameraname = "csm" .. index
 	local cameraeid = icamera.create {
@@ -295,46 +295,25 @@ function sm:init()
 	end
 end
 
-local dl_create_mb 		= world:sub{"component_register", "directional_light"}
-local dl_mb 			= world:sub{"component_changed", "directional_light"}
-local camera_changed_mb = world:sub{"component_changed", "camera"}
+local modify_mailboxs = {}
 
 function sm:post_init()
-	local updated
 	local mq = world:singleton_entity "main_queue"
-	local cameraeid = mq.camera_eid
-	for _, _, eid in dl_create_mb:unpack() do
-		update_shadow_camera(world[eid], cameraeid)
-		updated = true
-	end
+	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "transform", mq.camera_eid}
+	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "frusutm", mq.camera_eid}
+	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "directional_light", world:singleton_entity_id "directional_light"}
 
-	if not updated then
-		log.info("shadow camera not update")
-	end
+	--pub an event to make update_shadow_camera be called
+	world:pub{"component_changed", "directional_light", world:singleton_entity_id "directional_light"}
 end
 
-function sm:data_changed()
-	local dl_eid
-	for _, _, eid in dl_mb:unpack() do
-		dl_eid = eid
-		break
-	end
-
-	if dl_eid == nil then
-		local mq = world:singleton_entity "main_queue"
-		for _, _, eid in camera_changed_mb:unpack() do
-			if mq.camera_eid == eid then
-				if dl_eid == nil then
-					dl_eid = world:singleton_entity_id "directional_light"
-				end
-				break
-			end
+function sm:create_camera_from_mainview()
+	for _, mb in ipairs(modify_mailboxs) do
+		for _ in mb:each() do
+			local dl = world:singleton_entity "directional_light"
+			local mq = world:singleton_entity "main_queue"
+			update_shadow_camera(dl, mq.camera_eid)
 		end
-	end
-
-	if dl_eid then
-		local mq = world:singleton_entity "main_queue"
-		update_shadow_camera(world[dl_eid], world[mq.camera_eid].camera)
 	end
 end
 
