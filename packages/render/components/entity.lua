@@ -314,6 +314,32 @@ function ientity.create_circle_entity(radius, slices, srt, name)
 	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_singlecolor.material", name, mesh)
 end
 
+function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
+	local circle_vb, _ = geolib.cricle(radius, slices)
+	local gvb = {0,0,0,0,0,1}
+	local ib = {}
+	local idx = 1
+	local maxidx = #circle_vb
+	for _, v in ipairs(circle_vb) do
+		for _, vv in ipairs(v) do
+			gvb[#gvb+1] = vv
+		end
+		gvb[#gvb+1] = 0
+		gvb[#gvb+1] = 0
+		gvb[#gvb+1] = 1
+		ib[#ib+1] = idx
+		ib[#ib+1] = 0
+		if idx ~= maxidx then
+			ib[#ib+1] = idx + 1
+		else
+			ib[#ib+1] = 1
+		end
+		idx = idx + 1
+	end
+	local mesh = create_mesh({"p3|n3", gvb}, ib)
+	return create_simple_render_entity(srt, mtl, name, mesh)
+end
+
 local skybox_mesh
 local function get_skybox_mesh()
 	if skybox_mesh == nil then

@@ -11,7 +11,6 @@ policy "hierarchy_policy"
     .require_system "scenespace_system"
     .require_transform "ant.general|rendercache_transform"
     .component "scene_entity"
-    .action "mount"
 
 action "mount"
     .implement "scenespace.lua"

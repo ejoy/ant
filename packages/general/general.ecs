@@ -19,3 +19,7 @@ transform "rendercache_transform"
 action "name"
     .implement "general.lua"
     .method "init"
+
+action "import"
+    .implement "general.lua"
+    .method "init"

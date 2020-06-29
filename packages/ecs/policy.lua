@@ -3,15 +3,13 @@ local function create(w, policies)
     local res = {
         policy = policies,
         component = {},
-        register_component = {},
-        action = {},
         process_entity = {},
         process_prefab = {},
     }
+    local componentset = {}
     local unionset = {}
     local policyset = {}
     local transformset = {}
-    local actionset = {}
     local reflection = {}
     local function table_append(t, a)
         table.move(a, 1, #a, #t+1, t)
@@ -71,15 +69,9 @@ local function create(w, policies)
             import_transform(v)
         end
         for _, v in ipairs(class.component) do
-            if not res.register_component[v] then
-                res.register_component[v] = true
+            if not componentset[v] then
+                componentset[v] = true
                 res.component[#res.component+1] = v
-            end
-        end
-        for _, v in ipairs(class.action) do
-            if not actionset[v] then
-                actionset[v] = true
-                res.action[#res.action+1] = v
             end
         end
     end
@@ -94,29 +86,19 @@ local function create(w, policies)
             local class = w._class.transform[name]
             if class.process_prefab then
                 res.process_prefab[#res.process_prefab+1] = class.process_prefab
-                for _, v in ipairs(class.output) do
-                    res.register_component[v] = true
-                end
             end
             if class.process_entity then
                 res.process_entity[#res.process_entity+1] = class.process_entity
-                for _, v in ipairs(class.output) do
-                    res.register_component[v] = true
-                end
             end
         end
     end
 
     table.sort(res.component)
-    table.sort(res.action)
     return res
 end
 
 local function add(w, eid, policies)
     local res = create(w, policies)
-    if #res.action > 0 then
-        error "action can only be imported during instance."
-    end
     local e = w[eid]
     for _, policy_name in ipairs(policies) do
         local class = w._class.policy[policy_name]
