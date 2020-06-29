@@ -1,7 +1,7 @@
 local m = {}
 
 local ObjectMetatable = {}
-local function markMap(t)
+local function markObject(t)
     if next(t) == nil then
         return setmetatable(t, ObjectMetatable)
     end
@@ -57,7 +57,7 @@ local function query(data, path)
         return
     end
     if path:sub(1,1) ~= "/" then
-        return false
+        return
     end
     return query_(data, split(path:sub(2)), 1)
 end
@@ -113,7 +113,7 @@ local function remove(data, path)
             return false
         end
         t[k] = nil
-        markMap(t)
+        markObject(t)
     end
     return true, data
 end
@@ -147,7 +147,7 @@ local function spin(data, path)
     local oldvalue = t[k]
     t[k] = nil
     if not isarray then
-        markMap(t)
+        markObject(t)
     end
     return true, oldvalue
 end
@@ -169,14 +169,6 @@ end
 
 local function equal(a, b)
     return equal_(a, b) and equal_(b, a)
-end
-
-function m.get(data, path)
-    return get(data, path)
-end
-
-function m.set(data, path, value)
-    return add(data, path, value)
 end
 
 local op = {}
@@ -214,7 +206,10 @@ end
 
 function op:test(data)
     local ok, res = get(data, self.path)
-    return (ok and equal(res, self.value)), data
+    if ok and equal(res, self.value) then
+        return true, data
+    end
+    return false
 end
 
 function m.apply(data, patchs, n)

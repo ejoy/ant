@@ -51,7 +51,7 @@ end
 
 for _, data in ipairs(json_decode "packages/serialize/test/patch.json") do
     if not run_test(data) then
-        print("FAILED:", data.comment)
+        print("FAILED:", data.error and data.error or data.comment)
         run_test(data)
     end
 end
