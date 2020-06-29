@@ -5,8 +5,8 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mu, mc = mathpkg.util, mathpkg.constant
 
-local ie = world:interface "ant.render|entity"
 local iobj_motion = ecs.interface "obj_motion"
+local icamera = world:interface "ant.camera|camera"
 
 function iobj_motion.get_position(eid)
     return math3d.index(world[eid]._rendercache.srt, 4)
@@ -107,7 +107,7 @@ function iobj_motion.ray(eid, pt2d, vp_size)
 
     local ndc_near, ndc_far = mu.NDC_near_far_pt(mu.pt2D_to_NDC(pt2d, vp_size))
 
-    local viewproj = iobj_motion.viewproj(eid)
+    local viewproj = icamera.viewproj(eid)
     local invviewproj = math3d.inverse(viewproj)
     local pt_near_WS = math3d.transformH(invviewproj, ndc_near, 1)
     local pt_far_WS = math3d.transformH(invviewproj, ndc_far, 1)

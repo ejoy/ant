@@ -71,6 +71,17 @@ print("inverse", ref2, "=", math3d.tostring(math3d.inverse(ref2)))
 print("inverse", ref3, "=", math3d.tostring(math3d.inverse(ref3)))
 print("reciprocal", ref2, "=", math3d.tostring(math3d.reciprocal(ref2)))
 
+print "===INVERSE==="
+do
+	local m = math3d.lookto(math3d.vector(1, 2, 1), math3d.vector(1, -1, 1))
+	local imf = math3d.inverse_fast(m)
+	local mf = math3d.inverse(m)
+
+	print("look to matrix:", math3d.tostring(m))
+	print("inverse fast:", math3d.tostring(imf))
+	print("inverse:", math3d.tostring(mf))
+end
+
 print "===MULADD==="
 do
 	local v1, v2 = math3d.vector(1, 2, 3, 0), math3d.vector(1, 0, 0, 0)
