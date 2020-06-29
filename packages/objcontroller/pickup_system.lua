@@ -17,6 +17,9 @@ local bgfx 		= require "bgfx"
 local function enable_pickup(enable)
 	local e = world:singleton_entity "pickup"
 	e.visible = enable
+	local filter = e.primitive_filter
+	filter.result.opaticy.items = {}
+	filter.result.translucent.items = {}
 
 	if not enable then
 		e.pickup.nextstep = nil
