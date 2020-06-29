@@ -1,10 +1,8 @@
-local fs_local  = import_package "ant.utility".fs_local
-local thread    = require "thread"
 local gltfutil  = require "model.glTF.util"
 local renderpkg = import_package "ant.render"
-local declmgr	= renderpkg.declmgr
-local math3d	= require "math3d"
-local lfs		= require "filesystem.local"
+local declmgr   = renderpkg.declmgr
+local math3d    = require "math3d"
+local utility   = require "model.utility"
 
 local function sort_pairs(t)
     local s = {}
@@ -284,11 +282,7 @@ local function redirect_skin_joints(gltfscene, skin)
 	end
 end
 
-local function write_file(path, data)
-	fs_local.write_file(path, thread.pack(data))
-end
-
-local function export_skinbin(gltfscene, bindata, output, exports)
+local function export_skinbin(gltfscene, bindata, exports)
 	exports.skin = {}
 	local skins = gltfscene.skins
 	if skins == nil then
@@ -297,13 +291,13 @@ local function export_skinbin(gltfscene, bindata, output, exports)
 	for skinidx, skin in ipairs(gltfscene.skins) do
 		redirect_skin_joints(gltfscene, skin)
 		local skinname = get_obj_name(skin, skinidx, "skin")
-		local resname = skinname .. ".skinbin"
-		write_file(output / resname, fetch_skininfo(gltfscene, skin, bindata))
+		local resname = "./meshes/"..skinname .. ".skinbin"
+		utility.save_bin_file(resname, fetch_skininfo(gltfscene, skin, bindata))
 		exports.skin[skinidx] = "./meshes/"..resname
 	end
 end
 
-local function export_meshbin(gltfscene, bindata, output, exports)
+local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}
 	local meshes = gltfscene.meshes
 	if meshes == nil then
@@ -314,8 +308,6 @@ local function export_meshbin(gltfscene, bindata, output, exports)
 		local meshaabb = math3d.aabb()
 		exports.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
-			local primname = "P" .. primidx
-			local resname = meshname .. "_" .. primname .. ".meshbin"
 			local group = {}
 			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
 			local indices_accidx = prim.indices
@@ -328,16 +320,16 @@ local function export_meshbin(gltfscene, bindata, output, exports)
 				group.bounding = bb
 				meshaabb = math3d.aabb_merge(meshaabb, math3d.aabb(bb.aabb[1], bb.aabb[2]))
 			end
-			write_file(output / resname, group)
-			exports.mesh[meshidx][primidx] = "./meshes/"..resname
+			local primname = "P" .. primidx
+			local resname = "./meshes/"..meshname .. "_" .. primname .. ".meshbin"
+			utility.save_bin_file(resname, group)
+			exports.mesh[meshidx][primidx] = resname
 		end
 	end
 end
 
-return function (output, glbdata, exports)
-	local meshfolder = output / "meshes"
-	lfs.create_directories(meshfolder)
-	export_meshbin(glbdata.info, glbdata.bin, meshfolder, exports)
-	export_skinbin(glbdata.info, glbdata.bin, meshfolder, exports)
+return function (_, glbdata, exports)
+	export_meshbin(glbdata.info, glbdata.bin, exports)
+	export_skinbin(glbdata.info, glbdata.bin, exports)
 	return exports
 end

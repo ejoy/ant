@@ -1,6 +1,5 @@
-local fs_local = import_package "ant.utility".fs_local
-local stringify = import_package "ant.serialize".stringify
 local fs = require "filesystem.local"
+local utility = require "model.utility"
 
 local image_extension = {
     ["image/jpeg"] = ".jpg",
@@ -45,10 +44,6 @@ return function (output, glbdata, exports)
         end
     end
 
-    local image_folder = output / "images"
-    local pbrm_folder = output / "materials"
-
-    fs.create_directories(pbrm_folder)
     local images = glbscene.images
     local bufferviews = glbscene.bufferViews
     local buffers = glbscene.buffers
@@ -69,16 +64,14 @@ return function (output, glbdata, exports)
             name = name .. ext
         end
 
-        local imgpath = image_folder / name
-        fs.create_directories(imgpath:parent_path())
-        if not fs.exists(imgpath) then
+        if not fs.exists(output / "images" / name) then
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
             local begidx = (bv.byteOffset or 0)+1
             local endidx = begidx + bv.byteLength
             assert((endidx - 1) <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
-            fs_local.write_file(imgpath, c)
+            utility.save_file("./images/"..name, c)
         end
         return name
     end
@@ -186,9 +179,7 @@ return function (output, glbdata, exports)
         --TODO: check texture if need compress
         local need_compress<const> = true
         add_texture_format(texture_desc, need_compress)
-
-        local texpath = output / "images" / name .. ".texture"
-        fs_local.write_file(texpath, stringify(texture_desc))
+        utility.save_txt_file("./images/" .. name .. ".texture", texture_desc)
         return "./../images/" .. name .. ".texture"
     end
 
@@ -274,8 +265,8 @@ return function (output, glbdata, exports)
             local newname = name:gsub("['\\/:*?\"<>|]", "_")
             return newname
         end
-        local filename = refine_name(name) .. ".material"
-        fs_local.write_file(pbrm_folder / filename, stringify(material, conv))
-        exports.material[matidx] = "./materials/" .. filename
+        local filename = "./materials/" .. refine_name(name) .. ".material"
+        utility.save_txt_file(filename, material, conv)
+        exports.material[matidx] = filename
     end
 end

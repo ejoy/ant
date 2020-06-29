@@ -1,9 +1,9 @@
 local m = {}
 
-local MapMetatable <const> = {__name = 'serialize.map'}
+local ObjectMetatable = {}
 local function markMap(t)
     if next(t) == nil then
-        return setmetatable(t, MapMetatable)
+        return setmetatable(t, ObjectMetatable)
     end
     return t
 end
@@ -11,8 +11,7 @@ end
 local function isArray(t)
     local first_value = next(t)
     if first_value == nil then
-        local mt = getmetatable(t)
-        if mt and mt.__name == 'serialize.map' then
+        if getmetatable(t) == ObjectMetatable then
             return false
         end
         return true
@@ -232,6 +231,10 @@ function m.apply(data, patchs, n)
         end
     end
     return true, data
+end
+
+function m.set_object_metatable(mt)
+    ObjectMetatable = mt
 end
 
 return m

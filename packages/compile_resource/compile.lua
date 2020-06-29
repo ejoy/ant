@@ -67,19 +67,31 @@ local function do_build(output)
         return
     end
 	for _, dep in ipairs(readconfig(depfile)) do
-		local timestamp, filename = dep[1], lfs.path(dep[2])
-		if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
-			return
-		end
+        local timestamp, filename = dep[1], lfs.path(dep[2])
+        if timestamp == 0 then
+            if lfs.exists(filename) then
+                return
+            end
+        else
+            if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
+                return
+            end
+        end
 	end
 	return true
 end
 
-local function create_depfile(filename, deps)
+local function create_depfile(filename, input)
     local w = {}
-    for _, file in ipairs(deps) do
-        w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file:localpath()), lfs.absolute(file):string())
+    local function insert_dep(file)
+        if lfs.exists(file) then
+            w[#w+1] = ("{%d, %q}"):format(lfs.last_write_time(file), lfs.absolute(file):string())
+        else
+            w[#w+1] = ("{0, %q}"):format(lfs.absolute(file):string())
+        end
     end
+    insert_dep(input)
+    insert_dep(input..".patch")
     writefile(filename, table.concat(w, "\n"))
 end
 
@@ -98,7 +110,7 @@ local function do_compile(cfg, input, output)
     if not ok then
         error("compile failed: " .. input:string() .. "\n" .. err)
     end
-    create_depfile(output / ".dep", {input})
+    create_depfile(output / ".dep", input)
 end
 
 local function clean_file(input)

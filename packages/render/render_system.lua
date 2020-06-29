@@ -17,6 +17,27 @@ local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
 end
 
+local function to_v(t)
+	if type(t) ~= "table" then
+		return t
+	end
+	if t.stage then
+		return t
+	end
+	if type(t[1]) == "number" then
+		return #t == 4 and math3d.ref(math3d.vector(t)) or math3d.ref(math3d.matrix(t))
+	end
+	local res = {}
+	for i, v in ipairs(t) do
+		if type(v) == "table" then
+			res[i] = #v == 4 and math3d.ref(math3d.vector(v)) or math3d.ref(math3d.matrix(v))
+		else
+			res[i] = v
+		end
+	end
+	return res
+end
+
 function rt.process_entity(e)
 	local c = e._cache_prefab
 
@@ -28,12 +49,14 @@ function rt.process_entity(e)
 		for _, u in ipairs(uniforms) do
 			local n = u.name
 			local v = pp[n] or isys_properties.get(n)
+			v = to_v(v)
 			properties[n] = {
-				value=v,
+				value = v,
 				handle = u.handle,
 				type = u.type,
 				set = imaterial.which_set_func(v),
-				ref=true}
+				ref = true
+			}
 		end
 	end
 

@@ -235,7 +235,7 @@ end
 
 local function serialize_prefab(w, prefab)
 	local t = {}
-	for _, class in ipairs(prefab.__class) do
+	for _, class in ipairs(prefab) do
 		if class.prefab then
 			t[#t+1] = {
 				prefab = tostring(class.prefab),
@@ -249,7 +249,7 @@ local function serialize_prefab(w, prefab)
 end
 
 function world:serialize(entities)
-	return serialize_prefab(self, entities)
+	return serialize_prefab(self, entities.__class)
 end
 
 function world:remove_entity(eid)

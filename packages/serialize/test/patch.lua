@@ -1,5 +1,6 @@
-local json = require "packages.debugger.common.json"
+local json = require "packages.json.json"
 local patch = require "packages.serialize.patch"
+patch.set_object_metatable(json.object)
 
 local function readfile(file)
     local f = assert(io.open(file, "r"))
@@ -8,25 +9,8 @@ local function readfile(file)
     return data
 end
 
-local MapMetatable <const> = {__name = 'serialize.map'}
-
-local function update_metatable(t)
-    if getmetatable(t) then
-        assert(next(t) == nil)
-        setmetatable(t, MapMetatable)
-        return
-    end
-    for _, v in pairs(t) do
-        if type(v) == "table" then
-            update_metatable(v)
-        end
-    end
-end
-
 local function json_decode(file)
-    local res = json.decode(readfile(file))
-    update_metatable(res)
-    return res
+    return json.decode(readfile(file))
 end
 
 local function equal_(a, b)
@@ -49,6 +33,9 @@ local function equal(a, b)
 end
 
 local function run_test(data)
+    if data.disabled then
+        return true
+    end
     local ok, res = patch.apply(data.doc, data.patch)
     if data.error then
         return ok == false
@@ -68,3 +55,5 @@ for _, data in ipairs(json_decode "packages/serialize/test/patch.json") do
         run_test(data)
     end
 end
+
+print "OK"
