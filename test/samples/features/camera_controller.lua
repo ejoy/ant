@@ -59,16 +59,16 @@ function camera_controller_sys:data_changed()
 	local mq = world:singleton_entity "main_queue"
 
 	if can_rotate(mq.camera_eid) then
-		-- for _, e in ipairs(mouse_events) do
-		-- 	for _,_,state,x,y in e:unpack() do
-		-- 		if state == "MOVE" and mouse_lastx then
-		-- 			local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
-		-- 			local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-		-- 			iom.rotate(mq.camera_eid, uy, ux)
-		-- 		end
-		-- 		mouse_lastx, mouse_lasty = x, y
-		-- 	end
-		-- end
+		for _, e in ipairs(mouse_events) do
+			for _,_,state,x,y in e:unpack() do
+				if state == "MOVE" and mouse_lastx then
+					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
+					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
+					iom.rotate(mq.camera_eid, uy, ux)
+				end
+				mouse_lastx, mouse_lasty = x, y
+			end
+		end
 	end
 	if can_move(mq.camera_eid) then
 		local keyboard_delta = {0 , 0, 0}

@@ -1,5 +1,7 @@
 local ecs       = ...
 local world     = ecs.world
+
+local mc = import_package "ant.math".constant
 local math3d    = require "math3d"
 local default_comp 	= import_package "ant.general".default
 
@@ -10,7 +12,9 @@ function cm.process_entity(e)
     local f = {}
     for k, v in pairs(e.frustum) do f[k] = v end
     rc.frustum = f
-
+    if e.updir then
+        rc.updir = math3d.ref(e.updir)
+    end
     local lt = e.lock_target
     if lt then
         local nlt = {}
@@ -45,9 +49,10 @@ function ic.create(info)
     return world:create_entity {
         policy = policy,
         data = {
-            transform   = math3d.ref(math3d.inverse_fast(viewmat)),
+            transform   = math3d.ref(math3d.inverse(viewmat)),
             frustum     = frustum,
             lock_target = info.locktarget,
+            updir       = info.updir,
             name        = info.name or "DEFAULT_CAMERA",
             scene_entity= true,
             camera      = true,
@@ -87,6 +92,11 @@ function ic.set_frustum(eid, frustum)
     world:pub {"component_changed", "frustum", eid}
 end
 
+function ic.set_updir(eid, updir)
+    world[eid]._rendercache.updir.v = updir
+    world:pub {"component_changed", "updir", eid}
+end
+
 local function frustum_changed(eid, name, value)
     local e = world[eid]
     local rc = e._rendercache
@@ -121,7 +131,7 @@ local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(eid)
     local rc = world[eid]._rendercache
-    rc.viewmat = math3d.inverse_fast(rc.worldmat)
+    rc.viewmat = math3d.lookto(math3d.index(rc.worldmat, 4), math3d.index(rc.worldmat, 3), rc.updir)
     rc.projmat = math3d.projmat(rc.frustum)
     rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end

@@ -34,6 +34,7 @@ interface "camera"
     .method "set_frustum_aspect"
     .method "set_frustum_fov"
     .method "lookto"
+    .method "set_updir"
 
 pipeline "camera"
     .stage "update_mainview_camera"

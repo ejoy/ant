@@ -114,9 +114,11 @@ function init_loader_sys:init()
 end
 
 function init_loader_sys:post_init()
-    local dir = math3d.todirection(math3d.quaternion{math.rad(30), math.rad(150), 0})
     local mq = world:singleton_entity "main_queue"
+    local dir = math3d.todirection(math3d.quaternion{math.rad(30), math.rad(150), 0})
     icamera.lookto(mq.camera_eid, {-4.5, 2, -1.5, 1}, dir)
+    --local dir = {0, 0, -1, 0}
+    --icamera.lookto(mq.camera_eid, {0, 0, 0, 1}, dir)
 end
 
 local imgui      = require "imgui"

@@ -18,8 +18,5 @@ interface "obj_motion"
 
     .method "ray"
 
-    .method "focus_obj"
-    .method "focus_point"
-
     .method "set_lock_target"
     .method "calc_worldmat"

@@ -9,15 +9,15 @@ function util.limit(v, min, max)
     return v
 end
 
-function util.equal(n0, n1)
-    assert(type(n0) == "number")
-    assert(type(n1) == "number")
-    return util.iszero(n1 - n0)
-end
-
 function util.iszero(n, threshold)
     threshold = threshold or 0.00001
     return -threshold <= n and n <= threshold
+end
+
+function util.equal(n0, n1, threshold)
+    assert(type(n0) == "number")
+    assert(type(n1) == "number")
+    return util.iszero(n1 - n0, threshold)
 end
 
 function util.print_srt(e, numtab)
