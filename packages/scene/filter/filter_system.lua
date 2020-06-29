@@ -9,16 +9,13 @@ local iss = world:interface "ant.scene|iscenespace"
 local ies = world:interface "ant.scene|ientity_state"
 
 local function update_bounding(rc, e)
+	local worldmat = rc.worldmat
 	local mesh = e.mesh
-	if mesh then
-		local bounding = mesh.bounding
-		if bounding then
-			rc.aabb = math3d.aabb_transform(rc.worldmat, bounding.aabb)
-			return
-		end
+	if worldmat == nil or mesh == nil or mesh.bounding == nil then
+		rc.aabb = nil
+	else
+		rc.aabb = math3d.aabb_transform(rc.worldmat, mesh.bounding.aabb)
 	end
-
-	rc.aabb = nil
 end
 
 local function update_transform(eid)
@@ -47,9 +44,7 @@ local function update_transform(eid)
 		end
 	end
 
-	if rc.worldmat then
-		update_bounding(rc, e)
-	end
+	update_bounding(rc, e)
 end
 
 local function update_state(eid)
