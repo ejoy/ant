@@ -1519,7 +1519,10 @@ lfrustum_intersect_aabb_list(lua_State *L){
 		//	table: eid=value
 		//		value: {aabb=...}
 		const lua_Integer eid = lua_tointeger(L, -2);	//table key
-		const float * aabb = object_from_field(L, LS, -1, "aabb", LINEAR_TYPE_MAT, matrix_from_table);
+
+		const float * aabb = (LUA_TNIL != lua_getfield(L, -1, "aabb")) ?
+			object_from_index(L, LS, -1, LINEAR_TYPE_MAT, matrix_from_table) : NULL;
+		lua_pop(L, 1);
 
 		if (aabb == NULL || math3d_frustum_intersect_aabb(LS, planes, aabb) >= 0){
 			lua_pushvalue(L, -1);	//-1 is table value
