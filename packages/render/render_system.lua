@@ -46,8 +46,12 @@ function rt.process_entity(e)
 		properties = {}
 		for _, u in ipairs(uniforms) do
 			local n = u.name
-			local v = pp[n] or isys_properties.get(n)
-			v = to_v(v)
+			local v = pp[n]
+			if v then
+				v = to_v(v)
+			else
+				v = isys_properties.get(n)
+			end
 			properties[n] = {
 				value = v,
 				handle = u.handle,
