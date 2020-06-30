@@ -9,6 +9,8 @@ local geometry_drawer = import_package "ant.geometry".drawer
 local bgfx = require "bgfx"
 local widget_drawer_sys = ecs.system "widget_drawer_system"
 
+local iom = world:interface "ant.objcontroller|obj_motion"
+
 local function create_dynamic_mesh(layout, num_vertices, num_indices)
 	local declmgr = import_package "ant.render".declmgr
 	local decl = declmgr.get(layout)
@@ -173,7 +175,7 @@ function physic_bounding_sys:widget()
 	for _, eid in world:each "collider" do
 		local e = world[eid]
 		local collider = e.collider
-		local srt = e.transform.srt
+		local srt = iom.srt(eid)
 		if collider.box then
 			for _, sh in ipairs(collider.box) do
 				iwd.draw_box(sh, srt)

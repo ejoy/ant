@@ -46,7 +46,7 @@ function m:init()
 	-- 		scene_entity = true,
 	--		state = ies.create_state "visible|selectable",
 	-- 		transform =  {
-	-- 			s={100},
+	-- 			s=100,
 	-- 			t={0, 2, 0, 0}
 	-- 		},
 	-- 		material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",

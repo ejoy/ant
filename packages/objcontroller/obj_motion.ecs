@@ -1,9 +1,17 @@
 interface "obj_motion"
     .implement "obj_motion.lua"
-    .method "set_direction"
     .method "set_position"
-    .method "get_direction"
     .method "get_position"
+
+    --
+    .method "set_direction"
+    .method "get_direction"
+    .method "get_rotation"
+    .method "set_rotation"
+    --
+
+    .method "get_scale"
+    .method "set_scale"
 
     .method "srt"
     .method "set_srt"

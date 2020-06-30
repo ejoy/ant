@@ -38,7 +38,7 @@ function m:post_init()
 	create_camera()
 end
 
-local player
+local player, player_id
 function m:init()
 	create_light()
 	computil.create_procedural_sky()
@@ -52,7 +52,7 @@ function m:init()
 	world:create_entity 'res/door.txt'
 	world:create_entity 'res/fence1.txt'
 	world:create_entity 'res/fence2.txt'
-	local eid = world:create_entity 'res/player.txt'
+	player_id = world:create_entity 'res/player.txt'
 	player = world[eid]
 end
 
@@ -84,29 +84,31 @@ local mode
 local target
 local move_speed = 200
 
-local function setEntityFacing(e, facing)
-	e.transform.r = math3d.quaternion{0, facing, 0}
+local iom = world:interface "ant.objcontroller|obj_motion"
+
+local function setEntityFacing(eid, facing)
+	iom.set_rotation(eid, math3d.quaternion{0, facing, 0})
 end
 
-local function setEntityPosition(e, postion)
-	local s, r, t = math3d.srt(e.transform)
+local function setEntityPosition(eid, postion)
+	local s, r, t = math3d.srt(iom.get_position(eid))
 	local srt_test = {
 		s = s,
 		r = r,
 		t = postion,
 	}
-	if collider.test(e, srt_test) then
+	if collider.test(world[eid], srt_test) then
 		return
 	end
-	e.transform.t = postion
+	iom.set_position(eid, postion)
 	return true
 end
 
-local function moveEntity(e, distance)
-	local s, r, t = math3d.srt(e.transform)
+local function moveEntity(eid, distance)
+	local s, r, t = math3d.srt(iom.srt(eid))
 	local d = math3d.todirection(r)
 	local postion = math3d.muladd(distance, d, t)
-	if setEntityPosition(e, postion) then
+	if setEntityPosition(eid, postion) then
 		iom.move_along_axis(camera_id, d, distance)
 	end
 end
@@ -151,7 +153,7 @@ local function mainloop(delta)
 		if res.dir[2] < 0 then
 			local x0 = res.origin[1] - res.dir[1]/res.dir[2]*res.origin[2]
 			local z0 = res.origin[3] - res.dir[3]/res.dir[2]*res.origin[2]
-			local postion = math3d.totable(player.transform.t)
+			local postion = math3d.totable(iom.get_position(player_id))
 			local facing = math.atan(x0-postion[1], z0-postion[3])
 			setEntityFacing(player, facing)
 			target = {x0, 0, z0}
@@ -164,14 +166,13 @@ local function mainloop(delta)
 	end
 	local move_distance = delta * move_speed / 100000
 	if mode == "keyboard" then
-		local camera_data = camera.get(camera_id)
-		local viewdir = math3d.totable(camera_data.viewdir)
+		local viewdir = math3d.totable(iom.get_direction(camera_id))
 		local facing = RADIAN[cur_direction] + math.atan(viewdir[1], viewdir[3])
 		animation.set_state(player, "move")
-		setEntityFacing(player, facing)
-		moveEntity(player, move_distance)
+		setEntityFacing(player_id, facing)
+		moveEntity(player_id, move_distance)
 	elseif mode == "mouse" then
-		local postion = math3d.totable(player.transform.t)
+		local postion = math3d.totable(iom.get_position(player_id))
 		local dx = target[1] - postion[1]
 		local dy = target[3] - postion[3]
 		local dis = dx*dx+dy*dy
@@ -184,9 +185,9 @@ local function mainloop(delta)
 		iwd.draw_lines {postion, target}
 		animation.set_state(player, "move")
 		if dis < move_distance * move_distance then
-			moveEntity(player, math.sqrt(dis))
+			moveEntity(player_id, math.sqrt(dis))
 		else
-			moveEntity(player, move_distance)
+			moveEntity(player_id, move_distance)
 		end
 	end
 end

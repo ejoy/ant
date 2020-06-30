@@ -4,6 +4,8 @@ local math3d = require "math3d"
 local imgui      = require "imgui"
 local rhwi       = import_package 'ant.render'.hwi
 
+local iom = world:interface "ant.objcontroller|obj_motion"
+
 local function ONCE(t, s)
     if not s then return t end
 end
@@ -93,15 +95,18 @@ function m:ui_update()
 
     for _, eid in eventGizmo:unpack() do
         currentEID = eid
-        local Pos = math3d.totable(world[eid].transform.srt.t)
+        local s, r, t = math3d.srt(iom.srt(eid))
+        local Pos = math3d.totable(t)
         currentEIDPos[1] = Pos[1]
         currentEIDPos[2] = Pos[2]
         currentEIDPos[3] = Pos[3]
-        local Rot = math3d.totable(math3d.quat2euler(world[eid].transform.srt.r))--math3d.totable(world[eid].transform.srt.r)
+
+        local Rot = math3d.totable(math3d.quat2euler(r))
         currentEIDRot[1] = math.deg(Rot[1])
         currentEIDRot[2] = math.deg(Rot[2])
         currentEIDRot[3] = math.deg(Rot[3])
-        local Scale = math3d.totable(world[eid].transform.srt.s)
+
+        local Scale = math3d.totable(s)
         currentEIDScale[1] = Scale[1]
         currentEIDScale[2] = Scale[2]
         currentEIDScale[3] = Scale[3]

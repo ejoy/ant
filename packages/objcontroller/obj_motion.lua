@@ -42,6 +42,25 @@ function iobj_motion.set_view(eid, pos, dir)
     world:pub{"component_changed", "transform", eid}
 end
 
+function iobj_motion.set_scale(eid, scale)
+    world[eid]._rendercache.srt.s = scale
+    world:pub{"component_changed", "transform", eid}
+end
+
+function iobj_motion.get_scale(eid)
+    return math3d.matrix_scale(world[eid]._rendercache.srt)
+end
+
+function iobj_motion.set_rotation(eid, rot)
+    world[eid]._rendercache.srt.r = rot
+    world:pub{"component_changed", "transform", eid}
+end
+
+function iobj_motion.get_rotation(eid)
+    --torotation is more efficient than srt.r
+    return math3d.torotation(math3d.index(world[eid]._rendercache.srt, 3))
+end
+
 function iobj_motion.worldmat(eid)
     return world[eid]._rendercache.worldmat
 end
