@@ -1,8 +1,0 @@
-system "editor_operate_gizmo_system"
-    .implement "system/editor_operate_gizmo_system.lua"
-    .method "after_pickup"
-    .method "editor_update"
-    .method "init"
-
-policy "gizmo_object"
-    .component "gizmo_object"

@@ -1,3 +1,0 @@
-system "world_profile_system"
-    .implement "system/world_profile_system.lua"
-    .method "editor_update"

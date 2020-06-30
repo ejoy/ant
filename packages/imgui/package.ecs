@@ -1,8 +1,0 @@
-import "system/editor_entity_system.ecs"
-import "system/editor_msg_watch_system.ecs"
-import "system/editor_operate_gizmo_system.ecs"
-import "system/editor_policy_system.ecs"
-import "system/editor_tool_system.ecs"
-import "system/editor_watch_system.ecs"
-import "system/policy_define.ecs"
-import "system/world_profile_system.ecs"

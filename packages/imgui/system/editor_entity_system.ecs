@@ -1,4 +1,0 @@
-system "editor_entity_system"
-    .implement "system/editor_entity_system.lua"
-    .method "editor_update"
-    .method "init"

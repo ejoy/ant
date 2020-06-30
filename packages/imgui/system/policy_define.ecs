@@ -1,6 +1,0 @@
-import "@ant.serialize"
-
-policy "base_entity"
-    .component "name"
-    .component "transform"
-    .component "serialize"
