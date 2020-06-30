@@ -36,23 +36,15 @@ local function to_v(t)
 	return res
 end
 
-function rt.process_entity(e)
-	local c = e._cache_prefab
-
-	local properties
-	local uniforms = c.fx.uniforms
-	local pp = c.properties or {}
+local function generate_properties(uniforms, properties)
+	local new_properties
+	properties = properties or {}
 	if uniforms and #uniforms > 0 then
-		properties = {}
+		new_properties = {}
 		for _, u in ipairs(uniforms) do
 			local n = u.name
-			local v = pp[n]
-			if v then
-				v = to_v(v)
-			else
-				v = isys_properties.get(n)
-			end
-			properties[n] = {
+			local v = properties[n] and to_v(properties[n]) or isys_properties.get(n)
+			new_properties[n] = {
 				value = v,
 				handle = u.handle,
 				type = u.type,
@@ -62,9 +54,14 @@ function rt.process_entity(e)
 		end
 	end
 
+	return new_properties
+end
+
+function rt.process_entity(e)
+	local c = e._cache_prefab
 	e._rendercache.set_transform= set_world_matrix
 	e._rendercache.fx 			= c.fx
-	e._rendercache.properties 	= properties
+	e._rendercache.properties 	= generate_properties(c.fx.uniforms, c.properties)
 	e._rendercache.state 		= c.state
 	e._rendercache.vb 			= c.vb
 	e._rendercache.ib 			= c.ib

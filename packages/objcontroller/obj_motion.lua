@@ -71,7 +71,7 @@ function iobj_motion.lookto(eid, eyepos, viewdir, updir)
     world:pub{"component_changed", "transform", eid}
 end
 
-function iobj_motion.move(eid, delta_vec)
+function iobj_motion.move_delta(eid, delta_vec)
     local srt = world[eid]._rendercache.srt
     local pos = math3d.add(math3d.index(srt, 4), delta_vec)
     iobj_motion.set_position(eid, pos)
@@ -80,6 +80,15 @@ end
 function iobj_motion.move_along_axis(eid, axis, delta)
     local p = iobj_motion.get_position(eid)
     iobj_motion.set_position(eid, math3d.muladd(axis, delta, p))
+end
+
+function iobj_motion.move(eid, v)
+    local srt = world[eid]._rendercache.srt
+    local p = math3d.index(srt, 4)
+    for i=1, 3 do
+        p = math3d.muladd(v[i], math3d.index(srt, i), p)
+    end
+    iobj_motion.set_position(eid, p)
 end
 
 function iobj_motion.set_lock_target(eid, lt)
