@@ -24,7 +24,6 @@ data:
   skinning: {}
   animation_birth: idle
   transform: 
-    srt: $srt
-      s: $vector {1,1,1,0}
-      r: $quaternion {0,0.92388,0,0.382683}
-      t: $vector {0,0,0,1}
+      s: {1,1,1,0}
+      r: {0,0.92388,0,0.382683}
+      t: {0,0,0,1}

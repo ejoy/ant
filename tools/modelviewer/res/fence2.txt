@@ -16,4 +16,4 @@ data:
   name: door
   transform: 
     srt: $srt
-      t: $vector {2.2,0,-8,0}
+      t:  {2.2,0,-8,0}

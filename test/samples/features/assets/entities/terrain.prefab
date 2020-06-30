@@ -18,5 +18,5 @@ data:
     collider: $collider
         terrain:
             --- $terrain_shape
-                origin: $vector{0, 0, 0, 1}
+                origin: {0, 0, 0, 1}
     name: terrain_test
