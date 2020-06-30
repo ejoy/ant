@@ -40,3 +40,8 @@ pipeline "camera"
     .stage "update_mainview_camera"
     .stage "create_camera_from_mainview"
     .stage "update_camera"
+
+
+action "bind_camera"
+    .implement "camera.lua"
+    .method "init"

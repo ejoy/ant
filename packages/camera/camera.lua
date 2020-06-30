@@ -156,3 +156,9 @@ function cameraview_sys:update_camera()
         end
     end
 end
+
+local bm = ecs.action "bind_camera"
+function bm.init(prefab, idx, value)
+    local eid = prefab[idx][1]
+    ic.bind(eid, value)
+end
