@@ -35,7 +35,7 @@ local function update_viewinfo(e, clickx, clicky)
 	local ndc2D = mu.pt2D_to_NDC({clickx, clicky}, rt)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
 
-	local vp = icamera.viewproj(mq.camera_eid)
+	local vp = icamera.calc_viewproj(mq.camera_eid)
 	local ivp = math3d.inverse(vp)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)

@@ -70,16 +70,25 @@ function ic.bind(eid, which_queue)
     ic.set_frustum_aspect(eid, vr.w / vr.h)
 end
 
-function ic.viewmat(eid)
-    return world[eid]._rendercache.viewmat
+function ic.calc_viewmat(eid)
+    local rc = world[eid]._rendercache
+    return math3d.lookto(math3d.index(rc.worldmat, 4), math3d.index(rc.worldmat, 3), rc.updir)
 end
 
-function ic.projmat(eid)
-    return world[eid]._rendercache.projmat
+function ic.calc_projmat(eid)
+    return math3d.projmat(world[eid]._rendercache.frustum)
 end
 
-function ic.viewproj(eid)
-    return world[eid]._rendercache.viewprojmat
+local function view_proj(worldmat, updir, frustum)
+    local viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), updir)
+    local projmat = math3d.projmat(frustum)
+    return viewmat, projmat, math3d.mul(projmat, viewmat)
+end
+
+function ic.calc_viewproj(eid)
+    local rc = world[eid]._rendercache
+    local _, _, vp = view_proj(rc.srt, rc.updir, rc.frustum)
+    return vp
 end
 
 function ic.get_frustum(eid)
@@ -131,9 +140,7 @@ local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(eid)
     local rc = world[eid]._rendercache
-    rc.viewmat = math3d.lookto(math3d.index(rc.worldmat, 4), math3d.index(rc.worldmat, 3), rc.updir)
-    rc.projmat = math3d.projmat(rc.frustum)
-    rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+    rc.viewmat, rc.projmat, rc.viewprojmat = view_proj(rc.worldmat, rc.updir, rc.frustum)
 end
 
 function cameraview_sys:update_mainview_camera()

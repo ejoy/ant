@@ -14,7 +14,7 @@ function cull_sys:cull()
 		local filter = e.primitive_filter
 
 		if e.visible then
-			local vp = icamera.viewproj(e.camera_eid)
+			local vp = icamera.calc_viewproj(e.camera_eid)
 			local frustum_planes = math3d.frustum_planes(vp)
 
 			local results = filter.result

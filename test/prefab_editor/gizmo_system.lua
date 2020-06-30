@@ -525,7 +525,7 @@ local pickup_mb = world:sub {"pickup"}
 local icamera = world:interface "ant.camera|camera"
 local function worldToScreen(world_pos)
 	local mq = world:singleton_entity "main_queue"
-	local vp = icamera.viewproj(mq.camera_eid)
+	local vp = icamera.calc_viewproj(mq.camera_eid)
 	local proj_pos = math3d.totable(math3d.transform(vp, world_pos, 1))
 	local sw, sh = rhwi.screen_size()
 	return {(1 + proj_pos[1] / proj_pos[4]) * sw * 0.5, (1 - proj_pos[2] / proj_pos[4]) * sh * 0.5, 0}

@@ -107,7 +107,7 @@ function iobj_motion.ray(eid, pt2d, vp_size)
 
     local ndc_near, ndc_far = mu.NDC_near_far_pt(mu.pt2D_to_NDC(pt2d, vp_size))
 
-    local viewproj = icamera.viewproj(eid)
+    local viewproj = icamera.calc_viewproj(eid)
     local invviewproj = math3d.inverse(viewproj)
     local pt_near_WS = math3d.transformH(invviewproj, ndc_near, 1)
     local pt_far_WS = math3d.transformH(invviewproj, ndc_far, 1)

@@ -89,7 +89,7 @@ local function gizmo_position_on_drag(cache,picked_type,mouse_delta)
         -- log("dxdy",dx,dy)
         --calc part1
         local mq = world:singleton_entity "main_queue"
-        local viewproj = icamera.viewproj(mq.camera_eid)
+        local viewproj = icamera.calc_viewproj(mq.camera_eid)
         local vp_rect = mq.render_target.viewport.rect
         local trans = target_entity.transform
         local drag_axis_unit = calc_drag_axis_unit(trans, viewproj, axis_unit, vp_rect.w, vp_rect.h, dx, dy)
@@ -139,7 +139,7 @@ local function gizmo_scale_on_drag(cache,picked_dir,mouse_delta)
         local axis_unit = cache.axis_map[picked_dir] -- {1,0,0} or {0,1,0} or {0,0,1}
         
         local mq = world:singleton_entity "main_queue"
-        local viewproj = icamera.viewproj(mq.camera_eid)
+        local viewproj = icamera.calc_viewproj(mq.camera_eid)
         local vp_rect = mq.render_target.viewport.rect
 
         local tvec3 = calc_drag_axis_unit(scale_box_trans, viewproj, axis_unit, vp_rect.w, vp_rect.h, dx, dy)
@@ -174,7 +174,7 @@ local function gizmo_rotation_on_drag(cache,picked_type,mouse_delta)
             local axis_unit = cache.axis_map[typ]
             local rot_unit = cache.rot_axis_map[typ]
             local mq = world:singleton_entity "main_queue"
-            local viewproj = icamera.viewproj(mq.camera_eid)
+            local viewproj = icamera.calc_viewproj(mq.camera_eid)
             r_axis_unit = math3d.transform(trans.r, axis_unit, 0)
             ------------------------
             local inject_pos_world

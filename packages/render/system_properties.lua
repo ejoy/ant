@@ -107,7 +107,7 @@ local function update_shadow_properties()
 		local split_distanceVS = csm.split_distance_VS
 		if split_distanceVS then
 			split_distances[idx] = split_distanceVS
-			local vp = icamera.viewproj(se.camera_eid)
+			local vp = icamera.calc_viewproj(se.camera_eid)
 			vp = math3d.mul(shadowutil.shadow_crop_matrix(), vp)
 			local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
 			csm_matrixs[csm.index].m = math3d.mul(viewport_cropmatrix, vp)

@@ -311,7 +311,7 @@ function Util.mouse_project_onto_plane(world,mouse_pos,plane_point,plane_normal)
     local screen_pos = {2.0*mouse_pos[1]/win_w-1, 1.0-2.0*mouse_pos[2]/win_h}
 
     local icamera = world:interface "ant.camera|camera"
-    local view_proj = icamera.viewproj(mq.camera_eid)
+    local view_proj = icamera.calc_viewproj(mq.camera_eid)
     local p = project_screen_onto_plane(screen_pos,plane_point,plane_normal,view_proj)
     return p
 end

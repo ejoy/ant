@@ -85,7 +85,7 @@ local function main_view_debug_frustum()
 		local s = world[seid]
 
 		local csm = s.csm
-		local vp  = icamera.viewproj(s.camera_eid)
+		local vp  = icamera.calc_viewproj(s.camera_eid)
 		local frustum_points = math3d.frustum_points(vp)
 		add_shadow_debug_policy(
 		computil.create_frustum_entity(frustum_points, "main view part" .. csm.index, frustum_colors[csm.index]))
