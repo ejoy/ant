@@ -1,6 +1,6 @@
 fx: $resource /pkg/ant.resources/materials/fx/test/singlecolor_tri_strip.fx
 properties:
-  u_color: $vector {1, 0, 0, 1}
+  u_color:  {1, 0, 0, 1}
 state:
   ALPHA_REF: 0
   CULL: CCW

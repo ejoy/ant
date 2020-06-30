@@ -6,7 +6,7 @@ properties:
   s_bloomcolor:
     texture: $resource /pkg/ant.resources/materials/textures/Default.texture
     stage: 1
-  u_params: $vector {1, 0, 0, 0}
+  u_params:  {1, 0, 0, 0}
 state:
   CULL: CCW
   DEPTH_TEST: LESS

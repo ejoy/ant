@@ -6,6 +6,6 @@ properties:
   s_normal:
     texture: $resource /pkg/ant.resources/PVPScene/siegeweapon_n.texture
     stage: 1
-  u_specularColor: $vector {0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03}
-  u_specularLight: $vector{5.5, 0, 0, 0} 
+  u_specularColor:  {0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03}
+  u_specularLight: {5.5, 0, 0, 0} 
 state: /pkg/ant.resources/materials/states/default.state

@@ -1,5 +1,5 @@
 fx: $resource /pkg/ant.resources/materials/fx/simple_mesh.fx
 properties:
   u_color:
-    $vector {1, 1, 1, 1}
+     {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

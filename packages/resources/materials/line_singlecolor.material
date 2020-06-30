@@ -5,7 +5,7 @@ fx:
   setting:
     transparency: translucent
 properties:
-  u_color: $vector {1, 1, 1, 1}
+  u_color:  {1, 1, 1, 1}
 state:
   ALPHA_REF: 0
   CULL: CCW
