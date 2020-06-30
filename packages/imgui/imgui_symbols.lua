@@ -23,7 +23,7 @@ function widget.SmallButton() end
 function widget.InvisibleButton() end
 function widget.ArrowButton() end
 --@return change,new_value
-function widget.Checkbox(field,value) end 
+function widget.Checkbox(field,value) end
 function widget.RadioButton(name,selected) end
 function widget.ProgressBar() end
 function widget.Bullet() end
@@ -125,7 +125,7 @@ function cursor.SetColumnOffset(int index,float offset) end
 function cursor.SetNextItemWidth() end
 function cursor.SetMouseCursor( cursor = enum.MouseCursor.Arrow ) end
 
---@return 
+--@return
 --  opening:false if window is collapsed;
 --  closebtn_change:return false if clicked;
 function windows.Begin(title_id,flag) end
@@ -149,7 +149,7 @@ function windows.BeginPopupContextWindow() end
 function windows.BeginPopupContextVoid() end
 function windows.BeginPopupModal() end
 function windows.EndPopup() end
-function windows.OpenPopupOnItemClick() end
+function windows.OpenPopupContextItem() end
 function windows.IsPopupOpen() end
 function windows.CloseCurrentPopup() end
 function windows.IsWindowAppearing() end

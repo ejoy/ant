@@ -5,12 +5,16 @@
 *.xcbkptlist
 *.dll
 *.exe
+*.o
+*.a
 
 .cache
 .vscode
 .vs
 .repo
 .build
+.dep
+_build
 
 /3rd/bin
 /bin

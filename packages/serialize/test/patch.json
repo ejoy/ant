@@ -465,6 +465,11 @@
       "patch": [{"op": "remove", "path": "/baz"}],
       "error": "removing a nonexistent field should fail" },
 
+      { "comment": "Removing deep nonexistent path",
+        "doc": {"foo" : "bar"},
+        "patch": [{"op": "remove", "path": "/missing1/missing2"}],
+        "error": "removing a nonexistent field should fail" },
+
     { "comment": "Removing nonexistent index",
       "doc": ["foo", "bar"],
       "patch": [{"op": "remove", "path": "/3"}],

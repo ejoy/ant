@@ -1,6 +1,5 @@
-local fs_local = import_package "ant.utility".fs_local
 local math3d = require "math3d"
-local stringify = import_package "ant.serialize".stringify
+local utility = require "model.utility"
 
 local prefab = {}
 local conv = {}
@@ -219,5 +218,5 @@ return function(output, glbdata, exports)
         assert(nodeidx == mesh_nodeidx)
         create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     end
-    fs_local.write_file(output / "mesh.prefab", stringify(prefab, conv))
+    utility.save_txt_file("./mesh.prefab", prefab, conv)
 end

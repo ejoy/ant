@@ -101,16 +101,16 @@ local function fill_default_sampler(sampler)
 	return sampler
 end
 
-return function (sourcefile, outpath, identity, localpath)
+return function (input, output, identity, localpath)
 	local os, renderer = identity:match "(%w+)_(%w+)"
 	local ext = assert(extensions[renderer])
-	local binfile = (outpath / "main.bin"):replace_extension(ext)
+	local binfile = (output / "main.bin"):replace_extension(ext)
 
 	local commands = {
 		TEXTUREC,
 	}
 
-	local param = fs_local.datalist(sourcefile)
+	local param = fs_local.datalist(input)
 	local texpath = localpath(assert(param.path))
 
 	param.format = assert(which_format(os, param))
@@ -122,18 +122,19 @@ return function (sourcefile, outpath, identity, localpath)
 			success = false
 		end
 	end
-	if success then
-		assert(lfs.exists(binfile))
-		local config = {
-			name	= texpath:string(),
-			sampler = fill_default_sampler(param.sampler),
-			flag	= samplerutil.sampler_flag(param.sampler),
-		}
-		if param.colorspace == "sRGB" then
-			config.flag = config.flag .. 'Sg'
-		end
-		writefile(outpath / "main.cfg", stringify(config))
-		lfs.rename(binfile, outpath / "main.bin")
+	if not success then
+		return false, msg
 	end
-	return success, msg
+	assert(lfs.exists(binfile))
+	local config = {
+		name	= texpath:string(),
+		sampler = fill_default_sampler(param.sampler),
+		flag	= samplerutil.sampler_flag(param.sampler),
+	}
+	if param.colorspace == "sRGB" then
+		config.flag = config.flag .. 'Sg'
+	end
+	writefile(output / "main.cfg", stringify(config))
+	lfs.rename(binfile, output / "main.bin")
+	return true
 end

@@ -30,4 +30,5 @@ return {
     save_meshbin = save_meshbin,
     save_prefab = save_prefab,
     stringify = require "stringify",
+    patch = require "patch",
 }
