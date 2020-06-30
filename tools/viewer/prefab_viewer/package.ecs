@@ -3,6 +3,7 @@ import "@ant.general"
 import "@ant.imguibase"
 import "@ant.render"
 import "@ant.objcontroller"
+import "@ant.camera"
 import "pipeline.ecs"
 
 system "init_system"

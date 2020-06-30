@@ -112,15 +112,13 @@ local function calc_shadow_camera(viewmat, frustum, split_ratios, lightdir, shad
 	}
 end
 
-local function update_shadow_camera(l, view_camera_eid)
+local function update_shadow_camera(l, viewmat, frustum)
 	local lightdir = math3d.inverse(l.direction)
 	local shadowentity = world:singleton_entity "shadow"
 	local shadowcfg = shadowentity.shadow
 	local stabilize = shadowcfg.stabilize
 	local shadowmap_size = shadowcfg.shadowmap_size
 
-	local frustum = icamera.get_frustum(view_camera_eid)
-	local viewmat = icamera.viewmat(view_camera_eid)
 	local split = shadowcfg.split
 	local ratios = shadowutil.calc_split_distance_ratio(split.min_ratio, split.max_ratio, 
 		frustum.n, frustum.f, split.pssm_lambda, split.num_split)
@@ -308,11 +306,13 @@ function sm:post_init()
 end
 
 function sm:create_camera_from_mainview()
+	local dl = world:singleton_entity "directional_light"
+	local mq = world:singleton_entity "main_queue"
+	local c = world[mq.camera_eid]._rendercache
+
 	for _, mb in ipairs(modify_mailboxs) do
 		for _ in mb:each() do
-			local dl = world:singleton_entity "directional_light"
-			local mq = world:singleton_entity "main_queue"
-			update_shadow_camera(dl, mq.camera_eid)
+			update_shadow_camera(dl, c.viewmat, c.frustum)
 		end
 	end
 end

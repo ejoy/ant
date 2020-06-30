@@ -72,7 +72,7 @@ end
 
 function ic.calc_viewmat(eid)
     local rc = world[eid]._rendercache
-    return math3d.lookto(math3d.index(rc.worldmat, 4), math3d.index(rc.worldmat, 3), rc.updir)
+    return math3d.lookto(math3d.index(rc.srt, 4), math3d.index(rc.srt, 3), rc.updir)
 end
 
 function ic.calc_projmat(eid)

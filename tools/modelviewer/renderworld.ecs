@@ -8,6 +8,7 @@ import "@ant.sky"
 import "@ant.timer"
 import "@ant.character"
 import "@ant.scene"
+import "@ant.camera"
 
 system "gui_system"
     .implement "renderworld.lua"
