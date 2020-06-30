@@ -1,7 +1,6 @@
 local function create(w, policies)
     local solve_depend = require "solve_depend"
     local res = {
-        policy = policies,
         component = {},
         process_entity = {},
         process_prefab = {},

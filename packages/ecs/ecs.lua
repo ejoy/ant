@@ -87,14 +87,13 @@ function world:disable_tag(eid, c)
 end
 
 function world:add_policy(eid, t)
-	local policies, dataset = t.policy, t.data
     if t.action and next(t.action) ~= nil then
         error "action can only be imported during instance."
     end
-	local res = policy.add(self, eid, policies)
+	local res = policy.add(self, eid, t.policy)
 	local e = self[eid]
 	for _, c in ipairs(res.component) do
-		e[c] = dataset[c]
+		e[c] = t.data[c]
 		register_component(self, eid, c)
 	end
 	for _, f in ipairs(res.process_prefab) do
@@ -114,26 +113,25 @@ local function register_entity(w)
 end
 
 local function create_prefab_from_entity(w, t)
-	local policies, dataset = t.policy, t.data
-	local template = policy.create(w, policies)
-	local action = t.action or {}
+	local res = policy.create(w, t.policy)
 	local args = {
 	}
-	if action.mount then
-		args["_mount"] = action.mount
-		action.mount = "_mount"
+	if t.action and t.action.mount then
+		args["_mount"] = t.action.mount
+		t.action.mount = "_mount"
 	end
 	local e = {}
-	for _, c in ipairs(template.component) do
-		e[c] = dataset[c]
+	for _, c in ipairs(res.component) do
+		e[c] = t.data[c]
 	end
-	for _, f in ipairs(template.process_prefab) do
+	for _, f in ipairs(res.process_prefab) do
 		f(e)
 	end
 	return {{
-		template = template,
-		dataset = e,
-		action = action,
+		component = res.component,
+		process = res.process_entity,
+		template = e,
+		data = t,
 	}}, args
 end
 
@@ -148,35 +146,14 @@ end
 local function instance_entity(w, entity)
 	local eid = register_entity(w)
 	local e = w[eid]
-	for _, c in ipairs(entity.template.component) do
+	setmetatable(e, {__index = entity.template})
+	for _, c in ipairs(entity.component) do
 		register_component(w, eid, c)
 	end
-	for k, v in pairs(entity.dataset) do
-		e[k] = v
-	end
-	for _, f in ipairs(entity.template.process_entity) do
+	for _, f in ipairs(entity.process) do
 		f(e)
 	end
 	return eid
-end
-
-local function set_readonly(w, prefab)
-	local readonly = require "readonly"
-	for _, data in ipairs(prefab) do
-		if data.prefab then
-			set_readonly(w, data.prefab)
-		else
-			local e = {}
-			for k, v in pairs(data.dataset) do
-				if type(v) == "table" then
-					e[k] = readonly(v)
-				else
-					e[k] = v
-				end
-			end
-			data.dataset = e
-		end
-	end
 end
 
 local function instance_prefab(w, prefab, args)
@@ -212,25 +189,7 @@ end
 
 function world:instance(filename, args)
 	local prefab = component_init(self, "resource", filename)
-	--set_readonly(self, prefab)
 	return instance_prefab(self, prefab, args)
-end
-
-local function serialize_entity(class)
-	local e = {policy={},data={}}
-	local template = class.template
-	local dataset = class.dataset
-	if next(class.action) ~= nil then
-		e.action = class.action
-	end
-	for _, p in ipairs(template.policy) do
-		e.policy[#e.policy+1] = p
-	end
-	for _, name in ipairs(template.component) do
-		e.data[name] = dataset[name]
-	end
-	table.sort(e.policy)
-	return e
 end
 
 local function serialize_prefab(w, prefab)
@@ -242,7 +201,7 @@ local function serialize_prefab(w, prefab)
 				args = next(class.args) ~= nil and class.args or nil,
 			}
 		else
-			t[#t+1] = serialize_entity(class)
+			t[#t+1] = class.data
 		end
     end
     return stringify(t, w._typeclass)
