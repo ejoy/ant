@@ -1884,57 +1884,35 @@ winOpenPopup(lua_State *L) {
 static int
 winBeginPopup(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiWindowFlags flags = (ImGuiWindowFlags)(luaL_optinteger(L, 2, 0) & 0xffffffff);
+	ImGuiWindowFlags flags = (ImGuiWindowFlags)(luaL_optinteger(L, INDEX_ARGS, 0) & 0xffffffff);
 	bool change = ImGui::BeginPopup(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
 }
 
-struct popup_args {
-	const char *id;
-	int mouse_button;
-	bool b;
-};
-
-static void
-get_popup_args(lua_State *L, struct popup_args *args) {
-	int index = INDEX_ID;
-	int t = lua_type(L, index);
-	if (t == LUA_TSTRING || t == LUA_TNIL || t == LUA_TNONE) {
-		args->id = lua_tostring(L, index);
-		++index;
-	}
-	args->mouse_button = (int)luaL_optinteger(L, index++, 1);
-	if (lua_type(L, index) == LUA_TBOOLEAN) {
-		args->b = lua_toboolean(L, index);
-	} else {
-		args->b = true;
-	}
-}
-
 static int
 winBeginPopupContextItem(lua_State *L) {
-	struct popup_args args;
-	get_popup_args(L, &args);
-	int change = ImGui::BeginPopupContextItem(args.id, args.mouse_button);
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));	// 1 : MouseButtonRight
+	int change = ImGui::BeginPopupContextItem(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
 }
 
 static int
 winBeginPopupContextWindow(lua_State *L) {
-	struct popup_args args;
-	get_popup_args(L, &args);
-	int change = ImGui::BeginPopupContextWindow(args.id, args.mouse_button, args.b);
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));
+	int change = ImGui::BeginPopupContextWindow(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
 }
 
 static int
 winBeginPopupContextVoid(lua_State *L) {
-	struct popup_args args;
-	get_popup_args(L, &args);
-	int change = ImGui::BeginPopupContextVoid(args.id, args.mouse_button);
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));
+	int change = ImGui::BeginPopupContextVoid(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
 }
@@ -1956,10 +1934,10 @@ winEndPopup(lua_State *L) {
 }
 
 static int
-winOpenPopupOnItemClick(lua_State *L) {
-	struct popup_args args;
-	get_popup_args(L, &args);
-	int change = ImGui::OpenPopupOnItemClick(args.id, args.mouse_button);
+winOpenPopupContextItem(lua_State *L) {
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));
+	int change = ImGui::OpenPopupContextItem(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
 }
@@ -3013,6 +2991,19 @@ static struct enum_pair eDragDropFlags[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair ePopupFlags[] = {
+	ENUM(ImGuiPopupFlags, None),
+	ENUM(ImGuiPopupFlags, MouseButtonLeft),
+	ENUM(ImGuiPopupFlags, MouseButtonRight),
+	ENUM(ImGuiPopupFlags, MouseButtonMiddle),
+	ENUM(ImGuiPopupFlags, NoOpenOverExistingPopup),
+	ENUM(ImGuiPopupFlags, NoOpenOverItems),
+	ENUM(ImGuiPopupFlags, AnyPopupId),
+	ENUM(ImGuiPopupFlags, AnyPopupLevel),
+	ENUM(ImGuiPopupFlags, AnyPopup),
+	{ NULL, 0 },
+};
+
 #ifdef _MSC_VER
 #pragma endregion IMP_FLAG
 #endif
@@ -3398,7 +3389,7 @@ luaopen_imgui(lua_State *L) {
 		{ "BeginPopupContextVoid", winBeginPopupContextVoid },
 		{ "BeginPopupModal", winBeginPopupModal },
 		{ "EndPopup", winEndPopup },
-		{ "OpenPopupOnItemClick", winOpenPopupOnItemClick },
+		{ "OpenPopupContextItem", winOpenPopupContextItem },
 		{ "IsPopupOpen", winIsPopupOpen },
 		{ "CloseCurrentPopup", winCloseCurrentPopup },
 		{ "IsWindowAppearing", winIsWindowAppearing },
@@ -3495,6 +3486,7 @@ luaopen_imgui(lua_State *L) {
 	flag_gen(L, "Hovered", eHoveredFlags);
 	flag_gen(L, "TabBar", eTabBarFlags);
 	flag_gen(L, "DragDrop", eDragDropFlags);
+	flag_gen(L, "Popup", ePopupFlags);
 	lua_setfield(L, -2, "flags");
 
 	lua_newtable(L);
@@ -3505,4 +3497,3 @@ luaopen_imgui(lua_State *L) {
 
 	return 1;
 }
-
