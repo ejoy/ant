@@ -286,7 +286,11 @@ void
 math3d_inverse_matrix_fast(struct lastack *LS, const float mat[16]) {
 	glm::mat4x4 &r = allocmat(LS);
 	auto &m = MAT(mat);
-	r = glm::mat4(glm::transpose(glm::mat3x3(m))) * glm::translate(glm::mat4(1.f), glm::vec3(-m[3]));
+	glm::mat3x3 m3(m);
+
+	assert(is_zero(glm::dot(m3[0], m3[1])) && is_zero(glm::dot(m3[1], m3[2])) && is_zero(glm::dot(m3[2], m3[0])));
+	glm::transpose(m3);
+	r = glm::mat4(m3) * glm::translate(glm::mat4(1.f), glm::vec3(-m[3]));
 }
 
 void

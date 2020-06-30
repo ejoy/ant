@@ -18,7 +18,7 @@ end
 
 local function cameraRotate(dx, dy)
 	local iom = world:interface "ant.objcontroller|obj_motion"
-	iom.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
+	iom.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx)
 end
 
 local function cameraPan(dx, dy)

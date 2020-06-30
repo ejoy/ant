@@ -17,7 +17,6 @@ local kPanSpeed <const> = 0.5
 local kRotationSpeed <const> = 1
 local iom = world:interface "ant.objcontroller|obj_motion"
 local function view_to_world(view_pos)
-	-- iom.srt only camera srt, not camera world matrix
 	local camerasrt = iom.srt(cameraId)
 	return math3d.transform(camerasrt, view_pos, 0)
 end
@@ -27,36 +26,30 @@ local function world_to_screen(world_pos)
 end
 
 local function cameraUpdateEyepos(camera)
-	camera.eyepos.v = math3d.sub(cameraTarget, math3d.mul(camera.viewdir, cameraDistance))
+	iom.set_position(cameraId, math3d.sub(cameraTarget, math3d.mul(camera.viewdir, cameraDistance)))
 end
 
 local function cameraRotate(dx, dy)
-	--iom.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
 	iom.rotate(cameraId, dy * kRotationSpeed, dx * kRotationSpeed)
-	local camera = world[cameraId].camera
-	cameraUpdateEyepos(camera)
+	cameraUpdateEyepos()
 end
 
-
 local function cameraPan(dx, dy)
-	local camera = world[cameraId].camera
 	local world_dir = view_to_world({dy * kPanSpeed, dx * kPanSpeed, 0})
-	cameraTarget.v = math3d.add(cameraTarget, math3d.cross(camera.viewdir, world_dir))
-	cameraUpdateEyepos(camera)
+	local viewdir = iom.get_direction(cameraId)
+	cameraTarget.v = math3d.add(cameraTarget, math3d.cross(viewdir, world_dir))
+	cameraUpdateEyepos()
 end
 
 local function cameraZoom(dx)
-	local camera = world[cameraId].camera
 	cameraDistance = cameraDistance + dx * kWheelSpeed
-	cameraUpdateEyepos(camera)
+	cameraUpdateEyepos()
 end
 
 local function cameraReset(eyepos, target)
-	local camera = world[cameraId].camera
 	cameraTarget.v = target
 	cameraDistance = math3d.length(math3d.sub(cameraTarget, eyepos))
-	camera.eyepos.v = eyepos
-	camera.viewdir.v = math3d.normalize(math3d.sub(cameraTarget, eyepos))
+	iom.set_view(cameraId, eyepos, math3d.normalize(math3d.sub(cameraTarget, eyepos)))
 end
 
 local function cameraInit()
@@ -64,7 +57,7 @@ local function cameraInit()
 	local camera = world:interface "ant.camera|camera"
 	cameraId = camera.create {
 		eyepos = {0,0,0,1},
-		viewdir = {0,1,0,0},
+		viewdir = {0,0,1,0},
 	}
 	camera.bind(cameraId, "main_queue")
 end

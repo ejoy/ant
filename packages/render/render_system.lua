@@ -11,6 +11,10 @@ local isys_properties = world:interface "ant.render|system_properties"
 local imaterial = world:interface "ant.asset|imaterial"
 local rt = ecs.transform "render_transform"
 
+local function set_world_matrix(rc)
+	bgfx.set_transform(rc.worldmat)
+end
+
 function rt.process_entity(e)
 	local c = e._cache_prefab
 
@@ -32,6 +36,7 @@ function rt.process_entity(e)
 		end
 	end
 
+	e._rendercache.set_transform= set_world_matrix
 	e._rendercache.fx 			= c.fx
 	e._rendercache.properties 	= properties
 	e._rendercache.state 		= c.state

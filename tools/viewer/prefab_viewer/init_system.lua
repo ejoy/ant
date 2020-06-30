@@ -15,25 +15,13 @@ local m = ecs.system 'init_system'
 local root
 local entities = {}
 local iom = world:interface "ant.objcontroller|obj_motion"
-local function get_matrix(eid)
-    local e = world[eid]
-    local srt = iom.srt(eid)
-    if e.parent and eid ~= root then
-        if not srt then
-            return get_matrix(e.parent)
-        end
-        local psrt = get_matrix(e.parent)
-        return math3d.mul(srt, psrt)
-    end
-    return srt
-end
 
 local function normalizeAabb()
     local aabb
     for _, eid in ipairs(entities) do
         local e = world[eid]
         if e.mesh and e.mesh.bounding then
-            local newaabb = math3d.aabb_transform(get_matrix(eid), e.mesh.bounding.aabb)
+            local newaabb = math3d.aabb_transform(iom.calc_worldmat(eid), e.mesh.bounding.aabb)
             aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
         end
     end
@@ -44,7 +32,7 @@ local function normalizeAabb()
     local s = 1/math.max(max_x - min_x, max_y - min_y, max_z - min_z)
     local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
     local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
-    itransform.set_srt(root, math3d.mul(transform, itransform.srt(root)))
+    iom.set_srt(root, math3d.mul(transform, iom.srt(root)))
 end
 
 local function instancePrefab(filename)

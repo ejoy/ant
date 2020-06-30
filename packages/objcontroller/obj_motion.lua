@@ -30,6 +30,18 @@ function iobj_motion.srt(eid)
     return world[eid]._rendercache.srt
 end
 
+function iobj_motion.set_srt(eid, srt)
+    world[eid]._rendercache.srt.m = srt
+    world:pub{"component_changed", "transform", eid}
+end
+
+function iobj_motion.set_view(eid, pos, dir)
+    local srt = world[eid]._rendercache.srt
+    local s = math3d.matrix_scale(srt)
+    srt.m = math3d.matrix{s=s, r=math3d.torotation(dir), t=pos}
+    world:pub{"component_changed", "transform", eid}
+end
+
 function iobj_motion.worldmat(eid)
     return world[eid]._rendercache.worldmat
 end
@@ -90,9 +102,9 @@ function iobj_motion.rotate_around_point(eid, targetpt, distance, dx, dy, thresh
     local srt = world[eid]._rendercache.srt
     local q = calc_rotation(srt, -dx, -dy, threshold)
 
-    local dir = math3d.normalize(math3d.inverse(math3d.transform(q, mc.ZAXIS)))
+    local dir = math3d.normalize(math3d.inverse(math3d.transform(q, mc.ZAXIS, 0)))
     local p = math3d.muladd(distance, dir, targetpt)
-    local s = math3d.srt(srt)
+    local s = math3d.matrix_scale(srt)
     srt.m = math3d.matrix{s=s, r=q, t=p}
 end
 
@@ -120,8 +132,14 @@ function iobj_motion.ray(eid, pt2d, vp_size)
 end
 
 local function calc_worldmat(eid, c_mt)
-	local srt = world[eid]._rendercache.srt
-	local wm = c_mt and math3d.mul(srt, c_mt) or math3d.matrix(srt)
+    local srt = world[eid]._rendercache.srt
+    local wm
+    if srt then
+        wm = c_mt and math3d.mul(srt, c_mt) or math3d.matrix(srt)
+    else
+        wm = c_mt
+    end
+
 	local e = world[eid]
 	if e.parent then
 		return calc_worldmat(e.parent, wm)

@@ -12,33 +12,32 @@ local cameraTarget
 local cameraDistance
 local cameraId
 
-local function cameraUpdateEyepos(camera)
-	camera.eyepos.v = math3d.sub(cameraTarget, math3d.mul(camera.viewdir, cameraDistance))
+local iom = world:interface "ant.objcontroller|obj_motion"
+
+local function cameraUpdateEyepos()
+	local viewdir = iom.get_direction(cameraId)
+	iom.set_position(cameraId, math3d.sub(cameraTarget, math3d.mul(viewdir, cameraDistance)))
 end
 
 local function cameraRotate(dx, dy)
-	local iom = world:interface "ant.objcontroller|obj_motion"
-	iom.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx, 0.6)
+	iom.rotate_around_point(cameraId, cameraTarget, cameraDistance, dy, dx)
 end
 
 local function cameraPan(dx, dy)
-	local camera = world[cameraId].camera
-	cameraTarget.v = math3d.add(cameraTarget, math3d.cross(camera.viewdir, {dy,dx,0,1}))
-	cameraUpdateEyepos(camera)
+	local viewdir = iom.get_direction(cameraId)
+	cameraTarget.v = math3d.add(cameraTarget, math3d.cross(viewdir, {dy,dx,0,1}))
+	cameraUpdateEyepos()
 end
 
 local function cameraZoom(dx)
-	local camera = world[cameraId].camera
 	cameraDistance = cameraDistance + dx
-	cameraUpdateEyepos(camera)
+	cameraUpdateEyepos()
 end
 
 local function cameraReset(eyepos, target)
-	local camera = world[cameraId].camera
 	cameraTarget.v = target
 	cameraDistance = math3d.length(math3d.sub(cameraTarget, eyepos))
-	camera.eyepos.v = eyepos
-	camera.viewdir.v = math3d.normalize(math3d.sub(cameraTarget, eyepos))
+	iom.set_view(cameraId, eyepos, math3d.normalize(math3d.sub(cameraTarget, eyepos)))
 end
 
 local function cameraInit()
@@ -46,7 +45,7 @@ local function cameraInit()
 	local camera = world:interface "ant.camera|camera"
 	cameraId = camera.create {
 		eyepos = {0,0,0,1},
-		viewdir = {0,1,0,0},
+		viewdir = {0,0,1,0},
 	}
 	camera.bind(cameraId, "main_queue")
 end

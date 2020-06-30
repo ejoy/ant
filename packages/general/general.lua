@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+local math3d = require "math3d"
+
 local m = ecs.component "resource"
 
 function m:init()
@@ -20,6 +22,12 @@ end
 local rct = ecs.transform "rendercache_transform"
 function rct.process_entity(e)
     e._rendercache = {}
+end
+
+local gt = ecs.transform "generate_transform"
+
+function gt.process_entity(e)
+	e._rendercache.srt			= math3d.ref(math3d.matrix(e.transform))
 end
 
 local m = ecs.action "name"
