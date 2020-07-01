@@ -131,7 +131,7 @@ memory_keepalive(lua_State *L) {
 	if (mem->ref == 0)
 		return 0;
 	// keep alive
-	lua_newuserdata(L, 0);
+	lua_newuserdatauv(L, 0, 1);
 	luaL_getmetatable(L, "BGFX_MEMORY_REF");
 	lua_setmetatable(L, -2);
 	lua_pushvalue(L, -2);
@@ -145,7 +145,7 @@ memory_release(lua_State *L) {
 	if (mem->ref == 0)
 		return 0;
 	// keep self alive
-	lua_newuserdata(L, 0);
+	lua_newuserdatauv(L, 0, 1);
 	if (luaL_newmetatable(L, "BGFX_MEMORY_REF")) {
 		lua_pushcfunction(L, memory_keepalive);
 		lua_setfield(L, -2, "__gc");
@@ -159,7 +159,7 @@ memory_release(lua_State *L) {
 
 static struct memory *
 memory_new(lua_State *L) {
-	struct memory *mem = (struct memory *)lua_newuserdata(L, sizeof(*mem));
+	struct memory *mem = (struct memory *)lua_newuserdatauv(L, sizeof(*mem), 1);
 	mem->data = NULL;
 	mem->size = 0;
 	mem->ref = 0;
@@ -182,13 +182,14 @@ memory_new(lua_State *L) {
 static void *
 newMemory(lua_State *L, void *data, size_t size) {
 	if (data == NULL) {
-		data = lua_newuserdatauv(L, size, 1);
+		data = lua_newuserdatauv(L, size, 0);
 	}
 	struct memory *mem = memory_new(L);
 	lua_insert(L, -2);
 	if (lua_type(L, -1) == LUA_TSTRING) {
 		mem->constant = 1;
 	}
+	// mount data -> mem
 	lua_setiuservalue(L, -2, 1);
 	mem->data = data;
 	mem->size = size;
@@ -2196,7 +2197,7 @@ idToAttribType(uint16_t id) {
 
 static size_t
 new_vdecl_from_string(lua_State *L, const char *vdecl, size_t sz) {
-	bgfx_vertex_layout_t * vd = lua_newuserdata(L, sizeof(*vd));
+	bgfx_vertex_layout_t * vd = lua_newuserdatauv(L, sizeof(*vd), 0);
 	struct string_reader rd = { L, vdecl, sz, 0 };
 	uint8_t numAttrs = read_int(&rd, 1);
 	uint16_t stride = read_int(&rd, 2);
@@ -2247,7 +2248,7 @@ lnewVertexLayout(lua_State *L) {
 	if (!lua_isnoneornil(L, 2)) {
 		id = renderer_type_id(L, 2);
 	}
-	bgfx_vertex_layout_t * vd = lua_newuserdata(L, sizeof(*vd));
+	bgfx_vertex_layout_t * vd = lua_newuserdatauv(L, sizeof(*vd), 0);
 	BGFX(vertex_layout_begin)(vd, id);
 	int i, type;
 	for (i=1; (type = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
@@ -2375,7 +2376,7 @@ lcalcTangent(lua_State *L) {
 	} else {
 		numIndices = indmem->size / sizeof(uint16_t);
 	}
-	float *tangents = (float *)lua_newuserdata(L, 6*numVertices*sizeof(float));
+	float *tangents = (float *)lua_newuserdatauv(L, 6*numVertices*sizeof(float), 0);
 	memset(tangents, 0 , 6*numVertices*sizeof(float));
 
 	struct PosTexcoord {
@@ -3103,7 +3104,7 @@ static int
 lnewTransientBuffer(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
-	struct ltb * v = lua_newuserdata(L, sizeof(*v) + sz);
+	struct ltb * v = lua_newuserdatauv(L, sizeof(*v) + sz, 0);
 	v->cap_v = 0;
 	v->cap_i = 0;
 	memcpy(v->format, format, sz+1);
@@ -3217,7 +3218,7 @@ static int
 lnewInstanceBuffer(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
-	struct lidb * v = lua_newuserdata(L, sizeof(*v) + sz);
+	struct lidb * v = lua_newuserdatauv(L, sizeof(*v) + sz, 0);
 	v->num = 0;
 	int i;
 	int stride = 0;
