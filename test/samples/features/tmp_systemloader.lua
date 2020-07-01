@@ -25,12 +25,10 @@ local function create_plane_test()
             {
                 ["ant.collision|collider_policy"] = {
                     collider = world.component "collider" {
-                        box = {
-                            world.component "box_shape" {
-                                origin = math3d.ref(math3d.vector(0, 0, 0, 1)),
-                                size = {50, 0.001, 50},
-                            }
-                        }
+                        box = {{
+                            origin = math3d.ref(math3d.vector(0, 0, 0, 1)),
+                            size = {50, 0.001, 50},
+                        }}
                     },
                 },
                 ["ant.render|debug_mesh_bounding"] = {

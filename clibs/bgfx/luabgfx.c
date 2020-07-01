@@ -2291,7 +2291,7 @@ get_stride(lua_State *L, const char *format) {
 		case 'd':
 			stride += 4;
 			break;
-		case 's':
+		case 'w':
 			stride += 2;
 			break;
 		case 'b':
@@ -2323,7 +2323,7 @@ copy_layout_data(lua_State*L, const char* layout, int tableidx, uint8_t *addr){
 				*(uint32_t *)addr = (uint32_t)lua_tointeger(L, -1);
 				addr += 4;
 				break;
-			case 's':
+			case 'w':
 				*(uint16_t *)addr = (uint16_t)lua_tointeger(L, -1);
 				addr += 2;
 				break;
@@ -2724,7 +2724,7 @@ getIndexBuffer(lua_State *L, int idx, int index32) {
 		}
 		else {
 			void *data = newMemory(L, NULL, n*sizeof(uint16_t));
-			copy_layout_data(L, "s", 1, data);
+			copy_layout_data(L, "w", 1, data);
 		}
 		return bgfxMemory(L, -1);
 	} else {
@@ -2997,6 +2997,7 @@ lallocTB(lua_State *L) {
 	}
 	v->cap_v = max_v;
 	v->cap_i = max_i;
+
 	return 0;
 }
 
@@ -3061,6 +3062,7 @@ lpackTVB(lua_State *L) {
 		switch(v->format[i]) {
 		case 'f':	// float
 			*(float*)(data + offset) = luaL_checknumber(L, 3+i);
+			offset += sizeof(float);
 			break;
 		case 'd':	// dword
 			d = (uint32_t)luaL_checkinteger(L, 3+i);
@@ -3068,13 +3070,25 @@ lpackTVB(lua_State *L) {
 			data[offset+1] = (d >> 8) & 0xff;
 			data[offset+2] = (d >> 16) & 0xff;
 			data[offset+3] = (d >> 24) & 0xff;
+			offset += sizeof(uint32_t);
+			break;
+		case 'w':	// word
+			d = (uint16_t)luaL_checkinteger(L, 3+i);
+			data[offset] = d & 0xff;
+			data[offset+1] = (d >> 8) & 0xff;
+			offset += sizeof(uint16_t);
+			break;
+		case 'b':	// byte
+			d = (uint8_t)luaL_checkinteger(L, 3+i);
+			data[offset] = d;
+			offset += sizeof(uint8_t);
 			break;
 		case 's':	// skip
+			offset += 4;
 			break;
 		default:
 			return luaL_error(L, "Invalid format %c", v->format[i]);
 		}
-		offset += 4;
 	}
 	return 0;
 }

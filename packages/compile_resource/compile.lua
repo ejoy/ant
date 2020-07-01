@@ -133,6 +133,9 @@ local function compile_file(input)
     local ext = input:extension():string():sub(2):lower()
     local cfg = link[ext]
     if not cfg then
+        if not lfs.exists(input) then
+            error(tostring(input) .. " not exist")
+        end
         assert(lfs.exists(input))
         return input
     end
