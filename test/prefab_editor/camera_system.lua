@@ -26,7 +26,7 @@ local function world_to_screen(world_pos)
 end
 
 local function cameraUpdateEyepos(camera)
-	iom.set_position(cameraId, math3d.sub(cameraTarget, math3d.mul(camera.viewdir, cameraDistance)))
+	iom.set_position(cameraId, math3d.sub(cameraTarget, math3d.mul(iom.get_direction(cameraId), cameraDistance)))
 end
 
 local function cameraRotate(dx, dy)
