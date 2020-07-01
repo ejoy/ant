@@ -330,7 +330,7 @@ local function print_raw_buffer(rawbuffer)
 end
 
 local function select_obj(pickup_com, blit_buffer, viewrect)
-	print_raw_buffer(blit_buffer)
+	--print_raw_buffer(blit_buffer)
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)
