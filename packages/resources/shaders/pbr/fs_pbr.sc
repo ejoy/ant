@@ -155,7 +155,7 @@ vec3 fresnelSchlickRoughness(float NdotH, vec3 F0, float roughness)
 
 vec3 directional_light_radiance()
 {
-	return directional_color.rgb * directional_intensity.r;
+	return u_directional_color.rgb * u_directional_intensity.r;
 }
 
 vec3 diffuse_percent(vec3 kS, float metallic)
@@ -227,7 +227,7 @@ void main()
 
 	vec3 N = getNormal(v_normal, v_posWS.xyz, v_texcoord0);
 	vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
-	vec3 L = normalize(directional_lightdir.xyz);
+	vec3 L = normalize(u_directional_lightdir.xyz);
 	vec3 H = normalize(L+V);
 	vec3 R = normalize(reflect(-V, N));
 

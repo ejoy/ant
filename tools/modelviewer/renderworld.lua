@@ -23,7 +23,6 @@ local function create_light()
 	local dlightdir = math3d.totable(math3d.normalize(math3d.inverse(dir)))
 	local pos = {0, 0, 0, 1}
 	ilight.create_directional_light_entity("direction light", {1,1,1,1}, 2, dlightdir, pos)
-	ilight.create_ambient_light_entity("ambient light", 'color', {1, 1, 1, 1}, {0.9, 0.9, 1, 1}, {0.60,0.74,0.68,1})
 end
 
 local function create_camera()

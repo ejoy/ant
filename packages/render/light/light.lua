@@ -5,7 +5,6 @@ for _, lighttype in ipairs {
 	"directional",
 	"point",
 	"spot",
-	"ambient",
 } do
 	local lightname = lighttype .. "_light"
 	local transname = lighttype .. "_transform"
@@ -81,26 +80,5 @@ function ilight.create_spot_light_entity(name, dir, pos)
 			}
 		}
 
-	}
-end
-
-function ilight.create_ambient_light_entity(name, mode, skycolor, midcolor, groundcolor)
-	return world:create_entity {
-		policy = {
-			"ant.render|light.ambient",
-			"ant.general|name",
-		},
-		data = {
-			name = name,
-			light = "",
-			ambient_light = {
-				mode = mode or 'color',
-				factor = 0.3,
-				skycolor = skycolor or {1,0,0,1},
-				midcolor = midcolor or {0.9,0.9,1,1},
-				groundcolor = groundcolor or {0.50,0.74,0.68,1},
-				dirty = true,
-			}
-		}
 	}
 end

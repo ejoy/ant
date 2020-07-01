@@ -10,13 +10,8 @@ $input v_normal, v_positionWS
 void main()
 {
 	// only diffuse?
-	float ntol 			= max(0, dot(v_normal.xyz, directional_lightdir.xyz));
-	float lightIntensity= ntol * directional_intensity.x;
-    vec4 lightColor 	= vec4(directional_color.xyz * lightIntensity, 1.0);
-
-	vec4  ambientColor  = vec4(calc_ambient_color(ambient_mode.x, v_normal.y).rgb, 0.0);
-	vec4  diffuseColor  = lightColor; 
-	
-	vec4 finalcolor 	= saturate(ambientColor + diffuseColor);
+	float ntol 			= max(0, dot(v_normal.xyz, u_directional_lightdir.xyz));
+	float lightIntensity= ntol * u_directional_intensity.x;
+	vec4 finalcolor 	= saturate(vec4(u_directional_color.rgb * lightIntensity, 1.0));
     gl_FragColor        = finalcolor;
 }

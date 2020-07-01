@@ -102,11 +102,7 @@ local function find_entity(name, whichtype)
 end
 
 function init_loader_sys:init()
-    do
-        world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
-        ilight.create_ambient_light_entity('ambient_light', 'gradient', {1, 1, 1, 1})
-    end
-
+    world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
     computil.create_grid_entity()
 
     computil.create_procedural_sky()

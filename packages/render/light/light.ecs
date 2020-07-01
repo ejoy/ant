@@ -1,15 +1,8 @@
 interface "light"
     .implement "light/light.lua"
-    .method "create_ambient_light_entity"
     .method "create_directional_light_entity"
     .method "create_point_light_entity"
     .method "create_spot_light_entity"
-
-policy "light.ambient"
-    .require_transform "ambient_transform"
-    .component "ambient_light"
-    .component "light"
-    .unique_component "ambient_light"
 
 policy "light.directional"
     .require_transform "directional_transform"
@@ -32,12 +25,6 @@ policy "light.spot"
     .component "light"
     .component "direction"
     .component "position"
-
-transform "ambient_transform"
-    .implement "light/light.lua"
-    .input "ambient_light"
-    .output "light"
-    .method "process_prefab"
 
 transform "directional_transform"
     .implement "light/light.lua"

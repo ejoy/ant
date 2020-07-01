@@ -26,16 +26,6 @@ vec3 calc_directional_light(vec3 normal, vec3 lightdir, vec3 viewdir, float shin
 	return vec3(result, result, result);
 }
 
-vec4 calc_ambient_color(float ambientMode, float factor) 
-{
-	// gradient mode 
-	if(ambientMode == 2.0) {
-		return mix(ambient_midcolor, ambient_skycolor, abs(factor));
-	}
-	// default classic mode 
-	return ambient_skycolor;
-}
-
 vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir, 
 						vec4 lightColor, vec4 diffuseColor, vec4 specularColor, 
 						float gloss, float specularIntensity)

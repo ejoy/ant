@@ -19,10 +19,8 @@ void main()
 	vec3 normal 	= unproject_normal(remap_normal(ntexdata.xy));
 
 	vec4 basecolor  = texture2D(s_basecolor, v_texcoord0.xy);
-	vec4 lightcolor = directional_color * directional_intensity.x;
+	vec4 lightcolor = u_directional_color * u_directional_intensity.x;
 	
-	vec4 ambientcolor = calc_ambient_color(ambient_mode.x, v_normal.y) * basecolor;
-    
-	gl_FragColor 	= saturate(ambientcolor + calc_lighting_BH(normal, v_lightdir, v_viewdir, lightcolor, 
-															basecolor, u_specularColor, gloss, u_specularLight.x));
+	gl_FragColor 	= saturate(calc_lighting_BH(normal, v_lightdir, v_viewdir, lightcolor, 
+												basecolor, u_specularColor, gloss, u_specularLight.x));
 }

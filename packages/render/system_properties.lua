@@ -14,13 +14,9 @@ local icamera = world:interface "ant.camera|camera"
 local m = ecs.interface "system_properties"
 local system_properties = {
 	--lighting
-	directional_lightdir= math3d.ref(mc.ZERO),
-	directional_color 	= math3d.ref(mc.ZERO),
-	directional_intensity= math3d.ref(mc.ZERO),
-	ambient_mode 		= math3d.ref(mc.ZERO),
-	ambient_skycolor 	= math3d.ref(mc.ZERO),
-	ambient_midcolor 	= math3d.ref(mc.ZERO),
-	ambient_groundcolor = math3d.ref(mc.ZERO),
+	u_directional_lightdir= math3d.ref(mc.ZERO),
+	u_directional_color 	= math3d.ref(mc.ZERO),
+	u_directional_intensity= math3d.ref(mc.ZERO),
 	u_eyepos			= math3d.ref(mc.ZERO_PT),
 
 	-- shadow
@@ -47,9 +43,9 @@ end
 local function add_directional_light_properties()
 	local dlight = world:singleton_entity "directional_light"
 	if dlight then
-		system_properties["directional_lightdir"].v 	= dlight.direction
-		system_properties["directional_color"].v 	= dlight.directional_light.color
-		system_properties["directional_intensity"].v = {dlight.directional_light.intensity, 0.28, 0, 0}
+		system_properties["u_directional_lightdir"].v 	= dlight.direction
+		system_properties["u_directional_color"].v 	= dlight.directional_light.color
+		system_properties["u_directional_intensity"].v = {dlight.directional_light.intensity, 0.28, 0, 0}
 	end
 end
 
@@ -59,21 +55,8 @@ local mode_type = {
 	gradient = 2,
 }
 
---add ambient properties
-local function add_ambient_light_propertices()
-	local le = world:singleton_entity "ambient_light"
-	if le then
-		local ambient = le.ambient_light
-		system_properties["ambient_mode"].v			= {mode_type[ambient.mode], ambient.factor, 0, 0}
-		system_properties["ambient_skycolor"].v		= ambient.skycolor
-		system_properties["ambient_midcolor"].v		= ambient.midcolor
-		system_properties["ambient_groundcolor"].v	= ambient.groundcolor
-	end
-end 
-
 local function update_lighting_properties()
 	add_directional_light_properties()
-	add_ambient_light_propertices()
 
 	local mq = world:singleton_entity "main_queue"
 	system_properties["u_eyepos"].v = iom.get_position(mq.camera_eid)

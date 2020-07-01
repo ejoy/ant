@@ -18,7 +18,6 @@ return {
             -- "ant.render|bounding_draw",
             -- "ant.render|debug_mesh_bounding",
             -- "ant.render|light.directional",
-            -- "ant.render|light.ambient",
             -- "ant.scene|hierarchy_policy",
             -- --editor
             -- "ant.character|character",
