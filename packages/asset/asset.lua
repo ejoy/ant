@@ -108,14 +108,7 @@ function assetmgr.resource(world, path)
 end
 
 --TODO
-function assetmgr.load_fx(fx, setting)
-	local mt = getmetatable(fx)
-	if mt and mt.__data then
-		fx = mt.__data
-	end
-	local res = cr.compile_fx(fx, setting)
-	return setmetatable(res, {__data=fx})
-end
+assetmgr.load_fx = cr.compile_fx
 
 function assetmgr.load_fx_file(fxfile, setting)
 	return assetmgr.load_fx(fs_local.datalist(fs.path(fxfile):localpath()), setting)

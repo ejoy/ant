@@ -38,14 +38,6 @@ function util.print_srt(e, numtab)
 	print(tab .. "position : ", t_str)
 end
 
-function util.srt(s, r, t)
-	return {
-		s = math3d.ref(math3d.vector(s or {1, 1, 1, 0})),
-		r = math3d.ref(math3d.quaternion(r or {0, 0, 0, 1})),
-		t = math3d.ref(math3d.vector(t or {0, 0, 0, 1})),
-	}
-end
-
 function util.ratio(start, to, t)
 	return (t - start) / (to - start)
 end

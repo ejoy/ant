@@ -63,7 +63,7 @@ local currentEID
 local currentEIDPos = {0,0,0}
 local currentEIDRot = {0,0,0}
 local currentEIDScale = {1,1,1}
-
+local localSpace = {}
 function m:ui_update()
     imgui.windows.SetNextWindowPos(0, 0)
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
@@ -87,11 +87,17 @@ function m:ui_update()
             status.GizmoMode = "scale"
             world:pub { "gizmo", "scale" }
         end
+        imgui.cursor.SameLine()
+        if imgui.widget.Checkbox("LocalSpace", localSpace) then
+            world:pub { "gizmo", "localspace", localSpace[1] }
+        end
         imguiEndToolbar()
     end
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(sw - PropertyWidgetWidth, 0)
     imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh)
+
+    
 
     for _, eid in eventGizmo:unpack() do
         currentEID = eid

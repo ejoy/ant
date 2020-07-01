@@ -293,7 +293,7 @@ local function export_skinbin(gltfscene, bindata, exports)
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = "./meshes/"..skinname .. ".skinbin"
 		utility.save_bin_file(resname, fetch_skininfo(gltfscene, skin, bindata))
-		exports.skin[skinidx] = "./meshes/"..resname
+		exports.skin[skinidx] = resname
 	end
 end
 

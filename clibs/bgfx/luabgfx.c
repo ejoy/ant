@@ -37,18 +37,6 @@
 
 #endif //_MSC_VER > 0
 
-#ifndef lua_newuserdata
-// lua 5.4
-
-static void *
-lua_newuserdatauv(lua_State *L, size_t size, int nuvalue) {
-	if (nuvalue > 1)
-		luaL_error(L, "Don't support nuvalue (%d) > 1", nuvalue);
-	return lua_newuserdata(L, size);
-}
-
-#endif
-
 
 // screenshot queue length
 #define MAX_SCREENSHOT 16
@@ -143,11 +131,11 @@ memory_keepalive(lua_State *L) {
 	if (mem->ref == 0)
 		return 0;
 	// keep alive
-	lua_newuserdata(L, 0);
+	lua_newuserdatauv(L, 0, 1);
 	luaL_getmetatable(L, "BGFX_MEMORY_REF");
 	lua_setmetatable(L, -2);
 	lua_pushvalue(L, -2);
-	lua_setuservalue(L, -2);
+	lua_setiuservalue(L, -2, 1);
 	return 0;
 }
 
@@ -157,21 +145,21 @@ memory_release(lua_State *L) {
 	if (mem->ref == 0)
 		return 0;
 	// keep self alive
-	lua_newuserdata(L, 0);
+	lua_newuserdatauv(L, 0, 1);
 	if (luaL_newmetatable(L, "BGFX_MEMORY_REF")) {
 		lua_pushcfunction(L, memory_keepalive);
 		lua_setfield(L, -2, "__gc");
 	}
 	lua_setmetatable(L, -2);
 	lua_pushvalue(L, 1);
-	lua_setuservalue(L, -2);
+	lua_setiuservalue(L, -2, 1);
 
 	return 0;
 }
 
 static struct memory *
 memory_new(lua_State *L) {
-	struct memory *mem = (struct memory *)lua_newuserdata(L, sizeof(*mem));
+	struct memory *mem = (struct memory *)lua_newuserdatauv(L, sizeof(*mem), 1);
 	mem->data = NULL;
 	mem->size = 0;
 	mem->ref = 0;
@@ -201,7 +189,8 @@ newMemory(lua_State *L, void *data, size_t size) {
 	if (lua_type(L, -1) == LUA_TSTRING) {
 		mem->constant = 1;
 	}
-	lua_setuservalue(L, -2);
+	// mount data -> mem
+	lua_setiuservalue(L, -2, 1);
 	mem->data = data;
 	mem->size = size;
 
@@ -524,7 +513,7 @@ linit(lua_State *L) {
 		cb_capture_end,
 		cb_capture_frame,
 	};
-	struct callback *cb = lua_newuserdata(L, sizeof(*cb));
+	struct callback *cb = lua_newuserdatauv(L, sizeof(*cb), 0);
 	memset(cb, 0, sizeof(*cb));
 	lua_setfield(L, LUA_REGISTRYINDEX, "bgfx_cb");
 	cb->base.vtbl = &vtbl;
@@ -2208,7 +2197,7 @@ idToAttribType(uint16_t id) {
 
 static size_t
 new_vdecl_from_string(lua_State *L, const char *vdecl, size_t sz) {
-	bgfx_vertex_layout_t * vd = lua_newuserdata(L, sizeof(*vd));
+	bgfx_vertex_layout_t * vd = lua_newuserdatauv(L, sizeof(*vd), 0);
 	struct string_reader rd = { L, vdecl, sz, 0 };
 	uint8_t numAttrs = read_int(&rd, 1);
 	uint16_t stride = read_int(&rd, 2);
@@ -2259,7 +2248,7 @@ lnewVertexLayout(lua_State *L) {
 	if (!lua_isnoneornil(L, 2)) {
 		id = renderer_type_id(L, 2);
 	}
-	bgfx_vertex_layout_t * vd = lua_newuserdata(L, sizeof(*vd));
+	bgfx_vertex_layout_t * vd = lua_newuserdatauv(L, sizeof(*vd), 0);
 	BGFX(vertex_layout_begin)(vd, id);
 	int i, type;
 	for (i=1; (type = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
@@ -2291,7 +2280,7 @@ get_stride(lua_State *L, const char *format) {
 		case 'd':
 			stride += 4;
 			break;
-		case 's':
+		case 'w':
 			stride += 2;
 			break;
 		case 'b':
@@ -2323,7 +2312,7 @@ copy_layout_data(lua_State*L, const char* layout, int tableidx, uint8_t *addr){
 				*(uint32_t *)addr = (uint32_t)lua_tointeger(L, -1);
 				addr += 4;
 				break;
-			case 's':
+			case 'w':
 				*(uint16_t *)addr = (uint16_t)lua_tointeger(L, -1);
 				addr += 2;
 				break;
@@ -2387,7 +2376,7 @@ lcalcTangent(lua_State *L) {
 	} else {
 		numIndices = indmem->size / sizeof(uint16_t);
 	}
-	float *tangents = (float *)lua_newuserdata(L, 6*numVertices*sizeof(float));
+	float *tangents = (float *)lua_newuserdatauv(L, 6*numVertices*sizeof(float), 0);
 	memset(tangents, 0 , 6*numVertices*sizeof(float));
 
 	struct PosTexcoord {
@@ -2724,7 +2713,7 @@ getIndexBuffer(lua_State *L, int idx, int index32) {
 		}
 		else {
 			void *data = newMemory(L, NULL, n*sizeof(uint16_t));
-			copy_layout_data(L, "s", 1, data);
+			copy_layout_data(L, "w", 1, data);
 		}
 		return bgfxMemory(L, -1);
 	} else {
@@ -2997,6 +2986,7 @@ lallocTB(lua_State *L) {
 	}
 	v->cap_v = max_v;
 	v->cap_i = max_i;
+
 	return 0;
 }
 
@@ -3061,6 +3051,7 @@ lpackTVB(lua_State *L) {
 		switch(v->format[i]) {
 		case 'f':	// float
 			*(float*)(data + offset) = luaL_checknumber(L, 3+i);
+			offset += sizeof(float);
 			break;
 		case 'd':	// dword
 			d = (uint32_t)luaL_checkinteger(L, 3+i);
@@ -3068,13 +3059,25 @@ lpackTVB(lua_State *L) {
 			data[offset+1] = (d >> 8) & 0xff;
 			data[offset+2] = (d >> 16) & 0xff;
 			data[offset+3] = (d >> 24) & 0xff;
+			offset += sizeof(uint32_t);
+			break;
+		case 'w':	// word
+			d = (uint16_t)luaL_checkinteger(L, 3+i);
+			data[offset] = d & 0xff;
+			data[offset+1] = (d >> 8) & 0xff;
+			offset += sizeof(uint16_t);
+			break;
+		case 'b':	// byte
+			d = (uint8_t)luaL_checkinteger(L, 3+i);
+			data[offset] = d;
+			offset += sizeof(uint8_t);
 			break;
 		case 's':	// skip
+			offset += 4;
 			break;
 		default:
 			return luaL_error(L, "Invalid format %c", v->format[i]);
 		}
-		offset += 4;
 	}
 	return 0;
 }
@@ -3101,7 +3104,7 @@ static int
 lnewTransientBuffer(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
-	struct ltb * v = lua_newuserdata(L, sizeof(*v) + sz);
+	struct ltb * v = lua_newuserdatauv(L, sizeof(*v) + sz, 0);
 	v->cap_v = 0;
 	v->cap_i = 0;
 	memcpy(v->format, format, sz+1);
@@ -3215,7 +3218,7 @@ static int
 lnewInstanceBuffer(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
-	struct lidb * v = lua_newuserdata(L, sizeof(*v) + sz);
+	struct lidb * v = lua_newuserdatauv(L, sizeof(*v) + sz, 0);
 	v->num = 0;
 	int i;
 	int stride = 0;

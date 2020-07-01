@@ -1,12 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg  = import_package "ant.math"
-local mu       = mathpkg.util
-
+local mu        = import_package "ant.math".util
 local fbmgr     = require "framebuffer_mgr"
 local viewidmgr = require "viewid_mgr"
-local renderutil= require "util"
 local isys_properties  = world:interface "ant.render|system_properties"
 local computil = world:interface "ant.render|entity"
 

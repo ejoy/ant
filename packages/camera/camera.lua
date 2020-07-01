@@ -140,21 +140,18 @@ local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(eid)
     local rc = world[eid]._rendercache
-    rc.viewmat, rc.projmat, rc.viewprojmat = view_proj(rc.worldmat, rc.updir, rc.frustum)
+    local worldmat = rc.worldmat
+    rc.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), rc.updir)
+    rc.projmat = math3d.projmat(rc.frustum)
+    rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end
 
 function cameraview_sys:update_mainview_camera()
     local mq = world:singleton_entity "main_queue"
     update_camera(mq.camera_eid)
-end
 
-function cameraview_sys:update_camera()
-    local main_cameraeid = world:singleton_entity "main_queue".camera_eid
-    for _, eid in world:each "camera" do
-        if eid ~= main_cameraeid then
-            update_camera(eid)
-        end
-    end
+    local bq = world:singleton_entity "blit_queue"
+    update_camera(bq.camera_eid)
 end
 
 local bm = ecs.action "bind_camera"

@@ -2,8 +2,8 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg 	= import_package "ant.math"
-local mu, mc 	= mathpkg.util, mathpkg.constant
+local mu 		= import_package "ant.math".util
+local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
 
 local renderpkg = import_package "ant.render"
@@ -21,29 +21,32 @@ local function enable_pickup(enable)
 	filter.result.opaticy.items = {}
 	filter.result.translucent.items = {}
 
-	if not enable then
+	if enable then
+		e.pickup.nextstep = "blit"
+	else
 		e.pickup.nextstep = nil
 	end
 end
 
 local icamera = world:interface "ant.camera|camera"
 
-local function update_viewinfo(e, clickx, clicky) 
+local function update_camera(e, clickpt) 
 	local mq = world:singleton_entity "main_queue"
 	local rt = mq.render_target.viewport.rect
 
-	local ndc2D = mu.pt2D_to_NDC({clickx, clicky}, rt)
+	local ndc2D = mu.pt2D_to_NDC(clickpt, rt)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
 
-	local vp = icamera.calc_viewproj(mq.camera_eid)
+	local vp = world[mq.camera_eid]._rendercache.viewprojmat
 	local ivp = math3d.inverse(vp)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
 
 	local rc = world[e.camera_eid]._rendercache
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
-	rc.worldmat = math3d.matrix{r=math3d.torotation(viewdir), t=eye}
-	rc.srt.m = rc.worldmat
+	rc.viewmat = math3d.lookto(eye, viewdir, rc.updir)
+	rc.projmat = math3d.projmat(rc.frustum)
+	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end
 
 
@@ -285,15 +288,19 @@ function pickup_sys:refine_filter()
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}
-function pickup_sys:create_camera_from_mainview()
+local clickpt = {}
+function pickup_sys:data_changed()
 	for _,_,state,x,y in leftmousepress_mb:unpack() do
 		if state == "DOWN" then
 			enable_pickup(true)
-			local pickupentity = world:singleton_entity "pickup"
-			update_viewinfo(pickupentity, x, y)
-			local pickupcomp = pickupentity.pickup
-			pickupcomp.nextstep = "blit"
+			clickpt[1], clickpt[2] = x, y
 		end
+	end
+end
+function pickup_sys:update_camera()
+	local pickupentity = world:singleton_entity "pickup"
+	if pickupentity.visible then
+		update_camera(pickupentity, clickpt)
 	end
 end
 

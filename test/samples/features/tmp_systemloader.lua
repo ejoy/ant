@@ -1,14 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
-local fs = require 'filesystem'
-
 local math3d = require "math3d"
 
 local computil = world:interface "ant.render|entity"
-
-local mathpkg   = import_package "ant.math"
-local mu        = mathpkg.util
 
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = world:interface "ant.asset|imaterial"
@@ -30,12 +25,10 @@ local function create_plane_test()
             {
                 ["ant.collision|collider_policy"] = {
                     collider = world.component "collider" {
-                        box = {
-                            world.component "box_shape" {
-                                origin = math3d.ref(math3d.vector(0, 0, 0, 1)),
-                                size = {50, 0.001, 50},
-                            }
-                        }
+                        box = {{
+                            origin = math3d.ref(math3d.vector(0, 0, 0, 1)),
+                            size = {50, 0.001, 50},
+                        }}
                     },
                 },
                 ["ant.render|debug_mesh_bounding"] = {
@@ -59,8 +52,8 @@ local function target_lock_test()
             name = "lock_target",
             can_render = true,
             transform =  {
-                s = world.component "vector" {2, 1, 2, 0},
-                t = world.component "vector" {16, 1, 6},
+                s = {2, 1, 2, 0},
+                t = {16, 1, 6},
             },
             mesh = world.component "resource" "/pkg/ant.resources/meshes/sphere.mesh",
             material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",

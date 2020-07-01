@@ -14,16 +14,8 @@ local world = ecs.world
     [3] E. Lengyel, Game Engine Gems, Volume One. Jones & Bartlett Learning, 2010. pp. 219 - 234
 ]]
 
-local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
-
-local assetmgr = import_package "ant.asset"
-
-local renderpkg = import_package "ant.render"
-local declmgr = renderpkg.declmgr
-
+local mu = import_package "ant.math".util
 local math3d = require "math3d"
-local bgfx = require "bgfx"
 
 local MONTHS = {
 	"January",

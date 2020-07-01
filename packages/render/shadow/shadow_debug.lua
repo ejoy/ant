@@ -1,14 +1,14 @@
 local ecs = ...
 local world = ecs.world
 
-local computil = world:interface "ant.render|entity"
+local computil  = world:interface "ant.render|entity"
 local shadowutil= require "shadow.util"
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
-local irender	= world:interface "ant.render|irender"
-local mathpkg   = import_package "ant.math"
-local mu, mc= mathpkg.util, mathpkg.constant
-local math3d	= require "math3d"
+local irender   = world:interface "ant.render|irender"
+local mu        = import_package "ant.math".util
+local mc        = import_package "ant.math".constant
+local math3d    = require "math3d"
 
 local icamera = world:interface "ant.camera|camera"
 local iom = world:interface "ant.objcontroller|obj_motion"

@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
+local mc 		= import_package "ant.math".constant
 
 local math3d = require "math3d"
 local rp3d = require "rp3d"
@@ -28,39 +27,26 @@ local w = rp3d.create_world {
 --	logger = { Level = "Error", Format = "Text" },
 }
 
-local s = ecs.component "sphere_shape"
-
-function s:init()
-	self._handle = w:new_shape("sphere", self.radius)
-	return self
+local function sphere_shape(shape)
+	return w:new_shape("sphere", shape.radius)
 end
 
-local b = ecs.component "box_shape"
-
-function b:init()
-	self._handle = w:new_shape("box", table.unpack(self.size))
-	return self
+local function box_shape(shape)
+	return w:new_shape("box", table.unpack(shape.size))
 end
 
-local c = ecs.component "capsule_shape"
-
-function c:init()
-	self._handle = w:new_shape("capsule", self.radius, self.height)
-	return self
+local function capsule_shape(shape)
+	return w:new_shape("capsule", shape.radius, shape.height)
 end
 
-local ts = ecs.component "terrain_shape"
-
-function ts:init()
+local function terrain_shape(self)
 	self.up_axis 		= self.up_axis or "Y"
 	self.min_height 	= self.min_height or 0
 	self.max_height 	= self.max_height or 0
 	self.height_scaling = self.height_scaling or 1
 	self.scaling 		= self.scaling or 1
-
 	return self
 end
-
 
 local tcb = ecs.transform "terrain_collider_transform"
 
@@ -99,17 +85,17 @@ local collcomp = ecs.component "collider"
 
 function collcomp:init()
 	self._handle = w:body_create(mc.ZERO_PT, mc.IDENTITY_QUAT)
-	local function add_shape(shape)
+	local function add_shape(shape, constructor)
 		if not shape then
 			return
 		end
 		for _, sh in ipairs(shape) do
-			w:add_shape(self._handle, sh._handle, sh.origin)
+			w:add_shape(self._handle, constructor(sh), sh.origin)
 		end
 	end
-	add_shape(self.sphere)
-	add_shape(self.box)
-	add_shape(self.capsule)
+	add_shape(self.sphere,  sphere_shape)
+	add_shape(self.box,     box_shape)
+	add_shape(self.capsule, capsule_shape)
 	--add_shape(self.terrain)
 	return self
 end

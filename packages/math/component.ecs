@@ -8,11 +8,6 @@ component "quaternion"
     .method "init"
     .method "save"
 
-component "srt"
-    .implement "component.lua"
-    .method "init"
-    .method "save"
-
 component "vector"
     .implement "component.lua"
     .method "init"

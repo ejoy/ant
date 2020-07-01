@@ -6,7 +6,6 @@ local ientity = ecs.interface "entity"
 local declmgr   = require "vertexdecl_mgr"
 local hwi       = require "hardware_interface"
 local math3d    = require "math3d"
-local mu        = import_package "ant.math".util
 local geopkg    = import_package "ant.geometry"
 local geodrawer = geopkg.drawer
 local geolib    = geopkg.geometry
@@ -66,7 +65,7 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 			"ant.general|name",
 		},
 		data = {
-			transform	=  {srt = world.component "srt"(srt or {})},
+			transform	= srt or {},
 			material	= world.component "resource"(material),
 			mesh		= mesh,
 			state		= state or ies.create_state "visible",
@@ -134,7 +133,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
 	}
 
 	local data = {
-		transform =  {srt = world.component "srt"(srt or {})},
+		transform = srt or {},
 		material = world.component "resource" (materialpath),
 		state = ies.create_state "visible",
 		name = name or "Plane",
@@ -164,7 +163,7 @@ function ientity.create_plane_entity(srt, materialpath, name, entity_info)
 	}
 
 	local data = {
-		transform = mu.srt(),
+		transform = {},
 		material = world.component "resource" (materialpath),
 		state = ies.create_state "visible|selectable",
 		name = name or "Plane",
@@ -362,7 +361,7 @@ function ientity.create_skybox(material)
 			"ant.general|name",
 		},
 		data = {
-			transform =  {srt=mu.srt()},
+			transform = {},
 			material = world.component "resource"(material or "/pkg/ant.resources/materials/skybox.material"),
 			state = ies.create_state "selectable|visible",
 			scene_entity = true,
@@ -417,7 +416,7 @@ function ientity.create_procedural_sky(settings)
 			"ant.general|name",
 		},
 		data = {
-			transform = mu.srt(),
+			transform = {},
 			material = world.component "resource" "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = world.component "procedural_sky" {
 				--attached_sun_light = attached_light(settings.attached_sun_light),

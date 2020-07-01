@@ -11,7 +11,6 @@ policy "camera"
 system "camera_view_system"
     .implement "camera.lua"
     .method "update_mainview_camera"
-    .method "update_camera"
 
 transform "camera_transform"
     .implement "camera.lua"
@@ -38,7 +37,6 @@ interface "camera"
 
 pipeline "camera"
     .stage "update_mainview_camera"
-    .stage "create_camera_from_mainview"
     .stage "update_camera"
 
 

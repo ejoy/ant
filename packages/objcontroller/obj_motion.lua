@@ -2,8 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local math3d = require "math3d"
-local mathpkg = import_package "ant.math"
-local mu, mc = mathpkg.util, mathpkg.constant
+local mu     = import_package "ant.math".util
+local mc     = import_package "ant.math".constant
 
 local iobj_motion = ecs.interface "obj_motion"
 local icamera = world:interface "ant.camera|camera"

@@ -2,8 +2,6 @@
 local ecs = ...
 local world = ecs.world
 
-local math = import_package "ant.math"
-local mu = math.util
 local math3d = require "math3d"
 
 local cull_sys = ecs.system "cull_system"
@@ -14,7 +12,7 @@ function cull_sys:cull()
 		local filter = e.primitive_filter
 
 		if e.visible then
-			local vp = icamera.calc_viewproj(e.camera_eid)
+			local vp = world[e.camera_eid]._rendercache.viewprojmat
 			local frustum_planes = math3d.frustum_planes(vp)
 
 			local results = filter.result

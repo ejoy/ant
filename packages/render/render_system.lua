@@ -16,9 +16,7 @@ local function set_world_matrix(rc)
 end
 
 local function to_v(t)
-	if type(t) ~= "table" then
-		return t
-	end
+	assert(type(t) == "table")
 	if t.stage then
 		return t
 	end
