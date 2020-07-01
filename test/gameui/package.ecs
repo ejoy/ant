@@ -1,0 +1,28 @@
+import "@ant.general"
+import "@ant.render"
+import "@ant.camera"
+
+system "gameui"
+    .implement "gameui.lua"
+    .require_policy "ant.general|name"
+    .require_policy "ant.render|render"
+    .method "init"
+    .method "ui_update"
+
+pipeline "init"
+    .stage "init"
+    .stage "post_init"
+
+pipeline "exit"
+    .stage "exit"
+
+pipeline "update"
+    .stage "timer"
+    .stage "data_changed"
+    .pipeline "scene"
+    .pipeline "camera"
+    .pipeline "render"
+    .stage "ui_update"
+    .stage "end_frame"
+    .stage "final"
+
