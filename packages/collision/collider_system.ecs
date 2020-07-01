@@ -30,25 +30,9 @@ transform "terrain_collider_transform"
     .output "collider"
     .method "process_entity"
 
-component "box_shape"
-    .implement "collider_system.lua"
-    .method "init"
-
-component "capsule_shape"
-    .implement "collider_system.lua"
-    .method "init"
-
 component "collider"
     .implement "collider_system.lua"
     .method "delete"
-    .method "init"
-
-component "sphere_shape"
-    .implement "collider_system.lua"
-    .method "init"
-
-component "terrain_shape"
-    .implement "collider_system.lua"
     .method "init"
 
 pipeline "collider"
