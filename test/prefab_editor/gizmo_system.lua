@@ -574,7 +574,8 @@ local function rayHitPlane(ray, plane_info)
 	if math.abs(d) > 0.00001 then
 		local t = -(math3d.dot(planeDirVec, rayOriginVec) + plane.d) / d
 		if t >= 0.0 then
-			return math3d.vector(ray.origin[1] + t * ray.dir[1], ray.origin[2] + t * ray.dir[2], ray.origin[3] + t * ray.dir[3])
+			return math3d.add(ray.origin, math3d.mul(t, ray.dir))
+			--return math3d.vector(ray.origin[1] + t * ray.dir[1], ray.origin[2] + t * ray.dir[2], ray.origin[3] + t * ray.dir[3])
 		end	
 	end
 	return nil
@@ -977,7 +978,7 @@ end
 local function updata_uniform_scale_gizmo()
 	if not gizmo_obj.rw.eid[1] then return end
 	local cameraeid = world:singleton_entity "main_queue".camera_eid
-	gizmo_obj.rw.dir = iom.get_direction(cameraeid)
+	gizmo_obj.rw.dir = math3d.totable(iom.get_direction(cameraeid))
 	-- local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
 	-- local iv = math3d.inverse(viewmat)
 	
