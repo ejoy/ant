@@ -101,14 +101,15 @@ local function calc_shadow_camera(viewmat, frustum, split_ratios, lightdir, shad
 	end
 
 	local rc = world[sc_eid]._rendercache
-	rc.worldmat = math3d.matrix{r=math3d.torotation(lightdir), t=center_WS}
-	rc.srt.m = rc.worldmat
+	rc.viewmat = math3d.lookto(center_WS, lightdir, rc.updir)
 	rc.frustum = {
 		ortho=true,
 		l = min_extent[1], r = max_extent[1],
 		b = min_extent[2], t = max_extent[2],
 		n = min_extent[3], f = max_extent[3],
 	}
+	rc.projmat = math3d.projmat(rc.frustum)
+	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end
 
 local function update_shadow_camera(l, viewmat, frustum)
@@ -304,16 +305,16 @@ function sm:post_init()
 	world:pub{"component_changed", "directional_light", world:singleton_entity_id "directional_light"}
 end
 
-function sm:create_camera_from_mainview()
+function sm:update_camera()
 	local dl = world:singleton_entity "directional_light"
 	local mq = world:singleton_entity "main_queue"
 	local c = world[mq.camera_eid]._rendercache
 
-	for _, mb in ipairs(modify_mailboxs) do
-		for _ in mb:each() do
+	-- for _, mb in ipairs(modify_mailboxs) do
+	-- 	for _ in mb:each() do
 			update_shadow_camera(dl, c.viewmat, c.frustum)
-		end
-	end
+	-- 	end
+	-- end
 end
 
 local function replace_material(result, material)
