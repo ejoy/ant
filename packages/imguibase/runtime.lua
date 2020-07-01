@@ -94,6 +94,9 @@ local function dispatch(ok, CMD, ...)
 		local ok, err = xpcall(f, debug_traceback, ...)
 		if not ok then
 			LOGERROR(err)
+			if CMD == "init" then
+				return false
+			end
 		end
 	end
 	return CMD ~= 'exit'
