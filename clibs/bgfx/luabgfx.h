@@ -30,4 +30,23 @@ check_handle_type(lua_State *L, int type, int id, const char * tname) {
 	return (uint16_t)(id & 0xffff);
 }
 
+#if LUA_VERSION_NUM < 504
+// lua 5.3
+
+static inline void *
+lua_newuserdatauv(lua_State *L, size_t size, int nuvalue) {
+	if (nuvalue > 1)
+		luaL_error(L, "Don't support nuvalue (%d) > 1", nuvalue);
+	return lua_newuserdata(L, size);
+}
+
+static inline int
+lua_setiuservalue(lua_State *L, int idx, int n) {
+	if (n != 1)
+		return luaL_error(L, "Don't support setiuservalue %d !=1", n);
+	return lua_setuservalue(L, idx);
+}
+
+#endif
+
 #endif

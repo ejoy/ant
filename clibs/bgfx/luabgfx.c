@@ -37,18 +37,6 @@
 
 #endif //_MSC_VER > 0
 
-#ifndef lua_newuserdata
-// lua 5.4
-
-static void *
-lua_newuserdatauv(lua_State *L, size_t size, int nuvalue) {
-	if (nuvalue > 1)
-		luaL_error(L, "Don't support nuvalue (%d) > 1", nuvalue);
-	return lua_newuserdata(L, size);
-}
-
-#endif
-
 
 // screenshot queue length
 #define MAX_SCREENSHOT 16
@@ -147,7 +135,7 @@ memory_keepalive(lua_State *L) {
 	luaL_getmetatable(L, "BGFX_MEMORY_REF");
 	lua_setmetatable(L, -2);
 	lua_pushvalue(L, -2);
-	lua_setuservalue(L, -2);
+	lua_setiuservalue(L, -2, 1);
 	return 0;
 }
 
@@ -164,7 +152,7 @@ memory_release(lua_State *L) {
 	}
 	lua_setmetatable(L, -2);
 	lua_pushvalue(L, 1);
-	lua_setuservalue(L, -2);
+	lua_setiuservalue(L, -2, 1);
 
 	return 0;
 }
@@ -194,14 +182,14 @@ memory_new(lua_State *L) {
 static void *
 newMemory(lua_State *L, void *data, size_t size) {
 	if (data == NULL) {
-		data = lua_newuserdatauv(L, size, 0);
+		data = lua_newuserdatauv(L, size, 1);
 	}
 	struct memory *mem = memory_new(L);
 	lua_insert(L, -2);
 	if (lua_type(L, -1) == LUA_TSTRING) {
 		mem->constant = 1;
 	}
-	lua_setuservalue(L, -2);
+	lua_setiuservalue(L, -2, 1);
 	mem->data = data;
 	mem->size = size;
 
@@ -524,7 +512,7 @@ linit(lua_State *L) {
 		cb_capture_end,
 		cb_capture_frame,
 	};
-	struct callback *cb = lua_newuserdata(L, sizeof(*cb));
+	struct callback *cb = lua_newuserdatauv(L, sizeof(*cb), 0);
 	memset(cb, 0, sizeof(*cb));
 	lua_setfield(L, LUA_REGISTRYINDEX, "bgfx_cb");
 	cb->base.vtbl = &vtbl;
