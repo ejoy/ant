@@ -363,7 +363,7 @@ function gizmo_sys:post_init()
 
 	imaterial.set_property(coneeid, "u_color", world.component "vector" {0, 0.5, 0.5, 1})
 
-	local srt = {s = {1}, r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
+	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
 		policy = {
 			"ant.general|name",
@@ -382,7 +382,7 @@ function gizmo_sys:post_init()
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform =  {srt= world.component "srt"(srt)},
+			transform = srt,
 			name = "rot root",
 		},
 	}
@@ -397,7 +397,7 @@ function gizmo_sys:post_init()
 			"ant.scene|transform_policy",
 		},
 		data = {
-			transform =  {srt= world.component "srt"(srt)},
+			transform = srt,
 			name = "rot root",
 		},
 	}

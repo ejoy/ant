@@ -65,7 +65,7 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 			"ant.general|name",
 		},
 		data = {
-			transform	=  {srt = world.component "srt"(srt or {})},
+			transform	= {},
 			material	= world.component "resource"(material),
 			mesh		= mesh,
 			state		= state or ies.create_state "visible",
@@ -133,7 +133,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
 	}
 
 	local data = {
-		transform =  {srt = world.component "srt"(srt or {})},
+		transform = {},
 		material = world.component "resource" (materialpath),
 		state = ies.create_state "visible",
 		name = name or "Plane",
