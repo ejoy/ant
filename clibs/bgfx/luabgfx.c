@@ -2724,7 +2724,7 @@ getIndexBuffer(lua_State *L, int idx, int index32) {
 		}
 		else {
 			void *data = newMemory(L, NULL, n*sizeof(uint16_t));
-			copy_layout_data(L, "s", 1, data);
+			copy_layout_data(L, "w", 1, data);
 		}
 		return bgfxMemory(L, -1);
 	} else {
