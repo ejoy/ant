@@ -30,7 +30,7 @@ end
 
 local icamera = world:interface "ant.camera|camera"
 
-local function update_viewinfo(e, clickpt) 
+local function update_camera(e, clickpt) 
 	local mq = world:singleton_entity "main_queue"
 	local rt = mq.render_target.viewport.rect
 
@@ -44,9 +44,9 @@ local function update_viewinfo(e, clickpt)
 
 	local rc = world[e.camera_eid]._rendercache
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
-	local v = math3d.lookto(eye, viewdir)
-	rc.worldmat = math3d.inverse_fast(v)
-	rc.srt.m = rc.worldmat
+	rc.viewmat = math3d.lookto(eye, viewdir, rc.updir)
+	rc.projmat = math3d.projmat(rc.frustum)
+	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end
 
 
@@ -297,11 +297,10 @@ function pickup_sys:data_changed()
 		end
 	end
 end
-function pickup_sys:create_camera_from_mainview()
+function pickup_sys:update_camera()
 	local pickupentity = world:singleton_entity "pickup"
 	if pickupentity.visible then
-		update_viewinfo(pickupentity, clickpt)
-		
+		update_camera(pickupentity, clickpt)
 	end
 end
 
@@ -331,7 +330,7 @@ local function print_raw_buffer(rawbuffer)
 end
 
 local function select_obj(pickup_com, blit_buffer, viewrect)
-	--print_raw_buffer(blit_buffer)
+	print_raw_buffer(blit_buffer)
 	local selecteid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if selecteid and selecteid<100 then
 		log.info("selecteid",selecteid)
