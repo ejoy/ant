@@ -438,7 +438,7 @@ function gizmo_sys:post_init()
 	world[uniform_rot_eid].parent = uniform_rot_root
 	local function create_rotate_fan(radius, circle_trans)
 		local mesh_eid = computil.create_circle_mesh_entity(radius, rotate_slices, circle_trans, "/pkg/ant.resources/materials/t_gizmos.material", "rotate_mesh_gizmo_uniform")
-		imaterial.set_property(mesh_eid, "u_color", world.component "vector" {0, 0, 1, 0.5})
+		imaterial.set_property(mesh_eid, "u_color", {0, 0, 1, 0.5})
 		ies.set_state(mesh_eid, "visible", false)
 		world[mesh_eid].parent = axis_root
 		return mesh_eid

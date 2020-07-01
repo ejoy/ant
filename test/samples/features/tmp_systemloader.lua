@@ -56,8 +56,8 @@ local function target_lock_test()
             name = "lock_target",
             can_render = true,
             transform =  {
-                s = world.component "vector" {2, 1, 2, 0},
-                t = world.component "vector" {16, 1, 6},
+                s = {2, 1, 2, 0},
+                t = {16, 1, 6},
             },
             mesh = world.component "resource" "/pkg/ant.resources/meshes/sphere.mesh",
             material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",
