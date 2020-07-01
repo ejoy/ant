@@ -1,14 +1,9 @@
 local ecs = ...
 local world = ecs.world
 
-local fs = require 'filesystem'
-
 local math3d = require "math3d"
 
 local computil = world:interface "ant.render|entity"
-
-local mathpkg   = import_package "ant.math"
-local mu        = mathpkg.util
 
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = world:interface "ant.asset|imaterial"

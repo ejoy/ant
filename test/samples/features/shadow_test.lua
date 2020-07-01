@@ -5,8 +5,7 @@ local math3d = require "math3d"
 local computil = world:interface "ant.render|entity"
 local st_sys = ecs.system "shadow_test_system"
 
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
+local mc = import_package "ant.math".constant
 local ies = world:interface "ant.scene|ientity_state"
 local imaterial = world:interface "ant.asset|imaterial"
 

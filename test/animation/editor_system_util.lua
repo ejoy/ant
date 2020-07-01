@@ -1,5 +1,3 @@
-local mathpkg   = import_package "ant.math"
-local mu = mathpkg.util
 local math3d = require "math3d"
 
 local function euler2quat(euler)
@@ -107,7 +105,7 @@ local function create_line_entity(world, name, start_pos,end_pos,color,parent,di
             "ant.test.animation|gizmo_object",
         },
         data = {
-            transform = mu.srt(),
+            transform = {},
             material = world.component "resource" "/pkg/ant.resources/materials/gizmo_line.material",
             name = name,
             state = ies.create_state "visible|selectable",

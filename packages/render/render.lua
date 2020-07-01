@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
-local mathpkg = import_package "ant.math"
-local mc, mu = mathpkg.constant, mathpkg.util
+local mc = import_package "ant.math".constant
 
 local default_comp 	= import_package "ant.general".default
 
@@ -150,7 +149,7 @@ function irender_class.create_blit_queue(viewrect)
 			"ant.render|render",
 		},
 		data = {
-			transform = mu.srt(),
+			transform = {},
 			material = world.component "resource" "/pkg/ant.resources/materials/fullscreen.material",
 			state = ies.create_state "blit_view",
 			name = "full_quad",

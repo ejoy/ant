@@ -2,8 +2,6 @@
 local ecs = ...
 local world = ecs.world
 
-local math = import_package "ant.math"
-local mu = math.util
 local math3d = require "math3d"
 
 local cull_sys = ecs.system "cull_system"

@@ -4,8 +4,7 @@ local renderpkg = import_package "ant.render"
 local fbmgr = renderpkg.fbmgr
 local shadowutil = renderpkg.shadow
 
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
+local mc = import_package "ant.math".constant
 
 local math3d = require "math3d"
 local iom = world:interface "ant.objcontroller|obj_motion"

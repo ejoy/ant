@@ -9,8 +9,7 @@ local shadowutil= require "shadow.util"
 local fbmgr 	= require "framebuffer_mgr"
 local setting	= require "setting"
 
-local mathpkg 	= import_package "ant.math"
-local mc		= mathpkg.constant
+local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
 
