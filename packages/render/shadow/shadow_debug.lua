@@ -11,7 +11,8 @@ local mu, mc= mathpkg.util, mathpkg.constant
 local math3d	= require "math3d"
 
 local icamera = world:interface "ant.camera|camera"
-
+local iom = world:interface "ant.objcontroller|obj_motion"
+local ilight = world:interface "ant.render|light"
 ----------------------------------------------------------------------------------------------------------
 local dbg_sm_sys = ecs.system "debug_shadow_maker_system"
 
@@ -59,8 +60,7 @@ end
 local function	csm_shadow_debug_frustum()
 	for _, seid in world:each "csm" do
 		local e = world[seid]
-		local camera = world[e.camera_eid].camera
-		local vp = mu.view_proj(camera)
+		local vp = icamera.calc_viewproj(e.camera_eid)
 
 		local color = frustum_colors[e.csm.index]
 		local frustum_points = math3d.frustum_points(vp)
@@ -71,8 +71,8 @@ local function	csm_shadow_debug_frustum()
 		add_shadow_debug_policy(
 			computil.create_axis_entity(
 			{
-				r=math3d.tovalue(math3d.torotation(camera.viewdir)), 
-				t=math3d.tovalue(camera.eyepos)
+				r=iom.get_rotation(e.camera_eid),
+				t=iom.get_position(e.camera_eid),
 			},
 			color)
 		)
@@ -140,15 +140,14 @@ local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
 
 local function check_shadow_matrix()
 	local csm1 = world[find_csm_entity(1)]
-
-	local lightdir = math3d.inverse(world:singleton_entity "directional_light".direction)
+	local lightdir = iom.get_direction(ilight.directional_light())
 	print("light direction:", math3d.tostring(lightdir))
 
-	local viewcamera = camerautil.main_queue_camera(world)
-	print("eye posision:", math3d.tostring(viewcamera.eyepos))
-	print("view direction:", math3d.tostring(viewcamera.viewdir))
+	local mq = world:singleton_entity "main_queue"
+	print("eye posision:", math3d.tostring(iom.get_position(mq.camera_eid)))
+	print("view direction:", math3d.tostring(iom.get_direction(mq.camera_eid)))
 
-	local camera_2_origin = math3d.length(viewcamera.eyepos)
+	local camera_2_origin = math3d.length(iom.get_position(mq.camera_eid))
 	print("check eye position to [0, 0, 0] distance:", camera_2_origin)
 
 	local dis_n, dis_f = get_split_distance(1)
@@ -160,8 +159,10 @@ local function check_shadow_matrix()
 		print("origin is not on csm1")
 	end
 
-	local split_frustum_desc = shadowutil.split_new_frustum(viewcamera.frustum, csm1.csm.split_ratios)
-	local vp = mu.view_proj(viewcamera, split_frustum_desc)
+	local frustum = icamera.get_frustum(mq.camera_eid)
+	local split_frustum_desc = shadowutil.split_new_frustum(frustum, csm1.csm.split_ratios)
+	local viewmat = icamera.calc_viewmat(mq.camera_eid)
+	local vp = math3d.mul(math3d.projmat(split_frustum_desc), viewmat)
 
 	local frustum_points = math3d.frusutm_points(vp)
 	local center = math3d.frustum_center(frustum_points)

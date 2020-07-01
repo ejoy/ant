@@ -1,6 +1,6 @@
 policy "camera"
     .require_transform "camera_transform"
-    .require_transform "ant.general|generate_transform"
+    .require_transform "ant.general|init_transform"
     .component "transform"
     .component "frustum"
     .component "lock_target"

@@ -13,6 +13,7 @@ local mathpkg 	= import_package "ant.math"
 local mc		= mathpkg.constant
 local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
+local ilight	= world:interface "ant.render|light"
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -306,12 +307,12 @@ function sm:post_init()
 end
 
 function sm:create_camera_from_mainview()
-	local dl = world:singleton_entity "directional_light"
 	local mq = world:singleton_entity "main_queue"
 	local c = world[mq.camera_eid]._rendercache
 
 	for _, mb in ipairs(modify_mailboxs) do
 		for _ in mb:each() do
+			local dl = world[ilight.directional_light()]
 			update_shadow_camera(dl, c.viewmat, c.frustum)
 		end
 	end

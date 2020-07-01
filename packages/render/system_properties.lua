@@ -9,15 +9,16 @@ local mc = mathpkg.constant
 
 local math3d = require "math3d"
 local iom = world:interface "ant.objcontroller|obj_motion"
+local ilight = world:interface "ant.render|light"
 local icamera = world:interface "ant.camera|camera"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
 	--lighting
-	u_directional_lightdir= math3d.ref(mc.ZERO),
-	u_directional_color 	= math3d.ref(mc.ZERO),
-	u_directional_intensity= math3d.ref(mc.ZERO),
-	u_eyepos			= math3d.ref(mc.ZERO_PT),
+	u_directional_lightdir	= math3d.ref(mc.ZERO),
+	u_directional_color		= math3d.ref(mc.ZERO),
+	u_directional_intensity	= math3d.ref(mc.ZERO),
+	u_eyepos				= math3d.ref(mc.ZERO_PT),
 
 	-- shadow
 	u_csm_matrix 		= {
@@ -41,11 +42,13 @@ function m.get(n)
 end
 
 local function add_directional_light_properties()
-	local dlight = world:singleton_entity "directional_light"
-	if dlight then
-		system_properties["u_directional_lightdir"].v 	= dlight.direction
-		system_properties["u_directional_color"].v 	= dlight.directional_light.color
-		system_properties["u_directional_intensity"].v = {dlight.directional_light.intensity, 0.28, 0, 0}
+	local deid = ilight.directional_light()
+	if deid then
+		local data = ilight.data(deid)
+		iom.get_direction(deid)
+		system_properties["u_directional_lightdir"].v	= math3d.inverse(iom.get_direction(deid))
+		system_properties["u_directional_color"].v		= data.color
+		system_properties["u_directional_intensity"].v	= data.intensity
 	end
 end
 

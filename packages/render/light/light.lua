@@ -1,84 +1,107 @@
 local ecs = ...
 local world = ecs.world
 
-for _, lighttype in ipairs {
-	"directional",
-	"point",
-	"spot",
-} do
-	local lightname = lighttype .. "_light"
-	local transname = lighttype .. "_transform"
-	local t = ecs.transform(transname)
-	function t.process_prefab(e)
-		e.light = lightname
-	end
+local math3d = require "math3d"
+
+local lt = ecs.transform "light_transform"
+function lt.process_entity(e)
+	e._light = {
+		color		= math3d.ref(math3d.vector(e.color)),
+		intensity	= math3d.ref({e.intensity, 0, 0, 0}),
+		range		= e.range,
+		radian		= e.radian,
+	}
 end
 
 -- light interface
-
-local mathpkg 	= import_package 'ant.math'
-local mc		= mathpkg.constant
-
 local ilight 	= ecs.interface "light"
 
-function ilight.create_directional_light_entity(name, color, intensity, direction, position)
+function ilight.create(light)
 	return world:create_entity {
 		policy = {
-			"ant.render|light.directional",
+			"ant.render|light",
 			"ant.general|name",
 		},
 		data = {
-			position	= world.component "vector"(position),
-			direction 	= world.component "vector"(direction),
-			name		= name,
-			light 		= "",
-			directional_light = {
-				color 	= color or {1, 1, 1, 1},
-				intensity= intensity or 2,
-			}
+			transform	= math3d.ref(light.transform),
+			name		= light.name or "DEFAULT_LIGHT",
+			light_type	= assert(light.light_type),
+			color		= light.color or {1, 1, 1, 1},
+			intensity	= light.intensity or 2,
+			range		= light.range,
+			radian		= light.radian,
 		}
 	}
 end
 
-function ilight.create_point_light_entity(name, dir, pos)
-	return world:create_entity {
-		policy = {
-			"ant.render|point_light",
-			"ant.general|name",
-		},
-		data = {
-			direction = world.component "vector"(dir or mc.T_NYAXIS),
-			position = world.component "vector"(pos or mc.T_ZERO_PT),
-			name = name,
-			light = "",
-			point_light = {
-				color = {0.8, 0.8, 0.8, 1},
-				intensity = 2,
-				range = 1000,
-			}
-		}
-
-	}
+function ilight.data(eid)
+	return world[eid]._light
 end
 
-function ilight.create_spot_light_entity(name, dir, pos)
-	return world:create_entity {
-		policy = {
-			"ant.render|spot_light",
-			"ant.general|name",
-		},
-		data = {
-			direction = world.component "vector"(dir or mc.T_NYAXIS),
-			position = world.component "vector"(pos or mc.T_ZERO_PT),
-			name = name,
-			light = "",
-			spot_light = {
-				color = {0.8, 0.8, 0.8, 1},
-				intensity = 2,
-				range = 1000,
-				angle = 60,
-			}
-		}
+function ilight.color(eid)
+	return world[eid]._light.color
+end
 
-	}
+function ilight.set_color(eid, color)
+	local l = world[eid]._light
+	l.color.v = color
+
+	world:pub{"component_changed", "light", eid}
+end
+
+function ilight.intensity(eid)
+	return world[eid]._light.intensity
+end
+
+function ilight.set_intensity(eid, i)
+	local ii = world[eid]._light.intensity
+	local v = math3d.tovalue(ii)
+	v[1] = i
+	ii.v = v
+	world:pub{"component_changed", "light", eid}
+end
+
+function ilight.range(eid)
+	return world[eid]._light.range
+end
+
+function ilight.set_range(eid, r)
+	local e = world[eid]
+	if e.light_type == "directional" then
+		error("directional light do not have 'range' property")
+	end
+
+	e._light.range = r
+	world:pub{"component_changed", "light", eid}
+end
+
+function ilight.radian(eid)
+	return world[eid]._light.radian
+end
+
+function ilight.set_radian(eid, r)
+	local e = world[eid]
+	if e.light_type ~= "spot" then
+		error(("%s light do not have 'radian' property"):format(e.light_type))
+	end
+
+	e._light.radian = r
+	world:pub{"component_changed", "light", eid}
+end
+
+local active_dl
+function ilight.directional_light()
+	return active_dl
+end
+
+function ilight.active_directional_light(eid)
+	local e = world[eid]
+	assert(e.light_type == "directional")
+	active_dl = eid
+end
+
+local mdl = ecs.action "main_directional_light"
+function mdl.init(prefab, idx, value)
+	local eid = prefab[idx][1]
+	ilight.active_directional_light(eid)
 end

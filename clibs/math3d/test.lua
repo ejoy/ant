@@ -1,8 +1,5 @@
 local math3d = require "math3d"
 
-local m = math3d.lookto({-200, 100, 200, 1}, {2, -1, 2, 0}, {0, 1, 0, 0})
-local im = math3d.inverse(m)
-
 local ref1 = math3d.ref()
 
 ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }

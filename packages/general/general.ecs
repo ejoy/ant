@@ -16,7 +16,7 @@ transform "rendercache_transform"
     .output "_rendercache"
     .method "process_entity"
 
-transform "generate_transform"
+transform "init_transform"
     .implement "general.lua"
     .require_transform "ant.general|rendercache_transform"
     .input "transform"

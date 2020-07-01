@@ -49,8 +49,6 @@ end
 local icamera = world:interface "ant.camera|camera"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
-local ilight = world:interface "ant.render|light"
-
 local function target_lock_test()
     local eid = world:create_entity{
         policy = {

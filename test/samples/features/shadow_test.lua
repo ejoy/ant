@@ -9,6 +9,8 @@ local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 local ies = world:interface "ant.scene|ientity_state"
 local imaterial = world:interface "ant.asset|imaterial"
+local ilight = world:interface "ant.render|light"
+local iom = world:interface "ant.objcontroller|obj_motion"
 
 function st_sys:init()
 	world:create_entity {
@@ -148,9 +150,8 @@ local function directional_light_arrow_widget(srt, cylinder_cone_ratio, cylinder
 end
 
 function st_sys:post_init()
-    local dl = world:singleton_entity "directional_light"
-	local rotator = math3d.torotation(math3d.inverse(dl.direction))
-    directional_light_arrow_widget({s = 0.02, r = rotator, t = dl.position}, 8, 0.45)
+	local dl_eid = ilight.directional_light()
+    directional_light_arrow_widget({s = 0.02, r=iom.get_rotation(dl_eid), t =iom.get_position(dl_eid)}, 8, 0.45)
 end
 
 local keypress_mb = world:sub{"keyboard"}
