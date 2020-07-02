@@ -13,7 +13,7 @@ function iobj_motion.get_position(eid)
 end
 
 function iobj_motion.set_position(eid, pos)
-    world[eid]._rendercache.srt.t = pos
+    math3d.set_index(world[eid]._rendercache.srt, 4, pos);
     world:pub{"component_changed", "transform", eid}
 end
 
@@ -22,7 +22,15 @@ function iobj_motion.get_direction(eid)
 end
 
 function iobj_motion.set_direction(eid, dir)
-    world[eid]._rendercache.srt.r = math3d.torotation(dir)
+    local e = world[eid]
+    local rc = e._rendercache
+    local srt = rc.srt
+    if e.camera then
+        srt.id = math3d.inverse(math3d.lookto(math3d.index(srt, 4), dir, rc.updir))
+    else
+        srt.r = math3d.torotation(dir)
+    end
+    
     world:pub{"component_changed", "transform", eid}
 end
 
@@ -35,10 +43,17 @@ function iobj_motion.set_srt(eid, srt)
     world:pub{"component_changed", "transform", eid}
 end
 
-function iobj_motion.set_view(eid, pos, dir)
-    local srt = world[eid]._rendercache.srt
-    local s = math3d.matrix_scale(srt)
-    srt.m = math3d.matrix{s=s, r=math3d.torotation(dir), t=pos}
+function iobj_motion.set_view(eid, pos, dir, updir)
+    local e = world[eid]
+    local rc = e._rendercache
+    local srt = rc.srt
+    if e.camera then
+        srt.id = math3d.inverse(math3d.lookto(pos, dir, updir or rc.updir))
+    else
+        local s = math3d.matrix_scale(srt)
+        srt.id = math3d.matrix{s=s, r=math3d.torotation(dir), t=pos}
+    end
+
     world:pub{"component_changed", "transform", eid}
 end
 
@@ -52,7 +67,15 @@ function iobj_motion.get_scale(eid)
 end
 
 function iobj_motion.set_rotation(eid, rot)
-    world[eid]._rendercache.srt.r = rot
+    local e = world[eid]
+    local rc = e._rendercache
+    local srt = rc.srt
+    if e.camera then
+        local viewdir = math3d.todirection(rot)
+        srt.id = math3d.inverse(math3d.lookto(math3d.index(srt, 4), viewdir, rc.updir))
+    else
+        srt.r = rot
+    end
     world:pub{"component_changed", "transform", eid}
 end
 
@@ -97,8 +120,6 @@ function iobj_motion.set_lock_target(eid, lt)
     world:pub{"component_changed", "lock_target", eid}
 end
 
-local halfpi<const> = math.pi * 0.5
-
 local function calc_rotation(srt, rotateX, rotateY, threshold)
     rotateX = rotateX or 0
     rotateY = rotateY or 0
@@ -122,7 +143,7 @@ end
 function iobj_motion.rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
         local srt = world[eid]._rendercache.srt
-        srt.r = calc_rotation(srt, rotateX, rotateY)
+        iobj_motion.set_rotation(eid, calc_rotation(srt, rotateX, rotateY))
     end
 end
 
@@ -132,8 +153,7 @@ function iobj_motion.rotate_around_point(eid, targetpt, distance, dx, dy, thresh
 
     local dir = math3d.normalize(math3d.inverse(math3d.transform(q, mc.ZAXIS, 0)))
     local p = math3d.muladd(distance, dir, targetpt)
-    local s = math3d.matrix_scale(srt)
-    srt.m = math3d.matrix{s=s, r=q, t=p}
+    iobj_motion.set_view(eid, p, dir)
 end
 
 local function main_queue_viewport_size()

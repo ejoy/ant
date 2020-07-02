@@ -288,7 +288,11 @@ math3d_inverse_matrix_fast(struct lastack *LS, const float mat[16]) {
 	auto &m = MAT(mat);
 	glm::mat3x3 m3(m);
 
-	assert(is_zero(glm::dot(m3[0], m3[1])) && is_zero(glm::dot(m3[1], m3[2])) && is_zero(glm::dot(m3[2], m3[0])));
+	auto d01 = glm::dot(m3[0], m3[1]);
+	auto d12 = glm::dot(m3[1], m3[2]);
+	auto d20 = glm::dot(m3[2], m3[0]);
+	//assert(is_zero() && is_zero(glm::dot(m3[1], m3[2])) && is_zero(glm::dot(m3[2], m3[0])));
+	assert(is_zero(d01, 10e-6f) && is_zero(d12, 10e-6f) && is_zero(d20, 10e-6f));
 	glm::transpose(m3);
 	r = glm::mat4(m3) * glm::translate(glm::mat4(1.f), glm::vec3(-m[3]));
 }

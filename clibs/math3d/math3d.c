@@ -526,14 +526,6 @@ ref_get_number(lua_State *L) {
 
 
 static int
-lindex(lua_State *L) {
-	int64_t id = get_id(L, 1, lua_type(L, 1));
-	int idx = luaL_checkinteger(L, 2);
-	return index_object(L, GETLS(L), id, idx);
-}
-
-
-static int
 lref_getter(lua_State *L) {
 	int type = lua_type(L, 2);
 	switch (type) {
@@ -747,6 +739,55 @@ quat_from_index(lua_State *L, struct lastack *LS, int index) {
 	if (q == NULL)
 		luaL_error(L, "Need a quat");
 	return q;
+}
+
+static int
+lindex(lua_State *L) {
+	int64_t id = get_id(L, 1, lua_type(L, 1));
+	int idx = luaL_checkinteger(L, 2);
+	return index_object(L, GETLS(L), id, idx);
+}
+
+static int
+lset_index(lua_State *L){
+	struct lastack *LS  = GETLS(L);
+
+	int64_t id = get_id(L, 1, lua_type(L, 1));
+	
+	int type;
+	const float * v = lastack_value(LS, id, &type);
+	if (v == NULL) {
+		return luaL_error(L, "Invalid ref object");
+	}
+
+	int idx = luaL_checkinteger(L, 2);
+	if (idx < 1 || idx > 4) {
+		return luaL_error(L, "Invalid index %d", idx);
+	}
+	--idx;
+
+	switch (type)
+	{
+	case LINEAR_TYPE_MAT:{
+		const float* nv = vector_from_index(L, LS, 3);
+		float vv[16]; memcpy(vv, v, sizeof(vv));
+		memcpy(vv + idx * 4, nv, sizeof(float) * 4);
+		lastack_pushmatrix(LS, vv);
+	}
+		break;
+	case LINEAR_TYPE_VEC4:
+	case LINEAR_TYPE_QUAT:{
+		float vv[4]; memcpy(vv, v, sizeof(vv));
+		vv[idx] = luaL_checknumber(L, 3);
+		lastack_pushvec4(LS, vv);
+	}
+		break;
+	default:
+		return luaL_error(L, "invalid data type:%s", lastack_typename(type));
+	}
+
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
 }
 
 static int
@@ -1622,6 +1663,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "vector", lvector },
 		{ "quaternion", lquaternion },
 		{ "index", lindex },
+		{ "set_index", lset_index},
 		{ "reset", lreset },
 		{ "mul", lmul },
 		{ "add", ladd },

@@ -124,13 +124,13 @@ end
 function iwd.draw_lines(shape, srt, color)
 	local desc = {vb={}, ib={}}
 	geometry_drawer.draw_line(shape, color or DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers("fffd", desc.vb, "s", desc.ib)
+	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
 function iwd.draw_box(shape, srt)
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_box(shape.size, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers("fffd", desc.vb, "s", desc.ib)
+	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
 function iwd.draw_capsule(shape, srt)
@@ -140,7 +140,7 @@ function iwd.draw_capsule(shape, srt)
 		height = shape.height,
 		radius = shape.radius,
 	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers("fffd", desc.vb, "s", desc.ib)
+	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
 function iwd.draw_sphere(shape, srt)
@@ -149,19 +149,19 @@ function iwd.draw_sphere(shape, srt)
 		tessellation = 2,
 		radius = shape.radius,
 	}, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers("fffd", desc.vb, "s", desc.ib)
+	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
 function iwd.draw_aabb_box(shape, srt)
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_aabb_box(shape, DEFAULT_COLOR, apply_srt(shape, srt), desc)
-	append_buffers("fffd", desc.vb, "s", desc.ib)
+	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
 function iwd.draw_skeleton(ske, ani, srt)
 	local desc={vb={}, ib={}}
 	geometry_drawer.draw_skeleton(ske, ani, DEFAULT_COLOR, srt, desc)
-	append_buffers("fffd", desc.vb, "s", desc.ib)
+	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
 
 local physic_bounding_sys = ecs.system "physic_bounding_system"
