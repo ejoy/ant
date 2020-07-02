@@ -1,2 +1,2 @@
-fx: $resource /pkg/ant.resources/materials/postprocess/fx/combine.fx
+fx: /pkg/ant.resources/materials/postprocess/fx/combine.fx
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

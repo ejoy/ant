@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/test.fx
+fx: /pkg/ant.resources/materials/fx/test.fx
 properties:
   u_color:  {1, 0, 0, 1}
 state: /pkg/ant.resources/materials/states/default.state

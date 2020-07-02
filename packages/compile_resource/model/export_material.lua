@@ -32,18 +32,6 @@ return function (output, glbdata, exports)
         return
     end
 
-    local conv = {}
-    local function proxy(name)
-        return function (v)
-            local o = {v}
-            conv[o] = {
-                name = name,
-                save = function() return v end
-            }
-            return o
-        end
-    end
-
     local images = glbscene.images
     local bufferviews = glbscene.bufferViews
     local buffers = glbscene.buffers
@@ -214,7 +202,7 @@ return function (output, glbdata, exports)
             and fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
             or default_pbr_param[name].texture
         return {
-            texture = proxy "resource" (filename),
+            texture = filename,
             stage = default_pbr_param[name].stage,
         }
     end
@@ -225,7 +213,7 @@ return function (output, glbdata, exports)
         local pbr_mr = mat.pbrMetallicRoughness
 
         local material = {
-            fx          = proxy "resource" "/pkg/ant.resources/materials/fx/pbr_default.fx",
+            fx          = "/pkg/ant.resources/materials/fx/pbr_default.fx",
             state       = "/pkg/ant.resources/materials/states/default.state",
             properties  = {
                 s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
@@ -266,7 +254,7 @@ return function (output, glbdata, exports)
             return newname
         end
         local filename = "./materials/" .. refine_name(name) .. ".material"
-        utility.save_txt_file(filename, material, conv)
+        utility.save_txt_file(filename, material)
         exports.material[matidx] = filename
     end
 end

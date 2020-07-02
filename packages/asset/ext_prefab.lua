@@ -1,18 +1,16 @@
-local ecs = ...
-local world = ecs.world
 local ecs_policy = import_package "ant.ecs".policy
 local assetmgr = require "asset"
+local cr = import_package "ant.compile_resource"
+local datalist = require "datalist"
 
-local m = ecs.component "prefab"
-
-local function load_prefab(v)
+local function load_prefab(world, v)
 	return {
 		prefab = assetmgr.resource(world, v.prefab),
 		data = v,
 	}
 end
 
-local function load_entity(v)
+local function load_entity(world, v)
 	local res = ecs_policy.create(world, v.policy)
 	local e = {}
 	for _, c in ipairs(res.component) do
@@ -37,10 +35,19 @@ local function load_entity(v)
 	}
 end
 
-function m:init()
+local function loader(filename, world)
+	local data = datalist.parse(cr.read_file(filename))
 	local prefab = {}
-	for _, v in ipairs(self) do
-		prefab[#prefab+1] = v.prefab and load_prefab(v) or load_entity(v)
+	for _, v in ipairs(data) do
+		prefab[#prefab+1] = v.prefab and load_prefab(world, v) or load_entity(world, v)
 	end
 	return prefab
 end
+
+local function unloader()
+end
+
+return {
+    loader = loader,
+    unloader = unloader,
+}

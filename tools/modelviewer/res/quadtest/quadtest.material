@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.modelviewer/res/quadtest/quadtest.fx
+fx: /pkg/ant.modelviewer/res/quadtest/quadtest.fx
 state:
   ALPHA_REF: 0
   CULL: CCW

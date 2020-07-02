@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/gizmo_line.fx
+fx: /pkg/ant.resources/materials/fx/gizmo_line.fx
 state:
   ALPHA_REF: 1
   CULL: CCW

@@ -1,2 +1,2 @@
-fx: $resource /pkg/ant.resources/materials/postprocess/fx/downsample.fx
+fx: /pkg/ant.resources/materials/postprocess/fx/downsample.fx
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

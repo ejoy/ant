@@ -197,7 +197,7 @@ end
 
 
 function world:instance(filename, args)
-	local prefab = component_init(self, "resource", filename)
+	local prefab = assetmgr.resource(self, filename)
 	return instance_prefab(self, prefab, args)
 end
 

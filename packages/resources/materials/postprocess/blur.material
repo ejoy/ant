@@ -1,7 +1,7 @@
-fx: $resource /pkg/ant.resources/materials/fx/bloom/blur.fx
+fx: /pkg/ant.resources/materials/fx/bloom/blur.fx
 properties:
   s_basecolor:
-    texture: $resource /pkg/ant.resources/materials/textures/Default.texture
+    texture: /pkg/ant.resources/materials/textures/Default.texture
     stage: 0
   u_blur:  {5, 0.75, 0, 0}
   u_params:  {1, 25, 0, 0}

@@ -1,2 +1,2 @@
-fx: $resource /pkg/ant.resources/materials/postprocess/fx/copy_quad.fx
+fx: /pkg/ant.resources/materials/postprocess/fx/copy_quad.fx
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

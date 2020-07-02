@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/gizmo_front_singlecolor.fx
+fx: /pkg/ant.resources/materials/fx/gizmo_front_singlecolor.fx
 properties:
     u_color:  {1, 1, 1, 1}
 state:

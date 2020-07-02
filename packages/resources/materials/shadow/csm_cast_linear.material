@@ -1,2 +1,2 @@
-fx: $resource /pkg/ant.resources/materials/fx/shadow/csm_cast_linear.fx
+fx: /pkg/ant.resources/materials/fx/shadow/csm_cast_linear.fx
 state: /pkg/ant.resources/materials/states/default.state
