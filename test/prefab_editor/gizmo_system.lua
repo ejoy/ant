@@ -981,12 +981,15 @@ local function updata_uniform_scale_gizmo()
 	gizmo_obj.rw.dir = math3d.totable(iom.get_direction(cameraeid))
 	-- local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
 	-- local iv = math3d.inverse(viewmat)
+	--update_camera
+	local r = iom.get_rotation(cameraeid)
+	-- local t = iom.get_position(cameraeid)
+	-- local s = iom.get_scale(cameraeid)
+	-- local s,r,t = math3d.srt(world[cameraeid].transform)
 	
-	local s,r,t = math3d.srt(world[cameraeid].transform)
 	iom.set_rotation(gizmo_obj.rw.eid[1], r)
 	iom.set_rotation(gizmo_obj.rw.eid[3], r)
 	iom.set_rotation(gizmo_obj.rw.eid[4], r)
-	
 end
 
 function gizmo_sys:data_changed()
@@ -1072,10 +1075,10 @@ function gizmo_sys:data_changed()
         local eid = pick_id
         if eid and world[eid] then
 			if gizmo_obj.mode ~= SELECT and gizmo_obj.target_eid ~= eid then
+				gizmo_obj.target_eid = eid
 				gizmo_obj.position = math3d.totable(iom.get_position(eid))
 				iom.set_position(gizmo_obj.rooteid, iom.get_position(eid))
-				iom.set_rotation(gizmo_obj.uniform_rot_rooteid, iom.get_rotation(eid))
-				gizmo_obj.target_eid = eid
+				iom.set_position(gizmo_obj.uniform_rot_rooteid, iom.get_position(eid))
 				if localSpace or gizmo_obj.mode == SCALE then
 					iom.set_rotation(gizmo_obj.rooteid, iom.get_rotation(eid))
 				else
