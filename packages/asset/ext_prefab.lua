@@ -7,8 +7,7 @@ local m = ecs.component "prefab"
 local function load_prefab(v)
 	return {
 		prefab = world.component "resource"(v.prefab),
-		args = v.args or {},
-		action = v.action or {},
+		data = v,
 	}
 end
 
