@@ -27,7 +27,7 @@ system "model_viewer_system"
     .require_policy "ant.render|render"
     .require_policy "ant.general|name"
     .require_policy "ant.render|shadow_cast_policy"
-    .require_policy "ant.render|light.directional"
+    .require_policy "ant.render|light"
     .require_policy 'ant.character|character'
     .require_policy 'ant.scene|hierarchy_policy'
     .require_policy 'ant.general|name'

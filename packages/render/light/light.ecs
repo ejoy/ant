@@ -1,5 +1,6 @@
 interface "light"
     .implement "light/light.lua"
+    .method "create"
     .method "data"
     .method "range"
     .method "set_range"
@@ -36,3 +37,8 @@ policy "light"
     .component "intensity"
     .component "range"
     .component "radian"
+
+
+action "main_directional_light"
+    .implement "light/light.lua"
+    .method "init"

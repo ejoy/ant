@@ -1,10 +1,12 @@
 ---
 policy:
-  ant.render|light.directional
+  ant.render|light
+  ant.general|name
 data:
-  direction: {0, 0.8660253882408142, -0.5, 0}
-  position: {0, 0, 0, 1}
-  directional_light:
-    color: {1, 1, 1, 1}
-    intensity: 2
-  light: directional_light
+  transform:
+    r: {2.4, 0, 0}
+    t: {0, 10, 0, 1}
+  color: {1, 1, 1, 1}
+  intensity: 2
+  light_type: directional_light
+  name: directional_light

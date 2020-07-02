@@ -6,8 +6,8 @@ local math3d = require "math3d"
 local lt = ecs.transform "light_transform"
 function lt.process_entity(e)
 	e._light = {
-		color		= math3d.ref(math3d.vector(e.color)),
-		intensity	= math3d.ref({e.intensity, 0, 0, 0}),
+		color		= math3d.ref(math3d.vector(e.color or {1, 1, 1, 1})),
+		intensity	= math3d.ref(math3d.vector{e.intensity, 0, 0, 0}),
 		range		= e.range,
 		radian		= e.radian,
 	}

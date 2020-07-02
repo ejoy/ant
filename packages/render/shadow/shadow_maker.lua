@@ -13,6 +13,7 @@ local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
 local ilight	= world:interface "ant.render|light"
+local iom		= world:interface "ant.objcontroller|obj_motion"
 
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
@@ -113,8 +114,8 @@ local function calc_shadow_camera(viewmat, frustum, split_ratios, lightdir, shad
 	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end
 
-local function update_shadow_camera(l, viewmat, frustum)
-	local lightdir = math3d.inverse(l.direction)
+local function update_shadow_camera(dl_eid, viewmat, frustum)
+	local lightdir = iom.get_direction(dl_eid)
 	local shadowentity = world:singleton_entity "shadow"
 	local shadowcfg = shadowentity.shadow
 	local stabilize = shadowcfg.stabilize
@@ -306,14 +307,13 @@ function sm:post_init()
 	world:pub{"component_changed", "directional_light", world:singleton_entity_id "directional_light"}
 end
 
-function sm:create_camera_from_mainview()
+function sm:update_camera()
 	local mq = world:singleton_entity "main_queue"
 	local c = world[mq.camera_eid]._rendercache
 
 	-- for _, mb in ipairs(modify_mailboxs) do
 	-- 	for _ in mb:each() do
-			local dl = world[ilight.directional_light()]
-			update_shadow_camera(dl, c.viewmat, c.frustum)
+			update_shadow_camera(ilight.directional_light(), c.viewmat, c.frustum)
 	-- 	end
 	-- end
 end
