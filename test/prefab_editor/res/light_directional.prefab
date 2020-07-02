@@ -8,5 +8,5 @@ data:
     t: {0, 10, 0, 1}
   color: {1, 1, 1, 1}
   intensity: 2
-  light_type: directional_light
+  light_type: directional
   name: directional_light
