@@ -11,8 +11,7 @@ data:
     material: /pkg/ant.resources/materials/gpu_skin.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/simple_skin/animation/skeleton.ozz
     animation:
-        anilist:
-            idle: $resource /pkg/ant.resources.binary/meshes/simple_skin/animation/animation_0.ozz
+        idle: /pkg/ant.resources.binary/meshes/simple_skin/animation/animation_0.ozz
     animation_birth: idle
     can_render: true
     scene_entity: true

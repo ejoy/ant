@@ -14,8 +14,7 @@ data:
     material: /pkg/ant.resources/materials/gpu_skin.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
-        anilist:
-            idle: $resource /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+        idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
     animation_birth: idle
     state = 0x00000005
     scene_entity: true
@@ -38,8 +37,7 @@ data:
     material: /pkg/ant.resources/materials/gpu_skin.material
     skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
-        anilist:
-            idle: $resource /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+        idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
     animation_birth: idle
     state: 0x00000005
     scene_entity: true

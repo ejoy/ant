@@ -14,8 +14,7 @@ data:
         t: {-5, 0, 5, 1}
     material: /pkg/ant.resources/materials/skin_model_sample.material
     animation:
-        anilist:
-            walk: $resource /pkg/ant.resources.binary/meshes/ozz/animation1.ozz
+        walk: /pkg/ant.resources.binary/meshes/ozz/animation1.ozz
     animation_birth: walk
     scene_entity: true
     skeleton: $resource /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz

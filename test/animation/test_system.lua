@@ -66,7 +66,7 @@ local status = {
 }
 
 local function playAnimation(e, name)
-    local ani = e.animation.anilist[name]
+    local ani = e.animation[name]
     if status.Loop then
         ani._max_ratio = math.maxinteger
     else
@@ -132,7 +132,7 @@ function init_loader_sys:ui_update()
     end
 
     for _ in imgui_util.windows("Animation", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }) do
-        for name in sortpairs(e.animation.anilist) do
+        for name in sortpairs(e.animation) do
             if imgui.widget.Selectable(name, e._animation._current.animation.name == name) then
                 playAnimation(e, name)
             end

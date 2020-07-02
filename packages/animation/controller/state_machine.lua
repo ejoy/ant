@@ -39,7 +39,7 @@ local function play_animation(e, name, duration)
 		for i = 1, #current_pose do
 			current_pose[i].init_weight = current_pose[i].weight
 		end
-		local ani = e.animation.anilist[name]
+		local ani = e.animation[name]
 		current_pose[#current_pose+1] = {
 			animation = ani,
 			weight = 0,
@@ -55,7 +55,7 @@ local function play_animation(e, name, duration)
 				ratio = current_pose.ratio,
 			},
 			{
-				animation = e.animation.anilist[name],
+				animation = e.animation[name],
 				weight = 0,
 				init_weight = 0,
 				ratio = 0,
@@ -63,7 +63,7 @@ local function play_animation(e, name, duration)
 		}
 	else
 		e._animation._current = {
-			animation = e.animation.anilist[name],
+			animation = e.animation[name],
             ratio = 0,
 		}
 		return
@@ -133,13 +133,13 @@ function iani.set_state(e, name)
 end
 
 function iani.play(e, name, time)
-	if e.animation and e.animation.anilist[name]  then
+	if e.animation and e.animation[name]  then
 		if e.state_machine then
 			e.state_machine._current = nil
 			play_animation(e, name, time)
 		else
 			e._animation._current = {
-				animation = e.animation.anilist[name],
+				animation = e.animation[name],
 				ratio = 0,
 			}
 		end

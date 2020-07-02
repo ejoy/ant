@@ -113,14 +113,11 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
             --animation
             if next(exports.animations) ~= nil then
                 local lst = {}
-                local anilist = {}
+                data.animation = {}
                 for name, file in pairs(exports.animations) do
-                    anilist[name] = proxy "resource"(file)
+                    data.animation[name] = file
                     lst[#lst+1] = name
                 end
-                data.animation = {
-                    anilist = anilist,
-                }
                 table.sort(lst)
                 data.animation_birth = lst[1]
                 policy[#policy+1] = "ant.animation|animation"
