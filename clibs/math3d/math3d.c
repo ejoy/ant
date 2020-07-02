@@ -366,8 +366,23 @@ assign_trans(lua_State *L, struct lastack *LS, int index, int64_t oid) {
 	return lastack_mark(LS, lastack_pop(LS));
 }
 
+void
+set_index_object(lua_State *L, struct lastack *LS, int64_t id);
+
 static int
-lref_setter(lua_State *L) {
+ref_set_number(lua_State *L){
+	struct refobject *R = lua_touserdata(L, 1);
+	struct lastack *LS = GETLS(L);
+	const int64_t oid = R->id;
+
+	set_index_object(L, LS, oid);
+	R->id = lastack_mark(LS, lastack_pop(LS));
+	lastack_unmark(LS, oid);
+	return 0;
+}
+
+static int
+ref_set_key(lua_State *L){
 	struct refobject *R = lua_touserdata(L, 1);
 	const char *key = luaL_checkstring(L, 2);
 	struct lastack *LS = GETLS(L);
@@ -405,6 +420,19 @@ lref_setter(lua_State *L) {
 	}
 	lastack_unmark(LS, oid);
 	return 0;
+}
+
+static int
+lref_setter(lua_State *L) {
+	int type = lua_type(L, 2);
+	switch (type) {
+	case LUA_TNUMBER:
+		return ref_set_number(L);
+	case LUA_TSTRING:
+		return ref_set_key(L);
+	default:
+		return luaL_error(L, "Invalid key type %s", lua_typename(L, type));
+	}
 }
 
 static void
@@ -748,21 +776,19 @@ lindex(lua_State *L) {
 	return index_object(L, GETLS(L), id, idx);
 }
 
-static int
-lset_index(lua_State *L){
-	struct lastack *LS  = GETLS(L);
-
-	int64_t id = get_id(L, 1, lua_type(L, 1));
-	
+static void
+set_index_object(lua_State *L, struct lastack *LS, int64_t id){
 	int type;
 	const float * v = lastack_value(LS, id, &type);
 	if (v == NULL) {
-		return luaL_error(L, "Invalid ref object");
+		luaL_error(L, "Invalid ref object");
+		return;
 	}
 
 	int idx = luaL_checkinteger(L, 2);
 	if (idx < 1 || idx > 4) {
-		return luaL_error(L, "Invalid index %d", idx);
+		luaL_error(L, "Invalid index %d", idx);
+		return;
 	}
 	--idx;
 
@@ -783,9 +809,17 @@ lset_index(lua_State *L){
 	}
 		break;
 	default:
-		return luaL_error(L, "invalid data type:%s", lastack_typename(type));
+		luaL_error(L, "invalid data type:%s", lastack_typename(type));
 	}
+}
 
+
+static int
+lset_index(lua_State *L){
+	struct lastack *LS  = GETLS(L);
+	int64_t id = get_id(L, 1, lua_type(L, 1));
+
+	set_index_object(L, LS, id);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
 }

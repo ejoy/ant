@@ -13,8 +13,7 @@ function iobj_motion.get_position(eid)
 end
 
 function iobj_motion.set_position(eid, pos)
-    --math3d.set_index(world[eid]._rendercache.srt, 4, pos);
-    world[eid]._rendercache.srt.t = pos
+    world[eid]._rendercache.srt[4] = pos
     world:pub{"component_changed", "transform", eid}
 end
 
