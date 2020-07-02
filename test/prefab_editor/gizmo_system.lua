@@ -71,13 +71,6 @@ local gizmo_obj = {
 	sz = {dir = DIR_Z, color = COLOR_Z},
 }
 
-local function gizmoDirToWorld(localDir)
-	if localSpace or (gizmo_obj.mode == SCALE) then
-		return math3d.totable(math3d.transform(iom.get_rotation(gizmo_obj.root_eid), localDir, 0))
-	else
-		return localDir
-	end
-end
 
 local function showRotateMesh(show)
 	local state = "visible"
@@ -161,31 +154,6 @@ local function showGizmoByState(show)
 	end
 end
 
-local function resetGizmoRotaion()
-	if not gizmo_obj.target_eid then
-		return
-	end
-	if gizmo_obj.mode == SCALE then
-		iom.set_rotation(gizmo_obj.root_eid, iom.get_rotation(gizmo_obj.target_eid))
-	elseif gizmo_obj.mode == MOVE or gizmo_obj.mode == ROTATE then
-		if localSpace then
-			iom.set_rotation(gizmo_obj.root_eid, iom.get_rotation(gizmo_obj.target_eid))
-		else
-			iom.set_rotation(gizmo_obj.root_eid, math3d.quaternion{0,0,0})
-		end
-	end
-end
-
-local function onGizmoMode(mode)
-	showGizmoByState(false)
-	gizmo_obj.mode = mode
-	showGizmoByState(true)
-	if mode == SELECT then
-		gizmo_obj.target_eid = nil
-	end
-	resetGizmoRotaion()
-end
-
 local imaterial = world:interface "ant.asset|imaterial"
 
 local function resetMoveAxisColor()
@@ -222,54 +190,6 @@ local function resetScaleAxisColor()
 	imaterial.set_property(gizmo_obj.sz.eid[1], uname, COLOR_Z)
 	imaterial.set_property(gizmo_obj.sz.eid[2], uname, COLOR_Z)
 	imaterial.set_property(gizmo_obj.uniform_scale_eid, uname, COLOR_GRAY)
-end
-
-function gizmo_sys:init()
-    
-end
-
-local function updateGizmoScale()
-	local mq = world:singleton_entity "main_queue"
-	local viewdir = iom.get_direction(mq.camera_eid)
-	local eyepos = iom.get_position(mq.camera_eid)
-	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(math3d.vector(gizmo_obj.position), eyepos))
-	gizmo_scale = project_dist * 0.6
-	iom.set_scale(gizmo_obj.root_eid, gizmo_scale)
-	iom.set_scale(gizmo_obj.uniform_rot_root_eid, gizmo_scale)
-end
-
-local function updateAxisPlane()
-	if gizmo_obj.mode ~= MOVE or not gizmo_obj.target_eid then
-		return
-	end
-
-	local gizmoPosVec = math3d.vector(gizmo_obj.position)
-	local worldDir = math3d.vector(gizmoDirToWorld(DIR_Z))
-	local plane_xy = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
-	worldDir = math3d.vector(gizmoDirToWorld(DIR_Y))
-	local plane_zx = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
-	worldDir = math3d.vector(gizmoDirToWorld(DIR_X))
-	local plane_yz = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
-
-	local mq = world:singleton_entity "main_queue"
-	local eyepos = iom.get_position(mq.camera_eid)
-
-	local project = math3d.sub(eyepos, math3d.mul(plane_xy.n, math3d.dot(plane_xy.n, eyepos) + plane_xy.d))
-
-
-	local tp = math3d.totable(math3d.transform(math3d.inverse(iom.srt(gizmo_obj.root_eid)), project, 1))
-	iom.set_position(gizmo_obj.txy.eid[1], {(tp[1] > 0) and move_plane_offset or -move_plane_offset, (tp[2] > 0) and move_plane_offset or -move_plane_offset, 0})
-	gizmo_obj.txy.area = (tp[1] > 0) and ((tp[2] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[2] > 0) and LEFT_TOP or LEFT_BOTTOM))
-
-	project = math3d.sub(eyepos, math3d.mul(plane_zx.n, math3d.dot(plane_zx.n, eyepos) + plane_zx.d))
-	tp = math3d.totable(math3d.transform(math3d.inverse(iom.srt(gizmo_obj.root_eid)), project, 1))
-	iom.set_position(gizmo_obj.tzx.eid[1], {(tp[1] > 0) and move_plane_offset or -move_plane_offset, 0, (tp[3] > 0) and move_plane_offset or -move_plane_offset})
-	gizmo_obj.tzx.area = (tp[1] > 0) and ((tp[3] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[3] > 0) and LEFT_TOP or LEFT_BOTTOM))
-
-	project = math3d.sub(eyepos, math3d.mul(plane_yz.n, math3d.dot(plane_yz.n, eyepos) + plane_yz.d))
-	tp = math3d.totable(math3d.transform(math3d.inverse(iom.srt(gizmo_obj.root_eid)), project, 1))
-	iom.set_position(gizmo_obj.tyz.eid[1], {0,(tp[2] > 0) and move_plane_offset or -move_plane_offset, (tp[3] > 0) and move_plane_offset or -move_plane_offset})
-	gizmo_obj.tyz.area = (tp[3] > 0) and ((tp[2] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[2] > 0) and LEFT_TOP or LEFT_BOTTOM))
 end
 
 local function create_arrow_widget(axis_root, axis_str)
@@ -338,6 +258,10 @@ local function create_arrow_widget(axis_root, axis_str)
 	elseif axis_str == "z" then
 		gizmo_obj.tz.eid = {cylindereid, coneeid}
 	end
+end
+
+function gizmo_sys:init()
+    
 end
 
 function gizmo_sys:post_init()
@@ -522,6 +446,82 @@ function gizmo_sys:post_init()
 	showGizmoByState(false)
 end
 
+local function resetGizmoRotaion()
+	if not gizmo_obj.target_eid then
+		return
+	end
+	if gizmo_obj.mode == SCALE then
+		iom.set_rotation(gizmo_obj.root_eid, iom.get_rotation(gizmo_obj.target_eid))
+	elseif gizmo_obj.mode == MOVE or gizmo_obj.mode == ROTATE then
+		if localSpace then
+			iom.set_rotation(gizmo_obj.root_eid, iom.get_rotation(gizmo_obj.target_eid))
+		else
+			iom.set_rotation(gizmo_obj.root_eid, math3d.quaternion{0,0,0})
+		end
+	end
+end
+
+local function onGizmoMode(mode)
+	showGizmoByState(false)
+	gizmo_obj.mode = mode
+	showGizmoByState(true)
+	if mode == SELECT then
+		gizmo_obj.target_eid = nil
+	end
+	resetGizmoRotaion()
+end
+
+local function gizmoDirToWorld(localDir)
+	if localSpace or (gizmo_obj.mode == SCALE) then
+		return math3d.totable(math3d.transform(iom.get_rotation(gizmo_obj.root_eid), localDir, 0))
+	else
+		return localDir
+	end
+end
+
+local function updateGizmoScale()
+	local mq = world:singleton_entity "main_queue"
+	local viewdir = iom.get_direction(mq.camera_eid)
+	local eyepos = iom.get_position(mq.camera_eid)
+	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(math3d.vector(gizmo_obj.position), eyepos))
+	gizmo_scale = project_dist * 0.6
+	iom.set_scale(gizmo_obj.root_eid, gizmo_scale)
+	iom.set_scale(gizmo_obj.uniform_rot_root_eid, gizmo_scale)
+end
+
+local function updateAxisPlane()
+	if gizmo_obj.mode ~= MOVE or not gizmo_obj.target_eid then
+		return
+	end
+
+	local gizmoPosVec = math3d.vector(gizmo_obj.position)
+	local worldDir = math3d.vector(gizmoDirToWorld(DIR_Z))
+	local plane_xy = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
+	worldDir = math3d.vector(gizmoDirToWorld(DIR_Y))
+	local plane_zx = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
+	worldDir = math3d.vector(gizmoDirToWorld(DIR_X))
+	local plane_yz = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
+
+	local mq = world:singleton_entity "main_queue"
+	local eyepos = iom.get_position(mq.camera_eid)
+
+	local project = math3d.sub(eyepos, math3d.mul(plane_xy.n, math3d.dot(plane_xy.n, eyepos) + plane_xy.d))
+	local invmat = math3d.inverse(iom.srt(gizmo_obj.root_eid))
+	local tp = math3d.totable(math3d.transform(invmat, project, 1))
+	iom.set_position(gizmo_obj.txy.eid[1], {(tp[1] > 0) and move_plane_offset or -move_plane_offset, (tp[2] > 0) and move_plane_offset or -move_plane_offset, 0})
+	gizmo_obj.txy.area = (tp[1] > 0) and ((tp[2] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[2] > 0) and LEFT_TOP or LEFT_BOTTOM))
+
+	project = math3d.sub(eyepos, math3d.mul(plane_zx.n, math3d.dot(plane_zx.n, eyepos) + plane_zx.d))
+	tp = math3d.totable(math3d.transform(invmat, project, 1))
+	iom.set_position(gizmo_obj.tzx.eid[1], {(tp[1] > 0) and move_plane_offset or -move_plane_offset, 0, (tp[3] > 0) and move_plane_offset or -move_plane_offset})
+	gizmo_obj.tzx.area = (tp[1] > 0) and ((tp[3] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[3] > 0) and LEFT_TOP or LEFT_BOTTOM))
+
+	project = math3d.sub(eyepos, math3d.mul(plane_yz.n, math3d.dot(plane_yz.n, eyepos) + plane_yz.d))
+	tp = math3d.totable(math3d.transform(invmat, project, 1))
+	iom.set_position(gizmo_obj.tyz.eid[1], {0,(tp[2] > 0) and move_plane_offset or -move_plane_offset, (tp[3] > 0) and move_plane_offset or -move_plane_offset})
+	gizmo_obj.tyz.area = (tp[3] > 0) and ((tp[2] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[2] > 0) and LEFT_TOP or LEFT_BOTTOM))
+end
+
 local keypress_mb = world:sub{"keyboard"}
 
 local pickup_mb = world:sub {"pickup"}
@@ -592,7 +592,6 @@ local function rayHitPlane(ray, plane_info)
 		local t = -(math3d.dot(planeDirVec, rayOriginVec) + plane.d) / d
 		if t >= 0.0 then
 			return math3d.add(ray.origin, math3d.mul(t, ray.dir))
-			--return math3d.vector(ray.origin[1] + t * ray.dir[1], ray.origin[2] + t * ray.dir[2], ray.origin[3] + t * ray.dir[3])
 		end	
 	end
 	return nil
@@ -993,18 +992,13 @@ function gizmo_obj:selectGizmo(x, y)
 	return false
 end
 
-local function updata_uniform_scale_gizmo()
+local function updataUniformScaleGizmo()
 	if not gizmo_obj.rw.eid[1] then return end
 	local cameraeid = world:singleton_entity "main_queue".camera_eid
 	gizmo_obj.rw.dir = math3d.totable(iom.get_direction(cameraeid))
-	-- local viewmat = math3d.lookto(camera.eyepos, camera.viewdir, camera.updir)
-	-- local iv = math3d.inverse(viewmat)
 	--update_camera
 	local r = iom.get_rotation(cameraeid)
-	-- local t = iom.get_position(cameraeid)
-	-- local s = iom.get_scale(cameraeid)
 	-- local s,r,t = math3d.srt(world[cameraeid].transform)
-	
 	iom.set_rotation(gizmo_obj.rw.eid[1], r)
 	iom.set_rotation(gizmo_obj.rw.eid[3], r)
 	iom.set_rotation(gizmo_obj.rw.eid[4], r)
@@ -1047,7 +1041,6 @@ function gizmo_sys:data_changed()
 					end
 					iom.set_rotation(gizmo_obj.rot_circle_root_eid, math3d.quaternion{0,0,0})
 				end
-				--updata_uniform_scale_gizmo()
 			end
 			gizmo_seleted = false
 		elseif what == "RIGHT" then
@@ -1081,7 +1074,7 @@ function gizmo_sys:data_changed()
 		elseif what == "RIGHT" then
 			world:pub { "camera", "rotate", dx, dy }
 			updateGizmoScale()
-			updata_uniform_scale_gizmo()
+			updataUniformScaleGizmo()
 		end
 	end
 
@@ -1096,7 +1089,7 @@ function gizmo_sys:data_changed()
 				iom.set_position(gizmo_obj.uniform_rot_root_eid, pos)
 				resetGizmoRotaion()
 				updateGizmoScale()
-				updata_uniform_scale_gizmo()
+				updataUniformScaleGizmo()
 				updateAxisPlane()
 				showGizmoByState(true)
 				world:pub {"Gizmo", eid}
