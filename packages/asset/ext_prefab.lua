@@ -15,7 +15,15 @@ local function load_entity(v)
 	local res = ecs_policy.create(world, v.policy)
 	local e = {}
 	for _, c in ipairs(res.component) do
-		e[c] = v.data[c]
+		local init = res.init_component[c]
+		local component = v.data[c]
+		if component ~= nil then
+			if init then
+				e[c] = init(component)
+			else
+				e[c] = component
+			end
+		end
 	end
 	for _, f in ipairs(res.process_prefab) do
 		f(e)

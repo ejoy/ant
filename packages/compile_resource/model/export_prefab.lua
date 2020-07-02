@@ -84,8 +84,8 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
         local data = {
             scene_entity= true,
             transform   = transform,
-            mesh        = proxy "resource" (meshfile),
-            material    = proxy "resource" (materialfile),
+            mesh        = meshfile,
+            material    = materialfile,
             name        = meshname .. "." .. primidx,
             state       = DEFAULT_STATE,
         }
@@ -104,11 +104,10 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
                 error("mesh has skin info, but skeleton not export correctly")
             end
 
-            local meshskin = proxy "resource" (f)
             data.skeleton = proxy "resource" (exports.skeleton)
 
             --skinning
-            data.meshskin = meshskin
+            data.meshskin = proxy "resource" (f)
             policy[#policy+1] = "ant.animation|skinning"
 
             --animation

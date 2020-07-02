@@ -1,42 +1,24 @@
 local ecs = ...
+local world = ecs.world
 
 local m = ecs.component "mesh"
 
-local bgfx = require "bgfx"
-local declmgr = import_package "ant.render".declmgr
-
-local proxy_vb = {}
-function proxy_vb:__index(k)
-    if k == "handle" then
-        assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
-        local membuf = bgfx.memory_buffer(table.unpack(self.memory))
-        local h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)
-        self.handle = h
-        return h
-    end
-end
-
-local proxy_ib = {}
-function proxy_ib:__index(k)
-    if k == "handle" then
-        assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
-        local membuf = bgfx.memory_buffer(table.unpack(self.memory))
-        local h = bgfx.create_index_buffer(membuf, self.flag)
-        self.handle = h
-        return h
-    end
-end
+local assetmgr = require "asset"
+local resource = import_package "ant.resource"
+local ext_meshbin = require "ext_meshbin"
 
 function m:init()
-    local vb = self.vb
-    for _, v in ipairs(vb) do
-        setmetatable(v, proxy_vb)
-    end
-    local ib = self.ib
-    if ib then
-        setmetatable(ib, proxy_ib)
-    end
-    return self
+	if type(self) == "string" then
+		return assetmgr.resource(world, self)
+	end
+    return ext_meshbin.init(self)
+end
+
+function m:save()
+	if resource.status(self) ~= "runtime" then
+		return tostring(self)
+	end
+	return self
 end
 
 local mt = ecs.transform "mesh_transform"

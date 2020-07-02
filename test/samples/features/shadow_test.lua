@@ -25,8 +25,8 @@ function st_sys:init()
 				s=100,
 				t={0, 2, 0, 0}
 			},
-			material = world.component "material" "/pkg/ant.resources/materials/bunny.material",
-			mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+			material = "/pkg/ant.resources/materials/bunny.material",
+			mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 			name = "cast_shadow_cube",
 		}
 	}

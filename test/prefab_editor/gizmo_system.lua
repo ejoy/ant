@@ -283,8 +283,8 @@ local function create_arrow_widget(axis_root, axis_str)
 				r = local_rotator,
 				t = cylindere_t,
 			},
-			material = world.component "material" "/pkg/ant.resources/materials/t_gizmos.material",
-			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
+			material = "/pkg/ant.resources/materials/t_gizmos.material",
+			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str
 		},
 		action = {
@@ -302,8 +302,8 @@ local function create_arrow_widget(axis_root, axis_str)
 			scene_entity = true,
 			state = ies.create_state "visible",
 			transform =  {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
-			material = world.component "material" "/pkg/ant.resources/materials/t_gizmos.material",
-			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
+			material = "/pkg/ant.resources/materials/t_gizmos.material",
+			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
 		},
 		action = {
@@ -335,8 +335,8 @@ function gizmo_sys:post_init()
 				s=50,
 				t={0, 0.5, 1, 0}
 			},
-			material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+			material = "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 			name = "test_cube",
 		}
 	}
@@ -355,8 +355,8 @@ function gizmo_sys:post_init()
 				s=50,
 				t={-1, 0.5, 0}
 			},
-			material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
+			material = "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "test_cone"
 		},
 	}
@@ -478,8 +478,8 @@ function gizmo_sys:post_init()
 				scene_entity = true,
 				state = ies.create_state "visible",
 				transform = srt,
-				material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material",
-				mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+				material = "/pkg/ant.resources/materials/singlecolor.material",
+				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name
 			}
 		}

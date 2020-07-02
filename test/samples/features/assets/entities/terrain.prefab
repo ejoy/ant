@@ -5,17 +5,17 @@ policy:
     ant.general|name
     ant.collision|collider_policy
 data:
-    material:$resource /pkg/ant.resources/terrain/test.material
+    material: /pkg/ant.resources/terrain/test.material
     transform: 
         s: {1, 1, 1, 0}
     scene_entity: true
     can_render: true
-    terrain: $terrain
+    terrain:
         tile_width  : 2
         tile_height : 2
         section_size: 2
         element_size: 7
-    collider: $collider
+    collider:
         terrain:
             --- $terrain_shape
                 origin: {0, 0, 0, 1}

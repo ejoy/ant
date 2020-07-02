@@ -15,7 +15,6 @@ local function component_init(w, c, component)
 		w._typeclass[res] = {
 			name = c,
 			save = tc.save,
-			copy = tc.copy,
 		}
 		return res
 	end
@@ -86,15 +85,22 @@ function world:disable_tag(eid, c)
 	end
 end
 
-function world:add_policy(eid, t)
-    if t.action and next(t.action) ~= nil then
+function world:add_policy(eid, v)
+    if v.action and next(v.action) ~= nil then
         error "action can only be imported during instance."
     end
-	local res = policy.add(self, eid, t.policy)
+	local res = policy.add(self, eid, v.policy)
 	local e = self[eid]
 	for _, c in ipairs(res.component) do
-		e[c] = t.data[c]
-		register_component(self, eid, c)
+		local init = res.init_component[c]
+		local component = v.data[c]
+		if component ~= nil then
+			if init then
+				e[c] = init(component)
+			else
+				e[c] = component
+			end
+		end
 	end
 	for _, f in ipairs(res.process_prefab) do
 		f(e)
@@ -112,17 +118,25 @@ local function register_entity(w)
 	return eid
 end
 
-local function create_prefab_from_entity(w, t)
-	local res = policy.create(w, t.policy)
+local function create_prefab_from_entity(w, v)
+	local res = policy.create(w, v.policy)
 	local args = {
 	}
-	if t.action and t.action.mount then
-		args["_mount"] = t.action.mount
-		t.action.mount = "_mount"
+	if v.action and v.action.mount then
+		args["_mount"] = v.action.mount
+		v.action.mount = "_mount"
 	end
 	local e = {}
 	for _, c in ipairs(res.component) do
-		e[c] = t.data[c]
+		local init = res.init_component[c]
+		local component = v.data[c]
+		if component ~= nil then
+			if init then
+				e[c] = init(component)
+			else
+				e[c] = component
+			end
+		end
 	end
 	for _, f in ipairs(res.process_prefab) do
 		f(e)
@@ -131,7 +145,7 @@ local function create_prefab_from_entity(w, t)
 		component = res.component,
 		process = res.process_entity,
 		template = e,
-		data = t,
+		data = v,
 	}}, args
 end
 

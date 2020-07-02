@@ -24,7 +24,7 @@ local function create_plane_test()
             "test shadow plane",
             {
                 ["ant.collision|collider_policy"] = {
-                    collider = world.component "collider" {
+                    collider = {
                         box = {{
                             origin = { 0, 0, 0, 1 },
                             size = {50, 0.001, 50},
@@ -55,8 +55,8 @@ local function target_lock_test()
                 s = {2, 1, 2, 0},
                 t = {16, 1, 6},
             },
-            mesh = world.component "resource" "/pkg/ant.resources/meshes/sphere.mesh",
-            material = world.component "material" "/pkg/ant.resources/materials/bunny.material",
+            mesh = "/pkg/ant.resources/meshes/sphere.mesh",
+            material = "/pkg/ant.resources/materials/bunny.material",
             scene_entity = true,
         }
     }
@@ -77,8 +77,8 @@ local function target_lock_test()
                 type = "ignore_scale",
                 offset = {0, 0, 3},
             },
-            mesh = world.component "resource" "/pkg/ant.resources/meshes/cube.mesh",
-            material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material",
+            mesh = "/pkg/ant.resources/meshes/cube.mesh",
+            material = "/pkg/ant.resources/materials/singlecolor.material",
             scene_entity = true,
         },
     }

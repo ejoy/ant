@@ -233,7 +233,7 @@ local function add_pick_entity()
 			"ant.objcontroller|pickup",
 		},
 		data = {
-			pickup = world.component "pickup" {
+			pickup = {
 				blit_buffer = world.component "blit_buffer" {
 					w = pickup_buffer_w,
 					h = pickup_buffer_h,
@@ -241,7 +241,7 @@ local function add_pick_entity()
 				},
 			},
 			camera_eid = cameraeid,
-			render_target = world.component "render_target" {
+			render_target = {
 				viewid = pickupviewid,
 				view_mode = "s",
 				viewport = {
@@ -257,7 +257,7 @@ local function add_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			primitive_filter = world.component "primitive_filter" {
+			primitive_filter = {
 				filter_type = "selectable"
 			},
 			name = "pickup_renderqueue",

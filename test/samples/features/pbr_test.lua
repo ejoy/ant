@@ -6,7 +6,6 @@ local fs = require "filesystem"
 local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
-local sphere_mesh = world.component "resource"("/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin")
 local ies = world:interface "ant.scene|ientity_state"
 local imaterial = world:interface "ant.asset|imaterial"
 
@@ -24,7 +23,7 @@ local function create_pbr_entity(name, srt, material,
             transform   = srt,
             material    = material,
             state       = ies.create_state "visible|selectable",
-            mesh        = sphere_mesh,
+            mesh        = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
             scene_entity = true,
         },
     }
@@ -42,7 +41,7 @@ local function pbr_spheres()
     local movestep = 2
     local x = 0.0
 
-    local material = world.component "material" ((feature_path / "assets/pbr_test.material"):string())
+    local material = (feature_path / "assets/pbr_test.material"):string()
     for row=1, num_samples do
         local metallic = row * metallic_step
         local z = 0.0

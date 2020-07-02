@@ -2,6 +2,7 @@ local function create(w, policies)
     local solve_depend = require "solve_depend"
     local res = {
         component = {},
+        init_component = {},
         process_entity = {},
         process_prefab = {},
     }
@@ -93,6 +94,14 @@ local function create(w, policies)
     end
 
     table.sort(res.component)
+
+    for _, c in ipairs(res.component) do
+        local tc = w._class.component[c]
+        if tc and tc.init then
+            res.init_component[c] = tc.init
+        end
+    end
+
     return res
 end
 

@@ -1,8 +1,8 @@
 ---
 data:
   state: 0x00000005,
-  material: $resource /pkg/ant.resources/materials/mesh_shadow.material
-  mesh: $resource ./plane.meshbin
+  material: /pkg/ant.resources/materials/mesh_shadow.material
+  mesh: ./plane.meshbin
   scene_entity: true
   transform:
       s: {500, 1, 500, 0}

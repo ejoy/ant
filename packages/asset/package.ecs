@@ -10,6 +10,7 @@ component "material"
 component "mesh"
     .implement "mesh.lua"
     .method "init"
+    .method "save"
 
 transform "material_transform"
     .implement "material.lua"
