@@ -8,8 +8,6 @@ prefab: ./procedural_sky.prefab
 ---
 prefab: ./plane.prefab
 ---
-action:
-    main_directional_light: {}
 prefab: ./light_directional.prefab
 ---
 prefab: ./fox.glb|mesh.prefab

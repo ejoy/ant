@@ -204,6 +204,6 @@ end
 
 local mdl = ecs.action "main_directional_light"
 function mdl.init(prefab, idx, value)
-	local eid = prefab[idx][1]
+	local eid = prefab[idx]
 	ilight.active_directional_light(eid)
 end
