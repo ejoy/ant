@@ -871,7 +871,11 @@ lquaternion(lua_State *L) {
 static int
 lsrt(lua_State *L) {
 	struct lastack *LS = GETLS(L);
-	const float * mat = matrix_from_index(L, LS, 1);
+	int type;
+	const float *mat = get_object(L, LS, 1, &type);
+	if (type != LINEAR_TYPE_MAT || mat == NULL){
+		luaL_error(L, "invalid type:%s", lastack_typename(type));
+	}
 	math3d_decompose_matrix(LS, mat);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
