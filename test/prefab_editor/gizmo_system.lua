@@ -822,6 +822,7 @@ local function moveGizmo(x, y)
 	end
 	local new_pos = math3d.vector(gizmo_obj.position)
 	iom.set_position(gizmo_obj.root_eid, new_pos)
+	iom.set_position(gizmo_obj.uniform_rot_root_eid, new_pos)
 	iom.set_position(gizmo_obj.target_eid, new_pos)
 	updateGizmoScale()
 
@@ -1046,7 +1047,7 @@ function gizmo_sys:data_changed()
 					end
 					iom.set_rotation(gizmo_obj.rot_circle_root_eid, math3d.quaternion{0,0,0})
 				end
-				updata_uniform_scale_gizmo()
+				--updata_uniform_scale_gizmo()
 			end
 			gizmo_seleted = false
 		elseif what == "RIGHT" then
@@ -1089,16 +1090,13 @@ function gizmo_sys:data_changed()
         if eid and world[eid] then
 			if gizmo_obj.mode ~= SELECT and gizmo_obj.target_eid ~= eid then
 				gizmo_obj.target_eid = eid
-				gizmo_obj.position = math3d.totable(iom.get_position(eid))
-				iom.set_position(gizmo_obj.root_eid, iom.get_position(eid))
-				iom.set_position(gizmo_obj.uniform_rot_root_eid, iom.get_position(eid))
-				-- if localSpace or gizmo_obj.mode == SCALE then
-				-- 	iom.set_rotation(gizmo_obj.root_eid, iom.get_rotation(eid))
-				-- else
-				-- 	iom.set_rotation(gizmo_obj.root_eid, math3d.quaternion{0,0,0})
-				-- end
+				local pos = iom.get_position(eid)
+				gizmo_obj.position = math3d.totable(pos)
+				iom.set_position(gizmo_obj.root_eid, pos)
+				iom.set_position(gizmo_obj.uniform_rot_root_eid, pos)
 				resetGizmoRotaion()
 				updateGizmoScale()
+				updata_uniform_scale_gizmo()
 				updateAxisPlane()
 				showGizmoByState(true)
 				world:pub {"Gizmo", eid}
