@@ -1,5 +1,4 @@
 import "@ant.general"
-import "@ant.math"
 import "@ant.scene"
 import "@ant.camera"
 

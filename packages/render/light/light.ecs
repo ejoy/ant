@@ -56,3 +56,13 @@ transform "spot_transform"
     .input "spot_light"
     .output "light"
     .method "process_prefab"
+
+component "position"
+    .implement "light/light.lua"
+    .method "init"
+    .method "save"
+
+component "direction"
+    .implement "light/light.lua"
+    .method "init"
+    .method "save"

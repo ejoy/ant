@@ -1,6 +1,36 @@
 local ecs = ...
 local world = ecs.world
 
+local math3d = require "math3d"
+
+local function vector_init(v)
+    local n = #v
+    if n == 0 or n > 4 then
+        error(string.format("vector only accept 1/4 number:%d", n))
+    end
+    if #v == 1 then
+        local vv = v[1]
+        v[2], v[3] = vv, vv
+        v[4] = 0
+    end
+    return math3d.ref(math3d.vector(v))
+end
+
+local function vector_save(v)
+    assert(type(v) == "userdata")
+    local r = math3d.totable(v)
+    r.type = nil
+    return r
+end
+
+local m = ecs.component "position"
+m.init = vector_init
+m.save = vector_save
+
+local m = ecs.component "direction"
+m.init = vector_init
+m.save = vector_save
+
 for _, lighttype in ipairs {
 	"directional",
 	"point",
@@ -29,8 +59,8 @@ function ilight.create_directional_light_entity(name, color, intensity, directio
 			"ant.general|name",
 		},
 		data = {
-			position	= world.component "vector"(position),
-			direction 	= world.component "vector"(direction),
+			position	= world.component "position"(position),
+			direction 	= world.component "direction"(direction),
 			name		= name,
 			light 		= "",
 			directional_light = {
@@ -48,8 +78,8 @@ function ilight.create_point_light_entity(name, dir, pos)
 			"ant.general|name",
 		},
 		data = {
-			direction = world.component "vector"(dir or mc.T_NYAXIS),
-			position = world.component "vector"(pos or mc.T_ZERO_PT),
+			direction = world.component "direction"(dir or mc.T_NYAXIS),
+			position = world.component "position"(pos or mc.T_ZERO_PT),
 			name = name,
 			light = "",
 			point_light = {
@@ -69,8 +99,8 @@ function ilight.create_spot_light_entity(name, dir, pos)
 			"ant.general|name",
 		},
 		data = {
-			direction = world.component "vector"(dir or mc.T_NYAXIS),
-			position = world.component "vector"(pos or mc.T_ZERO_PT),
+			direction = world.component "direction"(dir or mc.T_NYAXIS),
+			position = world.component "position"(pos or mc.T_ZERO_PT),
 			name = name,
 			light = "",
 			spot_light = {

@@ -31,15 +31,15 @@ local SCALE <const> = 3
 local DIR_X <const> = {1, 0, 0}
 local DIR_Y <const> = {0, 1, 0}
 local DIR_Z <const> = {0, 0, 1}
-local COLOR_X = world.component "vector" {1, 0, 0, 1}
-local COLOR_Y = world.component "vector" {0, 1, 0, 1}
-local COLOR_Z = world.component "vector" {0, 0, 1, 1}
-local COLOR_X_ALPHA = world.component "vector" {1, 0, 0, 0.5}
-local COLOR_Y_ALPHA = world.component "vector" {0, 1, 0, 0.5}
-local COLOR_Z_ALPHA = world.component "vector" {0, 0, 1, 0.5}
-local COLOR_GRAY = world.component "vector" {0.5, 0.5, 0.5, 1}
-local COLOR_GRAY_ALPHA = world.component "vector" {0.5, 0.5, 0.5, 0.5}
-local HIGHTLIGHT_COLOR_ALPHA = world.component "vector" {1, 1, 0, 0.5}
+local COLOR_X = {1, 0, 0, 1}
+local COLOR_Y = {0, 1, 0, 1}
+local COLOR_Z = {0, 0, 1, 1}
+local COLOR_X_ALPHA = {1, 0, 0, 0.5}
+local COLOR_Y_ALPHA = {0, 1, 0, 0.5}
+local COLOR_Z_ALPHA = {0, 0, 1, 0.5}
+local COLOR_GRAY = {0.5, 0.5, 0.5, 1}
+local COLOR_GRAY_ALPHA = {0.5, 0.5, 0.5, 0.5}
+local HIGHTLIGHT_COLOR_ALPHA = {1, 1, 0, 0.5}
 
 local RIGHT_TOP <const> = 0
 local RIGHT_BOTTOM <const> = 1
@@ -52,7 +52,7 @@ local gizmo_obj = {
 	mode = SELECT,
 	position = {0,0,0},
 	deactive_color = COLOR_GRAY,
-	highlight_color = world.component "vector" {1, 1, 0, 1},
+	highlight_color = {1, 1, 0, 1},
 	--move
 	tx = {dir = DIR_X, color = COLOR_X},
 	ty = {dir = DIR_Y, color = COLOR_Y},
@@ -361,7 +361,7 @@ function gizmo_sys:post_init()
 		},
 	}
 
-	imaterial.set_property(coneeid, "u_color", world.component "vector" {0, 0.5, 0.5, 1})
+	imaterial.set_property(coneeid, "u_color", {0, 0.5, 0.5, 1})
 
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
