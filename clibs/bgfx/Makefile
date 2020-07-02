@@ -21,10 +21,13 @@ $(ODIR)/luabgfx.o : luabgfx.c bgfx_alloc.h | $(ODIR)
 $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
 
-$(ODIR)/bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/bgfx_alloc.o
+$(ODIR)/luabgfxui.o : luabgfxui.c  | $(ODIR)
+	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC)
+
+$(ODIR)/bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/bgfx_alloc.o $(ODIR)/luabgfxui.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -L$(BGFXLIBDIR) $(BGFXLIB) $(BXLIB) -lstdc++
 
-$(ODIR)/libbgfx.a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/bgfx_alloc.o
+$(ODIR)/libbgfx.a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/bgfx_alloc.o $(ODIR)/luabgfxui.o
 	ar rsv $@ $^
 
 $(ODIR) :
