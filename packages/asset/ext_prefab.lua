@@ -1,12 +1,13 @@
 local ecs = ...
 local world = ecs.world
 local ecs_policy = import_package "ant.ecs".policy
+local assetmgr = require "asset"
 
 local m = ecs.component "prefab"
 
 local function load_prefab(v)
 	return {
-		prefab = world.component "resource"(v.prefab),
+		prefab = assetmgr.resource(world, v.prefab),
 		data = v,
 	}
 end

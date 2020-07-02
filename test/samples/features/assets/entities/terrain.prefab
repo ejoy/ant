@@ -17,6 +17,6 @@ data:
         element_size: 7
     collider:
         terrain:
-            --- $terrain_shape
-                origin: {0, 0, 0, 1}
+            ---
+            origin: {0, 0, 0, 1}
     name: terrain_test

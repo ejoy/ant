@@ -17,12 +17,12 @@ data:
         walk: /pkg/ant.resources.binary/meshes/ozz/animation1.ozz
     animation_birth: walk
     scene_entity: true
-    skeleton: $resource /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz
+    skeleton: /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz
     mesh: /pkg/ant.resources.binary/meshes/ozz/mesh.ozz
     name: ozz_animation_sample
-    collider: $collider
+    collider:
         capsule:
-            --- $capsule_shape
+            ---
             origin: {0, 1, 0, 1}
             radius: 0.5
             height: 1

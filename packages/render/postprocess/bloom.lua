@@ -74,9 +74,9 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
         assert(false, "can not patch resource anymore")
         -- local m = world.component "material" (material), {properties={}}
         -- local properties = m.properties
-        -- properties["u_sample_param"] = world.component "uniform" (sampleparam)
+        -- properties["u_sample_param"] = sampleparam
         -- if intensity then
-        --     properties["u_intensity"] = world.component "uniform" {intensity, 0.0, 0.0, 0.0}
+        --     properties["u_intensity"] = {intensity, 0.0, 0.0, 0.0}
         -- end
 
         -- passes[passidx] = {

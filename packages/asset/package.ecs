@@ -7,8 +7,18 @@ component "material"
     .method "init"
     .method "save"
 
+component "skeleton"
+    .implement "skeleton.lua"
+    .method "init"
+    .method "save"
+
 component "mesh"
     .implement "mesh.lua"
+    .method "init"
+    .method "save"
+
+component "meshskin"
+    .implement "meshskin.lua"
     .method "init"
     .method "save"
 
