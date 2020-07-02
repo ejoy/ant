@@ -10,10 +10,6 @@ function m:init()
     return assetmgr.resource(world, self)
 end
 
-function m:save()
-    return tostring(self)
-end
-
 local ct = ecs.transform "cache_transform"
 function ct.process_prefab(e)
 	e._cache_prefab = {}

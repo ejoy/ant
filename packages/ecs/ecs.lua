@@ -3,6 +3,7 @@ local system = require "system"
 local policy = require "policy"
 local event = require "event"
 local stringify = import_package "ant.serialize".stringify
+local assetmgr = import_package "ant.asset"
 
 local world = {}
 world.__index = world
@@ -10,13 +11,7 @@ world.__index = world
 local function component_init(w, c, component)
 	local tc = w._class.component[c]
 	if tc and tc.init then
-		local res = tc.init(component)
-		assert(type(res) == "table" or type(res) == "userdata")
-		w._typeclass[res] = {
-			name = c,
-			save = tc.save,
-		}
-		return res
+		return tc.init(component)
 	end
 	error(("component `%s` has no init function."):format(c))
 end
@@ -218,7 +213,7 @@ local function serialize_prefab(w, prefab)
 			t[#t+1] = class.data
 		end
     end
-    return stringify(t, w._typeclass)
+    return stringify(t)
 end
 
 function world:serialize(entities)
@@ -439,7 +434,6 @@ function m.new_world(config)
 		_uniques = {},
 		_slots = {},
 		_current_path = {},
-		_typeclass = setmetatable({}, { __mode = "k" }),
 	}, world)
 
 	--init event

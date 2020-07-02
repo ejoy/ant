@@ -4,7 +4,6 @@ local world = ecs.world
 local m = ecs.component "mesh"
 
 local assetmgr = require "asset"
-local resource = import_package "ant.resource"
 local ext_meshbin = require "ext_meshbin"
 
 function m:init()
@@ -12,13 +11,6 @@ function m:init()
 		return assetmgr.resource(world, self)
 	end
     return ext_meshbin.init(self)
-end
-
-function m:save()
-	if resource.status(self) ~= "runtime" then
-		return tostring(self)
-	end
-	return self
 end
 
 local mt = ecs.transform "mesh_transform"
