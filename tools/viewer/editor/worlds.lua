@@ -14,6 +14,8 @@ local function create_world(config)
             and (y <= rect_y + rect_h)
     end
     local world = ecs.new_world (config)
+    local irender = world:interface "ant.render|irender"
+    irender.create_blit_queue{w=config.width, h=config.height}
     init_world(world)
     local world_update = world:update_func "update"
     local world_tex
