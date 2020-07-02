@@ -58,7 +58,7 @@ local function target_lock_test()
                 t = {16, 1, 6},
             },
             mesh = world.component "resource" "/pkg/ant.resources/meshes/sphere.mesh",
-            material = world.component "resource" "/pkg/ant.resources/materials/bunny.material",
+            material = world.component "material" "/pkg/ant.resources/materials/bunny.material",
             scene_entity = true,
         }
     }
@@ -80,7 +80,7 @@ local function target_lock_test()
                 offset = {0, 0, 3},
             },
             mesh = world.component "resource" "/pkg/ant.resources/meshes/cube.mesh",
-            material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+            material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material",
             scene_entity = true,
         },
     }

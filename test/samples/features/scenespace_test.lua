@@ -13,7 +13,7 @@ local function material_hierarchy_test()
         },
         data = {
             name = "hierarhcy_root",
-            material = world.component "resource"("/pkg/ant.resources/materials/bunny.material")
+            material = world.component "material"("/pkg/ant.resources/materials/bunny.material")
         }
     }
 
@@ -80,7 +80,7 @@ local function space_test()
         }
     }
 
-    local material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material"
+    local material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material"
 
     local child1 = world:create_entity{
         policy = {

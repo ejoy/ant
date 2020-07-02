@@ -42,7 +42,7 @@ local function pbr_spheres()
     local movestep = 2
     local x = 0.0
 
-    local material = world.component "resource" ((feature_path / "assets/pbr_test.material"):string())
+    local material = world.component "material" ((feature_path / "assets/pbr_test.material"):string())
     for row=1, num_samples do
         local metallic = row * metallic_step
         local z = 0.0

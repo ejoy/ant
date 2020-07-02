@@ -150,7 +150,7 @@ function irender_class.create_blit_queue(viewrect)
 		},
 		data = {
 			transform = {},
-			material = world.component "resource" "/pkg/ant.resources/materials/fullscreen.material",
+			material = world.component "material" "/pkg/ant.resources/materials/fullscreen.material",
 			state = ies.create_state "blit_view",
 			name = "full_quad",
 			scene_entity = true,

@@ -11,7 +11,7 @@ function m:init()
 end
 
 function m:save()
-    return tostring(self):match "^(.-):?$"
+    return tostring(self)
 end
 
 local ct = ecs.transform "cache_transform"

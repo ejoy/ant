@@ -72,7 +72,7 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 
         --TODO:
         assert(false, "can not patch resource anymore")
-        -- local m = world.component "resource" (material), {properties={}}
+        -- local m = world.component "material" (material), {properties={}}
         -- local properties = m.properties
         -- properties["u_sample_param"] = world.component "uniform" (sampleparam)
         -- if intensity then
@@ -114,7 +114,7 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
 
     passes[#passes+1] = {
         name = "combine scene with bloom",
-        material = world.component "resource"(combine_material:string()),
+        material = world.component "material"(combine_material:string()),
         viewport = get_viewport(),
         output  = {fb_idx=next_fbidx(), rb_idx=1},
     }
