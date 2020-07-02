@@ -161,15 +161,15 @@ local function instance_prefab(w, prefab, args)
 	local res = {__class = prefab}
 	for i, v in ipairs(prefab) do
 		if v.prefab then
-			res[i] = instance_prefab(w, v.prefab, prefab.args)
+			res[i] = instance_prefab(w, v.prefab, v.data.args)
 		else
 			res[i] = instance_entity(w, v)
 		end
 	end
 	setmetatable(res, {__index=args})
 	for i, entity in ipairs(prefab) do
-		if entity.action then
-			for name, target in sortpairs(entity.action) do
+		if entity.data.action then
+			for name, target in sortpairs(entity.data.action) do
 				local object = w._class.action[name]
 				assert(object and object.init)
 				object.init(res, i, target)

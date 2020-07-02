@@ -1,5 +1,4 @@
 import "@ant.objcontroller"
-import "@ant.math"
 import "@ant.general"
 
 system "scenespace_system"

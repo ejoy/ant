@@ -31,15 +31,15 @@ local SCALE <const> = 3
 local DIR_X <const> = {1, 0, 0}
 local DIR_Y <const> = {0, 1, 0}
 local DIR_Z <const> = {0, 0, 1}
-local COLOR_X = world.component "vector" {1, 0, 0, 1}
-local COLOR_Y = world.component "vector" {0, 1, 0, 1}
-local COLOR_Z = world.component "vector" {0, 0, 1, 1}
-local COLOR_X_ALPHA = world.component "vector" {1, 0, 0, 0.5}
-local COLOR_Y_ALPHA = world.component "vector" {0, 1, 0, 0.5}
-local COLOR_Z_ALPHA = world.component "vector" {0, 0, 1, 0.5}
-local COLOR_GRAY = world.component "vector" {0.5, 0.5, 0.5, 1}
-local COLOR_GRAY_ALPHA = world.component "vector" {0.5, 0.5, 0.5, 0.5}
-local HIGHTLIGHT_COLOR_ALPHA = world.component "vector" {1, 1, 0, 0.5}
+local COLOR_X = {1, 0, 0, 1}
+local COLOR_Y = {0, 1, 0, 1}
+local COLOR_Z = {0, 0, 1, 1}
+local COLOR_X_ALPHA = {1, 0, 0, 0.5}
+local COLOR_Y_ALPHA = {0, 1, 0, 0.5}
+local COLOR_Z_ALPHA = {0, 0, 1, 0.5}
+local COLOR_GRAY = {0.5, 0.5, 0.5, 1}
+local COLOR_GRAY_ALPHA = {0.5, 0.5, 0.5, 0.5}
+local HIGHTLIGHT_COLOR_ALPHA = {1, 1, 0, 0.5}
 
 local RIGHT_TOP <const> = 0
 local RIGHT_BOTTOM <const> = 1
@@ -52,7 +52,7 @@ local gizmo_obj = {
 	mode = SELECT,
 	position = {0,0,0},
 	deactive_color = COLOR_GRAY,
-	highlight_color = world.component "vector" {1, 1, 0, 1},
+	highlight_color = {1, 1, 0, 1},
 	--move
 	tx = {dir = DIR_X, color = COLOR_X},
 	ty = {dir = DIR_Y, color = COLOR_Y},
@@ -283,7 +283,7 @@ local function create_arrow_widget(axis_root, axis_str)
 				r = local_rotator,
 				t = cylindere_t,
 			},
-			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
+			material = world.component "material" "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str
 		},
@@ -302,7 +302,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			scene_entity = true,
 			state = ies.create_state "visible",
 			transform =  {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
-			material = world.component "resource" "/pkg/ant.resources/materials/t_gizmos.material",
+			material = world.component "material" "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
 		},
@@ -335,7 +335,7 @@ function gizmo_sys:post_init()
 				s=50,
 				t={0, 0.5, 1, 0}
 			},
-			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+			material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 			name = "test_cube",
 		}
@@ -355,13 +355,13 @@ function gizmo_sys:post_init()
 				s=50,
 				t={-1, 0.5, 0}
 			},
-			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+			material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "test_cone"
 		},
 	}
 
-	imaterial.set_property(coneeid, "u_color", world.component "vector" {0, 0.5, 0.5, 1})
+	imaterial.set_property(coneeid, "u_color", {0, 0.5, 0.5, 1})
 
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
@@ -478,7 +478,7 @@ function gizmo_sys:post_init()
 				scene_entity = true,
 				state = ies.create_state "visible",
 				transform = srt,
-				material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
+				material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material",
 				mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name
 			}

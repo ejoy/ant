@@ -90,7 +90,7 @@ function collcomp:init()
 			return
 		end
 		for _, sh in ipairs(shape) do
-			w:add_shape(self._handle, constructor(sh), sh.origin)
+			w:add_shape(self._handle, constructor(sh), math3d.vector(sh.origin))
 		end
 	end
 	add_shape(self.sphere,  sphere_shape)

@@ -37,7 +37,7 @@ function widget_drawer_sys:init()
 		},
 		data = {
 			transform = {},
-			material = world.component "resource" "/pkg/ant.resources/materials/line.material",
+			material = world.component "material" "/pkg/ant.resources/materials/line.material",
 			mesh = nil,
 			state = ies.create_state "visible",
 			scene_entity = true,

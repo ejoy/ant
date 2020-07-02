@@ -122,7 +122,7 @@ local function get_properties(eid, fx)
 		return p
 	end
 	local imaterial = world:interface "ant.asset|imaterial"
-	local v = world.component "vector" (packeid_as_rgba(eid))
+	local v = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
 	local u = fx.uniforms[1]
 	assert(u.name == "u_id")
 	p = {
