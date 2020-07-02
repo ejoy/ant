@@ -144,14 +144,6 @@ local function create_prefab_from_entity(w, v)
 	}}, args
 end
 
-function world:component_init(name, v)
-	return component_init(self, name, v)
-end
-
-function world:component_delete(name, v)
-	component_delete(self, name, v)
-end
-
 local function instance_entity(w, entity)
 	local eid = register_entity(w)
 	local e = w[eid]

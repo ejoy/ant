@@ -73,12 +73,6 @@ local function get_current_path(w)
 	return w._current_path[#w._current_path]
 end
 
-local function resource_load(fullpath, resdata, lazyload)
-	local filename = fullpath:match "[^:]+"
-	resource.load(filename, resdata, lazyload)
-    return resource.proxy(fullpath)
-end
-
 local function absolute_path(base, path)
 	if path:sub(1,1) == "/" or not base then
 		return path
@@ -88,7 +82,8 @@ end
 
 function assetmgr.resource(world, path)
 	local fullpath = absolute_path(get_current_path(world), path)
-    return resource_load(fullpath, world, true)
+	resource.load(fullpath, world, true)
+    return resource.proxy(fullpath)
 end
 
 assetmgr.load_fx = cr.compile_fx
@@ -113,7 +108,6 @@ function assetmgr.init()
 		glb_unload(filename)
 		local world = data
 		require("ext_" .. ext).unloader(res, world)
-		world:component_delete(ext, res)
 	end
 	resource.register(loader, unloader)
 end
