@@ -8,7 +8,7 @@ local ext_meshbin = require "ext_meshbin"
 
 function m:init()
 	if type(self) == "string" then
-		return assetmgr.resource(world, self)
+		return assetmgr.resource(self)
 	end
     return ext_meshbin.init(self)
 end

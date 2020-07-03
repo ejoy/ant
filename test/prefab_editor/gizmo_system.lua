@@ -284,7 +284,7 @@ local function rayHitPlane(ray, plane_info)
 end
 
 local function mouseHitPlane(screen_pos, plane_info)
-	local q = world:singleton_entity("main_queue")
+	local q = world:singleton_entity "main_queue"
 	return rayHitPlane(iom.ray(q.camera_eid, screen_pos), plane_info)
 end
 
@@ -616,7 +616,7 @@ local function pointToLineDistance2D(p1, p2, p3)
 end
 
 local function viewToAxisConstraint(point, axis, origin)
-	local q = world:singleton_entity("main_queue")
+	local q = world:singleton_entity "main_queue"
 	local ray = iom.ray(q.camera_eid, point)
 	local raySrc = ray.origin
 	local mq = world:singleton_entity "main_queue"

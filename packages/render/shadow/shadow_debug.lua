@@ -47,14 +47,7 @@ local frustum_colors = {
 }
 
 local function add_shadow_debug_policy(eid)
-	world:add_policy(eid, {
-		policy = {
-			"ant.render|shadow_debug_policy",
-		},
-		data = {
-			shadow_debug = true,
-		}
-	})
+	assert(false)
 end
 
 local function	csm_shadow_debug_frustum()

@@ -3,6 +3,7 @@ local function create(w, policies)
     local res = {
         component = {},
         init_component = {},
+        unique_component = {},
         process_entity = {},
         process_prefab = {},
     }
@@ -100,38 +101,14 @@ local function create(w, policies)
         if tc and tc.init then
             res.init_component[c] = tc.init
         end
-    end
-
-    return res
-end
-
-local function add(w, eid, policies)
-    local res = create(w, policies)
-    local e = w[eid]
-    for _, policy_name in ipairs(policies) do
-        local class = w._class.policy[policy_name]
-        for _, transform_name in ipairs(class.transform) do
-            local class = w._class.transform[transform_name]
-            for _, v in ipairs(class.output) do
-                if e[v] ~= nil then
-                    error(("component `%s` already exists, it conflicts with policy `%s`."):format(v, policy_name))
-                end
-            end
+        if w._class.unique[c] then
+            res.unique_component[#res.unique_component+1] = c
         end
     end
-    local i = 1
-    while i <= #res.component do
-        local c = res.component[i]
-        if e[c] ~= nil then
-            table.remove(res.component, i)
-        else
-            i = i + 1
-        end
-    end
+
     return res
 end
 
 return {
     create = create,
-    add = add,
 }

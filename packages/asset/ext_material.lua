@@ -7,24 +7,24 @@ local function load_state(filename)
 	return type(filename) == "string" and datalist.parse(cr.read_file(filename)) or filename
 end
 
-local function init(world, material)
+local function init(material)
     if type(material.fx) == "string" then
-        material.fx = assetmgr.resource(world, material.fx)
+        material.fx = assetmgr.resource(material.fx)
     end
     material.state = bgfx.make_state(load_state(material.state))
     if material.properties then
         for _, v in pairs(material.properties) do
             if v.stage then
-                v.texture = assetmgr.resource(world, v.texture)
+                v.texture = assetmgr.resource(v.texture)
             end
         end
     end
     return material
 end
 
-local function loader(filename, world)
+local function loader(filename)
     local m = datalist.parse(cr.read_file(filename))
-    return init(world, m)
+    return init(m)
 end
 
 local function unloader()

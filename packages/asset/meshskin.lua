@@ -7,7 +7,7 @@ local m = ecs.component "meshskin"
 
 function m:init()
 	if type(self) == "string" then
-		return assetmgr.resource(world, self)
+		return assetmgr.resource(self)
 	end
 	return self
 end

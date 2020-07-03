@@ -21,7 +21,7 @@ function m:init()
 		renderpkg.fbmgr.bind(ctx.viewid, queue.render_target.fb_idx)
 	end
 
-	ctx.fx = assetmgr.load_fx_file "/pkg/ant.test.gameui/uiquat.fx"
+	ctx.fx = assetmgr.load_fx "/pkg/ant.test.gameui/uiquat.fx"
 end
 
 function m:ui_update()

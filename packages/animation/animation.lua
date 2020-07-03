@@ -101,7 +101,7 @@ local m = ecs.component "animation"
 
 function m:init()
 	for k, v in pairs(self) do
-		self[k] = assetmgr.resource(world, v)
+		self[k] = assetmgr.resource(v)
 	end
 	return self
 end

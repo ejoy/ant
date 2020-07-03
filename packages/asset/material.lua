@@ -145,7 +145,7 @@ local m = ecs.component "material"
 
 function m:init()
 	if type(self) == "string" then
-		return assetmgr.resource(world, self)
+		return assetmgr.resource(self)
 	end
-	return ext_material.init(world, self)
+	return ext_material.init(self)
 end
