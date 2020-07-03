@@ -8,14 +8,6 @@ local assetmgr = import_package "ant.asset"
 local world = {}
 world.__index = world
 
-local function register_component(w, eid, c)
-	local set = w._set[c]
-	if set then
-		set[#set+1] = eid
-	end
-	w:pub {"component_register", c, eid}
-end
-
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -70,8 +62,14 @@ local function instance_entity(w, entity)
 		end
 		w._uniques[c] = eid
 	end
+	for c in pairs(entity.template) do
+		local set = w._set[c]
+		if set then
+			set[#set+1] = eid
+		end
+	end
 	for _, c in ipairs(entity.component) do
-		register_component(w, eid, c)
+		w:pub {"component_register", c, eid}
 	end
 	for _, f in ipairs(entity.process) do
 		f(e)
@@ -385,7 +383,6 @@ function m.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
 		_slots = {},
-		_current_path = {},
 	}, world)
 
 	--init event
