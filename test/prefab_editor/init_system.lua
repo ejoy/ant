@@ -1,5 +1,7 @@
 local ecs = ...
 local world = ecs.world
+local math3d = require "math3d"
+local iom = world:interface "ant.objcontroller|obj_motion"
 local camera = world:interface "ant.camera|camera"
 local entity = world:interface "ant.render|entity"
 local m = ecs.system 'init_system'
@@ -21,7 +23,7 @@ function m:init()
 	-- 	"test shadow plane"
     -- )
     entity.create_grid_entity("", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
-    --entity.create_axis_entity()
+	--local axis = entity.create_axis_entity()
     --world:instance '/pkg/tools.viewer.prefab_viewer/light_directional.prefab'
     world:instance "res/light_directional.prefab"
 	-- local res = world:instance "res/fox.glb|mesh.prefab"
