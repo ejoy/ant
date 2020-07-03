@@ -6,11 +6,14 @@ local renderpkg = import_package "ant.render"
 local assetmgr = import_package "ant.asset"
 local bgfx = require "bgfx"
 local ui = require "bgfx.ui"
+local platform = require "platform"
+local Font = platform.font
 
 local ctx = {
 	viewid = renderpkg.viewidmgr.generate "gameui",
 	bind = false,
 	prog = false,
+	fonttex = false,
 }
 
 function m:init()
@@ -22,10 +25,16 @@ function m:init()
 	end
 
 	ctx.fx = assetmgr.load_fx "/pkg/ant.test.gameui/uiquat.fx"
+	local fontid = ui.addfont(Font "黑体")
+	assert(fontid == 0)
+	local size = ui.fonttexture_size
+	ctx.fonttex = bgfx.create_texture2d(size, size, false, 1, "A8")
 end
 
 function m:ui_update()
 	ctx.bind()
+
+	assert(ui.prepare_text(ctx.fonttex, "你好"))
 
 	ui.submit_rect(10,10, 200, 100, 0xff0000)
 	ui.submit_frame(300, 300, 50, 80, 0xff00, 2)

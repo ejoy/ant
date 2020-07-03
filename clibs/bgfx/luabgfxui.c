@@ -6,6 +6,7 @@
 
 #include "bgfx_interface.h"
 #include "luabgfx.h"
+#include "font_manager.h"
 
 
 /* _________________________________
@@ -49,6 +50,8 @@ struct context {
 	bgfx_transient_vertex_buffer_t tvb;
 	bgfx_index_buffer_handle_t ib;
 	bgfx_vertex_layout_t rect_layout;
+	bgfx_vertex_layout_t text_layout;
+	struct font_manager fm;
 };
 
 struct buffer_rect {
@@ -67,6 +70,15 @@ new_context(lua_State *L) {
 	BGFX(vertex_layout_add)(&c->rect_layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_INT16, true, false);
 	BGFX(vertex_layout_add)(&c->rect_layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
 	BGFX(vertex_layout_end)(&c->rect_layout);
+
+	BGFX(vertex_layout_begin)(&c->text_layout, BGFX_RENDERER_TYPE_NOOP);
+	BGFX(vertex_layout_add)(&c->text_layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_INT16, true, false);
+	BGFX(vertex_layout_add)(&c->text_layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_INT16, true, false);
+	BGFX(vertex_layout_add)(&c->text_layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
+	BGFX(vertex_layout_end)(&c->text_layout);
+
+	font_manager_init(&c->fm);
+
 	return c;
 }
 
@@ -107,6 +119,8 @@ push_typeargs(lua_State *L, int type) {
 	switch(type) {
 	case TYPE_RECT:
 		return 1;
+	case TYPE_TEXT:
+		return 2;	// number, fontid
 	default:
 		return luaL_error(L, "Invalid type %d", type);
 	}
@@ -128,6 +142,9 @@ check_submit(lua_State *L, struct context *c, int type, int size) {
 		switch (type) {
 		case TYPE_RECT:
 			BGFX(alloc_transient_vertex_buffer)(&c->tvb, MAX_RECT, &c->rect_layout);
+			break;
+		case TYPE_TEXT:
+			BGFX(alloc_transient_vertex_buffer)(&c->tvb, MAX_RECT, &c->text_layout);
 			break;
 		case TYPE_NULL:
 			break;
@@ -253,7 +270,191 @@ lsubmit_frame(lua_State *L) {
 static int
 lsubmit_null(lua_State *L) {
 	struct context *c = (struct context *)lua_touserdata(L, lua_upvalueindex(1));
+	font_manager_flush(&c->fm);
 	return check_submit(L, c, TYPE_NULL, 0);
+}
+
+static const void *
+getttf(lua_State *L, int idx) {
+	int type = lua_type(L, idx);
+	const char * ttf = NULL;
+	if (type == LUA_TSTRING) {
+		ttf = lua_tostring(L, idx);
+	} else if (type == LUA_TUSERDATA) {
+		ttf = (const char *)lua_touserdata(L, idx);
+		ttf += 4;	// skip length
+	} else {
+		luaL_error(L, "Need ttf pointer");
+	}
+	return (const void *)ttf;
+}
+
+static struct font_manager *
+getF(lua_State *L) {
+	struct context *c = (struct context *)lua_touserdata(L, lua_upvalueindex(1));
+	return &c->fm;
+}
+
+static int
+laddfont(lua_State *L) {
+	struct font_manager *F = getF(L);
+	const void * ttf = getttf(L, 1);
+	int fontid = font_manager_addfont(F, ttf);
+	if (fontid < 0)
+		return luaL_error(L, "Add font failed");
+	lua_pushinteger(L, fontid);
+	return 1;
+}
+
+static int
+lrebindfont(lua_State *L) {
+	struct font_manager *F = getF(L);
+	int fontid = luaL_checkinteger(L, 1);
+	const void * ttf = getttf(L, 2);
+	fontid = font_manager_rebindfont(F, fontid, ttf);
+	if (fontid < 0)
+		return luaL_error(L, "rebind font failed");
+	return 0;
+}
+
+struct prepare {
+	struct font_manager *F;
+	bgfx_texture_handle_t texid;
+	short fontid;
+	int codepoint;
+};
+
+static inline const char *
+prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, int codepoint) {
+	struct font_glyph g;
+	int ret = font_manager_touch(F, fontid, codepoint, &g);
+	if (ret > 0)
+		return NULL;
+	if (ret < 0)	// failed
+		return "overflow";
+	// update texture
+	const bgfx_memory_t * mem = BGFX(alloc)(g.w * g.h);
+	const char * err = font_manager_update(F, fontid, codepoint, &g, mem->data);
+	if (err)
+		return err;
+	BGFX(update_texture_2d)(texid, 0, 0, g.u, g.v, g.w, g.h, mem, g.w);
+
+	return NULL;
+}
+
+/*
+** From lua 5.4
+** Decode one UTF-8 sequence, returning NULL if byte sequence is
+** invalid.  The array 'limits' stores the minimum value for each
+** sequence length, to check for overlong representations. Its first
+** entry forces an error for non-ascii bytes with no continuation
+** bytes (count == 0).
+*/
+typedef unsigned int utfint;
+#define MAXUNICODE	0x10FFFFu
+#define MAXUTF		0x7FFFFFFFu
+
+static const char *utf8_decode (const char *s, utfint *val, int strict) {
+  static const utfint limits[] =
+        {~(utfint)0, 0x80, 0x800, 0x10000u, 0x200000u, 0x4000000u};
+  unsigned int c = (unsigned char)s[0];
+  utfint res = 0;  /* final result */
+  if (c < 0x80)  /* ascii? */
+    res = c;
+  else {
+    int count = 0;  /* to count number of continuation bytes */
+    for (; c & 0x40; c <<= 1) {  /* while it needs continuation bytes... */
+      unsigned int cc = (unsigned char)s[++count];  /* read next byte */
+      if ((cc & 0xC0) != 0x80)  /* not a continuation byte? */
+        return NULL;  /* invalid byte sequence */
+      res = (res << 6) | (cc & 0x3F);  /* add lower 6 bits from cont. byte */
+    }
+    res |= ((utfint)(c & 0x7F) << (count * 5));  /* add first byte */
+    if (count > 5 || res > MAXUTF || res < limits[count])
+      return NULL;  /* invalid byte sequence */
+    s += count;  /* skip continuation bytes read */
+  }
+  if (strict) {
+    /* check for invalid code points; too large or surrogates */
+    if (res > MAXUNICODE || (0xD800u <= res && res <= 0xDFFFu))
+      return NULL;
+  }
+  if (val) *val = res;
+  return s + 1;  /* +1 to include first byte */
+}
+
+
+/*
+	handle texture
+	string text
+	integer fontid (default = 0)
+
+	return true/false, err message
+ */
+static int
+lprepare_text(lua_State *L) {
+	uint16_t texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 1));
+	bgfx_texture_handle_t th = {texture_id};
+	size_t sz;
+	const char * str = luaL_checklstring(L, 2, &sz);
+	const char * end_ptr = str + sz;
+	struct context *c = (struct context *)lua_touserdata(L, lua_upvalueindex(1));
+	struct font_manager *F = &c->fm;
+	int fontid = luaL_optinteger(L, 3, 0);
+
+	while (str < end_ptr) {
+		utfint codepoint;
+		str = utf8_decode(str, &codepoint, 1);
+		if (str) {
+			const char * err = prepare_char(F, th, fontid, codepoint);
+			if (err) {
+				lua_pushboolean(L, 0);
+				lua_pushstring(L, err);
+				return 2;
+			}
+		} else {
+			lua_pushboolean(L, 0);
+			lua_pushstring(L, "Invalid utf8 text");
+			return 2;
+		}
+	}
+
+	lua_pushboolean(L,1);
+	return 1;
+}
+
+/*
+	number x
+	number y
+	integer size
+	integer color
+	integer codepoint
+	integer fontid (default = 0)
+
+	return advance_x, advance_y
+ */
+
+static int
+lsubmit_char(lua_State *L) {
+	int16_t x = read_fixpoint(L, 1);
+	int16_t y = read_fixpoint(L, 2);
+	int size = luaL_checkinteger(L, 3);
+	uint32_t color = luaL_checkinteger(L, 4) | 0xff000000;	// todo : alpha text
+	int codepoint = luaL_checkinteger(L, 5);
+	int fontid = luaL_optinteger(L, 6, 0);
+
+	struct context *c = (struct context *)lua_touserdata(L, lua_upvalueindex(1));
+	struct font_manager *F = &c->fm;
+	
+	struct font_glyph g;
+	int ret = font_manager_touch(F, fontid, codepoint, &g);
+	if (ret != 0)
+		return 0;
+	ret = check_submit(L, c, TYPE_TEXT, 1);
+	// todo : fill tvb
+	(void)color; (void)size; (void)x; (void)y;
+
+	return ret;
 }
 
 LUAMOD_API int
@@ -262,6 +463,11 @@ luaopen_bgfx_ui(lua_State *L) {
 	init_interface(L);
 
 	luaL_Reg l[] = {
+		{ "fonttexture_size", NULL },
+		{ "addfont", laddfont },
+		{ "rebind", lrebindfont },
+		{ "prepare_text", lprepare_text },
+		{ "submit_char", lsubmit_char },
 //		{ "new_sprite", lnew_sprite },
 //		{ "submit_sprite", lsubmit_sprite },
 		{ "submit_rect", lsubmit_rect },
@@ -274,5 +480,7 @@ luaopen_bgfx_ui(lua_State *L) {
 	luaL_newlibtable(L, l);
 	lua_pushlightuserdata(L, (void *)c);
 	luaL_setfuncs(L, l, 1);
+	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
+	lua_setfield(L, -2, "fonttexture_size");
 	return 1;
 }

@@ -242,6 +242,8 @@ font_manager_rebindfont(struct font_manager *F, int fontid, const void *ttfbuffe
 	return fontid;
 }
 
+#if 0
+
 int
 main() {
 	FILE * f = fopen("msyh.ttc", "rb");
@@ -286,3 +288,5 @@ main() {
 
 	return 0;
 }
+
+#endif
