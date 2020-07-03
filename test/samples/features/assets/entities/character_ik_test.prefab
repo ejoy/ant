@@ -11,15 +11,13 @@ policy:
     ant.character|character
     ant.character|foot_ik_raycast
 data:
-    transform : 
-        srt: $srt
-            t: {-2.5, 0, -6, 1}
-    material : $resource /pkg/ant.resources/materials/skin_model_sample.material
-    mesh : $resource /pkg/ant.resources.binary/meshes/ozz/mesh.ozz
-    skeleton : $resource /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz
+    transform: 
+        t: {-2.5, 0, -6, 1}
+    material: /pkg/ant.resources/materials/skin_model_sample.material
+    mesh: /pkg/ant.resources.binary/meshes/ozz/mesh.ozz
+    skeleton: /pkg/ant.resources.binary/meshes/ozz/human_skeleton.ozz
     animation:
-        anilist:
-            idle : $resource /pkg/ant.test.features/assets/tmp/animation.ozz
+        idle: /pkg/ant.test.features/assets/tmp/animation.ozz
     animation_birth: idle
     ik:
         jobs:
@@ -73,9 +71,9 @@ data:
             sole: right_sole
     character:
         movespeed: 1.0
-    collider: $collider
+    collider:
         capsule:
-            --- $capsule_shape
+            ---
             origin :  {0, 1, 0, 1}
             radius : 0.5
             height : 1

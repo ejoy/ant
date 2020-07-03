@@ -169,8 +169,8 @@ function ilight.create_light_direction_arrow(eid, data)
 				s = math3d.ref(math3d.mul(100, math3d.vector(cylinder_radius, cylinder_scaleY, cylinder_radius))),
 				t = math3d.ref(cylinder_offset),
 			},
-			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
+			material = "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder",
 		},
 		action = {
@@ -190,8 +190,8 @@ function ilight.create_light_direction_arrow(eid, data)
 			scene_entity = true,
 			state = ies.create_state "visible",
 			transform =  {s=100, t=cone_offset},
-			material = world.component "resource" "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = world.component "resource" '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
+			material = "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone"
 		},
 		action = {

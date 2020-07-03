@@ -3,45 +3,10 @@ local system = require "system"
 local policy = require "policy"
 local event = require "event"
 local stringify = import_package "ant.serialize".stringify
+local assetmgr = import_package "ant.asset"
 
 local world = {}
 world.__index = world
-
-local function component_init(w, c, component)
-	local tc = w._class.component[c]
-	if tc and tc.init then
-		local res = tc.init(component)
-		assert(type(res) == "table" or type(res) == "userdata")
-		w._typeclass[res] = {
-			name = c,
-			save = tc.save,
-			copy = tc.copy,
-		}
-		return res
-	end
-	error(("component `%s` has no init function."):format(c))
-end
-
-local function component_delete(w, c, component)
-    local tc = w._class.component[c]
-    if tc and tc.delete then
-        tc.delete(component)
-    end
-end
-
-local function register_component(w, eid, c)
-	local set = w._set[c]
-	if set then
-		set[#set+1] = eid
-	end
-	if w._class.unique[c] then
-		if w._uniques[c] then
-			error "unique component already exists"
-		end
-		w._uniques[c] = eid
-	end
-	w:pub {"component_register", c, eid}
-end
 
 local function sortpairs(t)
     local sort = {}
@@ -58,13 +23,6 @@ local function sortpairs(t)
         n = n + 1
         return k, t[k]
     end
-end
-
-function world:add_component(eid, c, data)
-	local e = assert(self[eid])
-	assert(e[c] == nil)
-	e[c] = data
-	register_component(self, eid, c)
 end
 
 function world:enable_tag(eid, c)
@@ -86,24 +44,6 @@ function world:disable_tag(eid, c)
 	end
 end
 
-function world:add_policy(eid, t)
-    if t.action and next(t.action) ~= nil then
-        error "action can only be imported during instance."
-    end
-	local res = policy.add(self, eid, t.policy)
-	local e = self[eid]
-	for _, c in ipairs(res.component) do
-		e[c] = t.data[c]
-		register_component(self, eid, c)
-	end
-	for _, f in ipairs(res.process_prefab) do
-		f(e)
-	end
-	for _, f in ipairs(res.process_entity) do
-		f(e)
-	end
-end
-
 local function register_entity(w)
 	local eid = w._entity_id + 1
 	w._entity_id = eid
@@ -112,43 +52,24 @@ local function register_entity(w)
 	return eid
 end
 
-local function create_prefab_from_entity(w, t)
-	local res = policy.create(w, t.policy)
-	local args = {
-	}
-	if t.action and t.action.mount then
-		args["_mount"] = t.action.mount
-		t.action.mount = "_mount"
-	end
-	local e = {}
-	for _, c in ipairs(res.component) do
-		e[c] = t.data[c]
-	end
-	for _, f in ipairs(res.process_prefab) do
-		f(e)
-	end
-	return {{
-		component = res.component,
-		process = res.process_entity,
-		template = e,
-		data = t,
-	}}, args
-end
-
-function world:component_init(name, v)
-	return component_init(self, name, v)
-end
-
-function world:component_delete(name, v)
-	component_delete(self, name, v)
-end
-
 local function instance_entity(w, entity)
 	local eid = register_entity(w)
 	local e = w[eid]
 	setmetatable(e, {__index = entity.template})
+	for _, c in ipairs(entity.unique) do
+		if w._uniques[c] then
+			error "unique component already exists"
+		end
+		w._uniques[c] = eid
+	end
+	for c in pairs(entity.template) do
+		local set = w._set[c]
+		if set then
+			set[#set+1] = eid
+		end
+	end
 	for _, c in ipairs(entity.component) do
-		register_component(w, eid, c)
+		w:pub {"component_register", c, eid}
 	end
 	for _, f in ipairs(entity.process) do
 		f(e)
@@ -180,21 +101,66 @@ local function instance_prefab(w, prefab, args)
 	return res
 end
 
-function world:create_entity(data)
-	local prefab, args = create_prefab_from_entity(self, data)
+local function create_entity_template(w, v)
+	local res = policy.create(w, v.policy)
+	local e = {}
+	for _, c in ipairs(res.component) do
+		local init = res.init_component[c]
+		local component = v.data[c]
+		if component ~= nil then
+			if init then
+				e[c] = init(component)
+			else
+				e[c] = component
+			end
+		end
+	end
+	for _, f in ipairs(res.process_prefab) do
+		f(e)
+	end
+	return {
+		component = res.component,
+		process = res.process_entity,
+		unique = res.unique_component,
+		template = e,
+		data = v,
+	}
+end
+
+function world:create_template(data)
+	local prefab = {}
+	for _, v in ipairs(data) do
+		if v.prefab then
+			prefab[#prefab+1] = {
+				prefab = assetmgr.resource(v.prefab, self),
+				data = v,
+			}
+		else
+			prefab[#prefab+1] = create_entity_template(self, v)
+		end
+	end
+	return prefab
+end
+
+function world:create_entity(v)
+	local args = {}
+	if v.action and v.action.mount then
+		args["_mount"] = v.action.mount
+		v.action.mount = "_mount"
+	end
+	local prefab = {create_entity_template(self, v)}
 	local res = instance_prefab(self, prefab, args)
 	return res[1], res
 end
 
-
 function world:instance(filename, args)
-	local prefab = component_init(self, "resource", filename)
+	local prefab = assetmgr.resource(filename, self)
 	return instance_prefab(self, prefab, args)
 end
 
-local function serialize_prefab(w, prefab)
+function world:serialize(entities)
 	local t = {}
-	for _, class in ipairs(prefab) do
+	for _, class in ipairs(entities.__class) do
 		if class.prefab then
 			t[#t+1] = {
 				prefab = tostring(class.prefab),
@@ -203,12 +169,8 @@ local function serialize_prefab(w, prefab)
 		else
 			t[#t+1] = class.data
 		end
-    end
-    return stringify(t, w._typeclass)
-end
-
-function world:serialize(entities)
-	return serialize_prefab(self, entities.__class)
+	end
+	return stringify(t)
 end
 
 function world:remove_entity(eid)
@@ -276,7 +238,10 @@ end
 
 local function remove_entity(w, e)
 	for c, component in sortpairs(e) do
-		component_delete(w, c, component)
+		local tc = w._class.component[c]
+		if tc and tc.delete then
+			tc.delete(component)
+		end
 	end
 end
 
@@ -326,12 +291,6 @@ end
 
 function world:interface(fullname)
 	return self._class.interface[fullname]
-end
-
-function world:action(fullname, ...)
-	local object = self._class.action[fullname]
-	assert(object and object.init)
-	object.init(...)
 end
 
 function world:signal_on(name, f)
@@ -424,8 +383,6 @@ function m.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
 		_slots = {},
-		_current_path = {},
-		_typeclass = setmetatable({}, { __mode = "k" }),
 	}, world)
 
 	--init event
@@ -436,7 +393,11 @@ function m.new_world(config)
 
 	w.component = function(name)
 		return function (args)
-			return component_init(w, name, args)
+			local tc = w._class.component[name]
+			if tc and tc.init then
+				return tc.init(args)
+			end
+			error(("component `%s` has no init function."):format(name))
 		end
 	end
 
@@ -445,7 +406,5 @@ function m.new_world(config)
 
 	return w
 end
-
-m.policy = policy
 
 return m

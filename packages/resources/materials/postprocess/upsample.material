@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/postprocess/fx/upsample.fx
+fx: /pkg/ant.resources/materials/postprocess/fx/upsample.fx
 properties:
   u_intensity:  {1.2, 0, 0, 0}
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

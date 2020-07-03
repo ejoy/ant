@@ -13,7 +13,7 @@ local function material_hierarchy_test()
         },
         data = {
             name = "hierarhcy_root",
-            material = world.component "material"("/pkg/ant.resources/materials/bunny.material")
+            material = "/pkg/ant.resources/materials/bunny.material"
         }
     }
 
@@ -24,7 +24,7 @@ local function material_hierarchy_test()
         },
         data = {
             name = "hierarchy_child",
-            mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             state = ies.create_state "visible",
             transform = {s = 10, t = {5, 0, 0}}
         },
@@ -41,7 +41,7 @@ local function material_hierarchy_test()
         },
         data = {
             name = "hierarchy_child_2",
-            mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             state = ies.create_state "visible",
             transform = {s = 10, t = {5, 0, 0}},
         },
@@ -57,7 +57,7 @@ local function material_hierarchy_test()
         },
         data = {
             name = "hierarchy_child",
-            mesh = world.component "resource" ("/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"),
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             state = ies.create_state "visible",
             transform = {s = 10, t = {5, 0, 0}},
         },
@@ -80,7 +80,7 @@ local function space_test()
         }
     }
 
-    local material = world.component "material" "/pkg/ant.resources/materials/singlecolor.material"
+    local material = "/pkg/ant.resources/materials/singlecolor.material"
 
     local child1 = world:create_entity{
         policy = {
@@ -91,7 +91,7 @@ local function space_test()
         data = {
             name = "child1",
             material = material,
-            mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
             transform =  {
                 s = 100,
                 t={1, 2, 0, 1},
@@ -114,7 +114,7 @@ local function space_test()
             name = "child1_1",
             scene_entity = true,
             state = ies.create_state "visible|selectable",
-            mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = material,
             transform =  {
                 s = 100,
@@ -157,7 +157,7 @@ local function space_test()
             state = ies.create_state "visible|selectable",
             scene_entity = true,
             material = material,
-            mesh = world.component "resource" "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             transform =  {
                 s = 100,
                 t ={1, 2, 0, 1}

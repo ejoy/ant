@@ -150,9 +150,8 @@ end
 
 
 -- pickup_system
-local bb = ecs.component "blit_buffer"
 
-function bb:init()
+local function blit_buffer_init(self)
 	self.handle = bgfx.memory_texture(self.w*self.h * self.elemsize)
 	self.rb_idx = fbmgr.create_rb {
 		w = self.w,
@@ -179,6 +178,7 @@ function pu:init()
 		last_pick = -1,
 		pick_ids = {},
 	}
+	self.blit_buffer = blit_buffer_init(self.blit_buffer)
 	return self
 end
 
@@ -233,15 +233,15 @@ local function add_pick_entity()
 			"ant.objcontroller|pickup",
 		},
 		data = {
-			pickup = world.component "pickup" {
-				blit_buffer = world.component "blit_buffer" {
+			pickup = {
+				blit_buffer = {
 					w = pickup_buffer_w,
 					h = pickup_buffer_h,
 					elemsize = 4,
 				},
 			},
 			camera_eid = cameraeid,
-			render_target = world.component "render_target" {
+			render_target = {
 				viewid = pickupviewid,
 				view_mode = "s",
 				viewport = {
@@ -257,7 +257,7 @@ local function add_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			primitive_filter = world.component "primitive_filter" {
+			primitive_filter = {
 				filter_type = "selectable"
 			},
 			name = "pickup_renderqueue",

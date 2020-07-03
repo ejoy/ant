@@ -1,9 +1,9 @@
 ---
 data:
-  material: $resource /pkg/ant.resources/materials/sky/procedural/procedural_sky.material
-  mesh: $resource ./procedural_sky.meshbin
+  material: /pkg/ant.resources/materials/sky/procedural/procedural_sky.material
+  mesh: ./procedural_sky.meshbin
   name: "procedural sky"
-  procedural_sky: $procedural_sky
+  procedural_sky:
     latitude: 0.8726646259971648
     month: June
     turbidity: 2.15

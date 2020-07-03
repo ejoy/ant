@@ -1,18 +1,6 @@
 local ecs = ...
-local world = ecs.world
 
 local math3d = require "math3d"
-
-local m = ecs.component "resource"
-
-function m:init()
-    local assetmgr = import_package "ant.asset"
-    return assetmgr.resource(world, self)
-end
-
-function m:save()
-    return tostring(self)
-end
 
 local ct = ecs.transform "cache_transform"
 function ct.process_prefab(e)

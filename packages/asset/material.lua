@@ -2,14 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local assetmgr = require "asset"
-local resource = import_package "ant.resource"
-local bgfx = require "bgfx"
 local mt = ecs.transform "material_transform"
-local fs_local = import_package "ant.utility".fs_local
-local fs = require "filesystem"
-local function load_state(filename)
-	return type(filename) == "string" and fs_local.datalist(fs.path(filename):localpath()) or filename
-end
+local ext_material = require "ext_material"
 
 local function load_material(m, setting)
 	local fx = assetmgr.load_fx(m.fx, setting)
@@ -17,11 +11,10 @@ local function load_material(m, setting)
 	if not properties and #fx.uniforms > 0 then
 		properties = {}
 	end
-
 	return {
 		fx = fx,
 		properties = properties,
-		state = bgfx.make_state(load_state(m.state))
+		state = m.state
 	}
 end
 
@@ -152,14 +145,7 @@ local m = ecs.component "material"
 
 function m:init()
 	if type(self) == "string" then
-		return assetmgr.resource(world, self)
+		return assetmgr.resource(self)
 	end
-	return self
-end
-
-function m:save()
-	if resource.status(self) ~= "runtime" then
-		return tostring(self)
-	end
-	return self
+	return ext_material.init(self)
 end

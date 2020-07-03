@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/shadow/csm_cast.fx
+fx: /pkg/ant.resources/materials/fx/shadow/csm_cast.fx
 state:
   ALPHA_REF: 0
   CULL: CW

@@ -66,7 +66,7 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 		},
 		data = {
 			transform	= srt or {},
-			material	= world.component "material"(material),
+			material	= material,
 			mesh		= mesh,
 			state		= state or ies.create_state "visible",
 			name		= name or gen_test_name(),
@@ -134,7 +134,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
 
 	local data = {
 		transform = srt or {},
-		material = world.component "material" (materialpath),
+		material = materialpath,
 		state = ies.create_state "visible",
 		name = name or "Plane",
 		scene_entity = true,
@@ -164,7 +164,7 @@ function ientity.create_plane_entity(srt, materialpath, name, entity_info)
 
 	local data = {
 		transform = {},
-		material = world.component "material" (materialpath),
+		material = materialpath,
 		state = ies.create_state "visible|selectable",
 		name = name or "Plane",
 		scene_entity = true,
@@ -362,7 +362,7 @@ function ientity.create_skybox(material)
 		},
 		data = {
 			transform = {},
-			material = world.component "material"(material or "/pkg/ant.resources/materials/skybox.material"),
+			material = material or "/pkg/ant.resources/materials/skybox.material",
 			state = ies.create_state "selectable|visible",
 			scene_entity = true,
 			name = "sky_box",
@@ -417,8 +417,8 @@ function ientity.create_procedural_sky(settings)
 		},
 		data = {
 			transform = {},
-			material = world.component "material" "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
-			procedural_sky = world.component "procedural_sky" {
+			material = "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
+			procedural_sky = {
 				--attached_sun_light = attached_light(settings.attached_sun_light),
 				which_hour 	= settings.whichhour or 12,	-- high noon
 				turbidity 	= settings.turbidity or 2.15,

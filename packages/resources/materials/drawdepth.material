@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/drawdepth.fx
+fx: /pkg/ant.resources/materials/fx/drawdepth.fx
 state:
   CULL: CCW
   DEPTH_TEST: LESS

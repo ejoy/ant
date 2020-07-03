@@ -36,3 +36,7 @@ pipeline "animation"
 pipeline "refine_animation_pose"
     .stage "do_refine"
     .stage "do_ik"
+
+component "animation"
+    .implement "animation.lua"
+    .method "init"

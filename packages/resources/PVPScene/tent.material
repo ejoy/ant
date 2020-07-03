@@ -1,10 +1,10 @@
-fx: $resource /pkg/ant.resources/materials/fx/PVPScene/tent.fx
+fx: /pkg/ant.resources/materials/fx/PVPScene/tent.fx
 properties:
   s_basecolor:
-    texture: $resource /pkg/ant.resources/PVPScene/tent_d.texture
+    texture: /pkg/ant.resources/PVPScene/tent_d.texture
     stage: 0
   s_normal:
-    texture: $resource /pkg/ant.resources/PVPScene/tent_n.texture
+    texture: /pkg/ant.resources/PVPScene/tent_n.texture
     stage: 1
   u_specularColor:  {0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03}
   u_specularLight:  {5.5, 0, 0, 0}

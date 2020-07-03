@@ -11,18 +11,17 @@ policy:
     ant.scene|hierarchy_policy
 data:
     transform: {}
-    mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Joints_P1.meshbin"
-    material: $resource /pkg/ant.resources/materials/gpu_skin.material
-    skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
+    mesh: "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Joints_P1.meshbin"
+    material: /pkg/ant.resources/materials/gpu_skin.material
+    skeleton: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
-        anilist:
-            idle: $resource /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
-            jumping: $resource /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
-            punching: $resource /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
-            running: $resource /pkg/ant.resources.binary/meshes/female/animations/running.ozz
-            running_fast: $resource /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
-            walking: $resource /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
-    meshskin: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin1.skinbin"
+        idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+        jumping: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+        punching: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
+        running: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
+        running_fast: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
+        walking: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
+    meshskin: "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin1.skinbin"
     animation_birth: idle
     state: 0x00000005
     scene_entity: true
@@ -42,19 +41,18 @@ policy:
     ant.scene|hierarchy_policy
 data:
     transform: {}
-    mesh: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"
-    material: $resource /pkg/ant.resources/materials/gpu_skin.material
-    skeleton: $resource /pkg/ant.resources.binary/meshes/female/skeleton.ozz
+    mesh: "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"
+    material: /pkg/ant.resources/materials/gpu_skin.material
+    skeleton: /pkg/ant.resources.binary/meshes/female/skeleton.ozz
     animation:
-        anilist:
-            idle: $resource /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
-            jumping: $resource /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
-            punching: $resource /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
-            running: $resource /pkg/ant.resources.binary/meshes/female/animations/running.ozz
-            running_fast: $resource /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
-            walking: $resource /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
+        idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
+        jumping: /pkg/ant.resources.binary/meshes/female/animations/junmping.ozz
+        punching: /pkg/ant.resources.binary/meshes/female/animations/punching.ozz
+        running: /pkg/ant.resources.binary/meshes/female/animations/running.ozz
+        running_fast: /pkg/ant.resources.binary/meshes/female/animations/running-fast.ozz
+        walking: /pkg/ant.resources.binary/meshes/female/animations/walking.ozz
     animation_birth: idle
-    meshskin: $resource "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin"
+    meshskin: "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin"
     scene_entity: true
     state: 0x00000005
     name: gltf_animation_sample

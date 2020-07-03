@@ -1,10 +1,10 @@
-fx: $resource /pkg/ant.resources/materials/fx/stone.fx
+fx: /pkg/ant.resources/materials/fx/stone.fx
 properties:
   s_basecolor:
-    texture: $resource /pkg/ant.resources/stone.texture
+    texture: /pkg/ant.resources/stone.texture
     stage: 0
   s_normal:
-    texture: $resource /pkg/ant.resources/stone_normal.texture
+    texture: /pkg/ant.resources/stone_normal.texture
     stage: 1
 state:
   ALPHA_REF: 0

@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bgfx\bgfx_alloc.cpp" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfx.c" />
+    <ClCompile Include="..\..\clibs\bgfx\luabgfxui.c" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfxutil.c" />
   </ItemGroup>
   <ItemGroup>

@@ -23,7 +23,7 @@ local function create_plane_test()
     "test shadow plane",
     {
         ["ant.collision|collider_policy"] = {
-            collider = world.component "collider" {
+            collider = {
                 box = {{
                     origin = {0, 0, 0, 1},
                     size = {5, 0.001, 5},

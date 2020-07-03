@@ -1,10 +1,10 @@
-fx: $resource /pkg/ant.resources/materials/fx/bloom/bloom.fx
+fx: /pkg/ant.resources/materials/fx/bloom/bloom.fx
 properties:
   s_basecolor:
-    texture: $resource /pkg/ant.resources/materials/textures/Default.texture
+    texture: /pkg/ant.resources/materials/textures/Default.texture
     stage: 0
   s_bloomcolor:
-    texture: $resource /pkg/ant.resources/materials/textures/Default.texture
+    texture: /pkg/ant.resources/materials/textures/Default.texture
     stage: 1
   u_params:  {1, 0, 0, 0}
 state:

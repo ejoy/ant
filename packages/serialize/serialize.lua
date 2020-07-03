@@ -19,7 +19,7 @@ local function save_meshbin(world, eid, filename)
         }
     end
     write_file(filename, thread.pack(e.mesh))
-    e.mesh = world.component "resource" (filename)
+    e.mesh = world.component "mesh" (filename)
 end
 
 local function save_prefab(world, eid, filename)

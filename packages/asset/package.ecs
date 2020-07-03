@@ -1,14 +1,17 @@
-component "prefab"
-    .implement "ext_prefab.lua"
-    .method "init"
-
 component "material"
     .implement "material.lua"
     .method "init"
-    .method "save"
+
+component "skeleton"
+    .implement "skeleton.lua"
+    .method "init"
 
 component "mesh"
     .implement "mesh.lua"
+    .method "init"
+
+component "meshskin"
+    .implement "meshskin.lua"
     .method "init"
 
 transform "material_transform"

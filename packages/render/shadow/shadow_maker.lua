@@ -154,11 +154,11 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 				index = index,
 				split_distance_VS = 0,
 			},
-			primitive_filter = world.component "primitive_filter" {
+			primitive_filter = {
 				filter_type = "cast_shadow",
 			},
 			camera_eid = cameraeid,
-			render_target = world.component "render_target" {
+			render_target = {
 				viewid = viewidmgr.get(cameraname),
 				view_mode = "s",
 				viewport = {

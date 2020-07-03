@@ -91,7 +91,7 @@ function irender_class.create_main_queue(view_rect)
 		data = {
 			camera_eid = camera_eid,
 			
-			render_target = world.component "render_target" {
+			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
 				viewport = default_comp.viewport(view_rect),
@@ -99,7 +99,7 @@ function irender_class.create_main_queue(view_rect)
 					render_buffers = render_buffers
 				},
 			},
-			primitive_filter = world.component "primitive_filter" {
+			primitive_filter = {
 				filter_type = "visible",
 			},
 			visible = true,
@@ -128,11 +128,11 @@ function irender_class.create_blit_queue(viewrect)
 		},
 		data = {
 			camera_eid = cameraeid,
-			render_target = world.component "render_target" {
+			render_target = {
 				viewid = blitviewid,
 				viewport = default_comp.viewport(viewrect),
 			},
-			primitive_filter = world.component "primitive_filter" {
+			primitive_filter = {
 				filter_type = "blit_view",
 			},
 			view_mode = "",
@@ -150,7 +150,7 @@ function irender_class.create_blit_queue(viewrect)
 		},
 		data = {
 			transform = {},
-			material = world.component "material" "/pkg/ant.resources/materials/fullscreen.material",
+			material = "/pkg/ant.resources/materials/fullscreen.material",
 			state = ies.create_state "blit_view",
 			name = "full_quad",
 			scene_entity = true,

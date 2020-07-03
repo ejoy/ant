@@ -67,7 +67,7 @@ local function serializePrefab(filename)
     write_file(filename, world:serialize(entities, {{mount="root"}}))
     local stringify = import_package "ant.serialize".stringify
     local e = world[entities[3]]
-    write_file('/pkg/tools.viewer.prefab_viewer/res/root/test.material', stringify(e.material, world._typeclass))
+    write_file('/pkg/tools.viewer.prefab_viewer/res/root/test.material', stringify(e.material))
 end
 
 function m:init()

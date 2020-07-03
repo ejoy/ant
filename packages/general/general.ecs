@@ -1,11 +1,6 @@
 policy "name"
     .component "name"
 
-component "resource"
-    .implement "general.lua"
-    .method "init"
-    .method "save"
-
 transform "cache_transform"
     .implement "general.lua"
     .output "_cache_prefab"

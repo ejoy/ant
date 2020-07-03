@@ -81,7 +81,8 @@ end
 
 function iobj_motion.get_rotation(eid)
     --torotation is more efficient than srt.r
-    return math3d.torotation(math3d.index(world[eid]._rendercache.srt, 3))
+    return world[eid]._rendercache.srt.r
+    --return math3d.torotation(math3d.index(world[eid]._rendercache.srt, 3))
 end
 
 function iobj_motion.worldmat(eid)

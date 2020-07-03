@@ -1,4 +1,4 @@
-fx: $resource /pkg/ant.resources/materials/fx/outline/scale.fx
+fx: /pkg/ant.resources/materials/fx/outline/scale.fx
 properties:
   u_outlinecolor:  {0.8, 0.8, 0, 1}
   u_outlinescale:  {0.01, 0, 0, 0}

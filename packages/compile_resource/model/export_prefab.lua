@@ -2,7 +2,6 @@ local math3d = require "math3d"
 local utility = require "model.utility"
 
 local prefab = {}
-local conv = {}
 
 local function create_entity(t)
     if t.parent then
@@ -17,19 +16,6 @@ local function create_entity(t)
         action = t.action,
     }
     return #prefab
-end
-
-local function proxy(name)
-    return function (v)
-        local o = {v}
-        conv[o] = {
-            name = name,
-            save = function()
-                return v
-            end
-        }
-        return o
-    end
 end
 
 local function get_transform(node)
@@ -84,8 +70,8 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
         local data = {
             scene_entity= true,
             transform   = transform,
-            mesh        = proxy "resource" (meshfile),
-            material    = proxy "resource" (materialfile),
+            mesh        = meshfile,
+            material    = materialfile,
             name        = meshname .. "." .. primidx,
             state       = DEFAULT_STATE,
         }
@@ -104,24 +90,20 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
                 error("mesh has skin info, but skeleton not export correctly")
             end
 
-            local meshskin = proxy "resource" (f)
-            data.skeleton = proxy "resource" (exports.skeleton)
+            data.skeleton = exports.skeleton
 
             --skinning
-            data.meshskin = meshskin
+            data.meshskin = f
             policy[#policy+1] = "ant.animation|skinning"
 
             --animation
             if next(exports.animations) ~= nil then
                 local lst = {}
-                local anilist = {}
+                data.animation = {}
                 for name, file in pairs(exports.animations) do
-                    anilist[name] = proxy "resource"(file)
+                    data.animation[name] = file
                     lst[#lst+1] = name
                 end
-                data.animation = {
-                    anilist = anilist,
-                }
                 table.sort(lst)
                 data.animation_birth = lst[1]
                 policy[#policy+1] = "ant.animation|animation"
@@ -181,7 +163,6 @@ end
 
 return function(output, glbdata, exports)
     prefab = {}
-    conv = {}
 
     local gltfscene = glbdata.info
     local sceneidx = gltfscene.scene or 0
@@ -218,5 +199,5 @@ return function(output, glbdata, exports)
         assert(nodeidx == mesh_nodeidx)
         create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     end
-    utility.save_txt_file("./mesh.prefab", prefab, conv)
+    utility.save_txt_file("./mesh.prefab", prefab)
 end

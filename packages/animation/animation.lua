@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
+local assetmgr = import_package "ant.asset"
 local ani_module = require "hierarchy.animation"
 
 local ani_cache = ecs.transform "animation_transform"
@@ -94,3 +95,13 @@ mathadapter.bind(
 
 		ani_module.build_skinning_matrices = math3d_adapter.matrix(ani_module.build_skinning_matrices, 5)
 	end)
+
+
+local m = ecs.component "animation"
+
+function m:init()
+	for k, v in pairs(self) do
+		self[k] = assetmgr.resource(v)
+	end
+	return self
+end
