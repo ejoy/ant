@@ -5,7 +5,6 @@ local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
 local samplerutil= require "sampler"
-local shadowutil= require "shadow.util"
 local fbmgr 	= require "framebuffer_mgr"
 local setting	= require "setting"
 
@@ -13,8 +12,9 @@ local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
 local ilight	= world:interface "ant.render|light"
-local iom		= world:interface "ant.objcontroller|obj_motion"
+local ishadow	= world:interface "ant.render|ishadow"
 
+local iom		= world:interface "ant.objcontroller|obj_motion"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -80,17 +80,15 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 	maxextent[1], maxextent[2] = newmax[1], newmax[2]
 end
 
-local function calc_shadow_camera(viewmat, frustum, split_ratios, lightdir, shadowmap_size, stabilize, sc_eid)
-	-- frustum_desc can cache, only camera distance changed or ratios change need recalculate
-	local newfrustum = shadowutil.split_new_frustum(frustum, split_ratios)
-	local vp = math3d.mul(math3d.projmat(newfrustum), viewmat)
+local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, stabilize, sc_eid)
+	local vp = math3d.mul(math3d.projmat(frustum), viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
 
 	local center_WS = math3d.frustum_center(corners_WS)
 	local min_extent, max_extent
 	if stabilize then
-		local radius = math3d.frusutm_max_radius(corners_WS, center_WS)
+		local radius = math3d.frustum_max_radius(corners_WS, center_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadowmap_size)
@@ -114,33 +112,25 @@ local function calc_shadow_camera(viewmat, frustum, split_ratios, lightdir, shad
 	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end
 
-local function update_shadow_camera(dl_eid, viewmat, frustum)
+local function update_shadow_camera(dl_eid, viewmat, viewfrustum)
 	local lightdir = iom.get_direction(dl_eid)
-	local shadowentity = world:singleton_entity "shadow"
-	local shadowcfg = shadowentity.shadow
-	local stabilize = shadowcfg.stabilize
-	local shadowmap_size = shadowcfg.shadowmap_size
+	
+	local setting = ishadow.setting()
 
-	local split = shadowcfg.split
-	local ratios = shadowutil.calc_split_distance_ratio(split.min_ratio, split.max_ratio, 
-		frustum.n, frustum.f, split.pssm_lambda, split.num_split)
+	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
 
 	for _, eid in world:each "csm" do
-		local csmentity = world[eid]
-		local sc_eid = csmentity.camera_eid
-		local csmfrustum = icamera.get_frustum(sc_eid)
-		local csm = world[eid].csm
-		local ratio = ratios[csm.index]
-		calc_shadow_camera(viewmat, frustum, ratio, lightdir, shadowmap_size, stabilize, sc_eid)
-		csm.split_distance_VS = csmfrustum.f - frustum.n
+		local e = world[eid]
+		local csm = e.csm
+		local cf = csmfrustums[csm.index]
+		calc_shadow_camera(viewmat, cf, lightdir, setting.shadowmap_size, setting.stabilize, e.camera_eid)
+		csm.split_distance_VS = cf.f - viewfrustum.n
 	end
 end
 
 local sm = ecs.system "shadow_system"
 
-local imateral = world:interface "ant.asset|imaterial"
-local icamera = world:interface "ant.camera|camera"
-local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
+local function create_csm_entity(index, viewrect, fbidx, depth_type)
 	local cameraname = "csm" .. index
 	local cameraeid = icamera.create {
 			updir 	= mc.YAXIS,
@@ -155,15 +145,14 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 
 	return world:create_entity {
 		policy = {
-			"ant.render|shadow_make_policy",
 			"ant.render|render_queue",
+			"ant.render|csm_policy",
 			"ant.general|name",
 		},
 		data = {
 			csm = {
-				split_ratios= {0, 0},
-				index 		= index,
-				stabilize 	= false,
+				index = index,
+				split_distance_VS = 0,
 			},
 			primitive_filter = world.component "primitive_filter" {
 				filter_type = "cast_shadow",
@@ -178,7 +167,7 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 						color = 0xffffffff,
 						depth = 1,
 						stencil = 0,
-						clear = linear_shadow and "colordepth" or "depth",
+						clear = depth_type == "linear" and "colordepth" or "depth",
 					}
 				},
 				fb_idx = fbidx,
@@ -186,112 +175,19 @@ local function create_csm_entity(index, viewrect, fbidx, linear_shadow)
 			visible = true,
 			name = "csm" .. index,
 		},
-		writeable = {
-			render_target = true,
-		}
-	}
-end
-
-local function get_render_buffers(width, height, linear_shadow)
-	if linear_shadow then
-		local flags = samplerutil.sampler_flag {
-			RT="RT_ON",
-			MIN="LINEAR",
-			MAG="LINEAR",
-			U="CLAMP",
-			V="CLAMP",
-		}
-
-		return {
-			fbmgr.create_rb{
-				format = "RGBA8",
-				w=width,
-				h=height,
-				layers=1,
-				flags=flags,
-			},
-			fbmgr.create_rb {
-				format = "D24S8",
-				w=width,
-				h=height,
-				layers=1,
-				flags=flags,
-			},
-		}
-
-	end
-
-	return {
-		fbmgr.create_rb{
-			format = "D32F",
-			w=width,
-			h=height,
-			layers=1,
-			flags=samplerutil.sampler_flag{
-				RT="RT_ON",
-				MIN="LINEAR",
-				MAG="LINEAR",
-				U="CLAMP",
-				V="CLAMP",
-				COMPARE="COMPARE_LEQUAL",
-				BOARD_COLOR="0",
-			},
-		}
-	}
-end
-
-local function create_shadow_entity(shadowmap_size, split_num, depth_type)
-	local height = shadowmap_size
-	local width = shadowmap_size * split_num
-
-	local min_ratio, max_ratio 	= 0.02, 1.0
-	local pssm_lambda 			= 3
-
-	return world:create_entity {
-		policy = {
-			"ant.render|shadow_config_policy"
-		},
-		data = {
-			shadow = {
-				shadowmap_size 	= shadowmap_size,
-				bias 			= 0.003,
-				depth_type 		= depth_type,
-				normal_offset 	= 0,
-				split = {
-					min_ratio 	= min_ratio,
-					max_ratio 	= max_ratio,
-					pssm_lambda = pssm_lambda,
-					num_split 	= split_num,
-					ratios 		= {},
-				}
-			},
-			fb_index = fbmgr.create{
-				render_buffers = get_render_buffers(width, height, depth_type == "linear")
-			}
-		}
 	}
 end
 
 local shadow_material
+local imaterial = world:interface "ant.asset|imaterial"
 function sm:init()
-	local sd = setting:data()
-	local shadowsetting = sd.graphic.shadow
-	local shadowmap_size= shadowsetting.size
-	local depth_type 	= shadowsetting.type
-	local linear_shadow = depth_type == "linear"
-	local split_num 	= shadowsetting.split_num
+	local fbidx = ishadow.fb_index()
+	local s, dt = ishadow.shadowmap_size(), ishadow.depth_type()
 
-	shadow_material = imateral.load(linear_shadow and 
-		"/pkg/ant.resources/materials/shadow/csm_cast_linear.material" or 
-		"/pkg/ant.resources/materials/shadow/csm_cast.material")
-
-	local seid 	= create_shadow_entity(shadowmap_size, split_num, depth_type)
-	local se 	= world[seid]
-	local fbidx = se.fb_index
-
-	for ii=1, split_num do
-		local vr = {x=(ii-1)*shadowmap_size, y=0, w=shadowmap_size, h=shadowmap_size}
-		create_csm_entity(ii, vr, fbidx, linear_shadow)
+	shadow_material = imaterial.load("/pkg/ant.resources/materials/shadow/csm_cast.material", {shadow_type=dt})
+	for ii=1, ishadow.split_num() do
+		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
+		create_csm_entity(ii, vr, fbidx, dt)
 	end
 end
 
@@ -301,10 +197,10 @@ function sm:post_init()
 	local mq = world:singleton_entity "main_queue"
 	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "transform", mq.camera_eid}
 	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "frusutm", mq.camera_eid}
-	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "directional_light", world:singleton_entity_id "directional_light"}
+	modify_mailboxs[#modify_mailboxs+1] = world:sub{"component_changed", "directional_light", ilight.directional_light()}
 
 	--pub an event to make update_shadow_camera be called
-	world:pub{"component_changed", "directional_light", world:singleton_entity_id "directional_light"}
+	world:pub{"component_changed", "directional_light", ilight.directional_light()}
 end
 
 function sm:update_camera()
@@ -338,8 +234,6 @@ function sm:refine_filter()
 		local se = world[eid]
 		local filter = se.primitive_filter
 		local results = filter.result
-
-
 		replace_material(results.opaticy, 		shadow_material)
 		replace_material(results.translucent, 	shadow_material)
 	end

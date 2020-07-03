@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local computil  = world:interface "ant.render|entity"
-local shadowutil= require "shadow.util"
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local irender   = world:interface "ant.render|irender"

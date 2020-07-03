@@ -1,8 +1,7 @@
 local ecs = ...
 local world = ecs.world
-local renderpkg = import_package "ant.render"
-local fbmgr = renderpkg.fbmgr
-local shadowutil = renderpkg.shadow
+
+local fbmgr = require "framebuffer_mgr"
 
 local mc = import_package "ant.math".constant
 
@@ -10,6 +9,7 @@ local math3d = require "math3d"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local ilight = world:interface "ant.render|light"
 local icamera = world:interface "ant.camera|camera"
+local ishadow = world:interface "ant.render|ishadow"
 
 local m = ecs.interface "system_properties"
 local system_properties = {
@@ -61,27 +61,10 @@ local function update_lighting_properties()
 	add_directional_light_properties()
 
 	local mq = world:singleton_entity "main_queue"
-	system_properties["u_eyepos"].v = iom.get_position(mq.camera_eid)
-end
-
-local function calc_viewport_crop_matrix(csm_idx)
-	local ratios = shadowutil.get_split_ratios()
-	local numsplit = #ratios
-	local spiltunit = 1 / numsplit
-
-	local offset = spiltunit * (csm_idx - 1)
-
-	return math3d.matrix(
-		spiltunit, 0.0, 0.0, 0.0,
-		0.0, 1.0, 0.0, 0.0, 
-		0.0, 0.0, 1.0, 0.0,
-		offset, 0.0, 0.0, 1.0)
+	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
 end
 
 local function update_shadow_properties()
-	--TODO: shadow matrix consist of lighting matrix, crop matrix and viewport offset matrix
-	-- but crop matrix and viewport offset matrix only depend csm split ratios
-	-- we can detect csm split ratios changed, and update those matrix two matrices, and combine as bias matrix
 	local csm_matrixs = system_properties.u_csm_matrix
 	local split_distances = {0, 0, 0, 0}
 	for _, eid in world:each "csm" do
@@ -92,27 +75,23 @@ local function update_shadow_properties()
 		local split_distanceVS = csm.split_distance_VS
 		if split_distanceVS then
 			split_distances[idx] = split_distanceVS
-			local vp = icamera.calc_viewproj(se.camera_eid)
-			vp = math3d.mul(shadowutil.shadow_crop_matrix(), vp)
-			local viewport_cropmatrix = calc_viewport_crop_matrix(idx)
-			csm_matrixs[csm.index].m = math3d.mul(viewport_cropmatrix, vp)
+			local rc = world[se.camera_eid]._rendercache
+			csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), rc.viewprojmat)
 		end
 	end
 
 	system_properties["u_csm_split_distances"].v = split_distances
 
-	local shadowentity = world:singleton_entity "shadow"
-	if shadowentity then
-		local fb = fbmgr.get(shadowentity.fb_index)
-		local sm = system_properties["s_shadowmap"]
-		sm.texture.handle = fbmgr.get_rb(fb[1]).handle
+	local fb = fbmgr.get(ishadow.fb_index())
+	local sm = system_properties["s_shadowmap"]
+	sm.texture.handle = fbmgr.get_rb(fb[1]).handle
 
-		system_properties["u_depth_scale_offset"].v = shadowutil.shadow_depth_scale_offset()
-		local shadow = shadowentity.shadow
-		system_properties["u_shadow_param1"].v = {shadow.bias, shadow.normal_offset, 1/shadow.shadowmap_size, 0}
-		local shadowcolor = shadow.color or {0, 0, 0, 0}
-		system_properties["u_shadow_param2"].v = shadowcolor
+	if ishadow.depth_type() == "linear" then
+		system_properties["u_depth_scale_offset"].id = ishadow.shadow_depth_scale_offset()
 	end
+
+	system_properties["u_shadow_param1"].v = ishadow.shadow_param()
+	system_properties["u_shadow_param2"].v = ishadow.color()
 end
 
 local function update_postprocess_properties()

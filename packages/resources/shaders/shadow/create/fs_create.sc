@@ -1,7 +1,8 @@
 $input v_position
 #include "common.sh"
-
+#ifdef SM_LINEAR
 uniform vec4 u_depth_scale_offset;
+#endif 
 
 void main()
 {

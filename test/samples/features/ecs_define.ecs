@@ -76,7 +76,6 @@ system "scenespace_test_system"
 
 system "shadow_test_system"
     .implement "shadow_test.lua"
-    .require_policy "ant.render|shadow_make_policy"
     .require_policy "ant.scene|hierarchy_policy"
     .require_system "ant.render|shadow_system"
     .method "init"
