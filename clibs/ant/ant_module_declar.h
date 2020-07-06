@@ -25,3 +25,4 @@ int luaopen_rp3d_core(lua_State* L);
 int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
+int luaopen_bgfx_ui(lua_State *L);
