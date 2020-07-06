@@ -255,3 +255,78 @@ function irender_class.read_render_buffer_content(format, rb_idx, force_read, si
 
 	return memory_handle, size.w, size.h, size.w * elem_size
 end
+
+local irq = ecs.interface "irenderqueue"
+
+function irq.target_clear(eid)
+	return world[eid].render_target.viewport.clear_state
+end
+
+function irq.viewport_rect(eid)
+	return world[eid].render_target.viewport.rect
+end
+
+function irq.frame_buffer(eid)
+	return world[eid].render_target.fb_idx
+end
+
+function irq.camera(eid)
+	return world[eid].camera_eid
+end
+
+function irq.visible(eid)
+	return world[eid].visible
+end
+
+function irq.main_camera()
+	return irq.camera(world:singleton_entity_id "main_queue")
+end
+
+function irq.set_target_clear(eid, color, depth, stencil)
+	local cs = world[eid].render_target.viewport.clear_state
+	cs.color = color
+	cs.depth = depth
+	cs.stencil = stencil
+
+	local f = ""
+	if color then
+		f = f .. "C"
+	end
+
+	if depth then
+		f = f .. "D"
+	end
+
+	if stencil then
+		f = f .. "S"
+	end
+
+	cs.clear = f
+	world:pub{"component_changed", "target_clear"}
+end
+
+function irq.set_viewport_rect(eid, rect)
+	local vp = world[eid].render_target.viewport
+	local rc = vp.rect
+	rc.x, rc.y = rect.x, rect.y
+	rc.w, rc.h = rect.w, rect.h
+	world:pub{"component_changed", "viewport"}
+end
+
+function irq.set_frame_buffer(eid, fbidx)
+	local rt = world[eid].render_target
+	rt.fb_idx = fbidx
+	world:pub{"component_changed", "framebuffer"}
+end
+
+function irq.set_camera(eid, cameraeid)
+	world[eid].camera_eid = cameraeid
+	world:pub{"component_changed", "camera_eid"}
+end
+
+function irq.set_visible(eid, visible)
+	local q = world[eid]
+	q.visible = visible
+
+	world:pub{"component_changed", "visible"}
+end
