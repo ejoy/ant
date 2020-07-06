@@ -3206,6 +3206,8 @@ lSetCurrentContext(lua_State* L) {
 static int
 lbeginFrame(lua_State* L) {
 	plat::NewFrame(L);
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = (float)luaL_checknumber(L, 1); //(float)(1.0f / 60.0f);
 	ImGui::NewFrame();
 	sync_io(L);
 	return 0;
