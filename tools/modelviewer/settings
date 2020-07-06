@@ -27,5 +27,10 @@ graphic:
   shadow:
     enable: true
     size: 1024
-    split_num: 4
     type: inv_z
+    bias: 0.003
+    normal_offset: 0
+    color: {1, 1, 1, 1}
+    stabilize: true
+    split_lamada: 1
+    split_num: 4
