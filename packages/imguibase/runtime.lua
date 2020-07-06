@@ -51,6 +51,9 @@ end
 function callback.keyboard(key, press, state)
 	world:signal_emit("keyboard", key, press, state)
 end
+function callback.char(...)
+	world:signal_emit("char", ...)
+end
 function callback.size(width,height,_)
 	if world then
 		world:pub {"resize", width, height}
