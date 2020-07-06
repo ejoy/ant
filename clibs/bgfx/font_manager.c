@@ -258,6 +258,11 @@ scale(short *v, int size) {
 	*v = (*v * size + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
 }
 
+static inline void
+uscale(unsigned short *v, int size) {
+	*v = (*v * size + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
+}
+
 void
 font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 	(void)F;
@@ -265,6 +270,8 @@ font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 	scale(&glyph->offset_y, size);
 	scale(&glyph->advance_x, size);
 	scale(&glyph->advance_x, size);
+	uscale(&glyph->w, size);
+	uscale(&glyph->h, size);
 }
 
 #if 0

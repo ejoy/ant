@@ -443,6 +443,8 @@ lprepare_text(lua_State *L) {
 
 static inline void
 fill_text(struct font_manager *F, struct buffer_text * rect, int16_t x0, int16_t y0, uint32_t color, int size, struct font_glyph *g) {
+	unsigned short w = g->w;
+	unsigned short h = g->h;
 	font_manager_scale(F, g, size);
 
 	x0 += g->offset_x * FIXPOINT;
@@ -454,8 +456,8 @@ fill_text(struct font_manager *F, struct buffer_text * rect, int16_t x0, int16_t
 	int16_t u0 = g->u * (0x8000 / FONT_MANAGER_TEXSIZE);
 	int16_t v0 = g->v * (0x8000 / FONT_MANAGER_TEXSIZE);
 
-	int16_t u1 = (g->u + g->w) * (0x8000 / FONT_MANAGER_TEXSIZE);
-	int16_t v1 = (g->v + g->h) * (0x8000 / FONT_MANAGER_TEXSIZE);
+	int16_t u1 = (g->u + w) * (0x8000 / FONT_MANAGER_TEXSIZE);
+	int16_t v1 = (g->v + h) * (0x8000 / FONT_MANAGER_TEXSIZE);
 
 	rect[0].p[0] = x0;
 	rect[0].p[1] = y0;
@@ -489,13 +491,6 @@ fill_text(struct font_manager *F, struct buffer_text * rect, int16_t x0, int16_t
 		rect[i].c[2] = c[2];
 		rect[i].c[3] = c[3]; 
 	}
-/*
-	uint8_t * tmp = (uint8_t *)rect;
-	for (i=0;i<sizeof(*rect) * 4;i++) {
-		printf("%02x ", tmp[i]);
-	}
-	printf("\n");
-*/
 }
 
 /*
@@ -525,6 +520,7 @@ lsubmit_char(lua_State *L) {
 	int ret = check_submit(L, c, TYPE_TEXT, 1);
 	struct buffer_text *bt = get_buffer_text(c);
 	fill_text(F, bt, x, y, color, size, &g);
+	++c->size;
 	return ret;
 }
 

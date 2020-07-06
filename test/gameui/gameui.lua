@@ -16,6 +16,7 @@ local ctx = {
 	fonttex = false,
 	fx = false,
 	fontfx = false,
+	fonttex = false,
 }
 
 function m:init()
@@ -28,10 +29,12 @@ function m:init()
 
 	ctx.fx = assetmgr.load_fx "/pkg/ant.test.gameui/uiquat.fx"
 	ctx.fontfx = assetmgr.load_fx "/pkg/ant.test.gameui/uifont.fx"
+	ctx.fontuniform = ctx.fontfx.uniforms[1].handle	-- s_texFont
 	local fontid = ui.addfont(Font "黑体")
 	assert(fontid == 0)
 	local size = ui.fonttexture_size
 	ctx.fonttex = bgfx.create_texture2d(size, size, false, 1, "A8")
+	bgfx.set_view_clear(ctx.viewid, "C", 0)
 end
 
 function m:ui_update()
@@ -46,7 +49,10 @@ function m:ui_update()
 
 	bgfx.submit(ctx.viewid, ctx.fx.prog)
 
-	ui.submit_char(300,300, 24, 0xffffff, codepoint)
+	ui.submit_char(300,300, 24, 0x0000ff, codepoint)
 	ui.submit()
+	bgfx.set_texture(0, ctx.fontuniform, ctx.fonttex)
 	bgfx.submit(ctx.viewid, ctx.fontfx.prog)
+
+
 end
