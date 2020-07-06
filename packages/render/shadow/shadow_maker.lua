@@ -69,7 +69,7 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 		-- value /= unit_pretexel;
 		-- value = floor( value );
 		-- value *= unit_pretexel;
-		return math3d.totable(
+		return math3d.tovalue(
 			math3d.mul(math3d.floor(math3d.mul(value, invunit_pretexel)), unit_pretexel))
 	end
 
@@ -97,7 +97,7 @@ local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, st
 		-- look at matrix up direction should select one that not easy parallel with view direction
 		local shadow_viewmatrix = math3d.lookto(center_WS, lightdir)
 		local minv, maxv = math3d.minmax(corners_WS, shadow_viewmatrix)
-		min_extent, max_extent = math3d.totable(minv), math3d.totable(maxv)
+		min_extent, max_extent = math3d.tovalue(minv), math3d.tovalue(maxv)
 	end
 
 	local rc = world[sc_eid]._rendercache
