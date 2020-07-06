@@ -15,6 +15,7 @@ local m = ecs.system 'init_system'
 local root
 local entities = {}
 local iom = world:interface "ant.objcontroller|obj_motion"
+local irq = world:interface "ant.render|irenderqueue"
 
 local function normalizeAabb()
     local aabb
@@ -85,8 +86,7 @@ function m:init()
 end
 
 function m:post_init()
-    local e = world:singleton_entity "main_queue"
-    e.render_target.viewport.clear_state.color = 0xa0a0a0ff
+    irq.set_target_clear(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
 end
 
 function m:data_changed()

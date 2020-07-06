@@ -9,6 +9,8 @@ local ui = require "bgfx.ui"
 local platform = require "platform"
 local Font = platform.font
 
+local irq = world:interface "ant.render|irenderqueue"
+
 local ctx = {
 	viewid = renderpkg.viewidmgr.generate "gameui",
 	bind = false,
@@ -18,7 +20,7 @@ local ctx = {
 
 function m:init()
 	local queue = world:singleton_entity "main_queue"
-	queue.render_target.viewport.clear_state.color = 0xa0a0a0ff
+	irq.set_target_clear(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
 	bgfx.set_view_rect(ctx.viewid, 0,0, 1024, 768)
 	ctx.bind = function()
 		renderpkg.fbmgr.bind(ctx.viewid, queue.render_target.fb_idx)

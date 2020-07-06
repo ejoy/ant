@@ -6,7 +6,7 @@ local imgui_util = require "imgui_util"
 local computil = world:interface "ant.render|entity"
 
 local drawer = world:interface "ant.render|iwidget_drawer"
-
+local irq = world:interface "ant.render|irenderqueue"
 local init_loader_sys = ecs.system 'init_loader_system'
 
 local RoleEntityId
@@ -48,8 +48,7 @@ function init_loader_sys:init()
 end
 
 function init_loader_sys:post_init()
-    local e = world:singleton_entity "main_queue"
-    e.render_target.viewport.clear_state.color = 0xa0a0a0ff
+    irq.set_target_clear(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
 end
 
 local status = {

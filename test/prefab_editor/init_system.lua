@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local math3d = require "math3d"
-local iom = world:interface "ant.objcontroller|obj_motion"
+local irq = world:interface "ant.render|irenderqueue"
 local camera = world:interface "ant.camera|camera"
 local entity = world:interface "ant.render|entity"
 local m = ecs.system 'init_system'
@@ -9,7 +9,7 @@ local m = ecs.system 'init_system'
 function m:init()
     entity.create_procedural_sky()
     local e = world:singleton_entity "main_queue"
-    e.render_target.viewport.clear_state.color = 0xa0a0a0ff
+    irq.set_target_clear(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
     camera.bind(camera.create {
         eyepos = {-200, 100,200, 1},
         viewdir = {2,-1,-2,0},

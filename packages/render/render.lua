@@ -104,8 +104,8 @@ function irender.create_main_queue(view_rect)
 						clear = rs.clear or "all",
 					},
 					rect = {
-						x = view_rect.x, y = view_rect.y,
-						w = view_rect, h = view_rect,
+						x = view_rect.x or 0, y = view_rect.y or 0,
+						w = view_rect.w or 1, h = view_rect.h or 1,
 					},
 				},
 				fb_idx = fbmgr.create {
