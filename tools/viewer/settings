@@ -16,6 +16,11 @@ animation:
     GPU:
       enable: true
 graphic:
+  render:
+    clear_color: 0x000000ff
+    clear_depth: 1
+    clear_stencil: 0
+    clear: all
   hdr:
     enable: false
     format: RGBA16F

@@ -11,9 +11,10 @@ local samplerutil	= require "sampler"
 
 local setting		= require "setting"
 
-local irender_class = ecs.interface "irender"
-local irender = world:interface "ant.render|irender"
-function irender_class.draw(vid, ri)
+local irender = ecs.interface "irender"
+
+local icamera = world:interface "ant.camera|camera"
+function irender.draw(vid, ri)
 	ri:set_transform()
 
 	bgfx.set_state(ri.state)
@@ -35,13 +36,13 @@ function irender_class.draw(vid, ri)
 	bgfx.submit(vid, ri.fx.prog, 0)
 end
 
-function irender_class.get_main_view_rendertexture()
+function irender.get_main_view_rendertexture()
 	local mq = world:singleton_entity "main_queue"
 	local fb = fbmgr.get(mq.render_target.fb_idx)
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-function irender_class.create_main_queue(view_rect)
+function irender.create_main_queue(view_rect)
 	local rb_flag = samplerutil.sampler_flag {
 		RT="RT_MSAA2",
 		MIN="LINEAR",
@@ -74,13 +75,14 @@ function irender_class.create_main_queue(view_rect)
 		view_rect.w, view_rect.h, "D24S8", rb_flag)
 	)
 
-	local icamera = world:interface "ant.camera|camera"
 	local camera_eid = icamera.create{
 		eyepos  = {0, 0, 0, 1},
 		viewdir = {0, 0, 1, 0},
 		frustum = default_comp.frustum(view_rect.w / view_rect.h),
         name = "default_camera",
 	}
+
+	local rs = sd.graphic.render
 
 	return world:create_entity {
 		policy = {
@@ -94,7 +96,18 @@ function irender_class.create_main_queue(view_rect)
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
-				viewport = default_comp.viewport(view_rect),
+				viewport = {
+					clear_state = {
+						color = rs.clear_color or 0x000000ff,
+						depth = rs.clear_depth or 1,
+						stencil = rs.clear_stencil or 0,
+						clear = rs.clear or "all",
+					},
+					rect = {
+						x = view_rect.x, y = view_rect.y,
+						w = view_rect, h = view_rect,
+					},
+				},
 				fb_idx = fbmgr.create {
 					render_buffers = render_buffers
 				},
@@ -111,7 +124,7 @@ end
 
 local blitviewid = viewidmgr.get "blit"
 local icamera = world:interface "ant.camera|camera"
-function irender_class.create_blit_queue(viewrect)
+function irender.create_blit_queue(viewrect)
 	local cameraeid = icamera.create {
 		eyepos = mc.ZERO_PT,
 		viewdir = mc.ZAXIS,
@@ -175,14 +188,14 @@ local statemap = {
 	DS 				= "DS",
 }
 
-function irender_class.update_frame_buffer_view(viewid, fbidx)
+function irender.update_frame_buffer_view(viewid, fbidx)
 	local fb = fbmgr.get(fbidx)
 	if fb then
 		bgfx.set_view_frame_buffer(viewid, fb.handle)
 	end
 end
 
-function irender_class.update_viewport(viewid, viewport)
+function irender.update_viewport(viewid, viewport)
 	local cs = viewport.clear_state
 	local clear_what = cs.clear
 	local state = statemap[clear_what]
@@ -194,12 +207,12 @@ function irender_class.update_viewport(viewid, viewport)
 	bgfx.set_view_rect(viewid, rt.x, rt.y, rt.w, rt.h)
 end
 
-function irender_class.update_render_target(viewid, rt)
+function irender.update_render_target(viewid, rt)
 	irender.update_frame_buffer_view(viewid, rt.fb_idx)
 	irender.update_viewport(viewid, rt.viewport)
 end
 
-function irender_class.screen_capture(world, force_read)
+function irender.screen_capture(world, force_read)
 	local mq = world:singleton_entity "main_queue"
 	local fbidx = mq.render_target.fb_idx
 	local fb = fbmgr.get(fbidx)
@@ -209,7 +222,7 @@ function irender_class.screen_capture(world, force_read)
 	return width, height, pitch, tostring(handle)
 end
 
-function irender_class.read_render_buffer_content(format, rb_idx, force_read, size)
+function irender.read_render_buffer_content(format, rb_idx, force_read, size)
 	local rb = fbmgr.get_rb(rb_idx)
 	local w, h
 	if size then
