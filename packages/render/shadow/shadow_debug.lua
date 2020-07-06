@@ -5,86 +5,37 @@ local computil  = world:interface "ant.render|entity"
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local irender   = world:interface "ant.render|irender"
-local mu        = import_package "ant.math".util
-local mc        = import_package "ant.math".constant
+local mathpkg   = import_package "ant.math"
+local mu, mc    = mathpkg.util, mathpkg.constant
+
 local math3d    = require "math3d"
 
-local icamera = world:interface "ant.camera|camera"
-local iom = world:interface "ant.objcontroller|obj_motion"
-local ilight = world:interface "ant.render|light"
-----------------------------------------------------------------------------------------------------------
-local dbg_sm_sys = ecs.system "debug_shadow_maker_system"
+local icamera	= world:interface "ant.camera|camera"
+local iom		= world:interface "ant.objcontroller|obj_motion"
+local ilight	= world:interface "ant.render|light"
+local ishadow	= world:interface "ant.render|ishadow"
 
+local shadowdbg_sys = ecs.system "shadow_debug_system"
 
 local quadsize = 192
 
+local quadmaterial = "/pkg/ant.resources/materials/shadow/shadowmap_quad.material"
+
 local function csm_shadow_debug_quad()
-	local quadmaterial = "/pkg/ant.resources/materials/shadow/shadowmap_quad.material"
+	local splitnum = ishadow.split_num()
+	local fbidx = ishadow.fb_index()
+	local fb = fbmgr.get(fbidx)
 
-	local se = world:singleton_entity "shadow"
-	local fb = fbmgr.get(se.fb_index)
-
-	local num_split = se.shadow.split.num_split
-	local rect = {x=0, y=0, w=quadsize*num_split, h=quadsize}
+	local rect = {x=0, y=0, w=quadsize*splitnum, h=quadsize}
 	local q_eid = computil.create_quad_entity(rect, quadmaterial, "csm_quad")
-	local qe = world[q_eid]
-
-	--TODO
-	assert(false, "can not patch anymore")
-	-- local m = assetmgr.patch(qe.material, {})
-	-- m.properties = {
-	-- 	s_shadowmap = {
-	-- 		stage = smstage,
-	-- 		texture = {handle=fbmgr.get_rb(fb[1]).handle},
-	-- 	}
-	-- }
-	-- qe.material = m
+	ishadow.set_property(q_eid, "s_shadowmap", fbmgr.get_rb(fb[1]).handle)
 end
 
 local frustum_colors = {
 	0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
 }
 
-local function add_shadow_debug_policy(eid)
-	assert(false)
-end
-
-local function	csm_shadow_debug_frustum()
-	for _, seid in world:each "csm" do
-		local e = world[seid]
-		local vp = icamera.calc_viewproj(e.camera_eid)
-
-		local color = frustum_colors[e.csm.index]
-		local frustum_points = math3d.frustum_points(vp)
-		
-		add_shadow_debug_policy(
-			computil.create_frustum_entity(frustum_points, "csm frusutm part" .. e.csm.index, color)
-		)
-		add_shadow_debug_policy(
-			computil.create_axis_entity(
-			{
-				r=iom.get_rotation(e.camera_eid),
-				t=iom.get_position(e.camera_eid),
-			},
-			color)
-		)
-
-	end
-end
-
-local function main_view_debug_frustum()
-	for _, seid in world:each "csm" do
-		local s = world[seid]
-
-		local csm = s.csm
-		local vp  = icamera.calc_viewproj(s.camera_eid)
-		local frustum_points = math3d.frustum_points(vp)
-		add_shadow_debug_policy(
-		computil.create_frustum_entity(frustum_points, "main view part" .. csm.index, frustum_colors[csm.index]))
-	end
-end
-
-function dbg_sm_sys:post_init()
+function shadowdbg_sys:post_init()
 	csm_shadow_debug_quad()
 end
 
@@ -98,15 +49,10 @@ local function find_csm_entity(index)
 end
 
 local function get_split_distance(index)
-	local se = world[find_csm_entity(index)]
-
-	local viewcamera = camerautil.main_queue_camera(world)
-	local viewdistance = viewcamera.frustum.f - viewcamera.frustum.n
-
-	local ratios = se.csm.split_ratios
-	local n = viewcamera.frustum.n + ratios[1] * viewdistance
-	local f = viewcamera.frustum.n + ratios[2] * viewdistance
-	return n, f
+	local mq = world:singleton_entity "main_queue"
+	local ff = ishadow.calc_split_frustums(icamera.get_frustum(mq.camera_eid))
+	local f = ff[index]
+	return f.n, f.f
 end
 
 local function create_debug_entity()
@@ -114,18 +60,22 @@ local function create_debug_entity()
 		world:remove_entity(seid)
 	end
 
-	main_view_debug_frustum()
-	csm_shadow_debug_frustum()
+	for _, seid in world:each "csm" do
+		local s = world[seid]
+		local idx = s.csm.index
+		local vp  = icamera.calc_viewproj(s.camera_eid)
+		local frustum_points = math3d.frustum_points(vp)
+		local color = frustum_colors[idx]
+
+		computil.create_frustum_entity(frustum_points, "main view part" .. idx, color)
+		computil.create_axis_entity(iom.srt(s.camera_eid), "csm_axis:" .. idx, color)
+	end
 end
 
 local function print_points(points)
 	for idx, p in ipairs(points) do
 		print(string.format("\tpoint[%d]:[%s]", idx, math3d.tostring(p)))
 	end
-end
-
-local function print_frustum_points(frustum_points)
-	print_points(frustum_points)
 end
 
 local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
@@ -151,33 +101,26 @@ local function check_shadow_matrix()
 		print("origin is not on csm1")
 	end
 
-	local frustum = icamera.get_frustum(mq.camera_eid)
-	local split_frustum_desc = shadowutil.split_new_frustum(frustum, csm1.csm.split_ratios)
+	local ff = ishadow.calc_split_frustums(icamera.get_frustum(mq.camera_eid))
+	local split_frustum_desc = ff[csm1.index]
 	local viewmat = icamera.calc_viewmat(mq.camera_eid)
 	local vp = math3d.mul(math3d.projmat(split_frustum_desc), viewmat)
 
 	local frustum_points = math3d.frusutm_points(vp)
 	local center = math3d.frustum_center(frustum_points)
 
-	print(string.format("view split frusutm corners, center:[%f, %f, %f]", center[1], center[2], center[3]))
-	print_frustum_points(frustum_points)
+	print("view split frusutm corners, center: " .. math3d.tostring(center))
+	print_points(frustum_points)
 
 	local lightmatrix = math3d.lookto(center, lightdir)
 	local corners_LS = {}
-	local minextent, maxextent = {}, {}
 	for _, c in ipairs(frustum_points) do
-		local c_LS = math3d.transform(lightmatrix, c, 1)
-		corners_LS[#corners_LS+1] = c_LS
-		minextent[1] = minextent[1] and math.min(minextent[1], c_LS[1]) or c_LS[1]
-		minextent[2] = minextent[2] and math.min(minextent[2], c_LS[2]) or c_LS[2]
-		minextent[3] = minextent[3] and math.min(minextent[3], c_LS[3]) or c_LS[3]
-
-		maxextent[1] = maxextent[1] and math.max(maxextent[1], c_LS[1]) or c_LS[1]
-		maxextent[2] = maxextent[2] and math.max(maxextent[2], c_LS[2]) or c_LS[2]
-		maxextent[3] = maxextent[3] and math.max(maxextent[3], c_LS[3]) or c_LS[3]
+		corners_LS[#corners_LS+1] = math3d.transform(lightmatrix, c, 1)
 	end
 
-	print("light space corner points")
+	local minextent, maxextent = math3d.minmax(corners_LS)
+
+	print("light space corner points:")
 	print_points(corners_LS)
 
 	local frustum_desc = {
@@ -192,30 +135,27 @@ local function check_shadow_matrix()
 	frustum_desc.b, frustum_desc.t, 
 	frustum_desc.n, frustum_desc.f))
 
-	local newvp = mu.view_proj({eyepos=center, viewdir=lightdir, up=mc.YAXIS}, frustum_desc)
+	local newvp = math3d.mul(math3d.projmat(frustum_desc), math3d.lookto(center, lightdir))
 	local new_light_frustum_points = math3d.frustum_points(newvp)
-	add_shadow_debug_policy(
-	computil.create_frustum_entity(new_light_frustum_points, "lua calc view frustum",  0xff0000ff))
+	computil.create_frustum_entity(new_light_frustum_points, "lua calc view frustum",  0xff0000ff)
 
 	---------------------------------------------------------------------------------------------------------
 
-	local shadowcamera = world[csm1.camera_eid].camera
-	print("shadow camera view direction:", math3d.tostring(shadowcamera.viewdir))
-	print("shadow camera position:", math3d.string(shadowcamera.eyepos))
+	print("shadow camera view direction:", math3d.tostring(iom.get_direction(csm1.camera_eid)))
+	print("shadow camera position:", math3d.string(iom.get_position(csm1.camera_eid)))
 
-	local shadowcamera_frustum_desc = shadowcamera.frustum
+	local shadowcamera_frustum_desc = icamera.get_frustum(csm1.camera_eid)
 	print(string.format("shadow camera frustum:[l=%f, r=%f, b=%f, t=%f, n=%f, f=%f]", 
 		shadowcamera_frustum_desc.l, shadowcamera_frustum_desc.r, 
 		shadowcamera_frustum_desc.b, shadowcamera_frustum_desc.t, 
 		shadowcamera_frustum_desc.n, shadowcamera_frustum_desc.f))
 
-	local shadow_viewproj = mu.view_proj(shadowcamera)
+	local shadow_viewproj = icamera.calc_viewproj(csm1.camera_eid)
 	local shadowcamera_frustum_points = math3d.frustum_points(shadow_viewproj)
 
 	print("shadow view frustm point")
-	print_frustum_points(shadowcamera_frustum_points)
-	add_shadow_debug_policy(
-	computil.create_frustum_entity(shadowcamera_frustum_points, "view frustum", 0xffffff00))
+	print_points(shadowcamera_frustum_points)
+	computil.create_frustum_entity(shadowcamera_frustum_points, "view frustum", 0xffffff00)
 
 	-------------------------------------------------------------------------------------------------
 	-- test shadow matrix
@@ -232,8 +172,8 @@ local function check_shadow_matrix()
 		origin_CS[4] / origin_CS[4]
 	}
 	print(string.format("origin ndc space:[%f, %f, %f, %f]", origin_NDC[1], origin_NDC[2], origin_NDC[3], origin_NDC[4]))
-
-	local shadow_matrix = math3d.mul(shadowutil.shadow_crop_matrix(), shadow_viewproj)
+	local cp_mat = ishadow.crop_matrices()[csm1.index]
+	local shadow_matrix = math3d.mul(cp_mat, shadow_viewproj)
 	local origin_CS_With_Crop = math3d.transform(shadow_matrix, {0, 0, 0.55, 1})
 	print(string.format("origin clip space with corp:[%f, %f, %f, %f]", 
 		origin_CS_With_Crop[1], origin_CS_With_Crop[2], origin_CS_With_Crop[3], origin_CS_With_Crop[4]))
@@ -248,8 +188,7 @@ local function check_shadow_matrix()
 		origin_NDC_With_Crop[1], origin_NDC_With_Crop[2], origin_NDC_With_Crop[3], origin_NDC_With_Crop[4]))
 	------------------------------------------------------------------------------------------------------------------------
 	-- read the shadow map back
-	if linear_shadow then
-
+	if ishadow.depth_type() == "linear" then
 		local size = csm1.shadow.shadowmap_size
 		local fb = fbmgr.get(csm1.render_target.fb_idx)
 		local memory_handle, width, height, pitch = irender.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1], true)
@@ -290,11 +229,11 @@ end
 
 local record_camera_state_mb = world:sub {"record_camera_state"}
 
-function dbg_sm_sys:data_changed()
+function shadowdbg_sys:data_changed()
 	for _, eid in record_camera_state_mb:unpack() do
 		log_split_distance()
-		create_debug_entity(eid)
+		create_debug_entity()
 
-		--check_shadow_matrix()
+		check_shadow_matrix()
 	end
 end

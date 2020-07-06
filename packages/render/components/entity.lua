@@ -276,7 +276,7 @@ local axis_ib = {
 	2, 3,
 	4, 5,
 }
-function ientity.create_axis_entity(srt, color, name)
+function ientity.create_axis_entity(srt, name, color)
 	local axis_vb = {
 		0, 0, 0, color or 0xff0000ff,
 		1, 0, 0, color or 0xff0000ff,
