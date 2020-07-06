@@ -129,7 +129,7 @@ touch_slot(struct font_manager *F, int slotid) {
 	F->list_head = slotid;
 }
 
-// 1 exist in cache. 0 not exist in cache (only glyph->w/glyph->h are valid), call font_manager_update. -1 failed.
+// 1 exist in cache. 0 not exist in cache , call font_manager_update. -1 failed.
 int
 font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph) {
 	int cp = codepoint_ttf(font, codepoint);
@@ -150,10 +150,9 @@ font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_
 	}
 	int last_slot = F->priority[F->list_head].prev;
 	struct priority_list *last_node = &F->priority[last_slot];
-	if (last_node->version == F->version)	// full ?
-		return -1;
 	if (font < 0 || font >= F->font_number) {
 		// invalid font
+		memset(glyph, 0, sizeof(*glyph));
 		return -1;
 	}
 
@@ -174,6 +173,9 @@ font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_
 	glyph->advance_y = (short)((ascent + descent + lineGap) * scale + 0.5f) + DISTANCE_OFFSET * 2;
 	glyph->u = 0;
 	glyph->v = 0;
+
+	if (last_node->version == F->version)	// full ?
+		return -1;
 
 	return 0;
 }
@@ -212,6 +214,15 @@ font_manager_update(struct font_manager *F, int font, int codepoint, struct font
 
 	stbtt_FreeSDF(tmp, F->ttf[font].userdata);
 
+	struct font_slot *s = &F->slots[slot];
+	s->codepoint_ttf = cp;
+	s->offset_x = glyph->offset_x;
+	s->offset_y = glyph->offset_y;
+	s->advance_x = glyph->advance_x;
+	s->advance_y = glyph->advance_y;
+	s->w = glyph->w;
+	s->h = glyph->h;
+
 	return NULL;
 }
 
@@ -240,6 +251,20 @@ font_manager_rebindfont(struct font_manager *F, int fontid, const void *ttfbuffe
 		return -1;
 	}
 	return fontid;
+}
+
+static inline void
+scale(short *v, int size) {
+	*v = (*v * size + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
+}
+
+void
+font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
+	(void)F;
+	scale(&glyph->offset_x, size);
+	scale(&glyph->offset_y, size);
+	scale(&glyph->advance_x, size);
+	scale(&glyph->advance_x, size);
 }
 
 #if 0

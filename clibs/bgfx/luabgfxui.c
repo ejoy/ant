@@ -59,6 +59,13 @@ struct buffer_rect {
 	uint8_t c[4];
 };
 
+struct buffer_text {
+	int16_t p[2];
+	int16_t u;
+	int16_t v;
+	uint8_t c[4];
+};
+
 static struct context *
 new_context(lua_State *L) {
 	struct context *c = (struct context *)lua_newuserdatauv(L, sizeof(struct context), 0);
@@ -120,7 +127,7 @@ push_typeargs(lua_State *L, int type) {
 	case TYPE_RECT:
 		return 1;
 	case TYPE_TEXT:
-		return 2;	// number, fontid
+		return 1;
 	default:
 		return luaL_error(L, "Invalid type %d", type);
 	}
@@ -161,6 +168,11 @@ check_submit(lua_State *L, struct context *c, int type, int size) {
 static inline struct buffer_rect *
 get_buffer_rect(struct context *c) {
 	return (struct buffer_rect *)(c->tvb.data + c->size * sizeof(struct buffer_rect) * 4);
+}
+
+static inline struct buffer_text *
+get_buffer_text(struct context *c) {
+	return (struct buffer_text *)(c->tvb.data + c->size * sizeof(struct buffer_text) * 4);
 }
 
 static inline int16_t
@@ -324,22 +336,28 @@ struct prepare {
 	int codepoint;
 };
 
-static inline const char *
-prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, int codepoint) {
+static inline void
+prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
 	struct font_glyph g;
 	int ret = font_manager_touch(F, fontid, codepoint, &g);
-	if (ret > 0)
-		return NULL;
-	if (ret < 0)	// failed
-		return "overflow";
-	// update texture
-	const bgfx_memory_t * mem = BGFX(alloc)(g.w * g.h);
-	const char * err = font_manager_update(F, fontid, codepoint, &g, mem->data);
-	if (err)
-		return err;
-	BGFX(update_texture_2d)(texid, 0, 0, g.u, g.v, g.w, g.h, mem, g.w);
+	*advance_x = g.advance_x;
+	*advance_y = g.advance_y;
 
-	return NULL;
+	if (ret < 0) {	// failed
+		// todo: report overflow
+		return;
+	}
+
+	if (ret == 0) {
+		// update texture
+		const bgfx_memory_t * mem = BGFX(alloc)(g.w * g.h);
+		const char * err = font_manager_update(F, fontid, codepoint, &g, mem->data);
+		if (err) {
+			// todo: report error
+			return;
+		}
+		BGFX(update_texture_2d)(texid, 0, 0, g.u, g.v, g.w, g.h, mem, g.w);
+	}
 }
 
 /*
@@ -389,7 +407,7 @@ static const char *utf8_decode (const char *s, utfint *val, int strict) {
 	string text
 	integer fontid (default = 0)
 
-	return true/false, err message
+	return advance_x, advance_y
  */
 static int
 lprepare_text(lua_State *L) {
@@ -402,25 +420,82 @@ lprepare_text(lua_State *L) {
 	struct font_manager *F = &c->fm;
 	int fontid = luaL_optinteger(L, 3, 0);
 
+	int advance_x=0, advance_y=0;
 	while (str < end_ptr) {
 		utfint codepoint;
 		str = utf8_decode(str, &codepoint, 1);
 		if (str) {
-			const char * err = prepare_char(F, th, fontid, codepoint);
-			if (err) {
-				lua_pushboolean(L, 0);
-				lua_pushstring(L, err);
-				return 2;
+			int x,y;
+			prepare_char(F, th, fontid, codepoint, &x, &y);
+			advance_x += x;
+			if (y > advance_y) {
+				advance_y = y;
 			}
 		} else {
-			lua_pushboolean(L, 0);
-			lua_pushstring(L, "Invalid utf8 text");
-			return 2;
+			return luaL_error(L, "Invalid utf8 text");
 		}
 	}
 
-	lua_pushboolean(L,1);
-	return 1;
+	lua_pushinteger(L, advance_x);
+	lua_pushinteger(L, advance_y);
+	return 2;
+}
+
+static inline void
+fill_text(struct font_manager *F, struct buffer_text * rect, int16_t x0, int16_t y0, uint32_t color, int size, struct font_glyph *g) {
+	font_manager_scale(F, g, size);
+
+	x0 += g->offset_x * FIXPOINT;
+	y0 += g->offset_y * FIXPOINT;
+
+	int16_t x1 = x0 + g->w * FIXPOINT;
+	int16_t y1 = y0 + g->h * FIXPOINT;
+
+	int16_t u0 = g->u * (0x8000 / FONT_MANAGER_TEXSIZE);
+	int16_t v0 = g->v * (0x8000 / FONT_MANAGER_TEXSIZE);
+
+	int16_t u1 = (g->u + g->w) * (0x8000 / FONT_MANAGER_TEXSIZE);
+	int16_t v1 = (g->v + g->h) * (0x8000 / FONT_MANAGER_TEXSIZE);
+
+	rect[0].p[0] = x0;
+	rect[0].p[1] = y0;
+	rect[1].p[0] = x1;
+	rect[1].p[1] = y0;
+	rect[2].p[0] = x0;
+	rect[2].p[1] = y1;
+	rect[3].p[0] = x1;
+	rect[3].p[1] = y1;
+	
+	rect[0].u = u0;
+	rect[0].v = v0;
+	rect[1].u = u1;
+	rect[1].v = v0;
+	rect[2].u = u0;
+	rect[2].v = v1;
+	rect[3].u = u1;
+	rect[3].v = v1;
+
+	int i;
+	uint8_t c[4] = {
+		(color >> 16) & 0xff,
+		(color >> 8) & 0xff,
+		color & 0xff,
+		(color >> 24) & 0xff,
+	};
+
+	for (i=0;i<4;i++) {
+		rect[i].c[0] = c[0];
+		rect[i].c[1] = c[1];
+		rect[i].c[2] = c[2];
+		rect[i].c[3] = c[3]; 
+	}
+/*
+	uint8_t * tmp = (uint8_t *)rect;
+	for (i=0;i<sizeof(*rect) * 4;i++) {
+		printf("%02x ", tmp[i]);
+	}
+	printf("\n");
+*/
 }
 
 /*
@@ -430,10 +505,7 @@ lprepare_text(lua_State *L) {
 	integer color
 	integer codepoint
 	integer fontid (default = 0)
-
-	return advance_x, advance_y
  */
-
 static int
 lsubmit_char(lua_State *L) {
 	int16_t x = read_fixpoint(L, 1);
@@ -447,13 +519,12 @@ lsubmit_char(lua_State *L) {
 	struct font_manager *F = &c->fm;
 	
 	struct font_glyph g;
-	int ret = font_manager_touch(F, fontid, codepoint, &g);
-	if (ret != 0)
+	if (font_manager_touch(F, fontid, codepoint, &g) <= 0)	// not in cache
 		return 0;
-	ret = check_submit(L, c, TYPE_TEXT, 1);
-	// todo : fill tvb
-	(void)color; (void)size; (void)x; (void)y;
-
+	
+	int ret = check_submit(L, c, TYPE_TEXT, 1);
+	struct buffer_text *bt = get_buffer_text(c);
+	fill_text(F, bt, x, y, color, size, &g);
 	return ret;
 }
 
@@ -472,7 +543,6 @@ luaopen_bgfx_ui(lua_State *L) {
 //		{ "submit_sprite", lsubmit_sprite },
 		{ "submit_rect", lsubmit_rect },
 		{ "submit_frame", lsubmit_frame },
-//		{ "submit_font", lsubmit_font },
 		{ "submit", lsubmit_null },
 		{ NULL, NULL },
 	};
