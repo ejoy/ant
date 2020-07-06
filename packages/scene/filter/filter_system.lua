@@ -47,11 +47,6 @@ local function update_transform(eid)
 	update_bounding(rc, e)
 end
 
-local function update_state(eid)
-	--TODO: need update by event
-	local e = world[eid]
-	e._rendercache.entity_state = e.state
-end
 
 local filters = {}
 function filter_system:post_init()
@@ -91,14 +86,9 @@ local function add_filter_list(eid, filters)
 	end
 end
 
-local function update_renderinfo(eid)
-	update_transform(eid)
-	update_state(eid)
-end
-
 function filter_system:filter_render_items()
 	for _, eid in ipairs(iss.scenequeue()) do
-		update_renderinfo(eid)
+		update_transform(eid)
 		add_filter_list(eid, filters)
 	end
 end
