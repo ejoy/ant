@@ -163,7 +163,7 @@ function ientity.create_plane_entity(srt, materialpath, name, entity_info)
 	}
 
 	local data = {
-		transform = {},
+		transform = srt or {},
 		material = materialpath,
 		state = ies.create_state "visible|selectable",
 		name = name or "Plane",
