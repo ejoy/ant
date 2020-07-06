@@ -169,8 +169,8 @@ font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_
 	glyph->h = iy1-iy0 + DISTANCE_OFFSET * 2;
 	glyph->offset_x = (short)(lsb * scale) - DISTANCE_OFFSET;
 	glyph->offset_y = iy0 - DISTANCE_OFFSET;
-	glyph->advance_x = (short)(((float)advance) * scale + 0.5f) + DISTANCE_OFFSET * 2;
-	glyph->advance_y = (short)((ascent + descent + lineGap) * scale + 0.5f) + DISTANCE_OFFSET * 2;
+	glyph->advance_x = (short)(((float)advance) * scale + 0.5f);
+	glyph->advance_y = (short)((ascent + descent + lineGap) * scale + 0.5f);
 	glyph->u = 0;
 	glyph->v = 0;
 
@@ -178,6 +178,25 @@ font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_
 		return -1;
 
 	return 0;
+}
+
+static inline int
+scale_font(int v, float scale, int size) {
+	return ((int)(v * scale * size) + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
+}
+
+void
+font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap) {
+	if (fontid < 0 || fontid >=F->font_number) {
+		*ascent = 0;
+		*descent = 0;
+		*lineGap = 0;
+	}
+	float scale = stbtt_ScaleForPixelHeight(&F->ttf[fontid], ORIGINAL_SIZE);
+	stbtt_GetFontVMetrics(&F->ttf[fontid], ascent, descent, lineGap);
+	*ascent = scale_font(*ascent, scale, size);
+	*descent = scale_font(*descent, scale, size);
+	*lineGap = scale_font(*lineGap, scale, size);
 }
 
 const char *
@@ -222,6 +241,9 @@ font_manager_update(struct font_manager *F, int font, int codepoint, struct font
 	s->advance_y = glyph->advance_y;
 	s->w = glyph->w;
 	s->h = glyph->h;
+
+	glyph->u = (slot % FONT_MANAGER_SLOTLINE) * FONT_MANAGER_GLYPHSIZE;
+	glyph->v = (slot / FONT_MANAGER_SLOTLINE) * FONT_MANAGER_GLYPHSIZE;
 
 	return NULL;
 }
@@ -269,7 +291,7 @@ font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 	scale(&glyph->offset_x, size);
 	scale(&glyph->offset_y, size);
 	scale(&glyph->advance_x, size);
-	scale(&glyph->advance_x, size);
+	scale(&glyph->advance_y, size);
 	uscale(&glyph->w, size);
 	uscale(&glyph->h, size);
 }

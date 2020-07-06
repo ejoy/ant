@@ -133,6 +133,11 @@ push_typeargs(lua_State *L, int type) {
 	}
 }
 
+static inline int
+check_size(struct context *c) {
+	return (c->size >= MAX_RECT);
+}
+
 static int
 check_submit(lua_State *L, struct context *c, int type, int size) {
 	if (c->type != type || c->size + size > MAX_RECT) {
@@ -329,6 +334,20 @@ lrebindfont(lua_State *L) {
 	return 0;
 }
 
+static int
+lfontheight(lua_State *L) {
+	struct font_manager *F = getF(L);
+	int size = luaL_checkinteger(L, 1);
+	int fontid = luaL_optinteger(L, 2, 0);
+	int ascent, descent, lineGap;
+	font_manager_fontheight(F, fontid, size, &ascent, &descent, &lineGap);
+	lua_pushinteger(L, ascent);
+	lua_pushinteger(L, descent);
+	lua_pushinteger(L, lineGap);
+
+	return 3;
+}
+
 struct prepare {
 	struct font_manager *F;
 	bgfx_texture_handle_t texid;
@@ -445,6 +464,7 @@ static inline void
 fill_text(struct font_manager *F, struct buffer_text * rect, int16_t x0, int16_t y0, uint32_t color, int size, struct font_glyph *g) {
 	unsigned short w = g->w;
 	unsigned short h = g->h;
+//	printf("fill %d %d %d %d %d\n", x0, g->u, g->v, w, h);
 	font_manager_scale(F, g, size);
 
 	x0 += g->offset_x * FIXPOINT;
@@ -498,29 +518,52 @@ fill_text(struct font_manager *F, struct buffer_text * rect, int16_t x0, int16_t
 	number y
 	integer size
 	integer color
-	integer codepoint
+	string text
 	integer fontid (default = 0)
  */
 static int
-lsubmit_char(lua_State *L) {
+lsubmit_text(lua_State *L) {
 	int16_t x = read_fixpoint(L, 1);
 	int16_t y = read_fixpoint(L, 2);
 	int size = luaL_checkinteger(L, 3);
 	uint32_t color = luaL_checkinteger(L, 4) | 0xff000000;	// todo : alpha text
-	int codepoint = luaL_checkinteger(L, 5);
+	size_t sz;
+	const char * str = luaL_checklstring(L, 5, &sz);
+	const char * end_ptr = str + sz;
 	int fontid = luaL_optinteger(L, 6, 0);
 
 	struct context *c = (struct context *)lua_touserdata(L, lua_upvalueindex(1));
 	struct font_manager *F = &c->fm;
-	
-	struct font_glyph g;
-	if (font_manager_touch(F, fontid, codepoint, &g) <= 0)	// not in cache
-		return 0;
-	
-	int ret = check_submit(L, c, TYPE_TEXT, 1);
+
+	int ret = check_submit(L, c, TYPE_TEXT, 0);
 	struct buffer_text *bt = get_buffer_text(c);
-	fill_text(F, bt, x, y, color, size, &g);
-	++c->size;
+
+	struct font_glyph g;
+
+	while (str < end_ptr) {
+		utfint codepoint;
+		str = utf8_decode(str, &codepoint, 1);
+		if (str) {
+			if (font_manager_touch(F, fontid, codepoint, &g) <= 0)	// not in cache
+				break;
+			if (check_size(c)) {
+				// full
+				if (ret) {
+					// todo : submit remain text
+					return ret;
+				}
+				ret = check_submit(L, c, TYPE_TEXT, 1);
+				bt = get_buffer_text(c);
+			}
+			fill_text(F, bt, x, y, color, size, &g);
+			++c->size;
+			x += g.advance_x * FIXPOINT;
+			bt += 4;
+		} else {
+			break;
+		}
+	}
+
 	return ret;
 }
 
@@ -531,10 +574,11 @@ luaopen_bgfx_ui(lua_State *L) {
 
 	luaL_Reg l[] = {
 		{ "fonttexture_size", NULL },
+		{ "fontheight", lfontheight },
 		{ "addfont", laddfont },
 		{ "rebind", lrebindfont },
 		{ "prepare_text", lprepare_text },
-		{ "submit_char", lsubmit_char },
+		{ "submit_text", lsubmit_text },
 //		{ "new_sprite", lnew_sprite },
 //		{ "submit_sprite", lsubmit_sprite },
 		{ "submit_rect", lsubmit_rect },
