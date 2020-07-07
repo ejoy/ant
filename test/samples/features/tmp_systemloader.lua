@@ -3,8 +3,8 @@ local world = ecs.world
 
 local math3d = require "math3d"
 
-local computil = world:interface "ant.render|entity"
-
+local ientity = world:interface "ant.render|entity"
+local ies = world:interface "ant.scene|ientity_state"
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = world:interface "ant.asset|imaterial"
 
@@ -18,7 +18,7 @@ local function create_plane_test()
     }
 
     for _, p in ipairs(planes) do
-        local eid = computil.create_plane_entity(
+        local eid = ientity.create_plane_entity(
             p.srt,
             p.material,
             "test shadow plane",
@@ -50,7 +50,7 @@ local function target_lock_test()
         },
         data = {
             name = "lock_target",
-            can_render = true,
+            state = ies.create_state "visible",
             transform =  {
                 s = {2, 1, 2, 0},
                 t = {16, 1, 6},
@@ -70,8 +70,7 @@ local function target_lock_test()
         },
         data = {
             name = "lock_obj",
-            can_render = true,
-            parent = eid,
+            state = ies.create_state "visible",
             transform =  {t={0, 0, -6}},
             lock_target = {
                 type = "ignore_scale",
@@ -81,6 +80,9 @@ local function target_lock_test()
             material = "/pkg/ant.resources/materials/singlecolor.material",
             scene_entity = true,
         },
+        action = {
+            mount = eid,
+        }
     }
 end
 
@@ -94,9 +96,9 @@ end
 
 function init_loader_sys:init()
     world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
-    computil.create_grid_entity()
+    ientity.create_grid_entity()
 
-    computil.create_procedural_sky()
+    ientity.create_procedural_sky()
     --target_lock_test()
 end
 
@@ -126,7 +128,7 @@ function init_loader_sys:ui_update()
     end
 
     if widget.Button "camera_lock_target_for_move" then
-        local foundeid = find_entity("lock_target", "can_render")
+        local foundeid = find_entity("lock_target", "scene_entity")
         if foundeid then
             iom.set_lock_target(cameraeid, {type = "move", offset = {0, 1, 0}})
         else
@@ -136,7 +138,7 @@ function init_loader_sys:ui_update()
     end
 
     if widget.Button "camera_lock_target_for_rotate" then
-        local foundeid = find_entity("lock_target", "can_render")
+        local foundeid = find_entity("lock_target", "scene_entity")
         if foundeid then
             iom.set_lock_target(cameraeid, {type="rotate"})
         else
@@ -145,14 +147,14 @@ function init_loader_sys:ui_update()
     end
 
     if widget.Button "move_target" then
-        local foundeid = find_entity("lock_target", "can_render")
+        local foundeid = find_entity("lock_target", "scene_entity")
         if foundeid then
             iom.move(foundeid, {0, 0, 1})
         end
     end
 
     if widget.Button "rotate_target" then
-        local foundeid = find_entity("lock_target", "can_render")
+        local foundeid = find_entity("lock_target", "scene_entity")
         if foundeid then
             iom.rotate(foundeid, math.rad(3), 0)
         end

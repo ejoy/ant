@@ -10,6 +10,8 @@ local entities = {}
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar", "NoBringToFrontOnFocus" }
 local VIEWER <const> = "/pkg/tools.viewer.prefab_viewer/res/"
 
+local ies = world:interface "ant.scene|ientity_state"
+
 local function ONCE(t, s)
     if not s then return t end
 end
@@ -71,9 +73,9 @@ function event.prefab_editor()
         for _, eid in ipairs(entities) do
             local e = world[eid]
             if e.mesh then
-                local change, value = imgui.widget.Checkbox(e.name, e.can_render == true)
+                local change, value = imgui.widget.Checkbox(e.name, ies.can_visible(eid))
                 if change then
-                    e.can_render = value
+                    ies.set_state(eid, "visible", value)
                 end
             end
         end
