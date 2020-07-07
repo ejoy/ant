@@ -113,8 +113,8 @@ function imgui_sys:ui_start()
 	for _,w, h in eventResize:unpack() do
 		imgui_resize(w, h)
 	end
-    local delta = timer.delta()
-    imgui.begin_frame(delta * 1000)
+	local delta = timer.delta()
+    imgui.begin_frame(delta / 1000)
 end
 
 -- --test

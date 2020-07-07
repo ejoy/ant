@@ -62,20 +62,14 @@ local function glb_unload(path)
 end
 
 local CURPATH = {}
-
-function CURPATH.push(path)
-	CURPATH[#CURPATH+1] = path
+local function push_currentpath(path)
+	CURPATH[#CURPATH+1] = path:match "^(.-)[^/|]*$"
 end
-
-function CURPATH.pop()
+local function pop_currentpath()
 	CURPATH[#CURPATH] = nil
 end
-
-function CURPATH.get()
-	return CURPATH[#CURPATH]
-end
-
-local function absolute_path(base, path)
+local function absolute_path(path)
+	local base = CURPATH[#CURPATH]
 	if path:sub(1,1) == "/" or not base then
 		return path
 	end
@@ -83,14 +77,23 @@ local function absolute_path(base, path)
 end
 
 function assetmgr.resource(path, world)
-	local fullpath = absolute_path(CURPATH.get(), path)
+	local fullpath = absolute_path(path)
 	resource.load(fullpath, world, true)
 	return resource.proxy(fullpath)
 end
 
 function assetmgr.load_fx(fx, setting)
 	if type(fx) == "string" then
+		push_currentpath(fx)
 		fx = datalist.parse(cr.read_file(fx))
+		for k, v in pairs(fx.shader) do
+			fx.shader[k] = absolute_path(v)
+		end
+		pop_currentpath()
+	else
+		for k, v in pairs(fx.shader) do
+			fx.shader[k] = absolute_path(v)
+		end
 	end
 	return cr.compile_fx(fx, setting)
 end
@@ -101,9 +104,9 @@ function assetmgr.init()
 		glb_load(filename)
 		local world = data
 		local res
-		CURPATH.push(filename:match "^(.-)[^/|]*$")
+		push_currentpath(filename)
 		res = require("ext_" .. ext).loader(filename, world)
-		CURPATH.pop()
+		pop_currentpath()
 		return res
 	end
 	local function unloader(filename, data, res)

@@ -80,6 +80,12 @@ function toolset.compile(config)
 		commands[#commands+1] = tostring(level)
 	end
 
+	do
+		-- Fixes bgfx shaderc bug
+		lfs.remove(config.output)
+		lfs.open(config.output, "wb"):close()
+	end
+
 	local ok, msg = subprocess.spawn_process(commands)
 	if ok then
 		local INFO = msg:upper()

@@ -366,7 +366,7 @@ assign_trans(lua_State *L, struct lastack *LS, int index, int64_t oid) {
 	return lastack_mark(LS, lastack_pop(LS));
 }
 
-void
+static void
 set_index_object(lua_State *L, struct lastack *LS, int64_t id);
 
 static int
