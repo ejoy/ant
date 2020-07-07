@@ -66,7 +66,7 @@ function ic.bind(eid, which_queue)
         error(string.format("not find queue:%s", which_queue))
     end
     q.camera_eid = eid
-    local vr = q.render_target.viewport.rect
+    local vr = q.render_target.view_rect
     ic.set_frustum_aspect(eid, vr.w / vr.h)
 end
 

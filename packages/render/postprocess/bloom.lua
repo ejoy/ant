@@ -83,6 +83,8 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
         --     name = "bloom" .. passidx,
         --     material = m,
         --     viewport = get_viewport(fbw, fbh),
+        --     view_rect = {x=0, y=0, w=fbw, h=fbh},
+        --     clear_state = {clear=""},
         --     output = {fb_idx=fbidx, rb_idx=1},
         -- }
     end
@@ -115,7 +117,8 @@ local function get_passes_settings(main_fbidx, fb_indices, fbsize)
     passes[#passes+1] = {
         name = "combine scene with bloom",
         material = world.component "material"(combine_material:string()),
-        viewport = get_viewport(),
+        view_rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},
+        clear_state = {clear=""},
         output  = {fb_idx=next_fbidx(), rb_idx=1},
     }
 

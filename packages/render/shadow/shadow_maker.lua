@@ -161,14 +161,12 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 			render_target = {
 				viewid = viewidmgr.get(cameraname),
 				view_mode = "s",
-				viewport = {
-					rect = viewrect,
-					clear_state = {
-						color = 0xffffffff,
-						depth = 1,
-						stencil = 0,
-						clear = depth_type == "linear" and "colordepth" or "depth",
-					}
+				view_rect = viewrect,
+				clear_state = {
+					color = 0xffffffff,
+					depth = 1,
+					stencil = 0,
+					clear = depth_type == "linear" and "CD" or "D",
 				},
 				fb_idx = fbidx,
 			},

@@ -5,6 +5,7 @@ local fbmgr 	= require "framebuffer_mgr"
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
 local icamera = world:interface "ant.camera|camera"
+local irender = world:interface "ant.render|irender"
 
 local eventResize = world:sub {"resize"}
 
@@ -25,14 +26,21 @@ local function resize_framebuffer(w, h, fbidx)
 end
 
 local function update_render_queue(q, viewsize)
-	local vp = q.render_target.viewport
-	local rt = vp.rect
+	local rt = q.render_target
+	local vr = rt.view_rect
 	if viewsize then
-		rt.w, rt.h = viewsize.w, viewsize.h
+		vr.w, vr.h = viewsize.w, viewsize.h
 	end
 
-	icamera.set_frustum_aspect(q.camera_eid, rt.w/rt.h)
-	resize_framebuffer(rt.w, rt.h, q.render_target.fb_idx)
+	icamera.set_frustum_aspect(q.camera_eid, vr.w/vr.h)
+	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
+end
+
+local irq = world:interface "ant.render|irenderqueue"
+local function rebind_framebuffer_to_viewid()
+	for _, eid in world:each "render_target" do
+		irq.update_rendertarget(world[eid].render_target)
+	end
 end
 
 local function update_camera_viewrect(viewsize)
@@ -43,6 +51,8 @@ local function update_camera_viewrect(viewsize)
 	if bq then
 		update_render_queue(bq, viewsize)
 	end
+
+	rebind_framebuffer_to_viewid()
 end
 
 function vp_detect_sys:post_init()

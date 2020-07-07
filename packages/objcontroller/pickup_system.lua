@@ -32,7 +32,7 @@ local icamera = world:interface "ant.camera|camera"
 
 local function update_camera(e, clickpt) 
 	local mq = world:singleton_entity "main_queue"
-	local rt = mq.render_target.viewport.rect
+	local rt = mq.render_target.view_rect
 
 	local ndc2D = mu.pt2D_to_NDC(clickpt, rt)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
@@ -244,16 +244,14 @@ local function add_pick_entity()
 			render_target = {
 				viewid = pickupviewid,
 				view_mode = "s",
-				viewport = {
-					rect = {
-						x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
-					},
-					clear_state = {
-						color = 0,
-						depth = 1,
-						stencil = 0,
-						clear = "all"
-					},
+				view_rect = {
+					x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
+				},
+				clear_state = {
+					color = 0,
+					depth = 1,
+					stencil = 0,
+					clear = "CDS"
 				},
 				fb_idx = fbidx,
 			},
@@ -379,7 +377,7 @@ function pickup_sys:pickup()
 			blit(pickupcomp.blit_buffer, rb)
 		elseif nextstep	== "select_obj" then
 			if needcheck then
-				select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.viewport.rect)
+				select_obj(pickupcomp,pickupcomp.blit_buffer, pickupentity.render_target.view_rect)
 			else
 				world:pub {"pickup",nil,{}}
 				print("not found any eid")

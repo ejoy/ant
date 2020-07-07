@@ -1,22 +1,5 @@
 local default = {}; default.__index = default
 
-function default.viewport(vr)
-	local x, y = vr.x or 0, vr.y or 0
-	local w, h = assert(vr.w), assert(vr.h)
-	return {
-		clear_state = {
-			color = 0x000000ff,
-			depth = 1,
-			stencil = 0,
-			clear = "all",
-		},
-		rect = {
-			x = x, y = y,
-			w = w, h = h,
-		},
-	}
-end
-
 local default_far_distance = 300
 local default_near_distance = 0.1
 function default.frustum(aspect)

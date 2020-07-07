@@ -304,8 +304,8 @@ end
 
 function Util.mouse_project_onto_plane(world,mouse_pos,plane_point,plane_normal)
     local mq = world:singleton_entity "main_queue"
-    local viewport = mq.render_target.viewport
-    local win_w,win_h = viewport.rect.w,viewport.rect.h
+    local vr = mq.render_target.view_rect
+    local win_w,win_h = vr.w, vr.h
     local screen_pos = {2.0*mouse_pos[1]/win_w-1, 1.0-2.0*mouse_pos[2]/win_h}
 
     local icamera = world:interface "ant.camera|camera"

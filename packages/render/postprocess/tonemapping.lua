@@ -28,10 +28,8 @@ function tm_sys:post_init()
                             fb_idx = main_fbidx,
                             rb_idx = 1,
                         },
-                        viewport = {
-                            rect = {x=0, y=0, w=fbsize.w, h=fbsize.h},
-                            clear_state = {clear=""},
-                        }
+                        view_rect = {x=0, y=0, w=fbsize.w, h=fbsize.h}, 
+                        clear_state = {clear=""},
                     },
                 }
             }

@@ -159,7 +159,7 @@ end
 
 local function main_queue_viewport_size()
     local mq = world:singleton_entity "main_queue"
-    local vp_rt = mq.render_target.viewport.rect
+    local vp_rt = mq.render_target.view_rect
     return {w=vp_rt.w, h=vp_rt.h}
 end
 

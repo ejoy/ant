@@ -66,17 +66,10 @@ function rt.process_entity(e)
 end
 
 local rt = ecs.component "render_target"
+local irq = world:interface "ant.render|irenderqueue"
 
 function rt:init()
-	self.view_mode = self.view_mode or ""
-
-	local viewid = self.viewid
-	local fb_idx = self.fb_idx
-	if fb_idx then
-		fbmgr.bind(viewid, fb_idx)
-	else
-		self.fb_idx = fbmgr.get_fb_idx(viewid)
-	end
+	irq.update_rendertarget(self)
 	return self
 end
 
@@ -101,13 +94,10 @@ function render_sys:render_commit()
 		if rq.visible then
 			local rt = rq.render_target
 			local viewid = rt.viewid
-			irender.update_render_target(viewid, rt)
 			update_view_proj(viewid, rq.camera_eid)
 
 			local filter = rq.primitive_filter
 			local results = filter.result
-
-			bgfx.set_view_mode(viewid, rt.view_mode)
 
 			local function draw_items(result)
 				local items = result.visible_set

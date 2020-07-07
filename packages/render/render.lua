@@ -96,17 +96,15 @@ function irender.create_main_queue(view_rect)
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
-				viewport = {
-					clear_state = {
-						color = rs.clear_color or 0x000000ff,
-						depth = rs.clear_depth or 1,
-						stencil = rs.clear_stencil or 0,
-						clear = rs.clear or "all",
-					},
-					rect = {
-						x = view_rect.x or 0, y = view_rect.y or 0,
-						w = view_rect.w or 1, h = view_rect.h or 1,
-					},
+				clear_state = {
+					color = rs.clear_color or 0x000000ff,
+					depth = rs.clear_depth or 1,
+					stencil = rs.clear_stencil or 0,
+					clear = rs.clear or "CDS",
+				},
+				view_rect = {
+					x = view_rect.x or 0, y = view_rect.y or 0,
+					w = view_rect.w or 1, h = view_rect.h or 1,
 				},
 				fb_idx = fbmgr.create {
 					render_buffers = render_buffers
@@ -143,12 +141,21 @@ function irender.create_blit_queue(viewrect)
 			camera_eid = cameraeid,
 			render_target = {
 				viewid = blitviewid,
-				viewport = default_comp.viewport(viewrect),
+				view_mode = "",
+				clear_state = {
+					color = 0x000000ff,
+					depth = 1,
+					stencil = 0,
+					clear = "C",
+				},
+				view_rect = {
+					x = viewrect.x or 0, y = viewrect.y or 0,
+					w = viewrect.w or 1, h = viewrect.h or 1,
+				},
 			},
 			primitive_filter = {
 				filter_type = "blit_view",
 			},
-			view_mode = "",
 			visible = true,
 			blit_queue = true,
 			name = "blit main queue to window frame buffer",
@@ -188,28 +195,11 @@ local statemap = {
 	DS 				= "DS",
 }
 
-function irender.update_frame_buffer_view(viewid, fbidx)
+function irender.set_view_frame_buffer(viewid, fbidx)
 	local fb = fbmgr.get(fbidx)
 	if fb then
 		bgfx.set_view_frame_buffer(viewid, fb.handle)
 	end
-end
-
-function irender.update_viewport(viewid, viewport)
-	local cs = viewport.clear_state
-	local clear_what = cs.clear
-	local state = statemap[clear_what]
-	if state then
-		bgfx.set_view_clear(viewid, state, cs.color, cs.depth, cs.stencil)
-	end
-
-	local rt = viewport.rect
-	bgfx.set_view_rect(viewid, rt.x, rt.y, rt.w, rt.h)
-end
-
-function irender.update_render_target(viewid, rt)
-	irender.update_frame_buffer_view(viewid, rt.fb_idx)
-	irender.update_viewport(viewid, rt.viewport)
 end
 
 function irender.screen_capture(world, force_read)
@@ -272,11 +262,11 @@ end
 local irq = ecs.interface "irenderqueue"
 
 function irq.target_clear(eid)
-	return world[eid].render_target.viewport.clear_state
+	return world[eid].render_target.clear_state
 end
 
 function irq.viewport_rect(eid)
-	return world[eid].render_target.viewport.rect
+	return world[eid].render_target.view_rect
 end
 
 function irq.frame_buffer(eid)
@@ -295,8 +285,9 @@ function irq.main_camera()
 	return irq.camera(world:singleton_entity_id "main_queue")
 end
 
-function irq.set_target_clear(eid, color, depth, stencil)
-	local cs = world[eid].render_target.viewport.clear_state
+function irq.set_view_clear(eid, color, depth, stencil)
+	local rt = world[eid].render_target
+	local cs = rt.clear_state
 	cs.color = color
 	cs.depth = depth
 	cs.stencil = stencil
@@ -315,14 +306,16 @@ function irq.set_target_clear(eid, color, depth, stencil)
 	end
 
 	cs.clear = f
+	bgfx.set_view_clear(rt.viewid, f, color, depth, stencil)
 	world:pub{"component_changed", "target_clear"}
 end
 
-function irq.set_viewport_rect(eid, rect)
-	local vp = world[eid].render_target.viewport
-	local rc = vp.rect
-	rc.x, rc.y = rect.x, rect.y
-	rc.w, rc.h = rect.w, rect.h
+function irq.set_view_rect(eid, rect)
+	local rt = world[eid].render_target
+	local vr = rt.view_rect
+	vr.x, vr.y = rect.x, rect.y
+	vr.w, vr.h = rect.w, rect.h
+	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
 	world:pub{"component_changed", "viewport"}
 end
 
@@ -342,4 +335,20 @@ function irq.set_visible(eid, visible)
 	q.visible = visible
 
 	world:pub{"component_changed", "visible"}
+end
+
+function irq.update_rendertarget(rt)
+	local viewid = rt.viewid
+	bgfx.set_view_mode(viewid, rt.view_mode)
+	local vr = rt.view_rect
+	bgfx.set_view_rect(viewid, vr.x, vr.y, vr.w, vr.h)
+	local cs = rt.clear_state
+	bgfx.set_view_clear(viewid, cs.clear, cs.color, cs.depth, cs.stencil)
+	
+	local fb_idx = rt.fb_idx
+	if fb_idx then
+		fbmgr.bind(viewid, fb_idx)
+	else
+		rt.fb_idx = fbmgr.get_fb_idx(viewid)
+	end
 end

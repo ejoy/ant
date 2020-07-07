@@ -54,15 +54,11 @@ local function render_pass(lastslot, out_viewid, pass, meshgroup)
     local function bind_input(slot)
         local fb = fbmgr.get(slot.fb_idx)
         ppinput.texture.handle = fbmgr.get_rb(fb[slot.rb_idx]).handle
-        render_properties["u_bright_threshold"] = {
-            {0.8, 0.0, 0.0, 0.0}
-        }
+        -- render_properties["u_bright_threshold"] = {
+        --     {0.8, 0.0, 0.0, 0.0}
+        -- }
     end
     bind_input(in_slot)
-
-    irender.update_frame_buffer_view(out_viewid, out_slot.fb_idx)
-    irender.update_viewport(out_viewid, pass.viewport)
-
     local material = pass.material
     irender.draw(out_viewid, {
         ib = meshgroup.ib,
