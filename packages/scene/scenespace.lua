@@ -1,6 +1,8 @@
 local ecs = ...
 local world = ecs.world
 
+local math3d = require "math3d"
+
 local m = ecs.action "mount"
 function m.init(prefab, i, value)
 	local e = world[prefab[i]]
@@ -30,11 +32,6 @@ local eremove_mb = world:sub {"entity_removed"}
 
 local hie_scene = require "hierarchy.scene"
 local scenequeue = hie_scene.queue()
-
-local iss = ecs.interface "iscenespace"
-function iss.scenequeue()
-	return scenequeue
-end
 
 local function bind_slot_entity(e)
 	local slot = e.bind_slot
@@ -99,6 +96,52 @@ function sp_sys:update_hierarchy()
     end
 end
 
+
+local function update_bounding(rc, e)
+	local worldmat = rc.worldmat
+	local mesh = e.mesh
+	if worldmat == nil or mesh == nil or mesh.bounding == nil then
+		rc.aabb = nil
+	else
+		rc.aabb = math3d.aabb_transform(rc.worldmat, mesh.bounding.aabb)
+	end
+end
+
+local function update_transform(eid)
+	local e = world[eid]
+	local rc = e._rendercache
+	if rc.srt == nil and e.parent == nil then
+		return
+	end
+
+	rc.worldmat = rc.srt and math3d.matrix(rc.srt) or nil
+
+	if e.parent then
+		-- combine parent transform
+		if e.lock_target == nil then
+			local pe = world[e.parent]
+			-- need apply before tr.worldmat
+			local bs_idx = e._bind_slot_idx
+			if bs_idx then
+				local t = pe.pose_result:joint(bs_idx)
+				rc.worldmat = math3d.mul(t, rc.worldmat)
+			end
+			local p_rc = pe._rendercache
+			if p_rc.worldmat then
+				rc.worldmat = rc.worldmat and math3d.mul(p_rc.worldmat, rc.worldmat) or math3d.matrix(p_rc.worldmat)
+			end
+		end
+	end
+
+	update_bounding(rc, e)
+end
+
+local filtersys = ecs.system "filter_system"
+function filtersys:filter_render_items()
+	for _, eid in ipairs(scenequeue) do
+		update_transform(eid)
+	end
+end
 
 local hiemodule 		= require "hierarchy"
 local math3d_adapter 	= require "math3d.adapter"

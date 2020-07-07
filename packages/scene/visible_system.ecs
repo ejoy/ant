@@ -1,3 +1,0 @@
-system "visible_system"
-    .implement "visible_system.lua"
-    .method "after_update"

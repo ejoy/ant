@@ -1,4 +1,1 @@
 import "scene.ecs"
-import "filter/filter_system.ecs"
-
-import "visible_system.ecs"
