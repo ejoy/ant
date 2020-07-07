@@ -53,7 +53,12 @@ interface "ientity_state"
     .method "get_state_type"
     .method "create_state"
     .method "set_state"
-    .method "update_filters"
+    .method "filter_mask"
+
+interface "iprimitive_filter"
+    .implement "scenespace.lua"
+    .method "select_filters"
+    .method "reset_filters"
 
 pipeline "scene"
     .stage "update_hierarchy"

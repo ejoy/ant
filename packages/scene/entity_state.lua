@@ -13,25 +13,6 @@ local STATE_TYPE = {
 
 local es_trans = ecs.transform "entity_state_transform"
 
-local function can_render(rc)
-	return rc.vb and rc.fx and rc.state
-end
-
-local function update_filters(rc, eid)
-	local state = rc.entity_state
-	if state == nil then
-		return
-	end
-	local needadd = can_render(rc)
-	for _, feid in world:each "primitive_filter" do
-		local filter = world[feid].primitive_filter
-		local m = STATE_TYPE[filter.filter_type]
-		if needadd and ((state & m) ~= 0) then
-			filter.result[rc.fx.setting.transparency].items[eid] = rc
-		end
-	end
-end
-
 function es_trans.process_entity(e)
 	local rc = e._rendercache
 	rc.entity_state = e.state or 0
@@ -39,9 +20,7 @@ end
 
 local ies = ecs.interface "ientity_state"
 
-function ies.update_filters(eid)
-	update_filters(world[eid]._rendercache, eid)
-end
+local ipf = world:interface "ant.scene|iprimitive_filter"
 
 function ies.has_state(eid, name)
 	return ((world[eid]._rendercache.entity_state) & STATE_TYPE[name]) ~= 0
@@ -54,7 +33,7 @@ function ies.set_state(eid, name, v)
 	else
 		rc.entity_state = rc.entity_state & (~STATE_TYPE[name])
 	end
-	update_filters(rc, eid)
+	ipf.select_filters(eid)
 	world:pub{"component_changed", "state"}
 end
 
@@ -81,4 +60,8 @@ function ies.create_state(namelist)
 	end
 
 	return state
+end
+
+function ies.filter_mask(t)
+	return STATE_TYPE[t]
 end

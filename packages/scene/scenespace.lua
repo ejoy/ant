@@ -3,6 +3,35 @@ local world = ecs.world
 
 local math3d = require "math3d"
 
+local ipf = ecs.interface "iprimitive_filter"
+function ipf.select_filters(eid)
+	local e = world[eid]
+	local rc = e._rendercache
+	local state = rc.entity_state
+	if state == nil then
+		return
+	end
+
+	local needadd = rc.vb and rc.fx and rc.state
+	for _, feid in world:each "primitive_filter" do
+		local filter = world[feid].primitive_filter
+		if needadd and ((state & filter.filter_mask) ~= 0) then
+			filter.result[rc.fx.setting.transparency].items[eid] = rc
+		end
+	end
+end
+
+function ipf.reset_filters(eid)
+	for _, feid in world:each "primitive_filter" do
+		local filter = world[feid].primitive_filter
+		local r = filter.result
+		r.opaticy.items[eid] = nil
+		r.translucent.items[eid] = nil
+	end
+end
+
+local ies = world:interface "ant.scene|ientity_state"
+
 local m = ecs.action "mount"
 function m.init(prefab, i, value)
 	local e = world[prefab[i]]
@@ -10,7 +39,6 @@ function m.init(prefab, i, value)
 end
 
 local pf = ecs.component "primitive_filter"
-
 function pf:init()
 	self.result = {
 		translucent = {
@@ -20,12 +48,11 @@ function pf:init()
 			items = {},
 		},
 	}
+	self.filter_mask = ies.filter_mask(self.filter_type)
 	return self
 end
 
 local sp_sys = ecs.system "scenespace_system"
-
-local ies = world:interface "ant.scene|ientity_state"
 
 local se_mb = world:sub {"component_register", "scene_entity"}
 local eremove_mb = world:sub {"entity_removed"}
@@ -77,7 +104,7 @@ function sp_sys:update_hierarchy()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
 		scenequeue:mount(eid, e.parent or 0)
-		ies.update_filters(eid)
+		ipf.select_filters(eid)
 		if e.parent then
 			bind_slot_entity(e)
 			inherit_entity_state(e)
@@ -87,7 +114,8 @@ function sp_sys:update_hierarchy()
 
     local needclear
     for _, eid in eremove_mb:unpack() do
-        scenequeue:mount(eid)
+		scenequeue:mount(eid)
+		ipf.reset_filters(eid)
         needclear = true
     end
 
