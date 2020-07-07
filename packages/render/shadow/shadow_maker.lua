@@ -214,18 +214,28 @@ function sm:update_camera()
 	-- end
 end
 
+local itemcache = {}
+
 local function replace_material(result, material)
 	local items = result.items
-	for eid, item in pairs(items) do
-		local newitem = {}
-		for n, v in pairs(item) do
-			newitem[n] = v
+	for eid in pairs(items) do
+		local rc = world[eid]._rendercache
+		local item = itemcache[eid]
+		if item == nil then
+			item = {}
+			itemcache[eid] = item
 		end
-		newitem.fx 			= material.fx
-		newitem.properties 	= material.properties
-		--TODO: primitive mode should follow origin material setting
-		--newitem.state 		= material._state
-		items[eid]			= newitem
+		
+		item.skinning_matrices = rc.skinning_matrices
+		item.set_transform = rc.set_transform
+		item.worldmat = rc.worldmat
+		item.aabb = rc.aabb
+		item.ib = rc.ib
+		item.vb = rc.vb
+		item.state = rc.state
+		item.fx = material.fx
+		item.properties = material.properties
+		items[eid] = item
 	end
 end
 

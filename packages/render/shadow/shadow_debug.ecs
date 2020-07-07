@@ -1,9 +1,9 @@
-system "debug_shadow_maker_system"
+system "shadow_debug_system"
     .implement "shadow/shadow_debug.lua"
     .require_interface "system_properties"
     .method "post_init"
     .method "data_changed"
 
 policy "shadow_debug_policy"
-    .require_system "debug_shadow_maker_system"
+    .require_system "shadow_debug_system"
     .component "shadow_debug"

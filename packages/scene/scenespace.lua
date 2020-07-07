@@ -23,6 +23,8 @@ end
 
 local sp_sys = ecs.system "scenespace_system"
 
+local ies = world:interface "ant.scene|ientity_state"
+
 local se_mb = world:sub {"component_register", "scene_entity"}
 local eremove_mb = world:sub {"entity_removed"}
 
@@ -78,7 +80,7 @@ function sp_sys:update_hierarchy()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
 		scenequeue:mount(eid, e.parent or 0)
-
+		ies.update_filters(eid)
 		if e.parent then
 			bind_slot_entity(e)
 			inherit_entity_state(e)

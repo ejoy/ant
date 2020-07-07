@@ -17,7 +17,7 @@ policy "pickup"
 
 policy "select"
     .require_system "pickup_system"
-    .require_transform "entity_state_transform"
+    .require_transform "ant.scene|entity_state_transform"
     .component "state"
 
 component "pickup"

@@ -14,7 +14,7 @@ local icamera	= world:interface "ant.camera|camera"
 local iom		= world:interface "ant.objcontroller|obj_motion"
 local ilight	= world:interface "ant.render|light"
 local ishadow	= world:interface "ant.render|ishadow"
-
+local imaterial = world:interface "ant.asset|imaterial"
 local shadowdbg_sys = ecs.system "shadow_debug_system"
 
 local quadsize = 192
@@ -23,12 +23,8 @@ local quadmaterial = "/pkg/ant.resources/materials/shadow/shadowmap_quad.materia
 
 local function csm_shadow_debug_quad()
 	local splitnum = ishadow.split_num()
-	local fbidx = ishadow.fb_index()
-	local fb = fbmgr.get(fbidx)
-
 	local rect = {x=0, y=0, w=quadsize*splitnum, h=quadsize}
-	local q_eid = computil.create_quad_entity(rect, quadmaterial, "csm_quad")
-	ishadow.set_property(q_eid, "s_shadowmap", fbmgr.get_rb(fb[1]).handle)
+	computil.create_quad_entity(rect, quadmaterial, "csm_quad")
 end
 
 local frustum_colors = {

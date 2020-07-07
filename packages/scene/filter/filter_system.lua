@@ -47,48 +47,8 @@ local function update_transform(eid)
 	update_bounding(rc, e)
 end
 
-
-local filters = {}
-function filter_system:post_init()
-	for _, eid in world:each "primitive_filter" do
-		local e = world[eid]
-		local pf = e.primitive_filter
-		filters[pf.filter_type] = eid
-	end
-end
-
-local function can_render(rc)
-	return rc.entity_state ~= 0 and rc.vb and rc.fx and rc.state and rc.worldmat
-end
-
-local function add_filter_list(eid, filters)
-	local rc = world[eid]._rendercache
-	if rc == nil then
-		return
-	end
-	local needset = can_render(rc)
-
-	local entity_state = rc.entity_state
-	local stattypes = ies.get_state_type()
-	for n, filtereid in pairs(filters) do
-		local fe = world[filtereid]
-		if fe.visible then
-			local mask = assert(stattypes[n])
-			local filter = fe.primitive_filter
-			if needset and ((entity_state & mask) ~= 0) then
-				local resulttarget = filter.result[rc.fx.setting.transparency]
-				resulttarget.items[eid] = rc
-			else
-				filter.result.opaticy.items[eid] = nil
-				filter.result.translucent.items[eid] = nil
-			end
-		end
-	end
-end
-
 function filter_system:filter_render_items()
 	for _, eid in ipairs(iss.scenequeue()) do
 		update_transform(eid)
-		add_filter_list(eid, filters)
 	end
 end

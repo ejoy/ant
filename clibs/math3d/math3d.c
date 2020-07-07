@@ -1388,6 +1388,16 @@ lpack(lua_State *L) {
 }
 
 static int
+lisvalid(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	int type;
+	int64_t id = get_id(L, 1, lua_type(L, 1));
+	const float * v = lastack_value(LS, id, &type);
+	lua_pushboolean(L, v != NULL);
+	return 1;
+}
+
+static int
 lquat2euler(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *q = quat_from_index(L, LS, 1);
@@ -1734,6 +1744,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "set_homogeneous_depth", lset_homogeneous_depth},
 		{ "set_origin_bottom_left", lset_origin_bottom_left},
 		{ "pack", lpack },
+		{ "isvalid", lisvalid},
 
 		//aabb
 		{ "aabb", laabb},

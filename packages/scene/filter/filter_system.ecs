@@ -1,6 +1,5 @@
 system "filter_system"
     .implement "filter/filter_system.lua"
-    .method "post_init"
     .method "filter_render_items"
 
 transform "entity_state_transform"
@@ -20,3 +19,4 @@ interface "ientity_state"
     .method "get_state_type"
     .method "create_state"
     .method "set_state"
+    .method "update_filters"
