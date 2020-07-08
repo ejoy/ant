@@ -10,6 +10,7 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local ies = world:interface "ant.scene|ientity_state"
 
 local queue = require "queue"
+local scene = require "scene"
 
 local move_axis
 local rotate_axis
@@ -385,7 +386,8 @@ function gizmo_sys:post_init()
 			name = "test_cube",
 		}
 	}
-
+	scene.add(cubeid)
+	world:pub { "Scene", "create", cubeid }
 	local coneeid = world:create_entity{
 		policy = {
 			"ant.render|render",
@@ -405,8 +407,9 @@ function gizmo_sys:post_init()
 			name = "test_cone"
 		},
 	}
-
 	imaterial.set_property(coneeid, "u_color", {0, 0.5, 0.5, 1})
+	scene.add(coneeid)
+	world:pub { "Scene", "create", coneeid }
 
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
@@ -569,6 +572,15 @@ function gizmo_sys:post_init()
 	gizmo_obj:show_by_state(false)
 
 	world:pub {"Gizmo", "create", gizmo_obj, cmd_queue}
+
+
+	scene.add(1001)
+	scene.add(1002, 1001)
+	scene.add(2001)
+	scene.add(2002, 2001)
+	scene.add(2003, 2001)
+	scene.add(3001, 2003)
+	scene.add(3002, 2003)
 end
 
 function gizmo_obj.set_scale(self, inscale)
