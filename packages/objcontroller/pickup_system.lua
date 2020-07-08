@@ -13,14 +13,60 @@ local viewidmgr = renderpkg.viewidmgr
 
 local bgfx 		= require "bgfx"
 
+local opacity_material, translucent_material
+
+local function packeid_as_rgba(eid)
+    return {(eid & 0x000000ff) / 0xff,
+            ((eid & 0x0000ff00) >> 8) / 0xff,
+            ((eid & 0x00ff0000) >> 16) / 0xff,
+            ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
+end
+
+local uid_cache = {}
+local function get_properties(eid, fx)
+	local p = uid_cache[eid]
+	if p then
+		return p
+	end
+	local imaterial = world:interface "ant.asset|imaterial"
+	local v = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
+	local u = fx.uniforms[1]
+	assert(u.name == "u_id")
+	p = {
+		u_id = {
+			value = v,
+			handle = u.handle,
+			type = u.type,
+			set = imaterial.which_set_func(v)
+		},
+	}
+	uid_cache[eid] = p
+	return p
+end
+
+local pfpt = ecs.transform "pickup_primitive_transform"
+function pfpt.process_entity(e)
+	local f = e.primitive_filter
+	f.insert_item = function (filter, fxtype, eid, rc)
+		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
+		opaticy.items[eid] = setmetatable({
+			fx = opacity_material.fx,
+			properties = get_properties(eid, opacity_material.fx)
+		}, {__index=rc})
+
+		translucent.items[eid] = setmetatable({
+			fx = translucent_material.fx,
+			properties = get_properties(eid, translucent_material.fx),
+		}, {__index=rc})
+	end
+end
+
 --update pickup view
 local function enable_pickup(enable)
 	local e = world:singleton_entity "pickup"
 	e.visible = enable
 	e.pickup.nextstep = enable and "blit" or nil
 end
-
-local icamera = world:interface "ant.camera|camera"
 
 local function update_camera(e, clickpt) 
 	local mq = world:singleton_entity "main_queue"
@@ -41,13 +87,6 @@ local function update_camera(e, clickpt)
 	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end
 
-
-local function packeid_as_rgba(eid)
-    return {(eid & 0x000000ff) / 0xff,
-            ((eid & 0x0000ff00) >> 8) / 0xff,
-            ((eid & 0x00ff0000) >> 16) / 0xff,
-            ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
-end
 
 local function which_entity_hitted(blitdata, viewrect, elemsize)
 	local ceil = math.ceil
@@ -106,56 +145,6 @@ local function which_entity_hitted(blitdata, viewrect, elemsize)
 end
 
 local pickup_sys = ecs.system "pickup_system"
-
-local uid_cache = {}
-local function get_properties(eid, fx)
-	local p = uid_cache[eid]
-	if p then
-		return p
-	end
-	local imaterial = world:interface "ant.asset|imaterial"
-	local v = math3d.ref(math3d.vector(packeid_as_rgba(eid)))
-	local u = fx.uniforms[1]
-	assert(u.name == "u_id")
-	p = {
-		u_id = {
-			value = v,
-			handle = u.handle,
-			type = u.type,
-			set = imaterial.which_set_func(v)
-		},
-	}
-	uid_cache[eid] = p
-	return p
-end
-
-local itemcache = {}
-local function replace_material(result, material)
-	local items = result.items
-	for eid in pairs(items) do
-		local rc = world[eid]._rendercache
-
-		local item = itemcache[eid]
-		if item == nil then
-			item = {}
-			itemcache[eid] = item
-		end
-
-		item.skinning_matrices = rc.skinning_matrices
-		item.set_transform = rc.set_transform
-		item.worldmat = rc.worldmat
-		item.aabb = rc.aabb
-		item.ib = rc.ib
-		item.vb = rc.vb
-		item.state = rc.state
-		item.fx = material.fx
-		item.properties = get_properties(eid, material.fx)
-
-		items[eid] = item
-	end
-end
-
-
 -- pickup_system
 
 local function blit_buffer_init(self)
@@ -272,24 +261,13 @@ local function add_pick_entity()
 	}
 end
 
-local opacity_material, translucent_material
+
 local imaterial = world:interface "ant.asset|imaterial"
 
 function pickup_sys:init()
 	add_pick_entity()
 	opacity_material = imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
 	translucent_material = imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
-end
-
-function pickup_sys:refine_filter()
-	local e = world:singleton_entity "pickup"
-	if e.visible then
-		local filter = e.primitive_filter
-
-		local result = filter.result
-		replace_material(result.opaticy, opacity_material)
-		replace_material(result.translucent, translucent_material)
-	end
 end
 
 local leftmousepress_mb = world:sub {"mouse", "LEFT"}

@@ -31,10 +31,18 @@ system "end_frame_system"
     .implement "end_frame_system.lua"
     .method "end_frame"
 
+transform "visible_primitive_transform"
+    .implement "render.lua"
+    .input "primitive_filter"
+    .output "primitive_filter.visible"
+    .method "process_entity"
+
 policy "blit_queue"
+    .require_transform "visible_primitive_transform"
     .unique_component "blit_queue"
 
 policy "main_queue"
+    .require_transform "visible_primitive_transform"
     .unique_component "main_queue"
 
 transform "render_transform"

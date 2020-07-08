@@ -13,6 +13,14 @@ local setting		= require "setting"
 
 local irender = ecs.interface "irender"
 
+local vpt = ecs.transform "visible_primitive_transform"
+function vpt.process_entity(e)
+	local f = e.primitive_filter
+	f.insert_item = function (filter, fxtype, eid, rc)
+		filter.result[fxtype].items[eid] = rc
+	end
+end
+
 local icamera = world:interface "ant.camera|camera"
 function irender.draw(vid, ri)
 	ri:set_transform()

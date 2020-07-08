@@ -16,7 +16,7 @@ function ipf.select_filters(eid)
 	for _, feid in world:each "primitive_filter" do
 		local filter = world[feid].primitive_filter
 		if needadd and ((state & filter.filter_mask) ~= 0) then
-			filter.result[rc.fx.setting.transparency].items[eid] = rc
+			filter:insert_item(rc.fx.setting.transparency, eid, rc)
 		end
 	end
 end

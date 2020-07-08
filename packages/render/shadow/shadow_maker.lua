@@ -212,37 +212,12 @@ function sm:update_camera()
 	-- end
 end
 
-local itemcache = {}
-
-local function replace_material(result, material)
-	local items = result.items
-	for eid in pairs(items) do
-		local rc = world[eid]._rendercache
-		local item = itemcache[eid]
-		if item == nil then
-			item = {}
-			itemcache[eid] = item
-		end
-		
-		item.skinning_matrices = rc.skinning_matrices
-		item.set_transform = rc.set_transform
-		item.worldmat = rc.worldmat
-		item.aabb = rc.aabb
-		item.ib = rc.ib
-		item.vb = rc.vb
-		item.state = rc.state
-		item.fx = material.fx
-		item.properties = material.properties
-		items[eid] = item
-	end
-end
-
-function sm:refine_filter()
-	for _, eid in world:each "csm" do
-		local se = world[eid]
-		local filter = se.primitive_filter
-		local results = filter.result
-		replace_material(results.opaticy, 		shadow_material)
-		replace_material(results.translucent, 	shadow_material)
+local spt = ecs.transform "shadow_primitive_transform"
+function spt.process_entity(e)
+	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
+		filter.result[fxtype].items[eid] = setmetatable({
+			fx = shadow_material.fx,
+			properties = shadow_material.properties,
+		}, {__index=rc})
 	end
 end
