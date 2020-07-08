@@ -2,7 +2,7 @@ system "shadow_debug_system"
     .implement "shadow/shadow_debug.lua"
     .require_interface "system_properties"
     .method "post_init"
-    .method "data_changed"
+    .method "camera_usage"
 
 policy "shadow_debug_policy"
     .require_system "shadow_debug_system"

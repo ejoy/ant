@@ -87,6 +87,10 @@ local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, st
 
 	local center_WS = math3d.frustum_center(corners_WS)
 	local min_extent, max_extent
+	local rc = world[sc_eid]._rendercache
+	rc.viewmat = math3d.lookto(center_WS, lightdir)
+	rc.srt = math3d.inverse(rc.viewmat)
+
 	if stabilize then
 		local radius = math3d.frustum_max_radius(corners_WS, center_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
@@ -95,13 +99,10 @@ local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, st
 	else
 		-- using camera world matrix right axis as light camera matrix up direction
 		-- look at matrix up direction should select one that not easy parallel with view direction
-		local shadow_viewmatrix = math3d.lookto(center_WS, lightdir)
-		local minv, maxv = math3d.minmax(corners_WS, shadow_viewmatrix)
+		local minv, maxv = math3d.minmax(corners_WS, rc.viewmat)
 		min_extent, max_extent = math3d.tovalue(minv), math3d.tovalue(maxv)
 	end
 
-	local rc = world[sc_eid]._rendercache
-	rc.viewmat = math3d.lookto(center_WS, lightdir, rc.updir)
 	rc.frustum = {
 		ortho=true,
 		l = min_extent[1], r = max_extent[1],

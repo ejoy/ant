@@ -38,6 +38,7 @@ interface "camera"
 pipeline "camera"
     .stage "update_mainview_camera"
     .stage "update_camera"
+    .stage "camera_usage"
 
 
 action "bind_camera"

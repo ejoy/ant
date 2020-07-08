@@ -165,7 +165,7 @@ function ientity.create_plane_entity(srt, materialpath, name, entity_info)
 	local data = {
 		transform = srt or {},
 		material = materialpath,
-		state = ies.create_state "visible|selectable|cast_shadow",
+		state = ies.create_state "visible|selectable",
 		name = name or "Plane",
 		scene_entity = true,
 		mesh = get_plane_mesh(),
