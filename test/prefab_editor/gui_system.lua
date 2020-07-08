@@ -6,6 +6,8 @@ local rhwi       = import_package 'ant.render'.hwi
 
 local iom = world:interface "ant.objcontroller|obj_motion"
 
+local scene = require "scene"
+
 local function ONCE(t, s)
     if not s then return t end
 end
@@ -58,13 +60,14 @@ local function imguiToolbar(text, tooltip, active)
 end
 local PropertyWidgetWidth <const> = 320
 local eventGizmo = world:sub {"Gizmo"}
-local currentEID = {0, flags = 1 << 14}
+local eventScene = world:sub {"Scene"}
+local currentEID = {0, flags = imgui.flags.InputText{ "ReadOnly" }}
 local gizmo
 local cmd_queue
 local currentPos = {0,0,0}
 local currentRot = {0,0,0}
 local currentScale = {1,1,1}
-local currentName = {"noname"}
+local currentName = {text = "noname"}
 local testSlider = {1}
 local localSpace = {}
 local testText = {}
@@ -72,8 +75,47 @@ local SELECT <const> = 0
 local MOVE <const> = 1
 local ROTATE <const> = 2
 local SCALE <const> = 3
+local sourceEid = nil
+local targetEid = nil
+local function show_scene_node(node)
+    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((currentEID[1] == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
+    local name = tostring(node.eid)--world[node.eid].name
+
+    local function select_or_move(eid)
+        if imgui.util.IsItemClicked() then
+            currentEID[1] = eid
+        end
+        if imgui.widget.BeginDragDropSource() then
+            imgui.widget.SetDragDropPayload("Reparent", eid)
+            imgui.widget.EndDragDropSource()
+        end
+        if imgui.widget.BeginDragDropTarget() then
+            local payload = imgui.widget.AcceptDragDropPayload("Reparent")
+            if payload then
+                sourceEid = tonumber(payload)
+                targetEid = eid
+            end
+            imgui.widget.EndDragDropTarget()
+        end
+    end
+
+    if #node.children == 0 then
+        imgui.widget.TreeNode(name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
+    else
+        if imgui.widget.TreeNode(name, base_flags) then
+            select_or_move(node.eid)
+            for _, child in ipairs(node.children) do
+                show_scene_node(child)
+            end
+            imgui.widget.TreePop()
+            return
+        end
+    end
+    select_or_move(node.eid)
+end
+
 function m:ui_update()
-    imgui.windows.SetNextWindowPos(0, 0)
+    imgui.windows.SetNextWindowPos(PropertyWidgetWidth, 0)
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
         imguiBeginToolbar()
         if imguiToolbar("🚫", "Select", status.GizmoMode == "select") then
@@ -101,42 +143,33 @@ function m:ui_update()
         end
         imguiEndToolbar()
     end
+
     local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(sw - PropertyWidgetWidth, 0)
+    imgui.windows.SetNextWindowPos(0, 0)
     imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh)
 
-    for _, action, value1, value2 in eventGizmo:unpack() do
-        if action == "update" or action == "ontarget" then
-            if action == "ontarget" then
-                currentEID[1] = gizmo.target_eid
-            end
-            local s, r, t = math3d.srt(iom.srt(gizmo.target_eid))
-            local Pos = math3d.totable(t)
-            currentPos[1] = Pos[1]
-            currentPos[2] = Pos[2]
-            currentPos[3] = Pos[3]
-    
-            local Rot = math3d.totable(math3d.quat2euler(r))
-            currentRot[1] = math.deg(Rot[1])
-            currentRot[2] = math.deg(Rot[2])
-            currentRot[3] = math.deg(Rot[3])
-    
-            local Scale = math3d.totable(s)
-            currentScale[1] = Scale[1]
-            currentScale[2] = Scale[2]
-            currentScale[3] = Scale[3]
-        elseif action == "create" then
-            gizmo = value1
-            cmd_queue = value2
+    for _ in imgui_windows("Scene", imgui.flags.Window { "NoResize", "NoScrollbar", "NoClosed" }) do
+        sourceEid = nil
+        targetEid = nil
+        for _, child in ipairs(scene.children) do
+            show_scene_node(child)
+        end
+        if sourceEid and targetEid then
+            scene.set_parent(sourceEid, targetEid)
         end
     end
+    
+    imgui.windows.SetNextWindowPos(sw - PropertyWidgetWidth, 0)
+    imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh)
     local oldPos = nil
     local oldRot = nil
     local oldScale = nil
-    for _ in imgui_windows("Inspector", imgui.flags.Window { "NoResize", "NoScrollbar" }) do
+    for _ in imgui_windows("Inspector", imgui.flags.Window { "NoResize", "NoScrollbar", "NoClosed" }) do
         
         imgui.widget.InputInt("EID", currentEID)
-        imgui.widget.InputText("Name", currentName)
+        if imgui.widget.InputText("Name", currentName) then
+            world[currentEID[1]].name = tostring(currentName.text)
+        end
 
         if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
             if imgui.widget.InputFloat("Position", currentPos) then
@@ -166,6 +199,37 @@ function m:ui_update()
     elseif oldScale then
         cmd_queue:record({action = SCALE, eid = gizmo.target_eid, oldvalue = oldScale, newvalue = {currentScale[1], currentScale[2], currentScale[3]}})
         oldScale = nil
+    end
+
+    for _, action, value1, value2 in eventGizmo:unpack() do
+        if action == "update" or action == "ontarget" then
+            if action == "ontarget" then
+                currentEID[1] = gizmo.target_eid
+                currentName.text = world[gizmo.target_eid].name
+            end
+            local s, r, t = math3d.srt(iom.srt(gizmo.target_eid))
+            local Pos = math3d.totable(t)
+            currentPos[1] = Pos[1]
+            currentPos[2] = Pos[2]
+            currentPos[3] = Pos[3]
+    
+            local Rot = math3d.totable(math3d.quat2euler(r))
+            currentRot[1] = math.deg(Rot[1])
+            currentRot[2] = math.deg(Rot[2])
+            currentRot[3] = math.deg(Rot[3])
+    
+            local Scale = math3d.totable(s)
+            currentScale[1] = Scale[1]
+            currentScale[2] = Scale[2]
+            currentScale[3] = Scale[3]
+        elseif action == "create" then
+            gizmo = value1
+            cmd_queue = value2
+        end
+    end
+
+    for _, action, eid in eventScene:unpack() do
+
     end
 end
 
