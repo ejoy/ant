@@ -20,7 +20,7 @@ policy "shadow_cast_policy"
 transform "shadow_primitive_transform"
     .implement "shadow/shadow_maker.lua"
     .input "primitive_filter"
-    .input "primitive_filter.shadow"
+    .output "primitive_filter.shadow"
     .method "process_entity"
 
 policy "csm_policy"
