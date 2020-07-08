@@ -9,7 +9,7 @@ local m = ecs.system 'init_system'
 function m:init()
     entity.create_procedural_sky()
     local e = world:singleton_entity "main_queue"
-    irq.set_view_clear(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
+    irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
     camera.bind(camera.create {
         eyepos = {-200, 100,200, 1},
         viewdir = {2,-1,-2,0},

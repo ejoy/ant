@@ -86,7 +86,7 @@ function m:init()
 end
 
 function m:post_init()
-    irq.set_view_clear(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
+    irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
 end
 
 function m:data_changed()

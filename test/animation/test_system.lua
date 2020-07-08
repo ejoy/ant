@@ -48,7 +48,7 @@ function init_loader_sys:init()
 end
 
 function init_loader_sys:post_init()
-    irq.set_view_clear(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
+    irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
 end
 
 local status = {

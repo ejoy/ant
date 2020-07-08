@@ -179,22 +179,6 @@ function irender.create_blit_queue(viewrect)
 	}
 end
 
-local statemap = {
-	all 			= "CDS",
-	color 			= "C",
-	depth 			= "D",
-	stencil 		= "S",
-	colordepth 		= "CD",
-	colorstencil	= "CD",
-	depthstencil 	= "DS",
-	C 				= "C",
-	D 				= "D",
-	S				= "S",
-	CD 				= "CD",
-	CS 				= "CS",
-	DS 				= "DS",
-}
-
 function irender.set_view_frame_buffer(viewid, fbidx)
 	local fb = fbmgr.get(fbidx)
 	if fb then
@@ -261,11 +245,11 @@ end
 
 local irq = ecs.interface "irenderqueue"
 
-function irq.target_clear(eid)
+function irq.clear_state(eid)
 	return world[eid].render_target.clear_state
 end
 
-function irq.viewport_rect(eid)
+function irq.view_rect(eid)
 	return world[eid].render_target.view_rect
 end
 
@@ -285,28 +269,48 @@ function irq.main_camera()
 	return irq.camera(world:singleton_entity_id "main_queue")
 end
 
-function irq.set_view_clear(eid, color, depth, stencil)
+local function view_clear(viewid, cs)
+	bgfx.set_view_clear(viewid, cs.clear, cs.color, cs.depth, cs.stencil)
+	world:pub{"component_changed", "target_clear"}
+end
+
+function irq.set_view_clear_state(eid, state)
+	local rt = world[eid].render_target
+	local cs = rt.clear_state
+	cs.clear = state
+	view_clear(rt.viewid, cs)
+end
+
+function irq.set_view_clear_color(eid, color)
+	local rt = world[eid].render_target
+	local cs = rt.clear_state
+	cs.color = color
+	view_clear(rt.viewid, cs)
+end
+
+function irq.set_view_clear_depth(eid, depth)
+	local rt = world[eid].render_target
+	local cs = rt.clear_state
+	cs.depth = depth
+	view_clear(rt.viewid, cs)
+end
+
+function irq.set_view_clear_stencil(eid, stencil)
+	local rt = world[eid].render_target
+	local cs = rt.clear_state
+	cs.stencil = stencil
+	view_clear(rt.viewid, cs)
+end
+
+function irq.set_view_clear(eid, what, color, depth, stencil)
 	local rt = world[eid].render_target
 	local cs = rt.clear_state
 	cs.color = color
 	cs.depth = depth
 	cs.stencil = stencil
 
-	local f = ""
-	if color then
-		f = f .. "C"
-	end
-
-	if depth then
-		f = f .. "D"
-	end
-
-	if stencil then
-		f = f .. "S"
-	end
-
-	cs.clear = f
-	bgfx.set_view_clear(rt.viewid, f, color, depth, stencil)
+	cs.clear = what
+	bgfx.set_view_clear(rt.viewid, what, color, depth, stencil)
 	world:pub{"component_changed", "target_clear"}
 end
 
