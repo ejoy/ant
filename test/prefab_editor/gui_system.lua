@@ -58,38 +58,46 @@ local function imguiToolbar(text, tooltip, active)
 end
 local PropertyWidgetWidth <const> = 320
 local eventGizmo = world:sub {"Gizmo"}
-
-local currentEID
-local currentEIDPos = {0,0,0}
-local currentEIDRot = {0,0,0}
-local currentEIDScale = {1,1,1}
+local currentEID = {0, flags = 1 << 14}
+local gizmo
+local cmd_queue
+local currentPos = {0,0,0}
+local currentRot = {0,0,0}
+local currentScale = {1,1,1}
+local currentName = {"noname"}
+local testSlider = {1}
 local localSpace = {}
+local testText = {}
+local SELECT <const> = 0
+local MOVE <const> = 1
+local ROTATE <const> = 2
+local SCALE <const> = 3
 function m:ui_update()
     imgui.windows.SetNextWindowPos(0, 0)
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
         imguiBeginToolbar()
         if imguiToolbar("🚫", "Select", status.GizmoMode == "select") then
             status.GizmoMode = "select"
-            world:pub { "gizmo", "select" }
+            world:pub { "GizmoMode", "select" }
         end
         imgui.cursor.SameLine()
         if imguiToolbar("🔄", "Rotate", status.GizmoMode == "rotate") then
             status.GizmoMode = "rotate"
-            world:pub { "gizmo", "rotate" }
+            world:pub { "GizmoMode", "rotate" }
         end
         imgui.cursor.SameLine()
         if imguiToolbar("🤚", "Move", status.GizmoMode == "move") then
             status.GizmoMode = "move"
-            world:pub { "gizmo", "move" }
+            world:pub { "GizmoMode", "move" }
         end
         imgui.cursor.SameLine()
         if imguiToolbar("🔍", "Scale", status.GizmoMode == "scale") then
             status.GizmoMode = "scale"
-            world:pub { "gizmo", "scale" }
+            world:pub { "GizmoMode", "scale" }
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("LocalSpace", localSpace) then
-            world:pub { "gizmo", "localspace", localSpace[1] }
+            world:pub { "GizmoMode", "localspace", localSpace[1] }
         end
         imguiEndToolbar()
     end
@@ -97,34 +105,67 @@ function m:ui_update()
     imgui.windows.SetNextWindowPos(sw - PropertyWidgetWidth, 0)
     imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh)
 
+    for _, action, value1, value2 in eventGizmo:unpack() do
+        if action == "update" or action == "ontarget" then
+            if action == "ontarget" then
+                currentEID[1] = gizmo.target_eid
+            end
+            local s, r, t = math3d.srt(iom.srt(gizmo.target_eid))
+            local Pos = math3d.totable(t)
+            currentPos[1] = Pos[1]
+            currentPos[2] = Pos[2]
+            currentPos[3] = Pos[3]
     
-
-    for _, eid in eventGizmo:unpack() do
-        currentEID = eid
-        local s, r, t = math3d.srt(iom.srt(eid))
-        local Pos = math3d.totable(t)
-        currentEIDPos[1] = Pos[1]
-        currentEIDPos[2] = Pos[2]
-        currentEIDPos[3] = Pos[3]
-
-        local Rot = math3d.totable(math3d.quat2euler(r))
-        currentEIDRot[1] = math.deg(Rot[1])
-        currentEIDRot[2] = math.deg(Rot[2])
-        currentEIDRot[3] = math.deg(Rot[3])
-
-        local Scale = math3d.totable(s)
-        currentEIDScale[1] = Scale[1]
-        currentEIDScale[2] = Scale[2]
-        currentEIDScale[3] = Scale[3]
+            local Rot = math3d.totable(math3d.quat2euler(r))
+            currentRot[1] = math.deg(Rot[1])
+            currentRot[2] = math.deg(Rot[2])
+            currentRot[3] = math.deg(Rot[3])
+    
+            local Scale = math3d.totable(s)
+            currentScale[1] = Scale[1]
+            currentScale[2] = Scale[2]
+            currentScale[3] = Scale[3]
+        elseif action == "create" then
+            gizmo = value1
+            cmd_queue = value2
+        end
     end
-
+    local oldPos = nil
+    local oldRot = nil
+    local oldScale = nil
     for _ in imgui_windows("Inspector", imgui.flags.Window { "NoResize", "NoScrollbar" }) do
+        
+        imgui.widget.InputInt("EID", currentEID)
+        imgui.widget.InputText("Name", currentName)
+
         if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
-            imgui.widget.InputFloat("Position", currentEIDPos)
-            imgui.widget.InputFloat("Rotate", currentEIDRot)
-            imgui.widget.InputFloat("Scale", currentEIDScale)
+            if imgui.widget.InputFloat("Position", currentPos) then
+                oldPos = math3d.totable(iom.get_position(gizmo.target_eid))
+                gizmo:set_position(currentPos)
+            end
+            if imgui.widget.InputFloat("Rotate", currentRot) then
+                oldRot = math3d.totable(iom.get_rotation(gizmo.target_eid))
+                gizmo:set_rotation(currentRot)
+            end
+            if imgui.widget.InputFloat("Scale", currentScale) then
+                oldScale = math3d.totable(iom.get_scale(gizmo.target_eid))
+                gizmo:set_scale(currentScale)
+            end
+
             imgui.widget.TreePop()
         end
+        
+    end
+
+    if oldPos then
+        cmd_queue:record({action = MOVE, eid = gizmo.target_eid, oldvalue = oldPos, newvalue = {currentPos[1], currentPos[2], currentPos[3]}})
+        oldPos = nil
+    elseif oldRot then
+        cmd_queue:record({action = ROTATE, eid = gizmo.target_eid, oldvalue = oldRot, newvalue = {currentRot[1], currentRot[2], currentRot[3]}})
+        oldRot = nil
+    elseif oldScale then
+        cmd_queue:record({action = SCALE, eid = gizmo.target_eid, oldvalue = oldScale, newvalue = {currentScale[1], currentScale[2], currentScale[3]}})
+        oldScale = nil
     end
 end
 
