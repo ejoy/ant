@@ -17,15 +17,7 @@ local bgfx 		= require "bgfx"
 local function enable_pickup(enable)
 	local e = world:singleton_entity "pickup"
 	e.visible = enable
-	local filter = e.primitive_filter
-	filter.result.opaticy.items = {}
-	filter.result.translucent.items = {}
-
-	if enable then
-		e.pickup.nextstep = "blit"
-	else
-		e.pickup.nextstep = nil
-	end
+	e.pickup.nextstep = enable and "blit" or nil
 end
 
 local icamera = world:interface "ant.camera|camera"
@@ -137,14 +129,29 @@ local function get_properties(eid, fx)
 	return p
 end
 
+local itemcache = {}
 local function replace_material(result, material)
 	local items = result.items
-	for eid, item in pairs(items) do
-		local ni = {}; for k, v in pairs(item) do ni[k] = v end
-		ni.fx = material.fx
-		ni.properties = get_properties(eid, material.fx)
-		ni.state = material._state
-		items[eid] = ni
+	for eid in pairs(items) do
+		local rc = world[eid]._rendercache
+
+		local item = itemcache[eid]
+		if item == nil then
+			item = {}
+			itemcache[eid] = item
+		end
+
+		item.skinning_matrices = rc.skinning_matrices
+		item.set_transform = rc.set_transform
+		item.worldmat = rc.worldmat
+		item.aabb = rc.aabb
+		item.ib = rc.ib
+		item.vb = rc.vb
+		item.state = rc.state
+		item.fx = material.fx
+		item.properties = get_properties(eid, material.fx)
+
+		items[eid] = item
 	end
 end
 
