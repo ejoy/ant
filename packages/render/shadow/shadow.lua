@@ -6,19 +6,28 @@ local setting	= require "setting"
 local fbmgr		= require "framebuffer_mgr"
 local samplerutil = require "sampler"
 
-local bottomleft_cropmatrix = math3d.ref(math3d.matrix{
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 0.5, 0.0,
-	0.5, 0.5, 0.5, 1.0,
-})
+local function calc_crop_matrix()
+	-- topleft origin and homogeneous depth matrix
+	local m = {
+		0.5, 0.0, 0.0, 0.0,
+		0.0, -0.5, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.5, 0.5, 0.0, 1.0,
+	}
 
-local topleft_cropmatrix = math3d.ref(math3d.matrix {
-	0.5, 0.0, 0.0, 0.0,
-	0.0, -0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0,
-})
+	local caps = hwi.get_caps()
+	if caps.originBottomLeft then
+		m[6] = -m[6]
+	end
+	
+	if caps.homogeneousDepth then
+		m[11], m[15] = 0.5, 0.5
+	end
+
+	return math3d.ref(math3d.matrix(m))
+end
+
+local sm_crop_matrix = calc_crop_matrix()
 
 local homogeneous_depth_scale_offset = math3d.ref(math3d.vector(0.5, 0.5, 0.0, 0.0))
 local normal_depth_scale_offset = math3d.ref(math3d.vector(1.0, 0.0, 0.0, 0.0))
@@ -136,8 +145,6 @@ end
 function ishadow.shadow_depth_scale_offset()
 	return scale_offset
 end
-
-local sm_crop_matrix = hwi.get_caps().originBottomLeft and bottomleft_cropmatrix or topleft_cropmatrix
 
 local crop_matrices = {}
 
