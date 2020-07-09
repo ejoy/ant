@@ -4,6 +4,7 @@ local math3d = require "math3d"
 local rhwi = import_package 'ant.render'.hwi
 local mc = import_package "ant.math".constant
 local iwd = world:interface "ant.render|iwidget_drawer"
+local iss = world:interface "ant.scene|iscenespace"
 local computil = world:interface "ant.render|entity"
 local gizmo_sys = ecs.system "gizmo_system"
 local iom = world:interface "ant.objcontroller|obj_motion"
@@ -1175,7 +1176,7 @@ function gizmo_sys:data_changed()
 				testswitch = false
 				print("set parent")
 				iom.set_srt(testcubeid, math3d.mul(math3d.inverse(iom.srt(testconeeid)), iom.srt(testcubeid)))
-				world[testcubeid].parent = testconeeid
+				iss.set_parent(testcubeid, testconeeid)
 			else
 				testswitch = true
 				print("set no parent")
