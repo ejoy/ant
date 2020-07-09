@@ -125,7 +125,7 @@ function sp_sys:update_hierarchy()
 	
 	for _, _, eid in pc_mb:unpack() do
 		local e = world[eid]
-		scenequeue:mount(eid, e.parent)
+		scenequeue:mount(eid, e.parent or 0)
 	end
 
     local needclear
