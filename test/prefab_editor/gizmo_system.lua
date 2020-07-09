@@ -207,6 +207,21 @@ function gizmo_obj:show_by_state(show)
 	end
 end
 
+function gizmo_obj:set_target(eid)
+	if self.target_eid == eid then
+		return
+	end
+	self.target_eid = eid
+	if eid then
+		self:set_position()
+		self:set_rotation()
+		self:update_scale()
+		self:updata_uniform_scale()
+		self:update_axis_plane()
+	end
+	gizmo_obj:show_by_state(eid ~= nil)
+end
+
 local imaterial = world:interface "ant.asset|imaterial"
 
 local function resetMoveAxisColor()
@@ -351,23 +366,24 @@ local function updateGlobalAxis()
 	iom.set_scale(global_axis_eid, adjustScale * 0.5)
 end
 
-local function updateGizmoScale()
+function gizmo_obj:update_scale()
 	local mq = world:singleton_entity "main_queue"
 	local viewdir = iom.get_direction(mq.camera_eid)
 	local eyepos = iom.get_position(mq.camera_eid)
-	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(iom.get_position(gizmo_obj.root_eid), eyepos))
+	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(iom.get_position(self.root_eid), eyepos))
 	gizmo_scale = project_dist * 0.6
-	if gizmo_obj.root_eid then
-		iom.set_scale(gizmo_obj.root_eid, gizmo_scale)
+	if self.root_eid then
+		iom.set_scale(self.root_eid, gizmo_scale)
 	end
-	if gizmo_obj.uniform_rot_root_eid then
-		iom.set_scale(gizmo_obj.uniform_rot_root_eid, gizmo_scale)
+	if self.uniform_rot_root_eid then
+		iom.set_scale(self.uniform_rot_root_eid, gizmo_scale)
 	end
 end
-
+local testcubeid
+local testconeeid
 function gizmo_sys:post_init()
 	
-	local cubeid = world:create_entity {
+	testcubeid = world:create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
@@ -378,7 +394,7 @@ function gizmo_sys:post_init()
 			scene_entity = true,
 			state = ies.create_state "visible|selectable",
 			transform =  {
-				s=50,
+				s= 50,
 				t={0, 0.5, 1, 0}
 			},
 			material = "/pkg/ant.resources/materials/singlecolor.material",
@@ -386,9 +402,9 @@ function gizmo_sys:post_init()
 			name = "test_cube",
 		}
 	}
-	scene.add(cubeid)
-	world:pub { "Scene", "create", cubeid }
-	local coneeid = world:create_entity{
+	scene.add(testcubeid)
+	world:pub { "Scene", "create", testcubeid }
+	testconeeid = world:create_entity{
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
@@ -407,9 +423,12 @@ function gizmo_sys:post_init()
 			name = "test_cone"
 		},
 	}
-	imaterial.set_property(coneeid, "u_color", {0, 0.5, 0.5, 1})
-	scene.add(coneeid)
-	world:pub { "Scene", "create", coneeid }
+	imaterial.set_property(testconeeid, "u_color", {0, 0.5, 0.5, 1})
+	scene.add(testconeeid)
+	world:pub { "Scene", "create", testconeeid }
+
+	-- iom.set_srt(testcubeid, math3d.mul(math3d.inverse(iom.srt(testconeeid)), iom.srt(testcubeid)))
+	-- world[testcubeid].parent = testconeeid
 
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
@@ -568,20 +587,11 @@ function gizmo_sys:post_init()
 	imaterial.set_property(new_eid, "u_color", COLOR_Z)
 	world[new_eid].parent = global_axis_eid
 	updateGlobalAxis()
-	updateGizmoScale()
+	gizmo_obj:update_scale()
 
 	gizmo_obj:show_by_state(false)
-	gizmo_obj:show_move(true)
+
 	world:pub {"Gizmo", "create", gizmo_obj, cmd_queue}
-
-
-	scene.add(1001)
-	scene.add(1002, 1001)
-	scene.add(2001)
-	scene.add(2002, 2001)
-	scene.add(2003, 2001)
-	scene.add(3001, 2003)
-	scene.add(3002, 2003)
 end
 
 function gizmo_obj:set_scale(inscale)
@@ -644,12 +654,12 @@ local function gizmoDirToWorld(localDir)
 end
 
 
-local function updateAxisPlane()
-	if gizmo_obj.mode ~= MOVE or not gizmo_obj.target_eid then
+function gizmo_obj:update_axis_plane()
+	if self.mode ~= MOVE or not self.target_eid then
 		return
 	end
 
-	local gizmoPosVec = iom.get_position(gizmo_obj.root_eid)
+	local gizmoPosVec = iom.get_position(self.root_eid)
 	local worldDir = math3d.vector(gizmoDirToWorld(DIR_Z))
 	local plane_xy = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
 	worldDir = math3d.vector(gizmoDirToWorld(DIR_Y))
@@ -661,20 +671,20 @@ local function updateAxisPlane()
 	local eyepos = iom.get_position(mq.camera_eid)
 
 	local project = math3d.sub(eyepos, math3d.mul(plane_xy.n, math3d.dot(plane_xy.n, eyepos) + plane_xy.d))
-	local invmat = math3d.inverse(iom.srt(gizmo_obj.root_eid))
+	local invmat = math3d.inverse(iom.srt(self.root_eid))
 	local tp = math3d.totable(math3d.transform(invmat, project, 1))
-	iom.set_position(gizmo_obj.txy.eid[1], {(tp[1] > 0) and move_plane_offset or -move_plane_offset, (tp[2] > 0) and move_plane_offset or -move_plane_offset, 0})
-	gizmo_obj.txy.area = (tp[1] > 0) and ((tp[2] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[2] > 0) and LEFT_TOP or LEFT_BOTTOM))
+	iom.set_position(self.txy.eid[1], {(tp[1] > 0) and move_plane_offset or -move_plane_offset, (tp[2] > 0) and move_plane_offset or -move_plane_offset, 0})
+	self.txy.area = (tp[1] > 0) and ((tp[2] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[2] > 0) and LEFT_TOP or LEFT_BOTTOM))
 
 	project = math3d.sub(eyepos, math3d.mul(plane_zx.n, math3d.dot(plane_zx.n, eyepos) + plane_zx.d))
 	tp = math3d.totable(math3d.transform(invmat, project, 1))
-	iom.set_position(gizmo_obj.tzx.eid[1], {(tp[1] > 0) and move_plane_offset or -move_plane_offset, 0, (tp[3] > 0) and move_plane_offset or -move_plane_offset})
-	gizmo_obj.tzx.area = (tp[1] > 0) and ((tp[3] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[3] > 0) and LEFT_TOP or LEFT_BOTTOM))
+	iom.set_position(self.tzx.eid[1], {(tp[1] > 0) and move_plane_offset or -move_plane_offset, 0, (tp[3] > 0) and move_plane_offset or -move_plane_offset})
+	self.tzx.area = (tp[1] > 0) and ((tp[3] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[3] > 0) and LEFT_TOP or LEFT_BOTTOM))
 
 	project = math3d.sub(eyepos, math3d.mul(plane_yz.n, math3d.dot(plane_yz.n, eyepos) + plane_yz.d))
 	tp = math3d.totable(math3d.transform(invmat, project, 1))
-	iom.set_position(gizmo_obj.tyz.eid[1], {0,(tp[2] > 0) and move_plane_offset or -move_plane_offset, (tp[3] > 0) and move_plane_offset or -move_plane_offset})
-	gizmo_obj.tyz.area = (tp[3] > 0) and ((tp[2] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[2] > 0) and LEFT_TOP or LEFT_BOTTOM))
+	iom.set_position(self.tyz.eid[1], {0,(tp[2] > 0) and move_plane_offset or -move_plane_offset, (tp[3] > 0) and move_plane_offset or -move_plane_offset})
+	self.tyz.area = (tp[3] > 0) and ((tp[2] > 0) and RIGHT_TOP or RIGHT_BOTTOM) or (((tp[2] > 0) and LEFT_TOP or LEFT_BOTTOM))
 end
 
 local keypress_mb = world:sub{"keyboard"}
@@ -948,7 +958,7 @@ local function moveGizmo(x, y)
 		deltaPos = {lastGizmoPos[1] + deltaOffset[1], lastGizmoPos[2] + deltaOffset[2], lastGizmoPos[3] + deltaOffset[3]}
 	end
 	gizmo_obj:set_position(deltaPos)
-	updateGizmoScale()
+	gizmo_obj:update_scale()
 	isTranDirty = true
 	world:pub {"Gizmo", "update"}
 end
@@ -1121,23 +1131,23 @@ local function faceToCamera()
 	
 end
 
-local function updataUniformScaleGizmo()
-	if not gizmo_obj.rw.eid[1] then return end
+function gizmo_obj:updata_uniform_scale()
+	if not self.rw.eid[1] then return end
 	local cameraeid = world:singleton_entity "main_queue".camera_eid
-	gizmo_obj.rw.dir = math3d.totable(iom.get_direction(cameraeid))
+	self.rw.dir = math3d.totable(iom.get_direction(cameraeid))
 	--update_camera
 	local r = iom.get_rotation(cameraeid)
 	-- local s,r,t = math3d.srt(world[cameraeid].transform)
-	iom.set_rotation(gizmo_obj.rw.eid[1], r)
-	iom.set_rotation(gizmo_obj.rw.eid[3], r)
-	iom.set_rotation(gizmo_obj.rw.eid[4], r)
+	iom.set_rotation(self.rw.eid[1], r)
+	iom.set_rotation(self.rw.eid[3], r)
+	iom.set_rotation(self.rw.eid[4], r)
 end
 
 local keypress_mb = world:sub{"keyboard"}
-local testshow = false
+local testswitch = true
 function gizmo_sys:data_changed()
 	for _ in cameraZoom:unpack() do
-		updateGizmoScale()
+		gizmo_obj:update_scale()
 	end
 
 	for _, what, value in gizmoModeEvent:unpack() do
@@ -1151,28 +1161,27 @@ function gizmo_sys:data_changed()
 			gizmo_obj:on_mode(SCALE)
 		elseif what == "localspace" then
 			localSpace = value
-			updateAxisPlane()
+			gizmo_obj:update_axis_plane()
 			gizmo_obj:set_rotation()
 		end
 	end
 
 	for _, what, x, y in mouseDown:unpack() do
+		print(what)
 		if what == "LEFT" then
 			gizmo_seleted = gizmo_obj:selectGizmo(x, y)
-			print("testshow", testshow)
-			ies.set_state(gizmo_obj.tx.eid[1], "visible", testshow)
-			ies.set_state(gizmo_obj.tx.eid[2], "visible", testshow)
-			ies.set_state(gizmo_obj.tx.eid[1], "visible", testshow)
-			ies.set_state(gizmo_obj.tx.eid[2], "visible", testshow)
-			ies.set_state(gizmo_obj.ty.eid[1], "visible", testshow)
-			ies.set_state(gizmo_obj.ty.eid[2], "visible", testshow)
-			ies.set_state(gizmo_obj.tz.eid[1], "visible", testshow)
-			ies.set_state(gizmo_obj.tz.eid[2], "visible", testshow)
-			--
-			ies.set_state(gizmo_obj.txy.eid[1], "visible", testshow)
-			ies.set_state(gizmo_obj.tyz.eid[1], "visible", testshow)
-			ies.set_state(gizmo_obj.tzx.eid[1], "visible", testshow)
-			testshow = not testshow
+		elseif what == "MIDDLE" then
+			if testswitch then
+				testswitch = false
+				print("set parent")
+				iom.set_srt(testcubeid, math3d.mul(math3d.inverse(iom.srt(testconeeid)), iom.srt(testcubeid)))
+				world[testcubeid].parent = testconeeid
+			else
+				testswitch = true
+				print("set no parent")
+				iom.set_srt(testcubeid, math3d.mul(iom.srt(testconeeid), iom.srt(testcubeid)))
+				world[testcubeid].parent = nil
+			end
 		end
 	end
 
@@ -1200,7 +1209,7 @@ function gizmo_sys:data_changed()
 				end
 			end
 		elseif what == "RIGHT" then
-			updateAxisPlane()
+			gizmo_obj:update_axis_plane()
 		end
 	end
 
@@ -1229,27 +1238,20 @@ function gizmo_sys:data_changed()
 			end
 		elseif what == "RIGHT" then
 			world:pub { "camera", "rotate", dx, dy }
-			updateGizmoScale()
-			updataUniformScaleGizmo()
+			gizmo_obj:update_scale()
+			gizmo_obj:updata_uniform_scale()
 		end
 	end
 	
 	for _,pick_id,pick_ids in pickup_mb:unpack() do
         local eid = pick_id
 		if eid and world[eid] then
-			if gizmo_obj.mode ~= SELECT and gizmo_obj.target_eid ~= eid then 
-				gizmo_obj.target_eid = eid
-				gizmo_obj:set_position()
-				gizmo_obj:set_rotation()
-				updateGizmoScale()
-				updataUniformScaleGizmo()
-				updateAxisPlane()
-				gizmo_obj:show_by_state(true)
-				world:pub {"Gizmo", "ontarget"}
+			if gizmo_obj.mode ~= SELECT then
+				gizmo_obj:set_target(eid)
 			end
 		else
 			if not gizmo_seleted then
-				gizmo_obj:show_by_state(false)
+				gizmo_obj:set_target(nil)
 			end
 		end
 	end

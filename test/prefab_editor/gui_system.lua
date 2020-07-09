@@ -68,9 +68,8 @@ local cmd_queue
 local currentPos = {0,0,0}
 local currentRot = {0,0,0}
 local currentScale = {1,1,1}
-local testSlider = {1}
 local localSpace = {}
-local testText = {}
+
 local SELECT <const> = 0
 local MOVE <const> = 1
 local ROTATE <const> = 2
@@ -78,13 +77,12 @@ local SCALE <const> = 3
 local sourceEid = nil
 local targetEid = nil
 local function show_scene_node(node)
-    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((scene.current_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
-    local name = tostring(node.eid)--world[node.eid].name
+    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
+    local name = world[node.eid].name--tostring(node.eid)--
 
     local function select_or_move(eid)
         if imgui.util.IsItemClicked() then
-            --currentEID[1] = eid
-            scene.current_eid = eid
+            gizmo:set_target(eid)
         end
         if imgui.widget.BeginDragDropSource() then
             imgui.widget.SetDragDropPayload("Drag", eid)
@@ -116,6 +114,29 @@ local function show_scene_node(node)
 end
 
 function m:ui_update()
+    for _, action, value1, value2 in eventGizmo:unpack() do
+        if action == "update" then
+            local s, r, t = math3d.srt(iom.srt(gizmo.target_eid))
+            local Pos = math3d.totable(t)
+            currentPos[1] = Pos[1]
+            currentPos[2] = Pos[2]
+            currentPos[3] = Pos[3]
+    
+            local Rot = math3d.totable(math3d.quat2euler(r))
+            currentRot[1] = math.deg(Rot[1])
+            currentRot[2] = math.deg(Rot[2])
+            currentRot[3] = math.deg(Rot[3])
+    
+            local Scale = math3d.totable(s)
+            currentScale[1] = Scale[1]
+            currentScale[2] = Scale[2]
+            currentScale[3] = Scale[3]
+        elseif action == "create" then
+            gizmo = value1
+            cmd_queue = value2
+        end
+    end
+
     imgui.windows.SetNextWindowPos(PropertyWidgetWidth, 0)
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
         imguiBeginToolbar()
@@ -157,6 +178,8 @@ function m:ui_update()
         end
         if sourceEid and targetEid then
             scene.set_parent(sourceEid, targetEid)
+            -- iom.set_srt(sourceEid, math3d.mul(math3d.inverse(iom.srt(targetEid)), iom.srt(sourceEid)))
+            -- world[sourceEid].parent = targetEid
         end
     end
     
@@ -168,7 +191,11 @@ function m:ui_update()
     local oldScale = nil
     
     for _ in imgui_windows("Inspector", imgui.flags.Window { "NoResize", "NoScrollbar", "NoClosed" }) do
-        if scene.current_eid then
+        if gizmo.target_eid then
+            if currentEID[1] ~= gizmo.target_eid then
+                currentEID[1] = gizmo.target_eid
+                currentName.text = world[gizmo.target_eid].name
+            end
             imgui.widget.InputInt("EID", currentEID)
             if imgui.widget.InputText("Name", currentName) then
                 world[currentEID[1]].name = tostring(currentName.text)
@@ -202,37 +229,6 @@ function m:ui_update()
     elseif oldScale then
         cmd_queue:record({action = SCALE, eid = gizmo.target_eid, oldvalue = oldScale, newvalue = {currentScale[1], currentScale[2], currentScale[3]}})
         oldScale = nil
-    end
-
-    for _, action, value1, value2 in eventGizmo:unpack() do
-        if action == "update" or action == "ontarget" then
-            if action == "ontarget" then
-                currentEID[1] = gizmo.target_eid
-                currentName.text = world[gizmo.target_eid].name
-            end
-            local s, r, t = math3d.srt(iom.srt(gizmo.target_eid))
-            local Pos = math3d.totable(t)
-            currentPos[1] = Pos[1]
-            currentPos[2] = Pos[2]
-            currentPos[3] = Pos[3]
-    
-            local Rot = math3d.totable(math3d.quat2euler(r))
-            currentRot[1] = math.deg(Rot[1])
-            currentRot[2] = math.deg(Rot[2])
-            currentRot[3] = math.deg(Rot[3])
-    
-            local Scale = math3d.totable(s)
-            currentScale[1] = Scale[1]
-            currentScale[2] = Scale[2]
-            currentScale[3] = Scale[3]
-        elseif action == "create" then
-            gizmo = value1
-            cmd_queue = value2
-        end
-    end
-
-    for _, action, eid in eventScene:unpack() do
-
     end
 end
 
