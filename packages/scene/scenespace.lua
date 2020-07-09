@@ -54,9 +54,18 @@ function pf:init()
 	return self
 end
 
+----iscenespace----
+local iss = ecs.interface "iscenespace"
+function iss.set_parent(eid, peid)
+	world[eid].parent = peid
+	world:pub {"component_changed", "parent", eid}
+end
+
+----scenespace_system----
 local sp_sys = ecs.system "scenespace_system"
 
 local se_mb = world:sub {"component_register", "scene_entity"}
+local pc_mb = world:sub {"component_changed", "parent"}
 local eremove_mb = world:sub {"entity_removed"}
 
 local hie_scene = require "hierarchy.scene"
@@ -112,7 +121,12 @@ function sp_sys:update_hierarchy()
 			inherit_entity_state(e)
 			inherit_material(e)
 		end
-    end
+	end
+	
+	for _, _, eid in pc_mb:unpack() do
+		local e = world[eid]
+		scenequeue:mount(eid, e.parent)
+	end
 
     local needclear
     for _, eid in eremove_mb:unpack() do

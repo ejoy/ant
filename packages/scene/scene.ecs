@@ -60,6 +60,10 @@ interface "iprimitive_filter"
     .method "select_filters"
     .method "reset_filters"
 
+interface "iscenespace"
+    .implement "scenespace.lua"
+    .method "set_parent"
+
 pipeline "scene"
     .stage "update_hierarchy"
     .stage "refine_entity_transform"
