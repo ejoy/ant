@@ -296,11 +296,11 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str
 		},
-		action = {
-            mount = axis_root,
-		},
+		-- action = {
+        --     mount = axis_root,
+		-- },
 	}
-
+	iss.set_parent(cylindereid, axis_root)
 	local coneeid = world:create_entity{
 		policy = {
 			"ant.render|render",
@@ -315,11 +315,11 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
 		},
-		action = {
-            mount = axis_root,
-		},
+		-- action = {
+        --     mount = axis_root,
+		-- },
 	}
-
+	iss.set_parent(coneeid, axis_root)
 	if axis_str == "x" then
 		gizmo_obj.tx.eid = {cylindereid, coneeid}
 	elseif axis_str == "y" then
@@ -380,10 +380,42 @@ function gizmo_obj:update_scale()
 		iom.set_scale(self.uniform_rot_root_eid, gizmo_scale)
 	end
 end
+local testcylinder
 local testcubeid
 local testconeeid
 function gizmo_sys:post_init()
+	scene:set_root(world:create_entity{
+		policy = {
+			"ant.general|name",
+			"ant.scene|transform_policy",
+		},
+		data = {
+			transform = {},
+			name = "Root",
+		}
+	})
 	
+	testcylinder = world:create_entity {
+		policy = {
+			"ant.render|render",
+			"ant.general|name",
+			"ant.scene|hierarchy_policy",
+			"ant.objcontroller|select",
+		},
+		data = {
+			scene_entity = true,
+			state = ies.create_state "visible|selectable",
+			transform =  {
+				s= 30,
+				t={1, 0.5, 0, 0}
+			},
+			material = "/pkg/ant.resources/materials/singlecolor.material",
+			mesh = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
+			name = "cylinder",
+		}
+	}
+	scene:add(testcylinder)
+
 	testcubeid = world:create_entity {
 		policy = {
 			"ant.render|render",
@@ -400,11 +432,14 @@ function gizmo_sys:post_init()
 			},
 			material = "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-			name = "test_cube",
+			name = "cube",
 		}
 	}
-	scene.add(testcubeid)
+	imaterial.set_property(testcubeid, "u_color", {0.5, 0.5, 0.5, 1})
+
+	scene:add(testcubeid)
 	world:pub { "Scene", "create", testcubeid }
+
 	testconeeid = world:create_entity{
 		policy = {
 			"ant.render|render",
@@ -421,15 +456,12 @@ function gizmo_sys:post_init()
 			},
 			material = "/pkg/ant.resources/materials/singlecolor.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
-			name = "test_cone"
+			name = "cone"
 		},
 	}
 	imaterial.set_property(testconeeid, "u_color", {0, 0.5, 0.5, 1})
-	scene.add(testconeeid)
+	scene:add(testconeeid)
 	world:pub { "Scene", "create", testconeeid }
-
-	-- iom.set_srt(testcubeid, math3d.mul(math3d.inverse(iom.srt(testconeeid)), iom.srt(testcubeid)))
-	-- world[testcubeid].parent = testconeeid
 
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
@@ -454,7 +486,7 @@ function gizmo_sys:post_init()
 		},
 	}
 
-	world[rot_circle_root].parent = axis_root
+	iss.set_parent(rot_circle_root, axis_root)
 	gizmo_obj.rot_circle_root_eid = rot_circle_root
 
 	local uniform_rot_root = world:create_entity{
@@ -477,7 +509,7 @@ function gizmo_sys:post_init()
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_xy")
 	imaterial.set_property(plane_xy_eid, "u_color", gizmo_obj.txy.color)
-	world[plane_xy_eid].parent = axis_root
+	iss.set_parent(plane_xy_eid, axis_root)
 	gizmo_obj.txy.eid = {plane_xy_eid, plane_xy_eid}
 
 	plane_yz_eid = computil.create_prim_plane_entity(
@@ -485,7 +517,7 @@ function gizmo_sys:post_init()
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_yz")
 	imaterial.set_property(plane_yz_eid, "u_color", gizmo_obj.tyz.color)
-	world[plane_yz_eid].parent = axis_root
+	iss.set_parent(plane_yz_eid, axis_root)
 	gizmo_obj.tyz.eid = {plane_yz_eid, plane_yz_eid}
 
 	plane_zx_eid = computil.create_prim_plane_entity(
@@ -493,36 +525,36 @@ function gizmo_sys:post_init()
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_zx")
 	imaterial.set_property(plane_zx_eid, "u_color", gizmo_obj.tzx.color)
-	world[plane_zx_eid].parent = axis_root
+	iss.set_parent(plane_zx_eid, axis_root)
 	gizmo_obj.tzx.eid = {plane_zx_eid, plane_zx_eid}
 	resetMoveAxisColor()
 
 	-- roate axis
 	local uniform_rot_eid = computil.create_circle_entity(uniform_rot_axis_len, rotate_slices, {}, "rotate_gizmo_uniform")
 	imaterial.set_property(uniform_rot_eid, "u_color", COLOR_GRAY)
-	world[uniform_rot_eid].parent = uniform_rot_root
+	iss.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
 		local mesh_eid = computil.create_circle_mesh_entity(radius, rotate_slices, circle_trans, "/pkg/ant.resources/materials/t_gizmos.material", "rotate_mesh_gizmo_uniform")
 		imaterial.set_property(mesh_eid, "u_color", {0, 0, 1, 0.5})
 		ies.set_state(mesh_eid, "visible", false)
-		world[mesh_eid].parent = axis_root
+		iss.set_parent(mesh_eid, axis_root)
 		return mesh_eid
 	end
 	-- counterclockwise mesh
 	local rot_ccw_mesh_eid = create_rotate_fan(uniform_rot_axis_len, {})
-	world[rot_ccw_mesh_eid].parent = uniform_rot_root
+	iss.set_parent(rot_ccw_mesh_eid, uniform_rot_root)
 	-- clockwise mesh
 	local rot_cw_mesh_eid = create_rotate_fan(uniform_rot_axis_len, {})
-	world[rot_cw_mesh_eid].parent = uniform_rot_root
+	iss.set_parent(rot_cw_mesh_eid, uniform_rot_root)
 	gizmo_obj.rw.eid = {uniform_rot_eid, uniform_rot_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
 
 	local function create_rotate_axis(axis, line_end, circle_trans)
 		local line_eid = computil.create_line_entity({}, {0, 0, 0}, line_end)
 		imaterial.set_property(line_eid, "u_color", axis.color)
-		world[line_eid].parent = rot_circle_root
+		iss.set_parent(line_eid, rot_circle_root)
 		local rot_eid = computil.create_circle_entity(axis_len, rotate_slices, circle_trans, "rotate gizmo circle")
 		imaterial.set_property(rot_eid, "u_color", axis.color)
-		world[rot_eid].parent = rot_circle_root
+		iss.set_parent(rot_eid, rot_circle_root)
 		local rot_ccw_mesh_eid = create_rotate_fan(axis_len, circle_trans)
 		local rot_cw_mesh_eid = create_rotate_fan(axis_len, circle_trans)
 		axis.eid = {rot_eid, line_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
@@ -553,14 +585,14 @@ function gizmo_sys:post_init()
 	end
 	-- scale axis cube
 	local cube_eid = create_scale_cube({s = axis_cube_scale}, COLOR_GRAY, "uniform scale")
-	world[cube_eid].parent = axis_root
+	iss.set_parent(cube_eid, axis_root)
 	gizmo_obj.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
 		local cube_eid = create_scale_cube({t = axis_end, s = axis_cube_scale}, axis.color, "scale axis")
-		world[cube_eid].parent = axis_root
+		iss.set_parent(cube_eid, axis_root)
 		local line_eid = computil.create_line_entity({}, {0, 0, 0}, axis_end)
 		imaterial.set_property(line_eid, "u_color", axis.color)
-		world[line_eid].parent = axis_root
+		iss.set_parent(line_eid, axis_root)
 		axis.eid = {cube_eid, line_eid}
 	end
 	create_scale_axis(gizmo_obj.sx, {axis_len, 0, 0})
@@ -580,13 +612,13 @@ function gizmo_sys:post_init()
 
 	local new_eid = computil.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0})
 	imaterial.set_property(new_eid, "u_color", COLOR_X)
-	world[new_eid].parent = global_axis_eid
+	iss.set_parent(new_eid, global_axis_eid)
 	new_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0})
 	imaterial.set_property(new_eid, "u_color", COLOR_Y)
-	world[new_eid].parent = global_axis_eid
+	iss.set_parent(new_eid, global_axis_eid)
 	new_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1})
 	imaterial.set_property(new_eid, "u_color", COLOR_Z)
-	world[new_eid].parent = global_axis_eid
+	iss.set_parent(new_eid, global_axis_eid)
 	updateGlobalAxis()
 	gizmo_obj:update_scale()
 
@@ -602,16 +634,19 @@ function gizmo_obj:set_scale(inscale)
 	iom.set_scale(self.target_eid, inscale)
 end
 
-function gizmo_obj:set_position(inpos)
+function gizmo_obj:set_position(worldpos)
 	if not self.target_eid then
 		return
 	end
 	local newpos
-	if inpos then
-		iom.set_position(self.target_eid, inpos)
-		newpos = inpos
+	if worldpos then
+		local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.calc_worldmat(world[gizmo_obj.target_eid].parent)), worldpos, 1))
+		iom.set_position(self.target_eid, localPos)
+		newpos = worldpos
 	else
-		newpos = math3d.totable(iom.get_position(self.target_eid))
+		local s,r,t = math3d.srt(iom.calc_worldmat(gizmo_obj.target_eid))
+		newpos = math3d.totable(t)
+		--newpos = math3d.totable(iom.get_position(self.target_eid))
 	end
 	iom.set_position(self.root_eid, newpos)
 	iom.set_position(self.uniform_rot_root_eid, newpos)
@@ -958,6 +993,7 @@ local function moveGizmo(x, y)
 		local deltaOffset = math3d.totable(math3d.sub(newOffset, initOffset))
 		deltaPos = {lastGizmoPos[1] + deltaOffset[1], lastGizmoPos[2] + deltaOffset[2], lastGizmoPos[3] + deltaOffset[3]}
 	end
+
 	gizmo_obj:set_position(deltaPos)
 	gizmo_obj:update_scale()
 	isTranDirty = true
@@ -1172,17 +1208,7 @@ function gizmo_sys:data_changed()
 		if what == "LEFT" then
 			gizmo_seleted = gizmo_obj:selectGizmo(x, y)
 		elseif what == "MIDDLE" then
-			if testswitch then
-				testswitch = false
-				print("set parent")
-				iom.set_srt(testcubeid, math3d.mul(math3d.inverse(iom.srt(testconeeid)), iom.srt(testcubeid)))
-				iss.set_parent(testcubeid, testconeeid)
-			else
-				testswitch = true
-				print("set no parent")
-				iom.set_srt(testcubeid, math3d.mul(iom.srt(testconeeid), iom.srt(testcubeid)))
-				world[testcubeid].parent = nil
-			end
+			
 		end
 	end
 
