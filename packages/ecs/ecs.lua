@@ -82,7 +82,7 @@ local function instance_prefab(w, prefab, args)
 	local res = {__class = prefab}
 	for i, v in ipairs(prefab) do
 		if v.prefab then
-			res[i] = instance_prefab(w, v.prefab, v.data.args)
+			res[i] = instance_prefab(w, v.prefab, v.data and v.data.args or nil)
 		else
 			res[i] = instance_entity(w, v)
 		end
