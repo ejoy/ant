@@ -146,7 +146,7 @@ function world:create_entity(v)
 		args["_mount"] = v.action.mount
 		v.action.mount = "_mount"
 	end
-	local prefab = {data=v, create_entity_template(self, v)}
+	local prefab = {data={v}, create_entity_template(self, v)}
 	local res = instance_prefab(self, prefab, args)
 	return res[1], res
 end
