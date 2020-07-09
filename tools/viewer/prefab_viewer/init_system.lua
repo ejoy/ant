@@ -6,6 +6,7 @@ local lfs = require "filesystem.local"
 
 local math3d  = require 'math3d'
 local computil = world:interface "ant.render|entity"
+local worldedit = require "worldedit"(world)
 
 local eventInstancePrefab = world:sub {"instance_prefab"}
 local eventSerializePrefab = world:sub {"serialize_prefab"}
@@ -14,6 +15,7 @@ local m = ecs.system 'init_system'
 
 local root
 local entities = {}
+local prefab
 local iom = world:interface "ant.objcontroller|obj_motion"
 local irq = world:interface "ant.render|irenderqueue"
 
@@ -51,7 +53,9 @@ local function instancePrefab(filename)
             scene_entity = true,
         }
     }
-    entities = world:instance(filename, {root=root})
+    prefab = worldedit:prefab_template(filename)
+    entities = worldedit:prefab_instance(prefab, {root=root})
+    worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     normalizeAabb()
     world:pub {"editor", "prefab", entities}
 end

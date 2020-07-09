@@ -88,9 +88,9 @@ local function instance_prefab(w, prefab, args)
 		end
 	end
 	setmetatable(res, {__index=args})
-	for i, entity in ipairs(prefab) do
-		if entity.data.action then
-			for name, target in sortpairs(entity.data.action) do
+	for i, entity in ipairs(prefab.data) do
+		if entity.action then
+			for name, target in sortpairs(entity.action) do
 				local object = w._class.action[name]
 				assert(object and object.init)
 				object.init(res, i, target)
@@ -123,17 +123,15 @@ local function create_entity_template(w, v)
 		process = res.process_entity,
 		unique = res.unique_component,
 		template = e,
-		data = v,
 	}
 end
 
 function world:create_template(data)
-	local prefab = {}
+	local prefab = {data=data}
 	for _, v in ipairs(data) do
 		if v.prefab then
 			prefab[#prefab+1] = {
-				prefab = assetmgr.resource(v.prefab, self),
-				data = v,
+				prefab = assetmgr.resource(v.prefab, self)
 			}
 		else
 			prefab[#prefab+1] = create_entity_template(self, v)
@@ -148,7 +146,7 @@ function world:create_entity(v)
 		args["_mount"] = v.action.mount
 		v.action.mount = "_mount"
 	end
-	local prefab = {create_entity_template(self, v)}
+	local prefab = {data=v, create_entity_template(self, v)}
 	local res = instance_prefab(self, prefab, args)
 	return res[1], res
 end
@@ -158,19 +156,12 @@ function world:instance(filename, args)
 	return instance_prefab(self, prefab, args)
 end
 
+function world:instance_prefab(prefab, args)
+	return instance_prefab(self, prefab, args)
+end
+
 function world:serialize(entities)
-	local t = {}
-	for _, class in ipairs(entities.__class) do
-		if class.prefab then
-			t[#t+1] = {
-				prefab = tostring(class.prefab),
-				args = next(class.args) ~= nil and class.args or nil,
-			}
-		else
-			t[#t+1] = class.data
-		end
-	end
-	return stringify(t)
+	return stringify(entities.__class.data)
 end
 
 function world:remove_entity(eid)
