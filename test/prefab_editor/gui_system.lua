@@ -77,7 +77,10 @@ local SCALE <const> = 3
 local sourceEid = nil
 local targetEid = nil
 
-local update_ui_transform()
+local function update_ui_transform()
+    if not gizmo.target_eid then
+        return
+    end
     local s, r, t = math3d.srt(iom.srt(gizmo.target_eid))
     local Pos = math3d.totable(t)
     currentPos[1] = Pos[1]
@@ -102,7 +105,7 @@ local function show_scene_node(node)
     local function select_or_move(eid)
         if imgui.util.IsItemClicked() then
             gizmo:set_target(eid)
-            update_ui_transform()
+            --update_ui_transform()
         end
         if imgui.widget.BeginDragDropSource() then
             imgui.widget.SetDragDropPayload("Drag", eid)
@@ -135,7 +138,7 @@ end
 
 function m:ui_update()
     for _, action, value1, value2 in eventGizmo:unpack() do
-        if action == "update" then
+        if action == "update" or action == "ontarget" then
             update_ui_transform()
         elseif action == "create" then
             gizmo = value1

@@ -221,6 +221,7 @@ function gizmo_obj:set_target(eid)
 		self:update_axis_plane()
 	end
 	gizmo_obj:show_by_state(eid ~= nil)
+	world:pub {"Gizmo","ontarget"}
 end
 
 local imaterial = world:interface "ant.asset|imaterial"
@@ -1232,7 +1233,8 @@ function gizmo_sys:data_changed()
 				elseif gizmo_obj.mode == ROTATE then
 					cmd_queue:record({action = ROTATE, eid = target, oldvalue = math3d.totable(lastRotate), newvalue = math3d.totable(iom.get_rotation(target))})
 				elseif gizmo_obj.mode == MOVE then
-					cmd_queue:record({action = MOVE, eid = target, oldvalue = lastGizmoPos, newvalue = math3d.totable(iom.get_position(target))})
+					local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.calc_worldmat(world[target].parent)), lastGizmoPos, 1))
+					cmd_queue:record({action = MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(target))})
 				end
 			end
 		elseif what == "RIGHT" then
