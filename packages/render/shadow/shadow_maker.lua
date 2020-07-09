@@ -216,9 +216,15 @@ end
 local spt = ecs.transform "shadow_primitive_transform"
 function spt.process_entity(e)
 	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
-		filter.result[fxtype].items[eid] = setmetatable({
-			fx = shadow_material.fx,
-			properties = shadow_material.properties,
-		}, {__index=rc})
+		local results = filter.result
+		if rc then
+			results[fxtype].items[eid] = setmetatable({
+				fx = shadow_material.fx,
+				properties = shadow_material.properties,
+			}, {__index=rc})
+		else
+			results.opaticy.items[eid] = nil
+			results.translucent.items[eid] = nil
+		end
 	end
 end

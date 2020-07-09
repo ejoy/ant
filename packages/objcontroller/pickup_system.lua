@@ -49,15 +49,21 @@ function pfpt.process_entity(e)
 	local f = e.primitive_filter
 	f.insert_item = function (filter, fxtype, eid, rc)
 		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
-		opaticy.items[eid] = setmetatable({
-			fx = opacity_material.fx,
-			properties = get_properties(eid, opacity_material.fx)
-		}, {__index=rc})
+		if rc then
+			opaticy.items[eid] = setmetatable({
+				fx = opacity_material.fx,
+				properties = get_properties(eid, opacity_material.fx)
+			}, {__index=rc})
+	
+			translucent.items[eid] = setmetatable({
+				fx = translucent_material.fx,
+				properties = get_properties(eid, translucent_material.fx),
+			}, {__index=rc})
+		else
+			opaticy.items[eid] = nil
+			translucent.items[eid] = nil
+		end
 
-		translucent.items[eid] = setmetatable({
-			fx = translucent_material.fx,
-			properties = get_properties(eid, translucent_material.fx),
-		}, {__index=rc})
 	end
 end
 

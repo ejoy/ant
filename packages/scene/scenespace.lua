@@ -15,9 +15,11 @@ function ipf.select_filters(eid)
 	local needadd = rc.vb and rc.fx and rc.state
 	for _, feid in world:each "primitive_filter" do
 		local filter = world[feid].primitive_filter
+		local item
 		if needadd and ((state & filter.filter_mask) ~= 0) then
-			filter:insert_item(rc.fx.setting.transparency, eid, rc)
+			item = rc
 		end
+		filter:insert_item(rc.fx.setting.transparency, eid, item)
 	end
 end
 
