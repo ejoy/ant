@@ -62,12 +62,12 @@ local PropertyWidgetWidth <const> = 320
 local eventGizmo = world:sub {"Gizmo"}
 local eventScene = world:sub {"Scene"}
 local currentEID = {0, flags = imgui.flags.InputText{ "ReadOnly" }}
+local currentName = {text = "noname"}
 local gizmo
 local cmd_queue
 local currentPos = {0,0,0}
 local currentRot = {0,0,0}
 local currentScale = {1,1,1}
-local currentName = {text = "noname"}
 local testSlider = {1}
 local localSpace = {}
 local testText = {}
@@ -78,19 +78,20 @@ local SCALE <const> = 3
 local sourceEid = nil
 local targetEid = nil
 local function show_scene_node(node)
-    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((currentEID[1] == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
+    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((scene.current_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     local name = tostring(node.eid)--world[node.eid].name
 
     local function select_or_move(eid)
         if imgui.util.IsItemClicked() then
-            currentEID[1] = eid
+            --currentEID[1] = eid
+            scene.current_eid = eid
         end
         if imgui.widget.BeginDragDropSource() then
-            imgui.widget.SetDragDropPayload("Reparent", eid)
+            imgui.widget.SetDragDropPayload("Drag", eid)
             imgui.widget.EndDragDropSource()
         end
         if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("Reparent")
+            local payload = imgui.widget.AcceptDragDropPayload("Drag")
             if payload then
                 sourceEid = tonumber(payload)
                 targetEid = eid
@@ -161,33 +162,35 @@ function m:ui_update()
     
     imgui.windows.SetNextWindowPos(sw - PropertyWidgetWidth, 0)
     imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh)
+    
     local oldPos = nil
     local oldRot = nil
     local oldScale = nil
+    
     for _ in imgui_windows("Inspector", imgui.flags.Window { "NoResize", "NoScrollbar", "NoClosed" }) do
-        
-        imgui.widget.InputInt("EID", currentEID)
-        if imgui.widget.InputText("Name", currentName) then
-            world[currentEID[1]].name = tostring(currentName.text)
-        end
-
-        if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
-            if imgui.widget.InputFloat("Position", currentPos) then
-                oldPos = math3d.totable(iom.get_position(gizmo.target_eid))
-                gizmo:set_position(currentPos)
-            end
-            if imgui.widget.InputFloat("Rotate", currentRot) then
-                oldRot = math3d.totable(iom.get_rotation(gizmo.target_eid))
-                gizmo:set_rotation(currentRot)
-            end
-            if imgui.widget.InputFloat("Scale", currentScale) then
-                oldScale = math3d.totable(iom.get_scale(gizmo.target_eid))
-                gizmo:set_scale(currentScale)
+        if scene.current_eid then
+            imgui.widget.InputInt("EID", currentEID)
+            if imgui.widget.InputText("Name", currentName) then
+                world[currentEID[1]].name = tostring(currentName.text)
             end
 
-            imgui.widget.TreePop()
+            if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
+                if imgui.widget.InputFloat("Position", currentPos) then
+                    oldPos = math3d.totable(iom.get_position(gizmo.target_eid))
+                    gizmo:set_position(currentPos)
+                end
+                if imgui.widget.InputFloat("Rotate", currentRot) then
+                    oldRot = math3d.totable(iom.get_rotation(gizmo.target_eid))
+                    gizmo:set_rotation(currentRot)
+                end
+                if imgui.widget.InputFloat("Scale", currentScale) then
+                    oldScale = math3d.totable(iom.get_scale(gizmo.target_eid))
+                    gizmo:set_scale(currentScale)
+                end
+
+                imgui.widget.TreePop()
+            end
         end
-        
     end
 
     if oldPos then

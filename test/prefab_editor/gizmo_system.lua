@@ -77,7 +77,7 @@ local cmd_queue = {
 	cmd_redo = queue.new()
 }
 local isTranDirty = false
-function cmd_queue.undo(self)
+function cmd_queue:undo()
 	local cmd = queue.pop_last(self.cmd_undo)
 	if not cmd then return end
 	if cmd.action == SCALE then
@@ -97,7 +97,7 @@ function cmd_queue.undo(self)
 	queue.push_last(self.cmd_redo, cmd)
 end
 
-function cmd_queue.redo(self)
+function cmd_queue:redo()
 	local cmd = queue.pop_last(self.cmd_redo)
 	if not cmd then return end
 	if cmd.action == SCALE then
@@ -117,7 +117,7 @@ function cmd_queue.redo(self)
 	queue.push_last(self.cmd_undo, cmd)
 end
 
-function cmd_queue.record(self, cmd)
+function cmd_queue:record(cmd)
 	local redocmd = queue.pop_last(self.cmd_redo)
 	while redocmd do
 		redocmd = queue.pop_last(self.cmd_redo)
@@ -125,7 +125,7 @@ function cmd_queue.record(self, cmd)
 	queue.push_last(self.cmd_undo, cmd)
 end
 
-function gizmo_obj.show_rotate_fan(self, show)
+function gizmo_obj:show_rotate_fan(show)
 	local state = "visible"
 	ies.set_state(self.rx.eid[3], state, show)
 	ies.set_state(self.rx.eid[4], state, show)
@@ -154,7 +154,7 @@ local function showRotateMeshByAxis(show, axis)
 	world[axis.eid[4]]._rendercache.ib.num = 0
 end
 
-function gizmo_obj.show_move(self, show)
+function gizmo_obj:show_move(show)
 	local state = "visible"
 	ies.set_state(self.tx.eid[1], state, show)
 	ies.set_state(self.tx.eid[2], state, show)
@@ -168,7 +168,7 @@ function gizmo_obj.show_move(self, show)
 	ies.set_state(self.tzx.eid[1], state, show)
 end
 
-function gizmo_obj.show_rotate(self, show)
+function gizmo_obj:show_rotate(show)
 	local state = "visible"
 	ies.set_state(self.rx.eid[1], state, show)
 	ies.set_state(self.rx.eid[2], state, show)
@@ -179,7 +179,7 @@ function gizmo_obj.show_rotate(self, show)
 	ies.set_state(self.rw.eid[1], state, show)
 end
 
-function gizmo_obj.show_scale(self, show)
+function gizmo_obj:show_scale(show)
 	local state = "visible"
 	ies.set_state(self.sx.eid[1], state, show)
 	ies.set_state(self.sx.eid[2], state, show)
@@ -190,7 +190,7 @@ function gizmo_obj.show_scale(self, show)
 	ies.set_state(self.uniform_scale_eid, state, show)
 end
 
-function gizmo_obj.show_by_state(self, show)
+function gizmo_obj:show_by_state(show)
 	if show and not self.target_eid then
 		return
 	end
@@ -569,8 +569,9 @@ function gizmo_sys:post_init()
 	world[new_eid].parent = global_axis_eid
 	updateGlobalAxis()
 	updateGizmoScale()
-	gizmo_obj:show_by_state(false)
 
+	gizmo_obj:show_by_state(false)
+	gizmo_obj:show_move(true)
 	world:pub {"Gizmo", "create", gizmo_obj, cmd_queue}
 
 
@@ -583,14 +584,14 @@ function gizmo_sys:post_init()
 	scene.add(3002, 2003)
 end
 
-function gizmo_obj.set_scale(self, inscale)
+function gizmo_obj:set_scale(inscale)
 	if not self.target_eid then
 		return
 	end
 	iom.set_scale(self.target_eid, inscale)
 end
 
-function gizmo_obj.set_position(self, inpos)
+function gizmo_obj:set_position(inpos)
 	if not self.target_eid then
 		return
 	end
@@ -605,7 +606,7 @@ function gizmo_obj.set_position(self, inpos)
 	iom.set_position(self.uniform_rot_root_eid, newpos)
 end
 
-function gizmo_obj.set_rotation(self, inrot)
+function gizmo_obj:set_rotation(inrot)
 	if not self.target_eid then
 		return
 	end
@@ -627,7 +628,7 @@ function gizmo_obj.set_rotation(self, inrot)
 	end
 end
 
-function gizmo_obj.on_mode(self, mode)
+function gizmo_obj:on_mode(mode)
 	self:show_by_state(false)
 	self.mode = mode
 	self:show_by_state(true)
@@ -1133,7 +1134,7 @@ local function updataUniformScaleGizmo()
 end
 
 local keypress_mb = world:sub{"keyboard"}
-
+local testshow = false
 function gizmo_sys:data_changed()
 	for _ in cameraZoom:unpack() do
 		updateGizmoScale()
@@ -1158,6 +1159,20 @@ function gizmo_sys:data_changed()
 	for _, what, x, y in mouseDown:unpack() do
 		if what == "LEFT" then
 			gizmo_seleted = gizmo_obj:selectGizmo(x, y)
+			print("testshow", testshow)
+			ies.set_state(gizmo_obj.tx.eid[1], "visible", testshow)
+			ies.set_state(gizmo_obj.tx.eid[2], "visible", testshow)
+			ies.set_state(gizmo_obj.tx.eid[1], "visible", testshow)
+			ies.set_state(gizmo_obj.tx.eid[2], "visible", testshow)
+			ies.set_state(gizmo_obj.ty.eid[1], "visible", testshow)
+			ies.set_state(gizmo_obj.ty.eid[2], "visible", testshow)
+			ies.set_state(gizmo_obj.tz.eid[1], "visible", testshow)
+			ies.set_state(gizmo_obj.tz.eid[2], "visible", testshow)
+			--
+			ies.set_state(gizmo_obj.txy.eid[1], "visible", testshow)
+			ies.set_state(gizmo_obj.tyz.eid[1], "visible", testshow)
+			ies.set_state(gizmo_obj.tzx.eid[1], "visible", testshow)
+			testshow = not testshow
 		end
 	end
 
@@ -1222,7 +1237,7 @@ function gizmo_sys:data_changed()
 	for _,pick_id,pick_ids in pickup_mb:unpack() do
         local eid = pick_id
 		if eid and world[eid] then
-			if not gizmo_obj.target_eid or gizmo_obj.target_eid ~= eid then
+			if gizmo_obj.mode ~= SELECT and gizmo_obj.target_eid ~= eid then 
 				gizmo_obj.target_eid = eid
 				gizmo_obj:set_position()
 				gizmo_obj:set_rotation()
@@ -1234,7 +1249,6 @@ function gizmo_sys:data_changed()
 			end
 		else
 			if not gizmo_seleted then
-				gizmo_obj.target_eid = nil
 				gizmo_obj:show_by_state(false)
 			end
 		end
