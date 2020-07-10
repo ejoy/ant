@@ -58,6 +58,7 @@ local function imguiToolbar(text, tooltip, active)
     end
     return r
 end
+local SceneWidgetWidth <const> = 200
 local PropertyWidgetWidth <const> = 320
 local eventGizmo = world:sub {"Gizmo"}
 local eventScene = world:sub {"Scene"}
@@ -146,7 +147,7 @@ function m:ui_update()
         end
     end
 
-    imgui.windows.SetNextWindowPos(PropertyWidgetWidth, 0)
+    imgui.windows.SetNextWindowPos(SceneWidgetWidth, 0)
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
         imguiBeginToolbar()
         if imguiToolbar("🚫", "Select", status.GizmoMode == "select") then
@@ -177,7 +178,7 @@ function m:ui_update()
 
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, 0)
-    imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh)
+    imgui.windows.SetNextWindowSize(SceneWidgetWidth, sh)
 
     for _ in imgui_windows("Scene", imgui.flags.Window { "NoResize", "NoScrollbar", "NoClosed" }) do
         sourceEid = nil
@@ -185,7 +186,9 @@ function m:ui_update()
         show_scene_node(scene.root)
         if sourceEid and targetEid then
             scene:set_parent(sourceEid, targetEid)
-            iom.set_srt(sourceEid, math3d.mul(math3d.inverse(iom.srt(targetEid)), iom.srt(sourceEid)))
+            local sourceWorldMat = iom.calc_worldmat(sourceEid)
+            local targetWorldMat = iom.calc_worldmat(targetEid)
+            iom.set_srt(sourceEid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
             iss.set_parent(sourceEid, targetEid)
         end
     end

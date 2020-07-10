@@ -94,6 +94,8 @@ function cmd_queue:undo()
 			iom.set_position(cmd.eid, cmd.oldvalue)
 		end
 	end
+	gizmo_obj:set_position()
+	gizmo_obj:set_rotation()
 	world:pub {"Gizmo", "update"}
 	queue.push_last(self.cmd_redo, cmd)
 end
@@ -114,6 +116,8 @@ function cmd_queue:redo()
 			iom.set_position(cmd.eid, cmd.newvalue)
 		end
 	end
+	gizmo_obj:set_position()
+	gizmo_obj:set_rotation()
 	world:pub {"Gizmo", "update"}
 	queue.push_last(self.cmd_undo, cmd)
 end
@@ -647,7 +651,6 @@ function gizmo_obj:set_position(worldpos)
 	else
 		local s,r,t = math3d.srt(iom.calc_worldmat(gizmo_obj.target_eid))
 		newpos = math3d.totable(t)
-		--newpos = math3d.totable(iom.get_position(self.target_eid))
 	end
 	iom.set_position(self.root_eid, newpos)
 	iom.set_position(self.uniform_rot_root_eid, newpos)
