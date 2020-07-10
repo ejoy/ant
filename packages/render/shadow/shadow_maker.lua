@@ -80,20 +80,17 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 	maxextent[1], maxextent[2] = newmax[1], newmax[2]
 end
 
-local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, stabilize, sc_eid)
-	local vp = math3d.mul(math3d.projmat(frustum), viewmat)
+local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, stabilize, sc_eid)
+	local vp = math3d.mul(math3d.projmat(frustum), camera.viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
 
 	local center_WS = math3d.frustum_center(corners_WS)
 	local min_extent, max_extent
 	local rc = world[sc_eid]._rendercache
-	--TODO: up direction for shadow view matrix should consider parallel with view frustum situation
-	-- using camera world matrix right axis as light camera matrix up direction
-	-- look at matrix up direction should select one that not easy parallel with view direction
-	rc.viewmat = math3d.lookto(center_WS, lightdir)
-	rc.srt = math3d.inverse(rc.viewmat)
-
+	rc.viewmat = math3d.lookto(center_WS, lightdir, math3d.index(camera.worldmat, 1))
+	rc.srt = math3d.inverse(rc.viewmat)	
+	
 	if stabilize then
 		local radius = math3d.frustum_max_radius(corners_WS, center_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
@@ -114,16 +111,17 @@ local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, st
 	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
 end
 
-local function update_shadow_camera(dl_eid, viewmat, viewfrustum)
-	local lightdir = iom.get_direction(dl_eid)	
+local function update_shadow_camera(dl_eid, camera)
+	local lightdir = iom.get_direction(dl_eid)
 	local setting = ishadow.setting()
+	local viewfrustum = camera.frustum
 	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
 
 	for _, eid in world:each "csm" do
 		local e = world[eid]
 		local csm = e.csm
 		local cf = csmfrustums[csm.index]
-		calc_shadow_camera(viewmat, cf, lightdir, setting.shadowmap_size, setting.stabilize, e.camera_eid)
+		calc_shadow_camera(camera, cf, lightdir, setting.shadowmap_size, setting.stabilize, e.camera_eid)
 		csm.split_distance_VS = cf.f - viewfrustum.n
 	end
 end
@@ -207,7 +205,7 @@ function sm:update_camera()
 
 	-- for _, mb in ipairs(modify_mailboxs) do
 	-- 	for _ in mb:each() do
-			update_shadow_camera(ilight.directional_light(), c.viewmat, c.frustum)
+			update_shadow_camera(ilight.directional_light(), c)
 	-- 	end
 	-- end
 end
