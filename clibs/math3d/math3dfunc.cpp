@@ -529,6 +529,58 @@ math3d_aabb_diagonal_length(struct lastack *LS, const float *aabb){
 	return glm::length(VEC3(&maxv.x) - VEC3(&minv.x));
 }
 
+static inline int
+plane_intersect(const glm::vec4& plane, const float* aabb) {
+	const auto& min = CAABB_MIN(aabb);
+	const auto& max = CAABB_MAX(aabb);
+	float minD, maxD;
+	if (plane.x > 0.0f) {
+		minD = plane.x * min.x;
+		maxD = plane.x * max.x;
+	}
+	else {
+		minD = plane.x * max.x;
+		maxD = plane.x * min.x;
+	}
+
+	if (plane.y > 0.0f) {
+		minD += plane.y * min.y;
+		maxD += plane.y * max.y;
+	}
+	else {
+		minD += plane.y * max.y;
+		maxD += plane.y * min.y;
+	}
+
+	if (plane.z > 0.0f) {
+		minD += plane.z * min.z;
+		maxD += plane.z * max.z;
+	}
+	else {
+		minD += plane.z * max.z;
+		maxD += plane.z * min.z;
+	}
+
+	// in front of the plane
+	if (minD > -plane.w) {
+		return 1;
+	}
+
+	// in back of the plane
+	if (maxD < -plane.w) {
+		return -1;
+	}
+
+	// straddle of the plane
+	return 0;
+}
+
+
+int
+math3d_aabb_intersect_plane(struct lastack *LS, const float *aabb, const float plane[4]){
+	return plane_intersect(VEC(plane), aabb);
+}
+
 // plane [left, right, bottom, top, near, far]
 enum PlaneName{
 	PN_left = 0,
@@ -635,50 +687,6 @@ math3d_frustum_points(struct lastack *LS, const float m[16], float *points[8]){
 	}
 }
 
-
-static inline int
-plane_intersect(const glm::vec4 &plane, const float* aabb) {
-	const auto& min = CAABB_MIN(aabb);
-	const auto& max = CAABB_MAX(aabb);
-	float minD, maxD;	
-	if (plane.x > 0.0f){
-		minD = plane.x * min.x;
-		maxD = plane.x * max.x;
-	} else {
-		minD = plane.x * max.x;
-		maxD = plane.x * min.x;
-	}
-
-	if (plane.y > 0.0f){
-		minD += plane.y * min.y;
-		maxD += plane.y * max.y;
-	} else {
-		minD += plane.y * max.y;
-		maxD += plane.y * min.y;
-	}
-
-	if (plane.z > 0.0f){
-		minD += plane.z * min.z;
-		maxD += plane.z * max.z;
-	} else {
-		minD += plane.z * max.z;
-		maxD += plane.z * min.z;
-	}
-
-	// in front of the plane
-	if (minD > -plane.w){
-		return 1;
-	}
-
-	// in back of the plane
-	if (maxD < -plane.w){
-		return -1;
-	}
-
-	// straddle of the plane
-	return 0;
-}
-
 // frustum
 int 
 math3d_frustum_intersect_aabb(struct lastack *LS, const float* planes[6], const float *aabb){
@@ -735,4 +743,9 @@ math3d_frustum_max_radius(struct lastack *LS, const float *points[8], const floa
 
 void math3d_frustum_calc_near_far(struct lastack *LS, const float *planes[6], float nearfar[2]){
 
+}
+
+float
+math3d_point2plane(struct lastack *LS, const float pt[4], const float plane[4]){
+	return glm::dot(VEC3(pt), VEC3(plane)) + plane[4];
 }

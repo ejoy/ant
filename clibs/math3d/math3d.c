@@ -1551,6 +1551,16 @@ laabb_center_extents(lua_State *L){
 	return 2;
 }
 
+static int
+laabb_intersect_plane(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *aabb = matrix_from_index(L, LS, 1);
+	const float *plane = vector_from_index(L, LS, 2);
+
+	lua_pushinteger(L, math3d_aabb_intersect_plane(LS, aabb, plane));
+	return 1;
+}
+
 //frustum
 static int
 lfrustum_planes(lua_State *L){
@@ -1698,6 +1708,16 @@ lfrustum_calc_near_far(lua_State *L){
 	return 2;
 }
 
+static int
+lpoint2plane(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *pt = vector_from_index(L, LS, 1);
+	const float *plane = vector_from_index(L, LS, 2);
+
+	lua_pushnumber(L, math3d_point2plane(LS, pt, plane));
+	return 1;
+}
+
 static void
 init_math3d_api(lua_State *L, struct boxstack *bs) {
 		luaL_Reg l[] = {
@@ -1753,6 +1773,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "aabb_merge", laabb_merge},
 		{ "aabb_transform", laabb_transform},
 		{ "aabb_center_extents", laabb_center_extents},
+		{ "aabb_intersect_plane", laabb_intersect_plane},
 
 		//frustum
 		{ "frustum_planes", 		lfrustum_planes},
@@ -1763,6 +1784,9 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "frustum_center",			lfrustum_center},
 		{ "frustum_max_radius",		lfrustum_max_radius},
 		{ "frustum_calc_near_far",  lfrustum_calc_near_far},
+
+		//primitive
+		{ "point2plane",	lpoint2plane},
 		{ NULL, NULL },
 	};
 

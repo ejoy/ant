@@ -88,6 +88,9 @@ local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, st
 	local center_WS = math3d.frustum_center(corners_WS)
 	local min_extent, max_extent
 	local rc = world[sc_eid]._rendercache
+	--TODO: up direction for shadow view matrix should consider parallel with view frustum situation
+	-- using camera world matrix right axis as light camera matrix up direction
+	-- look at matrix up direction should select one that not easy parallel with view direction
 	rc.viewmat = math3d.lookto(center_WS, lightdir)
 	rc.srt = math3d.inverse(rc.viewmat)
 
@@ -97,8 +100,6 @@ local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, st
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadowmap_size)
 	else
-		-- using camera world matrix right axis as light camera matrix up direction
-		-- look at matrix up direction should select one that not easy parallel with view direction
 		local minv, maxv = math3d.minmax(corners_WS, rc.viewmat)
 		min_extent, max_extent = math3d.tovalue(minv), math3d.tovalue(maxv)
 	end
@@ -114,10 +115,8 @@ local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, st
 end
 
 local function update_shadow_camera(dl_eid, viewmat, viewfrustum)
-	local lightdir = iom.get_direction(dl_eid)
-	
+	local lightdir = iom.get_direction(dl_eid)	
 	local setting = ishadow.setting()
-
 	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
 
 	for _, eid in world:each "csm" do

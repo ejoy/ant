@@ -216,22 +216,24 @@ function ishadow.calc_split_frustums(view_frustum)
 	local view_nearclip, view_farclip = view_frustum.n, view_frustum.f
 	local clip_range = view_farclip - view_nearclip
 	local split_num = csm_setting.split_num
+
+	local function calc_clip(r)
+		return view_nearclip + clip_range * r
+	end
+	
 	if lambda then
 		local ratio = view_farclip / view_nearclip;
 		local last_clip = view_nearclip
 		for i=1, split_num do
 			local p = i / split_num
 			local log = view_nearclip * (ratio ^ p);
-			local uniform = view_nearclip + clip_range * p;
+			local uniform = calc_clip(p)
 			local new_far_clip = lambda * (log - uniform) + uniform;
 
 			split_frustums[i] = split_new_frustum(view_frustum, last_clip, new_far_clip)
 			last_clip = new_far_clip
 		end
 	else
-		local function calc_clip(r)
-			return view_frustum.n + clip_range * r
-		end
 		for i=1, split_num do
 			local ratio = csm_setting.split_ratios[i]
 			local near_clip, far_clip = calc_clip(ratio[1]), calc_clip(ratio[2])
