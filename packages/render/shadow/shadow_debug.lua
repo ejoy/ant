@@ -32,7 +32,7 @@ local frustum_colors = {
 }
 
 function shadowdbg_sys:post_init()
-	csm_shadow_debug_quad()
+	--csm_shadow_debug_quad()
 end
 
 local function find_csm_entity(index)
@@ -71,7 +71,7 @@ local function create_debug_entity()
 		local color = frustum_colors[idx]
 
 		debug_entities[#debug_entities+1] = ientity.create_frustum_entity(frustum_points, "frusutm:" .. s.name, color)
-		debug_entities[#debug_entities+1] = ientity.create_axis_entity(rc.worldmat, "csm_axis:" .. idx, color)
+		debug_entities[#debug_entities+1] = ientity.create_axis_entity(math3d.tovalue(rc.worldmat), "csm_axis:" .. idx, color)
 	end
 end
 

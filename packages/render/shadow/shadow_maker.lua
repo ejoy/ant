@@ -89,7 +89,8 @@ local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, sta
 	local min_extent, max_extent
 	local rc = world[sc_eid]._rendercache
 	rc.viewmat = math3d.lookto(center_WS, lightdir, math3d.index(camera.worldmat, 1))
-	rc.srt = math3d.inverse(rc.viewmat)	
+	rc.worldmat = math3d.inverse(rc.viewmat)
+	rc.srt.id = rc.worldmat
 	
 	if stabilize then
 		local radius = math3d.frustum_max_radius(corners_WS, center_WS)
