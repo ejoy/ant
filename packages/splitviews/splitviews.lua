@@ -112,14 +112,16 @@ local function hide_ortho_view()
     end
 end
 
+local view_control
+
 function svs:data_changed()
     for _, key, press, state in kb_mb:unpack() do
-        if key == "H" and press == 0 then
+        if key == "F4" and press == 0 then
             hide_ortho_view()
             viewidx = viewidx == 2 and 1 or 2
             show_ortho_view()
         end
-		if key == "G" and press == 0 then
+		if key == "F3" and press == 0 then
             splitview = not splitview
             
             if splitview then
@@ -129,7 +131,20 @@ function svs:data_changed()
                 recover_mainqueue_rect()
                 hide_ortho_view()
             end
-		end
+        end
+        
+        if key == "F2" and press == 0 then
+            if view_control == nil then
+                view_control = 1
+            elseif view_control == #viewqueue then
+                 view_control = nil
+             else
+                 view_control = view_control + 1
+             end
+
+            local eid = view_control and (orthoview[viewqueue[viewidx][view_control]].eid or (world:singleton_entity_id "main_queue"))
+            world:pub {"splitviews", "selected", eid}
+        end
 	end
 end
 

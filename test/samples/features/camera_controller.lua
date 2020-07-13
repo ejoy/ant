@@ -21,28 +21,12 @@ local eventKeyboard = world:sub {"keyboard"}
 local kKeyboardSpeed <const> = 0.5
 
 
-function camera_controller_sys:post_init()
-	-- local camera = get_camera()
-	-- camera.frustum.f = 100	--set far distance to 100
-	-- camera_reset(camera)
-	dpi_x, dpi_y = rhwi.dpi()
+local cameraeid
 
-	--local message = {}
-	--local w,s,a,d=0,0,0,0
-	--function message:steering(code, press)
-	--	if code == "W" then
-	--		w = press
-	--	elseif code == "S" then
-	--		s = press
-	--	elseif code == "A" then
-	--		a = press
-	--	elseif code == "D" then
-	--		d = press
-	--	end
-	--	data.dz = w - s
-	--	data.dx = d - a
-	--end
-	--self.message.observers:add(message)
+function camera_controller_sys:post_init()
+	cameraeid = world:singleton_entity "main_queue".camera_eid
+
+	dpi_x, dpi_y = rhwi.dpi()
 end
 
 local function can_rotate(eid)
@@ -55,22 +39,26 @@ local function can_move(eid)
 	return lock_target and lock_target.type ~= "move" or true
 end
 
-function camera_controller_sys:data_changed()
-	local mq = world:singleton_entity "main_queue"
+local svs_mb = world:sub{"splitviews", "selected"}
 
-	if can_rotate(mq.camera_eid) then
+function camera_controller_sys:data_changed()
+	for _, _, eid in svs_mb:unpack() do
+		cameraeid = world[eid].camera_eid
+	end
+
+	if can_rotate(cameraeid) then
 		for _, e in ipairs(mouse_events) do
 			for _,_,state,x,y in e:unpack() do
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-					iom.rotate(mq.camera_eid, uy, ux)
+					iom.rotate(cameraeid, uy, ux)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end
 		end
 	end
-	if can_move(mq.camera_eid) then
+	if can_move(cameraeid) then
 		local keyboard_delta = {0 , 0, 0}
 		for _,code,press in eventKeyboard:unpack() do
 			local delta = (press>0) and kKeyboardSpeed or 0
@@ -89,7 +77,7 @@ function camera_controller_sys:data_changed()
 			end
 		end
 		if keyboard_delta[1] ~= 0 or keyboard_delta[2] ~= 0 or keyboard_delta[3] ~= 0 then
-			iom.move(mq.camera_eid, keyboard_delta)
+			iom.move(cameraeid, keyboard_delta)
 		end
 	end
 end
