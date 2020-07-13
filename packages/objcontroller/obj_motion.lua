@@ -181,6 +181,9 @@ function iobj_motion.ray(eid, pt2d, vp_size)
 end
 
 local function calc_worldmat(eid, c_mt)
+    if not eid then
+        return math3d.matrix()
+    end
     local srt = world[eid]._rendercache.srt
     local wm
     if srt then

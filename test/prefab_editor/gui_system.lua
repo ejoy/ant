@@ -3,7 +3,7 @@ local world = ecs.world
 local math3d = require "math3d"
 local imgui      = require "imgui"
 local rhwi       = import_package 'ant.render'.hwi
-
+local iss = world:interface "ant.scene|iscenespace"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
 local scene = require "scene"
@@ -58,6 +58,7 @@ local function imguiToolbar(text, tooltip, active)
     end
     return r
 end
+local SceneWidgetWidth <const> = 200
 local PropertyWidgetWidth <const> = 320
 local eventGizmo = world:sub {"Gizmo"}
 local eventScene = world:sub {"Scene"}
@@ -76,13 +77,36 @@ local ROTATE <const> = 2
 local SCALE <const> = 3
 local sourceEid = nil
 local targetEid = nil
+
+local function update_ui_transform()
+    if not gizmo.target_eid then
+        return
+    end
+    local s, r, t = math3d.srt(iom.srt(gizmo.target_eid))
+    local Pos = math3d.totable(t)
+    currentPos[1] = Pos[1]
+    currentPos[2] = Pos[2]
+    currentPos[3] = Pos[3]
+
+    local Rot = math3d.totable(math3d.quat2euler(r))
+    currentRot[1] = math.deg(Rot[1])
+    currentRot[2] = math.deg(Rot[2])
+    currentRot[3] = math.deg(Rot[3])
+
+    local Scale = math3d.totable(s)
+    currentScale[1] = Scale[1]
+    currentScale[2] = Scale[2]
+    currentScale[3] = Scale[3]
+end
+
 local function show_scene_node(node)
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
-    local name = world[node.eid].name--tostring(node.eid)--
+    local name = world[node.eid].name
 
     local function select_or_move(eid)
         if imgui.util.IsItemClicked() then
             gizmo:set_target(eid)
+            --update_ui_transform()
         end
         if imgui.widget.BeginDragDropSource() then
             imgui.widget.SetDragDropPayload("Drag", eid)
@@ -115,29 +139,15 @@ end
 
 function m:ui_update()
     for _, action, value1, value2 in eventGizmo:unpack() do
-        if action == "update" then
-            local s, r, t = math3d.srt(iom.srt(gizmo.target_eid))
-            local Pos = math3d.totable(t)
-            currentPos[1] = Pos[1]
-            currentPos[2] = Pos[2]
-            currentPos[3] = Pos[3]
-    
-            local Rot = math3d.totable(math3d.quat2euler(r))
-            currentRot[1] = math.deg(Rot[1])
-            currentRot[2] = math.deg(Rot[2])
-            currentRot[3] = math.deg(Rot[3])
-    
-            local Scale = math3d.totable(s)
-            currentScale[1] = Scale[1]
-            currentScale[2] = Scale[2]
-            currentScale[3] = Scale[3]
+        if action == "update" or action == "ontarget" then
+            update_ui_transform()
         elseif action == "create" then
             gizmo = value1
             cmd_queue = value2
         end
     end
 
-    imgui.windows.SetNextWindowPos(PropertyWidgetWidth, 0)
+    imgui.windows.SetNextWindowPos(SceneWidgetWidth, 0)
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar" }) do
         imguiBeginToolbar()
         if imguiToolbar("🚫", "Select", status.GizmoMode == "select") then
@@ -168,18 +178,18 @@ function m:ui_update()
 
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, 0)
-    imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh)
+    imgui.windows.SetNextWindowSize(SceneWidgetWidth, sh)
 
     for _ in imgui_windows("Scene", imgui.flags.Window { "NoResize", "NoScrollbar", "NoClosed" }) do
         sourceEid = nil
         targetEid = nil
-        for _, child in ipairs(scene.children) do
-            show_scene_node(child)
-        end
+        show_scene_node(scene.root)
         if sourceEid and targetEid then
-            scene.set_parent(sourceEid, targetEid)
-            -- iom.set_srt(sourceEid, math3d.mul(math3d.inverse(iom.srt(targetEid)), iom.srt(sourceEid)))
-            -- world[sourceEid].parent = targetEid
+            scene:set_parent(sourceEid, targetEid)
+            local sourceWorldMat = iom.calc_worldmat(sourceEid)
+            local targetWorldMat = iom.calc_worldmat(targetEid)
+            iom.set_srt(sourceEid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
+            iss.set_parent(sourceEid, targetEid)
         end
     end
     
