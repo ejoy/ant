@@ -65,7 +65,11 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 				eyepos  = {0, 0, 0, 1},
 				viewdir = {0, 0, 1, 0},
 				updir = {0, 1, 0, 0},
-				ortho = true,
+				frustum = {
+					l=-1, r=1, b=-1, t=1, n=0.25, f=250,
+					ortho = true,
+				},
+				name = orthoface,
 			},
 
 			primitive_filter = {

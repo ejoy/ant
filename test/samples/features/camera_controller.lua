@@ -7,6 +7,7 @@ local rhwi = import_package "ant.render".hwi
 local camera_controller_sys = ecs.system "camera_controller_system"
 
 local iom = world:interface "ant.objcontroller|obj_motion"
+local icamera = world:interface "ant.camera|camera"
 
 local mouse_events = {
 	world:sub {"mouse", "LEFT"},
@@ -40,9 +41,27 @@ local function can_move(eid)
 end
 
 local svs_mb = world:sub{"splitviews", "selected"}
+local mw_mb = world:sub{"mouse_wheel"}
+
+local function can_orthoview_scale(cameraeid)
+	local f = icamera.get_frustum(cameraeid)
+	return f.ortho
+end
+
+local function scale_orthoview(cameraeid, delta)
+	local scale_speed = 0.25
+	local f = icamera.get_frustum(cameraeid)
+	local d = delta * scale_speed
+	f.l = f.l - d
+	f.r = f.r + d
+	f.b = f.b - d
+	f.t = f.t + d
+
+	icamera.set_frustum(cameraeid, f)
+end
 
 function camera_controller_sys:data_changed()
-	for _, _, eid in svs_mb:unpack() do
+	for _, t, eid in svs_mb:unpack() do
 		cameraeid = world[eid].camera_eid
 	end
 
@@ -58,6 +77,13 @@ function camera_controller_sys:data_changed()
 			end
 		end
 	end
+
+	if can_orthoview_scale(cameraeid) then
+		for _, delta in mw_mb:unpack() do
+			scale_orthoview(cameraeid, delta)
+		end
+	end
+
 	if can_move(cameraeid) then
 		local keyboard_delta = {0 , 0, 0}
 		for _,code,press in eventKeyboard:unpack() do

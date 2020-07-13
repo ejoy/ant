@@ -117,6 +117,8 @@ end
 local imgui      = require "imgui"
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar" }
 
+local svs_mb = world:sub{"splitviews", "selected"}
+local viewtext
 function init_loader_sys:ui_update()
     local mq = world:singleton_entity "main_queue"
     local cameraeid = mq.camera_eid
@@ -163,6 +165,18 @@ function init_loader_sys:ui_update()
             iom.rotate(foundeid, math.rad(3), 0)
         end
     end
+    imgui.windows.End()
 
+    imgui.windows.SetNextWindowPos(0, 250)
+    imgui.windows.SetNextWindowSize(120, 24)
+    imgui.windows.Begin("Test2", wndflags)
+        for _, t, eid in svs_mb:unpack() do
+            local e = world[eid]
+            viewtext = e.orthoview
+        end
+
+        if viewtext then
+            widget.Button(viewtext)
+        end
     imgui.windows.End()
 end

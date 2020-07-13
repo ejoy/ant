@@ -29,11 +29,11 @@ local ic = ecs.interface "camera"
 
 function ic.create(info)
     local frustum = info.frustum
-    local default_frustum = default_comp.frustum()
     if not frustum then
-        frustum = default_frustum
+        frustum = default_comp.frustum()
     else
-        for k ,v in pairs(default_frustum) do
+        local df = frustum.ortho and default_comp.ortho_frustum() or default_comp.frustum()
+        for k ,v in pairs(df) do
             if not frustum[k] then
                 frustum[k] = v
             end

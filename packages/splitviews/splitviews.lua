@@ -38,6 +38,7 @@ function svs:post_init()
     orthoview = {
         front = {
             viewdir = {0, 0, 1, 0},
+            updir = {0, 1, 0, 0},
             name = "ortho_front",
             view_ratio = {
                 x = 0.5, y = 0, w = 0.5, h = 0.5,
@@ -45,6 +46,7 @@ function svs:post_init()
         },
         back = {
             viewdir = {0, 0, -1, 0},
+            updir = {0, 1, 0, 0},
             name = "ortho_back",
             view_ratio = {
                 x = 0.5, y = 0, w = 0.5, h = 0.5,
@@ -52,6 +54,7 @@ function svs:post_init()
         },
         left = {
             viewdir = {1, 0, 0, 0},
+            updir = {0, 1, 0, 0},
             name = "ortho_left",
             view_ratio = {
                 x = 0, y = 0.5, w = 0.5, h = 0.5,
@@ -59,6 +62,7 @@ function svs:post_init()
         },
         right = {
             viewdir = {-1, 0, 0, 0},
+            updir = {0, 1, 0, 0},
             name = "ortho_right",
             view_ratio = {
                 x = 0, y = 0.5, w = 0.5, h = 0.5,
@@ -66,6 +70,7 @@ function svs:post_init()
         },
         top = {
             viewdir = {0, -1, 0, 0},
+            updir = {0, 0, 1, 0},
             name = "ortho_top",
             view_ratio = {
                 x = 0.5, y = 0.5, w = 0.5, h = 0.5,
@@ -73,6 +78,7 @@ function svs:post_init()
         },
         bottom = {
             viewdir = {0, 1, 0, 0},
+            updir = {0, 0, -1, 0},
             name = "ortho_bottom",
             view_ratio = {
                 x = 0.5, y = 0.5, w = 0.5, h = 0.5,
@@ -81,7 +87,10 @@ function svs:post_init()
     }
 
     for k, v in pairs(orthoview) do
-        orthoview[k].eid = irender.create_orthoview_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name)
+        local eid = irender.create_orthoview_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name)
+        local cameraeid = world[eid].camera_eid
+        iom.lookto(cameraeid, {0, 0, 0, 1}, v.viewdir, v.updir)
+        orthoview[k].eid = eid
     end
 end
 
@@ -101,7 +110,6 @@ local function show_ortho_view()
         local eid = v.eid
         irenderqueue.set_view_rect(eid, rect_from_ratio(mainqueue_rect, v.view_ratio))
         irenderqueue.set_visible(eid, true)
-        iom.set_direction(world[eid].camera_eid, v.viewdir)
     end
 end
 
@@ -134,16 +142,21 @@ function svs:data_changed()
         end
         
         if key == "F2" and press == 0 then
+            local vq = viewqueue[viewidx]
             if view_control == nil then
                 view_control = 1
-            elseif view_control == #viewqueue then
+            elseif view_control == #vq then
                  view_control = nil
              else
                  view_control = view_control + 1
              end
 
-            local eid = view_control and (orthoview[viewqueue[viewidx][view_control]].eid or (world:singleton_entity_id "main_queue"))
-            world:pub {"splitviews", "selected", eid}
+            world:pub {
+                "splitviews", "selected",
+                view_control and 
+                    orthoview[vq[view_control]].eid or 
+                    world:singleton_entity_id "main_queue"
+            }
         end
 	end
 end
