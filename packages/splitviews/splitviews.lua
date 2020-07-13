@@ -114,6 +114,7 @@ local function show_ortho_view()
 end
 
 local function hide_ortho_view()
+    irenderqueue.set_view_rect(world:singleton_entity_id "main_queue", mainqueue_rect)
     for _, n in ipairs(viewqueue[viewidx]) do
         local eid = orthoview[n].eid
         irenderqueue.set_visible(eid, false)
@@ -157,6 +158,13 @@ function svs:data_changed()
                     orthoview[vq[view_control]].eid or 
                     world:singleton_entity_id "main_queue"
             }
+        end
+
+        if key == "R" and press == 0 then
+            for _, n in ipairs(viewqueue[viewidx]) do
+                local v = orthoview[n]
+                iom.lookto(v.eid, {0, 0, 0, 1}, v.viewdir, v.updir)
+            end
         end
 	end
 end

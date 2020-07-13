@@ -90,7 +90,11 @@ function iobj_motion.worldmat(eid)
 end
 
 function iobj_motion.lookto(eid, eyepos, viewdir, updir)
-    local rc = world[eid]._rendercache
+    local e = world[eid]
+    local rc = e._rendercache
+    if e.camera then
+        rc.updir = updir
+    end
     rc.srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
     world:pub{"component_changed", "transform", eid}
 end
