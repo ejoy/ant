@@ -45,6 +45,10 @@ policy "main_queue"
     .require_transform "visible_primitive_transform"
     .unique_component "main_queue"
 
+policy "orthoview_queue"
+    .require_transform "visible_primitive_transform"
+    .component "orthoview"
+
 transform "render_transform"
     .implement "render_system.lua"
     .require_transform "ant.general|rendercache_transform"
@@ -69,6 +73,8 @@ policy "render"
     .component "scene_entity"
     .component "mesh"
 
+
+
 policy "render_queue"
     .component "render_target"
     .component "camera_eid"
@@ -85,6 +91,7 @@ interface "irender"
     .method "draw"
     .method "create_main_queue"
     .method "create_blit_queue"
+    .method "create_orthoview_queue"
     .method "get_main_view_rendertexture"
     .method "set_view_frame_buffer"
     .method "screen_capture"

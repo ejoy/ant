@@ -7,6 +7,7 @@ local ientity = world:interface "ant.render|entity"
 local ies = world:interface "ant.scene|ientity_state"
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = world:interface "ant.asset|imaterial"
+local mc = import_package"ant.math".constant
 
 local function create_plane_test()
     local planes = {
@@ -104,8 +105,11 @@ end
 
 function init_loader_sys:post_init()
     local mq = world:singleton_entity "main_queue"
-    local dir = math3d.todirection(math3d.quaternion{math.rad(30), math.rad(150), 0})
-    icamera.lookto(mq.camera_eid, {-4.5, 2, -1.5, 1}, dir)
+    local pos = math3d.vector(-4.5, 2, -1.5, 1)
+    icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
+    local f = icamera.get_frustum(mq.camera_eid)
+    f.n, f.f = 0.25, 250
+    icamera.set_frustum(mq.camera_eid, f)
     --local dir = {0, 0, -1, 0}
     --icamera.lookto(mq.camera_eid, {0, 0, 0, 1}, dir)
 end

@@ -1,12 +1,12 @@
 import "@ant.general"
 import "@ant.scene"
 
---import "shadow/shadow_debug.ecs"
+import "shadow/shadow_debug.ecs"
 
 system "shadow_system"
     .implement "shadow/shadow_maker.lua"
     .require_system "ant.render|render_system"
-    --.require_policy "ant.render|shadow_debug_policy"
+    .require_policy "ant.render|shadow_debug_policy"
     .method "init"
     .method "post_init"
     .method "update_camera"
