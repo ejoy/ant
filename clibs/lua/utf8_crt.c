@@ -16,6 +16,16 @@ FILE* __cdecl utf8_fopen(const char * filename, const char * mode)
 	return ret;
 }
 
+FILE* __cdecl utf8_freopen(char const* filename, char const* mode, FILE* stream)
+{
+	wchar_t* wfilename = u2w(filename);
+	wchar_t* wmode = u2w(mode);
+	FILE* ret = _wfreopen(wfilename, wmode, stream);
+	free(wfilename);
+	free(wmode);
+	return ret;
+}
+
 FILE*  __cdecl utf8_popen(const char * command, const char* type)
 {
 	wchar_t* wcommand = u2w(command);

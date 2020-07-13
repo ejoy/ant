@@ -6,6 +6,7 @@
 #include <wchar.h>
 
 FILE* __cdecl utf8_fopen(const char * filename, const char * mode);
+FILE* __cdecl utf8_freopen(char const* filename, char const* mode, FILE* stream);
 FILE*  __cdecl utf8_popen(const char * command, const char* type);
 int __cdecl utf8_system(const char* command);
 int __cdecl utf8_remove(const char* filename);
