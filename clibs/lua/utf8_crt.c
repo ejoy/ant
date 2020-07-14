@@ -62,7 +62,6 @@ int __cdecl utf8_rename(const char* oldfilename, const char* newfilename)
 	return ret;
 }
 
-
 char* __cdecl utf8_getenv(const char* varname)
 {
 	wchar_t* wvarname = u2w(varname);
@@ -77,6 +76,23 @@ char* __cdecl utf8_getenv(const char* varname)
 	}
 	ret = w2u(wret);
 	return ret;
+}
+
+char* __cdecl utf8_tmpnam(char* buffer)
+{
+	wchar_t tmp[L_tmpnam];
+	static char tmpbuf[L_tmpnam];
+	if (!_wtmpnam(tmp)) {
+		return NULL;
+	}
+	if (!buffer) {
+		buffer = tmpbuf;
+	}
+	unsigned long ret = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, buffer, L_tmpnam, NULL, NULL);
+	if (ret == 0) {
+		return NULL;
+	}
+	return buffer;
 }
 
 void* __stdcall utf8_LoadLibraryExA(const char* filename, void* file, unsigned long flags)
