@@ -24,7 +24,7 @@ system "render_system"
 
 system "cull_system"
     .implement "cull_system.lua"
-    .require_system "ant.scene|filter_system"
+    .require_system "ant.scene|scenespace_system"
     .method "cull"
 
 system "end_frame_system"

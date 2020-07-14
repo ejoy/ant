@@ -180,8 +180,7 @@ local function update_transform(eid)
 	update_bounding(rc, e)
 end
 
-local filtersys = ecs.system "filter_system"
-function filtersys:filter_render_items()
+function sp_sys:update_transform()
 	for _, eid in ipairs(scenequeue) do
 		update_transform(eid)
 	end
