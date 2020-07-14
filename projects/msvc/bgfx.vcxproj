@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\bgfx_alloc.h" />
+    <ClInclude Include="..\..\clibs\bgfx\bgfx_interface.h" />
     <ClInclude Include="..\..\clibs\bgfx\font_manager.h" />
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h" />
   </ItemGroup>

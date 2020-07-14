@@ -29,8 +29,10 @@ ant_searcher_c(lua_State *L) {
 
 static void
 init_bgfx(lua_State *L) {
-	lua_pushcfunction(L, (lua_CFunction)(void*)bgfx_get_interface);
-	lua_setfield(L, LUA_REGISTRYINDEX, "BGFX_GET_INTERFACE");
+#if !defined(_MSC_VER)
+    lua_pushcfunction(L, (lua_CFunction)(void*)bgfx_get_interface);
+    lua_setfield(L, LUA_REGISTRYINDEX, "BGFX_GET_INTERFACE");
+#endif
 }
 
 int
