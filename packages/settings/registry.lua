@@ -195,6 +195,16 @@ function mt:enum_value(path)
     end
 end
 
+local function is_array(t)
+    for k in pairs(t) do
+        if not (type(k) == "number" and math.type(k) == "integer") then
+            return
+        end
+    end
+
+    return true
+end
+
 function mt:data()
     local l = self._l
     local function proxy(prefix)
@@ -205,9 +215,8 @@ function mt:data()
             for _, l in ipairs(l) do
                 local t = get_internal(l, sp, 1)
                 if t then
-                    local k = sp[#sp]
-                    local v = t[k]
-                    if type(v) == 'table' then
+                    local v = t[sp[#sp]]
+                    if type(v) == 'table' and (not is_array(v)) then
                         return proxy(path)
                     end
                     if v ~= nil then
@@ -218,6 +227,32 @@ function mt:data()
         end
         function mt:__newindex()
             error "Modify registry needs to use the `set` method."
+        end
+
+        function mt:__len()
+            local sp = split(prefix)
+            for _, ll in ipairs(l) do
+                local v = get_internal(ll, sp, 1)
+                if type(v) == 'table' then
+                    return #v[sp[#sp]]
+                end
+            end
+        end
+
+        function mt:__ipairs()
+            local path = prefix
+            local sp = split(path)
+            local data
+            for _, ll in ipairs(l) do
+                local v = get_internal(ll, sp, 1)
+                if type(v) == 'table' then
+                    data = v[sp[#sp]]
+                    break
+                end
+            end
+            return function (t, i)
+                return t[i]
+            end, data, 0
         end
         function mt:__pairs()
             local path = prefix
@@ -241,7 +276,7 @@ function mt:data()
                 if not kv then return end
                 n = n + 1
                 local k, v = kv[1], kv[2]
-                if type(v) == 'table' then
+                if type(v) == 'table' and is_array(v) then
                     return k, proxy(path .. '/' .. k)
                 end
                 return k, v

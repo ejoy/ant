@@ -123,7 +123,7 @@ if shadowcfg.split_lamada then
 else
 	local ratio_list
 	if shadowcfg.split_ratios then
-		if #shadowcfg.split_ratios == (csm_setting.split_num - 1)  then
+		if #shadowcfg.split_ratios ~= (csm_setting.split_num - 1)  then
 			error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, csm_setting.split_num))
 		end
 
