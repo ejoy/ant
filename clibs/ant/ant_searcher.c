@@ -5,6 +5,10 @@
 #include "ant.h"
 #include <string.h>
 
+#if defined(_MSC_VER)
+#include <Windows.h>
+#endif
+
 #include "ant_module_declar.h"
 static const luaL_Reg g_modules[] = {
 #include "ant_module_define.h"
@@ -27,12 +31,26 @@ ant_searcher_c(lua_State *L) {
 	return 1;
 }
 
+static void*
+get_bgfx() {
+#if defined(_MSC_VER)
+    HMODULE dll = LoadLibraryW(L"bgfx-core.dll");
+    if (dll) {
+        return (void*)GetProcAddress(dll, "bgfx_get_interface");
+    }
+    return NULL;
+#else
+    return (void*)bgfx_get_interface;
+#endif
+}
+
 static void
 init_bgfx(lua_State *L) {
-#if !defined(_MSC_VER)
-    lua_pushcfunction(L, (lua_CFunction)(void*)bgfx_get_interface);
-    lua_setfield(L, LUA_REGISTRYINDEX, "BGFX_GET_INTERFACE");
-#endif
+    void* bgfx = get_bgfx();
+    if (bgfx) {
+        lua_pushcfunction(L, (lua_CFunction)bgfx);
+        lua_setfield(L, LUA_REGISTRYINDEX, "BGFX_GET_INTERFACE");
+    }
 }
 
 int
