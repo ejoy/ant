@@ -76,7 +76,33 @@ local function absolute_path(path)
 	return base .. (path:match "^%./(.+)$" or path)
 end
 
+local initialized = false
+local function initialize()
+	if initialized then
+		return
+	end
+	initialized = true
+	local function loader(filename, data)
+		local ext = filename:match "[^.]*$"
+		glb_load(filename)
+		local world = data
+		local res
+		push_currentpath(filename)
+		res = require("ext_" .. ext).loader(filename, world)
+		pop_currentpath()
+		return res
+	end
+	local function unloader(filename, data, res)
+		local ext = filename:match "[^.]*$"
+		glb_unload(filename)
+		local world = data
+		require("ext_" .. ext).unloader(res, world)
+	end
+	resource.register(loader, unloader)
+end
+
 function assetmgr.resource(path, world)
+	initialize()
 	local fullpath = absolute_path(path)
 	resource.load(fullpath, world, true)
 	return resource.proxy(fullpath)
@@ -96,26 +122,6 @@ function assetmgr.load_fx(fx, setting)
 		end
 	end
 	return cr.compile_fx(fx, setting)
-end
-
-function assetmgr.init()
-	local function loader(filename, data)
-		local ext = filename:match "[^.]*$"
-		glb_load(filename)
-		local world = data
-		local res
-		push_currentpath(filename)
-		res = require("ext_" .. ext).loader(filename, world)
-		pop_currentpath()
-		return res
-	end
-	local function unloader(filename, data, res)
-		local ext = filename:match "[^.]*$"
-		glb_unload(filename)
-		local world = data
-		require("ext_" .. ext).unloader(res, world)
-	end
-	resource.register(loader, unloader)
 end
 
 return assetmgr
