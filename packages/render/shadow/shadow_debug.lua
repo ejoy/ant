@@ -222,13 +222,19 @@ local function log_split_distance()
 	end
 end
 
-local record_camera_state_mb = world:sub {"record_camera_state"}
-
+local keypress_mb = world:sub{"keyboard"}
 function shadowdbg_sys:camera_usage()
-	for _, eid in record_camera_state_mb:unpack() do
-		log_split_distance()
-		create_debug_entity()
-
-		--check_shadow_matrix()
+	for _, key, press, state in keypress_mb:unpack() do
+		if key == "SPACE" and press == 0 then
+			log_split_distance()
+			create_debug_entity()
+		elseif key == "L" and press == 0 then
+			local eids = {}
+			for _, eid in world:each "csm" do
+				local e = world[eid]
+				eids[e.csm.index] = e.camera_eid
+			end
+			world:pub{"splitview", "change_camera", eids}
+		end
 	end
 end

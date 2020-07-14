@@ -86,7 +86,6 @@ system "shadow_test_system"
     .require_system "ant.render|shadow_system"
     .method "init"
     .method "post_init"
-    .method "data_changed"
 
 
 

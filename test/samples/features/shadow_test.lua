@@ -55,13 +55,3 @@ end
 function st_sys:post_init()
 	ilight.create_light_direction_arrow(ilight.directional_light(), {scale=0.02, cylinder_cone_ratio=1, cylinder_rawradius=0.45})
 end
-
-local keypress_mb = world:sub{"keyboard"}
-
-function st_sys:data_changed()
-	for _, key, press, state in keypress_mb:unpack() do
-		if key == "SPACE" and press == 0 then
-			world:pub{"record_camera_state"}
-		end
-	end
-end

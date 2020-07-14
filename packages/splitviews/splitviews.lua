@@ -39,6 +39,7 @@ function svs:post_init()
         front = {
             viewdir = {0, 0, 1, 0},
             updir = {0, 1, 0, 0},
+            eyepos = {0, 0, -5, 0},
             name = "ortho_front",
             view_ratio = {
                 x = 0.5, y = 0, w = 0.5, h = 0.5,
@@ -47,6 +48,7 @@ function svs:post_init()
         back = {
             viewdir = {0, 0, -1, 0},
             updir = {0, 1, 0, 0},
+            eyepos = {0, 0, 5, 0},
             name = "ortho_back",
             view_ratio = {
                 x = 0.5, y = 0, w = 0.5, h = 0.5,
@@ -55,6 +57,7 @@ function svs:post_init()
         left = {
             viewdir = {1, 0, 0, 0},
             updir = {0, 1, 0, 0},
+            eyepos = {-5, 0, 0, 0},
             name = "ortho_left",
             view_ratio = {
                 x = 0, y = 0.5, w = 0.5, h = 0.5,
@@ -63,6 +66,7 @@ function svs:post_init()
         right = {
             viewdir = {-1, 0, 0, 0},
             updir = {0, 1, 0, 0},
+            eyepos = {5, 0, 0, 0},
             name = "ortho_right",
             view_ratio = {
                 x = 0, y = 0.5, w = 0.5, h = 0.5,
@@ -71,6 +75,7 @@ function svs:post_init()
         top = {
             viewdir = {0, -1, 0, 0},
             updir = {0, 0, 1, 0},
+            eyepos = {0, 5, 0, 0},
             name = "ortho_top",
             view_ratio = {
                 x = 0.5, y = 0.5, w = 0.5, h = 0.5,
@@ -79,6 +84,7 @@ function svs:post_init()
         bottom = {
             viewdir = {0, 1, 0, 0},
             updir = {0, 0, -1, 0},
+            eyepos = {0, -5, 0, 0},
             name = "ortho_bottom",
             view_ratio = {
                 x = 0.5, y = 0.5, w = 0.5, h = 0.5,
@@ -89,7 +95,7 @@ function svs:post_init()
     for k, v in pairs(orthoview) do
         local eid = irender.create_orthoview_queue(rect_from_ratio(mainqueue_rect, v.view_ratio), v.name)
         local cameraeid = world[eid].camera_eid
-        iom.lookto(cameraeid, {0, 0, 0, 1}, v.viewdir, v.updir)
+        iom.lookto(cameraeid, v.eyepos, v.viewdir, v.updir)
         orthoview[k].eid = eid
     end
 end
@@ -122,6 +128,8 @@ local function hide_ortho_view()
 end
 
 local view_control
+
+local svcc_mb = world:sub{"splitview", "change_camera"}
 
 function svs:data_changed()
     for _, key, press, state in kb_mb:unpack() do
@@ -163,10 +171,19 @@ function svs:data_changed()
         if key == "R" and press == 0 then
             for _, n in ipairs(viewqueue[viewidx]) do
                 local v = orthoview[n]
-                iom.lookto(v.eid, {0, 0, 0, 1}, v.viewdir, v.updir)
+                iom.lookto(v.eid, v.eyepos, v.viewdir, v.updir)
             end
         end
-	end
+    end
+    
+    if splitview then
+        for _, _, cameraeids in svcc_mb:unpack() do
+            local vq = viewqueue[viewidx]
+            for idx, n in ipairs(vq) do
+                irenderqueue.set_camera(orthoview[n].eid, cameraeids[idx])
+            end
+        end
+    end
 end
 
 function svs:update_camera()
