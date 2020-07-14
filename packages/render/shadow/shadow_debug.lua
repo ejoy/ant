@@ -21,19 +21,9 @@ local shadowdbg_sys = ecs.system "shadow_debug_system"
 local quadsize = 192
 local quadmaterial = "/pkg/ant.resources/materials/shadow/shadowmap_quad.material"
 
-local function csm_shadow_debug_quad()
-	local splitnum = ishadow.split_num()
-	local rect = {x=0, y=0, w=quadsize*splitnum, h=quadsize}
-	ientity.create_quad_entity(rect, quadmaterial, "csm_quad")
-end
-
 local frustum_colors = {
 	0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
 }
-
-function shadowdbg_sys:post_init()
-	--csm_shadow_debug_quad()
-end
 
 local function find_csm_entity(index)
 	for _, seid in world:each "csm" do
@@ -50,6 +40,12 @@ local function create_debug_entity()
 		world:remove_entity(eid)
 	end
 	debug_entities = {}
+
+	do
+		local splitnum = ishadow.split_num()
+		local rect = {x=0, y=0, w=quadsize*splitnum, h=quadsize}
+		debug_entities[#debug_entities+1] = ientity.create_quad_entity(rect, quadmaterial, "csm_quad")
+	end
 
 	do
 		local rc = world[world:singleton_entity "main_queue".camera_eid]._rendercache
