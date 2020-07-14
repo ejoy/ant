@@ -7,7 +7,7 @@ function default.frustum(aspect)
 		type = "mat",
 		n = default_near_distance,
 		f = default_far_distance,
-		fov = 60,
+		fov = 30,
 		aspect = aspect or (4 / 3),
 	}
 end

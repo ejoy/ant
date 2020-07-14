@@ -94,6 +94,7 @@ function render_sys:render_commit()
 		if rq.visible then
 			local rt = rq.render_target
 			local viewid = rt.viewid
+			bgfx.touch(viewid)
 			update_view_proj(viewid, rq.camera_eid)
 
 			local filter = rq.primitive_filter

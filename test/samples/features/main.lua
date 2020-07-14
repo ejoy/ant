@@ -5,4 +5,4 @@ package.path = table.concat({
 }, ";")
 
 require "bootstrap"
-import_package "ant.imguibase".runtime.start "ant.test.features"
+import_package "ant.imguibase".runtime.start("ant.test.features", 1280, 720)
