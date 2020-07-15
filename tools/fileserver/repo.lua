@@ -8,6 +8,7 @@ repo.__index = repo
 
 local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
+local crypt = require "crypt"
 
 local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
@@ -75,8 +76,30 @@ function repo.new(rootpath)
 	return r
 end
 
-local sha1_from_file = access.sha1_from_file
-local sha1 = access.sha1
+local function byte2hex(c)
+	return ("%02x"):format(c:byte())
+end
+
+local function sha1(str)
+	return crypt.sha1(str):gsub(".", byte2hex)
+end
+
+local sha1_encoder = crypt.sha1_encoder()
+
+local function sha1_from_file(filename)
+	sha1_encoder:init()
+	local ff = assert(lfs.open(filename, "rb"))
+	while true do
+		local content = ff:read(1024)
+		if content then
+			sha1_encoder:update(content)
+		else
+			break
+		end
+	end
+	ff:close()
+	return sha1_encoder:final():gsub(".", byte2hex)
+end
 
 -- map path in repo to realpath (replace mountpoint)
 function repo:realpath(filepath)

@@ -9,7 +9,7 @@ local function LOG(...)
 end
 
 local fw = require "filewatch"
-local repo_new = require "vfs.repo".new
+local repo_new = require "repo".new
 local protocol = require "protocol"
 local network = require "network"
 local vfs = require "vfs.simplefs"

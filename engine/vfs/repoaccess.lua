@@ -1,7 +1,6 @@
 local access = {}
 
 local lfs = require "filesystem.local"
-local crypt = require "crypt"
 
 local function load_package(path)
     if not lfs.is_directory(path) then
@@ -138,32 +137,6 @@ function access.list_files(repo, filepath)
 		end
 	end
 	return files
-end
-
--- sha1
-local function byte2hex(c)
-	return ("%02x"):format(c:byte())
-end
-
-function access.sha1(str)
-	return crypt.sha1(str):gsub(".", byte2hex)
-end
-
-local sha1_encoder = crypt.sha1_encoder()
-
-function access.sha1_from_file(filename)
-	sha1_encoder:init()
-	local ff = assert(lfs.open(filename, "rb"))
-	while true do
-		local content = ff:read(1024)
-		if content then
-			sha1_encoder:update(content)
-		else
-			break
-		end
-	end
-	ff:close()
-	return sha1_encoder:final():gsub(".", byte2hex)
 end
 
 return access
