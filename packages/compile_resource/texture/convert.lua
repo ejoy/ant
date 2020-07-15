@@ -1,10 +1,8 @@
-local lfs 	= require "filesystem.local"
-
 local samplerutil = import_package "ant.render".sampler
 local stringify = import_package "ant.serialize".stringify
-local utilitypkg = import_package "ant.utility"
-local subprocess = utilitypkg.subprocess
-local fs_local = utilitypkg.fs_local
+local subprocess = require "sp_util"
+local datalist = require "datalist"
+local lfs = require "filesystem.local"
 
 local TEXTUREC = subprocess.tool_exe_path "texturec"
 
@@ -101,6 +99,13 @@ local function fill_default_sampler(sampler)
 	return sampler
 end
 
+local function readdatalist(filepath)
+	local f = assert(lfs.open(filepath, "r"))
+	local data = f:read "a"
+	f:close()
+	return datalist.parse(data)
+end
+
 return function (input, output, identity, localpath)
 	local os, renderer = identity:match "(%w+)_(%w+)"
 	local ext = assert(extensions[renderer])
@@ -110,7 +115,7 @@ return function (input, output, identity, localpath)
 		TEXTUREC,
 	}
 
-	local param = fs_local.datalist(input)
+	local param = readdatalist(input)
 	local texpath = localpath(assert(param.path))
 
 	param.format = assert(which_format(os, param))

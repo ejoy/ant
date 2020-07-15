@@ -5,4 +5,5 @@ package.path = table.concat({
 }, ";")
 
 require "bootstrap"
+require "vfs.repo"
 import_package "ant.fileserver"
