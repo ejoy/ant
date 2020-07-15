@@ -8,7 +8,7 @@ local sm = ecs.transform "skinning_material"
 
 function sm.process_prefab(e)
 	if e.skinning_type == "GPU" then
-		e._cache_prefab.material_setting = {skinning = "GPU"}
+		e._cache_prefab.material_setting.skinning = "GPU"
 	end
 end
 

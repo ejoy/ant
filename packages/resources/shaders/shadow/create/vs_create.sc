@@ -13,12 +13,13 @@ $output v_position
 
 void main()
 {
+	vec4 pos = vec4(a_position, 1.0);
 #ifdef GPU_SKINNING
 	mat4 w = calc_bone_transform(a_indices, a_weight);
 	vec4 worldpos = mul(w, pos);
 	gl_Position = mul(u_viewProj, worldpos);
 #else //!GPU_SKINNING
-	gl_Position = mul(u_modelViewProj, vec4(a_position, 1.0));	
+	gl_Position = mul(u_modelViewProj, pos);	
 #endif //GPU_SKINNING
 #ifdef SM_LINEAR
 	v_position = gl_Position;

@@ -106,7 +106,7 @@ function render_sys:render_commit()
 					for eid, ri in pairs(items) do
 						irender.draw(viewid, ri)
 					end
-				end
+				end  
 			end
 
 			draw_items(results.opaticy)

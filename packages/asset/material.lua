@@ -5,6 +5,11 @@ local assetmgr = require "asset"
 local mt = ecs.transform "material_transform"
 local ext_material = require "ext_material"
 
+local mst = ecs.transform "material_setting_transform"
+function mst.process_prefab(e)
+	e._cache_prefab.material_setting = {}
+end
+
 local function load_material(m, setting)
 	local fx = assetmgr.load_fx(m.fx, setting)
 	local properties = m.properties

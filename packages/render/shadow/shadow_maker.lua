@@ -176,12 +176,15 @@ local function create_csm_entity(index, viewrect, fbidx, depth_type)
 end
 
 local shadow_material
+local gpu_skinning_material
 local imaterial = world:interface "ant.asset|imaterial"
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s, dt = ishadow.shadowmap_size(), ishadow.depth_type()
 
-	shadow_material = imaterial.load("/pkg/ant.resources/materials/shadow/csm_cast.material", {shadow_type=dt})
+	local originmatrial = "/pkg/ant.resources/materials/shadow/csm_cast.material"
+	shadow_material = imaterial.load(originmatrial, {shadow_type=dt})
+	gpu_skinning_material = imaterial.load(originmatrial, {shadow_type=dt, skinning="GPU"})
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx, dt)
@@ -210,15 +213,24 @@ function sm:update_camera()
 	-- 	end
 	-- end
 end
+local function which_material(eid)
+	if world[eid].skinning_type == "GPU" then
+		return gpu_skinning_material
+	else
+		return shadow_material
+	end
+end
 
 local spt = ecs.transform "shadow_primitive_transform"
+
 function spt.process_entity(e)
 	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
 		local results = filter.result
 		if rc then
+			local material = which_material(eid)
 			results[fxtype].items[eid] = setmetatable({
-				fx = shadow_material.fx,
-				properties = shadow_material.properties,
+				fx = material.fx,
+				properties = material.properties,
 			}, {__index=rc})
 		else
 			results.opaticy.items[eid] = nil
