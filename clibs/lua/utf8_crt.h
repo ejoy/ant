@@ -12,6 +12,7 @@ int __cdecl utf8_system(const char* command);
 int __cdecl utf8_remove(const char* filename);
 int __cdecl utf8_rename(const char* oldfilename, const char* newfilename);
 char* __cdecl utf8_getenv(const char* varname);
+char* __cdecl utf8_tmpnam(char* buffer);
 void* __stdcall utf8_LoadLibraryExA(const char* filename, void* file, unsigned long flags);
 unsigned long __stdcall utf8_GetModuleFileNameA(void* module, char* filename, unsigned long size);
 unsigned long __stdcall utf8_FormatMessageA(

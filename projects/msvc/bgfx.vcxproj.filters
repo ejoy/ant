@@ -47,6 +47,9 @@
     <ClInclude Include="..\..\clibs\bgfx\font_manager.h">
       <Filter>Header Files\fontmanager</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\clibs\bgfx\bgfx_interface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="copy_tools.bat">

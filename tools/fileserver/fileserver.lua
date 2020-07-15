@@ -1,9 +1,3 @@
-package.cpath = table.concat({
-	"clibs/?.dll",
-	"bin/?.dll",
-}, ";")
-require "editor.vfs"
-
 local default_reponame = arg[1]
 local config = {
 	address = "0.0.0.0",
@@ -116,7 +110,7 @@ local function logger_init(id)
 end
 
 local filelisten = network.listen(config.address, config.port)
-LOG ("Listen :", config.address, config.port, filelisten)
+LOG ("Listen :", config.address, config.port)
 
 local function response(obj, ...)
 	network.send(obj, protocol.packmessage({...}))

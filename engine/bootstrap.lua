@@ -15,7 +15,6 @@ require "filesystem"
 local pm = require "antpm"
 pm.initialize()
 import_package = pm.import
-import_package "ant.asset".init()
 
 if __ANT_RUNTIME__ then
     require "runtime.debug"

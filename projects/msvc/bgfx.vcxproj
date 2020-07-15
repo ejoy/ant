@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\bgfx_alloc.h" />
+    <ClInclude Include="..\..\clibs\bgfx\bgfx_interface.h" />
     <ClInclude Include="..\..\clibs\bgfx\font_manager.h" />
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h" />
   </ItemGroup>
@@ -88,7 +89,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;../../3rd/bgfx/.build/win64_vs2019/bin/bx$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../3rd/bgfx/.build/win64_vs2019/bin/bx$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -111,7 +112,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lua54.lib;../../3rd/bgfx/.build/win64_vs2019/bin/bx$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../3rd/bgfx/.build/win64_vs2019/bin/bx$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

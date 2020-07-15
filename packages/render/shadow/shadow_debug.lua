@@ -195,17 +195,6 @@ local function check_shadow_matrix()
 		local depth2 = memory_handle[cy*pitch+fx]
 		local depth3 = memory_handle[cy*pitch+cx]
 
-		-- local fs_local = require "filesystem.local"
-		-- local f = fs_local.open(fs.path "tmp.txt", "wb")
-		-- for ii=1, sm_size do
-		-- 	for jj=1, sm_size do
-		-- 		local v = memory_handle[(ii-1)*sm_size+jj]
-		-- 		f:write(v == 0 and 0 or 1)
-		-- 	end
-		-- 	f:write("\n")
-		-- end
-		-- f:close()
-
 		print("depth:", depth)
 		print("depth0:", depth0, "depth1:", depth1, "depth2:", depth2, "depth3:", depth3)
 	end

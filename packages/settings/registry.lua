@@ -1,77 +1,13 @@
-local fs = require 'filesystem.local'
+local fs = require 'filesystem'
 
 local mt = {}
 mt.__index = mt
-
-local function save(path, str)
-    local f = assert(fs.open(path, 'w'))
-    f:write(str)
-    f:close()
-    return true
-end
 
 local function load(path)
     local f = assert(fs.open(path, 'r'))
     local str = f:read 'a'
     f:close()
     return str
-end
-
-local function sort_kv(t, mode)
-    local sort = {}
-    for k, v in pairs(t) do
-        if not mode or (mode == 'k') == (type(v) == 'table') then
-            sort[#sort+1] = k
-        end
-    end
-    table.sort(sort)
-    return sort
-end
-
-local function enum_kv(t, mode)
-    local sort = sort_kv(t, mode)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
-local function convertreal(v)
-    local g = ('%.16g'):format(v)
-    if tonumber(g) == v then
-        return g
-    end
-    return ('%.17g'):format(v)
-end
-
-local function stringify_value(v)
-    if math.type(v) == 'float' then
-        return convertreal(v)
-    end
-    return tostring(v)
-end
-
-local function stringify_table(s, t, n)
-    local prefix = ('  '):rep(n)
-    for k, v in enum_kv(t, 'v') do
-        s[#s+1] = prefix..k..': '..stringify_value(v)
-    end
-    for k, v in enum_kv(t, 'k') do
-        s[#s+1] = prefix..k..':'
-        stringify_table(s, v, n+1)
-    end
-end
-
-local function stringify(t)
-    local s = {}
-    stringify_table(s, t, 0)
-    s[#s+1] = ''
-    return table.concat(s, '\n')
 end
 
 local function split(s)
@@ -141,10 +77,7 @@ function mt:set(path, value)
     end
     local k = sp[#sp]
     t[k] = value
-    if not self._path then
-        return true
-    end
-    return save(self._path, stringify(self._data))
+    return true
 end
 
 function mt:enum_key(path)

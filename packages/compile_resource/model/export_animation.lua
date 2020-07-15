@@ -1,5 +1,5 @@
 local fs = require "filesystem.local"
-local subprocess = import_package "ant.utility".subprocess
+local subprocess = require "sp_util"
 
 return function (input, output, exports)
     local folder = output / "animations"
