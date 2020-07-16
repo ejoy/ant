@@ -358,6 +358,22 @@ check_matrix_pool(struct lastack *LS) {
 	return LS->temp_mat + LS->temp_matrix_top * MATRIX;
 }
 
+static float *
+check_matrix_pool_n(struct lastack *LS, int n) {
+	if (LS->temp_matrix_top + n > LS->temp_matrix_cap) {
+		int newcap = LS->temp_matrix_cap * 2;
+		while (LS->temp_matrix_top + n > newcap) {
+			newcap *= 2;
+		}
+		size_t sz = LS->temp_matrix_top * sizeof(float) * MATRIX;
+		void * p = new_page(LS, LS->temp_mat, sz);
+		LS->temp_mat = malloc(newcap * sizeof(float) * MATRIX);
+		memcpy(LS->temp_mat, p, sz);
+		LS->temp_matrix_cap = newcap;
+	}
+	return LS->temp_mat + LS->temp_matrix_top * MATRIX;
+}
+
 float *
 lastack_allocmatrix(struct lastack *LS) {
 	float * pmat = check_matrix_pool(LS);
@@ -368,6 +384,22 @@ lastack_allocmatrix(struct lastack *LS) {
 	sid.s.id = LS->temp_matrix_top;
 	push_id(LS, sid);
 	++ LS->temp_matrix_top;
+	return pmat;
+}
+
+float *
+lastack_allocmatrixn(struct lastack *LS, int n) {
+	float * pmat = check_matrix_pool_n(LS, n);
+	union stackid sid;
+	int i;
+	for (i=0;i<n;i++) {
+		sid.s.type = LINEAR_TYPE_MAT;
+		sid.s.persistent = 0;
+		sid.s.version = LS->version;
+		sid.s.id = LS->temp_matrix_top;
+		push_id(LS, sid);
+		++ LS->temp_matrix_top;
+	}
 	return pmat;
 }
 
@@ -467,6 +499,21 @@ alloc_float4(struct lastack *LS, int type) {
 	push_id(LS, sid);
 	++ LS->temp_vector_top;
 	return result;
+}
+
+void
+lastack_preallocfloat4(struct lastack *LS, int n) {
+	if (LS->temp_vector_top + n > LS->temp_vector_cap) {
+		int newcap = LS->temp_vector_cap * 2;
+		while (LS->temp_vector_top + n > newcap) {
+			newcap *= 2;
+		}
+		size_t sz = LS->temp_vector_top * sizeof(float) * VECTOR4;
+		void * p = new_page(LS, LS->temp_vec, sz);
+		LS->temp_vec = malloc(newcap * sizeof(float) * VECTOR4);
+		memcpy(LS->temp_vec, p, sz);
+		LS->temp_vector_cap = newcap;
+	}
 }
 
 void

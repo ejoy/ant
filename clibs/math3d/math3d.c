@@ -1283,6 +1283,8 @@ lminmax(lua_State *L){
 
 	const float* transform = lua_isnoneornil(L, 2) ? NULL : matrix_from_index(L, LS, 2);
 
+	lastack_preallocfloat4(LS, 2);
+
 	float *minv = alloc_vec4(L, LS);
 	minv[0] = FLT_MAX;
 	minv[1] = FLT_MAX;
@@ -1544,6 +1546,7 @@ static int
 laabb_center_extents(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *aabb = matrix_from_index(L, LS, 1);
+	lastack_preallocfloat4(LS, 2);
 	float *center = alloc_vec4(L, LS);
 	float *extents= alloc_vec4(L, LS);
 	math3d_aabb_center_extents(LS, aabb, center, extents);
@@ -1569,6 +1572,7 @@ lfrustum_planes(lua_State *L){
 	float *planes[6];
 	int i;
 	lua_createtable(L, 6, 0);
+	lastack_preallocfloat4(LS, 6);
 	for (i=0;i<6;i++) {
 		planes[i] = alloc_vec4(L, LS);
 		lua_seti(L, -2, i+1);
@@ -1653,6 +1657,7 @@ lfrustum_points(lua_State *L){
 	lua_createtable(L, 8, 0);
 	float *points[8];
 	int i;
+	lastack_preallocfloat4(LS, 8);
 	for (i=0;i<8;i++) {
 		points[i] = alloc_vec4(L, LS);
 		lua_seti(L, -2, i+1);
