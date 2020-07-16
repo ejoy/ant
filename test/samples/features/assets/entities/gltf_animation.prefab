@@ -16,7 +16,7 @@ data:
     animation:
         idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
     animation_birth: idle
-    state = 0x00000005
+    state = 7
     scene_entity: true
     name: gltf_animation_sample
     character:
@@ -39,7 +39,7 @@ data:
     animation:
         idle: /pkg/ant.resources.binary/meshes/female/animations/idle.ozz
     animation_birth: idle
-    state: 0x00000005
+    state: 7
     scene_entity: true
     name: gltf_animation_sample
     character:

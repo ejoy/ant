@@ -1,1 +1,1 @@
-import "terrain_component.ecs"
+import "terrain.ecs"
