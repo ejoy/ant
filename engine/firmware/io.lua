@@ -180,6 +180,11 @@ local function response_id(id, ...)
 	end
 end
 
+local function response_err(id, msg)
+	print(msg)
+	response_id(id, nil, msg)
+end
+
 local function logger_dispatch(t)
 	for i = 1, #logqueue do
 		t.SEND("LOG", logqueue[i])
@@ -221,37 +226,6 @@ function offline.TYPE(id, fullpath)
 		end
 	end
 	response_id(id, nil)
-end
-
-local function getbuilddir(fullpath)
-	local hash = sha1(fullpath)
-	return "_build/" .. hash
-end
-
-local function cache_bin(buildhash, binhash)
-	local binpath = repo.repo:hashpath(buildhash) .. ".bin"
-	local f = io.open(binpath,"wb")
-	if f then
-		f:write(binhash)
-		f:close()
-	end
-end
-
-local function response_bin(id, buildhash)
-	local binpath = repo.repo:hashpath(buildhash) .. ".bin"
-	local f = io.open(binpath,"rb")
-	if f then
-		local binhash = f:read "a"
-		f:close()
-		local realpath = repo.repo:hashpath(binhash)
-		response_id(id, realpath, binhash)
-		return true
-	end
-	return false
-end
-
-local function extension(name)
-	return name:match "[^/](%.[%w*?_%-]*)$"
 end
 
 function offline.GET(id, fullpath)
@@ -413,7 +387,7 @@ local function hash_complete(hash, exist)
 			end
 		else
 			for id in pairs(path_req) do
-				response_id(id, nil)	-- response file missing
+				response_err(id, "MISSING "..path)
 			end
 		end
 	end
@@ -612,11 +586,6 @@ function online.TYPE(id, fullpath)
 	else
 		response_id(id, nil)
 	end
-end
-
-local function response_err(id, msg)
-	print(msg)
-	response_id(id, nil, msg)
 end
 
 function online.GET(id, fullpath)
