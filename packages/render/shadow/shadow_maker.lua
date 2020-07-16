@@ -275,7 +275,7 @@ function spt.process_entity(e)
 			local material = which_material(eid)
 			results[fxtype].items[eid] = setmetatable({
 				fx = material.fx,
-				properties = material.properties,
+				properties = material.properties or false,
 			}, {__index=rc})
 		else
 			results.opaticy.items[eid] = nil

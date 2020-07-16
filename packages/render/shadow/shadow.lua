@@ -90,7 +90,7 @@ local function get_render_buffers(width, height, depth_type)
 				U="CLAMP",
 				V="CLAMP",
 				COMPARE="COMPARE_LEQUAL",
-				BOARD_COLOR="1",
+				BOARD_COLOR="0",
 			},
 		}
 	}
