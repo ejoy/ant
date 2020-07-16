@@ -9,7 +9,7 @@ local function LOG(...)
 end
 
 local fw = require "filewatch"
-local repo_new = require "vfs.repo".new
+local repo_new = require "repo".new
 local protocol = require "protocol"
 local network = require "network"
 local vfs = require "vfs.simplefs"
@@ -166,23 +166,6 @@ function message:GET(hash)
 		end
 	end
 	f:close()
-end
-
-function message:IDENTITY(ext, identity)
-	local repo = self._repo
-	repo._link[ext] = {identity=identity}
-	LOG("IDENTITY", ext, identity)
-end
-
-function message:LINK(path, hash)
-	local repo = self._repo
-	local binhash, buildhash = repo:link(path, hash)
-	LOG("LINK", path, hash, buildhash, binhash)
-	if binhash then
-		response(self, "LINK", path, buildhash, binhash)
-	else
-		response(self, "LINK", path)
-	end
 end
 
 function message:DBG(data)

@@ -2,11 +2,7 @@ local lfs = require "filesystem.local"
 local fs = require "filesystem"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
-local bgfx = require "bgfx"
-local stringify = require "fx.stringify"
 local toolset = require "fx.toolset"
-local render = import_package "ant.render"
-local FX_CACHE = {}
 local IDENTITY
 local PLATFORM
 local RENDERER
@@ -32,7 +28,7 @@ local function readfile(filename)
 	return data
 end
 
-local function register(identity)
+local function init(identity)
     IDENTITY = identity
     PLATFORM, RENDERER = IDENTITY:match "(%w+)_(%w+)"
     BINPATH = fs.path ".build/fx":localpath() / identity
@@ -99,146 +95,20 @@ local function do_compile(input, output, stage, setting)
     return deps
 end
 
-local function create_uniform(h, mark)
-    local name, type, num = bgfx.get_uniform_info(h)
-    if mark[name] then
-        return
-    end
-    mark[name] = true
-    return { handle = h, name = name, type = type, num = num }
-end
-
-local function uniform_info(shader, uniforms, mark)
-    for _, h in ipairs(bgfx.get_shader_uniforms(shader)) do
-        uniforms[#uniforms+1] = create_uniform(h, mark)
-    end
-end
-
-local function create_render_program(vs, fs)
-    local prog = bgfx.create_program(vs, fs, false)
-    if prog then
-        local uniforms = {}
-        local mark = {}
-        uniform_info(vs, uniforms, mark)
-        uniform_info(fs, uniforms, mark)
-        return prog, uniforms
-    else
-        error(string.format("create program failed, vs:%d, fs:%d", vs, fs))
-    end
-end
-
-local function create_compute_program(cs)
-    local prog = bgfx.create_program(cs, false)
-    if prog then
-        local uniforms = {}
-        local mark = {}
-        uniform_info(cs, uniforms, mark)
-        return prog, uniforms
-    else
-        error(string.format("create program failed, cs:%d", cs))
-    end
-end
-
-local default_setting = {
-	lighting = "on",			-- "on"/"off"
-	transparency = "opaticy",	-- "opaticy"/"translucent"
-	shadow_cast	= "on",			-- "on"/"off"
-	shadow_receive = "off",		-- "on"/"off"
-	subsurface = "off",			-- "on"/"off"? maybe has other setting
-	skinning = "UNKNOWN",
-    shadow_type = render.setting:get 'graphic/shadow/type',
-    bloom_enable = render.setting:get 'graphic/postprocess/bloom/enable',
-}
-
-local function merge(a, b)
-    for k, v in pairs(b) do
-        if not a[k] then
-            a[k] = v
-        end
-    end
-end
-
-local function read_fx(fx, setting)
-    setting = setting or {}
-    if fx.setting then
-        merge(setting, fx.setting)
-    end
-    merge(setting, default_setting)
-    return {
-        shader = fx.shader,
-        setting = setting
-    }
-end
-
-local function get_fx_cache(setting)
-    local setting_string = stringify(setting)
-    local hash = sha1(setting_string):sub(1,7)
-    local path = BINPATH / hash
-    if FX_CACHE[hash] then
-        return FX_CACHE[hash], path
-    end
-    FX_CACHE[hash] = {}
-    lfs.create_directories(path)
-    lfs.create_directories(path / ".dep")
-    writefile(path / ".setting", setting_string)
-    return FX_CACHE[hash], path
-end
-
-local function get_hash(fx)
-    local shader = fx.shader
-    if shader.cs then
-        return shader.cs
-    end
-    return shader.vs..shader.fs
-end
-
-local function load_shader(output, fx, stage)
-    local input = fx.shader[stage]
-    local hashpath = get_filename(input)
-    local outfile = output / hashpath
-    local depfile = output / ".dep" / hashpath
+local function get_shader(path, stage, fx)
+    local hashpath = get_filename(path)
+    local output = BINPATH / hashpath / stage
+    local outfile = output / fx.hash
+    local depfile = outfile..".dep"
     if not do_build(depfile) then
-        local deps = do_compile(input, outfile, stage, fx.setting)
+        lfs.create_directories(output)
+        local deps = do_compile(path, outfile, stage, fx.setting)
         create_depfile(depfile, deps)
     end
-    local h = bgfx.create_shader(readfile(outfile))
-    bgfx.set_name(h, input)
-    return h
-end
-
-local function create_program(output, fx)
-    local shader = fx.shader
-    if shader.cs then
-        return create_compute_program(
-            load_shader(output, fx, "cs")
-        )
-    else
-        return create_render_program(
-            load_shader(output, fx, "vs"),
-            load_shader(output, fx, "fs")
-        )
-    end
-end
-
-local function loader(input, setting)
-    local fx = read_fx(input, setting)
-    local cache, output = get_fx_cache(fx.setting)
-    local hash = get_hash(fx)
-    local res = cache[hash]
-    if res then
-        return res
-    end
-    fx.prog, fx.uniforms = create_program(output, fx)
-    cache[hash] = fx
-    return fx
-end
-
-local function unloader(res)
-    bgfx.destroy(assert(res.shader.prog))
+    return outfile
 end
 
 return {
-    register = register,
-    loader = loader,
-    unloader = unloader,
+    init = init,
+    get_shader = get_shader,
 }

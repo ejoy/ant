@@ -35,8 +35,7 @@ function localvfs.new(rootpath)
 	if not lfs.is_directory(rootpath) then
 		return nil, "Not a dir"
 	end
-	local mountpoint = access.readmount(rootpath / ".mount")
-	local mountname = access.mountname(mountpoint)
+	local mountpoint, mountname = access.readmount(rootpath / ".mount")
 	repo = {
 		_mountname = mountname,
 		_mountpoint = mountpoint,

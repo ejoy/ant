@@ -180,6 +180,8 @@ math3d_decompose_rot(const float mat[16], float quat[4]) {
 void
 math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 	const glm::mat4x4 &m = *(const glm::mat4x4 *)mat;
+
+	lastack_preallocfloat4(LS, 3);
 	float *trans = lastack_allocvec4(LS);
 	glm::quat &q = allocquat(LS);
 	float *scale = lastack_allocvec4(LS);
@@ -373,6 +375,7 @@ math3d_orthoLH(struct lastack *LS, float left, float right, float bottom, float 
 
 void
 math3d_base_axes(struct lastack *LS, const float forward[4]) {
+	lastack_preallocfloat4(LS, 2);
 	glm::vec4 &up = allocvec4(LS);
 	glm::vec4 &right = allocvec4(LS);
 

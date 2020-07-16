@@ -17,5 +17,5 @@ pm.initialize()
 import_package = pm.import
 
 if __ANT_RUNTIME__ then
-    require "runtime.debug"
+    --require "runtime.debug"
 end
