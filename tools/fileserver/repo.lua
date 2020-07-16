@@ -70,7 +70,6 @@ function repo.new(rootpath)
 		_repo = repopath,
 		_cache = cachepath,
 		_namecache = {},
-		_link = {},
 		_lock = filelock(repopath),	-- lock repo
 	}, repo)
 	return r

@@ -19,14 +19,6 @@ local function load_package(path)
     return config.name
 end
 
-function access.repopath(repo, hash, ext)
-	if ext then
-		return repo._repo /	hash:sub(1,2) / (hash .. ext)
-	else
-		return repo._repo /	hash:sub(1,2) / hash
-	end
-end
-
 function access.readmount(filename)
 	local mountpoint = {}
 	local f = assert(lfs.open(filename, "rb"))

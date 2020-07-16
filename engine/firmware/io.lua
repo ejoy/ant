@@ -24,13 +24,11 @@ local logqueue = {}
 local repo = {
 	repo = nil,
 	uncomplete = {},
-	link = {},
 }
 
 local connection = {
 	request_path = {},	-- requesting path
 	request_hash = {},	-- requesting hash
-	request_link = {},
 	sendq = {},
 	recvq = {},
 	fd = nil,
@@ -239,10 +237,6 @@ local function cache_bin(buildhash, binhash)
 	end
 end
 
-function offline.IDENTITY(ext, identity)
-	repo.link[ext] = { identity = identity }
-end
-
 local function response_bin(id, buildhash)
 	local binpath = repo.repo:hashpath(buildhash) .. ".bin"
 	local f = io.open(binpath,"rb")
@@ -276,25 +270,8 @@ function offline.GET(id, fullpath)
 		response_id(id, nil)
 		return
 	end
-	local ext = extension(name)
-	if not repo.link[ext] then
-		-- no link , raw file
-		local realpath = repo.repo:hashpath(v.hash)
-		response_id(id, realpath, v.hash)
-		return
-	end
-
-	local builddir = getbuilddir(fullpath)
-	local dir = repo.repo:list(builddir)
-	if dir then
-		local build = dir[name .. repo.link[ext].identity]
-		if build and not build.dir then
-			if response_bin(id, build.hash) then
-				return
-			end
-		end
-	end
-	response_id(id, nil)
+	local realpath = repo.repo:hashpath(v.hash)
+	response_id(id, realpath, v.hash)
 end
 
 function offline.EXIT(id)
@@ -416,16 +393,6 @@ local function request_file(id, hash, path, req)
 	path_req[id] = req
 end
 
-local function request_link(id, path, hash)
-	local hash_req = connection.request_link[path]
-	if hash_req then
-		hash_req[id] = path
-	else
-		connection.request_link[path] = { [id] = path }
-		connection_send("LINK", path, hash)
-	end
-end
-
 -- file server update hash file
 local function hash_complete(hash, exist)
 	local hash_list = connection.request_hash[hash]
@@ -493,34 +460,6 @@ function response.BLOB(hash, data)
 		return
 	end
 	hash_complete(hash, true)
-end
-
-function response.LINK(path, buildhash, binhash)
-	local resp = connection.request_link[path]
-	if resp then
-		if not binhash then
-			print("REQUEST LINK FAILED", path)
-			for id in pairs(resp) do
-				response_id(id, nil)
-			end
-			return
-		end
-		cache_bin(buildhash, binhash)
-		local realpath = repo.repo:hashpath(binhash)
-		local f = io.open(realpath, "rb")
-		if f then
-			f:close()
-			for id in pairs(resp) do
-				response_id(id, realpath, binhash)
-			end
-			return
-		end
-		for id in pairs(resp) do
-			request_file(id, binhash, binhash, "_LINKRES")
-		end
-	else
-		print("REQUEST LINK ERROR", path, binhash)
-	end
 end
 
 function response.FILE(hash, size)
@@ -675,9 +614,9 @@ function online.TYPE(id, fullpath)
 	end
 end
 
-function online.IDENTITY(ext, identity)
-	repo.link[ext] = { identity = identity }
-	connection_send("IDENTITY", ext, identity)
+local function response_err(id, msg)
+	print(msg)
+	response_id(id, nil, msg)
 end
 
 function online.GET(id, fullpath)
@@ -692,77 +631,23 @@ function online.GET(id, fullpath)
 			request_file(id, hash, fullpath, "GET")
 			return
 		end
-		print("Not exist", fullpath)
-		response_id(id, nil)
+		response_err(id, "Not exist " .. fullpath)
 		return
 	end
 
 	local v = dir[name]
 	if not v or v.dir then
-		print("Not exist", fullpath)
-		response_id(id, nil)
+		response_err(id, "Not exist " .. fullpath)
 		return
 	end
-	local ext = extension(name)
-	if not repo.link[ext] then
-		-- no link , raw file
-		local realpath = repo.repo:hashpath(v.hash)
-		local f = io.open(realpath,"rb")
-		if not f then
-			request_file(id, v.hash, fullpath, "GET")
-		else
-			f:close()
-			response_id(id, realpath, v.hash)
-		end
-		return
+	local realpath = repo.repo:hashpath(v.hash)
+	local f = io.open(realpath,"rb")
+	if not f then
+		request_file(id, v.hash, fullpath, "GET")
+	else
+		f:close()
+		response_id(id, realpath, v.hash)
 	end
-
-	local builddir = getbuilddir(fullpath)
-	local dir, hash = repo.repo:list(builddir)
-	if dir then
-		local build = dir[name .. repo.link[ext].identity]
-		if build and not build.dir then
-			if response_bin(id, build.hash) then
-				return
-			end
-			request_link(id, fullpath, build.hash)
-			return
-		end
-	elseif hash then
-		request_file(id, hash, fullpath, "_LINK")
-		return
-	end
-	request_link(id, fullpath)
-end
-
-function online._LINK(id, fullpath)
-	local path, name = fullpath:match "(.*)/(.-)$"
-	if path == nil then
-		path = ""
-		name = fullpath
-	end
-	local builddir = getbuilddir(fullpath)
-	local dir, hash = repo.repo:list(builddir)
-	if dir then
-		local ext = extension(name)
-		local build = dir[name .. repo.link[ext].identity]
-		if build and not build.dir then
-			if response_bin(id, build.hash) then
-				return
-			end
-			request_link(id, fullpath, build.hash)
-			return
-		end
-	elseif hash then
-		request_file(id, hash, fullpath, "_LINK")
-		return
-	end
-	request_link(id, fullpath)
-end
-
-function online._LINKRES(id, hash)
-	local realpath = repo.repo:hashpath(hash)
-	response_id(id, realpath, hash)
 end
 
 function online.PREFETCH(path)

@@ -203,7 +203,7 @@ function path_mt:remove_permissions()
 end
 
 function path_mt:localpath()
-    return lfs.path(vfs.realpath(self._value))
+    return lfs.path(assert(vfs.realpath(self._value)))
 end
 
 function path_mt:package_name()

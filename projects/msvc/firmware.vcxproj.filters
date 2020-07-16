@@ -27,4 +27,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\engine\firmware\bootloader.lua">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\engine\firmware\bootstrap.lua">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\engine\firmware\init_thread.lua">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\engine\firmware\io.lua">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\engine\firmware\vfs.lua">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
