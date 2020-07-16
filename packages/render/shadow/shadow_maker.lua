@@ -80,37 +80,42 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 	maxextent[1], maxextent[2] = newmax[1], newmax[2]
 end
 
-local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, stabilize, sc_eid)
-	local vp = math3d.mul(math3d.projmat(frustum), camera.viewmat)
-
-	local corners_WS = math3d.frustum_points(vp)
-	local v = math3d.tovalue(corners_WS[1])
-
-	local center_WS = math3d.frustum_center(corners_WS)
+local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, camera_rc)
+	local center_WS = math3d.points_center(corners_WS)
 	local min_extent, max_extent
-	local rc = world[sc_eid]._rendercache
-	rc.viewmat = math3d.lookto(center_WS, lightdir, math3d.index(camera.worldmat, 1))
-	rc.worldmat = math3d.inverse(rc.viewmat)
-	rc.srt.id = rc.worldmat
-	
+
+	camera_rc.viewmat = math3d.lookto(center_WS, lightdir, camera_rc.updir) --math3d.index(camera.worldmat, 1))
+	camera_rc.worldmat = math3d.inverse(camera_rc.viewmat)
+	camera_rc.srt.id = camera_rc.worldmat
+
 	if stabilize then
-		local radius = math3d.frustum_max_radius(corners_WS, center_WS)
+		local radius = math3d.points_radius(corners_WS, center_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadowmap_size)
 	else
-		local minv, maxv = math3d.minmax(corners_WS, rc.viewmat)
+		local minv, maxv = math3d.minmax(corners_WS, camera_rc.viewmat)
 		min_extent, max_extent = math3d.tovalue(minv), math3d.tovalue(maxv)
 	end
 
-	rc.frustum = {
+	camera_rc.frustum = {
 		ortho=true,
 		l = min_extent[1], r = max_extent[1],
 		b = min_extent[2], t = max_extent[2],
 		n = min_extent[3], f = max_extent[3],
 	}
-	rc.projmat = math3d.projmat(rc.frustum)
-	rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+	camera_rc.projmat = math3d.projmat(camera_rc.frustum)
+	camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
+end
+
+local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, stabilize, sc_eid)
+	local vp = math3d.mul(math3d.projmat(frustum), camera.viewmat)
+
+	local corners_WS = math3d.frustum_points(vp)
+	local updir = math3d.index(camera.worldmat, 1)
+	local camera_rc = world[sc_eid]._rendercache
+	camera_rc.updir.id = updir
+	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, camera_rc)
 end
 
 local function update_shadow_camera(dl_eid, camera)
@@ -216,6 +221,7 @@ function sm:update_camera()
 end
 
 function sm:refine_camera()
+	local setting = ishadow.setting()
 	for _, eid in world:each "csm" do
 		local se = world[eid]
 		local filter = se.primitive_filter.result
@@ -238,12 +244,15 @@ function sm:refine_camera()
 
 		if math3d.aabb_isvalid(sceneaabb) then
 			local camera_rc = world[se.camera_eid]._rendercache
-			math3d.aabb_transform(sceneaabb, camera_rc.viewmat)
+
+			local frustm_points_WS = math3d.frustum_points(camera_rc.viewprojmat)
+			local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
+
+			local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
 			
-			local frusutm_aabb = math3d.frustum_to_aabb(camera_rc.frustum)
-			
-			camera_rc.frustum = math3d.aabb_to_frustum(math3d.aabb_intersection(sceneaabb, frusutm_aabb))
-			camera_rc.projmat = math3d.projmat(camera_rc.frustum)
+			local aabb_corners_WS = math3d.aabb_points(scene_frustum_aabb_WS)
+			local lightdir = math3d.index(camera_rc.worldmat, 3)
+			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
 		end
 	end
 end

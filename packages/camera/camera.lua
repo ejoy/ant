@@ -12,9 +12,7 @@ function cm.process_entity(e)
     local f = {}
     for k, v in pairs(e.frustum) do f[k] = v end
     rc.frustum = f
-    if e.updir then
-        rc.updir = math3d.ref(e.updir)
-    end
+    rc.updir = math3d.ref(e.updir or mc.YAXIS)
     local lt = e.lock_target
     if lt then
         local nlt = {}

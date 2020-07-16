@@ -440,7 +440,8 @@ function ientity.entity_bounding(eid)
 	if m and ies.can_visible(eid) then
 		local b = m.bounding
 		if b then
-			return math3d.aabb_transform(b.aabb, iom.calc_worldmat(eid))
+			local aabbtransformd = math3d.aabb_transform(iom.calc_worldmat(eid), b.aabb)
+			return aabbtransformd
 		end
 	end
 end

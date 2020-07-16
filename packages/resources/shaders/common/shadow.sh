@@ -69,7 +69,7 @@ float hardShadow(
 	return step(receiver, occluder);
 #else
 	vec4 coord = _shadowCoord;
-	coord.z -= _bias;
+	coord.z += _bias;
 	return shadow2DProj(_sampler, coord);
 #endif
 }
@@ -93,7 +93,7 @@ int select_cascade(float distanceVS)
 
 vec4 get_color_coverage(int cascadeidx)
 {
-	float coverage = 0.4;
+	float coverage = 0.8;
 	mat4 color_coverages = mat4(
 		coverage, 0.0, 0.0, 1.0,
 		0.0, coverage, 0.0, 1.0,

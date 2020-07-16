@@ -587,11 +587,29 @@ math3d_aabb_intersect_plane(struct lastack *LS, const float *aabb, const float p
 void
 math3d_aabb_intersetion(struct lastack *LS, const float *lhsaabb, const float *rhsaabb){
 	glm::mat4 &m = allocmat(LS);
-	m[1] = glm::max(CAABB_MIN(lhsaabb), CAABB_MIN(rhsaabb));
-	m[2] = glm::min(CAABB_MAX(lhsaabb), CAABB_MAX(rhsaabb));
+	m[0] = glm::max(CAABB_MIN(lhsaabb), CAABB_MIN(rhsaabb));
+	m[1] = glm::min(CAABB_MAX(lhsaabb), CAABB_MAX(rhsaabb));
 }
 
-// plane [left, right, bottom, top, near, far]
+void
+math3d_aabb_points(struct lastack *LS, const float *aabb, float *points[8]){
+	const auto &minv = CAABB_MIN(aabb);
+	const auto &maxv = CAABB_MAX(aabb);
+
+	#define V(_p) *((glm::vec4*)(_p))
+	V(points[0]) = minv;
+	V(points[1]) = glm::vec4(minv.x, maxv.y, minv.z, 1.f);
+	V(points[2]) = glm::vec4(maxv.x, minv.y, minv.z, 1.f);
+	V(points[3]) = glm::vec4(maxv.x, maxv.y, minv.z, 1.f);
+
+	V(points[4]) = glm::vec4(minv.x, minv.y, maxv.z, 1.f);
+	V(points[5]) = glm::vec4(minv.x, maxv.y, maxv.z, 1.f);
+	V(points[6]) = glm::vec4(maxv.x, minv.y, maxv.z, 1.f);
+	V(points[7]) = maxv;
+	#undef V
+}
+
+// vplane [left, right, bottom, top, near, far]
 enum PlaneName{
 	PN_left = 0,
 	PN_right,

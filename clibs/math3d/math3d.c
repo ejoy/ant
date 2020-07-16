@@ -1600,6 +1600,22 @@ laabb_to_frustum(lua_State *L){
 }
 
 static int
+laabb_points(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *aabb = matrix_from_index(L, LS, 1);
+	lua_createtable(L, 8, 0);
+	float *points[8];
+	int i;
+	lastack_preallocfloat4(LS, 8);
+	for (i=0;i<8;i++) {
+		points[i] = alloc_vec4(L, LS);
+		lua_seti(L, -2, i+1);
+	}
+	math3d_aabb_points(LS, aabb, points);
+	return 1;
+}
+
+static int
 lfrustum_to_aabb(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	luaL_checktype(L, 1, LUA_TTABLE);
@@ -1626,9 +1642,11 @@ lfrustum_to_aabb(lua_State *L){
 	aabb[0] = frustum[0],
 	aabb[1] = frustum[1],
 	aabb[2] = frustum[2];
+	aabb[3] = 1.0f;
 	aabb[4] = frustum[3],
 	aabb[5] = frustum[4],
 	aabb[6] = frustum[5];
+	aabb[7] = 1.0f;
 	return 1;
 }
 
@@ -1663,22 +1681,12 @@ fetch_vectors_from_table(lua_State *L, struct lastack *LS, int index, int checkn
 	}
 }
 
-static inline void
-fetch_frustum_planes(lua_State *L, struct lastack *LS, int index, const float* planes[6]){
-	fetch_vectors_from_table(L, LS, index, 6, planes);
-}
-
-static inline void
-fetch_frustum_points(lua_State *L, struct lastack *LS, int index, const float *points[8]){
-	fetch_vectors_from_table(L, LS, index, 8, points);
-}
-
 static int
 lfrustum_intersect_aabb(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	luaL_checktype(L, 1, LUA_TTABLE);
 	const float* planes[6];
-	fetch_frustum_planes(L, LS, 1, planes);
+	fetch_vectors_from_table(L, LS, 1, 6, planes);
 
 	const float* aabb = matrix_from_index(L, LS, 2);
 	lua_pushinteger(L, math3d_frustum_intersect_aabb(LS, planes, aabb));
@@ -1689,7 +1697,7 @@ static int
 lfrustum_intersect_aabb_list(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float* planes[6];
-	fetch_frustum_planes(L, LS, 1, planes);
+	fetch_vectors_from_table(L, LS, 1, 6, planes);
 
 	const int resultidx = lua_gettop(L)+1;
 	lua_newtable(L);
@@ -1735,10 +1743,10 @@ lfrustum_points(lua_State *L){
 }
 
 static int
-lfrustum_aabb(lua_State *L){
+lpoints_aabb(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *points[8];
-	fetch_frustum_points(L, LS, 1, points);
+	fetch_vectors_from_table(L, LS, 1, 8, points);
 
 	float *aabb = alloc_aabb(L, LS);
 	math3d_frusutm_aabb(LS, points, aabb);
@@ -1747,10 +1755,10 @@ lfrustum_aabb(lua_State *L){
 }
 
 static int
-lfrustum_center(lua_State *L){
+lpoints_center(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *points[8];
-	fetch_frustum_points(L, LS, 1, points);
+	fetch_vectors_from_table(L, LS, 1, 8, points);
 	float *center = alloc_vec4(L, LS);
 	math3d_frustum_center(LS, points, center);
 
@@ -1758,10 +1766,10 @@ lfrustum_center(lua_State *L){
 }
 
 static int
-lfrustum_max_radius(lua_State *L){
+lpoints_radius(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *points[8];
-	fetch_frustum_points(L, LS, 1, points);
+	fetch_vectors_from_table(L, LS, 1, 8, points);
 
 	const float *center = vector_from_index(L, LS, 2);
 	lua_pushnumber(L, math3d_frustum_max_radius(LS, points, center));
@@ -1772,7 +1780,7 @@ static int
 lfrustum_calc_near_far(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float* planes[6];
-	fetch_frustum_planes(L, LS, 1, planes);
+	fetch_vectors_from_table(L, LS, 1, 6, planes);
 
 	float nearfar[2];
 	math3d_frustum_calc_near_far(LS, planes, nearfar);
@@ -1839,25 +1847,28 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "pack", lpack },
 		{ "isvalid", lisvalid},
 
+		//points
+		{ "points_center",	lpoints_center},
+		{ "points_radius",	lpoints_radius},
+		{ "points_aabb",	lpoints_aabb},
+
 		//aabb
-		{ "aabb", laabb},
-		{ "aabb_isvalid", laabb_isvalid},
-		{ "aabb_append", laabb_append},
-		{ "aabb_merge", laabb_merge},
+		{ "aabb", 			laabb},
+		{ "aabb_isvalid", 	laabb_isvalid},
+		{ "aabb_append", 	laabb_append},
+		{ "aabb_merge", 	laabb_merge},
 		{ "aabb_transform", laabb_transform},
 		{ "aabb_center_extents", laabb_center_extents},
-		{ "aabb_intersect_plane", laabb_intersect_plane},
-		{ "aabb_intersection", laabb_intersection},
-		{ "aabb_to_frustum", laabb_to_frustum},
+		{ "aabb_intersect_plane",laabb_intersect_plane},
+		{ "aabb_intersection",	 laabb_intersection},
+		{ "aabb_to_frustum",	 laabb_to_frustum},
+		{ "aabb_points",		 laabb_points},
 
 		//frustum
 		{ "frustum_planes", 		lfrustum_planes},
 		{ "frustum_intersect_aabb", lfrustum_intersect_aabb},
 		{ "frustum_intersect_aabb_list", lfrustum_intersect_aabb_list},
 		{ "frustum_points", 		lfrustum_points},
-		{ "frustum_aabb",			lfrustum_aabb},
-		{ "frustum_center",			lfrustum_center},
-		{ "frustum_max_radius",		lfrustum_max_radius},
 		{ "frustum_calc_near_far",  lfrustum_calc_near_far},
 		{ "frustum_to_aabb",		lfrustum_to_aabb},
 

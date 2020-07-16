@@ -108,7 +108,7 @@ local function check_shadow_matrix()
 	local vp = math3d.mul(math3d.projmat(split_frustum_desc), viewmat)
 
 	local frustum_points = math3d.frustum_points(vp)
-	local center = math3d.frustum_center(frustum_points)
+	local center = math3d.points_center(frustum_points)
 
 	print("view split frusutm corners, center: " .. math3d.tostring(center))
 	print_points(frustum_points)
