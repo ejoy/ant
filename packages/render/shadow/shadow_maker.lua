@@ -221,40 +221,41 @@ function sm:update_camera()
 end
 
 function sm:refine_camera()
-	local setting = ishadow.setting()
-	for _, eid in world:each "csm" do
-		local se = world[eid]
-		local filter = se.primitive_filter.result
-		local sceneaabb = math3d.aabb()
+	--TODO: need fix!
+	-- local setting = ishadow.setting()
+	-- for _, eid in world:each "csm" do
+	-- 	local se = world[eid]
+	-- 	local filter = se.primitive_filter.result
+	-- 	local sceneaabb = math3d.aabb()
 
-		local function merge_scene_aabb(sceneaabb, filtertarget)
-			local vs = filtertarget.visible_set
-			if vs then
-				for _, ri in pairs(vs) do
-					if ri.aabb then
-						sceneaabb = math3d.aabb_merge(sceneaabb, ri.aabb)
-					end
-				end
-			end
-			return sceneaabb
-		end
+	-- 	local function merge_scene_aabb(sceneaabb, filtertarget)
+	-- 		local vs = filtertarget.visible_set
+	-- 		if vs then
+	-- 			for _, ri in pairs(vs) do
+	-- 				if ri.aabb then
+	-- 					sceneaabb = math3d.aabb_merge(sceneaabb, ri.aabb)
+	-- 				end
+	-- 			end
+	-- 		end
+	-- 		return sceneaabb
+	-- 	end
 
-		sceneaabb = merge_scene_aabb(sceneaabb, filter.opaticy)
-		sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
+	-- 	sceneaabb = merge_scene_aabb(sceneaabb, filter.opaticy)
+	-- 	sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
 
-		if math3d.aabb_isvalid(sceneaabb) then
-			local camera_rc = world[se.camera_eid]._rendercache
+	-- 	if math3d.aabb_isvalid(sceneaabb) then
+	-- 		local camera_rc = world[se.camera_eid]._rendercache
 
-			local frustm_points_WS = math3d.frustum_points(camera_rc.viewprojmat)
-			local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
+	-- 		local frustm_points_WS = math3d.frustum_points(camera_rc.viewprojmat)
+	-- 		local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
 
-			local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
+	-- 		local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
 			
-			local aabb_corners_WS = math3d.aabb_points(scene_frustum_aabb_WS)
-			local lightdir = math3d.index(camera_rc.worldmat, 3)
-			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
-		end
-	end
+	-- 		local aabb_corners_WS = math3d.aabb_points(scene_frustum_aabb_WS)
+	-- 		local lightdir = math3d.index(camera_rc.worldmat, 3)
+	-- 		calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
+	-- 	end
+	-- end
 end
 
 local function which_material(eid)
