@@ -1283,7 +1283,7 @@ lminmax(lua_State *L){
 
 	const float* transform = lua_isnoneornil(L, 2) ? NULL : matrix_from_index(L, LS, 2);
 
-	float *minv = alloc_vec4(L, LS);
+		float *minv = alloc_vec4(L, LS);
 	minv[0] = FLT_MAX;
 	minv[1] = FLT_MAX;
 	minv[2] = FLT_MAX;
@@ -1494,7 +1494,7 @@ static int
 laabb_merge(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *lhsaabb = matrix_from_index(L, LS, 1);
-	const float *rhsaabb = matrix_from_index(L, LS, 1);
+	const float *rhsaabb = matrix_from_index(L, LS, 2);
 	float *aabb = alloc_aabb(L, LS);
 	math3d_aabb_merge(LS, lhsaabb, rhsaabb, aabb);
 
@@ -1558,6 +1558,74 @@ laabb_intersect_plane(lua_State *L){
 	const float *plane = vector_from_index(L, LS, 2);
 
 	lua_pushinteger(L, math3d_aabb_intersect_plane(LS, aabb, plane));
+	return 1;
+}
+
+static int
+laabb_intersection(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	math3d_aabb_intersetion(LS, matrix_from_index(L, LS, 1), matrix_from_index(L, LS, 2));
+	
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static const char* s_frustum_field[] = {
+	"l", "b", "n", "r", "t", "f",
+};
+
+static int
+laabb_to_frustum(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *aabb = matrix_from_index(L, LS, 1);
+
+	lua_createtable(L, 0, 7);
+	lua_pushboolean(L, 1);
+	lua_setfield(L, -2, "ortho");
+
+	const float frustum[6] = {
+		aabb[0], aabb[1], aabb[2],
+		aabb[4], aabb[5], aabb[6],
+	};
+
+	for (int ii = 0; ii < sizeof(s_frustum_field)/sizeof(s_frustum_field[0]); ++ii){
+		lua_pushnumber(L, frustum[ii]);
+		lua_setfield(L, -2, s_frustum_field[ii]);
+	}
+
+	return 1;
+}
+
+static int
+lfrustum_to_aabb(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	luaL_checktype(L, 1, LUA_TTABLE);
+
+	lua_getfield(L, 1, "ortho");
+	const int isortho = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	if (!isortho){
+		luaL_error(L, "only support aabb to ortho frustum");
+		return 0;
+	}
+
+	float frustum[6];
+	for (int ii = 0; ii < sizeof(s_frustum_field)/sizeof(s_frustum_field[0]); ++ii){
+		if (LUA_TNUMBER != lua_getfield(L, 1, s_frustum_field[ii])){
+			luaL_error(L, "invalid field:%s in frustum", s_frustum_field[ii]);
+			return 0;
+		}
+		frustum[ii] = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+	}
+	
+	float * aabb = alloc_aabb(L, LS);
+	aabb[0] = frustum[0],
+	aabb[1] = frustum[1],
+	aabb[2] = frustum[2];
+	aabb[4] = frustum[3],
+	aabb[5] = frustum[4],
+	aabb[6] = frustum[5];
 	return 1;
 }
 
@@ -1774,6 +1842,8 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "aabb_transform", laabb_transform},
 		{ "aabb_center_extents", laabb_center_extents},
 		{ "aabb_intersect_plane", laabb_intersect_plane},
+		{ "aabb_intersection", laabb_intersection},
+		{ "aabb_to_frustum", laabb_to_frustum},
 
 		//frustum
 		{ "frustum_planes", 		lfrustum_planes},
@@ -1784,6 +1854,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "frustum_center",			lfrustum_center},
 		{ "frustum_max_radius",		lfrustum_max_radius},
 		{ "frustum_calc_near_far",  lfrustum_calc_near_far},
+		{ "frustum_to_aabb",		lfrustum_to_aabb},
 
 		//primitive
 		{ "point2plane",	lpoint2plane},

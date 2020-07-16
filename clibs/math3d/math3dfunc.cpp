@@ -581,6 +581,13 @@ math3d_aabb_intersect_plane(struct lastack *LS, const float *aabb, const float p
 	return plane_intersect(VEC(plane), aabb);
 }
 
+void
+math3d_aabb_intersetion(struct lastack *LS, const float *lhsaabb, const float *rhsaabb){
+	glm::mat4 &m = allocmat(LS);
+	m[1] = glm::max(CAABB_MIN(lhsaabb), CAABB_MIN(rhsaabb));
+	m[2] = glm::min(CAABB_MAX(lhsaabb), CAABB_MAX(rhsaabb));
+}
+
 // plane [left, right, bottom, top, near, far]
 enum PlaneName{
 	PN_left = 0,

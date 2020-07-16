@@ -11,6 +11,7 @@ system "shadow_system"
     .method "post_init"
     .method "update_camera"
     --.method "refine_filter"
+    .method "refine_camera"
 
 policy "shadow_cast_policy"
     .require_system "shadow_system"

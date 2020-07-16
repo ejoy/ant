@@ -105,9 +105,7 @@ local function update_postprocess_properties()
 	end
 end
 
-local usp = ecs.system "update_system_properties"
-
-function usp:update_system_properties()
+function m.update()
 	update_lighting_properties()
 	update_shadow_properties()
 	update_postprocess_properties()

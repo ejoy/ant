@@ -84,6 +84,7 @@ local function calc_shadow_camera(camera, frustum, lightdir, shadowmap_size, sta
 	local vp = math3d.mul(math3d.projmat(frustum), camera.viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
+	local v = math3d.tovalue(corners_WS[1])
 
 	local center_WS = math3d.frustum_center(corners_WS)
 	local min_extent, max_extent
@@ -213,6 +214,40 @@ function sm:update_camera()
 	-- 	end
 	-- end
 end
+
+function sm:refine_camera()
+	for _, eid in world:each "csm" do
+		local se = world[eid]
+		local filter = se.primitive_filter.result
+		local sceneaabb = math3d.aabb()
+
+		local function merge_scene_aabb(sceneaabb, filtertarget)
+			local vs = filtertarget.visible_set
+			if vs then
+				for _, ri in pairs(vs) do
+					if ri.aabb then
+						sceneaabb = math3d.aabb_merge(sceneaabb, ri.aabb)
+					end
+				end
+			end
+			return sceneaabb
+		end
+
+		sceneaabb = merge_scene_aabb(sceneaabb, filter.opaticy)
+		sceneaabb = merge_scene_aabb(sceneaabb, filter.translucent)
+
+		if math3d.aabb_isvalid(sceneaabb) then
+			local camera_rc = world[se.camera_eid]._rendercache
+			math3d.aabb_transform(sceneaabb, camera_rc.viewmat)
+			
+			local frusutm_aabb = math3d.frustum_to_aabb(camera_rc.frustum)
+			
+			camera_rc.frustum = math3d.aabb_to_frustum(math3d.aabb_intersection(sceneaabb, frusutm_aabb))
+			camera_rc.projmat = math3d.projmat(camera_rc.frustum)
+		end
+	end
+end
+
 local function which_material(eid)
 	if world[eid].skinning_type == "GPU" then
 		return gpu_skinning_material

@@ -2,6 +2,27 @@ local math3d = require "math3d"
 
 local ref1 = math3d.ref()
 
+
+do
+	local pool = {}
+	for i=1, 128 do
+		pool[i] = math3d.vector(i, 0, 0, 1)
+	end
+
+	local v128 = math3d.tovalue(pool[128])
+	print(v128[1], v128[2], v128[3], v128[4])
+
+	pool[129] = math3d.vector(129, 0, 0, 1)
+	local v129 = math3d.tovalue(pool[129])
+	print(v129[1], v129[2], v129[3], v129[4])
+
+	pool[130] = math3d.vector(130, 0, 0, 1)
+	local v130 = math3d.tovalue(pool[130])
+	print(v130[1], v130[2], v130[3], v130[4])
+
+	print ""
+end
+
 ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
 local ref2 = math3d.ref()
 ref2.v = math3d.vector(1,2,3,4)

@@ -89,6 +89,7 @@ function render_sys:init()
 end
 
 function render_sys:render_commit()
+	isys_properties.update()
 	for _, eid in world:each "render_target" do
 		local rq = world[eid]
 		if rq.visible then
