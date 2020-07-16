@@ -19,44 +19,47 @@ local function load_package(path)
     return config.name
 end
 
+local function split(str)
+    local r = {}
+    str:gsub('[^/]*', function (w) r[#r+1] = w end)
+    return r
+end
+
 function access.readmount(filename)
 	local mountpoint = {}
-	local f = assert(lfs.open(filename, "rb"))
+	local mountname = {}
+	local dir = {}
+	local function addmount(name, path)
+		mountpoint[name] = path
+		mountname[#mountname+1] = name
+		local dirlst = split(name)
+		for i = 1, #dirlst do
+			dir[table.concat(dirlst, "/", 1, i)] = true
+		end
+	end
+	local f <close> = assert(lfs.open(filename, "rb"))
 	for line in f:lines() do
 		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
 		if name == nil then
 			if not (line:match "^%s*#" or line:match "^%s*$") then
-				f:close()
 				error ("Invalid .mount file : " .. line)
 			end
 		end
 		path = lfs.path(path:gsub("%s*#.*$",""))	-- strip comment
 		if name == '@pkg-one' then
 			local pkgname = load_package(path)
-			mountpoint['pkg/'..pkgname] = path
+			addmount('pkg/'..pkgname, path)
 		elseif name == '@pkg' then
 			for pkgpath in path:list_directory() do
 				local pkgname = load_package(pkgpath)
-				mountpoint['pkg/'..pkgname] = pkgpath
+				addmount('pkg/'..pkgname, pkgpath)
 			end
 		else
-			mountpoint[name] = path
+			addmount(name, path)
 		end
 	end
-	f:close()
-	return mountpoint
-end
-
-function access.mountname(mountpoint)
-	local mountname = {}
-
-	for name in pairs(mountpoint) do
-		if name ~= '' then
-			table.insert(mountname, name)
-		end
-	end
-	table.sort(mountname, function(a,b) return a>b end)
-	return mountname
+	table.sort(mountname)
+	return mountpoint, mountname, dir
 end
 
 function access.realpath(repo, pathname)
@@ -113,18 +116,15 @@ function access.list_files(repo, filepath)
 	if filepath == '/' then
 		-- root path
 		for mountname in pairs(repo._mountpoint) do
-			if mountname ~= ''  and not mountname:find("/",1,true) then
-				files[mountname] = true
-			end
+			local name = mountname:match "^([^/]+)/?"
+			files[name] = true
 		end
 	else
 		local n = #filepath
 		for mountname in pairs(repo._mountpoint) do
 			if mountname:sub(1,n) == filepath then
-				local name = mountname:sub(n+1)
-				if not name:find("/",1,true) then
-					files[name] = true
-				end
+				local name = mountname:sub(n+1):match "^([^/]+)/?"
+				files[name] = true
 			end
 		end
 	end
