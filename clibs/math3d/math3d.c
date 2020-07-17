@@ -1616,6 +1616,17 @@ laabb_points(lua_State *L){
 }
 
 static int
+laabb_expand(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *aabb = matrix_from_index(L, LS, 1);
+	const float *e = vector_from_index(L, LS, 2);
+
+	math3d_aabb_expand(LS, aabb, e);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static int
 lfrustum_to_aabb(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	luaL_checktype(L, 1, LUA_TTABLE);
@@ -1863,6 +1874,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "aabb_intersection",	 laabb_intersection},
 		{ "aabb_to_frustum",	 laabb_to_frustum},
 		{ "aabb_points",		 laabb_points},
+		{ "aabb_expand",		 laabb_expand},
 
 		//frustum
 		{ "frustum_planes", 		lfrustum_planes},
