@@ -80,6 +80,18 @@ function toolset.compile(config)
 		commands[#commands+1] = tostring(level)
 	end
 
+	if config.debug then
+		commands[#commands+1] = "--debug"
+	end
+
+	-- print("shader compile:")
+	-- local cmdstring = {}
+	-- for _, c in ipairs(commands) do
+	-- 	cmdstring[#cmdstring+1] = tostring(c)
+	-- end
+
+	-- print(table.concat(cmdstring, " "))
+
 	do
 		-- Fixes bgfx shaderc bug
 		lfs.remove(config.output)

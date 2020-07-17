@@ -78,6 +78,12 @@ local function get_macros(setting)
 	return macros
 end
 
+local function compile_debug_shader(platform, renderer)
+    -- if platform == "windows" and renderer:match "direct3d" then
+    --     return true
+    -- end
+end
+
 local function do_compile(input, output, stage, setting)
     input = fs.path(input):localpath():string()
     local ok, err, deps = toolset.compile {
@@ -88,6 +94,7 @@ local function do_compile(input, output, stage, setting)
         includes = {SHARER_INC},
         stage = stage,
         macros = get_macros(setting),
+        debug = compile_debug_shader(PLATFORM, RENDERER),
     }
     if not ok then
         error("compile failed: " .. input .. "\n\n" .. err)
