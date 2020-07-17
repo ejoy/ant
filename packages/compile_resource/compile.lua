@@ -22,9 +22,9 @@ local function split(str)
 end
 
 local function get_filename(pathname)
-    local stem = pathname:stem():string():lower()
-    local parent = pathname:parent_path():string():lower()
-    return stem.."_"..sha1(parent)
+    pathname = pathname:lower()
+    local filename = pathname:match "[/]?([^/]*)$"
+    return filename.."_"..sha1(pathname)
 end
 
 local function writefile(filename, data)
@@ -125,7 +125,7 @@ local function clean_file(input)
         cache[keystring] = nil
         lfs.remove_all(cachepath)
     else
-        lfs.remove_all(cfg.binpath / get_filename(input))
+        lfs.remove_all(cfg.binpath / get_filename(input:string()))
     end
 end
 
@@ -139,12 +139,12 @@ local function compile_file(input)
         assert(lfs.exists(input))
         return input
     end
-    local keystring = input:string():lower()
+    local keystring = lfs.absolute(input):string():lower()
     local cachepath = cache[keystring]
     if cachepath then
         return cachepath
     end
-    local output = cfg.binpath / get_filename(input)
+    local output = cfg.binpath / get_filename(keystring)
     if not lfs.exists(output) or not do_build(output) then
         do_compile(cfg, input, output)
     end

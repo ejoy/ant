@@ -29,7 +29,7 @@ local function init()
     local renderer = import_package "ant.render".hwi.get_caps().rendererType
     local identity = (os.."_"..renderer):lower()
     fx.init(identity)
-    compile.register("glb")
+    compile.register("glb", identity)
     compile.register("texture", identity)
 end
 

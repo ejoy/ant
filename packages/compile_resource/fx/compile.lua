@@ -10,7 +10,7 @@ local BINPATH
 local SHARER_INC = lfs.current_path() / "packages/resources/shaders"
 
 local function get_filename(pathname)
-    pathname = pathname:lower()
+    pathname = lfs.absolute(fs.path(pathname):localpath()):string():lower():lower()
     local filename = pathname:match "[/]?([^/]*)$"
     return filename.."_"..sha1(pathname)
 end
@@ -31,7 +31,7 @@ end
 local function init(identity)
     IDENTITY = identity
     PLATFORM, RENDERER = IDENTITY:match "(%w+)_(%w+)"
-    BINPATH = fs.path ".build/fx":localpath() / identity
+    BINPATH = fs.path ".build/sc":localpath() / identity
 end
 
 local function do_build(depfile)
@@ -99,9 +99,9 @@ local function get_shader(path, stage, fx)
     local hashpath = get_filename(path)
     local output = BINPATH / hashpath / stage
     local outfile = output / fx.hash
-    local depfile = outfile..".dep"
+    local depfile = output / ".dep" / fx.hash
     if not do_build(depfile) then
-        lfs.create_directories(output)
+        lfs.create_directories(output / ".dep")
         local deps = do_compile(path, outfile, stage, fx.setting)
         create_depfile(depfile, deps)
     end
