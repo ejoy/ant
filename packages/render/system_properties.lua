@@ -44,18 +44,11 @@ local function add_directional_light_properties()
 	local deid = ilight.directional_light()
 	if deid then
 		local data = ilight.data(deid)
-		iom.get_direction(deid)
 		system_properties["u_directional_lightdir"].v	= math3d.inverse(iom.get_direction(deid))
 		system_properties["u_directional_color"].v		= data.color
 		system_properties["u_directional_intensity"].v	= data.intensity
 	end
 end
-
-local mode_type = {
-	factor = 0,
-	color = 1,
-	gradient = 2,
-}
 
 local function update_lighting_properties()
 	add_directional_light_properties()
