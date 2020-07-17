@@ -25,7 +25,16 @@ local function split(str)
     return r
 end
 
-function access.readmount(filename)
+function access.addmount(repo, name, path)
+	repo._mountpoint[name] = path
+	repo._mountname[#repo._mountname+1] = name
+	local dirlst = split(name)
+	for i = 1, #dirlst do
+		repo._dir[table.concat(dirlst, "/", 1, i)] = true
+	end
+end
+
+function access.readmount(repo)
 	local mountpoint = {}
 	local mountname = {}
 	local dir = {}
@@ -37,7 +46,7 @@ function access.readmount(filename)
 			dir[table.concat(dirlst, "/", 1, i)] = true
 		end
 	end
-	local f <close> = assert(lfs.open(filename, "rb"))
+	local f <close> = assert(lfs.open(repo._root / ".mount", "rb"))
 	for line in f:lines() do
 		local name, path = line:match "^%s*(.-)%s+(.-)%s*$"
 		if name == nil then
@@ -59,13 +68,16 @@ function access.readmount(filename)
 		end
 	end
 	table.sort(mountname)
-	return mountpoint, mountname, dir
+	repo._mountname = mountname
+	repo._mountpoint = mountpoint
+	repo._dir = dir
 end
 
 function access.realpath(repo, pathname)
 	pathname = pathname:match "^/?(.-)/?$"
 	local mountnames = repo._mountname
-	for _, mpath in ipairs(mountnames) do
+	for i = #mountnames, 1, -1 do
+		local mpath = mountnames[i]
 		if pathname == mpath then
 			return repo._mountpoint[mpath]
 		end
@@ -79,12 +91,11 @@ end
 
 function access.virtualpath(repo, pathname)
 	pathname = pathname:string()
-	local mountpoints = repo._mountpoint
 	-- TODO: ipairs
-	for name, mpath in pairs(mountpoints) do
+	for name, mpath in pairs(repo._mountpoint) do
 		mpath = mpath:string()
 		if pathname == mpath then
-			return repo._mountname[mpath]
+			return name
 		end
 		local n = #mpath + 1
 		if pathname:sub(1,n) == mpath .. '/' then

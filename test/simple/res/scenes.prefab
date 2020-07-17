@@ -10,4 +10,4 @@ prefab: ./plane.prefab
 ---
 prefab: ./light_directional.prefab
 ---
-prefab: ./fox.glb|mesh.prefab
+prefab: ./Fox.glb|mesh.prefab

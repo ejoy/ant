@@ -54,7 +54,7 @@ local function watch_add(repo, repopath)
 	end
 end
 
-local function repo_add(reponame)
+local function repo_add(identity, reponame)
 	if repos[reponame] then
 		return repos[reponame]
 	end
@@ -65,6 +65,7 @@ local function repo_add(reponame)
 		return
 	end
 	LOG ("Rebuild repo")
+	repo._identity = identity
 	if lfs.is_regular_file(repopath / ".repo" / "root") then
 		repo:index()
 	else
@@ -119,22 +120,20 @@ end
 local debug = {}
 local message = {}
 
-function message:ROOT(reponame)
+function message:ROOT(identity, reponame)
 	if not self._id then
 		self._id = clients_add()
 	end
 	logger_init(self._id)
-
+	LOG("ROOT", identity, reponame)
 	local reponame = assert(reponame or default_reponame,  "Need repo name")
-	local repo = repo_add(reponame)
+	local repo = repo_add(identity, reponame)
 	if repo == nil then
 		response(self, "ROOT", "")
 		return
 	end
 	self._repo = repo
-	repo:build()
-	local roothash = repo:root()
-	response(self, "ROOT", roothash)
+	response(self, "ROOT", repo:root())
 end
 
 function message:GET(hash)

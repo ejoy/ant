@@ -6,17 +6,7 @@ local INTERVAL = 0.01 -- socket select timeout
 local thread = require "thread"
 local lsocket = require "lsocket"
 local protocol = require "protocol"
-local crypt = require "crypt"
 local _print
-
-local function byte2hex(c)
-	return ("%02x"):format(c:byte())
-end
-
-local function sha1(str)
-	return crypt.sha1(str):gsub(".", byte2hex)
-end
-
 
 local config = {}
 local channel = {}
@@ -105,6 +95,7 @@ local function init_config()
 	config.address = assert(c.address)
 	config.port = assert(c.port)
 	config.vfspath = assert(c.vfspath)
+	config.identity = assert(c.identity)
 	config.rootname = c.rootname
 	read_config(config.repopath .. "config", config)
 end
@@ -493,7 +484,7 @@ end
 local function waiting_for_root()
 	local resp = {}
 	local reading = connection.recvq
-	connection_send("ROOT", config.rootname)
+	connection_send("ROOT", config.identity, config.rootname)
 	while true do
 		local ok, err = connection_dispose(INTERVAL)
 		if not ok then
@@ -600,13 +591,17 @@ function online.GET(id, fullpath)
 			request_file(id, hash, fullpath, "GET")
 			return
 		end
-		response_err(id, "Not exist " .. fullpath)
+		response_err(id, "Not exist " .. path)
 		return
 	end
 
 	local v = dir[name]
-	if not v or v.dir then
+	if not v then
 		response_err(id, "Not exist " .. fullpath)
+		return
+	end
+	if v.dir then
+		response_err(id, "Not file " .. fullpath)
 		return
 	end
 	local realpath = repo.repo:hashpath(v.hash)

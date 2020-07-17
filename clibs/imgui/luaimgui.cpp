@@ -158,27 +158,31 @@ sync_io(lua_State *L) {
 }
 
 static int lshowDockSpace(lua_State * L) {
-	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_NoDockingInCentralNode | ImGuiDockNodeFlags_PassthruCentralNode;
 
 	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
 	// because it would be confusing to have two docking targets within each others.
-	ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+	ImGuiWindowFlags window_flags = /*ImGuiWindowFlags_MenuBar | */ImGuiWindowFlags_NoDocking;
 
+	auto pos = ImVec2{ (float)luaL_optnumber(L, 1, 0), (float)luaL_optnumber(L, 2, 0) };
+	
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(viewport->Pos);
-	ImGui::SetNextWindowSize(viewport->Size);
+	ImGui::SetNextWindowPos(pos);
+	ImGui::SetNextWindowSize(ImVec2{ viewport->Size.x, viewport->Size.y - pos.y });
 	ImGui::SetNextWindowViewport(viewport->ID);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 	window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 	window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+	
+	if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+		window_flags |= ImGuiWindowFlags_NoBackground;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 	bool p_open = true;
 	ImGui::Begin("DockSpace Demo", &p_open, window_flags);
-	ImGui::PopStyleVar();
 
-	ImGui::PopStyleVar(2);
+	ImGui::PopStyleVar(3);
 
 	ImGuiIO& io = ImGui::GetIO();
 	if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
@@ -1758,6 +1762,19 @@ wAcceptDragDropPayload(lua_State * L) {
 }
 
 static int
+wGetDragDropPayload(lua_State* L) {
+	const ImGuiPayload* payload = ImGui::GetDragDropPayload();
+	if (payload != NULL) {
+		const char* data = (const char*)payload->Data;
+		lua_pushlstring(L, data, payload->DataSize);
+	}
+	else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+static int
 wPushTextWrapPos(lua_State* L) {
 	float pos = (float)luaL_optnumber(L, 1, 0.0f);
 	ImGui::PushTextWrapPos(pos);
@@ -2936,6 +2953,7 @@ static struct enum_pair eWindowFlags[] = {
 	ENUM(ImGuiWindowFlags, NoNavInputs),
 	ENUM(ImGuiWindowFlags, NoNavFocus),
 	ENUM(ImGuiWindowFlags, UnsavedDocument),
+	ENUM(ImGuiWindowFlags, NoDocking),
 	ENUM(ImGuiWindowFlags, NoNav),
 	ENUM(ImGuiWindowFlags, NoDecoration),
 	ENUM(ImGuiWindowFlags, NoInputs),
@@ -3331,6 +3349,7 @@ luaopen_imgui(lua_State *L) {
 		{ "BeginDragDropTarget", wBeginDragDropTarget },
 		{ "EndDragDropTarget", wEndDragDropTarget },
 		{ "AcceptDragDropPayload", wAcceptDragDropPayload },
+		{ "GetDragDropPayload", wGetDragDropPayload},
 		{ "PushTextWrapPos", wPushTextWrapPos },
 		{ "PopTextWrapPos", wPopTextWrapPos },
 		{ NULL, NULL },

@@ -82,7 +82,7 @@ function message.init(nwh, context, width, height)
 		height = height,
 	}
     imgui_init()
-	cb.init()
+	cb.init(width, height)
     initialized = true
 end
 
@@ -98,12 +98,17 @@ function message.keyboard(key, press, state)
     imgui.keyboard(key, press, state)
 	cb.keyboard(key, press, state)
 end
-message.char = imgui.input_char
+--message.char = imgui.input_char
+function message.char(...)
+	imgui.input_char(...)
+	cb.char(...)
+end
 function message.dropfiles(filelst)
 	cb.dropfiles(filelst)
 end
 function message.size(width,height,_)
 	imgui_resize(width, height)
+	cb.size(width, height)
 	rhwi.reset(nil, width, height)
 end
 function message.exit()
@@ -115,7 +120,7 @@ function message.update()
 	if initialized then
 		bgfx.set_view_clear(viewid, "CD", 0x000000FF, 1, 0)
 		local delta = timer_delta()
-		imgui.begin_frame(delta * 1000)
+		imgui.begin_frame(delta / 1000)
         cb.update(delta)
 		imgui.end_frame()
         rhwi.frame()

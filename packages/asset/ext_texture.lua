@@ -11,9 +11,8 @@ local function readfile(filename)
 end
 
 local function loader(filename)
-	local outpath = cr.compile(filename)
-	local config = datalist.parse(readfile(outpath / "main.cfg"))
-	local h = bgfx.create_texture(readfile(outpath / "main.bin"), config.flag)
+	local config = datalist.parse(readfile(cr.compile(filename .. "|main.cfg")))
+	local h = bgfx.create_texture(readfile(cr.compile(filename .. "|main.bin")), config.flag)
 	bgfx.set_name(h, config.name)
 	return {
 		handle = h,

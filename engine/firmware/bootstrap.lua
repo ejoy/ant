@@ -1,13 +1,17 @@
 __ANT_RUNTIME__ = "0.0.1"
 
-local platform = require "platform"
+local os = (require "platform".OS):lower()
+local renderer = {
+	windows = "direct3d11",
+}
 local config = {
 	repopath = "./",
 	vfspath = "vfs.lua",
-	nettype = (platform.OS ~= "iOS") and "connect" or "listen",
+	nettype = (os ~= "ios") and "connect" or "listen",
 	address = "127.0.0.1",
 	port = 2018,
 	rootname = arg[1],
+	identity = os.."_"..renderer[os],
 }
 
 local thread = require "thread"

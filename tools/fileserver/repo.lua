@@ -10,59 +10,6 @@ local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
 local crypt = require "crypt"
 
-local function addslash(name)
-	return (name:gsub("[/\\]?$","/"))
-end
-
-local function filelock(filepath)
-	filepath = filepath / "vfs.lock"
-	local f = lfs.filelock(filepath)
-	return assert(f, "repo is locking. (" .. filepath:string() .. ")")
-end
-
-local function refname(self, hash)
-	return self._repo / hash:sub(1,2) / (hash .. ".ref")
-end
-
---[[
-	all path should be absolute path
-
-	{ rootpath,
-		xxx = mountxxx,
-	}
-]]
-local function init(rootpath, repopath)
-	if not lfs.is_directory(repopath) then
-		-- already has .repo
-		assert(lfs.create_directories(repopath))
-	end
-	for i=0,0xff do
-		local path = repopath / string.format("%02x", i)
-		if not lfs.is_directory(path) then
-			assert(lfs.create_directories(path))
-		end
-	end
-end
-
-function repo.new(rootpath)
-	if not lfs.is_directory(rootpath) then
-		return nil, "Not a dir"
-	end
-	local repopath = rootpath / ".repo"
-	init(rootpath, repopath)
-	local mountpoint, mountname, dir = access.readmount(rootpath / ".mount")
-	local r = setmetatable({
-		_mountname = mountname,
-		_mountpoint = mountpoint,
-		_dir = dir,
-		_root = rootpath,
-		_repo = repopath,
-		_namecache = {},
-		_lock = filelock(repopath),	-- lock repo
-	}, repo)
-	return r
-end
-
 local function byte2hex(c)
 	return ("%02x"):format(c:byte())
 end
@@ -86,6 +33,71 @@ local function sha1_from_file(filename)
 	end
 	ff:close()
 	return sha1_encoder:final():gsub(".", byte2hex)
+end
+
+local function get_filename(repo, pathname)
+    pathname = lfs.absolute(access.realpath(repo, pathname)):string():lower()
+    local filename = pathname:match "[/]?([^/]*)$"
+    return filename.."_"..sha1(pathname)
+end
+
+local function compile_resource(repo, path)
+	local ext = path:match "[^/]%.([%w*?_%-]*)$"
+	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" then
+		return true
+	end
+	local realpath = repo._root / ".build" / ext / repo._identity / get_filename(repo, path)
+	if not lfs.exists(realpath) then
+		return false
+	end
+	access.addmount(repo, path, realpath)
+	return true
+end
+
+local function is_directory(repo, path)
+	if repo._dir[path] then
+		return true
+	end
+	return lfs.is_directory(access.realpath(repo, path))
+end
+
+local function addslash(name)
+	return (name:gsub("[/\\]?$","/"))
+end
+
+local function filelock(filepath)
+	filepath = filepath / "vfs.lock"
+	local f = lfs.filelock(filepath)
+	return assert(f, "repo is locking. (" .. filepath:string() .. ")")
+end
+
+local function refname(self, hash)
+	return self._repo / hash:sub(1,2) / (hash .. ".ref")
+end
+
+function repo.new(rootpath)
+	local repopath = rootpath / ".repo"
+	if not lfs.is_directory(rootpath) then
+		return nil, "Not a dir"
+	end
+	if not lfs.is_directory(repopath) then
+		-- already has .repo
+		assert(lfs.create_directories(repopath))
+	end
+	for i = 0, 0xff do
+		local path = repopath / string.format("%02x", i)
+		if not lfs.is_directory(path) then
+			assert(lfs.create_directories(path))
+		end
+	end
+	local r = {
+		_root = rootpath,
+		_repo = repopath,
+		_namecache = {},
+		_lock = filelock(repopath),	-- lock repo
+	}
+	access.readmount(r)
+	return setmetatable(r, repo)
 end
 
 -- map path in repo to realpath (replace mountpoint)
@@ -112,34 +124,33 @@ local function repo_build_dir(self, filepath, cache, namehashcache)
 		add_item(hash, { filelist = cache_hash.filelist	, filename = filepath })
 		return hash
 	end
-	local rpath = self:realpath(filepath)
 	local hashs = {}
-	local files = access.list_files(self, filepath)
-
-	for name in pairs(files) do
+	for name in pairs(access.list_files(self, filepath)) do
 		local fullname = filepath == '' and name or filepath .. '/' .. name	-- full name in repo
-		local realfullname = rpath / name	-- full name in local file system
-		if self._dir[fullname] or lfs.is_directory(realfullname) then
-			local hash = repo_build_dir(self, fullname, cache, namehashcache)
-			table.insert(hashs, string.format("d %s %s", hash, name))
-		else
-			local mtime = lfs.last_write_time(realfullname)	-- timestamp
-			local cache_hash = namehashcache[fullname]
-			local hash
-			if cache_hash and mtime == cache_hash.timestamp then
-				-- file not change
-				hash = cache_hash.hash
-				if _DEBUG then print("CACHE", hash, fullname) end
+		if compile_resource(self, fullname) then
+			if is_directory(self, fullname) then
+				local hash = repo_build_dir(self, fullname, cache, namehashcache)
+				table.insert(hashs, string.format("d %s %s", hash, name))
 			else
-				hash = sha1_from_file(realfullname)
-				namehashcache[fullname] = { hash = hash, timestamp = mtime }
-				if _DEBUG then print("FILE", hash, fullname, mtime) end
+				local realfullname = self:realpath(fullname)
+				local mtime = lfs.last_write_time(realfullname)	-- timestamp
+				local cache_hash = namehashcache[fullname]
+				local hash
+				if cache_hash and mtime == cache_hash.timestamp then
+					-- file not change
+					hash = cache_hash.hash
+					if _DEBUG then print("CACHE", hash, fullname) end
+				else
+					hash = sha1_from_file(realfullname)
+					namehashcache[fullname] = { hash = hash, timestamp = mtime }
+					if _DEBUG then print("FILE", hash, fullname, mtime) end
+				end
+				add_item(hash, {
+					filename = fullname,
+					timestamp = mtime,
+				})
+				table.insert(hashs, string.format("f %s %s", hash, name))
 			end
-			add_item(hash, {
-				filename = fullname,
-				timestamp = mtime,
-			})
-			table.insert(hashs, string.format("f %s %s", hash, name))
 		end
 	end
 	table.sort(hashs)

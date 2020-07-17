@@ -11,11 +11,9 @@ function localvfs.realpath(pathname)
 end
 
 function localvfs.list(path)
-	path = path:match "^/?(.-)/?$"
-	local files = access.list_files(repo, path)
-	path = path .. '/'
+	path = path:match "^/?(.-)/?$" .. '/'
 	local item = {}
-	for filename in pairs(files) do
+	for filename in pairs(access.list_files(repo, path)) do
 		local realpath = access.realpath(repo, path .. filename)
 		item[filename] = not not lfs.is_directory(realpath)
 	end
@@ -35,12 +33,10 @@ function localvfs.new(rootpath)
 	if not lfs.is_directory(rootpath) then
 		return nil, "Not a dir"
 	end
-	local mountpoint, mountname = access.readmount(rootpath / ".mount")
 	repo = {
-		_mountname = mountname,
-		_mountpoint = mountpoint,
 		_root = rootpath,
 	}
+	access.readmount(repo)
 end
 
 function localvfs.repo()
