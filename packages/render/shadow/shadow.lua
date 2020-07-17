@@ -6,7 +6,7 @@ local setting	= require "setting"
 local fbmgr		= require "framebuffer_mgr"
 local samplerutil = require "sampler"
 
-local function calc_crop_matrix()
+local function calc_bias_matrix()
 	-- topleft origin and homogeneous depth matrix
 	local m = {
 		0.5, 0.0, 0.0, 0.0,
@@ -27,7 +27,7 @@ local function calc_crop_matrix()
 	return math3d.ref(math3d.matrix(m))
 end
 
-local sm_crop_matrix = calc_crop_matrix()
+local sm_bias_matrix = calc_bias_matrix()
 
 local homogeneous_depth_scale_offset = math3d.ref(math3d.vector(0.5, 0.5, 0.0, 0.0))
 local normal_depth_scale_offset = math3d.ref(math3d.vector(1.0, 0.0, 0.0, 0.0))
@@ -149,7 +149,7 @@ end
 local crop_matrices = {}
 
 local spiltunit = 1 / csm_setting.split_num
-local function calc_viewport_matrix(csm_idx)
+local function calc_crop_matrix(csm_idx)
 	local offset = spiltunit * (csm_idx - 1)
 	return math3d.matrix(
 		spiltunit, 0.0, 0.0, 0.0,
@@ -159,8 +159,8 @@ local function calc_viewport_matrix(csm_idx)
 end
 
 for csm_idx=1, csm_setting.split_num do
-	local vp_crop = calc_viewport_matrix(csm_idx)
-	crop_matrices[#crop_matrices+1] = math3d.ref(math3d.mul(vp_crop, sm_crop_matrix))
+	local vp_crop = calc_crop_matrix(csm_idx)
+	crop_matrices[#crop_matrices+1] = math3d.ref(math3d.mul(vp_crop, sm_bias_matrix))
 end
 
 

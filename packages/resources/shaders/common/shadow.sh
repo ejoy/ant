@@ -43,7 +43,7 @@ bool is_proj_texcoord_in_range(vec4 texcoord, float minv, float maxv)
 
 float hardShadow(
 	shadow_sampler_type _sampler,
-	vec4 _shadowCoord, float _bias)
+	vec4 _shadowCoord, float _bias, int cascadeidx)
 {
 	// vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
 
@@ -69,8 +69,16 @@ float hardShadow(
 	return step(receiver, occluder);
 #else
 	vec4 coord = _shadowCoord;
-	coord.z += _bias;
-	return shadow2DProj(_sampler, coord);
+	coord.z -= _bias;
+
+	vec2 t = coord.xy / coord.w;
+
+	float fidx = float(cascadeidx);
+	if (0.25 * fidx <= t.x && t.x <= 0.25 * (fidx+1) &&
+		0.0 < t.y && t.y < 1.0){
+		return shadow2DProj(_sampler, coord);
+	}
+	return 1.0f;
 #endif
 }
 
@@ -109,6 +117,6 @@ float shadow_visibility(float distanceVS, vec4 posWS)
 	mat4 m = u_csm_matrix[cascadeidx];
 	vec4 shadowcoord = mul(m, posWS);
 
-	return max(0.15, hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
+	return max(0.15, hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias, cascadeidx));
 }
 #endif //__SHADER_SHADOW_SH__

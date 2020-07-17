@@ -4,7 +4,7 @@ data:
   mesh: ./plane.meshbin
   name: "test shadow plane"
   scene_entity: true
-  state: 5
+  state: 7
   transform:
       r: {0, 0, 0, 1}
       s: {500, 1, 500, 0}
