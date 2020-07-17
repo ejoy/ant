@@ -12,7 +12,7 @@ local ies = world:interface "ant.scene|ientity_state"
 
 local imaterial = world:interface "ant.asset|imaterial"
 local queue = require "queue"
-local scene = require "scene"
+local prefab_view = require "prefab_view"
 local utils = require "mathutils"
 
 local move_axis
@@ -549,7 +549,7 @@ local testconeeid
 function gizmo_sys:post_init()
 	camera_eid = world:singleton_entity "main_queue".camera_eid
 
-	scene:set_root(world:create_entity{
+	prefab_view:set_root(world:create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
@@ -559,7 +559,7 @@ function gizmo_sys:post_init()
 			name = "Root",
 		}
 	})
-	
+	print("state : ", ies.create_state "visible|selectable")
 	testcylinder = world:create_entity {
 		policy = {
 			"ant.render|render",
@@ -579,7 +579,7 @@ function gizmo_sys:post_init()
 			name = "cylinder",
 		}
 	}
-	scene:add(testcylinder)
+	prefab_view:add(testcylinder)
 
 	testcubeid = world:create_entity {
 		policy = {
@@ -602,7 +602,7 @@ function gizmo_sys:post_init()
 	}
 	imaterial.set_property(testcubeid, "u_color", {0.5, 0.5, 0.5, 1})
 
-	scene:add(testcubeid)
+	prefab_view:add(testcubeid)
 	world:pub { "Scene", "create", testcubeid }
 
 	testconeeid = world:create_entity{
@@ -625,7 +625,7 @@ function gizmo_sys:post_init()
 		},
 	}
 	imaterial.set_property(testconeeid, "u_color", {0, 0.5, 0.5, 1})
-	scene:add(testconeeid)
+	prefab_view:add(testconeeid)
 	world:pub { "Scene", "create", testconeeid }
 
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
