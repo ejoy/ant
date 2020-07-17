@@ -610,9 +610,8 @@ math3d_aabb_points(struct lastack *LS, const float *aabb, float *points[8]){
 }
 
 void
-math3d_aabb_expand(struct lastack *LS, const float *aabb, float e[4]){
+math3d_aabb_expand(struct lastack *LS, const float *aabb, const float e[4]){
 	glm::mat4 &m = allocmat(LS);
-	const glm::mat4 &cm = MAT(aabb);
 	m[0] = CAABB_MIN(aabb) - VEC(e);
 	m[0][3] = 1.f;
 	m[1] = CAABB_MAX(aabb) + VEC(e);
