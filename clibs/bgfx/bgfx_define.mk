@@ -13,6 +13,7 @@ BGFX3RDINC = -I$(BGFXSRC)/3rdparty -I$(BGFXSRC)/examples/common
 
 BXLIB = -lbx$(MODE)
 BIMGLIB = -lbimg$(MODE)
+BIMGDECODELIB=-lbimg_decode$(MODE)
 
 ifeq "$(PLAT)" "mingw"
 BXLIB += -lpsapi

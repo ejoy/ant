@@ -122,6 +122,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rp3d", "rp3d.vcxproj", "{36
 		{AF8C0252-364F-4D3B-B35E-F3392EEA620B} = {AF8C0252-364F-4D3B-B35E-F3392EEA620B}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "image", "image.vcxproj", "{B2EFF699-8A9E-40F2-9994-6FB1F3A67467}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -224,6 +226,10 @@ Global
 		{36C6CFE5-E334-4216-A5BB-371D0655EB53}.Debug|x64.Build.0 = Debug|x64
 		{36C6CFE5-E334-4216-A5BB-371D0655EB53}.Release|x64.ActiveCfg = Release|x64
 		{36C6CFE5-E334-4216-A5BB-371D0655EB53}.Release|x64.Build.0 = Release|x64
+		{B2EFF699-8A9E-40F2-9994-6FB1F3A67467}.Debug|x64.ActiveCfg = Debug|x64
+		{B2EFF699-8A9E-40F2-9994-6FB1F3A67467}.Debug|x64.Build.0 = Debug|x64
+		{B2EFF699-8A9E-40F2-9994-6FB1F3A67467}.Release|x64.ActiveCfg = Release|x64
+		{B2EFF699-8A9E-40F2-9994-6FB1F3A67467}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

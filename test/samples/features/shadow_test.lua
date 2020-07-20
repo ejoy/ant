@@ -47,7 +47,7 @@ function st_sys:init()
     local eid = computil.create_plane_entity(
 		{t = {0, 0, 0, 1}, s = {50, 1, 50, 0}},
 		"/pkg/ant.resources/materials/mesh_shadow.material",
-		"test shadow plane")
+		"test_shadow_plane", nil, true)
 
 	imaterial.set_property(eid, "u_basecolor_factor", {0.8, 0.8, 0.8, 1})
 end

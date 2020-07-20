@@ -156,16 +156,21 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
 	}
 end
 
-function ientity.create_plane_entity(srt, materialpath, name, entity_info)
+function ientity.create_plane_entity(srt, materialpath, name, entity_info, enable_shadow)
 	local policy = {
 		"ant.render|render",
 		"ant.general|name",
 	}
 
+	local whichstate = "visible|selectable"
+	if enable_shadow then
+		whichstate = whichstate .. "|cast_shadow"
+	end
+
 	local data = {
 		transform = srt or {},
 		material = materialpath,
-		state = ies.create_state "visible|selectable",
+		state = ies.create_state(whichstate),
 		name = name or "Plane",
 		scene_entity = true,
 		mesh = get_plane_mesh(),

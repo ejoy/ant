@@ -30,13 +30,16 @@ bimg:
 bgfx: bx
 	$(BGFX_MAKE_CMD) bgfx
 
-bgfx-shared-lib: bgfx bimg
+bimg_decode: bimg bx
+	$(BGFX_MAKE_CMD) bimg_decode
+
+bgfx-shared-lib: bgfx bimg bimg_decode
 	$(BGFX_MAKE_CMD) bgfx-shared-lib
 
 tools: bgfx
 	$(BGFX_MAKE_CMD) shaderc texturec
 
-runtime_make: bx bimg bgfx
+runtime_make: bx bimg bgfx bimg_decode
 
 TOOLSDIR = ../bin/$(PLAT)/$(MODE)
 
