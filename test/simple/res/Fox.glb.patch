@@ -1,0 +1,6 @@
+---
+file: mesh.prefab
+op: replace
+path: /2/data/transform
+value:
+    s : {0.01,0.01,0.01}
