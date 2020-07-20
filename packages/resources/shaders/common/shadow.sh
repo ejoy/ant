@@ -106,6 +106,7 @@ vec4 get_color_coverage(int cascadeidx)
 float shadow_visibility(float distanceVS, vec4 posWS)
 {
 	vec4 shadowcoord;
+	int cascadeidx = -1;
 	for (int ii = 3; ii >= 0; --ii){
 		mat4 m = u_csm_matrix[ii];
 		vec4 v = mul(m, posWS);
@@ -114,9 +115,13 @@ float shadow_visibility(float distanceVS, vec4 posWS)
 		if (0.25 * fidx <= t.x && t.x <= 0.25 * (fidx+1) &&
 			0.0 < t.y && t.y < 1.0){
 			shadowcoord = v;
+			cascadeidx = ii;
 		}
 	}
-	
-	return max(0.15, hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
+
+	if (cascadeidx >= 0)
+		return max(0.1, hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
+
+	return 1.0;
 }
 #endif //__SHADER_SHADOW_SH__
