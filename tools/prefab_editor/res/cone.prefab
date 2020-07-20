@@ -1,6 +1,6 @@
 ---
 policy:
-  ant.render|light
+  ant.render|render
   ant.general|name
   ant.scene|hierarchy_policy
   ant.objcontroller|select

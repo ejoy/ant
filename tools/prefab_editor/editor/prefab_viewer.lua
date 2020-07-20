@@ -49,10 +49,11 @@ function event.init(pw, ph)
 end
 
 function event.dropfiles(filelst)
-    task.create(function()
-        import_prefab(filelst[1], VIEWER .. "root.glb")
-        world:pub {"instance_prefab", VIEWER .. "root.glb|mesh.prefab"}
-    end)
+    -- task.create(function()
+    --     import_prefab(filelst[1], VIEWER .. "root.glb")
+    --     world:pub {"instance_prefab", VIEWER .. "root.glb|mesh.prefab"}
+    -- end)
+    world:pub {"OnDropFiles", filelst}
 end
 
 function event.update()
