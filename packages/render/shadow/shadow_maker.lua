@@ -245,14 +245,31 @@ function sm:refine_camera()
 		if math3d.aabb_isvalid(sceneaabb) then
 			local camera_rc = world[se.camera_eid]._rendercache
 
-			local frustm_points_WS = math3d.frustum_points(camera_rc.viewprojmat)
-			local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
+			local function calc_refine_frustum_corners(rc)
+				local frustm_points_WS = math3d.frustum_points(rc.viewprojmat)
+				local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
+	
+				local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
+				local max_frustum_aabb_WS = math3d.aabb_merge(sceneaabb, frustum_aabb_WS)
+				local _, extents = math3d.aabb_center_extents(scene_frustum_aabb_WS)
+				extents = math3d.mul(0.1, extents)
+				scene_frustum_aabb_WS = math3d.aabb_expand(scene_frustum_aabb_WS, extents)
+				
+				local max_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, max_frustum_aabb_WS)
+				local max_n, max_f = math3d.index(math3d.index(max_frustum_aabb_VS, 1), 3), math3d.index(math3d.index(max_frustum_aabb_VS, 2), 3)
 
-			local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
-			local _, extents = math3d.aabb_center_extents(scene_frustum_aabb_WS)
-			extents = math3d.mul(0.1, extents)
-			scene_frustum_aabb_WS = math3d.aabb_expand(scene_frustum_aabb_WS, extents)
-			local aabb_corners_WS = math3d.aabb_points(scene_frustum_aabb_WS)
+				local scene_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, scene_frustum_aabb_WS)
+
+				local minv, maxv = math3d.index(scene_frustum_aabb_VS, 1), math3d.index(scene_frustum_aabb_VS, 2)
+				minv, maxv = math3d.set_index(minv, 3, max_n), math3d.set_index(maxv, 3, max_f)
+				scene_frustum_aabb_VS = math3d.aabb(minv, maxv)
+				
+				scene_frustum_aabb_WS = math3d.aabb_transform(rc.worldmat, scene_frustum_aabb_VS)
+				return math3d.aabb_points(scene_frustum_aabb_WS)
+			end
+
+			local aabb_corners_WS = calc_refine_frustum_corners(camera_rc)
+
 			local lightdir = math3d.index(camera_rc.worldmat, 3)
 			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
 		end
