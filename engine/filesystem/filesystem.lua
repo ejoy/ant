@@ -1,5 +1,5 @@
 local lfs = require "filesystem.local"
-local vfs = require "vfs.simplefs"
+local vfs = require "vfs"
 local nio = io
 
 local function errmsg(err, filename, real_filename)
@@ -179,10 +179,14 @@ function path_mt:is_relative()
 end
 
 function path_mt:list_directory()
-    local next = vfs.each(self._value)
+    local list = vfs.list(self._value)
+    if not list then
+        return function ()
+        end
+    end
     local name
     return function()
-        name = next()
+        name = next(list, name)
         if not name then
             return
         end

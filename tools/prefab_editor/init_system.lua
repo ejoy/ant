@@ -9,6 +9,9 @@ local imgui      = require "imgui"
 --local prefab_mgr = require "prefab_manager"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local worldedit = require "worldedit"(world)
+local lfs  = require "filesystem.local"
+local fs   = require "filesystem"
+local vfs = require "vfs"
 local root
 local entities = {}
 local prefab
@@ -31,8 +34,19 @@ local function normalizeAabb()
     iom.set_srt(root, math3d.mul(transform, iom.srt(root)))
 end
 
+local function LoadImguiLayout(filename)
+    local rf = lfs.open(filename, "rb")
+    if rf then
+        local setting = rf:read "a"
+        rf:close()
+        imgui.util.LoadIniSettings(setting)
+    end
+end
+
 function m:init()
     imgui.setDockEnable(true)
+    LoadImguiLayout(vfs.repo()._root .. "/" .. "imgui.layout")
+
 	--prefab_mgr:init(world)
     entity.create_procedural_sky()
     local e = world:singleton_entity "main_queue"

@@ -12,7 +12,6 @@ local fw = require "filewatch"
 local repo_new = require "repo".new
 local protocol = require "protocol"
 local network = require "network"
-local vfs = require "vfs.simplefs"
 local lfs = require "filesystem.local"
 local debugger = require "debugger"
 
@@ -21,6 +20,13 @@ local WORKDIR = lfs.current_path()
 local watch = {}
 local repos = {}
 local clients = {1}
+
+local function vfsjoin(dir, file)
+    if file:sub(1, 1) == '/' or dir == '' then
+        return file
+    end
+    return dir:gsub("(.-)/?$", "%1") .. '/' .. file
+end
 
 local function split(path)
 	local r = {}
@@ -288,7 +294,7 @@ local function filewatch()
 				local rel_path = table.concat(elems, "/", i+1, #elems)
 				if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
 					for _, v in ipairs(tree) do
-						local newpath = vfs.join(v.url, rel_path)
+						local newpath = vfsjoin(v.url, rel_path)
 						print('[FileWatch]', type, newpath)
 						v.repo:touch(newpath)
 					end

@@ -7,8 +7,8 @@ local iss = world:interface "ant.scene|iscenespace"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
+local vfs = require "vfs"
 local prefab_view = require "prefab_view"
---local prefab_mgr = require "prefab_manager"
 
 local function ONCE(t, s)
     if not s then return t end
@@ -177,7 +177,15 @@ local function showMenu()
         if imgui.widget.BeginMenu("Edit") then
             if imgui.widget.MenuItem("Undo", "CTRL+Z") then
             end
+
             if imgui.widget.MenuItem("Redo", "CTRL+Y", false, false) then
+            end
+
+            if imgui.widget.MenuItem("SaveUILayout") then
+                local setting = imgui.util.SaveIniSettings()
+                local wf = assert(lfs.open(vfs.repo()._root .. "/" .. "imgui.layout", "wb"))
+                wf:write(setting)
+                wf:close()
             end
             imgui.widget.EndMenu()
         end

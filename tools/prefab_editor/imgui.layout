@@ -1,0 +1,42 @@
+[Window][DockSpace Demo]
+Pos=0,62
+Size=1280,658
+Collapsed=0
+
+[Window][Scene]
+Pos=0,62
+Size=225,436
+Collapsed=0
+DockId=0x00000001,0
+
+[Window][Inspector]
+Pos=969,62
+Size=311,436
+Collapsed=0
+DockId=0x00000004,0
+
+[Window][ResourceBrowser]
+Pos=0,500
+Size=1280,220
+Collapsed=0
+DockId=0x00000006,0
+
+[Window][Debug##Default]
+Pos=60,60
+Size=400,400
+Collapsed=0
+
+[Window][Controll]
+Pos=0,23
+Size=1280,40
+Collapsed=0
+
+[Docking][Data]
+DockSpace       ID=0x3BC79352 Window=0x4647B76E Pos=0,62 Size=1280,658 Split=Y
+  DockNode      ID=0x00000005 Parent=0x3BC79352 SizeRef=1280,436 Split=X
+    DockNode    ID=0x00000003 Parent=0x00000005 SizeRef=967,658 Split=X
+      DockNode  ID=0x00000001 Parent=0x00000003 SizeRef=225,658 Selected=0x18B8C0DE
+      DockNode  ID=0x00000002 Parent=0x00000003 SizeRef=740,658 CentralNode=1
+    DockNode    ID=0x00000004 Parent=0x00000005 SizeRef=311,658 Selected=0xF02CD328
+  DockNode      ID=0x00000006 Parent=0x3BC79352 SizeRef=1280,220 Selected=0xACA40541
+
