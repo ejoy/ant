@@ -5,63 +5,6 @@ local datalist = require "datalist"
 
 local assetmgr = {}
 
-local function split(str)
-    local r = {}
-    str:gsub('[^|]*', function (w) r[#r+1] = w end)
-    return r
-end
-
-local glb = {}
-
-function assetmgr.unload_glb(filename)
-	local lst = glb[filename]
-	if not lst then
-		return
-	end
-	local tmp = {}
-	for i, f in ipairs(lst) do
-		tmp[i] = f
-	end
-	for _, f in ipairs(tmp) do
-		resource.unload(f)
-		cr.clean(f)
-	end
-    cr.clean(filename)
-end
-
-local function glb_load(path)
-	local lst = split(path)
-	if #lst <= 1 then
-		return
-	end
-	local t = glb[lst[1]]
-	if t then
-		t[#t+1] = path
-	else
-		glb[lst[1]] = {path}
-	end
-end
-
-local function glb_unload(path)
-	local lst = split(path)
-	if #lst <= 1 then
-		return
-	end
-	local t = glb[lst[1]]
-	if not t then
-		return
-	end
-	for i, v in ipairs(t) do
-		if v == path then
-			table.remove(t, i)
-			if #t == 0 then
-				glb[lst[1]] = nil
-			end
-			break
-		end
-	end
-end
-
 local CURPATH = {}
 local function push_currentpath(path)
 	CURPATH[#CURPATH+1] = path:match "^(.-)[^/|]*$"
@@ -85,7 +28,6 @@ local function initialize()
 	initialized = true
 	local function loader(filename, data)
 		local ext = filename:match "[^.]*$"
-		glb_load(filename)
 		local world = data
 		local res
 		push_currentpath(filename)
@@ -95,7 +37,6 @@ local function initialize()
 	end
 	local function unloader(filename, data, res)
 		local ext = filename:match "[^.]*$"
-		glb_unload(filename)
 		local world = data
 		require("ext_" .. ext).unloader(res, world)
 	end
@@ -122,7 +63,7 @@ function assetmgr.load_fx(fx, setting)
 			fx.shader[k] = absolute_path(v)
 		end
 	end
-	return cr.compile_fx(fx, setting)
+	return cr.load_fx(fx, setting)
 end
 
 return assetmgr

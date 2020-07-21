@@ -1,3 +1,9 @@
+package.path = table.concat({
+    "engine/?.lua",
+    "engine/?/?.lua",
+    "?.lua",
+}, ";")
+
 debug.setcstacklimit(200)
 
 if __ANT_RUNTIME__ then

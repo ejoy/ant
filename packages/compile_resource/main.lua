@@ -23,14 +23,10 @@ end
 
 local compile = require "compile"
 
---TODO
-local function init()
-    local os = require "platform".OS
-    local renderer = import_package "ant.render".hwi.get_caps().rendererType
-    local identity = (os.."_"..renderer):lower()
-    fx.init(identity)
-    compile.register("glb", identity)
-    compile.register("texture", identity)
+local function set_identity(v)
+    fx.set_identity(v)
+    compile.set_identity("glb", v)
+    compile.set_identity("texture", v)
 end
 
 local function read_file(filename)
@@ -41,9 +37,10 @@ local function read_file(filename)
 end
 
 return {
-    init = init,
+    set_identity = set_identity,
     compile = compile.compile,
     clean = compile.clean,
-    compile_fx = fx.loader,
+    compile_fx = fx.compile,
+    load_fx = fx.loader,
     read_file = read_file,
 }
