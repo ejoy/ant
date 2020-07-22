@@ -15,6 +15,7 @@ data:
         tile_height : 2
         section_size: 2
         element_size: 7
+        heightmap: /pkg/ant.resources.binary/terrain/heightmaps/test.png
     collider:
         terrain:
             ---

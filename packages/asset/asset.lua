@@ -77,6 +77,15 @@ local function absolute_path(path)
 	return base .. (path:match "^%./(.+)$" or path)
 end
 
+local extmapper = {
+	bmp = "image", png = "image",
+}
+
+local function require_ext(ext)
+	ext = extmapper[ext] or ext
+	return require("ext_" .. ext)
+end
+
 local initialized = false
 local function initialize()
 	if initialized then
@@ -89,7 +98,7 @@ local function initialize()
 		local world = data
 		local res
 		push_currentpath(filename)
-		res = require("ext_" .. ext).loader(filename, world)
+		res = require_ext(ext).loader(filename, world)
 		pop_currentpath()
 		return res
 	end
@@ -97,7 +106,7 @@ local function initialize()
 		local ext = filename:match "[^.]*$"
 		glb_unload(filename)
 		local world = data
-		require("ext_" .. ext).unloader(res, world)
+		require_ext(ext).unloader(res, world)
 	end
 	resource.register(loader, unloader)
 end

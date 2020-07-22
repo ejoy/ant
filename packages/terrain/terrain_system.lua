@@ -7,8 +7,56 @@ local renderpkg = import_package 'ant.render'
 local declmgr	= renderpkg.declmgr
 
 local math3d	= require "math3d"
+local terrain_module = require "terrain"
+
+local ies = world:interface "ant.scene|ientity_state"
 
 local t = ecs.component "terrain"
+function t:init()
+	self.tile_width		= self.tile_width	or 1
+	self.tile_height	= self.tile_height	or 1
+	self.section_size	= self.section_size or 2
+	self.elem_size		= self.elem_size	or 7
+	self.grid_unit		= self.grid_unit	or 1
+	return self
+end
+
+local tm = ecs.transform "terrain_mesh"
+function tm.process_prefab(e)
+	local terrain = e._terrain
+	local tilelen = terrain.section_size * terrain.elem_size
+	local gridwidth, gridheight = terrain.tile_width * tilelen, terrain.tile_height * tilelen
+	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
+	local numindices = terrain.section_size * terrain.section_size * 2 * 3
+
+	local renderdata = terrain_module.create_render_data()
+	local indices = renderdata:init_index_buffer(terrain.section_size, terrain.section_size)
+	local positions, normals = renderdata:init_vertex_buffer(gridwidth, gridheight, terrain.heightfield)
+	terrain.renderdata = renderdata
+
+	local numvertices = (gridwidth + 1) * (gridheight + 1)
+	e.mesh = world.component "mesh" {
+		vb = {
+			start = 0,
+			num = numvertices,
+			{
+				declname = "p3",
+				memory = {positions, pos_decl.stride * numvertices},
+			},
+			{
+				declname = "n3",
+				memory = {normals, normal_decl.stride * numvertices},
+			},
+		},
+		ib = {
+			start = 0,
+			num = numindices,
+			memory = {indices, numindices * 4}
+		}
+	}
+end
+
+local bt = ecs.transform "build_terrain"
 
 local function is_power_of_2(n)
 	if n ~= 0 then
@@ -17,103 +65,139 @@ local function is_power_of_2(n)
 	end
 end
 
-local terrain_module = require "terrain"
-
-local function tile_length(tc)
-	return tc.section_size * tc.element_size
+local function tile_length(t)
+	return t.section_size * t.element_size
 end
 
-function t:init()
-	
-	if self.ref_path then
-		self.tile_width = self.tile_width or 1
-		self.tile_height = self.tile_height or 1
-		self.section_size = self.section_size or 1
-		self.element_size = self.element_size or 7
+function bt.process_prefab(e)
+	local terrain = e.terrain
 
-		local tlen = tile_length(self)
-		local gridwidth, gridheight = self.tile_width * tlen, self.tile_height * tlen
-	else
-		if self.tile_width == nil or self.tile_height == nil then
-			error(string.format("terrain data must provide if not from height field file"))
-		end
-		self.num_title = self.tile_width * self.tile_height
-		self.num_section = self.num_title * self.section_size * self.section_size
-
-		if not is_power_of_2(self.element_size+1) then
-			error(string.foramt("element size must be power of two - 1:%d", self.element_size))
-		end
-
-		self.num_element = self.num_section * self.element_size * self.element_size
-		local tlen = tile_length(self)
-
-		local gridwidth, gridheight = self.tile_width * tlen, self.tile_height * tlen
-		local hf_width, hf_height = gridwidth+1, gridheight+1
-		local heightfield = {hf_width, hf_height}
-
-		--TODO: need init aabb with heightfield data
-		local data = {}
-		data.bounding = {aabb = math3d.ref(math3d.aabb({-hf_width, 0, -hf_height}, {hf_width, 0, hf_height}))}
-		heightfield[3] = terrain_module.alloc_heightfield(hf_width, hf_height)
-		self.grid_unit = self.grid_unit or 1
-
-		data.heightfield = heightfield
-		assert("terrain_module.create should create terrain object, it should include terrain data")
-		data.terrain_vertices, data.terrain_indices, data.terrain_normaldata = terrain_module.create(gridwidth, gridheight, self.grid_unit, heightfield)
-
-		self._data = data
+	if not is_power_of_2(terrain.element_size+1) then
+		error(string.foramt("element size must be power of two - 1:%d", terrain.element_size))
 	end
-	return self
-end
 
-local iterrain_class = ecs.interface "terrain"
-local iterrain
-
-function iterrain_class.grid_width(tc)
-	return tc.tile_width * tile_length(tc)
-end
-
-function iterrain_class.grid_height(tc)
-	return tc.tile_height * tile_length(tc)
-end
-
-function iterrain_class.calc_min_max_height(tc)
-	return terrain_module.calc_min_max_height(tc.heightfield)
-end
-
-function iterrain_class.heightfield(tc)
-	return tc.heightfield
-end
-
-iterrain = world:interface "ant.terrain|terrain"
-
-local trt = ecs.transform "terrain_transform"
-
-function trt.process_entity(e)
-	local terraincomp 	= e.terrain
-	local terraindata = terraincomp._data
-
-	local gridwidth, gridheight = iterrain.grid_width(terraincomp), iterrain.grid_height(terraincomp)
-	local numvertices = (gridwidth + 1) * (gridheight + 1)
-	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
-	local numindices = gridwidth * gridheight * 2 * 3
-	e.mesh = world.component "mesh" {
-		vb = {
-			start = 1,
-			num = numvertices,
-			{
-				declname = "p3",
-				memory = {terraindata.terrain_vertices, numvertices * pos_decl.stride},
-			},
-			{
-				declname = "n3",
-				memory = {terraindata.terrain_normaldata, numvertices * normal_decl.stride},
-			},
-		},
-		ib = {
-			start = 1,
-			num = numindices,
-			memory = {terraindata.terrain_indices, numvertices * 4},
-		}
+	local num_title	= terrain.tile_width * terrain.tile_height
+	local t = {
+		tile_width	= terrain.tile_width,
+		tile_height	= terrain.tile_height,
+		section_size= terrain.section_size,
+		elem_size	= terrain.elem_size,
+		grid_unit	= terrain.grid_unit,
+		num_title	= num_title,
+		num_section = num_title * terrain.section_size * terrain.section_size,
 	}
+
+	local tilelen = terrain.section_size * terrain.element_size
+
+	local gridwidth, gridheight = terrain.tile_width * tilelen, terrain.tile_height * tilelen
+
+	local hf_width, hf_height = gridwidth+1, gridheight+1
+	t.bounding = {aabb = math3d.ref(math3d.aabb({-hf_width, 0, -hf_height}, {hf_width, 0, hf_height}))}
+
+	local hmwidth, hmheight, hmdata
+	if terrain.heightmap then
+		local hminfo = assetmgr.resource(terrain.heightmap, world)
+		hmwidth, hmheight, hmdata = hminfo.width, hminfo.height, hminfo.data
+	else
+		hmwidth, hmheight = hf_width, hf_height
+	end
+
+	t.heightfield = {
+		hmwidth, hmheight,
+		terrain_module.alloc_heightfield(hmwidth, hmheight, hmdata)
+	}
+	e._terrain = t
+end
+
+local iterrain = ecs.interface "terrain"
+
+function iterrain.grid_width(eid)
+	local t = world[eid]._terrain
+	return t.tile_width * tile_length(t)
+end
+
+function iterrain.grid_height(eid)
+	local t = world[eid]._terrain
+	return t.tile_height * tile_length(t)
+end
+
+function iterrain.min_max_height(eid)
+	local t = world[eid]._terrain
+	return t.min_max_height
+end
+
+function iterrain.heightfield(eid)
+	local t = world[eid]._terrain
+	return t.heightfield
+end
+
+local sma = ecs.action "section_mount"
+function sma.init(prefab, idx, terraineid)
+	local e = world[prefab[idx]]
+	e.parent = terraineid
+	local te = world[terraineid]
+	local cp = te._cache_prefab
+
+	local rc = e._rendercache
+	rc.vb = {
+		start = e.section_draw.vb_start,
+		num = e.section_draw.vb_num,
+		handles = cp.vb.handles,
+	}
+	rc.ib = cp.ib
+end
+
+local function create_render_terrain_entity(eid)
+	local e = world[eid]
+	if e.material == nil then
+		error("terrain entity need material")
+	end
+	local terrain = e._terrain
+
+	local sw = terrain.tile_width * terrain.section_size
+	local sh = terrain.tile_height * terrain.section_size
+	local section_vertexnum = (terrain.elem_size+1)
+	local numvertices = sw * section_vertexnum * sh * section_vertexnum
+	for isy=1, sh do
+		for isx=1, sw do
+			local start = ((isx-1) + (isy-1) * sw) * section_vertexnum
+			world:create_entity{
+				policy = {
+					"ant.terrain|terrain_section_render",
+					"ant.render|render",
+					"ant.scene|hierarchy_policy",
+					"ant.general|name",
+				},
+				data = {
+					name = "section" .. isx .. isy,
+					transform = {},
+					state = ies.create_state "visible|cast_shadow",
+					scene_entity=true,
+					section_draw = {
+						vb_start = start,
+						vb_num = numvertices,
+						sectionidx=isx + (isy-1) * sw
+					},
+				},
+				action = {
+					section_mount = eid,
+				}
+			}
+		end
+	end
+end
+
+local ts = ecs.system "terrain_system"
+local terrain_create_mb = world:sub{"component_register", "terrain"}
+local terrain_delete_mb = world:sub{"remove_entity", "terrain"}
+function ts.data_changed()
+	for _, _, eid in terrain_create_mb:unpack() do
+		local e = world[eid]
+		create_render_terrain_entity(eid)
+	end
+
+	for _, _, eid in terrain_delete_mb:unpack() do
+		local e= world[eid]
+
+	end
 end
