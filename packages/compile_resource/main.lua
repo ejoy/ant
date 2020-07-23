@@ -27,6 +27,7 @@ local function set_identity(v)
     fx.set_identity(v)
     compile.set_identity("glb", v)
     compile.set_identity("texture", v)
+    compile.set_identity("png", v)
 end
 
 local function read_file(filename)

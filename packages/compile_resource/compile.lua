@@ -13,6 +13,11 @@ local link = {
         binpath = fs.path "":localpath() / ".build" / "texture",
         identity = {},
     },
+    png = {
+        compiler = "png.convert",
+        binpath = fs.path "":localpath() / ".build" / "imgui_png",
+        identity = {},
+    }
 }
 
 local function split(str)
