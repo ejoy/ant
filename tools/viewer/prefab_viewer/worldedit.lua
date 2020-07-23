@@ -119,6 +119,7 @@ local function get_prefab(prefab, path)
 end
 
 local mt = {}
+mt.__index = mt
 
 function mt:prefab_template(filename)
 	local prefab = assetmgr.resource(filename, self.world)
@@ -141,6 +142,23 @@ function mt:prefab_get(prefab, path)
     return res
 end
 
+local function deepcopy(t)
+    if type(t) ~= "table" then
+        return t
+    end
+    local r = {}
+    for k, v in pairs(t) do
+        r[k] = deepcopy(v)
+    end
+    return r
+end
+
+function mt:prefab_copy(prefab)
+    local newprefab = deepcopy(prefab)
+    mgr[newprefab] = {}
+    return newprefab
+end
+
 return function(world)
-    return setmetatable({world=world}, {__index=mt})
+    return setmetatable({world=world}, mt)
 end

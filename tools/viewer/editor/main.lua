@@ -40,4 +40,6 @@ end
 function cb.dropfiles(filelst)
     event("dropfiles", filelst)
 end
+function cb.size(width, height)
+end
 editor.start(1024, 768, cb)

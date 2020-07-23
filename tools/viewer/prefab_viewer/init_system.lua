@@ -54,7 +54,9 @@ local function instancePrefab(filename)
         }
     }
     prefab = worldedit:prefab_template(filename)
+    prefab = worldedit:prefab_copy(prefab)
     entities = worldedit:prefab_instance(prefab, {root=root})
+
     worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     normalizeAabb()
     world:pub {"editor", "prefab", entities}
