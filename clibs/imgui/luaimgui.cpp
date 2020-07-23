@@ -2424,6 +2424,22 @@ cSetColumnOffset(lua_State* L) {
 }
 
 static int
+cGetColumnWidth(lua_State* L) {
+	int index = (int)luaL_optinteger(L, 1, 0) - 1;
+	float width = ImGui::GetColumnWidth(index);
+	lua_pushnumber(L, width);
+	return 1;
+}
+
+static int
+cSetColumnWidth(lua_State* L) {
+	int index = (int)luaL_checkinteger(L, 1) - 1;
+	float width = (float)luaL_checknumber(L, 2);
+	ImGui::SetColumnWidth(index, width);
+	return 0;
+}
+
+static int
 cSetNextItemWidth(lua_State * L) {
 	float w = (float)lua_tonumber(L, 1);
 	ImGui::SetNextItemWidth(w);
@@ -3383,6 +3399,8 @@ luaopen_imgui(lua_State *L) {
 		{ "GetColumnIndex", cGetColumnIndex },
 		{ "GetColumnOffset", cGetColumnOffset },
 		{ "SetColumnOffset", cSetColumnOffset },
+		{ "GetColumnWidth", cGetColumnWidth },
+		{ "SetColumnWidth", cSetColumnWidth },
 		{ "SetNextItemWidth", cSetNextItemWidth },
 		{ "SetMouseCursor", cSetMouseCursor },
 		{ NULL, NULL },
