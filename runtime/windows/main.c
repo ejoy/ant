@@ -6,9 +6,10 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <fcntl.h>
+#include <io.h>
 
 static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr, size_t wsz) {
-    int usz = WideCharToMultiByte(CP_UTF8, 0, wstr, wsz, 0, 0, NULL, NULL);
+    int usz = WideCharToMultiByte(CP_UTF8, 0, wstr, (int)wsz, 0, 0, NULL, NULL);
     if (usz <= 0) {
         luaL_error(L, "convert to utf-8 string fail.");
         return 0;
@@ -20,7 +21,7 @@ static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr, size_t 
         luaL_error(L, "convert to utf-8 string fail.");
         return 0;
     }
-    int rusz = WideCharToMultiByte(CP_UTF8, 0, wstr, wsz, ustr, usz, NULL, NULL);
+    int rusz = WideCharToMultiByte(CP_UTF8, 0, wstr, (int)wsz, ustr, usz, NULL, NULL);
     if (rusz <= 0) {
         allocf(ud, ustr, usz, 0);
         luaL_error(L, "convert to utf-8 string fail.");
