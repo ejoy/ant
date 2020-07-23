@@ -12,10 +12,12 @@ end
 
 local function loader(filename)
 	local config = datalist.parse(readfile(cr.compile(filename .. "|main.cfg")))
-	local h = bgfx.create_texture(readfile(cr.compile(filename .. "|main.bin")), config.flag)
+	local ti = {}
+	local h = bgfx.create_texture(readfile(cr.compile(filename .. "|main.bin")), config.flag, ti)
 	bgfx.set_name(h, config.name)
 	return {
 		handle = h,
+		texinfo = ti,
 		sampler = config.sampler
 	}
 end
