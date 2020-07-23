@@ -28,7 +28,12 @@ get_heightfield_data(const heightfield_data &hfdata, float percentW, float perce
 
 static inline heightfield_data
 fetch_heightfield(lua_State *L, int index){
-	heightfield_data hf;
+	heightfield_data hf = { 0 };
+	if (lua_isnoneornil(L, index)){
+		luaL_error(L, "heightfield data must provided");
+		return hf;
+	}
+
 	lua_geti(L, index, 1);
 	hf.w = (uint32_t)lua_tointeger(L, -1);
 	lua_geti(L, index, 2);
@@ -105,9 +110,9 @@ lterrain_update_vertex_buffers(lua_State *L){
 }
 
 struct render_data{
-	uint32_t *indices;
-	float *positions;
-	float *normals;
+	glm::uvec3 *indices;
+	glm::vec3 *positions;
+	glm::vec3 *normals;
 };
 
 static const char* RD_MT = "TERRAIN_RENDERDATA";
@@ -139,25 +144,21 @@ lrenderdata_init_index_buffer(lua_State *L){
 	auto rd = get_rd(L, 1);
 	const uint32_t w = (uint32_t)luaL_checkinteger(L, 2);
 	const uint32_t h = (uint32_t)luaL_checkinteger(L, 3);
+	const uint32_t pitchw = (uint32_t)luaL_checkinteger(L, 4);
 
 	const uint32_t triangle_num = w * h * 2;
-	rd->indices = new uint32_t[triangle_num * 3];
-
-	auto indices = (glm::uvec3*)rd->indices;
-
-	const uint32_t vw = w + 1;
-
+	rd->indices = new glm::uvec3[triangle_num];
 	uint32_t itriangle = 0;
 	for (uint32_t iz = 0; iz < h; ++iz){
 		for (uint32_t ix = 0; ix < w; ++ix){
 			// quad indices
-			const uint32_t idx0 = (iz * vw) + ix;
-			const uint32_t idx1 = (iz+1) * vw + ix;
-			const uint32_t idx2 = (iz * vw) + (ix + 1);
+			const uint32_t idx0 = (iz * pitchw) + ix;
+			const uint32_t idx1 = (iz+1) * pitchw + ix;
+			const uint32_t idx2 = (iz * pitchw) + (ix + 1);
 
-			const uint32_t idx3 = (iz+1) * vw + (ix + 1);
-			indices[itriangle++] = glm::uvec3(idx0, idx1, idx2);
-			indices[itriangle++] = glm::uvec3(idx3, idx2, idx1);
+			const uint32_t idx3 = (iz+1) * pitchw + (ix + 1);
+			rd->indices[itriangle++] = glm::uvec3(idx0, idx1, idx2);
+			rd->indices[itriangle++] = glm::uvec3(idx3, idx2, idx1);
 		}
 	}
 	lua_pushlightuserdata(L, rd->indices);
@@ -170,25 +171,19 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 	const uint32_t grid_width = (uint32_t)luaL_checkinteger(L, 2);
 	const uint32_t grid_height = (uint32_t)luaL_checkinteger(L, 3);
 
-	if (lua_isnoneornil(L, 4)){
-		return luaL_error(L, "heightfield data must provided");
-	}
-
 	const heightfield_data hfdata = fetch_heightfield(L, 4);
 
 	const float grid_unit = (float)luaL_optnumber(L, 5, 1.f);
 
-	const uint32_t vertex_width = grid_width 	+ 1;
-	const uint32_t vertex_height = grid_height 	+ 1;
+	const uint32_t vertex_width  = grid_width + 1;
+	const uint32_t vertex_height = grid_height + 1;
 
 	const float offsetX = (float)luaL_optnumber(L, 6, grid_width * -0.5f);
 	const float offsetZ = (float)luaL_optnumber(L, 7, grid_height * -0.5f);
 
 	const uint32_t vertex_num = vertex_width * vertex_height;
-	rd->positions = new float[vertex_num * 3];
-	rd->normals = new float[vertex_num * 3];
-	auto positions = (glm::vec3*)rd->positions;
-	auto normals = (glm::vec3*)rd->normals;
+	rd->positions = new glm::vec3[vertex_num];
+	rd->normals = new glm::vec3[vertex_num];
 
 	const float hf_percentW = hfdata.data ? hfdata.w / float(vertex_width) : 1.f, 
 				hf_percentH = hfdata.data ? hfdata.h / float(vertex_height) : 1.f;
@@ -201,14 +196,14 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 			const float z = (float(iz) + offsetZ) * grid_unit;
 
 			auto p = glm::vec3(x, y, z);
-			positions[ip] = p;
+			rd->positions[ip] = p;
 		}
 	}
 	
-	auto calc_normal = [positions](uint32_t idx0, uint32_t idx1, uint32_t idx2){
-			const auto& p0 = positions[idx0], 
-						p1 = positions[idx1], 
-						p2 = positions[idx2];
+	auto calc_normal = [rd](uint32_t idx0, uint32_t idx1, uint32_t idx2){
+			const auto& p0 = rd->positions[idx0], 
+						p1 = rd->positions[idx1], 
+						p2 = rd->positions[idx2];
 
 			const auto e0 = p1 - p0,
 						e1 = p2 - p0;
@@ -222,7 +217,7 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 			const uint32_t idx1 = (iz+1) * vertex_width + ix;
 			const uint32_t idx2 = (iz * vertex_width) + (ix + 1);
 			
-			normals[idx0] = calc_normal(idx0, idx1, idx2);
+			rd->normals[idx0] = calc_normal(idx0, idx1, idx2);
 		}
 	}
 
@@ -231,7 +226,7 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 						idx1 = (vertex_width * ii + grid_width - 1),
 						idx2 = (vertex_width * ii + 1 + grid_width);
 
-		normals[idx0] = calc_normal(idx0, idx1, idx2);
+		rd->normals[idx0] = calc_normal(idx0, idx1, idx2);
 	}
 
 	for (uint32_t ii = 0; ii < grid_width; ++ii){
@@ -239,14 +234,14 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 						idx1 = (grid_height * vertex_width + ii + 1),
 						idx2 = ((grid_height - 1) * vertex_width + ii);
 
-		normals[idx0] = calc_normal(idx0, idx1, idx2);
+		rd->normals[idx0] = calc_normal(idx0, idx1, idx2);
 	}
 
 	{
 		const uint32_t idx0 = grid_height * vertex_width + grid_width,
 						idx1 = (grid_height - 1) * vertex_width + grid_width,
 						idx2 = grid_height * vertex_width + grid_width - 1;
-		normals[idx0] = calc_normal(idx0, idx1, idx2);
+		rd->normals[idx0] = calc_normal(idx0, idx1, idx2);
 	}
 
 	lua_pushlightuserdata(L, rd->positions);

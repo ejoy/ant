@@ -27,10 +27,10 @@ function tm.process_prefab(e)
 	local tilelen = terrain.section_size * terrain.elem_size
 	local gridwidth, gridheight = terrain.tile_width * tilelen, terrain.tile_height * tilelen
 	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
-	local numindices = terrain.section_size * terrain.section_size * 2 * 3
+	local numindices = terrain.elem_size * terrain.elem_size * 2 * 3
 
 	local renderdata = terrain_module.create_render_data()
-	local indices = renderdata:init_index_buffer(terrain.section_size, terrain.section_size)
+	local indices = renderdata:init_index_buffer(terrain.elem_size, terrain.elem_size, gridwidth+1)
 	local positions, normals = renderdata:init_vertex_buffer(gridwidth, gridheight, terrain.heightfield)
 	terrain.renderdata = renderdata
 
@@ -51,6 +51,7 @@ function tm.process_prefab(e)
 		ib = {
 			start = 0,
 			num = numindices,
+			flag = "d",
 			memory = {indices, numindices * 4}
 		}
 	}
@@ -66,14 +67,14 @@ local function is_power_of_2(n)
 end
 
 local function tile_length(t)
-	return t.section_size * t.element_size
+	return t.section_size * t.elem_size
 end
 
 function bt.process_prefab(e)
 	local terrain = e.terrain
 
-	if not is_power_of_2(terrain.element_size+1) then
-		error(string.foramt("element size must be power of two - 1:%d", terrain.element_size))
+	if not is_power_of_2(terrain.elem_size+1) then
+		error(string.foramt("element size must be power of two - 1:%d", terrain.elem_size))
 	end
 
 	local num_title	= terrain.tile_width * terrain.tile_height
@@ -87,7 +88,7 @@ function bt.process_prefab(e)
 		num_section = num_title * terrain.section_size * terrain.section_size,
 	}
 
-	local tilelen = terrain.section_size * terrain.element_size
+	local tilelen = terrain.section_size * terrain.elem_size
 
 	local gridwidth, gridheight = terrain.tile_width * tilelen, terrain.tile_height * tilelen
 
@@ -96,7 +97,7 @@ function bt.process_prefab(e)
 
 	local hmwidth, hmheight, hmdata
 	if terrain.heightmap then
-		local hminfo = assetmgr.resource(terrain.heightmap, world)
+		local hminfo = assetmgr.resource(terrain.heightmap)
 		hmwidth, hmheight, hmdata = hminfo.width, hminfo.height, hminfo.data
 	else
 		hmwidth, hmheight = hf_width, hf_height
@@ -157,10 +158,12 @@ local function create_render_terrain_entity(eid)
 	local sw = terrain.tile_width * terrain.section_size
 	local sh = terrain.tile_height * terrain.section_size
 	local section_vertexnum = (terrain.elem_size+1)
-	local numvertices = sw * section_vertexnum * sh * section_vertexnum
+	local vertexwidth, vertexheight = (sw * terrain.elem_size)+1, (sh*terrain.elem_size)+1
+	local numvertices = vertexwidth * vertexheight
 	for isy=1, sh do
+		local offset = (isy-1) * vertexwidth * terrain.elem_size
 		for isx=1, sw do
-			local start = ((isx-1) + (isy-1) * sw) * section_vertexnum
+			local start = offset + terrain.elem_size * (isx-1)
 			world:create_entity{
 				policy = {
 					"ant.terrain|terrain_section_render",
@@ -176,7 +179,7 @@ local function create_render_terrain_entity(eid)
 					section_draw = {
 						vb_start = start,
 						vb_num = numvertices,
-						sectionidx=isx + (isy-1) * sw
+						sectionidx=isx + (isy-1) * sw,
 					},
 				},
 				action = {
