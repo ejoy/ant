@@ -39,5 +39,4 @@ return function (input, output)
         error "unsupport file format"
         return
     end
-    assetmgr.unload_glb(output)
 end

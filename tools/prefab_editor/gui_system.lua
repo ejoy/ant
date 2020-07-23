@@ -111,7 +111,7 @@ local function update_ui_transform(eid)
     uiData.scale[3] = Scale[3]
 end
 
-local function onSelect(eid)
+local function on_select(eid)
     uiData.eid[1] = eid
     uiData.name.text = world[eid].name
     update_ui_transform(eid)
@@ -183,6 +183,7 @@ local function showMenu()
 
             if imgui.widget.MenuItem("SaveUILayout") then
                 local setting = imgui.util.SaveIniSettings()
+                local current_path = lfs.current_path()
                 local wf = assert(lfs.open(vfs.repo()._root .. "/" .. "imgui.layout", "wb"))
                 wf:write(setting)
                 wf:close()
@@ -257,7 +258,7 @@ local function showInspector()
     for _ in imgui_windows("Inspector", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         if gizmo.target_eid then
             if uiData.eid[1] ~= gizmo.target_eid then
-                onSelect(gizmo.target_eid)
+                on_select(gizmo.target_eid)
             end
             imgui.widget.InputInt("EID", uiData.eid)
             if imgui.widget.InputText("Name", uiData.name) then
@@ -313,6 +314,22 @@ local resourceTree = nil
 local resourceRoot = "D:/Github/ant/tools/prefab_editor"
 local currentFolder = {files = {}}
 local currentFile = nil
+
+local dropFilesEvent = world:sub {"OnDropFiles"}
+
+local function on_drop_files(files)
+    local current_path = lfs.path(tostring(currentFolder[1]))
+    for k, v in pairs(files) do
+        local path = lfs.path(v)
+        local dst_path = current_path / tostring(path:filename())
+        if lfs.is_directory(path) then
+            lfs.create_directories(dst_path)
+            lfs.copy(path, dst_path, true)
+        else
+            lfs.copy_file(path, dst_path, true)
+        end
+    end
+end
 
 local function path_split(fullname)
     local root = (fullname:sub(1, 1) == "/") and "/" or ""
@@ -423,13 +440,19 @@ local function showResourceBrowser()
         local folder = currentFolder[2]
         if folder then
             for _, v in pairs(folder.files) do
-                if imgui.widget.Selectable(tostring(fs.path(v):filename()), currentFile == v) then
+                local v_path = fs.path(v)
+                if imgui.widget.Selectable(tostring(v_path:filename()), currentFile == v, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                     currentFile = v
+                    if imgui.util.IsMouseDoubleClicked(0) and v_path:equal_extension(".prefab") then
+                        world:pub {"instance_prefab", tostring(v_path)}
+                        --print(tostring(v_path))
+                    end
                 end
-                if fs.path(v):equal_extension(".material")
-                    or fs.path(v):equal_extension(".png")
-                    or fs.path(v):equal_extension(".prefab")
-                    or fs.path(v):equal_extension(".glb") then
+                
+                if v_path:equal_extension(".material")
+                    or v_path:equal_extension(".png")
+                    or v_path:equal_extension(".prefab")
+                    or v_path:equal_extension(".glb") then
                     if imgui.widget.BeginDragDropSource() then
                         imgui.widget.SetDragDropPayload("Drag", tostring(v))
                         imgui.widget.EndDragDropSource()
@@ -466,12 +489,13 @@ function m:ui_update()
             cmd_queue = value2
         end
     end
+    
+    for _, files in dropFilesEvent:unpack() do
+        on_drop_files(files)
+    end
+
     showMenu()
     showToolbar()
-    -- local x, y = imgui.cursor.GetCursorPos()
-    -- local sx, sy = imgui.cursor.GetCursorScreenPos()
-
-    -- imgui.cursor.SetCursorPos(0, 64)
     imgui.showDockSpace(0, 62)
     showSceneView()
     showInspector()

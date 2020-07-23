@@ -5,17 +5,17 @@ local stringify = require "fx.stringify"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
 local FX_CACHE = {}
-local compile
+local fxcompile
 
 if __ANT_RUNTIME__ then
-    compile = {}
-    function compile.register()
+    fxcompile = {}
+    function fxcompile.register()
     end
-    function compile.get_shader(path, stage, fx)
+    function fxcompile.get_shader(path, stage, fx)
         return (fs.path(path) / stage / fx.hash):localpath()
     end
 else
-    compile = require "fx.compile"
+    fxcompile = require "fx.compile"
 end
 
 local default_setting = {
@@ -106,7 +106,7 @@ end
 
 local function load_shader(fx, stage)
     local input = fx.shader[stage]
-    local h = bgfx.create_shader(readfile(compile.get_shader(input, stage, fx)))
+    local h = bgfx.create_shader(readfile(fxcompile.get_shader(input, stage, fx)))
     bgfx.set_name(h, input)
     return h
 end
@@ -147,12 +147,21 @@ local function loader(input, setting)
     return fx
 end
 
+local function compile(input, setting)
+    local fx = read_fx(input, setting)
+    fx.hash = sha1(stringify(fx.setting)):sub(1,7)
+    for k in pairs(fx.shader) do
+        fxcompile.get_shader(fx.shader[k], k, fx)
+    end
+end
+
 local function unloader(res)
     bgfx.destroy(assert(res.shader.prog))
 end
 
 return {
-    init = compile.init,
+    set_identity = fxcompile.set_identity,
+    compile = compile,
     loader = loader,
     unloader = unloader,
 }

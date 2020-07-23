@@ -405,7 +405,11 @@ namespace ant::lua_filesystem {
 		const fs::path& from = path::to(L, 1);
 		const fs::path& to = path::to(L, 2);
 		bool overwritten = !!lua_toboolean(L, 3);
-		fs::copy(from, to, overwritten ? fs::copy_options::overwrite_existing : fs::copy_options::none);
+        auto options = fs::copy_options::recursive;//fs::copy_options::none
+        if (overwritten) {
+            options |= fs::copy_options::overwrite_existing;
+        }
+		fs::copy(from, to, options);
 		return 0;
 		LUA_TRY_END;
 	}

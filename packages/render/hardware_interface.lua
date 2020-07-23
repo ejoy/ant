@@ -66,7 +66,9 @@ end
 
 function hw.init(args)
 	bgfx_init(args)
-	import_package "ant.compile_resource".init()
+    local os = platform.OS
+    local renderer = hw.get_caps().rendererType
+	import_package "ant.compile_resource".set_identity((os.."_"..renderer):lower())
 end
 
 function hw.dpi()

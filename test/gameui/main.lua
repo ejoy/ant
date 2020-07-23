@@ -1,8 +1,2 @@
-package.path = table.concat({
-	"engine/?.lua",
-	"engine/?/?.lua",
-	"?.lua",
-}, ";")
-
-require "bootstrap"
+dofile "engine/bootstrap.lua"
 import_package "ant.imguibase".runtime.start "ant.test.gameui"

@@ -25,6 +25,8 @@ local function normalizeAabb()
         end
     end
 
+    if not aabb then return end
+
     local aabb_mat = math3d.tovalue(aabb)
     local min_x, min_y, min_z = aabb_mat[1], aabb_mat[2], aabb_mat[3]
     local max_x, max_y, max_z = aabb_mat[5], aabb_mat[6], aabb_mat[7]
@@ -117,7 +119,7 @@ local function instancePrefab(filename)
     }
     prefab = worldedit:prefab_template(filename)
     entities = worldedit:prefab_instance(prefab, {root=root})
-    worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
+    --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     normalizeAabb()
     world:pub {"editor", "prefab", entities}
 end

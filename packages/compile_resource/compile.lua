@@ -1,19 +1,19 @@
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
-local vfs = require "vfs"
 local sha1 = require "hash".sha1
 local datalist = require "datalist"
-local cache = {}
-local link = {}
-
-local function init(ext, compiler)
-    link[ext] = {
-        compiler = compiler,
-    }
-end
-
-init("glb",     "model.convert")
-init("texture", "texture.convert")
+local link = {
+    glb = {
+        compiler = "model.convert",
+        binpath = fs.path "":localpath() / ".build" / "glb",
+        identity = {},
+    },
+    texture = {
+        compiler = "texture.convert",
+        binpath = fs.path "":localpath() / ".build" / "texture",
+        identity = {},
+    },
+}
 
 local function split(str)
     local r = {}
@@ -44,21 +44,12 @@ local function readconfig(filename)
     return datalist.parse(readfile(filename))
 end
 
-local function register(ext, identity)
-    local info = link[ext]
-    if not info then
+local function set_identity(ext, identity)
+    local cfg = link[ext]
+    if not cfg then
         error("invalid type: " .. ext)
     end
-    local root = vfs.repo()._root
-    info.compiler = info.compiler
-    if identity then
-        info.identity = identity
-        info.binpath = root / ".build" / ext / identity
-    else
-        info.binpath = root / ".build" / ext
-    end
-    lfs.create_directories(info.binpath)
-    return info
+    cfg.identity = identity
 end
 
 local function do_build(output)
@@ -103,7 +94,7 @@ local function absolute_path(base, path)
 end
 
 local function do_compile(cfg, input, output)
-    lfs.create_directory(output)
+    lfs.create_directories(output)
     local ok, err = require(cfg.compiler)(input, output, cfg.identity, function (path)
         return absolute_path(input, path)
     end)
@@ -111,22 +102,6 @@ local function do_compile(cfg, input, output)
         error("compile failed: " .. input:string() .. "\n" .. err)
     end
     create_depfile(output / ".dep", input)
-end
-
-local function clean_file(input)
-    local ext = input:extension():string():sub(2):lower()
-    local cfg = link[ext]
-    if not cfg then
-        return input
-    end
-    local keystring = input:string()
-    local cachepath = cache[keystring]
-    if cachepath then
-        cache[keystring] = nil
-        lfs.remove_all(cachepath)
-    else
-        lfs.remove_all(cfg.binpath / get_filename(input:string()))
-    end
 end
 
 local function compile_file(input)
@@ -140,15 +115,10 @@ local function compile_file(input)
         return input
     end
     local keystring = lfs.absolute(input):string():lower()
-    local cachepath = cache[keystring]
-    if cachepath then
-        return cachepath
-    end
-    local output = cfg.binpath / get_filename(keystring)
+    local output = cfg.binpath / cfg.identity / get_filename(keystring)
     if not lfs.exists(output) or not do_build(output) then
         do_compile(cfg, input, output)
     end
-    cache[keystring] = output
     return output
 end
 
@@ -161,16 +131,11 @@ local function compile_path(pathstring)
     return path
 end
 
-local function clean(pathstring)
-    return clean_file(compile_path(pathstring))
-end
-
 local function compile(pathstring)
     return compile_file(compile_path(pathstring))
 end
 
 return {
-    register = register,
+    set_identity = set_identity,
     compile = compile,
-    clean = clean,
 }

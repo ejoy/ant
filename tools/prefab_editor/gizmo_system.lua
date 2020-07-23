@@ -469,7 +469,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible",
-			transform =  {
+			transform = {
 				s = math3d.ref(math3d.vector(0.2, 10, 0.2)),
 				r = local_rotator,
 				t = cylindere_t,
@@ -477,10 +477,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			material = "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str
-		},
-		-- action = {
-        --     mount = axis_root,
-		-- },
+		}
 	}
 	iss.set_parent(cylindereid, axis_root)
 	local coneeid = world:create_entity{
@@ -492,14 +489,11 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible",
-			transform =  {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
+			transform = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
 			material = "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
-		},
-		-- action = {
-        --     mount = axis_root,
-		-- },
+		}
 	}
 	iss.set_parent(coneeid, axis_root)
 	if axis_str == "x" then
@@ -560,73 +554,73 @@ function gizmo_sys:post_init()
 		}
 	})
 	print("state : ", ies.create_state "visible|selectable")
-	testcylinder = world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-			"ant.scene|hierarchy_policy",
-			"ant.objcontroller|select",
-		},
-		data = {
-			scene_entity = true,
-			state = ies.create_state "visible|selectable",
-			transform =  {
-				s= 30,
-				t={1, 0.5, 0, 0}
-			},
-			material = "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
-			name = "cylinder",
-		}
-	}
-	prefab_view:add(testcylinder)
+	-- testcylinder = world:create_entity {
+	-- 	policy = {
+	-- 		"ant.render|render",
+	-- 		"ant.general|name",
+	-- 		"ant.scene|hierarchy_policy",
+	-- 		"ant.objcontroller|select",
+	-- 	},
+	-- 	data = {
+	-- 		scene_entity = true,
+	-- 		state = ies.create_state "visible|selectable",
+	-- 		transform =  {
+	-- 			s= 30,
+	-- 			t={1, 0.5, 0, 0}
+	-- 		},
+	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
+	-- 		mesh = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
+	-- 		name = "cylinder",
+	-- 	}
+	-- }
+	-- prefab_view:add(testcylinder)
 
-	testcubeid = world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-			"ant.scene|hierarchy_policy",
-			"ant.objcontroller|select",
-		},
-		data = {
-			scene_entity = true,
-			state = ies.create_state "visible|selectable",
-			transform =  {
-				s= 50,
-				t={0, 0.5, 1, 0}
-			},
-			material = "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-			name = "cube",
-		}
-	}
-	imaterial.set_property(testcubeid, "u_color", {0.5, 0.5, 0.5, 1})
+	-- testcubeid = world:create_entity {
+	-- 	policy = {
+	-- 		"ant.render|render",
+	-- 		"ant.general|name",
+	-- 		"ant.scene|hierarchy_policy",
+	-- 		"ant.objcontroller|select",
+	-- 	},
+	-- 	data = {
+	-- 		scene_entity = true,
+	-- 		state = ies.create_state "visible|selectable",
+	-- 		transform =  {
+	-- 			s= 50,
+	-- 			t={0, 0.5, 1, 0}
+	-- 		},
+	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
+	-- 		mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+	-- 		name = "cube",
+	-- 	}
+	-- }
+	-- imaterial.set_property(testcubeid, "u_color", {0.5, 0.5, 0.5, 1})
 
-	prefab_view:add(testcubeid)
-	world:pub { "Scene", "create", testcubeid }
+	-- prefab_view:add(testcubeid)
+	-- world:pub { "Scene", "create", testcubeid }
 
-	testconeeid = world:create_entity{
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-			"ant.scene|hierarchy_policy",
-			"ant.objcontroller|select",
-		},
-		data = {
-			scene_entity = true,
-			state = ies.create_state "visible|selectable",
-			transform = {
-				s=50,
-				t={-1, 0.5, 0}
-			},
-			material = "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
-			name = "cone"
-		},
-	}
-	imaterial.set_property(testconeeid, "u_color", {0, 0.5, 0.5, 1})
-	prefab_view:add(testconeeid)
-	world:pub { "Scene", "create", testconeeid }
+	-- testconeeid = world:create_entity{
+	-- 	policy = {
+	-- 		"ant.render|render",
+	-- 		"ant.general|name",
+	-- 		"ant.scene|hierarchy_policy",
+	-- 		"ant.objcontroller|select",
+	-- 	},
+	-- 	data = {
+	-- 		scene_entity = true,
+	-- 		state = ies.create_state "visible|selectable",
+	-- 		transform = {
+	-- 			s=50,
+	-- 			t={-1, 0.5, 0}
+	-- 		},
+	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
+	-- 		mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
+	-- 		name = "cone"
+	-- 	},
+	-- }
+	-- imaterial.set_property(testconeeid, "u_color", {0, 0.5, 0.5, 1})
+	-- prefab_view:add(testconeeid)
+	-- world:pub { "Scene", "create", testconeeid }
 
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
@@ -738,7 +732,7 @@ function gizmo_sys:post_init()
 			},
 			data = {
 				scene_entity = true,
-				state = ies.create_state "visible",
+				state = ies.create_state "visible|selectable",
 				transform = srt,
 				material = "/pkg/ant.resources/materials/t_gizmos.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
