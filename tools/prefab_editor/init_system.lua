@@ -12,6 +12,8 @@ local worldedit = require "worldedit"(world)
 local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
 local vfs = require "vfs"
+local prefab_view = require "prefab_view"
+local entity_mgr = require "common.entity_mgr"
 local root
 local entities = {}
 local prefab
@@ -47,7 +49,7 @@ end
 
 function m:init()
     imgui.setDockEnable(true)
-    LoadImguiLayout(vfs.repo()._root .. "/" .. "imgui.layout")
+    LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")
 
 	--prefab_mgr:init(world)
     entity.create_procedural_sky()
@@ -65,41 +67,12 @@ function m:init()
 	-- 	{0.8, 0.8, 0.8, 1},
 	-- 	"test shadow plane"
     -- )
+    --world:instance("res/cube.prefab", { t = {0.5, 0, 0}})
+	--imaterial.set_property(eid[1], "u_color", color)
     entity.create_grid_entity("", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
 	--local axis = entity.create_axis_entity()
     --world:instance '/pkg/tools.viewer.prefab_viewer/light_directional.prefab'
     world:instance "res/light_directional.prefab"
-	-- local res = world:instance "res/fox.glb|mesh.prefab"
-	-- world[res[3]].transform =  {s={0.01}}
-    -- world:add_policy(res[3], {
-    --     policy = {
-	-- 		"ant.objcontroller|select"
-	-- 	},
-    --     data = {
-	-- 		can_select = true,
-	-- 		name = "fox",
-	-- 	},
-    -- })
-
-    -- local cubeid = world:create_entity {
-	-- 	policy = {
-	-- 		"ant.render|render",
-	-- 		"ant.general|name",
-	-- 		"ant.objcontroller|select",
-	-- 	},
-	-- 	data = {
-	-- 		scene_entity = true,
-	--		state = ies.create_state "visible|selectable",
-	-- 		transform =  {
-	-- 			s=100,
-	-- 			t={0, 2, 0, 0}
-	-- 		},
-	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
-	-- 		mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-	-- 		name = "test_cube",
-	-- 	}
-	-- }
-	--imaterial.set_property(cubeid, "u_color", {1, 1, 1, 1})
 end
 
 local function instancePrefab(filename)
@@ -107,19 +80,30 @@ local function instancePrefab(filename)
     for _, eid in ipairs(entities) do
         world:remove_entity(eid)
     end
-
+    prefab_view:clear()
+    entities = {}
     root = world:create_entity {
         policy = {
+            "ant.general|name",
             "ant.scene|transform_policy",
         },
         data = {
+            name = "Root",
             transform = {},
-            scene_entity = true,
+            scene_entity = true
         }
     }
+    prefab_view:set_root(root)
+    entity_mgr:add_entity(root)
     prefab = worldedit:prefab_template(filename)
     entities = worldedit:prefab_instance(prefab, {root=root})
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
+    --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
+    for i, e in ipairs(entities) do
+        prefab_view:add(e, world[e].parent)
+        entity_mgr:add_entity(e, prefab)
+    end
+    
     normalizeAabb()
     world:pub {"editor", "prefab", entities}
 end

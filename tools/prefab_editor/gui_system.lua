@@ -1,14 +1,18 @@
 local ecs = ...
-local world = ecs.world
-local math3d = require "math3d"
-local imgui      = require "imgui"
-local rhwi       = import_package 'ant.render'.hwi
+local world     = ecs.world
+local math3d    = require "math3d"
+local imgui     = require "imgui"
+local rhwi      = import_package 'ant.render'.hwi
+local assetmgr  = import_package "ant.asset"
 local iss = world:interface "ant.scene|iscenespace"
 local iom = world:interface "ant.objcontroller|obj_motion"
+local ies = world:interface "ant.scene|ientity_state"
 local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
 local vfs = require "vfs"
 local prefab_view = require "prefab_view"
+local entity_mgr = require "common.entity_mgr"
+
 
 local function ONCE(t, s)
     if not s then return t end
@@ -32,14 +36,15 @@ local m = ecs.system 'gui_system'
 
 local status = {
     GizmoMode = "select",
+    GizmoSpace = "worldspace"
 }
 
 local function imguiBeginToolbar()
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.Button, 0, 0, 0, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.ButtonActive, 0, 0, 0, 0)
-    imgui.windows.PushStyleColor(imgui.enum.StyleCol.ButtonHovered, 0, 0, 0, 0)
-    imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 0)
-    imgui.windows.PushStyleVar(imgui.enum.StyleVar.FramePadding, 0, 3)
+    imgui.windows.PushStyleColor(imgui.enum.StyleCol.ButtonHovered, 0.5, 0.5, 0.5, 0)
+    imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 4, 0)
+    imgui.windows.PushStyleVar(imgui.enum.StyleVar.FramePadding, 0, 0)
 end
 
 local function imguiEndToolbar()
@@ -47,20 +52,22 @@ local function imguiEndToolbar()
     imgui.windows.PopStyleColor(3)
 end
 
-local function imguiToolbar(text, tooltip, active)
+local function imguiToolbar(icon, tooltip, active)
+    local bg_col
     if active then
-        imgui.windows.PushStyleColor(imgui.enum.StyleCol.Text, 0.8, 0.8, 0.8, 1)
+        bg_col = {0, 0, 0, 1}
     else
-        imgui.windows.PushStyleColor(imgui.enum.StyleCol.Text, 0.4, 0.4, 0.4, 1)
+        bg_col = {0.2, 0.2, 0.2, 1}
     end
-    local r = imgui.widget.Button(text)
-    imgui.windows.PopStyleColor()
+    local r = imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height,
+                {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
     if tooltip then
         imgui_tooltip(tooltip)
     end
     return r
 end
 local WidgetStartY = 23
+local toolBarHeight = 40
 local SceneWidgetWidth <const> = 200
 local PropertyWidgetWidth <const> = 320
 local ResourceBrowserHeight <const> = 256
@@ -80,8 +87,6 @@ local uiData = {
 
 local gizmo
 local cmd_queue
-
-local localSpace = {}
 
 local SELECT <const> = 0
 local MOVE <const> = 1
@@ -120,13 +125,25 @@ local function on_select(eid)
     -- uiData.mesh.text = world[eid].mesh.filename
 end
 
+local function is_editable(eid)
+    if not iom.srt(eid) or
+        not entity_mgr:is_visible(eid) or
+        entity_mgr:is_locked(eid) then
+        return false
+    end
+    return true
+end
+
+local icons = require "common.icons"(assetmgr)
+
 local function show_scene_node(node)
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     local name = world[node.eid].name
-
     local function select_or_move(eid)
         if imgui.util.IsItemClicked() then
-            gizmo:set_target(eid)
+            if is_editable(eid) then
+                gizmo:set_target(eid)
+            end
         end
         if imgui.widget.BeginDragDropSource() then
             imgui.widget.SetDragDropPayload("Drag", eid)
@@ -141,20 +158,50 @@ local function show_scene_node(node)
             imgui.widget.EndDragDropTarget()
         end
     end
-
+    local function lock_visible(eid)
+        imgui.cursor.NextColumn()
+        local icon
+        if entity_mgr:is_locked(eid) then
+            icon = icons.ICON_LOCK
+        else
+            icon = icons.ICON_UNLOCK
+        end
+        imgui.util.PushID(eid)
+        if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
+            entity_mgr:set_lock(eid, not entity_mgr:is_locked(eid))
+            --world:pub { "EntityState", "lock", eid, entity_mgr:is_locked(eid) }
+        end
+        imgui.util.PopID()
+        imgui.cursor.SameLine()
+        if entity_mgr:is_visible(eid) then
+            icon = icons.ICON_VISIBLE
+        else
+            icon = icons.ICON_UNVISIBLE
+        end
+        imgui.util.PushID(eid)
+        if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
+            entity_mgr:set_visible(eid, not entity_mgr:is_visible(eid))
+            ies.set_state(eid, "visible", entity_mgr:is_visible(eid))
+            --world:pub { "EntityState", "visible", eid, entity_mgr:is_visible(eid) }
+        end
+        imgui.util.PopID()
+        imgui.cursor.NextColumn()
+    end
     if #node.children == 0 then
         imgui.widget.TreeNode(name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
+        select_or_move(node.eid)
+        lock_visible(node.eid)
     else
-        if imgui.widget.TreeNode(name, base_flags) then
-            select_or_move(node.eid)
+        local open = imgui.widget.TreeNode(name, base_flags)
+        select_or_move(node.eid)
+        lock_visible(node.eid)
+        if open then
             for _, child in ipairs(node.children) do
                 show_scene_node(child)
             end
             imgui.widget.TreePop()
-            return
         end
     end
-    select_or_move(node.eid)
 end
 
 local function showMenu()
@@ -184,7 +231,7 @@ local function showMenu()
             if imgui.widget.MenuItem("SaveUILayout") then
                 local setting = imgui.util.SaveIniSettings()
                 local current_path = lfs.current_path()
-                local wf = assert(lfs.open(vfs.repo()._root .. "/" .. "imgui.layout", "wb"))
+                local wf = assert(lfs.open(fs.path "":localpath() .. "/" .. "imgui.layout", "wb"))
                 wf:write(setting)
                 wf:close()
             end
@@ -194,62 +241,93 @@ local function showMenu()
     end
 end
 
+local localSpace = {}
 local function showToolbar()
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, WidgetStartY)
-    imgui.windows.SetNextWindowSize(sw, 40)
+    imgui.windows.SetNextWindowSize(sw, toolBarHeight)
+    imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
+    imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0)
+    imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) do
         imguiBeginToolbar()
-        if imguiToolbar("🚫", "Select", status.GizmoMode == "select") then
+        -- if imguiToolbar(icons.ICON_UNDO, "Undo", false) then
+        --     print("undo")
+        --     world:pub { "GizmoMode", "undo" }
+        -- end
+        -- imgui.cursor.SameLine()
+        -- if imguiToolbar(icons.ICON_REDO, "Redo", false) then
+        --     print("redo")
+        --     world:pub { "GizmoMode", "redo" }
+        -- end
+        -- imgui.cursor.SameLine()
+        if imguiToolbar(icons.ICON_SELECT, "Select", status.GizmoMode == "select") then
             status.GizmoMode = "select"
             world:pub { "GizmoMode", "select" }
         end
         imgui.cursor.SameLine()
-        if imguiToolbar("🔄", "Rotate", status.GizmoMode == "rotate") then
-            status.GizmoMode = "rotate"
-            world:pub { "GizmoMode", "rotate" }
-        end
-        imgui.cursor.SameLine()
-        if imguiToolbar("🤚", "Move", status.GizmoMode == "move") then
+        if imguiToolbar(icons.ICON_MOVE, "Move", status.GizmoMode == "move") then
             status.GizmoMode = "move"
             world:pub { "GizmoMode", "move" }
         end
         imgui.cursor.SameLine()
-        if imguiToolbar("🔍", "Scale", status.GizmoMode == "scale") then
+        if imguiToolbar(icons.ICON_ROTATE, "Rotate", status.GizmoMode == "rotate") then
+            status.GizmoMode = "rotate"
+            world:pub { "GizmoMode", "rotate" }
+        end
+        imgui.cursor.SameLine()
+        if imguiToolbar(icons.ICON_SCALE, "Scale", status.GizmoMode == "scale") then
             status.GizmoMode = "scale"
             world:pub { "GizmoMode", "scale" }
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("LocalSpace", localSpace) then
-            world:pub { "GizmoMode", "localspace", localSpace[1] }
+            world:pub { "GizmoMode", "localspace", localSpace[1]}
         end
+        -- if imguiToolbar(icons.ICON_WORLD, "WorldSpace", status.GizmoSpace == "worldspace") then
+        --     status.GizmoSpace = "worldspace"
+        --     world:pub { "GizmoMode", "worldspace"}
+        -- end
+        -- imgui.cursor.SameLine()
+        -- if imguiToolbar(icons.ICON_LOCAL, "LocalSpace", status.GizmoSpace == "localspace") then
+        --     status.GizmoSpace = "localspace"
+        --     world:pub { "GizmoMode", "localspace"}
+        -- end
         imguiEndToolbar()
     end
+    imgui.windows.PopStyleColor()
+    imgui.windows.PopStyleVar(2)
 end
 
 local function showSceneView()
     local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, WidgetStartY + 39, 'F')
-    imgui.windows.SetNextWindowSize(SceneWidgetWidth, sh - ResourceBrowserHeight - (WidgetStartY + 39), 'F')
+    imgui.windows.SetNextWindowPos(0, WidgetStartY + toolBarHeight, 'F')
+    imgui.windows.SetNextWindowSize(SceneWidgetWidth, sh - ResourceBrowserHeight - (WidgetStartY + toolBarHeight), 'F')
 
-    for _ in imgui_windows("Scene", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
-        sourceEid = nil
-        targetEid = nil
-        show_scene_node(prefab_view.root)
-        if sourceEid and targetEid then
-            prefab_view:set_parent(sourceEid, targetEid)
-            local sourceWorldMat = iom.calc_worldmat(sourceEid)
-            local targetWorldMat = iom.calc_worldmat(targetEid)
-            iom.set_srt(sourceEid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
-            iss.set_parent(sourceEid, targetEid)
+    for _ in imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+        if prefab_view.root.eid > 0 then
+            imgui.cursor.Columns(2, "SceneColumns", true)
+            imgui.cursor.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - 60)
+            sourceEid = nil
+            targetEid = nil
+            show_scene_node(prefab_view.root)
+            imgui.cursor.NextColumn()
+            if sourceEid and targetEid then
+                prefab_view:set_parent(sourceEid, targetEid)
+                local sourceWorldMat = iom.calc_worldmat(sourceEid)
+                local targetWorldMat = iom.calc_worldmat(targetEid)
+                iom.set_srt(sourceEid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
+                iss.set_parent(sourceEid, targetEid)
+            end
+            imgui.cursor.Columns(1)
         end
     end
 end
 
 local function showInspector()
     local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(sw - PropertyWidgetWidth, WidgetStartY + 39, 'F')
-    imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh - ResourceBrowserHeight - (WidgetStartY + 39), 'F')
+    imgui.windows.SetNextWindowPos(sw - PropertyWidgetWidth, WidgetStartY + toolBarHeight, 'F')
+    imgui.windows.SetNextWindowSize(PropertyWidgetWidth, sh - ResourceBrowserHeight - (WidgetStartY + toolBarHeight), 'F')
     
     local oldPos = nil
     local oldRot = nil
@@ -316,6 +394,7 @@ local currentFolder = {files = {}}
 local currentFile = nil
 
 local dropFilesEvent = world:sub {"OnDropFiles"}
+local previewImages = {}
 
 local function on_drop_files(files)
     local current_path = lfs.path(tostring(currentFolder[1]))
@@ -398,6 +477,7 @@ local function showResourceBrowser()
             end
         end 
     end
+
     for _ in imgui_windows("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
         imgui.widget.Button(tostring(fs.path(resourceRoot):parent_path()))
@@ -422,7 +502,6 @@ local function showResourceBrowser()
             end
         end
         imgui.windows.PopStyleVar(1)
-
         imgui.cursor.Separator()
 
         local min_x, min_y = imgui.windows.GetWindowContentRegionMin()
@@ -430,22 +509,36 @@ local function showResourceBrowser()
         local width = imgui.windows.GetWindowContentRegionWidth() * 0.2
         local height = (max_y - min_y) * 0.5
 
-        imgui.windows.BeginChild("ChildL", width, height, false);
+        imgui.windows.BeginChild("ResourceBrowserDir", width, height, false);
         doShowBrowser(resourceTree)
         imgui.windows.EndChild()
-
         imgui.cursor.SameLine()
-
-        imgui.windows.BeginChild("ChildM1", width * 3, height, false)
+        imgui.windows.BeginChild("ResourceBrowserContent", width * 3, height, false);
         local folder = currentFolder[2]
         if folder then
             for _, v in pairs(folder.files) do
+                local icon = icons.get_file_icon(v)
+                imgui.widget.Image(icon.handle, icon.texinfo.width, icon.texinfo.height)
+                imgui.cursor.SameLine()
                 local v_path = fs.path(v)
                 if imgui.widget.Selectable(tostring(v_path:filename()), currentFile == v, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                     currentFile = v
-                    if imgui.util.IsMouseDoubleClicked(0) and v_path:equal_extension(".prefab") then
-                        world:pub {"instance_prefab", tostring(v_path)}
-                        --print(tostring(v_path))
+                    if imgui.util.IsMouseDoubleClicked(0) then
+                        local prefab_file
+                        if v_path:equal_extension(".prefab") then
+                            prefab_file = tostring(v_path)
+                        elseif v_path:equal_extension(".glb") then
+                            prefab_file = tostring(v_path) .. "|mesh.prefab"
+                        end
+                        world:pub {"instance_prefab", prefab_file}
+                        
+                    end
+                    if v_path:equal_extension(".png") then
+                        if not previewImages[currentFile] then
+                            local rp = fs.relative(v_path, fs.path(resourceRoot))
+                            local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
+                            previewImages[currentFile] = assetmgr.resource(pkg_path, true)
+                        end
                     end
                 end
                 
@@ -460,6 +553,8 @@ local function showResourceBrowser()
                 end
             end
             for _, v in pairs(folder.dirs) do
+                imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
+                imgui.cursor.SameLine()
                 if imgui.widget.Selectable(tostring(fs.path(v[1]):filename()), currentFile == v[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                     currentFile = v[1]
                     if imgui.util.IsMouseDoubleClicked(0) then
@@ -471,7 +566,17 @@ local function showResourceBrowser()
         end
         imgui.windows.EndChild()
         imgui.cursor.SameLine()
-        imgui.windows.BeginChild("ChildR", width, height, false)
+        imgui.windows.BeginChild("ResourceBrowserPreview", width, height, false);
+        
+        
+        if fs.path(currentFile):equal_extension(".png") then
+            local preview = previewImages[currentFile]
+            if preview then
+                imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
+                imgui.widget.Image(preview.handle, preview.texinfo.width, preview.texinfo.height)
+            end
+            --imgui.widget.ImageButton(tex.handle)
+        end
         imgui.windows.EndChild()
     end
     local payload = imgui.widget.GetDragDropPayload()

@@ -14,7 +14,7 @@ local imaterial = world:interface "ant.asset|imaterial"
 local queue = require "queue"
 local prefab_view = require "prefab_view"
 local utils = require "mathutils"
-
+local worldedit = require "worldedit"(world)
 local move_axis
 local rotate_axis
 local uniform_scale = false
@@ -543,85 +543,6 @@ local testconeeid
 function gizmo_sys:post_init()
 	camera_eid = world:singleton_entity "main_queue".camera_eid
 
-	prefab_view:set_root(world:create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.scene|transform_policy",
-		},
-		data = {
-			transform = {},
-			name = "Root",
-		}
-	})
-	print("state : ", ies.create_state "visible|selectable")
-	-- testcylinder = world:create_entity {
-	-- 	policy = {
-	-- 		"ant.render|render",
-	-- 		"ant.general|name",
-	-- 		"ant.scene|hierarchy_policy",
-	-- 		"ant.objcontroller|select",
-	-- 	},
-	-- 	data = {
-	-- 		scene_entity = true,
-	-- 		state = ies.create_state "visible|selectable",
-	-- 		transform =  {
-	-- 			s= 30,
-	-- 			t={1, 0.5, 0, 0}
-	-- 		},
-	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
-	-- 		mesh = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
-	-- 		name = "cylinder",
-	-- 	}
-	-- }
-	-- prefab_view:add(testcylinder)
-
-	-- testcubeid = world:create_entity {
-	-- 	policy = {
-	-- 		"ant.render|render",
-	-- 		"ant.general|name",
-	-- 		"ant.scene|hierarchy_policy",
-	-- 		"ant.objcontroller|select",
-	-- 	},
-	-- 	data = {
-	-- 		scene_entity = true,
-	-- 		state = ies.create_state "visible|selectable",
-	-- 		transform =  {
-	-- 			s= 50,
-	-- 			t={0, 0.5, 1, 0}
-	-- 		},
-	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
-	-- 		mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-	-- 		name = "cube",
-	-- 	}
-	-- }
-	-- imaterial.set_property(testcubeid, "u_color", {0.5, 0.5, 0.5, 1})
-
-	-- prefab_view:add(testcubeid)
-	-- world:pub { "Scene", "create", testcubeid }
-
-	-- testconeeid = world:create_entity{
-	-- 	policy = {
-	-- 		"ant.render|render",
-	-- 		"ant.general|name",
-	-- 		"ant.scene|hierarchy_policy",
-	-- 		"ant.objcontroller|select",
-	-- 	},
-	-- 	data = {
-	-- 		scene_entity = true,
-	-- 		state = ies.create_state "visible|selectable",
-	-- 		transform = {
-	-- 			s=50,
-	-- 			t={-1, 0.5, 0}
-	-- 		},
-	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
-	-- 		mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
-	-- 		name = "cone"
-	-- 	},
-	-- }
-	-- imaterial.set_property(testconeeid, "u_color", {0, 0.5, 0.5, 1})
-	-- prefab_view:add(testconeeid)
-	-- world:pub { "Scene", "create", testconeeid }
-
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
 		policy = {
@@ -739,6 +660,16 @@ function gizmo_sys:post_init()
 				name = "scale_cube" .. axis_name
 			}
 		}
+		-- prefab = worldedit:prefab_template(filename)
+    	-- entities = worldedit:prefab_instance(prefab, {root=root})
+		-- local eid = world:instance("res/cube.prefab", srt)
+		-- worldedit:prefab_set(prefab, "/1/data/ma", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
+		-- print("state", world[eid[1]]._rendercache.state)
+		-- if srt.t then
+		-- 	iom.set_position(eid[1], srt.t)
+		-- end
+		-- iom.set_scale(eid[1], axis_cube_scale)
+
 		imaterial.set_property(eid, "u_color", color)
 		return eid
 	end
@@ -1225,8 +1156,8 @@ function gizmo_sys:data_changed()
 			gizmo:on_mode(MOVE)
 		elseif what == "scale" then
 			gizmo:on_mode(SCALE)
-		elseif what == "localspace" then
-			localSpace = value
+		elseif what == "localspace" then-- or what == "worldspace" then
+			localSpace = value--(what == "localspace")
 			gizmo:update_axis_plane()
 			gizmo:set_rotation()
 		end
