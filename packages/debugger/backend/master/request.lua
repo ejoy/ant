@@ -1,15 +1,14 @@
 local mgr = require 'backend.master.mgr'
 local response = require 'backend.master.response'
 local event = require 'backend.master.event'
-local ev = require 'common.event'
+local ev = require 'backend.event'
 local utility = require 'remotedebug.utility'
 
 local request = {}
 
-local readyTrg = nil
 local firstWorker = true
 local terminateTimestamp
-local initializing = false
+local state = 'none'
 local config = {
     initialize = {},
     breakpoints = {},
@@ -18,10 +17,7 @@ local config = {
 }
 
 ev.on('close', function()
-    if readyTrg then
-        readyTrg:remove()
-        readyTrg = nil
-    end
+    state = "none"
     event.terminated()
 end)
 
@@ -47,8 +43,7 @@ end
 
 function request.attach(req)
     response.success(req)
-
-    initializing = true
+    state = "initializing"
     config = {
         initialize = req.arguments,
         breakpoints = {},
@@ -113,18 +108,15 @@ local function initializeWorker(w)
     })
 end
 
+ev.on('worker-ready', function(w)
+    if state == "initialized" then
+        initializeWorker(w)
+    end
+end)
+
 function request.configurationDone(req)
     response.success(req)
-    initializing = false
-
-    if readyTrg then
-        readyTrg:remove()
-        readyTrg = nil
-    end
-    readyTrg = ev.on('worker-ready', function(w)
-        initializeWorker(w)
-    end)
-
+    state = "initialized"
     for _, w in ipairs(mgr.threads()) do
         initializeWorker(w)
     end
@@ -159,10 +151,6 @@ end
 function request.setBreakpoints(req)
     local args = req.arguments
     local content = skipBOM(args.sourceContent)
-    if args.source.path and not isValidPath(args.source.path) then
-        response.error(req, ("Does not support path: `%s`"):format(args.source.path))
-        return
-    end
     for _, bp in ipairs(args.breakpoints) do
         bp.id = genBreakpointID()
         bp.verified = false
@@ -170,6 +158,12 @@ function request.setBreakpoints(req)
     response.success(req, {
         breakpoints = args.breakpoints
     })
+    -- 因为VSCode奇葩处理方式，所以无论如何都必须返回success，让它高兴。
+    -- https://github.com/microsoft/vscode/issues/85279
+    if args.source.path and not isValidPath(args.source.path) then
+        --response.error(req, ("Does not support path: `%s`"):format(args.source.path))
+        return
+    end
     if args.source.sourceReference then
         local sourceReference = args.source.sourceReference
         local w = sourceReference >> 32
@@ -179,7 +173,7 @@ function request.setBreakpoints(req)
             args.breakpoints,
             content,
         }
-        if not initializing then
+        if state == "initialized" then
             initializeWorkerBreakpoints(w, args.source, args.breakpoints, content)
         end
     else
@@ -189,7 +183,7 @@ function request.setBreakpoints(req)
             args.breakpoints,
             content,
         }
-        if not initializing then
+        if state == "initialized" then
             for _, w in ipairs(mgr.threads()) do
                 initializeWorkerBreakpoints(w, args.source, args.breakpoints, content)
             end
@@ -203,7 +197,7 @@ function request.setFunctionBreakpoints(req)
         breakpoints = {}
     })
     config.function_breakpoints = args.breakpoints
-    if not initializing then
+    if state == "initialized" then
         mgr.broadcastToWorker {
             cmd = 'setFunctionBreakpoints',
             breakpoints = args.breakpoints,
@@ -215,7 +209,7 @@ function request.setExceptionBreakpoints(req)
     local args = req.arguments
     response.success(req)
     config.exception_breakpoints = args.filters
-    if not initializing then
+    if state == "initialized" then
         mgr.broadcastToWorker {
             cmd = 'setExceptionBreakpoints',
             filters = args.filters,

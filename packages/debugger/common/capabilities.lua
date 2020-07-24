@@ -12,6 +12,7 @@ return {
     supportsLoadedSourcesRequest = true,
     supportsLogPoints = true,
     supportsTerminateRequest = true,
+    supportsClipboardContext = true,
     exceptionBreakpointFilters = {
         {
             default = false,

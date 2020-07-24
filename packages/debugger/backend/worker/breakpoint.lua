@@ -2,41 +2,26 @@ local rdebug = require 'remotedebug.visitor'
 local fs = require 'backend.worker.filesystem'
 local source = require 'backend.worker.source'
 local evaluate = require 'backend.worker.evaluate'
-local ev = require 'common.event'
+local ev = require 'backend.event'
 local hookmgr = require 'remotedebug.hookmgr'
+local parser = require 'backend.worker.parser'
 
-local breakpoints = {}
+local currentactive = {}
 local waitverify = {}
 local info = {}
 local m = {}
 local enable = false
 
-local function nextActiveLine(si, line)
-    local defines = si.definelines
-    if line > #defines then
-        return
-    end
-    local actives = si.activelines
-    local fn = defines[line]
-    while actives[line] ~= true do
-        if fn ~= defines[line] then
-            return
-        end
-        line = line + 1
-    end
-    return line
-end
-
 local function updateHook()
     if enable then
-        if next(breakpoints) == nil and next(waitverify) == nil then
+        if next(currentactive) == nil and next(waitverify) == nil then
             enable = false
-            hookmgr.break_close()
+            hookmgr.break_open(false)
         end
     else
-        if next(breakpoints) ~= nil or next(waitverify) ~= nil then
+        if next(currentactive) ~= nil or next(waitverify) ~= nil then
             enable = true
-            hookmgr.break_open()
+            hookmgr.break_open(true)
         end
     end
 end
@@ -50,20 +35,19 @@ local function hasActiveBreakpoint(bps, activeline)
     return false
 end
 
-local function updateBreakpoint(key, src, bps)
+local function updateBreakpoint(bpkey, src, bps)
     if next(bps) == nil then
-        breakpoints[key] = nil
+        currentactive[bpkey] = nil
         for proto in pairs(src.protos) do
             hookmgr.break_del(proto)
         end
     else
-        breakpoints[key] = bps
-        for proto, activeline in pairs(src.protos) do
-            if hasActiveBreakpoint(bps, activeline) then
-                activeline.bp = true
+        currentactive[bpkey] = bps
+        local lineinfo = src.lineinfo
+        for proto, key in pairs(src.protos) do
+            if hasActiveBreakpoint(bps, lineinfo[key]) then
                 hookmgr.break_add(proto)
             else
-                activeline.bp = false
                 hookmgr.break_del(proto)
             end
         end
@@ -92,25 +76,22 @@ local function valid(bp)
     return true
 end
 
-local function verifyBreakpoint(src, clientsrc, bps)
-    if not clientsrc.si then
-        return
-    end
-    local key = bpKey(src)
-    local oldBP = breakpoints[key]
+local function verifyBreakpoint(src, breakpoints)
+    local bpkey = bpKey(src)
+    local curbp = currentactive[bpkey]
+    local lineinfo = src.lineinfo
     local hits = {}
-    if oldBP then
-        for _, bp in ipairs(oldBP) do
+    local res = {}
+    if curbp then
+        for _, bp in ipairs(curbp) do
             hits[bp.realLine] = bp.statHit
         end
     end
-
-    local res = {}
-    for _, bp in ipairs(bps) do
+    for _, bp in ipairs(breakpoints) do
         if not valid(bp) then
             goto continue
         end
-        local activeline = nextActiveLine(clientsrc.si, bp.line)
+        local activeline = lineinfo[bp.line]
         if not activeline then
             goto continue
         end
@@ -138,11 +119,11 @@ local function verifyBreakpoint(src, clientsrc, bps)
         })
         ::continue::
     end
-    updateBreakpoint(key, src, res)
+    updateBreakpoint(bpkey, src, res)
 end
 
 function m.find(src, currentline)
-    local currentBP = breakpoints[bpKey(src)]
+    local currentBP = currentactive[bpKey(src)]
     if not currentBP then
         hookmgr.break_closeline()
         return
@@ -150,15 +131,32 @@ function m.find(src, currentline)
     return currentBP[currentline]
 end
 
-function m.set_bp(clientsrc, breakpoints, content)
-    local src = source.c2s(clientsrc, content)
-    if src then
-        clientsrc.si = clientsrc.si or src.si
-        verifyBreakpoint(src, clientsrc, breakpoints)
-        return
+local function calcLineInfo(src, content)
+    if not src.lineinfo then
+        if content then
+            src.lineinfo = parser(content)
+        elseif src.sourceReference then
+            src.lineinfo = parser(source.getCode(src.sourceReference))
+        end
     end
-    waitverify[bpKey(clientsrc)] = { clientsrc, breakpoints }
-    updateHook()
+    return src.lineinfo
+end
+
+function m.set_bp(clientsrc, breakpoints, content)
+    local src = source.c2s(clientsrc)
+    if src then
+        if calcLineInfo(src, content) then
+            verifyBreakpoint(src, breakpoints)
+        end
+    else
+        if content then
+            waitverify[bpKey(clientsrc)] = {
+                breakpoints = breakpoints,
+                lineinfo = parser(content),
+            }
+            updateHook()
+        end
+    end
 end
 
 function m.exec(bp)
@@ -199,25 +197,21 @@ function m.exec(bp)
     return true
 end
 
-local function sourceUpdateBreakpoint(src)
-    local key = bpKey(src)
-    local wv = waitverify[key]
+function m.newproto(proto, src, key)
+    src.protos[proto] = key
+    local bpkey = bpKey(src)
+    local wv = waitverify[bpkey]
     if wv then
-        waitverify[key] = nil
-        verifyBreakpoint(src, wv[1], wv[2])
+        waitverify[bpkey] = nil
+        src.lineinfo = wv.lineinfo
+        verifyBreakpoint(src, wv.breakpoints)
         return
     end
-    local bps = breakpoints[key]
-    if bps then
+    local bps = currentactive[bpkey]
+    if bps and src.lineinfo then
         updateBreakpoint(key, src, bps)
         return
     end
-end
-
-function m.newproto(proto, src, activeline)
-    src.protos[proto] = activeline
-    sourceUpdateBreakpoint(src)
-    return activeline.bp
 end
 
 local funcs = {}
@@ -241,12 +235,12 @@ function m.hit_funcbp(func)
 end
 
 ev.on('terminated', function()
-    breakpoints = {}
+    currentactive = {}
     waitverify = {}
     info = {}
     m = {}
     enable = false
-    hookmgr.break_close()
+    hookmgr.break_open(false)
 end)
 
 return m

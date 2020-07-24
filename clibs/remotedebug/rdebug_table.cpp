@@ -69,15 +69,11 @@ int get_kv(lua_State* L, const void* tv, unsigned int i) {
 	return 1;
 }
 
-int get_k(lua_State* L, int idx, unsigned int i) {
-	const Table* t = (const Table*)lua_topointer(L, idx);
-	if (!t) {
-		return 0;
-	}
+int get_k(lua_State* L, const void* t, unsigned int i) {
 	if (i >= hash_size(t)) {
 		return 0;
 	}
-	Node* n = &t->node[i];
+	Node* n = &((const Table*)t)->node[i];
 	if (ttisnil(gval(n))) {
 		return 0;
 	}
@@ -89,6 +85,14 @@ int get_k(lua_State* L, int idx, unsigned int i) {
 #endif
 	L->top++;
 	return 1;
+}
+
+int get_k(lua_State* L, int idx, unsigned int i) {
+	const void* t = lua_topointer(L, idx);
+	if (!t) {
+		return 0;
+	}
+	return get_k(L, t, i);
 }
 
 int get_v(lua_State* L, int idx, unsigned int i) {
