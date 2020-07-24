@@ -18,16 +18,17 @@ function t:init()
 	self.section_size	= self.section_size or 2
 	self.elem_size		= self.elem_size	or 7
 	self.grid_unit		= self.grid_unit	or 1
+	self.heightmap_scale= self.heightmap_scale or 1
 	return self
 end
 
-local function get_hieght_field_data(hf)
+local function get_hieght_field_data(hf, scale)
 	if hf then
 		local img = hf.handle
 		local w, h = img:size()
-		local d, s = img:data()
+		local d = img:data()
 		return {
-			w, h, d, s
+			w, h, d, scale
 		}
 	end
 end
@@ -42,7 +43,7 @@ function tm.process_prefab(e)
 
 	local renderdata = terrain_module.create_render_data()
 	local indices = renderdata:init_index_buffer(terrain.elem_size, terrain.elem_size, gridwidth+1)
-	local positions, normals = renderdata:init_vertex_buffer(gridwidth, gridheight, get_hieght_field_data(terrain.heightfield))
+	local positions, normals = renderdata:init_vertex_buffer(gridwidth, gridheight, get_hieght_field_data(terrain.heightfield, terrain.heightmap_scale))
 	terrain.renderdata = renderdata
 
 	local numvertices = (gridwidth + 1) * (gridheight + 1)
@@ -95,6 +96,7 @@ function bt.process_prefab(e)
 		section_size= terrain.section_size,
 		elem_size	= terrain.elem_size,
 		grid_unit	= terrain.grid_unit,
+		heightmap_scale = terrain.heightmap_scale,
 		num_title	= num_title,
 		num_section = num_title * terrain.section_size * terrain.section_size,
 	}

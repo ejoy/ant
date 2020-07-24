@@ -17,13 +17,14 @@ extern "C" {
 struct heightfield_data{
 	uint32_t w, h;
 	const float *data;
+	float scale;
 };
 static inline float
 get_heightfield_data(const heightfield_data &hfdata, float percentW, float percentH, uint32_t x, uint32_t z){
 	const uint32_t sampleX = uint32_t(x * percentW), sampleZ = uint32_t(z * percentH);
 
 	assert((sampleZ * hfdata.w + sampleX) < (hfdata.w * hfdata.h));
-	return hfdata.data[sampleZ * hfdata.w + sampleX];
+	return hfdata.data[sampleZ * hfdata.w + sampleX] * hfdata.scale;
 }
 
 static int 
@@ -132,7 +133,9 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 		hfdata.h = (uint32_t)lua_tointeger(L, -1);
 		lua_geti(L, 4, 3);
 		hfdata.data = (const float*)lua_touserdata(L, -1);
-		lua_pop(L, 3);
+		lua_geti(L, 4, 4);
+		hfdata.scale = (float)lua_tonumber(L, -1);
+		lua_pop(L, 4);
 	}
 
 	const float grid_unit = (float)luaL_optnumber(L, 5, 1.f);
