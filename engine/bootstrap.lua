@@ -17,10 +17,7 @@ end
 
 require "common.init_bgfx"
 require "filesystem"
-
-local pm = require "antpm"
-pm.initialize()
-import_package = pm.import
+require "antpm"
 
 if __ANT_RUNTIME__ then
     --require "runtime.debug"
