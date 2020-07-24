@@ -49,6 +49,11 @@ function scene:del(eid)
     return eid_node
 end
 
+function scene:clear()
+    self.root = {eid = -1, parent = -1, children = {}}
+    self.all = {}
+end
+
 function scene:set_parent(eid, peid)
     local eid_node = self.all[eid]
     local peid_node = self.all[peid]

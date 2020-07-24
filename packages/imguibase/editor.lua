@@ -57,7 +57,7 @@ local function imgui_init()
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
 		font.Create {
-			{ Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
+			--{ Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
 			{ Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
 		}
 	elseif platform.OS == "macOS" then
