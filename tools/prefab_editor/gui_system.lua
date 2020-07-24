@@ -4,6 +4,7 @@ local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package 'ant.render'.hwi
 local assetmgr  = import_package "ant.asset"
+local irq = world:interface "ant.render|irenderqueue"
 local iss = world:interface "ant.scene|iscenespace"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local ies = world:interface "ant.scene|ientity_state"
@@ -585,6 +586,10 @@ local function showResourceBrowser()
     end
 end
 
+local last_x = -1
+local last_y = -1
+local last_width = -1
+local last_height = -1
 function m:ui_update()
     for _, action, value1, value2 in eventGizmo:unpack() do
         if action == "update" or action == "ontarget" then
@@ -601,10 +606,19 @@ function m:ui_update()
 
     showMenu()
     showToolbar()
-    imgui.showDockSpace(0, 62)
+    local x, y, width, height = imgui.showDockSpace(0, WidgetStartY + toolBarHeight)
     showSceneView()
     showInspector()
     showResourceBrowser()
+
+    local dirty = false
+    if last_x ~= x then last_x = x dirty = true end
+    if last_y ~= y then last_y = y dirty = true  end
+    if last_width ~= width then last_width = width dirty = true  end
+    if last_height ~= height then last_height = height dirty = true  end
+    if dirty then
+        irq.set_view_rect(world:singleton_entity_id "main_queue", {x = x, y = y, w = width, h = height})
+    end
 end
 
 -- local function onDropFiles(files)

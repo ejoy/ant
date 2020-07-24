@@ -371,10 +371,16 @@ function irq.set_view_clear(eid, what, color, depth, stencil)
 end
 
 function irq.set_view_rect(eid, rect)
-	local rt = world[eid].render_target
+	local qe = world[eid]
+	local rt = qe.render_target
 	local vr = rt.view_rect
 	vr.x, vr.y = rect.x, rect.y
 	vr.w, vr.h = rect.w, rect.h
+
+	local camera_eid = world[eid].camera_eid
+	
+	local icamera = world:interface "ant.camera|camera"
+	icamera.set_frustum_aspect(qe.camera_eid, vr.w/vr.h)
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
 	world:pub{"component_changed", "viewport"}
 end
