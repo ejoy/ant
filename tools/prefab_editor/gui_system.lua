@@ -537,7 +537,7 @@ local function showResourceBrowser()
                         if not previewImages[currentFile] then
                             local rp = fs.relative(v_path, fs.path(resourceRoot))
                             local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
-                            previewImages[currentFile] = assetmgr.resource(pkg_path, true)
+                            previewImages[currentFile] = assetmgr.resource(pkg_path, { compile = true })
                         end
                     end
                 end
