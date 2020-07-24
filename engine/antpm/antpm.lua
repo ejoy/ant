@@ -77,8 +77,9 @@ local function initialize()
     end
 end
 
+initialize()
+import_package = import
+
 return {
     loadenv = loadenv,
-    import = import,
-    initialize = initialize,
 }

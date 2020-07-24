@@ -1,6 +1,6 @@
 local json = require 'common.json'
 local proto = require 'common.protocol'
-local ev = require 'common.event'
+local ev = require 'backend.event'
 local thread = require 'remotedebug.thread'
 local stdio = require 'remotedebug.stdio'
 

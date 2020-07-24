@@ -93,6 +93,7 @@ rlua_Number   (rlua_tonumberx) (rlua_State *L, int idx, int *isnum);
 rlua_Integer  (rlua_tointegerx) (rlua_State *L, int idx, int *isnum);
 int           (rlua_isinteger) (rlua_State *L, int idx);
 int           (rlua_iscfunction) (rlua_State *L, int idx);
+int           (rlua_isstring) (rlua_State *L, int idx);
 
 void (rlua_createtable) (rlua_State *L, int narr, int nrec);
 void (rlua_rawsetp) (rlua_State *L, int idx, const void *p);

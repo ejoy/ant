@@ -2,6 +2,7 @@ local rdebug = require 'remotedebug.visitor'
 local hookmgr = require 'remotedebug.hookmgr'
 local source = require 'backend.worker.source'
 local luaver = require 'backend.worker.luaver'
+local fs = require 'backend.worker.filesystem'
 
 local info = {}
 
@@ -56,8 +57,8 @@ local function getshortsrc(info)
 end
 
 local function findfield(t, f, level, name)
-    local loct = rdebug.copytable(t, 5000)
-    for i = 1, #loct, 3 do
+    local loct = rdebug.tablehashv(t, 5000)
+    for i = 1, #loct, 2 do
         local key, value = loct[i], loct[i+1]
         if rdebug.type(key) == 'string' then
             local skey = rdebug.value(key)
@@ -96,33 +97,44 @@ local function pushfuncname(f, info)
     end
 end
 
-local function replacewhere(msg, level)
+local function replacewhere(msg)
     local f, l = msg:find ':[-%d]+: '
-    if f then
-        msg = msg:sub(l + 1)
+    if not f then
+        if rdebug.getinfo(1, "Sl", info) then
+            msg = ('%s:%d: %s'):format(getshortsrc(info), info.currentline, msg)
+        end
+        return msg, 0
     end
-    if not rdebug.getinfo(level + 1, "Sl", info) then
-        return msg
+    local srcpath = fs.source_normalize(msg:sub(1, f-1))
+    local line = tonumber(msg:sub(f+1, l-2))
+    local message = msg:sub(l + 1)
+    local level = 1
+    while true do
+        if not rdebug.getinfo(level, "Sl", info) then
+            return ('%s:%d: %s'):format(source.clientPath(srcpath), line, message), 0
+        end
+        if line == info.currentline and srcpath == fs.source_normalize(info.source:sub(2)) then
+            return ('%s:%d: %s'):format(getshortsrc(info), info.currentline, message), level
+        end
+        level = level + 1
     end
-    return ('%s:%d: %s'):format(getshortsrc(info), info.currentline, msg)
 end
 
-return function(msg, level)
+return function(msg)
     local s = {}
-    if msg then
-        msg = replacewhere(msg, level)
-    end
+    local message, level = replacewhere(msg)
     s[#s + 1] = 'stack traceback:'
     local last = hookmgr.stacklevel()
     local n1 = ((last - level) > 21) and 10 or -1
     local opt = luaver.LUAVERSION >= 52 and "Slnt" or "Sln"
-    while rdebug.getinfo(level, opt, info) do
-        local f = rdebug.getfunc(level)
-        level = level + 1
+    local depth = level
+    while rdebug.getinfo(depth, opt, info) do
+        local f = rdebug.getfunc(depth)
+        depth = depth + 1
         n1 = n1 - 1
         if n1 == 1 then
             s[#s + 1] = '\n\t...'
-            level = last - 10
+            depth = last - 10
         else
             s[#s + 1] = ('\n\t%s:'):format(getshortsrc(info))
             if info.currentline > 0 then
@@ -135,5 +147,5 @@ return function(msg, level)
             end
         end
     end
-    return msg, table.concat(s)
+    return message, table.concat(s), level
 end

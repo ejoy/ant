@@ -13,7 +13,7 @@ local function getproto(content)
     return cl.f
 end
 
-local function getinfo(proto)
+local function getactivelines(proto)
     local l = {}
     if version >= 504 then
         local n = proto.linedefined
@@ -34,70 +34,63 @@ local function getinfo(proto)
             l[line] = true
         end
     end
-    return {
-        activelines = l,
-        linedefined = proto.linedefined,
-        lastlinedefined = proto.lastlinedefined,
-    }
+    return l
 end
 
-local function calc_lines(proto, src, tmp)
-    local info = getinfo(proto)
-    local actives = src.activelines
-    local defines = src.definelines
-    local maxn = 0
-    for l in pairs(info.activelines) do
-        actives[l] = true
-        maxn = math.max(maxn, l)
-    end
-    local startLn = info.linedefined
-    local endLn = info.lastlinedefined
+local function calclineinfo(proto, lineinfo, si)
+    local activelines = getactivelines(proto)
+    local startLn = proto.linedefined
+    local endLn = proto.lastlinedefined
+    local key = startLn.."-"..endLn
     if endLn == 0 then
         startLn = 1
-        endLn = maxn
-        tmp.maxline = math.max(tmp.maxline, maxn)
-    else
-        tmp.maxline = math.max(tmp.maxline, endLn)
+        for l in pairs(activelines) do
+            endLn = math.max(endLn, l)
+        end
     end
-    local n = tmp.n + 1
-    tmp.n = n
+    for l in pairs(activelines) do
+        si.activelines[l] = true
+    end
     for l = startLn, endLn do
-        defines[l] = n
+        si.definelines[l] = key
     end
+    lineinfo[key] = activelines
     for i = 1, proto.sizep do
-        calc_lines(proto.p[i], src, tmp)
+        calclineinfo(proto.p[i], lineinfo, si)
     end
 end
 
-local function normalize(src, maxline)
-    local actives = src.activelines
-    local defines = src.definelines
+local function nextActiveLine(si, line)
+    local defines = si.definelines
+    local actives = si.activelines
+    local fn = defines[line]
+    while actives[line] ~= true do
+        if fn ~= defines[line] then
+            return
+        end
+        line = line + 1
+    end
+    return line
+end
+
+local function normalize(lineinfo, si)
+    local maxline = 0
+    for l in pairs(si.definelines) do
+        maxline = math.max(maxline, l)
+    end
     for i = 1, maxline do
-        if actives[i] == nil then
-            actives[i] = false
-        end
-        if defines[i] == nil then
-            defines[i] = 0
-        end
+        lineinfo[i] = nextActiveLine(si, i)
     end
 end
 
-local function parser_lines(content)
+return function (content)
     local proto = getproto(content)
     if not proto then
         return
     end
-    local src = {}
-    local tmp = { n = 0, maxline = 0 }
-    src.maxline = 0
-    src.activelines = { }
-    src.definelines = { }
-    calc_lines(proto, src, tmp)
-    normalize(src, tmp.maxline)
-    return src
-end
-
-return function (src, content)
-    src.si = parser_lines(content)
-    return src
+    local si = { activelines = {}, definelines = {} }
+    local lineinfo = {}
+    calclineinfo(proto, lineinfo, si)
+    normalize(lineinfo, si)
+    return lineinfo
 end
