@@ -1,4 +1,5 @@
-dofile "engine/bootstrap.lua"
+package.path = "engine/?.lua"
+require "bootstrap"
 
 local prebuilt = import_package "ant.prebuilt"
 

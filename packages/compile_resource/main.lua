@@ -13,10 +13,9 @@ if __ANT_RUNTIME__ then
         return c
     end
     return {
-        init = function() end,
+        set_identity = function() end,
         compile = compile,
-        clean = function() end,
-        compile_fx = fx.loader,
+        load_fx = fx.loader,
         read_file = read_file,
     }
 end
@@ -40,7 +39,6 @@ end
 return {
     set_identity = set_identity,
     compile = compile.compile,
-    clean = compile.clean,
     compile_fx = fx.compile,
     load_fx = fx.loader,
     read_file = read_file,

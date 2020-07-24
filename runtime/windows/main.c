@@ -116,7 +116,6 @@ static int pmain(lua_State *L) {
     return 0;
 }
 
-
 void init_stdio() {
     int hCrt = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
     FILE *hf = _fdopen(hCrt, "w");

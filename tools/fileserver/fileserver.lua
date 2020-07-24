@@ -60,12 +60,27 @@ local function watch_add(repo, repopath)
 	end
 end
 
+local function do_prebuilt(repopath)
+	local sp = require "subprocess"
+    local function luaexe()
+        local i = -1
+        while arg[i] ~= nil do i = i - 1 end
+        return arg[i + 1]
+    end
+	sp.spawn {
+        luaexe(),
+        repopath / "prebuilt.lua",
+        hideWindow = true,
+    } :wait()
+end
+
 local function repo_add(identity, reponame)
 	if repos[reponame] then
 		return repos[reponame]
 	end
 	local repopath = lfs.path(reponame)
 	LOG ("Open repo : ", repopath)
+	do_prebuilt(repopath)
 	local repo = repo_new(repopath)
 	if not repo then
 		return
