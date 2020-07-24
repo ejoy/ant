@@ -18,7 +18,7 @@ get_image(lua_State *L, int idx=1){
 static int
 limg_del(lua_State *L){
     auto img = get_image(L);
-    bx::free(&s_imgallocator, img->ic);
+    BX_ALIGNED_FREE(&s_imgallocator, img->ic, 16);
     return 1;
 }
 
