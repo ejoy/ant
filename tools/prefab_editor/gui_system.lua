@@ -249,7 +249,7 @@ local function showToolbar()
     imgui.windows.SetNextWindowSize(sw, toolBarHeight)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0)
-    imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
+    imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.25, 0.25, 0.25, 1)
     for _ in imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) do
         imguiBeginToolbar()
         -- if imguiToolbar(icons.ICON_UNDO, "Undo", false) then
@@ -390,7 +390,7 @@ local function showInspector()
 end
 
 local resourceTree = nil
-local resourceRoot = "D:/Github/ant/tools/prefab_editor"
+local resourceRoot = nil--"D:/Github/ant/tools/prefab_editor"
 local currentFolder = {files = {}}
 local currentFile = nil
 
@@ -591,6 +591,10 @@ local last_y = -1
 local last_width = -1
 local last_height = -1
 function m:ui_update()
+    if not resourceRoot then
+        resourceRoot = tostring(fs.path "":localpath())
+        resourceRoot = string.sub(resourceRoot, 1, #resourceRoot - 1)
+    end
     for _, action, value1, value2 in eventGizmo:unpack() do
         if action == "update" or action == "ontarget" then
             update_ui_transform(gizmo.target_eid)
@@ -603,14 +607,15 @@ function m:ui_update()
     for _, files in dropFilesEvent:unpack() do
         on_drop_files(files)
     end
-
+    imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
+    imgui.windows.PushStyleColor(imgui.enum.StyleCol.TitleBg, 0.2, 0.2, 0.2, 1)
     showMenu()
     showToolbar()
     local x, y, width, height = imgui.showDockSpace(0, WidgetStartY + toolBarHeight)
     showSceneView()
     showInspector()
     showResourceBrowser()
-
+    imgui.windows.PopStyleColor(2)
     local dirty = false
     if last_x ~= x then last_x = x dirty = true end
     if last_y ~= y then last_y = y dirty = true  end
@@ -618,6 +623,7 @@ function m:ui_update()
     if last_height ~= height then last_height = height dirty = true  end
     if dirty then
         irq.set_view_rect(world:singleton_entity_id "main_queue", {x = x, y = y, w = width, h = height})
+        world:pub {"viewpos", x, y}
     end
 end
 

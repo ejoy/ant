@@ -1141,8 +1141,19 @@ function gizmo:selectGizmo(x, y)
 end
 
 local keypress_mb = world:sub{"keyboard"}
+local viewposEvent = world:sub{"viewpos"}
+local view_pos = {x = 0, y = 0}
+
+local function adjust_mouse_pos(x, y)
+	return x - view_pos.x, y - view_pos.y
+end
 
 function gizmo_sys:data_changed()
+	for _, x, y in viewposEvent:unpack() do
+		view_pos.x = x
+		view_pos.y = y
+	end
+
 	for _ in cameraZoom:unpack() do
 		gizmo:update_scale()
 	end
@@ -1165,7 +1176,7 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouseDown:unpack() do
 		if what == "LEFT" then
-			gizmo_seleted = gizmo:selectGizmo(x, y)
+			gizmo_seleted = gizmo:selectGizmo(adjust_mouse_pos(x, y))
 			gizmo:click_axis_or_plane(move_axis)
 			gizmo:click_axis(rotate_axis)
 		elseif what == "MIDDLE" then
@@ -1205,6 +1216,7 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouseMove:unpack() do
 		if what == "UNKNOWN" then
+			x, y = adjust_mouse_pos(x, y)
 			if gizmo.mode == MOVE or gizmo.mode == SCALE then
 				local axis = selectAxis(x, y)
 				gizmo:highlight_axis_or_plane(axis)
@@ -1216,6 +1228,7 @@ function gizmo_sys:data_changed()
 	
 	for _, what, x, y, dx, dy in mouseDrag:unpack() do
 		if what == "LEFT" then
+			x, y = adjust_mouse_pos(x, y)
 			if gizmo.mode == MOVE and move_axis then
 				moveGizmo(x, y)
 			elseif gizmo.mode == SCALE then
