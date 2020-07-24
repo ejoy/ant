@@ -20,5 +20,5 @@ require "filesystem"
 require "antpm"
 
 if __ANT_RUNTIME__ then
-    --require "runtime.debug"
+    require "runtime.debug"
 end

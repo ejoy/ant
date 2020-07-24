@@ -10,7 +10,7 @@ local debug_traceback = debug.traceback
 local thread_sleep = thread.sleep
 
 local LOGERROR = __ANT_RUNTIME__ and log.error or print
-local debug_update = __ANT_RUNTIME__ and nil --require 'runtime.debug'
+local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
 
 local callback = {}
 
