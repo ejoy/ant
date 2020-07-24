@@ -21,6 +21,17 @@ function t:init()
 	return self
 end
 
+local function get_hieght_field_data(hf)
+	if hf then
+		local img = hf.handle
+		local w, h = img:size()
+		local d, s = img:data()
+		return {
+			w, h, d, s
+		}
+	end
+end
+
 local tm = ecs.transform "terrain_mesh"
 function tm.process_prefab(e)
 	local terrain = e._terrain
@@ -31,7 +42,7 @@ function tm.process_prefab(e)
 
 	local renderdata = terrain_module.create_render_data()
 	local indices = renderdata:init_index_buffer(terrain.elem_size, terrain.elem_size, gridwidth+1)
-	local positions, normals = renderdata:init_vertex_buffer(gridwidth, gridheight, terrain.heightfield)
+	local positions, normals = renderdata:init_vertex_buffer(gridwidth, gridheight, get_hieght_field_data(terrain.heightfield))
 	terrain.renderdata = renderdata
 
 	local numvertices = (gridwidth + 1) * (gridheight + 1)
@@ -95,18 +106,9 @@ function bt.process_prefab(e)
 	local hf_width, hf_height = gridwidth+1, gridheight+1
 	t.bounding = {aabb = math3d.ref(math3d.aabb({-hf_width, 0, -hf_height}, {hf_width, 0, hf_height}))}
 
-	local hmwidth, hmheight, hmdata
 	if terrain.heightmap then
-		local hminfo = assetmgr.resource(terrain.heightmap)
-		hmwidth, hmheight, hmdata = hminfo.width, hminfo.height, hminfo.data
-	else
-		hmwidth, hmheight = hf_width, hf_height
+		t.heightfield = assetmgr.resource(terrain.heightmap, {format="r32f"})
 	end
-
-	t.heightfield = {
-		hmwidth, hmheight,
-		terrain_module.alloc_heightfield(hmwidth, hmheight, hmdata)
-	}
 	e._terrain = t
 end
 

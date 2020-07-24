@@ -21,7 +21,7 @@ local function absolute_path(path)
 end
 
 local extmapper = {
-	bmp = "image", png = "image",
+	bmp = "image", png = "image", dds = "image"
 }
 
 local function require_ext(ext)

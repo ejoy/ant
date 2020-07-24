@@ -26,53 +26,6 @@ get_heightfield_data(const heightfield_data &hfdata, float percentW, float perce
 	return hfdata.data[sampleZ * hfdata.w + sampleX];
 }
 
-static inline heightfield_data
-fetch_heightfield(lua_State *L, int index){
-	heightfield_data hf = { 0 };
-	if (lua_isnoneornil(L, index)){
-		luaL_error(L, "heightfield data must provided");
-		return hf;
-	}
-
-	lua_geti(L, index, 1);
-	hf.w = (uint32_t)lua_tointeger(L, -1);
-	lua_geti(L, index, 2);
-	hf.h = (uint32_t)lua_tointeger(L, -1);
-	lua_geti(L, index, 3);
-	hf.data = (const float*)lua_touserdata(L, -1);
-	lua_pop(L, 3);
-
-	return hf;
-}
-
-static int
-lterrain_alloc_heightfield(lua_State *L){
-	const uint32_t width = (uint32_t)luaL_checkinteger(L, 1);
-	const uint32_t height = (uint32_t)luaL_checkinteger(L, 2);
-
-	const uint8_t *p = lua_isnoneornil(L, 3) ? nullptr : (const uint8_t*)lua_touserdata(L, 3);
-	const char* fmt = lua_isnoneornil(L, 4) ? "f" : (const char*)lua_tostring(L, 4);
-
-	const uint32_t buffersize = width * height * sizeof(float);
-	float * hf = (float*)lua_newuserdatauv(L, buffersize, 0);
-
-	if (p) {
-		if (strcmp(fmt, "f") == 0){
-			memcpy(hf, p, buffersize);
-		} else if (strcmp(fmt, "rgba8") == 0){
-			for (uint32_t ii=0; ii<width; ++ii){
-				for (uint32_t jj=0; jj<height; ++jj){
-					uint32_t iv = ((const uint32_t*)(p))[ii*width+jj];
-					float v = float(iv & 0x000000ff);
-				}
-			}
-		}
-	} else {
-		memset(hf, 0, buffersize);
-	}
-	return 1;
-}
-
 static int 
 lterrain_min_max_height(lua_State *L){
 	const uint32_t grid_width = (uint32_t)lua_tointeger(L, 1);
@@ -171,7 +124,16 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 	const uint32_t grid_width = (uint32_t)luaL_checkinteger(L, 2);
 	const uint32_t grid_height = (uint32_t)luaL_checkinteger(L, 3);
 
-	const heightfield_data hfdata = fetch_heightfield(L, 4);
+	heightfield_data hfdata = {0};
+	if (!lua_isnoneornil(L, 4)){
+		lua_geti(L, 4, 1);
+		hfdata.w = (uint32_t)lua_tointeger(L, -1);
+		lua_geti(L, 4, 2);
+		hfdata.h = (uint32_t)lua_tointeger(L, -1);
+		lua_geti(L, 4, 3);
+		hfdata.data = (const float*)lua_touserdata(L, -1);
+		lua_pop(L, 3);
+	}
 
 	const float grid_unit = (float)luaL_optnumber(L, 5, 1.f);
 
@@ -192,7 +154,7 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 		for (uint32_t ix = 0; ix < vertex_width; ++ix){
 			auto ip = iz * vertex_width + ix;
 			const float x = (float(ix) + offsetX) * grid_unit;
-			const float y = get_heightfield_data(hfdata, hf_percentW, hf_percentH, ix, iz);
+			const float y = hfdata.data ? get_heightfield_data(hfdata, hf_percentW, hf_percentH, ix, iz) * grid_unit : 0.f;
 			const float z = (float(iz) + offsetZ) * grid_unit;
 
 			auto p = glm::vec3(x, y, z);
@@ -305,7 +267,6 @@ LUAMOD_API int
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "create_render_data",		lterrain_create_renderdara},
-		{ "alloc_heightfield", 		lterrain_alloc_heightfield},
 		{ "calc_min_max_height",	lterrain_min_max_height},
 		{ "update_vertex_buffers",	lterrain_update_vertex_buffers},
 		{ NULL, NULL },
