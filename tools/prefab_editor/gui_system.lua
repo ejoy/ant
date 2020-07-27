@@ -390,7 +390,7 @@ local function showInspector()
 end
 
 local resourceTree = nil
-local resourceRoot = nil--"D:/Github/ant/tools/prefab_editor"
+local resourceRoot = nil
 local currentFolder = {files = {}}
 local currentFile = nil
 
@@ -432,7 +432,6 @@ local function showResourceBrowser()
     local function constructResourceTree(fspath)
         local tree = {files = {}, dirs = {}}
         for item in fspath:list_directory() do
-            local filename = tostring(fs.path(item):filename())
             if fs.is_directory(item) then
                 table.insert(tree.dirs, {item, constructResourceTree(item), parent = {tree}})
             else
@@ -443,8 +442,7 @@ local function showResourceBrowser()
     end
 
     if resourceTree == nil then
-        local root_path = fs.path(resourceRoot)
-        resourceTree = {files = {}, dirs = {{root_path, constructResourceTree(root_path)}}}
+        resourceTree = {files = {}, dirs = {{resourceRoot, constructResourceTree(resourceRoot)}}}
         local function set_parent(tree)
             for _, v in pairs(tree[2].dirs) do
                 v.parent = tree
@@ -457,7 +455,7 @@ local function showResourceBrowser()
 
     local function doShowBrowser(folder)
         for k, v in pairs(folder.dirs) do
-            local dir_name = tostring(fs.path(v[1]):filename())
+            local dir_name = tostring(v[1]:filename())
             local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((currentFolder == v) and imgui.flags.TreeNode{"Selected"} or 0)
             local skip = false
             if (#v[2].dirs == 0) then
@@ -481,9 +479,9 @@ local function showResourceBrowser()
 
     for _ in imgui_windows("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
-        imgui.widget.Button(tostring(fs.path(resourceRoot):parent_path()))
+        imgui.widget.Button(tostring(resourceRoot:parent_path()))
         imgui.cursor.SameLine()
-        local _, split_dirs = path_split(tostring(fs.relative(currentFolder[1], fs.path(fs.path(resourceRoot):parent_path()))))
+        local _, split_dirs = path_split(tostring(fs.relative(currentFolder[1], resourceRoot:parent_path())))
         for i = 1, #split_dirs do
             if imgui.widget.Button("/" .. split_dirs[i])then
                 if tostring(currentFolder[1]:filename()) ~= split_dirs[i] then
@@ -517,49 +515,48 @@ local function showResourceBrowser()
         imgui.windows.BeginChild("ResourceBrowserContent", width * 3, height, false);
         local folder = currentFolder[2]
         if folder then
-            for _, v in pairs(folder.files) do
-                local icon = icons.get_file_icon(v)
+            for _, path in pairs(folder.files) do
+                local icon = icons.get_file_icon(path)
                 imgui.widget.Image(icon.handle, icon.texinfo.width, icon.texinfo.height)
                 imgui.cursor.SameLine()
-                local v_path = fs.path(v)
-                if imgui.widget.Selectable(tostring(v_path:filename()), currentFile == v, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                    currentFile = v
+                if imgui.widget.Selectable(tostring(path:filename()), currentFile == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                    currentFile = path
                     if imgui.util.IsMouseDoubleClicked(0) then
                         local prefab_file
-                        if v_path:equal_extension(".prefab") then
-                            prefab_file = tostring(v_path)
-                        elseif v_path:equal_extension(".glb") then
-                            prefab_file = tostring(v_path) .. "|mesh.prefab"
+                        if path:equal_extension(".prefab") then
+                            prefab_file = tostring(path)
+                        elseif path:equal_extension(".glb") then
+                            prefab_file = tostring(path) .. "|mesh.prefab"
                         end
                         world:pub {"instance_prefab", prefab_file}
                         
                     end
-                    if v_path:equal_extension(".png") then
+                    if path:equal_extension(".png") then
                         if not previewImages[currentFile] then
-                            local rp = fs.relative(v_path, fs.path(resourceRoot))
+                            local rp = fs.relative(path, resourceRoot)
                             local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
                             previewImages[currentFile] = assetmgr.resource(pkg_path, { compile = true })
                         end
                     end
                 end
                 
-                if v_path:equal_extension(".material")
-                    or v_path:equal_extension(".png")
-                    or v_path:equal_extension(".prefab")
-                    or v_path:equal_extension(".glb") then
+                if path:equal_extension(".material")
+                    or path:equal_extension(".png")
+                    or path:equal_extension(".prefab")
+                    or path:equal_extension(".glb") then
                     if imgui.widget.BeginDragDropSource() then
-                        imgui.widget.SetDragDropPayload("Drag", tostring(v))
+                        imgui.widget.SetDragDropPayload("Drag", tostring(path))
                         imgui.widget.EndDragDropSource()
                     end
                 end
             end
-            for _, v in pairs(folder.dirs) do
+            for _, path in pairs(folder.dirs) do
                 imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
                 imgui.cursor.SameLine()
-                if imgui.widget.Selectable(tostring(fs.path(v[1]):filename()), currentFile == v[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                    currentFile = v[1]
+                if imgui.widget.Selectable(tostring(path[1]:filename()), currentFile == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                    currentFile = path[1]
                     if imgui.util.IsMouseDoubleClicked(0) then
-                        currentFolder = v
+                        currentFolder = path
                     end
                 end
                 
@@ -576,7 +573,6 @@ local function showResourceBrowser()
                 imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
                 imgui.widget.Image(preview.handle, preview.texinfo.width, preview.texinfo.height)
             end
-            --imgui.widget.ImageButton(tex.handle)
         end
         imgui.windows.EndChild()
     end
@@ -592,8 +588,8 @@ local last_width = -1
 local last_height = -1
 function m:ui_update()
     if not resourceRoot then
-        resourceRoot = tostring(fs.path "":localpath())
-        resourceRoot = string.sub(resourceRoot, 1, #resourceRoot - 1)
+        local res_root_str = tostring(fs.path "":localpath())
+        resourceRoot = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
     end
     for _, action, value1, value2 in eventGizmo:unpack() do
         if action == "update" or action == "ontarget" then
