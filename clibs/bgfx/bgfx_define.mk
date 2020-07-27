@@ -7,9 +7,12 @@ ifeq ("$(BGFXROOT)","")
 $(error BGFXROOT NOT define)
 endif
 
-#BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/$(PLAT) -I$(BXSRC)/include -I$(BGFXSRC)/src -I$(BGFXSRC)/examples/common -I$(BIMGSRC)/include
-BGFXINC = -I$(BGFXSRC)/include -I$(BXSRC)/include/compat/$(PLAT) -I$(BXSRC)/include -I$(BGFXSRC)/src -I$(BIMGSRC)/include
+BXINC = -I$(BXSRC)/include/compat/$(PLAT) -I$(BXSRC)/include
+BIMGINC = -I$(BIMGSRC)/include
+
+BGFXINC = -I$(BGFXSRC)/include $(BXINC) -I$(BGFXSRC)/src -I$(BIMGSRC)/include
 BGFX3RDINC = -I$(BGFXSRC)/3rdparty -I$(BGFXSRC)/examples/common
+
 
 BXLIB = -lbx$(MODE)
 BIMGLIB = -lbimg$(MODE)

@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
@@ -185,13 +186,21 @@ static int lshowDockSpace(lua_State * L) {
 	ImGui::PopStyleVar(3);
 
 	ImGuiIO& io = ImGui::GetIO();
+	int ret = 0;
 	if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 	{
 		ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+		//
+		auto central_node = ImGui::DockBuilderGetCentralNode(dockspace_id);
+		lua_pushnumber(L, central_node->Pos.x);
+		lua_pushnumber(L, central_node->Pos.y);
+		lua_pushnumber(L, central_node->Size.x);
+		lua_pushnumber(L, central_node->Size.y);
+		ret = 4;
 	}
 	ImGui::End();
-	return 0;
+	return ret;
 }
 
 

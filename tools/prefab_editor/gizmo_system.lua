@@ -54,6 +54,7 @@ local localSpace = false
 
 local global_axis_eid
 
+local current_viewport
 local axis_plane_area
 local camera_eid
 local gizmo = {
@@ -514,7 +515,8 @@ local function mouseHitPlane(screen_pos, plane_info)
 end
 
 local function updateGlobalAxis()
-	local sw, sh = rhwi.screen_size()
+	if not current_viewport then return end
+	local sw, sh = current_viewport.w, current_viewport.h --rhwi.screen_size()
 	local worldPos = mouseHitPlane({50, sh - 50}, {dir = {0,1,0}, pos = {0,0,0}})
 	if worldPos then
 		iom.set_position(global_axis_eid, math3d.totable(worldPos))
@@ -529,7 +531,7 @@ function gizmo:update_scale()
 	local viewdir = iom.get_direction(camera_eid)
 	local eyepos = iom.get_position(camera_eid)
 	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(iom.get_position(self.root_eid), eyepos))
-	gizmo_scale = project_dist * 0.25
+	gizmo_scale = project_dist * 0.35
 	if self.root_eid then
 		iom.set_scale(self.root_eid, gizmo_scale)
 	end
@@ -763,7 +765,7 @@ local icamera = world:interface "ant.camera|camera"
 local function worldToScreen(world_pos)
 	local vp = icamera.calc_viewproj(camera_eid)
 	local proj_pos = math3d.totable(math3d.transform(vp, world_pos, 1))
-	local sw, sh = rhwi.screen_size()
+	local sw, sh = current_viewport.w, current_viewport.h --rhwi.screen_size()
 	return {(1 + proj_pos[1] / proj_pos[4]) * sw * 0.5, (1 - proj_pos[2] / proj_pos[4]) * sh * 0.5, 0}
 end
 
@@ -1141,8 +1143,18 @@ function gizmo:selectGizmo(x, y)
 end
 
 local keypress_mb = world:sub{"keyboard"}
+local viewposEvent = world:sub{"ViewportDirty"}
+
+local function adjust_mouse_pos(x, y)
+	return x - current_viewport.x, y - current_viewport.y
+end
 
 function gizmo_sys:data_changed()
+	for _, vp in viewposEvent:unpack() do
+		current_viewport = vp
+		updateGlobalAxis()
+	end
+
 	for _ in cameraZoom:unpack() do
 		gizmo:update_scale()
 	end
@@ -1165,7 +1177,8 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouseDown:unpack() do
 		if what == "LEFT" then
-			gizmo_seleted = gizmo:selectGizmo(x, y)
+			--print("Down", x, y, adjust_mouse_pos(x, y))
+			gizmo_seleted = gizmo:selectGizmo(adjust_mouse_pos(x, y))
 			gizmo:click_axis_or_plane(move_axis)
 			gizmo:click_axis(rotate_axis)
 		elseif what == "MIDDLE" then
@@ -1205,6 +1218,7 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouseMove:unpack() do
 		if what == "UNKNOWN" then
+			x, y = adjust_mouse_pos(x, y)
 			if gizmo.mode == MOVE or gizmo.mode == SCALE then
 				local axis = selectAxis(x, y)
 				gizmo:highlight_axis_or_plane(axis)
@@ -1216,6 +1230,7 @@ function gizmo_sys:data_changed()
 	
 	for _, what, x, y, dx, dy in mouseDrag:unpack() do
 		if what == "LEFT" then
+			x, y = adjust_mouse_pos(x, y)
 			if gizmo.mode == MOVE and move_axis then
 				moveGizmo(x, y)
 			elseif gizmo.mode == SCALE then

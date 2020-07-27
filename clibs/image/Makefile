@@ -12,7 +12,7 @@ image.dll : $(ODIR)/image.dll
 	cp $< $@
 
 $(ODIR)/image.o : image.cpp | $(ODIR)
-	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(BIMGINC) $(CLIBS_INC)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(BXINC) $(BIMGINC) $(CLIBS_INC)
 
 OBJS = $(ODIR)/image.o
 
