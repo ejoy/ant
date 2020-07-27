@@ -1,5 +1,4 @@
 local ecs = ...
-local world = ecs.world
 
 local m = ecs.component "mesh"
 

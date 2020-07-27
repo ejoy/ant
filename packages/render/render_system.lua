@@ -57,12 +57,13 @@ end
 
 function rt.process_entity(e)
 	local c = e._cache_prefab
-	e._rendercache.set_transform= set_world_matrix
-	e._rendercache.fx 			= c.fx
-	e._rendercache.properties 	= c.fx and generate_properties(c.fx.uniforms, c.properties) or nil
-	e._rendercache.state 		= c.state
-	e._rendercache.vb 			= c.vb
-	e._rendercache.ib 			= c.ib
+	local rc = e._rendercache
+	rc.set_transform= set_world_matrix
+	rc.fx 			= c.fx
+	rc.properties 	= c.fx and generate_properties(c.fx.uniforms, c.properties) or nil
+	rc.state 		= c.state
+	rc.vb 			= c.vb
+	rc.ib 			= c.ib
 end
 
 local rt = ecs.component "render_target"

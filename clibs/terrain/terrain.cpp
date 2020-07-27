@@ -54,6 +54,46 @@ lterrain_min_max_height(lua_State *L){
 }
 
 static int
+lterrain_create_section_aabb(lua_State *L){
+	const glm::vec3 *position = (const glm::vec3*)lua_touserdata(L, 1);
+	const uint32_t offset = (uint32_t)luaL_checkinteger(L, 2);
+	const uint32_t elemsize = (uint32_t)luaL_checkinteger(L, 3);
+	const uint32_t vertexsize = elemsize+1;
+	const uint32_t pitchw = (uint32_t)luaL_checkinteger(L, 4);
+
+	glm::vec3 minv(
+		std::numeric_limits<float>::max(),
+		std::numeric_limits<float>::max(),
+		std::numeric_limits<float>::max()
+	);
+	glm::vec3 maxv(
+		std::numeric_limits<float>::lowest(),
+		std::numeric_limits<float>::lowest(),
+		std::numeric_limits<float>::lowest()
+	);
+	for (uint32_t ih=0; ih<vertexsize; ++ih){
+		const uint32_t offset = ih * pitchw;
+		for (uint32_t iw=0; iw<vertexsize; ++iw){
+			const glm::vec3 &v = position[offset + iw];
+			minv = glm::min(minv, v);
+			maxv = glm::max(maxv, v);
+		}
+	}
+
+	auto push_v3 = [L](const auto& v){
+		lua_createtable(L, 3, 0);
+		for(uint32_t ii=0; ii<3;++ii){
+			lua_pushnumber(L, v[ii]);
+			lua_seti(L, -2, ii+1);
+		}
+	};
+	
+	push_v3(minv);
+	push_v3(maxv);
+	return 2;
+}
+
+static int
 lterrain_update_vertex_buffers(lua_State *L){
 	//const auto hf = fetch_heightfield(L, 1);
 	//auto positions = (glm::vec3*)lua_touserdata(L, 2);
@@ -67,6 +107,11 @@ struct render_data{
 	glm::uvec3 *indices;
 	glm::vec3 *positions;
 	glm::vec3 *normals;
+
+#ifdef _DEBUG
+	uint32_t grid_width, grid_height;
+	uint32_t indices_grid_width, indices_grid_height;
+#endif//_DEBUG
 };
 
 static const char* RD_MT = "TERRAIN_RENDERDATA";
@@ -102,6 +147,10 @@ lrenderdata_init_index_buffer(lua_State *L){
 
 	const uint32_t triangle_num = w * h * 2;
 	rd->indices = new glm::uvec3[triangle_num];
+#ifdef _DEBUG
+	rd->indices_grid_width = w;
+	rd->indices_grid_height = h;
+#endif //_DEBUG
 	uint32_t itriangle = 0;
 	for (uint32_t iz = 0; iz < h; ++iz){
 		for (uint32_t ix = 0; ix < w; ++ix){
@@ -149,6 +198,10 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 	const uint32_t vertex_num = vertex_width * vertex_height;
 	rd->positions = new glm::vec3[vertex_num];
 	rd->normals = new glm::vec3[vertex_num];
+#ifdef _DEBUG
+	rd->grid_width = grid_width;
+	rd->grid_width = grid_height;
+#endif //_DEBUG
 
 	const float hf_percentW = hfdata.data ? hfdata.w / float(vertex_width) : 1.f, 
 				hf_percentH = hfdata.data ? hfdata.h / float(vertex_height) : 1.f;
@@ -242,6 +295,70 @@ lrenderdata_vertex_buffer(lua_State *L){
 	return 1;
 }
 
+#ifdef _DEBUG
+static int
+lrenderdata_totable(lua_State *L){
+	auto rd = get_rd(L, 1);
+	auto t = luaL_checkstring(L, 2);
+	if (strcmp(t, "position") == 0){
+		const uint32_t  w = (rd->grid_width+1),
+						h = (rd->grid_height+1);
+		lua_createtable(L, w * h, 0);
+		for(uint32_t jj=0; jj<h; ++jj){
+			const uint32_t offset = jj*w;
+			for(uint32_t ii=0; ii<w; ++ii){
+				const uint32_t idx = ii+offset;
+				const auto & v = rd->positions[idx];
+				for (uint32_t ip=0; ip<3; ++ip){
+					lua_pushnumber(L, v[ip]);
+					lua_seti(L, -2, idx+ip+1);
+				}
+			}
+		}
+		return 1;
+	}
+	if (strcmp(t, "indices") == 0){
+		const uint32_t triangle_num = rd->indices_grid_width * rd->indices_grid_height * 2;
+		lua_createtable(L, triangle_num * 3, 0);
+		for (uint32_t it=0; it<triangle_num; ++it){
+			const auto &v = rd->indices[it];
+			for (uint32_t ii=0; ii<3; ++ii){
+				lua_pushinteger(L, v[ii]);
+				lua_seti(L, -2, it+ii+1);
+			}
+		}
+		return 1;
+	}
+	if (strcmp(t, "section") == 0){
+		const uint32_t sectionidx = (uint32_t)luaL_checkinteger(L, 3)-1;
+		const uint32_t sectionwidth = rd->grid_width / rd->indices_grid_width;
+		const uint32_t pitchw = rd->grid_width+1;
+		const uint32_t vertexsize = rd->indices_grid_width+1;
+		const uint32_t vertex_offset = (sectionidx / sectionwidth) * pitchw * vertexsize + 
+			(sectionidx % sectionwidth) * vertexsize;
+
+		lua_createtable(L, vertexsize*vertexsize * 3, 0);
+		for (uint32_t jj=0; jj<vertexsize; ++jj){
+			const uint32_t offset = jj*pitchw + vertex_offset;
+			const uint32_t voffset = jj*vertexsize;
+
+			for (uint32_t ii=0; ii<vertexsize; ++ii){
+				const uint32_t idx = offset + ii;
+				const auto &v = rd->positions[idx];
+				lua_createtable(L, 3, 0);
+				for (uint32_t ip=0; ip<3; ++ip){
+					lua_pushnumber(L, v[ip]);
+					lua_seti(L, -2, ip+1);
+				}
+				lua_seti(L, -2, voffset+ii+1);
+			}
+		}
+		return 1;
+	}
+	
+	return luaL_error(L, "unknow type:%s", t);
+}
+#endif //_DEBUG
 static int
 lterrain_create_renderdara(lua_State *L){
 	auto rd = (render_data*)lua_newuserdatauv(L, sizeof(render_data), 0);
@@ -254,6 +371,9 @@ lterrain_create_renderdara(lua_State *L){
 			{"init_vertex_buffer",	lrenderdata_init_vertex_buffer},
 			{"init_buffer", 		lrenderdata_index_buffer},
 			{"vertex_buffer",		lrenderdata_vertex_buffer},
+			#ifdef _DEBUG
+			{"totable",				lrenderdata_totable},
+			#endif //_DEBUG
 			{"__gc",				lrenderdata_delete},
 			{nullptr, nullptr},
 		};
@@ -271,6 +391,7 @@ LUAMOD_API int
 	luaL_Reg l[] = {
 		{ "create_render_data",		lterrain_create_renderdara},
 		{ "calc_min_max_height",	lterrain_min_max_height},
+		{ "create_section_aabb",	lterrain_create_section_aabb},
 		{ "update_vertex_buffers",	lterrain_update_vertex_buffers},
 		{ NULL, NULL },
 	};

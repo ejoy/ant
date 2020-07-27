@@ -6,6 +6,8 @@ interface "terrain"
     .method "min_max_height"
     .method "grid_height"
     .method "grid_width"
+    .method "tile_length"
+    .method "vertices_num"
     .method "heightfield"
 
 policy "terrain_policy"

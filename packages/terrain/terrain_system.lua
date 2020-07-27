@@ -22,6 +22,47 @@ function t:init()
 	return self
 end
 
+local iterrain = ecs.interface "terrain"
+
+local function tile_length(t) return t.section_size * t.elem_size end
+function iterrain.tile_length(eid)
+	return tile_length(world[eid]._terrain)
+end
+
+local function grid_width(t) return t.tile_width * tile_length(t) end
+function iterrain.grid_width(eid)
+	return grid_width(world[eid]._terrain)
+end
+
+local function grid_height(t) return t.tile_height * tile_length(t)end
+function iterrain.grid_height(eid)
+	return  grid_height(world[eid]._terrain)
+end
+
+local function vertices_num(t)
+	local tl = tile_length(t)
+	return (t.tile_width*tl+1) * (t.tile_height*tl+1)
+end
+
+function iterrain.vertices_num(eid)
+	return vertices_num(world[eid]._terrain)
+end
+
+local function indices_num(t)
+	return t.elem_size * t.elem_size * 2 * 3
+end
+
+function iterrain.min_max_height(eid)
+	local t = world[eid]._terrain
+	return t.min_max_height
+end
+
+function iterrain.heightfield(eid)
+	local t = world[eid]._terrain
+	return t.heightfield
+end
+
+
 local function get_hieght_field_data(hf, scale)
 	if hf then
 		local img = hf.handle
@@ -36,17 +77,16 @@ end
 local tm = ecs.transform "terrain_mesh"
 function tm.process_prefab(e)
 	local terrain = e._terrain
-	local tilelen = terrain.section_size * terrain.elem_size
-	local gridwidth, gridheight = terrain.tile_width * tilelen, terrain.tile_height * tilelen
+	
+	local gw, gh = grid_width(terrain), grid_height(terrain)
 	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
-	local numindices = terrain.elem_size * terrain.elem_size * 2 * 3
 
 	local renderdata = terrain_module.create_render_data()
-	local indices = renderdata:init_index_buffer(terrain.elem_size, terrain.elem_size, gridwidth+1)
-	local positions, normals = renderdata:init_vertex_buffer(gridwidth, gridheight, get_hieght_field_data(terrain.heightfield, terrain.heightmap_scale))
+	local indices = renderdata:init_index_buffer(terrain.elem_size, terrain.elem_size, gw+1)
+	local positions, normals = renderdata:init_vertex_buffer(gw, gh, get_hieght_field_data(terrain.heightfield, terrain.heightmap_scale))
 	terrain.renderdata = renderdata
 
-	local numvertices = (gridwidth + 1) * (gridheight + 1)
+	local numvertices, numindices = vertices_num(terrain), indices_num(terrain)
 	e.mesh = world.component "mesh" {
 		vb = {
 			start = 0,
@@ -76,10 +116,6 @@ local function is_power_of_2(n)
 		local l = math.log(n, 2)
 		return math.ceil(l) == math.floor(l)
 	end
-end
-
-local function tile_length(t)
-	return t.section_size * t.elem_size
 end
 
 function bt.process_prefab(e)
@@ -114,28 +150,6 @@ function bt.process_prefab(e)
 	e._terrain = t
 end
 
-local iterrain = ecs.interface "terrain"
-
-function iterrain.grid_width(eid)
-	local t = world[eid]._terrain
-	return t.tile_width * tile_length(t)
-end
-
-function iterrain.grid_height(eid)
-	local t = world[eid]._terrain
-	return t.tile_height * tile_length(t)
-end
-
-function iterrain.min_max_height(eid)
-	local t = world[eid]._terrain
-	return t.min_max_height
-end
-
-function iterrain.heightfield(eid)
-	local t = world[eid]._terrain
-	return t.heightfield
-end
-
 local sma = ecs.action "section_mount"
 function sma.init(prefab, idx, terraineid)
 	local e = world[prefab[idx]]
@@ -144,12 +158,25 @@ function sma.init(prefab, idx, terraineid)
 	local cp = te._cache_prefab
 
 	local rc = e._rendercache
+	local sd = e.section_draw
+	local vbstart = sd.vb_start
 	rc.vb = {
-		start = e.section_draw.vb_start,
-		num = e.section_draw.vb_num,
+		start	= vbstart,
+		num		= sd.vb_num,
 		handles = cp.vb.handles,
 	}
 	rc.ib = cp.ib
+
+	local terrain = te._terrain
+	local pitchw = iterrain.grid_width(terraineid) + 1
+	local minv, maxv = terrain_module.create_section_aabb(
+		terrain.renderdata:vertex_buffer "position", vbstart, terrain.elem_size, pitchw)
+
+	--local tt = terrain.renderdata:totable("section", sd.sectionidx)
+
+	e.mesh = {bounding = {
+		aabb = math3d.ref(math3d.aabb(minv, maxv))
+	}}
 end
 
 local function create_render_terrain_entity(eid)
@@ -161,13 +188,14 @@ local function create_render_terrain_entity(eid)
 
 	local sw = terrain.tile_width * terrain.section_size
 	local sh = terrain.tile_height * terrain.section_size
-	local section_vertexnum = (terrain.elem_size+1)
-	local vertexwidth, vertexheight = (sw * terrain.elem_size)+1, (sh*terrain.elem_size)+1
+
+	local elemsize = terrain.elem_size
+	local vertexwidth, vertexheight = (sw * elemsize)+1, (sh*elemsize)+1
 	local numvertices = vertexwidth * vertexheight
 	for isy=1, sh do
-		local offset = (isy-1) * vertexwidth * terrain.elem_size
+		local offset = (isy-1) * vertexwidth * elemsize
 		for isx=1, sw do
-			local start = offset + terrain.elem_size * (isx-1)
+			local start = offset + elemsize * (isx-1)
 			world:create_entity{
 				policy = {
 					"ant.terrain|terrain_section_render",
