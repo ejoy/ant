@@ -57,14 +57,15 @@ function util.view_proj(camera, frustum)
 	return math3d.mul(projmat, viewmat)
 end
 
-function util.pt2D_to_NDC(pt2d, screensize)
-    local screen_y = pt2d[2] / screensize.h
-    if not math3d.origin_bottom_left then
+function util.pt2D_to_NDC(pt2d, rt)
+	local vp_pt2d = {pt2d[1]-rt.x, pt2d[2] - rt.y}
+    local screen_y = vp_pt2d[2] / rt.h
+	if not math3d.origin_bottom_left then
         screen_y = 1 - screen_y
     end
 
     return {
-        (pt2d[1] / screensize.w) * 2 - 1,
+        (vp_pt2d[1] / rt.w) * 2 - 1,
         (screen_y) * 2 - 1,
     }
 end
