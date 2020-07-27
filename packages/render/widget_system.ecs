@@ -19,6 +19,13 @@ system "widget_drawer_system"
     .method "end_frame"
     .method "init"
 
+transform "widget_drawer_transform"
+    .implement "widget_system.lua"
+    .require_transform "ant.general|cache_transform"
+    .input "widget_drawer"
+    .output "mesh"
+    .method "process_prefab"
+
 interface "iwidget_drawer"
     .implement "widget_system.lua"
     .require_system "widget_drawer_system"
@@ -31,6 +38,7 @@ interface "iwidget_drawer"
 
 policy "bounding_draw"
     .unique_component "widget_drawer"
+    .require_transform "widget_drawer_transform"
 
 policy "debug_mesh_bounding"
     .require_system "render_mesh_bounding_system"

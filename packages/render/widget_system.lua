@@ -5,10 +5,10 @@ local math3d = require "math3d"
 local geometry_drawer = import_package "ant.geometry".drawer
 local bgfx = require "bgfx"
 local widget_drawer_sys = ecs.system "widget_drawer_system"
-
+local ies = world:interface "ant.scene|ientity_state"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
-local function create_dynamic_mesh(layout, num_vertices, num_indices)
+local function create_dynamic_buffer(layout, num_vertices, num_indices)
 	local declmgr = import_package "ant.render".declmgr
 	local decl = declmgr.get(layout)
 	local vb_size = num_vertices * decl.stride
@@ -17,51 +17,54 @@ local function create_dynamic_mesh(layout, num_vertices, num_indices)
 	return {
 		vb = {
 			start = 0,
-			num = num_vertices,
+			num = 0,
 			{handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")}
 		},
 		ib = {
 			start = 0,
-			num = num_indices,
+			num = 0,
 			handle = bgfx.create_dynamic_index_buffer(ib_size, "a")
 		}
 	}
 end
 
 local ies = world:interface "ant.scene|ientity_state"
+
+local wd_trans = ecs.transform "widget_drawer_transform"
+function wd_trans.process_prefab(e)
+	local wd = e.widget_drawer
+	e.mesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)
+end
+
 function widget_drawer_sys:init()
-	local eid = world:create_entity {
+	world:create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.render|bounding_draw",
+			"ant.general|name",
 		},
 		data = {
 			transform = {},
 			material = "/pkg/ant.resources/materials/line.material",
-			mesh = nil,
 			state = ies.create_state "visible",
 			scene_entity = true,
-			widget_drawer = true,
+			widget_drawer = {
+				vertices_num = 1024,
+				indices_num = 2048,
+				declname = "p3|c40niu",
+			},
+			name = "bounding_draw"
 		}
-	}
-	local dmesh = world[eid]
-	dmesh.mesh = create_dynamic_mesh("p3|c40niu", 1024, 2048)
-	dmesh.bounding_draw = {
-		vertex_offset = 0,
-		index_offset = 0,
 	}
 end
 
 function widget_drawer_sys:end_frame()
 	local dmesh = world:singleton_entity "widget_drawer"
 	if dmesh then
-		local mesh = dmesh.mesh
-		local vbdesc, ibdesc = mesh.vb, mesh.ib
+		local rc = dmesh._rendercache
+		local vbdesc, ibdesc = rc.vb, rc.ib
 		vbdesc.start, vbdesc.num = 0, 0
 		ibdesc.start, ibdesc.num = 0, 0
-
-		dmesh.bounding_draw.vertex_offset = 0
-		dmesh.bounding_draw.index_offset = 0
 	end
 end
 
@@ -83,25 +86,19 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 		return
 	end
 	local dmesh = world:singleton_entity "widget_drawer"
-	local bounding_draw = dmesh.bounding_draw
-	local mesh = dmesh.mesh
-	local vbdesc, ibdesc = mesh.vb, mesh.ib
+	local rc = dmesh._rendercache
+	local vbdesc, ibdesc = rc.vb, rc.ib
 
-	vbdesc.num = vbdesc.num + numvertices
-
-	local vbhandle = vbdesc[1].handle
-	local vertex_offset = bounding_draw.vertex_offset
-	
-	bgfx.update(vbhandle, vertex_offset, bgfx.memory_buffer(vbfmt, vb));
-	bounding_draw.vertex_offset = vertex_offset + numvertices
+	local vertex_offset = vbdesc.num
+	bgfx.update(vbdesc.handles[1], vertex_offset, bgfx.memory_buffer(vbfmt, vb));
+	vbdesc.num = vertex_offset + numvertices
 
 	local numindices = #ib
 	if numindices ~= 0 then
-		ibdesc.num = ibdesc.num + numindices
-		local index_offset = bounding_draw.index_offset
+		local index_offset = ibdesc.num
 		local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
 		bgfx.update(ibdesc.handle, index_offset, bgfx.memory_buffer(ibfmt, newib))
-		bounding_draw.index_offset = index_offset + numindices
+		ibdesc.num = index_offset + numindices
 	end
 end
 
@@ -194,10 +191,21 @@ end
 local rmb_sys = ecs.system "render_mesh_bounding_system"
 
 function rmb_sys:widget()
-	-- local transformed_boundings = {}
-	-- computil.get_mainqueue_transform_boundings(world, transformed_boundings)
-	-- for _, tb in ipairs(transformed_boundings) do
-	-- 	local aabbmin, aabbmax = math3d.index(tb, 1), math3d.index(tb, 2)
-	-- 	iwd.draw_aabb_box{min=math3d.totable(aabbmin), max=math3d.totable(aabbmax)}
-	-- end
+	local desc={vb={}, ib={}}
+
+	for _, eid in world:each "scene_entity" do
+		local e = world[eid]
+		if e.mesh and e.mesh.bounding then
+			local rc = e._rendercache
+			if rc and rc.vb and ies.can_visible(eid) then
+				local w = iom.calc_worldmat(eid)
+				local aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
+				local v = math3d.tovalue(aabb)
+				local aabb_shape = {min=v, max={v[5], v[6], v[7]}}
+				geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
+			end
+		end
+	end
+
+	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
