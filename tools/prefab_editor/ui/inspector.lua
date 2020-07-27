@@ -98,7 +98,7 @@ function m.show(rhwi)
                     world[uiData.eid[1]].mesh = tostring(uiData.material.text)
                 end
                 if imgui.widget.BeginDragDropTarget() then
-                    local payload = imgui.widget.AcceptDragDropPayload("Drag")
+                    local payload = imgui.widget.AcceptDragDropPayload("DragFile")
                     if payload then
                         print(payload)
                     end

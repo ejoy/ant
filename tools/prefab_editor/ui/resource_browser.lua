@@ -168,7 +168,7 @@ function m.show(rhwi)
                     or path:equal_extension(".prefab")
                     or path:equal_extension(".glb") then
                     if imgui.widget.BeginDragDropSource() then
-                        imgui.widget.SetDragDropPayload("Drag", tostring(path))
+                        imgui.widget.SetDragDropPayload("DragFile", tostring(path))
                         imgui.widget.EndDragDropSource()
                     end
                 end
@@ -198,10 +198,6 @@ function m.show(rhwi)
             end
         end
         imgui.windows.EndChild()
-    end
-    local payload = imgui.widget.GetDragDropPayload()
-    if payload then
-        print(payload)
     end
 end
 
