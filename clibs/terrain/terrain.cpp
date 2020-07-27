@@ -56,7 +56,7 @@ lterrain_min_max_height(lua_State *L){
 static int
 lterrain_create_section_aabb(lua_State *L){
 	const glm::vec3 *position = (const glm::vec3*)lua_touserdata(L, 1);
-	const uint32_t offset = (uint32_t)luaL_checkinteger(L, 2);
+	const uint32_t vertex_offset = (uint32_t)luaL_checkinteger(L, 2);
 	const uint32_t elemsize = (uint32_t)luaL_checkinteger(L, 3);
 	const uint32_t vertexsize = elemsize+1;
 	const uint32_t pitchw = (uint32_t)luaL_checkinteger(L, 4);
@@ -72,7 +72,7 @@ lterrain_create_section_aabb(lua_State *L){
 		std::numeric_limits<float>::lowest()
 	);
 	for (uint32_t ih=0; ih<vertexsize; ++ih){
-		const uint32_t offset = ih * pitchw;
+		const uint32_t offset = ih * pitchw + vertex_offset;
 		for (uint32_t iw=0; iw<vertexsize; ++iw){
 			const glm::vec3 &v = position[offset + iw];
 			minv = glm::min(minv, v);

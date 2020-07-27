@@ -172,8 +172,6 @@ function sma.init(prefab, idx, terraineid)
 	local minv, maxv = terrain_module.create_section_aabb(
 		terrain.renderdata:vertex_buffer "position", vbstart, terrain.elem_size, pitchw)
 
-	--local tt = terrain.renderdata:totable("section", sd.sectionidx)
-
 	e.mesh = {bounding = {
 		aabb = math3d.ref(math3d.aabb(minv, maxv))
 	}}
