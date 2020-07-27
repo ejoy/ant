@@ -58,7 +58,8 @@ function util.view_proj(camera, frustum)
 end
 
 function util.pt2D_to_NDC(pt2d, rt)
-	local vp_pt2d = {pt2d[1]-rt.x, pt2d[2] - rt.y}
+	local x, y = rt.x or 0, rt.y or 0
+	local vp_pt2d = {pt2d[1]-x, pt2d[2]-y}
     local screen_y = vp_pt2d[2] / rt.h
 	if not math3d.origin_bottom_left then
         screen_y = 1 - screen_y
