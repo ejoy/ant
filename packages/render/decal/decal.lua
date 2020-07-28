@@ -10,10 +10,10 @@ function dm.init(prefab, idx, value)
     local eid = prefab[idx]
     local e = world[eid]
     local rc = e._rendercache
-    rc.decaled_eid = value
-    local de = world[value]
-    rc.vb = de.vb
-    rc.ib = de.ib
+    rc.parent = prefab[value]
+    local de_rc = world[rc.parent]._rendercache
+    rc.vb = de_rc.vb
+    rc.ib = de_rc.ib
 
     -- update decal relate propertey
     imaterial.set_property(eid, "u_decal_viewproj", rc.viewprojmat)
@@ -24,15 +24,14 @@ local function update_decal(e)
     local _rc = e._rendercache
     local decal = e.decal
     local hw, hh = decal.w * 0.5, decal.h * 0.5
-    _rc.viewmat = math3d.ref(math3d.inverse(_rc.srt))
-    local frustum = {
+    _rc.frustum = {
         l = -hw, r = hw,
         b = -hh, t = hh,
         n = 0, f = 1,
         ortho = true,
     }
-    _rc.viewprojmat = math3d.ref(math3d.mul(math3d.projmat(frustum), _rc.viewmat))
 end
+
 function dt.process_entity(e)
     update_decal(e)
 end
@@ -44,7 +43,7 @@ local decal_entity_remove_mb = world:sub{"entity_remove", "decal"}
 
 local decal_changed_mb = {}
 local decal_transform_mb = {}
-function ds.data_changed()
+function ds:data_changed()
     for _, _, eid in decal_register_mb:unpack() do
         decal_changed_mb[eid] = world:sub{"component_changed", "decal", eid}
         decal_transform_mb[eid] = world:sub{"component_changed", "transform", eid}
@@ -65,5 +64,15 @@ function ds.data_changed()
         for _, _, eid in mb:unpack() do
             update_decal(world[eid])
         end
+    end
+end
+
+function ds:follow_transforum_updated()
+    for _, decaleid in world:each "decal" do
+        local rc = world[decaleid]._rendercache
+        rc.viewmat = math3d.inverse(rc.worldmat)
+        rc.projmat = math3d.projmat(rc.frustum)
+        rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+        imaterial.set_property(decaleid, "u_decal_viewproj", rc.viewprojmat)
     end
 end
