@@ -1,0 +1,34 @@
+---
+policy:
+    ant.render|render
+    ant.scene|hierarchy_policy
+    ant.general|name
+data:
+    transform: 
+        s: {100, 100, 100, 0}
+        t: {0, 0, 8, 1}
+    bind_slot: "mixamorig:Head"
+    material: /pkg/ant.resources/materials/bunny.material
+    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
+    state: 0x00000005
+    scene_entity: true
+    name: slot_cube
+action:
+    mount: rooteid
+---
+policy:
+    ant.render|render
+    ant.render|decal
+    ant.scene|hierarchy_policy
+    ant.general|name
+data:
+    name: decal_test
+    transform: {}
+    material: /pkg/ant.resources/materials/decal_test.material
+    state: 5
+    scene_entity: true
+    decal:
+        w: 1
+        h: 1
+action:
+    decal_mount: 1
