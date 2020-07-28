@@ -20,7 +20,7 @@ end
 
 local default_setting = {
 	lighting = "on",			-- "on"/"off"
-	transparency = "opaticy",	-- "opaticy"/"translucent"
+	surfacetype = "opaticy",	-- "opaticy"/"translucent"/"decal"
 	shadow_cast	= "on",			-- "on"/"off"
 	shadow_receive = "off",		-- "on"/"off"
 	subsurface = "off",			-- "on"/"off"? maybe has other setting

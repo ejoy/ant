@@ -3,7 +3,7 @@ fx:
     fs: /pkg/ant.resources/shaders/line/fs_line_singlecolor.sc
     vs: /pkg/ant.resources/shaders/line/vs_line_singlecolor.sc
   setting:
-    transparency: translucent
+    surfacetype: translucent
 properties:
   u_color:  {1, 1, 1, 1}
 state:

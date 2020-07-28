@@ -17,7 +17,7 @@ function ipf.select_filters(eid)
 		if needadd and ((state & filter.filter_mask) ~= 0) then
 			item = rc
 		end
-		filter:insert_item(rc.fx.setting.transparency, eid, item)
+		filter:insert_item(rc.fx.setting.surfacetype, eid, item)
 	end
 end
 
@@ -40,7 +40,10 @@ function pf:init()
 		},
 		opaticy = {
 			items = {},
-		},
+        },
+        decal = {
+            items = {},
+        }
 	}
 	self.filter_mask = ies.filter_mask(self.filter_type)
 	return self

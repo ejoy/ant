@@ -6,4 +6,4 @@ setting:
   shadow_cast: on
   shadow_receive: on
   subsurface: on
-  transparency: opaticy
+  surfacetype: opaticy

@@ -7,4 +7,9 @@ properties:
     s_decal: 
         stage: 0
         texture: /pkg/ant.resources/textures/test/decal_test.texture
-state: /pkg/ant.resources/materials/states/default.state
+state:
+    ALPHA_REF: 0
+    CULL: CCW
+    DEPTH_TEST: EQUAL
+    MSAA: true
+    WRITE_MASK: RGBAZ

@@ -4,4 +4,4 @@ shader:
 setting:
   shadow_cast: off
   shadow_receive: off
-  transparency: opaticy
+  surfacetype: opaticy
