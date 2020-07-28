@@ -2812,6 +2812,21 @@ uCalcItemWidth(lua_State* L) {
 	return 1;
 }
 
+static int
+cIsMouseDragging(lua_State* L) {
+	int mouseType = (int)luaL_optinteger(L, 1, 0);
+	lua_pushboolean(L, ImGui::IsMouseDragging(mouseType));
+	return 1;
+}
+
+static int
+cGetMousePos(lua_State* L) {
+	auto pos = ImGui::GetMousePos();
+	lua_pushnumber(L, pos.x);
+	lua_pushnumber(L, pos.y);
+	return 2;
+}
+
 #ifdef _MSC_VER
 #pragma endregion IMP_UTIL
 #endif
@@ -3506,6 +3521,8 @@ luaopen_imgui(lua_State *L) {
 		{ "PopID",uPopID},
 		{ "CalcTextSize",uCalcTextSize},
 		{ "CalcItemWidth",uCalcItemWidth},
+		{ "IsMouseDragging", cIsMouseDragging },
+		{ "GetMousePos", cGetMousePos },
 		{ NULL, NULL },
 	};
 

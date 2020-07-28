@@ -79,6 +79,8 @@ local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 local entityStateEvent = world:sub {"EntityState"}
 local dropFilesEvent = world:sub {"OnDropFiles"}
 local transformEvent = world:sub {"TransformEvent"}
+local mouseMove = world:sub {"mousemove"}
+local dragFile = false
 local last_x = -1
 local last_y = -1
 local last_width = -1
@@ -140,6 +142,22 @@ function m:ui_update()
         local viewport = {x = x, y = y, w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
         world:pub {"ViewportDirty", viewport}
+    end
+    --drag file to view
+    if imgui.util.IsMouseDragging(0) then
+        local x, y = imgui.util.GetMousePos()
+        if (x > last_x and x < (last_x + last_width) and y > last_y and y < (last_y + last_height)) then
+            if not dragFile then
+                dragFile = imgui.widget.GetDragDropPayload()
+            end
+        else
+            dragFile = nil
+        end
+    else
+        if dragFile then
+            world:pub {"AddPrefab", dragFile}
+            dragFile = nil
+        end
     end
 end
 

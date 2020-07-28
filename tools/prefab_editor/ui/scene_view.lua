@@ -37,11 +37,11 @@ local function show_scene_node(node)
             end
         end
         if imgui.widget.BeginDragDropSource() then
-            imgui.widget.SetDragDropPayload("Drag", eid)
+            imgui.widget.SetDragDropPayload("DragNode", eid)
             imgui.widget.EndDragDropSource()
         end
         if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("Drag")
+            local payload = imgui.widget.AcceptDragDropPayload("DragNode")
             if payload then
                 sourceEid = tonumber(payload)
                 targetEid = eid
