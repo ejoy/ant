@@ -200,6 +200,7 @@ local function create_render_terrain_entity(eid)
 					"ant.render|render",
 					"ant.scene|hierarchy_policy",
 					"ant.general|name",
+					"ant.render|debug_mesh_bounding"
 				},
 				data = {
 					name = "section" .. isx .. isy,
@@ -211,10 +212,11 @@ local function create_render_terrain_entity(eid)
 						vb_num = numvertices,
 						sectionidx=isx + (isy-1) * sw,
 					},
+					debug_mesh_bounding = true,
 				},
 				action = {
 					section_mount = eid,
-				}
+				},
 			}
 		end
 	end

@@ -8,6 +8,8 @@ local widget_drawer_sys = ecs.system "widget_drawer_system"
 local ies = world:interface "ant.scene|ientity_state"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
+local setting = require "setting"
+
 local function create_dynamic_buffer(layout, num_vertices, num_indices)
 	local declmgr = import_package "ant.render".declmgr
 	local decl = declmgr.get(layout)
@@ -28,12 +30,16 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 	}
 end
 
-local ies = world:interface "ant.scene|ientity_state"
-
 local wd_trans = ecs.transform "widget_drawer_transform"
 function wd_trans.process_prefab(e)
 	local wd = e.widget_drawer
 	e.mesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)
+end
+
+local dmb_trans = ecs.transform "debug_mesh_bounding_transform"
+function dmb_trans.process_entity(e)
+	local rc = e._rendercache
+	rc.debug_mesh_bounding = e.debug_mesh_bounding
 end
 
 function widget_drawer_sys:init()
@@ -191,21 +197,23 @@ end
 local rmb_sys = ecs.system "render_mesh_bounding_system"
 
 function rmb_sys:widget()
-	local desc={vb={}, ib={}}
-
-	for _, eid in world:each "scene_entity" do
-		local e = world[eid]
-		if e.mesh and e.mesh.bounding then
+	local sd  = setting:data()
+	if sd.debug and sd.debug.show_bounding then
+		local desc={vb={}, ib={}}
+		for _, eid in world:each "debug_mesh_bounding" do
+			local e = world[eid]
 			local rc = e._rendercache
-			if rc and rc.vb and ies.can_visible(eid) then
-				local w = iom.calc_worldmat(eid)
-				local aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
-				local v = math3d.tovalue(aabb)
-				local aabb_shape = {min=v, max={v[5], v[6], v[7]}}
-				geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
+			if rc.debug_mesh_bounding and e.mesh and e.mesh.bounding then
+				if rc and rc.vb and ies.can_visible(eid) then
+					local w = iom.calc_worldmat(eid)
+					local aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
+					local v = math3d.tovalue(aabb)
+					local aabb_shape = {min=v, max={v[5], v[6], v[7]}}
+					geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
+				end
 			end
 		end
+	
+		append_buffers("fffd", desc.vb, "w", desc.ib)
 	end
-
-	append_buffers("fffd", desc.vb, "w", desc.ib)
 end
