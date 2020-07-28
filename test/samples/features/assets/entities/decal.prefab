@@ -6,7 +6,6 @@ policy:
 data:
     transform: 
         s: {100, 100, 100, 0}
-        t: {0, 0, 8, 1}
     bind_slot: "mixamorig:Head"
     material: /pkg/ant.resources/materials/bunny.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
@@ -23,7 +22,7 @@ policy:
     ant.general|name
 data:
     name: decal_test
-    transform: {}
+    transform:{}
     material: /pkg/ant.resources/materials/decal_test.material
     state: 5
     scene_entity: true

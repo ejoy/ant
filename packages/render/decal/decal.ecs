@@ -22,4 +22,5 @@ system "decal_system"
     .implement "decal/decal.lua"
     .require_policy "ant.render|decal"
     .method "data_changed"
+    .method "follow_transforum_updated"
 

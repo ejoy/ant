@@ -14,9 +14,6 @@ function dm.init(prefab, idx, value)
     local de_rc = world[rc.parent]._rendercache
     rc.vb = de_rc.vb
     rc.ib = de_rc.ib
-
-    -- update decal relate propertey
-    imaterial.set_property(eid, "u_decal_viewproj", rc.viewprojmat)
 end
 
 local dt = ecs.transform "decal_transform"

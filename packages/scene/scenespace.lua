@@ -3,6 +3,8 @@ local world = ecs.world
 
 local math3d = require "math3d"
 
+local ipf = world:interface "ant.scene|iprimitive_filter"
+
 ----iscenespace----
 local m = ecs.action "mount"
 function m.init(prefab, i, value)

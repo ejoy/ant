@@ -2,6 +2,8 @@ fx:
     shader:
         vs: /pkg/ant.resources/shaders/decals/vs_test.sc
         fs: /pkg/ant.resources/shaders/decals/fs_test.sc
+    setting:
+        surfacetype: decal
 properties:
     u_decal_viewproj: {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
     s_decal: 

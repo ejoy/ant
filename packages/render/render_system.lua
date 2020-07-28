@@ -113,6 +113,7 @@ function render_sys:render_commit()
 
 			draw_items(results.opaticy)
 			draw_items(results.translucent)
+			draw_items(results.decal)
 		end
 		
 	end
