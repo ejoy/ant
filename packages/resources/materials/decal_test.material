@@ -12,6 +12,6 @@ properties:
 state:
     ALPHA_REF: 0
     CULL: CCW
-    DEPTH_TEST: LEQUAL
+    DEPTH_TEST: ALWAYS
     MSAA: true
     WRITE_MASK: RGBA
