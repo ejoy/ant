@@ -107,6 +107,8 @@ struct render_data{
 	glm::uvec3 *indices;
 	glm::vec3 *positions;
 	glm::vec3 *normals;
+	glm::vec2 *texcoord0;
+	glm::vec2 *texcoord1;
 
 #ifdef _DEBUG
 	uint32_t grid_width, grid_height;
@@ -134,6 +136,8 @@ lrenderdata_delete(lua_State *L){
 	del_array_func(rd->indices);
 	del_array_func(rd->positions);
 	del_array_func(rd->normals);
+	del_array_func(rd->texcoord0);
+	del_array_func(rd->texcoord1);
 
 	return 0;
 }
@@ -198,6 +202,8 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 	const uint32_t vertex_num = vertex_width * vertex_height;
 	rd->positions = new glm::vec3[vertex_num];
 	rd->normals = new glm::vec3[vertex_num];
+	rd->texcoord0 = new glm::vec2[vertex_num];
+	rd->texcoord1 = nullptr;	//TODO
 #ifdef _DEBUG
 	rd->grid_width = grid_width;
 	rd->grid_width = grid_height;
@@ -215,9 +221,10 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 
 			auto p = glm::vec3(x, y, z);
 			rd->positions[ip] = p;
+			rd->texcoord0[ip] = glm::vec2(float(ix), float(iz));
 		}
 	}
-	memset(rd->normals, 0, vertex_width * vertex_height * sizeof(glm::vec3));
+	memset(rd->normals, 0, vertex_num * sizeof(glm::vec3));
 	
 	auto calc_normal = [rd](glm::vec3 *normals, uint32_t idx0, uint32_t idx1, uint32_t idx2){
 			const auto& p0 = rd->positions[idx0], 
