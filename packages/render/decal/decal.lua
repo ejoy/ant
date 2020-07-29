@@ -4,16 +4,21 @@ local world = ecs.world
 local math3d = require "math3d"
 
 local imaterial = world:interface "ant.asset|imaterial"
+local bgfx = require "bgfx"
 
 local dm = ecs.action "decal_mount"
 function dm.init(prefab, idx, value)
     local eid = prefab[idx]
     local e = world[eid]
     local rc = e._rendercache
-    rc.parent = prefab[value]
-    local de_rc = world[rc.parent]._rendercache
+    rc.decaled_eid = prefab[value]
+    local de_rc = world[rc.decaled_eid]._rendercache
     rc.vb = de_rc.vb
     rc.ib = de_rc.ib
+
+    rc.set_transform = function (self)
+        bgfx.set_transform(de_rc.worldmat)
+    end
 end
 
 local dt = ecs.transform "decal_transform"
@@ -64,12 +69,26 @@ function ds:data_changed()
     end
 end
 
-function ds:follow_transforum_updated()
-    for _, decaleid in world:each "decal" do
-        local rc = world[decaleid]._rendercache
-        rc.viewmat = math3d.inverse(rc.worldmat)
+-- rotate Z Axis -> Y Axis
+local rotateYZ_MAT = math3d.ref(
+    math3d.matrix(
+        1, 0, 0, 0,
+        0, 0, -1, 0,
+        0, 1, 0, 0,
+        0, 0, 0, 1)
+    )
+
+function ds:follow_transform_updated()
+    for _, eid in world:each "decal" do
+        local de = world[eid]
+        local rc = de._rendercache
+
+        local mm = math3d.mul(rotateYZ_MAT, rc.worldmat)
+
+        rc.viewmat = math3d.inverse(mm)
         rc.projmat = math3d.projmat(rc.frustum)
         rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
-        imaterial.set_property(decaleid, "u_decal_viewproj", rc.viewprojmat)
+
+        imaterial.set_property(eid, "u_decal_mat", math3d.mul(rc.worldmat, rc.viewprojmat))
     end
 end

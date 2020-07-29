@@ -5,13 +5,13 @@ fx:
     setting:
         surfacetype: decal
 properties:
-    u_decal_viewproj: {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+    u_decal_mat: {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
     s_decal: 
         stage: 0
         texture: /pkg/ant.resources/textures/test/decal_test.texture
 state:
     ALPHA_REF: 0
     CULL: CCW
-    DEPTH_TEST: EQUAL
+    DEPTH_TEST: LEQUAL
     MSAA: true
-    WRITE_MASK: RGBAZ
+    WRITE_MASK: RGBA

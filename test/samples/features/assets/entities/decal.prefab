@@ -22,7 +22,8 @@ policy:
     ant.general|name
 data:
     name: decal_test
-    transform:{}
+    transform:
+        t: {0, 0, 1, 1}
     material: /pkg/ant.resources/materials/decal_test.material
     state: 5
     scene_entity: true
