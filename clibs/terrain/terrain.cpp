@@ -217,15 +217,19 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 			rd->positions[ip] = p;
 		}
 	}
+	memset(rd->normals, 0, vertex_width * vertex_height * sizeof(glm::vec3));
 	
-	auto calc_normal = [rd](uint32_t idx0, uint32_t idx1, uint32_t idx2){
+	auto calc_normal = [rd](glm::vec3 *normals, uint32_t idx0, uint32_t idx1, uint32_t idx2){
 			const auto& p0 = rd->positions[idx0], 
 						p1 = rd->positions[idx1], 
 						p2 = rd->positions[idx2];
 
 			const auto e0 = p1 - p0,
 						e1 = p2 - p0;
-			return glm::normalize(glm::cross(e0, e1));
+			const auto n = glm::normalize(glm::cross(e0, e1));
+			normals[idx0] += n;
+			normals[idx1] += n;
+			normals[idx2] += n;
 	};
 
 	for (uint32_t iz = 0; iz < grid_height; ++iz){
@@ -235,7 +239,7 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 			const uint32_t idx1 = (iz+1) * vertex_width + ix;
 			const uint32_t idx2 = (iz * vertex_width) + (ix + 1);
 			
-			rd->normals[idx0] = calc_normal(idx0, idx1, idx2);
+			calc_normal(rd->normals, idx0, idx1, idx2);
 		}
 	}
 
@@ -244,7 +248,7 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 						idx1 = (vertex_width * ii + grid_width - 1),
 						idx2 = (vertex_width * ii + 1 + grid_width);
 
-		rd->normals[idx0] = calc_normal(idx0, idx1, idx2);
+		calc_normal(rd->normals, idx0, idx1, idx2);
 	}
 
 	for (uint32_t ii = 0; ii < grid_width; ++ii){
@@ -252,14 +256,22 @@ lrenderdata_init_vertex_buffer(lua_State *L){
 						idx1 = (grid_height * vertex_width + ii + 1),
 						idx2 = ((grid_height - 1) * vertex_width + ii);
 
-		rd->normals[idx0] = calc_normal(idx0, idx1, idx2);
+		calc_normal(rd->normals, idx0, idx1, idx2);
 	}
 
 	{
 		const uint32_t idx0 = grid_height * vertex_width + grid_width,
 						idx1 = (grid_height - 1) * vertex_width + grid_width,
 						idx2 = grid_height * vertex_width + grid_width - 1;
-		rd->normals[idx0] = calc_normal(idx0, idx1, idx2);
+		calc_normal(rd->normals, idx0, idx1, idx2);
+	}
+
+	for (uint32_t jj=0; jj<vertex_height; ++jj){
+		const uint32_t offset = jj * vertex_width;
+		for(uint32_t ii=0; ii<vertex_width; ++ii){
+			const uint32_t idx = offset + ii;
+			glm::normalize(rd->normals[idx]);
+		}
 	}
 
 	lua_pushlightuserdata(L, rd->positions);
