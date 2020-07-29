@@ -28,7 +28,7 @@ data:
     state: 5
     scene_entity: true
     decal:
-        w: 1
-        h: 1
+        w: 2.5
+        h: 2.5
 action:
     decal_mount: 1
