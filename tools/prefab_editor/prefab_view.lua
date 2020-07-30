@@ -2,7 +2,8 @@ local queue = require "queue"
 
 local scene = {
     root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}},
-    all = {}
+    all = {},
+    select_adapter = {}
 }
 
 function scene:set_root(eid)
@@ -92,7 +93,15 @@ function scene:set_visible(eid, b)
 end
 
 function scene:get_template(eid)
-    return self.all[eid].template
+    return self.all[eid] and self.all[eid].template or nil
+end
+
+function scene:add_select_adapter(eid, target)
+    self.select_adapter[eid] = target
+end
+
+function scene:get_select_adapter(eid)
+    return self.select_adapter[eid] or eid
 end
 
 return scene

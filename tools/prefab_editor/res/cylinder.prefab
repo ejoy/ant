@@ -1,4 +1,18 @@
 ---
+action:
+  mount: root
+data:
+  name: Root
+  scene_entity: true
+  transform:
+    s: 1
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 1
 policy:
   ant.render|render
   ant.general|name
@@ -9,7 +23,6 @@ data:
   state: 5
   transform:
     s: 30
-    t: {0, 0, 0, 0}
   color: {1, 1, 1, 1}
   material: "/pkg/ant.resources/materials/singlecolor.material"
   mesh: "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin"

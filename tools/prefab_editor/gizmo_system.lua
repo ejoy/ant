@@ -14,7 +14,7 @@ local imaterial = world:interface "ant.asset|imaterial"
 local queue = require "queue"
 local prefab_view = require "prefab_view"
 local utils = require "mathutils"
-local worldedit = require "worldedit"(world)
+local worldedit = import_package "ant.editor".worldedit(world)
 local move_axis
 local rotate_axis
 local uniform_scale = false
@@ -325,18 +325,19 @@ local function showRotateMeshByAxis(show, axis)
 end
 
 function gizmo:set_target(eid)
-	if self.target_eid == eid then
+	local target = prefab_view:get_select_adapter(eid)
+	if self.target_eid == target then
 		return
 	end
-	self.target_eid = eid
-	if eid then
+	self.target_eid = target
+	if target then
 		self:set_position()
 		self:set_rotation()
 		self:update_scale()
 		self:updata_uniform_scale()
 		self:update_axis_plane()
 	end
-	gizmo:show_by_state(eid ~= nil)
+	gizmo:show_by_state(target ~= nil)
 	world:pub {"Gizmo","ontarget"}
 end
 

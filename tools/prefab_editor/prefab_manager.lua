@@ -13,8 +13,8 @@ local m = {
 
 function m:init(w)
 	world = w
-	iom = world:interface "ant.objcontroller|obj_motion"
-	worldedit = require "worldedit"(world)
+    iom = world:interface "ant.objcontroller|obj_motion"
+    worldedit = import_package "ant.editor".worldedit(world)
 end
 
 function m:normalize_aabb()
@@ -45,27 +45,21 @@ function m:open_prefab(filename)
 			world:remove_entity(eid)
 		end
 	end
-    local root = world:create_entity {
-        policy = {
-            "ant.general|name",
-            "ant.scene|transform_policy",
-        },
-        data = {
-            name = "Root",
-            transform = {},
-            scene_entity = true
-        }
-	}
-	prefab_view:clear()
-    prefab_view:set_root(root)
+
     local prefab = worldedit:prefab_template(filename)
-    local entities = worldedit:prefab_instance(prefab, {root = root})
+    local entities = worldedit:prefab_instance(prefab)
+    local root = entities[1]
+    prefab_view:clear()
+    prefab_view:set_root(root)
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/4/action/mount", 1)
     for i, e in ipairs(entities) do
-        prefab_view:add(e, {prefab = prefab}, world[e].parent)
-	end
+        if world[e].parent then
+            prefab_view:add(e, {prefab = prefab}, world[e].parent)
+        end
+    end
+
 	self.root = root
 	self.prefab = prefab
 	self.entities = entities
@@ -74,23 +68,20 @@ function m:open_prefab(filename)
 end
 
 function m:add_prefab(filename)
-	local root = world:create_entity {
-        policy = {
-            "ant.general|name",
-            "ant.scene|transform_policy",
-        },
-        data = {
-            name = "",
-            transform = {},
-            scene_entity = true
-        }
-	}
-
-	world[root].name = "prefab_" .. root
-
 	local prefab = worldedit:prefab_template(filename)
-	local entities = worldedit:prefab_instance(prefab, {root = root})
+    local entities = worldedit:prefab_instance(prefab, {root = self.root})
+    local root = entities[1]
+    world[root].name = "Prefab_" .. root
     local relative_path = lfs.relative(lfs.path(filename), fs.path "":localpath())
+    self.entities[#self.entities] = root
+    for i, e in ipairs(entities) do
+        if i > 1 then
+            prefab_view:add_select_adapter(e, root)
+        end
+    end
+    
+    --worldedit:prefab_add()
+    
     prefab_view:add(root, {prefab = prefab, filename = relative_path}, self.root)
 end
 

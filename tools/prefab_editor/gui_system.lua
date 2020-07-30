@@ -165,7 +165,8 @@ function m:data_changed()
         elseif what == "lock" then
             prefab_view:set_lock(eid, value)
         elseif what == "delete" then
-            
+            prefab_view:del(eid)
+            world:remove_entity(eid)
         end
     end
     for _, filename in eventOpenPrefab:unpack() do

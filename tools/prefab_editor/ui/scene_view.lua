@@ -45,9 +45,6 @@ local function context_menu(eid)
     end
 end
 local function show_scene_node(node)
-    local icons = require "common.icons"(asset_mgr)
-    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
-    local name = world[node.eid].name
     local function select_or_move(eid)
         if imgui.util.IsItemClicked() then
             if is_editable(eid) then
@@ -67,6 +64,7 @@ local function show_scene_node(node)
             imgui.widget.EndDragDropTarget()
         end
     end
+    local icons = require "common.icons"(asset_mgr)
     local function lock_visible(eid)
         imgui.cursor.NextColumn()
         imgui.util.PushID(eid)
@@ -86,6 +84,8 @@ local function show_scene_node(node)
         imgui.util.PopID()
         imgui.cursor.NextColumn()
     end
+    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
+    local name = world[node.eid].name
     if #node.children == 0 then
         imgui.widget.TreeNode(name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
         context_menu(node.eid)
