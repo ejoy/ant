@@ -94,7 +94,7 @@ local function set_prefab(world, prefab, path, value)
     local catalog = pathlst[2]
     if catalog == "data" then
         set(prefab[idx].template, "/"..table.concat(pathlst, "/", 3), value)
-        set(prefab.data, path, value)
+        set(prefab.__class, path, value)
         if need_update(pathlst) then
             for _, instance in ipairs(mgr[prefab]) do
                 set_entity(world, instance[idx], pathlst, value)
@@ -113,7 +113,7 @@ local function get_prefab(prefab, path)
     end
     local catalog = pathlst[2]
     if catalog == "data" then
-        return get(prefab.data, path)
+        return get(prefab.__class, path)
     end
     return false
 end

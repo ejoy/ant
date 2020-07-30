@@ -79,7 +79,7 @@ end
 
 local function instance_prefab(w, prefab, args)
 	args = args or {}
-	local res = {__class = prefab}
+	local res = {__class = prefab.__class}
 	for i, v in ipairs(prefab) do
 		if v.prefab then
 			res[i] = instance_prefab(w, v.prefab, v.data and v.data.args or nil)
@@ -88,7 +88,7 @@ local function instance_prefab(w, prefab, args)
 		end
 	end
 	setmetatable(res, {__index=args})
-	for i, entity in ipairs(prefab.data) do
+	for i, entity in ipairs(prefab.__class) do
 		if entity.action then
 			for name, target in sortpairs(entity.action) do
 				local object = w._class.action[name]
@@ -126,9 +126,9 @@ local function create_entity_template(w, v)
 	}
 end
 
-function world:create_template(data)
-	local prefab = {data=data}
-	for _, v in ipairs(data) do
+function world:create_template(t)
+	local prefab = {__class=t}
+	for _, v in ipairs(t) do
 		if v.prefab then
 			prefab[#prefab+1] = {
 				prefab = assetmgr.resource(v.prefab, self)
@@ -146,7 +146,7 @@ function world:create_entity(v)
 		args["_mount"] = v.action.mount
 		v.action.mount = "_mount"
 	end
-	local prefab = {data={v}, create_entity_template(self, v)}
+	local prefab = {__class={v}, create_entity_template(self, v)}
 	local res = instance_prefab(self, prefab, args)
 	return res[1], res
 end
@@ -161,7 +161,7 @@ function world:instance_prefab(prefab, args)
 end
 
 function world:serialize(entities)
-	return stringify(entities.__class.data)
+	return stringify(entities.__class)
 end
 
 function world:remove_entity(eid)
@@ -306,60 +306,6 @@ function world:signal_emit(name, ...)
 	if f then
 		f(...)
 	end
-end
-
-local patch_table; do
-
-	local function format_error(format, ...)
-		error(format:format(...))
-	end
-
-	local function apply_patch(obj, patch)
-		for k,v in pairs(patch) do
-			local original = obj[k]
-			if original == nil then
-				format_error("the key %s in the patch is not exist in the original object", k)
-			end
-			if type(original) ~= "table" then
-				if type(v) == "table" then
-					format_error("patch a none-table key %s with a table", k)
-				end
-				obj[k] = v
-			else
-				-- it's sub tree
-				if type(v) ~= "table" then
-					format_error("patch a sub tree %s with a none-table", k)
-				end
-				obj[k] = patch_table(original, v)
-			end
-		end
-	end
-
-	function patch_table(src, patch)
-		if patch._data ~= nil then
-			-- patch is a resource proxy
-			return patch
-		end
-		local obj
-		if src._data ~= nil or src._patch == nil then
-			-- src is shared
-			obj = { _patch = false }
-			for k,v in pairs(src) do
-				obj[k] = v
-			end
-		else
-			-- src._patch == false
-			obj = src
-		end
-		apply_patch(obj, patch)
-		return obj
-	end
-end
-
-function world:set(eid, cname, patch)
-	local e = self[eid]
-	local oldc = e[cname]
-	e[cname] = patch_table(oldc, patch)
 end
 
 local m = {}
