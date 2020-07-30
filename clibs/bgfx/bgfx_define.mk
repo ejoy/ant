@@ -21,14 +21,14 @@ BIMGDECODELIB=-lbimg_decode$(MODE)
 ifeq "$(PLAT)" "mingw"
 BXLIB += -lpsapi
 BGFXLIBDIR = $(BGFXSRC)/.build/win64_mingw-gcc/bin
-BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -luuid
+BGFXLIB = -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++ -lgdi32 -luuid
 else ifeq "$(PLAT)" "osx"
 BGFXLIBDIR = $(BGFXSRC)/.build/osx64_clang/bin
-BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
+BGFXLIB = -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
 BGFXLIB += -framework Foundation -framework Metal -framework QuartzCore -framework Cocoa
 else ifeq "$(PLAT)" "ios"
 BGFXLIBDIR = $(BGFXSRC)/.build/ios-arm64/bin
-BGFXLIB = -L$(BGFXLIBDIR) -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
+BGFXLIB = -lbgfx$(MODE) $(BIMGLIB) $(BXLIB) -lstdc++
 BGFXLIB += -framework CoreFoundation -framework Foundation -framework OpenGLES -framework UIKit -framework QuartzCore -weak_framework Metal
 endif
 

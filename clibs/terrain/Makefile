@@ -18,7 +18,7 @@ terrain.dll: $(ODIR)/terrain.dll | $(ODIR)
 	cp $^ $@
 
 $(ODIR)/terrain.dll : $(ODIR)/terrain.o 
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) $(BGFXLIB)
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++
 
 $(ODIR)/libterrain.a : $(ODIR)/terrain.o 
 	ar rsv $@ $^

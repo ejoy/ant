@@ -30,34 +30,34 @@ OBJS += $(ODIR)/imgui_win32.o
 LIBS = -limm32
 
 $(ODIR)/imgui_win32.o : imgui_win32.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(WINDOW_INC) $(IMGUI_MACRO)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(WINDOW_INC) $(IMGUI_MACRO)
 endif
 
 ifeq "$(PLAT)" "osx"
 OBJS += $(ODIR)/imgui_osx.o
 
 $(ODIR)/imgui_osx.o : imgui_osx.mm | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 endif
 
 ifeq "$(PLAT)" "ios"
 OBJS += $(ODIR)/imgui_ios.o
 
 $(ODIR)/imgui_ios.o : imgui_ios.mm | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 endif
 
 $(ODIR)/luaimgui.o : luaimgui.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
 $(ODIR)/imgui_ant.o : imgui_ant.cpp imgui_ant.h | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx -I$(ANT3RD)/glm
 
 $(ODIR)/luaimnode.o: luaimnodes.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(IMNODES_INC)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(IMNODES_INC)
 
 $(ODIR)/imgui_config.o : imgui_config.cpp imgui_ant.h $(IMGUI_SRC)/imgui.h | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx
+	$(CXX) $(CFLAGS) -c -o $@ $< $(LUAINC) $(IMGUI_INC) $(IMGUI_MACRO) $(BGFXINC) -I../bgfx
 
 $(ODIR)/imgui.o : $(IMGUI_SRC)/imgui.cpp  $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
