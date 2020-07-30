@@ -12,14 +12,13 @@ local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
 local vfs = require "vfs"
 local prefab_view = require "prefab_view"
-local entity_mgr = require "common.entity_mgr"
 local resource_browser = require "ui.resource_browser"(world, asset_mgr)
 local toolbar = require "ui.toolbar"(world, asset_mgr)
-local scene_view = require "ui.scene_view"(world, asset_mgr, entity_mgr)
+local scene_view = require "ui.scene_view"(world, asset_mgr)
 local inspector = require "ui.inspector"(world)
 local uiconfig = require "ui.config"
 local uiutils = require "ui.utils"
-
+local prefab_mgr = require "prefab_manager"
 
 local m = ecs.system 'gui_system'
 
@@ -48,7 +47,7 @@ local function showMenu()
 
             end
             if imgui.widget.MenuItem("Save", "Ctrl+S") then
-
+                prefab_mgr:save_prefab("D:/Github/ant/tools/prefab_editor/res/female/test.prefab")
             end
             if imgui.widget.MenuItem("Save As..") then
 
@@ -90,37 +89,6 @@ function m:ui_update()
         local res_root_str = tostring(fs.path "":localpath())
         resourceRoot = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
         resource_browser.set_root(resourceRoot)
-    end
-    for _, action, value1, value2 in eventGizmo:unpack() do
-        if action == "update" or action == "ontarget" then
-            inspector.update_ui()
-        elseif action == "create" then
-            gizmo = value1
-            cmd_queue = value2
-            inspector.set_gizmo(gizmo)
-            scene_view.set_gizmo(gizmo)
-        end
-    end
-    for _, what, target, old, new in entityStateEvent:unpack() do
-        if what == "move" then
-            cmd_queue:record {action = MOVE, eid = target, oldvalue = old, newvalue = new}
-        elseif what == "rotate" then
-            cmd_queue:record {action = ROTATE, eid = target, oldvalue = old, newvalue = new}
-        elseif what == "scale" then
-            cmd_queue:record {action = SCALE, eid = target, oldvalue = old, newvalue = new}
-        end
-    end
-    for _, what, eid, value in entityStateEvent:unpack() do
-        if what == "visible" then
-            entity_mgr:set_visible(eid, value)
-            ies.set_state(eid, what, value)
-        elseif what == "lock" then
-            entity_mgr:set_lock(eid, value)
-        end
-    end
-
-    for _, files in dropFilesEvent:unpack() do
-        on_drop_files(files)
     end
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -168,10 +136,45 @@ end
 -- end
 
 -- local dragFiles = world:sub {"dropfiles"}
-
+local eventOpenPrefab = world:sub {"OpenPrefab"}
+local eventAddPrefab = world:sub {"AddPrefab"}
 function m:data_changed()
-
-    -- for _,files in dragFiles:unpack() do
-    --     onDropFiles(files)
-    -- end
+    for _, action, value1, value2 in eventGizmo:unpack() do
+        if action == "update" or action == "ontarget" then
+            inspector.update_ui()
+        elseif action == "create" then
+            gizmo = value1
+            cmd_queue = value2
+            inspector.set_gizmo(gizmo)
+            scene_view.set_gizmo(gizmo)
+        end
+    end
+    for _, what, target, old, new in transformEvent:unpack() do
+        if what == "move" then
+            cmd_queue:record {action = MOVE, eid = target, oldvalue = old, newvalue = new}
+        elseif what == "rotate" then
+            cmd_queue:record {action = ROTATE, eid = target, oldvalue = old, newvalue = new}
+        elseif what == "scale" then
+            cmd_queue:record {action = SCALE, eid = target, oldvalue = old, newvalue = new}
+        end
+    end
+    for _, what, eid, value in entityStateEvent:unpack() do
+        if what == "visible" then
+            prefab_view:set_visible(eid, value)
+            ies.set_state(eid, what, value)
+        elseif what == "lock" then
+            prefab_view:set_lock(eid, value)
+        elseif what == "delete" then
+            
+        end
+    end
+    for _, filename in eventOpenPrefab:unpack() do
+        prefab_mgr:open_prefab(filename)
+    end
+    for _, filename in eventAddPrefab:unpack() do
+        prefab_mgr:add_prefab(filename)
+    end
+    for _, files in dropFilesEvent:unpack() do
+        on_drop_files(files)
+    end
 end

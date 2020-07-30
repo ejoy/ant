@@ -151,7 +151,7 @@ function m.show(rhwi)
                             prefab_file = tostring(path) .. "|mesh.prefab"
                         end
                         if prefab_file then
-                            world:pub {"instance_prefab", prefab_file}
+                            world:pub {"OpenPrefab", prefab_file}
                         end
                     end
                     if path:equal_extension(".png") then
@@ -188,7 +188,6 @@ function m.show(rhwi)
         imgui.windows.EndChild()
         imgui.cursor.SameLine()
         imgui.windows.BeginChild("ResourceBrowserPreview", width, height, false);
-        
         
         if fs.path(currentFile):equal_extension(".png") then
             local preview = previewImages[currentFile]

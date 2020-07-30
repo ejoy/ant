@@ -2,6 +2,7 @@ local imgui     = require "imgui"
 local math3d    = require "math3d"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
+local prefab_view = require "prefab_view"
 local m = {}
 local world
 local localSpace = {}
@@ -73,7 +74,15 @@ function m.show(rhwi)
             if uiData.eid[1] ~= gizmo.target_eid then
                 on_select(gizmo.target_eid)
             end
-            imgui.widget.InputInt("EID", uiData.eid)
+            imgui.widget.Text("EID :")
+            imgui.cursor.SameLine()
+            imgui.widget.Text(uiData.eid[1])
+            local template = prefab_view:get_template(uiData.eid[1])
+            if template and template.filename then
+                imgui.widget.Text("Prefab :")
+                imgui.cursor.SameLine()
+                imgui.widget.Text(tostring(template.filename))
+            end
             if imgui.widget.InputText("Name", uiData.name) then
                 world[uiData.eid[1]].name = tostring(uiData.name.text)
             end

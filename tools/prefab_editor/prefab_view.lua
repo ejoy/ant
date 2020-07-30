@@ -1,6 +1,9 @@
 local queue = require "queue"
 
-local scene = {root = {eid = -1, parent = -1, children = {}}, all = {}}
+local scene = {
+    root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}},
+    all = {}
+}
 
 function scene:set_root(eid)
     self.root.eid = eid
@@ -15,8 +18,8 @@ local function find(t, eid)
     end
     return nil
 end
-function scene:add(ineid, inpeid)
-    local node = { eid = ineid, parent = inpeid, children = {} }
+function scene:add(ineid, tp, inpeid)
+    local node = { eid = ineid, parent = inpeid, template = tp, children = {}, locked = {false}, visible = {true} }
     if inpeid then
         local parent = self.all[inpeid]
         if parent then
@@ -50,7 +53,7 @@ function scene:del(eid)
 end
 
 function scene:clear()
-    self.root = {eid = -1, parent = -1, children = {}}
+    self.root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}}
     self.all = {}
 end
 
@@ -62,6 +65,34 @@ function scene:set_parent(eid, peid)
     removed_node.parent = peid
     table.insert(peid_node.children, removed_node)
     self.all[eid] = removed_node
+end
+
+function scene:get_locked_uidata(eid)
+    return self.all[eid].locked
+end
+
+function scene:get_visible_uidata(eid)
+    return self.all[eid].visible
+end
+
+function scene:is_locked(eid)
+    return self.all[eid].locked[1]
+end
+
+function scene:is_visible(eid)
+    return self.all[eid].visible[1]
+end
+
+function scene:set_lock(eid, b)
+    self.all[eid].locked[1] = b
+end
+
+function scene:set_visible(eid, b)
+    self.all[eid].visible[1] = b
+end
+
+function scene:get_template(eid)
+    return self.all[eid].template
 end
 
 return scene
