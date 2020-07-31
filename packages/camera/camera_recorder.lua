@@ -59,95 +59,76 @@ function cr.stop(recordereid)
     --TODO
 end
 
-local cr_playing
 function cr.play(recordereid, cameraeid)
-    if cr_playing then
-        print("camera queue is playing:%d, %s", cr_playing, world[cr_playing].name or "")
-        return
-    end
-
-    cr_playing = recordereid
     local q = world[recordereid]
     local p = q._playing
     p.camera_eid = cameraeid
     p.cursor = 0
+    world:pub{"camera_recorder", "play", recordereid}
 end
 
 local cq_sys = ecs.system "camera_recorder_system"
-local kb_mb = world:sub{"keyboard"}
+local cr_play_mb = world:sub {"camera_recorder", "play"}
 
-local which_cr
-local recording = false
-function cq_sys.data_changed()
-    for _, code, press, state in kb_mb:unpack() do
-        if code == "RETURN" and press == 0 then 
-            recording = not recording
-            if recording then
-                which_cr = cr.start "test1"
-            else
-                cr.stop(which_cr)
-            end
-        elseif code == "SPACE" and press == 0 then
-            local ceid = world:singleton_entity "main_queue".camera_eid
-            cr.add(which_cr, ceid)
-        elseif state.CTRL and code == "P" and press == 0 then
-            if recording then
-                print("camera is recording, please stop before play")
-            else
-                local ceid = world:singleton_entity "main_queue".camera_eid
-                cr.play(which_cr, ceid)
-            end
-        end
+local playing_cr
+local function play_camera_recorder()
+    if playing_cr == nil then
+        return
     end
 
     local delta_time = timer.delta()
-    if cr_playing then
-        local r = world[cr_playing]
-        
-        local frames = r.frames
-        if #frames >= 2 then
-            local p = r._playing
-            local cameraeid = p.camera_eid
+    local r = world[playing_cr]
 
-            local function which_frame(cursor)
-                local duration = 0
-                local numframe = #frames
-                for ii=1, numframe-1 do
-                    local f = frames[ii]
-                    duration = duration + f.duration
-                    if cursor < duration then
-                        local localcursor = cursor - (duration - f.duration)
-                        return ii, ii+1, math.min(localcursor / f.duration, 1.0)
-                    end
+    local frames = r.frames
+    if #frames >= 2 then
+        local p = r._playing
+        local cameraeid = p.camera_eid
+
+        local function which_frames(cursor)
+            local duration = 0
+            local numframe = #frames
+            for ii=1, numframe-1 do
+                local f = frames[ii]
+                duration = duration + f.duration
+                if cursor < duration then
+                    local localcursor = cursor - (duration - f.duration)
+                    return f, frames[ii+1], math.min(localcursor / f.duration, 1.0)
                 end
-            end
-
-            local cf_idx, nf_idx, t = which_frame(p.cursor)
-            
-            if cf_idx then
-                local cf, nf = frames[cf_idx], frames[nf_idx]
-                if cf.mode == "linear" then
-                    local position = math3d.lerp(cf.position, nf.position, t)
-                    local rotation = math3d.slerp(cf.rotation, nf.rotation, t)
-                    local nearclip = mu.lerp(cf.nearclip, nf.nearclip, t)
-                    local farclip  = mu.lerp(cf.farclip, nf.farclip, t)
-                    local fov      = mu.lerp(cf.fov, nf.fov, t)
-
-                    local frusutm = icamera.get_frustum(cameraeid)
-                    frusutm.n = nearclip
-                    frusutm.f = farclip
-                    frusutm.fov = fov
-                    icamera.set_frustum(cameraeid, frusutm)
-                    
-                    iom.lookto(cameraeid, position, math3d.todirection(rotation))
-                else
-                    error(("not support interpolation mode"):format(cf.mode))
-                end
-    
-                p.cursor = p.cursor + delta_time
-            else
-                cr_playing = nil
             end
         end
+
+        local cf, nf, t = which_frames(p.cursor)
+        
+        if cf then
+            if cf.mode == "linear" then
+                local position = math3d.lerp(cf.position, nf.position, t)
+                local rotation = math3d.slerp(cf.rotation, nf.rotation, t)
+                local nearclip = mu.lerp(cf.nearclip, nf.nearclip, t)
+                local farclip  = mu.lerp(cf.farclip, nf.farclip, t)
+                local fov      = mu.lerp(cf.fov, nf.fov, t)
+
+                local frusutm = icamera.get_frustum(cameraeid)
+                frusutm.n = nearclip
+                frusutm.f = farclip
+                frusutm.fov = fov
+                icamera.set_frustum(cameraeid, frusutm)
+                
+                iom.lookto(cameraeid, position, math3d.todirection(rotation))
+            else
+                error(("not support interpolation mode"):format(cf.mode))
+            end
+
+            p.cursor = p.cursor + delta_time
+        else
+            playing_cr = nil
+        end
     end
+end
+
+function cq_sys.data_changed()
+    for _, _, creid in cr_play_mb:unpack() do
+        playing_cr = creid
+    end
+
+    play_camera_recorder()
 end
