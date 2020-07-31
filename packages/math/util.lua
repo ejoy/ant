@@ -38,6 +38,10 @@ function util.print_srt(e, numtab)
 	print(tab .. "position : ", t_str)
 end
 
+function util.lerp(v1, v2, t)
+	return v1 * (1-t) + v2 * t
+end
+
 function util.ratio(start, to, t)
 	return (t - start) / (to - start)
 end

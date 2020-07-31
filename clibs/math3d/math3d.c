@@ -691,6 +691,13 @@ alloc_vec4(lua_State *L, struct lastack *LS) {
 	return v;
 }
 
+static float*
+alloc_quat(lua_State *L, struct lastack *LS){
+	float * v = lastack_allocquat(LS);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return v;
+}
+
 static int
 ladd(lua_State *L) {
 	struct lastack *LS = GETLS(L);
@@ -1310,14 +1317,41 @@ lminmax(lua_State *L){
 static int
 llerp(lua_State *L){
 	struct lastack *LS = GETLS(L);
-	const float *v0 = vector_from_index(L, LS, 1);
-	const float *v1 = vector_from_index(L, LS, 1);
+
+	int type0, type1;
+	const float *v0 = get_object(L, LS, 1, &type0);
+	const float *v1 = get_object(L, LS, 2, &type1);
+	
+	if (type0 != type1) {
+		luaL_error(L, "not equal type for lerp:%s, %s", lastack_typename(type0), lastack_typename(type1));
+	}
 
 	const float ratio = luaL_checknumber(L, 3);
 
-	float *r = alloc_vec4(L, LS);
+	switch (type0)
+	{
+	case LINEAR_TYPE_VEC4:
+		math3d_lerp(LS, v0, v1, ratio, alloc_vec4(L, LS));
+		break;
+	case LINEAR_TYPE_QUAT:
+		math3d_quat_lerp(LS, v0, v1, ratio, alloc_quat(L, LS));
+		break;
+	default:
+		luaL_error(L, "%s type can not for lerp", lastack_typename(type0));
+		break;
+	}
 
-	math3d_lerp(LS, v0, v1, ratio, r);
+	return 1;
+}
+
+static int
+lslerp(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *v0 = quat_from_index(L, LS, 1);
+	const float *v1 = quat_from_index(L, LS, 2);
+	const float ratio = luaL_checknumber(L, 3);
+
+	math3d_quat_slerp(LS, v0, v1, ratio, alloc_quat(L, LS));
 	return 1;
 }
 
@@ -1848,6 +1882,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "projmat", lprojmat },
 		{ "minmax", lminmax},
 		{ "lerp", llerp},
+		{ "slerp", lslerp},
 		{ "matrix_scale", lmatrix_scale},
 		{ "quat2euler", lquat2euler},
 		{ "dir2radian", ldir2radian},

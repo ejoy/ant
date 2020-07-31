@@ -421,6 +421,16 @@ math3d_lerp(struct lastack *LS, const float v0[4], const float v1[4], float rati
 }
 
 void 
+math3d_quat_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]){
+	*(glm::quat*)r = glm::lerp(QUAT(v0), QUAT(v1), ratio);
+}
+
+void 
+math3d_quat_slerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]){
+	*(glm::quat*)r = glm::slerp(QUAT(v0), QUAT(v1), ratio);
+}
+
+void 
 math3d_quat_to_euler(struct lastack *LS, const float q[4], float euler[4]){
 	*(glm::vec3*)euler = glm::eulerAngles(QUAT(q));
 }
