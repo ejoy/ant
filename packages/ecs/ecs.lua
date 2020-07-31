@@ -77,17 +77,7 @@ local function instance_entity(w, entity)
 	return eid
 end
 
-local function instance_prefab(w, prefab, args)
-	args = args or {}
-	local res = {__class = prefab.__class}
-	for i, v in ipairs(prefab) do
-		if v.prefab then
-			res[i] = instance_prefab(w, v.prefab, v.data and v.data.args or nil)
-		else
-			res[i] = instance_entity(w, v)
-		end
-	end
-	setmetatable(res, {__index=args})
+local function run_action(w, res, prefab)
 	for i, entity in ipairs(prefab.__class) do
 		if entity.action then
 			for name, target in sortpairs(entity.action) do
@@ -97,7 +87,27 @@ local function instance_prefab(w, prefab, args)
 			end
 		end
 	end
-	setmetatable(res, nil)
+	for i, v in ipairs(prefab) do
+		if v.prefab then
+			if v.args then
+				for k, v in pairs(v.args) do
+					res[i][k] = res[v]
+				end
+			end
+			run_action(w, res[i], v.prefab)
+		end
+	end
+end
+
+local function instance_prefab(w, prefab)
+	local res = {__class = prefab.__class}
+	for i, v in ipairs(prefab) do
+		if v.prefab then
+			res[i] = instance_prefab(w, v.prefab)
+		else
+			res[i] = instance_entity(w, v)
+		end
+	end
 	return res
 end
 
@@ -131,7 +141,8 @@ function world:create_template(t)
 	for _, v in ipairs(t) do
 		if v.prefab then
 			prefab[#prefab+1] = {
-				prefab = assetmgr.resource(v.prefab, self)
+				prefab = assetmgr.resource(v.prefab, self),
+				args = v.args,
 			}
 		else
 			prefab[#prefab+1] = create_entity_template(self, v)
@@ -147,17 +158,24 @@ function world:create_entity(v)
 		v.action.mount = "_mount"
 	end
 	local prefab = {__class={v}, create_entity_template(self, v)}
-	local res = instance_prefab(self, prefab, args)
+	local res = self:instance_prefab(prefab, args)
 	return res[1], res
 end
 
 function world:instance(filename, args)
 	local prefab = assetmgr.resource(filename, self)
-	return instance_prefab(self, prefab, args)
+	return self:instance_prefab(prefab, args)
 end
 
 function world:instance_prefab(prefab, args)
-	return instance_prefab(self, prefab, args)
+	local res = instance_prefab(self, prefab)
+	if args then
+		for k, v in pairs(args) do
+			res[k] = v -- TODO?
+		end
+	end
+	run_action(self, res, prefab, args)
+	return res
 end
 
 function world:serialize(entities)
