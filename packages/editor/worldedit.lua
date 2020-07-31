@@ -94,13 +94,22 @@ local function set_prefab(world, prefab, path, value)
     local catalog = pathlst[2]
     if catalog == "data" then
         set(prefab[idx].template, "/"..table.concat(pathlst, "/", 3), value)
-        set(prefab.data, path, value)
+        set(prefab.__class, path, value)
         if need_update(pathlst) then
             for _, instance in ipairs(mgr[prefab]) do
                 set_entity(world, instance[idx], pathlst, value)
             end
         end
         return true
+    elseif catalog == "action" then
+        set(prefab[idx].template, "/"..table.concat(pathlst, "/", 3), value)
+        set(prefab.__class, path, value)
+        if pathlst[3] == "mount" then
+            local object = world._class.action[pathlst[3]]
+            assert(object and object.init)
+            local target = prefab.__class[idx].action[pathlst[3]]
+            object.init(mgr[prefab][1], idx, target)
+        end
     end
     return false
 end
@@ -113,12 +122,13 @@ local function get_prefab(prefab, path)
     end
     local catalog = pathlst[2]
     if catalog == "data" then
-        return get(prefab.data, path)
+        return get(prefab.__class, path)
     end
     return false
 end
 
 local mt = {}
+mt.__index = mt
 
 function mt:prefab_template(filename)
 	local prefab = assetmgr.resource(filename, self.world)
@@ -132,6 +142,22 @@ function mt:prefab_instance(prefab, args)
     return instance
 end
 
+function mt:prefab_add(filename, pidx)
+    set_prefab(self.world, prefab, path, value)
+    prefab.__class[#prefab.__class] = {action = {mount = ""}, prefab = filename}
+end
+
+function mt:prefab_del(idx)
+    for i, t in prefab.__class do
+        if t.action.mount > idx then
+            t.action.mount = t.action.mount - 1
+        end
+    end
+
+    table.remove(prefab, idx)
+    table.remove(prefab.__class, idx)
+end
+
 function mt:prefab_set(prefab, path, value)
     set_prefab(self.world, prefab, path, value)
 end
@@ -141,6 +167,23 @@ function mt:prefab_get(prefab, path)
     return res
 end
 
+local function deepcopy(t)
+    if type(t) ~= "table" then
+        return t
+    end
+    local r = {}
+    for k, v in pairs(t) do
+        r[k] = deepcopy(v)
+    end
+    return r
+end
+
+function mt:prefab_copy(prefab)
+    local newprefab = deepcopy(prefab)
+    mgr[newprefab] = {}
+    return newprefab
+end
+
 return function(world)
-    return setmetatable({world=world}, {__index=mt})
+    return setmetatable({world=world}, mt)
 end

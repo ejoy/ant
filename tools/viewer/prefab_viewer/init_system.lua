@@ -6,7 +6,7 @@ local lfs = require "filesystem.local"
 
 local math3d  = require 'math3d'
 local computil = world:interface "ant.render|entity"
-local worldedit = require "worldedit"(world)
+local worldedit = import_package "ant.editor".worldedit(world)
 
 local eventInstancePrefab = world:sub {"instance_prefab"}
 local eventSerializePrefab = world:sub {"serialize_prefab"}

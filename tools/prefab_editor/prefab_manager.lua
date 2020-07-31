@@ -1,70 +1,114 @@
-local task          = require "task"
-local import_prefab = require "import_prefab"
+local math3d 		= require "math3d"
+local fs            = require "filesystem"
 local lfs           = require "filesystem.local"
 local prefab_view   = require "prefab_view"
 
-local m = {}
 local world
+local iom
+local worldedit
+
+local m = {
+	entities = {}
+}
+
 function m:init(w)
-    world = w
+	world = w
+    iom = world:interface "ant.objcontroller|obj_motion"
+    worldedit = import_package "ant.editor".worldedit(world)
 end
 
-local VIEWER <const> = "/pkg/test.prefab_editor/res/"
-
-function m:create_prefab(path)
-    if not world then
-        print("world not exist.")
-        return
+function m:normalize_aabb()
+    local aabb
+    for _, eid in ipairs(self.entities) do
+        local e = world[eid]
+        if e.mesh and e.mesh.bounding then
+            local newaabb = math3d.aabb_transform(iom.calc_worldmat(eid), e.mesh.bounding.aabb)
+            aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
+        end
     end
 
-    local inputPath = lfs.path(path)
-    local fileName = inputPath:filename()
+    if not aabb then return end
 
-    task.create(function()
-        import_prefab(fileName, VIEWER .. fileName .. ".glb")
-        world:pub {"instance_prefab", VIEWER .. fileName .. ".glb|mesh.prefab"}
-    end)
-
-    -- testcylinder = world:create_entity {
-	-- 	policy = {
-	-- 		"ant.render|render",
-	-- 		"ant.general|name",
-	-- 		"ant.scene|hierarchy_policy",
-	-- 		"ant.objcontroller|select",
-	-- 	},
-	-- 	data = {
-	-- 		scene_entity = true,
-	-- 		state = ies.create_state "visible|selectable",
-	-- 		transform =  {
-	-- 			s= 30,
-	-- 			t={1, 0.5, 0, 0}
-	-- 		},
-	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
-	-- 		mesh = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
-	-- 		name = "cylinder",
-	-- 	}
-	-- }
-	-- prefab_view:add(testcylinder)
-
-	-- testcubeid = world:create_entity {
-	-- 	policy = {
-	-- 		"ant.render|render",
-	-- 		"ant.general|name",
-	-- 		"ant.scene|hierarchy_policy",
-	-- 		"ant.objcontroller|select",
-	-- 	},
-	-- 	data = {
-	-- 		scene_entity = true,
-	-- 		state = ies.create_state "visible|selectable",
-	-- 		transform =  {
-	-- 			s= 50,
-	-- 			t={0, 0.5, 1, 0}
-	-- 		},
-	-- 		material = "/pkg/ant.resources/materials/singlecolor.material",
-	-- 		mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-	-- 		name = "cube",
-	-- 	}
-    -- }
+    local aabb_mat = math3d.tovalue(aabb)
+    local min_x, min_y, min_z = aabb_mat[1], aabb_mat[2], aabb_mat[3]
+    local max_x, max_y, max_z = aabb_mat[5], aabb_mat[6], aabb_mat[7]
+    local s = 1/math.max(max_x - min_x, max_y - min_y, max_z - min_z)
+    local t = {-(max_x+min_x)/2,-min_y,-(max_z+min_z)/2}
+    local transform = math3d.mul(math3d.matrix{ s = s }, { t = t })
+    iom.set_srt(self.root, math3d.mul(transform, iom.srt(self.root)))
 end
+
+function m:open_prefab(filename)
+	if self.root then world:remove_entity(self.root) end
+	if self.entities then
+		for _, eid in ipairs(self.entities) do
+			world:remove_entity(eid)
+		end
+	end
+
+    local prefab = worldedit:prefab_template(filename)
+    local entities = worldedit:prefab_instance(prefab)
+    local root = entities[1]
+    prefab_view:clear()
+    prefab_view:set_root(root)
+    --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
+    --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
+    --worldedit:prefab_set(prefab, "/4/action/mount", 1)
+    for i, e in ipairs(entities) do
+        if world[e].parent then
+            prefab_view:add(e, {prefab = prefab}, world[e].parent)
+        end
+    end
+
+	self.root = root
+	self.prefab = prefab
+	self.entities = entities
+	self:normalize_aabb()
+	world:pub {"editor", "prefab", entities}
+end
+
+function m:add_prefab(filename)
+	local prefab = worldedit:prefab_template(filename)
+    local entities = worldedit:prefab_instance(prefab, {root = self.root})
+    local root = entities[1]
+    world[root].name = "Prefab_" .. root
+    local relative_path = lfs.relative(lfs.path(filename), fs.path "":localpath())
+    self.entities[#self.entities] = root
+    for i, e in ipairs(entities) do
+        if i > 1 then
+            prefab_view:add_select_adapter(e, root)
+        end
+    end
+    
+    --worldedit:prefab_add()
+    
+    prefab_view:add(root, {prefab = prefab, filename = relative_path}, self.root)
+end
+
+local fs = require "filesystem"
+local lfs = require "filesystem.local"
+
+local function write_file(filename, data)
+    local f = assert(lfs.open(fs.path(filename):localpath(), "wb"))
+    f:write(data)
+    f:close()
+end
+
+function m:save_prefab(filename)
+    lfs.create_directories(fs.path(filename):localpath():parent_path())
+
+    write_file(filename, world:serialize(self.entities, {{mount="root"}}))
+    -- local stringify = import_package "ant.serialize".stringify
+    -- local e = world[entities[3]]
+    -- write_file('/pkg/tools.viewer.prefab_viewer/res/root/test.material', stringify(e.material))
+end
+
+-- local eventSerializePrefab = world:sub {"serialize_prefab"}
+
+-- function m:data_changed()
+--     for _, filename in eventSerializePrefab:unpack() do
+--         serializePrefab(filename)
+--     end
+-- end
 
 return m

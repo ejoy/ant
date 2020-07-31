@@ -7,29 +7,44 @@ local prefab_view = require "prefab_view"
 local m = {}
 local world
 local asset_mgr
-local entity_mgr
 local sourceEid = nil
 local targetEid = nil
 local gizmo
-
+local iom
+local iss
 function m.set_gizmo(obj)
     gizmo = obj
 end
 
 local function is_editable(eid)
-    local iom = world:interface "ant.objcontroller|obj_motion"
     if not iom.srt(eid) or
-        not entity_mgr:is_visible(eid) or
-        entity_mgr:is_locked(eid) then
+        not prefab_view:is_visible(eid) or
+        prefab_view:is_locked(eid) then
         return false
     end
     return true
 end
 
+local menu_name = "entity context menu"
+
+local function context_menu(eid)
+    if imgui.windows.BeginPopupContextItem(eid) then
+        local current_lock = prefab_view:is_locked(eid)
+        if imgui.widget.Selectable(current_lock and "Unlock" or "lock", false) then
+            world:pub { "EntityState", "lock", eid, not current_lock }
+        end
+        local current_visible = prefab_view:is_visible(eid)
+        if imgui.widget.Selectable(current_visible and "Hide" or "Show", false) then
+            world:pub { "EntityState", "visible", eid, not current_visible }
+        end
+        imgui.cursor.Separator()
+        if imgui.widget.Selectable("Delete", false) then
+            world:pub { "EntityState", "delete", eid }
+        end
+        imgui.windows.EndPopup()
+    end
+end
 local function show_scene_node(node)
-    local icons = require "common.icons"(asset_mgr)
-    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
-    local name = world[node.eid].name
     local function select_or_move(eid)
         if imgui.util.IsItemClicked() then
             if is_editable(eid) then
@@ -49,38 +64,36 @@ local function show_scene_node(node)
             imgui.widget.EndDragDropTarget()
         end
     end
+    local icons = require "common.icons"(asset_mgr)
     local function lock_visible(eid)
         imgui.cursor.NextColumn()
-        local icon
-        if entity_mgr:is_locked(eid) then
-            icon = icons.ICON_LOCK
-        else
-            icon = icons.ICON_UNLOCK
-        end
         imgui.util.PushID(eid)
+        local current_lock = prefab_view:is_locked(eid)
+        local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-            world:pub { "EntityState", "lock", eid, not entity_mgr:is_locked(eid) }
+            world:pub { "EntityState", "lock", eid, not current_lock }
         end
         imgui.util.PopID()
         imgui.cursor.SameLine()
-        if entity_mgr:is_visible(eid) then
-            icon = icons.ICON_VISIBLE
-        else
-            icon = icons.ICON_UNVISIBLE
-        end
         imgui.util.PushID(eid)
+        local current_visible = prefab_view:is_visible(eid)
+        icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-            world:pub { "EntityState", "visible", eid, not entity_mgr:is_visible(eid) }
+            world:pub { "EntityState", "visible", eid, not current_visible }
         end
         imgui.util.PopID()
         imgui.cursor.NextColumn()
     end
+    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
+    local name = world[node.eid].name
     if #node.children == 0 then
         imgui.widget.TreeNode(name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
+        context_menu(node.eid)
         select_or_move(node.eid)
         lock_visible(node.eid)
     else
         local open = imgui.widget.TreeNode(name, base_flags)
+        context_menu(node.eid)
         select_or_move(node.eid)
         lock_visible(node.eid)
         if open then
@@ -119,9 +132,10 @@ function m.show(rhwi)
     end
 end
 
-return function(w, am, em)
+return function(w, am)
     world = w
     asset_mgr = am
-    entity_mgr = em
+    iom = world:interface "ant.objcontroller|obj_motion"
+    iss = world:interface "ant.scene|iscenespace"
     return m
 end
