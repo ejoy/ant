@@ -30,21 +30,40 @@ function ipf.reset_filters(eid)
 	end
 end
 
+function ipf.filter_order(eid)
+	return world[eid].filter_order
+end
+
 local ies = world:interface "ant.scene|ientity_state"
 
 local pf = ecs.component "primitive_filter"
+
+local default_filter_order = {
+	"foreground", "opaticy", "backgroud", "translucent", "decal",
+}
+
 function pf:init()
 	self.result = {
 		translucent = {
 			items = {},
+			needcull = true,
 		},
 		opaticy = {
 			items = {},
+			needcull = true,
         },
         decal = {
-            items = {},
-        }
+			items = {},
+			needcull = true,
+		},
+		foreground = {
+			items = {},
+		},
+		backgroud = {
+			items = {},
+		}
 	}
 	self.filter_mask = ies.filter_mask(self.filter_type)
+	self.filter_order = self.filter_order or default_filter_order
 	return self
 end

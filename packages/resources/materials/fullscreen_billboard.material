@@ -2,7 +2,11 @@ fx:
     shader:
         vs: /pkg/ant.resources/shaders/simple/quad/vs_simple_texquad.sc
         fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
+    setting:
+        surfacetype: foreground
 properties:
     s_texColor:
         stage: 0
         texture: /pkg/ant.resources/textures/space_sky/101.texture
+
+state: /pkg/ant.resources/materials/states/quad.state

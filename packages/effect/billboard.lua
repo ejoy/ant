@@ -9,7 +9,7 @@ local ientity = world:interface "ant.render|entity"
 local bb_a = ecs.action "billboard_mount"
 function bb_a.init(prefab, idx, value)
     local eid = prefab[idx]
-    world[eid]._rendercache.camera_eid = value
+    world[eid]._rendercache.camera_eid = prefab[value]
 end
 
 local bb_build = ecs.transform "build_billboard_mesh"
@@ -37,9 +37,9 @@ function bb_sys:camera_usage()
             local updir = math3d.cross(newviewdir, rightdir)
 
             local worldmat = rc.worldmat
-            math3d.set_index(worldmat, rightdir, 1)
-            math3d.set_index(worldmat, updir, 2)
-            math3d.set_index(worldmat, newviewdir, 3)
+            math3d.set_index(worldmat, 1, rightdir)
+            math3d.set_index(worldmat, 2, updir)
+            math3d.set_index(worldmat, 3, newviewdir)
         else
             error(("not support billboard type:%s"):format(bb.lock))
         end

@@ -56,6 +56,7 @@ interface "iprimitive_filter"
     .implement "primitive_filter.lua"
     .method "select_filters"
     .method "reset_filters"
+    .method "filter_order"
 
 interface "iscenespace"
     .implement "scenespace.lua"

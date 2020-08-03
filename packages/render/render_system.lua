@@ -111,9 +111,9 @@ function render_sys:render_commit()
 				end  
 			end
 
-			draw_items(results.opaticy)
-			draw_items(results.translucent)
-			draw_items(results.decal)
+			for _, fn in ipairs(filter.filter_order) do
+				draw_items(results[fn])
+			end
 		end
 		
 	end
