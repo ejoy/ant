@@ -1,0 +1,15 @@
+---
+policy:
+    ant.render|render
+    ant.effect|billboard
+    ant.general|name
+data:
+    name: billboard_test
+    transform: {}
+    billboard:
+        lock: camera    #x/y/z
+    material: /pkg/ant.resources/materials/fullscreen_billboard.material
+    state: 1
+    scene_entity: true
+action:
+    billboard_mount: root
