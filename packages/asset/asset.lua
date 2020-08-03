@@ -60,17 +60,8 @@ function assetmgr.resource(path, world)
 end
 
 function assetmgr.load_fx(fx, setting)
-	if type(fx) == "string" then
-		push_currentpath(fx)
-		fx = datalist.parse(cr.read_file(fx))
-		for k, v in pairs(fx.shader) do
-			fx.shader[k] = absolute_path(v)
-		end
-		pop_currentpath()
-	else
-		for k, v in pairs(fx.shader) do
-			fx.shader[k] = absolute_path(v)
-		end
+	for k, v in pairs(fx.shader) do
+		fx.shader[k] = absolute_path(v)
 	end
 	return cr.load_fx(fx, setting)
 end
