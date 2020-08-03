@@ -1,2 +1,5 @@
-fx: /pkg/ant.resources/materials/fx/generate_shadow.fx
+fx:
+  shader:
+    fs: /pkg/ant.resources/shaders/picking/fs_picking.sc.sc
+    vs: /pkg/ant.resources/shaders/picking/vs_picking.sc.sc
 state: /pkg/ant.resources/materials/states/default.state

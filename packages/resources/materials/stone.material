@@ -1,11 +1,20 @@
-fx: /pkg/ant.resources/materials/fx/stone.fx
+fx:
+  setting:
+    lighting: on
+    shadow_cast: on
+    shadow_receive: on
+    subsurface: on
+    surfacetype: opaticy
+  shader:
+    fs: /pkg/ant.resources/shaders/mesh/fs_mesh_bump.sc
+    vs: /pkg/ant.resources/shaders/mesh/vs_mesh_bump.sc
 properties:
   s_basecolor:
-    texture: /pkg/ant.resources/stone.texture
     stage: 0
+    texture: /pkg/ant.resources/stone.texture
   s_normal:
-    texture: /pkg/ant.resources/stone_normal.texture
     stage: 1
+    texture: /pkg/ant.resources/stone_normal.texture
 state:
   ALPHA_REF: 0
   CULL: CW

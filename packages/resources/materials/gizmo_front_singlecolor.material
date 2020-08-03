@@ -1,6 +1,11 @@
-fx: /pkg/ant.resources/materials/fx/gizmo_front_singlecolor.fx
+fx:
+  setting:
+    surfacetype: translucent
+  shader:
+    fs: /pkg/ant.resources/shaders/mesh/fs_singlecolor.sc
+    vs: /pkg/ant.resources/shaders/gizmo/vs_front_singlecolor.sc
 properties:
-    u_color:  {1, 1, 1, 1}
+  u_color: {1, 1, 1, 1}
 state:
   ALPHA_REF: 1
   CULL: CW

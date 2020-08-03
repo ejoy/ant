@@ -1,11 +1,14 @@
-fx: /pkg/ant.resources/materials/fx/PVPScene/tent.fx
+fx:
+  shader:
+    fs: /pkg/ant.resources/shaders/mesh/fs_mesh_bumpex.sc
+    vs: /pkg/ant.resources/shaders/mesh/vs_mesh_bump.sc
 properties:
   s_basecolor:
-    texture: /pkg/ant.resources/PVPScene/tent_d.texture
     stage: 0
+    texture: /pkg/ant.resources/PVPScene/tent_d.texture
   s_normal:
-    texture: /pkg/ant.resources/PVPScene/tent_n.texture
     stage: 1
-  u_specularColor:  {0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03}
-  u_specularLight:  {5.5, 0, 0, 0}
+    texture: /pkg/ant.resources/PVPScene/tent_n.texture
+  u_specularColor: {0.023529411764705882, 0.0196078431372549, 0.0196078431372549, 0.03}
+  u_specularLight: {5.5, 0, 0, 0}
 state: /pkg/ant.resources/materials/states/default.state

@@ -1,11 +1,9 @@
-fx: /pkg/ant.resources/materials/fx/mesh_shadow.fx
-state:
-  ALPHA_REF: 0
-  CULL: CCW
-  DEPTH_TEST: LESS
-  MSAA: true
-  PT: TRISTRIP
-  WRITE_MASK: RGBAZ
+fx:
+  setting:
+    shadow_receive: on
+  shader:
+    fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+    vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
 properties:
   s_basecolor:
     stage: 0
@@ -22,9 +20,16 @@ properties:
   s_occlusion:
     stage: 3
     texture: /pkg/ant.resources/textures/pbr/default/occlusion.texture
-  u_IBLparam:  {1, 1, 0, 0}
-  u_alpha_info:  {0, 0, 0, 0}
-  u_basecolor_factor:  {1, 1, 1, 1}
-  u_emissive_factor:  {0, 0, 0, 0}
-  u_material_texture_flags:  {0, 0, 1, 0}
-  u_metallic_roughness_factor:  {0, 1, 0, 0}
+  u_IBLparam: {1, 1, 0, 0}
+  u_alpha_info: {0, 0, 0, 0}
+  u_basecolor_factor: {1, 1, 1, 1}
+  u_emissive_factor: {0, 0, 0, 0}
+  u_material_texture_flags: {0, 0, 1, 0}
+  u_metallic_roughness_factor: {0, 1, 0, 0}
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: LESS
+  MSAA: true
+  PT: TRISTRIP
+  WRITE_MASK: RGBAZ

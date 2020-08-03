@@ -1,6 +1,11 @@
-fx: /pkg/ant.resources/materials/fx/test/singlecolor_tri_strip.fx
+fx:
+  setting:
+    lighting: off
+  shader:
+    fs: /pkg/ant.resources/shaders/test/singlecolor/fs.sc
+    vs: /pkg/ant.resources/shaders/test/singlecolor/vs.sc
 properties:
-  u_color:  {1, 0, 0, 1}
+  u_color: {1, 0, 0, 1}
 state:
   ALPHA_REF: 0
   CULL: CCW

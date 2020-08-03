@@ -1,5 +1,12 @@
-fx: /pkg/ant.resources/materials/fx/simple_mesh.fx
+fx:
+  setting:
+    shadow_cast: off
+    shadow_receive: off
+    surfacetype: opaticy
+  shader:
+    fs: /pkg/ant.resources/shaders/mesh/fs_lighting.sc
+    vs: /pkg/ant.resources/shaders/mesh/vs_lighting.sc
 properties:
   u_color:
-     {1, 1, 1, 1}
+    {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

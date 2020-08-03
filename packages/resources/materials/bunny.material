@@ -1,4 +1,7 @@
-fx: /pkg/ant.resources/materials/fx/bunny.fx
+fx:
+  shader:
+    fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
+    vs: /pkg/ant.resources/shaders/mesh/vs_colormeshex.sc
 properties:
-    u_time: {1, 1, 1, 1}
+  u_time: {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

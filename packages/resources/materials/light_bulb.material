@@ -1,4 +1,3 @@
-fx: /pkg/ant.resources/materials/fx/light_bulb.fx
 properties:
-    u_color:  {1, 1, 1, 1}
+  u_color: {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state

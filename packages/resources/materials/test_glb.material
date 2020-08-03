@@ -1,6 +1,9 @@
-fx: /pkg/ant.resources/materials/fx/test_glb.fx
+fx:
+  shader:
+    fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
+    vs: /pkg/ant.resources/shaders/mesh/vs_colormeshex.sc
 properties:
-  u_time:  {1, 1, 1, 1}
+  u_time: {1, 1, 1, 1}
 state:
   ALPHA_REF: 0
   CULL: NONE
