@@ -99,7 +99,7 @@ function init_loader_sys:init()
     world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
     ientity.create_grid_entity()
 
-    ientity.create_procedural_sky()
+    --ientity.create_procedural_sky()
     --target_lock_test()
 end
 

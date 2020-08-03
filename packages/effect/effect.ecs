@@ -1,11 +1,18 @@
 policy "billboard"
     .require_system "billboard_system"
     .require_policy "ant.render|render"
+    .require_transform "build_billboard_mesh"
     .component "billboard"
 
 system "billboard_system"
     .implement "billboard.lua"
     .method "camera_usage"
+
+transform "build_billboard_mesh"
+    .implement "billboard.lua"
+    .input "billboard"
+    .output "mesh"
+    .method "process_prefab"
 
 action "billboard_mount"
     .implement "billboard.lua"

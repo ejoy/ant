@@ -5,4 +5,4 @@ fx:
 properties:
     s_texColor:
         stage: 0
-        texture: /pkg/ant.resources/textures/space_sky/space_sky101.texture
+        texture: /pkg/ant.resources/textures/space_sky/101.texture

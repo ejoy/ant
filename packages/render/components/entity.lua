@@ -51,9 +51,7 @@ local function create_mesh(vb_lst, ib)
 	return world.component "mesh"(mesh)
 end
 
-function ientity.create_mesh(vb, ib)
-	return create_mesh(vb, ib)
-end
+ientity.create_mesh = create_mesh
 
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
@@ -215,16 +213,22 @@ local function quad_mesh(rect)
 	}})
 end
 
-function ientity.quad_mesh(rect)
-	return quad_mesh(rect)
-end
-
 local fullquad_meshres
-function ientity.fullquad_mesh()
+local function fullquad_mesh()
 	if fullquad_meshres == nil then
 		fullquad_meshres = quad_mesh()
 	end
 	return fullquad_meshres
+end
+
+ientity.fullquad_mesh = fullquad_mesh
+
+function ientity.quad_mesh(rect)
+	if rect == nil then
+		return fullquad_meshres
+	end
+
+	return quad_mesh(rect)
 end
 
 function ientity.create_quad_entity(rect, material, name)
