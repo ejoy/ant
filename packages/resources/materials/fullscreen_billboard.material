@@ -1,0 +1,8 @@
+fx:
+    shader:
+        vs: /pkg/ant.resources/shaders/simple/quad/vs_simple_texquad.sc
+        fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
+properties:
+    s_texColor:
+        stage: 0
+        texture: /pkg/ant.resources/textures/space_sky/space_sky101.texture
