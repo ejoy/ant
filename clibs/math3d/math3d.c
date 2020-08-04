@@ -698,6 +698,13 @@ alloc_quat(lua_State *L, struct lastack *LS){
 	return v;
 }
 
+static float*
+alloc_mat(lua_State *L, struct lastack *LS){
+	float * v = lastack_allocmatrix(LS);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return v;
+}
+
 static int
 ladd(lua_State *L) {
 	struct lastack *LS = GETLS(L);
@@ -828,6 +835,23 @@ lset_index(lua_State *L){
 
 	set_index_object(L, LS, id);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static int
+lset_columns(lua_State *L){
+	struct lastack *LS  = GETLS(L);
+	lua_settop(L, 5);
+	const float *m = matrix_from_index(L, LS, 1);
+	float *nm = alloc_mat(L, LS);
+	memcpy(nm, m, sizeof(float) * 16);
+	for (int ii=2; ii <= 5; ++ii){
+		const uint32_t offset = (ii-2) * 4;
+		const float *v = lua_isnoneornil(L, ii) ?
+			(m+offset) : 
+			vector_from_index(L, LS, ii);
+		memcpy(nm+offset, v, sizeof(float)*4);
+	}
 	return 1;
 }
 
@@ -1434,6 +1458,38 @@ lisvalid(lua_State *L){
 }
 
 static int
+lisequal(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	int type0, type1;
+	const float *v0 = get_object(L, LS, 1, &type0);
+	const float *v1 = get_object(L, LS, 2, &type1);
+
+	if (type0 != type1){
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+
+	const float threshold = luaL_optnumber(L, 3, 10e-6);
+
+	int numelem = 0;
+	switch (type0){
+	case LINEAR_TYPE_MAT: numelem = 16; break;
+	case LINEAR_TYPE_VEC4: numelem = 3; break;
+	case LINEAR_TYPE_QUAT: numelem = 4; break;
+	default: luaL_error(L, "invalide type: %s", lastack_typename(type0));break;}
+
+	for (int ii=0; ii<numelem; ++ii){
+		if (abs(v0[ii]-v1[ii]) > threshold){
+			lua_pushboolean(L, 0);
+			return 1;
+		}
+	}
+
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
+static int
 lquat2euler(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float *q = quat_from_index(L, LS, 1);
@@ -1854,6 +1910,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "quaternion", lquaternion },
 		{ "index", lindex },
 		{ "set_index", lset_index},
+		{ "set_columns", lset_columns},
 		{ "reset", lreset },
 		{ "mul", lmul },
 		{ "add", ladd },
@@ -1892,6 +1949,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "set_origin_bottom_left", lset_origin_bottom_left},
 		{ "pack", lpack },
 		{ "isvalid", lisvalid},
+		{ "isequal", lisequal},
 
 		//points
 		{ "points_center",	lpoints_center},

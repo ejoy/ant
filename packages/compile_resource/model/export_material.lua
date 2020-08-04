@@ -1,6 +1,8 @@
 local fs = require "filesystem.local"
 local utility = require "model.utility"
 
+local datalist = require "datalist"
+
 local image_extension = {
     ["image/jpeg"] = ".jpg",
     ["image/png"] = ".png",
@@ -24,7 +26,117 @@ local function tov4(v, def)
     return {v[1], v[2], v[3], v[4]}
 end
 
-return function (output, glbdata, exports)
+local default_pbr_param = {
+    basecolor = {
+        texture = "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
+        factor = {1, 1, 1, 1},
+        stage = 0,
+    },
+    metallic_roughness = {
+        texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
+        factor = {1, 1, 0, 0},
+        stage = 1,
+    },
+    normal = {
+        texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
+        stage = 2,
+    },
+    occlusion = {
+        texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
+        stage = 3,
+    },
+    emissive = {
+        texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
+        factor = {0, 0, 0, 0},
+        stage = 4,
+    },
+}
+
+local filter_tags = {
+    NEAREST = 9728,
+    LINEAR = 9729,
+    NEAREST_MIPMAP_NEAREST = 9984,
+    LINEAR_MIPMAP_NEAREST = 9985,
+    NEAREST_MIPMAP_LINEAR = 9986,
+    LINEAR_MIPMAP_LINEAR = 9987,
+}
+
+local filter_names = {}
+for k, v in pairs(filter_tags) do
+    assert(filter_names[v] == nil, "duplicate value")
+    filter_names[v] = k
+end
+
+local address_tags = {
+    CLAMP_TO_EDGE   = 33071,
+    MIRRORED_REPEAT = 33648,
+    REPEAT          = 10497,
+}
+
+local address_names = {}
+for k, v in pairs(address_tags) do
+    assert(address_names[v] == nil)
+    address_names[v] = k
+end
+
+local default_sampler_flags = {
+    maxFilter   = filter_tags["LINEAR"],
+    minFilter   = filter_tags["LINEAR"],
+    wrapS       = address_tags["REPEAT"],
+    wrapT       = address_tags["REPEAT"],
+}
+
+local MIP_map = {
+    NEAREST = "POINT",
+    LINEAR = "POINT",
+    NEAREST_MIPMAP_NEAREST = "POINT",
+    LINEAR_MIPMAP_NEAREST = "POINT",
+    NEAREST_MIPMAP_LINEAR = "LINEAR",
+    LINEAR_MIPMAP_LINEAR = "LINEAR",
+}
+
+local MAG_MIN_map = {
+    NEAREST = "POINT",
+    LINEAR = "LINEAR",
+    NEAREST_MIPMAP_NEAREST = "POINT",
+    LINEAR_MIPMAP_NEAREST = "POINT",
+    NEAREST_MIPMAP_LINEAR = "LINEAR",
+    LINEAR_MIPMAP_LINEAR = "LINEAR",
+}
+
+local UV_map = {
+    CLAMP_TO_EDGE   = "CLAMP",
+    MIRRORED_REPEAT = "MIRROR",
+    REPEAT          = "WRAP",
+}
+
+local default_fx = {
+    shader = {
+        fs = "/pkg/ant.resources/shaders/pbr/fs_pbr.sc",
+        vs = "/pkg/ant.resources/shaders/pbr/vs_pbr.sc",
+    }
+}
+
+local primitive_state_names = {
+    "POINTS",
+    "LINES",
+    false, --LINELOOP, not support
+    "LINESTRIP",
+    "",         --TRIANGLES
+    "TRISTRIP", --TRIANGLE_STRIP
+    false, --TRIANGLE_FAN not support
+}
+
+local states = {}
+
+local function read_datalist(statefile)
+    local f = fs.open(statefile)
+    local c = f:read "a"
+    f:close()
+    return datalist.parse(c)
+end
+
+return function (output, glbdata, exports, tolocalpath)
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
 
@@ -64,70 +176,12 @@ return function (output, glbdata, exports)
         return name
     end
 
-    local filter_tags = {
-        NEAREST = 9728,
-        LINEAR = 9729,
-        NEAREST_MIPMAP_NEAREST = 9984,
-        LINEAR_MIPMAP_NEAREST = 9985,
-        NEAREST_MIPMAP_LINEAR = 9986,
-        LINEAR_MIPMAP_LINEAR = 9987,
-    }
-    
-    local filter_names = {}
-    for k, v in pairs(filter_tags) do
-        assert(filter_names[v] == nil, "duplicate value")
-        filter_names[v] = k
-    end
-    
-    local address_tags = {
-        CLAMP_TO_EDGE   = 33071,
-        MIRRORED_REPEAT = 33648,
-        REPEAT          = 10497,
-    }
-    
-    local address_names = {}
-    for k, v in pairs(address_tags) do
-        assert(address_names[v] == nil)
-        address_names[v] = k
-    end
-    
-    local default_sampler_flags = {
-        maxFilter   = filter_tags["LINEAR"],
-        minFilter   = filter_tags["LINEAR"],
-        wrapS       = address_tags["REPEAT"],
-        wrapT       = address_tags["REPEAT"],
-    }
-    
     local function to_sampler(sampleidx)
         local gltfsampler = sampleidx and samplers[sampleidx + 1] or default_sampler_flags
     
         local minfilter = gltfsampler.minFilter or default_sampler_flags.minFilter
         local maxFilter = gltfsampler.maxFilter or default_sampler_flags.maxFilter
-    
-        local MIP_map = {
-            NEAREST = "POINT",
-            LINEAR = "POINT",
-            NEAREST_MIPMAP_NEAREST = "POINT",
-            LINEAR_MIPMAP_NEAREST = "POINT",
-            NEAREST_MIPMAP_LINEAR = "LINEAR",
-            LINEAR_MIPMAP_LINEAR = "LINEAR",
-        }
-    
-        local MAG_MIN_map = {
-            NEAREST = "POINT",
-            LINEAR = "LINEAR",
-            NEAREST_MIPMAP_NEAREST = "POINT",
-            LINEAR_MIPMAP_NEAREST = "POINT",
-            NEAREST_MIPMAP_LINEAR = "LINEAR",
-            LINEAR_MIPMAP_LINEAR = "LINEAR",
-        }
-    
-        local UV_map = {
-            CLAMP_TO_EDGE   = "CLAMP",
-            MIRRORED_REPEAT = "MIRROR",
-            REPEAT          = "WRAP",
-        }
-    
+        
         local wrapS, wrapT =    
             gltfsampler.wrapS or default_sampler_flags.wrapS,
             gltfsampler.wrapT or default_sampler_flags.wrapT
@@ -171,32 +225,6 @@ return function (output, glbdata, exports)
         return "./../images/" .. name .. ".texture"
     end
 
-    local default_pbr_param = {
-        basecolor = {
-            texture = "/pkg/ant.resources/textures/pbr/default/basecolor.texture",
-            factor = {1, 1, 1, 1},
-            stage = 0,
-        },
-        metallic_roughness = {
-            texture = "/pkg/ant.resources/textures/pbr/default/metallic_roughness.texture",
-            factor = {1, 1, 0, 0},
-            stage = 1,
-        },
-        normal = {
-            texture = "/pkg/ant.resources/textures/pbr/default/normal.texture",
-            stage = 2,
-        },
-        occlusion = {
-            texture = "/pkg/ant.resources/textures/pbr/default/occlusion.texture",
-            stage = 3,
-        },
-        emissive = {
-            texture = "/pkg/ant.resources/textures/pbr/default/emissive.texture",
-            factor = {0, 0, 0, 0},
-            stage = 4,
-        },
-    }
-
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         local filename = tex_desc
             and fetch_texture_info(tex_desc.index, name, normalmap, colorspace)
@@ -207,60 +235,98 @@ return function (output, glbdata, exports)
         }
     end
 
+    local function find_material_modes()
+        local pp = {}
+        for meshidx, mesh in ipairs(glbscene.meshes) do
+            for primidx, prim in ipairs(mesh.primitives) do
+                if prim.material then
+                    local matidx = prim.material+1
+                    local m = pp[matidx]
+                    if m == nil then
+                        m = {}
+                        pp[matidx] = m
+                    end
+
+                    local mode = prim.mode or 4
+                    m[mode] = {meshidx, primidx}
+                end
+            end
+        end
+
+        return pp
+    end
+
+    local material_modes = find_material_modes()
+
+    local function get_state(primitivemode)
+        local s = states[primitivemode]
+        if s then
+            return s
+        end
+
+        s = read_datalist(tolocalpath "/pkg/ant.resources/materials/states/default.state")
+        local PT = primitive_state_names[primitivemode+1]
+        s.PT = PT ~= "" and PT or nil
+        return s
+    end
+
     exports.material = {}
-    local default_fx = {
-        shader = {
-            fs = "/pkg/ant.resources/shaders/pbr/fs_pbr.sc",
-            vs = "/pkg/ant.resources/shaders/pbr/vs_pbr.sc",
-        }
-    }
     for matidx, mat in ipairs(materials) do
         local name = mat.name or tostring(matidx)
         local pbr_mr = mat.pbrMetallicRoughness
 
-        local material = {
-            fx          = default_fx,
-            state       = "/pkg/ant.resources/materials/states/default.state",
-            properties  = {
-                s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
-                s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
-                s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
-                s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
-                s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
+        local modes = material_modes[matidx]
 
-                u_basecolor_factor = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
-                u_metallic_roughness_factor = {
-                    0.0, -- keep for occlusion factor
-                    pbr_mr.roughnessFactor or 1.0,
-                    pbr_mr.metallicFactor or 0.0,
-                    pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
-                },
-                u_emissive_factor = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
-                u_material_texture_flags = {
-                    pbr_mr.baseColorTexture and 1.0 or 0.0,
-                    mat.normalTexture and 1.0 or 0.0,
-                    mat.emissiveTexture and 1.0 or 0.0,
-                    mat.occlusionTexture and 1.0 or 0.0,
-                },
-                u_IBLparam = {
-                        1.0, -- perfilter cubemap mip levels
-                        1.0, -- IBL indirect lighting scale
-                        0.0, 0.0,
+        for mode in pairs(modes) do
+            local material = {
+                fx          = default_fx,
+                state       = get_state(mode),
+                properties  = {
+                    s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
+                    s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
+                    s_normal             = handle_texture(mat.normalTexture, "normal", true, "linear"),
+                    s_occlusion          = handle_texture(mat.occlusionTexture, "occlusion", false, "linear"),
+                    s_emissive           = handle_texture(mat.emissiveTexture, "emissive", false, "sRGB"),
+    
+                    u_basecolor_factor = tov4(pbr_mr.baseColorFactor, default_pbr_param.basecolor.factor),
+                    u_metallic_roughness_factor = {
+                        0.0, -- keep for occlusion factor
+                        pbr_mr.roughnessFactor or 1.0,
+                        pbr_mr.metallicFactor or 0.0,
+                        pbr_mr.metallicRoughnessTexture and 1.0 or 0.0,
                     },
-                u_alpha_info = {
-                    mat.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
-                    mat.alphaCutoff or 0.0,
-                    0.0, 0.0,
-                }
-            },
-        }
-
-        local function refine_name(name)
-            local newname = name:gsub("['\\/:*?\"<>|]", "_")
-            return newname
+                    u_emissive_factor = tov4(mat.emissiveFactor, default_pbr_param.emissive.factor),
+                    u_material_texture_flags = {
+                        pbr_mr.baseColorTexture and 1.0 or 0.0,
+                        mat.normalTexture and 1.0 or 0.0,
+                        mat.emissiveTexture and 1.0 or 0.0,
+                        mat.occlusionTexture and 1.0 or 0.0,
+                    },
+                    u_IBLparam = {
+                            1.0, -- perfilter cubemap mip levels
+                            1.0, -- IBL indirect lighting scale
+                            0.0, 0.0,
+                        },
+                    u_alpha_info = {
+                        mat.alphaMode == "OPAQUE" and 0.0 or 1.0, --u_alpha_mask
+                        mat.alphaCutoff or 0.0,
+                        0.0, 0.0,
+                    }
+                },
+            }
+    
+            local function refine_name(name)
+                local newname = name:gsub("['\\/:*?\"<>|]", "_")
+                return newname
+            end
+            local filename = "./materials/" .. refine_name(name) .. ".material"
+            utility.save_txt_file(filename, material)
+            local mm = exports.material[matidx]
+            if mm == nil then
+                mm = {}
+                exports.material[matidx] = mm
+            end
+            mm[mode] = filename
         end
-        local filename = "./materials/" .. refine_name(name) .. ".material"
-        utility.save_txt_file(filename, material)
-        exports.material[matidx] = filename
     end
 end

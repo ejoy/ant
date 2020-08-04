@@ -12,6 +12,7 @@ local imaterial = world:interface "ant.asset|imaterial"
 local rt = ecs.transform "render_transform"
 
 local function set_world_matrix(rc)
+	local m = math3d
 	bgfx.set_transform(rc.worldmat)
 end
 

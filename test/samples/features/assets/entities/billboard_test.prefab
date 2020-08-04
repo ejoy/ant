@@ -5,9 +5,7 @@ policy:
     ant.general|name
 data:
     name: billboard_test
-    transform:
-        s: 6
-        t: {2, 2, 0, 1}
+    transform:{}
     billboard:
         lock: camera    #x/y/z
     material: /pkg/ant.resources/materials/billboard/simple.material

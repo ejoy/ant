@@ -54,7 +54,9 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
         local materialfile
         if prim.material then 
             if exports.material and next(exports.material) then
-                materialfile = exports.material[prim.material+1]
+                local mm = exports.material[prim.material+1]
+                local mode = prim.mode or 4
+                materialfile = assert(mm[mode])
             else
                 error(("primitive need material, but no material files output:%s %d"):format(meshname, prim.material))
             end
