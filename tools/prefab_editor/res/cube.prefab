@@ -13,16 +13,16 @@ policy:
 ---
 action:
   mount: 1
-policy:
-  ant.render|render
-  ant.general|name
-  ant.scene|hierarchy_policy
 data:
+  color: {1, 1, 1, 1}
+  material: /pkg/ant.resources/materials/singlecolor.material
+  mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
+  name: cube
   scene_entity: true
   state: 5
   transform:
     s: 50
-  color: {1, 1, 1, 1}
-  material: "/pkg/ant.resources/materials/singlecolor.material"
-  mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-  name: cube
+policy:
+  ant.render|render
+  ant.general|name
+  ant.scene|hierarchy_policy

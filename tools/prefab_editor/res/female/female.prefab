@@ -4,8 +4,7 @@ action:
 data:
   name: "Root Scene"
   scene_entity: true
-  transform:
-    s: 1
+  transform: {}
 policy:
   ant.general|name
   ant.scene|hierarchy_policy
@@ -16,10 +15,7 @@ action:
 data:
   name: RootNode
   scene_entity: true
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
-    t: {0, 0, 0}
+  transform: {}
 policy:
   ant.general|name
   ant.scene|hierarchy_policy
@@ -38,10 +34,7 @@ data:
   scene_entity: true
   skeleton: ./female.glb|animations/skeleton.ozz
   state: 7
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
-    t: {0, 0, 0}
+  transform: {}
 policy:
   ant.animation|animation
   ant.animation|animation_controller.birth
@@ -63,10 +56,7 @@ data:
   scene_entity: true
   skeleton: ./female.glb|animations/skeleton.ozz
   state: 7
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
-    t: {0, 0, 0}
+  transform: {}
 policy:
   ant.animation|animation
   ant.animation|animation_controller.birth
