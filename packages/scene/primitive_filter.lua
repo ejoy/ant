@@ -39,7 +39,7 @@ local ies = world:interface "ant.scene|ientity_state"
 local pf = ecs.component "primitive_filter"
 
 local default_filter_order = {
-	"foreground", "opaticy", "backgroud", "translucent", "decal",
+	"foreground", "opaticy", "background", "translucent", "decal",
 }
 
 function pf:init()
@@ -59,7 +59,7 @@ function pf:init()
 		foreground = {
 			items = {},
 		},
-		backgroud = {
+		background = {
 			items = {},
 		}
 	}
