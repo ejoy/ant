@@ -1,0 +1,10 @@
+fx:
+    vs: /pkg/ant.resources/shaders/sky/vs_skybox.sc
+    fs: /pkg/ant.resources/shaders/sky/fs_skybox.sc
+    setting:
+        surfacetype: background
+properties:
+    s_skybox_cubemap:
+        stage: 0
+        texture: /pkg/ant.resources/textures/sky/skybox.texture
+state: /pkg/ant.resources/materials/states/default.state

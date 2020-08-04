@@ -17,6 +17,18 @@ component "procedural_sky"
     .implement "procedural_sky_system.lua"
     .method "init"
 
+policy "skybox"
+    .require_system "skybox_system.lua"
+    .require_policy "ant.render|render"
+    .require_transform "skybox_transform"
+    .component "skybox"
+
+transform "skybox_transform"
+    .implement "skybox_system.lua"
+    .input "skybox"
+    .output "mesh"
+    .mehtod "process_prefab"
+
 system "skybox_system"
     .implement "skybox_system.lua"
     .method "init"

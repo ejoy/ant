@@ -3,6 +3,12 @@ local world = ecs.world
 
 local ie = world:interface "ant.render|entity"
 
+local sb_trans = ecs.transform "skybox_transform"
+function sb_trans.process_prefab(e)
+    
+end
+
+
 local skybox_sys = ecs.system "skybox_system"
 
 function skybox_sys:init()
