@@ -105,13 +105,14 @@ end
 
 function init_loader_sys:post_init()
     local mq = world:singleton_entity "main_queue"
-    local pos = math3d.vector(-4.5, 2, -1.5, 1)
-    icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
+    -- local pos = math3d.vector(-4.5, 2, -1.5, 1)
+    -- icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
+    local dir = {0, 0, 1, 0}
+    icamera.lookto(mq.camera_eid, {0, 0, -8, 1}, dir)
     local f = icamera.get_frustum(mq.camera_eid)
     f.n, f.f = 0.25, 250
     icamera.set_frustum(mq.camera_eid, f)
-    --local dir = {0, 0, -1, 0}
-    --icamera.lookto(mq.camera_eid, {0, 0, 0, 1}, dir)
+
 end
 
 local imgui      = require "imgui"
