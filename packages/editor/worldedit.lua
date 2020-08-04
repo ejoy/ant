@@ -142,9 +142,17 @@ function mt:prefab_instance(prefab, args)
     return instance
 end
 
-function mt:prefab_add(filename, pidx)
-    set_prefab(self.world, prefab, path, value)
-    prefab.__class[#prefab.__class] = {action = {mount = ""}, prefab = filename}
+function mt:add_entity(curr_prefab, template)
+    local edit_prefab = assetmgr.edit(curr_prefab)
+    edit_prefab.__class[#edit_prefab.__class+1] = template
+    if template.prefab then
+        edit_prefab[#edit_prefab+1] = {
+            prefab = assetmgr.resource(template.prefab, self.world)
+        }
+    else
+        edit_prefab[#edit_prefab+1] = world:create_entity_template(template)
+    end
+    
 end
 
 function mt:prefab_del(idx)

@@ -66,4 +66,6 @@ function assetmgr.load_fx(fx, setting)
 	return cr.load_fx(fx, setting)
 end
 
+assetmgr.edit = resource.edit
+
 return assetmgr

@@ -11,6 +11,8 @@ local status = {
     GizmoSpace = "worldspace"
 }
 
+local localSpace = {}
+
 function m.show(rhwi)
     local sw, sh = rhwi.screen_size()
     local icons = require "common.icons"(asset_mgr)

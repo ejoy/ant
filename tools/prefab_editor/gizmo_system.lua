@@ -1203,13 +1203,15 @@ function gizmo_sys:data_changed()
 			if isTranDirty then
 				isTranDirty = false
 				local target = gizmo.target_eid
-				if gizmo.mode == SCALE then
-					cmd_queue:record({action = SCALE, eid = target, oldvalue = lastGizmoScale, newvalue = math3d.totable(iom.get_scale(target))})
-				elseif gizmo.mode == ROTATE then
-					cmd_queue:record({action = ROTATE, eid = target, oldvalue = math3d.totable(lastRotate), newvalue = math3d.totable(iom.get_rotation(target))})
-				elseif gizmo.mode == MOVE then
-					local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.calc_worldmat(world[target].parent)), lastGizmoPos, 1))
-					cmd_queue:record({action = MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(target))})
+				if target then
+					if gizmo.mode == SCALE then
+						cmd_queue:record({action = SCALE, eid = target, oldvalue = lastGizmoScale, newvalue = math3d.totable(iom.get_scale(target))})
+					elseif gizmo.mode == ROTATE then
+						cmd_queue:record({action = ROTATE, eid = target, oldvalue = math3d.totable(lastRotate), newvalue = math3d.totable(iom.get_rotation(target))})
+					elseif gizmo.mode == MOVE then
+						local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.calc_worldmat(world[target].parent)), lastGizmoPos, 1))
+						cmd_queue:record({action = MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(target))})
+					end
 				end
 			end
 		elseif what == "RIGHT" then

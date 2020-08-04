@@ -1,18 +1,15 @@
 local ecs = ...
 local world = ecs.world
-local math3d = require "math3d"
 local irq = world:interface "ant.render|irenderqueue"
 local camera = world:interface "ant.camera|camera"
 local entity = world:interface "ant.render|entity"
 local m = ecs.system 'init_system'
 local imgui      = require "imgui"
 local prefab_mgr = require "prefab_manager"
-local iom = world:interface "ant.objcontroller|obj_motion"
 local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
-local vfs = require "vfs"
-local prefab_view = require "prefab_view"
-
+local rhwi      = import_package 'ant.render'.hwi
+local window = require "window"
 local function LoadImguiLayout(filename)
     local rf = lfs.open(filename, "rb")
     if rf then
@@ -38,6 +35,8 @@ function m:init()
     }, "main_queue")
     entity.create_grid_entity("", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
     world:instance "res/light_directional.prefab"
+
+    window.set_title(rhwi.native_window(), "PrefabEditor")
 end
 
 function m:data_changed()

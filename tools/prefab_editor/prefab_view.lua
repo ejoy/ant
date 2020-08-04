@@ -68,6 +68,24 @@ function scene:set_parent(eid, peid)
     self.all[eid] = removed_node
 end
 
+function scene:update_prefab_template(prefab)
+    local prefab_template = {}
+    local function construct_entity(eid, pt)
+        table.insert(pt, self.all[eid].template.template)
+        local prefab_filename = self.all[eid].template.filename
+        if prefab_filename then
+            table.insert(pt, {args = {root = #pt}, prefab = prefab_filename})
+        end
+        local pidx = #pt
+        for _, child in ipairs(self.all[eid].children) do
+            self.all[child.eid].template.template.action.mount = pidx
+            construct_entity(child.eid, pt)
+        end
+    end
+    construct_entity(self.root.eid, prefab_template)
+    prefab.__class = prefab_template
+end
+
 function scene:get_locked_uidata(eid)
     return self.all[eid].locked
 end
