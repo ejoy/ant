@@ -60,9 +60,14 @@ function assetmgr.resource(path, world)
 end
 
 function assetmgr.load_fx(fx, setting)
-	for k, v in pairs(fx.shader) do
-		fx.shader[k] = absolute_path(v)
+	local function check_resolve_path(fx, p)
+		if fx[p] then
+			fx[p] = absolute_path(fx[p])
+		end
 	end
+	check_resolve_path(fx, "vs")
+	check_resolve_path(fx, "fs")
+	check_resolve_path(fx, "cs")
 	return cr.load_fx(fx, setting)
 end
 

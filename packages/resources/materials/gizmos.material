@@ -1,7 +1,6 @@
 fx:
-  shader:
-    fs: /pkg/ant.resources/shaders/mesh/fs_singlecolor.sc
-    vs: /pkg/ant.resources/shaders/mesh/vs_singlecolor.sc
+  fs: /pkg/ant.resources/shaders/mesh/fs_singlecolor.sc
+  vs: /pkg/ant.resources/shaders/mesh/vs_singlecolor.sc
 properties:
   u_color: {1, 1, 1, 1}
 state:

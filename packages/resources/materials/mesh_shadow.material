@@ -1,9 +1,8 @@
 fx:
+  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
   setting:
     shadow_receive: on
-  shader:
-    fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
-    vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
 properties:
   s_basecolor:
     stage: 0

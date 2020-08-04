@@ -1,10 +1,9 @@
 fx:
+  fs: /pkg/ant.resources/shaders/simple/quad/fs_shadowquad.sc
   setting:
     shadow_receive: on
     surfacetype: translucent
-  shader:
-    fs: /pkg/ant.resources/shaders/simple/quad/fs_shadowquad.sc
-    vs: /pkg/ant.resources/shaders/simple/quad/vs_texquad.sc
+  vs: /pkg/ant.resources/shaders/simple/quad/vs_texquad.sc
 state:
   ALPHA_REF: 0
   CULL: CCW

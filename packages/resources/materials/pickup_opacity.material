@@ -1,5 +1,4 @@
 fx:
-  shader:
-    fs: /pkg/ant.resources/shaders/picking/fs_picking.sc
-    vs: /pkg/ant.resources/shaders/picking/vs_picking.sc
+  fs: /pkg/ant.resources/shaders/picking/fs_picking.sc
+  vs: /pkg/ant.resources/shaders/picking/vs_picking.sc
 state: /pkg/ant.resources/materials/states/default.state

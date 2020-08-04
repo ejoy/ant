@@ -1,12 +1,11 @@
 fx:
-    shader:
-        vs: /pkg/ant.resources/shaders/billboard/vs_billboard.sc
-        fs: /pkg/ant.resources/shaders/billboard/fs_billboard.sc
-    setting:
-        surfacetype: background
+  fs: /pkg/ant.resources/shaders/billboard/fs_billboard.sc
+  setting:
+    surfacetype: background
+  vs: /pkg/ant.resources/shaders/billboard/vs_billboard.sc
 properties:
-    u_color: {1.0, 1.0, 1.0, 1.0}
-    s_basecolor:
-        stage: 0
-        texture: /pkg/ant.resources/textures/test/color.texture
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.resources/textures/test/color.texture
+  u_color: {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/billboard.state

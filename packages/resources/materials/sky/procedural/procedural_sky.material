@@ -1,7 +1,6 @@
 fx:
-  shader:
-    fs: /pkg/ant.resources/shaders/sky/procedural/fs_sky_color_banding_fix.sc
-    vs: /pkg/ant.resources/shaders/sky/procedural/vs_sky.sc
+  fs: /pkg/ant.resources/shaders/sky/procedural/fs_sky_color_banding_fix.sc
+  vs: /pkg/ant.resources/shaders/sky/procedural/vs_sky.sc
 properties:
   u_parameters: {0, 0, 0, 0}
   u_perezCoeff:
