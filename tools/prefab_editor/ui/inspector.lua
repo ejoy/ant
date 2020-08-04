@@ -3,8 +3,11 @@ local math3d    = require "math3d"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
 local prefab_view = require "prefab_view"
+local prefab_view = require "prefab_view"
 local m = {}
 local world
+local worldedit
+local iom
 local localSpace = {}
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 
@@ -23,7 +26,6 @@ local function update_ui_transform(eid)
     if not eid then
         return
     end
-    local iom = world:interface "ant.objcontroller|obj_motion"
     local s, r, t = math3d.srt(iom.srt(eid))
     local Pos = math3d.totable(t)
     uiData.pos[1] = Pos[1]
@@ -56,8 +58,26 @@ function m.set_gizmo(obj)
     gizmo = obj
 end
 
-function m.update_ui()
-    update_ui_transform(gizmo.target_eid)
+function m.update_template_tranform(eid)
+    if not eid then return end
+    local template = prefab_view:get_template(eid)
+    local s, r, t = math3d.srt(iom.srt(eid))
+    local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
+    local srt_table = {
+        r = {tr[1], tr[2], tr[3], tr[4]},
+        s = {ts[1], ts[2], ts[3]},
+        t = {tt[1], tt[2], tt[3]}
+    }
+    template.template.data.transform = srt_table
+    --worldedit:prefab_set(template.prefab, "/" .. tostring(template.index) .."/data/transform", srt_table)
+end
+
+function m.update_ui(ut)
+    local eid = gizmo.target_eid
+    update_ui_transform(eid)
+    if ut then
+        m.update_template_tranform(eid)
+    end
 end
 
 function m.show(rhwi)
@@ -81,10 +101,12 @@ function m.show(rhwi)
             if template and template.filename then
                 imgui.widget.Text("Prefab :")
                 imgui.cursor.SameLine()
-                imgui.widget.Text(tostring(template.filename))
+                imgui.widget.Text(template.filename)
             end
             if imgui.widget.InputText("Name", uiData.name) then
-                world[uiData.eid[1]].name = tostring(uiData.name.text)
+                local name = tostring(uiData.name.text)
+                world[uiData.eid[1]].name = name
+                world:pub {"EntityEvent", "name", uiData.eid[1], name}
             end
 
             if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
@@ -122,18 +144,20 @@ function m.show(rhwi)
     end
 
     if oldPos then
-        world:pub {"TransformEvent", "move", gizmo.target_eid, oldPos, {currentPos[1], currentPos[2], currentPos[3]}}
+        world:pub {"EntityEvent", "move", gizmo.target_eid, oldPos, {uiData.pos[1], uiData.pos[2], uiData.pos[3]}}
         oldPos = nil
     elseif oldRot then
-        world:pub {"TransformEvent", "rotate", gizmo.target_eid, oldRot, {currentRot[1], currentRot[2], currentRot[3]}}
+        world:pub {"EntityEvent", "rotate", gizmo.target_eid, oldRot, {uiData.rot[1], uiData.rot[2], uiData.rot[3]}}
         oldRot = nil
     elseif oldScale then
-        world:pub {"TransformEvent", "scale", gizmo.target_eid, oldScale, {currentScale[1], currentScale[2], currentScale[3]}}
+        world:pub {"EntityEvent", "scale", gizmo.target_eid, oldScale, {uiData.scale[1], uiData.scale[2], uiData.scale[3]}}
         oldScale = nil
     end
 end
 
 return function(w)
     world = w
+    iom = world:interface "ant.objcontroller|obj_motion"
+    worldedit = import_package "ant.editor".worldedit(world)
     return m
 end

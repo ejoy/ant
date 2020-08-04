@@ -47,10 +47,19 @@ local function showMenu()
 
             end
             if imgui.widget.MenuItem("Save", "Ctrl+S") then
-                prefab_mgr:save_prefab("D:/Github/ant/tools/prefab_editor/res/female/test.prefab")
+                prefab_mgr:save_prefab()
             end
             if imgui.widget.MenuItem("Save As..") then
-
+                local filedialog = require 'filedialog'
+                local dialog_info = {
+                    Owner = rhwi.native_window(),
+                    Title = "Save As..",
+                    FileTypes = {"Prefab", "*.prefab" }
+                }
+                local ok, path = filedialog.save(dialog_info)
+                if ok then
+                    prefab_mgr:save_prefab(path .. ".prefab")
+                end
             end
             imgui.widget.EndMenu()
         end
@@ -77,13 +86,13 @@ end
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 local entityStateEvent = world:sub {"EntityState"}
 local dropFilesEvent = world:sub {"OnDropFiles"}
-local transformEvent = world:sub {"TransformEvent"}
+local entityEvent = world:sub {"EntityEvent"}
 local mouseMove = world:sub {"mousemove"}
 local dragFile = false
-local last_x = -1
-local last_y = -1
-local last_width = -1
-local last_height = -1
+local lastX = -1
+local lastY = -1
+local lastWidth = -1
+local lastHeight = -1
 function m:ui_update()
     if not resourceRoot then
         local res_root_str = tostring(fs.path "":localpath())
@@ -102,10 +111,10 @@ function m:ui_update()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
     local dirty = false
-    if last_x ~= x then last_x = x dirty = true end
-    if last_y ~= y then last_y = y dirty = true  end
-    if last_width ~= width then last_width = width dirty = true  end
-    if last_height ~= height then last_height = height dirty = true  end
+    if lastX ~= x then lastX = x dirty = true end
+    if lastY ~= y then lastY = y dirty = true  end
+    if lastWidth ~= width then lastWidth = width dirty = true  end
+    if lastHeight ~= height then lastHeight = height dirty = true  end
     if dirty then
         local viewport = {x = x, y = y, w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
@@ -114,7 +123,7 @@ function m:ui_update()
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         local x, y = imgui.util.GetMousePos()
-        if (x > last_x and x < (last_x + last_width) and y > last_y and y < (last_y + last_height)) then
+        if (x > lastX and x < (lastX + lastWidth) and y > lastY and y < (lastY + lastHeight)) then
             if not dragFile then
                 dragFile = imgui.widget.GetDragDropPayload()
             end
@@ -129,19 +138,16 @@ function m:ui_update()
     end
 end
 
--- local function onDropFiles(files)
---     for _, file in ipairs(files) do
---         prefab_mgr:create_prefab(file)
---     end
--- end
-
--- local dragFiles = world:sub {"dropfiles"}
 local eventOpenPrefab = world:sub {"OpenPrefab"}
 local eventAddPrefab = world:sub {"AddPrefab"}
+local eventResourceBrowser = world:sub {"ResourceBrowser"}
+local eventWindowTitle = world:sub {"WindowTitle"}
+
+local window = require "window"
 function m:data_changed()
     for _, action, value1, value2 in eventGizmo:unpack() do
         if action == "update" or action == "ontarget" then
-            inspector.update_ui()
+            inspector.update_ui(action == "update")
         elseif action == "create" then
             gizmo = value1
             cmd_queue = value2
@@ -149,13 +155,23 @@ function m:data_changed()
             scene_view.set_gizmo(gizmo)
         end
     end
-    for _, what, target, old, new in transformEvent:unpack() do
+    for _, what, target, v1, v2 in entityEvent:unpack() do
+        local dirty = false
         if what == "move" then
-            cmd_queue:record {action = MOVE, eid = target, oldvalue = old, newvalue = new}
+            cmd_queue:record {action = MOVE, eid = target, oldvalue = v1, newvalue = v2}
+            dirty = true
         elseif what == "rotate" then
-            cmd_queue:record {action = ROTATE, eid = target, oldvalue = old, newvalue = new}
+            cmd_queue:record {action = ROTATE, eid = target, oldvalue = v1, newvalue = v2}
+            dirty = true
         elseif what == "scale" then
-            cmd_queue:record {action = SCALE, eid = target, oldvalue = old, newvalue = new}
+            cmd_queue:record {action = SCALE, eid = target, oldvalue = v1, newvalue = v2}
+            dirty = true
+        elseif what == "name" then
+            local template = prefab_view:get_template(eid)
+            template.template.data.name = name
+        end
+        if dirty then
+            inspector.update_template_tranform(eid)
         end
     end
     for _, what, eid, value in entityStateEvent:unpack() do
@@ -165,8 +181,7 @@ function m:data_changed()
         elseif what == "lock" then
             prefab_view:set_lock(eid, value)
         elseif what == "delete" then
-            prefab_view:del(eid)
-            world:remove_entity(eid)
+            prefab_mgr:remove_entity(eid)
         end
     end
     for _, filename in eventOpenPrefab:unpack() do
@@ -177,5 +192,16 @@ function m:data_changed()
     end
     for _, files in dropFilesEvent:unpack() do
         on_drop_files(files)
+    end
+
+    for _, what in eventResourceBrowser:unpack() do
+        if what == "dirty" then
+            resource_browser.dirty = true
+        end
+    end
+
+    for _, what in eventWindowTitle:unpack() do
+        local title = "PrefabEditor - " .. what
+        window.set_title(rhwi.native_window(), title)
     end
 end

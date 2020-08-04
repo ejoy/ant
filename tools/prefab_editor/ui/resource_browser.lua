@@ -5,7 +5,9 @@ local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
 local world
 local assetmgr
-local m = {}
+local m = {
+    dirty = true
+}
 
 local resourceTree = nil
 local resourceRoot = nil
@@ -46,33 +48,39 @@ function m.set_root(root)
     resourceRoot = root
 end
 
+local function constructResourceTree(fspath)
+    local tree = {files = {}, dirs = {}}
+    for item in fspath:list_directory() do
+        if fs.is_directory(item) then
+            table.insert(tree.dirs, {item, constructResourceTree(item), parent = {tree}})
+        else
+            table.insert(tree.files, item)
+        end
+    end
+    return tree
+end
+
+function m.update_resource_tree()
+    if not m.dirty then return end
+
+    resourceTree = {files = {}, dirs = {{resourceRoot, constructResourceTree(resourceRoot)}}}
+    local function set_parent(tree)
+        for _, v in pairs(tree[2].dirs) do
+            v.parent = tree
+            set_parent(v)
+        end
+    end
+    set_parent(resourceTree.dirs[1])
+    currentFolder = resourceTree.dirs[1]
+    m.dirty = false
+end
+
 function m.show(rhwi)
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, sh - uiconfig.ResourceBrowserHeight, 'F')
     imgui.windows.SetNextWindowSize(sw, uiconfig.ResourceBrowserHeight, 'F')
-    local function constructResourceTree(fspath)
-        local tree = {files = {}, dirs = {}}
-        for item in fspath:list_directory() do
-            if fs.is_directory(item) then
-                table.insert(tree.dirs, {item, constructResourceTree(item), parent = {tree}})
-            else
-                table.insert(tree.files, item)
-            end
-        end
-        return tree
-    end
-
-    if resourceTree == nil then
-        resourceTree = {files = {}, dirs = {{resourceRoot, constructResourceTree(resourceRoot)}}}
-        local function set_parent(tree)
-            for _, v in pairs(tree[2].dirs) do
-                v.parent = tree
-                set_parent(v)
-            end
-        end
-        set_parent(resourceTree.dirs[1])
-        currentFolder = resourceTree.dirs[1]
-    end
+    
+    m.update_resource_tree()
 
     local function doShowBrowser(folder)
         for k, v in pairs(folder.dirs) do
