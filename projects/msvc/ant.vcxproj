@@ -55,9 +55,6 @@
     <ProjectReference Include="protocol.vcxproj">
       <Project>{cf016076-47e5-40cf-875d-dcade7c9055e}</Project>
     </ProjectReference>
-    <ProjectReference Include="redirectfd.vcxproj">
-      <Project>{ad2e16b7-601f-4189-88ad-d439329322e3}</Project>
-    </ProjectReference>
     <ProjectReference Include="remotedebug.vcxproj">
       <Project>{d1b7638b-572f-4212-915c-512395553224}</Project>
     </ProjectReference>
