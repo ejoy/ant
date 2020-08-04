@@ -1,3 +1,0 @@
-properties:
-  u_bright_threshold: {0.75, 0, 0, 0}
-state: /pkg/ant.resources/materials/bloom/postprocess.state

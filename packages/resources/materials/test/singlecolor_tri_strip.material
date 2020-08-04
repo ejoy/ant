@@ -1,9 +1,8 @@
 fx:
+  fs: /pkg/ant.resources/shaders/test/singlecolor/fs.sc
   setting:
     lighting: off
-  shader:
-    fs: /pkg/ant.resources/shaders/test/singlecolor/fs.sc
-    vs: /pkg/ant.resources/shaders/test/singlecolor/vs.sc
+  vs: /pkg/ant.resources/shaders/test/singlecolor/vs.sc
 properties:
   u_color: {1, 0, 0, 1}
 state:

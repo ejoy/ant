@@ -1,7 +1,6 @@
 fx:
-  shader:
-    fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
-    vs: /pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc
+  fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
+  vs: /pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc
 properties:
   s_texColor:
     stage: 0

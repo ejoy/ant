@@ -11,8 +11,10 @@ if __ANT_RUNTIME__ then
     fxcompile = {}
     function fxcompile.register()
     end
-    function fxcompile.get_shader(path, stage, fx)
-        return (fs.path(path) / stage / fx.hash):localpath()
+    function fxcompile.get_shader(fx, stage)
+        if fx[stage] then
+            return (fs.path(fx[stage]) / stage / fx.hash):localpath()
+        end
     end
 else
     fxcompile = require "fx.compile"
@@ -44,17 +46,18 @@ local function read_fx(fx, setting)
     end
     merge(setting, default_setting)
     return {
-        shader = fx.shader,
+        vs = fx.vs,
+        fs = fx.fs,
+        cs = fx.cs,
         setting = setting
     }
 end
 
 local function get_hash(fx)
-    local shader = fx.shader
-    if shader.cs then
-        return shader.cs
+    if fx.cs then
+        return fx.cs
     end
-    return shader.vs..shader.fs
+    return fx.vs..fx.fs
 end
 
 local function create_uniform(h, mark)
@@ -105,15 +108,17 @@ local function readfile(filename)
 end
 
 local function load_shader(fx, stage)
-    local input = fx.shader[stage]
-    local h = bgfx.create_shader(readfile(fxcompile.get_shader(input, stage, fx)))
+    local input = fx[stage]
+    if input == nil then
+        error(("invalid stage:%s in fx file"):format(stage))
+    end
+    local h = bgfx.create_shader(readfile(fxcompile.get_shader(fx, stage)))
     bgfx.set_name(h, input)
     return h
 end
 
 local function create_program(fx)
-    local shader = fx.shader
-    if shader.cs then
+    if fx.cs then
         return create_compute_program(
             load_shader(fx, "cs")
         )
@@ -150,13 +155,13 @@ end
 local function compile(input, setting)
     local fx = read_fx(input, setting)
     fx.hash = sha1(stringify(fx.setting)):sub(1,7)
-    for k in pairs(fx.shader) do
-        fxcompile.get_shader(fx.shader[k], k, fx)
-    end
+    fxcompile.get_shader(fx, "vs")
+    fxcompile.get_shader(fx, "fs")
+    fxcompile.get_shader(fx, "cs")
 end
 
 local function unloader(res)
-    bgfx.destroy(assert(res.shader.prog))
+    bgfx.destroy(assert(res.prog))
 end
 
 return {

@@ -99,7 +99,8 @@ local function do_compile(input, output, stage, setting)
     return deps
 end
 
-local function get_shader(path, stage, fx)
+local function get_shader(fx, stage)
+    local path = fx[stage]
     local hashpath = get_filename(path)
     local output = BINPATH / IDENTITY / hashpath / stage
     local outfile = output / fx.hash

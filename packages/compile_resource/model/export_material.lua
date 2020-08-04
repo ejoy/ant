@@ -111,10 +111,8 @@ local UV_map = {
 }
 
 local default_fx = {
-    shader = {
-        fs = "/pkg/ant.resources/shaders/pbr/fs_pbr.sc",
-        vs = "/pkg/ant.resources/shaders/pbr/vs_pbr.sc",
-    }
+    fs = "/pkg/ant.resources/shaders/pbr/fs_pbr.sc",
+    vs = "/pkg/ant.resources/shaders/pbr/vs_pbr.sc",
 }
 
 local primitive_state_names = {

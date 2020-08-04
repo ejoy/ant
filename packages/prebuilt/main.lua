@@ -86,9 +86,15 @@ function SEARCH.material(data, fx_setting)
 end
 
 function SEARCH.fx(data, setting)
-    for k, v in pairs(data.shader) do
-        data.shader[k] = absolute_path(v)
+    local function check_resolve_path(fx, p)
+		if fx[p] then
+			fx[p] = absolute_path(fx[p])
+		end
     end
+
+    check_resolve_path(data, "vs")
+    check_resolve_path(data, "fs")
+    check_resolve_path(data, "cs")
     cr.compile_fx(data, setting)
 end
 

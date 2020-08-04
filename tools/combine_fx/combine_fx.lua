@@ -79,14 +79,8 @@ end
 
 for _, mf in ipairs(materialfiles) do
     local c = read_datalist(mf)
-    if type(c.fx) == "string" then
-        local fxpath = fs.path(to_localpath(c.fx))
-        c.fx = read_datalist(fxpath)
-        local s = stringify(c)
-        write_file(mf, s)
-    end
-end
-
-for _, fxfile in ipairs(list_files(fs.current_path() / "packages", ".fx", {})) do
-    fs.remove(fxfile)
+    local shader = assert(c.fx.shader)
+    shader.setting = c.fx.setting
+    c.fx = shader
+    write_file(mf, stringify(c))
 end
