@@ -47,7 +47,7 @@ function scene:del(eid)
     end
     local idx = find(pt, eid)
     if idx then
-        table.remove(pt, idx, eid)
+        table.remove(pt, idx)
     end
     self.all[eid] = nil
     return eid_node

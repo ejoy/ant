@@ -60,6 +60,7 @@ function m:open_prefab(filename)
         world:remove_entity(eid)
     end
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    assetmgr.unload(vfspath)
     local prefab = worldedit:prefab_template(vfspath)
     self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
@@ -166,9 +167,9 @@ function m:save_prefab(filename)
         end
         filename = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     end
-    local self_prefab = tostring(self.prefab) --tostring(fs.path "":localpath()) .. tostring(self.prefab)
-    filename = filename or self_prefab
-    local saveas = (lfs.path(filename) ~= lfs.path(self_prefab))
+    local prefab_filename = tostring(self.prefab)
+    filename = filename or prefab_filename
+    local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     prefab_view:update_prefab_template(assetmgr.edit(self.prefab))
     self.entities.__class = self.prefab.__class
     if not saveas then
@@ -179,7 +180,6 @@ function m:save_prefab(filename)
     local current_dir = lfs.path(self_prefab):parent_path()
     local new_dir = lfs.path(filename):localpath():parent_path()
     if current_dir ~= new_dir then
-        --data = utils.deep_copy(self.entities.__class)
         for _, t in ipairs(data) do
             if t.prefab then
                 t.prefab = convert_path(t.prefab, current_dir, new_dir)
@@ -216,15 +216,8 @@ function m:remove_entity(eid)
         for _, e in ipairs(teml.children) do
             world:remove_entity(e)
         end
-        -- local child_idx = find_index(self.entities, teml.children)
-        -- if child_idx then
-        --     table.remove(self.entities, child_idx)
-        -- end
-        self:internal_remove(teml.children)
     end
     world:remove_entity(eid)
-    -- local eid_index = find_index(self.entities, eid)
-    -- table.remove(self.entities, eid_index)
     self:internal_remove(eid)
     prefab_view:del(eid)
 end
