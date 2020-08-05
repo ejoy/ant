@@ -1,6 +1,5 @@
 local imgui       = require "imgui.ant"
 local renderpkg   = import_package "ant.render"
-local assetmgr    = import_package "ant.asset"
 local viewidmgr   = renderpkg.viewidmgr
 local rhwi        = renderpkg.hwi
 local window      = require "window"
@@ -140,4 +139,5 @@ end
 return {
 	start = start,
 	get_context = get_context,
+    init_world = common.init_world,
 }
