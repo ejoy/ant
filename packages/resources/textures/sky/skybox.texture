@@ -11,4 +11,5 @@ sampler:
   MIP: POINT
   U: CLAMP
   V: CLAMP
+  W: CLAMP
 type: texture

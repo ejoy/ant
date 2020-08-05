@@ -3888,6 +3888,36 @@ lcreateTexture2D(lua_State *L) {
 }
 
 /*
+	integer size
+	boolean hasMips
+	integer layers
+	string format
+	string flags
+	todo : mem
+*/
+
+static int
+lcreateTextureCube(lua_State *L){
+	const uint32_t size = (uint32_t)luaL_checkinteger(L, 1);
+	const int hasMips = lua_toboolean(L, 2);
+	const int layers = luaL_checkinteger(L, 3);
+	const bgfx_texture_format_t fmt = texture_format_from_string(L, 4);
+	const uint64_t flags = 
+		lua_isnoneornil(L, 5) ? 
+			BGFX_TEXTURE_NONE|BGFX_SAMPLER_NONE : 
+			get_texture_flags(L, lua_tostring(L, 5));
+
+	const bgfx_memory_t * mem = lua_isnoneornil(L, 6) ? NULL : getMemory(L, 6);
+
+	const bgfx_texture_handle_t handle = BGFX(create_texture_cube)(size, hasMips, layers, fmt, flags, mem);
+	if (!BGFX_HANDLE_IS_VALID(handle)) {
+		return luaL_error(L, "create texture cube failed");
+	}
+	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, handle));
+	return 1;
+}
+
+/*
 	integer texture id
 	integer layer
 	integer mip
