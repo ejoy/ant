@@ -88,6 +88,7 @@ local entityStateEvent = world:sub {"EntityState"}
 local dropFilesEvent = world:sub {"OnDropFiles"}
 local entityEvent = world:sub {"EntityEvent"}
 local mouseMove = world:sub {"mousemove"}
+local keypress_mb = world:sub{"keyboard"}
 local dragFile = false
 local lastX = -1
 local lastY = -1
@@ -204,5 +205,14 @@ function m:data_changed()
         local title = "PrefabEditor - " .. what
         window.set_title(rhwi.native_window(), title)
         gizmo.target_eid = nil
+    end
+
+    for _, key, press, state in keypress_mb:unpack() do
+        if key == "DELETE" and press == 1 then
+            prefab_mgr:remove_entity(gizmo.target_eid)
+            gizmo.target_eid = nil
+        elseif state.CTRL and key == "S" and press == 1 then
+            prefab_mgr:save_prefab()
+        end
     end
 end

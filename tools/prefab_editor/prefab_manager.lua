@@ -211,6 +211,7 @@ function m:save_prefab(filename)
 end
 
 function m:remove_entity(eid)
+    if not eid then return end
     local teml = prefab_view:get_template(eid)
     if teml.children then
         for _, e in ipairs(teml.children) do
