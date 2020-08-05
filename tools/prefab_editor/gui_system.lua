@@ -19,9 +19,9 @@ local inspector = require "ui.inspector"(world)
 local uiconfig = require "ui.config"
 local uiutils = require "ui.utils"
 local prefab_mgr = require "prefab_manager"
+local menu = require "ui.menu"(prefab_mgr)
 
 local m = ecs.system 'gui_system'
-
 
 local eventGizmo = world:sub {"Gizmo"}
 local eventScene = world:sub {"Scene"}
@@ -36,52 +36,6 @@ local SCALE <const> = 3
 
 
 local icons = require "common.icons"(asset_mgr)
-
-local function showMenu()
-    if imgui.widget.BeginMainMenuBar() then
-        if imgui.widget.BeginMenu("File") then
-            if imgui.widget.MenuItem("New", "Ctrl+N") then
-
-            end
-            if imgui.widget.MenuItem("Open", "Ctrl+O") then
-
-            end
-            if imgui.widget.MenuItem("Save", "Ctrl+S") then
-                prefab_mgr:save_prefab()
-            end
-            if imgui.widget.MenuItem("Save As..") then
-                local filedialog = require 'filedialog'
-                local dialog_info = {
-                    Owner = rhwi.native_window(),
-                    Title = "Save As..",
-                    FileTypes = {"Prefab", "*.prefab" }
-                }
-                local ok, path = filedialog.save(dialog_info)
-                if ok then
-                    prefab_mgr:save_prefab(path .. ".prefab")
-                end
-            end
-            imgui.widget.EndMenu()
-        end
-        if imgui.widget.BeginMenu("Edit") then
-            if imgui.widget.MenuItem("Undo", "CTRL+Z") then
-            end
-
-            if imgui.widget.MenuItem("Redo", "CTRL+Y", false, false) then
-            end
-
-            if imgui.widget.MenuItem("SaveUILayout") then
-                local setting = imgui.util.SaveIniSettings()
-                local current_path = lfs.current_path()
-                local wf = assert(lfs.open(fs.path "":localpath() .. "/" .. "imgui.layout", "wb"))
-                wf:write(setting)
-                wf:close()
-            end
-            imgui.widget.EndMenu()
-        end
-        imgui.widget.EndMainMenuBar()
-    end
-end
 
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 local entityStateEvent = world:sub {"EntityState"}
@@ -103,7 +57,7 @@ function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.TitleBg, 0.2, 0.2, 0.2, 1)
-    showMenu()
+    menu.show()
     toolbar.show(rhwi)
     local x, y, width, height = imgui.showDockSpace(0, viewStartY)
     scene_view.show(rhwi)
@@ -179,6 +133,12 @@ function m:data_changed()
         if what == "visible" then
             prefab_view:set_visible(eid, value)
             ies.set_state(eid, what, value)
+            local template = prefab_view:get_template(eid)
+            if template.children then
+                for _, e in ipairs(template.children) do
+                    ies.set_state(e, what, value)
+                end
+            end
         elseif what == "lock" then
             prefab_view:set_lock(eid, value)
         elseif what == "delete" then
