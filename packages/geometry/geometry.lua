@@ -35,8 +35,35 @@ local function create_box_ib(needib, line)
 			}
 			
 		else
-			assert(false)
-			return nil
+			local
+			lbn<const>, ltn<const>, rtn<const>, rbn<const>,
+			rbf<const>, rtf<const>, ltf<const>, lbf<const> = 
+					0, 1, 2, 3,
+					4, 5, 6, 7
+
+			local faces<const> = {
+				{lbn, ltn, rtn, rbn},	--front
+				{rbf, rtf, ltf, rbf},	--back
+
+				{lbf, ltf, ltn, lbn},	--left
+				{rbn, rtn, rtf, rbf},	--right
+
+				{ltn, ltf, rtf, rtn},	--top
+				{rbn, rbf, lbf, lbn},	--bottom
+			}
+
+			local subib<const> = {
+				1, 2, 4,
+				2, 3, 4
+			}
+			local ib = {}
+			for _, f in ipairs(faces) do
+				for _, si in ipairs(subib) do
+					ib[#ib+1] = f[si]
+				end
+			end
+
+			return ib
 		end
 	end
 end	
@@ -49,15 +76,15 @@ function geometry.box_from_aabb(aabb, needib, line)
 			local maxx, maxy, maxz = max[1], max[2], max[3]
 			local minx, miny, minz = min[1], min[2], min[3]
 			return {
-					min,				-- lbn
-					{minx, maxy, minz},	-- ltn
-					{maxx, maxy, minz},	-- rtn
-					{maxx, miny, minz},	-- rbn
+					min[1], min[2], min[3],	-- lbn
+					minx, maxy, minz,		-- ltn
+					maxx, maxy, minz,		-- rtn
+					maxx, miny, minz,		-- rbn
 		
-					{maxx, miny, maxz},	-- rbf
-					max,				-- rtf
-					{minx, maxy, maxz},	-- ltf
-					{minx, miny, maxz},	-- lbf			
+					maxx, miny, maxz,		-- rbf
+					max[1], max[2], max[3],	-- rtf
+					minx, maxy, maxz,		-- ltf
+					minx, miny, maxz,		-- lbf
 				}
 		end
 	end
@@ -73,17 +100,17 @@ function geometry.box(size, needib, line)
 			else
 				hsx, hsy, hsz = size, size, size
 			end
-			
+
 			return {
-				{-hsx, -hsy, -hsz},	-- lbn
-				{-hsx, hsy, -hsz},	-- ltn
-				{hsx, hsy, -hsz},	-- rtn
-				{hsx, -hsy, -hsz},	-- rbn
+				-hsx, -hsy, -hsz,	-- lbn
+				-hsx, hsy, -hsz,	-- ltn
+				hsx, hsy, -hsz,		-- rtn
+				hsx, -hsy, -hsz,	-- rbn
 	
-				{hsx, -hsy, hsz},	-- rbf
-				{hsx, hsy, hsz},	-- rtf
-				{-hsx, hsy, hsz},	-- ltf
-				{-hsx, -hsy, hsz},	-- lbf
+				hsx, -hsy, hsz,		-- rbf
+				hsx, hsy, hsz,		-- rtf
+				-hsx, hsy, hsz,		-- ltf
+				-hsx, -hsy, hsz,	-- lbf
 			}
 		end
 
@@ -92,15 +119,19 @@ function geometry.box(size, needib, line)
 	return create_vb(), create_box_ib(needib, line)
 end
 
+local function add_vertex(t, x, y, z)
+	local n = #t
+	t[n+1], t[n+2], t[n+2] = x, y, z
+end
+
 local function gen_cricle_vertices(vb, slices, height, radius)
 	local radian_step = 2 * math.pi / slices
 	for s=0, slices-1 do
 		local radian = radian_step * s
-		table.insert(vb, {
-			math.cos(radian) * radius, 
+		add_vertex(vb, 
+			math.cos(radian) * radius,
 			height,
-			math.sin(radian) * radius
-		})
+			math.sin(radian) * radius)
 	end
 end
 
@@ -108,11 +139,10 @@ local function gen_cricle_vertices_facez(vb, slices, zvalue, radius)
 	local radian_step = 2 * math.pi / slices
 	for s=0, slices-1 do
 		local radian = radian_step * s
-		table.insert(vb, {
+		add_vertex(vb,
 			math.cos(radian) * radius,
 			math.sin(radian) * radius,
-			zvalue,
-		})
+			zvalue)
 	end
 end
 
@@ -120,8 +150,8 @@ local function gen_cricle_indices(ib, slices, baseidx)
 	local last_idx = baseidx
 	for i=1, slices do
 		local next_idx = i == slices and baseidx or (last_idx + 1)					
-		table.insert(ib, last_idx)
-		table.insert(ib, next_idx)
+		ib[#ib+1] = last_idx
+		ib[#ib+1] = next_idx
 
 		last_idx = next_idx
 	end
@@ -144,8 +174,8 @@ function geometry.cone(slices, height, radius, needib, line)
 			end
 
 			local vb = {
-				{0, height, 0},	-- top center
-				{0, 0, 0}	-- bottom center
+				0, height, 0,	-- top center
+				0, 0, 0			-- bottom center
 			}
 			gen_cricle_vertices(vb, slices, 0, radius)
 			return vb
@@ -161,13 +191,13 @@ function geometry.cone(slices, height, radius, needib, line)
 				
 				for i=1, slices do
 					-- height lines
-					table.insert(ib, topcenter_idx)
-					table.insert(ib, bottomcenter_idx + i)
+					ib[#ib+1] = topcenter_idx
+					ib[#ib+1] = bottomcenter_idx + i
 
 					-- bottom lines
-					table.insert(ib, bottomcenter_idx)
-					table.insert(ib, bottomcenter_idx + i)
-				end	
+					ib[#ib+1] = bottomcenter_idx
+					ib[#ib+1] = bottomcenter_idx + i
+				end
 
 				-- cricles lines
 				gen_cricle_indices(ib, slices, bottomcenter_idx + 1)
@@ -191,12 +221,12 @@ function geometry.cylinder(slices, height, radius, needib, line)
 			local half_height = height * 0.5			
 
 			local vb = {
-				{0, half_height, 0},	-- top center
+				0, half_height, 0,	-- top center
 			}
 
 			gen_cricle_vertices(vb, slices, half_height, radius)
 
-			table.insert(vb, {0, -half_height, 0})	-- bottom center
+			add_vertex(vb, 0, -half_height, 0)	-- bottom center
 			gen_cricle_vertices(vb, slices, -half_height, radius)
 			return vb
 		end
@@ -210,16 +240,16 @@ function geometry.cylinder(slices, height, radius, needib, line)
 				
 				for i=1, slices do
 					-- top lines
-					table.insert(ib, topcenter_idx)
-					table.insert(ib, topcenter_idx+i)
+					ib[#ib+1] = topcenter_idx
+					ib[#ib+1] = topcenter_idx+i
 
 					-- body lines
-					table.insert(ib, topcenter_idx+i)
-					table.insert(ib, bottomcenter_idx+i)
+					ib[#ib+1] = topcenter_idx+i
+					ib[#ib+1] = bottomcenter_idx+i
 
 					-- bottom lines
-					table.insert(ib, bottomcenter_idx)
-					table.insert(ib, bottomcenter_idx+i)
+					ib[#ib+1] = bottomcenter_idx
+					ib[#ib+1] = bottomcenter_idx+i
 				end
 
 				gen_cricle_indices(ib, slices, topcenter_idx+1)
@@ -276,12 +306,12 @@ end
 
 local function octahedron(radius)
 	local vb = {
-		{0, radius, 0}, -- top
-		{radius, 0, 0},
-		{0, 0, -radius},
-		{-radius, 0, 0},
-		{0, 0, radius},
-		{0, -radius, 0},	-- bottom
+		0, radius, 0, -- top
+		radius, 0, 0,
+		0, 0, -radius,
+		-radius, 0, 0,
+		0, 0, radius,
+		0, -radius, 0,	-- bottom
 	}
 
 	local ib = {
@@ -335,9 +365,9 @@ local function tessellateion(vb, ib, radius)
 
 	local numfaces = #ib / 3
 	for f=0, numfaces-1 do
-		local function get_v(idx)				
+		local function get_v(idx)
 			local i = ib[f*3+idx]
-			return vb[i+1]
+			return {vb[i+1], vb[i+2], vb[i+3]}
 		end
 		
 		local v0, v1, v2 = get_v(1), get_v(2), get_v(3)
@@ -365,14 +395,15 @@ local function tessellateion(vb, ib, radius)
 		 /___|__\
 		v2  m1  v1
 ]]
-		local vbsize = #newvb
-		table.insert(newvb, v0)
-		table.insert(newvb, v1)
-		table.insert(newvb, v2)
+		local vertexnum = #newvb / 3
+		add_vertex(newvb, v0[1], v0[2], v0[3])
+		add_vertex(newvb, v1[1], v1[2], v1[3])
+		add_vertex(newvb, v2[1], v2[2], v2[3])
 
-		table.insert(newvb, m0)
-		table.insert(newvb, m1)
-		table.insert(newvb, m2)
+
+		add_vertex(newvb, m0[1], m0[2], m0[3])
+		add_vertex(newvb, m1[1], m1[2], m1[3])
+		add_vertex(newvb, m2[1], m2[2], m2[3])
 
 		local newindices = {
 			0, 3, 5,
@@ -382,8 +413,8 @@ local function tessellateion(vb, ib, radius)
 		}
 
 		for i=1, #newindices do
-			newindices[i] = newindices[i] + vbsize
-		end	
+			newindices[i] = newindices[i] + vertexnum
+		end
 		table.move(newindices, 1, #newindices, #newib+1, newib)
 	end
 
@@ -418,18 +449,18 @@ end
 
 function geometry.capsule(radius, height, tessellation)
 	local t_vb = {
-		{      0, radius,   0},
-		{ radius, 0,        0},
-		{      0, 0,  -radius},
-		{-radius, 0,        0},
-		{      0, 0,   radius},
+		      0, radius,   0,
+		 radius, 0,        0,
+		      0, 0,  -radius,
+		-radius, 0,        0,
+		      0, 0,   radius,
 	}
 	local b_vb = {
-		{      0, -radius,  0},
-		{ radius, 0,        0},
-		{      0, 0,  -radius},
-		{-radius, 0,        0},
-		{      0, 0,   radius},
+		      0, -radius,  0,
+		 radius, 0,        0,
+		      0, 0,  -radius,
+		-radius, 0,        0,
+		      0, 0,   radius,
 	}
 	local t_ib = {
 		0, 1, 2,
@@ -451,23 +482,20 @@ function geometry.capsule(radius, height, tessellation)
 	local h = height / 2
 	local mark = {}
 	local middle = {}
-	for i, v in ipairs(t_vb) do
-		if not mark[v] then
-			mark[v] = true
-			if v[2] < 0.001 and v[2] > -0.001 then
-				middle[#middle+1] = i - 1
-			end
-			v[2] = v[2] + h
+	for i=1, #t_vb, 3 do
+		local y = t_vb[i+2]
+		if y < 0.001 and y > -0.001 then
+			middle[#middle+1] = i - 1
 		end
+		t_vb[i+2] = y + h
 	end
-	for _, v in ipairs(b_vb) do
-		if not mark[v] then
-			mark[v] = true
-			v[2] = v[2] - h
-		end
+
+	for i=1, #b_vb, 3 do
+		b_vb[i+2] = b_vb[i+2] - h
 	end
+
 	local vb, ib = t_vb, t_ib
-	local offset = #vb
+	local offset = #vb / 3
 	for i = 1, #b_ib do
 		b_ib[i] = b_ib[i] + offset
 	end
@@ -488,10 +516,11 @@ function geometry.sphereLatitude(slices, stacks, radius, needib, line)
 
 end
 
-function geometry.grid(width, height, unit)	
-	local vb, ib = {}, {}		
-	local function add_vertex(x, z, clr)
-		table.insert(vb, {x, 0, z, clr})			
+function geometry.grid(width, height, color, unit)
+	local vb, ib = {}, {}
+	local function add_vertex_clr(x, z, clr)
+		add_vertex(vb, x, 0, z)
+		vb[#vb+1] = clr
 	end
 
 	if width < 2 or height < 2 then
@@ -513,11 +542,11 @@ function geometry.grid(width, height, unit)
 	local hh = height * 0.5
 	local hh_len = hh * unit
 
-	local color = 0x88c0c0c0
+	color = color or 0x88c0c0c0
 
 	local function add_line(x0, z0, x1, z1, color)
-		add_vertex(x0, z0, color)
-		add_vertex(x1, z1, color)
+		add_vertex_clr(x0, z0, color)
+		add_vertex_clr(x1, z1, color)
 		-- call 2 times
 		table.insert(ib, #ib)
 		table.insert(ib, #ib)

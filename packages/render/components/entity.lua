@@ -13,14 +13,6 @@ local geolib    = geopkg.geometry
 local ies = world:interface "ant.scene|ientity_state"
 local imaterial = world:interface "ant.asset|imaterial"
 
-local function create_vb_buffer(flag, vb)
-	return ("<"..flag:gsub("d", "I4"):rep(#vb/#flag)):pack(table.unpack(vb))
-end
-
-local function create_ib_buffer(ib)
-	return ("<"..("I4"):rep(#ib)):pack(table.unpack(ib))
-end
-
 local function create_mesh(vb_lst, ib)
 	local mesh = {
 		vb = {
@@ -32,20 +24,17 @@ local function create_mesh(vb_lst, ib)
 		local layout, vb = vb_lst[i], vb_lst[i+1]
 		local correct_layout = declmgr.correct_layout(layout)
 		local flag = declmgr.vertex_desc_str(correct_layout)
-		local vb_value = create_vb_buffer(flag, vb)
 		mesh.vb[#mesh.vb+1] = {
 			declname = correct_layout,
-			memory = {vb_value,1,#vb_value},
+			memory = {flag, vb}
 		}
 		num = num + #vb / #flag
 	end
 	mesh.vb.num = num
 	if ib then
-		local ib_value = create_ib_buffer(ib)
 		mesh.ib = {
 			start = 0, num = #ib,
-			flag = "d",
-			memory = {ib_value,1,#ib_value},
+			memory = {"w", ib},
 		}
 	end
 	return world.component "mesh"(mesh)
@@ -77,14 +66,8 @@ function ientity.create_grid_entity(name, w, h, unit, srt)
 	w = w or 64
 	h = h or 64
 	unit = unit or 1
-	local vb, ib = geolib.grid(w, h, unit)
-	local gvb = {}
-	for _, v in ipairs(vb) do
-		for _, vv in ipairs(v) do
-			gvb[#gvb+1] = vv
-		end
-	end
-	local mesh = create_mesh({"p3|c40niu", gvb}, ib)
+	local vb, ib = geolib.grid(w, h, nil, unit)
+	local mesh = create_mesh({"p3|c40niu", vb}, ib)
 	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
 end
 
@@ -366,13 +349,14 @@ end
 function ientity.create_skybox(material)
     return world:create_entity {
 		policy = {
+			"ant.sky|skybox",
 			"ant.render|render",
 			"ant.general|name",
 		},
 		data = {
 			transform = {},
 			material = material or "/pkg/ant.resources/materials/skybox.material",
-			state = ies.create_state "selectable|visible",
+			state = ies.create_state "visible",
 			scene_entity = true,
 			name = "sky_box",
 			mesh = get_skybox_mesh(),
