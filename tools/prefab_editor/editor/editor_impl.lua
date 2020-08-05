@@ -6,7 +6,6 @@ local import_prefab = require "import_prefab"
 local w
 local world
 local eventPrefab
-local entities = {}
 local wndflags = imgui.flags.Window { "NoTitleBar", "NoBackground", "NoResize", "NoScrollbar", "NoBringToFrontOnFocus" }
 --local VIEWER <const> = "/pkg/tools.viewer.prefab_viewer/res/"
 local VIEWER <const> = "/pkg/tools.prefab_editor/res/"
@@ -44,22 +43,18 @@ function event.init(pw, ph)
             }
         }
     }
-    eventPrefab = world:sub {"editor", "prefab"}
+    --eventPrefab = world:sub {"editor", "prefab"}
     w.init()
 end
 
 function event.dropfiles(filelst)
-    -- task.create(function()
-    --     import_prefab(filelst[1], VIEWER .. "root.glb")
-    --     world:pub {"instance_prefab", VIEWER .. "root.glb|mesh.prefab"}
-    -- end)
     world:pub {"OnDropFiles", filelst}
 end
 
 function event.update()
-    for _,_,e in eventPrefab:unpack() do
-        entities = e
-    end
+    -- for _,_,e in eventPrefab:unpack() do
+    --     entities = e
+    -- end
 end
 
 -- function event.prefab_viewer()
