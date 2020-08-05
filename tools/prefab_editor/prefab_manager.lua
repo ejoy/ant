@@ -50,26 +50,24 @@ function m:internal_remove(eid)
 end
 
 function m:open_prefab(filename)
-	if self.entities then
-        for _, eid in ipairs(self.entities) do
-            local teml = prefab_view:get_template(eid)
-            if teml.children then
-                for _, e in ipairs(teml.children) do
-                    world:remove_entity(e)
-                end
+    for _, eid in ipairs(self.entities) do
+        local teml = prefab_view:get_template(eid)
+        if teml.children then
+            for _, e in ipairs(teml.children) do
+                world:remove_entity(e)
             end
-            world:remove_entity(eid)
-		end
+        end
+        world:remove_entity(eid)
     end
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     local prefab = worldedit:prefab_template(vfspath)
+    self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
-    local root = entities[1]
+    self.entities = entities
+    self.root = entities[1]
     prefab_view:clear()
-    prefab_view:set_root(root)
+    prefab_view:set_root(self.root)
     prefab_view.root.template.template = prefab.__class[1]
-    local tp = prefab_view:get_template(root)
-    tp.prefab = prefab
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/4/action/mount", 1)
@@ -90,11 +88,6 @@ function m:open_prefab(filename)
             end
         end
     end
-
-	self.root = root
-	self.prefab = prefab
-    self.entities = entities
-    
     for _, e in ipairs(remove_entity) do
         self:internal_remove(e)
     end

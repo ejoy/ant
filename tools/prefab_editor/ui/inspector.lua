@@ -103,6 +103,7 @@ function m.show(rhwi)
                 imgui.cursor.SameLine()
                 imgui.widget.Text(template.filename)
             end
+
             if imgui.widget.InputText("Name", uiData.name) then
                 local name = tostring(uiData.name.text)
                 world[uiData.eid[1]].name = name
@@ -137,9 +138,9 @@ function m.show(rhwi)
                 end
                 imgui.widget.TreePop()
             end
-            if imgui.widget.InputText("Name", uiData.mesh) then
-                world[uiData.eid[1]].mesh = tostring(uiData.mesh.text)
-            end
+            -- if imgui.widget.InputText("Name", uiData.mesh) then
+            --     world[uiData.eid[1]].mesh = tostring(uiData.mesh.text)
+            -- end
         end
     end
 

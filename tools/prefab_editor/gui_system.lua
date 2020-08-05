@@ -167,8 +167,8 @@ function m:data_changed()
             cmd_queue:record {action = SCALE, eid = target, oldvalue = v1, newvalue = v2}
             dirty = true
         elseif what == "name" then
-            local template = prefab_view:get_template(eid)
-            template.template.data.name = name
+            local template = prefab_view:get_template(target)
+            template.template.data.name = v1
         end
         if dirty then
             inspector.update_template_tranform(eid)
@@ -203,5 +203,6 @@ function m:data_changed()
     for _, what in eventWindowTitle:unpack() do
         local title = "PrefabEditor - " .. what
         window.set_title(rhwi.native_window(), title)
+        gizmo.target_eid = nil
     end
 end
