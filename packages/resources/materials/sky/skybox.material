@@ -7,4 +7,9 @@ properties:
     s_skybox:
         stage: 0
         texture: /pkg/ant.resources/textures/sky/skybox.texture
-state: /pkg/ant.resources/materials/states/default.state
+state:
+    ALPHA_REF: 0
+    CULL: CW
+    DEPTH_TEST: LEQUAL
+    MSAA: true
+    WRITE_MASK: RGBA

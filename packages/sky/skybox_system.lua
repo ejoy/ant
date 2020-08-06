@@ -34,6 +34,6 @@ function skybox_sys:camera_usage()
     for _, eid in world:each "skybox" do
         local e = world[eid]
         local rc = e._rendercache
-        math3d.set_index(rc.worldmat, 4, camerapos)
+        rc.worldmat = math3d.set_index(rc.worldmat, 4, camerapos)
     end
 end

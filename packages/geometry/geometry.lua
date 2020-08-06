@@ -43,7 +43,7 @@ local function create_box_ib(needib, line)
 
 			local faces<const> = {
 				{lbn, ltn, rtn, rbn},	--front
-				{rbf, rtf, ltf, rbf},	--back
+				{rbf, rtf, ltf, lbf},	--back
 
 				{lbf, ltf, ltn, lbn},	--left
 				{rbn, rtn, rtf, rbf},	--right
