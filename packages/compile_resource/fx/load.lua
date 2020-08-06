@@ -155,9 +155,9 @@ end
 local function compile(input, setting)
     local fx = read_fx(input, setting)
     fx.hash = sha1(stringify(fx.setting)):sub(1,7)
-    fxcompile.get_shader(fx, "vs")
-    fxcompile.get_shader(fx, "fs")
-    fxcompile.get_shader(fx, "cs")
+    if fx.vs then fxcompile.get_shader(fx, "vs") end
+    if fx.fs then fxcompile.get_shader(fx, "fs") end
+    if fx.cs then fxcompile.get_shader(fx, "cs") end
 end
 
 local function unloader(res)
