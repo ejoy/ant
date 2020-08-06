@@ -1,4 +1,4 @@
-local path_sep = package.config:sub(1,1) == "\\" and ";" or ":"
+local path_sep = package.config:sub(3,3)
 if package.cpath:match(path_sep) then
 	package.cpath = (function ()
 		local i = 0
