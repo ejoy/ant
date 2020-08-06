@@ -1,3 +1,5 @@
+local identity = ...
+
 package.path = "engine/?.lua"
 require "bootstrap"
 
@@ -8,5 +10,10 @@ prebuilt.load("material", "/pkg/ant.resources/materials/shadow/csm_cast.material
 prebuilt.load("material", "/pkg/ant.resources/materials/shadow/csm_cast.material", {shadow_type="inv_z", skinning="GPU"})
 prebuilt.load("prefab", "res/scenes.prefab")
 
-prebuilt.build "windows_direct3d11"
-prebuilt.build "ios_metal"
+if identity then
+    prebuilt.build(identity)
+else
+    prebuilt.build "windows_direct3d11"
+    prebuilt.build "ios_metal"
+    prebuilt.build "osx_metal"
+end
