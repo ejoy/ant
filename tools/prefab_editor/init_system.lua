@@ -37,14 +37,6 @@ function m:init()
         frustum = {f = 1000 }
     }
     camera.bind(main_camera, "main_queue")
-    --camera.bind(main_camera, "view_queue")
-    
-    -- local rc = world[main_camera]._rendercache
-    -- local icamera = world:interface "ant.camera|camera"
-    -- rc.viewmat = icamera.calc_viewmat(main_camera)
-    -- rc.projmat = icamera.calc_projmat(main_camera)
-    -- rc.viewprojmat = icamera.calc_viewproj(main_camera)
-
     camera.bind_queue(main_camera, global_data.second_view)
 
     entity.create_procedural_sky()
