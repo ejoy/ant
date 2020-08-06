@@ -45,7 +45,7 @@ function m:init()
     -- rc.projmat = icamera.calc_projmat(main_camera)
     -- rc.viewprojmat = icamera.calc_viewproj(main_camera)
 
-    world[global_data.second_view].camera_eid = main_camera
+    camera.bind_queue(main_camera, global_data.second_view)
 
     entity.create_procedural_sky()
     entity.create_grid_entity("", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
