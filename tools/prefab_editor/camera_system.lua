@@ -85,31 +85,33 @@ function m:data_changed()
 	end
 	
 	for _, key, press, state in keypress_mb:unpack() do
-        if key == "W" then
-			if press == 1 then
-				ZOOM_FORWARD = true
-			elseif press == 0 then
-				ZOOM_FORWARD = false
+		if not state.CTRL and not state.SHIFT then
+			if key == "W" then
+				if press == 1 then
+					ZOOM_FORWARD = true
+				elseif press == 0 then
+					ZOOM_FORWARD = false
+				end
+			elseif key == "S" then
+				if press == 1 then
+					ZOOM_BACK = true
+				elseif press == 0 then
+					ZOOM_BACK = false
+				end
+			elseif key == "A" then
+				if press == 1 then
+					PAN_LEFT = true
+				elseif press == 0 then
+					PAN_LEFT = false
+				end
+			elseif key == "D" then
+				if press == 1 then
+					PAN_RIGHT = true
+				elseif press == 0 then
+					PAN_RIGHT = false
+				end
 			end
-        elseif key == "S" then
-			if press == 1 then
-				ZOOM_BACK = true
-			elseif press == 0 then
-				ZOOM_BACK = false
-			end
-		elseif key == "A" then
-			if press == 1 then
-				PAN_LEFT = true
-			elseif press == 0 then
-				PAN_LEFT = false
-			end
-		elseif key == "D" then
-			if press == 1 then
-				PAN_RIGHT = true
-			elseif press == 0 then
-				PAN_RIGHT = false
-			end
-        end
+		end
 	end
 
 	if PAN_LEFT then

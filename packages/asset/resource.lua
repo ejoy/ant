@@ -122,7 +122,7 @@ end
 
 function resource.unload(filename)
 	local robj = FILELIST[filename]
-	if robj.object == nil then
+	if robj == nil or robj.object == nil then
 		-- not in memory
 		return
 	end

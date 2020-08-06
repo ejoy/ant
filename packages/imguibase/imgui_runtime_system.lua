@@ -7,9 +7,8 @@ local fbmgr       = renderpkg.fbmgr
 local viewidmgr   = renderpkg.viewidmgr
 local rhwi        = renderpkg.hwi
 local window      = require "window"
-local assetmgr    = import_package "ant.asset"
 local platform    = require "platform"
-local inputmgr    = require "inputmgr"
+local common      = require "common"
 local imguiIO     = imgui.IO
 local font        = imgui.font
 local Font        = platform.font
@@ -68,23 +67,7 @@ function imgui_sys:init()
 
 	world.imgui_context = imgui.CreateContext(rhwi.native_window())
 	imgui.ant.viewid(viewidmgr.generate "ui")
-	local imgui_font = assetmgr.load_fx {
-		fs = "/pkg/ant.imguibase/shader/fs_imgui_font.sc",
-		vs = "/pkg/ant.imguibase/shader/vs_imgui_font.sc",
-	}
-	imgui.ant.font_program(
-		imgui_font.prog,
-		imgui_font.uniforms[1].handle
-	)
-	local imgui_image = assetmgr.load_fx {
-		fs = "/pkg/ant.imguibase/shader/fs_imgui_image.sc",
-		vs = "/pkg/ant.imguibase/shader/vs_imgui_image.sc",
-	}
-	imgui.ant.image_program(
-		imgui_image.prog,
-        imgui_image.uniforms[1].handle
-	)
-    inputmgr.init_keymap(imgui)
+    common.init_imgui(imgui)
 	window.set_ime(imgui.ime_handle())
 	if platform.OS == "Windows" then
 		font.Create {

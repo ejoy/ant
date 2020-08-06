@@ -1,7 +1,0 @@
-system "script_system"
-    .implement "script_system.lua"
-    .method "before_update"
-    .method "data_changed"
-    .method "end_frame"
-    .method "init"
-    .method "on_gui"

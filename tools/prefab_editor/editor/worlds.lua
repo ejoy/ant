@@ -1,6 +1,5 @@
 local editor      = import_package "ant.imguibase".editor
 local ecs         = import_package "ant.ecs"
-local init_world  = import_package "ant.imguibase".init_world
 local imgui       = require "imgui.ant"
 
 local function create_world(config)
@@ -16,7 +15,7 @@ local function create_world(config)
     local world = ecs.new_world (config)
     local irender = world:interface "ant.render|irender"
     irender.create_blit_queue{w=config.width, h=config.height}
-    init_world(world)
+    editor.init_world(world)
     local world_update = world:update_func "update"
     local world_tex
     local m = {}

@@ -72,5 +72,7 @@ function assetmgr.load_fx(fx, setting)
 end
 
 assetmgr.edit = resource.edit
+assetmgr.unload = resource.unload
+assetmgr.reload = resource.reload
 
 return assetmgr

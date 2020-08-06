@@ -50,7 +50,13 @@ end
 
 local function constructResourceTree(fspath)
     local tree = {files = {}, dirs = {}}
+    local sorted_path = {}
     for item in fspath:list_directory() do
+        sorted_path[#sorted_path+1] = item
+    end
+    table.sort(sorted_path, function(a, b) return tostring(a) < tostring(b) end)
+    --for item in fspath:list_directory() do
+    for _, item in ipairs(sorted_path) do
         if fs.is_directory(item) then
             table.insert(tree.dirs, {item, constructResourceTree(item), parent = {tree}})
         else
@@ -145,6 +151,17 @@ function m.show(rhwi)
         local folder = currentFolder[2]
         if folder then
             local icons = require "common.icons"(assetmgr)
+            for _, path in pairs(folder.dirs) do
+                imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
+                imgui.cursor.SameLine()
+                if imgui.widget.Selectable(tostring(path[1]:filename()), currentFile == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                    currentFile = path[1]
+                    if imgui.util.IsMouseDoubleClicked(0) then
+                        currentFolder = path
+                    end
+                end
+                
+            end
             for _, path in pairs(folder.files) do
                 local icon = icons.get_file_icon(path)
                 imgui.widget.Image(icon.handle, icon.texinfo.width, icon.texinfo.height)
@@ -180,17 +197,6 @@ function m.show(rhwi)
                         imgui.widget.EndDragDropSource()
                     end
                 end
-            end
-            for _, path in pairs(folder.dirs) do
-                imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
-                imgui.cursor.SameLine()
-                if imgui.widget.Selectable(tostring(path[1]:filename()), currentFile == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                    currentFile = path[1]
-                    if imgui.util.IsMouseDoubleClicked(0) then
-                        currentFolder = path
-                    end
-                end
-                
             end
         end
         imgui.windows.EndChild()

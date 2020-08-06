@@ -1,6 +1,7 @@
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "filesystem.local"
+local vfs           = require "vfs"
 local prefab_view   = require "prefab_view"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
@@ -39,30 +40,39 @@ function m:normalize_aabb()
     iom.set_srt(self.root, math3d.mul(transform, iom.srt(self.root)))
 end
 
-function m:open_prefab(filename)
-	if self.entities then
-        for _, eid in ipairs(self.entities) do
-            local teml = prefab_view:get_template(eid)
-            if teml.children then
-                for _, e in ipairs(teml.children) do
-                    world:remove_entity(e)
-                end
-            end
-            world:remove_entity(eid)
-		end
-	end
+function m:internal_remove(eid)
+    for idx, e in ipairs(self.entities) do
+        if e == eid then
+            table.remove(self.entities, idx)
+            return
+        end
+    end
+end
 
-    local prefab = worldedit:prefab_template(filename)
+function m:open_prefab(filename)
+    for _, eid in ipairs(self.entities) do
+        local teml = prefab_view:get_template(eid)
+        if teml.children then
+            for _, e in ipairs(teml.children) do
+                world:remove_entity(e)
+            end
+        end
+        world:remove_entity(eid)
+    end
+    local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    assetmgr.unload(vfspath)
+    local prefab = worldedit:prefab_template(vfspath)
+    self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
-    local root = entities[1]
+    self.entities = entities
+    self.root = entities[1]
     prefab_view:clear()
-    prefab_view:set_root(root)
+    prefab_view:set_root(self.root)
     prefab_view.root.template.template = prefab.__class[1]
-    local tp = prefab_view:get_template(root)
-    tp.prefab = prefab
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/4/action/mount", 1)
+    local remove_entity = {}
     for i, entity in ipairs(entities) do
         if type(entity) == "table" then            
             local parent = world[entity[1]].parent
@@ -72,16 +82,17 @@ function m:open_prefab(filename)
             for _, e in ipairs(entity) do
                 prefab_view:add_select_adapter(e, parent)
             end
+            remove_entity[#remove_entity+1] = entity
         else
             if world[entity].parent then
                 prefab_view:add(entity, {template = prefab.__class[i]}, world[entity].parent)
             end
         end
     end
+    for _, e in ipairs(remove_entity) do
+        self:internal_remove(e)
+    end
 
-	self.root = root
-	self.prefab = prefab
-	self.entities = entities
 	--self:normalize_aabb()
     world:pub {"editor", "prefab", entities}
     world:pub {"WindowTitle", filename}
@@ -107,8 +118,8 @@ function m:add_prefab(filename)
     local entity_name = "Prefab_" .. mount_root
     entity_template.data.name = entity_name
     world[mount_root].name = entity_name
-
-    local prefab = worldedit:prefab_template(filename)
+    local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    local prefab = worldedit:prefab_template(vfspath)
     local entities = worldedit:prefab_instance(prefab)
     world[entities[1]].parent = mount_root
     for i, e in ipairs(entities) do
@@ -116,7 +127,7 @@ function m:add_prefab(filename)
     end
 
     local current_dir = lfs.path(tostring(self.prefab)):parent_path()
-    local relative_path = lfs.relative(lfs.path(filename), current_dir)
+    local relative_path = lfs.relative(lfs.path(vfspath), current_dir)
 
     prefab_view:add(mount_root, {template = entity_template, filename = tostring(relative_path), children = entities}, self.root)
 end
@@ -148,9 +159,17 @@ end
 
 function m:save_prefab(filename)
     if not self.prefab then return end
-    local self_prefab = tostring(self.prefab)
-    filename = filename or self_prefab
-    local saveas = (lfs.path(filename) ~= lfs.path(self_prefab))
+    if filename then
+        filename = string.gsub(filename, "\\", "/")
+        local pos = string.find(filename, "%.prefab")
+        if #filename > pos + 6 then
+            filename = string.sub(filename, 1, pos + 6)
+        end
+        filename = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    end
+    local prefab_filename = tostring(self.prefab)
+    filename = filename or prefab_filename
+    local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     prefab_view:update_prefab_template(assetmgr.edit(self.prefab))
     self.entities.__class = self.prefab.__class
     if not saveas then
@@ -161,7 +180,6 @@ function m:save_prefab(filename)
     local current_dir = lfs.path(self_prefab):parent_path()
     local new_dir = lfs.path(filename):localpath():parent_path()
     if current_dir ~= new_dir then
-        --data = utils.deep_copy(self.entities.__class)
         for _, t in ipairs(data) do
             if t.prefab then
                 t.prefab = convert_path(t.prefab, current_dir, new_dir)
@@ -188,32 +206,20 @@ function m:save_prefab(filename)
         end
     end
     write_file(filename, stringify(data))
-    self:open_prefab(filename)
+    self:open_prefab(tostring(fs.path "":localpath()) .. filename)
     world:pub {"ResourceBrowser", "dirty"}
 end
 
 function m:remove_entity(eid)
-    local function find_index(eid)
-        for idx, e in ipairs(self.entities) do
-            if e == eid then
-                return idx
-            end
-        end
-        return nil
-    end
+    if not eid then return end
     local teml = prefab_view:get_template(eid)
     if teml.children then
         for _, e in ipairs(teml.children) do
             world:remove_entity(e)
         end
-        local child_idx = find_index(teml.children)
-        if child_idx then
-            table.remove(self.entities, child_idx)
-        end
     end
     world:remove_entity(eid)
-    local eid_index = find_index(eid)
-    table.remove(self.entities, eid_index)
+    self:internal_remove(eid)
     prefab_view:del(eid)
 end
 

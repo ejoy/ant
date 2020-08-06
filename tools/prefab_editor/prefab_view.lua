@@ -47,7 +47,7 @@ function scene:del(eid)
     end
     local idx = find(pt, eid)
     if idx then
-        table.remove(pt, idx, eid)
+        table.remove(pt, idx)
     end
     self.all[eid] = nil
     return eid_node
@@ -72,11 +72,11 @@ function scene:update_prefab_template(prefab)
     local prefab_template = {}
     local function construct_entity(eid, pt)
         table.insert(pt, self.all[eid].template.template)
+        local pidx = #pt
         local prefab_filename = self.all[eid].template.filename
         if prefab_filename then
             table.insert(pt, {args = {root = #pt}, prefab = prefab_filename})
         end
-        local pidx = #pt
         for _, child in ipairs(self.all[eid].children) do
             self.all[child.eid].template.template.action.mount = pidx
             construct_entity(child.eid, pt)
