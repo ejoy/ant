@@ -40,6 +40,30 @@ function m:normalize_aabb()
     iom.set_srt(self.root, math3d.mul(transform, iom.srt(self.root)))
 end
 
+function m:create(what)
+    -- if what == "camera" then
+    --     local entity_template = {
+    --         action = {
+    --             mount = 1
+    --         },
+    --         policy = {
+    --             "ant.general|name",
+    --             "ant.camera|camera"
+    --         },
+    --         data = {
+    --             name = "",
+    --             frustum = {
+    --                 aspect = 1.3333333333333333,
+    --                 f = 1000,
+    --                 fov = 60,
+    --                 n = 0.1,
+    --                 type = mat
+    --             }
+    --         }
+    --     }
+    -- end
+end
+
 function m:internal_remove(eid)
     for idx, e in ipairs(self.entities) do
         if e == eid then

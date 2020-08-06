@@ -50,6 +50,50 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
+function irender.create_view_queue(view_rect, view_name)
+	local mq = world:singleton_entity "main_queue"
+	local rt = mq.render_target
+	local cs = rt.clear_state
+	return world:create_entity {
+		policy = {
+			"ant.render|render_queue",
+			"ant.render|view_queue",
+			"ant.general|name",
+		},
+		data = {
+			camera_eid = icamera.create{
+				eyepos  = {0, 0, 0, 1},
+				viewdir = {0, 0, 1, 0},
+				frustum = default_comp.frustum(view_rect.w / view_rect.h),
+				name = view_name,
+			},
+
+			primitive_filter = {
+				filter_type = "visible",
+			},
+
+			render_target = {
+				viewid = viewidmgr.generate(view_name),
+				view_mode = "s",
+				clear_state = {
+					color = cs.clear_color,
+					depth = cs.clear_depth,
+					stencil = cs.clear_stencil,
+					clear = cs.clear,
+				},
+				view_rect = {
+					x = view_rect.x or 0, y = view_rect.y or 0,
+					w = view_rect.w or 1, h = view_rect.h or 1,
+				},
+				fb_idx = rt.fb_idx,
+			},
+			visible = true,
+			name = view_name,
+			view_queue = true
+		}
+	}
+end
+
 function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 	local mq = world:singleton_entity "main_queue"
 	local rt = mq.render_target

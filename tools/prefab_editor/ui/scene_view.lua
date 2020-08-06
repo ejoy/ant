@@ -26,8 +26,7 @@ local function is_editable(eid)
 end
 
 local menu_name = "entity context menu"
-
-local function context_menu(eid)
+local function node_context_menu(eid)
     if imgui.windows.BeginPopupContextItem(eid) then
         local current_lock = prefab_view:is_locked(eid)
         if imgui.widget.Selectable(current_lock and "Unlock" or "lock", false) then
@@ -88,12 +87,12 @@ local function show_scene_node(node)
     local name = world[node.eid].name
     if #node.children == 0 then
         imgui.widget.TreeNode(name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
-        context_menu(node.eid)
+        node_context_menu(node.eid)
         select_or_move(node.eid)
         lock_visible(node.eid)
     else
         local open = imgui.widget.TreeNode(name, base_flags)
-        context_menu(node.eid)
+        node_context_menu(node.eid)
         select_or_move(node.eid)
         lock_visible(node.eid)
         if open then

@@ -8,6 +8,7 @@ local irq = world:interface "ant.render|irenderqueue"
 local iss = world:interface "ant.scene|iscenespace"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local ies = world:interface "ant.scene|ientity_state"
+local icamera = world:interface "ant.camera|camera"
 local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
 local vfs = require "vfs"
@@ -19,8 +20,8 @@ local inspector = require "ui.inspector"(world)
 local uiconfig = require "ui.config"
 local uiutils = require "ui.utils"
 local prefab_mgr = require "prefab_manager"
-local menu = require "ui.menu"(prefab_mgr)
-
+local menu = require "ui.menu"(world, prefab_mgr)
+local global_data = require "common.global_data"
 local m = ecs.system 'gui_system'
 
 local eventGizmo = world:sub {"Gizmo"}
@@ -38,16 +39,16 @@ local SCALE <const> = 3
 local icons = require "common.icons"(asset_mgr)
 
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
-local entityStateEvent = world:sub {"EntityState"}
-local dropFilesEvent = world:sub {"OnDropFiles"}
-local entityEvent = world:sub {"EntityEvent"}
-local mouseMove = world:sub {"mousemove"}
-local keypress_mb = world:sub{"keyboard"}
+
 local dragFile = false
 local lastX = -1
 local lastY = -1
 local lastWidth = -1
 local lastHeight = -1
+local secondViewQueue
+local secondViewWidth = 384
+local secondViewHeight = 216
+local secondCameraEID
 function m:ui_update()
     if not resourceRoot then
         local res_root_str = tostring(fs.path "":localpath())
@@ -73,7 +74,12 @@ function m:ui_update()
     if dirty then
         local viewport = {x = x, y = y, w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
+
         world:pub {"ViewportDirty", viewport}
+
+        local secondViewport = {x = viewport.x + (width - secondViewWidth), y = viewport.y + (height - secondViewHeight), w = secondViewWidth, h = secondViewHeight}
+        -- world[global_data.second_view].camera_eid = world[world:singleton_entity_id "main_queue"].camera_eid
+        irq.set_view_rect(global_data.second_view, secondViewport)
     end
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
@@ -93,13 +99,32 @@ function m:ui_update()
     end
 end
 
+function update_second_view_camera()
+    if not secondCameraEID then return end
+    local rc = world[secondCameraEID]._rendercache
+    -- local worldmat = rc.worldmat
+    -- rc.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), rc.updir)
+    -- rc.projmat = math3d.projmat(rc.frustum)
+    -- rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
+    rc.viewmat = icamera.calc_viewmat(secondCameraEID)
+    rc.projmat = icamera.calc_projmat(secondCameraEID)
+    rc.viewprojmat = icamera.calc_viewproj(secondCameraEID)
+end
+
+local entityStateEvent = world:sub {"EntityState"}
+local dropFilesEvent = world:sub {"OnDropFiles"}
+local entityEvent = world:sub {"EntityEvent"}
+local eventKeyboard = world:sub{"keyboard"}
 local eventOpenPrefab = world:sub {"OpenPrefab"}
 local eventAddPrefab = world:sub {"AddPrefab"}
 local eventResourceBrowser = world:sub {"ResourceBrowser"}
 local eventWindowTitle = world:sub {"WindowTitle"}
-
+local eventCreate = world:sub {"Create"}
 local window = require "window"
 function m:data_changed()
+    
+    update_second_view_camera()
+
     for _, action, value1, value2 in eventGizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
@@ -167,12 +192,16 @@ function m:data_changed()
         gizmo.target_eid = nil
     end
 
-    for _, key, press, state in keypress_mb:unpack() do
+    for _, key, press, state in eventKeyboard:unpack() do
         if key == "DELETE" and press == 1 then
             prefab_mgr:remove_entity(gizmo.target_eid)
             gizmo.target_eid = nil
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
         end
+    end
+
+    for _, what in eventCreate:unpack() do
+        prefab_mgr:create(what)
     end
 end

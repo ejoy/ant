@@ -21,6 +21,7 @@ system "init_system"
     .require_interface "ant.render|entity"
     .method "init"
     .method "data_changed"
+    .method "post_init"
     
 system "gizmo_system"
     .implement "gizmo_system.lua"

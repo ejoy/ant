@@ -292,13 +292,13 @@ function ientity.create_line_entity(srt, p0, p1, name, color)
 end
 
 function ientity.create_circle_entity(radius, slices, srt, name)
-	local circle_vb, circle_ib = geolib.cricle(radius, slices)
+	local circle_vb, circle_ib = geolib.circle(radius, slices)
 	local gvb = {}
 	--color = color or 0xffffffff
-	for _, v in ipairs(circle_vb) do
-		for _, vv in ipairs(v) do
-			gvb[#gvb+1] = vv
-		end
+	for i = 1, #circle_vb, 3 do
+		gvb[#gvb+1] = circle_vb[i]
+		gvb[#gvb+1] = circle_vb[i + 1]
+		gvb[#gvb+1] = circle_vb[i + 2]
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
@@ -306,15 +306,15 @@ function ientity.create_circle_entity(radius, slices, srt, name)
 end
 
 function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
-	local circle_vb, _ = geolib.cricle(radius, slices)
+	local circle_vb, _ = geolib.circle(radius, slices)
 	local gvb = {0,0,0,0,0,1}
 	local ib = {}
 	local idx = 1
 	local maxidx = #circle_vb
-	for _, v in ipairs(circle_vb) do
-		for _, vv in ipairs(v) do
-			gvb[#gvb+1] = vv
-		end
+	for i = 1, #circle_vb, 3 do
+		gvb[#gvb+1] = circle_vb[i]
+		gvb[#gvb+1] = circle_vb[i + 1]
+		gvb[#gvb+1] = circle_vb[i + 2]
 		gvb[#gvb+1] = 0
 		gvb[#gvb+1] = 0
 		gvb[#gvb+1] = 1

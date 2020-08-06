@@ -124,7 +124,7 @@ local function add_vertex(t, x, y, z)
 	t[n+1], t[n+2], t[n+3] = x, y, z
 end
 
-local function gen_cricle_vertices(vb, slices, height, radius)
+local function gen_circle_vertices(vb, slices, height, radius)
 	local radian_step = 2 * math.pi / slices
 	for s=0, slices-1 do
 		local radian = radian_step * s
@@ -135,7 +135,7 @@ local function gen_cricle_vertices(vb, slices, height, radius)
 	end
 end
 
-local function gen_cricle_vertices_facez(vb, slices, zvalue, radius)
+local function gen_circle_vertices_facez(vb, slices, zvalue, radius)
 	local radian_step = 2 * math.pi / slices
 	for s=0, slices-1 do
 		local radian = radian_step * s
@@ -146,7 +146,7 @@ local function gen_cricle_vertices_facez(vb, slices, zvalue, radius)
 	end
 end
 
-local function gen_cricle_indices(ib, slices, baseidx)
+local function gen_circle_indices(ib, slices, baseidx)
 	local last_idx = baseidx
 	for i=1, slices do
 		local next_idx = i == slices and baseidx or (last_idx + 1)					
@@ -157,11 +157,11 @@ local function gen_cricle_indices(ib, slices, baseidx)
 	end
 end
 
-function geometry.cricle(radius, slices)
+function geometry.circle(radius, slices)
 	local vb = {}
 	local ib = {}
-	gen_cricle_vertices_facez(vb, slices, 0, radius)
-	gen_cricle_indices(ib, slices, 0)
+	gen_circle_vertices_facez(vb, slices, 0, radius)
+	gen_circle_indices(ib, slices, 0)
 	return vb, ib
 end
 
@@ -177,7 +177,7 @@ function geometry.cone(slices, height, radius, needib, line)
 				0, height, 0,	-- top center
 				0, 0, 0			-- bottom center
 			}
-			gen_cricle_vertices(vb, slices, 0, radius)
+			gen_circle_vertices(vb, slices, 0, radius)
 			return vb
 		end
 	end
@@ -199,8 +199,8 @@ function geometry.cone(slices, height, radius, needib, line)
 					ib[#ib+1] = bottomcenter_idx + i
 				end
 
-				-- cricles lines
-				gen_cricle_indices(ib, slices, bottomcenter_idx + 1)
+				-- circles lines
+				gen_circle_indices(ib, slices, bottomcenter_idx + 1)
 
 				return ib
 			end
@@ -224,10 +224,10 @@ function geometry.cylinder(slices, height, radius, needib, line)
 				0, half_height, 0,	-- top center
 			}
 
-			gen_cricle_vertices(vb, slices, half_height, radius)
+			gen_circle_vertices(vb, slices, half_height, radius)
 
 			add_vertex(vb, 0, -half_height, 0)	-- bottom center
-			gen_cricle_vertices(vb, slices, -half_height, radius)
+			gen_circle_vertices(vb, slices, -half_height, radius)
 			return vb
 		end
 	end
@@ -252,8 +252,8 @@ function geometry.cylinder(slices, height, radius, needib, line)
 					ib[#ib+1] = bottomcenter_idx+i
 				end
 
-				gen_cricle_indices(ib, slices, topcenter_idx+1)
-				gen_cricle_indices(ib, slices, bottomcenter_idx+1)
+				gen_circle_indices(ib, slices, topcenter_idx+1)
+				gen_circle_indices(ib, slices, bottomcenter_idx+1)
 			end
 		end
 	end
