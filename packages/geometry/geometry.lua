@@ -121,7 +121,7 @@ end
 
 local function add_vertex(t, x, y, z)
 	local n = #t
-	t[n+1], t[n+2], t[n+2] = x, y, z
+	t[n+1], t[n+2], t[n+3] = x, y, z
 end
 
 local function gen_cricle_vertices(vb, slices, height, radius)
