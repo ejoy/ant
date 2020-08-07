@@ -1,0 +1,21 @@
+fx:
+    vs: /pkg/ant.resources/shaders/star/vs_star.sc
+    fs: /pkg/ant.resources/shaders/star/fs_star.sc
+properties:
+    s_LavaDiffuse:
+        stage: 0
+        texture: /pkg/ant.resources/textures/star/laya_diffuse.texture
+    s_StoneDiffuse:
+        stage: 1
+        texture: /pkg/ant.resources/textures/star/stone.texture
+    s_LavaNoise:
+        stage: 2
+        texture: /pkg/ant.resources/textures/star/laya.texture
+
+    u_lava_bright_color: {0.1155097, 0.1779949, 1.58622, 0}
+    u_lava_hot_stone_color: {0.1122097, 0.4785253, 1.58622, 0}
+    u_lava_cold_stone_color: {0, 0, 0, 0}
+    u_star_atmosphere: {0.5, 1.2, 0, 0}
+    u_star_atmosphere_color: {0.1483025, 0.3240842, 0.4562634, 1}
+
+stage: /pkg/ant.resources/materials/states/default.state
