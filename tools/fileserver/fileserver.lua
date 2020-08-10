@@ -80,16 +80,14 @@ local function repo_add(identity, reponame)
 	LOG ("Open repo : ", repopath)
 	do_prebuilt(repopath, identity)
 	if repos[reponame] then
-		repos[reponame]:close()
-		repos[reponame] = nil
-		--local repo = repos[reponame]
-		--assert(repo._identity == identity)
-		--if lfs.is_regular_file(repopath / ".repo" / "root") then
-		--	repo:index()
-		--else
-		--	repo:rebuild()
-		--end
-		--return repo
+		local repo = repos[reponame]
+		assert(repo._identity == identity)
+		if lfs.is_regular_file(repopath / ".repo" / "root") then
+			repo:index()
+		else
+			repo:rebuild()
+		end
+		return repo
 	end
 	local repo = repo_new(repopath)
 	if not repo then

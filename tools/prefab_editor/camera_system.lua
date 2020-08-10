@@ -54,12 +54,14 @@ end
 
 local function cameraInit()
 	cameraTarget = math3d.ref()
-	local camera = world:interface "ant.camera|camera"
-	cameraId = camera.create {
-		eyepos = {0,0,0,1},
-		viewdir = {0,0,1,0},
-	}
-	camera.bind(cameraId, "main_queue")
+	-- local camera = world:interface "ant.camera|camera"
+	-- cameraId = camera.create {
+	-- 	eyepos = {0,0,0,1},
+	-- 	viewdir = {0,0,1,0},
+	-- }
+	-- camera.bind(cameraId, "main_queue")
+
+	cameraId = world[world:singleton_entity_id "main_queue"].camera_eid
 end
 
 function m:post_init()

@@ -222,6 +222,8 @@ function repo:rebuild()
 end
 
 function repo:build()
+	access.readmount(self)
+
 	local cache = {}
 	self._namecache[''] = undef
 	local roothash = repo_build_dir(self, "", cache, self._namecache)

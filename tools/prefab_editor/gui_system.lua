@@ -74,12 +74,9 @@ function m:ui_update()
     if dirty then
         local viewport = {x = x, y = y, w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
-
-        world:pub {"ViewportDirty", viewport}
-
         local secondViewport = {x = viewport.x + (width - secondViewWidth), y = viewport.y + (height - secondViewHeight), w = secondViewWidth, h = secondViewHeight}
-        -- world[global_data.second_view].camera_eid = world[world:singleton_entity_id "main_queue"].camera_eid
         irq.set_view_rect(global_data.second_view, secondViewport)
+        world:pub {"ViewportDirty", viewport}
     end
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
