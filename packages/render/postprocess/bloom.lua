@@ -1,14 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
+local setting		= import_package "ant.settings".setting
+
 local viewidmgr = require "viewid_mgr"
 local fbmgr    = require "framebuffer_mgr"
 local renderutil= require "util"
-local setting   = require "setting"
 
 local fs        = require "filesystem"
-
-local assetmgr = import_package "ant.asset"
 
 local bloom_sys = ecs.system "bloom_system"
 

@@ -1,5 +1,5 @@
 local bgfx = require "bgfx"
-local render = import_package "ant.render"
+local setting = import_package "ant.settings".setting
 local sha1 = require "hash".sha1
 local stringify = require "fx.stringify"
 local fs = require "filesystem"
@@ -27,8 +27,8 @@ local default_setting = {
 	shadow_receive = "off",		-- "on"/"off"
 	subsurface = "off",			-- "on"/"off"? maybe has other setting
 	skinning = "UNKNOWN",
-    shadow_type = render.setting:get 'graphic/shadow/type',
-    bloom_enable = render.setting:get 'graphic/postprocess/bloom/enable',
+    shadow_type = setting:get 'graphic/shadow/type',
+    bloom_enable = setting:get 'graphic/postprocess/bloom/enable',
 }
 
 local function merge(a, b)

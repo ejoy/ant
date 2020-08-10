@@ -1,9 +1,10 @@
 local ecs = ...
 local world = ecs.world
 
+local setting		= import_package "ant.settings".setting
+
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
-local setting   = require "setting"
 
 local tm_sys    = ecs.system "tonemapping_system"
 

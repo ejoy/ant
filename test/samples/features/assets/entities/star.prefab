@@ -7,5 +7,6 @@ data:
     state: 7
     material: /pkg/ant.resources/materials/star.material
     mesh: /pkg/ant.resources.binary/meshes/star/planet_non_clouded.glb|meshes/atmosphere_geosphereShape_P1.meshbin
-    transform:{}
+    transform:
+        s: 0.25
     name: star_test

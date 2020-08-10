@@ -1,14 +1,16 @@
 local ecs = ...
 local world = ecs.world
 
-local math3d = require "math3d"
 local geometry_drawer = import_package "ant.geometry".drawer
-local bgfx = require "bgfx"
-local widget_drawer_sys = ecs.system "widget_drawer_system"
+local setting		= import_package "ant.settings".setting
+
 local ies = world:interface "ant.scene|ientity_state"
 local iom = world:interface "ant.objcontroller|obj_motion"
 
-local setting = require "setting"
+local bgfx = require "bgfx"
+local math3d = require "math3d"
+
+local widget_drawer_sys = ecs.system "widget_drawer_system"
 
 local function create_dynamic_buffer(layout, num_vertices, num_indices)
 	local declmgr = import_package "ant.render".declmgr

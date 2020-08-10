@@ -3,13 +3,12 @@ local world = ecs.world
 local mc = import_package "ant.math".constant
 
 local default_comp 	= import_package "ant.general".default
+local setting		= import_package "ant.settings".setting
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
-
-local setting		= require "setting"
 
 local irender = ecs.interface "irender"
 

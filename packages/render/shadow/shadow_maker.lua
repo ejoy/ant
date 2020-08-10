@@ -4,9 +4,6 @@ local ecs = ...
 local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
-local samplerutil= require "sampler"
-local fbmgr 	= require "framebuffer_mgr"
-local setting	= require "setting"
 
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"

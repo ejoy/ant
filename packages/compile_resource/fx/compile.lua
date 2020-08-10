@@ -7,6 +7,8 @@ local IDENTITY
 local BINPATH = fs.path "":localpath() / ".build" / "sc"
 local SHARER_INC = lfs.current_path() / "packages/resources/shaders"
 
+local setting = import_package "ant.settings"
+
 local function get_filename(pathname)
     pathname = lfs.absolute(fs.path(pathname):localpath()):string():lower():lower()
     local filename = pathname:match "[/]?([^/]*)$"
@@ -75,9 +77,9 @@ local function get_macros(setting)
 end
 
 local function compile_debug_shader(platform, renderer)
-    -- if platform == "windows" and renderer:match "direct3d" then
-    --     return true
-    -- end
+    if platform == "windows" and renderer:match "direct3d" then
+        return true
+    end
 end
 
 local function do_compile(input, output, stage, setting)
