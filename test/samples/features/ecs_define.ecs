@@ -119,6 +119,5 @@ system "effect_test_system"
 
 system "skybox_test_system"
     .implement "skybox_test.lua"
-    .require_system "ant.sky|skybox_system"
     .require_policy "ant.sky|skybox"
     .method "init"

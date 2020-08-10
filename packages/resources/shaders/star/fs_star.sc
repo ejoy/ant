@@ -10,7 +10,7 @@ SAMPLERCUBE(s_LavaNoise, 2);
 uniform vec4 u_eyepos;
 uniform vec4 u_lava_hot_stone_color;
 uniform vec4 u_lava_cold_stone_color;
-uniform vec4 s_lava_bright_color;
+uniform vec4 u_lava_bright_color;
 
 uniform vec4 u_star_atmosphere;
 #define u_star_atmosphere_width     u_star_atmosphere.x
@@ -58,7 +58,7 @@ void main()
 
     float lava_mask = saturate(-scale_noise) * saturate(-scale_noise);
 
-    vec3 viewdir = normalize(u_eyepos - v_posWS);
+    vec3 viewdir = normalize(u_eyepos.xyz - v_posWS);
     vec2 parallax_offset = inverted_noise_rescaled * viewdir.xz;
 
     vec2 lavauv = uv0 * LAVA_TEXTURE_TILE - (parallax_offset * LAVA_TEXTURE_PARALLAX);
@@ -67,16 +67,16 @@ void main()
     vec2 stoneuv = uv0 * STONE_TEXTURE_TILE - (parallax_offset * STONE_TEXTURE_PARALLAX);
     vec3 stone_color = texture2D(s_StoneDiffuse, stoneuv ).rgb;
 
-    vec3 heatedstone = stone_color * u_lava_hot_stone_color * (pow(inverted_noise_rescaled2, 0.5) + LAVA_STONE_HOTTNESS );
+    vec3 heatedstone = stone_color * u_lava_hot_stone_color.rgb * (pow(inverted_noise_rescaled2, 0.5) + LAVA_STONE_HOTTNESS );
     float stoneLerp = (1.0 - saturate(scale_noise));
     heatedstone = lerp(heatedstone + stone_color * u_lava_cold_stone_color, heatedstone, stoneLerp);
-    vec3 lava = lava_color * s_lava_bright_color * pow(lava_mask, 0.7);
+    vec3 lava = lava_color * u_lava_bright_color * pow(lava_mask, 0.7);
 
     vec3 finalcolor = saturate(heatedstone + lava);
 
     // Atmosphere
     vec3 normal = normalize(v_normalWS);
-    float vAtmosphere = saturate(dot(normal, -viewdir + u_star_atmosphere_width);
+    float vAtmosphere = saturate(dot(normal, -viewdir + u_star_atmosphere_width));
     finalcolor = lerp(finalcolor, u_star_atmosphere_color.rgb, 
         vAtmosphere * vAtmosphere * 
             u_star_atmosphere_color.a * 
@@ -96,6 +96,6 @@ void main()
     //     finalcolor = saturate( finalcolor );
     // #endif
 
-    return vec4(finalcolor.rgb*2, 1.0f);
+    gl_FragColor = vec4(finalcolor.rgb*2, 1.0f);
     //return float4(finalcolor.rgb*2, vAlpha);
 }

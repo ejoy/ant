@@ -18,4 +18,9 @@ properties:
     u_star_atmosphere: {0.5, 1.2, 0, 0}
     u_star_atmosphere_color: {0.1483025, 0.3240842, 0.4562634, 1}
 
-stage: /pkg/ant.resources/materials/states/default.state
+state:
+    ALPHA_REF: 0
+    CULL: NONE
+    DEPTH_TEST: LESS
+    MSAA: true
+    WRITE_MASK: RGBAZ
