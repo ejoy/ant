@@ -82,20 +82,10 @@ void main()
             u_star_atmosphere_color.a * 
             u_star_atmosphere_intensity);
 
-    // float vAlpha = 1.0;
-
-    // #ifdef IS_NEUTRON_STAR_SHELL
-    //     float NdotL = saturate( 0.5 - dot(normal, viewdir));
-    //     vAlpha *= NdotL;
-    //     vAlpha *= 0.2;
-    // #else
-    //     vAlpha = 0.1 * vBloomFactor;
-
-    //     float vRim = smoothstep( 0.5, 1.0, 1.0 - dot(normal, viewdir));
-    //     finalcolor.rgb += finalcolor.rgb * vRim * 3.5f;
-    //     finalcolor = saturate( finalcolor );
-    // #endif
+    //rim
+    float rim = smoothstep( 0.5, 1.0, 1.0 - dot(normal, viewdir));
+    finalcolor.rgb += finalcolor.rgb * rim * 3.5f;
+    finalcolor = saturate(finalcolor);
 
     gl_FragColor = vec4(finalcolor.rgb*2, 1.0f);
-    //return float4(finalcolor.rgb*2, vAlpha);
 }
