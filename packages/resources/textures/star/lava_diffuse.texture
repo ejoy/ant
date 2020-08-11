@@ -11,6 +11,6 @@ sampler:
   MAG: LINEAR
   MIN: LINEAR
   MIP: LINEAR
-  U: CLAMP
-  V: CLAMP
+  U: WRAP
+  V: WRAP
 type: texture
