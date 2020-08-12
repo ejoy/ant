@@ -112,6 +112,8 @@ function m:data_changed()
             inspector.update_ui(action == "update")
             if action == "ontarget" then
                 camera_mgr.show_frustum(gizmo.target_eid, true)
+            else
+                camera_mgr.update_frustrum(gizmo.target_eid)
             end
         elseif action == "create" then
             gizmo = value1

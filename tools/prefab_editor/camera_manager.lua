@@ -114,9 +114,7 @@ local function create_dynamic_line(srt, p0, p1, name, color)
 end
 
 function m.update_frustrum(cam_eid)
-    if not m[cam_eid] then
-        m[cam_eid] = { camera_eid = cam_eid }
-    end
+    if not m[cam_eid] then return end
 
     local frustum_points = math3d.frustum_points(icamera.calc_viewproj(cam_eid))
     local frustum_eid = m[cam_eid].frustum_eid
@@ -168,18 +166,20 @@ function m.show_frustum(eid, visible)
     if m.current_frustum then
         local state = "visible"
         ies.set_state(m[m.current_frustum].frustum_eid, state, false)
-        ies.set_state(m[m.current_frustum].far_boundary[1].line_eid, state, false)
-        ies.set_state(m[m.current_frustum].far_boundary[2].line_eid, state, false)
-        ies.set_state(m[m.current_frustum].far_boundary[3].line_eid, state, false)
-        ies.set_state(m[m.current_frustum].far_boundary[4].line_eid, state, false)
+        local boundary = m[m.current_frustum].far_boundary
+        ies.set_state(boundary[1].line_eid, state, false)
+        ies.set_state(boundary[2].line_eid, state, false)
+        ies.set_state(boundary[3].line_eid, state, false)
+        ies.set_state(boundary[4].line_eid, state, false)
     end
     if m[eid] then
         local state = "visible"
         ies.set_state(m[eid].frustum_eid, state, visible)
-        ies.set_state(m[eid].far_boundary[1].line_eid, state, visible)
-        ies.set_state(m[eid].far_boundary[2].line_eid, state, visible)
-        ies.set_state(m[eid].far_boundary[3].line_eid, state, visible)
-        ies.set_state(m[eid].far_boundary[4].line_eid, state, visible)
+        local boundary = m[eid].far_boundary
+        ies.set_state(boundary[1].line_eid, state, visible)
+        ies.set_state(boundary[2].line_eid, state, visible)
+        ies.set_state(boundary[3].line_eid, state, visible)
+        ies.set_state(boundary[4].line_eid, state, visible)
         m.current_frustum = eid
     end
 end
@@ -195,6 +195,8 @@ function m.ceate_camera()
     }
     iom.set_position(new_camera, iom.get_position(m.main_camera))
     iom.set_rotation(new_camera, iom.get_rotation(m.main_camera))
+    
+    m[new_camera] = { camera_eid = new_camera }
 
     m.update_frustrum(new_camera)
     m.set_second_camera(new_camera)
