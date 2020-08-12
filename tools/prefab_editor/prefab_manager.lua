@@ -5,16 +5,17 @@ local vfs           = require "vfs"
 local prefab_view   = require "prefab_view"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
+local camera_mgr
 local world
 local iom
 local worldedit
-
 local m = {
 	entities = {}
 }
 
 function m:init(w)
-	world = w
+    world = w
+    camera_mgr = require "camera_manager"(world)
     iom = world:interface "ant.objcontroller|obj_motion"
     worldedit = import_package "ant.editor".worldedit(world)
 end
@@ -41,27 +42,12 @@ function m:normalize_aabb()
 end
 
 function m:create(what)
-    -- if what == "camera" then
-    --     local entity_template = {
-    --         action = {
-    --             mount = 1
-    --         },
-    --         policy = {
-    --             "ant.general|name",
-    --             "ant.camera|camera"
-    --         },
-    --         data = {
-    --             name = "",
-    --             frustum = {
-    --                 aspect = 1.3333333333333333,
-    --                 f = 1000,
-    --                 fov = 60,
-    --                 n = 0.1,
-    --                 type = mat
-    --             }
-    --         }
-    --     }
-    -- end
+    if what == "camera" then
+        local new_camera = camera_mgr.ceate_camera()
+        world:enable_tag(new_camera, "tag_camera")
+        local node = prefab_view:add(new_camera)
+        node.camera = true
+    end
 end
 
 function m:internal_remove(eid)

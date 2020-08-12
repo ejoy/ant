@@ -11,45 +11,71 @@ local iom
 local localSpace = {}
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 
-local uiData = {
+local baseUIData = {
     eid = {0, flags = imgui.flags.InputText{ "ReadOnly" }},
     name = {text = "noname"},
     pos = {0,0,0},
     rot = {0,0,0},
     scale = {1,1,1},
-    state = {0},
-    material = {text = "nomaterial"},
-    mesh = {text = "nomesh"}
+    color = {}
 }
 
-local function update_ui_transform(eid)
+local entityUIData = {
+    state       = {0},
+    material    = {text = "nomaterial"},
+}
+
+local lightUIData = {
+
+}
+
+local cameraUIData = {
+    target          = {-1},
+    dist            = {5},
+    fov_axis        = {text = "vert"},
+    field_of_view   = {30},
+    near_plane      = {0.1},
+    far_plane       = {300}
+}
+
+
+
+local function update_ui_data(eid)
     if not eid then
         return
     end
     local s, r, t = math3d.srt(iom.srt(eid))
     local Pos = math3d.totable(t)
-    uiData.pos[1] = Pos[1]
-    uiData.pos[2] = Pos[2]
-    uiData.pos[3] = Pos[3]
+    baseUIData.pos[1] = Pos[1]
+    baseUIData.pos[2] = Pos[2]
+    baseUIData.pos[3] = Pos[3]
 
     local Rot = math3d.totable(math3d.quat2euler(r))
-    uiData.rot[1] = math.deg(Rot[1])
-    uiData.rot[2] = math.deg(Rot[2])
-    uiData.rot[3] = math.deg(Rot[3])
+    baseUIData.rot[1] = math.deg(Rot[1])
+    baseUIData.rot[2] = math.deg(Rot[2])
+    baseUIData.rot[3] = math.deg(Rot[3])
 
     local Scale = math3d.totable(s)
-    uiData.scale[1] = Scale[1]
-    uiData.scale[2] = Scale[2]
-    uiData.scale[3] = Scale[3]
+    baseUIData.scale[1] = Scale[1]
+    baseUIData.scale[2] = Scale[2]
+    baseUIData.scale[3] = Scale[3]
+    --
+    if world[eid]["tag_camera"] then
+        local frustum = icamera.get_frustum(eid)
+        cameraUIData.near_plane[1] = frustum.n
+        cameraUIData.far_plane[1] = frustum.f
+        cameraUIData.field_of_view[1] = frustum.fov
+    end
 end
 
 local function on_select(eid)
-    uiData.eid[1] = eid
-    uiData.name.text = world[eid].name
-    update_ui_transform(eid)
-    uiData.state[1] = world[eid]._rendercache.state
-    -- uiData.material.text = world[eid].material.filename
-    -- uiData.mesh.text = world[eid].mesh.filename
+    baseUIData.eid[1] = eid
+    baseUIData.name.text = world[eid].name
+    update_ui_data(eid)
+    entityUIData.state[1] = world[eid]._rendercache.state
+    
+    -- baseUIData.material.text = world[eid].material.filename
+    -- baseUIData.mesh.text = world[eid].mesh.filename
 end
 
 local gizmo
@@ -60,7 +86,11 @@ end
 
 function m.update_template_tranform(eid)
     if not eid then return end
+    
     local template = prefab_view:get_template(eid)
+    
+    if not template or not template.template then return end
+
     local s, r, t = math3d.srt(iom.srt(eid))
     local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
     local srt_table = {
@@ -72,9 +102,10 @@ function m.update_template_tranform(eid)
     --worldedit:prefab_set(template.prefab, "/" .. tostring(template.index) .."/data/transform", srt_table)
 end
 
+
 function m.update_ui(ut)
     local eid = gizmo.target_eid
-    update_ui_transform(eid)
+    update_ui_data(eid)
     if ut then
         m.update_template_tranform(eid)
     end
@@ -91,67 +122,105 @@ function m.show(rhwi)
     
     for _ in uiutils.imgui_windows("Inspector", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         if gizmo.target_eid then
-            if uiData.eid[1] ~= gizmo.target_eid then
+            if baseUIData.eid[1] ~= gizmo.target_eid then
                 on_select(gizmo.target_eid)
             end
             imgui.widget.Text("EID :")
             imgui.cursor.SameLine()
-            imgui.widget.Text(uiData.eid[1])
-            local template = prefab_view:get_template(uiData.eid[1])
+            imgui.widget.Text(baseUIData.eid[1])
+            local template = prefab_view:get_template(baseUIData.eid[1])
             if template and template.filename then
                 imgui.widget.Text("Prefab :")
                 imgui.cursor.SameLine()
                 imgui.widget.Text(template.filename)
             end
 
-            if imgui.widget.InputText("Name", uiData.name) then
-                local name = tostring(uiData.name.text)
-                world[uiData.eid[1]].name = name
-                world:pub {"EntityEvent", "name", uiData.eid[1], name}
+            if imgui.widget.InputText("Name", baseUIData.name) then
+                local name = tostring(baseUIData.name.text)
+                world[baseUIData.eid[1]].name = name
+                world:pub {"EntityEvent", "name", baseUIData.eid[1], name}
             end
 
             if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
-                if imgui.widget.InputFloat("Position", uiData.pos) then
-                    oldPos = math3d.totable(iom.get_position(uiData.eid[1]))
-                    gizmo:set_position(uiData.pos)
+                if imgui.widget.InputFloat("Position", baseUIData.pos) then
+                    oldPos = math3d.totable(iom.get_position(baseUIData.eid[1]))
+                    gizmo:set_position(baseUIData.pos)
                 end
-                if imgui.widget.InputFloat("Rotate", uiData.rot) then
-                    oldRot = math3d.totable(iom.get_rotation(uiData.eid[1]))
-                    gizmo:set_rotation(uiData.rot)
+                if imgui.widget.InputFloat("Rotate", baseUIData.rot) then
+                    oldRot = math3d.totable(iom.get_rotation(baseUIData.eid[1]))
+                    gizmo:set_rotation(baseUIData.rot)
                 end
-                if imgui.widget.InputFloat("Scale", uiData.scale) then
-                    oldScale = math3d.totable(iom.get_scale(uiData.eid[1]))
-                    gizmo:set_scale(uiData.scale)
-                end
-                imgui.widget.TreePop()
-            end
-            if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
-                if imgui.widget.InputText("mtlFile", uiData.material) then
-                    world[uiData.eid[1]].mesh = tostring(uiData.material.text)
-                end
-                if imgui.widget.BeginDragDropTarget() then
-                    local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-                    if payload then
-                        print(payload)
-                    end
-                    imgui.widget.EndDragDropTarget()
+                if imgui.widget.InputFloat("Scale", baseUIData.scale) then
+                    oldScale = math3d.totable(iom.get_scale(baseUIData.eid[1]))
+                    gizmo:set_scale(baseUIData.scale)
                 end
                 imgui.widget.TreePop()
             end
-            -- if imgui.widget.InputText("Name", uiData.mesh) then
-            --     world[uiData.eid[1]].mesh = tostring(uiData.mesh.text)
+            -- if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
+            --     if imgui.widget.InputText("mtlFile", baseUIData.material) then
+            --         world[baseUIData.eid[1]].material = tostring(baseUIData.material.text)
+            --     end
+            --     if imgui.widget.BeginDragDropTarget() then
+            --         local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+            --         if payload then
+            --             print(payload)
+            --         end
+            --         imgui.widget.EndDragDropTarget()
+            --     end
+            --     imgui.widget.TreePop()
             -- end
+            
+            -- if imgui.widget.InputText("Name", baseUIData.mesh) then
+            --     world[baseUIData.eid[1]].mesh = tostring(baseUIData.mesh.text)
+            -- end
+            if world[gizmo.target_eid]["tag_camera"] then
+                if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
+                    local what
+                    local value
+                    if imgui.widget.InputInt("Target", cameraUIData.target) then
+                        what = "target"
+                        value = cameraUIData.target[1]
+                    end
+                    if cameraUIData.target ~= -1 then
+                        if imgui.widget.InputInt("DistToTarget", cameraUIData.dist) then
+                            what = "dist"
+                            value = cameraUIData.dist[1]
+                        end
+                    end
+                    if imgui.widget.InputFloat("FOV", cameraUIData.field_of_view) then
+                        what = "fov"
+                        value = cameraUIData.field_of_view[1]
+                    end
+                    if imgui.widget.InputFloat("Near", cameraUIData.near_plane) then
+                        what = "near"
+                        value = cameraUIData.near_plane[1]
+                    end
+                    if imgui.widget.InputFloat("Far", cameraUIData.far_plane) then
+                        what = "far"
+                        value = cameraUIData.far_plane[1]
+                    end
+                    if what then
+                        -- icamera.set_frustum(gizmo.target_eid, {
+                        --     fov = cameraUIData.field_of_view[1]
+                        --     n = cameraUIData.near_plane[1],
+                        --     f = cameraUIData.far_plane[1]
+                        -- })
+                        world:pub {"CameraEdit", what, gizmo.target_eid, value}
+                    end
+                    imgui.widget.TreePop()
+                end
+            end
         end
     end
 
     if oldPos then
-        world:pub {"EntityEvent", "move", gizmo.target_eid, oldPos, {uiData.pos[1], uiData.pos[2], uiData.pos[3]}}
+        world:pub {"EntityEvent", "move", gizmo.target_eid, oldPos, {baseUIData.pos[1], baseUIData.pos[2], baseUIData.pos[3]}}
         oldPos = nil
     elseif oldRot then
-        world:pub {"EntityEvent", "rotate", gizmo.target_eid, oldRot, {uiData.rot[1], uiData.rot[2], uiData.rot[3]}}
+        world:pub {"EntityEvent", "rotate", gizmo.target_eid, oldRot, {baseUIData.rot[1], baseUIData.rot[2], baseUIData.rot[3]}}
         oldRot = nil
     elseif oldScale then
-        world:pub {"EntityEvent", "scale", gizmo.target_eid, oldScale, {uiData.scale[1], uiData.scale[2], uiData.scale[3]}}
+        world:pub {"EntityEvent", "scale", gizmo.target_eid, oldScale, {baseUIData.scale[1], baseUIData.scale[2], baseUIData.scale[3]}}
         oldScale = nil
     end
 end
@@ -159,6 +228,7 @@ end
 return function(w)
     world = w
     iom = world:interface "ant.objcontroller|obj_motion"
+    icamera = world:interface "ant.camera|camera"
     worldedit = import_package "ant.editor".worldedit(world)
     return m
 end

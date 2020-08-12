@@ -1,7 +1,7 @@
 local math3d = require "math3d"
 
 local m = {}
-
+local world
 function m.point_to_line_distance2D(p1, p2, p3)
 	local dx = p2[1] - p1[1];
 	local dy = p2[2] - p1[2];
@@ -54,4 +54,24 @@ function m.view_to_axis_constraint(ray, cameraPos, axis, origin)
 	return math3d.mul(factor, axisVec)
 end
 
-return m
+
+local icamera
+local global_data = require "common.global_data"
+function m.world_to_screen(camera_eid, world_pos)
+	local vp = icamera.calc_viewproj(camera_eid)
+	local proj_pos = math3d.totable(math3d.transform(vp, world_pos, 1))
+	return {(1 + proj_pos[1] / proj_pos[4]) * global_data.viewport.w * 0.5, (1 - proj_pos[2] / proj_pos[4]) * global_data.viewport.h * 0.5, 0}
+end
+
+function m.adjust_mouse_pos(x,y)
+    if not global_data.viewport then
+        return x, y
+    end
+    return x - global_data.viewport.x, y - global_data.viewport.y
+end
+
+return function(w)
+	world = w
+	icamera = world:interface "ant.camera|camera"
+	return m
+end

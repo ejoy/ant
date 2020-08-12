@@ -21,7 +21,7 @@ local uiconfig = require "ui.config"
 local uiutils = require "ui.utils"
 local prefab_mgr = require "prefab_manager"
 local menu = require "ui.menu"(world, prefab_mgr)
-local global_data = require "common.global_data"
+local camera_mgr = require "camera_manager"(world)
 local m = ecs.system 'gui_system'
 
 local eventGizmo = world:sub {"Gizmo"}
@@ -75,7 +75,7 @@ function m:ui_update()
         local viewport = {x = x, y = y, w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
         local secondViewport = {x = viewport.x + (width - secondViewWidth), y = viewport.y + (height - secondViewHeight), w = secondViewWidth, h = secondViewHeight}
-        irq.set_view_rect(global_data.second_view, secondViewport)
+        irq.set_view_rect(camera_mgr.second_view, secondViewport)
         world:pub {"ViewportDirty", viewport}
     end
     --drag file to view
@@ -96,18 +96,6 @@ function m:ui_update()
     end
 end
 
-function update_second_view_camera()
-    if not secondCameraEID then return end
-    local rc = world[secondCameraEID]._rendercache
-    -- local worldmat = rc.worldmat
-    -- rc.viewmat = math3d.lookto(math3d.index(worldmat, 4), math3d.index(worldmat, 3), rc.updir)
-    -- rc.projmat = math3d.projmat(rc.frustum)
-    -- rc.viewprojmat = math3d.mul(rc.projmat, rc.viewmat)
-    rc.viewmat = icamera.calc_viewmat(secondCameraEID)
-    rc.projmat = icamera.calc_projmat(secondCameraEID)
-    rc.viewprojmat = icamera.calc_viewproj(secondCameraEID)
-end
-
 local entityStateEvent = world:sub {"EntityState"}
 local dropFilesEvent = world:sub {"OnDropFiles"}
 local entityEvent = world:sub {"EntityEvent"}
@@ -119,12 +107,12 @@ local eventWindowTitle = world:sub {"WindowTitle"}
 local eventCreate = world:sub {"Create"}
 local window = require "window"
 function m:data_changed()
-    
-    update_second_view_camera()
-
     for _, action, value1, value2 in eventGizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
+            if action == "ontarget" then
+                camera_mgr.show_frustum(gizmo.target_eid, true)
+            end
         elseif action == "create" then
             gizmo = value1
             cmd_queue = value2
@@ -156,7 +144,7 @@ function m:data_changed()
             prefab_view:set_visible(eid, value)
             ies.set_state(eid, what, value)
             local template = prefab_view:get_template(eid)
-            if template.children then
+            if template and template.children then
                 for _, e in ipairs(template.children) do
                     ies.set_state(e, what, value)
                 end

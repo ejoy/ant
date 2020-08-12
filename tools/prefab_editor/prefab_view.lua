@@ -33,6 +33,7 @@ function scene:add(ineid, tp, inpeid)
         table.insert(self.root.children, node)
     end
     self.all[ineid] = node
+    return node
 end
 
 function scene:del(eid)

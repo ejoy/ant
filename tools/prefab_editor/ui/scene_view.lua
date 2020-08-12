@@ -44,10 +44,14 @@ local function node_context_menu(eid)
     end
 end
 local function show_scene_node(node)
-    local function select_or_move(eid)
+    local function select_or_move(nd)
+        local eid = nd.eid
         if imgui.util.IsItemClicked() then
             if is_editable(eid) then
                 gizmo:set_target(eid)
+                if nd.camera then
+                    world:pub { "ActiveSceondCamera", eid }
+                end
             end
         end
         if imgui.widget.BeginDragDropSource() then
@@ -88,12 +92,12 @@ local function show_scene_node(node)
     if #node.children == 0 then
         imgui.widget.TreeNode(name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
         node_context_menu(node.eid)
-        select_or_move(node.eid)
+        select_or_move(node)
         lock_visible(node.eid)
     else
         local open = imgui.widget.TreeNode(name, base_flags)
         node_context_menu(node.eid)
-        select_or_move(node.eid)
+        select_or_move(node)
         lock_visible(node.eid)
         if open then
             for _, child in ipairs(node.children) do
@@ -113,6 +117,10 @@ function m.show(rhwi)
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         if prefab_view.root.eid > 0 then
+            if imgui.widget.Button("Snapshot") then
+                world:pub { "Create", "camera"}
+            end
+            imgui.cursor.Separator()
             imgui.cursor.Columns(2, "SceneColumns", true)
             imgui.cursor.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - 60)
             sourceEid = nil
