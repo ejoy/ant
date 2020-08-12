@@ -8,6 +8,7 @@ local m = {}
 local world
 local worldedit
 local iom
+local camera_mgr
 local localSpace = {}
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 
@@ -62,6 +63,8 @@ local function update_ui_data(eid)
     --
     if world[eid]["tag_camera"] then
         local frustum = icamera.get_frustum(eid)
+        cameraUIData.target[1] = camera_mgr[eid].target
+        cameraUIData.dist[1] = camera_mgr[eid].dist_to_target
         cameraUIData.near_plane[1] = frustum.n
         cameraUIData.far_plane[1] = frustum.f
         cameraUIData.field_of_view[1] = frustum.fov
@@ -182,7 +185,7 @@ function m.show(rhwi)
                         value = cameraUIData.target[1]
                     end
                     if cameraUIData.target ~= -1 then
-                        if imgui.widget.InputInt("DistToTarget", cameraUIData.dist) then
+                        if imgui.widget.InputInt("Dist", cameraUIData.dist) then
                             what = "dist"
                             value = cameraUIData.dist[1]
                         end
@@ -230,5 +233,6 @@ return function(w)
     iom = world:interface "ant.objcontroller|obj_motion"
     icamera = world:interface "ant.camera|camera"
     worldedit = import_package "ant.editor".worldedit(world)
+    camera_mgr = require "camera_manager"(world)
     return m
 end

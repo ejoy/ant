@@ -87,21 +87,22 @@ local function get_frustum_vb(points, color)
     end
     return vb
 end
-local frustum_ib = {
-    -- front
-    0, 1, 2, 3,
-    0, 2, 1, 3,
-    -- back
-    4, 5, 6, 7,
-    4, 6, 5, 7,
-    -- left
-    0, 4, 1, 5,
-    -- right
-    2, 6, 3, 7,
-}
+
 local function create_dynamic_frustum(frustum_points, name, color)
-	local vb = get_frustum_vb(frustum_points, color)
-    local mesh = create_dynamic_mesh("p3|c40niu", vb, frustum_ib)
+    local vb = get_frustum_vb(frustum_points, color)
+    local ib = {
+        -- front
+        0, 1, 2, 3,
+        0, 2, 1, 3,
+        -- back
+        4, 5, 6, 7,
+        4, 6, 5, 7,
+        -- left
+        0, 4, 1, 5,
+        -- right
+        2, 6, 3, 7,
+    }
+    local mesh = create_dynamic_mesh("p3|c40niu", vb, ib)
 	return create_simple_render_entity(nil, "/pkg/ant.resources/materials/line.material", name, mesh)
 end
 local function create_dynamic_line(srt, p0, p1, name, color)
@@ -184,6 +185,26 @@ function m.show_frustum(eid, visible)
     end
 end
 
+local function update_direction(eid)
+    if m[eid].target < 0 then return end
+    local target_pos = iom.get_position(m[eid].target)
+    local eyepos = iom.get_position(eid)
+    local viewdir = math3d.normalize(math3d.sub(target_pos, eyepos))
+    iom.lookto(eid, eyepos, viewdir, {0, 1, 0})
+    iom.set_position(eid, math3d.add(target_pos, math3d.mul(viewdir, -m[eid].dist_to_target)))
+    m.update_frustrum(eid)
+end
+
+function m.set_target(eid, target)
+    m[eid].target = target
+    update_direction(eid)
+end
+
+function m.set_dist_to_target(eid, dist)
+    m[eid].dist_to_target = dist
+    update_direction(eid)
+end
+
 function m.ceate_camera()
     local main_frustum = icamera.get_frustum(m.main_camera)
     local new_camera = icamera.create {
@@ -195,8 +216,8 @@ function m.ceate_camera()
     }
     iom.set_position(new_camera, iom.get_position(m.main_camera))
     iom.set_rotation(new_camera, iom.get_rotation(m.main_camera))
-    
-    m[new_camera] = { camera_eid = new_camera }
+
+    m[new_camera] = { camera_eid = new_camera, target = -1, dist_to_target = 5 }
 
     m.update_frustrum(new_camera)
     m.set_second_camera(new_camera)
