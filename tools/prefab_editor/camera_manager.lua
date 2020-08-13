@@ -115,7 +115,9 @@ local function create_dynamic_line(srt, p0, p1, name, color)
 end
 
 function m.update_frustrum(cam_eid)
-    if not m[cam_eid] then return end
+    if not m[cam_eid] then
+        m[cam_eid] = { camera_eid = cam_eid, target = -1, dist_to_target = 5 } 
+    end
 
     local frustum_points = math3d.frustum_points(icamera.calc_viewproj(cam_eid))
     local frustum_eid = m[cam_eid].frustum_eid
@@ -186,7 +188,7 @@ function m.show_frustum(eid, visible)
 end
 
 local function update_direction(eid)
-    if m[eid].target < 0 then return end
+    if m[eid].target < 0 or not world[m[eid].target] then return end
     local target_pos = iom.get_position(m[eid].target)
     local eyepos = iom.get_position(eid)
     local viewdir = math3d.normalize(math3d.sub(target_pos, eyepos))
@@ -205,24 +207,25 @@ function m.set_dist_to_target(eid, dist)
     update_direction(eid)
 end
 
+local nameidx = 0
+local function gen_camera_name() nameidx = nameidx + 1 return "camera" .. nameidx end
+
 function m.ceate_camera()
     local main_frustum = icamera.get_frustum(m.main_camera)
-    local new_camera = icamera.create {
+    local new_camera, info = icamera.create {
         eyepos = {2, 2, -2, 1},
         viewdir = {-2, -1, 2, 0},
         frustum = {n = 0.1, f = 100, aspect = main_frustum.aspect, fov = main_frustum.fov },
         updir = {0, 1, 0},
-        name = "new_camera"
+        name = gen_camera_name()
     }
     iom.set_position(new_camera, iom.get_position(m.main_camera))
     iom.set_rotation(new_camera, iom.get_rotation(m.main_camera))
 
-    m[new_camera] = { camera_eid = new_camera, target = -1, dist_to_target = 5 }
-
     m.update_frustrum(new_camera)
     m.set_second_camera(new_camera)
     m.show_frustum(new_camera, false)
-    return new_camera
+    return new_camera, info.__class[1]
 end
 
 return function(w)

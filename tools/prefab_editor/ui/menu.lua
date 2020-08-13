@@ -1,4 +1,5 @@
 local imgui = require "imgui"
+local rhwi  = import_package 'ant.render'.hwi
 local lfs   = require "filesystem.local"
 local fs    = require "filesystem"
 

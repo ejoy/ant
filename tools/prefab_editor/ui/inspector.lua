@@ -61,7 +61,7 @@ local function update_ui_data(eid)
     baseUIData.scale[2] = Scale[2]
     baseUIData.scale[3] = Scale[3]
     --
-    if world[eid]["tag_camera"] then
+    if world[eid].camera then
         local frustum = icamera.get_frustum(eid)
         cameraUIData.target[1] = camera_mgr[eid].target
         cameraUIData.dist[1] = camera_mgr[eid].dist_to_target
@@ -176,7 +176,7 @@ function m.show(rhwi)
             -- if imgui.widget.InputText("Name", baseUIData.mesh) then
             --     world[baseUIData.eid[1]].mesh = tostring(baseUIData.mesh.text)
             -- end
-            if world[gizmo.target_eid]["tag_camera"] then
+            if world[gizmo.target_eid].camera then
                 if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
                     local what
                     local value

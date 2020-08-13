@@ -42,11 +42,26 @@ function m:normalize_aabb()
 end
 
 function m:create(what)
+    local localpath = tostring(fs.path "":localpath())
     if what == "camera" then
-        local new_camera = camera_mgr.ceate_camera()
-        world:enable_tag(new_camera, "tag_camera")
-        local node = prefab_view:add(new_camera)
+        local new_camera, templ = camera_mgr.ceate_camera()
+        local s, r, t = math3d.srt(templ.data.transform)
+        local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
+        templ.data.transform = {s = {ts[1],ts[2],ts[3]}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
+        local node = prefab_view:add(new_camera, {template = templ}, self.root)
         node.camera = true
+    elseif what == "empty" then
+
+    elseif what == "cube" then
+        m:add_prefab(localpath .. "res/cube.prefab")
+    elseif what == "cone" then
+        m:add_prefab(localpath .. "res/cone.prefab")
+    elseif what == "cylinder" then
+        m:add_prefab(localpath .. "res/cylinder.prefab")
+    elseif what == "sphere" then
+        m:add_prefab(localpath .. "res/sphere.prefab")
+    elseif what == "torus" then
+        m:add_prefab(localpath .. "res/torus.prefab")
     end
 end
 
@@ -94,8 +109,12 @@ function m:open_prefab(filename)
             end
             remove_entity[#remove_entity+1] = entity
         else
-            if world[entity].parent then
-                prefab_view:add(entity, {template = prefab.__class[i]}, world[entity].parent)
+            if i > 1 then
+                prefab_view:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
+                if world[entity].camera then
+                    camera_mgr.update_frustrum(entity)
+                    camera_mgr.show_frustum(entity, false)
+                end
             end
         end
     end
@@ -187,7 +206,7 @@ function m:save_prefab(filename)
         return
     end
     local data = self.entities.__class
-    local current_dir = lfs.path(self_prefab):parent_path()
+    local current_dir = lfs.path(prefab_filename):parent_path()
     local new_dir = lfs.path(filename):localpath():parent_path()
     if current_dir ~= new_dir then
         for _, t in ipairs(data) do

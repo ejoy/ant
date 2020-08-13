@@ -79,7 +79,10 @@ function scene:update_prefab_template(prefab)
             table.insert(pt, {args = {root = #pt}, prefab = prefab_filename})
         end
         for _, child in ipairs(self.all[eid].children) do
-            self.all[child.eid].template.template.action.mount = pidx
+            local action = self.all[child.eid].template.template.action
+            if action then
+                action.mount = pidx
+            end
             construct_entity(child.eid, pt)
         end
     end
