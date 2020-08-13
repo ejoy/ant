@@ -10,7 +10,8 @@ local m = {
     FRUSTUM_LEFT = 1,
     FRUSTUM_TOP = 2,
     FRUSTUM_RIGHT = 3,
-    FRUSTUM_BOTTOM = 4
+    FRUSTUM_BOTTOM = 4,
+    camera_list = {}
 }
 
 local normal_color = {1, 0.3, 0.3, 1}
@@ -23,7 +24,7 @@ function m.set_second_camera(eid)
 end
 
 function m.reset_frustum_color(eid)
-    local boundary = m[eid].far_boundary
+    local boundary = m.camera_list[eid].far_boundary
     imaterial.set_property(boundary[m.FRUSTUM_LEFT].line_eid, "u_color", normal_color)
     imaterial.set_property(boundary[m.FRUSTUM_TOP].line_eid, "u_color", normal_color)
     imaterial.set_property(boundary[m.FRUSTUM_RIGHT].line_eid, "u_color", normal_color)
@@ -31,7 +32,7 @@ function m.reset_frustum_color(eid)
 end
 
 function m.highlight_frustum(eid, dir, highlight)
-    local boundary = m[eid].far_boundary
+    local boundary = m.camera_list[eid].far_boundary
     boundary[dir].highlight = highlight
     if highlight then
         imaterial.set_property(boundary[dir].line_eid, "u_color", highlight_color)
@@ -115,14 +116,16 @@ local function create_dynamic_line(srt, p0, p1, name, color)
 end
 
 function m.update_frustrum(cam_eid)
-    if not m[cam_eid] then
-        m[cam_eid] = { camera_eid = cam_eid, target = -1, dist_to_target = 5 } 
+    if not cam_eid or not world[cam_eid].camera then return end
+
+    if not m.camera_list[cam_eid] then
+        m.camera_list[cam_eid] = { camera_eid = cam_eid, target = -1, dist_to_target = 5 }
     end
 
     local frustum_points = math3d.frustum_points(icamera.calc_viewproj(cam_eid))
-    local frustum_eid = m[cam_eid].frustum_eid
+    local frustum_eid = m.camera_list[cam_eid].frustum_eid
     if not frustum_eid then
-        m[cam_eid].frustum_eid = create_dynamic_frustum(frustum_points, "frustum", normal_color_i)
+        m.camera_list[cam_eid].frustum_eid = create_dynamic_frustum(frustum_points, "frustum", normal_color_i)
     else
         local rc = world[frustum_eid]._rendercache
         local vbdesc, ibdesc = rc.vb, rc.ib
@@ -134,7 +137,7 @@ function m.update_frustrum(cam_eid)
     rc.projmat = icamera.calc_projmat(cam_eid)
     rc.viewprojmat = icamera.calc_viewproj(cam_eid)
 
-    local old_boundary = m[cam_eid].far_boundary
+    local old_boundary = m.camera_list[cam_eid].far_boundary
     local boundary = {}
     local function create_boundary(dir, p1, p2)
         local tp1 = math3d.totable(p1)
@@ -162,48 +165,54 @@ function m.update_frustrum(cam_eid)
     create_boundary(m.FRUSTUM_RIGHT, frustum_points[8], frustum_points[7])
     create_boundary(m.FRUSTUM_BOTTOM, frustum_points[7], frustum_points[5])
 
-    m[cam_eid].far_boundary = boundary
+    m.camera_list[cam_eid].far_boundary = boundary
 end
 
 function m.show_frustum(eid, visible)
-    if m.current_frustum then
+    if m.second_camera and m.second_camera ~= m.main_camera then
         local state = "visible"
-        ies.set_state(m[m.current_frustum].frustum_eid, state, false)
-        local boundary = m[m.current_frustum].far_boundary
+        ies.set_state(m.camera_list[m.second_camera].frustum_eid, state, false)
+        local boundary = m.camera_list[m.second_camera].far_boundary
         ies.set_state(boundary[1].line_eid, state, false)
         ies.set_state(boundary[2].line_eid, state, false)
         ies.set_state(boundary[3].line_eid, state, false)
         ies.set_state(boundary[4].line_eid, state, false)
     end
-    if m[eid] then
+
+    if not eid or not world[eid].camera then
+        --m.set_second_camera(m.main_camera)
+        return
+    end
+    
+    if m.camera_list[eid] then
         local state = "visible"
-        ies.set_state(m[eid].frustum_eid, state, visible)
-        local boundary = m[eid].far_boundary
+        ies.set_state(m.camera_list[eid].frustum_eid, state, visible)
+        local boundary = m.camera_list[eid].far_boundary
         ies.set_state(boundary[1].line_eid, state, visible)
         ies.set_state(boundary[2].line_eid, state, visible)
         ies.set_state(boundary[3].line_eid, state, visible)
         ies.set_state(boundary[4].line_eid, state, visible)
-        m.current_frustum = eid
+        m.set_second_camera(eid)
     end
 end
 
 local function update_direction(eid)
-    if m[eid].target < 0 or not world[m[eid].target] then return end
-    local target_pos = iom.get_position(m[eid].target)
+    if m.camera_list[eid].target < 0 or not world[m.camera_list[eid].target] then return end
+    local target_pos = iom.get_position(m.camera_list[eid].target)
     local eyepos = iom.get_position(eid)
     local viewdir = math3d.normalize(math3d.sub(target_pos, eyepos))
     iom.lookto(eid, eyepos, viewdir, {0, 1, 0})
-    iom.set_position(eid, math3d.add(target_pos, math3d.mul(viewdir, -m[eid].dist_to_target)))
+    iom.set_position(eid, math3d.add(target_pos, math3d.mul(viewdir, -m.camera_list[eid].dist_to_target)))
     m.update_frustrum(eid)
 end
 
 function m.set_target(eid, target)
-    m[eid].target = target
+    m.camera_list[eid].target = target
     update_direction(eid)
 end
 
 function m.set_dist_to_target(eid, dist)
-    m[eid].dist_to_target = dist
+    m.camera_list[eid].dist_to_target = dist
     update_direction(eid)
 end
 
@@ -226,6 +235,28 @@ function m.ceate_camera()
     m.set_second_camera(new_camera)
     m.show_frustum(new_camera, false)
     return new_camera, info.__class[1]
+end
+
+function m.remove_camera(eid)
+    m.set_second_camera(m.main_camera)
+    world:remove_entity(m.camera_list[eid].frustum_eid)
+    world:remove_entity(m.camera_list[eid].far_boundary[1].line_eid)
+    world:remove_entity(m.camera_list[eid].far_boundary[2].line_eid)
+    world:remove_entity(m.camera_list[eid].far_boundary[3].line_eid)
+    world:remove_entity(m.camera_list[eid].far_boundary[4].line_eid)
+    m.camera_list[eid] = nil
+end
+
+function m.clear()
+    m.set_second_camera(m.main_camera)
+    for k, v in pairs(m.camera_list) do
+        world:remove_entity(v.frustum_eid)
+        world:remove_entity(v.far_boundary[1].line_eid)
+        world:remove_entity(v.far_boundary[2].line_eid)
+        world:remove_entity(v.far_boundary[3].line_eid)
+        world:remove_entity(v.far_boundary[4].line_eid)
+    end
+    m.camera_list = {}
 end
 
 return function(w)

@@ -63,8 +63,8 @@ local function update_ui_data(eid)
     --
     if world[eid].camera then
         local frustum = icamera.get_frustum(eid)
-        cameraUIData.target[1] = camera_mgr[eid].target
-        cameraUIData.dist[1] = camera_mgr[eid].dist_to_target
+        cameraUIData.target[1] = camera_mgr.camera_list[eid].target
+        cameraUIData.dist[1] = camera_mgr.camera_list[eid].dist_to_target
         cameraUIData.near_plane[1] = frustum.n
         cameraUIData.far_plane[1] = frustum.f
         cameraUIData.field_of_view[1] = frustum.fov
@@ -176,7 +176,7 @@ function m.show(rhwi)
             -- if imgui.widget.InputText("Name", baseUIData.mesh) then
             --     world[baseUIData.eid[1]].mesh = tostring(baseUIData.mesh.text)
             -- end
-            if world[gizmo.target_eid].camera then
+            if world[gizmo.target_eid] and world[gizmo.target_eid].camera then
                 if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
                     local what
                     local value
@@ -203,11 +203,6 @@ function m.show(rhwi)
                         value = cameraUIData.far_plane[1]
                     end
                     if what then
-                        -- icamera.set_frustum(gizmo.target_eid, {
-                        --     fov = cameraUIData.field_of_view[1]
-                        --     n = cameraUIData.near_plane[1],
-                        --     f = cameraUIData.far_plane[1]
-                        -- })
                         world:pub {"CameraEdit", what, gizmo.target_eid, value}
                     end
                     imgui.widget.TreePop()

@@ -70,7 +70,7 @@ local ZOOM_FORWARD = false
 local ZOOM_BACK = false
 local icamera = world:interface "ant.camera|camera"
 function update_second_view_camera()
-    if not camera_mgr.second_camera then return end
+    if not camera_mgr.second_camera or camera_mgr.second_camera == camera_mgr.main_camera then return end
     local rc = world[camera_mgr.second_camera]._rendercache
 	rc.viewmat = icamera.calc_viewmat(camera_mgr.second_camera)
     rc.projmat = icamera.calc_projmat(camera_mgr.second_camera)--math3d.projmat(world[camera_mgr.second_camera]._rendercache.frustum)--
@@ -91,7 +91,7 @@ local currentDir = math3d.ref()
 local centrePos = math3d.ref()
 local function selectBoundary(hp)
 	lastMousePos = hp
-	local boundary = camera_mgr[camera_mgr.second_camera].far_boundary
+	local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
 	for i, v in ipairs(boundary) do
 		local sp1 = utils.world_to_screen(camera_mgr.main_camera, v[1])
 		local sp2 = utils.world_to_screen(camera_mgr.main_camera, v[2])
@@ -109,7 +109,7 @@ function m:data_changed()
 	camera_mgr.select_frustum = false
 	for _, what, x, y in mouseMove:unpack() do
 		if what == "UNKNOWN" then
-			if camera_mgr[camera_mgr.second_camera] then
+			if camera_mgr.camera_list[camera_mgr.second_camera] then
 				local x, y = utils.adjust_mouse_pos(x, y)
 				selectArea = selectBoundary({x, y})
 			end
@@ -119,10 +119,10 @@ function m:data_changed()
 	for _, what, x, y in mouseDown:unpack() do
 		if what == "LEFT" then
 			local x, y = utils.adjust_mouse_pos(x, y)
-			if camera_mgr[camera_mgr.second_camera] then
+			if camera_mgr.camera_list[camera_mgr.second_camera] then
 				selectArea = selectBoundary({x, y})
 				if selectArea ~= 0 then
-					local boundary = camera_mgr[camera_mgr.second_camera].far_boundary
+					local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
 					local lb_point = boundary[1][1]
 					local lt_point = boundary[2][1]
 					local rt_point = boundary[3][1]

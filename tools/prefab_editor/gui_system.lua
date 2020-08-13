@@ -136,9 +136,11 @@ function m:data_changed()
         elseif what == "name" then
             local template = prefab_view:get_template(target)
             template.template.data.name = v1
+        elseif what == "parent" then
+            dirty = true
         end
         if dirty then
-            inspector.update_template_tranform(eid)
+            inspector.update_template_tranform(target)
         end
     end
     for _, what, eid, value in entityStateEvent:unpack() do

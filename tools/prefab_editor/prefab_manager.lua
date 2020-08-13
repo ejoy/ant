@@ -75,6 +75,7 @@ function m:internal_remove(eid)
 end
 
 function m:open_prefab(filename)
+    camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
         local teml = prefab_view:get_template(eid)
         if teml.children then
@@ -86,6 +87,7 @@ function m:open_prefab(filename)
     end
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(vfspath)
+
     local prefab = worldedit:prefab_template(vfspath)
     self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
@@ -241,6 +243,9 @@ end
 
 function m:remove_entity(eid)
     if not eid then return end
+    if world[eid].camera then
+        camera_mgr.remove_camera(eid)
+    end
     local teml = prefab_view:get_template(eid)
     if teml.children then
         for _, e in ipairs(teml.children) do

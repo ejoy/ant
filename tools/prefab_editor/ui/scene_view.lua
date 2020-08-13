@@ -133,6 +133,7 @@ function m.show(rhwi)
                 local targetWorldMat = iom.calc_worldmat(targetEid)
                 iom.set_srt(sourceEid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
                 iss.set_parent(sourceEid, targetEid)
+                world:pub {"EntityEvent", "parent", sourceEid}
             end
             imgui.cursor.Columns(1)
         end
