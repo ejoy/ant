@@ -1,12 +1,12 @@
 local queue = require "queue"
 
-local scene = {
+local hierarchy = {
     root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}},
     all = {},
     select_adapter = {}
 }
 
-function scene:set_root(eid)
+function hierarchy:set_root(eid)
     self.root.eid = eid
     self.all[eid] = self.root
 end
@@ -19,7 +19,7 @@ local function find(t, eid)
     end
     return nil
 end
-function scene:add(ineid, tp, inpeid)
+function hierarchy:add(ineid, tp, inpeid)
     local node = { eid = ineid, parent = inpeid, template = tp, children = {}, locked = {false}, visible = {true} }
     if inpeid then
         local parent = self.all[inpeid]
@@ -36,7 +36,7 @@ function scene:add(ineid, tp, inpeid)
     return node
 end
 
-function scene:del(eid)
+function hierarchy:del(eid)
     local eid_node = self.all[eid]
     if not eid_node then return end
 
@@ -54,12 +54,12 @@ function scene:del(eid)
     return eid_node
 end
 
-function scene:clear()
+function hierarchy:clear()
     self.root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}}
     self.all = {}
 end
 
-function scene:set_parent(eid, peid)
+function hierarchy:set_parent(eid, peid)
     local eid_node = self.all[eid]
     local peid_node = self.all[peid]
     if (not eid_node) or (not peid_node) or (eid_node.parent == peid) then return end
@@ -69,7 +69,7 @@ function scene:set_parent(eid, peid)
     self.all[eid] = removed_node
 end
 
-function scene:update_prefab_template(prefab)
+function hierarchy:update_prefab_template(prefab)
     local prefab_template = {}
     local function construct_entity(eid, pt)
         table.insert(pt, self.all[eid].template.template)
@@ -90,40 +90,40 @@ function scene:update_prefab_template(prefab)
     prefab.__class = prefab_template
 end
 
-function scene:get_locked_uidata(eid)
+function hierarchy:get_locked_uidata(eid)
     return self.all[eid].locked
 end
 
-function scene:get_visible_uidata(eid)
+function hierarchy:get_visible_uidata(eid)
     return self.all[eid].visible
 end
 
-function scene:is_locked(eid)
+function hierarchy:is_locked(eid)
     return self.all[eid].locked[1]
 end
 
-function scene:is_visible(eid)
+function hierarchy:is_visible(eid)
     return self.all[eid].visible[1]
 end
 
-function scene:set_lock(eid, b)
+function hierarchy:set_lock(eid, b)
     self.all[eid].locked[1] = b
 end
 
-function scene:set_visible(eid, b)
+function hierarchy:set_visible(eid, b)
     self.all[eid].visible[1] = b
 end
 
-function scene:get_template(eid)
+function hierarchy:get_template(eid)
     return self.all[eid] and self.all[eid].template or nil
 end
 
-function scene:add_select_adapter(eid, target)
+function hierarchy:add_select_adapter(eid, target)
     self.select_adapter[eid] = target
 end
 
-function scene:get_select_adapter(eid)
+function hierarchy:get_select_adapter(eid)
     return self.select_adapter[eid] or eid
 end
 
-return scene
+return hierarchy

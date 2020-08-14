@@ -12,14 +12,14 @@ local icamera = world:interface "ant.camera|camera"
 local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
 local vfs = require "vfs"
-local prefab_view = require "prefab_view"
+local hierarchy = require "hierarchy"
 local resource_browser = require "ui.resource_browser"(world, asset_mgr)
 local toolbar = require "ui.toolbar"(world, asset_mgr)
 local scene_view = require "ui.scene_view"(world, asset_mgr)
 local inspector = require "ui.inspector"(world)
 local uiconfig = require "ui.config"
 local uiutils = require "ui.utils"
-local prefab_mgr = require "prefab_manager"
+local prefab_mgr = require "prefab_manager"(world)
 local menu = require "ui.menu"(world, prefab_mgr)
 local camera_mgr = require "camera_manager"(world)
 local m = ecs.system 'gui_system'
@@ -134,7 +134,7 @@ function m:data_changed()
             cmd_queue:record {action = SCALE, eid = target, oldvalue = v1, newvalue = v2}
             dirty = true
         elseif what == "name" then
-            local template = prefab_view:get_template(target)
+            local template = hierarchy:get_template(target)
             template.template.data.name = v1
         elseif what == "parent" then
             dirty = true
@@ -145,16 +145,16 @@ function m:data_changed()
     end
     for _, what, eid, value in entityStateEvent:unpack() do
         if what == "visible" then
-            prefab_view:set_visible(eid, value)
+            hierarchy:set_visible(eid, value)
             ies.set_state(eid, what, value)
-            local template = prefab_view:get_template(eid)
+            local template = hierarchy:get_template(eid)
             if template and template.children then
                 for _, e in ipairs(template.children) do
                     ies.set_state(e, what, value)
                 end
             end
         elseif what == "lock" then
-            prefab_view:set_lock(eid, value)
+            hierarchy:set_lock(eid, value)
         elseif what == "delete" then
             prefab_mgr:remove_entity(eid)
         end

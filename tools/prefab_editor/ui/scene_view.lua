@@ -2,7 +2,7 @@ local imgui     = require "imgui"
 local math3d    = require "math3d"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
-local prefab_view = require "prefab_view"
+local hierarchy = require "hierarchy"
 
 local m = {}
 local world
@@ -18,8 +18,8 @@ end
 
 local function is_editable(eid)
     if not iom.srt(eid) or
-        not prefab_view:is_visible(eid) or
-        prefab_view:is_locked(eid) then
+        not hierarchy:is_visible(eid) or
+        hierarchy:is_locked(eid) then
         return false
     end
     return true
@@ -28,11 +28,11 @@ end
 local menu_name = "entity context menu"
 local function node_context_menu(eid)
     if imgui.windows.BeginPopupContextItem(eid) then
-        local current_lock = prefab_view:is_locked(eid)
+        local current_lock = hierarchy:is_locked(eid)
         if imgui.widget.Selectable(current_lock and "Unlock" or "lock", false) then
             world:pub { "EntityState", "lock", eid, not current_lock }
         end
-        local current_visible = prefab_view:is_visible(eid)
+        local current_visible = hierarchy:is_visible(eid)
         if imgui.widget.Selectable(current_visible and "Hide" or "Show", false) then
             world:pub { "EntityState", "visible", eid, not current_visible }
         end
@@ -71,7 +71,7 @@ local function show_scene_node(node)
     local function lock_visible(eid)
         imgui.cursor.NextColumn()
         imgui.util.PushID(eid)
-        local current_lock = prefab_view:is_locked(eid)
+        local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
             world:pub { "EntityState", "lock", eid, not current_lock }
@@ -79,7 +79,7 @@ local function show_scene_node(node)
         imgui.util.PopID()
         imgui.cursor.SameLine()
         imgui.util.PushID(eid)
-        local current_visible = prefab_view:is_visible(eid)
+        local current_visible = hierarchy:is_visible(eid)
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
             world:pub { "EntityState", "visible", eid, not current_visible }
@@ -116,7 +116,7 @@ function m.show(rhwi)
     imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, sh - uiconfig.ResourceBrowserHeight - viewStartY, 'F')
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
-        if prefab_view.root.eid > 0 then
+        if hierarchy.root.eid > 0 then
             if imgui.widget.Button("Snapshot") then
                 world:pub { "Create", "camera"}
             end
@@ -125,10 +125,10 @@ function m.show(rhwi)
             imgui.cursor.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - 60)
             sourceEid = nil
             targetEid = nil
-            show_scene_node(prefab_view.root)
+            show_scene_node(hierarchy.root)
             imgui.cursor.NextColumn()
             if sourceEid and targetEid then
-                prefab_view:set_parent(sourceEid, targetEid)
+                hierarchy:set_parent(sourceEid, targetEid)
                 local sourceWorldMat = iom.calc_worldmat(sourceEid)
                 local targetWorldMat = iom.calc_worldmat(targetEid)
                 iom.set_srt(sourceEid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))

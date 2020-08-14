@@ -2,8 +2,7 @@ local imgui     = require "imgui"
 local math3d    = require "math3d"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
-local prefab_view = require "prefab_view"
-local prefab_view = require "prefab_view"
+local hierarchy = require "hierarchy"
 local m = {}
 local world
 local worldedit
@@ -90,7 +89,7 @@ end
 function m.update_template_tranform(eid)
     if not eid then return end
     
-    local template = prefab_view:get_template(eid)
+    local template = hierarchy:get_template(eid)
     
     if not template or not template.template then return end
 
@@ -103,6 +102,14 @@ function m.update_template_tranform(eid)
     }
     template.template.data.transform = srt_table
     --worldedit:prefab_set(template.prefab, "/" .. tostring(template.index) .."/data/transform", srt_table)
+    if world[eid].camera then
+        local template_frustum = template.template.data.frustum
+        local frustum = icamera.get_frustum(eid)
+        template_frustum.aspect = frustum.aspect
+        template_frustum.n = frustum.n
+        template_frustum.f = frustum.f
+        template_frustum.fov = frustum.fov
+    end
 end
 
 
@@ -131,7 +138,7 @@ function m.show(rhwi)
             imgui.widget.Text("EID :")
             imgui.cursor.SameLine()
             imgui.widget.Text(baseUIData.eid[1])
-            local template = prefab_view:get_template(baseUIData.eid[1])
+            local template = hierarchy:get_template(baseUIData.eid[1])
             if template and template.filename then
                 imgui.widget.Text("Prefab :")
                 imgui.cursor.SameLine()

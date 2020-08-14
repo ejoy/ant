@@ -12,7 +12,7 @@ local ies = world:interface "ant.scene|ientity_state"
 
 local imaterial = world:interface "ant.asset|imaterial"
 local queue = require "queue"
-local prefab_view = require "prefab_view"
+local hierarchy = require "hierarchy"
 local utils = require "mathutils"(world)
 local worldedit = import_package "ant.editor".worldedit(world)
 local global_data = require "common.global_data"
@@ -325,7 +325,7 @@ local function showRotateMeshByAxis(show, axis)
 end
 
 function gizmo:set_target(eid)
-	local target = prefab_view:get_select_adapter(eid)
+	local target = hierarchy:get_select_adapter(eid)
 	if self.target_eid == target then
 		return
 	end

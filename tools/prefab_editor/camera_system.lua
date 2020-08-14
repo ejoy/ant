@@ -165,7 +165,7 @@ function m:data_changed()
 			end
 			local half_fov = math.atan(proj_len / distToPlane / aspect )
 			camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
-			inspector.update_ui()
+			inspector.update_ui(true)
 		end
 	end
 

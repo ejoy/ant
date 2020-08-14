@@ -1,15 +1,15 @@
 local ecs = ...
 local world = ecs.world
 local irq           = world:interface "ant.render|irenderqueue"
-local icamera        = world:interface "ant.camera|camera"
+local icamera       = world:interface "ant.camera|camera"
 local entity        = world:interface "ant.render|entity"
+local camera_mgr    = require "camera_manager"(world)
+local rhwi          = import_package 'ant.render'.hwi
 local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
-local rhwi          = import_package 'ant.render'.hwi
 local window        = require "window"
-local camera_mgr = require "camera_manager"(world)
-local prefab_mgr    = require "prefab_manager"
+
 local m             = ecs.system 'init_system'
 
 local function LoadImguiLayout(filename)
@@ -24,8 +24,6 @@ end
 function m:init()
     imgui.setDockEnable(true)
     LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")
-
-    prefab_mgr:init(world)
 
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
     
