@@ -136,6 +136,7 @@ function m:data_changed()
         elseif what == "name" then
             local template = hierarchy:get_template(target)
             template.template.data.name = v1
+            hierarchy:update_display_name(target, v1)
         elseif what == "parent" then
             dirty = true
         end

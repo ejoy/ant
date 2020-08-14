@@ -135,9 +135,9 @@ function m.show(rhwi)
             if baseUIData.eid[1] ~= gizmo.target_eid then
                 on_select(gizmo.target_eid)
             end
-            imgui.widget.Text("EID :")
-            imgui.cursor.SameLine()
-            imgui.widget.Text(baseUIData.eid[1])
+            -- imgui.widget.Text("EID :")
+            -- imgui.cursor.SameLine()
+            -- imgui.widget.Text(baseUIData.eid[1])
             local template = hierarchy:get_template(baseUIData.eid[1])
             if template and template.filename then
                 imgui.widget.Text("Prefab :")

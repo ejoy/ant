@@ -1,5 +1,4 @@
 local queue = require "queue"
-
 local hierarchy = {
     root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}},
     all = {},
@@ -124,6 +123,11 @@ end
 
 function hierarchy:get_select_adapter(eid)
     return self.select_adapter[eid] or eid
+end
+
+function hierarchy:update_display_name(eid, name)
+    if not self.all[eid] then return end
+    self.all[eid].display_name = name .. "(" .. eid .. ")"
 end
 
 return hierarchy

@@ -122,6 +122,9 @@ function m:open_prefab(filename)
     world:pub {"WindowTitle", filename}
 end
 
+local nameidx = 0
+local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameidx end
+
 function m:add_prefab(filename)
     local entity_template = {
         action = {
@@ -139,7 +142,7 @@ function m:add_prefab(filename)
     }
     local mount_root = world:create_entity(entity_template)
     self.entities[#self.entities+1] = mount_root
-    local entity_name = "Prefab_" .. mount_root
+    local entity_name = gen_prefab_name()
     entity_template.data.name = entity_name
     world[mount_root].name = entity_name
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
