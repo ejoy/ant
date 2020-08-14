@@ -1,0 +1,44 @@
+---
+policy:
+    ant.effect|particle_system
+    ant.general|name
+data:
+    name: particle_system_test
+    particle_system: {}
+---
+policy:
+    ant.effect|particle_emitter
+    ant.render|render
+    ant.general|name
+data:
+    name: emitter1
+    material: /pkg/ant.resources/materials/bunny.material
+    transform:{}
+    scene_entity: true
+    state: 1
+    emitter:
+        particle_type: quad
+        attributes:
+            ---
+            name: spawn
+            data:
+                type: const
+                count: 32
+            ---
+            name: orientation
+            data:
+                method: sphere_random
+                longitude: {0, 360}
+                latitude: {0, 180}
+            ---
+            name: translation
+            data:
+                method: around_sphere
+                radius_scale: {1, 1.2}
+            ---
+            name: scale
+            data:
+                range: {0.25, 0.28}
+
+action:
+    attach_particle_system: 1

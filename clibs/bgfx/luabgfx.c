@@ -2294,8 +2294,7 @@ get_stride(lua_State *L, const char *format) {
 }
 
 static inline void
-copy_layout_data(lua_State*L, const char* layout, int tableidx, uint8_t *addr){
-	int startidx = 1;
+copy_layout_data(lua_State*L, const char* layout, int tableidx, int startidx, uint8_t *addr){
 	int i;
 	int type = lua_geti(L, tableidx, startidx);
 	while (type != LUA_TNIL) {
@@ -2506,6 +2505,8 @@ lvertexConvert(lua_State *L) {
 	type 1 :
 		string layout
 		table number array
+		vertex start index(opt)
+		vertex number (opt)
 	type 2 :
 		string data
 		integer offset (opt)
@@ -2548,10 +2549,12 @@ lmemoryBuffer(lua_State *L) {
 	}
 	if (lua_type(L, 2) == LUA_TTABLE) {
 		// type 1
-		int n = lua_rawlen(L, 2) / sz;
+		int vertexidx = luaL_optinteger(L, 3, 1);
+		int startidx = (vertexidx-1) * sz + 1;
+		int n = lua_isnoneornil(L, 4) ? lua_rawlen(L, 2) / sz : (int)lua_tointeger(L, 4);
 		int stride = get_stride(L, str);
 		void *data = newMemory(L, NULL, n*stride);
-		copy_layout_data(L, str, 2, data);
+		copy_layout_data(L, str, 2, startidx, data);
 		return 1;
 	}
 	// type 2
@@ -2709,11 +2712,11 @@ getIndexBuffer(lua_State *L, int idx, int index32) {
 		int n = lua_rawlen(L, 1);
 		if (index32) {
 			void *data = newMemory(L, NULL, n*sizeof(uint32_t));
-			copy_layout_data(L, "d", 1, data);
+			copy_layout_data(L, "d", 1, 1, data);
 		}
 		else {
 			void *data = newMemory(L, NULL, n*sizeof(uint16_t));
-			copy_layout_data(L, "w", 1, data);
+			copy_layout_data(L, "w", 1, 1, data);
 		}
 		return bgfxMemory(L, -1);
 	} else {
