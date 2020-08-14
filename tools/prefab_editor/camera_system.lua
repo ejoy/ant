@@ -172,6 +172,7 @@ function m:data_changed()
 	for _, what, eid, value in eventCameraEdit:unpack() do
 		if what == "target" then
 			camera_mgr.set_target(eid, value)
+			inspector.update_ui()
 		elseif what == "dist" then
 			camera_mgr.set_dist_to_target(eid, value)
 		elseif what == "fov" then

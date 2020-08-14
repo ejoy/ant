@@ -130,4 +130,8 @@ function hierarchy:update_display_name(eid, name)
     self.all[eid].display_name = name .. "(" .. eid .. ")"
 end
 
+function hierarchy:get_node(eid)
+    return self.all[eid]
+end
+
 return hierarchy

@@ -188,8 +188,10 @@ function m.show(rhwi)
                     local what
                     local value
                     if imgui.widget.InputInt("Target", cameraUIData.target) then
-                        what = "target"
-                        value = cameraUIData.target[1]
+                        if hierarchy:get_node(cameraUIData.target[1]) then
+                            what = "target"
+                            value = cameraUIData.target[1]
+                        end
                     end
                     if cameraUIData.target ~= -1 then
                         if imgui.widget.InputInt("Dist", cameraUIData.dist) then

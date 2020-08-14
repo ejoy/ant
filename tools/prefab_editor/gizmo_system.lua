@@ -1240,7 +1240,7 @@ function gizmo_sys:data_changed()
 	for _,pick_id,pick_ids in pickup_mb:unpack() do
         local eid = pick_id
 		if eid and world[eid] then
-			if gizmo.mode ~= SELECT then
+			if gizmo.mode ~= SELECT and not gizmo_seleted then
 				gizmo:set_target(eid)
 			end
 		else
