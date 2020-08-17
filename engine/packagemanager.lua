@@ -1,4 +1,4 @@
-local sandbox = require "antpm.sandbox"
+local sandbox = require "sandbox"
 local fs  = require "filesystem"
 local dofile = dofile
 

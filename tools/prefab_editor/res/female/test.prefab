@@ -34,7 +34,10 @@ data:
   scene_entity: true
   skeleton: /pkg/ant.resources.binary/meshes/female/female.glb|animations/skeleton.ozz
   state: 7
-  transform: {}
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, -2.232994318008423}
 policy:
   ant.animation|animation
   ant.animation|animation_controller.birth
@@ -68,23 +71,6 @@ policy:
 action:
   mount: 1
 data:
-  name: cone
-  scene_entity: true
-  transform:
-    r: {0, 0, 0, 1}
-    s: {1, 1, 1}
-    t: {0, 0, 0.22404605150222778}
-policy:
-  ant.general|name
-  ant.scene|transform_policy
----
-args:
-  root: 5
-prefab: ../cone.prefab
----
-action:
-  mount: 1
-data:
   name: cube
   scene_entity: true
   transform:
@@ -96,5 +82,22 @@ policy:
   ant.scene|transform_policy
 ---
 args:
-  root: 7
+  root: 5
 prefab: ../cube.prefab
+---
+action:
+  mount: 1
+data:
+  name: cone
+  scene_entity: true
+  transform:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {0, 0, 0.7406535148620605}
+policy:
+  ant.general|name
+  ant.scene|transform_policy
+---
+args:
+  root: 7
+prefab: ../cone.prefab

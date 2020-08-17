@@ -2,22 +2,16 @@ local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "filesystem.local"
 local vfs           = require "vfs"
-local prefab_view   = require "prefab_view"
+local hierarchy   = require "hierarchy"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
+local camera_mgr
 local world
 local iom
 local worldedit
-
 local m = {
 	entities = {}
 }
-
-function m:init(w)
-	world = w
-    iom = world:interface "ant.objcontroller|obj_motion"
-    worldedit = import_package "ant.editor".worldedit(world)
-end
 
 function m:normalize_aabb()
     local aabb
@@ -41,27 +35,27 @@ function m:normalize_aabb()
 end
 
 function m:create(what)
-    -- if what == "camera" then
-    --     local entity_template = {
-    --         action = {
-    --             mount = 1
-    --         },
-    --         policy = {
-    --             "ant.general|name",
-    --             "ant.camera|camera"
-    --         },
-    --         data = {
-    --             name = "",
-    --             frustum = {
-    --                 aspect = 1.3333333333333333,
-    --                 f = 1000,
-    --                 fov = 60,
-    --                 n = 0.1,
-    --                 type = mat
-    --             }
-    --         }
-    --     }
-    -- end
+    local localpath = tostring(fs.path "":localpath())
+    if what == "camera" then
+        local new_camera, templ = camera_mgr.ceate_camera()
+        local s, r, t = math3d.srt(templ.data.transform)
+        local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
+        templ.data.transform = {s = {ts[1],ts[2],ts[3]}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
+        local node = hierarchy:add(new_camera, {template = templ}, self.root)
+        node.camera = true
+    elseif what == "empty" then
+
+    elseif what == "cube" then
+        m:add_prefab(localpath .. "res/cube.prefab")
+    elseif what == "cone" then
+        m:add_prefab(localpath .. "res/cone.prefab")
+    elseif what == "cylinder" then
+        m:add_prefab(localpath .. "res/cylinder.prefab")
+    elseif what == "sphere" then
+        m:add_prefab(localpath .. "res/sphere.prefab")
+    elseif what == "torus" then
+        m:add_prefab(localpath .. "res/torus.prefab")
+    end
 end
 
 function m:internal_remove(eid)
@@ -74,8 +68,9 @@ function m:internal_remove(eid)
 end
 
 function m:open_prefab(filename)
+    camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
-        local teml = prefab_view:get_template(eid)
+        local teml = hierarchy:get_template(eid)
         if teml.children then
             for _, e in ipairs(teml.children) do
                 world:remove_entity(e)
@@ -85,14 +80,15 @@ function m:open_prefab(filename)
     end
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(vfspath)
+
     local prefab = worldedit:prefab_template(vfspath)
     self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
     self.entities = entities
     self.root = entities[1]
-    prefab_view:clear()
-    prefab_view:set_root(self.root)
-    prefab_view.root.template.template = prefab.__class[1]
+    hierarchy:clear()
+    hierarchy:set_root(self.root)
+    hierarchy.root.template.template = prefab.__class[1]
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/4/action/mount", 1)
@@ -100,16 +96,20 @@ function m:open_prefab(filename)
     for i, entity in ipairs(entities) do
         if type(entity) == "table" then            
             local parent = world[entity[1]].parent
-            local teml = prefab_view:get_template(parent)
+            local teml = hierarchy:get_template(parent)
             teml.filename = prefab.__class[i].prefab
             teml.children = entity
             for _, e in ipairs(entity) do
-                prefab_view:add_select_adapter(e, parent)
+                hierarchy:add_select_adapter(e, parent)
             end
             remove_entity[#remove_entity+1] = entity
         else
-            if world[entity].parent then
-                prefab_view:add(entity, {template = prefab.__class[i]}, world[entity].parent)
+            if i > 1 then
+                hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
+                if world[entity].camera then
+                    camera_mgr.update_frustrum(entity)
+                    camera_mgr.show_frustum(entity, false)
+                end
             end
         end
     end
@@ -121,6 +121,9 @@ function m:open_prefab(filename)
     world:pub {"editor", "prefab", entities}
     world:pub {"WindowTitle", filename}
 end
+
+local nameidx = 0
+local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameidx end
 
 function m:add_prefab(filename)
     local entity_template = {
@@ -139,7 +142,7 @@ function m:add_prefab(filename)
     }
     local mount_root = world:create_entity(entity_template)
     self.entities[#self.entities+1] = mount_root
-    local entity_name = "Prefab_" .. mount_root
+    local entity_name = gen_prefab_name()
     entity_template.data.name = entity_name
     world[mount_root].name = entity_name
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
@@ -147,13 +150,13 @@ function m:add_prefab(filename)
     local entities = worldedit:prefab_instance(prefab)
     world[entities[1]].parent = mount_root
     for i, e in ipairs(entities) do
-        prefab_view:add_select_adapter(e, mount_root)
+        hierarchy:add_select_adapter(e, mount_root)
     end
 
     local current_dir = lfs.path(tostring(self.prefab)):parent_path()
     local relative_path = lfs.relative(lfs.path(vfspath), current_dir)
 
-    prefab_view:add(mount_root, {template = entity_template, filename = tostring(relative_path), children = entities}, self.root)
+    hierarchy:add(mount_root, {template = entity_template, filename = tostring(relative_path), children = entities}, self.root)
 end
 
 local fs = require "filesystem"
@@ -194,14 +197,14 @@ function m:save_prefab(filename)
     local prefab_filename = tostring(self.prefab)
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
-    prefab_view:update_prefab_template(assetmgr.edit(self.prefab))
+    hierarchy:update_prefab_template(assetmgr.edit(self.prefab))
     self.entities.__class = self.prefab.__class
     if not saveas then
         write_file(filename, stringify(self.entities.__class))
         return
     end
     local data = self.entities.__class
-    local current_dir = lfs.path(self_prefab):parent_path()
+    local current_dir = lfs.path(prefab_filename):parent_path()
     local new_dir = lfs.path(filename):localpath():parent_path()
     if current_dir ~= new_dir then
         for _, t in ipairs(data) do
@@ -236,7 +239,10 @@ end
 
 function m:remove_entity(eid)
     if not eid then return end
-    local teml = prefab_view:get_template(eid)
+    if world[eid].camera then
+        camera_mgr.remove_camera(eid)
+    end
+    local teml = hierarchy:get_template(eid)
     if teml.children then
         for _, e in ipairs(teml.children) do
             world:remove_entity(e)
@@ -244,11 +250,17 @@ function m:remove_entity(eid)
     end
     world:remove_entity(eid)
     self:internal_remove(eid)
-    prefab_view:del(eid)
+    hierarchy:del(eid)
 end
 
 function m:get_current_filename()
     return tostring(self.prefab)
 end
 
-return m
+return function(w)
+    world       = w
+    camera_mgr  = require "camera_manager"(world)
+    iom         = world:interface "ant.objcontroller|obj_motion"
+    worldedit   = import_package "ant.editor".worldedit(world)
+    return m
+end

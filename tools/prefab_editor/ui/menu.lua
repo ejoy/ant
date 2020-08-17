@@ -1,4 +1,5 @@
 local imgui = require "imgui"
+local rhwi  = import_package 'ant.render'.hwi
 local lfs   = require "filesystem.local"
 local fs    = require "filesystem"
 
@@ -44,6 +45,12 @@ function m.show()
                 end
                 if imgui.widget.MenuItem("Cylinder") then
                     world:pub {"Create", "cylinder"}
+                end
+                if imgui.widget.MenuItem("Sphere") then
+                    world:pub {"Create", "sphere"}
+                end
+                if imgui.widget.MenuItem("Torus") then
+                    world:pub {"Create", "torus"}
                 end
                 if imgui.widget.MenuItem("Camera") then
                     world:pub {"Create", "camera"}

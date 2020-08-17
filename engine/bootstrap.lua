@@ -1,8 +1,4 @@
-package.path = table.concat({
-    "engine/?.lua",
-    "engine/?/?.lua",
-    "?.lua",
-}, ";")
+package.path = "engine/?.lua"
 
 debug.setcstacklimit(200)
 
@@ -17,7 +13,7 @@ end
 
 require "common.init_bgfx"
 require "filesystem"
-require "antpm"
+require "packagemanager"
 
 if __ANT_RUNTIME__ then
     require "runtime.debug"

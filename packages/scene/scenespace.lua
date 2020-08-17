@@ -41,7 +41,7 @@ local function bind_slot_entity(e)
 end
 
 local function inherit_entity_state(e)
-	local s = e.state
+	local s = e.state or 0
 	local pe = world[e.parent]
 	local ps = pe.state
 	if ps then
