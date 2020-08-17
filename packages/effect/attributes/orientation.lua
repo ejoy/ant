@@ -4,14 +4,9 @@ local mc, mu = mathpkg.constant, mathpkg.util
 
 local qc = require "quad_cache"
 
-local function random(r)
-    local t = math.random()
-    return mu.lerp(r[1], r[2], t)
-end
-
 local function calc_random_orientation(longitude_range, latitude_range)
-    local longitude = math.rad(random(longitude_range))
-    local latitude = math.rad(random(latitude_range))
+    local longitude = math.rad(mu.random(longitude_range))
+    local latitude = math.rad(mu.random(latitude_range))
 
     local sinlong, coslong = math.sin(longitude), math.cos(longitude)
     local sinlat, coslat = math.sin(latitude), math.cos(latitude)

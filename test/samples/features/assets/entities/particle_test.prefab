@@ -38,7 +38,11 @@ data:
             ---
             name: scale
             data:
-                range: {0.25, 0.28}
+                range: {0.05, 0.08}
+            ---
+            name: uv
+            data:
+                speed_range: {0.05, 0.12}
 
 action:
     attach_particle_system: 1

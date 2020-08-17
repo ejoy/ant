@@ -90,4 +90,10 @@ end
 function util.to_radian(angles) return list_op(angles, math.rad) end
 function util.to_angle(radians) return list_op(radians, math.deg) end
 
+
+function util.random(r)
+	local t = math.random()
+	return util.lerp(r[1], r[2], t)
+end
+
 return util
