@@ -15,8 +15,8 @@ static const luaL_Reg g_modules[] = {
 	{ NULL, NULL },
 };
 
-int
-ant_searcher_c(lua_State *L) {
+static int
+searcher_c(lua_State *L) {
 	const char* name = luaL_checkstring(L, 1);
 	int i;
 	for (i=0;g_modules[i].name;i++) {
@@ -74,7 +74,7 @@ ant_searcher_init(lua_State *L, int loadlib) {
         lua_pushnil(L);
         lua_seti(L, -2, 4);
     }
-    lua_pushcfunction(L, ant_searcher_c);
+    lua_pushcfunction(L, searcher_c);
     lua_seti(L, -2, 3);
     lua_pop(L, 2);
 	return 1;
