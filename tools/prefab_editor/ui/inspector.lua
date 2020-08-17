@@ -14,9 +14,9 @@ local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 local baseUIData = {
     eid = {0, flags = imgui.flags.InputText{ "ReadOnly" }},
     name = {text = "noname"},
-    pos = {0,0,0},
-    rot = {0,0,0},
-    scale = {1,1,1},
+    pos = {0,0,0, speed = 0.1},
+    rot = {0,0,0, speed = 0.1},
+    scale = {1,1,1, speed = 0.05},
     color = {}
 }
 
@@ -31,9 +31,9 @@ local lightUIData = {
 
 local cameraUIData = {
     target          = {-1},
-    dist            = {5},
+    dist            = {5, speed = 0.1},
     fov_axis        = {text = "vert"},
-    field_of_view   = {30},
+    field_of_view   = {30, speed = 0.5},
     near_plane      = {0.1},
     far_plane       = {300}
 }
@@ -54,7 +54,6 @@ local function update_ui_data(eid)
     baseUIData.rot[1] = math.deg(Rot[1])
     baseUIData.rot[2] = math.deg(Rot[2])
     baseUIData.rot[3] = math.deg(Rot[3])
-
     local Scale = math3d.totable(s)
     baseUIData.scale[1] = Scale[1]
     baseUIData.scale[2] = Scale[2]
@@ -152,15 +151,15 @@ function m.show(rhwi)
             end
 
             if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
-                if imgui.widget.InputFloat("Position", baseUIData.pos) then
+                if imgui.widget.DragFloat("Position", baseUIData.pos) then
                     oldPos = math3d.totable(iom.get_position(baseUIData.eid[1]))
                     gizmo:set_position(baseUIData.pos)
                 end
-                if imgui.widget.InputFloat("Rotate", baseUIData.rot) then
+                if imgui.widget.DragFloat("Rotate", baseUIData.rot) then
                     oldRot = math3d.totable(iom.get_rotation(baseUIData.eid[1]))
                     gizmo:set_rotation(baseUIData.rot)
                 end
-                if imgui.widget.InputFloat("Scale", baseUIData.scale) then
+                if imgui.widget.DragFloat("Scale", baseUIData.scale) then
                     oldScale = math3d.totable(iom.get_scale(baseUIData.eid[1]))
                     gizmo:set_scale(baseUIData.scale)
                 end
@@ -194,20 +193,20 @@ function m.show(rhwi)
                         end
                     end
                     if cameraUIData.target ~= -1 then
-                        if imgui.widget.InputInt("Dist", cameraUIData.dist) then
+                        if imgui.widget.DragFloat("Dist", cameraUIData.dist) then
                             what = "dist"
                             value = cameraUIData.dist[1]
                         end
                     end
-                    if imgui.widget.InputFloat("FOV", cameraUIData.field_of_view) then
+                    if imgui.widget.DragFloat("FOV", cameraUIData.field_of_view) then
                         what = "fov"
                         value = cameraUIData.field_of_view[1]
                     end
-                    if imgui.widget.InputFloat("Near", cameraUIData.near_plane) then
+                    if imgui.widget.DragFloat("Near", cameraUIData.near_plane) then
                         what = "near"
                         value = cameraUIData.near_plane[1]
                     end
-                    if imgui.widget.InputFloat("Far", cameraUIData.far_plane) then
+                    if imgui.widget.DragFloat("Far", cameraUIData.far_plane) then
                         what = "far"
                         value = cameraUIData.far_plane[1]
                     end

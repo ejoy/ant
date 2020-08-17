@@ -117,7 +117,7 @@ function m.show(rhwi)
     imgui.windows.SetNextWindowPos(0, viewStartY, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, sh - uiconfig.ResourceBrowserHeight - viewStartY, 'F')
 
-    for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         if hierarchy.root.eid > 0 then
             if imgui.widget.Button("Snapshot") then
                 world:pub { "Create", "camera"}
