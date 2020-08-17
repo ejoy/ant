@@ -1,6 +1,6 @@
 local interface = require "interface"
 local fs = require "filesystem"
-local pm = require "antpm"
+local pm = require "packagemanager"
 
 local current_package = {}
 local function getCurrentPackage()
