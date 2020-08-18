@@ -75,8 +75,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\ant\ant_searcher.c" />
-    <ClCompile Include="..\..\runtime\windows\main.c" />
+    <ClCompile Include="..\..\runtime\common\modules.cpp" />
+    <ClCompile Include="..\..\runtime\common\runtime.cpp" />
+    <ClCompile Include="..\..\runtime\common\searcher.cpp" />
+    <ClCompile Include="..\..\runtime\common\set_current_win32.cpp" />
+    <ClCompile Include="..\..\runtime\windows\main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -127,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui;../../runtime/common</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,7 +151,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui;../../runtime/common</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

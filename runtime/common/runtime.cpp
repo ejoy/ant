@@ -65,12 +65,12 @@ static void createargtable(lua_State *L, int argc, RT_COMMAND argv) {
 static int pmain(lua_State *L) {
     int argc = (int)lua_tointeger(L, 1);
     wchar_t** argv = (wchar_t **)lua_touserdata(L, 2);
+    lua_CFunction set_current = lua_tocfunction(L, 3);
     luaL_checkversion(L);
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     luaL_openlibs(L);
     createargtable(L, argc, argv);
     searcher_init(L, 0);
-    lua_CFunction set_current = lua_tocfunction(L, 3);
     set_current(L);
     dostring(L, "local fw = require 'firmware' ; assert(fw.loadfile 'bootstrap.lua')()");
     return 0;
