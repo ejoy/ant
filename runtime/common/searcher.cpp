@@ -1,32 +1,23 @@
-#include <lua.h>
-#include <lauxlib.h>
+#include "searcher.h"
+#include "modules.h"
 #include <bgfx/c99/bgfx.h>
-
-#include "ant.h"
 #include <string.h>
 
 #if defined(_MSC_VER)
 #include <Windows.h>
 #endif
 
-#include "ant_module_declar.h"
-static const luaL_Reg g_modules[] = {
-#include "ant_module_define.h"
-	{ NULL, NULL },
-};
-
 static int
 searcher_c(lua_State *L) {
+	const luaL_Reg* modules = ant_modules();
 	const char* name = luaL_checkstring(L, 1);
-	int i;
-	for (i=0;g_modules[i].name;i++) {
-		if (strcmp(g_modules[i].name, name) == 0) {
-			lua_pushcfunction(L, g_modules[i].func);
+	for (size_t i = 0; modules[i].name; ++i) {
+		if (strcmp(modules[i].name, name) == 0) {
+			lua_pushcfunction(L, modules[i].func);
 			lua_pushvalue(L, 1);
 			return 2;
 		}
 	}
-
 	lua_pushfstring(L, "\n\tno C module '%s'", name);
 	return 1;
 }
@@ -54,7 +45,7 @@ init_bgfx(lua_State *L) {
 }
 
 int
-ant_searcher_init(lua_State *L, int loadlib) {
+searcher_init(lua_State *L, int loadlib) {
     init_bgfx(L);
     if (LUA_TTABLE != lua_getglobal(L, "package")) {
         lua_pop(L, 1);
