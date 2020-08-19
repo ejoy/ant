@@ -76,7 +76,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		msg.type = ANT_WINDOW_MOUSE;
 		msg.u.mouse.state = 2;
 		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
-		if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_RBUTTON)) == 0) {
+		if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)) == 0) {
 			msg.u.mouse.type = 0;
 			cb->message(cb->ud, &msg);
 		}
