@@ -80,9 +80,7 @@ function iobj_motion.set_rotation(eid, rot)
 end
 
 function iobj_motion.get_rotation(eid)
-    --torotation is more efficient than srt.r
     return world[eid]._rendercache.srt.r
-    --return math3d.torotation(math3d.index(world[eid]._rendercache.srt, 3))
 end
 
 function iobj_motion.worldmat(eid)
@@ -129,40 +127,45 @@ function iobj_motion.set_lock_target(eid, lt)
     world:pub{"component_changed", "lock_target", eid}
 end
 
-local function calc_rotation(srt, rotateX, rotateY, threshold)
+local function add_rotation(srt, rotateX, rotateY, threshold)
     rotateX = rotateX or 0
     rotateY = rotateY or 0
 
     threshold = threshold or 10e-6
 
-    local q = srt.r
+    local s, r, t = math3d.srt(srt)
     local nq = math3d.mul(math3d.mul(
         math3d.quaternion{axis=math3d.index(srt, 1), r=rotateX},
-        math3d.quaternion{axis=math3d.index(srt, 2), r=rotateY}), q)
+        math3d.quaternion{axis=math3d.index(srt, 2), r=rotateY}), r)
 
     local v = math3d.transform(nq, mc.ZAXIS, 0)
     
     if mu.iszero(math3d.dot(v, mc.NZAXIS), threshold) or mu.iszero(math3d.dot(v, mc.ZAXIS), threshold) then
-        return q
+        return srt
     end
 
-    return nq
+    return math3d.matrix{s=s, r=nq, t=t}
 end
 
 function iobj_motion.rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
         local srt = world[eid]._rendercache.srt
-        iobj_motion.set_rotation(eid, calc_rotation(srt, rotateX, rotateY))
+        srt.id = add_rotation(srt, rotateX, rotateY)
+        world:pub{"component_changed", "transform", eid}
     end
 end
 
-function iobj_motion.rotate_around_point(eid, targetpt, distance, dx, dy, threshold)
-    local srt = world[eid]._rendercache.srt
-    local q = calc_rotation(srt, -dx, -dy, threshold)
+function iobj_motion.rotate_around_point(eid, targetpt, distance, rotateX, rotateY, threshold)
+    if rotateX or rotateY then
+        local srt = world[eid]._rendercache.srt
+        local newsrt = math3d.set_index(srt, 4, targetpt)
+        newsrt = add_rotation(newsrt, rotateX, rotateY, threshold)
+        local dir = math3d.index(newsrt, 3)
+        local eyepos = math3d.muladd(distance, math3d.inverse(dir), targetpt)
+        srt.id = math3d.set_index(newsrt, 4, eyepos)
 
-    local dir = math3d.normalize(math3d.inverse(math3d.transform(q, mc.ZAXIS, 0)))
-    local p = math3d.muladd(distance, dir, targetpt)
-    iobj_motion.set_view(eid, p, dir)
+        world:pub{"component_changed", "transform", eid}
+    end
 end
 
 local function main_queue_viewport_size()
