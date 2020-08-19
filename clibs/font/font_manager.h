@@ -1,7 +1,7 @@
 #ifndef lua_bgfx_font_manager_h
 #define lua_bgfx_font_manager_h
 
-#include <stb/stb_truetype.h>
+#include <stb_truetype.h>
 
 #define FONT_MANAGER_TEXSIZE 2048
 #define FONT_MANAGER_GLYPHSIZE 32
