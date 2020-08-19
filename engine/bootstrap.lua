@@ -1,5 +1,3 @@
-package.path = "engine/?.lua"
-
 debug.setcstacklimit(200)
 
 if __ANT_RUNTIME__ then
