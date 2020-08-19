@@ -5,16 +5,14 @@ local function sandbox_env(root, pkgname)
     local _LOADED = {}
 
     local function searchpath(name, path)
-        local err = ''
         name = string.gsub(name, '%.', '/')
         for c in string.gmatch(path, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
             if fs.exists(fs.path(filename)) then
                 return filename
             end
-            err = err .. ("\n\tno file '%s'"):format(filename)
         end
-        return nil, err
+        return nil, "no file '"..string.gsub(path, ';', "'\n\tno file '").."'"
     end
 
     local function searcher_lua(name)
@@ -42,7 +40,7 @@ local function sandbox_env(root, pkgname)
             if type(f) == 'function' then
                 return f, extra, i
             elseif type(f) == 'string' then
-                msg = msg .. f
+                msg = msg .. "\n\t" .. f
             elseif type(f) == 'boolean' then
                 return
             end
