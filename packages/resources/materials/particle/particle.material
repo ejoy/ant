@@ -1,0 +1,14 @@
+fx:
+  fs: /pkg/ant.resources/shaders/particles/fs_particle.sc
+  vs: /pkg/ant.resources/shaders/particles/vs_particle.sc
+  setting:
+    surfacetype: translucent
+properties:
+  s_tex:
+    stage: 0
+    texture: /pkg/ant.resources/textures/particles/fire_des.texture
+state:
+    CULL: NONE
+    DEPTH_TEST: ALWAYS
+    WRITE_MASK: RGBA
+    BLEND: ALPHA

@@ -25,14 +25,14 @@ local function create_static_quad_ib(num_quad)
 end
 
 local default_quad<const> = {
-    --pos.xyz, normal.xyz, texcoord.uv
-    -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-    -0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0,
-     0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0,
-     0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+    --pos.xyz, normal.xyz, texcoord.uv, color.rgba
+    -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+    -0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+     0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+     0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
 }
 
-local layout_desc = declmgr.correct_layout "p3|n3|t2"
+local layout_desc = declmgr.correct_layout "p3|n3|t2|c4"
 local vertex_layout = declmgr.get(layout_desc)
 local vertex_format = declmgr.vertex_desc_str(layout_desc)
 local vertex_elemnum = #default_quad / 4
@@ -74,21 +74,32 @@ function qc.quad_num()
     return vbcache.n / #default_quad
 end
 
+local quad_srt = {}
+local function add_srt()
+    return {
+        s = math3d.ref(math3d.vector(1.0, 1.0, 1.0)),
+        r = math3d.ref(math3d.quaternion(0.0, 0.0, 0.0, 1.0)),
+        t = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 1.0)),
+    }
+end
+
 function qc.alloc_quad_buffer(numquad)
     local start = vbcache.n
     local def_elemnum = #default_quad
     for ii=1, numquad do
         table.move(default_quad, 1, def_elemnum, vbcache.n+1, vbcache)
         vbcache.n = vbcache.n + def_elemnum
+
+        quad_srt[#quad_srt+1] = add_srt()
     end
 
     return {
-        start = start,
-        num = vb_num,
+        start = start / vertex_elemnum,
+        num = vbcache.n / vertex_elemnum,
         handles = vb.handles,
     }, {
         start = 0,
-        num = ib_num,
+        num = numquad * 2,
         handle = ib.handle,
     }
 end
@@ -139,22 +150,6 @@ function qc.set_vertex_texcoord(vertexidx, u, v)
     vbcache[offset+7], vbcache[vertexidx+8]= u, v
 end
 
-local quad_srt
-
-function qc.check_alloc_quad_srt(numquad)
-    if quad_srt == nil then
-        quad_srt = {}
-        for ii=1, numquad do
-            quad_srt[ii] = {
-                m = math3d.ref(math3d.matrix()),
-                s = math3d.ref(math3d.vector(1.0, 1.0, 1.0)),
-                r = math3d.ref(math3d.quaternion(0.0, 0.0, 0.0, 1.0)),
-                t = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 1.0)),
-            }
-        end
-    end
-end
-
 function qc.set_quad_orientation(quadidx, q)
     quad_srt[quadidx].r.q = q
 end
@@ -185,10 +180,11 @@ local function update_quad_transform()
 
     for ii=1, numquad do
         local m = math3d.matrix(quad_srt[ii])
+        local offset_vertex = (ii-1) * 4
         for jj=1, 4 do
-            local vertexidx = (ii-1) * 4 + jj
+            local vertexidx = offset_vertex + jj
 
-            local offset = (jj-1) * 8
+            local offset = (jj-1) * vertex_elemnum
             local px, py, pz = default_quad[offset+1], default_quad[offset+2], default_quad[offset+3]
             local nx, ny, nz = default_quad[offset+4], default_quad[offset+5], default_quad[offset+6]
 

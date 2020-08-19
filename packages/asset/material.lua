@@ -93,19 +93,14 @@ function im_class.set_property(eid, who, what)
 		return
 	end
 	if p.type == "s" then
-		if type(what) ~= "number" then
-			error(("texture property should pass texture handle%s"):fromat(who))
+		if type(what) ~= "table" then
+			error(("texture property must resource data:%s"):fromat(who))
 		end
 
 		if p.ref then
 			p.ref = nil
-			local v = p.value
-			p.value = {
-				stage = v.stage,
-				texture = {},
-			}
 		end
-		p.value.texture.handle = what
+		p.value = what
 		p.set = set_texture
 	else
 		--must be uniform: vector or matrix
@@ -124,6 +119,11 @@ function im_class.set_property(eid, who, what)
 
 		update_uniform(p, what)
 	end
+end
+
+function im_class.has_property(eid, who)
+	local rc = world[eid]._rendercache
+	return rc.properties[who] ~= nil
 end
 
 local function which_type(u)

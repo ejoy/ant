@@ -219,23 +219,6 @@ function ientity.create_quad_entity(rect, material, name)
 	return create_simple_render_entity(nil, material, name, mesh)
 end
 
-function ientity.create_texture_quad_entity(texture_tbl, name)
-	local vb = {
-		-3,  3, 0, 0, 0,
-		 3,  3, 0, 1, 0,
-		-3, -3, 0, 0, 1,
-		 3, -3, 0, 1, 1,
-	}
-	local mesh = create_mesh({"p3|t2", vb})
-	local eid = create_simple_render_entity(nil, "/pkg/ant.resources/materials/texture.material",  name, mesh)
-	
-	for k, v in pairs(texture_tbl) do
-		imaterial.set_property(eid, k, v.handle)
-	end
-	return eid
-end
-
-
 local frustum_ib = {
 	-- front
 	0, 1, 2, 3,

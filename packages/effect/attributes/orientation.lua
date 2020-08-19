@@ -26,11 +26,19 @@ return {
         if data.method == "sphere_random" then
             local e = world[emittereid]
             local emitter = e._emitter
-            qc.check_alloc_quad_srt(emitter.quad_count)
-            for i=1, emitter.quad_count do
+            for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
                 local orientation = calc_random_orientation(data.longitude, data.latitude)
-                qc.set_quad_orientation(i, math3d.torotation(orientation))
+                qc.set_quad_orientation(ii, math3d.torotation(orientation))
             end
+        elseif data.method == "face_axis" then
+            local e = world[emittereid]
+            local emitter = e._emitter
+            local orientation = math3d.torotation(data.axis)
+            for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
+                qc.set_quad_orientation(ii, orientation)
+            end
+        else
+            error(("not support method:%s"):format(data.method))
         end
     end,
 }

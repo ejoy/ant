@@ -10,13 +10,30 @@ return {
         if data.method == "around_sphere" then
             local e = world[emittereid]
             local emitter = e._emitter
-            qc.check_alloc_quad_srt(emitter.quad_count)
-            for ii=1, emitter.quad_count do
+            
+            for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
                 local radius = mu.random(data.radius_scale)
                 local q = qc.quad_srt(ii).r
                 local n = math3d.transform(q, mc.ZAXIS, 0)
                 qc.set_quad_translate(ii, math3d.mul(radius, n))
             end
+        elseif data.method == "around_box" then
+            local e = world[emittereid]
+            local emitter = e._emitter
+            local br = data.box_range
+            
+            local function random_op(r) return r and 
+                function () return mu.random(r) end or 
+                function() return 0 end 
+            end
+            local x_op, y_op, z_op = random_op(br.x), random_op(br.y), random_op(br.z)
+
+            for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
+                local pos = math3d.vector(x_op(), y_op(), z_op())
+                qc.set_quad_translate(ii, pos)
+            end
+        else
+            error(("not support method:%s"):format(data.method))
         end
     end,
 }
