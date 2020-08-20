@@ -17,10 +17,18 @@ local m = {
 local normal_color = {1, 0.3, 0.3, 1}
 local normal_color_i = 0xff5050ff
 local highlight_color = {1, 1, 0, 1}
-
+local DefaultNearClip = 0.1
+local DefaultFarClip  = 100
+local DefaultFOV      = 30
+        
 function m.set_second_camera(eid)
+    local rc = world[eid]._rendercache
+	rc.viewmat = icamera.calc_viewmat(eid)
+    rc.projmat = icamera.calc_projmat(eid)
+    rc.viewprojmat = icamera.calc_viewproj(eid)
     icamera.bind_queue(eid, m.second_view)
     m.second_camera = eid
+    m.show_frustum(eid, true)
 end
 
 function m.reset_frustum_color(eid)
@@ -132,10 +140,10 @@ function m.update_frustrum(cam_eid)
         bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", get_frustum_vb(frustum_points, normal_color_i)));
     end
     
-    local rc = world[cam_eid]._rendercache
-    rc.viewmat = icamera.calc_viewmat(cam_eid)
-    rc.projmat = icamera.calc_projmat(cam_eid)
-    rc.viewprojmat = icamera.calc_viewproj(cam_eid)
+    -- local rc = world[cam_eid]._rendercache
+    -- rc.viewmat = icamera.calc_viewmat(cam_eid)
+    -- rc.projmat = icamera.calc_projmat(cam_eid)
+    -- rc.viewprojmat = icamera.calc_viewproj(cam_eid)
 
     local old_boundary = m.camera_list[cam_eid].far_boundary
     local boundary = {}
@@ -169,22 +177,11 @@ function m.update_frustrum(cam_eid)
 end
 
 function m.show_frustum(eid, visible)
-    if m.second_camera and m.second_camera ~= m.main_camera then
-        local state = "visible"
-        ies.set_state(m.camera_list[m.second_camera].frustum_eid, state, false)
-        local boundary = m.camera_list[m.second_camera].far_boundary
-        ies.set_state(boundary[1].line_eid, state, false)
-        ies.set_state(boundary[2].line_eid, state, false)
-        ies.set_state(boundary[3].line_eid, state, false)
-        ies.set_state(boundary[4].line_eid, state, false)
-    end
-
     if not eid or not world[eid].camera then
-        --m.set_second_camera(m.main_camera)
         return
     end
     
-    if m.camera_list[eid] then
+    if m.camera_list[eid] and m.camera_list[eid].frustum_eid then
         local state = "visible"
         ies.set_state(m.camera_list[eid].frustum_eid, state, visible)
         local boundary = m.camera_list[eid].far_boundary
@@ -192,7 +189,6 @@ function m.show_frustum(eid, visible)
         ies.set_state(boundary[2].line_eid, state, visible)
         ies.set_state(boundary[3].line_eid, state, visible)
         ies.set_state(boundary[4].line_eid, state, visible)
-        m.set_second_camera(eid)
     end
 end
 
@@ -216,45 +212,89 @@ function m.set_dist_to_target(eid, dist)
     update_direction(eid)
 end
 
-local nameidx = 0
-local function gen_camera_name() nameidx = nameidx + 1 return "camera" .. nameidx end
+local cameraidx = 0
+local function gen_camera_name() cameraidx = cameraidx + 1 return "camera" .. cameraidx end
+
 
 function m.ceate_camera()
     local main_frustum = icamera.get_frustum(m.main_camera)
-    local new_camera, info = icamera.create {
+    local new_camera, camera_template = icamera.create {
         eyepos = {2, 2, -2, 1},
         viewdir = {-2, -1, 2, 0},
-        frustum = {n = 0.1, f = 100, aspect = main_frustum.aspect, fov = main_frustum.fov },
+        frustum = {n = DefaultNearClip, f = DefaultFarClip, aspect = main_frustum.aspect, fov = main_frustum.fov },
         updir = {0, 1, 0},
         name = gen_camera_name()
     }
     iom.set_position(new_camera, iom.get_position(m.main_camera))
     iom.set_rotation(new_camera, iom.get_rotation(m.main_camera))
-
     m.update_frustrum(new_camera)
     m.set_second_camera(new_camera)
     m.show_frustum(new_camera, false)
-    return new_camera, info.__class[1]
+    return new_camera, camera_template.__class[1]
+end
+
+function m.bind_recorder(eid, recorder)
+    m.camera_list[eid].recorder = recorder
+end
+
+function m.set_frame(cam_eid, idx)
+    local pos = world[m.camera_list[cam_eid].recorder].frames[idx].position
+    local rot = world[m.camera_list[cam_eid].recorder].frames[idx].rotation
+    iom.set_position(cam_eid, pos)
+    iom.set_rotation(cam_eid, rot)
+    m.update_frustrum(cam_eid)
+end
+
+function m.add_recorder_frame(eid, idx)
+    local recorder = m.camera_list[eid].recorder
+    if not recorder then return end
+    icamera_recorder.add(recorder, m.main_camera, idx)
+    local idx = #world[recorder].frames
+    world[recorder].frames[idx].nearclip = DefaultNearClip
+    world[recorder].frames[idx].farclip = DefaultFarClip
+end
+
+function m.delete_recorder_frame(eid, idx)
+    if not m.camera_list[eid].recorder then return end
+    icamera_recorder.remove(m.camera_list[eid].recorder, idx)
+end
+
+function m.clear_recorder_frame(eid, idx)
+    if not m.camera_list[eid].recorder then return end
+    icamera_recorder.clear(m.camera_list[eid].recorder)
+end
+
+function m.play_recorder(eid)
+    if not m.camera_list[eid].recorder then return end
+    icamera_recorder.play(m.camera_list[eid].recorder, eid)
+end
+
+function m.get_recorder_frames(eid)
+    local recorder_eid = m.camera_list[eid].recorder
+    if not recorder_eid then return {} end
+    return world[recorder_eid].frames
+end
+
+local function do_remove_camera(cam)
+    world:remove_entity(cam.recorder)
+    world:remove_entity(cam.frustum_eid)
+    world:remove_entity(cam.far_boundary[1].line_eid)
+    world:remove_entity(cam.far_boundary[2].line_eid)
+    world:remove_entity(cam.far_boundary[3].line_eid)
+    world:remove_entity(cam.far_boundary[4].line_eid)
 end
 
 function m.remove_camera(eid)
-    m.set_second_camera(m.main_camera)
-    world:remove_entity(m.camera_list[eid].frustum_eid)
-    world:remove_entity(m.camera_list[eid].far_boundary[1].line_eid)
-    world:remove_entity(m.camera_list[eid].far_boundary[2].line_eid)
-    world:remove_entity(m.camera_list[eid].far_boundary[3].line_eid)
-    world:remove_entity(m.camera_list[eid].far_boundary[4].line_eid)
+    m.set_second_camera(m.second_view_camera)
+    local cam = m.camera_list[eid]
+    do_remove_camera(cam)
     m.camera_list[eid] = nil
 end
 
 function m.clear()
-    m.set_second_camera(m.main_camera)
+    m.set_second_camera(m.second_view_camera)
     for k, v in pairs(m.camera_list) do
-        world:remove_entity(v.frustum_eid)
-        world:remove_entity(v.far_boundary[1].line_eid)
-        world:remove_entity(v.far_boundary[2].line_eid)
-        world:remove_entity(v.far_boundary[3].line_eid)
-        world:remove_entity(v.far_boundary[4].line_eid)
+        do_remove_camera(v)
     end
     m.camera_list = {}
 end
@@ -266,5 +306,6 @@ return function(w)
     imaterial   = world:interface "ant.asset|imaterial"
     computil    = world:interface "ant.render|entity"
     ies         = world:interface "ant.scene|ientity_state"
+    icamera_recorder = world:interface "ant.camera|icamera_recorder"
     return m
 end

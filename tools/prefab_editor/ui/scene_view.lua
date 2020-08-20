@@ -49,22 +49,21 @@ local function show_scene_node(node)
         if imgui.util.IsItemClicked() then
             if is_editable(eid) then
                 gizmo:set_target(eid)
-                if nd.camera then
-                    world:pub { "ActiveSceondCamera", eid }
+            end
+        end
+        if not world[eid].camera then
+            if imgui.widget.BeginDragDropSource() then
+                imgui.widget.SetDragDropPayload("DragNode", eid)
+                imgui.widget.EndDragDropSource()
+            end
+            if imgui.widget.BeginDragDropTarget() then
+                local payload = imgui.widget.AcceptDragDropPayload("DragNode")
+                if payload then
+                    sourceEid = tonumber(payload)
+                    targetEid = eid
                 end
+                imgui.widget.EndDragDropTarget()
             end
-        end
-        if imgui.widget.BeginDragDropSource() then
-            imgui.widget.SetDragDropPayload("DragNode", eid)
-            imgui.widget.EndDragDropSource()
-        end
-        if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("DragNode")
-            if payload then
-                sourceEid = tonumber(payload)
-                targetEid = eid
-            end
-            imgui.widget.EndDragDropTarget()
         end
     end
     local icons = require "common.icons"(asset_mgr)
@@ -119,7 +118,7 @@ function m.show(rhwi)
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         if hierarchy.root.eid > 0 then
-            if imgui.widget.Button("Snapshot") then
+            if imgui.widget.Button("CreateCamera") then
                 world:pub { "Create", "camera"}
             end
             imgui.cursor.Separator()

@@ -37,7 +37,7 @@ function cr.add(recordereid, cameraeid, idx)
     idx = idx or #e.frames+1
 
     local frustum = icamera.get_frustum(cameraeid)
-    e.frames[idx] = {
+    table.insert(e.frames, idx, {
         position = math3d.ref(iom.get_position(cameraeid)),
         rotation = math3d.ref(iom.get_rotation(cameraeid)),
         nearclip = frustum.n,
@@ -46,13 +46,17 @@ function cr.add(recordereid, cameraeid, idx)
         duration = 2000,         --ms
         mode     = "linear",    --linear/curve
         curve    = nil, --mode should be 'curve'
-    }
+    })
 end
 
 function cr.remove(recordereid, idx)
     local e = world[recordereid]
     idx = idx or #e.frames
-    e.frames[idx] = nil
+    table.remove(e.frames, idx)
+end
+
+function cr.clear(recordereid)
+    world[recordereid].frames = {}
 end
 
 function cr.stop(recordereid)
