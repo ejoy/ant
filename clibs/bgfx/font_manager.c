@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #define STB_TRUETYPE_IMPLEMENTATION
-#include <stb_truetype.h>
+#include <stb/stb_truetype.h>
 
 /*
 	F->priority is a circular linked list for the LRU cache.
