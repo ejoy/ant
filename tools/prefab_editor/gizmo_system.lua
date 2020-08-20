@@ -329,6 +329,7 @@ function gizmo:set_target(eid)
 	if self.target_eid == target then
 		return
 	end
+	local old_target = self.target_eid
 	self.target_eid = target
 	if target then
 		self:set_position()
@@ -338,7 +339,7 @@ function gizmo:set_target(eid)
 		self:update_axis_plane()
 	end
 	gizmo:show_by_state(target ~= nil)
-	world:pub {"Gizmo","ontarget"}
+	world:pub {"Gizmo","ontarget", old_target, target}
 end
 
 function gizmo:reset_move_axis_color()
