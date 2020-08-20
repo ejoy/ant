@@ -18,7 +18,6 @@ local ctx = {
 	fonttex = false,
 	fx = false,
 	fontfx = false,
-	fonttex = false,
 	ascent = false;
 }
 
@@ -30,8 +29,15 @@ function m:init()
 		renderpkg.fbmgr.bind(ctx.viewid, queue.render_target.fb_idx)
 	end
 
-	ctx.fx = assetmgr.load_fx "/pkg/ant.test.gameui/uiquat.fx"
-	ctx.fontfx = assetmgr.load_fx "/pkg/ant.test.gameui/uifont.fx"
+	ctx.fx = assetmgr.load_fx {
+		vs = "/pkg/ant.test.gameui/fx/vs_uiquat.sc",
+		fs = "/pkg/ant.test.gameui/fx/fs_uiquat.sc",
+	}
+
+	ctx.fontfx = assetmgr.load_fx {
+		vs = "/pkg/ant.test.gameui/fx/vs_uifont.sc",
+		fs = "/pkg/ant.test.gameui/fx/fs_uifont.sc"
+	}
 	ctx.fontuniform = ctx.fontfx.uniforms[1].handle	-- s_texFont
 	local fontid = ui.addfont(Font "黑体")
 	assert(fontid == 0)
