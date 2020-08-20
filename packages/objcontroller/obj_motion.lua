@@ -25,7 +25,7 @@ function iobj_motion.set_direction(eid, dir)
     local e = world[eid]
     local rc = e._rendercache
     local srt = rc.srt
-    if e.camera then
+    if rc.updir then
         srt.id = math3d.inverse(math3d.lookto(math3d.index(srt, 4), dir, rc.updir))
     else
         srt.r = math3d.torotation(dir)
@@ -47,7 +47,7 @@ function iobj_motion.set_view(eid, pos, dir, updir)
     local e = world[eid]
     local rc = e._rendercache
     local srt = rc.srt
-    if e.camera then
+    if rc.updir then
         srt.id = math3d.inverse(math3d.lookto(pos, dir, updir or rc.updir))
     else
         local s = math3d.matrix_scale(srt)
@@ -70,7 +70,7 @@ function iobj_motion.set_rotation(eid, rot)
     local e = world[eid]
     local rc = e._rendercache
     local srt = rc.srt
-    if e.camera then
+    if rc.updir then
         local viewdir = math3d.todirection(rot)
         srt.id = math3d.inverse(math3d.lookto(math3d.index(srt, 4), viewdir, rc.updir))
     else
@@ -90,12 +90,8 @@ end
 function iobj_motion.lookto(eid, eyepos, viewdir, updir)
     local e = world[eid]
     local rc = e._rendercache
-    if e.camera then
-        if updir then
-            rc.updir = updir
-        else
-            updir = rc.updir
-        end
+    if updir then
+        rc.updir = updir
     end
     rc.srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
     world:pub{"component_changed", "transform", eid}
@@ -133,10 +129,9 @@ local function add_rotation(srt, rotateX, rotateY, threshold)
 
     threshold = threshold or 10e-6
 
-    local s, r, t = math3d.srt(srt)
-    local nq = math3d.mul(math3d.mul(
+    local nq = math3d.mul(
         math3d.quaternion{axis=math3d.index(srt, 1), r=rotateX},
-        math3d.quaternion{axis=math3d.index(srt, 2), r=rotateY}), r)
+        math3d.quaternion{axis=math3d.index(srt, 2), r=rotateY})
 
     local v = math3d.transform(nq, mc.ZAXIS, 0)
     
@@ -144,25 +139,36 @@ local function add_rotation(srt, rotateX, rotateY, threshold)
         return srt
     end
 
-    return math3d.matrix{s=s, r=nq, t=t}
+    return math3d.mul(math3d.matrix{r=nq}, srt)
 end
 
 function iobj_motion.rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
-        local srt = world[eid]._rendercache.srt
+        local rc = world[eid]._rendercache
+        local srt = rc.srt
         srt.id = add_rotation(srt, rotateX, rotateY)
+        if rc.updir then
+            local viewdir, eyepos = srt[3], srt[4]
+            srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
+        end
+
         world:pub{"component_changed", "transform", eid}
     end
 end
 
 function iobj_motion.rotate_around_point(eid, targetpt, distance, rotateX, rotateY, threshold)
     if rotateX or rotateY then
-        local srt = world[eid]._rendercache.srt
+        local rc = world[eid]._rendercache
+        local srt = rc.srt
         local newsrt = math3d.set_index(srt, 4, targetpt)
         newsrt = add_rotation(newsrt, rotateX, rotateY, threshold)
         local dir = math3d.index(newsrt, 3)
         local eyepos = math3d.muladd(distance, math3d.inverse(dir), targetpt)
         srt.id = math3d.set_index(newsrt, 4, eyepos)
+        if rc.updir then
+            local viewdir, eyepos = srt[3], srt[4]
+            srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
+        end
 
         world:pub{"component_changed", "transform", eid}
     end
