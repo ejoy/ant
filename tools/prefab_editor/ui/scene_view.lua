@@ -49,9 +49,6 @@ local function show_scene_node(node)
         if imgui.util.IsItemClicked() then
             if is_editable(eid) then
                 gizmo:set_target(eid)
-                if nd.camera then
-                    world:pub { "ActiveSceondCamera", eid }
-                end
             end
         end
         if imgui.widget.BeginDragDropSource() then
@@ -119,7 +116,7 @@ function m.show(rhwi)
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         if hierarchy.root.eid > 0 then
-            if imgui.widget.Button("Snapshot") then
+            if imgui.widget.Button("CreateCamera") then
                 world:pub { "Create", "camera"}
             end
             imgui.cursor.Separator()

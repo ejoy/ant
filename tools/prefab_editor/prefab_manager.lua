@@ -34,15 +34,28 @@ function m:normalize_aabb()
     iom.set_srt(self.root, math3d.mul(transform, iom.srt(self.root)))
 end
 
+local recorderidx = 0
+local function gen_camera_recorder_name() recorderidx = recorderidx + 1 return "recorder" .. recorderidx end
+
 function m:create(what)
     local localpath = tostring(fs.path "":localpath())
     if what == "camera" then
-        local new_camera, templ = camera_mgr.ceate_camera()
-        local s, r, t = math3d.srt(templ.data.transform)
+        local new_camera, camera_templ = camera_mgr.ceate_camera()
+        local s, r, t = math3d.srt(camera_templ.data.transform)
         local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
-        templ.data.transform = {s = {ts[1],ts[2],ts[3]}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
-        local node = hierarchy:add(new_camera, {template = templ}, self.root)
+        camera_templ.data.transform = {s = {ts[1],ts[2],ts[3]}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
+
+        local recorder, recorder_templ = icamera_recorder.start(gen_camera_recorder_name())
+        icamera_recorder.add(recorder, new_camera)
+        camera_mgr.bind_recorder(new_camera, recorder)
+
+        local node = hierarchy:add(new_camera, {template = camera_templ, keyframe = recorder_templ.__class[1]}, self.root)
         node.camera = true
+        self.entities[#self.entities+1] = new_camera
+    elseif what == "camerarecorder" then
+        -- local recorder, templ = camera_mgr.ceate_camera_recorder()
+        -- local node = hierarchy:add(new_camera, {template = templ}, self.root)
+        -- node.camera_recorder = true
     elseif what == "empty" then
 
     elseif what == "cube" then
@@ -93,6 +106,7 @@ function m:open_prefab(filename)
     --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/4/action/mount", 1)
     local remove_entity = {}
+    local last_camera
     for i, entity in ipairs(entities) do
         if type(entity) == "table" then            
             local parent = world[entity[1]].parent
@@ -105,11 +119,28 @@ function m:open_prefab(filename)
             remove_entity[#remove_entity+1] = entity
         else
             if i > 1 then
-                hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
+                local keyframes = prefab.__class[i].data.frames
+                if keyframes and last_camera then
+                    for i, v in ipairs(keyframes) do
+                        local tp = v.position
+                        local tr = v.rotation
+                        v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
+                        v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
+                    end
+
+                    local templ = hierarchy:get_template(last_camera)
+                    templ.keyframe = prefab.__class[i]
+                    camera_mgr.bind_recorder(last_camera, entity)
+                    remove_entity[#remove_entity+1] = entity
+                else
+                    hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
+                end
                 if world[entity].camera then
                     camera_mgr.update_frustrum(entity)
                     camera_mgr.show_frustum(entity, false)
+                    last_camera = entity
                 end
+                
             end
         end
     end

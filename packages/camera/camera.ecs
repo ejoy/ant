@@ -63,6 +63,7 @@ interface "icamera_recorder"
     .method "stop"
     .method "add"
     .method "remove"
+    .method "clear"
     .method "play"
 
 system "camera_recorder_system"

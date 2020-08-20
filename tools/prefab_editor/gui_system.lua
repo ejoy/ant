@@ -111,8 +111,13 @@ function m:data_changed()
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
             if action == "ontarget" then
-                camera_mgr.show_frustum(gizmo.target_eid, true)
-            else
+                if value1 and world[value1].camera then
+                    camera_mgr.show_frustum(value1, false)
+                end
+                if value2 and world[value2].camera then
+                    camera_mgr.set_second_camera(value2)
+                end
+            elseif action == "update" then
                 camera_mgr.update_frustrum(gizmo.target_eid)
             end
         elseif action == "create" then

@@ -70,14 +70,13 @@ local ZOOM_FORWARD = false
 local ZOOM_BACK = false
 local icamera = world:interface "ant.camera|camera"
 function update_second_view_camera()
-    if not camera_mgr.second_camera or camera_mgr.second_camera == camera_mgr.main_camera then return end
+    if not camera_mgr.second_camera then return end
     local rc = world[camera_mgr.second_camera]._rendercache
 	rc.viewmat = icamera.calc_viewmat(camera_mgr.second_camera)
     rc.projmat = icamera.calc_projmat(camera_mgr.second_camera)--math3d.projmat(world[camera_mgr.second_camera]._rendercache.frustum)--
 	rc.viewprojmat = icamera.calc_viewproj(camera_mgr.second_camera)
 end
 
-local eventSceondCamera = world:sub{"ActiveSceondCamera"}
 local eventCameraEdit = world:sub{"CameraEdit"}
 local mouseDrag = world:sub {"mousedrag"}
 local mouseMove = world:sub {"mousemove"}
@@ -188,10 +187,6 @@ function m:data_changed()
 				f = value
 			})
 		end
-	end
-
-	for _, eid in eventSceondCamera:unpack() do
-		camera_mgr.set_second_camera(eid)
 	end
 	
 	update_second_view_camera()

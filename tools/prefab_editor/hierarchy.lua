@@ -1,4 +1,7 @@
 local queue = require "queue"
+local utils = require "common.utils"
+local math3d = require "math3d"
+
 local hierarchy = {
     root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}},
     all = {},
@@ -73,6 +76,17 @@ function hierarchy:update_prefab_template(prefab)
     local function construct_entity(eid, pt)
         table.insert(pt, self.all[eid].template.template)
         local pidx = #pt
+        local keyframe_templ = self.all[eid].template.keyframe
+        if keyframe_templ then
+            local templ_copy = utils.deep_copy(keyframe_templ)
+            for i, v in ipairs(templ_copy.data.frames) do
+                local tp = math3d.totable(keyframe_templ.data.frames[i].position)
+                local tr = math3d.totable(keyframe_templ.data.frames[i].rotation)
+                templ_copy.data.frames[i].position = {tp[1], tp[2], tp[3]}
+                templ_copy.data.frames[i].rotation = {tr[1], tr[2], tr[3], tr[4]}
+            end
+            table.insert(pt, templ_copy)
+        end
         local prefab_filename = self.all[eid].template.filename
         if prefab_filename then
             table.insert(pt, {args = {root = #pt}, prefab = prefab_filename})
