@@ -46,9 +46,8 @@ function m:create(what)
         camera_templ.data.transform = {s = {ts[1],ts[2],ts[3]}, r = {tr[1],tr[2],tr[3],tr[4]}, t = {tt[1],tt[2],tt[3]}}
 
         local recorder, recorder_templ = icamera_recorder.start(gen_camera_recorder_name())
-        icamera_recorder.add(recorder, new_camera)
         camera_mgr.bind_recorder(new_camera, recorder)
-
+        camera_mgr.add_recorder_frame(new_camera)
         local node = hierarchy:add(new_camera, {template = camera_templ, keyframe = recorder_templ.__class[1]}, self.root)
         node.camera = true
         self.entities[#self.entities+1] = new_camera

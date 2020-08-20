@@ -126,26 +126,27 @@ function m.update_ui(ut)
 end
 
 local function onPositionDirty(eid, pos)
+    local oldPos = math3d.totable(iom.get_position(eid))
+    local tp = {pos[1], pos[2], pos[3]}
+    gizmo:set_position(pos)
+    world:pub {"EntityEvent", "move", eid, oldPos, tp}
     if world[eid].camera then
         local frames = camera_mgr.get_recorder_frames(eid)
-        frames[cameraUIData.current_frame].position.v = pos
-        camera_mgr.set_frame(eid, cameraUIData.current_frame)
-    else
-        local oldPos = math3d.totable(iom.get_position(eid))
-        gizmo:set_position(pos)
-        world:pub {"EntityEvent", "move", eid, oldPos, {pos[1], pos[2], pos[3]}}
+        frames[cameraUIData.current_frame].position = math3d.ref(iom.get_position(eid))
+        camera_mgr.update_frustrum(eid)
     end
 end
 
 local function onRotateDirty(eid, rot)
+    local oldRot = math3d.totable(iom.get_rotation(eid))
+    local newRot = {rot[1], rot[2], rot[3]}
+    local quat = math3d.quaternion(newRot)
+    gizmo:set_rotation(quat)
+    world:pub {"EntityEvent", "rotate", eid, oldRot, newRot}
     if world[eid].camera then
         local frames = camera_mgr.get_recorder_frames(eid)
-        frames[cameraUIData.current_frame].rotation.v = rot
-        camera_mgr.set_frame(eid, cameraUIData.current_frame)
-    else
-        local oldRot = math3d.totable(iom.get_rotation(eid))
-        gizmo:set_rotation(rot)
-        world:pub {"EntityEvent", "rotate", eid, oldRot, {rot[1], rot[2], rot[3]}}
+        frames[cameraUIData.current_frame].rotation = math3d.ref(quat)
+        camera_mgr.update_frustrum(eid)
     end
 end
 

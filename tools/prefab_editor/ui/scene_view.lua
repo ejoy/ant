@@ -51,17 +51,19 @@ local function show_scene_node(node)
                 gizmo:set_target(eid)
             end
         end
-        if imgui.widget.BeginDragDropSource() then
-            imgui.widget.SetDragDropPayload("DragNode", eid)
-            imgui.widget.EndDragDropSource()
-        end
-        if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("DragNode")
-            if payload then
-                sourceEid = tonumber(payload)
-                targetEid = eid
+        if not world[eid].camera then
+            if imgui.widget.BeginDragDropSource() then
+                imgui.widget.SetDragDropPayload("DragNode", eid)
+                imgui.widget.EndDragDropSource()
             end
-            imgui.widget.EndDragDropTarget()
+            if imgui.widget.BeginDragDropTarget() then
+                local payload = imgui.widget.AcceptDragDropPayload("DragNode")
+                if payload then
+                    sourceEid = tonumber(payload)
+                    targetEid = eid
+                end
+                imgui.widget.EndDragDropTarget()
+            end
         end
     end
     local icons = require "common.icons"(asset_mgr)
