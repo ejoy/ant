@@ -15,6 +15,7 @@
 #include "simplelock.h"
 #include "bgfx_interface.h"
 #include "bgfx_alloc.h"
+#include "transient_buffer.h"
 
 #if BGFX_API_VERSION != 108
 #   error BGFX_API_VERSION mismatch
@@ -2949,17 +2950,9 @@ ldbgTextImage(lua_State *L) {
 	return 0;
 }
 
-struct ltb {
-	bgfx_transient_vertex_buffer_t tvb;
-	bgfx_transient_index_buffer_t tib;
-	int cap_v;
-	int cap_i;
-	char format[1];
-};
-
 static int
 lallocTB(lua_State *L) {
-	struct ltb *v = luaL_checkudata(L, 1, "BGFX_TB");
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	int max_v = luaL_checkinteger(L, 2);
 	int max_i = 0;
 	int vd_index = 3;
@@ -2995,7 +2988,7 @@ lallocTB(lua_State *L) {
 
 static int
 lsetTVB(lua_State *L) {
-	struct ltb *v = luaL_checkudata(L, 1, "BGFX_TB");
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	if (v->cap_v == 0) {
 		return luaL_error(L, "Need alloc transient vb first");
 	}
@@ -3010,7 +3003,7 @@ lsetTVB(lua_State *L) {
 
 static int
 lsetTIB(lua_State *L) {
-	struct ltb *v = luaL_checkudata(L, 1, "BGFX_TB");
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	if (v->cap_i == 0) {
 		return luaL_error(L, "Need alloc transient ib first");
 	}
@@ -3023,7 +3016,7 @@ lsetTIB(lua_State *L) {
 
 static int
 lsetTB(lua_State *L) {
-	struct ltb *v = luaL_checkudata(L, 1, "BGFX_TB");
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	if (v->cap_i) {
 		BGFX(set_transient_index_buffer)(&v->tib, 0, v->cap_i);
 		v->cap_i = 0;
@@ -3037,7 +3030,7 @@ lsetTB(lua_State *L) {
 
 static int
 lpackTVB(lua_State *L) {
-	struct ltb *v = luaL_checkudata(L, 1, "BGFX_TB");
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	int idx = luaL_checkinteger(L, 2);
 	if (idx < 0 || idx >= v->cap_v) {
 		return luaL_error(L, "Transient vb index out of range %d/%d", idx, v->cap_v);
@@ -3087,7 +3080,7 @@ lpackTVB(lua_State *L) {
 
 static int
 lpackTIB(lua_State *L) {
-	struct ltb *v = luaL_checkudata(L, 1, "BGFX_TB");
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	luaL_checktype(L, 2, LUA_TTABLE);
 	uint16_t* indices = (uint16_t*)v->tib.data;
 	int i;
@@ -3103,11 +3096,28 @@ lpackTIB(lua_State *L) {
 	return 0;
 }
 
+/*
+	For external use.
+	You can write a external lib including some lua_TBFunction as lightuserdata.
+
+		tvb_object:apply(external.func, ...)
+ */
+static int
+lapplyVB(lua_State *L) {
+	// It's unsafe function, so don't check type of transient_buffer.
+	struct transient_buffer *v = lua_touserdata(L, 1);
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	lua_TBFunction func = (lua_TBFunction)lua_touserdata(L, 2);
+	lua_rotate(L, 1, -2);
+	lua_pop(L, 2);
+	return func(L, v);
+}
+
 static int
 lnewTransientBuffer(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
-	struct ltb * v = lua_newuserdatauv(L, sizeof(*v) + sz, 0);
+	struct transient_buffer * v = lua_newuserdatauv(L, sizeof(*v) + sz, 0);
 	v->cap_v = 0;
 	v->cap_i = 0;
 	memcpy(v->format, format, sz+1);
@@ -3119,6 +3129,7 @@ lnewTransientBuffer(lua_State *L) {
 			{ "set", lsetTB },
 			{ "packV", lpackTVB },
 			{ "packI", lpackTIB },
+			{ "apply", lapplyVB },
 			{ NULL, NULL },
 		};
 		luaL_newlib(L, l);
@@ -3885,36 +3896,6 @@ lcreateTexture2D(lua_State *L) {
 	}
 	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create texture 2d failed");
-	}
-	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, handle));
-	return 1;
-}
-
-/*
-	integer size
-	boolean hasMips
-	integer layers
-	string format
-	string flags
-	todo : mem
-*/
-
-static int
-lcreateTextureCube(lua_State *L){
-	const uint32_t size = (uint32_t)luaL_checkinteger(L, 1);
-	const int hasMips = lua_toboolean(L, 2);
-	const int layers = luaL_checkinteger(L, 3);
-	const bgfx_texture_format_t fmt = texture_format_from_string(L, 4);
-	const uint64_t flags = 
-		lua_isnoneornil(L, 5) ? 
-			BGFX_TEXTURE_NONE|BGFX_SAMPLER_NONE : 
-			get_texture_flags(L, lua_tostring(L, 5));
-
-	const bgfx_memory_t * mem = lua_isnoneornil(L, 6) ? NULL : getMemory(L, 6);
-
-	const bgfx_texture_handle_t handle = BGFX(create_texture_cube)(size, hasMips, layers, fmt, flags, mem);
-	if (!BGFX_HANDLE_IS_VALID(handle)) {
-		return luaL_error(L, "create texture cube failed");
 	}
 	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, handle));
 	return 1;
