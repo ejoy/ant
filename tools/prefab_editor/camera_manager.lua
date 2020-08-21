@@ -133,7 +133,9 @@ function m.update_frustrum(cam_eid)
     local frustum_points = math3d.frustum_points(icamera.calc_viewproj(cam_eid))
     local frustum_eid = m.camera_list[cam_eid].frustum_eid
     if not frustum_eid then
-        m.camera_list[cam_eid].frustum_eid = create_dynamic_frustum(frustum_points, "frustum", normal_color_i)
+        local eid = create_dynamic_frustum(frustum_points, "frustum", normal_color_i)
+        ies.set_state(eid, "auxgeom", true)
+        m.camera_list[cam_eid].frustum_eid = eid
     else
         local rc = world[frustum_eid]._rendercache
         local vbdesc, ibdesc = rc.vb, rc.ib
@@ -154,6 +156,7 @@ function m.update_frustrum(cam_eid)
         local old_highlight = false
         if not old_boundary then
             eid = create_dynamic_line(nil, tp1, tp2, "line")
+            ies.set_state(eid, "auxgeom", true)
         else
             old_highlight = old_boundary[dir].highlight or false
             eid = old_boundary[dir].line_eid

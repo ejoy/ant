@@ -9,6 +9,8 @@ local STATE_TYPE = {
 
 	--
 	blit_view	= 0x00000008,
+	--
+	auxgeom		= 0x00010000,
 }
 
 local es_trans = ecs.transform "entity_state_transform"

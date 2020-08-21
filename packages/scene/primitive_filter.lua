@@ -14,7 +14,7 @@ function ipf.select_filters(eid)
 	for _, feid in world:each "primitive_filter" do
 		local filter = world[feid].primitive_filter
 		local item
-		if needadd and ((state & filter.filter_mask) ~= 0) then
+		if needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0) then
 			item = rc
 		end
 		filter:insert_item(rc.fx.setting.surfacetype, eid, item)
@@ -64,6 +64,7 @@ function pf:init()
 		}
 	}
 	self.filter_mask = ies.filter_mask(self.filter_type)
+	self.exclude_mask = self.exclude_type and ies.filter_mask(self.exclude_type) or 0
 	self.filter_order = self.filter_order or default_filter_order
 	return self
 end

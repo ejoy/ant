@@ -49,7 +49,7 @@ function irender.get_main_view_rendertexture()
 	return fbmgr.get_rb(fb[1]).handle
 end
 
-function irender.create_view_queue(view_rect, view_name)
+function irender.create_view_queue(view_rect, view_name, exclude)
 	local mq = world:singleton_entity "main_queue"
 	local rt = mq.render_target
 	local cs = rt.clear_state
@@ -69,6 +69,7 @@ function irender.create_view_queue(view_rect, view_name)
 
 			primitive_filter = {
 				filter_type = "visible",
+				exclude_type = exclude
 			},
 
 			render_target = {
