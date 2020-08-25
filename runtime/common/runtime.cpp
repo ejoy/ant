@@ -1,6 +1,7 @@
 #include "runtime.h"
 #include "searcher.h"
 #include "set_current.h"
+#include <string.h>
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -64,7 +65,7 @@ static void createargtable(lua_State *L, int argc, RT_COMMAND argv) {
 
 static int pmain(lua_State *L) {
     int argc = (int)lua_tointeger(L, 1);
-    wchar_t** argv = (wchar_t **)lua_touserdata(L, 2);
+    RT_COMMAND argv = (RT_COMMAND)lua_touserdata(L, 2);
     lua_CFunction set_current = lua_tocfunction(L, 3);
     luaL_checkversion(L);
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
