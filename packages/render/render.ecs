@@ -137,6 +137,13 @@ interface "entity"
     .method "create_line_entity"
     .method "create_prim_plane_entity"
     .method "create_circle_mesh_entity"
+
+
+interface "system_properties"
+    .implement "system_properties.lua"
+    .method "get"
+    .method "update"
+    
     
 pipeline "render"
     .stage "refine_filter"
