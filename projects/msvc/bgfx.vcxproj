@@ -16,6 +16,7 @@
     <ClCompile Include="..\..\clibs\bgfx\luabgfx.c" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfxui.c" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfxutil.c" />
+    <ClCompile Include="..\..\clibs\bgfx\luafont.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\bgfx_alloc.h" />

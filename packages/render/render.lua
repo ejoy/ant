@@ -33,13 +33,21 @@ function irender.draw(vid, ri)
 	end
 	local ib, vb = ri.ib, ri.vb
 
-	if ib then
+	if ib and ib.num ~= 0 then
 		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
 	end
+
 	local start_v, num_v = vb.start, vb.num
-	for idx, h in ipairs(vb.handles) do
-		bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
+	if num_v ~= 0 then
+		for idx, h in ipairs(vb.handles) do
+			if type(h) == "number" then
+				bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
+			else
+				h:setV(idx-1, start_v, num_v)
+			end
+		end
 	end
+
 	bgfx.submit(vid, ri.fx.prog, 0)
 end
 

@@ -1,0 +1,15 @@
+fx:
+  vs: /pkg/ant.test.gameui/fx/vs_uifont.sc
+  fs: /pkg/ant.test.gameui/fx/fs_uifont.sc
+  setting:
+    surfacetype: ui
+properties:
+  s_texFont:
+    stage: 0
+    texture: /pkg/ant.resources/materials/textures/pbr/default/basecolor.texture
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  WRITE_MASK: RGBA
+  BLEND: ALPHA

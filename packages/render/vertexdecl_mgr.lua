@@ -115,16 +115,14 @@ function mgr.vertex_desc_str(correct_layout)
 
 		if t == 'f' then
 			s = s .. ('f'):rep(n)
-		else
-			if t ~= 'u' then
-				error(("unsupport decl format attribute type, only support 'u':%s"):format(e))
-			end
-
+		elseif t == 'u' then
 			if n ~= '4' then
 				error(("invalid attribute number for 'u' type, must be 4: %d"):format(n))
 			end
 
 			s = s .. "d"
+		elseif t == 'i' then
+			error()
 		end
 	end
 

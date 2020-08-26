@@ -25,14 +25,14 @@ local function create_static_quad_ib(num_quad)
 end
 
 local default_quad<const> = {
-    --pos.xyz, normal.xyz, texcoord.uv, color.rgba
-    -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
-    -0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-     0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
-     0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    --pos.xyz, normal.xyz, texcoord.uv, color.dword
+    -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0xffffffff,
+    -0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0xffffffff,
+     0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0xffffffff,
+     0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0xffffffff,
 }
 
-local layout_desc = declmgr.correct_layout "p3|n3|t2|c4"
+local layout_desc = declmgr.correct_layout "p3|n3|t2|c40niu"
 local vertex_layout = declmgr.get(layout_desc)
 local vertex_format = declmgr.vertex_desc_str(layout_desc)
 local vertex_elemnum = #default_quad / 4
