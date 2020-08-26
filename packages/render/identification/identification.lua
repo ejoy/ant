@@ -3,13 +3,7 @@ local world = ecs.world
 
 local math3d = require "math3d"
 
-policy "identification"
-    .require_system "ant.render|identification"
-    .require_interface "ant.render|ifontmgr"
-    .component "identification"
-    .component "name"
-
-local ifontmgr = world:interface "ifontmgr"
+local ifontmgr = world:interface "ant.render|ifontmgr"
 
 local ident_sys = ecs.system "identification"
 
@@ -22,15 +16,15 @@ local function calc_identification_pos(e)
     end
 end
 
-function ident_sys:follow_transform_updated()
+function ident_sys:camera_usage()
     for _, eid in world:each "identification" do
         local e = world[eid]
         local n = e.name
-        local ident = e.identitfication
+        local ident = e.identification
         local pos = calc_identification_pos(e)
         local fontsetting = ident.font_setting
         if fontsetting then
-            ifontmgr.draw(pos, n, fontsetting.keepsize)
+            ifontmgr.add_text3d(pos, n, fontsetting.size)
         end
     end
 end

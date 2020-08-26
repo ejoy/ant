@@ -47,7 +47,8 @@ lprepare_text(lua_State *L) {
 	const char * str = luaL_checklstring(L, 2, &sz);
 	const char * end_ptr = str + sz;
 
-	int fontid = luaL_optinteger(L, 3, 0);
+    const int size = luaL_checkinteger(L, 3);
+	int fontid = luaL_optinteger(L, 4, 0);
 
 	int advance_x=0, advance_y=0;
     int numchar=0;
@@ -67,8 +68,13 @@ lprepare_text(lua_State *L) {
 		}
 	}
 
-    lua_pushinteger(L, advance_x);
-    lua_pushinteger(L, advance_y);
+    struct font_glyph t_g = {0};
+    t_g.advance_x = advance_x;
+    t_g.advance_y = advance_y;
+    font_manager_scale(F, &t_g, size);
+
+    lua_pushinteger(L, t_g.advance_x);
+    lua_pushinteger(L, t_g.advance_y);
     lua_pushinteger(L, numchar);
 	return 3;
 }
@@ -128,18 +134,20 @@ read_fixpoint(lua_State *L, int idx) {
 }
 
 static int
-ltb_text_quad(lua_State *L, struct transient_buffer *tb){
+lload_text_quad(lua_State *L){
     struct font_manager *fm = getF(L);
+
+    struct transient_buffer *tb = luaL_checkudata(L, 1, "BGFX_TB");
     size_t sz;
-    const char* text = luaL_checklstring(L, 1, &sz);
+    const char* text = luaL_checklstring(L, 2, &sz);
     const char* textend = text + sz;
 
-    int16_t x = read_fixpoint(L, 2);
-    int16_t y = read_fixpoint(L, 3);
+    int16_t x = read_fixpoint(L, 3);
+    int16_t y = read_fixpoint(L, 4);
 
-    const int size = (int)luaL_checkinteger(L, 4);
-    const uint32_t color = (uint32_t)luaL_checkinteger(L, 5);
-    const int fontid = luaL_optinteger(L, 6, 0);
+    const int size = (int)luaL_checkinteger(L, 5);
+    const uint32_t color = (uint32_t)luaL_checkinteger(L, 6);
+    const int fontid = luaL_optinteger(L, 7, 0);
 
     struct font_glyph g = {0};
 
@@ -165,27 +173,6 @@ ltb_text_quad(lua_State *L, struct transient_buffer *tb){
         
     }
     return 0;
-}
-
-static void
-bind_transient_buffer_method(lua_State *L){
-	struct tb_method{
-		const char *name;
-		lua_TBFunction func;
-	};
-	struct tb_method funcs[] = {
-		{"tb_text_quad", ltb_text_quad},
-	};
-
-	const int num = sizeof(funcs)/sizeof(funcs[0]);
-	lua_createtable(L, num, 0);
-	for(int ii=0; ii<num; ++ii){
-		
-		lua_pushlightuserdata(L, funcs[0].func);
-		lua_setfield(L, -2, funcs[0].name);
-	}
-
-	lua_setfield(L, -2, "tb_methods");
 }
 
 static inline const void *
@@ -251,6 +238,7 @@ luaopen_bgfx_font(lua_State *L) {
 		{ "addfont", 		laddfont },
 		{ "rebind", 		lrebindfont },
         { "prepare_text",   lprepare_text},
+        { "load_text_quad", lload_text_quad},
 		{ NULL, 			NULL },
 	};
 	struct font_context * c = new_font_context(L);
@@ -259,8 +247,6 @@ luaopen_bgfx_font(lua_State *L) {
 	luaL_setfuncs(L, l, 1);
 	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
 	lua_setfield(L, -2, "fonttexture_size");
-
-	bind_transient_buffer_method(L);
 
 	return 1;
 }

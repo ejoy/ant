@@ -1,0 +1,15 @@
+interface "ifontmgr"
+    .implement "identification/font_mgr.lua"
+    .method "add_font"
+    .method "add_text3d"
+
+system "identification"
+    .implement "identification/identification.lua"
+    .require_interface "ant.render|ifontmgr"
+    .method "camera_usage"
+
+policy "identification"
+    .require_system "ant.render|identification"
+    .require_interface "ant.render|ifontmgr"
+    .component "identification"
+    .component "name"

@@ -14,4 +14,6 @@ data:
     state: 0x00000005
     scene_entity: true
     name: slot_cube
-    show_name: {}
+    identification:
+        font_setting:
+            size: 42

@@ -122,7 +122,7 @@ function mgr.vertex_desc_str(correct_layout)
 
 			s = s .. "d"
 		elseif t == 'i' then
-			error()
+			s = s .. "w"
 		end
 	end
 
