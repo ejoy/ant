@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#import <UIKit/UIKit.h>
 
 int need_cleanup() {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
