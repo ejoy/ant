@@ -293,7 +293,7 @@ function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
 	local gvb = {0,0,0,0,0,1}
 	local ib = {}
 	local idx = 1
-	local maxidx = #circle_vb
+	local maxidx = #circle_vb / 3
 	for i = 1, #circle_vb, 3 do
 		gvb[#gvb+1] = circle_vb[i]
 		gvb[#gvb+1] = circle_vb[i + 1]

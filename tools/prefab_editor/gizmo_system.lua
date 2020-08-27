@@ -489,6 +489,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			name = "arrow.cylinder" .. axis_str
 		}
 	}
+	ies.set_state(cylindereid, "auxgeom", true)
 	iss.set_parent(cylindereid, axis_root)
 	local coneeid = world:create_entity{
 		policy = {
@@ -505,6 +506,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			name = "arrow.cone" .. axis_str
 		}
 	}
+	ies.set_state(coneeid, "auxgeom", true)
 	iss.set_parent(coneeid, axis_root)
 	if axis_str == "x" then
 		gizmo.tx.eid = {cylindereid, coneeid}
@@ -596,6 +598,7 @@ function gizmo_sys:post_init()
 		{t = {move_plane_offset, move_plane_offset, 0, 1}, s = {move_plane_scale, 1, move_plane_scale, 0}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})},
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_xy")
+	ies.set_state(plane_xy_eid, "auxgeom", true)
 	imaterial.set_property(plane_xy_eid, "u_color", gizmo.txy.color)
 	iss.set_parent(plane_xy_eid, axis_root)
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
@@ -604,6 +607,7 @@ function gizmo_sys:post_init()
 		{t = {0, move_plane_offset, move_plane_offset, 1}, s = {move_plane_scale, 1, move_plane_scale, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_yz")
+	ies.set_state(plane_yz_eid, "auxgeom", true)
 	imaterial.set_property(plane_yz_eid, "u_color", gizmo.tyz.color)
 	iss.set_parent(plane_yz_eid, axis_root)
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
@@ -612,6 +616,7 @@ function gizmo_sys:post_init()
 		{t = {move_plane_offset, 0, move_plane_offset, 1}, s = {move_plane_scale, 1, move_plane_scale, 0}},
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_zx")
+	ies.set_state(plane_zx_eid, "auxgeom", true)
 	imaterial.set_property(plane_zx_eid, "u_color", gizmo.tzx.color)
 	iss.set_parent(plane_zx_eid, axis_root)
 	gizmo.tzx.eid = {plane_zx_eid, plane_zx_eid}
@@ -619,6 +624,7 @@ function gizmo_sys:post_init()
 
 	-- roate axis
 	local uniform_rot_eid = computil.create_circle_entity(uniform_rot_axis_len, rotate_slices, {}, "rotate_gizmo_uniform")
+	ies.set_state(uniform_rot_eid, "auxgeom", true)
 	imaterial.set_property(uniform_rot_eid, "u_color", COLOR_GRAY)
 	iss.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
@@ -638,6 +644,7 @@ function gizmo_sys:post_init()
 
 	local function create_rotate_axis(axis, line_end, circle_trans)
 		local line_eid = computil.create_line_entity({}, {0, 0, 0}, line_end)
+		ies.set_state(line_eid, "auxgeom", true)
 		imaterial.set_property(line_eid, "u_color", axis.color)
 		iss.set_parent(line_eid, rot_circle_root)
 		local rot_eid = computil.create_circle_entity(axis_len, rotate_slices, circle_trans, "rotate gizmo circle")
@@ -668,6 +675,7 @@ function gizmo_sys:post_init()
 				name = "scale_cube" .. axis_name
 			}
 		}
+		ies.set_state(eid, "auxgeom", true)
 		-- prefab = worldedit:prefab_template(filename)
     	-- entities = worldedit:prefab_instance(prefab, {root=root})
 		-- local eid = world:instance("res/cube.prefab", srt)
@@ -683,6 +691,7 @@ function gizmo_sys:post_init()
 	end
 	-- scale axis cube
 	local cube_eid = create_scale_cube({s = axis_cube_scale}, COLOR_GRAY, "uniform scale")
+	ies.set_state(cube_eid, "auxgeom", true)
 	iss.set_parent(cube_eid, axis_root)
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
@@ -707,14 +716,17 @@ function gizmo_sys:post_init()
 			name = "global axis root",
 		},
 	}
-
+	ies.set_state(global_axis_eid, "auxgeom", true)
 	local new_eid = computil.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0})
+	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", COLOR_X)
 	iss.set_parent(new_eid, global_axis_eid)
 	new_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0})
+	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", COLOR_Y)
 	iss.set_parent(new_eid, global_axis_eid)
 	new_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1})
+	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", COLOR_Z)
 	iss.set_parent(new_eid, global_axis_eid)
 	updateGlobalAxis()

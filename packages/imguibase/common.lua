@@ -39,7 +39,7 @@ function m.init_world(w)
 		w:pub {"mouse_wheel", delta, x, y}
 	end)
 	w:signal_on("touch", function(x, y, id, state)
-		w:pub {"touch", state, id, x, y}
+		w:pub {"touch", id, mouse_state[state] or "UNKNOWN", x, y}
 	end)
 end
 

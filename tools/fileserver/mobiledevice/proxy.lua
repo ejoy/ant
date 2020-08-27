@@ -1,7 +1,8 @@
 package.path = table.concat({
 	"tools/fileserver/?.lua",
-	"tools/fileserver/?/?.lua"
+    "tools/fileserver/?/?.lua"
 }, ";")
+dofile "engine/editor/init_cpath.lua"
 
 log = {}
 function log.info()

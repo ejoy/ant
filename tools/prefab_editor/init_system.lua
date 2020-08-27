@@ -36,13 +36,12 @@ function m:init()
     camera_mgr.main_camera = main_camera
 
     local irender = world:interface "ant.render|irender"
-    camera_mgr.second_view = irender.create_view_queue({x = 0, y = 0, w = 1280, h = 720}, "second_view")
+    camera_mgr.second_view = irender.create_view_queue({x = 0, y = 0, w = 1280, h = 720}, "second_view", "auxgeom")
     local second_camera = icamera.create {
         eyepos = {2, 2, -2, 1},
         viewdir = {-2, -1, 2, 0},
         frustum = {f = 1000 }
     }
-    
     local rc = world[second_camera]._rendercache
     rc.viewmat = icamera.calc_viewmat(second_camera)
     rc.projmat = icamera.calc_projmat(second_camera)

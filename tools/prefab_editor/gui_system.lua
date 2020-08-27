@@ -117,7 +117,7 @@ function m:data_changed()
                 if value2 and world[value2].camera then
                     camera_mgr.set_second_camera(value2)
                 end
-            elseif action == "update" then
+            elseif action == "update" and world[gizmo.target_eid].camera then
                 camera_mgr.update_frustrum(gizmo.target_eid)
             end
         elseif action == "create" then
