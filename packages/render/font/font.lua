@@ -141,11 +141,11 @@ local function calc_pos(e, cfg)
     end
 end
 
-local function draw_text3d(e, font, pos, text)
+local function draw_text3d(e, font, pos, text, color)
     local rc = e._rendercache
     local vb, ib = rc.vb, rc.ib
 
-    vb.start, vb.num = ifontmgr.add_text3d(pos, font.id, text, font.size, 0xffafafaf, 0)
+    vb.start, vb.num = ifontmgr.add_text3d(pos, font.id, text, font.size, color or 0xffafafaf, 0)
     ib.start, ib.num = 0, (vb.num / 4) * 2 * 3
 end
 
@@ -155,7 +155,7 @@ local function submit_text(eid)
     local sc = e.show_config
     local pos = calc_pos(e, sc)
 
-    draw_text3d(e, font, pos, sc.description)
+    draw_text3d(e, font, pos, sc.description, sc.color)
     imaterial.set_property(eid, "s_texFont", fonttex)
 end
 

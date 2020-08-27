@@ -30,5 +30,6 @@ data:
     show_config:
         location: header
         description: 测试测试
+        color: 0xff00ff00
 action:
     show_name: 1
