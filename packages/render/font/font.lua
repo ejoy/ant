@@ -30,8 +30,8 @@ local function calc_screen_pos(pos3d, queueeid)
     local vp = world[q.camera_eid]._rendercache.viewprojmat
     local posNDC = math3d.transformH(vp, pos3d)
 
-    local offset<const> = {0.5, 0.5, 0, 0}
-    local posClamp = math3d.muladd(posNDC, 0.5, offset)
+    local mask<const>, offset<const> = {0.5, 0.5, 1, 1}, {0.5, 0.5, 0, 0}
+    local posClamp = math3d.muladd(posNDC, mask, offset)
     local vr = irq.view_rect(queueeid)
 
     local posScreen = math3d.tovalue(math3d.mul(math3d.vector(vr.w, vr.h, 1, 1), posClamp))
@@ -48,7 +48,7 @@ local allfont = {}
 function ifontmgr.add_font(fontname)
     local fontid = allfont[fontname]
     if fontid == nil then
-        fontid = bgfxfont.add_font(platform.font(fontname))
+        fontid = bgfxfont.addfont(platform.font(fontname))
         allfont[fontname] = fontid
     end
 
@@ -64,6 +64,39 @@ function ifontmgr.add_text3d(pos3d, fontid, text, size, color, style, queueeid)
     local textw, texth, numchar = bgfxfont.prepare_text(fonttex, text, size, fontid)
     
     local x, y = text_start_pos(textw, texth, screenpos)
-    tb:allocTB(numchar * 4, fontquad_layout.handle)
-    bgfxfont.load_text_quad(tb, x, y, text, size, color, fontid)
+    tb:alloc(numchar * 4, fontquad_layout.handle)
+    bgfxfont.load_text_quad(tb, text, x, y, size, color, fontid)
+end
+
+local fontcomp = ecs.component "font"
+function fontcomp:init()
+    self.id = ifontmgr.add_font(self.name)
+    return self
+end
+
+local fontsys = ecs.system "font_system"
+
+local function calc_pos(e, cfg)
+    if cfg.location == "header" then
+        local mask<const> = {0, 1, 0, 0}
+        local aabb = e._rendercache.aabb
+        if aabb then
+            local center, extent = math3d.aabb_center_extents(aabb)
+            return math3d.muladd(mask, extent, center)
+        end
+    else
+        error(("not support location:%s"):format(cfg.location))
+    end
+end
+
+function fontsys:camera_usage()
+    for _, eid in world:each "show_config" do
+        local e = world[eid]
+        local n = e.name
+        local font = assert(e.font)
+        local pos = calc_pos(e, e.show_config)
+        if font then
+            ifontmgr.add_text3d(pos, font.id, n, font.size, 0xffafafaf, 0)
+        end
+    end
 end

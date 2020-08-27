@@ -28,14 +28,36 @@ static struct font_context* new_font_context(lua_State *L){
 
 static struct font_manager* 
 getF(lua_State *L){
-    return (struct font_manager*)lua_touserdata(L, lua_upvalueindex(1));
+    struct font_context * t = (struct font_context*)lua_touserdata(L, lua_upvalueindex(1));
+	return &t->fm;
 }
 
 typedef unsigned int utfint;
 const char *utf8_decode (const char *s, utfint *val, int strict);
 
-void
-prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, int codepoint, int *advance_x, int *advance_y);
+static void
+prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
+	struct font_glyph g;
+	int ret = font_manager_touch(F, fontid, codepoint, &g);
+	*advance_x = g.advance_x;
+	*advance_y = g.advance_y;
+
+	if (ret < 0) {	// failed
+		// todo: report overflow
+		return;
+	}
+
+	if (ret == 0) {
+		// update texture
+		const bgfx_memory_t * mem = BGFX(alloc)(g.w * g.h);
+		const char * err = font_manager_update(F, fontid, codepoint, &g, mem->data);
+		if (err) {
+			// todo: report error
+			return;
+		}
+		BGFX(update_texture_2d)(texid, 0, 0, g.u, g.v, g.w, g.h, mem, g.w);
+	}
+}
 
 
 static int
@@ -155,7 +177,7 @@ lload_text_quad(lua_State *L){
     int numchar=0;
     while (text != textend){
         utfint codepoint;
-        utf8_decode(text, &codepoint, 0);
+        text = utf8_decode(text, &codepoint, 0);
         if (codepoint){
             if (font_manager_touch(fm, fontid, codepoint, &g) <= 0){
                 luaL_error(L, "codepoint:%d, %s, is not cache, need call 'prepare_text first'", codepoint, text);
@@ -170,7 +192,6 @@ lload_text_quad(lua_State *L){
             ++qt;
             ++numchar;
         }
-        
     }
     return 0;
 }
@@ -241,9 +262,8 @@ luaopen_bgfx_font(lua_State *L) {
         { "load_text_quad", lload_text_quad},
 		{ NULL, 			NULL },
 	};
-	struct font_context * c = new_font_context(L);
 	luaL_newlibtable(L, l);
-	lua_pushlightuserdata(L, (void *)c);
+	struct font_context * c = new_font_context(L);
 	luaL_setfuncs(L, l, 1);
 	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
 	lua_setfield(L, -2, "fonttexture_size");

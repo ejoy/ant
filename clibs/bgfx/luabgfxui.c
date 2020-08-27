@@ -355,7 +355,7 @@ struct prepare {
 	int codepoint;
 };
 
-void
+static void
 prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
 	struct font_glyph g;
 	int ret = font_manager_touch(F, fontid, codepoint, &g);

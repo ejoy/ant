@@ -1,0 +1,20 @@
+interface "ifontmgr"
+    .implement "font/font.lua"
+    .method "add_font"
+    .method "add_text3d"
+
+system "font_system"
+    .implement "font/font.lua"
+    .require_interface "ant.render|ifontmgr"
+    .method "camera_usage"
+
+component "font"
+    .implement "font/font.lua"
+    .method "init"
+
+policy "show_name"
+    .require_system "ant.render|font_system"
+    .require_interface "ant.render|ifontmgr"
+    .component "font"
+    .component "show_config"
+    .component "name"

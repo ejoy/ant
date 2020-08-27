@@ -128,5 +128,5 @@ system "skybox_test_system"
 
 system "font_test_system"
     .implement "font_test.lua"
-    .require_policy "ant.render|identification"
+    .require_policy "ant.render|show_name"
     .method "init"
