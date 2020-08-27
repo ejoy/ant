@@ -6,7 +6,7 @@ fx:
 properties:
   s_texFont:
     stage: 0
-    texture: /pkg/ant.resources/materials/textures/pbr/default/basecolor.texture
+    texture: /pkg/ant.resources/materials/textures/default.texture
 state:
   ALPHA_REF: 0
   CULL: CCW

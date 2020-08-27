@@ -13,6 +13,10 @@ component "font"
     .implement "font/font.lua"
     .method "init"
 
+component "show_config"
+    .implement "font/font.lua"
+    .method "init"
+
 transform "font_mesh"
     .implement "font/font.lua"
     .input "font"

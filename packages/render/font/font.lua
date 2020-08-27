@@ -106,6 +106,19 @@ function fontcomp:init()
     return self
 end
 
+local sc_comp = ecs.component "show_config"
+function sc_comp:init()
+    if self.location_offset then
+        self.location_offset = math3d.ref(math3d.vector(self.location_offset))
+    end
+    
+    if self.location then
+        self.location = math3d.ref(math3d.vector(self.location))
+    end
+
+    return self
+end
+
 local fontmesh = ecs.transform "font_mesh"
 function fontmesh.process_prefab(e)
     e.mesh = world.component "mesh" {
@@ -124,18 +137,34 @@ end
 
 local fontsys = ecs.system "font_system"
 
-local function calc_pos(e, cfg)
-    if cfg.location == "header" then
-        local mask<const> = {0, 1, 0, 0}
-        local attacheid = e._rendercache.attach_eid
-        local attach_e = world[attacheid]
-        if attach_e then
-            local aabb = attach_e._rendercache.aabb
-            if aabb then
-                local center, extent = math3d.aabb_center_extents(aabb)
-                return math3d.muladd(mask, extent, center)
+local mask<const> = {0, 1, 0, 0}
+local function calc_aabb_pos(e, offset, offsetop)
+    local attacheid = e._rendercache.attach_eid
+    local attach_e = world[attacheid]
+    if attach_e then
+        local aabb = attach_e._rendercache.aabb
+        if aabb then
+            local center, extent = math3d.aabb_center_extents(aabb)
+            local pos = offsetop(center, extent)
+            if offset then
+                return math3d.add(offset, pos)
             end
+            return pos
         end
+    end
+end
+
+local function calc_pos(e, cfg)
+    if cfg.location_type == "aabb_head" then
+        return calc_aabb_pos(e, cfg.location_offset, function (center, extent)
+            return math3d.muladd(mask, extent, center)
+        end)
+    elseif cfg.location_type == "aabb_bottom" then
+        return calc_aabb_pos(e, cfg.location_offset, function (center, extent)
+                return math3d.muladd(mask, math3d.inverse(extent), center)
+            end)
+    elseif cfg.location then
+        return cfg.location
     else
         error(("not support location:%s"):format(cfg.location))
     end

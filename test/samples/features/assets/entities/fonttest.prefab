@@ -28,7 +28,8 @@ data:
         name: 黑体
         size: 42
     show_config:
-        location: header
+        location_type: aabb_bottom
+        location_offset: {0, -0.85, 0, 0}
         description: 测试测试
         color: 0xff00ff00
 action:

@@ -1,6 +1,7 @@
 normalmap: false
 path: /pkg/ant.resources.binary/textures/default.dds
 sRGB: false
+format: RGBA8
 sampler:
   MAG: LINEAR
   MIN: LINEAR
