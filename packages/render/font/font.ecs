@@ -1,13 +1,12 @@
 interface "ifontmgr"
     .implement "font/font.lua"
     .method "add_font"
-    .method "add_text3d"
+    .method "add_text"
 
 system "font_system"
     .implement "font/font.lua"
     .require_interface "ant.render|ifontmgr"
     .method "camera_usage"
-    .method "end_frame"
 
 component "font"
     .implement "font/font.lua"

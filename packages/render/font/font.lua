@@ -21,21 +21,8 @@ local fonttex = {stage=0, texture={handle=fonttex_handle}}
 local layout_desc   = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout = declmgr.get(layout_desc)
 local declformat    = declmgr.vertex_desc_str(layout_desc)
-local tb            = bgfx.transient_buffer(declformat)
-local tboffset      = 0
 
 local imaterial = world:interface "ant.asset|imaterial"
-
-local function alloc(n, decl)
-    tb:alloc(n, decl)
-    local start = tboffset
-    tboffset = tboffset + n
-    return start, tboffset
-end
-
-local function reset()
-    tboffset = 0
-end
 
 local function create_ib()
     local ib = {}
@@ -90,14 +77,8 @@ local function text_start_pos(textw, texth, screenpos)
     return screenpos[1] - textw * 0.5, screenpos[2] - texth * 0.5
 end
 
-function ifontmgr.add_text3d(pos3d, fontid, text, size, color, style, queueeid)
-    local screenpos = calc_screen_pos(pos3d, queueeid)
-    local textw, texth, numchar = bgfxfont.prepare_text(fonttex_handle, text, size, fontid)
+function ifontmgr.add_text(x, y, fontid, text, size, color, style)
 
-    local x, y = text_start_pos(textw, texth, screenpos)
-    local start, num = alloc(numchar * 4, fontquad_layout.handle)
-    bgfxfont.load_text_quad(tb, text, x, y, size, color, fontid)
-    return start, num
 end
 
 local fontcomp = ecs.component "font"
@@ -125,7 +106,7 @@ function fontmesh.process_prefab(e)
         vb = {
             start = 0,
             num = 0,
-            tb,
+            bgfx.transient_buffer(declformat),
         },
         ib = {
             start = 0,
@@ -154,8 +135,8 @@ local function calc_aabb_pos(e, offset, offsetop)
     end
 end
 
-local function calc_pos(e, cfg)
-    if cfg.location_type == "aabb_head" then
+local function calc_3d_anchor_pos(e, cfg)
+    if cfg.location_type == "aabb_top" then
         return calc_aabb_pos(e, cfg.location_offset, function (center, extent)
             return math3d.muladd(mask, extent, center)
         end)
@@ -170,36 +151,52 @@ local function calc_pos(e, cfg)
     end
 end
 
-local function draw_text3d(e, font, pos, text, color)
-    local rc = e._rendercache
-    local vb, ib = rc.vb, rc.ib
-
-    vb.start, vb.num = ifontmgr.add_text3d(pos, font.id, text, font.size, color or 0xffafafaf, 0)
-    ib.start, ib.num = 0, (vb.num / 4) * 2 * 3
-end
-
-local function submit_text(eid)
+local alltext = {}
+local function collect_text(eid)
     local e = world[eid]
     local font = e.font
     local sc = e.show_config
-    local pos = calc_pos(e, sc)
+    local screenpos = calc_screen_pos(calc_3d_anchor_pos(e, sc))
 
-    draw_text3d(e, font, pos, sc.description, sc.color)
-    imaterial.set_property(eid, "s_texFont", fonttex)
+    local textw, texth, num = bgfxfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
+    local x, y = text_start_pos(textw, texth, screenpos)
+    local rc = e._rendercache
+    local vb, ib = rc.vb, rc.ib
+    vb.start, vb.num = 0, num*4
+    local vbhandle = vb.handles[1]
+    vbhandle:alloc(vb.num, fontquad_layout.handle)
+
+    ib.num = num * 2 * 3
+
+    alltext[#alltext+1] = {
+        vbhandle, sc.description, x, y, font.size, sc.color, font.id, depth=screenpos[3]
+    }
+end
+
+local function submit_text()
+    table.sort(alltext, function (lhs, rhs)
+        return lhs.depth < rhs.depth
+    end)
+
+    for _, t in ipairs(alltext) do
+        bgfxfont.load_text_quad(table.unpack(t))
+    end
+    alltext = {}
 end
 
 function fontsys:camera_usage()
     for _, eid in world:each "show_config" do
-        submit_text(eid)
+        collect_text(eid)
     end
-end
 
-function fontsys:end_frame()
-    reset()
+    submit_text()
 end
 
 local sn_a = ecs.action "show_name"
 function sn_a.init(prefab, idx, value)
-    local e = world[prefab[idx]]
+    local eid = prefab[idx]
+    local e = world[eid]
     e._rendercache.attach_eid = prefab[value]
+
+    imaterial.set_property(eid, "s_texFont", fonttex)
 end
