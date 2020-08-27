@@ -34,12 +34,18 @@ function irender.draw(vid, ri)
 	local ib, vb = ri.ib, ri.vb
 
 	if ib and ib.num ~= 0 then
-		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
+		--TODO: need set function for set_index_buffer
+		if type(ib.handle) == "number" then
+			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
+		else
+			ib.handle:setI(ib.start, ib.num)
+		end
 	end
 
 	local start_v, num_v = vb.start, vb.num
 	if num_v ~= 0 then
 		for idx, h in ipairs(vb.handles) do
+			--TODO: need set function for set_index_buffer
 			if type(h) == "number" then
 				bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
 			else

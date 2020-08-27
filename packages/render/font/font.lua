@@ -33,6 +33,10 @@ local function alloc(n, decl)
     return start, tboffset
 end
 
+local function reset()
+    tboffset = 0
+end
+
 local function create_ib()
     local ib = {}
     for i=1, MAX_QUAD do
@@ -106,9 +110,7 @@ function fontmesh.process_prefab(e)
         vb = {
             start = 0,
             num = 0,
-            handles = {
-                tb,
-            }
+            tb,
         },
         ib = {
             start = 0,
@@ -137,22 +139,32 @@ local function calc_pos(e, cfg)
     end
 end
 
+local function draw_text3d(e, font, pos, text)
+    local rc = e._rendercache
+    local vb, ib = rc.vb, rc.ib
+
+    vb.start, vb.num = ifontmgr.add_text3d(pos, font.id, text, font.size, 0xffafafaf, 0)
+    ib.num = (vb.num / 4) * 2
+end
+
+local function submit_text(eid)
+    local e = world[eid]
+    local font = e.font
+    local sc = e.show_config
+    local pos = calc_pos(e, sc)
+
+    draw_text3d(e, font, pos, sc.description)
+    imaterial.set_property(eid, "s_texFont", fonttex)
+end
+
 function fontsys:camera_usage()
     for _, eid in world:each "show_config" do
-        local e = world[eid]
-        local font = assert(e.font)
-        local sc = e.show_config
-        local pos = calc_pos(e, sc)
-        if font then
-            local rc = e._rendercache
-            local vb, ib = rc.vb, rc.ib
-
-            vb.start, vb.num = ifontmgr.add_text3d(pos, font.id, sc.description, font.size, 0xffafafaf, 0)
-            ib.num = (vb.num / 4) * 2
-
-            imaterial.set_property(eid, "s_texFont", fonttex)
-        end
+        submit_text(eid)
     end
+end
+
+function fontsys:end_frame()
+    reset()
 end
 
 local sn_a = ecs.action "show_name"
