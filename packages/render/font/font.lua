@@ -40,14 +40,16 @@ end
 local function create_ib()
     local ib = {}
     for i=1, MAX_QUAD do
-        ib[#ib+1] = 0
-        ib[#ib+1] = 1
-        ib[#ib+1] = 3
-        ib[#ib+1] = 1
-        ib[#ib+1] = 2
-        ib[#ib+1] = 3
+        local offset = (i-1) * 4
+        ib[#ib+1] = offset + 0
+        ib[#ib+1] = offset + 1
+        ib[#ib+1] = offset + 2
+
+        ib[#ib+1] = offset + 1
+        ib[#ib+1] = offset + 3
+        ib[#ib+1] = offset + 2
     end
-    return bgfx.create_index_buffer('w', ib)
+    return bgfx.create_index_buffer(bgfx.memory_buffer('w', ib), "")
 end
 local ibhandle = create_ib()
 
@@ -144,7 +146,7 @@ local function draw_text3d(e, font, pos, text)
     local vb, ib = rc.vb, rc.ib
 
     vb.start, vb.num = ifontmgr.add_text3d(pos, font.id, text, font.size, 0xffafafaf, 0)
-    ib.num = (vb.num / 4) * 2
+    ib.start, ib.num = 0, (vb.num / 4) * 2 * 3
 end
 
 local function submit_text(eid)

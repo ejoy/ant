@@ -66,14 +66,22 @@ local function get_type(v)
 	return assert(shortname_mapper[v])
 end
 
+local decls = {}
+
 local function decl_name(elemname)
-	assert(#elemname == 6)
-	local attrib 	= get_attrib(elemname)
-	local num 		= tonumber(elemname:sub(2, 2))
-	local normalize = elemname:sub(4, 4) == "n"
-	local asint		= elemname:sub(5, 5) == "i"
-	local type 		= get_type(elemname:sub(6, 6))
-	return {attrib, num, type, normalize, asint}
+	local decl = decls[elemname]
+	if decl == nil then
+		assert(#elemname == 6)
+		local attrib 	= get_attrib(elemname)
+		local num 		= tonumber(elemname:sub(2, 2))
+		local normalize = elemname:sub(4, 4) == "n"
+		local asint		= elemname:sub(5, 5) == "i"
+		local type 		= get_type(elemname:sub(6, 6))
+		decl = {attrib, num, type, normalize, asint}
+		decls[elemname] = decl
+	end
+
+	return decl
 end
 
 local function create_decl(vb_layout)

@@ -105,7 +105,7 @@ end
 
 function init_loader_sys:post_init()
     local mq = world:singleton_entity "main_queue"
-    local pos = math3d.vector(-4.5, 2, -1.5, 1)
+    local pos = math3d.vector(-10.5, 10, -5.5, 1)
     icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
     -- local dir = {0, 0, 1, 0}
     -- icamera.lookto(mq.camera_eid, {0, 0, -8, 1}, dir)

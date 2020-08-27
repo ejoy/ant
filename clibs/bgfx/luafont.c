@@ -174,7 +174,7 @@ lload_text_quad(lua_State *L){
     struct font_glyph g = {0};
 
     struct quad_text *qt = (struct quad_text *)tb->tvb.data;
-    int numchar=0;
+    
     while (text != textend){
         utfint codepoint;
         text = utf8_decode(text, &codepoint, 0);
@@ -183,14 +183,13 @@ lload_text_quad(lua_State *L){
                 luaL_error(L, "codepoint:%d, %s, is not cache, need call 'prepare_text' first", codepoint, text);
             }
 
-            if (numchar * 4 > tb->cap_v){
+            if ((qt - (struct quad_text *)(tb->tvb.data)) > tb->cap_v * 4){
                 luaL_error(L, "transient vertex buffer is not enough: %d", tb->cap_v);
             }
 
             fill_text_quad(fm, qt, x, y, color, size, &g);
-            x += g.advance_x;
-            ++qt;
-            ++numchar;
+            x += g.advance_x * FIXPOINT;
+            qt += 4;
         }
     }
     return 0;
