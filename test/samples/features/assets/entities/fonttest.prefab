@@ -1,7 +1,6 @@
 ---
 policy:
     ant.render|render
-    ant.render|show_name
     ant.scene|hierarchy_policy
     ant.general|name
 data:
@@ -13,8 +12,23 @@ data:
     state: 0x00000005
     scene_entity: true
     name: slot_cube
+
+---
+policy:
+    ant.render|render
+    ant.render|show_name
+    ant.render|fontrender
+    ant.general|name
+data:
+    transform: {}
+    material: /pkg/ant.resources/materials/font/font.material
+    state: 1
+    scene_entity:true
     font:
         name: 黑体
         size: 42
     show_config:
         location: header
+        description: 测试测试
+action:
+    show_name: 1

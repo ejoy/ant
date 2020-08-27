@@ -1,6 +1,6 @@
 fx:
-  vs: /pkg/ant.test.gameui/fx/vs_uifont.sc
-  fs: /pkg/ant.test.gameui/fx/fs_uifont.sc
+  vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
+  fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
   setting:
     surfacetype: ui
 properties:

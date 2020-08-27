@@ -16,11 +16,36 @@ local function create_font_texture2d()
     return bgfx.create_texture2d(s, s, false, 1, "A8")
 end
 
-local fonttex       = create_font_texture2d()
-local layout_desc   = declmgr.correct_layout "p20Nii|t20Nii|c40niu"
+local fonttex_handle= create_font_texture2d()
+local fonttex = {stage=0, texture={handle=fonttex_handle}}
+local layout_desc   = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout = declmgr.get(layout_desc)
 local declformat    = declmgr.vertex_desc_str(layout_desc)
 local tb            = bgfx.transient_buffer(declformat)
+local tboffset      = 0
+
+local imaterial = world:interface "ant.asset|imaterial"
+
+local function alloc(n, decl)
+    tb:alloc(n, decl)
+    local start = tboffset
+    tboffset = tboffset + n
+    return start, tboffset
+end
+
+local function create_ib()
+    local ib = {}
+    for i=1, MAX_QUAD do
+        ib[#ib+1] = 0
+        ib[#ib+1] = 1
+        ib[#ib+1] = 3
+        ib[#ib+1] = 1
+        ib[#ib+1] = 2
+        ib[#ib+1] = 3
+    end
+    return bgfx.create_index_buffer('w', ib)
+end
+local ibhandle = create_ib()
 
 local irq = world:interface "ant.render|irenderqueue"
 local function calc_screen_pos(pos3d, queueeid)
@@ -61,11 +86,12 @@ end
 
 function ifontmgr.add_text3d(pos3d, fontid, text, size, color, style, queueeid)
     local screenpos = calc_screen_pos(pos3d, queueeid)
-    local textw, texth, numchar = bgfxfont.prepare_text(fonttex, text, size, fontid)
-    
+    local textw, texth, numchar = bgfxfont.prepare_text(fonttex_handle, text, size, fontid)
+
     local x, y = text_start_pos(textw, texth, screenpos)
-    tb:alloc(numchar * 4, fontquad_layout.handle)
+    local start, num = alloc(numchar * 4, fontquad_layout.handle)
     bgfxfont.load_text_quad(tb, text, x, y, size, color, fontid)
+    return start, num
 end
 
 local fontcomp = ecs.component "font"
@@ -74,15 +100,37 @@ function fontcomp:init()
     return self
 end
 
+local fontmesh = ecs.transform "font_mesh"
+function fontmesh.process_prefab(e)
+    e.mesh = world.component "mesh" {
+        vb = {
+            start = 0,
+            num = 0,
+            handles = {
+                tb,
+            }
+        },
+        ib = {
+            start = 0,
+            num = 0,
+            handle = ibhandle
+        }
+    }
+end
+
 local fontsys = ecs.system "font_system"
 
 local function calc_pos(e, cfg)
     if cfg.location == "header" then
         local mask<const> = {0, 1, 0, 0}
-        local aabb = e._rendercache.aabb
-        if aabb then
-            local center, extent = math3d.aabb_center_extents(aabb)
-            return math3d.muladd(mask, extent, center)
+        local attacheid = e._rendercache.attach_eid
+        local attach_e = world[attacheid]
+        if attach_e then
+            local aabb = attach_e._rendercache.aabb
+            if aabb then
+                local center, extent = math3d.aabb_center_extents(aabb)
+                return math3d.muladd(mask, extent, center)
+            end
         end
     else
         error(("not support location:%s"):format(cfg.location))
@@ -92,11 +140,23 @@ end
 function fontsys:camera_usage()
     for _, eid in world:each "show_config" do
         local e = world[eid]
-        local n = e.name
         local font = assert(e.font)
-        local pos = calc_pos(e, e.show_config)
+        local sc = e.show_config
+        local pos = calc_pos(e, sc)
         if font then
-            ifontmgr.add_text3d(pos, font.id, n, font.size, 0xffafafaf, 0)
+            local rc = e._rendercache
+            local vb, ib = rc.vb, rc.ib
+
+            vb.start, vb.num = ifontmgr.add_text3d(pos, font.id, sc.description, font.size, 0xffafafaf, 0)
+            ib.num = (vb.num / 4) * 2
+
+            imaterial.set_property(eid, "s_texFont", fonttex)
         end
     end
+end
+
+local sn_a = ecs.action "show_name"
+function sn_a.init(prefab, idx, value)
+    local e = world[prefab[idx]]
+    e._rendercache.attach_eid = prefab[value]
 end

@@ -180,7 +180,7 @@ lload_text_quad(lua_State *L){
         text = utf8_decode(text, &codepoint, 0);
         if (codepoint){
             if (font_manager_touch(fm, fontid, codepoint, &g) <= 0){
-                luaL_error(L, "codepoint:%d, %s, is not cache, need call 'prepare_text first'", codepoint, text);
+                luaL_error(L, "codepoint:%d, %s, is not cache, need call 'prepare_text' first", codepoint, text);
             }
 
             if (numchar * 4 > tb->cap_v){
