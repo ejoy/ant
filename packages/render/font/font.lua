@@ -176,6 +176,7 @@ function fontsys:camera_usage()
     for _, eid in world:each "show_config" do
         load_text(eid)
     end
+    bgfxfont.submit()
 end
 
 local sn_a = ecs.action "show_name"

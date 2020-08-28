@@ -246,6 +246,12 @@ lfontheight(lua_State *L) {
 	return 3;
 }
 
+static int
+lsubmit(lua_State *L){
+	struct font_manager *F = getF(L);
+	font_manager_flush(F);
+	return 0;
+}
 
 LUAMOD_API int
 luaopen_bgfx_font(lua_State *L) {
@@ -259,6 +265,7 @@ luaopen_bgfx_font(lua_State *L) {
 		{ "rebind", 		lrebindfont },
         { "prepare_text",   lprepare_text},
         { "load_text_quad", lload_text_quad},
+		{ "submit",			lsubmit},
 		{ NULL, 			NULL },
 	};
 	luaL_newlibtable(L, l);
