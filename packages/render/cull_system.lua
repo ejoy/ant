@@ -17,10 +17,14 @@ function cull_sys:cull()
 
 			local results = filter.result
 			for _, resulttarget in pairs(results) do
-				if resulttarget.needcull then
-					resulttarget.visible_set = math3d.frustum_intersect_aabb_list(frustum_planes, resulttarget.items)
-				else
-					resulttarget.visible_set = resulttarget.items
+				local vs = resulttarget.visible_set
+				if vs then
+					local items = resulttarget.items
+					if #items > 0 then
+						vs.n = math3d.frustum_intersect_aabb_list(frustum_planes, items, vs)
+					else
+						vs.n = 0
+					end
 				end
 			end
 		end

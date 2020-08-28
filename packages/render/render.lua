@@ -12,11 +12,19 @@ local samplerutil	= require "sampler"
 
 local irender = ecs.interface "irender"
 
+local ipf			= world:interface "ant.scene|iprimitive_filter"
+
 local vpt = ecs.transform "visible_primitive_transform"
 function vpt.process_entity(e)
 	local f = e.primitive_filter
 	f.insert_item = function (filter, fxtype, eid, rc)
-		filter.result[fxtype].items[eid] = rc
+		local items = filter.result[fxtype].items
+		if rc then
+			rc.eid = eid
+			items[#items+1] = rc
+		else
+			ipf.remove_item(items, eid)
+		end
 	end
 end
 

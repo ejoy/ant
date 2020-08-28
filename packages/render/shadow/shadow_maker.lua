@@ -12,6 +12,7 @@ local ilight	= world:interface "ant.render|light"
 local ishadow	= world:interface "ant.render|ishadow"
 
 local iom		= world:interface "ant.objcontroller|obj_motion"
+local ipf		= world:interface "ant.scene|iprimitive_filter"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -225,12 +226,9 @@ function sm:refine_camera()
 		local sceneaabb = math3d.aabb()
 
 		local function merge_scene_aabb(sceneaabb, filtertarget)
-			local vs = filtertarget.visible_set
-			if vs then
-				for _, ri in pairs(vs) do
-					if ri.aabb then
-						sceneaabb = math3d.aabb_merge(sceneaabb, ri.aabb)
-					end
+			for _, item in ipf.iter_target(filtertarget) do
+				if item.aabb then
+					sceneaabb = math3d.aabb_merge(sceneaabb, item.aabb)
 				end
 			end
 			return sceneaabb
@@ -287,14 +285,15 @@ function spt.process_entity(e)
 	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
 		local results = filter.result
 		if rc then
+			rc.eid = eid
 			local material = which_material(eid)
 			results[fxtype].items[eid] = setmetatable({
 				fx = material.fx,
 				properties = material.properties or false,
 			}, {__index=rc})
 		else
-			results.opaticy.items[eid] = nil
-			results.translucent.items[eid] = nil
+			ipf.remove_item(results.opaticy.items, eid)
+			ipf.remove_item(results.translucent.items, eid)
 		end
 	end
 end

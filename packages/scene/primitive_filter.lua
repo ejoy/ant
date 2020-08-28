@@ -34,6 +34,27 @@ function ipf.filter_order(eid)
 	return world[eid].filter_order
 end
 
+function ipf.remove_item(items, eid)
+	for i=1, #items do
+		local item = items[i]
+		if item.eid == eid then
+			table.remove(items, i)
+			return
+		end
+	end
+end
+
+function ipf.iter_target(result)
+	local vs = result.visible_set or result.items
+	local n = vs.n or #vs
+	return function (t, idx)
+		if idx < n then
+			idx = idx + 1
+			return idx, t[idx]
+		end
+	end, vs, 0
+end
+
 local ies = world:interface "ant.scene|ientity_state"
 
 local pf = ecs.component "primitive_filter"
@@ -42,29 +63,27 @@ local default_filter_order = {
 	"foreground", "opaticy", "background", "translucent", "decal", "ui"
 }
 
+local function gen_filter(needcull, sort)
+	return {
+		items = {},
+		visible_set = needcull and {n=0} or nil,
+		sort = sort,
+	}
+end
+
 function pf:init()
 	self.result = {
-		translucent = {
-			items = {},
-			needcull = true,
-		},
-		opaticy = {
-			items = {},
-			needcull = true,
-        },
-        decal = {
-			items = {},
-			needcull = true,
-		},
-		foreground = {
-			items = {},
-		},
-		background = {
-			items = {},
-		},
-		ui = {
-			items = {},
-		}
+		translucent = gen_filter(true),
+		opaticy = gen_filter(true),
+        decal = gen_filter(true),
+		foreground = gen_filter(),
+		background = gen_filter(),
+		ui = gen_filter(nil,
+			function (items)
+				table.sort(items, function (lhs, rhs)
+					return lhs.depth < rhs.depth
+				end)
+			end)
 	}
 	self.filter_mask = ies.filter_mask(self.filter_type)
 	self.exclude_mask = self.exclude_type and ies.filter_mask(self.exclude_type) or 0

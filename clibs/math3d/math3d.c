@@ -1800,30 +1800,35 @@ lfrustum_intersect_aabb_list(lua_State *L){
 	const float* planes[6];
 	fetch_vectors_from_table(L, LS, 1, 6, planes);
 
-	const int resultidx = lua_gettop(L)+1;
-	lua_newtable(L);
+	luaL_checktype(L, 2, LUA_TTABLE);
+	const int numelem = lua_rawlen(L, 2);
 
-	int haselem = 0;
-	lua_pushnil(L);
-	while (lua_next(L, 2) != 0){
-		//	table: eid=value
-		//		value: {aabb=...}
-		const lua_Integer eid = lua_tointeger(L, -2);	//table key
+	const int visibleset_idx = 3;
+	luaL_checktype(L, visibleset_idx, LUA_TTABLE);
 
-		const float * aabb = (LUA_TNIL != lua_getfield(L, -1, "aabb")) ?
-			object_from_index(L, LS, -1, LINEAR_TYPE_MAT, matrix_from_table) : NULL;
-		lua_pop(L, 1);
+	int num_visible = 0;
+	
+	for (int ii=0; ii<numelem; ++ii){
+		int t = lua_gettop(L);
+		lua_geti(L, 2, ii+1);{
+			t = lua_gettop(L);
+			const float * aabb = (LUA_TNIL != lua_getfield(L, -1, "aabb")) ?
+				object_from_index(L, LS, -1, LINEAR_TYPE_MAT, matrix_from_table) : NULL;
+			lua_pop(L, 1);
+			t = lua_gettop(L);
 
-		if (aabb == NULL || math3d_frustum_intersect_aabb(LS, planes, aabb) >= 0){
-			lua_pushvalue(L, -1);	//-1 is table value
-			lua_seti(L, resultidx, eid);
-			haselem = 1;
+			if (aabb == NULL || math3d_frustum_intersect_aabb(LS, planes, aabb) >= 0){
+				lua_pushvalue(L, -1);
+				lua_seti(L, visibleset_idx, ++num_visible);
+			}
+			t = lua_gettop(L);
 		}
-
 		lua_pop(L, 1);
+		t = lua_gettop(L);
+		int debug = t;
 	}
-
-	return haselem;
+	lua_pushinteger(L, num_visible);
+	return 1;
 }
 
 static int

@@ -6,17 +6,20 @@ local bgfx 		= require "bgfx"
 
 local math3d	= require "math3d"
 
-local irender = world:interface "ant.render|irender"
-local isys_properties = world:interface "ant.render|system_properties"
+local irender 	= world:interface "ant.render|irender"
+local isp 		= world:interface "ant.render|system_properties"
 local imaterial = world:interface "ant.asset|imaterial"
-local rt = ecs.transform "render_transform"
+local ipf		= world:interface "ant.scene|iprimitive_filter"
 
+local rt = ecs.transform "render_transform"
 local function set_world_matrix(rc)
-	local m = math3d
 	bgfx.set_transform(rc.worldmat)
 end
 
 local function to_v(t)
+	if t == nil then
+		return
+	end
 	assert(type(t) == "table")
 	if t.stage then
 		return t
@@ -42,7 +45,7 @@ local function generate_properties(uniforms, properties)
 		new_properties = {}
 		for _, u in ipairs(uniforms) do
 			local n = u.name
-			local v = properties[n] and to_v(properties[n]) or isys_properties.get(n)
+			local v = to_v(properties[n]) or isp.get(n)
 			new_properties[n] = {
 				value = v,
 				handle = u.handle,
@@ -91,7 +94,7 @@ function render_sys:init()
 end
 
 function render_sys:render_commit()
-	isys_properties.update()
+	isp.update()
 	for _, eid in world:each "render_target" do
 		local rq = world[eid]
 		if rq.visible then
@@ -104,12 +107,9 @@ function render_sys:render_commit()
 			local results = filter.result
 
 			local function draw_items(result)
-				local items = result.visible_set
-				if items then
-					for eid, ri in pairs(items) do
-						irender.draw(viewid, ri)
-					end
-				end  
+				for _, item in ipf.iter_target(result) do
+					irender.draw(viewid, item)
+				end
 			end
 
 			for _, fn in ipairs(filter.filter_order) do
