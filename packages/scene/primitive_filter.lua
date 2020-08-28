@@ -79,9 +79,12 @@ function pf:init()
 		foreground = gen_filter(),
 		background = gen_filter(),
 		ui = gen_filter(nil,
-			function (items)
-				table.sort(items, function (lhs, rhs)
-					return lhs.depth < rhs.depth
+			function (result)
+				local vs = result.visible_set or result.items
+				local n = vs.n or #vs
+				vs[n+1] = nil
+				table.sort(vs, function (lhs, rhs)
+					return lhs.depth > rhs.depth
 				end)
 			end)
 	}

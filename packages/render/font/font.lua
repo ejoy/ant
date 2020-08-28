@@ -151,8 +151,7 @@ local function calc_3d_anchor_pos(e, cfg)
     end
 end
 
-local alltext = {}
-local function collect_text(eid)
+local function load_text(eid)
     local e = world[eid]
     local font = e.font
     local sc = e.show_config
@@ -168,28 +167,15 @@ local function collect_text(eid)
 
     ib.num = num * 2 * 3
 
-    alltext[#alltext+1] = {
-        vbhandle, sc.description, x, y, font.size, sc.color, font.id, depth=screenpos[3]
-    }
-end
+    rc.depth = screenpos[3]
 
-local function submit_text()
-    table.sort(alltext, function (lhs, rhs)
-        return lhs.depth < rhs.depth
-    end)
-
-    for _, t in ipairs(alltext) do
-        bgfxfont.load_text_quad(table.unpack(t))
-    end
-    alltext = {}
+    bgfxfont.load_text_quad(vbhandle, sc.description, x, y, font.size, sc.color, font.id)
 end
 
 function fontsys:camera_usage()
     for _, eid in world:each "show_config" do
-        collect_text(eid)
+        load_text(eid)
     end
-
-    submit_text()
 end
 
 local sn_a = ecs.action "show_name"

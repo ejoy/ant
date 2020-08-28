@@ -107,6 +107,9 @@ function render_sys:render_commit()
 			local results = filter.result
 
 			local function draw_items(result)
+				if result.sort then
+					result:sort()
+				end
 				for _, item in ipf.iter_target(result) do
 					irender.draw(viewid, item)
 				end
