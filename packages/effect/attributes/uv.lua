@@ -1,6 +1,5 @@
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
-local qc = require "quad_cache"
 
 return {
     init = function (world, emittereid, attrib)

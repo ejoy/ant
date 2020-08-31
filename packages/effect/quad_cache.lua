@@ -1,28 +1,18 @@
+local ecs = ...
+local world = ecs.world
+
 local renderpkg = import_package "ant.render"
 local declmgr = renderpkg.declmgr
+
+local irender = world:interface "ant.render|irender"
 
 local bgfx = require "bgfx"
 local math3d = require "math3d"
 
-local qc = {} qc.__index = qc
+local iqc = ecs.interface "iquadcache"
 
 local vb, ib
 local vb_num, ib_num
-local function create_static_quad_ib(num_quad)
-    local b = {}
-    for ii=1, num_quad do
-        local offset = (ii-1) * 4
-        b[#b+1] = offset + 0
-        b[#b+1] = offset + 1
-        b[#b+1] = offset + 2
-
-        b[#b+1] = offset + 1
-        b[#b+1] = offset + 3
-        b[#b+1] = offset + 2
-    end
-
-    return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
-end
 
 local default_quad<const> = {
     --pos.xyz, normal.xyz, texcoord.uv, color.dword
@@ -50,11 +40,14 @@ local function del_buffer()
     ib_num, vb_num = nil, nil
 end
 
-function qc.init(numquad)
+function iqc.init(numquad)
     del_buffer()
     ib_num = numquad * 2 * 3
+    if numquad > irender.quad_ib_num() then
+        error(("require quad number is too large:%d, max: %d"):format(numquad, irender.quad_ib_num()))
+    end
     ib = {
-        handle = create_static_quad_ib(numquad)
+        handle = irender.quad_ib()
     }
 
     vb_num = numquad * 4
@@ -66,11 +59,11 @@ function qc.init(numquad)
     }
 end
 
-qc.clear = del_buffer
+iqc.clear = del_buffer
 
 local vbcache = {n=0}
 
-function qc.quad_num()
+function iqc.quad_num()
     return vbcache.n / #default_quad
 end
 
@@ -83,7 +76,7 @@ local function add_srt()
     }
 end
 
-function qc.alloc_quad_buffer(numquad)
+function iqc.alloc_quad_buffer(numquad)
     local start = vbcache.n
     local def_elemnum = #default_quad
     for ii=1, numquad do
@@ -114,47 +107,47 @@ local function elem_offset(vertexidx)
     return (vertexidx-1) * vertex_elemnum
 end
 
-function qc.vertex_pos(vertexidx)
+function iqc.vertex_pos(vertexidx)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
     return vbcache[offset+1], vbcache[offset+2], vbcache[vertexidx+3]
 end
 
-function qc.vertex_normal(vertexidx)
+function iqc.vertex_normal(vertexidx)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
     return vbcache[offset+4], vbcache[offset+5], vbcache[offset+6]
 end
 
-function qc.vertex_texcoord(vertexidx)
+function iqc.vertex_texcoord(vertexidx)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
     return vbcache[offset+7], vbcache[offset+8]
 end
 
-function  qc.set_vertex_pos(vertexidx, x, y, z)
+function  iqc.set_vertex_pos(vertexidx, x, y, z)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
     vbcache[offset+1], vbcache[offset+2], vbcache[offset+3] = x, y, z
 end
 
-function  qc.set_vertex_normal(vertexidx, x, y, z)
+function  iqc.set_vertex_normal(vertexidx, x, y, z)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
     vbcache[offset+4], vbcache[offset+5], vbcache[offset+6] = x, y, z
 end
 
-function qc.set_vertex_texcoord(vertexidx, u, v)
+function iqc.set_vertex_texcoord(vertexidx, u, v)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
     vbcache[offset+7], vbcache[vertexidx+8]= u, v
 end
 
-function qc.set_quad_orientation(quadidx, q)
+function iqc.set_quad_orientation(quadidx, q)
     quad_srt[quadidx].r.q = q
 end
 
-function qc.set_quad_scale(quadidx, s)
+function iqc.set_quad_scale(quadidx, s)
     if type(s) == "number" then
         quad_srt[quadidx].s.v = {s, s, s}
     else
@@ -162,21 +155,21 @@ function qc.set_quad_scale(quadidx, s)
     end
 end
 
-function qc.set_quad_translate(quadidx, t)
+function iqc.set_quad_translate(quadidx, t)
     quad_srt[quadidx].t.v = t
 end
 
-function qc.quad_srt(quadidx)
+function iqc.quad_srt(quadidx)
     return quad_srt[quadidx]
 end
 
-function qc.set_quad_srt(quadidx, s, r, t)
+function iqc.set_quad_srt(quadidx, s, r, t)
     local srt = quad_srt[quadidx]
     srt.s, srt.r, srt.t = s, r, t
 end
 
 local function update_quad_transform()
-    local numquad = qc.quad_num()
+    local numquad = iqc.quad_num()
 
     for ii=1, numquad do
         local m = math3d.matrix(quad_srt[ii])
@@ -191,16 +184,14 @@ local function update_quad_transform()
             local np = math3d.tovalue(math3d.transform(m, math3d.vector(px, py, pz), 1))
             local nn = math3d.tovalue(math3d.transform(m, math3d.vector(nx, ny, nz), 0))
 
-            qc.set_vertex_pos(vertexidx, np[1], np[2], np[3])
-            qc.set_vertex_normal(vertexidx, nn[1], nn[2], nn[3])
+            iqc.set_vertex_pos(vertexidx, np[1], np[2], np[3])
+            iqc.set_vertex_normal(vertexidx, nn[1], nn[2], nn[3])
         end
     end
 
 end
 
-function qc.update()
+function iqc.update()
     update_quad_transform()
     bgfx.update(vb.handles[1], 0, bgfx.memory_buffer(vertex_format, vbcache, 1, vbcache.n))
 end
-
-return qc

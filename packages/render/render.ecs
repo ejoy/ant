@@ -100,6 +100,8 @@ interface "irender"
     .method "set_view_frame_buffer"
     .method "screen_capture"
     .method "read_render_buffer_content"
+    .method "quad_ib"
+    .method "quad_ib_num"
 
 interface "irenderqueue"
     .implement "render.lua"

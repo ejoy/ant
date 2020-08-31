@@ -2,7 +2,6 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
 
-local qc = require "quad_cache"
 
 local function calc_random_orientation(longitude_range, latitude_range)
     local longitude = math.rad(mu.random(longitude_range))
@@ -22,20 +21,21 @@ end
 
 return {
     init = function (world, emittereid, attrib)
+        local iqc = world:interface "ant.effect|iqaudcache"
         local data = attrib.data
         if data.method == "sphere_random" then
             local e = world[emittereid]
             local emitter = e._emitter
             for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
                 local orientation = calc_random_orientation(data.longitude, data.latitude)
-                qc.set_quad_orientation(ii, math3d.torotation(orientation))
+                iqc.set_quad_orientation(ii, math3d.torotation(orientation))
             end
         elseif data.method == "face_axis" then
             local e = world[emittereid]
             local emitter = e._emitter
             local orientation = math3d.torotation(data.axis)
             for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
-                qc.set_quad_orientation(ii, orientation)
+                iqc.set_quad_orientation(ii, orientation)
             end
         else
             error(("not support method:%s"):format(data.method))

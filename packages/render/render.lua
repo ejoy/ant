@@ -365,6 +365,32 @@ function irender.read_render_buffer_content(format, rb_idx, force_read, size)
 	return memory_handle, size.w, size.h, size.w * elem_size
 end
 
+local function create_quad_ib(num_quad)
+    local b = {}
+    for ii=1, num_quad do
+        local offset = (ii-1) * 4
+        b[#b+1] = offset + 0
+        b[#b+1] = offset + 1
+        b[#b+1] = offset + 2
+
+        b[#b+1] = offset + 1
+        b[#b+1] = offset + 3
+        b[#b+1] = offset + 2
+    end
+
+    return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
+end
+
+local quad_ib_num<const> = 512
+local ibhandle = create_quad_ib(quad_ib_num)
+function irender.quad_ib()
+	return ibhandle
+end
+
+function icamera.quad_ib_num()
+	return quad_ib_num
+end
+
 local irq = ecs.interface "irenderqueue"
 
 function irq.clear_state(eid)

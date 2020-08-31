@@ -23,22 +23,7 @@ local fontquad_layout = declmgr.get(layout_desc)
 local declformat    = declmgr.vertex_desc_str(layout_desc)
 
 local imaterial = world:interface "ant.asset|imaterial"
-
-local function create_ib()
-    local ib = {}
-    for i=1, MAX_QUAD do
-        local offset = (i-1) * 4
-        ib[#ib+1] = offset + 0
-        ib[#ib+1] = offset + 1
-        ib[#ib+1] = offset + 2
-
-        ib[#ib+1] = offset + 1
-        ib[#ib+1] = offset + 3
-        ib[#ib+1] = offset + 2
-    end
-    return bgfx.create_index_buffer(bgfx.memory_buffer('w', ib), "")
-end
-local ibhandle = create_ib()
+local irender = world:interface "ant.render|irender"
 
 local irq = world:interface "ant.render|irenderqueue"
 local function calc_screen_pos(pos3d, queueeid)
@@ -111,7 +96,7 @@ function fontmesh.process_prefab(e)
         ib = {
             start = 0,
             num = 0,
-            handle = ibhandle
+            handle = irender.quad_ib()
         }
     }
 end
