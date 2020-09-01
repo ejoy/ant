@@ -1183,6 +1183,7 @@ ldestroy(lua_State *L) {
 		BGFX(destroy_vertex_buffer)(handle);
 		break;
 	}
+	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:
 	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: {
 		bgfx_dynamic_vertex_buffer_handle_t handle = { id };
 		BGFX(destroy_dynamic_vertex_buffer)(handle);
@@ -1986,16 +1987,22 @@ static struct AttribTypeNamePairs attrib_type_name_pairs[BGFX_ATTRIB_TYPE_COUNT]
 
 #define ARRAY_COUNT(_ARRAY) sizeof(_ARRAY) / sizeof(_ARRAY[0])
 
+struct vertex_layout {
+	bgfx_vertex_layout_t layout;
+	//will not destory
+	bgfx_vertex_layout_handle_t  handle;
+};
+
 static const bgfx_vertex_layout_t *
 get_layout(lua_State *L, int index) {
-	const bgfx_vertex_layout_t * layout = (const bgfx_vertex_layout_t *)lua_touserdata(L, index);
+	const struct vertex_layout * layout = (const struct vertex_layout *)lua_touserdata(L, index);
 	if (layout == NULL) {
 		luaL_error(L, "Invalid layout");
 	}
-	if (lua_rawlen(L, index) != sizeof(bgfx_vertex_layout_t)) {
+	if (lua_rawlen(L, index) != sizeof(struct vertex_layout)) {
 		luaL_error(L, "Invalid layout");
 	}
-	return layout;
+	return &layout->layout;
 }
 
 static int
@@ -2196,9 +2203,20 @@ idToAttribType(uint16_t id) {
 	return BGFX_ATTRIB_TYPE_COUNT;
 }
 
+static inline bgfx_vertex_layout_handle_t
+get_vertex_layout_handle(struct vertex_layout *layout) {
+	if (BGFX_HANDLE_IS_VALID(layout->handle)){
+		layout->handle = BGFX(create_vertex_layout)(&layout->layout);
+	}
+	return layout->handle;
+}
+
 static size_t
 new_vdecl_from_string(lua_State *L, const char *vdecl, size_t sz) {
-	bgfx_vertex_layout_t * vd = lua_newuserdatauv(L, sizeof(*vd), 0);
+	struct vertex_layout * layout = lua_newuserdatauv(L, sizeof(*layout), 0);
+	layout->handle.idx = UINT16_MAX;
+	bgfx_vertex_layout_t * vd = &layout->layout;
+
 	struct string_reader rd = { L, vdecl, sz, 0 };
 	uint8_t numAttrs = read_int(&rd, 1);
 	uint16_t stride = read_int(&rd, 2);
@@ -2249,7 +2267,10 @@ lnewVertexLayout(lua_State *L) {
 	if (!lua_isnoneornil(L, 2)) {
 		id = renderer_type_id(L, 2);
 	}
-	bgfx_vertex_layout_t * vd = lua_newuserdatauv(L, sizeof(*vd), 0);
+	struct vertex_layout * layout = lua_newuserdatauv(L, sizeof(*layout), 0);
+	bgfx_vertex_layout_t *vd = &layout->layout;
+	layout->handle.idx = UINT16_MAX;
+
 	BGFX(vertex_layout_begin)(vd, id);
 	int i, type;
 	for (i=1; (type = lua_geti(L, 1, i)) != LUA_TNIL; i++) {
@@ -2638,12 +2659,27 @@ lcreateVertexBuffer(lua_State *L) {
 	return 1;
 }
 
+static inline int
+is_typeless(lua_State *L){
+	return lua_type(L, 2) == LUA_TUSERDATA ? 0 : 1;
+}
+
 static int
 lcreateDynamicVertexBuffer(lua_State *L) {
-	const bgfx_vertex_layout_t *vd = get_layout(L, 2);
+	const bgfx_vertex_layout_t *vd = NULL;
+	int flags_index;
+	uint32_t handle_type;
+	if (is_typeless(L)) {
+		flags_index = 2;
+		handle_type = BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS;
+	} else {
+		vd = get_layout(L, 2);
+		flags_index = 3;
+		handle_type = BGFX_HANDLE_DYNAMIC_INDEX_BUFFER;
+	}
 	uint16_t flags = BGFX_BUFFER_NONE;
-	if (lua_isstring(L, 3)) {
-		const char *f = lua_tostring(L, 3);
+	if (lua_isstring(L, flags_index)) {
+		const char *f = lua_tostring(L, flags_index);
 		int i;
 		for (i=0;f[i];i++) {
 			switch(f[i]) {
@@ -2674,8 +2710,8 @@ lcreateDynamicVertexBuffer(lua_State *L) {
 	if (!BGFX_HANDLE_IS_VALID(handle)) {
 		return luaL_error(L, "create dynamic vertex buffer failed");
 	}
-
-	lua_pushinteger(L, BGFX_LUAHANDLE(DYNAMIC_VERTEX_BUFFER, handle));
+#define BGFX_LUAHANDLE_EX(_HANDLETYPE, _HANDLE)	((_HANDLETYPE) << 16 | handle.idx)
+	lua_pushinteger(L, BGFX_LUAHANDLE_EX(handle_type, handle));
 	return 1;
 }
 
@@ -2748,7 +2784,8 @@ lupdate(lua_State *L) {
 	int idtype = id >> 16;
 	int idx = id & 0xffff;
 	uint32_t start = luaL_checkinteger(L, 2);
-	if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER) {
+	if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER || 
+		idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
 		const bgfx_memory_t *mem = getMemory(L, 3);
 		bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
 		BGFX(update_dynamic_vertex_buffer)(handle, start, mem);
@@ -2814,6 +2851,8 @@ lsetVertexBuffer(lua_State *L) {
 	int start = 0;
 	int end = UINT32_MAX;
 	int id;
+
+	struct vertex_layout* layout = NULL;
 	if (lua_gettop(L) <= 1) {
 		if (lua_isnoneornil(L, 1)) {
 			// empty
@@ -2827,6 +2866,7 @@ lsetVertexBuffer(lua_State *L) {
 		id = luaL_optinteger(L, 2, BGFX_HANDLE_VERTEX_BUFFER | UINT16_MAX);
 		start = luaL_optinteger(L, 3, 0);
 		end = luaL_optinteger(L, 4, UINT32_MAX);
+		layout = lua_isnoneornil(L, 5) ? NULL : (struct vertex_layout *)lua_touserdata(L, 5);
 	}
 
 	int idtype = id >> 16;
@@ -2835,11 +2875,20 @@ lsetVertexBuffer(lua_State *L) {
 		bgfx_vertex_buffer_handle_t handle = { idx };
 		BGFX(set_vertex_buffer)(stream, handle, start, end);
 	} else {
-		if (idtype != BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER) {
-			return luaL_error(L, "Invalid vertex buffer type %d", idtype);
+		if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER){
+			bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
+			BGFX(set_dynamic_vertex_buffer)(stream, handle, start, end);
 		}
-		bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
-		BGFX(set_dynamic_vertex_buffer)(stream, handle, start, end);
+
+		if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
+			if (layout == NULL){
+				return luaL_error(L, "dynamic vertex buffer of typeless must pass 'vertex_layout'");
+			}
+
+			bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
+			BGFX(set_dynamic_vertex_buffer)(stream, handle, start, end);
+		}
+		return luaL_error(L, "Invalid vertex buffer type %d", idtype);
 	}
 	return 0;
 }
@@ -4368,6 +4417,7 @@ lsetBuffer(lua_State *L) {
 		BGFX(set_compute_vertex_buffer)(stage, handle, a);
 		break;
 	}
+	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:
 	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: {
 		bgfx_dynamic_vertex_buffer_handle_t handle = { id };
 		BGFX(set_compute_dynamic_vertex_buffer)(stage, handle, a);
