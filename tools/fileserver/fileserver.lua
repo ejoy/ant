@@ -1,9 +1,3 @@
-local default_reponame = arg[1]
-local config = {
-	address = "0.0.0.0",
-	port = 2018,
-}
-
 local function LOG(...)
 	print(...)
 end
@@ -17,6 +11,8 @@ local debugger = require "debugger"
 
 local watch = {}
 local repos = {}
+local filelisten
+local config
 
 local function vfsjoin(dir, file)
     if file:sub(1, 1) == '/' or dir == '' then
@@ -59,13 +55,8 @@ end
 
 local function do_prebuilt(repopath, identity)
 	local sp = require "subprocess"
-    local function luaexe()
-        local i = -1
-        while arg[i] ~= nil do i = i - 1 end
-        return arg[i + 1]
-    end
 	sp.spawn {
-        luaexe(),
+        config.lua,
 		repopath / "prebuilt.lua",
 		identity,
         hideWindow = true,
@@ -120,9 +111,6 @@ local function logger_init(root)
 	logger_finish(root)
 end
 
-local filelisten = network.listen(config.address, config.port)
-LOG ("Listen :", config.address, config.port)
-
 local function response(obj, ...)
 	network.send(obj, protocol.packmessage({...}))
 end
@@ -132,7 +120,7 @@ local message = {}
 
 function message:ROOT(identity, reponame)
 	LOG("ROOT", identity, reponame)
-	local reponame = assert(reponame or default_reponame,  "Need repo name")
+	local reponame = assert(reponame or config.default_repo,  "Need repo name")
 	local repo = repo_add(identity, reponame)
 	if repo == nil then
 		response(self, "ROOT", "")
@@ -302,21 +290,34 @@ local function filewatch()
 	end
 end
 
-local function mainloop()
-	local objs = {}
-	if network.dispatch(objs, 0.1) then
-		for k,obj in ipairs(objs) do
-			objs[k] = nil
-			if is_fileserver(obj) then
-				fileserver_update(obj)
-			elseif is_dbgserver(obj) then
-				dbgserver_update(obj)
-			end
-		end
-	end
-	filewatch()
+local function init(v)
+	config = v
 end
 
-while true do
-	mainloop()
+local function listen(...)
+	filelisten = network.listen(...)
+	LOG ("Listen :", ...)
 end
+
+local function mainloop()
+	local objs = {}
+	while true do
+		if network.dispatch(objs, 0.1) then
+			for k,obj in ipairs(objs) do
+				objs[k] = nil
+				if is_fileserver(obj) then
+					fileserver_update(obj)
+				elseif is_dbgserver(obj) then
+					dbgserver_update(obj)
+				end
+			end
+		end
+		filewatch()
+	end
+end
+
+return {
+	init = init,
+	listen = listen,
+	mainloop = mainloop,
+}
