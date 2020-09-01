@@ -219,3 +219,60 @@ function rmb_sys:widget()
 		append_buffers("fffd", desc.vb, "w", desc.ib)
 	end
 end
+
+---------------------------------------------------------------------------------------------------
+-- iline_drawer
+local ild = ecs.interface "iline_drawer"
+
+local smt = ecs.transform "simple_mesh_transform"
+function smt.process_entity(e)
+	local s = e.simplemesh
+	local rc = e._rendercache
+	rc.vb = s.vb
+	rc.ib = s.ib
+end
+
+local mathpkg = import_package "ant.math"
+local mc = mathpkg.constant
+
+local iqc = world:interface "iquadcache"
+
+local function add_quad(startpt, endpt, radian, width, quadidx)
+	local dir = math3d.sub(endpt, startpt)
+	local len = math3d.length(dir)
+	local scale = {width, 1, len}
+
+	local ndir = math3d.normalize(dir)
+	local q = math3d.quaternion{axis = ndir, radian=radian}
+
+	local xaxis = math3d.isequal(ndir, mc.ZAXIS) and mc.XAXIS or math3d.cross(ndir, mc.ZAXIS)
+	local zaxis = math3d.cross(xaxis, ndir)
+	local m = math3d.matrix{s=scale, r=math3d.torotation(zaxis), t={-len*0.5, 0, 0}}
+	m = math3d.mul(m, math3d.matrix{r=q})
+
+	iqc.set_quad_srt(quadidx, math3d.srt(m))
+end
+
+function ild.draw_line(startpt, endpt, radian, material, width)
+	local quadoffset<const> = iqc.quad_num()
+	local ib, vb = iqc.alloc_quad_buffer(1)
+	add_quad(startpt, endpt, radian, width or 0.5, quadoffset+1)
+
+	return world:create_entity {
+		policy = {
+			"ant.render|simple_render",
+		},
+		data = {
+			simplemesh = {
+				vb = vb, ib = ib,
+			},
+			material = material,
+			transform = {},
+			state = ies.create_state "selectable|visible",
+		}
+	}
+end
+
+function ild.draw_circle(radius, radian, normal, material, width)
+
+end

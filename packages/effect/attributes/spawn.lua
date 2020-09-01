@@ -1,7 +1,7 @@
 
 return {
     init = function (world, emittereid, attrib)
-        local iqc = world:interface "ant.effect|iqaudcache"
+        local iqc = world:interface "ant.render|iqaudcache"
         local data = attrib.data
         if data.type == "const" then
             local e = world[emittereid]

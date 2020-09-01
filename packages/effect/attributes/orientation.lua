@@ -21,7 +21,7 @@ end
 
 return {
     init = function (world, emittereid, attrib)
-        local iqc = world:interface "ant.effect|iqaudcache"
+        local iqc = world:interface "ant.render|iqaudcache"
         local data = attrib.data
         if data.method == "sphere_random" then
             local e = world[emittereid]

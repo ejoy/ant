@@ -41,7 +41,6 @@ local function del_buffer()
 end
 
 function iqc.init(numquad)
-    del_buffer()
     ib_num = numquad * 2 * 3
     if numquad > irender.quad_ib_num() then
         error(("require quad number is too large:%d, max: %d"):format(numquad, irender.quad_ib_num()))
@@ -191,7 +190,15 @@ local function update_quad_transform()
 
 end
 
-function iqc.update()
+function iqc.update_transform()
     update_quad_transform()
+end
+
+function iqc.update_buffer()
     bgfx.update(vb.handles[1], 0, bgfx.memory_buffer(vertex_format, vbcache, 1, vbcache.n))
+end
+
+function iqc.update()
+    iqc.update_transform()
+    iqc.update_buffer()
 end

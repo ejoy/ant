@@ -24,11 +24,14 @@ transform "font_mesh"
 
 policy "fontrender"
     .require_transform "ant.render|font_mesh"
-    .require_transform "ant.render|render_transform"
+    .require_transform "ant.asset|mesh_transform"
+    .require_transform "ant.asset|material_transform"
+    .require_transform "ant.render|world_matrix_transform"
     .component "material"
     .component "transform"
     .component "scene_entity"
     .component "font"
+    .component "state"
 
 
 action "show_name"

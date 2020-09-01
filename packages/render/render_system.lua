@@ -4,70 +4,17 @@ local world = ecs.world
 local fbmgr 	= require "framebuffer_mgr"
 local bgfx 		= require "bgfx"
 
-local math3d	= require "math3d"
-
 local irender 	= world:interface "ant.render|irender"
-local isp 		= world:interface "ant.render|system_properties"
-local imaterial = world:interface "ant.asset|imaterial"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
 
-local rt = ecs.transform "render_transform"
+local rt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
 end
 
-local function to_v(t)
-	if t == nil then
-		return
-	end
-	assert(type(t) == "table")
-	if t.stage then
-		return t
-	end
-	if type(t[1]) == "number" then
-		return #t == 4 and math3d.ref(math3d.vector(t)) or math3d.ref(math3d.matrix(t))
-	end
-	local res = {}
-	for i, v in ipairs(t) do
-		if type(v) == "table" then
-			res[i] = #v == 4 and math3d.ref(math3d.vector(v)) or math3d.ref(math3d.matrix(v))
-		else
-			res[i] = v
-		end
-	end
-	return res
-end
-
-local function generate_properties(uniforms, properties)
-	local new_properties
-	properties = properties or {}
-	if uniforms and #uniforms > 0 then
-		new_properties = {}
-		for _, u in ipairs(uniforms) do
-			local n = u.name
-			local v = to_v(properties[n]) or isp.get(n)
-			new_properties[n] = {
-				value = v,
-				handle = u.handle,
-				type = u.type,
-				set = imaterial.which_set_func(v),
-				ref = true,
-			}
-		end
-	end
-
-	return new_properties
-end
-
 function rt.process_entity(e)
-	local c = e._cache_prefab
 	local rc = e._rendercache
-	rc.set_transform= set_world_matrix
-	rc.fx 			= c.fx
-	rc.properties 	= c.fx and generate_properties(c.fx.uniforms, c.properties) or nil
-	rc.state 		= c.state
-	rc.vb 			= c.vb
-	rc.ib 			= c.ib
+	rc.set_transform = set_world_matrix
 end
 
 local rt = ecs.component "render_target"
