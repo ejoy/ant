@@ -61,7 +61,7 @@ prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, in
 	}
 }
 
-static void
+static int
 lupdate_char_texture(lua_State *L){
 	struct font_manager *F = getF(L);
 
@@ -73,6 +73,7 @@ lupdate_char_texture(lua_State *L){
 
 	int advancex, advancey;
 	prepare_char(F, th, fontid, codepoint, &advancex, &advancey);
+	return 1;
 }
 
 
