@@ -1,4 +1,7 @@
-local log = function(fmt, ...) print(fmt:format(...)) end
+local function LOG(...)
+    print('[Network]', ...)
+end
+
 
 local undef = nil
 local lsocket = require "lsocket"
@@ -29,7 +32,7 @@ end
 function network.connect(address, port)
 	local fd, err = lsocket.connect(address, port)
 	if fd == nil then
-		log("Connect to %s %s error : %s", address, port, err)
+		LOG("Connect to", address, port, "error:", err)
 		return nil, err
 	end
 	connecting[fd] = true
@@ -78,9 +81,9 @@ local function dispatch(obj)
 	if not data then
 		if data then
 			-- socket error
-			log("Error : %s %s", obj._peer, err)
+			LOG("Error :", obj._peer, err)
 		end
-		log("Closed : %s", obj._peer)
+		LOG("Closed :", obj._peer)
 		network.close(obj)
 	else
 		table.insert(obj._read, data)
@@ -104,7 +107,7 @@ local function sendout(obj)
 			end
 		else
 			if err then
-				log("Error : %s %s", obj._peer, err)
+				LOG("Error :", obj._peer, err)
 			end
 			table.insert(sending, data)	-- push back
 			return
@@ -121,7 +124,7 @@ function network.dispatch(objs, interval)
 	local rd, wt = lsocket.select(readfds, writefds, interval)
 	if not rd then
 		if rd == nil then
-			log("Select error : %s", wt)
+			LOG("Select error :", wt)
 		end
 		return
 	end
@@ -131,12 +134,12 @@ function network.dispatch(objs, interval)
 			local client, address, port = fd:accept()
 			if not client then
 				if client == nil then
-					log("Accept error : %s", address)
+					LOG("Accept error :", address)
 				end
 			else
 				local obj = new_connection(client, address, port)
 				table.insert(writefds, client)
-				log("Accept : %s", obj._peer)
+				LOG("Accept :", obj._peer)
 				obj._ref = listen_obj
 				table.insert(objs, obj)
 			end
@@ -152,10 +155,9 @@ function network.dispatch(objs, interval)
 			if connecting[fd] then
 				local ok, err = fd:status()
 				if not ok then
-					log("Connect %s error : %s", obj._peer, err)
+					LOG("Connect", obj._peer, "error :", obj._peer, err)
 					network.close(obj)
 				else
-					--log("%s connected", obj._peer)
 					connecting[fd] = undef
 					obj._status = "CONNECTED"
 					table.insert(objs, obj)
