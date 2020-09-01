@@ -50,6 +50,7 @@ function m:init()
     camera_mgr.set_second_camera(second_camera)
 
     entity.create_procedural_sky()
+    --world:instance "res/skybox.prefab"
     entity.create_grid_entity("", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
     world:instance "res/light_directional.prefab"
 

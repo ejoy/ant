@@ -143,7 +143,7 @@ function m.show(rhwi)
         local width = imgui.windows.GetWindowContentRegionWidth() * 0.2
         local height = (max_y - min_y) * 0.5
 
-        imgui.windows.BeginChild("ResourceBrowserDir", width, height, false);
+        imgui.windows.BeginChild("ResourceBrowserDir", width, height, false)
         doShowBrowser(resourceTree)
         imgui.windows.EndChild()
         imgui.cursor.SameLine()
@@ -189,7 +189,9 @@ function m.show(rhwi)
                 end
                 
                 if path:equal_extension(".material")
+                    or path:equal_extension(".texture")
                     or path:equal_extension(".png")
+                    or path:equal_extension(".dds")
                     or path:equal_extension(".prefab")
                     or path:equal_extension(".glb") then
                     if imgui.widget.BeginDragDropSource() then

@@ -3,6 +3,7 @@ local math3d    = require "math3d"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
 local hierarchy = require "hierarchy"
+local material_panel
 local m = {}
 local world
 local worldedit
@@ -17,12 +18,7 @@ local baseUIData = {
     pos = {0,0,0, speed = 0.1},
     rot = {0,0,0, speed = 0.1},
     scale = {1,1,1, speed = 0.05},
-    color = {}
-}
-
-local entityUIData = {
-    state       = {0},
-    material    = {text = "nomaterial"},
+    color = {},
 }
 
 local lightUIData = {
@@ -39,8 +35,6 @@ local cameraUIData = {
     current_frame   = 1,
     duration        = {}
 }
-
-
 
 local function update_ui_data(eid)
     if not eid then
@@ -82,6 +76,8 @@ local function update_ui_data(eid)
     baseUIData.scale[1] = Scale[1]
     baseUIData.scale[2] = Scale[2]
     baseUIData.scale[3] = Scale[3]
+
+    material_panel.update_ui_data(eid)
 end
 
 local gizmo
@@ -115,7 +111,6 @@ function m.update_template_tranform(eid)
         template_frustum.fov = frustum.fov
     end
 end
-
 
 function m.update_ui(ut)
     local eid = gizmo.target_eid
@@ -188,38 +183,35 @@ function m.show(rhwi)
                 imgui.cursor.SameLine()
                 imgui.widget.Text(template.filename)
             end
-
-            if imgui.widget.InputText("Name", baseUIData.name) then
+            imgui.widget.Text("Name:")
+            imgui.cursor.SameLine()
+            if imgui.widget.InputText("##Name", baseUIData.name) then
                 local name = tostring(baseUIData.name.text)
                 world[current_eid].name = name
                 world:pub {"EntityEvent", "name", current_eid, name}
             end
 
             if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
-                if imgui.widget.DragFloat("Position", baseUIData.pos) then
+                imgui.widget.Text("Position:")
+                imgui.cursor.SameLine()
+                if imgui.widget.DragFloat("##Position", baseUIData.pos) then
                     onPositionDirty(current_eid, baseUIData.pos)
                 end
-                if imgui.widget.DragFloat("Rotate", baseUIData.rot) then
+                imgui.widget.Text("Rotate:")
+                imgui.cursor.SameLine()
+                if imgui.widget.DragFloat("##Rotate", baseUIData.rot) then
                     onRotateDirty(current_eid, baseUIData.rot)
                 end
-                if imgui.widget.DragFloat("Scale", baseUIData.scale) then
+                imgui.widget.Text("Scale:")
+                imgui.cursor.SameLine()
+                if imgui.widget.DragFloat("##Scale", baseUIData.scale) then
                     onScaleDirty(current_eid, baseUIData.scale)
                 end
                 imgui.widget.TreePop()
             end
-            -- if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
-            --     if imgui.widget.InputText("mtlFile", baseUIData.material) then
-            --         world[current_eid].material = tostring(baseUIData.material.text)
-            --     end
-            --     if imgui.widget.BeginDragDropTarget() then
-            --         local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-            --         if payload then
-            --             print(payload)
-            --         end
-            --         imgui.widget.EndDragDropTarget()
-            --     end
-            --     imgui.widget.TreePop()
-            -- end
+
+            material_panel.show(current_eid)
+
             if world[current_eid] and world[current_eid].camera then
                 if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
                     local what
@@ -307,5 +299,6 @@ return function(w)
     icamera = world:interface "ant.camera|camera"
     worldedit = import_package "ant.editor".worldedit(world)
     camera_mgr = require "camera_manager"(world)
+    material_panel = require "ui.material_panel"(world)
     return m
 end
