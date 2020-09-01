@@ -1,3 +1,3 @@
-package.path = "engine/?.lua"
+package.path = "engine/?.lua;tools/fileserver/?.lua"
 require "bootstrap"
-import_package "ant.fileserver"
+require "fileserver"

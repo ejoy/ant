@@ -15,11 +15,8 @@ local network = require "network"
 local lfs = require "filesystem.local"
 local debugger = require "debugger"
 
-local WORKDIR = lfs.current_path()
-
 local watch = {}
 local repos = {}
-local clients = {1}
 
 local function vfsjoin(dir, file)
     if file:sub(1, 1) == '/' or dir == '' then
@@ -105,38 +102,22 @@ local function repo_add(identity, reponame)
 	return repo
 end
 
-local function clients_add()
-	local ret = clients[1]
-	if #clients == 1 then
-		clients[1] = ret + 1
-	else
-		table.remove(clients, 1)
-	end
-	return ret
-end
-
-local function clients_remove(id)
-	clients[#clients+1] = id
-	table.sort(clients)
-end
-
-
 local _origin = os.time() - os.clock()
 local function os_date(fmt)
     local ti, tf = math.modf(_origin + os.clock())
     return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
 end
 
-local function logger_finish(id)
-	local logfile = WORKDIR / 'log' / ('runtime-%d.log'):format(id)
+local function logger_finish(root)
+	local logfile = root / '.log' / 'runtime.log'
 	if lfs.exists(logfile) then
-		lfs.rename(logfile, WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}')))
+		lfs.rename(logfile, root / '.log' / 'runtime' / ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}')))
 	end
 end
 
-local function logger_init(id)
-	lfs.create_directories(WORKDIR / 'log' / 'runtime')
-	logger_finish(id)
+local function logger_init(root)
+	lfs.create_directories(root / '.log' / 'runtime')
+	logger_finish(root)
 end
 
 local filelisten = network.listen(config.address, config.port)
@@ -150,10 +131,6 @@ local debug = {}
 local message = {}
 
 function message:ROOT(identity, reponame)
-	if not self._id then
-		self._id = clients_add()
-	end
-	logger_init(self._id)
 	LOG("ROOT", identity, reponame)
 	local reponame = assert(reponame or default_reponame,  "Need repo name")
 	local repo = repo_add(identity, reponame)
@@ -162,6 +139,7 @@ function message:ROOT(identity, reponame)
 		return
 	end
 	self._repo = repo
+	logger_init(self._repo._root)
 	response(self, "ROOT", repo:root())
 end
 
@@ -214,7 +192,7 @@ function message:DBG(data)
 end
 
 function message:LOG(data)
-	local logfile = WORKDIR / 'log' / ('runtime-%d.log'):format(self._id)
+	local logfile = self._repo._root / '.log' / 'runtime.log'
 	local fp = assert(lfs.open(logfile, 'a'))
 	fp:write(data)
 	fp:write('\n')
@@ -246,11 +224,7 @@ local function fileserver_update(obj)
 	if obj._status == "CONNECTING" then
 		--LOG("New", obj._peer, obj._ref)
 	elseif obj._status == "CLOSED" then
-		if obj._id then
-			clients_remove(obj._id)
-			logger_finish(obj._id)
-			obj._id = nil
-		end
+		logger_finish(obj._repo._root)
 		for fd, v in pairs(debug) do
 			if v.server == obj then
 				if v.client then

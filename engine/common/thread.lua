@@ -2,7 +2,7 @@ local thread = require "thread"
 
 if not __ANT_RUNTIME__ then
 	local function createThread(name, code)
-		thread.thread(([=[
+		return thread.thread(([=[
 --%s
 package.path = [[%s]]
 package.cpath = [[%s]]
@@ -11,6 +11,7 @@ package.cpath = [[%s]]
 	end
 	return {
 		createThread = createThread,
+		waitThread = thread.wait,
 	}
 end
 
@@ -20,7 +21,7 @@ require 'runtime.log'
 local function createThread(name, code)
 	local vfs = require 'vfs'
 	local init_thread = vfs.realpath('engine/firmware/init_thread.lua')
-	thread.thread(([=[
+	return thread.thread(([=[
 	--%s
 	__ANT_RUNTIME__ = %q
     package.searchers[3] = ...
@@ -45,5 +46,6 @@ local function createThread(name, code)
 end
 
 return {
-    createThread = createThread,
+	createThread = createThread,
+	waitThread = thread.wait,
 }
