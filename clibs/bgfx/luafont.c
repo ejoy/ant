@@ -10,6 +10,8 @@
 
 #include "transient_buffer.h"
 
+#include <string.h>
+
 struct font_context {
     struct font_manager fm;
 };
@@ -59,6 +61,20 @@ prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, in
 	}
 }
 
+static void
+lupdate_char_texture(lua_State *L){
+	struct font_manager *F = getF(L);
+
+	uint16_t texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 1));
+	bgfx_texture_handle_t th = {texture_id};
+
+	const utfint codepoint = luaL_checkinteger(L, 2);
+	const int fontid = luaL_optinteger(L, 3, 0);
+
+	int advancex, advancey;
+	prepare_char(F, th, fontid, codepoint, &advancex, &advancey);
+}
+
 
 static int
 lprepare_text(lua_State *L) {
@@ -99,6 +115,29 @@ lprepare_text(lua_State *L) {
     lua_pushinteger(L, t_g.advance_y);
     lua_pushinteger(L, numchar);
 	return 3;
+}
+
+
+static int
+ltext_codepoints(lua_State *L){
+	size_t sz;
+	const char * str = luaL_checklstring(L, 1, &sz);
+	const char * end_ptr = str + sz;
+
+	lua_createtable(L, sz, 0);
+	int idx=0;
+	while (str < end_ptr) {
+		utfint codepoint;
+		str = utf8_decode(str, &codepoint, 1);
+		if (str){
+			lua_pushinteger(L, codepoint);
+			lua_seti(L, -2, ++idx);
+		} else {
+			return luaL_error(L, "Invalid utf8 text");
+		}
+	}
+
+	return 1;
 }
 
 #define FIXPOINT 8
@@ -247,6 +286,70 @@ lfontheight(lua_State *L) {
 }
 
 static int
+lfont_glyph(lua_State *L){
+	struct font_manager *F = getF(L);
+	const utfint codepoint = luaL_checkinteger(L, 1);
+	const char* what = lua_tostring(L, 2);
+	const int fontid = luaL_optinteger(L, 3, 0);
+	const int size = luaL_optinteger(L, 4, 32);
+	struct font_glyph g = {0};
+	font_manager_touch(F, fontid, codepoint, &g);
+	font_manager_scale(F, &g, size);
+
+	if (strcmp(what, "") == 0){
+		lua_createtable(L, 0, 8);
+		lua_pushinteger(L, g.offset_x);
+		lua_setfield(L, -2, "offset_x");
+
+		lua_pushinteger(L, g.offset_y);
+		lua_setfield(L, -2, "offset_y");
+
+		lua_pushinteger(L, g.advance_x);
+		lua_setfield(L, -2, "advance_x");
+
+		lua_pushinteger(L, g.advance_y);
+		lua_setfield(L, -2, "advance_y");
+
+		lua_pushinteger(L, g.w);
+		lua_setfield(L, -2, "w");
+
+		lua_pushinteger(L, g.h);
+		lua_setfield(L, -2, "h");
+
+		lua_pushinteger(L, g.u);
+		lua_setfield(L, -2, "u");
+
+		lua_pushinteger(L, g.v);
+		lua_setfield(L, -2, "v");
+	} else {
+		int v;
+		if (strcmp(what, "offset_x") == 0){
+			v = g.offset_x;
+		} else if (strcmp(what, "offset_y") == 0){
+			v = g.offset_y;
+		} else if (strcmp(what, "advance_x") == 0){
+			v = g.advance_x;
+		} else if (strcmp(what, "advance_y") == 0){
+			v = g.advance_y;
+		} else if (strcmp(what, "w") == 0){
+			v = g.w;
+		} else if (strcmp(what, "h") == 0){
+			v = g.h;
+		} else if (strcmp(what, "u") == 0){
+			v = g.u;
+		} else if (strcmp(what, "v") == 0){
+			v = g.v;
+		} else {
+			luaL_error(L, "not found attribute:%s", what);
+		}
+
+		lua_pushinteger(L, v);
+	}
+
+	return 1;
+}
+
+static int
 lsubmit(lua_State *L){
 	struct font_manager *F = getF(L);
 	font_manager_flush(F);
@@ -261,9 +364,12 @@ luaopen_bgfx_font(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "fonttexture_size", NULL },
 		{ "fontheight", 	lfontheight },
+		{ "font_glyph",		lfont_glyph},
 		{ "addfont", 		laddfont },
 		{ "rebind", 		lrebindfont },
         { "prepare_text",   lprepare_text},
+		{ "update_char_texture", lupdate_char_texture},
+		{ "text_codepoints",ltext_codepoints},
         { "load_text_quad", lload_text_quad},
 		{ "submit",			lsubmit},
 		{ NULL, 			NULL },
