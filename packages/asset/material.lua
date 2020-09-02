@@ -123,7 +123,7 @@ end
 
 function imaterial.has_property(eid, who)
 	local rc = world[eid]._rendercache
-	return rc.properties[who] ~= nil
+	return rc.properties and rc.properties[who] ~= nil
 end
 
 local function which_type(u)

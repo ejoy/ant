@@ -16,7 +16,9 @@ return {
 
             init_properties(properties)
             for k, v in pairs(properties) do
-                imaterial.set_property(emittereid, k, v)
+                if imaterial.has_property(emittereid, k) then
+                    imaterial.set_property(emittereid, k, v)
+                end
             end
         else
             error(("not support method:%d"):format(data.method))

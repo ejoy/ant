@@ -240,23 +240,25 @@ local iqc = world:interface "ant.render|iquadcache"
 local function add_quad(startpt, endpt, radian, width, quadidx)
 	local dir = math3d.sub(endpt, startpt)
 	local len = math3d.length(dir)
-	local scale = {width, 1, len}
+	local scale = {width, len, 1}
 
 	local ndir = math3d.normalize(dir)
 	local q = math3d.quaternion{axis = ndir, r=radian}
 
 	local xaxis = math3d.isequal(ndir, mc.ZAXIS) and mc.XAXIS or math3d.cross(ndir, mc.ZAXIS)
 	local zaxis = math3d.cross(xaxis, ndir)
-	local m = math3d.matrix{s=scale, r=math3d.torotation(zaxis), t={-len*0.5, 0, 0}}
+	
+	local m = math3d.mul(math3d.matrix{s=scale, r=math3d.torotation(zaxis)}, math3d.matrix{t={0, 0.5, 0}})
 	m = math3d.mul(m, math3d.matrix{r=q})
 
 	iqc.set_quad_srt(quadidx, math3d.srt(m))
 end
 
-function ild.draw_line(startpt, endpt, radian, material, width)
+function ild.draw_line(startpt, endpt, radian, material, color, width)
 	local quadoffset<const> = iqc.quad_num()
 	local vb, ib = iqc.alloc_quad_buffer(1)
-	add_quad(startpt, endpt, radian, width or 0.5, quadoffset+1)
+	local quadidx<const> = quadoffset+1
+	add_quad(startpt, endpt, radian, width or 0.1, quadidx)
 
 	return world:create_entity {
 		policy = {

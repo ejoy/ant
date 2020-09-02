@@ -1,0 +1,9 @@
+fx:
+  fs: /pkg/ant.resources/shaders/particles/fs_particle.sc
+  vs: /pkg/ant.resources/shaders/particles/vs_particle.sc
+
+properties:
+  s_tex:
+    stage: 0
+    texture: /pkg/ant.resources/materials/textures/default.texture
+state: /pkg/ant.resources/materials/states/default.state
