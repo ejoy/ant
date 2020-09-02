@@ -113,6 +113,8 @@ function init_loader_sys:post_init()
     f.n, f.f = 0.25, 250
     icamera.set_frustum(mq.camera_eid, f)
 
+    local ild = world:interface "ant.render|iline_drawer"
+    ild.draw_line({0, 0, 0}, {10, 20, 30, 1}, 0, "/pkg/ant.resources/materials/particle/particle.material")
 end
 
 local imgui      = require "imgui"

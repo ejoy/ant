@@ -32,6 +32,7 @@ transform "material_setting_transform"
 
 transform "material_transform"
     .implement "material.lua"
+    .require_transform "ant.asset|material_prefab_transform"
     .input "_cache_prefab.material"
     .output "_rendercache.material"
     .method "process_entity"

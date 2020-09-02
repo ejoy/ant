@@ -387,7 +387,7 @@ function irender.quad_ib()
 	return ibhandle
 end
 
-function icamera.quad_ib_num()
+function irender.quad_ib_num()
 	return quad_ib_num
 end
 

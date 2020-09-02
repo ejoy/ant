@@ -24,8 +24,6 @@ function emitter_trans.process_entity(e)
     }
 end
 
-local quad_cache = require "quad_cache"
-
 local aps = ecs.action "attach_particle_system"
 function aps.init(prefab, idx, value)
     local ps = world[prefab[value]]
@@ -50,10 +48,6 @@ local function init_ps(ps)
             end
         end
     end
-end
-
-function particle_sys:init()
-    quad_cache.init(1024)
 end
 
 local itimer = world:interface "ant.timer|timer"
@@ -88,7 +82,5 @@ function particle_sys:data_changed()
             end
         end
     end
-
-    quad_cache.update()
 end
 

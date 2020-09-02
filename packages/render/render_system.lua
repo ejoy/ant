@@ -6,13 +6,14 @@ local bgfx 		= require "bgfx"
 
 local irender 	= world:interface "ant.render|irender"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
+local isp		= world:interface "ant.render|system_properties"
 
-local rt = ecs.transform "world_matrix_transform"
+local wmt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
 end
 
-function rt.process_entity(e)
+function wmt.process_entity(e)
 	local rc = e._rendercache
 	rc.set_transform = set_world_matrix
 end

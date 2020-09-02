@@ -235,7 +235,7 @@ end
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
 
-local iqc = world:interface "iquadcache"
+local iqc = world:interface "ant.render|iquadcache"
 
 local function add_quad(startpt, endpt, radian, width, quadidx)
 	local dir = math3d.sub(endpt, startpt)
@@ -243,7 +243,7 @@ local function add_quad(startpt, endpt, radian, width, quadidx)
 	local scale = {width, 1, len}
 
 	local ndir = math3d.normalize(dir)
-	local q = math3d.quaternion{axis = ndir, radian=radian}
+	local q = math3d.quaternion{axis = ndir, r=radian}
 
 	local xaxis = math3d.isequal(ndir, mc.ZAXIS) and mc.XAXIS or math3d.cross(ndir, mc.ZAXIS)
 	local zaxis = math3d.cross(xaxis, ndir)
@@ -255,7 +255,7 @@ end
 
 function ild.draw_line(startpt, endpt, radian, material, width)
 	local quadoffset<const> = iqc.quad_num()
-	local ib, vb = iqc.alloc_quad_buffer(1)
+	local vb, ib = iqc.alloc_quad_buffer(1)
 	add_quad(startpt, endpt, radian, width or 0.5, quadoffset+1)
 
 	return world:create_entity {

@@ -4,7 +4,7 @@ local math3d = require "math3d"
 
 return {
     init = function (world, emittereid, attrib)
-        local iqc = world:interface "ant.render|iqaudcache"
+        local iqc = world:interface "ant.render|iquadcache"
         local data = attrib.data
         
         if data.method == "around_sphere" then

@@ -58,8 +58,6 @@ function iqc.init(numquad)
     }
 end
 
-iqc.clear = del_buffer
-
 local vbcache = {n=0}
 
 function iqc.quad_num()
@@ -91,7 +89,7 @@ function iqc.alloc_quad_buffer(numquad)
         handles = vb.handles,
     }, {
         start = 0,
-        num = numquad * 2,
+        num = numquad * 2 * 3,
         handle = ib.handle,
     }
 end
@@ -164,7 +162,7 @@ end
 
 function iqc.set_quad_srt(quadidx, s, r, t)
     local srt = quad_srt[quadidx]
-    srt.s, srt.r, srt.t = s, r, t
+    srt.s.v, srt.r.q, srt.t.v = s, r, t
 end
 
 local function update_quad_transform()
@@ -201,4 +199,13 @@ end
 function iqc.update()
     iqc.update_transform()
     iqc.update_buffer()
+end
+
+local qc_sys = ecs.system "quadcache_system"
+function qc_sys:init()
+    iqc.init(256)
+end
+
+function qc_sys:data_changed()
+    iqc.update()
 end

@@ -2661,7 +2661,7 @@ lcreateVertexBuffer(lua_State *L) {
 
 static inline int
 is_typeless(lua_State *L){
-	return lua_type(L, 2) == LUA_TUSERDATA ? 0 : 1;
+	return lua_type(L, 2) != LUA_TUSERDATA;
 }
 
 static int
@@ -2675,7 +2675,7 @@ lcreateDynamicVertexBuffer(lua_State *L) {
 	} else {
 		vd = get_layout(L, 2);
 		flags_index = 3;
-		handle_type = BGFX_HANDLE_DYNAMIC_INDEX_BUFFER;
+		handle_type = BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER;
 	}
 	uint16_t flags = BGFX_BUFFER_NONE;
 	if (lua_isstring(L, flags_index)) {
@@ -2878,17 +2878,16 @@ lsetVertexBuffer(lua_State *L) {
 		if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER){
 			bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
 			BGFX(set_dynamic_vertex_buffer)(stream, handle, start, end);
-		}
-
-		if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
+		} else if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
 			if (layout == NULL){
 				return luaL_error(L, "dynamic vertex buffer of typeless must pass 'vertex_layout'");
 			}
 
 			bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
 			BGFX(set_dynamic_vertex_buffer)(stream, handle, start, end);
+		} else {
+			return luaL_error(L, "Invalid vertex buffer type %d", idtype);
 		}
-		return luaL_error(L, "Invalid vertex buffer type %d", idtype);
 	}
 	return 0;
 }
