@@ -1,9 +1,10 @@
-package.path = "engine/?.lua;tools/fileserver/?.lua"
+package.path = "engine/?.lua"
 require "bootstrap"
 
-local network = require "network"
-local server = require "fileserver"
-local proxy = require "mobiledevice.proxy"
+local srv = import_package "ant.server"
+local network = srv.network
+local server = srv.server
+local proxy = srv.proxy
 
 local function luaexe()
     local i = -1

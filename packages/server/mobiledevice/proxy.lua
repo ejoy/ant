@@ -1,9 +1,3 @@
-package.path = table.concat({
-	"tools/fileserver/?.lua",
-    "tools/fileserver/?/?.lua"
-}, ";")
-dofile "engine/editor/init_cpath.lua"
-
 local network = require 'network'
 local usbmuxd = require 'mobiledevice.usbmuxd'
 
