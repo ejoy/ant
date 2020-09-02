@@ -15,8 +15,8 @@ end
 
 srv.init_server {
     lua = luaexe(),
-    default_repo = arg[1]
 }
+srv.set_repopath(arg[1])
 srv.listen("0.0.0.0", 2018)
 srv.init_proxy()
 

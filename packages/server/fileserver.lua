@@ -9,12 +9,13 @@ local protocol = require "protocol"
 local network = require "network"
 local lfs = require "filesystem.local"
 local debugger = require "debugger"
+local event = require "event"
 
 local watch = {}
 local repos = {}
 local dbgserver_update
 local config
-local event = require "event"
+local REPOPATH
 
 local function vfsjoin(dir, file)
     if file:sub(1, 1) == '/' or dir == '' then
@@ -104,7 +105,7 @@ local message = {}
 
 function message:ROOT(identity, reponame)
 	LOG("ROOT", identity, reponame)
-	local reponame = assert(reponame or config.default_repo,  "Need repo name")
+	local reponame = assert(reponame or REPOPATH, "Need repo name")
 	local repo = repo_add(identity, reponame)
 	if repo == nil then
 		response(self, "ROOT", "")
@@ -270,8 +271,13 @@ local function listen(...)
 	LOG ("Listen :", ...)
 end
 
+local function set_repopath(path)
+	REPOPATH = path
+end
+
 return {
 	init = init,
 	listen = listen,
 	update = update,
+	set_repopath = set_repopath
 }

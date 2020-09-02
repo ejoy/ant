@@ -44,4 +44,5 @@ return {
     update_proxy = update_proxy,
     update_network = update_network,
     event = require "event",
+    set_repopath = server.set_repopath
 }
