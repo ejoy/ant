@@ -99,16 +99,16 @@ local function os_date(fmt)
     return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
 end
 
-local function logger_finish(root)
-	local logfile = root / '.log' / 'runtime.log'
-	if lfs.exists(logfile) then
-		lfs.rename(logfile, root / '.log' / 'runtime' / ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}')))
+local function logger_init(self)
+	self._log = ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
+	local logdir = self._repo._root / '.log'
+	lfs.create_directories(logdir)
+	for path in logdir:list_directory() do
+		if path:equal_extension ".log" then
+			lfs.create_directories(logdir / 'backup')
+			lfs.rename(path, logdir / 'backup' / path:filename())
+		end
 	end
-end
-
-local function logger_init(root)
-	lfs.create_directories(root / '.log' / 'runtime')
-	logger_finish(root)
 end
 
 local function response(fd, ...)
@@ -127,7 +127,7 @@ function message:ROOT(identity, reponame)
 		return
 	end
 	self._repo = repo
-	logger_init(self._repo._root)
+	logger_init(self)
 	response(self, "ROOT", repo:root())
 end
 
@@ -164,7 +164,7 @@ end
 
 function message:DBG(data)
 	if data == "" then
-		local fd = network.listen('127.0.0.1', 4278)
+		local fd = assert(network.listen('127.0.0.1', 4278))
 		fd.update = dbgserver_update
 		LOG("LISTEN DEBUG", '127.0.0.1', 4278)
 		debug[fd] = { server = self }
@@ -181,7 +181,7 @@ function message:DBG(data)
 end
 
 function message:LOG(data)
-	local logfile = self._repo._root / '.log' / 'runtime.log'
+	local logfile = self._repo._root / '.log' / self._log
 	local fp = assert(lfs.open(logfile, 'a'))
 	fp:write(data)
 	fp:write('\n')
@@ -206,7 +206,6 @@ end
 local function fileserver_update(fd)
 	dispatch_obj(fd)
 	if fd._status == "CLOSED" then
-		logger_finish(fd._repo._root)
 		for fd, v in pairs(debug) do
 			if v.server == fd then
 				if v.client then
@@ -255,7 +254,7 @@ local function update()
 			break
 		end
 		if type == 'error' then
-			print(path)
+			print('[FileWatch]', 'ERROR:', path)
 			goto continue
 		end
 		local tree = watch
