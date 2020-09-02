@@ -126,7 +126,7 @@ local EditSampler = function(eid, md)
         imgui.cursor.Indent()
         imgui.widget.Text("MAG:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth);
+        imgui.cursor.SetNextItemWidth(comboWidth)
         imgui.util.PushID("MAG" .. idx)
         if imgui.widget.BeginCombo("##MAG", {sampler.MAG, flags = comboFlags}) then
             for i, type in ipairs(filterType) do
@@ -141,7 +141,7 @@ local EditSampler = function(eid, md)
         imgui.cursor.SameLine()
         imgui.widget.Text("MIN:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth);
+        imgui.cursor.SetNextItemWidth(comboWidth)
         imgui.util.PushID("MIN" .. idx)
         if imgui.widget.BeginCombo("##MIN", {sampler.MIN, flags = comboFlags}) then
             for i, type in ipairs(filterType) do
@@ -156,7 +156,7 @@ local EditSampler = function(eid, md)
         imgui.cursor.SameLine()
         imgui.widget.Text("MIP:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth);
+        imgui.cursor.SetNextItemWidth(comboWidth)
         imgui.util.PushID("MIP" .. idx)
         if imgui.widget.BeginCombo("##MIP", {sampler.MIP, flags = comboFlags}) then
             for i, type in ipairs(filterType) do
@@ -170,7 +170,7 @@ local EditSampler = function(eid, md)
 
         imgui.widget.Text("U:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth);
+        imgui.cursor.SetNextItemWidth(comboWidth)
         imgui.util.PushID("U" .. idx)
         if imgui.widget.BeginCombo("##U", {sampler.U, flags = comboFlags}) then
             for i, type in ipairs(addressType) do
@@ -185,7 +185,7 @@ local EditSampler = function(eid, md)
         imgui.cursor.SameLine()
         imgui.widget.Text("V:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth);
+        imgui.cursor.SetNextItemWidth(comboWidth)
         imgui.util.PushID("V" .. idx)
         if imgui.widget.BeginCombo("##V", {sampler.V, flags = comboFlags}) then
             for i, type in ipairs(addressType) do

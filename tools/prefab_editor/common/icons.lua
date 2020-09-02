@@ -26,7 +26,10 @@ local icon_path = {
     ["ICON_MATERIAL"]       = "res/icon/CanvasItemMaterial.png",
     ["ICON_PREFAB"]         = "res/icon/PackedScene.png",
     ["ICON_SPOTLIGHT3D"]    = "res/icon/SpotLight3D.png",
-    ["ICON_DIRECTIONALLIGHT3D"] = "res/icon/DirectionalLight3D.png"
+    ["ICON_DIRECTIONALLIGHT3D"] = "res/icon/DirectionalLight3D.png",
+    ["ICON_INFO"] = "res/icon/Info.png",
+    ["ICON_WARN"] = "res/icon/Warn.png",
+    ["ICON_ERROR"] = "res/icon/Error.png"
 }
 
 local icons = {}
