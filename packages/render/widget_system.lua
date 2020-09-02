@@ -250,16 +250,12 @@ local function add_quad(startpt, endpt, radian, width, quadidx)
 	
 	local m = math3d.mul(math3d.matrix{s=scale, r=math3d.torotation(zaxis)}, math3d.matrix{t={0, 0.5, 0}})
 	m = math3d.mul(m, math3d.matrix{r=q})
+	m = math3d.set_index(m, 4, math3d.add(math3d.index(m, 4), startpt))
 
 	iqc.set_quad_srt(quadidx, math3d.srt(m))
 end
 
-function ild.draw_line(startpt, endpt, radian, material, color, width)
-	local quadoffset<const> = iqc.quad_num()
-	local vb, ib = iqc.alloc_quad_buffer(1)
-	local quadidx<const> = quadoffset+1
-	add_quad(startpt, endpt, radian, width or 0.1, quadidx)
-
+local function create_line_entity(vb, ib, material)
 	return world:create_entity {
 		policy = {
 			"ant.render|simple_render",
@@ -273,6 +269,31 @@ function ild.draw_line(startpt, endpt, radian, material, color, width)
 			state = ies.create_state "selectable|visible",
 		}
 	}
+end
+
+function ild.draw_line(startpt, endpt, radian, material, width)
+	local quadoffset<const> = iqc.quad_num()
+	local vb, ib = iqc.alloc_quad_buffer(1)
+	local quadidx<const> = quadoffset+1
+	add_quad(startpt, endpt, radian, width or 0.1, quadidx)
+
+	return create_line_entity(vb, ib, material)
+end
+
+function ild.draw_lines(points, radian, material, width)
+	if #points < 2 then
+		error("need more than 2 point")
+	end
+
+	local quadoffset<const> = iqc.quad_num()
+	local quadnum<const> = #points-1
+	local vb, ib = iqc.alloc_quad_buffer(quadnum)
+	for i=1, #points-1 do
+		local quadidx = quadoffset + i
+		add_quad(points[i], points[i+1], radian, width or 0.1, quadidx)
+	end
+
+	return create_line_entity(vb, ib, material)
 end
 
 function ild.draw_circle(radius, radian, normal, material, width)
