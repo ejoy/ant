@@ -4,13 +4,6 @@ package.path = table.concat({
 }, ";")
 dofile "engine/editor/init_cpath.lua"
 
-log = {}
-function log.info()
-    return function(fmt, ...)
-        print(fmt:format(...))
-    end
-end
-
 local network = require 'network'
 local usbmuxd = require 'mobiledevice.usbmuxd'
 
@@ -30,12 +23,23 @@ local function is_closed(fd)
     return false
 end
 
+local function update_fd(fd)
+    if fd._status == "CLOSED" then
+        closed[fd] = true
+    end
+end
+
+
 local function connect_server()
-    return assert(network.connect('127.0.0.1', 2018))
+    local fd = assert(network.connect('127.0.0.1', 2018))
+    fd.update = update_fd
+    return fd
 end
 
 local function connect_usbmuxd()
-    return assert(network.connect(usbmuxd.get_address()))
+    local fd = assert(network.connect(usbmuxd.get_address()))
+    fd.update = update_fd
+    return fd
 end
 
 local function init()
@@ -149,20 +153,11 @@ local function update_devices()
 end
 
 local function update()
-    local objs = {}
-    if network.dispatch(objs, 0.1) then
-        for _, obj in ipairs(objs) do
-            if obj._status == "CLOSED" then
-                closed[obj] = true
-            end
-        end
-    end
     update_event()
     update_devices()
 end
 
-init()
-
-while true do
-    update()
-end
+return {
+    init = init,
+    update = update,
+}

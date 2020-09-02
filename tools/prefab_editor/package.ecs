@@ -6,6 +6,7 @@ import "@ant.sky"
 import "@ant.objcontroller"
 import "@ant.scene"
 import "@ant.camera"
+import "@ant.asset"
 
 system "init_system"
     .implement "init_system.lua"

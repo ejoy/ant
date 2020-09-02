@@ -14,6 +14,7 @@ local fs   = require "filesystem"
 local vfs = require "vfs"
 local hierarchy = require "hierarchy"
 local resource_browser = require "ui.resource_browser"(world, asset_mgr)
+local log_widget = require "ui.log_widget"(world)
 local toolbar = require "ui.toolbar"(world, asset_mgr)
 local scene_view = require "ui.scene_view"(world, asset_mgr)
 local inspector = require "ui.inspector"(world)
@@ -64,6 +65,7 @@ function m:ui_update()
     scene_view.show(rhwi)
     inspector.show(rhwi)
     resource_browser.show(rhwi)
+    log_widget.show(rhwi)
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
     local dirty = false
@@ -116,6 +118,7 @@ function m:data_changed()
                 end
                 if value2 and world[value2].camera then
                     camera_mgr.set_second_camera(value2)
+                    --ies.set_state(camera_mgr.second_view, "visible", false)
                 end
             elseif action == "update" and world[gizmo.target_eid].camera then
                 camera_mgr.update_frustrum(gizmo.target_eid)

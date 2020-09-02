@@ -1,11 +1,5 @@
-local default_reponame = arg[1]
-local config = {
-	address = "0.0.0.0",
-	port = 2018,
-}
-
 local function LOG(...)
-	print(...)
+	print("[FileSrv]", ...)
 end
 
 local fw = require "filewatch"
@@ -15,11 +9,10 @@ local network = require "network"
 local lfs = require "filesystem.local"
 local debugger = require "debugger"
 
-local WORKDIR = lfs.current_path()
-
 local watch = {}
 local repos = {}
-local clients = {1}
+local dbgserver_update
+local config
 
 local function vfsjoin(dir, file)
     if file:sub(1, 1) == '/' or dir == '' then
@@ -62,13 +55,8 @@ end
 
 local function do_prebuilt(repopath, identity)
 	local sp = require "subprocess"
-    local function luaexe()
-        local i = -1
-        while arg[i] ~= nil do i = i - 1 end
-        return arg[i + 1]
-    end
 	sp.spawn {
-        luaexe(),
+        config.lua,
 		repopath / "prebuilt.lua",
 		identity,
         hideWindow = true,
@@ -105,63 +93,41 @@ local function repo_add(identity, reponame)
 	return repo
 end
 
-local function clients_add()
-	local ret = clients[1]
-	if #clients == 1 then
-		clients[1] = ret + 1
-	else
-		table.remove(clients, 1)
-	end
-	return ret
-end
-
-local function clients_remove(id)
-	clients[#clients+1] = id
-	table.sort(clients)
-end
-
-
 local _origin = os.time() - os.clock()
 local function os_date(fmt)
     local ti, tf = math.modf(_origin + os.clock())
     return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
 end
 
-local function logger_finish(id)
-	local logfile = WORKDIR / 'log' / ('runtime-%d.log'):format(id)
-	if lfs.exists(logfile) then
-		lfs.rename(logfile, WORKDIR / 'log' / 'runtime' / ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}')))
+local function logger_init(self)
+	self._log = ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
+	local logdir = self._repo._root / '.log'
+	lfs.create_directories(logdir)
+	for path in logdir:list_directory() do
+		if path:equal_extension ".log" then
+			lfs.create_directories(logdir / 'backup')
+			lfs.rename(path, logdir / 'backup' / path:filename())
+		end
 	end
 end
 
-local function logger_init(id)
-	lfs.create_directories(WORKDIR / 'log' / 'runtime')
-	logger_finish(id)
-end
-
-local filelisten = network.listen(config.address, config.port)
-LOG ("Listen :", config.address, config.port)
-
-local function response(obj, ...)
-	network.send(obj, protocol.packmessage({...}))
+local function response(fd, ...)
+	network.send(fd, protocol.packmessage({...}))
 end
 
 local debug = {}
 local message = {}
 
 function message:ROOT(identity, reponame)
-	if not self._id then
-		self._id = clients_add()
-	end
-	logger_init(self._id)
 	LOG("ROOT", identity, reponame)
-	local reponame = assert(reponame or default_reponame,  "Need repo name")
+	local reponame = assert(reponame or config.default_repo,  "Need repo name")
 	local repo = repo_add(identity, reponame)
 	if repo == nil then
 		response(self, "ROOT", "")
 		return
 	end
 	self._repo = repo
+	logger_init(self)
 	response(self, "ROOT", repo:root())
 end
 
@@ -198,7 +164,8 @@ end
 
 function message:DBG(data)
 	if data == "" then
-		local fd = network.listen('127.0.0.1', 4278)
+		local fd = assert(network.listen('127.0.0.1', 4278))
+		fd.update = dbgserver_update
 		LOG("LISTEN DEBUG", '127.0.0.1', 4278)
 		debug[fd] = { server = self }
 		return
@@ -214,7 +181,7 @@ function message:DBG(data)
 end
 
 function message:LOG(data)
-	local logfile = WORKDIR / 'log' / ('runtime-%d.log'):format(self._id)
+	local logfile = self._repo._root / '.log' / self._log
 	local fp = assert(lfs.open(logfile, 'a'))
 	fp:write(data)
 	fp:write('\n')
@@ -222,37 +189,25 @@ function message:LOG(data)
 end
 
 local output = {}
-local function dispatch_obj(obj)
-	local reading_queue = obj._read
+local function dispatch_obj(fd)
+	local reading_queue = fd._read
 	while true do
 		local msg = protocol.readmessage(reading_queue, output)
 		if msg == nil then
 			break
 		end
-		--LOG("REQ :", obj._peer, msg[1])
 		local f = message[msg[1]]
 		if f then
-			f(obj, table.unpack(msg, 2))
+			f(fd, table.unpack(msg, 2))
 		end
 	end
 end
 
-local function is_fileserver(obj)
-	return filelisten == obj._ref
-end
-
-local function fileserver_update(obj)
-	dispatch_obj(obj)
-	if obj._status == "CONNECTING" then
-		--LOG("New", obj._peer, obj._ref)
-	elseif obj._status == "CLOSED" then
-		if obj._id then
-			clients_remove(obj._id)
-			logger_finish(obj._id)
-			obj._id = nil
-		end
+local function fileserver_update(fd)
+	dispatch_obj(fd)
+	if fd._status == "CLOSED" then
 		for fd, v in pairs(debug) do
-			if v.server == obj then
+			if v.server == fd then
 				if v.client then
 					network.close(v.client)
 				end
@@ -264,14 +219,10 @@ local function fileserver_update(obj)
 	end
 end
 
-local function is_dbgserver(obj)
-	return debug[obj._ref] ~= nil
-end
-
-local function dbgserver_update(obj)
-	local dbg = debug[obj._ref]
-	local data = table.concat(obj._read)
-	obj._read = {}
+function dbgserver_update(fd)
+	local dbg = debug[fd._ref]
+	local data = table.concat(fd._read)
+	fd._read = {}
 	if data ~= "" then
 		local self = dbg.server._repo
 		local msg = debugger.convertRecv(self, data)
@@ -280,30 +231,30 @@ local function dbgserver_update(obj)
 			msg = debugger.convertRecv(self, "")
 		end
 	end
-	if obj._status == "CONNECTING" then
-		obj._status = "CONNECTED"
-		LOG("New DBG", obj._peer, obj._ref)
+	if fd._status == "CONNECTING" then
+		fd._status = "CONNECTED"
+		LOG("New DBG", fd._peer, fd._ref)
 		if dbg.client then
-			network.close(obj)
+			network.close(fd)
 		else
-			dbg.client = obj
+			dbg.client = fd
 		end
-	elseif obj._status == "CLOSED" then
-		if dbg.client == obj then
+	elseif fd._status == "CLOSED" then
+		if dbg.client == fd then
 			dbg.client = nil
 		end
 		response(dbg.server, "DBG", "") --close DBG
 	end
 end
 
-local function filewatch()
+local function update()
 	while true do
 		local type, path = fw.select()
 		if not type then
 			break
 		end
 		if type == 'error' then
-			print(path)
+			print('[FileWatch]', 'ERROR:', path)
 			goto continue
 		end
 		local tree = watch
@@ -328,21 +279,18 @@ local function filewatch()
 	end
 end
 
-local function mainloop()
-	local objs = {}
-	if network.dispatch(objs, 0.1) then
-		for k,obj in ipairs(objs) do
-			objs[k] = nil
-			if is_fileserver(obj) then
-				fileserver_update(obj)
-			elseif is_dbgserver(obj) then
-				dbgserver_update(obj)
-			end
-		end
-	end
-	filewatch()
+local function init(v)
+	config = v
 end
 
-while true do
-	mainloop()
+local function listen(...)
+	local fd = assert(network.listen(...))
+	fd.update = fileserver_update
+	LOG ("Listen :", ...)
 end
+
+return {
+	init = init,
+	listen = listen,
+	update = update,
+}
