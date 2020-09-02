@@ -142,6 +142,34 @@ local function add_rotation(srt, rotateX, rotateY, threshold)
     return math3d.mul(math3d.matrix{r=nq}, srt)
 end
 
+local function rotate_forword_vector(srt, rx, ry)
+    local forward = srt[3]
+
+    local nq = math3d.mul(
+        math3d.quaternion{axis=math3d.index(srt, 1), r=rx},
+        math3d.quaternion{axis=math3d.index(srt, 2), r=ry})
+    
+    return math3d.transform(nq, forward, 0)
+end
+
+function iobj_motion.rotate_forward_vector(eid, rotateX, rotateY)
+    if rotateX or rotateY then
+        local rc = world[eid]._rendercache
+        local srt = rc.srt
+        local eyepos = srt[4]
+        local viewdir = rotate_forword_vector(srt, rotateX, rotateY)
+        if rc.updir then
+            srt.id = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
+        else
+            local xaxis = math3d.isequal(viewdir, mc.ZAXIS) and mc.XAXIS or math3d.cross(viewdir, mc.ZAXIS)
+            local yaxis = math3d.cross(viewdir, xaxis)
+            srt[1], srt[2], srt[3] = xaxis, yaxis, viewdir
+        end
+
+        world:pub{"component_changed", "transform", eid}
+    end
+end
+
 function iobj_motion.rotate(eid, rotateX, rotateY)
     if rotateX or rotateY then
         local rc = world[eid]._rendercache
