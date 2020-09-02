@@ -193,7 +193,9 @@ function iqc.update_transform()
 end
 
 function iqc.update_buffer()
-    bgfx.update(vb.handles[1], 0, bgfx.memory_buffer(vertex_format, vbcache, 1, vbcache.n))
+    if vbcache.n > 0 then
+        bgfx.update(vb.handles[1], 0, bgfx.memory_buffer(vertex_format, vbcache, 1, vbcache.n))
+    end
 end
 
 function iqc.update()
