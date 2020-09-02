@@ -1,5 +1,6 @@
+local log = require "log"
 local function LOG(...)
-	print("[FileSrv]", ...)
+	log("[FileSrv]", ...)
 end
 
 local fw = require "filewatch"
@@ -13,6 +14,7 @@ local watch = {}
 local repos = {}
 local dbgserver_update
 local config
+local event = require "event"
 
 local function vfsjoin(dir, file)
     if file:sub(1, 1) == '/' or dir == '' then
@@ -93,24 +95,6 @@ local function repo_add(identity, reponame)
 	return repo
 end
 
-local _origin = os.time() - os.clock()
-local function os_date(fmt)
-    local ti, tf = math.modf(_origin + os.clock())
-    return os.date(fmt, ti):gsub('{ms}', ('%03d'):format(math.floor(tf*1000)))
-end
-
-local function logger_init(self)
-	self._log = ('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
-	local logdir = self._repo._root / '.log'
-	lfs.create_directories(logdir)
-	for path in logdir:list_directory() do
-		if path:equal_extension ".log" then
-			lfs.create_directories(logdir / 'backup')
-			lfs.rename(path, logdir / 'backup' / path:filename())
-		end
-	end
-end
-
 local function response(fd, ...)
 	network.send(fd, protocol.packmessage({...}))
 end
@@ -127,7 +111,7 @@ function message:ROOT(identity, reponame)
 		return
 	end
 	self._repo = repo
-	logger_init(self)
+	event[#event+1] = {"RUNTIME_CREATE", repo}
 	response(self, "ROOT", repo:root())
 end
 
@@ -181,11 +165,7 @@ function message:DBG(data)
 end
 
 function message:LOG(data)
-	local logfile = self._repo._root / '.log' / self._log
-	local fp = assert(lfs.open(logfile, 'a'))
-	fp:write(data)
-	fp:write('\n')
-	fp:close()
+	event[#event+1] = {"RUNTIME_LOG", data}
 end
 
 local output = {}
@@ -206,6 +186,7 @@ end
 local function fileserver_update(fd)
 	dispatch_obj(fd)
 	if fd._status == "CLOSED" then
+		event[#event+1] = {"RUNTIME_CLOSE", fd._repo}
 		for fd, v in pairs(debug) do
 			if v.server == fd then
 				if v.client then
@@ -254,7 +235,7 @@ local function update()
 			break
 		end
 		if type == 'error' then
-			print('[FileWatch]', 'ERROR:', path)
+			log('[FileWatch]', 'ERROR:', path)
 			goto continue
 		end
 		local tree = watch
@@ -269,7 +250,7 @@ local function update()
 				if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
 					for _, v in ipairs(tree) do
 						local newpath = vfsjoin(v.url, rel_path)
-						print('[FileWatch]', type, newpath)
+						log('[FileWatch]', type, newpath)
 						v.repo:touch(newpath)
 					end
 				end

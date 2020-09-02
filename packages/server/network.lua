@@ -1,5 +1,6 @@
+local log = require "log"
 local function LOG(...)
-    print('[Network]', ...)
+    log('[Network]', ...)
 end
 
 

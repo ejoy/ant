@@ -1,9 +1,10 @@
+local log = require "log"
+local function LOG(...)
+    log('[iOS proxy]', ...)
+end
+
 local network = require 'network'
 local usbmuxd = require 'mobiledevice.usbmuxd'
-
-local function LOG(...)
-    print('[iOS proxy]', ...)
-end
 
 local eventfd
 local devices = {}
