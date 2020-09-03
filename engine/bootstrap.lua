@@ -7,11 +7,11 @@ else
     local thread = require "thread"
     if thread.id == 0 then
         thread.newchannel "INITTHREAD"
+        require "editor.init_cpath"
     else
         arg = thread.channel_consume "INITTHREAD"()
     end
     require "common.thread"
-    require "editor.init_cpath"
     require "editor.vfs"
     require "editor.log"
 end

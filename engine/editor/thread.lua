@@ -8,7 +8,8 @@ local function createThread(name, code)
 	thread.channel_produce "INITTHREAD"(arg)
 	return thread.thread(([=[
 --%s
-%s]=]):format(name, code))
+package.cpath = %q
+%s]=]):format(name, package.cpath, code))
 end
 
 return {
