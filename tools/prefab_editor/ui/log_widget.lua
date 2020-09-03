@@ -1,6 +1,9 @@
 local imgui     = require "imgui"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
+
+local fileserver_thread
+
 local icons
 local m = {}
 
@@ -9,8 +12,10 @@ local log_tags = {
     "Engine",
     "Editor",
     "Network",
-    "FileServer"
+    "FileSrv",
+    "FileWatch"
 }
+
 local LEVEL_INFO = 0x0000001
 local LEVEL_WARN = 0x0000002
 local LEVEL_ERROR = 0x0000004
@@ -35,18 +40,20 @@ local function time2str( time )
     return os.date(fmt, ti)..string.format("%03d",math.floor(tf*1000))
 end
 
-function m.add_tag(tagname)
-    if log_items[tagname] then return end
-    log_items[tagname] = {
-        [LEVEL_INFO] = {},
-        [LEVEL_WARN] = {},
-        [LEVEL_ERROR] = {},
-        [LEVEL_INFO | LEVEL_WARN] = {},
-        [LEVEL_INFO | LEVEL_ERROR] = {},
-        [LEVEL_WARN | LEVEL_ERROR] = {},
-        [LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR] = {}
-    }
+local function get_active_count()
+    local count = 0
+    if filter_flag | LEVEL_INFO then
+        count = count + #log_items[current_tag][LEVEL_INFO]
+    end
+    if filter_flag | LEVEL_WARN then
+        count = count + #log_items[current_tag][LEVEL_WARN]
+    end
+    if filter_flag | LEVEL_ERROR then
+        count = count + #log_items[current_tag][LEVEL_ERROR]
+    end
+    return count
 end
+
 local function do_add_info(tag, item)
     local container = log_items[tag]
     if not container then return end
@@ -71,43 +78,59 @@ local function do_add_error(tag, item)
     table.insert(container[LEVEL_ERROR | LEVEL_WARN], item)
     table.insert(container[LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR], item)
 end
+
+function m.message(msg)
+    if msg.level == LEVEL_INFO then
+        m.info(msg)
+    elseif msg.level == LEVEL_WARN then
+        m.warn(msg)
+    elseif msg.level == LEVEL_ERROR then
+        m.error(msg)
+    end
+end
+local new_log = false
 function m.info(msg)
-    local vit = {level = LEVEL_INFO, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
-    do_add_info("All", vit)
-    do_add_info(msg.tag, vit)
+    local msg_str = {level = LEVEL_INFO, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
+    do_add_info("All", msg_str)
+    do_add_info(msg.tag, msg_str)
+    new_log = true
 end
 
 function m.warn(msg)
-    local vit = {level = LEVEL_WARN, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
-    do_add_warn("All", vit)
-    do_add_warn(msg.tag, vit)
+    local msg_str = {level = LEVEL_WARN, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
+    do_add_warn("All", msg_str)
+    do_add_warn(msg.tag, msg_str)
+    new_log = true
 end
 
 function m.error(msg)
-    local vit = {level = LEVEL_ERROR, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
-    do_add_error("All", vit)
-    do_add_error(msg.tag, vit)
+    local msg_str = {level = LEVEL_ERROR, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
+    do_add_error("All", msg_str)
+    do_add_error(msg.tag, msg_str)
+    new_log = true
 end
+local fileserver_ip = {text="0.0.0.0"}
+local fileserver_port = {text="2018"}
 
-local function get_active_count()
-    local count = 0
-    if filter_flag | LEVEL_INFO then
-        count = count + #log_items[current_tag][LEVEL_INFO]
-    end
-    if filter_flag | LEVEL_WARN then
-        count = count + #log_items[current_tag][LEVEL_WARN]
-    end
-    if filter_flag | LEVEL_ERROR then
-        count = count + #log_items[current_tag][LEVEL_ERROR]
-    end
-    return count
-end
+local log_receiver
 
 function m.show(rhwi)
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, sh - uiconfig.LogWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(sw, uiconfig.LogWidgetHeight, 'F')
-    
+    local has, msg = log_receiver:pop()
+    while has do
+        local item = {time = msg[2], tag = msg[3], content = msg[4]}
+        if msg[1] == "info" then
+            m.info(item)
+        elseif msg[1] == "warn" then
+            m.warn(item)
+        elseif msg[1] == "error" then
+            m.error(item)
+        end
+        has, msg = log_receiver:pop()
+    end
+
     for _ in uiutils.imgui_windows("Log", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         if imgui.widget.Button("Clear") then
 
@@ -158,19 +181,49 @@ function m.show(rhwi)
             imgui.widget.EndCombo()
         end
 
+        -- imgui.cursor.SameLine()
+        -- imgui.widget.Text("IP:")
+        -- imgui.cursor.SameLine()
+        -- imgui.cursor.SetNextItemWidth(150)
+        
+        -- if imgui.widget.InputText("##IP", fileserver_ip) then
+        
+        -- end
+        
+        -- imgui.cursor.SameLine()
+        -- imgui.widget.Text("Port:")
+        -- imgui.cursor.SameLine()
+        -- imgui.cursor.SetNextItemWidth(60)
+        
+        -- if imgui.widget.InputText("##Port", fileserver_port) then
+        
+        -- end
+
+        -- imgui.cursor.SameLine()
+        -- if imgui.widget.Button("Connect") then
+
+        -- end
+
         local total_filter_count = (filter_flag > 0) and #log_items[current_tag][filter_flag] or 0
         if total_filter_count > 0 then
             imgui.cursor.Separator()
-            local winWidth, winHeight = imgui.windows.GetWindowSize()
             imgui.windows.SetNextWindowContentSize(0, get_active_count() * log_item_height)
+            
             imgui.windows.BeginChild("LogDetail", 0, 0, false, imgui.flags.Window { "HorizontalScrollbar" })
+            if new_log then
+                new_log = false
+                imgui.windows.SetScrollY(imgui.windows.GetScrollMaxY())
+            end
             local scrolly = imgui.windows.GetScrollY()
             local aw, ah = imgui.windows.GetWindowSize()
             local item_count = math.ceil(ah / log_item_height)
             local start_idx = math.floor(scrolly / log_item_height)
             imgui.cursor.SetCursorPos(nil, start_idx * log_item_height)
             start_idx = start_idx + 1
-            local max_idx = total_filter_count - item_count + 1
+            local max_idx = 1
+            if total_filter_count > item_count then
+                max_idx = total_filter_count - item_count + 1
+            end
             if start_idx > max_idx then
                 start_idx = max_idx
             end
@@ -210,14 +263,46 @@ end
 return function(am)
     icons = require "common.icons"(am)
     for i, v in ipairs(log_tags) do
-        m.add_tag(v)
+        log_items[v] = {
+            [LEVEL_INFO] = {},
+            [LEVEL_WARN] = {},
+            [LEVEL_ERROR] = {},
+            [LEVEL_INFO | LEVEL_WARN] = {},
+            [LEVEL_INFO | LEVEL_ERROR] = {},
+            [LEVEL_WARN | LEVEL_ERROR] = {},
+            [LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR] = {}
+        }
     end
     --test
-    for i = 1, 5000, 3 do
-        m.info({time = os.time(), tag = log_tags[math.random(2, #log_tags)], content = "helloworld_" .. i})
-        m.warn({time = os.time(), tag = log_tags[math.random(2, #log_tags)], content = "helloworld_" .. i + 1})
-        m.error({time = os.time(), tag = log_tags[math.random(2, #log_tags)], content = "helloworld_" .. i + 2})
+    for i = 1, 500, 3 do
+        m.info({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i})
+        m.warn({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i + 1})
+        m.error({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i + 2})
     end
     --
+    local cthread = require "thread"
+    cthread.newchannel "log_channel"
+    log_receiver = cthread.channel_consume "log_channel"
+    local produce = cthread.channel_produce "log_channel"
+    produce:push(arg)
+    -- fileserver_thread = thread.thread(([[
+    --     package.path = "engine/?.lua;packages/server/?.lua;tools/prefab_editor/?.lua"
+    --     package.cpath = %q
+    --     local fileserver = require "fileserver_adapter"()
+    --     fileserver.run()
+    -- ]]):format(package.cpath))
+    
+    local lthread = require "common.thread"
+    fileserver_thread = lthread.create [[
+        package.path = "engine/?.lua;tools/prefab_editor/?.lua"
+        require "bootstrap"
+        local fileserver = require "fileserver_adapter"()
+        fileserver.run()
+    ]]
+
+	local thread = require "thread"
+	local err = thread.channel_consume "errlog"
+    --print("ERROR:" .. err())
+    --thread.wait(fileserver_thread)
     return m
 end
