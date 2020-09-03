@@ -2316,11 +2316,15 @@ get_stride(lua_State *L, const char *format) {
 }
 
 static inline void
-copy_layout_data(lua_State*L, const char* layout, int tableidx, int startidx, uint8_t *addr){
+copy_layout_data(lua_State*L, const char* layout, int tableidx, int startidx, int num, uint8_t *addr){
 	int i;
-	int type = lua_geti(L, tableidx, startidx);
-	while (type != LUA_TNIL) {
+	int len = lua_rawlen(L, tableidx);
+	if ((startidx - 1 + num) > len){
+		luaL_error(L, "invalid range:%d, %d, table len:%d", startidx, num, len);
+	}
+	while(startidx <= num){
 		for (i=0;layout[i];i++) {
+			int type = lua_geti(L, tableidx, startidx++);
 			if (type != LUA_TNUMBER) {
 				luaL_error(L, "buffer data %d type error %s", tableidx, lua_typename(L, type));
 			}
@@ -2343,11 +2347,8 @@ copy_layout_data(lua_State*L, const char* layout, int tableidx, int startidx, ui
 				break;
 			}
 			lua_pop(L, 1);
-			++startidx;
-			type = lua_geti(L, tableidx, startidx);
 		}
 	}
-	lua_pop(L, 1);
 }
 
 #include <math.h>
@@ -2573,10 +2574,10 @@ lmemoryBuffer(lua_State *L) {
 		// type 1
 		int vertexidx = luaL_optinteger(L, 3, 1);
 		int startidx = (vertexidx-1) * sz + 1;
-		int n = lua_isnoneornil(L, 4) ? lua_rawlen(L, 2) / sz : (int)lua_tointeger(L, 4);
+		int numvertex = lua_isnoneornil(L, 4) ? lua_rawlen(L, 2) / sz : (int)lua_tointeger(L, 4);
 		int stride = get_stride(L, str);
-		void *data = newMemory(L, NULL, n*stride);
-		copy_layout_data(L, str, 2, startidx, data);
+		void *data = newMemory(L, NULL, numvertex*stride);
+		copy_layout_data(L, str, 2, startidx, numvertex*sz, data);
 		return 1;
 	}
 	// type 2
@@ -2755,11 +2756,11 @@ getIndexBuffer(lua_State *L, int idx, int index32) {
 		int n = lua_rawlen(L, 1);
 		if (index32) {
 			void *data = newMemory(L, NULL, n*sizeof(uint32_t));
-			copy_layout_data(L, "d", 1, 1, data);
+			copy_layout_data(L, "d", 1, 1, n, data);
 		}
 		else {
 			void *data = newMemory(L, NULL, n*sizeof(uint16_t));
-			copy_layout_data(L, "w", 1, 1, data);
+			copy_layout_data(L, "w", 1, 1, n, data);
 		}
 		return bgfxMemory(L, -1);
 	} else {
