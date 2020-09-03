@@ -365,6 +365,13 @@ function irender.read_render_buffer_content(format, rb_idx, force_read, size)
 	return memory_handle, size.w, size.h, size.w * elem_size
 end
 
+--[[
+	1 ---- 3
+	|      |
+	|      |
+	0 ---- 2
+]]
+
 local function create_quad_ib(num_quad)
     local b = {}
     for ii=1, num_quad do

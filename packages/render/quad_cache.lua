@@ -85,8 +85,9 @@ function iqc.alloc_quad_buffer(numquad)
 end
 
 local function check_vertex_index(vertexidx)
-    if vertexidx == 0 or vertexidx > vbcache.n then
-        error(("invalid vertex index: %d, %d"):format(vertexidx, vbcache.n))
+    local numv = (vbcache.n / vertex_elemnum)
+    if vertexidx <= 0  or vertexidx > numv then
+        error(("invalid vertex index: %d, %d"):format(vertexidx, numv))
     end
 end
 
@@ -97,7 +98,7 @@ end
 function iqc.vertex_pos(vertexidx)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
-    return vbcache[offset+1], vbcache[offset+2], vbcache[vertexidx+3]
+    return vbcache[offset+1], vbcache[offset+2], vbcache[offset+3]
 end
 
 function iqc.vertex_normal(vertexidx)
@@ -110,6 +111,12 @@ function iqc.vertex_texcoord(vertexidx)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
     return vbcache[offset+7], vbcache[offset+8]
+end
+
+function iqc.vertex_color(vertexidx)
+    check_vertex_index(vertexidx)
+    local offset = elem_offset(vertexidx)
+    return vbcache[offset+9]
 end
 
 function  iqc.set_vertex_pos(vertexidx, x, y, z)
@@ -128,6 +135,12 @@ function iqc.set_vertex_texcoord(vertexidx, u, v)
     check_vertex_index(vertexidx)
     local offset = elem_offset(vertexidx)
     vbcache[offset+7], vbcache[vertexidx+8]= u, v
+end
+
+function iqc.set_vertex_color(vertexidx, color)
+    check_vertex_index(vertexidx)
+    local offset = elem_offset(vertexidx)
+    vbcache[offset+9] = color
 end
 
 local patchs = {}
