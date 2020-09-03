@@ -75,10 +75,10 @@ function iqc.alloc_quad_buffer(numquad)
 
     return {
         start = start / vertex_elemnum,
-        num = vbcache.n / vertex_elemnum,
+        num = numquad * 4,
         handles = vb.handles,
     }, {
-        start = 0,
+        start = 0, --quadoffset * 2 * 3,
         num = numquad * 2 * 3,
         handle = ib.handle,
     }

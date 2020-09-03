@@ -6,4 +6,9 @@ properties:
   s_tex:
     stage: 0
     texture: /pkg/ant.resources/materials/textures/default.texture
-state: /pkg/ant.resources/materials/states/default.state
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: LESS
+  MSAA: true
+  WRITE_MASK: RGBAZ

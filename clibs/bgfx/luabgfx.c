@@ -2322,7 +2322,8 @@ copy_layout_data(lua_State*L, const char* layout, int tableidx, int startidx, in
 	if ((startidx - 1 + num) > len){
 		luaL_error(L, "invalid range:%d, %d, table len:%d", startidx, num, len);
 	}
-	while(startidx <= num){
+	int endidx = startidx-1 + num;
+	while(startidx <= endidx){
 		for (i=0;layout[i];i++) {
 			int type = lua_geti(L, tableidx, startidx++);
 			if (type != LUA_TNUMBER) {
