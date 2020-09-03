@@ -21,21 +21,23 @@ end
 
 return {
     init = function (world, emittereid, attrib)
-        local iqc = world:interface "ant.render|iquadcache"
+        local iemitter = world:interface "ant.effect|iemitter"
+
         local data = attrib.data
+        local e = world[emittereid]
+        local emitter = e._emitter
+
         if data.method == "sphere_random" then
-            local e = world[emittereid]
-            local emitter = e._emitter
             for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
                 local orientation = calc_random_orientation(data.longitude, data.latitude)
-                iqc.set_quad_orientation(ii, math3d.torotation(orientation))
+                iemitter.set_rotation(emittereid, ii, math3d.torotation(orientation))
+                iemitter.rotate_quad(emittereid, ii)
             end
         elseif data.method == "face_axis" then
-            local e = world[emittereid]
-            local emitter = e._emitter
             local orientation = math3d.torotation(data.axis)
             for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
-                iqc.set_quad_orientation(ii, orientation)
+                iemitter.set_rotation(emittereid, ii, orientation)
+                iemitter.rotate_quad(emittereid, ii)
             end
         else
             error(("not support method:%s"):format(data.method))

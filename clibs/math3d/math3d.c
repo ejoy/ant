@@ -1154,8 +1154,18 @@ ltodirection(lua_State *L) {
 static int
 ltorotation(lua_State *L) {
 	struct lastack *LS = GETLS(L);
-	const float * v = vector_from_index(L, LS, 1);
+	const float* v = vector_from_index(L, LS, 1);
 	math3d_viewdir_to_quat(LS, v);
+	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
+	return 1;
+}
+
+static int
+lvectors_quat(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float* v0 = vector_from_index(L, LS, 1);
+	const float* v1 = vector_from_index(L, LS, 2);
+	math3d_quat_between_2vectors(LS, v0, v1);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
 }
@@ -1930,6 +1940,7 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "reciprocal", lreciprocal },
 		{ "todirection", ltodirection },
 		{ "torotation", ltorotation },
+		{ "vectors_quat", lvectors_quat},
 		{ "totable", ltotable},
 		{ "tovalue", ltovalue},
 		{ "base_axes", lbase_axes},

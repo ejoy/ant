@@ -13,6 +13,8 @@ return {
 
             local rc = e._rendercache
             rc.vb, rc.ib = iqc.alloc_quad_buffer(data.count)
+
+            iqc.submit_patch(emitter.quad_offset, emitter.quad_count)
         end
     end,
 }

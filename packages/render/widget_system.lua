@@ -240,29 +240,36 @@ local iqc = world:interface "ant.render|iquadcache"
 local function add_quad(startpt, endpt, radian, width, quadidx)
 	local dir = math3d.sub(endpt, startpt)
 	local len = math3d.length(dir)
-	local scale = {width, len, 1}
+	local s = {width, len, 1}
 
 	local ndir = math3d.normalize(dir)
 	local q = math3d.quaternion{axis = ndir, r=radian}
+	local q1 = math3d.vectors_quat(mc.YAXIS, ndir)
 
-	local xaxis = math3d.isequal(ndir, mc.ZAXIS) and mc.XAXIS or math3d.cross(ndir, mc.ZAXIS)
-	local zaxis = math3d.cross(xaxis, ndir)
+	local t = math3d.muladd(dir, 0.5, startpt)	--line center
+	local m = math3d.matrix{s=s, r=math3d.mul(q1, q), t=t}
 	
-	local m = math3d.mul(math3d.matrix{s=scale, r=math3d.torotation(zaxis)}, math3d.matrix{t={0, 0.5, 0}})
-	m = math3d.mul(m, math3d.matrix{r=q})
-	m = math3d.set_index(m, 4, math3d.add(math3d.index(m, 4), startpt))
-
-	iqc.set_quad_srt(quadidx, math3d.srt(m))
+	local voffset = (quadidx-1) * 4
+	for i=1, 4 do
+		local vidx = voffset+i
+		local p = math3d.vector(iqc.vertex_pos(vidx))
+		local pp = math3d.tovalue(math3d.transform(m, p, 1))
+		iqc.set_vertex_pos(vidx, pp[1], pp[2], pp[3])
+	end
 end
 
-local function create_line_entity(vb, ib, material)
+local function create_line_entity(vb, ib, quadoffset, quadnum, material)
+	iqc.submit_patch(quadoffset, quadnum)
 	return world:create_entity {
 		policy = {
 			"ant.render|simple_render",
 		},
 		data = {
 			simplemesh = {
-				vb = vb, ib = ib,
+				vb = vb,
+				ib = ib,
+				quad_offset = quadoffset,
+				quad_num = quadnum,
 			},
 			material = material,
 			transform = {},
@@ -277,7 +284,7 @@ function ild.draw_line(startpt, endpt, radian, material, width)
 	local quadidx<const> = quadoffset+1
 	add_quad(startpt, endpt, radian, width or 0.1, quadidx)
 
-	return create_line_entity(vb, ib, material)
+	return create_line_entity(vb, ib, quadoffset, 1, material)
 end
 
 function ild.draw_lines(points, radian, material, width)
@@ -293,7 +300,7 @@ function ild.draw_lines(points, radian, material, width)
 		add_quad(points[i], points[i+1], radian, width or 0.1, quadidx)
 	end
 
-	return create_line_entity(vb, ib, material)
+	return create_line_entity(vb, ib, quadoffset, quadnum, material)
 end
 
 function ild.draw_circle(radius, radian, normal, material, width)

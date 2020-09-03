@@ -114,7 +114,11 @@ function init_loader_sys:post_init()
     icamera.set_frustum(mq.camera_eid, f)
 
     local ild = world:interface "ant.render|iline_drawer"
-    ild.draw_line({0, 0, 0}, {10, 20, 30, 1}, 0, "/pkg/ant.resources/materials/quadline.material", 0xffffffff, 0.5)
+    ild.draw_line({0, 0, 0}, {10, 20, 30, 1}, 0, "/pkg/ant.resources/materials/quadline.material", 0.5)
+
+    ild.draw_lines({
+        {0, 0, 0}, {1, 1, 1}, {2, 3, 5}, {9, 7, 8},
+    }, 0, "/pkg/ant.resources/materials/quadline.material", 0.1)
 end
 
 local imgui      = require "imgui"

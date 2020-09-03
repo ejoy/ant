@@ -352,9 +352,15 @@ math3d_rotmat_to_viewdir(struct lastack *LS, const float m[16]) {
 }
 
 void
-math3d_viewdir_to_quat(struct lastack *LS, const float v[3]) {
+math3d_quat_between_2vectors(struct lastack *LS, const float v0[3], const float v1[3]){
 	glm::quat &q = allocquat(LS);
-	q = glm::quat(glm::vec3(0, 0, 1), VEC3(v));
+	q = glm::quat(VEC3(v0), VEC3(v1));
+}
+
+void
+math3d_viewdir_to_quat(struct lastack *LS, const float v[3]) {
+	float vv[3] = {0, 0, 1};
+	math3d_quat_between_2vectors(LS, vv, v);
 }
 
 void

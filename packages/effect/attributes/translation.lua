@@ -4,19 +4,20 @@ local math3d = require "math3d"
 
 return {
     init = function (world, emittereid, attrib)
-        local iqc = world:interface "ant.render|iquadcache"
+        local iemitter = world:interface "ant.effect|iemitter"
+
         local data = attrib.data
         
         if data.method == "around_sphere" then
             local e = world[emittereid]
             local emitter = e._emitter
-            
-            for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
+
+            for quadidx=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
                 local radius = mu.random(data.radius_scale)
-                local q = iqc.quad_srt(ii).r
-                local n = math3d.transform(q, mc.ZAXIS, 0)
-                iqc.set_quad_translate(ii, math3d.mul(radius, n))
+                iemitter.set_translate(emittereid, quadidx, {0, 0, radius})
+                iemitter.translate_quad(emittereid, quadidx)
             end
+            
         elseif data.method == "around_box" then
             local e = world[emittereid]
             local emitter = e._emitter
@@ -28,9 +29,10 @@ return {
             end
             local x_op, y_op, z_op = random_op(br.x), random_op(br.y), random_op(br.z)
 
-            for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
+            for quadidx=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
                 local pos = math3d.vector(x_op(), y_op(), z_op())
-                iqc.set_quad_translate(ii, pos)
+                iemitter.set_translate(emittereid, quadidx, pos)
+                iemitter.translate_quad(emittereid, quadidx)
             end
         else
             error(("not support method:%s"):format(data.method))
