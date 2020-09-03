@@ -1,3 +1,7 @@
+local thread = require "thread"
+if thread.id ~= 0 then
+    return
+end
 if debug.getregistry().BGFX_GET_INTERFACE then
     return
 end
