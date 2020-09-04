@@ -5,7 +5,15 @@ if thread.id == 0 then
 	local registry = debug.getregistry()
 	local debugger = registry["lua-debug"]
 	if debugger then
-		registry.DEBUG_ATTACH = debugger.attach_thread
+		registry.DEBUG_ATTACH = ([[
+			local path = %q
+			local f = assert(io.open(path.."/script/debugger.lua"))
+			local str = f:read "a"
+			f:close()
+			assert(load(str, "=(BOOTSTRAP)"))(path)
+			:start "<Not Needed>"
+			:event "wait"
+		]]):format(debugger.root)
 	end
 end
 
@@ -25,7 +33,7 @@ if attach then
 	debug.getregistry().DEBUG_ATTACH = attach
 	assert(load(attach, "=(BOOTSTRAP)"))()
 end
-%s]=]):format(name, package.cpath, code))
+assert(load(%q))()]=]):format(name, package.cpath, code))
 end
 
 return {
