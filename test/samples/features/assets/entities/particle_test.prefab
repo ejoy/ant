@@ -25,20 +25,20 @@ data:
                 type: const
                 count: 32
             ---
-            name: orientation
+            name: scale
             data:
-                method: sphere_random
-                longitude: {0, 360}
-                latitude: {0, 180}
+                range: {0.15, 0.28}
             ---
             name: translation
             data:
                 method: around_sphere
                 radius_scale: {1, 1.2}
             ---
-            name: scale
+            name: orientation
             data:
-                range: {0.15, 0.28}
+                method: sphere_random
+                longitude: {0, 360}
+                latitude: {0, 180}
 action:
     attach_particle_system: 1
 ---
