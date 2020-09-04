@@ -169,7 +169,3 @@ local qc_sys = ecs.system "quadcache_system"
 function qc_sys:init()
     iqc.init(256)
 end
-
-function qc_sys:data_changed()
-    iqc.update()
-end

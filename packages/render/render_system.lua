@@ -7,6 +7,7 @@ local bgfx 		= require "bgfx"
 local irender 	= world:interface "ant.render|irender"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
 local isp		= world:interface "ant.render|system_properties"
+local iqc		= world:interface "ant.render|iquadcache"
 
 local wmt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)
@@ -42,6 +43,7 @@ function render_sys:init()
 end
 
 function render_sys:render_commit()
+	iqc.update()
 	isp.update()
 	for _, eid in world:each "render_target" do
 		local rq = world[eid]

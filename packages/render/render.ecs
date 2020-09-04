@@ -152,7 +152,6 @@ pipeline "render"
 system "quadcache_system"
     .implement "quad_cache.lua"
     .method "init"
-    .method "data_changed"
 
 interface "iquadcache"
     .implement "quad_cache.lua"
