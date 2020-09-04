@@ -3550,7 +3550,7 @@ get_texture_flags(lua_State *L, const char *format) {
 				luaL_error(L, "Invalid SAMPLE %c", format[i+1]);
 			}
 			continue;
-		case 'S': // sRGB/Gamma space
+		case 'S': // sRGB/Linear space
 			switch (format[i + 1]) {
 				case 'g': flags |= BGFX_TEXTURE_SRGB; break;// gamma
 				case 'l': break;// linear

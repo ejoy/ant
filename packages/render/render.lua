@@ -170,7 +170,8 @@ function irender.create_main_queue(view_rect)
 		MIN="LINEAR",
 		MAG="LINEAR",
 		U="CLAMP",
-		V="CLAMP"
+		V="CLAMP",
+		COLOR_SPACE = "sRGB",
 	}
 
 	local sd = setting:data()
@@ -192,9 +193,17 @@ function irender.create_main_queue(view_rect)
 			view_rect.w, view_rect.h, fmt, rb_flag)
 		)
 	end
+	local db_flag = samplerutil.sampler_flag {
+		RT="RT_MSAA2",
+		MIN="LINEAR",
+		MAG="LINEAR",
+		U="CLAMP",
+		V="CLAMP",
+	}
+
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(
 		default_comp.render_buffer(
-		view_rect.w, view_rect.h, "D24S8", rb_flag)
+		view_rect.w, view_rect.h, "D24S8", db_flag)
 	)
 
 	local camera_eid = icamera.create{
@@ -243,7 +252,6 @@ function irender.create_main_queue(view_rect)
 end
 
 local blitviewid = viewidmgr.get "blit"
-local icamera = world:interface "ant.camera|camera"
 function irender.create_blit_queue(viewrect)
 	local cameraeid = icamera.create {
 		eyepos = mc.ZERO_PT,
@@ -475,10 +483,6 @@ function irq.set_view_rect(eid, rect)
 	local vr = rt.view_rect
 	vr.x, vr.y = rect.x, rect.y
 	vr.w, vr.h = rect.w, rect.h
-
-	local camera_eid = world[eid].camera_eid
-	
-	local icamera = world:interface "ant.camera|camera"
 	icamera.set_frustum_aspect(qe.camera_eid, vr.w/vr.h)
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
 	world:pub{"component_changed", "viewport"}

@@ -11,6 +11,8 @@ local sample_types = {
 	RT_READWRITE = "r", 
 	RT_MSAA="r",
 
+	COLOR_SPACE="S",
+
 	BLIT = "b",
 	BLIT_READBACK = "b", 
 	BLIT_COMPUTE = "b",
@@ -23,6 +25,10 @@ local sample_value = {
 	CLAMP="c", MIRROR = "m", BORDER="b", WRAP="w",	--default
 	-- filter address
 	POINT="p", ANISOTROPIC="a", LINEAR="l", --default,
+
+	-- color space
+	sRGB="g",
+	--LINEAR="l",
 
 	-- compare
 	COMPARE_LESS = '<',
