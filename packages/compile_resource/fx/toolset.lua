@@ -19,6 +19,11 @@ local shader_options = {
 		fs = "ps_4_0",
 		cs = "cs_5_0",
 	},
+	direct3d12 = {
+		vs = "vs_4_0",
+		fs = "ps_4_0",
+		cs = "cs_5_0",
+	},
 	opengl = {
 		vs = "120",
 		fs = "120",
