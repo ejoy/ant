@@ -48,6 +48,8 @@ function m:init()
     rc.viewprojmat = icamera.calc_viewproj(second_camera)
     camera_mgr.second_view_camera = second_camera
     camera_mgr.set_second_camera(second_camera)
+    
+    world[camera_mgr.second_view].visible = false
 
     entity.create_procedural_sky()
     --world:instance "res/skybox.prefab"

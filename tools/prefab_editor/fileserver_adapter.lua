@@ -30,7 +30,6 @@ function event.RUNTIME_CLOSE(repo)
 end
 
 function event.SERVER_LOG(...)
-    print(...)
     sender:push({...})
 end
 

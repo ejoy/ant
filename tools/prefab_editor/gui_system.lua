@@ -54,9 +54,9 @@ local secondCameraEID
 local fileserver_thread
 function m:ui_update()
     if not resourceRoot then
-        --if not imgui.windows.IsPopupOpen("Choose project folder") then
+        if not imgui.windows.IsPopupOpen("Choose project folder") then
             imgui.windows.OpenPopup("Choose project folder")
-        --end
+        end
         local change, opened = imgui.windows.BeginPopupModal("Choose project folder", imgui.flags.Window{"AlwaysAutoResize"})
         if change then
             if imgui.widget.Button("Create empty project") then

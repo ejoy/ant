@@ -183,7 +183,7 @@ function m.show_frustum(eid, visible)
     if not eid or not world[eid].camera then
         return
     end
-    
+    world[m.second_view].visible = visible
     if m.camera_list[eid] and m.camera_list[eid].frustum_eid then
         local state = "visible"
         ies.set_state(m.camera_list[eid].frustum_eid, state, visible)
