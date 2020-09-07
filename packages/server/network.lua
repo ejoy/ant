@@ -1,6 +1,6 @@
 local log = require "log"
 local function LOG(...)
-    log('[Network]', ...)
+    log.info('Network', ...)
 end
 
 

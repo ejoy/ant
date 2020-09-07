@@ -67,7 +67,7 @@ local function constructResourceTree(fspath)
 end
 
 function m.update_resource_tree()
-    if not m.dirty then return end
+    if not m.dirty or not resourceRoot then return end
 
     resourceTree = {files = {}, dirs = {{resourceRoot, constructResourceTree(resourceRoot)}}}
     local function set_parent(tree)
@@ -82,6 +82,9 @@ function m.update_resource_tree()
 end
 
 function m.show(rhwi)
+    if not resourceRoot then
+        return
+    end
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, sh - uiconfig.ResourceBrowserHeight, 'F')
     imgui.windows.SetNextWindowSize(sw, uiconfig.ResourceBrowserHeight, 'F')
