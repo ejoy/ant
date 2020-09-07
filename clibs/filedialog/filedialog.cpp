@@ -53,6 +53,7 @@ static void dlgSetTitle(lua_State* L, ComPtr<IFileDialog>& dialog, int idx) {
 
 static void dlgSetFileTypes(lua_State* L, ComPtr<IFileDialog>& dialog, int idx) {
     if (LUA_TTABLE != lua_getfield(L, idx, "FileTypes")) {
+        dialog->SetOptions(FOS_PICKFOLDERS);
         lua_pop(L, 1);
         return;
     }

@@ -1,8 +1,7 @@
 local imgui     = require "imgui"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
-
-local fileserver_thread
+local cthread = require "thread"
 
 local icons
 local m = {}
@@ -12,6 +11,7 @@ local log_tags = {
     "Engine",
     "Editor",
     "Network",
+    "Thread",
     "FileSrv",
     "FileWatch"
 }
@@ -40,43 +40,51 @@ local function time2str( time )
     return os.date(fmt, ti)..string.format("%03d",math.floor(tf*1000))
 end
 
-local function get_active_count()
-    local count = 0
+local function get_log_height()
+    local height = 0
     if filter_flag | LEVEL_INFO then
-        count = count + #log_items[current_tag][LEVEL_INFO]
+        height = height + log_items[current_tag][LEVEL_INFO].height
     end
     if filter_flag | LEVEL_WARN then
-        count = count + #log_items[current_tag][LEVEL_WARN]
+        height = height + log_items[current_tag][LEVEL_WARN].height
     end
     if filter_flag | LEVEL_ERROR then
-        count = count + #log_items[current_tag][LEVEL_ERROR]
+        height = height + log_items[current_tag][LEVEL_ERROR].height
     end
-    return count
+    return height
+end
+
+local function do_add(t, item)
+    table.insert(t, item)
+    t.height = t.height + item.height
+    for i = 1, item.line_count do
+        t.vtor_index[#t.vtor_index + 1] = {#t, i - 1}
+    end
 end
 
 local function do_add_info(tag, item)
     local container = log_items[tag]
     if not container then return end
-    table.insert(container[LEVEL_INFO], item)
-    table.insert(container[LEVEL_INFO | LEVEL_WARN], item)
-    table.insert(container[LEVEL_INFO | LEVEL_ERROR], item)
-    table.insert(container[LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR], item)
+    do_add(container[LEVEL_INFO], item)
+    do_add(container[LEVEL_INFO | LEVEL_WARN], item)
+    do_add(container[LEVEL_INFO | LEVEL_ERROR], item)
+    do_add(container[LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR], item)
 end
 local function do_add_warn(tag, item)
     local container = log_items[tag]
     if not container then return end
-    table.insert(container[LEVEL_WARN], item)
-    table.insert(container[LEVEL_WARN | LEVEL_INFO], item)
-    table.insert(container[LEVEL_WARN | LEVEL_ERROR], item)
-    table.insert(container[LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR], item)
+    do_add(container[LEVEL_WARN], item)
+    do_add(container[LEVEL_WARN | LEVEL_INFO], item)
+    do_add(container[LEVEL_WARN | LEVEL_ERROR], item)
+    do_add(container[LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR], item)
 end
 local function do_add_error(tag, item)
     local container = log_items[tag]
     if not container then return end
-    table.insert(container[LEVEL_ERROR], item)
-    table.insert(container[LEVEL_ERROR | LEVEL_INFO], item)
-    table.insert(container[LEVEL_ERROR | LEVEL_WARN], item)
-    table.insert(container[LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR], item)
+    do_add(container[LEVEL_ERROR], item)
+    do_add(container[LEVEL_ERROR | LEVEL_INFO], item)
+    do_add(container[LEVEL_ERROR | LEVEL_WARN], item)
+    do_add(container[LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR], item)
 end
 
 function m.message(msg)
@@ -90,50 +98,102 @@ function m.message(msg)
 end
 local new_log = false
 function m.info(msg)
-    local msg_str = {level = LEVEL_INFO, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
-    do_add_info("All", msg_str)
-    do_add_info(msg.tag, msg_str)
+    msg.level = LEVEL_INFO
+    do_add_info("All", msg)
+    do_add_info(msg.tag, msg)
     new_log = true
 end
 
 function m.warn(msg)
-    local msg_str = {level = LEVEL_WARN, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
-    do_add_warn("All", msg_str)
-    do_add_warn(msg.tag, msg_str)
+    msg.level = LEVEL_WARN
+    do_add_warn("All", msg)
+    do_add_warn(msg.tag, msg)
     new_log = true
 end
 
 function m.error(msg)
-    local msg_str = {level = LEVEL_ERROR, message = "[" .. time2str(msg.time) .. "][".. msg.tag .. "]" .. msg.content}
-    do_add_error("All", msg_str)
-    do_add_error(msg.tag, msg_str)
+    msg.level = LEVEL_ERROR
+    do_add_error("All", msg)
+    do_add_error(msg.tag, msg)
     new_log = true
 end
 local fileserver_ip = {text="0.0.0.0"}
 local fileserver_port = {text="2018"}
 
 local log_receiver
+local err_receiver
+local function reset_log()
+    for i, v in ipairs(log_tags) do
+        log_items[v] = {
+            [LEVEL_INFO] = {height = 0, vtor_index = {}},
+            [LEVEL_WARN] = {height = 0, vtor_index = {}},
+            [LEVEL_ERROR] = {height = 0, vtor_index = {}},
+            [LEVEL_INFO | LEVEL_WARN] = {height = 0, vtor_index = {}},
+            [LEVEL_INFO | LEVEL_ERROR] = {height = 0, vtor_index = {}},
+            [LEVEL_WARN | LEVEL_ERROR] = {height = 0, vtor_index = {}},
+            [LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR] = {height = 0, vtor_index = {}}
+        }
+    end
+end
+
+function m.init_log_receiver()
+    if not log_receiver then
+        log_receiver = cthread.channel_consume "log_channel"
+    end
+end
 
 function m.show(rhwi)
+    if not err_receiver then
+        err_receiver = cthread.channel_consume "errlog"
+    end
+    
+    local error, info = err_receiver:pop()
+    if error then
+        local count = 1
+        for _ in string.gmatch(info, '\n') do
+            count = count + 1
+        end
+        m.error({
+            message = "[" .. time2str(os.time()) .. "][Thread]" .. info,
+            height = count * log_item_height,
+            line_count = count
+        })
+    end
+    --print("ERROR:" .. err:pop())
+    --thread.wait(fileserver_thread)
+
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, sh - uiconfig.LogWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(sw, uiconfig.LogWidgetHeight, 'F')
-    local has, msg = log_receiver:pop()
-    while has do
-        local item = {time = msg[2], tag = msg[3], content = msg[4]}
-        if msg[1] == "info" then
-            m.info(item)
-        elseif msg[1] == "warn" then
-            m.warn(item)
-        elseif msg[1] == "error" then
-            m.error(item)
+    if log_receiver then
+        local has, msg = log_receiver:pop()
+        while has do
+            local msg_str = ""
+            for i = 4, #msg do
+                msg_str = msg_str .. msg[i]
+            end
+            local count = 1
+            for _ in string.gmatch(msg_str, '\n') do
+                count = count + 1
+            end
+            local item = {
+                message = "[" .. time2str(msg[2]) .. "][".. msg[3] .. "]" .. msg_str,
+                height = count * log_item_height,
+                line_count = count
+            }
+            if msg[1] == "info" then
+                m.info(item)
+            elseif msg[1] == "warn" then
+                m.warn(item)
+            elseif msg[1] == "error" then
+                m.error(item)
+            end
+            has, msg = log_receiver:pop()
         end
-        has, msg = log_receiver:pop()
     end
-
     for _ in uiutils.imgui_windows("Log", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         if imgui.widget.Button("Clear") then
-
+            reset_log()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("Info", show_info) then
@@ -203,35 +263,40 @@ function m.show(rhwi)
         -- if imgui.widget.Button("Connect") then
 
         -- end
-
-        local total_filter_count = (filter_flag > 0) and #log_items[current_tag][filter_flag] or 0
-        if total_filter_count > 0 then
+        local current_log = log_items[current_tag][filter_flag]
+        local total_virtual_count = (filter_flag > 0) and #current_log.vtor_index or 0
+        if total_virtual_count > 0 then
             imgui.cursor.Separator()
-            imgui.windows.SetNextWindowContentSize(0, get_active_count() * log_item_height)
-            
+            imgui.windows.SetNextWindowContentSize(0, current_log.height)
             imgui.windows.BeginChild("LogDetail", 0, 0, false, imgui.flags.Window { "HorizontalScrollbar" })
             if new_log then
                 new_log = false
                 imgui.windows.SetScrollY(imgui.windows.GetScrollMaxY())
             end
             local scrolly = imgui.windows.GetScrollY()
-            local aw, ah = imgui.windows.GetWindowSize()
+            local aw, ah = imgui.windows.GetWindowContentRegionMax()
             local item_count = math.ceil(ah / log_item_height)
-            local start_idx = math.floor(scrolly / log_item_height)
-            imgui.cursor.SetCursorPos(nil, start_idx * log_item_height)
-            start_idx = start_idx + 1
+            local items_to_show = scrolly / log_item_height
+            local v_start_idx = math.floor(items_to_show) + 1
             local max_idx = 1
-            if total_filter_count > item_count then
-                max_idx = total_filter_count - item_count + 1
+            if total_virtual_count > item_count then
+                max_idx = total_virtual_count - item_count
             end
-            if start_idx > max_idx then
-                start_idx = max_idx
+            if v_start_idx > max_idx then
+                v_start_idx = max_idx
             end
-            local end_idx = start_idx + item_count + 1
-            if end_idx > total_filter_count then
-                end_idx = total_filter_count
+            local v_end_idx = v_start_idx + item_count + 1
+            if v_end_idx > total_virtual_count then
+                v_end_idx = total_virtual_count
             end
-            local current_log = log_items[current_tag][filter_flag]
+            local _, remain = math.modf(items_to_show)
+            local offset = remain + current_log.vtor_index[v_start_idx][2]
+            if offset < 0 then
+                offset = 0
+            end
+            imgui.cursor.SetCursorPos(nil, scrolly - offset * log_item_height)
+            local start_idx = current_log.vtor_index[v_start_idx][1]
+            local end_idx = current_log.vtor_index[v_end_idx][1]
             for i = start_idx, end_idx do
                 local color
                 item = current_log[i]
@@ -262,47 +327,55 @@ end
 
 return function(am)
     icons = require "common.icons"(am)
-    for i, v in ipairs(log_tags) do
-        log_items[v] = {
-            [LEVEL_INFO] = {},
-            [LEVEL_WARN] = {},
-            [LEVEL_ERROR] = {},
-            [LEVEL_INFO | LEVEL_WARN] = {},
-            [LEVEL_INFO | LEVEL_ERROR] = {},
-            [LEVEL_WARN | LEVEL_ERROR] = {},
-            [LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR] = {}
-        }
-    end
+    reset_log()
     --test
-    for i = 1, 500, 3 do
-        m.info({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i})
-        m.warn({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i + 1})
-        m.error({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i + 2})
-    end
+    -- for i = 1, 10 do
+    --     if i == 5 then
+    --         m.info({
+    --             message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_\nHello\nWorld" .. i,
+    --             height = 3 * log_item_height,
+    --             line_count = 3
+    --         })
+    --     elseif i == 8 then
+    --         m.info({
+    --             message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_\nWord" .. i,
+    --             height = 2 * log_item_height,
+    --             line_count = 2
+    --         })
+    --     elseif i == 9 then
+    --         m.info({
+    --             message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_\nAAA\nBBB\nCCC\nDDD\nEEE\nFFF" .. i,
+    --             height = 7 * log_item_height,
+    --             line_count = 7
+    --         })
+    --     else
+    --         m.info({
+    --             message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_" .. i,
+    --             height = log_item_height,
+    --             line_count = 1
+    --         })
+    --     end
+        
+    --     -- m.warn({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i + 1})
+    --     -- m.error({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i + 2})
+    -- end
+    -- for i = 1, 10, 3 do
+    --     m.info({
+    --         message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_" .. i,
+    --         height = log_item_height,
+    --         line_count = 1
+    --     })
+    --     m.warn({
+    --         message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_" .. i + 1,
+    --         height = log_item_height,
+    --         line_count = 1
+    --     })
+    --     m.error({
+    --         message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_" .. i + 2,
+    --         height = log_item_height,
+    --         line_count = 1
+    --     })
+    -- end
     --
-    local cthread = require "thread"
-    cthread.newchannel "log_channel"
-    log_receiver = cthread.channel_consume "log_channel"
-    local produce = cthread.channel_produce "log_channel"
-    produce:push(arg)
-    -- fileserver_thread = thread.thread(([[
-    --     package.path = "engine/?.lua;packages/server/?.lua;tools/prefab_editor/?.lua"
-    --     package.cpath = %q
-    --     local fileserver = require "fileserver_adapter"()
-    --     fileserver.run()
-    -- ]]):format(package.cpath))
-    
-    local lthread = require "common.thread"
-    fileserver_thread = lthread.create [[
-        package.path = "engine/?.lua;tools/prefab_editor/?.lua"
-        require "bootstrap"
-        local fileserver = require "fileserver_adapter"()
-        fileserver.run()
-    ]]
-
-	local thread = require "thread"
-	local err = thread.channel_consume "errlog"
-    --print("ERROR:" .. err())
-    --thread.wait(fileserver_thread)
     return m
 end

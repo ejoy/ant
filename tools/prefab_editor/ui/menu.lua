@@ -13,7 +13,6 @@ function m.show()
 
             end
             if imgui.widget.MenuItem("Open", "Ctrl+O") then
-
             end
             if imgui.widget.MenuItem("Save", "Ctrl+S") then
                 prefab_mgr:save_prefab()

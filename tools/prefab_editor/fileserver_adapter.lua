@@ -30,6 +30,7 @@ function event.RUNTIME_CLOSE(repo)
 end
 
 function event.SERVER_LOG(...)
+    print(...)
     sender:push({...})
 end
 
@@ -53,7 +54,7 @@ local function update_event()
 end
 
 local arg
-
+local repopath
 local function luaexe()
     local i = -1
     while arg[i] ~= nil do i = i - 1 end
@@ -64,7 +65,7 @@ function m.run()
     srv.init_server {
         lua = luaexe(),
     }
-    srv.set_repopath(arg[1])
+    srv.set_repopath(repopath)
     srv.listen("0.0.0.0", 2018)
     srv.init_proxy()
     while true do
@@ -76,7 +77,7 @@ function m.run()
 end
 
 return function()
-    arg = cthread.channel_consume "log_channel"()
+    arg, repopath = cthread.channel_consume "fileserver_channel"()
     sender = cthread.channel_produce "log_channel"
     return m
 end

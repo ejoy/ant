@@ -4,17 +4,17 @@ local event = require "event"
 --     event[#event+1] = {"SERVER_LOG", ...}
 -- end
 local m = {}
-local function add_event(level, tag, msg)
-    event[#event+1] = {"SERVER_LOG", level, os.time(), tag, msg}
+local function add_event(level, tag, ...)
+    event[#event+1] = {"SERVER_LOG", level, os.time(), tag, ...}
 end
-function m.info(tag, msg)
-    add_event("info", tag, msg)
+function m.info(tag, ...)
+    add_event("info", tag, ...)
 end
-function m.warn(tag, msg)
-    add_event("warn", tag, msg)
+function m.warn(tag, ...)
+    add_event("warn", tag, ...)
 end
-function m.error(tag, msg)
-    add_event("error", tag, msg)
+function m.error(tag, ...)
+    add_event("error", tag, ...)
 end
 
 return m

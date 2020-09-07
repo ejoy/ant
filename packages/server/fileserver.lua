@@ -1,6 +1,6 @@
 local log = require "log"
-local function LOG(msg)
-	log.info("FileSrv", msg)
+local function LOG(...)
+	log.info("FileSrv", ...)
 end
 
 local fw = require "filewatch"
@@ -68,7 +68,7 @@ end
 
 local function repo_add(identity, reponame)
 	local repopath = lfs.path(reponame)
-	LOG ("Open repo : " .. repopath)
+	LOG ("Open repo : ", tostring(repopath))
 	do_prebuilt(repopath, identity)
 	if repos[reponame] then
 		local repo = repos[reponame]
@@ -104,7 +104,7 @@ local debug = {}
 local message = {}
 
 function message:ROOT(identity, reponame)
-	LOG("ROOT" .. identity .. reponame)
+	LOG("ROOT", identity, reponame)
 	local reponame = assert(reponame or REPOPATH, "Need repo name")
 	local repo = repo_add(identity, reponame)
 	if repo == nil then
@@ -151,7 +151,7 @@ function message:DBG(data)
 	if data == "" then
 		local fd = assert(network.listen('127.0.0.1', 4278))
 		fd.update = dbgserver_update
-		LOG("LISTEN DEBUG" .. '127.0.0.1' .. 4278)
+		LOG("LISTEN DEBUG", '127.0.0.1', 4278)
 		debug[fd] = { server = self }
 		return
 	end
@@ -215,7 +215,7 @@ function dbgserver_update(fd)
 	end
 	if fd._status == "CONNECTING" then
 		fd._status = "CONNECTED"
-		LOG("New DBG" .. fd._peer .. fd._ref)
+		LOG("New DBG", fd._peer, fd._ref)
 		if dbg.client then
 			network.close(fd)
 		else
@@ -251,7 +251,7 @@ local function update()
 				if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
 					for _, v in ipairs(tree) do
 						local newpath = vfsjoin(v.url, rel_path)
-						log.info('FileWatch', type .. newpath)
+						log.info('FileWatch', type, newpath)
 						v.repo:touch(newpath)
 					end
 				end
