@@ -17,14 +17,11 @@ local function create_world(config)
     irender.create_blit_queue{w=config.width, h=config.height}
     editor.init_world(world)
     local world_update = world:update_func "update"
-    local world_tex
     local m = {}
     function m.init()
         world:pub {"resize", rect_w, rect_h}
         world:update_func "init" ()
         imgui.SetCurrentContext(context)
-        local irender = world:interface "ant.render|irender"
-        world_tex = assert(irender.get_main_view_rendertexture())
     end
     -- function m.show()
     --     rect_x, rect_y = imgui.cursor.GetCursorScreenPos()

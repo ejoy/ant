@@ -211,11 +211,14 @@ function sm:update_camera()
 	local mq = world:singleton_entity "main_queue"
 	local c = world[mq.camera_eid]._rendercache
 
-	-- for _, mb in ipairs(modify_mailboxs) do
-	-- 	for _ in mb:each() do
-			update_shadow_camera(ilight.directional_light(), c)
-	-- 	end
-	-- end
+	local leid = ilight.directional_light()
+	for _, ceid in world:each "csm" do
+		world[ceid].visible = leid ~= nil
+	end
+
+	if leid then
+		update_shadow_camera(leid, c)
+	end
 end
 
 function sm:refine_camera()

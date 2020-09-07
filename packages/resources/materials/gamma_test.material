@@ -1,0 +1,14 @@
+fx:
+    vs: /pkg/ant.resources/shaders/simple/quad/vs_texquad.sc
+    fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
+    setting:
+        surfacetype: translucent
+properties:
+    s_texColor:
+        stage: 0
+        texture: /pkg/ant.resources/textures/test/gamma_test.texture
+state:
+    ALPHA_REF: 0
+    CULL: NONE
+    DEPTH_TEST: ALWAYS
+    WRITE_MASK: RGBA

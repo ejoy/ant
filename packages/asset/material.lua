@@ -51,7 +51,7 @@ end
 
 local function set_texture(p)
 	local v = p.value
-	return bgfx.set_texture(v.stage, p.handle, v.texture.handle)
+	return bgfx.set_texture(v.stage, p.handle, v.texture.handle, v.texture.flags)
 end
 
 local function update_uniform(p, dst)

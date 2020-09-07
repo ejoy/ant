@@ -171,7 +171,6 @@ function irender.create_main_queue(view_rect)
 		MAG="LINEAR",
 		U="CLAMP",
 		V="CLAMP",
-		COLOR_SPACE = "sRGB",
 	}
 
 	local sd = setting:data()
@@ -273,10 +272,7 @@ function irender.create_blit_queue(viewrect)
 				viewid = blitviewid,
 				view_mode = "",
 				clear_state = {
-					color = 0x000000ff,
-					depth = 1,
-					stencil = 0,
-					clear = "C",
+					clear = "",
 				},
 				view_rect = {
 					x = viewrect.x or 0, y = viewrect.y or 0,

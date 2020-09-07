@@ -61,14 +61,16 @@ local function update_shadow_properties()
 	local split_distances = {0, 0, 0, 0}
 	for _, eid in world:each "csm" do
 		local se = world[eid]
-		local csm = se.csm
+		if se.visible then
+			local csm = se.csm
 
-		local idx = csm.index
-		local split_distanceVS = csm.split_distance_VS
-		if split_distanceVS then
-			split_distances[idx] = split_distanceVS
-			local rc = world[se.camera_eid]._rendercache
-			csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), rc.viewprojmat)
+			local idx = csm.index
+			local split_distanceVS = csm.split_distance_VS
+			if split_distanceVS then
+				split_distances[idx] = split_distanceVS
+				local rc = world[se.camera_eid]._rendercache
+				csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), rc.viewprojmat)
+			end
 		end
 	end
 

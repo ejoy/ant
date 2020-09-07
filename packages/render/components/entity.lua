@@ -11,7 +11,8 @@ local geodrawer = geopkg.drawer
 local geolib    = geopkg.geometry
 
 local ies = world:interface "ant.scene|ientity_state"
-local imaterial = world:interface "ant.asset|imaterial"
+local irender = world:interface "ant.render|irender"
+local bgfx = require "bgfx"
 
 local function create_mesh(vb_lst, ib)
 	local mesh = {
@@ -407,6 +408,40 @@ function ientity.create_procedural_sky(settings)
 			name = "procedural sky",
 		}
 	}
+end
+
+function ientity.create_gamma_test_entity()
+	world:create_entity {
+        policy = {
+            "ant.render|simple_render",
+            "ant.general|name",
+        },
+        data = {
+            material = "/pkg/ant.resources/materials/gamma_test.material",
+            simplemesh = {
+                ib = {
+                    start = 0,
+                    num = 6,
+                    handle = irender.quad_ib(),
+                },
+                vb = {
+                    start = 0,
+                    num = 4,
+                    handles = {
+                        bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
+                            100, 200, 0.0, 0.0,
+                            100, 132, 0.0, 1.0,
+                            420, 200, 1.0, 0.0,
+                            420, 132, 1.0, 1.0,
+                        }), declmgr.get "p2|t2".handle)
+                    }
+                }
+            },
+            transform = {},
+            scene_entity = true,
+            state = 1,
+        }
+    }
 end
 
 local iom = "ant.objcontroller|obj_motion"
