@@ -24,9 +24,10 @@ end
 function ipf.reset_filters(eid)
 	for _, feid in world:each "primitive_filter" do
 		local filter = world[feid].primitive_filter
-		local r = filter.result
-		r.opaticy.items[eid] = nil
-		r.translucent.items[eid] = nil
+
+		for n, f in pairs(filter.result) do
+			ipf.remove_item(f.items, eid)
+		end
 	end
 end
 
