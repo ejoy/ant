@@ -30,7 +30,7 @@ end
 
 function ies.set_state(eid, name, v)
 	local rc = world[eid]._rendercache
-	if not rc.entity_state then
+	if not rc or not rc.entity_state then
 		return
 	end
 	if v then
