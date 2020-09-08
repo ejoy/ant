@@ -61,13 +61,22 @@ function m:ui_update()
         if change then
             if imgui.widget.Button("Create empty project") then
                 print("Create empty project")
+                local filedialog = require 'filedialog'
+                local dialog_info = {
+                    Owner = rhwi.native_window(),
+                    Title = "Choose project folder"
+                }
+                local ok, path = filedialog.open(dialog_info)
+                if ok then
+                    
+                end
             end
             imgui.cursor.SameLine()
             if imgui.widget.Button("Open project") then
                 local filedialog = require 'filedialog'
                 local dialog_info = {
                     Owner = rhwi.native_window(),
-                    Title = "Open project"
+                    Title = "Choose project folder"
                 }
                 local ok, path = filedialog.open(dialog_info)
                 if ok then
@@ -161,8 +170,7 @@ function m:data_changed()
                     camera_mgr.show_frustum(value1, false)
                 end
                 if value2 and world[value2].camera then
-                    camera_mgr.set_second_camera(value2)
-                    --ies.set_state(camera_mgr.second_view, "visible", false)
+                    camera_mgr.set_second_camera(value2, true)
                 end
             elseif action == "update" and world[gizmo.target_eid].camera then
                 camera_mgr.update_frustrum(gizmo.target_eid)

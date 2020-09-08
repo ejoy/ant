@@ -21,14 +21,14 @@ local DefaultNearClip = 0.1
 local DefaultFarClip  = 100
 local DefaultFOV      = 30
         
-function m.set_second_camera(eid)
+function m.set_second_camera(eid, show)
     local rc = world[eid]._rendercache
 	rc.viewmat = icamera.calc_viewmat(eid)
     rc.projmat = icamera.calc_projmat(eid)
     rc.viewprojmat = icamera.calc_viewproj(eid)
     icamera.bind_queue(eid, m.second_view)
     m.second_camera = eid
-    m.show_frustum(eid, true)
+    m.show_frustum(eid, show)
 end
 
 function m.reset_frustum_color(eid)
@@ -231,8 +231,7 @@ function m.ceate_camera()
     iom.set_position(new_camera, iom.get_position(m.main_camera))
     iom.set_rotation(new_camera, iom.get_rotation(m.main_camera))
     m.update_frustrum(new_camera)
-    m.set_second_camera(new_camera)
-    m.show_frustum(new_camera, false)
+    m.set_second_camera(new_camera, false)
     return new_camera, camera_template.__class[1]
 end
 
@@ -288,14 +287,14 @@ local function do_remove_camera(cam)
 end
 
 function m.remove_camera(eid)
-    m.set_second_camera(m.second_view_camera)
+    m.set_second_camera(m.second_view_camera, false)
     local cam = m.camera_list[eid]
     do_remove_camera(cam)
     m.camera_list[eid] = nil
 end
 
 function m.clear()
-    m.set_second_camera(m.second_view_camera)
+    m.set_second_camera(m.second_view_camera, false)
     for k, v in pairs(m.camera_list) do
         do_remove_camera(v)
     end

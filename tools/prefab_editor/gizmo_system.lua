@@ -185,24 +185,24 @@ function gizmo:click_axis_or_plane(axis)
 	end
 end
 
-function gizmo:show_rotate_fan(show)
+function gizmo:hide_rotate_fan(rotAxis)
 	local state = "visible"
-	ies.set_state(self.rx.eid[3], state, show)
-	ies.set_state(self.rx.eid[4], state, show)
-	ies.set_state(self.ry.eid[3], state, show)
-	ies.set_state(self.ry.eid[4], state, show)
-	ies.set_state(self.rz.eid[3], state, show)
-	ies.set_state(self.rz.eid[4], state, show)
-	ies.set_state(self.rw.eid[3], state, show)
-	ies.set_state(self.rw.eid[4], state, show)
-	world[self.rx.eid[3]]._rendercache.ib.num = 0
-	world[self.rx.eid[4]]._rendercache.ib.num = 0
-	world[self.ry.eid[3]]._rendercache.ib.num = 0
-	world[self.ry.eid[4]]._rendercache.ib.num = 0
-	world[self.rz.eid[3]]._rendercache.ib.num = 0
-	world[self.rz.eid[4]]._rendercache.ib.num = 0
-	world[self.rw.eid[3]]._rendercache.ib.num = 0
-	world[self.rw.eid[4]]._rendercache.ib.num = 0
+	ies.set_state(self.rx.eid[3], state, false)
+	ies.set_state(self.rx.eid[4], state, false)
+	ies.set_state(self.ry.eid[3], state, false)
+	ies.set_state(self.ry.eid[4], state, false)
+	ies.set_state(self.rz.eid[3], state, false)
+	ies.set_state(self.rz.eid[4], state, false)
+	ies.set_state(self.rw.eid[3], state, false)
+	ies.set_state(self.rw.eid[4], state, false)
+	-- world[self.rx.eid[3]]._rendercache.ib.num = 0
+	-- world[self.rx.eid[4]]._rendercache.ib.num = 0
+	-- world[self.ry.eid[3]]._rendercache.ib.num = 0
+	-- world[self.ry.eid[4]]._rendercache.ib.num = 0
+	-- world[self.rz.eid[3]]._rendercache.ib.num = 0
+	-- world[self.rz.eid[4]]._rendercache.ib.num = 0
+	-- world[self.rw.eid[3]]._rendercache.ib.num = 0
+	-- world[self.rw.eid[4]]._rendercache.ib.num = 0
 end
 
 function gizmo:show_move(show)
@@ -313,15 +313,6 @@ function cmd_queue:record(cmd)
 		redocmd = queue.pop_last(self.cmd_redo)
 	end
 	queue.push_last(self.cmd_undo, cmd)
-end
-
-local function showRotateMeshByAxis(show, axis)
-	ies.set_state(axis.eid[3], "visible", show)
-	ies.set_state(axis.eid[4], "visible", show)
-	world[axis.eid[3]]._rendercache.ib.start = 0
-	world[axis.eid[4]]._rendercache.ib.start = 0
-	world[axis.eid[3]]._rendercache.ib.num = 0
-	world[axis.eid[4]]._rendercache.ib.num = 0
 end
 
 function gizmo:set_target(eid)
@@ -676,15 +667,6 @@ function gizmo_sys:post_init()
 			}
 		}
 		ies.set_state(eid, "auxgeom", true)
-		-- prefab = worldedit:prefab_template(filename)
-    	-- entities = worldedit:prefab_instance(prefab, {root=root})
-		-- local eid = world:instance("res/cube.prefab", srt)
-		-- worldedit:prefab_set(prefab, "/1/data/ma", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
-		-- print("state", world[eid[1]]._rendercache.state)
-		-- if srt.t then
-		-- 	iom.set_position(eid[1], srt.t)
-		-- end
-		-- iom.set_scale(eid[1], axis_cube_scale)
 
 		imaterial.set_property(eid, "u_color", color)
 		return eid
@@ -1024,6 +1006,13 @@ local function showRotateFan(rotAxis, startAngle, deltaAngle)
 	end
 	world[rotAxis.eid[3]]._rendercache.ib.start = start
 	world[rotAxis.eid[3]]._rendercache.ib.num = num
+
+	if world[rotAxis.eid[3]]._rendercache.ib.num > 0 then
+		ies.set_state(rotAxis.eid[3], "visible", true)
+	end
+	if world[rotAxis.eid[4]]._rendercache.ib.num > 0 then
+		ies.set_state(rotAxis.eid[4], "visible", true)
+	end
 end
 
 local function rotateGizmo(x, y)
@@ -1049,6 +1038,9 @@ local function rotateGizmo(x, y)
 		deltaAngle = deltaAngle - 360
 	elseif deltaAngle < -360 then
 		deltaAngle = deltaAngle + 360
+	end
+	if math.abs(deltaAngle) < 0.0001 then
+		return
 	end
 	local tableGizmoToLastHit
 	if localSpace and rotate_axis ~= gizmo.rw then
@@ -1145,7 +1137,6 @@ function gizmo:selectGizmo(x, y)
 			else
 				lastRotateAxis.v = rotate_axis.dir
 			end
-			showRotateMeshByAxis(true, rotate_axis)
 			return true
 		end
 	end
@@ -1196,7 +1187,7 @@ function gizmo_sys:data_changed()
 		if what == "LEFT" then
 			gizmo:reset_move_axis_color()
 			if gizmo.mode == ROTATE then
-				gizmo:show_rotate_fan(false)
+				gizmo:hide_rotate_fan()
 				if localSpace then
 					if gizmo.target_eid then
 						iom.set_rotation(gizmo.root_eid, iom.get_rotation(gizmo.target_eid))
@@ -1231,6 +1222,7 @@ function gizmo_sys:data_changed()
 				local axis = selectAxis(x, y)
 				gizmo:highlight_axis_or_plane(axis)
 			elseif gizmo.mode == ROTATE then
+				gizmo:hide_rotate_fan()
 				selectRotateAxis(x, y)
 			end
 		end
