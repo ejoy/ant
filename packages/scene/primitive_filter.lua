@@ -34,31 +34,24 @@ function ipf.filter_order(eid)
 	return world[eid].filter_order
 end
 
-local function find_item(items, eid)
+function ipf.find_item(items, eid)
 	for i=1, #items do
-		local item = items[i]
-		if item.eid == eid then
+		if items[i].eid == eid then
 			return i
 		end
 	end
 end
 
 function ipf.remove_item(items, eid)
-	local idx = find_item(items, eid)
+	local idx = ipf.find_item(items, eid)
 	if idx then
 		table.remove(items, idx)
 	end
 end
 
-function ipf.add_item(items, eid)
-	local e = world[eid]
-	local _rc = e._rendercache
-	if _rc then
-		_rc.eid = eid
-		if find_item(items, eid) then
-			items[#items+1] = _rc
-		end
-	end
+function ipf.add_item(items, eid, item)
+	local idx = ipf.find_item(items, eid) or (#items+1)
+	items[idx] = assert(item)
 end
 
 function ipf.iter_target(result)

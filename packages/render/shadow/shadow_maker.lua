@@ -290,10 +290,10 @@ function spt.process_entity(e)
 		if rc then
 			rc.eid = eid
 			local material = which_material(eid)
-			results[fxtype].items[eid] = setmetatable({
+			ipf.add_item(results[fxtype].items, eid, setmetatable({
 				fx = material.fx,
 				properties = material.properties or false,
-			}, {__index=rc})
+			}, {__index=rc}))
 		else
 			ipf.remove_item(results.opaticy.items, eid)
 			ipf.remove_item(results.translucent.items, eid)

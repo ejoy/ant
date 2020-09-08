@@ -53,15 +53,14 @@ function pfpt.process_entity(e)
 		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
 		if rc then
 			rc.eid = eid
-			opaticy.items[#opaticy.items+1] = setmetatable({
+			ipf.add_item(opaticy.items, eid, setmetatable({
 				fx = opacity_material.fx,
 				properties = get_properties(eid, opacity_material.fx),
-			}, {__index=rc})
-	
-			translucent.items[#translucent.items+1] = setmetatable({
-				fx = translucent_material.fx,
-				properties = get_properties(eid, translucent_material.fx),
-			}, {__index=rc})
+			}, {__index=rc}))
+			ipf.add_item(translucent.items, eid, setmetatable({
+				fx = opacity_material.fx,
+				properties = get_properties(eid, opacity_material.fx),
+			}, {__index=rc}))
 		else
 			ipf.remove_item(opaticy.items, eid)
 			ipf.remove_item(translucent.items, eid)
