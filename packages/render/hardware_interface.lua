@@ -49,7 +49,7 @@ local function bgfx_init(args)
 	if args.reset == nil then
 		flags = {
 			-- v = true,
-			--m = 4,
+			m = 4,
 			s = true,
 		}
 		args.reset = get_flags()
@@ -85,7 +85,6 @@ end
 
 function hw.reset(t, w_, h_)
 	if t then flags = t end
-	local bgfx = require "bgfx"
 	w = w_ or w
 	h = h_ or h
 	bgfx.reset(w, h, get_flags())
@@ -98,7 +97,6 @@ function hw.add_reset_flag(flag)
 		return
 	end
 	flags[f] = v
-	local bgfx = require "bgfx"
 	bgfx.reset(w, h, get_flags())
 end
 
@@ -108,7 +106,6 @@ function hw.remove_reset_flag(flag)
 		return
 	end
 	flags[f] = nil
-	local bgfx = require "bgfx"
 	bgfx.reset(w, h, get_flags())
 end
 
@@ -141,7 +138,6 @@ end
 
 function hw.shutdown()
 	caps = nil
-	local bgfx = require "bgfx"
 	bgfx.shutdown()
 end
 
