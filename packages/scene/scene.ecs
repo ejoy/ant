@@ -60,6 +60,7 @@ interface "iprimitive_filter"
     .method "remove_item"
     .method "add_item"
     .method "find_item"
+    .method "set_sort"
     .method "iter_target"
 
 interface "iscenespace"

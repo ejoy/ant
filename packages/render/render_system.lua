@@ -56,17 +56,14 @@ function render_sys:render_commit()
 			local filter = rq.primitive_filter
 			local results = filter.result
 
-			local function draw_items(result)
+			for _, fn in ipairs(filter.filter_order) do
+				local result = results[fn]
 				if result.sort then
 					result:sort()
 				end
 				for _, item in ipf.iter_target(result) do
 					irender.draw(viewid, item)
 				end
-			end
-
-			for _, fn in ipairs(filter.filter_order) do
-				draw_items(results[fn])
 			end
 		end
 		

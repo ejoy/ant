@@ -1,13 +1,15 @@
 local ecs = ...
 local world = ecs.world
 
-local mu        = import_package "ant.math".util
-local fbmgr     = require "framebuffer_mgr"
-local viewidmgr = require "viewid_mgr"
-local isys_properties  = world:interface "ant.render|system_properties"
-local computil = world:interface "ant.render|entity"
+local fbmgr             = require "framebuffer_mgr"
+local viewidmgr         = require "viewid_mgr"
+local isys_properties   = world:interface "ant.render|system_properties"
+local ientity           = world:interface "ant.render|entity"
+local irender           = world:interface "ant.render|irender"
+local irq               = world:interface "ant.render|irenderqueue"
 
-local pp_sys = ecs.system "postprocess_system"
+local pp_sys            = ecs.system "postprocess_system"
+local ipp = ecs.interface "postprocess"
 
 local techniques = {}
 local quad_mesh
@@ -34,73 +36,55 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    quad_mesh = computil.quad_mesh {x=-1, y=-1, w=2, h=2}
+    quad_mesh = ientity.quad_mesh {x=-1, y=-1, w=2, h=2}
+
 end
 
-local function is_slot_equal(lhs, rhs)
-    return lhs.fb_idx == rhs.fb_idx and lhs.rb_idx == rhs.rb_idx
+local pp_lastinput
+function pp_sys:post_init()
+    pp_lastinput = ipp.get_rbhandle(fbmgr.get_fb_idx(viewidmgr.get "main_view"), 1)
 end
-local irender = world:interface "ant.render|irender"
-local function render_pass(lastslot, out_viewid, pass, meshgroup)
+
+local function render_pass(lastinput, out_viewid, pass)
+    local input = pass.input or lastinput
+    local output = pass.output
+    if input == output then
+        error("input and output as same render buffer handle")
+    end
+
+    irq.update_rendertarget(pass.render_target)
+
     local ppinput = isys_properties.get "s_postprocess_input"
+    ppinput.texture.handle = output
 
-    local in_slot = pass.input or lastslot
-    local out_slot = pass.output
-    if is_slot_equal(in_slot, out_slot) then
-        error(string.format("input viewid[%d:%d] is the same as output viewid[%d:%d]", 
-            in_slot.viewid, in_slot.slot, out_slot.viewid, out_slot.slot))
-    end
-
-    local function bind_input(slot)
-        local fb = fbmgr.get(slot.fb_idx)
-        ppinput.texture.handle = fbmgr.get_rb(fb[slot.rb_idx]).handle
-        -- render_properties["u_bright_threshold"] = {
-        --     {0.8, 0.0, 0.0, 0.0}
-        -- }
-    end
-    bind_input(in_slot)
-    local material = pass.material
-    irender.draw(out_viewid, {
-        ib = meshgroup.ib,
-        vb = meshgroup.vb,
-        fx  = material.fx,
-        properties = material.properties,
-        state = material._state,
-    }, mu.IDENTITY_MAT)
-
-    return out_slot
+    irender.draw(out_viewid, pass.renderitem)
+    return output
 end
 
-local function render_technique(tech, lastslot, meshgroup)
-    if tech.reorders then
-        for _, passidx in ipairs(tech.reorders) do
-            lastslot = render_pass(lastslot, next_viewid(), assert(tech.passes[passidx]), meshgroup)
-        end
-    else
-        for _, pass in ipairs(tech.passes) do
-            lastslot = render_pass(lastslot, next_viewid(), pass, meshgroup)
-        end
+local function iter_tech(tech)
+    local reorders, passes = tech.reorders, tech.passes
+    if reorders == nil then
+        return ipairs(tech.passes)
     end
 
-    return lastslot
+    return function (t, idx)
+        idx = idx + 1
+        local n = t[idx]
+        if n then
+            return passes[n]
+        end
+    end, reorders, 0
 end
 
 function pp_sys:combine_postprocess()
-    if next(techniques) then
-        local lastslot = {
-            fb_idx = fbmgr.get_fb_idx(viewidmgr.get "main_view"),
-            rb_idx = 1
-        }
-
-        reset_viewid_idx()
-        for i=1, #techniques do
-            local tech = techniques[i]
-            lastslot = render_technique(tech, lastslot, quad_mesh)
+    local lastinput = pp_lastinput
+    reset_viewid_idx()
+    for _, tech in ipairs(techniques) do
+        for _, pass in iter_tech(tech) do
+            pp_lastinput = render_pass(lastinput, next_viewid(), pass)
         end
     end
 end
-
-local ipp = ecs.interface "postprocess"
 
 function ipp.main_rb_size(main_fbidx)
     main_fbidx = main_fbidx or fbmgr.get_fb_idx(viewidmgr.get "main_view")
@@ -109,9 +93,41 @@ function ipp.main_rb_size(main_fbidx)
     local rb = fbmgr.get_rb(fb[1])
     
     assert(rb.format:match "RGBA")
-    return {w=rb.w, h=rb.h}
+    return rb.w, rb.h
+end
+
+function ipp.get_rbhandle(fbidx, rbidx)
+    local fb = fbmgr.get_fb(fbidx)
+    return fbmgr.get_rb(fb[rbidx]).handle
 end
 
 function ipp.techniques()
     return techniques
+end
+
+function ipp.add_technique(tech)
+    techniques[#techniques+1] = tech
+end
+
+function ipp.quad_mesh()
+    return quad_mesh
+end
+
+function ipp.create_pass(material, rt, output, name)
+    local eid = world:create_entity {
+        policy = {"ant.render|simplerender"},
+        data = {
+            simplemesh = quad_mesh,
+            material = material,
+            state = 0,
+        }
+    }
+
+    return {
+        name        = name,
+        renderitem  = world[eid]._rendercache,
+        render_target = rt,
+        output      = output,
+        eid         = eid,
+    }
 end

@@ -55,6 +55,10 @@ function ipf.add_item(items, eid, item)
 	items[idx] = assert(item)
 end
 
+function ipf.set_sort(eid, surfacetype, sortfunc)
+	world[eid].primitive_filter.result[surfacetype].sort = sortfunc
+end
+
 function ipf.iter_target(result)
 	local vs = result.visible_set or result.items
 	local n = vs.n or #vs
