@@ -195,14 +195,6 @@ function gizmo:hide_rotate_fan(rotAxis)
 	ies.set_state(self.rz.eid[4], state, false)
 	ies.set_state(self.rw.eid[3], state, false)
 	ies.set_state(self.rw.eid[4], state, false)
-	-- world[self.rx.eid[3]]._rendercache.ib.num = 0
-	-- world[self.rx.eid[4]]._rendercache.ib.num = 0
-	-- world[self.ry.eid[3]]._rendercache.ib.num = 0
-	-- world[self.ry.eid[4]]._rendercache.ib.num = 0
-	-- world[self.rz.eid[3]]._rendercache.ib.num = 0
-	-- world[self.rz.eid[4]]._rendercache.ib.num = 0
-	-- world[self.rw.eid[3]]._rendercache.ib.num = 0
-	-- world[self.rw.eid[4]]._rendercache.ib.num = 0
 end
 
 function gizmo:show_move(show)
@@ -1007,12 +999,8 @@ local function showRotateFan(rotAxis, startAngle, deltaAngle)
 	world[rotAxis.eid[3]]._rendercache.ib.start = start
 	world[rotAxis.eid[3]]._rendercache.ib.num = num
 
-	if world[rotAxis.eid[3]]._rendercache.ib.num > 0 then
-		ies.set_state(rotAxis.eid[3], "visible", true)
-	end
-	if world[rotAxis.eid[4]]._rendercache.ib.num > 0 then
-		ies.set_state(rotAxis.eid[4], "visible", true)
-	end
+	ies.set_state(rotAxis.eid[3], "visible", world[rotAxis.eid[3]]._rendercache.ib.num > 0)
+	ies.set_state(rotAxis.eid[4], "visible", world[rotAxis.eid[4]]._rendercache.ib.num > 0)
 end
 
 local function rotateGizmo(x, y)
@@ -1187,7 +1175,7 @@ function gizmo_sys:data_changed()
 		if what == "LEFT" then
 			gizmo:reset_move_axis_color()
 			if gizmo.mode == ROTATE then
-				gizmo:hide_rotate_fan()
+				--gizmo:hide_rotate_fan()
 				if localSpace then
 					if gizmo.target_eid then
 						iom.set_rotation(gizmo.root_eid, iom.get_rotation(gizmo.target_eid))

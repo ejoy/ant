@@ -51,67 +51,72 @@ local secondViewWidth = 384
 local secondViewHeight = 216
 local secondCameraEID
 
+local function chooseProject()
+    if resourceRoot then return end
+
+    if not imgui.windows.IsPopupOpen("Choose project") then
+        imgui.windows.OpenPopup("Choose project")
+    end
+
+    local change, opened = imgui.windows.BeginPopupModal("Choose project", imgui.flags.Window{"AlwaysAutoResize"})
+    if change then
+        imgui.widget.Text("Create new or open existing project.")
+        if imgui.widget.Button("Create project") then
+            print("Create empty project")
+            local filedialog = require 'filedialog'
+            local dialog_info = {
+                Owner = rhwi.native_window(),
+                Title = "Choose project folder"
+            }
+            local ok, path = filedialog.open(dialog_info)
+            if ok then
+                
+            end
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Open project") then
+            local filedialog = require 'filedialog'
+            local dialog_info = {
+                Owner = rhwi.native_window(),
+                Title = "Choose project folder"
+            }
+            local ok, path = filedialog.open(dialog_info)
+            if ok then
+                resourceRoot = fs.path(path[1])
+                --file server
+                local cthread = require "thread"
+                cthread.newchannel "log_channel"
+                cthread.newchannel "fileserver_channel"
+                local produce = cthread.channel_produce "fileserver_channel"
+                produce:push(arg, path[1])
+                local lthread = require "common.thread"
+                fileserver_thread = lthread.create [[
+                    package.path = "engine/?.lua;tools/prefab_editor/?.lua"
+                    require "bootstrap"
+                    local fileserver = require "fileserver_adapter"()
+                    fileserver.run()
+                ]]
+                log_widget.init_log_receiver()
+            end
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Quit") then
+            local res_root_str = tostring(fs.path "":localpath())
+            resourceRoot = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
+        end
+        if resourceRoot then
+            resource_browser.set_root(resourceRoot)
+        end
+        imgui.windows.EndPopup()
+    end
+end
+
 local fileserver_thread
 function m:ui_update()
-    if not resourceRoot then
-        if not imgui.windows.IsPopupOpen("Choose project folder") then
-            imgui.windows.OpenPopup("Choose project folder")
-        end
-        local change, opened = imgui.windows.BeginPopupModal("Choose project folder", imgui.flags.Window{"AlwaysAutoResize"})
-        if change then
-            if imgui.widget.Button("Create empty project") then
-                print("Create empty project")
-                local filedialog = require 'filedialog'
-                local dialog_info = {
-                    Owner = rhwi.native_window(),
-                    Title = "Choose project folder"
-                }
-                local ok, path = filedialog.open(dialog_info)
-                if ok then
-                    
-                end
-            end
-            imgui.cursor.SameLine()
-            if imgui.widget.Button("Open project") then
-                local filedialog = require 'filedialog'
-                local dialog_info = {
-                    Owner = rhwi.native_window(),
-                    Title = "Choose project folder"
-                }
-                local ok, path = filedialog.open(dialog_info)
-                if ok then
-                    resourceRoot = fs.path(path[1])
-                    resource_browser.set_root(resourceRoot)
-                    --file server
-                    local cthread = require "thread"
-                    cthread.newchannel "log_channel"
-                    cthread.newchannel "fileserver_channel"
-                    local produce = cthread.channel_produce "fileserver_channel"
-                    produce:push(arg, path[1])
-                    local lthread = require "common.thread"
-                    fileserver_thread = lthread.create [[
-                        package.path = "engine/?.lua;tools/prefab_editor/?.lua"
-                        require "bootstrap"
-                        local fileserver = require "fileserver_adapter"()
-                        fileserver.run()
-                    ]]
-                    log_widget.init_log_receiver()
-                else
-                    local res_root_str = tostring(fs.path "":localpath())
-                    resourceRoot = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
-                    resource_browser.set_root(resourceRoot)
-                end
-            end
-            imgui.cursor.SameLine()
-            if imgui.widget.Button("Quit") then
-                print("Quit")
-            end
-            imgui.windows.EndPopup()
-        end
-    end
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.TitleBg, 0.2, 0.2, 0.2, 1)
+    chooseProject()
     menu.show()
     toolbar.show(rhwi)
     local x, y, width, height = imgui.showDockSpace(0, viewStartY)
