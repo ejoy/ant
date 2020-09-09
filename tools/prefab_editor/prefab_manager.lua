@@ -5,6 +5,7 @@ local vfs           = require "vfs"
 local hierarchy   = require "hierarchy"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
+local light_gizmo
 local camera_mgr
 local world
 local iom
@@ -82,13 +83,17 @@ end
 function m:open_prefab(filename)
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
-        local teml = hierarchy:get_template(eid)
-        if teml.children then
-            for _, e in ipairs(teml.children) do
-                world:remove_entity(e)
+        if not world[eid].directional_light then
+            local teml = hierarchy:get_template(eid)
+            if teml and teml.children then
+                for _, e in ipairs(teml.children) do
+                    world:remove_entity(e)
+                end
             end
+            world:remove_entity(eid)
+        else
+            light_gizmo.reset()
         end
-        world:remove_entity(eid)
     end
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(vfspath)
@@ -112,6 +117,7 @@ function m:open_prefab(filename)
     --self.root = entities[1]
     hierarchy:clear()
     hierarchy:set_root(self.root)
+    hierarchy:add(light_gizmo.root)
     --hierarchy.root.template.template = prefab.__class[1]
 
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
@@ -131,9 +137,7 @@ function m:open_prefab(filename)
             remove_entity[#remove_entity+1] = entity
         else
             if world[entity].light_type == "directional" then
-                local dir_gizmo = require "gizmo.directional_light"(world)
-                dir_gizmo.bind(entity)
-                hierarchy:add(dir_gizmo.root)
+                light_gizmo.bind(entity)
             else
                 local keyframes = prefab.__class[i].data.frames
                 if keyframes and last_camera then
@@ -308,5 +312,6 @@ return function(w)
     camera_mgr  = require "camera_manager"(world)
     iom         = world:interface "ant.objcontroller|obj_motion"
     worldedit   = import_package "ant.editor".worldedit(world)
+    light_gizmo = require "gizmo.directional_light"(world)
     return m
 end
