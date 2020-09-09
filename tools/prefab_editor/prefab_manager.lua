@@ -97,10 +97,23 @@ function m:open_prefab(filename)
     self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
     self.entities = entities
-    self.root = entities[1]
+
+    local scene_root = world:create_entity{
+		policy = {
+			"ant.general|name",
+			"ant.scene|transform_policy",
+		},
+		data = {
+			transform = {},
+			name = "scene root",
+		},
+    }
+    self.root = scene_root
+    --self.root = entities[1]
     hierarchy:clear()
     hierarchy:set_root(self.root)
-    hierarchy.root.template.template = prefab.__class[1]
+    --hierarchy.root.template.template = prefab.__class[1]
+
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/4/action/mount", 1)
@@ -117,7 +130,11 @@ function m:open_prefab(filename)
             end
             remove_entity[#remove_entity+1] = entity
         else
-            if i > 1 then
+            if world[entity].light_type == "directional" then
+                local dir_gizmo = require "gizmo.directional_light"(world)
+                dir_gizmo.bind(entity)
+                hierarchy:add(dir_gizmo.root)
+            else
                 local keyframes = prefab.__class[i].data.frames
                 if keyframes and last_camera then
                     for i, v in ipairs(keyframes) do
@@ -126,7 +143,7 @@ function m:open_prefab(filename)
                         v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
                         v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
                     end
-
+    
                     local templ = hierarchy:get_template(last_camera)
                     templ.keyframe = prefab.__class[i]
                     camera_mgr.bind_recorder(last_camera, entity)
@@ -139,7 +156,6 @@ function m:open_prefab(filename)
                     camera_mgr.show_frustum(entity, false)
                     last_camera = entity
                 end
-                
             end
         end
     end

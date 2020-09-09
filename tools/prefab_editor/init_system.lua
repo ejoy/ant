@@ -50,9 +50,13 @@ function m:init()
     camera_mgr.set_second_camera(second_camera, false)
     
     entity.create_procedural_sky()
-    --world:instance "res/skybox.prefab"
     entity.create_grid_entity("", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
-    world:instance "res/light_directional.prefab"
+    local dir = world:instance "res/light_directional.prefab"
+    
+    local dir_gizmo = require "gizmo.directional_light"(world)
+    dir_gizmo.bind(dir[1])
+    local hierarchy = require "hierarchy"
+    hierarchy:add(dir_gizmo.root)
 
     window.set_title(rhwi.native_window(), "PrefabEditor")
 end

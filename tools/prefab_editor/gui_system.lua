@@ -166,19 +166,43 @@ local eventResourceBrowser = world:sub {"ResourceBrowser"}
 local eventWindowTitle = world:sub {"WindowTitle"}
 local eventCreate = world:sub {"Create"}
 local window = require "window"
+local light_gizmo = require "gizmo.directional_light"(world)
+
+local function onTarget(old, new)
+    if old then
+        if world[old].camera then
+            camera_mgr.show_frustum(old, false)
+        elseif world[old].directional_light then
+            light_gizmo.show(false)
+        end
+    end
+    if new then
+        if world[new].camera then
+            camera_mgr.set_second_camera(new, true)
+        elseif world[new].directional_light then
+            light_gizmo.show(true)
+        end
+    end
+end
+
+local function onUpdate(eid)
+    if not eid then return end
+
+    if world[eid].camera then
+        camera_mgr.update_frustrum(eid)
+    elseif world[eid].directional_light then
+        light_gizmo.update()
+    end
+end
+
 function m:data_changed()
     for _, action, value1, value2 in eventGizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
             if action == "ontarget" then
-                if value1 and world[value1].camera then
-                    camera_mgr.show_frustum(value1, false)
-                end
-                if value2 and world[value2].camera then
-                    camera_mgr.set_second_camera(value2, true)
-                end
-            elseif action == "update" and world[gizmo.target_eid].camera then
-                camera_mgr.update_frustrum(gizmo.target_eid)
+                onTarget(value1, value2)
+            elseif action == "update" then
+                onUpdate(gizmo.target_eid)
             end
         elseif action == "create" then
             gizmo = value1
