@@ -29,7 +29,7 @@ function ilight.create(light)
 			"ant.general|name",
 		},
 		data = {
-			transform	= math3d.ref(light.transform),
+			transform	= light.transform,
 			name		= light.name or "DEFAULT_LIGHT",
 			light_type	= assert(light.light_type),
 			color		= light.color or {1, 1, 1, 1},
