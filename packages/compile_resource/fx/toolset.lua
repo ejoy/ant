@@ -15,13 +15,13 @@ local shader_options = {
 		fs = "ps_3_0",
 	},
 	direct3d11 = {
-		vs = "vs_4_0",
-		fs = "ps_4_0",
+		vs = "vs_5_0",
+		fs = "ps_5_0",
 		cs = "cs_5_0",
 	},
 	direct3d12 = {
-		vs = "vs_4_0",
-		fs = "ps_4_0",
+		vs = "vs_5_0",
+		fs = "ps_5_0",
 		cs = "cs_5_0",
 	},
 	opengl = {
