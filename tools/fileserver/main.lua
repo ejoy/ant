@@ -41,7 +41,7 @@ end
 function event.RUNTIME_CLOSE(repo)
 end
 
-function event.SERVER_LOG(...)
+function event.SERVER_LOG(_,_,...)
     print(...)
 end
 

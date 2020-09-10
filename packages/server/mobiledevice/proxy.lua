@@ -1,6 +1,6 @@
 local log = require "log"
 local function LOG(...)
-    log('[iOS proxy]', ...)
+    log.info('[iOS proxy]', ...)
 end
 
 local network = require 'network'
