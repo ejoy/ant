@@ -83,18 +83,16 @@ end
 function m:open_prefab(filename)
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
-        if not world[eid].directional_light then
-            local teml = hierarchy:get_template(eid)
-            if teml and teml.children then
-                for _, e in ipairs(teml.children) do
-                    world:remove_entity(e)
-                end
+        local teml = hierarchy:get_template(eid)
+        if teml and teml.children then
+            for _, e in ipairs(teml.children) do
+                world:remove_entity(e)
             end
-            world:remove_entity(eid)
-        else
-            light_gizmo.reset()
         end
+        world:remove_entity(eid)
     end
+    light_gizmo.reset()
+    
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(vfspath)
 
