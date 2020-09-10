@@ -280,7 +280,7 @@ function m.show(rhwi)
             local v_start_idx = math.floor(items_to_show) + 1
             local max_idx = 1
             if total_virtual_count > item_count then
-                max_idx = total_virtual_count - item_count
+                max_idx = total_virtual_count - item_count + 1
             end
             if v_start_idx > max_idx then
                 v_start_idx = max_idx
