@@ -5,6 +5,7 @@ local vfs           = require "vfs"
 local hierarchy   = require "hierarchy"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
+local light_gizmo
 local camera_mgr
 local world
 local iom
@@ -83,13 +84,15 @@ function m:open_prefab(filename)
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
         local teml = hierarchy:get_template(eid)
-        if teml.children then
+        if teml and teml.children then
             for _, e in ipairs(teml.children) do
                 world:remove_entity(e)
             end
         end
         world:remove_entity(eid)
     end
+    light_gizmo.reset()
+    
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(vfspath)
 
@@ -97,10 +100,24 @@ function m:open_prefab(filename)
     self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
     self.entities = entities
-    self.root = entities[1]
+
+    local scene_root = world:create_entity{
+		policy = {
+			"ant.general|name",
+			"ant.scene|transform_policy",
+		},
+		data = {
+			transform = {},
+			name = "scene root",
+		},
+    }
+    self.root = scene_root
+    --self.root = entities[1]
     hierarchy:clear()
     hierarchy:set_root(self.root)
-    hierarchy.root.template.template = prefab.__class[1]
+    hierarchy:add(light_gizmo.root)
+    --hierarchy.root.template.template = prefab.__class[1]
+
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/1/data/material", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
     --worldedit:prefab_set(prefab, "/4/action/mount", 1)
@@ -117,7 +134,9 @@ function m:open_prefab(filename)
             end
             remove_entity[#remove_entity+1] = entity
         else
-            if i > 1 then
+            if world[entity].light_type == "directional" then
+                light_gizmo.bind(entity)
+            else
                 local keyframes = prefab.__class[i].data.frames
                 if keyframes and last_camera then
                     for i, v in ipairs(keyframes) do
@@ -126,7 +145,7 @@ function m:open_prefab(filename)
                         v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
                         v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
                     end
-
+    
                     local templ = hierarchy:get_template(last_camera)
                     templ.keyframe = prefab.__class[i]
                     camera_mgr.bind_recorder(last_camera, entity)
@@ -139,7 +158,6 @@ function m:open_prefab(filename)
                     camera_mgr.show_frustum(entity, false)
                     last_camera = entity
                 end
-                
             end
         end
     end
@@ -292,5 +310,6 @@ return function(w)
     camera_mgr  = require "camera_manager"(world)
     iom         = world:interface "ant.objcontroller|obj_motion"
     worldedit   = import_package "ant.editor".worldedit(world)
+    light_gizmo = require "gizmo.directional_light"(world)
     return m
 end

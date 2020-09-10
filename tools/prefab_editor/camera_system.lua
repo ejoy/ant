@@ -8,8 +8,8 @@ local inspector = require "ui.inspector"(world)
 local m = ecs.system "camera_system"
 
 local eventCameraControl = world:sub {"camera"}
-local cameraInitEyepos <const> = {2, 2, -2, 1}
-local cameraInitTarget <const> = {0, 1,  0, 1}
+local cameraInitEyepos <const> = {5, 5, -5, 1}
+local cameraInitTarget <const> = {0, 0,  0, 1}
 local cameraTarget
 local cameraDistance
 local cameraId

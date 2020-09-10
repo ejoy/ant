@@ -117,16 +117,16 @@ function m.show(rhwi)
     imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, sh - uiconfig.ResourceBrowserHeight - viewStartY, 'F')
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
-        if hierarchy.root.eid > 0 then
-            if imgui.widget.Button("CreateCamera") then
-                world:pub { "Create", "camera"}
-            end
-            imgui.cursor.Separator()
+        if imgui.widget.Button("CreateCamera") then
+            world:pub { "Create", "camera"}
+        end
+        imgui.cursor.Separator()
+        for i, child in ipairs(hierarchy.root.children) do
             imgui.cursor.Columns(2, "SceneColumns", true)
             imgui.cursor.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - 60)
             sourceEid = nil
             targetEid = nil
-            show_scene_node(hierarchy.root)
+            show_scene_node(child)
             imgui.cursor.NextColumn()
             if sourceEid and targetEid then
                 hierarchy:set_parent(sourceEid, targetEid)
