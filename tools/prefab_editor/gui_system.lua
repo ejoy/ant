@@ -172,14 +172,14 @@ local function onTarget(old, new)
     if old then
         if world[old].camera then
             camera_mgr.show_frustum(old, false)
-        elseif world[old].directional_light then
+        elseif world[old].light_type == "directional" then
             light_gizmo.show(false)
         end
     end
     if new then
         if world[new].camera then
             camera_mgr.set_second_camera(new, true)
-        elseif world[new].directional_light then
+        elseif world[new].light_type == "directional" then
             light_gizmo.show(true)
         end
     end
@@ -190,7 +190,7 @@ local function onUpdate(eid)
 
     if world[eid].camera then
         camera_mgr.update_frustrum(eid)
-    elseif world[eid].directional_light then
+    elseif world[eid].light_type == "directional" then
         light_gizmo.update()
     end
 end

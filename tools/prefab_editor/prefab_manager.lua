@@ -123,17 +123,31 @@ function m:open_prefab(filename)
     local remove_entity = {}
     local last_camera
     for i, entity in ipairs(entities) do
-        if type(entity) == "table" then            
+        if type(entity) == "table" then          
+            -- entity[1] : root node  
             local parent = world[entity[1]].parent
-            local teml = hierarchy:get_template(parent)
-            teml.filename = prefab.__class[i].prefab
-            teml.children = entity
-            for _, e in ipairs(entity) do
-                hierarchy:add_select_adapter(e, parent)
+            if parent then
+                local teml = hierarchy:get_template(parent)
+                teml.filename = prefab.__class[i].prefab
+                teml.children = entity
+                for _, e in ipairs(entity) do
+                    hierarchy:add_select_adapter(e, parent)
+                end
+                remove_entity[#remove_entity+1] = entity
+            else
+                -- local prefab_root = world:create_entity{
+                --     policy = {
+                --         "ant.general|name",
+                --         "ant.scene|transform_policy",
+                --     },
+                --     data = {
+                --         transform = {},
+                --         name = "prefab" .. i,
+                --     },
+                -- }
+                -- hierarchy:add(prefab_root, {filename = prefab.__class[i].prefab}, self.root)
             end
-            remove_entity[#remove_entity+1] = entity
         else
-            
             local keyframes = prefab.__class[i].data.frames
             if keyframes and last_camera then
                 for i, v in ipairs(keyframes) do
