@@ -21,10 +21,7 @@ local function iter_tech()
         idx = idx + 1
         local n = t[idx]
         if n then
-            local tech = techniques[n]
-            if tech then
-                return idx, tech
-            end
+            return idx, techniques[n]
         end
     end, tech_order, 0
 end
@@ -91,8 +88,10 @@ function pp_sys:combine_postprocess()
     local input = mainview_rbhandle
     reset_viewid_idx()
     for _, tech in iter_tech() do
-        for _, pass in ipairs(tech) do
-            input = render_pass(input, next_viewid(), pass)
+        if tech then
+            for _, pass in ipairs(tech) do
+                input = render_pass(input, next_viewid(), pass)
+            end
         end
     end
 end
