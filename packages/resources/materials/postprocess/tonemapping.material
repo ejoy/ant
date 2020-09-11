@@ -6,5 +6,5 @@ fx:
     shadow_receive: off
   vs: /pkg/ant.resources/materials/postprocess/fx/vs_pp_quad.sc
 properties:
-  u_exposure: {1.8, 0.0, 0.0, 0.0}
+  u_tonemap_param: {1.8, 0.0, 0.0, 0.0} #u_exposure, u_tonemap_gamma
 state: /pkg/ant.resources/materials/postprocess/postprocess.state
