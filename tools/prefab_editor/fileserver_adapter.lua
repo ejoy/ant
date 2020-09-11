@@ -43,7 +43,7 @@ function event.RUNTIME_LOG(data)
 end
 
 function event.RUNTIME_CONSOLE(...)
-    sender:push({data})
+    sender:push({...})
 end
 
 local function update_event()

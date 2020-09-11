@@ -224,8 +224,6 @@ function m.show(rhwi)
             line_count = count
         })
     end
-    --print("ERROR:" .. err:pop())
-    --thread.wait(fileserver_thread)
 
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, sh - uiconfig.LogWidgetHeight, 'F')
