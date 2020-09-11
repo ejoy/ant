@@ -204,7 +204,9 @@ local function execCommand(command)
         height = log_item_height,
         line_count = 1
     })
-    console_sender:push(command)
+    if console_sender then
+        console_sender:push(command)
+    end
 end
 
 function m.show(rhwi)
