@@ -92,7 +92,7 @@ function m:open_prefab(filename)
         world:remove_entity(eid)
     end
     light_gizmo.reset()
-    
+
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(vfspath)
 
@@ -115,7 +115,6 @@ function m:open_prefab(filename)
     --self.root = entities[1]
     hierarchy:clear()
     hierarchy:set_root(self.root)
-    hierarchy:add(light_gizmo.root)
     --hierarchy.root.template.template = prefab.__class[1]
 
     --worldedit:prefab_set(prefab, "/3/data/state", worldedit:prefab_get(prefab, "/3/data/state") & ~1)
@@ -124,40 +123,54 @@ function m:open_prefab(filename)
     local remove_entity = {}
     local last_camera
     for i, entity in ipairs(entities) do
-        if type(entity) == "table" then            
+        if type(entity) == "table" then          
+            -- entity[1] : root node  
             local parent = world[entity[1]].parent
-            local teml = hierarchy:get_template(parent)
-            teml.filename = prefab.__class[i].prefab
-            teml.children = entity
-            for _, e in ipairs(entity) do
-                hierarchy:add_select_adapter(e, parent)
+            if parent then
+                local teml = hierarchy:get_template(parent)
+                teml.filename = prefab.__class[i].prefab
+                teml.children = entity
+                for _, e in ipairs(entity) do
+                    hierarchy:add_select_adapter(e, parent)
+                end
+                remove_entity[#remove_entity+1] = entity
+            else
+                -- local prefab_root = world:create_entity{
+                --     policy = {
+                --         "ant.general|name",
+                --         "ant.scene|transform_policy",
+                --     },
+                --     data = {
+                --         transform = {},
+                --         name = "prefab" .. i,
+                --     },
+                -- }
+                -- hierarchy:add(prefab_root, {filename = prefab.__class[i].prefab}, self.root)
             end
-            remove_entity[#remove_entity+1] = entity
         else
+            local keyframes = prefab.__class[i].data.frames
+            if keyframes and last_camera then
+                for i, v in ipairs(keyframes) do
+                    local tp = v.position
+                    local tr = v.rotation
+                    v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
+                    v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
+                end
+
+                local templ = hierarchy:get_template(last_camera)
+                templ.keyframe = prefab.__class[i]
+                camera_mgr.bind_recorder(last_camera, entity)
+                remove_entity[#remove_entity+1] = entity
+            else
+                hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
+            end
+            if world[entity].camera then
+                camera_mgr.update_frustrum(entity)
+                camera_mgr.show_frustum(entity, false)
+                last_camera = entity
+            end
             if world[entity].light_type == "directional" then
                 light_gizmo.bind(entity)
-            else
-                local keyframes = prefab.__class[i].data.frames
-                if keyframes and last_camera then
-                    for i, v in ipairs(keyframes) do
-                        local tp = v.position
-                        local tr = v.rotation
-                        v.position = math3d.ref(math3d.vector(tp[1], tp[2], tp[3]))
-                        v.rotation = math3d.ref(math3d.quaternion(tr[1], tr[2], tr[3], tr[4]))
-                    end
-    
-                    local templ = hierarchy:get_template(last_camera)
-                    templ.keyframe = prefab.__class[i]
-                    camera_mgr.bind_recorder(last_camera, entity)
-                    remove_entity[#remove_entity+1] = entity
-                else
-                    hierarchy:add(entity, {template = prefab.__class[i]}, world[entity].parent or self.root)
-                end
-                if world[entity].camera then
-                    camera_mgr.update_frustrum(entity)
-                    camera_mgr.show_frustum(entity, false)
-                    last_camera = entity
-                end
             end
         end
     end

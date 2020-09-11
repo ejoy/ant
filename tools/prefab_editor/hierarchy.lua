@@ -93,7 +93,7 @@ function hierarchy:update_prefab_template(prefab)
         end
         for _, child in ipairs(self.all[eid].children) do
             local action = self.all[child.eid].template.template.action
-            if action then
+            if action and action.mount then
                 action.mount = pidx
             end
             construct_entity(child.eid, pt)

@@ -87,6 +87,7 @@ local function chooseProject()
                 local cthread = require "thread"
                 cthread.newchannel "log_channel"
                 cthread.newchannel "fileserver_channel"
+                cthread.newchannel "console_channel"
                 local produce = cthread.channel_produce "fileserver_channel"
                 produce:push(arg, path[1])
                 local lthread = require "common.thread"
@@ -112,6 +113,41 @@ local function chooseProject()
 end
 
 local fileserver_thread
+
+local function showDockSpace(offset_x, offset_y)
+    --local vp_w, vp_h = 1024, 768
+    --imgui.windows.SetNextWindowPos(offset_x, offset_y)
+    --imgui.windows.SetNextWindowSize(vp_w - offset_x, vp_h - offset_y)
+    --SetNextWindowViewport
+	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0.0);
+	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0.0);
+    imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowPadding, 0.0, 0.0);
+    local wndflags = imgui.flags.Window {
+        "NoDocking",
+        "NoTitleBar",
+        "NoCollapse",
+        "NoResize",
+        "NoMove",
+        "NoBringToFrontOnFocus",
+        "NoNavFocus",
+        "NoBackground",
+    }
+    local dockflags = imgui.flags.DockNode {
+        "NoDockingInCentralNode",
+        "PassthruCentralNode",
+    }
+    if not imgui.windows.Begin("DockSpace Demo", wndflags) then
+        imgui.windows.PopStyleVar(3)
+        imgui.windows.End()
+        return
+    end
+    imgui.dock.Space("MyDockSpace", dockflags)
+    local x,y,w,h = imgui.dock.BuilderGetCentralRect("MyDockSpace")
+    imgui.windows.PopStyleVar(3)
+    imgui.windows.End()
+    return x,y,w,h
+end
+
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -119,7 +155,7 @@ function m:ui_update()
     chooseProject()
     menu.show()
     toolbar.show(rhwi)
-    local x, y, width, height = imgui.showDockSpace(0, viewStartY)
+    local x, y, width, height = showDockSpace(0, viewStartY)
     scene_view.show(rhwi)
     inspector.show(rhwi)
     resource_browser.show(rhwi)
@@ -172,14 +208,14 @@ local function onTarget(old, new)
     if old then
         if world[old].camera then
             camera_mgr.show_frustum(old, false)
-        elseif world[old].directional_light then
+        elseif world[old].light_type == "directional" then
             light_gizmo.show(false)
         end
     end
     if new then
         if world[new].camera then
             camera_mgr.set_second_camera(new, true)
-        elseif world[new].directional_light then
+        elseif world[new].light_type == "directional" then
             light_gizmo.show(true)
         end
     end
@@ -190,7 +226,7 @@ local function onUpdate(eid)
 
     if world[eid].camera then
         camera_mgr.update_frustrum(eid)
-    elseif world[eid].directional_light then
+    elseif world[eid].light_type == "directional" then
         light_gizmo.update()
     end
 end

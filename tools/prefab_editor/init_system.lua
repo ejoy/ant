@@ -22,7 +22,7 @@ local function LoadImguiLayout(filename)
 end
 
 function m:init()
-    imgui.setDockEnable(true)
+    imgui.dock.Enable(true)
     LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")
 
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0xa0a0a0ff)

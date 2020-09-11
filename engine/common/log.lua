@@ -1,10 +1,7 @@
 local modes = {
-    'trace',
-    'debug',
     'info',
     'warn',
-    'error',
-    'fatal',
+    'error'
 }
 local levels = {}
 
@@ -36,7 +33,7 @@ end
 
 local function fork()
     local m = {}
-    m.level = 'trace'
+    m.level = 'info'
     m.skip = nil
     for i, name in ipairs(modes) do
         levels[name] = i

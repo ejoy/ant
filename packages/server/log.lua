@@ -5,7 +5,7 @@ local event = require "event"
 -- end
 local m = {}
 local function add_event(level, tag, ...)
-    event[#event+1] = {"SERVER_LOG", level, os.time(), tag, ...}
+    event[#event+1] = {"SERVER_LOG", os.time(), level, tag, ...}
 end
 function m.info(tag, ...)
     add_event("info", tag, ...)

@@ -2,26 +2,6 @@ local network = require "network"
 local server = require "fileserver"
 local proxy = require "mobiledevice.proxy"
 
-local function init_server(cfg)
-    server.init(cfg)
-end
-
-local function init_proxy()
-    proxy.init()
-end
-
-local function listen(...)
-    server.listen(...)
-end
-
-local function update_server()
-    server.update()
-end
-
-local function update_proxy()
-    proxy.update()
-end
-
 local fds = {}
 local function update_network()
     if network.dispatch(fds, 0.1) then
@@ -37,12 +17,13 @@ local function update_network()
 end
 
 return {
-    init_server = init_server,
-    init_proxy = init_proxy,
-    listen = listen,
-    update_server = update_server,
-    update_proxy = update_proxy,
+    init_server = server.init,
+    init_proxy = proxy.init,
+    listen = server.listen,
+    update_server = server.update,
+    update_proxy = proxy.update,
     update_network = update_network,
+    set_repopath = server.set_repopath,
+    console = server.console,
     event = require "event",
-    set_repopath = server.set_repopath
 }
