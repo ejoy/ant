@@ -22,11 +22,11 @@ graphic:
     clear_stencil: 0
     clear: CDS
   hdr:
-    enable: false
+    enable: true
     format: RGBA16F
   postprocess:
     bloom:
-      enable: false
+      enable: true
       format: RGBA16F
       sample_times: 4
   shadow:

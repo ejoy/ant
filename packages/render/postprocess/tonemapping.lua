@@ -8,6 +8,7 @@ local fbmgr     = require "framebuffer_mgr"
 local tm_sys    = ecs.system "tonemapping_system"
 
 local ipp       = world:interface "ant.render|postprocess"
+local imaterial = world:interface "ant.asset|imaterial"
 
 function tm_sys:post_init()
     local sd = setting:data()
@@ -16,8 +17,7 @@ function tm_sys:post_init()
         local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 
         local w, h = ipp.main_rb_size(main_fbidx)
-        ipp.add_technique("tonemapping", {
-            ipp.create_pass(
+        local pass = ipp.create_pass(
                 "/pkg/ant.resources/materials/postprocess/tonemapping.material",
                 {
                     view_rect = {x=0, y=0, w=w, h=h},
@@ -25,6 +25,7 @@ function tm_sys:post_init()
                     fb_idx = main_fbidx,
                 },
                 "tonemapping_main")
-            })
+        --imaterial.set_property(pass.eid, "u_exposure", {2.0, 0.0, 0.0, 0.0})
+        ipp.add_technique("tonemapping", {pass})
     end
 end

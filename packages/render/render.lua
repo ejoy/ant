@@ -184,12 +184,9 @@ function irender.create_main_queue(view_rect)
 
 	local bloom = sd.graphic.postprocess.bloom
 	if bloom.enable then
-		local fmt = bloom.format
-		-- not support RGBA8
-		assert(fmt == "RGBA16F" or fmt == "RGBA32F")
 		render_buffers[#render_buffers+1] = fbmgr.create_rb(
 			default_comp.render_buffer(
-			view_rect.w, view_rect.h, fmt, rb_flag)
+			view_rect.w, view_rect.h, main_display_format, rb_flag)
 		)
 	end
 	local db_flag = samplerutil.sampler_flag {
@@ -228,6 +225,7 @@ function irender.create_main_queue(view_rect)
 				view_mode = "s",
 				clear_state = {
 					color = rs.clear_color or 0x000000ff,
+					color1 = 0,
 					depth = rs.clear_depth or 1,
 					stencil = rs.clear_stencil or 0,
 					clear = rs.clear or "CDS",
@@ -461,6 +459,20 @@ function irq.set_view_clear_stencil(eid, stencil)
 	view_clear(rt.viewid, cs)
 end
 
+local clear_colornames<const> = {
+	"color1", "color2","color3","color4","color5","color6", "color7"
+}
+
+local function set_view_clear(viewid, cs)
+	-- if cs.color1 then
+	-- 	bgfx.set_view_clear_mrt(viewid, cs.clear, cs.depth, cs.stencil,
+	-- 		cs.color, cs.color1, cs.color2, cs.color3,
+	-- 		cs.color4, cs.color5, cs.color6, cs.color7)
+	-- else
+		bgfx.set_view_clear(viewid, cs.clear, cs.color, cs.depth, cs.stencil)
+	-- end
+end
+
 function irq.set_view_clear(eid, what, color, depth, stencil)
 	local rt = world[eid].render_target
 	local cs = rt.clear_state
@@ -469,7 +481,7 @@ function irq.set_view_clear(eid, what, color, depth, stencil)
 	cs.stencil = stencil
 
 	cs.clear = what
-	bgfx.set_view_clear(rt.viewid, what, color, depth, stencil)
+	set_view_clear(rt.viewid, cs)
 	world:pub{"component_changed", "target_clear"}
 end
 
@@ -509,7 +521,7 @@ function irq.update_rendertarget(rt)
 	local vr = rt.view_rect
 	bgfx.set_view_rect(viewid, vr.x, vr.y, vr.w, vr.h)
 	local cs = rt.clear_state
-	bgfx.set_view_clear(viewid, cs.clear, cs.color, cs.depth, cs.stencil)
+	set_view_clear(viewid, cs)
 	
 	local fb_idx = rt.fb_idx
 	if fb_idx then

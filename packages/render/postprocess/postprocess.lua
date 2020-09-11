@@ -21,7 +21,10 @@ local function iter_tech()
         idx = idx + 1
         local n = t[idx]
         if n then
-            return idx, techniques[n]
+            local tech = techniques[n]
+            if tech then
+                return idx, tech
+            end
         end
     end, tech_order, 0
 end
