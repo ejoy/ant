@@ -13,7 +13,8 @@ local log_tags = {
     "Network",
     "Thread",
     "FileSrv",
-    "FileWatch"
+    "FileWatch",
+    "Runtime"
 }
 -- 'trace'
 -- 'debug'
@@ -233,14 +234,20 @@ function m.show(rhwi)
     if log_receiver then
         local has, msg = log_receiver:pop()
         while has do
-            local level
-            local msg_str
-            if #msg == 1 then
+            local level = "info"
+            local msg_str = ""
+            if msg[1] == "CONSOLE" then
+                for i = 1, #msg do
+                    msg_str = msg_str .. msg[i]
+                end
+            elseif #msg == 1 then
                 local first = string.find(msg[1], "]")
-                local second = string.find(msg[1], "]", first + 1)
-                local rawlevel = string.sub(msg[1], first + 2, second - 1)
-                level = rawlevel:match'^%s*(.*%S)' or ''
-                level = string.lower(level)
+                if first then
+                    local second = string.find(msg[1], "]", first + 1)
+                    local rawlevel = string.sub(msg[1], first + 2, second - 1)
+                    level = rawlevel:match'^%s*(.*%S)' or ''
+                    level = string.lower(level)
+                end
                 msg_str = msg[1]
             elseif #msg > 3 then
                 level = msg[2]
