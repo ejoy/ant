@@ -115,9 +115,9 @@ end
 local fileserver_thread
 
 local function showDockSpace(offset_x, offset_y)
-    --local vp_w, vp_h = 1024, 768
-    --imgui.windows.SetNextWindowPos(offset_x, offset_y)
-    --imgui.windows.SetNextWindowSize(vp_w - offset_x, vp_h - offset_y)
+    local sw, sh = rhwi.screen_size()
+    imgui.windows.SetNextWindowPos(offset_x, offset_y)
+    imgui.windows.SetNextWindowSize(sw - offset_x, sh - offset_y)
     --SetNextWindowViewport
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0.0);
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0.0);
