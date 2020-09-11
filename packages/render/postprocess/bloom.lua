@@ -4,20 +4,18 @@ local world = ecs.world
 local setting		= import_package "ant.settings".setting
 
 local viewidmgr = require "viewid_mgr"
-local fbmgr    = require "framebuffer_mgr"
-local renderutil= require "util"
-
-local fs        = require "filesystem"
+local fbmgr     = require "framebuffer_mgr"
+local sampler   = require "sampler"
 
 local bloom_sys = ecs.system "bloom_system"
 
 local ipp = world:interface "ant.render|postprocess"
-local imaterial world:interface "ant.asset|imaterial"
+local imaterial = world:interface "ant.asset|imaterial"
 
 local bloom_chain_count = 4
 
-local function create_framebuffers_container_obj(fbsize)
-    local flags = renderutil.generate_sampler_flag {
+local function create_framebuffers_container_obj(fbw, fbh)
+    local flags = sampler.sampler_flag {
         RT="RT_ON",
         MIN="LINEAR",
         MAG="LINEAR",
@@ -34,7 +32,7 @@ local function create_framebuffers_container_obj(fbsize)
             render_buffers = {
                 fbmgr.create_rb {
                     format = fmt,
-                    w = fbsize.w, h = fbsize.h,
+                    w = fbw, h = fbh,
                     layers = 1, flags = flags,
                 }
             },
@@ -43,13 +41,13 @@ local function create_framebuffers_container_obj(fbsize)
     return t
 end
 
-local bloompath = fs.path "/pkg/ant.resources/materials/postprocess"
+local bloompath = "/pkg/ant.resources/materials/postprocess/"
 
-local downsample_material   = bloompath / "downsample.material"
-local upsample_material     = bloompath / "upsample.material"
-local combine_material      = bloompath / "combine.material"
+local downsample_material   = bloompath .. "downsample.material"
+local upsample_material     = bloompath .. "upsample.material"
+local combine_material      = bloompath .. "combine.material"
 
-local function get_passes_settings(main_fbidx, fb_indices, fbw, fbh)
+local function get_passes_settings(main_fbidx, fb_indices, fb_width, fb_height)
     local passes = {}
 
     local which_fb = 0
@@ -61,15 +59,13 @@ local function get_passes_settings(main_fbidx, fb_indices, fbw, fbh)
 
     local function insert_blur_pass(fbw, fbh, material, sampleparam, intensity)
         local passidx = #passes+1
-        local fbidx = next_fbidx()
         local pass = ipp.create_pass(
             material,
             {
-                view_rect = {x=0, y=0, w=fbw, h=fbh},
+                view_rect   = {x=0, y=0, w=fbw, h=fbh},
                 clear_state = {clear=""},
-                fb_idx    = fbidx,
-            }, 
-            ipp.get_rbhandle(fbidx, 1),
+                fb_idx      = next_fbidx(),
+            },
             "bloom" .. passidx
         )
         passes[passidx] = pass
@@ -82,9 +78,10 @@ local function get_passes_settings(main_fbidx, fb_indices, fbw, fbh)
     end
 
     local function create_sample_param_uniform(w, h)
-        return {w / fbw, h / fbh, 1 / w, 1 / h}
+        return {w / fb_width, h / fb_height, 1 / w, 1 / h}
     end
 
+    local fbw, fbh = fb_width, fb_height
     for ii=1, bloom_chain_count do
         local sampleparam = create_sample_param_uniform(fbw, fbh)
         fbw, fbh = math.floor(fbw*0.5), math.floor(fbh*0.5)
@@ -97,21 +94,17 @@ local function get_passes_settings(main_fbidx, fb_indices, fbw, fbh)
         fbw, fbh = fbw*2, fbh*2
         insert_blur_pass(fbw, fbh, upsample_material, sampleparam, intensity)
     end
-
-    local fbidx = next_fbidx()
     passes[#passes+1] = ipp.create_pass(
         combine_material, 
         {
-            view_rect = {x=0, y=0, w=fbw, h=fbh},
+            view_rect = {x=0, y=0, w=fb_width, h=fb_height},
             clear_state = {clear=""},
-            fb_idx = fbidx,
+            fb_idx = next_fbidx(),
         },
-        ipp.get_rbhandle(fbidx, 1),
         "combine_bloom_with_scene"
     )
 
-    assert(passes[1].input == nil)
-    passes[1].input = {fb_idx=main_fbidx, rb_idx=2}
+    passes[1].input = ipp.get_rbhandle(main_fbidx, 2)
     return passes
 end
 
@@ -119,11 +112,9 @@ function bloom_sys:post_init()
     local sd = setting:data()
     local bloom = sd.graphic.postprocess.bloom
     if bloom.enable then
-        local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
-        local w, h = ipp.main_rb_size(main_fbidx)
-        ipp.add_technique {
-            name = "bloom",
-            passes = get_passes_settings(main_fbidx, create_framebuffers_container_obj(w, h), w, h),
-        }
+        local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
+        local w, h = ipp.main_rb_size(fbidx)
+        ipp.add_technique("bloom", 
+            get_passes_settings(fbidx, create_framebuffers_container_obj(w, h), w, h))
     end
 end

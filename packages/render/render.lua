@@ -504,7 +504,8 @@ end
 
 function irq.update_rendertarget(rt)
 	local viewid = rt.viewid
-	bgfx.set_view_mode(viewid, rt.view_mode)
+	local vm = rt.view_mode or ""
+	bgfx.set_view_mode(viewid, vm)
 	local vr = rt.view_rect
 	bgfx.set_view_rect(viewid, vr.x, vr.y, vr.w, vr.h)
 	local cs = rt.clear_state

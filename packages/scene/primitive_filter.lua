@@ -17,7 +17,10 @@ function ipf.select_filters(eid)
 		if needadd and ((state & filter.filter_mask) ~= 0) and ((state & filter.exclude_mask) == 0) then
 			item = rc
 		end
-		filter:insert_item(rc.fx.setting.surfacetype, eid, item)
+		local fx = rc.fx
+		if fx then
+			filter:insert_item(fx.setting.surfacetype, eid, item)
+		end
 	end
 end
 

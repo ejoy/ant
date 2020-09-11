@@ -12,7 +12,21 @@ local pp_sys            = ecs.system "postprocess_system"
 local ipp = ecs.interface "postprocess"
 
 local techniques = {}
-local quad_mesh
+local tech_order = {
+    "bloom", "tonemapping"
+}
+
+local function iter_tech()
+    return function (t, idx)
+        idx = idx + 1
+        local n = t[idx]
+        if n then
+            return idx, techniques[n]
+        end
+    end, tech_order, 0
+end
+
+local quad_mesh_eid
 
 local function local_postprocess_views(num)
     local viewids = {}
@@ -36,52 +50,46 @@ local function reset_viewid_idx()
 end
 
 function pp_sys:init()
-    quad_mesh = ientity.quad_mesh {x=-1, y=-1, w=2, h=2}
-
+    quad_mesh_eid = world:create_entity {
+        policy = {
+            "ant.render|render",
+        },
+        data = {
+            mesh = ientity.quad_mesh {x=-1, y=-1, w=2, h=2},
+        }
+    }
 end
 
-local pp_lastinput
+local mainview_rbhandle
 function pp_sys:post_init()
-    pp_lastinput = ipp.get_rbhandle(fbmgr.get_fb_idx(viewidmgr.get "main_view"), 1)
+    mainview_rbhandle = ipp.get_rbhandle(fbmgr.get_fb_idx(viewidmgr.get "main_view"), 1)
 end
 
-local function render_pass(lastinput, out_viewid, pass)
-    local input = pass.input or lastinput
-    local output = pass.output
+local function render_pass(input, out_viewid, pass)
+    input = pass.input or input
+    local rt = pass.render_target
+    local fbidx = rt.fb_idx or fbmgr.get_fb_idx(viewidmgr.get "main_view")
+    local output = ipp.get_rbhandle(fbidx, 1)
     if input == output then
         error("input and output as same render buffer handle")
     end
 
-    irq.update_rendertarget(pass.render_target)
+    rt.viewid = out_viewid
+    irq.update_rendertarget(rt)
 
     local ppinput = isys_properties.get "s_postprocess_input"
-    ppinput.texture.handle = output
+    ppinput.texture.handle = input
 
     irender.draw(out_viewid, pass.renderitem)
     return output
 end
 
-local function iter_tech(tech)
-    local reorders, passes = tech.reorders, tech.passes
-    if reorders == nil then
-        return ipairs(tech.passes)
-    end
-
-    return function (t, idx)
-        idx = idx + 1
-        local n = t[idx]
-        if n then
-            return passes[n]
-        end
-    end, reorders, 0
-end
-
 function pp_sys:combine_postprocess()
-    local lastinput = pp_lastinput
+    local input = mainview_rbhandle
     reset_viewid_idx()
-    for _, tech in ipairs(techniques) do
-        for _, pass in iter_tech(tech) do
-            pp_lastinput = render_pass(lastinput, next_viewid(), pass)
+    for _, tech in iter_tech() do
+        for _, pass in ipairs(tech) do
+            input = render_pass(input, next_viewid(), pass)
         end
     end
 end
@@ -97,7 +105,7 @@ function ipp.main_rb_size(main_fbidx)
 end
 
 function ipp.get_rbhandle(fbidx, rbidx)
-    local fb = fbmgr.get_fb(fbidx)
+    local fb = fbmgr.get(fbidx)
     return fbmgr.get_rb(fb[rbidx]).handle
 end
 
@@ -105,29 +113,23 @@ function ipp.techniques()
     return techniques
 end
 
-function ipp.add_technique(tech)
-    techniques[#techniques+1] = tech
+function ipp.add_technique(name, tech)
+    techniques[name] = tech
 end
 
-function ipp.quad_mesh()
-    return quad_mesh
-end
-
-function ipp.create_pass(material, rt, output, name)
+function ipp.create_pass(material, rt, name)
     local eid = world:create_entity {
         policy = {"ant.render|simplerender"},
         data = {
-            simplemesh = quad_mesh,
-            material = material,
-            state = 0,
+            simplemesh  = world[quad_mesh_eid]._rendercache,
+            material    = material,
         }
     }
 
     return {
-        name        = name,
-        renderitem  = world[eid]._rendercache,
-        render_target = rt,
-        output      = output,
-        eid         = eid,
+        name            = name,
+        renderitem      = world[eid]._rendercache,
+        render_target   = rt,
+        eid             = eid,
     }
 end

@@ -78,7 +78,7 @@ transform "simple_mesh_transform"
 	.output "_rendercache.mesh"
 	.method "process_entity"
 
-policy "simple_render"
+policy "simplerender"
 	.require_transform "ant.general|rendercache_transform"
 	.require_transform "ant.general|init_transform"
 	.require_transform "ant.asset|material_transform"

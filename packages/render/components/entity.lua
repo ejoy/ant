@@ -413,7 +413,7 @@ end
 function ientity.create_gamma_test_entity()
 	world:create_entity {
         policy = {
-            "ant.render|simple_render",
+            "ant.render|simplerender",
             "ant.general|name",
         },
         data = {

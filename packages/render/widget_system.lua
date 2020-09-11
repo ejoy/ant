@@ -262,7 +262,7 @@ local function create_line_entity(vb, ib, quadoffset, quadnum, material)
 	iqc.submit_patch(quadoffset, quadnum)
 	return world:create_entity {
 		policy = {
-			"ant.render|simple_render",
+			"ant.render|simplerender",
 		},
 		data = {
 			simplemesh = {
