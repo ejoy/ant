@@ -113,6 +113,41 @@ local function chooseProject()
 end
 
 local fileserver_thread
+
+local function showDockSpace(offset_x, offset_y)
+    --local vp_w, vp_h = 1024, 768
+    --imgui.windows.SetNextWindowPos(offset_x, offset_y)
+    --imgui.windows.SetNextWindowSize(vp_w - offset_x, vp_h - offset_y)
+    --SetNextWindowViewport
+	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0.0);
+	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0.0);
+    imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowPadding, 0.0, 0.0);
+    local wndflags = imgui.flags.Window {
+        "NoDocking",
+        "NoTitleBar",
+        "NoCollapse",
+        "NoResize",
+        "NoMove",
+        "NoBringToFrontOnFocus",
+        "NoNavFocus",
+        "NoBackground",
+    }
+    local dockflags = imgui.flags.DockNode {
+        "NoDockingInCentralNode",
+        "PassthruCentralNode",
+    }
+    if not imgui.windows.Begin("DockSpace Demo", wndflags) then
+        imgui.windows.PopStyleVar(3)
+        imgui.windows.End()
+        return
+    end
+    imgui.dock.Space("MyDockSpace", dockflags)
+    local x,y,w,h = imgui.dock.BuilderGetCentralRect("MyDockSpace")
+    imgui.windows.PopStyleVar(3)
+    imgui.windows.End()
+    return x,y,w,h
+end
+
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -120,7 +155,7 @@ function m:ui_update()
     chooseProject()
     menu.show()
     toolbar.show(rhwi)
-    local x, y, width, height = imgui.showDockSpace(0, viewStartY)
+    local x, y, width, height = showDockSpace(0, viewStartY)
     scene_view.show(rhwi)
     inspector.show(rhwi)
     resource_browser.show(rhwi)
