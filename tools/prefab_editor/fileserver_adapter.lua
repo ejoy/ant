@@ -7,7 +7,7 @@ local m = {}
 
 local logfile
 local event = {}
-
+local repo_instance
 local _origin = os.time() - os.clock()
 local function os_date(fmt)
     local ti, tf = math.modf(_origin + os.clock())
@@ -15,6 +15,7 @@ local function os_date(fmt)
 end
 
 function event.RUNTIME_CREATE(repo)
+    repo_instance = repo
     local logdir = repo._root / '.log'
     lfs.create_directories(logdir)
     for path in logdir:list_directory() do
@@ -38,6 +39,10 @@ function event.RUNTIME_LOG(data)
     -- fp:write(data)
     -- fp:write('\n')
     -- fp:close()
+    sender:push({data})
+end
+
+function event.RUNTIME_CONSOLE(...)
     sender:push({data})
 end
 
@@ -68,11 +73,16 @@ function m.run()
     srv.set_repopath(repopath)
     srv.listen("0.0.0.0", 2018)
     srv.init_proxy()
+    local console_receiver = cthread.channel_consume "console_channel"
     while true do
         srv.update_network()
         srv.update_server()
         srv.update_proxy()
         update_event()
+        local has, command = console_receiver:pop()
+        if has and repo_instance then
+            srv.console(repo_instance, command)
+        end
     end
 end
 

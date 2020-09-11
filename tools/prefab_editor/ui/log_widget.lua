@@ -140,11 +140,12 @@ local function reset_log()
         }
     end
 end
-
+local console_sender
 function m.init_log_receiver()
     if not log_receiver then
         log_receiver = cthread.channel_consume "log_channel"
     end
+    console_sender = cthread.channel_produce "console_channel"
 end
 
 local command_queue = {}
@@ -203,6 +204,7 @@ local function execCommand(command)
         height = log_item_height,
         line_count = 1
     })
+    console_sender:push(command)
 end
 
 function m.show(rhwi)

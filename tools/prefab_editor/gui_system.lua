@@ -87,6 +87,7 @@ local function chooseProject()
                 local cthread = require "thread"
                 cthread.newchannel "log_channel"
                 cthread.newchannel "fileserver_channel"
+                cthread.newchannel "console_channel"
                 local produce = cthread.channel_produce "fileserver_channel"
                 produce:push(arg, path[1])
                 local lthread = require "common.thread"
