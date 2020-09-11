@@ -200,7 +200,7 @@ function m.show(rhwi)
             }
             if level == "warn" then
                 m.warn(item)
-            elseif level == "error" or level == "fatal" then
+            elseif level == "error" then
                 m.error(item)
             --elseif level == "info" then
             else
