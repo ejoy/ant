@@ -566,25 +566,25 @@ drag_float(lua_State *L, const char *label, int n) {
 	float min = (float)read_field_float(L, "min", 0.0f);
 	float max = (float)read_field_float(L, "max", 0.0f);
 	const char * format = read_field_string(L, "format", "%.3f");
-	float power = (float)read_field_float(L, "power", 1.0f);
+	ImGuiSliderFlags flags = (ImGuiSliderFlags)read_field_int(L, "flags", ImGuiSliderFlags_None);
 	bool change = false;
 	switch (n) {
 	case 1:
-		change = ImGui::DragFloat(label, v, speed, min, max, format, power);
+		change = ImGui::DragFloat(label, v, speed, min, max, format, flags);
 		break;
 	case 2:
 		if (read_field_boolean(L, "range", false)) {
 			const char *format_max = read_field_string(L, "format_max", NULL);
-			change = ImGui::DragFloatRange2(label, v+0, v+1, speed, min, max, format, format_max, power);
+			change = ImGui::DragFloatRange2(label, v+0, v+1, speed, min, max, format, format_max, flags);
 		} else {
-			change = ImGui::DragFloat2(label, v, speed, min, max, format, power);
+			change = ImGui::DragFloat2(label, v, speed, min, max, format, flags);
 		}
 		break;
 	case 3:
-		change = ImGui::DragFloat3(label, v, speed, min, max, format, power);
+		change = ImGui::DragFloat3(label, v, speed, min, max, format, flags);
 		break;
 	case 4:
-		change = ImGui::DragFloat4(label, v, speed, min, max, format, power);
+		change = ImGui::DragFloat4(label, v, speed, min, max, format, flags);
 		break;
 	}
 	if (change) {
@@ -748,8 +748,8 @@ vslider_float(lua_State *L, const char *label) {
 	float min = (float)read_field_checkfloat(L, "min");
 	float max = (float)read_field_checkfloat(L, "max");
 	const char * format = read_field_string(L, "format", "%.3f");
-	float power = (float)read_field_float(L, "power", 1.0f);
-	bool change = ImGui::VSliderFloat(label, ImVec2(width, height), &r, min, max, format, power);
+	ImGuiSliderFlags flags = (ImGuiSliderFlags)read_field_int(L, "flags", ImGuiSliderFlags_None);
+	bool change = ImGui::VSliderFloat(label, ImVec2(width, height), &r, min, max, format, flags);
 	if (change) {
 		lua_pushnumber(L, r);
 		lua_seti(L, INDEX_ARGS, 1);
@@ -3180,6 +3180,15 @@ static struct enum_pair eMouseCursor[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eSliderFlags[] = {
+	ENUM(ImGuiSliderFlags,None),
+	ENUM(ImGuiSliderFlags,ClampOnInput),
+	ENUM(ImGuiSliderFlags,Logarithmic),
+	ENUM(ImGuiSliderFlags,NoRoundToFormat),
+	ENUM(ImGuiSliderFlags,NoInput),
+	ENUM(ImGuiSliderFlags,InvalidMask_),
+	{ NULL, 0 },
+};
 
 #ifdef _MSC_VER
 #pragma endregion IMP_ENUM
@@ -3556,6 +3565,7 @@ luaopen_imgui(lua_State *L) {
 	enum_gen(L, "StyleCol", eStyleCol);
 	enum_gen(L, "StyleVar", eStyleVar);
 	enum_gen(L, "MouseCursor", eMouseCursor);
+	enum_gen(L, "SliderFlags", eSliderFlags);
 	lua_setfield(L, -2, "enum");
 
 	return 1;
