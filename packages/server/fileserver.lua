@@ -112,6 +112,7 @@ function message:ROOT(identity, reponame)
 		return
 	end
 	self._repo = repo
+	repo._fd = self
 	event[#event+1] = {"RUNTIME_CREATE", repo}
 	response(self, "ROOT", repo:root())
 end
@@ -167,6 +168,12 @@ end
 
 function message:LOG(data)
 	event[#event+1] = {"RUNTIME_LOG", data}
+end
+
+function message:MSG(CMD,...)
+	if CMD == "CONSOLE" then
+		event[#event+1] = {"RUNTIME_CONSOLE", ...}
+	end
 end
 
 local output = {}
@@ -275,9 +282,14 @@ local function set_repopath(path)
 	REPOPATH = path
 end
 
+local function console(repo, ...)
+	response(repo._fd, "MSG", "CONSOLE", ...)
+end
+
 return {
 	init = init,
 	listen = listen,
 	update = update,
-	set_repopath = set_repopath
+	set_repopath = set_repopath,
+	console = console,
 }
