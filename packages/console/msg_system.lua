@@ -10,7 +10,7 @@ channel_req("SUBSCIBE", "EditorMessage", "MSG")
 
 local eventEditorRes = world:sub {"editor-res"}
 
-local function dispatch_req(ok, ...)
+local function dispatch_req(ok, _, ...)
     if not ok then
         return
     end
