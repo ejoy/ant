@@ -249,14 +249,18 @@ void main()
 	// modulate_occlusion(v_texcoord0, indirect_color);
 	//color += indirect_color;
 
-	add_emissive(v_texcoord0, color);
-
 #ifdef ENABLE_SHADOW
 	float visibility = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0));
 	vec4 finalcolor = vec4(mix(color.rgb, u_shadow_color.rgb, visibility), basecolor.a);
 #else //!ENABLE_SHADOW
 	vec4 finalcolor = vec4(color, basecolor.a);
 #endif //ENABLE_SHADOW
+
+#ifdef ENABLE_BLOOM
+	add_emissive(v_texcoord0, gl_FragData[1]);
+#else //!ENABLE_BLOOM
+	add_emissive(v_texcoord0, color);
+#endif
 
 	gl_FragColor = output_color_sRGB(finalcolor);
 }
