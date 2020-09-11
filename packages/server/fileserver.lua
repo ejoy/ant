@@ -272,13 +272,14 @@ local function init(v)
 	config = v
 end
 
-local function listen(ip, port)
-	local fd = assert(network.listen(ip, port))
+local function listen(...)
+	local fd = assert(network.listen(...))
 	fd.update = fileserver_update
-	LOG ("Listen : " .. ip .. ":" .. port)
+	LOG ("Listen :", ...)
 end
 
 local function set_repopath(path)
+	LOG ("RepoPath :", path)
 	REPOPATH = path
 end
 

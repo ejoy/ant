@@ -147,6 +147,64 @@ function m.init_log_receiver()
     end
 end
 
+local command_queue = {}
+local history_pos = -1
+local console = {
+    text = "",
+    flags = imgui.flags.InputText{"EnterReturnsTrue", "CallbackCompletion", "CallbackHistory"},
+    up = function()
+            if #command_queue < 1 then return "" end
+
+            local prev_history_pos = history_pos
+            if history_pos == -1 then
+                history_pos = #command_queue - 1
+            elseif history_pos > 0 then
+                history_pos = history_pos - 1
+            end
+            if prev_history_pos ~= history_pos then
+                return (history_pos >= 0) and command_queue[history_pos + 1] or ""
+            else
+                return nil
+            end
+        end,
+    down = function()
+            if #command_queue < 1 then return "" end
+
+            local prev_history_pos = history_pos
+            if history_pos ~= -1 then
+                history_pos = history_pos + 1
+                if history_pos >= #command_queue then
+                    history_pos = -1
+                end
+            end
+            if prev_history_pos ~= history_pos then
+                return (history_pos >= 0) and command_queue[history_pos + 1] or ""
+            else
+                return nil
+            end
+        end
+}
+
+local function execCommand(command)
+    history_pos = -1
+    local exist_idx = 0
+    for i, v in ipairs(command_queue) do
+        if v == command then
+            exist_idx = i
+            break
+        end
+    end
+    if exist_idx ~= 0 then
+        table.remove(command_queue, exist_idx)
+    end
+    table.insert(command_queue, command)
+    m.info({
+        message = "[" .. time2str(os.time()) .. "][INFO][Console]" .. command,
+        height = log_item_height,
+        line_count = 1
+    })
+end
+
 function m.show(rhwi)
     if not err_receiver then
         err_receiver = cthread.channel_consume "errlog"
@@ -159,7 +217,7 @@ function m.show(rhwi)
             count = count + 1
         end
         m.error({
-            message = "[" .. time2str(os.time()) .. "][Thread]" .. info,
+            message = "[" .. time2str(os.time()) .. "][ERROR][Thread]" .. info,
             height = count * log_item_height,
             line_count = count
         })
@@ -183,9 +241,12 @@ function m.show(rhwi)
                 level = string.lower(level)
                 msg_str = msg[1]
             elseif #msg > 3 then
-                level = msg[1]
-                msg_str = "[" .. time2str(msg[2]) .. "][" .. level:upper() .. "][".. msg[3] .. "]"
+                level = msg[2]
+                msg_str = "[" .. time2str(msg[1]) .. "][" .. level:upper() .. "][".. msg[3] .. "]"
                 for i = 4, #msg do
+                    if i > 4 then
+                        msg_str = msg_str .. "    "
+                    end
                     msg_str = msg_str .. msg[i]
                 end
             end
@@ -258,29 +319,23 @@ function m.show(rhwi)
             end
             imgui.widget.EndCombo()
         end
+        imgui.cursor.SameLine()
+        imgui.widget.Text("    Console >:")
+        imgui.cursor.SameLine()
+        local reclaim_focus = false
+        if imgui.widget.InputText("##SingleLineInput", console) then
+            local command = tostring(console.text)
+            if command ~= "" then
+                execCommand(command)
+                console.text = ""
+            end
+            reclaim_focus = true
+        end
+        imgui.util.SetItemDefaultFocus()
+        if reclaim_focus then
+            imgui.util.SetKeyboardFocusHere(-1)
+        end
 
-        -- imgui.cursor.SameLine()
-        -- imgui.widget.Text("IP:")
-        -- imgui.cursor.SameLine()
-        -- imgui.cursor.SetNextItemWidth(150)
-        
-        -- if imgui.widget.InputText("##IP", fileserver_ip) then
-        
-        -- end
-        
-        -- imgui.cursor.SameLine()
-        -- imgui.widget.Text("Port:")
-        -- imgui.cursor.SameLine()
-        -- imgui.cursor.SetNextItemWidth(60)
-        
-        -- if imgui.widget.InputText("##Port", fileserver_port) then
-        
-        -- end
-
-        -- imgui.cursor.SameLine()
-        -- if imgui.widget.Button("Connect") then
-
-        -- end
         local current_log = log_items[current_tag][filter_flag]
         local total_virtual_count = (filter_flag > 0) and #current_log.vtor_index or 0
         if total_virtual_count > 0 then
@@ -346,54 +401,5 @@ end
 return function(am)
     icons = require "common.icons"(am)
     reset_log()
-    --test
-    -- for i = 1, 10 do
-    --     if i == 5 then
-    --         m.info({
-    --             message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_\nHello\nWorld" .. i,
-    --             height = 3 * log_item_height,
-    --             line_count = 3
-    --         })
-    --     elseif i == 8 then
-    --         m.info({
-    --             message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_\nWord" .. i,
-    --             height = 2 * log_item_height,
-    --             line_count = 2
-    --         })
-    --     elseif i == 9 then
-    --         m.info({
-    --             message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_\nAAA\nBBB\nCCC\nDDD\nEEE\nFFF" .. i,
-    --             height = 7 * log_item_height,
-    --             line_count = 7
-    --         })
-    --     else
-    --         m.info({
-    --             message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_" .. i,
-    --             height = log_item_height,
-    --             line_count = 1
-    --         })
-    --     end
-        
-    --     -- m.warn({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i + 1})
-    --     -- m.error({time = os.time(), tag = log_tags[math.random(2, 4)], content = "helloworld_" .. i + 2})
-    -- end
-    -- for i = 1, 10, 3 do
-    --     m.info({
-    --         message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_" .. i,
-    --         height = log_item_height,
-    --         line_count = 1
-    --     })
-    --     m.warn({
-    --         message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_" .. i + 1,
-    --         height = log_item_height,
-    --         line_count = 1
-    --     })
-    --     m.error({
-    --         message = "[" .. time2str(os.time()) .. "][".. log_tags[math.random(2, 4)] .. "]" .. "helloworld_" .. i + 2,
-    --         height = log_item_height,
-    --         line_count = 1
-    --     })
-    -- end
-    --
     return m
 end
