@@ -15,7 +15,12 @@ local log_tags = {
     "FileSrv",
     "FileWatch"
 }
-
+-- 'trace'
+-- 'debug'
+-- 'info'
+-- 'warn'
+-- 'error'
+-- 'fatal'
 local LEVEL_INFO = 0x0000001
 local LEVEL_WARN = 0x0000002
 local LEVEL_ERROR = 0x0000004
@@ -168,25 +173,38 @@ function m.show(rhwi)
     if log_receiver then
         local has, msg = log_receiver:pop()
         while has do
-            local msg_str = ""
-            for i = 4, #msg do
-                msg_str = msg_str .. msg[i]
+            local level
+            local msg_str
+            if #msg == 1 then
+                local first = string.find(msg[1], "]")
+                local second = string.find(msg[1], "]", first + 1)
+                local rawlevel = string.sub(msg[1], first + 2, second - 1)
+                level = rawlevel:match'^%s*(.*%S)' or ''
+                level = string.lower(level)
+                msg_str = msg[1]
+            elseif #msg > 3 then
+                level = msg[1]
+                msg_str = "[" .. time2str(msg[2]) .. "][" .. level:upper() .. "][".. msg[3] .. "]"
+                for i = 4, #msg do
+                    msg_str = msg_str .. msg[i]
+                end
             end
             local count = 1
             for _ in string.gmatch(msg_str, '\n') do
                 count = count + 1
             end
             local item = {
-                message = "[" .. time2str(msg[2]) .. "][".. msg[3] .. "]" .. msg_str,
+                message = msg_str,
                 height = count * log_item_height,
                 line_count = count
             }
-            if msg[1] == "info" then
-                m.info(item)
-            elseif msg[1] == "warn" then
+            if level == "warn" then
                 m.warn(item)
-            elseif msg[1] == "error" then
+            elseif level == "error" or level == "fatal" then
                 m.error(item)
+            --elseif level == "info" then
+            else
+                m.info(item)
             end
             has, msg = log_receiver:pop()
         end
