@@ -1,0 +1,15 @@
+policy "polyline"
+    .require_policy "ant.render|simplerender"
+    .require_system "ant.render|polyline_system"
+    .require_interface "ant.render|ipolyline"
+    .component "polyline"
+
+system "polyline_system"
+    .implement "polyline/polyline.lua"
+    .method "data_changed"
+
+interface "ipolyline"
+    .implement "polyline/polyline.lua"
+    .require_interface "ant.asset|imaterial"
+    .require_interface "ant.render|irender"
+    .method "add_lines"

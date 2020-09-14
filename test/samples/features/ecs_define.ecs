@@ -48,6 +48,7 @@ system "init_loader_system"
     .require_policy "ant.sky|procedural_sky"
     .require_policy "ant.objcontroller|select"
     .require_policy "ant.scene|hierarchy_policy"
+    .require_policy "ant.render|polyline"
 
     .require_interface "ant.camera|camera"
     .require_interface "ant.objcontroller|obj_motion"

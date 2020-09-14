@@ -80,13 +80,14 @@ function toolset.compile(config)
 			level = config.stage == "cs" and 1 or 3
 		end
 	end
-	if level then
-		commands[#commands+1] = "-O"
-		commands[#commands+1] = tostring(level)
-	end
 
 	if config.debug then
 		commands[#commands+1] = "--debug"
+	else
+		if level then
+			commands[#commands+1] = "-O"
+			commands[#commands+1] = tostring(level)
+		end
 	end
 
 	-- print("shader compile:")
