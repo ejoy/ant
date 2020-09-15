@@ -42,7 +42,7 @@ local icons = require "common.icons"(asset_mgr)
 
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 
-local dragFile = false
+local dragFile = nil
 local lastX = -1
 local lastY = -1
 local lastWidth = -1
@@ -182,7 +182,10 @@ function m:ui_update()
         local x, y = imgui.util.GetMousePos()
         if (x > lastX and x < (lastX + lastWidth) and y > lastY and y < (lastY + lastHeight)) then
             if not dragFile then
-                dragFile = imgui.widget.GetDragDropPayload()
+                local dropdata = imgui.widget.GetDragDropPayload()
+                if dropdata and string.sub(dropdata, -7) == ".prefab" then
+                    dragFile = dropdata
+                end
             end
         else
             dragFile = nil
