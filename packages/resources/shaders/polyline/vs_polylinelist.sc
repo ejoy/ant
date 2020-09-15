@@ -9,21 +9,6 @@ $output v_color, v_texcoord0
 
 #define a_linedir   a_texcoord2
 
-vec2 fix( vec4 i, float aspect ) {
-	vec2 res = i.xy / i.w;
-	res.x *= aspect;
-	return res;
-}
-
-vec2 calc_offset(vec2 dir, float aspect, float w)
-{
-	vec2 normal = normalize(vec2(-dir.y, dir.x));
-	normal.x /= aspect;
-	normal *= 0.5 * w;
-
-    return normal;
-}
-
 void main() {
 	float aspect 			= u_viewRect.z / u_viewRect.w;
 	float pixelWidthRatio	= 1. / (u_viewRect.z * u_proj[0][0]);

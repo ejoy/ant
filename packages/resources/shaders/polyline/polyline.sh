@@ -21,3 +21,18 @@ uniform vec4 u_dash_info;
 #define u_dash_offset    u_dash_info.y
 #define u_dash_ratio     u_dash_info.z
 #define u_use_dash       u_dash_info.w
+
+vec2 fix( vec4 i, float aspect ) {
+	vec2 res = i.xy / i.w;
+	res.x *= aspect;
+	return res;
+}
+
+vec2 calc_offset(vec2 dir, float aspect, float w)
+{
+	vec2 normal = normalize(vec2(-dir.y, dir.x));
+	normal.x /= aspect;
+	normal *= 0.5 * w;
+
+    return normal;
+}
