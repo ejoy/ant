@@ -166,7 +166,7 @@ end
 
 function irender.create_main_queue(view_rect)
 	local rb_flag = samplerutil.sampler_flag {
-		RT="RT_MSAA2",
+		RT="RT_MSAA4",
 		MIN="LINEAR",
 		MAG="LINEAR",
 		U="CLAMP",
@@ -190,7 +190,7 @@ function irender.create_main_queue(view_rect)
 		)
 	end
 	local db_flag = samplerutil.sampler_flag {
-		RT="RT_MSAA2",
+		RT="RT_MSAA4",
 		MIN="LINEAR",
 		MAG="LINEAR",
 		U="CLAMP",
