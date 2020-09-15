@@ -19,7 +19,7 @@ DockId=0x00000004,0
 Pos=0,500
 Size=1280,220
 Collapsed=0
-DockId=0x00000009,0
+DockId=0x00000009,1
 
 [Window][Debug##Default]
 Pos=60,60
@@ -41,7 +41,24 @@ DockId=0x00000007,0
 Pos=0,500
 Size=1280,220
 Collapsed=0
-DockId=0x00000009,1
+DockId=0x00000009,0
+
+[Window][ConsoleList]
+Pos=0,500
+Size=1280,220
+Collapsed=0
+DockId=0x00000009,2
+
+[Window][Choose project]
+Pos=472,317
+Size=340,86
+Collapsed=0
+
+[Window][Console]
+Pos=0,500
+Size=1280,220
+Collapsed=0
+DockId=0x00000009,2
 
 [Docking][Data]
 DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,63 Size=1280,657 Split=Y
@@ -52,5 +69,5 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,63 Size=1280,657 Split=Y
         DockNode  ID=0x00000001 Parent=0x00000008 SizeRef=225,658 Selected=0x18B8C0DE
         DockNode  ID=0x00000002 Parent=0x00000008 SizeRef=740,658 CentralNode=1
     DockNode      ID=0x00000004 Parent=0x00000005 SizeRef=262,658 Selected=0xF02CD328
-  DockNode        ID=0x00000009 Parent=0x3BC79352 SizeRef=1280,220 Selected=0xB7722E25
+  DockNode        ID=0x00000009 Parent=0x3BC79352 SizeRef=1280,220 Selected=0xF9BEF62A
 

@@ -15,6 +15,7 @@ local vfs = require "vfs"
 local hierarchy = require "hierarchy"
 local resource_browser = require "ui.resource_browser"(world, asset_mgr)
 local log_widget = require "ui.log_widget"(asset_mgr)
+local console_widget = require "ui.console_widget"(asset_mgr)
 local toolbar = require "ui.toolbar"(world, asset_mgr)
 local scene_view = require "ui.scene_view"(world, asset_mgr)
 local inspector = require "ui.inspector"(world)
@@ -41,7 +42,7 @@ local icons = require "common.icons"(asset_mgr)
 
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 
-local dragFile = false
+local dragFile = nil
 local lastX = -1
 local lastY = -1
 local lastWidth = -1
@@ -98,6 +99,7 @@ local function chooseProject()
                     fileserver.run()
                 ]]
                 log_widget.init_log_receiver()
+                console_widget.init_console_sender()
             end
         end
         imgui.cursor.SameLine()
@@ -160,6 +162,7 @@ function m:ui_update()
     inspector.show(rhwi)
     resource_browser.show(rhwi)
     log_widget.show(rhwi)
+    console_widget.show(rhwi)
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
     local dirty = false
@@ -179,7 +182,10 @@ function m:ui_update()
         local x, y = imgui.util.GetMousePos()
         if (x > lastX and x < (lastX + lastWidth) and y > lastY and y < (lastY + lastHeight)) then
             if not dragFile then
-                dragFile = imgui.widget.GetDragDropPayload()
+                local dropdata = imgui.widget.GetDragDropPayload()
+                if dropdata and string.sub(dropdata, -7) == ".prefab" then
+                    dragFile = dropdata
+                end
             end
         else
             dragFile = nil
