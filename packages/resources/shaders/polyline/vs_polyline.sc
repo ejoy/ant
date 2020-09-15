@@ -1,19 +1,14 @@
 $input a_position, a_texcoord0, a_texcoord1, a_texcoord2, a_texcoord3
 $output v_color, v_texcoord0
 
-//input attributes: a_vertex_cfg: [side, width, counters]
-#define a_prevpos	a_texcoord1
-#define a_nextpos	a_texcoord2
-
-#define a_side		a_texcoord3.x
-#define a_width		a_texcoord3.y
-#define a_counters	a_texcoord3.z
+#include <bgfx_shader.sh>
+#include "polyline/polyline.sh"
 
 #define v_uv		v_texcoord0.xy
 #define v_counters	v_texcoord0.z
 
-#include <bgfx_shader.sh>
-#include "polyline/polyline.sh"
+#define a_prevpos	a_texcoord2
+#define a_nextpos	a_texcoord3
 
 vec2 fix( vec4 i, float aspect ) {
 	vec2 res = i.xy / i.w;

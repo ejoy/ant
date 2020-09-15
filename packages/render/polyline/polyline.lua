@@ -64,7 +64,7 @@ end
 
 local strip_ib = create_strip_index_buffer(3072)
 
-local function create_dynbuffer(numveritces, desc)
+local function create_dynbuffer(max_vertices, desc)
     local function create_layout(desc)
         desc = declmgr.correct_layout(desc)
         local decl = declmgr.get(desc)
@@ -80,17 +80,20 @@ local function create_dynbuffer(numveritces, desc)
 
     local  layout = create_layout(desc)
     return {
-        num_vertices    = numveritces,
+        max_vertices    = max_vertices,
         offset          = 0,
         layout          = layout,
-        handle          = bgfx.create_dynamic_vertex_buffer(numveritces, layout.handle, "a"),
+        handle          = bgfx.create_dynamic_vertex_buffer(max_vertices, layout.handle, "a"),
+        vertices_num    = function (self, vertex_table)
+            return #vertex_table / #self.layout.formatdesc
+        end,
         alloc = function (self, num, vertices)
             local stride = layout.stride
             local start = self.offset / stride
             self.offset = self.offset + num * stride
 
-            if self.offset > self.num_vertices * self.layout.stride then
-                error(("not enough dynamic buffer:%d, %d"):format(self.offset, self.num_vertices * self.layout.stride))
+            if self.offset > self.max_vertices * self.layout.stride then
+                error(("not enough dynamic buffer:%d, %d"):format(self.offset, self.max_vertices * self.layout.stride))
             end
     
             local vb = {
@@ -118,22 +121,23 @@ local function create_dynbuffer(numveritces, desc)
     }
 end
 
-local dyn_vbbuffer = create_dynbuffer(2048, "p3|t20|t31|t32|t33")
+local dyn_stripline_vb = create_dynbuffer(1024, "p3|t20|t31|t32|t33")
+local dyn_linelist_vb = create_dynbuffer(1024, "p3|t20|t31|t32")
 
 local polylines = {}
-
-
-local function generate_polyline_vertices(points)
-    local vertex_elem_num<const> = 14
+local function generate_stripline_vertices(points)
+    local vertex_elem_num<const> = #dyn_stripline_vb.layout.formatdesc
     local elem_offset = 0
     local vertices = {}
-    local function fill_pos(p)        vertices[elem_offset+1],  vertices[elem_offset+2], vertices[elem_offset+3]   = p[1], p[2], p[3] end
-    local function fill_uv(u, v)      vertices[elem_offset+4],  vertices[elem_offset+5]                            = u, v             end
-    local function fill_prevpos(p)    vertices[elem_offset+6],  vertices[elem_offset+7], vertices[elem_offset+8]   = p[1], p[2], p[3] end
-    local function fill_nextpos(p)    vertices[elem_offset+9],  vertices[elem_offset+10],vertices[elem_offset+11]  = p[1], p[2], p[3] end
-    local function fille_config(side, width, counter)
-                                      vertices[elem_offset+12], vertices[elem_offset+13], vertices[elem_offset+14] = side, width, counter end
-    local function next_vertex()      elem_offset = elem_offset + vertex_elem_num end
+    local function fill_vertex(p, prev_p, next_p, u, v, side, width, counter)
+        vertices[elem_offset+1],  vertices[elem_offset+2], vertices[elem_offset+3]   = p[1], p[2], p[3]
+        vertices[elem_offset+4],  vertices[elem_offset+5]                            = u, v
+        vertices[elem_offset+6],  vertices[elem_offset+7], vertices[elem_offset+8]   = side, width, counter
+        vertices[elem_offset+9],  vertices[elem_offset+10],vertices[elem_offset+11]  = prev_p[1], prev_p[2], prev_p[3]
+        vertices[elem_offset+12], vertices[elem_offset+13],vertices[elem_offset+14]  = next_p[1], next_p[2], next_p[3]
+    
+        elem_offset = elem_offset + vertex_elem_num
+    end
 
     local numpoint = #points
 
@@ -143,27 +147,10 @@ local function generate_polyline_vertices(points)
         local p = points[idx]
         local prev_p = idx == 1         and p                or points[idx-1]
         local next_p = idx == numpoint  and points[numpoint] or points[idx+1]
-
-        -- positive side
-        fill_pos(p)
-        fill_uv(tex_u, 0)
-        fill_prevpos(prev_p)
-        fill_nextpos(next_p)
         local counter = (idx-1) / numpoint
-        fille_config(1, 1, counter)
 
-        next_vertex()
-        ---
-
-        -- opposite side
-        fill_pos(p)
-        fill_uv(tex_u, 1)
-        fill_prevpos(prev_p)
-        fill_nextpos(next_p)
-        fille_config(-1, 1, counter)
-
-        next_vertex()
-        ---
+        fill_vertex(p, prev_p, next_p, tex_u, 0, 1, 1, counter)
+        fill_vertex(p, prev_p, next_p, tex_u, 1, -1, 1, counter)
 
         tex_u = tex_u + tex_u_step
     end
@@ -181,7 +168,7 @@ local function add_polylines(polymesh, line_width, color, material)
         data = {
             polyline = true,
             simplemesh = polymesh,
-            material = material or "/pkg/ant.resources/materials/polyline.material",
+            material = material,
             state = 1,
             name = "polyline",
         }
@@ -198,23 +185,56 @@ local function add_polylines(polymesh, line_width, color, material)
     return eid
 end
 
-local defcolor<const> = {0.8, 0.8, 0.8, 1.0}
+local defcolor<const> = {1.0, 1.0, 1.0, 1.0}
 function ipl.add_strip_lines(points, line_width, color, material)
     color = color or defcolor
     line_width = line_width or 1
 
-    local vertices = generate_polyline_vertices(points)
+    local vertices = generate_stripline_vertices(points)
     local numpoint = #points
     local numlines = numpoint-1
 
-    local numvertex = numpoint * 2
+    local numvertex = dyn_stripline_vb:vertices_num(vertices)
 
     local polymesh = {
         ib = strip_ib:alloc(numlines),
-        vb = dyn_vbbuffer:alloc(numvertex, vertices),
+        vb = dyn_stripline_vb:alloc(numvertex, vertices),
     }
 
-    return add_polylines(polymesh, line_width, color, material)
+    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polyline.material")
+end
+
+local function generate_linelist_vertices(points)
+    local vertex_elem_num<const> = #dyn_linelist_vb.layout.formatdesc
+    local elem_offset = 0
+    local vertices = {}
+    local function fill_vertex(p, d, u, v, side, width, counter)
+        vertices[elem_offset+1],  vertices[elem_offset+2], vertices[elem_offset+3]   = p[1], p[2], p[3]
+        vertices[elem_offset+4],  vertices[elem_offset+5]                            = u, v
+        vertices[elem_offset+6],  vertices[elem_offset+7], vertices[elem_offset+8]   = side, width, counter
+        vertices[elem_offset+9],  vertices[elem_offset+10], vertices[elem_offset+11] = d[1], d[2], d[3]
+        elem_offset = elem_offset + vertex_elem_num
+    end
+
+    local numpoint = #points
+
+    local function sub(p0, p1)
+        return {p1[1]-p0[1], p1[2]-p0[2], p1[3]-p0[3]}
+    end
+
+    for idx=1, numpoint, 2 do
+        local p0, p1 = points[idx], points[idx+1]
+        local d0, d1 = sub(p1, p0), sub(p0, p1)
+        local c0, c1 = (idx-1) / numpoint, idx / numpoint
+
+        fill_vertex(p0, d0, 0, 0,  1, 1, c0)
+        fill_vertex(p0, d0, 0, 1, -1, 1, c0)
+
+        fill_vertex(p1, d1, 1, 0,  1, 1, c1)
+        fill_vertex(p1, d1, 1, 1, -1, 1, c1)
+    end
+
+    return vertices
 end
 
 function ipl.add_linelist(pointlist, line_width, color, material)
@@ -226,8 +246,8 @@ function ipl.add_linelist(pointlist, line_width, color, material)
     color = color or defcolor
     line_width = line_width or 1
 
-    local vertices = generate_polyline_vertices(pointlist)
-    local numvertex = #vertices / #dyn_vbbuffer.layout.formatdesc
+    local vertices = generate_linelist_vertices(pointlist)
+    local numvertex = dyn_linelist_vb:vertices_num(vertices)
 
     local numlines = numpoint / 2
 
@@ -237,10 +257,10 @@ function ipl.add_linelist(pointlist, line_width, color, material)
             num = numlines * 2 * 3,
             handle = irender.quad_ib(),
         },
-        vb = dyn_vbbuffer:alloc(numvertex, vertices),
+        vb = dyn_linelist_vb:alloc(numvertex, vertices),
     }
 
-    return add_polylines(polymesh, line_width, color, material)
+    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polylinelist.material")
 end
 
 local pl_sys = ecs.system "polyline_system"
@@ -249,7 +269,14 @@ function pl_sys:data_changed()
         for _ in data.mailbox:unpack() do
             local e = world[eid]
             if e.polyline then
-                dyn_vbbuffer:free(e._rendercache.vb)
+                local vb = e._rendercache.vb
+                local vbhandle = vb.handles[1]
+                if dyn_stripline_vb.handle == vbhandle then
+                    dyn_stripline_vb:free(vb)
+                elseif dyn_linelist_vb.handle == vbhandle then
+                    dyn_linelist_vb:free(vb)
+                end
+                
             end
         end
     end

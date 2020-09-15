@@ -72,7 +72,7 @@ function ientity.create_grid_entity(name, w, h, unit, srt)
 	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
 end
 
-function ientity.create_grid_entity2(name, width, height, unit, color)
+function ientity.create_grid_entity2(name, width, height, unit, linewidth)
 	local ipl = world:interface "ant.render|ipolyline"
 	
 	local hw = width * 0.5
@@ -101,8 +101,14 @@ function ientity.create_grid_entity2(name, width, height, unit, color)
 		add_line(-hw_len, y, hw_len, y)
 	end
 
-	local eid = ipl.add_linelist(pl, 1.5, color)
+	local eid = ipl.add_linelist(pl, linewidth, {0.8, 0.8, 0.8, 1.0})
 	world[eid].name = name
+
+	local xeid = ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, linewidth * 1.5, {1.0, 0.0, 0.0, 1.0})
+	local zeid = ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, linewidth * 1.5, {0.0, 0.0, 1.0, 1.0})
+
+	world[xeid].name = name .. ":centerx"
+	world[zeid].name = name .. ":centerz"
 end
 
 local plane_mesh

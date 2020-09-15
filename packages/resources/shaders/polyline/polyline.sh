@@ -1,3 +1,9 @@
+//input attributes: a_texcoord1: [side, width, counters]
+
+#define a_side		a_texcoord1.x
+#define a_width		a_texcoord1.y
+#define a_counters	a_texcoord1.z
+
 uniform vec4            u_line_info;
 #define u_line_width    u_line_info.x
 #define u_visible       u_line_info.y
