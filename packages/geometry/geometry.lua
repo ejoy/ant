@@ -517,12 +517,6 @@ function geometry.sphereLatitude(slices, stacks, radius, needib, line)
 end
 
 function geometry.grid(width, height, color, unit)
-	local vb, ib = {}, {}
-	local function add_vertex_clr(x, z, clr)
-		add_vertex(vb, x, 0, z)
-		vb[#vb+1] = clr
-	end
-
 	if width < 2 or height < 2 then
 		return
 	end
@@ -534,6 +528,12 @@ function geometry.grid(width, height, color, unit)
 
 	if not is_even_number(width) or not is_even_number(height) then
 		error(string.format("width = %d, height = %d, all need to even number", width, height))
+	end
+
+	local vb, ib = {}, {}
+	local function add_vertex_clr(x, z, clr)
+		add_vertex(vb, x, 0, z)
+		vb[#vb+1] = clr
 	end
 
 	local hw = width * 0.5
@@ -552,25 +552,21 @@ function geometry.grid(width, height, color, unit)
 		table.insert(ib, #ib)
 	end
 
-	-- center lines
-	add_line(-hh_len, 0, hh_len, 0, color--[[0x880000ff]])
-	add_line(0, -hw_len, 0, hw_len, color--[[0x88ff0000]])
-
 	-- column lines
 	for i=0, width do
-		if i ~= hw then
-			local x = -hw_len + i * unit
-			add_line(x, -hh_len, x, hh_len, color)
-		end
+		local x = -hw_len + i * unit
+		add_line(x, -hh_len, x, hh_len, color)
 	end
 
 	-- row lines
 	for i=0, height do
-		if i ~= hh then
-			local y = -hh_len + i * unit
-			add_line(-hw_len, y, hw_len, y, color)
-		end
+		local y = -hh_len + i * unit
+		add_line(-hw_len, y, hw_len, y, color)
 	end
+
+	-- center lines
+	add_line(-hh_len, 0, hh_len, 0, color--[[0x880000ff]])
+	add_line(0, -hw_len, 0, hw_len, color--[[0x88ff0000]])
 	return vb, ib
 end
 

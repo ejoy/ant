@@ -72,6 +72,39 @@ function ientity.create_grid_entity(name, w, h, unit, srt)
 	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
 end
 
+function ientity.create_grid_entity2(name, width, height, unit, color)
+	local ipl = world:interface "ant.render|ipolyline"
+	
+	local hw = width * 0.5
+	local hw_len = hw * unit
+
+	local hh = height * 0.5
+	local hh_len = hh * unit
+
+	local pl = {}
+	local function add_vertex(x, y, z)
+		pl[#pl+1] = {x, y, z}
+	end
+
+	local function add_line(x0, z0, x1, z1)
+		add_vertex(x0, 0, z0)
+		add_vertex(x1, 0, z1)
+	end
+
+	for i=0, width do
+		local x = -hw_len + i * unit
+		add_line(x, -hh_len, x, hh_len)
+	end
+
+	for i=0, height do
+		local y = -hh_len + i * unit
+		add_line(-hw_len, y, hw_len, y)
+	end
+
+	local eid = ipl.add_linelist(pl, 1.5, color)
+	world[eid].name = name
+end
+
 local plane_mesh
 local function get_plane_mesh()
 	if plane_mesh == nil then

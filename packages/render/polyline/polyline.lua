@@ -20,48 +20,49 @@ local ipl = ecs.interface "ipolyline"
 
 local declmgr           = require "vertexdecl_mgr"
 
-local function create_ib_buffer(max_lines)
-    local indices = {}
-    local numindices<const> = max_lines * 2 * 3
-
-    local offset = 0
-    for i=1, max_lines do
-        indices[#indices+1] = offset + 0
-        indices[#indices+1] = offset + 1
-        indices[#indices+1] = offset + 2
-
-        indices[#indices+1] = offset + 1
-        indices[#indices+1] = offset + 3
-        indices[#indices+1] = offset + 2
-
-        offset = offset + 2
+local function create_strip_index_buffer(max_lines)
+    local function create_ib_buffer(max_lines)
+        local indices = {}
+        local offset = 0
+        for i=1, max_lines do
+            indices[#indices+1] = offset + 0
+            indices[#indices+1] = offset + 1
+            indices[#indices+1] = offset + 2
+    
+            indices[#indices+1] = offset + 1
+            indices[#indices+1] = offset + 3
+            indices[#indices+1] = offset + 2
+    
+            offset = offset + 2
+        end
+    
+        return bgfx.create_index_buffer(bgfx.memory_buffer("w", indices))
     end
 
     return {
         offset = 0,
-        num_indices = numindices,
-        handle = bgfx.create_index_buffer(bgfx.memory_buffer("w", indices))
+        num_indices = max_lines,
+        handle = create_ib_buffer(max_lines),
+        alloc = function (self, numlines)
+            local numindices<const> = numlines * 2 * 3
+            local start = self.offset
+        
+            if start + numindices > self.num_indices then
+                error(("not enough index buffer:%d, %d"):format(start+numindices, self.num_indices))
+            end
+        
+            self.offset = start + numindices
+        
+            return {
+                start = start,
+                num = numindices,
+                handle = self.handle,
+            }
+        end
     }
 end
 
-local ibbuffer = create_ib_buffer(3072)
-
-local function alloc(ibbuffer, numlines)
-    local numindices<const> = numlines * 2 * 3
-    local start = ibbuffer.offset
-
-    if start + numindices > ibbuffer.num_indices then
-        error(("not enough index buffer:%d, %d"):format(start+numindices, ibbuffer.num_indices))
-    end
-
-    ibbuffer.offset = start + numindices
-
-    return {
-        start = start,
-        num = numindices,
-        handle = ibbuffer.handle,
-    }
-end
+local strip_ib = create_strip_index_buffer(3072)
 
 local function create_dynbuffer(numveritces, desc)
     local function create_layout(desc)
@@ -121,11 +122,8 @@ local dyn_vbbuffer = create_dynbuffer(2048, "p3|t20|t31|t32|t33")
 
 local polylines = {}
 
-local defcolor<const> = {0.8, 0.8, 0.8, 1.0}
-function ipl.add_lines(points, line_width, color, material)
-    color = color or defcolor
-    line_width = line_width or 1
 
+local function generate_polyline_vertices(points)
     local vertex_elem_num<const> = 14
     local elem_offset = 0
     local vertices = {}
@@ -170,9 +168,10 @@ function ipl.add_lines(points, line_width, color, material)
         tex_u = tex_u + tex_u_step
     end
 
-    local numlines = numpoint-1
+    return vertices
+end
 
-    local numvertex = numpoint * 2
+local function add_polylines(polymesh, line_width, color, material)
     local eid = world:create_entity {
         policy = {
             "ant.render|simplerender",
@@ -181,24 +180,67 @@ function ipl.add_lines(points, line_width, color, material)
         },
         data = {
             polyline = true,
-            simplemesh = {
-                ib = alloc(ibbuffer, numlines),
-                vb = dyn_vbbuffer:alloc(numvertex, vertices),
-            },
+            simplemesh = polymesh,
             material = material or "/pkg/ant.resources/materials/polyline.material",
             state = 1,
             name = "polyline",
         }
     }
 
-    local  lineinfo<const> = {10, 0.0, 0.0, 0.0}
+    local  lineinfo<const> = {line_width, 0.0, 0.0, 0.0}
     imaterial.set_property(eid, "u_color",      color)
     imaterial.set_property(eid, "u_line_info",  lineinfo)
 
     polylines[eid] = {
         mailbox = world:sub{"entity_removed", eid},
-        vertices = vertices,
     }
+
+    return eid
+end
+
+local defcolor<const> = {0.8, 0.8, 0.8, 1.0}
+function ipl.add_strip_lines(points, line_width, color, material)
+    color = color or defcolor
+    line_width = line_width or 1
+
+    local vertices = generate_polyline_vertices(points)
+    local numpoint = #points
+    local numlines = numpoint-1
+
+    local numvertex = numpoint * 2
+
+    local polymesh = {
+        ib = strip_ib:alloc(numlines),
+        vb = dyn_vbbuffer:alloc(numvertex, vertices),
+    }
+
+    return add_polylines(polymesh, line_width, color, material)
+end
+
+function ipl.add_linelist(pointlist, line_width, color, material)
+    local numpoint = #pointlist
+    if numpoint % 2 ~= 0 then
+        error(("privoided point for line's number must multiple of 2: %d"):format(numpoint))
+    end
+
+    color = color or defcolor
+    line_width = line_width or 1
+
+    local vertices = generate_polyline_vertices(pointlist)
+    local numvertex = #vertices / #dyn_vbbuffer.layout.formatdesc
+
+    local numlines = numpoint / 2
+
+    local polymesh = {
+        ib = {
+            start = 0,
+            num = numlines * 2 * 3,
+            handle = irender.quad_ib(),
+        },
+        vb = dyn_vbbuffer:alloc(numvertex, vertices),
+    }
+
+    return add_polylines(polymesh, line_width, color, material)
 end
 
 local pl_sys = ecs.system "polyline_system"

@@ -97,7 +97,7 @@ end
 
 function init_loader_sys:init()
     world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
-    ientity.create_grid_entity()
+    ientity.create_grid_entity2("polyline_grid", 64, 64, 1, {0.8, 0.8, 0.8, 1.0})
 
     --ientity.create_procedural_sky()
     --target_lock_test()
@@ -121,7 +121,7 @@ function init_loader_sys:post_init()
     -- }, 0, "/pkg/ant.resources/materials/quadline.material", 0.1)
 
     local ipl = world:interface "ant.render|ipolyline"
-    ipl.add_lines({
+    ipl.add_strip_lines({
         {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
     }, 2.5, {1.0, 1.0, 0.0, 1.0})
 end
