@@ -2428,6 +2428,19 @@ cSetNextItemWidth(lua_State * L) {
 }
 
 static int
+cPushItemWidth(lua_State* L) {
+	float w = (float)lua_tonumber(L, 1);
+	ImGui::PushItemWidth(w);
+	return 0;
+}
+
+static int
+cPopItemWidth(lua_State* L) {
+	ImGui::PopItemWidth();
+	return 0;
+}
+
+static int
 cSetMouseCursor(lua_State* L) {
 	int mouseCursorType = (int)luaL_optinteger(L, 1, 1);
 	ImGui::SetMouseCursor(mouseCursorType);
@@ -3425,6 +3438,8 @@ luaopen_imgui(lua_State *L) {
 		{ "GetColumnWidth", cGetColumnWidth },
 		{ "SetColumnWidth", cSetColumnWidth },
 		{ "SetNextItemWidth", cSetNextItemWidth },
+		{ "PushItemWidth", cPushItemWidth},
+		{ "PopItemWidth", cPopItemWidth},
 		{ "SetMouseCursor", cSetMouseCursor },
 		{ NULL, NULL },
 	};

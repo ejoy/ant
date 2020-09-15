@@ -31,7 +31,7 @@ function event.RUNTIME_CLOSE(repo)
 end
 
 function event.SERVER_LOG(...)
-    sender:push({...})
+    sender:push({"SERVER", ...})
 end
 
 function event.RUNTIME_LOG(data)
@@ -39,7 +39,7 @@ function event.RUNTIME_LOG(data)
     -- fp:write(data)
     -- fp:write('\n')
     -- fp:close()
-    sender:push({data})
+    sender:push({"RUNTIME", data})
 end
 
 function event.RUNTIME_CONSOLE(...)
