@@ -1,8 +1,10 @@
 local imgui     = require "imgui"
+local fw        = require "filewatch"
 local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
+
 local world
 local assetmgr
 local m = {
@@ -46,6 +48,7 @@ end
 
 function m.set_root(root)
     resourceRoot = root
+    fw.add(root:string())
 end
 
 local function constructResourceTree(fspath)
@@ -84,6 +87,11 @@ end
 function m.show(rhwi)
     if not resourceRoot then
         return
+    end
+    local type, _ = fw.select()
+    while type do
+        type, _ = fw.select()
+        m.dirty = true
     end
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, sh - uiconfig.ResourceBrowserHeight, 'F')

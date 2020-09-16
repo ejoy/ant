@@ -17,4 +17,19 @@ function utils.deep_copy(orig)
     return do_deep_copy(orig)
 end
 
+function utils.time2str(time)
+    local fmt = "%Y-%m-%d %H:%M:%S:"
+    local ti, tf = math.modf(time)
+    return os.date(fmt, ti)..string.format("%03d",math.floor(tf*1000))
+end
+
+local fs = require "filesystem"
+local lfs = require "filesystem.local"
+
+function utils.write_file(filename, data)
+    local f = assert(lfs.open(fs.path(filename):localpath(), "wb"))
+    f:write(data)
+    f:close()
+end
+
 return utils

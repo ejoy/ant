@@ -1,6 +1,7 @@
 local imgui     = require "imgui"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
+local utils     = require "common.utils"
 local cthread   = require "thread"
 local log_widget
 local m = {}
@@ -65,7 +66,7 @@ local function execCommand(command)
     table.insert(command_queue, command)
     log_widget.info({
         tag = "Console",
-        message = "[" .. uiutils.time2str(os.time()) .. "][INFO][Console]" .. command,
+        message = "[" .. utils.time2str(os.time()) .. "][INFO][Console]" .. command,
         height = log_item_height,
         line_count = 1
     })

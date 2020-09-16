@@ -1,6 +1,7 @@
 local imgui     = require "imgui"
 local uiconfig  = require "ui.config"
 local uiutils   = require "ui.utils"
+local utils     = require "common.utils"
 local cthread = require "thread"
 
 local icons
@@ -154,7 +155,7 @@ local function checkLog()
         end
         m.error({
             tag = "Thread",
-            message = "[" .. uiutils.time2str(os.time()) .. "][Thread]" .. info,
+            message = "[" .. utils.time2str(os.time()) .. "][Thread]" .. info,
             height = count * log_item_height,
             line_count = count
         })
@@ -170,7 +171,7 @@ local function checkLog()
         local type = msg[1]
         if type == "CONSOLE" then
             msg_tag = "Console"
-            msg_str = "[" .. uiutils.time2str(os.time()) .. "][" .. level:upper() .. "][" .. msg_tag .."]"
+            msg_str = "[" .. utils.time2str(os.time()) .. "][" .. level:upper() .. "][" .. msg_tag .."]"
             for i = 2, #msg do
                 msg_str = msg_str .. msg[i]
             end
@@ -185,7 +186,7 @@ local function checkLog()
         elseif type == "SERVER" then
             level = msg[3]
             msg_tag = msg[4]--"Server"
-            msg_str = "[" .. uiutils.time2str(msg[2]) .. "][" .. level:upper() .. "][".. msg_tag .. "]"
+            msg_str = "[" .. utils.time2str(msg[2]) .. "][" .. level:upper() .. "][".. msg_tag .. "]"
             for i = 5, #msg do
                 if i > 5 then
                     msg_str = msg_str .. "    "

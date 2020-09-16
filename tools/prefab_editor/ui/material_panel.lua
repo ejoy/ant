@@ -4,7 +4,11 @@ local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local vfs       = require "vfs"
 local cr        = import_package "ant.compile_resource"
-local datalist = require "datalist"
+local rhwi      = import_package 'ant.render'.hwi
+local datalist  = require "datalist"
+local stringify = import_package "ant.serialize".stringify
+local filedialog = require 'filedialog'
+local utils     = require "common.utils"
 
 local m = {}
 local world
@@ -54,7 +58,7 @@ function m.update_ui_data(eid)
             uidata.fs.text = tdata.fx.fs
             for k, v in pairs(tdata.properties) do
                 if is_sampler(k) then
-                    uidata.properties[v.stage + 1] = {{text = v.texture}, label = k}
+                    uidata.properties[v.stage + 1] = {{text = v.texture}, {text = v.tdata.path}, label = k}
                 elseif is_uniform(k) then
                     uidata.properties[k] = {v[1], v[2], v[3], v[4], speed = 0.01, min = 0, max = 1}
                 end
@@ -91,6 +95,13 @@ local EditSampler = function(eid, md)
             --     imaterial.set_property(eid, k, assetmgr.resource(tp.texture))
             -- end
         end
+        imgui.cursor.Indent()
+        imgui.widget.Text("image:")
+        imgui.cursor.SameLine()
+        if imgui.widget.InputText("##" .. tp.tdata.path .. idx, pro[2]) then
+            tp.tdata.path = tostring(pro[2].text)
+        end
+        imgui.cursor.Unindent()
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
             if payload then
@@ -107,7 +118,8 @@ local EditSampler = function(eid, md)
                 elseif string.sub(payload, -4) == ".png"
                     or string.sub(payload, -4) == ".dds" then
                     local t = assetmgr.resource(pkg_path, { compile = true })
-                    texture_handle = t._data.handle
+                    texture_handle = t.handle
+                    tp.tdata.path = pkg_path
                 end
                 if k == "s_metallic_roughness" then
                     md.tdata.properties.u_metallic_roughness_factor[4] = 1
@@ -195,7 +207,29 @@ local EditSampler = function(eid, md)
             end
             imgui.widget.EndCombo()
         end
+        imgui.cursor.SameLine()
         imgui.util.PopID()
+        if imgui.widget.Button("Save") then
+            utils.write_file(tp.texture, stringify(tp.tdata))
+            assetmgr.unload(tp.texture)
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Save As") then
+            local dialog_info = {
+                Owner = rhwi.native_window(),
+                Title = "Save As..",
+                FileTypes = {"Texture", "*.texture" }
+            }
+            local ok, path = filedialog.save(dialog_info)
+            if ok then
+                path = string.gsub(path, "\\", "/") .. ".texture"
+                local pos = string.find(path, "%.texture")
+                if #path > pos + 7 then
+                    path = string.sub(path, 1, pos + 7)
+                end
+                utils.write_file(path, stringify(tp.tdata))
+            end
+        end
         imgui.cursor.Unindent()
     end
 end
@@ -217,22 +251,77 @@ local EditUniform = function(eid, md)
     end
 end
 
+local function load_material(m, setting)
+	local fx = assetmgr.load_fx(m.fx, setting)
+	local properties = m.properties
+	if not properties and #fx.uniforms > 0 then
+		properties = {}
+	end
+	return {
+		fx = fx,
+		properties = properties,
+		state = m.state
+	}
+end
+
+
+
 function m.show(eid)
     if not mtldata then
         return
     end
     local uidata = mtldata.uidata
     local tdata = mtldata.tdata
+    local do_save = function(path)
+        local tempt = {}
+        for idx, pro in ipairs(uidata.properties) do
+            local k = pro.label
+            local tp = tdata.properties[k]
+            tempt[idx] = tp.tdata
+            tp.tdata = nil
+        end
+        utils.write_file(path, stringify(tdata))
+        for idx, pro in ipairs(uidata.properties) do
+            local k = pro.label
+            local tp = tdata.properties[k]
+            tp.tdata = tempt[idx]
+        end
+    end
     if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
+        if imgui.widget.Button("Save") then
+            do_save(mtldata_list[eid].filename)
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Save As") then
+            local dialog_info = {
+                Owner = rhwi.native_window(),
+                Title = "Save As..",
+                FileTypes = {"Material", "*.material" }
+            }
+            local ok, path = filedialog.save(dialog_info)
+            if ok then
+                path = string.gsub(path, "\\", "/") .. ".material"
+                local pos = string.find(path, "%.material")
+                if #path > pos + 8 then
+                    path = string.sub(path, 1, pos + 8)
+                end
+                do_save(path)
+            end
+        end
+
         imgui.widget.Text("file:")
         imgui.cursor.SameLine()
         if imgui.widget.InputText("##file", uidata.material_file) then
-            world[current_eid].material = tostring(uidata.material_file.text)
+            world[eid].material = tostring(uidata.material_file.text)
         end
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
             if payload then
-                print(payload)
+                world[eid].material = payload
+                local m = assetmgr.resource(payload, world)
+                local c = world[eid]._cache_prefab
+		        local m = load_material(m, c.material_setting)
+		        c.fx, c.properties, c.state = m.fx, m.properties, m.state
             end
             imgui.widget.EndDragDropTarget()
         end
@@ -242,25 +331,25 @@ function m.show(eid)
         if imgui.widget.InputText("##vs", uidata.vs) then
             tdata.fx.vs = tostring(uidata.vs.text)
         end
-        if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-            if payload then
-                print(payload)
-            end
-            imgui.widget.EndDragDropTarget()
-        end
+        -- if imgui.widget.BeginDragDropTarget() then
+        --     local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+        --     if payload then
+        --         print(payload)
+        --     end
+        --     imgui.widget.EndDragDropTarget()
+        -- end
         imgui.widget.Text("fs:")
         imgui.cursor.SameLine()
         if imgui.widget.InputText("##fs", uidata.fs) then
             tdata.fx.fs = tostring(uidata.fs.text)
         end
-        if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-            if payload then
-                print(payload)
-            end
-            imgui.widget.EndDragDropTarget()
-        end
+        -- if imgui.widget.BeginDragDropTarget() then
+        --     local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+        --     if payload then
+        --         print(payload)
+        --     end
+        --     imgui.widget.EndDragDropTarget()
+        -- end
         imgui.cursor.Unindent()
 
         if imgui.widget.TreeNode("Properties", imgui.flags.TreeNode { "DefaultOpen" }) then
