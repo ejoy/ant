@@ -4,9 +4,6 @@ $output v_color, v_texcoord0
 #include <bgfx_shader.sh>
 #include "polyline/polyline.sh"
 
-#define v_uv		v_texcoord0.xy
-#define v_counters	v_texcoord0.z
-
 #define a_linedir   a_texcoord2
 
 void main() {

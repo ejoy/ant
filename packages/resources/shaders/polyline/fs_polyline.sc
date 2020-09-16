@@ -5,29 +5,26 @@ $input v_color, v_texcoord0
 #include <bgfx_shader.sh>
 #include "polyline/polyline.sh"
 
-SAMPLER2D(s_tex,        0);
-SAMPLER2D(s_alphatex,   1);
+SAMPLER2D(s_tex, 0);
 
 void main() {
     vec4 c  = v_color;
-    vec2 uv = v_texcoord0.xy * u_repeat;
-    if(u_use_tex == 1.0 ) {
+
+    if(u_tex_enable == 1.0 ) {
+        vec2 uv = v_uv * u_repeat;
         c *= texture2D(s_tex, uv);
+        if(c.a <= u_alphaRef)
+            discard;
     }
 
-    if(u_use_alphatex == 1.0){
-        c.a *= texture2D(s_alphatex, uv).a;
-    }
+    if(u_dash_enable == 1.0){
+        //c.a *= ceil(mod(v_counters + u_dash_offset, u_dash_array) - (u_dash_array * u_dash_ratio));
+        float dash = mod(v_counters, u_dash_round);
+        c.a *= step(dash, u_dash_ratio);
 
-    if(c.a < u_alphatest)
-        discard;
-
-    float v_counters = v_texcoord0.z;
-    if(u_use_dash == 1.0){
-        c.a *= ceil(mod(v_counters + u_dash_offset, u_dash_array) - (u_dash_array * u_dash_ratio));
+        if(c.a <= u_alphaRef)
+            discard;
     }
 
     gl_FragColor = c;
-    gl_FragColor.a *= step(v_counters, u_visible);
-
 }
