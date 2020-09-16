@@ -217,6 +217,19 @@ local EditUniform = function(eid, md)
     end
 end
 
+local function load_material(m, setting)
+	local fx = assetmgr.load_fx(m.fx, setting)
+	local properties = m.properties
+	if not properties and #fx.uniforms > 0 then
+		properties = {}
+	end
+	return {
+		fx = fx,
+		properties = properties,
+		state = m.state
+	}
+end
+
 function m.show(eid)
     if not mtldata then
         return
@@ -224,15 +237,27 @@ function m.show(eid)
     local uidata = mtldata.uidata
     local tdata = mtldata.tdata
     if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
+        if imgui.widget.Button("Save") then
+
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Save As") then
+
+        end
+
         imgui.widget.Text("file:")
         imgui.cursor.SameLine()
         if imgui.widget.InputText("##file", uidata.material_file) then
-            world[current_eid].material = tostring(uidata.material_file.text)
+            world[eid].material = tostring(uidata.material_file.text)
         end
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
             if payload then
-                print(payload)
+                world[eid].material = payload
+                local m = assetmgr.resource(payload, world)
+                local c = world[eid]._cache_prefab
+		        local m = load_material(m, c.material_setting)
+		        c.fx, c.properties, c.state = m.fx, m.properties, m.state
             end
             imgui.widget.EndDragDropTarget()
         end
@@ -242,25 +267,25 @@ function m.show(eid)
         if imgui.widget.InputText("##vs", uidata.vs) then
             tdata.fx.vs = tostring(uidata.vs.text)
         end
-        if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-            if payload then
-                print(payload)
-            end
-            imgui.widget.EndDragDropTarget()
-        end
+        -- if imgui.widget.BeginDragDropTarget() then
+        --     local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+        --     if payload then
+        --         print(payload)
+        --     end
+        --     imgui.widget.EndDragDropTarget()
+        -- end
         imgui.widget.Text("fs:")
         imgui.cursor.SameLine()
         if imgui.widget.InputText("##fs", uidata.fs) then
             tdata.fx.fs = tostring(uidata.fs.text)
         end
-        if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-            if payload then
-                print(payload)
-            end
-            imgui.widget.EndDragDropTarget()
-        end
+        -- if imgui.widget.BeginDragDropTarget() then
+        --     local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+        --     if payload then
+        --         print(payload)
+        --     end
+        --     imgui.widget.EndDragDropTarget()
+        -- end
         imgui.cursor.Unindent()
 
         if imgui.widget.TreeNode("Properties", imgui.flags.TreeNode { "DefaultOpen" }) then
