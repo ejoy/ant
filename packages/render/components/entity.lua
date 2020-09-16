@@ -63,16 +63,7 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 	}
 end
 
-function ientity.create_grid_entity(name, w, h, unit, srt)
-	w = w or 64
-	h = h or 64
-	unit = unit or 1
-	local vb, ib = geolib.grid(w, h, nil, unit)
-	local mesh = create_mesh({"p3|c40niu", vb}, ib)
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
-end
-
-function ientity.create_grid_entity2(name, width, height, unit, linewidth)
+function ientity.create_grid_entity(name, width, height, unit, linewidth)
 	local ipl = world:interface "ant.render|ipolyline"
 	
 	local hw = width * 0.5
@@ -92,20 +83,25 @@ function ientity.create_grid_entity2(name, width, height, unit, linewidth)
 	end
 
 	for i=0, width do
-		local x = -hw_len + i * unit
-		add_line(x, -hh_len, x, hh_len)
+		if i ~= hw then
+			local x = -hw_len + i * unit
+			add_line(x, -hh_len, x, hh_len)
+		end
 	end
 
 	for i=0, height do
-		local y = -hh_len + i * unit
-		add_line(-hw_len, y, hw_len, y)
+		if i ~= hh then
+			local y = -hh_len + i * unit
+			add_line(-hw_len, y, hw_len, y)
+		end
 	end
 
 	local eid = ipl.add_linelist(pl, linewidth, {0.8, 0.8, 0.8, 1.0})
 	world[eid].name = name
 
-	local xeid = ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, linewidth * 1.5, {1.0, 0.0, 0.0, 1.0})
-	local zeid = ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, linewidth * 1.5, {0.0, 0.0, 1.0, 1.0})
+	local centerwidth<const> = linewidth * 2.0
+	local xeid = ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {1.0, 0.0, 0.0, 1.0})
+	local zeid = ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, 1.0, 1.0})
 
 	world[xeid].name = name .. ":centerx"
 	world[zeid].name = name .. ":centerz"

@@ -1,6 +1,8 @@
 fx:
     vs: /pkg/ant.resources/shaders/polyline/vs_polyline.sc
     fs: /pkg/ant.resources/shaders/polyline/fs_polyline.sc
+    setting:
+        surfacetype: translucent
 properties:
     s_tex:
         stage: 0
@@ -13,4 +15,5 @@ state:
     CULL: NONE
     DEPTH_TEST: LESS
     MSAA: true
-    WRITE_MASK: RGBAZ
+    WRITE_MASK: RGBA
+    BLEND: ALPHA

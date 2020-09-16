@@ -50,7 +50,7 @@ function m:init()
     camera_mgr.set_second_camera(second_camera, false)
     
     entity.create_procedural_sky()
-    entity.create_grid_entity("", nil, nil, nil, {srt={r = {0,0.92388,0,0.382683},}})
+    entity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     local light = world:instance "res/light_directional.prefab"
     
     local light_gizmo = require "gizmo.directional_light"(world)
