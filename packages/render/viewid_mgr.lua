@@ -1,9 +1,10 @@
 local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
-local max_viewid = 256
+local max_viewid<const> = 256
 
 --1~99
-local shadow_csm_start_viewid = 1
+local shadow_csm_start_viewid<const> = 1
+local max_uieditor<const> = 5
 local bindings = {
 	csm1 		= shadow_csm_start_viewid + 0,
 	csm2 		= shadow_csm_start_viewid + 1,
@@ -13,9 +14,10 @@ local bindings = {
 	pickup 		= 31,
 	pickup_blit = 32,
 
-	uiruntime	= max_viewid - 3,
-	blit		= max_viewid - 2,
-	uieditor	= max_viewid - 1,
+	uiruntime	= max_viewid - max_uieditor - 3,
+	blit		= max_viewid - max_uieditor - 2,
+
+	uieditor	= max_viewid - max_uieditor - 1,
 }
 
 local freeidx = 100
