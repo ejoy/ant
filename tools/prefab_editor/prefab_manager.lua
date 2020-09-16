@@ -2,9 +2,10 @@ local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "filesystem.local"
 local vfs           = require "vfs"
-local hierarchy   = require "hierarchy"
+local hierarchy     = require "hierarchy"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
+local utils         = require "ui.utils"
 local light_gizmo
 local camera_mgr
 local world
@@ -226,14 +227,6 @@ function m:add_prefab(filename)
     hierarchy:add(mount_root, {template = entity_template, filename = tostring(relative_path), children = entities}, self.root)
 end
 
-local fs = require "filesystem"
-local lfs = require "filesystem.local"
-
-local function write_file(filename, data)
-    local f = assert(lfs.open(fs.path(filename):localpath(), "wb"))
-    f:write(data)
-    f:close()
-end
 
 local utils = require "common.utils"
 
@@ -267,7 +260,7 @@ function m:save_prefab(filename)
     hierarchy:update_prefab_template(assetmgr.edit(self.prefab))
     self.entities.__class = self.prefab.__class
     if not saveas then
-        write_file(filename, stringify(self.entities.__class))
+        utils.write_file(filename, stringify(self.entities.__class))
         return
     end
     local data = self.entities.__class
@@ -299,7 +292,7 @@ function m:save_prefab(filename)
             end
         end
     end
-    write_file(filename, stringify(data))
+    utils.write_file(filename, stringify(data))
     self:open_prefab(tostring(fs.path "":localpath()) .. filename)
     world:pub {"ResourceBrowser", "dirty"}
 end

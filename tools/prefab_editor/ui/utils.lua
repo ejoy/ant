@@ -48,10 +48,4 @@ function m.imguiToolbar(icon, tooltip, active)
     return r
 end
 
-function m.time2str(time)
-    local fmt = "%Y-%m-%d %H:%M:%S:"
-    local ti, tf = math.modf(time)
-    return os.date(fmt, ti)..string.format("%03d",math.floor(tf*1000))
-end
-
 return m

@@ -20,7 +20,6 @@ local toolbar = require "ui.toolbar"(world, asset_mgr)
 local scene_view = require "ui.scene_view"(world, asset_mgr)
 local inspector = require "ui.inspector"(world)
 local uiconfig = require "ui.config"
-local uiutils = require "ui.utils"
 local prefab_mgr = require "prefab_manager"(world)
 local menu = require "ui.menu"(world, prefab_mgr)
 local camera_mgr = require "camera_manager"(world)
