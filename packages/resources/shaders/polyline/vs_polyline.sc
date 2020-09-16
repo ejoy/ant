@@ -41,7 +41,7 @@ void main() {
 	}
 
 	vec2 offset = calc_offset(dir.xy, aspect, w);
-	finalPosition.xy += offset;
+	finalPosition.xy += offset * a_side;
 
 	gl_Position = finalPosition;
 
