@@ -51,7 +51,7 @@ local console = {
         end
 }
 
-local function execCommand(command)
+local function exec_command(command)
     history_pos = -1
     local exist_idx = 0
     for i, v in ipairs(command_queue) do
@@ -75,7 +75,7 @@ local function execCommand(command)
     end
 end
 
-local function showInput()
+local function show_input()
     imgui.widget.Text(">")
     imgui.cursor.SameLine()
     local reclaim_focus = false
@@ -83,7 +83,7 @@ local function showInput()
     if imgui.widget.InputText("##SingleLineInput", console) then
         local command = tostring(console.text)
         if command ~= "" then
-            execCommand(command)
+            exec_command(command)
             console.text = ""
         end
         reclaim_focus = true
@@ -98,10 +98,10 @@ end
 function m.show(rhwi)
     --log_widget.checkLog()
     local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, sh - uiconfig.ConsoleWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(sw, uiconfig.ConsoleWidgetHeight, 'F')
+    imgui.windows.SetNextWindowPos(0, sh - uiconfig.BottomWidgetHeight, 'F')
+    imgui.windows.SetNextWindowSize(sw, uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Console", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
-        showInput()
+        show_input()
         log_widget.showConsole()
     end
 end

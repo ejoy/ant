@@ -21,12 +21,7 @@ local log_tags = {
     "Server",
     "Console"
 }
--- 'trace'
--- 'debug'
--- 'info'
--- 'warn'
--- 'error'
--- 'fatal'
+
 local LEVEL_INFO = 0x0000001
 local LEVEL_WARN = 0x0000002
 local LEVEL_ERROR = 0x0000004

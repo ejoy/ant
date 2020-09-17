@@ -7,8 +7,8 @@ local hierarchy = require "hierarchy"
 local m = {}
 local world
 local asset_mgr
-local sourceEid = nil
-local targetEid = nil
+local source_eid = nil
+local target_eid = nil
 local gizmo
 local iom
 local iss
@@ -59,8 +59,8 @@ local function show_scene_node(node)
             if imgui.widget.BeginDragDropTarget() then
                 local payload = imgui.widget.AcceptDragDropPayload("DragNode")
                 if payload then
-                    sourceEid = tonumber(payload)
-                    targetEid = eid
+                    source_eid = tonumber(payload)
+                    target_eid = eid
                 end
                 imgui.widget.EndDragDropTarget()
             end
@@ -124,17 +124,17 @@ function m.show(rhwi)
         for i, child in ipairs(hierarchy.root.children) do
             imgui.cursor.Columns(2, "SceneColumns", true)
             imgui.cursor.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - 60)
-            sourceEid = nil
-            targetEid = nil
+            source_eid = nil
+            target_eid = nil
             show_scene_node(child)
             imgui.cursor.NextColumn()
-            if sourceEid and targetEid then
-                hierarchy:set_parent(sourceEid, targetEid)
-                local sourceWorldMat = iom.calc_worldmat(sourceEid)
-                local targetWorldMat = iom.calc_worldmat(targetEid)
-                iom.set_srt(sourceEid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
-                iss.set_parent(sourceEid, targetEid)
-                world:pub {"EntityEvent", "parent", sourceEid}
+            if source_eid and target_eid then
+                hierarchy:set_parent(source_eid, target_eid)
+                local sourceWorldMat = iom.calc_worldmat(source_eid)
+                local targetWorldMat = iom.calc_worldmat(target_eid)
+                iom.set_srt(source_eid, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
+                iss.set_parent(source_eid, target_eid)
+                world:pub {"EntityEvent", "parent", source_eid}
             end
             imgui.cursor.Columns(1)
         end

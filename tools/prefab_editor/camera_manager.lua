@@ -4,22 +4,21 @@ local world
 local iom
 local icamera
 local imaterial
-local computil
 local ies
 local m = {
-    FRUSTUM_LEFT = 1,
-    FRUSTUM_TOP = 2,
-    FRUSTUM_RIGHT = 3,
-    FRUSTUM_BOTTOM = 4,
-    camera_list = {}
+    FRUSTUM_LEFT    = 1,
+    FRUSTUM_TOP     = 2,
+    FRUSTUM_RIGHT   = 3,
+    FRUSTUM_BOTTOM  = 4,
+    camera_list     = {}
 }
 
-local normal_color = {1, 0.3, 0.3, 1}
-local normal_color_i = 0xff5050ff
-local highlight_color = {1, 1, 0, 1}
-local DefaultNearClip = 0.1
-local DefaultFarClip  = 100
-local DefaultFOV      = 30
+local normal_color      = {1, 0.3, 0.3, 1}
+local normal_color_i    = 0xff5050ff
+local highlight_color   = {1, 1, 0, 1}
+local default_near_clip = 0.1
+local default_far_clip  = 100
+local default_fov       = 30
         
 function m.set_second_camera(eid, show)
     local rc = world[eid]._rendercache
@@ -224,7 +223,7 @@ function m.ceate_camera()
     local new_camera, camera_template = icamera.create {
         eyepos = {2, 2, -2, 1},
         viewdir = {-2, -1, 2, 0},
-        frustum = {n = DefaultNearClip, f = DefaultFarClip, aspect = main_frustum.aspect, fov = main_frustum.fov },
+        frustum = {n = default_near_clip, f = default_far_clip, aspect = main_frustum.aspect, fov = main_frustum.fov },
         updir = {0, 1, 0},
         name = gen_camera_name()
     }
@@ -252,8 +251,8 @@ function m.add_recorder_frame(eid, idx)
     if not recorder then return end
     icamera_recorder.add(recorder, m.main_camera, idx)
     local idx = #world[recorder].frames
-    world[recorder].frames[idx].nearclip = DefaultNearClip
-    world[recorder].frames[idx].farclip = DefaultFarClip
+    world[recorder].frames[idx].nearclip = default_near_clip
+    world[recorder].frames[idx].farclip = default_far_clip
 end
 
 function m.delete_recorder_frame(eid, idx)
@@ -306,7 +305,6 @@ return function(w)
     iom         = world:interface "ant.objcontroller|obj_motion"
     icamera     = world:interface "ant.camera|camera"
     imaterial   = world:interface "ant.asset|imaterial"
-    computil    = world:interface "ant.render|entity"
     ies         = world:interface "ant.scene|ientity_state"
     icamera_recorder = world:interface "ant.camera|icamera_recorder"
     return m
