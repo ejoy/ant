@@ -1,7 +1,7 @@
 Ant 游戏引擎
 =====
 
-### 预编译 dll 在 bin 下，以 submodule 方式引用。第一次需要用以下指令初始化：
+### 更新并初始化第三方库：
 
 > git submodule update --init
 
@@ -26,9 +26,13 @@ echo "export PATH=\$MINGW/bin:\$PATH" >> ~/.bash_profile
 pacman -Syu make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
 ```
 
-### 下载FBX2glTF
+#### 关于模型的转换工具
+引擎支持直接支持glb（glTF文件的二进制，但不支持二进制的glTF格式）文件格式，需要使用FBX的话，可以使用FBX2glTF工具。
 
+- FBX2glTF
 下载[FBX2glTF](https://github.com/facebookincubator/FBX2glTF/releases),并放到3rd/bin目录下
+- glTF转glb工具
+https://github.com/KhronosGroup/glTF#gltf-tools
 
 
 ### 编译
