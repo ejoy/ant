@@ -3,7 +3,6 @@
 static int DEBUG_HOST = 0;	// host L in client VM
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
 
-void probe(rlua_State* cL, lua_State* hL, const char* name);
 int  event(rlua_State* cL, lua_State* hL, const char* name);
 
 rlua_State *
@@ -48,7 +47,9 @@ clear_client(lua_State *L) {
 static int
 lhost_clear(lua_State *L) {
 	rlua_State *cL = get_client(L);
-	probe(cL, L, "exit");
+	if (cL) {
+		event(cL, L, "exit");
+	}
 	clear_client(L);
 	return 0;
 }
@@ -132,16 +133,6 @@ lhost_start(lua_State *L) {
 }
 
 static int
-lhost_probe(lua_State *L) {
-	rlua_State* cL = get_client(L);
-	if (!cL) {
-		return 0;
-	}
-	probe(cL, L, luaL_checkstring(L, 1));
-	return 0;
-}
-
-static int
 lhost_event(lua_State *L) {
 	rlua_State* cL = get_client(L);
 	if (!cL) {
@@ -172,7 +163,6 @@ int luaopen_remotedebug(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "start", lhost_start },
 		{ "clear", lhost_clear },
-		{ "probe", lhost_probe },
 		{ "event", lhost_event },
 #if defined(_WIN32) && !defined(RLUA_DISABLE)
 		{ "a2u",   la2u },

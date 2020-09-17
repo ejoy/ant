@@ -71,7 +71,7 @@ function camera_controller_sys:data_changed()
 				if state == "MOVE" and mouse_lastx then
 					local ux = (x - mouse_lastx) / dpi_x * kMouseSpeed
 					local uy = (y - mouse_lasty) / dpi_y * kMouseSpeed
-					iom.rotate(cameraeid, uy, ux)
+					iom.rotate_forward_vector(cameraeid, uy, ux)
 				end
 				mouse_lastx, mouse_lasty = x, y
 			end

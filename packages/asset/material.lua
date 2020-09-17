@@ -2,13 +2,8 @@ local ecs = ...
 local world = ecs.world
 
 local assetmgr = require "asset"
-local mt = ecs.transform "material_transform"
+local mpt = ecs.transform "material_prefab_transform"
 local ext_material = require "ext_material"
-
-local mst = ecs.transform "material_setting_transform"
-function mst.process_prefab(e)
-	e._cache_prefab.material_setting = {}
-end
 
 local function load_material(m, setting)
 	local fx = assetmgr.load_fx(m.fx, setting)
@@ -23,7 +18,7 @@ local function load_material(m, setting)
 	}
 end
 
-function mt.process_prefab(e)
+function mpt.process_prefab(e)
 	local m = e.material
 	if m then
 		local c = e._cache_prefab
@@ -32,8 +27,13 @@ function mt.process_prefab(e)
 	end
 end
 
-local im_class = ecs.interface "imaterial"
-function im_class.load(materialpath, setting)
+local mst = ecs.transform "material_setting_transform"
+function mst.process_prefab(e)
+	e._cache_prefab.material_setting = {}
+end
+
+local imaterial = ecs.interface "imaterial"
+function imaterial.load(materialpath, setting)
 	local m = world.component "material"(materialpath)
 	return load_material(m, setting)
 end
@@ -51,7 +51,7 @@ end
 
 local function set_texture(p)
 	local v = p.value
-	return bgfx.set_texture(v.stage, p.handle, v.texture.handle)
+	return bgfx.set_texture(v.stage, p.handle, v.texture.handle, v.texture.flags)
 end
 
 local function update_uniform(p, dst)
@@ -81,7 +81,7 @@ local function update_uniform(p, dst)
 	end
 end
 
-function im_class.set_property(eid, who, what)
+function imaterial.set_property(eid, who, what)
 	if world:interface "ant.render|system_properties".get(who) then
 		error(("global property could not been set:%s"):format(who))
 	end
@@ -93,19 +93,14 @@ function im_class.set_property(eid, who, what)
 		return
 	end
 	if p.type == "s" then
-		if type(what) ~= "number" then
-			error(("texture property should pass texture handle%s"):fromat(who))
+		if type(what) ~= "table" then
+			error(("texture property must resource data:%s"):fromat(who))
 		end
 
 		if p.ref then
 			p.ref = nil
-			local v = p.value
-			p.value = {
-				stage = v.stage,
-				texture = {},
-			}
 		end
-		p.value.texture.handle = what
+		p.value = what
 		p.set = set_texture
 	else
 		--must be uniform: vector or matrix
@@ -126,6 +121,11 @@ function im_class.set_property(eid, who, what)
 	end
 end
 
+function imaterial.has_property(eid, who)
+	local rc = world[eid]._rendercache
+	return rc.properties and rc.properties[who] ~= nil
+end
+
 local function which_type(u)
 	local t = type(u)
 	if t == "table" then
@@ -136,7 +136,7 @@ local function which_type(u)
 	return "v"
 end
 
-function im_class.which_set_func(u)
+function imaterial.which_set_func(u)
 	local t = which_type(u)
 	if t == "s" then
 		return set_texture
@@ -153,4 +153,59 @@ function m:init()
 		return assetmgr.resource(self)
 	end
 	return ext_material.init(self)
+end
+
+local mt = ecs.transform "material_transform"
+
+local function to_v(t)
+	if t == nil then
+		return
+	end
+	assert(type(t) == "table")
+	if t.stage then
+		return t
+	end
+	if type(t[1]) == "number" then
+		return #t == 4 and math3d.ref(math3d.vector(t)) or math3d.ref(math3d.matrix(t))
+	end
+	local res = {}
+	for i, v in ipairs(t) do
+		if type(v) == "table" then
+			res[i] = #v == 4 and math3d.ref(math3d.vector(v)) or math3d.ref(math3d.matrix(v))
+		else
+			res[i] = v
+		end
+	end
+	return res
+end
+
+local function generate_properties(uniforms, properties)
+	local isp 		= world:interface "ant.render|system_properties"
+	local new_properties
+	properties = properties or {}
+	if uniforms and #uniforms > 0 then
+		new_properties = {}
+		for _, u in ipairs(uniforms) do
+			local n = u.name
+			local v = to_v(properties[n]) or isp.get(n)
+			new_properties[n] = {
+				value = v,
+				handle = u.handle,
+				type = u.type,
+				set = imaterial.which_set_func(v),
+				ref = true,
+			}
+		end
+	end
+
+	return new_properties
+end
+
+function mt.process_entity(e)
+	local rc = e._rendercache
+	local c = e._cache_prefab
+
+	rc.fx 			= c.fx
+	rc.properties 	= c.fx and generate_properties(c.fx.uniforms, c.properties) or nil
+	rc.state 		= c.state
 end

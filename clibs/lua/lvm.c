@@ -634,7 +634,8 @@ static void copy2buff (StkId top, int n, char *buff) {
 ** from 'L->top - total' up to 'L->top - 1'.
 */
 void luaV_concat (lua_State *L, int total) {
-  lua_assert(total >= 2);
+  if (total == 1)
+    return;  /* "all" values already concatenated */
   do {
     StkId top = L->top;
     int n = 2;  /* number of elements handled in this pass (at least 2) */
@@ -840,10 +841,8 @@ void luaV_finishOp (lua_State *L) {
       int a = GETARG_A(inst);      /* first element to concatenate */
       int total = cast_int(top - 1 - (base + a));  /* yet to concatenate */
       setobjs2s(L, top - 2, top);  /* put TM result in proper position */
-      if (total > 1) {  /* are there elements to concat? */
-        L->top = top - 1;  /* top is one after last element (at top-2) */
-        luaV_concat(L, total);  /* concat them (may yield again) */
-      }
+      L->top = top - 1;  /* top is one after last element (at top-2) */
+      luaV_concat(L, total);  /* concat them (may yield again) */
       break;
     }
     default: {
@@ -1102,9 +1101,9 @@ void luaV_finishOp (lua_State *L) {
 /* idem, but without changing the stack */
 #define halfProtectNT(exp)  (savepc(L), (exp))
 
-
+/* 'c' is the limit of live values in the stack */
 #define checkGC(L,c)  \
-	{ luaC_condGC(L, L->top = (c),  /* limit of live values */ \
+	{ luaC_condGC(L, (savepc(L), L->top = (c)), \
                          updatetrap(ci)); \
            luai_threadyield(L); }
 
@@ -1635,7 +1634,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         while (!ttisfunction(s2v(ra))) {  /* not a function? */
           luaD_tryfuncTM(L, ra);  /* try '__call' metamethod */
           b++;  /* there is now one extra argument */
-          checkstackp(L, 1, ra);
+          checkstackGCp(L, 1, ra);
         }
         if (!ttisLclosure(s2v(ra))) {  /* C function? */
           luaD_call(L, ra, LUA_MULTRET);  /* call it */
@@ -1792,11 +1791,10 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         vmbreak;
       }
       vmcase(OP_VARARGPREP) {
-        luaT_adjustvarargs(L, GETARG_A(i), ci, cl->p);
-        updatetrap(ci);
+        ProtectNT(luaT_adjustvarargs(L, GETARG_A(i), ci, cl->p));
         if (trap) {
           luaD_hookcall(L, ci);
-          L->oldpc = pc + 1;  /* next opcode will be seen as a "new" line */
+          L->oldpc = 1;  /* next opcode will be seen as a "new" line */
         }
         updatebase(ci);  /* function has new base after adjustment */
         vmbreak;

@@ -12,9 +12,11 @@ local ies = world:interface "ant.scene|ientity_state"
 
 local imaterial = world:interface "ant.asset|imaterial"
 local queue = require "queue"
-local prefab_view = require "prefab_view"
-local utils = require "mathutils"
-
+local hierarchy = require "hierarchy"
+local utils = require "mathutils"(world)
+local worldedit = import_package "ant.editor".worldedit(world)
+local global_data = require "common.global_data"
+local camera_mgr = require "camera_manager"(world)
 local move_axis
 local rotate_axis
 local uniform_scale = false
@@ -55,7 +57,6 @@ local localSpace = false
 local global_axis_eid
 
 local axis_plane_area
-local camera_eid
 local gizmo = {
     mode = SELECT,
 	--move
@@ -184,24 +185,16 @@ function gizmo:click_axis_or_plane(axis)
 	end
 end
 
-function gizmo:show_rotate_fan(show)
+function gizmo:hide_rotate_fan(rotAxis)
 	local state = "visible"
-	ies.set_state(self.rx.eid[3], state, show)
-	ies.set_state(self.rx.eid[4], state, show)
-	ies.set_state(self.ry.eid[3], state, show)
-	ies.set_state(self.ry.eid[4], state, show)
-	ies.set_state(self.rz.eid[3], state, show)
-	ies.set_state(self.rz.eid[4], state, show)
-	ies.set_state(self.rw.eid[3], state, show)
-	ies.set_state(self.rw.eid[4], state, show)
-	world[self.rx.eid[3]]._rendercache.ib.num = 0
-	world[self.rx.eid[4]]._rendercache.ib.num = 0
-	world[self.ry.eid[3]]._rendercache.ib.num = 0
-	world[self.ry.eid[4]]._rendercache.ib.num = 0
-	world[self.rz.eid[3]]._rendercache.ib.num = 0
-	world[self.rz.eid[4]]._rendercache.ib.num = 0
-	world[self.rw.eid[3]]._rendercache.ib.num = 0
-	world[self.rw.eid[4]]._rendercache.ib.num = 0
+	ies.set_state(self.rx.eid[3], state, false)
+	ies.set_state(self.rx.eid[4], state, false)
+	ies.set_state(self.ry.eid[3], state, false)
+	ies.set_state(self.ry.eid[4], state, false)
+	ies.set_state(self.rz.eid[3], state, false)
+	ies.set_state(self.rz.eid[4], state, false)
+	ies.set_state(self.rw.eid[3], state, false)
+	ies.set_state(self.rw.eid[4], state, false)
 end
 
 function gizmo:show_move(show)
@@ -314,29 +307,22 @@ function cmd_queue:record(cmd)
 	queue.push_last(self.cmd_undo, cmd)
 end
 
-local function showRotateMeshByAxis(show, axis)
-	ies.set_state(axis.eid[3], "visible", show)
-	ies.set_state(axis.eid[4], "visible", show)
-	world[axis.eid[3]]._rendercache.ib.start = 0
-	world[axis.eid[4]]._rendercache.ib.start = 0
-	world[axis.eid[3]]._rendercache.ib.num = 0
-	world[axis.eid[4]]._rendercache.ib.num = 0
-end
-
 function gizmo:set_target(eid)
-	if self.target_eid == eid then
+	local target = hierarchy:get_select_adapter(eid)
+	if self.target_eid == target then
 		return
 	end
-	self.target_eid = eid
-	if eid then
+	local old_target = self.target_eid
+	self.target_eid = target
+	if target then
 		self:set_position()
 		self:set_rotation()
 		self:update_scale()
 		self:updata_uniform_scale()
 		self:update_axis_plane()
 	end
-	gizmo:show_by_state(eid ~= nil)
-	world:pub {"Gizmo","ontarget"}
+	gizmo:show_by_state(target ~= nil)
+	world:pub {"Gizmo","ontarget", old_target, target}
 end
 
 function gizmo:reset_move_axis_color()
@@ -381,9 +367,9 @@ end
 
 function gizmo:updata_uniform_scale()
 	if not self.rw.eid[1] then return end
-	self.rw.dir = math3d.totable(iom.get_direction(camera_eid))
+	self.rw.dir = math3d.totable(iom.get_direction(camera_mgr.main_camera))
 	--update_camera
-	local r = iom.get_rotation(camera_eid)
+	local r = iom.get_rotation(camera_mgr.main_camera)
 	-- local s,r,t = math3d.srt(world[cameraeid].transform)
 	iom.set_rotation(self.rw.eid[1], r)
 	iom.set_rotation(self.rw.eid[3], r)
@@ -403,7 +389,14 @@ function gizmo:set_position(worldpos)
 	end
 	local newpos
 	if worldpos then
-		local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.calc_worldmat(world[gizmo.target_eid].parent)), worldpos, 1))
+		local parent_worldmat = iom.calc_worldmat(world[gizmo.target_eid].parent)
+		local localPos
+		if not parent_worldmat then
+			localPos = worldpos
+		else
+			localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), worldpos, 1))
+		end
+		
 		iom.set_position(self.target_eid, localPos)
 		newpos = worldpos
 	else
@@ -469,7 +462,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible",
-			transform =  {
+			transform = {
 				s = math3d.ref(math3d.vector(0.2, 10, 0.2)),
 				r = local_rotator,
 				t = cylindere_t,
@@ -477,11 +470,9 @@ local function create_arrow_widget(axis_root, axis_str)
 			material = "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str
-		},
-		-- action = {
-        --     mount = axis_root,
-		-- },
+		}
 	}
+	ies.set_state(cylindereid, "auxgeom", true)
 	iss.set_parent(cylindereid, axis_root)
 	local coneeid = world:create_entity{
 		policy = {
@@ -492,15 +483,13 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			scene_entity = true,
 			state = ies.create_state "visible",
-			transform =  {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
+			transform = {s = {1, 1.5, 1, 0}, r = local_rotator, t = cone_t},
 			material = "/pkg/ant.resources/materials/t_gizmos.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str
-		},
-		-- action = {
-        --     mount = axis_root,
-		-- },
+		}
 	}
+	ies.set_state(coneeid, "auxgeom", true)
 	iss.set_parent(coneeid, axis_root)
 	if axis_str == "x" then
 		gizmo.tx.eid = {cylindereid, coneeid}
@@ -516,12 +505,12 @@ function gizmo_sys:init()
 end
 
 local function mouseHitPlane(screen_pos, plane_info)
-	return utils.ray_hit_plane(iom.ray(camera_eid, screen_pos), plane_info)
+	return utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, screen_pos), plane_info)
 end
 
 local function updateGlobalAxis()
-	local sw, sh = rhwi.screen_size()
-	local worldPos = mouseHitPlane({50, sh - 50}, {dir = {0,1,0}, pos = {0,0,0}})
+	if not global_data.viewport then return end
+	local worldPos = mouseHitPlane({50, global_data.viewport.h  - 50}, {dir = {0,1,0}, pos = {0,0,0}})
 	if worldPos then
 		iom.set_position(global_axis_eid, math3d.totable(worldPos))
 	end
@@ -532,10 +521,10 @@ local function updateGlobalAxis()
 end
 
 function gizmo:update_scale()
-	local viewdir = iom.get_direction(camera_eid)
-	local eyepos = iom.get_position(camera_eid)
+	local viewdir = iom.get_direction(camera_mgr.main_camera)
+	local eyepos = iom.get_position(camera_mgr.main_camera)
 	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(iom.get_position(self.root_eid), eyepos))
-	gizmo_scale = project_dist * 0.25
+	gizmo_scale = project_dist * 0.35
 	if self.root_eid then
 		iom.set_scale(self.root_eid, gizmo_scale)
 	end
@@ -547,87 +536,6 @@ local testcylinder
 local testcubeid
 local testconeeid
 function gizmo_sys:post_init()
-	camera_eid = world:singleton_entity "main_queue".camera_eid
-
-	prefab_view:set_root(world:create_entity{
-		policy = {
-			"ant.general|name",
-			"ant.scene|transform_policy",
-		},
-		data = {
-			transform = {},
-			name = "Root",
-		}
-	})
-	print("state : ", ies.create_state "visible|selectable")
-	testcylinder = world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-			"ant.scene|hierarchy_policy",
-			"ant.objcontroller|select",
-		},
-		data = {
-			scene_entity = true,
-			state = ies.create_state "visible|selectable",
-			transform =  {
-				s= 30,
-				t={1, 0.5, 0, 0}
-			},
-			material = "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
-			name = "cylinder",
-		}
-	}
-	prefab_view:add(testcylinder)
-
-	testcubeid = world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-			"ant.scene|hierarchy_policy",
-			"ant.objcontroller|select",
-		},
-		data = {
-			scene_entity = true,
-			state = ies.create_state "visible|selectable",
-			transform =  {
-				s= 50,
-				t={0, 0.5, 1, 0}
-			},
-			material = "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-			name = "cube",
-		}
-	}
-	imaterial.set_property(testcubeid, "u_color", {0.5, 0.5, 0.5, 1})
-
-	prefab_view:add(testcubeid)
-	world:pub { "Scene", "create", testcubeid }
-
-	testconeeid = world:create_entity{
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-			"ant.scene|hierarchy_policy",
-			"ant.objcontroller|select",
-		},
-		data = {
-			scene_entity = true,
-			state = ies.create_state "visible|selectable",
-			transform = {
-				s=50,
-				t={-1, 0.5, 0}
-			},
-			material = "/pkg/ant.resources/materials/singlecolor.material",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
-			name = "cone"
-		},
-	}
-	imaterial.set_property(testconeeid, "u_color", {0, 0.5, 0.5, 1})
-	prefab_view:add(testconeeid)
-	world:pub { "Scene", "create", testconeeid }
-
 	local srt = {r = math3d.quaternion{0, 0, 0}, t = {0,0,0,1}}
 	local axis_root = world:create_entity{
 		policy = {
@@ -673,6 +581,7 @@ function gizmo_sys:post_init()
 		{t = {move_plane_offset, move_plane_offset, 0, 1}, s = {move_plane_scale, 1, move_plane_scale, 0}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})},
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_xy")
+	ies.set_state(plane_xy_eid, "auxgeom", true)
 	imaterial.set_property(plane_xy_eid, "u_color", gizmo.txy.color)
 	iss.set_parent(plane_xy_eid, axis_root)
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
@@ -681,6 +590,7 @@ function gizmo_sys:post_init()
 		{t = {0, move_plane_offset, move_plane_offset, 1}, s = {move_plane_scale, 1, move_plane_scale, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_yz")
+	ies.set_state(plane_yz_eid, "auxgeom", true)
 	imaterial.set_property(plane_yz_eid, "u_color", gizmo.tyz.color)
 	iss.set_parent(plane_yz_eid, axis_root)
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
@@ -689,6 +599,7 @@ function gizmo_sys:post_init()
 		{t = {move_plane_offset, 0, move_plane_offset, 1}, s = {move_plane_scale, 1, move_plane_scale, 0}},
 		"/pkg/ant.resources/materials/t_gizmos.material",
 		"plane_zx")
+	ies.set_state(plane_zx_eid, "auxgeom", true)
 	imaterial.set_property(plane_zx_eid, "u_color", gizmo.tzx.color)
 	iss.set_parent(plane_zx_eid, axis_root)
 	gizmo.tzx.eid = {plane_zx_eid, plane_zx_eid}
@@ -696,6 +607,7 @@ function gizmo_sys:post_init()
 
 	-- roate axis
 	local uniform_rot_eid = computil.create_circle_entity(uniform_rot_axis_len, rotate_slices, {}, "rotate_gizmo_uniform")
+	ies.set_state(uniform_rot_eid, "auxgeom", true)
 	imaterial.set_property(uniform_rot_eid, "u_color", COLOR_GRAY)
 	iss.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
@@ -715,9 +627,11 @@ function gizmo_sys:post_init()
 
 	local function create_rotate_axis(axis, line_end, circle_trans)
 		local line_eid = computil.create_line_entity({}, {0, 0, 0}, line_end)
+		ies.set_state(line_eid, "auxgeom", true)
 		imaterial.set_property(line_eid, "u_color", axis.color)
 		iss.set_parent(line_eid, rot_circle_root)
 		local rot_eid = computil.create_circle_entity(axis_len, rotate_slices, circle_trans, "rotate gizmo circle")
+		ies.set_state(rot_eid, "auxgeom", true)
 		imaterial.set_property(rot_eid, "u_color", axis.color)
 		iss.set_parent(rot_eid, rot_circle_root)
 		local rot_ccw_mesh_eid = create_rotate_fan(axis_len, circle_trans)
@@ -738,18 +652,21 @@ function gizmo_sys:post_init()
 			},
 			data = {
 				scene_entity = true,
-				state = ies.create_state "visible",
+				state = ies.create_state "visible|selectable",
 				transform = srt,
 				material = "/pkg/ant.resources/materials/t_gizmos.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name
 			}
 		}
+		ies.set_state(eid, "auxgeom", true)
+
 		imaterial.set_property(eid, "u_color", color)
 		return eid
 	end
 	-- scale axis cube
 	local cube_eid = create_scale_cube({s = axis_cube_scale}, COLOR_GRAY, "uniform scale")
+	ies.set_state(cube_eid, "auxgeom", true)
 	iss.set_parent(cube_eid, axis_root)
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
@@ -774,14 +691,17 @@ function gizmo_sys:post_init()
 			name = "global axis root",
 		},
 	}
-
+	ies.set_state(global_axis_eid, "auxgeom", true)
 	local new_eid = computil.create_line_entity({}, {0, 0, 0}, {0.1, 0, 0})
+	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", COLOR_X)
 	iss.set_parent(new_eid, global_axis_eid)
 	new_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0.1, 0})
+	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", COLOR_Y)
 	iss.set_parent(new_eid, global_axis_eid)
 	new_eid = computil.create_line_entity({}, {0, 0, 0}, {0, 0, 0.1})
+	ies.set_state(new_eid, "auxgeom", true)
 	imaterial.set_property(new_eid, "u_color", COLOR_Z)
 	iss.set_parent(new_eid, global_axis_eid)
 	updateGlobalAxis()
@@ -811,7 +731,7 @@ function gizmo:update_axis_plane()
 	worldDir = math3d.vector(gizmoDirToWorld(DIR_X))
 	local plane_yz = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
 
-	local eyepos = iom.get_position(camera_eid)
+	local eyepos = iom.get_position(camera_mgr.main_camera)
 
 	local project = math3d.sub(eyepos, math3d.mul(plane_xy.n, math3d.dot(plane_xy.n, eyepos) + plane_xy.d))
 	local invmat = math3d.inverse(iom.srt(self.root_eid))
@@ -833,14 +753,6 @@ end
 local keypress_mb = world:sub{"keyboard"}
 
 local pickup_mb = world:sub {"pickup"}
-
-local icamera = world:interface "ant.camera|camera"
-local function worldToScreen(world_pos)
-	local vp = icamera.calc_viewproj(camera_eid)
-	local proj_pos = math3d.totable(math3d.transform(vp, world_pos, 1))
-	local sw, sh = rhwi.screen_size()
-	return {(1 + proj_pos[1] / proj_pos[4]) * sw * 0.5, (1 - proj_pos[2] / proj_pos[4]) * sh * 0.5, 0}
-end
 
 local rotateHitRadius = 0.02
 local moveHitRadiusPixel = 10
@@ -923,7 +835,7 @@ local function selectAxis(x, y)
 	end
 	
 	local gizmo_obj_pos = iom.get_position(gizmo.root_eid)
-	local start = worldToScreen(gizmo_obj_pos)
+	local start = utils.world_to_screen(camera_mgr.main_camera, gizmo_obj_pos)
 	uniform_scale = false
 	-- uniform scale
 	local hp = {x, y, 0}
@@ -943,20 +855,20 @@ local function selectAxis(x, y)
 	end
 	-- by axis
 	local line_len = axis_len * gizmo_scale
-	local end_x = worldToScreen(math3d.add(gizmo_obj_pos, math3d.vector(gizmoDirToWorld({line_len, 0, 0}))))
+	local end_x = utils.world_to_screen(camera_mgr.main_camera, math3d.add(gizmo_obj_pos, math3d.vector(gizmoDirToWorld({line_len, 0, 0}))))
 	
 	local axis = (gizmo.mode == SCALE) and gizmo.sx or gizmo.tx
 	if utils.point_to_line_distance2D(start, end_x, hp) < moveHitRadiusPixel then
 		return axis
 	end
 
-	local end_y = worldToScreen(math3d.add(gizmo_obj_pos, math3d.vector(gizmoDirToWorld({0, line_len, 0}))))
+	local end_y = utils.world_to_screen(camera_mgr.main_camera, math3d.add(gizmo_obj_pos, math3d.vector(gizmoDirToWorld({0, line_len, 0}))))
 	axis = (gizmo.mode == SCALE) and gizmo.sy or gizmo.ty
 	if utils.point_to_line_distance2D(start, end_y, hp) < moveHitRadiusPixel then
 		return axis
 	end
 
-	local end_z = worldToScreen(math3d.add(gizmo_obj_pos, math3d.vector(gizmoDirToWorld({0, 0, line_len}))))
+	local end_z = utils.world_to_screen(camera_mgr.main_camera, math3d.add(gizmo_obj_pos, math3d.vector(gizmoDirToWorld({0, 0, line_len}))))
 	axis = (gizmo.mode == SCALE) and gizmo.sz or gizmo.tz
 	if utils.point_to_line_distance2D(start, end_z, hp) < moveHitRadiusPixel then
 		return axis
@@ -1038,7 +950,7 @@ local function moveGizmo(x, y)
 			deltaPos = {lastGizmoPos[1] + deltapos[1], lastGizmoPos[2] + deltapos[2], lastGizmoPos[3] + deltapos[3]}
 		end
 	else
-		local newOffset = utils.view_to_axis_constraint(iom.ray(camera_eid, {x, y}), iom.get_position(camera_eid), gizmoDirToWorld(move_axis.dir), lastGizmoPos)
+		local newOffset = utils.view_to_axis_constraint(iom.ray(camera_mgr.main_camera, {x, y}), iom.get_position(camera_mgr.main_camera), gizmoDirToWorld(move_axis.dir), lastGizmoPos)
 		local deltaOffset = math3d.totable(math3d.sub(newOffset, initOffset))
 		deltaPos = {lastGizmoPos[1] + deltaOffset[1], lastGizmoPos[2] + deltaOffset[2], lastGizmoPos[3] + deltaOffset[3]}
 	end
@@ -1087,6 +999,9 @@ local function showRotateFan(rotAxis, startAngle, deltaAngle)
 	end
 	world[rotAxis.eid[3]]._rendercache.ib.start = start
 	world[rotAxis.eid[3]]._rendercache.ib.num = num
+
+	ies.set_state(rotAxis.eid[3], "visible", world[rotAxis.eid[3]]._rendercache.ib.num > 0)
+	ies.set_state(rotAxis.eid[4], "visible", world[rotAxis.eid[4]]._rendercache.ib.num > 0)
 end
 
 local function rotateGizmo(x, y)
@@ -1112,6 +1027,9 @@ local function rotateGizmo(x, y)
 		deltaAngle = deltaAngle - 360
 	elseif deltaAngle < -360 then
 		deltaAngle = deltaAngle + 360
+	end
+	if math.abs(deltaAngle) < 0.0001 then
+		return
 	end
 	local tableGizmoToLastHit
 	if localSpace and rotate_axis ~= gizmo.rw then
@@ -1155,7 +1073,7 @@ local function scaleGizmo(x, y)
 		newScale = {lastGizmoScale[1] * scaleFactor, lastGizmoScale[2] * scaleFactor, lastGizmoScale[3] * scaleFactor}
 	else
 		newScale = {lastGizmoScale[1], lastGizmoScale[2], lastGizmoScale[3]}
-		local newOffset = utils.view_to_axis_constraint(iom.ray(camera_eid, {x, y}), iom.get_position(camera_eid), gizmoDirToWorld(move_axis.dir), lastGizmoPos)
+		local newOffset = utils.view_to_axis_constraint(iom.ray(camera_mgr.main_camera, {x, y}), iom.get_position(camera_mgr.main_camera), gizmoDirToWorld(move_axis.dir), lastGizmoPos)
 		local deltaOffset = math3d.totable(math3d.sub(newOffset, initOffset))
 		local scaleFactor = (1.0 + 3.0 * math3d.length(deltaOffset))
 		if move_axis.dir == DIR_X then
@@ -1195,7 +1113,7 @@ function gizmo:selectGizmo(x, y)
 			lastGizmoScale = math3d.totable(iom.get_scale(gizmo.target_eid))
 			if move_axis then
 				lastGizmoPos = math3d.totable(iom.get_position(gizmo.root_eid))
-				initOffset.v = utils.view_to_axis_constraint(iom.ray(camera_eid, {x, y}), iom.get_position(camera_eid), gizmoDirToWorld(move_axis.dir), lastGizmoPos)
+				initOffset.v = utils.view_to_axis_constraint(iom.ray(camera_mgr.main_camera, {x, y}), iom.get_position(camera_mgr.main_camera), gizmoDirToWorld(move_axis.dir), lastGizmoPos)
 			end
 			return true
 		end
@@ -1208,7 +1126,6 @@ function gizmo:selectGizmo(x, y)
 			else
 				lastRotateAxis.v = rotate_axis.dir
 			end
-			showRotateMeshByAxis(true, rotate_axis)
 			return true
 		end
 	end
@@ -1216,8 +1133,14 @@ function gizmo:selectGizmo(x, y)
 end
 
 local keypress_mb = world:sub{"keyboard"}
+local viewposEvent = world:sub{"ViewportDirty"}
 
 function gizmo_sys:data_changed()
+	for _, vp in viewposEvent:unpack() do
+		global_data.viewport = vp
+		updateGlobalAxis()
+	end
+
 	for _ in cameraZoom:unpack() do
 		gizmo:update_scale()
 	end
@@ -1231,8 +1154,8 @@ function gizmo_sys:data_changed()
 			gizmo:on_mode(MOVE)
 		elseif what == "scale" then
 			gizmo:on_mode(SCALE)
-		elseif what == "localspace" then
-			localSpace = value
+		elseif what == "localspace" then-- or what == "worldspace" then
+			localSpace = value--(what == "localspace")
 			gizmo:update_axis_plane()
 			gizmo:set_rotation()
 		end
@@ -1240,7 +1163,8 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouseDown:unpack() do
 		if what == "LEFT" then
-			gizmo_seleted = gizmo:selectGizmo(x, y)
+			--print("Down", x, y, utils.adjust_mouse_pos(x, y))
+			gizmo_seleted = gizmo:selectGizmo(utils.adjust_mouse_pos(x, y))
 			gizmo:click_axis_or_plane(move_axis)
 			gizmo:click_axis(rotate_axis)
 		elseif what == "MIDDLE" then
@@ -1252,7 +1176,7 @@ function gizmo_sys:data_changed()
 		if what == "LEFT" then
 			gizmo:reset_move_axis_color()
 			if gizmo.mode == ROTATE then
-				gizmo:show_rotate_fan(false)
+				--gizmo:hide_rotate_fan()
 				if localSpace then
 					if gizmo.target_eid then
 						iom.set_rotation(gizmo.root_eid, iom.get_rotation(gizmo.target_eid))
@@ -1264,13 +1188,15 @@ function gizmo_sys:data_changed()
 			if isTranDirty then
 				isTranDirty = false
 				local target = gizmo.target_eid
-				if gizmo.mode == SCALE then
-					cmd_queue:record({action = SCALE, eid = target, oldvalue = lastGizmoScale, newvalue = math3d.totable(iom.get_scale(target))})
-				elseif gizmo.mode == ROTATE then
-					cmd_queue:record({action = ROTATE, eid = target, oldvalue = math3d.totable(lastRotate), newvalue = math3d.totable(iom.get_rotation(target))})
-				elseif gizmo.mode == MOVE then
-					local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.calc_worldmat(world[target].parent)), lastGizmoPos, 1))
-					cmd_queue:record({action = MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(target))})
+				if target then
+					if gizmo.mode == SCALE then
+						cmd_queue:record({action = SCALE, eid = target, oldvalue = lastGizmoScale, newvalue = math3d.totable(iom.get_scale(target))})
+					elseif gizmo.mode == ROTATE then
+						cmd_queue:record({action = ROTATE, eid = target, oldvalue = math3d.totable(lastRotate), newvalue = math3d.totable(iom.get_rotation(target))})
+					elseif gizmo.mode == MOVE then
+						local localPos = math3d.totable(math3d.transform(math3d.inverse(iom.calc_worldmat(world[target].parent)), lastGizmoPos, 1))
+						cmd_queue:record({action = MOVE, eid = target, oldvalue = localPos, newvalue = math3d.totable(iom.get_position(target))})
+					end
 				end
 			end
 		elseif what == "RIGHT" then
@@ -1280,10 +1206,12 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouseMove:unpack() do
 		if what == "UNKNOWN" then
+			x, y = utils.adjust_mouse_pos(x, y)
 			if gizmo.mode == MOVE or gizmo.mode == SCALE then
 				local axis = selectAxis(x, y)
 				gizmo:highlight_axis_or_plane(axis)
 			elseif gizmo.mode == ROTATE then
+				gizmo:hide_rotate_fan()
 				selectRotateAxis(x, y)
 			end
 		end
@@ -1291,6 +1219,7 @@ function gizmo_sys:data_changed()
 	
 	for _, what, x, y, dx, dy in mouseDrag:unpack() do
 		if what == "LEFT" then
+			x, y = utils.adjust_mouse_pos(x, y)
 			if gizmo.mode == MOVE and move_axis then
 				moveGizmo(x, y)
 			elseif gizmo.mode == SCALE then
@@ -1312,11 +1241,11 @@ function gizmo_sys:data_changed()
 	for _,pick_id,pick_ids in pickup_mb:unpack() do
         local eid = pick_id
 		if eid and world[eid] then
-			if gizmo.mode ~= SELECT then
+			if gizmo.mode ~= SELECT and not gizmo_seleted then
 				gizmo:set_target(eid)
 			end
 		else
-			if not gizmo_seleted then
+			if not gizmo_seleted and not camera_mgr.select_frustum then
 				gizmo:set_target(nil)
 			end
 		end

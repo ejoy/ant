@@ -8,16 +8,23 @@ default : ant.exe
 
 mingw : default
 
-main.o : main.c mingw_wmain.h
-	$(CC) -c $(CFLAGS) -I$(ANT)/clibs/ant -I$(ANT)/clibs/lua -o $@ $<
+modules.o : ../common/modules.cpp ../common/modules.h
+	$(CXX) -c $(CFLAGS) $(LUAINC) -I../common -o $@ $<
+
+main.o : main.cpp mingw_wmain.h ../common/runtime.h
+	$(CXX) -c $(CFLAGS) $(LUAINC) -I../common -o $@ $<
 
 $(ODIR)/libant.a :
 	cd $(ANT)/clibs/ant/ && $(MAKE) $@
 
-ant.exe : main.o $(ODIR)/libant.a
-	$(CC) -o $@ main.o $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) -lshlwapi && $(STRIP) $@
+$(ODIR)/libruntime.a :
+	cd ../common/ && $(MAKE) $@
+
+ant.exe : main.o modules.o $(ODIR)/libruntime.a $(ODIR)/libant.a
+	$(CC) -o $@ main.o modules.o ../common/$(ODIR)/libruntime.a $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) -lshlwapi && $(STRIP) $@
 
 clean :
 	rm -f *.o
 	rm -f ant.exe
-	rm -rf $(ANT)/clibs/ant/o/$(PLAT)
+	rm -rf $(ANT)/clibs/ant/$(ODIR)
+	rm -rf ../common/$(ODIR)

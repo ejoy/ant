@@ -34,12 +34,12 @@ local function start(wait)
         require "backend.master" ("log/")
         require 'backend.worker'
     ]], package.searchers[3])
-    local probe = rdebug.probe
+    local event = rdebug.event
     if wait then
-        probe 'wait'
+        event 'wait'
     end
     return function()
-        probe 'update'
+        event 'update'
     end
 end
 

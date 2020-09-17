@@ -3,7 +3,7 @@ local world = ecs.world
 
 local imgui      = require "imgui"
 local imgui_util = require "imgui_util"
-local computil = world:interface "ant.render|entity"
+local ientity = world:interface "ant.render|entity"
 
 local drawer = world:interface "ant.render|iwidget_drawer"
 local irq = world:interface "ant.render|irenderqueue"
@@ -29,7 +29,7 @@ local function create_prefab(prefab, srt)
 end
 
 function init_loader_sys:init()
-    computil.create_grid_entity( "", nil, nil, nil, {srt = {r = {0,0.92388,0,0.382683}}})
+    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     world:instance "res/light_directional.prefab"
 
     create_prefab("res/gltf_animation.prefab", {

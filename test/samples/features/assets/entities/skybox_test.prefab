@@ -1,0 +1,12 @@
+---
+policy:
+    ant.sky|skybox
+    ant.render|render
+    ant.general|name
+data:
+    name: skybox_test
+    scene_entity: true
+    state: 1
+    transform: {}
+    material: /pkg/ant.resources/materials/sky/skybox.material
+    skybox: {}

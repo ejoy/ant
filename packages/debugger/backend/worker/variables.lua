@@ -1,10 +1,12 @@
 local rdebug = require 'remotedebug.visitor'
 local source = require 'backend.worker.source'
 local luaver = require 'backend.worker.luaver'
-local ev = require 'common.event'
+local serialize = require 'backend.worker.serialize'
+local ev = require 'backend.event'
 
-local SHORT_TABLE_FIELD = 100
-local MAX_TABLE_FIELD = 1000
+local SHORT_TABLE_FIELD <const> = 100
+local MAX_TABLE_FIELD <const> = 1000
+local TABLE_VALUE_MAXLEN <const> = 32
 local LUAVERSION = 54
 
 local info = {}
@@ -126,25 +128,31 @@ function special_has.Return(frameId)
 end
 
 function special_has.Global()
-    local gt = rdebug._G
-    local key
-    while true do
-        key = rdebug.nextkey(gt, key)
+    local global = rdebug._G
+    local asize, hsize = rdebug.tablesize(global)
+    if asize ~= 0 then
+        return true
+    end
+    local key = nil
+    local next = 0
+    while next < hsize do
+        key, next = rdebug.tablekey(global, next)
         if not key then
-            return false
+            break
         end
         if not standard[key] then
             return true
         end
     end
+    return false
 end
 
 function special_has.Standard()
     return true
 end
 
-
-local function normalizeNumber(str)
+local function floatToShortString(v)
+    local str = ('%.4f'):format(v)
     if str:find('.', 1, true) then
         str = str:gsub('0+$', '')
         if str:sub(-1) == '.' then
@@ -154,6 +162,38 @@ local function normalizeNumber(str)
     return str
 end
 
+local function floatToString(x)
+    if x ~= x then
+        return 'nan'
+    end
+    if x == math.huge then
+        return '+inf'
+    end
+    if x == -math.huge then
+        return '-inf'
+    end
+    local g = ('%.16g'):format(x)
+    if tonumber(g) == x then
+        return g
+    end
+    return ('%.17g'):format(x)
+end
+
+local escape_char = {
+    [ "\\" .. string.byte "\a" ] = "\\".."a",
+    [ "\\" .. string.byte "\b" ] = "\\".."b",
+    [ "\\" .. string.byte "\f" ] = "\\".."f",
+    [ "\\" .. string.byte "\n" ] = "\\".."n",
+    [ "\\" .. string.byte "\r" ] = "\\".."r",
+    [ "\\" .. string.byte "\t" ] = "\\".."t",
+    [ "\\" .. string.byte "\v" ] = "\\".."v",
+    [ "\\" .. string.byte "\\" ] = "\\".."\\",
+    [ "\\" .. string.byte "\"" ] = "\\".."\"",
+}
+
+local function quotedString(s)
+    return ("%q"):format(s):sub(2,-2):gsub("\\[1-9][0-9]?", escape_char):gsub("\\\n", "\\n")
+end
 
 local function varCanExtand(type, value)
     if type == 'function' then
@@ -161,7 +201,8 @@ local function varCanExtand(type, value)
     elseif type == 'c function' then
         return rdebug.getupvaluev(value, 1) ~= nil
     elseif type == 'table' then
-        if rdebug.nextkey(value, nil) ~= nil then
+        local asize, hsize = rdebug.tablesize(value)
+        if asize ~= 0 or hsize ~= 0 then
             return true
         end
         if rdebug.getmetatablev(value) ~= nil then
@@ -185,7 +226,7 @@ local function varCanExtand(type, value)
     return false
 end
 
-local function varGetName(value)
+local function varGetShortName(value)
     local type = rdebug.type(value)
     if LUAVERSION <= 52 and type == "float" then
         local rvalue = rdebug.value(value)
@@ -198,7 +239,7 @@ local function varGetName(value)
         if #str < 32 then
             return str
         end
-        return str:sub(1, 32) .. '...'
+        return quotedString(str:sub(1, 32)) .. '...'
     elseif type == 'boolean' then
         if rdebug.value(value) then
             return 'true'
@@ -214,7 +255,29 @@ local function varGetName(value)
         end
         return ('%d'):format(rvalue)
     elseif type == 'float' then
-        return normalizeNumber(('%.4f'):format(rdebug.value(value)))
+        return floatToShortString(rdebug.value(value))
+    end
+    return tostring(rdebug.value(value))
+end
+
+local function varGetName(value)
+    local type = rdebug.type(value)
+    if LUAVERSION <= 52 and type == "float" then
+        local rvalue = rdebug.value(value)
+        if rvalue == math.floor(rvalue) then
+            type = 'integer'
+        end
+    end
+    if type == 'integer' then
+        local rvalue = rdebug.value(value)
+        if rvalue > 0 and rvalue < 1000 then
+            return ('[%03d]'):format(rvalue)
+        end
+        return ('%d'):format(rvalue)
+    elseif type == 'float' then
+        return floatToString(rdebug.value(value))
+    elseif type == 'string' then
+        return quotedString(rdebug.value(value))
     end
     return tostring(rdebug.value(value))
 end
@@ -224,9 +287,9 @@ local function varGetShortValue(value)
     if type == 'string' then
         local str = rdebug.value(value)
         if #str < 16 then
-            return ("'%s'"):format(str)
+            return ("'%s'"):format(quotedString(str))
         end
-        return ("'%s...'"):format(str:sub(1, 16))
+        return ("'%s...'"):format(quotedString(str:sub(1, 16)))
     elseif type == 'boolean' then
         if rdebug.value(value) then
             return 'true'
@@ -238,7 +301,7 @@ local function varGetShortValue(value)
     elseif type == 'integer' then
         return ('%d'):format(rdebug.value(value))
     elseif type == 'float' then
-        return normalizeNumber(('%f'):format(rdebug.value(value)))
+        return floatToShortString(rdebug.value(value))
     elseif type == 'function' then
         return 'func'
     elseif type == 'c function' then
@@ -252,7 +315,6 @@ local function varGetShortValue(value)
     return type
 end
 
-local TABLE_VALUE_MAXLEN = 32
 local function varGetTableValue(t)
     local asize = rdebug.tablesize(t)
     local str = ''
@@ -268,11 +330,11 @@ local function varGetTableValue(t)
         end
     end
 
-    local loct = rdebug.copytable(t,SHORT_TABLE_FIELD)
+    local loct = rdebug.tablehashv(t,SHORT_TABLE_FIELD)
     local kvs = {}
-    for i = 1, #loct, 3 do
+    for i = 1, #loct, 2 do
         local key, value = loct[i], loct[i+1]
-        local kn = varGetName(key)
+        local kn = varGetShortName(key)
         kvs[#kvs + 1] = { kn, value }
     end
     table.sort(kvs, function(a, b) return a[1] < b[1] end)
@@ -331,11 +393,42 @@ local function getFunctionCode(str, startLn, endLn)
     return str:sub(startPos, endPos)
 end
 
--- context: getvalue,setvalue,scopes,hover,watch,repl,copyvalue
+local function varGetFunctionCode(value)
+    rdebug.getinfo(value, "S", info)
+    local src = source.create(info.source)
+    if not source.valid(src) then
+        return tostring(rdebug.value(value))
+    end
+    if not src.sourceReference then
+        return ("%s:%d"):format(source.clientPath(src.path), info.linedefined)
+    end
+    local code = source.getCode(src.sourceReference)
+    return getFunctionCode(code, info.linedefined, info.lastlinedefined)
+end
+
+local function varGetUserdata(value)
+    local meta = rdebug.getmetatablev(value)
+    if meta ~= nil then
+        local fn = rdebug.fieldv(meta, '__debugger_tostring')
+        if fn ~= nil and (rdebug.type(fn) == 'function' or rdebug.type(fn) == 'c function') then
+            local ok, res = rdebug.eval(fn, value)
+            if ok then
+                return res
+            end
+        end
+        local name = rdebug.fieldv(meta, '__name')
+        if name ~= nil then
+            return tostring(rdebug.value(name))
+        end
+    end
+    return 'userdata'
+end
+
+-- context: variables,hover,watch,repl,clipboard
 local function varGetValue(context, type, value)
     if type == 'string' then
         local str = rdebug.value(value)
-        if context == "repl" or context == "copyvalue" then
+        if context == "repl" or context == "clipboard" then
             return ("'%s'"):format(str)
         end
         if context == "hover" then
@@ -345,9 +438,9 @@ local function varGetValue(context, type, value)
             return ("'%s...'"):format(str:sub(1, 2048))
         end
         if #str < 1024 then
-            return ("'%s'"):format(str)
+            return ("'%s'"):format(quotedString(str))
         end
-        return ("'%s...'"):format(str:sub(1, 1024))
+        return ("'%s...'"):format(quotedString(str:sub(1, 1024)))
     elseif type == 'boolean' then
         if rdebug.value(value) then
             return 'true'
@@ -359,42 +452,22 @@ local function varGetValue(context, type, value)
     elseif type == 'integer' then
         return ('%d'):format(rdebug.value(value))
     elseif type == 'float' then
-        return normalizeNumber(('%f'):format(rdebug.value(value)))
+        return floatToString(rdebug.value(value))
     elseif type == 'function' then
-        rdebug.getinfo(value, "S", info)
-        local src = source.create(info.source)
-        if not source.valid(src) then
-            return tostring(rdebug.value(value))
-        end
-        if not src.sourceReference then
-            return ("%s:%d"):format(source.clientPath(src.path), info.linedefined)
-        end
-        local code = source.getCode(src.sourceReference)
-        return getFunctionCode(code, info.linedefined, info.lastlinedefined)
+        return varGetFunctionCode(value)
     elseif type == 'c function' then
         return 'C function'
     elseif type == 'table' then
+        if context == "clipboard" then
+            return serialize(value)
+        end
         return varGetTableValue(value)
     elseif type == 'userdata' then
-        local meta = rdebug.getmetatablev(value)
-        if meta ~= nil then
-            local fn = rdebug.fieldv(meta, '__debugger_tostring')
-            if fn ~= nil and (rdebug.type(fn) == 'function' or rdebug.type(fn) == 'c function') then
-                local ok, res = rdebug.evalref(fn, value)
-                if ok then
-                    return res
-                end
-            end
-            local name = rdebug.fieldv(meta, '__name')
-            if name ~= nil then
-                return tostring(rdebug.value(name))
-            end
-        end
-        return 'userdata'
+        return varGetUserdata(value)
     elseif type == 'lightuserdata' then
         return 'light' .. tostring(rdebug.value(value))
     elseif type == 'thread' then
-        return 'thread'
+        return ('thread (%s)'):format(rdebug.costatus(value))
     end
     return tostring(rdebug.value(value))
 end
@@ -476,7 +549,7 @@ local function varCreate(vars, varRef, kind, name, nameidx, value, evaluateName,
     if type(evaluateName) ~= "string" then
         evaluateName = nil
     end
-    local var = varCreateReference(value, evaluateName, "getvalue")
+    local var = varCreateReference(value, evaluateName, "variables")
     var.name = name
     var.evaluateName = evaluateName
     var.presentationHint = kind and { kind = kind } or nil
@@ -494,6 +567,13 @@ local function getTabelKey(key)
         return ('[%q]'):format(str)
     elseif type == 'boolean' or type == 'float' or type == 'integer' then
         return ('[%s]'):format(tostring(rdebug.value(key)))
+    end
+end
+
+local function evaluateTabelKey(table, key)
+    local evaluateKey = getTabelKey(key)
+    if table and evaluateKey then
+        return ("%s%s"):format(table, evaluateKey)
     end
 end
 
@@ -525,13 +605,12 @@ local function extandTableNamed(varRef)
     local t = varRef.v
     local evaluateName = varRef.eval
     local vars = {}
-    local loct = rdebug.copytable(t,MAX_TABLE_FIELD)
+    local loct = rdebug.tablehash(t,MAX_TABLE_FIELD)
     for i = 1, #loct, 3 do
         local key, value, valueref = loct[i], loct[i+1], loct[i+2]
-        local evalKey = getTabelKey(key)
         varCreate(vars, varRef, nil
             , varGetName(key), nil
-            , value, evaluateName and evalKey and ('%s%s'):format(evaluateName, evalKey)
+            , value, evaluateTabelKey(evaluateName, key)
             , function() return valueref end
         )
     end
@@ -753,13 +832,13 @@ end
 local function extandGlobalNamed(varRef)
     varRef.extand = varRef.extand or {}
     local vars = {}
-    local loct = rdebug.copytable(rdebug._G,MAX_TABLE_FIELD)
+    local loct = rdebug.tablehash(rdebug._G,MAX_TABLE_FIELD)
     for i = 1, #loct, 3 do
         local key, value, valueref = loct[i], loct[i+1], loct[i+2]
         if not isStandardName(key) then
             varCreate(vars, varRef, nil
                 , varGetName(key), nil
-                , value, ('_G%s'):format(getTabelKey(key))
+                , value, evaluateTabelKey("_G", key)
                 , function() return valueref end
             )
         end
@@ -785,7 +864,7 @@ function special_extand.Standard(varRef)
         if value ~= nil then
             varCreate(vars, varRef, nil
                 , name, nil
-                , value , ('_G%s'):format(getTabelKey(name))
+                , value, ("_G.%s"):format(name)
                 , function() return rdebug.field(rdebug._G, name) end
             )
         end
@@ -836,7 +915,7 @@ local function setValue(varRef, name, value)
     if not rdebug.assign(rvalue, newvalue) then
         return nil, 'Failed set variable'
     end
-    return varCreateReference(rvalue, evaluateName, "setvalue")
+    return varCreateReference(rvalue, evaluateName, "variables")
 end
 
 local m = {}
@@ -889,7 +968,7 @@ function m.tostring(v)
     if meta ~= nil then
         local fn = rdebug.fieldv(meta, '__tostring')
         if fn ~= nil and (rdebug.type(fn) == 'function' or rdebug.type(fn) == 'c function') then
-            local ok, res = rdebug.evalref(fn, v)
+            local ok, res = rdebug.eval(fn, v)
             if ok then
                 return res
             end

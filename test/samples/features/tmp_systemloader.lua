@@ -97,21 +97,33 @@ end
 
 function init_loader_sys:init()
     world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
-    ientity.create_grid_entity()
+    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
-    ientity.create_procedural_sky()
+    --ientity.create_procedural_sky()
     --target_lock_test()
 end
 
 function init_loader_sys:post_init()
     local mq = world:singleton_entity "main_queue"
-    local pos = math3d.vector(-4.5, 2, -1.5, 1)
+    local pos = math3d.vector(-10.5, 10, -5.5, 1)
     icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
+    -- local dir = {0, 0, 1, 0}
+    -- icamera.lookto(mq.camera_eid, {0, 0, -8, 1}, dir)
     local f = icamera.get_frustum(mq.camera_eid)
     f.n, f.f = 0.25, 250
     icamera.set_frustum(mq.camera_eid, f)
-    --local dir = {0, 0, -1, 0}
-    --icamera.lookto(mq.camera_eid, {0, 0, 0, 1}, dir)
+
+    -- local ild = world:interface "ant.render|iline_drawer"
+    -- ild.draw_line({0, 1, 0}, {3, 2, 4, 1}, 0, "/pkg/ant.resources/materials/quadline.material", 0.5)
+
+    -- ild.draw_lines({
+    --     {0, 0, 0}, {0, 0, 1}, {1, 0, 1}, {1, 0, 0},
+    -- }, 0, "/pkg/ant.resources/materials/quadline.material", 0.1)
+
+    local ipl = world:interface "ant.render|ipolyline"
+    ipl.add_strip_lines({
+        {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
+    }, 15, {1.0, 1.0, 0.0, 1.0})
 end
 
 local imgui      = require "imgui"

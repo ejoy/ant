@@ -1,4 +1,7 @@
-fx: /pkg/ant.resources/materials/postprocess/fx/upsample.fx
+fx:
+  fs: /pkg/ant.resources/materials/postprocess/fx/fs_upsample.sc
+  vs: /pkg/ant.resources/materials/postprocess/fx/vs_pp_quad.sc
 properties:
-  u_intensity:  {1.2, 0, 0, 0}
+  u_sample_param:{0, 0, 0, 0}
+  u_intensity: {1.2, 0, 0, 0}
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

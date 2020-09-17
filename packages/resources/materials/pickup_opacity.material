@@ -1,2 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/pickup_opacity.fx
+fx:
+  fs: /pkg/ant.resources/shaders/picking/fs_picking.sc
+  vs: /pkg/ant.resources/shaders/picking/vs_picking.sc
 state: /pkg/ant.resources/materials/states/default.state

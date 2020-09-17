@@ -3,21 +3,28 @@ local world = ecs.world
 local mc = import_package "ant.math".constant
 
 local default_comp 	= import_package "ant.general".default
+local setting		= import_package "ant.settings".setting
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
 
-local setting		= require "setting"
-
 local irender = ecs.interface "irender"
+
+local ipf			= world:interface "ant.scene|iprimitive_filter"
 
 local vpt = ecs.transform "visible_primitive_transform"
 function vpt.process_entity(e)
 	local f = e.primitive_filter
 	f.insert_item = function (filter, fxtype, eid, rc)
-		filter.result[fxtype].items[eid] = rc
+		local items = filter.result[fxtype].items
+		if rc then
+			rc.eid = eid
+			ipf.add_item(items, eid, rc)
+		else
+			ipf.remove_item(items, eid)
+		end
 	end
 end
 
@@ -34,13 +41,27 @@ function irender.draw(vid, ri)
 	end
 	local ib, vb = ri.ib, ri.vb
 
-	if ib then
-		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
+	if ib and ib.num ~= 0 then
+		--TODO: need set function for set_index_buffer
+		if type(ib.handle) == "number" then
+			bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
+		else
+			ib.handle:setI(ib.start, ib.num)
+		end
 	end
+
 	local start_v, num_v = vb.start, vb.num
-	for idx, h in ipairs(vb.handles) do
-		bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
+	if num_v ~= 0 then
+		for idx, h in ipairs(vb.handles) do
+			--TODO: need set function for set_index_buffer
+			if type(h) == "number" then
+				bgfx.set_vertex_buffer(idx-1, h, start_v, num_v)
+			else
+				h:setV(idx-1, start_v, num_v)
+			end
+		end
 	end
+
 	bgfx.submit(vid, ri.fx.prog, 0)
 end
 
@@ -48,6 +69,51 @@ function irender.get_main_view_rendertexture()
 	local mq = world:singleton_entity "main_queue"
 	local fb = fbmgr.get(mq.render_target.fb_idx)
 	return fbmgr.get_rb(fb[1]).handle
+end
+
+function irender.create_view_queue(view_rect, view_name, exclude)
+	local mq = world:singleton_entity "main_queue"
+	local rt = mq.render_target
+	local cs = rt.clear_state
+	return world:create_entity {
+		policy = {
+			"ant.render|render_queue",
+			"ant.render|view_queue",
+			"ant.general|name",
+		},
+		data = {
+			camera_eid = icamera.create{
+				eyepos  = {0, 0, 0, 1},
+				viewdir = {0, 0, 1, 0},
+				frustum = default_comp.frustum(view_rect.w / view_rect.h),
+				name = view_name,
+			},
+
+			primitive_filter = {
+				filter_type = "visible",
+				exclude_type = exclude
+			},
+
+			render_target = {
+				viewid = viewidmgr.generate(view_name),
+				view_mode = "s",
+				clear_state = {
+					color = cs.clear_color,
+					depth = cs.clear_depth,
+					stencil = cs.clear_stencil,
+					clear = cs.clear,
+				},
+				view_rect = {
+					x = view_rect.x or 0, y = view_rect.y or 0,
+					w = view_rect.w or 1, h = view_rect.h or 1,
+				},
+				fb_idx = rt.fb_idx,
+			},
+			visible = true,
+			name = view_name,
+			view_queue = true
+		}
+	}
 end
 
 function irender.create_orthoview_queue(view_rect, orthoface, queuename)
@@ -100,11 +166,11 @@ end
 
 function irender.create_main_queue(view_rect)
 	local rb_flag = samplerutil.sampler_flag {
-		RT="RT_MSAA2",
+		RT="RT_MSAA4",
 		MIN="LINEAR",
 		MAG="LINEAR",
 		U="CLAMP",
-		V="CLAMP"
+		V="CLAMP",
 	}
 
 	local sd = setting:data()
@@ -118,17 +184,22 @@ function irender.create_main_queue(view_rect)
 
 	local bloom = sd.graphic.postprocess.bloom
 	if bloom.enable then
-		local fmt = bloom.format
-		-- not support RGBA8
-		assert(fmt == "RGBA16F" or fmt == "RGBA32F")
 		render_buffers[#render_buffers+1] = fbmgr.create_rb(
 			default_comp.render_buffer(
-			view_rect.w, view_rect.h, fmt, rb_flag)
+			view_rect.w, view_rect.h, main_display_format, rb_flag)
 		)
 	end
+	local db_flag = samplerutil.sampler_flag {
+		RT="RT_MSAA4",
+		MIN="LINEAR",
+		MAG="LINEAR",
+		U="CLAMP",
+		V="CLAMP",
+	}
+
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(
 		default_comp.render_buffer(
-		view_rect.w, view_rect.h, "D24S8", rb_flag)
+		view_rect.w, view_rect.h, "D24S8", db_flag)
 	)
 
 	local camera_eid = icamera.create{
@@ -154,6 +225,7 @@ function irender.create_main_queue(view_rect)
 				view_mode = "s",
 				clear_state = {
 					color = rs.clear_color or 0x000000ff,
+					color1 = 0,
 					depth = rs.clear_depth or 1,
 					stencil = rs.clear_stencil or 0,
 					clear = rs.clear or "CDS",
@@ -177,7 +249,6 @@ function irender.create_main_queue(view_rect)
 end
 
 local blitviewid = viewidmgr.get "blit"
-local icamera = world:interface "ant.camera|camera"
 function irender.create_blit_queue(viewrect)
 	local cameraeid = icamera.create {
 		eyepos = mc.ZERO_PT,
@@ -199,10 +270,7 @@ function irender.create_blit_queue(viewrect)
 				viewid = blitviewid,
 				view_mode = "",
 				clear_state = {
-					color = 0x000000ff,
-					depth = 1,
-					stencil = 0,
-					clear = "C",
+					clear = "",
 				},
 				view_rect = {
 					x = viewrect.x or 0, y = viewrect.y or 0,
@@ -299,6 +367,39 @@ function irender.read_render_buffer_content(format, rb_idx, force_read, size)
 	return memory_handle, size.w, size.h, size.w * elem_size
 end
 
+--[[
+	1 ---- 3
+	|      |
+	|      |
+	0 ---- 2
+]]
+
+local function create_quad_ib(num_quad)
+    local b = {}
+    for ii=1, num_quad do
+        local offset = (ii-1) * 4
+        b[#b+1] = offset + 0
+        b[#b+1] = offset + 1
+        b[#b+1] = offset + 2
+
+        b[#b+1] = offset + 1
+        b[#b+1] = offset + 3
+        b[#b+1] = offset + 2
+    end
+
+    return bgfx.create_index_buffer(bgfx.memory_buffer("w", b))
+end
+
+local quad_ib_num<const> = 512
+local ibhandle = create_quad_ib(quad_ib_num)
+function irender.quad_ib()
+	return ibhandle
+end
+
+function irender.quad_ib_num()
+	return quad_ib_num
+end
+
 local irq = ecs.interface "irenderqueue"
 
 function irq.clear_state(eid)
@@ -358,6 +459,20 @@ function irq.set_view_clear_stencil(eid, stencil)
 	view_clear(rt.viewid, cs)
 end
 
+local clear_colornames<const> = {
+	"color1", "color2","color3","color4","color5","color6", "color7"
+}
+
+local function set_view_clear(viewid, cs)
+	-- if cs.color1 then
+	-- 	bgfx.set_view_clear_mrt(viewid, cs.clear, cs.depth, cs.stencil,
+	-- 		cs.color, cs.color1, cs.color2, cs.color3,
+	-- 		cs.color4, cs.color5, cs.color6, cs.color7)
+	-- else
+		bgfx.set_view_clear(viewid, cs.clear, cs.color, cs.depth, cs.stencil)
+	-- end
+end
+
 function irq.set_view_clear(eid, what, color, depth, stencil)
 	local rt = world[eid].render_target
 	local cs = rt.clear_state
@@ -366,15 +481,17 @@ function irq.set_view_clear(eid, what, color, depth, stencil)
 	cs.stencil = stencil
 
 	cs.clear = what
-	bgfx.set_view_clear(rt.viewid, what, color, depth, stencil)
+	set_view_clear(rt.viewid, cs)
 	world:pub{"component_changed", "target_clear"}
 end
 
 function irq.set_view_rect(eid, rect)
-	local rt = world[eid].render_target
+	local qe = world[eid]
+	local rt = qe.render_target
 	local vr = rt.view_rect
 	vr.x, vr.y = rect.x, rect.y
 	vr.w, vr.h = rect.w, rect.h
+	icamera.set_frustum_aspect(qe.camera_eid, vr.w/vr.h)
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
 	world:pub{"component_changed", "viewport"}
 end
@@ -399,11 +516,12 @@ end
 
 function irq.update_rendertarget(rt)
 	local viewid = rt.viewid
-	bgfx.set_view_mode(viewid, rt.view_mode)
+	local vm = rt.view_mode or ""
+	bgfx.set_view_mode(viewid, vm)
 	local vr = rt.view_rect
 	bgfx.set_view_rect(viewid, vr.x, vr.y, vr.w, vr.h)
 	local cs = rt.clear_state
-	bgfx.set_view_clear(viewid, cs.clear, cs.color, cs.depth, cs.stencil)
+	set_view_clear(viewid, cs)
 	
 	local fb_idx = rt.fb_idx
 	if fb_idx then

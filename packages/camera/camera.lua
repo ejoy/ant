@@ -58,14 +58,23 @@ function ic.create(info)
     }
 end
 
+local function bind_queue(cameraeid, q)
+    q.camera_eid = cameraeid
+    local vr = q.render_target.view_rect
+    ic.set_frustum_aspect(cameraeid, vr.w / vr.h)
+end
+
 function ic.bind(eid, which_queue)
     local q = world:singleton_entity(which_queue)
     if q == nil then
         error(string.format("not find queue:%s", which_queue))
     end
-    q.camera_eid = eid
-    local vr = q.render_target.view_rect
-    ic.set_frustum_aspect(eid, vr.w / vr.h)
+
+    bind_queue(eid, q)
+end
+
+function ic.bind_queue(eid, queueeid)
+    bind_queue(eid, world[queueeid])
 end
 
 function ic.calc_viewmat(eid)

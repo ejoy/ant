@@ -1,6 +1,6 @@
 local event = require 'backend.master.event'
 local response = require 'backend.master.response'
-local ev = require 'common.event'
+local ev = require 'backend.event'
 
 local CMD = {}
 

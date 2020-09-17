@@ -1,4 +1,6 @@
-fx: /pkg/ant.resources/materials/fx/shadow/shadow.fx
+fx:
+  fs: /pkg/ant.resources/shaders/shadow/fs_shadowmaps_packdepth.sc
+  vs: /pkg/ant.resources/shaders/shadow/vs_shadowmaps_packdepth.sc
 state:
   CULL: CCW
   DEPTH_TEST: LESS

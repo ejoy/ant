@@ -24,13 +24,16 @@ $(ODIR)/luabgfxutil.o : luabgfxutil.c  | $(ODIR)
 $(ODIR)/luabgfxui.o : luabgfxui.c | $(ODIR)
 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
 
+$(ODIR)/luafont.o : luafont.c | $(ODIR)
+	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
+
 $(ODIR)/font_manager.o : font_manager.c | $(ODIR)
 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFXINC) $(BGFX3RDINC)
 
-$(ODIR)/bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/bgfx_alloc.o $(ODIR)/luabgfxui.o $(ODIR)/font_manager.o 
-	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -L$(BGFXLIBDIR) $(BGFXLIB) $(BXLIB) -lstdc++
+$(ODIR)/bgfx.dll : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/bgfx_alloc.o $(ODIR)/luabgfxui.o $(ODIR)/font_manager.o $(ODIR)/luafont.o
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -L$(BGFXLIBDIR) $(BXLIB) -lstdc++
 
-$(ODIR)/libbgfx.a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/bgfx_alloc.o $(ODIR)/luabgfxui.o $(ODIR)/font_manager.o 
+$(ODIR)/libbgfx.a : $(ODIR)/luabgfx.o $(ODIR)/luabgfxutil.o $(ODIR)/bgfx_alloc.o $(ODIR)/luabgfxui.o $(ODIR)/font_manager.o $(ODIR)/luafont.o
 	ar rsv $@ $^
 
 $(ODIR) :

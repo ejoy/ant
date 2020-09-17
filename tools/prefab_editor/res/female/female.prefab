@@ -1,0 +1,66 @@
+---
+action:
+  mount: root
+data:
+  name: "Root Scene"
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 1
+data:
+  name: RootNode
+  scene_entity: true
+  transform: {}
+policy:
+  ant.general|name
+  ant.scene|hierarchy_policy
+  ant.scene|transform_policy
+---
+action:
+  mount: 2
+data:
+  animation:
+    mixamo.com: /pkg/ant.resources.binary/meshes/female/female.glb|animations/mixamo.com.ozz
+  animation_birth: mixamo.com
+  material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/Beta_Joints_MAT.material
+  mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Joints_P1.meshbin
+  meshskin: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin1.skinbin
+  name: Beta_Joints.1
+  scene_entity: true
+  skeleton: /pkg/ant.resources.binary/meshes/female/female.glb|animations/skeleton.ozz
+  state: 7
+  transform: {}
+policy:
+  ant.animation|animation
+  ant.animation|animation_controller.birth
+  ant.animation|skinning
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy
+---
+action:
+  mount: 2
+data:
+  animation:
+    mixamo.com: /pkg/ant.resources.binary/meshes/female/female.glb|animations/mixamo.com.ozz
+  animation_birth: mixamo.com
+  material: /pkg/ant.resources.binary/meshes/female/female.glb|materials/asdf1_Beta_HighLimbsGeoSG2.material
+  mesh: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin
+  meshskin: /pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin
+  name: Beta_Surface.1
+  scene_entity: true
+  skeleton: /pkg/ant.resources.binary/meshes/female/female.glb|animations/skeleton.ozz
+  state: 7
+  transform: {}
+policy:
+  ant.animation|animation
+  ant.animation|animation_controller.birth
+  ant.animation|skinning
+  ant.general|name
+  ant.render|render
+  ant.scene|hierarchy_policy

@@ -352,9 +352,15 @@ math3d_rotmat_to_viewdir(struct lastack *LS, const float m[16]) {
 }
 
 void
-math3d_viewdir_to_quat(struct lastack *LS, const float v[3]) {
+math3d_quat_between_2vectors(struct lastack *LS, const float v0[3], const float v1[3]){
 	glm::quat &q = allocquat(LS);
-	q = glm::quat(glm::vec3(0, 0, 1), VEC3(v));
+	q = glm::quat(VEC3(v0), VEC3(v1));
+}
+
+void
+math3d_viewdir_to_quat(struct lastack *LS, const float v[3]) {
+	float vv[3] = {0, 0, 1};
+	math3d_quat_between_2vectors(LS, vv, v);
 }
 
 void
@@ -418,6 +424,16 @@ math3d_minmax(struct lastack *LS, const float mat[16], const float v[4], float m
 void 
 math3d_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]){
 	*(glm::vec4*)r = glm::lerp(VEC(v0), VEC(v1), ratio);
+}
+
+void 
+math3d_quat_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]){
+	*(glm::quat*)r = glm::lerp(QUAT(v0), QUAT(v1), ratio);
+}
+
+void 
+math3d_quat_slerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]){
+	*(glm::quat*)r = glm::slerp(QUAT(v0), QUAT(v1), ratio);
 }
 
 void 
@@ -610,9 +626,8 @@ math3d_aabb_points(struct lastack *LS, const float *aabb, float *points[8]){
 }
 
 void
-math3d_aabb_expand(struct lastack *LS, const float *aabb, float e[4]){
+math3d_aabb_expand(struct lastack *LS, const float *aabb, const float e[4]){
 	glm::mat4 &m = allocmat(LS);
-	const glm::mat4 &cm = MAT(aabb);
 	m[0] = CAABB_MIN(aabb) - VEC(e);
 	m[0][3] = 1.f;
 	m[1] = CAABB_MAX(aabb) + VEC(e);

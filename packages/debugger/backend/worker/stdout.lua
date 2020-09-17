@@ -1,4 +1,4 @@
-local ev = require 'common.event'
+local ev = require 'backend.event'
 
 local foreground
 local background
@@ -31,7 +31,8 @@ local function vtmode(text)
     end
     for vtstr in text:gmatch "\x1b%[([0-9;]+)m" do
         local codes = split(vtstr)
-        for n = 1, #codes do
+        local n = 1
+        while n <= #codes do
             local code = codes[n]
             if code == 0 then
                 --reset
@@ -80,6 +81,7 @@ local function vtmode(text)
                     n = n + 2
                 end
             end
+            n = n + 1
         end
     end
     if #vt > 0 then

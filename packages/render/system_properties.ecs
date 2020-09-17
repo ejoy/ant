@@ -1,7 +1,0 @@
-import "@ant.render"
-import "@ant.asset"
-
-interface "system_properties"
-    .implement "system_properties.lua"
-    .method "get"
-    .method "update"

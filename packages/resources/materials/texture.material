@@ -1,8 +1,10 @@
-fx: /pkg/ant.resources/materials/fx/texture.fx
+fx:
+  fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
+  vs: /pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc
 properties:
   s_texColor:
-    texture: /pkg/ant.resources/PVPScene/siegeweapon_d.texture
     stage: 0
+    texture: /pkg/ant.resources/PVPScene/siegeweapon_d.texture
 state:
   ALPHA_REF: 0
   CULL: CCW

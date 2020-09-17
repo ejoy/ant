@@ -1,5 +1,4 @@
 local ecs = ...
-local world = ecs.world
 
 local m = ecs.component "mesh"
 
@@ -13,8 +12,8 @@ function m:init()
     return ext_meshbin.init(self)
 end
 
-local mt = ecs.transform "mesh_transform"
-function mt.process_prefab(e)
+local mpt = ecs.transform "mesh_prefab_transform"
+function mpt.process_prefab(e)
 	local mesh = e.mesh
 	local c = e._cache_prefab
 	if mesh then
@@ -37,4 +36,14 @@ function mt.process_prefab(e)
 			c.ib = nil
 		end
 	end
+end
+
+local mt = ecs.transform "mesh_transform"
+
+function mt.process_entity(e)
+	local rc = e._rendercache
+	local c = e._cache_prefab
+
+	rc.vb = c.vb
+	rc.ib = c.ib
 end

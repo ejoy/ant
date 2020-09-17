@@ -3,6 +3,8 @@ __ANT_RUNTIME__ = "0.0.1"
 local os = (require "platform".OS):lower()
 local renderer = {
 	windows = "direct3d11",
+	osx = "metal",
+	ios = "metal",
 }
 local config = {
 	repopath = "./",

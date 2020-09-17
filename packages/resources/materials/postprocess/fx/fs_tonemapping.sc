@@ -5,7 +5,7 @@ $input v_texcoord0
 
 void main()
 {
-    vec4 c = texture2D(s_postprocess_input, v_texcoord0);
-    gl_FragColor.rgb    = toGamma(c.rgb / (1 + c.rgb));
-    gl_FragColor.a      = saturate(c.a);
+    vec4 c              = texture2D(s_postprocess_input, v_texcoord0);
+    gl_FragColor.rgb = vec3_splat(1.0) - exp(-c.rgb * u_exposure);
+    gl_FragColor.a   = saturate(c.a);
 }

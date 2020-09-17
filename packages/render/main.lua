@@ -4,5 +4,4 @@ return {
 	fbmgr       = require "framebuffer_mgr",
     declmgr     = require "vertexdecl_mgr",
     sampler     = require "sampler",
-    setting     = require "setting",
 }

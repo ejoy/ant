@@ -21,29 +21,32 @@ else ifeq "$(PLAT)" "mingw"
 endif
 BGFX_MAKE_CMD = make -R -C bgfx/$(BGFX_MAKEFILE) config=$(MODE)64 -j8
 
-bx:
+_bx:
 	$(BGFX_MAKE_CMD) bx
 
-bimg:
+_bimg:
 	$(BGFX_MAKE_CMD) bimg
 
-bgfx: bx
+_bgfx: bx
 	$(BGFX_MAKE_CMD) bgfx
 
-bgfx-shared-lib: bgfx bimg
+_bimg_decode: _bimg _bx
+	$(BGFX_MAKE_CMD) bimg_decode
+
+_bgfx-shared-lib: _bgfx _bimg _bimg_decode
 	$(BGFX_MAKE_CMD) bgfx-shared-lib
 
-tools: bgfx
+_tools: _bgfx
 	$(BGFX_MAKE_CMD) shaderc texturec
 
-runtime_make: bx bimg bgfx
+runtime_make: _bx _bimg _bgfx _bimg_decode
 
 TOOLSDIR = ../bin/$(PLAT)/$(MODE)
 
 toolsdir:
 	mkdir -p $(TOOLSDIR)
 
-editor_make: runtime_make bgfx-shared-lib tools | toolsdir
+editor_make: runtime_make _bgfx-shared-lib _tools | toolsdir
 	cp -f bgfx/src/bgfx_shader.sh ../packages/resources/shaders/bgfx_shader.sh
 	cp -f bgfx/src/bgfx_compute.sh ../packages/resources/shaders/bgfx_compute.sh
 	cp -f bgfx/examples/common/common.sh ../packages/resources/shaders/common.sh

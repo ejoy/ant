@@ -1,32 +1,34 @@
 local bgfx = require "bgfx"
-local render = import_package "ant.render"
+local setting = import_package "ant.settings".setting
 local sha1 = require "hash".sha1
 local stringify = require "fx.stringify"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
 local FX_CACHE = {}
-local compile
+local fxcompile
 
 if __ANT_RUNTIME__ then
-    compile = {}
-    function compile.register()
+    fxcompile = {}
+    function fxcompile.register()
     end
-    function compile.get_shader(path, stage, fx)
-        return (fs.path(path) / stage / fx.hash):localpath()
+    function fxcompile.get_shader(fx, stage)
+        if fx[stage] then
+            return (fs.path(fx[stage]) / stage / fx.hash):localpath()
+        end
     end
 else
-    compile = require "fx.compile"
+    fxcompile = require "fx.compile"
 end
 
 local default_setting = {
 	lighting = "on",			-- "on"/"off"
-	transparency = "opaticy",	-- "opaticy"/"translucent"
+	surfacetype = "opaticy",	-- "opaticy"/"translucent"/"decal"
 	shadow_cast	= "on",			-- "on"/"off"
 	shadow_receive = "off",		-- "on"/"off"
 	subsurface = "off",			-- "on"/"off"? maybe has other setting
 	skinning = "UNKNOWN",
-    shadow_type = render.setting:get 'graphic/shadow/type',
-    bloom_enable = render.setting:get 'graphic/postprocess/bloom/enable',
+    shadow_type = setting:get 'graphic/shadow/type',
+    bloom_enable = setting:get 'graphic/postprocess/bloom/enable',
 }
 
 local function merge(a, b)
@@ -44,17 +46,18 @@ local function read_fx(fx, setting)
     end
     merge(setting, default_setting)
     return {
-        shader = fx.shader,
+        vs = fx.vs,
+        fs = fx.fs,
+        cs = fx.cs,
         setting = setting
     }
 end
 
 local function get_hash(fx)
-    local shader = fx.shader
-    if shader.cs then
-        return shader.cs
+    if fx.cs then
+        return fx.cs
     end
-    return shader.vs..shader.fs
+    return fx.vs..fx.fs
 end
 
 local function create_uniform(h, mark)
@@ -105,15 +108,17 @@ local function readfile(filename)
 end
 
 local function load_shader(fx, stage)
-    local input = fx.shader[stage]
-    local h = bgfx.create_shader(readfile(compile.get_shader(input, stage, fx)))
+    local input = fx[stage]
+    if input == nil then
+        error(("invalid stage:%s in fx file"):format(stage))
+    end
+    local h = bgfx.create_shader(readfile(fxcompile.get_shader(fx, stage)))
     bgfx.set_name(h, input)
     return h
 end
 
 local function create_program(fx)
-    local shader = fx.shader
-    if shader.cs then
+    if fx.cs then
         return create_compute_program(
             load_shader(fx, "cs")
         )
@@ -147,12 +152,21 @@ local function loader(input, setting)
     return fx
 end
 
+local function compile(input, setting)
+    local fx = read_fx(input, setting)
+    fx.hash = sha1(stringify(fx.setting)):sub(1,7)
+    if fx.vs then fxcompile.get_shader(fx, "vs") end
+    if fx.fs then fxcompile.get_shader(fx, "fs") end
+    if fx.cs then fxcompile.get_shader(fx, "cs") end
+end
+
 local function unloader(res)
-    bgfx.destroy(assert(res.shader.prog))
+    bgfx.destroy(assert(res.prog))
 end
 
 return {
-    init = compile.init,
+    set_identity = fxcompile.set_identity,
+    compile = compile,
     loader = loader,
     unloader = unloader,
 }

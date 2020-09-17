@@ -4,22 +4,22 @@ ANT3RD= $(ANT)/3rd
 include $(ANT)/clibs/common.mk
 include $(ANT)/clibs/ant/ant_define.mk
 
-ANTINC= -I$(ANT)/clibs/ant
-LUAINC= -I$(ANT)/clibs/lua
-CFLAGS= -O2 -Wall -fPIC
-
 default : ant.exe
 
-mingw : default
+modules.o : ../common/modules.cpp ../common/modules.h
+	$(CXX) -c $(CFLAGS) $(LUAINC) -I../common -o $@ $<
 
-main.o : main.cpp
-	g++ -std=c++17 -c $(CFLAGS) $(ANTINC) $(LUAINC) -o $@ $<
+main.o : main.cpp mingw_wmain.h ../common/runtime.h
+	$(CXX) -c $(CFLAGS) $(LUAINC) -I../common -o $@ $<
 
 $(ODIR)/libant.a :
 	cd $(ANT)/clibs/ant/ && $(MAKE) $@
 
-ant.exe : main.o $(ODIR)/libant.a
-	gcc -o $@ main.o $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) && $(STRIP) $@
+$(ODIR)/libruntime.a :
+	cd ../common/ && $(MAKE) $@
+
+ant.exe : main.o modules.o $(ODIR)/libruntime.a $(ODIR)/libant.a
+	$(CC) -o $@ main.o modules.o ../common/$(ODIR)/libruntime.a $(ANT)/clibs/ant/$(ODIR)/libant.a $(LINKLIBANT) && $(STRIP) $@
 
 clean :
 	rm -f *.o && rm -f ant.exe

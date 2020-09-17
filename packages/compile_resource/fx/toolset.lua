@@ -15,8 +15,13 @@ local shader_options = {
 		fs = "ps_3_0",
 	},
 	direct3d11 = {
-		vs = "vs_4_0",
-		fs = "ps_4_0",
+		vs = "vs_5_0",
+		fs = "ps_5_0",
+		cs = "cs_5_0",
+	},
+	direct3d12 = {
+		vs = "vs_5_0",
+		fs = "ps_5_0",
 		cs = "cs_5_0",
 	},
 	opengl = {
@@ -75,13 +80,14 @@ function toolset.compile(config)
 			level = config.stage == "cs" and 1 or 3
 		end
 	end
-	if level then
-		commands[#commands+1] = "-O"
-		commands[#commands+1] = tostring(level)
-	end
 
 	if config.debug then
 		commands[#commands+1] = "--debug"
+	else
+		if level then
+			commands[#commands+1] = "-O"
+			commands[#commands+1] = tostring(level)
+		end
 	end
 
 	-- print("shader compile:")

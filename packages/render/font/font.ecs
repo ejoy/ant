@@ -1,0 +1,46 @@
+interface "ifontmgr"
+    .implement "font/font.lua"
+    .method "add_font"
+    .method "add_text"
+
+system "font_system"
+    .implement "font/font.lua"
+    .require_interface "ant.render|ifontmgr"
+    .method "camera_usage"
+
+component "font"
+    .implement "font/font.lua"
+    .method "init"
+
+component "show_config"
+    .implement "font/font.lua"
+    .method "init"
+
+transform "font_mesh"
+    .implement "font/font.lua"
+    .input "font"
+    .output "mesh"
+    .method "process_prefab"
+
+policy "fontrender"
+    .require_transform "ant.render|font_mesh"
+    .require_transform "ant.asset|mesh_transform"
+    .require_transform "ant.asset|material_transform"
+    .require_transform "ant.render|world_matrix_transform"
+    .component "material"
+    .component "transform"
+    .component "scene_entity"
+    .component "font"
+    .component "state"
+
+
+action "show_name"
+    .implement "font/font.lua"
+    .method "init"
+
+policy "show_name"
+    .require_system "ant.render|font_system"
+    .require_interface "ant.render|ifontmgr"
+    .require_policy "ant.render|fontrender"
+    .component "show_config"
+    .component "name"

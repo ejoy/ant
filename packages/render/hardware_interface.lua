@@ -43,7 +43,7 @@ end
 local function bgfx_init(args)
 	nwh, w, h = args.nwh, args.width, args.height
 	--assert(nwh,"handle is nil")
-	local bgfx = require "bgfx"
+	
 	args.renderer = check_renderer(args.renderer)
 	args.getlog = args.getlog or true
 	if args.reset == nil then
@@ -66,7 +66,9 @@ end
 
 function hw.init(args)
 	bgfx_init(args)
-	import_package "ant.compile_resource".init()
+    local os = platform.OS
+    local renderer = hw.get_caps().rendererType
+	import_package "ant.compile_resource".set_identity((os.."_"..renderer):lower())
 end
 
 function hw.dpi()
@@ -83,7 +85,6 @@ end
 
 function hw.reset(t, w_, h_)
 	if t then flags = t end
-	local bgfx = require "bgfx"
 	w = w_ or w
 	h = h_ or h
 	bgfx.reset(w, h, get_flags())
@@ -96,7 +97,6 @@ function hw.add_reset_flag(flag)
 		return
 	end
 	flags[f] = v
-	local bgfx = require "bgfx"
 	bgfx.reset(w, h, get_flags())
 end
 
@@ -106,7 +106,6 @@ function hw.remove_reset_flag(flag)
 		return
 	end
 	flags[f] = nil
-	local bgfx = require "bgfx"
 	bgfx.reset(w, h, get_flags())
 end
 
@@ -139,7 +138,6 @@ end
 
 function hw.shutdown()
 	caps = nil
-	local bgfx = require "bgfx"
 	bgfx.shutdown()
 end
 

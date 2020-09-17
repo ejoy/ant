@@ -1,4 +1,6 @@
-fx: /pkg/ant.resources/materials/fx/pickup_transparent.fx
+fx:
+  fs: /pkg/ant.resources/shaders/picking/fs_picking.sc
+  vs: /pkg/ant.resources/shaders/picking/vs_picking.sc
 state:
   DEPTH_TEST: ALWAYS
   WRITE_MASK: RGBA

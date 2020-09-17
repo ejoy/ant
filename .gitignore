@@ -14,11 +14,10 @@
 .repo
 .build
 .dep
-_build
+.log
 
 /3rd/bin
 /bin
-/log
 /clibs/*/o
 
 editor.user.setting

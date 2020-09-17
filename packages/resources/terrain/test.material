@@ -1,2 +1,4 @@
-fx: /pkg/ant.resources/terrain/test.fx
+fx:
+  fs: /pkg/ant.resources/shaders/terrain/fs_test.sc
+  vs: /pkg/ant.resources/shaders/terrain/vs_test.sc
 state: /pkg/ant.resources/materials/states/default.state

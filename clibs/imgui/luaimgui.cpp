@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
@@ -45,18 +46,6 @@ lDestroyContext(lua_State *L) {
 	ImGui::DestroyContext();
 	return 0;
 }
-
-static int
-lsetDockEnable(lua_State *L) {
-	bool enable = lua_toboolean(L, 1);
-	ImGuiIO& io = ImGui::GetIO();
-	if (enable)
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	else
-		io.ConfigFlags ^= ImGuiConfigFlags_DockingEnable;
-	return 0;
-}
-
 
 static int
 limeHandle(lua_State *L) {
@@ -157,41 +146,33 @@ sync_io(lua_State *L) {
 		io_cache->inited = true;
 }
 
-static int lshowDockSpace(lua_State * L) {
-	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_NoDockingInCentralNode | ImGuiDockNodeFlags_PassthruCentralNode;
-
-	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-	// because it would be confusing to have two docking targets within each others.
-	ImGuiWindowFlags window_flags = /*ImGuiWindowFlags_MenuBar | */ImGuiWindowFlags_NoDocking;
-
-	auto pos = ImVec2{ (float)luaL_optnumber(L, 1, 0), (float)luaL_optnumber(L, 2, 0) };
-	
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(pos);
-	ImGui::SetNextWindowSize(ImVec2{ viewport->Size.x, viewport->Size.y - pos.y });
-	ImGui::SetNextWindowViewport(viewport->ID);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-	window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-	window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-	
-	if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-		window_flags |= ImGuiWindowFlags_NoBackground;
-
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	bool p_open = true;
-	ImGui::Begin("DockSpace Demo", &p_open, window_flags);
-
-	ImGui::PopStyleVar(3);
-
+static int dEnable(lua_State* L) {
+	bool enable = lua_toboolean(L, 1);
 	ImGuiIO& io = ImGui::GetIO();
-	if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-	{
-		ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-	}
-	ImGui::End();
+	if (enable)
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	else
+		io.ConfigFlags ^= ImGuiConfigFlags_DockingEnable;
 	return 0;
+}
+
+static int dSpace(lua_State* L) {
+	const char* str_id = luaL_checkstring(L, 1);
+	ImGuiDockNodeFlags flags = (ImGuiDockNodeFlags)luaL_checkinteger(L, 2);
+	float w = (float)luaL_optnumber(L, 3, 0);
+	float h = (float)luaL_optnumber(L, 4, 0);
+	ImGui::DockSpace(ImGui::GetID(str_id), ImVec2(w, h), flags);
+	return 0;
+}
+
+static int dBuilderGetCentralRect(lua_State * L) {
+	const char* str_id = luaL_checkstring(L, 1);
+	ImGuiDockNode* central_node = ImGui::DockBuilderGetCentralNode(ImGui::GetID(str_id));
+	lua_pushnumber(L, central_node->Pos.x);
+	lua_pushnumber(L, central_node->Pos.y);
+	lua_pushnumber(L, central_node->Size.x);
+	lua_pushnumber(L, central_node->Size.y);
+	return 4;
 }
 
 
@@ -557,25 +538,25 @@ drag_float(lua_State *L, const char *label, int n) {
 	float min = (float)read_field_float(L, "min", 0.0f);
 	float max = (float)read_field_float(L, "max", 0.0f);
 	const char * format = read_field_string(L, "format", "%.3f");
-	float power = (float)read_field_float(L, "power", 1.0f);
+	ImGuiSliderFlags flags = (ImGuiSliderFlags)read_field_int(L, "flags", ImGuiSliderFlags_None);
 	bool change = false;
 	switch (n) {
 	case 1:
-		change = ImGui::DragFloat(label, v, speed, min, max, format, power);
+		change = ImGui::DragFloat(label, v, speed, min, max, format, flags);
 		break;
 	case 2:
 		if (read_field_boolean(L, "range", false)) {
 			const char *format_max = read_field_string(L, "format_max", NULL);
-			change = ImGui::DragFloatRange2(label, v+0, v+1, speed, min, max, format, format_max, power);
+			change = ImGui::DragFloatRange2(label, v+0, v+1, speed, min, max, format, format_max, flags);
 		} else {
-			change = ImGui::DragFloat2(label, v, speed, min, max, format, power);
+			change = ImGui::DragFloat2(label, v, speed, min, max, format, flags);
 		}
 		break;
 	case 3:
-		change = ImGui::DragFloat3(label, v, speed, min, max, format, power);
+		change = ImGui::DragFloat3(label, v, speed, min, max, format, flags);
 		break;
 	case 4:
-		change = ImGui::DragFloat4(label, v, speed, min, max, format, power);
+		change = ImGui::DragFloat4(label, v, speed, min, max, format, flags);
 		break;
 	}
 	if (change) {
@@ -739,8 +720,8 @@ vslider_float(lua_State *L, const char *label) {
 	float min = (float)read_field_checkfloat(L, "min");
 	float max = (float)read_field_checkfloat(L, "max");
 	const char * format = read_field_string(L, "format", "%.3f");
-	float power = (float)read_field_float(L, "power", 1.0f);
-	bool change = ImGui::VSliderFloat(label, ImVec2(width, height), &r, min, max, format, power);
+	ImGuiSliderFlags flags = (ImGuiSliderFlags)read_field_int(L, "flags", ImGuiSliderFlags_None);
+	bool change = ImGui::VSliderFloat(label, ImVec2(width, height), &r, min, max, format, flags);
 	if (change) {
 		lua_pushnumber(L, r);
 		lua_seti(L, INDEX_ARGS, 1);
@@ -2424,9 +2405,38 @@ cSetColumnOffset(lua_State* L) {
 }
 
 static int
+cGetColumnWidth(lua_State* L) {
+	int index = (int)luaL_optinteger(L, 1, 0) - 1;
+	float width = ImGui::GetColumnWidth(index);
+	lua_pushnumber(L, width);
+	return 1;
+}
+
+static int
+cSetColumnWidth(lua_State* L) {
+	int index = (int)luaL_checkinteger(L, 1) - 1;
+	float width = (float)luaL_checknumber(L, 2);
+	ImGui::SetColumnWidth(index, width);
+	return 0;
+}
+
+static int
 cSetNextItemWidth(lua_State * L) {
 	float w = (float)lua_tonumber(L, 1);
 	ImGui::SetNextItemWidth(w);
+	return 0;
+}
+
+static int
+cPushItemWidth(lua_State* L) {
+	float w = (float)lua_tonumber(L, 1);
+	ImGui::PushItemWidth(w);
+	return 0;
+}
+
+static int
+cPopItemWidth(lua_State* L) {
+	ImGui::PopItemWidth();
 	return 0;
 }
 
@@ -2787,6 +2797,21 @@ uCalcItemWidth(lua_State* L) {
 	return 1;
 }
 
+static int
+cIsMouseDragging(lua_State* L) {
+	int mouseType = (int)luaL_optinteger(L, 1, 0);
+	lua_pushboolean(L, ImGui::IsMouseDragging(mouseType));
+	return 1;
+}
+
+static int
+cGetMousePos(lua_State* L) {
+	auto pos = ImGui::GetMousePos();
+	lua_pushnumber(L, pos.x);
+	lua_pushnumber(L, pos.y);
+	return 2;
+}
+
 #ifdef _MSC_VER
 #pragma endregion IMP_UTIL
 #endif
@@ -3140,6 +3165,26 @@ static struct enum_pair eMouseCursor[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eSliderFlags[] = {
+	ENUM(ImGuiSliderFlags,None),
+	ENUM(ImGuiSliderFlags,ClampOnInput),
+	ENUM(ImGuiSliderFlags,Logarithmic),
+	ENUM(ImGuiSliderFlags,NoRoundToFormat),
+	ENUM(ImGuiSliderFlags,NoInput),
+	ENUM(ImGuiSliderFlags,InvalidMask_),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eDockNodeFlags[] = {
+	ENUM(ImGuiDockNodeFlags,None),
+	ENUM(ImGuiDockNodeFlags,KeepAliveOnly),
+	ENUM(ImGuiDockNodeFlags,NoDockingInCentralNode),
+	ENUM(ImGuiDockNodeFlags,PassthruCentralNode),
+	ENUM(ImGuiDockNodeFlags,NoSplit),
+	ENUM(ImGuiDockNodeFlags,NoResize),
+	ENUM(ImGuiDockNodeFlags,AutoHideTabBar),
+	{ NULL, 0 },
+};
 
 #ifdef _MSC_VER
 #pragma endregion IMP_ENUM
@@ -3274,8 +3319,6 @@ luaopen_imgui(lua_State *L) {
 		{ "resize", lresize },
 		{ "getSize", lgetSize },
 		{ "ime_handle", limeHandle },
-		{ "setDockEnable", lsetDockEnable },
-		{ "showDockSpace", lshowDockSpace },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
@@ -3288,6 +3331,15 @@ luaopen_imgui(lua_State *L) {
 	};
 	push_sync_io(L);
 	luaL_setfuncs(L, io, 2);
+
+	luaL_Reg dock[] = {
+		{ "Enable", dEnable },
+		{ "Space", dSpace },
+		{ "BuilderGetCentralRect", dBuilderGetCentralRect },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, dock);
+	lua_setfield(L, -2, "dock");
 
 	
 	luaL_Reg widgets[] = {
@@ -3383,7 +3435,11 @@ luaopen_imgui(lua_State *L) {
 		{ "GetColumnIndex", cGetColumnIndex },
 		{ "GetColumnOffset", cGetColumnOffset },
 		{ "SetColumnOffset", cSetColumnOffset },
+		{ "GetColumnWidth", cGetColumnWidth },
+		{ "SetColumnWidth", cSetColumnWidth },
 		{ "SetNextItemWidth", cSetNextItemWidth },
+		{ "PushItemWidth", cPushItemWidth},
+		{ "PopItemWidth", cPopItemWidth},
 		{ "SetMouseCursor", cSetMouseCursor },
 		{ NULL, NULL },
 	};
@@ -3479,6 +3535,8 @@ luaopen_imgui(lua_State *L) {
 		{ "PopID",uPopID},
 		{ "CalcTextSize",uCalcTextSize},
 		{ "CalcItemWidth",uCalcItemWidth},
+		{ "IsMouseDragging", cIsMouseDragging },
+		{ "GetMousePos", cGetMousePos },
 		{ NULL, NULL },
 	};
 
@@ -3506,6 +3564,8 @@ luaopen_imgui(lua_State *L) {
 	flag_gen(L, "TabBar", eTabBarFlags);
 	flag_gen(L, "DragDrop", eDragDropFlags);
 	flag_gen(L, "Popup", ePopupFlags);
+	flag_gen(L, "Slider", eSliderFlags);
+	flag_gen(L, "DockNode", eDockNodeFlags);
 	lua_setfield(L, -2, "flags");
 
 	lua_newtable(L);

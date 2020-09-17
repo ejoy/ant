@@ -1,3 +1,0 @@
-system "skybox_system"
-    .implement "skybox_system.lua"
-    .method "init"

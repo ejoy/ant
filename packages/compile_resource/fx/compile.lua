@@ -4,10 +4,10 @@ local sha1 = require "hash".sha1
 local datalist = require "datalist"
 local toolset = require "fx.toolset"
 local IDENTITY
-local PLATFORM
-local RENDERER
-local BINPATH
+local BINPATH = fs.path "":localpath() / ".build" / "sc"
 local SHARER_INC = lfs.current_path() / "packages/resources/shaders"
+
+local setting = import_package "ant.settings"
 
 local function get_filename(pathname)
     pathname = lfs.absolute(fs.path(pathname):localpath()):string():lower():lower()
@@ -28,10 +28,8 @@ local function readfile(filename)
 	return data
 end
 
-local function init(identity)
+local function set_identity(identity)
     IDENTITY = identity
-    PLATFORM, RENDERER = IDENTITY:match "(%w+)_(%w+)"
-    BINPATH = fs.path ".build/sc":localpath() / identity
 end
 
 local function do_build(depfile)
@@ -79,22 +77,23 @@ local function get_macros(setting)
 end
 
 local function compile_debug_shader(platform, renderer)
-    -- if platform == "windows" and renderer:match "direct3d" then
-    --     return true
-    -- end
+    if platform == "windows" and renderer:match "direct3d" then
+        return true
+    end
 end
 
 local function do_compile(input, output, stage, setting)
+    local platform, renderer = IDENTITY:match "(%w+)_(%w+)"
     input = fs.path(input):localpath():string()
     local ok, err, deps = toolset.compile {
-        platform = PLATFORM,
-        renderer = RENDERER,
+        platform = platform,
+        renderer = renderer,
         input = input,
         output = output,
         includes = {SHARER_INC},
         stage = stage,
         macros = get_macros(setting),
-        debug = compile_debug_shader(PLATFORM, RENDERER),
+        debug = compile_debug_shader(platform, renderer),
     }
     if not ok then
         error("compile failed: " .. input .. "\n\n" .. err)
@@ -102,9 +101,10 @@ local function do_compile(input, output, stage, setting)
     return deps
 end
 
-local function get_shader(path, stage, fx)
+local function get_shader(fx, stage)
+    local path = fx[stage]
     local hashpath = get_filename(path)
-    local output = BINPATH / hashpath / stage
+    local output = BINPATH / IDENTITY / hashpath / stage
     local outfile = output / fx.hash
     local depfile = output / ".dep" / fx.hash
     if not do_build(depfile) then
@@ -116,6 +116,6 @@ local function get_shader(path, stage, fx)
 end
 
 return {
-    init = init,
+    set_identity = set_identity,
     get_shader = get_shader,
 }

@@ -1,2 +1,4 @@
-fx: /pkg/ant.resources/materials/fx/skin_model_sample.fx
+fx:
+  fs: /pkg/ant.resources/shaders/mesh/fs_lighting.sc
+  vs: /pkg/ant.resources/shaders/mesh/vs_lighting.sc
 state: /pkg/ant.resources/materials/states/default.state

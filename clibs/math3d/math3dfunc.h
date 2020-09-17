@@ -37,6 +37,7 @@ void math3d_reciprocal(struct lastack *LS, const float v[4]);
 void math3d_quat_to_viewdir(struct lastack *LS, const float q[4]);
 void math3d_rotmat_to_viewdir(struct lastack *LS, const float m[16]);
 void math3d_viewdir_to_quat(struct lastack *LS, const float v[3]);
+void math3d_quat_between_2vectors(struct lastack *LS, const float v0[3], const float v1[3]);
 void math3d_frustumLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
 void math3d_orthoLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
 void math3d_base_axes(struct lastack *LS, const float forward[4]);
@@ -44,6 +45,8 @@ void math3d_quat_transform(struct lastack *LS, const float quat[4], const float 
 void math3d_rotmat_transform(struct lastack *LS, const float mat[16], const float v[4]);
 void math3d_minmax(struct lastack *LS, const float mat[16], const float v[4], float minv[4], float maxv[4]);
 void math3d_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]);
+void math3d_quat_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]);
+void math3d_quat_slerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]);
 void math3d_quat_to_euler(struct lastack *LS, const float q[4], float euler[4]);
 void math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]);
 //aabb
@@ -56,7 +59,7 @@ float math3d_aabb_diagonal_length(struct lastack *LS, const float *aabb);
 int math3d_aabb_intersect_plane(struct lastack *LS, const float *aabb, const float plane[4]);
 void math3d_aabb_intersetion(struct lastack *LS, const float *lhsaabb, const float *rhsaabb);
 void math3d_aabb_points(struct lastack *LS, const float *aabb, float *points[8]);
-void math3d_aabb_expand(struct lastack *LS, const float *aabb, float e[4]);
+void math3d_aabb_expand(struct lastack *LS, const float *aabb, const float e[4]);
 
 //frustum
 void math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6]);

@@ -26,10 +26,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\runtime\windows\main.c">
+    <ClCompile Include="..\..\runtime\windows\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\ant\ant_searcher.c">
+    <ClCompile Include="..\..\runtime\common\set_current_win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\runtime\common\modules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\runtime\common\runtime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\runtime\common\searcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

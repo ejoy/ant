@@ -100,8 +100,9 @@ mathadapter.bind(
 local m = ecs.component "animation"
 
 function m:init()
+	local res = {}
 	for k, v in pairs(self) do
-		self[k] = assetmgr.resource(v)
+		res[k] = assetmgr.resource(v)
 	end
-	return self
+	return res
 end

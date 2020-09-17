@@ -1,6 +1,7 @@
 import "@ant.general"
 import "@ant.render"
 import "@ant.camera"
+import "@ant.asset"
 
 system "gameui"
     .implement "gameui.lua"

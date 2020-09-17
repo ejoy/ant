@@ -40,3 +40,5 @@ graphic:
     #split_ratios: {0.05, 0.25, 0.6}
     split_lamada: 0.8
     split_num: 4
+debug:
+  show_bounding: true

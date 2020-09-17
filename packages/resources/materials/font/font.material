@@ -1,0 +1,15 @@
+fx:
+  vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
+  fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
+  setting:
+    surfacetype: ui
+properties:
+  s_texFont:
+    stage: 0
+    texture: /pkg/ant.resources/materials/textures/default.texture
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  WRITE_MASK: RGBA
+  BLEND: ALPHA

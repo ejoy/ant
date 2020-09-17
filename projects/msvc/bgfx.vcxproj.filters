@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\clibs\bgfx\font_manager.c">
       <Filter>Source Files\fontmanager</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\bgfx\luafont.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h">

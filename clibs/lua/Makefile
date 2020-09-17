@@ -21,11 +21,13 @@ BASE_O= $(CORE_O) $(LIB_O) $(MYOBJS)
 define build_lua
 $(ODIR)/$(1) : $(subst .o,.c,$(1))  | $(ODIR)
 	$(CC) -c $(CFLAGS) $(LUA_FLAGS) -o $(ODIR)/$(1) $(subst .o,.c,$(1))
+$(ODIR)/_$(1) : $(subst .o,.c,$(1))  | $(ODIR)
+	$(CC) -c $(CFLAGS) -o $(ODIR)/_$(1) $(subst .o,.c,$(1))
 endef
 $(foreach v, $(BASE_O), $(eval $(call build_lua,$(v))))
 $(eval $(call build_lua,lua.o))
 
-$(ODIR)/liblua.a : $(foreach v, $(BASE_O), $(ODIR)/$(v))
+$(ODIR)/liblua.a : $(foreach v, $(BASE_O), $(ODIR)/_$(v))
 	ar rsv $@ $^
 
 lua54.dll : $(ODIR)/lua54.dll | $(ODIR)

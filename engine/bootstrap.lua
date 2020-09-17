@@ -5,17 +5,15 @@ if __ANT_RUNTIME__ then
     require "runtime.errlog"
 else
     require "editor.init_cpath"
+    require "common.thread"
     require "editor.vfs"
     require "editor.log"
 end
 
 require "common.init_bgfx"
 require "filesystem"
-
-local pm = require "antpm"
-pm.initialize()
-import_package = pm.import
+require "packagemanager"
 
 if __ANT_RUNTIME__ then
-    --require "runtime.debug"
+    require "runtime.debug"
 end

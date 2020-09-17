@@ -55,9 +55,6 @@
     <ProjectReference Include="protocol.vcxproj">
       <Project>{cf016076-47e5-40cf-875d-dcade7c9055e}</Project>
     </ProjectReference>
-    <ProjectReference Include="redirectfd.vcxproj">
-      <Project>{ad2e16b7-601f-4189-88ad-d439329322e3}</Project>
-    </ProjectReference>
     <ProjectReference Include="remotedebug.vcxproj">
       <Project>{d1b7638b-572f-4212-915c-512395553224}</Project>
     </ProjectReference>
@@ -78,8 +75,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\ant\ant_searcher.c" />
-    <ClCompile Include="..\..\runtime\windows\main.c" />
+    <ClCompile Include="..\..\runtime\common\modules.cpp" />
+    <ClCompile Include="..\..\runtime\common\runtime.cpp" />
+    <ClCompile Include="..\..\runtime\common\searcher.cpp" />
+    <ClCompile Include="..\..\runtime\common\set_current_win32.cpp" />
+    <ClCompile Include="..\..\runtime\windows\main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui;../../runtime/common</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -151,7 +151,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>LUA_BUILD_AS_DLL;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../clibs/ant;../../3rd/bgfx/include;../../3rd/bx/include;../../3rd/imgui;../../runtime/common</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -33,7 +33,7 @@ OBJS += $(ODIR)/osx_task_info.o $(ODIR)/osx_font_info.o
 endif
 
 $(ODIR)/platform_timer.o : platform_timer.cpp | $(ODIR)
-	$(CXX) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) -I$(BXSRC)/include
+	$(CXX) $(CFLAGS) -c -o $@ $^ $(LUAINC) -I$(BXSRC)/include
 
 $(ODIR)/platform_$(PLAT).o : platform_$(PLAT).$(PLAT_CXX) | $(ODIR)
 	$(CXX) -c $(CFLAGS) $(LUAINC) -o $@ $<

@@ -4,65 +4,19 @@ local world = ecs.world
 local fbmgr 	= require "framebuffer_mgr"
 local bgfx 		= require "bgfx"
 
-local math3d	= require "math3d"
+local irender 	= world:interface "ant.render|irender"
+local ipf		= world:interface "ant.scene|iprimitive_filter"
+local isp		= world:interface "ant.render|system_properties"
+local iqc		= world:interface "ant.render|iquadcache"
 
-local irender = world:interface "ant.render|irender"
-local isys_properties = world:interface "ant.render|system_properties"
-local imaterial = world:interface "ant.asset|imaterial"
-local rt = ecs.transform "render_transform"
-
+local wmt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
 end
 
-local function to_v(t)
-	assert(type(t) == "table")
-	if t.stage then
-		return t
-	end
-	if type(t[1]) == "number" then
-		return #t == 4 and math3d.ref(math3d.vector(t)) or math3d.ref(math3d.matrix(t))
-	end
-	local res = {}
-	for i, v in ipairs(t) do
-		if type(v) == "table" then
-			res[i] = #v == 4 and math3d.ref(math3d.vector(v)) or math3d.ref(math3d.matrix(v))
-		else
-			res[i] = v
-		end
-	end
-	return res
-end
-
-local function generate_properties(uniforms, properties)
-	local new_properties
-	properties = properties or {}
-	if uniforms and #uniforms > 0 then
-		new_properties = {}
-		for _, u in ipairs(uniforms) do
-			local n = u.name
-			local v = properties[n] and to_v(properties[n]) or isys_properties.get(n)
-			new_properties[n] = {
-				value = v,
-				handle = u.handle,
-				type = u.type,
-				set = imaterial.which_set_func(v),
-				ref = true,
-			}
-		end
-	end
-
-	return new_properties
-end
-
-function rt.process_entity(e)
-	local c = e._cache_prefab
-	e._rendercache.set_transform= set_world_matrix
-	e._rendercache.fx 			= c.fx
-	e._rendercache.properties 	= generate_properties(c.fx.uniforms, c.properties)
-	e._rendercache.state 		= c.state
-	e._rendercache.vb 			= c.vb
-	e._rendercache.ib 			= c.ib
+function wmt.process_entity(e)
+	local rc = e._rendercache
+	rc.set_transform = set_world_matrix
 end
 
 local rt = ecs.component "render_target"
@@ -89,7 +43,8 @@ function render_sys:init()
 end
 
 function render_sys:render_commit()
-	isys_properties.update()
+	iqc.update()
+	isp.update()
 	for _, eid in world:each "render_target" do
 		local rq = world[eid]
 		if rq.visible then
@@ -101,17 +56,15 @@ function render_sys:render_commit()
 			local filter = rq.primitive_filter
 			local results = filter.result
 
-			local function draw_items(result)
-				local items = result.visible_set
-				if items then
-					for eid, ri in pairs(items) do
-						irender.draw(viewid, ri)
-					end
-				end  
+			for _, fn in ipairs(filter.filter_order) do
+				local result = results[fn]
+				if result.sort then
+					result:sort()
+				end
+				for _, item in ipf.iter_target(result) do
+					irender.draw(viewid, item)
+				end
 			end
-
-			draw_items(results.opaticy)
-			draw_items(results.translucent)
 		end
 		
 	end

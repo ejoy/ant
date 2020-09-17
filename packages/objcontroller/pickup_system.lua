@@ -13,6 +13,8 @@ local viewidmgr = renderpkg.viewidmgr
 
 local bgfx 		= require "bgfx"
 
+local ipf		= world:interface "ant.scene|iprimitive_filter"
+
 local opacity_material, translucent_material
 
 local function packeid_as_rgba(eid)
@@ -50,18 +52,18 @@ function pfpt.process_entity(e)
 	f.insert_item = function (filter, fxtype, eid, rc)
 		local opaticy, translucent = filter.result.opaticy, filter.result.translucent
 		if rc then
-			opaticy.items[eid] = setmetatable({
+			rc.eid = eid
+			ipf.add_item(opaticy.items, eid, setmetatable({
 				fx = opacity_material.fx,
-				properties = get_properties(eid, opacity_material.fx)
-			}, {__index=rc})
-	
-			translucent.items[eid] = setmetatable({
-				fx = translucent_material.fx,
-				properties = get_properties(eid, translucent_material.fx),
-			}, {__index=rc})
+				properties = get_properties(eid, opacity_material.fx),
+			}, {__index=rc}))
+			ipf.add_item(translucent.items, eid, setmetatable({
+				fx = opacity_material.fx,
+				properties = get_properties(eid, opacity_material.fx),
+			}, {__index=rc}))
 		else
-			opaticy.items[eid] = nil
-			translucent.items[eid] = nil
+			ipf.remove_item(opaticy.items, eid)
+			ipf.remove_item(translucent.items, eid)
 		end
 
 	end

@@ -26,11 +26,20 @@ CMAKE_OPT=
 CMAKE_PROJ_BUILD_SUB_PATH = $(PLAT)/$(MODE)
 CMAKE_PROJ_SRC_RELATIVE_PATH = ../../../..
 
-CMAKE_OPT_ozz-animation=-Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF -Dozz_build_gltf=ON -Dozz_build_cpp11=ON -DEMSCRIPTEN=FALSE
+ifeq "$(PLAT)" "ios"
+  CMAKE_OZZ_OPT = -Dozz_build_tools=OFF -Dozz_build_gltf=OFF
+endif
+
+CMAKE_OPT_ozz-animation=$(CMAKE_OZZ_OPT) -Dozz_build_samples=OFF -Dozz_build_fbx=OFF -Dozz_build_howtos=OFF -Dozz_build_cpp11=ON -DEMSCRIPTEN=FALSE
 ifeq "$(PLAT)" "mingw"
 TOOL_EXT_NAME=.exe
 endif
-CMAKE_COPY_ozz-animation= mkdir -p ../../../../../bin/$(PLAT)/$(MODE)/ && cp src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) ../../../../../bin/$(PLAT)/$(MODE)/gltf2ozz$(TOOL_EXT_NAME)
+
+ifeq "$(PLAT)" "ios"
+  CMAKE_COPY_ozz-animation= echo ok
+else
+  CMAKE_COPY_ozz-animation= mkdir -p ../../../../../bin/$(PLAT)/$(MODE)/ && cp src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) ../../../../../bin/$(PLAT)/$(MODE)/gltf2ozz$(TOOL_EXT_NAME)
+endif
 CMAKE_OPT_reactphysics3d=-DRP3D_LOGS_ENABLED=ON
 CMAKE_COPY_reactphysics3d= echo ok
 

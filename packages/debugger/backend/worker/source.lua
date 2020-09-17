@@ -1,6 +1,5 @@
 local fs = require 'backend.worker.filesystem'
-local parser = require 'backend.worker.parser'
-local ev = require 'common.event'
+local ev = require 'backend.event'
 local crc32 = require 'backend.worker.crc32'
 
 local sourcePool = {}
@@ -121,12 +120,10 @@ local function create(source)
         -- TODO
         return {}
     else
-        local src = {
+        return {
             sourceReference = codeReference(source),
             protos = {},
         }
-        parser(src, source)
-        return src
     end
 end
 
@@ -145,11 +142,7 @@ function m.create(source, hide)
     return newSource
 end
 
-function m.c2s(clientsrc, content)
-    if content then
-        parser(clientsrc, content)
-    end
-
+function m.c2s(clientsrc)
     -- TODO: 不遍历？
     if clientsrc.sourceReference then
         local ref = clientsrc.sourceReference

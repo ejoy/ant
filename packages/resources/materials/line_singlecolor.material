@@ -1,17 +1,16 @@
 fx:
-  shader:
-    fs: /pkg/ant.resources/shaders/line/fs_line_singlecolor.sc
-    vs: /pkg/ant.resources/shaders/line/vs_line_singlecolor.sc
+  fs: /pkg/ant.resources/shaders/line/fs_line_singlecolor.sc
   setting:
-    transparency: translucent
+    surfacetype: translucent
+  vs: /pkg/ant.resources/shaders/line/vs_line_singlecolor.sc
 properties:
-  u_color:  {1, 1, 1, 1}
+  u_color: {1, 1, 1, 1}
 state:
   ALPHA_REF: 0
+  BLEND: ALPHA
   CULL: CCW
   DEPTH_TEST: ALWAYS
   LINEAA: true
   MSAA: true
   PT: LINES
   WRITE_MASK: RGB
-  BLEND: ALPHA

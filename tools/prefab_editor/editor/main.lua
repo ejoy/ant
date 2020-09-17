@@ -6,7 +6,7 @@ local worlds        = require "worlds"
 local cb = {}
 
 function cb.init(width, height)
-    require "prefab_viewer"
+    require "editor_impl"
     event("init", width, height)
 end
 

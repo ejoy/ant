@@ -93,7 +93,7 @@ function util.spawn_process(commands)
 	return true, table.concat(msg, "\n")
 end
 
-local BINDIR = fs.current_path() / package.cpath:sub(1,-6)
+local BINDIR = fs.current_path() / package.cpath:gsub(";.*$",""):sub(1,-6)
 local TOOLSUFFIX = platform.OS == "OSX" and "" or ".exe"
 
 function util.tool_exe_path(toolname)

@@ -1,0 +1,16 @@
+colorspace: sRGB
+compress:
+  android: ASTC6x6
+  ios: ASTC6x6
+  windows: BC1
+maxsize: 2048x2048
+normalmap: false
+mipmap: 0
+path: /pkg/ant.resources.binary/textures/star/lava_d.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

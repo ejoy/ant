@@ -4,9 +4,6 @@ local ecs = ...
 local world = ecs.world
 
 local viewidmgr = require "viewid_mgr"
-local samplerutil= require "sampler"
-local fbmgr 	= require "framebuffer_mgr"
-local setting	= require "setting"
 
 local mc 		= import_package "ant.math".constant
 local math3d	= require "math3d"
@@ -15,6 +12,7 @@ local ilight	= world:interface "ant.render|light"
 local ishadow	= world:interface "ant.render|ishadow"
 
 local iom		= world:interface "ant.objcontroller|obj_motion"
+local ipf		= world:interface "ant.scene|iprimitive_filter"
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -213,11 +211,14 @@ function sm:update_camera()
 	local mq = world:singleton_entity "main_queue"
 	local c = world[mq.camera_eid]._rendercache
 
-	-- for _, mb in ipairs(modify_mailboxs) do
-	-- 	for _ in mb:each() do
-			update_shadow_camera(ilight.directional_light(), c)
-	-- 	end
-	-- end
+	local leid = ilight.directional_light()
+	for _, ceid in world:each "csm" do
+		world[ceid].visible = leid ~= nil
+	end
+
+	if leid then
+		update_shadow_camera(leid, c)
+	end
 end
 
 function sm:refine_camera()
@@ -228,12 +229,9 @@ function sm:refine_camera()
 		local sceneaabb = math3d.aabb()
 
 		local function merge_scene_aabb(sceneaabb, filtertarget)
-			local vs = filtertarget.visible_set
-			if vs then
-				for _, ri in pairs(vs) do
-					if ri.aabb then
-						sceneaabb = math3d.aabb_merge(sceneaabb, ri.aabb)
-					end
+			for _, item in ipf.iter_target(filtertarget) do
+				if item.aabb then
+					sceneaabb = math3d.aabb_merge(sceneaabb, item.aabb)
 				end
 			end
 			return sceneaabb
@@ -245,11 +243,31 @@ function sm:refine_camera()
 		if math3d.aabb_isvalid(sceneaabb) then
 			local camera_rc = world[se.camera_eid]._rendercache
 
-			local frustm_points_WS = math3d.frustum_points(camera_rc.viewprojmat)
-			local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
+			local function calc_refine_frustum_corners(rc)
+				local frustm_points_WS = math3d.frustum_points(rc.viewprojmat)
+				local frustum_aabb_WS = math3d.points_aabb(frustm_points_WS)
+	
+				local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
+				local max_frustum_aabb_WS = math3d.aabb_merge(sceneaabb, frustum_aabb_WS)
+				local _, extents = math3d.aabb_center_extents(scene_frustum_aabb_WS)
+				extents = math3d.mul(0.1, extents)
+				scene_frustum_aabb_WS = math3d.aabb_expand(scene_frustum_aabb_WS, extents)
+				
+				local max_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, max_frustum_aabb_WS)
+				local max_n, max_f = math3d.index(math3d.index(max_frustum_aabb_VS, 1), 3), math3d.index(math3d.index(max_frustum_aabb_VS, 2), 3)
 
-			local scene_frustum_aabb_WS = math3d.aabb_intersection(sceneaabb, frustum_aabb_WS)
-			local aabb_corners_WS = math3d.aabb_points(scene_frustum_aabb_WS)
+				local scene_frustum_aabb_VS = math3d.aabb_transform(rc.viewmat, scene_frustum_aabb_WS)
+
+				local minv, maxv = math3d.index(scene_frustum_aabb_VS, 1), math3d.index(scene_frustum_aabb_VS, 2)
+				minv, maxv = math3d.set_index(minv, 3, max_n), math3d.set_index(maxv, 3, max_f)
+				scene_frustum_aabb_VS = math3d.aabb(minv, maxv)
+				
+				scene_frustum_aabb_WS = math3d.aabb_transform(rc.worldmat, scene_frustum_aabb_VS)
+				return math3d.aabb_points(scene_frustum_aabb_WS)
+			end
+
+			local aabb_corners_WS = calc_refine_frustum_corners(camera_rc)
+
 			local lightdir = math3d.index(camera_rc.worldmat, 3)
 			calc_shadow_camera_from_corners(aabb_corners_WS, lightdir, setting.shadowmap_size, setting.stabilize, camera_rc)
 		end
@@ -270,14 +288,15 @@ function spt.process_entity(e)
 	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
 		local results = filter.result
 		if rc then
+			rc.eid = eid
 			local material = which_material(eid)
-			results[fxtype].items[eid] = setmetatable({
+			ipf.add_item(results[fxtype].items, eid, setmetatable({
 				fx = material.fx,
 				properties = material.properties or false,
-			}, {__index=rc})
+			}, {__index=rc}))
 		else
-			results.opaticy.items[eid] = nil
-			results.translucent.items[eid] = nil
+			ipf.remove_item(results.opaticy.items, eid)
+			ipf.remove_item(results.translucent.items, eid)
 		end
 	end
 end

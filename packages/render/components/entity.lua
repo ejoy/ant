@@ -11,15 +11,8 @@ local geodrawer = geopkg.drawer
 local geolib    = geopkg.geometry
 
 local ies = world:interface "ant.scene|ientity_state"
-local imaterial = world:interface "ant.asset|imaterial"
-
-local function create_vb_buffer(flag, vb)
-	return ("<"..flag:gsub("d", "I4"):rep(#vb/#flag)):pack(table.unpack(vb))
-end
-
-local function create_ib_buffer(ib)
-	return ("<"..("I4"):rep(#ib)):pack(table.unpack(ib))
-end
+local irender = world:interface "ant.render|irender"
+local bgfx = require "bgfx"
 
 local function create_mesh(vb_lst, ib)
 	local mesh = {
@@ -32,28 +25,23 @@ local function create_mesh(vb_lst, ib)
 		local layout, vb = vb_lst[i], vb_lst[i+1]
 		local correct_layout = declmgr.correct_layout(layout)
 		local flag = declmgr.vertex_desc_str(correct_layout)
-		local vb_value = create_vb_buffer(flag, vb)
 		mesh.vb[#mesh.vb+1] = {
 			declname = correct_layout,
-			memory = {vb_value,1,#vb_value},
+			memory = {flag, vb}
 		}
 		num = num + #vb / #flag
 	end
 	mesh.vb.num = num
 	if ib then
-		local ib_value = create_ib_buffer(ib)
 		mesh.ib = {
 			start = 0, num = #ib,
-			flag = "d",
-			memory = {ib_value,1,#ib_value},
+			memory = {"w", ib},
 		}
 	end
 	return world.component "mesh"(mesh)
 end
 
-function ientity.create_mesh(vb, ib)
-	return create_mesh(vb, ib)
-end
+ientity.create_mesh = create_mesh
 
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
@@ -75,19 +63,48 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 	}
 end
 
-function ientity.create_grid_entity(name, w, h, unit, srt)
-	w = w or 64
-	h = h or 64
-	unit = unit or 1
-	local vb, ib = geolib.grid(w, h, unit)
-	local gvb = {}
-	for _, v in ipairs(vb) do
-		for _, vv in ipairs(v) do
-			gvb[#gvb+1] = vv
+function ientity.create_grid_entity(name, width, height, unit, linewidth)
+	local ipl = world:interface "ant.render|ipolyline"
+	
+	local hw = width * 0.5
+	local hw_len = hw * unit
+
+	local hh = height * 0.5
+	local hh_len = hh * unit
+
+	local pl = {}
+	local function add_vertex(x, y, z)
+		pl[#pl+1] = {x, y, z}
+	end
+
+	local function add_line(x0, z0, x1, z1)
+		add_vertex(x0, 0, z0)
+		add_vertex(x1, 0, z1)
+	end
+
+	for i=0, width do
+		if i ~= hw then
+			local x = -hw_len + i * unit
+			add_line(x, -hh_len, x, hh_len)
 		end
 	end
-	local mesh = create_mesh({"p3|c40niu", gvb}, ib)
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
+
+	for i=0, height do
+		if i ~= hh then
+			local y = -hh_len + i * unit
+			add_line(-hw_len, y, hw_len, y)
+		end
+	end
+
+	local eid = ipl.add_linelist(pl, linewidth, {0.8, 0.8, 0.8, 1.0})
+	world[eid].name = name
+
+	local centerwidth<const> = linewidth * 2.0
+	local xeid = ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {1.0, 0.0, 0.0, 1.0})
+	local zeid = ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, 1.0, 1.0})
+
+	world[xeid].name = name .. ":centerx"
+	world[zeid].name = name .. ":centerz"
 end
 
 local plane_mesh
@@ -156,16 +173,21 @@ function ientity.create_prim_plane_entity(srt, materialpath, name, entity_info)
 	}
 end
 
-function ientity.create_plane_entity(srt, materialpath, name, entity_info)
+function ientity.create_plane_entity(srt, materialpath, name, entity_info, enable_shadow)
 	local policy = {
 		"ant.render|render",
 		"ant.general|name",
 	}
 
+	local whichstate = "visible|selectable"
+	if enable_shadow then
+		whichstate = whichstate .. "|cast_shadow"
+	end
+
 	local data = {
 		transform = srt or {},
 		material = materialpath,
-		state = ies.create_state "visible|selectable",
+		state = ies.create_state(whichstate),
 		name = name or "Plane",
 		scene_entity = true,
 		mesh = get_plane_mesh(),
@@ -210,39 +232,28 @@ local function quad_mesh(rect)
 	}})
 end
 
-function ientity.quad_mesh(rect)
-	return quad_mesh(rect)
-end
-
 local fullquad_meshres
-function ientity.fullquad_mesh()
+local function fullquad_mesh()
 	if fullquad_meshres == nil then
 		fullquad_meshres = quad_mesh()
 	end
 	return fullquad_meshres
 end
 
+ientity.fullquad_mesh = fullquad_mesh
+
+function ientity.quad_mesh(rect)
+	if rect == nil then
+		return fullquad_meshres
+	end
+
+	return quad_mesh(rect)
+end
+
 function ientity.create_quad_entity(rect, material, name)
 	local mesh = quad_mesh(rect)
 	return create_simple_render_entity(nil, material, name, mesh)
 end
-
-function ientity.create_texture_quad_entity(texture_tbl, name)
-	local vb = {
-		-3,  3, 0, 0, 0,
-		 3,  3, 0, 1, 0,
-		-3, -3, 0, 0, 1,
-		 3, -3, 0, 1, 1,
-	}
-	local mesh = create_mesh({"p3|t2", vb})
-	local eid = create_simple_render_entity(nil, "/pkg/ant.resources/materials/texture.material",  name, mesh)
-	
-	for k, v in pairs(texture_tbl) do
-		imaterial.set_property(eid, k, v.handle)
-	end
-	return eid
-end
-
 
 local frustum_ib = {
 	-- front
@@ -300,13 +311,13 @@ function ientity.create_line_entity(srt, p0, p1, name, color)
 end
 
 function ientity.create_circle_entity(radius, slices, srt, name)
-	local circle_vb, circle_ib = geolib.cricle(radius, slices)
+	local circle_vb, circle_ib = geolib.circle(radius, slices)
 	local gvb = {}
 	--color = color or 0xffffffff
-	for _, v in ipairs(circle_vb) do
-		for _, vv in ipairs(v) do
-			gvb[#gvb+1] = vv
-		end
+	for i = 1, #circle_vb, 3 do
+		gvb[#gvb+1] = circle_vb[i]
+		gvb[#gvb+1] = circle_vb[i + 1]
+		gvb[#gvb+1] = circle_vb[i + 2]
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
@@ -314,15 +325,15 @@ function ientity.create_circle_entity(radius, slices, srt, name)
 end
 
 function ientity.create_circle_mesh_entity(radius, slices, srt, mtl, name)
-	local circle_vb, _ = geolib.cricle(radius, slices)
+	local circle_vb, _ = geolib.circle(radius, slices)
 	local gvb = {0,0,0,0,0,1}
 	local ib = {}
 	local idx = 1
-	local maxidx = #circle_vb
-	for _, v in ipairs(circle_vb) do
-		for _, vv in ipairs(v) do
-			gvb[#gvb+1] = vv
-		end
+	local maxidx = #circle_vb / 3
+	for i = 1, #circle_vb, 3 do
+		gvb[#gvb+1] = circle_vb[i]
+		gvb[#gvb+1] = circle_vb[i + 1]
+		gvb[#gvb+1] = circle_vb[i + 2]
 		gvb[#gvb+1] = 0
 		gvb[#gvb+1] = 0
 		gvb[#gvb+1] = 1
@@ -357,13 +368,14 @@ end
 function ientity.create_skybox(material)
     return world:create_entity {
 		policy = {
+			"ant.sky|skybox",
 			"ant.render|render",
 			"ant.general|name",
 		},
 		data = {
 			transform = {},
 			material = material or "/pkg/ant.resources/materials/skybox.material",
-			state = ies.create_state "selectable|visible",
+			state = ies.create_state "visible",
 			scene_entity = true,
 			name = "sky_box",
 			mesh = get_skybox_mesh(),
@@ -431,6 +443,40 @@ function ientity.create_procedural_sky(settings)
 			name = "procedural sky",
 		}
 	}
+end
+
+function ientity.create_gamma_test_entity()
+	world:create_entity {
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            material = "/pkg/ant.resources/materials/gamma_test.material",
+            simplemesh = {
+                ib = {
+                    start = 0,
+                    num = 6,
+                    handle = irender.quad_ib(),
+                },
+                vb = {
+                    start = 0,
+                    num = 4,
+                    handles = {
+                        bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
+                            100, 200, 0.0, 0.0,
+                            100, 132, 0.0, 1.0,
+                            420, 200, 1.0, 0.0,
+                            420, 132, 1.0, 1.0,
+                        }), declmgr.get "p2|t2".handle)
+                    }
+                }
+            },
+            transform = {},
+            scene_entity = true,
+            state = 1,
+        }
+    }
 end
 
 local iom = "ant.objcontroller|obj_motion"

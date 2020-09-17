@@ -1,8 +1,3 @@
-package.path = table.concat({
-	"engine/?.lua",
-	"engine/?/?.lua",
-	"?.lua",
-}, ";")
-
+package.path = "engine/?.lua"
 require "bootstrap"
 import_package "tools.viewer.editor"

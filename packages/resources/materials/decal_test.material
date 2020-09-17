@@ -1,0 +1,16 @@
+fx:
+  fs: /pkg/ant.resources/shaders/decals/fs_test.sc
+  setting:
+    surfacetype: decal
+  vs: /pkg/ant.resources/shaders/decals/vs_test.sc
+properties:
+  s_decal:
+    stage: 0
+    texture: /pkg/ant.resources/textures/test/decal_test.texture
+  u_decal_mat: {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  WRITE_MASK: RGBA

@@ -17,7 +17,8 @@ echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/msys/\$arch/" > /etc/p
 
 - 把ming64的路径加到环境变量
 ``` bash
-echo "export PATH=/mingw64/bin:$PATH" >> ~/.bash_profile
+echo "export MINGW=/mingw64" >> ~/.bash_profile
+echo "export PATH=\$MINGW/bin:\$PATH" >> ~/.bash_profile
 ```
 
 - 安装gcc/make/cmake

@@ -1,12 +1,14 @@
-fx: /pkg/ant.resources/materials/fx/bloom/bloom.fx
+fx:
+  fs: /pkg/ant.resources/shaders/bloom/fs_mesh_bloom.sc
+  vs: /pkg/ant.resources/shaders/bloom/vs_mesh_bloom.sc
 properties:
   s_basecolor:
-    texture: /pkg/ant.resources/materials/textures/Default.texture
     stage: 0
-  s_bloomcolor:
     texture: /pkg/ant.resources/materials/textures/Default.texture
+  s_bloomcolor:
     stage: 1
-  u_params:  {1, 0, 0, 0}
+    texture: /pkg/ant.resources/materials/textures/Default.texture
+  u_params: {1, 0, 0, 0}
 state:
   CULL: CCW
   DEPTH_TEST: LESS

@@ -355,7 +355,7 @@ struct prepare {
 	int codepoint;
 };
 
-static inline void
+static void
 prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
 	struct font_glyph g;
 	int ret = font_manager_touch(F, fontid, codepoint, &g);
@@ -391,7 +391,7 @@ typedef unsigned int utfint;
 #define MAXUNICODE	0x10FFFFu
 #define MAXUTF		0x7FFFFFFFu
 
-static const char *utf8_decode (const char *s, utfint *val, int strict) {
+const char *utf8_decode (const char *s, utfint *val, int strict) {
   static const utfint limits[] =
         {~(utfint)0, 0x80, 0x800, 0x10000u, 0x200000u, 0x4000000u};
   unsigned int c = (unsigned char)s[0];

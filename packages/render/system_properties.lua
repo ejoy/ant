@@ -8,7 +8,6 @@ local mc = import_package "ant.math".constant
 local math3d = require "math3d"
 local iom = world:interface "ant.objcontroller|obj_motion"
 local ilight = world:interface "ant.render|light"
-local icamera = world:interface "ant.camera|camera"
 local ishadow = world:interface "ant.render|ishadow"
 
 local m = ecs.interface "system_properties"
@@ -44,18 +43,11 @@ local function add_directional_light_properties()
 	local deid = ilight.directional_light()
 	if deid then
 		local data = ilight.data(deid)
-		iom.get_direction(deid)
 		system_properties["u_directional_lightdir"].v	= math3d.inverse(iom.get_direction(deid))
 		system_properties["u_directional_color"].v		= data.color
 		system_properties["u_directional_intensity"].v	= data.intensity
 	end
 end
-
-local mode_type = {
-	factor = 0,
-	color = 1,
-	gradient = 2,
-}
 
 local function update_lighting_properties()
 	add_directional_light_properties()
@@ -69,14 +61,16 @@ local function update_shadow_properties()
 	local split_distances = {0, 0, 0, 0}
 	for _, eid in world:each "csm" do
 		local se = world[eid]
-		local csm = se.csm
+		if se.visible then
+			local csm = se.csm
 
-		local idx = csm.index
-		local split_distanceVS = csm.split_distance_VS
-		if split_distanceVS then
-			split_distances[idx] = split_distanceVS
-			local rc = world[se.camera_eid]._rendercache
-			csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), rc.viewprojmat)
+			local idx = csm.index
+			local split_distanceVS = csm.split_distance_VS
+			if split_distanceVS then
+				split_distances[idx] = split_distanceVS
+				local rc = world[se.camera_eid]._rendercache
+				csm_matrixs[csm.index].id = math3d.mul(ishadow.crop_matrix(idx), rc.viewprojmat)
+			end
 		end
 	end
 
