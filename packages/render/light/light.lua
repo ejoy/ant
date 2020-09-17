@@ -11,6 +11,12 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 
 local lt = ecs.transform "light_transform"
 function lt.process_entity(e)
+	local lt = e.light_type
+	if (lt == "point" or lt == "spot") and e.range == nil then
+		error(("light:%s need define 'range' attribute"):format(lt))
+	elseif lt == "spot" and e.radian == nil then
+		error("spot light need define 'radian' attribute")
+	end
 	e._light = {
 		color		= math3d.ref(math3d.vector(e.color or {1, 1, 1, 1})),
 		intensity	= math3d.ref(math3d.vector{e.intensity or 2, 0, 0, 0}),
