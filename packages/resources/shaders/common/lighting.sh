@@ -1,5 +1,22 @@
 #ifndef __SHADER_LIGHTING_SH__
 #define __SHADER_LIGHTING_SH__
+
+// lighting
+uniform vec4 u_directional_lightdir;
+uniform vec4 u_directional_color;
+uniform vec4 u_directional_intensity;
+
+#ifndef MAX_LIGHT
+#define MAX_LIGHT 4
+#endif // MAX_LIGHT
+
+uniform vec4 u_light_color[MAX_LIGHT];	
+uniform vec4 u_light_pos[MAX_LIGHT];		//xyz: pos, w: light type
+uniform vec4 u_light_dir[MAX_LIGHT];		// point light: (0, 0, 0, 0), spot light, xyz: light dir, w: cutoff
+uniform vec4 u_light_param[MAX_LIGHT];    //xyz for attenuation: const, linear, quadratic, w: outcutoff
+
+uniform vec4 u_eyepos;
+
 float fresnel(float _ndotl, float _bias, float _pow)
 {
 	float facing = (1.0 - _ndotl);
@@ -42,6 +59,35 @@ vec4 calc_lighting_BH(vec3 normal, vec3 lightdir, vec3 viewdir,
 	//return vec4(specularFactor * gloss, specularFactor * gloss, specularFactor * gloss, 1.0);
 	//return vec4(specular,1.0);
 	return vec4(diffuse + specular, 1.0);
+}
+
+vec4 calc_point_lighting(vec3 normal, vec3 lightpos, vec3 viewdir, vec4 diffuse, vec4 specular, float shininess)
+{
+    // ambient
+    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
+  	
+    // diffuse 
+    vec3 norm = normalize(normal);
+    vec3 lightDir = normalize(light.position - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;  
+    
+    // specular
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);  
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;  
+    
+    // attenuation
+    float distance    = length(light.position - FragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+
+    ambient  *= attenuation;  
+    diffuse   *= attenuation;
+    specular *= attenuation;   
+        
+    vec3 result = ambient + diffuse + specular;
+    FragColor = vec4(result, 1.0);
 }
 
 vec4 calc_fog_factor(vec4 color, float density, float LOG2, float distanceVS)

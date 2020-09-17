@@ -2,7 +2,6 @@
 $input v_texcoord0 
  
 #include <common.sh>
-#include "common/uniforms.sh"
 #include "common/lighting.sh"
  
 SAMPLER2D(s_basecolor, 0);

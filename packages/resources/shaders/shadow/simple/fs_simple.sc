@@ -1,6 +1,5 @@
 $input v_normal, v_viewdir, v_shadowcoord
 #include "common.sh"
-#include "common/uniforms.sh"
 #include "common/lighting.sh"
 #include "common/shadow.sh"
 

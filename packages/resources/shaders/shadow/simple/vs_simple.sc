@@ -2,7 +2,6 @@ $input a_position, a_normal
 $output v_normal, v_viewdir, v_shadowcoord
 
 #include "common.sh"
-#include "common/uniforms.sh"
 #include "common/shadow.sh"
 
 void main()

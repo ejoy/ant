@@ -18,6 +18,31 @@ local system_properties = {
 	u_directional_intensity	= math3d.ref(mc.ZERO),
 	u_eyepos				= math3d.ref(mc.ZERO_PT),
 
+	u_light_pos				= {
+		math3d.ref(mc.ZERO_PT),
+		math3d.ref(mc.ZERO_PT),
+		math3d.ref(mc.ZERO_PT),
+		math3d.ref(mc.ZERO_PT),
+	},
+	u_light_color			= {
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+	},
+	u_light_dir				= {
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+	},
+	u_light_param			= {
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+		math3d.ref(mc.ZERO),
+	},
+
 	-- shadow
 	u_csm_matrix 		= {
 		math3d.ref(mc.IDENTITY_MAT),

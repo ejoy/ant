@@ -213,3 +213,8 @@ function mdl.init(prefab, idx, value)
 	local eid = prefab[idx]
 	ilight.active_directional_light(eid)
 end
+
+local lightsys = ecs.system "light_system"
+function lightsys:data_changed()
+
+end

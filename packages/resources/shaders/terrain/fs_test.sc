@@ -2,7 +2,6 @@
 $input v_normal, v_positionWS
 
 #include "common.sh"
-#include "common/uniforms.sh"
 #include "common/lighting.sh"
 
 #define v_distanceVS v_positionWS.w

@@ -97,6 +97,7 @@ end
 
 function init_loader_sys:init()
     world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
+    world:instance("/pkg/ant.test.features/assets/entities/light_point.prefab", {})
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     --ientity.create_procedural_sky()

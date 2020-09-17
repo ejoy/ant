@@ -1,6 +1,5 @@
 $input v_normal, v_color0, v_viewdir
 #include "common.sh"
-#include "common/uniforms.sh"
 #include "common/lighting.sh"
 
 SAMPLER2D(s_basecolor, 0);

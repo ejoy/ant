@@ -1,7 +1,6 @@
 $input v_normal, v_posWS, v_texcoord0
 #include <bgfx_shader.sh>
 #include <shaderlib.sh>
-#include "common/uniforms.sh"
 #include "common/lighting.sh"
 #include "common/transform.sh"
 #include "common/utils.sh"
@@ -158,6 +157,13 @@ vec3 directional_light_radiance()
 	return u_directional_color.rgb * u_directional_intensity.r;
 }
 
+vec3 point_light_radiance(vec3 lightcolor, vec3 lightdir)
+{
+	float distance_square = dot(lightdir, lightdir);
+
+	return (lightcolor / distance_square);
+}
+
 vec3 diffuse_percent(vec3 kS, float metallic)
 {
 	vec3 kD = vec3_splat(1.0) - kS;
@@ -244,7 +250,37 @@ void main()
 
 	vec3 F0 = mix(vec3_splat(0.04), basecolor, metallic);
 	vec3 color = calc_direct_lighting(pbr_inputs, directional_light_radiance(), basecolor.rgb, F0);
-	
+#ifdef ENABLE_POINT_LIGHT
+	for (int ii=0; ii < MAX_LIGHT; ++ii)
+	{
+		vec3 lightcolor = u_point_color[ii];
+
+		vec4 lightpos = u_light_pos[ii];
+
+		L = lightpos.xyz - v_posWS.xyz;
+		H = normalize(L+V);
+		vec3 radiance = point_light_radiance(lightcolor, L);
+
+#define IS_SPOT_LIGHT(_type) _type > 1.0
+		if (IS_SPOT_LIGHT(lightpos.w))
+		{
+			vec4 spotdir = u_spot_dir[ii];
+			float cutoff = spotdir.w;
+			float outcutoff = u_light_param[ii].w;
+			float theta = dot(L, spotdir);
+
+			float t = max(theta - cutoff, 0.0) / (outcutoff - cutoff);
+			radiance *= clamp(t, 0.0, 1.0);
+		}
+
+		pbr_inputs.NdotL = max(dot(N, L), 0.0);
+		pbr_inputs.LdotH = max(dot(L, H), 0.0);
+		pbr_inputs.NdotH = max(dot(N, H), 0.0);
+		pbr_inputs.VdotH = max(dot(V, H), 0.0);
+
+		color += calc_direct_lighting(pbr_inputs, radiance, basecolor.rgb, F0);
+	}
+#endif //ENABLE_POINT_LIGHT
 	// vec3 indirect_color = calc_indirect_lighting_IBL(pbr_inputs, N, R, basecolor.rgb, F0);
 	// modulate_occlusion(v_texcoord0, indirect_color);
 	//color += indirect_color;

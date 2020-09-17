@@ -8,7 +8,6 @@ $input  a_position, a_normal, a_texcoord0
 $output v_texcoord0, v_normal, v_posWS
 
 #include <bgfx_shader.sh>
-#include "common/uniforms.sh"
 #include "common/transform.sh"
 
 void main()

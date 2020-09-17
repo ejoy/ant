@@ -1,9 +1,8 @@
 $input a_position, a_normal
 $output v_normal, v_color0, v_viewdir
 #include <bgfx_shader.sh>
-#include "common/uniforms.sh"
+#include "common/lighting.sh"
 
-// uniform vec4 u_eyepos;
 uniform vec4 u_color;
 
 void main()
