@@ -71,18 +71,18 @@ function m.update_ui_data(eid)
     end
 end
 
-local filterType = {"POINT", "LINEAR", "ANISOTROPIC"}
-local addressType = {"WRAP", "MIRROR", "CLAMP", "BORDER"}
-local comboWidth = 60
-local comboFlags = imgui.flags.Combo { "NoArrowButton" }
-local textureUsedIdx = {
+local filter_type = {"POINT", "LINEAR", "ANISOTROPIC"}
+local address_type = {"WRAP", "MIRROR", "CLAMP", "BORDER"}
+local combo_width = 60
+local combo_flags = imgui.flags.Combo { "NoArrowButton" }
+local texture_used_idx = {
     ["s_basecolor"] = 1,
     ["s_normal"] = 2,
     ["s_occlusion"] = 3,
     ["s_emissive"] = 4
 }
 
-local EditSampler = function(eid, md)
+local edit_sampler = function(eid, md)
     for idx, pro in ipairs(md.uidata.properties) do
         local k = pro.label
         local tp = md.tdata.properties[k]
@@ -126,7 +126,7 @@ local EditSampler = function(eid, md)
                     imaterial.set_property(eid, "u_metallic_roughness_factor", md.tdata.properties.u_metallic_roughness_factor)
                 else
                     local used_flags = md.tdata.properties.u_material_texture_flags
-                    used_flags[textureUsedIdx[k]] = 1
+                    used_flags[texture_used_idx[k]] = 1
                     imaterial.set_property(eid, "u_material_texture_flags", used_flags)
                 end
                 imaterial.set_property(eid, k, {stage = tp.stage, texture = {handle = texture_handle}})
@@ -138,10 +138,10 @@ local EditSampler = function(eid, md)
         imgui.cursor.Indent()
         imgui.widget.Text("MAG:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth)
+        imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("MAG" .. idx)
-        if imgui.widget.BeginCombo("##MAG", {sampler.MAG, flags = comboFlags}) then
-            for i, type in ipairs(filterType) do
+        if imgui.widget.BeginCombo("##MAG", {sampler.MAG, flags = combo_flags}) then
+            for i, type in ipairs(filter_type) do
                 if imgui.widget.Selectable(type, sampler.MAG == type) then
                     sampler.MAG = type
                 end
@@ -153,10 +153,10 @@ local EditSampler = function(eid, md)
         imgui.cursor.SameLine()
         imgui.widget.Text("MIN:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth)
+        imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("MIN" .. idx)
-        if imgui.widget.BeginCombo("##MIN", {sampler.MIN, flags = comboFlags}) then
-            for i, type in ipairs(filterType) do
+        if imgui.widget.BeginCombo("##MIN", {sampler.MIN, flags = combo_flags}) then
+            for i, type in ipairs(filter_type) do
                 if imgui.widget.Selectable(type, sampler.MIN == type) then
                     sampler.MIN = type
                 end
@@ -168,10 +168,10 @@ local EditSampler = function(eid, md)
         imgui.cursor.SameLine()
         imgui.widget.Text("MIP:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth)
+        imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("MIP" .. idx)
-        if imgui.widget.BeginCombo("##MIP", {sampler.MIP, flags = comboFlags}) then
-            for i, type in ipairs(filterType) do
+        if imgui.widget.BeginCombo("##MIP", {sampler.MIP, flags = combo_flags}) then
+            for i, type in ipairs(filter_type) do
                 if imgui.widget.Selectable(type, sampler.MIP == type) then
                     sampler.MIP = type
                 end
@@ -182,10 +182,10 @@ local EditSampler = function(eid, md)
 
         imgui.widget.Text("U:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth)
+        imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("U" .. idx)
-        if imgui.widget.BeginCombo("##U", {sampler.U, flags = comboFlags}) then
-            for i, type in ipairs(addressType) do
+        if imgui.widget.BeginCombo("##U", {sampler.U, flags = combo_flags}) then
+            for i, type in ipairs(address_type) do
                 if imgui.widget.Selectable(type, sampler.U == type) then
                     sampler.U = type
                 end
@@ -197,10 +197,10 @@ local EditSampler = function(eid, md)
         imgui.cursor.SameLine()
         imgui.widget.Text("V:")
         imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(comboWidth)
+        imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("V" .. idx)
-        if imgui.widget.BeginCombo("##V", {sampler.V, flags = comboFlags}) then
-            for i, type in ipairs(addressType) do
+        if imgui.widget.BeginCombo("##V", {sampler.V, flags = combo_flags}) then
+            for i, type in ipairs(address_type) do
                 if imgui.widget.Selectable(type, sampler.V == type) then
                     sampler.V = type
                 end
@@ -234,7 +234,7 @@ local EditSampler = function(eid, md)
     end
 end
 
-local EditUniform = function(eid, md)
+local edit_uniform = function(eid, md)
     for k, v in pairs(md.uidata.properties) do
         if type(k) == "string" then
             imgui.widget.Text(k..":")
@@ -353,8 +353,8 @@ function m.show(eid)
         imgui.cursor.Unindent()
 
         if imgui.widget.TreeNode("Properties", imgui.flags.TreeNode { "DefaultOpen" }) then
-            EditSampler(eid, mtldata)
-            EditUniform(eid, mtldata)
+            edit_sampler(eid, mtldata)
+            edit_uniform(eid, mtldata)
             imgui.widget.TreePop()
         end
         imgui.widget.TreePop()

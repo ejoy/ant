@@ -7,19 +7,19 @@ local utils = require "mathutils"(world)
 local inspector = require "ui.inspector"(world)
 local m = ecs.system "camera_system"
 
-local eventCameraControl = world:sub {"camera"}
-local cameraInitEyepos <const> = {5, 5, -5, 1}
-local cameraInitTarget <const> = {0, 0,  0, 1}
-local cameraTarget
-local cameraDistance
-local cameraId
-local kZoomSpeed <const> = 1
-local kWheelSpeed <const> = 0.5
-local kPanSpeed <const> = 0.5
-local kRotationSpeed <const> = 1
+local event_camera_control = world:sub {"camera"}
+local camera_init_eye_pos <const> = {5, 5, -5, 1}
+local camera_init_target <const> = {0, 0,  0, 1}
+local camera_target
+local camera_distance
+local camera_id
+local zoom_speed <const> = 1
+local wheel_speed <const> = 0.5
+local pan_speed <const> = 0.5
+local rotation_speed <const> = 1
 
 local function view_to_world(view_pos)
-	local camerasrt = iom.srt(cameraId)
+	local camerasrt = iom.srt(camera_id)
 	return math3d.transform(camerasrt, view_pos, 0)
 end
 
@@ -27,41 +27,41 @@ local function world_to_screen(world_pos)
 	
 end
 
-local function cameraUpdateEyepos(camera)
-	iom.set_position(cameraId, math3d.sub(cameraTarget, math3d.mul(iom.get_direction(cameraId), cameraDistance)))
+local function camera_update_eye_pos(camera)
+	iom.set_position(camera_id, math3d.sub(camera_target, math3d.mul(iom.get_direction(camera_id), camera_distance)))
 end
 
-local function cameraRotate(dx, dy)
-	iom.rotate(cameraId, dy * kRotationSpeed, dx * kRotationSpeed)
-	cameraUpdateEyepos()
+local function camera_rotate(dx, dy)
+	iom.rotate(camera_id, dy * rotation_speed, dx * rotation_speed)
+	camera_update_eye_pos()
 end
 
-local function cameraPan(dx, dy)
-	local world_dir = view_to_world({dy * kPanSpeed, dx * kPanSpeed, 0})
-	local viewdir = iom.get_direction(cameraId)
-	cameraTarget.v = math3d.add(cameraTarget, math3d.cross(viewdir, world_dir))
-	cameraUpdateEyepos()
+local function camera_pan(dx, dy)
+	local world_dir = view_to_world({dy * pan_speed, dx * pan_speed, 0})
+	local viewdir = iom.get_direction(camera_id)
+	camera_target.v = math3d.add(camera_target, math3d.cross(viewdir, world_dir))
+	camera_update_eye_pos()
 end
 
-local function cameraZoom(dx)
-	cameraDistance = cameraDistance + dx * kWheelSpeed
-	cameraUpdateEyepos()
+local function camera_zoom(dx)
+	camera_distance = camera_distance + dx * wheel_speed
+	camera_update_eye_pos()
 end
 
-local function cameraReset(eyepos, target)
-	cameraTarget.v = target
-	cameraDistance = math3d.length(math3d.sub(cameraTarget, eyepos))
-	iom.set_view(cameraId, eyepos, math3d.normalize(math3d.sub(cameraTarget, eyepos)))
+local function camera_reset(eyepos, target)
+	camera_target.v = target
+	camera_distance = math3d.length(math3d.sub(camera_target, eyepos))
+	iom.set_view(camera_id, eyepos, math3d.normalize(math3d.sub(camera_target, eyepos)))
 end
 
-local function cameraInit()
-	cameraTarget = math3d.ref()
-	cameraId = world[world:singleton_entity_id "main_queue"].camera_eid
+local function camera_init()
+	camera_target = math3d.ref()
+	camera_id = world[world:singleton_entity_id "main_queue"].camera_eid
 end
 
 function m:post_init()
-	cameraInit()
-	cameraReset(cameraInitEyepos, cameraInitTarget)
+	camera_init()
+	camera_reset(camera_init_eye_pos, camera_init_target)
 end
 local keypress_mb = world:sub{"keyboard"}
 local PAN_LEFT = false
@@ -77,19 +77,19 @@ function update_second_view_camera()
 	rc.viewprojmat = icamera.calc_viewproj(camera_mgr.second_camera)
 end
 
-local eventCameraEdit = world:sub{"CameraEdit"}
-local mouseDrag = world:sub {"mousedrag"}
-local mouseMove = world:sub {"mousemove"}
-local mouseDown = world:sub {"mousedown"}
-local mouseUp = world:sub {"mouseup"}
-local selectArea = 0
-local lastMousePos
-local hitPlane
-local distToPlane
-local currentDir = math3d.ref()
-local centrePos = math3d.ref()
+local event_camera_edit = world:sub{"CameraEdit"}
+local mouse_drag = world:sub {"mousedrag"}
+local mouse_move = world:sub {"mousemove"}
+local mouse_down = world:sub {"mousedown"}
+local mouse_up = world:sub {"mouseup"}
+local select_area = 0
+local last_mouse_pos
+local hit_plane
+local dist_to_plane
+local current_dir = math3d.ref()
+local centre_pos = math3d.ref()
 local function selectBoundary(hp)
-	lastMousePos = hp
+	last_mouse_pos = hp
 	local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
 	for i, v in ipairs(boundary) do
 		local sp1 = utils.world_to_screen(camera_mgr.main_camera, v[1])
@@ -106,69 +106,69 @@ end
 
 function m:data_changed()
 	camera_mgr.select_frustum = false
-	for _, what, x, y in mouseMove:unpack() do
+	for _, what, x, y in mouse_move:unpack() do
 		if what == "UNKNOWN" then
 			if camera_mgr.camera_list[camera_mgr.second_camera] then
 				local x, y = utils.adjust_mouse_pos(x, y)
-				selectArea = selectBoundary({x, y})
+				select_area = selectBoundary({x, y})
 			end
 		end
 	end
 	
-	for _, what, x, y in mouseDown:unpack() do
+	for _, what, x, y in mouse_down:unpack() do
 		if what == "LEFT" then
 			local x, y = utils.adjust_mouse_pos(x, y)
 			if camera_mgr.camera_list[camera_mgr.second_camera] then
-				selectArea = selectBoundary({x, y})
-				if selectArea ~= 0 then
+				select_area = selectBoundary({x, y})
+				if select_area ~= 0 then
 					local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
 					local lb_point = boundary[1][1]
 					local lt_point = boundary[2][1]
 					local rt_point = boundary[3][1]
 					local rb_point = boundary[4][1]
-					centrePos.v = math3d.vector(0.5 * (lb_point[1] + rt_point[1]), 0.5 * (lb_point[2] + rt_point[2]), 0.5 * (lb_point[3] + rt_point[3]))
-					hitPlane = {dir = math3d.totable(iom.get_direction(camera_mgr.second_camera)), pos = math3d.totable(centrePos)}
-					distToPlane = math3d.length(math3d.sub(centrePos, iom.get_position(camera_mgr.second_camera)))
+					centre_pos.v = math3d.vector(0.5 * (lb_point[1] + rt_point[1]), 0.5 * (lb_point[2] + rt_point[2]), 0.5 * (lb_point[3] + rt_point[3]))
+					hit_plane = {dir = math3d.totable(iom.get_direction(camera_mgr.second_camera)), pos = math3d.totable(centre_pos)}
+					dist_to_plane = math3d.length(math3d.sub(centre_pos, iom.get_position(camera_mgr.second_camera)))
 					local mid_pos
-					if selectArea == camera_mgr.FRUSTUM_LEFT then
+					if select_area == camera_mgr.FRUSTUM_LEFT then
 						mid_pos = math3d.vector(0.5 * (lb_point[1] + lt_point[1]), 0.5 * (lb_point[2] + lt_point[2]), 0.5 * (lb_point[3] + lt_point[3]))
-					elseif selectArea == camera_mgr.FRUSTUM_TOP then
+					elseif select_area == camera_mgr.FRUSTUM_TOP then
 						mid_pos = math3d.vector(0.5 * (rt_point[1] + lt_point[1]), 0.5 * (rt_point[2] + lt_point[2]), 0.5 * (rt_point[3] + lt_point[3]))
-					elseif selectArea == camera_mgr.FRUSTUM_RIGHT then
+					elseif select_area == camera_mgr.FRUSTUM_RIGHT then
 						mid_pos = math3d.vector(0.5 * (rt_point[1] + rb_point[1]), 0.5 * (rt_point[2] + rb_point[2]), 0.5 * (rt_point[3] + rb_point[3]))
-					elseif selectArea == camera_mgr.FRUSTUM_BOTTOM then
+					elseif select_area == camera_mgr.FRUSTUM_BOTTOM then
 						mid_pos = math3d.vector(0.5 * (lb_point[1] + rb_point[1]), 0.5 * (lb_point[2] + rb_point[2]), 0.5 * (lb_point[3] + rb_point[3]))
 					end
-					currentDir.v = math3d.normalize(math3d.sub(mid_pos, centrePos))
+					current_dir.v = math3d.normalize(math3d.sub(mid_pos, centre_pos))
 				end
 			end
 		end
 	end
 
-	camera_mgr.select_frustum = (selectArea ~= 0)
+	camera_mgr.select_frustum = (select_area ~= 0)
 
-	for _, what, x, y in mouseUp:unpack() do
+	for _, what, x, y in mouse_up:unpack() do
 		if what == "LEFT" then
 		end
 	end
 
-	for _, what, x, y, dx, dy in mouseDrag:unpack() do
-		if what == "LEFT" and selectArea ~= 0 then
+	for _, what, x, y, dx, dy in mouse_drag:unpack() do
+		if what == "LEFT" and select_area ~= 0 then
 			local ax, ay = utils.adjust_mouse_pos(x, y)
-			--local downpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, lastMousePos), hitPlane)
-			local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {ax, ay}), hitPlane)
-			local proj_len = math3d.dot(currentDir, math3d.sub(curpos, centrePos))
+			--local downpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, last_mouse_pos), hit_plane)
+			local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {ax, ay}), hit_plane)
+			local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
 			local aspect = 1.0
-			if selectArea == camera_mgr.FRUSTUM_LEFT or selectArea == camera_mgr.FRUSTUM_RIGHT then
+			if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
 				aspect = icamera.get_frustum(camera_mgr.second_camera).aspect
 			end
-			local half_fov = math.atan(proj_len / distToPlane / aspect )
+			local half_fov = math.atan(proj_len / dist_to_plane / aspect )
 			camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
 			inspector.update_ui(true)
 		end
 	end
 
-	for _, what, eid, value in eventCameraEdit:unpack() do
+	for _, what, eid, value in event_camera_edit:unpack() do
 		if what == "target" then
 			camera_mgr.set_target(eid, value)
 			inspector.update_ui()
@@ -191,16 +191,16 @@ function m:data_changed()
 	
 	update_second_view_camera()
 
-	for _,what,x,y in eventCameraControl:unpack() do
-		if selectArea == 0 then
+	for _,what,x,y in event_camera_control:unpack() do
+		if select_area == 0 then
 			if what == "rotate" then
-				cameraRotate(x, y)
+				camera_rotate(x, y)
 			elseif what == "pan" then
-				cameraPan(x, y)
+				camera_pan(x, y)
 			elseif what == "zoom" then
-				cameraZoom(x)
+				camera_zoom(x)
 			elseif what == "reset" then
-				cameraReset(cameraInitEyepos, cameraInitTarget)
+				camera_reset(camera_init_eye_pos, camera_init_target)
 			end
 		end
 	end
@@ -236,12 +236,12 @@ function m:data_changed()
 	end
 
 	if PAN_LEFT then
-		cameraPan(0.05, 0)
+		camera_pan(0.05, 0)
 	elseif PAN_RIGHT then
-		cameraPan(-0.05, 0)
+		camera_pan(-0.05, 0)
 	elseif ZOOM_FORWARD then
-		cameraZoom(-0.05)
+		camera_zoom(-0.05)
 	elseif ZOOM_BACK then
-		cameraZoom(0.05)
+		camera_zoom(0.05)
 	end
 end

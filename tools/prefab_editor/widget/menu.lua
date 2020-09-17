@@ -10,7 +10,6 @@ function m.show()
     if imgui.widget.BeginMainMenuBar() then
         if imgui.widget.BeginMenu("File") then
             if imgui.widget.MenuItem("New", "Ctrl+N") then
-
             end
             if imgui.widget.MenuItem("Open", "Ctrl+O") then
             end
@@ -65,7 +64,6 @@ function m.show()
             imgui.cursor.Separator()
             if imgui.widget.MenuItem("SaveUILayout") then
                 local setting = imgui.util.SaveIniSettings()
-                local current_path = lfs.current_path()
                 local wf = assert(lfs.open(fs.path "":localpath() .. "/" .. "imgui.layout", "wb"))
                 wf:write(setting)
                 wf:close()

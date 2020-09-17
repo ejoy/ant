@@ -23,16 +23,6 @@ function m.show(rhwi)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.25, 0.25, 0.25, 1)
     for _ in uiutils.imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) do
         uiutils.imguiBeginToolbar()
-        -- if imguiToolbar(icons.ICON_UNDO, "Undo", false) then
-        --     print("undo")
-        --     world:pub { "GizmoMode", "undo" }
-        -- end
-        -- imgui.cursor.SameLine()
-        -- if imguiToolbar(icons.ICON_REDO, "Redo", false) then
-        --     print("redo")
-        --     world:pub { "GizmoMode", "redo" }
-        -- end
-        -- imgui.cursor.SameLine()
         if uiutils.imguiToolbar(icons.ICON_SELECT, "Select", status.GizmoMode == "select") then
             status.GizmoMode = "select"
             world:pub { "GizmoMode", "select" }
@@ -56,15 +46,6 @@ function m.show(rhwi)
         if imgui.widget.Checkbox("LocalSpace", localSpace) then
             world:pub { "GizmoMode", "localspace", localSpace[1]}
         end
-        -- if imguiToolbar(icons.ICON_WORLD, "WorldSpace", status.GizmoSpace == "worldspace") then
-        --     status.GizmoSpace = "worldspace"
-        --     world:pub { "GizmoMode", "worldspace"}
-        -- end
-        -- imgui.cursor.SameLine()
-        -- if imguiToolbar(icons.ICON_LOCAL, "LocalSpace", status.GizmoSpace == "localspace") then
-        --     status.GizmoSpace = "localspace"
-        --     world:pub { "GizmoMode", "localspace"}
-        -- end
         uiutils.imguiEndToolbar()
     end
     imgui.windows.PopStyleColor()
