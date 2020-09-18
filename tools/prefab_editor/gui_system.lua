@@ -31,12 +31,6 @@ local eventScene = world:sub {"Scene"}
 local gizmo
 local cmd_queue
 
-local SELECT <const> = 0
-local MOVE <const> = 1
-local ROTATE <const> = 2
-local SCALE <const> = 3
-
-
 local icons = require "common.icons"(asset_mgr)
 
 local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
@@ -236,6 +230,7 @@ local function onUpdate(eid)
     end
 end
 
+local cmd_queue = require "gizmo.command_queue"(world)
 function m:data_changed()
     for _, action, value1, value2 in eventGizmo:unpack() do
         if action == "update" or action == "ontarget" then
@@ -247,7 +242,7 @@ function m:data_changed()
             end
         elseif action == "create" then
             gizmo = value1
-            cmd_queue = value2
+            --cmd_queue = value2
             inspector.set_gizmo(gizmo)
             scene_view.set_gizmo(gizmo)
         end
@@ -255,13 +250,13 @@ function m:data_changed()
     for _, what, target, v1, v2 in entityEvent:unpack() do
         local dirty = false
         if what == "move" then
-            cmd_queue:record {action = MOVE, eid = target, oldvalue = v1, newvalue = v2}
+            cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
             dirty = true
         elseif what == "rotate" then
-            cmd_queue:record {action = ROTATE, eid = target, oldvalue = v1, newvalue = v2}
+            cmd_queue:record {action = gizmo_const.ROTATE, eid = target, oldvalue = v1, newvalue = v2}
             dirty = true
         elseif what == "scale" then
-            cmd_queue:record {action = SCALE, eid = target, oldvalue = v1, newvalue = v2}
+            cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
             dirty = true
         elseif what == "name" then
             local template = hierarchy:get_template(target)
