@@ -112,6 +112,10 @@ function ilight.active_directional_light(eid)
 	active_dl = eid
 end
 
+function ilight.max_point_light()
+	return 4
+end
+
 function ilight.create_light_direction_arrow(eid, data)
 	--[[
 		cylinde & cone

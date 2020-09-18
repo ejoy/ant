@@ -1,0 +1,15 @@
+---
+policy:
+    ant.render|render
+    ant.general|name
+data:
+    transform: 
+        s: {100, 100, 100, 0}
+        t: {0, 0, 8, 1}
+    material: /pkg/ant.resources/materials/pbr_default.material
+    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
+    state: 0x00000005
+    scene_entity: true
+    name: pbr_cube
+action:
+    mount: rooteid

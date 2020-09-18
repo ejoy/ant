@@ -74,8 +74,49 @@ local function add_directional_light_properties()
 	end
 end
 
+local function add_point_light_properties()
+	local numlight = 1
+	local maxlight<const> = ilight.max_point_light()
+	for _, leid in world:each "light_type" do
+		if numlight <= maxlight then
+			local e = world[leid]
+			local lt = e.light_type
+			if lt == "point" or lt == "spot" then
+				system_properties.u_light_color[numlight].v = e.color
+				local param = {0.0, 0.0, 0.0, 0.0}
+				local lightdir = system_properties.u_light_dir[numlight]
+				if lt == "spot" then
+					lightdir.v = iom.get_direction(leid)
+					param[1] = 2.0
+					local radian = e.radian * 0.5
+					local outer_radian = radian * 1.1
+					param[2], param[3] = math.cos(radian), math3d.cos(outer_radian)
+				else
+					lightdir.v = mc.ZERO
+				end
+
+				system_properties.u_light_pos[numlight].v	= iom.get_position(leid)
+				system_properties.u_light_param[numlight].v = param
+			end
+
+			numlight = numlight + 1
+		end
+	end
+
+	for i=numlight, maxlight-numlight do
+		system_properties.u_light_color[i].v	= mc.ZERO
+		system_properties.u_light_pos[i].v		= mc.ZERO
+		system_properties.u_light_dir[i].v		= mc.ZERO
+		system_properties.u_light_param[i].v	= mc.ZERO
+	end
+	if numlight > maxlight then
+		log.warn("point light number exceed, max point/spot light: %d", maxlight)
+	end
+end
+
 local function update_lighting_properties()
 	add_directional_light_properties()
+	add_point_light_properties()
 
 	local mq = world:singleton_entity "main_queue"
 	system_properties["u_eyepos"].id = iom.get_position(mq.camera_eid)
