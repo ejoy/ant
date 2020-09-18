@@ -17,6 +17,8 @@ interface "light"
 
     .method "create_light_direction_arrow"
 
+    .method "max_point_light"
+
 transform "light_transform"
     .implement "light/light.lua"
     .require_transform "ant.general|init_transform"
@@ -46,5 +48,5 @@ action "main_directional_light"
     .method "init"
 
 system "light_system"
-    .implement "light.lua"
+    .implement "light/light.lua"
     .method "data_changed"

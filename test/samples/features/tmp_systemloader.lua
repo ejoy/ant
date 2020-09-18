@@ -96,8 +96,18 @@ local function find_entity(name, whichtype)
 end
 
 function init_loader_sys:init()
-    world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
-    world:instance("/pkg/ant.test.features/assets/entities/light_point.prefab", {})
+    --world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
+    local lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+    iom.set_position(lighteid, {1, 1, 1, 1})
+
+    local lightcube = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
+    iom.set_position(lightcube, iom.get_position(lighteid))
+
+
+    local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
+    iom.set_position(cubeeid, {0, 0, 0, 1})
+    
+
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     --ientity.create_procedural_sky()
