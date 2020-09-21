@@ -1,6 +1,6 @@
 local imgui     = require "imgui"
-local uiconfig  = require "ui.config"
-local uiutils   = require "ui.utils"
+local uiconfig  = require "widget.config"
+local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local cthread   = require "thread"
 local log_widget
@@ -107,6 +107,6 @@ function m.show(rhwi)
 end
 
 return function(am)
-    log_widget = require "ui.log_widget"(am)
+    log_widget = require "widget.log"(am)
     return m
 end

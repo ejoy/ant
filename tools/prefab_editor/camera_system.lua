@@ -4,7 +4,7 @@ local iom = world:interface "ant.objcontroller|obj_motion"
 local camera_mgr = require "camera_manager"(world)
 local math3d  = require "math3d"
 local utils = require "mathutils"(world)
-local inspector = require "ui.inspector"(world)
+local inspector = require "widget.inspector"(world)
 local m = ecs.system "camera_system"
 
 local event_camera_control = world:sub {"camera"}

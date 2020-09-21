@@ -5,7 +5,7 @@ local vfs           = require "vfs"
 local hierarchy     = require "hierarchy"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
-local utils         = require "ui.utils"
+local utils         = require "widget.utils"
 local light_gizmo
 local camera_mgr
 local world

@@ -1,6 +1,6 @@
 local imgui     = require "imgui"
-local uiconfig  = require "ui.config"
-local uiutils   = require "ui.utils"
+local uiconfig  = require "widget.config"
+local uiutils   = require "widget.utils"
 
 local m = {}
 local world

@@ -1,7 +1,7 @@
 local imgui     = require "imgui"
 local math3d    = require "math3d"
-local uiconfig  = require "ui.config"
-local uiutils   = require "ui.utils"
+local uiconfig  = require "widget.config"
+local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy"
 local material_panel
 local m = {}
@@ -158,7 +158,7 @@ local view_start_y = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 function m.show(rhwi)
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(sw - uiconfig.PropertyWidgetWidth, view_start_y, 'F')
-    imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, sh - uiconfig.ResourceBrowserHeight - view_start_y, 'F')
+    imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, sh - uiconfig.BottomWidgetHeight - view_start_y, 'F')
     
     local current_eid = gizmo.target_eid
     for _ in uiutils.imgui_windows("Inspector", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
@@ -293,6 +293,6 @@ return function(w)
     icamera = world:interface "ant.camera|camera"
     worldedit = import_package "ant.editor".worldedit(world)
     camera_mgr = require "camera_manager"(world)
-    material_panel = require "ui.material_panel"(world)
+    material_panel = require "widget.material"(world)
     return m
 end

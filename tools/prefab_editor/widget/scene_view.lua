@@ -1,7 +1,7 @@
 local imgui     = require "imgui"
 local math3d    = require "math3d"
-local uiconfig  = require "ui.config"
-local uiutils   = require "ui.utils"
+local uiconfig  = require "widget.config"
+local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy"
 
 local m = {}
@@ -114,7 +114,7 @@ local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
 function m.show(rhwi)
     local sw, sh = rhwi.screen_size()
     imgui.windows.SetNextWindowPos(0, viewStartY, 'F')
-    imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, sh - uiconfig.ResourceBrowserHeight - viewStartY, 'F')
+    imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, sh - uiconfig.BottomWidgetHeight - viewStartY, 'F')
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         if imgui.widget.Button("CreateCamera") then
