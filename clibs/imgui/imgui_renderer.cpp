@@ -1,0 +1,284 @@
+#include <imgui.h>
+#include <lua.hpp>
+#include <algorithm>
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <cstring>
+#include <cstdlib>
+#include <malloc.h>
+#include <stack>
+#include "bgfx_interface.h"
+#include "luabgfx.h"
+#include "imgui_window.h"
+
+struct RendererViewport {
+	int viewid = -1;
+	bgfx_frame_buffer_handle_t fb = BGFX_INVALID_HANDLE;
+};
+
+std::stack<int> viewIdPool;
+
+bgfx_vertex_layout_t  g_layout;
+bgfx_program_handle_t g_fontProgram;
+bgfx_program_handle_t g_imageProgram;
+bgfx_uniform_handle_t g_fontTex;
+bgfx_uniform_handle_t g_imageTex;
+
+constexpr uint16_t IMGUI_FLAGS_NONE = 0x00;
+constexpr uint16_t IMGUI_FLAGS_FONT = 0x01;
+union ImGuiTexture {
+	ImTextureID ptr;
+	struct {
+		bgfx_texture_handle_t handle;
+		uint16_t flags;
+	} s;
+};
+
+void rendererDrawData(ImGuiViewport* viewport) {
+	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
+	const ImDrawData* drawData = viewport->DrawData;
+	const ImVec2& clip_size = drawData->DisplaySize;
+	const ImVec2 clip_offset = drawData->DisplayPos;
+	const ImVec2& clip_scale = drawData->FramebufferScale;
+
+	BGFX(set_view_name)(ud->viewid, "ImGui");
+	BGFX(set_view_mode)(ud->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
+
+	float L = drawData->DisplayPos.x;
+	float R = drawData->DisplayPos.x + drawData->DisplaySize.x;
+	float T = drawData->DisplayPos.y;
+	float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
+	const bgfx_caps_t* caps = BGFX(get_caps)();
+	auto ortho = caps->homogeneousDepth
+		? glm::orthoLH_NO(L, R, B, T, 0.0f, 1000.0f)
+		: glm::orthoLH_ZO(L, R, B, T, 0.0f, 1000.0f)
+		;
+	BGFX(set_view_transform)(ud->viewid, NULL, (const void*)&ortho[0]);
+
+	const float fb_x = 0;
+	const float fb_y = 0;
+	const float fb_w = fb_x + clip_size.x * clip_scale.x;
+	const float fb_h = fb_y + clip_size.y * clip_scale.y;
+	BGFX(set_view_rect)(ud->viewid, uint16_t(fb_x), uint16_t(fb_y), uint16_t(fb_w), uint16_t(fb_h));
+
+	for (size_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii) {
+		const ImDrawList* drawList = drawData->CmdLists[ii];
+		uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
+		uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
+
+		if (numVertices != BGFX(get_avail_transient_vertex_buffer)(numVertices, &g_layout)
+			|| numIndices != BGFX(get_avail_transient_index_buffer)(numIndices)) {
+			break;
+		}
+
+		bgfx_transient_vertex_buffer_t tvb;
+		bgfx_transient_index_buffer_t tib;
+		BGFX(alloc_transient_vertex_buffer)(&tvb, numVertices, &g_layout);
+		BGFX(alloc_transient_index_buffer)(&tib, numIndices);
+		ImDrawVert* verts = (ImDrawVert*)tvb.data;
+		memcpy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert));
+		ImDrawIdx* indices = (ImDrawIdx*)tib.data;
+		memcpy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx));
+
+		uint32_t offset = 0;
+		for (const ImDrawCmd& cmd : drawList->CmdBuffer) {
+			if (0 == cmd.ElemCount) {
+				continue;
+			}
+			assert(NULL != cmd.TextureId);
+			ImGuiTexture texture = { cmd.TextureId };
+
+			const float x = (cmd.ClipRect.x - clip_offset.x) * clip_scale.x;
+			const float y = (cmd.ClipRect.y - clip_offset.y) * clip_scale.y;
+			const float w = (cmd.ClipRect.z - cmd.ClipRect.x) * clip_scale.x;
+			const float h = (cmd.ClipRect.w - cmd.ClipRect.y) * clip_scale.y;
+			BGFX(set_scissor)(
+				uint16_t(std::min(std::max(x, 0.0f), 65535.0f))
+				, uint16_t(std::min(std::max(y, 0.0f), 65535.0f))
+				, uint16_t(std::min(std::max(w, 0.0f), 65535.0f))
+				, uint16_t(std::min(std::max(h, 0.0f), 65535.0f))
+				);
+
+			constexpr uint64_t state = 0
+				| BGFX_STATE_WRITE_RGB
+				| BGFX_STATE_WRITE_A
+				| BGFX_STATE_MSAA
+				| BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+				;
+			BGFX(set_state)(state, 0);
+
+			BGFX(set_transient_vertex_buffer)(0, &tvb, 0, numVertices);
+			BGFX(set_transient_index_buffer)(&tib, offset, cmd.ElemCount);
+			if (IMGUI_FLAGS_FONT == texture.s.flags) {
+				BGFX(set_texture)(0, g_fontTex, texture.s.handle, UINT32_MAX);
+				BGFX(submit)(ud->viewid, g_fontProgram, 0, BGFX_DISCARD_STATE);
+			}
+			else {
+				BGFX(set_texture)(0, g_imageTex, texture.s.handle, UINT32_MAX);
+				BGFX(submit)(ud->viewid, g_imageProgram, 0, BGFX_DISCARD_STATE);
+			}
+			offset += cmd.ElemCount;
+		}
+	}
+	BGFX(discard)(BGFX_DISCARD_ALL);
+}
+
+static int rendererGetViewId() {
+	return window_event_viewid(window_get_callback((lua_State*)ImGui::GetIO().UserData));
+}
+ 
+static void rendererFreeViewId(int viewid) {
+	viewIdPool.push(viewid);
+}
+
+static int rendererAllocViewId() {
+	if (viewIdPool.empty()) {
+		return rendererGetViewId();
+	}
+	int viewid = viewIdPool.top();
+	viewIdPool.pop();
+	return viewid;
+}
+
+static void rendererCreateWindow(ImGuiViewport* viewport) {
+	int viewid = rendererAllocViewId();
+	if (viewid == -1) {
+		return;
+	}
+	bgfx_frame_buffer_handle_t fb = BGFX(create_frame_buffer_from_nwh)(
+		viewport->PlatformHandle,
+		(uint16_t)viewport->Size.x,
+		(uint16_t)viewport->Size.y,
+		BGFX_TEXTURE_FORMAT_RGBA8,
+		BGFX_TEXTURE_FORMAT_D24S8
+		);
+	if (!BGFX_HANDLE_IS_VALID(fb)) {
+		rendererFreeViewId(viewid);
+		return;
+	}
+	RendererViewport* ud = new RendererViewport;
+	viewport->RendererUserData = ud;
+	ud->viewid = viewid;
+	ud->fb = fb;
+	BGFX(set_view_frame_buffer)(ud->viewid, fb);
+}
+
+static void rendererDestroyWindow(ImGuiViewport* viewport) {
+	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
+	if (ud) {
+		if (!BGFX_HANDLE_IS_VALID(ud->fb)) {
+			BGFX(destroy_frame_buffer)(ud->fb);
+		}
+		if (ud->viewid != -1) {
+			rendererFreeViewId(ud->viewid);
+		}
+		delete ud;
+		viewport->RendererUserData = nullptr;
+	}
+}
+
+static void rendererSetWindowSize(ImGuiViewport* viewport, ImVec2 size) {
+	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
+	bgfx_frame_buffer_handle_t fb = BGFX(create_frame_buffer_from_nwh)(
+		viewport->PlatformHandle,
+		(uint16_t)size.x,
+		(uint16_t)size.y,
+		BGFX_TEXTURE_FORMAT_RGBA8,
+		BGFX_TEXTURE_FORMAT_D24S8
+		);
+	if (!BGFX_HANDLE_IS_VALID(fb)) {
+		return;
+	}
+	BGFX(destroy_frame_buffer)(ud->fb);
+	BGFX(set_view_frame_buffer)(ud->viewid, fb);
+	ud->fb = fb;
+}
+
+static void rendererRenderWindow(ImGuiViewport* viewport, void*) {
+	rendererDrawData(viewport);
+}
+
+static void rendererSwapBuffers(ImGuiViewport* viewport, void*) {
+}
+
+bool rendererCreate() {
+	ImGuiIO& io = ImGui::GetIO();
+	io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+
+	ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+	platform_io.Renderer_CreateWindow = rendererCreateWindow;
+	platform_io.Renderer_DestroyWindow = rendererDestroyWindow;
+	platform_io.Renderer_SetWindowSize = rendererSetWindowSize;
+	platform_io.Renderer_RenderWindow = rendererRenderWindow;
+	platform_io.Renderer_SwapBuffers = rendererSwapBuffers;
+
+	int viewid = rendererAllocViewId();
+	if (viewid == -1) {
+		return false;
+	}
+	ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+	RendererViewport* ud = new RendererViewport();
+	ud->viewid = viewid;
+	main_viewport->RendererUserData = ud;
+	return true;
+}
+
+void rendererDestroy() {
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
+	delete ud;
+	viewport->RendererUserData = nullptr;
+}
+
+void rendererInit(lua_State* L) {
+	init_interface(L);
+	BGFX(vertex_layout_begin)(&g_layout, BGFX_RENDERER_TYPE_NOOP);
+	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+	BGFX(vertex_layout_add)(&g_layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, false);
+	BGFX(vertex_layout_end)(&g_layout);
+}
+
+int rendererSetFontProgram(lua_State* L) {
+	g_fontProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
+	g_fontTex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 2)) };
+	return 0;
+}
+
+int rendererSetImageProgram(lua_State* L) {
+	g_imageProgram = bgfx_program_handle_t{ BGFX_LUAHANDLE_ID(PROGRAM, (int)luaL_checkinteger(L, 1)) };
+	g_imageTex = bgfx_uniform_handle_t{ BGFX_LUAHANDLE_ID(UNIFORM, (int)luaL_checkinteger(L, 2)) };
+	return 0;
+}
+
+int rendererBuildFont(lua_State* L) {
+	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+	uint8_t* data;
+	int32_t width;
+	int32_t height;
+	atlas->GetTexDataAsAlpha8(&data, &width, &height);
+
+	ImGuiTexture texture;
+	texture.s.handle = BGFX(create_texture_2d)(
+		(uint16_t)width
+		, (uint16_t)height
+		, false
+		, 1
+		, BGFX_TEXTURE_FORMAT_A8
+		, 0
+		, BGFX(copy)(data, width * height)
+		);
+	texture.s.flags = IMGUI_FLAGS_FONT;
+	atlas->TexID = texture.ptr;
+	atlas->ClearInputData();
+	atlas->ClearTexData();
+	return 0;
+}
+
+ImTextureID rendererGetTextureID(lua_State* L, int lua_handle) {
+	bgfx_texture_handle_t th = { BGFX_LUAHANDLE_ID(TEXTURE, lua_handle) };
+	ImGuiTexture texture;
+	texture.s.handle = th;
+	texture.s.flags = IMGUI_FLAGS_NONE;
+	return texture.ptr;
+}

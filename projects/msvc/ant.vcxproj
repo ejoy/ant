@@ -12,8 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\ant\ant.h" />
-    <ClInclude Include="..\..\clibs\ant\ant_module_declar.h" />
-    <ClInclude Include="..\..\clibs\ant\ant_module_define.h" />
+    <ClInclude Include="..\..\runtime\common\modules.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="bgfx.vcxproj">

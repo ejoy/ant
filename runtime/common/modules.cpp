@@ -11,7 +11,6 @@ int luaopen_hierarchy(lua_State* L);
 int luaopen_hierarchy_animation(lua_State* L);
 int luaopen_hierarchy_scene(lua_State *L);
 int luaopen_imgui(lua_State* L);
-int luaopen_imgui_ant(lua_State* L);
 int luaopen_lsocket(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_adapter(lua_State* L);
@@ -42,7 +41,6 @@ const luaL_Reg* ant_modules() {
         { "hierarchy.animation", luaopen_hierarchy_animation },
         { "hierarchy.scene", luaopen_hierarchy_scene },
         { "imgui", luaopen_imgui },
-        { "imgui.ant", luaopen_imgui_ant },
         { "lsocket", luaopen_lsocket },
         { "math3d", luaopen_math3d },
         { "math3d.adapter", luaopen_math3d_adapter },

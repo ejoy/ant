@@ -7,9 +7,6 @@
     <Filter Include="binding">
       <UniqueIdentifier>{8c7e47fd-fe08-4aca-85f9-17a4bd24705d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="imnodes">
-      <UniqueIdentifier>{05d9b6ee-c1b1-4314-ab34-c860b6b8b4ff}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rd\imgui\imgui_widgets.cpp">
@@ -17,12 +14,6 @@
     </ClCompile>
     <ClCompile Include="..\..\3rd\imgui\imgui.cpp">
       <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\imgui\imgui_ant.cpp">
-      <Filter>binding</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\imgui\imgui_win32.cpp">
-      <Filter>binding</Filter>
     </ClCompile>
     <ClCompile Include="..\..\clibs\imgui\luaimgui.cpp">
       <Filter>binding</Filter>
@@ -33,10 +24,13 @@
     <ClCompile Include="..\..\3rd\imgui\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\imnodes\imnodes.cpp">
-      <Filter>imnodes</Filter>
+    <ClCompile Include="..\..\clibs\imgui\imgui_renderer.cpp">
+      <Filter>binding</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\imgui\luaimnodes.cpp">
+    <ClCompile Include="..\..\clibs\imgui\win32\imgui_platform.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\imgui_window.cpp">
       <Filter>binding</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,11 +53,17 @@
     <ClInclude Include="..\..\3rd\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\imgui\imgui_ant.h">
+    <ClInclude Include="..\..\clibs\imgui\imgui_renderer.h">
       <Filter>binding</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\imnodes\imnodes.h">
-      <Filter>imnodes</Filter>
+    <ClInclude Include="..\..\clibs\imgui\imgui_window.h">
+      <Filter>binding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\imgui\virtual_keys.h">
+      <Filter>binding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\imgui\imgui_platform.h">
+      <Filter>binding</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

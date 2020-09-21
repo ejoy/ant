@@ -1,7 +1,7 @@
 local ecs = ...
 
 local math3d = require "math3d"
-local imgui = require "imgui.ant"
+local imgui = require "imgui"
 local rp3d = require "rp3d.core"
 local imgui_util = require "imgui_util"
 
@@ -27,7 +27,7 @@ local function memory_info()
 	s[#s+1] = ("lua   memory:%s"):format(bytestr(collectgarbage "count" * 1024.0))
 	s[#s+1] = ("bgfx  memory:%s"):format(bytestr(bgfx.get_memory()))
 	s[#s+1] = ("math  memory:%s"):format(bytestr(math3d.stacksize()))
-	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui.ant.memory()))
+	s[#s+1] = ("imgui memory:%s"):format(bytestr(imgui.memory()))
 	s[#s+1] = ("rp3d  memory:%s"):format(bytestr(rp3d.memory()))
 	s[#s+1] = "-------------------"
 	local data = bgfx.get_stats "m"

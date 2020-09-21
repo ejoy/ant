@@ -1,5 +1,3 @@
-local window = require "window"
-
 local renderpkg = import_package "ant.render"
 local argument  = import_package "ant.argument"
 local ecs       = import_package "ant.ecs"
@@ -85,7 +83,6 @@ local function dispatch(ok, CMD, ...)
 			LOGERROR(err)
 			if err:find("interrupted!", 1, true) then
 				dispatch(true, 'exit')
-				window.exit()
 				return false
 			end
 		end

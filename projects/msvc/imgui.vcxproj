@@ -29,8 +29,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\imnodes\imnodes.cpp" />
-    <ClCompile Include="..\..\clibs\imgui\imgui_ant.cpp">
+    <ClCompile Include="..\..\clibs\imgui\imgui_renderer.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -38,15 +37,12 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\imgui\imgui_win32.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\imgui_window.cpp" />
     <ClCompile Include="..\..\clibs\imgui\luaimgui.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\imgui\luaimnodes.cpp" />
+    <ClCompile Include="..\..\clibs\imgui\win32\imgui_platform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="luadll.vcxproj">
@@ -59,9 +55,11 @@
     <ClInclude Include="..\..\3rd\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\..\3rd\imgui\imstb_textedit.h" />
     <ClInclude Include="..\..\3rd\imgui\imstb_truetype.h" />
-    <ClInclude Include="..\..\3rd\imnodes\imnodes.h" />
-    <ClInclude Include="..\..\clibs\imgui\imgui_ant.h" />
     <ClInclude Include="..\..\clibs\imgui\imgui_config.h" />
+    <ClInclude Include="..\..\clibs\imgui\imgui_platform.h" />
+    <ClInclude Include="..\..\clibs\imgui\imgui_renderer.h" />
+    <ClInclude Include="..\..\clibs\imgui\imgui_window.h" />
+    <ClInclude Include="..\..\clibs\imgui\virtual_keys.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

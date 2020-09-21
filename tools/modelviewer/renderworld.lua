@@ -203,7 +203,7 @@ function m:data_changed()
 	task.update(delta)
 end
 
-local imgui = require "imgui.ant"
+local imgui = require "imgui"
 local imgui_util = require "imgui_util"
 
 local gui_sys = ecs.system "gui_system"

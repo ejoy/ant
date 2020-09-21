@@ -1,16 +1,13 @@
-local imgui       = require "imgui.ant"
+local imgui       = require "imgui"
 local renderpkg   = import_package "ant.render"
 local viewidmgr   = renderpkg.viewidmgr
+local assetmgr    = import_package "ant.asset"
 local rhwi        = renderpkg.hwi
-local window      = require "window"
 local platform    = require "platform"
 local common      = require "common"
-local bgfx        = require "bgfx"
 local font        = imgui.font
 local Font        = platform.font
-local context     = nil
 local cb          = nil
-local viewid      = nil
 local message     = {}
 local initialized = false
 local debug_traceback = debug.traceback
@@ -38,12 +35,81 @@ local function glyphRanges(t)
 	return table.concat(s)
 end
 
-local function imgui_init()
-	viewid = viewidmgr.get "uieditor"
-	context = imgui.CreateContext(rhwi.native_window())
-	imgui.ant.viewid(viewid)
-    common.init_imgui(imgui)
-	window.set_ime(imgui.ime_handle())
+function message.init(nwh, context, width, height)
+	rhwi.init {
+		nwh = nwh,
+		context = context,
+		width = width,
+		height = height,
+	}
+	cb.init(width, height)
+    initialized = true
+end
+
+function message.mouse_wheel(x, y, delta)
+	cb.mouse_wheel(x, y, delta)
+end
+function message.mouse(x, y, what, state)
+	cb.mouse(x, y, what, state)
+end
+function message.keyboard(key, press, state)
+	cb.keyboard(key, press, state)
+end
+function message.dropfiles(filelst)
+	cb.dropfiles(filelst)
+end
+function message.size(width,height,_)
+	cb.size(width, height)
+	rhwi.reset(nil, width, height)
+end
+function message.exit()
+    imgui.Destroy()
+	rhwi.shutdown()
+    print "exit"
+end
+function message.update()
+	if initialized then
+		local delta = timer_delta()
+        cb.update(delta)
+        rhwi.frame()
+    end
+end
+function message.viewid()
+	return viewidmgr.generate("imgui", viewidmgr.get "uieditor")
+end
+
+local function dispatch(CMD, ...)
+	local f = message[CMD]
+	if f then
+		local ok, err = xpcall(f, debug_traceback, ...)
+		if ok then
+			return err
+		else
+			print(err)
+		end
+	end
+end
+
+local function start(w, h, callback)
+    cb = callback
+	imgui.Create(dispatch, w, h)
+    imgui.UpdateIO()
+	local imgui_font = assetmgr.load_fx {
+		fs = "/pkg/ant.imguibase/shader/fs_imgui_font.sc",
+		vs = "/pkg/ant.imguibase/shader/vs_imgui_font.sc",
+	}
+	imgui.SetFontProgram(
+		imgui_font.prog,
+		imgui_font.uniforms[1].handle
+	)
+	local imgui_image = assetmgr.load_fx {
+		fs = "/pkg/ant.imguibase/shader/fs_imgui_image.sc",
+		vs = "/pkg/ant.imguibase/shader/vs_imgui_image.sc",
+	}
+	imgui.SetImageProgram(
+		imgui_image.prog,
+		imgui_image.uniforms[1].handle
+	)
 	if platform.OS == "Windows" then
 		font.Create {
 			--{ Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
@@ -54,90 +120,10 @@ local function imgui_init()
 	else -- iOS
 		font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	end
-end
-
-local function imgui_resize(width, height)
-	local xdpi, ydpi = rhwi.dpi()
-	local xscale = math.floor(xdpi/96.0+0.5)
-	local yscale = math.floor(ydpi/96.0+0.5)
-	imgui.resize(width/xscale, height/yscale, xscale, yscale)
-end
-
-function message.init(nwh, context, width, height)
-	rhwi.init {
-		nwh = nwh,
-		context = context,
-		width = width,
-		height = height,
-	}
-    imgui_init()
-	cb.init(width, height)
-    initialized = true
-end
-
-function message.mouse_wheel(x, y, delta)
-    imgui.mouse_wheel(x, y, delta)
-	cb.mouse_wheel(x, y, delta)
-end
-function message.mouse(x, y, what, state)
-    imgui.mouse(x, y, what, state)
-	cb.mouse(x, y, what, state)
-end
-function message.keyboard(key, press, state)
-    imgui.keyboard(key, press, state)
-	cb.keyboard(key, press, state)
-end
---message.char = imgui.input_char
-function message.char(...)
-	imgui.input_char(...)
-	cb.char(...)
-end
-function message.dropfiles(filelst)
-	cb.dropfiles(filelst)
-end
-function message.size(width,height,_)
-	imgui_resize(width, height)
-	cb.size(width, height)
-	rhwi.reset(nil, width, height)
-end
-function message.exit()
-    imgui.DestroyContext()
-	rhwi.shutdown()
-    print "exit"
-end
-function message.update()
-	if initialized then
-		bgfx.set_view_clear(viewid, "CD", 0x000000FF, 1, 0)
-		local delta = timer_delta()
-		imgui.begin_frame(delta / 1000)
-        cb.update(delta)
-		imgui.end_frame()
-        rhwi.frame()
-    end
-end
-
-local function dispatch(CMD, ...)
-	local f = message[CMD]
-	if f then
-		local ok, err = xpcall(f, debug_traceback, ...)
-		if not ok then
-			print(err)
-		end
-	end
-end
-
-local function start(w, h, callback)
-    cb = callback
-    window.create(dispatch, w, h)
-    window.mainloop(true)
-end
-
-local function get_context()
-    return context
+    imgui.MainLoop()
 end
 
 return {
 	start = start,
-	get_context = get_context,
     init_world = common.init_world,
 }

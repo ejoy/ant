@@ -1,4 +1,4 @@
-local imgui = require "imgui.ant"
+local imgui = require "imgui"
 
 local function TOCLOSE(f)
     return setmetatable({}, { __close = f })

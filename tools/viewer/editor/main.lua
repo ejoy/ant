@@ -1,5 +1,5 @@
 local editor        = import_package "ant.imguibase".editor
-local imgui         = require "imgui.ant"
+local imgui         = require "imgui"
 local task          = require "task"
 local event         = require "event"
 local worlds        = require "worlds"

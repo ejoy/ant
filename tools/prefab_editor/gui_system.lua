@@ -110,10 +110,12 @@ end
 local fileserver_thread
 
 local function showDockSpace(offset_x, offset_y)
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(offset_x, offset_y)
-    imgui.windows.SetNextWindowSize(sw - offset_x, sh - offset_y)
-    --SetNextWindowViewport
+    local viewport = imgui.GetMainViewport()
+    --imgui.windows.SetNextWindowPos(offset_x, offset_y)
+    --imgui.windows.SetNextWindowSize(sw - offset_x, sh - offset_y)
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
+    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2])
+    imgui.windows.SetNextWindowViewport(viewport.ID)
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0.0);
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0.0);
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowPadding, 0.0, 0.0);
@@ -164,7 +166,8 @@ function m:ui_update()
     if lastWidth ~= width then lastWidth = width dirty = true  end
     if lastHeight ~= height then lastHeight = height dirty = true  end
     if dirty then
-        local viewport = {x = x, y = y, w = width, h = height}
+        local mvp = imgui.GetMainViewport()
+        local viewport = {x = x-mvp.WorkPos[1], y = y-mvp.WorkPos[2], w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
         local secondViewport = {x = viewport.x + (width - secondViewWidth), y = viewport.y + (height - secondViewHeight), w = secondViewWidth, h = secondViewHeight}
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
@@ -200,7 +203,6 @@ local eventAddPrefab = world:sub {"AddPrefab"}
 local eventResourceBrowser = world:sub {"ResourceBrowser"}
 local eventWindowTitle = world:sub {"WindowTitle"}
 local eventCreate = world:sub {"Create"}
-local window = require "window"
 local light_gizmo = require "gizmo.directional_light"(world)
 
 local function onTarget(old, new)
@@ -303,7 +305,27 @@ function m:data_changed()
 
     for _, what in eventWindowTitle:unpack() do
         local title = "PrefabEditor - " .. what
-        window.set_title(rhwi.native_window(), title)
+        imgui.SetWindowTitle(title)
+        -- local handle = bgfx.create_frame_buffer(wnd, w, h, "RGBA8")
+        -- bgfx.set_view_frame_buffer(viewid, handle)
+        local fbidx = fbmgr.create_wnd {
+            wndhandle = wnd,
+            w = w, 
+            h = h,
+        }
+        local eid = world:create_entity {
+            data = {
+                render_target = {
+                    viewid = xxx,
+                    fb_idx = fbidx,
+                },
+
+                primitive_filter = {
+                    filter_type = "visible"
+                }
+
+            },
+        }
         gizmo.target_eid = nil
     end
 
