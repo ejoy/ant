@@ -70,7 +70,10 @@ local function get_macros(setting)
 	end
 	if setting.bloom_enable then
 		macros[#macros+1] = "BLOOM_ENABLE"
-	end
+    end
+    if setting.fix_line_width then
+        macros[#macros+1] = "FIX_WIDTH"
+    end
 	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"
 	macros[#macros+1] = "ENABLE_SRGB_FB"
 	return macros

@@ -13,7 +13,11 @@ void main() {
 	vec4 finalPosition      = mul(u_modelViewProj, vec4(a_position, 1.0));
 	vec4 dir                = mul(u_modelViewProj, vec4(a_linedir, 0.0));
 
-	float pixelWidth        = finalPosition.w * pixelWidthRatio;
+#ifdef FIX_WIDTH
+	float pixelWidth 		= 0.01;
+#else
+	float pixelWidth 		= finalPosition.w * pixelWidthRatio;
+#endif
 	float w                 = 1.8 * pixelWidth * u_line_width * a_width;
 
 	vec2 offset = calc_offset(dir.xy, aspect, w);

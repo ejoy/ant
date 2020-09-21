@@ -22,8 +22,13 @@ void main() {
 	vec2 currentP	= fix(finalPosition, aspect);
 	vec2 prevP		= fix(prevPos, aspect);
 	vec2 nextP		= fix(nextPos, aspect);
+
+#ifdef FIX_WIDTH
+	float pixelWidth= 0.01;
+#else
+	float pixelWidth= finalPosition.w * pixelWidthRatio;
+#endif
 	
-	float pixelWidth = finalPosition.w * pixelWidthRatio;
 	float w = 1.8 * pixelWidth * u_line_width * a_width;
 
 	vec2 dir;
