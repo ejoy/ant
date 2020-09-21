@@ -63,6 +63,15 @@ local function create_simple_render_entity(srt, material, name, mesh, state)
 	}
 end
 
+function ientity.create_grid_entity_simple(name, w, h, unit, srt)
+	w = w or 64
+	h = h or 64
+	unit = unit or 1
+	local vb, ib = geolib.grid(w, h, nil, unit)
+	local mesh = create_mesh({"p3|c40niu", vb}, ib)
+	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line.material", name, mesh, ies.create_state "visible")
+end
+
 function ientity.create_grid_entity(name, width, height, unit, linewidth)
 	local ipl = world:interface "ant.render|ipolyline"
 	
