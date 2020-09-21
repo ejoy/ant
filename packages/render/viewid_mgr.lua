@@ -1,10 +1,9 @@
 local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
-local max_viewid<const> = 256
-
---1~99
+local max_viewid<const>				 = 256
 local shadow_csm_start_viewid<const> = 1
-local max_uieditor<const> = 5
+local max_uieditor<const>			 = 5
+
 local bindings = {
 	csm1 		= shadow_csm_start_viewid + 0,
 	csm2 		= shadow_csm_start_viewid + 1,
@@ -20,44 +19,44 @@ local bindings = {
 	uieditor	= max_viewid - max_uieditor - 1,
 }
 
-local freeidx = 100
-
-local function alloc_postprocess_viewids(num)
-    local name = "postprocess"
-	for i=1, num do
-		local n = name .. i
-		bindings[n] = freeidx
-		freeidx = freeidx + 1
-    end
-end
-
-alloc_postprocess_viewids(30)
-
 local pool = {}
 for _, v in pairs(bindings) do
 	pool[v] = true
 end
 
+local function find_valid_viewid(afterviewid)
+	local vid = afterviewid+1
+	while pool[vid] ~= nil and vid < max_viewid do
+		vid = vid + 1
+	end
+	return vid < max_viewid and vid or nil
+end
+
+local function alloc_viewids(num, basename, afterviewid)
+	local vids = {}
+	local vid = afterviewid
+	for i=1, num do
+		vid = find_valid_viewid(vid)
+		if vid then
+			local n			= basename .. i
+			bindings[n]		= vid
+			pool[vid]		= true
+			vids[#vids+1]	= vid
+		else
+			error("not enough viewid")
+		end
+	end
+
+	return vids
+end
+
+alloc_viewids(30, "postprocess", 100)
+
+viewid_pool.alloc_viewids = alloc_viewids
+
 function viewid_pool.generate(name, afterviewid)
-	if freeidx >= 256 then
-		--to do, need release function for not used viewid to mark which view id released
-		return error("not enougth view id to alloc")
-	end
-
-	local vid
-	if afterviewid then
-		vid = afterviewid + 1
-		while viewid_pool.get(vid) ~= nil and vid < max_viewid do
-			vid = vid + 1
-		end
-		if vid == max_viewid then
-			error(string.format("want a viewid after:%d, but not enough viewid to alloc", afterviewid))
-		end
-	else
-		vid = freeidx
-		freeidx = freeidx + 1
-	end
-
+	afterviewid = afterviewid or viewid_pool.get "main_view"
+	local vid = find_valid_viewid(afterviewid)
 	viewid_pool.bind(name, vid)
 	return vid
 end
@@ -68,7 +67,7 @@ function viewid_pool.bind(name, viewid)
 	end
 
 	if pool[viewid] then
-		error(string.format("viewid:%d have been used", viewid))
+		error(("viewid:%d have been used"):format(viewid))
 	end
 
 	pool[viewid] = true
