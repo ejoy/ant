@@ -2,8 +2,8 @@ local imgui     = require "imgui"
 local fw        = require "filewatch"
 local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
-local uiconfig  = require "ui.config"
-local uiutils   = require "ui.utils"
+local uiconfig  = require "widget.config"
+local uiutils   = require "widget.utils"
 
 local world
 local assetmgr
@@ -94,8 +94,8 @@ function m.show(rhwi)
         m.dirty = true
     end
     local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, sh - uiconfig.ResourceBrowserHeight, 'F')
-    imgui.windows.SetNextWindowSize(sw, uiconfig.ResourceBrowserHeight, 'F')
+    imgui.windows.SetNextWindowPos(0, sh - uiconfig.BottomWidgetHeight, 'F')
+    imgui.windows.SetNextWindowSize(sw, uiconfig.BottomWidgetHeight, 'F')
     
     m.update_resource_tree()
 

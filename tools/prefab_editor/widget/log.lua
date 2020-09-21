@@ -1,6 +1,6 @@
 local imgui     = require "imgui"
-local uiconfig  = require "ui.config"
-local uiutils   = require "ui.utils"
+local uiconfig  = require "widget.config"
+local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local cthread = require "thread"
 
@@ -326,8 +326,8 @@ function m.show(rhwi)
     end
     checkLog()
     local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, sh - uiconfig.LogWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(sw, uiconfig.LogWidgetHeight, 'F')
+    imgui.windows.SetNextWindowPos(0, sh - uiconfig.BottomWidgetHeight, 'F')
+    imgui.windows.SetNextWindowSize(sw, uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Log", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         showHeaderWidget(log_items[current_tag])
         m.showLog("LogList", log_items[current_tag][filter_flag])
