@@ -178,12 +178,13 @@ function m.show(rhwi)
             end
             imgui.widget.Text("Name:")
             imgui.cursor.SameLine()
+            imgui.cursor.PushItemWidth(-1)
             if imgui.widget.InputText("##Name", base_ui_data.name) then
                 local name = tostring(base_ui_data.name.text)
                 world[current_eid].name = name
                 world:pub {"EntityEvent", "name", current_eid, name}
             end
-
+            imgui.cursor.PopItemWidth()
             if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
                 imgui.widget.Text("Position:")
                 imgui.cursor.SameLine()

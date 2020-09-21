@@ -88,6 +88,7 @@ local edit_sampler = function(eid, md)
         local tp = md.tdata.properties[k]
         imgui.widget.Text(k..":")
         imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##" .. k, pro[1]) then
             -- tp.texture = tostring(pro[1].text)
             -- if string.sub(tp.texture, -8) == ".texture" then
@@ -95,12 +96,15 @@ local edit_sampler = function(eid, md)
             --     imaterial.set_property(eid, k, assetmgr.resource(tp.texture))
             -- end
         end
+        imgui.cursor.PopItemWidth()
         imgui.cursor.Indent()
         imgui.widget.Text("image:")
         imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##" .. tp.tdata.path .. idx, pro[2]) then
-            tp.tdata.path = tostring(pro[2].text)
+            --tp.tdata.path = tostring(pro[2].text)
         end
+        imgui.cursor.PopItemWidth()
         imgui.cursor.Unindent()
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
@@ -264,8 +268,6 @@ local function load_material(m, setting)
 	}
 end
 
-
-
 function m.show(eid)
     if not mtldata then
         return
@@ -290,6 +292,7 @@ function m.show(eid)
     if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
         if imgui.widget.Button("Save") then
             do_save(mtldata_list[eid].filename)
+            assetmgr.unload(mtldata_list[eid].filename)
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button("Save As") then
@@ -311,9 +314,11 @@ function m.show(eid)
 
         imgui.widget.Text("file:")
         imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##file", uidata.material_file) then
             world[eid].material = tostring(uidata.material_file.text)
         end
+        imgui.cursor.PopItemWidth()
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
             if payload then
@@ -328,9 +333,11 @@ function m.show(eid)
         imgui.cursor.Indent()
         imgui.widget.Text("vs:")
         imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##vs", uidata.vs) then
             tdata.fx.vs = tostring(uidata.vs.text)
         end
+        imgui.cursor.PopItemWidth()
         -- if imgui.widget.BeginDragDropTarget() then
         --     local payload = imgui.widget.AcceptDragDropPayload("DragFile")
         --     if payload then
@@ -340,9 +347,11 @@ function m.show(eid)
         -- end
         imgui.widget.Text("fs:")
         imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##fs", uidata.fs) then
             tdata.fx.fs = tostring(uidata.fs.text)
         end
+        imgui.cursor.PopItemWidth()
         -- if imgui.widget.BeginDragDropTarget() then
         --     local payload = imgui.widget.AcceptDragDropPayload("DragFile")
         --     if payload then
