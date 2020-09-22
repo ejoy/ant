@@ -1,8 +1,8 @@
 local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
-local max_viewid<const>				 = 256
+local max_viewid<const>				 = 1024
 local shadow_csm_start_viewid<const> = 1
-local max_uieditor<const>			 = 5
+local max_uieditor<const>			 = 32
 
 local bindings = {
 	csm1 		= shadow_csm_start_viewid + 0,
@@ -57,7 +57,9 @@ viewid_pool.alloc_viewids = alloc_viewids
 function viewid_pool.generate(name, afterviewid)
 	afterviewid = afterviewid or viewid_pool.get "main_view"
 	local vid = find_valid_viewid(afterviewid)
-	viewid_pool.bind(name, vid)
+	if vid then
+		viewid_pool.bind(name, vid)
+	end
 	return vid
 end
 
