@@ -111,8 +111,6 @@ local fileserver_thread
 
 local function showDockSpace(offset_x, offset_y)
     local viewport = imgui.GetMainViewport()
-    --imgui.windows.SetNextWindowPos(offset_x, offset_y)
-    --imgui.windows.SetNextWindowSize(sw - offset_x, sh - offset_y)
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2])
     imgui.windows.SetNextWindowViewport(viewport.ID)
