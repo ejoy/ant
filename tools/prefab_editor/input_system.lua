@@ -11,6 +11,9 @@ local lastX, lastY
 local keypress_mb = world:sub{"keyboard"}
 
 local function is_in_view(x, y)
+    if not global_data.viewport then
+        return x, y
+    end
     local xinview = x - global_data.viewport.x
     local yinview = y - global_data.viewport.y
     return xinview > 0 and xinview < global_data.viewport.w and yinview > 0 and yinview < global_data.viewport.h
