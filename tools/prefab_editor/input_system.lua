@@ -10,35 +10,35 @@ local lastMouse
 local lastX, lastY
 local keypress_mb = world:sub{"keyboard"}
 
+local function is_in_view(x, y)
+    local xinview = x - global_data.viewport.x
+    local yinview = y - global_data.viewport.y
+    return xinview > 0 and xinview < global_data.viewport.w and yinview > 0 and yinview < global_data.viewport.h
+end
 function m:data_changed()
     for _,what,state,x,y in eventMouse:unpack() do
-        if state == "MOVE" then
-            world:pub {"mousemove", what, x, y}
-        end
-        if state == "DOWN" then
-            lastX, lastY = x, y
-            lastMouse = what
-            world:pub {"mousedown", what, x, y}
-        elseif state == "MOVE" and lastMouse == what then
-            local dpiX, dpiY = rhwi.dpi()
-            local dx, dy = (x - lastX) / dpiX, (y - lastY) / dpiY
-            -- if what == "LEFT" then
-            --     world:pub { "camera", "pan", dx*kPanSpeed, dy*kPanSpeed }
-            -- elseif what == "RIGHT" then
-            --     world:pub { "camera", "rotate", dx*kRotationSpeed, dy*kRotationSpeed }
-            -- end
-            if what == "LEFT" or what == "RIGHT" then
-                world:pub { "mousedrag", what, x, y, dx, dy }
+        if is_in_view(x, y) then
+            if state == "MOVE" then
+                world:pub {"mousemove", what, x, y}
             end
-            lastX, lastY = x, y
-        elseif state == "UP" then
-            world:pub {"mouseup", what, x, y}
+            if state == "DOWN" then
+                lastX, lastY = x, y
+                lastMouse = what
+                world:pub {"mousedown", what, x, y}
+            elseif state == "MOVE" and lastMouse == what then
+                local dpiX, dpiY = rhwi.dpi()
+                local dx, dy = (x - lastX) / dpiX, (y - lastY) / dpiY
+                if what == "LEFT" or what == "RIGHT" then
+                    world:pub { "mousedrag", what, x, y, dx, dy }
+                end
+                lastX, lastY = x, y
+            elseif state == "UP" then
+                world:pub {"mouseup", what, x, y}
+            end
         end
     end
     for _, delta, x, y in eventMouseWheel:unpack() do
-        local xinview = x - global_data.viewport.x
-        local yinview = y - global_data.viewport.y
-        if  xinview > 0 and xinview < global_data.viewport.w and yinview > 0 and yinview < global_data.viewport.h then
+        if is_in_view(x, y) then
             world:pub { "camera", "zoom", -delta }
         end
     end
