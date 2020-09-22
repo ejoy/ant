@@ -18,10 +18,7 @@
     <ClInclude Include="..\..\clibs\ant\ant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\clibs\ant\ant_module_declar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\ant\ant_module_define.h">
+    <ClInclude Include="..\..\runtime\common\modules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

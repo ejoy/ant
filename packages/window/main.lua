@@ -1,16 +1,15 @@
-local window = require "window"
-
 local renderpkg = import_package "ant.render"
 local argument  = import_package "ant.argument"
+local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
 local thread    = require "thread"
-local common    = require "common"
 local rhwi      = renderpkg.hwi
 local debug_traceback = debug.traceback
 local thread_sleep = thread.sleep
 
 local LOGERROR = __ANT_RUNTIME__ and log.error or print
 local debug_update = __ANT_RUNTIME__ and require 'runtime.debug'
+
 
 local callback = {}
 
@@ -29,7 +28,12 @@ function callback.init(nwh, context, width, height)
 	config.width  = width
 	config.height = height
 	world = ecs.new_world(config)
-	common.init_world(world)
+	local ev = inputmgr.create(world)
+	callback.mouse_wheel = ev.mouse_wheel
+	callback.mouse = ev.mouse
+	callback.touch = ev.touch
+	callback.keyboard = ev.keyboard
+
 	world:pub {"resize", width, height}
 	local irender = world:interface "ant.render|irender"
 	irender.create_blit_queue{w=width,h=height}
@@ -38,29 +42,12 @@ function callback.init(nwh, context, width, height)
 	world_update = world:update_func "update"
 	world_exit   = world:update_func "exit"
 end
-
-function callback.mouse_wheel(x, y, delta)
-	world:signal_emit("mouse_wheel", x, y, delta)
-end
-function callback.mouse(x, y, what, state)
-	world:signal_emit("mouse", x, y, what, state)
-end
-function callback.touch(x, y, id, state)
-	world:signal_emit("touch", x, y, id, state)
-end
-function callback.keyboard(key, press, state)
-	world:signal_emit("keyboard", key, press, state)
-end
-function callback.char(...)
-	world:signal_emit("char", ...)
-end
 function callback.size(width,height,_)
 	if world then
 		world:pub {"resize", width, height}
 	end
 	rhwi.reset(nil, width, height)
 end
-
 function callback.exit()
 	if world_exit then
 		world_exit()
@@ -85,7 +72,6 @@ local function dispatch(ok, CMD, ...)
 			LOGERROR(err)
 			if err:find("interrupted!", 1, true) then
 				dispatch(true, 'exit')
-				window.exit()
 				return false
 			end
 		end

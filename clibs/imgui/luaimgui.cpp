@@ -11,15 +11,10 @@ extern "C" {
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
-
-namespace plat {
-	void CreateContext(lua_State* L);
-	void DestroyContext(lua_State* L);
-	void NewFrame(lua_State* L);
-	void Render(lua_State* L);
-	int  BuildFont(lua_State* L);
-	ImTextureID GetTextureID(lua_State* L, int lua_handle);
-}
+#include <bx/platform.h>
+#include "imgui_renderer.h"
+#include "imgui_platform.h"
+#include "imgui_window.h"
 
 static void*
 lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
@@ -41,40 +36,13 @@ struct lua_args {
 };
 
 static int
-lDestroyContext(lua_State *L) {
-	plat::DestroyContext(L);
+lDestroy(lua_State *L) {
+	if (ImGui::GetCurrentContext()) {
+		rendererDestroy();
+		platformDestroy();
+	}
 	ImGui::DestroyContext();
 	return 0;
-}
-
-static int
-limeHandle(lua_State *L) {
-	//TODO:Docking branch remove ImGui::GetIO().ImeWindowHandle
-	//lua_pushlightuserdata(L, ImGui::GetIO().ImeWindowHandle);
-	lua_pushlightuserdata(L, NULL);
-	return 1;
-}
-
-static int
-lresize(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	float width = (float)luaL_checknumber(L, 1);
-	float height = (float)luaL_checknumber(L, 2);
-	float xscale = (float)luaL_optnumber(L, 3, 1.0);
-	float yscale = (float)luaL_optnumber(L, 4, 1.0);
-	io.DisplaySize = ImVec2(width, height);
-	io.DisplayFramebufferScale = ImVec2(xscale, yscale);
-	return 0;
-}
-
-static int
-lgetSize(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	lua_pushnumber(L, io.DisplaySize.x);
-	lua_pushnumber(L, io.DisplaySize.y);
-	lua_pushnumber(L, io.DisplayFramebufferScale.x);
-	lua_pushnumber(L, io.DisplayFramebufferScale.y);
-	return 4;
 }
 
 struct lua_imgui_io
@@ -123,8 +91,8 @@ _sync_io_val(lua_State * L, int io_index, const char * name, float& cache_value,
 	}
 }
 
-static void
-sync_io(lua_State *L) {
+static int
+lUpdateIO(lua_State *L) {
 	ImGuiIO& io = ImGui::GetIO();
 	lua_imgui_io * io_cache =  (lua_imgui_io*)lua_touserdata(L, lua_upvalueindex(2));
 	bool inited = io_cache->inited;
@@ -144,15 +112,6 @@ sync_io(lua_State *L) {
 	sync_io_val(MetricsActiveAllocations, inited);
 	if(!inited)
 		io_cache->inited = true;
-}
-
-static int dEnable(lua_State* L) {
-	bool enable = lua_toboolean(L, 1);
-	ImGuiIO& io = ImGui::GetIO();
-	if (enable)
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	else
-		io.ConfigFlags ^= ImGuiConfigFlags_DockingEnable;
 	return 0;
 }
 
@@ -175,6 +134,30 @@ static int dBuilderGetCentralRect(lua_State * L) {
 	return 4;
 }
 
+static int lGetMainViewport(lua_State* L) {
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	lua_newtable(L);
+
+	lua_pushinteger(L, viewport->ID);
+	lua_setfield(L, -2, "ID");
+
+	ImVec2 pos = viewport->GetWorkPos();
+	lua_newtable(L);
+	lua_pushnumber(L, pos.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, pos.y);
+	lua_seti(L, -2, 2);
+	lua_setfield(L, -2, "WorkPos");
+
+	ImVec2 size = viewport->GetWorkSize();
+	lua_newtable(L);
+	lua_pushnumber(L, size.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, size.y);
+	lua_seti(L, -2, 2);
+	lua_setfield(L, -2, "WorkSize");
+	return 1;
+}
 
 static ImGuiCond
 get_cond(lua_State *L, int index) {
@@ -206,63 +189,6 @@ get_cond(lua_State *L, int index) {
 	return ImGuiCond_Always;
 }
 
-// key, press, state
-static int
-lkeyboard(lua_State *L) {
-	lua_Integer key = luaL_checkinteger(L, 1);
-	lua_Integer press = luaL_checkinteger(L, 2);
-	lua_Integer state = luaL_checkinteger(L, 3);
-	ImGuiIO& io = ImGui::GetIO();
-
-	io.KeyCtrl = (state & 0x01) != 0;
-	io.KeyAlt = (state & 0x02) != 0;
-	io.KeyShift = (state & 0x04) != 0;
-	io.KeySuper = (state & 0x08) != 0;
-	if (key >= 0 && key < 256) {
-		io.KeysDown[key] = press > 0;
-	}
-	return 0;
-}
-
-static int
-lmouseWheel(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2(
-		(float)luaL_checknumber(L, 1)/io.DisplayFramebufferScale.x,
-		(float)luaL_checknumber(L, 2)/io.DisplayFramebufferScale.y
-	);
-	io.MouseWheel = (float)luaL_checknumber(L, 3);
-	return 0;
-}
-
-static int
-lmouse(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2(
-		(float)luaL_checknumber(L, 1)/io.DisplayFramebufferScale.x,
-		(float)luaL_checknumber(L, 2)/io.DisplayFramebufferScale.y
-	);
-	lua_Integer state = luaL_checkinteger(L, 4);
-	if (state != 2) {
-		lua_Integer what = luaL_checkinteger(L, 3);
-		switch (what) {
-		case 1: io.MouseDown[ImGuiMouseButton_Left] = state == 1; break;
-		case 2: io.MouseDown[ImGuiMouseButton_Right] = state == 1; break;
-		case 3: io.MouseDown[ImGuiMouseButton_Middle] = state == 1; break;
-		default: break;
-		}
-	}
-	return 0;
-}
-
-static int
-linputChar(lua_State *L) {
-	int c = (int)luaL_checkinteger(L, 1);
-	ImGuiIO& io = ImGui::GetIO();
-	io.AddInputCharacter(c);
-	return 0;
-}
-
 #ifdef _MSC_VER
 #pragma endregion IMP_IMGUI
 #endif
@@ -271,6 +197,8 @@ linputChar(lua_State *L) {
 #ifdef _MSC_VER
 #pragma region IMP_WIDGET
 #endif
+
+bool f = true;
 
 static int
 wButton(lua_State *L) {
@@ -1606,7 +1534,7 @@ wListBox(lua_State *L) {
 
 static int wImage(lua_State *L) {
 	int lua_handle = (int)luaL_checkinteger(L, 1);
-	ImTextureID tex_id = plat::GetTextureID(L, lua_handle);
+	ImTextureID tex_id = rendererGetTextureID(L, lua_handle);
 	float size_x = (float)luaL_checknumber(L, 2);
 	float size_y = (float)luaL_checknumber(L, 3);
 	ImVec2 size = { size_x, size_y };
@@ -1641,7 +1569,7 @@ static int wImage(lua_State *L) {
 static int
 wImageButton(lua_State *L) {
 	int lua_handle = (int)luaL_checkinteger(L, 1);
-	ImTextureID tex_id = plat::GetTextureID(L, lua_handle);
+	ImTextureID tex_id = rendererGetTextureID(L, lua_handle);
 	float size_x = (float)luaL_checknumber(L, 2);
 	float size_y = (float)luaL_checknumber(L, 3);
 	ImVec2 size = { size_x, size_y };
@@ -2074,6 +2002,13 @@ winSetNextWindowSize(lua_State *L) {
 	float y = (float)luaL_checknumber(L, 2);
 	ImGuiCond cond = get_cond(L, 3);
 	ImGui::SetNextWindowSize(ImVec2(x, y), cond);
+	return 0;
+}
+
+static int
+winSetNextWindowViewport(lua_State* L) {
+	ImGuiID ID = (ImGuiID)luaL_checkinteger(L, 1);
+	ImGui::SetNextWindowViewport(ID);
 	return 0;
 }
 
@@ -2731,7 +2666,7 @@ fCreate(lua_State *L) {
 		return 0;
 	}
 
-	int r = plat::BuildFont(L);
+	int r = rendererBuildFont(L);
 	return r;
 }
 
@@ -3190,93 +3125,40 @@ static struct enum_pair eDockNodeFlags[] = {
 #pragma endregion IMP_ENUM
 #endif
 
-static struct {
-	const char* name;
-	int value;
-} KeyMap[] = {
-#define KEYMAP(k) { #k, ImGuiKey_##k },
-		KEYMAP(Tab)
-		KEYMAP(LeftArrow)
-		KEYMAP(RightArrow)
-		KEYMAP(UpArrow)
-		KEYMAP(DownArrow)
-		KEYMAP(PageUp)
-		KEYMAP(PageDown)
-		KEYMAP(Home)
-		KEYMAP(End)
-		KEYMAP(Insert)
-		KEYMAP(Delete)
-		KEYMAP(Backspace)
-		KEYMAP(Space)
-		KEYMAP(Enter)
-		KEYMAP(Escape)
-		KEYMAP(KeyPadEnter)
-		KEYMAP(A)
-		KEYMAP(C)
-		KEYMAP(V)
-		KEYMAP(X)
-		KEYMAP(Y)
-		KEYMAP(Z)
-#undef  KEYMAP
-};
-static_assert(IM_ARRAYSIZE(KeyMap) == ImGuiKey_COUNT);
-
 static int
-lkeymap(lua_State *L) {
-
-	if (lua_gettop(L) == 0) {
-		lua_createtable(L, ImGuiKey_COUNT, 0);
-		lua_Integer i = 0;
-		for (auto& key : KeyMap) {
-			lua_pushstring(L, key.name);
-			lua_rawseti(L, -2, ++i);
-		}
-		return 1;
-	}
-
-	luaL_checktype(L, 1, LUA_TTABLE);
+lCreate(lua_State* L) {
+	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
-	for (auto& key : KeyMap) {
-		if (LUA_TNUMBER == lua_getfield(L, 1, key.name)) {
-			io.KeyMap[key.value] = (int)lua_tointeger(L, -1);
-		}
-		lua_pop(L, 1);
+	io.IniFilename = NULL;
+	io.UserData = L;
+
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+	window_register(L, 1);
+	int width = (int)luaL_checkinteger(L, 2);
+	int height = (int)luaL_checkinteger(L, 3);
+	if (!platformCreate(L, width, height)) {
+		return luaL_error(L, "Create backend failed");
+	}
+	if (!rendererCreate()) {
+		return luaL_error(L, "Create renderer failed");
 	}
 	return 0;
 }
 
 static int
-lCreateContext(lua_State* L) {
-	ImGuiContext* ctx = ImGui::CreateContext();
-	ImGui::SetCurrentContext(ctx);
-	plat::CreateContext(L);
-	sync_io(L);
-	lua_pushlightuserdata(L, ctx);
-	return 1;
-}
-
-static int
-lSetCurrentContext(lua_State* L) {
-	if (lua_isnoneornil(L, 1)) {
-		return 0;
-	}
-	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-	ImGui::SetCurrentContext((ImGuiContext*)lua_touserdata(L, 1));
-	sync_io(L);
-	return 0;
-}
-
-static int
-lbeginFrame(lua_State* L) {
-	plat::NewFrame(L);
+lNewFrame(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = (float)luaL_checknumber(L, 1);
+	platformNewFrame();
 	ImGui::NewFrame();
-	sync_io(L);
 	return 0;
 }
 
 static int
 push_sync_io( lua_State * L ){
-	//set field IO and begin_frame( and IO is its upvalue) 
+	//set field IO and NewFrame( and IO is its upvalue) 
 	lua_newtable(L);
 
 	lua_pushvalue(L, -1);
@@ -3294,10 +3176,63 @@ push_sync_io( lua_State * L ){
 }
 
 static int
-lendFrame(lua_State* L) {
+lRender(lua_State* L) {
 	ImGui::Render();
-	plat::Render(L);
+	rendererDrawData(ImGui::GetMainViewport());
+	ImGui::UpdatePlatformWindows();
+	ImGui::RenderPlatformWindowsDefault();
 	return 0;
+}
+
+static int
+lMainLoop(lua_State* L) {
+	platformMainLoop(L);
+	return 0;
+}
+
+static int
+lSetWindowTitle(lua_State* L) {
+	ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+	if (!platform_io.Platform_SetWindowTitle) {
+		return 0;
+	}
+	platform_io.Platform_SetWindowTitle(ImGui::GetMainViewport(), luaL_checkstring(L, 1));
+	return 0;
+}
+
+#if BX_PLATFORM_WINDOWS
+#define bx_malloc_size _msize
+#elif BX_PLATFORM_LINUX
+#define bx_malloc_size malloc_usable_size
+#elif BX_PLATFORM_OSX
+#define bx_malloc_size malloc_size
+#elif BX_PLATFORM_IOS
+#define bx_malloc_size malloc_size
+#else
+#    error "Unknown PLATFORM!"
+#endif
+
+int64_t allocator_memory = 0;
+
+static void* ImGuiAlloc(size_t sz, void* /*user_data*/) {
+	void* ptr = malloc(sz);
+	if (ptr) {
+		allocator_memory += bx_malloc_size(ptr);
+	}
+	return ptr;
+}
+
+static void ImGuiFree(void* ptr, void* /*user_data*/) {
+	if (ptr) {
+		allocator_memory -= bx_malloc_size(ptr);
+	}
+	free(ptr);
+}
+
+static int
+lmemory(lua_State* L) {
+	lua_pushinteger(L, allocator_memory);
+	return 1;
 }
 
 extern "C"
@@ -3307,33 +3242,32 @@ __declspec(dllexport)
 int
 luaopen_imgui(lua_State *L) {
 	luaL_checkversion(L);
+	rendererInit(L);
+	ImGui::SetAllocatorFunctions(&ImGuiAlloc, &ImGuiFree, NULL);
 
 	luaL_Reg l[] = {
-		{ "DestroyContext", lDestroyContext },
-		{ "keymap", lkeymap },
-		{ "end_frame", lendFrame },
-		{ "keyboard", lkeyboard },
-		{ "input_char", linputChar },
-		{ "mouse_wheel", lmouseWheel },
-		{ "mouse", lmouse },
-		{ "resize", lresize },
-		{ "getSize", lgetSize },
-		{ "ime_handle", limeHandle },
+		{ "Create", lCreate },
+		{ "Destroy", lDestroy },
+		{ "NewFrame", lNewFrame },
+		{ "Render", lRender },
+		{ "MainLoop", lMainLoop },
+		{ "SetWindowTitle", lSetWindowTitle },
+		{ "SetFontProgram", rendererSetFontProgram },
+		{ "SetImageProgram", rendererSetImageProgram },
+		{ "GetMainViewport", lGetMainViewport },
+		{ "memory", lmemory },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
 
 	luaL_Reg io[] = {
-		{ "begin_frame", lbeginFrame },
-		{ "CreateContext", lCreateContext },
-		{ "SetCurrentContext", lSetCurrentContext },
+		{ "UpdateIO", lUpdateIO },
 		{ NULL, NULL },
 	};
 	push_sync_io(L);
 	luaL_setfuncs(L, io, 2);
 
 	luaL_Reg dock[] = {
-		{ "Enable", dEnable },
 		{ "Space", dSpace },
 		{ "BuilderGetCentralRect", dBuilderGetCentralRect },
 		{ NULL, NULL },
@@ -3341,7 +3275,6 @@ luaopen_imgui(lua_State *L) {
 	luaL_newlib(L, dock);
 	lua_setfield(L, -2, "dock");
 
-	
 	luaL_Reg widgets[] = {
 		{ "Button", wButton },
 		{ "SmallButton", wSmallButton },
@@ -3483,6 +3416,7 @@ luaopen_imgui(lua_State *L) {
 		{ "SetScrollFromPosY", winSetScrollFromPosY },
 		{ "SetNextWindowPos", winSetNextWindowPos },
 		{ "SetNextWindowSize", winSetNextWindowSize },
+		{ "SetNextWindowViewport", winSetNextWindowViewport },
 		{ "SetNextWindowSizeConstraints", winSetNextWindowSizeConstraints },
 		{ "SetNextWindowContentSize", winSetNextWindowContentSize },
 		{ "SetNextWindowCollapsed", winSetNextWindowCollapsed },

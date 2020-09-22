@@ -1,5 +1,5 @@
-local editor        = import_package "ant.imguibase".editor
-local imgui         = require "imgui.ant"
+local editor        = import_package "ant.imgui"
+local imgui         = require "imgui"
 local task          = require "task"
 local event         = require "event"
 local worlds        = require "worlds"
@@ -30,11 +30,6 @@ end
 function cb.keyboard(key, press, state)
     for _, w in ipairs(worlds) do
         w.keyboard(key, press, state)
-    end
-end
-function cb.char(key, press, state)
-    for _, w in ipairs(worlds) do
-        w.char(key, press, state)
     end
 end
 function cb.size(width, height)

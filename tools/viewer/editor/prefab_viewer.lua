@@ -1,7 +1,7 @@
 local event         = require "event"
 local worlds        = require "worlds"
 local task          = require "task"
-local imgui         = require "imgui.ant"
+local imgui         = require "imgui"
 local import_prefab = require "import_prefab"
 local w
 local world

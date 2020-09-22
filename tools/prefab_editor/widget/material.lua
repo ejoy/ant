@@ -37,10 +37,16 @@ function m.update_ui_data(eid)
         if not mtldata_list[eid] then
             local mtl_filename = tostring(world[eid].material)
             local md = {filename = mtl_filename, tdata = datalist.parse(cr.read_file(mtl_filename))}
-            
+            local mtl_path = cr.compile(mtl_filename):remove_filename()
             for k, v in pairs(md.tdata.properties) do
                 if is_sampler(k) then
-                    v.tdata = readtable(v.texture)
+                    local absolute_path
+                    if fs.path(v.texture):is_absolute() then
+                        absolute_path = v.texture
+                    else
+                        absolute_path = tostring(mtl_path) .. v.texture 
+                    end
+                    v.tdata = readtable(absolute_path)
                 end
             end
 

@@ -4,11 +4,9 @@ local irq           = world:interface "ant.render|irenderqueue"
 local icamera       = world:interface "ant.camera|camera"
 local entity        = world:interface "ant.render|entity"
 local camera_mgr    = require "camera_manager"(world)
-local rhwi          = import_package 'ant.render'.hwi
 local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
-local window        = require "window"
 
 local m             = ecs.system 'init_system'
 
@@ -22,7 +20,6 @@ local function LoadImguiLayout(filename)
 end
 
 function m:init()
-    imgui.dock.Enable(true)
     LoadImguiLayout(fs.path "":localpath() .. "/" .. "imgui.layout")
 
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0xa0a0a0ff)
@@ -56,7 +53,7 @@ function m:init()
     local light_gizmo = require "gizmo.directional_light"(world)
     light_gizmo.default_light = light[1]
     light_gizmo.bind(light[1])
-    window.set_title(rhwi.native_window(), "PrefabEditor")
+    imgui.SetWindowTitle("PrefabEditor")
 end
 
 
