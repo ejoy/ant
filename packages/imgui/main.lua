@@ -92,7 +92,6 @@ end
 local function start(w, h, callback)
     cb = callback
 	imgui.Create(dispatch, w, h)
-    imgui.UpdateIO()
 	local imgui_font = assetmgr.load_fx {
 		fs = "/pkg/ant.imgui/shader/fs_imgui_font.sc",
 		vs = "/pkg/ant.imgui/shader/vs_imgui_font.sc",

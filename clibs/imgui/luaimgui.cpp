@@ -11,6 +11,9 @@ extern "C" {
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
+#include <functional>
+#include <map>
+#include <string_view>
 #include <bx/platform.h>
 #include "imgui_renderer.h"
 #include "imgui_platform.h"
@@ -42,76 +45,6 @@ lDestroy(lua_State *L) {
 		platformDestroy();
 	}
 	ImGui::DestroyContext();
-	return 0;
-}
-
-struct lua_imgui_io
-{
-	
-	bool		   inited = false;
-	bool        WantCaptureMouse;               // When io.WantCaptureMouse is true, imgui will use the mouse inputs, do not dispatch them to your main game/application (in both cases, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
-	bool        WantCaptureKeyboard;            // When io.WantCaptureKeyboard is true, imgui will use the keyboard inputs, do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
-	bool        WantTextInput;                  // Mobile/console: when io.WantTextInput is true, you may display an on-screen keyboard. This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
-	bool        WantSetMousePos;                // MousePos has been altered, back-end should reposition mouse on next frame. Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
-	bool        WantSaveIniSettings;            // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. IMPORTANT: You need to clear io.WantSaveIniSettings yourself.
-	bool        NavActive;                      // Directional navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
-	bool        NavVisible;                     // Directional navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
-	float       Framerate;                      // Application framerate estimation, in frame per second. Solely for convenience. Rolling average estimation based on IO.DeltaTime over 120 frames
-	int         MetricsRenderVertices;          // Vertices output during last call to Render()
-	int         MetricsRenderIndices;           // Indices output during last call to Render() = number of triangles * 3
-	int         MetricsRenderWindows;           // Number of visible windows
-	int         MetricsActiveWindows;           // Number of active windows
-	int         MetricsActiveAllocations;       // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-};
-
-#define sync_io_val(name,inited)  _sync_io_val(L, lua_upvalueindex(1), #name, io_cache->name, io.name, inited)
-
-static void
-_sync_io_val(lua_State * L, int io_index, const char * name, bool& cache_value, bool new_value, bool inited) {
-	if (!inited || (cache_value != new_value)) {
-		cache_value = new_value;
-		lua_pushboolean(L, cache_value);
-		lua_setfield(L, io_index, name);
-	}
-}
-static void
-_sync_io_val(lua_State * L, int io_index, const char * name, int& cache_value, int new_value, bool inited) {
-	if (!inited || (cache_value != new_value)) {
-		cache_value = new_value;
-		lua_pushinteger(L, cache_value);
-		lua_setfield(L, io_index, name);
-	}
-}
-static void
-_sync_io_val(lua_State * L, int io_index, const char * name, float& cache_value, float new_value, bool inited) {
-	if (!inited || (cache_value != new_value)) {
-		cache_value = new_value;
-		lua_pushnumber(L, cache_value);
-		lua_setfield(L, io_index, name);
-	}
-}
-
-static int
-lUpdateIO(lua_State *L) {
-	ImGuiIO& io = ImGui::GetIO();
-	lua_imgui_io * io_cache =  (lua_imgui_io*)lua_touserdata(L, lua_upvalueindex(2));
-	bool inited = io_cache->inited;
-
-	sync_io_val(WantCaptureMouse, inited);
-	sync_io_val(WantCaptureKeyboard, inited);
-	sync_io_val(WantTextInput, inited);
-	sync_io_val(WantSetMousePos, inited);
-	sync_io_val(WantSaveIniSettings, inited);
-	sync_io_val(NavActive, inited);
-	sync_io_val(NavVisible, inited);
-	sync_io_val(Framerate, inited);
-	sync_io_val(MetricsRenderVertices, inited);
-	sync_io_val(MetricsRenderIndices, inited);
-	sync_io_val(MetricsRenderWindows, inited);
-	sync_io_val(MetricsActiveWindows, inited);
-	sync_io_val(MetricsActiveAllocations, inited);
-	if(!inited)
-		io_cache->inited = true;
 	return 0;
 }
 
@@ -3151,6 +3084,65 @@ lCreate(lua_State* L) {
 	return 0;
 }
 
+static void ioWantCaptureMouse(lua_State* L) {
+	lua_pushboolean(L, ImGui::GetIO().WantCaptureMouse);
+}
+
+static void ioWantCaptureKeyboard(lua_State* L) {
+	lua_pushboolean(L, ImGui::GetIO().WantCaptureKeyboard);
+}
+
+std::map<std::string_view, std::function<void(lua_State*)>> ioProperty = {
+	{"WantCaptureMouse", ioWantCaptureMouse},
+	{"WantCaptureKeyboard", ioWantCaptureKeyboard},
+};
+
+static int
+ioGetter(lua_State* L) {
+	size_t keysz = 0;
+	const char* key = luaL_checklstring(L, 2, &keysz);
+	auto iter = ioProperty.find(std::string_view(key, keysz));
+	if (iter == ioProperty.end()) {
+		return luaL_error(L, "Invalid ImGui.IO.%s", key);
+	}
+	iter->second(L);
+	lua_pushvalue(L, -1);
+	lua_insert(L, 2);
+	lua_rawset(L, -4);
+	return 1;
+}
+
+static int
+ioCreate(lua_State* L) {
+	lua_newtable(L);
+	luaL_Reg mt[] = {
+		{ "__index", ioGetter },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, mt);
+	lua_setmetatable(L, -2);
+	lua_pushvalue(L, -1);
+	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_IO");
+	return 1;
+}
+
+static int
+ioClean(lua_State* L) {
+	if (lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_IO") != LUA_TTABLE) {
+		lua_pop(L, 1);
+		return 0;
+	}
+	lua_pushnil(L);
+	while (lua_next(L, -2)) {
+		lua_pop(L, 1);
+		lua_pushvalue(L, -1);
+		lua_pushnil(L);
+		lua_rawset(L, -4);
+	}
+	lua_pop(L, 1);
+	return 0;
+}
+
 static int
 lNewFrame(lua_State* L) {
 	ImGuiIO& io = ImGui::GetIO();
@@ -3161,26 +3153,8 @@ lNewFrame(lua_State* L) {
 }
 
 static int
-push_sync_io( lua_State * L ){
-	//set field IO and NewFrame( and IO is its upvalue) 
-	lua_newtable(L);
-
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -3, "IO");
-
-	size_t io_size = sizeof(lua_imgui_io);
-#if LUA_VERSION_NUM >=504
-	lua_imgui_io* io_cache = (lua_imgui_io*)lua_newuserdatauv(L, io_size, 0);
-#else
-	lua_imgui_io* io_cache = (lua_imgui_io*)lua_newuserdata(L, io_size);
-#endif
-	
-	io_cache->inited = false;
-	return 2;
-}
-
-static int
 lRender(lua_State* L) {
+	ioClean(L);
 	ImGui::Render();
 	rendererDrawData(ImGui::GetMainViewport());
 	ImGui::UpdatePlatformWindows();
@@ -3264,12 +3238,8 @@ luaopen_imgui(lua_State *L) {
 	};
 	luaL_newlib(L, l);
 
-	luaL_Reg io[] = {
-		{ "UpdateIO", lUpdateIO },
-		{ NULL, NULL },
-	};
-	push_sync_io(L);
-	luaL_setfuncs(L, io, 2);
+	ioCreate(L);
+	lua_setfield(L, -2, "IO");
 
 	luaL_Reg dock[] = {
 		{ "Space", dSpace },
