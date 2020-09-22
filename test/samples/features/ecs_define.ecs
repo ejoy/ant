@@ -27,7 +27,6 @@ system "init_loader_system"
     -- .require_system "ant.test.features|shadow_test_system"
     --.require_system "ant.test.features|decal_test_system"
     .require_system "ant.camera|camera_recorder_system"
-    .require_system "ant.imgui|imgui_system"
     .require_system "ant.sky|procedural_sky_system"
     .require_system "ant.splitviews|splitviews_system"
     
@@ -58,7 +57,6 @@ system "init_loader_system"
 
     .method "init"
     .method "post_init"
-    .method "ui_update"
 
 
 system "animation_test_system"
