@@ -6,7 +6,8 @@ GENIE=cd bgfx && ../bx/tools/bin/darwin/genie
 else
 GENIE=cd bgfx && ../bx/tools/bin/windows/genie
 endif
-GENIE_WITH_EDITOR = --with-tools --with-shared-lib --with-dynamic-runtime
+
+GENIE_WITH_EDITOR = --with-tools --with-shared-lib --with-dynamic-runtime --with-examples
 
 ifeq "$(PLAT)" "ios"
   BGFX_MAKEFILE = .build/projects/gmake-ios-arm64
@@ -19,7 +20,8 @@ else ifeq "$(PLAT)" "mingw"
   BGFX_BIN = bgfx/.build/win64_mingw-gcc/bin/
   BGFX_SHARED_LIB = bgfx-shared-lib$(MODE).dll
 endif
-BGFX_MAKE_CMD = make -R -C bgfx/$(BGFX_MAKEFILE) config=$(MODE)64 -j8
+
+BGFX_MAKE_CMD = make -R -C bgfx/$(BGFX_MAKEFILE) config=$(MODE)64 -j8 
 
 _bx:
 	$(BGFX_MAKE_CMD) bx
@@ -64,9 +66,9 @@ GENIE_PLATFORM= --gcc=osx gmake
 else
 GENIE_PLATFORM= --os=windows --gcc=mingw-gcc gmake
 endif
-
+BGFX_CONFIG=MAX_VIEWS=1024
 init:
-	$(GENIE) $(GENIE_WITH_EDITOR) $(GENIE_PLATFORM)
+	export BGFX_CONFIG=$(BGFX_CONFIG) && $(GENIE) $(GENIE_WITH_EDITOR) $(GENIE_PLATFORM)
 
 ifeq "$(PLAT)" "msvc"
 make:
