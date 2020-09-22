@@ -4,7 +4,6 @@ local viewidmgr   = renderpkg.viewidmgr
 local assetmgr    = import_package "ant.asset"
 local rhwi        = renderpkg.hwi
 local platform    = require "platform"
-local common      = require "common"
 local font        = imgui.font
 local Font        = platform.font
 local cb          = nil
@@ -95,16 +94,16 @@ local function start(w, h, callback)
 	imgui.Create(dispatch, w, h)
     imgui.UpdateIO()
 	local imgui_font = assetmgr.load_fx {
-		fs = "/pkg/ant.imguibase/shader/fs_imgui_font.sc",
-		vs = "/pkg/ant.imguibase/shader/vs_imgui_font.sc",
+		fs = "/pkg/ant.imgui/shader/fs_imgui_font.sc",
+		vs = "/pkg/ant.imgui/shader/vs_imgui_font.sc",
 	}
 	imgui.SetFontProgram(
 		imgui_font.prog,
 		imgui_font.uniforms[1].handle
 	)
 	local imgui_image = assetmgr.load_fx {
-		fs = "/pkg/ant.imguibase/shader/fs_imgui_image.sc",
-		vs = "/pkg/ant.imguibase/shader/vs_imgui_image.sc",
+		fs = "/pkg/ant.imgui/shader/fs_imgui_image.sc",
+		vs = "/pkg/ant.imgui/shader/vs_imgui_image.sc",
 	}
 	imgui.SetImageProgram(
 		imgui_image.prog,
@@ -125,5 +124,4 @@ end
 
 return {
 	start = start,
-    init_world = common.init_world,
 }

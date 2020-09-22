@@ -1,4 +1,4 @@
 return {
-    name = "ant.imguibase",
+    name = "ant.inputmgr",
     entry = "main",
 }

@@ -302,30 +302,6 @@ function world:interface(fullname)
 	return self._class.interface[fullname]
 end
 
-function world:signal_on(name, f)
-	self._slots[name] = f
-end
-
-function world:signal_hook(name, newf)
-    local f = self._slots[name]
-	if f then
-		self._slots[name] = function(...)
-			if not newf(...) then
-				f(...)
-			end
-		end
-	else
-		self._slots[name] = newf
-    end
-end
-
-function world:signal_emit(name, ...)
-	local f = self._slots[name]
-	if f then
-		f(...)
-	end
-end
-
 local m = {}
 
 function m.new_world(config)
@@ -337,7 +313,6 @@ function m.new_world(config)
 		_removed = {},	-- A list of { eid, component_name, component } / { eid, entity }
 		_switchs = {},	-- for enable/disable
 		_uniques = {},
-		_slots = {},
 	}, world)
 
 	--init event
