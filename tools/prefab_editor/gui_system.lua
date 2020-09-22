@@ -23,12 +23,11 @@ local uiconfig = require "widget.config"
 local prefab_mgr = require "prefab_manager"(world)
 local menu = require "widget.menu"(world, prefab_mgr)
 local camera_mgr = require "camera_manager"(world)
-local m = ecs.system 'gui_system'
-
+local gizmo = require "gizmo.gizmo"(world)
 local eventGizmo = world:sub {"Gizmo"}
 local eventScene = world:sub {"Scene"}
+local m = ecs.system 'gui_system'
 
-local gizmo
 local cmd_queue
 
 local icons = require "common.icons"(asset_mgr)
@@ -240,11 +239,6 @@ function m:data_changed()
             elseif action == "update" then
                 onUpdate(gizmo.target_eid)
             end
-        elseif action == "create" then
-            gizmo = value1
-            --cmd_queue = value2
-            inspector.set_gizmo(gizmo)
-            scene_view.set_gizmo(gizmo)
         end
     end
     for _, what, target, v1, v2 in entityEvent:unpack() do

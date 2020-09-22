@@ -4,17 +4,14 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy"
 
+local gizmo
 local m = {}
 local world
 local asset_mgr
 local source_eid = nil
 local target_eid = nil
-local gizmo
 local iom
 local iss
-function m.set_gizmo(obj)
-    gizmo = obj
-end
 
 local function is_editable(eid)
     if not iom.srt(eid) or
@@ -144,5 +141,6 @@ return function(w, am)
     asset_mgr = am
     iom = world:interface "ant.objcontroller|obj_motion"
     iss = world:interface "ant.scene|iscenespace"
+    gizmo = require "gizmo.gizmo"(world)
     return m
 end

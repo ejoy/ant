@@ -385,7 +385,6 @@ function gizmo_sys:post_init()
 	update_global_axis()
 	gizmo:update_scale()
 	gizmo:show_by_state(false)
-	world:pub {"Gizmo", "create", gizmo, cmd_queue}
 end
 
 local function gizmo_dir_to_world(localDir)
@@ -834,8 +833,8 @@ function gizmo_sys:data_changed()
 			gizmo:on_mode(gizmo_const.MOVE)
 		elseif what == "scale" then
 			gizmo:on_mode(gizmo_const.SCALE)
-		elseif what == "localspace" then-- or what == "worldspace" then
-			local_space = value--(what == "localspace")
+		elseif what == "localspace" then
+			local_space = value
 			gizmo:update_axis_plane()
 			gizmo:set_rotation()
 		end
@@ -843,7 +842,6 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouse_down:unpack() do
 		if what == "LEFT" then
-			--print("Down", x, y, utils.mouse_pos_in_view(x, y))
 			gizmo_seleted = gizmo:select_gizmo(utils.mouse_pos_in_view(x, y))
 			gizmo:click_axis_or_plane(move_axis)
 			gizmo:click_axis(rotate_axis)

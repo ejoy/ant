@@ -3,6 +3,8 @@ local math3d    = require "math3d"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy"
+
+local gizmo
 local material_panel
 local m = {}
 local world
@@ -72,12 +74,6 @@ local function update_ui_data(eid)
     base_ui_data.scale[3] = scale[3]
 
     material_panel.update_ui_data(eid)
-end
-
-local gizmo
-
-function m.set_gizmo(obj)
-    gizmo = obj
 end
 
 function m.update_template_tranform(eid)
@@ -288,10 +284,11 @@ end
 
 return function(w)
     world = w
-    iom = world:interface "ant.objcontroller|obj_motion"
-    icamera = world:interface "ant.camera|camera"
-    worldedit = import_package "ant.editor".worldedit(world)
-    camera_mgr = require "camera_manager"(world)
-    material_panel = require "widget.material"(world)
+    iom             = world:interface "ant.objcontroller|obj_motion"
+    icamera         = world:interface "ant.camera|camera"
+    worldedit       = import_package "ant.editor".worldedit(world)
+    camera_mgr      = require "camera_manager"(world)
+    material_panel  = require "widget.material"(world)
+    gizmo           = require "gizmo.gizmo"(world)
     return m
 end
