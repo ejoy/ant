@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local rhwi = import_package 'ant.render'.hwi
-
+local global_data = require "common.global_data"
 local m = ecs.system 'input_system'
 
 local eventMouse = world:sub {"mouse"}
@@ -35,8 +35,12 @@ function m:data_changed()
             world:pub {"mouseup", what, x, y}
         end
     end
-    for _,delta in eventMouseWheel:unpack() do
-        world:pub { "camera", "zoom", -delta }
+    for _, delta, x, y in eventMouseWheel:unpack() do
+        local xinview = x - global_data.viewport.x
+        local yinview = y - global_data.viewport.y
+        if  xinview > 0 and xinview < global_data.viewport.w and yinview > 0 and yinview < global_data.viewport.h then
+            world:pub { "camera", "zoom", -delta }
+        end
     end
     for _, key, press, state in keypress_mb:unpack() do
         if key == "W" and press == 2 then

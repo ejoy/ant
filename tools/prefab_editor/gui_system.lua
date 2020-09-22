@@ -33,8 +33,6 @@ local cmd_queue
 
 local icons = require "common.icons"(asset_mgr)
 
-local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
-
 local dragFile = nil
 local lastX = -1
 local lastY = -1
@@ -111,8 +109,10 @@ local fileserver_thread
 
 local function showDockSpace(offset_x, offset_y)
     local viewport = imgui.GetMainViewport()
-    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
-    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], viewport.WorkSize[2])
+    --imgui.windows.SetNextWindowPos(offset_x, offset_y)
+    --imgui.windows.SetNextWindowSize(sw - offset_x, sh - offset_y)
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + offset_x, viewport.WorkPos[2] + offset_y)
+    imgui.windows.SetNextWindowSize(viewport.WorkSize[1] - offset_x, viewport.WorkSize[2] - offset_y)
     imgui.windows.SetNextWindowViewport(viewport.ID)
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0.0);
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0.0);
@@ -149,13 +149,13 @@ function m:ui_update()
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.TitleBg, 0.2, 0.2, 0.2, 1)
     chooseProject()
     menu.show()
-    toolbar.show(rhwi)
-    local x, y, width, height = showDockSpace(0, viewStartY)
-    scene_view.show(rhwi)
-    inspector.show(rhwi)
-    resource_browser.show(rhwi)
-    log_widget.show(rhwi)
-    console_widget.show(rhwi)
+    toolbar.show()
+    local x, y, width, height = showDockSpace(0, uiconfig.ToolBarHeight)
+    scene_view.show()
+    inspector.show()
+    resource_browser.show()
+    log_widget.show()
+    console_widget.show()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
     local dirty = false
@@ -165,7 +165,7 @@ function m:ui_update()
     if lastHeight ~= height then lastHeight = height dirty = true  end
     if dirty then
         local mvp = imgui.GetMainViewport()
-        local viewport = {x = x-mvp.WorkPos[1], y = y-mvp.WorkPos[2], w = width, h = height}
+        local viewport = {x = x - mvp.WorkPos[1], y = y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
         local secondViewport = {x = viewport.x + (width - secondViewWidth), y = viewport.y + (height - secondViewHeight), w = secondViewWidth, h = secondViewHeight}
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
@@ -304,26 +304,6 @@ function m:data_changed()
     for _, what in eventWindowTitle:unpack() do
         local title = "PrefabEditor - " .. what
         imgui.SetWindowTitle(title)
-        -- local handle = bgfx.create_frame_buffer(wnd, w, h, "RGBA8")
-        -- bgfx.set_view_frame_buffer(viewid, handle)
-        local fbidx = fbmgr.create_wnd {
-            wndhandle = wnd,
-            w = w, 
-            h = h,
-        }
-        local eid = world:create_entity {
-            data = {
-                render_target = {
-                    viewid = xxx,
-                    fb_idx = fbidx,
-                },
-
-                primitive_filter = {
-                    filter_type = "visible"
-                }
-
-            },
-        }
         gizmo.target_eid = nil
     end
 

@@ -109,12 +109,10 @@ local function show_scene_node(node)
     end
 end
 
-local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
-
-function m.show(rhwi)
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, viewStartY, 'F')
-    imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, sh - uiconfig.BottomWidgetHeight - viewStartY, 'F')
+function m.show()
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
+    imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         if imgui.widget.Button("CreateCamera") then

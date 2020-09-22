@@ -154,11 +154,10 @@ local function setCurrentFrame(eid, idx, force)
     camera_mgr.set_frame(eid, idx)
 end
 
-local view_start_y = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
-function m.show(rhwi)
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(sw - uiconfig.PropertyWidgetWidth, view_start_y, 'F')
-    imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, sh - uiconfig.BottomWidgetHeight - view_start_y, 'F')
+function m.show()
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
+    imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
     
     local current_eid = gizmo.target_eid
     for _ in uiutils.imgui_windows("Inspector", imgui.flags.Window { "NoCollapse", "NoClosed" }) do

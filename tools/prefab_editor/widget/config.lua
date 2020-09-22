@@ -1,5 +1,5 @@
 local m = {
-    WidgetStartY = 23,
+    MenuHeight = 24,
     ToolBarHeight = 40,
     SceneWidgetWidth = 200,
     PropertyWidgetWidth = 320,

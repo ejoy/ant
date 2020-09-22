@@ -13,12 +13,11 @@ local status = {
 
 local localSpace = {}
 
-function m.show(rhwi)
-    local sw, sh = rhwi.screen_size()
+function m.show()
     local icons = require "common.icons"(asset_mgr)
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
-    imgui.windows.SetNextWindowSize(sw, uiconfig.ToolBarHeight)
+    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.ToolBarHeight)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.25, 0.25, 0.25, 1)

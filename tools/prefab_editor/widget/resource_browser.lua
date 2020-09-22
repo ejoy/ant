@@ -84,7 +84,7 @@ function m.update_resource_tree()
     m.dirty = false
 end
 
-function m.show(rhwi)
+function m.show()
     if not resource_root then
         return
     end
@@ -93,10 +93,10 @@ function m.show(rhwi)
         type, _ = fw.select()
         m.dirty = true
     end
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, sh - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(sw, uiconfig.BottomWidgetHeight, 'F')
-    
+
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     m.update_resource_tree()
 
     local function doShowBrowser(folder)

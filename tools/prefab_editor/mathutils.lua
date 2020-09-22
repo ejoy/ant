@@ -63,11 +63,13 @@ function m.world_to_screen(camera_eid, world_pos)
 	return {(1 + proj_pos[1] / proj_pos[4]) * global_data.viewport.w * 0.5, (1 - proj_pos[2] / proj_pos[4]) * global_data.viewport.h * 0.5, 0}
 end
 
-function m.adjust_mouse_pos(x,y)
-    if not global_data.viewport then
-        return x, y
-    end
-    return x - global_data.viewport.x, y - global_data.viewport.y
+function m.mouse_pos_in_view(x,y)
+    if global_data.viewport then
+        local viewx, viewy = x - global_data.viewport.x, y - global_data.viewport.y
+		if viewx > 0 and viewx < global_data.viewport.w and viewy > 0 and viewy < global_data.viewport.h then
+			return viewx, viewy
+		end
+	end
 end
 
 return function(w)

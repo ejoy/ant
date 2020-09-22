@@ -320,14 +320,15 @@ function m.showConsole()
     m.showLog("ConsoleList", log_items["Console"][LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR])
 end
 
-function m.show(rhwi)
+function m.show()
     if not err_receiver then
         err_receiver = cthread.channel_consume "errlog"
     end
     checkLog()
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, sh - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(sw, uiconfig.BottomWidgetHeight, 'F')
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+
     for _ in uiutils.imgui_windows("Log", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         showHeaderWidget(log_items[current_tag])
         m.showLog("LogList", log_items[current_tag][filter_flag])
