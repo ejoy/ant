@@ -1,6 +1,6 @@
 local viewid_pool = {}; viewid_pool.__index = viewid_pool
 
-local max_viewid<const>				 = 1024
+local max_viewid<const>				 = 256
 local shadow_csm_start_viewid<const> = 1
 local max_uieditor<const>			 = 32
 

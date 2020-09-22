@@ -6,10 +6,6 @@
 
 #define MAX_DROP_PATH 255*3
 
-enum {
-	WM_USER_WINDOW_SETCURSOR = WM_USER,
-};
-
 struct PlatformViewport {
 	HWND native_handle = NULL;
 	bool owned = true;
@@ -18,10 +14,18 @@ struct PlatformViewport {
 };
 
 static HWND g_main_window = NULL;
+static ImGuiMouseCursor g_last_mouse_cursor = ImGuiMouseCursor_COUNT;
+static bool g_want_update_monitors = true;
 
-static void set_cursor(ImGuiMouseCursor im_cursor) {
+static void platformUpdateMouseCursor() {
+	ImGuiIO& io = ImGui::GetIO();
+	ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+	if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor) {
+		::SetCursor(NULL);
+		return;
+	}
 	LPTSTR cursor = NULL;
-	switch (im_cursor) {
+	switch (imgui_cursor) {
 	default: [[fallthrough]] ;
 	case ImGuiMouseCursor_Arrow:      cursor = IDC_ARROW;    break;
 	case ImGuiMouseCursor_TextInput:  cursor = IDC_IBEAM;    break;
@@ -31,16 +35,9 @@ static void set_cursor(ImGuiMouseCursor im_cursor) {
 	case ImGuiMouseCursor_ResizeNESW: cursor = IDC_SIZENESW; break;
 	case ImGuiMouseCursor_ResizeNWSE: cursor = IDC_SIZENWSE; break;
 	case ImGuiMouseCursor_Hand:       cursor = IDC_HAND;     break;
-	case ImGuiMouseCursor_None:       cursor = NULL;         break;
+	case ImGuiMouseCursor_NotAllowed: cursor = IDC_NO;       break;
 	}
-	ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-	HWND  window = (HWND)(main_viewport->PlatformHandle);
-	if (window != NULL)
-		PostMessage(window, WM_USER_WINDOW_SETCURSOR, (WPARAM)NULL, (LPARAM)cursor);
-	else if (cursor != NULL)
-		::SetCursor(::LoadCursor(NULL, cursor));
-	else
-		::SetCursor(NULL);
+	::SetCursor(::LoadCursor(NULL, cursor));
 }
 
 static void platformSetImeInputPos(ImGuiViewport * viewport, ImVec2 pos) {
@@ -73,7 +70,7 @@ static void platformCreateWindow(ImGuiViewport* viewport) {
 	RECT rect = { (LONG)viewport->Pos.x, (LONG)viewport->Pos.y, (LONG)(viewport->Pos.x + viewport->Size.x), (LONG)(viewport->Pos.y + viewport->Size.y) };
 	::AdjustWindowRectEx(&rect, ud->style, FALSE, ud->exstyle);
 	ud->native_handle = ::CreateWindowExW(
-		ud->exstyle, L"ImGui Platform", L"Untitled", ud->style,
+		ud->exstyle, L"ImGui Viewport", L"Untitled", ud->style,
 		rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
 		parent_window, NULL, ::GetModuleHandleW(NULL), window_get_callback((lua_State*)ImGui::GetIO().UserData)
 	);
@@ -254,51 +251,50 @@ static uint8_t get_keystate(LPARAM lParam) {
 		;
 }
 
-static void platformImGuiWindowFunction(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	if (!ImGui::GetCurrentContext())
-		return;
+static bool platformImGuiWindowFunction(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	if (!ImGui::GetCurrentContext()) {
+		return false;
+	}
 	ImGuiIO& io = ImGui::GetIO();
 	switch (message) {
 	case WM_MOUSEWHEEL:
 		io.MouseWheel += (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
-		return;
+		break;
 	case WM_MOUSEHWHEEL:
 		io.MouseWheelH += (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
-		return;
-	case WM_LBUTTONDOWN:
-		io.MouseDown[0] = true;
-		return;
-	case WM_LBUTTONUP:
-		io.MouseDown[0] = false;
-		return;
-	case WM_RBUTTONDOWN:
-		io.MouseDown[1] = true;
-		return;
-	case WM_RBUTTONUP:
-		io.MouseDown[1] = false;
-		return;
-	case WM_MBUTTONDOWN:
-		io.MouseDown[2] = true;
-		return;
-	case WM_MBUTTONUP:
-		io.MouseDown[2] = false;
-		return;
+		break;
+	case WM_LBUTTONDOWN: io.MouseDown[0] = true;  break;
+	case WM_LBUTTONUP:   io.MouseDown[0] = false; break;
+	case WM_RBUTTONDOWN: io.MouseDown[1] = true;  break;
+	case WM_RBUTTONUP:   io.MouseDown[1] = false; break;
+	case WM_MBUTTONDOWN: io.MouseDown[2] = true;  break;
+	case WM_MBUTTONUP:   io.MouseDown[2] = false; break;
 	case WM_KEYDOWN:
 		if (wParam >= 0 && wParam < 256) {
 			io.KeysDown[wParam] = true;
 		}
-		return;
+		break;
 	case WM_KEYUP:
 		if (wParam >= 0 && wParam < 256) {
 			io.KeysDown[wParam] = false;
 		}
-		return;
+		break;
 	case WM_CHAR:
 		if (wParam > 0 && wParam < 0x10000) {
 			io.AddInputCharacterUTF16((unsigned short)wParam);
 		}
-		return;
+		break;
+	case WM_SETCURSOR:
+		if (LOWORD(lParam) == HTCLIENT) {
+			platformUpdateMouseCursor();
+			return true;
+		}
+		break;
+	case WM_DISPLAYCHANGE:
+		g_want_update_monitors = true;
+		return 0;
 	}
+	return false;
 }
 
 static void platformEventWindowFunction(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -398,14 +394,13 @@ static void platformEventWindowFunction(HWND hWnd, UINT message, WPARAM wParam, 
 		free(path_counts);
 		return;
 	}
-	case WM_USER_WINDOW_SETCURSOR:
-		SetCursor(LoadCursor(NULL, (LPTSTR)lParam));
-		return;
 	}
 }
 
 static LRESULT CALLBACK platformViewportWindowFunction(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	platformImGuiWindowFunction(hWnd, message, wParam, lParam);
+	if (platformImGuiWindowFunction(hWnd, message, wParam, lParam)) {
+		return true;
+	}
 	platformEventWindowFunction(hWnd, message, wParam, lParam);
 	if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)hWnd)) {
 		switch (message) {
@@ -422,7 +417,8 @@ static LRESULT CALLBACK platformViewportWindowFunction(HWND hWnd, UINT message, 
 			if (viewport->Flags & ImGuiViewportFlags_NoFocusOnClick)
 				return MA_NOACTIVATE;
 			break;
-		case WM_NCHITTEST:if (viewport->Flags & ImGuiViewportFlags_NoInputs)
+		case WM_NCHITTEST:
+			if (viewport->Flags & ImGuiViewportFlags_NoInputs)
 				return HTTRANSPARENT;
 			break;
 		}
@@ -431,7 +427,9 @@ static LRESULT CALLBACK platformViewportWindowFunction(HWND hWnd, UINT message, 
 }
 
 static LRESULT CALLBACK platformMainViewportWindowFunction(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	platformImGuiWindowFunction(hWnd, message, wParam, lParam);
+	if (platformImGuiWindowFunction(hWnd, message, wParam, lParam)) {
+		return true;
+	}
 	platformEventWindowFunction(hWnd, message, wParam, lParam);
 	switch (message) {
 	case WM_DESTROY: {
@@ -461,7 +459,7 @@ static LRESULT CALLBACK platformMainViewportWindowFunction(HWND hWnd, UINT messa
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-static BOOL CALLBACK enumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM) {
+static BOOL CALLBACK platformEnumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM) {
 	MONITORINFO info = { 0 };
 	info.cbSize = sizeof(MONITORINFO);
 	if (!::GetMonitorInfo(monitor, &info))
@@ -480,7 +478,15 @@ static BOOL CALLBACK enumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM) {
 	return TRUE;
 }
 
-static void updateMousePos() {
+static void platformUpdateMonitors() {
+	if (g_want_update_monitors) {
+		ImGui::GetPlatformIO().Monitors.resize(0);
+		::EnumDisplayMonitors(NULL, NULL, platformEnumMonitors, NULL);
+		g_want_update_monitors = false;
+	}
+}
+
+static void platformUpdateMousePos() {
 	ImGuiIO& io = ImGui::GetIO();
 
 	if (io.WantSetMousePos) {
@@ -522,10 +528,12 @@ void platformNewFrame() {
 	::GetClientRect(g_main_window, &rect);
 	io.DisplaySize = ImVec2((float)(rect.right - rect.left), (float)(rect.bottom - rect.top));
 
-	updateMousePos();
-	ImGuiMouseCursor cursor_type = io.MouseDrawCursor ? ImGuiMouseCursor_None : ImGui::GetMouseCursor();
-	if (io.WantCaptureMouse && !(io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)) {
-		set_cursor(cursor_type);
+	platformUpdateMonitors();
+	platformUpdateMousePos(); 
+	ImGuiMouseCursor mouse_cursor = io.MouseDrawCursor ? ImGuiMouseCursor_None : ImGui::GetMouseCursor();
+	if (g_last_mouse_cursor != mouse_cursor) {
+		g_last_mouse_cursor = mouse_cursor;
+		platformUpdateMouseCursor();
 	}
 
 	io.KeyCtrl = (::GetKeyState(VK_CONTROL) & 0x8000) != 0;
@@ -539,6 +547,8 @@ void platformDestroy() {
 	PlatformViewport* ud = (PlatformViewport*)viewport->PlatformUserData;
 	delete ud;
 	viewport->PlatformUserData = nullptr;
+	UnregisterClassW(L"ImGui Viewport", GetModuleHandleW(NULL));
+	UnregisterClassW(L"ImGui Host Viewport", GetModuleHandleW(NULL));
 }
 
 static bool platformCreateMainWindow(lua_State* L, int w, int h) {
@@ -554,20 +564,20 @@ static bool platformCreateMainWindow(lua_State* L, int w, int h) {
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
 	wndclass.cbSize = sizeof(wndclass);
-	wndclass.style = CS_HREDRAW | CS_VREDRAW;// | CS_OWNDC;
+	wndclass.style = CS_HREDRAW | CS_VREDRAW;
 	wndclass.lpfnWndProc = platformMainViewportWindowFunction;
-	wndclass.hInstance = GetModuleHandleW(0);
-	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wndclass.lpszClassName = L"ImGui Main Viewport";
-	wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+	wndclass.hInstance = GetModuleHandleW(NULL);
+	wndclass.hIcon = LoadIconW(NULL, IDI_APPLICATION);
+	wndclass.hCursor = LoadCursorW(NULL, IDC_ARROW);
+	wndclass.lpszClassName = L"ImGui Host Viewport";
+	wndclass.hIconSm = LoadIconW(NULL, IDI_APPLICATION);
 	RegisterClassExW(&wndclass);
 
-	HWND window = CreateWindowExW(0, L"ImGui Main Viewport", NULL,
+	HWND window = CreateWindowExW(0, L"ImGui Host Viewport", NULL,
 		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
 		rect.right - rect.left, rect.bottom - rect.top,
 		0, 0,
-		GetModuleHandleW(0),
+		GetModuleHandleW(NULL),
 		cb);
 	if (!window) {
 		return false;
@@ -619,8 +629,7 @@ bool platformCreate(lua_State* L, int w, int h) {
 	platform_io.Platform_GetWindowDpiScale = platformGetWindowDpiScale;
 	platform_io.Platform_OnChangedViewport = platformOnChangedViewport;
 
-	platform_io.Monitors.resize(0);
-	::EnumDisplayMonitors(NULL, NULL, enumMonitors, NULL);
+	platformUpdateMonitors();
 
 	if (!platformCreateMainWindow(L, w, h)) {
 		return false;
@@ -632,12 +641,12 @@ bool platformCreate(lua_State* L, int w, int h) {
 	wcex.lpfnWndProc = platformViewportWindowFunction;
 	wcex.cbClsExtra = 0;
 	wcex.cbWndExtra = 0;
-	wcex.hInstance = ::GetModuleHandle(NULL);
+	wcex.hInstance = ::GetModuleHandleW(NULL);
 	wcex.hIcon = NULL;
 	wcex.hCursor = NULL;
 	wcex.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
 	wcex.lpszMenuName = NULL;
-	wcex.lpszClassName = L"ImGui Platform";
+	wcex.lpszClassName = L"ImGui Viewport";
 	wcex.hIconSm = NULL;
 	::RegisterClassEx(&wcex);
 
@@ -682,5 +691,4 @@ void platformMainLoop(lua_State* L) {
 			Sleep(0);
 		}
 	}
-	UnregisterClassW(L"ImGui Main Viewport", GetModuleHandleW(0));
 }

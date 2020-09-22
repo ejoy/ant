@@ -141,6 +141,9 @@ static int lGetMainViewport(lua_State* L) {
 	lua_pushinteger(L, viewport->ID);
 	lua_setfield(L, -2, "ID");
 
+	lua_pushlightuserdata(L, viewport->PlatformHandle);
+	lua_setfield(L, -2, "PlatformHandle");
+
 	ImVec2 pos = viewport->GetWorkPos();
 	lua_newtable(L);
 	lua_pushnumber(L, pos.x);
@@ -3134,12 +3137,13 @@ lCreate(lua_State* L) {
 
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigViewportsNoTaskBarIcon = true;
 
 	window_register(L, 1);
 	int width = (int)luaL_checkinteger(L, 2);
 	int height = (int)luaL_checkinteger(L, 3);
 	if (!platformCreate(L, width, height)) {
-		return luaL_error(L, "Create backend failed");
+		return luaL_error(L, "Create platform failed");
 	}
 	if (!rendererCreate()) {
 		return luaL_error(L, "Create renderer failed");
