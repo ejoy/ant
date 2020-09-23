@@ -24,7 +24,7 @@ static void platformUpdateMouseCursor() {
 		::SetCursor(NULL);
 		return;
 	}
-	LPTSTR cursor = NULL;
+	LPWSTR cursor = NULL;
 	switch (imgui_cursor) {
 	default: [[fallthrough]] ;
 	case ImGuiMouseCursor_Arrow:      cursor = IDC_ARROW;    break;
@@ -37,7 +37,7 @@ static void platformUpdateMouseCursor() {
 	case ImGuiMouseCursor_Hand:       cursor = IDC_HAND;     break;
 	case ImGuiMouseCursor_NotAllowed: cursor = IDC_NO;       break;
 	}
-	::SetCursor(::LoadCursor(NULL, cursor));
+	::SetCursor(::LoadCursorW(NULL, cursor));
 }
 
 static void platformSetImeInputPos(ImGuiViewport * viewport, ImVec2 pos) {
@@ -481,7 +481,7 @@ static BOOL CALLBACK platformEnumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM)
 static void platformUpdateMonitors() {
 	if (g_want_update_monitors) {
 		ImGui::GetPlatformIO().Monitors.resize(0);
-		::EnumDisplayMonitors(NULL, NULL, platformEnumMonitors, NULL);
+		::EnumDisplayMonitors(NULL, NULL, platformEnumMonitors, 0);
 		g_want_update_monitors = false;
 	}
 }
@@ -648,7 +648,7 @@ bool platformCreate(lua_State* L, int w, int h) {
 	wcex.lpszMenuName = NULL;
 	wcex.lpszClassName = L"ImGui Viewport";
 	wcex.hIconSm = NULL;
-	::RegisterClassEx(&wcex);
+	::RegisterClassExW(&wcex);
 
 	io.KeyMap[ImGuiKey_Tab] = VK_TAB;
 	io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
