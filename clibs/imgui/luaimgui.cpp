@@ -3092,9 +3092,86 @@ static void ioWantCaptureKeyboard(lua_State* L) {
 	lua_pushboolean(L, ImGui::GetIO().WantCaptureKeyboard);
 }
 
+static void ioMouseWheel(lua_State* L) {
+	lua_pushnumber(L, ImGui::GetIO().MouseWheel);
+}
+
+static void ioMouseWheelH(lua_State* L) {
+	lua_pushnumber(L, ImGui::GetIO().MouseWheelH);
+}
+
+static void ioMouseClicked(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseClicked");
+	lua_Integer i = 0;
+	for (bool v : io.MouseClicked) {
+		lua_pushboolean(L, v);
+		lua_seti(L, -2, ++i);
+	}
+}
+
+static void ioMouseReleased(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseReleased");
+	lua_Integer i = 0;
+	for (bool v : io.MouseReleased) {
+		lua_pushboolean(L, v);
+		lua_seti(L, -2, ++i);
+	}
+}
+
+static void ioMousePos(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_MousePos");
+	lua_pushnumber(L, io.MousePos.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, io.MousePos.y);
+	lua_seti(L, -2, 2);
+}
+
+static void ioKeyMods(lua_State* L) {
+	lua_pushinteger(L, ImGui::GetIO().KeyMods);
+}
+
+static void ioKeysPressed(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
+	for (int i = 1; i < 255; ++i) {
+		if (ImGui::IsKeyPressed(i)) {
+			lua_pushboolean(L, 1);
+		}
+		else {
+			lua_pushnil(L);
+		}
+		lua_seti(L, -2, i);
+	}
+}
+
+static void ioKeysReleased(lua_State* L) {
+	ImGuiIO& io = ImGui::GetIO();
+	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysReleased");
+	for (int i = 1; i < 255; ++i) {
+		if (ImGui::IsKeyReleased(i)) {
+			lua_pushboolean(L, 1);
+		}
+		else {
+			lua_pushnil(L);
+		}
+		lua_seti(L, -2, i);
+	}
+}
+
 std::map<std::string_view, std::function<void(lua_State*)>> ioProperty = {
 	{"WantCaptureMouse", ioWantCaptureMouse},
 	{"WantCaptureKeyboard", ioWantCaptureKeyboard},
+	{"MouseWheel", ioMouseWheel},
+	{"MouseWheelH", ioMouseWheelH},
+	{"MousePos", ioMousePos},
+	{"MouseClicked", ioMouseClicked},
+	{"MouseReleased", ioMouseReleased},
+	{"KeyMods", ioKeyMods},
+	{"KeysPressed", ioKeysPressed},
+	{"KeysReleased", ioKeysReleased},
 };
 
 static int
@@ -3123,6 +3200,17 @@ ioCreate(lua_State* L) {
 	lua_setmetatable(L, -2);
 	lua_pushvalue(L, -1);
 	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_IO");
+
+	lua_newtable(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseClicked");
+	lua_newtable(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_MouseReleased");
+	lua_newtable(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_MousePos");
+	lua_newtable(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
+	lua_newtable(L);
+	lua_setfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysReleased");
 	return 1;
 }
 

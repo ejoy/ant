@@ -45,15 +45,6 @@ function message.init(nwh, context, width, height)
     initialized = true
 end
 
-function message.mouse_wheel(x, y, delta)
-	cb.mouse_wheel(x, y, delta)
-end
-function message.mouse(x, y, what, state)
-	cb.mouse(x, y, what, state)
-end
-function message.keyboard(key, press, state)
-	cb.keyboard(key, press, state)
-end
 function message.dropfiles(filelst)
 	cb.dropfiles(filelst)
 end
@@ -66,10 +57,54 @@ function message.exit()
 	rhwi.shutdown()
     print "exit"
 end
+
+local mouse = {}
+local keyboard = {}
+
+local function updateIO()
+	local io = imgui.IO
+	if not io.WantCaptureMouse then
+		if io.MouseWheel ~= 0 then
+			cb.mouse_wheel(io.MousePos[1], io.MousePos[2], io.MouseWheel)
+		end
+		for i = 1, 3 do
+			if io.MouseClicked[i] then
+				mouse[i] = true
+				cb.mouse(io.MousePos[1], io.MousePos[2], i, 1)
+			end
+			if io.MouseReleased[i] then
+				mouse[i] = nil
+				cb.mouse(io.MousePos[1], io.MousePos[2], i, 3)
+			end
+			if mouse[i] and not io.MouseClicked[i] then
+				cb.mouse(io.MousePos[1], io.MousePos[2], i, 2)
+			end
+		end
+	end
+	if not io.WantCaptureKeyboard then
+		for code in pairs(io.KeysPressed) do
+			keyboard[code] = true
+			cb.keyboard(code, 1, io.KeyMods)
+		end
+		for code in pairs(io.KeysReleased) do
+			keyboard[code] = nil
+			cb.keyboard(code, 0, io.KeyMods)
+		end
+		for code in pairs(keyboard) do
+			if not io.KeysPressed[code] then
+				cb.keyboard(code, 2, io.KeyMods)
+			end
+		end
+	end
+end
+
 function message.update()
 	if initialized then
 		local delta = timer_delta()
+		imgui.NewFrame(delta / 1000)
+		updateIO()
         cb.update(delta)
+		imgui.Render()
         rhwi.frame()
     end
 end

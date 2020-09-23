@@ -69,40 +69,6 @@ void window_event_exit(struct window_callback* cb) {
 	event_emit(cb);
 }
 
-void window_event_keyboard(struct window_callback* cb, int key, uint8_t state, uint8_t press) {
-	if (!event_push(cb, ANT_WINDOW_KEYBOARD)) {
-		return;
-	}
-	lua_State* L = ((struct window_callback*)cb)->callback;
-	lua_pushinteger(L, key);
-	lua_pushinteger(L, press);
-	lua_pushinteger(L, state);
-	event_emit(cb);
-}
-
-void window_event_mouse(struct window_callback* cb, int x, int y, uint8_t type, uint8_t state) {
-	if (!event_push(cb, ANT_WINDOW_MOUSE)) {
-		return;
-	}
-	lua_State* L = ((struct window_callback*)cb)->callback;
-	lua_pushinteger(L, x);
-	lua_pushinteger(L, y);
-	lua_pushinteger(L, type);
-	lua_pushinteger(L, state);
-	event_emit(cb);
-}
-
-void window_event_mouse_wheel(struct window_callback* cb, int x, int y, float delta) {
-	if (!event_push(cb, ANT_WINDOW_MOUSE_WHEEL)) {
-		return;
-	}
-	lua_State* L = ((struct window_callback*)cb)->callback;
-	lua_pushinteger(L, x);
-	lua_pushinteger(L, y);
-	lua_pushnumber(L, delta);
-	event_emit(cb);
-}
-
 void window_event_size(struct window_callback* cb, int w, int h, int type) {
 	if (!event_push(cb, ANT_WINDOW_SIZE)) {
 		return;
@@ -161,9 +127,6 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	register_function(L, "update", fL, ANT_WINDOW_UPDATE);
 	register_function(L, "init", fL, ANT_WINDOW_INIT);
 	register_function(L, "exit", fL, ANT_WINDOW_EXIT);
-	register_function(L, "keyboard", fL, ANT_WINDOW_KEYBOARD);
-	register_function(L, "mouse_wheel", fL, ANT_WINDOW_MOUSE_WHEEL);
-	register_function(L, "mouse", fL, ANT_WINDOW_MOUSE);
 	register_function(L, "size", fL, ANT_WINDOW_SIZE);
 	register_function(L, "dropfiles", fL, ANT_WINDOW_DROPFILES);
 	register_function(L, "viewid", fL, ANT_WINDOW_VIEWID);

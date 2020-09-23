@@ -304,66 +304,11 @@ static bool platformImGuiWindowFunction(HWND hWnd, UINT message, WPARAM wParam, 
 
 static void platformEventWindowFunction(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	struct window_callback* cb = NULL;
-	int x, y;
 	switch (message) {
 	case WM_CREATE: {
 		LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
 		cb = (struct window_callback*)(cs->lpCreateParams);
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)cb);
-		return;
-	}
-	case WM_MOUSEMOVE:
-		cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		get_xy(lParam, &x, &y);
-		if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)) == 0) {
-			window_event_mouse(cb, x, y, 0, 2);
-		}
-		else {
-			if (wParam & MK_LBUTTON) {
-				window_event_mouse(cb, x, y, 1, 2);
-			}
-			if (wParam & MK_RBUTTON) {
-				window_event_mouse(cb, x, y, 2, 2);
-			}
-			if (wParam & MK_MBUTTON) {
-				window_event_mouse(cb, x, y, 3, 2);
-			}
-		}
-		return;
-	case WM_MOUSEWHEEL: {
-		cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		get_screen_xy(hWnd, lParam, &x, &y);
-		float delta = (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
-		window_event_mouse_wheel(cb, x, y, delta);
-		return;
-	}
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-		cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		get_xy(lParam, &x, &y);
-		window_event_mouse(cb, x, y, 1, (message == WM_LBUTTONDOWN) ? 1 : 3);
-		return;
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-		cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		get_xy(lParam, &x, &y);
-		window_event_mouse(cb, x, y, 2, (message == WM_RBUTTONDOWN) ? 1 : 3);
-		return;
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-		cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		get_xy(lParam, &x, &y);
-		window_event_mouse(cb, x, y, 3, (message == WM_MBUTTONDOWN) ? 1 : 3);
-		return;
-	case WM_KEYDOWN:
-	case WM_KEYUP: {
-		cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		int press = (message == WM_KEYUP ? 0 : (
-			(lParam & (1 << 30)) ? 2 : 1
-			));
-		int key = (int)wParam;
-		uint8_t state = get_keystate(lParam);
-		window_event_keyboard(cb, key, state, press);
 		return;
 	}
 	case WM_DROPFILES: {

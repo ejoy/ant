@@ -17,24 +17,24 @@ function cb.update(delta)
     task.update(delta)
     event "update"
 end
-function cb.mouse_wheel(x, y, delta)
+function cb.mouse_wheel(...)
     for _, w in ipairs(worlds) do
-        w.mouse_wheel(x, y, delta)
+        w.mouse_wheel(...)
     end
 end
-function cb.mouse(x, y, what, state)
+function cb.mouse(...)
     for _, w in ipairs(worlds) do
-        w.mouse(x, y, what, state)
+        w.mouse(...)
     end
 end
-function cb.keyboard(key, press, state)
+function cb.keyboard(...)
     for _, w in ipairs(worlds) do
-        w.keyboard(key, press, state)
+        w.keyboard(...)
     end
 end
-function cb.size(width, height)
+function cb.size(...)
     for _, w in ipairs(worlds) do
-        w.size(width, height)
+        w.size(...)
     end
 end
 function cb.dropfiles(filelst)
