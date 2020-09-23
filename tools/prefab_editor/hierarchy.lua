@@ -38,6 +38,26 @@ function hierarchy:add(ineid, tp, inpeid)
     return node
 end
 
+function hierarchy:replace(old_eid, new_eid)
+    local node = { eid = new_eid, parent = self.all[old_eid].parent, template = self.all[old_eid].template, children = self.all[old_eid].children, locked = {false}, visible = {true} }
+    local parent_node
+    if node.parent then
+        parent_node = self.all[node.parent]
+    else
+        parent_node = self.root
+    end
+    local idx = find(parent_node.children, old_eid)
+    if idx then
+        parent_node.children[idx] = node
+    end
+    for _, v in ipairs(node.children) do
+        v.parent = node
+    end
+    self.all[old_eid] = nil
+    self.all[new_eid] = node
+    return node
+end
+
 function hierarchy:del(eid)
     local eid_node = self.all[eid]
     if not eid_node then return end

@@ -4,7 +4,7 @@ local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
-
+local gd        = require "common.global_data"
 local world
 local assetmgr
 local m = {
@@ -12,7 +12,6 @@ local m = {
 }
 
 local resource_tree = nil
-local resource_root = nil
 local current_folder = {files = {}}
 local current_file = nil
 
@@ -46,11 +45,6 @@ local function path_split(fullname)
     return root, stack
 end
 
-function m.set_root(root)
-    resource_root = root
-    fw.add(root:string())
-end
-
 local function construct_resource_tree(fspath)
     local tree = {files = {}, dirs = {}}
     local sorted_path = {}
@@ -70,9 +64,9 @@ local function construct_resource_tree(fspath)
 end
 
 function m.update_resource_tree()
-    if not m.dirty or not resource_root then return end
+    if not m.dirty or not gd.resource_root then return end
 
-    resource_tree = {files = {}, dirs = {{resource_root, construct_resource_tree(resource_root)}}}
+    resource_tree = {files = {}, dirs = {{gd.resource_root, construct_resource_tree(gd.resource_root)}}}
     local function set_parent(tree)
         for _, v in pairs(tree[2].dirs) do
             v.parent = tree
@@ -85,7 +79,7 @@ function m.update_resource_tree()
 end
 
 function m.show()
-    if not resource_root then
+    if not gd.resource_root then
         return
     end
     local type, _ = fw.select()
@@ -125,9 +119,9 @@ function m.show()
 
     for _ in uiutils.imgui_windows("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
-        imgui.widget.Button(tostring(resource_root:parent_path()))
+        imgui.widget.Button(tostring(gd.resource_root:parent_path()))
         imgui.cursor.SameLine()
-        local _, split_dirs = path_split(tostring(fs.relative(current_folder[1], resource_root:parent_path())))
+        local _, split_dirs = path_split(tostring(fs.relative(current_folder[1], gd.resource_root:parent_path())))
         for i = 1, #split_dirs do
             if imgui.widget.Button("/" .. split_dirs[i])then
                 if tostring(current_folder[1]:filename()) ~= split_dirs[i] then
@@ -192,7 +186,7 @@ function m.show()
                     end
                     if path:equal_extension(".png") then
                         if not preview_images[current_file] then
-                            local rp = fs.relative(path, resource_root)
+                            local rp = fs.relative(path, gd.resource_root)
                             local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
                             preview_images[current_file] = assetmgr.resource(pkg_path, { compile = true })
                         end

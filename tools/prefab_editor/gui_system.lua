@@ -24,6 +24,8 @@ local prefab_mgr = require "prefab_manager"(world)
 local menu = require "widget.menu"(world, prefab_mgr)
 local camera_mgr = require "camera_manager"(world)
 local gizmo = require "gizmo.gizmo"(world)
+local global_data = require "common.global_data"
+
 local eventGizmo = world:sub {"Gizmo"}
 local eventScene = world:sub {"Scene"}
 local m = ecs.system 'gui_system'
@@ -43,7 +45,7 @@ local secondViewHeight = 216
 local secondCameraEID
 
 local function chooseProject()
-    if resourceRoot then return end
+    if global_data.resource_root then return end
 
     if not imgui.windows.IsPopupOpen("Choose project") then
         imgui.windows.OpenPopup("Choose project")
@@ -73,7 +75,7 @@ local function chooseProject()
             }
             local ok, path = filedialog.open(dialog_info)
             if ok then
-                resourceRoot = fs.path(path[1])
+                global_data.resource_root = fs.path(path[1])
                 --file server
                 local cthread = require "thread"
                 cthread.newchannel "log_channel"
@@ -95,10 +97,11 @@ local function chooseProject()
         imgui.cursor.SameLine()
         if imgui.widget.Button("Quit") then
             local res_root_str = tostring(fs.path "":localpath())
-            resourceRoot = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
+            global_data.resource_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
         end
-        if resourceRoot then
-            resource_browser.set_root(resourceRoot)
+        local fw = require "filewatch"
+        if global_data.resource_root then
+            fw.add(global_data.resource_root:string())
         end
         imgui.windows.EndPopup()
     end
@@ -108,8 +111,6 @@ local fileserver_thread
 
 local function showDockSpace(offset_x, offset_y)
     local viewport = imgui.GetMainViewport()
-    --imgui.windows.SetNextWindowPos(offset_x, offset_y)
-    --imgui.windows.SetNextWindowSize(sw - offset_x, sh - offset_y)
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + offset_x, viewport.WorkPos[2] + offset_y)
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1] - offset_x, viewport.WorkSize[2] - offset_y)
     imgui.windows.SetNextWindowViewport(viewport.ID)
@@ -203,7 +204,7 @@ local eventCreate = world:sub {"Create"}
 local light_gizmo = require "gizmo.directional_light"(world)
 
 local function onTarget(old, new)
-    if old then
+    if old and world[old] then
         if world[old].camera then
             camera_mgr.show_frustum(old, false)
         elseif world[old].light_type == "directional" then
