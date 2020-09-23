@@ -5,13 +5,8 @@ local imgui     = require "imgui"
 local rhwi      = import_package 'ant.render'.hwi
 local asset_mgr  = import_package "ant.asset"
 local irq = world:interface "ant.render|irenderqueue"
-local iss = world:interface "ant.scene|iscenespace"
-local iom = world:interface "ant.objcontroller|obj_motion"
 local ies = world:interface "ant.scene|ientity_state"
-local icamera = world:interface "ant.camera|camera"
-local lfs  = require "filesystem.local"
 local fs   = require "filesystem"
-local vfs = require "vfs"
 local hierarchy = require "hierarchy"
 local resource_browser = require "widget.resource_browser"(world, asset_mgr)
 local log_widget = require "widget.log"(asset_mgr)
@@ -25,24 +20,15 @@ local menu = require "widget.menu"(world, prefab_mgr)
 local camera_mgr = require "camera_manager"(world)
 local gizmo = require "gizmo.gizmo"(world)
 local global_data = require "common.global_data"
-
-local eventGizmo = world:sub {"Gizmo"}
-local eventScene = world:sub {"Scene"}
-local m = ecs.system 'gui_system'
-
-local cmd_queue
-
 local icons = require "common.icons"(asset_mgr)
-
-local dragFile = nil
-local lastX = -1
-local lastY = -1
-local lastWidth = -1
-local lastHeight = -1
-local secondViewQueue
-local secondViewWidth = 384
-local secondViewHeight = 216
-local secondCameraEID
+local m = ecs.system 'gui_system'
+local drag_file = nil
+local last_x = -1
+local last_y = -1
+local last_width = -1
+local last_height = -1
+local second_view_width = 384
+local second_vew_height = 216
 
 local function chooseProject()
     if global_data.resource_root then return end
@@ -159,48 +145,49 @@ function m:ui_update()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
     local dirty = false
-    if lastX ~= x then lastX = x dirty = true end
-    if lastY ~= y then lastY = y dirty = true  end
-    if lastWidth ~= width then lastWidth = width dirty = true  end
-    if lastHeight ~= height then lastHeight = height dirty = true  end
+    if last_x ~= x then last_x = x dirty = true end
+    if last_y ~= y then last_y = y dirty = true  end
+    if last_width ~= width then last_width = width dirty = true  end
+    if last_height ~= height then last_height = height dirty = true  end
     if dirty then
         local mvp = imgui.GetMainViewport()
         local viewport = {x = x - mvp.WorkPos[1], y = y - mvp.WorkPos[2] + uiconfig.MenuHeight, w = width, h = height}
         irq.set_view_rect(world:singleton_entity_id "main_queue", viewport)
-        local secondViewport = {x = viewport.x + (width - secondViewWidth), y = viewport.y + (height - secondViewHeight), w = secondViewWidth, h = secondViewHeight}
+        local secondViewport = {x = viewport.x + (width - second_view_width), y = viewport.y + (height - second_vew_height), w = second_view_width, h = second_vew_height}
         irq.set_view_rect(camera_mgr.second_view, secondViewport)
         world:pub {"ViewportDirty", viewport}
     end
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         local x, y = imgui.util.GetMousePos()
-        if (x > lastX and x < (lastX + lastWidth) and y > lastY and y < (lastY + lastHeight)) then
-            if not dragFile then
+        if (x > last_x and x < (last_x + last_width) and y > last_y and y < (last_y + last_height)) then
+            if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
                 if dropdata and string.sub(dropdata, -7) == ".prefab" then
-                    dragFile = dropdata
+                    drag_file = dropdata
                 end
             end
         else
-            dragFile = nil
+            drag_file = nil
         end
     else
-        if dragFile then
-            world:pub {"AddPrefab", dragFile}
-            dragFile = nil
+        if drag_file then
+            world:pub {"AddPrefab", drag_file}
+            drag_file = nil
         end
     end
 end
 
-local entityStateEvent = world:sub {"EntityState"}
-local dropFilesEvent = world:sub {"OnDropFiles"}
-local entityEvent = world:sub {"EntityEvent"}
-local eventKeyboard = world:sub{"keyboard"}
-local eventOpenPrefab = world:sub {"OpenPrefab"}
-local eventAddPrefab = world:sub {"AddPrefab"}
-local eventResourceBrowser = world:sub {"ResourceBrowser"}
-local eventWindowTitle = world:sub {"WindowTitle"}
-local eventCreate = world:sub {"Create"}
+local entity_state_event = world:sub {"EntityState"}
+local drop_files_event = world:sub {"OnDropFiles"}
+local entity_event = world:sub {"EntityEvent"}
+local event_keyboard = world:sub{"keyboard"}
+local event_open_prefab = world:sub {"OpenPrefab"}
+local event_add_prefab = world:sub {"AddPrefab"}
+local event_resource_browser = world:sub {"ResourceBrowser"}
+local event_window_title = world:sub {"WindowTitle"}
+local event_create = world:sub {"Create"}
+local event_gizmo = world:sub {"Gizmo"}
 local light_gizmo = require "gizmo.directional_light"(world)
 
 local function onTarget(old, new)
@@ -232,7 +219,7 @@ end
 
 local cmd_queue = require "gizmo.command_queue"(world)
 function m:data_changed()
-    for _, action, value1, value2 in eventGizmo:unpack() do
+    for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
             if action == "ontarget" then
@@ -242,7 +229,7 @@ function m:data_changed()
             end
         end
     end
-    for _, what, target, v1, v2 in entityEvent:unpack() do
+    for _, what, target, v1, v2 in entity_event:unpack() do
         local dirty = false
         if what == "move" then
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
@@ -264,7 +251,7 @@ function m:data_changed()
             inspector.update_template_tranform(target)
         end
     end
-    for _, what, eid, value in entityStateEvent:unpack() do
+    for _, what, eid, value in entity_state_event:unpack() do
         if what == "visible" then
             hierarchy:set_visible(eid, value)
             ies.set_state(eid, what, value)
@@ -280,38 +267,38 @@ function m:data_changed()
             prefab_mgr:remove_entity(eid)
         end
     end
-    for _, filename in eventOpenPrefab:unpack() do
+    for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open_prefab(filename)
     end
-    for _, filename in eventAddPrefab:unpack() do
+    for _, filename in event_add_prefab:unpack() do
         prefab_mgr:add_prefab(filename)
     end
-    for _, files in dropFilesEvent:unpack() do
+    for _, files in drop_files_event:unpack() do
         on_drop_files(files)
     end
 
-    for _, what in eventResourceBrowser:unpack() do
+    for _, what in event_resource_browser:unpack() do
         if what == "dirty" then
             resource_browser.dirty = true
         end
     end
 
-    for _, what in eventWindowTitle:unpack() do
+    for _, what in event_window_title:unpack() do
         local title = "PrefabEditor - " .. what
         imgui.SetWindowTitle(title)
-        gizmo.target_eid = nil
+        gizmo:set_target(nil)
     end
 
-    for _, key, press, state in eventKeyboard:unpack() do
+    for _, key, press, state in event_keyboard:unpack() do
         if key == "DELETE" and press == 1 then
             prefab_mgr:remove_entity(gizmo.target_eid)
-            gizmo.target_eid = nil
+            gizmo:set_target(nil)
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
         end
     end
 
-    for _, what in eventCreate:unpack() do
+    for _, what in event_create:unpack() do
         prefab_mgr:create(what)
     end
 end
