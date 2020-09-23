@@ -25,14 +25,12 @@ WINDOW_INC=-I$(ANTCLIBS)/window
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_window.o $(ODIR)/imgui_renderer.o $(ODIR)/imgui_platform.o $(ODIR)/imgui_config.o $(ODIR)/imgui.o $(ODIR)/imgui_widgets.o $(ODIR)/imgui_draw.o
 
 ifeq "$(PLAT)" "mingw"
-OBJS += $(ODIR)/imgui_win32.o
 LIBS = -limm32 -lgdi32
 IMGUI_MACRO += -DUNICODE
 IMGUI_PLAT = win32
 endif
 
 ifeq "$(PLAT)" "osx"
-OBJS += $(ODIR)/imgui_osx.o
 IMGUI_PLAT = osx
 endif
 
