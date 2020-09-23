@@ -6,6 +6,11 @@
 
 #define MAX_DROP_PATH 255*3
 
+// Allow compilation with old Windows SDK. MinGW doesn't have default _WIN32_WINNT/WINVER versions.
+#ifndef WM_MOUSEHWHEEL
+#define WM_MOUSEHWHEEL 0x020E
+#endif
+
 struct PlatformViewport {
 	HWND native_handle = NULL;
 	bool owned = true;
