@@ -2601,7 +2601,6 @@ fCreate(lua_State *L) {
 		luaL_error(L, "Create font failed.");
 		return 0;
 	}
-
 	int r = rendererBuildFont(L);
 	return r;
 }
@@ -3134,7 +3133,6 @@ static void ioKeyMods(lua_State* L) {
 }
 
 static void ioKeysPressed(lua_State* L) {
-	ImGuiIO& io = ImGui::GetIO();
 	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysPressed");
 	for (int i = 1; i < 255; ++i) {
 		if (ImGui::IsKeyPressed(i)) {
@@ -3148,7 +3146,6 @@ static void ioKeysPressed(lua_State* L) {
 }
 
 static void ioKeysReleased(lua_State* L) {
-	ImGuiIO& io = ImGui::GetIO();
 	lua_getfield(L, LUA_REGISTRYINDEX, "_ImGui_KeysReleased");
 	for (int i = 1; i < 255; ++i) {
 		if (ImGui::IsKeyReleased(i)) {

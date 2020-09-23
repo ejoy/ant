@@ -271,7 +271,7 @@ int rendererBuildFont(lua_State* L) {
 	texture.s.flags = IMGUI_FLAGS_FONT;
 	atlas->TexID = texture.ptr;
 	atlas->ClearInputData();
-	atlas->ClearTexData();
+	//atlas->ClearTexData();
 	return 0;
 }
 

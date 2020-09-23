@@ -25,8 +25,9 @@ WINDOW_INC=-I$(ANTCLIBS)/window
 OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_window.o $(ODIR)/imgui_renderer.o $(ODIR)/imgui_platform.o $(ODIR)/imgui_config.o $(ODIR)/imgui.o $(ODIR)/imgui_widgets.o $(ODIR)/imgui_draw.o
 
 ifeq "$(PLAT)" "mingw"
-LIBS = -limm32 -lgdi32
-IMGUI_MACRO += -DUNICODE
+OBJS += $(ODIR)/imgui_impl_win32.o
+LIBS = -limm32 -lgdi32 -lxinput
+IMGUI_MACRO += -DUNICODE -D_UNICODE
 IMGUI_PLAT = win32
 endif
 
@@ -56,6 +57,9 @@ $(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)/imstb_truetype.h
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 
 $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
+	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
+
+$(ODIR)/imgui_impl_win32.o : $(IMGUI_SRC)/examples/imgui_impl_win32.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 
 $(ODIR)/imgui.dll : $(OBJS)
