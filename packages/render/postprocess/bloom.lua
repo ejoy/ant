@@ -29,14 +29,12 @@ local function create_framebuffers_container_obj(fbw, fbh)
     local t = {}
     for i=1, 2 do
         t[i] = fbmgr.create {
-            render_buffers = {
                 fbmgr.create_rb {
                     format = fmt,
                     w = fbw, h = fbh,
                     layers = 1, flags = flags,
                 }
-            },
-        }
+            }
     end
     return t
 end

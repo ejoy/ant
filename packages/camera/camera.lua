@@ -164,7 +164,6 @@ local function set_dof(e, dof)
         sensor              = dof.sensor_size,
         focus_distance      = dof.focus_distance,
         focal_len           = dof.focal_len,
-        scale_camera        = 0.0001,
         enable              = dof.enable,
     }
 end

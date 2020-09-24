@@ -4,8 +4,10 @@ local world = ecs.world
 local viewidmgr     = require "viewid_mgr"
 local fbmgr         = require "framebuffer_mgr"
 local sampler       = require "sampler"
-local ipp           = world:interface "ant.render|ipostprocess"
+local ipp           = world:interface "ant.render|postprocess"
 local iom           = world:interface "ant.objcontroller|obj_motion"
+local imaterial     = world:interface "ant.asset|imaterial"
+local irender       = world:interface "ant.render|irender"
 local math3d        = require "math3d"
 
 local dof_sys       = ecs.system "dof_system"
@@ -33,53 +35,59 @@ function dof_sys.post_init()
         clear_state = {clear=""},
         view_rect = {x=0, y=0, w=hfbw, h=hfbh},
         fb_idx = fbmgr.create{
-            fbmgr.create_rb{        --near
-                format = "RGBA8",
-                w=hfbw, h=hfbh
-            },
-            fbmgr.create_rb{        --far
-                format = "RGBA8",
+            fbmgr.create_rb{        --near color
+                format = "RGBA16",
                 w=hfbw, h=hfbh,
-                layer = 1,
+                layers = 1,
+                flags = flags,
+            },
+            fbmgr.create_rb{        --far color
+                format = "RGBA16",
+                w=hfbw, h=hfbh,
+                layers = 1,
                 flags = flags,
             },
             fbmgr.create_rb{        --coc
                 format = "RG16F",
                 w=hfbw, h=hfbh,
-                layer = 1,
+                layers = 1,
                 flags = flags,
             }
         }
     }
-    local ds_pass = ipp.create_pass("/pkg/ant.resources/materials/dof/downsample.material", ds_rt, "downsample")
+    local ds_pass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/downsample.material", ds_rt, "downsample")
 
     local scatter_rt = {
         clear_state = {clear=""},
-        view_rect = {x=0, y=0, w=hfbw, hfbh},
+        view_rect = {x=0, y=0, w=hfbw, h=hfbh},
         fb_idx = fbmgr.create{
             fbmgr.create_rb{
                 format = "RGBA8",
                 w=hfbw, h=hfbh,
-                layer = 1, flags=flags,
+                layers = 1, flags=flags,
             }
         }
     }
-    local scatter_pass = ipp.create_pass("/pkg/ant.resources/materials/dof/scatter.material", scatter_rt, "scatter")
+    local scatter_pass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/scatter.material", scatter_rt, "scatter")
     local ds_fb = fbmgr.get(ds_rt.fb_idx)
-    imaterial.set_property(scatter_pass.eid, "s_nearBuffer", {stage=0, texture={handle = ds_fb[1].handle}})
-    imaterial.set_property(scatter_pass.eid, "s_farBuffer",  {stage=1, texture={handle = ds_fb[2].handle}})
-    imaterial.set_property(scatter_pass.eid, "s_cocBuffer",  {stage=2, texture={handle = ds_fb[3].handle}})
+    imaterial.set_property(scatter_pass.eid, "s_nearBuffer", {stage=0, texture={handle = fbmgr.get_rb(ds_fb[1]).handle}})
+    imaterial.set_property(scatter_pass.eid, "s_farBuffer",  {stage=1, texture={handle = fbmgr.get_rb(ds_fb[2]).handle}})
+    imaterial.set_property(scatter_pass.eid, "s_cocBuffer",  {stage=2, texture={handle = fbmgr.get_rb(ds_fb[3]).handle}})
 
-    scatter_pass.renderitem.ib.num = hfbw * hfbh
+    scatter_pass.renderitem.ib = {
+        start = 0,
+        num = hfbw * hfbh,
+        handle = irender.quad_ib(),
+    }
     
     local us_rt = {
         clear_state = {clear=""},
         view_rect   = {x=0, y=0, w=hfbw, h=hfbh},
         fb_idx      = mq_rt.fb_idx,
     }
-    local us_pass = ipp.create_pass("/pkg/ant.resources/materials/dof/resolve.material", us_rt, "resolve")
+    local us_pass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/resolve.material", us_rt, "resolve")
     local sp_fb = fbmgr.get(scatter_rt.fb_idx)
-    imaterial.set_property(us_pass.eid, "s_scatterBuffer", {stage=0, texture={handle = sp_fb[1].handle}})
+    imaterial.set_property(us_pass.eid, "s_scatterBuffer", {stage=0, texture={handle = fbmgr.get_rb(sp_fb[1]).handle}})
 
     ipp.add_technique("dof", {ds_pass, scatter_pass, us_pass})
 end
@@ -107,12 +115,15 @@ local function update_dof_param(eid)
 
     local focusdist = calc_focus_distance(eid, dof)
 
-    local aperture          = 0.5 * dof.scale_camera* dof.focal_len / dof.aperture_fstop;
-    local focal_len_scaled  = dof.scale_camera      * dof.focal_len
-    local sensor_scaled     = dof.scale_camera      * dof.sensor_size
+    local function to_meter(mm)
+        return mm * 0.001
+    end
+    local focal_len = to_meter(dof.focal_len)
+    local aperture = 0.5 * focal_len / dof.aperture_fstop;
+    local sensor_size = to_meter(dof.sensor_size)
 
-    local dof_bais = aperture * math.abs(focal_len_scaled / (focusdist - focal_len_scaled));
-    dof_bais = dof_bais *(w / sensor_scaled);
+    local dof_bais = aperture * math.abs(focal_len / (focusdist - focal_len));
+    dof_bais = dof_bais *(w / sensor_size);
     local dof_params = {
         -focusdist * dof_bais,
         dof_bais,
@@ -121,7 +132,7 @@ local function update_dof_param(eid)
 
     imaterial.set_property(ds_pass.eid, "u_dof_param", dof_params)
 
-    local bokeh = {dof.aperture_rotation, dof.aperture.rotio, 100, 0}
+    local bokeh = {dof.aperture_rotation, 1/dof.aperture_ratio, 100, 0}
     imaterial.set_property(scatter_pass.eid, "u_bokeh_param", bokeh)
     
     local blades = dof.aperture_blades

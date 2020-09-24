@@ -166,7 +166,7 @@ local function update_postprocess_properties()
 		mv.texture.handle = fbmgr.get_rb(fb[1]).handle
 		
 		local mvd = system_properties["s_mainview_depth"]
-		mvd.texture.handle = fbmgr.get_rb(fb[3]).handle
+		mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
 	end
 end
 

@@ -212,21 +212,19 @@ local function add_pick_entity()
 	}
 
 	local fbidx = fbmgr.create {
-		render_buffers = {
-			fbmgr.create_rb {
-				w = pickup_buffer_w,
-				h = pickup_buffer_h,
-				layers = 1,
-				format = "RGBA8",
-				flags = fb_renderbuffer_flag,
-			},
-			fbmgr.create_rb {
-				w = pickup_buffer_w,
-				h = pickup_buffer_h,
-				layers = 1,
-				format = "D24S8",
-				flags = fb_renderbuffer_flag,
-			}
+		fbmgr.create_rb {
+			w = pickup_buffer_w,
+			h = pickup_buffer_h,
+			layers = 1,
+			format = "RGBA8",
+			flags = fb_renderbuffer_flag,
+		},
+		fbmgr.create_rb {
+			w = pickup_buffer_w,
+			h = pickup_buffer_h,
+			layers = 1,
+			format = "D24S8",
+			flags = fb_renderbuffer_flag,
 		}
 	}
 

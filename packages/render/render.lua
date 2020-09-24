@@ -189,17 +189,10 @@ function irender.create_main_queue(view_rect)
 			view_rect.w, view_rect.h, main_display_format, rb_flag)
 		)
 	end
-	local db_flag = samplerutil.sampler_flag {
-		RT="RT_MSAA4",
-		MIN="LINEAR",
-		MAG="LINEAR",
-		U="CLAMP",
-		V="CLAMP",
-	}
 
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(
 		default_comp.render_buffer(
-		view_rect.w, view_rect.h, "D24S8", db_flag)
+		view_rect.w, view_rect.h, "D24S8", rb_flag)
 	)
 
 	local camera_eid = icamera.create{
@@ -234,9 +227,7 @@ function irender.create_main_queue(view_rect)
 					x = view_rect.x or 0, y = view_rect.y or 0,
 					w = view_rect.w or 1, h = view_rect.h or 1,
 				},
-				fb_idx = fbmgr.create {
-					render_buffers = render_buffers
-				},
+				fb_idx = fbmgr.create(render_buffers),
 			},
 			primitive_filter = {
 				filter_type = "visible",

@@ -1,0 +1,16 @@
+fx:
+    vs: /pkg/ant.resources/shaders/postprocess/dof/vs_scatter.sc
+    fs: /pkg/ant.resources/shaders/postprocess/dof/fs_scatter.sc
+properties:
+    u_bokeh_param: {0.0, 0.0, 0.0, 0.0}
+    u_bokeh_sides: {0.0, 0.0, 0.0, 0.0}
+    s_nearBuffer:
+        stage:0
+        texture: /pkg/ant.resources/materials/textures/default.texture
+    s_farBuffer:
+        stage:1
+        texture: /pkg/ant.resources/materials/textures/default.texture
+    s_cocBuffer:
+        stage:2
+        texture: /pkg/ant.resources/materials/textures/default.texture
+state: /pkg/ant.resources/materials/postprocess/postprocess.state

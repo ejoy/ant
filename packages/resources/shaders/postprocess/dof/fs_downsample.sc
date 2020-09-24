@@ -1,14 +1,17 @@
+$input v_texcoord0
+#include <bgfx_shader.sh>
 #include "common/postprocess.sh"
-#include "dof/utils.sh"
+#include "postprocess/dof/utils.sh"
 
-#define out_nearColor   gl_FragColor[0]
-#define out_farColor    gl_FragColor[1]
-#define out_cocData     gl_FragColor[2]
+#define out_nearColor   gl_FragData[0]
+#define out_farColor    gl_FragData[1]
+#define out_cocData     gl_FragData[2]
+
 
 /* Downsample the color buffer to half resolution.
  * Weight color samples by
  * Compute maximum CoC for near and far blur. */
-void main(void)
+void main()
 {
   ivec4 uvs = ivec4(gl_FragCoord.xyxy) * 2 + ivec4(0, 0, 1, 1);
 
@@ -30,7 +33,7 @@ void main(void)
   /* Compute signed CoC for each depth samples */
   vec4 coc_near = calculate_coc(zdepth);
   vec4 coc_far = -coc_near;
-
+#define max_v4(v4) max(max(max(v4[0], v4[1]), v4[2]), v4[3])
   out_cocData.x = max(max_v4(coc_near), 0.0);
   out_cocData.y = max(max_v4(coc_far), 0.0);
 

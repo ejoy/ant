@@ -81,7 +81,25 @@ function mgr.create(fb)
 		myfb = copy_arg(fb)
 		myfb.handle = bgfx.create_frame_buffer(fb.wndhandle.handle, fb.w, fb.h, fb.color_format, fb.depth_format)
 	else
-		myfb = create_fb_handle(fb.render_buffers, fb.manager_buffer)
+		local function check_render_buffers(rbs)
+			if #rbs == 0 then
+				error("need at least 1 render buffer to create framebuffer")
+			end
+			local i
+			for idx, rbidx in ipairs(rbs) do
+				local rb = mgr.get_rb(rbidx)
+				if rb.format[1] == "D" then
+					i = idx
+					break
+				end
+			end
+
+			if i ~= nil and i ~= #rbs then
+				error(("depth buffer should put on the last render buffer:%d"):format(i))
+			end
+		end
+		check_render_buffers(fb)
+		myfb = create_fb_handle(fb, fb.manager_buffer)
 	end
 
 	local fb_idx = generate_fb_idx()
@@ -96,16 +114,15 @@ end
 
 function mgr.copy(fbidx)
 	local template_fb = mgr.get(fbidx)
-	local rbs = {}
+	local fb = {}
     for _, rbidx in ipairs(template_fb) do
         local rb = mgr.get_rb(rbidx)
-        rbs[#rbs+1] = mgr.create_rb(rb)
-    end
+        fb[#fb+1] = mgr.create_rb(rb)
+	end
+	
+	fb.manager_buffer = template_fb.manager_buffer
 
-    return mgr.create {
-        render_buffers = rbs,
-        manager_buffer = template_fb.manager_buffer,
-    }
+    return mgr.create(fb)
 end
 
 function mgr.is_wnd_frame_buffer(fb_idx)

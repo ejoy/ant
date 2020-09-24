@@ -116,9 +116,7 @@ local csm_setting = {
     color			= math3d.ref(math3d.vector(shadow_color())),
     --stabilize		= shadowcfg.stabilize,
 	split_frustums	= {nil, nil, nil, nil},
-	fb_index		= fbmgr.create {
-		render_buffers = get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type)
-	}
+	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size, shadowcfg.type))
 }
 
 if shadowcfg.split_lamada then
