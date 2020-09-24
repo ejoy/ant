@@ -52,7 +52,6 @@ local function construct_resource_tree(fspath)
         sorted_path[#sorted_path+1] = item
     end
     table.sort(sorted_path, function(a, b) return tostring(a) < tostring(b) end)
-    --for item in fspath:list_directory() do
     for _, item in ipairs(sorted_path) do
         if fs.is_directory(item) then
             table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})

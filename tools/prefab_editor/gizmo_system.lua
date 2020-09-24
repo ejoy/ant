@@ -812,8 +812,37 @@ end
 
 local keypress_mb = world:sub{"keyboard"}
 local viewpos_event = world:sub{"ViewportDirty"}
-local mouse_pos_x_in_view
-local mouse_pos_y_in_view
+local mouse_pos_x
+local mouse_pos_y
+local imgui = require "imgui"
+local function on_mouse_move()
+	local viewport = imgui.GetMainViewport()
+	local io = imgui.IO
+	local is_mouse_move = false
+	local wx = io.MousePos[1] - viewport.MainPos[1]
+	local wy = io.MousePos[2] - viewport.MainPos[2]
+	if mouse_pos_x ~= wx then
+		mouse_pos_x = wx
+		is_mouse_move = true
+	end
+	if mouse_pos_y ~= wy then
+		mouse_pos_y = wy
+		is_mouse_move = true
+	end
+	if is_mouse_move and gizmo.mode ~= gizmo_const.SELECT then
+		local vx, vy = utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
+		if vx and vy then
+			if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
+				local axis = select_axis(vx, vy)
+				gizmo:highlight_axis_or_plane(axis)
+			elseif gizmo.mode == gizmo_const.ROTATE then
+				gizmo:hide_rotate_fan()
+				select_rotate_axis(vx, vy)
+			end
+		end
+	end
+end
+
 function gizmo_sys:data_changed()
 	for _, vp in viewpos_event:unpack() do
 		global_data.viewport = vp
@@ -842,7 +871,7 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouse_down:unpack() do
 		if what == "LEFT" then
-			gizmo_seleted = gizmo:select_gizmo(utils.mouse_pos_in_view(x, y))
+			gizmo_seleted = gizmo:select_gizmo(x, y)
 			gizmo:click_axis_or_plane(move_axis)
 			gizmo:click_axis(rotate_axis)
 		elseif what == "MIDDLE" then
@@ -881,24 +910,24 @@ function gizmo_sys:data_changed()
 			gizmo:update_axis_plane()
 		end
 	end
+	
+	on_mouse_move()
 
-	for _, what, x, y in mouse_move:unpack() do
-		if what == "UNKNOWN" then
-			x, y = utils.mouse_pos_in_view(x, y)
-			mouse_pos_x_in_view, mouse_pos_y_in_view = x, y
-			if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
-				local axis = select_axis(x, y)
-				gizmo:highlight_axis_or_plane(axis)
-			elseif gizmo.mode == gizmo_const.ROTATE then
-				gizmo:hide_rotate_fan()
-				select_rotate_axis(x, y)
-			end
-		end
-	end
+	-- for _, what, x, y in mouse_move:unpack() do
+	-- 	if what == "UNKNOWN" then
+	-- 		mouse_pos_x_in_view, mouse_pos_y_in_view = x, y
+	-- 		if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
+	-- 			local axis = select_axis(x, y)
+	-- 			gizmo:highlight_axis_or_plane(axis)
+	-- 		elseif gizmo.mode == gizmo_const.ROTATE then
+	-- 			gizmo:hide_rotate_fan()
+	-- 			select_rotate_axis(x, y)
+	-- 		end
+	-- 	end
+	-- end
 	
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
-			x, y = utils.mouse_pos_in_view(x, y)
 			if gizmo.mode == gizmo_const.MOVE and move_axis then
 				move_gizmo(x, y)
 			elseif gizmo.mode == gizmo_const.SCALE then
@@ -925,7 +954,8 @@ function gizmo_sys:data_changed()
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then
-				if mouse_pos_x_in_view and mouse_pos_y_in_view then
+				local vx, vy = utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
+				if vx and vy then
 					gizmo:set_target(nil)
 				end
 			end

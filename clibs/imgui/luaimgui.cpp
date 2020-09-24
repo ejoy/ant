@@ -92,6 +92,23 @@ static int lGetMainViewport(lua_State* L) {
 	lua_pushnumber(L, size.y);
 	lua_seti(L, -2, 2);
 	lua_setfield(L, -2, "WorkSize");
+
+	// main area position
+	lua_newtable(L);
+	lua_pushnumber(L, viewport->Pos.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, viewport->Pos.y);
+	lua_seti(L, -2, 2);
+	lua_setfield(L, -2, "MainPos");
+
+	// main area size
+	lua_newtable(L);
+	lua_pushnumber(L, viewport->Size.x);
+	lua_seti(L, -2, 1);
+	lua_pushnumber(L, viewport->Size.y);
+	lua_seti(L, -2, 2);
+	lua_setfield(L, -2, "MainSize");
+
 	return 1;
 }
 

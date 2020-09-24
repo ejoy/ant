@@ -235,6 +235,7 @@ function m:update_material(eid, mtl)
     local relative_path = tostring(lfs.relative(lfs.path(mtl), current_dir))
     prefab.template.data.material = relative_path
     world[eid].material = relative_path
+    iom.set_srt(new_eid, iom.srt(eid))
     world[new_eid].name = world[eid].name
     local new_node = hierarchy:replace(eid, new_eid)
     world[new_eid].parent = new_node.parent
