@@ -43,6 +43,11 @@ function ic.create(info)
         "ant.general|name",
     }
 
+    local dof = info.dof
+    if dof then
+        policy[#policy+1] = "ant.camera|dof"
+    end
+
     local viewmat = math3d.lookto(info.eyepos, info.viewdir, info.updir)
     return world:create_entity {
         policy = policy,
@@ -54,6 +59,7 @@ function ic.create(info)
             name        = info.name or "DEFAULT_CAMERA",
             scene_entity= true,
             camera      = true,
+            dof         = dof,
         }
     }
 end
@@ -143,6 +149,31 @@ function ic.lookto(eid, ...)
     iom.lookto(eid, ...)
 end
 
+function ic.set_dof_focus_obj(eid, focus_eid)
+    local dof = world[eid]._dof
+    dof.focus_eid = focus_eid
+    world:pub{"component_changed", "dof", focus_eid, "focus",}
+end
+
+local function set_dof(e, dof)
+    e._dof = {
+        aperture_fstop      = dof.aperture_fstop,
+        aperture_blades     = dof.aperture_blades,
+        aperture_rotation   = dof.aperture_rotation,
+        aperture_ratio      = dof.aperture_ratio,
+        sensor              = dof.sensor_size,
+        focus_distance      = dof.focus_distance,
+        focal_len           = dof.focal_len,
+        scale_camera        = 0.0001,
+        enable              = dof.enable,
+    }
+end
+
+function ic.set_dof(eid, dof)
+    set_dof(world[eid], dof)
+    world:pub{"component_changed", "dof", eid}
+end
+
 local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(eid)
@@ -165,4 +196,17 @@ local bm = ecs.action "bind_camera"
 function bm.init(prefab, idx, value)
     local eid = prefab[idx][1]
     ic.bind(eid, value)
+end
+
+local dof_trans = ecs.transform "dof_transform"
+function dof_trans.process_entity(e)
+    local dof = e.dof
+    set_dof(e, dof)
+end
+
+local dof_focus = ecs.action "dof_focus_obj"
+function dof_focus:init(prefab, idx, value)
+    local eid = prefab[idx]
+    local focuseid = prefab[value]
+    ic.focus_obj(eid, focuseid)
 end

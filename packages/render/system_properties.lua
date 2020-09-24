@@ -55,6 +55,7 @@ local system_properties = {
 	u_shadow_param1		= math3d.ref(mc.ZERO),
 	u_shadow_param2		= math3d.ref(mc.ZERO),
 
+	s_mainview_depth	= {stage=5, texture={handle=nil}},
 	s_mainview			= {stage=6, texture={handle=nil}},
 	s_shadowmap			= {stage=7, texture={handle=nil}},
 	s_postprocess_input	= {stage=7, texture={handle=nil}},
@@ -159,9 +160,13 @@ local function update_postprocess_properties()
 	local fbidx = mq.render_target.fb_idx
 	if fbidx then
 		local fb = fbmgr.get(fbidx)
-		local mainview_name = "s_mainview"
-		local mv = system_properties[mainview_name]
+
+		--TODO: need check render buffer in framebuffer is color buffer or depth buffer
+		local mv = system_properties["s_mainview"]
 		mv.texture.handle = fbmgr.get_rb(fb[1]).handle
+		
+		local mvd = system_properties["s_mainview_depth"]
+		mvd.texture.handle = fbmgr.get_rb(fb[3]).handle
 	end
 end
 

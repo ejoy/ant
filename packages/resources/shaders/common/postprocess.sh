@@ -3,6 +3,7 @@
 
 #include <shaderlib.sh>
 
+SAMPLER2D(s_mainview_depth,     5);
 SAMPLER2D(s_mainview,           6);
 SAMPLER2D(s_postprocess_input,  7);
 
