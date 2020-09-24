@@ -328,10 +328,6 @@ function m.show(eid)
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
             if payload then
-                -- local m = assetmgr.resource(payload, world)
-                -- local c = world[eid]._cache_prefab
-		        -- local m = load_material(m, c.material_setting)
-                -- c.fx, c.properties, c.state = m.fx, m.properties, m.state
                 mtldata_list[eid] = nil
                 prefab_mgr:update_material(eid, tostring(fs.relative(fs.path(payload), gd.resource_root)))
             end

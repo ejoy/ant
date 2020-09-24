@@ -56,6 +56,9 @@ local function construct_resource_tree(fspath)
     for _, item in ipairs(sorted_path) do
         if fs.is_directory(item) then
             table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
+            if current_folder[1] == item then
+                current_folder = tree.dirs[#tree.dirs]
+            end
         else
             table.insert(tree.files, item)
         end
@@ -74,7 +77,9 @@ function m.update_resource_tree()
         end
     end
     set_parent(resource_tree.dirs[1])
-    current_folder = resource_tree.dirs[1]
+    if not current_folder[1] then
+        current_folder = resource_tree.dirs[1]
+    end
     m.dirty = false
 end
 
@@ -82,10 +87,14 @@ function m.show()
     if not gd.resource_root then
         return
     end
-    local type, _ = fw.select()
+    local type, path = fw.select()
     while type do
-        type, _ = fw.select()
-        m.dirty = true
+        if (not string.find(path, "\\.build\\"))
+            and (not string.find(path, "\\.log\\"))
+            and (not string.find(path, "\\.repo\\")) then
+            m.dirty = true
+        end
+        type, path = fw.select()
     end
 
     local viewport = imgui.GetMainViewport()
@@ -214,7 +223,14 @@ function m.show()
             local preview = preview_images[current_file]
             if preview then
                 imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
-                imgui.widget.Image(preview.handle, preview.texinfo.width, preview.texinfo.height)
+                local width, height = preview.texinfo.width, preview.texinfo.height
+                if width > 128 then
+                    width = 128
+                end
+                if height > 128 then
+                    height = 128
+                end
+                imgui.widget.Image(preview.handle, width, height)
             end
         end
         imgui.windows.EndChild()
