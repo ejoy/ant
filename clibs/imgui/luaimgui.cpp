@@ -3067,20 +3067,27 @@ lCreate(lua_State* L) {
 	io.IniFilename = NULL;
 	io.UserData = L;
 
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigViewportsNoTaskBarIcon = true;
 
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.WindowRounding = 0.0f;
+	style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+
 	window_register(L, 1);
 	int width = (int)luaL_checkinteger(L, 2);
 	int height = (int)luaL_checkinteger(L, 3);
-	if (!platformCreate(L, width, height)) {
+	void* window = platformCreate(L, width, height);
+	if (!window) {
 		return luaL_error(L, "Create platform failed");
 	}
 	if (!rendererCreate()) {
 		return luaL_error(L, "Create renderer failed");
 	}
-	return 0;
+	lua_pushlightuserdata(L, window);
+	return 1;
 }
 
 static void ioWantCaptureMouse(lua_State* L) {
@@ -3231,10 +3238,10 @@ ioClean(lua_State* L) {
 static int
 lNewFrame(lua_State* L) {
 	ImGuiIO& io = ImGui::GetIO();
-	io.DeltaTime = (float)luaL_checknumber(L, 1);
 	platformNewFrame();
 	ImGui::NewFrame();
-	return 0;
+	lua_pushboolean(L, platformProcessMessage());
+	return 1;
 }
 
 static int
@@ -3244,12 +3251,6 @@ lRender(lua_State* L) {
 	rendererDrawData(ImGui::GetMainViewport());
 	ImGui::UpdatePlatformWindows();
 	ImGui::RenderPlatformWindowsDefault();
-	return 0;
-}
-
-static int
-lMainLoop(lua_State* L) {
-	platformMainLoop(L);
 	return 0;
 }
 
@@ -3313,7 +3314,6 @@ luaopen_imgui(lua_State *L) {
 		{ "Destroy", lDestroy },
 		{ "NewFrame", lNewFrame },
 		{ "Render", lRender },
-		{ "MainLoop", lMainLoop },
 		{ "SetWindowTitle", lSetWindowTitle },
 		{ "SetFontProgram", rendererSetFontProgram },
 		{ "SetImageProgram", rendererSetImageProgram },

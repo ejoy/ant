@@ -4,11 +4,14 @@ local viewidmgr   = renderpkg.viewidmgr
 local assetmgr    = import_package "ant.asset"
 local rhwi        = renderpkg.hwi
 local platform    = require "platform"
+local thread    = require "thread"
 local font        = imgui.font
 local Font        = platform.font
 local cb          = nil
 local message     = {}
 local initialized = false
+local init_width
+local init_height
 local debug_traceback = debug.traceback
 
 local _timer = require "platform.timer"
@@ -34,28 +37,17 @@ local function glyphRanges(t)
 	return table.concat(s)
 end
 
-function message.init(nwh, context, width, height)
-	rhwi.init {
-		nwh = nwh,
-		context = context,
-		width = width,
-		height = height,
-	}
-	cb.init(width, height)
-    initialized = true
-end
-
 function message.dropfiles(filelst)
 	cb.dropfiles(filelst)
 end
-function message.size(width,height,_)
-	cb.size(width, height)
-	rhwi.reset(nil, width, height)
-end
-function message.exit()
-    imgui.Destroy()
-	rhwi.shutdown()
-    print "exit"
+function message.size(width,height)
+	if initialized then
+		cb.size(width, height)
+		rhwi.reset(nil, width, height)
+	else
+		init_width = width
+		init_height = height
+	end
 end
 
 local mouse = {}
@@ -98,16 +90,6 @@ local function updateIO()
 	end
 end
 
-function message.update()
-	if initialized then
-		local delta = timer_delta()
-		imgui.NewFrame(delta / 1000)
-		updateIO()
-        cb.update(delta)
-		imgui.Render()
-        rhwi.frame()
-    end
-end
 function message.viewid()
 	return viewidmgr.generate("imgui", viewidmgr.get "uieditor")
 end
@@ -125,8 +107,17 @@ local function dispatch(CMD, ...)
 end
 
 local function start(w, h, callback)
-    cb = callback
-	imgui.Create(dispatch, w, h)
+	cb = callback
+	init_width, init_height = w, h
+	local nwh = imgui.Create(dispatch, w, h)
+	rhwi.init {
+		nwh = nwh,
+		width = init_width,
+		height = init_height,
+	}
+	cb.init(init_width, init_height)
+
+    initialized = true
 	local imgui_font = assetmgr.load_fx {
 		fs = "/pkg/ant.imgui/shader/fs_imgui_font.sc",
 		vs = "/pkg/ant.imgui/shader/vs_imgui_font.sc",
@@ -153,7 +144,16 @@ local function start(w, h, callback)
 	else -- iOS
 		font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
 	end
-    imgui.MainLoop()
+	while imgui.NewFrame() do
+		updateIO()
+		cb.update(timer_delta())
+		imgui.Render()
+        rhwi.frame()
+		thread.sleep(0.01)
+	end
+    imgui.Destroy()
+	rhwi.shutdown()
+    print "exit"
 end
 
 return {

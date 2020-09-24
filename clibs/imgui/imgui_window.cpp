@@ -43,53 +43,25 @@ static bool event_emit(struct window_callback* context, int nresults = 0) {
 	return true;
 }
 
-void window_event_update(struct window_callback* cb) {
-	if (!event_push(cb, ANT_WINDOW_UPDATE)) {
-		return;
-	}
-	event_emit(cb);
-}
-
-void window_event_init(struct window_callback* cb, void* window, void* context, int w, int h) {
-	if (!event_push(cb, ANT_WINDOW_INIT)) {
-		return;
-	}
-	lua_State* L = ((struct window_callback*)cb)->callback;
-	lua_pushlightuserdata(L, window);
-	lua_pushlightuserdata(L, context);
-	lua_pushinteger(L, w);
-	lua_pushinteger(L, h);
-	event_emit(cb);
-}
-
-void window_event_exit(struct window_callback* cb) {
-	if (!event_push(cb, ANT_WINDOW_EXIT)) {
-		return;
-	}
-	event_emit(cb);
-}
-
-void window_event_size(struct window_callback* cb, int w, int h, int type) {
+void window_event_size(struct window_callback* cb, int w, int h) {
 	if (!event_push(cb, ANT_WINDOW_SIZE)) {
 		return;
 	}
 	lua_State* L = ((struct window_callback*)cb)->callback;
 	lua_pushinteger(L, w);
 	lua_pushinteger(L, h);
-	lua_pushinteger(L, type);
 	event_emit(cb);
 }
 
-void window_event_dropfiles(struct window_callback* cb, int count, char** paths, int* path_counts) {
+void window_event_dropfiles(struct window_callback* cb, std::vector<std::string> files) {
 	if (!event_push(cb, ANT_WINDOW_DROPFILES)) {
 		return;
 	}
 	lua_State* L = ((struct window_callback*)cb)->callback;
-	lua_createtable(L, count, 0);
-	for (int i = 0; i < count; i++)
-	{
+	lua_createtable(L, (int)files.size(), 0);
+	for (size_t i = 0; i < files.size(); ++i) {
 		lua_pushinteger(L, i + 1);
-		lua_pushlstring(L, paths[i], path_counts[i]);
+		lua_pushlstring(L, files[i].data(), files[i].size());
 		lua_settable(L, -3);
 	}
 	event_emit(cb);
@@ -124,9 +96,6 @@ register_functions(lua_State *L, int index, lua_State *fL) {
 	for (int i = 0; i < ANT_WINDOW_COUNT; ++i) {
 		lua_pushnil(fL);
 	}
-	register_function(L, "update", fL, ANT_WINDOW_UPDATE);
-	register_function(L, "init", fL, ANT_WINDOW_INIT);
-	register_function(L, "exit", fL, ANT_WINDOW_EXIT);
 	register_function(L, "size", fL, ANT_WINDOW_SIZE);
 	register_function(L, "dropfiles", fL, ANT_WINDOW_DROPFILES);
 	register_function(L, "viewid", fL, ANT_WINDOW_VIEWID);

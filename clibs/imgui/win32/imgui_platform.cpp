@@ -1,11 +1,86 @@
 #include <ImGui.h>
 #include <Windows.h>
-#include <imm.h>
+#include <oleidl.h>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
+#include <examples/imgui_impl_win32.h>
 #include "../imgui_window.h"
 #include "../imgui_platform.h"
-#include <examples/imgui_impl_win32.h>
 
-#define MAX_DROP_PATH 255*3
+struct DropManager : public IDropTarget {
+	ULONG m_refcount = 0;
+	ULONG AddRef() { return InterlockedIncrement(&m_refcount); }
+	ULONG Release() { return InterlockedDecrement(&m_refcount); }
+	HRESULT QueryInterface(REFIID iid, void** ppv) {
+		if (IsEqualIID(iid, IID_IUnknown) || IsEqualIID(iid, IID_IDropTarget)) {
+			*ppv = static_cast<IDropTarget*>(this);
+			AddRef();
+			return S_OK;
+		}
+		*ppv = NULL;
+		return E_NOINTERFACE;
+	}
+	//---------------------------------------------
+	//---------------------------------------------
+	std::vector<std::string> m_files;
+	HWND m_window = NULL;
+
+	HRESULT DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+		FORMATETC fmte = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+		STGMEDIUM stgm;
+		if (SUCCEEDED(pDataObj->GetData(&fmte, &stgm))) {
+			HDROP hdrop = reinterpret_cast<HDROP>(stgm.hGlobal);
+			UINT n = DragQueryFileW(hdrop, 0xFFFFFFFF, NULL, 0);
+			for (UINT i = 0; i < n; i++) {
+				UINT wlen = ::DragQueryFileW(hdrop, i, NULL, 0);
+				wlen++;
+				std::unique_ptr<wchar_t[]> wstr(new wchar_t[wlen]);
+				::DragQueryFileW(hdrop, i, wstr.get(), wlen);
+				int len = ::WideCharToMultiByte(CP_UTF8, 0, wstr.get(), (int)wlen, NULL, 0, 0, 0);
+				if (len > 0) {
+					std::unique_ptr<char[]> str(new char[len]);
+					::WideCharToMultiByte(CP_UTF8, 0, wstr.get(), (int)wlen, str.get(), len, 0, 0);
+					m_files.push_back(std::string(str.get(), len - 1));
+				}
+				else {
+					m_files.push_back("");
+				}
+			}
+			ReleaseStgMedium(&stgm);
+		}
+		*pdwEffect &= DROPEFFECT_COPY;
+		return S_OK;
+	}
+	HRESULT DragLeave() {
+		m_files.clear();
+		return S_OK;
+	}
+	HRESULT DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+		*pdwEffect &= DROPEFFECT_COPY;
+		return S_OK;
+	}
+	HRESULT Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+		struct window_callback* cb = (struct window_callback*)GetWindowLongPtr(m_window, GWLP_USERDATA);
+		window_event_dropfiles(cb, m_files);
+		m_files.clear();
+		*pdwEffect &= DROPEFFECT_COPY;
+		return S_OK;
+	}
+
+	void Register(HWND window) {
+		m_window = window;
+		RegisterDragDrop(m_window, this);
+	}
+
+	void Revoke() {
+		RevokeDragDrop(m_window);
+		OleUninitialize();
+	}
+};
+
+DropManager g_dropmanager;
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -22,58 +97,12 @@ static LRESULT CALLBACK platformMainViewportWindowFunction(HWND hWnd, UINT messa
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)cb);
 		break;
 	}
-	case WM_DESTROY: {
-		struct window_callback* cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		window_event_exit(cb);
+	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
-	}
 	case WM_SIZE: {
 		struct window_callback* cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		switch (wParam) {
-		case SIZE_MINIMIZED:
-			window_event_size(cb, LOWORD(lParam), HIWORD(lParam), 1);
-			break;
-		case SIZE_MAXIMIZED:
-			window_event_size(cb, LOWORD(lParam), HIWORD(lParam), 2);
-			break;
-		default:
-			window_event_size(cb, LOWORD(lParam), HIWORD(lParam), 0);
-			break;
-		}
-		break;
-	}
-	case WM_DROPFILES: {
-		cb = (struct window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		HDROP drop = (HDROP)wParam;
-		UINT file_count = DragQueryFile(drop, 0xFFFFFFFF, NULL, 0);
-		char** paths = (char**)malloc(sizeof(char*) * file_count);
-		int* path_counts = (int*)malloc(sizeof(int) * file_count);
-		int count = file_count;
-		for (UINT i = 0; i < file_count; i++) {
-			path_counts[i] = 0;
-			paths[i] = NULL;
-			WCHAR* str_w = (WCHAR*)malloc(sizeof(WCHAR) * MAX_DROP_PATH);
-			UINT size_w = DragQueryFileW(drop, i, str_w, MAX_DROP_PATH);
-			if (str_w != NULL && size_w > 0) {
-				int len_a = WideCharToMultiByte(CP_UTF8, 0, str_w, size_w, NULL, 0, NULL, NULL);
-				if (len_a > 0) {
-					paths[i] = (char*)malloc(sizeof(char) * (len_a + 1));
-					if (paths[i] != NULL) {
-						int out_len = WideCharToMultiByte(CP_UTF8, 0, str_w, size_w, paths[i], len_a, NULL, NULL);
-						path_counts[i] = out_len;
-					}
-				}
-			}
-			free(str_w);
-		}
-		window_event_dropfiles(cb, count, paths, path_counts);
-		for (UINT i = 0; i < file_count; i++) {
-			if (paths[i] != NULL)
-				free(paths[i]);
-		}
-		free(paths);
-		free(path_counts);
+		window_event_size(cb, LOWORD(lParam), HIWORD(lParam));
 		break;
 	}
 	default:
@@ -84,11 +113,6 @@ static LRESULT CALLBACK platformMainViewportWindowFunction(HWND hWnd, UINT messa
 
 void platformNewFrame() {
 	ImGui_ImplWin32_NewFrame();
-}
-
-void platformDestroy() {
-	ImGui_ImplWin32_Shutdown();
-	UnregisterClassW(L"ImGui Host Viewport", GetModuleHandleW(NULL));
 }
 
 static HWND platformCreateMainWindow(lua_State* L, int w, int h) {
@@ -122,40 +146,42 @@ static HWND platformCreateMainWindow(lua_State* L, int w, int h) {
 	if (!window) {
 		return NULL;
 	}
-
-	RECT r;
-	GetClientRect(window, &r);
-	window_event_init(cb, window, 0, r.right - r.left, r.bottom - r.top);
-
-	DragAcceptFiles(window, TRUE);
 	ShowWindow(window, SW_SHOWDEFAULT);
 	UpdateWindow(window);
-
 	return window;
 }
 
-bool platformCreate(lua_State* L, int w, int h) {
+void* platformCreate(lua_State* L, int w, int h) {
+	if (FAILED(OleInitialize(NULL))) {
+		return nullptr;
+	}
 	HWND window = platformCreateMainWindow(L, w, h);
 	if (!window) {
-		return false;
+		return nullptr;
 	}
+	g_dropmanager.Register(window);
 	ImGui_ImplWin32_Init(window);
-	return true;
+	return window;
 }
 
-void platformMainLoop(lua_State* L) {
-	struct window_callback*  cb = window_get_callback(L);
+void platformDestroy() {
+	g_dropmanager.Revoke();
+	OleUninitialize();
+	ImGui_ImplWin32_Shutdown();
+	UnregisterClassW(L"ImGui Host Viewport", GetModuleHandleW(NULL));
+}
+
+bool platformProcessMessage() {
 	MSG msg;
 	for (;;) {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT)
-				break;
+				return false;
 			TranslateMessage(&msg);
 			DispatchMessageW(&msg);
 		}
 		else {
-			window_event_update(cb);
-			Sleep(0);
+			return true;
 		}
 	}
 }
