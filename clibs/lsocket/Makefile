@@ -26,6 +26,8 @@ $(ODIR)/lsocket.dll : $(OBJS)
 $(ODIR)/liblsocket.a : $(OBJS)
 	ar rsv $@ $^
 
+lsocket.dll : $(ODIR)/lsocket.dll
+
 $(ODIR) :
 	mkdir -p $@
 

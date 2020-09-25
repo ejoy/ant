@@ -5,7 +5,7 @@ include ant_define.mk
 
 default : libant.a
 
-LIBS= lua bgfx hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem imgui rp3d
+LIBS= lua bgfx hierarchy math3d thread terrain crypt lsocket protocol remotedebug firmware platform window datalist filesystem rp3d
 
 define MakeLibs
 

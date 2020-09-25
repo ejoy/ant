@@ -26,7 +26,7 @@ OBJS = $(ODIR)/luaimgui.o $(ODIR)/imgui_window.o $(ODIR)/imgui_renderer.o $(ODIR
 
 ifeq "$(PLAT)" "mingw"
 OBJS += $(ODIR)/imgui_impl_win32.o
-LIBS = -limm32 -lgdi32 -lxinput
+LIBS = -limm32 -lgdi32 -lxinput -lole32 -luuid
 IMGUI_MACRO += -DUNICODE -D_UNICODE
 IMGUI_PLAT = win32
 endif
