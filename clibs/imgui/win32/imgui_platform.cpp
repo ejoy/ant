@@ -111,10 +111,6 @@ static LRESULT CALLBACK platformMainViewportWindowFunction(HWND hWnd, UINT messa
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-void platformNewFrame() {
-	ImGui_ImplWin32_NewFrame();
-}
-
 static HWND platformCreateMainWindow(lua_State* L, int w, int h) {
 	struct window_callback* cb = window_get_callback(L);
 
@@ -171,7 +167,7 @@ void platformDestroy() {
 	UnregisterClassW(L"ImGui Host Viewport", GetModuleHandleW(NULL));
 }
 
-bool platformProcessMessage() {
+bool platformNewFrame() {
 	MSG msg;
 	for (;;) {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -181,6 +177,7 @@ bool platformProcessMessage() {
 			DispatchMessageW(&msg);
 		}
 		else {
+			ImGui_ImplWin32_NewFrame();
 			return true;
 		}
 	}

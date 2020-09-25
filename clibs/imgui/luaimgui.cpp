@@ -3254,9 +3254,11 @@ ioClean(lua_State* L) {
 
 static int
 lNewFrame(lua_State* L) {
-	platformNewFrame();
+	if (!platformNewFrame()) {
+		return 0;
+	}
 	ImGui::NewFrame();
-	lua_pushboolean(L, platformProcessMessage());
+	lua_pushboolean(L, 1);
 	return 1;
 }
 
