@@ -82,6 +82,35 @@ function m.update_resource_tree()
     m.dirty = false
 end
 
+local renaming = false
+local new_filename = {text = "noname"}
+local function rename_file(file)
+    if not renaming then return end
+
+    if not imgui.windows.IsPopupOpen("Rename file") then
+        imgui.windows.OpenPopup("Rename file")
+    end
+
+    local change, opened = imgui.windows.BeginPopupModal("Rename file", imgui.flags.Window{"AlwaysAutoResize"})
+    if change then
+        imgui.widget.Text("new name :")
+        imgui.cursor.SameLine()
+        if imgui.widget.InputText("##NewName", new_filename) then
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("OK") then
+            print(file, file:parent_path(), tostring(new_filename.text))
+            lfs.rename(file:localpath(), fs.path(tostring(file:parent_path() .. "/" .. tostring(new_filename.text))):localpath())
+            renaming = false
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Cancel") then
+            renaming = false
+        end
+        imgui.windows.EndPopup()
+    end
+end
+
 function m.show()
     if not gd.resource_root then
         return
@@ -101,7 +130,7 @@ function m.show()
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     m.update_resource_tree()
 
-    local function doShowBrowser(folder)
+    local function do_show_browser(folder)
         for k, v in pairs(folder.dirs) do
             local dir_name = tostring(v[1]:filename())
             local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((current_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
@@ -115,7 +144,7 @@ function m.show()
                         current_folder = v
                     end
                     skip = true
-                    doShowBrowser(v[2])
+                    do_show_browser(v[2])
                     imgui.widget.TreePop()
                 end
             end
@@ -157,13 +186,14 @@ function m.show()
         local height = (max_y - min_y) * 0.5
 
         imgui.windows.BeginChild("ResourceBrowserDir", width, height, false)
-        doShowBrowser(resource_tree)
+        do_show_browser(resource_tree)
         imgui.windows.EndChild()
         imgui.cursor.SameLine()
         imgui.windows.BeginChild("ResourceBrowserContent", width * 3, height, false);
         local folder = current_folder[2]
         if folder then
             local icons = require "common.icons"(assetmgr)
+            rename_file(current_file)
             for _, path in pairs(folder.dirs) do
                 imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
                 imgui.cursor.SameLine()
@@ -179,7 +209,8 @@ function m.show()
                         current_file = nil
                     end
                     if imgui.widget.Selectable("Rename", false) then
-                        
+                        renaming = true
+                        new_filename.text = tostring(current_file:filename())
                     end
                     imgui.windows.EndPopup()
                 end
@@ -215,6 +246,8 @@ function m.show()
                         current_file = nil
                     end
                     if imgui.widget.Selectable("Rename", false) then
+                        renaming = true
+                        new_filename.text = tostring(current_file:filename())
                     end
                     imgui.windows.EndPopup()
                 end

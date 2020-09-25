@@ -54,7 +54,7 @@ local function choose_project_dir()
     end
 end
 
-local function chooseProject()
+local function choose_project()
     if global_data.resource_root then return end
 
     if not imgui.windows.IsPopupOpen("Choose project") then
@@ -109,7 +109,7 @@ end
 
 local fileserver_thread
 
-local function showDockSpace(offset_x, offset_y)
+local function show_dock_space(offset_x, offset_y)
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + offset_x, viewport.WorkPos[2] + offset_y)
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1] - offset_x, viewport.WorkSize[2] - offset_y)
@@ -147,10 +147,10 @@ function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.TitleBg, 0.2, 0.2, 0.2, 1)
-    chooseProject()
+    choose_project()
     menu.show()
     toolbar.show()
-    local x, y, width, height = showDockSpace(0, uiconfig.ToolBarHeight)
+    local x, y, width, height = show_dock_space(0, uiconfig.ToolBarHeight)
     scene_view.show()
     inspector.show()
     resource_browser.show()
