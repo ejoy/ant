@@ -816,6 +816,7 @@ local mouse_pos_x
 local mouse_pos_y
 local imgui = require "imgui"
 local function on_mouse_move()
+	if gizmo_seleted then return end
 	local viewport = imgui.GetMainViewport()
 	local io = imgui.IO
 	local is_mouse_move = false

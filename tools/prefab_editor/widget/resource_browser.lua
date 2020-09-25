@@ -173,7 +173,16 @@ function m.show()
                         current_folder = path
                     end
                 end
-                
+                if imgui.windows.BeginPopupContextItem(tostring(path[1]:filename())) then
+                    if imgui.widget.Selectable("Delete", false) then
+                        lfs.remove(current_file:localpath())
+                        current_file = nil
+                    end
+                    if imgui.widget.Selectable("Rename", false) then
+                        
+                    end
+                    imgui.windows.EndPopup()
+                end
             end
             for _, path in pairs(folder.files) do
                 local icon = icons.get_file_icon(path)
@@ -200,7 +209,15 @@ function m.show()
                         end
                     end
                 end
-                
+                if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
+                    if imgui.widget.Selectable("Delete", false) then
+                        lfs.remove(current_file:localpath())
+                        current_file = nil
+                    end
+                    if imgui.widget.Selectable("Rename", false) then
+                    end
+                    imgui.windows.EndPopup()
+                end
                 if path:equal_extension(".material")
                     or path:equal_extension(".texture")
                     or path:equal_extension(".png")

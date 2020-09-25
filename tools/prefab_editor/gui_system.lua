@@ -3,10 +3,11 @@ local world     = ecs.world
 local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package 'ant.render'.hwi
-local asset_mgr  = import_package "ant.asset"
-local irq = world:interface "ant.render|irenderqueue"
-local ies = world:interface "ant.scene|ientity_state"
-local fs   = require "filesystem"
+local asset_mgr = import_package "ant.asset"
+local irq       = world:interface "ant.render|irenderqueue"
+local ies       = world:interface "ant.scene|ientity_state"
+local fs        = require "filesystem"
+local lfs       = require "filesystem.local"
 local hierarchy = require "hierarchy"
 local resource_browser = require "widget.resource_browser"(world, asset_mgr)
 local log_widget = require "widget.log"(asset_mgr)
@@ -30,6 +31,29 @@ local last_height = -1
 local second_view_width = 384
 local second_vew_height = 216
 
+local function on_new_project(path)
+    local rp = fs.path "":localpath():parent_path():parent_path()
+    local temp_path = fs.path(tostring(rp:parent_path()) .. "/test/simple/")
+    lfs.create_directory(lfs.path(path .. "\\res"))
+    lfs.copy_file(fs.path(tostring(temp_path) .. ".mount"):localpath(), lfs.path(path .. "\\.mount"))
+    lfs.copy_file(fs.path(tostring(temp_path) .. "init_system.lua"):localpath(), lfs.path(path .. "\\init_system.lua"))
+    lfs.copy_file(fs.path(tostring(temp_path) .. "main.lua"):localpath(), lfs.path(path .. "\\main.lua"))
+    lfs.copy_file(fs.path(tostring(temp_path) .. "package.ecs"):localpath(), lfs.path(path .. "\\package.ecs"))
+    lfs.copy_file(fs.path(tostring(temp_path) .. "package.lua"):localpath(), lfs.path(path .. "\\package.lua"))
+end
+
+local function choose_project_dir()
+    local filedialog = require 'filedialog'
+    local dialog_info = {
+        Owner = rhwi.native_window(),
+        Title = "Choose project folder"
+    }
+    local ok, path = filedialog.open(dialog_info)
+    if ok then
+        return path[1]
+    end
+end
+
 local function chooseProject()
     if global_data.resource_root then return end
 
@@ -41,34 +65,24 @@ local function chooseProject()
     if change then
         imgui.widget.Text("Create new or open existing project.")
         if imgui.widget.Button("Create project") then
-            print("Create empty project")
-            local filedialog = require 'filedialog'
-            local dialog_info = {
-                Owner = rhwi.native_window(),
-                Title = "Choose project folder"
-            }
-            local ok, path = filedialog.open(dialog_info)
-            if ok then
-                
+            local path = choose_project_dir()
+            if path then
+                global_data.resource_root = fs.path(path)
+                on_new_project(path)
             end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button("Open project") then
-            local filedialog = require 'filedialog'
-            local dialog_info = {
-                Owner = rhwi.native_window(),
-                Title = "Choose project folder"
-            }
-            local ok, path = filedialog.open(dialog_info)
-            if ok then
-                global_data.resource_root = fs.path(path[1])
+            local path = choose_project_dir()
+            if path then
+                global_data.resource_root = fs.path(path)
                 --file server
                 local cthread = require "thread"
                 cthread.newchannel "log_channel"
                 cthread.newchannel "fileserver_channel"
                 cthread.newchannel "console_channel"
                 local produce = cthread.channel_produce "fileserver_channel"
-                produce:push(arg, path[1])
+                produce:push(arg, path)
                 local lthread = require "common.thread"
                 fileserver_thread = lthread.create [[
                     package.path = "engine/?.lua;tools/prefab_editor/?.lua"
