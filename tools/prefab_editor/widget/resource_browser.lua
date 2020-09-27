@@ -203,16 +203,18 @@ function m.show()
                         current_folder = path
                     end
                 end
-                if imgui.windows.BeginPopupContextItem(tostring(path[1]:filename())) then
-                    if imgui.widget.Selectable("Delete", false) then
-                        lfs.remove(current_file:localpath())
-                        current_file = nil
+                if current_file == path[1] then
+                    if imgui.windows.BeginPopupContextItem(tostring(path[1]:filename())) then
+                        if imgui.widget.Selectable("Delete", false) then
+                            lfs.remove(current_file:localpath())
+                            current_file = nil
+                        end
+                        if imgui.widget.Selectable("Rename", false) then
+                            renaming = true
+                            new_filename.text = tostring(current_file:filename())
+                        end
+                        imgui.windows.EndPopup()
                     end
-                    if imgui.widget.Selectable("Rename", false) then
-                        renaming = true
-                        new_filename.text = tostring(current_file:filename())
-                    end
-                    imgui.windows.EndPopup()
                 end
             end
             for _, path in pairs(folder.files) do
@@ -251,16 +253,18 @@ function m.show()
                         end
                     end
                 end
-                if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
-                    if imgui.widget.Selectable("Delete", false) then
-                        lfs.remove(current_file:localpath())
-                        current_file = nil
+                if current_file == path then
+                    if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
+                        if imgui.widget.Selectable("Delete", false) then
+                            lfs.remove(current_file:localpath())
+                            current_file = nil
+                        end
+                        if imgui.widget.Selectable("Rename", false) then
+                            renaming = true
+                            new_filename.text = tostring(current_file:filename())
+                        end
+                        imgui.windows.EndPopup()
                     end
-                    if imgui.widget.Selectable("Rename", false) then
-                        renaming = true
-                        new_filename.text = tostring(current_file:filename())
-                    end
-                    imgui.windows.EndPopup()
                 end
                 if path:equal_extension(".material")
                     or path:equal_extension(".texture")
@@ -296,17 +300,18 @@ function m.show()
                 imgui.widget.Image(preview.handle, width, height)
                 imgui.cursor.SameLine()
                 -- imgui.cursor.NextColumn()
-                if texture_detail[current_file] then
+                local texture_info = texture_detail[current_file] 
+                if texture_info then
                     imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
-                                                    texture_detail[current_file].compress.android,
-                                                    texture_detail[current_file].compress.ios,
-                                                    texture_detail[current_file].compress.windows,
-                                                    texture_detail[current_file].sampler.MAG,
-                                                    texture_detail[current_file].sampler.MIN,
-                                                    texture_detail[current_file].sampler.MIP,
-                                                    texture_detail[current_file].sampler.U,
-                                                    texture_detail[current_file].sampler.V
-                                                ))
+                        texture_info.compress.android,
+                        texture_info.compress.ios,
+                        texture_info.compress.windows,
+                        texture_info.sampler.MAG,
+                        texture_info.sampler.MIN,
+                        texture_info.sampler.MIP,
+                        texture_info.sampler.U,
+                        texture_info.sampler.V
+                        ))
                 end
                 -- imgui.cursor.Columns(1)
             end

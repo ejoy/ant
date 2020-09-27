@@ -309,6 +309,14 @@ function m.showLog(name, current_log)
         if imgui.widget.Selectable(item.message, current_select == i) then
             current_select = i
         end
+        if current_select == i then
+            if imgui.windows.BeginPopupContextItem(current_select) then
+                if imgui.widget.Selectable("Copy", false) then
+                    imgui.util.SetClipboardText(current_log[current_select].message)
+                end
+                imgui.windows.EndPopup()
+            end
+        end
         if color then
             imgui.windows.PopStyleColor()
         end
