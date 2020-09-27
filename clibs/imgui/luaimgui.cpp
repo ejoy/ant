@@ -2699,6 +2699,13 @@ cGetMousePos(lua_State* L) {
 	return 2;
 }
 
+static int
+cSetClipboardText(lua_State* L) {
+	const char* text = luaL_checkstring(L, 1);
+	ImGui::SetClipboardText(text);
+	return 0;
+}
+
 #ifdef _MSC_VER
 #pragma endregion IMP_UTIL
 #endif
@@ -3548,6 +3555,7 @@ luaopen_imgui(lua_State *L) {
 		{ "CalcItemWidth",uCalcItemWidth},
 		{ "IsMouseDragging", cIsMouseDragging },
 		{ "GetMousePos", cGetMousePos },
+		{ "SetClipboardText", cSetClipboardText },
 		{ NULL, NULL },
 	};
 
