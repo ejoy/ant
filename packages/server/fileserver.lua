@@ -59,7 +59,8 @@ end
 local function do_prebuilt(repopath, identity)
 	local sp = require "subprocess"
 	sp.spawn {
-        config.lua,
+		config.lua,
+		"-e", ("package.cpath=[[%s]]"):format(package.cpath),
 		repopath / "prebuilt.lua",
 		identity,
         hideWindow = true,

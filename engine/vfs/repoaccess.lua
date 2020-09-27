@@ -28,10 +28,6 @@ end
 function access.addmount(repo, name, path)
 	repo._mountpoint[name] = path
 	repo._mountname[#repo._mountname+1] = name
-	local dirlst = split(name)
-	for i = 1, #dirlst do
-		repo._dir[table.concat(dirlst, "/", 1, i)] = true
-	end
 end
 
 function access.readmount(repo)
@@ -70,7 +66,6 @@ function access.readmount(repo)
 	table.sort(mountname)
 	repo._mountname = mountname
 	repo._mountpoint = mountpoint
-	repo._dir = dir
 end
 
 function access.realpath(repo, pathname)
@@ -111,7 +106,7 @@ function access.list_files(repo, filepath)
 		for name in rpath:list_directory() do
 			local filename = name:filename():string()
 			if filename:sub(1,1) ~= '.' then	-- ignore .xxx file
-				files[filename] = true
+				files[filename] = "l"
 			end
 		end
 	end
@@ -128,14 +123,14 @@ function access.list_files(repo, filepath)
 		-- root path
 		for mountname in pairs(repo._mountpoint) do
 			local name = mountname:match "^([^/]+)/?"
-			files[name] = true
+			files[name] = "v"
 		end
 	else
 		local n = #filepath
 		for mountname in pairs(repo._mountpoint) do
 			if mountname:sub(1,n) == filepath then
 				local name = mountname:sub(n+1):match "^([^/]+)/?"
-				files[name] = true
+				files[name] = "v"
 			end
 		end
 	end

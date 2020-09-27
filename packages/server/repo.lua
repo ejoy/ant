@@ -54,13 +54,6 @@ local function compile_resource(repo, path)
 	return true
 end
 
-local function is_directory(repo, path)
-	if repo._dir[path] then
-		return true
-	end
-	return lfs.is_directory(access.realpath(repo, path))
-end
-
 local function addslash(name)
 	return (name:gsub("[/\\]?$","/"))
 end
@@ -125,10 +118,10 @@ local function repo_build_dir(self, filepath, cache, namehashcache)
 		return hash
 	end
 	local hashs = {}
-	for name in pairs(access.list_files(self, filepath)) do
+	for name, type in pairs(access.list_files(self, filepath)) do
 		local fullname = filepath == '' and name or filepath .. '/' .. name	-- full name in repo
 		if compile_resource(self, fullname) then
-			if is_directory(self, fullname) then
+			if type == "v" or lfs.is_directory(access.realpath(self, fullname)) then
 				local hash = repo_build_dir(self, fullname, cache, namehashcache)
 				table.insert(hashs, string.format("d %s %s", hash, name))
 			else
