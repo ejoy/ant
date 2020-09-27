@@ -126,6 +126,7 @@ interface "irender"
     .method "read_render_buffer_content"
     .method "quad_ib"
     .method "quad_ib_num"
+    .method "check_primitive_mode_state"
 
 interface "irenderqueue"
     .implement "render.lua"

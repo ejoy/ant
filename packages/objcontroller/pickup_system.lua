@@ -14,6 +14,7 @@ local viewidmgr = renderpkg.viewidmgr
 local bgfx 		= require "bgfx"
 
 local ipf		= world:interface "ant.scene|iprimitive_filter"
+local irender	= world:interface "ant.render|irender"
 
 local opacity_material, translucent_material
 
@@ -56,10 +57,12 @@ function pfpt.process_entity(e)
 			ipf.add_item(opaticy.items, eid, setmetatable({
 				fx = opacity_material.fx,
 				properties = get_properties(eid, opacity_material.fx),
+				state = irender.check_primitive_mode_state(rc.state, opacity_material.state),
 			}, {__index=rc}))
 			ipf.add_item(translucent.items, eid, setmetatable({
-				fx = opacity_material.fx,
-				properties = get_properties(eid, opacity_material.fx),
+				fx			= translucent_material.fx,
+				properties	= get_properties(eid, translucent_material.fx),
+				state		= irender.check_primitive_mode_state(rc.state, translucent_material.state),
 			}, {__index=rc}))
 		else
 			ipf.remove_item(opaticy.items, eid)

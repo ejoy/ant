@@ -40,6 +40,18 @@ function vpt.process_entity(e)
 	end
 end
 
+function irender.check_primitive_mode_state(state, template_state)
+	local s = bgfx.parse_state(state)
+	if s.PT then
+		local ts = bgfx.parse_state(template_state)
+		if s.PT ~= ts.PT then
+			ts.PT = s.PT
+			return bgfx.make_state(ts)
+		end
+	end
+	return template_state
+end
+
 local pd_pt = ecs.transform "pre_depth_primitive_transform"
 function pd_pt.process_entity(e)
 	local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/depth.material"
@@ -52,10 +64,11 @@ function pd_pt.process_entity(e)
 			local material = world[eid].skinning_type == "GPU" and pre_depth_skinning_material or pre_depth_material
 			if rc then
 				ipf.add_item(items, eid, setmetatable({
-					eid = eid,
-					properties = material.properties,
-					fx = material.fx,
-					state = material.state,
+					eid			= eid,
+					properties	= material.properties,
+					fx			= material.fx,
+					--state		= material.state,
+					state		= irender.check_primitive_mode_state(rc.state, material.state),
 				}, {__index=rc}))
 			else
 				ipf.remove_item(items, eid)

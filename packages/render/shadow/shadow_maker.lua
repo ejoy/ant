@@ -10,6 +10,7 @@ local math3d	= require "math3d"
 local icamera	= world:interface "ant.camera|camera"
 local ilight	= world:interface "ant.render|light"
 local ishadow	= world:interface "ant.render|ishadow"
+local irender	= world:interface "ant.render|irender"
 
 local iom		= world:interface "ant.objcontroller|obj_motion"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
@@ -293,6 +294,7 @@ function spt.process_entity(e)
 			ipf.add_item(results[fxtype].items, eid, setmetatable({
 				fx = material.fx,
 				properties = material.properties or false,
+				state = irender.check_primitive_mode_state(rc.state, material.state),
 			}, {__index=rc}))
 		else
 			ipf.remove_item(results.opaticy.items, eid)
