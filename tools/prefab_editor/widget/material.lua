@@ -10,6 +10,7 @@ local stringify = import_package "ant.serialize".stringify
 local filedialog = require 'filedialog'
 local utils     = require "common.utils"
 local gd        = require "common.global_data"
+
 local m = {}
 local world
 local imaterial
@@ -22,14 +23,6 @@ end
 
 local function is_uniform(str)
     return string.find(str,"u") == 1 and string.find(str,"_") == 2
-end
-
-local function readtable(filename)
-    local path = fs.path(filename):localpath()
-    local f = assert(lfs.open(path))
-	local data = f:read "a"
-	f:close()
-    return datalist.parse(data)
 end
 
 function m.update_ui_data(eid)
@@ -46,7 +39,7 @@ function m.update_ui_data(eid)
                     else
                         absolute_path = tostring(mtl_path) .. v.texture 
                     end
-                    v.tdata = readtable(absolute_path)
+                    v.tdata = utils.readtable(absolute_path)
                 end
             end
 
@@ -121,7 +114,7 @@ local edit_sampler = function(eid, md)
                 if string.sub(payload, -8) == ".texture" then
                     pro[1].text = pkg_path
                     tp.texture = pkg_path
-                    tp.tdata = readtable(tp.texture)
+                    tp.tdata = utils.readtable(tp.texture)
                     local t = assetmgr.resource(tp.texture)
                     local s = t.sampler
                     texture_handle = t._data.handle

@@ -4,6 +4,7 @@ local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
+local utils     = require "common.utils"
 local gd        = require "common.global_data"
 local world
 local assetmgr
@@ -16,6 +17,7 @@ local current_folder = {files = {}}
 local current_file = nil
 
 local preview_images = {}
+local texture_detail = {}
 
 local function on_drop_files(files)
     local current_path = lfs.path(tostring(current_folder[1]))
@@ -99,7 +101,6 @@ local function rename_file(file)
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button("OK") then
-            print(file, file:parent_path(), tostring(new_filename.text))
             lfs.rename(file:localpath(), fs.path(tostring(file:parent_path() .. "/" .. tostring(new_filename.text))):localpath())
             renaming = false
         end
@@ -184,12 +185,11 @@ function m.show()
         local max_x, max_y = imgui.windows.GetWindowContentRegionMin()
         local width = imgui.windows.GetWindowContentRegionWidth() * 0.2
         local height = (max_y - min_y) * 0.5
-
         imgui.windows.BeginChild("ResourceBrowserDir", width, height, false)
         do_show_browser(resource_tree)
         imgui.windows.EndChild()
         imgui.cursor.SameLine()
-        imgui.windows.BeginChild("ResourceBrowserContent", width * 3, height, false);
+        imgui.windows.BeginChild("ResourceBrowserContent", width * 2.5, height, false);
         local folder = current_folder[2]
         if folder then
             local icons = require "common.icons"(assetmgr)
@@ -239,6 +239,17 @@ function m.show()
                             preview_images[current_file] = assetmgr.resource(pkg_path, { compile = true })
                         end
                     end
+
+                    if path:equal_extension(".texture") then
+                        if not texture_detail[current_file] then
+                            local rp = fs.relative(path, gd.resource_root)
+                            local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
+                            texture_detail[current_file] = utils.readtable(pkg_path)
+                            local t = assetmgr.resource(pkg_path)
+                            local s = t.sampler
+                            preview_images[current_file] = t._data
+                        end
+                    end
                 end
                 if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
                     if imgui.widget.Selectable("Delete", false) then
@@ -266,20 +277,38 @@ function m.show()
         end
         imgui.windows.EndChild()
         imgui.cursor.SameLine()
-        imgui.windows.BeginChild("ResourceBrowserPreview", width, height, false);
-        
-        if fs.path(current_file):equal_extension(".png") then
+        imgui.windows.BeginChild("ResourceBrowserPreview", width * 1.5, height, false);
+        if fs.path(current_file):equal_extension(".png") or fs.path(current_file):equal_extension(".texture") then
             local preview = preview_images[current_file]
             if preview then
+                if texture_detail[current_file] then
+                    imgui.widget.Text("image:" .. texture_detail[current_file].path)
+                end
+                -- imgui.cursor.Columns(2, "PreviewColumns", true)
                 imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
                 local width, height = preview.texinfo.width, preview.texinfo.height
-                if width > 128 then
-                    width = 128
+                if width > 180 then
+                    width = 180
                 end
-                if height > 128 then
-                    height = 128
+                if height > 180 then
+                    height = 180
                 end
                 imgui.widget.Image(preview.handle, width, height)
+                imgui.cursor.SameLine()
+                -- imgui.cursor.NextColumn()
+                if texture_detail[current_file] then
+                    imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
+                                                    texture_detail[current_file].compress.android,
+                                                    texture_detail[current_file].compress.ios,
+                                                    texture_detail[current_file].compress.windows,
+                                                    texture_detail[current_file].sampler.MAG,
+                                                    texture_detail[current_file].sampler.MIN,
+                                                    texture_detail[current_file].sampler.MIP,
+                                                    texture_detail[current_file].sampler.U,
+                                                    texture_detail[current_file].sampler.V
+                                                ))
+                end
+                -- imgui.cursor.Columns(1)
             end
         end
         imgui.windows.EndChild()

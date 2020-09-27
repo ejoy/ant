@@ -57,14 +57,14 @@ function gizmo:updata_uniform_scale()
 end
 
 function gizmo:set_scale(inscale)
-	if not self.target_eid then
+	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
 		return
 	end
 	iom.set_scale(self.target_eid, inscale)
 end
 
 function gizmo:set_position(worldpos)
-	if not self.target_eid then
+	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
 		return
 	end
 	local newpos
@@ -88,7 +88,7 @@ function gizmo:set_position(worldpos)
 end
 
 function gizmo:set_rotation(inrot)
-	if not self.target_eid then
+	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
 		return
 	end
 	local newrot
