@@ -36,8 +36,7 @@ void main()
   } else {
     if (is_near) {
       v_scatter_color = texelFetch(s_nearBuffer, texelco, 0);
-    }
-    else {
+    } else {
       v_scatter_color = texelFetch(s_farBuffer, texelco, 0);
     }
     /* find the area the pixel will cover and divide the v_scatter_color by it */
@@ -87,8 +86,7 @@ void main()
     /* don't do smoothing for small sprites */
     if (coc > 3.0) {
       v_scatter_smooth_fac = 1.0 - 1.5 / coc;
-    }
-    else {
+    } else {
       v_scatter_smooth_fac = 1.0;
     }
   }

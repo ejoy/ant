@@ -17,9 +17,9 @@ uniform vec4 u_shadow_param2;
 #define u_shadowmap_texelsize	u_shadow_param1.z
 #define u_shadow_color			u_shadow_param2.rgb
 
-//#define SM_LINEAR
+//#define DEPTH_LINEAR
 
-#ifdef SM_LINEAR
+#ifdef DEPTH_LINEAR
 #define SHADOW_SAMPLER2D	SAMPLER2D
 #define shadow_sampler_type sampler2D 
 #else
@@ -61,7 +61,7 @@ float hardShadow(
 
 	// float visibility = step(receiver, occluder);
 	// return visibility;
-#ifdef SM_LINEAR
+#ifdef DEPTH_LINEAR
 	// when use multi sampler case, no need to check border
 	vec2 tc = clamp(_shadowCoord.xy, 0.0, 1.0);
 	float receiver = (_shadowCoord.z-_bias);

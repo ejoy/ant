@@ -21,7 +21,7 @@ void main()
 #else //!GPU_SKINNING
 	gl_Position = mul(u_modelViewProj, pos);	
 #endif //GPU_SKINNING
-#ifdef SM_LINEAR
+#ifdef DEPTH_LINEAR
 	v_position = gl_Position;
-#endif //SM_LINEAR
+#endif //DEPTH_LINEAR
 }

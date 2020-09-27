@@ -9,6 +9,7 @@ local bindings = {
 	csm2 		= shadow_csm_start_viewid + 1,
 	csm3 		= shadow_csm_start_viewid + 2,
 	csm4 		= shadow_csm_start_viewid + 3,
+	depth		= 29,
 	main_view 	= 30,
 	pickup 		= 31,
 	pickup_blit = 32,

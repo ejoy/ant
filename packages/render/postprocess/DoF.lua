@@ -12,15 +12,11 @@ local math3d        = require "math3d"
 
 local dof_sys       = ecs.system "dof_system"
 
-local function main_rb_size()
-    local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
-    return ipp.main_rb_size(fbidx)
-end
-
 function dof_sys.post_init()
     local mq_rt = world:singleton_entity "main_queue".render_target
     
-    local fbw, fbh = main_rb_size()
+    local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
+    local fbw, fbh = ipp.main_rb_size(fbidx)
     local hfbw, hfbh = fbw/2, fbh/2
     
     local flags = sampler.sampler_flag {
@@ -36,13 +32,13 @@ function dof_sys.post_init()
         view_rect = {x=0, y=0, w=hfbw, h=hfbh},
         fb_idx = fbmgr.create{
             fbmgr.create_rb{        --near color
-                format = "RGBA16",
+                format = "RGBA16F",
                 w=hfbw, h=hfbh,
                 layers = 1,
                 flags = flags,
             },
             fbmgr.create_rb{        --far color
-                format = "RGBA16",
+                format = "RGBA16F",
                 w=hfbw, h=hfbh,
                 layers = 1,
                 flags = flags,
@@ -82,7 +78,7 @@ function dof_sys.post_init()
     
     local us_rt = {
         clear_state = {clear=""},
-        view_rect   = {x=0, y=0, w=hfbw, h=hfbh},
+        view_rect   = {x=0, y=0, w=fbw, h=fbh},
         fb_idx      = mq_rt.fb_idx,
     }
     local us_pass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/resolve.material", us_rt, "resolve")

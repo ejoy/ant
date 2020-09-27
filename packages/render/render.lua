@@ -10,20 +10,56 @@ local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local samplerutil	= require "sampler"
 
-local irender = ecs.interface "irender"
+local irender		= ecs.interface "irender"
 
+local imaterial		= world:interface "ant.asset|imaterial"
 local ipf			= world:interface "ant.scene|iprimitive_filter"
 
 local vpt = ecs.transform "visible_primitive_transform"
+local function parse_rc(rc)
+	local pdq = world:singleton_entity "pre_depth_queue"
+	if pdq then
+		local state = bgfx.parse_state(rc.state)
+		state.WRITE_MASK = state.WRITE_MASK:gsub("Z", "")
+		return setmetatable({
+			state = bgfx.make_state(state)
+		}, {__index=rc})
+	end
+	return rc
+end
 function vpt.process_entity(e)
 	local f = e.primitive_filter
 	f.insert_item = function (filter, fxtype, eid, rc)
 		local items = filter.result[fxtype].items
 		if rc then
 			rc.eid = eid
-			ipf.add_item(items, eid, rc)
+			ipf.add_item(items, eid, parse_rc(rc))
 		else
 			ipf.remove_item(items, eid)
+		end
+	end
+end
+
+local pd_pt = ecs.transform "pre_depth_primitive_transform"
+function pd_pt.process_entity(e)
+	local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/depth.material"
+	local pre_depth_material 				= imaterial.load(pre_depth_material_file, {depth_type="linear"})
+	local pre_depth_skinning_material 		= imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
+	
+	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
+		if fxtype == "opaticy" then
+			local items = filter.result[fxtype].items
+			local material = world[eid].skinning_type == "GPU" and pre_depth_skinning_material or pre_depth_material
+			if rc then
+				ipf.add_item(items, eid, setmetatable({
+					eid = eid,
+					properties = material.properties,
+					fx = material.fx,
+					state = material.state,
+				}, {__index=rc}))
+			else
+				ipf.remove_item(items, eid)
+			end
 		end
 	end
 end
@@ -164,18 +200,69 @@ function irender.create_orthoview_queue(view_rect, orthoface, queuename)
 	}
 end
 
-function irender.create_main_queue(view_rect)
-	local rb_flag = samplerutil.sampler_flag {
-		RT="RT_MSAA4",
-		MIN="LINEAR",
-		MAG="LINEAR",
-		U="CLAMP",
-		V="CLAMP",
+local rb_flag = samplerutil.sampler_flag {
+	RT="RT_MSAA4",
+	MIN="LINEAR",
+	MAG="LINEAR",
+	U="CLAMP",
+	V="CLAMP",
+}
+
+function irender.create_pre_depth_queue(view_rect, camera_eid)
+	local fbidx = fbmgr.create{
+		fbmgr.create_rb{
+			format = "R32F",
+			w = view_rect.w, h=view_rect.h,
+			layers = 1,
+			flags = rb_flag,
+		},
+		fbmgr.create_rb{
+			format = "D24S8",
+			w = view_rect.w, h=view_rect.h,
+			layers = 1,
+			flags = rb_flag,
+		}
 	}
 
-	local sd = setting:data()
+	return world:create_entity{
+		policy = {
+			"ant.render|render_queue",
+			"ant.render|pre_depth_queue",
+			"ant.general|name",
+		},
+		data = {
+			name = "pre_z",
+			camera_eid = camera_eid,
+			primitive_filter = {
+				filter_type = "visible",
+			},
+			render_target = {
+				viewid = viewidmgr.get "depth",
+				clear_state = {
+					clear = "CD",
+					color = 0,
+					depth = 1,
+				},
+				view_mode = "s",
+				view_rect = {
+					x=view_rect.x or 0, y = view_rect.y or 0,
+					w=view_rect.w, h=view_rect.h,
+				},
+				fb_idx = fbidx,
+			},
+			visible = true,
+			pre_depth_queue = true,
+		}
+	}
+end
+
+function irender.create_main_queue(view_rect, camera_eid)
+	local pd = world:singleton_entity "pre_depth_queue"
+	local pd_fb = fbmgr.get(pd.render_target.fb_idx)
+
 	local render_buffers = {}
 
+	local sd = setting:data()
 	local main_display_format = sd.graphic.hdr.enable and "RGBA16F" or "RGBA8"
 	render_buffers[#render_buffers+1] = fbmgr.create_rb(
 		default_comp.render_buffer(
@@ -190,17 +277,7 @@ function irender.create_main_queue(view_rect)
 		)
 	end
 
-	render_buffers[#render_buffers+1] = fbmgr.create_rb(
-		default_comp.render_buffer(
-		view_rect.w, view_rect.h, "D24S8", rb_flag)
-	)
-
-	local camera_eid = icamera.create{
-		eyepos  = {0, 0, 0, 1},
-		viewdir = {0, 0, 1, 0},
-		frustum = default_comp.frustum(view_rect.w / view_rect.h),
-        name = "default_camera",
-	}
+	render_buffers[#render_buffers+1] = pd_fb[#pd_fb]
 
 	local rs = sd.graphic.render
 
@@ -219,9 +296,7 @@ function irender.create_main_queue(view_rect)
 				clear_state = {
 					color = rs.clear_color or 0x000000ff,
 					color1 = 0,
-					depth = rs.clear_depth or 1,
-					stencil = rs.clear_stencil or 0,
-					clear = rs.clear or "CDS",
+					clear = "C",
 				},
 				view_rect = {
 					x = view_rect.x or 0, y = view_rect.y or 0,

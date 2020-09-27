@@ -1735,7 +1735,7 @@ parse_write(lua_State *L, uint64_t state) {
 	write[idx++] = 0;
 	if (idx > 1) {
 		lua_pushstring(L, write);
-		lua_setfield(L, -2, "WRITE");
+		lua_setfield(L, -2, "WRITE_MASK");
 	}
 }
 

@@ -27,7 +27,7 @@ local default_setting = {
 	shadow_receive = "off",		-- "on"/"off"
 	subsurface = "off",			-- "on"/"off"? maybe has other setting
 	skinning = "UNKNOWN",
-    shadow_type = setting:get 'graphic/shadow/type',
+    depth_type = setting:get 'graphic/shadow/type',
     bloom_enable = setting:get 'graphic/postprocess/bloom/enable',
 }
 

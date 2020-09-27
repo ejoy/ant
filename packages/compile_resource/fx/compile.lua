@@ -64,10 +64,13 @@ local function get_macros(setting)
 	end
 	if setting.skinning == "GPU" then
 		macros[#macros+1] = "GPU_SKINNING"
-	end
-	if setting.shadow_type == "linear" then
-		macros[#macros+1] = "SM_LINEAR"
-	end
+    end
+	if setting.depth_type == "linear" then
+		macros[#macros+1] = "DEPTH_LINEAR"
+    end
+    if setting.depth_value == "pack_depth" then
+        macros[#macros+1] = "PACK_RGBA8"
+    end
 	if setting.bloom_enable then
 		macros[#macros+1] = "BLOOM_ENABLE"
     end

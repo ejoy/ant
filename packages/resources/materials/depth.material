@@ -1,0 +1,8 @@
+fx:
+  fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+state:
+  ALPHA_REF: 0
+  CULL: CW
+  DEPTH_TEST: LESS
+  WRITE_MASK: RGBAZ

@@ -4,10 +4,13 @@ local world = ecs.world
 local fbmgr 	= require "framebuffer_mgr"
 local bgfx 		= require "bgfx"
 
+local default_comp 	= import_package "ant.general".default
+
 local irender 	= world:interface "ant.render|irender"
 local ipf		= world:interface "ant.scene|iprimitive_filter"
 local isp		= world:interface "ant.render|system_properties"
 local iqc		= world:interface "ant.render|iquadcache"
+local icamera	= world:interface "ant.camera|camera"
 
 local wmt = ecs.transform "world_matrix_transform"
 local function set_world_matrix(rc)
@@ -39,7 +42,16 @@ local function update_view_proj(viewid, cameraeid)
 end
 
 function render_sys:init()
-	irender.create_main_queue{w=world.args.width,h=world.args.height}
+	local vr = {w=world.args.width,h=world.args.height}
+	local camera_eid = icamera.create{
+		eyepos  = {0, 0, 0, 1},
+		viewdir = {0, 0, 1, 0},
+		frustum = default_comp.frustum(vr.w/vr.h),
+        name = "default_camera",
+	}
+
+	irender.create_pre_depth_queue(vr, camera_eid)
+	irender.create_main_queue(vr, camera_eid)
 end
 
 function render_sys:render_commit()
