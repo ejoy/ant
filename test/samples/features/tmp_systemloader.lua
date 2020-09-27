@@ -95,19 +95,19 @@ local function find_entity(name, whichtype)
     end
 end
 
-function init_loader_sys:init()
-    --world:instance("/pkg/ant.test.features/assets/entities/light_directional.prefab", {})
-    local lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+local function point_light_test()
+    local  lighteid = world:instance "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
     iom.set_position(lighteid, {1, 1, 1, 1})
 
-    local lightcube = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
+    local  lightcube = world:instance "/pkg/ant.test.features/assets/entities/cube.prefab"[1]
     iom.set_position(lightcube, iom.get_position(lighteid))
-
 
     local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
     iom.set_position(cubeeid, {0, 0, 0, 1})
-    
+end
 
+function init_loader_sys:init()
+    point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     --ientity.create_procedural_sky()
@@ -117,16 +117,27 @@ end
 function init_loader_sys:post_init()
     local mq = world:singleton_entity "main_queue"
     local pos = math3d.vector(-10.5, 10, -5.5, 1)
+    
     icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
     icamera.set_dof(mq.camera_eid, {
-        aperture_fstop = 2.8,
-        aperture_blades = 0,
-        aperture_rotation = 0,
-        aperture_ratio = 1,
-        sensor_size = 100,
-        focus_distance = 5,
-        focal_len = 84,
-        enable = true,
+        aperture_fstop      = 2.8,
+        aperture_blades     = 0,
+        aperture_rotation   = 0,
+        aperture_ratio      = 1,
+        sensor_size         = 100,
+        focus_distance      = 5,
+        focal_len           = 84,
+        focuseid            = world:create_entity {
+            policy = {
+                "ant.render|simplerender"
+            },
+            data = {
+                transform = {},
+                simplemesh = {},
+                state = "",
+            }
+        },
+        enable              = true,
     })
     -- local dir = {0, 0, 1, 0}
     -- icamera.lookto(mq.camera_eid, {0, 0, -8, 1}, dir)

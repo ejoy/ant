@@ -13,4 +13,9 @@ properties:
     s_cocBuffer:
         stage:2
         texture: /pkg/ant.resources/materials/textures/default.texture
-state: /pkg/ant.resources/materials/postprocess/postprocess.state
+state:
+    CULL: CCW
+    DEPTH_TEST: ALWAYS
+    PT: TRISTRIP
+    WRITE_MASK: RGBA
+    BLEND: ADD

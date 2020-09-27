@@ -13,6 +13,7 @@ function cm.process_entity(e)
     for k, v in pairs(e.frustum) do f[k] = v end
     rc.frustum = f
     rc.updir = math3d.ref(e.updir or mc.YAXIS)
+    rc.clip_range = e.clip_range and e.clip_range or {f.n, f.f}
     local lt = e.lock_target
     if lt then
         local nlt = {}
@@ -57,6 +58,7 @@ function ic.create(info)
             lock_target = info.locktarget,
             updir       = info.updir,
             name        = info.name or "DEFAULT_CAMERA",
+            clip_range  = info.clip_range,
             scene_entity= true,
             camera      = true,
             dof         = dof,
@@ -152,7 +154,7 @@ end
 function ic.set_dof_focus_obj(eid, focus_eid)
     local dof = world[eid]._dof
     dof.focus_eid = focus_eid
-    world:pub{"component_changed", "dof", focus_eid, "focus",}
+    world:pub{"component_changed", "dof", focus_eid, "focus_entity",}
 end
 
 local function set_dof(e, dof)
@@ -161,16 +163,17 @@ local function set_dof(e, dof)
         aperture_blades     = dof.aperture_blades,
         aperture_rotation   = dof.aperture_rotation,
         aperture_ratio      = dof.aperture_ratio,
-        sensor              = dof.sensor_size,
+        sensor_size         = dof.sensor_size,
         focus_distance      = dof.focus_distance,
         focal_len           = dof.focal_len,
+        focuseid            = dof.focuseid,
         enable              = dof.enable,
     }
 end
 
 function ic.set_dof(eid, dof)
     set_dof(world[eid], dof)
-    world:pub{"component_changed", "dof", eid}
+    world:pub{"component_changed", "dof", eid,}
 end
 
 local cameraview_sys = ecs.system "camera_view_system"

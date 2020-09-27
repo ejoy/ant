@@ -48,10 +48,5 @@ void main()
    * but does fade out the undersampling artifacts. */
   float shape = smoothstep(1.0, min(0.999, v_scatter_smooth_fac), dist);
 
-  gl_FragData[0] *= shape;
-
-#  ifdef USE_ALPHA_DOF
-  gl_FragData[0].a = v_scatter_weight * shape;
-  gl_FragData[1] = gl_FragData.a;
-#  endif
+  gl_FragData[0] = v_scatter_color * shape;
 }

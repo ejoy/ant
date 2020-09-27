@@ -4,7 +4,4 @@ fx:
 properties:
     u_near_far:{0.0, 0.0, 0.0, 0.0}
     u_dof_param:{0.0, 0.0, 0.0, 0.0}
-    s_scatterBuffer:
-        stage: 0
-        texture: /pkg/ant.resources/materials/textures/default.texture
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

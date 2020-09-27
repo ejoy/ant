@@ -156,18 +156,17 @@ local function update_shadow_properties()
 end
 
 local function update_postprocess_properties()
-	local mq = world:singleton_entity "main_queue"
-	local fbidx = mq.render_target.fb_idx
-	if fbidx then
+	local function rb_handle(q, idx)
+		local fbidx = q.render_target.fb_idx
 		local fb = fbmgr.get(fbidx)
-
-		--TODO: need check render buffer in framebuffer is color buffer or depth buffer
-		local mv = system_properties["s_mainview"]
-		mv.texture.handle = fbmgr.get_rb(fb[1]).handle
-		
-		local mvd = system_properties["s_mainview_depth"]
-		mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
+		return fbmgr.get_rb(fb[idx]).handle
 	end
+
+	local mv = system_properties["s_mainview"]
+	mv.texture.handle = rb_handle(world:singleton_entity "main_queue", 1)
+	
+	local mvd = system_properties["s_mainview_depth"]
+	mvd.texture.handle = rb_handle(world:singleton_entity "pre_depth_queue", 1)
 end
 
 function m.update()

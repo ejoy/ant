@@ -32,13 +32,13 @@ function dof_sys.post_init()
         view_rect = {x=0, y=0, w=hfbw, h=hfbh},
         fb_idx = fbmgr.create{
             fbmgr.create_rb{        --near color
-                format = "RGBA16F",
+                format = "RG11B10F",
                 w=hfbw, h=hfbh,
                 layers = 1,
                 flags = flags,
             },
             fbmgr.create_rb{        --far color
-                format = "RGBA16F",
+                format = "RG11B10F",
                 w=hfbw, h=hfbh,
                 layers = 1,
                 flags = flags,
@@ -58,8 +58,8 @@ function dof_sys.post_init()
         view_rect = {x=0, y=0, w=hfbw, h=hfbh},
         fb_idx = fbmgr.create{
             fbmgr.create_rb{
-                format = "RGBA8",
-                w=hfbw, h=hfbh,
+                format = "RGBA32F",
+                w=fbw*2, h=fbh,
                 layers = 1, flags=flags,
             }
         }
@@ -70,14 +70,19 @@ function dof_sys.post_init()
     imaterial.set_property(scatter_pass.eid, "s_farBuffer",  {stage=1, texture={handle = fbmgr.get_rb(ds_fb[2]).handle}})
     imaterial.set_property(scatter_pass.eid, "s_cocBuffer",  {stage=2, texture={handle = fbmgr.get_rb(ds_fb[3]).handle}})
 
-    scatter_pass.renderitem.ib = {
-        start = 0,
-        num = hfbw * hfbh,
-        handle = irender.quad_ib(),
-    }
+    do
+        local ri = scatter_pass.renderitem
+        ri.ib = nil
+        local vb = ri.vb
+        ri.vb = {
+            start = 0,
+            num = (hfbw * hfbh) * 3,
+            handles = vb.handles
+        }
+    end
     
     local us_rt = {
-        clear_state = {clear=""},
+        clear_state = {clear="C", color=0},
         view_rect   = {x=0, y=0, w=fbw, h=fbh},
         fb_idx      = mq_rt.fb_idx,
     }
@@ -88,8 +93,8 @@ function dof_sys.post_init()
     ipp.add_technique("dof", {ds_pass, scatter_pass, us_pass})
 end
 
-local function update_dof_param(eid)
-    local dof = world[eid]._dof
+local function update_dof_param(e, eid)
+    local dof = e._dof
     
     local function calc_focus_distance(eid, dof)
         local focuseid = dof.focuseid
@@ -102,13 +107,16 @@ local function update_dof_param(eid)
         return dof.focus_distance
     end
 
+    local cr = e._rendercache.clip_range
+
     local tech = ipp.get_technique "dof"
 
-    local ds_pass = tech[1]
-    local scatter_pass = tech[2]
+    local ds_pass, scatter_pass, resolve_pass = tech[1], tech[2], tech[3]
 
-    local w, h = main_rb_size()
+    local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
+    local fbw   = ipp.main_rb_size(fbidx)
 
+    --- downsample
     local focusdist = calc_focus_distance(eid, dof)
 
     local function to_meter(mm)
@@ -119,15 +127,16 @@ local function update_dof_param(eid)
     local sensor_size = to_meter(dof.sensor_size)
 
     local dof_bais = aperture * math.abs(focal_len / (focusdist - focal_len));
-    dof_bais = dof_bais *(w / sensor_size);
-    local dof_params = {
+    dof_bais = dof_bais * (fbw / sensor_size);
+    local dof_param = {
         -focusdist * dof_bais,
         dof_bais,
-        0, 0,
+        cr[1], cr[2]
     }
 
-    imaterial.set_property(ds_pass.eid, "u_dof_param", dof_params)
+    imaterial.set_property(ds_pass.eid, "u_dof_param", dof_param)
 
+    --- scatter
     local bokeh = {dof.aperture_rotation, 1/dof.aperture_ratio, 100, 0}
     imaterial.set_property(scatter_pass.eid, "u_bokeh_param", bokeh)
     
@@ -140,18 +149,24 @@ local function update_dof_param(eid)
         blades > 0 and math.cos(math.pi / blades) or 0,
     }
     imaterial.set_property(scatter_pass.eid, "u_bokeh_sides", bokeh_sides)
+
+    --- resolve
+    imaterial.set_property(resolve_pass.eid, "u_dof_param", dof_param)
 end
 
-local dof_register_mb = world:sub{"component_register", "dof"}
+local dof_register_mb = world:sub{"component_register", "camera"}
 local dof_mbs = {}
 function dof_sys:data_changed()
     for _, _, eid in dof_register_mb:unpack() do
-        update_dof_param(eid)
-        world:sub{"component_changed", "dof", eid}
+        local e = world[eid]
+        if e._dof then
+            update_dof_param(e, eid)
+            world:sub{"component_changed", "camera", "dof", eid}
+        end
     end
 
     for _, mb in ipairs(dof_mbs) do
-        for _, _, eid in mb:unpack() do
+        for _, _, _, eid in mb:unpack() do
             update_dof_param(eid)
         end
     end

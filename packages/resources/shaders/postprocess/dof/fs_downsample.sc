@@ -3,11 +3,7 @@ $input v_texcoord0
 #include "common/postprocess.sh"
 #include "postprocess/dof/utils.sh"
 
-#define out_nearColor   gl_FragData[0]
-#define out_farColor    gl_FragData[1]
-#define out_cocData     gl_FragData[2]
-
-
+#define THRESHOLD 1.0
 /* Downsample the color buffer to half resolution.
  * Weight color samples by
  * Compute maximum CoC for near and far blur. */
@@ -34,23 +30,15 @@ void main()
   vec4 coc_near = calculate_coc(zdepth);
   vec4 coc_far = -coc_near;
 #define max_v4(v4) max(max(max(v4[0], v4[1]), v4[2]), v4[3])
-  out_cocData.x = max(max_v4(coc_near), 0.0);
-  out_cocData.y = max(max_v4(coc_far), 0.0);
+  vec2 coc = vec2(max(max_v4(coc_near), 0.0), max(max_v4(coc_far), 0.0));
+  gl_FragData[2] = vec4(coc, 0.0, 0.0);
 
   /* now we need to write the near-far fields premultiplied by the coc
    * also use bilateral weighting by each coc values to avoid bleeding. */
-  vec4 near_weights = step(THRESHOLD, coc_near) * clamp(1.0 - abs(out_cocData.x - coc_near), 0.0, 1.0);
-  vec4 far_weights = step(THRESHOLD, coc_far) * clamp(1.0 - abs(out_cocData.y - coc_far), 0.0, 1.0);
-
-#  ifdef USE_ALPHA_DOF
-  /* Premult */
-  color1.rgb *= color1.a;
-  color2.rgb *= color2.a;
-  color3.rgb *= color3.a;
-  color4.rgb *= color4.a;
-#  endif
+  vec4 near_weights = step(THRESHOLD, coc_near) * clamp(1.0 - abs(coc.x - coc_near), 0.0, 1.0);
+  vec4 far_weights  = step(THRESHOLD, coc_far)  * clamp(1.0 - abs(coc.y - coc_far),  0.0, 1.0);
 
   /* now write output to weighted buffers. */
-  out_nearColor = weighted_sum(color1, color2, color3, color4, near_weights);
-  out_farColor  = weighted_sum(color1, color2, color3, color4, far_weights);
+  gl_FragData[0] = weighted_sum(color1, color2, color3, color4, near_weights);
+  gl_FragData[1] = weighted_sum(color1, color2, color3, color4, far_weights);
 }

@@ -6,9 +6,6 @@ $input v_texcoord0
 #define MERGE_THRESHOLD 4.0
 
 SAMPLER2D(s_scatterBuffer,        0);
-#  ifdef USE_ALPHA_DOF
-SAMPLER2D(s_scatterAlphaBuffer,   1);
-#  endif
 
 vec4 upsample_filter(sampler2D tex, vec2 uv, vec2 texelSize)
 {
@@ -72,19 +69,5 @@ void main()
 
   focus_col *= focus_w; /* Premul */
 
-#  ifdef USE_ALPHA_DOF
-  near_col.a = upsample_filter(s_scatterAlphaBuffer, near_uv, texelSize).r;
-  far_col.a = upsample_filter(s_scatterAlphaBuffer, far_uv, texelSize).r;
-#  endif
-
   gl_FragColor = (far_col + near_col + focus_col) * inv_weight_sum;
-
-#  ifdef USE_ALPHA_DOF
-  /* Sigh... viewport expect premult output but
-   * the final render output needs to be with
-   * associated alpha. */
-  if (u_unpremult) {
-    gl_FragColor.rgb /= (gl_FragColor.a > 0.0) ? gl_FragColor.a : 1.0;
-  }
-#  endif
 }
