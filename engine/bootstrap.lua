@@ -5,7 +5,7 @@ if __ANT_RUNTIME__ then
     require "runtime.errlog"
 else
     require "editor.init_cpath"
-    require "common.thread"
+    require "editor.thread"
     require "editor.vfs"
     require "editor.log"
 end
