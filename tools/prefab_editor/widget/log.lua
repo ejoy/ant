@@ -2,7 +2,9 @@ local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
-local cthread = require "thread"
+local cthread   = require "thread"
+local fs        = require "filesystem"
+local lfs       = require "filesystem.local"
 
 local icons
 local m = {
@@ -53,7 +55,17 @@ local function get_log_height()
     end
     return height
 end
-
+local logfile
+local function log_to_file(msg)
+    if not logfile then
+        logfile = fs.path "":localpath() / "log.txt"--('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
+    end
+    --local fp = assert(lfs.open(logfile, 'a'))
+    local fp = assert(lfs.open(logfile, 'w+'))
+    fp:write(msg)
+    fp:write('\n')
+    fp:close()
+end
 local function do_add(t, item)
     table.insert(t, item)
     t.height = t.height + item.height
@@ -98,6 +110,7 @@ function m.message(msg)
 end
 
 function m.info(msg)
+    log_to_file(msg.message)
     msg.level = LEVEL_INFO
     do_add_info("All", msg)
     do_add_info(msg.tag, msg)
@@ -105,6 +118,7 @@ function m.info(msg)
 end
 
 function m.warn(msg)
+    log_to_file(msg.message)
     msg.level = LEVEL_WARN
     do_add_warn("All", msg)
     do_add_warn(msg.tag, msg)
@@ -112,6 +126,7 @@ function m.warn(msg)
 end
 
 function m.error(msg)
+    log_to_file(msg.message)
     msg.level = LEVEL_ERROR
     do_add_error("All", msg)
     do_add_error(msg.tag, msg)
@@ -342,7 +357,9 @@ function m.show()
         m.showLog("LogList", log_items[current_tag][filter_flag])
     end
 end
-
+function m.close_log()
+    logfile_handle:close()
+end
 return function(am)
     icons = require "common.icons"(am)
     reset_log()

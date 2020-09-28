@@ -913,19 +913,6 @@ function gizmo_sys:data_changed()
 	end
 	
 	on_mouse_move()
-
-	-- for _, what, x, y in mouse_move:unpack() do
-	-- 	if what == "UNKNOWN" then
-	-- 		mouse_pos_x_in_view, mouse_pos_y_in_view = x, y
-	-- 		if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
-	-- 			local axis = select_axis(x, y)
-	-- 			gizmo:highlight_axis_or_plane(axis)
-	-- 		elseif gizmo.mode == gizmo_const.ROTATE then
-	-- 			gizmo:hide_rotate_fan()
-	-- 			select_rotate_axis(x, y)
-	-- 		end
-	-- 	end
-	-- end
 	
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then

@@ -161,7 +161,7 @@ end
 
 function hierarchy:update_display_name(eid, name)
     if not self.all[eid] then return end
-    self.all[eid].display_name = name .. "(" .. eid .. ")"
+    self.all[eid].display_name = (name or "") .. "(" .. eid .. ")"
 end
 
 function hierarchy:get_node(eid)

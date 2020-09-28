@@ -1,18 +1,16 @@
 local ecs = ...
 local world = ecs.world
-local rhwi = import_package 'ant.render'.hwi
+local rhwi  = import_package 'ant.render'.hwi
 local utils = require "mathutils"(world)
-local m = ecs.system 'input_system'
+local m     = ecs.system 'input_system'
 local event_mouse = world:sub {"mouse"}
 local event_mouse_wheel = world:sub {"mouse_wheel"}
+local event_keyboard = world:sub{"keyboard"}
 local last_mouse
 local last_x, last_y
-local event_keyboard = world:sub{"keyboard"}
-
 function m:data_changed()
     for _,what,state,x,y in event_mouse:unpack() do
         local vx, vy = utils.mouse_pos_in_view(x, y)
-        --print(vx, vy)
         if vx and vy then
             if state == "MOVE" then
                 world:pub {"mousemove", what, vx, vy}
@@ -49,6 +47,5 @@ function m:data_changed()
 		elseif key == "D" and press == 2 then
 			
         end
-        --print(key, press)
 	end
 end

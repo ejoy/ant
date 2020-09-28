@@ -22,6 +22,8 @@ local camera_mgr = require "camera_manager"(world)
 local gizmo = require "gizmo.gizmo"(world)
 local global_data = require "common.global_data"
 local icons = require "common.icons"(asset_mgr)
+local gizmo_const = require "gizmo.const"
+
 local m = ecs.system 'gui_system'
 local drag_file = nil
 local last_x = -1
