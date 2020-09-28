@@ -75,7 +75,7 @@ local function repo_create(identity, reponame)
 	local repopath = lfs.path(reponame)
 	LOG ("Open repo : ", tostring(repopath))
 	do_prebuilt(repopath, identity)
-	assert(not repos[reponame])
+	assert(not repos[repopath:string()])
 	local repo = repo_new(repopath)
 	if not repo then
 		return
@@ -88,7 +88,7 @@ local function repo_create(identity, reponame)
 		repo:rebuild()
 	end
 	watch_add(repo, repopath)
-	repos[reponame] = repo
+	repos[repopath:string()] = repo
 	return repo
 end
 
