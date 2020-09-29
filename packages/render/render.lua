@@ -270,9 +270,6 @@ function irender.create_pre_depth_queue(view_rect, camera_eid)
 end
 
 function irender.create_main_queue(view_rect, camera_eid)
-	local pd = world:singleton_entity "pre_depth_queue"
-	local pd_fb = fbmgr.get(pd.render_target.fb_idx)
-
 	local render_buffers = {}
 
 	local sd = setting:data()
@@ -290,9 +287,41 @@ function irender.create_main_queue(view_rect, camera_eid)
 		)
 	end
 
-	render_buffers[#render_buffers+1] = pd_fb[#pd_fb]
-
 	local rs = sd.graphic.render
+
+	local function get_depth_buffer()
+		local pd = world:singleton_entity "pre_depth_queue"
+		if pd then
+			local pd_fb = fbmgr.get(pd.render_target.fb_idx)
+			return pd_fb[#pd_fb]
+		end
+
+		return fbmgr.create_rb{
+			format = "D24S8",
+			w = view_rect.w, h=view_rect.h,
+			layers = 1,
+			flags = rb_flag,
+		}
+	end
+
+	local function get_clear_state()
+		local pd = world:singleton_entity "pre_depth_queue"
+		local cs = {
+			color = rs.clear_color or 0x000000ff,
+			color1 = 0,
+			clear = "C",
+		}
+		if pd == nil then
+			cs.depth = 1
+			cs.stencil = 0
+			cs.clear = "CDS"
+		end
+		return cs
+	end
+
+	local cs = get_clear_state()
+
+	render_buffers[#render_buffers+1] = get_depth_buffer()
 
 	return world:create_entity {
 		policy = {
@@ -306,11 +335,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 			render_target = {
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
-				clear_state = {
-					color = rs.clear_color or 0x000000ff,
-					color1 = 0,
-					clear = "C",
-				},
+				clear_state = cs,
 				view_rect = {
 					x = view_rect.x or 0, y = view_rect.y or 0,
 					w = view_rect.w or 1, h = view_rect.h or 1,

@@ -21,15 +21,12 @@ vec3 reconstruct_3dpoint(vec2 xy, float depth){
 }
 
 void main() {
-    vec2 tex_size   = textureSize(s_mainview, 0).xy;
-    vec2 uv         = gl_FragCoord.xy / tex_size;
+    vec4 focus      = texture2D(s_mainview,       v_texcoord0);
+    float depth     = texture2D(s_mainview_depth, v_texcoord0).r;
 
-    vec4 focus      = texture2D(s_mainview,       uv);
-    float depth     = texture2D(s_mainview_depth, uv);
+    vec3 pos        = reconstruct_3dpoint(v_texcoord0, depth);
 
-    vec3 pos        = reconstruct_3dpoint(gl_FragCoord.xy, depth);
-
-    vec4 outfocus   = texture2D(s_outfocus, uv);
+    vec4 outfocus   = texture2D(s_outfocus, v_texcoord0);
 
     float blur      = smoothstep(u_distance_range.x, u_distance_range.y, length(pos - u_focuspoint.xyz));
 

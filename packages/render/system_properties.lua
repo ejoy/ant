@@ -166,11 +166,19 @@ local function update_postprocess_properties()
 		return fbmgr.get_rb(fb[idx]).handle
 	end
 
+	local mq = world:singleton_entity "main_queue"
 	local mv = system_properties["s_mainview"]
-	mv.texture.handle = rb_handle(world:singleton_entity "main_queue", 1)
+	mv.texture.handle = rb_handle(mq, 1)
 	
 	local mvd = system_properties["s_mainview_depth"]
-	mvd.texture.handle = rb_handle(world:singleton_entity "pre_depth_queue", 1)
+	local pdq = world:singleton_entity "pre_depth_queue"
+	if pdq then
+		mvd.texture.handle = rb_handle(mvd, 1)
+	else
+		local fbidx = mq.render_target.fb_idx
+		local fb = fbmgr.get(fbidx)
+		mvd.texture.handle = fbmgr.get_rb(fb[#fb]).handle
+	end
 end
 
 function m.update()
