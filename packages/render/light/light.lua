@@ -107,8 +107,10 @@ function ilight.directional_light()
 end
 
 function ilight.active_directional_light(eid)
-	local e = world[eid]
-	assert(e.light_type == "directional")
+	if eid then
+		local e = world[eid]
+		assert(e.light_type == "directional")
+	end
 	active_dl = eid
 end
 

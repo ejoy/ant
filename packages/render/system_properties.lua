@@ -72,6 +72,10 @@ local function add_directional_light_properties()
 		system_properties["u_directional_lightdir"].v	= math3d.inverse(iom.get_direction(deid))
 		system_properties["u_directional_color"].v		= data.color
 		system_properties["u_directional_intensity"].v	= data.intensity
+	else
+		system_properties["u_directional_lightdir"].v	= mc.ZERO
+		system_properties["u_directional_color"].v		= mc.ZERO
+		system_properties["u_directional_intensity"].v	= mc.ZERO
 	end
 end
 
@@ -91,7 +95,7 @@ local function add_point_light_properties()
 					param[1] = 2.0
 					local radian = e.radian * 0.5
 					local outer_radian = radian * 1.1
-					param[2], param[3] = math.cos(radian), math3d.cos(outer_radian)
+					param[2], param[3] = math.cos(radian), math.cos(outer_radian)
 				else
 					lightdir.v = mc.ZERO
 				end
