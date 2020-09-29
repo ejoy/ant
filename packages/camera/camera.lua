@@ -190,6 +190,9 @@ function cameraview_sys:update_mainview_camera()
     local mq = world:singleton_entity "main_queue"
     update_camera(mq.camera_eid)
 
+    local pdq = world:singleton_entity "pre_depth_queue"
+    pdq.camera_eid = mq.camera_eid
+
     local bq = world:singleton_entity "blit_queue"
     update_camera(bq.camera_eid)
 end
