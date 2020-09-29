@@ -119,26 +119,26 @@ function init_loader_sys:post_init()
     local pos = math3d.vector(-10.5, 10, -5.5, 1)
     
     icamera.lookto(mq.camera_eid, pos, math3d.sub(mc.ZERO_PT, pos))
-    icamera.set_dof(mq.camera_eid, {
-        aperture_fstop      = 2.8,
-        aperture_blades     = 0,
-        aperture_rotation   = 0,
-        aperture_ratio      = 1,
-        sensor_size         = 100,
-        focus_distance      = 5,
-        focal_len           = 84,
-        focuseid            = world:create_entity {
-            policy = {
-                "ant.render|simplerender"
-            },
-            data = {
-                transform = {},
-                simplemesh = {},
-                state = "",
-            }
-        },
-        enable              = true,
-    })
+    -- icamera.set_dof(mq.camera_eid, {
+    --     aperture_fstop      = 2.8,
+    --     aperture_blades     = 0,
+    --     aperture_rotation   = 0,
+    --     aperture_ratio      = 1,
+    --     sensor_size         = 100,
+    --     focus_distance      = 5,
+    --     focal_len           = 84,
+    --     focuseid            = world:create_entity {
+    --         policy = {
+    --             "ant.render|simplerender"
+    --         },
+    --         data = {
+    --             transform = {},
+    --             simplemesh = {},
+    --             state = "",
+    --         }
+    --     },
+    --     enable              = true,
+    -- })
     -- local dir = {0, 0, 1, 0}
     -- icamera.lookto(mq.camera_eid, {0, 0, -8, 1}, dir)
     local f = icamera.get_frustum(mq.camera_eid)
