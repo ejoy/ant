@@ -56,30 +56,26 @@ local function watch_add(repo, repopath)
 	end
 end
 
+local function watch_del(repo)
+	repo._closed = true
+end
+
 local function do_prebuilt(repopath, identity)
 	local sp = require "subprocess"
 	sp.spawn {
-        config.lua,
+		config.lua,
+		"-e", ("package.cpath=[[%s]]"):format(package.cpath),
 		repopath / "prebuilt.lua",
 		identity,
         hideWindow = true,
     } :wait()
 end
 
-local function repo_add(identity, reponame)
+local function repo_create(identity, reponame)
 	local repopath = lfs.path(reponame)
 	LOG ("Open repo : ", tostring(repopath))
 	do_prebuilt(repopath, identity)
-	if repos[reponame] then
-		local repo = repos[reponame]
-		assert(repo._identity == identity)
-		if lfs.is_regular_file(repopath / ".repo" / "root") then
-			repo:index()
-		else
-			repo:rebuild()
-		end
-		return repo
-	end
+	assert(not repos[repopath:string()])
 	local repo = repo_new(repopath)
 	if not repo then
 		return
@@ -92,8 +88,14 @@ local function repo_add(identity, reponame)
 		repo:rebuild()
 	end
 	watch_add(repo, repopath)
-	repos[reponame] = repo
+	repos[repopath:string()] = repo
 	return repo
+end
+
+local function repo_close(repo)
+	watch_del(repo)
+	repos[repo._root:string()] = nil
+	repo:close()
 end
 
 local function response(fd, ...)
@@ -106,7 +108,7 @@ local message = {}
 function message:ROOT(identity, reponame)
 	LOG("ROOT", identity, reponame)
 	local reponame = assert(reponame or REPOPATH, "Need repo name")
-	local repo = repo_add(identity, reponame)
+	local repo = repo_create(identity, reponame)
 	if repo == nil then
 		response(self, "ROOT", "")
 		return
@@ -194,7 +196,8 @@ end
 local function fileserver_update(fd)
 	dispatch_obj(fd)
 	if fd._status == "CLOSED" then
-		event[#event+1] = {"RUNTIME_CLOSE", fd._repo}
+		local repo = fd._repo
+		event[#event+1] = {"RUNTIME_CLOSE", repo}
 		for fd, v in pairs(debug) do
 			if v.server == fd then
 				if v.client then
@@ -205,6 +208,7 @@ local function fileserver_update(fd)
 				break
 			end
 		end
+		repo_close(repo)
 	end
 end
 
@@ -256,10 +260,18 @@ local function update()
 			if tree[".id"] then
 				local rel_path = table.concat(elems, "/", i+1, #elems)
 				if rel_path ~= '' and rel_path:sub(1, 1) ~= '.' then
-					for _, v in ipairs(tree) do
-						local newpath = vfsjoin(v.url, rel_path)
-						log.info('FileWatch', type, newpath)
-						v.repo:touch(newpath)
+					local j = 1
+					while j <= #tree do
+						local v = tree[j]
+						if v.repo._closed then
+							tree[j] = tree[#tree]
+							tree[#tree] = nil
+						else
+							local newpath = vfsjoin(v.url, rel_path)
+							log.info('FileWatch', type, newpath)
+							v.repo:touch(newpath)
+							j = j + 1
+						end
 					end
 				end
 			end

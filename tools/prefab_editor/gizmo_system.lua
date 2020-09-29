@@ -57,14 +57,14 @@ function gizmo:updata_uniform_scale()
 end
 
 function gizmo:set_scale(inscale)
-	if not self.target_eid then
+	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
 		return
 	end
 	iom.set_scale(self.target_eid, inscale)
 end
 
 function gizmo:set_position(worldpos)
-	if not self.target_eid then
+	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
 		return
 	end
 	local newpos
@@ -88,7 +88,7 @@ function gizmo:set_position(worldpos)
 end
 
 function gizmo:set_rotation(inrot)
-	if not self.target_eid then
+	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
 		return
 	end
 	local newrot
@@ -385,7 +385,6 @@ function gizmo_sys:post_init()
 	update_global_axis()
 	gizmo:update_scale()
 	gizmo:show_by_state(false)
-	world:pub {"Gizmo", "create", gizmo, cmd_queue}
 end
 
 local function gizmo_dir_to_world(localDir)
@@ -496,7 +495,7 @@ local function select_axis_plane(x, y)
 end
 
 local function select_axis(x, y)
-	if not gizmo.target_eid then
+	if not gizmo.target_eid or not x or not y then
 		return
 	end
 	if gizmo.mode == gizmo_const.SCALE then
@@ -553,7 +552,7 @@ local function select_axis(x, y)
 end
 
 local function select_rotate_axis(x, y)
-	if not gizmo.target_eid then
+	if not gizmo.target_eid or not x or not y then
 		return
 	end
 	gizmo:reset_rotate_axis_color()
@@ -605,7 +604,7 @@ local mouse_move = world:sub {"mousemove"}
 local mouse_down = world:sub {"mousedown"}
 local mouse_up = world:sub {"mouseup"}
 
-local gizmoModeEvent = world:sub {"GizmoMode"}
+local gizmo_mode_event = world:sub {"GizmoMode"}
 
 local last_mouse_pos
 local last_gizmo_pos
@@ -617,7 +616,7 @@ local last_hit = math3d.ref()
 local gizmo_seleted = false
 
 local function move_gizmo(x, y)
-	if not gizmo.target_eid then
+	if not gizmo.target_eid or not x or not y then
 		return
 	end
 	local deltaPos
@@ -681,6 +680,7 @@ local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 end
 
 local function rotate_gizmo(x, y)
+	if not x or not y then return end
 	local axis_dir = (rotate_axis ~= gizmo.rw) and gizmo_dir_to_world(rotate_axis.dir) or rotate_axis.dir
 	local gizmoPos = iom.get_position(gizmo.root_eid)
 	local hitPosVec = mouse_hit_plane({x, y}, {dir = axis_dir, pos = math3d.totable(gizmoPos)})
@@ -735,6 +735,7 @@ local function rotate_gizmo(x, y)
 end
 
 local function scale_gizmo(x, y)
+	if not x or not y then return end
 	local newScale
 	if uniform_scale then
 		local delta_x = x - last_mouse_pos[1]
@@ -781,6 +782,7 @@ end
 
 
 function gizmo:select_gizmo(x, y)
+	if not x or not y then return false end
 	if self.mode == gizmo_const.MOVE or self.mode == gizmo_const.SCALE then
 		move_axis = select_axis(x, y)
 		gizmo:highlight_axis_or_plane(move_axis)
@@ -810,6 +812,37 @@ end
 
 local keypress_mb = world:sub{"keyboard"}
 local viewpos_event = world:sub{"ViewportDirty"}
+local mouse_pos_x
+local mouse_pos_y
+local imgui = require "imgui"
+local function on_mouse_move()
+	if gizmo_seleted then return end
+	local viewport = imgui.GetMainViewport()
+	local io = imgui.IO
+	local is_mouse_move = false
+	local wx = io.MousePos[1] - viewport.MainPos[1]
+	local wy = io.MousePos[2] - viewport.MainPos[2]
+	if mouse_pos_x ~= wx then
+		mouse_pos_x = wx
+		is_mouse_move = true
+	end
+	if mouse_pos_y ~= wy then
+		mouse_pos_y = wy
+		is_mouse_move = true
+	end
+	if is_mouse_move and gizmo.mode ~= gizmo_const.SELECT then
+		local vx, vy = utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
+		if vx and vy then
+			if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
+				local axis = select_axis(vx, vy)
+				gizmo:highlight_axis_or_plane(axis)
+			elseif gizmo.mode == gizmo_const.ROTATE then
+				gizmo:hide_rotate_fan()
+				select_rotate_axis(vx, vy)
+			end
+		end
+	end
+end
 
 function gizmo_sys:data_changed()
 	for _, vp in viewpos_event:unpack() do
@@ -821,7 +854,7 @@ function gizmo_sys:data_changed()
 		gizmo:update_scale()
 	end
 
-	for _, what, value in gizmoModeEvent:unpack() do
+	for _, what, value in gizmo_mode_event:unpack() do
 		if what == "select" then
 			gizmo:on_mode(gizmo_const.SELECT)
 		elseif what == "rotate" then
@@ -830,8 +863,8 @@ function gizmo_sys:data_changed()
 			gizmo:on_mode(gizmo_const.MOVE)
 		elseif what == "scale" then
 			gizmo:on_mode(gizmo_const.SCALE)
-		elseif what == "localspace" then-- or what == "worldspace" then
-			local_space = value--(what == "localspace")
+		elseif what == "localspace" then
+			local_space = value
 			gizmo:update_axis_plane()
 			gizmo:set_rotation()
 		end
@@ -839,8 +872,7 @@ function gizmo_sys:data_changed()
 
 	for _, what, x, y in mouse_down:unpack() do
 		if what == "LEFT" then
-			--print("Down", x, y, utils.adjust_mouse_pos(x, y))
-			gizmo_seleted = gizmo:select_gizmo(utils.adjust_mouse_pos(x, y))
+			gizmo_seleted = gizmo:select_gizmo(x, y)
 			gizmo:click_axis_or_plane(move_axis)
 			gizmo:click_axis(rotate_axis)
 		elseif what == "MIDDLE" then
@@ -879,23 +911,11 @@ function gizmo_sys:data_changed()
 			gizmo:update_axis_plane()
 		end
 	end
-
-	for _, what, x, y in mouse_move:unpack() do
-		if what == "UNKNOWN" then
-			x, y = utils.adjust_mouse_pos(x, y)
-			if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
-				local axis = select_axis(x, y)
-				gizmo:highlight_axis_or_plane(axis)
-			elseif gizmo.mode == gizmo_const.ROTATE then
-				gizmo:hide_rotate_fan()
-				select_rotate_axis(x, y)
-			end
-		end
-	end
+	
+	on_mouse_move()
 	
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
-			x, y = utils.adjust_mouse_pos(x, y)
 			if gizmo.mode == gizmo_const.MOVE and move_axis then
 				move_gizmo(x, y)
 			elseif gizmo.mode == gizmo_const.SCALE then
@@ -922,7 +942,10 @@ function gizmo_sys:data_changed()
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then
-				gizmo:set_target(nil)
+				local vx, vy = utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
+				if vx and vy then
+					gizmo:set_target(nil)
+				end
 			end
 		end
 	end

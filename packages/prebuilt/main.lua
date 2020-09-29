@@ -37,6 +37,12 @@ local function prebuilt_material(v, fx_setting)
     end
 end
 
+local function prebuilt_mesh(v)
+    if type(v) == "string" then
+        cr.compile(absolute_path(v))
+    end
+end
+
 local function prebuilt_fx(v, setting)
     if type(v) == "string" then
         prebuilt("fx", v, setting)
@@ -61,6 +67,7 @@ local function prebuilt_entity(v)
             fx_setting = {skinning = "GPU"}
         end
         prebuilt_material(e.material, fx_setting)
+        prebuilt_mesh(e.mesh)
     end
 end
 

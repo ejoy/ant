@@ -4,17 +4,14 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy"
 
+local gizmo
 local m = {}
 local world
 local asset_mgr
 local source_eid = nil
 local target_eid = nil
-local gizmo
 local iom
 local iss
-function m.set_gizmo(obj)
-    gizmo = obj
-end
 
 local function is_editable(eid)
     if not iom.srt(eid) or
@@ -109,12 +106,10 @@ local function show_scene_node(node)
     end
 end
 
-local viewStartY = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
-
-function m.show(rhwi)
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, viewStartY, 'F')
-    imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, sh - uiconfig.BottomWidgetHeight - viewStartY, 'F')
+function m.show()
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
+    imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         if imgui.widget.Button("CreateCamera") then
@@ -146,5 +141,6 @@ return function(w, am)
     asset_mgr = am
     iom = world:interface "ant.objcontroller|obj_motion"
     iss = world:interface "ant.scene|iscenespace"
+    gizmo = require "gizmo.gizmo"(world)
     return m
 end

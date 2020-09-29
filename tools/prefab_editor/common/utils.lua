@@ -32,4 +32,13 @@ function utils.write_file(filename, data)
     f:close()
 end
 
+local datalist  = require "datalist"
+function utils.readtable(filename)
+    local path = fs.path(filename):localpath()
+    local f = assert(lfs.open(path))
+	local data = f:read "a"
+	f:close()
+    return datalist.parse(data)
+end
+
 return utils

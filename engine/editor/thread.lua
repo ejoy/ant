@@ -1,6 +1,7 @@
 local thread = require "thread"
 
 if thread.id == 0 then
+	thread.newchannel "IOreq"
 	thread.newchannel "INITTHREAD"
 	local registry = debug.getregistry()
 	local debugger = registry["lua-debug"]

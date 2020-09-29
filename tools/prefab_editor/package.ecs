@@ -1,5 +1,4 @@
 import "@ant.general"
-import "@ant.imgui"
 import "@ant.render"
 import "@ant.animation"
 import "@ant.sky"
@@ -48,7 +47,6 @@ system "gui_system"
     .implement "gui_system.lua"
     .method "data_changed"
     .method "ui_update"
-    .require_system "ant.imgui|imgui_system"
     .require_policy "ant.render|render"
     .require_policy "ant.general|name"
 

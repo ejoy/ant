@@ -187,11 +187,15 @@ end
 
 local defcolor<const> = {1.0, 1.0, 1.0, 1.0}
 function ipl.add_strip_lines(points, line_width, color, material)
+    local numpoint = #points
+    if numpoint < 2 then
+        error(("strip line need at least 2 point:%d"):format(numpoint))
+    end
     color = color or defcolor
     line_width = line_width or 1
 
     local vertices = generate_stripline_vertices(points)
-    local numpoint = #points
+    
     local numlines = numpoint-1
 
     local numvertex = dyn_stripline_vb:vertices_num(vertices)
@@ -239,7 +243,7 @@ end
 
 function ipl.add_linelist(pointlist, line_width, color, material)
     local numpoint = #pointlist
-    if numpoint % 2 ~= 0 then
+    if numpoint == 0 or numpoint % 2 ~= 0 then
         error(("privoided point for line's number must multiple of 2: %d"):format(numpoint))
     end
 

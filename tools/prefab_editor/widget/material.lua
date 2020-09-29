@@ -9,27 +9,20 @@ local datalist  = require "datalist"
 local stringify = import_package "ant.serialize".stringify
 local filedialog = require 'filedialog'
 local utils     = require "common.utils"
+local gd        = require "common.global_data"
 
 local m = {}
 local world
 local imaterial
 local mtldata_list = {}
 local mtldata = nil
-
+local prefab_mgr
 local function is_sampler(str)
     return string.find(str,"s") == 1 and string.find(str,"_") == 2 
 end
 
 local function is_uniform(str)
     return string.find(str,"u") == 1 and string.find(str,"_") == 2
-end
-
-local function readtable(filename)
-    local path = fs.path(filename):localpath()
-    local f = assert(lfs.open(path))
-	local data = f:read "a"
-	f:close()
-    return datalist.parse(data)
 end
 
 function m.update_ui_data(eid)
@@ -46,7 +39,7 @@ function m.update_ui_data(eid)
                     else
                         absolute_path = tostring(mtl_path) .. v.texture 
                     end
-                    v.tdata = readtable(absolute_path)
+                    v.tdata = utils.readtable(absolute_path)
                 end
             end
 
@@ -121,7 +114,7 @@ local edit_sampler = function(eid, md)
                 if string.sub(payload, -8) == ".texture" then
                     pro[1].text = pkg_path
                     tp.texture = pkg_path
-                    tp.tdata = readtable(tp.texture)
+                    tp.tdata = utils.readtable(tp.texture)
                     local t = assetmgr.resource(tp.texture)
                     local s = t.sampler
                     texture_handle = t._data.handle
@@ -322,17 +315,14 @@ function m.show(eid)
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##file", uidata.material_file) then
-            world[eid].material = tostring(uidata.material_file.text)
+            --world[eid].material = tostring(uidata.material_file.text)
         end
         imgui.cursor.PopItemWidth()
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
             if payload then
-                world[eid].material = payload
-                local m = assetmgr.resource(payload, world)
-                local c = world[eid]._cache_prefab
-		        local m = load_material(m, c.material_setting)
-		        c.fx, c.properties, c.state = m.fx, m.properties, m.state
+                mtldata_list[eid] = nil
+                prefab_mgr:update_material(eid, tostring(fs.relative(fs.path(payload), gd.resource_root)))
             end
             imgui.widget.EndDragDropTarget()
         end
@@ -341,7 +331,7 @@ function m.show(eid)
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##vs", uidata.vs) then
-            tdata.fx.vs = tostring(uidata.vs.text)
+            --tdata.fx.vs = tostring(uidata.vs.text)
         end
         imgui.cursor.PopItemWidth()
         -- if imgui.widget.BeginDragDropTarget() then
@@ -355,7 +345,7 @@ function m.show(eid)
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##fs", uidata.fs) then
-            tdata.fx.fs = tostring(uidata.fs.text)
+            --tdata.fx.fs = tostring(uidata.fs.text)
         end
         imgui.cursor.PopItemWidth()
         -- if imgui.widget.BeginDragDropTarget() then
@@ -379,5 +369,6 @@ end
 return function(w)
     world = w
     imaterial = world:interface "ant.asset|imaterial"
+    prefab_mgr = require "prefab_manager"(world)
     return m
 end

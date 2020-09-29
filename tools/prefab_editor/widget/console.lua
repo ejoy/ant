@@ -95,11 +95,10 @@ local function show_input()
     end
     imgui.cursor.Separator()
 end
-function m.show(rhwi)
-    --log_widget.checkLog()
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, sh - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(sw, uiconfig.BottomWidgetHeight, 'F')
+function m.show()
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Console", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         show_input()
         log_widget.showConsole()

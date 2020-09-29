@@ -17,21 +17,9 @@ local function create_world(config)
         world_update()
         world:clear_removed()
     end
-    function m.mouse_wheel(...)
-        --if imgui.IO.WantCaptureMouse then
-            ev.mouse_wheel(...)
-        --end
-    end
-    function m.mouse(...)
-        --if imgui.IO.WantCaptureMouse then
-            ev.mouse(...)
-        --end
-    end
-    function m.keyboard(...)
-        --if imgui.IO.WantCaptureKeyboard then
-            ev.keyboard(...)
-        --end
-    end
+    m.mouse_wheel = ev.mouse_wheel
+    m.mouse = ev.mouse
+    m.keyboard = ev.keyboard
     function m.size(width, height)
         world:pub {"resize", width, height}
     end

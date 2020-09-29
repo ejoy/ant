@@ -4,7 +4,8 @@ local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
-
+local utils     = require "common.utils"
+local gd        = require "common.global_data"
 local world
 local assetmgr
 local m = {
@@ -12,11 +13,11 @@ local m = {
 }
 
 local resource_tree = nil
-local resource_root = nil
 local current_folder = {files = {}}
 local current_file = nil
 
 local preview_images = {}
+local texture_detail = {}
 
 local function on_drop_files(files)
     local current_path = lfs.path(tostring(current_folder[1]))
@@ -46,11 +47,6 @@ local function path_split(fullname)
     return root, stack
 end
 
-function m.set_root(root)
-    resource_root = root
-    fw.add(root:string())
-end
-
 local function construct_resource_tree(fspath)
     local tree = {files = {}, dirs = {}}
     local sorted_path = {}
@@ -58,10 +54,12 @@ local function construct_resource_tree(fspath)
         sorted_path[#sorted_path+1] = item
     end
     table.sort(sorted_path, function(a, b) return tostring(a) < tostring(b) end)
-    --for item in fspath:list_directory() do
     for _, item in ipairs(sorted_path) do
         if fs.is_directory(item) then
             table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
+            if current_folder[1] == item then
+                current_folder = tree.dirs[#tree.dirs]
+            end
         else
             table.insert(tree.files, item)
         end
@@ -70,9 +68,9 @@ local function construct_resource_tree(fspath)
 end
 
 function m.update_resource_tree()
-    if not m.dirty or not resource_root then return end
+    if not m.dirty or not gd.resource_root then return end
 
-    resource_tree = {files = {}, dirs = {{resource_root, construct_resource_tree(resource_root)}}}
+    resource_tree = {files = {}, dirs = {{gd.resource_root, construct_resource_tree(gd.resource_root)}}}
     local function set_parent(tree)
         for _, v in pairs(tree[2].dirs) do
             v.parent = tree
@@ -80,26 +78,60 @@ function m.update_resource_tree()
         end
     end
     set_parent(resource_tree.dirs[1])
-    current_folder = resource_tree.dirs[1]
+    if not current_folder[1] then
+        current_folder = resource_tree.dirs[1]
+    end
     m.dirty = false
 end
 
-function m.show(rhwi)
-    if not resource_root then
+local renaming = false
+local new_filename = {text = "noname"}
+local function rename_file(file)
+    if not renaming then return end
+
+    if not imgui.windows.IsPopupOpen("Rename file") then
+        imgui.windows.OpenPopup("Rename file")
+    end
+
+    local change, opened = imgui.windows.BeginPopupModal("Rename file", imgui.flags.Window{"AlwaysAutoResize"})
+    if change then
+        imgui.widget.Text("new name :")
+        imgui.cursor.SameLine()
+        if imgui.widget.InputText("##NewName", new_filename) then
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("OK") then
+            lfs.rename(file:localpath(), fs.path(tostring(file:parent_path() .. "/" .. tostring(new_filename.text))):localpath())
+            renaming = false
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Cancel") then
+            renaming = false
+        end
+        imgui.windows.EndPopup()
+    end
+end
+
+function m.show()
+    if not gd.resource_root then
         return
     end
-    local type, _ = fw.select()
+    local type, path = fw.select()
     while type do
-        type, _ = fw.select()
-        m.dirty = true
+        if (not string.find(path, "\\.build\\"))
+            and (not string.find(path, "\\.log\\"))
+            and (not string.find(path, "\\.repo\\")) then
+            m.dirty = true
+        end
+        type, path = fw.select()
     end
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, sh - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(sw, uiconfig.BottomWidgetHeight, 'F')
-    
+
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     m.update_resource_tree()
 
-    local function doShowBrowser(folder)
+    local function do_show_browser(folder)
         for k, v in pairs(folder.dirs) do
             local dir_name = tostring(v[1]:filename())
             local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((current_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
@@ -113,7 +145,7 @@ function m.show(rhwi)
                         current_folder = v
                     end
                     skip = true
-                    doShowBrowser(v[2])
+                    do_show_browser(v[2])
                     imgui.widget.TreePop()
                 end
             end
@@ -125,9 +157,9 @@ function m.show(rhwi)
 
     for _ in uiutils.imgui_windows("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
-        imgui.widget.Button(tostring(resource_root:parent_path()))
+        imgui.widget.Button(tostring(gd.resource_root:parent_path()))
         imgui.cursor.SameLine()
-        local _, split_dirs = path_split(tostring(fs.relative(current_folder[1], resource_root:parent_path())))
+        local _, split_dirs = path_split(tostring(fs.relative(current_folder[1], gd.resource_root:parent_path())))
         for i = 1, #split_dirs do
             if imgui.widget.Button("/" .. split_dirs[i])then
                 if tostring(current_folder[1]:filename()) ~= split_dirs[i] then
@@ -153,15 +185,15 @@ function m.show(rhwi)
         local max_x, max_y = imgui.windows.GetWindowContentRegionMin()
         local width = imgui.windows.GetWindowContentRegionWidth() * 0.2
         local height = (max_y - min_y) * 0.5
-
         imgui.windows.BeginChild("ResourceBrowserDir", width, height, false)
-        doShowBrowser(resource_tree)
+        do_show_browser(resource_tree)
         imgui.windows.EndChild()
         imgui.cursor.SameLine()
-        imgui.windows.BeginChild("ResourceBrowserContent", width * 3, height, false);
+        imgui.windows.BeginChild("ResourceBrowserContent", width * 2.5, height, false);
         local folder = current_folder[2]
         if folder then
             local icons = require "common.icons"(assetmgr)
+            rename_file(current_file)
             for _, path in pairs(folder.dirs) do
                 imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
                 imgui.cursor.SameLine()
@@ -171,7 +203,19 @@ function m.show(rhwi)
                         current_folder = path
                     end
                 end
-                
+                if current_file == path[1] then
+                    if imgui.windows.BeginPopupContextItem(tostring(path[1]:filename())) then
+                        if imgui.widget.Selectable("Delete", false) then
+                            lfs.remove(current_file:localpath())
+                            current_file = nil
+                        end
+                        if imgui.widget.Selectable("Rename", false) then
+                            renaming = true
+                            new_filename.text = tostring(current_file:filename())
+                        end
+                        imgui.windows.EndPopup()
+                    end
+                end
             end
             for _, path in pairs(folder.files) do
                 local icon = icons.get_file_icon(path)
@@ -192,13 +236,36 @@ function m.show(rhwi)
                     end
                     if path:equal_extension(".png") then
                         if not preview_images[current_file] then
-                            local rp = fs.relative(path, resource_root)
+                            local rp = fs.relative(path, gd.resource_root)
                             local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
                             preview_images[current_file] = assetmgr.resource(pkg_path, { compile = true })
                         end
                     end
+
+                    if path:equal_extension(".texture") then
+                        if not texture_detail[current_file] then
+                            local rp = fs.relative(path, gd.resource_root)
+                            local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
+                            texture_detail[current_file] = utils.readtable(pkg_path)
+                            local t = assetmgr.resource(pkg_path)
+                            local s = t.sampler
+                            preview_images[current_file] = t._data
+                        end
+                    end
                 end
-                
+                if current_file == path then
+                    if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
+                        if imgui.widget.Selectable("Delete", false) then
+                            lfs.remove(current_file:localpath())
+                            current_file = nil
+                        end
+                        if imgui.widget.Selectable("Rename", false) then
+                            renaming = true
+                            new_filename.text = tostring(current_file:filename())
+                        end
+                        imgui.windows.EndPopup()
+                    end
+                end
                 if path:equal_extension(".material")
                     or path:equal_extension(".texture")
                     or path:equal_extension(".png")
@@ -214,13 +281,39 @@ function m.show(rhwi)
         end
         imgui.windows.EndChild()
         imgui.cursor.SameLine()
-        imgui.windows.BeginChild("ResourceBrowserPreview", width, height, false);
-        
-        if fs.path(current_file):equal_extension(".png") then
+        imgui.windows.BeginChild("ResourceBrowserPreview", width * 1.5, height, false);
+        if fs.path(current_file):equal_extension(".png") or fs.path(current_file):equal_extension(".texture") then
             local preview = preview_images[current_file]
             if preview then
+                if texture_detail[current_file] then
+                    imgui.widget.Text("image:" .. texture_detail[current_file].path)
+                end
+                -- imgui.cursor.Columns(2, "PreviewColumns", true)
                 imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
-                imgui.widget.Image(preview.handle, preview.texinfo.width, preview.texinfo.height)
+                local width, height = preview.texinfo.width, preview.texinfo.height
+                if width > 180 then
+                    width = 180
+                end
+                if height > 180 then
+                    height = 180
+                end
+                imgui.widget.Image(preview.handle, width, height)
+                imgui.cursor.SameLine()
+                -- imgui.cursor.NextColumn()
+                local texture_info = texture_detail[current_file] 
+                if texture_info then
+                    imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
+                        texture_info.compress.android,
+                        texture_info.compress.ios,
+                        texture_info.compress.windows,
+                        texture_info.sampler.MAG,
+                        texture_info.sampler.MIN,
+                        texture_info.sampler.MIP,
+                        texture_info.sampler.U,
+                        texture_info.sampler.V
+                        ))
+                end
+                -- imgui.cursor.Columns(1)
             end
         end
         imgui.windows.EndChild()

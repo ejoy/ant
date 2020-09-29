@@ -2,7 +2,9 @@ local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
-local cthread = require "thread"
+local cthread   = require "thread"
+local fs        = require "filesystem"
+local lfs       = require "filesystem.local"
 
 local icons
 local m = {
@@ -53,7 +55,17 @@ local function get_log_height()
     end
     return height
 end
-
+local logfile
+local function log_to_file(msg)
+    if not logfile then
+        logfile = fs.path "":localpath() / "log.txt"--('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
+    end
+    --local fp = assert(lfs.open(logfile, 'a'))
+    local fp = assert(lfs.open(logfile, 'w+'))
+    fp:write(msg)
+    fp:write('\n')
+    fp:close()
+end
 local function do_add(t, item)
     table.insert(t, item)
     t.height = t.height + item.height
@@ -98,6 +110,7 @@ function m.message(msg)
 end
 
 function m.info(msg)
+    log_to_file(msg.message)
     msg.level = LEVEL_INFO
     do_add_info("All", msg)
     do_add_info(msg.tag, msg)
@@ -105,6 +118,7 @@ function m.info(msg)
 end
 
 function m.warn(msg)
+    log_to_file(msg.message)
     msg.level = LEVEL_WARN
     do_add_warn("All", msg)
     do_add_warn(msg.tag, msg)
@@ -112,6 +126,7 @@ function m.warn(msg)
 end
 
 function m.error(msg)
+    log_to_file(msg.message)
     msg.level = LEVEL_ERROR
     do_add_error("All", msg)
     do_add_error(msg.tag, msg)
@@ -309,6 +324,14 @@ function m.showLog(name, current_log)
         if imgui.widget.Selectable(item.message, current_select == i) then
             current_select = i
         end
+        if current_select == i then
+            if imgui.windows.BeginPopupContextItem(current_select) then
+                if imgui.widget.Selectable("Copy", false) then
+                    imgui.util.SetClipboardText(current_log[current_select].message)
+                end
+                imgui.windows.EndPopup()
+            end
+        end
         if color then
             imgui.windows.PopStyleColor()
         end
@@ -320,20 +343,23 @@ function m.showConsole()
     m.showLog("ConsoleList", log_items["Console"][LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR])
 end
 
-function m.show(rhwi)
+function m.show()
     if not err_receiver then
         err_receiver = cthread.channel_consume "errlog"
     end
     checkLog()
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(0, sh - uiconfig.BottomWidgetHeight, 'F')
-    imgui.windows.SetNextWindowSize(sw, uiconfig.BottomWidgetHeight, 'F')
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
+    imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
+
     for _ in uiutils.imgui_windows("Log", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         showHeaderWidget(log_items[current_tag])
         m.showLog("LogList", log_items[current_tag][filter_flag])
     end
 end
-
+function m.close_log()
+    logfile_handle:close()
+end
 return function(am)
     icons = require "common.icons"(am)
     reset_log()

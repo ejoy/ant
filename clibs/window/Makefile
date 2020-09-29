@@ -21,7 +21,7 @@ $(ODIR)/window.o : window.c window.h | $(ODIR)
 	$(CC) -g $(CFLAGS) -c -o $@ $< $(LUAINC)
 
 $(ODIR)/$(PLAT)_window.o : $(PLAT)/$(PLAT)_window.$(PLAT_C) $(PLAT)/$(PLAT)_window.h window.h  | $(ODIR)
-	$(CC) -g $(CFLAGS) -c -o $@ $<
+	$(CC) -g $(CFLAGS) -c -o $@ $< $(LUAINC)
 
 $(ODIR)/window.dll : $(ODIR)/window.o $(ODIR)/$(PLAT)_window.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(PLAT_LIB) $(LUALIB)

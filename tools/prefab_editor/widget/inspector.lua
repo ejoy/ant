@@ -3,6 +3,8 @@ local math3d    = require "math3d"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy"
+
+local gizmo
 local material_panel
 local m = {}
 local world
@@ -72,12 +74,6 @@ local function update_ui_data(eid)
     base_ui_data.scale[3] = scale[3]
 
     material_panel.update_ui_data(eid)
-end
-
-local gizmo
-
-function m.set_gizmo(obj)
-    gizmo = obj
 end
 
 function m.update_template_tranform(eid)
@@ -154,11 +150,10 @@ local function setCurrentFrame(eid, idx, force)
     camera_mgr.set_frame(eid, idx)
 end
 
-local view_start_y = uiconfig.WidgetStartY + uiconfig.ToolBarHeight
-function m.show(rhwi)
-    local sw, sh = rhwi.screen_size()
-    imgui.windows.SetNextWindowPos(sw - uiconfig.PropertyWidgetWidth, view_start_y, 'F')
-    imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, sh - uiconfig.BottomWidgetHeight - view_start_y, 'F')
+function m.show()
+    local viewport = imgui.GetMainViewport()
+    imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
+    imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
     
     local current_eid = gizmo.target_eid
     for _ in uiutils.imgui_windows("Inspector", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
@@ -289,10 +284,11 @@ end
 
 return function(w)
     world = w
-    iom = world:interface "ant.objcontroller|obj_motion"
-    icamera = world:interface "ant.camera|camera"
-    worldedit = import_package "ant.editor".worldedit(world)
-    camera_mgr = require "camera_manager"(world)
-    material_panel = require "widget.material"(world)
+    iom             = world:interface "ant.objcontroller|obj_motion"
+    icamera         = world:interface "ant.camera|camera"
+    worldedit       = import_package "ant.editor".worldedit(world)
+    camera_mgr      = require "camera_manager"(world)
+    material_panel  = require "widget.material"(world)
+    gizmo           = require "gizmo.gizmo"(world)
     return m
 end
