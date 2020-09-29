@@ -13,7 +13,8 @@ local ipp = ecs.interface "postprocess"
 
 local techniques = {}
 local tech_order = {
-    "bloom", "tonemapping", "dof"
+    "simpledof", --"dof"
+    "bloom", "tonemapping",
 }
 
 local function iter_tech()

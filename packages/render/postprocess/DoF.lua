@@ -13,10 +13,8 @@ local math3d        = require "math3d"
 local dof_sys       = ecs.system "dof_system"
 
 function dof_sys.post_init()
-    local mq_rt = world:singleton_entity "main_queue".render_target
-    
-    local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
-    local fbw, fbh = ipp.main_rb_size(fbidx)
+    local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
+    local fbw, fbh = ipp.main_rb_size(main_fbidx)
     local hfbw, hfbh = fbw/2, fbh/2
     
     local flags = sampler.sampler_flag {
@@ -84,7 +82,7 @@ function dof_sys.post_init()
     local us_rt = {
         clear_state = {clear="C", color=0},
         view_rect   = {x=0, y=0, w=fbw, h=fbh},
-        fb_idx      = mq_rt.fb_idx,
+        fb_idx      = main_fbidx
     }
     local us_pass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/resolve.material", us_rt, "resolve")
     local sp_fb = fbmgr.get(scatter_rt.fb_idx)
@@ -113,8 +111,8 @@ local function update_dof_param(e, eid)
 
     local ds_pass, scatter_pass, resolve_pass = tech[1], tech[2], tech[3]
 
-    local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
-    local fbw   = ipp.main_rb_size(fbidx)
+    local main_fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
+    local fbw   = ipp.main_rb_size(main_fbidx)
 
     --- downsample
     local focusdist = calc_focus_distance(eid, dof)

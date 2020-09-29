@@ -1,0 +1,6 @@
+fx:
+    vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
+    fs: /pkg/ant.resources/shaders/postprocess/simpledof/fs_blur.sc
+properties:
+    u_param: {2, 2, 0.2, 0.5}
+state: /pkg/ant.resources/materials/postprocess/postprocess.state

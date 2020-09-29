@@ -1,0 +1,10 @@
+fx:
+    vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
+    fs: /pkg/ant.resources/shaders/postprocess/simpledof/fs_merge.sc
+properties:
+    u_focuspoint:   {0, 0, 0, 0}      #xy: for select 2d point in screen
+    u_distance_range: {0, 0, 8.0, 12.0} #xy: nearclip, farclip, zw: min_focus distance, max_focus distance
+    s_outfocus:
+        stage: 0
+        texture: /pkg/ant.resources/materials/textures/default.texture
+state: /pkg/ant.resources/materials/postprocess/postprocess.state
