@@ -17,8 +17,14 @@ local base_ui_data = {
     name = {text = "noname"},
     pos = {0,0,0, speed = 0.1},
     rot = {0,0,0, speed = 0.1},
-    scale = {1,1,1, speed = 0.05},
-    color = {},
+    scale = {1,1,1, speed = 0.05}
+}
+
+local light_ui_data = {
+    color = {1,1,1,1},
+    intensity = {2, speed = 0.1},
+    range = {1, speed = 0.1},
+    radian = {0.5, speed = 0.1}
 }
 
 local camera_ui_data = {
@@ -33,9 +39,7 @@ local camera_ui_data = {
 }
 
 local function update_ui_data(eid)
-    if not eid then
-        return
-    end
+    if not eid then return end
     local pos
     local rot
     local scale
@@ -108,7 +112,7 @@ function m.update_ui(ut)
     end
 end
 
-local function onPositionDirty(eid, pos)
+local function on_position_dirty(eid, pos)
     local oldPos = math3d.totable(iom.get_position(eid))
     local tp = {pos[1], pos[2], pos[3]}
     gizmo:set_position(pos)
@@ -120,7 +124,7 @@ local function onPositionDirty(eid, pos)
     end
 end
 
-local function onRotateDirty(eid, rot)
+local function on_rotate_dirty(eid, rot)
     local oldRot = math3d.totable(iom.get_rotation(eid))
     local newRot = {rot[1], rot[2], rot[3]}
     local quat = math3d.quaternion(newRot)
@@ -133,7 +137,7 @@ local function onRotateDirty(eid, rot)
     end
 end
 
-local function onScaleDirty(eid, scale)
+local function on_scale_dirty(eid, scale)
     if world[eid].camera then
         
     else
@@ -143,11 +147,117 @@ local function onScaleDirty(eid, scale)
     end
 end
 
-local function setCurrentFrame(eid, idx, force)
+local function show_light_property(eid)
+    imgui.cursor.Separator()
+    imgui.widget.Text("color:")
+    imgui.cursor.SameLine()
+    if imgui.widget.ColorEdit("##lightcolor", light_ui_data.color) then
+        ilight.set_color(eid, light_ui_data.color)
+    end
+    imgui.widget.Text("intensity:")
+    imgui.cursor.SameLine()
+    if imgui.widget.DragFloat("##intensity", light_ui_data.intensity) then
+        ilight.set_intensity(eid, light_ui_data.intensity[1])
+    end
+    if world[eid].light_type ~= "directional" then
+        imgui.widget.Text("range:")
+        imgui.cursor.SameLine()
+        if imgui.widget.DragFloat("##range", light_ui_data.range) then
+            ilight.set_range(eid, light_ui_data.range[1])
+        end
+        if world[eid].light_type == "spot" then
+            imgui.widget.Text("radian:")
+            imgui.cursor.SameLine()
+            if imgui.widget.DragFloat("##radian", light_ui_data.radian) then
+                ilight.set_radian(eid, light_ui_data.radian[1])
+            end
+        end
+    end
+end
+
+local function set_current_frame(eid, idx, force)
     if camera_ui_data.current_frame == idx and not force then return end
     camera_ui_data.current_frame = idx
     update_ui_data(eid)
     camera_mgr.set_frame(eid, idx)
+end
+
+local function show_camera_property(eid)
+    if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
+        local what
+        local value
+        if imgui.widget.InputInt("Target", camera_ui_data.target) then
+            if hierarchy:get_node(camera_ui_data.target[1]) then
+                what = "target"
+                value = camera_ui_data.target[1]
+            end
+        end
+        if camera_ui_data.target ~= -1 then
+            if imgui.widget.DragFloat("Dist", camera_ui_data.dist) then
+                what = "dist"
+                value = camera_ui_data.dist[1]
+            end
+        end
+        if imgui.widget.DragFloat("FOV", camera_ui_data.field_of_view) then
+            what = "fov"
+            value = camera_ui_data.field_of_view[1]
+        end
+        if imgui.widget.DragFloat("Near", camera_ui_data.near_plane) then
+            what = "near"
+            value = camera_ui_data.near_plane[1]
+        end
+        if imgui.widget.DragFloat("Far", camera_ui_data.far_plane) then
+            what = "far"
+            value = camera_ui_data.far_plane[1]
+        end
+        imgui.cursor.Separator()
+        if imgui.widget.Button("AddFrame") then
+            local new_idx = camera_ui_data.current_frame + 1
+            camera_mgr.add_recorder_frame(eid, new_idx)
+            set_current_frame(eid, new_idx, true)
+            local frames = camera_mgr.get_recorder_frames(eid)
+            camera_ui_data.duration[new_idx] = {frames[new_idx].duration}
+        end
+        local frames = camera_mgr.get_recorder_frames(eid)
+        if #frames > 1 then
+            imgui.cursor.SameLine()
+            if imgui.widget.Button("DeleteFrame") then
+                camera_mgr.delete_recorder_frame(eid, camera_ui_data.current_frame)
+                table.remove(camera_ui_data.duration, camera_ui_data.current_frame)
+                if camera_ui_data.current_frame > #frames then
+                    set_current_frame(eid, #frames)
+                end
+            end
+            imgui.cursor.SameLine()
+            if imgui.widget.Button("Play") then
+                camera_mgr.play_recorder(eid)
+            end
+        end
+        if #frames > 0 then
+            imgui.cursor.Columns(2, "FrameColumns", false)
+            imgui.widget.Text("FrameIndex")
+            imgui.cursor.NextColumn()
+            imgui.widget.Text("Duration")
+            imgui.cursor.NextColumn()
+            imgui.cursor.Separator()
+            for i, v in ipairs(frames) do
+                if imgui.widget.Selectable(i, camera_ui_data.current_frame == i) then
+                    set_current_frame(eid, i)
+                end
+                imgui.cursor.NextColumn()
+                if imgui.widget.DragFloat("##"..i, camera_ui_data.duration[i]) then
+                    frames[i].duration = camera_ui_data.duration[i][1]
+                end
+                imgui.cursor.NextColumn()
+            end
+            imgui.cursor.Columns(1)
+        end
+
+        if what then
+            world:pub {"CameraEdit", what, eid, value}
+        end
+        imgui.widget.TreePop()
+    end
 end
 
 function m.show()
@@ -161,7 +271,7 @@ function m.show()
             if base_ui_data.current_eid ~= current_eid then
                 base_ui_data.current_eid = current_eid
                 if world[current_eid].camera then
-                    setCurrentFrame(current_eid, 1, true)
+                    set_current_frame(current_eid, 1, true)
                 end
                 update_ui_data(current_eid)
             end
@@ -184,99 +294,26 @@ function m.show()
                 imgui.widget.Text("Position:")
                 imgui.cursor.SameLine()
                 if imgui.widget.DragFloat("##Position", base_ui_data.pos) then
-                    onPositionDirty(current_eid, base_ui_data.pos)
+                    on_position_dirty(current_eid, base_ui_data.pos)
                 end
                 imgui.widget.Text("Rotate:")
                 imgui.cursor.SameLine()
                 if imgui.widget.DragFloat("##Rotate", base_ui_data.rot) then
-                    onRotateDirty(current_eid, base_ui_data.rot)
+                    on_rotate_dirty(current_eid, base_ui_data.rot)
                 end
                 imgui.widget.Text("Scale:")
                 imgui.cursor.SameLine()
                 if imgui.widget.DragFloat("##Scale", base_ui_data.scale) then
-                    onScaleDirty(current_eid, base_ui_data.scale)
+                    on_scale_dirty(current_eid, base_ui_data.scale)
                 end
                 imgui.widget.TreePop()
             end
-
-            material_panel.show(current_eid)
-
-            if world[current_eid] and world[current_eid].camera then
-                if imgui.widget.TreeNode("Camera", imgui.flags.TreeNode { "DefaultOpen" }) then
-                    local what
-                    local value
-                    if imgui.widget.InputInt("Target", camera_ui_data.target) then
-                        if hierarchy:get_node(camera_ui_data.target[1]) then
-                            what = "target"
-                            value = camera_ui_data.target[1]
-                        end
-                    end
-                    if camera_ui_data.target ~= -1 then
-                        if imgui.widget.DragFloat("Dist", camera_ui_data.dist) then
-                            what = "dist"
-                            value = camera_ui_data.dist[1]
-                        end
-                    end
-                    if imgui.widget.DragFloat("FOV", camera_ui_data.field_of_view) then
-                        what = "fov"
-                        value = camera_ui_data.field_of_view[1]
-                    end
-                    if imgui.widget.DragFloat("Near", camera_ui_data.near_plane) then
-                        what = "near"
-                        value = camera_ui_data.near_plane[1]
-                    end
-                    if imgui.widget.DragFloat("Far", camera_ui_data.far_plane) then
-                        what = "far"
-                        value = camera_ui_data.far_plane[1]
-                    end
-                    imgui.cursor.Separator()
-                    if imgui.widget.Button("AddFrame") then
-                        local new_idx = camera_ui_data.current_frame + 1
-                        camera_mgr.add_recorder_frame(current_eid, new_idx)
-                        setCurrentFrame(current_eid, new_idx, true)
-                        local frames = camera_mgr.get_recorder_frames(current_eid)
-                        camera_ui_data.duration[new_idx] = {frames[new_idx].duration}
-                    end
-                    local frames = camera_mgr.get_recorder_frames(current_eid)
-                    if #frames > 1 then
-                        imgui.cursor.SameLine()
-                        if imgui.widget.Button("DeleteFrame") then
-                            camera_mgr.delete_recorder_frame(current_eid, camera_ui_data.current_frame)
-                            table.remove(camera_ui_data.duration, camera_ui_data.current_frame)
-                            if camera_ui_data.current_frame > #frames then
-                                setCurrentFrame(current_eid, #frames)
-                            end
-                        end
-                        imgui.cursor.SameLine()
-                        if imgui.widget.Button("Play") then
-                            camera_mgr.play_recorder(current_eid)
-                        end
-                    end
-                    if #frames > 0 then
-                        imgui.cursor.Columns(2, "FrameColumns", false)
-                        imgui.widget.Text("FrameIndex")
-                        imgui.cursor.NextColumn()
-                        imgui.widget.Text("Duration")
-                        imgui.cursor.NextColumn()
-                        imgui.cursor.Separator()
-                        for i, v in ipairs(frames) do
-                            if imgui.widget.Selectable(i, camera_ui_data.current_frame == i) then
-                                setCurrentFrame(current_eid, i)
-                            end
-                            imgui.cursor.NextColumn()
-                            if imgui.widget.DragFloat("##"..i, camera_ui_data.duration[i]) then
-                                frames[i].duration = camera_ui_data.duration[i][1]
-                            end
-                            imgui.cursor.NextColumn()
-                        end
-                        imgui.cursor.Columns(1)
-                    end
-
-                    if what then
-                        world:pub {"CameraEdit", what, current_eid, value}
-                    end
-                    imgui.widget.TreePop()
-                end
+            if world[current_eid].camera then
+                show_camera_property(current_eid)
+            elseif world[current_eid].light_type then
+                show_light_property(current_eid)
+            else
+                material_panel.show(current_eid)
             end
         end
     end
@@ -286,6 +323,7 @@ return function(w)
     world = w
     iom             = world:interface "ant.objcontroller|obj_motion"
     icamera         = world:interface "ant.camera|camera"
+    ilight          = world:interface "ant.render|light"
     worldedit       = import_package "ant.editor".worldedit(world)
     camera_mgr      = require "camera_manager"(world)
     material_panel  = require "widget.material"(world)

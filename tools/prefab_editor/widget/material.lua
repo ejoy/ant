@@ -240,9 +240,15 @@ end
 local edit_uniform = function(eid, md)
     for k, v in pairs(md.uidata.properties) do
         if type(k) == "string" then
+            local imgui_func
+            if k == "u_color" then
+                imgui_func = imgui.widget.ColorEdit
+            else
+                imgui_func = imgui.widget.DragFloat
+            end
             imgui.widget.Text(k..":")
             imgui.cursor.SameLine()
-            if imgui.widget.DragFloat("##" .. k, v) then
+            if imgui_func("##" .. k, v) then
                 local tu = md.tdata.properties[k]
                 tu[1] = v[1]
                 tu[2] = v[2]

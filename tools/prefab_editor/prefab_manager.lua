@@ -6,6 +6,7 @@ local hierarchy     = require "hierarchy"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
 local utils         = require "widget.utils"
+local ilight
 local light_gizmo
 local camera_mgr
 local world
@@ -38,7 +39,7 @@ end
 
 local recorderidx = 0
 local function gen_camera_recorder_name() recorderidx = recorderidx + 1 return "recorder" .. recorderidx end
-
+local lightidx = 0
 function m:create(what)
     local localpath = tostring(fs.path "":localpath())
     if what == "camera" then
@@ -54,9 +55,7 @@ function m:create(what)
         node.camera = true
         self.entities[#self.entities+1] = new_camera
     elseif what == "camerarecorder" then
-        -- local recorder, templ = camera_mgr.ceate_camera_recorder()
-        -- local node = hierarchy:add(new_camera, {template = templ}, self.root)
-        -- node.camera_recorder = true
+
     elseif what == "empty" then
 
     elseif what == "cube" then
@@ -69,6 +68,21 @@ function m:create(what)
         m:add_prefab(localpath .. "res/sphere.prefab")
     elseif what == "torus" then
         m:add_prefab(localpath .. "res/torus.prefab")
+    elseif what == "directional" or what == "point" or what == "spot" then      
+        local ilight = world:interface "ant.render|light" 
+        local _, newlight = ilight.create({
+            transform = {},
+            name = what .. lightidx,
+            light_type = what,
+            color = {1, 1, 1, 1},
+            intensity = 2,
+            range = 1,
+            radian = 0.5
+        })
+        lightidx = lightidx + 1
+        self.entities[#self.entities+1] = newlight[1]
+        hierarchy:add(newlight[1], {template = newlight.__class[1]}, self.root)
+        light_gizmo.bind(newlight[1])
     end
 end
 
@@ -328,6 +342,9 @@ function m:remove_entity(eid)
     if not eid then return end
     if world[eid].camera then
         camera_mgr.remove_camera(eid)
+    elseif world[eid].light_type == "directional" then
+        ilight.active_directional_light(nil)
+        light_gizmo.show(false)
     end
     local teml = hierarchy:get_template(eid)
     if teml.children then
@@ -349,6 +366,7 @@ return function(w)
     camera_mgr  = require "camera_manager"(world)
     iom         = world:interface "ant.objcontroller|obj_motion"
     worldedit   = import_package "ant.editor".worldedit(world)
-    light_gizmo = require "gizmo.directional_light"(world)
+    ilight      = world:interface "ant.render|light"
+    light_gizmo = require "gizmo.light"(world)
     return m
 end

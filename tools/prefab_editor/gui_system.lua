@@ -204,20 +204,20 @@ local event_resource_browser = world:sub {"ResourceBrowser"}
 local event_window_title = world:sub {"WindowTitle"}
 local event_create = world:sub {"Create"}
 local event_gizmo = world:sub {"Gizmo"}
-local light_gizmo = require "gizmo.directional_light"(world)
+local light_gizmo = require "gizmo.light"(world)
 
 local function onTarget(old, new)
     if old and world[old] then
         if world[old].camera then
             camera_mgr.show_frustum(old, false)
-        elseif world[old].light_type == "directional" then
+        elseif world[old].light_type then
             light_gizmo.show(false)
         end
     end
     if new then
         if world[new].camera then
             camera_mgr.set_second_camera(new, true)
-        elseif world[new].light_type == "directional" then
+        elseif world[new].light_type then
             light_gizmo.show(true)
         end
     end
@@ -228,7 +228,7 @@ local function onUpdate(eid)
 
     if world[eid].camera then
         camera_mgr.update_frustrum(eid)
-    elseif world[eid].light_type == "directional" then
+    elseif world[eid].light_type then
         light_gizmo.update()
     end
 end

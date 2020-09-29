@@ -24,6 +24,7 @@ end
 
 local menu_name = "entity context menu"
 local function node_context_menu(eid)
+    if gizmo.target_eid ~= eid then return end
     if imgui.windows.BeginPopupContextItem(eid) then
         local current_lock = hierarchy:is_locked(eid)
         if imgui.widget.Selectable(current_lock and "Unlock" or "lock", false) then
@@ -105,15 +106,38 @@ local function show_scene_node(node)
         end
     end
 end
-
+local create_light = {"directional", "point", "spot"}
+local create_geom = {"cube", "cone", "cylinder", "sphere", "torus"}
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
 
     for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
-        if imgui.widget.Button("CreateCamera") then
-            world:pub { "Create", "camera"}
+        if imgui.widget.Button("Create") then
+            imgui.windows.OpenPopup("CreateEntity")
+        end
+        if imgui.windows.BeginPopup("CreateEntity") then
+            if imgui.widget.BeginMenu("Geometry") then
+                for i, type in ipairs(create_geom) do
+                    if imgui.widget.MenuItem(type) then
+                        world:pub { "Create", type}
+                    end
+                end
+                imgui.widget.EndMenu()
+            end
+            if imgui.widget.BeginMenu("Light") then
+                for i, type in ipairs(create_light) do
+                    if imgui.widget.MenuItem(type) then
+                        world:pub { "Create", type}
+                    end
+                end
+                imgui.widget.EndMenu()
+            end
+            if imgui.widget.MenuItem("Camera") then
+                world:pub { "Create", "camera"}
+            end
+            imgui.windows.EndPopup()
         end
         imgui.cursor.Separator()
         for i, child in ipairs(hierarchy.root.children) do
