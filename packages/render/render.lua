@@ -52,24 +52,51 @@ function irender.check_primitive_mode_state(state, template_state)
 	return template_state
 end
 
+local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/depth.material"
+local pre_depth_material, pre_depth_skinning_material
+local pre_depth_state, pre_depth_skinning_state
+
 local pd_pt = ecs.transform "pre_depth_primitive_transform"
 function pd_pt.process_entity(e)
-	local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/depth.material"
-	local pre_depth_material 				= imaterial.load(pre_depth_material_file, {depth_type="linear"})
-	local pre_depth_skinning_material 		= imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
+	if pre_depth_material == nil then
+		pre_depth_material = imaterial.load(pre_depth_material_file, {depth_type="linear"})
+		pre_depth_state = bgfx.parse_state(pre_depth_material.state)
+	end
+
+	if pre_depth_skinning_material then
+		pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
+		pre_depth_skinning_state = bgfx.parse_state(pre_depth_skinning_material.state)
+	end
 	
 	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
 		if fxtype == "opaticy" then
 			local items = filter.result[fxtype].items
-			local material = world[eid].skinning_type == "GPU" and pre_depth_skinning_material or pre_depth_material
+			local material, state
+			if world[eid].skinning_type == "GPU" then
+				material, state = pre_depth_skinning_material, pre_depth_skinning_state
+			else
+				material, state = pre_depth_material, pre_depth_state
+			end
 			if rc then
-				ipf.add_item(items, eid, setmetatable({
-					eid			= eid,
-					properties	= material.properties,
-					fx			= material.fx,
-					--state		= material.state,
-					state		= irender.check_primitive_mode_state(rc.state, material.state),
-				}, {__index=rc}))
+				local s = bgfx.parse_state(rc.state)
+				if s.WRITE_MASK == nil or s.WRITE_MASK:match "Z" then
+					local ss = material.state
+					if s.PT and s.PT ~= state.PT then
+						local ts = {}
+						for k, v in pairs(state) do
+							ts[k] = v
+						end
+						ts.PT = s.PT
+						ss = bgfx.make_state(ts)
+					end
+
+					ipf.add_item(items, eid, setmetatable({
+						eid			= eid,
+						properties	= material.properties,
+						fx			= material.fx,
+						state		= ss,
+					}, {__index=rc}))
+				end
 			else
 				ipf.remove_item(items, eid)
 			end

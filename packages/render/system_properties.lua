@@ -173,7 +173,7 @@ local function update_postprocess_properties()
 	local mvd = system_properties["s_mainview_depth"]
 	local pdq = world:singleton_entity "pre_depth_queue"
 	if pdq then
-		mvd.texture.handle = rb_handle(mvd, 1)
+		mvd.texture.handle = rb_handle(pdq, 1)
 	else
 		local fbidx = mq.render_target.fb_idx
 		local fb = fbmgr.get(fbidx)
