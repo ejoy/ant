@@ -47,3 +47,11 @@ function mt.process_entity(e)
 	rc.vb = c.vb
 	rc.ib = c.ib
 end
+
+local smt = ecs.transform "simple_mesh_transform"
+function smt.process_entity(e)
+	local s = e.simplemesh
+	local rc = e._rendercache
+	rc.vb = s.vb
+	rc.ib = s.ib
+end

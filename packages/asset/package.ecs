@@ -51,6 +51,12 @@ transform "mesh_transform"
     .output "_rendercache.mesh"
     .method "process_entity"
 
+transform "simple_mesh_transform"
+    .implement "mesh.lua"
+    .input "simplemesh"
+	.output "_rendercache.mesh"
+	.method "process_entity"
+
 interface "imaterial"
     .implement "material.lua"
     .method "load"
