@@ -3,7 +3,7 @@ local math3d    = require "math3d"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy"
-
+local light_gizmo
 local gizmo
 local material_panel
 local m = {}
@@ -60,6 +60,17 @@ local function update_ui_data(eid)
             camera_ui_data.duration[i] = {frames[i].duration}
         end
     end
+    if world[eid].light_type then
+        local value = math3d.totable(ilight.intensity(eid))
+        light_ui_data.intensity[1] = value[1]
+        light_ui_data.range[1] = ilight.range(eid)
+        light_ui_data.radian[1] = ilight.radian(eid)
+        local color = math3d.totable(ilight.color(eid))
+        light_ui_data.color[1] = color[1]
+        light_ui_data.color[2] = color[2]
+        light_ui_data.color[3] = color[3]
+        light_ui_data.color[4] = color[4]
+    end
     if not pos then
         local s, r, t = math3d.srt(iom.srt(eid))
         pos = math3d.totable(t)
@@ -76,7 +87,7 @@ local function update_ui_data(eid)
     base_ui_data.scale[1] = scale[1]
     base_ui_data.scale[2] = scale[2]
     base_ui_data.scale[3] = scale[3]
-
+    
     material_panel.update_ui_data(eid)
 end
 
@@ -121,6 +132,8 @@ local function on_position_dirty(eid, pos)
         local frames = camera_mgr.get_recorder_frames(eid)
         frames[camera_ui_data.current_frame].position = math3d.ref(iom.get_position(eid))
         camera_mgr.update_frustrum(eid)
+    elseif world[eid].light_type then
+        light_gizmo.update()
     end
 end
 
@@ -134,6 +147,8 @@ local function on_rotate_dirty(eid, rot)
         local frames = camera_mgr.get_recorder_frames(eid)
         frames[camera_ui_data.current_frame].rotation = math3d.ref(quat)
         camera_mgr.update_frustrum(eid)
+    elseif world[eid].light_type then
+        light_gizmo.update()
     end
 end
 
@@ -148,6 +163,9 @@ local function on_scale_dirty(eid, scale)
 end
 
 local function show_light_property(eid)
+    
+    light_gizmo.remove_invalid_entity()
+
     imgui.cursor.Separator()
     imgui.widget.Text("color:")
     imgui.cursor.SameLine()
@@ -158,18 +176,21 @@ local function show_light_property(eid)
     imgui.cursor.SameLine()
     if imgui.widget.DragFloat("##intensity", light_ui_data.intensity) then
         ilight.set_intensity(eid, light_ui_data.intensity[1])
+        light_gizmo.update_gizmo()
     end
     if world[eid].light_type ~= "directional" then
         imgui.widget.Text("range:")
         imgui.cursor.SameLine()
         if imgui.widget.DragFloat("##range", light_ui_data.range) then
             ilight.set_range(eid, light_ui_data.range[1])
+            light_gizmo.update_gizmo()
         end
         if world[eid].light_type == "spot" then
             imgui.widget.Text("radian:")
             imgui.cursor.SameLine()
             if imgui.widget.DragFloat("##radian", light_ui_data.radian) then
                 ilight.set_radian(eid, light_ui_data.radian[1])
+                light_gizmo.update_gizmo()
             end
         end
     end
@@ -267,7 +288,7 @@ function m.show()
     
     local current_eid = gizmo.target_eid
     for _ in uiutils.imgui_windows("Inspector", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
-        if current_eid then
+        if current_eid and world[current_eid] then
             if base_ui_data.current_eid ~= current_eid then
                 base_ui_data.current_eid = current_eid
                 if world[current_eid].camera then
@@ -328,5 +349,6 @@ return function(w)
     camera_mgr      = require "camera_manager"(world)
     material_panel  = require "widget.material"(world)
     gizmo           = require "gizmo.gizmo"(world)
+    light_gizmo     = require "gizmo.light"(world)
     return m
 end
