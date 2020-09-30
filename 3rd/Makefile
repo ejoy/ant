@@ -1,4 +1,4 @@
-CMAKE_PROJ := ozz-animation reactphysics3d
+CMAKE_PROJ := ozz-animation reactphysics3d RmlUi
 ALL_PROJ := bgfx $(CMAKE_PROJ)
 
 ifeq "$(PLAT)" ""
@@ -35,13 +35,19 @@ ifeq "$(PLAT)" "mingw"
 TOOL_EXT_NAME=.exe
 endif
 
+CMAKE_OPT_RmlUi=-DNO_FONT_INTERFACE_DEFAULT=ON
+CMAKE_COPY_RmlUi= echo ok
 ifeq "$(PLAT)" "ios"
   CMAKE_COPY_ozz-animation= echo ok
+else ifeq "$(PLAT)" "msvc"
+  CMAKE_OPT_RmlUi+=-DBUILD_SAMPLES=ON
 else
   CMAKE_COPY_ozz-animation= mkdir -p ../../../../../bin/$(PLAT)/$(MODE)/ && cp src/animation/offline/gltf/gltf2ozz$(TOOL_EXT_NAME) ../../../../../bin/$(PLAT)/$(MODE)/gltf2ozz$(TOOL_EXT_NAME)
 endif
+
 CMAKE_OPT_reactphysics3d=-DRP3D_LOGS_ENABLED=ON
 CMAKE_COPY_reactphysics3d= echo ok
+
 
 ifeq "$(PLAT)" "osx"
   CMAKE_PROJ_TYPE = Unix Makefiles

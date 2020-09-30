@@ -1,8 +1,9 @@
 call scripts\msvc.bat
 
-msbuild build\ozz-animation\msvc\%1\ozz.sln      /m /v:m /t:build /p:Configuration="%1",Platform="x64"
+msbuild build\ozz-animation\msvc\%1\ozz.sln             /m /v:m /t:build /p:Configuration="%1",Platform="x64"
 msbuild build\reactphysics3d\msvc\%1\REACTPHYSICS3D.sln /m /v:m /t:build /p:Configuration="%1",Platform="x64"
-msbuild bgfx\.build\projects\vs2019\bgfx.sln     /m /v:m /t:build /p:Configuration="%1",Platform="x64"
+msbuild build\RmlUi\msvc\%1\RmlUi.sln                   /m /v:m /t:build /p:Configuration="%1",Platform="x64"
+msbuild bgfx\.build\projects\vs2019\bgfx.sln            /m /v:m /t:build /p:Configuration="%1",Platform="x64"
 
 copy /B /Y bgfx\.build\win64_vs2019\bin\texturec%1.exe ..\bin\msvc\%1\texturec.exe
 copy /B /Y bgfx\.build\win64_vs2019\bin\shaderc%1.exe ..\bin\msvc\%1\shaderc.exe
