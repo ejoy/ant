@@ -54,47 +54,31 @@ end
 
 local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/depth.material"
 local pre_depth_material, pre_depth_skinning_material
-local pre_depth_state, pre_depth_skinning_state
+
+local function can_write_depth(state)
+	local s = bgfx.parse_state(state)
+	local wm = s.WRITE_MASK
+	return wm == nil or wm:match "Z"
+end
 
 local pd_pt = ecs.transform "pre_depth_primitive_transform"
 function pd_pt.process_entity(e)
 	if pre_depth_material == nil then
-		pre_depth_material = imaterial.load(pre_depth_material_file, {depth_type="linear"})
-		pre_depth_state = bgfx.parse_state(pre_depth_material.state)
+		pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="linear"})
+		pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
 	end
 
-	if pre_depth_skinning_material then
-		pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="linear", skinning="GPU"})
-		pre_depth_skinning_state = bgfx.parse_state(pre_depth_skinning_material.state)
-	end
-	
 	e.primitive_filter.insert_item = function (filter, fxtype, eid, rc)
 		if fxtype == "opaticy" then
 			local items = filter.result[fxtype].items
-			local material, state
-			if world[eid].skinning_type == "GPU" then
-				material, state = pre_depth_skinning_material, pre_depth_skinning_state
-			else
-				material, state = pre_depth_material, pre_depth_state
-			end
+			local material = world[eid].skinning_type == "GPU" and pre_depth_skinning_material or pre_depth_material
 			if rc then
-				local s = bgfx.parse_state(rc.state)
-				if s.WRITE_MASK == nil or s.WRITE_MASK:match "Z" then
-					local ss = material.state
-					if s.PT and s.PT ~= state.PT then
-						local ts = {}
-						for k, v in pairs(state) do
-							ts[k] = v
-						end
-						ts.PT = s.PT
-						ss = bgfx.make_state(ts)
-					end
-
+				if can_write_depth(rc.state) then
 					ipf.add_item(items, eid, setmetatable({
 						eid			= eid,
 						properties	= material.properties,
 						fx			= material.fx,
-						state		= ss,
+						state		= irender.check_primitive_mode_state(rc.state, material.state),
 					}, {__index=rc}))
 				end
 			else
@@ -320,7 +304,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 		local pd = world:singleton_entity "pre_depth_queue"
 		if pd then
 			local pd_fb = fbmgr.get(pd.render_target.fb_idx)
-			return pd_fb[#pd_fb]
+			return pd_fb[#pd_fb], true
 		end
 
 		return fbmgr.create_rb{
@@ -348,7 +332,12 @@ function irender.create_main_queue(view_rect, camera_eid)
 
 	local cs = get_clear_state()
 
-	render_buffers[#render_buffers+1] = get_depth_buffer()
+	local db, ownership = get_depth_buffer()
+	render_buffers[#render_buffers+1] = db
+	if ownership then
+		local os = {}; os[db] = true
+		render_buffers.ownerships = os
+	end
 
 	return world:create_entity {
 		policy = {

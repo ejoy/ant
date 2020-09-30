@@ -100,6 +100,7 @@ function mgr.create(fb)
 		end
 		check_render_buffers(fb)
 		myfb = create_fb_handle(fb, fb.manager_buffer)
+		myfb.ownerships = fb.ownerships
 	end
 
 	local fb_idx = generate_fb_idx()

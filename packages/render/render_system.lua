@@ -50,7 +50,7 @@ function render_sys:init()
         name = "default_camera",
 	}
 
-	--irender.create_pre_depth_queue(vr, camera_eid)
+	irender.create_pre_depth_queue(vr, camera_eid)
 	irender.create_main_queue(vr, camera_eid)
 end
 

@@ -14,9 +14,12 @@ local function resize_framebuffer(w, h, fbidx)
 		local fb = fbmgr.get(fbidx)
 		local changed = false
 		local rbs = {}
+		local ownerships = fb.ownerships
 		for _, rbidx in ipairs(fb)do
 			rbs[#rbs+1] = rbidx
-			changed = fbmgr.resize_rb(w, h, rbidx) or changed
+			if ownerships == nil or (not ownerships[rbidx]) then
+				changed = fbmgr.resize_rb(w, h, rbidx) or changed
+			end
 		end
 		
 		if changed then
@@ -44,6 +47,11 @@ local function rebind_framebuffer_to_viewid()
 end
 
 local function update_camera_viewrect(viewsize)
+	local pdq = world:singleton_entity "pre_depth_queue"
+	if pdq then
+		update_render_queue(pdq, viewsize)
+	end
+
 	local mq = world:singleton_entity "main_queue"
 	update_render_queue(mq, viewsize)
 
