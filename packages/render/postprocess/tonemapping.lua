@@ -18,13 +18,13 @@ function tm_sys:post_init()
 
         local w, h = ipp.main_rb_size(main_fbidx)
         local pass = ipp.create_pass(
+                "tonemapping_main",
                 "/pkg/ant.resources/materials/postprocess/tonemapping.material",
                 {
                     view_rect = {x=0, y=0, w=w, h=h},
                     clear_state = {clear=""},
                     fb_idx = main_fbidx,
-                },
-                "tonemapping_main")
+                })
         --imaterial.set_property(pass.eid, "u_exposure", {2.0, 0.0, 0.0, 0.0})
         ipp.add_technique("tonemapping", {pass})
     end

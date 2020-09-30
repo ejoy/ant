@@ -8,12 +8,17 @@ local ientity           = world:interface "ant.render|entity"
 local irender           = world:interface "ant.render|irender"
 local irq               = world:interface "ant.render|irenderqueue"
 
+local mathpkg           = import_package "ant.math"
+local mc                = mathpkg.constant
+
+local bgfx              = require "bgfx"
+
 local pp_sys            = ecs.system "postprocess_system"
 local ipp = ecs.interface "postprocess"
 
 local techniques = {}
 local tech_order = {
-    --"simpledof", --"dof"
+    "simpledof", --"dof"
     "bloom", "tonemapping",
 }
 
@@ -67,12 +72,19 @@ function pp_sys:post_init()
 end
 
 local function render_pass(input, out_viewid, pass)
-    input = pass.input or input
-    local rt = pass.render_target
-    local fbidx = rt.fb_idx or fbmgr.get_fb_idx(viewidmgr.get "main_view")
-    local output = ipp.get_rbhandle(fbidx, 1)
+    local rt        = pass.render_target
+    local fbidx     = rt.fb_idx or fbmgr.get_fb_idx(viewidmgr.get "main_view")
+    local output    = ipp.get_rbhandle(fbidx, 1)
+    input           = pass.input or input
     if input == output then
         error("input and output as same render buffer handle")
+    end
+
+    if pass.camera_eid then
+        local camera_rc = world[pass.camera_eid]._rendercache
+        bgfx.set_view_transform(out_viewid, camera_rc.viewmat, camera_rc.projmat)
+    else
+        bgfx.set_view_transform(out_viewid, mc.IDENTITY_MAT, mc.IDENTITY_MAT)
     end
 
     rt.viewid = out_viewid
@@ -124,12 +136,13 @@ function ipp.add_technique(name, tech)
     techniques[name] = tech
 end
 
-function ipp.create_pass(material, rt, name)
+function ipp.create_pass(name, material, rt, transform, cameraeid)
     local eid = world:create_entity {
         policy = {"ant.render|simplerender"},
         data = {
             simplemesh  = world[quad_mesh_eid]._rendercache,
             material    = material,
+            transform   = transform,
         }
     }
 
@@ -137,6 +150,7 @@ function ipp.create_pass(material, rt, name)
         name            = name,
         renderitem      = world[eid]._rendercache,
         render_target   = rt,
+        camera_eid      = cameraeid,
         eid             = eid,
     }
 end

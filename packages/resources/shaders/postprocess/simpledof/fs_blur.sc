@@ -14,8 +14,7 @@ void main() {
 
     vec2 texSize   = textureSize(s_mainview, 0).xy;
 
-    vec2 uv = gl_FragCoord.xy / texSize;
-    vec4 fragColor = texture2D(s_mainview, uv);
+    vec4 fragColor = texture2D(s_mainview, v_texcoord0);
 
     float bright = 0.0;
     vec4  max_brightcolor = fragColor;
@@ -31,7 +30,7 @@ void main() {
             // For a circular shape.
             if (distance(vec2(i, j), vec2(0, 0)) > size){
                 vec2 offset = (vec2(i, j) * u_separation)/texSize;
-                vec4 c = texture2D(s_mainview, uv + offset);
+                vec4 c = texture2D(s_mainview, v_texcoord0 + offset);
 
                 float b = dot(c.rgb, vec3(0.3, 0.59, 0.11));
 

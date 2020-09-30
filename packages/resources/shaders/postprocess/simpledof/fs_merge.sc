@@ -13,11 +13,12 @@ uniform vec4 u_distance_range;
 #define u_max_distance  u_distance_range.w
 
 vec3 reconstruct_3dpoint(vec2 xy, float depth){
-    float z = (u_near * u_far) / (depth * (u_near - u_far) + u_far);
-    float x = xy.x * z / u_near;
-    float y = xy.y * z / u_near;
+    float x = xy.x * 2.0 - 1.0;
+    float y = (1.0 - xy.y) * 2.0 - 1.0;
 
-    return vec3(x, y, z);
+    vec4 p = mul(u_invViewProj, vec4(x, y, depth, 1.0));
+    p /= p.w;
+    return p.xyz;
 }
 
 void main() {
@@ -28,7 +29,7 @@ void main() {
 
     vec4 outfocus   = texture2D(s_outfocus, v_texcoord0);
 
-    float blur      = smoothstep(u_distance_range.x, u_distance_range.y, length(pos - u_focuspoint.xyz));
+    float blur      = smoothstep(u_min_distance, u_max_distance, length(pos - u_focuspoint.xyz));
 
     gl_FragColor    = mix(focus, outfocus, blur);
 }

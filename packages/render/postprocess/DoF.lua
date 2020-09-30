@@ -49,7 +49,7 @@ function dof_sys.post_init()
             }
         }
     }
-    local ds_pass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/downsample.material", ds_rt, "downsample")
+    local ds_pass = ipp.create_pass("downsample", "/pkg/ant.resources/materials/postprocess/dof/downsample.material", ds_rt)
 
     local scatter_rt = {
         clear_state = {clear=""},
@@ -62,7 +62,7 @@ function dof_sys.post_init()
             }
         }
     }
-    local scatter_pass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/scatter.material", scatter_rt, "scatter")
+    local scatter_pass = ipp.create_pass("scatter", "/pkg/ant.resources/materials/postprocess/dof/scatter.material", scatter_rt)
     local ds_fb = fbmgr.get(ds_rt.fb_idx)
     imaterial.set_property(scatter_pass.eid, "s_nearBuffer", {stage=0, texture={handle = fbmgr.get_rb(ds_fb[1]).handle}})
     imaterial.set_property(scatter_pass.eid, "s_farBuffer",  {stage=1, texture={handle = fbmgr.get_rb(ds_fb[2]).handle}})
@@ -84,7 +84,7 @@ function dof_sys.post_init()
         view_rect   = {x=0, y=0, w=fbw, h=fbh},
         fb_idx      = main_fbidx
     }
-    local us_pass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/resolve.material", us_rt, "resolve")
+    local us_pass = ipp.create_pass("resolve", "/pkg/ant.resources/materials/postprocess/dof/resolve.material", us_rt)
     local sp_fb = fbmgr.get(scatter_rt.fb_idx)
     imaterial.set_property(us_pass.eid, "s_scatterBuffer", {stage=0, texture={handle = fbmgr.get_rb(sp_fb[1]).handle}})
 

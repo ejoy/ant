@@ -40,23 +40,30 @@ function simpledof.post_init()
             }
         },
     }
-    local blurpass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/simple_blur.material", blurrt, "simpledof_blur")
-    
+
+    local mq = world:singleton_entity "main_queue"
+    local blurpass = ipp.create_pass(
+        "simpledof_blur", 
+        "/pkg/ant.resources/materials/postprocess/dof/simple_blur.material", 
+        blurrt, nil, mq.camera_eid)
 
     local mergert = {
         clear_state = {clear=""},
-        view_rect = {x=0, y=0, w=hfbw, h=hfbh},
+        view_rect = {x=0, y=0, w=fbw, h=fbh},
         fb_idx = fbmgr.create{
             fbmgr.create_rb {
                 format = "RGBA16F",
                 layers = 1,
-                w = hfbw, h = hfbh,
+                w = fbw, h = fbh,
                 flags = rbflags,
             }
         },
     }
 
-    local mergepass = ipp.create_pass("/pkg/ant.resources/materials/postprocess/dof/simple_merge.material", mergert, "simpledof_merge")
+    local mergepass = ipp.create_pass(
+        "simpledof_merge",
+        "/pkg/ant.resources/materials/postprocess/dof/simple_merge.material",
+        mergert, nil, mq.camera_eid)
     local outfocus_handle = fbmgr.get_rb(fbmgr.get(blurrt.fb_idx)[1]).handle
     imaterial.set_property(mergepass.eid, "s_outfocus", {stage=0, texture={handle=outfocus_handle}})
     ipp.add_technique("simpledof", {blurpass, mergepass})

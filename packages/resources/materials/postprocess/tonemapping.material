@@ -1,10 +1,10 @@
 fx:
-  fs: /pkg/ant.resources/materials/postprocess/fx/fs_tonemapping.sc
+  fs: /pkg/ant.resources/shaders/postprocess/fs_tonemapping.sc
   setting:
     lighting: off
     shadow_cast: off
     shadow_receive: off
-  vs: /pkg/ant.resources/materials/postprocess/fx/vs_pp_quad.sc
+  vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
 properties:
   u_tonemap_param: {1.8, 0.0, 0.0, 0.0} #u_exposure, u_tonemap_gamma
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

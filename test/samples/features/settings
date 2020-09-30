@@ -22,7 +22,7 @@ graphic:
     clear_stencil: 0
     clear: CDS
   hdr:
-    enable: false
+    enable: true
     format: RGBA16F
   postprocess:
     bloom:

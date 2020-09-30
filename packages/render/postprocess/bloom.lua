@@ -58,13 +58,13 @@ local function get_passes_settings(main_fbidx, fb_indices, fb_width, fb_height)
     local function insert_blur_pass(fbw, fbh, material, sampleparam, intensity)
         local passidx = #passes+1
         local pass = ipp.create_pass(
+            "bloom" .. passidx,
             material,
             {
                 view_rect   = {x=0, y=0, w=fbw, h=fbh},
                 clear_state = {clear=""},
                 fb_idx      = next_fbidx(),
-            },
-            "bloom" .. passidx
+            }
         )
         passes[passidx] = pass
 
@@ -93,13 +93,13 @@ local function get_passes_settings(main_fbidx, fb_indices, fb_width, fb_height)
         insert_blur_pass(fbw, fbh, upsample_material, sampleparam, intensity)
     end
     passes[#passes+1] = ipp.create_pass(
+        "combine_bloom_with_scene",
         combine_material, 
         {
             view_rect = {x=0, y=0, w=fb_width, h=fb_height},
             clear_state = {clear=""},
             fb_idx = next_fbidx(),
-        },
-        "combine_bloom_with_scene"
+        }
     )
 
     passes[1].input = ipp.get_rbhandle(main_fbidx, 2)
