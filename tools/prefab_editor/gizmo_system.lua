@@ -600,7 +600,6 @@ end
 
 local camera_zoom = world:sub {"camera", "zoom"}
 local mouse_drag = world:sub {"mousedrag"}
-local mouse_move = world:sub {"mousemove"}
 local mouse_down = world:sub {"mousedown"}
 local mouse_up = world:sub {"mouseup"}
 
@@ -815,6 +814,43 @@ local viewpos_event = world:sub{"ViewportDirty"}
 local mouse_pos_x
 local mouse_pos_y
 local imgui = require "imgui"
+local light_gizmo = require "gizmo.light"(world)
+
+local light_gizmo_selected = false
+local function select_light_gizmo(x, y)
+	if not light_gizmo.current_light then return end
+	light_gizmo_selected = true
+	--local radian = ilight.radian(light_gizmo.current_light)
+    local range = ilight.range(light_gizmo.current_light)
+	local function hit_test_rotate_axis(axis)
+		local gizmoPos = iom.get_position(light_gizmo.current_light)
+		local hitPosVec = mouse_hit_plane({x, y}, {dir = axis, pos = math3d.totable(gizmoPos)})
+		if not hitPosVec then
+			return
+		end
+		local dist = math3d.length(math3d.sub(gizmoPos, hitPosVec))
+		local abs_dist = math.abs(dist - range)
+		if math.abs(dist - range) < gizmo_const.ROTATE_HIT_RADIUS * 3 then
+			light_gizmo.highlight(true)
+			return hitPosVec
+		else
+			light_gizmo.highlight(false)
+			return nil
+		end
+	end
+	
+	if hit_test_rotate_axis({1,0,0}) then
+		return	
+	end
+	if hit_test_rotate_axis({0,1,0}) then
+		return
+	end
+	if hit_test_rotate_axis({0,0,1}) then
+		return
+	end
+	light_gizmo_selected = false
+end
+
 local function on_mouse_move()
 	if gizmo_seleted then return end
 	local viewport = imgui.GetMainViewport()
@@ -833,6 +869,9 @@ local function on_mouse_move()
 	if is_mouse_move and gizmo.mode ~= gizmo_const.SELECT then
 		local vx, vy = utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
 		if vx and vy then
+			if select_light_gizmo(vx, vy) then
+
+			end
 			if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
 				local axis = select_axis(vx, vy)
 				gizmo:highlight_axis_or_plane(axis)
@@ -916,6 +955,9 @@ function gizmo_sys:data_changed()
 	
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
+			if light_gizmo_selected then
+				
+			end
 			if gizmo.mode == gizmo_const.MOVE and move_axis then
 				move_gizmo(x, y)
 			elseif gizmo.mode == gizmo_const.SCALE then

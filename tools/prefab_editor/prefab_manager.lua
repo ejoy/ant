@@ -82,7 +82,7 @@ function m:create(what)
         lightidx = lightidx + 1
         self.entities[#self.entities+1] = newlight[1]
         hierarchy:add(newlight[1], {template = newlight.__class[1]}, self.root)
-        light_gizmo.bind(newlight[1])
+        --light_gizmo.bind(newlight[1])
     end
 end
 
@@ -109,7 +109,7 @@ function m:open_prefab(filename)
         end
         world:remove_entity(eid)
     end
-    light_gizmo.reset()
+    light_gizmo.show(false)
 
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(vfspath)
@@ -188,7 +188,7 @@ function m:open_prefab(filename)
                 camera_mgr.show_frustum(entity, false)
                 last_camera = entity
             end
-            if world[entity].light_type == "directional" then
+            if world[entity].light_type then
                 light_gizmo.bind(entity)
             end
         end
@@ -342,8 +342,10 @@ function m:remove_entity(eid)
     if not eid then return end
     if world[eid].camera then
         camera_mgr.remove_camera(eid)
-    elseif world[eid].light_type == "directional" then
-        ilight.active_directional_light(nil)
+    elseif world[eid].light_type then
+        if world[eid].light_type == "directional" then
+            ilight.active_directional_light(nil)
+        end
         light_gizmo.show(false)
     end
     local teml = hierarchy:get_template(eid)

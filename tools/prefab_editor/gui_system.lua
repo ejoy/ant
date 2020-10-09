@@ -211,14 +211,14 @@ local function onTarget(old, new)
         if world[old].camera then
             camera_mgr.show_frustum(old, false)
         elseif world[old].light_type then
-            light_gizmo.show(false)
+            light_gizmo.bind(nil)
         end
     end
     if new then
         if world[new].camera then
             camera_mgr.set_second_camera(new, true)
         elseif world[new].light_type then
-            light_gizmo.show(true)
+            light_gizmo.bind(new)
         end
     end
 end

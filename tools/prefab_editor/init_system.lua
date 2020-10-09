@@ -48,11 +48,6 @@ function m:init()
     
     entity.create_procedural_sky()
     entity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})
-    -- local light = world:instance "res/light_directional.prefab"
-    
-    -- local light_gizmo = require "gizmo.light"(world)
-    -- light_gizmo.default_light = light[1]
-    -- light_gizmo.bind(light[1])
     imgui.SetWindowTitle("PrefabEditor")
 end
 
