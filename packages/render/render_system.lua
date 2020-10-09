@@ -49,8 +49,6 @@ function render_sys:init()
 		frustum = default_comp.frustum(vr.w/vr.h),
         name = "default_camera",
 	}
-
-	irender.create_pre_depth_queue(vr, camera_eid)
 	irender.create_main_queue(vr, camera_eid)
 end
 
@@ -79,6 +77,43 @@ function render_sys:render_commit()
 			end
 		end
 		
+	end
+end
+
+local pd_sys = ecs.system "pre_depth_system"
+local pd_mbs = {}
+function pd_sys:post_init()
+	local mq_eid = world:singleton_entity_id "main_queue"
+	local mq = world[mq_eid]
+	local pd_eid = irender.create_pre_depth_queue(mq.render_target.view_rect, mq.camera_eid)
+
+	local callbacks = {
+		view_rect = function (m)
+			local vr = mq.render_target.view_rect
+			irq.set_view_rect(pd_eid, vr)
+		end,
+		camera_eid = function (m)
+			irq.set_camera(pd_eid, mq.camera_eid)
+		end,
+		framebuffer = function (m)
+			error "not implement"
+		end,
+	}
+
+	for n, cb in pairs(callbacks) do
+		pd_mbs[n] = {
+			mb = world:sub{"component_changed", n, mq_eid},
+			cb = cb
+		}
+	end
+end
+
+function pd_sys:before_render()
+	for _, d in pairs(pd_mbs) do
+		local cb = d.cb
+		for msg in d.mb:each() do
+			cb(msg)
+		end
 	end
 end
 

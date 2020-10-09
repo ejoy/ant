@@ -46,8 +46,14 @@ policy "blit_queue"
     .require_transform "visible_primitive_transform"
     .unique_component "blit_queue"
 
+system "pre_depth_system"
+    .implement "render_system.lua"
+    .method "post_init"
+    .method "before_render"
+
 policy "pre_depth_queue"
     .require_transform "pre_depth_primitive_transform"
+    .require_system "ant.render|pre_depth_system"
     .unique_component "pre_depth_queue"
 
 policy "main_queue"
@@ -173,6 +179,7 @@ pipeline "render"
     .stage "refine_filter"
     .stage "cull"
     .stage "refine_camera"
+    .stage "before_render"
     .stage "render_commit"
     .pipeline "postprocess"
 

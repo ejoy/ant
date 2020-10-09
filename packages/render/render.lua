@@ -602,7 +602,7 @@ function irq.set_view_clear(eid, what, color, depth, stencil)
 
 	cs.clear = what
 	set_view_clear(rt.viewid, cs)
-	world:pub{"component_changed", "target_clear"}
+	world:pub{"component_changed", "clear_state", eid}
 end
 
 function irq.set_view_rect(eid, rect)
@@ -613,18 +613,18 @@ function irq.set_view_rect(eid, rect)
 	vr.w, vr.h = rect.w, rect.h
 	icamera.set_frustum_aspect(qe.camera_eid, vr.w/vr.h)
 	bgfx.set_view_rect(rt.viewid, vr.x, vr.y, vr.w, vr.h)
-	world:pub{"component_changed", "viewport"}
+	world:pub{"component_changed", "view_rect", eid}
 end
 
 function irq.set_frame_buffer(eid, fbidx)
 	local rt = world[eid].render_target
 	rt.fb_idx = fbidx
-	world:pub{"component_changed", "framebuffer"}
+	world:pub{"component_changed", "framebuffer", eid}
 end
 
 function irq.set_camera(eid, cameraeid)
 	world[eid].camera_eid = cameraeid
-	world:pub{"component_changed", "camera_eid"}
+	world:pub{"component_changed", "camera_eid", eid}
 end
 
 function irq.set_visible(eid, b)
