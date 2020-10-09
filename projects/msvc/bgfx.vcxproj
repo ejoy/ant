@@ -12,16 +12,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bgfx\bgfx_alloc.cpp" />
-    <ClCompile Include="..\..\clibs\bgfx\font_manager.c" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfx.c" />
-    <ClCompile Include="..\..\clibs\bgfx\luabgfxui.c" />
     <ClCompile Include="..\..\clibs\bgfx\luabgfxutil.c" />
-    <ClCompile Include="..\..\clibs\bgfx\luafont.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\bgfx_alloc.h" />
     <ClInclude Include="..\..\clibs\bgfx\bgfx_interface.h" />
-    <ClInclude Include="..\..\clibs\bgfx\font_manager.h" />
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h" />
   </ItemGroup>
   <ItemGroup>

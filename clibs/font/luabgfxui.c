@@ -380,48 +380,6 @@ prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, in
 }
 
 /*
-** From lua 5.4
-** Decode one UTF-8 sequence, returning NULL if byte sequence is
-** invalid.  The array 'limits' stores the minimum value for each
-** sequence length, to check for overlong representations. Its first
-** entry forces an error for non-ascii bytes with no continuation
-** bytes (count == 0).
-*/
-typedef unsigned int utfint;
-#define MAXUNICODE	0x10FFFFu
-#define MAXUTF		0x7FFFFFFFu
-
-const char *utf8_decode (const char *s, utfint *val, int strict) {
-  static const utfint limits[] =
-        {~(utfint)0, 0x80, 0x800, 0x10000u, 0x200000u, 0x4000000u};
-  unsigned int c = (unsigned char)s[0];
-  utfint res = 0;  /* final result */
-  if (c < 0x80)  /* ascii? */
-    res = c;
-  else {
-    int count = 0;  /* to count number of continuation bytes */
-    for (; c & 0x40; c <<= 1) {  /* while it needs continuation bytes... */
-      unsigned int cc = (unsigned char)s[++count];  /* read next byte */
-      if ((cc & 0xC0) != 0x80)  /* not a continuation byte? */
-        return NULL;  /* invalid byte sequence */
-      res = (res << 6) | (cc & 0x3F);  /* add lower 6 bits from cont. byte */
-    }
-    res |= ((utfint)(c & 0x7F) << (count * 5));  /* add first byte */
-    if (count > 5 || res > MAXUTF || res < limits[count])
-      return NULL;  /* invalid byte sequence */
-    s += count;  /* skip continuation bytes read */
-  }
-  if (strict) {
-    /* check for invalid code points; too large or surrogates */
-    if (res > MAXUNICODE || (0xD800u <= res && res <= 0xDFFFu))
-      return NULL;
-  }
-  if (val) *val = res;
-  return s + 1;  /* +1 to include first byte */
-}
-
-
-/*
 	handle texture
 	string text
 	integer fontid (default = 0)

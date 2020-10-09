@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\fontmanager">
-      <UniqueIdentifier>{50f6a0ad-bbc4-4ac8-8521-4471e8ecb7dd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\fontmanager">
-      <UniqueIdentifier>{b36e30fb-d44b-4068-a17e-cf4abc2a0f0d}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\bgfx\luabgfx.c">
@@ -30,15 +24,6 @@
     <ClCompile Include="..\..\clibs\bgfx\bgfx_alloc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\bgfx\luabgfxui.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\bgfx\font_manager.c">
-      <Filter>Source Files\fontmanager</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\clibs\bgfx\luafont.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\bgfx\luabgfx.h">
@@ -46,9 +31,6 @@
     </ClInclude>
     <ClInclude Include="..\..\clibs\bgfx\bgfx_alloc.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\clibs\bgfx\font_manager.h">
-      <Filter>Header Files\fontmanager</Filter>
     </ClInclude>
     <ClInclude Include="..\..\clibs\bgfx\bgfx_interface.h">
       <Filter>Header Files</Filter>

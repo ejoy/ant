@@ -3039,7 +3039,9 @@ lallocTB(lua_State *L) {
 	v->cap_v = max_v;
 	v->cap_i = max_i;
 
-	return 0;
+	lua_pushlightuserdata(L, v->tvb.data);
+	lua_pushlightuserdata(L, v->tib.data);
+	return 2;
 }
 
 static int

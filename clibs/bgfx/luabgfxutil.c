@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <math.h>
 
+#include "bgfx_interface.h"
+
 static inline float
 fclamp(float _a, float _min, float _max) {
 	return fmin(fmax(_a, _min), _max);
@@ -53,13 +55,29 @@ lencodeNormalRgba8(lua_State *L) {
 	return 1;
 }
 
+static void
+update_char_texture(uint16_t texid, 
+	uint16_t _layer, uint8_t _mip, 
+	uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height, uint16_t _pitch,
+	const uint8_t *mem, void (*release_fn)(void*, void*)){
+
+	bgfx_texture_handle_t th = {texid};
+	const bgfx_memory_t *m = BGFX(make_ref_release)(mem, _width * _height, release_fn, NULL);
+	BGFX(update_texture_2d)(th, _layer, _mip, _x, _y, _width, _height, m, _pitch);
+}
+
 LUAMOD_API int
 luaopen_bgfx_util(lua_State *L) {
 	luaL_checkversion(L);
+	init_interface(L);
 	luaL_Reg l[] = {
+		{ "update_char_texture", NULL},
 		{ "encodeNormalRgba8", lencodeNormalRgba8 },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
+
+	lua_pushlightuserdata(L, update_char_texture);
+	lua_setfield(L, -2, "update_char_texture");
 	return 1;
 }

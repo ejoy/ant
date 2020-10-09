@@ -3,7 +3,10 @@ hw.__index = hw
 
 local platform = require "platform"
 local bgfx     = require "bgfx"
+local bgfxutil = require "bgfx.util"
+
 local math3d   = require "math3d"
+local  lfont   = require "font"
 
 local caps = nil
 function hw.get_caps()
@@ -62,6 +65,8 @@ local function bgfx_init(args)
 	math3d.homogeneous_depth = caps.homogeneousDepth
 	math3d.set_origin_bottom_left(caps.originBottomLeft)
 	math3d.origin_bottom_left = caps.originBottomLeft
+
+	lfont.init(bgfxutil.update_char_texture)
 end
 
 function hw.init(args)

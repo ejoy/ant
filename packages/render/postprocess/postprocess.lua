@@ -18,7 +18,7 @@ local ipp = ecs.interface "postprocess"
 
 local techniques = {}
 local tech_order = {
-    "simpledof", --"dof"
+    --"simpledof", --"dof"
     "bloom", "tonemapping",
 }
 

@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 
 local bgfx = require "bgfx"
-local bgfxfont = require "bgfx.font"
+local  lfont = require "font"
 local math3d = require "math3d"
 local platform = require "platform"
 
@@ -12,7 +12,7 @@ local MAX_QUAD<const>       = 256
 local MAX_VERTICES<const>   = MAX_QUAD * 4
 
 local function create_font_texture2d()
-    local s = bgfxfont.fonttexture_size
+    local s = lfont.fonttexture_size
     return bgfx.create_texture2d(s, s, false, 1, "A8")
 end
 
@@ -51,7 +51,7 @@ local allfont = {}
 function ifontmgr.add_font(fontname)
     local fontid = allfont[fontname]
     if fontid == nil then
-        fontid = bgfxfont.addfont(platform.font(fontname))
+        fontid = lfont.addfont(platform.font(fontname))
         allfont[fontname] = fontid
     end
 
@@ -142,26 +142,26 @@ local function load_text(eid)
     local sc = e.show_config
     local screenpos = calc_screen_pos(calc_3d_anchor_pos(e, sc))
 
-    local textw, texth, num = bgfxfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
+    local textw, texth, num = lfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
     local x, y = text_start_pos(textw, texth, screenpos)
     local rc = e._rendercache
     local vb, ib = rc.vb, rc.ib
     vb.start, vb.num = 0, num*4
     local vbhandle = vb.handles[1]
-    vbhandle:alloc(vb.num, fontquad_layout.handle)
+    local vbdata = vbhandle:alloc(vb.num, fontquad_layout.handle)
 
     ib.num = num * 2 * 3
 
     rc.depth = screenpos[3]
 
-    bgfxfont.load_text_quad(vbhandle, sc.description, x, y, font.size, sc.color, font.id)
+    lfont.load_text_quad(vbdata, sc.description, x, y, font.size, sc.color, font.id)
 end
 
 function fontsys:camera_usage()
     for _, eid in world:each "show_config" do
         load_text(eid)
     end
-    bgfxfont.submit()
+    lfont.submit()
 end
 
 local sn_a = ecs.action "show_name"

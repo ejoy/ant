@@ -2,18 +2,20 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-#include <bgfx/c99/bgfx.h>
 
-#include "bgfx_interface.h"
-#include "luabgfx.h"
 #include "font_manager.h"
 
-#include "transient_buffer.h"
-
 #include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 
+typedef void (*UPDATE_CHAR_FUNC)(uint16_t texid, 
+	uint16_t _layer, uint8_t _mip, 
+	uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height, uint16_t _pitch,
+	const uint8_t *mem, void (*release_fn)(void*, void*));
 struct font_context {
     struct font_manager fm;
+	UPDATE_CHAR_FUNC update_char_func;
 };
 
 struct quad_text{
@@ -22,23 +24,61 @@ struct quad_text{
     uint32_t color;
 };
 
-static struct font_context* new_font_context(lua_State *L){
-    struct font_context* t = lua_newuserdatauv(L, sizeof(*t), 0);
-    font_manager_init(&t->fm);
-    return t;
-}
-
 static struct font_manager* 
 getF(lua_State *L){
     struct font_context * t = (struct font_context*)lua_touserdata(L, lua_upvalueindex(1));
 	return &t->fm;
 }
 
+/*
+** From lua 5.4
+** Decode one UTF-8 sequence, returning NULL if byte sequence is
+** invalid.  The array 'limits' stores the minimum value for each
+** sequence length, to check for overlong representations. Its first
+** entry forces an error for non-ascii bytes with no continuation
+** bytes (count == 0).
+*/
 typedef unsigned int utfint;
-const char *utf8_decode (const char *s, utfint *val, int strict);
+#define MAXUNICODE	0x10FFFFu
+#define MAXUTF		0x7FFFFFFFu
+
+const char *utf8_decode (const char *s, utfint *val, int strict) {
+  static const utfint limits[] =
+        {~(utfint)0, 0x80, 0x800, 0x10000u, 0x200000u, 0x4000000u};
+  unsigned int c = (unsigned char)s[0];
+  utfint res = 0;  /* final result */
+  if (c < 0x80)  /* ascii? */
+    res = c;
+  else {
+    int count = 0;  /* to count number of continuation bytes */
+    for (; c & 0x40; c <<= 1) {  /* while it needs continuation bytes... */
+      unsigned int cc = (unsigned char)s[++count];  /* read next byte */
+      if ((cc & 0xC0) != 0x80)  /* not a continuation byte? */
+        return NULL;  /* invalid byte sequence */
+      res = (res << 6) | (cc & 0x3F);  /* add lower 6 bits from cont. byte */
+    }
+    res |= ((utfint)(c & 0x7F) << (count * 5));  /* add first byte */
+    if (count > 5 || res > MAXUTF || res < limits[count])
+      return NULL;  /* invalid byte sequence */
+    s += count;  /* skip continuation bytes read */
+  }
+  if (strict) {
+    /* check for invalid code points; too large or surrogates */
+    if (res > MAXUNICODE || (0xD800u <= res && res <= 0xDFFFu))
+      return NULL;
+  }
+  if (val) *val = res;
+  return s + 1;  /* +1 to include first byte */
+}
 
 static void
-prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
+release_char_memory(void *d, void *u){
+	free(d);
+}
+
+static void
+prepare_char(struct font_context *fc, uint16_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
+	struct font_manager *F = &fc->fm;
 	struct font_glyph g;
 	int ret = font_manager_touch(F, fontid, codepoint, &g);
 	*advance_x = g.advance_x;
@@ -50,38 +90,29 @@ prepare_char(struct font_manager *F, bgfx_texture_handle_t texid, int fontid, in
 	}
 
 	if (ret == 0) {
-		// update texture
-		const bgfx_memory_t * mem = BGFX(alloc)(g.w * g.h);
-		const char * err = font_manager_update(F, fontid, codepoint, &g, mem->data);
-		if (err) {
-			// todo: report error
-			return;
+		// // update texture
+		// const bgfx_memory_t * mem = BGFX(alloc)(g.w * g.h);
+		// const char * err = font_manager_update(F, fontid, codepoint, &g, mem->data);
+		// if (err) {
+		// 	// todo: report error
+		// 	return;
+		// }
+		// BGFX(update_texture_2d)(texid, 0, 0, g.u, g.v, g.w, g.h, mem, g.w);
+
+		uint8_t *d = malloc(g.w * g.h);
+		const char * err = font_manager_update(F, fontid, codepoint, &g, d);
+		if (err){
+			return ;
 		}
-		BGFX(update_texture_2d)(texid, 0, 0, g.u, g.v, g.w, g.h, mem, g.w);
+		fc->update_char_func(texid, 0, 0, g.u, g.v, g.w, g.h, g.w, d, release_char_memory);
 	}
 }
 
 static int
-lupdate_char_texture(lua_State *L){
-	struct font_manager *F = getF(L);
-
-	uint16_t texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 1));
-	bgfx_texture_handle_t th = {texture_id};
-
-	const utfint codepoint = luaL_checkinteger(L, 2);
-	const int fontid = luaL_optinteger(L, 3, 0);
-
-	int advancex, advancey;
-	prepare_char(F, th, fontid, codepoint, &advancex, &advancey);
-	return 1;
-}
-
-
-static int
 lprepare_text(lua_State *L) {
-    struct font_manager *F = getF(L);
-	uint16_t texture_id = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 1));
-	bgfx_texture_handle_t th = {texture_id};
+    struct font_context *fc = (struct font_context *)lua_touserdata(L, lua_upvalueindex(1));
+	struct font_manager *F = &fc->fm;
+	uint16_t texid = luaL_checkinteger(L, 1);
 	size_t sz;
 	const char * str = luaL_checklstring(L, 2, &sz);
 	const char * end_ptr = str + sz;
@@ -96,7 +127,7 @@ lprepare_text(lua_State *L) {
 		str = utf8_decode(str, &codepoint, 1);
 		if (str) {
 			int x,y;
-			prepare_char(F, th, fontid, codepoint, &x, &y);
+			prepare_char(fc, texid, fontid, codepoint, &x, &y);
 			advance_x += x;
 			if (y > advance_y) {
 				advance_y = y;
@@ -119,27 +150,27 @@ lprepare_text(lua_State *L) {
 }
 
 
-static int
-ltext_codepoints(lua_State *L){
-	size_t sz;
-	const char * str = luaL_checklstring(L, 1, &sz);
-	const char * end_ptr = str + sz;
+// static int
+// ltext_codepoints(lua_State *L){
+// 	size_t sz;
+// 	const char * str = luaL_checklstring(L, 1, &sz);
+// 	const char * end_ptr = str + sz;
 
-	lua_createtable(L, sz, 0);
-	int idx=0;
-	while (str < end_ptr) {
-		utfint codepoint;
-		str = utf8_decode(str, &codepoint, 1);
-		if (str){
-			lua_pushinteger(L, codepoint);
-			lua_seti(L, -2, ++idx);
-		} else {
-			return luaL_error(L, "Invalid utf8 text");
-		}
-	}
+// 	lua_createtable(L, (int)sz, 0);
+// 	int idx=0;
+// 	while (str < end_ptr) {
+// 		utfint codepoint;
+// 		str = utf8_decode(str, &codepoint, 1);
+// 		if (str){
+// 			lua_pushinteger(L, codepoint);
+// 			lua_seti(L, -2, ++idx);
+// 		} else {
+// 			return luaL_error(L, "Invalid utf8 text");
+// 		}
+// 	}
 
-	return 1;
-}
+// 	return 1;
+// }
 
 #define FIXPOINT 8
 
@@ -199,7 +230,7 @@ static int
 lload_text_quad(lua_State *L){
     struct font_manager *fm = getF(L);
 
-    struct transient_buffer *tb = luaL_checkudata(L, 1, "BGFX_TB");
+    struct quad_text *qtdata = (struct quad_text*)lua_touserdata(L, 1);
     size_t sz;
     const char* text = luaL_checklstring(L, 2, &sz);
     const char* textend = text + sz;
@@ -207,14 +238,13 @@ lload_text_quad(lua_State *L){
     int16_t x = read_fixpoint(L, 3);
     int16_t y = read_fixpoint(L, 4);
 
-    const int size = (int)luaL_checkinteger(L, 5);
+    const int fontsize = (int)luaL_checkinteger(L, 5);
     const uint32_t color = (uint32_t)luaL_checkinteger(L, 6);
     const int fontid = luaL_optinteger(L, 7, 0);
 
-    struct font_glyph g = {0};
+	struct quad_text *qt = qtdata;
 
-    struct quad_text *qt = (struct quad_text *)tb->tvb.data;
-    
+    struct font_glyph g = {0};
     while (text != textend){
         utfint codepoint;
         text = utf8_decode(text, &codepoint, 0);
@@ -223,11 +253,7 @@ lload_text_quad(lua_State *L){
                 luaL_error(L, "codepoint:%d, %s, is not cache, need call 'prepare_text' first", codepoint, text);
             }
 
-            if ((qt - (struct quad_text *)(tb->tvb.data)) > tb->cap_v * 4){
-                luaL_error(L, "transient vertex buffer is not enough: %d", tb->cap_v);
-            }
-
-            fill_text_quad(fm, qt, x, y, color, size, &g);
+            fill_text_quad(fm, qt, x, y, color, fontsize, &g);
             x += g.advance_x * FIXPOINT;
             qt += 4;
         }
@@ -286,69 +312,43 @@ lfontheight(lua_State *L) {
 	return 3;
 }
 
-static int
-lfont_glyph(lua_State *L){
-	struct font_manager *F = getF(L);
-	const utfint codepoint = luaL_checkinteger(L, 1);
-	const char* what = lua_tostring(L, 2);
-	const int fontid = luaL_optinteger(L, 3, 0);
-	const int size = luaL_optinteger(L, 4, 32);
-	struct font_glyph g = {0};
-	font_manager_touch(F, fontid, codepoint, &g);
-	font_manager_scale(F, &g, size);
+// static int
+// lfont_glyph(lua_State *L){
+// 	struct font_manager *F = getF(L);
+// 	const utfint codepoint = luaL_checkinteger(L, 1);
+// 	const int fontid = luaL_optinteger(L, 2, 0);
+// 	const int size = luaL_optinteger(L, 3, 32);
+// 	struct font_glyph g = {0};
+// 	font_manager_touch(F, fontid, codepoint, &g);
+// 	font_manager_scale(F, &g, size);
 
-	if (strcmp(what, "") == 0){
-		lua_createtable(L, 0, 8);
-		lua_pushinteger(L, g.offset_x);
-		lua_setfield(L, -2, "offset_x");
+// 	lua_createtable(L, 0, 8);
+// 	lua_pushinteger(L, g.offset_x);
+// 	lua_setfield(L, -2, "offset_x");
 
-		lua_pushinteger(L, g.offset_y);
-		lua_setfield(L, -2, "offset_y");
+// 	lua_pushinteger(L, g.offset_y);
+// 	lua_setfield(L, -2, "offset_y");
 
-		lua_pushinteger(L, g.advance_x);
-		lua_setfield(L, -2, "advance_x");
+// 	lua_pushinteger(L, g.advance_x);
+// 	lua_setfield(L, -2, "advance_x");
 
-		lua_pushinteger(L, g.advance_y);
-		lua_setfield(L, -2, "advance_y");
+// 	lua_pushinteger(L, g.advance_y);
+// 	lua_setfield(L, -2, "advance_y");
 
-		lua_pushinteger(L, g.w);
-		lua_setfield(L, -2, "w");
+// 	lua_pushinteger(L, g.w);
+// 	lua_setfield(L, -2, "w");
 
-		lua_pushinteger(L, g.h);
-		lua_setfield(L, -2, "h");
+// 	lua_pushinteger(L, g.h);
+// 	lua_setfield(L, -2, "h");
 
-		lua_pushinteger(L, g.u);
-		lua_setfield(L, -2, "u");
+// 	lua_pushinteger(L, g.u);
+// 	lua_setfield(L, -2, "u");
 
-		lua_pushinteger(L, g.v);
-		lua_setfield(L, -2, "v");
-	} else {
-		int v;
-		if (strcmp(what, "offset_x") == 0){
-			v = g.offset_x;
-		} else if (strcmp(what, "offset_y") == 0){
-			v = g.offset_y;
-		} else if (strcmp(what, "advance_x") == 0){
-			v = g.advance_x;
-		} else if (strcmp(what, "advance_y") == 0){
-			v = g.advance_y;
-		} else if (strcmp(what, "w") == 0){
-			v = g.w;
-		} else if (strcmp(what, "h") == 0){
-			v = g.h;
-		} else if (strcmp(what, "u") == 0){
-			v = g.u;
-		} else if (strcmp(what, "v") == 0){
-			v = g.v;
-		} else {
-			luaL_error(L, "not found attribute:%s", what);
-		}
+// 	lua_pushinteger(L, g.v);
+// 	lua_setfield(L, -2, "v");
 
-		lua_pushinteger(L, v);
-	}
-
-	return 1;
-}
+// 	return 1;
+// }
 
 static int
 lsubmit(lua_State *L){
@@ -357,29 +357,38 @@ lsubmit(lua_State *L){
 	return 0;
 }
 
+static int
+linit(lua_State *L){
+	struct font_context * t = (struct font_context*)lua_touserdata(L, lua_upvalueindex(1));
+	t->update_char_func	= (UPDATE_CHAR_FUNC)lua_touserdata(L, 1);
+	return 0;
+}
+
 LUAMOD_API int
-luaopen_bgfx_font(lua_State *L) {
+luaopen_font(lua_State *L) {
 	luaL_checkversion(L);
-	init_interface(L);
 
 	luaL_Reg l[] = {
 		{ "fonttexture_size", NULL },
+		{ "font_manager",	NULL},
+		{ "init",			linit},
 		{ "fontheight", 	lfontheight },
-		{ "font_glyph",		lfont_glyph},
 		{ "addfont", 		laddfont },
 		{ "rebind", 		lrebindfont },
         { "prepare_text",   lprepare_text},
-		{ "update_char_texture", lupdate_char_texture},
-		{ "text_codepoints",ltext_codepoints},
         { "load_text_quad", lload_text_quad},
 		{ "submit",			lsubmit},
 		{ NULL, 			NULL },
 	};
 	luaL_newlibtable(L, l);
-	struct font_context * c = new_font_context(L);
+	struct font_context * c = lua_newuserdatauv(L, sizeof(*c), 0);
+	font_manager_init(&c->fm);
 	luaL_setfuncs(L, l, 1);
 	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
 	lua_setfield(L, -2, "fonttexture_size");
+
+	lua_pushlightuserdata(L, &c->fm);
+	lua_setfield(L, -2, "font_manager");
 
 	return 1;
 }
