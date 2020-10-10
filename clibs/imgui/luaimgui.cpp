@@ -1813,12 +1813,11 @@ winEndPopup(lua_State *L) {
 }
 
 static int
-winOpenPopupContextItem(lua_State *L) {
+winOpenPopupOnItemClick(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
 	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));
-	int change = ImGui::OpenPopupContextItem(id, flags);
-	lua_pushboolean(L, change);
-	return 1;
+	ImGui::OpenPopupOnItemClick(id, flags);
+	return 0;
 }
 
 static int
@@ -3061,7 +3060,7 @@ static struct enum_pair eMouseCursor[] = {
 
 static struct enum_pair eSliderFlags[] = {
 	ENUM(ImGuiSliderFlags,None),
-	ENUM(ImGuiSliderFlags,ClampOnInput),
+	ENUM(ImGuiSliderFlags,AlwaysClamp),
 	ENUM(ImGuiSliderFlags,Logarithmic),
 	ENUM(ImGuiSliderFlags,NoRoundToFormat),
 	ENUM(ImGuiSliderFlags,NoInput),
@@ -3481,7 +3480,7 @@ luaopen_imgui(lua_State *L) {
 		{ "BeginPopupContextVoid", winBeginPopupContextVoid },
 		{ "BeginPopupModal", winBeginPopupModal },
 		{ "EndPopup", winEndPopup },
-		{ "OpenPopupContextItem", winOpenPopupContextItem },
+		{ "OpenPopupOnItemClick", winOpenPopupOnItemClick },
 		{ "IsPopupOpen", winIsPopupOpen },
 		{ "CloseCurrentPopup", winCloseCurrentPopup },
 		{ "IsWindowAppearing", winIsWindowAppearing },
