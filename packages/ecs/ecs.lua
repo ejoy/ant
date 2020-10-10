@@ -52,10 +52,10 @@ local function register_entity(w)
 	return eid
 end
 
-local function instance_entity(w, entity)
+local function instance_entity(w, entity, owned)
 	local eid = register_entity(w)
 	local e = w[eid]
-	setmetatable(e, {__index = entity.template})
+	setmetatable(e, {__index = entity.template, __owned = owned})
 	for _, c in ipairs(entity.unique) do
 		if w._uniques[c] then
 			error "unique component already exists"
@@ -99,13 +99,13 @@ local function run_action(w, res, prefab)
 	end
 end
 
-local function instance_prefab(w, prefab)
+local function instance_prefab(w, prefab, owned)
 	local res = {__class = prefab.__class}
 	for i, v in ipairs(prefab) do
 		if v.prefab then
-			res[i] = instance_prefab(w, v.prefab)
+			res[i] = instance_prefab(w, v.prefab, owned)
 		else
-			res[i] = instance_entity(w, v)
+			res[i] = instance_entity(w, v, owned)
 		end
 	end
 	return res
@@ -158,7 +158,7 @@ function world:create_entity(v)
 		v.action.mount = "_mount"
 	end
 	local prefab = {__class={v}, create_entity_template(self, v)}
-	local res = self:instance_prefab(prefab, args)
+	local res = self:instance_prefab(prefab, args, true)
 	return res[1], res
 end
 
@@ -167,8 +167,8 @@ function world:instance(filename, args)
 	return self:instance_prefab(prefab, args)
 end
 
-function world:instance_prefab(prefab, args)
-	local res = instance_prefab(self, prefab)
+function world:instance_prefab(prefab, args, owned)
+	local res = instance_prefab(self, prefab, owned)
 	if args then
 		for k, v in pairs(args) do
 			res[k] = v -- TODO?
@@ -251,6 +251,10 @@ local function remove_entity(w, e)
 		if tc and tc.delete then
 			tc.delete(component)
 		end
+	end
+	local mt = getmetatable(e)
+	if mt and mt.__owned then
+		remove_entity(w, mt.__index)
 	end
 end
 
