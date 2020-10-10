@@ -169,6 +169,13 @@ function resource.status(proxy, result)
 	return "ref"
 end
 
+local function disable(robj)
+	local meta = getmetatable(robj.proxy)
+	meta.__index = robj.proxy._data
+	meta.__pairs = data_pairs
+	meta.__len = data_len
+end
+
 -- returns a touched function if enable is true, this function would returns true if the filename is used
 function resource.monitor(filename, enable)
 	local robj = get_file_object(filename)
@@ -181,14 +188,17 @@ function resource.monitor(filename, enable)
 		local meta = getmetatable(robj.proxy)
 		function meta:__index(key)
 			touch = true
+			disable(robj)
 			return self._data[key]
 		end
 		function meta:__pairs(key)
 			touch = true
+			disable(robj)
 			return pairs(self._data)
 		end
 		function meta:__len(key)
 			touch = true
+			disable(robj)
 			return #self._data
 		end
 		return function() return touch end
@@ -197,10 +207,7 @@ function resource.monitor(filename, enable)
 		return
 	else
 		-- disable
-		local meta = getmetatable(robj.proxy)
-		meta.__index = robj.proxy._data
-		meta.__pairs = data_pairs
-		meta.__len = data_len
+		disable(robj)
 	end
 end
 

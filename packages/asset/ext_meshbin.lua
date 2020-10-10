@@ -44,6 +44,22 @@ local function init(mesh)
     return mesh
 end
 
+local function delete(mesh)
+    local vb = mesh.vb
+    for idx, v in ipairs(vb) do
+        if type(v) ~= "userdata" then
+            bgfx.destory(v.handle)
+        end
+    end
+
+    local ib = mesh.ib
+    if ib then
+        if type(ib.handle) ~= "userdata" then
+            bgfx.destory(ib.handle)
+        end
+    end
+end
+
 local function create_bounding(bounding)
     if bounding then
         bounding.aabb = math3d.ref(math3d.aabb(bounding.aabb[1], bounding.aabb[2]))
@@ -57,11 +73,13 @@ local function loader(filename)
     return init(mesh)
 end
 
-local function unloader()
+local function unloader(filename, res, obj)
+    delete(res)
 end
 
 return {
     init = init,
+    delete = delete,
     loader = loader,
     unloader = unloader,
 }

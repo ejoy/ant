@@ -9,6 +9,7 @@ component "skeleton"
 component "mesh"
     .implement "mesh.lua"
     .method "init"
+    .method "delete"
 
 component "meshskin"
     .implement "meshskin.lua"

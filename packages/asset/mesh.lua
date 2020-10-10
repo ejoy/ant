@@ -9,7 +9,14 @@ function m:init()
 	if type(self) == "string" then
 		return assetmgr.resource(self)
 	end
+	self.procedural_mesh = true
     return ext_meshbin.init(self)
+end
+
+function m:delete()
+	if self.procedural_mesh then
+		ext_meshbin.delete(self)
+	end
 end
 
 local mpt = ecs.transform "mesh_prefab_transform"

@@ -71,13 +71,15 @@ end
 function sp_sys:update_hierarchy()
 	for _, _, eid in se_mb:unpack() do
 		local e = world[eid]
-		scenequeue:mount(eid, e.parent or 0)
-		if e.parent then
-			bind_slot_entity(e)
-			inherit_entity_state(e)
-			inherit_material(e)
+		if e then
+			scenequeue:mount(eid, e.parent or 0)
+			if e.parent then
+				bind_slot_entity(e)
+				inherit_entity_state(e)
+				inherit_material(e)
+			end
+			ipf.select_filters(eid)
 		end
-		ipf.select_filters(eid)
 	end
 	
 	for _, _, eid in pc_mb:unpack() do
