@@ -2,8 +2,6 @@
 #include <lua.hpp>
 #include <stdint.h>
 #include "imgui_window.h"
-#include "imgui_platform.h"
-#include "virtual_keys.h"
 #ifdef _WIN32
 #include <windows.h>
 #include <WinNT.h>

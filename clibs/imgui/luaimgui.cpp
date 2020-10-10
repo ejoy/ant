@@ -2564,7 +2564,7 @@ GetGlyphRanges(ImFontAtlas* atlas, const char* type) {
 }
 
 static void
-CreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
+fCreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
 	size_t ttf_len = 0;
 	const char* ttf_buf = 0;
 	switch (lua_rawgeti(L, -1, 1)) {
@@ -2591,7 +2591,6 @@ CreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
 		glyphranges = GetGlyphRanges(atlas, luaL_checkstring(L, -1));
 	}
 	lua_pop(L, 1);
-
 	atlas->AddFontFromMemoryTTF((void*)ttf_buf, (int)ttf_len, (float)size, config, glyphranges);
 }
 
@@ -2609,7 +2608,7 @@ fCreate(lua_State *L) {
 		lua_rawgeti(L, 1, i);
 		luaL_checktype(L, -1, LUA_TTABLE);
 		config.MergeMode = (i != 1);
-		CreateFont(L, atlas, &config);
+		fCreateFont(L, atlas, &config);
 		lua_pop(L, 1);
 	}
 
@@ -2617,8 +2616,8 @@ fCreate(lua_State *L) {
 		luaL_error(L, "Create font failed.");
 		return 0;
 	}
-	int r = rendererBuildFont(L);
-	return r;
+	rendererBuildFont(L);
+	return 0;
 }
 
 static int

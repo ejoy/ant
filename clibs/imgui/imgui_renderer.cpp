@@ -251,7 +251,7 @@ int rendererSetImageProgram(lua_State* L) {
 	return 0;
 }
 
-int rendererBuildFont(lua_State* L) {
+void rendererBuildFont(lua_State* L) {
 	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
 	uint8_t* data;
 	int32_t width;
@@ -272,7 +272,6 @@ int rendererBuildFont(lua_State* L) {
 	atlas->TexID = texture.ptr;
 	atlas->ClearInputData();
 	//atlas->ClearTexData();
-	return 0;
 }
 
 ImTextureID rendererGetTextureID(lua_State* L, int lua_handle) {

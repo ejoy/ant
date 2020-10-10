@@ -68,15 +68,12 @@ struct DropManager : public IDropTarget {
 		*pdwEffect &= DROPEFFECT_COPY;
 		return S_OK;
 	}
-
 	void Register(HWND window) {
 		m_window = window;
 		RegisterDragDrop(m_window, this);
 	}
-
 	void Revoke() {
 		RevokeDragDrop(m_window);
-		OleUninitialize();
 	}
 };
 
