@@ -33,6 +33,9 @@
     <ProjectReference Include="firmware.vcxproj">
       <Project>{4e00a5a9-ec1a-442e-8e9d-4a44a4bc5898}</Project>
     </ProjectReference>
+    <ProjectReference Include="font.vcxproj">
+      <Project>{d65a3c90-688f-498a-a165-2c698d7d7ff3}</Project>
+    </ProjectReference>
     <ProjectReference Include="hierarchy.vcxproj">
       <Project>{434d019f-f121-4391-87fe-a369ac0cdf31}</Project>
     </ProjectReference>

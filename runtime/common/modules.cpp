@@ -25,14 +25,14 @@ int luaopen_rp3d_core(lua_State* L);
 int luaopen_thread(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
-int luaopen_bgfx_ui(lua_State *L);
+int luaopen_font(lua_State *L);
 }
 
 const luaL_Reg* ant_modules() {
     static const luaL_Reg modules[] = {
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
-        { "bgfx.ui", luaopen_bgfx_ui },
+        { "font", luaopen_font },
         { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
         { "filesystem.cpp", luaopen_filesystem_cpp },
