@@ -2,30 +2,30 @@ local ecs = ...
 local world = ecs.world
 local rhwi  = import_package 'ant.render'.hwi
 local utils = require "mathutils"(world)
+local imgui = require "imgui"
 local m     = ecs.system 'input_system'
 local event_mouse = world:sub {"mouse"}
 local event_mouse_wheel = world:sub {"mouse_wheel"}
 local event_keyboard = world:sub{"keyboard"}
 local last_mouse
-local last_x, last_y
+local last_vx, last_vy
+local last_wx, last_wy
+
 function m:data_changed()
     for _,what,state,x,y in event_mouse:unpack() do
         local vx, vy = utils.mouse_pos_in_view(x, y)
         if vx and vy then
-            if state == "MOVE" then
-                world:pub {"mousemove", what, vx, vy}
-            end
             if state == "DOWN" then
-                last_x, last_y = vx, vy
+                last_vx, last_vy = vx, vy
                 last_mouse = what
                 world:pub {"mousedown", what, vx, vy}
             elseif state == "MOVE" and last_mouse == what then
                 local dpiX, dpiY = rhwi.dpi()
-                local dx, dy = (vx - last_x) / dpiX, (vy - last_y) / dpiY
+                local dx, dy = (vx - last_vx) / dpiX, (vy - last_vy) / dpiY
                 if what == "LEFT" or what == "RIGHT" then
                     world:pub { "mousedrag", what, vx, vy, dx, dy }
                 end
-                last_x, last_y = vx, vy
+                last_vx, last_vy = vx, vy
             elseif state == "UP" then
                 world:pub {"mouseup", what, vx, vy}
             end
@@ -47,5 +47,5 @@ function m:data_changed()
 		elseif key == "D" and press == 2 then
 			
         end
-	end
+    end
 end
