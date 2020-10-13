@@ -163,9 +163,6 @@ local function on_scale_dirty(eid, scale)
 end
 
 local function show_light_property(eid)
-    
-    light_gizmo.remove_invalid_entity()
-
     imgui.cursor.Separator()
     imgui.widget.Text("color:")
     imgui.cursor.SameLine()

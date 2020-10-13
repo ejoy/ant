@@ -1,6 +1,6 @@
 ---
 action:
-  mount: root
+  mount: 0
 data:
   name: Root
   scene_entity: true
@@ -15,7 +15,7 @@ action:
   mount: 1
 data:
   color: {1, 1, 1, 1}
-  material: /pkg/ant.resources/materials/singlecolor.material
+  material: /pkg/ant.resources/materials/pbr_default.material
   mesh: /pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin
   name: torus
   scene_entity: true
