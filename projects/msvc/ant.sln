@@ -121,6 +121,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "filedialog", "filedialog.vc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "font", "font.vcxproj", "{D65A3C90-688F-498A-A165-2C698D7D7FF3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rmlui", "rmlui.vcxproj", "{C7F2089D-ECE0-46D6-A601-C317267B6BAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -281,6 +283,12 @@ Global
 		{D65A3C90-688F-498A-A165-2C698D7D7FF3}.Release|x64.ActiveCfg = Release|x64
 		{D65A3C90-688F-498A-A165-2C698D7D7FF3}.Release|x64.Build.0 = Release|x64
 		{D65A3C90-688F-498A-A165-2C698D7D7FF3}.Release|x86.ActiveCfg = Release|x64
+		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Debug|x64.ActiveCfg = Debug|x64
+		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Debug|x64.Build.0 = Debug|x64
+		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Debug|x86.ActiveCfg = Debug|x64
+		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x64.ActiveCfg = Release|x64
+		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x64.Build.0 = Release|x64
+		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

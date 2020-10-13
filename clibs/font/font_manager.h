@@ -49,19 +49,35 @@ struct font_glyph {
 	unsigned short v;
 };
 
+#ifdef _MSC_VER 
+#	ifdef FONT_EXPORT
+#define FONT_API __declspec(dllexport)
+#	else //!FONT_EXPORT
+#define FONT_API __declspec(dllimport)
+#	endif //FONT_EXPORT
+#else
+#define FONT_API
+#endif 
+
 void font_manager_init(struct font_manager *);
 
-// You should keep ttfbuffer alive before font_manager_delete
-int font_manager_addfont(struct font_manager *, const void *ttfbuffer);
-int font_manager_rebindfont(struct font_manager *, int fontid, const void *ttfbuffer);
-void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
+FONT_API int font_manager_addfont(struct font_manager *, const void *ttfbuffer, int index);
+typedef enum {
+	FF_Blod			= 0x01,
+	FF_ITALIC		= 0x02,
+	FF_UNDERSCORE	= 0x04,
+	FF_NONE			= 0x08,
+}FamilyFlag;
+FONT_API int font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, const char* family, FamilyFlag flags);
+FONT_API int font_manager_rebindfont(struct font_manager *, int fontid, const void *ttfbuffer);
+FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
 
 // 1 exist in cache. 0 not exist in cache, call font_manager_update. -1 failed.
-int font_manager_touch(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);
+FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);
 // buffer size should be [ glyph->w * glyph->h ] ,  NULL succ , otherwise returns error msg
-const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, unsigned char *buffer);
-void font_manager_flush(struct font_manager *);
-void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
+FONT_API const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, unsigned char *buffer);
+FONT_API void font_manager_flush(struct font_manager *);
+FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
 
 
 #endif

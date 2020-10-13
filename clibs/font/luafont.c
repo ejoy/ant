@@ -90,15 +90,6 @@ prepare_char(struct font_context *fc, uint16_t texid, int fontid, int codepoint,
 	}
 
 	if (ret == 0) {
-		// // update texture
-		// const bgfx_memory_t * mem = BGFX(alloc)(g.w * g.h);
-		// const char * err = font_manager_update(F, fontid, codepoint, &g, mem->data);
-		// if (err) {
-		// 	// todo: report error
-		// 	return;
-		// }
-		// BGFX(update_texture_2d)(texid, 0, 0, g.u, g.v, g.w, g.h, mem, g.w);
-
 		uint8_t *d = malloc(g.w * g.h);
 		const char * err = font_manager_update(F, fontid, codepoint, &g, d);
 		if (err){
@@ -280,7 +271,19 @@ static int
 laddfont(lua_State *L) {
 	struct font_manager *F = getF(L);
 	const void * ttf = getttf(L, 1);
-	int fontid = font_manager_addfont(F, ttf);
+	const int type = lua_type(L, 2);
+	int fontid;
+	if (type == LUA_TSTRING){
+		const char* family = lua_tostring(L, 2);
+		const int flags = luaL_optnumber(L, 3, 0);
+		fontid = font_manager_addfont_with_family(F, ttf, family, flags);
+	}else if (type == LUA_TNUMBER){
+		const int index = (int)lua_tointeger(L, 2);
+		fontid = font_manager_addfont(F, ttf, 0);
+	} else {
+		luaL_error(L, "invalid add font param");
+	}
+	
 	if (fontid < 0)
 		return luaL_error(L, "Add font failed");
 	lua_pushinteger(L, fontid);

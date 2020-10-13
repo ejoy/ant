@@ -1,3 +1,4 @@
+#define LUA_LIB 1
 #include <lua.hpp>
 #include <cstring>
 #include "bimg/decode.h"
@@ -85,10 +86,8 @@ lparse(lua_State *L){
 }
 
 extern "C"
-#if BX_PLATFORM_WINDOWS
-__declspec(dllexport)
-#endif
-int luaopen_image(lua_State* L) {
+LUAMOD_API int
+luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
         { "parse", lparse},
         { nullptr, nullptr },

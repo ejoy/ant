@@ -253,15 +253,25 @@ font_manager_flush(struct font_manager *F) {
 	++F->version;
 }
 
-int
-font_manager_addfont(struct font_manager *F, const void *ttfbuffer) {
+static int
+fm_addfont(struct font_manager *F, const void *ttfbuffer, int offset){
 	if (F->font_number >= FONT_MANAGER_MAXFONT)
 		return -1;
 	int fontid = F->font_number;
-	if (!stbtt_InitFont(&F->ttf[fontid], (const unsigned char *)ttfbuffer, stbtt_GetFontOffsetForIndex(ttfbuffer,0)))
+	if (!stbtt_InitFont(&F->ttf[fontid], (const unsigned char *)ttfbuffer, offset))
 		return -1;
 	++F->font_number;
 	return fontid;
+}
+
+int
+font_manager_addfont(struct font_manager *F, const void *ttfbuffer, int index) {
+	return fm_addfont(F, ttfbuffer, stbtt_GetFontOffsetForIndex(ttfbuffer,index));
+}
+
+int
+font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, const char* family, FamilyFlag flags) {
+	return fm_addfont(F, ttfbuffer, stbtt_FindMatchingFont(ttfbuffer, family, (int)flags));
 }
 
 int
