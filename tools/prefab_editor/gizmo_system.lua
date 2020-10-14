@@ -640,13 +640,40 @@ local function move_gizmo(x, y)
 end
 
 local light_gizmo = require "gizmo.light"(world)
-local light_gizmo_selected = false
+-- light_gizmo_mode:
+-- 1 point light  x axis
+-- 2 point light x axis
+-- 3 point light x axis
+-- 4 spot light range
+-- 5 spot light radian
+local light_gizmo_mode = 0
 local click_dir_point_light
+local click_dir_spot_light
+local last_spot_range
 local function move_light_gizmo(x, y)
-	if not click_dir_point_light then return end
+	if light_gizmo_mode == 0 then return end
+
 	local lightPos = iom.get_position(light_gizmo.current_light)
-	local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_point_light), pos = math3d.totable(lightPos)})
-	ilight.set_range(light_gizmo.current_light, math3d.length(math3d.sub(curpos, lightPos)))
+	local circle_centre
+	if light_gizmo_mode == 4 or light_gizmo_mode == 5 then
+		local mat = iom.srt(light_gizmo.current_light)
+		circle_centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
+	end
+	if light_gizmo_mode == 4 then
+		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_spot_light), pos = math3d.totable(circle_centre)})
+		ilight.set_radian(light_gizmo.current_light, math3d.length(math3d.sub(curpos, circle_centre)))
+	elseif light_gizmo_mode == 5 then
+		local move_dir = math3d.sub(circle_centre, lightPos)
+		local new_offset = utils.view_to_axis_constraint(iom.ray(camera_mgr.main_camera, {x, y}), iom.get_position(camera_mgr.main_camera), gizmo_dir_to_world(move_dir), last_gizmo_pos)
+		local offset = math3d.length(math3d.sub(new_offset, init_offset))
+		if math3d.length(math3d.sub(new_offset, lightPos)) < math3d.length(math3d.sub(init_offset, lightPos)) then
+			offset = -offset
+		end
+		ilight.set_range(light_gizmo.current_light, last_spot_range + offset)
+	else
+		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_point_light), pos = math3d.totable(lightPos)})
+		ilight.set_range(light_gizmo.current_light, math3d.length(math3d.sub(curpos, lightPos)))
+	end
 	light_gizmo.update_gizmo()
 	light_gizmo.highlight(true)
 	world:pub {"Gizmo", "update"}
@@ -794,49 +821,76 @@ end
 
 local function select_light_gizmo(x, y)
 	if not light_gizmo.current_light then return end
-	light_gizmo_selected = false
-	--local radian = ilight.radian(light_gizmo.current_light)
-	local function hit_test_point(axis)
-		local range = ilight.range(light_gizmo.current_light)
-		local gizmoPos = iom.get_position(light_gizmo.current_light)
+	light_gizmo_mode = 0
+	local function hit_test_circle(axis, radius, pos)
+		local gizmoPos = pos or iom.get_position(light_gizmo.current_light)
 		local hitPosVec = mouse_hit_plane({x, y}, {dir = axis, pos = math3d.totable(gizmoPos)})
 		if not hitPosVec then
 			return
 		end
 		local dist = math3d.length(math3d.sub(gizmoPos, hitPosVec))
-		local abs_dist = math.abs(dist - range)
-		if math.abs(dist - range) < gizmo_const.ROTATE_HIT_RADIUS * 3 then
+		local abs_dist = math.abs(dist - radius)
+		if math.abs(dist - radius) < gizmo_const.ROTATE_HIT_RADIUS * 3 then
 			light_gizmo.highlight(true)
-			return hitPosVec
+			return true
 		else
 			light_gizmo.highlight(false)
-			return nil
+			return false
 		end
 	end
+	
+	click_dir_point_light = nil
+	click_dir_spot_light = nil
+	
+	local radius = ilight.range(light_gizmo.current_light)
 	if world[light_gizmo.current_light].light_type == "point" then
-		click_dir_point_light = nil
-		if hit_test_point({1, 0, 0}) then
+		if hit_test_circle({1, 0, 0}, radius) then
 			click_dir_point_light = {1, 0, 0}
-			light_gizmo_selected = true
-		elseif hit_test_point({0, 1, 0}) then
+			light_gizmo_mode = 1
+		elseif hit_test_circle({0, 1, 0}, radius) then
 			click_dir_point_light = {0, 1, 0}
-			light_gizmo_selected = true
-		elseif hit_test_point({0, 0, 1}) then
+			light_gizmo_mode = 2
+		elseif hit_test_circle({0, 0, 1}, radius) then
 			click_dir_point_light = {0, 0, 1}
-			light_gizmo_selected = true
+			light_gizmo_mode = 3
 		end
-		
 	elseif world[light_gizmo.current_light].light_type == "spot" then
-		
+		local dir = math3d.totable(math3d.transform(iom.get_rotation(light_gizmo.current_light), math3d.vector{0, 0, 1}, 0))
+		local mat = iom.srt(light_gizmo.current_light)
+		local centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
+		if hit_test_circle(dir, ilight.radian(light_gizmo.current_light), centre) then
+			click_dir_spot_light = dir
+			light_gizmo_mode = 4
+		else
+			local sp1 = utils.world_to_screen(camera_mgr.main_camera, iom.get_position(light_gizmo.current_light))
+			local sp2 = utils.world_to_screen(camera_mgr.main_camera, centre)
+			if utils.point_to_line_distance2D(sp1, sp2, {x, y}) < 5.0 then
+				light_gizmo_mode = 5
+				light_gizmo.highlight(true)
+			else
+				light_gizmo.highlight(false)
+			end
+		end
 	end
-	return light_gizmo_selected
+	return light_gizmo_mode
 end
 
 function gizmo:select_gizmo(x, y)
 	if not x or not y then return false end
 	if self.mode == gizmo_const.MOVE or self.mode == gizmo_const.ROTATE then
 		last_mouse_pos = {x, y}
-		if select_light_gizmo(x, y) then return true end
+		local mode = select_light_gizmo(x, y)
+		if mode ~= 0 then
+			if mode == 5 then
+				last_spot_range = ilight.range(light_gizmo.current_light)
+				last_gizmo_pos = math3d.totable(iom.get_position(light_gizmo.current_light))
+				local mat = iom.srt(light_gizmo.current_light)
+				local circle_centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
+				local move_dir = math3d.sub(circle_centre, iom.get_position(light_gizmo.current_light))
+				init_offset.v = utils.view_to_axis_constraint(iom.ray(camera_mgr.main_camera, {x, y}), iom.get_position(camera_mgr.main_camera), gizmo_dir_to_world(move_dir), last_gizmo_pos)
+			end
+			return true
+		end
 	end
 	if self.mode == gizmo_const.MOVE or self.mode == gizmo_const.SCALE then
 		move_axis = select_axis(x, y)
@@ -871,7 +925,6 @@ local mouse_pos_x
 local mouse_pos_y
 local imgui = require "imgui"
 
-
 local function on_mouse_move()
 	if gizmo_seleted then return end
 	local viewport = imgui.GetMainViewport()
@@ -891,7 +944,7 @@ local function on_mouse_move()
 		local vx, vy = utils.mouse_pos_in_view(mouse_pos_x, mouse_pos_y)
 		if vx and vy then
 			--world:pub {"mousemove", "UNKNOWN", vx, vy}
-			if not select_light_gizmo(vx, vy) then
+			if select_light_gizmo(vx, vy) == 0 then
 				if gizmo.mode == gizmo_const.MOVE or gizmo.mode == gizmo_const.SCALE then
 					local axis = select_axis(vx, vy)
 					gizmo:highlight_axis_or_plane(axis)
@@ -954,6 +1007,7 @@ function gizmo_sys:data_changed()
 				end
 			end
 			gizmo_seleted = false
+			light_gizmo_mode = 0
 			if is_tran_dirty then
 				is_tran_dirty = false
 				local target = gizmo.target_eid
@@ -977,7 +1031,7 @@ function gizmo_sys:data_changed()
 	
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" then
-			if light_gizmo_selected then
+			if light_gizmo_mode ~= 0 then
 				move_light_gizmo(x, y)
 			elseif gizmo.mode == gizmo_const.MOVE and move_axis then
 				move_gizmo(x, y)

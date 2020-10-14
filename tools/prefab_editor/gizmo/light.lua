@@ -172,10 +172,12 @@ local function update_spot_gizmo()
         init_entity(line2, root)
         local line3 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {-radian, 0, range}, "line")
         init_entity(line3, root)
-        m.spot.eid = {line0, line1, line2, line3, c0}
+        local line4 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, 0, range}, "line")
+        init_entity(line4, root)
+        m.spot.eid = {line0, line1, line2, line3, line4, c0}
     else
-        update_circle_vb(m.spot.eid[5], radian)
-        iom.set_position(m.spot.eid[5], {0, 0, range})
+        update_circle_vb(m.spot.eid[6], radian)
+        iom.set_position(m.spot.eid[6], {0, 0, range})
 
         local function update_vb(eid, tp2)
             -- old_highlight = old_boundary[dir].highlight or false
@@ -192,6 +194,7 @@ local function update_spot_gizmo()
         update_vb(m.spot.eid[2], {radian, 0, range})
         update_vb(m.spot.eid[3], {0, -radian, range})
         update_vb(m.spot.eid[4], {-radian, 0, range})
+        update_vb(m.spot.eid[5], {0, 0, range})
     end
 end
 
