@@ -38,10 +38,11 @@ function bb_sys:camera_usage()
             local c_rc = world[ceid]._rendercache
             local c_wm = c_rc.worldmat
 
-            local newviewdir = math3d.inverse(math3d.index(c_wm, 3))
-            local rightdir = math3d.index(c_wm, 1)
+            local newviewdir = math3d.normalize(math3d.inverse(math3d.index(c_wm, 3)))
+            local rightdir = math3d.normalize(math3d.index(c_wm, 1))
             local updir = math3d.cross(rightdir, newviewdir)
-            rc.worldmat = math3d.set_columns(rc.worldmat, rightdir, updir, newviewdir)
+            local m = math3d.set_columns(math3d.matrix(), rightdir, updir, newviewdir, mc.ZERO_PT)
+            rc.worldmat = math3d.mul(m, rc.worldmat)
         else
             error(("not support billboard type:%s"):format(bb.lock))
         end

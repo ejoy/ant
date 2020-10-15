@@ -1145,7 +1145,7 @@ ltodirection(lua_State *L) {
 		math3d_rotmat_to_viewdir(LS, v);
 		break;
 	default:
-		return luaL_error(L, "todirection don't support %s", lastack_typename(type));
+		return luaL_error(L, "todirection don't support: %s", lastack_typename(type));
 	}
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
@@ -1154,8 +1154,18 @@ ltodirection(lua_State *L) {
 static int
 ltorotation(lua_State *L) {
 	struct lastack *LS = GETLS(L);
-	const float* v = vector_from_index(L, LS, 1);
-	math3d_viewdir_to_quat(LS, v);
+	int type;
+	const float *v = get_object(L, LS, 1, &type);
+	switch (type){
+	case LINEAR_TYPE_VEC4:
+		math3d_viewdir_to_quat(LS, v);
+		break;
+	case LINEAR_TYPE_MAT:
+		math3d_matrix_to_quat(LS, v);
+		break;
+	default:
+		return luaL_error(L, "torotation not support: %s", lastack_typename(type));
+	}
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
 }

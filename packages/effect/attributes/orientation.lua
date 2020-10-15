@@ -34,7 +34,7 @@ return {
                 iemitter.rotate_quad(emittereid, ii)
             end
         elseif data.method == "face_axis" then
-            local orientation = math3d.torotation(data.axis)
+            local orientation = math3d.torotation(math3d.vector(data.axis))
             for ii=emitter.quad_offset+1, emitter.quad_offset+emitter.quad_count do
                 iemitter.set_rotation(emittereid, ii, orientation)
                 iemitter.rotate_quad(emittereid, ii)
