@@ -4,7 +4,7 @@ fx:
   setting:
     surfacetype: ui
 properties:
-  s_texFont:
+  s_tex:
     stage: 0
     texture: /pkg/ant.resources/materials/textures/default.texture
 state:

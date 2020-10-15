@@ -277,7 +277,7 @@ laddfont(lua_State *L) {
 		const char* family = lua_tostring(L, 2);
 		const int flags = luaL_optnumber(L, 3, 0);
 		fontid = font_manager_addfont_with_family(F, ttf, family, flags);
-	}else if (type == LUA_TNUMBER){
+	}else if (type == LUA_TNUMBER || type == LUA_TNONE || type == LUA_TNIL){
 		const int index = (int)lua_tointeger(L, 2);
 		fontid = font_manager_addfont(F, ttf, 0);
 	} else {

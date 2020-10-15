@@ -104,6 +104,9 @@ local function point_light_test()
 
     local cubeeid = world:instance "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
     iom.set_position(cubeeid, {0, 0, 0, 1})
+
+    world:instance("/pkg/ant.test.features/assets/entities/billboard_test.prefab", 
+        {root=world:singleton_entity "main_queue".camera_eid})
 end
 
 function init_loader_sys:init()
