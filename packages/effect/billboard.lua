@@ -34,7 +34,9 @@ function bb_sys:camera_usage()
             local newviewdir = math3d.inverse(math3d.index(c_wm, 3))
             local rightdir = math3d.index(c_wm, 1)
             local updir = math3d.cross(rightdir, newviewdir)
-            rc.worldmat = math3d.set_columns(rc.worldmat, rightdir, updir, newviewdir)
+            local s, _, t = math3d.srt(rc.worldmat)
+            local r = math3d.set_columns(rc.worldmat, rightdir, updir, newviewdir, mc.ZERO_PT)
+            rc.worldmat = math3d.matrix{s=s, r=r, t=t}
         else
             error(("not support billboard type:%s"):format(bb.lock))
         end
