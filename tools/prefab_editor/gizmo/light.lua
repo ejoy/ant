@@ -204,6 +204,26 @@ function m.update_gizmo()
     end
 end
 
+function m.clear()
+    ilight.active_directional_light(nil)
+    for k,v in pairs(m.billboard) do
+        world:remove_entity(v)
+    end
+    m.billboard = {}
+    m.current_light = nil
+    m.show(false)
+end
+
+function m.on_remove_light(eid)
+    if world[eid].light_type == "directional" then
+        ilight.active_directional_light(nil)
+    end
+    world:remove_entity(m.billboard[eid])
+    m.billboard[eid] = nil
+    m.current_light = nil
+    m.show(false)
+end
+
 function m.init()
     create_directional_gizmo()
     m.point.root = create_gizmo_root()
