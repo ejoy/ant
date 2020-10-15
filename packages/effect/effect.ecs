@@ -1,8 +1,7 @@
-policy "billboard"
-    .require_system "billboard_system"
-    .require_policy "ant.render|render"
-    .require_transform "build_billboard_mesh"
-    .component "billboard"
+---billboard
+component "billboard"
+    .implement "billboard.lua"
+    .method "init"
 
 system "billboard_system"
     .implement "billboard.lua"
@@ -17,6 +16,14 @@ transform "build_billboard_mesh"
 action "billboard_mount"
     .implement "billboard.lua"
     .method "init"
+
+policy "billboard"
+    .require_system "billboard_system"
+    .require_policy "ant.render|render"
+    .require_transform "build_billboard_mesh"
+    .component "billboard"
+
+--TODO: billboard is part of particle_system, need clean
 
 policy "particle_system"
     .require_system "particle_system"

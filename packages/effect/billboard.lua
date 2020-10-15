@@ -12,6 +12,13 @@ function bb_a.init(prefab, idx, value)
     world[eid]._rendercache.camera_eid = prefab[value]
 end
 
+local identity_rect<const> = {x=0, y=0, w=1, h=1}
+local bc = ecs.component "billboard"
+function bc:init()
+    self.rect = self.rect or identity_rect
+    return self
+end
+
 local bb_build = ecs.transform "build_billboard_mesh"
 function bb_build.process_prefab(e)
     e.mesh = ientity.quad_mesh(e.billboard.rect)

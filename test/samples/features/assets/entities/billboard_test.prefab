@@ -8,6 +8,11 @@ data:
     transform:{}
     billboard:
         lock: camera    #x/y/z
+        rect:
+            x=0
+            y=0
+            w=2
+            h=2
     material: /pkg/ant.resources/materials/billboard/simple.material
     state: 1
     scene_entity: true

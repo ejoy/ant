@@ -1,7 +1,7 @@
 fx:
   fs: /pkg/ant.resources/shaders/billboard/fs_billboard.sc
   setting:
-    surfacetype: background
+    surfacetype: translucent
   vs: /pkg/ant.resources/shaders/billboard/vs_billboard.sc
 properties:
   s_basecolor:
