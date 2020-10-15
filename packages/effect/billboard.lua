@@ -44,6 +44,7 @@ function bb_sys:camera_usage()
             -- matrix m = translate matrix * rotate matrix, apply rotate, and then translate
             local m = math3d.set_columns(rc.worldmat, rightdir, updir, newviewdir)
             local s = math3d.matrix{s=math3d.matrix_scale(rc.worldmat)}
+            -- finally the srt order: original scale->new rotation->original translation
             rc.worldmat = math3d.mul(m, s)
         else
             error(("not support billboard type:%s"):format(bb.lock))
