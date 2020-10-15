@@ -7,6 +7,7 @@ data:
     name: billboard_test
     transform:
         s: 3
+        t: {2, 3, 3, 1}
     billboard:
         lock: camera    #x/y/z
     material: /pkg/ant.resources/materials/billboard/simple.material
