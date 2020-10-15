@@ -36,16 +36,10 @@ struct TexInfo{
 };
 using TexMap = std::unordered_map<Rml::String, TexInfo>;
 
-struct HW_Interface{
-    uint16_t (*create_texture)(const uint8_t *data, uint32_t numbytes, const char* flags, bool source);
-    void (*destory_texture)(uint16_t texid);
-    void (*get_texture_dimension)(uint16_t texid, int* w, int *h);
-};
-
+class HWInterface;
 class Renderer : public Rml::RenderInterface {
 public:
-    Renderer(HW_Interface i) : mHWI(i){}
-
+    Renderer(HWInterface *i) : mHWI(i){}
     virtual void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                                 int* indices, int num_indices, 
                                 Rml::TextureHandle texture, const Rml::Vector2f& translation) override;
@@ -58,19 +52,14 @@ public:
     virtual void SetTransform(const Rml::Matrix4f* transform) override{mTransform = *transform;}
 
 public:
-    void Submit();
-    const GeometryBuffer& GetGeometryBuffer() const {return mGeoBuffer;}
-    const RenderBatchArray& GetRenderBatchs() const { return mRenderBatches;}
-    const Rml::Matrix4f& GetTransform() const { return mTransform;}
-    struct Rect {int x, y, w, h;};
-    const Rect& GetScissorRect() const { return mScissorRect;}
     void AddTextureId(const Rml::String &key, uint16_t texid, const Rml::Vector2i &dim) {mTexMap[key] = {texid, dim};}
 private:
+    struct Rect {int x, y, w, h;};
     RenderBatchArray    mRenderBatches;
     GeometryBuffer      mGeoBuffer;
     Rml::Matrix4f       mTransform = Rml::Matrix4f::Identity();
     Rect                mScissorRect = {0, 0, 0, 0};
-    HW_Interface        mHWI;
+    HWInterface         *mHWI;
 
     TexMap              mTexMap;
 };

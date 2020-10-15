@@ -8,19 +8,30 @@ local platform = require "platform"
 
 local declmgr = require "vertexdecl_mgr"
 
-local MAX_QUAD<const>       = 256
-local MAX_VERTICES<const>   = MAX_QUAD * 4
-
 local function create_font_texture2d()
     local s = lfont.fonttexture_size
     return bgfx.create_texture2d(s, s, false, 1, "A8")
 end
 
-local fonttex_handle= create_font_texture2d()
-local fonttex = {stage=0, texture={handle=fonttex_handle}}
-local layout_desc   = declmgr.correct_layout "p20nii|t20nii|c40niu"
-local fontquad_layout = declmgr.get(layout_desc)
-local declformat    = declmgr.vertex_desc_str(layout_desc)
+local fonttex_handle    = create_font_texture2d()
+local fonttex           = {stage=0, texture={handle=fonttex_handle}}
+local  layout_desc      = declmgr.correct_layout "p20nii|t20nii|c40niu"
+local fontquad_layout   = declmgr.get(layout_desc)
+local declformat        = declmgr.vertex_desc_str(layout_desc)
+
+local ifont             = ecs.interface "ifont"
+function ifont.font_tex_handle()
+    return fonttex
+end
+
+function ifont.font_tex_dim()
+    local s = lfont.fonttexture_size
+    return s, s
+end
+
+function ifont.handle()
+    return lfont.font_manager
+end
 
 local imaterial = world:interface "ant.asset|imaterial"
 local irender = world:interface "ant.render|irender"
@@ -170,5 +181,5 @@ function sn_a.init(prefab, idx, value)
     local e = world[eid]
     e._rendercache.attach_eid = prefab[value]
 
-    imaterial.set_property(eid, "s_texFont", fonttex)
+    imaterial.set_property(eid, "s_tex", fonttex)
 end
