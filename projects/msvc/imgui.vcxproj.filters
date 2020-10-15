@@ -33,7 +33,7 @@
     <ClCompile Include="..\..\clibs\imgui\imgui_window.cpp">
       <Filter>binding</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\imgui\examples\imgui_impl_win32.cpp">
+    <ClCompile Include="..\..\3rd\imgui\backends\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
   </ItemGroup>
@@ -68,7 +68,7 @@
     <ClInclude Include="..\..\clibs\imgui\imgui_platform.h">
       <Filter>binding</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rd\imgui\examples\imgui_impl_win32.h">
+    <ClInclude Include="..\..\3rd\imgui\backends\imgui_impl_win32.h">
       <Filter>imgui</Filter>
     </ClInclude>
   </ItemGroup>
