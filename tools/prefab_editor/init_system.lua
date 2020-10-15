@@ -8,7 +8,13 @@ local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
 
-local m             = ecs.system 'init_system'
+local bb_a = ecs.action "bind_billboard_camera"
+function bb_a.init(prefab, idx, value)
+    local eid = prefab[idx]
+    world[eid]._rendercache.camera_eid = prefab[value] or world:singleton_entity "main_queue".camera_eid
+end
+
+local m = ecs.system 'init_system'
 
 local function LoadImguiLayout(filename)
     local rf = lfs.open(filename, "rb")

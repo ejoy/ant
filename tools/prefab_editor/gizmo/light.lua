@@ -8,6 +8,7 @@ local computil
 local iom
 local ies
 local imaterial
+
 local m = {
     directional = {
         eid = {}
@@ -17,9 +18,9 @@ local m = {
     },
     spot = {
         eid = {}
-    }
+    },
+    billboard = {}
 }
-local remove_entity = {}
 local NORMAL_COLOR = {1, 1, 1, 1}
 local HIGHLIGHT_COLOR = {0.5, 0.5, 0, 1}
 local RADIUS = 0.25
@@ -62,6 +63,7 @@ end
 function m.update()
     iom.set_position(m.current_gizmo.root, iom.get_position(m.current_light))
     iom.set_rotation(m.current_gizmo.root, iom.get_rotation(m.current_light))
+    iom.set_position(m.billboard[m.current_light], iom.get_position(m.current_light))
 end
 
 function m.show(b)
@@ -137,8 +139,6 @@ local function update_circle_vb(eid, radian)
 end
 
 local function update_point_gizmo()
-    remove_entity[#remove_entity + 1] = m.point.eid
-
     local root = m.point.root
     local radius = ilight.range(m.current_light)
     
@@ -180,8 +180,6 @@ local function update_spot_gizmo()
         iom.set_position(m.spot.eid[6], {0, 0, range})
 
         local function update_vb(eid, tp2)
-            -- old_highlight = old_boundary[dir].highlight or false
-            -- eid = old_boundary[dir].line_eid
             local vb = {
                 0, 0, 0, 0xffffffff,
                 tp2[1], tp2[2], tp2[3], 0xffffffff,
