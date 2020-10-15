@@ -35,7 +35,9 @@ ifeq "$(PLAT)" "mingw"
 TOOL_EXT_NAME=.exe
 endif
 
-CMAKE_OPT_RmlUi= -DBUILD_SHARED_LIBS=OFF -DNO_FONT_INTERFACE_DEFAULT=ON
+
+#CMAKE_OPT_RmlUi= -DBUILD_SHARED_LIBS=OFF -DFREETYPE_INCLUDE_DIRS=d:/Code/github/freetype2/include -DFREETYPE_LIBRARY=d:/Code/github/freetype2/build/$(MODE)/freetyped.lib
+CMAKE_OPT_RmlUi= -DBUILD_SHARED_LIBS=OFF -DNO_FONT_INTERFACE_DEFAULT=ON 
 CMAKE_COPY_RmlUi= echo ok
 ifeq "$(PLAT)" "ios"
   CMAKE_COPY_ozz-animation= echo ok

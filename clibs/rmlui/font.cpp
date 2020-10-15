@@ -29,9 +29,35 @@ to_FontId_key(const Rml::String &family, FamilyFlag f){
     return family + std::to_string(f);
 }
 
-bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face) {
-    assert(mfontmgr && "mfontmgr is not init");
+bool FontInterface::LoadFontFace(const Rml::String& file_name, bool fallback_face){
+    const FamilyFlag flags = to_FamilyFlag(Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Normal);
+    Rml::String family;
     
+
+    auto ifile = Rml::GetFileInterface();
+    auto fh = ifile->Open(file_name);
+    if (!fh)
+        return false;
+
+    ifile->Seek(fh, 0, SEEK_END);
+    const uint32_t filesize = ifile->Tell(fh);
+    ifile->Seek(fh, 0, SEEK_SET);
+
+    std::vector<uint8_t>    buffer(filesize);
+    ifile->Read(&buffer[0], filesize, fh);
+    ifile->Close(fh);
+
+    int fontid = font_manager_addfont(mfontmgr, &buffer[0], 1);
+    family.resize(128);
+    int namelen = 0;
+    font_manager_family_name(mfontmgr, fontid, &family[0], &namelen);
+
+    const auto key = to_FontId_key(family, flags);
+    mfontids[key] = fontid;
+    return true;
+}
+
+bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face) {
     const FamilyFlag flags = to_FamilyFlag(style, weight);
     const auto key = to_FontId_key(family, flags);
 
@@ -45,7 +71,7 @@ bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml
 }
 
 Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
-    assert(mfontmgr && "mfontmgr is not init");
+    
     const auto key = to_FontId_key(family, to_FamilyFlag(style, weight));
     const auto found = mfontids.find(key);
     if (found != mfontids.end()){
@@ -63,7 +89,7 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 // }
 
 int FontInterface::GetSize(Rml::FontFaceHandle handle){
-    assert(mfontmgr && "mfontmgr is not init");
+    
     size_t idx = static_cast<size_t>(handle);
     const auto &face = mFontFaces[idx];
     return face.fontsize;
@@ -81,7 +107,7 @@ get_glyph(struct font_manager *F, const FontFace &face, int codepoint){
 }
 
 int FontInterface::GetXHeight(Rml::FontFaceHandle handle){
-    assert(mfontmgr && "mfontmgr is not init");
+    
     size_t idx = static_cast<size_t>(handle);
     const auto &face = mFontFaces[idx];
 
@@ -90,7 +116,7 @@ int FontInterface::GetXHeight(Rml::FontFaceHandle handle){
 }
 
 int FontInterface::GetLineHeight(Rml::FontFaceHandle handle){
-    assert(mfontmgr && "mfontmgr is not init");
+    
     size_t idx = static_cast<size_t>(handle);
     const auto &face = mFontFaces[idx];
 
@@ -100,7 +126,7 @@ int FontInterface::GetLineHeight(Rml::FontFaceHandle handle){
 }
 
 int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
-    assert(mfontmgr && "mfontmgr is not init");
+    
     size_t idx = static_cast<size_t>(handle);
     const auto &face = mFontFaces[idx];
 
@@ -111,7 +137,7 @@ int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
 }
 
 float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
-    assert(mfontmgr && "mfontmgr is not init");
+    
     size_t idx = static_cast<size_t>(handle);
     const auto &face = mFontFaces[idx];
 
@@ -122,7 +148,7 @@ float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
 }
 
 int FontInterface::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character /*= Character::Null*/){
-    assert(mfontmgr && "mfontmgr is not init");
+    
     const auto &face = mFontFaces[static_cast<size_t>(handle)];
 
     int width = 0;

@@ -69,6 +69,7 @@ typedef enum {
 	FF_NONE			= 0x08,
 }FamilyFlag;
 FONT_API int font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, const char* family, FamilyFlag flags);
+FONT_API int font_manager_family_name(struct font_manager *F, int fontid, char name[128], int *namelen);
 FONT_API int font_manager_rebindfont(struct font_manager *, int fontid, const void *ttfbuffer);
 FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
 

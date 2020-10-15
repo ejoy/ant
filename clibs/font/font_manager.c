@@ -274,6 +274,15 @@ font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, 
 	return fm_addfont(F, ttfbuffer, stbtt_FindMatchingFont(ttfbuffer, family, (int)flags));
 }
 
+int 
+font_manager_family_name(struct font_manager *F, int fontid, char name[128], int *namelen){
+	struct stbtt_fontinfo * fi = &F->ttf[fontid];
+	const char* n = stbtt_GetFontNameString(fi, namelen, STBTT_PLATFORM_ID_MICROSOFT, STBTT_MS_EID_SYMBOL, STBTT_MS_LANG_CHINESE, 1);
+	
+	strcpy_s(name, 128, n);
+	return 0;
+}
+
 int
 font_manager_rebindfont(struct font_manager *F, int fontid, const void *ttfbuffer) {
 	if (fontid < 0 || fontid >= F->font_number)

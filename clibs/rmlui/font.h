@@ -12,6 +12,7 @@ class FontInterface : public Rml::FontEngineInterface {
 public:
 	FontInterface(struct font_manager *fm) : mfontmgr(fm){}
 	virtual ~FontInterface() = default;
+	virtual bool LoadFontFace(const Rml::String& file_name, bool fallback_face) override;
 	virtual bool LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face)override;
 
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
