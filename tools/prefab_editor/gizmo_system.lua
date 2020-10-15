@@ -640,25 +640,24 @@ local function move_gizmo(x, y)
 end
 
 local light_gizmo = require "gizmo.light"(world)
+local light_gizmo_mode = 0
 -- light_gizmo_mode:
 -- 1 point light  x axis
 -- 2 point light x axis
 -- 3 point light x axis
 -- 4 spot light range
 -- 5 spot light radian
-local light_gizmo_mode = 0
 local click_dir_point_light
 local click_dir_spot_light
 local last_spot_range
 local function move_light_gizmo(x, y)
 	if light_gizmo_mode == 0 then return end
-
-	local lightPos = iom.get_position(light_gizmo.current_light)
 	local circle_centre
 	if light_gizmo_mode == 4 or light_gizmo_mode == 5 then
 		local mat = iom.srt(light_gizmo.current_light)
 		circle_centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(light_gizmo.current_light)}, 1)
 	end
+	local lightPos = iom.get_position(light_gizmo.current_light)
 	if light_gizmo_mode == 4 then
 		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_spot_light), pos = math3d.totable(circle_centre)})
 		ilight.set_radian(light_gizmo.current_light, math3d.length(math3d.sub(curpos, circle_centre)))
@@ -820,8 +819,9 @@ local function scale_gizmo(x, y)
 end
 
 local function select_light_gizmo(x, y)
-	if not light_gizmo.current_light then return end
 	light_gizmo_mode = 0
+	if not light_gizmo.current_light then return light_gizmo_mode end
+
 	local function hit_test_circle(axis, radius, pos)
 		local gizmoPos = pos or iom.get_position(light_gizmo.current_light)
 		local hitPosVec = mouse_hit_plane({x, y}, {dir = axis, pos = math3d.totable(gizmoPos)})

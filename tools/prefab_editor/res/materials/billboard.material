@@ -1,0 +1,17 @@
+fx:
+  fs: /pkg/ant.resources/shaders/billboard/fs_billboard.sc
+  setting:
+    surfacetype: background
+  vs: /pkg/ant.resources/shaders/billboard/vs_billboard.sc
+properties:
+  s_basecolor:
+    stage: 0
+    texture: ../texture/default.texture
+  u_color: {1, 1, 1, 1}
+state:
+  ALPHA_REF: 0
+  BLEND: ALPHA
+  CULL: NONE
+  DEPTH_TEST: LEQUAL
+  PT: TRISTRIP
+  WRITE_MASK: RGBA

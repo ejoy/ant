@@ -15,7 +15,6 @@ local worldedit
 local m = {
 	entities = {}
 }
-
 function m:normalize_aabb()
     local aabb
     for _, eid in ipairs(self.entities) do
@@ -82,7 +81,37 @@ function m:create(what)
         lightidx = lightidx + 1
         self.entities[#self.entities+1] = newlight[1]
         hierarchy:add(newlight[1], {template = newlight.__class[1]}, self.root)
-        --light_gizmo.bind(newlight[1])
+
+        local bb_eid = world:create_entity{
+            policy = {
+                "ant.render|render",
+                "ant.effect|billboard",
+                "ant.general|name"
+            },
+            data = {
+                name = "billboard_light",
+                transform = {},
+                billboard = {lock = "camera"},
+                state = 1,
+                scene_entity = true,
+                material = "res/materials/billboard.material"
+            },
+            action = {
+                bind_billboard_camera = "camera"
+            }
+        }
+        local icons = require "common.icons"(assetmgr)
+        local tex
+        if what == "spot" then
+            tex = icons.ICON_SPOTLIGHT.handle
+        elseif what == "point" then
+            tex = icons.ICON_POINTLIGHT.handle
+        else
+            tex = icons.ICON_DIRECTIONALLIGHT.handle
+        end
+        imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
+        iom.set_scale(bb_eid, 0.2)
+        light_gizmo.billboard[newlight[1]] = bb_eid
     end
 end
 
