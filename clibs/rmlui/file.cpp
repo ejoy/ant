@@ -6,9 +6,7 @@ Rml::FileHandle FileInterface2::Open(const Rml::String& path){
     auto found = mFileDist.find(path);
     if (found != mFileDist.end()){
         auto fh = mFI.Open(found->second);
-        if (!fh){
-            return mFI.Open(mRootDir + "/" + found->second);
-        }
+        return fh ? fh : mFI.Open(mRootDir + "/" + found->second);
     }
 
     return Rml::FileHandle(0);

@@ -21,7 +21,7 @@ local declformat        = declmgr.vertex_desc_str(layout_desc)
 
 local ifont             = ecs.interface "ifont"
 function ifont.font_tex_handle()
-    return fonttex
+    return fonttex_handle
 end
 
 function ifont.font_tex_dim()

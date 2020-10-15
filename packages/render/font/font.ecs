@@ -23,7 +23,7 @@ transform "font_mesh"
     .method "process_prefab"
 
 interface "ifont"
-    .implement "font.lua"
+    .implement "font/font.lua"
     .method "font_tex_handle"
     .method "font_tex_dim"
     .method "handle"

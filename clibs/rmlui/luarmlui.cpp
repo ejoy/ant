@@ -142,13 +142,15 @@ parse_file_dict(lua_State *L, int index, Rml::String &root_dir, FileDist &fd){
         root_dir = lua_tostring(L, -1);
         lua_pop(L, 1);
 
-        lua_getfield(L, -1, "files");{
-            for(lua_pushnil(L); lua_next(L, index); lua_pop(L, 2)){
+        if (lua_getfield(L, -1, "files") == LUA_TTABLE){
+            for(lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)){
                 lua_pushvalue(L, -2);
                 const char* key = lua_tostring(L, -1);
                 const char* value = lua_tostring(L, -2); 
                 fd[key] = value;
             }
+        } else {
+            luaL_error(L, "file_dist.files is not a table!");
         }
         lua_pop(L, 1);
     } else {
@@ -160,13 +162,16 @@ parse_file_dict(lua_State *L, int index, Rml::String &root_dir, FileDist &fd){
 
 static inline void
 parse_win_size(lua_State *L, int index, int *width, int *height){
-    lua_getfield(L, index, "width");
-    *width = (int)lua_tointeger(L, -1);
-    lua_pop(L, 1);
+    auto get_int = [L, index](const char *name, int *d){
+        if (lua_getfield(L, index, name) == LUA_TNUMBER)
+            *d = (int)lua_tointeger(L, -1);
+        else 
+            luaL_error(L, "invalid '%s' data", name);
+        lua_pop(L, 1);
+    };
 
-    lua_getfield(L, index, "height");
-    *height = (int)lua_tointeger(L, -1);
-    lua_pop(L, 1);
+    get_int("width", width);
+    get_int("height", height);
 }
 
 static inline void
@@ -192,7 +197,7 @@ parse_shader_context(lua_State *L, int index, ShaderContext *c){
             luaL_error(L, "invalid shader.%s info", name);
         }
 
-        si.prog = get_field_handle_idx(L, -1, "handle");
+        si.prog = get_field_handle_idx(L, -1, "prog");
 
         //uniform idx
         lua_getfield(L, -1, "uniforms");
@@ -214,7 +219,7 @@ parse_shader_context(lua_State *L, int index, ShaderContext *c){
 
 static inline rml_context*
 get_rc(lua_State *L, int index = 1){
-    return (rml_context*)lua_touserdata(L, 1);
+    return (rml_context*)luaL_checkudata(L, 1, "RML_CONTEXT");
 }
 
 static inline Rml::Context*
@@ -241,7 +246,7 @@ lrmlui_context_del(lua_State *L){
 static int
 lrmui_context_load(lua_State *L){
     auto context = get_context_handle(L);
-    if (context){
+    if (!context){
         return luaL_error(L, "invalid context");
     }
 
@@ -280,6 +285,7 @@ create_rml_context(lua_State *L){
         };
 		luaL_setfuncs(L, l, 0);
     }
+    lua_setmetatable(L, -2);
     return rc;
 }
 
@@ -322,8 +328,6 @@ linit(lua_State *L){
     rc->irenderer = new Renderer(rc->hwi);
     rc->irenderer->AddTextureId(FontInterface::FONT_TEX_NAME, texid, tex_dim);
 
-    parse_win_size(L, 1, &rc->context.width, &rc->context.height);
-
     Rml::SetFileInterface(rc->ifile);
     Rml::SetRenderInterface(rc->irenderer);
     Rml::SetSystemInterface(rc->isystem);
@@ -334,6 +338,7 @@ linit(lua_State *L){
     }
 
     auto &c = rc->context;
+    parse_win_size(L, 1, &c.width, &c.height);
     c.handle = Rml::CreateContext(c.name, Rml::Vector2i(c.width, c.height));
     if (!c.handle){
         luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", c.name, c.width, c.height);

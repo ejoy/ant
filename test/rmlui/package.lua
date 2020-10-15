@@ -10,7 +10,7 @@ return {
             "exit",
         },
         system = {
-            "ant.test.rmlui|rmlui",
+            "ant.test.rmlui|rmlui_system",
         }
     }
 }

@@ -1,3 +1,3 @@
 package.path = "engine/?.lua"
 require "bootstrap"
-import_package "ant.window".start "ant.test.gameui"
+import_package "ant.window".start "ant.test.rmlui"
