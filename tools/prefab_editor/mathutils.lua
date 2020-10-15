@@ -69,9 +69,21 @@ function m.mouse_pos_in_view(x,y)
 		local mvp = imgui.GetMainViewport()
     	--local wx, wy = x - mvp.WorkPos[1], y - mvp.WorkPos[2] + uiconfig.MenuHeight
         local viewx, viewy = x - global_data.viewport.x, y - global_data.viewport.y
-		if viewx > 0 and viewx < global_data.viewport.w and viewy > 0 and viewy < global_data.viewport.h then
-			return viewx, viewy
+		if viewx < 0 then
+			viewx = 0
 		end
+		if viewx > global_data.viewport.w then
+			viewx = global_data.viewport.w
+		end
+
+		if viewy < 0 then
+			viewy = 0
+		end
+		if viewy > global_data.viewport.h then
+			viewy = global_data.viewport.h
+		end
+
+		return viewx, viewy
 	end
 end
 

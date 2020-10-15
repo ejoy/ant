@@ -1,5 +1,7 @@
 local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
+local bgfx = require "bgfx"
+local geo_utils
 local ilight
 local iss
 local computil
@@ -127,45 +129,73 @@ local function init_entity(eid, root)
     iss.set_parent(eid, root)
 end
 
+local function update_circle_vb(eid, radian)
+    local rc = world[eid]._rendercache
+    local vbdesc, ibdesc = rc.vb, rc.ib
+    local vb, _ = geo_utils.get_circle_vb_ib(radian, gizmo_const.ROTATE_SLICES)
+    bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb));
+end
+
 local function update_point_gizmo()
     remove_entity[#remove_entity + 1] = m.point.eid
 
     local root = m.point.root
     local radius = ilight.range(m.current_light)
-    local c0 = computil.create_circle_entity(radius, gizmo_const.ROTATE_SLICES, {}, "light gizmo circle")
-    init_entity(c0, root)
-    local c1 = computil.create_circle_entity(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "light gizmo circle")
-    init_entity(c1, root)
-    local c2 = computil.create_circle_entity(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "light gizmo circle")
-    init_entity(c2, root)
-    m.point.eid = {c0, c1, c2}
+    
+    if #m.point.eid == 0 then
+        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {}, "light gizmo circle")
+        init_entity(c0, root)
+        local c1 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, "light gizmo circle")
+        init_entity(c1, root)
+        local c2 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, "light gizmo circle")
+        init_entity(c2, root)
+        m.point.eid = {c0, c1, c2}
+    else
+        update_circle_vb(m.point.eid[1], radius)
+        update_circle_vb(m.point.eid[2], radius)
+        update_circle_vb(m.point.eid[3], radius)
+    end
 end
 
 local function update_spot_gizmo()
-    remove_entity[#remove_entity + 1] = m.spot.eid
     local radian = ilight.radian(m.current_light)
     local range = ilight.range(m.current_light)
-    local root = m.spot.root
-    local c0 = computil.create_circle_entity(radian, gizmo_const.ROTATE_SLICES, {t = {0, 0, range}}, "light gizmo circle")
-    init_entity(c0, root)
-    local line0 = computil.create_line_entity({}, {0, 0, 0}, {0, radian, range})
-    init_entity(line0, root)
-    local line1 = computil.create_line_entity({}, {0, 0, 0}, {radian, 0, range})
-    init_entity(line1, root)
-    local line2 = computil.create_line_entity({}, {0, 0, 0}, {0, -radian, range})
-    init_entity(line2, root)
-    local line3 = computil.create_line_entity({}, {0, 0, 0}, {-radian, 0, range})
-    init_entity(line3, root)
-    m.spot.eid = {line0, line1, line2, line3, c0}
-end
+    if #m.spot.eid == 0 then
+        local root = m.spot.root
+        local c0 = geo_utils.create_dynamic_circle(radian, gizmo_const.ROTATE_SLICES, {t = {0, 0, range}}, "light gizmo circle")
+        init_entity(c0, root)
+        local line0 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, radian, range}, "line")
+        init_entity(line0, root)
+        local line1 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {radian, 0, range}, "line")
+        init_entity(line1, root)
+        local line2 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, -radian, range}, "line")
+        init_entity(line2, root)
+        local line3 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {-radian, 0, range}, "line")
+        init_entity(line3, root)
+        local line4 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, 0, range}, "line")
+        init_entity(line4, root)
+        m.spot.eid = {line0, line1, line2, line3, line4, c0}
+    else
+        update_circle_vb(m.spot.eid[6], radian)
+        iom.set_position(m.spot.eid[6], {0, 0, range})
 
-function m.remove_invalid_entity()
-    for _, eids in ipairs(remove_entity) do
-        for _, eid in ipairs(eids) do
-            world:remove_entity(eid)
+        local function update_vb(eid, tp2)
+            -- old_highlight = old_boundary[dir].highlight or false
+            -- eid = old_boundary[dir].line_eid
+            local vb = {
+                0, 0, 0, 0xffffffff,
+                tp2[1], tp2[2], tp2[3], 0xffffffff,
+            }
+            local rc = world[eid]._rendercache
+            local vbdesc = rc.vb
+            bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb));
         end
+        update_vb(m.spot.eid[1], {0, radian, range})
+        update_vb(m.spot.eid[2], {radian, 0, range})
+        update_vb(m.spot.eid[3], {0, -radian, range})
+        update_vb(m.spot.eid[4], {-radian, 0, range})
+        update_vb(m.spot.eid[5], {0, 0, range})
     end
-    remove_entity = {}
 end
 
 function m.update_gizmo()
@@ -202,5 +232,6 @@ return function(w)
     iom = world:interface "ant.objcontroller|obj_motion"
     iss = world:interface "ant.scene|iscenespace"
     ies = world:interface "ant.scene|ientity_state"
+    geo_utils   = require "editor.geometry_utils"(world)
     return m
 end

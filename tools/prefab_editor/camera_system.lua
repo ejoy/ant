@@ -105,12 +105,12 @@ local function selectBoundary(hp)
 	return 0
 end
 
-function m:data_changed()
-	camera_mgr.select_frustum = false
+function m:data_changed()	
+	--camera_mgr.select_frustum = false
 	for _, what, x, y in mouse_move:unpack() do
 		if what == "UNKNOWN" then
 			if camera_mgr.camera_list[camera_mgr.second_camera] then
-				local x, y = utils.mouse_pos_in_view(x, y)
+				--local x, y = utils.mouse_pos_in_view(x, y)
 				select_area = selectBoundary({x, y})
 			end
 		end
@@ -118,7 +118,7 @@ function m:data_changed()
 	
 	for _, what, x, y in mouse_down:unpack() do
 		if what == "LEFT" then
-			local x, y = utils.mouse_pos_in_view(x, y)
+			--local x, y = utils.mouse_pos_in_view(x, y)
 			if camera_mgr.camera_list[camera_mgr.second_camera] then
 				select_area = selectBoundary({x, y})
 				if select_area ~= 0 then
@@ -150,24 +150,26 @@ function m:data_changed()
 
 	for _, what, x, y in mouse_up:unpack() do
 		if what == "LEFT" then
+			if camera_mgr.camera_list[camera_mgr.second_camera] then
+				local boundary = camera_mgr.camera_list[camera_mgr.second_camera].far_boundary
+				for i, v in ipairs(boundary) do
+					camera_mgr.highlight_frustum(camera_mgr.second_camera, i, false)
+				end
+			end
 		end
 	end
 
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
 		if what == "LEFT" and select_area ~= 0 then
-			local ax, ay = utils.mouse_pos_in_view(x, y)
-			if ax and ay then
-				--local downpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, last_mouse_pos), hit_plane)
-				local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {ax, ay}), hit_plane)
-				local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
-				local aspect = 1.0
-				if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
-					aspect = icamera.get_frustum(camera_mgr.second_camera).aspect
-				end
-				local half_fov = math.atan(proj_len / dist_to_plane / aspect )
-				camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
-				inspector.update_ui(true)
+			local curpos = utils.ray_hit_plane(iom.ray(camera_mgr.main_camera, {x, y}), hit_plane)
+			local proj_len = math3d.dot(current_dir, math3d.sub(curpos, centre_pos))
+			local aspect = 1.0
+			if select_area == camera_mgr.FRUSTUM_LEFT or select_area == camera_mgr.FRUSTUM_RIGHT then
+				aspect = icamera.get_frustum(camera_mgr.second_camera).aspect
 			end
+			local half_fov = math.atan(proj_len / dist_to_plane / aspect )
+			camera_mgr.set_frustum_fov(camera_mgr.second_camera, 2 * math.deg(half_fov))
+			inspector.update_ui(true)
 		end
 	end
 
@@ -195,7 +197,7 @@ function m:data_changed()
 	update_second_view_camera()
 
 	for _,what,x,y in event_camera_control:unpack() do
-		if select_area == 0 then
+		if not camera_mgr.select_frustum then
 			if what == "rotate" then
 				camera_rotate(x, y)
 			elseif what == "pan" then

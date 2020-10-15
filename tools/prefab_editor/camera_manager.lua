@@ -5,6 +5,8 @@ local iom
 local icamera
 local imaterial
 local ies
+local geo_utils
+
 local m = {
     FRUSTUM_LEFT    = 1,
     FRUSTUM_TOP     = 2,
@@ -53,75 +55,6 @@ function m.set_frustum_fov(camera_eid, fov)
     m.update_frustrum(camera_eid)
 end
 
-local function create_dynamic_mesh(layout, vb, ib)
-	local declmgr = import_package "ant.render".declmgr
-	local decl = declmgr.get(layout)
-	return {
-		vb = {
-			start = 0,
-			num_vertices = #vb / decl.stride,
-			{handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), declmgr.get(layout).handle, "a")}
-		},
-		ib = {
-			start = 0,
-			num_indices = #ib,
-			handle = bgfx.create_dynamic_index_buffer(bgfx.memory_buffer("w", ib), "a")
-		}
-	}
-end
-
-local function create_simple_render_entity(srt, material, name, mesh, state)
-	return world:create_entity {
-		policy = {
-			"ant.render|render",
-			"ant.general|name",
-		},
-		data = {
-			transform	= srt or {},
-			material	= material,
-			mesh		= mesh,
-			state		= state or ies.create_state "visible",
-			name		= name,-- or gen_test_name(),
-			scene_entity= true,
-		}
-	}
-end
-local function get_frustum_vb(points, color)
-    local vb = {}
-    for i=1, #points do
-        local p = math3d.totable(points[i])
-        table.move(p, 1, 3, #vb+1, vb)
-        vb[#vb+1] = color or 0xffffffff
-    end
-    return vb
-end
-
-local function create_dynamic_frustum(frustum_points, name, color)
-    local vb = get_frustum_vb(frustum_points, color)
-    local ib = {
-        -- front
-        0, 1, 2, 3,
-        0, 2, 1, 3,
-        -- back
-        4, 5, 6, 7,
-        4, 6, 5, 7,
-        -- left
-        0, 4, 1, 5,
-        -- right
-        2, 6, 3, 7,
-    }
-    local mesh = create_dynamic_mesh("p3|c40niu", vb, ib)
-	return create_simple_render_entity(nil, "/pkg/ant.resources/materials/line.material", name, mesh)
-end
-local function create_dynamic_line(srt, p0, p1, name, color)
-	local vb = {
-		p0[1], p0[2], p0[3], color or 0xffffffff,
-		p1[1], p1[2], p1[3], color or 0xffffffff,
-	}
-    local mesh = create_dynamic_mesh("p3|c40niu", vb, {0, 1} )
-	return create_simple_render_entity(srt, "/pkg/ant.resources/materials/line_singlecolor.material", name, mesh)
-end
-
 function m.update_frustrum(cam_eid)
     if not cam_eid or not world[cam_eid].camera then return end
 
@@ -132,13 +65,13 @@ function m.update_frustrum(cam_eid)
     local frustum_points = math3d.frustum_points(icamera.calc_viewproj(cam_eid))
     local frustum_eid = m.camera_list[cam_eid].frustum_eid
     if not frustum_eid then
-        local eid = create_dynamic_frustum(frustum_points, "frustum", normal_color_i)
+        local eid = geo_utils.create_dynamic_frustum(frustum_points, "frustum", normal_color_i)
         ies.set_state(eid, "auxgeom", true)
         m.camera_list[cam_eid].frustum_eid = eid
     else
         local rc = world[frustum_eid]._rendercache
         local vbdesc, ibdesc = rc.vb, rc.ib
-        bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", get_frustum_vb(frustum_points, normal_color_i)));
+        bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", geo_utils.get_frustum_vb(frustum_points, normal_color_i)));
     end
     
     -- local rc = world[cam_eid]._rendercache
@@ -154,7 +87,7 @@ function m.update_frustrum(cam_eid)
         local eid
         local old_highlight = false
         if not old_boundary then
-            eid = create_dynamic_line(nil, tp1, tp2, "line")
+            eid = geo_utils.create_dynamic_line(nil, tp1, tp2, "line")
             ies.set_state(eid, "auxgeom", true)
         else
             old_highlight = old_boundary[dir].highlight or false
@@ -307,5 +240,6 @@ return function(w)
     imaterial   = world:interface "ant.asset|imaterial"
     ies         = world:interface "ant.scene|ientity_state"
     icamera_recorder = world:interface "ant.camera|icamera_recorder"
+    geo_utils   = require "editor.geometry_utils"(world)
     return m
 end

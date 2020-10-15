@@ -59,7 +59,7 @@ $(ODIR)/imgui_draw.o : $(IMGUI_SRC)/imgui_draw.cpp $(IMGUI_SRC)/imstb_truetype.h
 $(ODIR)/imgui_widgets.o : $(IMGUI_SRC)/imgui_widgets.cpp $(IMGUI_SRC)/imgui_internal.h | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 
-$(ODIR)/imgui_impl_win32.o : $(IMGUI_SRC)/examples/imgui_impl_win32.cpp | $(ODIR)
+$(ODIR)/imgui_impl_win32.o : $(IMGUI_SRC)/backends/imgui_impl_win32.cpp | $(ODIR)
 	$(CXX) $(CFLAGS) -c -o $@ $< $(IMGUI_INC) $(IMGUI_MACRO)
 
 $(ODIR)/imgui.dll : $(OBJS)
