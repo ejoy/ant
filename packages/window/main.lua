@@ -15,8 +15,6 @@ local callback = {}
 
 local config = {}
 local world
-local world_update
-local world_exit
 
 function callback.init(nwh, context, width, height)
 	rhwi.init {
@@ -38,9 +36,7 @@ function callback.init(nwh, context, width, height)
 	local irender = world:interface "ant.render|irender"
 	irender.create_blit_queue{w=width,h=height}
 
-	world:update_func "init" ()
-	world_update = world:update_func "update"
-	world_exit   = world:update_func "exit"
+	world:pipeline_init()
 end
 function callback.size(width,height,_)
 	if world then
@@ -49,8 +45,8 @@ function callback.size(width,height,_)
 	rhwi.reset(nil, width, height)
 end
 function callback.exit()
-	if world_exit then
-		world_exit()
+	if world then
+		world:pipeline_exit()
 	end
 	rhwi.shutdown()
     print "exit"
@@ -58,9 +54,8 @@ end
 
 function callback.update()
 	if debug_update then debug_update() end
-	if world_update then
-		world_update()
-		world:clear_removed()
+	if world then
+		world:pipeline_update()
 		rhwi.frame()
 	end
 end
