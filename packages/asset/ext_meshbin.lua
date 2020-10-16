@@ -48,14 +48,14 @@ local function delete(mesh)
     local vb = mesh.vb
     for idx, v in ipairs(vb) do
         if type(v) ~= "userdata" then
-            bgfx.destory(v.handle)
+            bgfx.destroy(v.handle)
         end
     end
 
     local ib = mesh.ib
     if ib then
         if type(ib.handle) ~= "userdata" then
-            bgfx.destory(ib.handle)
+            bgfx.destroy(ib.handle)
         end
     end
 end

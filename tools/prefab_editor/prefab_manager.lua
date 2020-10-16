@@ -79,8 +79,9 @@ function m:create(what)
             radian = 0.5
         })
         lightidx = lightidx + 1
-        self.entities[#self.entities+1] = newlight[1]
-        hierarchy:add(newlight[1], {template = newlight.__class[1]}, self.root)
+        local new_light = newlight[1]
+        self.entities[#self.entities+1] = new_light
+        hierarchy:add(new_light, {template = newlight.__class[1]}, self.root)
 
         local bb_eid = world:create_entity{
             policy = {
@@ -106,12 +107,14 @@ function m:create(what)
             tex = icons.ICON_SPOTLIGHT.handle
         elseif what == "point" then
             tex = icons.ICON_POINTLIGHT.handle
-        else
+        elseif what == "directional" then
             tex = icons.ICON_DIRECTIONALLIGHT.handle
+            ilight.active_directional_light(new_light)
         end
         imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
         iom.set_scale(bb_eid, 0.2)
-        light_gizmo.billboard[newlight[1]] = bb_eid
+        world[bb_eid].parent = world[new_light].parent
+        light_gizmo.billboard[new_light] = bb_eid
     end
 end
 
@@ -138,8 +141,7 @@ function m:open_prefab(filename)
         end
         world:remove_entity(eid)
     end
-    light_gizmo.show(false)
-
+    light_gizmo.clear()
     local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     assetmgr.unload(vfspath)
 
@@ -372,10 +374,7 @@ function m:remove_entity(eid)
     if world[eid].camera then
         camera_mgr.remove_camera(eid)
     elseif world[eid].light_type then
-        if world[eid].light_type == "directional" then
-            ilight.active_directional_light(nil)
-        end
-        light_gizmo.show(false)
+        light_gizmo.on_remove_light(eid)
     end
     local teml = hierarchy:get_template(eid)
     if teml.children then
