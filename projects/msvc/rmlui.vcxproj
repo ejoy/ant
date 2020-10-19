@@ -66,9 +66,9 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/RmlUi/msvc/$(Configuration)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/RmlUi/msvc/$(Configuration)/$(Configuration);d:/Code/github/freetype2/build/Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
-      <AdditionalDependencies>RmlCore.lib;font.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>RmlCore.lib;font.lib;freetyped.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -95,6 +95,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="font.vcxproj">
+      <Project>{d65a3c90-688f-498a-a165-2c698d7d7ff3}</Project>
+    </ProjectReference>
     <ProjectReference Include="luadll.vcxproj">
       <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
     </ProjectReference>

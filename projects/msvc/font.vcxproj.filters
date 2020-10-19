@@ -20,6 +20,9 @@
     <ClCompile Include="..\..\clibs\font\luafont.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\font\name_cvt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\font\font_manager.h">

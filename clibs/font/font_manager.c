@@ -40,6 +40,11 @@ font_manager_init(struct font_manager *F) {
 	}
 }
 
+int
+font_manager_font_num(struct font_manager *F, const void *ttfbuffer){
+	return stbtt_GetNumberOfFonts(ttfbuffer);
+}
+
 static inline int
 codepoint_ttf(int font, int codepoint) {
 	return (font << 24 | codepoint);
@@ -274,13 +279,118 @@ font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, 
 	return fm_addfont(F, ttfbuffer, stbtt_FindMatchingFont(ttfbuffer, family, (int)flags));
 }
 
-int 
-font_manager_family_name(struct font_manager *F, int fontid, char name[128], int *namelen){
-	struct stbtt_fontinfo * fi = &F->ttf[fontid];
-	const char* n = stbtt_GetFontNameString(fi, namelen, STBTT_PLATFORM_ID_MICROSOFT, STBTT_MS_EID_SYMBOL, STBTT_MS_LANG_CHINESE, 1);
+extern void
+cvt_name_info(const char* name, size_t numbytes, char newname[128]);
+
+static int
+get_name_str(struct stbtt_fontinfo * fi,
+	unsigned short platformID,
+	unsigned short encodingID,
+	unsigned short languageID,
+	unsigned short nameID,
+	int need_cvt,
+	char *name){
+	int namelen = 0;
+	const char* n = stbtt_GetFontNameString(fi, &namelen, platformID, encodingID, languageID, nameID);
+	if (n){
+		if (need_cvt){
+			cvt_name_info(n, namelen, name);
+		} else {
+			strcpy_s(name, 128, n);
+		}
+	}
+
+	return namelen;
+}
+
+static int
+get_name_info(struct stbtt_fontinfo * fi,
+	unsigned short platformID,
+	unsigned short encodingID,
+	unsigned short languageID,
+	int need_cvt,
+	char family[128], char style[64]){
+
+	static const unsigned short NAMEID_family = 1;
+	static const unsigned short NAMEID_style = 2;
 	
-	strcpy_s(name, 128, n);
+	if (get_name_str(fi, platformID, encodingID, languageID, NAMEID_family, need_cvt, family)){
+		get_name_str(fi, platformID, encodingID, languageID, NAMEID_style, need_cvt, style);
+		return 1;
+	}
+
 	return 0;
+}
+
+int 
+font_manager_family_style(struct font_manager *F, int fontid, char family[128], char style[64]){
+	struct stbtt_fontinfo * fi = &F->ttf[fontid];
+
+	//TODO: specify platform from outside
+	const unsigned short platformID = STBTT_PLATFORM_ID_MAC;
+
+	switch (platformID){
+    case STBTT_PLATFORM_ID_UNICODE:{
+		static const unsigned short encodings[] = {
+			STBTT_UNICODE_EID_UNICODE_1_0,
+			STBTT_UNICODE_EID_UNICODE_1_1,
+			STBTT_UNICODE_EID_ISO_10646,
+			STBTT_UNICODE_EID_UNICODE_2_0_BMP,
+			STBTT_UNICODE_EID_UNICODE_2_0_FULL,
+		};
+		const unsigned short languageID = 0;	// always 0
+		for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
+			if (get_name_info(fi, platformID, encodings[e], languageID, 1, family, style))
+				return 0;
+		}
+		break;
+    }
+    case STBTT_PLATFORM_ID_MAC:{
+		static const unsigned short encodings[] = {
+			STBTT_MAC_EID_ROMAN, 		STBTT_MAC_EID_ARABIC,
+			STBTT_MAC_EID_JAPANESE,   	STBTT_MAC_EID_HEBREW,
+			STBTT_MAC_EID_CHINESE_TRAD, STBTT_MAC_EID_GREEK,
+			STBTT_MAC_EID_KOREAN, 		STBTT_MAC_EID_RUSSIAN,
+		};
+		static const unsigned short languageIDs[] = {
+			STBTT_MS_LANG_ENGLISH, STBTT_MS_LANG_CHINESE,
+		};
+        for (int e=0; e<sizeof(encodings)/sizeof(encodings); ++e){
+			for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
+				if (get_name_info(fi, platformID, encodings[e], languageIDs[l], 0, family, style)){
+					return 0;
+				}
+			}
+		}
+		break;
+	}
+    case STBTT_PLATFORM_ID_MICROSOFT:
+		static const unsigned short languageIDs[] = {
+			STBTT_MS_LANG_ENGLISH, STBTT_MS_LANG_CHINESE,
+		};
+		static const unsigned short encodings[] = {
+			STBTT_MS_EID_SYMBOL,
+			STBTT_MS_EID_UNICODE_BMP,
+			STBTT_MS_EID_SHIFTJIS,
+			STBTT_MS_EID_UNICODE_FULL,
+		};
+    	for (int e=0; e<sizeof(encodings)/sizeof(encodings); ++e){
+			const unsigned short encodingID = encodings[0];
+			const int need_cvt = encodingID == STBTT_MS_EID_UNICODE_BMP || encodingID == STBTT_MS_EID_UNICODE_FULL;
+
+			for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
+				if (get_name_info(fi, platformID, encodings[e], languageIDs[l], need_cvt, family, style)){
+					return 0;
+				}
+			}
+		}
+        break;
+    case STBTT_PLATFORM_ID_ISO:
+    default:
+        return -2;
+    }
+
+	return -1;
 }
 
 int

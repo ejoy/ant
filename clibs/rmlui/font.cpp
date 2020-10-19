@@ -26,34 +26,49 @@ to_FamilyFlag(Rml::Style::FontStyle s, Rml::Style::FontWeight w){
 
 static inline Rml::String
 to_FontId_key(const Rml::String &family, FamilyFlag f){
-    return family + std::to_string(f);
+    return family + ":" + std::to_string(f);
+}
+
+static inline FamilyFlag
+match_FamilyFlag(const Rml::String &f){
+    Rml::String s(f);
+    for (auto &c:s) c = std::tolower(c);
+
+    int flags = 0;
+    if (s.find("italic") != Rml::String::npos)
+        flags |= FF_ITALIC;
+    if (s.find("bold") != Rml::String::npos)
+        flags |= FF_Blod;
+    return FamilyFlag(flags);
 }
 
 bool FontInterface::LoadFontFace(const Rml::String& file_name, bool fallback_face){
-    const FamilyFlag flags = to_FamilyFlag(Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Normal);
-    Rml::String family;
-    
-
     auto ifile = Rml::GetFileInterface();
     auto fh = ifile->Open(file_name);
     if (!fh)
         return false;
 
     ifile->Seek(fh, 0, SEEK_END);
-    const uint32_t filesize = ifile->Tell(fh);
+    const size_t filesize = ifile->Tell(fh);
     ifile->Seek(fh, 0, SEEK_SET);
 
     std::vector<uint8_t>    buffer(filesize);
     ifile->Read(&buffer[0], filesize, fh);
     ifile->Close(fh);
 
-    int fontid = font_manager_addfont(mfontmgr, &buffer[0], 1);
-    family.resize(128);
-    int namelen = 0;
-    font_manager_family_name(mfontmgr, fontid, &family[0], &namelen);
+    const int num = font_manager_font_num(mfontmgr, &buffer[0]);
+    for(int ii=0; ii<num; ++ii){
+        int fontid = font_manager_addfont(mfontmgr, &buffer[0], ii);
+        Rml::String family; family.resize(128);
+        Rml::String style; style.resize(64);
 
-    const auto key = to_FontId_key(family, flags);
-    mfontids[key] = fontid;
+        if (0 == font_manager_family_style(mfontmgr, fontid, &family[0], &style[0])){
+            auto flags = match_FamilyFlag(style);
+            const auto key = to_FontId_key(family, flags);
+            mfontids[key] = fontid;
+        }
+    }
+
     return true;
 }
 

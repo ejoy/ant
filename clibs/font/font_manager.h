@@ -61,6 +61,7 @@ struct font_glyph {
 
 void font_manager_init(struct font_manager *);
 
+FONT_API int font_manager_font_num(struct font_manager *F, const void *ttfbuffer);
 FONT_API int font_manager_addfont(struct font_manager *, const void *ttfbuffer, int index);
 typedef enum {
 	FF_Blod			= 0x01,
@@ -69,7 +70,7 @@ typedef enum {
 	FF_NONE			= 0x08,
 }FamilyFlag;
 FONT_API int font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, const char* family, FamilyFlag flags);
-FONT_API int font_manager_family_name(struct font_manager *F, int fontid, char name[128], int *namelen);
+FONT_API int font_manager_family_style(struct font_manager *F, int fontid, char family[128], char style[64]);
 FONT_API int font_manager_rebindfont(struct font_manager *, int fontid, const void *ttfbuffer);
 FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
 
