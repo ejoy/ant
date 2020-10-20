@@ -84,3 +84,7 @@ end
 function rmlui_sys:ui_update()
     rmlui_context:render()
 end
+
+function rmlui_sys:exit()
+    rmlui_context:shutdown()
+end

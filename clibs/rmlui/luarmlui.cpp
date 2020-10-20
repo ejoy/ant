@@ -180,17 +180,28 @@ get_context_handle(lua_State *L, int index=1){
 }
 
 static int
-lrmlui_context_del(lua_State *L){
+lrmlui_context_shutdown(lua_State *L){
     auto rc = get_rc(L);
-
     Rml::Shutdown();
-    auto release = [](auto &p){ delete p; p = nullptr;};
+    auto release = [](auto &p){ 
+        if (p){
+            delete p; p = nullptr;
+        }
+    };
 
     release(rc->ifile);
     release(rc->ifont);
     release(rc->isystem);
     release(rc->irenderer);
+}
 
+
+static int
+lrmlui_context_del(lua_State *L){
+    auto rc = get_rc(L);
+    if (rc->irenderer || rc->isystem || rc->ifont || rc->ifile){
+        luaL_error(L, "RmlUi should call shutdown before lua vm release");
+    }
     return 0;
 }
 
@@ -242,10 +253,11 @@ create_rml_context(lua_State *L){
         lua_pushvalue(L, -1);
         lua_setfield(L, -2, "__index");
         luaL_Reg l[] = {
-            {"load",    lrmlui_context_load},
-            {"load_font",lrmlui_context_font},
-            {"render",  lrmlui_context_render},
-            {"__gc",    lrmlui_context_del},
+            {"load",        lrmlui_context_load},
+            {"load_font",   lrmlui_context_font},
+            {"render",      lrmlui_context_render},
+            {"shutdown",    lrmlui_context_shutdown},
+            {"__gc",        lrmlui_context_del},
             {nullptr, nullptr},
         };
 		luaL_setfuncs(L, l, 0);

@@ -12,6 +12,7 @@ system "rmlui_system"
     .require_interface "ant.render|irenderqueue"
     .method "post_init"
     .method "ui_update"
+    .method "exit"
 
 pipeline "init"
     .stage "init"
