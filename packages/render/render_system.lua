@@ -49,6 +49,7 @@ function render_sys:init()
 		frustum = default_comp.frustum(vr.w/vr.h),
         name = "default_camera",
 	}
+	irender.create_pre_depth_queue(vr, camera_eid)
 	irender.create_main_queue(vr, camera_eid)
 end
 
@@ -83,10 +84,13 @@ end
 local pd_sys = ecs.system "pre_depth_system"
 local pd_mbs = {}
 function pd_sys:post_init()
+	local pd_eid = world:singleton_entity_id "pre_depth_queue"
+	if pd_eid == nil then
+		return
+	end
+
 	local mq_eid = world:singleton_entity_id "main_queue"
 	local mq = world[mq_eid]
-	local pd_eid = irender.create_pre_depth_queue(mq.render_target.view_rect, mq.camera_eid)
-
 	local callbacks = {
 		view_rect = function (m)
 			local vr = mq.render_target.view_rect
@@ -107,7 +111,6 @@ function pd_sys:post_init()
 		}
 	end
 end
-
 function pd_sys:before_render()
 	for _, d in pairs(pd_mbs) do
 		local cb = d.cb

@@ -22,7 +22,14 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     // mGeoBuffer.mindices.resize(batch.ib_start + batch.ib_num);
     // memcpy(&mGeoBuffer.mindices[batch.ib_start], indices, sizeof(int));
 
-    mHWI->Render(vertices, num_vertices, indices, num_indices, texture, translation);
+    const bool enableScissor = mScissorRect.w == 0 && mScissorRect.w == mScissorRect.h;
+    mHWI->SetScissorRect(enableScissor ? &mScissorRect : nullptr);
+    auto t = mTransform.GetColumn(3);
+    t[0] += translation.x;
+    t[1] += translation.y;
+    auto m = mTransform;
+    m.SetColumn(3, t);
+    mHWI->Render(vertices, num_vertices, indices, num_indices, texture, m.data());
 }
 
 void Renderer::EnableScissorRegion(bool enable) {
@@ -34,8 +41,8 @@ void Renderer::EnableScissorRegion(bool enable) {
 }
 
 void Renderer::SetScissorRegion(int x, int y, int w, int h) {
-    mScissorRect.x = x;
-    mScissorRect.y = y;
+    mScissorRect.x = std::max(x, 0);
+    mScissorRect.y = std::max(y, 0);
     mScissorRect.w = w;
     mScissorRect.h = h;
 }

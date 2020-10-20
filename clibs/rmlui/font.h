@@ -1,3 +1,4 @@
+#pragma once
 #include "RmlUi/Core/FontEngineInterface.h"
 
 #include <unordered_map>

@@ -15,11 +15,14 @@
 //define class HWInterface/////////////////////////////////////////////////////////////
 #include "HWInterface.h"
 
-HWInterface::HWInterface(uint16_t viewid, uint16_t layoutid)
+HWInterface::HWInterface(uint16_t viewid, void *layout, const Rect &vr)
     : mViewId(viewid)
-    , mVertexLayoutId(layoutid)
-    , mRenderState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_LESS|BGFX_STATE_CULL_CW|BGFX_STATE_MSAA)
-    {}
+    , mLayout(layout)
+    , mRenderState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_MSAA)
+    , mViewRect(vr)
+    {
+        BGFX(set_view_rect)(mViewId, uint16_t(mViewRect.x), uint16_t(mViewRect.y), uint16_t(mViewRect.w), uint16_t(mViewRect.h));
+    }
 
 uint16_t HWInterface::CreateTexture(const uint8_t *data, uint32_t numbytes, SamplerFlag flags, int *w, int *h){
 	const bgfx_memory_t *mem = BGFX(alloc)(numbytes);
@@ -44,12 +47,22 @@ void HWInterface::DestroyTexture(uint16_t texid){
     BGFX(destroy_texture)({texid});
 }
 
+void HWInterface::SetScissorRect(const Rect* rect){
+    rect = rect ? rect : &mViewRect;
+    BGFX(set_view_scissor)(mViewId, rect->x, rect->y, rect->w, rect->h);
+}
+
+void HWInterface::SetTransform(const float *m){
+    BGFX(set_view_transform)(mViewId, m, nullptr);
+}
+
 void HWInterface::Render(Rml::Vertex* vertices, int num_vertices, 
             int* indices, int num_indices, 
-            Rml::TextureHandle texture, const Rml::Vector2f& translation){
+            Rml::TextureHandle texture, const float *transform){
+
+    SetTransform(transform);
     bgfx_transient_vertex_buffer_t tvb;
-    bgfx_vertex_layout_t l = {mVertexLayoutId};
-    BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, &l);
+    BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mLayout);
 
     memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
     BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num_vertices);
@@ -74,7 +87,7 @@ void HWInterface::Render(Rml::Vertex* vertices, int num_vertices,
     const auto &si = texid == mShaderContext.font_texid ? mShaderContext.font : mShaderContext.image;
     BGFX(set_texture)(0, {si.tex_uniform_idx}, {texid}, UINT32_MAX);
 
-    BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_NONE);
+    BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
 }
 
 //end define class HWInterface/////////////////////////////////////////////////////////
@@ -86,9 +99,8 @@ struct rml_context{
     System          *isystem;
     HWInterface     *hwi;
     struct context {
-        Rml::Context *handle;
-        int width, height;
-        char name[32];
+        Rml::Context *  handle;
+        char            name[32];
     };
     context         context;
 };
@@ -161,17 +173,26 @@ parse_file_dict(lua_State *L, int index, Rml::String &root_dir, FileDist &fd){
 }
 
 static inline void
-parse_win_size(lua_State *L, int index, int *width, int *height){
-    auto get_int = [L, index](const char *name, int *d){
-        if (lua_getfield(L, index, name) == LUA_TNUMBER)
-            *d = (int)lua_tointeger(L, -1);
-        else 
-            luaL_error(L, "invalid '%s' data", name);
-        lua_pop(L, 1);
-    };
+parse_viewrect(lua_State *L, int index, Rect *rect){
+    if (lua_getfield(L, index, "viewrect") == LUA_TTABLE){
+        auto get_int = [L](const char *name, int index, int *d){
+            if (lua_getfield(L, index, name) == LUA_TNUMBER)
+                *d = (int)lua_tointeger(L, -1);
+            else 
+                luaL_error(L, "invalid '%s' data", name);
+            lua_pop(L, 1);
+        };
 
-    get_int("width", width);
-    get_int("height", height);
+        get_int("x", -1, &rect->x);
+        get_int("y", -1, &rect->y);
+
+        get_int("w", -1, &rect->w);
+        get_int("h", -1, &rect->h);
+    }else {
+        luaL_error(L, "invalid viewrect");
+    }
+
+    lua_pop(L, 1);
 }
 
 static inline void
@@ -184,6 +205,18 @@ parse_context_name(lua_State *L, int index, char contextname[32]){
     }
 
     strcpy(contextname, name);
+}
+
+static inline bgfx_vertex_layout_t*
+parse_vertex_layout(lua_State *L, int index){
+    bgfx_vertex_layout_t* l = nullptr;
+    if (lua_getfield(L, index, "layout") == LUA_TUSERDATA){
+        l = (bgfx_vertex_layout_t *)lua_touserdata(L, -1);
+    } else {
+        luaL_error(L, "invalid vertex layout");
+    }
+    lua_pop(L, 1);
+    return l;
 }
 
 static inline void
@@ -255,6 +288,8 @@ lrmlui_context_load(lua_State *L){
     if (!doc){
         luaL_error(L, "load document failed:%s", docfile);
     }
+
+    doc->Show();
     lua_pushlightuserdata(L, doc);
     return 1;
 }
@@ -301,18 +336,6 @@ create_rml_context(lua_State *L){
     return rc;
 }
 
-static inline bgfx_vertex_layout_handle_t
-create_ui_layout(){
-    bgfx_vertex_layout_t vlt = {0};
-    BGFX(vertex_layout_begin)(&vlt, BGFX_RENDERER_TYPE_NOOP);
-    BGFX(vertex_layout_add)(&vlt, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
-    BGFX(vertex_layout_add)(&vlt, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, true);
-    BGFX(vertex_layout_add)(&vlt, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
-    BGFX(vertex_layout_end)(&vlt);
-
-    return BGFX(create_vertex_layout)(&vlt);
-}
-
 static int
 linit(lua_State *L){
     luaL_checktype(L, 1, LUA_TTABLE);
@@ -328,11 +351,12 @@ linit(lua_State *L){
     parse_file_dict(L, 1, root_dir, fd);
     rc->ifile       = new FileInterface2(std::move(root_dir), std::move(fd));
 
-    parse_context_name(L, 1, rc->context.name);
-
-    rc->hwi         = new HWInterface(
-                            get_field_handle_idx(L, 1, "viewid"), 
-                            create_ui_layout().idx);
+    auto &c = rc->context;
+    parse_context_name(L, 1, c.name);
+    Rect rt;
+    parse_viewrect(L, 1, &rt);
+    auto l = parse_vertex_layout(L, 1);
+    rc->hwi = new HWInterface(get_field_handle_idx(L, 1, "viewid"), l, rt);
 
     auto &sc = rc->hwi->GetShaderContext();
     parse_shader_context(L, 1, &sc);
@@ -349,11 +373,9 @@ linit(lua_State *L){
         luaL_error(L, "Failed to Initialise Rml");
     }
 
-    auto &c = rc->context;
-    parse_win_size(L, 1, &c.width, &c.height);
-    c.handle = Rml::CreateContext(c.name, Rml::Vector2i(c.width, c.height));
+    c.handle = Rml::CreateContext(c.name, Rml::Vector2i(rt.w, rt.h));
     if (!c.handle){
-        luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", c.name, c.width, c.height);
+        luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", c.name, rt.w, rt.h);
     }
 
     return 1;

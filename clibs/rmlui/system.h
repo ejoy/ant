@@ -1,3 +1,4 @@
+#pragma once
 #include <RmlUi/Core/SystemInterface.h>
 
 #include <chrono>

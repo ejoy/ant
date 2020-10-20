@@ -280,7 +280,7 @@ font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, 
 }
 
 extern void
-cvt_name_info(const char* name, size_t numbytes, char newname[128]);
+cvt_name_info(const char* name, size_t numbytes, char *newname, size_t maxbytes, int needcvt);
 
 static int
 get_name_str(struct stbtt_fontinfo * fi,
@@ -289,15 +289,11 @@ get_name_str(struct stbtt_fontinfo * fi,
 	unsigned short languageID,
 	unsigned short nameID,
 	int need_cvt,
-	char *name){
+	char *name, size_t maxbytes){
 	int namelen = 0;
 	const char* n = stbtt_GetFontNameString(fi, &namelen, platformID, encodingID, languageID, nameID);
 	if (n){
-		if (need_cvt){
-			cvt_name_info(n, namelen, name);
-		} else {
-			strcpy_s(name, 128, n);
-		}
+		cvt_name_info(n, namelen, name, maxbytes, need_cvt);
 	}
 
 	return namelen;
@@ -314,8 +310,8 @@ get_name_info(struct stbtt_fontinfo * fi,
 	static const unsigned short NAMEID_family = 1;
 	static const unsigned short NAMEID_style = 2;
 	
-	if (get_name_str(fi, platformID, encodingID, languageID, NAMEID_family, need_cvt, family)){
-		get_name_str(fi, platformID, encodingID, languageID, NAMEID_style, need_cvt, style);
+	if (get_name_str(fi, platformID, encodingID, languageID, NAMEID_family, need_cvt, family, 128)){
+		get_name_str(fi, platformID, encodingID, languageID, NAMEID_style, need_cvt, style, 64);
 		return 1;
 	}
 
@@ -353,9 +349,9 @@ font_manager_family_style(struct font_manager *F, int fontid, char family[128], 
 			STBTT_MAC_EID_KOREAN, 		STBTT_MAC_EID_RUSSIAN,
 		};
 		static const unsigned short languageIDs[] = {
-			STBTT_MS_LANG_ENGLISH, STBTT_MS_LANG_CHINESE,
+			STBTT_MAC_LANG_ENGLISH, STBTT_MAC_LANG_CHINESE_SIMPLIFIED, STBTT_MAC_LANG_CHINESE_TRAD,
 		};
-        for (int e=0; e<sizeof(encodings)/sizeof(encodings); ++e){
+        for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
 			for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
 				if (get_name_info(fi, platformID, encodings[e], languageIDs[l], 0, family, style)){
 					return 0;
@@ -374,12 +370,12 @@ font_manager_family_style(struct font_manager *F, int fontid, char family[128], 
 			STBTT_MS_EID_SHIFTJIS,
 			STBTT_MS_EID_UNICODE_FULL,
 		};
-    	for (int e=0; e<sizeof(encodings)/sizeof(encodings); ++e){
-			const unsigned short encodingID = encodings[0];
+    	for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
+			const unsigned short encodingID = encodings[e];
 			const int need_cvt = encodingID == STBTT_MS_EID_UNICODE_BMP || encodingID == STBTT_MS_EID_UNICODE_FULL;
 
 			for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
-				if (get_name_info(fi, platformID, encodings[e], languageIDs[l], need_cvt, family, style)){
+				if (get_name_info(fi, platformID, encodingID, languageIDs[l], need_cvt, family, style)){
 					return 0;
 				}
 			}
@@ -389,9 +385,9 @@ font_manager_family_style(struct font_manager *F, int fontid, char family[128], 
     default:
         return -2;
     }
-
 	return -1;
 }
+	
 
 int
 font_manager_rebindfont(struct font_manager *F, int fontid, const void *ttfbuffer) {

@@ -1,3 +1,4 @@
+#pragma once
 #include <RmlUi/Core/FileInterface.h>
 #include <../Source/Core/FileInterfaceDefault.h>
 

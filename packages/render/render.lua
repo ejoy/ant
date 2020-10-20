@@ -335,7 +335,7 @@ function irender.create_main_queue(view_rect, camera_eid)
 	local db, ownership = get_depth_buffer()
 	render_buffers[#render_buffers+1] = db
 	if ownership then
-		local os = {}; os[db] = true
+		local os = {}; os[db] = "pre_depth_queue"
 		render_buffers.ownerships = os
 	end
 

@@ -1,5 +1,6 @@
 #include <string>
 #include <codecvt>
+#include <algorithm>
 
 static std::wstring
 toutf16(const std::string &s){
@@ -30,10 +31,18 @@ bigendian_to_smallendian(const std::string &s){
 
 extern "C" {
     void
-    cvt_name_info(const char* name, size_t numbytes, char newname[128]){
-        auto s = toutf8(bigendian_to_smallendian(name));
-        if (!s.empty()){
-            strcpy_s(newname, 128, &s[0]);
+    cvt_name_info(const char* name, size_t numbytes, char *newname, size_t maxbytes, int needcvt){
+        auto cp = [maxbytes](char *d, const char* s, size_t num){
+            memcpy(d, s, std::min(sizeof(char) * num, maxbytes));
+        };
+
+        if(needcvt){
+            auto s = toutf8(bigendian_to_smallendian(name));
+            if (!s.empty()){
+                cp(newname, &s[0], s.size());
+            }
+        }else {
+            cp(newname, name, numbytes);
         }
     }
 }

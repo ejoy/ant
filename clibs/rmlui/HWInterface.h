@@ -1,6 +1,7 @@
+#pragma once
 #include <RmlUi/Core/Types.h>
 #include <cstdint>
-
+#include "util.h"
 
 class Renderer;
 // Same as BGFX
@@ -45,18 +46,22 @@ struct ShaderContext{
 
 class HWInterface{
 public:
-    HWInterface(uint16_t viewid, uint16_t layoutid);
+    HWInterface(uint16_t viewid, void *layout, const Rect &vr);
     uint16_t CreateTexture(const uint8_t *data, uint32_t numbytes, SamplerFlag flags, int *w, int *h);
     uint16_t CreateTexture2D(int w, int h, SamplerFlag flags, const uint8_t *data, uint32_t numbytes);
     void DestroyTexture(uint16_t texid);
 
-    void Render(Rml::Vertex* vertices, int num_vertices, 
-                int* indices, int num_indices, 
-                Rml::TextureHandle texture, const Rml::Vector2f& translation);
+    void Render(Rml::Vertex* vertices, int num_vertices,
+        int* indices, int num_indices,
+        Rml::TextureHandle texture, const float* transform);
     ShaderContext& GetShaderContext() { return mShaderContext;}
+    void SetScissorRect(const Rect* rect);
+    void SetTransform(const float *m);
+    const Rect& GetViewRect() const { return mViewRect;}
 private:
     uint16_t mViewId;
-    uint16_t mVertexLayoutId;
+    void* mLayout;
     uint64_t mRenderState;
     ShaderContext mShaderContext;
+    Rect mViewRect;
 };

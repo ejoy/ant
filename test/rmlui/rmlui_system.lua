@@ -7,13 +7,15 @@ local fs        = require "filesystem"
 local rmlui     = require "rmlui"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
+local declmgr   = renderpkg.declmgr
+local fbmgr     = renderpkg.fbmgr
 
 local ifont     = world:interface "ant.render|ifont"
 local irq       = world:interface "ant.render|irenderqueue"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-local root_dir = fs.path "/pkg/ant.resources.binary/ui/test"
+local root_dir = fs.path "/pkg/ant.resources.binary/ui/tmp"
 
 local function init_rmlui_data()
     local ft_w, ft_h = ifont.font_tex_dim()
@@ -41,12 +43,16 @@ local function init_rmlui_data()
         root_dir = root_dir:string(),
         files = files
     }
+    local mq_eid = world:singleton_entity_id "main_queue"
+    local  layouhandle = declmgr.get "p2|c40niu|t20".handle
+    local vid = viewidmgr.get "uiruntime"
+    local vr = irq.view_rect(mq_eid)
+    fbmgr.bind(vid, irq.frame_buffer(mq_eid))
 
-    local vr = irq.view_rect(world:singleton_entity_id "main_queue")
     return {
         font = fontinfo,
         file_dist = file_dist,
-        viewid = viewidmgr.get "uiruntime",
+        viewid = vid,
         shader = {
             font = assetmgr.load_fx {
                 fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
@@ -57,8 +63,8 @@ local function init_rmlui_data()
                 vs = "/pkg/ant.resources/shaders/ui/vs_image.sc",
             },
         },
-        width = vr.w,
-        height = vr.h,
+        layout  = layouhandle,
+        viewrect= vr,
     }
 end
 
@@ -72,7 +78,7 @@ function rmlui_sys:post_init()
             rmlui_context:load_font(f)
         end
     end
-    rmlui_context:load "/pkg/ant.resources.binary/ui/test/demo.rml"
+    rmlui_context:load "/pkg/ant.resources.binary/ui/tmp/tutorial.rml"
 end
 
 function rmlui_sys:ui_update()

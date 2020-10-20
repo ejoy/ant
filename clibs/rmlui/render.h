@@ -1,35 +1,10 @@
+#pragma once
 #include <RmlUi/Core/RenderInterface.h>
 #include <algorithm>
 #include <unordered_map>
 
-struct GeometryBuffer{
-    std::vector<Rml::Vertex>    mvertices;
-    std::vector<int>            mindices;
-    GeometryBuffer(){
-        Reset();
-    }
+#include "util.h"
 
-    void Reset(){
-        //mvertices.reserve(std::max({mvertices.size(), decltype(mvertices)::size_type(2048)}));
-        mvertices.reserve(std::max(mvertices.size(), size_t(2048)));
-        mindices.reserve(std::max(mindices.size(), size_t(4096)));
-        mvertices.resize(0);
-        mindices.resize(0);
-    }
-};
-
-struct RenderBatch{
-    uint32_t vb_start;
-    uint32_t vb_num;
-
-    uint32_t ib_start;
-    uint32_t ib_num;
-
-    Rml::Vector2f       offset;
-    Rml::TextureHandle  tex;
-};
-
-using RenderBatchArray = std::vector<RenderBatch>;
 struct TexInfo{
     uint16_t        texid;
     Rml::Vector2i   dim;
@@ -54,9 +29,6 @@ public:
 public:
     void AddTextureId(const Rml::String &key, uint16_t texid, const Rml::Vector2i &dim) {mTexMap[key] = {texid, dim};}
 private:
-    struct Rect {int x, y, w, h;};
-    RenderBatchArray    mRenderBatches;
-    GeometryBuffer      mGeoBuffer;
     Rml::Matrix4f       mTransform = Rml::Matrix4f::Identity();
     Rect                mScissorRect = {0, 0, 0, 0};
     HWInterface         *mHWI;
