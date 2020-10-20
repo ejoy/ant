@@ -47,6 +47,10 @@ function callback.size(width,height,_)
 		world:pub {"resize", width, height}
 	end
 	rhwi.reset(nil, width, height)
+
+	if world then
+		world:pub {"reset"}
+	end
 end
 function callback.exit()
 	if world_exit then

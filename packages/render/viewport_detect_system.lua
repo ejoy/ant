@@ -1,12 +1,12 @@
 local ecs = ...
 local world = ecs.world
 local fbmgr 	= require "framebuffer_mgr"
+local viewidmgr = require "viewid_mgr"
 
 local vp_detect_sys = ecs.system "viewport_detect_system"
 
-local icamera = world:interface "ant.camera|camera"
-local irender = world:interface "ant.render|irender"
-
+local icamera	= world:interface "ant.camera|camera"
+local irq		= world:interface "ant.render|irenderqueue"
 local eventResize = world:sub {"resize"}
 
 local function resize_framebuffer(w, h, fbidx)
@@ -39,11 +39,21 @@ local function update_render_queue(q, viewsize)
 	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
 end
 
+local function rebind_uiruntime()
+	local uiviewid = viewidmgr.get "uiruntime"
+
+	local mq_eid = world:singleton_entity_id "main_queue"
+	local fbidx = irq.frame_buffer(mq_eid)
+	fbmgr.bind(uiviewid, fbidx)
+end
+
 local irq = world:interface "ant.render|irenderqueue"
-local function rebind_framebuffer_to_viewid()
+local function rebind_viewid()
 	for _, eid in world:each "render_target" do
 		irq.update_rendertarget(world[eid].render_target)
 	end
+
+	rebind_uiruntime()
 end
 
 local function update_camera_viewrect(viewsize)
@@ -60,7 +70,7 @@ local function update_camera_viewrect(viewsize)
 		update_render_queue(bq, viewsize)
 	end
 
-	rebind_framebuffer_to_viewid()
+	rebind_viewid()
 end
 
 function vp_detect_sys:post_init()
