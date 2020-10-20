@@ -12,92 +12,11 @@
 
 #include <cassert>
 
-//define class HWInterface/////////////////////////////////////////////////////////////
-#include "HWInterface.h"
-
-HWInterface::HWInterface(uint16_t viewid, void *layout, const Rect &vr)
-    : mViewId(viewid)
-    , mLayout(layout)
-    , mRenderState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_MSAA)
-    , mViewRect(vr)
-    {
-        BGFX(set_view_rect)(mViewId, uint16_t(mViewRect.x), uint16_t(mViewRect.y), uint16_t(mViewRect.w), uint16_t(mViewRect.h));
-    }
-
-uint16_t HWInterface::CreateTexture(const uint8_t *data, uint32_t numbytes, SamplerFlag flags, int *w, int *h){
-	const bgfx_memory_t *mem = BGFX(alloc)(numbytes);
-	memcpy(mem->data, data, numbytes);
-
-	bgfx_texture_info_t info;
-	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, flags, 1, &info);
-	if (th.idx != UINT16_MAX){
-		*w = (int)info.width;
-		*h = (int)info.height;
-	}
-	return th.idx;
-}
-
-uint16_t HWInterface::CreateTexture2D(int w, int h, SamplerFlag flags, const uint8_t *data, uint32_t numbytes){
-	const bgfx_memory_t *mem = BGFX(alloc)(numbytes);
-	memcpy(mem->data, data, numbytes);
-	return BGFX(create_texture_2d)(w, h, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, flags, mem).idx;
-}
-
-void HWInterface::DestroyTexture(uint16_t texid){
-    BGFX(destroy_texture)({texid});
-}
-
-void HWInterface::SetScissorRect(const Rect* rect){
-    rect = rect ? rect : &mViewRect;
-    BGFX(set_view_scissor)(mViewId, rect->x, rect->y, rect->w, rect->h);
-}
-
-void HWInterface::SetTransform(const float *m){
-    BGFX(set_view_transform)(mViewId, m, nullptr);
-}
-
-void HWInterface::Render(Rml::Vertex* vertices, int num_vertices, 
-            int* indices, int num_indices, 
-            Rml::TextureHandle texture, const float *transform){
-
-    SetTransform(transform);
-    bgfx_transient_vertex_buffer_t tvb;
-    BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mLayout);
-
-    memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
-    BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num_vertices);
-
-    bgfx_transient_index_buffer_t tib;
-    BGFX(alloc_transient_index_buffer)(&tib, num_indices);
-    uint16_t *data = (uint16_t*)tib.data;
-    for (int ii=0; ii<num_indices; ++ii){
-        int d = indices[ii];
-        if (d > UINT16_MAX){
-            assert(false);
-            return;
-        }
-
-        *data++ = (uint16_t)d;
-    }
-
-    BGFX(set_transient_index_buffer)(&tib, 0, num_indices);
-    BGFX(set_state)(mRenderState, 0);
-
-    const uint16_t texid = (uint16_t)texture;
-    const auto &si = texid == mShaderContext.font_texid ? mShaderContext.font : mShaderContext.image;
-    BGFX(set_texture)(0, {si.tex_uniform_idx}, {texid}, UINT32_MAX);
-
-    BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
-}
-
-//end define class HWInterface/////////////////////////////////////////////////////////
-
 struct rml_context{
     FileInterface2  *ifile;
     FontInterface   *ifont;
     Renderer        *irenderer;
     System          *isystem;
-    HWInterface     *hwi;
     struct context {
         Rml::Context *  handle;
         char            name[32];
@@ -271,7 +190,6 @@ lrmlui_context_del(lua_State *L){
     release(rc->ifont);
     release(rc->isystem);
     release(rc->irenderer);
-    release(rc->hwi);
 
     return 0;
 }
@@ -356,13 +274,13 @@ linit(lua_State *L){
     Rect rt;
     parse_viewrect(L, 1, &rt);
     auto l = parse_vertex_layout(L, 1);
-    rc->hwi = new HWInterface(get_field_handle_idx(L, 1, "viewid"), l, rt);
 
-    auto &sc = rc->hwi->GetShaderContext();
+    rc->irenderer = new Renderer(get_field_handle_idx(L, 1, "viewid"), l, rt);
+    rc->irenderer->AddTextureId(FontInterface::FONT_TEX_NAME, texid, tex_dim);
+
+    auto &sc = rc->irenderer->GetShaderContext();
     parse_shader_context(L, 1, &sc);
     sc.font_texid = texid;
-    rc->irenderer = new Renderer(rc->hwi);
-    rc->irenderer->AddTextureId(FontInterface::FONT_TEX_NAME, texid, tex_dim);
 
     Rml::SetFileInterface(rc->ifile);
     Rml::SetRenderInterface(rc->irenderer);
@@ -392,4 +310,9 @@ LUAMOD_API int
     luaL_newlib(L, l);
     return 1;
 }
+}
+
+bgfx_interface_vtbl_t* 
+get_bgfx_interface(){
+    return bgfx_inf_;
 }

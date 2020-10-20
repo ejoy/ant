@@ -1,35 +1,66 @@
 #include "render.h"
-#include "HWInterface.h"
 
 #include <RmlUi/Core.h>
+
+#include <cassert>
+
+extern bgfx_interface_vtbl_t* get_bgfx_interface();
+#define BGFX(api) get_bgfx_interface()->api
+
+Renderer::Renderer(uint16_t viewid, const bgfx_vertex_layout_t *layout, const Rect &vr)
+    : mViewId(viewid)
+    , mLayout(layout)
+    , mViewRect(vr)
+    , mRenderState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_MSAA){
+    BGFX(set_view_rect)(mViewId, uint16_t(mViewRect.x), uint16_t(mViewRect.y), uint16_t(mViewRect.w), uint16_t(mViewRect.h));
+}
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                             int* indices, int num_indices, 
                             Rml::TextureHandle texture, const Rml::Vector2f& translation) {
-    // RenderBatch batch;
-    // batch.vb_start  = (uint32_t)mGeoBuffer.mvertices.size();
-    // batch.vb_num    = num_vertices;
-
-    // batch.ib_start  = (uint32_t)mGeoBuffer.mindices.size();
-    // batch.ib_num    = num_indices;
+    if (mScissorRect.w == 0 && mScissorRect.w == mScissorRect.h){
+        BGFX(set_view_scissor)(mViewId, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
+    } else {
+        BGFX(set_view_scissor)(mViewId, 0, 0, 0, 0);
+    }
     
-    // batch.tex       = texture;
-    // batch.offset    = translation;
+    Rml::Matrix4f m = Rml::Matrix4f::Identity();
+    m = mTransform;
 
-    // mGeoBuffer.mvertices.resize(batch.vb_start + batch.vb_num);
-    // memcpy(&mGeoBuffer.mvertices[batch.vb_start], vertices, num_vertices * sizeof(Rml::Vertex));
-
-    // mGeoBuffer.mindices.resize(batch.ib_start + batch.ib_num);
-    // memcpy(&mGeoBuffer.mindices[batch.ib_start], indices, sizeof(int));
-
-    const bool enableScissor = mScissorRect.w == 0 && mScissorRect.w == mScissorRect.h;
-    mHWI->SetScissorRect(enableScissor ? &mScissorRect : nullptr);
-    auto t = mTransform.GetColumn(3);
+    auto t = m.GetColumn(3);
     t[0] += translation.x;
     t[1] += translation.y;
-    auto m = mTransform;
     m.SetColumn(3, t);
-    mHWI->Render(vertices, num_vertices, indices, num_indices, texture, m.data());
+
+    BGFX(set_transform)(m.data(), 1);
+
+    bgfx_transient_vertex_buffer_t tvb;
+    BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mLayout);
+
+    memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
+    BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num_vertices);
+
+    bgfx_transient_index_buffer_t tib;
+    BGFX(alloc_transient_index_buffer)(&tib, num_indices);
+    uint16_t *data = (uint16_t*)tib.data;
+    for (int ii=0; ii<num_indices; ++ii){
+        int d = indices[ii];
+        if (d > UINT16_MAX){
+            assert(false);
+            return;
+        }
+
+        *data++ = (uint16_t)d;
+    }
+
+    BGFX(set_transient_index_buffer)(&tib, 0, num_indices);
+    BGFX(set_state)(mRenderState, 0);
+
+    const uint16_t texid = (uint16_t)texture;
+    const auto &si = texid == mShaderContext.font_texid ? mShaderContext.font : mShaderContext.image;
+    BGFX(set_texture)(0, {si.tex_uniform_idx}, {texid}, UINT32_MAX);
+
+    BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
 }
 
 void Renderer::EnableScissorRegion(bool enable) {
@@ -77,24 +108,35 @@ bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& te
 	const size_t bufsize = ifile->Tell(fh);
 	ifile->Seek(fh, 0, SEEK_SET);
 	
-    std::vector<uint8_t> buffer(bufsize);
-    uint8_t *data = &buffer[0];
-	ifile->Read(data, bufsize, fh);
+    const bgfx_memory_t *mem = BGFX(alloc)((uint32_t)bufsize);
+	ifile->Read(mem->data, bufsize, fh);
 	ifile->Close(fh);
 
-    texture_handle = static_cast<Rml::TextureHandle>(
-            mHWI->CreateTexture(data, (uint32_t)bufsize, DefaultSamplerFlag(), &texture_dimensions.x, &texture_dimensions.y));
-
-    return texture_handle != uint16_t(-1);
+	bgfx_texture_info_t info;
+	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, DefaultSamplerFlag(), 1, &info);
+	if (th.idx != UINT16_MAX){
+		texture_dimensions.x = (int)info.width;
+		texture_dimensions.y = (int)info.height;
+        texture_handle = static_cast<Rml::TextureHandle>(th.idx);
+        return true;
+	}
+	return false;
 }
 
 bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Vector2i& source_dimensions) {
     //RGBA data
     const uint32_t bufsize = source_dimensions.x * source_dimensions.y * 4;
-    texture_handle = static_cast<Rml::TextureHandle>(mHWI->CreateTexture2D(source_dimensions.x, source_dimensions.y, DefaultSamplerFlag(), source, bufsize));
-    return texture_handle != uint16_t(-1);
+     const bgfx_memory_t *mem = BGFX(alloc)(bufsize);
+	memcpy(mem->data, source, bufsize);
+	auto thidx = BGFX(create_texture_2d)(source_dimensions.x, source_dimensions.y, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, DefaultSamplerFlag(), mem).idx;
+    if (thidx != UINT16_MAX){
+        texture_handle = static_cast<Rml::TextureHandle>(thidx);
+        return true;
+    }
+
+    return false;
 }
 
 void Renderer::ReleaseTexture(Rml::TextureHandle texture) {
-    mHWI->DestroyTexture(static_cast<uint16_t>(texture));
+    BGFX(destroy_texture)({static_cast<uint16_t>(texture)});
 }
