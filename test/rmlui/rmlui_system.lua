@@ -15,7 +15,7 @@ local irq       = world:interface "ant.render|irenderqueue"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-local root_dir = fs.path "/pkg/ant.resources.binary/ui/tmp"
+local root_dir = fs.path "/pkg/ant.resources.binary/ui"
 
 local function init_rmlui_data()
     local ft_w, ft_h = ifont.font_tex_dim()
@@ -78,7 +78,7 @@ function rmlui_sys:post_init()
             rmlui_context:load_font(f)
         end
     end
-    rmlui_context:load "/pkg/ant.resources.binary/ui/tmp/tutorial.rml"
+    rmlui_context:load "/pkg/ant.resources.binary/ui/test/src/demo.rml"
 end
 
 function rmlui_sys:ui_update()

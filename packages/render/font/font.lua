@@ -5,6 +5,7 @@ local bgfx = require "bgfx"
 local  lfont = require "font"
 local math3d = require "math3d"
 local platform = require "platform"
+local fs = require "filesystem"
 
 local declmgr = require "vertexdecl_mgr"
 
@@ -59,11 +60,40 @@ end
 
 local ifontmgr = ecs.interface "ifontmgr"
 local allfont = {}
-function ifontmgr.add_font(fontname)
-    local fontid = allfont[fontname]
+function ifontmgr.add_font(font)
+    local file = font.file or ""
+    local family = assert(font.family)
+    local style = font.style or ""
+
+    local key = file .. ":" .. family .. ":" .. style
+    if key == "::" then
+        error(("invalid font, file:%s, family:%s, style:%s"):format(file, family, style))
+    end
+
+    local fontid = allfont[key]
     if fontid == nil then
-        fontid = lfont.addfont(platform.font(fontname))
-        allfont[fontname] = fontid
+        local function read_file(file)
+            local p = fs.path(file)
+            local ext = p:extension():string():lower()
+            if ext ~= ".otf" and ext ~= ".ttf" then
+                error(("not support font file:%s"):format(file))
+            end
+
+            local f = fs.open(p, "rb")
+            local c = f:read "a"
+            f:close()
+            return c
+        end
+        local fontcontent = font.file and read_file(file) or platform.font(family)
+
+        -- local fontnum = lfont.fontnum(fontcontent)
+        -- for i=1, fontnum do
+        --     local id = lfont.addfont(fontcontent, i-1)
+        --     local nt = lfont.font_name_table(id)
+        -- end
+
+        fontid = lfont.addfont(fontcontent, family, style)
+        allfont[key] = fontid
     end
 
     return fontid
@@ -79,7 +109,7 @@ end
 
 local fontcomp = ecs.component "font"
 function fontcomp:init()
-    self.id = ifontmgr.add_font(self.name)
+    self.id = ifontmgr.add_font(self)
     return self
 end
 

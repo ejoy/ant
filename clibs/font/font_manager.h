@@ -2,6 +2,7 @@
 #define lua_bgfx_font_manager_h
 
 #include <stb/stb_truetype.h>
+#include <stdint.h>
 
 #define FONT_MANAGER_TEXSIZE 2048
 #define FONT_MANAGER_GLYPHSIZE 32
@@ -13,40 +14,40 @@
 
 struct font_slot {
 	int codepoint_ttf;	// high 8 bits (ttf index)
-	short offset_x;
-	short offset_y;
-	short advance_x;
-	short advance_y;
-	unsigned short w;
-	unsigned short h;
+	int16_t offset_x;
+	int16_t offset_y;
+	int16_t advance_x;
+	int16_t advance_y;
+	uint16_t w;
+	uint16_t h;
 };
 
 struct priority_list {
 	int version;
-	short prev;
-	short next;
+	int16_t prev;
+	int16_t next;
 };
 
 struct font_manager {
 	int version;
 	int count;
-	short list_head;
-	short font_number;
+	int16_t list_head;
+	int16_t font_number;
 	struct stbtt_fontinfo ttf[FONT_MANAGER_MAXFONT];
 	struct font_slot slots[FONT_MANAGER_SLOTS];
 	struct priority_list priority[FONT_MANAGER_SLOTS];
-	short hash[FONT_MANAGER_HASHSLOTS];
+	int16_t hash[FONT_MANAGER_HASHSLOTS];
 };
 
 struct font_glyph {
-	short offset_x;
-	short offset_y;
-	short advance_x;
-	short advance_y;
-	unsigned short w;
-	unsigned short h;
-	unsigned short u;
-	unsigned short v;
+	int16_t offset_x;
+	int16_t offset_y;
+	int16_t advance_x;
+	int16_t advance_y;
+	uint16_t w;
+	uint16_t h;
+	uint16_t u;
+	uint16_t v;
 };
 
 #ifdef _MSC_VER 
@@ -77,9 +78,21 @@ FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int si
 // 1 exist in cache. 0 not exist in cache, call font_manager_update. -1 failed.
 FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);
 // buffer size should be [ glyph->w * glyph->h ] ,  NULL succ , otherwise returns error msg
-FONT_API const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, unsigned char *buffer);
+FONT_API const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
 FONT_API void font_manager_flush(struct font_manager *);
 FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
 
-
+// example: see 'font_manager.c'
+FONT_API int font_manager_name_table_num(struct font_manager *F, int fontid, int *offset);
+struct name_item {
+	uint16_t platformID;
+	uint16_t encodingID;
+	uint16_t languageID;
+	uint16_t nameID;
+	const char* name;	// 'name' maybe bigendian unicode char, platformID and encodingID determine what encoding 'name' is
+	uint16_t namelen;	// 'namlen' is 'name' buffer size
+};
+FONT_API void font_manager_name_item(struct font_manager *F, int fontid, int offset, int idx, struct name_item *ni);
+#define name_item_is_unicode(ni) ((ni)->platformID == STBTT_PLATFORM_ID_UNICODE || ((ni)->platformID == STBTT_PLATFORM_ID_MICROSOFT && (ni)->encodingID == STBTT_MS_EID_UNICODE_BMP) ||((ni)->platformID == STBTT_PLATFORM_ID_MICROSOFT && (ni)->encodingID== STBTT_MS_EID_UNICODE_FULL))
+FONT_API int unicode_bigendian_to_utf8(const uint16_t *u, uint32_t len, uint8_t *utf8);
 #endif

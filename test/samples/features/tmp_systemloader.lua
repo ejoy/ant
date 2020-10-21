@@ -113,7 +113,7 @@ function init_loader_sys:init()
     point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
-    --world:instance "/pkg/ant.test.features/assets/entities/fonttest.prefab"
+    world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
 
     --ientity.create_procedural_sky()
     --target_lock_test()

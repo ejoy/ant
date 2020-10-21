@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <ctype.h>
 
 typedef void (*UPDATE_CHAR_FUNC)(uint16_t texid, 
 	uint16_t _layer, uint8_t _mip, 
@@ -268,6 +270,26 @@ getttf(lua_State *L, int idx) {
 }
 
 static int
+get_font_style(const char* style){
+	if (strcmp(style, "") == 0)
+		return STBTT_MACSTYLE_NONE;
+
+	int flags = 0;
+	char ss[32] = {0};
+	for (int i=0; i<32&&style[i]; ++i){
+		ss[i] = tolower(style[i]);
+	}
+	if(strstr(ss, "bold") == 0){
+		flags |= STBTT_MACSTYLE_BOLD;
+	}
+	if(strstr(ss, "italic") == 0){
+		flags |= STBTT_MACSTYLE_ITALIC;
+	}
+
+	return flags != 0 ? flags : STBTT_MACSTYLE_NONE;
+}
+
+static int
 laddfont(lua_State *L) {
 	struct font_manager *F = getF(L);
 	const void * ttf = getttf(L, 1);
@@ -275,8 +297,8 @@ laddfont(lua_State *L) {
 	int fontid;
 	if (type == LUA_TSTRING){
 		const char* family = lua_tostring(L, 2);
-		const int flags = luaL_optnumber(L, 3, 0);
-		fontid = font_manager_addfont_with_family(F, ttf, family, flags);
+		const char* style = luaL_optstring(L, 3, "");
+		fontid = font_manager_addfont_with_family(F, ttf, family, get_font_style(style));
 	}else if (type == LUA_TNUMBER || type == LUA_TNONE || type == LUA_TNIL){
 		const int index = (int)lua_tointeger(L, 2);
 		fontid = font_manager_addfont(F, ttf, 0);
@@ -361,6 +383,59 @@ lsubmit(lua_State *L){
 }
 
 static int
+lfont_name_table(lua_State*L){
+	struct font_manager *F = getF(L);
+	int fontid = luaL_checkinteger(L, 1);
+	
+	int offset;
+	const int ntnum = font_manager_name_table_num(F, fontid, &offset);
+	lua_createtable(L, ntnum, 0);
+	for(int ii=0; ii<ntnum; ++ii){
+		struct name_item ni;
+		font_manager_name_item(F, fontid, offset, ii, &ni);
+
+		lua_createtable(L, 0, 5);
+
+		lua_pushinteger(L, ni.platformID);
+		lua_setfield(L, -2, "platformID");
+
+		lua_pushinteger(L, ni.encodingID);
+		lua_setfield(L, -2, "encodingID");
+
+		lua_pushinteger(L, ni.languageID);
+		lua_setfield(L, -2, "languageID");
+		
+		lua_pushinteger(L, ni.nameID);
+		lua_setfield(L, -2, "nameID");
+
+		if (name_item_is_unicode(&ni)){
+			char name[512] = {0};
+			assert(sizeof(name) > ni.namelen);
+			const int namelen = unicode_bigendian_to_utf8((const uint16_t*)ni.name, ni.namelen / 2, name);
+			lua_pushlstring(L, name, namelen);
+		} else {
+			lua_pushlstring(L, ni.name, ni.namelen);
+		}
+
+		lua_setfield(L, -2, "name");
+
+		lua_seti(L, -2, ii+1);
+	}
+
+	return 1;
+}
+
+static int
+lfontnum(lua_State *L){
+	struct font_manager *F = getF(L);
+
+	const void * ttf = getttf(L, 1);
+	int numfont = font_manager_font_num(F, ttf);
+	lua_pushinteger(L, numfont);
+	return 1;
+}
+
+static int
 linit(lua_State *L){
 	struct font_context * t = (struct font_context*)lua_touserdata(L, lua_upvalueindex(1));
 	t->update_char_func	= (UPDATE_CHAR_FUNC)lua_touserdata(L, 1);
@@ -375,12 +450,14 @@ luaopen_font(lua_State *L) {
 		{ "fonttexture_size", NULL },
 		{ "font_manager",	NULL},
 		{ "init",			linit},
+		{ "fontnum",		lfontnum},
 		{ "fontheight", 	lfontheight },
 		{ "addfont", 		laddfont },
 		{ "rebind", 		lrebindfont },
         { "prepare_text",   lprepare_text},
         { "load_text_quad", lload_text_quad},
 		{ "submit",			lsubmit},
+		{ "font_name_table", lfont_name_table},
 		{ NULL, 			NULL },
 	};
 	luaL_newlibtable(L, l);

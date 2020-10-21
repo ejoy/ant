@@ -205,7 +205,7 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 }
 
 const char *
-font_manager_update(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph, unsigned char *buffer) {
+font_manager_update(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
 	if (font < 0 || font >= F->font_number)
 		return "Invalid font";
 	int cp = codepoint_ttf(font, codepoint);
@@ -276,117 +276,200 @@ font_manager_addfont(struct font_manager *F, const void *ttfbuffer, int index) {
 
 int
 font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, const char* family, FamilyFlag flags) {
-	return fm_addfont(F, ttfbuffer, stbtt_FindMatchingFont(ttfbuffer, family, (int)flags));
-}
-
-extern void
-cvt_name_info(const char* name, size_t numbytes, char *newname, size_t maxbytes, int needcvt);
-
-static int
-get_name_str(struct stbtt_fontinfo * fi,
-	unsigned short platformID,
-	unsigned short encodingID,
-	unsigned short languageID,
-	unsigned short nameID,
-	int need_cvt,
-	char *name, size_t maxbytes){
-	int namelen = 0;
-	const char* n = stbtt_GetFontNameString(fi, &namelen, platformID, encodingID, languageID, nameID);
-	if (n){
-		cvt_name_info(n, namelen, name, maxbytes, need_cvt);
+	const int offset = stbtt_FindMatchingFont(ttfbuffer, family, (int)flags);
+	if (offset < 0){
+		return -1;
 	}
-
-	return namelen;
+	return fm_addfont(F, ttfbuffer, offset);
 }
 
-static int
-get_name_info(struct stbtt_fontinfo * fi,
-	unsigned short platformID,
-	unsigned short encodingID,
-	unsigned short languageID,
-	int need_cvt,
-	char family[128], char style[64]){
+int
+font_manager_name_table_num(struct font_manager *F, int fontid, int *offset){
+	const stbtt_fontinfo *font = &F->ttf[fontid];
+	stbtt_uint8 *fc = font->data;
+    stbtt_uint32 nm = stbtt__find_table(fc, font->fontstart, "name");
+    if (!nm)
+		return -1;
 
-	static const unsigned short NAMEID_family = 1;
-	static const unsigned short NAMEID_style = 2;
+	*offset = nm;
+	return ttUSHORT(fc+nm+2);
+}
+
+// static void
+// list_tt_name_table(const stbtt_fontinfo *font, int idx, struct name_item *ni){
+//     stbtt_int32 count,stringOffset;
+//     stbtt_uint8 *fc = font->data;
+//     stbtt_uint32 offset = font->fontstart;
+//     stbtt_uint32 nm = stbtt__find_table(fc, offset, "name");
+//     if (!nm) 
+//         return ;
+ 
+//     count = ttUSHORT(fc+nm+2);
+//     stringOffset = nm + ttUSHORT(fc+nm+4);
+//     const char* ntp = (const char*)(fc + stringOffset);
+//     //for (i=0; i < count; ++i) {
+//         stbtt_uint32 loc = nm + 6 + 12 * idx;
+
+//         ni->platformID  = ttUSHORT(fc+loc+0); 
+//         ni->encodingID  = ttUSHORT(fc+loc+2);
+//         ni->languageID  = ttUSHORT(fc+loc+4);
+//         ni->nameID      = ttUSHORT(fc+loc+6);
+
+//         ni->namelen 	= ttUSHORT(fc+loc+8);
+//         ni->name		= ntp+ttUSHORT(fc+loc+10);
+//     //}
+// }
+
+void
+font_manager_name_item(struct font_manager *F, int fontid, int offset, int idx, struct name_item *ni){
+	const stbtt_fontinfo *font = &F->ttf[fontid];
+
+	stbtt_uint8 *fc = font->data;
+	int str_offset = offset + ttUSHORT(fc+offset+4);
+	const char* ntp = (const char*)(fc + str_offset);
+
+	stbtt_uint32 loc = offset + 6 + 12 * idx;
+
+	ni->platformID  = ttUSHORT(fc+loc+0); 
+	ni->encodingID  = ttUSHORT(fc+loc+2);
+	ni->languageID  = ttUSHORT(fc+loc+4);
+	ni->nameID      = ttUSHORT(fc+loc+6);
+
+	ni->namelen 	= ttUSHORT(fc+loc+8);
+	ni->name    	= ntp+ttUSHORT(fc+loc+10);
+}
+
+int
+unicode_bigendian_to_utf8(const uint16_t *u, uint32_t len, uint8_t *utf8){
+	uint8_t* b = utf8;
+	for (uint32_t ii=0; ii < len; ++ii){
+		uint16_t c = (0xff00&u[ii])>>8|(0x00ff&u[ii])<<8; // to little endian
+
+		if (c<0x80) *b++=c;
+		else if (c<0x800) *b++=192+c/64, *b++=128+c%64;
+		else if (c-0xd800u<0x800) return -2;
+		else if (c<0x10000) *b++=224+c/4096, *b++=128+c/64%64, *b++=128+c%64;
+		else if (c<0x110000) *b++=240+c/262144, *b++=128+c/4096%64, *b++=128+c/64%64, *b++=128+c%64;
+		else return -1;
+	}
+	return (b - utf8);
+}
+
+int
+font_manager_is_unicode_name_item(struct font_manager *F, struct name_item *ni){
+	return ( ni->platformID == 0 || 
+		(ni->platformID == 3 && ni->encodingID == 1) ||
+		(ni->platformID == 3 && ni->encodingID== 10));
+}
+
+// extern void
+// cvt_name_info(const char* name, size_t numbytes, char *newname, size_t maxbytes, int needcvt);
+
+// static int
+// get_name_str(struct stbtt_fontinfo * fi,
+// 	uint16_t platformID,
+// 	uint16_t encodingID,
+// 	uint16_t languageID,
+// 	uint16_t nameID,
+// 	int need_cvt,
+// 	char *name, size_t maxbytes){
+// 	int namelen = 0;
+// 	const char* n = stbtt_GetFontNameString(fi, &namelen, platformID, encodingID, languageID, nameID);
+// 	if (n){
+// 		cvt_name_info(n, namelen, name, maxbytes, need_cvt);
+// 	}
+
+// 	return namelen;
+// }
+
+// static int
+// get_name_info(struct stbtt_fontinfo * fi,
+// 	uint16_t platformID,
+// 	uint16_t encodingID,
+// 	uint16_t languageID,
+// 	int need_cvt,
+// 	char family[128], char style[64]){
+
+// 	static const uint16_t NAMEID_family = 1;
+// 	static const uint16_t NAMEID_style = 2;
 	
-	if (get_name_str(fi, platformID, encodingID, languageID, NAMEID_family, need_cvt, family, 128)){
-		get_name_str(fi, platformID, encodingID, languageID, NAMEID_style, need_cvt, style, 64);
-		return 1;
-	}
+// 	if (get_name_str(fi, platformID, encodingID, languageID, NAMEID_family, need_cvt, family, 128)){
+// 		get_name_str(fi, platformID, encodingID, languageID, NAMEID_style, need_cvt, style, 64);
+// 		return 1;
+// 	}
 
-	return 0;
-}
+// 	return 0;
+// }
 
-int 
-font_manager_family_style(struct font_manager *F, int fontid, char family[128], char style[64]){
-	struct stbtt_fontinfo * fi = &F->ttf[fontid];
+// int 
+// font_manager_family_style(struct font_manager *F, int fontid, char family[128], char style[64]){
+// 	struct stbtt_fontinfo * fi = &F->ttf[fontid];
 
-	//TODO: specify platform from outside
-	const unsigned short platformID = STBTT_PLATFORM_ID_MAC;
+// 	//TODO: specify platform from outside
+// 	const uint16_t platformID = STBTT_PLATFORM_ID_MAC;
 
-	switch (platformID){
-    case STBTT_PLATFORM_ID_UNICODE:{
-		static const unsigned short encodings[] = {
-			STBTT_UNICODE_EID_UNICODE_1_0,
-			STBTT_UNICODE_EID_UNICODE_1_1,
-			STBTT_UNICODE_EID_ISO_10646,
-			STBTT_UNICODE_EID_UNICODE_2_0_BMP,
-			STBTT_UNICODE_EID_UNICODE_2_0_FULL,
-		};
-		const unsigned short languageID = 0;	// always 0
-		for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-			if (get_name_info(fi, platformID, encodings[e], languageID, 1, family, style))
-				return 0;
-		}
-		break;
-    }
-    case STBTT_PLATFORM_ID_MAC:{
-		static const unsigned short encodings[] = {
-			STBTT_MAC_EID_ROMAN, 		STBTT_MAC_EID_ARABIC,
-			STBTT_MAC_EID_JAPANESE,   	STBTT_MAC_EID_HEBREW,
-			STBTT_MAC_EID_CHINESE_TRAD, STBTT_MAC_EID_GREEK,
-			STBTT_MAC_EID_KOREAN, 		STBTT_MAC_EID_RUSSIAN,
-		};
-		static const unsigned short languageIDs[] = {
-			STBTT_MAC_LANG_ENGLISH, STBTT_MAC_LANG_CHINESE_SIMPLIFIED, STBTT_MAC_LANG_CHINESE_TRAD,
-		};
-        for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-			for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
-				if (get_name_info(fi, platformID, encodings[e], languageIDs[l], 0, family, style)){
-					return 0;
-				}
-			}
-		}
-		break;
-	}
-    case STBTT_PLATFORM_ID_MICROSOFT:
-		static const unsigned short languageIDs[] = {
-			STBTT_MS_LANG_ENGLISH, STBTT_MS_LANG_CHINESE,
-		};
-		static const unsigned short encodings[] = {
-			STBTT_MS_EID_SYMBOL,
-			STBTT_MS_EID_UNICODE_BMP,
-			STBTT_MS_EID_SHIFTJIS,
-			STBTT_MS_EID_UNICODE_FULL,
-		};
-    	for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-			const unsigned short encodingID = encodings[e];
-			const int need_cvt = encodingID == STBTT_MS_EID_UNICODE_BMP || encodingID == STBTT_MS_EID_UNICODE_FULL;
+// 	switch (platformID){
+//     case STBTT_PLATFORM_ID_UNICODE:{
+// 		static const uint16_t encodings[] = {
+// 			STBTT_UNICODE_EID_UNICODE_1_0,
+// 			STBTT_UNICODE_EID_UNICODE_1_1,
+// 			STBTT_UNICODE_EID_ISO_10646,
+// 			STBTT_UNICODE_EID_UNICODE_2_0_BMP,
+// 			STBTT_UNICODE_EID_UNICODE_2_0_FULL,
+// 		};
+// 		const uint16_t languageID = 0;	// always 0
+// 		for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
+// 			if (get_name_info(fi, platformID, encodings[e], languageID, 1, family, style))
+// 				return 0;
+// 		}
+// 		break;
+//     }
+//     case STBTT_PLATFORM_ID_MAC:{
+// 		static const uint16_t encodings[] = {
+// 			STBTT_MAC_EID_ROMAN, 		STBTT_MAC_EID_ARABIC,
+// 			STBTT_MAC_EID_JAPANESE,   	STBTT_MAC_EID_HEBREW,
+// 			STBTT_MAC_EID_CHINESE_TRAD, STBTT_MAC_EID_GREEK,
+// 			STBTT_MAC_EID_KOREAN, 		STBTT_MAC_EID_RUSSIAN,
+// 		};
+// 		static const uint16_t languageIDs[] = {
+// 			STBTT_MAC_LANG_ENGLISH, STBTT_MAC_LANG_CHINESE_SIMPLIFIED, STBTT_MAC_LANG_CHINESE_TRAD,
+// 		};
+//         for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
+// 			for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
+// 				if (get_name_info(fi, platformID, encodings[e], languageIDs[l], 0, family, style)){
+// 					return 0;
+// 				}
+// 			}
+// 		}
+// 		break;
+// 	}
+//     case STBTT_PLATFORM_ID_MICROSOFT:
+// 		static const uint16_t languageIDs[] = {
+// 			STBTT_MS_LANG_ENGLISH, STBTT_MS_LANG_CHINESE,
+// 		};
+// 		static const uint16_t encodings[] = {
+// 			STBTT_MS_EID_SYMBOL,
+// 			STBTT_MS_EID_UNICODE_BMP,
+// 			STBTT_MS_EID_SHIFTJIS,
+// 			STBTT_MS_EID_UNICODE_FULL,
+// 		};
+//     	for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
+// 			const uint16_t encodingID = encodings[e];
+// 			const int need_cvt = encodingID == STBTT_MS_EID_UNICODE_BMP || encodingID == STBTT_MS_EID_UNICODE_FULL;
 
-			for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
-				if (get_name_info(fi, platformID, encodingID, languageIDs[l], need_cvt, family, style)){
-					return 0;
-				}
-			}
-		}
-        break;
-    case STBTT_PLATFORM_ID_ISO:
-    default:
-        return -2;
-    }
-	return -1;
-}
+// 			for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
+// 				if (get_name_info(fi, platformID, encodingID, languageIDs[l], need_cvt, family, style)){
+// 					return 0;
+// 				}
+// 			}
+// 		}
+//         break;
+//     case STBTT_PLATFORM_ID_ISO:
+//     default:
+//         return -2;
+//     }
+// 	return -1;
+// }
 	
 
 int
@@ -406,7 +489,7 @@ scale(short *v, int size) {
 }
 
 static inline void
-uscale(unsigned short *v, int size) {
+uscale(uint16_t *v, int size) {
 	*v = (*v * size + ORIGINAL_SIZE/2) / ORIGINAL_SIZE;
 }
 
@@ -423,6 +506,21 @@ font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 
 #if 0
 
+void fetch_tt_font_name_table(struct font_manager *F, int fontid){
+	int offset;
+	int num_nt = font_manager_name_table_num(F, fontid, &offset);
+	for(int idx=0; idx<num_nt;++idx){
+		struct name_item ni;
+		font_manager_name_item(F, fontid, offset, idx, &ni);
+		char*name = (char*)malloc(sizeof(char) * ni.namelen);
+		uint16_t namelen_utf8;
+		font_manager_name_item_to_utf8(F, &ni, name, &namelen_utf8);
+		printf(name);
+		free(name);
+	}
+}
+#include <stdlib.h>
+#include <stdio.h>
 int
 main() {
 	FILE * f = fopen("msyh.ttc", "rb");
@@ -464,6 +562,8 @@ main() {
 		}
 
 	}
+
+	fetch_tt_font_name_table(&F, font);
 
 	return 0;
 }

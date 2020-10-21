@@ -193,6 +193,7 @@ lrmlui_context_shutdown(lua_State *L){
     release(rc->ifont);
     release(rc->isystem);
     release(rc->irenderer);
+    return 0;
 }
 
 
