@@ -25,15 +25,15 @@ data:
     state: 1
     scene_entity:true
     font:
-        file: /pkg/ant.resources.binary/ui/arial.ttf
-        family: Arial
+        file: /pkg/ant.resources.binary/ui/test/assets/Delicious-Roman.otf
+        family: Delicious
         #style: Blod#|Italic #not support rightnow
         size: 42
     show_config:
         location_type: aabb_bottom
         location_offset: {0, -0.85, 0, 0}
         #description: 测试测试
-        description: abc
+        description: ABC
         color: 0xff00ff00
 action:
     show_name: 1
