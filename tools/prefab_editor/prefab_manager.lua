@@ -6,6 +6,9 @@ local hierarchy     = require "hierarchy"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
 local utils         = require "widget.utils"
+local bgfx          = require "bgfx"
+local geo_utils
+
 local ilight
 local light_gizmo
 local camera_mgr
@@ -13,8 +16,46 @@ local world
 local iom
 local worldedit
 local m = {
-	entities = {}
+    entities = {}
 }
+local aabb_color = 0x6060ffff
+local highlight_aabb_eid
+function m:update_current_aabb(eid)
+    if not highlight_aabb_eid then
+        highlight_aabb_eid = geo_utils.create_dynamic_aabb({}, "highlight_aabb")
+        ies.set_state(highlight_aabb_eid, "auxgeom", true)
+    end
+    ies.set_state(highlight_aabb_eid, "visible", false)
+    if not eid or world[eid].camera or world[eid].light_type then
+        return
+    end
+    local aabb = nil
+    local e = world[eid]
+    if e.mesh and e.mesh.bounding then
+        local w = iom.calc_worldmat(eid)
+        aabb = math3d.aabb_transform(w, e.mesh.bounding.aabb)
+    else
+        local adaptee = hierarchy:get_select_adaptee(eid)
+        for _, eid in ipairs(adaptee) do
+            local e = world[eid]
+            if e.mesh and e.mesh.bounding then
+                local newaabb = math3d.aabb_transform(iom.calc_worldmat(eid), e.mesh.bounding.aabb)
+                aabb = aabb and math3d.aabb_merge(aabb, newaabb) or newaabb
+            end
+        end
+    end
+
+    if aabb then
+        local v = math3d.tovalue(aabb)
+        local aabb_shape = {min={v[1],v[2],v[3]}, max={v[5],v[6],v[7]}}
+        local vb, ib = geo_utils.get_aabb_vb_ib(aabb_shape, aabb_color)
+        local rc = world[highlight_aabb_eid]._rendercache
+        local vbdesc, ibdesc = rc.vb, rc.ib
+        bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb))
+        ies.set_state(highlight_aabb_eid, "visible", true)
+    end
+end
+
 function m:normalize_aabb()
     local aabb
     for _, eid in ipairs(self.entities) do
@@ -113,6 +154,7 @@ function m:create(what)
         end
         imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
         iom.set_scale(bb_eid, 0.2)
+        ies.set_state(bb_eid, "auxgeom", true)
         world[bb_eid].parent = world[new_light].parent
         light_gizmo.billboard[new_light] = bb_eid
     end
@@ -127,6 +169,26 @@ function m:internal_remove(eid)
     end
 end
 
+local function set_select_adapter(entity_set, mount_root)
+    for _, eid in ipairs(entity_set) do
+        if type(eid) == "table" then
+            set_select_adapter(eid, mount_root)
+        else
+            hierarchy:add_select_adapter(eid, mount_root)
+        end
+    end
+end
+
+local function remove_entitys(entities)
+    for _, eid in ipairs(entities) do
+        if type(eid) == "table" then
+            remove_entitys(eid)
+        else
+            world:remove_entity(eid)
+        end
+    end
+end
+
 function m:open_prefab(filename)
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
@@ -135,9 +197,7 @@ function m:open_prefab(filename)
         end
         local teml = hierarchy:get_template(eid)
         if teml and teml.children then
-            for _, e in ipairs(teml.children) do
-                world:remove_entity(e)
-            end
+            remove_entitys(teml.children)
         end
         world:remove_entity(eid)
     end
@@ -174,9 +234,7 @@ function m:open_prefab(filename)
                 local teml = hierarchy:get_template(parent)
                 teml.filename = prefab.__class[i].prefab
                 teml.children = entity
-                for _, e in ipairs(entity) do
-                    hierarchy:add_select_adapter(e, parent)
-                end
+                set_select_adapter(entity, parent)
             else
                 local prefab_root = world:create_entity{
                     policy = {
@@ -262,10 +320,8 @@ function m:add_prefab(filename)
     local prefab = worldedit:prefab_template(vfspath)
     local entities = worldedit:prefab_instance(prefab)
     world[entities[1]].parent = mount_root
-    for i, e in ipairs(entities) do
-        hierarchy:add_select_adapter(e, mount_root)
-    end
-
+    
+    set_select_adapter(entities, mount_root)
     local current_dir = lfs.path(tostring(self.prefab)):parent_path()
     local relative_path = lfs.relative(lfs.path(vfspath), current_dir)
 
@@ -398,5 +454,6 @@ return function(w)
     worldedit   = import_package "ant.editor".worldedit(world)
     ilight      = world:interface "ant.render|light"
     light_gizmo = require "gizmo.light"(world)
+    geo_utils   = require "editor.geometry_utils"(world)
     return m
 end
