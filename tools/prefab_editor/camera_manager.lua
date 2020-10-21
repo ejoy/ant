@@ -66,6 +66,7 @@ function m.update_frustrum(cam_eid)
     local frustum_eid = m.camera_list[cam_eid].frustum_eid
     if not frustum_eid then
         local eid = geo_utils.create_dynamic_frustum(frustum_points, "frustum", normal_color_i)
+        imaterial.set_property(eid, "u_color", normal_color)
         ies.set_state(eid, "auxgeom", true)
         m.camera_list[cam_eid].frustum_eid = eid
     else

@@ -18,11 +18,13 @@ local worldedit
 local m = {
     entities = {}
 }
-local aabb_color = 0x6060ffff
+local aabb_color_i = 0x6060ffff
+local aabb_color = {1.0, 0.38, 0.38, 1.0}
 local highlight_aabb_eid
 function m:update_current_aabb(eid)
     if not highlight_aabb_eid then
         highlight_aabb_eid = geo_utils.create_dynamic_aabb({}, "highlight_aabb")
+        imaterial.set_property(highlight_aabb_eid, "u_color", aabb_color)
         ies.set_state(highlight_aabb_eid, "auxgeom", true)
     end
     ies.set_state(highlight_aabb_eid, "visible", false)
@@ -48,7 +50,7 @@ function m:update_current_aabb(eid)
     if aabb then
         local v = math3d.tovalue(aabb)
         local aabb_shape = {min={v[1],v[2],v[3]}, max={v[5],v[6],v[7]}}
-        local vb, ib = geo_utils.get_aabb_vb_ib(aabb_shape, aabb_color)
+        local vb, ib = geo_utils.get_aabb_vb_ib(aabb_shape, aabb_color_i)
         local rc = world[highlight_aabb_eid]._rendercache
         local vbdesc, ibdesc = rc.vb, rc.ib
         bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb))
