@@ -70,8 +70,8 @@ function ifontmgr.add_font(font)
         error(("invalid font, file:%s, family:%s, style:%s"):format(file, family, style))
     end
 
-    local fontid = allfont[key]
-    if fontid == nil then
+    local fontdata = allfont[key]
+    if fontdata == nil then
         local function read_file(file)
             local p = fs.path(file)
             local ext = p:extension():string():lower()
@@ -85,18 +85,13 @@ function ifontmgr.add_font(font)
             return c
         end
         local fontcontent = font.file and read_file(file) or platform.font(family)
-
-        -- local fontnum = lfont.fontnum(fontcontent)
-        -- for i=1, fontnum do
-        --     local id = lfont.addfont(fontcontent, i-1)
-        --     local nt = lfont.font_name_table(id)
-        -- end
-
-        fontid = lfont.addfont(fontcontent, family, style)
-        allfont[key] = fontid
+        font.fontcontent = fontcontent
+        local fontid = lfont.addfont(fontcontent, family, style)
+        fontdata = {fontid=fontid, content=fontcontent}
+        allfont[key] = fontdata
     end
 
-    return fontid
+    return fontdata.fontid
 end
 
 local function text_start_pos(textw, texth, screenpos)

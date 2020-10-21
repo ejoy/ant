@@ -301,7 +301,7 @@ laddfont(lua_State *L) {
 		fontid = font_manager_addfont_with_family(F, ttf, family, get_font_style(style));
 	}else if (type == LUA_TNUMBER || type == LUA_TNONE || type == LUA_TNIL){
 		const int index = (int)lua_tointeger(L, 2);
-		fontid = font_manager_addfont(F, ttf, 0);
+		fontid = font_manager_addfont(F, ttf, index);
 	} else {
 		luaL_error(L, "invalid add font param");
 	}
