@@ -1,5 +1,5 @@
 #include "font.h"
-
+#include "render.h"
 extern "C"{
 #include "font/font_manager.h"
 }
@@ -55,22 +55,29 @@ bool FontInterface::LoadFontFace(const Rml::String& file_name, bool fallback_fac
     const size_t filesize = ifile->Tell(fh);
     ifile->Seek(fh, 0, SEEK_SET);
 
-    std::vector<uint8_t>    buffer(filesize);
-    ifile->Read(&buffer[0], filesize, fh);
-    ifile->Close(fh);
-
-    const int num = font_manager_font_num(mfontmgr, &buffer[0]);
-    for(int ii=0; ii<num; ++ii){
-        int fontid = font_manager_addfont(mfontmgr, &buffer[0], ii);
-        char family[128] = {0}, style[64] = {0};
-
-        if (0 == font_manager_family_style(mfontmgr, fontid, family, style)){
-            auto flags      = match_FamilyFlag(style);
-            const auto key  = to_FontId_key(family, flags);
-            mfontids[key]   = fontid;
-        }
+    if (mFonts.find(file_name) != mFonts.end()){
+        return true;
     }
 
+    auto &fi = mFonts[file_name];
+    fi.buffer.resize(filesize);
+    uint8_t* ttbuffer = &fi.buffer[0];
+    ifile->Read(ttbuffer, filesize, fh);
+    ifile->Close(fh);
+
+    const int fontnum = font_manager_font_num(mfontmgr, ttbuffer);
+    for (int ii=0; ii < fontnum; ++ii){
+        int fontid = font_manager_addfont(mfontmgr, ttbuffer, ii);
+
+        char family[64] = {0}, style[64] = {0};
+        if (font_manager_family_name(mfontmgr, fontid, &family[0]) > 0 &&
+            font_manager_style_name(mfontmgr, fontid, &style[0]) > 0){
+            auto flags = match_FamilyFlag(style);
+            auto key = to_FontId_key(family, flags);
+            mFontIDs[key] = fontid;
+            fi.fontids.push_back(fontid);
+        }
+    }
     return true;
 }
 
@@ -78,9 +85,14 @@ bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml
     const FamilyFlag flags = to_FamilyFlag(style, weight);
     const auto key = to_FontId_key(family, flags);
 
-    if (mfontids.find(key) == mfontids.end()){
-        auto fontid = font_manager_addfont_with_family(mfontmgr, data, family.c_str(), (FamilyFlag)flags);
-        mfontids[key] = fontid;
+    if (mFonts.find(key) == mFonts.end()){
+        auto &fi = mFonts[key];
+        fi.buffer = std::move(std::vector<uint8_t>(data, data+data_size));
+
+        auto fontid = font_manager_addfont_with_family(mfontmgr, &fi.buffer[0], family.c_str(), (FamilyFlag)flags);
+        mFontIDs[key] = fontid;
+
+        fi.fontids.push_back(fontid);
         return (fontid >=0);
     }
 
@@ -89,8 +101,11 @@ bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml
 
 Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
     const auto key = to_FontId_key(family, to_FamilyFlag(style, weight));
-    const auto found = mfontids.find(key);
-    if (found != mfontids.end()){
+    auto found = mFontIDs.find(key);
+    if (found == mFontIDs.end() && !mFontIDs.empty())
+        found = std::begin(mFontIDs);
+
+    if (found != mFontIDs.end()){
         int fontid = found->second;
         auto itfound = std::find_if(mFontFaces.begin(), mFontFaces.end(), [=](auto it){
             return it.fontid == fontid && it.fontsize == size;
@@ -98,12 +113,12 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
         if (itfound == mFontFaces.end()){
             const size_t idx = mFontFaces.size();
             mFontFaces.push_back(FontFace{fontid, size});
-            return static_cast<Rml::FontFaceHandle>(idx);
+            return static_cast<Rml::FontFaceHandle>(idx) + 1;
         }
-        return static_cast<Rml::FontFaceHandle>(std::distance(itfound, mFontFaces.begin()));
+        return static_cast<Rml::FontFaceHandle>(std::distance(itfound, mFontFaces.begin())) + 1;
     }
 
-    return static_cast<Rml::FontFaceHandle>(-1);
+    return static_cast<Rml::FontFaceHandle>(0);
 }
 
 // Rml::FontEffectsHandle FontInterface::PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects){
@@ -112,7 +127,7 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 
 int FontInterface::GetSize(Rml::FontFaceHandle handle){
     
-    size_t idx = static_cast<size_t>(handle);
+    size_t idx = static_cast<size_t>(handle) - 1;
     const auto &face = mFontFaces[idx];
     return face.fontsize;
 }
@@ -130,7 +145,7 @@ get_glyph(struct font_manager *F, const FontFace &face, int codepoint){
 
 int FontInterface::GetXHeight(Rml::FontFaceHandle handle){
     
-    size_t idx = static_cast<size_t>(handle);
+    size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
     struct font_glyph g = get_glyph(mfontmgr, face, 'x');
@@ -138,8 +153,7 @@ int FontInterface::GetXHeight(Rml::FontFaceHandle handle){
 }
 
 int FontInterface::GetLineHeight(Rml::FontFaceHandle handle){
-    
-    size_t idx = static_cast<size_t>(handle);
+    size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
     int ascent, descent, lineGap;
@@ -148,8 +162,7 @@ int FontInterface::GetLineHeight(Rml::FontFaceHandle handle){
 }
 
 int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
-    
-    size_t idx = static_cast<size_t>(handle);
+    size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
     int ascent, descent, lineGap;
@@ -159,8 +172,7 @@ int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
 }
 
 float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
-    
-    size_t idx = static_cast<size_t>(handle);
+    size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
     int ascent, descent, lineGap;
@@ -170,8 +182,8 @@ float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
 }
 
 int FontInterface::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character /*= Character::Null*/){
-    
-    const auto &face = mFontFaces[static_cast<size_t>(handle)];
+    size_t idx = static_cast<size_t>(handle)-1;
+    const auto &face = mFontFaces[idx];
 
     int width = 0;
     for (auto itc = Rml::StringIteratorU8(string); itc; ++itc){
@@ -192,7 +204,7 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 	geometrys.resize(1);
 	Rml::Geometry& geometry = geometrys[0];
 
-	//geometry.SetTexture(&texture);
+	geometry.SetTexture(&mFontTex);
 
 	auto& vertices = geometry.GetVertices();
 	auto& indices = geometry.GetIndices();
@@ -200,7 +212,8 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 	vertices.reserve(string.size() * 4);
 	indices.reserve(string.size() * 6);
 
-    const auto&face = mFontFaces[static_cast<size_t>(handle)];
+    const size_t fontidx = static_cast<size_t>(handle)-1;
+    const auto&face = mFontFaces[fontidx];
 
 	Rml::Vector2f pos = position.Round();
 
@@ -209,8 +222,13 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 		int codepoint = (int)*it_char;
 
         struct font_glyph g;
-        if (font_manager_touch(mfontmgr, face.fontid, codepoint, &g)){
-            font_manager_update(mfontmgr, face.fontid, codepoint, &g, NULL);
+        if (font_manager_touch(mfontmgr, face.fontid, codepoint, &g) == 0){
+            auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
+            uint8_t *buffer = new uint8_t[g.w * g.h];
+            const char* err = font_manager_update(mfontmgr, face.fontid, codepoint, &g, buffer);
+            if (NULL == err){
+                ri->UpdateTexture(mFontTex.GetHandle(ri), Rect{g.u, g.v, g.w, g.h}, buffer);
+            }
         }
 
         uint16_t uv_w = g.w, uv_h = g.h;

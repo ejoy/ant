@@ -137,6 +137,18 @@ bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::by
     return false;
 }
 
+bool Renderer::UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer){
+    const bgfx_texture_handle_t th = {static_cast<uint16_t>(texhandle)};
+
+    if (!BGFX_HANDLE_IS_VALID(th))
+        return false;
+
+    const uint32_t bytes = (uint32_t)rt.w * rt.h;
+    auto mem = BGFX(make_ref)(buffer, bytes);
+    BGFX(update_texture_2d)(th, 0, 0, rt.x, rt.y, rt.w, rt.h, mem, rt.w);
+    return true;
+}
+
 void Renderer::ReleaseTexture(Rml::TextureHandle texture) {
     BGFX(destroy_texture)({static_cast<uint16_t>(texture)});
 }

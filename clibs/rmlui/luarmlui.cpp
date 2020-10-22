@@ -304,6 +304,7 @@ linit(lua_State *L){
         luaL_error(L, "Failed to Initialise Rml");
     }
 
+    rc->ifont->InitFontTex();
     c.handle = Rml::CreateContext(c.name, Rml::Vector2i(rt.w, rt.h));
     if (!c.handle){
         luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", c.name, rt.w, rt.h);

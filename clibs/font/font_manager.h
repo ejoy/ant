@@ -71,7 +71,6 @@ typedef enum {
 	FF_NONE			= 0x08,
 }FamilyFlag;
 FONT_API int font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, const char* family, FamilyFlag flags);
-FONT_API int font_manager_family_style(struct font_manager *F, int fontid, char family[128], char style[64]);
 FONT_API int font_manager_rebindfont(struct font_manager *, int fontid, const void *ttfbuffer);
 FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
 
@@ -81,6 +80,9 @@ FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, 
 FONT_API const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
 FONT_API void font_manager_flush(struct font_manager *);
 FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
+
+FONT_API int font_manager_style_name(struct font_manager *F, int fontid, char style[64]);
+FONT_API int font_manager_family_name(struct font_manager *F, int fontid, char family[64]);
 
 // example: see 'font_manager.c'
 FONT_API int font_manager_name_table_num(struct font_manager *F, int fontid, int *offset);
@@ -93,6 +95,10 @@ struct name_item {
 	uint16_t namelen;	// 'namlen' is 'name' buffer size
 };
 FONT_API void font_manager_name_item(struct font_manager *F, int fontid, int offset, int idx, struct name_item *ni);
-#define name_item_is_unicode(ni) ((ni)->platformID == STBTT_PLATFORM_ID_UNICODE || ((ni)->platformID == STBTT_PLATFORM_ID_MICROSOFT && (ni)->encodingID == STBTT_MS_EID_UNICODE_BMP) ||((ni)->platformID == STBTT_PLATFORM_ID_MICROSOFT && (ni)->encodingID== STBTT_MS_EID_UNICODE_FULL))
+
+#define is_unicode(_PLATID, _ENCODINGID) (_PLATID == STBTT_PLATFORM_ID_UNICODE ||\
+										(_PLATID == STBTT_PLATFORM_ID_MICROSOFT && _ENCODINGID == STBTT_MS_EID_UNICODE_BMP)\
+										||(_PLATID == STBTT_PLATFORM_ID_MICROSOFT && _ENCODINGID == STBTT_MS_EID_UNICODE_FULL))
+#define name_item_is_unicode(ni) is_unicode((ni)->platformID, (ni)->encodingID)
 FONT_API int unicode_bigendian_to_utf8(const uint16_t *u, uint32_t len, uint8_t *utf8);
 #endif

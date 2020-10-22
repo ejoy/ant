@@ -1,18 +1,23 @@
 #pragma once
 #include "RmlUi/Core/FontEngineInterface.h"
-
+#include "RmlUi/Core/Texture.h"
 #include <unordered_map>
 #include <vector>
 struct font_namager;
 struct FontFace{
-	int fontid;
+	int	fontid;
 	int fontsize;
 };
 
 class FontInterface : public Rml::FontEngineInterface {
 public:
-	FontInterface(struct font_manager *fm) : mfontmgr(fm){}
+	FontInterface(struct font_manager *fm) : mfontmgr(fm){
+	}
 	virtual ~FontInterface() = default;
+
+	void InitFontTex(){
+		mFontTex.Set(FONT_TEX_NAME);
+	}
 	virtual bool LoadFontFace(const Rml::String& file_name, bool fallback_face) override;
 	virtual bool LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face)override;
 
@@ -34,8 +39,14 @@ public:
 public:
 	static const Rml::String FONT_TEX_NAME;
 private:
-    struct font_manager*				mfontmgr;
-	std::unordered_map<Rml::String, int>mfontids;
-	std::vector<FontFace>				mFontFaces;
-	uint16_t							mtexid;
+    struct font_manager*		mfontmgr;
+	struct fontinfo {
+		std::vector<uint8_t>buffer;
+		std::vector<int>	fontids;
+	};
+	std::unordered_map<Rml::String, fontinfo>	mFonts;
+
+	std::unordered_map<Rml::String, int>		mFontIDs;
+	std::vector<FontFace>		mFontFaces;
+	Rml::Texture mFontTex;
 };
