@@ -68,8 +68,10 @@ local function log_to_file(msg)
 end
 local function do_add(t, item)
     table.insert(t, item)
-    t.height = t.height + item.height
-    for i = 1, item.line_count do
+    local current_height = item.height or log_item_height
+    t.height = t.height + current_height
+    local current_count = item.line_count or 1
+    for i = 1, current_count do
         t.vtor_index[#t.vtor_index + 1] = {#t, i - 1}
     end
 end

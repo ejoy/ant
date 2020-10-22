@@ -8,7 +8,7 @@ local stringify     = import_package "ant.serialize".stringify
 local utils         = require "widget.utils"
 local bgfx          = require "bgfx"
 local geo_utils
-
+local logger
 local ilight
 local light_gizmo
 local camera_mgr
@@ -360,16 +360,37 @@ end
 
 local utils = require "common.utils"
 
-local function convert_path(path, current_dir, new_dir)
+local function split(str)
+    local r = {}
+    str:gsub('[^|]*', function (w) r[#r+1] = w end)
+    return r
+end
+
+local function get_filename(pathname)
+    pathname = pathname:lower()
+    return pathname:match "[/]?([^/]*)$"
+end
+
+local function convert_path(path, current_dir, new_dir, glb_filename)
     if fs.path(path):is_absolute() then return path end
-    local op_path = path
-    local spec = string.find(path, '|')
-    if spec then
-        op_path = string.sub(path, 1, spec - 1)
-    end
-    local new_path = tostring(lfs.relative(current_dir / lfs.path(op_path), new_dir))
-    if spec then
-        new_path = new_path .. string.sub(path, spec)
+    local new_path
+    if glb_filename then
+        local dir = tostring(lfs.relative(current_dir, new_dir)) .. "/" .. glb_filename
+        local pretty = tostring(lfs.path(path))
+        if string.sub(path, 1, 2) == "./" then
+            pretty = string.sub(path, 3)
+        end
+        new_path = dir .. "|" .. pretty
+    else
+        local op_path = path
+        local spec = string.find(path, '|')
+        if spec then
+            op_path = string.sub(path, 1, spec - 1)
+        end
+        new_path = tostring(lfs.relative(current_dir / lfs.path(op_path), new_dir))
+        if spec then
+            new_path = new_path .. string.sub(path, spec)
+        end
     end
     return new_path
 end
@@ -389,35 +410,44 @@ function m:save_prefab(filename)
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     hierarchy:update_prefab_template(assetmgr.edit(self.prefab))
     self.entities.__class = self.prefab.__class
+    
+    local path_list = split(prefab_filename)
+    local glb_filename
+    if #path_list > 1 then
+        glb_filename = get_filename(path_list[1])
+    end
+
     if not saveas then
-        utils.write_file(filename, stringify(self.entities.__class))
+        if glb_filename then
+            logger.error({tag = "Editor", message = "cann't save glb file, please save as prefab"})
+        else
+            utils.write_file(filename, stringify(self.entities.__class))
+        end
         return
     end
     local data = self.entities.__class
     local current_dir = lfs.path(prefab_filename):parent_path()
     local new_dir = lfs.path(filename):localpath():parent_path()
-    if current_dir ~= new_dir then
-        for _, t in ipairs(data) do
-            if t.prefab then
-                t.prefab = convert_path(t.prefab, current_dir, new_dir)
-            else
-                if t.data.material then
-                    t.data.material = convert_path(t.data.material, current_dir, new_dir)
-                end
-                if t.data.mesh then
-                    t.data.mesh = convert_path(t.data.mesh, current_dir, new_dir)
-                end
-                if t.data.meshskin then
-                    t.data.meshskin = convert_path(t.data.meshskin, current_dir, new_dir)
-                end
-                if t.data.skeleton then
-                    t.data.skeleton = convert_path(t.data.skeleton, current_dir, new_dir)
-                end
-                if t.data.animation then
-                    local animation = t.data.animation
-                    for k, v in pairs(t.data.animation) do
-                        animation[k] = convert_path(v, current_dir, new_dir)
-                    end
+    for _, t in ipairs(data) do
+        if t.prefab then
+            t.prefab = convert_path(t.prefab, current_dir, new_dir, glb_filename)
+        else
+            if t.data.material then
+                t.data.material = convert_path(t.data.material, current_dir, new_dir, glb_filename)
+            end
+            if t.data.mesh then
+                t.data.mesh = convert_path(t.data.mesh, current_dir, new_dir, glb_filename)
+            end
+            if t.data.meshskin then
+                t.data.meshskin = convert_path(t.data.meshskin, current_dir, new_dir, glb_filename)
+            end
+            if t.data.skeleton then
+                t.data.skeleton = convert_path(t.data.skeleton, current_dir, new_dir, glb_filename)
+            end
+            if t.data.animation then
+                local animation = t.data.animation
+                for k, v in pairs(t.data.animation) do
+                    animation[k] = convert_path(v, current_dir, new_dir, glb_filename)
                 end
             end
         end
@@ -457,5 +487,7 @@ return function(w)
     ilight      = world:interface "ant.render|light"
     light_gizmo = require "gizmo.light"(world)
     geo_utils   = require "editor.geometry_utils"(world)
+    local asset_mgr = import_package "ant.asset"
+    logger      = require "widget.log"(asset_mgr)
     return m
 end
