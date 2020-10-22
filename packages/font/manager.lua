@@ -14,10 +14,19 @@ end
 font.namelist = {}
 
 local function utf16toutf8(s)
-	-- todo: surrogate (font name barely use surrogate)
+	local surrogate
 	return (s:gsub("..", function(utf16)
 		local cp = string.unpack(">H", utf16)
-		return utf8.char(cp)
+		if (cp & 0xFC00) == 0xD800 then
+			surrogate = cp
+			return ""
+		else
+			if surrogate then
+				cp = ((surrogate - 0xD800) << 10) + (cp - 0xDC00) + 0x10000
+				surrogate = nil
+			end
+			return utf8.char(cp)
+		end
 	end))
 end
 
