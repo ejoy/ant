@@ -23,6 +23,7 @@ local gizmo = require "gizmo.gizmo"(world)
 local global_data = require "common.global_data"
 local icons = require "common.icons"(asset_mgr)
 local gizmo_const = require "gizmo.const"
+local new_project = require "common.new_project"
 local m = ecs.system 'gui_system'
 local drag_file = nil
 local last_x = -1
@@ -33,14 +34,13 @@ local second_view_width = 384
 local second_vew_height = 216
 
 local function on_new_project(path)
-    local rp = fs.path "":localpath():parent_path():parent_path()
-    local temp_path = fs.path(tostring(rp:parent_path()) .. "/test/simple/")
-    lfs.create_directory(lfs.path(path .. "\\res"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. ".mount"):localpath(), lfs.path(path .. "\\.mount"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. "init_system.lua"):localpath(), lfs.path(path .. "\\init_system.lua"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. "main.lua"):localpath(), lfs.path(path .. "\\main.lua"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. "package.ecs"):localpath(), lfs.path(path .. "\\package.ecs"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. "package.lua"):localpath(), lfs.path(path .. "\\package.lua"))
+    new_project.set_path(path)
+    new_project.gen_mount()
+    new_project.gen_init_system()
+    new_project.gen_main()
+    new_project.gen_package_ecs()
+    new_project.gen_package()
+    new_project.gen_settings()
 end
 
 local function choose_project_dir()

@@ -1,13 +1,14 @@
 ---
 data:
-  state: 0x00000005,
   material: /pkg/ant.resources/materials/mesh_shadow.material
   mesh: ./plane.meshbin
+  name: "test shadow plane"
   scene_entity: true
+  state: 7
   transform:
-      s: {500, 1, 500, 0}
-  name: shadow_plane
+      r: {0, 0, 0, 1}
+      s: {5, 1, 5, 0}
+      t: {0, 0, 0, 1}
 policy:
-  ant.render|render
-  ant.render|mesh
   ant.general|name
+  ant.render|render
