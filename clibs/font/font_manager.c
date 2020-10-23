@@ -18,6 +18,19 @@
 #define DISTANCE_OFFSET 5
 #define ORIGINAL_SIZE (FONT_MANAGER_GLYPHSIZE - DISTANCE_OFFSET * 2)
 
+static const int SAPCE_CODEPOINT[] = {
+    ' ', '\t', '\n', '\r',
+};
+
+static int is_space_codepoint(int codepoint){
+    for (int ii=0; ii < sizeof(SAPCE_CODEPOINT)/sizeof(SAPCE_CODEPOINT[0]); ++ii){
+        if (codepoint == SAPCE_CODEPOINT[ii]){
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void
 font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
 	F->version = 1;
@@ -221,6 +234,23 @@ int
 font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize){
 	//TODO: hardcode, one point size is 2 pixel size
 	return pointsize * 2;
+}
+
+int
+font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, uint16_t *w, uint16_t *h){
+    int updated = font_manager_touch(F, fontid, codepoint, g);
+
+    if (w || h){
+        if (is_space_codepoint(codepoint)){
+			updated = 1;	// not need update
+            *w = *h = 0;
+        } else {
+            *w = g->w, *h = g->h;
+        }
+    }
+
+    font_manager_scale(F, g, size);
+    return updated;
 }
 
 const char *

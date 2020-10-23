@@ -43,22 +43,20 @@ int FontInterface::GetSize(Rml::FontFaceHandle handle){
 struct font_glyph
 FontInterface::GetGlyph(const FontFace &face, int codepoint, uint16_t *uv_w, uint16_t *uv_h){
     struct font_glyph g;
-    if (font_manager_touch(mfontmgr, face.fontid, codepoint, &g) == 0){
+    uint16_t w=0, h=0;
+    if (0 == font_manager_glyph(mfontmgr, face.fontid, codepoint, face.pixelsize, &g, &w, &h)){
         auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
-        uint8_t *buffer = new uint8_t[g.w * g.h];
-        const char* err = font_manager_update(mfontmgr, face.fontid, codepoint, &g, buffer);
-        if (NULL == err){
-            ri->UpdateTexture(mFontTex.GetHandle(ri), Rect{g.u, g.v, g.w, g.h}, buffer);
+        uint8_t *buffer = new uint8_t[w*h];
+        if (NULL == font_manager_update(mfontmgr, face.fontid, codepoint, &g, buffer)){
+            ri->UpdateTexture(mFontTex.GetHandle(ri), Rect{g.u, g.v, w, h}, buffer);
+        } else {
+            delete []buffer;
         }
     }
 
     if (uv_w || uv_h){
-        *uv_w = g.w;
-        *uv_h = g.h;
+        *uv_w = w, *uv_h = h;
     }
-
-    font_manager_scale(mfontmgr, &g, face.pixelsize);
-
     return g;
 }
 
