@@ -16,12 +16,12 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 
     if (fontid > 0){
         auto itfound = std::find_if(mFontFaces.begin(), mFontFaces.end(), [=](auto it){
-            return it.fontid == fontid && it.fontsize == size;
+            return it.fontid == fontid && it.pointsize == size;
         });
         if (itfound == mFontFaces.end()){
             const size_t idx = mFontFaces.size();
-            mFontFaces.push_back(FontFace{fontid, size});
-            return static_cast<Rml::FontFaceHandle>(idx) + 1;
+            mFontFaces.push_back(FontFace{fontid, size, font_manager_pixelsize(mfontmgr, fontid, size)});
+            return static_cast<Rml::FontFaceHandle>(idx + 1);
         }
         auto dis = (std::distance(itfound, mFontFaces.begin()));
         return  static_cast<Rml::FontFaceHandle>(dis + 1);
@@ -37,7 +37,7 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 int FontInterface::GetSize(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle) - 1;
     const auto &face = mFontFaces[idx];
-    return face.fontsize;
+    return face.pointsize;
 }
 
 struct font_glyph
@@ -57,7 +57,7 @@ FontInterface::GetGlyph(const FontFace &face, int codepoint, uint16_t *uv_w, uin
         *uv_h = g.h;
     }
 
-    font_manager_scale(mfontmgr, &g, face.fontsize);
+    font_manager_scale(mfontmgr, &g, face.pixelsize);
 
     return g;
 }
@@ -76,7 +76,7 @@ int FontInterface::GetLineHeight(Rml::FontFaceHandle handle){
     const auto &face = mFontFaces[idx];
 
     int ascent, descent, lineGap;
-    font_manager_fontheight(mfontmgr, face.fontid, face.fontsize, &ascent, &descent, &lineGap);
+    font_manager_fontheight(mfontmgr, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
     return ascent - descent + lineGap;
 }
 
@@ -85,7 +85,7 @@ int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
     const auto &face = mFontFaces[idx];
 
     int x0, y0, x1, y1;
-    font_manager_boundingbox(mfontmgr, face.fontid, face.fontsize, &x0, &y0, &x1, &y1);
+    font_manager_boundingbox(mfontmgr, face.fontid, face.pixelsize, &x0, &y0, &x1, &y1);
     return -y0;
 }
 
@@ -94,7 +94,7 @@ float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
     const auto &face = mFontFaces[idx];
 
     int x0, y0, x1, y1;
-    font_manager_boundingbox(mfontmgr, face.fontid, face.fontsize, &x0, &y0, &x1, &y1);
+    font_manager_boundingbox(mfontmgr, face.fontid, face.pixelsize, &x0, &y0, &x1, &y1);
     return y1;
 }
 
@@ -133,7 +133,7 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
     const auto&face = mFontFaces[fontidx];
 
     int a, d, g;
-    font_manager_fontheight(mfontmgr, face.fontid, face.fontsize, &a, &d, &g);
+    font_manager_fontheight(mfontmgr, face.fontid, face.pixelsize, &a, &d, &g);
     int fontheight = a - d;
 
 #define FIX_POINT 8

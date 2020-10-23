@@ -65,6 +65,7 @@ void font_manager_init(struct font_manager *, struct truetype_font *ttf, void *L
 FONT_API int font_manager_addfont_with_family(struct font_manager *F, const char* family);
 FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
 FONT_API void font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1, int *y1);
+FONT_API int font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize);
 
 // 1 exist in cache. 0 not exist in cache, call font_manager_update. -1 failed.
 FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);
@@ -72,8 +73,5 @@ FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, 
 FONT_API const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
 FONT_API void font_manager_flush(struct font_manager *);
 FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
-
-FONT_API int font_manager_style_name(struct font_manager *F, int fontid, char style[64]);
-FONT_API int font_manager_family_name(struct font_manager *F, int fontid, char family[64]);
 
 #endif

@@ -217,6 +217,12 @@ font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, 
 	*y1 = scale_font(*y1, scale, size);
 }
 
+int
+font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize){
+	//TODO: hardcode, one point size is 2 pixel size
+	return pointsize * 2;
+}
+
 const char *
 font_manager_update(struct font_manager *F, int fontid, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
 	if (fontid <= 0)

@@ -6,7 +6,8 @@
 struct font_namager;
 struct FontFace{
 	int	fontid;
-	int fontsize;
+	int pointsize;
+	int pixelsize;
 };
 
 class FontInterface : public Rml::FontEngineInterface {
