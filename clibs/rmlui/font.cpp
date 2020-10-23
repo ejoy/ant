@@ -132,14 +132,25 @@ int FontInterface::GetSize(Rml::FontFaceHandle handle){
     return face.fontsize;
 }
 
-static inline struct font_glyph
-get_glyph(struct font_manager *F, const FontFace &face, int codepoint){
+struct font_glyph
+FontInterface::GetGlyph(const FontFace &face, int codepoint, uint16_t *uv_w, uint16_t *uv_h){
     struct font_glyph g;
-    if (font_manager_touch(F, face.fontid, codepoint, &g)){
-        font_manager_update(F, face.fontid, codepoint, &g, NULL);
+    if (font_manager_touch(mfontmgr, face.fontid, codepoint, &g) == 0){
+        auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
+        uint8_t *buffer = new uint8_t[g.w * g.h];
+        const char* err = font_manager_update(mfontmgr, face.fontid, codepoint, &g, buffer);
+        if (NULL == err){
+            ri->UpdateTexture(mFontTex.GetHandle(ri), Rect{g.u, g.v, g.w, g.h}, buffer);
+        }
     }
 
-    font_manager_scale(F, &g, face.fontsize);
+    if (uv_w || uv_h){
+        *uv_w = g.w;
+        *uv_h = g.h;
+    }
+
+    font_manager_scale(mfontmgr, &g, face.fontsize);
+
     return g;
 }
 
@@ -148,7 +159,7 @@ int FontInterface::GetXHeight(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
-    struct font_glyph g = get_glyph(mfontmgr, face, 'x');
+    struct font_glyph g = GetGlyph(face, 'x');
     return g.h;
 }
 
@@ -165,20 +176,18 @@ int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
-    int ascent, descent, lineGap;
-    font_manager_fontheight(mfontmgr, face.fontid, face.fontsize, &ascent, &descent, &lineGap);
-
-    return descent + (ascent - descent) / 2;
+    int x0, y0, x1, y1;
+    font_manager_boundingbox(mfontmgr, face.fontid, face.fontsize, &x0, &y0, &x1, &y1);
+    return -y0;
 }
 
 float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
-    int ascent, descent, lineGap;
-    font_manager_fontheight(mfontmgr, face.fontid, face.fontsize, &ascent, &descent, &lineGap);
-
-    return descent;
+    int x0, y0, x1, y1;
+    font_manager_boundingbox(mfontmgr, face.fontid, face.fontsize, &x0, &y0, &x1, &y1);
+    return y1;
 }
 
 int FontInterface::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character /*= Character::Null*/){
@@ -187,7 +196,7 @@ int FontInterface::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String&
 
     int width = 0;
     for (auto itc = Rml::StringIteratorU8(string); itc; ++itc){
-        auto glyph = get_glyph(mfontmgr, face, (int)*itc);
+        auto glyph = GetGlyph(face, (int)*itc);
         width += glyph.advance_x;
     }
 
@@ -215,48 +224,45 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
     const size_t fontidx = static_cast<size_t>(handle)-1;
     const auto&face = mFontFaces[fontidx];
 
-	Rml::Vector2f pos = position.Round();
+    int a, d, g;
+    font_manager_fontheight(mfontmgr, face.fontid, face.fontsize, &a, &d, &g);
+    int fontheight = a - d;
 
+#define FIX_POINT 8
+    int16_t x= int16_t(position.x * FIX_POINT), y= int16_t((position.y + fontheight)  * FIX_POINT);
 	for (auto it_char = Rml::StringIteratorU8(string); it_char; ++it_char)
 	{
 		int codepoint = (int)*it_char;
 
-        struct font_glyph g;
-        if (font_manager_touch(mfontmgr, face.fontid, codepoint, &g) == 0){
-            auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
-            uint8_t *buffer = new uint8_t[g.w * g.h];
-            const char* err = font_manager_update(mfontmgr, face.fontid, codepoint, &g, buffer);
-            if (NULL == err){
-                ri->UpdateTexture(mFontTex.GetHandle(ri), Rect{g.u, g.v, g.w, g.h}, buffer);
-            }
-        }
-
-        uint16_t uv_w = g.w, uv_h = g.h;
-        font_manager_scale(mfontmgr, &g, face.fontsize);
+        uint16_t uv_w, uv_h;
+        auto g = GetGlyph(face, codepoint, &uv_w, &uv_h);
 
 		// Generate the geometry for the character.
 		vertices.resize(vertices.size() + 4);
 		indices.resize(indices.size() + 6);
 
-        int16_t u0 = g.u * (0x8000 / FONT_MANAGER_TEXSIZE);
-        int16_t v0 = g.v * (0x8000 / FONT_MANAGER_TEXSIZE);
+        const int16_t x0 = x + g.offset_x * FIX_POINT;
+        const int16_t y0 = y + g.offset_y * FIX_POINT;
 
-        int16_t u1 = (g.u + uv_w) * (0x8000 / FONT_MANAGER_TEXSIZE);
-        int16_t v1 = (g.v + uv_h) * (0x8000 / FONT_MANAGER_TEXSIZE);
+        const int16_t u0 = g.u;
+        const int16_t v0 = g.v;
+
+        const int16_t u1 = g.u + uv_w;
+        const int16_t v1 = g.v + uv_h;
 
 		Rml::GeometryUtilities::GenerateQuad(
 			&vertices[0] + (vertices.size() - 4),
 			&indices[0] + (indices.size() - 6),
-			(pos + Rml::Vector2f(g.offset_x, g.offset_y)).Round(),
-			Rml::Vector2f(g.w, g.h),
+			Rml::Vector2f(x0, y0) / 65536.f,
+			Rml::Vector2f(g.w * FIX_POINT, g.h * FIX_POINT) / 65536.f,
 			colour,
-			Rml::Vector2f(u0, v0),
-            Rml::Vector2f(u1, v1),
+			Rml::Vector2f(u0, v0) / FONT_MANAGER_TEXSIZE,
+            Rml::Vector2f(u1, v1) / FONT_MANAGER_TEXSIZE,
 			(int)vertices.size() - 4
 		);
 
 		width += g.advance_x;
-		pos.x += g.advance_x;
+        x += g.advance_x * FIX_POINT;
 	}
 
 	return width;

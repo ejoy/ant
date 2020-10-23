@@ -73,6 +73,7 @@ typedef enum {
 FONT_API int font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, const char* family, FamilyFlag flags);
 FONT_API int font_manager_rebindfont(struct font_manager *, int fontid, const void *ttfbuffer);
 FONT_API void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
+FONT_API void font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1, int *y1);
 
 // 1 exist in cache. 0 not exist in cache, call font_manager_update. -1 failed.
 FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);

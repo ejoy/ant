@@ -36,6 +36,9 @@ public:
 
 	virtual int GetVersion(Rml::FontFaceHandle handle)override;
 
+private:
+	struct font_glyph
+	GetGlyph(const FontFace &face, int codepoint, uint16_t *uv_w = nullptr, uint16_t *uv_h = nullptr);
 public:
 	static const Rml::String FONT_TEX_NAME;
 private:

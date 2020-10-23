@@ -204,6 +204,16 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 	*lineGap = scale_font(*lineGap, scale, size);
 }
 
+void
+font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1,int *y1){
+	stbtt_GetFontBoundingBox(&F->ttf[fontid], x0, y0, x1, y1);
+	float scale = stbtt_ScaleForPixelHeight(&F->ttf[fontid], ORIGINAL_SIZE);
+	*x0 = scale_font(*x0, scale, size);
+	*y0 = scale_font(*y0, scale, size);
+	*x1 = scale_font(*x1, scale, size);
+	*y1 = scale_font(*y1, scale, size);
+}
+
 const char *
 font_manager_update(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
 	if (font < 0 || font >= F->font_number)
