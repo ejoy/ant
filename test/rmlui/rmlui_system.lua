@@ -15,7 +15,7 @@ local irq       = world:interface "ant.render|irenderqueue"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-local root_dir = fs.path "/pkg/ant.resources.binary/ui"
+local root_dir = fs.path "/pkg/ant.resources.binary/ui/test"
 
 local function init_rmlui_data()
     local ft_w, ft_h = ifont.font_tex_dim()
@@ -74,7 +74,7 @@ function rmlui_sys:post_init()
     rmlui_context = rmlui.init(data)
     for f in pairs(data.file_dist.files) do
         local ext = f:match ".+%.([%w_]+)$":lower()
-        if ext == "otf" or ext == "ttf" then
+        if ext == "otf" or ext == "ttf" or ext == "ttc" then
             rmlui_context:load_font(f)
         end
     end
