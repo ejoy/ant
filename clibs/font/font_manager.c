@@ -1,4 +1,6 @@
 #include "font_manager.h"
+#include "truetype.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
@@ -17,10 +19,11 @@
 #define ORIGINAL_SIZE (FONT_MANAGER_GLYPHSIZE - DISTANCE_OFFSET * 2)
 
 void
-font_manager_init(struct font_manager *F) {
+font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
 	F->version = 1;
 	F->count = 0;
-	F->font_number = 0;
+	F->ttf = ttf;
+	F->L = L;
 // init priority list
 	int i;
 	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
@@ -38,11 +41,6 @@ font_manager_init(struct font_manager *F) {
 	for (i=0;i<FONT_MANAGER_HASHSLOTS;i++) {
 		F->hash[i] = -1;	// empty slot
 	}
-}
-
-int
-font_manager_font_num(struct font_manager *F, const void *ttfbuffer){
-	return stbtt_GetNumberOfFonts(ttfbuffer);
 }
 
 static inline int
@@ -155,20 +153,22 @@ font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_
 	}
 	int last_slot = F->priority[F->list_head].prev;
 	struct priority_list *last_node = &F->priority[last_slot];
-	if (font < 0 || font >= F->font_number) {
+	if (font <= 0) {
 		// invalid font
 		memset(glyph, 0, sizeof(*glyph));
 		return -1;
 	}
 
-	float scale = stbtt_ScaleForPixelHeight(&F->ttf[font], ORIGINAL_SIZE);
+	const struct stbtt_fontinfo *fi = truetype_font(F->ttf, font, F->L);
+
+	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 	int ascent, descent, lineGap;
 	int advance, lsb;
 	int ix0, iy0, ix1, iy1;
 
-	stbtt_GetFontVMetrics(&F->ttf[font], &ascent, &descent, &lineGap);
-	stbtt_GetCodepointHMetrics(&F->ttf[font], codepoint, &advance, &lsb);
-	stbtt_GetCodepointBitmapBox(&F->ttf[font], codepoint, scale, scale, &ix0, &iy0, &ix1, &iy1);
+	stbtt_GetFontVMetrics(fi, &ascent, &descent, &lineGap);
+	stbtt_GetCodepointHMetrics(fi, codepoint, &advance, &lsb);
+	stbtt_GetCodepointBitmapBox(fi, codepoint, scale, scale, &ix0, &iy0, &ix1, &iy1);
 
 	glyph->w = ix1-ix0 + DISTANCE_OFFSET * 2;
 	glyph->h = iy1-iy0 + DISTANCE_OFFSET * 2;
@@ -192,13 +192,15 @@ scale_font(int v, float scale, int size) {
 
 void
 font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap) {
-	if (fontid < 0 || fontid >=F->font_number) {
+	if (fontid <= 0) {
 		*ascent = 0;
 		*descent = 0;
 		*lineGap = 0;
 	}
-	float scale = stbtt_ScaleForPixelHeight(&F->ttf[fontid], ORIGINAL_SIZE);
-	stbtt_GetFontVMetrics(&F->ttf[fontid], ascent, descent, lineGap);
+
+	const struct stbtt_fontinfo *fi = truetype_font(F->ttf, fontid, F->L);
+	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+	stbtt_GetFontVMetrics(fi, ascent, descent, lineGap);
 	*ascent = scale_font(*ascent, scale, size);
 	*descent = scale_font(*descent, scale, size);
 	*lineGap = scale_font(*lineGap, scale, size);
@@ -206,8 +208,9 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 
 void
 font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1,int *y1){
-	stbtt_GetFontBoundingBox(&F->ttf[fontid], x0, y0, x1, y1);
-	float scale = stbtt_ScaleForPixelHeight(&F->ttf[fontid], ORIGINAL_SIZE);
+	const struct stbtt_fontinfo *fi = truetype_font(F->ttf, fontid, F->L);
+	stbtt_GetFontBoundingBox(fi, x0, y0, x1, y1);
+	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 	*x0 = scale_font(*x0, scale, size);
 	*y0 = scale_font(*y0, scale, size);
 	*x1 = scale_font(*x1, scale, size);
@@ -215,10 +218,10 @@ font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, 
 }
 
 const char *
-font_manager_update(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
-	if (font < 0 || font >= F->font_number)
+font_manager_update(struct font_manager *F, int fontid, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
+	if (fontid <= 0)
 		return "Invalid font";
-	int cp = codepoint_ttf(font, codepoint);
+	int cp = codepoint_ttf(fontid, codepoint);
 	int slot = hash_lookup(F, cp);
 	if (slot < 0) {
 		// move last node to head
@@ -233,11 +236,12 @@ font_manager_update(struct font_manager *F, int font, int codepoint, struct font
 		hash_insert(F, cp, slot);
 	}
 
-	float scale = stbtt_ScaleForPixelHeight(&F->ttf[font], ORIGINAL_SIZE);
+	const struct stbtt_fontinfo *fi = truetype_font(F->ttf, fontid, F->L);
+	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 
 	int width, height, xoff, yoff;
 
-	unsigned char *tmp = stbtt_GetCodepointSDF(&F->ttf[font], scale, codepoint, DISTANCE_OFFSET, 180, 36.0f, &width, &height, &xoff, &yoff);
+	unsigned char *tmp = stbtt_GetCodepointSDF(fi, scale, codepoint, DISTANCE_OFFSET, 180, 36.0f, &width, &height, &xoff, &yoff);
 	if (tmp == NULL){
 		return NULL;
 	}
@@ -248,7 +252,7 @@ font_manager_update(struct font_manager *F, int font, int codepoint, struct font
 	}
 	memcpy(buffer, tmp, size);
 
-	stbtt_FreeSDF(tmp, F->ttf[font].userdata);
+	stbtt_FreeSDF(tmp, fi->userdata);
 
 	struct font_slot *s = &F->slots[slot];
 	s->codepoint_ttf = cp;
@@ -270,232 +274,9 @@ font_manager_flush(struct font_manager *F) {
 	++F->version;
 }
 
-static int
-fm_addfont(struct font_manager *F, const void *ttfbuffer, int offset){
-	if (F->font_number >= FONT_MANAGER_MAXFONT || offset < 0)
-		return -1;
-	int fontid = F->font_number;
-	if (!stbtt_InitFont(&F->ttf[fontid], (const unsigned char *)ttfbuffer, offset))
-		return -1;
-	++F->font_number;
-	return fontid;
-}
-
 int
-font_manager_addfont(struct font_manager *F, const void *ttfbuffer, int index) {
-	return fm_addfont(F, ttfbuffer, stbtt_GetFontOffsetForIndex(ttfbuffer,index));
-}
-
-int
-font_manager_addfont_with_family(struct font_manager *F, const void *ttfbuffer, const char* family, FamilyFlag flags) {
-	return fm_addfont(F, ttfbuffer, stbtt_FindMatchingFont(ttfbuffer, family, (int)flags));
-}
-
-int
-font_manager_name_table_num(struct font_manager *F, int fontid, int *offset){
-	const stbtt_fontinfo *font = &F->ttf[fontid];
-	stbtt_uint8 *fc = font->data;
-    stbtt_uint32 nm = stbtt__find_table(fc, font->fontstart, "name");
-    if (!nm)
-		return -1;
-
-	*offset = nm;
-	return ttUSHORT(fc+nm+2);
-}
-
-// static void
-// list_tt_name_table(const stbtt_fontinfo *font, int idx, struct name_item *ni){
-//     stbtt_int32 count,stringOffset;
-//     stbtt_uint8 *fc = font->data;
-//     stbtt_uint32 offset = font->fontstart;
-//     stbtt_uint32 nm = stbtt__find_table(fc, offset, "name");
-//     if (!nm) 
-//         return ;
- 
-//     count = ttUSHORT(fc+nm+2);
-//     stringOffset = nm + ttUSHORT(fc+nm+4);
-//     const char* ntp = (const char*)(fc + stringOffset);
-//     //for (i=0; i < count; ++i) {
-//         stbtt_uint32 loc = nm + 6 + 12 * idx;
-
-//         ni->platformID  = ttUSHORT(fc+loc+0); 
-//         ni->encodingID  = ttUSHORT(fc+loc+2);
-//         ni->languageID  = ttUSHORT(fc+loc+4);
-//         ni->nameID      = ttUSHORT(fc+loc+6);
-
-//         ni->namelen 	= ttUSHORT(fc+loc+8);
-//         ni->name		= ntp+ttUSHORT(fc+loc+10);
-//     //}
-// }
-
-void
-font_manager_name_item(struct font_manager *F, int fontid, int offset, int idx, struct name_item *ni){
-	const stbtt_fontinfo *font = &F->ttf[fontid];
-
-	stbtt_uint8 *fc = font->data;
-	int str_offset = offset + ttUSHORT(fc+offset+4);
-	const char* ntp = (const char*)(fc + str_offset);
-
-	stbtt_uint32 loc = offset + 6 + 12 * idx;
-
-	ni->platformID  = ttUSHORT(fc+loc+0); 
-	ni->encodingID  = ttUSHORT(fc+loc+2);
-	ni->languageID  = ttUSHORT(fc+loc+4);
-	ni->nameID      = ttUSHORT(fc+loc+6);
-
-	ni->namelen 	= ttUSHORT(fc+loc+8);
-	ni->name    	= ntp+ttUSHORT(fc+loc+10);
-}
-
-int
-unicode_bigendian_to_utf8(const uint16_t *u, uint32_t len, uint8_t *utf8){
-	uint8_t* b = utf8;
-	for (uint32_t ii=0; ii < len; ++ii){
-		uint16_t c = (0xff00&u[ii])>>8|(0x00ff&u[ii])<<8; // to little endian
-
-		if (c<0x80) *b++=c;
-		else if (c<0x800) *b++=192+c/64, *b++=128+c%64;
-		else if (c-0xd800u<0x800) return -2;
-		else if (c<0x10000) *b++=224+c/4096, *b++=128+c/64%64, *b++=128+c%64;
-		else if (c<0x110000) *b++=240+c/262144, *b++=128+c/4096%64, *b++=128+c/64%64, *b++=128+c%64;
-		else return -1;
-	}
-	return (b - utf8);
-}
-
-int
-font_manager_is_unicode_name_item(struct font_manager *F, struct name_item *ni){
-	return ( ni->platformID == 0 || 
-		(ni->platformID == 3 && ni->encodingID == 1) ||
-		(ni->platformID == 3 && ni->encodingID== 10));
-}
-
-// extern void
-// cvt_name_info(const char* name, size_t numbytes, char *newname, size_t maxbytes, int needcvt);
-
-static const uint16_t NAMEID_family = 1;
-static const uint16_t NAMEID_style = 2;
-
-static int
-get_name_info(struct stbtt_fontinfo * fi, 
-	uint16_t platformID, uint16_t encodingID, uint16_t languageID, uint16_t nameID, 
-	char *name, uint8_t maxbytes){
-
-	int namelen = 0;
-	const char* n = stbtt_GetFontNameString(fi, &namelen, platformID, encodingID, languageID, nameID);
-	if (n) {
-		if (is_unicode(platformID, encodingID)) {
-			if (maxbytes > namelen){
-				return unicode_bigendian_to_utf8((const uint16_t*)n, namelen / 2, name);
-			}
-		} else {
-			if (maxbytes > namelen){
-				memcpy(name, n, namelen < maxbytes  ?  namelen : maxbytes);
-				return namelen;
-			}
-		}
-	}
-	return -1;
-}
-
-int 
-fm_name_item(struct font_manager *F, int fontid, uint16_t nameid, char name[64]){
-// 	struct stbtt_fontinfo * fi = &F->ttf[fontid];
-
-// 	static const uint16_t platforms[] = {
-// 		STBTT_PLATFORM_ID_MAC,
-// 		STBTT_PLATFORM_ID_UNICODE,
-// 		STBTT_PLATFORM_ID_MICROSOFT,
-// 	};
-
-// #define COUNTOF(_A) (sizeof((_A))/sizeof(_A[0]))
-
-// 	for (int pidx=0; pidx < COUNTOF(platforms); ++pidx){
-// 		const uint16_t platformID = platforms[pidx];
-// 		switch (platformID){
-// 		case STBTT_PLATFORM_ID_UNICODE:{
-// 			static const uint16_t encodings[] = {
-// 				STBTT_UNICODE_EID_UNICODE_1_0,
-// 				STBTT_UNICODE_EID_UNICODE_1_1,
-// 				STBTT_UNICODE_EID_ISO_10646,
-// 				STBTT_UNICODE_EID_UNICODE_2_0_BMP,
-// 				STBTT_UNICODE_EID_UNICODE_2_0_FULL,
-// 			};
-// 			const uint16_t languageID = 0;	// always 0
-// 			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-// 				const int namelen = get_name_info(fi, platformID, encodings[e], languageID, nameid, name, 64);
-// 				if (namelen > 0)
-// 					return namelen;
-// 			}
-// 			break;
-// 		}
-// 		case STBTT_PLATFORM_ID_MAC:{
-// 			static const uint16_t encodings[] = {
-// 				STBTT_MAC_EID_ROMAN, 		STBTT_MAC_EID_ARABIC,
-// 				STBTT_MAC_EID_JAPANESE,   	STBTT_MAC_EID_HEBREW,
-// 				STBTT_MAC_EID_CHINESE_TRAD, STBTT_MAC_EID_GREEK,
-// 				STBTT_MAC_EID_KOREAN, 		STBTT_MAC_EID_RUSSIAN,
-// 			};
-// 			static const uint16_t languageIDs[] = {
-// 				STBTT_MAC_LANG_ENGLISH, STBTT_MAC_LANG_CHINESE_SIMPLIFIED, STBTT_MAC_LANG_CHINESE_TRAD,
-// 			};
-// 			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-// 				for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
-// 					const int namelen = get_name_info(fi, platformID, encodings[e], languageIDs[l], nameid, name, 64);
-// 					if (namelen > 0){
-// 						return namelen;
-// 					}
-// 				}
-// 			}
-// 			break;
-// 		}
-// 		case STBTT_PLATFORM_ID_MICROSOFT:
-// 			static const uint16_t languageIDs[] = {
-// 				STBTT_MS_LANG_ENGLISH, STBTT_MS_LANG_CHINESE,
-// 			};
-// 			static const uint16_t encodings[] = {
-// 				STBTT_MS_EID_SYMBOL,
-// 				STBTT_MS_EID_UNICODE_BMP,
-// 				STBTT_MS_EID_SHIFTJIS,
-// 				STBTT_MS_EID_UNICODE_FULL,
-// 			};
-// 			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-// 				for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
-// 					const int namelen = get_name_info(fi, platformID, encodings[e], languageIDs[l], nameid, name, 64);
-// 					if (namelen > 0){
-// 						return namelen;
-// 					}
-// 				}
-// 			}
-// 			break;
-// 		case STBTT_PLATFORM_ID_ISO:
-// 		default:
-// 			return -2;
-// 		}
-// 	}
-	
-	return -1;
-}
-
-int 
-font_manager_style_name(struct font_manager *F, int fontid, char style[64]){
-	return fm_name_item(F, fontid, NAMEID_style, style);
-}
-
-int 
-font_manager_family_name(struct font_manager *F, int fontid, char family[64]){
-	return fm_name_item(F, fontid, NAMEID_family, family);
-}
-
-int
-font_manager_rebindfont(struct font_manager *F, int fontid, const void *ttfbuffer) {
-	if (fontid < 0 || fontid >= F->font_number)
-		return -1;
-	if (!stbtt_InitFont(&F->ttf[fontid], (const unsigned char *)ttfbuffer, 0)) {
-		F->ttf[fontid] = F->ttf[0];
-		return -1;
-	}
-	return fontid;
+font_manager_addfont_with_family(struct font_manager *F, const char* family) {
+	return truetype_name(F->L, family);
 }
 
 static inline void

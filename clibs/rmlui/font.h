@@ -18,9 +18,7 @@ public:
 	void InitFontTex(){
 		mFontTex.Set(FONT_TEX_NAME);
 	}
-	virtual bool LoadFontFace(const Rml::String& file_name, bool fallback_face) override;
-	virtual bool LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face)override;
-
+	
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
 	//virtual Rml::FontEffectsHandle PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects)override;
 

@@ -1,11 +1,16 @@
 local ttf = require "font.truetype"
+local lfont = require "font"
+local bgfxutil = require "bgfx.util"
+local fs = require "filesystem"
+
+lfont.init(bgfxutil.update_char_texture)
+
 local font = {}
 
 local MAXFONT <const> = 64
 
 function font.loader(filename)
-	print ("Load", filename)
-	local f = assert(io.open(filename, "rb"))
+	local f = assert(fs.open(fs.path(filename), "rb"))
 	local data = f:read "a"
 	f:close()
 	return data

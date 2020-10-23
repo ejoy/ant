@@ -225,16 +225,6 @@ lrmlui_context_load(lua_State *L){
 }
 
 static int
-lrmlui_context_font(lua_State *L){
-    const char* filename = luaL_checkstring(L, 2);
-    if (!Rml::LoadFontFace(filename)){
-        return luaL_error(L, "load font failed:%s", filename);
-    }
-
-    return 0;
-}
-
-static int
 lrmlui_context_render(lua_State *L){
     auto context = get_context_handle(L);
     if (!context){
@@ -254,7 +244,6 @@ create_rml_context(lua_State *L){
         lua_setfield(L, -2, "__index");
         luaL_Reg l[] = {
             {"load",        lrmlui_context_load},
-            {"load_font",   lrmlui_context_font},
             {"render",      lrmlui_context_render},
             {"shutdown",    lrmlui_context_shutdown},
             {"__gc",        lrmlui_context_del},

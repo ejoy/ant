@@ -100,10 +100,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\clibs\font\font_manager.c" />
     <ClCompile Include="..\..\clibs\font\luafont.c" />
-    <ClCompile Include="..\..\clibs\font\name_cvt.cpp" />
+    <ClCompile Include="..\..\clibs\font\truetype.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\font\font_manager.h" />
+    <ClInclude Include="..\..\clibs\font\truetype.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

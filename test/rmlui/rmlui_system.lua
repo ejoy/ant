@@ -10,6 +10,9 @@ local viewidmgr = renderpkg.viewidmgr
 local declmgr   = renderpkg.declmgr
 local fbmgr     = renderpkg.fbmgr
 
+local fontpkg   = import_package "ant.font"
+local fontmgr   = fontpkg.mgr
+
 local ifont     = world:interface "ant.render|ifont"
 local irq       = world:interface "ant.render|irenderqueue"
 
@@ -75,7 +78,7 @@ function rmlui_sys:post_init()
     for f in pairs(data.file_dist.files) do
         local ext = f:match ".+%.([%w_]+)$":lower()
         if ext == "otf" or ext == "ttf" or ext == "ttc" then
-            rmlui_context:load_font(f)
+            fontmgr.import(f)
         end
     end
     rmlui_context:load "/pkg/ant.resources.binary/ui/test/src/demo.rml"

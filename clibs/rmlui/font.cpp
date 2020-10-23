@@ -2,6 +2,7 @@
 #include "render.h"
 extern "C"{
 #include "font/font_manager.h"
+#include "font/truetype.h"
 }
 
 #include <RmlUi/Core.h>
@@ -10,103 +11,10 @@ extern "C"{
 //static
 const Rml::String FontInterface::FONT_TEX_NAME("?FONT_TEX");
 
-static inline FamilyFlag
-to_FamilyFlag(Rml::Style::FontStyle s, Rml::Style::FontWeight w){
-    int flags = 0;
-    if (s == Rml::Style::FontStyle::Italic){
-        flags |= FF_ITALIC;
-    }
-
-    if (w == Rml::Style::FontWeight::Bold){
-        flags |= FF_Blod;
-    }
-
-    return static_cast<FamilyFlag>(flags);
-}
-
-static inline Rml::String
-to_FontId_key(const Rml::String &family, FamilyFlag f){
-    Rml::String s(family);
-    for (auto &c:s) c = std::tolower(c);
-
-    return s + ":" + std::to_string(f);
-}
-
-static inline FamilyFlag
-match_FamilyFlag(const Rml::String &f){
-    Rml::String s(f);
-    for (auto &c:s) c = std::tolower(c);
-
-    int flags = 0;
-    if (s.find("italic") != Rml::String::npos)
-        flags |= FF_ITALIC;
-    if (s.find("bold") != Rml::String::npos)
-        flags |= FF_Blod;
-    return FamilyFlag(flags);
-}
-
-bool FontInterface::LoadFontFace(const Rml::String& file_name, bool fallback_face){
-    auto ifile = Rml::GetFileInterface();
-    auto fh = ifile->Open(file_name);
-    if (!fh)
-        return false;
-
-    ifile->Seek(fh, 0, SEEK_END);
-    const size_t filesize = ifile->Tell(fh);
-    ifile->Seek(fh, 0, SEEK_SET);
-
-    if (mFonts.find(file_name) != mFonts.end()){
-        return true;
-    }
-
-    auto &fi = mFonts[file_name];
-    fi.buffer.resize(filesize);
-    uint8_t* ttbuffer = &fi.buffer[0];
-    ifile->Read(ttbuffer, filesize, fh);
-    ifile->Close(fh);
-
-    const int fontnum = font_manager_font_num(mfontmgr, ttbuffer);
-    for (int ii=0; ii < fontnum; ++ii){
-        int fontid = font_manager_addfont(mfontmgr, ttbuffer, ii);
-
-        char family[64] = {0}, style[64] = {0};
-        if (font_manager_family_name(mfontmgr, fontid, &family[0]) > 0 &&
-            font_manager_style_name(mfontmgr, fontid, &style[0]) > 0){
-            auto flags = match_FamilyFlag(style);
-            auto key = to_FontId_key(family, flags);
-            mFontIDs[key] = fontid;
-            fi.fontids.push_back(fontid);
-        }
-    }
-    return true;
-}
-
-bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face) {
-    const FamilyFlag flags = to_FamilyFlag(style, weight);
-    const auto key = to_FontId_key(family, flags);
-
-    if (mFonts.find(key) == mFonts.end()){
-        auto &fi = mFonts[key];
-        fi.buffer = std::move(std::vector<uint8_t>(data, data+data_size));
-
-        auto fontid = font_manager_addfont_with_family(mfontmgr, &fi.buffer[0], family.c_str(), (FamilyFlag)flags);
-        mFontIDs[key] = fontid;
-
-        fi.fontids.push_back(fontid);
-        return (fontid >=0);
-    }
-
-    return true;
-}
-
 Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
-    const auto key = to_FontId_key(family, to_FamilyFlag(style, weight));
-    auto found = mFontIDs.find(key);
-    if (found == mFontIDs.end() && !mFontIDs.empty())
-        found = std::begin(mFontIDs);
+    int fontid = truetype_name((lua_State*)mfontmgr->L, family.empty() ? "宋体" : family.c_str());
 
-    if (found != mFontIDs.end()){
-        int fontid = found->second;
+    if (fontid > 0){
         auto itfound = std::find_if(mFontFaces.begin(), mFontFaces.end(), [=](auto it){
             return it.fontid == fontid && it.fontsize == size;
         });
@@ -115,7 +23,8 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
             mFontFaces.push_back(FontFace{fontid, size});
             return static_cast<Rml::FontFaceHandle>(idx) + 1;
         }
-        return static_cast<Rml::FontFaceHandle>(std::distance(itfound, mFontFaces.begin())) + 1;
+        auto dis = (std::distance(itfound, mFontFaces.begin()));
+        return  static_cast<Rml::FontFaceHandle>(dis + 1);
     }
 
     return static_cast<Rml::FontFaceHandle>(0);
@@ -126,7 +35,6 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 // }
 
 int FontInterface::GetSize(Rml::FontFaceHandle handle){
-    
     size_t idx = static_cast<size_t>(handle) - 1;
     const auto &face = mFontFaces[idx];
     return face.fontsize;

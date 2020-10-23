@@ -46,7 +46,7 @@ lupdate_cstruct(lua_State *L) {
 	--fontid;
 	if (stbtt_InitFont(&f->fontinfo[fontid], data, offset) == 0)
 		return luaL_error(L, "InitFont %d with failed", fontid+1);
-	f->enable |= 1 << fontid;
+	f->enable |= (uint64_t)(1 << fontid);
 
 	lua_pushlightuserdata(L, &f->fontinfo[fontid]);
 	return 1;

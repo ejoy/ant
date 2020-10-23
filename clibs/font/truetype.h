@@ -18,7 +18,7 @@ struct truetype_font {
 };
 
 // get global struct truetype_font
-struct truetype_font *
+static struct truetype_font *
 truetype_cstruct(lua_State *L) {
 	if (lua_getfield(L, LUA_REGISTRYINDEX, TRUETYPE_CSTRUCT) != LUA_TUSERDATA) {
 		lua_pop(L, 1);
@@ -55,7 +55,7 @@ truetype_font(struct truetype_font *ttf, int fontid, lua_State *L) {
 		--fontid;
 	}
 
-	if (ttf->enable & (1 << fontid)) {
+	if (ttf->enable & (uint64_t)1 << fontid) {
 		return &ttf->fontinfo[fontid];
 	}
 	if (L == NULL) {
@@ -63,13 +63,13 @@ truetype_font(struct truetype_font *ttf, int fontid, lua_State *L) {
 	}
 
 	lua_pushcfunction(L, lget_fontdata);
-	lua_pushinteger(L, fontid);
+	lua_pushinteger(L, fontid+1);
 	if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
 		lua_pop(L, 1);
 		return default_info(ttf);
 	}
 
-	const stbtt_fontinfo * info = lua_touserdata(L, -1);
+	const stbtt_fontinfo * info = (const stbtt_fontinfo*)lua_touserdata(L, -1);
 	lua_pop(L, 1);
 	if (info == NULL) {
 		return default_info(ttf);

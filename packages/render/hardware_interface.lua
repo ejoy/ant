@@ -65,8 +65,6 @@ local function bgfx_init(args)
 	math3d.homogeneous_depth = caps.homogeneousDepth
 	math3d.set_origin_bottom_left(caps.originBottomLeft)
 	math3d.origin_bottom_left = caps.originBottomLeft
-
-	lfont.init(bgfxutil.update_char_texture)
 end
 
 function hw.init(args)

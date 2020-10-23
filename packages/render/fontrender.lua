@@ -1,13 +1,13 @@
 local ecs = ...
 local world = ecs.world
 
-local bgfx = require "bgfx"
-local  lfont = require "font"
-local math3d = require "math3d"
-local platform = require "platform"
-local fs = require "filesystem"
+local bgfx      = require "bgfx"
+local  lfont    = require "font"
+local math3d    = require "math3d"
 
-local declmgr = require "vertexdecl_mgr"
+local declmgr   = require "vertexdecl_mgr"
+
+local fontmgr   = import_package "ant.font".mgr
 
 local function create_font_texture2d()
     local s = lfont.fonttexture_size
@@ -58,53 +58,13 @@ local function calc_screen_pos(pos3d, queueeid)
     return posScreen
 end
 
-local ifontmgr = ecs.interface "ifontmgr"
-local allfont = {}
-function ifontmgr.add_font(font)
-    local file = font.file or ""
-    local family = assert(font.family)
-    local style = font.style or ""
-
-    local key = file .. ":" .. family .. ":" .. style
-    if key == "::" then
-        error(("invalid font, file:%s, family:%s, style:%s"):format(file, family, style))
-    end
-
-    local fontdata = allfont[key]
-    if fontdata == nil then
-        local function read_file(file)
-            local p = fs.path(file)
-            local ext = p:extension():string():lower()
-            if ext ~= ".otf" and ext ~= ".ttf" then
-                error(("not support font file:%s"):format(file))
-            end
-
-            local f = fs.open(p, "rb")
-            local c = f:read "a"
-            f:close()
-            return c
-        end
-        local fontcontent = font.file and read_file(file) or platform.font(family)
-        font.fontcontent = fontcontent
-        local fontid = lfont.addfont(fontcontent, family, style)
-        fontdata = {fontid=fontid, content=fontcontent}
-        allfont[key] = fontdata
-    end
-
-    return fontdata.fontid
-end
-
 local function text_start_pos(textw, texth, screenpos)
     return screenpos[1] - textw * 0.5, screenpos[2] - texth * 0.5
 end
 
-function ifontmgr.add_text(x, y, fontid, text, size, color, style)
-
-end
-
 local fontcomp = ecs.component "font"
 function fontcomp:init()
-    self.id = ifontmgr.add_font(self)
+    self.id = fontmgr.name(self.family)
     return self
 end
 

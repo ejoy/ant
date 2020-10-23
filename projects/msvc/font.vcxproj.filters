@@ -8,7 +8,7 @@
     <Filter Include="Header Files">
       <UniqueIdentifier>{76668831-4189-4866-a614-020834dcb2c9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Resource Files">
+    <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
@@ -20,12 +20,15 @@
     <ClCompile Include="..\..\clibs\font\luafont.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\font\name_cvt.cpp">
+    <ClCompile Include="..\..\clibs\font\truetype.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\font\font_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\clibs\font\truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
