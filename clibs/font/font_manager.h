@@ -57,7 +57,7 @@ struct font_glyph {
 #define FONT_API __declspec(dllimport)
 #	endif //FONT_EXPORT
 #else
-#define FONT_API
+#define FONT_API extern
 #endif 
 
 void font_manager_init(struct font_manager *);

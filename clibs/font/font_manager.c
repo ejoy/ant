@@ -400,79 +400,79 @@ get_name_info(struct stbtt_fontinfo * fi,
 
 int 
 fm_name_item(struct font_manager *F, int fontid, uint16_t nameid, char name[64]){
-	struct stbtt_fontinfo * fi = &F->ttf[fontid];
+// 	struct stbtt_fontinfo * fi = &F->ttf[fontid];
 
-	static const uint16_t platforms[] = {
-		STBTT_PLATFORM_ID_MAC,
-		STBTT_PLATFORM_ID_UNICODE,
-		STBTT_PLATFORM_ID_MICROSOFT,
-	};
+// 	static const uint16_t platforms[] = {
+// 		STBTT_PLATFORM_ID_MAC,
+// 		STBTT_PLATFORM_ID_UNICODE,
+// 		STBTT_PLATFORM_ID_MICROSOFT,
+// 	};
 
-#define COUNTOF(_A) (sizeof((_A))/sizeof(_A[0]))
+// #define COUNTOF(_A) (sizeof((_A))/sizeof(_A[0]))
 
-	for (int pidx=0; pidx < COUNTOF(platforms); ++pidx){
-		const uint16_t platformID = platforms[pidx];
-		switch (platformID){
-		case STBTT_PLATFORM_ID_UNICODE:{
-			static const uint16_t encodings[] = {
-				STBTT_UNICODE_EID_UNICODE_1_0,
-				STBTT_UNICODE_EID_UNICODE_1_1,
-				STBTT_UNICODE_EID_ISO_10646,
-				STBTT_UNICODE_EID_UNICODE_2_0_BMP,
-				STBTT_UNICODE_EID_UNICODE_2_0_FULL,
-			};
-			const uint16_t languageID = 0;	// always 0
-			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-				const int namelen = get_name_info(fi, platformID, encodings[e], languageID, nameid, name, 64);
-				if (namelen > 0)
-					return namelen;
-			}
-			break;
-		}
-		case STBTT_PLATFORM_ID_MAC:{
-			static const uint16_t encodings[] = {
-				STBTT_MAC_EID_ROMAN, 		STBTT_MAC_EID_ARABIC,
-				STBTT_MAC_EID_JAPANESE,   	STBTT_MAC_EID_HEBREW,
-				STBTT_MAC_EID_CHINESE_TRAD, STBTT_MAC_EID_GREEK,
-				STBTT_MAC_EID_KOREAN, 		STBTT_MAC_EID_RUSSIAN,
-			};
-			static const uint16_t languageIDs[] = {
-				STBTT_MAC_LANG_ENGLISH, STBTT_MAC_LANG_CHINESE_SIMPLIFIED, STBTT_MAC_LANG_CHINESE_TRAD,
-			};
-			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-				for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
-					const int namelen = get_name_info(fi, platformID, encodings[e], languageIDs[l], nameid, name, 64);
-					if (namelen > 0){
-						return namelen;
-					}
-				}
-			}
-			break;
-		}
-		case STBTT_PLATFORM_ID_MICROSOFT:
-			static const uint16_t languageIDs[] = {
-				STBTT_MS_LANG_ENGLISH, STBTT_MS_LANG_CHINESE,
-			};
-			static const uint16_t encodings[] = {
-				STBTT_MS_EID_SYMBOL,
-				STBTT_MS_EID_UNICODE_BMP,
-				STBTT_MS_EID_SHIFTJIS,
-				STBTT_MS_EID_UNICODE_FULL,
-			};
-			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
-				for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
-					const int namelen = get_name_info(fi, platformID, encodings[e], languageIDs[l], nameid, name, 64);
-					if (namelen > 0){
-						return namelen;
-					}
-				}
-			}
-			break;
-		case STBTT_PLATFORM_ID_ISO:
-		default:
-			return -2;
-		}
-	}
+// 	for (int pidx=0; pidx < COUNTOF(platforms); ++pidx){
+// 		const uint16_t platformID = platforms[pidx];
+// 		switch (platformID){
+// 		case STBTT_PLATFORM_ID_UNICODE:{
+// 			static const uint16_t encodings[] = {
+// 				STBTT_UNICODE_EID_UNICODE_1_0,
+// 				STBTT_UNICODE_EID_UNICODE_1_1,
+// 				STBTT_UNICODE_EID_ISO_10646,
+// 				STBTT_UNICODE_EID_UNICODE_2_0_BMP,
+// 				STBTT_UNICODE_EID_UNICODE_2_0_FULL,
+// 			};
+// 			const uint16_t languageID = 0;	// always 0
+// 			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
+// 				const int namelen = get_name_info(fi, platformID, encodings[e], languageID, nameid, name, 64);
+// 				if (namelen > 0)
+// 					return namelen;
+// 			}
+// 			break;
+// 		}
+// 		case STBTT_PLATFORM_ID_MAC:{
+// 			static const uint16_t encodings[] = {
+// 				STBTT_MAC_EID_ROMAN, 		STBTT_MAC_EID_ARABIC,
+// 				STBTT_MAC_EID_JAPANESE,   	STBTT_MAC_EID_HEBREW,
+// 				STBTT_MAC_EID_CHINESE_TRAD, STBTT_MAC_EID_GREEK,
+// 				STBTT_MAC_EID_KOREAN, 		STBTT_MAC_EID_RUSSIAN,
+// 			};
+// 			static const uint16_t languageIDs[] = {
+// 				STBTT_MAC_LANG_ENGLISH, STBTT_MAC_LANG_CHINESE_SIMPLIFIED, STBTT_MAC_LANG_CHINESE_TRAD,
+// 			};
+// 			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
+// 				for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
+// 					const int namelen = get_name_info(fi, platformID, encodings[e], languageIDs[l], nameid, name, 64);
+// 					if (namelen > 0){
+// 						return namelen;
+// 					}
+// 				}
+// 			}
+// 			break;
+// 		}
+// 		case STBTT_PLATFORM_ID_MICROSOFT:
+// 			static const uint16_t languageIDs[] = {
+// 				STBTT_MS_LANG_ENGLISH, STBTT_MS_LANG_CHINESE,
+// 			};
+// 			static const uint16_t encodings[] = {
+// 				STBTT_MS_EID_SYMBOL,
+// 				STBTT_MS_EID_UNICODE_BMP,
+// 				STBTT_MS_EID_SHIFTJIS,
+// 				STBTT_MS_EID_UNICODE_FULL,
+// 			};
+// 			for (int e=0; e<sizeof(encodings)/sizeof(encodings[0]); ++e){
+// 				for (int l=0; l<sizeof(languageIDs)/sizeof(languageIDs[0]); ++l){
+// 					const int namelen = get_name_info(fi, platformID, encodings[e], languageIDs[l], nameid, name, 64);
+// 					if (namelen > 0){
+// 						return namelen;
+// 					}
+// 				}
+// 			}
+// 			break;
+// 		case STBTT_PLATFORM_ID_ISO:
+// 		default:
+// 			return -2;
+// 		}
+// 	}
 	
 	return -1;
 }

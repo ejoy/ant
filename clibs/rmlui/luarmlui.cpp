@@ -11,6 +11,7 @@
 #include <RmlUi/Core.h>
 
 #include <cassert>
+#include <cstring>
 
 struct rml_context{
     FileInterface2  *ifile;
@@ -36,7 +37,6 @@ get_field_handle_idx(lua_State *L, int index, const char* fieldname){
 
 static inline void
 parse_font(lua_State *L, int index, struct font_manager **fm, uint16_t *texid, Rml::Vector2i *tex_dim){
-    struct font_manager* fontmgr = nullptr;
     if (lua_getfield(L, 1, "font") == LUA_TTABLE){
         if (lua_getfield(L, -1, "font_mgr") == LUA_TLIGHTUSERDATA){
             *fm = (struct font_manager*)lua_touserdata(L, -1);
@@ -226,7 +226,6 @@ lrmlui_context_load(lua_State *L){
 
 static int
 lrmlui_context_font(lua_State *L){
-    auto rc = get_rc(L, 1);
     const char* filename = luaL_checkstring(L, 2);
     if (!Rml::LoadFontFace(filename)){
         return luaL_error(L, "load font failed:%s", filename);
@@ -274,7 +273,7 @@ linit(lua_State *L){
     rc->isystem     = new System();
 
     struct font_manager *fontmgr = nullptr;
-    uint16_t texid; Rml::Vector2i tex_dim;
+    uint16_t texid = UINT16_MAX; Rml::Vector2i tex_dim;
     parse_font(L, 1, &fontmgr, &texid, &tex_dim);
     rc->ifont       = new FontInterface(fontmgr);
 

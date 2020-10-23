@@ -84,5 +84,5 @@ private:
     const bgfx_vertex_layout_t* mLayout;
     uint64_t            mRenderState;
     ShaderContext       mShaderContext;
-    Rect                mViewRect;
+    Rect                mViewRect = {0, 0, 0, 0};
 };

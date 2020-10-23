@@ -85,13 +85,14 @@ lparse(lua_State *L){
     return 1;
 }
 
-extern "C"
-LUAMOD_API int
-luaopen_image(lua_State* L) {
-    luaL_Reg lib[] = {
-        { "parse", lparse},
-        { nullptr, nullptr },
-    };
-    luaL_newlib(L, lib);
-    return 1;
+extern "C"{
+    LUAMOD_API int
+    luaopen_image(lua_State* L) {
+        luaL_Reg lib[] = {
+            { "parse", lparse},
+            { nullptr, nullptr },
+        };
+        luaL_newlib(L, lib);
+        return 1;
+    }
 }

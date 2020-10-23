@@ -1,4 +1,5 @@
 include ../common.mk
+include ../bgfx/bgfx_define.mk
 
 ifeq "$(PLAT)" "mingw"
 default : rmlui.dll
@@ -9,17 +10,31 @@ endif
 rmlui.dll : $(ODIR)/rmlui.dll
 	cp $< $@
 
-# $(ODIR)/luafont.o : luafont.c | $(ODIR)
-# 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
+RMLUIINC=-I$(ANT3RD)/RmlUi/Include
 
-# $(ODIR)/font_manager.o : font_manager.c | $(ODIR)
-# 	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
+$(ODIR)/file.o : file.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(RMLUIINC)
 
-# $(ODIR)/rmlui.dll : $(ODIR)/luafont.o $(ODIR)/font_manager.o
-# 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++
+$(ODIR)/font.o : font.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
-# $(ODIR)/librmlui.a : $(ODIR)/luafont.o $(ODIR)/font_manager.o
-# 	ar rsv $@ $^
+$(ODIR)/render.o : render.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+
+$(ODIR)/system.o : system.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+
+$(ODIR)/luarmlui.o : luarmlui.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+
+RMLUILIB=-L$(ANT3RD)/build/RmlUi/$(PLAT)/$(MODE) -lRmlCore
+FONTLIB=-L../../bin/$(PLAT)/$(MODE) -lfont
+
+$(ODIR)/rmlui.dll : $(ODIR)/luarmlui.o $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(RMLUILIB) $(FONTLIB) $(LUALIB) -lstdc++ 
+
+$(ODIR)/librmlui.a : $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/luarmlui.o
+	ar rsv $@ $^
 
 $(ODIR) :
 	mkdir -p $@
