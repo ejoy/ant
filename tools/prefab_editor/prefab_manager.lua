@@ -82,6 +82,45 @@ end
 local recorderidx = 0
 local function gen_camera_recorder_name() recorderidx = recorderidx + 1 return "recorder" .. recorderidx end
 local lightidx = 0
+
+local function create_light_billboard(light_eid)
+    local bb_eid = world:create_entity{
+        policy = {
+            "ant.render|render",
+            "ant.effect|billboard",
+            "ant.general|name"
+        },
+        data = {
+            name = "billboard_light",
+            transform = {},
+            billboard = {lock = "camera"},
+            state = 1,
+            scene_entity = true,
+            material = "res/materials/billboard.material"
+        },
+        action = {
+            bind_billboard_camera = "camera"
+        }
+    }
+    local icons = require "common.icons"(assetmgr)
+    local tex
+    local light_type = world[light_eid].light_type
+    if light_type == "spot" then
+        tex = icons.ICON_SPOTLIGHT.handle
+    elseif light_type == "point" then
+        tex = icons.ICON_POINTLIGHT.handle
+    elseif light_type == "directional" then
+        tex = icons.ICON_DIRECTIONALLIGHT.handle
+        ilight.active_directional_light(light_eid)
+    end
+    imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
+    iom.set_scale(bb_eid, 0.2)
+    ies.set_state(bb_eid, "auxgeom", true)
+    iom.set_position(bb_eid, iom.get_position(light_eid))
+    world[bb_eid].parent = world[light_eid].parent
+    light_gizmo.billboard[light_eid] = bb_eid
+end
+
 function m:create(what)
     local localpath = tostring(fs.path "":localpath())
     if what == "camera" then
@@ -125,40 +164,7 @@ function m:create(what)
         local new_light = newlight[1]
         self.entities[#self.entities+1] = new_light
         hierarchy:add(new_light, {template = newlight.__class[1]}, self.root)
-
-        local bb_eid = world:create_entity{
-            policy = {
-                "ant.render|render",
-                "ant.effect|billboard",
-                "ant.general|name"
-            },
-            data = {
-                name = "billboard_light",
-                transform = {},
-                billboard = {lock = "camera"},
-                state = 1,
-                scene_entity = true,
-                material = "res/materials/billboard.material"
-            },
-            action = {
-                bind_billboard_camera = "camera"
-            }
-        }
-        local icons = require "common.icons"(assetmgr)
-        local tex
-        if what == "spot" then
-            tex = icons.ICON_SPOTLIGHT.handle
-        elseif what == "point" then
-            tex = icons.ICON_POINTLIGHT.handle
-        elseif what == "directional" then
-            tex = icons.ICON_DIRECTIONALLIGHT.handle
-            ilight.active_directional_light(new_light)
-        end
-        imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
-        iom.set_scale(bb_eid, 0.2)
-        ies.set_state(bb_eid, "auxgeom", true)
-        world[bb_eid].parent = world[new_light].parent
-        light_gizmo.billboard[new_light] = bb_eid
+        create_light_billboard(new_light)
     end
 end
 
@@ -280,6 +286,7 @@ function m:open_prefab(filename)
                 last_camera = entity
             end
             if world[entity].light_type then
+                create_light_billboard(entity)
                 light_gizmo.bind(entity)
             end
         end
