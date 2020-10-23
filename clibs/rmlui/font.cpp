@@ -23,7 +23,7 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
             mFontFaces.push_back(FontFace{fontid, size, font_manager_pixelsize(mfontmgr, fontid, size)});
             return static_cast<Rml::FontFaceHandle>(idx + 1);
         }
-        auto dis = (std::distance(itfound, mFontFaces.begin()));
+        auto dis = (std::distance(mFontFaces.begin(), itfound));
         return  static_cast<Rml::FontFaceHandle>(dis + 1);
     }
 
