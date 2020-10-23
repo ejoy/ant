@@ -23,7 +23,7 @@ local gizmo = require "gizmo.gizmo"(world)
 local global_data = require "common.global_data"
 local icons = require "common.icons"(asset_mgr)
 local gizmo_const = require "gizmo.const"
-
+local new_project = require "common.new_project"
 local m = ecs.system 'gui_system'
 local drag_file = nil
 local last_x = -1
@@ -34,14 +34,13 @@ local second_view_width = 384
 local second_vew_height = 216
 
 local function on_new_project(path)
-    local rp = fs.path "":localpath():parent_path():parent_path()
-    local temp_path = fs.path(tostring(rp:parent_path()) .. "/test/simple/")
-    lfs.create_directory(lfs.path(path .. "\\res"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. ".mount"):localpath(), lfs.path(path .. "\\.mount"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. "init_system.lua"):localpath(), lfs.path(path .. "\\init_system.lua"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. "main.lua"):localpath(), lfs.path(path .. "\\main.lua"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. "package.ecs"):localpath(), lfs.path(path .. "\\package.ecs"))
-    lfs.copy_file(fs.path(tostring(temp_path) .. "package.lua"):localpath(), lfs.path(path .. "\\package.lua"))
+    new_project.set_path(path)
+    new_project.gen_mount()
+    new_project.gen_init_system()
+    new_project.gen_main()
+    new_project.gen_package_ecs()
+    new_project.gen_package()
+    new_project.gen_settings()
 end
 
 local function choose_project_dir()
@@ -206,7 +205,7 @@ local event_create = world:sub {"Create"}
 local event_gizmo = world:sub {"Gizmo"}
 local light_gizmo = require "gizmo.light"(world)
 
-local function onTarget(old, new)
+local function on_target(old, new)
     if old and world[old] then
         if world[old].camera then
             camera_mgr.show_frustum(old, false)
@@ -215,15 +214,17 @@ local function onTarget(old, new)
         end
     end
     if new then
-        if world[new].camera then
+        local new_entity = world[new]
+        if new_entity.camera then
             camera_mgr.set_second_camera(new, true)
-        elseif world[new].light_type then
+        elseif new_entity.light_type then
             light_gizmo.bind(new)
         end
     end
+    prefab_mgr:update_current_aabb(new)
 end
 
-local function onUpdate(eid)
+local function on_update(eid)
     if not eid then return end
 
     if world[eid].camera then
@@ -231,6 +232,7 @@ local function onUpdate(eid)
     elseif world[eid].light_type then
         light_gizmo.update()
     end
+    prefab_mgr:update_current_aabb(eid)
 end
 
 local cmd_queue = require "gizmo.command_queue"(world)
@@ -239,9 +241,9 @@ function m:data_changed()
         if action == "update" or action == "ontarget" then
             inspector.update_ui(action == "update")
             if action == "ontarget" then
-                onTarget(value1, value2)
+                on_target(value1, value2)
             elseif action == "update" then
-                onUpdate(gizmo.target_eid)
+                on_update(gizmo.target_eid)
             end
         end
     end

@@ -295,11 +295,11 @@ function m.show()
             end
             local template = hierarchy:get_template(current_eid)
             if template and template.filename then
-                imgui.widget.Text("Prefab :")
+                imgui.widget.Text("Prefab")
                 imgui.cursor.SameLine()
                 imgui.widget.Text(template.filename)
             end
-            imgui.widget.Text("Name:")
+            imgui.widget.Text("Name")
             imgui.cursor.SameLine()
             imgui.cursor.PushItemWidth(-1)
             if imgui.widget.InputText("##Name", base_ui_data.name) then
@@ -309,18 +309,21 @@ function m.show()
             end
             imgui.cursor.PopItemWidth()
             if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
-                imgui.widget.Text("Position:")
-                imgui.cursor.SameLine()
+                --imgui.cursor.SetNextItemWidth(100)
+                imgui.widget.Text("Position")
+                imgui.cursor.SameLine(120)
                 if imgui.widget.DragFloat("##Position", base_ui_data.pos) then
                     on_position_dirty(current_eid, base_ui_data.pos)
                 end
-                imgui.widget.Text("Rotate:")
-                imgui.cursor.SameLine()
+                --imgui.cursor.SetNextItemWidth(100)
+                imgui.widget.Text("Rotate")
+                imgui.cursor.SameLine(120)
                 if imgui.widget.DragFloat("##Rotate", base_ui_data.rot) then
                     on_rotate_dirty(current_eid, base_ui_data.rot)
                 end
-                imgui.widget.Text("Scale:")
-                imgui.cursor.SameLine()
+                --imgui.cursor.SetNextItemWidth(100)
+                imgui.widget.Text("Scale")
+                imgui.cursor.SameLine(120)
                 if imgui.widget.DragFloat("##Scale", base_ui_data.scale) then
                     on_scale_dirty(current_eid, base_ui_data.scale)
                 end

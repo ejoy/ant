@@ -13,12 +13,11 @@ local function create_world(config)
     local world = ecs.new_world (config)
     local irender = world:interface "ant.render|irender"
     irender.create_blit_queue{w=config.width, h=config.height}
-    local world_update = world:update_func "update"
     local world_tex
     local m = {}
     function m.init()
         world:pub {"resize", rect_w, rect_h}
-        world:update_func "init" ()
+        world:pipeline_init()
         local irender = world:interface "ant.render|irender"
         world_tex = assert(irender.get_main_view_rendertexture())
     end
@@ -28,8 +27,7 @@ local function create_world(config)
         imgui.widget.ImageButton(world_tex,rect_w,rect_h,{frame_padding=0,bg_col={0,0,0,1}})
     end
     function m.update()
-        world_update()
-        world:clear_removed()
+        world:pipeline_update()
     end
     function m.mouse_wheel(x, y, delta)
         if not isInRect(x, y) then

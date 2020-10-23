@@ -5,7 +5,8 @@ local math3d = require "math3d"
 local hierarchy = {
     root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}},
     all = {},
-    select_adapter = {}
+    select_adapter = {},
+    select_adaptee = {}
 }
 
 function hierarchy:set_root(eid)
@@ -79,6 +80,8 @@ end
 function hierarchy:clear()
     self.root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}}
     self.all = {}
+    self.select_adapter = {}
+    self.select_adaptee = {}
 end
 
 function hierarchy:set_parent(eid, peid)
@@ -153,10 +156,20 @@ end
 
 function hierarchy:add_select_adapter(eid, target)
     self.select_adapter[eid] = target
+    
+    if not self.select_adaptee[target] then
+        self.select_adaptee[target] = {}
+    end
+    local count = #self.select_adaptee[target]
+    self.select_adaptee[target][count + 1] = eid
 end
 
 function hierarchy:get_select_adapter(eid)
     return self.select_adapter[eid] or eid
+end
+
+function hierarchy:get_select_adaptee(eid)
+    return self.select_adaptee[eid] or {}
 end
 
 function hierarchy:update_display_name(eid, name)

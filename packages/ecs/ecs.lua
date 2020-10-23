@@ -245,35 +245,13 @@ function world:singleton(c_type)
 	end
 end
 
-local function remove_entity(w, e)
-	for c, component in sortpairs(e) do
-		local tc = w._class.component[c]
-		if tc and tc.delete then
-			tc.delete(component)
-		end
-	end
-	local mt = getmetatable(e)
-	if mt and mt.__owned then
-		remove_entity(w, mt.__index)
-	end
-end
-
-function world:clear_removed()
-	local set = self._removed
-	for i = #set,1,-1 do
-		local e = set[i]
-		set[i] = nil
-		remove_entity(self, e)
-	end
-end
-
 local timer = require "platform.timer"
 local time_counter = timer.counter
 local time_freq    = timer.frequency() / 1000
 local function gettime()
 	return time_counter() / time_freq
 end
-function world:update_func(what)
+function world:pipeline_func(what)
 	local list = system.lists(self, what)
 	if not list then
 		return function() end
@@ -290,6 +268,46 @@ function world:update_func(what)
 			self:pub {"system_hook","end",name,what,step_name,gettime()}
 		end
 	end
+end
+
+local function remove_entity(w, e)
+	for c, component in sortpairs(e) do
+		local tc = w._class.component[c]
+		if tc and tc.delete then
+			tc.delete(component)
+		end
+	end
+	local mt = getmetatable(e)
+	if mt and mt.__owned then
+		remove_entity(w, mt.__index)
+	end
+end
+
+local function clear_removed(w)
+	local set = w._removed
+	for i = #set,1,-1 do
+		local e = set[i]
+		set[i] = nil
+		remove_entity(w, e)
+	end
+end
+
+function world:pipeline_init()
+	self:pipeline_func "init" ()
+	self._update_func = self:pipeline_func "update"
+end
+
+function world:pipeline_exit()
+	self:pipeline_func "exit" ()
+	for eid in sortpairs(self._entity) do
+		self:remove_entity(eid)
+	end
+	clear_removed(self)
+end
+
+function world:pipeline_update()
+	self._update_func()
+	clear_removed(self)
 end
 
 function world:enable_system(name, enable)

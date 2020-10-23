@@ -146,8 +146,6 @@ function m:data_changed()
 		end
 	end
 
-	camera_mgr.select_frustum = (select_area ~= 0)
-
 	for _, what, x, y in mouse_up:unpack() do
 		if what == "LEFT" then
 			if camera_mgr.camera_list[camera_mgr.second_camera] then
@@ -157,6 +155,7 @@ function m:data_changed()
 				end
 			end
 		end
+		select_area = 0
 	end
 
 	for _, what, x, y, dx, dy in mouse_drag:unpack() do
@@ -195,6 +194,8 @@ function m:data_changed()
 	end
 	
 	update_second_view_camera()
+
+	camera_mgr.select_frustum = (select_area ~= 0)
 
 	for _,what,x,y in event_camera_control:unpack() do
 		if not camera_mgr.select_frustum then

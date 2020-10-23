@@ -7,15 +7,13 @@ local function create_world(config)
     local ev = inputmgr.create(world)
     local irender = world:interface "ant.render|irender"
     irender.create_blit_queue{w=config.width, h=config.height}
-    local world_update = world:update_func "update"
     local m = {}
     function m.init()
         world:pub {"resize", rect_w, rect_h}
-        world:update_func "init" ()
+        world:pipeline_init()
     end
     function m.update()
-        world_update()
-        world:clear_removed()
+        world:pipeline_update()
     end
     m.mouse_wheel = ev.mouse_wheel
     m.mouse = ev.mouse

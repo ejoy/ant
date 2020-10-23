@@ -330,12 +330,10 @@ local function select_obj(pickup_com, blit_buffer, viewrect)
 		pickup_com.pickup_cache.pick_ids = {selecteid}
 		local name = assert(world[selecteid]).name
 		print("pick entity id : ", selecteid, ", name : ", name)
-		-- world:update_func("after_pickup")()
 		world:pub {"pickup",selecteid,pickup_com.pickup_cache.pick_ids}
 	else
 		pickup_com.pickup_cache.last_pick = nil
 		pickup_com.pickup_cache.pick_ids = {}
-		-- world:update_func("after_pickup")()
 		world:pub {"pickup",nil,{}}
 		print("not found any eid")
 	end

@@ -13,14 +13,17 @@ end
 local function gen_color_vertices(pts, color, transform, vb)
 	local vnum = #pts
 	if transform then
-		for i=1, vnum do
-			local v = gen_color_vertex(pts[i], color, transform)
+		for i=1, vnum, 3 do
+			local v = gen_color_vertex({pts[i], pts[i+1], pts[i+2]}, color, transform)
+			-- local v = gen_color_vertex(pts[i], color, transform)
 			
 			table.move(v, 1, #v, #vb+1, vb)
 		end
 	else
-		for i=1, vnum do
-			table.move(pts[i], 1, 3, #vb+1, vb)
+		for i=1, vnum, 3 do
+			vb[#vb+1] = pts[i]
+			vb[#vb+1] = pts[i+1]
+			vb[#vb+1] = pts[i+2]
 			vb[#vb+1] = color
 		end
 	end

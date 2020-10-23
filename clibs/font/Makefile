@@ -20,7 +20,13 @@ $(ODIR)/font_manager.o : font_manager.c | $(ODIR)
 $(ODIR)/font.dll : $(ODIR)/luafont.o $(ODIR)/font_manager.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -DFONT_EXPORT -o $@ $^ $(LUALIB) -lstdc++
 
-$(ODIR)/libfont.a : $(ODIR)/luafont.o $(ODIR)/font_manager.o
+$(ODIR)/truetype.o : truetype.c | $(ODIR)
+	$(CC) $(CFLAGS) -c $(LUA_FLAGS) -o $@ $^ $(LUAINC) $(BGFX3RD_INC)
+
+$(ODIR)/font.dll : $(ODIR)/luafont.o $(ODIR)/font_manager.o $(ODIR)/truetype.o
+	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(LUALIB) -lstdc++
+
+$(ODIR)/libfont.a : $(ODIR)/luafont.o $(ODIR)/font_manager.o $(ODIR)/truetype.o
 	ar rsv $@ $^
 
 $(ODIR) :
