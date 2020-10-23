@@ -85,7 +85,7 @@ local edit_sampler = function(eid, md)
     for idx, pro in ipairs(md.uidata.properties) do
         local k = pro.label
         local tp = md.tdata.properties[k]
-        imgui.widget.Text(k..":")
+        imgui.widget.Text(k)
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##" .. k, pro[1]) then
@@ -97,7 +97,7 @@ local edit_sampler = function(eid, md)
         end
         imgui.cursor.PopItemWidth()
         imgui.cursor.Indent()
-        imgui.widget.Text("image:")
+        imgui.widget.Text("image")
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##" .. tp.tdata.path .. idx, pro[2]) then
@@ -139,7 +139,7 @@ local edit_sampler = function(eid, md)
 
         local sampler = tp.tdata.sampler
         imgui.cursor.Indent()
-        imgui.widget.Text("MAG:")
+        imgui.widget.Text("MAG")
         imgui.cursor.SameLine()
         imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("MAG" .. idx)
@@ -154,7 +154,7 @@ local edit_sampler = function(eid, md)
         imgui.util.PopID()
 
         imgui.cursor.SameLine()
-        imgui.widget.Text("MIN:")
+        imgui.widget.Text("MIN")
         imgui.cursor.SameLine()
         imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("MIN" .. idx)
@@ -169,7 +169,7 @@ local edit_sampler = function(eid, md)
         imgui.util.PopID()
 
         imgui.cursor.SameLine()
-        imgui.widget.Text("MIP:")
+        imgui.widget.Text("MIP")
         imgui.cursor.SameLine()
         imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("MIP" .. idx)
@@ -183,7 +183,7 @@ local edit_sampler = function(eid, md)
         end
         imgui.util.PopID()
 
-        imgui.widget.Text("U:")
+        imgui.widget.Text("U")
         imgui.cursor.SameLine()
         imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("U" .. idx)
@@ -198,7 +198,7 @@ local edit_sampler = function(eid, md)
         imgui.util.PopID()
 
         imgui.cursor.SameLine()
-        imgui.widget.Text("V:")
+        imgui.widget.Text("V")
         imgui.cursor.SameLine()
         imgui.cursor.SetNextItemWidth(combo_width)
         imgui.util.PushID("V" .. idx)
@@ -246,8 +246,8 @@ local edit_uniform = function(eid, md)
             else
                 imgui_func = imgui.widget.DragFloat
             end
-            imgui.widget.Text(k..":")
-            imgui.cursor.SameLine()
+            imgui.widget.Text(k)
+            imgui.cursor.SameLine(270)
             if imgui_func("##" .. k, v) then
                 local tu = md.tdata.properties[k]
                 tu[1] = v[1]
@@ -317,7 +317,7 @@ function m.show(eid)
             end
         end
 
-        imgui.widget.Text("file:")
+        imgui.widget.Text("file")
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##file", uidata.material_file) then
@@ -333,7 +333,7 @@ function m.show(eid)
             imgui.widget.EndDragDropTarget()
         end
         imgui.cursor.Indent()
-        imgui.widget.Text("vs:")
+        imgui.widget.Text("vs")
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##vs", uidata.vs) then
@@ -347,7 +347,7 @@ function m.show(eid)
         --     end
         --     imgui.widget.EndDragDropTarget()
         -- end
-        imgui.widget.Text("fs:")
+        imgui.widget.Text("fs")
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##fs", uidata.fs) then
@@ -362,12 +362,12 @@ function m.show(eid)
         --     imgui.widget.EndDragDropTarget()
         -- end
         imgui.cursor.Unindent()
-
-        if imgui.widget.TreeNode("Properties", imgui.flags.TreeNode { "DefaultOpen" }) then
+        imgui.cursor.Separator()
+        --if imgui.widget.TreeNode("Properties", imgui.flags.TreeNode { "DefaultOpen" }) then
             edit_sampler(eid, mtldata)
             edit_uniform(eid, mtldata)
-            imgui.widget.TreePop()
-        end
+        --     imgui.widget.TreePop()
+        -- end
         imgui.widget.TreePop()
     end
 end
