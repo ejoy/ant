@@ -174,7 +174,7 @@ function world:instance_prefab(prefab, args, owned)
 			res[k] = v -- TODO?
 		end
 	end
-	run_action(self, res, prefab, args)
+	run_action(self, res, prefab)
 	return res
 end
 

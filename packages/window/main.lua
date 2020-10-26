@@ -146,7 +146,7 @@ end
 local function headlessMode()
 	callback.init(nil, nil, 1024, 768)
 	if debug_update then debug_update() end
-	if world_update then world_update() end
+	if world then world:pipeline_update() end
 	screenshot(type(argument.headless) == "string" and  argument.headless or "test.bmp")
 	callback.exit()
 end
