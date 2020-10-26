@@ -9,6 +9,7 @@
 #include <bgfx/c99/bgfx.h>
 
 #include <RmlUi/Core.h>
+#include <RmlUi/Lua.h>
 
 #include <cassert>
 #include <cstring>
@@ -292,6 +293,7 @@ linit(lua_State *L){
         luaL_error(L, "Failed to Initialise Rml");
     }
 
+    Rml::Lua::Initialise();
     rc->ifont->InitFontTex();
     c.handle = Rml::CreateContext(c.name, Rml::Vector2i(rt.w, rt.h));
     if (!c.handle){

@@ -12,6 +12,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Lua">
+      <UniqueIdentifier>{56df3fc6-45d2-4122-9464-ec8fe478ec85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lua\Source">
+      <UniqueIdentifier>{d2bfa68e-418f-4ad8-86c2-da8a3cb75ff8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lua\Source\Elements">
+      <UniqueIdentifier>{f1880568-606b-4446-8d00-9c09efd4dcc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lua\Include">
+      <UniqueIdentifier>{190936a9-2a62-4092-b234-6ac699f3a5e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\rmlui\font.cpp">
@@ -29,6 +41,135 @@
     <ClCompile Include="..\..\clibs\rmlui\system.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Colourb.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Colourf.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Context.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ContextDocumentsProxy.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Document.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Element.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementAttributesProxy.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementChildNodesProxy.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementInstancer.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementStyleProxy.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementText.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Event.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\EventParametersProxy.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\GlobalLuaFunctions.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Interpreter.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Log.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Lua.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaDocument.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaDocumentElementInstancer.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaElementInstancer.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaEventListener.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaEventListenerInstancer.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaPlugin.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaType.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\RmlUi.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\RmlUiContextsProxy.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Utilities.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Vector2f.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Vector2i.cpp">
+      <Filter>Lua\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\DataFormatter.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\DataSource.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementDataGrid.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementDataGridRow.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementForm.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControl.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlDataSelect.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlInput.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlSelect.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlTextArea.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementTabSet.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\LuaDataFormatter.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\LuaDataSource.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\SelectOptionsProxy.cpp">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\rmlui\file.h">
@@ -43,5 +184,149 @@
     <ClInclude Include="..\..\clibs\rmlui\system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Colourb.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Colourf.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Context.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ContextDocumentsProxy.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Document.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Element.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementAttributesProxy.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementChildNodesProxy.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementInstancer.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementStyleProxy.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementText.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Event.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\EventParametersProxy.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\GlobalLuaFunctions.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Log.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaDocument.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaDocumentElementInstancer.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaElementInstancer.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaEventListener.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaEventListenerInstancer.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaPlugin.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\RmlUi.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\RmlUiContextsProxy.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Vector2f.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Vector2i.h">
+      <Filter>Lua\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\As.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\DataFormatter.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\DataSource.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementDataGrid.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementDataGridRow.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementForm.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControl.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlDataSelect.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlInput.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlSelect.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlTextArea.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementTabSet.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\LuaDataFormatter.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\LuaDataSource.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\SelectOptionsProxy.h">
+      <Filter>Lua\Source\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Header.h">
+      <Filter>Lua\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\IncludeLua.h">
+      <Filter>Lua\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Interpreter.h">
+      <Filter>Lua\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Lua.h">
+      <Filter>Lua\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\LuaType.h">
+      <Filter>Lua\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Utilities.h">
+      <Filter>Lua\Include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\LuaType.inl">
+      <Filter>Lua\Include</Filter>
+    </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
