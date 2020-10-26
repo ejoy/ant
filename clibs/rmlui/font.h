@@ -36,7 +36,7 @@ public:
 
 private:
 	struct font_glyph
-	GetGlyph(const FontFace &face, int codepoint, uint16_t *uv_w = nullptr, uint16_t *uv_h = nullptr);
+	GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og = nullptr);
 public:
 	static const Rml::String FONT_TEX_NAME;
 private:

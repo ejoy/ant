@@ -240,15 +240,16 @@ font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize){
 }
 
 int
-font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, uint16_t *w, uint16_t *h){
+font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og){
     int updated = font_manager_touch(F, fontid, codepoint, g);
 
-    if (w || h){
+    if (og){
         if (is_space_codepoint(codepoint)){
 			updated = 1;	// not need update
-            *w = *h = 0;
+			*og = *g;
+            og->w = og->h = 0;
         } else {
-            *w = g->w, *h = g->h;
+            *og = *g;
         }
     }
 
@@ -341,19 +342,6 @@ font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 
 #if 0
 
-void fetch_tt_font_name_table(struct font_manager *F, int fontid){
-	int offset;
-	int num_nt = font_manager_name_table_num(F, fontid, &offset);
-	for(int idx=0; idx<num_nt;++idx){
-		struct name_item ni;
-		font_manager_name_item(F, fontid, offset, idx, &ni);
-		char*name = (char*)malloc(sizeof(char) * ni.namelen);
-		uint16_t namelen_utf8;
-		font_manager_name_item_to_utf8(F, &ni, name, &namelen_utf8);
-		printf(name);
-		free(name);
-	}
-}
 #include <stdlib.h>
 #include <stdio.h>
 int
@@ -397,8 +385,6 @@ main() {
 		}
 
 	}
-
-	fetch_tt_font_name_table(&F, font);
 
 	return 0;
 }

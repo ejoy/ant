@@ -41,22 +41,21 @@ int FontInterface::GetSize(Rml::FontFaceHandle handle){
 }
 
 struct font_glyph
-FontInterface::GetGlyph(const FontFace &face, int codepoint, uint16_t *uv_w, uint16_t *uv_h){
-    struct font_glyph g;
-    uint16_t w=0, h=0;
-    if (0 == font_manager_glyph(mfontmgr, face.fontid, codepoint, face.pixelsize, &g, &w, &h)){
+FontInterface::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_){
+    struct font_glyph g, og;
+    if (0 == font_manager_glyph(mfontmgr, face.fontid, codepoint, face.pixelsize, &g, &og)){
         auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
-        uint8_t *buffer = new uint8_t[w*h];
-        if (NULL == font_manager_update(mfontmgr, face.fontid, codepoint, &g, buffer)){
-            ri->UpdateTexture(mFontTex.GetHandle(ri), Rect{g.u, g.v, w, h}, buffer);
+        const uint32_t bufsize = og.w * og.h;
+        uint8_t *buffer = new uint8_t[bufsize];
+        memset(buffer, 0, bufsize);
+        if (NULL == font_manager_update(mfontmgr, face.fontid, codepoint, &og, buffer)){
+            ri->UpdateTexture(mFontTex.GetHandle(ri), Rect{og.u, og.v, og.w, og.h}, buffer);
         } else {
             delete []buffer;
         }
     }
-
-    if (uv_w || uv_h){
-        *uv_w = w, *uv_h = h;
-    }
+    if (og_)
+        *og_ = og;
     return g;
 }
 
@@ -136,8 +135,8 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 	{
 		int codepoint = (int)*it_char;
 
-        uint16_t uv_w, uv_h;
-        auto g = GetGlyph(face, codepoint, &uv_w, &uv_h);
+        struct font_glyph og;
+        auto g = GetGlyph(face, codepoint, &og);
 
 		// Generate the geometry for the character.
 		vertices.resize(vertices.size() + 4);
@@ -149,8 +148,8 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
         const int16_t u0 = g.u;
         const int16_t v0 = g.v;
 
-        const int16_t u1 = g.u + uv_w;
-        const int16_t v1 = g.v + uv_h;
+        const int16_t u1 = g.u + og.w;
+        const int16_t v1 = g.v + og.h;
 
 		Rml::GeometryUtilities::GenerateQuad(
 			&vertices[0] + (vertices.size() - 4),
