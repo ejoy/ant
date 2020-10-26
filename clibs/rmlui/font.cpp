@@ -130,12 +130,8 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
     const size_t fontidx = static_cast<size_t>(handle)-1;
     const auto&face = mFontFaces[fontidx];
 
-    int a, d, g;
-    font_manager_fontheight(mfontmgr, face.fontid, face.pixelsize, &a, &d, &g);
-    int fontheight = a - d;
-
 #define FIX_POINT 8
-    int16_t x= int16_t(position.x * FIX_POINT), y= int16_t((position.y + fontheight)  * FIX_POINT);
+    int16_t x= int16_t(position.x * FIX_POINT), y= int16_t(position.y * FIX_POINT);
 	for (auto it_char = Rml::StringIteratorU8(string); it_char; ++it_char)
 	{
 		int codepoint = (int)*it_char;
