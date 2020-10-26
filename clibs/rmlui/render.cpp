@@ -13,6 +13,7 @@ Renderer::Renderer(uint16_t viewid, const bgfx_vertex_layout_t *layout, const Re
     , mViewRect(vr)
     , mRenderState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA){
     BGFX(set_view_rect)(mViewId, uint16_t(mViewRect.x), uint16_t(mViewRect.y), uint16_t(mViewRect.w), uint16_t(mViewRect.h));
+    BGFX(set_view_mode)(mViewId, BGFX_VIEW_MODE_SEQUENTIAL);
 }
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
