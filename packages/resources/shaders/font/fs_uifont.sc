@@ -7,7 +7,7 @@ SAMPLER2D(s_tex, 0);
 void main()
 {
 	float distance = texture2D(s_tex, v_texcoord0).a;
-	distance = smoothstep(0.7 - 0.1, 0.7 + 0.1, distance);
+	distance = smoothstep(0.68 - 0.2, 0.68 + 0.2, distance);
 	vec4 color = v_color0 * distance;
 	
 //	color.x = color.x+1;
