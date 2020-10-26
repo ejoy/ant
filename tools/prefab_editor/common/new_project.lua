@@ -1,37 +1,42 @@
 local utils = require "common.utils"
 local lfs   = require "filesystem.local"
+
 local m = {
 }
 
-local pn = "ant.test.simple"
-local mount_root
-local project_path
-local package_name
+local init_param = {
+
+}
+
 function m.set_path(path)
-    project_path = path
+    init_param.ProjectPath = path
     local standard_path = string.gsub(path, "\\", "/")
     local engine_pos = string.find(standard_path, '/ant/')
-    mount_root = string.sub(standard_path, engine_pos + 5, -1)
-    package_name = "ant." .. string.gsub(mount_root, '/', '.')
-    lfs.create_directory(lfs.path(project_path .. "\\res"))
+    init_param.MountRoot = string.sub(standard_path, engine_pos + 5, -1)
+    init_param.PackageName = "ant." .. string.gsub(init_param.MountRoot, '/', '.')
+    lfs.create_directory(lfs.path(init_param.ProjectPath .. "\\res"))
 end
 
 function m.gen_main()
-    local main_code = ([[
+    local main_code = [[
 package.path = "engine/?.lua"
 require "bootstrap"
-import_package "ant.window".start "%s"
-    ]]):format(package_name)
-    utils.write_file(tostring(lfs.path(project_path .. "\\main.lua")), main_code)
+import_package "ant.window".start "$PackageName"
+    ]]
+    local test_code = [[
+import_package "ant.window".start "$PackageName"
+    ]]
+
+    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\main.lua")), string.gsub(main_code, "%$(%w+)", init_param))
 end
 
 function m.gen_package()
-    local package_code = ([[
+    local package_code = [[
 return {
-    name = "%s",
+    name = "$PackageName",
     ecs = {
         import = {
-            "@%s",
+            "@$PackageName",
         },
         pipeline = {
             "init",
@@ -39,26 +44,26 @@ return {
             "exit",
         },
         system = {
-            "%s|init_system",
+            "$PackageName|init_system",
         }
     }
 }
-    ]]):format(package_name, package_name, package_name)
-    utils.write_file(tostring(lfs.path(project_path .. "\\package.lua")), package_code)
+    ]]
+    
+    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\package.lua")), string.gsub(package_code, "%$(%w+)", init_param))
 end
 
 function m.gen_mount()
-
-    local mount_content = ([[
+    local mount_content = [[
 @pkg packages
-@pkg-one %s
+@pkg-one $MountRoot
 engine engine
-    ]]):format(mount_root)
-    utils.write_file(tostring(lfs.path(project_path .. "\\.mount")), mount_content)
+    ]]
+    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\.mount")), string.gsub(mount_content, "%$(%w+)", init_param))
 end
 
 function m.gen_init_system()
-    local system_code = ([[
+    local system_code = [[
 local ecs = ...
 local world = ecs.world
 local m = ecs.system 'init_system'
@@ -67,8 +72,8 @@ function m:init()
     irq.set_view_clear_color(world:singleton_entity_id "main_queue", 0)
     --world:instance "res/scenes.prefab"
 end
-    ]]):format()
-    utils.write_file(tostring(lfs.path(project_path .. "\\init_system.lua")), system_code)
+    ]]
+    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\init_system.lua")), system_code)
 end
 
 function m.gen_package_ecs()
@@ -120,7 +125,7 @@ pipeline "ui"
     .stage "ui_update"
     .stage "ui_end"
     ]]
-    utils.write_file(tostring(lfs.path(project_path .. "\\package.ecs")), ecs)
+    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\package.ecs")), ecs)
 end
 
 function m.gen_settings()
@@ -167,6 +172,6 @@ graphic:
     split_lamada: 1
     split_num: 4
     ]]
-    utils.write_file(tostring(lfs.path(project_path .. "\\settings")), settings)
+    utils.write_file(tostring(lfs.path(init_param.ProjectPath .. "\\settings")), settings)
 end
 return m
