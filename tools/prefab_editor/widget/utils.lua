@@ -48,4 +48,34 @@ function m.imguiToolbar(icon, tooltip, active)
     return r
 end
 
+local message = {
+    
+}
+function m.message_box(msg)
+    message[#message + 1] = msg
+end
+
+local message_pop_id = "Message Box"
+function m.show_message_box()
+    if #message < 1 then return end
+    local level = 1
+    local function do_show_message(msg)
+        imgui.windows.OpenPopup(msg.title)
+        local change, opened = imgui.windows.BeginPopupModal(msg.title, imgui.flags.Window{"AlwaysAutoResize"})
+        if change then
+            imgui.widget.Text(msg.info)
+            level = level + 1
+            if level <= #message then
+                do_show_message(message[level])
+            end
+            if imgui.widget.Button("Close") then
+                message[level - 1] = nil
+                imgui.windows.CloseCurrentPopup()
+            end
+            imgui.windows.EndPopup()
+        end
+    end
+    do_show_message(message[level])
+end
+
 return m
