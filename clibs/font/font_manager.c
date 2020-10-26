@@ -37,6 +37,7 @@ font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
 	F->count = 0;
 	F->ttf = ttf;
 	F->L = L;
+	F->dpi_perinch = 0;
 // init priority list
 	int i;
 	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
@@ -232,8 +233,10 @@ font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, 
 
 int
 font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize){
-	//TODO: hardcode, one point size is 2 pixel size
-	return pointsize * 2;
+	//TODO: need set dpi when init font_manager
+	const int deault_dpi = 96;
+	const int dpi = F->dpi_perinch == 0 ? 96 : F->dpi_perinch;
+	return (int)((pointsize / 72.f) * dpi + 0.5f);
 }
 
 int

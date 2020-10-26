@@ -16,11 +16,11 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 
     if (fontid > 0){
         auto itfound = std::find_if(mFontFaces.begin(), mFontFaces.end(), [=](auto it){
-            return it.fontid == fontid && it.pointsize == size;
+            return it.fontid == fontid && it.pixelsize == size;
         });
         if (itfound == mFontFaces.end()){
             const size_t idx = mFontFaces.size();
-            mFontFaces.push_back(FontFace{fontid, size, font_manager_pixelsize(mfontmgr, fontid, size)});
+            mFontFaces.push_back(FontFace{fontid, size});
             return static_cast<Rml::FontFaceHandle>(idx + 1);
         }
         auto dis = (std::distance(mFontFaces.begin(), itfound));
@@ -37,7 +37,7 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 int FontInterface::GetSize(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle) - 1;
     const auto &face = mFontFaces[idx];
-    return face.pointsize;
+    return face.pixelsize;
 }
 
 struct font_glyph

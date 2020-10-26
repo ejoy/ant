@@ -6,7 +6,6 @@
 struct font_namager;
 struct FontFace{
 	int	fontid;
-	int pointsize;
 	int pixelsize;
 };
 

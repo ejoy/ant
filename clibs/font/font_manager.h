@@ -38,6 +38,7 @@ struct font_manager {
 	int16_t hash[FONT_MANAGER_HASHSLOTS];
 	struct truetype_font* ttf;
 	void *L;
+	int dpi_perinch;
 };
 
 struct font_glyph {
