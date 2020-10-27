@@ -5,7 +5,7 @@ local vfs           = require "vfs"
 local hierarchy     = require "hierarchy"
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
-local utils         = require "widget.utils"
+local widget_utils  = require "widget.utils"
 local bgfx          = require "bgfx"
 local geo_utils
 local logger
@@ -426,7 +426,9 @@ function m:save_prefab(filename)
 
     if not saveas then
         if glb_filename then
-            logger.error({tag = "Editor", message = "cann't save glb file, please save as prefab"})
+            local msg = "cann't save glb file, please save as prefab"
+            logger.error({tag = "Editor", message = msg})
+            widget_utils.message_box({title = "SaveError", info = msg})
         else
             utils.write_file(filename, stringify(self.entities.__class))
         end

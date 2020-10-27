@@ -24,6 +24,7 @@ local global_data = require "common.global_data"
 local icons = require "common.icons"(asset_mgr)
 local gizmo_const = require "gizmo.const"
 local new_project = require "common.new_project"
+local widget_utils = require "widget.utils"
 local m = ecs.system 'gui_system'
 local drag_file = nil
 local last_x = -1
@@ -58,9 +59,7 @@ end
 local function choose_project()
     if global_data.resource_root then return end
 
-    if not imgui.windows.IsPopupOpen("Choose project") then
-        imgui.windows.OpenPopup("Choose project")
-    end
+    imgui.windows.OpenPopup("Choose project")
 
     local change, opened = imgui.windows.BeginPopupModal("Choose project", imgui.flags.Window{"AlwaysAutoResize"})
     if change then
@@ -149,6 +148,7 @@ function m:ui_update()
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.TitleBg, 0.2, 0.2, 0.2, 1)
     choose_project()
+    widget_utils.show_message_box()
     menu.show()
     toolbar.show()
     local x, y, width, height = show_dock_space(0, uiconfig.ToolBarHeight)
