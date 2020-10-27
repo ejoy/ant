@@ -4,8 +4,10 @@
 #include "file.h"
 #include "font.h"
 #include "system.h"
+#include "lua2struct.h"
 
 #include <bgfx/bgfx_interface.h>
+#include <bgfx/luabgfx.h>
 #include <bgfx/c99/bgfx.h>
 
 #include <RmlUi/Core.h>
@@ -14,152 +16,53 @@
 #include <cassert>
 #include <cstring>
 
-struct rml_context{
+struct rml_context {
     FileInterface2  *ifile;
     FontInterface   *ifont;
     Renderer        *irenderer;
     System          *isystem;
     struct context {
         Rml::Context *  handle;
-        char            name[32];
+        char            name[32] = "main";
     };
     context         context;
 };
 
-static inline uint16_t
-get_field_handle_idx(lua_State *L, int index, const char* fieldname){
-    auto handleidx = lua_getfield(L, index, fieldname) == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : UINT16_MAX;
-    lua_pop(L, 1);
-    if (handleidx == UINT16_MAX){
-        return luaL_error(L, "invalid handle:%s", fieldname);
-    }
-    return handleidx;
-}
-
-static inline void
-parse_font(lua_State *L, int index, struct font_manager **fm, uint16_t *texid, Rml::Vector2i *tex_dim){
-    if (lua_getfield(L, 1, "font") == LUA_TTABLE){
-        if (lua_getfield(L, -1, "font_mgr") == LUA_TLIGHTUSERDATA){
-            *fm = (struct font_manager*)lua_touserdata(L, -1);
-        } else {
-            luaL_error(L, "font manager pointer must be provided!");
-        }
-        lua_pop(L, 1);
-
-        if (lua_getfield(L, -1, "font_texture") == LUA_TTABLE){
-            *texid = get_field_handle_idx(L, -1, "texid");
-
-            lua_getfield(L, -1, "width");
-            tex_dim->x = (int)lua_tointeger(L, -1);
-            lua_pop(L, 1);
-
-            lua_getfield(L, -1, "height");
-            tex_dim->y = (int)lua_tointeger(L, -1);
-            lua_pop(L, 1);
-        } else {
-            luaL_error(L, "Invalid font texture info");
-        }
-        lua_pop(L, 1);
-    } else {
-        luaL_error(L, "invalid font info");
-    }
-    lua_pop(L, 1);
-
-}
-
-static inline void
-parse_file_dict(lua_State *L, int index, FileDist &fd){
-    if (lua_getfield(L, index, "file_dist") == LUA_TTABLE){
-        for(lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)){
-            lua_pushvalue(L, -2);
-            const char* key = lua_tostring(L, -1);
-            const char* value = lua_tostring(L, -2); 
-            fd[key] = value;
-        }
-    } else {
-        luaL_error(L, "file dist should provide as [key:local_file_path] pairs table");
-    }
-
-    lua_pop(L, 1);
-}
-
-static inline void
-parse_viewrect(lua_State *L, int index, Rect *rect){
-    if (lua_getfield(L, index, "viewrect") == LUA_TTABLE){
-        auto get_int = [L](const char *name, int index, int *d){
-            if (lua_getfield(L, index, name) == LUA_TNUMBER)
-                *d = (int)lua_tointeger(L, -1);
-            else 
-                luaL_error(L, "invalid '%s' data", name);
-            lua_pop(L, 1);
+struct rml_init_context {
+    struct font {
+        struct font_texture {
+            int width;
+            int height;
+            uint32_t texid;
         };
-
-        get_int("x", -1, &rect->x);
-        get_int("y", -1, &rect->y);
-
-        get_int("w", -1, &rect->w);
-        get_int("h", -1, &rect->h);
-    }else {
-        luaL_error(L, "invalid viewrect");
-    }
-
-    lua_pop(L, 1);
-}
-
-static inline void
-parse_context_name(lua_State *L, int index, char contextname[32]){
-    const char* name = lua_getfield(L, index, "name") == LUA_TSTRING ? lua_tostring(L, -1) : "main";
-    lua_pop(L, 1);
-
-    if (strlen(name) >31){
-        luaL_error(L, "context name too long, should least than 31 char");
-    }
-
-    strcpy(contextname, name);
-}
-
-static inline bgfx_vertex_layout_t*
-parse_vertex_layout(lua_State *L, int index){
-    bgfx_vertex_layout_t* l = nullptr;
-    if (lua_getfield(L, index, "layout") == LUA_TUSERDATA){
-        l = (bgfx_vertex_layout_t *)lua_touserdata(L, -1);
-    } else {
-        luaL_error(L, "invalid vertex layout");
-    }
-    lua_pop(L, 1);
-    return l;
-}
-
-static inline void
-parse_shader_context(lua_State *L, int index, ShaderContext *c){
-    if (lua_getfield(L, index, "shader") != LUA_TTABLE){
-        luaL_error(L, "invalid shader info");
-    }
-
-    auto parse_shader_info = [L](const char*name, ShaderInfo &si){
-        if (lua_getfield(L, -1, name) != LUA_TTABLE){
-            luaL_error(L, "invalid shader.%s info", name);
-        }
-
-        si.prog = get_field_handle_idx(L, -1, "prog");
-
-        //uniform idx
-        lua_getfield(L, -1, "uniforms");
-        if (lua_rawlen(L, -1) <= 0){
-            luaL_error(L, "invalid shader.uniforms, uniform is empty");
-        }
-        lua_geti(L, -1, 1);
-        si.tex_uniform_idx = get_field_handle_idx(L, -1, "handle");
-        lua_pop(L, 1);  //"uniforms[1]"
-        lua_pop(L, 1);  //"uniforms"
-        lua_pop(L, 1); //name
+        font_texture font_texture;
+        struct font_manager* font_mgr;
     };
-
-    parse_shader_info("font", c->font);
-    parse_shader_info("image", c->image);
-    
-    lua_pop(L, 1);
-}
+    struct shader {
+        struct shader_info {
+            struct uniforms {
+                uint32_t handle;
+            };
+            uint32_t prog;
+            std::vector<uniforms> uniforms;
+        };
+        shader_info font;
+        shader_info image;
+    };
+    font        font;
+    shader      shader;
+    FileDist    file_dist;
+    uint16_t    viewid;
+    Rect        viewrect;
+    bgfx_vertex_layout_t* layout;
+};
+LUA2STRUCT(struct rml_init_context, font, shader, file_dist, viewid, viewrect, layout);
+LUA2STRUCT(struct rml_init_context::font, font_texture, font_mgr);
+LUA2STRUCT(struct rml_init_context::font::font_texture, width, height, texid);
+LUA2STRUCT(struct rml_init_context::shader, font, image);
+LUA2STRUCT(struct rml_init_context::shader::shader_info, prog, uniforms);
+LUA2STRUCT(struct rml_init_context::shader::shader_info::uniforms, handle);
+LUA2STRUCT(struct Rect, x, y, w, h);
 
 static inline rml_context*
 get_rc(lua_State *L, int index = 1){
@@ -187,7 +90,6 @@ lrmlui_context_shutdown(lua_State *L){
     release(rc->irenderer);
     return 0;
 }
-
 
 static int
 lrmlui_context_del(lua_State *L){
@@ -249,30 +151,30 @@ create_rml_context(lua_State *L){
 
 static int
 linit(lua_State *L){
-    luaL_checktype(L, 1, LUA_TTABLE);
+    rml_init_context init;
+    lua_struct::unpack(L, init);
+
     rml_context* rc = create_rml_context(L);
-    rc->isystem     = new System();
-
-    struct font_manager *fontmgr = nullptr;
-    uint16_t texid = UINT16_MAX; Rml::Vector2i tex_dim;
-    parse_font(L, 1, &fontmgr, &texid, &tex_dim);
-    rc->ifont       = new FontInterface(fontmgr);
-
-    FileDist fd;
-    parse_file_dict(L, 1, fd);
-    rc->ifile       = new FileInterface2(std::move(fd));
-
-    auto &c = rc->context;
-    parse_context_name(L, 1, c.name);
-    Rect rt;
-    parse_viewrect(L, 1, &rt);
-    auto l = parse_vertex_layout(L, 1);
-
-    rc->irenderer = new Renderer(get_field_handle_idx(L, 1, "viewid"), l, rt);
-    rc->irenderer->AddTextureId(FontInterface::FONT_TEX_NAME, texid, tex_dim);
+    rc->isystem   = new System();
+    rc->ifont     = new FontInterface(init.font.font_mgr);
+    rc->ifile     = new FileInterface2(std::move(init.file_dist));
+    rc->irenderer = new Renderer(
+        init.viewid,
+        init.layout,
+        init.viewrect
+    );
+    uint16_t texid = BGFX_LUAHANDLE_ID(TEXTURE, init.font.font_texture.texid);
+    rc->irenderer->AddTextureId(
+        FontInterface::FONT_TEX_NAME,
+        texid,
+        Rml::Vector2i(init.font.font_texture.width, init.font.font_texture.height)
+    );
 
     auto &sc = rc->irenderer->GetShaderContext();
-    parse_shader_context(L, 1, &sc);
+    sc.font.prog = BGFX_LUAHANDLE_ID(PROGRAM, init.shader.font.prog);
+    sc.font.tex_uniform_idx = BGFX_LUAHANDLE_ID(UNIFORM, init.shader.font.uniforms[0].handle);
+    sc.image.prog = BGFX_LUAHANDLE_ID(PROGRAM, init.shader.image.prog);
+    sc.image.tex_uniform_idx = BGFX_LUAHANDLE_ID(UNIFORM, init.shader.image.uniforms[0].handle);
     sc.font_texid = texid;
 
     Rml::SetFileInterface(rc->ifile);
@@ -286,9 +188,9 @@ linit(lua_State *L){
 
     Rml::Lua::Initialise();
     rc->ifont->InitFontTex();
-    c.handle = Rml::CreateContext(c.name, Rml::Vector2i(rt.w, rt.h));
-    if (!c.handle){
-        luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", c.name, rt.w, rt.h);
+    rc->context.handle = Rml::CreateContext(rc->context.name, Rml::Vector2i(init.viewrect.w, init.viewrect.h));
+    if (!rc->context.handle){
+        luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", rc->context.name, init.viewrect.w, init.viewrect.h);
     }
 
     return 1;

@@ -322,6 +322,9 @@
     <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Utilities.h">
       <Filter>Lua\Include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\clibs\rmlui\lua2struct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\LuaType.inl">

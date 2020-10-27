@@ -201,6 +201,7 @@
     <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Vector2i.h" />
     <ClInclude Include="..\..\clibs\rmlui\file.h" />
     <ClInclude Include="..\..\clibs\rmlui\font.h" />
+    <ClInclude Include="..\..\clibs\rmlui\lua2struct.h" />
     <ClInclude Include="..\..\clibs\rmlui\render.h" />
     <ClInclude Include="..\..\clibs\rmlui\system.h" />
   </ItemGroup>
