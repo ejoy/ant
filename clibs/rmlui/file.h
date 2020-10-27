@@ -11,8 +11,8 @@ namespace Rml{
 using FileDist = std::unordered_map<Rml::String, Rml::String>;
 class FileInterface2 : public Rml::FileInterface{
 public:
-    FileInterface2(Rml::String &&rd, FileDist &&fd)
-        : mRootDir(std::move(rd)), mFileDist(std::move(fd))
+    FileInterface2(FileDist &&fd)
+        : mFileDist(std::move(fd))
         {}
 
     virtual Rml::FileHandle Open(const Rml::String& path) override;
@@ -24,6 +24,5 @@ public:
 
 private:
     Rml::FileInterfaceDefault mFI;
-    Rml::String mRootDir;
     FileDist    mFileDist;
 };

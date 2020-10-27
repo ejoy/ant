@@ -3,10 +3,10 @@
 #include <cassert>
 
 Rml::FileHandle FileInterface2::Open(const Rml::String& path){
-    auto found = mFileDist.find(path);
+    auto p = path[0] == '/' ? path.c_str() + 1 : path;
+    auto found = mFileDist.find(p);
     if (found != mFileDist.end()){
-        auto fh = mFI.Open(found->second);
-        return fh ? fh : mFI.Open(mRootDir + "/" + found->second);
+        return mFI.Open(found->second);
     }
 
     return Rml::FileHandle(0);

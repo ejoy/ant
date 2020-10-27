@@ -67,23 +67,14 @@ parse_font(lua_State *L, int index, struct font_manager **fm, uint16_t *texid, R
 }
 
 static inline void
-parse_file_dict(lua_State *L, int index, Rml::String &root_dir, FileDist &fd){
-    if (lua_getfield(L, 1, "file_dist") == LUA_TTABLE){
-        lua_getfield(L, -1, "root_dir");
-        root_dir = lua_tostring(L, -1);
-        lua_pop(L, 1);
-
-        if (lua_getfield(L, -1, "files") == LUA_TTABLE){
-            for(lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)){
-                lua_pushvalue(L, -2);
-                const char* key = lua_tostring(L, -1);
-                const char* value = lua_tostring(L, -2); 
-                fd[key] = value;
-            }
-        } else {
-            luaL_error(L, "file_dist.files is not a table!");
+parse_file_dict(lua_State *L, int index, FileDist &fd){
+    if (lua_getfield(L, index, "file_dist") == LUA_TTABLE){
+        for(lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)){
+            lua_pushvalue(L, -2);
+            const char* key = lua_tostring(L, -1);
+            const char* value = lua_tostring(L, -2); 
+            fd[key] = value;
         }
-        lua_pop(L, 1);
     } else {
         luaL_error(L, "file dist should provide as [key:local_file_path] pairs table");
     }
@@ -266,9 +257,9 @@ linit(lua_State *L){
     parse_font(L, 1, &fontmgr, &texid, &tex_dim);
     rc->ifont       = new FontInterface(fontmgr);
 
-    Rml::String root_dir; FileDist fd;
-    parse_file_dict(L, 1, root_dir, fd);
-    rc->ifile       = new FileInterface2(std::move(root_dir), std::move(fd));
+    FileDist fd;
+    parse_file_dict(L, 1, fd);
+    rc->ifile       = new FileInterface2(std::move(fd));
 
     auto &c = rc->context;
     parse_context_name(L, 1, c.name);

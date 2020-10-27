@@ -30,22 +30,20 @@ local function init_rmlui_data()
         },
     }
 
-    local files = {}
     local function list_all_files(path, files)
         for p in path:list_directory() do
             if fs.is_directory(p) then
                 list_all_files(p, files)
             elseif fs.is_regular_file(p) then
-                files[p:string()] = p:localpath():string()
+                local key = p:string():gsub(root_dir:string() .. "/", "")
+                files[key] = p:localpath():string()
             end
         end
     end
 
-    list_all_files(root_dir, files)
-    local file_dist = {
-        root_dir = root_dir:string(),
-        files = files
-    }
+    local file_dist = {}
+    list_all_files(root_dir, file_dist)
+    
     local mq_eid = world:singleton_entity_id "main_queue"
     local  layouhandle = declmgr.get "p2|c40niu|t20".handle
     local vid = viewidmgr.get "uiruntime"
@@ -75,13 +73,13 @@ local rmlui_context
 function rmlui_sys:post_init()
     local data = init_rmlui_data()
     rmlui_context = rmlui.init(data)
-    for f in pairs(data.file_dist.files) do
+    for f in pairs(data.file_dist) do
         local ext = f:match ".+%.([%w_]+)$":lower()
         if ext == "otf" or ext == "ttf" or ext == "ttc" then
-            fontmgr.import(f)
+            fontmgr.import(root_dir / f)
         end
     end
-    rmlui_context:load "/pkg/ant.resources.binary/ui/test/src/demo.rml"
+    rmlui_context:load "src/demo.rml"
 end
 
 function rmlui_sys:ui_update()
