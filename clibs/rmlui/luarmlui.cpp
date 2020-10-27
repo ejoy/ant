@@ -11,6 +11,7 @@
 #include <bgfx/c99/bgfx.h>
 
 #include <RmlUi/Core.h>
+#include <RmlUi/Debugger.h>
 #include <RmlUi/Lua.h>
 
 #include <cassert>
@@ -192,7 +193,7 @@ linit(lua_State *L){
     if (!rc->context.handle){
         luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", rc->context.name, init.viewrect.w, init.viewrect.h);
     }
-
+    Rml::Debugger::Initialise(rc->context.handle);
     return 1;
 }
 

@@ -68,7 +68,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/RmlUi/msvc/$(Configuration)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
-      <AdditionalDependencies>RmlCore.lib;font.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>RmlCore.lib;RmlDebugger.lib;font.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -91,7 +91,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);../../3rd/build/RmlUi/msvc/$(Configuration)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>RmlCore.lib;font.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>RmlCore.lib;RmlDebugger.lib;font.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
