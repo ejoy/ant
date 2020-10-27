@@ -6,13 +6,8 @@ SAMPLER2D(s_tex, 0);
 
 void main()
 {
-	float distance = texture2D(s_tex, v_texcoord0).a;
-	distance = smoothstep(0.68 - 0.2, 0.68 + 0.2, distance);
-	vec4 color = v_color0 * distance;
-	
-//	color.x = color.x+1;
-//	color.y = color.y+1;
-//	color.z = color.z+1;
-//	color.w = color.w+1;
-	gl_FragColor = color;
+	float dis = texture2D(s_tex, v_texcoord0).a;
+	dis = smoothstep(0.68 - 0.2, 0.68 + 0.2, dis);
+	gl_FragColor.rgb	= v_color0.rgb;
+	gl_FragColor.a		= dis;
 }
