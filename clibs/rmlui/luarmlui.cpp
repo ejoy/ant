@@ -47,6 +47,9 @@ struct rml_init_context {
             std::vector<uniforms> uniforms;
         };
         shader_info font;
+        shader_info font_outline;
+        shader_info font_shadow;
+        shader_info font_glow;
         shader_info image;
     };
     font        font;
@@ -59,7 +62,7 @@ struct rml_init_context {
 LUA2STRUCT(struct rml_init_context, font, shader, file_dist, viewid, viewrect, layout);
 LUA2STRUCT(struct rml_init_context::font, font_texture, font_mgr);
 LUA2STRUCT(struct rml_init_context::font::font_texture, width, height, texid);
-LUA2STRUCT(struct rml_init_context::shader, font, image);
+LUA2STRUCT(struct rml_init_context::shader, font, font_outline, font_shadow, font_glow, image);
 LUA2STRUCT(struct rml_init_context::shader::shader_info, prog, uniforms);
 LUA2STRUCT(struct rml_init_context::shader::shader_info::uniforms, handle);
 LUA2STRUCT(struct Rect, x, y, w, h);

@@ -77,6 +77,9 @@ local function get_macros(setting)
     if setting.fix_line_width then
         macros[#macros+1] = "FIX_WIDTH"
     end
+    if setting.macros then
+        table.move(setting.macros, 1, #setting.macros, #macros+1, macros)
+    end
 	macros[#macros+1] = "ENABLE_SRGB_TEXTURE"
 	macros[#macros+1] = "ENABLE_SRGB_FB"
 	return macros

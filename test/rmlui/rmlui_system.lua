@@ -65,6 +65,21 @@ local function init_rmlui_data()
                 fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
                 vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
             },
+            font_outline = assetmgr.load_fx {
+                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                setting = {macros = {"OUTLINE_EFFECT"}},
+            },
+            font_shadow = assetmgr.load_fx {
+                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                setting = {macros = {"OUTLINE_SHADOW"}},
+            },
+            font_glow = assetmgr.load_fx {
+                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                setting = {macros = {"OUTLINE_GLOW"}},
+            },
             image = assetmgr.load_fx {
                 fs = "/pkg/ant.resources/shaders/ui/fs_image.sc",
                 vs = "/pkg/ant.resources/shaders/ui/vs_image.sc",

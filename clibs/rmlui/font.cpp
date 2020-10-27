@@ -12,8 +12,17 @@ extern "C"{
 //static
 const Rml::String FontInterface::FONT_TEX_NAME("?FONT_TEX");
 
+static inline int
+load_fontid(struct font_manager *F, const Rml::String &family){
+    const char* name = "宋体";
+    if (!family.empty() && family != "rmlui-debugger-font")
+        name = family.c_str();
+    
+    return truetype_name((lua_State*)F->L, name);
+}
+
 Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
-    int fontid = truetype_name((lua_State*)mfontmgr->L, family.empty() ? "宋体" : family.c_str());
+    int fontid = load_fontid(mfontmgr, family);
 
     if (fontid > 0){
         auto itfound = std::find_if(mFontFaces.begin(), mFontFaces.end(), [=](auto it){
@@ -31,9 +40,11 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
     return static_cast<Rml::FontFaceHandle>(0);
 }
 
-// Rml::FontEffectsHandle FontInterface::PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects){
+Rml::FontEffectsHandle FontInterface::PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects){
+    
 
-// }
+    return 0;
+}
 
 int FontInterface::GetSize(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle) - 1;

@@ -9,6 +9,13 @@ struct FontFace{
 	int pixelsize;
 };
 
+enum FontEffect : uint8_t {
+	FE_None		= 0,
+	FE_Outline	= 1,
+	FE_Shadow 	= 2,
+	FE_Glow 	= 3,
+};
+
 class FontInterface : public Rml::FontEngineInterface {
 public:
 	FontInterface(struct font_manager *fm) : mfontmgr(fm){
@@ -20,7 +27,7 @@ public:
 	}
 	
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
-	//virtual Rml::FontEffectsHandle PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects)override;
+	virtual Rml::FontEffectsHandle PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects)override;
 
 	virtual int GetSize(Rml::FontFaceHandle handle)override;
 	virtual int GetXHeight(Rml::FontFaceHandle handle)override;
