@@ -52,14 +52,14 @@ struct font_glyph {
 	uint16_t v;
 };
 
-#	ifdef FONT_EXPORT
+#ifdef FONT_EXPORT
+#	ifdef FONT_IMP
 #define FONT_API __declspec(dllexport)
-#	else //!FONT_EXPORT
-#ifdef _MSC_VER
+#	else //!FONT_IMP
 #define FONT_API __declspec(dllimport)
-#else //!_MSC_VER
+#	endif//FONT_IMP
+#	else //!FONT_EXPORT
 #define FONT_API extern
-#endif //_MSC_VER
 #	endif //FONT_EXPORT
 
 void font_manager_init(struct font_manager *, struct truetype_font *ttf, void *L);

@@ -7,6 +7,7 @@ extern "C"{
 
 #include <RmlUi/Core.h>
 #include <cassert>
+#include <cstring>
 
 //static
 const Rml::String FontInterface::FONT_TEX_NAME("?FONT_TEX");
