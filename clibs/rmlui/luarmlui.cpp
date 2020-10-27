@@ -11,6 +11,7 @@
 #include <bgfx/c99/bgfx.h>
 
 #include <RmlUi/Core.h>
+#include <RmlUi/Debugger.h>
 #include <RmlUi/Lua.h>
 
 #include <cassert>
@@ -95,6 +96,27 @@ lrmlui_context_shutdown(lua_State *L){
 }
 
 static int
+lrmlui_context_touch_move(lua_State* L) {
+    Rml::Context* context = get_context_handle(L);
+    context->ProcessMouseMove(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), 0);
+    return 0;
+}
+
+static int
+lrmlui_context_touch_down(lua_State* L) {
+    Rml::Context* context = get_context_handle(L);
+    context->ProcessMouseButtonDown(luaL_checkinteger(L, 2), 0);
+    return 0;
+}
+
+static int
+lrmlui_context_touch_up(lua_State* L) {
+    Rml::Context* context = get_context_handle(L);
+    context->ProcessMouseButtonUp(luaL_checkinteger(L, 2), 0);
+    return 0;
+}
+
+static int
 lrmlui_context_del(lua_State *L){
     auto rc = get_rc(L);
     if (rc->irenderer || rc->isystem || rc->ifont || rc->ifile){
@@ -143,6 +165,9 @@ create_rml_context(lua_State *L){
             {"load",        lrmlui_context_load},
             {"render",      lrmlui_context_render},
             {"shutdown",    lrmlui_context_shutdown},
+            {"touch_move",  lrmlui_context_touch_move},
+            {"touch_down",  lrmlui_context_touch_down},
+            {"touch_up",    lrmlui_context_touch_up},
             {"__gc",        lrmlui_context_del},
             {nullptr, nullptr},
         };
@@ -195,7 +220,7 @@ linit(lua_State *L){
     if (!rc->context.handle){
         luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", rc->context.name, init.viewrect.w, init.viewrect.h);
     }
-
+    Rml::Debugger::Initialise(rc->context.handle);
     return 1;
 }
 

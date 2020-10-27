@@ -103,7 +103,19 @@ function rmlui_sys:post_init()
     rmlui_context:load "demo.rml"
 end
 
+local eventMouse = world:sub {"mouse"}
+local mouseId = { LEFT = 0, RIGHT = 1, MIDDLE = 2}
 function rmlui_sys:ui_update()
+    for _,what,state,x,y in eventMouse:unpack() do
+        if state == "MOVE" then
+            rmlui_context:touch_move(x, y)
+        elseif state == "DOWN" then
+                rmlui_context:touch_down(mouseId[what])
+            elseif state == "UP" then
+                rmlui_context:touch_up(mouseId[what])
+            else
+        end
+    end
     rmlui_context:render()
 end
 
