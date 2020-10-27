@@ -1,0 +1,838 @@
+<rml>
+<head>
+<link type="text/template" href="assets/window.rml"/>
+<title>Demo Sample</title>
+<style>
+@spritesheet demo-sheet
+{
+	src: assets/invader.dds;
+	
+	window-outer: 0px 0px 144px 151px;
+	
+	demo-radio-t: 407px  0px 30px 14px;
+	demo-radio-c: 407px 14px 30px  2px;
+	demo-radio-b: 407px 16px 30px 14px;
+	
+	demo-radio-l: 407px 0px 14px 30px;
+	demo-radio-m: 421px 0px  2px 30px;
+	demo-radio-r: 423px 0px 14px 30px;
+	
+	demo-checkbox-t: 407px 60px 30px 14px;
+	demo-checkbox-c: 407px 74px 30px  2px;
+	demo-checkbox-b: 407px 76px 30px 14px;
+	
+	demo-checkbox-l: 407px 60px 14px 30px;
+	demo-checkbox-m: 421px 60px  2px 30px;
+	demo-checkbox-r: 423px 60px 14px 30px;
+	
+	demo-checked-t: 407px  90px 30px  8px;
+	demo-checked-c: 407px  98px 30px 14px;
+	demo-checked-b: 407px 112px 30px  8px;
+	
+	demo-help-t:    128px 152px 51px  6px;
+	demo-help-c:    128px 158px 51px 21px;
+	demo-help-b:    128px 179px 51px 12px;
+	
+	demo-title-bar: 147px 0px 96px 85px;
+}
+
+body.window
+{
+	width: 1300px;
+	height: 750px;
+	min-width: 1030px;
+	min-height: 300px;
+	max-width: -1px;
+	max-height: -1px;
+}
+div#title_bar div#icon
+{
+	display: none;
+}
+div#content
+{ 
+	position: relative; 
+	/* background-color: #bbb; */
+}
+tabset
+{
+	display: block;
+}
+tabs
+{
+    display: block;
+	position: fixed;
+	clip: none;
+	text-align: right;
+	top: -47px;
+	left: 205px;
+	right: 10px;
+}
+tab
+{
+    width: 90px;
+	padding: 0px 20px;
+	line-height: 40px;
+	display: inline-block;
+	
+	font-size: 16px;
+	color: #ddd;
+	text-align: center;
+	
+	decorator: tiled-horizontal( datagridheader-l, datagridheader-c, datagridheader-r );
+	image-color: #cffc;
+}
+tab:hover
+{
+	image-color: #fffe;
+	color: #fff;
+}
+tab:active, tab:selected
+{
+	image-color: #fff;
+	color: #fff;
+}
+panels
+{
+    display: block;
+}
+panel
+{
+    display: block;
+	padding: 30px;
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 500px;
+}
+panel#welcome
+{
+	display: inline-block;
+}
+h1
+{
+	margin: 1.4em 0 0.7em;
+	font-size: 18px;
+}
+p.title
+{
+	font-size: 35px;
+	color: #b33;
+	font-effect: glow(2px #ed5);
+}
+.center {
+	text-align: center;
+}
+.clickable
+{ 
+	cursor: pointer;
+}
+
+
+/***  Decorators  ***/
+#decorators {
+	text-align: left;
+}
+#decorators p
+{
+	margin: 0.5em 0;
+}
+#decorators button.gradient
+{
+	decorator: gradient( vertical #415857 #5990A3 );
+	border: 3px #415857;
+	border-radius: 8px;
+	margin-right: 12px;
+}
+#decorators button.gradient.horizontal
+{
+	decorator: gradient( horizontal #DB6565 #F1B58A );
+	border-color: #DB6565;
+}
+#decorators button.gradient:hover
+{
+	border-color: #F9EFA3;
+}
+
+#decorators .image-alien
+{
+	width: 64px;
+	height: 64px;
+	decorator: image( /assets/high_scores_alien_1.dds );
+}
+#decorators .image-invader
+{
+	width: 51px;
+	height: 39px;
+	decorator: image( icon-invader );
+}
+.side-by-side
+{
+	display: inline-block;
+	width: 120px;
+	vertical-align: middle;
+	text-align: center;
+}
+.tiled-box
+{
+	height: 200px;
+	decorator: tiled-box(
+		window-tl, window-t, window-tr, 
+		window-l, window-c, window-r,
+		window-bl, window-b, window-br
+	);
+}
+.image-mode
+{
+	text-align: center;
+	margin-top: 30px;
+}
+.image-mode > div
+{
+	display: inline-block;
+	width: 120px;
+	height: 50px;
+	padding: 5px 10px;
+	margin: 10px 10px;
+	background-color: #c662;
+	border: 1px #777;
+	font-effect: shadow( 1px 1px #333 );
+}
+#decorators .image-mode > div > p
+{
+	margin: -2em 0 0 0;
+	text-align: center;
+}
+.image-mode.small { margin-top: -20px; }
+.image-mode.small > div
+{
+	width: 40px;
+	height: 20px;
+	padding: 0;
+	margin-left: 60px;
+	margin-right: 60px;
+}
+.align-default     { decorator: image( icon-invader scale-none             ); }
+.align-right       { decorator: image( icon-invader scale-none right       ); }
+.align-left-bottom { decorator: image( icon-invader scale-none left bottom ); }
+.align-percent     { decorator: image( icon-invader scale-none 70% 30%     ); }
+.align-pixel       { decorator: image( icon-invader scale-none 100px -15px ); }
+.fit-fill       { decorator: image( icon-invader fill       ); }
+.fit-contain    { decorator: image( icon-invader contain    ); }
+.fit-cover      { decorator: image( icon-invader cover      ); }
+.fit-scale-none { decorator: image( icon-invader scale-none ); }
+.fit-scale-down { decorator: image( icon-invader scale-down ); }
+.orientation-vertical   { decorator: image( icon-invader flip-vertical   scale-none ); }
+.orientation-horizontal { decorator: image( icon-invader flip-horizontal scale-none ); }
+.orientation-rotate     { decorator: image( icon-invader rotate-180      scale-none ); }
+
+
+/***  Font effects  ***/
+
+#font_effects div 
+{
+	display: inline-block;
+	width: 150px;
+	margin: 0px 30px 30px;
+	text-align: center;
+	font-size: 35px;
+	color: #b33;
+}
+#font_effects h1 
+{
+	margin: 15px 0 10px 0;
+}
+#font_effects .glow
+{
+	font-effect: glow(3px #ed5);
+}
+#font_effects .glow_sharper
+{
+	font-effect: glow(3px 1px #ed5);
+}
+#font_effects .glow_blurry
+{
+	font-effect: glow(2px 7px #ed5);
+}
+#font_effects .glow_shadow
+{
+	color: #ed5;
+	font-effect: glow(2px 4px 2px 3px #644);
+}
+#font_effects .outline_small
+{
+	font-effect: outline(2px #ed5);
+}
+#font_effects .outline_big
+{
+	font-effect: outline(4px #ed5);
+}
+#font_effects .blur_small
+{
+	color: transparent;
+	font-effect: blur(3px #ed5);
+}
+#font_effects .blur_big
+{
+	color: transparent;
+	font-effect: blur(10px #ed5);
+}
+#font_effects .shadow_up
+{
+	font-weight: bold;
+	font-effect: shadow(3px -3px #ed5);
+}
+#font_effects .shadow_down
+{
+	font-weight: bold;
+	font-effect: shadow(0px 2px #333);
+}
+
+
+/***  Animations  ***/
+
+#tweening_area
+{
+	position: relative;
+	margin: 30px auto;
+	width: 400px;
+	height: 250px;
+	border: 1px #777;
+	background-color: #ccc2;
+	cursor: cross;
+}
+#tweening_area img
+{
+	position: absolute;
+	cursor: pointer;
+	transform: translate(190px, 100px);
+}
+
+#transition
+{
+	margin: 20px auto 30px;
+	width: 400px;
+	height: 250px;
+	border: 1px #777;
+	background-color: #ccc2;
+	position: relative;
+	overflow: hidden;
+}
+#transition > img
+{
+	position: absolute;
+	top: -50px;
+	left: 50%;
+	margin-left: -32px;
+	transition: top left 0.6s back-out, opacity 0.4s, image-color 0.4s 0.3s quadratic-out;
+	opacity: 0;
+	image-color: #fff;
+}
+#transition:hover > img
+{
+	top: 50px;
+	opacity: 1;
+	image-color: #f61;
+}
+#transition:hover .alien1 { left: 30%; top: 75px; }
+#transition:hover .alien3 { left: 70%; top: 75px; }
+#transition .defender
+{ 
+	transition: image-color 0.3s 0.0s quadratic-out;
+	position: absolute;
+	left: -44px;
+	top: 150px; opacity: 1; 
+}
+#transition:hover .defender { image-color: #acf;  }
+#transition .ray { 
+	transition: top 0.4s back-out, opacity 0.4s cubic-in;
+	position: absolute;
+	top: -130px;
+	left: 50%;
+	opacity: 0;
+	margin-left: -20px;
+	width: 40px;
+	height: 200px;
+	decorator: gradient( vertical #daf0 #fef6 );
+}
+#transition:hover .ray
+{
+	opacity: 1;
+	top: 0px;
+}
+
+@keyframes cube-rotate {
+	from { transform: rotate3d(1, -1, 0.3, 0deg);	}
+	to { transform: rotate3d(1, -1, 0.3, 360deg);	}
+}
+
+.cube_container {
+	width: 200px;
+	height: 200px;
+	margin: 20px auto;
+	perspective: 500px;
+}
+.cube {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	animation: 3s cube-rotate infinite back-in-out;
+}
+.face {
+	left: 50px; top: 50px;
+	display: block;
+	position: absolute;
+	width: 100px;
+	height: 100px;
+	line-height: 100px;
+	font-size: 60px;
+	color: white;
+	text-align: center;
+}
+/* Define each face based on direction */
+.face.front {
+	background: rgba(0, 0, 0, 160);
+	transform: translateZ(50px);
+}
+.face.front:hover {
+	background: rgba(255, 255, 0, 120);
+}
+.face.back {
+	background: rgba(0, 255, 0, 255);
+	color: black;
+	transform: rotateY(180deg) translateZ(50px);
+}
+.face.right {
+	background: rgba(196, 0, 0, 200);
+	transform: rotateY(90deg) translateZ(50px);
+}
+.face.left {
+	background: rgba(0, 0, 196, 200);
+	transform: rotateY(-90deg) translateZ(50px);
+}
+.face.top {
+	background: rgba(196, 196, 0, 200);
+	transform: rotateX(90deg) translateZ(50px);
+}
+.face.bottom {
+	background: rgba(196, 0, 196, 200);
+	transform: rotateX(-90deg) translateZ(50px);
+}
+
+
+/***  Forms  ***/
+
+form {
+	display: block;
+	text-align: left;
+}
+form input, form select {
+	margin-left: 0;
+}
+input.text, input.password {
+	width: 35%;
+}
+input.text.two-wide {
+	width: 70%;
+}
+form h2 {
+	display: block;
+	font-size: 16px;
+	font-weight: bold;
+	margin-top: 8px;
+}
+#rating {
+	display: inline-block;
+	width: 40px;
+	padding-left: 1em;
+}
+#rating_emoji { 
+	color: #ffd40f;
+	font-size: 1.7em;
+}
+progressbar {
+	margin: 10px 20px;
+	display: inline-block;
+	vertical-align: middle;
+}
+#gauge { 
+	decorator: image( gauge );
+	width: 100px;
+	height: 86px;
+}
+#gauge fill { 
+	fill-image: gauge-fill;
+}
+#progress_horizontal { 
+	decorator: tiled-horizontal( progress-l, progress-c, progress-r );
+	width: 150px;
+	height: 34px;
+}
+#progress_horizontal fill {
+	decorator: tiled-horizontal( progress-fill-l, progress-fill-c, progress-fill-r );
+	margin: 0 7px;
+	padding-left: 14px;
+}
+#progress_label {
+	font-size: 18px;
+	color: #ceb;
+	margin-left: 1em;
+	margin-bottom: 0;
+}
+#gauge_value, #progress_value {
+	font-size: 18px;
+	color: #4ADB2D;
+	text-align: right;
+	width: 50px;
+	font-effect: outline( 2px #555 );
+}
+#gauge_value {
+	margin: 30px 0 0 18px;
+}
+#progress_value { 
+	margin-left: -20px;
+	display: inline-block;
+	vertical-align: -3px;
+}
+
+
+#form_output 
+{
+	border: 1px #666;
+	font-size: 0.9em;
+	background-color: #ddd;
+	min-height: 180px;
+	margin-top: 10px;
+	padding: 5px 8px;
+	color: #222;
+	white-space: pre-wrap;
+	overflow: hidden auto;
+}
+
+#controls textarea 
+{
+	font-size: 18px;
+	font-effect: outline(2px #006600);
+	color: #ddd;
+}
+
+
+/***  Sandbox  ***/
+
+#sandbox
+{
+	position: absolute;
+	top: 20px;
+	right: 30px;
+	bottom: 20px;
+	left: 30px;
+	padding: 0;
+}
+#sandbox textarea
+{
+	font-size: 13px;
+	color: #222;
+	font-family: rmlui-debugger-font;
+	box-sizing: border-box;
+	width: 50%;
+	height: 40%;
+}
+#sandbox_target 
+{
+	box-sizing: border-box;
+	background-color: #fff;
+	border: 1px #000;
+	height: 55%;
+	margin-top: 15px;
+	color: #000;
+	text-align: left;
+	position: relative;
+}
+#sandbox_rml_source { margin-left: -5px; }
+#sandbox_rcss_source { margin-left: 5px; }
+</style>
+</head>
+
+<body template="window">
+
+<tabset id="menu">
+<tab>Welcome</tab>
+<panel id="welcome">
+	<p class="title" style="margin-top: 1.8em;">RmlUi 😍</p>
+	<p>Have fun fiddling about in this demo.</p>
+	<p>Press 'F8' to open up the debugger.</p>
+	<p class="title" style="margin-top: 1em;">🎉</p>
+</panel>
+<tab>Decorators</tab>
+<panel id="decorators">
+	<h1>Gradient decorator</h1>
+	<p>The 'gradient' decorator renders a color gradient in the vertical or horizontal direction.</p>
+	<div class="center">
+		<button class="gradient">Gradient</button>
+		<button class="gradient horizontal">Gradient</button>
+	</div>
+	
+	<h1>Image decorator</h1>
+	<p>The 'image' decorator applies an image to the background of an element. By default it stretches the image to the size of the element, but this behavior can be controlled as seen later on.</p>
+	<div class="center">
+		<div class="side-by-side">
+			<div class="image-alien clickable" onclick="change_color"/>
+		</div>
+		<div class="side-by-side">
+			<div class="image-invader"/>
+		</div>
+		<div class="side-by-side">
+			<button>Button</button>
+		</div>
+	</div>
+	
+	<h1>Tiled-horizontal decorator</h1>
+	<p>The 'tiled-horizontal' decorator separates an image into three parts, with the edges displayed at their native size while the middle part is stretched to cover the remaining width of the element. In each of the following examples an image is displayed at its native size first, and then the decorator is applied to it with its element stretched horizontally.</p>
+	<div class="side-by-side">
+		<div style="width: 30px; height: 30px; decorator: image( radio );"/>
+		<div style="width: 120px; height: 30px; decorator: tiled-horizontal( demo-radio-l, demo-radio-m, demo-radio-r );"/>
+	</div>
+	<div class="side-by-side">
+		<div style="width: 30px; height: 30px; decorator: image( checkbox );"/>
+		<div style="width: 120px; height: 30px; decorator: tiled-horizontal( demo-checkbox-l, demo-checkbox-m, demo-checkbox-r );"/>
+	</div>
+	<div class="side-by-side" width="250px;">
+		<div style="width: 96px; height: 85px; decorator: image( demo-title-bar );"/>
+		<div style="width: 250px; height: 85px; decorator: tiled-horizontal( title-bar-l, title-bar-c, title-bar-r );"/>
+	</div>
+	<p>In the third example we show the same title bar that is used to style the sample windows.</p>
+	
+
+	<h1>Tiled-vertical decorator</h1>
+	<p>The 'tiled-vertical' decorator behaves like tiled-horizontal, but this time it is stretched vertically.</p>
+	<div class="side-by-side">
+		<div style="width: 30px; height: 30px; decorator: image( radio );"/>
+		<div style="width: 30px; height: 80px; decorator: tiled-vertical( demo-radio-t, demo-radio-c, demo-radio-b );"/>
+	</div>
+	<div class="side-by-side">
+		<div style="width: 30px; height: 30px; decorator: image( checkbox );"/>
+		<div style="width: 30px; height: 80px; decorator: tiled-vertical( demo-checkbox-t, demo-checkbox-c, demo-checkbox-b );"/>
+	</div>
+	<div class="side-by-side">
+		<div style="width: 30px; height: 30px; decorator: image( checkbox-checked );"/>
+		<div style="width: 30px; height: 80px; decorator: tiled-vertical( demo-checked-t, demo-checked-c, demo-checked-b );"/>
+	</div>
+	<div class="side-by-side">
+		<div style="width: 51px; height: 39px; decorator: image( icon-help );"/>
+		<div style="width: 51px; height: 80px; decorator: tiled-vertical( demo-help-t, demo-help-c, demo-help-b );"/>
+	</div>
+	<p>Clearly, not all images are designed to stretch like this. However, one can certainly envision a usage for the first two examples.</p>
+	
+	<h1>Tiled-box decorator</h1>
+	<p>The 'tiled-box' decorator lays out a 3x3 grid within the element, each of the nine parts being filled with a separate sprite or image. The corners stay fixed in size, while the center and edges are stretched to fill the remaining size of the element.</p>
+	<p>The following image displays the region used to define the background of the window in this sample.</p>
+	<img sprite="window-outer"/>
+	<p>The decorator's element can then gracefully be sized in any direction, keeping the corners and edges at a proper size.</p>
+	<div class="tiled-box"/>
+	
+	<h1>Ninepatch decorator</h1>
+	<p>The 'ninepatch' decorator is similar to the tiled-box decorator in that it splits the image into nine parts. However, only two sprites are used to define all nine tiles, an outer sprite and an inner sprite.</p>
+	
+	<p>Let us define the outer sprite by the following image, and the inner sprite as the part within the displayed border.</p>
+	<div style="position: relative; text-align: left; width: 145px;">
+		<img sprite="textarea"/><img sprite="textarea-inner" style="position: absolute; left: 10px; top: 13px; border: 1px #f0f;"/>
+	</div>
+	
+	<p>When the ninepatch decorator is applied and the element is stretched, the following is rendered.</p>
+	<div style="width: 240px; height: 50px; decorator: ninepatch(textarea, textarea-inner);"/>
+	<p>Notice that the corners stay fixed, and the inner sprite is stretched. We can also control the rendered size of the edges, here the left edge is displayed at its native size and the others at half their size.</p>
+	<div style="width: 240px; height: 50px; decorator: ninepatch(textarea, textarea-inner, .5 .5 .5 1);"/>
+	
+	<p>If we instead compare this to the image decorator, we see the following.</p>
+	<div style="width: 240px; height: 50px; decorator: image(textarea);"/>
+	<p>With the image decorator it looks blurry and its borders are stretched.</p>
+	
+	<div style="width: 850px; margin-left: -175px;">
+		<h1>Image decorator fit modes</h1>
+		<div class="image-mode">
+			<div class="fit-fill"><p>fill</p></div>
+			<div class="fit-contain"><p>contain</p></div>
+			<div class="fit-cover"><p>cover</p></div>
+			<div class="fit-scale-none"><p>scale-none</p></div>
+			<div class="fit-scale-down"><p>scale-down</p></div>
+		</div>
+		<div class="image-mode small">
+			<div class="fit-fill"></div>
+			<div class="fit-contain"></div>
+			<div class="fit-cover"></div>
+			<div class="fit-scale-none"></div>
+			<div class="fit-scale-down"></div>
+		</div>
+		<h1>Image decorator alignment modes</h1>
+		<div class="image-mode">
+			<div class="align-default"><p style="font-style: italic;">default</p></div>
+			<div class="align-right"><p>right</p></div>
+			<div class="align-left-bottom"><p>left bottom</p></div>
+			<div class="align-percent"><p>70% 30%</p></div>
+			<div class="align-pixel"><p>100px -15px</p></div>
+			<p class="center" style="margin: 0.3em 0 0 0;">Using fit mode 'scale-none'.</p>
+		</div>
+		<h1>Tiled decorators orientation</h1>
+		<p>Orientation can be applied to every tile individually in the 'image', 'tiled-horizontal', 'tiled-vertical', and 'tiled-box' decorators.</p>
+		<div class="image-mode">
+			<div class="orientation-vertical"><p>flip-vertical</p></div>
+			<div class="orientation-horizontal"><p>flip-horizontal</p></div>
+			<div class="orientation-rotate"><p>rotate-180</p></div>
+		</div>
+	</div>
+
+	<h1>Image elements</h1>
+	<div class="center">
+		<img src="assets/high_scores_defender.dds" class="clickable" onclick="change_color"/>
+		<img sprite="icon-game" style="vertical-align: 10px;"/>
+		<img src="assets/high_scores_defender.dds" style="image-color: #fc5;" rect="0 0 64 64"/>
+		<img src="assets/high_scores_defender.dds" style="image-color: #9c5;" rect="64 0 64 64"/>
+	</div>
+	<p>The 'img' elements are separate from decorators, but we describe them here for completeness. They can be declared as in html. Additionally, a 'rect' attribute can be used to crop the image. The element can also display sprites declared in a sprite sheet.</p>
+	
+	<h1>Sprite sheets</h1>
+	<p>Sprite sheets are defined by an image source and a collection of sprites, and can be declared in RCSS. Sprites are essentially rectangles into the given image. For example, the following image</p>
+	<img src="assets/invader.dds" rect="0 0 500 435" style="margin-top: 10px; margin-bottom: 10px;"/>
+	<p>is used to render most sprites in this demo. Sprites can be used in decorators and image elements as if they were separate images.</p>
+</panel>
+<tab>Font effects</tab>
+<panel id="font_effects">
+	<h1>None</h1>
+	<div class="original">RmlUi 😍</div>
+	<h1>Glow</h1>
+	<div class="glow">RmlUi 😍</div>
+	<div class="glow_sharper">RmlUi 😍</div>
+	<div class="glow_blurry">RmlUi 😍</div>
+	<div class="glow_shadow">RmlUi 😍</div>
+	<h1>Outline</h1>
+	<div class="outline_small">RmlUi 😍</div>
+	<div class="outline_big">RmlUi 😍</div>
+	<h1>Shadow</h1>
+	<div class="shadow_up">RmlUi 😍</div>
+	<div class="shadow_down">RmlUi 😍</div>
+	<h1>Blur</h1>
+	<div class="blur_small">RmlUi 😍</div>
+	<div class="blur_big">RmlUi 😍</div>
+</panel>
+<tab>Animations</tab>
+<panel id="animations">
+	
+	<h1>Transitions</h1>
+	<p>Hover over the following to see an animation performed by the transition property in RCSS.</p>
+	<div id="transition">
+		<img class="alien alien1" src="assets/high_scores_alien_1.dds"/>
+		<img class="alien alien2" src="assets/high_scores_alien_2.dds"/>
+		<img class="alien alien3" src="assets/high_scores_alien_3.dds"/>
+		<div class="ray"><img class="defender" src="assets/high_scores_defender.dds"/></div>
+		<div style="height: 110%;"/>
+	</div>
+	
+	<h1>Tweening functions</h1>
+	<p>Set animation parameters below and click on the background or the flag.</p>
+	<div id="tweening_area" onclick="move_child">
+		<img sprite="icon-flag" onclick="change_color"/>
+	</div>
+	<select name="tween_function" onchange="tween_function">
+		<option value="linear" selected>Tweening function</option>
+		<option value="back">Back</option>
+		<option value="bounce">Bounce</option>
+		<option value="circular">Circular</option>
+		<option value="cubic">Cubic</option>
+		<option value="elastic">Elastic</option>
+		<option value="exponential">Exponential</option>
+		<option value="linear">Linear</option>
+		<option value="quadratic">Quadratic</option>
+		<option value="quartic">Quartic</option>
+		<option value="quintic">Quintic</option>
+		<option value="sine">Sine</option>
+	</select>
+	<select name="tween_direction" onchange="tween_direction">
+		<option value="out" selected>Direction</option>
+		<option value="in">In</option>
+		<option value="out">Out</option>
+		<option value="in-out">In-Out</option>
+	</select>
+	<div>
+		<input type="range" style="width: 150px; margin-right: 1em;" min="0" max="2" step="0.05" value="0.5" onchange="tween_duration"/> 
+		Duration <span id="duration">0.50</span> s
+	</div>
+	
+	<h1>Cube</h1>
+	<p>The cube is transformed and animated entirely in RCSS using the @keyframes at-rule.</p>
+	<div class="cube_container">
+		<div class="cube">
+			<div class="face back">6</div>
+			<div class="face top">5</div>
+			<div class="face left">4</div>
+			<div class="face bottom">3</div>
+			<div class="face right">2</div>
+			<div class="face front">1</div>
+		</div>
+	</div>
+</panel>
+<tab>Forms</tab>
+<panel id="controls">
+	<form onsubmit="submit_form">
+		<h2>Full name</h2>
+		<div>
+			<input class="two-wide" type="text" name="name"/>
+		</div>
+		<h2>Email and password</h2>
+		<div>
+			<input type="text" name="email"/>
+			<input type="password" name="password"/>
+		</div>
+		<h2>Favorite animal</h2>
+		<div>
+			<input type="radio" name="animal" value="dog" checked/> Dog
+			<input type="radio" name="animal" value="cat"/> Cat
+			<input type="radio" name="animal" value="narwhal"/> Narwhal
+			<input type="radio" name="animal" value="no"/> I don't like animals
+		</div>
+		<h2>Favorite meals</h2>
+		<div>
+			<input type="checkbox" name="meals" value="pizza" checked/> Pizza
+			<input type="checkbox" name="meals" value="pasta" checked/> Pasta
+			<input type="checkbox" name="meals" value="lasagne" checked/> Lasagne
+		</div>
+		<h2>Rating</h2>
+		<div>
+			<input type="range" name="rating" min="0" max="100" step="1" value="50" onchange="rating"/> <span id="rating"/><span id="rating_emoji">&nbsp;</span>
+		</div>
+		<h2>Subject</h2>
+		<div>
+			<select name="subject">
+				<option value="none" selected>Choose your subject</option>
+				<option value="feature">Feature request</option>
+				<option value="bug">Bug report</option>
+				<option value="praise">Praise</option>
+				<option value="criticism">Criticism</option>
+			</select>
+		</div>
+		<h2>Message</h2>
+		<div>
+			<textarea cols="25" rows="4" wrap="nowrap" name="message">😍 Hello 🌐 World! 😎</textarea>
+		</div>
+		<div style="margin-bottom: 15px;">
+			<input type="submit">Submit</input>
+		</div>
+		<div id="submit_progress" style="display: none;">
+			<p id="progress_label">&nbsp;</p>
+			<progressbar id="gauge" direction="clockwise" start-edge="bottom" value="0.0">
+				<div id="gauge_value">50%</div>
+			</progressbar>
+			<progressbar id="progress_horizontal" direction="right" value="0.0"/>
+			<div id="progress_value">50%</div>
+			<h2>Form output</h2>
+			<div id="form_output"></div>
+		</div>
+	</form>
+</panel>
+<tab>Sandbox</tab>
+<panel id="sandbox" style="max-width: -1px;">
+	<textarea id="sandbox_rml_source" wrap="nowrap" onchange="set_sandbox_body"></textarea>
+	<textarea id="sandbox_rcss_source" wrap="nowrap" onchange="set_sandbox_style"></textarea>
+	<div id="sandbox_target"></div>
+</panel>
+</tabset>
+</body>
+</rml>

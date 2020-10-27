@@ -18,7 +18,8 @@ local irq       = world:interface "ant.render|irenderqueue"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-local root_dir = fs.path "/pkg/ant.resources.binary/ui/test"
+local script_dir = fs.path "/pkg/ant.test.rmlui/ui"
+local resource_dir = fs.path "/pkg/ant.resources.binary/ui/test"
 
 local function init_rmlui_data()
     local ft_w, ft_h = ifont.font_tex_dim()
@@ -30,20 +31,25 @@ local function init_rmlui_data()
         },
     }
 
-    local function list_all_files(path, files)
-        for p in path:list_directory() do
-            if fs.is_directory(p) then
-                list_all_files(p, files)
-            elseif fs.is_regular_file(p) then
-                local key = p:string():gsub(root_dir:string() .. "/", "")
-                files[key] = p:localpath():string()
+
+    local function list_all_files(root, files)
+        local function list_files(path)
+            for p in path:list_directory() do
+                if fs.is_directory(p) then
+                    list_files(p)
+                elseif fs.is_regular_file(p) then
+                    local key = p:string():gsub(root:string() .. "/", "")
+                    files[key] = p:localpath():string()
+                end
             end
         end
+        list_files(root)
     end
 
     local file_dist = {}
-    list_all_files(root_dir, file_dist)
-    
+    list_all_files(resource_dir, file_dist)
+    list_all_files(script_dir, file_dist)
+
     local mq_eid = world:singleton_entity_id "main_queue"
     local  layouhandle = declmgr.get "p2|c40niu|t20".handle
     local vid = viewidmgr.get "uiruntime"
@@ -76,10 +82,10 @@ function rmlui_sys:post_init()
     for f in pairs(data.file_dist) do
         local ext = f:match ".+%.([%w_]+)$":lower()
         if ext == "otf" or ext == "ttf" or ext == "ttc" then
-            fontmgr.import(root_dir / f)
+            fontmgr.import(resource_dir / f)
         end
     end
-    rmlui_context:load "src/demo.rml"
+    rmlui_context:load "demo.rml"
 end
 
 function rmlui_sys:ui_update()
