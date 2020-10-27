@@ -12,6 +12,10 @@ extern "C"{
 //static
 const Rml::String FontInterface::FONT_TEX_NAME("?FONT_TEX");
 
+bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face){
+    return (family == "rmlui-debugger-font");
+}
+
 static inline int
 load_fontid(struct font_manager *F, const Rml::String &family){
     const char* name = "宋体";
