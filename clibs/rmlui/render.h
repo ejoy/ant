@@ -1,4 +1,6 @@
 #pragma once
+#include "font.h"
+
 #include <RmlUi/Core/RenderInterface.h>
 #include <algorithm>
 #include <unordered_map>
@@ -37,15 +39,36 @@ enum SamplerFlag : uint32_t {
     MIP_MASK        = 0x00000400,
 };
 
-struct ShaderInfo{
+struct ImageShaderInfo{
     uint16_t prog;
     uint16_t tex_uniform_idx;
 };
 
-struct ShaderContext{
-    ShaderInfo font;
-    ShaderInfo image;
-    uint16_t font_texid;
+struct FontShaderInfo{
+    uint16_t prog;
+    uint16_t tex_uniform_idx;
+    uint16_t texid;
+
+    uint16_t mask_uniform_idx;
+    uint16_t effectcolor_uniform_idx;
+    FontEffect effecttype;
+    
+    union sdf_mark{
+        struct {
+            float colormask;
+            float colorrange;
+            float effectmask;
+            float effectrange;
+        };
+        float data[4];
+    };
+    sdf_mark mask;
+    float effectcolor[4];
+};
+
+struct ShaderContext {
+    FontShaderInfo  font;
+    ImageShaderInfo image;
 };
 
 struct TexInfo{

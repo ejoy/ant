@@ -59,10 +59,19 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     BGFX(set_state)(mRenderState, 0);
 
     const uint16_t texid = (uint16_t)texture;
-    const auto &si = texid == mShaderContext.font_texid ? mShaderContext.font : mShaderContext.image;
-    BGFX(set_texture)(0, {si.tex_uniform_idx}, {texid}, UINT32_MAX);
-
-    BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
+    if (texid == mShaderContext.font.texid) {
+        const auto& si = mShaderContext.font;
+        BGFX(set_texture)(0, { si.tex_uniform_idx }, { texid }, UINT32_MAX);
+        BGFX(set_uniform)({si.mask_uniform_idx}, si.mask.data, 1);
+        if (si.effecttype != FE_None && si.effectcolor_uniform_idx != UINT16_MAX) {
+            BGFX(set_uniform)({ si.effectcolor_uniform_idx}, si.effectcolor, 1);
+        }
+        BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
+    } else {
+        const auto &si = mShaderContext.image;
+        BGFX(set_texture)(0, {si.tex_uniform_idx}, {texid}, UINT32_MAX);
+        BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
+    }
 }
 
 void Renderer::EnableScissorRegion(bool enable) {

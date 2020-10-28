@@ -43,6 +43,7 @@ struct rml_init_context {
         struct shader_info {
             struct uniforms {
                 uint32_t handle;
+                const char* name;
             };
             uint32_t prog;
             std::vector<uniforms> uniforms;
@@ -65,7 +66,7 @@ LUA2STRUCT(struct rml_init_context::font, font_texture, font_mgr);
 LUA2STRUCT(struct rml_init_context::font::font_texture, width, height, texid);
 LUA2STRUCT(struct rml_init_context::shader, font, font_outline, font_shadow, font_glow, image);
 LUA2STRUCT(struct rml_init_context::shader::shader_info, prog, uniforms);
-LUA2STRUCT(struct rml_init_context::shader::shader_info::uniforms, handle);
+LUA2STRUCT(struct rml_init_context::shader::shader_info::uniforms, handle, name);
 LUA2STRUCT(struct Rect, x, y, w, h);
 
 static inline rml_context*
@@ -177,6 +178,50 @@ create_rml_context(lua_State *L){
     return rc;
 }
 
+static inline void
+init_shader_context(lua_State *L, Renderer *renderer, const rml_init_context& init){
+    auto &sc = renderer->GetShaderContext();
+    sc.font.prog            = BGFX_LUAHANDLE_ID(PROGRAM, init.shader.font.prog);
+    auto find_uniform_handle = [](const auto &uniforms, const char*name){
+        for(auto it : uniforms){
+            if (strcmp(it.name, name) == 0){
+                return it.handle;
+            }
+        }
+        return (uint32_t)UINT16_MAX;
+    };
+    sc.font.tex_uniform_idx = BGFX_LUAHANDLE_ID(UNIFORM, find_uniform_handle(init.shader.font.uniforms, "s_tex"));
+    sc.font.texid           = BGFX_LUAHANDLE_ID(TEXTURE, init.font.font_texture.texid);
+    const uint32_t color_uniformidx = find_uniform_handle(init.shader.font.uniforms, "u_mask");
+    if (color_uniformidx != UINT16_MAX){
+        sc.font.mask_uniform_idx = BGFX_LUAHANDLE_ID(UNIFORM, color_uniformidx);
+        sc.font.mask.colormask      = 0.68f;
+        sc.font.mask.colorrange     = 0.18f;
+    } else {
+        luaL_error(L, "font shader need define 'u_mask'");
+    }
+
+    const uint32_t effect_uniformidx = find_uniform_handle(init.shader.font.uniforms, "u_effect_color");
+    if (effect_uniformidx != UINT16_MAX){
+        sc.font.effectcolor_uniform_idx = BGFX_LUAHANDLE_ID(UNIFORM, effect_uniformidx);
+        sc.font.effecttype      = FE_Outline;
+        sc.font.mask.effectmask = 0.7f;
+        sc.font.mask.effectrange= 0.15f;
+        sc.font.effectcolor[0]  = 1.0f;
+        sc.font.effectcolor[1]  = 0.0f;
+        sc.font.effectcolor[2]  = 0.0f;
+        sc.font.effectcolor[3]  = 1.0f;
+    } else {
+        sc.font.effectcolor_uniform_idx = UINT16_MAX;
+        sc.font.effecttype      = FE_None;
+        sc.font.mask.effectmask = 0.f;
+        sc.font.mask.effectrange= 0.f;
+    }
+
+    sc.image.prog           = BGFX_LUAHANDLE_ID(PROGRAM, init.shader.image.prog);
+    sc.image.tex_uniform_idx= BGFX_LUAHANDLE_ID(UNIFORM, find_uniform_handle(init.shader.image.uniforms, "s_tex"));
+}
+
 static int
 linit(lua_State *L){
     rml_init_context init;
@@ -198,12 +243,7 @@ linit(lua_State *L){
         Rml::Vector2i(init.font.font_texture.width, init.font.font_texture.height)
     );
 
-    auto &sc = rc->irenderer->GetShaderContext();
-    sc.font.prog = BGFX_LUAHANDLE_ID(PROGRAM, init.shader.font.prog);
-    sc.font.tex_uniform_idx = BGFX_LUAHANDLE_ID(UNIFORM, init.shader.font.uniforms[0].handle);
-    sc.image.prog = BGFX_LUAHANDLE_ID(PROGRAM, init.shader.image.prog);
-    sc.image.tex_uniform_idx = BGFX_LUAHANDLE_ID(UNIFORM, init.shader.image.uniforms[0].handle);
-    sc.font_texid = texid;
+    init_shader_context(L, rc->irenderer, init);
 
     Rml::SetFileInterface(rc->ifile);
     Rml::SetRenderInterface(rc->irenderer);
