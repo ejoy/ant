@@ -3,10 +3,9 @@ compress:
   android: ASTC6x6
   ios: ASTC6x6
   windows: BC1
-maxsize: 1024x1024
 mipmap: 0
 normalmap: false
-path: /pkg/ant.resources.binary/test/1x1_gray.png
+path: /pkg/ant.resources.binary/textures/1x1_white.png
 sampler:
   MAG: LINEAR
   MIN: LINEAR

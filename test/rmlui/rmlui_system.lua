@@ -56,6 +56,7 @@ local function init_rmlui_data()
     local vr = irq.view_rect(mq_eid)
     fbmgr.bind(vid, irq.frame_buffer(mq_eid))
 
+    local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
     return {
         font = fontinfo,
         file_dist = file_dist,
@@ -85,6 +86,10 @@ local function init_rmlui_data()
                 vs = "/pkg/ant.resources/shaders/ui/vs_image.sc",
             },
         },
+        default_tex = {
+            width = 1, height = 1,
+            texid = default_texid,
+        },
         layout  = layouhandle,
         viewrect= vr,
     }
@@ -100,7 +105,7 @@ function rmlui_sys:post_init()
             fontmgr.import(resource_dir / f)
         end
     end
-    rmlui_context:load "demo.rml"
+    rmlui_context:load "tutorial.rml"
 end
 
 local eventMouse = world:sub {"mouse"}

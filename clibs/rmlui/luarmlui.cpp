@@ -29,14 +29,14 @@ struct rml_context {
     context         context;
 };
 
+struct texture_desc{
+    int width, height;
+    uint32_t texid;
+};
+
 struct rml_init_context {
     struct font {
-        struct font_texture {
-            int width;
-            int height;
-            uint32_t texid;
-        };
-        font_texture font_texture;
+        texture_desc font_texture;
         struct font_manager* font_mgr;
     };
     struct shader {
@@ -57,13 +57,14 @@ struct rml_init_context {
     font        font;
     shader      shader;
     FileDist    file_dist;
+    texture_desc default_tex;
     uint16_t    viewid;
     Rect        viewrect;
     bgfx_vertex_layout_t* layout;
 };
-LUA2STRUCT(struct rml_init_context, font, shader, file_dist, viewid, viewrect, layout);
+LUA2STRUCT(struct rml_init_context, font, shader, file_dist, default_tex, viewid, viewrect, layout);
 LUA2STRUCT(struct rml_init_context::font, font_texture, font_mgr);
-LUA2STRUCT(struct rml_init_context::font::font_texture, width, height, texid);
+LUA2STRUCT(struct texture_desc, width, height, texid);
 LUA2STRUCT(struct rml_init_context::shader, font, font_outline, font_shadow, font_glow, image);
 LUA2STRUCT(struct rml_init_context::shader::shader_info, prog, uniforms);
 LUA2STRUCT(struct rml_init_context::shader::shader_info::uniforms, handle, name);
@@ -242,6 +243,8 @@ linit(lua_State *L){
         texid,
         Rml::Vector2i(init.font.font_texture.width, init.font.font_texture.height)
     );
+
+    rc->irenderer->AddTextureId(Renderer::DEFAULT_TEX_NAME, init.default_tex.texid, Rml::Vector2i(init.default_tex.width, init.default_tex.height));
 
     init_shader_context(L, rc->irenderer, init);
 

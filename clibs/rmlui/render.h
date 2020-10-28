@@ -92,6 +92,7 @@ public:
     virtual void SetTransform(const Rml::Matrix4f* transform) override{mTransform = *transform;}
 
 public:
+    static const Rml::String DEFAULT_TEX_NAME;
     // will delete buffer
     bool UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer);
     void AddTextureId(const Rml::String &key, uint16_t texid, const Rml::Vector2i &dim) {mTexMap[key] = {texid, dim};}

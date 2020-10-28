@@ -7,6 +7,9 @@
 extern bgfx_interface_vtbl_t* get_bgfx_interface();
 #define BGFX(api) get_bgfx_interface()->api
 
+//static
+const Rml::String Renderer::DEFAULT_TEX_NAME("?DEFAULT_TEX");
+
 Renderer::Renderer(uint16_t viewid, const bgfx_vertex_layout_t *layout, const Rect &vr)
     : mViewId(viewid)
     , mLayout(layout)
@@ -15,6 +18,17 @@ Renderer::Renderer(uint16_t viewid, const bgfx_vertex_layout_t *layout, const Re
     
     BGFX(set_view_rect)(mViewId, uint16_t(mViewRect.x), uint16_t(mViewRect.y), uint16_t(mViewRect.w), uint16_t(mViewRect.h));
     BGFX(set_view_mode)(mViewId, BGFX_VIEW_MODE_SEQUENTIAL);
+}
+
+#define TEX_ID_MASK 0x00010000
+static inline uint16_t
+to_TextureID(Rml::TextureHandle th){
+    return th == 0 ? UINT16_MAX : uint16_t((~TEX_ID_MASK)&th);
+}
+
+static inline Rml::TextureHandle
+to_TextureHandle(uint16_t texid){
+    return texid == UINT16_MAX ? Rml::TextureHandle(0) : Rml::TextureHandle(uint32_t(TEX_ID_MASK|texid));
 }
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
@@ -58,7 +72,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     BGFX(set_transient_index_buffer)(&tib, 0, num_indices);
     BGFX(set_state)(mRenderState, 0);
 
-    const uint16_t texid = (uint16_t)texture;
+    const uint16_t texid = to_TextureID(texture);
     if (texid == mShaderContext.font.texid) {
         const auto& si = mShaderContext.font;
         BGFX(set_texture)(0, { si.tex_uniform_idx }, { texid }, UINT32_MAX);
@@ -69,8 +83,22 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
         BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
     } else {
         const auto &si = mShaderContext.image;
-        BGFX(set_texture)(0, {si.tex_uniform_idx}, {texid}, UINT32_MAX);
-        BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
+
+        auto check_texid = [this](uint16_t texid){
+            if (texid != UINT16_MAX){
+                return texid;
+            } 
+
+            auto itfound = mTexMap.find(Renderer::DEFAULT_TEX_NAME);
+            return (itfound != mTexMap.end()) ? itfound->second.texid :  UINT16_MAX;
+        };
+
+        const uint16_t id = check_texid(texid);
+
+        if (id != UINT16_MAX){
+            BGFX(set_texture)(0, {si.tex_uniform_idx}, {id}, UINT32_MAX);
+            BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
+        }
     }
 }
 
@@ -107,7 +135,7 @@ bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& te
         if (found == mTexMap.end())
             return false;
         texture_dimensions = found->second.dim;
-        texture_handle = static_cast<Rml::TextureHandle>(found->second.texid);
+        texture_handle = to_TextureHandle(found->second.texid);
         return true;
     }
     Rml::FileInterface* ifile = Rml::GetFileInterface();
@@ -128,7 +156,7 @@ bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& te
 	if (th.idx != UINT16_MAX){
 		texture_dimensions.x = (int)info.width;
 		texture_dimensions.y = (int)info.height;
-        texture_handle = static_cast<Rml::TextureHandle>(th.idx);
+        texture_handle = to_TextureHandle(th.idx);
         return true;
 	}
 	return false;
@@ -141,7 +169,7 @@ bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::by
 	memcpy(mem->data, source, bufsize);
 	auto thidx = BGFX(create_texture_2d)(source_dimensions.x, source_dimensions.y, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, DefaultSamplerFlag(), mem).idx;
     if (thidx != UINT16_MAX){
-        texture_handle = static_cast<Rml::TextureHandle>(thidx);
+        texture_handle = to_TextureHandle(thidx);
         return true;
     }
 
@@ -149,7 +177,7 @@ bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::by
 }
 
 bool Renderer::UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer){
-    const bgfx_texture_handle_t th = {static_cast<uint16_t>(texhandle)};
+    const bgfx_texture_handle_t th = {to_TextureID(texhandle)};
 
     if (!BGFX_HANDLE_IS_VALID(th))
         return false;
@@ -161,5 +189,5 @@ bool Renderer::UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8
 }
 
 void Renderer::ReleaseTexture(Rml::TextureHandle texture) {
-    BGFX(destroy_texture)({static_cast<uint16_t>(texture)});
+    BGFX(destroy_texture)({to_TextureID(texture)});
 }
