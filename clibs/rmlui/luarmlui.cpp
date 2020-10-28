@@ -156,6 +156,12 @@ lrmlui_context_render(lua_State *L){
     return 0;
 }
 
+static int
+lrmlui_context_debugger(lua_State* L) {
+    Rml::Debugger::SetVisible(!Rml::Debugger::IsVisible());
+    return 0;
+}
+
 static inline rml_context*
 create_rml_context(lua_State *L){
     rml_context* rc = (rml_context*)lua_newuserdatauv(L, sizeof(*rc), 0);
@@ -170,6 +176,7 @@ create_rml_context(lua_State *L){
             {"touch_move",  lrmlui_context_touch_move},
             {"touch_down",  lrmlui_context_touch_down},
             {"touch_up",    lrmlui_context_touch_up},
+            {"debugger",    lrmlui_context_debugger},
             {"__gc",        lrmlui_context_del},
             {nullptr, nullptr},
         };
