@@ -2138,13 +2138,15 @@ cDummy(lua_State *L) {
 
 static int
 cIndent(lua_State *L) {
-	ImGui::Indent();
+	float indent_width = (float)luaL_optnumber(L, 1, 0.0f);
+	ImGui::Indent(indent_width);
 	return 0;
 }
 
 static int
 cUnindent(lua_State *L) {
-	ImGui::Unindent();
+	float indent_width = (float)luaL_optnumber(L, 1, 0.0f);
+	ImGui::Unindent(indent_width);
 	return 0;
 }
 

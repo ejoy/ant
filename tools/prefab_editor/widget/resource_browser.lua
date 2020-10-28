@@ -181,15 +181,16 @@ function m.show()
         imgui.windows.PopStyleVar(1)
         imgui.cursor.Separator()
 
-        local min_x, min_y = imgui.windows.GetWindowContentRegionMin()
-        local max_x, max_y = imgui.windows.GetWindowContentRegionMin()
-        local width = imgui.windows.GetWindowContentRegionWidth() * 0.2
-        local height = (max_y - min_y) * 0.5
-        imgui.windows.BeginChild("ResourceBrowserDir", width, height, false)
+        imgui.cursor.Columns(3)
+        local child_width, child_height = imgui.windows.GetContentRegionAvail()
+        imgui.windows.BeginChild("##ResourceBrowserDir", child_width, child_height, false)
         do_show_browser(resource_tree)
         imgui.windows.EndChild()
+
         imgui.cursor.SameLine()
-        imgui.windows.BeginChild("ResourceBrowserContent", width * 2.5, height, false);
+        imgui.cursor.NextColumn()
+        child_width, child_height = imgui.windows.GetContentRegionAvail()
+        imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height, false);
         local folder = current_folder[2]
         if folder then
             local icons = require "common.icons"(assetmgr)
@@ -280,8 +281,11 @@ function m.show()
             end
         end
         imgui.windows.EndChild()
+
         imgui.cursor.SameLine()
-        imgui.windows.BeginChild("ResourceBrowserPreview", width * 1.5, height, false);
+        imgui.cursor.NextColumn()
+        child_width, child_height = imgui.windows.GetContentRegionAvail()
+        imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height, false);
         if fs.path(current_file):equal_extension(".png") or fs.path(current_file):equal_extension(".texture") then
             local preview = preview_images[current_file]
             if preview then
@@ -317,6 +321,8 @@ function m.show()
             end
         end
         imgui.windows.EndChild()
+
+        imgui.cursor.Columns(1)
     end
 end
 
