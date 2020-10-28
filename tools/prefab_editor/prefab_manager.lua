@@ -81,7 +81,9 @@ end
 
 local recorderidx = 0
 local function gen_camera_recorder_name() recorderidx = recorderidx + 1 return "recorder" .. recorderidx end
+
 local lightidx = 0
+local function gen_light_id() lightidx = lightidx + 1 return lightidx end
 
 local function create_light_billboard(light_eid)
     local bb_eid = world:create_entity{
@@ -153,14 +155,13 @@ function m:create(what)
         local ilight = world:interface "ant.render|light" 
         local _, newlight = ilight.create({
             transform = {},
-            name = what .. lightidx,
+            name = what .. gen_light_id(),
             light_type = what,
             color = {1, 1, 1, 1},
             intensity = 2,
             range = 1,
             radian = 0.5
         })
-        lightidx = lightidx + 1
         local new_light = newlight[1]
         self.entities[#self.entities+1] = new_light
         hierarchy:add(new_light, {template = newlight.__class[1]}, self.root)

@@ -12,7 +12,7 @@ local source_eid = nil
 local target_eid = nil
 local iom
 local iss
-
+local icons
 local function is_editable(eid)
     if not iom.srt(eid) or
         not hierarchy:is_visible(eid) or
@@ -41,6 +41,31 @@ local function node_context_menu(eid)
         imgui.windows.EndPopup()
     end
 end
+
+local function get_icon_by_object_type(node)
+    local entity = world[node.eid]
+    local template = hierarchy:get_template(node.eid)
+    if template and template.filename then
+        return icons.ICON_WORLD3D
+    else
+        if entity.camera then
+            return icons.ICON_CAMERA3D
+        elseif entity.light_type then
+            if entity.light_type == "directional" then
+                return icons.ICON_DIRECTIONALLIGHT
+            elseif entity.light_type == "point" then
+                return icons.ICON_POINTLIGHT
+            elseif entity.light_type == "spot" then
+                return icons.ICON_SPOTLIGHT
+            end
+        elseif entity.mesh then
+            return icons.ICON_MESH
+        else
+            return icons.ICON_OBJECT
+        end
+    end
+end
+
 local function show_scene_node(node)
     local function select_or_move(nd)
         local eid = nd.eid
@@ -64,7 +89,6 @@ local function show_scene_node(node)
             end
         end
     end
-    local icons = require "common.icons"(asset_mgr)
     local function lock_visible(eid)
         imgui.cursor.NextColumn()
         imgui.util.PushID(eid)
@@ -84,26 +108,37 @@ local function show_scene_node(node)
         imgui.util.PopID()
         imgui.cursor.NextColumn()
     end
-    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
+    --, "SpanFullWidth"
+    local base_flags = imgui.flags.TreeNode { "OpenOnArrow" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
         hierarchy:update_display_name(node.eid, world[node.eid].name)
     end
+
+    local flags = base_flags
+    local has_child = true
     if #node.children == 0 then
-        imgui.widget.TreeNode(node.display_name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
-        node_context_menu(node.eid)
-        select_or_move(node)
-        lock_visible(node.eid)
-    else
-        local open = imgui.widget.TreeNode(node.display_name, base_flags)
-        node_context_menu(node.eid)
-        select_or_move(node)
-        lock_visible(node.eid)
-        if open then
-            for _, child in ipairs(node.children) do
-                show_scene_node(child)
-            end
-            imgui.widget.TreePop()
+        flags = base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" } --, "NoTreePushOnOpen"
+        has_child = false
+    end
+    
+    local current_icon = get_icon_by_object_type(node)
+    imgui.widget.Image(current_icon.handle, current_icon.texinfo.width, current_icon.texinfo.height)
+    imgui.cursor.SameLine()
+    if not has_child then
+        imgui.cursor.Indent(-2)
+    end
+    local open = imgui.widget.TreeNode(node.display_name, flags)
+    if not has_child then
+        imgui.cursor.Indent(2)
+    end
+    node_context_menu(node.eid)
+    select_or_move(node)
+    lock_visible(node.eid)
+    if open and has_child then
+        for _, child in ipairs(node.children) do
+            show_scene_node(child)
         end
+        imgui.widget.TreePop()
     end
 end
 local create_light = {"directional", "point", "spot"}
@@ -163,6 +198,7 @@ end
 return function(w, am)
     world = w
     asset_mgr = am
+    icons = require "common.icons"(asset_mgr)
     iom = world:interface "ant.objcontroller|obj_motion"
     iss = world:interface "ant.scene|iscenespace"
     gizmo = require "gizmo.gizmo"(world)
