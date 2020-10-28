@@ -23,14 +23,6 @@ local resource_dir = fs.path "/pkg/ant.resources.binary/ui/test"
 
 local function init_rmlui_data()
     local ft_w, ft_h = ifont.font_tex_dim()
-    local fontinfo = {
-        font_mgr = ifont.handle(),
-        font_texture = {
-            texid = ifont.font_tex_handle(),
-            width = ft_w, height = ft_h,
-        },
-    }
-
 
     local function list_all_files(root, files)
         local function list_files(path)
@@ -46,9 +38,9 @@ local function init_rmlui_data()
         list_files(root)
     end
 
-    local file_dist = {}
-    list_all_files(resource_dir, file_dist)
-    list_all_files(script_dir, file_dist)
+    local file_dict = {}
+    list_all_files(resource_dir, file_dict)
+    list_all_files(script_dir, file_dict)
 
     local mq_eid = world:singleton_entity_id "main_queue"
     local  layouhandle = declmgr.get "p2|c40niu|t20".handle
@@ -58,40 +50,64 @@ local function init_rmlui_data()
 
     local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
     return {
-        font = fontinfo,
-        file_dist = file_dist,
+        file_dict = file_dict,
         viewid = vid,
         shader = {
-            font = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+            font = {
+                info = assetmgr.load_fx {
+                    fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                    vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                },
+                color = {0, 0, 0, 0},
+                mask = 0.68,
+                range = 0.18,
             },
-            font_outline = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                setting = {macros = {"OUTLINE_EFFECT"}},
+            font_outline = {
+                info = assetmgr.load_fx {
+                    fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                    vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                    setting = {macros = {"OUTLINE_EFFECT"}},
+                },
+                color = {1, 0, 0, 1},
+                mask = 0.71,
+                range = 0.1,
             },
-            font_shadow = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                setting = {macros = {"OUTLINE_SHADOW"}},
+            font_shadow = {
+                info = assetmgr.load_fx {
+                    fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                    vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                    setting = {macros = {"OUTLINE_SHADOW"}},
+                },
+                color = {0.8, 0.8, 0.8, 1},
+                mask = 0.71,
+                range = 0.1,
             },
-            font_glow = assetmgr.load_fx {
-                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                setting = {macros = {"OUTLINE_GLOW"}},
+            font_glow = {
+                info = assetmgr.load_fx {
+                    fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                    vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                    setting = {macros = {"OUTLINE_GLOW"}},
+                },
+                color = {1, 0, 0, 1},
+                mask = 0.71,
+                range = 0.1,
             },
             image = assetmgr.load_fx {
                 fs = "/pkg/ant.resources/shaders/ui/fs_image.sc",
                 vs = "/pkg/ant.resources/shaders/ui/vs_image.sc",
             },
         },
+        font_mgr = ifont.handle(),
         default_tex = {
             width = 1, height = 1,
             texid = default_texid,
         },
-        layout  = layouhandle,
+        font_tex = {
+            texid = ifont.font_tex_handle(),
+            width = ft_w, height = ft_h,
+        },
         viewrect= vr,
+        layout  = layouhandle,
     }
 end
 
@@ -99,12 +115,15 @@ local rmlui_context
 function rmlui_sys:post_init()
     local data = init_rmlui_data()
     rmlui_context = rmlui.init(data)
-    for f in pairs(data.file_dist) do
+    for f in pairs(data.file_dict) do
         local ext = f:match ".+%.([%w_]+)$":lower()
         if ext == "otf" or ext == "ttf" or ext == "ttc" then
             fontmgr.import(resource_dir / f)
         end
     end
+
+    local vr = irq.view_rect(world:singleton_entity_id "main_queue")
+    rmlui_context:create("main", vr.w, vr.h)
     rmlui_context:load "tutorial.rml"
 end
 

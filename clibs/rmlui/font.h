@@ -1,19 +1,14 @@
 #pragma once
+#include "context.h"
+
 #include "RmlUi/Core/FontEngineInterface.h"
 #include "RmlUi/Core/Texture.h"
 #include <unordered_map>
 #include <vector>
-struct font_namager;
+
 struct FontFace{
 	int	fontid;
 	int pixelsize;
-};
-
-enum FontEffect : uint8_t {
-	FE_None		= 0,
-	FE_Outline	= 1,
-	FE_Shadow 	= 2,
-	FE_Glow 	= 3,
 };
 
 class FontInterface : public Rml::FontEngineInterface {

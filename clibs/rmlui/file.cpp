@@ -4,8 +4,8 @@
 
 Rml::FileHandle FileInterface2::Open(const Rml::String& path){
     auto p = path[0] == '/' ? path.c_str() + 1 : path;
-    auto found = mFileDist.find(p);
-    if (found != mFileDist.end()){
+    auto found = mcontext->file_dict.find(p);
+    if (found != mcontext->file_dict.end()){
         return mFI.Open(found->second);
     }
 

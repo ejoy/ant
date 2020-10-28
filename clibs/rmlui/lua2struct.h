@@ -93,7 +93,7 @@ namespace lua_struct {
     }
     template <typename T, typename R>
     T checklimit(lua_State* L, R const& r) {
-        if (r < (std::numeric_limits<T>::min)() || r > (std::numeric_limits<T>::max)()) {
+        if (r < (std::numeric_limits<T>::lowest)() || r > (std::numeric_limits<T>::max)()) {
             raise(L, "limit exceeded");
         }
         return (T)r;

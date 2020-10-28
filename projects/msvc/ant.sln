@@ -122,8 +122,13 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "font", "font.vcxproj", "{D65A3C90-688F-498A-A165-2C698D7D7FF3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rmlui", "rmlui.vcxproj", "{C7F2089D-ECE0-46D6-A601-C317267B6BAD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1} = {709EA864-822E-45C8-AB4F-81CAFD6E38E1}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tool", "tool", "{336D39A7-8FEB-45E8-A40E-10A50247F491}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rmlui_lua", "rmlui_lua.vcxproj", "{709EA864-822E-45C8-AB4F-81CAFD6E38E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -291,6 +296,14 @@ Global
 		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x64.ActiveCfg = Release|x64
 		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x64.Build.0 = Release|x64
 		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x86.ActiveCfg = Release|x64
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1}.Debug|x64.ActiveCfg = Debug|x64
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1}.Debug|x64.Build.0 = Debug|x64
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1}.Debug|x86.ActiveCfg = Debug|Win32
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1}.Debug|x86.Build.0 = Debug|Win32
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1}.Release|x64.ActiveCfg = Release|x64
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1}.Release|x64.Build.0 = Release|x64
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1}.Release|x86.ActiveCfg = Release|Win32
+		{709EA864-822E-45C8-AB4F-81CAFD6E38E1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

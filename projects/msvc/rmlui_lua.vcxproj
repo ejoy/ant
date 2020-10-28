@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Header.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\IncludeLua.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Interpreter.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Lua.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\LuaType.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\Utilities.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Colourb.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Colourf.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Context.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ContextDocumentsProxy.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Document.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Element.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementAttributesProxy.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementChildNodesProxy.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementInstancer.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementStyleProxy.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\As.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\DataFormatter.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\DataSource.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementDataGrid.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementDataGridRow.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementForm.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControl.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlDataSelect.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlInput.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlSelect.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlTextArea.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementTabSet.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\LuaDataFormatter.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\LuaDataSource.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Elements\SelectOptionsProxy.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\ElementText.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Event.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\EventParametersProxy.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\GlobalLuaFunctions.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Log.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaDocument.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaDocumentElementInstancer.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaElementInstancer.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaEventListener.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaEventListenerInstancer.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\LuaPlugin.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Pairs.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\RmlUi.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\RmlUiContextsProxy.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Vector2f.h" />
+    <ClInclude Include="..\..\3rd\RmlUi\Source\Lua\Vector2i.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\3rd\RmlUi\Include\RmlUi\Lua\LuaType.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Colourb.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Colourf.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Context.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ContextDocumentsProxy.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Document.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Element.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementAttributesProxy.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementChildNodesProxy.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementInstancer.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementStyleProxy.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\DataFormatter.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\DataSource.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementDataGrid.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementDataGridRow.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementForm.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControl.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlDataSelect.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlInput.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlSelect.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementFormControlTextArea.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\ElementTabSet.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\LuaDataFormatter.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\LuaDataSource.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Elements\SelectOptionsProxy.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\ElementText.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Event.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\EventParametersProxy.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\GlobalLuaFunctions.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Interpreter.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Log.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Lua.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaDocument.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaDocumentElementInstancer.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaElementInstancer.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaEventListener.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaEventListenerInstancer.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaPlugin.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\LuaType.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\RmlUi.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\RmlUiContextsProxy.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Utilities.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Vector2f.cpp" />
+    <ClCompile Include="..\..\3rd\RmlUi\Source\Lua\Vector2i.cpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{709ea864-822e-45c8-ab4f-81cafd6e38e1}</ProjectGuid>
+    <RootNamespace>rmluilua</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\bin\msvc\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\clibs\$(ProjectName)\o\msvc\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\bin\msvc\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\clibs\$(ProjectName)\o\msvc\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>RMLUI_STATIC_LIB;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/RmlUi/Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>RMLUI_STATIC_LIB;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../../clibs/lua;../../3rd/RmlUi/Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

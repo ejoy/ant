@@ -1,19 +1,13 @@
 #pragma once
+#include "context.h"
 #include <RmlUi/Core/FileInterface.h>
 #include <../Source/Core/FileInterfaceDefault.h>
 
 #include <unordered_map>
 
-namespace Rml{
-    class FileInterfaceDefault;
-}
-
-using FileDist = std::unordered_map<Rml::String, Rml::String>;
 class FileInterface2 : public Rml::FileInterface{
 public:
-    FileInterface2(FileDist &&fd)
-        : mFileDist(std::move(fd))
-        {}
+    FileInterface2(const rml_context *context) : mcontext(context){}
 
     virtual Rml::FileHandle Open(const Rml::String& path) override;
 	virtual void Close(Rml::FileHandle file)override;
@@ -24,5 +18,5 @@ public:
 
 private:
     Rml::FileInterfaceDefault mFI;
-    FileDist    mFileDist;
+    const rml_context* mcontext;
 };

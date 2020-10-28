@@ -6,10 +6,6 @@
 #include <unordered_map>
 #include <bgfx/c99/bgfx.h>
 
-struct Rect {
-    int x, y, w, h;
-};
-
 // Same as BGFX
 enum SamplerFlag : uint32_t {
     U_MIRROR        = 0x00000001,
@@ -39,47 +35,9 @@ enum SamplerFlag : uint32_t {
     MIP_MASK        = 0x00000400,
 };
 
-struct ImageShaderInfo{
-    uint16_t prog;
-    uint16_t tex_uniform_idx;
-};
-
-struct FontShaderInfo{
-    uint16_t prog;
-    uint16_t tex_uniform_idx;
-    uint16_t texid;
-
-    uint16_t mask_uniform_idx;
-    uint16_t effectcolor_uniform_idx;
-    FontEffect effecttype;
-    
-    union sdf_mark{
-        struct {
-            float colormask;
-            float colorrange;
-            float effectmask;
-            float effectrange;
-        };
-        float data[4];
-    };
-    sdf_mark mask;
-    float effectcolor[4];
-};
-
-struct ShaderContext {
-    FontShaderInfo  font;
-    ImageShaderInfo image;
-};
-
-struct TexInfo{
-    uint16_t        texid;
-    Rml::Vector2i   dim;
-};
-using TexMap = std::unordered_map<Rml::String, TexInfo>;
-
 class Renderer : public Rml::RenderInterface {
 public:
-    Renderer(uint16_t viewid, const bgfx_vertex_layout_t *layout, const Rect &vr);
+    Renderer(const rml_context* context);
     virtual void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                                 int* indices, int num_indices, 
                                 Rml::TextureHandle texture, const Rml::Vector2f& translation) override;
@@ -92,21 +50,11 @@ public:
     virtual void SetTransform(const Rml::Matrix4f* transform) override{mTransform = *transform;}
 
 public:
-    static const Rml::String DEFAULT_TEX_NAME;
     // will delete buffer
     bool UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer);
-    void AddTextureId(const Rml::String &key, uint16_t texid, const Rml::Vector2i &dim) {mTexMap[key] = {texid, dim};}
-    ShaderContext& GetShaderContext() { return mShaderContext;}
-    
+
 private:
     Rml::Matrix4f       mTransform = Rml::Matrix4f::Identity();
     Rect                mScissorRect = {0, 0, 0, 0};
-    TexMap              mTexMap;
-
-private:
-    uint16_t            mViewId;
-    const bgfx_vertex_layout_t* mLayout;
-    uint64_t            mRenderState;
-    ShaderContext       mShaderContext;
-    Rect                mViewRect;
+    const rml_context*  mcontext;
 };

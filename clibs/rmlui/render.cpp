@@ -7,17 +7,12 @@
 extern bgfx_interface_vtbl_t* get_bgfx_interface();
 #define BGFX(api) get_bgfx_interface()->api
 
-//static
-const Rml::String Renderer::DEFAULT_TEX_NAME("?DEFAULT_TEX");
-
-Renderer::Renderer(uint16_t viewid, const bgfx_vertex_layout_t *layout, const Rect &vr)
-    : mViewId(viewid)
-    , mLayout(layout)
-    , mRenderState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
-    , mViewRect(vr){
-    
-    BGFX(set_view_rect)(mViewId, uint16_t(mViewRect.x), uint16_t(mViewRect.y), uint16_t(mViewRect.w), uint16_t(mViewRect.h));
-    BGFX(set_view_mode)(mViewId, BGFX_VIEW_MODE_SEQUENTIAL);
+#define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
+Renderer::Renderer(const rml_context* context)
+    : mcontext(context){
+    const auto &vr = mcontext->viewrect;
+    BGFX(set_view_rect)(mcontext->viewid, uint16_t(vr.x), uint16_t(vr.y), uint16_t(vr.w), uint16_t(vr.h));
+    BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
 }
 
 #define TEX_ID_MASK 0x00010000
@@ -35,14 +30,12 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
                             int* indices, int num_indices, 
                             Rml::TextureHandle texture, const Rml::Vector2f& translation) {
     if (mScissorRect.w == 0 && mScissorRect.w == mScissorRect.h){
-        BGFX(set_view_scissor)(mViewId, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
+        BGFX(set_view_scissor)(mcontext->viewid, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
     } else {
-        BGFX(set_view_scissor)(mViewId, 0, 0, 0, 0);
+        BGFX(set_view_scissor)(mcontext->viewid, 0, 0, 0, 0);
     }
     
-    Rml::Matrix4f m = Rml::Matrix4f::Identity();
-    m = mTransform;
-
+    Rml::Matrix4f m = mTransform;
     auto t = m.GetColumn(3);
     t[0] += translation.x;
     t[1] += translation.y;
@@ -51,7 +44,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     BGFX(set_transform)(m.data(), 1);
 
     bgfx_transient_vertex_buffer_t tvb;
-    BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mLayout);
+    BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
 
     memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
     BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num_vertices);
@@ -70,34 +63,34 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     }
 
     BGFX(set_transient_index_buffer)(&tib, 0, num_indices);
-    BGFX(set_state)(mRenderState, 0);
+    BGFX(set_state)(RENDER_STATE, 0);
 
     const uint16_t texid = to_TextureID(texture);
-    if (texid == mShaderContext.font.texid) {
-        const auto& si = mShaderContext.font;
-        BGFX(set_texture)(0, { si.tex_uniform_idx }, { texid }, UINT32_MAX);
-        BGFX(set_uniform)({si.mask_uniform_idx}, si.mask.data, 1);
-        if (si.effecttype != FE_None && si.effectcolor_uniform_idx != UINT16_MAX) {
-            BGFX(set_uniform)({ si.effectcolor_uniform_idx}, si.effectcolor, 1);
-        }
-        BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
+    if (texid == (uint16_t)mcontext->font_tex.texid) {
+        const auto& font = mcontext->shader.font;
+        auto tex_uniform_idx = font.info.find_uniform("s_tex");
+        BGFX(set_texture)(0, { tex_uniform_idx }, { texid }, UINT32_MAX);
+
+        auto mask_uniform_idx = font.info.find_uniform("u_mask");
+        float mask[] = {font.mask, font.range, 0, 0};
+        BGFX(set_uniform)({mask_uniform_idx}, mask, 1);
+        BGFX(submit)(mcontext->viewid, {(uint16_t)font.info.prog}, 0, BGFX_DISCARD_ALL);
     } else {
-        const auto &si = mShaderContext.image;
+        const auto &si = mcontext->shader.image;
 
         auto check_texid = [this](uint16_t texid){
             if (texid != UINT16_MAX){
                 return texid;
             } 
 
-            auto itfound = mTexMap.find(Renderer::DEFAULT_TEX_NAME);
-            return (itfound != mTexMap.end()) ? itfound->second.texid :  UINT16_MAX;
+            return (uint16_t)mcontext->default_tex.texid;
         };
 
         const uint16_t id = check_texid(texid);
 
         if (id != UINT16_MAX){
-            BGFX(set_texture)(0, {si.tex_uniform_idx}, {id}, UINT32_MAX);
-            BGFX(submit)(mViewId, {si.prog}, 0, BGFX_DISCARD_ALL);
+            BGFX(set_texture)(0, {si.find_uniform("s_tex")}, {id}, UINT32_MAX);
+            BGFX(submit)(mcontext->viewid, {(uint16_t)si.prog}, 0, BGFX_DISCARD_ALL);
         }
     }
 }
@@ -130,12 +123,10 @@ DefaultSamplerFlag(){
 }
 
 bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& texture_dimensions, const Rml::String& source){
-    if (CustomTexture(source)){
-        auto found = mTexMap.find(source);
-        if (found == mTexMap.end())
-            return false;
-        texture_dimensions = found->second.dim;
-        texture_handle = to_TextureHandle(found->second.texid);
+    if (source == FontInterface::FONT_TEX_NAME){
+        texture_dimensions.x = mcontext->font_tex.width;
+        texture_dimensions.y = mcontext->font_tex.height;
+        texture_handle = to_TextureHandle((uint16_t)mcontext->font_tex.texid);
         return true;
     }
     Rml::FileInterface* ifile = Rml::GetFileInterface();
