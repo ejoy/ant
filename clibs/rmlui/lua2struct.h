@@ -93,7 +93,7 @@ namespace lua_struct {
     }
     template <typename T, typename R>
     T checklimit(lua_State* L, R const& r) {
-        if (r < (std::numeric_limits<T>::lowest)() || r > (std::numeric_limits<T>::max)()) {
+        if (r < std::numeric_limits<T>::lowest() || r > (std::numeric_limits<T>::max)()) {
             raise(L, "limit exceeded");
         }
         return (T)r;
@@ -169,6 +169,7 @@ namespace lua_struct {
 
     template <typename K, typename V>
     void unpack(lua_State* L, std::map<K, V>& v) {
+        checktype(L, -1, LUA_TTABLE);
         v.clear();
         lua_pushnil(L);
         while (lua_next(L, -2)) {
@@ -183,6 +184,7 @@ namespace lua_struct {
 
     template <typename K, typename V>
     void unpack(lua_State* L, std::unordered_map<K, V>& v) {
+        checktype(L, -1, LUA_TTABLE);
         v.clear();
         lua_pushnil(L);
         while (lua_next(L, -2)) {
@@ -197,6 +199,7 @@ namespace lua_struct {
 
     template <typename T>
     void unpack(lua_State* L, std::vector<T>& v) {
+        checktype(L, -1, LUA_TTABLE);
         size_t n = (size_t)luaL_len(L, -1);
         v.resize(n);
         for (size_t i = 0; i < n; ++i) {
@@ -209,6 +212,7 @@ namespace lua_struct {
 
     template <typename T, size_t N>
     void unpack(lua_State* L, std::array<T, N>& v) {
+        checktype(L, -1, LUA_TTABLE);
         for (size_t i = 0; i < N; ++i) {
             symbol::guard guard(i);
             lua_geti(L, -1, (lua_Integer)(i + 1));
@@ -219,6 +223,7 @@ namespace lua_struct {
 
     template <typename T, size_t N>
     void unpack(lua_State* L, T (&v)[N]) {
+        checktype(L, -1, LUA_TTABLE);
         for (size_t i = 0; i < N; ++i) {
             symbol::guard guard(i);
             lua_geti(L, -1, (lua_Integer)(i + 1));

@@ -128,6 +128,7 @@ function rmlui_sys:post_init()
 end
 
 local eventMouse = world:sub {"mouse"}
+local eventKeyboard = world:sub {"keyboard", "F8"}
 local mouseId = { LEFT = 0, RIGHT = 1, MIDDLE = 2}
 function rmlui_sys:ui_update()
     for _,what,state,x,y in eventMouse:unpack() do
@@ -140,6 +141,11 @@ function rmlui_sys:ui_update()
             else
         end
     end
+	for _,_,press in eventKeyboard:unpack() do
+		if press == 1 then
+			rmlui_context:debugger()
+		end
+	end
     rmlui_context:render()
 end
 

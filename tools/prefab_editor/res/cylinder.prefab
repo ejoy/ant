@@ -24,6 +24,6 @@ data:
   transform:
     s: 30
   color: {1, 1, 1, 1}
-  material: "/pkg/ant.resources/materials/singlecolor.material"
-  mesh: "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin"
+  material: /pkg/ant.resources/materials/singlecolor.material
+  mesh: /pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin
   name: cylinder
