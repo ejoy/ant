@@ -85,6 +85,9 @@ local function gen_camera_recorder_name() recorderidx = recorderidx + 1 return "
 local lightidx = 0
 local function gen_light_id() lightidx = lightidx + 1 return lightidx end
 
+local geometricidx = 0
+local function gen_light_id() geometricidx = geometricidx + 1 return geometricidx end
+
 local function create_light_billboard(light_eid)
     local bb_eid = world:create_entity{
         policy = {
@@ -123,6 +126,13 @@ local function create_light_billboard(light_eid)
     light_gizmo.billboard[light_eid] = bb_eid
 end
 
+local geom_mesh_file = {
+    ["cube(raw)"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+    ["cone(raw)"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
+    ["cylinder(raw)"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
+    ["sphere(raw)"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
+    ["torus(raw)"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
+}
 function m:create(what)
     local localpath = tostring(fs.path "":localpath())
     if what == "camera" then
@@ -140,16 +150,39 @@ function m:create(what)
     elseif what == "camerarecorder" then
 
     elseif what == "empty" then
-
-    elseif what == "cube" then
+    elseif what == "cube(raw)"
+        or what == "cone(raw)"
+        or what == "cylinder(raw)"
+        or what == "sphere(raw)"
+        or what == "torus(raw)" then
+        local new_entity, temp = world:create_entity {
+			policy = {
+				"ant.render|render",
+				"ant.general|name",
+				"ant.scene|hierarchy_policy",
+			},
+			data = {
+                color = {1, 1, 1, 1},
+				scene_entity = true,
+				state = ies.create_state "visible|selectable",
+				transform = {s = 50},
+				material = "/pkg/ant.resources/materials/singlecolor.material",
+				mesh = geom_mesh_file[what],
+				name = what .. geometricidx
+			}
+        }
+        imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
+        self.entities[#self.entities+1] = new_entity
+        hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
+    elseif what == "cube(prefab)" then
         m:add_prefab(localpath .. "res/cube.prefab")
-    elseif what == "cone" then
+    elseif what == "cone(prefab)" then
         m:add_prefab(localpath .. "res/cone.prefab")
-    elseif what == "cylinder" then
+    elseif what == "cylinder(prefab)" then
         m:add_prefab(localpath .. "res/cylinder.prefab")
-    elseif what == "sphere" then
+    elseif what == "sphere(prefab)" then
         m:add_prefab(localpath .. "res/sphere.prefab")
-    elseif what == "torus" then
+    elseif what == "torus(prefab)" then
         m:add_prefab(localpath .. "res/torus.prefab")
     elseif what == "directional" or what == "point" or what == "spot" then      
         local ilight = world:interface "ant.render|light" 

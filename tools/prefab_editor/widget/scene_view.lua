@@ -74,19 +74,22 @@ local function show_scene_node(node)
                 gizmo:set_target(eid)
             end
         end
-        if not world[eid].camera then
-            if imgui.widget.BeginDragDropSource() then
-                imgui.widget.SetDragDropPayload("DragNode", eid)
-                imgui.widget.EndDragDropSource()
+
+        if world[eid].camera or world[eid].light_type then
+            return
+        end
+
+        if imgui.widget.BeginDragDropSource() then
+            imgui.widget.SetDragDropPayload("DragNode", eid)
+            imgui.widget.EndDragDropSource()
+        end
+        if imgui.widget.BeginDragDropTarget() then
+            local payload = imgui.widget.AcceptDragDropPayload("DragNode")
+            if payload then
+                source_eid = tonumber(payload)
+                target_eid = eid
             end
-            if imgui.widget.BeginDragDropTarget() then
-                local payload = imgui.widget.AcceptDragDropPayload("DragNode")
-                if payload then
-                    source_eid = tonumber(payload)
-                    target_eid = eid
-                end
-                imgui.widget.EndDragDropTarget()
-            end
+            imgui.widget.EndDragDropTarget()
         end
     end
     local function lock_visible(eid)
@@ -109,7 +112,7 @@ local function show_scene_node(node)
         imgui.cursor.NextColumn()
     end
     --, "SpanFullWidth"
-    local base_flags = imgui.flags.TreeNode { "OpenOnArrow" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
+    local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
         hierarchy:update_display_name(node.eid, world[node.eid].name)
     end
@@ -142,7 +145,8 @@ local function show_scene_node(node)
     end
 end
 local create_light = {"directional", "point", "spot"}
-local create_geom = {"cube", "cone", "cylinder", "sphere", "torus"}
+local create_geom = {"cube(raw)", "cone(raw)", "cylinder(raw)", "sphere(raw)", "torus(raw)",
+                    "cube(prefab)", "cone(prefab)", "cylinder(prefab)", "sphere(prefab)", "torus(prefab)"}
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
