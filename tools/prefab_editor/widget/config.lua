@@ -6,6 +6,7 @@ local m = {
     BottomWidgetHeight  = 256,
     PropertyIndent      = 120,
     PropertyIndent2     = 270,
-    PropertyImageSize   = 64
+    PropertyImageSize   = 64,
+    ComboWidth          = 60
 }
 return m

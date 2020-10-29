@@ -72,7 +72,6 @@ end
 
 local filter_type = {"POINT", "LINEAR", "ANISOTROPIC"}
 local address_type = {"WRAP", "MIRROR", "CLAMP", "BORDER"}
-local combo_width = 60
 local combo_flags = imgui.flags.Combo { "NoArrowButton" }
 local texture_used_idx = {
     ["s_basecolor"] = 1,
@@ -147,79 +146,47 @@ local edit_sampler = function(eid, md)
         OnDragDopTextureOrImage(eid, pro, tp, md)
 
         local sampler = tp.tdata.sampler
-        imgui.widget.Text("MAG")
-        imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(combo_width)
-        imgui.util.PushID("MAG" .. idx)
-        if imgui.widget.BeginCombo("##MAG", {sampler.MAG, flags = combo_flags}) then
-            for i, type in ipairs(filter_type) do
-                if imgui.widget.Selectable(type, sampler.MAG == type) then
-                    sampler.MAG = type
+        local function show_filter(ft)
+            imgui.widget.Text(ft)
+            imgui.cursor.SameLine()
+            imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
+            imgui.util.PushID(ft .. idx)
+            if imgui.widget.BeginCombo("##"..ft, {sampler[ft], flags = combo_flags}) then
+                for i, type in ipairs(filter_type) do
+                    if imgui.widget.Selectable(type, sampler[ft] == type) then
+                        sampler[ft] = type
+                    end
                 end
+                imgui.widget.EndCombo()
             end
-            imgui.widget.EndCombo()
+            imgui.util.PopID()
         end
-        imgui.util.PopID()
+        show_filter("MAG")
+        imgui.cursor.SameLine()
+        show_filter("MIN")
+        imgui.cursor.SameLine()
+        show_filter("MIP")
+
+        local function show_uv(uv)
+            imgui.widget.Text(uv)
+            imgui.cursor.SameLine()
+            imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
+            imgui.util.PushID(uv .. idx)
+            if imgui.widget.BeginCombo("##"..uv, {sampler[uv], flags = combo_flags}) then
+                for i, type in ipairs(address_type) do
+                    if imgui.widget.Selectable(type, sampler[uv] == type) then
+                        sampler[uv] = type
+                    end
+                end
+                imgui.widget.EndCombo()
+            end
+            imgui.util.PopID()
+        end
+        show_uv("U")
+        imgui.cursor.SameLine()
+        show_uv("V")
 
         imgui.cursor.SameLine()
-        imgui.widget.Text("MIN")
-        imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(combo_width)
-        imgui.util.PushID("MIN" .. idx)
-        if imgui.widget.BeginCombo("##MIN", {sampler.MIN, flags = combo_flags}) then
-            for i, type in ipairs(filter_type) do
-                if imgui.widget.Selectable(type, sampler.MIN == type) then
-                    sampler.MIN = type
-                end
-            end
-            imgui.widget.EndCombo()
-        end
-        imgui.util.PopID()
-
-        imgui.cursor.SameLine()
-        imgui.widget.Text("MIP")
-        imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(combo_width)
-        imgui.util.PushID("MIP" .. idx)
-        if imgui.widget.BeginCombo("##MIP", {sampler.MIP, flags = combo_flags}) then
-            for i, type in ipairs(filter_type) do
-                if imgui.widget.Selectable(type, sampler.MIP == type) then
-                    sampler.MIP = type
-                end
-            end
-            imgui.widget.EndCombo()
-        end
-        imgui.util.PopID()
-
-        imgui.widget.Text("U")
-        imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(combo_width)
-        imgui.util.PushID("U" .. idx)
-        if imgui.widget.BeginCombo("##U", {sampler.U, flags = combo_flags}) then
-            for i, type in ipairs(address_type) do
-                if imgui.widget.Selectable(type, sampler.U == type) then
-                    sampler.U = type
-                end
-            end
-            imgui.widget.EndCombo()
-        end
-        imgui.util.PopID()
-
-        imgui.cursor.SameLine()
-        imgui.widget.Text("V")
-        imgui.cursor.SameLine()
-        imgui.cursor.SetNextItemWidth(combo_width)
-        imgui.util.PushID("V" .. idx)
-        if imgui.widget.BeginCombo("##V", {sampler.V, flags = combo_flags}) then
-            for i, type in ipairs(address_type) do
-                if imgui.widget.Selectable(type, sampler.V == type) then
-                    sampler.V = type
-                end
-            end
-            imgui.widget.EndCombo()
-        end
-        imgui.cursor.SameLine()
-        imgui.util.PopID()
         imgui.util.PushID("Save" .. idx)
         if imgui.widget.Button("Save") then
             utils.write_file(tp.texture, stringify(tp.tdata))
