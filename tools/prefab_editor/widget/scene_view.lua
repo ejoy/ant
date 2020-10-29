@@ -111,7 +111,6 @@ local function show_scene_node(node)
         imgui.util.PopID()
         imgui.cursor.NextColumn()
     end
-    --, "SpanFullWidth"
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
         hierarchy:update_display_name(node.eid, world[node.eid].name)
@@ -120,7 +119,7 @@ local function show_scene_node(node)
     local flags = base_flags
     local has_child = true
     if #node.children == 0 then
-        flags = base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" } --, "NoTreePushOnOpen"
+        flags = base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" }
         has_child = false
     end
     

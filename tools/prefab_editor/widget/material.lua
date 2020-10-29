@@ -130,15 +130,13 @@ local edit_sampler = function(eid, md)
         imgui.cursor.PopItemWidth()
         OnDragDopTextureOrImage(eid, pro, tp, md)
         imgui.cursor.Indent()
-        imgui.cursor.Columns(2)
-        local oldwidth = imgui.cursor.GetColumnWidth()
-        --imgui.cursor.SetColumnWidth(0, 100)
+        imgui.cursor.Columns(2, key, false)
+        imgui.cursor.SetColumnOffset(2, uiconfig.PropertyIndent)
         local prop = imaterial.get_property(eid, key)
         if prop and prop.type == "s" then
             imgui.widget.Image(prop.value.texture.handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
             imgui.cursor.SameLine(uiconfig.PropertyImageSize * 2)
         end
-        --imgui.cursor.SetColumnWidth(0, oldwidth)
         imgui.cursor.NextColumn()
         imgui.widget.Text("image")
         imgui.cursor.SameLine()
@@ -222,11 +220,14 @@ local edit_sampler = function(eid, md)
         end
         imgui.cursor.SameLine()
         imgui.util.PopID()
+        imgui.util.PushID("Save" .. idx)
         if imgui.widget.Button("Save") then
             utils.write_file(tp.texture, stringify(tp.tdata))
             assetmgr.unload(tp.texture)
         end
+        imgui.util.PopID()
         imgui.cursor.SameLine()
+        imgui.util.PushID("Save As" .. idx)
         if imgui.widget.Button("Save As") then
             local dialog_info = {
                 Owner = rhwi.native_window(),
@@ -243,6 +244,7 @@ local edit_sampler = function(eid, md)
                 utils.write_file(path, stringify(tp.tdata))
             end
         end
+        imgui.util.PopID()
         imgui.cursor.Unindent()
         imgui.cursor.Columns(1)
     end
@@ -353,13 +355,6 @@ function m.show(eid)
             --tdata.fx.vs = tostring(uidata.vs.text)
         end
         imgui.cursor.PopItemWidth()
-        -- if imgui.widget.BeginDragDropTarget() then
-        --     local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-        --     if payload then
-        --         print(payload)
-        --     end
-        --     imgui.widget.EndDragDropTarget()
-        -- end
         imgui.widget.Text("fs")
         imgui.cursor.SameLine(uiconfig.PropertyIndent)
         imgui.cursor.PushItemWidth(-1)
@@ -367,20 +362,11 @@ function m.show(eid)
             --tdata.fx.fs = tostring(uidata.fs.text)
         end
         imgui.cursor.PopItemWidth()
-        -- if imgui.widget.BeginDragDropTarget() then
-        --     local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-        --     if payload then
-        --         print(payload)
-        --     end
-        --     imgui.widget.EndDragDropTarget()
-        -- end
+
         imgui.cursor.Unindent()
         imgui.cursor.Separator()
-        --if imgui.widget.TreeNode("Properties", imgui.flags.TreeNode { "DefaultOpen" }) then
-            edit_sampler(eid, mtldata)
-            edit_uniform(eid, mtldata)
-        --     imgui.widget.TreePop()
-        -- end
+        edit_sampler(eid, mtldata)
+        edit_uniform(eid, mtldata)
         imgui.widget.TreePop()
     end
 end
