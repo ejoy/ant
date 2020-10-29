@@ -121,6 +121,11 @@ function imaterial.set_property(eid, who, what)
 	end
 end
 
+function imaterial.get_property(eid, who)
+	local rc = world[eid]._rendercache
+	return rc.properties and rc.properties[who] or nil
+end
+
 function imaterial.has_property(eid, who)
 	local rc = world[eid]._rendercache
 	return rc.properties and rc.properties[who] ~= nil

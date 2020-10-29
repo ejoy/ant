@@ -10,7 +10,7 @@ local stringify = import_package "ant.serialize".stringify
 local filedialog = require 'filedialog'
 local utils     = require "common.utils"
 local gd        = require "common.global_data"
-
+local uiconfig  = require "widget.config"
 local m = {}
 local world
 local imaterial
@@ -81,64 +81,74 @@ local texture_used_idx = {
     ["s_emissive"] = 4
 }
 
+local function OnDragDopTextureOrImage(eid, pro, tp, md)
+    if imgui.widget.BeginDragDropTarget() then
+        local key = pro.label
+        local payload = imgui.widget.AcceptDragDropPayload("DragFile")
+        if payload then
+            local rp = lfs.relative(lfs.path(payload), fs.path "":localpath())
+            local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
+            local texture_handle
+            if string.sub(payload, -8) == ".texture" then
+                tp.texture = pkg_path
+                tp.tdata = utils.readtable(tp.texture)
+                local t = assetmgr.resource(tp.texture)
+                local s = t.sampler
+                texture_handle = t._data.handle
+                pro[1].text = pkg_path
+                pro[2].text = tp.tdata.path
+            elseif string.sub(payload, -4) == ".png"
+                or string.sub(payload, -4) == ".dds" then
+                local t = assetmgr.resource(pkg_path, { compile = true })
+                texture_handle = t.handle
+                tp.tdata.path = pkg_path
+                pro[2].text = pkg_path
+            end
+            if key == "s_metallic_roughness" then
+                md.tdata.properties.u_metallic_roughness_factor[4] = 1
+                imaterial.set_property(eid, "u_metallic_roughness_factor", md.tdata.properties.u_metallic_roughness_factor)
+            else
+                local used_flags = md.tdata.properties.u_material_texture_flags
+                used_flags[texture_used_idx[key]] = 1
+                imaterial.set_property(eid, "u_material_texture_flags", used_flags)
+            end
+            imaterial.set_property(eid, key, {stage = tp.stage, texture = {handle = texture_handle}})
+        end
+        imgui.widget.EndDragDropTarget()
+    end
+end
+
 local edit_sampler = function(eid, md)
     for idx, pro in ipairs(md.uidata.properties) do
-        local k = pro.label
-        local tp = md.tdata.properties[k]
-        imgui.widget.Text(k)
+        local key = pro.label
+        local tp = md.tdata.properties[key]
+        imgui.widget.Text(key)
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
-        if imgui.widget.InputText("##" .. k, pro[1]) then
-            -- tp.texture = tostring(pro[1].text)
-            -- if string.sub(tp.texture, -8) == ".texture" then
-            --     tp.tdata = datalist.parse(cr.read_file(tp.texture .. "|main.cfg"))
-            --     imaterial.set_property(eid, k, assetmgr.resource(tp.texture))
-            -- end
+        if imgui.widget.InputText("##" .. key, pro[1]) then
         end
         imgui.cursor.PopItemWidth()
+        OnDragDopTextureOrImage(eid, pro, tp, md)
         imgui.cursor.Indent()
+        imgui.cursor.Columns(2)
+        local oldwidth = imgui.cursor.GetColumnWidth()
+        --imgui.cursor.SetColumnWidth(0, 100)
+        local prop = imaterial.get_property(eid, key)
+        if prop and prop.type == "s" then
+            imgui.widget.Image(prop.value.texture.handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
+            imgui.cursor.SameLine(uiconfig.PropertyImageSize * 2)
+        end
+        --imgui.cursor.SetColumnWidth(0, oldwidth)
+        imgui.cursor.NextColumn()
         imgui.widget.Text("image")
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##" .. tp.tdata.path .. idx, pro[2]) then
-            --tp.tdata.path = tostring(pro[2].text)
         end
         imgui.cursor.PopItemWidth()
-        imgui.cursor.Unindent()
-        if imgui.widget.BeginDragDropTarget() then
-            local payload = imgui.widget.AcceptDragDropPayload("DragFile")
-            if payload then
-                local rp = lfs.relative(lfs.path(payload), fs.path "":localpath())
-                local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
-                local texture_handle
-                if string.sub(payload, -8) == ".texture" then
-                    pro[1].text = pkg_path
-                    tp.texture = pkg_path
-                    tp.tdata = utils.readtable(tp.texture)
-                    local t = assetmgr.resource(tp.texture)
-                    local s = t.sampler
-                    texture_handle = t._data.handle
-                elseif string.sub(payload, -4) == ".png"
-                    or string.sub(payload, -4) == ".dds" then
-                    local t = assetmgr.resource(pkg_path, { compile = true })
-                    texture_handle = t.handle
-                    tp.tdata.path = pkg_path
-                end
-                if k == "s_metallic_roughness" then
-                    md.tdata.properties.u_metallic_roughness_factor[4] = 1
-                    imaterial.set_property(eid, "u_metallic_roughness_factor", md.tdata.properties.u_metallic_roughness_factor)
-                else
-                    local used_flags = md.tdata.properties.u_material_texture_flags
-                    used_flags[texture_used_idx[k]] = 1
-                    imaterial.set_property(eid, "u_material_texture_flags", used_flags)
-                end
-                imaterial.set_property(eid, k, {stage = tp.stage, texture = {handle = texture_handle}})
-            end
-            imgui.widget.EndDragDropTarget()
-        end
+        OnDragDopTextureOrImage(eid, pro, tp, md)
 
         local sampler = tp.tdata.sampler
-        imgui.cursor.Indent()
         imgui.widget.Text("MAG")
         imgui.cursor.SameLine()
         imgui.cursor.SetNextItemWidth(combo_width)
@@ -234,6 +244,7 @@ local edit_sampler = function(eid, md)
             end
         end
         imgui.cursor.Unindent()
+        imgui.cursor.Columns(1)
     end
 end
 
@@ -241,10 +252,10 @@ local edit_uniform = function(eid, md)
     for k, v in pairs(md.uidata.properties) do
         if type(k) == "string" then
             local imgui_func
-            local indent = 270
+            local indent = uiconfig.PropertyIndent2
             if k == "u_color" then
                 imgui_func = imgui.widget.ColorEdit
-                indent = 120
+                indent = uiconfig.PropertyIndent
             else
                 imgui_func = imgui.widget.DragFloat
             end
@@ -320,7 +331,7 @@ function m.show(eid)
         end
 
         imgui.widget.Text("file")
-        imgui.cursor.SameLine()
+        imgui.cursor.SameLine(uiconfig.PropertyIndent)
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##file", uidata.material_file) then
             --world[eid].material = tostring(uidata.material_file.text)
@@ -336,7 +347,7 @@ function m.show(eid)
         end
         imgui.cursor.Indent()
         imgui.widget.Text("vs")
-        imgui.cursor.SameLine()
+        imgui.cursor.SameLine(uiconfig.PropertyIndent)
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##vs", uidata.vs) then
             --tdata.fx.vs = tostring(uidata.vs.text)
@@ -350,7 +361,7 @@ function m.show(eid)
         --     imgui.widget.EndDragDropTarget()
         -- end
         imgui.widget.Text("fs")
-        imgui.cursor.SameLine()
+        imgui.cursor.SameLine(uiconfig.PropertyIndent)
         imgui.cursor.PushItemWidth(-1)
         if imgui.widget.InputText("##fs", uidata.fs) then
             --tdata.fx.fs = tostring(uidata.fs.text)

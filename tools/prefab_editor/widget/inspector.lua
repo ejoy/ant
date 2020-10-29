@@ -164,27 +164,27 @@ end
 
 local function show_light_property(eid)
     imgui.cursor.Separator()
-    imgui.widget.Text("color:")
-    imgui.cursor.SameLine()
+    imgui.widget.Text("color")
+    imgui.cursor.SameLine(uiconfig.PropertyIndent)
     if imgui.widget.ColorEdit("##lightcolor", light_ui_data.color) then
         ilight.set_color(eid, light_ui_data.color)
     end
-    imgui.widget.Text("intensity:")
-    imgui.cursor.SameLine()
+    imgui.widget.Text("intensity")
+    imgui.cursor.SameLine(uiconfig.PropertyIndent)
     if imgui.widget.DragFloat("##intensity", light_ui_data.intensity) then
         ilight.set_intensity(eid, light_ui_data.intensity[1])
         light_gizmo.update_gizmo()
     end
     if world[eid].light_type ~= "directional" then
-        imgui.widget.Text("range:")
-        imgui.cursor.SameLine()
+        imgui.widget.Text("range")
+        imgui.cursor.SameLine(uiconfig.PropertyIndent)
         if imgui.widget.DragFloat("##range", light_ui_data.range) then
             ilight.set_range(eid, light_ui_data.range[1])
             light_gizmo.update_gizmo()
         end
         if world[eid].light_type == "spot" then
-            imgui.widget.Text("radian:")
-            imgui.cursor.SameLine()
+            imgui.widget.Text("radian")
+            imgui.cursor.SameLine(uiconfig.PropertyIndent)
             if imgui.widget.DragFloat("##radian", light_ui_data.radian) then
                 ilight.set_radian(eid, light_ui_data.radian[1])
                 light_gizmo.update_gizmo()
@@ -296,11 +296,11 @@ function m.show()
             local template = hierarchy:get_template(current_eid)
             if template and template.filename then
                 imgui.widget.Text("Prefab")
-                imgui.cursor.SameLine()
+                imgui.cursor.SameLine(uiconfig.PropertyIndent)
                 imgui.widget.Text(template.filename)
             end
             imgui.widget.Text("Name")
-            imgui.cursor.SameLine()
+            imgui.cursor.SameLine(uiconfig.PropertyIndent)
             imgui.cursor.PushItemWidth(-1)
             if imgui.widget.InputText("##Name", base_ui_data.name) then
                 local name = tostring(base_ui_data.name.text)
@@ -311,19 +311,19 @@ function m.show()
             if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
                 --imgui.cursor.SetNextItemWidth(100)
                 imgui.widget.Text("Position")
-                imgui.cursor.SameLine(120)
+                imgui.cursor.SameLine(uiconfig.PropertyIndent)
                 if imgui.widget.DragFloat("##Position", base_ui_data.pos) then
                     on_position_dirty(current_eid, base_ui_data.pos)
                 end
                 --imgui.cursor.SetNextItemWidth(100)
                 imgui.widget.Text("Rotate")
-                imgui.cursor.SameLine(120)
+                imgui.cursor.SameLine(uiconfig.PropertyIndent)
                 if imgui.widget.DragFloat("##Rotate", base_ui_data.rot) then
                     on_rotate_dirty(current_eid, base_ui_data.rot)
                 end
                 --imgui.cursor.SetNextItemWidth(100)
                 imgui.widget.Text("Scale")
-                imgui.cursor.SameLine(120)
+                imgui.cursor.SameLine(uiconfig.PropertyIndent)
                 if imgui.widget.DragFloat("##Scale", base_ui_data.scale) then
                     on_scale_dirty(current_eid, base_ui_data.scale)
                 end
