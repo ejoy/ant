@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bgfx/c99/bgfx.h"
+#include <bgfx/c99/bgfx.h>
 #include <RmlUi/Core.h>
 #include <string>
 
