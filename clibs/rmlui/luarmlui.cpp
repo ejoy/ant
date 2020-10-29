@@ -58,6 +58,7 @@ lrmlui_context_shutdown(lua_State *L){
     release(wrapper->ifont);
     release(wrapper->isystem);
     release(wrapper->irenderer);
+    release(wrapper->context);
     return 0;
 }
 
@@ -88,11 +89,10 @@ lrmlui_context_del(lua_State *L){
     if (wrapper->irenderer || 
         wrapper->isystem || 
         wrapper->ifont || 
-        wrapper->ifile){
+        wrapper->ifile ||
+        wrapper->context){
             luaL_error(L, "RmlUi should call shutdown before lua vm release");
     }
-
-    release(wrapper->context);
     return 0;
 }
 
