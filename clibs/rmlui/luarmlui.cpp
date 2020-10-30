@@ -181,7 +181,7 @@ linit(lua_State *L){
     rc->unpack(L);
     lua_pop(L, 1);
     wrapper->isystem   = new System();
-    wrapper->ifont     = new FontInterface(rc->font_mgr);
+    wrapper->ifont     = new FontInterface(rc);
     wrapper->ifile     = new FileInterface2(rc);
     wrapper->irenderer = new Renderer(rc);
 
@@ -195,7 +195,7 @@ linit(lua_State *L){
     }
 
     Rml::Lua::Initialise();
-    wrapper->ifont->InitFontTex();
+    wrapper->ifont->Init();
     return 1;
 }
 

@@ -1,5 +1,7 @@
 #pragma once
+#include "texture.h"
 #include "context.h"
+#include "fonteffect.h"
 
 #include "RmlUi/Core/FontEngineInterface.h"
 #include "RmlUi/Core/Texture.h"
@@ -13,12 +15,14 @@ struct FontFace{
 
 class FontInterface : public Rml::FontEngineInterface {
 public:
-	FontInterface(struct font_manager *fm) : mfontmgr(fm){
+	FontInterface(const rml_context *context) : mcontext(context){
 	}
 	virtual ~FontInterface() = default;
-
-	void InitFontTex(){mFontTex.Set(FONT_TEX_NAME);}
-
+public:
+	void Init();
+	bool IsFontTexResource(const Rml::String &sourcename) const;
+	TexData* GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const;
+public:
 	virtual bool LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face) override;
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
 	virtual Rml::FontEffectsHandle PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects)override;
@@ -38,10 +42,24 @@ public:
 private:
 	struct font_glyph
 	GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og = nullptr);
+
+	void RegisterFontEffectInstancer();
+
+	struct FontResource {
+		Rml::Texture tex;
+		TexData*	data = nullptr;
+		~FontResource(){
+			if (data){
+				delete data;
+				data = nullptr;
+			}
+		}
+	};
+	const FontResource& FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle);
 public:
 	static const Rml::String FONT_TEX_NAME;
 private:
-    struct font_manager*		mfontmgr;
+    const rml_context* mcontext;
 	struct fontinfo {
 		std::vector<uint8_t>buffer;
 		std::vector<int>	fontids;
@@ -49,6 +67,8 @@ private:
 	std::unordered_map<Rml::String, fontinfo>	mFonts;
 
 	std::unordered_map<Rml::String, int>		mFontIDs;
-	std::vector<FontFace>		mFontFaces;
-	Rml::Texture mFontTex;
+	std::vector<FontFace> mFontFaces;
+
+	std::unordered_map<Rml::String, FontResource>	mFontResources;
+	FontEffectInstancerManager	mFEIMgr;
 };

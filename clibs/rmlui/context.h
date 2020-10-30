@@ -22,13 +22,6 @@ class FontInterface;
 class Renderer;
 class System;
 
-enum font_effect_type : uint8_t {
-    FE_None		= 0x0,
-    FE_Outline	= 0x1,
-    FE_Shadow 	= 0x2,
-    FE_Glow 	= 0x4,
-};
-
 struct shader_info {
     struct uniforms {
         uint32_t    handle;
@@ -48,17 +41,12 @@ struct shader_info {
 };
 
 struct shader {
-    struct font_effect{
-        shader_info info;
-        float color[4];
-        float mask;
-        float range;
-    };
-
-    font_effect font;
-    font_effect font_outline;
-    font_effect font_shadow;
-    font_effect font_glow;
+    float font_mask;
+    float font_range;
+    shader_info font;
+    shader_info font_outline;
+    shader_info font_shadow;
+    shader_info font_glow;
     shader_info image;
 };
 

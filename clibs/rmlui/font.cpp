@@ -1,5 +1,7 @@
 #include "font.h"
 #include "render.h"
+#include "fonteffect.h"
+
 extern "C"{
 #include "font/font_manager.h"
 #include "font/truetype.h"
@@ -11,6 +13,30 @@ extern "C"{
 
 //static
 const Rml::String FontInterface::FONT_TEX_NAME("?FONT_TEX");
+
+void FontInterface::Init(){
+    RegisterFontEffectInstancer();
+}
+
+void FontInterface::RegisterFontEffectInstancer(){
+    Rml::Factory::RegisterFontEffectInstancer("outline", mFEIMgr.Create("outline"));
+    //Rml::Factory::RegisterFontEffectInstancer("shadow", mFEIMgr.Create("shadow"));
+}
+
+bool FontInterface::IsFontTexResource(const Rml::String &sourcename) const{
+    return Rml::String::npos != sourcename.find(FONT_TEX_NAME);
+}
+
+TexData* FontInterface::GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const{
+    auto itfound = mFontResources.find(sourcename);
+    if (itfound == mFontResources.end()){
+        return nullptr;
+    }
+
+    texture_dimensions.x = mcontext->font_tex.width;
+    texture_dimensions.y = mcontext->font_tex.height;
+    return itfound->second.data;
+}
 
 bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face){
     return (family == "rmlui-debugger-font");
@@ -26,7 +52,7 @@ load_fontid(struct font_manager *F, const Rml::String &family){
 }
 
 Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
-    int fontid = load_fontid(mfontmgr, family);
+    int fontid = load_fontid(mcontext->font_mgr, family);
 
     if (fontid > 0){
         auto itfound = std::find_if(mFontFaces.begin(), mFontFaces.end(), [=](auto it){
@@ -45,8 +71,19 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 }
 
 Rml::FontEffectsHandle FontInterface::PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects){
+    if (font_effects.empty())
+        return Rml::FontEffectsHandle(0);
     
-
+    if (font_effects.size() == 1){
+        auto fe = font_effects[0];
+        auto sdffe = static_cast<const SDFFontEffect*>(fe.get());
+        if (TDF_FontEffect_Outline == sdffe->GetType()){
+            return (Rml::FontEffectsHandle)sdffe;
+        } else {
+            assert(false && "unkonwn font effect type");
+        }
+    }
+    assert(false && "not support more than one font effect in single text");
     return 0;
 }
 
@@ -59,13 +96,14 @@ int FontInterface::GetSize(Rml::FontFaceHandle handle){
 struct font_glyph
 FontInterface::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_){
     struct font_glyph g, og;
-    if (0 == font_manager_glyph(mfontmgr, face.fontid, codepoint, face.pixelsize, &g, &og)){
+    if (0 == font_manager_glyph(mcontext->font_mgr, face.fontid, codepoint, face.pixelsize, &g, &og)){
         auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
         const uint32_t bufsize = og.w * og.h;
         uint8_t *buffer = new uint8_t[bufsize];
         memset(buffer, 0, bufsize);
-        if (NULL == font_manager_update(mfontmgr, face.fontid, codepoint, &og, buffer)){
-            ri->UpdateTexture(mFontTex.GetHandle(ri), Rect{og.u, og.v, og.w, og.h}, buffer);
+        if (NULL == font_manager_update(mcontext->font_mgr, face.fontid, codepoint, &og, buffer)){
+            TexData t(mcontext->font_tex.texid);
+            ri->UpdateTexture(Rml::TextureHandle(&t), Rect{og.u, og.v, og.w, og.h}, buffer);
         } else {
             delete []buffer;
         }
@@ -89,7 +127,7 @@ int FontInterface::GetLineHeight(Rml::FontFaceHandle handle){
     const auto &face = mFontFaces[idx];
 
     int ascent, descent, lineGap;
-    font_manager_fontheight(mfontmgr, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
+    font_manager_fontheight(mcontext->font_mgr, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
     return ascent - descent + lineGap;
 }
 
@@ -98,7 +136,7 @@ int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
     const auto &face = mFontFaces[idx];
 
     int x0, y0, x1, y1;
-    font_manager_boundingbox(mfontmgr, face.fontid, face.pixelsize, &x0, &y0, &x1, &y1);
+    font_manager_boundingbox(mcontext->font_mgr, face.fontid, face.pixelsize, &x0, &y0, &x1, &y1);
     return -y0;
 }
 
@@ -107,7 +145,7 @@ float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
     const auto &face = mFontFaces[idx];
 
     int x0, y0, x1, y1;
-    font_manager_boundingbox(mfontmgr, face.fontid, face.pixelsize, &x0, &y0, &x1, &y1);
+    font_manager_boundingbox(mcontext->font_mgr, face.fontid, face.pixelsize, &x0, &y0, &x1, &y1);
     return y1;
 }
 
@@ -124,6 +162,25 @@ int FontInterface::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String&
     return width;
 }
 
+const FontInterface::FontResource& 
+FontInterface::FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle){
+    auto sdffe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
+    Rml::String key = sdffe ? sdffe->GenerateKey(FONT_TEX_NAME) : FontInterface::FONT_TEX_NAME;
+
+    auto itfound = mFontResources.find(key);
+	if (itfound == mFontResources.end()){
+        auto &fr = mFontResources[key];
+        fr.tex.Set(key);
+        const uint16_t texid = uint16_t(mcontext->font_tex.texid);
+        fr.data = sdffe ? sdffe->CreateTexData(texid) : new TexData(texid);
+        itfound = mFontResources.find(key);
+
+        return fr;
+    }
+
+    return itfound->second;
+}
+
 int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHandle font_effects_handle, 
     const Rml::String& string, 
     const Rml::Vector2f& position, 
@@ -134,7 +191,8 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 	geometrys.resize(1);
 	Rml::Geometry& geometry = geometrys[0];
 
-	geometry.SetTexture(&mFontTex);
+    const auto &res = FindOrAddFontResource(font_effects_handle);
+    geometry.SetTexture(&res.tex);
 
 	auto& vertices = geometry.GetVertices();
 	auto& indices = geometry.GetIndices();

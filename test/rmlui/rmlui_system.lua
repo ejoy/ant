@@ -53,44 +53,26 @@ local function init_rmlui_data()
         file_dict = file_dict,
         viewid = vid,
         shader = {
-            font = {
-                info = assetmgr.load_fx {
-                    fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                    vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                },
-                color = {0, 0, 0, 0},
-                mask = 0.68,
-                range = 0.18,
+            font_mask = 0.68,
+            font_range = 0.18,
+            font = assetmgr.load_fx {
+                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
             },
-            font_outline = {
-                info = assetmgr.load_fx {
-                    fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                    vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                    setting = {macros = {"OUTLINE_EFFECT"}},
-                },
-                color = {1, 0, 0, 1},
-                mask = 0.71,
-                range = 0.1,
+            font_outline = assetmgr.load_fx {
+                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                setting = {macros = {"OUTLINE_EFFECT"}},
             },
-            font_shadow = {
-                info = assetmgr.load_fx {
-                    fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                    vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                    setting = {macros = {"OUTLINE_SHADOW"}},
-                },
-                color = {0.8, 0.8, 0.8, 1},
-                mask = 0.71,
-                range = 0.1,
+            font_shadow = assetmgr.load_fx {
+                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                setting = {macros = {"OUTLINE_SHADOW"}},
             },
-            font_glow = {
-                info = assetmgr.load_fx {
-                    fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-                    vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-                    setting = {macros = {"OUTLINE_GLOW"}},
-                },
-                color = {1, 0, 0, 1},
-                mask = 0.71,
-                range = 0.1,
+            font_glow = assetmgr.load_fx {
+                fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
+                vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
+                setting = {macros = {"OUTLINE_GLOW"}},
             },
             image = assetmgr.load_fx {
                 fs = "/pkg/ant.resources/shaders/ui/fs_image.sc",
