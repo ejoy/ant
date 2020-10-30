@@ -36,7 +36,7 @@ update_font_properties(const rml_context *context, const TexData *td){
         auto mask_uniform_idx = font->find_uniform("u_mask");
         BGFX(set_uniform)({mask_uniform_idx}, data.md.data, 1);
 
-        auto color_uniform_idx = font->find_uniform("u_color");
+        auto color_uniform_idx = font->find_uniform("u_effect_color");
         if (color_uniform_idx != UINT16_MAX){
             BGFX(set_uniform)({color_uniform_idx}, data.color, 1);
         }
@@ -55,8 +55,9 @@ update_font_properties(const rml_context *context, const TexData *td){
         if (TDF_FontEffect_Outline & tf){
             auto outline = static_cast<const OutlineData*>(td);
             #define MAX_FONT_GLYPH_SIZE 32
-            ef_data.md.effect_mask = context->shader.font_mask;
-            ef_data.md.effect_range = outline->width / MAX_FONT_GLYPH_SIZE;
+            float ratio = float(outline->width) / MAX_FONT_GLYPH_SIZE;
+            ef_data.md.effect_mask = context->shader.font_mask + ratio;
+            ef_data.md.effect_range = context->shader.font_range;
 
             tocolor(outline->color, ef_data.color);
             return &(context->shader.font_outline);
@@ -74,6 +75,14 @@ update_font_properties(const rml_context *context, const TexData *td){
     update_font_data(font, fedata);
 
     return uint16_t(font->prog);
+}
+
+
+static bool
+is_font_tex(Rml::TextureHandle th) { 
+    if (th == 0)
+        return false;
+    return (TexData::ToTexData(th)->GetTextFlags() & TDF_FontTex) != 0;
 }
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
@@ -115,12 +124,6 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
 
     BGFX(set_transient_index_buffer)(&tib, 0, num_indices);
     BGFX(set_state)(RENDER_STATE, 0);
-
-    auto is_font_tex = [](auto th) { 
-        if (th == 0)
-            return false;
-        return (TexData::ToTexData(th)->GetTextFlags() & TDF_FontTex) != 0;
-    };
   
     if (is_font_tex(texture)) {
         auto prog = update_font_properties(mcontext, TexData::ToTexData(texture));
@@ -219,7 +222,9 @@ bool Renderer::UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8
 }
 
 void Renderer::ReleaseTexture(Rml::TextureHandle texhandle) {
-    auto td = TexData::ToTexData(texhandle);
-    BGFX(destroy_texture)({td->GetTexID()});
-    delete td;
+    if (!is_font_tex(texhandle)){
+        auto td = TexData::ToTexData(texhandle);
+        BGFX(destroy_texture)({td->GetTexID()});
+        delete td;
+    }
 }
