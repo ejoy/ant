@@ -188,14 +188,29 @@ lrmlui_run_script(lua_State* L) {
     return 1;
 }
 
+static int
+lrmlui_memory(lua_State* L) {
+    if (g_wrapper) {
+        lua_State* rL = g_wrapper->rL;
+        int k = lua_gc(rL, LUA_GCCOUNT);
+        int b = lua_gc(rL, LUA_GCCOUNTB);
+        lua_pushinteger(L, (lua_Integer)k * 1024 + b);
+    }
+    else {
+        lua_pushinteger(L, 0);
+    }
+    return 1;
+}
+
 extern "C" {
 LUAMOD_API int
     luaopen_rmlui(lua_State* L) {
     init_interface(L);
     luaL_Reg l[] = {
-        { "init",               lrmlui_init },
-        { "shutdown",           lrmlui_shutdown },
-        { "run_script",         lrmlui_run_script },
+        { "init",       lrmlui_init },
+        { "shutdown",   lrmlui_shutdown },
+        { "run_script", lrmlui_run_script },
+        { "memory",     lrmlui_memory },
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);
