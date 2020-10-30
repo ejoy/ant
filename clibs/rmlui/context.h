@@ -64,8 +64,6 @@ struct shader {
 
 struct lua_State;
 struct rml_context {
-    Rml::String         contextname = "main";
-    Rml::Vector2i       contextdim;
     struct font_manager* font_mgr;
     shader              shader;
     file_dictionaries   file_dict;
@@ -76,5 +74,5 @@ struct rml_context {
     Rect                viewrect;
     bgfx_vertex_layout_t* layout;
 
-    void unpack(lua_State *L);
+    rml_context(lua_State *L, int idx);
 };

@@ -17,185 +17,174 @@
 #include <cassert>
 #include <cstring>
 
-struct rml_context_wrapper{
-    rml_context *context;
-    FileInterface2* ifile;
-    FontInterface*  ifont;
-    Renderer*       irenderer;
-    System*         isystem;
-};
+struct rml_context_wrapper {
+    rml_context    context;
+    System         system;
+    FontInterface  font;
+    FileInterface2 file;
+    Renderer       renderer;
+    lua_State*     rL;
+    bool           debugger = false;
+    rml_context_wrapper(lua_State* L, int idx)
+        : context(L, idx)
+        , system()
+        , font(context.font_mgr)
+        , file(&context)
+        , renderer(&context)
+        , rL(luaL_newstate())
+    {
+        if (rL) {
+            luaL_openlibs(rL);
+        }
+    }
 
-static inline rml_context_wrapper*
-get_rc_wrapper(lua_State*L, int index = 1){
-    return ((rml_context_wrapper*)luaL_checkudata(L, 1, "RML_CONTEXT"));
-}
-
-static inline rml_context*
-get_rc(lua_State *L, int index = 1){
-    return get_rc_wrapper(L, index)->context;
-}
-
-static inline Rml::Context*
-get_context_handle(lua_State *L, int index=1){
-    auto rc = get_rc(L, index);
-
-    return Rml::GetContext(rc->contextname);
-}
-
-template<class Ptr>
-void release(Ptr &p){ 
-    if (p){
-        delete p;
-        p = nullptr;
+    ~rml_context_wrapper() {
+        if (rL) {
+            lua_close(rL);
+        }
     }
 };
+rml_context_wrapper* g_wrapper;
 
-static int
-lrmlui_context_shutdown(lua_State *L){
-    auto wrapper = get_rc_wrapper(L);
-    Rml::Shutdown();
-    release(wrapper->ifile);
-    release(wrapper->ifont);
-    release(wrapper->isystem);
-    release(wrapper->irenderer);
-    release(wrapper->context);
-    return 0;
-}
-
-static int
-lrmlui_context_touch_move(lua_State* L) {
-    Rml::Context* context = get_context_handle(L);
-    context->ProcessMouseMove(luaL_checkinteger(L, 2), luaL_checkinteger(L, 3), 0);
-    return 0;
-}
-
-static int
-lrmlui_context_touch_down(lua_State* L) {
-    Rml::Context* context = get_context_handle(L);
-    context->ProcessMouseButtonDown(luaL_checkinteger(L, 2), 0);
-    return 0;
-}
-
-static int
-lrmlui_context_touch_up(lua_State* L) {
-    Rml::Context* context = get_context_handle(L);
-    context->ProcessMouseButtonUp(luaL_checkinteger(L, 2), 0);
-    return 0;
-}
-
-static int
-lrmlui_context_del(lua_State *L){
-    auto wrapper = get_rc_wrapper(L);
-    if (wrapper->irenderer || 
-        wrapper->isystem || 
-        wrapper->ifont || 
-        wrapper->ifile ||
-        wrapper->context){
-            luaL_error(L, "RmlUi should call shutdown before lua vm release");
+template<typename T>
+T* checkud(lua_State* L, int idx)
+{
+    T** ptr = static_cast<T**>(lua_touserdata(L, idx));
+    if (!ptr || !*ptr) {
+        luaL_argerror(L, idx, "invalid userdata");
     }
+    return *ptr;
+}
+
+static int ContextProcessMouseMove(lua_State* L) {
+    Rml::Context* context = checkud<Rml::Context>(L, 1);
+    int x = luaL_checkinteger(L, 2);
+    int y = luaL_checkinteger(L, 3);
+    int state = luaL_optinteger(L, 4, 0);
+    context->ProcessMouseMove(x, y, state);
+    return 0;
+}
+
+static int ContextProcessMouseButtonDown(lua_State* L) {
+    Rml::Context* context = checkud<Rml::Context>(L, 1);
+    int button = luaL_checkinteger(L, 2);
+    int state = luaL_optinteger(L, 3, 0);
+    context->ProcessMouseButtonDown(button, state);
+    return 0;
+}
+
+static int ContextProcessMouseButtonUp(lua_State* L) {
+    Rml::Context* context = checkud<Rml::Context>(L, 1);
+    int button = luaL_checkinteger(L, 2);
+    int state = luaL_optinteger(L, 3, 0);
+    context->ProcessMouseButtonUp(button, state);
+    return 0;
+}
+
+static int ContextDebugger(lua_State* L) {
+    Rml::Context* context = checkud<Rml::Context>(L, 1);
+    bool open = lua_toboolean(L, 2);
+    if (!g_wrapper) {
+        return 0;
+    }
+    if (!g_wrapper->debugger) {
+        Rml::Debugger::Initialise(context);
+        g_wrapper->debugger = true;
+    }
+    else {
+        Rml::Debugger::SetContext(context);
+    }
+    Rml::Debugger::SetVisible(open);
     return 0;
 }
 
 static int
-lrmlui_context_load(lua_State *L){
-    auto context = get_context_handle(L);
-    if (!context){
-        return luaL_error(L, "invalid context");
+lrmlui_init(lua_State *L){
+    if (g_wrapper) {
+        return luaL_error(L, "RmlUi has been initialized.");
     }
-
-    const char* docfile = luaL_checkstring(L, 2);
-    auto doc = context->LoadDocument(docfile);
-    if (!doc){
-        luaL_error(L, "load document failed:%s", docfile);
-    }
-
-    doc->Show();
-    lua_pushlightuserdata(L, doc);
-    return 1;
-}
-
-
-static int
-lrmlui_context_create(lua_State *L){
-    auto rc = get_rc(L, 1);
-    rc->contextname = luaL_checkstring(L, 2);
-    rc->contextdim.x = luaL_checkinteger(L, 3);
-    rc->contextdim.y = luaL_checkinteger(L, 4);
-
-    auto ctx = Rml::CreateContext(rc->contextname, rc->contextdim);
-    if (!ctx){
-        luaL_error(L, "Failed to CreateContext:%s, width:%d, height:%d", rc->contextname.c_str(), rc->contextdim.x, rc->contextdim.y);
-    }
-    Rml::Debugger::Initialise(ctx);
-    return 0;
-}
-
-static int
-lrmlui_context_render(lua_State *L){
-    auto context = get_context_handle(L);
-    if (!context){
-        return luaL_error(L, "invalid context");
-    }
-    context->Update();
-    context->Render();
-    return 0;
-}
-
-static int
-lrmlui_context_debugger(lua_State* L) {
-    Rml::Debugger::SetVisible(!Rml::Debugger::IsVisible());
-    return 0;
-}
-
-static inline rml_context_wrapper*
-create_rml_context(lua_State *L){
-    rml_context_wrapper* wrapper = (rml_context_wrapper*)lua_newuserdatauv(L, sizeof(*wrapper), 0);
-    wrapper->context = new rml_context;
-    auto rc = wrapper->context;
-    if (luaL_newmetatable(L, "RML_CONTEXT")){
-        lua_pushvalue(L, -1);
-        lua_setfield(L, -2, "__index");
-        luaL_Reg l[] = {
-            {"load",        lrmlui_context_load},
-            {"create",      lrmlui_context_create},
-            {"render",      lrmlui_context_render},
-            {"shutdown",    lrmlui_context_shutdown},
-            {"touch_move",  lrmlui_context_touch_move},
-            {"touch_down",  lrmlui_context_touch_down},
-            {"touch_up",    lrmlui_context_touch_up},
-            {"debugger",    lrmlui_context_debugger},
-            {"__gc",        lrmlui_context_del},
-            {nullptr, nullptr},
-        };
-		luaL_setfuncs(L, l, 0);
-    }
-    lua_setmetatable(L, -2);
-    return wrapper;
-}
-
-static int
-linit(lua_State *L){
-    auto wrapper = create_rml_context(L);
-    auto rc = wrapper->context;
-    lua_pushvalue(L, 1);
-    rc->unpack(L);
-    lua_pop(L, 1);
-    wrapper->isystem   = new System();
-    wrapper->ifont     = new FontInterface(rc->font_mgr);
-    wrapper->ifile     = new FileInterface2(rc);
-    wrapper->irenderer = new Renderer(rc);
-
-    Rml::SetFileInterface(wrapper->ifile);
-    Rml::SetRenderInterface(wrapper->irenderer);
-    Rml::SetSystemInterface(wrapper->isystem);
-    Rml::SetFontEngineInterface(wrapper->ifont);
-
+    g_wrapper = new rml_context_wrapper(L, 1);
+    Rml::SetSystemInterface(&g_wrapper->system);
+    Rml::SetFontEngineInterface(&g_wrapper->font);
+    Rml::SetFileInterface(&g_wrapper->file);
+    Rml::SetRenderInterface(&g_wrapper->renderer);
     if (!Rml::Initialise()){
-        luaL_error(L, "Failed to Initialise Rml");
+        return luaL_error(L, "Failed to Initialise RmlUi.");
     }
+    lua_State* rL = g_wrapper->rL;
+    Rml::Lua::Initialise(rL);
 
-    Rml::Lua::Initialise();
-    wrapper->ifont->InitFontTex();
+    if (LUA_TTABLE == lua_getglobal(rL, "Context")) {
+        luaL_Reg lib[] = {
+            {"ProcessMouseMove",ContextProcessMouseMove},
+            {"ProcessMouseButtonDown",ContextProcessMouseButtonDown},
+            {"ProcessMouseButtonUp",ContextProcessMouseButtonUp},
+            {"Debugger",ContextDebugger},
+            {NULL,NULL},
+        };
+        luaL_setfuncs(rL, lib, 0);
+    }
+    lua_pop(rL, 1);
+
+    g_wrapper->font.InitFontTex();
+    return 0;
+}
+
+static int
+lrmlui_shutdown(lua_State* L) {
+    Rml::Shutdown();
+    if (g_wrapper) {
+        delete g_wrapper;
+        g_wrapper = nullptr;
+    }
+    return 0;
+}
+
+static bool rmlui_load_script(lua_State* L, const char* script) {
+    Rml::FileInterface* file_interface = Rml::GetFileInterface();
+    Rml::FileHandle handle = file_interface->Open(script);
+    if (handle == 0) {
+        return false;
+    }
+    size_t size = file_interface->Length(handle);
+    if (size == 0) {
+        return false;
+    }
+    std::string file_contents; file_contents.resize(size);
+    file_interface->Read(file_contents.data(), size, handle);
+    file_interface->Close(handle);
+    if (!Rml::Lua::Interpreter::LoadString(file_contents, std::string("@") + script)) {
+        return false;
+    }
+    if (!Rml::Lua::Interpreter::ExecuteCall(0, 1)) {
+        return false;
+    }
+    return true;
+}
+
+static int
+lrmlui_run_script(lua_State* L) {
+    lua_State* rL = Rml::Lua::Interpreter::GetLuaState();
+    const char* script = luaL_checkstring(L, 1);
+    if (LUA_TTABLE != lua_getfield(rL, LUA_REGISTRYINDEX, "rmlui::run_script")) {
+        lua_pop(rL, 1);
+        lua_newtable(rL);
+        lua_pushvalue(rL, -1);
+        lua_setfield(rL, LUA_REGISTRYINDEX, "rmlui::run_script");
+    }
+    if (LUA_TFUNCTION != lua_getfield(rL, -1, script)) {
+        lua_pop(rL, 1);
+        if (!rmlui_load_script(rL, script)) {
+            lua_pop(rL, 1);
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        lua_pushvalue(rL, -1);
+        lua_setfield(rL, -3, script);
+    }
+    Rml::Lua::Interpreter::ExecuteCall(0, 0);
+    lua_pop(rL, 1);
+    lua_pushboolean(L, 1);
     return 1;
 }
 
@@ -204,7 +193,9 @@ LUAMOD_API int
     luaopen_rmlui(lua_State* L) {
     init_interface(L);
     luaL_Reg l[] = {
-        { "init",           linit},
+        { "init",               lrmlui_init },
+        { "shutdown",           lrmlui_shutdown },
+        { "run_script",         lrmlui_run_script },
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);
