@@ -158,25 +158,26 @@ local function update_point_gizmo()
 end
 
 local function update_spot_gizmo()
-    local radian = ilight.radian(m.current_light)
     local range = ilight.range(m.current_light)
+    local radian = ilight.radian(m.current_light)
+    local radius = range * math.tan(radian * 0.5)
     if #m.spot.eid == 0 then
         local root = m.spot.root
-        local c0 = geo_utils.create_dynamic_circle(radian, gizmo_const.ROTATE_SLICES, {t = {0, 0, range}}, "light gizmo circle")
+        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {t = {0, 0, range}}, "light gizmo circle")
         init_entity(c0, root)
-        local line0 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, radian, range}, "line")
+        local line0 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, radius, range}, "line")
         init_entity(line0, root)
-        local line1 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {radian, 0, range}, "line")
+        local line1 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {radius, 0, range}, "line")
         init_entity(line1, root)
-        local line2 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, -radian, range}, "line")
+        local line2 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, -radius, range}, "line")
         init_entity(line2, root)
-        local line3 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {-radian, 0, range}, "line")
+        local line3 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {-radius, 0, range}, "line")
         init_entity(line3, root)
         local line4 = geo_utils.create_dynamic_line(nil, {0, 0, 0}, {0, 0, range}, "line")
         init_entity(line4, root)
         m.spot.eid = {line0, line1, line2, line3, line4, c0}
     else
-        update_circle_vb(m.spot.eid[6], radian)
+        update_circle_vb(m.spot.eid[6], radius)
         iom.set_position(m.spot.eid[6], {0, 0, range})
 
         local function update_vb(eid, tp2)
@@ -188,10 +189,10 @@ local function update_spot_gizmo()
             local vbdesc = rc.vb
             bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb));
         end
-        update_vb(m.spot.eid[1], {0, radian, range})
-        update_vb(m.spot.eid[2], {radian, 0, range})
-        update_vb(m.spot.eid[3], {0, -radian, range})
-        update_vb(m.spot.eid[4], {-radian, 0, range})
+        update_vb(m.spot.eid[1], {0, radius, range})
+        update_vb(m.spot.eid[2], {radius, 0, range})
+        update_vb(m.spot.eid[3], {0, -radius, range})
+        update_vb(m.spot.eid[4], {-radius, 0, range})
         update_vb(m.spot.eid[5], {0, 0, range})
     end
 end

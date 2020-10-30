@@ -193,7 +193,7 @@ function m:create(what)
             color = {1, 1, 1, 1},
             intensity = 2,
             range = 1,
-            radian = 0.5
+            radian = math.rad(45)
         })
         local new_light = newlight[1]
         self.entities[#self.entities+1] = new_light

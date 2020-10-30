@@ -24,7 +24,7 @@ local light_ui_data = {
     color = {1,1,1,1},
     intensity = {2, speed = 0.1},
     range = {1, speed = 0.1},
-    radian = {0.5, speed = 0.1}
+    degree = {45, speed = 0.1}
 }
 
 local camera_ui_data = {
@@ -64,7 +64,7 @@ local function update_ui_data(eid)
         local value = math3d.totable(ilight.intensity(eid))
         light_ui_data.intensity[1] = value[1]
         light_ui_data.range[1] = ilight.range(eid)
-        light_ui_data.radian[1] = ilight.radian(eid)
+        light_ui_data.degree[1] = math.deg(ilight.radian(eid))
         local color = math3d.totable(ilight.color(eid))
         light_ui_data.color[1] = color[1]
         light_ui_data.color[2] = color[2]
@@ -185,8 +185,8 @@ local function show_light_property(eid)
         if world[eid].light_type == "spot" then
             imgui.widget.Text("radian")
             imgui.cursor.SameLine(uiconfig.PropertyIndent)
-            if imgui.widget.DragFloat("##radian", light_ui_data.radian) then
-                ilight.set_radian(eid, light_ui_data.radian[1])
+            if imgui.widget.DragFloat("##radian", light_ui_data.degree) then
+                ilight.set_radian(eid, math.rad(light_ui_data.degree[1]))
                 light_gizmo.update_gizmo()
             end
         end
