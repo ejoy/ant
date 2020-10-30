@@ -87,13 +87,13 @@ local function add_point_light_properties()
 			local e = world[leid]
 			local lt = e.light_type
 			if lt == "point" or lt == "spot" then
-				system_properties.u_light_color[numlight].v = e.color
+				system_properties.u_light_color[numlight].v = ilight.color(leid)
 				local param = {0.0, 0.0, 0.0, 0.0}
 				local lightdir = system_properties.u_light_dir[numlight]
 				if lt == "spot" then
 					lightdir.v = iom.get_direction(leid)
 					param[1] = 2.0
-					local radian = e.radian * 0.5
+					local radian = ilight.radian(leid) * 0.5
 					local outer_radian = radian * 1.1
 					param[2], param[3] = math.cos(radian), math.cos(outer_radian)
 				else

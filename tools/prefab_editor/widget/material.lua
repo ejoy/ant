@@ -80,7 +80,7 @@ local texture_used_idx = {
     ["s_emissive"] = 4
 }
 
-local function OnDragDopTextureOrImage(eid, pro, tp, md)
+local function on_dragdrop_texture(eid, pro, tp, md)
     if imgui.widget.BeginDragDropTarget() then
         local key = pro.label
         local payload = imgui.widget.AcceptDragDropPayload("DragFile")
@@ -127,7 +127,7 @@ local edit_sampler = function(eid, md)
         if imgui.widget.InputText("##" .. key, pro[1]) then
         end
         imgui.cursor.PopItemWidth()
-        OnDragDopTextureOrImage(eid, pro, tp, md)
+        on_dragdrop_texture(eid, pro, tp, md)
         imgui.cursor.Indent()
         imgui.cursor.Columns(2, key, false)
         imgui.cursor.SetColumnOffset(2, uiconfig.PropertyIndent)
@@ -143,7 +143,7 @@ local edit_sampler = function(eid, md)
         if imgui.widget.InputText("##" .. tp.tdata.path .. idx, pro[2]) then
         end
         imgui.cursor.PopItemWidth()
-        OnDragDopTextureOrImage(eid, pro, tp, md)
+        on_dragdrop_texture(eid, pro, tp, md)
 
         local sampler = tp.tdata.sampler
         local function show_filter(ft)

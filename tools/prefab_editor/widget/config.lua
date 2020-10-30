@@ -7,6 +7,7 @@ local m = {
     PropertyIndent      = 120,
     PropertyIndent2     = 270,
     PropertyImageSize   = 64,
-    ComboWidth          = 60
+    ComboWidth          = 60,
+    LockVisibleWidth    = 60
 }
 return m

@@ -179,8 +179,8 @@ function m.show()
         end
         imgui.cursor.Separator()
         for i, child in ipairs(hierarchy.root.children) do
-            imgui.cursor.Columns(2, "SceneColumns", true)
-            imgui.cursor.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - 60)
+            imgui.cursor.Columns(2, "SceneColumns", false)
+            imgui.cursor.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - uiconfig.LockVisibleWidth)
             source_eid = nil
             target_eid = nil
             show_scene_node(child)
