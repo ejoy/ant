@@ -1,5 +1,4 @@
 #include "render.h"
-#include "texture.h"
 
 #include <RmlUi/Core.h>
 #include <cassert>
@@ -15,74 +14,17 @@ Renderer::Renderer(const rml_context* context)
     BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
 }
 
-static uint16_t
-update_font_properties(const rml_context *context, const TexData *td){
-    struct fonteffect_data {
-        union maskdata {
-            struct {
-                float mask, range;
-                float effect_mask, effect_range;
-            };
-            float data[4];
-        };
-        maskdata md;
-        float color[4];
-    };
-    const uint16_t texid = td->GetTexID();
-    auto update_font_data = [texid](auto font, const fonteffect_data &data){
-        auto tex_uniform_idx = font->find_uniform("s_tex");
-        BGFX(set_texture)(0, { tex_uniform_idx }, {texid}, UINT32_MAX);
-
-        auto mask_uniform_idx = font->find_uniform("u_mask");
-        BGFX(set_uniform)({mask_uniform_idx}, data.md.data, 1);
-
-        auto color_uniform_idx = font->find_uniform("u_effect_color");
-        if (color_uniform_idx != UINT16_MAX){
-            BGFX(set_uniform)({color_uniform_idx}, data.color, 1);
-        }
-    };
-
-    auto find_font = [context, texid](const TexData *td, fonteffect_data &ef_data){
-        const auto tf = td->GetTextFlags();
-        ef_data.md.mask = context->shader.font_mask;
-        ef_data.md.range = context->shader.font_range;
-        auto tocolor = [](const Rml::Colourb &c, float *cc){
-            cc[0] = c.red   / 256.f;
-            cc[1] = c.green / 256.f;
-            cc[2] = c.blue  / 256.f;
-            cc[3] = c.alpha / 256.f;
-        };
-        if (TDF_FontEffect_Outline & tf){
-            auto outline = static_cast<const OutlineData*>(td);
-            #define MAX_FONT_GLYPH_SIZE 32
-            float ratio = float(outline->width) / MAX_FONT_GLYPH_SIZE;
-            ef_data.md.effect_mask = context->shader.font_mask + ratio;
-            ef_data.md.effect_range = context->shader.font_range;
-
-            tocolor(outline->color, ef_data.color);
-            return &(context->shader.font_outline);
-        } else if (TDF_FontEffect_Shadow & tf){
-            
-        } else if (TDF_FontEffect_Glow & tf) {
-            
-        }
-
-        return &context->shader.font;
-    };
-
-    fonteffect_data fedata;
-    auto font = find_font(td, fedata);
-    update_font_data(font, fedata);
-
-    return uint16_t(font->prog);
+static inline SDFFontEffect*
+FE(Rml::TextureHandle th){
+    return reinterpret_cast<SDFFontEffect*>(th);
 }
 
 
 static bool
-is_font_tex(Rml::TextureHandle th) { 
-    if (th == 0)
+is_font_tex(SDFFontEffect *fe) { 
+    if (fe == nullptr)
         return false;
-    return (TexData::ToTexData(th)->GetTextFlags() & TDF_FontTex) != 0;
+    return (fe->GetType() & FE_FontTex) != 0;
 }
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
@@ -125,14 +67,29 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     BGFX(set_transient_index_buffer)(&tib, 0, num_indices);
     BGFX(set_state)(RENDER_STATE, 0);
   
-    if (is_font_tex(texture)) {
-        auto prog = update_font_properties(mcontext, TexData::ToTexData(texture));
+    auto fe = FE(texture);
+    if (is_font_tex(fe)) {
+        PropertyMap properties;
+        uint16_t prog = UINT16_MAX;
+        fe->GetProperties(mcontext->shader, properties, prog);
+
+        for (auto it : properties){
+            const auto& v = it.second;
+            assert(v.uniform_idx != UINT16_MAX);
+
+            const Rml::String tex_property_name = "s_tex";
+            if (tex_property_name == it.first){
+                BGFX(set_texture)(v.stage, {v.uniform_idx}, {v.texid}, UINT16_MAX);
+            } else {
+                BGFX(set_uniform)({v.uniform_idx}, v.value, 1);
+            }
+        }
         BGFX(submit)(mcontext->viewid, {prog}, 0, BGFX_DISCARD_ALL);
     } else {
         const auto &si = mcontext->shader.image;
-        const uint16_t id = texture == 0 ? uint16_t(mcontext->default_tex.texid) : TexData::ToTexData(texture)->GetTexID();
+        const uint16_t id = fe == nullptr ? uint16_t(mcontext->default_tex.texid) : fe->GetTexID();
         auto texuniformidx = si.find_uniform("s_tex");
-        assert(texuniformidx != UINT16_MAX);    
+        assert(texuniformidx != UINT16_MAX);
         BGFX(set_texture)(0, {texuniformidx}, {id}, UINT32_MAX);
         BGFX(submit)(mcontext->viewid, { (uint16_t)si.prog }, 0, BGFX_DISCARD_ALL);
     }
@@ -168,7 +125,7 @@ DefaultSamplerFlag(){
 bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& texture_dimensions, const Rml::String& source){
     auto ifont = static_cast<FontInterface*>(Rml::GetFontEngineInterface());
     if (ifont->IsFontTexResource(source)){
-        texture_handle = (Rml::TextureHandle)ifont->GetFontTexHandle(source, texture_dimensions);
+        texture_handle = ifont->GetFontTexHandle(source, texture_dimensions);
         return true;
     }
     Rml::FileInterface* ifile = Rml::GetFileInterface();
@@ -189,7 +146,7 @@ bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& te
 	if (th.idx != UINT16_MAX){
 		texture_dimensions.x = (int)info.width;
 		texture_dimensions.y = (int)info.height;
-        texture_handle = Rml::TextureHandle(new TexData(th.idx));
+        texture_handle = Rml::TextureHandle(new SDFFontEffectDefault(th.idx, true));
         return true;
 	}
 	return false;
@@ -202,7 +159,7 @@ bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::by
 	memcpy(mem->data, source, bufsize);
 	auto thidx = BGFX(create_texture_2d)(source_dimensions.x, source_dimensions.y, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, DefaultSamplerFlag(), mem).idx;
     if (thidx != UINT16_MAX){
-        texture_handle = Rml::TextureHandle(new TexData(thidx));
+        texture_handle = Rml::TextureHandle(new SDFFontEffectDefault(thidx, true));
         return true;
     }
 
@@ -210,7 +167,7 @@ bool Renderer::GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::by
 }
 
 bool Renderer::UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer){
-    const bgfx_texture_handle_t th = {TexData::ToTexData(texhandle)->GetTexID()};
+    const bgfx_texture_handle_t th = {FE(texhandle)->GetTexID()};
 
     if (!BGFX_HANDLE_IS_VALID(th))
         return false;
@@ -222,9 +179,9 @@ bool Renderer::UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8
 }
 
 void Renderer::ReleaseTexture(Rml::TextureHandle texhandle) {
-    if (!is_font_tex(texhandle)){
-        auto td = TexData::ToTexData(texhandle);
-        BGFX(destroy_texture)({td->GetTexID()});
-        delete td;
+    auto fe = FE(texhandle);
+    if (!is_font_tex(fe)){
+        BGFX(destroy_texture)({fe->GetTexID()});
+        delete fe;
     }
 }

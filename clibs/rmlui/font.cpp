@@ -12,30 +12,28 @@ extern "C"{
 #include <cstring>
 
 //static
-const Rml::String FontInterface::FONT_TEX_NAME("?FONT_TEX");
-
 void FontInterface::Init(){
     RegisterFontEffectInstancer();
 }
 
 void FontInterface::RegisterFontEffectInstancer(){
-    Rml::Factory::RegisterFontEffectInstancer("outline", mFEIMgr.Create("outline"));
+    Rml::Factory::RegisterFontEffectInstancer("outline", mFEIMgr.Create("outline", mcontext));
     //Rml::Factory::RegisterFontEffectInstancer("shadow", mFEIMgr.Create("shadow"));
 }
 
 bool FontInterface::IsFontTexResource(const Rml::String &sourcename) const{
-    return Rml::String::npos != sourcename.find(FONT_TEX_NAME);
+    return SDFFontEffect::IsFontTexResource(sourcename);
 }
 
-TexData* FontInterface::GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const{
+Rml::TextureHandle FontInterface::GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const{
     auto itfound = mFontResources.find(sourcename);
     if (itfound == mFontResources.end()){
-        return nullptr;
+        return Rml::TextureHandle(0);
     }
 
     texture_dimensions.x = mcontext->font_tex.width;
     texture_dimensions.y = mcontext->font_tex.height;
-    return itfound->second.data;
+    return Rml::TextureHandle(itfound->second.fe);
 }
 
 bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face){
@@ -72,16 +70,10 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
 
 Rml::FontEffectsHandle FontInterface::PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects){
     if (font_effects.empty())
-        return Rml::FontEffectsHandle(0);
-    
+        return Rml::FontEffectsHandle(&mDefaultFontEffect);
+
     if (font_effects.size() == 1){
-        auto fe = font_effects[0];
-        auto sdffe = static_cast<const SDFFontEffect*>(fe.get());
-        if (TDF_FontEffect_Outline == sdffe->GetType()){
-            return (Rml::FontEffectsHandle)sdffe;
-        } else {
-            assert(false && "unkonwn font effect type");
-        }
+        return Rml::FontEffectsHandle(font_effects[0].get());
     }
     assert(false && "not support more than one font effect in single text");
     return 0;
@@ -102,7 +94,7 @@ FontInterface::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *
         uint8_t *buffer = new uint8_t[bufsize];
         memset(buffer, 0, bufsize);
         if (NULL == font_manager_update(mcontext->font_mgr, face.fontid, codepoint, &og, buffer)){
-            TexData t(mcontext->font_tex.texid);
+            SDFFontEffectDefault t(mcontext->font_tex.texid);
             ri->UpdateTexture(Rml::TextureHandle(&t), Rect{og.u, og.v, og.w, og.h}, buffer);
         } else {
             delete []buffer;
@@ -165,16 +157,13 @@ int FontInterface::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String&
 const FontInterface::FontResource& 
 FontInterface::FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle){
     auto sdffe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
-    Rml::String key = sdffe ? sdffe->GenerateKey(FONT_TEX_NAME) : FontInterface::FONT_TEX_NAME;
+    Rml::String key = sdffe->GenerateKey();
 
     auto itfound = mFontResources.find(key);
 	if (itfound == mFontResources.end()){
         auto &fr = mFontResources[key];
         fr.tex.Set(key);
-        const uint16_t texid = uint16_t(mcontext->font_tex.texid);
-        fr.data = sdffe ? sdffe->CreateTexData(texid) : new TexData(texid);
-        itfound = mFontResources.find(key);
-
+        fr.fe = sdffe;
         return fr;
     }
 

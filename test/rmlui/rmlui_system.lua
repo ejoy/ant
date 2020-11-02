@@ -53,8 +53,8 @@ local function init_rmlui_data()
         file_dict = file_dict,
         viewid = vid,
         shader = {
-            font_mask = 0.68,
-            font_range = 0.18,
+            font_mask = 0.6,
+            font_range = 0.05,
             font = assetmgr.load_fx {
                 fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
                 vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",

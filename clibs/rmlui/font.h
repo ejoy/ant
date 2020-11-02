@@ -1,5 +1,4 @@
 #pragma once
-#include "texture.h"
 #include "context.h"
 #include "fonteffect.h"
 
@@ -7,6 +6,7 @@
 #include "RmlUi/Core/Texture.h"
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 
 struct FontFace{
 	int	fontid;
@@ -15,13 +15,15 @@ struct FontFace{
 
 class FontInterface : public Rml::FontEngineInterface {
 public:
-	FontInterface(const rml_context *context) : mcontext(context){
-	}
+	FontInterface(const rml_context *context) 
+		: mcontext(context)
+		, mDefaultFontEffect(uint16_t(context->font_tex.texid))
+		{}
 	virtual ~FontInterface() = default;
 public:
 	void Init();
 	bool IsFontTexResource(const Rml::String &sourcename) const;
-	TexData* GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const;
+	Rml::TextureHandle GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const;
 public:
 	virtual bool LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face) override;
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
@@ -47,17 +49,9 @@ private:
 
 	struct FontResource {
 		Rml::Texture tex;
-		TexData*	data = nullptr;
-		~FontResource(){
-			if (data){
-				delete data;
-				data = nullptr;
-			}
-		}
+		SDFFontEffect *fe;
 	};
 	const FontResource& FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle);
-public:
-	static const Rml::String FONT_TEX_NAME;
 private:
     const rml_context* mcontext;
 	struct fontinfo {
@@ -71,4 +65,6 @@ private:
 
 	std::unordered_map<Rml::String, FontResource>	mFontResources;
 	FontEffectInstancerManager	mFEIMgr;
+
+	SDFFontEffectDefault mDefaultFontEffect;
 };
