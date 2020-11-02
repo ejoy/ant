@@ -137,121 +137,123 @@ namespace lua_struct {
     /// unpack
     ///
     template <typename T>
-    void unpack(lua_State* L, T& v, typename std::enable_if<!std::is_integral<T>::value>::type* = 0);
+    void unpack(lua_State* L, int idx, T& v, typename std::enable_if<!std::is_integral<T>::value>::type* = 0);
 
     template <typename T>
-    void unpack(lua_State* L, T& v, typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
+    void unpack(lua_State* L, int idx, T& v, typename std::enable_if<std::is_integral<T>::value>::type* = 0) {
         static_assert(sizeof(T) <= sizeof(lua_Integer));
-        v = checklimit<T>(L, checkinteger(L, -1));
+        v = checklimit<T>(L, checkinteger(L, idx));
     }
 
     template <>
-    void unpack<float>(lua_State* L, float& v, void*) {
-        v = checklimit<float>(L, checknumber(L, -1));
+    void unpack<float>(lua_State* L, int idx, float& v, void*) {
+        v = checklimit<float>(L, checknumber(L, idx));
     }
 
     template <>
-    void unpack<double>(lua_State* L, double& v, void*) {
-        v = (double)checknumber(L, -1);
+    void unpack<double>(lua_State* L, int idx, double& v, void*) {
+        v = (double)checknumber(L, idx);
     }
 
     template <>
-    void unpack<bool>(lua_State* L, bool& v, void*) {
-        v = !!lua_toboolean(L, -1);
+    void unpack<bool>(lua_State* L, int idx, bool& v, void*) {
+        v = !!lua_toboolean(L, idx);
     }
 
     template <>
-    void unpack<std::string>(lua_State* L, std::string& v, void*) {
+    void unpack<std::string>(lua_State* L, int idx, std::string& v, void*) {
         size_t sz = 0;
-        const char* str = checklstring(L, -1, &sz);
+        const char* str = checklstring(L, idx, &sz);
         v.assign(str, sz);
     }
 
     template <typename K, typename V>
-    void unpack(lua_State* L, std::map<K, V>& v) {
-        checktype(L, -1, LUA_TTABLE);
+    void unpack(lua_State* L, int idx, std::map<K, V>& v) {
+        idx = lua_absindex(L, idx);
+        checktype(L, idx, LUA_TTABLE);
         v.clear();
         lua_pushnil(L);
-        while (lua_next(L, -2)) {
+        while (lua_next(L, idx)) {
             symbol::guard guard("*"); //TODO
             std::pair<K, V> pair;
-            unpack(L, pair.second);
+            unpack(L, -1, pair.second);
             lua_pop(L, 1);
-            unpack(L, pair.first);
+            unpack(L, -1, pair.first);
             v.emplace(std::move(pair));
         }
     }
 
     template <typename K, typename V>
-    void unpack(lua_State* L, std::unordered_map<K, V>& v) {
-        checktype(L, -1, LUA_TTABLE);
+    void unpack(lua_State* L, int idx, std::unordered_map<K, V>& v) {
+        idx = lua_absindex(L, idx);
+        checktype(L, idx, LUA_TTABLE);
         v.clear();
         lua_pushnil(L);
-        while (lua_next(L, -2)) {
+        while (lua_next(L, idx)) {
             symbol::guard guard("*"); //TODO
             std::pair<K, V> pair;
-            unpack(L, pair.second);
+            unpack(L, -1, pair.second);
             lua_pop(L, 1);
-            unpack(L, pair.first);
+            unpack(L, -1, pair.first);
             v.emplace(std::move(pair));
         }
     }
 
     template <typename T>
-    void unpack(lua_State* L, std::vector<T>& v) {
-        checktype(L, -1, LUA_TTABLE);
-        size_t n = (size_t)luaL_len(L, -1);
+    void unpack(lua_State* L, int idx, std::vector<T>& v) {
+        checktype(L, idx, LUA_TTABLE);
+        size_t n = (size_t)luaL_len(L, idx);
         v.resize(n);
         for (size_t i = 0; i < n; ++i) {
             symbol::guard guard(i);
-            lua_geti(L, -1, (lua_Integer)(i + 1));
-            unpack(L, v[i]);
+            lua_geti(L, idx, (lua_Integer)(i + 1));
+            unpack(L, -1, v[i]);
             lua_pop(L, 1);
         }
     }
 
     template <typename T, size_t N>
-    void unpack(lua_State* L, std::array<T, N>& v) {
-        checktype(L, -1, LUA_TTABLE);
+    void unpack(lua_State* L, int idx, std::array<T, N>& v) {
+        checktype(L, idx, LUA_TTABLE);
         for (size_t i = 0; i < N; ++i) {
             symbol::guard guard(i);
-            lua_geti(L, -1, (lua_Integer)(i + 1));
-            unpack(L, v[i]);
+            lua_geti(L, idx, (lua_Integer)(i + 1));
+            unpack(L, -1, v[i]);
             lua_pop(L, 1);
         }
     }
 
     template <typename T, size_t N>
-    void unpack(lua_State* L, T (&v)[N]) {
-        checktype(L, -1, LUA_TTABLE);
+    void unpack(lua_State* L, int idx, T(&v)[N]) {
+        checktype(L, idx, LUA_TTABLE);
         for (size_t i = 0; i < N; ++i) {
             symbol::guard guard(i);
-            lua_geti(L, -1, (lua_Integer)(i + 1));
-            unpack(L, v[i]);
+            lua_geti(L, idx, (lua_Integer)(i + 1));
+            unpack(L, -1, v[i]);
             lua_pop(L, 1);
         }
     }
 
     template <typename T>
-    void unpack(lua_State* L, T* & v) {
-        v = (T*)checkuserdata(L, -1);
+    void unpack(lua_State* L, int idx, T*& v) {
+        v = (T*)checkuserdata(L, idx);
     }
 
     template <typename T>
-    void unpack(lua_State* L, T const* & v) {
-        v = (T const*)checkuserdata(L, -1);
+    void unpack(lua_State* L, int idx, T const*& v) {
+        v = (T const*)checkuserdata(L, idx);
     }
 
     template <>
-    void unpack<char>(lua_State* L, char const* & v) {
-        v = checkstring(L, -1);
+    void unpack<char>(lua_State* L, int idx, char const*& v) {
+        v = checkstring(L, idx);
     }
 
     template <typename T>
-    void unpack_field(lua_State* L, const char* name, T& v) {
+    void unpack_field(lua_State* L, int idx, const char* name, T& v) {
         symbol::guard guard(name);
-        lua_getfield(L, -1, name);
-        unpack(L, v);
+        lua_getfield(L, idx, name);
+        unpack(L, -1, v);
         lua_pop(L, 1);
     }
 
@@ -279,7 +281,7 @@ namespace lua_struct {
 
     template <>
     void pack<bool>(lua_State* L, bool const& v, void*) {
-        lua_pushboolean(L, v? 1: 0);
+        lua_pushboolean(L, v ? 1 : 0);
     }
 
     template <>
@@ -290,7 +292,7 @@ namespace lua_struct {
     template <typename K, typename V>
     void pack(lua_State* L, std::map<K, V> const& v) {
         lua_newtable(L);
-        for (auto const& pair: v) {
+        for (auto const& pair : v) {
             pack(L, pair.first);
             pack(L, pair.second);
             lua_settable(L, -3);
@@ -300,7 +302,7 @@ namespace lua_struct {
     template <typename K, typename V>
     void pack(lua_State* L, std::unordered_map<K, V> const& v) {
         lua_newtable(L);
-        for (auto const& pair: v) {
+        for (auto const& pair : v) {
             pack(L, pair.first);
             pack(L, pair.second);
             lua_settable(L, -3);
@@ -359,26 +361,26 @@ namespace lua_struct {
 #define LUA2STRUCT_EXPAND(args) args
 #define LUA2STRUCT_PARAMS_COUNT(TAG,_16,_15,_14,_13,_12,_11,_10,_9,_8,_7,_6,_5,_4,_3,_2,_1,N,...) TAG##N
 
-#define LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME) unpack_field((L), #NAME, (V).NAME)
-#define LUA2STRUCT_UNPACK_FIELD_1(L, V, NAME) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME)
-#define LUA2STRUCT_UNPACK_FIELD_2(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_1(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_3(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_2(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_4(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_3(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_5(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_4(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_6(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_5(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_7(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_6(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_8(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_7(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_9(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_8(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_10(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_9(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_11(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_10(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_12(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_11(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_13(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_12(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_14(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_13(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_15(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_14(L, V, __VA_ARGS__))
-#define LUA2STRUCT_UNPACK_FIELD_16(L, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_15(L, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME) unpack_field((L), (IDX), #NAME, (V).NAME)
+#define LUA2STRUCT_UNPACK_FIELD_1(L, IDX, V, NAME) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME)
+#define LUA2STRUCT_UNPACK_FIELD_2(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_1(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_3(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_2(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_4(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_3(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_5(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_4(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_6(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_5(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_7(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_6(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_8(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_7(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_9(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_8(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_10(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_9(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_11(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_10(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_12(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_11(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_13(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_12(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_14(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_13(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_15(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_14(L, IDX, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK_FIELD_16(L, IDX, V, NAME, ...) LUA2STRUCT_UNPACK_FIELD_0(L, IDX, V, NAME); LUA2STRUCT_EXPAND(LUA2STRUCT_UNPACK_FIELD_15(L, IDX, V, __VA_ARGS__))
 
 
-#define LUA2STRUCT_UNPACK(L, V, ...) LUA2STRUCT_EXPAND(LUA2STRUCT_PARAMS_COUNT(LUA2STRUCT_UNPACK_FIELD, __VA_ARGS__,_16,_15,_14,_13,_12,_11,_10,_9,_8,_7,_6,_5,_4,_3,_2,_1)(L, V, __VA_ARGS__))
+#define LUA2STRUCT_UNPACK(L, IDX, V, ...) LUA2STRUCT_EXPAND(LUA2STRUCT_PARAMS_COUNT(LUA2STRUCT_UNPACK_FIELD, __VA_ARGS__,_16,_15,_14,_13,_12,_11,_10,_9,_8,_7,_6,_5,_4,_3,_2,_1)(L, IDX, V, __VA_ARGS__))
 
 
 #define LUA2STRUCT_PACK_FIELD_0(L, V, NAME) pack_field((L), #NAME, (V).NAME)
@@ -405,9 +407,9 @@ namespace lua_struct {
 #define LUA2STRUCT(STRUCT, ...) \
     namespace lua_struct { \
         template <> \
-        void unpack<STRUCT>(lua_State* L, STRUCT& v, void*) { \
-            luaL_checktype(L, -1, LUA_TTABLE); \
-            LUA2STRUCT_UNPACK(L, v, __VA_ARGS__); \
+        void unpack<STRUCT>(lua_State* L, int idx, STRUCT& v, void*) { \
+            luaL_checktype(L, idx, LUA_TTABLE); \
+            LUA2STRUCT_UNPACK(L, idx, v, __VA_ARGS__); \
         }\
         template <> \
         void pack<STRUCT>(lua_State* L, STRUCT const& v, void*) { \
