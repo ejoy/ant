@@ -26,7 +26,7 @@ data:
     scene_entity:true
     font:
         file: /pkg/ant.resources.binary/fonts/stxingka.ttf
-        #family: Delicious
+        family: 华文行楷
         #style: Blod#|Italic #not support rightnow
         size: 42
     show_config:
