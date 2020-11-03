@@ -35,6 +35,9 @@
     <ClCompile Include="..\..\clibs\rmlui\fonteffect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\rmlui\pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\rmlui\file.h">
@@ -58,6 +61,7 @@
     <ClInclude Include="..\..\clibs\rmlui\fonteffect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\clibs\rmlui\pch.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

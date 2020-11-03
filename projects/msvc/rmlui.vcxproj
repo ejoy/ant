@@ -53,7 +53,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
@@ -62,6 +62,7 @@
       <AdditionalIncludeDirectories>../../clibs;../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/RmlUi/Include;../../3rd/bgfx/include;../../3rd/bx/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -73,7 +74,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -84,6 +85,7 @@
       <AdditionalIncludeDirectories>../../clibs;../../clibs/lua;../../3rd/bgfx/3rdparty;../../3rd/RmlUi/Include;../../3rd/bgfx/include;../../3rd/bx/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -111,6 +113,10 @@
     <ClCompile Include="..\..\clibs\rmlui\font.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\fonteffect.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\luarmlui.cpp" />
+    <ClCompile Include="..\..\clibs\rmlui\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\..\clibs\rmlui\render.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\system.cpp" />
   </ItemGroup>
@@ -120,6 +126,7 @@
     <ClInclude Include="..\..\clibs\rmlui\font.h" />
     <ClInclude Include="..\..\clibs\rmlui\fonteffect.h" />
     <ClInclude Include="..\..\clibs\rmlui\lua2struct.h" />
+    <ClInclude Include="..\..\clibs\rmlui\pch.h" />
     <ClInclude Include="..\..\clibs\rmlui\render.h" />
     <ClInclude Include="..\..\clibs\rmlui\system.h" />
   </ItemGroup>

@@ -1,3 +1,4 @@
+#include "pch.h"
 #define LUA_LIB 1
 #include "lua.hpp"
 #include "render.h"
