@@ -18,6 +18,7 @@ function em_trans.process_entity(e)
     if e.simplemesh == nil then
         e.simplemesh = {
             vb = {start=0,num=0},
+            ib = {start=0, num=0}
         }
     end
 end
