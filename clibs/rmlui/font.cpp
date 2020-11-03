@@ -193,6 +193,8 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
     const size_t fontidx = static_cast<size_t>(handle)-1;
     const auto&face = mFontFaces[fontidx];
 
+    const Rml::Vector2f fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
+
 #define FIX_POINT 8
     int16_t x= int16_t(position.x * FIX_POINT), y= int16_t(position.y * FIX_POINT);
 	for (auto it_char = Rml::StringIteratorU8(string); it_char; ++it_char)
@@ -221,8 +223,8 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 			Rml::Vector2f(x0, y0) / 65536.f,
 			Rml::Vector2f(g.w * FIX_POINT, g.h * FIX_POINT) / 65536.f,
 			colour,
-			Rml::Vector2f(u0, v0) / FONT_MANAGER_TEXSIZE,
-            Rml::Vector2f(u1, v1) / FONT_MANAGER_TEXSIZE,
+			Rml::Vector2f(u0, v0) * fonttexel,
+            Rml::Vector2f(u1, v1) * fonttexel,
 			(int)vertices.size() - 4
 		);
 
