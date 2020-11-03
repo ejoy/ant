@@ -22,30 +22,8 @@ local irq       = world:interface "ant.render|irenderqueue"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-local script_dir = fs.path "/pkg/ant.test.rmlui/ui"
-local resource_dir = fs.path "/pkg/ant.resources.binary/ui/test"
-local OpenDebugger = false
-
 local function init_rmlui_data()
     local ft_w, ft_h = ifont.font_tex_dim()
-
-    local function list_all_files(root, files)
-        local function list_files(path)
-            for p in path:list_directory() do
-                if fs.is_directory(p) then
-                    list_files(p)
-                elseif fs.is_regular_file(p) then
-                    local key = p:string():gsub(root:string() .. "/", "")
-                    files[key] = p:localpath():string()
-                end
-            end
-        end
-        list_files(root)
-    end
-
-    local file_dict = {}
-    list_all_files(resource_dir, file_dict)
-    list_all_files(script_dir, file_dict)
 
     local mq_eid = world:singleton_entity_id "main_queue"
     local  layouhandle = declmgr.get "p2|c40niu|t20".handle
@@ -55,7 +33,6 @@ local function init_rmlui_data()
 
     local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
     return {
-        file_dict = file_dict,
         viewid = vid,
         shader = {
             font_mask = 0.6,
@@ -98,51 +75,60 @@ local function init_rmlui_data()
     }
 end
 
-setmetatable(rmlui, {__index = function(self,method)
-    local f = function(_,...)
-        channel:push(method, ...)
+local function preload_dir(dir)
+    dir = fs.path(dir)
+    local file_dict = {}
+    local function list_files(path)
+        for p in path:list_directory() do
+            if fs.is_directory(p) then
+                list_files(p)
+            elseif fs.is_regular_file(p) then
+                if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
+                    fontmgr.import(p)
+                end
+                local key = fs.relative(p, dir):string()
+                file_dict[key] = p:localpath():string()
+            end
+        end
     end
-    self[method] = f
-    return f
-end})
+    list_files(dir)
+    rmlui.preload_file(file_dict)
+end
 
 function rmlui_sys:post_init()
     local data = init_rmlui_data()
     rmlui.init(data)
-    for f in pairs(data.file_dict) do
-        local ext = f:match ".+%.([%w_]+)$":lower()
-        if ext == "otf" or ext == "ttf" or ext == "ttc" then
-            fontmgr.import(resource_dir / f)
-        end
-    end
-    local vr = irq.view_rect(world:singleton_entity_id "main_queue")
-    rmlui:CreateContext("main", vr.w, vr.h)
-    rmlui:LoadDocument("main", "tutorial.rml")
-    rmlui:Debugger(OpenDebugger)
+
+    preload_dir "/pkg/ant.rmlui/ui"
+    preload_dir "/pkg/ant.resources.binary/ui/test"
 end
 
 local eventMouse = world:sub {"mouse"}
-local eventKeyboard = world:sub {"keyboard", "F8"}
 local mouseId = { LEFT = 0, RIGHT = 1, MIDDLE = 2}
 function rmlui_sys:ui_update()
     for _,what,state,x,y in eventMouse:unpack() do
         if state == "MOVE" then
-            rmlui:MouseMove(x, y)
+            channel("MouseMove", x, y)
         elseif state == "DOWN" then
-            rmlui:MouseDown(mouseId[what])
+            channel("MouseDown", mouseId[what])
         elseif state == "UP" then
-            rmlui:MouseUp(mouseId[what])
+            channel("MouseUp", mouseId[what])
         end
     end
-	for _,_,press in eventKeyboard:unpack() do
-        if press == 1 then
-            OpenDebugger = not OpenDebugger
-            rmlui:Debugger(OpenDebugger)
-		end
-	end
     rmlui.run_script "rmlui_update.lua"
 end
 
 function rmlui_sys:exit()
     rmlui.shutdown()
+end
+
+
+local iRmlUi = ecs.interface "rmlui"
+
+function iRmlUi.preload_dir(dir)
+    preload_dir(dir)
+end
+
+function iRmlUi.message(...)
+    channel( ...)
 end

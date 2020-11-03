@@ -1,5 +1,6 @@
 import "@ant.render"
 import "@ant.terrain"
+import "@ant.asset"
 
 interface "terrain"
     .implement "terrain_system.lua"
