@@ -18,7 +18,8 @@ void FontInterface::Init(){
 
 void FontInterface::RegisterFontEffectInstancer(){
     Rml::Factory::RegisterFontEffectInstancer("outline", mFEIMgr.Create("outline", mcontext));
-    //Rml::Factory::RegisterFontEffectInstancer("shadow", mFEIMgr.Create("shadow"));
+    Rml::Factory::RegisterFontEffectInstancer("shadow", mFEIMgr.Create("shadow", mcontext));
+    Rml::Factory::RegisterFontEffectInstancer("glow", mFEIMgr.Create("glow", mcontext));
 }
 
 bool FontInterface::IsFontTexResource(const Rml::String &sourcename) const{
