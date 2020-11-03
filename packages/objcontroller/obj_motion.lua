@@ -35,7 +35,7 @@ function iobj_motion.set_direction(eid, dir)
 end
 
 function iobj_motion.srt(eid)
-    return world[eid]._rendercache.srt
+    if world[eid]._rendercache then return world[eid]._rendercache.srt end
 end
 
 function iobj_motion.set_srt(eid, srt)
