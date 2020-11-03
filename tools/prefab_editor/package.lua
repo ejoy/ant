@@ -14,8 +14,7 @@ return {
             "ant.tools.prefab_editor|gizmo_system",
             "ant.tools.prefab_editor|input_system",
             "ant.tools.prefab_editor|camera_system",
-            "ant.tools.prefab_editor|gui_system",
-            "ant.objcontroller|pickup_system"
+            "ant.tools.prefab_editor|gui_system"
         }
     }
 }
