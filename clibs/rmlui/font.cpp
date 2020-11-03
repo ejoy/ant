@@ -176,7 +176,6 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
     const Rml::Vector2f& position, 
     const Rml::Colourb& colour,
     Rml::GeometryList& geometrys){
-	int width = 0;
 
 	geometrys.resize(1);
 	Rml::Geometry& geometry = geometrys[0];
@@ -196,7 +195,7 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
     const Rml::Vector2f fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
 
 #define FIX_POINT 8
-    int16_t x= int16_t(position.x * FIX_POINT), y= int16_t(position.y * FIX_POINT);
+    int x = int(position.x + 0.5f), y = int(position.y+0.5f);
 	for (auto it_char = Rml::StringIteratorU8(string); it_char; ++it_char)
 	{
 		int codepoint = (int)*it_char;
@@ -208,8 +207,8 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 		vertices.resize(vertices.size() + 4);
 		indices.resize(indices.size() + 6);
 
-        const int16_t x0 = x + g.offset_x * FIX_POINT;
-        const int16_t y0 = y + g.offset_y * FIX_POINT;
+        const int x0 = x + g.offset_x;
+        const int y0 = y + g.offset_y;
 
         const int16_t u0 = g.u;
         const int16_t v0 = g.v;
@@ -217,22 +216,32 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
         const int16_t u1 = g.u + og.w;
         const int16_t v1 = g.v + og.h;
 
+
+		auto origin     = Rml::Vector2i(x0, y0);
+		auto dim        = Rml::Vector2i(g.w, g.h);
+        auto fe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
+        Rml::FontGlyph UNUSED_rml_fg;
+        auto olddim = dim;
+        fe->GetGlyphMetrics(origin, dim, UNUSED_rml_fg);
+
+        auto to_fixpt = [](const Rml::Vector2i &pt){
+            const float scale = FIX_POINT / 65536.f;
+            return Rml::Vector2f(pt.x * scale, pt.y * scale);
+        };
 		Rml::GeometryUtilities::GenerateQuad(
 			&vertices[0] + (vertices.size() - 4),
 			&indices[0] + (indices.size() - 6),
-			Rml::Vector2f(x0, y0) / 65536.f,
-			Rml::Vector2f(g.w * FIX_POINT, g.h * FIX_POINT) / 65536.f,
+            to_fixpt(origin), to_fixpt(dim),
 			colour,
 			Rml::Vector2f(u0, v0) * fonttexel,
             Rml::Vector2f(u1, v1) * fonttexel,
 			(int)vertices.size() - 4
 		);
 
-		width += g.advance_x;
-        x += g.advance_x * FIX_POINT;
+		x += g.advance_x + (dim.x - olddim.x);
 	}
 
-	return width;
+	return x - int(position.x + 0.5f);
 }
 
 int FontInterface::GetVersion(Rml::FontFaceHandle handle){

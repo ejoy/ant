@@ -104,10 +104,10 @@ public:
 
     virtual bool GetGlyphMetrics(Rml::Vector2i& origin, Rml::Vector2i& dimensions, const Rml::FontGlyph& glyph) const override{
         if (dimensions.x * dimensions.y > 0){
-            origin.x      += int(width);
-            origin.y      += int(width);
-            dimensions.x  += int(2 * width);
-            dimensions.y  += int(2 * width);
+            origin.x      += int(width + 0.5f);
+            origin.y      += int(width + 0.5f);
+            dimensions.x  += int(2 * width + 0.5f);
+            dimensions.y  += int(2 * width + 0.5f);
             return true;
         }
 
