@@ -8,7 +8,7 @@ system "rmlui_system"
     .require_system "ant.render|font_system"
     .require_interface "ant.render|ifont"
     .require_interface "ant.render|irenderqueue"
-    .method "post_init"
+    .method "init"
     .method "ui_update"
     .method "exit"
 

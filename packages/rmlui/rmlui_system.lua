@@ -95,7 +95,7 @@ local function preload_dir(dir)
     rmlui.preload_file(file_dict)
 end
 
-function rmlui_sys:post_init()
+function rmlui_sys:init()
     local data = init_rmlui_data()
     rmlui.init(data)
 
