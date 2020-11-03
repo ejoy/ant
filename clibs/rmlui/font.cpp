@@ -128,9 +128,9 @@ int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
-    int x0, y0, x1, y1;
-    font_manager_boundingbox(mcontext->font_mgr, face.fontid, face.pixelsize, &x0, &y0, &x1, &y1);
-    return -y0;
+    int ascent, descent, lineGap;
+    font_manager_fontheight(mcontext->font_mgr, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
+    return -descent + lineGap;
 }
 
 float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
