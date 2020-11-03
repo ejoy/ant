@@ -13,6 +13,15 @@ local function get_attrib_accessor(name)
     return accessor
 end
 
+local em_trans = ecs.transform "emitter_mesh_transform"
+function em_trans.process_entity(e)
+    if e.simplemesh == nil then
+        e.simplemesh = {
+            vb = {start=0,num=0},
+        }
+    end
+end
+
 local cpe_trans = ecs.transform "create_particle_emitters"
 function cpe_trans.process_entity(e)
     e.particle_emitters = {}
