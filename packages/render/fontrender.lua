@@ -64,6 +64,7 @@ end
 
 local fontcomp = ecs.component "font"
 function fontcomp:init()
+    fontmgr.import(self.file)
     self.id = fontmgr.name(self.family)
     return self
 end

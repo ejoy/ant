@@ -13,6 +13,10 @@ local fbmgr     = renderpkg.fbmgr
 local fontpkg   = import_package "ant.font"
 local fontmgr   = fontpkg.mgr
 
+local thread     = require "thread"
+thread.newchannel "rmlui"
+local channel    = thread.channel_produce "rmlui"
+
 local ifont     = world:interface "ant.render|ifont"
 local irq       = world:interface "ant.render|irenderqueue"
 
@@ -20,6 +24,7 @@ local rmlui_sys = ecs.system "rmlui_system"
 
 local script_dir = fs.path "/pkg/ant.test.rmlui/ui"
 local resource_dir = fs.path "/pkg/ant.resources.binary/ui/test"
+local OpenDebugger = false
 
 local function init_rmlui_data()
     local ft_w, ft_h = ifont.font_tex_dim()
@@ -93,20 +98,27 @@ local function init_rmlui_data()
     }
 end
 
-local rmlui_context
+setmetatable(rmlui, {__index = function(self,method)
+    local f = function(_,...)
+        channel:push(method, ...)
+    end
+    self[method] = f
+    return f
+end})
+
 function rmlui_sys:post_init()
     local data = init_rmlui_data()
-    rmlui_context = rmlui.init(data)
+    rmlui.init(data)
     for f in pairs(data.file_dict) do
         local ext = f:match ".+%.([%w_]+)$":lower()
         if ext == "otf" or ext == "ttf" or ext == "ttc" then
             fontmgr.import(resource_dir / f)
         end
     end
-
     local vr = irq.view_rect(world:singleton_entity_id "main_queue")
-    rmlui_context:create("main", vr.w, vr.h)
-    rmlui_context:load "tutorial.rml"
+    rmlui:CreateContext("main", vr.w, vr.h)
+    rmlui:LoadDocument("main", "tutorial.rml")
+    rmlui:Debugger(OpenDebugger)
 end
 
 local eventMouse = world:sub {"mouse"}
@@ -115,22 +127,22 @@ local mouseId = { LEFT = 0, RIGHT = 1, MIDDLE = 2}
 function rmlui_sys:ui_update()
     for _,what,state,x,y in eventMouse:unpack() do
         if state == "MOVE" then
-            rmlui_context:touch_move(x, y)
+            rmlui:MouseMove(x, y)
         elseif state == "DOWN" then
-                rmlui_context:touch_down(mouseId[what])
-            elseif state == "UP" then
-                rmlui_context:touch_up(mouseId[what])
-            else
+            rmlui:MouseDown(mouseId[what])
+        elseif state == "UP" then
+            rmlui:MouseUp(mouseId[what])
         end
     end
 	for _,_,press in eventKeyboard:unpack() do
-		if press == 1 then
-			rmlui_context:debugger()
+        if press == 1 then
+            OpenDebugger = not OpenDebugger
+            rmlui:Debugger(OpenDebugger)
 		end
 	end
-    rmlui_context:render()
+    rmlui.run_script "rmlui_update.lua"
 end
 
 function rmlui_sys:exit()
-    rmlui_context:shutdown()
+    rmlui.shutdown()
 end
