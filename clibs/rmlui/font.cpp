@@ -12,11 +12,6 @@ extern "C"{
 #include <cassert>
 #include <cstring>
 
-//static
-void FontInterface::Init(){
-    RegisterFontEffectInstancer();
-}
-
 void FontInterface::RegisterFontEffectInstancer(){
     Rml::Factory::RegisterFontEffectInstancer("outline", mFEIMgr.Create("outline", mcontext));
     Rml::Factory::RegisterFontEffectInstancer("shadow", mFEIMgr.Create("shadow", mcontext));

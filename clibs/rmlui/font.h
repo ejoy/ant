@@ -21,7 +21,7 @@ public:
 		{}
 	virtual ~FontInterface() = default;
 public:
-	void Init();
+	void RegisterFontEffectInstancer();
 	bool IsFontTexResource(const Rml::String &sourcename) const;
 	Rml::TextureHandle GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const;
 public:
@@ -44,8 +44,6 @@ public:
 private:
 	struct font_glyph
 	GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og = nullptr);
-
-	void RegisterFontEffectInstancer();
 
 	struct FontResource {
 		Rml::Texture tex;

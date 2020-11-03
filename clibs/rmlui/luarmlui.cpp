@@ -112,6 +112,7 @@ lrmlui_init(lua_State *L){
     if (!Rml::Initialise()){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
+    g_wrapper->font.RegisterFontEffectInstancer();
     lua_State* rL = g_wrapper->rL;
     Rml::Lua::Initialise(rL);
 

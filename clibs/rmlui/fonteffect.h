@@ -38,9 +38,6 @@ public:
     virtual bool HasUniqueTexture() const override{ return false;}
     uint16_t GetTexID() const { return mTexID; }
     FontEffectType GetType()  const { return mFEType;}
-    virtual ~SDFFontEffect(){
-        int debug = 0;
-    }
     virtual Rml::String GenerateKey() const = 0;
     virtual bool GetProperties(const shader &s, PropertyMap &properties, uint16_t &prog) const{
         Property m;
