@@ -189,6 +189,24 @@ lrmlui_run_script(lua_State* L) {
 }
 
 static int
+lrmlui_preload_file(lua_State* L) {
+    if (!g_wrapper) {
+        return 0;
+    }
+    auto& dict = g_wrapper->context.file_dict;
+    luaL_checktype(L, 1, LUA_TTABLE);
+    lua_pushnil(L);
+    while (lua_next(L, 1)) {
+        size_t ksz = 0, vsz = 0;
+        const char* k = luaL_checklstring(L, -2, &ksz);
+        const char* v = luaL_checklstring(L, -1, &vsz);
+        dict.emplace(std::string(k, ksz), std::string(v, vsz));
+        lua_pop(L, 1);
+    }
+    return 0;
+}
+
+static int
 lrmlui_memory(lua_State* L) {
     if (g_wrapper) {
         lua_State* rL = g_wrapper->rL;
@@ -210,6 +228,7 @@ LUAMOD_API int
         { "init",       lrmlui_init },
         { "shutdown",   lrmlui_shutdown },
         { "run_script", lrmlui_run_script },
+        { "preload_file", lrmlui_preload_file },
         { "memory",     lrmlui_memory },
         { nullptr, nullptr },
     };

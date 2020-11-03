@@ -1,6 +1,7 @@
 import "@ant.general"
 import "@ant.scene"
 import "@ant.camera"
+import "@ant.asset"
 
 system "blit_render_system"
     .implement "render_system.lua"

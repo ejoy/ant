@@ -1,0 +1,19 @@
+import "@ant.general"
+import "@ant.render"
+
+system "rmlui_system"
+    .implement "rmlui_system.lua"
+    .require_policy "ant.general|name"
+    .require_policy "ant.render|render"
+    .require_system "ant.render|font_system"
+    .require_interface "ant.render|ifont"
+    .require_interface "ant.render|irenderqueue"
+    .method "init"
+    .method "ui_update"
+    .method "exit"
+
+
+interface "rmlui"
+    .implement "rmlui_system.lua"
+    .method "preload_dir"
+    .method "message"

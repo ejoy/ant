@@ -1,3 +1,5 @@
+import "@ant.asset"
+
 ---billboard
 component "billboard"
     .implement "billboard.lua"
