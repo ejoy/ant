@@ -2,8 +2,7 @@
 #include "file.h"
 
 Rml::FileHandle FileInterface2::Open(const Rml::String& path){
-    auto p = path[0] == '/' ? path.c_str() + 1 : path;
-    auto found = mcontext->file_dict.find(p);
+    auto found = mcontext->file_dict.find(path);
     if (found != mcontext->file_dict.end()){
         return Rml::FileInterfaceDefault::Open(found->second);
     }
