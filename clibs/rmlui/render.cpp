@@ -69,9 +69,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
         BGFX(set_view_scissor)(mcontext->viewid, 0, 0, 0, 0);
     }
 
-    Rml::Matrix4f m = Rml::Matrix4f::Translate(translation.x, translation.y, 0.0);
-    m = mTransform * m;
-
+    const Rml::Matrix4f m = mTransform * Rml::Matrix4f::Translate(translation.x, translation.y, 0.0);
     BGFX(set_transform)(m.data(), 1);
 
     bgfx_transient_vertex_buffer_t tvb;
