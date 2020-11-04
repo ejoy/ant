@@ -3,13 +3,14 @@
 #include <assert.h>
 
 System::System()
-    : mStartTime(std::chrono::system_clock::now()){
+    : mStartTime(std::chrono::steady_clock::now()){
 }
 
 double System::GetElapsedTime(){
-    auto now = std::chrono::system_clock::now();
+    auto now = std::chrono::steady_clock::now();
     auto duration = now - mStartTime;
-	return duration.count();
+    auto time = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+	return time.count() / 1000.;
 }
 
 template <typename Container>
