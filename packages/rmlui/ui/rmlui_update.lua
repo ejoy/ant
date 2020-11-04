@@ -65,8 +65,6 @@ local function message(ok, what, ...)
     return true
 end
 
-local  lrmlui = require "rmlui"
-
 return function ()
     while message(channel:pop()) do
     end
@@ -77,6 +75,4 @@ return function ()
             ctx:Render()
         end
     end
-
-    lrmlui.frame()
 end
