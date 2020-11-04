@@ -4,6 +4,10 @@
 #include <RmlUi/Core.h>
 #include <cassert>
 
+#ifdef RMLUI_MATRIX_ROW_MAJOR
+error "need matrix type as column major"
+#endif //RMLUI_MATRIX_ROW_MAJOR
+
 extern bgfx_interface_vtbl_t* get_bgfx_interface();
 #define BGFX(api) get_bgfx_interface()->api
 
@@ -64,12 +68,9 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     } else {
         BGFX(set_view_scissor)(mcontext->viewid, 0, 0, 0, 0);
     }
-    
-    Rml::Matrix4f m = mTransform;
-    auto t = m.GetColumn(3);
-    t[0] += translation.x;
-    t[1] += translation.y;
-    m.SetColumn(3, t);
+
+    Rml::Matrix4f m = Rml::Matrix4f::Translate(translation.x, translation.y, 0.0);
+    m = mTransform * m;
 
     BGFX(set_transform)(m.data(), 1);
 
