@@ -47,7 +47,9 @@ public:
     virtual bool LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& texture_dimensions, const Rml::String& source) override;
     virtual bool GenerateTexture(Rml::TextureHandle& texture_handle, const Rml::byte* source, const Rml::Vector2i& source_dimensions) override;
     virtual void ReleaseTexture(Rml::TextureHandle texture) override;
-    virtual void SetTransform(const Rml::Matrix4f* transform) override{mTransform = *transform;}
+    virtual void SetTransform(const Rml::Matrix4f* transform) override{
+        mTransform = transform ? *transform : Rml::Matrix4f::Identity();
+    }
 
 public:
     // will delete buffer

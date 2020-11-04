@@ -27,6 +27,9 @@ $(ODIR)/system.o : system.cpp | $(ODIR)
 $(ODIR)/context.o : context.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
+$(ODIR)/fonteffect.o : fonteffect.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
+
 $(ODIR)/luarmlui.o : luarmlui.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
@@ -43,7 +46,7 @@ $(foreach v, $(RMLLUA), $(eval $(call RMLLUA_COMPLILE,$(v))))
 RMLUILIB=-L$(ANT3RD)/build/RmlUi/$(PLAT)/$(MODE) -lRmlDebugger -lRmlCore 
 FONTLIB=-L../../bin/$(PLAT)/$(MODE) -lfont
 
-$(ODIR)/rmlui.dll : $(ODIR)/luarmlui.o $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/context.o $(patsubst %,$(ODIR)/%.o, $(RMLLUA))
+$(ODIR)/rmlui.dll : $(ODIR)/luarmlui.o $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/context.o $(ODIR)/fonteffect.o $(patsubst %,$(ODIR)/%.o, $(RMLLUA))
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(RMLUILIB) $(FONTLIB) $(LUALIB) -lstdc++ 
 
 $(ODIR)/librmlui.a : $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/luarmlui.o

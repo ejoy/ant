@@ -79,11 +79,11 @@ protected:
 
     const shader_info&
     GetShaderInfo(const shader &s) const {
-        switch (mFEType){
-        case FE_Outline|FE_FontTex: s.font_outline;
-        case FE_Glow|FE_FontTex:    return s.font_glow;
-        case FE_Shadow|FE_FontTex: return s.font_shadow;
-        case FE_FontTex: return s.font;
+        switch (uint16_t(mFEType)){
+        case (FE_Outline|FE_FontTex):       return s.font_outline;
+        case (FE_Glow|FE_FontTex):          return s.font_glow;
+        case (FE_Shadow|FE_FontTex):        return s.font_shadow;
+        case (FE_FontTex):                  return s.font;
         default: assert(false &&"invalid"); return s.font;
         }
     }
