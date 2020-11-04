@@ -77,6 +77,17 @@ protected:
         cc[3] = c.alpha / 256.f;
     }
 
+    const shader_info&
+    GetShaderInfo(const shader &s) const {
+        switch (mFEType){
+        case FE_Outline|FE_FontTex: s.font_outline;
+        case FE_Glow|FE_FontTex:    return s.font_glow;
+        case FE_Shadow|FE_FontTex: return s.font_shadow;
+        case FE_FontTex: return s.font;
+        default: assert(false &&"invalid"); return s.font;
+        }
+    }
+
 
 private:
     const uint16_t          mTexID;
@@ -93,33 +104,31 @@ public:
 };
 
 ///outline//////////////////////////////////////////////////////////////////
-class SDFFontEffectOutline : public SDFFontEffect{
+template<FontEffectType FE_TYPE>
+class TSDFFontEffectOutline : public SDFFontEffect{
 public:
-    SDFFontEffectOutline(uint16_t texid, float w, Rml::Colourb c) 
-    : SDFFontEffect(texid, FontEffectType(FE_Outline|FE_FontTex))
-    , width(w){
+    TSDFFontEffectOutline(uint16_t texid, float w, Rml::Colourb c) 
+    : SDFFontEffect(texid, FE_TYPE)
+    , mwidth(w){
         SetLayer(Layer::Back);
         SetColour(c);
     }
 
     virtual bool GetGlyphMetrics(Rml::Vector2i& origin, Rml::Vector2i& dimensions, const Rml::FontGlyph& glyph) const override{
         if (dimensions.x * dimensions.y > 0){
-            origin.x      += int(width + 0.5f);
-            origin.y      += int(width + 0.5f);
-            dimensions.x  += int(2 * width + 0.5f);
-            dimensions.y  += int(2 * width + 0.5f);
+            origin      += Rml::Vector2i(int(mwidth + 0.5f));
+            dimensions  += Rml::Vector2i(int(2 * mwidth + 0.5f));
             return true;
         }
 
         return false;
     }
 
-    float GetWidth() const {return width;}
     virtual Rml::String GenerateKey() const override{
         std::ostringstream oss;
         
         oss << std::setprecision(std::numeric_limits<long double>::digits10 + 1) 
-            << DEFAULT_FONT_TEX_NAME.c_str() << GetType()<< width << GetColour();
+            << DEFAULT_FONT_TEX_NAME.c_str() << GetType()<< mwidth << GetColour();
         return oss.str();
     }
 
@@ -130,21 +139,22 @@ public:
         const float texel = 1.f / MAX_FONT_GLYPH_SIZE;
         auto &m = properties["u_mask"];
         m.value[2] = s.font_mask+texel;
-        m.value[3] = width * 4 * texel;
+        m.value[3] = mwidth * 4 * texel;
 
         Property color;
         tocolor(GetColour(), color.value);
         const char* colorname = "u_effect_color";
-        color.uniform_idx = s.font_outline.find_uniform("u_effect_color");
+        const auto si       = GetShaderInfo(s);
+        color.uniform_idx   = si.find_uniform("u_effect_color");
         properties[colorname] = color;
 
-        prog = s.font_outline.prog;
+        prog = si.prog;
 
         return true;
     }
 
 private:
-    const float width;
+    const float mwidth;
 };
 
 template<class FontEffectClass>
@@ -174,29 +184,8 @@ private:
     Rml::PropertyId id_width, id_color;
 };
 
-using SDFFontEffectOulineInstancer = TSDFFontEffectOulineInstancer<SDFFontEffectOutline>;
-
-///glow//////////////////////////////////////////////////////////////////
-class SDFFontEffectGlow : public SDFFontEffectOutline{
-public:
-    using SDFFontEffectOutline::SDFFontEffectOutline;
-    virtual bool GetProperties(const shader &s, PropertyMap &properties, uint16_t &prog) const override {
-        SDFFontEffectOutline::GetProperties(s, properties, prog);
-
-        auto reset_uniform_idx = [&](const Rml::String &name){
-            assert(properties.find(name) != properties.end());
-            auto &m = properties[name];
-            m.uniform_idx = s.font_glow.find_uniform(name.c_str());
-        };
-
-        reset_uniform_idx("u_mask");
-        reset_uniform_idx("u_effect_color");
-        prog = s.font_glow.prog;
-        return true;
-    }
-};
-
-using SDFFontEffectGlowInstancer = TSDFFontEffectOulineInstancer<SDFFontEffectGlow>;
+using SDFFontEffectOulineInstancer  = TSDFFontEffectOulineInstancer<TSDFFontEffectOutline<FontEffectType(FE_Outline|FE_FontTex)> >;
+using SDFFontEffectGlowInstancer    = TSDFFontEffectOulineInstancer<TSDFFontEffectOutline<FontEffectType(FE_Glow|FE_FontTex)> >;
 
 ///shadow//////////////////////////////////////////////////////////////////
 class SDFFontEffectShadow : public SDFFontEffect{

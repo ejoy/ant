@@ -12,7 +12,7 @@ function init_sys:post_init()
     iRmlUi.preload_dir "/pkg/ant.test.rmlui/ui"
     local vr = irq.view_rect(world:singleton_entity_id "main_queue")
     iRmlUi.message("CreateContext", "main", vr.w, vr.h)
-    iRmlUi.message("LoadDocument", "main", "tutorial.rml")
+    iRmlUi.message("LoadDocument", "main", "fonttest.rml")
     iRmlUi.message("Debugger", OpenDebugger)
 end
 
