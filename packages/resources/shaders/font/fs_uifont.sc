@@ -16,7 +16,7 @@ uniform vec4 u_effect_color;
 #endif
 
 #define OUTLINE_ENLARGE	100
-#define SHADOW_TEXEL 1/2048
+#define SHADOW_TEXEL 1.0/2048.0
 float sdf(float dis, float mask, float range){
 	return smoothstep(mask - range, mask + range,  dis);
 }
@@ -33,14 +33,14 @@ void main()
 	color = lerp(effectcolor, color, color.a);
 #elif defined(SHADOW_EFFECT)
 	vec2 fonttexel = vec2_splat(SHADOW_TEXEL);
-	float offsetdis = texture2D(s_tex, v_texcoord0+fonttexel);
+	float offsetdis = texture2D(s_tex, v_texcoord0+fonttexel).a;
 
 	vec4 effectcolor = u_effect_color;
 	effectcolor.a = sdf(offsetdis, u_effect_mask, u_effect_range);
 	color = lerp(effectcolor, color, color.a);
 #elif defined(GLOW_EFFECT)
 	vec4 effectcolor = u_effect_color;
-	effectcolor.a = sdf(dis, u_effect_mask, u_effect_range)
+	effectcolor.a = sdf(dis, u_effect_mask, u_effect_range);
 	color = lerp(effectcolor, color, color.a);
 #endif
 

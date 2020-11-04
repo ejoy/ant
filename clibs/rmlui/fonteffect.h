@@ -202,7 +202,7 @@ using SDFFontEffectGlowInstancer = TSDFFontEffectOulineInstancer<SDFFontEffectGl
 class SDFFontEffectShadow : public SDFFontEffect{
 public:
 SDFFontEffectShadow(uint16_t texid, const Rml::Vector2f &offset, Rml::Colourb c) 
-    : SDFFontEffect(texid, FontEffectType(FE_Outline|FE_FontTex))
+    : SDFFontEffect(texid, FontEffectType(FE_Shadow|FE_FontTex))
     , moffset(offset)
     {
         SetLayer(Layer::Back);
@@ -211,7 +211,7 @@ SDFFontEffectShadow(uint16_t texid, const Rml::Vector2f &offset, Rml::Colourb c)
 
     virtual bool GetGlyphMetrics(Rml::Vector2i& origin, Rml::Vector2i& dimensions, const Rml::FontGlyph& glyph) const override{
         if (dimensions.x * dimensions.y > 0){
-            const auto off = moffset * 0.5;
+            const auto off = moffset * 0.5f;
             origin.x      += int(off.x + 0.5f);
             origin.y      += int(off.y + 0.5f);
             dimensions.x  += int(moffset.x + 0.5f);
