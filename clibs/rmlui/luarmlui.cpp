@@ -220,6 +220,14 @@ lrmlui_memory(lua_State* L) {
     return 1;
 }
 
+static int
+lrmlui_frame(lua_State *L){
+    if (g_wrapper){
+        g_wrapper->renderer.Frame();
+    }
+    return 0;
+}
+
 extern "C" {
 LUAMOD_API int
     luaopen_rmlui(lua_State* L) {
@@ -230,6 +238,7 @@ LUAMOD_API int
         { "run_script", lrmlui_run_script },
         { "preload_file", lrmlui_preload_file },
         { "memory",     lrmlui_memory },
+        { "frame",      lrmlui_frame},
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);

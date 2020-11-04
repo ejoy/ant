@@ -40,6 +40,7 @@ public:
     TransientIndexBuffer32(uint32_t sizeBytes = 1024*1024*sizeof(uint32_t));
     ~TransientIndexBuffer32();
     void SetIndex(int *indices, int num);
+    void Reset();
 private:
     uint32_t moffset;
     uint32_t msize;
@@ -65,6 +66,7 @@ public:
 public:
     // will delete buffer
     bool UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer);
+    void Frame();
 
 private:
     Rml::Matrix4f       mTransform = Rml::Matrix4f::Identity();

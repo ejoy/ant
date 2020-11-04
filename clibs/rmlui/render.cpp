@@ -39,6 +39,11 @@ TransientIndexBuffer32::SetIndex(int *indices, int num){
     moffset += num;
 }
 
+void
+TransientIndexBuffer32::Reset(){
+    moffset = 0;
+}
+
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 Renderer::Renderer(const rml_context* context)
     : mcontext(context){
@@ -107,6 +112,10 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
         BGFX(set_texture)(0, {texuniformidx}, {id}, UINT32_MAX);
         BGFX(submit)(mcontext->viewid, { (uint16_t)si.prog }, 0, BGFX_DISCARD_ALL);
     }
+}
+
+void Renderer::Frame(){
+    mIndexBuffer.Reset();
 }
 
 void Renderer::EnableScissorRegion(bool enable) {
