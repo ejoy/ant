@@ -35,6 +35,17 @@ enum SamplerFlag : uint32_t {
     MIP_MASK        = 0x00000400,
 };
 
+class TransientIndexBuffer32{
+public:
+    TransientIndexBuffer32(uint32_t sizeBytes = 1024*1024*sizeof(uint32_t));
+    ~TransientIndexBuffer32();
+    void SetIndex(int *indices, int num);
+private:
+    uint32_t moffset;
+    uint32_t msize;
+    bgfx_dynamic_index_buffer_handle_t  mdyn_indexbuffer;
+};
+
 class Renderer : public Rml::RenderInterface {
 public:
     Renderer(const rml_context* context);
@@ -59,4 +70,5 @@ private:
     Rml::Matrix4f       mTransform = Rml::Matrix4f::Identity();
     Rect                mScissorRect = {0, 0, 0, 0};
     const rml_context*  mcontext;
+    TransientIndexBuffer32  mIndexBuffer;
 };

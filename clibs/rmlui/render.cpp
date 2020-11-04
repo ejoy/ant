@@ -7,6 +7,34 @@
 extern bgfx_interface_vtbl_t* get_bgfx_interface();
 #define BGFX(api) get_bgfx_interface()->api
 
+TransientIndexBuffer32::TransientIndexBuffer32(uint32_t sizeBytes)
+: moffset(0), msize(sizeBytes)
+, mdyn_indexbuffer(BGFX(create_dynamic_index_buffer)(sizeBytes, BGFX_BUFFER_INDEX32|BGFX_BUFFER_ALLOW_RESIZE))
+{}
+
+TransientIndexBuffer32::~TransientIndexBuffer32(){
+    if (mdyn_indexbuffer.idx != UINT16_MAX){
+        BGFX(destroy_dynamic_index_buffer)(mdyn_indexbuffer);
+        mdyn_indexbuffer = BGFX_INVALID_HANDLE;
+    }
+}
+
+void 
+TransientIndexBuffer32::SetIndex(int *indices, int num){
+    const uint32_t numbytes = num * sizeof(uint32_t);
+
+    if (moffset * sizeof(uint32_t) + numbytes > msize){
+        assert(false);
+    }
+
+    auto mem = BGFX(alloc)(numbytes);
+    memcpy(mem->data, indices, numbytes);
+    BGFX(update_dynamic_index_buffer)(mdyn_indexbuffer, moffset, mem);
+    BGFX(set_dynamic_index_buffer)(mdyn_indexbuffer, moffset, num);
+
+    moffset += num;
+}
+
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 Renderer::Renderer(const rml_context* context)
     : mcontext(context){
@@ -51,21 +79,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
     BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num_vertices);
 
-    // TODO: remove bgfx_transient_index_buffer_t, use dynamic buffer with uint32_t
-    bgfx_transient_index_buffer_t tib;
-    BGFX(alloc_transient_index_buffer)(&tib, num_indices);
-    uint16_t *data = (uint16_t*)tib.data;
-    for (int ii=0; ii<num_indices; ++ii){
-        int d = indices[ii];
-        if (d > UINT16_MAX){
-            assert(false);
-            return;
-        }
-
-        *data++ = (uint16_t)d;
-    }
-
-    BGFX(set_transient_index_buffer)(&tib, 0, num_indices);
+    mIndexBuffer.SetIndex(indices, num_indices);
     BGFX(set_state)(RENDER_STATE, 0);
   
     auto fe = FE(texture);
