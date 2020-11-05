@@ -118,6 +118,10 @@ function rmlui_sys:ui_update()
     rmlui.run_script "rmlui_update.lua"
 end
 
+function rmlui_sys:end_frame()
+    rmlui.frame()
+end
+
 function rmlui_sys:exit()
     rmlui.shutdown()
 end

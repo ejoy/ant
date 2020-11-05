@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 
 local math3d 	= require "math3d"
-local rmlui		= require "rmlui"
 local end_frame_sys = ecs.system "end_frame_system"
 
 function end_frame_sys:end_frame()
@@ -13,6 +12,5 @@ function end_frame_sys:end_frame()
 		rc.projmat = nil
 		rc.viewprojmat = nil
 	end
-	rmlui.frame()
 	math3d.reset()
 end
