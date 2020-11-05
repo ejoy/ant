@@ -221,6 +221,8 @@ local function on_target(old, new)
             camera_mgr.set_second_camera(new, true)
         elseif new_entity.light_type then
             light_gizmo.bind(new)
+        elseif new_entity.emitter then
+            particle_emitter.set_emitter(new)
         end
     end
     prefab_mgr:update_current_aabb(new)
