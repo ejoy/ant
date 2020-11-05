@@ -13,10 +13,6 @@ local fbmgr     = renderpkg.fbmgr
 local fontpkg   = import_package "ant.font"
 local fontmgr   = fontpkg.mgr
 
-local thread     = require "thread"
-thread.newchannel "rmlui"
-local channel    = thread.channel_produce "rmlui"
-
 local ifont     = world:interface "ant.render|ifont"
 local irq       = world:interface "ant.render|irenderqueue"
 
@@ -99,7 +95,6 @@ function rmlui_sys:init()
     local data = init_rmlui_data()
     rmlui.init(data)
 
-    preload_dir "/pkg/ant.rmlui/ui"
     preload_dir "/pkg/ant.resources.binary/ui/test"
 end
 
@@ -108,14 +103,13 @@ local mouseId = { LEFT = 0, RIGHT = 1, MIDDLE = 2}
 function rmlui_sys:ui_update()
     for _,what,state,x,y in eventMouse:unpack() do
         if state == "MOVE" then
-            channel("MouseMove", x, y)
+--            channel("MouseMove", x, y)
         elseif state == "DOWN" then
-            channel("MouseDown", mouseId[what])
+--            channel("MouseDown", mouseId[what])
         elseif state == "UP" then
-            channel("MouseUp", mouseId[what])
+--            channel("MouseUp", mouseId[what])
         end
     end
-    rmlui.run_script "rmlui_update.lua"
 end
 
 function rmlui_sys:exit()
@@ -130,5 +124,7 @@ function iRmlUi.preload_dir(dir)
 end
 
 function iRmlUi.message(...)
-    channel( ...)
+--    channel( ...)
 end
+
+iRmlUi.CreateContext = assert(rmlui.CreateContext)

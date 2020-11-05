@@ -18,86 +18,26 @@
 #include <cassert>
 #include <cstring>
 
+#define RMLCONTEXT "RMLCONTEXT"
+
 struct rml_context_wrapper {
     rml_context    context;
     System         system;
     FontInterface  font;
     FileInterface2 file;
     Renderer       renderer;
-    lua_State*     rL;
-    bool           debugger = false;
+    bool           debugger;
     rml_context_wrapper(lua_State* L, int idx)
         : context(L, idx)
         , system()
         , font(&context)
         , file(&context)
         , renderer(&context)
-        , rL(luaL_newstate())
-    {
-        if (rL) {
-            luaL_openlibs(rL);
-        }
-    }
-
-    ~rml_context_wrapper() {
-        if (rL) {
-            lua_close(rL);
-        }
-    }
+		, debugger(false)
+		{}
 };
-rml_context_wrapper* g_wrapper;
 
-template<typename T>
-T* checkud(lua_State* L, int idx)
-{
-    T** ptr = static_cast<T**>(lua_touserdata(L, idx));
-    if (!ptr || !*ptr) {
-        luaL_argerror(L, idx, "invalid userdata");
-    }
-    return *ptr;
-}
-
-static int ContextProcessMouseMove(lua_State* L) {
-    Rml::Context* context = checkud<Rml::Context>(L, 1);
-    int x = luaL_checkinteger(L, 2);
-    int y = luaL_checkinteger(L, 3);
-    int state = luaL_optinteger(L, 4, 0);
-    context->ProcessMouseMove(x, y, state);
-    return 0;
-}
-
-static int ContextProcessMouseButtonDown(lua_State* L) {
-    Rml::Context* context = checkud<Rml::Context>(L, 1);
-    int button = luaL_checkinteger(L, 2);
-    int state = luaL_optinteger(L, 3, 0);
-    context->ProcessMouseButtonDown(button, state);
-    return 0;
-}
-
-static int ContextProcessMouseButtonUp(lua_State* L) {
-    Rml::Context* context = checkud<Rml::Context>(L, 1);
-    int button = luaL_checkinteger(L, 2);
-    int state = luaL_optinteger(L, 3, 0);
-    context->ProcessMouseButtonUp(button, state);
-    return 0;
-}
-
-static int ContextDebugger(lua_State* L) {
-    Rml::Context* context = checkud<Rml::Context>(L, 1);
-    bool open = lua_toboolean(L, 2);
-    if (!g_wrapper) {
-        return 0;
-    }
-    if (!g_wrapper->debugger) {
-        Rml::Debugger::Initialise(context);
-        g_wrapper->debugger = true;
-    }
-    else {
-        Rml::Debugger::SetContext(context);
-    }
-    Rml::Debugger::SetVisible(open);
-    return 0;
-}
+static rml_context_wrapper* g_wrapper = nullptr;
 
 static int
 lrmlui_init(lua_State *L){
@@ -113,20 +53,6 @@ lrmlui_init(lua_State *L){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
     g_wrapper->font.RegisterFontEffectInstancer();
-    lua_State* rL = g_wrapper->rL;
-    Rml::Lua::Initialise(rL);
-
-    if (LUA_TTABLE == lua_getglobal(rL, "Context")) {
-        luaL_Reg lib[] = {
-            {"ProcessMouseMove",ContextProcessMouseMove},
-            {"ProcessMouseButtonDown",ContextProcessMouseButtonDown},
-            {"ProcessMouseButtonUp",ContextProcessMouseButtonUp},
-            {"Debugger",ContextDebugger},
-            {NULL,NULL},
-        };
-        luaL_setfuncs(rL, lib, 0);
-    }
-    lua_pop(rL, 1);
     return 0;
 }
 
@@ -138,54 +64,6 @@ lrmlui_shutdown(lua_State* L) {
         g_wrapper = nullptr;
     }
     return 0;
-}
-
-static bool rmlui_load_script(lua_State* L, const char* script) {
-    Rml::FileInterface* file_interface = Rml::GetFileInterface();
-    Rml::FileHandle handle = file_interface->Open(script);
-    if (handle == 0) {
-        return false;
-    }
-    size_t size = file_interface->Length(handle);
-    if (size == 0) {
-        return false;
-    }
-    std::string file_contents; file_contents.resize(size);
-    file_interface->Read(file_contents.data(), size, handle);
-    file_interface->Close(handle);
-    if (!Rml::Lua::Interpreter::LoadString(file_contents, std::string("@") + script)) {
-        return false;
-    }
-    if (!Rml::Lua::Interpreter::ExecuteCall(0, 1)) {
-        return false;
-    }
-    return true;
-}
-
-static int
-lrmlui_run_script(lua_State* L) {
-    lua_State* rL = Rml::Lua::Interpreter::GetLuaState();
-    const char* script = luaL_checkstring(L, 1);
-    if (LUA_TTABLE != lua_getfield(rL, LUA_REGISTRYINDEX, "rmlui::run_script")) {
-        lua_pop(rL, 1);
-        lua_newtable(rL);
-        lua_pushvalue(rL, -1);
-        lua_setfield(rL, LUA_REGISTRYINDEX, "rmlui::run_script");
-    }
-    if (LUA_TFUNCTION != lua_getfield(rL, -1, script)) {
-        lua_pop(rL, 1);
-        if (!rmlui_load_script(rL, script)) {
-            lua_pop(rL, 1);
-            lua_pushboolean(L, 0);
-            return 1;
-        }
-        lua_pushvalue(rL, -1);
-        lua_setfield(rL, -3, script);
-    }
-    Rml::Lua::Interpreter::ExecuteCall(0, 0);
-    lua_pop(rL, 1);
-    lua_pushboolean(L, 1);
-    return 1;
 }
 
 static int
@@ -207,20 +85,6 @@ lrmlui_preload_file(lua_State* L) {
 }
 
 static int
-lrmlui_memory(lua_State* L) {
-    if (g_wrapper) {
-        lua_State* rL = g_wrapper->rL;
-        int k = lua_gc(rL, LUA_GCCOUNT);
-        int b = lua_gc(rL, LUA_GCCOUNTB);
-        lua_pushinteger(L, (lua_Integer)k * 1024 + b);
-    }
-    else {
-        lua_pushinteger(L, 0);
-    }
-    return 1;
-}
-
-static int
 lrmlui_frame(lua_State *L){
     if (g_wrapper){
         g_wrapper->renderer.Frame();
@@ -228,17 +92,182 @@ lrmlui_frame(lua_State *L){
     return 0;
 }
 
+// RML Context
+
+struct rcontext {
+	Rml::Context* ctx;
+	lua_State *L;
+	size_t mem;
+	int warnstate;
+};
+
+static void *
+rml_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
+	struct rcontext *ctx = (struct rcontext *)ud;
+	if (nsize == 0) {
+		ctx->mem -= osize;
+		free(ptr);
+		return NULL;
+	}
+	else if (ptr == NULL) {
+		ctx->mem += nsize;
+		return malloc(nsize);
+	} else {
+		ctx->mem -= osize;
+		ctx->mem += nsize;
+		return realloc(ptr, nsize);
+	}
+}
+
+static int
+rml_panic (lua_State *L) {
+	const char *msg = lua_tostring(L, -1);
+	if (msg == NULL) msg = "error object is not a string";
+	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
+						msg);
+	return 0;
+}
+
+/*
+** Emit a warning. '*warnstate' means:
+** 0 - warning system is off;
+** 1 - ready to start a new message;
+** 2 - previous message is to be continued.
+*/
+static void
+rml_warnf (void *ud, const char *message, int tocont) {
+	struct rcontext *ctx = (struct rcontext *)ud;
+	int *warnstate = &ctx->warnstate;
+	if (*warnstate != 2 && !tocont && *message == '@') {  /* control message? */
+		if (strcmp(message, "@off") == 0)
+			*warnstate = 0;
+		else if (strcmp(message, "@on") == 0)
+			*warnstate = 1;
+		return;
+	}
+	else if (*warnstate == 0)  /* warnings off? */
+		return;
+	if (*warnstate == 1)  /* previous message was the last? */
+		lua_writestringerror("%s", "Lua warning: ");  /* start a new warning */
+	lua_writestringerror("%s", message);  /* write message */
+	if (tocont)  /* not the last part? */
+		*warnstate = 2;  /* to be continued */
+	else {  /* last part */
+		lua_writestringerror("%s", "\n");  /* finish message with end-of-line */
+		*warnstate = 1;  /* ready to start a new message */
+	}
+}
+
+static int
+init_luavm(struct rcontext *R) {
+	R->mem = 0;
+	R->warnstate = 0;
+	lua_State *L = lua_newstate(rml_alloc, R);
+	if (L == NULL)
+		return 0;
+	lua_atpanic(L, &rml_panic);
+	lua_setwarnf(L, rml_warnf, R);
+	R->L = L;
+	// todo : init libs
+	return 1;
+}
+
+static int
+lrelease_context(lua_State *L) {
+	struct rcontext *R = (struct rcontext *)lua_touserdata(L, 1);
+	if (R->ctx == NULL)
+		return 0;
+	Rml::RemoveContext(R->ctx->GetName());
+	R->ctx = NULL;
+	return 0;
+}
+
+static int
+lctx_Memory(lua_State *L) {
+	struct rcontext *R = (struct rcontext *)lua_touserdata(L, 1);
+	lua_pushinteger(L, R->mem);
+	return 1;
+}
+
+static Rml::Context *
+get_context(lua_State *L) {
+	struct rcontext *R = (struct rcontext *)lua_touserdata(L, 1);
+	if (R == NULL || R->ctx == NULL) {
+		luaL_error(L, "Invalid Rml Context");
+	}
+	return R->ctx;
+}
+
+static int
+lctx_load_document(lua_State *L) {
+	const char * path = luaL_checkstring(L, 2);
+	Rml::ElementDocument * doc = get_context(L)->LoadDocument(path);
+	if (doc == NULL) {
+		return 0;
+	}
+	// todo : gen document ud
+	doc->Show();
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
+static int
+lctx_update(lua_State *L) {
+	get_context(L)->Update();
+	return 0;
+}
+
+static int
+lctx_render(lua_State *L) {
+	get_context(L)->Render();
+	return 0;
+}
+
+static int
+lcreate_context(lua_State *L) {
+	const char * name = luaL_checkstring(L, 1);
+	int w = luaL_checkinteger(L, 2);
+	int h = luaL_checkinteger(L, 3);
+	struct rcontext * R = (struct rcontext *)lua_newuserdatauv(L, sizeof(*R), 0);
+	R->ctx = NULL;
+	if (!init_luavm(R)) {
+		return luaL_error(L, "Init context VM failed");
+	}
+	if (luaL_newmetatable(L, RMLCONTEXT)) {
+		luaL_Reg lib[] = {
+			{ "__gc", lrelease_context },
+			{ "__index", NULL },
+			{ "LoadDocument", lctx_load_document },
+			{ "Update", lctx_update },
+			{ "Render", lctx_render },
+			{ "Memory", lctx_Memory },
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, lib, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+	lua_setmetatable(L, -2);
+	Rml::Context * ctx = Rml::CreateContext(name, Rml::Vector2i(w,h));
+	if (ctx == NULL) {
+		return luaL_error(L, "Init Rml context failed");
+	}
+	R->ctx = ctx;
+
+	return 1;
+}
+
 extern "C" {
 LUAMOD_API int
-    luaopen_rmlui(lua_State* L) {
+luaopen_rmlui(lua_State* L) {
     init_interface(L);
     luaL_Reg l[] = {
         { "init",       lrmlui_init },
         { "shutdown",   lrmlui_shutdown },
-        { "run_script", lrmlui_run_script },
         { "preload_file", lrmlui_preload_file },
-        { "memory",     lrmlui_memory },
         { "frame",      lrmlui_frame},
+
+		{ "CreateContext", lcreate_context },
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);
