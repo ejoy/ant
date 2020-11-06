@@ -231,7 +231,19 @@ local function remove_entitys(entities)
     end
 end
 
-function m:open_prefab(filename)
+local function get_prefab(filename)
+    local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    assetmgr.unload(vfspath)
+    return worldedit:prefab_template(vfspath)
+end
+
+function m:open(filename)
+    local prefab = get_prefab(filename)
+    self:open_prefab(prefab)
+    world:pub {"WindowTitle", filename}
+end
+
+function m:open_prefab(prefab)
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
         if type(eid) == "table" then
@@ -244,15 +256,12 @@ function m:open_prefab(filename)
         world:remove_entity(eid)
     end
     light_gizmo.clear()
-    local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
-    assetmgr.unload(vfspath)
 
-    local prefab = worldedit:prefab_template(vfspath)
     self.prefab = prefab
     local entities = worldedit:prefab_instance(prefab)
     self.entities = entities
 
-    local scene_root = world:create_entity{
+    self.root = world:create_entity{
 		policy = {
 			"ant.general|name",
 			"ant.scene|transform_policy",
@@ -262,9 +271,9 @@ function m:open_prefab(filename)
 			name = "scene root",
 		},
     }
-    self.root = scene_root
     hierarchy:clear()
     hierarchy:set_root(self.root)
+    
     local remove_entity = {}
     local add_entity = {}
     local last_camera
@@ -331,9 +340,7 @@ function m:open_prefab(filename)
     for _, e in ipairs(add_entity) do
         self.entities[#self.entities + 1] = e
     end
-	--self:normalize_aabb()
     world:pub {"editor", "prefab", entities}
-    world:pub {"WindowTitle", filename}
 end
 
 local nameidx = 0
@@ -496,7 +503,7 @@ function m:save_prefab(filename)
         end
     end
     utils.write_file(filename, stringify(data))
-    self:open_prefab(tostring(fs.path "":localpath()) .. filename)
+    self:open(tostring(fs.path "":localpath()) .. filename)
     world:pub {"ResourceBrowser", "dirty"}
 end
 

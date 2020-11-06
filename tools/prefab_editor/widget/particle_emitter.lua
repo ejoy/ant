@@ -36,7 +36,7 @@ end
 function m.create_pro_by_method(pro)
     local data = pro.data
     local sp = {}
-    sp[#sp + 1] = uiproperty.ComboPro("method",
+    sp[#sp + 1] = uiproperty.Combo("method",
         function(v)
             data.method = v
             pro.dirty = true
@@ -46,25 +46,25 @@ function m.create_pro_by_method(pro)
         method_type)
 
     if data.method == "around_sphere" then
-        sp[#sp + 1] = uiproperty.FloatPro("radius_scale",
+        sp[#sp + 1] = uiproperty.Float("radius_scale",
             function(...) data_from_ui(data.radius_scale, ...) end,
             function() return data.radius_scale end, 2)
     elseif data.method == "sphere_random" then
-        sp[#sp + 1] = uiproperty.FloatPro("longitude",
+        sp[#sp + 1] = uiproperty.Float("longitude",
             function(...) data_from_ui(data.longitude, ...) end,
             function() return data.longitude end, 2)
-        sp[#sp + 1] = uiproperty.FloatPro("latitude",
+        sp[#sp + 1] = uiproperty.Float("latitude",
             function(...) data_from_ui(data.latitude, ...) end,
             function() return data.latitude end, 2)
     elseif data.method == "face_axis" then
-        sp[#sp + 1] = uiproperty.FloatPro("axis",
+        sp[#sp + 1] = uiproperty.Float("axis",
             function(...) data_from_ui(data.axis, ...) end,
             function() return data.axis end, 4)
     elseif data.method == "around_box" then
-        sp[#sp + 1] = uiproperty.FloatPro("box_range_x",
+        sp[#sp + 1] = uiproperty.Float("box_range_x",
             function(...) data_from_ui(data.box_range.x, ...) end,
             function() return data.box_range.x end, 2)
-        sp[#sp + 1] = uiproperty.FloatPro("box_range_y",
+        sp[#sp + 1] = uiproperty.Float("box_range_y",
             function(...) data_from_ui(data.box_range.y, ...) end,
             function() return data.box_range.y end, 2)
     elseif data.method == "change_property" then
@@ -73,7 +73,7 @@ function m.create_pro_by_method(pro)
                 data.properties.s_tex.texture = value
                 m.update_emitter()
             end,
-            function() return tostring(data.properties.s_tex.texture) end)
+            function() return data.properties.s_tex.texture end)
     end
     pro.property = sp
     pro.dirty = false
@@ -105,7 +105,7 @@ function m.show_panel(props)
     end
 end
 
-function m.data_from_ui(target, ...)
+local function data_from_ui(target, ...)
     if type(target) == "table" then
         target = {...}
     end
@@ -116,14 +116,14 @@ function m.create_emitter_panel(emitter)
     property = {}
     for _, item in ipairs(emitter.attributes) do
         if item.name == "spawn" then
-            property[#property + 1] = uiproperty.IntPro(item.name,
+            property[#property + 1] = uiproperty.Int(item.name,
                 function(v)
                     item.data.count = v
                     m.update_emitter()
                 end,
                 function() return item.data.count end)
         elseif item.name == "scale" then
-            property[#property + 1] = uiproperty.FloatPro(item.name,
+            property[#property + 1] = uiproperty.Float(item.name,
                 function(...) data_from_ui(item.data.range, ...) end,
                 function() return item.data.range end, 2)
         elseif item.name == "translation"
@@ -142,12 +142,19 @@ function m.set_emitter(emitter_eid)
     m.create_emitter_panel(world[emitter_eid].emitter)
 end
 
+local testcolor = {1,0.5,1,1}
+local uitestcolor = uiproperty.Color("TestColor",
+    function(...) testcolor = {...} end,
+    function() return testcolor end)
+uitestcolor:update()
+
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
     for _ in uiutils.imgui_windows("ParticleEmitter", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         m.show_panel(property)
+        uitestcolor:show()
     end
 end
 

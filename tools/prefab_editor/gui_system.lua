@@ -290,7 +290,7 @@ function m:data_changed()
         end
     end
     for _, filename in event_open_prefab:unpack() do
-        prefab_mgr:open_prefab(filename)
+        prefab_mgr:open(filename)
     end
     for _, filename in event_add_prefab:unpack() do
         prefab_mgr:add_prefab(filename)
