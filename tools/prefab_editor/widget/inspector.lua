@@ -3,6 +3,7 @@ local math3d    = require "math3d"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy"
+local uiproperty    = require "widget.uiproperty"
 local light_gizmo
 local gizmo
 local material_panel
@@ -11,6 +12,7 @@ local world
 local worldedit
 local iom
 local camera_mgr
+local light_view
 
 local base_ui_data = {
     current_eid = -1,
@@ -61,15 +63,20 @@ local function update_ui_data(eid)
         end
     end
     if world[eid].light_type then
-        local value = math3d.totable(ilight.intensity(eid))
-        light_ui_data.intensity[1] = value[1]
-        light_ui_data.range[1] = ilight.range(eid)
-        light_ui_data.degree[1] = math.deg(ilight.radian(eid))
-        local color = math3d.totable(ilight.color(eid))
-        light_ui_data.color[1] = color[1]
-        light_ui_data.color[2] = color[2]
-        light_ui_data.color[3] = color[3]
-        light_ui_data.color[4] = color[4]
+        -- local value = math3d.totable(ilight.intensity(eid))
+        -- light_ui_data.intensity[1] = value[1]
+        -- light_ui_data.range[1] = ilight.range(eid)
+        -- light_ui_data.degree[1] = math.deg(ilight.radian(eid))
+        -- local color = math3d.totable(ilight.color(eid))
+        -- light_ui_data.color[1] = color[1]
+        -- light_ui_data.color[2] = color[2]
+        -- light_ui_data.color[3] = color[3]
+        -- light_ui_data.color[4] = color[4]
+        if not light_panel then
+            light_panel = light_view()
+        end
+        light_panel:set_model(eid)
+        --update_light_ui(eid)
     end
     if not pos then
         local s, r, t = math3d.srt(iom.srt(eid))
@@ -161,6 +168,8 @@ local function on_scale_dirty(eid, scale)
         world:pub {"EntityEvent", "scale", eid, oldScale, {scale[1], scale[2], scale[3]}}
     end
 end
+
+
 
 local function show_light_property(eid)
     imgui.cursor.Separator()
@@ -332,7 +341,8 @@ function m.show()
             if world[current_eid].camera then
                 show_camera_property(current_eid)
             elseif world[current_eid].light_type then
-                show_light_property(current_eid)
+                --show_light_property(current_eid)
+                light_panel:show()
             else
                 material_panel.show(current_eid)
             end
@@ -350,5 +360,6 @@ return function(w)
     material_panel  = require "widget.material"(world)
     gizmo           = require "gizmo.gizmo"(world)
     light_gizmo     = require "gizmo.light"(world)
+    light_view      = require "widget.light_view"(world)
     return m
 end
