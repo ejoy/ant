@@ -33,14 +33,19 @@ $(ODIR)/fonteffect.o : fonteffect.cpp | $(ODIR)
 $(ODIR)/luarmlui.o : luarmlui.cpp | $(ODIR)
 	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(BGFX3RDINC) $(BGFXINC) $(RMLUIINC)
 
+$(ODIR)/luaplugin.o : luaplugin.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(RMLUIINC)
+
+$(ODIR)/rmlapi.o : rmlapi.cpp | $(ODIR)
+	$(CXX) -c $(CFLAGS) -o $@ $^ -DRMLUI_STATIC_LIB $(LUAINC) $(CLIBSINC) $(RMLUIINC)
 
 RMLUILIB=-L$(ANT3RD)/build/RmlUi/$(PLAT)/$(MODE) -lRmlDebugger -lRmlCore 
 FONTLIB=-L../../bin/$(PLAT)/$(MODE) -lfont
 
-$(ODIR)/rmlui.dll : $(ODIR)/luarmlui.o $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/context.o $(ODIR)/fonteffect.o
+$(ODIR)/rmlui.dll : $(ODIR)/luarmlui.o $(ODIR)/luaplugin.o $(ODIR)/rmlapi.o $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/context.o $(ODIR)/fonteffect.o
 	$(CC) $(CFLAGS) $(LD_SHARED) -o $@ $^ $(RMLUILIB) $(FONTLIB) $(LUALIB) -lstdc++ 
 
-$(ODIR)/librmlui.a : $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/luarmlui.o
+$(ODIR)/librmlui.a : $(ODIR)/file.o $(ODIR)/font.o $(ODIR)/render.o $(ODIR)/system.o $(ODIR)/luarmlui.o $(ODIR)/luaplugin.o $(ODIR)/rmlapi.o
 	ar rsv $@ $^
 
 $(ODIR) :

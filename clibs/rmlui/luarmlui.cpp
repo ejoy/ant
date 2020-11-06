@@ -6,6 +6,7 @@
 #include "font.h"
 #include "system.h"
 #include "context.h"
+#include "luaplugin.h"
 
 #include <bgfx/bgfx_interface.h>
 #include <bgfx/luabgfx.h>
@@ -13,7 +14,6 @@
 
 #include <RmlUi/Core.h>
 #include <RmlUi/Debugger.h>
-#include <RmlUi/Lua.h>
 
 #include <cassert>
 #include <cstring>
@@ -53,6 +53,8 @@ lrmlui_init(lua_State *L){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
     g_wrapper->font.RegisterFontEffectInstancer();
+
+	lua_plugin_register(L, 2);
     return 0;
 }
 
@@ -96,81 +98,7 @@ lrmlui_frame(lua_State *L){
 
 struct rcontext {
 	Rml::Context* ctx;
-	lua_State *L;
-	size_t mem;
-	int warnstate;
 };
-
-static void *
-rml_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
-	struct rcontext *ctx = (struct rcontext *)ud;
-	if (nsize == 0) {
-		ctx->mem -= osize;
-		free(ptr);
-		return NULL;
-	}
-	else if (ptr == NULL) {
-		ctx->mem += nsize;
-		return malloc(nsize);
-	} else {
-		ctx->mem -= osize;
-		ctx->mem += nsize;
-		return realloc(ptr, nsize);
-	}
-}
-
-static int
-rml_panic (lua_State *L) {
-	const char *msg = lua_tostring(L, -1);
-	if (msg == NULL) msg = "error object is not a string";
-	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
-						msg);
-	return 0;
-}
-
-/*
-** Emit a warning. '*warnstate' means:
-** 0 - warning system is off;
-** 1 - ready to start a new message;
-** 2 - previous message is to be continued.
-*/
-static void
-rml_warnf (void *ud, const char *message, int tocont) {
-	struct rcontext *ctx = (struct rcontext *)ud;
-	int *warnstate = &ctx->warnstate;
-	if (*warnstate != 2 && !tocont && *message == '@') {  /* control message? */
-		if (strcmp(message, "@off") == 0)
-			*warnstate = 0;
-		else if (strcmp(message, "@on") == 0)
-			*warnstate = 1;
-		return;
-	}
-	else if (*warnstate == 0)  /* warnings off? */
-		return;
-	if (*warnstate == 1)  /* previous message was the last? */
-		lua_writestringerror("%s", "Lua warning: ");  /* start a new warning */
-	lua_writestringerror("%s", message);  /* write message */
-	if (tocont)  /* not the last part? */
-		*warnstate = 2;  /* to be continued */
-	else {  /* last part */
-		lua_writestringerror("%s", "\n");  /* finish message with end-of-line */
-		*warnstate = 1;  /* ready to start a new message */
-	}
-}
-
-static int
-init_luavm(struct rcontext *R) {
-	R->mem = 0;
-	R->warnstate = 0;
-	lua_State *L = lua_newstate(rml_alloc, R);
-	if (L == NULL)
-		return 0;
-	lua_atpanic(L, &rml_panic);
-	lua_setwarnf(L, rml_warnf, R);
-	R->L = L;
-	// todo : init libs
-	return 1;
-}
 
 static int
 lrelease_context(lua_State *L) {
@@ -180,13 +108,6 @@ lrelease_context(lua_State *L) {
 	Rml::RemoveContext(R->ctx->GetName());
 	R->ctx = NULL;
 	return 0;
-}
-
-static int
-lctx_Memory(lua_State *L) {
-	struct rcontext *R = (struct rcontext *)lua_touserdata(L, 1);
-	lua_pushinteger(L, R->mem);
-	return 1;
 }
 
 static Rml::Context *
@@ -230,9 +151,6 @@ lcreate_context(lua_State *L) {
 	int h = luaL_checkinteger(L, 3);
 	struct rcontext * R = (struct rcontext *)lua_newuserdatauv(L, sizeof(*R), 0);
 	R->ctx = NULL;
-	if (!init_luavm(R)) {
-		return luaL_error(L, "Init context VM failed");
-	}
 	if (luaL_newmetatable(L, RMLCONTEXT)) {
 		luaL_Reg lib[] = {
 			{ "__gc", lrelease_context },
@@ -240,7 +158,6 @@ lcreate_context(lua_State *L) {
 			{ "LoadDocument", lctx_load_document },
 			{ "Update", lctx_update },
 			{ "Render", lctx_render },
-			{ "Memory", lctx_Memory },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, lib, 0);
