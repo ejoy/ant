@@ -14,7 +14,7 @@ function init_sys:post_init()
 	iRmlUi.preload_dir "/pkg/ant.test.rmlui/ui"
 	local vr = irq.view_rect(world:singleton_entity_id "main_queue")
 	rml = iRmlUi.CreateContext("main" , vr.w, vr.w)
-	rml:LoadDocument "fonttest.rml"
+	rml:LoadDocument "script.rml"
 end
 
 function init_sys:ui_update()

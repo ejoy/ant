@@ -231,55 +231,6 @@ void lua_event_listener::OnDetach(Rml::Element* element) {
 	plugin->call_lua_function("OnEventDetach", 1);
 }
 
-static void
-lua_pushvariant(lua_State *L, const Rml::Variant &v) {
-	switch (v.GetType()) {
-	case Rml::Variant::Type::BOOL:
-		lua_pushboolean(L, v.GetReference<bool>());
-		break;
-	case Rml::Variant::Type::BYTE:
-		lua_pushinteger(L, v.GetReference<unsigned char>());
-		break;
-	case Rml::Variant::Type::CHAR: {
-		char s[1] = {v.GetReference<char>() };
-		lua_pushlstring(L, s, 1);
-		break; }
-	case Rml::Variant::Type::FLOAT:
-		lua_pushnumber(L, v.GetReference<float>());
-		break;
-	case Rml::Variant::Type::DOUBLE:
-		lua_pushnumber(L, v.GetReference<double>());
-		break;
-	case Rml::Variant::Type::INT:
-		lua_pushinteger(L, v.GetReference<int>());
-		break;
-	case Rml::Variant::Type::INT64:
-		lua_pushinteger(L, v.GetReference<int64_t>());
-		break;
-	case Rml::Variant::Type::STRING: {
-		const Rml::String &s = v.GetReference<Rml::String>();
-		lua_pushlstring(L, s.c_str(), s.length());
-		break; }
-	case Rml::Variant::Type::NONE:
-	case Rml::Variant::Type::VECTOR2:
-	case Rml::Variant::Type::VECTOR3:
-	case Rml::Variant::Type::VECTOR4:
-	case Rml::Variant::Type::COLOURF:
-	case Rml::Variant::Type::COLOURB:
-	case Rml::Variant::Type::SCRIPTINTERFACE:
-	case Rml::Variant::Type::TRANSFORMPTR:
-	case Rml::Variant::Type::TRANSITIONLIST:
-	case Rml::Variant::Type::ANIMATIONLIST:
-	case Rml::Variant::Type::DECORATORSPTR:
-	case Rml::Variant::Type::FONTEFFECTSPTR:
-	case Rml::Variant::Type::VOIDPTR:
-	default:
-		// todo
-		lua_pushnil(L);
-		break;
-	}
-}
-
 void lua_event_listener::ProcessEvent(Rml::Event& event) {
 	lua_State *L = plugin->L;
 	lua_pushlightuserdata(L, (void *)this);

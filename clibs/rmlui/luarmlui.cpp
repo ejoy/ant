@@ -134,7 +134,12 @@ lctx_load_document(lua_State *L) {
 
 static int
 lctx_update(lua_State *L) {
+	// todo: We don't need update data model here.
+	Rml::DataModelConstructor constructor = get_context(L)->GetDataModel("basics");
+	constructor.GetModelHandle().Update();
+
 	get_context(L)->Update();
+
 	return 0;
 }
 

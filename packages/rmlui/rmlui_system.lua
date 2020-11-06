@@ -16,6 +16,12 @@ local function init_callback()
 		print("Document:", doc)
 		print(source)
 		print(rmlui.DocumentGetSourceURL(doc))
+		local f,err = load(source)
+		if err then
+			print("Load error:", err)
+		else
+			print(pcall(f, doc))
+		end
 	end
 
 	local event_name = {
