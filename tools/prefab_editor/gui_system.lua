@@ -221,6 +221,8 @@ local function on_target(old, new)
             camera_mgr.set_second_camera(new, true)
         elseif new_entity.light_type then
             light_gizmo.bind(new)
+        elseif new_entity.emitter then
+            particle_emitter.set_emitter(new)
         end
     end
     prefab_mgr:update_current_aabb(new)
@@ -288,7 +290,7 @@ function m:data_changed()
         end
     end
     for _, filename in event_open_prefab:unpack() do
-        prefab_mgr:open_prefab(filename)
+        prefab_mgr:open(filename)
     end
     for _, filename in event_add_prefab:unpack() do
         prefab_mgr:add_prefab(filename)
