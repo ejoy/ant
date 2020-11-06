@@ -26,7 +26,6 @@ lDocumentGetTitle(lua_State *L) {
 static int
 lDocumentGetSourceURL(lua_State *L) {
 	Rml::ElementDocument *doc = (Rml::ElementDocument *)lua_touserdata(L, 1);
-	printf("SOURCE URL\n");
 	const Rml::String &url = doc->GetSourceURL();
 	lua_pushlstring(L, url.c_str(), url.length());
 	return 1;

@@ -9,6 +9,9 @@ local function init_callback()
 	function m.OnNewDocument(doc)
 		print("Document Open", doc)
 	end
+	function m.OnDeleteDocument(doc)
+		print("Document Close", doc)
+	end
 	function m.OnLoadScript(source, doc, filename)
 		print("Document:", doc)
 		print(source)

@@ -22,6 +22,7 @@ public:
 		Init();
 	}
 private:
+	~lua_document();
 	void Init();
 	void LoadScript(Rml::Stream* stream, const Rml::String& source_name) override;
 
@@ -126,6 +127,7 @@ private:
 		check_function(L, "OnContextCreate");
 		check_function(L, "OnContextDestroy");
 		check_function(L, "OnNewDocument");
+		check_function(L, "OnDeleteDocument");
 		check_function(L, "OnLoadScript");
 		check_function(L, "OnEvent");
 		check_function(L, "OnEventAttach");
@@ -186,6 +188,12 @@ void lua_document::Init() {
 	lua_State *L = plugin->L;
 	lua_pushlightuserdata(L, (void *)this);
 	plugin->call_lua_function("OnNewDocument", 1);
+}
+
+lua_document::~lua_document() {
+	lua_State *L = plugin->L;
+	lua_pushlightuserdata(L, (void *)this);
+	plugin->call_lua_function("OnDeleteDocument", 1);
 }
 
 void
