@@ -80,4 +80,6 @@ function m.OnEventDetach(ev)
 	print("EventDetach", ev)
 end
 
+m.OnUpdate = require "core.update"
+
 return m

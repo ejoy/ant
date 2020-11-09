@@ -8,22 +8,18 @@ local irq        = world:interface "ant.render|irenderqueue"
 local OpenDebugger  = false
 local eventKeyboard = world:sub {"keyboard", "F8"}
 
-local rml
-
 function init_sys:post_init()
-	iRmlUi.preload_dir "/pkg/ant.test.rmlui/ui"
 	local vr = irq.view_rect(world:singleton_entity_id "main_queue")
-	rml = iRmlUi.CreateContext("main" , vr.w, vr.w)
-	rml:LoadDocument "script.rml"
+	iRmlUi.preload_dir "/pkg/ant.test.rmlui/ui"
+	iRmlUi.message("CreateContext", "main" , vr.w, vr.w)
+	iRmlUi.message("LoadDocument", "main", "start.html")
 end
 
 function init_sys:ui_update()
     for _,_,press in eventKeyboard:unpack() do
---        if press == 1 then
---            OpenDebugger = not OpenDebugger
---            iRmlUi.message("Debugger", OpenDebugger)
---        end
+        if press == 1 then
+            OpenDebugger = not OpenDebugger
+            iRmlUi.message("Debugger", OpenDebugger)
+        end
     end
-	rml:Update()
-	rml:Render()
 end

@@ -78,7 +78,11 @@ public:
 		}
 		InitLuaVM(mL, index);
 	}
-private:
+	~lua_plugin() {
+		delete document_element_instancer;
+		delete event_listener_instancer;
+	}
+
 	int GetEventClasses() override {
 		return EVT_BASIC;
 	}
@@ -91,7 +95,8 @@ private:
 	void OnShutdown() override {
 		delete document_element_instancer;
 		delete event_listener_instancer;
-		delete this;
+		document_element_instancer = nullptr;
+		event_listener_instancer = nullptr;
 	}
 	void call_lua_function(const char *name, int argn) {
 		lua_rawgetp(L, LUA_REGISTRYINDEX, (void *)this);
@@ -182,6 +187,7 @@ private:
 	lua_State *L = nullptr;
 	friend class lua_document;
 	friend class lua_event_listener;
+	friend void lua_plugin_call(plugin_t plugin, const char* name);
 	lua_document_instancer* document_element_instancer = nullptr;
 	lua_event_listener_instancer* event_listener_instancer = nullptr;
 };
@@ -258,4 +264,21 @@ lua_plugin_register(lua_State *L, int index) {
 	lua_plugin * p = new lua_plugin();
 	p->Init(L, index);
 	Rml::RegisterPlugin(p);
+}
+
+plugin_t
+lua_plugin_create(lua_State* L, int index) {
+	lua_plugin * p = new lua_plugin();
+	p->Init(L, index);
+	return p;
+}
+
+void
+lua_plugin_call(plugin_t plugin, const char* name) {
+	((lua_plugin*)plugin)->call_lua_function(name, 0);
+}
+
+void
+lua_plugin_destroy(plugin_t plugin) {
+	delete plugin;
 }

@@ -26,6 +26,7 @@ struct rml_context_wrapper {
     FontInterface  font;
     FileInterface2 file;
     Renderer       renderer;
+    plugin_t       plugin;
     bool           debugger;
     rml_context_wrapper(lua_State* L, int idx)
         : context(L, idx)
@@ -33,8 +34,12 @@ struct rml_context_wrapper {
         , font(&context)
         , file(&context)
         , renderer(&context)
+        , plugin(nullptr)
 		, debugger(false)
 		{}
+    ~rml_context_wrapper() {
+        lua_plugin_destroy(plugin);
+    }
 };
 
 static rml_context_wrapper* g_wrapper = nullptr;
@@ -53,8 +58,7 @@ lrmlui_init(lua_State *L){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
     g_wrapper->font.RegisterFontEffectInstancer();
-
-	lua_plugin_register(L, 2);
+    g_wrapper->plugin = lua_plugin_create(L, 2);
     return 0;
 }
 
@@ -82,6 +86,13 @@ lrmlui_preload_file(lua_State* L) {
         const char* v = luaL_checklstring(L, -1, &vsz);
         dict.emplace(std::string(k, ksz), std::string(v, vsz));
         lua_pop(L, 1);
+    }
+    return 0;
+}
+static int
+lrmlui_update(lua_State* L) {
+    if (g_wrapper) {
+        lua_plugin_call(g_wrapper->plugin, "OnUpdate");
     }
     return 0;
 }
@@ -183,6 +194,7 @@ luaopen_rmlui(lua_State* L) {
         { "init",       lrmlui_init },
         { "shutdown",   lrmlui_shutdown },
         { "preload_file", lrmlui_preload_file },
+        { "update",     lrmlui_update},
         { "frame",      lrmlui_frame},
 
 		{ "CreateContext", lcreate_context },
