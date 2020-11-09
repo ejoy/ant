@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include <RmlUi/Core.h>
 #include <RmlUi/Core/Plugin.h>
 #include <RmlUi/Core/ElementDocument.h>
@@ -146,7 +148,7 @@ private:
 		const char * source = (const char *)lua_touserdata(L, 1);
 		size_t sz = lua_tointeger(L, 2);
 		void *key = lua_touserdata(L, 3);
-		int err = luaL_loadbuffer(L, source, sz, "RmlInit") || lua_pcall(L, 0, 1, 0);
+		int err = luaL_loadbuffer(L, source, sz, source) || lua_pcall(L, 0, 1, 0);
 		if (err)
 			return lua_error(L);
 		check_module(L);
@@ -238,7 +240,7 @@ void lua_event_listener::ProcessEvent(Rml::Event& event) {
 	if (p.empty()) {
 		lua_pushnil(L);
 	} else {
-		lua_createtable(L, 0, p.size());
+		lua_createtable(L, 0, (int)p.size());
 		for (auto &v : p) {
 			lua_pushlstring(L, v.first.c_str(), v.first.length());
 			lua_pushvariant(L, v.second);

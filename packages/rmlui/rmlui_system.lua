@@ -1,91 +1,3 @@
-local function init_callback()
-	local m = {}
-	function m.OnContextCreate(context)
-		print("Create Context", context)
-	end
-	function m.OnContextDestroy(context)
-		print("Destroy Context", context)
-	end
-	function m.OnNewDocument(doc)
-		print("Document Open", doc)
-	end
-	function m.OnDeleteDocument(doc)
-		print("Document Close", doc)
-	end
-	function m.OnLoadScript(source, doc, filename)
-		print("Document:", doc)
-		print(source)
-		print(rmlui.DocumentGetSourceURL(doc))
-		local f,err = load(source)
-		if err then
-			print("Load error:", err)
-		else
-			print(pcall(f, doc))
-		end
-	end
-
-	local event_name = {
-		[0] = "invalid",
-		"mousedown"     ,
-		"mousescroll"   ,
-		"mouseover"     ,
-		"mouseout"      ,
-		"focus"         ,
-		"blur"          ,
-		"keydown"       ,
-		"keyup"         ,
-		"textinput"     ,
-		"mouseup"       ,
-		"click"         ,
-		"dblclick"      ,
-		"load"          ,
-		"unload"        ,
-		"show"          ,
-		"hide"          ,
-		"mousemove"     ,
-		"dragmove"      ,
-		"drag"          ,
-		"dragstart"     ,
-		"dragover"      ,
-		"dragdrop"      ,
-		"dragout"       ,
-		"dragend"       ,
-		"handledrag"    ,
-		"resize"        ,
-		"scroll"        ,
-		"animationend"  ,
-		"transitionend" ,
-		"change"        ,
-		"submit"        ,
-		"tabchange"     ,
-		"columnadd"     ,
-		"rowadd"        ,
-		"rowchange"     ,
-		"rowremove"     ,
-		"rowupdate"     ,
-	}
-
-	function m.OnEvent(ev, params, id)
-		print("Event", ev, event_name[id])
-		if params then
-			for k,v in pairs(params) do
-				print("=>", k,v)
-			end
-		end
-	end
-	function m.OnEventAttach(ev, document, element, source)
-		print("EventAttach", ev)
-		print("Document:", document)
-		print("Element:", element)
-		print(source)
-	end
-	function m.OnEventDetach(ev)
-		print("EventDetach", ev)
-	end
-
-	return m
-end
-
 local ecs = ...
 local world = ecs.world
 
@@ -117,7 +29,7 @@ local function init_rmlui_data()
 
     local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
     return {
-        viewid = vid,
+		viewid = vid,
         shader = {
             font_mask = 0.6,
             font_range = 0.05,
@@ -181,8 +93,11 @@ end
 
 function rmlui_sys:init()
 	local data = init_rmlui_data()
-    rmlui.init(data, string.dump(init_callback))
-
+	local thread = require "common.thread"
+    rmlui.init(data, thread.bootstrap("rmlui", [[
+		require "bootstrap"
+		return import_package "ant.rmlui"
+	]]))
     preload_dir "/pkg/ant.resources.binary/ui/test"
 end
 
