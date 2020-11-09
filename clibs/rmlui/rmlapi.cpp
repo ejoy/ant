@@ -10,12 +10,12 @@ extern "C" {
 
 #include "luaplugin.h"
 
-#include <RmlUi/Core/DataModel.h>
+#include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/DataVariable.h>
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 
-#define DMTABLE "DMTABLE"
+#define RMLDATAMODEL "RMLDATAMODEL"
 
 void
 lua_pushvariant(lua_State *L, const Rml::Variant &v) {
@@ -24,20 +24,15 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 		lua_pushboolean(L, v.GetReference<bool>());
 		break;
 	case Rml::Variant::Type::BYTE:
-		lua_pushinteger(L, v.GetReference<unsigned char>());
+	case Rml::Variant::Type::CHAR:
+	case Rml::Variant::Type::INT:
+		lua_pushinteger(L, v.GetReference<int>());
 		break;
-	case Rml::Variant::Type::CHAR: {
-		char s[1] = {v.GetReference<char>() };
-		lua_pushlstring(L, s, 1);
-		break; }
 	case Rml::Variant::Type::FLOAT:
 		lua_pushnumber(L, v.GetReference<float>());
 		break;
 	case Rml::Variant::Type::DOUBLE:
 		lua_pushnumber(L, v.GetReference<double>());
-		break;
-	case Rml::Variant::Type::INT:
-		lua_pushinteger(L, v.GetReference<int>());
 		break;
 	case Rml::Variant::Type::INT64:
 		lua_pushinteger(L, v.GetReference<int64_t>());
@@ -62,6 +57,31 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 	default:
 		// todo
 		lua_pushnil(L);
+		break;
+	}
+}
+
+void
+lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
+	if (!variant)
+		return;
+	switch(lua_type(L, index)) {
+	case LUA_TBOOLEAN:
+		*variant = (bool)lua_toboolean(L, index);
+		break;
+	case LUA_TNUMBER:
+		if (lua_isinteger(L, index)) {
+			*variant = (int64_t)lua_tointeger(L, index);
+		} else {
+			*variant = (double)lua_tonumber(L, index);
+		}
+		break;
+	case LUA_TSTRING:
+		*variant = Rml::String(lua_tostring(L, index));
+		break;
+	case LUA_TNIL:
+	default:	// todo
+		*variant = Rml::Variant();
 		break;
 	}
 }
@@ -99,17 +119,17 @@ lElementGetInnerRML(lua_State *L) {
 	return 1;
 }
 
-class lua_scalar;
+class LuaScalarDef;
 
-struct lua_datamodel {
-	Rml::DataModel *model;
+struct LuaDataModel {
+	Rml::DataModelHandle handle;
 	lua_State *dataL;
-	lua_scalar *scalar_def;
+	LuaScalarDef *scalarDef;
 };
 
-class lua_scalar final : public Rml::VariableDefinition {
+class LuaScalarDef final : public Rml::VariableDefinition {
 public:
-	lua_scalar (struct lua_datamodel *model) :
+	LuaScalarDef (const struct LuaDataModel *model) :
 		VariableDefinition(Rml::DataVariableType::Scalar), model(model) {}
 private:
 	virtual bool Get(void* ptr, Rml::Variant& variant) {
@@ -117,25 +137,7 @@ private:
 		if (!L)
 			return false;
 		int id = (intptr_t)ptr;
-		switch(lua_type(L, id)) {
-		case LUA_TBOOLEAN:
-			variant = (bool)lua_toboolean(L, id);
-			break;
-		case LUA_TNUMBER:
-			if (lua_isinteger(L, id)) {
-				variant = (int64_t)lua_tointeger(L, id);
-			} else {
-				variant = (double)lua_tonumber(L, id);
-			}
-			break;
-		case LUA_TSTRING:
-			variant = Rml::String(lua_tostring(L, id));
-			break;
-		case LUA_TNIL:
-		default:	// todo
-			variant = Rml::Variant();
-			break;
-		}
+		lua_getvariant(L, id, &variant);
 		return true;
 	}
 	virtual bool Set(void* ptr, const Rml::Variant& variant) {
@@ -148,11 +150,11 @@ private:
 		return true;
 	}
 
-	struct lua_datamodel *model;
+	const struct LuaDataModel *model;
 };
 
 static int
-get_id(lua_State *L, lua_State *dataL) {
+getId(lua_State *L, lua_State *dataL) {
 	lua_pushvalue(dataL, 1);
 	lua_xmove(dataL, L, 1);
 	lua_pushvalue(L, 2);
@@ -165,47 +167,53 @@ get_id(lua_State *L, lua_State *dataL) {
 }
 
 static int
-ldatamodel_get(lua_State *L) {
-	struct lua_datamodel *dm = (struct lua_datamodel *)lua_touserdata(L, 1);
-	lua_State *dataL = dm->dataL;
+lDataModelGet(lua_State *L) {
+	struct LuaDataModel *D = (struct LuaDataModel *)lua_touserdata(L, 1);
+	lua_State *dataL = D->dataL;
 	if (dataL == NULL)
 		luaL_error(L, "DataModel released");
 
-	int id = get_id(L, dataL);
+	int id = getId(L, dataL);
 	lua_pushvalue(dataL, id);
 	lua_xmove(dataL, L, 1);
 	return 1;
 }
 
 static int
-ldatamodel_set(lua_State *L) {
-	struct lua_datamodel *dm = (struct lua_datamodel *)lua_touserdata(L, 1);
-	lua_State *dataL = dm->dataL;
+lDataModelSet(lua_State *L) {
+	struct LuaDataModel *D = (struct LuaDataModel *)lua_touserdata(L, 1);
+	lua_State *dataL = D->dataL;
 	if (dataL == NULL)
 		luaL_error(L, "DataModel released");
-	int id = get_id(L, dataL);
+	int id = getId(L, dataL);
 	lua_xmove(L, dataL, 1);
 	lua_replace(dataL, id);
-	dm->model->DirtyVariable(lua_tostring(L, 2));
+	D->handle.DirtyVariable(lua_tostring(L, 2));
 	return 0;
 }
 
-// We should release lua_datamodel manually
+// We should release LuaDataModel manually
 static int
 lDataModelRelease(lua_State *L) {
-	struct lua_datamodel *dm = (struct lua_datamodel *)lua_touserdata(L, 1);
-	delete dm->scalar_def;
-	dm->model = nullptr;
-	dm->scalar_def = nullptr;
-	dm->dataL = nullptr;
+	struct LuaDataModel *D = (struct LuaDataModel *)luaL_checkudata(L, 1, RMLDATAMODEL);
+
+	D->dataL = nullptr;
+	delete D->scalarDef;
+	D->scalarDef = nullptr;
 	lua_pushnil(L);
-	lua_setuservalue(L, 1);
+	lua_setuservalue(L, -2);
 	return 0;
 }
 
+// Construct a lua sub thread for LuaDataModel
+// stack 1 : { name(string) -> id(integer) }
+// stack 2- : values
+// For example : build from { str = "Hello", x = 0 }
+//	1: { str = 2 , x = 3 }
+//	2: "Hello"
+//	3: 0
 static lua_State *
-bind_table(lua_State *L, int index, struct lua_datamodel *model) {
-	model->scalar_def = new lua_scalar(model);
+InitDataModelFromTable(lua_State *L, int index, Rml::DataModelConstructor &ctor, class LuaScalarDef *def) {
 	lua_State *dataL = lua_newthread(L);
 	lua_newtable(dataL);
 	intptr_t id = 2;
@@ -221,7 +229,7 @@ bind_table(lua_State *L, int index, struct lua_datamodel *model) {
 		lua_pushinteger(dataL, id);
 		lua_rawset(dataL, 1);
 		const char *key = lua_tostring(L, -1);
-		model->model->BindVariable(key, Rml::DataVariable(model->scalar_def, (void *)id)); 
+		ctor.BindCustomDataVariable(key, Rml::DataVariable(def, (void *)id));
 		++id;
 	}
 	return dataL;
@@ -238,18 +246,19 @@ lDataModelCreate(lua_State *L) {
 		return luaL_error(L, "Can't create DataModel with name %s", name.c_str());
 	}
 
-	struct lua_datamodel *dm = (struct lua_datamodel *)lua_newuserdata(L, sizeof(*dm));
-	dm->model = context->GetDataModelPtr(name);
-	dm->dataL = nullptr;
-	dm->scalar_def = nullptr;
-	
-	dm->dataL = bind_table(L, 3, dm);
+	struct LuaDataModel *D = (struct LuaDataModel *)lua_newuserdata(L, sizeof(*D));
+	D->dataL = nullptr;
+	D->scalarDef = nullptr;
+	D->handle = constructor.GetModelHandle();
+
+	D->scalarDef = new LuaScalarDef(D);
+	D->dataL = InitDataModelFromTable(L, 3, constructor, D->scalarDef);
 	lua_setuservalue(L, -2);
 
-	if (luaL_newmetatable(L, "RMLDATAMODEL")) {
+	if (luaL_newmetatable(L, RMLDATAMODEL)) {
 		luaL_Reg l[] = {
-			{ "__index", ldatamodel_get },
-			{ "__newindex", ldatamodel_set },
+			{ "__index", lDataModelGet },
+			{ "__newindex", lDataModelSet },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
@@ -257,15 +266,6 @@ lDataModelCreate(lua_State *L) {
 	lua_setmetatable(L, -2);
 
 	return 1;
-}
-
-static int
-lDataModelUpdate(lua_State *L) {
-	struct lua_datamodel *dm = (struct lua_datamodel *)lua_touserdata(L, 1);
-	if (dm->model) {
-		dm->model->Update();
-	}
-	return 0;
 }
 
 }
@@ -276,7 +276,6 @@ lua_plugin_apis(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "DataModelRelease", lDataModelRelease },
 		{ "DataModelCreate", lDataModelCreate },
-		{ "DataModelUpdate", lDataModelUpdate },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetTitle", lDocumentGetTitle },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
@@ -284,9 +283,6 @@ lua_plugin_apis(lua_State *L) {
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
-	// create datamodel
-	lua_newtable(L);
-	lua_setfield(L, LUA_REGISTRYINDEX, DMTABLE);
 
 	return 1;
 }

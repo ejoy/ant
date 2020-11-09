@@ -4,5 +4,6 @@
 void lua_plugin_register(lua_State *L, int index);
 int lua_plugin_apis(lua_State *L);
 void lua_pushvariant(lua_State *L, const Rml::Variant &v);
+void lua_getvariant(lua_State *L, int index, Rml::Variant* variant);
 
 #endif
