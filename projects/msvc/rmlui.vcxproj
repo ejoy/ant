@@ -103,21 +103,20 @@
     <ProjectReference Include="luadll.vcxproj">
       <Project>{af8c0252-364f-4d3b-b35e-f3392eea620b}</Project>
     </ProjectReference>
-    <ProjectReference Include="rmlui_lua.vcxproj">
-      <Project>{709ea864-822e-45c8-ab4f-81cafd6e38e1}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\clibs\rmlui\context.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\file.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\font.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\fonteffect.cpp" />
+    <ClCompile Include="..\..\clibs\rmlui\luaplugin.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\luarmlui.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\clibs\rmlui\render.cpp" />
+    <ClCompile Include="..\..\clibs\rmlui\rmlapi.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\system.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -126,6 +125,7 @@
     <ClInclude Include="..\..\clibs\rmlui\font.h" />
     <ClInclude Include="..\..\clibs\rmlui\fonteffect.h" />
     <ClInclude Include="..\..\clibs\rmlui\lua2struct.h" />
+    <ClInclude Include="..\..\clibs\rmlui\luaplugin.h" />
     <ClInclude Include="..\..\clibs\rmlui\pch.h" />
     <ClInclude Include="..\..\clibs\rmlui\render.h" />
     <ClInclude Include="..\..\clibs\rmlui\system.h" />

@@ -5,7 +5,6 @@ local function createBootstrap()
     return ([=[
         package.searchers[3] = ...
         package.searchers[4] = nil
-        if debug.setcstacklimit then debug.setcstacklimit(1000) end
         local f, err = io.open(%q)
         if not f then
             error('engine/firmware/init_thread.lua:No such file or directory.')

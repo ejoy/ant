@@ -9,11 +9,10 @@ local OpenDebugger  = false
 local eventKeyboard = world:sub {"keyboard", "F8"}
 
 function init_sys:post_init()
-    iRmlUi.preload_dir "/pkg/ant.test.rmlui/ui"
-    local vr = irq.view_rect(world:singleton_entity_id "main_queue")
-    iRmlUi.message("CreateContext", "main", vr.w, vr.h)
-    iRmlUi.message("LoadDocument", "main", "fonttest.rml")
-    iRmlUi.message("Debugger", OpenDebugger)
+	local vr = irq.view_rect(world:singleton_entity_id "main_queue")
+	iRmlUi.preload_dir "/pkg/ant.test.rmlui/ui"
+	iRmlUi.message("CreateContext", "main" , vr.w, vr.w)
+	iRmlUi.message("LoadDocument", "main", "start.html")
 end
 
 function init_sys:ui_update()
