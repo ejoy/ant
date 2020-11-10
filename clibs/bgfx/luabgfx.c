@@ -44,6 +44,36 @@
 // 64K log ring buffer
 #define MAX_LOGBUFFER (64*1024)
 
+static int tag_encoder = 0;
+#define ENCODER ((void *)&tag_encoder)
+
+struct encoder_holder {
+	bgfx_encoder_t *encoder;
+};
+
+static inline bgfx_encoder_t *
+get_encoder(lua_State *L) {
+#define DUMMY_ENCODER ((bgfx_encoder_t *)~0)
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, ENCODER) != LUA_TUSERDATA) {
+		luaL_error(L, "Call bgfx.encoder_init first");
+	}
+	struct encoder_holder *E = (struct encoder_holder *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	bgfx_encoder_t * encoder = E->encoder;
+	if (encoder == NULL) {
+		luaL_error(L, "Call bgfx.encoder_begin first");
+		// never here
+		return DUMMY_ENCODER;
+	}
+	return encoder;
+}
+
+#define ENCODER_API(APINAME) \
+ static inline int APINAME##_(lua_State *L, bgfx_encoder_t *encoder); \
+ static int APINAME(lua_State *L) { return APINAME##_(L, NULL); } \
+ static int APINAME##_encoder(lua_State *L) { return APINAME##_(L, get_encoder(L)); } \
+ static inline int APINAME##_(lua_State *L, bgfx_encoder_t *encoder)
+
 struct screenshot {
 	uint32_t width;
 	uint32_t height;
@@ -803,7 +833,8 @@ push_texture_formats(lua_State *L, const uint16_t *formats) {
 		CAPSTF(CUBE_SRGB)        //Texture as sRGB format is supported.
 		CAPSTF(CUBE_EMULATED)    //Texture format is emulated.
 		CAPSTF(VERTEX)           //Texture format can be used from vertex shader.
-		CAPSTF(IMAGE)            //Texture format can be used as image from compute shader.
+		CAPSTF(IMAGE_READ)       //Texture format can be used as image and read from.
+		CAPSTF(IMAGE_WRITE)      //Texture format can be used as image and written to.
 		CAPSTF(FRAMEBUFFER)      //Texture format can be used as frame buffer.
 		CAPSTF(FRAMEBUFFER_MSAA) //Texture format can be used as MSAA frame buffer.
 		CAPSTF(MSAA)             //Texture can be sampled as MSAA.
@@ -1111,10 +1142,9 @@ lsetViewClearMRT(lua_State *L) {
 	return 0;
 }
 
-static int
-ltouch(lua_State *L) {
+ENCODER_API(ltouch) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
-	BGFX(touch)(viewid);
+	BGFX_ENCODER(touch, encoder, viewid);
 	return 0;
 }
 
@@ -1314,21 +1344,19 @@ discard_flags(lua_State *L, int index) {
 	return flags;
 }
 
-static int
-lsubmit(lua_State *L) {
+ENCODER_API(lsubmit) {
 	bgfx_view_id_t id = luaL_checkinteger(L, 1);
 	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint32_t depth = luaL_optinteger(L, 3, 0);
 	uint8_t flags = discard_flags(L, 4);
 	bgfx_program_handle_t ph = { progid };
-	BGFX(submit)(id, ph, depth, flags);
+	BGFX_ENCODER(submit, encoder, id, ph, depth, flags);
 	return 0;
 }
 
-static int
-ldiscard(lua_State *L) {
+ENCODER_API(ldiscard) {
 	uint8_t flags = discard_flags(L, 1);
-	BGFX(discard)(flags);
+	BGFX_ENCODER(discard, encoder, flags);
 	return 0;
 }
 
@@ -1668,15 +1696,14 @@ lmakeState(lua_State *L) {
 	return 1;
 }
 
-static int
-lsetState(lua_State *L) {
+ENCODER_API(lsetState) {
 	if (lua_isnoneornil(L, 1)) {
-		BGFX(set_state)(BGFX_STATE_DEFAULT, 0);
+		BGFX_ENCODER(set_state, encoder, BGFX_STATE_DEFAULT, 0);
 	} else {
 		uint64_t state;
 		uint32_t rgba;
 		get_state(L, 1, &state, &rgba);
-		BGFX(set_state)(state, rgba);
+		BGFX_ENCODER(set_state, encoder, state, rgba);
 	}
 	return 0;
 }
@@ -2853,8 +2880,7 @@ lsetViewTransform(lua_State *L) {
 	return 0;
 }
 
-static int
-lsetVertexBuffer(lua_State *L) {
+ENCODER_API(lsetVertexBuffer) {
 	int stream = 0;
 	int start = 0;
 	int numv = UINT32_MAX;
@@ -2865,7 +2891,7 @@ lsetVertexBuffer(lua_State *L) {
 		if (lua_isnoneornil(L, 1)) {
 			// empty
 			bgfx_vertex_buffer_handle_t handle = { UINT16_MAX };
-			BGFX(set_vertex_buffer)(stream, handle, start, numv);
+			BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
 			return 0;
 		}
 		id = luaL_checkinteger(L, 1);
@@ -2881,18 +2907,18 @@ lsetVertexBuffer(lua_State *L) {
 	int idx = id & 0xffff;
 	if (idtype == BGFX_HANDLE_VERTEX_BUFFER) {
 		bgfx_vertex_buffer_handle_t handle = { idx };
-		BGFX(set_vertex_buffer)(stream, handle, start, numv);
+		BGFX_ENCODER(set_vertex_buffer, encoder, stream, handle, start, numv);
 	} else {
 		if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER){
 			bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
-			BGFX(set_dynamic_vertex_buffer)(stream, handle, start, numv);
+			BGFX_ENCODER(set_dynamic_vertex_buffer, encoder, stream, handle, start, numv);
 		} else if (idtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS) {
 			if (layout == NULL){
 				return luaL_error(L, "dynamic vertex buffer of typeless must pass 'vertex_layout'");
 			}
 
 			bgfx_dynamic_vertex_buffer_handle_t handle = { idx };
-			BGFX(set_dynamic_vertex_buffer_with_layout)(stream, handle, start, numv, get_vertex_layout_handle(layout));
+			BGFX_ENCODER(set_dynamic_vertex_buffer_with_layout, encoder, stream, handle, start, numv, get_vertex_layout_handle(layout));
 		} else {
 			return luaL_error(L, "Invalid vertex buffer type %d", idtype);
 		}
@@ -2900,8 +2926,7 @@ lsetVertexBuffer(lua_State *L) {
 	return 0;
 }
 
-static int
-lsetIndexBuffer(lua_State *L) {
+ENCODER_API(lsetIndexBuffer) {
 	int id = luaL_optinteger(L, 1, BGFX_HANDLE_INDEX_BUFFER | UINT16_MAX);
 	int idtype = id >> 16;
 	int idx = id & 0xffff;
@@ -2910,27 +2935,26 @@ lsetIndexBuffer(lua_State *L) {
 
 	if (idtype == BGFX_HANDLE_INDEX_BUFFER) {
 		bgfx_index_buffer_handle_t handle = { idx };
-		BGFX(set_index_buffer)(handle, start, end);
+		BGFX_ENCODER(set_index_buffer, encoder, handle, start, end);
 	} else {
 		if (idtype != BGFX_HANDLE_DYNAMIC_INDEX_BUFFER &&
 			idtype != BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32) {
 			return luaL_error(L, "Invalid index buffer type %d", idtype);
 		}
 		bgfx_dynamic_index_buffer_handle_t handle = { idx };
-		BGFX(set_dynamic_index_buffer)(handle, start, end);
+		BGFX_ENCODER(set_dynamic_index_buffer, encoder, handle, start, end);
 	}
 	return 0;
 }
 
-static int
-lsetTransform(lua_State *L) {
+ENCODER_API(lsetTransform) {
 	int n = lua_gettop(L);
 	if (n == 1) {
 		if (!lua_isuserdata(L, 1)) {
 			return luaL_error(L, "Need matrix userdata");
 		}
 		void *mat = lua_touserdata(L, 1);
-		int id = BGFX(set_transform)(mat, 1);
+		int id = BGFX_ENCODER(set_transform, encoder, mat, 1);
 		lua_pushinteger(L, id);
 		return 1;
 	} else if (n < 1) {
@@ -2938,7 +2962,7 @@ lsetTransform(lua_State *L) {
 	}
 	// multiple mats
 	bgfx_transform_t trans;
-	uint32_t id = BGFX(alloc_transform)(&trans, n);
+	uint32_t id = BGFX_ENCODER(alloc_transform, encoder, &trans, n);
 	if (trans.num > n) {
 		return luaL_error(L, "Too many transform");
 	}
@@ -2950,26 +2974,24 @@ lsetTransform(lua_State *L) {
 		void *mat = lua_touserdata(L, i+1);
 		memcpy(trans.data + 16 * i, mat, 16 * sizeof(float));
 	}
-	BGFX(set_transform_cached)(id, n);
+	BGFX_ENCODER(set_transform_cached, encoder, id, n);
 	lua_pushinteger(L, id);
 	return 1;
 }
 
-static int
-lsetTransformCached(lua_State *L) {
+ENCODER_API(lsetTransformCached) {
 	int id = luaL_checkinteger(L, 1);
 	int num = luaL_optinteger(L, 2, 1);
-	BGFX(set_transform_cached)(id, num);
+	BGFX_ENCODER(set_transform_cached, encoder, id, num);
 	return 0;
 }
 
-static int
-lsetMultiTransforms(lua_State *L){
+ENCODER_API(lsetMultiTransforms){
 	int t = lua_type(L, 1);
 	int num = luaL_checkinteger(L, 2);
 	if (t == LUA_TUSERDATA || t == LUA_TLIGHTUSERDATA) {
 		void *mat = lua_touserdata(L, 1);
-		int id = BGFX(set_transform)(mat, num);
+		int id = BGFX_ENCODER(set_transform, encoder, mat, num);
 		lua_pushinteger(L, id);
 		return 1;
 	}
@@ -3044,8 +3066,7 @@ lallocTB(lua_State *L) {
 	return 2;
 }
 
-static int
-lsetTVB(lua_State *L) {
+ENCODER_API(lsetTVB) {
 	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	if (v->cap_v == 0) {
 		return luaL_error(L, "Need alloc transient vb first");
@@ -3054,33 +3075,31 @@ lsetTVB(lua_State *L) {
 	int start = luaL_optinteger(L, 3, 0);
 	uint32_t end = luaL_optinteger(L, 4, UINT32_MAX); 
 
-	BGFX(set_transient_vertex_buffer)(stream, &v->tvb, start, end);
+	BGFX_ENCODER(set_transient_vertex_buffer, encoder, stream, &v->tvb, start, end);
 	v->cap_v = 0;
 	return 0;
 }
 
-static int
-lsetTIB(lua_State *L) {
+ENCODER_API(lsetTIB) {
 	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	if (v->cap_i == 0) {
 		return luaL_error(L, "Need alloc transient ib first");
 	}
 	int start = luaL_optinteger(L, 2, 0);
 	uint32_t end = luaL_optinteger(L, 3, UINT32_MAX); 
-	BGFX(set_transient_index_buffer)(&v->tib, start, end);
+	BGFX_ENCODER(set_transient_index_buffer, encoder, &v->tib, start, end);
 	v->cap_i = 0;
 	return 0;
 }
 
-static int
-lsetTB(lua_State *L) {
+ENCODER_API(lsetTB) {
 	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
 	if (v->cap_i) {
-		BGFX(set_transient_index_buffer)(&v->tib, 0, v->cap_i);
+		BGFX_ENCODER(set_transient_index_buffer, encoder, &v->tib, 0, v->cap_i);
 		v->cap_i = 0;
 	}
 	if (v->cap_v) {
-		BGFX(set_transient_vertex_buffer)(0, &v->tvb, 0, v->cap_v);
+		BGFX_ENCODER(set_transient_vertex_buffer, encoder, 0, &v->tvb, 0, v->cap_v);
 		v->cap_v = 0;
 	}
 	return 0;
@@ -3179,22 +3198,7 @@ lnewTransientBuffer(lua_State *L) {
 	v->cap_v = 0;
 	v->cap_i = 0;
 	memcpy(v->format, format, sz+1);
-	if (luaL_newmetatable(L, "BGFX_TB")) {
-		luaL_Reg l[] = {
-			{ "alloc", lallocTB },
-			{ "setV", lsetTVB },
-			{ "setI", lsetTIB },
-			{ "set", lsetTB },
-			{ "packV", lpackTVB },
-			{ "packI", lpackTIB },
-			{ "apply", lapplyVB },
-			{ NULL, NULL },
-		};
-		luaL_newlib(L, l);
-		lua_setfield(L, -2, "__index");
-		lua_pushcfunction(L, lpackTVB);
-		lua_setfield(L, -2, "__call");
-	}
+	luaL_getmetatable(L, "BGFX_TB");
 	lua_setmetatable(L, -2);
 	return 1;
 }
@@ -3215,8 +3219,7 @@ lallocIDB(lua_State *L) {
 	return 0;
 }
 
-static int
-lsetIDB(lua_State *L) {
+ENCODER_API(lsetIDB) {
 	struct lidb *v = luaL_checkudata(L, 1, "BGFX_IDB");
 	uint32_t num = UINT32_MAX;
 	if (lua_isnumber(L, 2)) {
@@ -3225,7 +3228,7 @@ lsetIDB(lua_State *L) {
 			return luaL_error(L, "Invalid instance data buffer num %d/%d",num, v->num);
 		}
 	}
-	BGFX(set_instance_data_buffer)(&v->idb, 0, num);
+	BGFX_ENCODER(set_instance_data_buffer, encoder, &v->idb, 0, num);
 	v->num = 0;
 	return 0;
 }
@@ -3399,7 +3402,7 @@ uniform_size(lua_State *L, int id) {
 }
 
 static int
-setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
+setUniform(lua_State *L, bgfx_encoder_t *encoder, bgfx_uniform_handle_t uh, int sz) {
 	int number = lua_gettop(L) - 1;
 	int t = lua_type(L, 2);	// the first value type
 	switch(t) {
@@ -3417,7 +3420,7 @@ setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 				lua_pop(L, 1);
 			}
 		}
-		BGFX(set_uniform)(uh, buffer, number);
+		BGFX_ENCODER(set_uniform, encoder, uh, buffer, number);
 		break;
 	}
 	case LUA_TUSERDATA:
@@ -3428,7 +3431,7 @@ setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 			void *data = lua_touserdata(L, 2);
 			if (data == NULL)
 				return luaL_error(L, "Uniform can't be NULL");
-			BGFX(set_uniform)(uh, data, 1);
+			BGFX_ENCODER(set_uniform, encoder, uh, data, 1);
 		} else {
 			float buffer[V(sz * number)];
 			int i;
@@ -3439,7 +3442,7 @@ setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 				}
 				memcpy(buffer + i * sz, ud, sz*sizeof(float));
 			}
-			BGFX(set_uniform)(uh, buffer, number);
+			BGFX_ENCODER(set_uniform, encoder, uh, buffer, number);
 		}
 		break;
 	default:
@@ -3448,17 +3451,15 @@ setUniform(lua_State *L, bgfx_uniform_handle_t uh, int sz) {
 	return 0;
 }
 
-static int
-lsetUniform(lua_State *L) {
+ENCODER_API(lsetUniform) {
 	int id = luaL_checkinteger(L, 1);
 	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
 	int sz = uniform_size(L, id);
-	return setUniform(L, uh, sz);
+	return setUniform(L, encoder, uh, sz);
 }
 
-static int
-lsetUniformMatrix(lua_State *L) {
+ENCODER_API(lsetUniformMatrix) {
 	int id = luaL_checkinteger(L, 1);
 	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
@@ -3466,11 +3467,10 @@ lsetUniformMatrix(lua_State *L) {
 	if (sz <= 4) {
 		return luaL_error(L, "Need a matrix");
 	}
-	return setUniform(L, uh, sz);
+	return setUniform(L, encoder, uh, sz);
 }
 
-static int
-lsetUniformVector(lua_State *L) {
+ENCODER_API(lsetUniformVector) {
 	int id = luaL_checkinteger(L, 1);
 	uint16_t uniformid = BGFX_LUAHANDLE_ID(UNIFORM, id);
 	bgfx_uniform_handle_t uh = { uniformid };
@@ -3478,7 +3478,7 @@ lsetUniformVector(lua_State *L) {
 	if (sz != 4) {
 		return luaL_error(L, "Need a vector");
 	}
-	return setUniform(L, uh, sz);
+	return setUniform(L, encoder, uh, sz);
 }
 
 static uint32_t
@@ -3746,8 +3746,7 @@ texture_sampler_flags(lua_State *L, uint64_t flags) {
 	return sampler;
 }
 
-static int
-lsetTexture(lua_State *L) {
+ENCODER_API(lsetTexture) {
 	int stage = luaL_checkinteger(L, 1);
 	int uid = luaL_checkinteger(L, 2);
 	uint16_t uniform_id = BGFX_LUAHANDLE_ID(UNIFORM, uid);
@@ -3763,7 +3762,7 @@ lsetTexture(lua_State *L) {
 	bgfx_uniform_handle_t uh = {uniform_id};
 	bgfx_texture_handle_t th = {texture_id};
 
-	BGFX(set_texture)(stage, uh, th, texture_sampler_flags(L, flags));
+	BGFX_ENCODER(set_texture, encoder, stage, uh, th, texture_sampler_flags(L, flags));
 
 	return 0;
 }
@@ -4123,8 +4122,7 @@ lgetTexture(lua_State *L) {
 		integer height
 		integer depth
  */
-static int
-lblit(lua_State *L) {
+ENCODER_API(lblit) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
 	uint16_t dstid = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 2));
 	int top = lua_gettop(L);
@@ -4175,7 +4173,7 @@ lblit(lua_State *L) {
 	bgfx_texture_handle_t sh = { srcid };
 	bgfx_texture_handle_t dh = { dstid };
 
-	BGFX(blit)(viewid, dh, dstmip, dstx, dsty, dstz, sh, srcmip, srcx, srcy, srcz, width, height, depth);
+	BGFX_ENCODER(blit, encoder, viewid, dh, dstmip, dstx, dsty, dstz, sh, srcmip, srcx, srcy, srcz, width, height, depth);
 	return 0;
 }
 
@@ -4262,11 +4260,10 @@ lmakeStencil(lua_State *L) {
 	return 1;
 }
 
-static int
-lsetStencil(lua_State *L) {
+ENCODER_API(lsetStencil) {
 	uint32_t fstencil = (uint32_t)luaL_optinteger(L, 1, BGFX_STENCIL_NONE);
 	uint32_t bstencil = (uint32_t)luaL_optinteger(L, 2, BGFX_STENCIL_NONE);
-	BGFX(set_stencil)(fstencil, bstencil);
+	BGFX_ENCODER(set_stencil, encoder, fstencil, bstencil);
 	return 0;
 }
 
@@ -4300,13 +4297,12 @@ lsetPaletteColor(lua_State *L) {
 	return 0;
 }
 
-static int
-lsetScissor(lua_State *L) {
+ENCODER_API(lsetScissor) {
 	int x = luaL_checkinteger(L, 1);
 	int y = luaL_checkinteger(L, 2);
 	int w = luaL_checkinteger(L, 3);
 	int h = luaL_checkinteger(L, 4);
-	BGFX(set_scissor)(x,y,w,h);
+	BGFX_ENCODER(set_scissor, encoder, x,y,w,h);
 	return 0;
 }
 
@@ -4320,18 +4316,16 @@ lcreateOcclusionQuery(lua_State *L) {
 	return 1;
 }
 
-static int
-lsetCondition(lua_State *L) {
+ENCODER_API(lsetCondition) {
 	uint16_t oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 1));
 	luaL_checktype(L, 2, LUA_TBOOLEAN);
 	int visible = lua_toboolean(L, 2);
 	bgfx_occlusion_query_handle_t handle = { oqid };
-	BGFX(set_condition)(handle, visible);
+	BGFX_ENCODER(set_condition, encoder, handle, visible);
 	return 0;
 }
 
-static int
-lsubmitOcclusionQuery(lua_State *L) {
+ENCODER_API(lsubmitOcclusionQuery) {
 	int id = luaL_checkinteger(L, 1);
 	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint16_t oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 3));
@@ -4339,12 +4333,11 @@ lsubmitOcclusionQuery(lua_State *L) {
 	int preserveState = lua_toboolean(L, 5);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_occlusion_query_handle_t oqh = { oqid };
-	BGFX(submit_occlusion_query)(id, ph, oqh, depth, preserveState);
+	BGFX_ENCODER(submit_occlusion_query, encoder, id, ph, oqh, depth, preserveState);
 	return 0;
 }
 
-static int
-lsubmitIndirect(lua_State *L) {
+ENCODER_API(lsubmitIndirect) {
 	int id = luaL_checkinteger(L, 1);
 	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint16_t iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
@@ -4355,7 +4348,7 @@ lsubmitIndirect(lua_State *L) {
 	bgfx_program_handle_t ph = { progid };
 	bgfx_indirect_buffer_handle_t ih = { iid };
 
-	BGFX(submit_indirect)(id, ph, ih, start, num, depth, preserveState);
+	BGFX_ENCODER(submit_indirect, encoder, id, ph, ih, start, num, depth, preserveState);
 	return 0;
 }
 
@@ -4412,8 +4405,7 @@ access_string(lua_State *L, const char * access) {
 	return a;
 }
 
-static int
-lsetBuffer(lua_State *L) {
+ENCODER_API(lsetBuffer) {
 	int stage = luaL_checkinteger(L, 1);
 	int idx = luaL_checkinteger(L, 2);
 	int type = idx >> 16;
@@ -4423,29 +4415,29 @@ lsetBuffer(lua_State *L) {
 	switch(type) {
 	case BGFX_HANDLE_VERTEX_BUFFER: {
 		bgfx_vertex_buffer_handle_t handle = { id };
-		BGFX(set_compute_vertex_buffer)(stage, handle, a);
+		BGFX_ENCODER(set_compute_vertex_buffer, encoder, stage, handle, a);
 		break;
 	}
 	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:
 	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: {
 		bgfx_dynamic_vertex_buffer_handle_t handle = { id };
-		BGFX(set_compute_dynamic_vertex_buffer)(stage, handle, a);
+		BGFX_ENCODER(set_compute_dynamic_vertex_buffer, encoder, stage, handle, a);
 		break;
 	}
 	case BGFX_HANDLE_INDEX_BUFFER: {
 		bgfx_index_buffer_handle_t handle = { id };
-		BGFX(set_compute_index_buffer)(stage, handle, a);
+		BGFX_ENCODER(set_compute_index_buffer, encoder, stage, handle, a);
 		break;
 	}
 	case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32:
 	case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER: {
 		bgfx_dynamic_index_buffer_handle_t handle = { id };
-		BGFX(set_compute_dynamic_index_buffer)(stage, handle, a);
+		BGFX_ENCODER(set_compute_dynamic_index_buffer, encoder, stage, handle, a);
 		break;
 	}
 	case BGFX_HANDLE_INDIRECT_BUFFER: {
 		bgfx_indirect_buffer_handle_t handle = { id };
-		BGFX(set_compute_indirect_buffer)(stage, handle, a);
+		BGFX_ENCODER(set_compute_indirect_buffer, encoder, stage, handle, a);
 		break;
 	}
 	default:
@@ -4454,8 +4446,7 @@ lsetBuffer(lua_State *L) {
 	return 0;
 }
 
-static int
-lsetInstanceDataBuffer(lua_State *L) {
+ENCODER_API(lsetInstanceDataBuffer) {
 	int idx = luaL_checkinteger(L, 1);
 	int type = idx >> 16;
 	int id = idx & 0xffff;
@@ -4464,12 +4455,12 @@ lsetInstanceDataBuffer(lua_State *L) {
 	switch(type) {
 	case BGFX_HANDLE_VERTEX_BUFFER: {
 		bgfx_vertex_buffer_handle_t handle = { id };
-		BGFX(set_instance_data_from_vertex_buffer)(handle, start, num);
+		BGFX_ENCODER(set_instance_data_from_vertex_buffer, encoder, handle, start, num);
 		break;
 	}
 	case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: {
 		bgfx_dynamic_vertex_buffer_handle_t handle = { id };
-		BGFX(set_instance_data_from_dynamic_vertex_buffer)(handle, start, num);
+		BGFX_ENCODER(set_instance_data_from_dynamic_vertex_buffer, encoder, handle, start, num);
 		break;
 	}
 	default:
@@ -4478,15 +4469,13 @@ lsetInstanceDataBuffer(lua_State *L) {
 	return 0;
 }
 
-static int
-lsetInstanceCount(lua_State *L) {
+ENCODER_API(lsetInstanceCount) {
 	uint32_t num = luaL_checkinteger(L, 1);
-	BGFX(set_instance_count)(num);
+	BGFX_ENCODER(set_instance_count, encoder, num);
 	return 0;
 }
 
-static int
-ldispatch(lua_State *L) {
+ENCODER_API(ldispatch) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
 	uint16_t pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint32_t x = luaL_optinteger(L, 3, 1);
@@ -4496,13 +4485,12 @@ ldispatch(lua_State *L) {
 
 	bgfx_program_handle_t  handle = { pid };
 
-	BGFX(dispatch)(viewid, handle, x, y, z, flags);
+	BGFX_ENCODER(dispatch, encoder, viewid, handle, x, y, z, flags);
 
 	return 0;
 }
 
-static int
-ldispatchIndirect(lua_State *L) {
+ENCODER_API(ldispatchIndirect) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
 	uint16_t pid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint16_t iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
@@ -4512,7 +4500,7 @@ ldispatchIndirect(lua_State *L) {
 	bgfx_program_handle_t  phandle = { pid };
 	bgfx_indirect_buffer_handle_t  ihandle = { iid };
 
-	BGFX(dispatch_indirect)(viewid, phandle, ihandle, start, num, flags);
+	BGFX_ENCODER(dispatch_indirect, encoder, viewid, phandle, ihandle, start, num, flags);
 
 	return 0;
 }
@@ -4555,8 +4543,7 @@ lsetViewMode(lua_State *L) {
 	return 0;
 }
 
-static int
-lsetImage(lua_State *L) {
+ENCODER_API(lsetImage) {
 	int stage = luaL_checkinteger(L, 1);
 	uint16_t tid = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 2));
 	bgfx_texture_handle_t handle = { tid };
@@ -4568,7 +4555,7 @@ lsetImage(lua_State *L) {
 	} else {
 		format = texture_format_from_string(L, 5);
 	}
-	BGFX(set_image)(stage, handle, mip, access, format);
+	BGFX_ENCODER(set_image, encoder, stage, handle, mip, access, format);
 	return 0;
 }
 
@@ -4636,6 +4623,90 @@ lgetLog(lua_State *L) {
 	return 1;
 }
 
+static int
+lbeginEncoder(lua_State *L) {
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, ENCODER) != LUA_TUSERDATA) {
+		luaL_error(L, "Call bgfx.encoder_init first");
+	}
+	struct encoder_holder *E = (struct encoder_holder *)lua_touserdata(L, -1);
+	E->encoder = BGFX(encoder_begin)(1);
+	return 0;
+}
+
+static int
+lendEncoder(lua_State *L) {
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, ENCODER) != LUA_TUSERDATA) {
+		luaL_error(L, "Call bgfx.encoder_init first");
+	}
+	struct encoder_holder *E = (struct encoder_holder *)lua_touserdata(L, -1);
+	if (E->encoder == NULL) {
+		luaL_error(L, "Call bgfx.encoder_begin first");
+	}
+	BGFX(encoder_end)(E->encoder);
+	E->encoder = NULL;
+	return 0;
+}
+
+static int
+linitEncoder(lua_State *L) {
+	luaL_Reg l[] = {
+		{ "touch", ltouch_encoder },
+		{ "submit", lsubmit_encoder },
+		{ "discard", ldiscard_encoder },
+		{ "set_state", lsetState_encoder },
+		{ "set_vertex_buffer", lsetVertexBuffer_encoder },
+		{ "set_index_buffer", lsetIndexBuffer_encoder },
+		{ "set_transform", lsetTransform_encoder },
+		{ "set_transform_cached", lsetTransformCached_encoder },
+		{ "set_multi_transforms", lsetMultiTransforms_encoder },
+		{ "set_uniform", lsetUniform_encoder },
+		{ "set_uniform_matrix", lsetUniformMatrix_encoder },
+		{ "set_uniform_vector", lsetUniformVector_encoder },
+		{ "set_texture", lsetTexture_encoder },
+		{ "blit", lblit_encoder },
+		{ "set_stencil", lsetStencil_encoder },
+		{ "set_scissor", lsetScissor_encoder },
+		{ "set_condition", lsetCondition_encoder },
+		{ "submit_occlusion_query", lsubmitOcclusionQuery_encoder },
+		{ "set_buffer", lsetBuffer_encoder },
+		{ "dispatch", ldispatch_encoder },
+		{ "dispatch_indirect", ldispatchIndirect_encoder },
+		{ "set_instance_data_buffer", lsetInstanceDataBuffer_encoder },
+		{ "set_instance_count", lsetInstanceCount_encoder },
+		{ "submit_indirect", lsubmitIndirect_encoder },
+		{ "set_image", lsetImage_encoder },
+
+		{ NULL, NULL },
+	};
+	// replace encoder apis
+	lua_pushvalue(L, lua_upvalueindex(1));
+	luaL_setfuncs(L, l, 0);
+	lua_pop(L, 1);
+
+	luaL_getmetatable(L, "BGFX_IDB");
+	luaL_Reg idb[] = {
+		{ "set", lsetIDB_encoder },
+		{ NULL, NULL },
+	};
+	luaL_setfuncs(L, idb, 0);
+	lua_pop(L, 1);
+
+	luaL_getmetatable(L, "BGFX_TB");
+	luaL_Reg tb[] = {
+		{ "setV", lsetTVB_encoder },
+		{ "setI", lsetTIB_encoder },
+		{ "set", lsetTB_encoder },
+		{ NULL, NULL },
+	};
+	luaL_setfuncs(L, tb, 0);
+	lua_pop(L, 1);
+
+	struct encoder_holder *E = (struct encoder_holder *)lua_newuserdatauv(L, sizeof(*E), 0);
+	E->encoder = NULL;
+	lua_rawsetp(L, LUA_REGISTRYINDEX, ENCODER);
+	return 0;
+}
+
 LUAMOD_API int
 luaopen_bgfx(lua_State *L) {
 	luaL_checkversion(L);
@@ -4658,6 +4729,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "pack", lpackIDB },
 		{ "format", lformatIDB }, // for math adapter
 		{ "__call", lpackIDB },
+		{ "__index", NULL },
 		{ NULL, NULL },
 	};
 	luaL_setfuncs(L, idb , 0);
@@ -4665,14 +4737,43 @@ luaopen_bgfx(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 	lua_pop(L, 1);
 
+	luaL_newmetatable(L, "BGFX_TB");
+	luaL_Reg tb[] = {
+		{ "alloc", lallocTB },
+		{ "setV", lsetTVB },
+		{ "setI", lsetTIB },
+		{ "set", lsetTB },
+		{ "packV", lpackTVB },
+		{ "packI", lpackTIB },
+		{ "apply", lapplyVB },
+		{ "__call", lpackTVB },
+		{ "__index", NULL },
+		{ NULL, NULL },
+	};
+	luaL_setfuncs(L, tb , 0);
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -2, "__index");
+	lua_pop(L, 1);
+
 	luaL_Reg l[] = {
 		{ "set_platform_data", lsetPlatformData },
 		{ "init", linit },
+		{ "shutdown", lshutdown },
+
+		{ "get_log", lgetLog },
+		{ "get_screenshot", lgetScreenshot },
+		{ "request_screenshot", lrequestScreenshot },
+
 		{ "get_caps", lgetCaps },
 		{ "get_stats", lgetStats },
 		{ "get_memory", lgetMemory },
+
 		{ "reset", lreset },
-		{ "shutdown", lshutdown },
+		{ "frame", lframe },
+		{ "set_debug", lsetDebug },
+		{ "set_name", lsetName },
+
+		{ "set_palette_color", lsetPaletteColor },
 		{ "set_view_clear", lsetViewClear },
 		{ "set_view_clear_mrt", lsetViewClearMRT },
 		{ "set_view_rect", lsetViewRect },
@@ -4680,79 +4781,89 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_view_order", lsetViewOrder },
 		{ "set_view_name", lsetViewName },
 		{ "set_view_frame_buffer", lsetViewFrameBuffer },
-		{ "touch", ltouch },
-		{ "set_debug", lsetDebug },
-		{ "frame", lframe },
-		{ "create_shader", lcreateShader },
-		{ "create_program", lcreateProgram },
-		{ "submit", lsubmit },
-		{ "discard", ldiscard },
+
 		{ "make_state", lmakeState },
-		{ "set_state", lsetState },
 		{ "parse_state", lparseState },
+		{ "make_stencil", lmakeStencil },
+
 		{ "vertex_layout", lnewVertexLayout },
 		{ "vertex_convert", lvertexConvert },
+		{ "export_vertex_layout", lexportVertexLayout },
+		{ "vertex_layout_stride", lvertexLayoutStride },
+
 		{ "memory_buffer", lmemoryBuffer},
 		{ "calc_tangent", lcalcTangent },
+
+		{ "create_shader", lcreateShader },
+		{ "create_program", lcreateProgram },
 		{ "create_vertex_buffer", lcreateVertexBuffer },
 		{ "create_dynamic_vertex_buffer", lcreateDynamicVertexBuffer },
 		{ "create_index_buffer", lcreateIndexBuffer },
 		{ "create_dynamic_index_buffer", lcreateDynamicIndexBuffer },
-		{ "set_vertex_buffer", lsetVertexBuffer },
-		{ "set_index_buffer", lsetIndexBuffer },
+		{ "create_uniform", lcreateUniform },
+		{ "create_texture2d", lcreateTexture2D },
+		{ "create_frame_buffer", lcreateFrameBuffer },
+		{ "create_indirect_buffer", lcreateIndirectBuffer },
+		{ "create_occlusion_query", lcreateOcclusionQuery },
+		{ "create_texture", lcreateTexture },	// create texture from data string (DDS, KTX or PVR texture data)
+
 		{ "destroy", ldestroy },
-		{ "set_transform", lsetTransform },
-		{ "set_transform_cached", lsetTransformCached },
-		{ "set_multi_transforms", lsetMultiTransforms},
+		{ "get_shader_uniforms", lgetShaderUniforms },
+		{ "get_uniform_info", lgetUniformInfo },
+		{ "set_view_mode", lsetViewMode },
+		{ "memory_texture", lmemoryTexture },
+
 		{ "dbg_text_clear", ldbgTextClear },
 		{ "dbg_text_print", ldbgTextPrint },
 		{ "dbg_text_image", ldbgTextImage },
+
 		{ "transient_buffer", lnewTransientBuffer },
-		{ "create_uniform", lcreateUniform },
-		{ "get_uniform_info", lgetUniformInfo },
+		{ "instance_buffer", lnewInstanceBuffer },
+		{ "instance_buffer_metatable", lgetInstanceBufferMetatable },
+
+		{ "is_texture_valid", lisTextureValid },
+		{ "get_texture", lgetTexture },
+		{ "get_result", lgetResult },
+		{ "read_texture", lreadTexture },
+		{ "update", lupdate },
+		{ "update_texture2d", lupdateTexture2D },
+	
+		// encoder apis
+		{ "touch", ltouch },
+		{ "submit", lsubmit },
+		{ "discard", ldiscard },
+		{ "set_state", lsetState },
+		{ "set_vertex_buffer", lsetVertexBuffer },
+		{ "set_index_buffer", lsetIndexBuffer },
+		{ "set_transform", lsetTransform },
+		{ "set_transform_cached", lsetTransformCached },
+		{ "set_multi_transforms", lsetMultiTransforms},
 		{ "set_uniform", lsetUniform },
 		{ "set_uniform_matrix", lsetUniformMatrix },	// for adapter
 		{ "set_uniform_vector", lsetUniformVector },	// for adapter
-		{ "instance_buffer", lnewInstanceBuffer },
-		{ "instance_buffer_metatable", lgetInstanceBufferMetatable },
-		{ "memory_texture", lmemoryTexture },
-		{ "create_texture", lcreateTexture },	// create texture from data string (DDS, KTX or PVR texture data)
-		{ "create_texture2d", lcreateTexture2D },
-		{ "update_texture2d", lupdateTexture2D },
-		{ "is_texture_valid", lisTextureValid },
 		{ "set_texture", lsetTexture },
-		{ "set_name", lsetName },
-		{ "create_frame_buffer", lcreateFrameBuffer },
-		{ "get_texture", lgetTexture },
-		{ "read_texture", lreadTexture },
 		{ "blit", lblit },
-		{ "make_stencil", lmakeStencil },
 		{ "set_stencil", lsetStencil },
-		{ "set_palette_color", lsetPaletteColor },
 		{ "set_scissor", lsetScissor },
-		{ "create_occlusion_query", lcreateOcclusionQuery },
 		{ "set_condition", lsetCondition },
 		{ "submit_occlusion_query", lsubmitOcclusionQuery },
-		{ "get_result", lgetResult },
-		{ "create_indirect_buffer", lcreateIndirectBuffer },
 		{ "set_buffer", lsetBuffer },
 		{ "dispatch", ldispatch },
 		{ "dispatch_indirect", ldispatchIndirect },
 		{ "set_instance_data_buffer", lsetInstanceDataBuffer },
 		{ "set_instance_count", lsetInstanceCount },
 		{ "submit_indirect", lsubmitIndirect },
-		{ "update", lupdate },
-		{ "get_shader_uniforms", lgetShaderUniforms },
-		{ "set_view_mode", lsetViewMode },
 		{ "set_image", lsetImage },
-		{ "request_screenshot", lrequestScreenshot },
-		{ "get_screenshot", lgetScreenshot },
-		{ "export_vertex_layout", lexportVertexLayout },
-		{ "vertex_layout_stride", lvertexLayoutStride },
-		{ "get_log", lgetLog },
+
+		{ "encoder_begin", lbeginEncoder },
+		{ "encoder_end", lendEncoder },
+		{ "encoder_init", NULL },
 
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
+	lua_pushvalue(L, -1);
+	lua_pushcclosure(L, linitEncoder, 1);
+	lua_setfield(L, -2, "encoder_init");
 	return 1;
 }

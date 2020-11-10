@@ -27,125 +27,125 @@ local current_emitter_eid
 
 local property = {}
 
-function m.update_emitter(update)
-    if update then
-        m.update_panel(property)
-    end
-end
+local function update_emitter()
 
-function m.create_pro_by_method(pro)
-    local data = pro.data
-    local sp = {}
-    sp[#sp + 1] = uiproperty.Combo("method",
-        function(v)
-            data.method = v
-            pro.dirty = true
-            m.update_emitter(true)
-        end,
-        function() return data.method end,
-        method_type)
-
-    if data.method == "around_sphere" then
-        sp[#sp + 1] = uiproperty.Float("radius_scale",
-            function(...) data_from_ui(data.radius_scale, ...) end,
-            function() return data.radius_scale end, 2)
-    elseif data.method == "sphere_random" then
-        sp[#sp + 1] = uiproperty.Float("longitude",
-            function(...) data_from_ui(data.longitude, ...) end,
-            function() return data.longitude end, 2)
-        sp[#sp + 1] = uiproperty.Float("latitude",
-            function(...) data_from_ui(data.latitude, ...) end,
-            function() return data.latitude end, 2)
-    elseif data.method == "face_axis" then
-        sp[#sp + 1] = uiproperty.Float("axis",
-            function(...) data_from_ui(data.axis, ...) end,
-            function() return data.axis end, 4)
-    elseif data.method == "around_box" then
-        sp[#sp + 1] = uiproperty.Float("box_range_x",
-            function(...) data_from_ui(data.box_range.x, ...) end,
-            function() return data.box_range.x end, 2)
-        sp[#sp + 1] = uiproperty.Float("box_range_y",
-            function(...) data_from_ui(data.box_range.y, ...) end,
-            function() return data.box_range.y end, 2)
-    elseif data.method == "change_property" then
-        sp[#sp + 1] = uiproperty.ResourcePathPro("texture",
-            function(value)
-                data.properties.s_tex.texture = value
-                m.update_emitter()
-            end,
-            function() return data.properties.s_tex.texture end)
-    end
-    pro.property = sp
-    pro.dirty = false
-end
-
-function m.update_panel(props)
-    for _, prop in ipairs(props) do
-        if prop.class then
-            prop:update() 
-        else
-            if prop.dirty then
-                m.create_pro_by_method(prop)
-            end
-            m.update_panel(prop.property)
-        end
-    end
-end
-
-function m.show_panel(props)
-    for _, prop in ipairs(props) do
-        if prop.class then
-            prop:show()
-        else
-            if imgui.widget.TreeNode(prop.name, imgui.flags.TreeNode { "DefaultOpen" }) then
-                m.show_panel(prop.property)
-                imgui.widget.TreePop()
-            end
-        end
-    end
 end
 
 local function data_from_ui(target, ...)
     if type(target) == "table" then
         target = {...}
     end
-    m.update_emitter()
+    update_emitter()
 end
 
-function m.create_emitter_panel(emitter)
+local function create_pro_by_method(data)
+    local sp = {}
+    sp[#sp + 1] = uiproperty.Combo({label = "method", options = method_type},
+        {
+            setter = function(v)
+                data.method = v
+                update_emitter()
+            end,
+            getter = function() return data.method end
+        })
+
+    if data.method == "around_sphere" then
+        sp[#sp + 1] = uiproperty.Float({label = "radius_scale", dim = 2},
+            {
+                setter = function(...) data_from_ui(data.radius_scale, ...) end,
+                getter = function() return data.radius_scale end
+            })
+    elseif data.method == "sphere_random" then
+        sp[#sp + 1] = uiproperty.Float({label = "longitude", dim = 2},
+            {
+                setter = function(...) data_from_ui(data.longitude, ...) end,
+                getter = function() return data.longitude end
+            })
+        sp[#sp + 1] = uiproperty.Float({label = "latitude", dim = 2},
+            {
+                setter = function(...) data_from_ui(data.latitude, ...) end,
+                getter = function() return data.latitude end
+            })
+    elseif data.method == "face_axis" then
+        sp[#sp + 1] = uiproperty.Float({label = "axis", dim = 4},
+            {
+                setter = function(...) data_from_ui(data.axis, ...) end,
+                getter = function() return data.axis end
+            })
+    elseif data.method == "around_box" then
+        sp[#sp + 1] = uiproperty.Float({label = "box_range_x", dim = 2},
+            {
+                setter = function(...) data_from_ui(data.box_range.x, ...) end,
+                getter = function() return data.box_range.x end
+            })
+        sp[#sp + 1] = uiproperty.Float({label = "box_range_y", dim = 2},
+            {
+                setter = function(...) data_from_ui(data.box_range.y, ...) end,
+                getter = function() return data.box_range.y end
+            })
+    elseif data.method == "change_property" then
+        sp[#sp + 1] = uiproperty.ResourcePath({label = "texture"},
+            {
+                setter = function(value)
+                    data.properties.s_tex.texture = value
+                    update_emitter()
+                end,
+                getter = function() return data.properties.s_tex.texture end
+            })
+    end
+    return sp
+end
+
+local function update_panel(props)
+    for _, prop in ipairs(props) do
+        prop:update()
+    end
+end
+
+local function show_panel(props)
+    for _, prop in ipairs(props) do
+        prop:show()
+    end
+end
+
+local function create_emitter_panel(emitter)
     property = {}
     for _, item in ipairs(emitter.attributes) do
         if item.name == "spawn" then
-            property[#property + 1] = uiproperty.Int(item.name,
-                function(v)
-                    item.data.count = v
-                    m.update_emitter()
-                end,
-                function() return item.data.count end)
+            property[#property + 1] = uiproperty.Int({label = item.name},
+                {
+                    setter = function(v)
+                        item.data.count = v
+                        update_emitter()
+                    end,
+                    getter = function() return item.data.count end
+                })
         elseif item.name == "scale" then
-            property[#property + 1] = uiproperty.Float(item.name,
-                function(...) data_from_ui(item.data.range, ...) end,
-                function() return item.data.range end, 2)
+            property[#property + 1] = uiproperty.Float({label = item.name, dim = 2},
+                {
+                    setter = function(...) data_from_ui(item.data.range, ...) end,
+                    getter = function() return item.data.range end
+                })
         elseif item.name == "translation"
             or item.name == "orientation"
-            or item.name == "material_property" then               
-                local sub_property = {name = item.name, property = {}, dirty = false, data = item.data}
-                property[#property + 1] = sub_property
-                m.create_pro_by_method(sub_property)
+            or item.name == "material_property" then
+                property[#property + 1] = uiproperty.Group({label = item.name}, create_pro_by_method(item.data))       
         end
     end
-    m.update_panel(property)
+    update_panel(property)
 end
 
 function m.set_emitter(emitter_eid)
     current_emitter_eid = emitter_eid
-    m.create_emitter_panel(world[emitter_eid].emitter)
+    create_emitter_panel(world[emitter_eid].emitter)
 end
 
-local testcolor = {1,0.5,1,1}
-local uitestcolor = uiproperty.Color("TestColor",
-    function(...) testcolor = {...} end,
-    function() return testcolor end)
+local testcolor = {1, 0.5, 1, 1}
+local uitestcolor = uiproperty.Color({label = "TestColor", dim = 4},
+                    {
+                        setter = function(...) testcolor = {...} end,
+                        getter = function() return testcolor end
+                    })
 uitestcolor:update()
 
 function m.show()
@@ -153,7 +153,7 @@ function m.show()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
     for _ in uiutils.imgui_windows("ParticleEmitter", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
-        m.show_panel(property)
+        show_panel(property)
         uitestcolor:show()
     end
 end

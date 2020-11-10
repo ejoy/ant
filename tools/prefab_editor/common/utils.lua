@@ -41,4 +41,40 @@ function utils.readtable(filename)
     return datalist.parse(data)
 end
 
+function utils.class(classname, ...)
+    local cls = {__cname = classname}
+    local supers = {...}
+    for _, super in ipairs(supers) do
+        local superType = type(super)
+        if superType == "table" then
+            cls.__supers = cls.__supers or {}
+            cls.__supers[#cls.__supers + 1] = super
+            if not cls.super then
+                cls.super = super
+            end
+        end
+    end
+    cls.__index = cls
+    local mt
+    if not cls.__supers or #cls.__supers == 1 then
+        mt = {__index = cls.super}
+    else
+        mt = {__index = function(_, key)
+                            local supers = cls.__supers
+                            for i = 1, #supers do
+                                local super = supers[i]
+                                if super[key] then return super[key] end
+                            end
+                        end}
+    end
+    mt.__call = function(cls, ...)
+        local instance = setmetatable({}, cls)
+        instance.class = cls
+        instance:_init(...)
+        return instance
+    end
+    setmetatable(cls, mt)
+    return cls
+end
+
 return utils

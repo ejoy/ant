@@ -13,12 +13,12 @@ local fbmgr     = renderpkg.fbmgr
 local fontpkg   = import_package "ant.font"
 local fontmgr   = fontpkg.mgr
 
+local ifont     = world:interface "ant.render|ifont"
+local irq       = world:interface "ant.render|irenderqueue"
+
 local thread     = require "thread"
 thread.newchannel "rmlui"
 local channel    = thread.channel_produce "rmlui"
-
-local ifont     = world:interface "ant.render|ifont"
-local irq       = world:interface "ant.render|irenderqueue"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
@@ -33,7 +33,7 @@ local function init_rmlui_data()
 
     local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
     return {
-        viewid = vid,
+		viewid = vid,
         shader = {
             font_mask = 0.525,
             font_range = 0.3,
@@ -96,10 +96,12 @@ local function preload_dir(dir)
 end
 
 function rmlui_sys:init()
-    local data = init_rmlui_data()
-    rmlui.init(data)
-
-    preload_dir "/pkg/ant.rmlui/ui"
+	local data = init_rmlui_data()
+	local thread = require "common.thread"
+    rmlui.init(data, thread.bootstrap("rmlui", [[
+		require "bootstrap"
+		return import_package "ant.rmlui"
+	]]))
     preload_dir "/pkg/ant.resources.binary/ui/test"
 end
 
@@ -115,7 +117,7 @@ function rmlui_sys:ui_update()
             channel("MouseUp", mouseId[what])
         end
     end
-    rmlui.run_script "rmlui_update.lua"
+    rmlui.update()
 end
 
 function rmlui_sys:end_frame()
@@ -134,5 +136,5 @@ function iRmlUi.preload_dir(dir)
 end
 
 function iRmlUi.message(...)
-    channel( ...)
+    channel(...)
 end

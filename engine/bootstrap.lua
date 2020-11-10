@@ -1,11 +1,9 @@
-debug.setcstacklimit(200)
-
 if __ANT_RUNTIME__ then
     require "runtime.vfs"
     require "runtime.errlog"
 else
     require "editor.init_cpath"
-    require "editor.thread"
+    require "common.thread"
     require "editor.vfs"
     require "editor.log"
 end
