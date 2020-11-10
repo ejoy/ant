@@ -105,6 +105,14 @@ lrmlui_frame(lua_State *L){
     return 0;
 }
 
+static int
+lrmlui_begin(lua_State *L){
+    if (g_wrapper){
+        g_wrapper->renderer.Begin();
+    }
+    return 0;
+}
+
 extern "C" {
 LUAMOD_API int
 luaopen_rmlui(lua_State* L) {
@@ -114,6 +122,7 @@ luaopen_rmlui(lua_State* L) {
         { "shutdown",   lrmlui_shutdown },
         { "preload_file", lrmlui_preload_file },
         { "update",     lrmlui_update},
+        { "begin",      lrmlui_begin},
         { "frame",      lrmlui_frame},
         { nullptr, nullptr },
     };

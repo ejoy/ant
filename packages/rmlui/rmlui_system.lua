@@ -105,6 +105,10 @@ function rmlui_sys:init()
     preload_dir "/pkg/ant.resources.binary/ui/test"
 end
 
+function rmlui_sys:ui_start()
+    rmlui.begin()
+end
+
 local eventMouse = world:sub {"mouse"}
 local mouseId = { LEFT = 0, RIGHT = 1, MIDDLE = 2}
 function rmlui_sys:ui_update()
@@ -120,7 +124,7 @@ function rmlui_sys:ui_update()
     rmlui.update()
 end
 
-function rmlui_sys:end_frame()
+function rmlui_sys:ui_end()
     rmlui.frame()
 end
 

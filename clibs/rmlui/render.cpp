@@ -24,7 +24,7 @@ TransientIndexBuffer32::~TransientIndexBuffer32(){
 }
 
 void 
-TransientIndexBuffer32::SetIndex(int *indices, int num){
+TransientIndexBuffer32::SetIndex(bgfx_encoder_t* encoder, int *indices, int num){
     const uint32_t numbytes = num * sizeof(uint32_t);
 
     if (moffset * sizeof(uint32_t) + numbytes > msize){
@@ -34,7 +34,7 @@ TransientIndexBuffer32::SetIndex(int *indices, int num){
     auto mem = BGFX(alloc)(numbytes);
     memcpy(mem->data, indices, numbytes);
     BGFX(update_dynamic_index_buffer)(mdyn_indexbuffer, moffset, mem);
-    BGFX(set_dynamic_index_buffer)(mdyn_indexbuffer, moffset, num);
+    BGFX(encoder_set_dynamic_index_buffer)(encoder, mdyn_indexbuffer, moffset, num);
 
     moffset += num;
 }
@@ -46,7 +46,8 @@ TransientIndexBuffer32::Reset(){
 
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 Renderer::Renderer(const rml_context* context)
-    : mcontext(context){
+    : mcontext(context)
+    , mEncoder(nullptr){
     const auto &vr = mcontext->viewrect;
     BGFX(set_view_rect)(mcontext->viewid, uint16_t(vr.x), uint16_t(vr.y), uint16_t(vr.w), uint16_t(vr.h));
     BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
@@ -68,23 +69,23 @@ is_font_tex(SDFFontEffect *fe) {
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                             int* indices, int num_indices, 
                             Rml::TextureHandle texture, const Rml::Vector2f& translation) {
-    if (mScissorRect.w == 0 && mScissorRect.w == mScissorRect.h){
-        BGFX(set_view_scissor)(mcontext->viewid, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
-    } else {
-        BGFX(set_view_scissor)(mcontext->viewid, 0, 0, 0, 0);
-    }
+    // if (mScissorRect.w == 0 && mScissorRect.w == mScissorRect.h){
+    //     BGFX(encoder_set_scissor)(mEncoder, 0, 0, 0, 0);
+    // } else {
+    //     BGFX(encoder_set_scissor)(mEncoder, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
+    // }
 
     const Rml::Matrix4f m = mTransform * Rml::Matrix4f::Translate(translation.x, translation.y, 0.0);
-    BGFX(set_transform)(m.data(), 1);
+    BGFX(encoder_set_transform)(mEncoder, m.data(), 1);
 
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
 
     memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
-    BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num_vertices);
+    BGFX(encoder_set_transient_vertex_buffer)(mEncoder, 0, &tvb, 0, num_vertices);
 
-    mIndexBuffer.SetIndex(indices, num_indices);
-    BGFX(set_state)(RENDER_STATE, 0);
+    mIndexBuffer.SetIndex(mEncoder, indices, num_indices);
+    BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
   
     auto fe = FE(texture);
     if (is_font_tex(fe)) {
@@ -98,23 +99,28 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
 
             const Rml::String tex_property_name = "s_tex";
             if (tex_property_name == it.first){
-                BGFX(set_texture)(v.stage, {v.uniform_idx}, {v.texid}, UINT16_MAX);
+                BGFX(encoder_set_texture)(mEncoder, v.stage, {v.uniform_idx}, {v.texid}, UINT16_MAX);
             } else {
-                BGFX(set_uniform)({v.uniform_idx}, v.value, 1);
+                BGFX(encoder_set_uniform)(mEncoder, {v.uniform_idx}, v.value, 1);
             }
         }
-        BGFX(submit)(mcontext->viewid, {prog}, 0, BGFX_DISCARD_ALL);
+        BGFX(encoder_submit)(mEncoder, mcontext->viewid, {prog}, 0, BGFX_DISCARD_ALL);
     } else {
         const auto &si = mcontext->shader.image;
         const uint16_t id = fe == nullptr ? uint16_t(mcontext->default_tex.texid) : fe->GetTexID();
         auto texuniformidx = si.find_uniform("s_tex");
         assert(texuniformidx != UINT16_MAX);
-        BGFX(set_texture)(0, {texuniformidx}, {id}, UINT32_MAX);
-        BGFX(submit)(mcontext->viewid, { (uint16_t)si.prog }, 0, BGFX_DISCARD_ALL);
+        BGFX(encoder_set_texture)(mEncoder, 0, {texuniformidx}, {id}, UINT32_MAX);
+        BGFX(encoder_submit)(mEncoder,mcontext->viewid, { (uint16_t)si.prog }, 0, BGFX_DISCARD_ALL);
     }
 }
 
+void Renderer::Begin(){
+    mEncoder = BGFX(encoder_begin)(false);
+}
+
 void Renderer::Frame(){
+    BGFX(encoder_end)(mEncoder);
     mIndexBuffer.Reset();
 }
 

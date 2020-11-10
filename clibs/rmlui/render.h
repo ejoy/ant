@@ -39,7 +39,7 @@ class TransientIndexBuffer32{
 public:
     TransientIndexBuffer32(uint32_t sizeBytes = 1024*1024*sizeof(uint32_t));
     ~TransientIndexBuffer32();
-    void SetIndex(int *indices, int num);
+    void SetIndex(bgfx_encoder_t *encoder, int *indices, int num);
     void Reset();
 private:
     uint32_t moffset;
@@ -66,6 +66,7 @@ public:
 public:
     // will delete buffer
     bool UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer);
+    void Begin();
     void Frame();
 
 private:
@@ -73,4 +74,6 @@ private:
     Rect                mScissorRect = {0, 0, 0, 0};
     const rml_context*  mcontext;
     TransientIndexBuffer32  mIndexBuffer;
+
+    bgfx_encoder_t*     mEncoder;
 };

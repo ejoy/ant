@@ -44,7 +44,7 @@ get_ttf(struct font_manager *F, int fontid){
 static inline int
 ttf_family_name(struct font_manager *F, const char* family){
 	#ifdef TEST_CASE
-	assert(false);
+	assert(0);
 	return -1;	// NOT SUPPORT
 	#else
 	return truetype_name(F->L, family);
