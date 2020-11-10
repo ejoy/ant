@@ -18,14 +18,15 @@ if thread.id == 0 then
 	end
 end
 
-local function createThread(name, code)
+local function bootstrap(name, code)
 	if code == nil then
 		code = name
 		name = "<thread>"
 	end
 	thread.channel_produce "INITTHREAD"(arg, debug.getregistry().DEBUG_ATTACH)
-	return thread.thread(([=[
+	return ([=[
 --%s
+package.path = %q
 package.cpath = %q
 local thread = require "thread"
 local attach
@@ -34,10 +35,15 @@ if attach then
 	debug.getregistry().DEBUG_ATTACH = attach
 	assert(load(attach, "=(BOOTSTRAP)"))()
 end
-assert(load(%q))()]=]):format(name, package.cpath, code))
+return assert(load(%q))()]=]):format(name, package.path, package.cpath, code)
+end
+
+local function createThread(name, code)
+	return thread.thread(bootstrap(name, code))
 end
 
 return {
 	create = createThread,
+	bootstrap = bootstrap,
 	wait = thread.wait,
 }

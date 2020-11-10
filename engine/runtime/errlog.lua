@@ -1,4 +1,4 @@
-local thread = require 'runtime.thread'
+local thread = require 'common.thread'
 
 thread.create('errlog', [[
 	local thread = require "thread"

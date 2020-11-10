@@ -1,3 +1,4 @@
 return {
-    name = "ant.rmlui"
+    name = "ant.rmlui",
+    entry = "core.startup",
 }
