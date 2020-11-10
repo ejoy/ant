@@ -22,13 +22,33 @@ static const int SAPCE_CODEPOINT[] = {
     ' ', '\t', '\n', '\r',
 };
 
-static int is_space_codepoint(int codepoint){
+static inline int
+is_space_codepoint(int codepoint){
     for (int ii=0; ii < sizeof(SAPCE_CODEPOINT)/sizeof(SAPCE_CODEPOINT[0]); ++ii){
         if (codepoint == SAPCE_CODEPOINT[ii]){
             return 1;
         }
     }
     return 0;
+}
+
+static inline const stbtt_fontinfo*
+get_ttf(struct font_manager *F, int fontid){
+	#ifdef TEST_CASE
+	return (&F->ttf->fontinfo[fontid - 1]);
+	#else //!TEST_CASE
+	return truetype_font(F->ttf, fontid, F->L);
+	#endif //TEST_CASE
+}
+
+static inline int
+ttf_family_name(struct font_manager *F, const char* family){
+	#ifdef TEST_CASE
+	assert(false);
+	return -1;	// NOT SUPPORT
+	#else
+	return truetype_name(F->L, family);
+	#endif //TEST_CASE
 }
 
 void
@@ -173,7 +193,7 @@ font_manager_touch(struct font_manager *F, int font, int codepoint, struct font_
 		return -1;
 	}
 
-	const struct stbtt_fontinfo *fi = truetype_font(F->ttf, font, F->L);
+	const struct stbtt_fontinfo *fi = get_ttf(F, font);
 
 	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 	int ascent, descent, lineGap;
@@ -212,7 +232,7 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 		*lineGap = 0;
 	}
 
-	const struct stbtt_fontinfo *fi = truetype_font(F->ttf, fontid, F->L);
+	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
 	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 	stbtt_GetFontVMetrics(fi, ascent, descent, lineGap);
 	*ascent = scale_font(*ascent, scale, size);
@@ -222,7 +242,7 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 
 void
 font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1,int *y1){
-	const struct stbtt_fontinfo *fi = truetype_font(F->ttf, fontid, F->L);
+	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
 	stbtt_GetFontBoundingBox(fi, x0, y0, x1, y1);
 	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 	*x0 = scale_font(*x0, scale, size);
@@ -276,7 +296,7 @@ font_manager_update(struct font_manager *F, int fontid, int codepoint, struct fo
 		hash_insert(F, cp, slot);
 	}
 
-	const struct stbtt_fontinfo *fi = truetype_font(F->ttf, fontid, F->L);
+	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
 	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 
 	int width, height, xoff, yoff;
@@ -316,7 +336,7 @@ font_manager_flush(struct font_manager *F) {
 
 int
 font_manager_addfont_with_family(struct font_manager *F, const char* family) {
-	return truetype_name(F->L, family);
+	return ttf_family_name(F, family);
 }
 
 static inline void
@@ -340,31 +360,43 @@ font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 	uscale(&glyph->h, size);
 }
 
-#if 0
-
+#ifdef TEST_CASE
 #include <stdlib.h>
 #include <stdio.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb/stb_image_write.h>
+static void
+add_font(void *ttfbuffer, struct truetype_font *ttf, int fontid){
+	stbtt_InitFont(&ttf->fontinfo[fontid - 1], ttfbuffer, stbtt_GetFontOffsetForIndex(ttfbuffer, 0));
+}
+
 int
 main() {
-	FILE * f = fopen("msyh.ttc", "rb");
+	FILE* f = NULL;
+	fopen_s(&f, "msyh.ttc", "rb");
 	fseek(f, 0, SEEK_END);
 	int sz = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	void * ttf = malloc(sz);
-	int read = fread(ttf, 1, sz, f);
+	void * ttfbuffer = malloc(sz);
+	int read = (int)fread(ttfbuffer, 1, sz, f);
 	fprintf(stderr, "read %d %d\n", sz, read);
 	fclose(f);
+
+	struct truetype_font ttf;
+
+	const int fontid = 1;
+	add_font(ttfbuffer, &ttf, fontid);
 	struct font_manager F;
-	font_manager_init(&F);
-	int font = font_manager_addfont(&F, ttf);
-	fprintf(stderr,"load font %d\n", font);
+	font_manager_init(&F, &ttf, NULL);
+
+	fprintf(stderr,"load font %d\n", fontid);
 
 	struct font_glyph g;
-	font_manager_touch(&F, font, 0x6C49, &g);
+	font_manager_touch(&F, fontid, 0x6C49, &g);
 
-	unsigned char buffer[g.w * g.h];
+	unsigned char* buffer = malloc(g.w * g.h);
 
-	const char * err = font_manager_update(&F, font, 0x6C49, &g, buffer);
+	const char * err = font_manager_update(&F, fontid, 0x6C49, &g, buffer);
 
 	if (err != NULL) {
 		fprintf(stderr, "Error : %s\n", err);
@@ -375,6 +407,7 @@ main() {
 			g.w, g.h,
 			g.u, g.v);
 
+		stbi_write_bmp("sdf.bmp", g.w, g.h, 1, buffer);
 		printf("P2\n%d %d\n255\n", g.w, g.h);
 		int i,j;
 		for (i=0;i<g.h;i++) {
@@ -386,7 +419,8 @@ main() {
 
 	}
 
+	free(buffer);
+
 	return 0;
 }
-
-#endif
+#endif //TEST_CASE

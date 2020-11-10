@@ -1,5 +1,5 @@
-#ifndef lua_bgfx_font_manager_h
-#define lua_bgfx_font_manager_h
+#ifndef font_manager_h
+#define font_manager_h
 
 #include <stb/stb_truetype.h>
 #include <stdint.h>
@@ -10,6 +10,36 @@
 #define FONT_MANAGER_SLOTLINE (FONT_MANAGER_TEXSIZE/FONT_MANAGER_GLYPHSIZE)
 #define FONT_MANAGER_SLOTS (FONT_MANAGER_SLOTLINE*FONT_MANAGER_SLOTLINE)
 #define FONT_MANAGER_HASHSLOTS (FONT_MANAGER_SLOTS * 2)
+
+// --------------
+//
+//                       xmin                     xmax
+//                        |                         |
+//                        |<-------- width -------->|
+//                        |                         |
+//              |         +-------------------------+----------------- ymax
+//              |         |    ggggggggg   ggggg    |     ^        ^
+//              |         |   g:::::::::ggg::::g    |     |        |
+//              |         |  g:::::::::::::::::g    |     |        |
+//              |         | g::::::ggggg::::::gg    |     |        |
+//              |         | g:::::g     g:::::g     |     |        |
+//    offset_x -|-------->| g:::::g     g:::::g     |  offset_y    |
+//              |         | g:::::g     g:::::g     |     |        |
+//              |         | g::::::g    g:::::g     |     |        |
+//              |         | g:::::::ggggg:::::g     |     |        |
+//              |         |  g::::::::::::::::g     |     |      height
+//              |         |   gg::::::::::::::g     |     |        |
+//  baseline ---*---------|---- gggggggg::::::g-----*--------      |
+//            / |         |             g:::::g     |              |
+//     origin   |         | gggggg      g:::::g     |              |
+//              |         | g:::::gg   gg:::::g     |              |
+//              |         |  g::::::ggg:::::::g     |              |
+//              |         |   gg:::::::::::::g      |              |
+//              |         |     ggg::::::ggg        |              |
+//              |         |         gggggg          |              v
+//              |         +-------------------------+----------------- ymin
+//              |                                   |
+//              |------------- advance_x ---------->|
 
 struct font_slot {
 	int codepoint_ttf;	// high 8 bits (ttf index)
@@ -39,6 +69,11 @@ struct font_manager {
 	struct truetype_font* ttf;
 	void *L;
 	int dpi_perinch;
+
+	// struct _sdf{
+	// 	int onedge_value;		// 0 .. 255
+	// 	float pixel_dist_scale;	// onedge_value / padding, padding = 5.0
+	// } sdf;
 };
 
 struct font_glyph {
@@ -77,4 +112,4 @@ FONT_API const char * font_manager_update(struct font_manager *, int font, int c
 FONT_API void font_manager_flush(struct font_manager *);
 FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
 
-#endif
+#endif //font_manager_h

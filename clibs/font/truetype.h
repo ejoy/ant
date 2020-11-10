@@ -31,7 +31,7 @@ truetype_cstruct(lua_State *L) {
 
 static inline int
 lget_fontdata(lua_State *L) {
-	int fontid = lua_tointeger(L, 1);
+	int fontid = (int)lua_tointeger(L, 1);
 	if (lua_getfield(L, LUA_REGISTRYINDEX, TRUETYPE_ID) != LUA_TTABLE) {
 		return 0;
 	}
@@ -96,7 +96,7 @@ truetype_name(lua_State *L, const char *name) {
 		lua_pop(L, 1);
 		return -1;
 	}
-	int fontid = lua_tointeger(L, -1);
+	int fontid = (int)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	return fontid;
 }
