@@ -31,6 +31,13 @@ private:
 	lua_plugin *plugin;
 };
 
+class lua_element final : public Rml::Element {
+public:
+	lua_element(Rml::Element* parent, const Rml::String& tag) : Rml::Element(tag) {
+		SetOwnerDocument(parent ? parent->GetOwnerDocument() : nullptr);
+	}
+};
+
 class lua_event_listener final : public Rml::EventListener {
 public:
 	lua_event_listener(lua_plugin *p, const Rml::String& code, Rml::Element* element) : plugin(p) {
@@ -52,6 +59,19 @@ private:
 		return new lua_event_listener(plugin, code, element);
 	}
 	lua_plugin *plugin;
+};
+
+class lua_element_instancer final : public Rml::ElementInstancer {
+public:
+	lua_element_instancer() {}
+private:
+	Rml::ElementPtr InstanceElement(Rml::Element* parent, const Rml::String& tag, const Rml::XMLAttributes& attributes) override {
+		// ignore attributes
+		return Rml::ElementPtr(new lua_element(parent, tag));
+	}
+	void ReleaseElement(Rml::Element* element) override {
+		delete element;
+	}
 };
 
 class lua_document_instancer final : public Rml::ElementInstancer {
@@ -88,8 +108,10 @@ public:
 	}
 	void OnInitialise() override {
 		document_element_instancer = new lua_document_instancer(this);
+		element_instancer = new lua_element_instancer();
 		event_listener_instancer = new lua_event_listener_instancer(this);
 		Rml::Factory::RegisterElementInstancer("body", document_element_instancer);
+		Rml::Factory::RegisterElementInstancer("*", element_instancer);
 		Rml::Factory::RegisterEventListenerInstancer(event_listener_instancer);
 	}
 	void OnShutdown() override {
@@ -135,10 +157,12 @@ public:
 		check_function(L, "OnContextDestroy");
 		check_function(L, "OnNewDocument");
 		check_function(L, "OnDeleteDocument");
-		check_function(L, "OnLoadScript");
+		check_function(L, "OnInlineScript");
+		check_function(L, "OnExternalScript");
 		check_function(L, "OnEvent");
 		check_function(L, "OnEventAttach");
 		check_function(L, "OnEventDetach");
+		check_function(L, "OnUpdate");
 	}
 
 	static void shutdown_error(lua_State *L, lua_plugin *p) {
@@ -189,6 +213,7 @@ public:
 	friend class lua_event_listener;
 	friend void lua_plugin_call(plugin_t plugin, const char* name);
 	lua_document_instancer* document_element_instancer = nullptr;
+	lua_element_instancer* element_instancer = nullptr;
 	lua_event_listener_instancer* event_listener_instancer = nullptr;
 };
 
@@ -206,20 +231,18 @@ lua_document::~lua_document() {
 
 void
 lua_document::LoadScript(Rml::Stream* stream, const Rml::String& source_name) {
-	lua_State *L = plugin->L;
-
-	Rml::String buffer;
-	stream->Read(buffer,stream->Length());
-	lua_pushlstring(L, buffer.c_str(), buffer.length());
-
-	lua_pushlightuserdata(L, (void *)this);
-
-	if(!source_name.empty()) {
+	lua_State* L = plugin->L;
+	lua_pushlightuserdata(L, (void*)this);
+	if (!source_name.empty()) {
 		lua_pushlstring(L, source_name.c_str(), source_name.length());
-	} else {
-		lua_pushnil(L);
+		plugin->call_lua_function("OnExternalScript", 2);
 	}
-	plugin->call_lua_function("OnLoadScript", 3);
+	else {
+		Rml::String buffer;
+		stream->Read(buffer, stream->Length());
+		lua_pushlstring(L, buffer.c_str(), buffer.length());
+		plugin->call_lua_function("OnInlineScript", 2);
+	}
 }
 
 void lua_event_listener::Init(const Rml::String& code, Rml::Element* element) {
@@ -257,13 +280,6 @@ void lua_event_listener::ProcessEvent(Rml::Event& event) {
 	plugin->call_lua_function("OnEvent", 3);
 }
 
-}
-
-void
-lua_plugin_register(lua_State *L, int index) {
-	lua_plugin * p = new lua_plugin();
-	p->Init(L, index);
-	Rml::RegisterPlugin(p);
 }
 
 plugin_t

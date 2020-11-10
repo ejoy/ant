@@ -1,27 +1,8 @@
+local console = require "core.console"
+local sandbox = require "core.sandbox"
+
 local m = {}
-function m.OnContextCreate(context)
-	print("Create Context", context)
-end
-function m.OnContextDestroy(context)
-	print("Destroy Context", context)
-end
-function m.OnNewDocument(doc)
-	print("Document Open", doc)
-end
-function m.OnDeleteDocument(doc)
-	print("Document Close", doc)
-end
-function m.OnLoadScript(source, doc, filename)
-	print("Document:", doc)
-	print(source)
-	print(rmlui.DocumentGetSourceURL(doc))
-	local f,err = load(source)
-	if err then
-		print("Load error:", err)
-	else
-		print(pcall(f, doc))
-	end
-end
+
 local event_name = {
 	[0] = "invalid",
 	"mousedown"     ,
@@ -62,22 +43,66 @@ local event_name = {
 	"rowremove"     ,
 	"rowupdate"     ,
 }
-function m.OnEvent(ev, params, id)
-	print("Event", ev, event_name[id])
-	if params then
-		for k,v in pairs(params) do
-			print("=>", k,v)
-		end
+
+local environment = {}
+local events = {}
+
+function m.OnContextCreate(context)
+end
+function m.OnContextDestroy(context)
+end
+function m.OnNewDocument(document)
+	environment[document] = sandbox()
+end
+function m.OnDeleteDocument(document)
+	environment[document] = nil
+end
+function m.OnInlineScript(document, source)
+	local f, err = load(source, source, "t", environment[document])
+	if not f then
+		console.warn(err)
+		return
+	end
+	local ok, err = xpcall(f, function(msg)
+		return debug.traceback(msg)
+	end)
+	if not ok then
+		console.warn(err)
 	end
 end
+function m.OnExternalScript(document, source)
+	local f, err = load(assert(rmlui.RmlReadFile(source)), "@"..source, "t", environment[document])
+	if not f then
+		console.warn(err)
+		return
+	end
+	local ok, err = xpcall(f, function(msg)
+		return debug.traceback(msg)
+	end)
+	if not ok then
+		console.warn(err)
+	end
+end
+function m.OnEvent(ev, params, id)
+	local f = events[ev]
+	if not f then
+		return
+	end
+	f(id, params)
+end
 function m.OnEventAttach(ev, document, element, source)
-	print("EventAttach", ev)
-	print("Document:", document)
-	print("Element:", element)
-	print(source)
+	if source == "" then
+		return
+	end
+	local f, err = load(source, source, "t", environment[document])
+	if not f then
+		console.warn(err)
+		return
+	end
+	events[ev] = f
 end
 function m.OnEventDetach(ev)
-	print("EventDetach", ev)
+	events[ev] = nil
 end
 
 m.OnUpdate = require "core.update"

@@ -59,6 +59,7 @@ lrmlui_init(lua_State *L){
     }
     g_wrapper->font.RegisterFontEffectInstancer();
     g_wrapper->plugin = lua_plugin_create(L, 2);
+    Rml::RegisterPlugin((Rml::Plugin*)g_wrapper->plugin);
     return 0;
 }
 
