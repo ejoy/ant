@@ -86,7 +86,7 @@ struct font_glyph
 FontEngine::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_){
     struct font_glyph g, og;
     if (0 == font_manager_glyph(mcontext->font_mgr, face.fontid, codepoint, face.pixelsize, &g, &og)){
-        auto ri = static_cast<RenderInterface*>(Rml::GetRenderInterface());
+        auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
         const uint32_t bufsize = og.w * og.h;
         uint8_t *buffer = new uint8_t[bufsize];
         memset(buffer, 0, bufsize);
