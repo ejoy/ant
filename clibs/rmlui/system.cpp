@@ -2,11 +2,11 @@
 #include "system.h"
 #include <assert.h>
 
-System::System()
+SystemInterface::SystemInterface()
     : mStartTime(std::chrono::steady_clock::now()){
 }
 
-double System::GetElapsedTime(){
+double SystemInterface::GetElapsedTime(){
     auto now = std::chrono::steady_clock::now();
     auto duration = now - mStartTime;
     auto time = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
@@ -36,7 +36,7 @@ std::string str_join(Container const& cont, std::string const& delim) {
     return r;
 }
 
-void System::JoinPath(Rml::String& out, const Rml::String& base, const Rml::String& path) {
+void SystemInterface::JoinPath(Rml::String& out, const Rml::String& base, const Rml::String& path) {
     std::vector<std::string> path_elems;
     str_split(base, path_elems, "/");
     assert(path_elems.size() > 0);

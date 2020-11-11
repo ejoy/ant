@@ -7,7 +7,7 @@
 #include <sstream>
 #include <cassert>
 
-struct rml_context;
+struct RmlContext;
 
 enum FontEffectType : uint8_t {
     FE_None		= 0,
@@ -160,7 +160,7 @@ private:
 template<class FontEffectClass>
 class TSDFFontEffectOulineInstancer : public Rml::FontEffectInstancer{
 public:
-    TSDFFontEffectOulineInstancer(const rml_context *c)
+    TSDFFontEffectOulineInstancer(const RmlContext* c)
         : mcontext(c)
         , id_width(Rml::PropertyId::Invalid)
         , id_color(Rml::PropertyId::Invalid)
@@ -180,7 +180,7 @@ public:
         return Rml::MakeShared<FontEffectClass>(mcontext->font_tex.texid, width, color);
     }
 private:
-    const rml_context *mcontext;
+    const RmlContext* mcontext;
     Rml::PropertyId id_width, id_color;
 };
 
@@ -246,7 +246,7 @@ private:
 
 class SDFFontEffectShadowInstancer : public Rml::FontEffectInstancer{
 public:
-    SDFFontEffectShadowInstancer(const rml_context *c)
+    SDFFontEffectShadowInstancer(const RmlContext*c)
         : mcontext(c)
         , id_offset_x(Rml::PropertyId::Invalid)
         , id_offset_y(Rml::PropertyId::Invalid)
@@ -268,13 +268,13 @@ public:
             properties.GetProperty(id_color)->Get<Rml::Colourb>());
     }
 private:
-    const rml_context *mcontext;
+    const RmlContext* mcontext;
     Rml::PropertyId id_offset_x, id_offset_y, id_color;
 };
 
 class FontEffectInstancerManager{
 public:
-	Rml::FontEffectInstancer* Create(const Rml::String &name, const rml_context *c){
+	Rml::FontEffectInstancer* Create(const Rml::String &name, const RmlContext*c){
         auto it = mInstancers.find(name);
         if (it == mInstancers.end()){
             Rml::FontEffectInstancer *inst = nullptr;

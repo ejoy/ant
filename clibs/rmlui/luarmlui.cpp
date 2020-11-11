@@ -6,7 +6,7 @@
 #include "font.h"
 #include "system.h"
 #include "context.h"
-#include "luaplugin.h"
+#include "luabind.h"
 
 #include <bgfx/bgfx_interface.h>
 #include <bgfx/luabgfx.h>
@@ -18,48 +18,47 @@
 #include <cassert>
 #include <cstring>
 
-#define RMLCONTEXT "RMLCONTEXT"
-
-struct rml_context_wrapper {
-    rml_context    context;
-    System         system;
-    FontInterface  font;
-    FileInterface2 file;
-    Renderer       renderer;
-    plugin_t       plugin;
-    bool           debugger;
-    rml_context_wrapper(lua_State* L, int idx)
-        : context(L, idx)
-        , system()
-        , font(&context)
-        , file(&context)
-        , renderer(&context)
-        , plugin(nullptr)
-		, debugger(false)
-		{}
-    ~rml_context_wrapper() {
-        lua_plugin_destroy(plugin);
+struct RmlInterface {
+    SystemInterface system;
+    FontInterface   font;
+    FileInterface   file;
+    RenderInterface renderer;
+    RmlInterface(RmlContext* context)
+        : system()
+        , font(context)
+        , file(context)
+        , renderer(context)
+    {
+        Rml::SetSystemInterface(&system);
+        Rml::SetFontEngineInterface(&font);
+        Rml::SetFileInterface(&file);
+        Rml::SetRenderInterface(&renderer);
     }
 };
 
-static rml_context_wrapper* g_wrapper = nullptr;
+struct RmlWrapper {
+    RmlContext   context;
+    RmlInterface interface;
+    RmlWrapper(lua_State* L, int idx)
+        : context(L, idx)
+        , interface(&context)
+	{}
+};
+
+static RmlWrapper* g_wrapper = nullptr;
 
 static int
 lrmlui_init(lua_State *L){
     if (g_wrapper) {
         return luaL_error(L, "RmlUi has been initialized.");
     }
-    g_wrapper = new rml_context_wrapper(L, 1);
-    Rml::SetSystemInterface(&g_wrapper->system);
-    Rml::SetFontEngineInterface(&g_wrapper->font);
-    Rml::SetFileInterface(&g_wrapper->file);
-    Rml::SetRenderInterface(&g_wrapper->renderer);
+    g_wrapper = new RmlWrapper(L, 1);
     if (!Rml::Initialise()){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
-    g_wrapper->font.RegisterFontEffectInstancer();
-    g_wrapper->plugin = lua_plugin_create(L, 2);
-    Rml::RegisterPlugin((Rml::Plugin*)g_wrapper->plugin);
+    g_wrapper->interface.font.RegisterFontEffectInstancer();
+    g_wrapper->context.plugin = lua_plugin_create(L, 2);
+    Rml::RegisterPlugin((Rml::Plugin*)g_wrapper->context.plugin);
     return 0;
 }
 
@@ -74,34 +73,36 @@ lrmlui_shutdown(lua_State* L) {
 }
 
 static int
-lrmlui_preload_file(lua_State* L) {
+lrmlui_call(lua_State* L) {
     if (!g_wrapper) {
         return 0;
     }
-    auto& dict = g_wrapper->context.file_dict;
-    luaL_checktype(L, 1, LUA_TTABLE);
-    lua_pushnil(L);
-    while (lua_next(L, 1)) {
-        size_t ksz = 0, vsz = 0;
-        const char* k = luaL_checklstring(L, -2, &ksz);
-        const char* v = luaL_checklstring(L, -1, &vsz);
-        dict.emplace(std::string(k, ksz), std::string(v, vsz));
-        lua_pop(L, 1);
+    plugin_t plugin = g_wrapper->context.plugin;
+    const char* name = luaL_checkstring(L, 1);
+    int top = lua_gettop(L);
+    if (top == 1) {
+        luabind::invoke(lua_plugin_getlua(plugin), [&](lua_State* L) {
+            lua_plugin_call(plugin, name, 0);
+        });
+        return 0;
     }
-    return 0;
-}
-static int
-lrmlui_update(lua_State* L) {
-    if (g_wrapper) {
-        lua_plugin_call(g_wrapper->plugin, "OnUpdate");
+    std::vector<Rml::Variant> args((size_t)(lua_gettop(L)-1));
+    for (size_t i = 0; 0 < args.size(); ++i) {
+        lua_getvariant(L, (int)i + 2, &args[i]);
     }
+    luabind::invoke(lua_plugin_getlua(plugin), [&](lua_State* L) {
+        for (auto const& arg : args) {
+            lua_pushvariant(L, arg);
+        }
+        lua_plugin_call(plugin, name, args.size());
+    });
     return 0;
 }
 
 static int
 lrmlui_frame(lua_State *L){
     if (g_wrapper){
-        g_wrapper->renderer.Frame();
+        g_wrapper->interface.renderer.Frame();
     }
     return 0;
 }
@@ -109,7 +110,7 @@ lrmlui_frame(lua_State *L){
 static int
 lrmlui_begin(lua_State *L){
     if (g_wrapper){
-        g_wrapper->renderer.Begin();
+        g_wrapper->interface.renderer.Begin();
     }
     return 0;
 }
@@ -121,10 +122,9 @@ luaopen_rmlui(lua_State* L) {
     luaL_Reg l[] = {
         { "init",       lrmlui_init },
         { "shutdown",   lrmlui_shutdown },
-        { "preload_file", lrmlui_preload_file },
-        { "update",     lrmlui_update},
-        { "begin",      lrmlui_begin},
-        { "frame",      lrmlui_frame},
+        { "begin",      lrmlui_begin },
+        { "call",       lrmlui_call },
+        { "frame",      lrmlui_frame },
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);

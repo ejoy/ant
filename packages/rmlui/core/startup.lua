@@ -1,5 +1,6 @@
 local console = require "core.console"
 local sandbox = require "core.sandbox"
+local filemanager = require "core.filemanager"
 
 local m = {}
 
@@ -71,7 +72,12 @@ function m.OnInlineScript(document, source)
 	end
 end
 function m.OnExternalScript(document, source)
-	local f, err = load(assert(rmlui.RmlReadFile(source)), "@"..source, "t", environment[document])
+	local path = filemanager.realpath(source)
+	if not path then
+		console.warn(("file '%s' does not exist."):format(source))
+		return
+	end
+	local f, err = loadfile(path, "t", environment[document])
 	if not f then
 		console.warn(err)
 		return
@@ -103,6 +109,10 @@ function m.OnEventAttach(ev, document, element, source)
 end
 function m.OnEventDetach(ev)
 	events[ev] = nil
+end
+
+function m.OnOpenFile(path)
+	return filemanager.realpath(path)
 end
 
 m.OnUpdate = require "core.update"

@@ -15,7 +15,7 @@ struct FontFace{
 
 class FontInterface : public Rml::FontEngineInterface {
 public:
-	FontInterface(const rml_context *context) 
+	FontInterface(const RmlContext* context)
 		: mcontext(context)
 		, mDefaultFontEffect(uint16_t(context->font_tex.texid))
 		{}
@@ -51,7 +51,7 @@ private:
 	};
 	const FontResource& FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle);
 private:
-    const rml_context* mcontext;
+    const RmlContext* mcontext;
 	struct fontinfo {
 		std::vector<uint8_t>buffer;
 		std::vector<int>	fontids;

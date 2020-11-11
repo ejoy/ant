@@ -76,23 +76,19 @@ local function init_rmlui_data()
 end
 
 local function preload_dir(dir)
-    dir = fs.path(dir)
-    local file_dict = {}
-    local function list_files(path)
+    local function import_font(path)
         for p in path:list_directory() do
             if fs.is_directory(p) then
-                list_files(p)
+                import_font(p)
             elseif fs.is_regular_file(p) then
                 if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
                     fontmgr.import(p)
                 end
-                local key = fs.relative(p, dir):string()
-                file_dict[key] = p:localpath():string()
             end
         end
     end
-    list_files(dir)
-    rmlui.preload_file(file_dict)
+    import_font(fs.path(dir))
+    channel("AddResourceDir", dir)
 end
 
 function rmlui_sys:init()
@@ -121,7 +117,7 @@ function rmlui_sys:ui_update()
             channel("MouseUp", mouseId[what])
         end
     end
-    rmlui.update()
+    rmlui.call "OnUpdate"
 end
 
 function rmlui_sys:ui_end()

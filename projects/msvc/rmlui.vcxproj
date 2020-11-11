@@ -125,6 +125,7 @@
     <ClInclude Include="..\..\clibs\rmlui\font.h" />
     <ClInclude Include="..\..\clibs\rmlui\fonteffect.h" />
     <ClInclude Include="..\..\clibs\rmlui\lua2struct.h" />
+    <ClInclude Include="..\..\clibs\rmlui\luabind.h" />
     <ClInclude Include="..\..\clibs\rmlui\luaplugin.h" />
     <ClInclude Include="..\..\clibs\rmlui\pch.h" />
     <ClInclude Include="..\..\clibs\rmlui\render.h" />

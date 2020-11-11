@@ -4,11 +4,11 @@
 #include <RmlUi/Core/FileInterface.h>
 #include <../Source/Core/FileInterfaceDefault.h>
 
-class FileInterface2 : public Rml::FileInterfaceDefault {
+class FileInterface : public Rml::FileInterfaceDefault {
 public:
-    FileInterface2(const rml_context *context) : mcontext(context){}
+    FileInterface(const RmlContext*context) : mcontext(context){}
     virtual Rml::FileHandle Open(const Rml::String& path) override;
 
 private:
-    const rml_context* mcontext;
+    const RmlContext* mcontext;
 };

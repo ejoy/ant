@@ -1,10 +1,11 @@
 #pragma once
-#include <RmlUi/Core/SystemInterface.h>
 
+#include <RmlUi/Core/SystemInterface.h>
 #include <chrono>
-class System : public Rml::SystemInterface{
+
+class SystemInterface : public Rml::SystemInterface {
 public:
-    System();
+    SystemInterface();
     virtual double GetElapsedTime() override;
     virtual void JoinPath(Rml::String& translated_path, const Rml::String& document_path, const Rml::String& path) override;
 private:
