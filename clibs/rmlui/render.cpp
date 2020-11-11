@@ -17,9 +17,8 @@ TransientIndexBuffer32::TransientIndexBuffer32(uint32_t sizeBytes)
 {}
 
 TransientIndexBuffer32::~TransientIndexBuffer32(){
-    if (mdyn_indexbuffer.idx != UINT16_MAX){
+    if (BGFX_HANDLE_IS_VALID(mdyn_indexbuffer)){
         BGFX(destroy_dynamic_index_buffer)(mdyn_indexbuffer);
-        mdyn_indexbuffer = BGFX_INVALID_HANDLE;
     }
 }
 
@@ -46,9 +45,11 @@ TransientIndexBuffer32::Reset(){
 
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 Renderer::Renderer(const rml_context* context)
-    : mcontext(context)
+    : mTransform(Rml::Matrix4f::Identity())
+    , mcontext(context)
     , mEncoder(nullptr){
     const auto &vr = mcontext->viewrect;
+    BGFX(set_view_scissor)(mcontext->viewid, 0, 0, 0, 0);
     BGFX(set_view_rect)(mcontext->viewid, uint16_t(vr.x), uint16_t(vr.y), uint16_t(vr.w), uint16_t(vr.h));
     BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
 }
@@ -61,20 +62,12 @@ FE(Rml::TextureHandle th){
 
 static bool
 is_font_tex(SDFFontEffect *fe) { 
-    if (fe == nullptr)
-        return false;
-    return (fe->GetType() & FE_FontTex) != 0;
+    return fe ? (fe->GetType() & FE_FontTex) != 0 : false;
 }
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                             int* indices, int num_indices, 
                             Rml::TextureHandle texture, const Rml::Vector2f& translation) {
-    // if (mScissorRect.w == 0 && mScissorRect.w == mScissorRect.h){
-    //     BGFX(encoder_set_scissor)(mEncoder, 0, 0, 0, 0);
-    // } else {
-    //     BGFX(encoder_set_scissor)(mEncoder, mScissorRect.x, mScissorRect.y, mScissorRect.w, mScissorRect.h);
-    // }
-
     const Rml::Matrix4f m = mTransform * Rml::Matrix4f::Translate(translation.x, translation.y, 0.0);
     BGFX(encoder_set_transform)(mEncoder, m.data(), 1);
 
@@ -97,7 +90,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
             const auto& v = it.second;
             assert(v.uniform_idx != UINT16_MAX);
 
-            const Rml::String tex_property_name = "s_tex";
+            static const Rml::String tex_property_name = "s_tex";
             if (tex_property_name == it.first){
                 BGFX(encoder_set_texture)(mEncoder, v.stage, {v.uniform_idx}, {v.texid}, UINT16_MAX);
             } else {
@@ -125,18 +118,13 @@ void Renderer::Frame(){
 }
 
 void Renderer::EnableScissorRegion(bool enable) {
-    if (enable){
-        mScissorRect.w = mScissorRect.h = 1;
-    } else {
-        mScissorRect.w = mScissorRect.h = 0;
+    if (!enable){
+        BGFX(set_view_scissor)(mcontext->viewid, 0, 0, 0, 0);
     }
 }
 
 void Renderer::SetScissorRegion(int x, int y, int w, int h) {
-    mScissorRect.x = std::max(x, 0);
-    mScissorRect.y = std::max(y, 0);
-    mScissorRect.w = w;
-    mScissorRect.h = h;
+    BGFX(set_view_scissor)(mcontext->viewid, std::max(x, 0), std::max(y, 0), w, h);
 }
 
 static inline bool
@@ -152,7 +140,7 @@ DefaultSamplerFlag(){
 }
 
 bool Renderer::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& texture_dimensions, const Rml::String& source){
-    auto ifont = static_cast<FontInterface*>(Rml::GetFontEngineInterface());
+    auto ifont = static_cast<FontEngine*>(Rml::GetFontEngineInterface());
     if (ifont->IsFontTexResource(source)){
         texture_handle = ifont->GetFontTexHandle(source, texture_dimensions);
         return true;

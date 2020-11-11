@@ -44,7 +44,7 @@ public:
 private:
     uint32_t moffset;
     uint32_t msize;
-    bgfx_dynamic_index_buffer_handle_t  mdyn_indexbuffer;
+    const bgfx_dynamic_index_buffer_handle_t  mdyn_indexbuffer;
 };
 
 class Renderer : public Rml::RenderInterface {
@@ -70,10 +70,9 @@ public:
     void Frame();
 
 private:
-    Rml::Matrix4f       mTransform = Rml::Matrix4f::Identity();
-    Rect                mScissorRect = {0, 0, 0, 0};
-    const rml_context*  mcontext;
+    Rml::Matrix4f           mTransform;
+    const rml_context*      mcontext;
     TransientIndexBuffer32  mIndexBuffer;
 
-    bgfx_encoder_t*     mEncoder;
+    bgfx_encoder_t*         mEncoder;
 };

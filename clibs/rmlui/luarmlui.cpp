@@ -23,8 +23,8 @@
 struct rml_context_wrapper {
     rml_context    context;
     System         system;
-    FontInterface  font;
-    FileInterface2 file;
+    FontEngine     font;
+    File           file;
     Renderer       renderer;
     plugin_t       plugin;
     bool           debugger;
@@ -38,7 +38,7 @@ struct rml_context_wrapper {
 		, debugger(false)
 		{}
     ~rml_context_wrapper() {
-        lua_plugin_destroy(plugin);
+        //lua_plugin_destroy(plugin);
     }
 };
 

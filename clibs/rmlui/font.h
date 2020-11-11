@@ -13,13 +13,13 @@ struct FontFace{
 	int pixelsize;
 };
 
-class FontInterface : public Rml::FontEngineInterface {
+class FontEngine : public Rml::FontEngineInterface {
 public:
-	FontInterface(const rml_context *context) 
+	FontEngine(const rml_context *context) 
 		: mcontext(context)
 		, mDefaultFontEffect(uint16_t(context->font_tex.texid))
 		{}
-	virtual ~FontInterface() = default;
+	virtual ~FontEngine() = default;
 public:
 	void RegisterFontEffectInstancer();
 	bool IsFontTexResource(const Rml::String &sourcename) const;

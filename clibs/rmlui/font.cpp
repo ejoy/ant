@@ -12,17 +12,17 @@ extern "C"{
 #include <cassert>
 #include <cstring>
 
-void FontInterface::RegisterFontEffectInstancer(){
+void FontEngine::RegisterFontEffectInstancer(){
     Rml::Factory::RegisterFontEffectInstancer("outline", mFEIMgr.Create("outline", mcontext));
     Rml::Factory::RegisterFontEffectInstancer("shadow", mFEIMgr.Create("shadow", mcontext));
     Rml::Factory::RegisterFontEffectInstancer("glow", mFEIMgr.Create("glow", mcontext));
 }
 
-bool FontInterface::IsFontTexResource(const Rml::String &sourcename) const{
+bool FontEngine::IsFontTexResource(const Rml::String &sourcename) const{
     return SDFFontEffect::IsFontTexResource(sourcename);
 }
 
-Rml::TextureHandle FontInterface::GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const{
+Rml::TextureHandle FontEngine::GetFontTexHandle(const Rml::String &sourcename, Rml::Vector2i& texture_dimensions) const{
     auto itfound = mFontResources.find(sourcename);
     if (itfound == mFontResources.end()){
         return Rml::TextureHandle(0);
@@ -33,7 +33,7 @@ Rml::TextureHandle FontInterface::GetFontTexHandle(const Rml::String &sourcename
     return Rml::TextureHandle(itfound->second.fe);
 }
 
-bool FontInterface::LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face){
+bool FontEngine::LoadFontFace(const Rml::byte* data, int data_size, const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, bool fallback_face){
     return (family == "rmlui-debugger-font");
 }
 
@@ -46,7 +46,7 @@ load_fontid(struct font_manager *F, const Rml::String &family){
     return truetype_name((lua_State*)F->L, name);
 }
 
-Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
+Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
     int fontid = load_fontid(mcontext->font_mgr, family);
 
     if (fontid > 0){
@@ -65,7 +65,7 @@ Rml::FontFaceHandle FontInterface::GetFontFaceHandle(const Rml::String& family, 
     return static_cast<Rml::FontFaceHandle>(0);
 }
 
-Rml::FontEffectsHandle FontInterface::PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects){
+Rml::FontEffectsHandle FontEngine::PrepareFontEffects(Rml::FontFaceHandle handle, const Rml::FontEffectList &font_effects){
     if (font_effects.empty())
         return Rml::FontEffectsHandle(&mDefaultFontEffect);
 
@@ -76,14 +76,14 @@ Rml::FontEffectsHandle FontInterface::PrepareFontEffects(Rml::FontFaceHandle han
     return 0;
 }
 
-int FontInterface::GetSize(Rml::FontFaceHandle handle){
+int FontEngine::GetSize(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle) - 1;
     const auto &face = mFontFaces[idx];
     return face.pixelsize;
 }
 
 struct font_glyph
-FontInterface::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_){
+FontEngine::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_){
     struct font_glyph g, og;
     if (0 == font_manager_glyph(mcontext->font_mgr, face.fontid, codepoint, face.pixelsize, &g, &og)){
         auto ri = static_cast<Renderer*>(Rml::GetRenderInterface());
@@ -102,7 +102,7 @@ FontInterface::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *
     return g;
 }
 
-int FontInterface::GetXHeight(Rml::FontFaceHandle handle){
+int FontEngine::GetXHeight(Rml::FontFaceHandle handle){
     
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
@@ -111,7 +111,7 @@ int FontInterface::GetXHeight(Rml::FontFaceHandle handle){
     return g.h;
 }
 
-int FontInterface::GetLineHeight(Rml::FontFaceHandle handle){
+int FontEngine::GetLineHeight(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
@@ -120,7 +120,7 @@ int FontInterface::GetLineHeight(Rml::FontFaceHandle handle){
     return ascent - descent + lineGap;
 }
 
-int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
+int FontEngine::GetBaseline(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
@@ -129,7 +129,7 @@ int FontInterface::GetBaseline(Rml::FontFaceHandle handle){
     return -descent + lineGap;
 }
 
-float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
+float FontEngine::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
@@ -138,7 +138,7 @@ float FontInterface::GetUnderline(Rml::FontFaceHandle handle, float &thickness){
     return y1;
 }
 
-int FontInterface::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character /*= Character::Null*/){
+int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String& string, Rml::Character prior_character /*= Character::Null*/){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
@@ -151,8 +151,8 @@ int FontInterface::GetStringWidth(Rml::FontFaceHandle handle, const Rml::String&
     return width;
 }
 
-const FontInterface::FontResource& 
-FontInterface::FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle){
+const FontEngine::FontResource& 
+FontEngine::FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle){
     auto sdffe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
     Rml::String key = sdffe->GenerateKey();
 
@@ -167,7 +167,7 @@ FontInterface::FindOrAddFontResource(Rml::FontEffectsHandle font_effects_handle)
     return itfound->second;
 }
 
-int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHandle font_effects_handle, 
+int FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHandle font_effects_handle, 
     const Rml::String& string, 
     const Rml::Vector2f& position, 
     const Rml::Colourb& colour,
@@ -232,7 +232,7 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 			Rml::Vector2f(u0, v0) * fonttexel,
             Rml::Vector2f(u1, v1) * fonttexel,
 			(int)vertices.size() - 4
-		);
+		); 
 
 		x += g.advance_x + (dim.x - olddim.x);
 	}
@@ -240,6 +240,6 @@ int FontInterface::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHa
 	return x - int(position.x + 0.5f);
 }
 
-int FontInterface::GetVersion(Rml::FontFaceHandle handle){
+int FontEngine::GetVersion(Rml::FontFaceHandle handle){
     return 1;
 }
