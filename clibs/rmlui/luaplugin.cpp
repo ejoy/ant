@@ -15,6 +15,8 @@ extern "C" {
 #include "luaplugin.h"
 #include "luabind.h"
 
+static int LUA_PLUGIN = 0;
+
 namespace {
 
 class lua_plugin;
@@ -92,16 +94,11 @@ private:
 
 class lua_plugin final : public Rml::Plugin {
 public:
-	void Init(lua_State *mL, int index) {
-		if (!lua_isstring(mL, index)) {
-			lua_pushstring(mL, "Need source string");
-			shutdown_error(mL, this);
-		}
-		InitLuaVM(mL, index);
-	}
 	~lua_plugin() {
 		delete document_element_instancer;
 		delete event_listener_instancer;
+		document_element_instancer = nullptr;
+		event_listener_instancer = nullptr;
 	}
 
 	int GetEventClasses() override {
@@ -116,31 +113,18 @@ public:
 		Rml::Factory::RegisterEventListenerInstancer(event_listener_instancer);
 	}
 	void OnShutdown() override {
-		delete document_element_instancer;
-		delete event_listener_instancer;
-		document_element_instancer = nullptr;
-		event_listener_instancer = nullptr;
-	}
-	void call_lua_function(const char *name, int argn = 0, int retn = 0) {
-		lua_rawgetp(L, LUA_REGISTRYINDEX, (void *)this);
-		lua_getfield(L, -1, name);
-		lua_replace(L, -2);
-		lua_insert(L, -1 - argn);
-		lua_call(L, argn, retn);
-	}
-	lua_State* get_lua() {
-		return L;
+		delete this;
 	}
 	void OnContextCreate(Rml::Context* context) override {
-		luabind::invoke(L, [&](lua_State* L) {
+		luabind::invoke(L, [&]() {
 			lua_pushlightuserdata(L, (void*)context);
-			call_lua_function("OnContextCreate", 1);
+			lua_plugin_call(L, "OnContextCreate", 1);
 		});	
 	}
 	void OnContextDestroy(Rml::Context* context) override {
-		luabind::invoke(L, [&](lua_State* L) {
+		luabind::invoke(L, [&]() {
 			lua_pushlightuserdata(L, (void*)context);
-			call_lua_function("OnContextDestroy", 1);
+			lua_plugin_call(L, "OnContextDestroy", 1);
 		});
 	}
 
@@ -171,48 +155,24 @@ public:
 		lua_error(L);
 	}
 
-	static int init_libs(lua_State *L) {
+	void InitLuaVM(lua_State* L, const char* source, size_t sz) {
 		luaL_openlibs(L);
 		luaL_requiref(L, "rmlui", lua_plugin_apis, 1);
 		lua_pop(L, 1);
-		const char * source = (const char *)lua_touserdata(L, 1);
-		size_t sz = lua_tointeger(L, 2);
-		void *key = lua_touserdata(L, 3);
-		int err = luaL_loadbuffer(L, source, sz, source) || lua_pcall(L, 0, 1, 0);
-		if (err)
-			return lua_error(L);
+		int err = luaL_loadbuffer(L, source, sz, source);
+		if (err) {
+			lua_error(L);
+			return;
+		}
+		lua_call(L, 0, 1);
 		check_module(L);
-		lua_rawsetp(L, LUA_REGISTRYINDEX, key);
-		return 0;
-	}
-
-	void InitLuaVM(lua_State *mL, int index) {
-		lua_State *L = luaL_newstate(); // todo: use own alloc
-		if (L == NULL) {
-			lua_pushstring(mL, "Lua VM init failed");
-			shutdown_error(mL, this);
-		}
-		size_t sz;
-		const char *libsource = lua_tolstring(mL, index, &sz);
-		lua_pushcfunction(L, init_libs);
-		lua_pushlightuserdata(L, (void *)libsource);
-		lua_pushinteger(L, sz);
-		lua_pushlightuserdata(L, (void *)this);
-		if (lua_pcall(L, 3, 0, 0) != LUA_OK) {
-			const char *error_message = lua_tostring(L, -1);
-			if (error_message == NULL)
-				error_message = "[ERROR]";
-			lua_pushfstring(mL, "Lua init error : %s\n", error_message);
-			lua_close(L);
-			shutdown_error(mL, this);
-		}
+		lua_rawsetp(L, LUA_REGISTRYINDEX, &LUA_PLUGIN);
 		this->L = L;
 	}
 
 	lua_State *L = nullptr;
 	friend class lua_document;
 	friend class lua_event_listener;
-	friend void lua_plugin_call(plugin_t plugin, const char* name);
 	lua_document_instancer* document_element_instancer = nullptr;
 	lua_element_instancer* element_instancer = nullptr;
 	lua_event_listener_instancer* event_listener_instancer = nullptr;
@@ -220,62 +180,62 @@ public:
 
 void lua_document::Init() {
 	lua_State *L = plugin->L;
-	luabind::invoke(L, [&](lua_State* L) {
+	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)this);
-		plugin->call_lua_function("OnNewDocument", 1);
+		lua_plugin_call(L, "OnNewDocument", 1);
 	});
 }
 
 lua_document::~lua_document() {
 	lua_State *L = plugin->L;
-	luabind::invoke(L, [&](lua_State* L) {
+	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)this);
-		plugin->call_lua_function("OnDeleteDocument", 1);
+		lua_plugin_call(L, "OnDeleteDocument", 1);
 	});
 }
 
 void
 lua_document::LoadScript(Rml::Stream* stream, const Rml::String& source_name) {
 	lua_State* L = plugin->L;
-	luabind::invoke(L, [&](lua_State* L) {
+	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)this);
 		if (!source_name.empty()) {
 			lua_pushlstring(L, source_name.c_str(), source_name.length());
-			plugin->call_lua_function("OnExternalScript", 2);
+			lua_plugin_call(L, "OnExternalScript", 2);
 		}
 		else {
 			Rml::String buffer;
 			stream->Read(buffer, stream->Length());
 			lua_pushlstring(L, buffer.c_str(), buffer.length());
-			plugin->call_lua_function("OnInlineScript", 2);
+			lua_plugin_call(L, "OnInlineScript", 2);
 		}
 	});
 }
 
 void lua_event_listener::Init(const Rml::String& code, Rml::Element* element) {
 	lua_State *L = plugin->L;
-	luabind::invoke(L, [&](lua_State* L) {
+	luabind::invoke(L, [&]() {
 		Rml::ElementDocument* doc = element->GetOwnerDocument();
 		lua_pushlightuserdata(L, (void*)this);
 		lua_pushlightuserdata(L, (void*)doc);
 		lua_pushlightuserdata(L, (void*)element);
 		lua_pushlstring(L, code.c_str(), code.length());
-		plugin->call_lua_function("OnEventAttach", 4);
+		lua_plugin_call(L, "OnEventAttach", 4);
 	});
 }
 
 void lua_event_listener::OnDetach(Rml::Element* element) {
 	// element should be the same with Init
 	lua_State *L = plugin->L;
-	luabind::invoke(L, [&](lua_State* L) {
+	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)this);
-		plugin->call_lua_function("OnEventDetach", 1);
+		lua_plugin_call(L, "OnEventDetach", 1);
 	});
 }
 
 void lua_event_listener::ProcessEvent(Rml::Event& event) {
 	lua_State *L = plugin->L;
-	luabind::invoke(L, [&](lua_State* L) {
+	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)this);
 		auto& p = event.GetParameters();
 		if (p.empty()) {
@@ -290,30 +250,32 @@ void lua_event_listener::ProcessEvent(Rml::Event& event) {
 			}
 		}
 		lua_pushinteger(L, (lua_Integer)event.GetId());
-		plugin->call_lua_function("OnEvent", 3);
+		lua_plugin_call(L, "OnEvent", 3);
 	});
 }
 
 }
 
-plugin_t
-lua_plugin_create(lua_State* L, int index) {
-	lua_plugin * p = new lua_plugin();
-	p->Init(L, index);
-	return p;
+Rml::Plugin*
+lua_plugin_create() {
+	return new lua_plugin();
 }
 
 void
-lua_plugin_call(plugin_t plugin, const char* name, size_t argn, size_t retn) {
-	((lua_plugin*)plugin)->call_lua_function(name, (int)argn, (int)retn);
-}
-
-lua_State*
-lua_plugin_getlua(plugin_t plugin) {
-	return ((lua_plugin*)plugin)->get_lua();
+lua_plugin_init(Rml::Plugin* plugin, lua_State* L, const char* source, size_t sz) {
+	((lua_plugin*)plugin)->InitLuaVM(L, source, sz);
 }
 
 void
-lua_plugin_destroy(plugin_t plugin) {
+lua_plugin_call(lua_State* L, const char* name, size_t argn, size_t retn) {
+	lua_rawgetp(L, LUA_REGISTRYINDEX, &LUA_PLUGIN);
+	lua_getfield(L, -1, name);
+	lua_replace(L, -2);
+	lua_insert(L, -1 - (int)argn);
+	lua_call(L, (int)argn, (int)retn);
+}
+
+void
+lua_plugin_destroy(Rml::Plugin* plugin) {
 	delete plugin;
 }

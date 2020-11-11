@@ -5,6 +5,8 @@
 
 namespace luabind {
 	typedef std::function<void(lua_State*)> call_t;
+	typedef std::function<void(void)> callv_t;
+	typedef std::function<void(const char*)> error_t;
 	inline int errhandler(lua_State* L) {
 		const char* msg = lua_tostring(L, 1);
 		if (msg == NULL) {
@@ -16,16 +18,17 @@ namespace luabind {
 		luaL_traceback(L, L, msg, 1);
 		return 1;
 	}
-	inline int function_call(lua_State* L) {
-		call_t& f = *(call_t*)lua_touserdata(L, 1);
-		f(L);
-		return 0;
+	inline void errfunc(const char* msg) {
+		// todo: use Rml log
+		lua_writestringerror("%s\n", msg);
 	}
-	inline bool invoke(lua_State* L, call_t f) {
+	template <typename F>
+	inline bool invoke(lua_State* L, F f, error_t err, lua_CFunction call) {
 		lua_pushcfunction(L, errhandler);
-		lua_pushcfunction(L, function_call);
+		lua_pushcfunction(L, call);
 		lua_pushlightuserdata(L, &f);
 		if (lua_pcall(L, 1, 0, lua_gettop(L) - 2) != LUA_OK) {
+			err(lua_tostring(L, -1));
 			// todo: use Rml log
 			lua_writestringerror("%s\n", lua_tostring(L, -1));
 			lua_pop(L, 2);
@@ -33,5 +36,21 @@ namespace luabind {
 		}
 		lua_pop(L, 1);
 		return true;
+	}
+	inline int function_call(lua_State* L) {
+		call_t& f = *(call_t*)lua_touserdata(L, 1);
+		f(L);
+		return 0;
+	}
+	inline int function_callv(lua_State* L) {
+		callv_t& f = *(callv_t*)lua_touserdata(L, 1);
+		f();
+		return 0;
+	}
+	inline bool invoke(lua_State* L, call_t f, error_t err = errfunc) {
+		return invoke(L, f, err, function_call);
+	}
+	inline bool invoke(lua_State* L, callv_t f, error_t err = errfunc) {
+		return invoke(L, f, err, function_callv);
 	}
 }

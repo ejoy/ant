@@ -1,6 +1,9 @@
 local console = require "core.console"
 local sandbox = require "core.sandbox"
 local filemanager = require "core.filemanager"
+local event = require "core.event"
+local createDocument = require "core.DOM.document"
+local createElement = require "core.DOM.element"
 
 local m = {}
 
@@ -48,14 +51,26 @@ local event_name = {
 local environment = {}
 local events = {}
 
+local function invoke(f, ...)
+	local ok, err = xpcall(f, function(msg)
+		return debug.traceback(msg)
+	end, ...)
+	if not ok then
+		console.warn(err)
+	end
+end
+
 function m.OnContextCreate(context)
 end
 function m.OnContextDestroy(context)
 end
 function m.OnNewDocument(document)
-	environment[document] = sandbox()
+	local globals = sandbox()
+	globals.document = createDocument(document)
+	environment[document] = globals
 end
 function m.OnDeleteDocument(document)
+	event("OnDeleteDocument", document)
 	environment[document] = nil
 end
 function m.OnInlineScript(document, source)
@@ -64,12 +79,7 @@ function m.OnInlineScript(document, source)
 		console.warn(err)
 		return
 	end
-	local ok, err = xpcall(f, function(msg)
-		return debug.traceback(msg)
-	end)
-	if not ok then
-		console.warn(err)
-	end
+	invoke(f)
 end
 function m.OnExternalScript(document, source)
 	local path = filemanager.realpath(source)
@@ -82,19 +92,14 @@ function m.OnExternalScript(document, source)
 		console.warn(err)
 		return
 	end
-	local ok, err = xpcall(f, function(msg)
-		return debug.traceback(msg)
-	end)
-	if not ok then
-		console.warn(err)
-	end
+	invoke(f)
 end
 function m.OnEvent(ev, params, id)
 	local f = events[ev]
 	if not f then
 		return
 	end
-	f(id, params)
+	invoke(f, id, params)
 end
 function m.OnEventAttach(ev, document, element, source)
 	if source == "" then

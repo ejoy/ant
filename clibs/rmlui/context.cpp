@@ -15,3 +15,9 @@ LUA2STRUCT(Rml::Vector2i, x, y);
 RmlContext::RmlContext(lua_State *L, int idx){
     lua_struct::unpack(L, idx, *this);
 }
+
+RmlContext::~RmlContext() {
+    if (pluginL) {
+        lua_close(pluginL);
+    }
+}

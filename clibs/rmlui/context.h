@@ -59,11 +59,8 @@ struct RmlContext {
     Rect                  viewrect;
     bgfx_vertex_layout_t* layout;
 
-    plugin_t              plugin = nullptr;
+    lua_State*            pluginL = nullptr;
 
     RmlContext(lua_State *L, int idx);
-
-    ~RmlContext() {
-        lua_plugin_destroy(plugin);
-    }
+    ~RmlContext();
 };

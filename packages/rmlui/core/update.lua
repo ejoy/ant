@@ -68,8 +68,10 @@ end
 return function ()
     while message(channel:pop()) do
     end
+    rmlui.RenderBegin()
     for _, ctx in ipairs(contexts) do
         rmlui.ContextUpdate(ctx)
         rmlui.ContextRender(ctx)
     end
+    rmlui.RenderFrame()
 end
