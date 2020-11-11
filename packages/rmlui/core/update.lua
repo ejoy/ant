@@ -2,6 +2,8 @@ local thread = require "thread"
 local rmlui = require "rmlui"
 local channel = thread.channel_consume "rmlui"
 
+local filemanager = require "core.filemanager"
+
 local CMD = {}
 local contexts = {}
 
@@ -37,6 +39,10 @@ function CMD.MouseUp(button)
     for _, ctx in ipairs(contexts) do
         rmlui.ContextProcessMouseButtonUp(ctx, button)
     end
+end
+
+function CMD.AddResourceDir(dir)
+    filemanager.add(dir)
 end
 
 function CMD.Debugger(open)

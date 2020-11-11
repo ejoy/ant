@@ -71,6 +71,9 @@
     <ClInclude Include="..\..\clibs\rmlui\luaplugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\clibs\rmlui\luabind.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

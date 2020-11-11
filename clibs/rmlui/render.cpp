@@ -44,7 +44,7 @@ TransientIndexBuffer32::Reset(){
 }
 
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
-Renderer::Renderer(const rml_context* context)
+Renderer::Renderer(const RmlContext* context)
     : mTransform(Rml::Matrix4f::Identity())
     , mcontext(context)
     , mEncoder(nullptr){
@@ -65,7 +65,7 @@ is_font_tex(SDFFontEffect *fe) {
     return fe ? (fe->GetType() & FE_FontTex) != 0 : false;
 }
 
-void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
+void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
                             int* indices, int num_indices, 
                             Rml::TextureHandle texture, const Rml::Vector2f& translation) {
     const Rml::Matrix4f m = mTransform * Rml::Matrix4f::Translate(translation.x, translation.y, 0.0);
@@ -111,6 +111,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
 void Renderer::Begin(){
     mEncoder = BGFX(encoder_begin)(false);
 }
+
 
 void Renderer::Frame(){
     BGFX(encoder_end)(mEncoder);

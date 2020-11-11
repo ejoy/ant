@@ -3,8 +3,7 @@
 #include <bgfx/c99/bgfx.h>
 #include <RmlUi/Core.h>
 #include <string>
-
-using file_dictionaries = std::unordered_map<Rml::String, Rml::String>;
+#include "luaplugin.h"
 
 struct font_namager;
 
@@ -51,16 +50,20 @@ struct shader {
 };
 
 struct lua_State;
-struct rml_context {
-    struct font_manager* font_mgr;
-    shader              shader;
-    file_dictionaries   file_dict;
-    texture_desc        default_tex;
-    texture_desc        font_tex;
-
-    uint16_t            viewid;
-    Rect                viewrect;
+struct RmlContext {
+    struct font_manager*  font_mgr;
+    shader                shader;
+    texture_desc          default_tex;
+    texture_desc          font_tex;
+    uint16_t              viewid;
+    Rect                  viewrect;
     bgfx_vertex_layout_t* layout;
 
-    rml_context(lua_State *L, int idx);
+    plugin_t              plugin = nullptr;
+
+    RmlContext(lua_State *L, int idx);
+
+    ~RmlContext() {
+        lua_plugin_destroy(plugin);
+    }
 };

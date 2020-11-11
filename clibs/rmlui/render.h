@@ -49,7 +49,7 @@ private:
 
 class Renderer : public Rml::RenderInterface {
 public:
-    Renderer(const rml_context* context);
+    Renderer(const RmlContext* context);
     virtual void RenderGeometry(Rml::Vertex* vertices, int num_vertices, 
                                 int* indices, int num_indices, 
                                 Rml::TextureHandle texture, const Rml::Vector2f& translation) override;
@@ -71,7 +71,7 @@ public:
 
 private:
     Rml::Matrix4f           mTransform;
-    const rml_context*      mcontext;
+    const RmlContext*       mcontext;
     TransientIndexBuffer32  mIndexBuffer;
 
     bgfx_encoder_t*         mEncoder;

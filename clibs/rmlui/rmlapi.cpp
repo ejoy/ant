@@ -349,26 +349,6 @@ lLog(lua_State* L) {
 	Rml::GetSystemInterface()->LogMessage(type, Rml::String(msg, sz));
 	return 0;
 }
-// TODO
-static int
-lRmlReadFile(lua_State* L) {
-	const char* filename = luaL_checkstring(L, 1);
-	Rml::FileInterface* file_interface = Rml::GetFileInterface();
-	Rml::FileHandle handle = file_interface->Open(filename);
-	if (handle == 0) {
-		return 0;
-	}
-	size_t sz = file_interface->Length(handle);
-	if (sz == 0) {
-		return 0;
-	}
-	void* buf = lua_newuserdatauv(L, sz, 0);
-	file_interface->Read(buf, sz, handle);
-	file_interface->Close(handle);
-	lua_pushlstring(L, (const char*)buf, sz);
-	lua_remove(L, -2);
-	return 1;
-}
 
 }
 
@@ -391,7 +371,6 @@ lua_plugin_apis(lua_State *L) {
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "Log", lLog },
 		{ "RmlCreateContext", lRmlCreateContext },
-		{ "RmlReadFile", lRmlReadFile },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
