@@ -88,6 +88,29 @@ lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
 	}
 }
 
+static void
+lua_pushobject(lua_State* L, void* handle) {
+	if (handle) {
+		lua_pushlightuserdata(L, handle);
+	}
+	else {
+		lua_pushnil(L);
+	}
+}
+
+template <typename T>
+T* lua_checkobject(lua_State* L, int idx) {
+	luaL_checktype(L, idx, LUA_TLIGHTUSERDATA);
+	return static_cast<T*>(lua_touserdata(L, 1));
+}
+
+static std::string
+lua_checkstdstring(lua_State* L, int idx) {
+	size_t sz = 0;
+	const char* str = luaL_checklstring(L, idx, &sz);
+	return std::string(str, sz);
+}
+
 namespace {
 	
 static int
@@ -145,6 +168,13 @@ static int
 lDocumentGetContext(lua_State *L) {
 	Rml::ElementDocument *doc = (Rml::ElementDocument *)lua_touserdata(L, 1);
 	lua_pushlightuserdata(L, (void *)doc->GetContext());
+	return 1;
+}
+
+static int
+lDocumentGetElementById(lua_State* L) {
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
+	lua_pushobject(L, doc->GetElementById(lua_checkstdstring(L, 2)));
 	return 1;
 }
 
@@ -352,6 +382,9 @@ lLog(lua_State* L) {
 
 }
 
+int lRenderBegin(lua_State* L);
+int lRenderFrame(lua_State* L);
+
 int
 lua_plugin_apis(lua_State *L) {
 	luaL_checkversion(L);
@@ -365,11 +398,14 @@ lua_plugin_apis(lua_State *L) {
 		{ "DataModelRelease", lDataModelRelease },
 		{ "DataModelCreate", lDataModelCreate },
 		{ "DocumentGetContext", lDocumentGetContext },
+		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetTitle", lDocumentGetTitle },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentShow", lDocumentShow },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "Log", lLog },
+		{ "RenderBegin", lRenderBegin },
+		{ "RenderFrame", lRenderFrame },
 		{ "RmlCreateContext", lRmlCreateContext },
 		{ NULL, NULL },
 	};
