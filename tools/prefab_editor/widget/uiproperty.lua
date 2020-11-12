@@ -8,26 +8,41 @@ local class     = utils.class
 
 local PropertyBase = class("PropertyBase")
 
-function PropertyBase._init(self, config, modifier)
+function PropertyBase:_init(config, modifier)
     self.label = config.label
+    self.modifier = modifier or {}
     self.dim = config.dim or 1
-    local sp = config.speed or 1
     if self.dim == 1 then
-        self.uidata = {0, speed = sp}
+        self.uidata = {0, speed = config.speed, min = config.min, max = config.max}
     elseif self.dim == 2 then
-        self.uidata = {0, 0, speed = sp}
+        self.uidata = {0, 0, speed = config.speed, min = config.min, max = config.max}
     elseif self.dim == 3 then
-        self.uidata = {0, 0, 0, speed = sp}
+        self.uidata = {0, 0, 0, speed = config.speed, min = config.min, max = config.max}
     elseif self.dim == 4 then
-        self.uidata = {0, 0, 0, 0, speed = sp}
+        self.uidata = {0, 0, 0, 0, speed = config.speed, min = config.min, max = config.max}
     end
-    self.modifier = modifier
+end
+
+function PropertyBase:set_userdata(userdata)
+    self.userdata = userdata
+end
+
+function PropertyBase:set_label(label)
+    self.label = label
+end
+
+function PropertyBase:set_getter(getter)
+    self.modifier.getter = getter
+end
+
+function PropertyBase:set_setter(setter)
+    self.modifier.setter = setter
 end
 
 function PropertyBase:update()
     local value = self.modifier.getter()
     if type(value) == "table" then
-        for i = 1, #value do
+        for i = 1, self.dim do
             self.uidata[i] = value[i]
         end
     else
@@ -76,15 +91,20 @@ local EditText = class("EditText", PropertyBase)
 
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
-    self.imgui_func = imgui.widget.InputText
+    self.readonly = config.readonly
     self.uidata = {text = ""}
+    self.imgui_func = imgui.widget.InputText
 end
 
 function EditText:show()
     imgui.widget.Text(self.label)
     imgui.cursor.SameLine(uiconfig.PropertyIndent)
-    if self.imgui_func("##" .. self.label, self.uidata) then
-        self.modifier.setter(tostring(self.uidata.text))
+    if self.readonly then
+        imgui.widget.Text(tostring(self.uidata.text))
+    else
+        if self.imgui_func("##" .. self.label, self.uidata) then
+            self.modifier.setter(tostring(self.uidata.text))
+        end
     end
 end
 
@@ -92,7 +112,7 @@ function EditText:update()
     self.uidata.text = self.modifier.getter()
 end
 
-local ResourcePath   = class("ResourcePath", EditText)
+local ResourcePath      = class("ResourcePath", EditText)
 local utils             = require "common.utils"
 function ResourcePath:update()
     self.runtimedata = self.modifier.getter()
@@ -107,12 +127,12 @@ function ResourcePath:update()
     end
 end
 
-local rhwi      = import_package 'ant.render'.hwi
-local datalist  = require "datalist"
-local stringify = import_package "ant.serialize".stringify
-local filedialog = require 'filedialog'
-local filter_type = {"POINT", "LINEAR", "ANISOTROPIC"}
-local address_type = {"WRAP", "MIRROR", "CLAMP", "BORDER"}
+local rhwi          = import_package 'ant.render'.hwi
+local datalist      = require "datalist"
+local stringify     = import_package "ant.serialize".stringify
+local filedialog    = require 'filedialog'
+local filter_type   = {"POINT", "LINEAR", "ANISOTROPIC"}
+local address_type  = {"WRAP", "MIRROR", "CLAMP", "BORDER"}
 
 function ResourcePath:show()
     imgui.widget.Text(self.label)
@@ -146,98 +166,100 @@ function ResourcePath:show()
 
     on_dragdrop()
 
-    -- texture detail
-    local texture_handle = self.runtimedata._data.handle
-    if texture_handle then
-        imgui.cursor.Indent()
-        imgui.cursor.Columns(2, self.label, false)
-        imgui.cursor.SetColumnOffset(2, uiconfig.PropertyIndent)
-        imgui.widget.Image(texture_handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
-        imgui.cursor.SameLine(uiconfig.PropertyImageSize * 2)
-        imgui.cursor.NextColumn()
-        imgui.widget.Text("image")
-        imgui.cursor.SameLine()
-        imgui.cursor.PushItemWidth(-1)
-        if imgui.widget.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
-        end
-        imgui.cursor.PopItemWidth()
-        on_dragdrop()
-
-        local sampler = self.metadata.sampler
-        local function show_filter(ft)
-            imgui.widget.Text(ft)
+    if self.runtimedata and self.runtimedata._data then
+        -- texture detail
+        local texture_handle = self.runtimedata._data.handle
+        if texture_handle then
+            imgui.cursor.Indent()
+            imgui.cursor.Columns(2, self.label, false)
+            imgui.cursor.SetColumnOffset(2, uiconfig.PropertyIndent)
+            imgui.widget.Image(texture_handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
+            imgui.cursor.SameLine(uiconfig.PropertyImageSize * 2)
+            imgui.cursor.NextColumn()
+            imgui.widget.Text("image")
             imgui.cursor.SameLine()
-            imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
-            imgui.util.PushID(ft .. self.label)
-            if imgui.widget.BeginCombo("##"..ft, {sampler[ft], flags = imgui.flags.Combo { "NoArrowButton" }}) then
-                for i, type in ipairs(filter_type) do
-                    if imgui.widget.Selectable(type, sampler[ft] == type) then
-                        sampler[ft] = type
+            imgui.cursor.PushItemWidth(-1)
+            if imgui.widget.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
+            end
+            imgui.cursor.PopItemWidth()
+            on_dragdrop()
+
+            local sampler = self.metadata.sampler
+            local function show_filter(ft)
+                imgui.widget.Text(ft)
+                imgui.cursor.SameLine()
+                imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
+                imgui.util.PushID(ft .. self.label)
+                if imgui.widget.BeginCombo("##"..ft, {sampler[ft], flags = imgui.flags.Combo { "NoArrowButton" }}) then
+                    for i, type in ipairs(filter_type) do
+                        if imgui.widget.Selectable(type, sampler[ft] == type) then
+                            sampler[ft] = type
+                        end
                     end
+                    imgui.widget.EndCombo()
                 end
-                imgui.widget.EndCombo()
+                imgui.util.PopID()
+            end
+            show_filter("MAG")
+            imgui.cursor.SameLine()
+            show_filter("MIN")
+            imgui.cursor.SameLine()
+            show_filter("MIP")
+
+            local function show_uv(uv)
+                imgui.widget.Text(uv)
+                imgui.cursor.SameLine()
+                imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
+                imgui.util.PushID(uv .. self.label)
+                if imgui.widget.BeginCombo("##"..uv, {sampler[uv], flags = imgui.flags.Combo { "NoArrowButton" }}) then
+                    for i, type in ipairs(address_type) do
+                        if imgui.widget.Selectable(type, sampler[uv] == type) then
+                            sampler[uv] = type
+                        end
+                    end
+                    imgui.widget.EndCombo()
+                end
+                imgui.util.PopID()
+            end
+            show_uv("U")
+            imgui.cursor.SameLine()
+            show_uv("V")
+
+            imgui.cursor.SameLine()
+            imgui.util.PushID("Save" .. self.label)
+            if imgui.widget.Button("Save") then
+                utils.write_file(self.texture, stringify(self.metadata))
+                assetmgr.unload(self.texture)
             end
             imgui.util.PopID()
-        end
-        show_filter("MAG")
-        imgui.cursor.SameLine()
-        show_filter("MIN")
-        imgui.cursor.SameLine()
-        show_filter("MIP")
-
-        local function show_uv(uv)
-            imgui.widget.Text(uv)
             imgui.cursor.SameLine()
-            imgui.cursor.SetNextItemWidth(uiconfig.ComboWidth)
-            imgui.util.PushID(uv .. self.label)
-            if imgui.widget.BeginCombo("##"..uv, {sampler[uv], flags = imgui.flags.Combo { "NoArrowButton" }}) then
-                for i, type in ipairs(address_type) do
-                    if imgui.widget.Selectable(type, sampler[uv] == type) then
-                        sampler[uv] = type
+            imgui.util.PushID("Save As" .. self.label)
+            if imgui.widget.Button("Save As") then
+                local dialog_info = {
+                    Owner = rhwi.native_window(),
+                    Title = "Save As..",
+                    FileTypes = {"Texture", "*.texture" }
+                }
+                local ok, path = filedialog.save(dialog_info)
+                if ok then
+                    path = string.gsub(path, "\\", "/") .. ".texture"
+                    local pos = string.find(path, "%.texture")
+                    if #path > pos + 7 then
+                        path = string.sub(path, 1, pos + 7)
                     end
+                    utils.write_file(path, stringify(self.metadata))
                 end
-                imgui.widget.EndCombo()
             end
             imgui.util.PopID()
+            imgui.cursor.Unindent()
+            imgui.cursor.Columns(1)
         end
-        show_uv("U")
-        imgui.cursor.SameLine()
-        show_uv("V")
-
-        imgui.cursor.SameLine()
-        imgui.util.PushID("Save" .. self.label)
-        if imgui.widget.Button("Save") then
-            utils.write_file(self.texture, stringify(self.metadata))
-            assetmgr.unload(self.texture)
-        end
-        imgui.util.PopID()
-        imgui.cursor.SameLine()
-        imgui.util.PushID("Save As" .. self.label)
-        if imgui.widget.Button("Save As") then
-            local dialog_info = {
-                Owner = rhwi.native_window(),
-                Title = "Save As..",
-                FileTypes = {"Texture", "*.texture" }
-            }
-            local ok, path = filedialog.save(dialog_info)
-            if ok then
-                path = string.gsub(path, "\\", "/") .. ".texture"
-                local pos = string.find(path, "%.texture")
-                if #path > pos + 7 then
-                    path = string.sub(path, 1, pos + 7)
-                end
-                utils.write_file(path, stringify(self.metadata))
-            end
-        end
-        imgui.util.PopID()
-        imgui.cursor.Unindent()
-        imgui.cursor.Columns(1)
     end
 end
 
 local Combo = class("Combo")
 
-function Combo._init(self, config, modifier)
+function Combo:_init(config, modifier)
     self.label          = config.label
     self.options        = config.options
     self.current_option = config.options[1]
@@ -264,9 +286,29 @@ function Combo:show()
     imgui.util.PopID()
 end
 
+local Button = class("Button")
+local button_id = 0
+function Button:_init(config, modifier)
+    button_id = button_id + 1
+    self.label      = config.label
+    self.modifier   = modifier or {}
+end
+
+function Button:set_click(click)
+    self.modifier.click = click
+end
+
+function Button:show()
+    imgui.util.PushID("ui_button_id" .. button_id)
+    if imgui.widget.Button(self.label) then
+        self.modifier.click()
+    end
+    imgui.util.PopID()
+end
+
 local Group = class("Group")
 
-function Group._init(self, config, subproperty)
+function Group:_init(config, subproperty)
     self.label        = config.label
     self.subproperty = subproperty
 end
@@ -298,5 +340,6 @@ return {
     Color           = Color,
     EditText        = EditText,
     ResourcePath    = ResourcePath,
-    Group           = Group
+    Group           = Group,
+    Button          = Button
 }
