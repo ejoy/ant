@@ -42,7 +42,7 @@ get_ttf(struct font_manager *F, int fontid){
 }
 
 static inline int
-ttf_family_name(struct font_manager *F, const char* family){
+ttf_with_family(struct font_manager *F, const char* family){
 	#ifdef TEST_CASE
 	assert(0);
 	return -1;	// NOT SUPPORT
@@ -58,6 +58,7 @@ font_manager_init(struct font_manager *F, struct truetype_font *ttf, void *L) {
 	F->ttf = ttf;
 	F->L = L;
 	F->dpi_perinch = 0;
+	font_manager_sdf_onedge_value(F, 180);
 // init priority list
 	int i;
 	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
@@ -301,7 +302,7 @@ font_manager_update(struct font_manager *F, int fontid, int codepoint, struct fo
 
 	int width, height, xoff, yoff;
 
-	unsigned char *tmp = stbtt_GetCodepointSDF(fi, scale, codepoint, DISTANCE_OFFSET, 180, 36.0f, &width, &height, &xoff, &yoff);
+	unsigned char *tmp = stbtt_GetCodepointSDF(fi, scale, codepoint, DISTANCE_OFFSET, F->sdf.onedge_value, F->sdf.pixel_dist_scale, &width, &height, &xoff, &yoff);
 	if (tmp == NULL){
 		return NULL;
 	}
@@ -336,7 +337,7 @@ font_manager_flush(struct font_manager *F) {
 
 int
 font_manager_addfont_with_family(struct font_manager *F, const char* family) {
-	return ttf_family_name(F, family);
+	return ttf_with_family(F, family);
 }
 
 static inline void
@@ -360,6 +361,22 @@ font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 	uscale(&glyph->h, size);
 }
 
+float
+font_manager_sdf_mask(struct font_manager *F, int offset){
+	return (F->sdf.onedge_value + offset) / 255.0f;
+}
+
+float
+font_manager_sdf_distance(struct font_manager *F, float numpixel){
+	return (numpixel * F->sdf.pixel_dist_scale) / 255.f;
+}
+
+void
+font_manager_sdf_onedge_value(struct font_manager *F, int onedge_value){
+	F->sdf.onedge_value = onedge_value;
+	F->sdf.pixel_dist_scale = F->sdf.onedge_value / ((float)DISTANCE_OFFSET);
+}
+
 #ifdef TEST_CASE
 #include <stdlib.h>
 #include <stdio.h>
@@ -373,7 +390,7 @@ add_font(void *ttfbuffer, struct truetype_font *ttf, int fontid){
 int
 main() {
 	FILE* f = NULL;
-	fopen_s(&f, "msyh.ttc", "rb");
+	fopen_s(&f, "simsun.ttc", "rb");
 	fseek(f, 0, SEEK_END);
 	int sz = ftell(f);
 	fseek(f, 0, SEEK_SET);
@@ -391,33 +408,50 @@ main() {
 
 	fprintf(stderr,"load font %d\n", fontid);
 
-	struct font_glyph g;
-	font_manager_touch(&F, fontid, 0x6C49, &g);
+	int bufsize = FONT_MANAGER_GLYPHSIZE * FONT_MANAGER_GLYPHSIZE * 5;
+	uint8_t* buffer = malloc(bufsize);
+	memset(buffer, 0, bufsize);
 
-	unsigned char* buffer = malloc(g.w * g.h);
+	uint8_t *p = buffer;
+	const char* s = "ABC";
+	int x = 0, y = 0;
+	for (const char* ss=s; *ss; ++ss){
+		struct font_glyph g;
+		int codepoint = *ss;	//0x6C49
+		font_manager_touch(&F, fontid, codepoint, &g);
 
-	const char * err = font_manager_update(&F, fontid, 0x6C49, &g, buffer);
-
-	if (err != NULL) {
-		fprintf(stderr, "Error : %s\n", err);
-	} else {
-		fprintf(stderr, "x=%d y=%d (%d x %d) (%d x %d), u=%d v=%d",
-			g.offset_x, g.offset_y,
-			g.advance_x, g.advance_y,
-			g.w, g.h,
-			g.u, g.v);
-
-		stbi_write_bmp("sdf.bmp", g.w, g.h, 1, buffer);
-		printf("P2\n%d %d\n255\n", g.w, g.h);
-		int i,j;
-		for (i=0;i<g.h;i++) {
-			for (j=0;j<g.w;j++) {
-				printf("%d ", buffer[i*g.w+j]);
+		uint8_t *p = malloc(g.w * g.h);
+		const char * err = font_manager_update(&F, fontid, codepoint, &g, p);
+		if (err != NULL) {
+			fprintf(stderr, "Error : %s\n", err);
+		} else {
+			fprintf(stderr, "x=%d y=%d (%d x %d) (%d x %d), u=%d v=%d\n",
+				g.offset_x, g.offset_y,
+				g.advance_x, g.advance_y,
+				g.w, g.h,
+				g.u, g.v);
+			
+			uint8_t *pp = buffer + x;
+			const uint8_t* p1 = p;
+			for (int ii=0; ii<g.h; ++ii){
+				memcpy(pp, p1, g.w);
+				pp += FONT_MANAGER_GLYPHSIZE * 5;
+				p1 += g.w;
 			}
-			printf("\n");
-		}
 
+			x += g.w;
+		}
 	}
+	
+	stbi_write_bmp("sdf.bmp", FONT_MANAGER_GLYPHSIZE * 5, FONT_MANAGER_GLYPHSIZE, 1, buffer);
+	// printf("P2\n%d %d\n255\n", g.w, g.h);
+	// int i,j;
+	// for (i=0;i<g.h;i++) {
+	// 	for (j=0;j<g.w;j++) {
+	// 		printf("%d ", buffer[i*g.w+j]);
+	// 	}
+	// 	printf("\n");
+	// }
 
 	free(buffer);
 

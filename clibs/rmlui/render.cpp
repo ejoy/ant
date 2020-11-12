@@ -84,11 +84,13 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, int num_vertices,
     if (is_font_tex(fe)) {
         PropertyMap properties;
         uint16_t prog = UINT16_MAX;
-        fe->GetProperties(mcontext->shader, properties, prog);
+        fe->GetProperties(mcontext->font_mgr, mcontext->shader, properties, prog);
 
         for (auto it : properties){
             const auto& v = it.second;
-            assert(v.uniform_idx != UINT16_MAX);
+            if(v.uniform_idx == UINT16_MAX){
+                continue;
+            }
 
             static const Rml::String tex_property_name = "s_tex";
             if (tex_property_name == it.first){
