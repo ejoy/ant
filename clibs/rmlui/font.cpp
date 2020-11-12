@@ -215,10 +215,10 @@ int FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHandl
 
 		auto origin     = Rml::Vector2i(x0, y0);
 		auto dim        = Rml::Vector2i(g.w, g.h);
-        auto fe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
-        Rml::FontGlyph UNUSED_rml_fg;
-        auto olddim = dim;
-        fe->GetGlyphMetrics(origin, dim, UNUSED_rml_fg);
+        // auto fe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
+        // Rml::FontGlyph UNUSED_rml_fg;
+        // auto olddim = dim;
+        // fe->GetGlyphMetrics(origin, dim, UNUSED_rml_fg);
 
         auto to_fixpt = [](const Rml::Vector2i &pt){
             const float scale = FIX_POINT / 65536.f;
@@ -234,7 +234,8 @@ int FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::FontEffectsHandl
 			(int)vertices.size() - 4
 		); 
 
-		x += g.advance_x + (dim.x - olddim.x);
+		//x += g.advance_x + (dim.x - olddim.x);
+        x += g.advance_x;
 	}
 
 	return x - int(position.x + 0.5f);
