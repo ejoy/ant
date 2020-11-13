@@ -154,8 +154,8 @@ function m:ui_update()
     toolbar.show()
     local x, y, width, height = show_dock_space(0, uiconfig.ToolBarHeight)
     scene_view.show()
-    inspector.show()
     particle_emitter.show()
+    inspector.show()
     resource_browser.show()
     log_widget.show()
     console_widget.show()
@@ -252,25 +252,26 @@ function m:data_changed()
         end
     end
     for _, what, target, v1, v2 in entity_event:unpack() do
-        local dirty = false
+        local transform_dirty = true
         if what == "move" then
+            gizmo:set_position(v2)
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
-            dirty = true
         elseif what == "rotate" then
+            gizmo:set_rotation(math3d.quaternion{math.rad(v2[1]), math.rad(v2[2]), math.rad(v2[3])})
             cmd_queue:record {action = gizmo_const.ROTATE, eid = target, oldvalue = v1, newvalue = v2}
-            dirty = true
         elseif what == "scale" then
+            gizmo:set_scale(v2)
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
-            dirty = true
         elseif what == "name" then
+            transform_dirty = false
             local template = hierarchy:get_template(target)
             template.template.data.name = v1
             hierarchy:update_display_name(target, v1)
         elseif what == "parent" then
-            dirty = true
-        end
-        if dirty then
             inspector.update_template_tranform(target)
+        end
+        if transform_dirty and world[target].light_type then
+            light_gizmo.update()
         end
     end
     for _, what, eid, value in entity_state_event:unpack() do

@@ -3,49 +3,56 @@
     <head>
         <style>
             body {
-                font-family: "宋体";
-                font-size: 18px;
+                font-family: "微软雅黑";
+                font-size: 19px;
                 width: 400px;
                 height: 300px;
                 margin: auto;
             }
 
-            button.outline {
+            /* button.outline {
                 display: block;
-                font-effect: outline(3px #000);
-                margin: 1rem;
+                font-effect: outline(1px #000);
+                width: 300px;
+                height: 30px;
+                margin: 2rem;
                 color:#fff;
                 background-color: #f0f0f0;
-            };
+            }; */
 
             button.shadow {
                 display: block;
-                font-effect: shadow(2px 2px #000);
-                margin: 1rem;
+                font-effect: shadow( 1px 1px #000 );
+                width: 300px;
+                height: 30px;
+                margin: 2rem;
                 color:#fff;
                 background-color: #f0f0f0;
             };
 
-            button.glow {
+            /* button.glow {
                 display: block;
                 font-effect: glow(2px #000);
                 margin: 1rem;
                 color:#fff;
                 background-color: #f0f0f0;
-            };
+            }; */
             button {
                 display: block;
+                font-size: 18px;
                 margin: 1rem;
                 color:#000;
-                background-color: #fff
+                background-color: #fff;
             }
             button:hover {
                 color:#731ee6;
+                transform: scale(1.5);
             }
         </style>
     </head>>
     <body>
-        <button>中文 ABC</button>
+        <!-- <button class="glow">中文 ABC</button> -->
+        <button class="shadow">ABC</button>
         <!-- <button class="shadow">Download</button>
         <button class="glow">Download</button> -->
     </body>

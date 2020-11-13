@@ -6,7 +6,7 @@
 
 LUA2STRUCT(struct RmlContext, font_mgr, shader, default_tex, font_tex, viewid, viewrect, layout, bootstrap);
 LUA2STRUCT(struct texture_desc, width, height, texid);
-LUA2STRUCT(struct shader, font_mask, font_range, font, font_outline, font_shadow, font_glow, image);
+LUA2STRUCT(struct shader, font, font_outline, font_shadow, font_glow, image);
 LUA2STRUCT(struct shader_info, prog, uniforms);
 LUA2STRUCT(struct shader_info::uniforms, handle, name);
 LUA2STRUCT(struct Rect, x, y, w, h);

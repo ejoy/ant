@@ -70,10 +70,17 @@ struct font_manager {
 	void *L;
 	int dpi_perinch;
 
-	// struct _sdf{
-	// 	int onedge_value;		// 0 .. 255
-	// 	float pixel_dist_scale;	// onedge_value / padding, padding = 5.0
-	// } sdf;
+	struct _sdf {
+		// sdf value is compute as:
+		// distance: pixel(center) to glyph contour line, unit is number of pixels on sdf texture
+		// 			 if pixel inside glyph contour(which mean inisde glyph), distance is positive, or is nagitive
+		// sdf value = clamp(0, 255, onedge_value + pixel_dist_scale * distance) 
+		//			 = clamp(0, 255, onedge_value * (1.0 + (distance/max_detect_distance)))
+		// we can image that, distance is larger than max_detect_distance, if distance is nagitive, then sdfvalue must 0, otherwise it will increase the value to 255
+		int		onedge_value;			// 0 .. 255
+		//float	max_detect_distance;	// we make max_detect_distance equal to DISTANCE_OFFSET, because max_detect_distance should not exceed padding pixel
+		float	pixel_dist_scale;		// onedge_value / max_detect_distance
+	} sdf;
 };
 
 struct font_glyph {
@@ -88,12 +95,12 @@ struct font_glyph {
 };
 
 #ifdef FONT_EXPORT
-#	ifdef FONT_IMP
+#   ifdef FONT_IMP
 #define FONT_API __declspec(dllexport)
 #	else //!FONT_IMP
 #define FONT_API __declspec(dllimport)
 #	endif//FONT_IMP
-#	else //!FONT_EXPORT
+#else //!FONT_EXPORT
 #define FONT_API extern
 #	endif //FONT_EXPORT
 
@@ -111,5 +118,9 @@ FONT_API int font_manager_touch(struct font_manager *, int font, int codepoint, 
 FONT_API const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
 FONT_API void font_manager_flush(struct font_manager *);
 FONT_API void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
+
+FONT_API float font_manager_sdf_mask(struct font_manager *F, int offset);
+FONT_API float font_manager_sdf_distance(struct font_manager *F, float numpixel);
+FONT_API void font_manager_sdf_onedge_value(struct font_manager *F, int onedge_value);
 
 #endif //font_manager_h
