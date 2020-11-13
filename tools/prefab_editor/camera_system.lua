@@ -69,7 +69,7 @@ local PAN_RIGHT = false
 local ZOOM_FORWARD = false
 local ZOOM_BACK = false
 local icamera = world:interface "ant.camera|camera"
-function update_second_view_camera()
+local function update_second_view_camera()
     if not camera_mgr.second_camera then return end
     local rc = world[camera_mgr.second_camera]._rendercache
 	rc.viewmat = icamera.calc_viewmat(camera_mgr.second_camera)

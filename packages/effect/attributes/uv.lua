@@ -7,6 +7,7 @@ return {
         emitter.uv_speed = mu.random(attrib.speed_range)
     end,
     update = function (world, emittereid, attrib, deltatime)
+        local iqc = world:interface "ant.render|iquadcache"
         local emitter = world[emittereid]._emitter
         local delta_uv = emitter.uv_speed * deltatime
 
@@ -14,8 +15,8 @@ return {
             local vertexoffset = (ii-1) * 4
             for jj=1, 4 do
                 local vertexidx = vertexoffset + jj
-                local u, v = qc.vertex_texcoord(vertexidx)
-                qc.set_vertex_texcoord(vertexidx, u+delta_uv, v+delta_uv)
+                local u, v = iqc.vertex_texcoord(vertexidx)
+                iqc.set_vertex_texcoord(vertexidx, u+delta_uv, v+delta_uv)
             end
         end
     end

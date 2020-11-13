@@ -29,19 +29,6 @@ local vertex_layout = declmgr.get(layout_desc)
 local vertex_format = declmgr.vertex_desc_str(layout_desc)
 local vertex_elemnum = quad_elemnum / 4
 
-local function del_buffer()
-    if ib then
-        bgfx.destory(ib.handle)
-        ib = nil
-    end
-    if vb then
-       bgfx.destory(bgfx.vb.handles[1])
-       vb = nil
-    end
-
-    ib_num, vb_num = nil, nil
-end
-
 function iqc.init(numquad)
     ib_num = numquad * 2 * 3
     if numquad > irender.quad_ib_num() then
