@@ -22,7 +22,23 @@ local channel    = thread.channel_produce "rmlui"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
-local function init_rmlui_data()
+local function preload_dir(dir)
+    local function import_font(path)
+        for p in path:list_directory() do
+            if fs.is_directory(p) then
+                import_font(p)
+            elseif fs.is_regular_file(p) then
+                if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
+                    fontmgr.import(p)
+                end
+            end
+        end
+    end
+    import_font(fs.path(dir))
+    channel("AddResourceDir", dir)
+end
+
+function rmlui_sys:init()
     local ft_w, ft_h = ifont.font_tex_dim()
 
     local mq_eid = world:singleton_entity_id "main_queue"
@@ -32,7 +48,7 @@ local function init_rmlui_data()
     fbmgr.bind(vid, irq.frame_buffer(mq_eid))
 
     local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
-    return {
+    rmlui.init {
 		viewid = vid,
         shader = {
             font_mask = 0.525,
@@ -72,32 +88,12 @@ local function init_rmlui_data()
         },
         viewrect= vr,
         layout  = layouhandle,
+        bootstrap = require "common.thread".bootstrap("rmlui", [[
+            require "bootstrap"
+            return import_package "ant.rmlui"
+        ]])
     }
-end
 
-local function preload_dir(dir)
-    local function import_font(path)
-        for p in path:list_directory() do
-            if fs.is_directory(p) then
-                import_font(p)
-            elseif fs.is_regular_file(p) then
-                if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
-                    fontmgr.import(p)
-                end
-            end
-        end
-    end
-    import_font(fs.path(dir))
-    channel("AddResourceDir", dir)
-end
-
-function rmlui_sys:init()
-	local data = init_rmlui_data()
-	local thread = require "common.thread"
-    rmlui.init(data, thread.bootstrap("rmlui", [[
-		require "bootstrap"
-		return import_package "ant.rmlui"
-	]]))
     preload_dir "/pkg/ant.resources.binary/ui/test"
 end
 
@@ -113,7 +109,7 @@ function rmlui_sys:ui_update()
             channel("MouseUp", mouseId[what])
         end
     end
-    rmlui.call "OnUpdate"
+    rmlui.update()
 end
 
 function rmlui_sys:exit()

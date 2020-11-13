@@ -58,19 +58,17 @@ lrmlui_init(lua_State *L){
     }
     g_wrapper->interface.font.RegisterFontEffectInstancer();
 
-    if (!lua_isstring(L, 2)) {
-        return luaL_error(L, "Need source string");
-    }
-    size_t sz;
-    const char* libsource = lua_tolstring(L, 2, &sz);
-
     lua_State* rL = luaL_newstate();
     if (rL == NULL) {
         return luaL_error(L, "Lua VM init failed");
     }
     Rml::Plugin* plugin = lua_plugin_create();
     auto initfunc = [&]() {
-        lua_plugin_init(plugin, rL, libsource, sz);
+        lua_plugin_init(plugin,
+            rL,
+            g_wrapper->context.bootstrap.data(),
+            g_wrapper->context.bootstrap.size()
+        );
     };
     std::string errmsg;
     auto errfunc = [&](const char* msg) {
@@ -107,7 +105,7 @@ lrmlui_call(lua_State* L) {
     if (top == 1) {
         lua_State* rL = g_wrapper->context.pluginL;
         luabind::invoke(rL, [&]() {
-            lua_plugin_call(rL, name, 0);
+            lua_plugin_call(rL, name);
         });
         return 0;
     }
@@ -121,6 +119,18 @@ lrmlui_call(lua_State* L) {
             lua_pushvariant(rL, arg);
         }
         lua_plugin_call(rL, name, args.size());
+    });
+    return 0;
+}
+
+static int
+lrmlui_update(lua_State* L) {
+    if (!g_wrapper) {
+        return 0;
+    }
+    lua_State* rL = g_wrapper->context.pluginL;
+    luabind::invoke(rL, [&]() {
+        lua_plugin_call(rL, "OnUpdate");
     });
     return 0;
 }
@@ -146,9 +156,10 @@ LUAMOD_API int
 luaopen_rmlui(lua_State* L) {
     init_interface(L);
     luaL_Reg l[] = {
-        { "init",       lrmlui_init },
-        { "shutdown",   lrmlui_shutdown },
-        { "call",       lrmlui_call },
+        { "init",     lrmlui_init },
+        { "shutdown", lrmlui_shutdown },
+        { "call",     lrmlui_call },
+        { "update",   lrmlui_update },
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);

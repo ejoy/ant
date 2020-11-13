@@ -58,6 +58,7 @@ struct RmlContext {
     uint16_t              viewid;
     Rect                  viewrect;
     bgfx_vertex_layout_t* layout;
+    std::string           bootstrap;
 
     lua_State*            pluginL = nullptr;
 

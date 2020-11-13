@@ -23,8 +23,9 @@ class lua_plugin;
 
 class lua_document final : public Rml::ElementDocument {
 public:
-	lua_document(lua_plugin *p, const Rml::String& tag) : Rml::ElementDocument(tag), plugin(p) {
+	lua_document(lua_plugin *p, Rml::Element* parent, const Rml::String& tag) : Rml::ElementDocument(tag), plugin(p) {
 		Init();
+		SetOwnerDocument(parent ? parent->GetOwnerDocument() : nullptr);
 	}
 private:
 	~lua_document();
@@ -82,8 +83,8 @@ public:
 	lua_document_instancer(lua_plugin *p) : plugin(p) {}
 private:
 	Rml::ElementPtr InstanceElement(Rml::Element* parent, const Rml::String& tag, const Rml::XMLAttributes& attributes) override {
-		// ignore parent and attributes
-		return Rml::ElementPtr(new lua_document(plugin, tag));
+		// ignore and attributes
+		return Rml::ElementPtr(new lua_document(plugin, parent, tag));
 	}
 	void ReleaseElement(Rml::Element* element) override {
 		delete element;

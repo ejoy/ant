@@ -2,8 +2,9 @@ local console = require "core.console"
 local sandbox = require "core.sandbox"
 local filemanager = require "core.filemanager"
 local event = require "core.event"
-local createDocument = require "core.DOM.document"
 local createElement = require "core.DOM.element"
+require "core.DOM.document"
+require "core.window"
 
 local m = {}
 
@@ -58,15 +59,18 @@ local function invoke(f, ...)
 	if not ok then
 		console.warn(err)
 	end
+	return ok, err
 end
 
 function m.OnContextCreate(context)
+	event("OnContextCreate", context)
 end
 function m.OnContextDestroy(context)
+	event("OnContextDestroy", context)
 end
 function m.OnNewDocument(document)
 	local globals = sandbox()
-	globals.document = createDocument(document)
+	event("OnNewDocument", document, globals)
 	environment[document] = globals
 end
 function m.OnDeleteDocument(document)
@@ -105,9 +109,15 @@ function m.OnEventAttach(ev, document, element, source)
 	if source == "" then
 		return
 	end
-	local f, err = load(source, source, "t", environment[document])
-	if not f then
+	local globals = environment[document]
+	local code = ("local this=...;return function()%s;end"):format(source)
+	local payload, err = load(code, source, "t", globals)
+	if not payload then
 		console.warn(err)
+		return
+	end
+	local ok, f = invoke(payload, createElement(globals.document, element))
+	if not ok then
 		return
 	end
 	events[ev] = f

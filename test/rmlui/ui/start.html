@@ -34,12 +34,25 @@
             }
         </style>
         <script src="start.lua" />
+        <script type="text/x-lua">
+            local start = window.createModel "start" {}
+            start.menus = {
+                    {label="新游戏",opacity=1},
+                    {label="载入游戏",opacity=0.3},
+                    {label="设置",opacity=0.3},
+                    {label="退出",opacity=0.3}
+            }
+            start.click = function ()
+            end
+            table.insert(start.menus, {label="退出",opacity=0.3})
+            start "menus" 
+        </script>
     </head>
-
     <body>
-        <button id="start"   onclick="RUN()"><span>新游戏</span></button>
-        <button id="load"    onclick=""><span>载入游戏</span></button>
-        <button id="setting" onclick=""><span>设置</span></button>
-        <button id="exit"    onclick=""><span>退出</span></button>
+        <div data-model="start">
+            <button data-for="menu:menus">
+                <span data-attr-style="'opacity:'+menu.opacity" data-event-click="click()">{{ menu.label }}</span>
+            </button>
+        </div>
     </body>
 </rml>
