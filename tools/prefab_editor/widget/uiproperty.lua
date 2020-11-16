@@ -165,7 +165,7 @@ function ResourcePath:show()
                 elseif level == 1 and (extension == ".png" or extension == ".dds") then
                     local t = assetmgr.resource(path_str, { compile = true })
                     self.runtimedata._data.handle = t.handle
-                    self.metadata.path = tostring(lfs.relative(relative_path, lfs.path(self.path):remove_filename()))
+                    self.metadata.path = path_str
                     self.uidata2.text = self.metadata.path
                 end
             end
@@ -237,8 +237,10 @@ function ResourcePath:show()
             imgui.cursor.SameLine()
             imgui.util.PushID("Save" .. self.label)
             if imgui.widget.Button("Save") then
+                local old = self.metadata.path
+                self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(self.path):remove_filename()))
                 utils.write_file(self.path, stringify(self.metadata))
-                assetmgr.unload(self.path)
+                self.metadata.path = old
             end
             imgui.util.PopID()
             imgui.cursor.SameLine()
@@ -256,7 +258,11 @@ function ResourcePath:show()
                     if #path > pos + 7 then
                         path = string.sub(path, 1, pos + 7)
                     end
+                    local old = self.metadata.path
+                    path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
+                    self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(path):remove_filename()))
                     utils.write_file(path, stringify(self.metadata))
+                    self.metadata.path = old
                 end
             end
             imgui.util.PopID()
