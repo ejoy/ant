@@ -42,16 +42,15 @@
                     {label="设置",opacity=0.3},
                     {label="退出",opacity=0.3}
             }
-            start.click = function ()
+            start.click = function (event, v)
+                console.log(event.id, v)
             end
-            table.insert(start.menus, {label="退出",opacity=0.3})
-            start "menus" 
         </script>
     </head>
     <body>
         <div data-model="start">
             <button data-for="menu:menus">
-                <span data-attr-style="'opacity:'+menu.opacity" data-event-click="click()">{{ menu.label }}</span>
+                <span data-attr-style="'opacity:'+menu.opacity" data-event-click="click(menu.opacity)">{{ menu.label }}</span>
             </button>
         </div>
     </body>

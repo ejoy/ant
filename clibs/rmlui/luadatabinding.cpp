@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include "luaplugin.h"
+#include "luabind.h"
 
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/DataVariable.h>
@@ -56,6 +57,20 @@ lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 		lua_pushnil(L);
 		break;
 	}
+}
+
+void
+lua_pushevent(lua_State* L, const Rml::Event& event) {
+	auto& p = event.GetParameters();
+	lua_createtable(L, 0, (int)p.size() + 1);
+	for (auto& v : p) {
+		lua_pushlstring(L, v.first.c_str(), v.first.length());
+		lua_pushvariant(L, v.second);
+		lua_rawset(L, -3);
+	}
+	lua_pushstring(L, "id");
+	lua_pushinteger(L, (lua_Integer)event.GetId());
+	lua_rawset(L, -3);
 }
 
 void
@@ -218,17 +233,33 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 	if (!lua_checkstack(dataL, 4)) {
 		luaL_error(L, "Memory Error");
 	}
-	D->top = lua_gettop(dataL) + 1;
+	int id = lua_gettop(dataL) + 1;
+	D->top = id;
 	// L top : key value
 	lua_xmove(L, dataL, 1);	// move value to dataL with index(id)
 	lua_pushvalue(L, -1);	// dup key
 	lua_xmove(L, dataL, 1);
-	lua_pushinteger(dataL, D->top);
+	lua_pushinteger(dataL, id);
 	lua_rawset(dataL, 1);
 	const char* key = lua_tostring(L, -1);
-	D->constructor.BindCustomDataVariable(key,
-		Rml::DataVariable(D->scalarDef, (void*)(intptr_t)D->top)
-	);
+	if (lua_type(dataL, D->top) == LUA_TFUNCTION) {
+		D->constructor.BindEventCallback(key, [=](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& list) {
+			lua_pushvalue(dataL, id);
+			lua_xmove(dataL, L, 1);
+			luabind::invoke(L, [&](){
+				lua_pushevent(L, event);
+				for (auto const& e : list) {
+					lua_pushvariant(L, e);
+				}
+				lua_call(L, (int)list.size() + 1, 0);
+			}, luabind::errfunc, 1);
+		});
+	}
+	else {
+		D->constructor.BindCustomDataVariable(key,
+			Rml::DataVariable(D->scalarDef, (void*)(intptr_t)id)
+		);
+	}
 }
 
 static int

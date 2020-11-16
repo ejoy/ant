@@ -238,20 +238,8 @@ void lua_event_listener::ProcessEvent(Rml::Event& event) {
 	lua_State *L = plugin->L;
 	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)this);
-		auto& p = event.GetParameters();
-		if (p.empty()) {
-			lua_pushnil(L);
-		}
-		else {
-			lua_createtable(L, 0, (int)p.size());
-			for (auto& v : p) {
-				lua_pushlstring(L, v.first.c_str(), v.first.length());
-				lua_pushvariant(L, v.second);
-				lua_rawset(L, -3);
-			}
-		}
-		lua_pushinteger(L, (lua_Integer)event.GetId());
-		lua_plugin_call(L, "OnEvent", 3);
+		lua_pushevent(L, event);
+		lua_plugin_call(L, "OnEvent", 2);
 	});
 }
 

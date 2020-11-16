@@ -11,5 +11,6 @@ void lua_plugin_destroy(Rml::Plugin* plugin);
 int lua_plugin_apis(lua_State *L);
 void lua_pushvariant(lua_State *L, const Rml::Variant &v);
 void lua_getvariant(lua_State *L, int index, Rml::Variant* variant);
+void lua_pushevent(lua_State* L, const Rml::Event& event);
 
 #endif
