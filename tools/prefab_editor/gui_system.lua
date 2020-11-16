@@ -270,8 +270,8 @@ function m:data_changed()
         elseif what == "parent" then
             inspector.update_template_tranform(target)
         end
-        if transform_dirty and world[target].light_type then
-            light_gizmo.update()
+        if transform_dirty then
+            on_update(target)
         end
     end
     for _, what, eid, value in entity_state_event:unpack() do
