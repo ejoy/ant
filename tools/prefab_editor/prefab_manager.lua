@@ -404,6 +404,7 @@ function m:update_material(eid, mtl)
     world:remove_entity(eid)
     local gizmo = require "gizmo.gizmo"(world)
     gizmo:set_target(new_eid)
+    return new_eid
 end
 
 local utils = require "common.utils"

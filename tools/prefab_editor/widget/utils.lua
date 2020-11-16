@@ -78,4 +78,24 @@ function m.show_message_box()
     do_show_message(message[level])
 end
 
+local rhwi          = import_package 'ant.render'.hwi
+local stringify     = import_package "ant.serialize".stringify
+local filedialog    = require 'filedialog'
+function m.get_saveas_path(filetype, extension)
+    local dialog_info = {
+        Owner = rhwi.native_window(),
+        Title = "Save As..",
+        FileTypes = {filetype, "*"..extension}
+    }
+    local ok, path = filedialog.save(dialog_info)
+    if ok then
+        path = string.gsub(path, "\\", "/") .. extension
+        local pos = string.find(path, "%"..extension)
+        if #path > pos + #extension - 1 then
+            path = string.sub(path, 1, pos + #extension - 1)
+        end
+        --utils.write_file(path, stringify(data))
+        return path
+    end
+end
 return m

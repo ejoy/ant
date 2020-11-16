@@ -7,6 +7,7 @@ local cr        = import_package "ant.compile_resource"
 local datalist  = require "datalist"
 local stringify = import_package "ant.serialize".stringify
 local utils         = require "common.utils"
+local uiutils       = require "widget.utils"
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local BaseView      = require "widget.view_class".BaseView
@@ -42,11 +43,18 @@ function MaterialView:_init()
     self.save_mat:set_click(function() self:on_save_mat() end)
     self.save_as_mat:set_click(function() self:on_saveas_mat() end)
 end
+local gd = require "common.global_data"
 function MaterialView:on_set_mat(value)
-    world[self.eid].material = value
+    local origin_path = fs.path(value)
+    local relative_path = tostring(origin_path)
+    if origin_path:is_absolute() then
+        relative_path = tostring(fs.relative(fs.path(value), gd.resource_root))
+    end
+    local new_eid = prefab_mgr:update_material(self.eid, relative_path)
+    self:set_model(new_eid)
 end
 function MaterialView:on_get_mat()
-    return world[self.eid].material
+    return tostring(world[self.eid].material)
 end
 function MaterialView:on_set_vs(value)
     mtldata_list[self.eid].tdata.fx.vs = value
@@ -60,9 +68,33 @@ end
 function MaterialView:on_get_fs()
     return mtldata_list[self.eid].tdata.fx.fs
 end
+
+local do_save = function(eid, path)
+    local tempt = {}
+    local tdata = mtldata_list[eid].tdata
+    local properties = tdata.properties
+    for k, v in pairs(properties) do
+        if v.tdata then
+            tempt[k] = v.tdata
+            v.tdata = nil
+        end
+    end
+    utils.write_file(path, stringify(tdata))
+    for k, v in pairs(properties) do
+        if tempt[k] then
+            v.tdata = tempt[k]
+        end
+    end
+end
+
 function MaterialView:on_save_mat()
+    local path = self.mat_file:get_path()
+    do_save(self.eid, path)
+    assetmgr.unload(path)
 end
 function MaterialView:on_saveas_mat()
+    local path = uiutils.get_saveas_path("Material", ".material")
+    do_save(self.eid, path)
 end
 
 local function is_sampler(str)
@@ -135,30 +167,34 @@ function MaterialView:set_model(eid)
             pro:set_label(k)
             pro:set_getter(
                 function()
-                    -- local prop = mtldata_list[eid].tdata.properties[k]
-                    -- return prop.texture
                     local prop = imaterial.get_property(eid, k)
-                    if prop then
-                        return prop.value.texture
-                    else
-                        return {}
-                    end
+                    return prop and tostring(prop.value.texture) or ""
                 end
             )
             pro:set_setter(
                 function(value)
                     local runtime_tex = assetmgr.resource(value)
                     local s = runtime_tex.sampler
-                    local md = mtldata_list[eid]
+                    local tdata = mtldata_list[eid].tdata
                     if k == "s_metallic_roughness" then
-                        md.tdata.properties.u_metallic_roughness_factor[4] = 1
-                        imaterial.set_property(eid, "u_metallic_roughness_factor", md.tdata.properties.u_metallic_roughness_factor)
+                        -- local factor = imaterial.get_property(eid, "u_metallic_roughness_factor")
+                        -- factor[4] = 1
+                        -- imaterial.set_property(eid, "u_metallic_roughness_factor", math3d.totable(factor.value))
+                        tdata.roperties.u_metallic_roughness_factor[4] = 1
+                        imaterial.set_property(eid, "u_metallic_roughness_factor", tdata.properties.u_metallic_roughness_factor)
                     else
-                        local used_flags = md.tdata.properties.u_material_texture_flags
+                        -- local used_flags = imaterial.get_property(eid, "u_material_texture_flags")
+                        -- used_flags[texture_used_idx[k]] = 1
+                        -- imaterial.set_property(eid, "u_material_texture_flags", math3d.totable(used_flags.value))
+                        local used_flags = tdata.properties.u_material_texture_flags
                         used_flags[texture_used_idx[k]] = 1
                         imaterial.set_property(eid, "u_material_texture_flags", used_flags)
                     end
-                    imaterial.set_property(eid, k, {stage = md.tdata.properties[k].stage, texture = {handle = runtime_tex._data.handle}})
+                    local prop = imaterial.get_property(eid, k)
+                    local mtl_filename = tostring(world[eid].material)
+                    local relative_path = lfs.relative(lfs.path(value), lfs.path(mtl_filename):remove_filename())
+                    tdata.properties[k].texture = relative_path:string()
+                    imaterial.set_property(eid, k, {stage = prop.value.stage, texture = {handle = runtime_tex._data.handle}})
                 end
             )
         elseif is_uniform(k) then
@@ -177,6 +213,8 @@ function MaterialView:set_model(eid)
             )
             pro:set_setter(
                 function(...)
+                    local tdata = mtldata_list[eid].tdata
+                    tdata.properties[k] = {...}
                     imaterial.set_property(eid, k, {...})
                 end
             )

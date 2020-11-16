@@ -115,11 +115,15 @@ end
 local ResourcePath      = class("ResourcePath", EditText)
 local utils             = require "common.utils"
 function ResourcePath:update()
-    self.runtimedata = self.modifier.getter()
-    self.uidata.text = tostring(self.runtimedata)
-    local path = self.uidata.text
-    if string.sub(path, -8) == ".texture" then
+    local path = self.modifier.getter()
+    self.path = path
+    self.uidata.text = path
+    local fp = fs.path(path)
+    if fp:equal_extension(".material") or fp:equal_extension(".texture") then
         self.metadata = utils.readtable(path)
+    end
+    if fp:equal_extension(".texture") then
+        self.runtimedata = assetmgr.resource(path)
         if not self.uidata2 then
             self.uidata2 = {text = ""}
         end
@@ -128,7 +132,6 @@ function ResourcePath:update()
 end
 
 local rhwi          = import_package 'ant.render'.hwi
-local datalist      = require "datalist"
 local stringify     = import_package "ant.serialize".stringify
 local filedialog    = require 'filedialog'
 local filter_type   = {"POINT", "LINEAR", "ANISOTROPIC"}
@@ -140,31 +143,37 @@ function ResourcePath:show()
     if self.imgui_func("##" .. self.label, self.uidata) then
     end
     
-    local function on_dragdrop()
+    local function on_dragdrop(level)
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragFile")
             if payload then
-                local rp = lfs.relative(lfs.path(payload), fs.path "":localpath())
-                local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
-                if string.sub(pkg_path, -8) == ".texture" then
-                    self.metadata = utils.readtable(pkg_path)
-                    self.runtimedata = assetmgr.resource(pkg_path)
-                    local s = self.runtimedata.sampler
-                    self.uidata.text = pkg_path
-                elseif string.sub(pkg_path, -4) == ".png"
-                    or string.sub(pkg_path, -4) == ".dds" then
-                    local t = assetmgr.resource(pkg_path, { compile = true })
+                local relative_path = lfs.relative(lfs.path(payload), fs.path "":localpath())
+                local extension = tostring(relative_path:extension())
+                local path_str = tostring(relative_path)
+                
+                if level == 0 then
+                    self.metadata = utils.readtable(path_str)
+                    if extension == ".texture" then
+                        self.runtimedata = assetmgr.resource(path_str)
+                        local s = self.runtimedata.sampler
+                    else
+                        
+                    end
+                    self.path = path_str
+                    self.uidata.text = path_str
+                    self.modifier.setter(path_str)
+                elseif level == 1 and (extension == ".png" or extension == ".dds") then
+                    local t = assetmgr.resource(path_str, { compile = true })
                     self.runtimedata._data.handle = t.handle
-                    self.metadata.path = pkg_path
+                    self.metadata.path = tostring(lfs.relative(relative_path, lfs.path(self.path):remove_filename()))
+                    self.uidata2.text = self.metadata.path
                 end
-                self.uidata2.text = self.metadata.path
-                self.modifier.setter(self.runtimedata)
             end
             imgui.widget.EndDragDropTarget()
         end
     end
 
-    on_dragdrop()
+    on_dragdrop(0)
 
     if self.runtimedata and self.runtimedata._data then
         -- texture detail
@@ -182,7 +191,7 @@ function ResourcePath:show()
             if imgui.widget.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
             end
             imgui.cursor.PopItemWidth()
-            on_dragdrop()
+            on_dragdrop(1)
 
             local sampler = self.metadata.sampler
             local function show_filter(ft)
@@ -228,8 +237,8 @@ function ResourcePath:show()
             imgui.cursor.SameLine()
             imgui.util.PushID("Save" .. self.label)
             if imgui.widget.Button("Save") then
-                utils.write_file(self.texture, stringify(self.metadata))
-                assetmgr.unload(self.texture)
+                utils.write_file(self.path, stringify(self.metadata))
+                assetmgr.unload(self.path)
             end
             imgui.util.PopID()
             imgui.cursor.SameLine()
@@ -255,6 +264,14 @@ function ResourcePath:show()
             imgui.cursor.Columns(1)
         end
     end
+end
+
+function ResourcePath:get_path()
+    return self.path
+end
+
+function ResourcePath:get_metadata()
+    return self.metadata
 end
 
 local Combo = class("Combo")

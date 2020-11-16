@@ -307,9 +307,9 @@ function m.show()
                 local texture_info = texture_detail[current_file] 
                 if texture_info then
                     imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
-                        texture_info.compress.android,
-                        texture_info.compress.ios,
-                        texture_info.compress.windows,
+                        texture_info.compress and texture_info.compress.android or "raw",
+                        texture_info.compress and texture_info.compress.ios or "raw",
+                        texture_info.compress and texture_info.compress.windows or "raw",
                         texture_info.sampler.MAG,
                         texture_info.sampler.MIN,
                         texture_info.sampler.MIP,
