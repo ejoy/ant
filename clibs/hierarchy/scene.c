@@ -54,7 +54,7 @@ get_index(lua_State *L, int value) {
 	int result;
 	if (lua_rawgeti(L, INDEX, value) == LUA_TNIL) {
 		// not exist
-		int n = lua_rawlen(L, QUEUE);
+		int n = (int)lua_rawlen(L, QUEUE);
 		result = n+1;
 		lua_pushinteger(L, value);
 		lua_rawseti(L, QUEUE, result);	// push queue
@@ -125,7 +125,7 @@ array_push(struct array *a, int v) {
 static int
 lqueue_mount(lua_State *L) {
 	luaL_checktype(L, QUEUE, LUA_TTABLE);
-	int id = luaL_checkinteger(L, OBJID);
+	int id = (int)luaL_checkinteger(L, OBJID);
 	if (id <= 0 || id > MAXID)
 		return luaL_error(L, "Invalid entity id %d (must > 0)", id);
 	if (lua_isnoneornil(L, PARENTID)) {
@@ -141,7 +141,7 @@ lqueue_mount(lua_State *L) {
 		lua_rawseti(L, QUEUE, position);
 		return 0;
 	}
-	int parent = luaL_checkinteger(L, PARENTID);
+	int parent = (int)luaL_checkinteger(L, PARENTID);
 	if (parent < 0 || parent > MAXID)
 		return luaL_error(L, "Invalid parent id %d (must >= 0)", parent);
 
@@ -149,7 +149,7 @@ lqueue_mount(lua_State *L) {
 		int position;
 		if (lua_rawgeti(L, INDEX, id) == LUA_TNIL) {
 			// not exist
-			position = lua_rawlen(L, QUEUE) + 1;
+			position = (int)lua_rawlen(L, QUEUE) + 1;
 		} else {
 			position = get_position(lua_tointeger(L, -1));
 		}
@@ -187,7 +187,7 @@ lqueue_mount(lua_State *L) {
 
 	struct array A;
 	array_init(&A, L);
-	int queue_len = lua_rawlen(L, QUEUE);
+	int queue_len = (int)lua_rawlen(L, QUEUE);
 	int head_index = obj_index;
 	int tail_index = queue_len;
 
@@ -201,7 +201,7 @@ lqueue_mount(lua_State *L) {
 
 	int i;
 	for (i=obj_index+1;i<=parent_index-1;i++) {
-		int v = get_integer(L, QUEUE, i);
+		int v = (int)get_integer(L, QUEUE, i);
 		int parent = get_parent(get_integer(L, INDEX, v));
 		if (parent != 0 && get_position(get_integer(L, INDEX, parent)) > queue_len) {
 			printf(">> ");
@@ -236,7 +236,7 @@ remove_from_index(lua_State *L) {
 	while (lua_next(L, INDEX) != 0) {
 		int pos = get_position(lua_tointeger(L, -1));
 		lua_pop(L, 1);	// pop value (index)
-		int key = lua_tointeger(L, -1);
+		int key = (int)lua_tointeger(L, -1);
 		if (lua_rawgeti(L, QUEUE, pos) != LUA_TNUMBER) {
 			// remove from index
 			printf("remove %d from index table\n", key);
@@ -277,12 +277,12 @@ parent_exist(lua_State *L, int id) {
 static int
 lqueue_clear(lua_State *L) {
 	int result_n = remove_from_index(L);
-	int n = lua_rawlen(L, QUEUE);
+	int n = (int)lua_rawlen(L, QUEUE);
 	int i, head;
 	for (head=i=1;i<=n;i++) {
 		int id;
 		int type;
-		if ((type=lua_rawgeti(L, QUEUE, i)) == LUA_TNUMBER && parent_exist(L, (id = lua_tointeger(L, -1)))) {
+		if ((type=(int)lua_rawgeti(L, QUEUE, i)) == LUA_TNUMBER && parent_exist(L, (id = (int)lua_tointeger(L, -1)))) {
 			if (head != i) {
 				lua_rawseti(L, QUEUE, head);
 				move_position(L, id, head);
