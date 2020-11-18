@@ -47,6 +47,12 @@ struct RmlWrapper {
 
 static RmlWrapper* g_wrapper = nullptr;
 
+lua_plugin* get_lua_plugin() {
+    return g_wrapper
+        ? g_wrapper->context.plugin
+        : nullptr;
+}
+
 static int
 lrmlui_init(lua_State *L){
     if (g_wrapper) {
@@ -58,30 +64,14 @@ lrmlui_init(lua_State *L){
     }
     g_wrapper->interface.font.RegisterFontEffectInstancer();
 
-    lua_State* rL = luaL_newstate();
-    if (rL == NULL) {
-        return luaL_error(L, "Lua VM init failed");
-    }
-    Rml::Plugin* plugin = lua_plugin_create();
-    auto initfunc = [&]() {
-        lua_plugin_init(plugin,
-            rL,
-            g_wrapper->context.bootstrap.data(),
-            g_wrapper->context.bootstrap.size()
-        );
-    };
+    auto plugin = std::make_unique<lua_plugin>();
     std::string errmsg;
-    auto errfunc = [&](const char* msg) {
-        errmsg = msg;
-    };
-    if (!luabind::invoke(rL, initfunc, errfunc)) {
-        lua_close(rL);
-        lua_plugin_destroy(plugin);
+    if (!plugin->initialize(g_wrapper->context.bootstrap, errmsg)) {
         lua_pushfstring(L, "Lua init error : %s\n", errmsg.c_str());
         return lua_error(L);
     }
-    Rml::RegisterPlugin(plugin);
-    g_wrapper->context.pluginL = rL;
+    g_wrapper->context.plugin = plugin.release();
+    Rml::RegisterPlugin(g_wrapper->context.plugin);
     return 0;
 }
 
@@ -96,41 +86,14 @@ lrmlui_shutdown(lua_State* L) {
 }
 
 static int
-lrmlui_call(lua_State* L) {
-    if (!g_wrapper) {
-        return 0;
-    }
-    const char* name = luaL_checkstring(L, 1);
-    int top = lua_gettop(L);
-    if (top == 1) {
-        lua_State* rL = g_wrapper->context.pluginL;
-        luabind::invoke(rL, [&]() {
-            lua_plugin_call(rL, name);
-        });
-        return 0;
-    }
-    std::vector<Rml::Variant> args((size_t)(lua_gettop(L)-1));
-    for (size_t i = 0; 0 < args.size(); ++i) {
-        lua_getvariant(L, (int)i + 2, &args[i]);
-    }
-    lua_State* rL = g_wrapper->context.pluginL;
-    luabind::invoke(rL, [&]() {
-        for (auto const& arg : args) {
-            lua_pushvariant(rL, arg);
-        }
-        lua_plugin_call(rL, name, args.size());
-    });
-    return 0;
-}
-
-static int
 lrmlui_update(lua_State* L) {
     if (!g_wrapper) {
         return 0;
     }
-    lua_State* rL = g_wrapper->context.pluginL;
+    lua_plugin* plugin = g_wrapper->context.plugin;
+    lua_State* rL = plugin->L;
     luabind::invoke(rL, [&]() {
-        lua_plugin_call(rL, "OnUpdate");
+        plugin->call(LuaEvent::OnUpdate);
     });
     return 0;
 }
@@ -151,20 +114,21 @@ lRenderFrame(lua_State* L){
     return 0;
 }
 
-extern "C" {
-LUAMOD_API int
+extern "C"
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+int
 luaopen_rmlui(lua_State* L) {
     init_interface(L);
     luaL_Reg l[] = {
         { "init",     lrmlui_init },
         { "shutdown", lrmlui_shutdown },
-        { "call",     lrmlui_call },
         { "update",   lrmlui_update },
         { nullptr, nullptr },
     };
     luaL_newlib(L, l);
     return 1;
-}
 }
 
 bgfx_interface_vtbl_t* 

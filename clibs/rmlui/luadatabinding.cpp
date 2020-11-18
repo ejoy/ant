@@ -13,8 +13,6 @@ extern "C" {
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 
-#define RMLDATAMODEL "RMLDATAMODEL"
-
 void
 lua_pushvariant(lua_State *L, const Rml::Variant &v) {
 	switch (v.GetType()) {
@@ -68,8 +66,8 @@ lua_pushevent(lua_State* L, const Rml::Event& event) {
 		lua_pushvariant(L, v.second);
 		lua_rawset(L, -3);
 	}
-	lua_pushstring(L, "id");
-	lua_pushinteger(L, (lua_Integer)event.GetId());
+	lua_pushstring(L, "type");
+	lua_pushstring(L, event.GetType().c_str());
 	lua_rawset(L, -3);
 }
 
@@ -275,7 +273,7 @@ getId(lua_State *L, lua_State *dataL) {
 	return id;
 }
 
-static int
+int
 lDataModelGet(lua_State *L) {
 	struct LuaDataModel *D = (struct LuaDataModel *)lua_touserdata(L, 1);
 	lua_State *dataL = D->dataL;
@@ -288,7 +286,7 @@ lDataModelGet(lua_State *L) {
 	return 1;
 }
 
-static int
+int
 lDataModelSet(lua_State *L) {
 	struct LuaDataModel *D = (struct LuaDataModel *)lua_touserdata(L, 1);
 	lua_State *dataL = D->dataL;
@@ -311,9 +309,9 @@ lDataModelSet(lua_State *L) {
 	return 0;
 }
 
-static int
+int
 lDataModelDirty(lua_State* L) {
-	struct LuaDataModel* D = (struct LuaDataModel*)luaL_checkudata(L, 1, RMLDATAMODEL);
+	struct LuaDataModel* D = (struct LuaDataModel*)lua_touserdata(L, 1);
 	int n = lua_gettop(L);
 	for (int i = 2; i <= n; ++i) {
 		D->handle.DirtyVariable(luaL_checkstring(L, i));
@@ -324,16 +322,16 @@ lDataModelDirty(lua_State* L) {
 // We should release LuaDataModel manually
 int
 lDataModelRelease(lua_State *L) {
-	struct LuaDataModel *D = (struct LuaDataModel *)luaL_checkudata(L, 1, RMLDATAMODEL);
+	struct LuaDataModel* D = (struct LuaDataModel*)lua_touserdata(L, 1);
 	D->release();
 	lua_pushnil(L);
 	lua_setuservalue(L, -2);
 	return 0;
 }
 
-static int
-lDataModelDel(lua_State* L) {
-	struct LuaDataModel* D = (struct LuaDataModel*)luaL_checkudata(L, 1, RMLDATAMODEL);
+int
+lDataModelDelete(lua_State* L) {
+	struct LuaDataModel* D = (struct LuaDataModel*)lua_touserdata(L, 1);
 	D->~LuaDataModel();
 	return 0;
 }
@@ -376,17 +374,5 @@ lDataModelCreate(lua_State *L) {
 		BindVariable(D, L);
 	}
 	lua_setuservalue(L, -2);
-
-	if (luaL_newmetatable(L, RMLDATAMODEL)) {
-		luaL_Reg l[] = {
-			{ "__index", lDataModelGet },
-			{ "__newindex", lDataModelSet },
-			{ "__gc", lDataModelDel },
-			{ "__call", lDataModelDirty },
-			{ NULL, NULL },
-		};
-		luaL_setfuncs(L, l, 0);
-	}
-	lua_setmetatable(L, -2);
 	return 1;
 }

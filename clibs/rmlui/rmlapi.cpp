@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include "luaplugin.h"
+#include "luabind.h"
 
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
@@ -128,6 +129,36 @@ lDocumentShow(lua_State* L) {
 	return 1;
 }
 
+struct EventListener final : public Rml::EventListener {
+	EventListener(lua_State* L_, int idx)
+		: L(L_)
+		, ref(LUA_NOREF)
+	{
+		luaL_checktype(L, idx, LUA_TFUNCTION);
+		lua_pushvalue(L, idx);
+		ref = get_lua_plugin()->ref(L);
+	}
+	~EventListener() {
+		get_lua_plugin()->unref(ref);
+	}
+	void OnDetach(Rml::Element* element) override { delete this; }
+	void ProcessEvent(Rml::Event& event) override {
+		luabind::invoke(L, [&]() {
+			lua_pushevent(L, event);
+			get_lua_plugin()->callref(ref, 1, 0);
+		});
+	}
+	lua_State* L;
+	int ref;
+};
+
+static int
+lElementAddEventListener(lua_State* L) {
+	Rml::Element* e = (Rml::Element*)lua_touserdata(L, 1);
+	e->AddEventListener(lua_checkstdstring(L, 2), new EventListener(L, 3), lua_toboolean(L, 4));
+	return 0;
+}
+
 static int
 lElementGetInnerRML(lua_State *L) {
 	Rml::Element *e = (Rml::Element *)lua_touserdata(L, 1);
@@ -188,6 +219,10 @@ lLog(lua_State* L) {
 
 int lDataModelCreate(lua_State* L);
 int lDataModelRelease(lua_State* L);
+int lDataModelDelete(lua_State* L);
+int lDataModelGet(lua_State* L);
+int lDataModelSet(lua_State* L);
+int lDataModelDirty(lua_State* L);
 int lRenderBegin(lua_State* L);
 int lRenderFrame(lua_State* L);
 
@@ -203,11 +238,16 @@ lua_plugin_apis(lua_State *L) {
 		{ "ContextUpdate", lContextUpdate },
 		{ "DataModelCreate", lDataModelCreate },
 		{ "DataModelRelease", lDataModelRelease },
+		{ "DataModelRelease", lDataModelDelete },
+		{ "DataModelGet", lDataModelGet },
+		{ "DataModelSet", lDataModelSet },
+		{ "DataModelDirty", lDataModelDirty },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetTitle", lDocumentGetTitle },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentShow", lDocumentShow },
+		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetProperty", lElementGetProperty },
 		{ "ElementRemoveProperty", lElementRemoveProperty },

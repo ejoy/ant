@@ -1,13 +1,51 @@
 #ifndef ant_rml_lua_plugin_h
 #define ant_rml_lua_plugin_h
 
-struct lua_State;
+#include "luabind.h"
 
-Rml::Plugin* lua_plugin_create();
-void lua_plugin_init(Rml::Plugin* plugin, lua_State* L, const char* source, size_t sz);
-void lua_plugin_call(lua_State* L, const char* name, size_t argn = 0, size_t retn = 0);
-void lua_plugin_destroy(Rml::Plugin* plugin);
+class lua_document;
+class lua_event_listener;
+class lua_document_instancer;
+class lua_element_instancer;
+class lua_event_listener_instancer;
 
+enum class LuaEvent : int {
+	OnContextCreate = 1,
+	OnContextDestroy,
+	OnNewDocument,
+	OnDeleteDocument,
+	OnInlineScript,
+	OnExternalScript,
+	OnEvent,
+	OnEventAttach,
+	OnEventDetach,
+	OnUpdate,
+	OnOpenFile,
+};
+
+class lua_plugin final : public Rml::Plugin {
+public:
+	~lua_plugin();
+	int GetEventClasses() override;
+	void OnInitialise() override;
+	void OnShutdown() override;
+	void OnContextCreate(Rml::Context* context) override;
+	void OnContextDestroy(Rml::Context* context) override;
+
+	bool initialize(const std::string& bootstrap, std::string& errmsg);
+	int  ref(lua_State* L);
+	void unref(int ref);
+	void callref(int ref, size_t argn = 0, size_t retn = 0);
+	void call(LuaEvent eid, size_t argn = 0, size_t retn = 0);
+
+	lua_State* L = nullptr;
+	std::unique_ptr<luabind::reference> reference;
+	lua_document_instancer* document_element_instancer = nullptr;
+	lua_element_instancer* element_instancer = nullptr;
+	lua_event_listener_instancer* event_listener_instancer = nullptr;
+};
+
+lua_plugin* get_lua_plugin();
 int lua_plugin_apis(lua_State *L);
 void lua_pushvariant(lua_State *L, const Rml::Variant &v);
 void lua_getvariant(lua_State *L, int index, Rml::Variant* variant);

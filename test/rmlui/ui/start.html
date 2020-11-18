@@ -43,12 +43,12 @@
                     {label="退出",opacity=0.3}
             }
             start.click = function (event, v)
-                console.log(event.id, v)
+                console.log(event.type, v)
             end
         </script>
     </head>
-    <body>
-        <div data-model="start">
+    <body onclick="load(self)">
+        <div  id="test" data-model="start">
             <button data-for="menu:menus">
                 <span data-attr-style="'opacity:'+menu.opacity" data-event-click="click(menu.opacity)">{{ menu.label }}</span>
             </button>

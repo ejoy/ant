@@ -1,5 +1,6 @@
 local event = require "core.event"
-local mt = {}local m = {}
+local mt = {}
+local m = {}
 mt.__index = m
 
 local style_mt = {}
@@ -14,6 +15,10 @@ function style_mt:__newindex(name, value)
     else
         rmlui.ElementSetProperty(self._handle, name, tostring(value))
     end
+end
+
+function m:addEventListener(type, listener, useCapture)
+    rmlui.ElementAddEventListener(self._handle, type, listener, useCapture)
 end
 
 local function constructor(document, handle)
