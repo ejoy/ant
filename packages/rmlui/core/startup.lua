@@ -4,12 +4,12 @@ local filemanager = require "core.filemanager"
 local event = require "core.event"
 local createElement = require "core.DOM.element"
 local createEvent = require "core.DOM.event"
+local environment = require "core.environment"
 require "core.DOM.document"
 require "core.window"
 
 local m = {}
 
-local environment = {}
 local events = {}
 
 local function invoke(f, ...)

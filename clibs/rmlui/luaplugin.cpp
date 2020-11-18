@@ -98,6 +98,7 @@ lua_plugin::~lua_plugin() {
 	delete event_listener_instancer;
 	document_element_instancer = nullptr;
 	event_listener_instancer = nullptr;
+	reference.reset();
 	if (L) {
 		lua_close(L);
 	}

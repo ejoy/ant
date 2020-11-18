@@ -1,14 +1,11 @@
 <rml><head>
-<script>
-local doc = ...
-local ctx = rmlui.DocumentGetContext(doc)
-basics = rmlui.DataModelCreate (ctx, "basics", {
+<script type="text/x-lua">
+window.createModel "basics" {
 	title = "Hello World"
-})
---rmlui.DataModelUpdate(basics)
+}
 </script>
 </head>
-	<body onload="OnLoad">
+	<body onload="">
 	<panel data-model="basics">
 		<h1>{{title}}</h1>
 	</panel>

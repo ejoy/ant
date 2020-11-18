@@ -1,5 +1,6 @@
 local event = require "core.event"
 local createEvent = require "core.DOM.event"
+local environment = require "core.environment"
 
 local datamodels = {}
 local datamodel_mt = {
@@ -38,6 +39,18 @@ function event.OnNewDocument(document, globals)
             debug.setmetatable(model, datamodel_mt)
             return model
         end
+    end
+    function m.open(url)
+        local context = rmlui.DocumentGetContext(document)
+        local newdoc = rmlui.ContextLoadDocument(context, url)
+        if not newdoc then
+            return
+        end
+        rmlui.DocumentShow(newdoc)
+        return environment[newdoc]
+    end
+    function m.close()
+        rmlui.DocumentClose(document)
     end
     globals.window = m
 end

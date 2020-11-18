@@ -93,8 +93,15 @@ lContextUpdate(lua_State* L) {
 }
 
 static int
+lDocumentClose(lua_State* L) {
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
+	doc->Close();
+	return 0;
+}
+
+static int
 lDocumentGetContext(lua_State *L) {
-	Rml::ElementDocument *doc = (Rml::ElementDocument *)lua_touserdata(L, 1);
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
 	lua_pushlightuserdata(L, (void *)doc->GetContext());
 	return 1;
 }
@@ -242,6 +249,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "DataModelGet", lDataModelGet },
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
+		{ "DocumentClose", lDocumentClose },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetTitle", lDocumentGetTitle },
