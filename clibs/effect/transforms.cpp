@@ -3,7 +3,7 @@
 #include "particle.h"
 #include "quadcache.h"
 
-#include "attributes.h"
+#include "transforms.h"
 #include "random.h"
 
 // bool scale_attribute::init(const particles_set &ps){
@@ -15,7 +15,7 @@
 //     return true;
 // }
 
-bool scale_attribute::update(const particles_set &ps, float deltatime){
+bool scale_transform::update(const particles_set &ps, float deltatime){
     for (uint16_t ii=0; ii<ps.count; ++ii){
         auto &p = particle_mgr::get().get_particle(ps.indices[ii]);
 

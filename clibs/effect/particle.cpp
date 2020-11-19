@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "particle.h"
 
-particle_mgr::particle_mgr(uint16_t maxnum)
-    : mparticle_pool(maxnum){}
+particle_mgr::particle_mgr()
+    : mparticle_pool(UINT16_MAX){}
 
 uint16_t particle_mgr::spawn_valid(uint16_t offset){
     //TODO: need another method to quickly find which particle is dead
