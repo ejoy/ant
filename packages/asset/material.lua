@@ -81,15 +81,10 @@ local function update_uniform(p, dst)
 	end
 end
 
-function imaterial.set_property(eid, who, what)
-	if world:interface "ant.render|system_properties".get(who) then
-		error(("global property could not been set:%s"):format(who))
-	end
-
-	local rc = world[eid]._rendercache
-	local p = rc.properties[who]
+function imaterial.set_property_directly(properties, who, what)
+	local p = properties[who]
 	if p == nil then
-		log.warn(("entity:%s, do not have property:%s"):format(world[eid].name or tostring(eid), who))
+		log.warn(("entity do not have property:%s"):format(who))
 		return
 	end
 	if p.type == "s" then
@@ -119,6 +114,15 @@ function imaterial.set_property(eid, who, what)
 
 		update_uniform(p, what)
 	end
+end
+
+function imaterial.set_property(eid, who, what)
+	if world:interface "ant.render|system_properties".get(who) then
+		error(("global property could not been set:%s"):format(who))
+	end
+
+	local rc = world[eid]._rendercache
+	imaterial.set_property_directly(rc.properties, who, what)
 end
 
 function imaterial.get_property(eid, who)

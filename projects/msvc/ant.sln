@@ -125,6 +125,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rmlui", "rmlui.vcxproj", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tool", "tool", "{336D39A7-8FEB-45E8-A40E-10A50247F491}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "effect", "effect.vcxproj", "{C868F81B-4C14-4C6F-9795-91473AA2AC8F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -291,6 +293,12 @@ Global
 		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x64.ActiveCfg = Release|x64
 		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x64.Build.0 = Release|x64
 		{C7F2089D-ECE0-46D6-A601-C317267B6BAD}.Release|x86.ActiveCfg = Release|x64
+		{C868F81B-4C14-4C6F-9795-91473AA2AC8F}.Debug|x64.ActiveCfg = Debug|x64
+		{C868F81B-4C14-4C6F-9795-91473AA2AC8F}.Debug|x64.Build.0 = Debug|x64
+		{C868F81B-4C14-4C6F-9795-91473AA2AC8F}.Debug|x86.ActiveCfg = Debug|x64
+		{C868F81B-4C14-4C6F-9795-91473AA2AC8F}.Release|x64.ActiveCfg = Release|x64
+		{C868F81B-4C14-4C6F-9795-91473AA2AC8F}.Release|x64.Build.0 = Release|x64
+		{C868F81B-4C14-4C6F-9795-91473AA2AC8F}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

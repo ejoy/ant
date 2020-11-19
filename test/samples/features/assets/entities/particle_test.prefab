@@ -16,13 +16,11 @@ data:
     scene_entity: true
     state: 1
     emitter:
-        particle_type: quad
+        spwan:
+            type:   quad
+            count:  16
+            lifetime: {1.1, 2.5}
         attributes:
-            ---
-            name: spawn
-            data:
-                type: const
-                count: 32
             ---
             name: scale
             data:
@@ -51,13 +49,11 @@ data:
     scene_entity: true
     state: 1
     emitter:
-        particle_type: quad
+        spwan:
+            type:   quad
+            count:  16
+            lifetime: {1.1, 2.5}
         attributes:
-            ---
-            name: spawn
-            data:
-                type: const
-                count: 16
             ---
             name: orientation
             data:

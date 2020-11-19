@@ -8,6 +8,7 @@
 #include "context.h"
 #include "luabind.h"
 
+#define EXPORT_BGFX_INTERFACE
 #include <bgfx/bgfx_interface.h>
 #include <bgfx/luabgfx.h>
 #include <bgfx/c99/bgfx.h>
@@ -154,9 +155,4 @@ luaopen_rmlui(lua_State* L) {
     luaL_newlib(L, l);
     return 1;
 }
-}
-
-bgfx_interface_vtbl_t* 
-get_bgfx_interface(){
-    return bgfx_inf_;
 }

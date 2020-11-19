@@ -44,4 +44,8 @@ init_interface(lua_State* L) {
 #define BGFX(api) bgfx_inf_->api
 #define BGFX_ENCODER(api, encoder, ...) (encoder ? (BGFX(encoder_##api)( encoder, ## __VA_ARGS__ )) : BGFX(api)( __VA_ARGS__ ))
 
+#ifdef EXPORT_BGFX_INTERFACE
+bgfx_interface_vtbl_t* ibgfx(){return bgfx_inf_;}
+#endif //EXPORT_BGFX_INTERFACE
+
 #endif

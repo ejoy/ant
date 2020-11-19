@@ -8,8 +8,8 @@
 error "need matrix type as column major"
 #endif //RMLUI_MATRIX_ROW_MAJOR
 
-extern bgfx_interface_vtbl_t* get_bgfx_interface();
-#define BGFX(api) get_bgfx_interface()->api
+extern bgfx_interface_vtbl_t* ibgfx();
+#define BGFX(api) ibgfx()->api
 
 TransientIndexBuffer32::TransientIndexBuffer32(uint32_t sizeBytes)
 : moffset(0), msize(sizeBytes)
