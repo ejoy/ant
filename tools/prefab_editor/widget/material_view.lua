@@ -21,9 +21,9 @@ local mtldata_list = {
 
 function MaterialView:_init()
     BaseView._init(self)
-    self.mat_file       = uiproperty.ResourcePath({label = "File"})
-    self.vs_file        = uiproperty.ResourcePath({label = "VS", readonly = true})
-    self.fs_file        = uiproperty.ResourcePath({label = "FS", readonly = true})
+    self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"})
+    self.vs_file        = uiproperty.ResourcePath({label = "VS", extension = ".sc", readonly = true})
+    self.fs_file        = uiproperty.ResourcePath({label = "FS", extension = ".sc", readonly = true})
     self.save_mat       = uiproperty.Button({label = "Save"})
     self.save_as_mat    = uiproperty.Button({label = "SaveAs"})
     self.samplers       = {}
@@ -48,7 +48,7 @@ function MaterialView:on_set_mat(value)
     local origin_path = fs.path(value)
     local relative_path = tostring(origin_path)
     if origin_path:is_absolute() then
-        relative_path = tostring(fs.relative(fs.path(value), gd.resource_root))
+        relative_path = tostring(fs.relative(fs.path(value), gd.project_root))
     end
     local new_eid = prefab_mgr:update_material(self.eid, relative_path)
     self:set_model(new_eid)
@@ -94,7 +94,9 @@ function MaterialView:on_save_mat()
 end
 function MaterialView:on_saveas_mat()
     local path = uiutils.get_saveas_path("Material", ".material")
-    do_save(self.eid, path)
+    if path then
+        do_save(self.eid, path)
+    end
 end
 
 local function is_sampler(str)
@@ -108,7 +110,7 @@ end
 function MaterialView:get_sampler_property()
     self.sampler_num = self.sampler_num + 1
     if self.sampler_num > #self.samplers then
-        self.samplers[#self.samplers + 1] = uiproperty.ResourcePath({label = ""}, {})
+        self.samplers[#self.samplers + 1] = uiproperty.TextureResource({label = ""}, {})
     end
     return self.samplers[self.sampler_num]
 end
@@ -177,15 +179,9 @@ function MaterialView:set_model(eid)
                     local s = runtime_tex.sampler
                     local tdata = mtldata_list[eid].tdata
                     if k == "s_metallic_roughness" then
-                        -- local factor = imaterial.get_property(eid, "u_metallic_roughness_factor")
-                        -- factor[4] = 1
-                        -- imaterial.set_property(eid, "u_metallic_roughness_factor", math3d.totable(factor.value))
                         tdata.roperties.u_metallic_roughness_factor[4] = 1
                         imaterial.set_property(eid, "u_metallic_roughness_factor", tdata.properties.u_metallic_roughness_factor)
                     else
-                        -- local used_flags = imaterial.get_property(eid, "u_material_texture_flags")
-                        -- used_flags[texture_used_idx[k]] = 1
-                        -- imaterial.set_property(eid, "u_material_texture_flags", math3d.totable(used_flags.value))
                         local used_flags = tdata.properties.u_material_texture_flags
                         used_flags[texture_used_idx[k]] = 1
                         imaterial.set_property(eid, "u_material_texture_flags", used_flags)

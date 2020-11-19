@@ -55,12 +55,13 @@ function m.message_box(msg)
     message[#message + 1] = msg
 end
 
-local message_pop_id = "Message Box"
 function m.show_message_box()
     if #message < 1 then return end
     local level = 1
     local function do_show_message(msg)
-        imgui.windows.OpenPopup(msg.title)
+        if not imgui.windows.IsPopupOpen(msg.title) then
+            imgui.windows.OpenPopup(msg.title)
+        end
         local change, opened = imgui.windows.BeginPopupModal(msg.title, imgui.flags.Window{"AlwaysAutoResize"})
         if change then
             imgui.widget.Text(msg.info)

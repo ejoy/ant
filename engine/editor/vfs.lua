@@ -39,6 +39,18 @@ function localvfs.new(rootpath)
 	access.readmount(repo)
 end
 
+function localvfs.merge_mount(other)
+	if other._mountname then
+		for _, name in ipairs(other._mountname) do
+			if not repo._mountpoint[name] then
+				repo._mountpoint[name] = other._mountpoint[name]
+				repo._mountname[#repo._mountname+1] = name
+			end
+		end
+	end
+	return repo
+end
+
 localvfs.new(lfs.absolute(lfs.path(arg[0])):remove_filename())
 
 package.loaded.vfs = localvfs

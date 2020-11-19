@@ -8,6 +8,7 @@ local utils     = require "common.utils"
 local gd        = require "common.global_data"
 local world
 local assetmgr
+local icons
 local m = {
     dirty = true
 }
@@ -68,16 +69,23 @@ local function construct_resource_tree(fspath)
 end
 
 function m.update_resource_tree()
-    if not m.dirty or not gd.resource_root then return end
+    if not m.dirty or not gd.project_root then return end
+    resource_tree = {files = {}, dirs = {}}
+    for _, item in ipairs(gd.packages) do
+        local path = fs.path(item.name)
+        resource_tree.dirs[#resource_tree.dirs + 1] = {path, construct_resource_tree(path)}
+    end
 
-    resource_tree = {files = {}, dirs = {{gd.resource_root, construct_resource_tree(gd.resource_root)}}}
     local function set_parent(tree)
         for _, v in pairs(tree[2].dirs) do
             v.parent = tree
             set_parent(v)
         end
     end
-    set_parent(resource_tree.dirs[1])
+
+    for _, tree in ipairs(resource_tree.dirs) do
+        set_parent(tree)
+    end
     if not current_folder[1] then
         current_folder = resource_tree.dirs[1]
     end
@@ -113,7 +121,7 @@ local function rename_file(file)
 end
 
 function m.show()
-    if not gd.resource_root then
+    if not gd.project_root then
         return
     end
     local type, path = fw.select()
@@ -136,6 +144,10 @@ function m.show()
             local dir_name = tostring(v[1]:filename())
             local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((current_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
             local skip = false
+            if not v.parent then
+                imgui.widget.Image(icons.ROOM_INSTANCE.handle, icons.ROOM_INSTANCE.texinfo.width, icons.ROOM_INSTANCE.texinfo.height)
+                imgui.cursor.SameLine()
+            end
             if (#v[2].dirs == 0) then
                 imgui.widget.TreeNode(dir_name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
             else
@@ -157,11 +169,9 @@ function m.show()
 
     for _ in uiutils.imgui_windows("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
-        imgui.widget.Button(tostring(gd.resource_root:parent_path()))
-        imgui.cursor.SameLine()
-        local _, split_dirs = path_split(tostring(fs.relative(current_folder[1], gd.resource_root:parent_path())))
+        local _, split_dirs = path_split(current_folder[1]:string())
         for i = 1, #split_dirs do
-            if imgui.widget.Button("/" .. split_dirs[i])then
+            if imgui.widget.Button("/" .. split_dirs[i]) then
                 if tostring(current_folder[1]:filename()) ~= split_dirs[i] then
                     local lookup_dir = current_folder.parent
                     while lookup_dir do
@@ -193,7 +203,6 @@ function m.show()
         imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height, false);
         local folder = current_folder[2]
         if folder then
-            local icons = require "common.icons"(assetmgr)
             rename_file(current_file)
             for _, path in pairs(folder.dirs) do
                 imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
@@ -237,16 +246,14 @@ function m.show()
                     end
                     if path:equal_extension(".png") then
                         if not preview_images[current_file] then
-                            local rp = fs.relative(path, gd.resource_root)
-                            local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
+                            local pkg_path = path:string()
                             preview_images[current_file] = assetmgr.resource(pkg_path, { compile = true })
                         end
                     end
 
                     if path:equal_extension(".texture") then
                         if not texture_detail[current_file] then
-                            local rp = fs.relative(path, gd.resource_root)
-                            local pkg_path = "/pkg/ant.tools.prefab_editor/" .. tostring(rp)
+                            local pkg_path = path:string()
                             texture_detail[current_file] = utils.readtable(pkg_path)
                             local t = assetmgr.resource(pkg_path)
                             local s = t.sampler
@@ -329,5 +336,6 @@ end
 return function(w, am)
     world = w
     assetmgr = am
+    icons = require "common.icons"(assetmgr)
     return m
 end

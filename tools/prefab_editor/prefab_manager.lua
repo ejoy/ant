@@ -232,9 +232,9 @@ local function remove_entitys(entities)
 end
 
 local function get_prefab(filename)
-    local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
-    assetmgr.unload(vfspath)
-    return worldedit:prefab_template(vfspath)
+    --local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    assetmgr.unload(filename)
+    return worldedit:prefab_template(filename)
 end
 
 function m:open(filename)

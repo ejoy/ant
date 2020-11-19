@@ -6,6 +6,8 @@ local rhwi      = import_package 'ant.render'.hwi
 local asset_mgr = import_package "ant.asset"
 local irq       = world:interface "ant.render|irenderqueue"
 local ies       = world:interface "ant.scene|ientity_state"
+local vfs       = require "vfs"
+local access    = require "vfs.repoaccess"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local hierarchy = require "hierarchy"
@@ -26,6 +28,7 @@ local icons = require "common.icons"(asset_mgr)
 local gizmo_const = require "gizmo.const"
 local new_project = require "common.new_project"
 local widget_utils = require "widget.utils"
+local utils = require "common.utils"
 local m = ecs.system 'gui_system'
 local drag_file = nil
 local last_x = -1
@@ -57,18 +60,39 @@ local function choose_project_dir()
     end
 end
 
+local function get_package(entry_path, readmount)
+    local repo = {_root = entry_path}
+    if readmount then
+        access.readmount(repo)
+    end
+    local merged_repo = vfs.merge_mount(repo)
+    local packages = {}
+    for _, name in ipairs(merged_repo._mountname) do
+        if utils.start_with(name, "pkg/ant.") then
+            if name == "pkg/ant.resources" or name == "pkg/ant.resources.binary" then
+                packages[#packages + 1] = {name = "/"..name, path = merged_repo._mountpoint[name]}
+            end
+        else
+            packages[#packages + 1] = {name = name, path = merged_repo._mountpoint[name]}
+        end
+    end
+    return packages
+end
+
 local function choose_project()
-    if global_data.resource_root then return end
-
-    imgui.windows.OpenPopup("Choose project")
-
-    local change, opened = imgui.windows.BeginPopupModal("Choose project", imgui.flags.Window{"AlwaysAutoResize"})
+    if global_data.project_root then return end
+    local title = "Choose project"
+    if not imgui.windows.IsPopupOpen(title) then
+        imgui.windows.OpenPopup(title)
+    end
+    local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         imgui.widget.Text("Create new or open existing project.")
         if imgui.widget.Button("Create project") then
             local path = choose_project_dir()
             if path then
-                global_data.resource_root = fs.path(path)
+                global_data.project_root = lfs.path(path)
+                global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
                 on_new_project(path)
             end
         end
@@ -76,7 +100,8 @@ local function choose_project()
         if imgui.widget.Button("Open project") then
             local path = choose_project_dir()
             if path then
-                global_data.resource_root = fs.path(path)
+                global_data.project_root = lfs.path(path)
+                global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
                 --file server
                 local cthread = require "thread"
                 cthread.newchannel "log_channel"
@@ -98,11 +123,16 @@ local function choose_project()
         imgui.cursor.SameLine()
         if imgui.widget.Button("Quit") then
             local res_root_str = tostring(fs.path "":localpath())
-            global_data.resource_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
+            global_data.project_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
+            global_data.packages = get_package(lfs.absolute(lfs.path(arg[0])):remove_filename(), false)
+            imgui.windows.CloseCurrentPopup();
+            show_mount_dialog = true
         end
-        local fw = require "filewatch"
-        if global_data.resource_root then
-            fw.add(global_data.resource_root:string())
+        if global_data.project_root then
+            local fw = require "filewatch"
+            fw.add(global_data.project_root:string())
+            local res_root_str = tostring(fs.path "":localpath())
+            global_data.editor_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
         end
         imgui.windows.EndPopup()
     end

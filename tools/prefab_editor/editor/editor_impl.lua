@@ -23,10 +23,10 @@ function event.init(pw, ph)
     w, world = worlds.create "prefab_editor" {
         width  = pw,
         height = ph,
-        name = "ant.tools.prefab_editor",
+        name = "tools.prefab_editor",
         ecs = {
             import = {
-                "@ant.tools.prefab_editor",
+                "@tools.prefab_editor",
             },
             pipeline = {
                 "init",
@@ -34,11 +34,11 @@ function event.init(pw, ph)
                 "exit",
             },
             system = {
-                "ant.tools.prefab_editor|init_system",
-                "ant.tools.prefab_editor|gizmo_system",
-                "ant.tools.prefab_editor|input_system",
-                "ant.tools.prefab_editor|camera_system",
-                "ant.tools.prefab_editor|gui_system",
+                "tools.prefab_editor|init_system",
+                "tools.prefab_editor|gizmo_system",
+                "tools.prefab_editor|input_system",
+                "tools.prefab_editor|camera_system",
+                "tools.prefab_editor|gui_system",
                 "ant.objcontroller|pickup_system"
             }
         }

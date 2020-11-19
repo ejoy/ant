@@ -77,4 +77,12 @@ function utils.class(classname, ...)
     return cls
 end
 
+function utils.start_with(str, start)
+    return str:sub(1, #start) == start
+end
+ 
+function utils.end_with(str, ending)
+    return ending == "" or str:sub(-#ending) == ending
+end
+
 return utils
