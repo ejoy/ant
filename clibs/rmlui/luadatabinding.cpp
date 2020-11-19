@@ -138,13 +138,13 @@ bool LuaTableDef::Get(void* ptr, Rml::Variant& variant) {
 	lua_State *L = model->dataL;
 	if (!L)
 		return false;
-	int id = (intptr_t)ptr;
+	int id = (int)(intptr_t)ptr;
 	lua_getvariant(L, id, &variant);
 	return true;
 }
 
 bool LuaTableDef::Set(void* ptr, const Rml::Variant& variant) {
-	int id = (intptr_t)ptr;
+	int id = (int)(intptr_t)ptr;
 	lua_State *L = model->dataL;
 	if (!L)
 		return false;
@@ -169,7 +169,7 @@ int LuaTableDef::Size(void* ptr) {
 	lua_State* L = model->dataL;
 	if (!L)
 		return 0;
-	int id = (intptr_t)ptr;
+	int id = (int)(intptr_t)ptr;
 	if (lua_type(L, id) != LUA_TTABLE) {
 		return 0;
 	}
@@ -182,7 +182,7 @@ int LuaTableDef::Size(void* ptr) {
 		lua_pop(L, 1);
 		return 0;
 	}
-	lua_Integer size = lua_tointeger(L, -1);
+	int size = (int)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 	return size;
 }
@@ -191,7 +191,7 @@ Rml::DataVariable LuaTableDef::Child(void* ptr, const Rml::DataAddressEntry& add
 	lua_State* L = model->dataL;
 	if (!L)
 		return Rml::DataVariable{};
-	int id = (intptr_t)ptr;
+	int id = (int)(intptr_t)ptr;
 	if (lua_type(L, id) != LUA_TTABLE) {
 		return Rml::DataVariable{};
 	}
@@ -268,7 +268,7 @@ getId(lua_State *L, lua_State *dataL) {
 	if (lua_rawget(L, -2) != LUA_TNUMBER) {
 		luaL_error(L, "DataModel has no key : %s", lua_tostring(L, 2));
 	}
-	int id = lua_tointeger(L, -1);
+	int id = (int)lua_tointeger(L, -1);
 	lua_pop(L, 2);
 	return id;
 }
@@ -292,7 +292,7 @@ lDataModelSet(lua_State *L) {
 	lua_State *dataL = D->dataL;
 	if (dataL == NULL)
 		luaL_error(L, "DataModel released");
-	assert(D->top == lua_gettop(dataL));
+	lua_settop(dataL, D->top);
 
 	lua_pushvalue(L, 2);
 	lua_xmove(L, dataL, 1);
