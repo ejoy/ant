@@ -26,8 +26,8 @@ public:
 private:
 	~lua_document();
 	void Init();
-	void LoadScript(Rml::Stream* stream, const Rml::String& source_name) override;
-
+	void LoadInlineScript(const std::string& content, const std::string& source_path, int source_line) override;
+	void LoadExternalScript(const std::string& source_path) override;
 	lua_plugin *plugin;
 };
 
@@ -213,20 +213,24 @@ lua_document::~lua_document() {
 }
 
 void
-lua_document::LoadScript(Rml::Stream* stream, const Rml::String& source_name) {
+lua_document::LoadInlineScript(const std::string& content, const std::string& source_path, int source_line) {
 	lua_State* L = plugin->L;
 	luabind::invoke(L, [&]() {
 		lua_pushlightuserdata(L, (void*)this);
-		if (!source_name.empty()) {
-			lua_pushlstring(L, source_name.c_str(), source_name.length());
-			plugin->call(LuaEvent::OnExternalScript, 2);
-		}
-		else {
-			Rml::String buffer;
-			stream->Read(buffer, stream->Length());
-			lua_pushlstring(L, buffer.c_str(), buffer.length());
-			plugin->call(LuaEvent::OnInlineScript, 2);
-		}
+		lua_pushlstring(L, content.data(), content.size());
+		lua_pushlstring(L, source_path.data(), source_path.size());
+		lua_pushinteger(L, source_line);
+		plugin->call(LuaEvent::OnInlineScript, 4);
+	});
+}
+
+void
+lua_document::LoadExternalScript(const std::string& source_path) {
+	lua_State* L = plugin->L;
+	luabind::invoke(L, [&]() {
+		lua_pushlightuserdata(L, (void*)this);
+		lua_pushlstring(L, source_path.data(), source_path.size());
+		plugin->call(LuaEvent::OnExternalScript, 2);
 	});
 }
 
