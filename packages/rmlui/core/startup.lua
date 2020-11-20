@@ -38,7 +38,13 @@ function m.OnDeleteDocument(document)
 	environment[document] = nil
 end
 function m.OnInlineScript(document, content, source_path, source_line)
-	local f, err = load(content, content, "t", environment[document])
+	local path = filemanager.realpath(source_path)
+	if not path then
+		console.warn(("file '%s' does not exist."):format(source_path))
+		return
+	end
+	local source = "--@"..path..":"..source_line.."\n"..content
+	local f, err = load(source, source, "t", environment[document])
 	if not f then
 		console.warn(err)
 		return

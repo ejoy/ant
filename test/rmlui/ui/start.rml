@@ -45,12 +45,13 @@
             start.click = function (event, v)
                 console.log(event.type, v)
             end
+            console.log 'ok'
         </script>
     </head>
     <body onclick="load(self)">
         <div  id="test" data-model="start">
             <button data-for="menu:menus">
-                <span data-attr-style="'opacity:'+menu.opacity" data-event-click="click(menu.opacity)" onclick="window.open 'script.rml'">{{ menu.label }}</span>
+                <span data-attr-style="'opacity:'+menu.opacity" data-event-click="click(menu.opacity)" onclick="">{{ menu.label }}</span>
             </button>
         </div>
     </body>
