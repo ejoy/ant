@@ -17,14 +17,12 @@ local debug_traceback = debug.traceback
 local _timer = require "platform.timer"
 local _time_counter = _timer.counter
 local _time_freq    = _timer.frequency() / 1000
-local _timer_previous
-local _timer_current = _time_counter() / _time_freq
-local _timer_delta
+local _timer_previous = _time_counter() / _time_freq
 local function timer_delta()
-	_timer_previous = _timer_current
-	_timer_current = _time_counter() / _time_freq
-	_timer_delta = _timer_current - _timer_previous
-	return _timer_delta
+	local current = _time_counter() / _time_freq
+	local delta = current - _timer_previous
+	_timer_previous = current
+	return delta
 end
 
 local function glyphRanges(t)

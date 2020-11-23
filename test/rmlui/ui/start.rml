@@ -45,7 +45,9 @@
             start.click = function (event, v)
                 console.log(event.type, v)
             end
-            console.log 'ok'
+            window.setTimeout(function()
+                console.log 'ok'
+            end, 2000);
         </script>
     </head>
     <body onclick="load(self)">

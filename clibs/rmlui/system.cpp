@@ -3,14 +3,15 @@
 #include <assert.h>
 
 SystemInterface::SystemInterface()
-    : mStartTime(std::chrono::steady_clock::now()){
+    : current_time(0){
+}
+
+void SystemInterface::update(double delta) {
+    current_time += delta;
 }
 
 double SystemInterface::GetElapsedTime(){
-    auto now = std::chrono::steady_clock::now();
-    auto duration = now - mStartTime;
-    auto time = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-	return time.count() / 1000.;
+    return current_time / 1000.;
 }
 
 template <typename Container>

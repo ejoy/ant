@@ -15,6 +15,7 @@ local fontmgr   = fontpkg.mgr
 
 local ifont     = world:interface "ant.render|ifont"
 local irq       = world:interface "ant.render|irenderqueue"
+local timer     = world:interface "ant.timer|timer"
 
 local thread     = require "thread"
 thread.newchannel "rmlui"
@@ -107,7 +108,7 @@ function rmlui_sys:ui_update()
             channel("MouseUp", mouseId[what])
         end
     end
-    rmlui.update()
+    rmlui.update(timer.delta())
 end
 
 function rmlui_sys:exit()

@@ -1,4 +1,5 @@
 local event = require "core.event"
+local timer = require "core.timer"
 local createEvent = require "core.DOM.event"
 local environment = require "core.environment"
 
@@ -51,6 +52,18 @@ function event.OnNewDocument(document, globals)
     end
     function m.close()
         rmlui.DocumentClose(document)
+    end
+    function m.setTimeout(f, delay)
+        return timer.wait(delay, f)
+    end
+    function m.setInterval(f, delay)
+        return timer.loop(delay, f)
+    end
+    function m.clearTimeout(t)
+        t:remove()
+    end
+    function m.clearInterval(t)
+        t:remove()
     end
     globals.window = m
 end

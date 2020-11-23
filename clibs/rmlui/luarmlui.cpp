@@ -90,10 +90,14 @@ lrmlui_update(lua_State* L) {
     if (!g_wrapper) {
         return 0;
     }
+    double delta = luaL_checknumber(L, 1);
+    g_wrapper->interface.system.update(delta);
+
     lua_plugin* plugin = g_wrapper->context.plugin;
     lua_State* rL = plugin->L;
     luabind::invoke(rL, [&]() {
-        plugin->call(LuaEvent::OnUpdate);
+        lua_pushnumber(rL, delta);
+        plugin->call(LuaEvent::OnUpdate, 1);
     });
     return 0;
 }
