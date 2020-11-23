@@ -35,13 +35,15 @@ public:
     void set(uint32_t quadidx, uint32_t vidx, const quad_vertex &v);
     void set(uint32_t start, uint32_t num, const quad_vertex *vv);
 
+    void init_transform(uint32_t quadidx);
     void transform(uint32_t quadidx, const glm::mat4 &trans);
     void rotate(uint32_t quadidx, const glm::quat &q);
     void scale(uint32_t quadidx, const glm::vec3 &s);
     void translate(uint32_t quadidx, const glm::vec3 &t);
 
-
     void update();
+
+    void submit(uint32_t offset, uint32_t num);
 private:
     const bgfx_vertex_layout_t *mlayout;
     const bgfx_index_buffer_handle_t mib;

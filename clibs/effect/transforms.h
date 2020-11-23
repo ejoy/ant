@@ -43,3 +43,12 @@ public:
     virtual bool init(const particles_set &ps) override;
     virtual bool update(const particles_set &ps, float deltatime) override;
 };
+
+class velocity_transform : public transform {
+public:
+
+};
+
+class acceleration_transform : public transform {
+public:
+};

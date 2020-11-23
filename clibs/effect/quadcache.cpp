@@ -57,6 +57,25 @@ void quad_cache::set(uint32_t start, uint32_t num, const quad_vertex *vv){
     memcpy(mvertiecs.get() + start + sizeof(quad_vertex), vv, num * sizeof(quad_vertex));
 }
 
+//
+//	1 ---- 3
+//	|      |
+//	|      |
+//	0 ---- 2
+static const glm::vec3 s_default_quad_pos[] = {
+    glm::vec3(-0.5f, -0.5f, 0.0f),
+    glm::vec3(-0.5f,  0.5f, 0.0f),
+    glm::vec3( 0.5f, -0.5f, 0.0f),
+    glm::vec3( 0.5f,  0.5f, 0.0f),
+};
+
+void quad_cache::init_transform(uint32_t quadidx){
+    auto ptr = mvertiecs.get() + quadidx * 4;
+    for (uint32_t ii=0; ii<4; ++ii){
+        ptr[ii].p = s_default_quad_pos[ii];
+    }
+}
+
 void quad_cache::transform(uint32_t quadidx, const glm::mat4 &trans){
     auto ptr = mvertiecs.get() + quadidx * 4;
     for (uint32_t ii=0; ii<4; ++ii){
@@ -104,6 +123,15 @@ void quad_cache::update(){
 
         BGFX(update_dynamic_vertex_buffer)(mdyn_vb, 0, mem);
     }
+}
+
+void quad_cache::submit(uint32_t offset, uint32_t num){
+    const uint32_t indices_num = num * 6;
+    BGFX(set_index_buffer)(mib, 0, num);
+
+    const uint32_t startv = offset * 4;
+    assert(offset + num <= mquadsize);
+    BGFX(set_dynamic_vertex_buffer)(0, mdyn_vb, startv, num * 4);
 }
 
 ////////////////////////////////////////////////////////////////
