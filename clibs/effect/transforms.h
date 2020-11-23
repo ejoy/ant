@@ -2,6 +2,7 @@
 
 #include "interpolation.h"
 #include "particle.h"
+/*
 class transform{
 public:
     virtual bool init(const particles_set &ps) = 0;
@@ -52,3 +53,4 @@ public:
 class acceleration_transform : public transform {
 public:
 };
+*/

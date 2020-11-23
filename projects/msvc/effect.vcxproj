@@ -100,7 +100,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\clibs\effect\attributes.cpp" />
     <ClCompile Include="..\..\clibs\effect\effect.cpp" />
     <ClCompile Include="..\..\clibs\effect\particle.cpp" />
     <ClCompile Include="..\..\clibs\effect\pch.cpp">

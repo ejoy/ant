@@ -83,11 +83,14 @@ particle_mgr::submit_render(){
 		update_quad_transform(pidx, quadidx, mmgr, mparticles);
 	}
 
+#define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
+	BGFX(set_state(uint64_t(RENDER_STATE), 0));
+
 	const uint32_t offset = (uint32_t)mparticles.renderquad[0];
 	quad_cache::get().submit(offset, n);
 	for (size_t ii=0; ii<mrenderdata.textures.size(); ++ii){
 		const auto &t = mrenderdata.textures[ii];
-		BGFX(set_texture)(ii, {t.uniformid}, {t.texid}, UINT16_MAX);
+		BGFX(set_texture)((uint8_t)ii, {t.uniformid}, {t.texid}, UINT16_MAX);
 	}
 	
 	BGFX(submit)(mrenderdata.viewid, {mrenderdata.progid}, 0, BGFX_DISCARD_ALL);

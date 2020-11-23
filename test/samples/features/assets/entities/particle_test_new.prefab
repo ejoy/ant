@@ -1,0 +1,30 @@
+---
+policy:
+    ant.effect|particle_system
+    ant.general|name
+data:
+    name: particle_system_test
+    particle_system: {}
+---
+policy:
+    ant.effect|particle_emitter
+    ant.general|name
+data:
+    name: emitter1
+    material: /pkg/ant.resources/materials/particle/particle.material
+    transform:{}
+    scene_entity: true
+    state: 1
+    emitter:
+        spwan:
+            type:   quad
+            count:  16
+            lifetime: {1.1, 2.5}
+        scale:
+            range: {0.15, 0.28}
+        velocity:
+            range: 
+                {0, 0, 1}
+                {0, 1, 0}
+action:
+    attach_particle_system: 1

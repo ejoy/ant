@@ -3,9 +3,7 @@
 #include "singleton.h"
 
 #define PARTICLE_COMPONENT  10
-extern "C"{
 #include "psystem_manager.h"
-}
 
 
 enum component_id : uint32_t {
@@ -28,6 +26,7 @@ using comp_ids = std::vector<component_id>;
 
 struct particles{
     struct lifetype {
+        lifetype(float t = 0.f) : time(t){}
         float time;
         float current;
         float delta;
@@ -39,7 +38,7 @@ struct particles{
         void add(comp_ids &ids, const T &v){
             assert(ids.end() == std::find(ids.begin(), ids.end(), ID));
             ids.push_back(ID);
-            push_back(v);
+            this->push_back(v);
         }
     };
 
@@ -65,9 +64,10 @@ struct render_data{
     uint16_t progid;
     render_data() : viewid(UINT16_MAX), progid(UINT16_MAX){}
     struct texture{
+        uint16_t stage;
         uint16_t uniformid;
         uint16_t texid;
-        texture() : uniformid(UINT16_MAX), texid(UINT16_MAX){}
+        texture(uint16_t uid = UINT16_MAX, uint16_t tid=UINT16_MAX) : uniformid(uid), texid(tid){}
     };
     std::vector<texture>   textures;
 };
@@ -82,7 +82,7 @@ public:
 
 public:
     comp_ids&& start() { return std::move(comp_ids()); }
-    bool end(comp_ids &&ids){ return 0 != particlesystem_add(mmgr, ids.size(), (int*)(&ids[0])); }
+    bool end(comp_ids &&ids){ return 0 != particlesystem_add(mmgr, (int)ids.size(), (int*)(&ids[0])); }
     
     void addlifetime(comp_ids& ids, const particles::lifetype &lt) { mparticles.life.add(ids, lt);}
     void addvelocity(comp_ids& ids,     const glm::vec3& v)    { mparticles.velocity.add(ids, v);}
@@ -93,14 +93,7 @@ public:
     void addrenderquad(comp_ids& ids,   uint32_t idx)          { mparticles.renderquad.add(ids, idx);}
 
 public:
-    void set_render_info(uint16_t viewid, uint16_t progid){
-        mrenderdata.progid = progid;
-        mrenderdata.viewid = viewid;
-    }
-
-    void add_texture(uint16_t uniformid, uint16_t texid){
-        mrenderdata.textures.push_back({uniformid, texid});
-    }
+    render_data& get_rd() { return mrenderdata; }
 private:
     void recap_particles();
     void submit_render();

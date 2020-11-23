@@ -18,9 +18,6 @@
     <ClCompile Include="..\..\clibs\effect\effect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\clibs\effect\attributes.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\clibs\effect\pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

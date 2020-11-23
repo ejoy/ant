@@ -1,8 +1,17 @@
 local ecs = ...
 local world = ecs.world
 
-local math3d = require "math3d"
-local effect = require "effect"
+local math3d        = require "math3d"
+local quadcache     = require "quad_cache"
+local effect        = require "effect"
+
+local assetmgr      = import_package "ant.asset"
+local renderpkg     = import_package "ant.render"
+local declmgr       = renderpkg.declmgr
+
+local irq           = world:interface "ant.render|irenderqueue"
+local irender       = world:interface "ant.render|irender"
+
 
 local em_trans = ecs.transform "emitter_mesh_transform"
 function em_trans.process_entity(e)
@@ -20,38 +29,39 @@ function cpe_trans.process_entity(e)
 end
 
 local emitter_trans = ecs.transform "emitter_transform"
-
-local function init_attributes(e)
-    local attributes = {}
-    for _, attrib in ipairs(e.emitter.attributes) do
-        local function create_attribute(attrib)
-            local name = attrib.name
-            local inst = effect.create_attribute(name, attrib)
-            if inst == nil then
-                local f, err = loadfile("attributes/" .. name .. ".lua")
-                if f == nil then
-                    error(err)
+local particle_material_path = "/pkg/ant.resources/materials/particle/particle.material"
+local particle_material
+local textures
+function emitter_trans.process_entity(e)
+    local viewid = world:singleton_entity "main_queue".render_target.viewid
+    if particle_material == nil then
+        particle_material = imaterial.load(particle_material_path)
+        textures = {}
+        local uniforms = particle_material.uniforms
+        local function find_uniform(name)
+            for _, u in ipairs(uniforms) do
+                if u.name == name then
+                    return u.handle
                 end
-
-                inst = f{world, attrib}
             end
 
-            return inst
+            error("not found uniform: " .. name)
         end
-
-        local inst = create_attribute(attrib)
-        if inst.init then
-            inst:init(e)
+        for k, v in pairs(particle_material.properties) do
+            if v.stage then
+                textures[#textures+1] = {
+                    stage       = v.stage,
+                    uniformid   = find_uniform(k),
+                    texid       = v.handle,
+                }
+            end
         end
-        attributes[#attributes+1] = inst
     end
-end
-
-function emitter_trans.process_entity(e)
-    e._emitter = {
-        current_time = 0,
-        particles = effect.create_particles(e.emitter.spawn),
-        attributes = init_attributes(e),
+    e._emitter = effect.create_emitter{
+        viewid      = viewid,
+        progid      = particle_material.fx.prog,
+        textures    = textures,
+        emitter     = e.emitter,
     }
 end
 
@@ -63,7 +73,14 @@ function aps.init(prefab, idx, value)
     local particle_emitters = ps.particle_emitters
     particle_emitters[#particle_emitters+1] = eid
 end
+
 local particle_sys = ecs.system "particle_system"
+
+local quadlayout = declmgr.get(declmgr.correct_layout "p3|t2|c40niu")
+
+function particle_sys:init()
+    quadcache.init(irender.quad_ib(), quadlayout, 1024)
+end
 
 local itimer = world:interface "ant.timer|timer"
 
@@ -80,12 +97,7 @@ function particle_sys:data_changed()
         for _, emittereid in ipairs(ps.particle_emitters) do
             local e = world[emittereid]
             emitter_step(e, dt)
-            for _, attrib in ipairs(e.emitter.attributes) do
-                local accessor = get_attrib_accessor(attrib.name)
-                if accessor.update then
-                    accessor.update(emittereid, attrib)
-                end
-            end
+            effect.update(e._emitter)
         end
     end
 end
