@@ -22,41 +22,34 @@ quad_cache::quad_cache(bgfx_index_buffer_handle_t ib, const bgfx_vertex_layout_t
     , moffset(0)
 {
     assert(BGFX_HANDLE_IS_VALID(mib));
+fix    assert(BGFX_HANDLE_IS_VALID(mdyn_vb));
 }
 
 quad_cache::~quad_cache(){
-    if (BGFX_HANDLE_IS_VALID(mdyn_vb)){
-        BGFX(destroy_dynamic_vertex_buffer)(mdyn_vb);
-    }
-    mvertiecs = nullptr;
+    BGFX(destroy_dynamic_vertex_buffer)(mdyn_vb);
+    delete mvertiecs; mvertiecs = nullptr;
 }
 
 void quad_cache::set_attrib(uint32_t quadidx, uint32_t vidx, const glm::vec3 &p){
     const uint32_t idx = quadidx * 4 + vidx;
-    auto ptr = mvertiecs.get() + idx;
+    auto ptr = mvertiecs + idx;
     ptr->p = p;
 }
 
 void quad_cache::set_attrib(uint32_t quadidx, uint32_t vidx, const glm::vec2 &uv){
-    const uint32_t idx = quadidx * 4 + vidx;
-    auto ptr = mvertiecs.get() + idx;
-    ptr->uv = uv;
+    mvertiecs[quadidx * 4 + vidx].uv = uv;
 }
 
 void quad_cache::set_attrib(uint32_t quadidx, uint32_t vidx, uint32_t c){
-    const uint32_t idx = quadidx * 4 + vidx;
-    auto ptr = mvertiecs.get() + idx;
-    ptr->color = c;
+    mvertiecs[quadidx * 4 + vidx].color = c;
 }
 
 void quad_cache::set(uint32_t quadidx, uint32_t vidx, const quad_vertex &v){
-    const uint32_t idx = quadidx * 4 + vidx;
-    auto ptr = mvertiecs.get() + idx;
-    *ptr = v;
+    mvertiecs[quadidx * 4 + vidx] = v;
 }
 
 void quad_cache::set(uint32_t start, uint32_t num, const quad_vertex *vv){
-    memcpy(mvertiecs.get() + start + sizeof(quad_vertex), vv, num * sizeof(quad_vertex));
+    memcpy(mvertiecs + start + sizeof(quad_vertex), vv, num * sizeof(quad_vertex));
 }
 
 //
@@ -73,63 +66,57 @@ static const quad_vertex s_default_quad[] = {
 
 void quad_cache::reset_quad(uint32_t start, uint32_t num){
     for (uint32_t ii=0; ii<num; ++ii){
-        auto ptr = mvertiecs.get() + (start+ii) * 4;
+        auto ptr = mvertiecs + (start+ii) * 4;
         memcpy(ptr, s_default_quad, sizeof(s_default_quad));
     }
 }
 
 void quad_cache::init_transform(uint32_t quadidx){
-    auto ptr = mvertiecs.get() + quadidx * 4;
+    auto ptr = mvertiecs + quadidx * 4;
     for (uint32_t ii=0; ii<4; ++ii){
         ptr[ii].p = s_default_quad[ii].p;
     }
 }
 
 void quad_cache::transform(uint32_t quadidx, const glm::mat4 &trans){
-    auto ptr = mvertiecs.get() + quadidx * 4;
+    auto ptr = mvertiecs + quadidx * 4;
     for (uint32_t ii=0; ii<4; ++ii){
         ptr[ii].p = trans * glm::vec4(ptr[ii].p, 1.f);
     }
 }
 
 void quad_cache::rotate(uint32_t quadidx, const glm::quat &q){
-    auto ptr = mvertiecs.get() + quadidx * 4;
+    auto ptr = mvertiecs + quadidx * 4;
     for (uint32_t ii=0; ii<4; ++ii){
         ptr[ii].p = glm::rotate(q, glm::vec4(ptr[ii].p, 1.f));
     }
 }
 
 void quad_cache::scale(uint32_t quadidx, const glm::vec3 &s){
-    auto ptr = mvertiecs.get() + quadidx * 4;
+    auto ptr = mvertiecs + quadidx * 4;
     for (uint32_t ii=0; ii<4; ++ii){
         ptr[ii].p = glm::scale(s) * glm::vec4(ptr[ii].p, 1.f);
     }
 }
 
 void quad_cache::translate(uint32_t quadidx, const glm::vec3 &t){
-    auto ptr = mvertiecs.get() + quadidx * 4;
+    auto ptr = mvertiecs + quadidx * 4;
     for (uint32_t ii=0; ii<4; ++ii){
         ptr[ii].p = glm::translate(t) * glm::vec4(ptr[ii].p, 1.f);
     }
 }
 
-struct wrapper{
-    using PT = decltype(quad_cache::mvertiecs);
-    PT p;
-    wrapper(PT p_):p(p_){}
-};
-
 void quad_cache::update(){
     if (moffset > 0){
-        auto p = mvertiecs;
-
-        auto mem = BGFX(make_ref_release)(mvertiecs.get(), moffset * sizeof(quad_vertex) * 4, 
-        [](void *p, void *userdata){
-            assert(((wrapper*)(userdata))->p.get() == p);
-            delete userdata;
-        },
-        new wrapper(mvertiecs));
-
+        const uint32_t buffersize = moffset * sizeof(quad_vertex) * 4;
+        // why we should copy the memory to bgfx, but not use make_ref/make_ref_release to shared the memory:
+        //    1). bgfx use multi-thread rendering, memory will pass to bgfx render thread, but memory will still update in main thread
+        //    2). if app shutdown, memory will delete in quad_cache's deconstruct, but memory will still access in bgfx render threading
+        // so, solution is simple, use automic lock to tell update thread and render threading when to release memory
+        // and alloc 2 times memory, one for update, one for render.
+        // but it not worth doing this. because if BGFX(alloc) will just put a pointer, but not really alloc memory
+        const auto mem = BGFX(alloc)(buffersize);
+        memcpy(mem->data, mvertiecs, buffersize);
         BGFX(update_dynamic_vertex_buffer)(mdyn_vb, 0, mem);
     }
 }

@@ -50,7 +50,6 @@ private:
     const bgfx_index_buffer_handle_t mib;
     const bgfx_dynamic_vertex_buffer_handle_t mdyn_vb;
     const uint32_t  mquadsize;
-
-    std::shared_ptr<quad_vertex[]> mvertiecs;
+    quad_vertex*    mvertiecs;
     uint32_t moffset;
 };
