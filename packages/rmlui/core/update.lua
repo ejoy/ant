@@ -7,6 +7,7 @@ local filemanager = require "core.filemanager"
 
 local CMD = {}
 local contexts = {}
+local debuggerInitialized = false
 
 function CMD.CreateContext(name, w, h)
     local ctx = rmlui.RmlCreateContext(name, w, h)
@@ -47,13 +48,16 @@ function CMD.AddResourceDir(dir)
 end
 
 function CMD.Debugger(open)
-    --TODO
-    --if contexts[1] then
-    --    local ctx = rmlui.contexts[contexts[1]]
-    --    if ctx then
-    --        ctx:Debugger(open)
-    --    end
-    --end
+    local ctx = contexts[1]
+    if ctx then
+        if not debuggerInitialized then
+            rmlui.DebuggerInitialise(ctx)
+            debuggerInitialized = true
+        else
+            rmlui.DebuggerSetContext(ctx)
+        end
+        rmlui.DebuggerSetVisible(open)
+    end
 end
 
 local function message(ok, what, ...)
