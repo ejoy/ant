@@ -18,6 +18,7 @@ enum component_id : uint32_t {
 
 using comp_ids = std::vector<component_id>;
 
+struct particle_remap;
 struct particles{
     struct lifetype {
         lifetype(float t = 0.f) : time(t){}
@@ -34,8 +35,9 @@ struct particles{
             ids.push_back(ID);
             this->push_back(v);
         }
+        void remap(const particle_remap &);
     };
-    using quaduv = std::array<glm::vec2, 4>;
+    using quaduv    = std::array<glm::vec2, 4>;
     using quadcolor = std::array<glm::vec4, 4>;
 
     component_arrayT<lifetype,  ID_life>            life;
@@ -55,9 +57,13 @@ struct particles{
         scale.reserve(UINT16_MAX);
         rotation.reserve(UINT16_MAX);
         translation.reserve(UINT16_MAX);
+        renderquad.reserve(UINT16_MAX);
+        color.reserve(UINT16_MAX);
+        uv.reserve(UINT16_MAX);
     }
 };
 
+//TODO: should move to lua level
 struct render_data{
     uint16_t viewid;
     uint16_t progid;

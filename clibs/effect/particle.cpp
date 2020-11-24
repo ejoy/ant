@@ -170,6 +170,15 @@ particle_mgr::submit_render(){
 	BGFX(submit)(mrenderdata.viewid, {mrenderdata.progid}, 0, BGFX_DISCARD_ALL);
 }
 
+template<typename T, component_id ID>
+void particles::component_arrayT<T, ID>::remap(const particle_remap &m){
+	if (m.to_id != PARTICLE_INVALID) {
+		(*this)[m.to_id] = (*this)[m.from_id];
+	} else {
+		this->resize(m.from_id);
+	}
+}
+
 void
 particle_mgr::recap_particles(){
     struct particle_remap remap[128];
@@ -179,27 +188,40 @@ particle_mgr::recap_particles(){
 	do {
 		n = particlesystem_arrange(mmgr, cap, remap, &ctx);
 		for (int i=0;i<n;i++) {
+			const auto &rm = remap[i];
 			switch(remap[i].component_id) {
 			case ID_life:
-				if (remap[i].to_id != PARTICLE_INVALID) {
-					mparticles.life[remap[i].to_id] = mparticles.life[remap[i].from_id];
-				} else {
-					mparticles.life.resize(remap[i].from_id);
-				}
+				mparticles.life.remap(rm);
 				break;
 			case ID_velocity:
-				if (remap[i].to_id != PARTICLE_INVALID) {
-					mparticles.velocity[remap[i].to_id] = mparticles.velocity[remap[i].from_id];
-				} else {
-					mparticles.velocity.resize(remap[i].from_id);
-				}
+				mparticles.velocity.remap(rm);
 				break;
 			case ID_acceleration:
-				if (remap[i].to_id != PARTICLE_INVALID) {
-					mparticles.acceleration[remap[i].to_id] = mparticles.acceleration[remap[i].from_id];
-				} else {
-					mparticles.acceleration.resize(remap[i].from_id);
-				}
+				mparticles.acceleration.remap(rm);
+				break;
+			case ID_color:
+				mparticles.color.remap(rm);
+				break;
+			case ID_uv:
+				mparticles.uv.remap(rm);
+				break;
+			case ID_scale:
+				mparticles.scale.remap(rm);
+				break;
+			case ID_rotation:
+				mparticles.rotation.remap(rm);
+				break;
+			case ID_translate:
+				mparticles.translation.remap(rm);
+				break;
+			//ignore
+			case ID_TAG_transform:
+				break;
+			case ID_render_quad:
+				mparticles.renderquad.remap(rm);
+				break;
+			default:
+				assert(false && "unsupport component");
 				break;
 			}
 		}
