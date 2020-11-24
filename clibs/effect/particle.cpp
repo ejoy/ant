@@ -132,37 +132,35 @@ update_translation(float dt, particle_manager *mgr, particles &p){
 }
 
 static inline void
-update_quad_transform(particle_index pidx, uint32_t quadidx, particle_manager *mgr, particles &p){
-	quad_cache::get().init_transform(quadidx);
+update_quad_transform(float dt, particle_manager *mgr, particles &p){
+	const int n = particlesystem_count(mgr, ID_render_quad);
+
+	for (particle_index pidx=0; pidx<n; ++pidx){
+		const uint32_t quadidx = p.renderquad[pidx];
+		quad_cache::get().init_transform(quadidx);
 	
-	const particle_index sidx = particlesystem_component(mgr, ID_render_quad, pidx, ID_scale);
-	if (sidx != PARTICLE_INVALID){
-		quad_cache::get().scale(quadidx, p.scale[sidx]);
-	}
-	const particle_index rotidx = particlesystem_component(mgr, ID_render_quad, pidx, ID_rotation);
-	if (rotidx != PARTICLE_INVALID){
-		quad_cache::get().rotate(quadidx, p.rotation[rotidx]);
-	}
-	const particle_index tidx = particlesystem_component(mgr, ID_render_quad, pidx, ID_translate);
-	if (tidx != PARTICLE_INVALID){
-		quad_cache::get().translate(quadidx, p.translation[tidx]);
+		const particle_index sidx = particlesystem_component(mgr, ID_render_quad, pidx, ID_scale);
+		if (sidx != PARTICLE_INVALID){
+			quad_cache::get().scale(quadidx, p.scale[sidx]);
+		}
+		const particle_index rotidx = particlesystem_component(mgr, ID_render_quad, pidx, ID_rotation);
+		if (rotidx != PARTICLE_INVALID){
+			quad_cache::get().rotate(quadidx, p.rotation[rotidx]);
+		}
+		const particle_index tidx = particlesystem_component(mgr, ID_render_quad, pidx, ID_translate);
+		if (tidx != PARTICLE_INVALID){
+			quad_cache::get().translate(quadidx, p.translation[tidx]);
+		}
 	}
 }
 
 void
 particle_mgr::submit_render(){
-	const int n = particlesystem_count(mmgr, ID_render_quad);
-
-	for (particle_index pidx=0; pidx<n; ++pidx){
-		const uint32_t quadidx = mparticles.renderquad[pidx];
-		update_quad_transform(pidx, quadidx, mmgr, mparticles);
-	}
-
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
 	BGFX(set_state(uint64_t(RENDER_STATE), 0));
 
 	const uint32_t offset = (uint32_t)mparticles.renderquad[0];
-	quad_cache::get().submit(offset, n);
+	quad_cache::get().submit(offset, (uint32_t)mparticles.renderquad.size());
 	quad_cache::get().update();
 	for (size_t ii=0; ii<mrenderdata.textures.size(); ++ii){
 		const auto &t = mrenderdata.textures[ii];
@@ -213,8 +211,9 @@ particle_mgr::update(float dt){
 	update_velocity(dt, mmgr, mparticles);
 	update_translation(dt, mmgr, mparticles);
 	update_lifetime(dt, mmgr, mparticles);
-
+	update_quad_transform(dt, mmgr, mparticles);
 	recap_particles();
 
+	//TODO: we can fully control render in lua level, only need vertex buffer in quad_cache
 	submit_render();
 }
