@@ -22,7 +22,7 @@ quad_cache::quad_cache(bgfx_index_buffer_handle_t ib, const bgfx_vertex_layout_t
     , moffset(0)
 {
     assert(BGFX_HANDLE_IS_VALID(mib));
-fix    assert(BGFX_HANDLE_IS_VALID(mdyn_vb));
+    assert(BGFX_HANDLE_IS_VALID(mdyn_vb));
 }
 
 quad_cache::~quad_cache(){
