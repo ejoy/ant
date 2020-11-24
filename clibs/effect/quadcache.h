@@ -28,6 +28,7 @@ public:
         return o;
     }
 
+    void reset_quad(uint32_t start, uint32_t num);
     void set_attrib(uint32_t quadidx, uint32_t vidx, const glm::vec3 &p);
     void set_attrib(uint32_t quadidx, uint32_t vidx, const glm::vec2 &uv);
     void set_attrib(uint32_t quadidx, uint32_t vidx, uint32_t c);

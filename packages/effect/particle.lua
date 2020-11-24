@@ -2,16 +2,14 @@ local ecs = ...
 local world = ecs.world
 
 local math3d        = require "math3d"
-local quadcache     = require "quad_cache"
 local effect        = require "effect"
+local quadcache     = require "effect.quadcache"
 
-local assetmgr      = import_package "ant.asset"
 local renderpkg     = import_package "ant.render"
 local declmgr       = renderpkg.declmgr
 
-local irq           = world:interface "ant.render|irenderqueue"
 local irender       = world:interface "ant.render|irender"
-
+local imaterial     = world:interface "ant.asset|imaterial"
 
 local em_trans = ecs.transform "emitter_mesh_transform"
 function em_trans.process_entity(e)
@@ -37,11 +35,11 @@ function emitter_trans.process_entity(e)
     if particle_material == nil then
         particle_material = imaterial.load(particle_material_path)
         textures = {}
-        local uniforms = particle_material.uniforms
+        local uniforms = particle_material.fx.uniforms
         local function find_uniform(name)
             for _, u in ipairs(uniforms) do
                 if u.name == name then
-                    return u.handle
+                    return (u.handle & 0xffff)
                 end
             end
 
@@ -52,14 +50,16 @@ function emitter_trans.process_entity(e)
                 textures[#textures+1] = {
                     stage       = v.stage,
                     uniformid   = find_uniform(k),
-                    texid       = v.handle,
+                    texid       = (v.texture.handle & 0xffff),
                 }
             end
         end
     end
-    e._emitter = effect.create_emitter{
+    e._emitter = {}
+    local prog = particle_material.fx.prog
+    effect.create_emitter{
         viewid      = viewid,
-        progid      = particle_material.fx.prog,
+        progid      = (prog & 0xffff),
         textures    = textures,
         emitter     = e.emitter,
     }
@@ -79,7 +79,8 @@ local particle_sys = ecs.system "particle_system"
 local quadlayout = declmgr.get(declmgr.correct_layout "p3|t2|c40niu")
 
 function particle_sys:init()
-    quadcache.init(irender.quad_ib(), quadlayout, 1024)
+    quadcache.init(irender.quad_ib(), quadlayout.handle, 1024)
+    effect.init()
 end
 
 local itimer = world:interface "ant.timer|timer"
@@ -90,16 +91,13 @@ local function emitter_step(ee, dt)
     _emitter.current_time = _emitter.current_time + dt
 end
 
-function particle_sys:data_changed()
+-- function particle_sys:data_changed()
+
+-- end
+
+function particle_sys:ui_update()
     local dt = itimer.delta()
-    for _, eid in world:each "particle_system" do
-        local ps = world[eid]
-        for _, emittereid in ipairs(ps.particle_emitters) do
-            local e = world[emittereid]
-            emitter_step(e, dt)
-            effect.update(e._emitter)
-        end
-    end
+    effect.update(dt * 0.001)
 end
 
 

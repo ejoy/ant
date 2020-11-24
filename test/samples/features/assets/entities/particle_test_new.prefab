@@ -16,12 +16,22 @@ data:
     scene_entity: true
     state: 1
     emitter:
-        spwan:
+        spawn:
             type:   quad
             count:  16
             lifetime: {1.1, 2.5}
         scale:
-            range: {0.15, 0.28}
+            range:
+                {0.15, 0.15, 0.15}
+                {0.28, 0.28, 0.28}
+        color:
+            range:
+                {0.0, 0.0, 0.0, 1.0}
+                {1.0, 1.0, 1.0, 1.0}
+        translation:
+            range:
+                {0.0, 0.0, 0.0}
+                {0.0, 0.0, 0.0}
         velocity:
             range: 
                 {0, 0, 1}

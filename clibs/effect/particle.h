@@ -41,14 +41,19 @@ struct particles{
             this->push_back(v);
         }
     };
+    using quaduv = std::array<glm::vec2, 4>;
+    using quadcolor = std::array<glm::vec4, 4>;
 
     component_arrayT<lifetype,  ID_life>            life;
+
     component_arrayT<glm::vec3, ID_velocity>        velocity;
     component_arrayT<glm::vec3, ID_acceleration>    acceleration;
     component_arrayT<glm::vec3, ID_scale>           scale;
     component_arrayT<glm::quat, ID_rotation>        rotation;
     component_arrayT<glm::vec3, ID_translate>       translation;
-    component_arrayT<uint32_t, ID_render_quad>      renderquad;
+    component_arrayT<uint32_t,  ID_render_quad>     renderquad;
+    component_arrayT<quadcolor, ID_color>           color;
+    component_arrayT<quaduv,    ID_uv>              uv;
     particles(){
         life.reserve(UINT16_MAX);
         velocity.reserve(UINT16_MAX);
@@ -81,17 +86,18 @@ public:
     void update(float dt);
 
 public:
-    comp_ids&& start() { return std::move(comp_ids()); }
-    bool end(comp_ids &&ids){ return 0 != particlesystem_add(mmgr, (int)ids.size(), (int*)(&ids[0])); }
+    comp_ids start() { return comp_ids(); }
+    bool end(comp_ids &&ids);
     
-    void addlifetime(comp_ids& ids, const particles::lifetype &lt) { mparticles.life.add(ids, lt);}
-    void addvelocity(comp_ids& ids,     const glm::vec3& v)    { mparticles.velocity.add(ids, v);}
-    void addacceleration(comp_ids& ids, const glm::vec3& a)    { mparticles.acceleration.add(ids, a);}
-    void addscale(comp_ids& ids,        const glm::vec3& s)    { mparticles.scale.add(ids, s);}
-    void addrotation(comp_ids& ids,     const glm::quat& r)    { mparticles.rotation.add(ids, r);}
-    void addtranslation(comp_ids& ids,  const glm::vec3& t)    { mparticles.translation.add(ids, t);}
-    void addrenderquad(comp_ids& ids,   uint32_t idx)          { mparticles.renderquad.add(ids, idx);}
-
+    void addlifetime(comp_ids& ids, const particles::lifetype &lt)          { mparticles.life.add(ids, lt);}
+    void addvelocity(comp_ids& ids,     const glm::vec3& v)                 { mparticles.velocity.add(ids, v);}
+    void addacceleration(comp_ids& ids, const glm::vec3& a)                 { mparticles.acceleration.add(ids, a);}
+    void addscale(comp_ids& ids,        const glm::vec3& s)                 { mparticles.scale.add(ids, s);}
+    void addrotation(comp_ids& ids,     const glm::quat& r)                 { mparticles.rotation.add(ids, r);}
+    void addtranslation(comp_ids& ids,  const glm::vec3& t)                 { mparticles.translation.add(ids, t);}
+    void addrenderquad(comp_ids& ids,   uint32_t idx)                       { mparticles.renderquad.add(ids, idx);}
+    void addcolor(comp_ids &ids,        const particles::quadcolor& c)      { mparticles.color.add(ids, c); }
+    void adduv(comp_ids &ids,           const particles::quaduv& uv)        { mparticles.uv.add(ids, uv); }
 public:
     render_data& get_rd() { return mrenderdata; }
 private:

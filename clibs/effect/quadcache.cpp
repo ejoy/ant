@@ -1,4 +1,6 @@
 #include "pch.h"
+#define LUA_LIB
+
 #include "quadcache.h"
 
 #include "lua.hpp"
@@ -62,17 +64,24 @@ void quad_cache::set(uint32_t start, uint32_t num, const quad_vertex *vv){
 //	|      |
 //	|      |
 //	0 ---- 2
-static const glm::vec3 s_default_quad_pos[] = {
-    glm::vec3(-0.5f, -0.5f, 0.0f),
-    glm::vec3(-0.5f,  0.5f, 0.0f),
-    glm::vec3( 0.5f, -0.5f, 0.0f),
-    glm::vec3( 0.5f,  0.5f, 0.0f),
+static const quad_vertex s_default_quad[] = {
+    {glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec2(0.0f, 0.0f), 0xffffffff},
+    {glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec2(0.0f, 1.0f), 0xffffffff},
+    {glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec2(1.0f, 1.0f), 0xffffffff},
+    {glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec2(1.0f, 0.0f), 0xffffffff},
 };
+
+void quad_cache::reset_quad(uint32_t start, uint32_t num){
+    for (uint32_t ii=0; ii<num; ++ii){
+        auto ptr = mvertiecs.get() + (start+ii) * 4;
+        memcpy(ptr, s_default_quad, sizeof(s_default_quad));
+    }
+}
 
 void quad_cache::init_transform(uint32_t quadidx){
     auto ptr = mvertiecs.get() + quadidx * 4;
     for (uint32_t ii=0; ii<4; ++ii){
-        ptr[ii].p = s_default_quad_pos[ii];
+        ptr[ii].p = s_default_quad[ii].p;
     }
 }
 
@@ -174,15 +183,17 @@ lbuffer(lua_State *L){
     return 2;
 }
 
-extern "C" int
-luaopen_quadcache(lua_State *L){
-    luaL_Reg l[] = {
-        {"init",        linit},
-        {"shutdown",    lshutdown},
-        {"alloc",       lalloc},
-        {nullptr,       nullptr},
-    };
+extern "C" {
+LUAMOD_API int
+    luaopen_effect_quadcache(lua_State *L){
+        luaL_Reg l[] = {
+            {"init",        linit},
+            {"shutdown",    lshutdown},
+            {"alloc",       lalloc},
+            {nullptr,       nullptr},
+        };
 
-    luaL_newlib(L, l);
-    return 1;
+        luaL_newlib(L, l);
+        return 1;
+    }
 }

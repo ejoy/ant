@@ -14,6 +14,78 @@ particle_mgr::~particle_mgr(){
     particlesystem_release(mmgr);
 }
 
+bool particle_mgr::end(comp_ids &&ids){
+	const bool valid = 0 != particlesystem_add(mmgr, (int)ids.size(), (int*)(&ids[0]));
+	if (valid){
+		for (auto id : ids){
+			switch (id){
+			case ID_life: 
+			break;
+			case ID_color:{
+				const int n = particlesystem_count(mmgr, ID_color);
+				assert(n == mparticles.color.size());
+				for (int iclr=0; iclr<n; ++iclr){
+					const auto &qc = mparticles.color[iclr];
+					const particle_index rq_idx = particlesystem_component(mmgr, ID_color, iclr, ID_render_quad);
+					assert(rq_idx < mparticles.renderquad.size());
+					if (rq_idx != PARTICLE_INVALID){
+						assert(rq_idx < mparticles.renderquad.size());
+						const uint32_t quadidx = mparticles.renderquad[rq_idx];
+						for (uint32_t ii=0; ii<4; ++ii){
+							const auto& c = qc[ii];
+							const uint32_t ic = uint32_t(c.r * 255.f) << 0 |
+												uint32_t(c.g * 255.f) << 8 |
+												uint32_t(c.b * 255.f) << 16|
+												uint32_t(c.a * 255.f) << 24;
+							quad_cache::get().set_attrib(quadidx, ii, ic);
+						}
+					}
+
+				}
+			}
+			break;
+			case ID_uv:{
+				const int n = particlesystem_count(mmgr, ID_uv);
+				assert(n == mparticles.uv.size());
+				for (int iuv=0; iuv<n; ++iuv){
+					const auto &quv = mparticles.uv[iuv];
+					const particle_index rq_idx = particlesystem_component(mmgr, ID_uv, iuv, ID_render_quad);
+					if (rq_idx != PARTICLE_INVALID){
+						assert(rq_idx < mparticles.renderquad.size());
+						const uint32_t quadidx = mparticles.renderquad[rq_idx];
+						for (uint32_t ii=0; ii<4; ++ii){
+							quad_cache::get().set_attrib(quadidx, ii, quv[ii]);
+						}
+					}
+				}
+			}
+			break;
+			case ID_velocity:
+			break;
+			case ID_acceleration: 
+			break;
+			case ID_scale: 
+			break;
+			case ID_rotation: 
+			break;
+			case ID_translate: 
+			break;
+			case ID_TAG_transform: 
+			break;
+			case ID_render_quad: 
+			break;
+			default:
+				assert(false && "invalid component id");
+				break;
+			}
+		}
+	} else {
+		assert(false && "need recover data");
+	}
+
+	return valid;
+}
+
 static inline void
 update_lifetime(float dt, particle_manager *mgr, particles &p){
     const int n = particlesystem_count(mgr, ID_life);
@@ -45,10 +117,10 @@ update_velocity(float dt, particle_manager *mgr, particles &p){
 static inline void
 update_translation(float dt, particle_manager *mgr, particles &p){
 	const int n = particlesystem_count(mgr, ID_velocity);
-	assert(n == p.acceleration.size());
+	assert(n == p.velocity.size());
 	for (int vidx=0; vidx<n; ++vidx){
 		const auto &v = p.velocity[vidx];
-		auto tidx = particlesystem_component(mgr, ID_acceleration, (particle_index)vidx, ID_translate);
+		auto tidx = particlesystem_component(mgr, ID_velocity, (particle_index)vidx, ID_translate);
 		assert(tidx < p.translation.size());
 		auto &t = p.translation[vidx];
 
@@ -88,6 +160,7 @@ particle_mgr::submit_render(){
 
 	const uint32_t offset = (uint32_t)mparticles.renderquad[0];
 	quad_cache::get().submit(offset, n);
+	quad_cache::get().update();
 	for (size_t ii=0; ii<mrenderdata.textures.size(); ++ii){
 		const auto &t = mrenderdata.textures[ii];
 		BGFX(set_texture)((uint8_t)ii, {t.uniformid}, {t.texid}, UINT16_MAX);
@@ -134,7 +207,11 @@ particle_mgr::recap_particles(){
 
 void
 particle_mgr::update(float dt){
-    update_lifetime(dt, mmgr, mparticles);
+	update_velocity(dt, mmgr, mparticles);
+	update_translation(dt, mmgr, mparticles);
+	update_lifetime(dt, mmgr, mparticles);
 
 	recap_particles();
+
+	submit_render();
 }

@@ -110,10 +110,10 @@ local function point_light_test()
 end
 
 function init_loader_sys:init()
-    point_light_test()
+    --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
-    world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
+    --world:instance "/pkg/ant.test.features/assets/entities/font_tt.prefab"
 
     --ientity.create_procedural_sky()
     --target_lock_test()
@@ -150,8 +150,8 @@ function init_loader_sys:post_init()
     f.n, f.f = 0.25, 250
     icamera.set_frustum(mq.camera_eid, f)
 
-    local ipl = world:interface "ant.render|ipolyline"
-    ipl.add_strip_lines({
-        {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
-    }, 15, {1.0, 1.0, 0.0, 1.0})
+    -- local ipl = world:interface "ant.render|ipolyline"
+    -- ipl.add_strip_lines({
+    --     {0, 0, 0}, {0.5, 0, 1}, {1, 0, 0},
+    -- }, 15, {1.0, 1.0, 0.0, 1.0})
 end

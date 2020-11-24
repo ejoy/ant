@@ -5,6 +5,7 @@
 #include <glm/gtx/compatibility.hpp>
 
 #include <vector>
+#include <array>
 #include <cstdint>
 #include <algorithm>
 #include <functional>

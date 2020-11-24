@@ -1,36 +1,46 @@
 #pragma once
 
 class randomobj final{
+
+    std::mt19937 mgen;
+    std::uniform_real_distribution<float> mdis;
+public:
     randomobj(float minv, float maxv) 
         : mgen(std::random_device().operator()())
         , mdis(minv, maxv)
         {}
-    std::mt19937 mgen;
-    std::uniform_real_distribution<float> mdis;
-public:
     float operator()() {
         return mdis(mgen);
     }
-    static randomobj&& create(float minv, float maxv) {
-        return std::move(randomobj(minv, maxv));
-    }
-
-    static randomobj&& create(const glm::vec2 &range) {
-        return create(range[0], range[1]);
-    }
 };
 
-class randomobj_vec3 final {
+class randomobj_v3 final {
 public:
-    randomobj_vec3(const glm::vec3 &minv, const glm::vec3 &maxv)
-        : x(randomobj::create(minv[0], maxv[0]))
-        , y(randomobj::create(minv[1], maxv[1]))
-        , z(randomobj::create(minv[2], maxv[2]))
+    randomobj_v3(const float *lhs, const float *rhs)
+        : x(std::min(lhs[0], rhs[0]), std::max(lhs[0], rhs[0]))
+        , y(std::min(lhs[1], rhs[1]), std::max(lhs[1], rhs[1]))
+        , z(std::min(lhs[2], rhs[2]), std::max(lhs[2], rhs[2]))
         {}
 
     glm::vec3 operator()(){
-        return glm::vec3(x.operator()(), y.operator()(), z.operator()());
+        return glm::vec3(x(), y(), z());
     }
 private:
     randomobj x, y, z;
+};
+
+class randomobj_v4 final {
+public:
+    randomobj_v4(const float *lhs, const float *rhs)
+        : x(std::min(lhs[0], rhs[0]), std::max(lhs[0], rhs[0]))
+        , y(std::min(lhs[1], rhs[1]), std::max(lhs[1], rhs[1]))
+        , z(std::min(lhs[2], rhs[2]), std::max(lhs[2], rhs[2]))
+        , w(std::min(lhs[3], rhs[3]), std::max(lhs[3], rhs[3]))
+        {}
+
+    glm::vec4 operator()(){
+        return glm::vec4(x(), y(), z(), w());
+    }
+private:
+    randomobj x, y, z, w;
 };
