@@ -2,10 +2,6 @@
 
 #include "singleton.h"
 
-#define PARTICLE_COMPONENT  10
-#include "psystem_manager.h"
-
-
 enum component_id : uint32_t {
     ID_life = 0,
     ID_color,
@@ -19,8 +15,6 @@ enum component_id : uint32_t {
     ID_render_quad,
     ID_count,
 };
-
-static_assert(PARTICLE_COMPONENT == ID_count, "define value 'PARTICLE_COMPONENT' need equal to 'ID_count'");
 
 using comp_ids = std::vector<component_id>;
 
@@ -77,6 +71,7 @@ struct render_data{
     std::vector<texture>   textures;
 };
 
+struct particle_manager;
 class particle_mgr : public singletonT<particle_mgr> {
     friend class singletonT<particle_mgr>;
 private:

@@ -3,6 +3,9 @@
 #include "transforms.h"
 #include "quadcache.h"
 
+#define PARTICLE_COMPONENT  ID_count
+#include "psystem_manager.h"
+
 extern bgfx_interface_vtbl_t* ibgfx();
 #define BGFX(_API) ibgfx()->_API
 
