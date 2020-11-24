@@ -10,6 +10,7 @@ extern "C" {
 
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
+#include <RmlUi/Debugger.h>
 
 static void
 lua_pushobject(lua_State* L, void* handle) {
@@ -89,6 +90,26 @@ static int
 lContextUpdate(lua_State* L) {
 	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
 	ctx->Update();
+	return 0;
+}
+
+static int
+lDebuggerInitialise(lua_State* L) {
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	Rml::Debugger::Initialise(ctx);
+	return 0;
+}
+
+static int
+lDebuggerSetContext(lua_State* L) {
+	Rml::Context* ctx = lua_checkobject<Rml::Context>(L, 1);
+	Rml::Debugger::SetContext(ctx);
+	return 0;
+}
+
+static int
+lDebuggerSetVisible(lua_State* L) {
+	Rml::Debugger::SetVisible(lua_toboolean(L, 1));
 	return 0;
 }
 
@@ -249,6 +270,9 @@ lua_plugin_apis(lua_State *L) {
 		{ "DataModelGet", lDataModelGet },
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
+		{ "DebuggerInitialise", lDebuggerInitialise },
+		{ "DebuggerSetContext", lDebuggerSetContext },
+		{ "DebuggerSetVisible", lDebuggerSetVisible },
 		{ "DocumentClose", lDocumentClose },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetElementById", lDocumentGetElementById },
