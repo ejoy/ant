@@ -1,92 +1,15 @@
 #include "pch.h"
 
-// Notice: I need call Context::GetDataModelPtr directly
-#define private public
-#include <RmlUi/Core/Context.h>
-#undef private
-
 extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
 }
 
 #include "luaplugin.h"
+#include "luabind.h"
 
-#include <RmlUi/Core/DataModelHandle.h>
-#include <RmlUi/Core/DataVariable.h>
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
-
-#define RMLDATAMODEL "RMLDATAMODEL"
-
-void
-lua_pushvariant(lua_State *L, const Rml::Variant &v) {
-	switch (v.GetType()) {
-	case Rml::Variant::Type::BOOL:
-		lua_pushboolean(L, v.GetReference<bool>());
-		break;
-	case Rml::Variant::Type::BYTE:
-	case Rml::Variant::Type::CHAR:
-	case Rml::Variant::Type::INT:
-		lua_pushinteger(L, v.GetReference<int>());
-		break;
-	case Rml::Variant::Type::FLOAT:
-		lua_pushnumber(L, v.GetReference<float>());
-		break;
-	case Rml::Variant::Type::DOUBLE:
-		lua_pushnumber(L, v.GetReference<double>());
-		break;
-	case Rml::Variant::Type::INT64:
-		lua_pushinteger(L, v.GetReference<int64_t>());
-		break;
-	case Rml::Variant::Type::STRING: {
-		const Rml::String &s = v.GetReference<Rml::String>();
-		lua_pushlstring(L, s.c_str(), s.length());
-		break; }
-	case Rml::Variant::Type::NONE:
-	case Rml::Variant::Type::VECTOR2:
-	case Rml::Variant::Type::VECTOR3:
-	case Rml::Variant::Type::VECTOR4:
-	case Rml::Variant::Type::COLOURF:
-	case Rml::Variant::Type::COLOURB:
-	case Rml::Variant::Type::SCRIPTINTERFACE:
-	case Rml::Variant::Type::TRANSFORMPTR:
-	case Rml::Variant::Type::TRANSITIONLIST:
-	case Rml::Variant::Type::ANIMATIONLIST:
-	case Rml::Variant::Type::DECORATORSPTR:
-	case Rml::Variant::Type::FONTEFFECTSPTR:
-	case Rml::Variant::Type::VOIDPTR:
-	default:
-		// todo
-		lua_pushnil(L);
-		break;
-	}
-}
-
-void
-lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
-	if (!variant)
-		return;
-	switch(lua_type(L, index)) {
-	case LUA_TBOOLEAN:
-		*variant = (bool)lua_toboolean(L, index);
-		break;
-	case LUA_TNUMBER:
-		if (lua_isinteger(L, index)) {
-			*variant = (int64_t)lua_tointeger(L, index);
-		} else {
-			*variant = (double)lua_tonumber(L, index);
-		}
-		break;
-	case LUA_TSTRING:
-		*variant = Rml::String(lua_tostring(L, index));
-		break;
-	case LUA_TNIL:
-	default:	// todo
-		*variant = Rml::Variant();
-		break;
-	}
-}
 
 static void
 lua_pushobject(lua_State* L, void* handle) {
@@ -109,6 +32,11 @@ lua_checkstdstring(lua_State* L, int idx) {
 	size_t sz = 0;
 	const char* str = luaL_checklstring(L, idx, &sz);
 	return std::string(str, sz);
+}
+
+static void
+lua_pushstdstring(lua_State* L, const std::string& str) {
+	lua_pushlstring(L, str.data(), str.size());
 }
 
 namespace {
@@ -165,8 +93,15 @@ lContextUpdate(lua_State* L) {
 }
 
 static int
+lDocumentClose(lua_State* L) {
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
+	doc->Close();
+	return 0;
+}
+
+static int
 lDocumentGetContext(lua_State *L) {
-	Rml::ElementDocument *doc = (Rml::ElementDocument *)lua_touserdata(L, 1);
+	Rml::ElementDocument* doc = lua_checkobject<Rml::ElementDocument>(L, 1);
 	lua_pushlightuserdata(L, (void *)doc->GetContext());
 	return 1;
 }
@@ -201,6 +136,36 @@ lDocumentShow(lua_State* L) {
 	return 1;
 }
 
+struct EventListener final : public Rml::EventListener {
+	EventListener(lua_State* L_, int idx)
+		: L(L_)
+		, ref(LUA_NOREF)
+	{
+		luaL_checktype(L, idx, LUA_TFUNCTION);
+		lua_pushvalue(L, idx);
+		ref = get_lua_plugin()->ref(L);
+	}
+	~EventListener() {
+		get_lua_plugin()->unref(ref);
+	}
+	void OnDetach(Rml::Element* element) override { delete this; }
+	void ProcessEvent(Rml::Event& event) override {
+		luabind::invoke(L, [&]() {
+			lua_pushevent(L, event);
+			get_lua_plugin()->callref(ref, 1, 0);
+		});
+	}
+	lua_State* L;
+	int ref;
+};
+
+static int
+lElementAddEventListener(lua_State* L) {
+	Rml::Element* e = (Rml::Element*)lua_touserdata(L, 1);
+	e->AddEventListener(lua_checkstdstring(L, 2), new EventListener(L, 3), lua_toboolean(L, 4));
+	return 0;
+}
+
 static int
 lElementGetInnerRML(lua_State *L) {
 	Rml::Element *e = (Rml::Element *)lua_touserdata(L, 1);
@@ -209,152 +174,29 @@ lElementGetInnerRML(lua_State *L) {
 	return 1;
 }
 
-class LuaScalarDef;
-
-struct LuaDataModel {
-	Rml::DataModelHandle handle;
-	lua_State *dataL;
-	LuaScalarDef *scalarDef;
-};
-
-class LuaScalarDef final : public Rml::VariableDefinition {
-public:
-	LuaScalarDef (const struct LuaDataModel *model) :
-		VariableDefinition(Rml::DataVariableType::Scalar), model(model) {}
-private:
-	virtual bool Get(void* ptr, Rml::Variant& variant) {
-		lua_State *L = model->dataL;
-		if (!L)
-			return false;
-		int id = (intptr_t)ptr;
-		lua_getvariant(L, id, &variant);
-		return true;
-	}
-	virtual bool Set(void* ptr, const Rml::Variant& variant) {
-		int id = (intptr_t)ptr;
-		lua_State *L = model->dataL;
-		if (!L)
-			return false;
-		lua_pushvariant(L, variant);
-		lua_replace(L, id);
-		return true;
-	}
-
-	const struct LuaDataModel *model;
-};
-
 static int
-getId(lua_State *L, lua_State *dataL) {
-	lua_pushvalue(dataL, 1);
-	lua_xmove(dataL, L, 1);
-	lua_pushvalue(L, 2);
-	if (lua_rawget(L, -2) != LUA_TNUMBER) {
-		luaL_error(L, "DataModel has no key : %s", lua_tostring(L, 2));
+lElementGetProperty(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	const Rml::Property* prop = e->GetProperty(lua_checkstdstring(L, 2));
+	if (!prop) {
+		return 0;
 	}
-	int id = lua_tointeger(L, -1);
-	lua_pop(L, 2);
-	return id;
-}
-
-static int
-lDataModelGet(lua_State *L) {
-	struct LuaDataModel *D = (struct LuaDataModel *)lua_touserdata(L, 1);
-	lua_State *dataL = D->dataL;
-	if (dataL == NULL)
-		luaL_error(L, "DataModel released");
-
-	int id = getId(L, dataL);
-	lua_pushvalue(dataL, id);
-	lua_xmove(dataL, L, 1);
+	lua_pushstdstring(L, prop->ToString());
 	return 1;
 }
 
 static int
-lDataModelSet(lua_State *L) {
-	struct LuaDataModel *D = (struct LuaDataModel *)lua_touserdata(L, 1);
-	lua_State *dataL = D->dataL;
-	if (dataL == NULL)
-		luaL_error(L, "DataModel released");
-	int id = getId(L, dataL);
-	lua_xmove(L, dataL, 1);
-	lua_replace(dataL, id);
-	D->handle.DirtyVariable(lua_tostring(L, 2));
+lElementRemoveProperty(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->RemoveProperty(lua_checkstdstring(L, 2));
 	return 0;
 }
 
-// We should release LuaDataModel manually
 static int
-lDataModelRelease(lua_State *L) {
-	struct LuaDataModel *D = (struct LuaDataModel *)luaL_checkudata(L, 1, RMLDATAMODEL);
-
-	D->dataL = nullptr;
-	delete D->scalarDef;
-	D->scalarDef = nullptr;
-	lua_pushnil(L);
-	lua_setuservalue(L, -2);
-	return 0;
-}
-
-// Construct a lua sub thread for LuaDataModel
-// stack 1 : { name(string) -> id(integer) }
-// stack 2- : values
-// For example : build from { str = "Hello", x = 0 }
-//	1: { str = 2 , x = 3 }
-//	2: "Hello"
-//	3: 0
-static lua_State *
-InitDataModelFromTable(lua_State *L, int index, Rml::DataModelConstructor &ctor, class LuaScalarDef *def) {
-	lua_State *dataL = lua_newthread(L);
-	lua_newtable(dataL);
-	intptr_t id = 2;
-	lua_pushnil(L);
-	while (lua_next(L, index) != 0) {
-		if (!lua_checkstack(dataL, 4)) {
-			luaL_error(L, "Memory Error");
-		}
-		// L top : key value
-		lua_xmove(L, dataL, 1);	// move value to dataL with index(id)
-		lua_pushvalue(L, -1);	// dup key
-		lua_xmove(L, dataL, 1);
-		lua_pushinteger(dataL, id);
-		lua_rawset(dataL, 1);
-		const char *key = lua_tostring(L, -1);
-		ctor.BindCustomDataVariable(key, Rml::DataVariable(def, (void *)id));
-		++id;
-	}
-	return dataL;
-}
-
-static int
-lDataModelCreate(lua_State *L) {
-	Rml::Context *context = (Rml::Context *)lua_touserdata(L, 1);
-	Rml::String name = luaL_checkstring(L, 2);
-	luaL_checktype(L, 3, LUA_TTABLE);
-
-	Rml::DataModelConstructor constructor = context->CreateDataModel(name);
-	if (!constructor) {
-		return luaL_error(L, "Can't create DataModel with name %s", name.c_str());
-	}
-
-	struct LuaDataModel *D = (struct LuaDataModel *)lua_newuserdata(L, sizeof(*D));
-	D->dataL = nullptr;
-	D->scalarDef = nullptr;
-	D->handle = constructor.GetModelHandle();
-
-	D->scalarDef = new LuaScalarDef(D);
-	D->dataL = InitDataModelFromTable(L, 3, constructor, D->scalarDef);
-	lua_setuservalue(L, -2);
-
-	if (luaL_newmetatable(L, RMLDATAMODEL)) {
-		luaL_Reg l[] = {
-			{ "__index", lDataModelGet },
-			{ "__newindex", lDataModelSet },
-			{ NULL, NULL },
-		};
-		luaL_setfuncs(L, l, 0);
-	}
-	lua_setmetatable(L, -2);
-
+lElementSetProperty(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	bool ok = e->SetProperty(lua_checkstdstring(L, 2), lua_checkstdstring(L, 3));
+	lua_pushboolean(L, ok);
 	return 1;
 }
 
@@ -382,6 +224,12 @@ lLog(lua_State* L) {
 
 }
 
+int lDataModelCreate(lua_State* L);
+int lDataModelRelease(lua_State* L);
+int lDataModelDelete(lua_State* L);
+int lDataModelGet(lua_State* L);
+int lDataModelSet(lua_State* L);
+int lDataModelDirty(lua_State* L);
 int lRenderBegin(lua_State* L);
 int lRenderFrame(lua_State* L);
 
@@ -395,14 +243,23 @@ lua_plugin_apis(lua_State *L) {
 		{ "ContextProcessMouseButtonUp", lContextProcessMouseButtonUp },
 		{ "ContextRender", lContextRender },
 		{ "ContextUpdate", lContextUpdate },
-		{ "DataModelRelease", lDataModelRelease },
 		{ "DataModelCreate", lDataModelCreate },
+		{ "DataModelRelease", lDataModelRelease },
+		{ "DataModelRelease", lDataModelDelete },
+		{ "DataModelGet", lDataModelGet },
+		{ "DataModelSet", lDataModelSet },
+		{ "DataModelDirty", lDataModelDirty },
+		{ "DocumentClose", lDocumentClose },
 		{ "DocumentGetContext", lDocumentGetContext },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetTitle", lDocumentGetTitle },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentShow", lDocumentShow },
+		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
+		{ "ElementGetProperty", lElementGetProperty },
+		{ "ElementRemoveProperty", lElementRemoveProperty },
+		{ "ElementSetProperty", lElementSetProperty },
 		{ "Log", lLog },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
@@ -413,4 +270,3 @@ lua_plugin_apis(lua_State *L) {
 
 	return 1;
 }
-

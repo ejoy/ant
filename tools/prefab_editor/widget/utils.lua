@@ -55,12 +55,13 @@ function m.message_box(msg)
     message[#message + 1] = msg
 end
 
-local message_pop_id = "Message Box"
 function m.show_message_box()
     if #message < 1 then return end
     local level = 1
     local function do_show_message(msg)
-        imgui.windows.OpenPopup(msg.title)
+        if not imgui.windows.IsPopupOpen(msg.title) then
+            imgui.windows.OpenPopup(msg.title)
+        end
         local change, opened = imgui.windows.BeginPopupModal(msg.title, imgui.flags.Window{"AlwaysAutoResize"})
         if change then
             imgui.widget.Text(msg.info)
@@ -78,4 +79,24 @@ function m.show_message_box()
     do_show_message(message[level])
 end
 
+local rhwi          = import_package 'ant.render'.hwi
+local stringify     = import_package "ant.serialize".stringify
+local filedialog    = require 'filedialog'
+function m.get_saveas_path(filetype, extension)
+    local dialog_info = {
+        Owner = rhwi.native_window(),
+        Title = "Save As..",
+        FileTypes = {filetype, "*"..extension}
+    }
+    local ok, path = filedialog.save(dialog_info)
+    if ok then
+        path = string.gsub(path, "\\", "/") .. extension
+        local pos = string.find(path, "%"..extension)
+        if #path > pos + #extension - 1 then
+            path = string.sub(path, 1, pos + #extension - 1)
+        end
+        --utils.write_file(path, stringify(data))
+        return path
+    end
+end
 return m

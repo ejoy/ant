@@ -30,15 +30,18 @@ local icon_path = {
     ["ICON_SPOTLIGHT"]      = "res/icon/SpotLight3D.png",
     ["ICON_POINTLIGHT"]     = "res/icon/OmniLight3D.png",
     ["ICON_DIRECTIONALLIGHT"] = "res/icon/DirectionalLight3D.png",
-    ["ICON_INFO"] = "res/icon/Info.png",
-    ["ICON_WARN"] = "res/icon/Warn.png",
-    ["ICON_ERROR"] = "res/icon/Error.png"
+    ["ICON_INFO"]           = "res/icon/Info.png",
+    ["ICON_WARN"]           = "res/icon/Warn.png",
+    ["ICON_ERROR"]          = "res/icon/Error.png",
+    ["FILE_LIST"]           = "res/icon/FileList.png",
+    ["FILE_SYSTEM"]         = "res/icon/Filesystem.png",
+    ["ROOM_INSTANCE"]       = "res/icon/RoomInstance.png"
 }
 
 local icons = {}
 return function(assetmgr)
     for k, v in pairs(icon_path) do
-        icons[k] = assetmgr.resource("/pkg/ant.tools.prefab_editor/" .. v, { compile = true })
+        icons[k] = assetmgr.resource("/pkg/tools.prefab_editor/" .. v, { compile = true })
     end
     local fs   = require "filesystem"
     icons.get_file_icon = function(path_str)

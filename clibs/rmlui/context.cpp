@@ -4,7 +4,7 @@
 
 #include "lua.hpp"
 
-LUA2STRUCT(struct RmlContext, font_mgr, shader, default_tex, font_tex, viewid, viewrect, layout);
+LUA2STRUCT(struct RmlContext, font_mgr, shader, default_tex, font_tex, viewid, viewrect, layout, bootstrap);
 LUA2STRUCT(struct texture_desc, width, height, texid);
 LUA2STRUCT(struct shader, font, font_outline, font_shadow, font_glow, image);
 LUA2STRUCT(struct shader_info, prog, uniforms);
@@ -14,10 +14,4 @@ LUA2STRUCT(Rml::Vector2i, x, y);
 
 RmlContext::RmlContext(lua_State *L, int idx){
     lua_struct::unpack(L, idx, *this);
-}
-
-RmlContext::~RmlContext() {
-    if (pluginL) {
-        lua_close(pluginL);
-    }
 }

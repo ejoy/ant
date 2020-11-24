@@ -109,6 +109,7 @@
     <ClCompile Include="..\..\clibs\rmlui\file.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\font.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\fonteffect.cpp" />
+    <ClCompile Include="..\..\clibs\rmlui\luadatabinding.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\luaplugin.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\luarmlui.cpp" />
     <ClCompile Include="..\..\clibs\rmlui\pch.cpp">

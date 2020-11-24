@@ -11,7 +11,7 @@ local function output(type, ...)
 	for i = 1, t.n do
 		s[#s+1] = tostring(t[i])
 	end
-	s = table.concat(s)
+	s = table.concat(s, '\t')
 	rmlui.Log(type, s)
 	print(s)
 end

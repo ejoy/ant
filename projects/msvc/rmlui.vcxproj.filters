@@ -44,6 +44,9 @@
     <ClCompile Include="..\..\clibs\rmlui\rmlapi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\rmlui\luadatabinding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\clibs\rmlui\file.h">

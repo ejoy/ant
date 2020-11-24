@@ -154,7 +154,7 @@ function m.show()
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
     for _ in uiutils.imgui_windows("ParticleEmitter", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
         show_panel(property)
-        uitestcolor:show()
+        --uitestcolor:show()
     end
 end
 

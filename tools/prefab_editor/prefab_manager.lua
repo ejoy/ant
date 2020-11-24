@@ -232,9 +232,9 @@ local function remove_entitys(entities)
 end
 
 local function get_prefab(filename)
-    local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
-    assetmgr.unload(vfspath)
-    return worldedit:prefab_template(vfspath)
+    --local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    assetmgr.unload(filename)
+    return worldedit:prefab_template(filename)
 end
 
 function m:open(filename)
@@ -404,6 +404,7 @@ function m:update_material(eid, mtl)
     world:remove_entity(eid)
     local gizmo = require "gizmo.gizmo"(world)
     gizmo:set_target(new_eid)
+    return new_eid
 end
 
 local utils = require "common.utils"

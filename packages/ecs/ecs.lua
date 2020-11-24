@@ -245,12 +245,6 @@ function world:singleton(c_type)
 	end
 end
 
-local timer = require "platform.timer"
-local time_counter = timer.counter
-local time_freq    = timer.frequency() / 1000
-local function gettime()
-	return time_counter() / time_freq
-end
 function world:pipeline_func(what)
 	local list = system.lists(self, what)
 	if not list then
@@ -262,10 +256,8 @@ function world:pipeline_func(what)
 		switch:update()
 		for i = 1, #list do
 			local v = list[i]
-			local f, proxy, name, step_name = v[1], v[2], v[3], v[4]
-			self:pub {"system_hook","begin",name,what,step_name,gettime()}
+			local f, proxy = v[1], v[2]
 			f(proxy)
-			self:pub {"system_hook","end",name,what,step_name,gettime()}
 		end
 	end
 end

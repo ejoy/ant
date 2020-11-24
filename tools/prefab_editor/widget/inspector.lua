@@ -6,13 +6,18 @@ local hierarchy = require "hierarchy"
 local uiproperty    = require "widget.uiproperty"
 local light_gizmo
 local gizmo
-local material_panel
+
 local m = {}
 local world
 local worldedit
 local iom
 local camera_mgr
-local light_view
+local light_panel
+local camera_panel
+local material_panel
+local base_panel
+local current_panel
+local current_eid
 
 local base_ui_data = {
     current_eid = -1,
@@ -20,13 +25,6 @@ local base_ui_data = {
     pos = {0,0,0, speed = 0.1},
     rot = {0,0,0, speed = 0.1},
     scale = {1,1,1, speed = 0.05}
-}
-
-local light_ui_data = {
-    color = {1,1,1,1},
-    intensity = {2, speed = 0.1},
-    range = {1, speed = 0.1},
-    degree = {45, speed = 0.1}
 }
 
 local camera_ui_data = {
@@ -41,61 +39,14 @@ local camera_ui_data = {
 }
 
 local function update_ui_data(eid)
-    if not eid then return end
-    local pos
-    local rot
-    local scale
-    if world[eid].camera then
-        local frustum = icamera.get_frustum(eid)
-        camera_ui_data.target[1] = camera_mgr.camera_list[eid].target
-        camera_ui_data.dist[1] = camera_mgr.camera_list[eid].dist_to_target
-        camera_ui_data.near_plane[1] = frustum.n
-        camera_ui_data.far_plane[1] = frustum.f
-        camera_ui_data.field_of_view[1] = frustum.fov
-        local frames = camera_mgr.get_recorder_frames(eid)
-        if #frames > 0 and camera_ui_data.current_frame <= #frames then
-            pos = math3d.totable(frames[camera_ui_data.current_frame].position)
-            rot = math3d.totable(frames[camera_ui_data.current_frame].rotation)
-            scale = {1,1,1}
-        end
-        for i, v in ipairs(frames) do
-            camera_ui_data.duration[i] = {frames[i].duration}
-        end
+    if not current_panel then return end
+    -- update transform
+    if current_panel.super then
+        -- BaseView
+        current_panel.super.update(current_panel)
+    else
+        current_panel:update()
     end
-    if world[eid].light_type then
-        -- local value = math3d.totable(ilight.intensity(eid))
-        -- light_ui_data.intensity[1] = value[1]
-        -- light_ui_data.range[1] = ilight.range(eid)
-        -- light_ui_data.degree[1] = math.deg(ilight.radian(eid))
-        -- local color = math3d.totable(ilight.color(eid))
-        -- light_ui_data.color[1] = color[1]
-        -- light_ui_data.color[2] = color[2]
-        -- light_ui_data.color[3] = color[3]
-        -- light_ui_data.color[4] = color[4]
-        if not light_panel then
-            light_panel = light_view()
-        end
-        light_panel:set_model(eid)
-        --update_light_ui(eid)
-    end
-    if not pos then
-        local s, r, t = math3d.srt(iom.srt(eid))
-        pos = math3d.totable(t)
-        rot = math3d.totable(math3d.quat2euler(r))
-        scale = math3d.totable(s)
-    end
-    base_ui_data.name.text = world[eid].name
-    base_ui_data.pos[1] = pos[1]
-    base_ui_data.pos[2] = pos[2]
-    base_ui_data.pos[3] = pos[3]
-    base_ui_data.rot[1] = math.deg(rot[1])
-    base_ui_data.rot[2] = math.deg(rot[2])
-    base_ui_data.rot[3] = math.deg(rot[3])
-    base_ui_data.scale[1] = scale[1]
-    base_ui_data.scale[2] = scale[2]
-    base_ui_data.scale[3] = scale[3]
-    
-    material_panel.update_ui_data(eid)
 end
 
 function m.update_template_tranform(eid)
@@ -112,14 +63,14 @@ function m.update_template_tranform(eid)
         s = {ts[1], ts[2], ts[3]},
         t = {tt[1], tt[2], tt[3]}
     }
-    if world[eid].camera then
-        local template_frustum = template.template.data.frustum
-        local frustum = icamera.get_frustum(eid)
-        template_frustum.aspect = frustum.aspect
-        template_frustum.n = frustum.n
-        template_frustum.f = frustum.f
-        template_frustum.fov = frustum.fov
-    end
+    -- if world[eid].camera then
+    --     local template_frustum = template.template.data.frustum
+    --     local frustum = icamera.get_frustum(eid)
+    --     template_frustum.aspect = frustum.aspect
+    --     template_frustum.n = frustum.n
+    --     template_frustum.f = frustum.f
+    --     template_frustum.fov = frustum.fov
+    -- end
 end
 
 function m.update_ui(ut)
@@ -166,39 +117,6 @@ local function on_scale_dirty(eid, scale)
         local oldScale = math3d.totable(iom.get_scale(eid))
         gizmo:set_scale(scale)
         world:pub {"EntityEvent", "scale", eid, oldScale, {scale[1], scale[2], scale[3]}}
-    end
-end
-
-
-
-local function show_light_property(eid)
-    imgui.cursor.Separator()
-    imgui.widget.Text("color")
-    imgui.cursor.SameLine(uiconfig.PropertyIndent)
-    if imgui.widget.ColorEdit("##lightcolor", light_ui_data.color) then
-        ilight.set_color(eid, light_ui_data.color)
-    end
-    imgui.widget.Text("intensity")
-    imgui.cursor.SameLine(uiconfig.PropertyIndent)
-    if imgui.widget.DragFloat("##intensity", light_ui_data.intensity) then
-        ilight.set_intensity(eid, light_ui_data.intensity[1])
-        light_gizmo.update_gizmo()
-    end
-    if world[eid].light_type ~= "directional" then
-        imgui.widget.Text("range")
-        imgui.cursor.SameLine(uiconfig.PropertyIndent)
-        if imgui.widget.DragFloat("##range", light_ui_data.range) then
-            ilight.set_range(eid, light_ui_data.range[1])
-            light_gizmo.update_gizmo()
-        end
-        if world[eid].light_type == "spot" then
-            imgui.widget.Text("radian")
-            imgui.cursor.SameLine(uiconfig.PropertyIndent)
-            if imgui.widget.DragFloat("##radian", light_ui_data.degree) then
-                ilight.set_radian(eid, math.rad(light_ui_data.degree[1]))
-                light_gizmo.update_gizmo()
-            end
-        end
     end
 end
 
@@ -287,79 +205,77 @@ local function show_camera_property(eid)
     end
 end
 
+local function get_camera_panel()
+    if not camera_panel then
+        camera_panel = require "widget.camera_view"(world)()
+    end
+    return camera_panel
+end
+
+local function get_light_panel()
+    if not light_panel then
+        light_panel = require "widget.light_view"(world)()
+    end
+    return light_panel
+end
+
+local function get_material_panel()
+    if not material_panel then
+        material_panel = require "widget.material_view"(world)()
+    end
+    return material_panel
+end
+
+local function get_base_panel()
+    if not base_panel then
+        base_panel = require "widget.base_view"(world)()
+    end
+    return base_panel
+end
+
+local function update_current()
+    if current_eid == gizmo.target_eid then return end
+    current_eid = gizmo.target_eid
+    if current_eid then
+        if world[current_eid].camera then
+            current_panel = get_camera_panel()
+        elseif world[current_eid].light_type then
+            current_panel = get_light_panel()
+        elseif world[current_eid].material then
+            current_panel = get_material_panel()
+        else
+            current_panel = get_base_panel()
+        end
+        current_panel:set_model(current_eid)
+    else
+        current_panel = nil
+    end
+end
+
 function m.show()
+    update_current()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
-    
-    local current_eid = gizmo.target_eid
     for _ in uiutils.imgui_windows("Inspector", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
-        if current_eid and world[current_eid] then
-            if base_ui_data.current_eid ~= current_eid then
-                base_ui_data.current_eid = current_eid
-                if world[current_eid].camera then
-                    set_current_frame(current_eid, 1, true)
-                end
-                update_ui_data(current_eid)
-            end
-            local template = hierarchy:get_template(current_eid)
-            if template and template.filename then
-                imgui.widget.Text("Prefab")
-                imgui.cursor.SameLine(uiconfig.PropertyIndent)
-                imgui.widget.Text(template.filename)
-            end
-            imgui.widget.Text("Name")
-            imgui.cursor.SameLine(uiconfig.PropertyIndent)
-            imgui.cursor.PushItemWidth(-1)
-            if imgui.widget.InputText("##Name", base_ui_data.name) then
-                local name = tostring(base_ui_data.name.text)
-                world[current_eid].name = name
-                world:pub {"EntityEvent", "name", current_eid, name}
-            end
-            imgui.cursor.PopItemWidth()
-            if imgui.widget.TreeNode("Transform", imgui.flags.TreeNode { "DefaultOpen" }) then
-                --imgui.cursor.SetNextItemWidth(100)
-                imgui.widget.Text("Position")
-                imgui.cursor.SameLine(uiconfig.PropertyIndent)
-                if imgui.widget.DragFloat("##Position", base_ui_data.pos) then
-                    on_position_dirty(current_eid, base_ui_data.pos)
-                end
-                --imgui.cursor.SetNextItemWidth(100)
-                imgui.widget.Text("Rotate")
-                imgui.cursor.SameLine(uiconfig.PropertyIndent)
-                if imgui.widget.DragFloat("##Rotate", base_ui_data.rot) then
-                    on_rotate_dirty(current_eid, base_ui_data.rot)
-                end
-                --imgui.cursor.SetNextItemWidth(100)
-                imgui.widget.Text("Scale")
-                imgui.cursor.SameLine(uiconfig.PropertyIndent)
-                if imgui.widget.DragFloat("##Scale", base_ui_data.scale) then
-                    on_scale_dirty(current_eid, base_ui_data.scale)
-                end
-                imgui.widget.TreePop()
-            end
-            if world[current_eid].camera then
-                show_camera_property(current_eid)
-            elseif world[current_eid].light_type then
-                --show_light_property(current_eid)
-                light_panel:show()
-            else
-                material_panel.show(current_eid)
-            end
+        if current_panel then
+            current_panel:show()
         end
     end
 end
 
 return function(w)
-    world = w
+    world           = w
     iom             = world:interface "ant.objcontroller|obj_motion"
     icamera         = world:interface "ant.camera|camera"
     ilight          = world:interface "ant.render|light"
     worldedit       = import_package "ant.editor".worldedit(world)
     camera_mgr      = require "camera_manager"(world)
-    material_panel  = require "widget.material"(world)
+    --material_panel  = require "widget.material"(world)
     gizmo           = require "gizmo.gizmo"(world)
     light_gizmo     = require "gizmo.light"(world)
     light_view      = require "widget.light_view"(world)
+    camera_view     = require "widget.camera_view"(world)
+    material_view   = require "widget.material_view"(world)
     return m
 end

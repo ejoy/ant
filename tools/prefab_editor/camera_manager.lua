@@ -187,11 +187,17 @@ function m.add_recorder_frame(eid, idx)
     local idx = #world[recorder].frames
     world[recorder].frames[idx].nearclip = default_near_clip
     world[recorder].frames[idx].farclip = default_far_clip
+    m.set_frame(eid, idx)
 end
 
 function m.delete_recorder_frame(eid, idx)
     if not m.camera_list[eid].recorder then return end
     icamera_recorder.remove(m.camera_list[eid].recorder, idx)
+    local frames = m.get_recorder_frames(eid)
+    if idx > #frames then
+        idx = #frames
+    end
+    m.set_frame(eid, idx)
 end
 
 function m.clear_recorder_frame(eid, idx)

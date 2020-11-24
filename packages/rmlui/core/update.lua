@@ -1,5 +1,6 @@
 local thread = require "thread"
 local rmlui = require "rmlui"
+local timer = require "core.timer"
 local channel = thread.channel_consume "rmlui"
 
 local filemanager = require "core.filemanager"
@@ -65,9 +66,10 @@ local function message(ok, what, ...)
     return true
 end
 
-return function ()
+return function (delta)
     while message(channel:pop()) do
     end
+    timer.update(delta)
     rmlui.RenderBegin()
     for _, ctx in ipairs(contexts) do
         rmlui.ContextUpdate(ctx)
