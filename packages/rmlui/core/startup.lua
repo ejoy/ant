@@ -43,7 +43,7 @@ function m.OnInlineScript(document, content, source_path, source_line)
 		console.warn(("file '%s' does not exist."):format(source_path))
 		return
 	end
-	local source = "--@"..path..":"..source_line.."\n"..content
+	local source = "--@"..path..":"..source_line.."\n "..content
 	local f, err = load(source, source, "t", environment[document])
 	if not f then
 		console.warn(err)

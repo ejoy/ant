@@ -182,8 +182,29 @@ struct EventListener final : public Rml::EventListener {
 
 static int
 lElementAddEventListener(lua_State* L) {
-	Rml::Element* e = (Rml::Element*)lua_touserdata(L, 1);
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->AddEventListener(lua_checkstdstring(L, 2), new EventListener(L, 3), lua_toboolean(L, 4));
+	return 0;
+}
+static int
+lElementDispatchEvent(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Dictionary params;
+	if (lua_type(L, 3) == LUA_TTABLE) {
+		lua_pushnil(L);
+		while (lua_next(L, 3)) {
+			if (lua_type(L, -2) != LUA_TSTRING) {
+				lua_pop(L, 1);
+				continue;
+			}
+			Rml::Dictionary::value_type v;
+			v.first = lua_checkstdstring(L, -2);
+			lua_getvariant(L, -1, &v.second);
+			params.emplace(v);
+			lua_pop(L, 1);
+		}
+	}
+	e->DispatchEvent(lua_checkstdstring(L, 2), params);
 	return 0;
 }
 
@@ -280,6 +301,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentShow", lDocumentShow },
 		{ "ElementAddEventListener", lElementAddEventListener },
+		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetProperty", lElementGetProperty },
 		{ "ElementRemoveProperty", lElementRemoveProperty },
