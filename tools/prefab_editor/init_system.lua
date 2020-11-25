@@ -7,7 +7,7 @@ local camera_mgr    = require "camera_manager"(world)
 local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
-
+local gd            = require "common.global_data"
 local bb_a = ecs.action "bind_billboard_camera"
 function bb_a.init(prefab, idx, value)
     local eid = prefab[idx]
@@ -55,6 +55,7 @@ function m:init()
     entity.create_procedural_sky()
     entity.create_grid_entity_simple("", nil, nil, nil, {srt={r={0,0.92388,0,0.382683},}})
     imgui.SetWindowTitle("PrefabEditor")
+    gd.package_path = "/pkg/tools.prefab_editor/"
 end
 
 

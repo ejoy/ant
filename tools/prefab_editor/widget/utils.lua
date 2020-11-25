@@ -95,7 +95,6 @@ function m.get_saveas_path(filetype, extension)
         if #path > pos + #extension - 1 then
             path = string.sub(path, 1, pos + #extension - 1)
         end
-        --utils.write_file(path, stringify(data))
         return path
     end
 end

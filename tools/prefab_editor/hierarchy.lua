@@ -94,7 +94,7 @@ function hierarchy:set_parent(eid, peid)
     self.all[eid] = removed_node
 end
 
-function hierarchy:update_prefab_template(prefab)
+function hierarchy:update_prefab_template()
     local prefab_template = {}
     local function construct_entity(eid, pt)
         table.insert(pt, self.all[eid].template.template)
@@ -123,7 +123,8 @@ function hierarchy:update_prefab_template(prefab)
         end
     end
     construct_entity(self.root.eid, prefab_template)
-    prefab.__class = prefab_template
+    return prefab_template
+    --prefab.__class = prefab_template
 end
 
 function hierarchy:get_locked_uidata(eid)

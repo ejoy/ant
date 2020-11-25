@@ -36,6 +36,7 @@ end
 function BaseView:set_model(eid)
     if self.eid == eid then return false end
     self.eid = eid
+    self.is_prefab = false
     local template = hierarchy:get_template(eid)
     if template and template.filename then
         self.is_prefab = true

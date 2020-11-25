@@ -19,14 +19,6 @@ local base_panel
 local current_panel
 local current_eid
 
-local base_ui_data = {
-    current_eid = -1,
-    name = {text = "noname"},
-    pos = {0,0,0, speed = 0.1},
-    rot = {0,0,0, speed = 0.1},
-    scale = {1,1,1, speed = 0.05}
-}
-
 local camera_ui_data = {
     target          = {-1},
     dist            = {5, speed = 0.1},
@@ -63,14 +55,6 @@ function m.update_template_tranform(eid)
         s = {ts[1], ts[2], ts[3]},
         t = {tt[1], tt[2], tt[3]}
     }
-    -- if world[eid].camera then
-    --     local template_frustum = template.template.data.frustum
-    --     local frustum = icamera.get_frustum(eid)
-    --     template_frustum.aspect = frustum.aspect
-    --     template_frustum.n = frustum.n
-    --     template_frustum.f = frustum.f
-    --     template_frustum.fov = frustum.fov
-    -- end
 end
 
 function m.update_ui(ut)
@@ -271,7 +255,6 @@ return function(w)
     ilight          = world:interface "ant.render|light"
     worldedit       = import_package "ant.editor".worldedit(world)
     camera_mgr      = require "camera_manager"(world)
-    --material_panel  = require "widget.material"(world)
     gizmo           = require "gizmo.gizmo"(world)
     light_gizmo     = require "gizmo.light"(world)
     light_view      = require "widget.light_view"(world)

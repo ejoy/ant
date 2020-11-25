@@ -340,7 +340,7 @@ function TextureResource:show()
     imgui.cursor.SameLine()
     imgui.util.PushID("Save As" .. self.label)
     if imgui.widget.Button("Save As") then
-        local path = uiutils.get_saveas_path("Texture", "*.texture")
+        local path = uiutils.get_saveas_path("Texture", ".texture")
         if path then
             path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
             self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(path):remove_filename()))

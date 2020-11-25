@@ -2,7 +2,7 @@ local imgui = require "imgui"
 local rhwi  = import_package 'ant.render'.hwi
 local lfs   = require "filesystem.local"
 local fs    = require "filesystem"
-
+local widget_utils = require "widget.utils"
 local m = {}
 local world
 local prefab_mgr
@@ -17,15 +17,9 @@ function m.show()
                 prefab_mgr:save_prefab()
             end
             if imgui.widget.MenuItem("Save As..") then
-                local filedialog = require 'filedialog'
-                local dialog_info = {
-                    Owner = rhwi.native_window(),
-                    Title = "Save As..",
-                    FileTypes = {"Prefab", "*.prefab" }
-                }
-                local ok, path = filedialog.save(dialog_info)
-                if ok then
-                    prefab_mgr:save_prefab(path .. ".prefab")
+                local path = widget_utils.get_saveas_path("Prefab", ".prefab")
+                if path then
+                    prefab_mgr:save_prefab(path)
                 end
             end
             imgui.widget.EndMenu()
