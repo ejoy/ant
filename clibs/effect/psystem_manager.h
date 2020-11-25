@@ -8,15 +8,15 @@
 #define PARTICLE_COMPONENT 7
 #endif
 
+#ifndef PARTICLE_KEY_COMPONENT
+#define PARTICLE_KEY_COMPONENT PARTICLE_COMPONENT
+#endif
+
 typedef unsigned short particle_index;
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
-#define PARTICLE_ARRANGE_INIT 0
-#define PARTICLE_ARRANGE_PARTICLE 1
-#define PARTICLE_ARRANGE_SYSTEM 2
 
 struct particle_remap {
 	int component_id;
@@ -33,7 +33,7 @@ struct particle_arrange_context {
 
 struct particle {
 	particle_index removed_list;
-	particle_index c[PARTICLE_COMPONENT];
+	particle_index c[PARTICLE_KEY_COMPONENT];
 };
 
 struct particle_ids {
@@ -106,7 +106,7 @@ particlesystem_count(struct particle_manager *P, int component_id) {
 static inline particle_index
 particlesystem_component(struct particle_manager *P, int component_id, particle_index index, int sibling_component_id) {
 	particle_index pid = find_particle_(P, component_id, index);
-	assert(sibling_component_id>=0 && sibling_component_id<PARTICLE_COMPONENT);
+	assert(sibling_component_id>=0 && sibling_component_id<PARTICLE_KEY_COMPONENT);
 	return P->p[pid].c[sibling_component_id];
 }
 
@@ -129,7 +129,7 @@ add_particle_(struct particle_manager *P) {
 	struct particle *p = &P->p[index];
 	p->removed_list = PARTICLE_INVALID;
 	int i;
-	for (i=0;i<PARTICLE_COMPONENT;i++) {
+	for (i=0;i<PARTICLE_KEY_COMPONENT;i++) {
 		p->c[i] = PARTICLE_INVALID;
 	}
 	return index;
@@ -166,7 +166,9 @@ particlesystem_add(struct particle_manager *P, int component_n, int components[]
 		int c = components[i];
 		assert(c>=0 && c<PARTICLE_COMPONENT);
 		particle_index index = add_particle_ids_(&P->c[c], pid);
-		p->c[c] = index;
+		// make key index
+		if (c < PARTICLE_KEY_COMPONENT)
+			p->c[c] = index;
 	}
 	return 1;
 }
@@ -325,7 +327,7 @@ particlesystem_debug(struct particle_manager *P, const char **cname) {
 	for (i=0;i<P->n;i++) {
 		struct particle *p = &P->p[i];
 		printf("\t[P%d] :", i);
-		for (j=0;j<PARTICLE_COMPONENT;j++) {
+		for (j=0;j<PARTICLE_KEY_COMPONENT;j++) {
 			if (p->c[j] != PARTICLE_INVALID) {
 				if (cname) {
 					printf(" %s:%d", cname[j],p->c[j]);
