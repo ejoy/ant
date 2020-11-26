@@ -41,5 +41,9 @@ local event_type = {
 }
 
 return function (e)
-    return e
+	if e.target then
+		local createElement = require "core.DOM.element"
+		e.target = createElement(e.target)
+	end
+	return e
 end

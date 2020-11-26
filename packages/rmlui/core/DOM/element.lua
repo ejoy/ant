@@ -1,7 +1,17 @@
 local event = require "core.event"
-local mt = {}
-local m = {}
-mt.__index = m
+
+local attribute_mt = {}
+
+function attribute_mt:__index(k)
+    return rmlui.ElementGetAttribute(self._handle, k)
+end
+function attribute_mt:__newindex(k, v)
+    if v == nil then
+        rmlui.ElementRemoveAttribute(self._handle, k)
+    else
+        rmlui.ElementSetAttribute(self._handle, k, v)
+    end
+end
 
 local style_mt = {}
 function style_mt:__index(name)
@@ -17,17 +27,22 @@ function style_mt:__newindex(name, value)
     end
 end
 
-function m:addEventListener(type, listener, useCapture)
+local api = {}
+function api:addEventListener(type, listener, useCapture)
     rmlui.ElementAddEventListener(self._handle, type, listener, useCapture)
 end
 
 local function constructor(document, handle)
+    local createDocument = require "core.DOM.document"
     local o = {
         _handle = handle,
-        ownerDocument = document,
+        ownerDocument = createDocument(document),
         style = setmetatable({_handle = handle}, style_mt)
     }
-    return setmetatable(o, mt)
+    for k,v in pairs(api) do
+        o[k] = v
+    end
+    return setmetatable(o, attribute_mt)
 end
 
 local pool = {}
@@ -36,14 +51,17 @@ function event.OnDeleteDocument(handle)
     pool[handle] = nil
 end
 
-return function (document, handle)
+return function (handle, document)
     if handle == nil then
         return
     end
-    local _pool = pool[document._handle]
+    if not document then
+        document = rmlui.ElementGetOwnerDocument(handle)
+    end
+    local _pool = pool[document]
     if not _pool then
         _pool = {}
-        pool[document._handle] = _pool
+        pool[document] = _pool
     end
     local o = _pool[handle]
     if not o then

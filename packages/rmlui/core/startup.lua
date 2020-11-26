@@ -86,7 +86,7 @@ function m.OnEventAttach(ev, document, element, source)
 		console.warn(err)
 		return
 	end
-	local ok, f = invoke(payload, createElement(globals.document, element))
+	local ok, f = invoke(payload, createElement(element, document))
 	if not ok then
 		return
 	end

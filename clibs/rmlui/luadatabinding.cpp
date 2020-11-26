@@ -66,9 +66,11 @@ lua_pushevent(lua_State* L, const Rml::Event& event) {
 		lua_pushvariant(L, v.second);
 		lua_rawset(L, -3);
 	}
-	lua_pushstring(L, "type");
 	lua_pushstring(L, event.GetType().c_str());
-	lua_rawset(L, -3);
+	lua_setfield(L, -2, "type");
+	Rml::Element* target = event.GetTargetElement();
+	target? lua_pushlightuserdata(L, target): lua_pushnil(L);
+	lua_setfield(L, -2, "target");
 }
 
 void

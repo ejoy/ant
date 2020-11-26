@@ -35,7 +35,8 @@
         </style>
         <script type="text/x-lua" >
             local start = window.createModel "start" {}
-            function start.new()
+            function start.new(event)
+                console.log(event.target.id)
                 local newWindow = window.open("script.rml")
                 newWindow.addEventListener('message', function(event)
                     console.log(event.data)
@@ -52,7 +53,7 @@
     </head>
     <body>
         <div id="test" data-model="start">
-            <button data-event-click="new()">新游戏</button>
+            <button id = "new" data-event-click="new()">新游戏</button>
             <button data-event-click="load()">载入游戏</button>
             <button data-event-click="setting()">设置</button>
             <button data-event-click="exit()">退出</button>

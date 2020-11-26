@@ -217,6 +217,28 @@ lElementGetInnerRML(lua_State *L) {
 }
 
 static int
+lElementGetAttribute(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	const Rml::Variant* attr = e->GetAttribute(lua_checkstdstring(L, 2));
+	if (!attr) {
+		return 0;
+	}
+	lua_pushvariant(L, *attr);
+	return 1;
+}
+
+static int
+lElementGetOwnerDocument(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::ElementDocument* doc = e->GetOwnerDocument();
+	if (!doc) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, doc);
+	return 1;
+}
+
+static int
 lElementGetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const Rml::Property* prop = e->GetProperty(lua_checkstdstring(L, 2));
@@ -228,9 +250,26 @@ lElementGetProperty(lua_State* L) {
 }
 
 static int
+lElementRemoveAttribute(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->RemoveAttribute(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+
+static int
 lElementRemoveProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->RemoveProperty(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+static int
+lElementSetAttribute(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Variant attr;
+	lua_getvariant(L, 3, &attr);
+	e->SetAttribute(lua_checkstdstring(L, 2), attr);
 	return 0;
 }
 
@@ -303,8 +342,12 @@ lua_plugin_apis(lua_State *L) {
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
+		{ "ElementGetAttribute", lElementGetAttribute },
+		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetProperty", lElementGetProperty },
+		{ "ElementRemoveAttribute", lElementRemoveAttribute },
 		{ "ElementRemoveProperty", lElementRemoveProperty },
+		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "Log", lLog },
 		{ "RenderBegin", lRenderBegin },
