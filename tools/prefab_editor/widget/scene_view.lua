@@ -143,9 +143,26 @@ local function show_scene_node(node)
         imgui.widget.TreePop()
     end
 end
-local create_light = {"directional", "point", "spot"}
-local create_geom = {"cube(raw)", "cone(raw)", "cylinder(raw)", "sphere(raw)", "torus(raw)",
-                    "cube(prefab)", "cone(prefab)", "cylinder(prefab)", "sphere(prefab)", "torus(prefab)"}
+
+local create_light = {
+    "directional",
+    "point",
+    "spot"
+}
+
+local create_geom = {
+    "cube(raw)",
+    "cone(raw)",
+    "cylinder(raw)",
+    "sphere(raw)",
+    "torus(raw)",
+    "cube(prefab)",
+    "cone(prefab)",
+    "cylinder(prefab)",
+    "sphere(prefab)",
+    "torus(prefab)"
+}
+
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
