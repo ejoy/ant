@@ -17,5 +17,7 @@ system "rmlui_system"
 
 interface "rmlui"
     .implement "rmlui_system.lua"
+    .method "initialize"
     .method "preload_dir"
-    .method "message"
+    .method "debugger"
+    .method "open"

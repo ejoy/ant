@@ -1,7 +1,8 @@
 local event = require "core.event"
 local timer = require "core.timer"
+local contextManager = require "core.contextManager"
 local createEvent = require "core.DOM.event"
-local environment = require "core.environment"
+local createExternWindow = require "core.externWindow"
 
 local datamodels = {}
 local datamodel_mt = {
@@ -30,7 +31,8 @@ function event.OnContextDestroy(context)
     datamodels[context] = nil
 end
 
-local function createWindow(document, get_source)
+local function createWindow(document, source)
+    --TODO: pool
     local window = {}
     function window.createModel(name)
         return function (init)
@@ -42,22 +44,15 @@ local function createWindow(document, get_source)
         end
     end
     function window.open(url)
-        local context = rmlui.DocumentGetContext(document)
-        local newdoc = rmlui.ContextLoadDocument(context, url)
+        local newdoc = contextManager.open(url)
         if not newdoc then
             return
         end
-        rmlui.DocumentShow(newdoc)
-        local newwindow
-        newwindow = createWindow(newdoc, function()
-            return createWindow(document, function()
-                return newwindow
-            end)
-        end)
-        return newwindow
+        event("OnDocumentExternName", newdoc, document)
+        return createWindow(newdoc, document)
     end
     function window.close()
-        rmlui.DocumentClose(document)
+        contextManager.close(rmlui.DocumentGetContext(document))
     end
     function window.setTimeout(f, delay)
         return timer.wait(delay, f)
@@ -72,11 +67,11 @@ local function createWindow(document, get_source)
         t:remove()
     end
     function window.addEventListener(type, listener, useCapture)
-        rmlui.ElementAddEventListener(document, type, listener, useCapture)
+        rmlui.ElementAddEventListener(document, type, function(e) listener(createEvent(e)) end, useCapture)
     end
     function window.postMessage(data)
         rmlui.ElementDispatchEvent(document, "message", {
-            source = get_source and get_source() or window,
+            source = source,
             data = data,
         })
     end
@@ -85,5 +80,7 @@ end
 
 function event.OnNewDocument(document, globals)
     globals.window = createWindow(document)
+    globals.window.extern = createExternWindow(document)
 end
 
+return createWindow

@@ -18,8 +18,10 @@ local irq       = world:interface "ant.render|irenderqueue"
 local timer     = world:interface "ant.timer|timer"
 
 local thread     = require "thread"
-thread.newchannel "rmlui"
-local channel    = thread.channel_produce "rmlui"
+thread.newchannel "rmlui_req"
+thread.newchannel "rmlui_res"
+local req = thread.channel_produce "rmlui_req"
+local res = thread.channel_consume "rmlui_res"
 
 local rmlui_sys = ecs.system "rmlui_system"
 
@@ -36,7 +38,7 @@ local function preload_dir(dir)
         end
     end
     import_font(fs.path(dir))
-    channel("AddResourceDir", dir)
+    req("add_resource_dir", dir)
 end
 
 function rmlui_sys:init()
@@ -96,19 +98,46 @@ function rmlui_sys:init()
     preload_dir "/pkg/ant.resources.binary/ui/test"
 end
 
+local windows = {}
+local events = {}
+local CMD = {}
+
+function CMD.message(name, data)
+    local window = windows[name]
+    local event = events[name]
+    if window and event and event.message then
+        event.message {
+            source = window,
+            data = data,
+        }
+    end
+end
+
+local function message(ok, what, ...)
+    if not ok then
+        return false
+    end
+    if CMD[what] then
+        CMD[what](...)
+    end
+    return true
+end
+
 local eventMouse = world:sub {"mouse"}
 local mouseId = { LEFT = 0, RIGHT = 1, MIDDLE = 2}
 function rmlui_sys:ui_update()
     for _,what,state,x,y in eventMouse:unpack() do
         if state == "MOVE" then
-            channel("MouseMove", x, y)
+            req("mouseMove", x, y)
         elseif state == "DOWN" then
-            channel("MouseDown", mouseId[what])
+            req("mouseDown", mouseId[what])
         elseif state == "UP" then
-            channel("MouseUp", mouseId[what])
+            req("mouseUp", mouseId[what])
         end
     end
     rmlui.update(timer.delta())
+    while message(res:pop()) do
+    end
 end
 
 function rmlui_sys:exit()
@@ -117,11 +146,38 @@ end
 
 
 local iRmlUi = ecs.interface "rmlui"
+local maxID = 0
 
 function iRmlUi.preload_dir(dir)
     preload_dir(dir)
 end
 
-function iRmlUi.message(...)
-    channel(...)
+function iRmlUi.initialize(w, h)
+    req("initialize", w, h)
+end
+
+function iRmlUi.debugger(open)
+    req("debugger", open)
+end
+
+function iRmlUi.open(url)
+    maxID = maxID + 1
+    local name = "#"..maxID
+    req("open", name, url)
+    local w = {}
+    local event = {}
+    windows[name] = w
+    events[name] = event
+    function w.close()
+        req("close", name)
+        windows[name] = nil
+        events[name] = nil
+    end
+    function w.postMessage(data)
+        req("postMessage", name, data)
+    end
+    function w.addEventListener(type, listener)
+        event[type] = listener
+    end
+    return w
 end

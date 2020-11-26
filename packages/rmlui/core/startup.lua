@@ -1,12 +1,12 @@
 local console = require "core.console"
 local sandbox = require "core.sandbox"
-local filemanager = require "core.filemanager"
+local fileManager = require "core.fileManager"
 local event = require "core.event"
 local createElement = require "core.DOM.element"
 local createEvent = require "core.DOM.event"
 local environment = require "core.environment"
 require "core.DOM.document"
-require "core.window"
+require "core.DOM.window"
 
 local m = {}
 
@@ -31,6 +31,7 @@ end
 function m.OnNewDocument(document)
 	local globals = sandbox()
 	event("OnNewDocument", document, globals)
+	globals.window.document = globals.document
 	environment[document] = globals
 end
 function m.OnDeleteDocument(document)
@@ -38,7 +39,7 @@ function m.OnDeleteDocument(document)
 	environment[document] = nil
 end
 function m.OnInlineScript(document, content, source_path, source_line)
-	local path = filemanager.realpath(source_path)
+	local path = fileManager.realpath(source_path)
 	if not path then
 		console.warn(("file '%s' does not exist."):format(source_path))
 		return
@@ -52,7 +53,7 @@ function m.OnInlineScript(document, content, source_path, source_line)
 	invoke(f)
 end
 function m.OnExternalScript(document, source_path)
-	local path = filemanager.realpath(source_path)
+	local path = fileManager.realpath(source_path)
 	if not path then
 		console.warn(("file '%s' does not exist."):format(source_path))
 		return
@@ -107,7 +108,7 @@ function m.OnEventDetach(ev)
 end
 
 function m.OnOpenFile(path)
-	return filemanager.realpath(path)
+	return fileManager.realpath(path)
 end
 
 m.OnUpdate = require "core.update"

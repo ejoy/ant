@@ -37,11 +37,7 @@
             local start = window.createModel "start" {}
             function start.new(event)
                 console.log(event.target.id)
-                local newWindow = window.open("script.rml")
-                newWindow.addEventListener('message', function(event)
-                    console.log(event.data)
-                end)
-                newWindow.postMessage('message')
+                window.open("script.rml")
             end
             function start.load()
             end
@@ -49,6 +45,9 @@
             end
             function start.exit()
             end
+            window.addEventListener('message', function(event)
+                event.source.postMessage(event.data)
+            end)
         </script>
     </head>
     <body>

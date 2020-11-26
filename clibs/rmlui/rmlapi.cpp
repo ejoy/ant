@@ -41,7 +41,7 @@ lua_pushstdstring(lua_State* L, const std::string& str) {
 }
 
 namespace {
-	
+
 static int
 lContextLoadDocument(lua_State* L) {
 	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
@@ -283,15 +283,20 @@ lElementSetProperty(lua_State* L) {
 
 static int
 lRmlCreateContext(lua_State* L) {
-	const char* name = luaL_checkstring(L, 1);
 	int w = luaL_checkinteger(L, 2);
 	int h = luaL_checkinteger(L, 3);
-	Rml::Context* ctx = Rml::CreateContext(name, Rml::Vector2i(w, h));
+	Rml::Context* ctx = Rml::CreateContext(lua_checkstdstring(L, 1), Rml::Vector2i(w, h));
 	if (!ctx) {
 		return 0;
 	}
 	lua_pushlightuserdata(L, ctx);
 	return 1;
+}
+
+static int
+lRmlRemoveContext(lua_State* L) {
+	Rml::RemoveContext(lua_checkstdstring(L, 1));
+	return 0;
 }
 
 static int
@@ -353,6 +358,7 @@ lua_plugin_apis(lua_State *L) {
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlCreateContext", lRmlCreateContext },
+		{ "RmlRemoveContext", lRmlRemoveContext },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
