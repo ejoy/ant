@@ -11,44 +11,41 @@ function BaseView:_init()
     local base = {}
     base["prefab"]   = uiproperty.EditText({label = "Prefabe", readonly = true})
     base["name"]     = uiproperty.EditText({label = "Name"})
-    self.base        = base
-    self.base_property = uiproperty.Group({label = "BaseInfo"}, base)
-
-    local transform = {}
-    transform["position"] = uiproperty.Float({label = "Position", dim = 3, speed = 0.1})
-    transform["rotate"]   = uiproperty.Float({label = "Rotate", dim = 3})
-    transform["scale"]    = uiproperty.Float({label = "Scale", dim = 3, speed = 0.05})
+    base["position"] = uiproperty.Float({label = "Position", dim = 3, speed = 0.1})
+    base["rotate"]   = uiproperty.Float({label = "Rotate", dim = 3})
+    base["scale"]    = uiproperty.Float({label = "Scale", dim = 3, speed = 0.05})
     
-    self.transform        = transform
-    self.transform_property = uiproperty.Group({label = "Transform"}, transform)
+    self.base        = base
+    self.general_property = uiproperty.Group({label = "General"}, base)
     --
     self.base.prefab:set_getter(function() return self:on_get_prefab() end)
     self.base.name:set_setter(function(value) self:on_set_name(value) end)      
     self.base.name:set_getter(function() return self:on_get_name() end)
-    self.transform.position:set_setter(function(...) self:on_set_position(...) end)
-    self.transform.position:set_getter(function() return self:on_get_position() end)
-    self.transform.rotate:set_setter(function(...) self:on_set_rotate(...) end)
-    self.transform.rotate:set_getter(function() return self:on_get_rotate() end)
-    self.transform.scale:set_setter(function(...) self:on_set_scale(...) end)
-    self.transform.scale:set_getter(function() return self:on_get_scale() end)
+    self.base.position:set_setter(function(...) self:on_set_position(...) end)
+    self.base.position:set_getter(function() return self:on_get_position() end)
+    self.base.rotate:set_setter(function(...) self:on_set_rotate(...) end)
+    self.base.rotate:set_getter(function() return self:on_get_rotate() end)
+    self.base.scale:set_setter(function(...) self:on_set_scale(...) end)
+    self.base.scale:set_getter(function() return self:on_get_scale() end)
 end
 
 function BaseView:set_model(eid)
     if self.eid == eid then return false end
     self.eid = eid
+    self.is_prefab = false
     local template = hierarchy:get_template(eid)
     if template and template.filename then
         self.is_prefab = true
     end
     local transform = {}
-    transform[#transform + 1] = self.transform.position
+    transform[#transform + 1] = self.base.position
     if self:has_rotate() then
-        transform[#transform + 1] = self.transform.rotate
+        transform[#transform + 1] = self.base.rotate
     end
     if self:has_scale() then
-        transform[#transform + 1] = self.transform.scale
+        transform[#transform + 1] = self.base.scale
     end
-    self.transform_property:set_subproperty(transform)
+    self.general_property:set_subproperty(transform)
     BaseView.update(self)
     return true
 end
@@ -107,16 +104,14 @@ function BaseView:update()
     if self.is_prefab then
         self.base.prefab:update()
     end
-    self.base.name:update()
-    self.transform_property:update()
+    self.general_property:update()
 end
 
 function BaseView:show()
     if self.is_prefab then
         self.base.prefab:show()
     end
-    self.base.name:show()
-    self.transform_property:show()
+    self.general_property:show()
 end
 
 return function(w)

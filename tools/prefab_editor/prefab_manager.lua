@@ -7,6 +7,7 @@ local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
 local widget_utils  = require "widget.utils"
 local bgfx          = require "bgfx"
+local gd            = require "common.global_data"
 local geo_utils
 local logger
 local ilight
@@ -101,7 +102,7 @@ local function create_light_billboard(light_eid)
             billboard = {lock = "camera"},
             state = 1,
             scene_entity = true,
-            material = "res/materials/billboard.material"
+            material = gd.package_path .. "res/materials/billboard.material"
         },
         action = {
             bind_billboard_camera = "camera"
@@ -134,7 +135,9 @@ local geom_mesh_file = {
     ["torus(raw)"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
 }
 function m:create(what)
-    local localpath = tostring(fs.path "":localpath())
+    if not self.root then
+        self:reset_prefab()
+    end
     if what == "camera" then
         local new_camera, camera_templ = camera_mgr.ceate_camera()
         local s, r, t = math3d.srt(camera_templ.data.transform)
@@ -175,15 +178,15 @@ function m:create(what)
         self.entities[#self.entities+1] = new_entity
         hierarchy:add(new_entity, {template = temp.__class[1]}, self.root)
     elseif what == "cube(prefab)" then
-        m:add_prefab(localpath .. "res/cube.prefab")
+        m:add_prefab(gd.package_path .. "res/cube.prefab")
     elseif what == "cone(prefab)" then
-        m:add_prefab(localpath .. "res/cone.prefab")
+        m:add_prefab(gd.package_path .. "res/cone.prefab")
     elseif what == "cylinder(prefab)" then
-        m:add_prefab(localpath .. "res/cylinder.prefab")
+        m:add_prefab(gd.package_path .. "res/cylinder.prefab")
     elseif what == "sphere(prefab)" then
-        m:add_prefab(localpath .. "res/sphere.prefab")
+        m:add_prefab(gd.package_path .. "res/sphere.prefab")
     elseif what == "torus(prefab)" then
-        m:add_prefab(localpath .. "res/torus.prefab")
+        m:add_prefab(gd.package_path .. "res/torus.prefab")
     elseif what == "directional" or what == "point" or what == "spot" then      
         local ilight = world:interface "ant.render|light" 
         local _, newlight = ilight.create({
@@ -243,7 +246,7 @@ function m:open(filename)
     world:pub {"WindowTitle", filename}
 end
 
-function m:open_prefab(prefab)
+function m:reset_prefab()
     camera_mgr.clear()
     for _, eid in ipairs(self.entities) do
         if type(eid) == "table" then
@@ -256,11 +259,7 @@ function m:open_prefab(prefab)
         world:remove_entity(eid)
     end
     light_gizmo.clear()
-
-    self.prefab = prefab
-    local entities = worldedit:prefab_instance(prefab)
-    self.entities = entities
-
+    hierarchy:clear()
     self.root = world:create_entity{
 		policy = {
 			"ant.general|name",
@@ -271,9 +270,14 @@ function m:open_prefab(prefab)
 			name = "scene root",
 		},
     }
-    hierarchy:clear()
     hierarchy:set_root(self.root)
-    
+end
+
+function m:open_prefab(prefab)
+    self:reset_prefab()
+    self.prefab = prefab
+    local entities = worldedit:prefab_instance(prefab)
+    self.entities = entities
     local remove_entity = {}
     local add_entity = {}
     local last_camera
@@ -347,6 +351,9 @@ local nameidx = 0
 local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameidx end
 
 function m:add_prefab(filename)
+    if not self.root then
+        self:reset_prefab()
+    end
     local entity_template = {
         action = {
             mount = 1
@@ -366,16 +373,16 @@ function m:add_prefab(filename)
     local entity_name = gen_prefab_name()
     entity_template.data.name = entity_name
     world[mount_root].name = entity_name
-    local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
-    local prefab = worldedit:prefab_template(vfspath)
+    -- local vfspath = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
+    local prefab = worldedit:prefab_template(filename)
     local entities = worldedit:prefab_instance(prefab)
     world[entities[1]].parent = mount_root
     
     set_select_adapter(entities, mount_root)
-    local current_dir = lfs.path(tostring(self.prefab)):parent_path()
-    local relative_path = lfs.relative(lfs.path(vfspath), current_dir)
+    -- local current_dir = lfs.path(tostring(self.prefab)):parent_path()
+    -- local relative_path = lfs.relative(lfs.path(vfspath), current_dir)
 
-    hierarchy:add(mount_root, {template = entity_template, filename = tostring(relative_path), children = entities}, self.root)
+    hierarchy:add(mount_root, {template = entity_template, filename = filename, children = entities}, self.root)
 end
 
 function m:update_material(eid, mtl)
@@ -444,21 +451,27 @@ local function convert_path(path, current_dir, new_dir, glb_filename)
     return new_path
 end
 
-function m:save_prefab(filename)
-    if not self.prefab then return end
-    if filename then
-        filename = string.gsub(filename, "\\", "/")
+function m:save_prefab(path)
+    local filename
+    if not self.prefab and not path then
+        filename = widget_utils.get_saveas_path("Prefab", ".prefab")
+        if not filename then return end
+    end
+    if path then
+        filename = string.gsub(path, "\\", "/")
         local pos = string.find(filename, "%.prefab")
         if #filename > pos + 6 then
             filename = string.sub(filename, 1, pos + 6)
         end
-        filename = tostring(lfs.relative(lfs.path(filename), fs.path "":localpath()))
     end
-    local prefab_filename = tostring(self.prefab)
+    local prefab_filename = self.prefab and tostring(self.prefab) or ""
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
-    hierarchy:update_prefab_template(assetmgr.edit(self.prefab))
-    self.entities.__class = self.prefab.__class
+    local current_templ = hierarchy:update_prefab_template()
+    if self.prefab then
+        self.prefab.__class = current_templ
+    end
+    self.entities.__class = current_templ
     
     local path_list = split(prefab_filename)
     local glb_filename
@@ -504,7 +517,7 @@ function m:save_prefab(filename)
         end
     end
     utils.write_file(filename, stringify(data))
-    self:open(tostring(fs.path "":localpath()) .. filename)
+    self:open(filename)
     world:pub {"ResourceBrowser", "dirty"}
 end
 

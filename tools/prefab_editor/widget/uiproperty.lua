@@ -51,8 +51,7 @@ function PropertyBase:update()
 end
 
 function PropertyBase:show()
-    imgui.widget.Text(self.label)
-    imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    imgui.widget.PropertyLabel(self.label)
     if self.imgui_func("##" .. self.label, self.uidata) then
         if self.dim == 1 then
             self.modifier.setter(self.uidata[1])
@@ -126,8 +125,9 @@ function EditText:_init(config, modifier)
 end
 
 function EditText:show()
-    imgui.widget.Text(self.label)
-    imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    -- imgui.widget.Text(self.label)
+    -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    imgui.widget.PropertyLabel(self.label)
     if self.readonly then
         imgui.widget.Text(tostring(self.uidata.text))
     else
@@ -171,8 +171,9 @@ function ResourcePath:get_extension()
 end
 
 function ResourcePath:show()
-    imgui.widget.Text(self.label)
-    imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    -- imgui.widget.Text(self.label)
+    -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
+    imgui.widget.PropertyLabel(self.label)
     if self.imgui_func("##" .. self.label, self.uidata) then
     end
     if imgui.widget.BeginDragDropTarget() then
@@ -261,14 +262,15 @@ function TextureResource:show()
     if not self.runtimedata then return end
     local texture_handle = self.runtimedata._data.handle
     if not texture_handle then return end
-    imgui.cursor.Indent()
+    --imgui.cursor.Indent()
     imgui.cursor.Columns(2, self.label, false)
     imgui.cursor.SetColumnOffset(2, uiconfig.PropertyIndent)
     imgui.widget.Image(texture_handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
-    imgui.cursor.SameLine(uiconfig.PropertyImageSize * 2)
+    --imgui.cursor.SameLine(uiconfig.PropertyImageSize * 2)
     imgui.cursor.NextColumn()
     imgui.widget.Text("image")
     imgui.cursor.SameLine()
+    --imgui.widget.PropertyLabel("image")
     imgui.cursor.PushItemWidth(-1)
     if imgui.widget.InputText("##" .. self.metadata.path .. self.label, self.uidata2) then
     end
@@ -340,7 +342,7 @@ function TextureResource:show()
     imgui.cursor.SameLine()
     imgui.util.PushID("Save As" .. self.label)
     if imgui.widget.Button("Save As") then
-        local path = uiutils.get_saveas_path("Texture", "*.texture")
+        local path = uiutils.get_saveas_path("Texture", ".texture")
         if path then
             path = tostring(lfs.relative(lfs.path(path), fs.path "":localpath()))
             self.metadata.path = tostring(lfs.relative(lfs.path(self.metadata.path), lfs.path(path):remove_filename()))
@@ -348,8 +350,8 @@ function TextureResource:show()
         end
     end
     imgui.util.PopID()
-    imgui.cursor.Unindent()
     imgui.cursor.Columns(1)
+    --imgui.cursor.Unindent()
 end
 
 

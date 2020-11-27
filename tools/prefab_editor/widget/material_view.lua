@@ -239,13 +239,13 @@ function MaterialView:show()
     BaseView.show(self)
     if imgui.widget.TreeNode("Material", imgui.flags.TreeNode { "DefaultOpen" }) then
         self.mat_file:show()
-        imgui.cursor.Indent()
-        self.vs_file:show()
-        self.fs_file:show()
+        -- imgui.cursor.Indent()
+        -- self.vs_file:show()
+        -- self.fs_file:show()
         self.save_mat:show()
         imgui.cursor.SameLine()
         self.save_as_mat:show()
-        imgui.cursor.Unindent()
+        -- imgui.cursor.Unindent()
         for i = 1, self.sampler_num do
             self.samplers[i]:show()
         end

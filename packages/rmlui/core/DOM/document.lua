@@ -6,7 +6,7 @@ local m = {}
 mt.__index = m
 
 function m:getElementById(id)
-    return createElement(self, rmlui.DocumentGetElementById(self._handle, id))
+    return createElement(rmlui.DocumentGetElementById(self._handle, id), self._handle)
 end
 
 local function constructor(handle)

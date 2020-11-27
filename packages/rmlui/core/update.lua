@@ -1,63 +1,24 @@
 local thread = require "thread"
-local rmlui = require "rmlui"
 local timer = require "core.timer"
-local channel = thread.channel_consume "rmlui"
-
-local filemanager = require "core.filemanager"
+local contextManager = require "core.contextManager"
+local fileManager = require "core.fileManager"
+local windowManager = require "core.windowManager"
+local channel = thread.channel_consume "rmlui_req"
 
 local CMD = {}
-local contexts = {}
-local debuggerInitialized = false
 
-function CMD.CreateContext(name, w, h)
-    local ctx = rmlui.RmlCreateContext(name, w, h)
-    contexts[#contexts+1] = ctx
-    contexts[name] = ctx
-end
+CMD.initialize = contextManager.initialize
+CMD.mouseMove = contextManager.mouseMove
+CMD.mouseDown = contextManager.mouseDown
+CMD.mouseUp = contextManager.mouseUp
+CMD.debugger = contextManager.debugger
 
-function CMD.LoadDocument(name, path)
-    local ctx = contexts[name]
-    if ctx then
-        local doc = rmlui.ContextLoadDocument(ctx, path)
-        if doc then
-            rmlui.DocumentShow(doc)
-        end
-    end
-end
+CMD.open = windowManager.open
+CMD.close = windowManager.close
+CMD.postMessage = windowManager.postMessage
 
-function CMD.MouseMove(x, y)
-    for _, ctx in ipairs(contexts) do
-        rmlui.ContextProcessMouseMove(ctx, x, y)
-    end
-end
-
-function CMD.MouseDown(button)
-    for _, ctx in ipairs(contexts) do
-        rmlui.ContextProcessMouseButtonDown(ctx, button)
-    end
-end
-
-function CMD.MouseUp(button)
-    for _, ctx in ipairs(contexts) do
-        rmlui.ContextProcessMouseButtonUp(ctx, button)
-    end
-end
-
-function CMD.AddResourceDir(dir)
-    filemanager.add(dir)
-end
-
-function CMD.Debugger(open)
-    local ctx = contexts[1]
-    if ctx then
-        if not debuggerInitialized then
-            rmlui.DebuggerInitialise(ctx)
-            debuggerInitialized = true
-        else
-            rmlui.DebuggerSetContext(ctx)
-        end
-        rmlui.DebuggerSetVisible(open)
-    end
+function CMD.add_resource_dir(dir)
+    fileManager.add(dir)
 end
 
 local function message(ok, what, ...)
@@ -74,10 +35,5 @@ return function (delta)
     while message(channel:pop()) do
     end
     timer.update(delta)
-    rmlui.RenderBegin()
-    for _, ctx in ipairs(contexts) do
-        rmlui.ContextUpdate(ctx)
-        rmlui.ContextRender(ctx)
-    end
-    rmlui.RenderFrame()
+    contextManager.update()
 end

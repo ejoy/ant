@@ -1,7 +1,8 @@
 local event = require "core.event"
 local timer = require "core.timer"
+local contextManager = require "core.contextManager"
 local createEvent = require "core.DOM.event"
-local environment = require "core.environment"
+local createExternWindow = require "core.externWindow"
 
 local datamodels = {}
 local datamodel_mt = {
@@ -30,9 +31,10 @@ function event.OnContextDestroy(context)
     datamodels[context] = nil
 end
 
-function event.OnNewDocument(document, globals)
-    local m = {}
-    function m.createModel(name)
+local function createWindow(document, source)
+    --TODO: pool
+    local window = {}
+    function window.createModel(name)
         return function (init)
             local context = rmlui.DocumentGetContext(document)
             local model = rmlui.DataModelCreate(context, name, init)
@@ -41,30 +43,44 @@ function event.OnNewDocument(document, globals)
             return model
         end
     end
-    function m.open(url)
-        local context = rmlui.DocumentGetContext(document)
-        local newdoc = rmlui.ContextLoadDocument(context, url)
+    function window.open(url)
+        local newdoc = contextManager.open(url)
         if not newdoc then
             return
         end
-        rmlui.DocumentShow(newdoc)
-        return environment[newdoc]
+        event("OnDocumentExternName", newdoc, document)
+        return createWindow(newdoc, document)
     end
-    function m.close()
-        rmlui.DocumentClose(document)
+    function window.close()
+        contextManager.close(rmlui.DocumentGetContext(document))
     end
-    function m.setTimeout(f, delay)
+    function window.setTimeout(f, delay)
         return timer.wait(delay, f)
     end
-    function m.setInterval(f, delay)
+    function window.setInterval(f, delay)
         return timer.loop(delay, f)
     end
-    function m.clearTimeout(t)
+    function window.clearTimeout(t)
         t:remove()
     end
-    function m.clearInterval(t)
+    function window.clearInterval(t)
         t:remove()
     end
-    globals.window = m
+    function window.addEventListener(type, listener, useCapture)
+        rmlui.ElementAddEventListener(document, type, function(e) listener(createEvent(e)) end, useCapture)
+    end
+    function window.postMessage(data)
+        rmlui.ElementDispatchEvent(document, "message", {
+            source = source,
+            data = data,
+        })
+    end
+    return window
 end
 
+function event.OnNewDocument(document, globals)
+    globals.window = createWindow(document)
+    globals.window.extern = createExternWindow(document)
+end
+
+return createWindow

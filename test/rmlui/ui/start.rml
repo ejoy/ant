@@ -33,28 +33,29 @@
                 opacity: 1;
             }
         </style>
-        <script src="start.lua" />
-        <script type="text/x-lua">
+        <script type="text/x-lua" >
             local start = window.createModel "start" {}
-            start.menus = {
-                    {label="新游戏",opacity=1},
-                    {label="载入游戏",opacity=0.3},
-                    {label="设置",opacity=0.3},
-                    {label="退出",opacity=0.3}
-            }
-            start.click = function (event, v)
-                console.log(event.type, v)
+            function start.new(event)
+                console.log(event.target.id)
+                window.open("script.rml")
             end
-            window.setTimeout(function()
-                console.log 'ok'
-            end, 2000);
+            function start.load()
+            end
+            function start.setting()
+            end
+            function start.exit()
+            end
+            window.addEventListener('message', function(event)
+                event.source.postMessage(event.data)
+            end)
         </script>
     </head>
-    <body onclick="load(self)">
-        <div  id="test" data-model="start">
-            <button data-for="menu:menus">
-                <span data-attr-style="'opacity:'+menu.opacity" data-event-click="click(menu.opacity)" onclick="">{{ menu.label }}</span>
-            </button>
+    <body>
+        <div id="test" data-model="start">
+            <button id = "new" data-event-click="new()">新游戏</button>
+            <button data-event-click="load()">载入游戏</button>
+            <button data-event-click="setting()">设置</button>
+            <button data-event-click="exit()">退出</button>
         </div>
     </body>
 </rml>

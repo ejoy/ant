@@ -41,7 +41,7 @@ lua_pushstdstring(lua_State* L, const std::string& str) {
 }
 
 namespace {
-	
+
 static int
 lContextLoadDocument(lua_State* L) {
 	Rml::Context* ctx = (Rml::Context*)lua_touserdata(L, 1);
@@ -182,8 +182,29 @@ struct EventListener final : public Rml::EventListener {
 
 static int
 lElementAddEventListener(lua_State* L) {
-	Rml::Element* e = (Rml::Element*)lua_touserdata(L, 1);
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->AddEventListener(lua_checkstdstring(L, 2), new EventListener(L, 3), lua_toboolean(L, 4));
+	return 0;
+}
+static int
+lElementDispatchEvent(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Dictionary params;
+	if (lua_type(L, 3) == LUA_TTABLE) {
+		lua_pushnil(L);
+		while (lua_next(L, 3)) {
+			if (lua_type(L, -2) != LUA_TSTRING) {
+				lua_pop(L, 1);
+				continue;
+			}
+			Rml::Dictionary::value_type v;
+			v.first = lua_checkstdstring(L, -2);
+			lua_getvariant(L, -1, &v.second);
+			params.emplace(v);
+			lua_pop(L, 1);
+		}
+	}
+	e->DispatchEvent(lua_checkstdstring(L, 2), params);
 	return 0;
 }
 
@@ -192,6 +213,28 @@ lElementGetInnerRML(lua_State *L) {
 	Rml::Element *e = (Rml::Element *)lua_touserdata(L, 1);
 	const Rml::String &rml = e->GetInnerRML();
 	lua_pushlstring(L, rml.c_str(), rml.length());
+	return 1;
+}
+
+static int
+lElementGetAttribute(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	const Rml::Variant* attr = e->GetAttribute(lua_checkstdstring(L, 2));
+	if (!attr) {
+		return 0;
+	}
+	lua_pushvariant(L, *attr);
+	return 1;
+}
+
+static int
+lElementGetOwnerDocument(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::ElementDocument* doc = e->GetOwnerDocument();
+	if (!doc) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, doc);
 	return 1;
 }
 
@@ -207,9 +250,26 @@ lElementGetProperty(lua_State* L) {
 }
 
 static int
+lElementRemoveAttribute(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->RemoveAttribute(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+
+static int
 lElementRemoveProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->RemoveProperty(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+static int
+lElementSetAttribute(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Variant attr;
+	lua_getvariant(L, 3, &attr);
+	e->SetAttribute(lua_checkstdstring(L, 2), attr);
 	return 0;
 }
 
@@ -223,15 +283,20 @@ lElementSetProperty(lua_State* L) {
 
 static int
 lRmlCreateContext(lua_State* L) {
-	const char* name = luaL_checkstring(L, 1);
 	int w = luaL_checkinteger(L, 2);
 	int h = luaL_checkinteger(L, 3);
-	Rml::Context* ctx = Rml::CreateContext(name, Rml::Vector2i(w, h));
+	Rml::Context* ctx = Rml::CreateContext(lua_checkstdstring(L, 1), Rml::Vector2i(w, h));
 	if (!ctx) {
 		return 0;
 	}
 	lua_pushlightuserdata(L, ctx);
 	return 1;
+}
+
+static int
+lRmlRemoveContext(lua_State* L) {
+	Rml::RemoveContext(lua_checkstdstring(L, 1));
+	return 0;
 }
 
 static int
@@ -280,14 +345,20 @@ lua_plugin_apis(lua_State *L) {
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentShow", lDocumentShow },
 		{ "ElementAddEventListener", lElementAddEventListener },
+		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetInnerRML", lElementGetInnerRML },
+		{ "ElementGetAttribute", lElementGetAttribute },
+		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetProperty", lElementGetProperty },
+		{ "ElementRemoveAttribute", lElementRemoveAttribute },
 		{ "ElementRemoveProperty", lElementRemoveProperty },
+		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "Log", lLog },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlCreateContext", lRmlCreateContext },
+		{ "RmlRemoveContext", lRmlRemoveContext },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

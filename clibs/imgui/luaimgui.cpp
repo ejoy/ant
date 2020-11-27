@@ -1103,6 +1103,43 @@ wText(lua_State *L) {
 }
 
 static int
+wPropertyLabel(lua_State* L) {
+	size_t sz;
+	const char* label = luaL_checklstring(L, 1, &sz);
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	const ImVec2 lineStart = ImGui::GetCursorScreenPos();
+	const ImGuiStyle& style = ImGui::GetStyle();
+	float fullWidth = ImGui::GetContentRegionAvail().x;
+	float itemWidth = fullWidth * 0.6f;
+	ImVec2 textSize = ImGui::CalcTextSize(label);
+	ImRect textRect;
+	textRect.Min = ImGui::GetCursorScreenPos();
+	textRect.Max = textRect.Min;
+	textRect.Max.x += fullWidth - itemWidth;
+	textRect.Max.y += textSize.y;
+
+	ImGui::SetCursorScreenPos(textRect.Min);
+
+	ImGui::AlignTextToFramePadding();
+	textRect.Min.y += window->DC.CurrLineTextBaseOffset;
+	textRect.Max.y += window->DC.CurrLineTextBaseOffset;
+
+	ImGui::ItemSize(textRect);
+	if (ImGui::ItemAdd(textRect, window->GetID(label)))
+	{
+		ImGui::RenderTextEllipsis(ImGui::GetWindowDrawList(), textRect.Min, textRect.Max, textRect.Max.x,
+			textRect.Max.x, label, nullptr, &textSize);
+
+		if (textRect.GetWidth() < textSize.x && ImGui::IsItemHovered())
+			ImGui::SetTooltip("%s", label);
+	}
+	ImGui::SetCursorScreenPos({ textRect.Max.x, textRect.Max.y - (textSize.y + window->DC.CurrLineTextBaseOffset) });
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(itemWidth);
+	return 0;
+}
+
+static int
 wTextDisabled(lua_State *L) {
 	size_t sz;
 	const char * text = luaL_checklstring(L, 1, &sz);
@@ -3382,6 +3419,7 @@ luaopen_imgui(lua_State *L) {
 		{ "InputFloat", wInputFloat },
 		{ "InputInt", wInputInt },
 		{ "Text", wText },
+		{ "PropertyLabel", wPropertyLabel },
 		{ "TextDisabled", wTextDisabled },
 		{ "TextWrapped", wTextWrapped },
 		{ "LabelText", wLabelText },

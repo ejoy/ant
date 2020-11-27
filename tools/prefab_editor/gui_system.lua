@@ -68,12 +68,23 @@ local function get_package(entry_path, readmount)
     local merged_repo = vfs.merge_mount(repo)
     local packages = {}
     for _, name in ipairs(merged_repo._mountname) do
+        local key
+        local skip = false
         if utils.start_with(name, "pkg/ant.") then
             if name == "pkg/ant.resources" or name == "pkg/ant.resources.binary" then
-                packages[#packages + 1] = {name = "/"..name, path = merged_repo._mountpoint[name]}
+                key = "/"..name
+            else
+                skip = true
             end
         else
-            packages[#packages + 1] = {name = name, path = merged_repo._mountpoint[name]}
+            if utils.start_with(name, "pkg/") then
+                key = "/"..name
+            else
+                key = name
+            end
+        end
+        if not skip then
+            packages[#packages + 1] = {name = key, path = merged_repo._mountpoint[name]}
         end
     end
     return packages
