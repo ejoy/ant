@@ -23,18 +23,34 @@ PARTICLE_POINTER_ID(object, OBJECT)
 class particle_system::attribute {
 public:
 	virtual ~attribute() {};
-	virtual void remap(int from, int to) = 0;
-	virtual void shrink(int n) = 0;
+	virtual int remap(struct particle_remap *map, int n) = 0;
 	virtual void pop_back() = 0;
 };
 
 namespace {
 	template<typename T>
-	struct attribute_object final : public particle_system::attribute {
-		void remap(int from, int to) override {
+	struct attribute_remap : public particle_system::attribute {
+		int remap(struct particle_remap *map, int n) override {
+			T * self = static_cast<T *>(this);
+			for (int i=0;i<n;i++) {
+				if (map[i].component_id != map[0].component_id)
+					return i;
+				if (map[i].to_id != PARTICLE_INVALID) {
+					self->move(map[i].from_id, map[i].to_id);
+				} else {
+					self->shrink(map[i].from_id);
+				}
+			}
+		return n;
+		}
+	};
+
+	template<typename T>
+	struct attribute_object final : public attribute_remap<attribute_object<T>> {
+		void move(int from, int to) {
 			data[to] = std::move(data[from]);
 		}
-		void shrink(int n) override {
+		void shrink(int n) {
 			data.resize(n);
 		}
 		void pop_back() override {
@@ -47,18 +63,18 @@ namespace {
 	};
 
 	template<typename T>
-	struct attribute_pointer final : public particle_system::attribute {
+	struct attribute_pointer final : public attribute_remap<attribute_pointer<T>> {
 		~attribute_pointer() {
 			for (auto& iter : data) {
 				delete(iter);
 			}
 		}
-		void remap(int from, int to) override {
+		void move(int from, int to) {
 			delete(data[to]);
 			data[to] = data[from];
 			data[from] = nullptr;
 		}
-		void shrink(int n) override {
+		void shrink(int n) {
 			int sz = data.size();
 			for (int i=n;i<sz;i++) {
 				delete(data[i]);
@@ -159,14 +175,13 @@ particle_system::arrange() {
 	int cap = sizeof(remap)/sizeof(remap[0]);
 	do {
 		n = particlesystem_arrange(manager, cap, remap, &ctx);
-		for (int i=0;i<n;i++) {
+		int i=0;
+		while (i<n) {
 			int component_id = remap[i].component_id;
 			if (component_id < maxid) {
-				if (remap[i].to_id != PARTICLE_INVALID) {
-					attribs[component_id]->remap(remap[i].from_id, remap[i].to_id);
-				} else {
-					attribs[component_id]->shrink(remap[i].from_id);
-				}
+				i+=attribs[component_id]->remap(remap+i, n-i);
+			} else {
+				++i;
 			}
 		}
 	} while (n == cap);
