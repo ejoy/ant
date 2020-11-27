@@ -1,7 +1,6 @@
 local cr = import_package "ant.compile_resource"
 
 local resource = require "resource"
-local datalist = require "datalist"
 
 local assetmgr = {}
 
