@@ -1,23 +1,27 @@
-template<typename T>
-class interpolation{
-public:
-    virtual T interpolate(float t) const = 0;
-    struct range { T minv, maxv;};
-    virtual range interpolate_range() const = 0;
+#pragma once
+
+enum interp_type : uint8_t {
+    IT_linear = 0,
+    IT_curve,
 };
 
-template<typename T>
-class linear_interpolation : public interpolation<T> {
+class interpolation {
 public:
-    linear_interpolation(const T& minv, const T& maxv):mminv(minv), mmaxv(maxv){}
-    virtual T interpolate(float t) const override{
-        return glm::lerp(mminv, mmaxv, t);
-    }
+    virtual void process(uint32_t delta_tick, float &value) = 0;
+    virtual interp_type get_type() const = 0;
+};
 
-    virtual interpolation<T>::range interpolate_range() const override {
-        return {mminv, mmaxv};
-    }
+class linear_interpolation : public interpolation {
+public:
+    linear_interpolation(float minv, float maxv, uint32_t maxprocess)
+        : mprocess_step((maxv-minv) / float(maxprocess))
+        {}
 
+    virtual interp_type get_type() const {return IT_linear;}
+
+    virtual void process(uint32_t delta_tick, float &value) override {
+        value += mprocess_step * delta_tick;
+    }
 private:
-    const T mminv, mmaxv;
+    const float mprocess_step;
 };

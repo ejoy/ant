@@ -140,22 +140,22 @@ namespace lua_struct {
     }
 
     template <>
-    void unpack<float>(lua_State* L, int idx, float& v, void*) {
+    inline void unpack<float>(lua_State* L, int idx, float& v, void*) {
         v = checklimit<float>(L, checknumber(L, idx));
     }
 
     template <>
-    void unpack<double>(lua_State* L, int idx, double& v, void*) {
+    inline void unpack<double>(lua_State* L, int idx, double& v, void*) {
         v = (double)checknumber(L, idx);
     }
 
     template <>
-    void unpack<bool>(lua_State* L, int idx, bool& v, void*) {
+    inline void unpack<bool>(lua_State* L, int idx, bool& v, void*) {
         v = !!lua_toboolean(L, idx);
     }
 
     template <>
-    void unpack<std::string>(lua_State* L, int idx, std::string& v, void*) {
+    inline void unpack<std::string>(lua_State* L, int idx, std::string& v, void*) {
         size_t sz = 0;
         const char* str = checklstring(L, idx, &sz);
         v.assign(str, sz);
@@ -239,7 +239,7 @@ namespace lua_struct {
     }
 
     template <>
-    void unpack<char>(lua_State* L, int idx, char const* & v) {
+    inline void unpack<char>(lua_State* L, int idx, char const* & v) {
         v = checkstring(L, idx);
     }
 
@@ -264,22 +264,22 @@ namespace lua_struct {
     }
 
     template <>
-    void pack<float>(lua_State* L, float const& v, void*) {
+    inline void pack<float>(lua_State* L, float const& v, void*) {
         lua_pushnumber(L, (lua_Number)v);
     }
 
     template <>
-    void pack<double>(lua_State* L, double const& v, void*) {
+    inline void pack<double>(lua_State* L, double const& v, void*) {
         lua_pushnumber(L, (lua_Number)v);
     }
 
     template <>
-    void pack<bool>(lua_State* L, bool const& v, void*) {
+    inline void pack<bool>(lua_State* L, bool const& v, void*) {
         lua_pushboolean(L, v? 1: 0);
     }
 
     template <>
-    void pack<std::string>(lua_State* L, std::string const& v, void*) {
+    inline void pack<std::string>(lua_State* L, std::string const& v, void*) {
         lua_pushlstring(L, v.data(), v.size());
     }
 
@@ -341,7 +341,7 @@ namespace lua_struct {
     }
 
     template <>
-    void pack<char>(lua_State* L, char const* const& v) {
+    inline void pack<char>(lua_State* L, char const* const& v) {
         lua_pushstring(L, v);
     }
 

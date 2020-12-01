@@ -100,6 +100,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\clibs\effect\attributes.cpp" />
     <ClCompile Include="..\..\clibs\effect\effect.cpp" />
     <ClCompile Include="..\..\clibs\effect\particle.cpp" />
     <ClCompile Include="..\..\clibs\effect\pch.cpp">
@@ -109,6 +110,7 @@
     <ClCompile Include="..\..\clibs\effect\quadcache.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\clibs\effect\attributes.h" />
     <ClInclude Include="..\..\clibs\effect\lua2struct.h" />
     <ClInclude Include="..\..\clibs\effect\particle.h" />
     <ClInclude Include="..\..\clibs\effect\pch.h" />

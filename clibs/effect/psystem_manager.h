@@ -156,7 +156,7 @@ add_particle_ids_(struct particle_ids *ids, particle_index pid) {
 }
 
 static inline int
-particlesystem_add(struct particle_manager *P, int component_n, int components[]) {
+particlesystem_add(struct particle_manager *P, int component_n, const int components[]) {
 	particle_index pid = add_particle_(P);
 	if (pid == PARTICLE_INVALID)
 		return 0;

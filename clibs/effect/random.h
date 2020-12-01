@@ -5,7 +5,7 @@ class randomobj final{
     std::mt19937 mgen;
     std::uniform_real_distribution<float> mdis;
 public:
-    randomobj(float minv, float maxv) 
+    randomobj(float minv = 0.0f, float maxv = 1.0f) 
         : mgen(std::random_device().operator()())
         , mdis(minv, maxv)
         {}

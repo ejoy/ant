@@ -16,25 +16,40 @@ data:
     scene_entity: true
     state: 1
     emitter:
+        loop: true
+        emitter_lifetime:
+            interp_type: linear
+            minv: 1.1
+            maxv: 4
         spawn:
-            type:   quad
             count:  16
-            lifetime: {1.1, 2.5}
-        scale:
-            range:
-                {0.15, 0.15, 0.15}
-                {0.28, 0.28, 0.28}
-        color:
-            range:
-                {0.0, 0.0, 0.0, 1.0}
-                {1.0, 1.0, 1.0, 1.0}
-        translation:
-            range:
-                {0.0, 0.0, 0.0}
-                {0.0, 0.0, 0.0}
-        velocity:
-            range: 
-                {0, 0, 1}
-                {0, 1, 0}
+            rate:   1.0
+        lifetime:
+            interp_type: linear
+            minv: 1.1
+            maxv: 2.5
+        init_scale:
+            interp_type: linear
+            minv:{0.15, 0.15, 0.15}
+            maxv:{0.28, 0.28, 0.28}
+        #init_scale_curve:
+        #    points:
+        #    type: param #param/linear, param for follow bezer/b-spline curve
+        init_translation:
+            interp_type: linear
+            minv:{0.0, 0.0, 0.0}
+            maxv:{0.0, 0.0, 0.0}
+        init_color:
+            interp_type: linear
+            minv: {0.0, 0.0, 0.0, 1.0}
+            maxv: {1.0, 1.0, 1.0, 1.0}
+        init_velocity:
+            interp_type: linear
+            minv: {0.0, 0.0, 0.0}
+            maxv: {0.0, 0.0, 0.0}
+        uv_motion:
+            scale:   1
+            u_speed: 0.2
+            v_speed: 0.3
 action:
     attach_particle_system: 1
