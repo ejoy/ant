@@ -1,5 +1,6 @@
 local event = require "core.event"
 local timer = require "core.timer"
+local task = require "core.task"
 local contextManager = require "core.contextManager"
 local createEvent = require "core.DOM.event"
 local createExternWindow = require "core.externWindow"
@@ -34,6 +35,7 @@ end
 local function createWindow(document, source)
     --TODO: pool
     local window = {}
+    local timer_object = setmetatable({}, {__mode="k"})
     function window.createModel(name)
         return function (init)
             local context = rmlui.DocumentGetContext(document)
@@ -52,13 +54,22 @@ local function createWindow(document, source)
         return createWindow(newdoc, document)
     end
     function window.close()
-        contextManager.close(rmlui.DocumentGetContext(document))
+        task.new(function ()
+            contextManager.close(rmlui.DocumentGetContext(document))
+            for t in pairs(timer_object) do
+                t:remove()
+            end
+        end)
     end
     function window.setTimeout(f, delay)
-        return timer.wait(delay, f)
+        local t = timer.wait(delay, f)
+        timer_object[t] = true
+        return t
     end
     function window.setInterval(f, delay)
-        return timer.loop(delay, f)
+        local t = timer.loop(delay, f)
+        timer_object[t] = true
+        return t
     end
     function window.clearTimeout(t)
         t:remove()

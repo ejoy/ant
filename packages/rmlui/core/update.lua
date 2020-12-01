@@ -1,5 +1,6 @@
 local thread = require "thread"
 local timer = require "core.timer"
+local task = require "core.task"
 local contextManager = require "core.contextManager"
 local fileManager = require "core.fileManager"
 local windowManager = require "core.windowManager"
@@ -36,4 +37,5 @@ return function (delta)
     end
     timer.update(delta)
     contextManager.update()
+    task.update()
 end

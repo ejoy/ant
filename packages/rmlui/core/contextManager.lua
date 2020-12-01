@@ -34,6 +34,7 @@ function m.close(ctx)
     for i, c in ipairs(contexts) do
         if c == ctx then
             table.remove(contexts, i)
+            return
         end
     end
 end
