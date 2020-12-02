@@ -30,17 +30,29 @@ quad_cache::~quad_cache(){
     delete mvertiecs; mvertiecs = nullptr;
 }
 
-void quad_cache::set_attrib(uint32_t quadidx, uint32_t vidx, const glm::vec3 &p){
+quad_vertex&
+quad_cache::get_vertex(uint32_t quadidx, uint32_t vidx){
+    const uint32_t idx = quadidx * 4 + vidx;
+    return *(mvertiecs + idx);
+}
+
+const quad_vertex& 
+quad_cache::get_vertex(uint32_t quadidx, uint32_t vidx) const{
+    const uint32_t idx = quadidx * 4 + vidx;
+    return *(mvertiecs + idx);
+}
+
+void quad_cache::set_pos(uint32_t quadidx, uint32_t vidx, const glm::vec3 &p){
     const uint32_t idx = quadidx * 4 + vidx;
     auto ptr = mvertiecs + idx;
     ptr->p = p;
 }
 
-void quad_cache::set_attrib(uint32_t quadidx, uint32_t vidx, const glm::vec2 &uv){
+void quad_cache::set_uv(uint32_t quadidx, uint32_t vidx, const glm::vec2 &uv){
     mvertiecs[quadidx * 4 + vidx].uv = uv;
 }
 
-void quad_cache::set_attrib(uint32_t quadidx, uint32_t vidx, uint32_t c){
+void quad_cache::set_color(uint32_t quadidx, uint32_t vidx, uint32_t c){
     mvertiecs[quadidx * 4 + vidx].color = c;
 }
 

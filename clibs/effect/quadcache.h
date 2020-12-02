@@ -28,10 +28,14 @@ public:
         return o;
     }
 
+    //
+    const quad_vertex& get_vertex(uint32_t quadidx, uint32_t vidx) const;
+    quad_vertex& get_vertex(uint32_t quadidx, uint32_t vidx);
+
     void reset_quad(uint32_t start, uint32_t num);
-    void set_attrib(uint32_t quadidx, uint32_t vidx, const glm::vec3 &p);
-    void set_attrib(uint32_t quadidx, uint32_t vidx, const glm::vec2 &uv);
-    void set_attrib(uint32_t quadidx, uint32_t vidx, uint32_t c);
+    void set_pos(uint32_t quadidx, uint32_t vidx, const glm::vec3 &p);
+    void set_uv(uint32_t quadidx, uint32_t vidx, const glm::vec2 &uv);
+    void set_color(uint32_t quadidx, uint32_t vidx, uint32_t c);
 
     void set(uint32_t quadidx, uint32_t vidx, const quad_vertex &v);
     void set(uint32_t start, uint32_t num, const quad_vertex *vv);

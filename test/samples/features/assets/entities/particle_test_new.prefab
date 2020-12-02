@@ -24,7 +24,7 @@ data:
         spawn:
             count:  16
             rate:   1.0
-        lifetime:
+        init_lifetime:
             interp_type: linear
             minv: 1.1
             maxv: 2.5

@@ -21,16 +21,20 @@ particle_mgr::particle_mgr()
 	create_array<particles::acceleration>();
 	create_array<particles::rendertype>();
 	create_array<particles::uv_moitoin>();
+
 	create_array<particles::init_life_interpolator>();
 	create_array<particles::init_spawn_interpolator>();
 	create_array<particles::init_velocity_interpolator>();
 	create_array<particles::init_acceleration_interpolator>();
 	create_array<particles::init_rendertype_interpolator>();
+	create_array<particles::init_uv_motion_interpolator>();
+
 	create_array<particles::lifetime_life_interpolator>();
 	create_array<particles::lifetime_spawn_interpolator>();
 	create_array<particles::lifetime_velocity_interpolator>();
 	create_array<particles::lifetime_acceleration_interpolator>();
 	create_array<particles::lifetime_rendertype_interpolator>();
+	create_array<particles::lifetime_uv_motion_interpolator>();
 }
 
 particle_mgr::~particle_mgr(){
@@ -126,35 +130,29 @@ std::vector<T>& particle_mgr::data(){
 	return static_cast<component_arrayT<T>*>(mcomp_arrays[T::ID])->mdata;
 }
 
-template<typename VALUE_TYPE, int NUM, typename INTERP_TYPE>
+template<typename VALUE_TYPE>
 static VALUE_TYPE
-interp_vec(const INTERP_TYPE &iv, randomobj &ro){
+interp_vec(const VALUE_TYPE &scale, int type, randomobj &ro){
 	VALUE_TYPE v;
-	for (uint32_t ii=0; ii<NUM; ++ii){
-		const auto &vs = iv.scale[ii];
-		v[ii] = vs.scale * particles::lifedata::MAX_PROCESS;
-		if (is_linear_interp(vs.type)){
+	if (is_linear_interp(type)){
+		for (uint32_t ii=0; ii<(uint32_t)scale.length(); ++ii){
+			v[ii] = scale[ii] * particles::lifedata::MAX_PROCESS;
 			const float random = ro();
 			v[ii] *= random;
 		}
+	} else if (is_const_interp(type)){
+		for (uint32_t ii=0; ii<(uint32_t)scale.length(); ++ii){
+			v[ii] = scale[ii] * particles::lifedata::MAX_PROCESS;
+		}
 	}
-
 	return v;
 }
 
 static uint32_t
-interp_color(const particles::v4_interp_value &iv, randomobj &ro){
-	uint8_t c[4] = {0};
-	for (uint32_t ii=0; ii<4;++ii){
-		const auto &s = iv.scale[ii];
-		const float v = s.scale * particles::lifedata::MAX_PROCESS;
-		c[ii] = uint8_t(v);
-		if (is_linear_interp(s.type)){
-			c[ii] = uint8_t(v * ro());
-		}
-	}
-	
-	return uint32_t(c[0]<<0|c[1]<<8|c[2]<<16|c[3]<<24);
+interp_color(const glm::vec4 &scale, int type, randomobj &ro){
+	glm::vec4 v = interp_vec(scale, type, ro);
+	v *= 255.f;
+	return uint32_t(uint8_t(v[0]) << 0|uint8_t(v[1]) << 8|uint8_t(v[2]) << 16 |uint8_t(v[3]) <<24);
 }
 
 void
@@ -193,33 +191,32 @@ particle_mgr::spawn_particles(float dt, uint32_t spawnidx, const particles::spaw
 				float life = interp_life.scale * particles::lifedata::MAX_PROCESS;
 				if (is_linear_interp(interp_life.type))
 					life *= ro();
-				return component(particles::life{particles::lifedata(life)});
+				return add_component(particles::life{particles::lifedata(life)});
 			}),
 
 			std::make_pair(ID_init_velocity_interpolator, [this](uint32_t idx, randomobj &ro){
-				const auto &init_vel_interp = data<particles::init_velocity_interpolator>();
-				return component(particles::velocity{interp_vec<glm::vec3, 3>(init_vel_interp[idx].comp, ro)});
+				const auto &c = data<particles::init_velocity_interpolator>()[idx].comp;
+				return add_component(particles::velocity{interp_vec(c.scale, c.type, ro)});
 			}),
 
 			std::make_pair(ID_init_acceleration_interpolator, [this](uint32_t idx, randomobj &ro){
-				const auto &init_acc_interp = data<particles::init_acceleration_interpolator>();
-				return component(particles::velocity{interp_vec<glm::vec3, 3>(init_acc_interp[idx].comp, ro)});
+				const auto &c = data<particles::init_acceleration_interpolator>()[idx].comp;
+				return add_component(particles::velocity{interp_vec(c.scale, c.type, ro)});
 			}),
 
 			std::make_pair(ID_init_render_interpolator, [this](uint32_t idx, randomobj &ro){
 				const auto &init_render_interp = data<particles::init_rendertype_interpolator>();
-				const auto &render_interp = init_render_interp[idx].comp;
+				const auto &ri = init_render_interp[idx].comp;
 				particles::renderdata rd;
-				rd.s = interp_vec<glm::vec3, 3>(render_interp.s, ro);
-				rd.t = interp_vec<glm::vec3, 3>(render_interp.t, ro);
-
-				rd.color = interp_color(render_interp.color, ro);
-				
+				rd.s = interp_vec(ri.s.scale, ri.s.type, ro);
+				rd.t = interp_vec(ri.t.scale, ri.s.type, ro);
+				rd.color = interp_color(ri.color.scale, ri.color.type, ro);
 				for(uint32_t ii=0; ii<4; ++ii){
-					rd.uv[ii] = interp_vec<glm::vec2, 2>(render_interp.uv[ii], ro);
+					const auto &uv = ri.uv[ii];
+					rd.uv[ii] = interp_vec(uv.scale, uv.type, ro);
 				}
 
-				return component(particles::rendertype{rd});
+				return add_component(particles::rendertype{rd});
 			}),
 		};
 
@@ -309,6 +306,25 @@ particle_mgr::update_translation(float dt){
 }
 
 void
+particle_mgr::update_uv_motion(float dt){
+	const auto &uvmotion = data<particles::uv_moitoin>();
+	const auto &rd = data<particles::rendertype>();
+
+	for(int pidx=0; pidx<uvmotion.size(); ++pidx){
+		const auto &uvm = uvmotion[pidx].comp;
+		const auto ridx = particlesystem_component(mmgr, ID_uv_motion, pidx, ID_render);
+
+		const uint32_t quadidx = rd[ridx].comp.quadidx;
+		
+		for (int ii=0; ii<4; ++ii){
+			auto& v = quad_cache::get().get_vertex(quadidx, ii);
+			v.uv.x += dt * uvm.u_speed * uvm.scale;
+			v.uv.y += dt * uvm.v_speed * uvm.scale;
+		}
+	}
+}
+
+void
 particle_mgr::update_quad_transform(float dt){
 	for (const auto& r : data<particles::rendertype>()){
 		const auto& c = r.comp;
@@ -319,8 +335,8 @@ particle_mgr::update_quad_transform(float dt){
 
 		quad_cache::get().transform(quadidx, m);
 		for (uint32_t ii=0; ii<4; ++ii){
-			quad_cache::get().set_attrib(quadidx, ii, c.color);
-			quad_cache::get().set_attrib(quadidx, ii, c.uv[ii]);
+			quad_cache::get().set_color(quadidx, ii, c.color);
+			quad_cache::get().set_uv(quadidx, ii, c.uv[ii]);
 		}
 	}
 }
@@ -360,9 +376,11 @@ particle_mgr::recap_particles(){
 
 void
 particle_mgr::update(float dt){
+	update_lifetime(dt);
 	update_velocity(dt);
 	update_translation(dt);
-	update_lifetime(dt);
+	update_uv_motion(dt);
+
 	update_quad_transform(dt);
 	recap_particles();
 
