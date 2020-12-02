@@ -37,17 +37,21 @@ particle_mgr::particle_mgr()
 	create_array<particles::lifetime_uv_motion_interpolator>();
 }
 
-particle_mgr::~particle_mgr(){
-    particlesystem_release(mmgr);
-}
-
 class component_array {
 public:
-	virtual ~component_array()              = default;
-	virtual void remap(int from, int to)    = 0;
-	virtual void shrink(int n)              = 0;
-	virtual void pop_back()                 = 0;
+	virtual ~component_array() = default;
+	virtual int remap(struct particle_remap* map, int n) = 0;
+	virtual void pop_back() = 0;
 };
+
+particle_mgr::~particle_mgr(){
+    particlesystem_release(mmgr);
+
+	for(auto &a : mcomp_arrays){
+		delete a;
+		a = nullptr;
+	}
+}
 
 template<typename T>
 class component_array_baseT : public component_array {
@@ -56,7 +60,23 @@ public:
 		mdata.push_back(std::move(v));
 		return T::ID;
 	}
+
 	std::vector<T> mdata;
+
+protected:
+	template<typename COMP_ARRAY>
+	static int remap(COMP_ARRAY *array, struct particle_remap *map, int n) {
+		for (int i=0;i<n;i++) {
+			if (map[i].component_id != map[0].component_id)
+				return i;
+			if (map[i].to_id != PARTICLE_INVALID) {
+				array->move(map[i].from_id, map[i].to_id);
+			} else {
+				array->shrink(map[i].from_id);
+			}
+		}
+		return n;
+	}
 };
 
 template<typename T>
@@ -64,11 +84,14 @@ class component_arrayT : public component_array_baseT<T> {
 public:
 	virtual ~component_arrayT() = default;
 
-	virtual void remap(int from, int to) override {
-		this->mdata[from] = std::move(this->mdata[to]);
+	virtual int remap(struct particle_remap *map, int n) override{
+		return component_array_baseT<T>::remap(this, map, n);
+	}
+	void move(int from, int to){
+		this->mdata[from] = this->mdata[to];
 	}
 
-	virtual void shrink(int n) override{
+	void shrink(int n) {
 		this->mdata.resize(n);
 	}
 
@@ -85,13 +108,18 @@ public:
 			delete p;
 		}
 	}
-	virtual void remap(int from, int to) override {
+
+	virtual int remap(struct particle_remap *map, int n) override{
+		return component_array_baseT<T*>::remap(this, map, n);
+	}
+
+	void move(int from, int to) {
 		delete this->mdata[to];
 		this->mdata[to] = this->mdata[from];
 		this->mdata[from] = nullptr;
 	}
 
-	virtual void shrink(int n) override{
+	void shrink(int n) {
 		for (int ii=n; ii<this->mdata.size(); ++ii){
 			delete this->mdata[ii];
 		}
@@ -364,11 +392,14 @@ particle_mgr::recap_particles(){
 	int n;
 	do {
 		n = particlesystem_arrange(mmgr, cap, remap, &ctx);
-		for (int ii=0; ii<n; ++ii){
-			if (remap[ii].to_id != PARTICLE_INVALID){
-				mcomp_arrays[remap[ii].component_id]->remap(remap[ii].from_id, remap[ii].to_id);
-			} else {
-				mcomp_arrays[remap[ii].component_id]->shrink(remap[ii].from_id);
+		int i = 0;
+		while (i < n) {
+			int component_id = remap[i].component_id;
+			if (component_id < ID_key_count) {
+				i += mcomp_arrays[component_id]->remap(remap + i, n - i);
+			}
+			else {
+				++i;
 			}
 		}
 	} while (n == cap);
