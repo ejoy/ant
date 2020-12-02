@@ -11,118 +11,6 @@ LUA2STRUCT(struct render_data::texture, stage, uniformid, texid);
 LUA2STRUCT(struct particles::spawndata, count, rate);
 LUA2STRUCT(struct particles::uv_motion_data, u_speed, v_speed, scale);
 
-// LUA2STRUCT(struct particles::f2_interp_value, scale, type);
-// LUA2STRUCT(struct particles::f3_interp_value, scale, type);
-// LUA2STRUCT(struct particles::f4_interp_value, scale, type);
-// LUA2STRUCT(struct particles::quad_interp_value, scale, type);
-
-template<typename VALUETYPE>
-bool get_value(lua_State *L, int index, const char* name, VALUETYPE&attrib){
-    bool isvaild = false;
-    if (LUA_TNIL == lua_getfield(L, index, name)){
-        lua_struct::unpack(L, -1, attrib);
-        isvaild = true;
-    }
-    lua_pop(L, 1);
-    return isvaild;
-}
-
-static inline bool check_add_id(component_id id, comp_ids &ids){
-    if (ids.end() == std::find(ids.begin(), ids.end(), id)){
-        ids.push_back(id);
-        return true;
-    }
-    return false;
-}
-
-template<typename VALUETYPE>
-static inline VALUETYPE& check_add_component(comp_ids &ids){
-    if (check_add_id((component_id)VALUETYPE::ID, ids)){
-        VALUETYPE v;
-        particle_mgr::get().add_component(v);
-    }
-
-    return particle_mgr::get().component_value<VALUETYPE>();
-}
-
-std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)>> g_attrib_map = {
-    std::make_pair("emitter_lifttime", [](lua_State *L, int index, comp_ids& ids){
-        particles::lifedata ld;
-        if (!get_value(L, index, "emitter_lifttime", ld)){
-            luaL_error(L, "spawn attribute must be define as emitter");
-        }
-
-        check_add_id(particle_mgr::get().add_component(particles::life{ld}), ids);
-    }),
-    std::make_pair("spawn", [](lua_State *L, int index, comp_ids& ids){
-        particles::spawndata sd;
-        if (!get_value(L, index, "spawn", sd)){
-            luaL_error(L, "spawn attribute must be define as emitter");
-        }
-
-        //TODO: particle lifetime interp value should fetch here and save in 'particles::spawndata'
-        check_add_id(particle_mgr::get().add_component(particles::spawn{sd}), ids);
-    }),
-    std::make_pair("init_lifttime", [](lua_State *L, int index, comp_ids& ids){
-        particles::float_interp_value iv;
-        if (get_value(L, index, "init_lifttime", iv)){
-            check_add_id(particle_mgr::get().add_component(particles::init_life_interpolator{iv}), ids);
-        }
-    }),
-    std::make_pair("init_scale", [](lua_State *L, int index, comp_ids& ids){
-        particles::f3_interp_value iv;
-        if (get_value(L, index, "init_scale", iv)){
-            auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
-            ri.comp.s = iv;
-        }
-    }),
-    std::make_pair("init_translation", [](lua_State *L, int index, comp_ids& ids){
-        particles::f3_interp_value iv;
-        if (get_value(L, index, "init_translation", iv)){
-            auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
-            ri.comp.t = iv;
-        }
-    }),
-    std::make_pair("init_color", [](lua_State *L, int index, comp_ids& ids){
-        particles::f4_interp_value iv;
-        if (get_value(L, index, "init_color", iv)){
-            auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
-            ri.comp.color = iv;
-        }
-    }),
-    std::make_pair("init_velocity", [](lua_State *L, int index, comp_ids& ids){
-        particles::f3_interp_value iv;
-        if (get_value(L, index, "init_velocity", iv)){
-            check_add_id(particle_mgr::get().add_component(particles::init_velocity_interpolator{iv}), ids);
-        }
-    }),
-    std::make_pair("init_acceleration", [](lua_State *L, int index, comp_ids& ids){
-        particles::f3_interp_value iv;
-        if (get_value(L, index, "init_acceleration", iv)){
-            check_add_id(particle_mgr::get().add_component(particles::init_acceleration_interpolator{iv}), ids);
-        }
-    }),
-    std::make_pair("uv_motion", [](lua_State *L, int index, comp_ids& ids){
-        particles::uv_motion_data md;
-        if (get_value(L, index, "uv_motion", md)){
-            check_add_id(particle_mgr::get().add_component(particles::uv_moitoin{md}), ids);
-        }
-    }),
-};
-
-static void error_reader(lua_State *, int, comp_ids&){
-    assert(false && "should not call here");
-}
-
-std::function<void (lua_State *, int, comp_ids&)> find_attrib_reader(const std::string &name){
-    auto it = g_attrib_map.find(name);
-    if (it == g_attrib_map.end()){
-        return error_reader;
-    }
-
-    return it->second;
-}
-
 namespace lua_struct {
     void to_const(float value, particles::lifedata &ld){
         ld.set(value);
@@ -147,6 +35,18 @@ namespace lua_struct {
     }
 
     template<typename VALUETYPE>
+    bool get_field(lua_State *L, int index, const char* name, VALUETYPE&attrib){
+        bool isvaild = false;
+        const int type = lua_getfield(L, index, name);
+        if (LUA_TTABLE == type || LUA_TNUMBER == type){
+            lua_struct::unpack(L, -1, attrib);
+            isvaild = true;
+        }
+        lua_pop(L, 1);
+        return isvaild;
+    }
+
+    template<typename VALUETYPE>
     void unpack_interp_value(lua_State* L, int index, VALUETYPE &iv) {
         luaL_checktype(L, index, LUA_TTABLE);
         const char *t = nullptr;
@@ -158,14 +58,14 @@ namespace lua_struct {
         using T = typename VALUETYPE::interp_type;
         if (strcmp(t, "const") == 0){
             T v;
-            if (!get_value(L, index, "value", v)){
+            if (!get_field(L, index, "value", v)){
                 luaL_error(L, "'interp_type' const need 'value' field");
             }
                 
             to_const(v, iv);
         } else if (strcmp(t, "linear") == 0){
             T minv, maxv;
-            if (!(get_value(L, index, "minv", minv) && get_value(L, index, "maxv", maxv))){
+            if (!(get_field(L, index, "minv", minv) && get_field(L, index, "maxv", maxv))){
                 luaL_error(L, "'interp_type' need 'minv' and 'maxv' fields");
             }
             to_linear(minv, maxv, iv);
@@ -210,4 +110,89 @@ namespace lua_struct {
     DEF_VEC_UNPACK(glm::vec2);
     DEF_VEC_UNPACK(glm::vec3);
     DEF_VEC_UNPACK(glm::vec4);
+}
+
+
+static inline bool check_add_id(component_id id, comp_ids &ids){
+    if (ids.end() == std::find(ids.begin(), ids.end(), id)){
+        ids.push_back(id);
+        return true;
+    }
+    return false;
+}
+
+template<typename VALUETYPE>
+static inline VALUETYPE& check_add_component(comp_ids &ids){
+    if (check_add_id((component_id)VALUETYPE::ID, ids)){
+        VALUETYPE v;
+        particle_mgr::get().add_component(v);
+    }
+
+    return particle_mgr::get().component_value<VALUETYPE>();
+}
+
+std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)>> g_attrib_map = {
+    std::make_pair("emitter_lifetime", [](lua_State *L, int index, comp_ids& ids){
+        particles::lifedata ld;
+        lua_struct::unpack(L, index, ld);
+        check_add_id(particle_mgr::get().add_component(particles::life{ld}), ids);
+    }),
+    std::make_pair("spawn", [](lua_State *L, int index, comp_ids& ids){
+        particles::spawndata sd;
+        lua_struct::unpack(L, index, sd);
+
+        //TODO: particle lifetime interp value should fetch here and save in 'particles::spawndata'
+        check_add_id(particle_mgr::get().add_component(particles::spawn{sd}), ids);
+    }),
+    std::make_pair("init_lifetime", [](lua_State *L, int index, comp_ids& ids){
+        particles::float_interp_value iv;
+        lua_struct::unpack(L, index, iv);
+        check_add_id(particle_mgr::get().add_component(particles::init_life_interpolator{iv}), ids);
+    }),
+    std::make_pair("init_scale", [](lua_State *L, int index, comp_ids& ids){
+        particles::f3_interp_value iv;
+        lua_struct::unpack(L, index, iv);
+        auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
+        ri.comp.s = iv;
+    }),
+    std::make_pair("init_translation", [](lua_State *L, int index, comp_ids& ids){
+        particles::f3_interp_value iv;
+        lua_struct::unpack(L, index, iv);
+        auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
+        ri.comp.t = iv;
+    }),
+    std::make_pair("init_color", [](lua_State *L, int index, comp_ids& ids){
+        particles::f4_interp_value iv;
+        lua_struct::unpack(L, index, iv);
+        auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
+        ri.comp.color = iv;
+    }),
+    std::make_pair("init_velocity", [](lua_State *L, int index, comp_ids& ids){
+        particles::f3_interp_value iv;
+        lua_struct::unpack(L, index, iv);
+        check_add_id(particle_mgr::get().add_component(particles::init_velocity_interpolator{iv}), ids);
+    }),
+    std::make_pair("init_acceleration", [](lua_State *L, int index, comp_ids& ids){
+        particles::f3_interp_value iv;
+        lua_struct::unpack(L, index, iv);
+        check_add_id(particle_mgr::get().add_component(particles::init_acceleration_interpolator{iv}), ids);
+    }),
+    std::make_pair("uv_motion", [](lua_State *L, int index, comp_ids& ids){
+        particles::uv_motion_data md;
+        lua_struct::unpack(L, index, md);
+        check_add_id(particle_mgr::get().add_component(particles::uv_motion{md}), ids);
+    }),
+};
+
+static void default_reader(lua_State *, int, comp_ids&){
+    
+}
+
+std::function<void (lua_State *, int, comp_ids&)> find_attrib_reader(const std::string &name){
+    auto it = g_attrib_map.find(name);
+    if (it == g_attrib_map.end()){
+        return default_reader;
+    }
+
+    return it->second;
 }

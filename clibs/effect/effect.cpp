@@ -40,7 +40,7 @@ leffect_create_emitter(lua_State *L){
            if (LUA_TSTRING == lua_type(L, -2)){
                const std::string key = lua_tostring(L, -2);
                auto reader = find_attrib_reader(key);
-               reader(L, -2, ids);
+               reader(L, -1, ids);
            }
         }
 

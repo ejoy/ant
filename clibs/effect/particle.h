@@ -69,10 +69,14 @@ struct particles{
             return uint32_t(t_in_second / FREQUENCY + 0.5 / FREQUENCY);
         }
 
-        inline bool isdead() const{ return process < tick; }
+        inline bool isdead() const{ return process >= tick; }
         inline bool update_process() {
-            process = time2tick(current);
+            process = uint32_t((time2tick(current) / float(tick)) * MAX_PROCESS);
             return isdead();
+        }
+
+        inline float normalize_process() const {
+            return (process / float(particles::lifedata::MAX_PROCESS));
         }
 
         lifedata(uint32_t t) : tick(t), process(0), current(0.f){}
@@ -132,21 +136,19 @@ struct particles{
     using velocity      = componentT<glm::vec3,      ID_velocity>;
     using acceleration  = componentT<glm::vec3,      ID_acceleration>;
     using rendertype    = componentT<renderdata,     ID_render>;
-    using uv_moitoin    = componentT<uv_motion_data, ID_render>;
+    using uv_motion     = componentT<uv_motion_data, ID_uv_motion>;
 
     using init_life_interpolator        = componentT<float_interp_value,ID_init_life_interpolator>;
     using init_spawn_interpolator       = componentT<float_interp_value,ID_init_spawn_interpolator>;
     using init_velocity_interpolator    = componentT<f3_interp_value,   ID_init_velocity_interpolator>;
     using init_acceleration_interpolator= componentT<f3_interp_value,   ID_init_acceleration_interpolator>;
     using init_rendertype_interpolator  = componentT<rendertype_interp, ID_init_render_interpolator>;
-    using init_uv_motion_interpolator   = componentT<rendertype_interp, ID_init_uv_motion_interpolator>;
 
     using lifetime_life_interpolator         = componentT<float_interp_value,ID_lifetime_life_interpolator>;
     using lifetime_spawn_interpolator        = componentT<float_interp_value,ID_lifetime_spawn_interpolator>;
     using lifetime_velocity_interpolator     = componentT<f3_interp_value,   ID_lifetime_velocity_interpolator>;
     using lifetime_acceleration_interpolator = componentT<f3_interp_value,   ID_lifetime_acceleration_interpolator>;
     using lifetime_rendertype_interpolator   = componentT<rendertype_interp, ID_lifetime_render_interpolator>;
-    using lifetime_uv_motion_interpolator    = componentT<rendertype_interp, ID_lifetime_uv_motion_interpolator>;
 };
 
 struct render_data{
@@ -193,7 +195,7 @@ private:
     template<typename T>
     std::vector<T>& data();
 
-    void spawn_particles(float dt, uint32_t spawnidx, const particles::spawndata &sd);
+    void spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawndata &sd);
     
     template<typename T>
     void create_array();

@@ -20,21 +20,19 @@ particle_mgr::particle_mgr()
 	create_array<particles::velocity>();
 	create_array<particles::acceleration>();
 	create_array<particles::rendertype>();
-	create_array<particles::uv_moitoin>();
+	create_array<particles::uv_motion>();
 
 	create_array<particles::init_life_interpolator>();
 	create_array<particles::init_spawn_interpolator>();
 	create_array<particles::init_velocity_interpolator>();
 	create_array<particles::init_acceleration_interpolator>();
 	create_array<particles::init_rendertype_interpolator>();
-	create_array<particles::init_uv_motion_interpolator>();
-
+	
 	create_array<particles::lifetime_life_interpolator>();
 	create_array<particles::lifetime_spawn_interpolator>();
 	create_array<particles::lifetime_velocity_interpolator>();
 	create_array<particles::lifetime_acceleration_interpolator>();
 	create_array<particles::lifetime_rendertype_interpolator>();
-	create_array<particles::lifetime_uv_motion_interpolator>();
 }
 
 class component_array {
@@ -184,88 +182,93 @@ interp_color(const glm::vec4 &scale, int type, randomobj &ro){
 }
 
 void
-particle_mgr::spawn_particles(float dt, uint32_t spawnidx, const particles::spawndata &sd){
-	const float num_pre_second = float(sd.count) / sd.rate;
+particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawndata &sd){
+	if (spawnnum == 0 || spawnnum > sd.count){
+		return ;
+	}
 
-	const uint32_t spawnnum = uint32_t(dt * num_pre_second + 0.5f);
-
-	if (spawnnum > 0){
-		struct spawn_id{
-			component_id id;
-			particle_index idx;
-		};
-		const component_id init_ids[] = {
-			// spawn init
-			ID_init_life_interpolator,
-			ID_init_velocity_interpolator,
-			ID_init_acceleration_interpolator,
-			ID_init_render_interpolator,
-			
-			// lifetime
-			ID_lifetime_spawn_interpolator,
-			ID_init_velocity_interpolator,
-			ID_init_acceleration_interpolator,
-			ID_init_render_interpolator,
-		};
-
-		std::vector<spawn_id>	particle_indices;
-
-		//TODO: should be gloabl value
-		std::unordered_map<component_id, std::function<component_id (uint32_t idx, randomobj &ro)>>	create_component_ops = {
-			std::make_pair(ID_init_life_interpolator, [this](uint32_t idx, randomobj &ro){
-				const auto &init_life_interpolator = data<particles::init_life_interpolator>();
-				const auto& interp_life = init_life_interpolator[idx].comp;
-
-				float life = interp_life.scale * particles::lifedata::MAX_PROCESS;
-				if (is_linear_interp(interp_life.type))
-					life *= ro();
-				return add_component(particles::life{particles::lifedata(life)});
-			}),
-
-			std::make_pair(ID_init_velocity_interpolator, [this](uint32_t idx, randomobj &ro){
-				const auto &c = data<particles::init_velocity_interpolator>()[idx].comp;
-				return add_component(particles::velocity{interp_vec(c.scale, c.type, ro)});
-			}),
-
-			std::make_pair(ID_init_acceleration_interpolator, [this](uint32_t idx, randomobj &ro){
-				const auto &c = data<particles::init_acceleration_interpolator>()[idx].comp;
-				return add_component(particles::velocity{interp_vec(c.scale, c.type, ro)});
-			}),
-
-			std::make_pair(ID_init_render_interpolator, [this](uint32_t idx, randomobj &ro){
-				const auto &init_render_interp = data<particles::init_rendertype_interpolator>();
-				const auto &ri = init_render_interp[idx].comp;
-				particles::renderdata rd;
-				rd.s = interp_vec(ri.s.scale, ri.s.type, ro);
-				rd.t = interp_vec(ri.t.scale, ri.s.type, ro);
-				rd.color = interp_color(ri.color.scale, ri.color.type, ro);
-				for(uint32_t ii=0; ii<4; ++ii){
-					const auto &uv = ri.uv[ii];
-					rd.uv[ii] = interp_vec(uv.scale, uv.type, ro);
-				}
-
-				return add_component(particles::rendertype{rd});
-			}),
-		};
-
-		for (auto initid : init_ids){
-			const particle_index idx = particlesystem_component(mmgr, ID_spawn, spawnidx, initid);
-			if (PARTICLE_INVALID != idx)
-				particle_indices.push_back(spawn_id{initid, idx});
-		}
-
-		randomobj ro;
-		for (uint32_t ii=0; ii<spawnnum; ++ii){
-			comp_ids ids;
-			for (auto p : particle_indices){
-				auto it = create_component_ops.find(p.id);
-				if (it != create_component_ops.end()){
-					ids.push_back(it->second(p.idx, ro));
-				}
-			}
+	struct spawn_id{
+		component_id id;
+		particle_index idx;
+	};
+	const component_id init_ids[] = {
+		// spawn init
+		ID_uv_motion,
+		ID_init_life_interpolator,
+		ID_init_velocity_interpolator,
+		ID_init_acceleration_interpolator,
+		ID_init_render_interpolator,
 		
-			add(ids);
+		// lifetime
+		ID_lifetime_spawn_interpolator,
+		ID_lifetime_velocity_interpolator,
+		ID_lifetime_acceleration_interpolator,
+		ID_lifetime_render_interpolator,
+	};
+
+	std::vector<spawn_id>	particle_indices;
+
+	//TODO: should be gloabl value
+	std::unordered_map<component_id, std::function<void (uint32_t, randomobj &, comp_ids&)>>	create_component_ops = {
+		std::make_pair(ID_init_life_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
+			const auto &init_life_interpolator = data<particles::init_life_interpolator>();
+			const auto& interp_life = init_life_interpolator[idx].comp;
+
+			float life = interp_life.scale * particles::lifedata::MAX_PROCESS;
+			if (is_linear_interp(interp_life.type))
+				life *= ro();
+			ids.push_back(add_component(particles::life{particles::lifedata(life)}));
+		}),
+
+		std::make_pair(ID_init_velocity_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids ){
+			const auto &c = data<particles::init_velocity_interpolator>()[idx].comp;
+			ids.push_back(add_component(particles::velocity{interp_vec(c.scale, c.type, ro)}));
+		}),
+
+		std::make_pair(ID_init_acceleration_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
+			const auto &c = data<particles::init_acceleration_interpolator>()[idx].comp;
+			ids.push_back(add_component(particles::velocity{interp_vec(c.scale, c.type, ro)}));
+		}),
+
+		std::make_pair(ID_init_render_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
+			const auto &init_render_interp = data<particles::init_rendertype_interpolator>();
+			const auto &ri = init_render_interp[idx].comp;
+			particles::renderdata rd;
+			rd.s = interp_vec(ri.s.scale, ri.s.type, ro);
+			rd.t = interp_vec(ri.t.scale, ri.t.type, ro);
+			rd.color = interp_color(ri.color.scale, ri.color.type, ro);
+			for(uint32_t ii=0; ii<4; ++ii){
+				const auto &uv = ri.uv[ii];
+				rd.uv[ii] = interp_vec(uv.scale, uv.type, ro);
+			}
+
+			ids.push_back(add_component(particles::rendertype{rd}));
+			ids.push_back(ID_TAG_render_quad);
+		}),
+		std::make_pair(ID_uv_motion, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
+			const auto &uvm = data<particles::uv_motion>()[idx];
+			ids.push_back(add_component(uvm));
+			ids.push_back(ID_TAG_uv_motion);
+		}),
+	};
+
+	for (auto initid : init_ids){
+		const particle_index idx = particlesystem_component(mmgr, ID_TAG_emitter, spawnidx, initid);
+		if (PARTICLE_INVALID != idx)
+			particle_indices.push_back(spawn_id{initid, idx});
+	}
+
+	randomobj ro;
+	for (uint32_t ii=0; ii<spawnnum; ++ii){
+		comp_ids ids;
+		for (auto p : particle_indices){
+			auto it = create_component_ops.find(p.id);
+			if (it != create_component_ops.end()){
+				it->second(p.idx, ro, ids);
+			}
 		}
+	
+		add(ids);
 	}
 }
 
@@ -298,10 +301,18 @@ particle_mgr::update_lifetime(float dt){
 void
 particle_mgr::update_particle_spawn(float dt){
 	const int n = particlesystem_count(mmgr, ID_TAG_emitter);
+	const auto &spawns = data<particles::spawn>();
+	const auto &lifes = data<particles::life>();
+
+	const uint32_t deltatick = particles::lifedata::time2tick(dt);
 	for (int ii=0; ii<n; ++ii){
-		const auto &sp = data<particles::spawn>()[ii].comp;
+		const auto &sp = spawns[ii].comp;
 		const auto idx = particlesystem_component(mmgr, ID_TAG_emitter, ii, ID_spawn);
-		spawn_particles(dt, idx, sp);
+		const auto lidx = particlesystem_component(mmgr, ID_TAG_emitter, ii, ID_life);
+
+		const auto& l = lifes[lidx].comp;
+		const uint32_t spawnnum = uint32_t((deltatick / float(l.tick)) * sp.count);
+		spawn_particles(spawnnum, idx, sp);
 	}
 }
 
@@ -335,7 +346,7 @@ particle_mgr::update_translation(float dt){
 
 void
 particle_mgr::update_uv_motion(float dt){
-	const auto &uvmotion = data<particles::uv_moitoin>();
+	const auto &uvmotion = data<particles::uv_motion>();
 	const auto &rd = data<particles::rendertype>();
 
 	for(int pidx=0; pidx<uvmotion.size(); ++pidx){
@@ -407,12 +418,14 @@ particle_mgr::recap_particles(){
 
 void
 particle_mgr::update(float dt){
-	update_lifetime(dt);
+	update_particle_spawn(dt);
 	update_velocity(dt);
 	update_translation(dt);
 	update_uv_motion(dt);
 
 	update_quad_transform(dt);
+
+	update_lifetime(dt);	// should be last update
 	recap_particles();
 
 	//TODO: we can fully control render in lua level, only need vertex buffer in quad_cache

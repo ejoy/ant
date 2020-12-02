@@ -16,7 +16,6 @@ data:
     scene_entity: true
     state: 1
     emitter:
-        loop: true
         emitter_lifetime:
             interp_type: linear
             minv: 1.1
