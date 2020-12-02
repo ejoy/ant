@@ -192,8 +192,10 @@ private:
     std::vector<T>& data();
 
     void spawn_particles(float dt, uint32_t spawnidx, const particles::spawndata &sd);
-
-public:
+    
+    template<typename T>
+    void create_array();
+private:
     void update_lifetime(float dt);
     void update_particle_spawn(float dt);
     void update_velocity(float dt);

@@ -14,6 +14,23 @@ extern bgfx_interface_vtbl_t* ibgfx();
 
 particle_mgr::particle_mgr()
     : mmgr(particlesystem_create()){
+
+	create_array<particles::life>();
+	create_array<particles::spawn>();
+	create_array<particles::velocity>();
+	create_array<particles::acceleration>();
+	create_array<particles::rendertype>();
+	create_array<particles::uv_moitoin>();
+	create_array<particles::init_life_interpolator>();
+	create_array<particles::init_spawn_interpolator>();
+	create_array<particles::init_velocity_interpolator>();
+	create_array<particles::init_acceleration_interpolator>();
+	create_array<particles::init_rendertype_interpolator>();
+	create_array<particles::lifetime_life_interpolator>();
+	create_array<particles::lifetime_spawn_interpolator>();
+	create_array<particles::lifetime_velocity_interpolator>();
+	create_array<particles::lifetime_acceleration_interpolator>();
+	create_array<particles::lifetime_rendertype_interpolator>();
 }
 
 particle_mgr::~particle_mgr(){
@@ -29,7 +46,7 @@ public:
 };
 
 template<typename T>
-class component_arrayT : public component_array {
+class component_array_baseT : public component_array {
 public:
 	component_id add(T &&v){
 		mdata.push_back(std::move(v));
@@ -39,11 +56,9 @@ public:
 };
 
 template<typename T>
-class component_objects : public component_arrayT<T> {
-	using base = component_arrayT<T>;
+class component_arrayT : public component_array_baseT<T> {
 public:
-
-	virtual ~component_objects() = default;
+	virtual ~component_arrayT() = default;
 
 	virtual void remap(int from, int to) override {
 		this->mdata[from] = std::move(this->mdata[to]);
@@ -59,9 +74,9 @@ public:
 };
 
 template<typename T>
-class component_pointers : public component_arrayT<T*>{
+class component_arrayT<T*> : public component_array_baseT<T*>{
 public:
-	virtual ~component_pointers(){
+	virtual ~component_arrayT(){
 		for (auto &p : this->mdata){
 			delete p;
 		}
@@ -84,6 +99,12 @@ public:
 		this->mdata.pop_back();
 	}
 };
+
+template<typename T>
+void particle_mgr::create_array(){
+	using TT = typename std::remove_pointer<T>::type;
+	mcomp_arrays[TT::ID] = new component_arrayT<T>();
+}
 
 static inline bool
 is_const_interp(int type){
