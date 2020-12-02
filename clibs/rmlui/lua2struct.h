@@ -21,13 +21,13 @@ namespace lua_struct {
     namespace symbol {
         static inline std::array<const char*, 16> stack;
         static inline size_t stack_top = 0;
-        static void push(const char* name) {
+        static inline void push(const char* name) {
             if (stack_top > stack.max_size()) {
                 return;
             }
             stack[stack_top++] = name;
         }
-        static void pop() {
+        static inline void pop() {
             if (stack_top == 0) {
                 return;
             }
@@ -87,7 +87,7 @@ namespace lua_struct {
     }
     template <typename T, typename R>
     T checklimit(lua_State* L, R const& r) {
-        if (r < std::numeric_limits<T>::lowest() || r > (std::numeric_limits<T>::max)()) {
+        if (r < std::numeric_limits<T>::lowest() || r >(std::numeric_limits<T>::max)()) {
             raise(L, "limit exceeded");
         }
         return (T)r;
@@ -140,22 +140,22 @@ namespace lua_struct {
     }
 
     template <>
-    void unpack<float>(lua_State* L, int idx, float& v, void*) {
+    inline void unpack<float>(lua_State* L, int idx, float& v, void*) {
         v = checklimit<float>(L, checknumber(L, idx));
     }
 
     template <>
-    void unpack<double>(lua_State* L, int idx, double& v, void*) {
+    inline void unpack<double>(lua_State* L, int idx, double& v, void*) {
         v = (double)checknumber(L, idx);
     }
 
     template <>
-    void unpack<bool>(lua_State* L, int idx, bool& v, void*) {
+    inline void unpack<bool>(lua_State* L, int idx, bool& v, void*) {
         v = !!lua_toboolean(L, idx);
     }
 
     template <>
-    void unpack<std::string>(lua_State* L, int idx, std::string& v, void*) {
+    inline void unpack<std::string>(lua_State* L, int idx, std::string& v, void*) {
         size_t sz = 0;
         const char* str = checklstring(L, idx, &sz);
         v.assign(str, sz);
@@ -218,7 +218,7 @@ namespace lua_struct {
     }
 
     template <typename T, size_t N>
-    void unpack(lua_State* L, int idx, T (&v)[N]) {
+    void unpack(lua_State* L, int idx, T(&v)[N]) {
         checktype(L, idx, LUA_TTABLE);
         for (size_t i = 0; i < N; ++i) {
             symbol::guard guard(i);
@@ -229,17 +229,17 @@ namespace lua_struct {
     }
 
     template <typename T>
-    void unpack(lua_State* L, int idx, T* & v) {
+    void unpack(lua_State* L, int idx, T*& v) {
         v = (T*)checkuserdata(L, idx);
     }
 
     template <typename T>
-    void unpack(lua_State* L, int idx, T const* & v) {
+    void unpack(lua_State* L, int idx, T const*& v) {
         v = (T const*)checkuserdata(L, idx);
     }
 
     template <>
-    void unpack<char>(lua_State* L, int idx, char const* & v) {
+    inline void unpack<char>(lua_State* L, int idx, char const*& v) {
         v = checkstring(L, idx);
     }
 
@@ -264,29 +264,29 @@ namespace lua_struct {
     }
 
     template <>
-    void pack<float>(lua_State* L, float const& v, void*) {
+    inline void pack<float>(lua_State* L, float const& v, void*) {
         lua_pushnumber(L, (lua_Number)v);
     }
 
     template <>
-    void pack<double>(lua_State* L, double const& v, void*) {
+    inline void pack<double>(lua_State* L, double const& v, void*) {
         lua_pushnumber(L, (lua_Number)v);
     }
 
     template <>
-    void pack<bool>(lua_State* L, bool const& v, void*) {
-        lua_pushboolean(L, v? 1: 0);
+    inline void pack<bool>(lua_State* L, bool const& v, void*) {
+        lua_pushboolean(L, v ? 1 : 0);
     }
 
     template <>
-    void pack<std::string>(lua_State* L, std::string const& v, void*) {
+    inline void pack<std::string>(lua_State* L, std::string const& v, void*) {
         lua_pushlstring(L, v.data(), v.size());
     }
 
     template <typename K, typename V>
     void pack(lua_State* L, std::map<K, V> const& v) {
         lua_newtable(L);
-        for (auto const& pair: v) {
+        for (auto const& pair : v) {
             pack(L, pair.first);
             pack(L, pair.second);
             lua_settable(L, -3);
@@ -296,7 +296,7 @@ namespace lua_struct {
     template <typename K, typename V>
     void pack(lua_State* L, std::unordered_map<K, V> const& v) {
         lua_newtable(L);
-        for (auto const& pair: v) {
+        for (auto const& pair : v) {
             pack(L, pair.first);
             pack(L, pair.second);
             lua_settable(L, -3);
@@ -322,7 +322,7 @@ namespace lua_struct {
     }
 
     template <typename T, size_t N>
-    void pack(lua_State* L, const T (&v)[N]) {
+    void pack(lua_State* L, const T(&v)[N]) {
         lua_newtable(L);
         for (size_t i = 0; i < N; ++i) {
             pack(L, v[i]);
@@ -341,7 +341,7 @@ namespace lua_struct {
     }
 
     template <>
-    void pack<char>(lua_State* L, char const* const& v) {
+    inline void pack<char>(lua_State* L, char const* const& v) {
         lua_pushstring(L, v);
     }
 
@@ -401,12 +401,12 @@ namespace lua_struct {
 #define LUA2STRUCT(STRUCT, ...) \
     namespace lua_struct { \
         template <> \
-        void unpack<STRUCT>(lua_State* L, int idx, STRUCT& v, void*) { \
+        inline void unpack<STRUCT>(lua_State* L, int idx, STRUCT& v, void*) { \
             luaL_checktype(L, idx, LUA_TTABLE); \
             LUA2STRUCT_UNPACK(L, idx, v, __VA_ARGS__); \
         }\
         template <> \
-        void pack<STRUCT>(lua_State* L, STRUCT const& v, void*) { \
+        inline void pack<STRUCT>(lua_State* L, STRUCT const& v, void*) { \
             lua_newtable(L); \
             LUA2STRUCT_PACK(L, v, __VA_ARGS__); \
         }\
