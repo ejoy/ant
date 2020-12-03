@@ -61,30 +61,13 @@ public:
 
 	std::vector<T> mdata;
 
-protected:
-	template<typename COMP_ARRAY>
-	static int remap(COMP_ARRAY *array, struct particle_remap *map, int n) {
-		for (int i=0;i<n;i++) {
-			if (map[i].component_id != map[0].component_id)
-				return i;
-			if (map[i].to_id != PARTICLE_INVALID) {
-				array->move(map[i].from_id, map[i].to_id);
-			} else {
-				array->shrink(map[i].from_id);
-			}
-		}
-		return n;
-	}
+	virtual int remap(struct particle_remap* map, int n) override;
 };
 
 template<typename T>
 class component_arrayT : public component_array_baseT<T> {
 public:
 	virtual ~component_arrayT() = default;
-
-	virtual int remap(struct particle_remap *map, int n) override{
-		return component_array_baseT<T>::remap(this, map, n);
-	}
 	void move(int from, int to){
 		this->mdata[from] = this->mdata[to];
 	}
@@ -107,10 +90,6 @@ public:
 		}
 	}
 
-	virtual int remap(struct particle_remap *map, int n) override{
-		return component_array_baseT<T*>::remap(this, map, n);
-	}
-
 	void move(int from, int to) {
 		delete this->mdata[to];
 		this->mdata[to] = this->mdata[from];
@@ -129,6 +108,23 @@ public:
 		this->mdata.pop_back();
 	}
 };
+
+
+template<typename T>
+int component_array_baseT<T>::remap(struct particle_remap *map, int n) {
+	for (int i=0;i<n;i++) {
+		if (map[i].component_id != map[0].component_id)
+			return i;
+
+		auto self = static_cast<component_arrayT<T>*>(this);
+		if (map[i].to_id != PARTICLE_INVALID) {
+			self->move(map[i].from_id, map[i].to_id);
+		} else {
+			self->shrink(map[i].from_id);
+		}
+	}
+	return n;
+}
 
 template<typename T>
 void particle_mgr::create_array(){
@@ -241,8 +237,9 @@ particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const partic
 				const auto &uv = ri.uv[ii];
 				rd.uv[ii] = interp_vec(uv.scale, uv.type, ro);
 			}
-
-			rd.quadidx = quad_cache::get().alloc(1);
+			quad_cache::quad q;
+			mqc->mquads.push_back(std::move(q));
+			rd.quadidx = (uint32_t)mqc->mquads.size();
 			ids.push_back(add_component(particles::rendertype{rd}));
 			ids.push_back(ID_TAG_render_quad);
 		}),
@@ -288,13 +285,18 @@ particle_mgr::pop_back(const comp_ids &ids){
 }
 
 void
+particle_mgr::remove_particle(uint32_t pidx){
+	particlesystem_remove(mmgr, ID_life, (particle_index)pidx);
+}
+
+void
 particle_mgr::update_lifetime(float dt){
 	auto &lifes = data<particles::life>();
 	for (size_t ii=0; ii<lifes.size(); ++ii){
 		auto &c = lifes[ii].comp;
 		c.current += dt;
 		if (c.update_process()){
-			particlesystem_remove(mmgr, ID_life, (particle_index)ii);
+			remove_particle((uint32_t)ii);
 		}
     }
 }
@@ -360,7 +362,7 @@ particle_mgr::update_uv_motion(float dt){
 		const uint32_t quadidx = rd[ridx].comp.quadidx;
 		
 		for (int ii=0; ii<4; ++ii){
-			auto& v = quad_cache::get().get_vertex(quadidx, ii);
+			auto& v = mqc->mquads[quadidx][ii];
 			v.uv.x += dt * uvm.u_speed * uvm.scale;
 			v.uv.y += dt * uvm.v_speed * uvm.scale;
 		}
@@ -376,10 +378,11 @@ particle_mgr::update_quad_transform(float dt){
 		m = glm::mat4(c.r) * m;
 		m = glm::translate(c.t) * m;
 
-		quad_cache::get().transform(quadidx, m);
+		auto &q = mqc->mquads[quadidx];
+		quad_cache::transform(q, m);
 		for (uint32_t ii=0; ii<4; ++ii){
-			quad_cache::get().set_color(quadidx, ii, c.color);
-			quad_cache::get().set_uv(quadidx, ii, c.uv[ii]);
+			q[ii].color = c.color;
+			q[ii].uv = c.uv[ii];
 		}
 	}
 }
@@ -387,8 +390,8 @@ particle_mgr::update_quad_transform(float dt){
 void
 particle_mgr::submit_render(){
 	//TODO: quad_cache::submit() should call from lua update not here
-	quad_cache::get().submit(0, (uint32_t)data<particles::rendertype>().size()); 
-	quad_cache::get().update();
+	mqc->update();
+	mqc->submit(0, (uint32_t)data<particles::rendertype>().size()); 
 	BGFX(set_state(uint64_t(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA), 0));
 
 	for (size_t ii=0; ii<mrenderdata.textures.size(); ++ii){

@@ -164,8 +164,10 @@ struct render_data{
     std::vector<texture>   textures;
 };
 
+class quad_cache;
 class component_array;
 struct particle_manager;
+
 class particle_mgr : public singletonT<particle_mgr> {
     friend class singletonT<particle_mgr>;
 private:
@@ -187,6 +189,7 @@ public:
              data<T>()[idx];
     }
 public:
+    void set_quadcache(quad_cache *qc) { mqc = qc;}
     render_data& get_rd() { return mrenderdata; }
 private:
     void recap_particles();
@@ -196,6 +199,7 @@ private:
     std::vector<T>& data();
 
     void spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawndata &sd);
+    void remove_particle(uint32_t pidx);
     
     template<typename T>
     void create_array();
@@ -212,6 +216,6 @@ private:
     struct particle_manager *mmgr;
 
     render_data mrenderdata;
-
+    quad_cache *mqc = nullptr;
     component_array *mcomp_arrays[ID_key_count];
 };

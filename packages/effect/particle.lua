@@ -11,6 +11,8 @@ local declmgr       = renderpkg.declmgr
 local irender       = world:interface "ant.render|irender"
 local imaterial     = world:interface "ant.asset|imaterial"
 
+local quadlayout = declmgr.get(declmgr.correct_layout "p3|t2|c40niu")
+
 local em_trans = ecs.transform "emitter_mesh_transform"
 function em_trans.process_entity(e)
     if e.simplemesh == nil then
@@ -55,12 +57,16 @@ function emitter_trans.process_entity(e)
             end
         end
     end
-    e._emitter = {}
+    local qc = quadcache.create(irender.quad_ib(), quadlayout.handle, 1024)
+    e._emitter = {
+        mqc = qc
+    }
     local prog = particle_material.fx.prog
     effect.create_emitter{
         viewid      = viewid,
         progid      = (prog & 0xffff),
         textures    = textures,
+        mqc         = qc,
         emitter     = e.emitter,
     }
 end
@@ -76,10 +82,7 @@ end
 
 local particle_sys = ecs.system "particle_system"
 
-local quadlayout = declmgr.get(declmgr.correct_layout "p3|t2|c40niu")
-
 function particle_sys:init()
-    quadcache.init(irender.quad_ib(), quadlayout.handle, 1024)
     effect.init()
 end
 

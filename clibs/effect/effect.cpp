@@ -32,6 +32,13 @@ leffect_create_emitter(lua_State *L){
 
     lua_struct::unpack(L, 1, particle_mgr::get().get_rd());
 
+    if (LUA_TTABLE == lua_getfield(L, 1, "quad_info")){
+        auto qc = (quad_cache*)luaL_checkudata(L, -1, "QUADCACHE_MT");
+        particle_mgr::get().set_quadcache(qc);
+    } else {
+        luaL_error(L, "invalid quadinfo");
+    }
+
     if (LUA_TTABLE == lua_getfield(L, 1, "emitter")){
         comp_ids ids;
         ids.push_back(ID_TAG_emitter);
