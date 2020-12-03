@@ -242,6 +242,7 @@ particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const partic
 				rd.uv[ii] = interp_vec(uv.scale, uv.type, ro);
 			}
 
+			rd.quadidx = quad_cache::get().alloc(1);
 			ids.push_back(add_component(particles::rendertype{rd}));
 			ids.push_back(ID_TAG_render_quad);
 		}),
@@ -349,9 +350,12 @@ particle_mgr::update_uv_motion(float dt){
 	const auto &uvmotion = data<particles::uv_motion>();
 	const auto &rd = data<particles::rendertype>();
 
-	for(int pidx=0; pidx<uvmotion.size(); ++pidx){
-		const auto &uvm = uvmotion[pidx].comp;
-		const auto ridx = particlesystem_component(mmgr, ID_uv_motion, pidx, ID_render);
+	const int n = particlesystem_count(mmgr, ID_TAG_uv_motion);
+
+	for(int pidx=0; pidx<n; ++pidx){
+		const auto uvm_idx = particlesystem_component(mmgr, ID_TAG_uv_motion, pidx, ID_uv_motion);
+		const auto ridx = particlesystem_component(mmgr, ID_TAG_uv_motion, pidx, ID_render);
+		const auto &uvm = uvmotion[uvm_idx].comp;
 
 		const uint32_t quadidx = rd[ridx].comp.quadidx;
 		
