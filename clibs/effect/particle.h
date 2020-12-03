@@ -1,13 +1,14 @@
 #pragma once
 
 #include "singleton.h"
-
+#include "quadcache.h"
 enum component_id : uint32_t {
     ID_life = 0,
     ID_spawn,
     ID_velocity,
     ID_acceleration,
     ID_render,
+    ID_quad,
     ID_uv_motion,
 
     ID_init_life_interpolator,
@@ -16,6 +17,7 @@ enum component_id : uint32_t {
     ID_init_acceleration_interpolator,
     ID_init_render_interpolator,
     ID_init_uv_motion_interpolator,
+    ID_init_quad_interpolator,
 
     ID_lifetime_life_interpolator,
     ID_lifetime_spawn_interpolator,
@@ -23,6 +25,7 @@ enum component_id : uint32_t {
     ID_lifetime_acceleration_interpolator,
     ID_lifetime_render_interpolator,
     ID_lifetime_uv_motion_interpolator,
+    ID_lifetime_quad_interpolator,
 
     ID_key_count,
 
@@ -51,9 +54,8 @@ inline constexpr T pow(const T base, const uint32_t exponent){
 }
 
 template<typename T, component_id COMP_ID>
-struct componentT {
-    T comp;
-    enum {ID=COMP_ID};
+struct componentT : public T {
+    static constexpr component_id ID() { return COMP_ID; }
 };
 
 struct particle_remap;
@@ -97,9 +99,6 @@ struct particles{
         glm::vec3 s;
         glm::quat r;
         glm::vec3 t;
-        glm::vec2 uv[4];
-        uint32_t color;
-        uint32_t quadidx;
         uint8_t material;
     };
 
@@ -126,7 +125,9 @@ struct particles{
         f3_interp_value s;
         quad_interp_value r;
         f3_interp_value t;
+    };
 
+    struct quad_interp{
         f2_interp_value uv[4];
         color_interp_value color;
     };
@@ -137,24 +138,28 @@ struct particles{
     using acceleration  = componentT<glm::vec3,      ID_acceleration>;
     using rendertype    = componentT<renderdata,     ID_render>;
     using uv_motion     = componentT<uv_motion_data, ID_uv_motion>;
+    using quad          = componentT<quaddata,       ID_quad>;
 
     using init_life_interpolator        = componentT<float_interp_value,ID_init_life_interpolator>;
     using init_spawn_interpolator       = componentT<float_interp_value,ID_init_spawn_interpolator>;
     using init_velocity_interpolator    = componentT<f3_interp_value,   ID_init_velocity_interpolator>;
     using init_acceleration_interpolator= componentT<f3_interp_value,   ID_init_acceleration_interpolator>;
     using init_rendertype_interpolator  = componentT<rendertype_interp, ID_init_render_interpolator>;
+    using init_quad_interpolator        = componentT<quad_interp,       ID_init_quad_interpolator>;
 
     using lifetime_life_interpolator         = componentT<float_interp_value,ID_lifetime_life_interpolator>;
     using lifetime_spawn_interpolator        = componentT<float_interp_value,ID_lifetime_spawn_interpolator>;
     using lifetime_velocity_interpolator     = componentT<f3_interp_value,   ID_lifetime_velocity_interpolator>;
     using lifetime_acceleration_interpolator = componentT<f3_interp_value,   ID_lifetime_acceleration_interpolator>;
     using lifetime_rendertype_interpolator   = componentT<rendertype_interp, ID_lifetime_render_interpolator>;
+    using lifetime_quad_interpolator         = componentT<quad_interp,       ID_lifetime_quad_interpolator>;
 };
 
 struct render_data{
-    uint16_t viewid;
-    uint16_t progid;
-    render_data() : viewid(UINT16_MAX), progid(UINT16_MAX){}
+    uint16_t viewid             = UINT16_MAX;
+    uint16_t progid             = UINT16_MAX;
+    bgfx_vertex_layout_t *layout= nullptr;
+    uint16_t ibhandle           = UINT16_MAX;
     struct texture{
         uint16_t stage;
         uint16_t uniformid;
@@ -177,10 +182,11 @@ public:
     void update(float dt);
 
 public:
+    //TODO: need check ID_TAG_* has corresponding component in comp_ids
     bool add(const comp_ids &ids);
     void pop_back(const comp_ids &ids);
     template<typename T>
-    component_id add_component(const T &v){ data<T>().push_back(v); return (component_id)T::ID; }
+    component_id add_component(const T &v){ data<T>().push_back(v); return T::ID(); }
 
     template<typename T>
     T& component_value(int idx = -1) {
@@ -189,20 +195,21 @@ public:
              data<T>()[idx];
     }
 public:
-    void set_quadcache(quad_cache *qc) { mqc = qc;}
     render_data& get_rd() { return mrenderdata; }
 private:
-    void recap_particles();
-    void submit_render();
-
     template<typename T>
     std::vector<T>& data();
-
-    void spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawndata &sd);
-    void remove_particle(uint32_t pidx);
     
     template<typename T>
     void create_array();
+
+    void spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawndata &sd);
+    void remove_particle(uint32_t pidx);
+    void remap_particles();
+
+private:
+    void submit_render();
+    void submit_buffer();
 private:
     void update_lifetime(float dt);
     void update_particle_spawn(float dt);
@@ -216,6 +223,5 @@ private:
     struct particle_manager *mmgr;
 
     render_data mrenderdata;
-    quad_cache *mqc = nullptr;
     component_array *mcomp_arrays[ID_key_count];
 };

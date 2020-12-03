@@ -3,7 +3,6 @@ local world = ecs.world
 
 local math3d        = require "math3d"
 local effect        = require "effect"
-local quadcache     = require "effect.quadcache"
 
 local renderpkg     = import_package "ant.render"
 local declmgr       = renderpkg.declmgr
@@ -57,16 +56,14 @@ function emitter_trans.process_entity(e)
             end
         end
     end
-    local qc = quadcache.create(irender.quad_ib(), quadlayout.handle, 1024)
-    e._emitter = {
-        mqc = qc
-    }
+    e._emitter = {}
     local prog = particle_material.fx.prog
     effect.create_emitter{
         viewid      = viewid,
         progid      = (prog & 0xffff),
+        ibhandle    = (irender.quad_ib() &0xffff),
+        layout      = quadlayout.handle,
         textures    = textures,
-        quadcache   = qc,
         emitter     = e.emitter,
     }
 end

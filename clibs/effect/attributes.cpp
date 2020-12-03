@@ -5,7 +5,7 @@
 #include "particle.h"
 #include "random.h"
 
-LUA2STRUCT(struct render_data, viewid, progid, textures);
+LUA2STRUCT(struct render_data, viewid, progid, layout, ibhandle, textures);
 LUA2STRUCT(struct render_data::texture, stage, uniformid, texid);
 
 LUA2STRUCT(struct particles::spawndata, count, rate);
@@ -123,7 +123,7 @@ static inline bool check_add_id(component_id id, comp_ids &ids){
 
 template<typename VALUETYPE>
 static inline VALUETYPE& check_add_component(comp_ids &ids){
-    if (check_add_id((component_id)VALUETYPE::ID, ids)){
+    if (check_add_id(VALUETYPE::ID(), ids)){
         VALUETYPE v;
         particle_mgr::get().add_component(v);
     }
@@ -153,19 +153,19 @@ std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)
         particles::f3_interp_value iv;
         lua_struct::unpack(L, index, iv);
         auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
-        ri.comp.s = iv;
+        ri.s = iv;
     }),
     std::make_pair("init_translation", [](lua_State *L, int index, comp_ids& ids){
         particles::f3_interp_value iv;
         lua_struct::unpack(L, index, iv);
         auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
-        ri.comp.t = iv;
+        ri.t = iv;
     }),
     std::make_pair("init_color", [](lua_State *L, int index, comp_ids& ids){
         particles::f4_interp_value iv;
         lua_struct::unpack(L, index, iv);
-        auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
-        ri.comp.color = iv;
+        auto &q = check_add_component<particles::init_quad_interpolator>(ids);
+        q.color = iv;
     }),
     std::make_pair("init_velocity", [](lua_State *L, int index, comp_ids& ids){
         particles::f3_interp_value iv;

@@ -26,32 +26,38 @@ quad_cache::quad_cache(bgfx_index_buffer_handle_t ib, const bgfx_vertex_layout_t
 //	|      |
 //	|      |
 //	0 ---- 2
-static const quad_cache::vertex s_default_quad[] = {
+static const quad_vertex s_default_quad[] = {
     {glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec2(0.0f, 0.0f), 0xffffffff},
     {glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec2(0.0f, 1.0f), 0xffffffff},
     {glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec2(1.0f, 1.0f), 0xffffffff},
     {glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec2(1.0f, 0.0f), 0xffffffff},
 };
 
-void quad_cache::transform(quad_cache::quad &q, const glm::mat4 &trans){
+static_assert(sizeof(quaddata) == sizeof(s_default_quad));
+
+quaddata::quaddata(){
+    memcpy(v, s_default_quad, sizeof(s_default_quad));
+}
+
+void quad_cache::transform(quaddata &q, const glm::mat4 &trans){
     for (uint32_t ii=0; ii<4; ++ii){
         q[ii].p = trans * glm::vec4(q[ii].p, 1.f);
     }
 }
 
-void quad_cache::rotate(quad_cache::quad &q, const glm::quat &r){
+void quad_cache::rotate(quaddata &q, const glm::quat &r){
     for (uint32_t ii=0; ii<4; ++ii){
         q[ii].p = glm::rotate(r, glm::vec4(q[ii].p, 1.f));
     }
 }
 
-void quad_cache::scale(quad_cache::quad &q, const glm::vec3 &s){
+void quad_cache::scale(quaddata &q, const glm::vec3 &s){
     for (uint32_t ii=0; ii<4; ++ii){
         q[ii].p = glm::scale(s) * glm::vec4(q[ii].p, 1.f);
     }
 }
 
-void quad_cache::translate(quad_cache::quad &q, const glm::vec3 &t){
+void quad_cache::translate(quaddata &q, const glm::vec3 &t){
     for (uint32_t ii=0; ii<4; ++ii){
         q[ii].p = glm::translate(t) * glm::vec4(q[ii].p, 1.f);
     }
@@ -73,18 +79,19 @@ void quad_cache::translate(quad_cache::quad &q, const glm::vec3 &t){
 //     }
 // }
 
-void quad_cache::submit(uint32_t offset, uint32_t num){
+void submit_buffer(uint32_t num, const quaddata* qv, bgfx_index_buffer_handle_t ibhandle, const bgfx_vertex_layout_t *layout){
     const uint32_t indices_num = num * 6;
-    BGFX(set_index_buffer)(mib, 0, num);
+    BGFX(set_index_buffer)(ibhandle, 0, num);
 
     bgfx_transient_vertex_buffer_t tvb;
-    const uint32_t bufsize = num * sizeof(vertex) * 4;
-    BGFX(alloc_transient_vertex_buffer)(&tvb, bufsize, mlayout);
-    memcpy(tvb.data, &mquads[offset], bufsize);
+    const uint32_t bufsize = num * sizeof(quad_vertex) * 4;
+    BGFX(alloc_transient_vertex_buffer)(&tvb, bufsize, layout);
+    memcpy(tvb.data, qv, bufsize);
+    BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num *4);
+}
 
-    const uint32_t startv = offset * 4;
-    assert(offset + num <= mmax_quad);
-    BGFX(set_transient_vertex_buffer)(0, &tvb, startv, num *4);
+void quad_cache::submit(uint32_t offset, uint32_t num){
+    submit_buffer(num, &mquads[offset], mib, mlayout);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -133,7 +140,7 @@ laddquad(lua_State *L){
     if (num < 4){
         luaL_error(L, "quad need 4 vertex: %d", num);
     }
-    quad_cache::quad q;
+    quaddata q;
     for (int ii=0; ii<4; ++ii){
         auto &qv=q[ii];
         lua_geti(L, 2, ii+1);{
