@@ -66,7 +66,7 @@ function emitter_trans.process_entity(e)
         viewid      = viewid,
         progid      = (prog & 0xffff),
         textures    = textures,
-        mqc         = qc,
+        quadcache   = qc,
         emitter     = e.emitter,
     }
 end

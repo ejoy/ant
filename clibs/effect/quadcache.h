@@ -19,20 +19,17 @@ public:
     static void translate(quad_cache::quad &q, const glm::vec3 &t);
 public:
     quad_cache(bgfx_index_buffer_handle_t ib, const bgfx_vertex_layout_t* layout, uint32_t maxquad);
+    ~quad_cache() = default;
+private:
     quad_cache(quad_cache&) = delete;
     quad_cache& operator=(quad_cache&) = delete;
-    ~quad_cache();
-
-    const bgfx_dynamic_vertex_buffer_handle_t get_vb() const { return mdyn_vb;}
-    const bgfx_index_buffer_handle_t get_ib() const {return mib; }
-
-    void update();
+public:
+    //void update();
     void submit(uint32_t offset, uint32_t num);
 
     quadvector mquads;
 private:
     const bgfx_vertex_layout_t *mlayout;
     const bgfx_index_buffer_handle_t mib;
-    const bgfx_dynamic_vertex_buffer_handle_t mdyn_vb;
     const uint32_t  mmax_quad;
 };

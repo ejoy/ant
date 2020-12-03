@@ -389,8 +389,7 @@ particle_mgr::update_quad_transform(float dt){
 
 void
 particle_mgr::submit_render(){
-	//TODO: quad_cache::submit() should call from lua update not here
-	mqc->update();
+	//mqc->update();
 	mqc->submit(0, (uint32_t)data<particles::rendertype>().size()); 
 	BGFX(set_state(uint64_t(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA), 0));
 

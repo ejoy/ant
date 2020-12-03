@@ -32,7 +32,7 @@ leffect_create_emitter(lua_State *L){
 
     lua_struct::unpack(L, 1, particle_mgr::get().get_rd());
 
-    if (LUA_TTABLE == lua_getfield(L, 1, "quad_info")){
+    if (LUA_TUSERDATA == lua_getfield(L, 1, "quadcache")){
         auto qc = (quad_cache*)luaL_checkudata(L, -1, "QUADCACHE_MT");
         particle_mgr::get().set_quadcache(qc);
     } else {

@@ -17,14 +17,8 @@ quad_cache::quad_cache(bgfx_index_buffer_handle_t ib, const bgfx_vertex_layout_t
     : mib(ib)
     , mlayout(layout)
     , mmax_quad(maxquad)
-    , mdyn_vb(BGFX(create_dynamic_vertex_buffer)(maxquad * 4, layout, BGFX_BUFFER_ALLOW_RESIZE))
 {
     assert(BGFX_HANDLE_IS_VALID(mib));
-    assert(BGFX_HANDLE_IS_VALID(mdyn_vb));
-}
-
-quad_cache::~quad_cache(){
-    BGFX(destroy_dynamic_vertex_buffer)(mdyn_vb);
 }
 
 //
@@ -63,27 +57,34 @@ void quad_cache::translate(quad_cache::quad &q, const glm::vec3 &t){
     }
 }
 
-void quad_cache::update(){
-    // why we should copy the memory to bgfx, but not use make_ref/make_ref_release to shared the memory:
-    //    1). bgfx use multi-thread rendering, memory will pass to bgfx render thread, but memory will still update in main thread
-    //    2). if app shutdown, memory will delete in quad_cache's deconstruct, but memory will still access in bgfx render threading
-    // so, solution is simple, use automic lock to tell update thread and render threading when to release memory
-    // and alloc 2 times memory, one for update, one for render.
-    // but it not worth doing this. because if BGFX(alloc) will just put a pointer, but not really alloc memory
+// void quad_cache::update(){
+//     // why we should copy the memory to bgfx, but not use make_ref/make_ref_release to shared the memory:
+//     //    1). bgfx use multi-thread rendering, memory will pass to bgfx render thread, but memory will still update in main thread
+//     //    2). if app shutdown, memory will delete in quad_cache's deconstruct, but memory will still access in bgfx render threading
+//     // so, solution is simple, use automic lock to tell update thread and render threading when to release memory
+//     // and alloc 2 times memory, one for update, one for render.
+//     // but it not worth doing this. because if BGFX(alloc) will just put a pointer, but not really alloc memory
 
-    const uint32_t bufsize = (uint32_t)mquads.size() * sizeof(quad);
-    const auto mem = BGFX(alloc)(bufsize);
-    memcpy(mem->data, &mquads.front(), bufsize);
-    BGFX(update_dynamic_vertex_buffer)(mdyn_vb, 0, mem);
-}
+//     if (mquads.size() <= mmax_quad){
+//         const uint32_t bufsize = (uint32_t)mquads.size() * sizeof(quad);
+//         const auto mem = BGFX(alloc)(bufsize);
+//         memcpy(mem->data, &mquads.front(), bufsize);
+//         BGFX(update_dynamic_vertex_buffer)(mdyn_vb, 0, mem);
+//     }
+// }
 
 void quad_cache::submit(uint32_t offset, uint32_t num){
     const uint32_t indices_num = num * 6;
     BGFX(set_index_buffer)(mib, 0, num);
 
+    bgfx_transient_vertex_buffer_t tvb;
+    const uint32_t bufsize = num * sizeof(vertex) * 4;
+    BGFX(alloc_transient_vertex_buffer)(&tvb, bufsize, mlayout);
+    memcpy(tvb.data, &mquads[offset], bufsize);
+
     const uint32_t startv = offset * 4;
     assert(offset + num <= mmax_quad);
-    BGFX(set_dynamic_vertex_buffer)(0, mdyn_vb, startv, num * 4);
+    BGFX(set_transient_vertex_buffer)(0, &tvb, startv, num *4);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -170,18 +171,6 @@ laddquad(lua_State *L){
     qc->mquads.push_back(q);
 
     return 0;
-}
-
-static int
-lbuffer(lua_State *L){
-    auto qc = (quad_cache*)lua_touserdata(L, 1);
-    auto ib = qc->get_ib();
-    auto vb = qc->get_vb();
-
-    lua_pushinteger(L, BGFX_LUAHANDLE(DYNAMIC_VERTEX_BUFFER, vb));
-    lua_pushinteger(L, BGFX_LUAHANDLE(INDEX_BUFFER, ib));
-
-    return 2;
 }
 
 extern "C" {
