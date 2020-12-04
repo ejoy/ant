@@ -252,6 +252,14 @@ arrange_init_(struct particle_manager *P, struct particle_arrange_context *ctx) 
 	ctx->remove = 0;
 }
 
+static inline void
+map_component_(struct particle_manager *P, int component_id, int index, particle_index pid) {
+	P->c[component_id]->id[index] = pid;
+	if (component_id < PARTICLE_KEY_COMPONENT) {
+		P->p[pid].c[component_id] = index;
+	}
+}
+
 static inline int
 arrange_component_(struct particle_manager *P, int cap, struct particle_remap remap[], struct particle_arrange_context *ctx) {
 	int i,j;
@@ -272,20 +280,17 @@ arrange_component_(struct particle_manager *P, int cap, struct particle_remap re
 					// removed
 					--c->n;
 					if (j<c->n) {
-						particle_index pid  = ids[c->n];
-						ids[j] = pid;
+						map_component_(P, i, j, ids[c->n]);
 						remap[ret_index].component_id = i;
 						remap[ret_index].from_id = c->n;
 						remap[ret_index].to_id = j;
-						if (i < PARTICLE_KEY_COMPONENT) {
-							P->p[pid].c[i] = j;
-						}
 						++ret_index;
 					}
 					--j;
 					++ctx->remove;
 				} else {
-					ids[j] = newid;
+					// move component
+					map_component_(P, i, j, newid);
 				}
 			}
 		}
