@@ -272,10 +272,14 @@ arrange_component_(struct particle_manager *P, int cap, struct particle_remap re
 					// removed
 					--c->n;
 					if (j<c->n) {
-						ids[j] = ids[c->n];
+						particle_index pid  = ids[c->n];
+						ids[j] = pid;
 						remap[ret_index].component_id = i;
 						remap[ret_index].from_id = c->n;
 						remap[ret_index].to_id = j;
+						if (i < PARTICLE_KEY_COMPONENT) {
+							P->p[pid].c[i] = j;
+						}
 						++ret_index;
 					}
 					--j;
