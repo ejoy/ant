@@ -4,6 +4,8 @@
 #include "quadcache.h"
 
 #include "random.h"
+#include <sstream>
+#include <Windows.h>
 
 #define PARTICLE_COMPONENT		ID_count
 #define PARTICLE_KEY_COMPONENT	ID_key_count
@@ -11,6 +13,59 @@
 
 extern bgfx_interface_vtbl_t* ibgfx();
 #define BGFX(_API) ibgfx()->_API
+
+#ifdef _DEBUG
+const char* g_component_names[ID_count] = {
+	"ID_life = 0",
+	"ID_spawn",
+	"ID_velocity",
+	"ID_acceleration",
+	"ID_render",
+	"ID_quad",
+	"ID_uv_motion",
+
+	"ID_init_life_interpolator",
+	"ID_init_spawn_interpolator",
+	"ID_init_velocity_interpolator",
+	"ID_init_acceleration_interpolator",
+	"ID_init_render_interpolator",
+	"ID_init_uv_motion_interpolator",
+	"ID_init_quad_interpolator",
+
+	"ID_lifetime_life_interpolator",
+	"ID_lifetime_spawn_interpolator",
+	"ID_lifetime_velocity_interpolator",
+	"ID_lifetime_acceleration_interpolator",
+	"ID_lifetime_render_interpolator",
+	"ID_lifetime_uv_motion_interpolator",
+	"ID_lifetime_quad_interpolator",
+
+	"ID_key_count",
+
+	"ID_TAG_emitter",
+	"ID_TAG_uv_motion",
+	"ID_TAG_uv",
+	"ID_TAG_scale",
+	"ID_TAG_rotation",
+	"ID_TAG_translate",
+	"ID_TAG_render_quad",
+	"ID_TAG_material",
+	"ID_TAG_color",
+};
+
+static inline const char*
+component_id_name(component_id id) { return g_component_names[id]; }
+
+// void
+// particle_mgr::debug_print_particle_component(int idx){
+
+// }
+
+// void
+// particle_mgr::debug_print_remap(struct particle_remap* remp, int n){
+
+// }
+#endif
 
 particle_mgr::particle_mgr()
     : mmgr(particlesystem_create()){
@@ -404,9 +459,6 @@ particle_mgr::submit_render(){
 	
 	BGFX(submit)(mrenderdata.viewid, {mrenderdata.progid}, 0, BGFX_DISCARD_ALL);
 }
-
-static void
-remap_quadcache(quad_cache* qc, struct particle_remap *remap, int n){}
 
 void
 particle_mgr::remap_particles(){
