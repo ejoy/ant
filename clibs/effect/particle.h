@@ -37,13 +37,12 @@ enum component_id : uint32_t {
     ID_TAG_emitter,
     ID_TAG_uv_motion,
     ID_TAG_uv,
+    ID_TAG_color,
     ID_TAG_scale,
     ID_TAG_rotation,
     ID_TAG_translate,
     ID_TAG_render_quad,
     ID_TAG_material,
-    ID_TAG_color,
-    ID_TAG_lifetime_update,
     ID_count,
 };
 
@@ -235,7 +234,9 @@ private:
     void update_particle_spawn(float dt);
     void update_velocity(float dt);
     void update_translation(float dt);
-    void update_lifetime_component(float dt);
+    void update_lifetime_scale(float dt);
+    void update_lifetime_rotation(float dt);
+    void update_lifetime_color(float dt);
     void update_uv_motion(float dt);
     void update_quad_transform(float dt);
 

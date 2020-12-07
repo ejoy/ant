@@ -12,11 +12,11 @@ LUA2STRUCT(struct particles::spawndata, count, rate);
 LUA2STRUCT(struct particles::uv_motion_data, u_speed, v_speed, scale);
 
 namespace lua_struct {
-    void to_const(float value, particles::lifedata &ld){
+    void to_const(float value, particles::life &ld){
         ld.set(value);
     }
 
-    void to_linear(float minv, float maxv, particles::lifedata &ld){
+    void to_linear(float minv, float maxv, particles::life &ld){
         randomobj ro;
         ld.set((maxv - minv) * ro());
     }
@@ -143,7 +143,7 @@ namespace lua_struct {
         unpack_interp_value(L, index, iv);\
     }
 
-    DEF_INTERP_VALUE_UNPACK(particles::lifedata);
+    DEF_INTERP_VALUE_UNPACK(particles::life);
     DEF_INTERP_VALUE_UNPACK(particles::float_interp_value);
     DEF_INTERP_VALUE_UNPACK(particles::f2_interp_value);
     DEF_INTERP_VALUE_UNPACK(particles::f3_interp_value);
@@ -194,7 +194,7 @@ static inline VALUETYPE& check_add_component(comp_ids &ids){
 
 std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)>> g_attrib_map = {
     std::make_pair("emitter_lifetime", [](lua_State *L, int index, comp_ids& ids){
-        particles::lifedata ld;
+        particles::life ld;
         lua_struct::unpack(L, index, ld);
         check_add_id(particle_mgr::get().add_component(particles::life{ld}), ids);
     }),

@@ -9,6 +9,17 @@ struct quad_vertex{
     uint32_t    color;
 };
 
+inline uint8_t to_color_channel(float c){
+    return uint8_t(std::min(255.f, c * 255.f));
+}
+
+inline uint32_t to_color(const glm::vec4 &c){
+    uint8_t rgba[4];
+    for (int ii=0; ii<4; ++ii)
+        rgba[ii] = to_color_channel(c[ii]);
+    return *(uint32_t*)rgba;
+}
+
 struct quaddata {
     quaddata();
     quad_vertex& operator[](uint32_t ii){ return v[ii]; }
