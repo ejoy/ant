@@ -152,13 +152,13 @@ std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)
     std::make_pair("init_scale", [](lua_State *L, int index, comp_ids& ids){
         particles::f3_interp_value iv;
         lua_struct::unpack(L, index, iv);
-        auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
+        auto &ri = check_add_component<particles::init_transform_interpolator>(ids);
         ri.s = iv;
     }),
     std::make_pair("init_translation", [](lua_State *L, int index, comp_ids& ids){
         particles::f3_interp_value iv;
         lua_struct::unpack(L, index, iv);
-        auto &ri = check_add_component<particles::init_rendertype_interpolator>(ids);
+        auto &ri = check_add_component<particles::init_transform_interpolator>(ids);
         ri.t = iv;
     }),
     std::make_pair("init_color", [](lua_State *L, int index, comp_ids& ids){

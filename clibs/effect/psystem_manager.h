@@ -254,7 +254,7 @@ arrange_init_(struct particle_manager *P, struct particle_arrange_context *ctx) 
 
 static inline void
 map_component_(struct particle_manager *P, int component_id, int index, particle_index pid) {
-	P->c[component_id]->id[index] = pid;
+	P->c[component_id].id[index] = pid;
 	if (component_id < PARTICLE_KEY_COMPONENT) {
 		P->p[pid].c[component_id] = index;
 	}

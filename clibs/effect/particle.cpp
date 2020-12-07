@@ -20,7 +20,7 @@ const char* g_component_names[ID_count] = {
 	"ID_spawn",
 	"ID_velocity",
 	"ID_acceleration",
-	"ID_render",
+	"ID_transform",
 	"ID_quad",
 	"ID_uv_motion",
 
@@ -74,7 +74,7 @@ particle_mgr::particle_mgr()
 	create_array<particles::spawn>();
 	create_array<particles::velocity>();
 	create_array<particles::acceleration>();
-	create_array<particles::rendertype>();
+	create_array<particles::transform>();
 	create_array<particles::uv_motion>();
 	create_array<particles::quad>();
 
@@ -82,14 +82,14 @@ particle_mgr::particle_mgr()
 	create_array<particles::init_spawn_interpolator>();
 	create_array<particles::init_velocity_interpolator>();
 	create_array<particles::init_acceleration_interpolator>();
-	create_array<particles::init_rendertype_interpolator>();
+	create_array<particles::init_transform_interpolator>();
 	create_array<particles::init_quad_interpolator>();
 	
 	create_array<particles::lifetime_life_interpolator>();
 	create_array<particles::lifetime_spawn_interpolator>();
 	create_array<particles::lifetime_velocity_interpolator>();
 	create_array<particles::lifetime_acceleration_interpolator>();
-	create_array<particles::lifetime_rendertype_interpolator>();
+	create_array<particles::lifetime_transform_interpolator>();
 	create_array<particles::lifetime_quad_interpolator>();
 }
 
@@ -272,8 +272,8 @@ particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const partic
 		}),
 
 		std::make_pair(ID_init_render_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
-			const auto &ri = data<particles::init_rendertype_interpolator>()[idx];
-			particles::rendertype rd;
+			const auto &ri = data<particles::init_transform_interpolator>()[idx];
+			particles::transform rd;
 			interp_vec(ri.s.scale, ri.s.type, ro, rd.s);
 			interp_vec(ri.t.scale, ri.t.type, ro, rd.t);
 			ids.push_back(add_component(rd));
@@ -386,11 +386,11 @@ particle_mgr::update_velocity(float dt){
 void
 particle_mgr::update_translation(float dt){
 	const auto &vel = data<particles::velocity>();
-	auto &render = data<particles::rendertype>();
+	auto &render = data<particles::transform>();
 
 	for (size_t vidx=0; vidx<vel.size(); ++vidx){
 		const auto &v = vel[vidx];
-		auto tidx = particlesystem_component(mmgr, ID_velocity, (particle_index)vidx, ID_render);
+		auto tidx = particlesystem_component(mmgr, ID_velocity, (particle_index)vidx, ID_transform);
 		if (tidx != PARTICLE_INVALID){
 			auto &r = render[vidx];
 			r.t += v * dt;
@@ -423,11 +423,11 @@ particle_mgr::update_uv_motion(float dt){
 void
 particle_mgr::update_quad_transform(float dt){
 	auto& quads = data<particles::quad>();
-	const auto& renders = data<particles::rendertype>();
+	const auto& renders = data<particles::transform>();
 
 	for (int iq = 0; iq < renders.size(); ++iq) {
 		auto& q = quads[iq];
-		const int ir = particlesystem_component(mmgr, ID_quad, iq, ID_render);
+		const int ir = particlesystem_component(mmgr, ID_quad, iq, ID_transform);
 		const auto &r = renders[ir];
 
 		glm::mat4 m = glm::scale(r.s);
@@ -448,7 +448,7 @@ void particle_mgr::submit_buffer(){
 void
 particle_mgr::submit_render(){
 	//mqc->update();
-	//mqc->submit(0, (uint32_t)data<particles::rendertype>().size()); 
+	//mqc->submit(0, (uint32_t)data<particles::transform>().size()); 
 	BGFX(set_state(uint64_t(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA), 0));
 	submit_buffer();
 
