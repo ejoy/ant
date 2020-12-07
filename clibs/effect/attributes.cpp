@@ -76,6 +76,67 @@ namespace lua_struct {
         }
     }
 
+    template<>
+    void unpack(lua_State* L, int index, particles::transform_interp &iv, void*) {
+        unpack_interp_value(L, index, iv.s);
+        unpack_interp_value(L, index, iv.r);
+        unpack_interp_value(L, index, iv.t);
+    }
+
+    template<>
+    void unpack(lua_State* L, int index, particles::color_interp_value &civ, void*) {
+        auto check_rgba = [](lua_State* L, int index, particles::color_interp_value &civ){
+            bool isvalid = false;
+            if (LUA_TTABLE == lua_getfield(L, index, "RGBA")){
+                isvalid = true;
+                particles::f4_interp_value f4v;
+                unpack_interp_value(L, index, f4v);
+                for (int ii=0; ii<4; ++ii){
+                    civ.rgba[ii].scale = f4v.scale[ii];
+                    civ.rgba[ii].type = f4v.type;
+                }
+            }
+            lua_pop(L, 1);
+            return isvalid;
+        };
+
+        auto check_rgb = [](lua_State* L, int index, particles::color_interp_value &civ){
+            bool isvalid = false;
+            if (LUA_TTABLE == lua_getfield(L, index, "RGB")){
+                isvalid = true;
+                particles::f3_interp_value f3v;
+                unpack_interp_value(L, index, f3v);
+                for (int ii=0; ii<3; ++ii){
+                    civ.rgba[ii].scale = f3v.scale[ii];
+                    civ.rgba[ii].type = f3v.type;
+                }
+
+                if (LUA_TTABLE == lua_getfield(L, index, "A")){
+                    unpack_interp_value(L, index, civ.rgba[3]);
+                }
+                lua_pop(L, 1);
+            }
+            lua_pop(L, 1);
+            return isvalid;
+        };
+
+        if (check_rgba(L, index, civ))
+            return;
+        
+        if (check_rgb(L, index, civ))
+            return;
+
+
+        for (int ii=0; ii<4; ++ii){
+            unpack_interp_value(L, index, civ.rgba[ii]);
+        }
+    }
+
+    template<>
+    void unpack(lua_State* L, int index, particles::quad_interp &iv, void*) {
+        unpack(L, index, iv.color);
+    }
+
 #define DEF_INTERP_VALUE_UNPACK(_INTERPTYPE) \
     template<>\
     void unpack(lua_State* L, int index, _INTERPTYPE &iv, void*) {\
@@ -152,19 +213,37 @@ std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)
     std::make_pair("init_scale", [](lua_State *L, int index, comp_ids& ids){
         particles::f3_interp_value iv;
         lua_struct::unpack(L, index, iv);
-        auto &ri = check_add_component<particles::init_transform_interpolator>(ids);
-        ri.s = iv;
+        auto &t = check_add_component<particles::init_transform_interpolator>(ids);
+        t.s = iv;
+    }),
+    std::make_pair("scale_over_life", [](lua_State *L, int index, comp_ids& ids){
+        particles::f3_interp_value iv;
+        lua_struct::unpack(L, index, iv);
+        auto &t = check_add_component<particles::lifetime_transform_interpolator>(ids);
+        t.s = iv;
     }),
     std::make_pair("init_translation", [](lua_State *L, int index, comp_ids& ids){
         particles::f3_interp_value iv;
         lua_struct::unpack(L, index, iv);
-        auto &ri = check_add_component<particles::init_transform_interpolator>(ids);
-        ri.t = iv;
+        auto &t = check_add_component<particles::init_transform_interpolator>(ids);
+        t.t = iv;
+    }),
+    std::make_pair("translation_over_life", [](lua_State *L, int index, comp_ids& ids){
+        // particles::f3_interp_value iv;
+        // lua_struct::unpack(L, index, iv);
+        // auto &t = check_add_component<particles::init_transform_interpolator>(ids);
+        // t.t = iv;
     }),
     std::make_pair("init_color", [](lua_State *L, int index, comp_ids& ids){
-        particles::f4_interp_value iv;
+        particles::color_interp_value iv;
         lua_struct::unpack(L, index, iv);
         auto &q = check_add_component<particles::init_quad_interpolator>(ids);
+        q.color = iv;
+    }),
+    std::make_pair("color_over_life", [](lua_State *L, int index, comp_ids& ids){
+        particles::color_interp_value iv;
+        lua_struct::unpack(L, index, iv);
+        auto &q = check_add_component<particles::lifetime_quad_interpolator>(ids);
         q.color = iv;
     }),
     std::make_pair("init_velocity", [](lua_State *L, int index, comp_ids& ids){

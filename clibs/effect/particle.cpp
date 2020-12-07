@@ -28,7 +28,7 @@ const char* g_component_names[ID_count] = {
 	"ID_init_spawn_interpolator",
 	"ID_init_velocity_interpolator",
 	"ID_init_acceleration_interpolator",
-	"ID_init_render_interpolator",
+	"ID_init_transform_interpolator",
 	"ID_init_uv_motion_interpolator",
 	"ID_init_quad_interpolator",
 
@@ -36,7 +36,7 @@ const char* g_component_names[ID_count] = {
 	"ID_lifetime_spawn_interpolator",
 	"ID_lifetime_velocity_interpolator",
 	"ID_lifetime_acceleration_interpolator",
-	"ID_lifetime_render_interpolator",
+	"ID_lifetime_transform_interpolator",
 	"ID_lifetime_uv_motion_interpolator",
 	"ID_lifetime_quad_interpolator",
 
@@ -84,6 +84,7 @@ particle_mgr::particle_mgr()
 	create_array<particles::init_acceleration_interpolator>();
 	create_array<particles::init_transform_interpolator>();
 	create_array<particles::init_quad_interpolator>();
+	create_array<particles::init_uv_motion_interpolator>();
 	
 	create_array<particles::lifetime_life_interpolator>();
 	create_array<particles::lifetime_spawn_interpolator>();
@@ -91,6 +92,7 @@ particle_mgr::particle_mgr()
 	create_array<particles::lifetime_acceleration_interpolator>();
 	create_array<particles::lifetime_transform_interpolator>();
 	create_array<particles::lifetime_quad_interpolator>();
+	create_array<particles::lifetime_uv_motion_interpolator>();
 }
 
 class component_array {
@@ -210,6 +212,13 @@ std::vector<T>& particle_mgr::data(){
 	return static_cast<component_arrayT<T>*>(mcomp_arrays[T::ID()])->mdata;
 }
 
+static void
+interp_float(float scale, int type, randomobj &ro, float &v){
+	v = scale * particles::lifedata::MAX_PROCESS;
+	if (is_linear_interp(type))
+		v *= ro();
+}
+
 template<typename VALUE_TYPE>
 static void
 interp_vec(const VALUE_TYPE &scale, int type, randomobj &ro, VALUE_TYPE &v){
@@ -226,12 +235,17 @@ interp_vec(const VALUE_TYPE &scale, int type, randomobj &ro, VALUE_TYPE &v){
 	}
 }
 
-static uint32_t
-interp_color(const glm::vec4 &scale, int type, randomobj &ro){
+static void
+interp_color(const particles::color_interp_value& civ, randomobj &ro, uint32_t &clr){
 	glm::vec4 v(0);
-	interp_vec(scale, type, ro, v);
-	v *= 255.f;
-	return uint32_t(uint8_t(v[0]) << 0|uint8_t(v[1]) << 8|uint8_t(v[2]) << 16 |uint8_t(v[3]) <<24);
+	for (int ii=0; ii<4; ++ii){
+		interp_float(civ.rgba[ii].scale, civ.rgba[ii].type, ro, v[ii]);
+	}
+	
+	clr = uint32_t( uint8_t(v[0])<<0|
+					uint8_t(v[1])<<8|
+					uint8_t(v[2])<<16|
+					uint8_t(v[3])<<24);
 }
 
 void
@@ -246,17 +260,14 @@ particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const partic
 	};
 
 	std::vector<spawn_id>	particle_indices;
-
 	//TODO: should be gloabl value
 	std::unordered_map<component_id, std::function<void (uint32_t, randomobj &, comp_ids&)>>	create_component_ops = {
 		std::make_pair(ID_init_life_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
-			const auto &init_life_interpolator = data<particles::init_life_interpolator>();
-			const auto& interp_life = init_life_interpolator[idx];
-
-			float life = interp_life.scale * particles::lifedata::MAX_PROCESS;
-			if (is_linear_interp(interp_life.type))
-				life *= ro();
-			ids.push_back(add_component(particles::life{particles::lifedata(life)}));
+			const auto &interp_life = data<particles::init_life_interpolator>()[idx];
+			float life;
+			interp_float(interp_life.scale, interp_life.type, ro, life);
+			particles::life l; l.set(life);
+			ids.push_back(add_component(l));
 		}),
 
 		std::make_pair(ID_init_velocity_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids ){
@@ -270,28 +281,31 @@ particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const partic
 			particles::acceleration a; interp_vec(c.scale, c.type, ro, *(glm::vec3*)&a);
 			ids.push_back(add_component(a));
 		}),
-
-		std::make_pair(ID_init_render_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
+		std::make_pair(ID_init_transform_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
 			const auto &ri = data<particles::init_transform_interpolator>()[idx];
 			particles::transform rd;
 			interp_vec(ri.s.scale, ri.s.type, ro, rd.s);
 			interp_vec(ri.t.scale, ri.t.type, ro, rd.t);
 			ids.push_back(add_component(rd));
-			ids.push_back(ID_TAG_render_quad);
-			
+		}),
+		std::make_pair(ID_lifetime_transform_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
+			const auto &t = data<particles::lifetime_transform_interpolator>()[idx];
+			ids.push_back(add_component(t));
 		}),
 		std::make_pair(ID_init_quad_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids &ids){
 			const auto &qi = data<particles::init_quad_interpolator>()[idx];
-			const auto clr = interp_color(qi.color.scale, qi.color.type, ro);
 			particles::quad q;
-			for(uint32_t ii=0; ii<4; ++ii){
-				const auto &uv = qi.uv[ii];
-				auto& v = q[ii];
-				v.color = clr;
-				interp_vec(uv.scale, uv.type, ro, v.uv);
-			}
+			uint32_t clr;
+			interp_color(qi.color, ro, clr);
+			for (int ii=0; ii<4; ++ii)
+				q[ii].color = clr;
 
 			ids.push_back(add_component(q));
+			ids.push_back(ID_TAG_render_quad);
+		}),
+		std::make_pair(ID_lifetime_quad_interpolator, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
+			const auto &lqi = data<particles::lifetime_quad_interpolator>()[idx];
+			ids.push_back(add_component(lqi));
 		}),
 		std::make_pair(ID_uv_motion, [this](uint32_t idx, randomobj &ro, comp_ids& ids){
 			const auto &uvm = data<particles::uv_motion>()[idx];
@@ -307,6 +321,15 @@ particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const partic
 			particle_indices.push_back(spawn_id{initid, idx});
 	}
 
+	auto check_add_lifetime_tag = [](comp_ids &ids){
+		for(auto id : ids){
+			if (ID_lifetime_interpolator_start <= id && id <= ID_lifetime_interpolator_end){
+				ids.push_back(ID_TAG_lifetime_update);
+				return;
+			}
+		}
+	};
+
 	randomobj ro;
 	for (uint32_t ii=0; ii<spawnnum; ++ii){
 		comp_ids ids;
@@ -316,7 +339,8 @@ particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const partic
 				it->second(p.idx, ro, ids);
 			}
 		}
-	
+
+		check_add_lifetime_tag(ids);
 		add(ids);
 	}
 }
@@ -386,15 +410,25 @@ particle_mgr::update_velocity(float dt){
 void
 particle_mgr::update_translation(float dt){
 	const auto &vel = data<particles::velocity>();
-	auto &render = data<particles::transform>();
+	auto &trans = data<particles::transform>();
 
 	for (size_t vidx=0; vidx<vel.size(); ++vidx){
 		const auto &v = vel[vidx];
 		auto tidx = particlesystem_component(mmgr, ID_velocity, (particle_index)vidx, ID_transform);
 		if (tidx != PARTICLE_INVALID){
-			auto &r = render[vidx];
+			auto &r = trans[vidx];
 			r.t += v * dt;
 		}
+	}
+}
+
+void
+particle_mgr::update_lifetime_component(float dt){
+	auto &trans = data<particles::transform>();
+	const int n = particlesystem_count(mmgr, ID_TAG_lifetime_update);
+	for (int ii=0; ii<n; ++ii){
+		const particle_index itransform = particlesystem_component(mmgr, ID_TAG_lifetime_update, ii, ID_lifetime_transform_interpolator);		
+
 	}
 }
 

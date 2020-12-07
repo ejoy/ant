@@ -25,27 +25,30 @@ data:
             rate:   1.0
         init_lifetime:
             interp_type: linear
-            minv: 1.1
-            maxv: 2.5
+            minv: 5
+            maxv: 20
         init_scale:
             interp_type: linear
-            minv:{0.15, 0.15, 0.15}
-            maxv:{0.28, 0.28, 0.28}
-        #init_scale_curve:
-        #    points:
-        #    type: param #param/linear, param for follow bezer/b-spline curve
-        init_translation:
-            interp_type: linear
-            minv:{0.0, 0.0, 0.0}
-            maxv:{0.0, 0.0, 0.0}
+            minv:{1.15, 1.15, 1.15}
+            maxv:{1.28, 1.28, 1.28}
+        #scale_over_life:
+        #    interp_value: linear
+        #    minv: {0.5, 1.0, 1.0}
+        #    maxv: {3.0, 1.0, 1.0}
         init_color:
+            #RGBA:
             interp_type: linear
             minv: {0.0, 0.0, 0.0, 1.0}
             maxv: {1.0, 1.0, 1.0, 1.0}
+        #color_over_life:
+        #    A:
+        #        interp_type: linear
+        #        minv: 1.0
+        #        maxv: 0.0
         init_velocity:
             interp_type: linear
-            minv: {0.0, 0.0, 0.0}
-            maxv: {0.0, 0.0, 0.0}
+            minv: {1.0, 0.0, 0.0}
+            maxv: {0.0, 1.0, 1.0}
         uv_motion:
             scale:   1
             u_speed: 0.2

@@ -12,21 +12,25 @@ enum component_id : uint32_t {
     ID_uv_motion,
     ID_material,
 
-    ID_init_life_interpolator,
+    ID_init_interpolator_start,
+    ID_init_life_interpolator = ID_init_interpolator_start,
     ID_init_spawn_interpolator,
     ID_init_velocity_interpolator,
     ID_init_acceleration_interpolator,
-    ID_init_render_interpolator,
+    ID_init_transform_interpolator,
     ID_init_uv_motion_interpolator,
     ID_init_quad_interpolator,
+    ID_init_interpolator_end = ID_init_quad_interpolator,
 
-    ID_lifetime_life_interpolator,
+    ID_lifetime_interpolator_start,
+    ID_lifetime_life_interpolator = ID_lifetime_interpolator_start,
     ID_lifetime_spawn_interpolator,
     ID_lifetime_velocity_interpolator,
     ID_lifetime_acceleration_interpolator,
-    ID_lifetime_render_interpolator,
+    ID_lifetime_transform_interpolator,
     ID_lifetime_uv_motion_interpolator,
     ID_lifetime_quad_interpolator,
+    ID_lifetime_interpolator_end = ID_lifetime_quad_interpolator,
 
     ID_key_count,
 
@@ -39,6 +43,7 @@ enum component_id : uint32_t {
     ID_TAG_render_quad,
     ID_TAG_material,
     ID_TAG_color,
+    ID_TAG_lifetime_update,
     ID_count,
 };
 
@@ -114,29 +119,29 @@ struct particles{
     template<typename INTERP_VALUE>
     struct interp_valueT{
         using interp_type = INTERP_VALUE;
+        interp_valueT():scale(0), type(UINT8_MAX){}
         INTERP_VALUE scale;
-        int type;   //0 for const, 1 for linear, [2, 255] for curve index
+        uint8_t type;   //0 for const, 1 for linear, [2, 254] for curve index
     };
 
     using float_interp_value    = interp_valueT<float>;
     using f2_interp_value       = interp_valueT<glm::vec2>;
     using f3_interp_value       = interp_valueT<glm::vec3>;
     using f4_interp_value       = interp_valueT<glm::vec4>;
-    using color_interp_value    = f4_interp_value;
     using quad_interp_value     = interp_valueT<glm::quat>;
 
-    struct color_intper_value{
+    struct color_interp_value{
         float_interp_value rgba[4];
     };
 
     struct transform_interp{
         f3_interp_value s;
-        quad_interp_value r;
+        float_interp_value r;
         f3_interp_value t;
     };
 
     struct quad_interp{
-        f2_interp_value uv[4];
+        //f2_interp_value uv[4];
         color_interp_value color;
     };
 
@@ -157,7 +162,7 @@ struct particles{
     using init_spawn_interpolator       = componentT<float_interp_value,ID_init_spawn_interpolator>;
     using init_velocity_interpolator    = componentT<f3_interp_value,   ID_init_velocity_interpolator>;
     using init_acceleration_interpolator= componentT<f3_interp_value,   ID_init_acceleration_interpolator>;
-    using init_transform_interpolator   = componentT<transform_interp,  ID_init_render_interpolator>;
+    using init_transform_interpolator   = componentT<transform_interp,  ID_init_transform_interpolator>;
     using init_quad_interpolator        = componentT<quad_interp,       ID_init_quad_interpolator>;
     using init_uv_motion_interpolator   = componentT<uv_motion_interp_value, ID_init_uv_motion_interpolator>;
 
@@ -165,9 +170,9 @@ struct particles{
     using lifetime_spawn_interpolator        = componentT<float_interp_value,ID_lifetime_spawn_interpolator>;
     using lifetime_velocity_interpolator     = componentT<f3_interp_value,   ID_lifetime_velocity_interpolator>;
     using lifetime_acceleration_interpolator = componentT<f3_interp_value,   ID_lifetime_acceleration_interpolator>;
-    using lifetime_transform_interpolator   = componentT<transform_interp, ID_lifetime_render_interpolator>;
+    using lifetime_transform_interpolator    = componentT<transform_interp, ID_lifetime_transform_interpolator>;
     using lifetime_quad_interpolator         = componentT<quad_interp,       ID_lifetime_quad_interpolator>;
-    using lifetime_uv_motion_interpolator   = componentT<uv_motion_interp_value, ID_lifetime_uv_motion_interpolator>;
+    using lifetime_uv_motion_interpolator    = componentT<uv_motion_interp_value, ID_lifetime_uv_motion_interpolator>;
 };
 
 struct render_data{
@@ -230,6 +235,7 @@ private:
     void update_particle_spawn(float dt);
     void update_velocity(float dt);
     void update_translation(float dt);
+    void update_lifetime_component(float dt);
     void update_uv_motion(float dt);
     void update_quad_transform(float dt);
 
