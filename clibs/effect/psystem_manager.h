@@ -261,6 +261,20 @@ map_component_(struct particle_manager *P, int component_id, int index, particle
 }
 
 static inline int
+find_last_(struct particle_manager *P, int component_id, struct particle_arrange_context *ctx) {
+	int i;
+	struct particle_ids *c = &P->c[component_id];
+	particle_index *ids = c->id;
+	for (i = c->n-1; i>=0; i++) {
+		particle_index oldid = ids[i];
+		if (ctx->map[oldid] != PARTICLE_INVALID) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+static inline int
 arrange_component_(struct particle_manager *P, int cap, struct particle_remap remap[], struct particle_arrange_context *ctx) {
 	int i,j;
 	int ret_index = 0;
@@ -277,17 +291,22 @@ arrange_component_(struct particle_manager *P, int cap, struct particle_remap re
 			particle_index newid = ctx->map[oldid];
 			if (newid != oldid) {
 				if (newid == PARTICLE_INVALID) {
-					// removed
-					--c->n;
-					if (j<c->n) {
-						map_component_(P, i, j, ids[c->n]);
+					++ctx->remove;
+					// remove j , and move the last slot into j
+					int last_index = find_last_(P, i, ctx);
+					c->n = last_index + 1;
+					if (last_index <= j) {
+						// It's the last one
+						assert(last_index != j);
+					} else {
+						oldid = ids[last_index];
+						newid = ctx->map[oldid];
 						remap[ret_index].component_id = i;
-						remap[ret_index].from_id = c->n;
+						remap[ret_index].from_id = last_index;
 						remap[ret_index].to_id = j;
 						++ret_index;
+						map_component_(P, i, j, newid);
 					}
-					--j;
-					++ctx->remove;
 				} else {
 					// move component
 					map_component_(P, i, j, newid);
@@ -385,7 +404,7 @@ particlesystem_verify(struct particle_manager *P) {
 		}
 	}
 	for (i=0;i<PARTICLE_COMPONENT;i++) {
-		struct particle_ids *ids = &P->c[j];
+		struct particle_ids *ids = &P->c[i];
 		for (j=0;j<ids->n;j++) {
 			particle_index index = ids->id[j];
 			if (index < 0 || index >= P->n) {
