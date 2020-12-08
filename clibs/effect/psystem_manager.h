@@ -26,8 +26,8 @@ struct particle_remap {
 
 struct particle_arrange_context {
 	int component;
-	int index;
-	int remove;
+	int begin;
+	int end;
 	int n;
 	particle_index map[PARTICLE_MAX];
 };
@@ -249,94 +249,78 @@ arrange_init_(struct particle_manager *P, struct particle_arrange_context *ctx) 
 	P->arranging = 1;
 	ctx->n = P->n - removed_n;
 	ctx->component = 0;
-	ctx->index = 0;
-	ctx->remove = 0;
+	ctx->begin = 0;
+	ctx->end = P->c[0].n;
 }
 
-static inline void
-map_component_(struct particle_manager *P, int component_id, int index, particle_index pid) {
-	P->c[component_id].id[index] = pid;
-	if (component_id < PARTICLE_KEY_COMPONENT) {
-		P->p[pid].c[component_id] = index;
-	}
-}
-
+// Find the first index in (c) needs to move
+// ctx->end is the last alive (not removed) component in (c)
+// ctx->map[ c->id[index] ] == PARTICLE_INVALID means the index component removed.
 static inline int
-find_last_(struct particle_manager *P, int component_id, struct particle_arrange_context *ctx) {
-	int i;
-	struct particle_ids *c = &P->c[component_id];
-	particle_index *ids = c->id;
-	for (i = c->n-1; i>=0; i--) {
-		particle_index oldid = ids[i];
-		if (ctx->map[oldid] != PARTICLE_INVALID) {
-			return i;
+next_removed_component_(struct particle_manager *P, struct particle_arrange_context *ctx, struct particle_ids *c) {
+	while(ctx->begin < ctx->end) {
+		particle_index oldid = c->id[ctx->begin];
+		particle_index newid = ctx->map[oldid];
+		if (newid != oldid) {
+			if (newid == PARTICLE_INVALID) {
+				// find last alive component
+				while (--ctx->end > ctx->begin) {
+					if (ctx->map[c->id[ctx->end]] != PARTICLE_INVALID) {
+						return ctx->begin;
+					}
+				}
+				return -1;
+			} else {
+				// particle remap
+				c->id[ctx->begin] = newid;
+			}
 		}
+		++ctx->begin;
 	}
 	return -1;
 }
 
 static inline int
 arrange_component_(struct particle_manager *P, int cap, struct particle_remap remap[], struct particle_arrange_context *ctx) {
-	int i,j;
 	int ret_index = 0;
-	for (i=ctx->component;i<PARTICLE_COMPONENT;i++) {
-		struct particle_ids *c = &P->c[i];
-		particle_index *ids = c->id;
-		for (j=ctx->index;j<c->n;j++) {
-			if (ret_index >= cap) {
-				ctx->component = i;
-				ctx->index = j;
-				return ret_index;
-			}
-			particle_index oldid = ids[j];
+	struct particle_ids *c = &P->c[ctx->component];
+	while (ctx->component < PARTICLE_COMPONENT) {
+		int index;
+		while ((index=next_removed_component_(P, ctx, c)) >= 0) {
+			// Move component[ctx->last] to component[index]
+			particle_index oldid = c->id[ctx->end]; 
 			particle_index newid = ctx->map[oldid];
-			if (newid != oldid) {
-				if (newid == PARTICLE_INVALID) {
-					++ctx->remove;
-					// remove j , and move the last slot into j
-					int last_index = find_last_(P, i, ctx);
-					if (last_index <= j) {
-						// It's the last one
-						assert(last_index != j);
-						--c->n;
-					} else {
-						c->n = last_index;
-						oldid = ids[last_index];
-						newid = ctx->map[oldid];
-						remap[ret_index].component_id = i;
-						remap[ret_index].from_id = last_index;
-						remap[ret_index].to_id = j;
-						++ret_index;
-						map_component_(P, i, j, newid);
-					}
-				} else {
-					// particle:oldid is removed, change to newid
-					map_component_(P, i, j, newid);
-				}
+			c->id[index] = newid;
+			if (ctx->component < PARTICLE_KEY_COMPONENT) {
+				P->p[newid].c[ctx->component] = index;
+			}
+			
+			// remap
+			remap[ret_index].component_id = ctx->component;
+			remap[ret_index].from_id = ctx->end;
+			remap[ret_index].to_id = index;
+			if (++ret_index >= cap) {
+				return ret_index;
 			}
 		}
-		if (ctx->remove) {
-			if (ret_index >= cap) {
-				ctx->component = i;
-				ctx->index = j;
-				return ret_index;
-			}
-			remap[ret_index].component_id = i;
-			remap[ret_index].from_id = c->n;
-			remap[ret_index].to_id = PARTICLE_INVALID;	// resize
+		if (c->n != ctx->end) {
+			// resize
+			c->n = ctx->end;
+			remap[ret_index].component_id = ctx->component;
+			remap[ret_index].from_id = ctx->end;
+			remap[ret_index].to_id = PARTICLE_INVALID;
 			++ret_index;
 		}
-		ctx->index = 0;
-		ctx->remove = 0;
+		c = &P->c[++ctx->component];
+		ctx->begin = 0;
+		ctx->end = c->n;
+		if (ret_index >= cap) {
+			return ret_index;
+		}
 	}
-	if (ret_index >= cap) {
-		ctx->component = i;
-		ctx->index = 0;
-	} else {
-		P->arranging = 0;
-		P->n = ctx->n;
-		P->removed_head = PARTICLE_INVALID;
-	}
+	P->arranging = 0;
+	P->n = ctx->n;
+	P->removed_head = PARTICLE_INVALID;
 	return ret_index;
 }
 
