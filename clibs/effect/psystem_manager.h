@@ -367,7 +367,7 @@ particlesystem_debug(struct particle_manager *P, const char **cname) {
 static inline int
 particlesystem_verify(struct particle_manager *P) {
 	int i,j;
-	for (i=0;i<i->P->n;i++) {
+	for (i=0;i<P->n;i++) {
 		struct particle *p = &P->p[i];
 		for (j=0;j<PARTICLE_KEY_COMPONENT;j++) {
 			if (p->c[j] != PARTICLE_INVALID) {
