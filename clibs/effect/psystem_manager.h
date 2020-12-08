@@ -363,4 +363,38 @@ particlesystem_debug(struct particle_manager *P, const char **cname) {
 	}
 }
 
+// Only for debug
+static inline int
+particlesystem_verify(struct particle_manager *P) {
+	int i,j;
+	for (i=0;i<i->P->n;i++) {
+		struct particle *p = &P->p[i];
+		for (j=0;j<PARTICLE_KEY_COMPONENT;j++) {
+			if (p->c[j] != PARTICLE_INVALID) {
+				int cindex = p->c[j];
+				struct particle_ids *ids = &P->c[j];
+				if (cindex < 0 || cindex >= ids->n) {
+					printf("Invalid component [%d] index (%d of %d) for particle %d.\n", j, cindex, ids->n, i);
+					return 1;
+				}
+				if (ids->id[cindex] != i) {
+					printf("Component [%d] (%d) not match with particle %d, it's %d\n", j , cindex, i, ids->id[cindex]);
+					return 1;
+				}
+			}
+		}
+	}
+	for (i=0;i<PARTICLE_COMPONENT;i++) {
+		struct particle_ids *ids = &P->c[j];
+		for (j=0;j<ids->n;j++) {
+			particle_index index = ids->id[j];
+			if (index < 0 || index >= P->n) {
+				printf("Invalid particle (%d/%d) for component [%d] at index (%d).\n", index, P->n, i, j);
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
 #endif
