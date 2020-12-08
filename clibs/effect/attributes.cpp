@@ -105,16 +105,18 @@ namespace lua_struct {
             if (LUA_TTABLE == lua_getfield(L, index, "RGB")){
                 isvalid = true;
                 particles::f3_interp_value f3v;
-                unpack_interp_value(L, index, f3v);
+                unpack_interp_value(L, -1, f3v);
                 for (int ii=0; ii<3; ++ii){
                     civ.rgba[ii].scale = f3v.scale[ii];
                     civ.rgba[ii].type = f3v.type;
                 }
+            }
+            lua_pop(L, 1);
 
-                if (LUA_TTABLE == lua_getfield(L, index, "A")){
-                    unpack_interp_value(L, index, civ.rgba[3]);
-                }
-                lua_pop(L, 1);
+            if (LUA_TTABLE == lua_getfield(L, index, "A")){
+                unpack_interp_value(L, -1, civ.rgba[3]);
+            } else {
+                luaL_error(L, "need define 'A' for alpha interp");
             }
             lua_pop(L, 1);
             return isvalid;
@@ -126,9 +128,14 @@ namespace lua_struct {
         if (check_rgb(L, index, civ))
             return;
 
-
+        const char* rgba_names[] = {"R", "G", "B", "A"};
         for (int ii=0; ii<4; ++ii){
-            unpack_interp_value(L, index, civ.rgba[ii]);
+            if (LUA_TTABLE == lua_getfield(L, index, rgba_names[ii])){
+                unpack_interp_value(L, -1, civ.rgba[ii]);
+            } else {
+                luaL_error(L, "need define '%s'", rgba_names[ii]);
+            }
+            lua_pop(L, 1);
         }
     }
 
@@ -153,10 +160,10 @@ namespace lua_struct {
     void unpack_vec(lua_State* L, int idx, glm::vec<NUM, float, glm::defaultp>& v) {
         luaL_checktype(L, idx, LUA_TTABLE);
         const int len = (int)luaL_len(L, idx);
-        if (len != NUM) {
-            luaL_error(L, "invalid vec3: %d", len);
+        if (len < NUM) {
+            luaL_error(L, "invalid vec: %d", len);
         }
-        for (int ii = 0; ii < len; ++ii) {
+        for (int ii = 0; ii < NUM; ++ii) {
             lua_geti(L, idx, ii + 1);
             v[ii] = (float)lua_tonumber(L, -1);
             lua_pop(L, 1);
