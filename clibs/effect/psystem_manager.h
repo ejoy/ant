@@ -28,6 +28,7 @@ struct particle_arrange_context {
 	int component;
 	int index;
 	int remove;
+	int n;
 	particle_index map[PARTICLE_MAX];
 };
 
@@ -207,7 +208,7 @@ arrange_init_(struct particle_manager *P, struct particle_arrange_context *ctx) 
 	int i;
 	for (i=0;i<P->n;i++) {
 		ctx->map[i] = i;
-	}
+	}	
 	particle_index removed_id = P->removed_head;
 	int removed_n = 0;
 	particle_index removed[PARTICLE_MAX];
@@ -245,8 +246,8 @@ arrange_init_(struct particle_manager *P, struct particle_arrange_context *ctx) 
 		--last;
 	}
 
-	P->n = last+1;
 	P->arranging = 1;
+	ctx->n = P->n - removed_n;
 	ctx->component = 0;
 	ctx->index = 0;
 	ctx->remove = 0;
@@ -265,7 +266,7 @@ find_last_(struct particle_manager *P, int component_id, struct particle_arrange
 	int i;
 	struct particle_ids *c = &P->c[component_id];
 	particle_index *ids = c->id;
-	for (i = c->n-1; i>=0; i++) {
+	for (i = c->n-1; i>=0; i--) {
 		particle_index oldid = ids[i];
 		if (ctx->map[oldid] != PARTICLE_INVALID) {
 			return i;
@@ -294,11 +295,12 @@ arrange_component_(struct particle_manager *P, int cap, struct particle_remap re
 					++ctx->remove;
 					// remove j , and move the last slot into j
 					int last_index = find_last_(P, i, ctx);
-					c->n = last_index + 1;
 					if (last_index <= j) {
 						// It's the last one
 						assert(last_index != j);
+						--c->n;
 					} else {
+						c->n = last_index;
 						oldid = ids[last_index];
 						newid = ctx->map[oldid];
 						remap[ret_index].component_id = i;
@@ -308,7 +310,7 @@ arrange_component_(struct particle_manager *P, int cap, struct particle_remap re
 						map_component_(P, i, j, newid);
 					}
 				} else {
-					// move component
+					// particle:oldid is removed, change to newid
 					map_component_(P, i, j, newid);
 				}
 			}
@@ -332,6 +334,7 @@ arrange_component_(struct particle_manager *P, int cap, struct particle_remap re
 		ctx->index = 0;
 	} else {
 		P->arranging = 0;
+		P->n = ctx->n;
 		P->removed_head = PARTICLE_INVALID;
 	}
 	return ret_index;
@@ -405,10 +408,16 @@ particlesystem_verify(struct particle_manager *P) {
 	}
 	for (i=0;i<PARTICLE_COMPONENT;i++) {
 		struct particle_ids *ids = &P->c[i];
+		int ref[PARTICLE_MAX] = {0};
 		for (j=0;j<ids->n;j++) {
 			particle_index index = ids->id[j];
 			if (index < 0 || index >= P->n) {
 				printf("Invalid particle (%d/%d) for component [%d] at index (%d).\n", index, P->n, i, j);
+				return 1;
+			}
+			++ref[index];
+			if (ref[index]>1) {
+				printf("Dup particle %d in component %d/%d.\n", index, i,j);
 				return 1;
 			}
 		}
