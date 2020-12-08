@@ -171,11 +171,11 @@ function CameraView:show()
         end
         
         if #frames > 0 then
-            imgui.cursor.Columns(2, "FrameColumns", false)
+            imgui.deprecated.Columns(2, "FrameColumns", false)
             imgui.widget.Text("FrameIndex")
-            imgui.cursor.NextColumn()
+            imgui.deprecated.NextColumn()
             imgui.widget.Text("Duration")
-            imgui.cursor.NextColumn()
+            imgui.deprecated.NextColumn()
             imgui.cursor.Separator()
             for i, v in ipairs(frames) do
                 if imgui.widget.Selectable(i, self.current_frame == i) then
@@ -183,13 +183,13 @@ function CameraView:show()
                     camera_mgr.set_frame(self.eid, i)
                     self:update()
                 end
-                imgui.cursor.NextColumn()
+                imgui.deprecated.NextColumn()
                 if imgui.widget.DragFloat("##"..i, self.duration[i]) then
                     frames[i].duration = self.duration[i][1]
                 end
-                imgui.cursor.NextColumn()
+                imgui.deprecated.NextColumn()
             end
-            imgui.cursor.Columns(1)
+            imgui.deprecated.Columns(1)
         end
 
         imgui.widget.TreePop()

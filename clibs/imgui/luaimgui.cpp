@@ -19,6 +19,8 @@ extern "C" {
 #include "imgui_platform.h"
 #include "imgui_window.h"
 
+namespace imgui::table { void init(lua_State* L); }
+
 static void*
 lua_realloc(lua_State *L, void *ptr, size_t osize, size_t nsize) {
 	void *ud;
@@ -2830,18 +2832,18 @@ static struct enum_pair eInputTextFlags[] = {
 	ENUM(ImGuiInputTextFlags, CallbackHistory),
 	// Todo : support CallbackAlways
 	//	ENUM(ImGuiInputTextFlags, CallbackAlways),
-		ENUM(ImGuiInputTextFlags, CallbackCharFilter),
-		ENUM(ImGuiInputTextFlags, AllowTabInput),
-		ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
-		ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
-		ENUM(ImGuiInputTextFlags, AlwaysInsertMode),
-		ENUM(ImGuiInputTextFlags, ReadOnly),
-		ENUM(ImGuiInputTextFlags, Password),
-		ENUM(ImGuiInputTextFlags, NoUndoRedo),
-		ENUM(ImGuiInputTextFlags, CharsScientific),
-		ENUM(ImGuiInputTextFlags, CallbackResize),
-		ENUM(ImGuiInputTextFlags, Multiline),
-		{ NULL, 0 },
+	ENUM(ImGuiInputTextFlags, CallbackCharFilter),
+	ENUM(ImGuiInputTextFlags, AllowTabInput),
+	ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
+	ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
+	ENUM(ImGuiInputTextFlags, AlwaysInsertMode),
+	ENUM(ImGuiInputTextFlags, ReadOnly),
+	ENUM(ImGuiInputTextFlags, Password),
+	ENUM(ImGuiInputTextFlags, NoUndoRedo),
+	ENUM(ImGuiInputTextFlags, CharsScientific),
+	ENUM(ImGuiInputTextFlags, CallbackResize),
+	ENUM(ImGuiInputTextFlags, Multiline),
+	{ NULL, 0 },
 };
 
 static struct enum_pair eComboFlags[] = {
@@ -2978,6 +2980,75 @@ static struct enum_pair ePopupFlags[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eTableFlags[] = {
+	ENUM(ImGuiTableFlags, None),
+	ENUM(ImGuiTableFlags, Resizable),
+	ENUM(ImGuiTableFlags, Reorderable),
+	ENUM(ImGuiTableFlags, Hideable),
+	ENUM(ImGuiTableFlags, Sortable),
+	ENUM(ImGuiTableFlags, MultiSortable),
+	ENUM(ImGuiTableFlags, NoSavedSettings),
+	ENUM(ImGuiTableFlags, ContextMenuInBody),
+	ENUM(ImGuiTableFlags, RowBg),
+	ENUM(ImGuiTableFlags, BordersInnerH),
+	ENUM(ImGuiTableFlags, BordersOuterH),
+	ENUM(ImGuiTableFlags, BordersInnerV),
+	ENUM(ImGuiTableFlags, BordersOuterV),
+	ENUM(ImGuiTableFlags, BordersH),
+	ENUM(ImGuiTableFlags, BordersV),
+	ENUM(ImGuiTableFlags, BordersInner),
+	ENUM(ImGuiTableFlags, BordersOuter),
+	ENUM(ImGuiTableFlags, Borders),
+	ENUM(ImGuiTableFlags, NoBordersInBody),
+	ENUM(ImGuiTableFlags, NoBordersInBodyUntilResize),
+	ENUM(ImGuiTableFlags, ColumnsWidthStretch),
+	ENUM(ImGuiTableFlags, ColumnsWidthFixed),
+	ENUM(ImGuiTableFlags, SameWidths),
+	ENUM(ImGuiTableFlags, NoHeadersWidth),
+	ENUM(ImGuiTableFlags, NoHostExtendY),
+	ENUM(ImGuiTableFlags, NoKeepColumnsVisible),
+	ENUM(ImGuiTableFlags, PreciseWidths),
+	ENUM(ImGuiTableFlags, NoClip),
+	ENUM(ImGuiTableFlags, PadOuterX),
+	ENUM(ImGuiTableFlags, NoPadOuterX),
+	ENUM(ImGuiTableFlags, NoPadInnerX),
+	ENUM(ImGuiTableFlags, ScrollX),
+	ENUM(ImGuiTableFlags, ScrollY),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eTableRowFlags[] = {
+	ENUM(ImGuiTableRowFlags, None),
+	ENUM(ImGuiTableRowFlags, Headers),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eTableColumnFlags[] = {
+	ENUM(ImGuiTableColumnFlags, None),
+	ENUM(ImGuiTableColumnFlags, DefaultHide),
+	ENUM(ImGuiTableColumnFlags, DefaultSort),
+	ENUM(ImGuiTableColumnFlags, WidthStretch),
+	ENUM(ImGuiTableColumnFlags, WidthFixed),
+	ENUM(ImGuiTableColumnFlags, WidthAutoResize),
+	ENUM(ImGuiTableColumnFlags, NoResize),
+	ENUM(ImGuiTableColumnFlags, NoReorder),
+	ENUM(ImGuiTableColumnFlags, NoHide),
+	ENUM(ImGuiTableColumnFlags, NoClip),
+	ENUM(ImGuiTableColumnFlags, NoSort),
+	ENUM(ImGuiTableColumnFlags, NoSortAscending),
+	ENUM(ImGuiTableColumnFlags, NoSortDescending),
+	ENUM(ImGuiTableColumnFlags, NoHeaderWidth),
+	ENUM(ImGuiTableColumnFlags, PreferSortAscending),
+	ENUM(ImGuiTableColumnFlags, PreferSortDescending),
+	ENUM(ImGuiTableColumnFlags, IndentEnable),
+	ENUM(ImGuiTableColumnFlags, IndentDisable),
+	ENUM(ImGuiTableColumnFlags, IsEnabled),
+	ENUM(ImGuiTableColumnFlags, IsVisible),
+	ENUM(ImGuiTableColumnFlags, IsSorted),
+	ENUM(ImGuiTableColumnFlags, IsHovered),
+	{ NULL, 0 },
+};
+
 #ifdef _MSC_VER
 #pragma endregion IMP_FLAG
 #endif
@@ -3093,6 +3164,21 @@ static struct enum_pair eMouseCursor[] = {
 	ENUM(ImGuiMouseCursor,ResizeNWSE),
 	ENUM(ImGuiMouseCursor,Hand),
 	ENUM(ImGuiMouseCursor,COUNT),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eTableBgTarget[] = {
+	ENUM(ImGuiTableBgTarget,None),
+	ENUM(ImGuiTableBgTarget,RowBg0),
+	ENUM(ImGuiTableBgTarget,RowBg1),
+	ENUM(ImGuiTableBgTarget,CellBg),
+	{ NULL, 0 },
+};
+
+static struct enum_pair eSortDirection[] = {
+	ENUM(ImGuiSortDirection,None),
+	ENUM(ImGuiSortDirection,Ascending),
+	ENUM(ImGuiSortDirection,Descending),
 	{ NULL, 0 },
 };
 
@@ -3485,13 +3571,6 @@ luaopen_imgui(lua_State *L) {
 		{ "GetFrameHeight", cGetFrameHeight },
 		{ "GetFrameHeightWithSpacing", cGetFrameHeightWithSpacing },
 		{ "GetTreeNodeToLabelSpacing", cGetTreeNodeToLabelSpacing },
-		{ "Columns", cColumns },
-		{ "NextColumn", cNextColumn },
-		{ "GetColumnIndex", cGetColumnIndex },
-		{ "GetColumnOffset", cGetColumnOffset },
-		{ "SetColumnOffset", cSetColumnOffset },
-		{ "GetColumnWidth", cGetColumnWidth },
-		{ "SetColumnWidth", cSetColumnWidth },
 		{ "SetNextItemWidth", cSetNextItemWidth },
 		{ "PushItemWidth", cPushItemWidth},
 		{ "PopItemWidth", cPopItemWidth},
@@ -3560,6 +3639,8 @@ luaopen_imgui(lua_State *L) {
 	luaL_newlib(L, windows);
 	lua_setfield(L, -2, "windows");
 
+	imgui::table::init(L);
+
 	luaL_Reg util[] = {
 		{ "SetColorEditOptions", uSetColorEditOptions },
 		{ "PushClipRect", uPushClipRect },
@@ -3609,6 +3690,20 @@ luaopen_imgui(lua_State *L) {
 
 	luaL_newlib(L, font);
 	lua_setfield(L, -2, "font");
+
+	luaL_Reg deprecated[] = {
+		{ "Columns", cColumns },
+		{ "NextColumn", cNextColumn },
+		{ "GetColumnIndex", cGetColumnIndex },
+		{ "GetColumnOffset", cGetColumnOffset },
+		{ "SetColumnOffset", cSetColumnOffset },
+		{ "GetColumnWidth", cGetColumnWidth },
+		{ "SetColumnWidth", cSetColumnWidth },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, deprecated);
+	lua_setfield(L, -2, "deprecated");
+
 	lua_newtable(L);
 	flag_gen(L, "ColorEdit", eColorEditFlags);
 	flag_gen(L, "InputText", eInputTextFlags);
@@ -3623,12 +3718,17 @@ luaopen_imgui(lua_State *L) {
 	flag_gen(L, "Popup", ePopupFlags);
 	flag_gen(L, "Slider", eSliderFlags);
 	flag_gen(L, "DockNode", eDockNodeFlags);
+	flag_gen(L, "Table", eTableFlags);
+	flag_gen(L, "TableRow", eTableRowFlags);
+	flag_gen(L, "TableColumn", eTableColumnFlags);
 	lua_setfield(L, -2, "flags");
 
 	lua_newtable(L);
 	enum_gen(L, "StyleCol", eStyleCol);
 	enum_gen(L, "StyleVar", eStyleVar);
 	enum_gen(L, "MouseCursor", eMouseCursor);
+	enum_gen(L, "TableBgTarget", eTableBgTarget);
+	enum_gen(L, "SortDirection", eSortDirection);
 	lua_setfield(L, -2, "enum");
 
 	return 1;

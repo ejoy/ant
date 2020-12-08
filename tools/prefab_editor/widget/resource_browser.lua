@@ -193,14 +193,14 @@ function m.show()
         imgui.windows.PopStyleVar(1)
         imgui.cursor.Separator()
 
-        imgui.cursor.Columns(3)
+        imgui.deprecated.Columns(3)
         local child_width, child_height = imgui.windows.GetContentRegionAvail()
         imgui.windows.BeginChild("##ResourceBrowserDir", child_width, child_height, false)
         do_show_browser(resource_tree)
         imgui.windows.EndChild()
 
         imgui.cursor.SameLine()
-        imgui.cursor.NextColumn()
+        imgui.deprecated.NextColumn()
         child_width, child_height = imgui.windows.GetContentRegionAvail()
         imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height, false);
         local folder = current_folder[2]
@@ -292,7 +292,7 @@ function m.show()
         imgui.windows.EndChild()
 
         imgui.cursor.SameLine()
-        imgui.cursor.NextColumn()
+        imgui.deprecated.NextColumn()
         child_width, child_height = imgui.windows.GetContentRegionAvail()
         imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height, false);
         if fs.path(current_file):equal_extension(".png") or fs.path(current_file):equal_extension(".texture") then
@@ -301,7 +301,7 @@ function m.show()
                 if texture_detail[current_file] then
                     imgui.widget.Text("image:" .. texture_detail[current_file].path)
                 end
-                -- imgui.cursor.Columns(2, "PreviewColumns", true)
+                -- imgui.deprecated.Columns(2, "PreviewColumns", true)
                 imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.format)
                 local width, height = preview.texinfo.width, preview.texinfo.height
                 if width > 180 then
@@ -312,7 +312,7 @@ function m.show()
                 end
                 imgui.widget.Image(preview.handle, width, height)
                 imgui.cursor.SameLine()
-                -- imgui.cursor.NextColumn()
+                -- imgui.deprecated.NextColumn()
                 local texture_info = texture_detail[current_file] 
                 if texture_info then
                     imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
@@ -326,12 +326,12 @@ function m.show()
                         texture_info.sampler.V
                         ))
                 end
-                -- imgui.cursor.Columns(1)
+                -- imgui.deprecated.Columns(1)
             end
         end
         imgui.windows.EndChild()
 
-        imgui.cursor.Columns(1)
+        imgui.deprecated.Columns(1)
     end
 end
 

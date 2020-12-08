@@ -13,6 +13,7 @@ local initialized = false
 local init_width
 local init_height
 local debug_traceback = debug.traceback
+local viewids = {}
 
 local _timer = require "platform.timer"
 local _time_counter = _timer.counter
@@ -89,7 +90,9 @@ local function updateIO()
 end
 
 function message.viewid()
-	return viewidmgr.generate("imgui", viewidmgr.get "uieditor")
+	local viewid = viewidmgr.generate("imgui", viewidmgr.get "uieditor")
+	viewids[#viewids+1] = viewid
+	return viewid
 end
 
 local function dispatch(CMD, ...)
@@ -104,8 +107,19 @@ local function dispatch(CMD, ...)
 	end
 end
 
+local function empty_function()
+end
+
 local function start(w, h, callback)
 	cb = callback
+
+	cb.init = cb.init or empty_function
+	cb.update = cb.update or empty_function
+	cb.mouse_wheel = cb.mouse_wheel or empty_function
+	cb.mouse = cb.mouse or empty_function
+	cb.keyboard = cb.keyboard or empty_function
+	cb.size = cb.size or empty_function
+
 	init_width, init_height = w, h
 	local nwh = imgui.Create(dispatch, w, h)
 	rhwi.init {
@@ -156,4 +170,5 @@ end
 
 return {
 	start = start,
+	viewids = function () return viewids end,
 }

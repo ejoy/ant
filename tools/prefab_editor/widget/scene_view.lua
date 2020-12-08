@@ -93,7 +93,7 @@ local function show_scene_node(node)
         end
     end
     local function lock_visible(eid)
-        imgui.cursor.NextColumn()
+        imgui.deprecated.NextColumn()
         imgui.util.PushID(eid)
         local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
@@ -109,7 +109,7 @@ local function show_scene_node(node)
             world:pub { "EntityState", "visible", eid, not current_visible }
         end
         imgui.util.PopID()
-        imgui.cursor.NextColumn()
+        imgui.deprecated.NextColumn()
     end
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
@@ -196,12 +196,12 @@ function m.show()
         end
         imgui.cursor.Separator()
         for i, child in ipairs(hierarchy.root.children) do
-            imgui.cursor.Columns(2, "SceneColumns", false)
-            imgui.cursor.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - uiconfig.LockVisibleWidth)
+            imgui.deprecated.Columns(2, "SceneColumns", false)
+            imgui.deprecated.SetColumnOffset(2, imgui.windows.GetWindowContentRegionWidth() - uiconfig.LockVisibleWidth)
             source_eid = nil
             target_eid = nil
             show_scene_node(child)
-            imgui.cursor.NextColumn()
+            imgui.deprecated.NextColumn()
             if source_eid and target_eid then
                 hierarchy:set_parent(source_eid, target_eid)
                 local sourceWorldMat = iom.calc_worldmat(source_eid)
@@ -210,7 +210,7 @@ function m.show()
                 iss.set_parent(source_eid, target_eid)
                 world:pub {"EntityEvent", "parent", source_eid}
             end
-            imgui.cursor.Columns(1)
+            imgui.deprecated.Columns(1)
         end
     end
 end

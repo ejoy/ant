@@ -24,6 +24,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../clibs/imgui</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\3rd\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\..\3rd\imgui\imgui_widgets.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_DISABLE_METRICS_WINDOW;IMGUI_DISABLE_DEMO_WINDOWS;IMGUI_DISABLE_DEFAULT_ALLOCATORS;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -43,6 +44,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">LUA_BUILD_AS_DLL;IMGUI_USER_CONFIG="imgui_config.h";NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\clibs\imgui\luaimgui_tables.cpp" />
     <ClCompile Include="..\..\clibs\imgui\win32\imgui_platform.cpp" />
   </ItemGroup>
   <ItemGroup>

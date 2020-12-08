@@ -263,11 +263,11 @@ function TextureResource:show()
     local texture_handle = self.runtimedata._data.handle
     if not texture_handle then return end
     --imgui.cursor.Indent()
-    imgui.cursor.Columns(2, self.label, false)
-    imgui.cursor.SetColumnOffset(2, uiconfig.PropertyIndent)
+    imgui.deprecated.Columns(2, self.label, false)
+    imgui.deprecated.SetColumnOffset(2, uiconfig.PropertyIndent)
     imgui.widget.Image(texture_handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
     --imgui.cursor.SameLine(uiconfig.PropertyImageSize * 2)
-    imgui.cursor.NextColumn()
+    imgui.deprecated.NextColumn()
     imgui.widget.Text("image")
     imgui.cursor.SameLine()
     --imgui.widget.PropertyLabel("image")
@@ -350,7 +350,7 @@ function TextureResource:show()
         end
     end
     imgui.util.PopID()
-    imgui.cursor.Columns(1)
+    imgui.deprecated.Columns(1)
     --imgui.cursor.Unindent()
 end
 
