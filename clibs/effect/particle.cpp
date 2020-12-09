@@ -7,64 +7,78 @@
 #include <sstream>
 #include <Windows.h>
 
-#define PARTICLE_COMPONENT		ID_count
-#define PARTICLE_KEY_COMPONENT	ID_key_count
-#include "psystem_manager.h"
-
 extern bgfx_interface_vtbl_t* ibgfx();
 #define BGFX(_API) ibgfx()->_API
 
 #ifdef _DEBUG
 const char* g_component_names[ID_count] = {
-	"ID_life = 0",
-	"ID_spawn",
-	"ID_velocity",
-	"ID_acceleration",
-	"ID_transform",
-	"ID_quad",
-	"ID_uv_motion",
+    "ID_life = 0",
+    "ID_spawn",
+    "ID_velocity",
+    "ID_acceleration",
+    "ID_transform",
+    "ID_quad",
+    "ID_uv_motion",
+    "ID_material",
 
-	"ID_init_life_interpolator",
-	"ID_init_spawn_interpolator",
-	"ID_init_velocity_interpolator",
-	"ID_init_acceleration_interpolator",
-	"ID_init_transform_interpolator",
-	"ID_init_uv_motion_interpolator",
-	"ID_init_quad_interpolator",
+    "ID_init_life_interpolator",
+    "ID_init_spawn_interpolator",
+    "ID_init_velocity_interpolator",
+    "ID_init_acceleration_interpolator",
+    "ID_init_transform_interpolator",
+    "ID_init_uv_motion_interpolator",
+    "ID_init_quad_interpolator",
 
-	"ID_lifetime_life_interpolator",
-	"ID_lifetime_spawn_interpolator",
-	"ID_lifetime_velocity_interpolator",
-	"ID_lifetime_acceleration_interpolator",
-	"ID_lifetime_transform_interpolator",
-	"ID_lifetime_uv_motion_interpolator",
-	"ID_lifetime_quad_interpolator",
+    "ID_lifetime_life_interpolator",
+    "ID_lifetime_spawn_interpolator",
+    "ID_lifetime_velocity_interpolator",
+    "ID_lifetime_acceleration_interpolator",
+    "ID_lifetime_transform_interpolator",
+    "ID_lifetime_uv_motion_interpolator",
+    "ID_lifetime_quad_interpolator",
 
-	"ID_key_count",
-
-	"ID_TAG_emitter",
-	"ID_TAG_uv_motion",
-	"ID_TAG_uv",
-	"ID_TAG_scale",
-	"ID_TAG_rotation",
-	"ID_TAG_translate",
-	"ID_TAG_render_quad",
-	"ID_TAG_material",
-	"ID_TAG_color",
+    "ID_key_count",
+    "ID_TAG_emitter",
+    "ID_TAG_uv_motion",
+    "ID_TAG_uv",
+    "ID_TAG_color",
+    "ID_TAG_scale",
+    "ID_TAG_rotation",
+    "ID_TAG_translate",
+    "ID_TAG_render_quad",
+    "ID_TAG_material",
 };
+
+static_assert(ID_count == sizeof(g_component_names)/sizeof(g_component_names[0]));
 
 static inline const char*
 component_id_name(component_id id) { return g_component_names[id]; }
 
-// void
-// particle_mgr::debug_print_particle_component(int idx){
+static void
+debug_print2(std::ostringstream &oss){
+	oss << std::endl;
+	OutputDebugStringA(oss.str().c_str());
+}
 
-// }
+template<typename T, typename ...Args>
+static void
+debug_print2(std::ostringstream &oss, const T &t, Args... args){
+	oss << t << "\t";
+	debug_print2(oss, args...);
+}
 
-// void
-// particle_mgr::debug_print_remap(struct particle_remap* remp, int n){
+template<typename ...Args>
+static void
+debug_print(Args... args){
+	std::ostringstream oss;
+	debug_print2(oss, args...);
+}
 
-// }
+#define PARTICLE_COMPONENT		ID_count
+#define PARTICLE_KEY_COMPONENT	ID_key_count
+#define printf debug_print
+#include "psystem_manager.h"
+#undef printf
 #endif
 
 particle_mgr::particle_mgr()
@@ -272,6 +286,7 @@ std::vector<T>& particle_mgr::data(){
 
 void
 particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawndata &sd){
+	debug_print("spawn:", spawnnum);
 	if (spawnnum == 0 || spawnnum > sd.count){
 		return ;
 	}
@@ -380,6 +395,14 @@ particle_mgr::pop_back(const comp_ids &ids){
 
 void
 particle_mgr::remove_particle(uint32_t pidx){
+	const int n = particlesystem_count(mmgr, ID_TAG_emitter);
+	for (int ii=0; ii<n; ++ii){
+		const int idx = particlesystem_component(mmgr, ID_TAG_emitter, ii, ID_life);
+		if (pidx == idx){
+			debug_print("remove emitter");
+		}
+	}
+
 	particlesystem_remove(mmgr, ID_life, (particle_index)pidx);
 }
 
@@ -404,11 +427,13 @@ particle_mgr::update_particle_spawn(float dt){
 	const uint32_t deltatick = particles::lifedata::time2tick(dt);
 	for (int ii=0; ii<n; ++ii){
 		const auto &sp = spawns[ii];
+		const uint32_t tick_prerate = particles::lifedata::time2tick(sp.rate);
+		
 		const auto idx = particlesystem_component(mmgr, ID_TAG_emitter, ii, ID_spawn);
 		const auto lidx = particlesystem_component(mmgr, ID_TAG_emitter, ii, ID_life);
 
 		const auto& l = lifes[lidx];
-		const uint32_t spawnnum = uint32_t((deltatick / float(l.tick)) * sp.count);
+		const uint32_t spawnnum = uint32_t((deltatick / float(tick_prerate)) * sp.count);
 		spawn_particles(spawnnum, idx, sp);
 	}
 }
@@ -518,9 +543,7 @@ particle_mgr::update_uv_motion(float dt){
 		auto &q = quads[qidx];
 	
 		for (int ii=0; ii<4; ++ii){
-			auto& v = q[ii];
-			v.uv.x += dt * uvm.u_speed * uvm.scale;
-			v.uv.y += dt * uvm.v_speed * uvm.scale;
+			q[ii].uv = dt * glm::vec2(uvm.u_speed, uvm.v_speed) * uvm.scale;
 		}
 	}
 }
@@ -538,16 +561,15 @@ particle_mgr::update_quad_transform(float dt){
 		glm::mat4 m = glm::scale(r.s);
 		m = glm::mat4(r.r) * m;
 		m = glm::translate(r.t) * m;
-		quad_cache::transform(q, m);
+		q.transform(m);
 	}
 }
 
-void submit_buffer(uint32_t num, const quaddata* qv, bgfx_index_buffer_handle_t ibhandle, const bgfx_vertex_layout_t *layout);
-
 void particle_mgr::submit_buffer(){
-	const auto &quads = data<particles::quad>();
-	if (!quads.empty())
-		::submit_buffer((uint32_t)quads.size(), &quads[0], bgfx_index_buffer_handle_t{mrenderdata.ibhandle}, mrenderdata.layout);
+	const auto& quads = data<particles::quad>();
+	static_assert(sizeof(decltype(quads)) == sizeof(quadvector));
+	const quadvector* qv = (quadvector*)&quads;
+	mrenderdata.qb.submit(*qv);
 }
 
 void
@@ -585,9 +607,44 @@ particle_mgr::remap_particles(){
 	} while (n == cap);
 }
 
+void 
+particle_mgr::print_particles_status(){
+	// return;
+	// const auto &lifes = data<particles::life>();
+	// struct particle_info {
+	// 	struct pair{
+	// 		component_id id;
+	// 		int pidx;
+	// 	};
+	// 	std::vector<pair>	comps;
+	// };
+	// using particles_info_vector = std::vector<particle_info>;
+	// particles_info_vector pis;
+	// for (int ii=0; ii<lifes.size(); ++ii){
+	// 	particle_info pi;
+	// 	for (int idx=0; idx<ID_key_count; ++idx){
+	// 		const component_id id = (component_id)idx;
+	// 		const auto pidx = particlesystem_component(mmgr, ID_life, ii, id);
+	// 		if (pidx != PARTICLE_INVALID){
+	// 			pi.comps.push_back({id, pidx});
+	// 		}
+	// 	}
+	// }
+
+	// for (int ii=0; ii<pis.size(); ++ii){
+	// 	debug_print("particle:", ii);
+	// 	const auto &pi = pis[ii];
+	// 	for (int id=0; id<pi.comps.size(); ++ii){
+	// 		debug_print("\tcomponent:", g_component_names[id], "\tisdead:", lifes[ii].isdead());
+	// 	}
+	// }
+	particlesystem_debug(mmgr, g_component_names);
+}
+
 void
 particle_mgr::update(float dt){
 	update_particle_spawn(dt);
+	//print_particles_status();
 	update_velocity(dt);
 	update_translation(dt);
 	update_uv_motion(dt);
@@ -597,7 +654,8 @@ particle_mgr::update(float dt){
 	update_quad_transform(dt);
 	update_lifetime(dt);	// should be last update
 	remap_particles();
-
+	assert(0 == particlesystem_verify(mmgr));
+	//print_particles_status();
 	//TODO: we can fully control render in lua level, only need vertex buffer in quad_cache
 	submit_render();
 }

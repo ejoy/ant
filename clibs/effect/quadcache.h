@@ -24,17 +24,25 @@ struct quaddata {
     quaddata();
     quad_vertex& operator[](uint32_t ii){ return v[ii]; }
     quad_vertex v[4];
+
+    void transform(const glm::mat4 &trans);
+    void scale(const glm::vec3 &s);
+    void rotate(const glm::quat &r);
+    void translate(const glm::vec3 &t);
 };
 using quadvector    = std::vector<quaddata>;
 
+class quad_buffer{
+public:
+    void submit(const quadvector &quads);
+    const bgfx_vertex_layout_t *layout;
+    bgfx_index_buffer_handle_t ib;
+};
+
 class quad_cache{
 public:
-    static void transform(quaddata &q, const glm::mat4 &trans);
-    static void scale(quaddata &q, const glm::vec3 &s);
-    static void rotate(quaddata &q, const glm::quat &r);
-    static void translate(quaddata &q, const glm::vec3 &t);
 public:
-    quad_cache(bgfx_index_buffer_handle_t ib, const bgfx_vertex_layout_t* layout, uint32_t maxquad);
+    quad_cache(){}
     ~quad_cache() = default;
 private:
     quad_cache(quad_cache&) = delete;
@@ -44,8 +52,6 @@ public:
     void submit(uint32_t offset, uint32_t num);
 
     quadvector mquads;
-private:
-    const bgfx_vertex_layout_t *mlayout;
-    const bgfx_index_buffer_handle_t mib;
-    const uint32_t  mmax_quad;
+    quad_buffer mqb;
+
 };

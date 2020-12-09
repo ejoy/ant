@@ -101,6 +101,11 @@ struct particles{
     };
 
     struct transformdata {
+        transformdata()
+            : s(1.f, 1.f, 1.f)
+            , r(0.f, 0.f, 0.f, 1.f)
+            , t(0.f, 0.f, 0.f)
+        {}
         glm::vec3 s;
         glm::quat r;
         glm::vec3 t;
@@ -177,8 +182,7 @@ struct particles{
 struct render_data{
     uint16_t viewid             = UINT16_MAX;
     uint16_t progid             = UINT16_MAX;
-    bgfx_vertex_layout_t *layout= nullptr;
-    uint16_t ibhandle           = UINT16_MAX;
+    quad_buffer qb;
     struct texture{
         uint16_t stage;
         uint16_t uniformid;
@@ -239,6 +243,9 @@ private:
     void update_lifetime_color(float dt);
     void update_uv_motion(float dt);
     void update_quad_transform(float dt);
+
+
+    void print_particles_status();
 
 private:
     particles mparticles;

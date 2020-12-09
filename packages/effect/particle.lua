@@ -61,8 +61,10 @@ function emitter_trans.process_entity(e)
     effect.create_emitter{
         viewid      = viewid,
         progid      = (prog & 0xffff),
-        ibhandle    = (irender.quad_ib() &0xffff),
-        layout      = quadlayout.handle,
+        qb          = {
+            ib = (irender.quad_ib() &0xffff),
+            layout = quadlayout.handle,
+        },
         textures    = textures,
         emitter     = e.emitter,
     }

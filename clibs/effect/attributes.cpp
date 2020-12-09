@@ -5,13 +5,32 @@
 #include "particle.h"
 #include "random.h"
 
-LUA2STRUCT(struct render_data, viewid, progid, layout, ibhandle, textures);
+LUA2STRUCT(struct render_data, viewid, progid, qb, textures);
 LUA2STRUCT(struct render_data::texture, stage, uniformid, texid);
 
 LUA2STRUCT(struct particles::spawndata, count, rate);
 LUA2STRUCT(struct particles::uv_motion_data, u_speed, v_speed, scale);
 
 namespace lua_struct {
+    template<>
+    void unpack(lua_State* L, int index, quad_buffer& qb, void*) {
+        if (LUA_TNUMBER == lua_getfield(L, index, "ib")){
+            qb.ib.idx = (L, -1);
+        } else {
+            luaL_error(L, "invalid 'ib'");
+        }
+        lua_pop(L, 1);
+        if (LUA_TUSERDATA == lua_getfield(L, index, "layout")){
+            qb.layout = (bgfx_vertex_layout_t*)lua_touserdata(L, 2);
+        } else {
+            luaL_error(L, "invalid pointer");
+        }
+        lua_pop(L, 1);
+    }
+    template<>
+    void pack(lua_State* L, const quad_buffer& qb, void*){
+
+    }
     void to_const(float value, particles::life &ld){
         ld.set(value);
     }
@@ -209,7 +228,6 @@ std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)
         particles::spawndata sd;
         lua_struct::unpack(L, index, sd);
 
-        //TODO: particle lifetime interp value should fetch here and save in 'particles::spawndata'
         check_add_id(particle_mgr::get().add_component(particles::spawn{sd}), ids);
     }),
     std::make_pair("init_lifetime", [](lua_State *L, int index, comp_ids& ids){
@@ -234,12 +252,6 @@ std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)
         lua_struct::unpack(L, index, iv);
         auto &t = check_add_component<particles::init_transform_interpolator>(ids);
         t.t = iv;
-    }),
-    std::make_pair("translation_over_life", [](lua_State *L, int index, comp_ids& ids){
-        // particles::f3_interp_value iv;
-        // lua_struct::unpack(L, index, iv);
-        // auto &t = check_add_component<particles::init_transform_interpolator>(ids);
-        // t.t = iv;
     }),
     std::make_pair("init_color", [](lua_State *L, int index, comp_ids& ids){
         particles::color_interp_value iv;

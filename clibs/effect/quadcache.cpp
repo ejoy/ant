@@ -13,14 +13,6 @@ extern "C"{
 extern bgfx_interface_vtbl_t* ibgfx();
 #define BGFX(_API) ibgfx()->_API
 
-quad_cache::quad_cache(bgfx_index_buffer_handle_t ib, const bgfx_vertex_layout_t* layout, uint32_t maxquad)
-    : mib(ib)
-    , mlayout(layout)
-    , mmax_quad(maxquad)
-{
-    assert(BGFX_HANDLE_IS_VALID(mib));
-}
-
 //
 //	1 ---- 3
 //	|      |
@@ -39,59 +31,45 @@ quaddata::quaddata(){
     memcpy(v, s_default_quad, sizeof(s_default_quad));
 }
 
-void quad_cache::transform(quaddata &q, const glm::mat4 &trans){
+void quaddata::transform(const glm::mat4 &trans){
     for (uint32_t ii=0; ii<4; ++ii){
-        q[ii].p = trans * glm::vec4(q[ii].p, 1.f);
+        v[ii].p = trans * glm::vec4(v[ii].p, 1.f);
     }
 }
 
-void quad_cache::rotate(quaddata &q, const glm::quat &r){
+void quaddata::rotate(const glm::quat &r){
     for (uint32_t ii=0; ii<4; ++ii){
-        q[ii].p = glm::rotate(r, glm::vec4(q[ii].p, 1.f));
+        v[ii].p = glm::rotate(r, glm::vec4(v[ii].p, 1.f));
     }
 }
 
-void quad_cache::scale(quaddata &q, const glm::vec3 &s){
+void quaddata::scale(const glm::vec3 &s){
     for (uint32_t ii=0; ii<4; ++ii){
-        q[ii].p = glm::scale(s) * glm::vec4(q[ii].p, 1.f);
+        v[ii].p = glm::scale(s) * glm::vec4(v[ii].p, 1.f);
     }
 }
 
-void quad_cache::translate(quaddata &q, const glm::vec3 &t){
+void quaddata::translate(const glm::vec3 &t){
     for (uint32_t ii=0; ii<4; ++ii){
-        q[ii].p = glm::translate(t) * glm::vec4(q[ii].p, 1.f);
+        v[ii].p = glm::translate(t) * glm::vec4(v[ii].p, 1.f);
     }
 }
 
-// void quad_cache::update(){
-//     // why we should copy the memory to bgfx, but not use make_ref/make_ref_release to shared the memory:
-//     //    1). bgfx use multi-thread rendering, memory will pass to bgfx render thread, but memory will still update in main thread
-//     //    2). if app shutdown, memory will delete in quad_cache's deconstruct, but memory will still access in bgfx render threading
-//     // so, solution is simple, use automic lock to tell update thread and render threading when to release memory
-//     // and alloc 2 times memory, one for update, one for render.
-//     // but it not worth doing this. because if BGFX(alloc) will just put a pointer, but not really alloc memory
 
-//     if (mquads.size() <= mmax_quad){
-//         const uint32_t bufsize = (uint32_t)mquads.size() * sizeof(quad);
-//         const auto mem = BGFX(alloc)(bufsize);
-//         memcpy(mem->data, &mquads.front(), bufsize);
-//         BGFX(update_dynamic_vertex_buffer)(mdyn_vb, 0, mem);
-//     }
-// }
 
-void submit_buffer(uint32_t num, const quaddata* qv, bgfx_index_buffer_handle_t ibhandle, const bgfx_vertex_layout_t *layout){
+void quad_buffer::submit(const quadvector &quads){
+    if (layout == nullptr || quads.empty())
+        return ;
+
+    const uint32_t num = (uint32_t)quads.size();
     const uint32_t indices_num = num * 6;
-    BGFX(set_index_buffer)(ibhandle, 0, num);
+    BGFX(set_index_buffer)(ib, 0, num);
 
     bgfx_transient_vertex_buffer_t tvb;
     const uint32_t bufsize = num * sizeof(quad_vertex) * 4;
     BGFX(alloc_transient_vertex_buffer)(&tvb, bufsize, layout);
-    memcpy(tvb.data, qv, bufsize);
+    memcpy(tvb.data, quads.data(), bufsize);
     BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num *4);
-}
-
-void quad_cache::submit(uint32_t offset, uint32_t num){
-    submit_buffer(num, &mquads[offset], mib, mlayout);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -111,10 +89,11 @@ static int
 lcreate(lua_State *L){
     const bgfx_index_buffer_handle_t ibhandle = {(uint16_t)luaL_checkinteger(L, 1)};
     const auto layout = (bgfx_vertex_layout_t*)lua_touserdata(L, 2);
-    const uint32_t maxquad = (uint32_t)luaL_optinteger(L, 3, 1024);
-
+    
     quad_cache *qc = (quad_cache*)lua_newuserdatauv(L, sizeof(quad_cache), 0);
-    new (qc) quad_cache(ibhandle, layout, maxquad);
+    new (qc) quad_cache();
+    qc->mqb.ib = ibhandle;
+    qc->mqb.layout= layout;
 
     if (luaL_newmetatable(L, "QUADCACHE_MT")){
         lua_pushvalue(L, -1);
@@ -180,12 +159,19 @@ laddquad(lua_State *L){
     return 0;
 }
 
+static int
+lsubmit(lua_State *L){
+    
+    return 0;
+}
+
 extern "C" {
 LUAMOD_API int
     luaopen_effect_quadcache(lua_State *L){
         luaL_Reg l[] = {
             {"create",      lcreate},
             {"addquad",     laddquad},
+            {"submit",      lsubmit},
             {nullptr,       nullptr},
         };
 
