@@ -266,7 +266,7 @@ next_removed_component_(struct particle_manager *P, struct particle_arrange_cont
 				// find last alive component
 				while (--ctx->end > ctx->begin) {
 					if (ctx->map[c->id[ctx->end]] != PARTICLE_INVALID) {
-						return ctx->begin;
+						return ctx->begin++;
 					}
 				}
 				return -1;
