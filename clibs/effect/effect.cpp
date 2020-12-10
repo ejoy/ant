@@ -36,11 +36,33 @@ leffect_create_emitter(lua_State *L){
         comp_ids ids;
         ids.push_back(ID_TAG_emitter);
 
+        const char* emitter_tags[] = {"spawn", "emitter_lifetime"};
+        for (auto tag : emitter_tags){
+            if (LUA_TTABLE == lua_getfield(L, -1, tag)){
+                auto reader = find_attrib_reader(tag);
+                reader(L, -1, ids);
+            } else {
+                luaL_error(L, "invalid field:%s", tag);
+            }
+            lua_pop(L, 1);
+        }
+
+        auto is_emitter_tag = [emitter_tags](const std::string &s){
+            for (auto tag:emitter_tags){
+                if (tag == s)
+                    return true;
+            }
+
+            return false;
+        };
+
         for(lua_pushnil(L); lua_next(L, -2); lua_pop(L, 1)){
            if (LUA_TSTRING == lua_type(L, -2)){
-               const std::string key = lua_tostring(L, -2);
-               auto reader = find_attrib_reader(key);
-               reader(L, -1, ids);
+                const std::string key = lua_tostring(L, -2);
+                if (!is_emitter_tag(key)){
+                    auto reader = find_attrib_reader(key);
+                    reader(L, -1, ids);
+                }
            }
         }
 

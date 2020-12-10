@@ -7,40 +7,28 @@ enum component_id : uint32_t {
     ID_spawn,
     ID_velocity,
     ID_acceleration,
-    ID_transform,
-    ID_quad,
+    ID_scale,
+    ID_rotation,
+    ID_translation,
     ID_uv_motion,
+    ID_quad,
     ID_material,
-
-    ID_init_interpolator_start,
-    ID_init_life_interpolator = ID_init_interpolator_start,
-    ID_init_spawn_interpolator,
-    ID_init_velocity_interpolator,
-    ID_init_acceleration_interpolator,
-    ID_init_transform_interpolator,
-    ID_init_uv_motion_interpolator,
-    ID_init_quad_interpolator,
-    ID_init_interpolator_end = ID_init_quad_interpolator,
-
-    ID_lifetime_interpolator_start,
-    ID_lifetime_life_interpolator = ID_lifetime_interpolator_start,
-    ID_lifetime_spawn_interpolator,
-    ID_lifetime_velocity_interpolator,
-    ID_lifetime_acceleration_interpolator,
-    ID_lifetime_transform_interpolator,
-    ID_lifetime_uv_motion_interpolator,
-    ID_lifetime_quad_interpolator,
-    ID_lifetime_interpolator_end = ID_lifetime_quad_interpolator,
 
     ID_key_count,
 
+    ID_interpolator_start,
+    ID_velocity_interpolator = ID_interpolator_start,
+    ID_acceleration_interpolator,
+    ID_scale_interpolator,
+    ID_rotation_interpolator,
+    ID_translation_interpolator,
+    ID_uv_motion_interpolator,
+    ID_color_interpolator,
+    ID_interpolator_end = ID_color_interpolator,
+
+    ID_component_count,
+
     ID_TAG_emitter,
-    ID_TAG_uv_motion,
-    ID_TAG_uv,
-    ID_TAG_color,
-    ID_TAG_scale,
-    ID_TAG_rotation,
-    ID_TAG_translate,
     ID_TAG_render_quad,
     ID_TAG_material,
     ID_count,
@@ -60,6 +48,8 @@ inline constexpr T pow(const T base, const uint32_t exponent){
 
 template<typename T, component_id COMP_ID>
 struct componentT : public T {
+    using T::T;
+    componentT(const T&t) : T(t){}
     static constexpr component_id ID() { return COMP_ID; }
 };
 
@@ -95,88 +85,103 @@ struct particles{
         float    current;
     };
 
-    struct spawndata {
-        uint32_t    count;
-        float       rate;
-    };
-
-    struct transformdata {
-        transformdata()
-            : s(1.f, 1.f, 1.f)
-            , r(0.f, 0.f, 0.f, 1.f)
-            , t(0.f, 0.f, 0.f)
-        {}
-        glm::vec3 s;
-        glm::quat r;
-        glm::vec3 t;
-    };
-
     struct materialdata {
         uint8_t idx;
     };
 
-    struct uv_motion_data{
-        float u_speed, v_speed;
-        float scale;
+    struct spawndata {
+        uint32_t    count;
+        float       rate;
+
+        template<typename T>
+        struct init_valueT{
+            T minv, maxv;
+            uint8_t interp_type;
+            T get(float t) const {
+                if (interp_type == 0){
+                    return minv;
+                }
+                if (interp_type == 1)
+                    return glm::lerp(minv, maxv, t);
+
+                assert(false && "not implement");
+                return minv;
+            }
+        };
+
+        template<typename T>
+        struct interp_valueT{
+            T scale;
+            uint8_t interp_type;
+
+            void from_init_value(const init_valueT<T>& iv) {
+                scale = (iv.maxv - iv.minv) / float(particles::life::MAX_PROCESS);
+                interp_type = iv.interp_type;
+            }
+
+            T get(const T&value, uint32_t process) const {
+                if (interp_type == 0)
+                    return scale;
+                if (interp_type == 1)
+                    return ((float)process * scale + value);
+                assert(false && "not implement");
+                return scale;
+            }
+        };
+
+        template<typename T>
+        struct color_attributeT{
+            T rgba[4];
+        };
+
+        struct init_attributes{
+            init_valueT<float>                      life;
+            init_valueT<glm::vec3>                  velocity;
+            init_valueT<glm::vec3>                  acceleration;
+            init_valueT<glm::vec3>                  scale;
+            init_valueT<glm::vec3>                  translation;
+            init_valueT<glm::vec3>                  rotation;
+            init_valueT<glm::vec2>                  uv_motion;
+            color_attributeT<init_valueT<float>>    color;
+            materialdata                            material;
+            comp_ids components;
+        };
+
+        struct interp_attributes{
+            interp_valueT<glm::vec3>                  velocity;
+            interp_valueT<glm::vec3>                  acceleration;
+            interp_valueT<glm::vec3>                  scale;
+            interp_valueT<glm::vec3>                  translation;
+            interp_valueT<glm::vec3>                  rotation;
+            interp_valueT<glm::vec2>                  uv_motion;
+            color_attributeT<interp_valueT<float>>    color;
+            comp_ids components;
+        };
+
+        init_attributes     init;
+        interp_attributes   interp;
     };
 
-    template<typename INTERP_VALUE>
-    struct interp_valueT{
-        using interp_type = INTERP_VALUE;
-        interp_valueT():scale(0), type(UINT8_MAX){}
-        INTERP_VALUE scale;
-        uint8_t type;   //0 for const, 1 for linear, [2, 254] for curve index
-    };
+    using life                       = componentT<lifedata,       ID_life>;
+    using spawn                      = componentT<spawndata,      ID_spawn>;
+    using velocity                   = componentT<glm::vec3,      ID_velocity>;
+    using acceleration               = componentT<glm::vec3,      ID_acceleration>;
+    using scale                      = componentT<glm::vec3,      ID_scale>;
+    using rotation                   = componentT<glm::quat,      ID_rotation>;
+    using translation                = componentT<glm::vec3,      ID_translation>;
+    using uv_motion                  = componentT<glm::vec2,      ID_uv_motion>;
+    using quad                       = componentT<quaddata,       ID_quad>; // make pos/uv/color in one component for render purpose
+    using material                   = componentT<materialdata,   ID_material>;
 
-    using float_interp_value    = interp_valueT<float>;
-    using f2_interp_value       = interp_valueT<glm::vec2>;
-    using f3_interp_value       = interp_valueT<glm::vec3>;
-    using f4_interp_value       = interp_valueT<glm::vec4>;
-    using quad_interp_value     = interp_valueT<glm::quat>;
-
-    struct color_interp_value{
-        float_interp_value rgba[4];
-    };
-
-    struct transform_interp{
-        f3_interp_value s;
-        float_interp_value r;
-        f3_interp_value t;
-    };
-
-    struct quad_interp{
-        //f2_interp_value uv[4];
-        color_interp_value color;
-    };
-
-    struct uv_motion_interp_value{
-        
-    };
-
-    using life          = componentT<lifedata,       ID_life>;
-    using spawn         = componentT<spawndata,      ID_spawn>;
-    using velocity      = componentT<glm::vec3,      ID_velocity>;
-    using acceleration  = componentT<glm::vec3,      ID_acceleration>;
-    using transform    = componentT<transformdata,   ID_transform>;
-    using uv_motion     = componentT<uv_motion_data, ID_uv_motion>;
-    using quad          = componentT<quaddata,       ID_quad>;
-    using material      = componentT<materialdata,   ID_material>;
-
-    using init_life_interpolator        = componentT<float_interp_value,ID_init_life_interpolator>;
-    using init_spawn_interpolator       = componentT<float_interp_value,ID_init_spawn_interpolator>;
-    using init_velocity_interpolator    = componentT<f3_interp_value,   ID_init_velocity_interpolator>;
-    using init_acceleration_interpolator= componentT<f3_interp_value,   ID_init_acceleration_interpolator>;
-    using init_transform_interpolator   = componentT<transform_interp,  ID_init_transform_interpolator>;
-    using init_quad_interpolator        = componentT<quad_interp,       ID_init_quad_interpolator>;
-    using init_uv_motion_interpolator   = componentT<uv_motion_interp_value, ID_init_uv_motion_interpolator>;
-
-    using lifetime_life_interpolator         = componentT<float_interp_value,ID_lifetime_life_interpolator>;
-    using lifetime_spawn_interpolator        = componentT<float_interp_value,ID_lifetime_spawn_interpolator>;
-    using lifetime_velocity_interpolator     = componentT<f3_interp_value,   ID_lifetime_velocity_interpolator>;
-    using lifetime_acceleration_interpolator = componentT<f3_interp_value,   ID_lifetime_acceleration_interpolator>;
-    using lifetime_transform_interpolator    = componentT<transform_interp, ID_lifetime_transform_interpolator>;
-    using lifetime_quad_interpolator         = componentT<quad_interp,       ID_lifetime_quad_interpolator>;
-    using lifetime_uv_motion_interpolator    = componentT<uv_motion_interp_value, ID_lifetime_uv_motion_interpolator>;
+    using f3_interpolator           = spawndata::interp_valueT<glm::vec3>;
+    using f2_interpolator           = spawndata::interp_valueT<glm::vec2>;
+    using velocity_interpolator     = componentT<f3_interpolator, ID_velocity_interpolator>;
+    using acceleration_interpolator = componentT<f3_interpolator, ID_acceleration_interpolator>;
+    using scale_interpolator        = componentT<f3_interpolator, ID_scale_interpolator>;
+    //using rotation_interpolator     = componentT<glm::quat,       ID_rotation_interpolator>;
+    using translation_interpolator  = componentT<f3_interpolator, ID_translation_interpolator>;
+    using uv_motion_interpolator    = componentT<f2_interpolator, ID_uv_motion>;
+    using color_interpolator        = componentT<spawndata::color_attributeT<spawndata::interp_valueT<float>>,    ID_color_interpolator>;
 };
 
 struct render_data{
@@ -226,7 +231,7 @@ private:
     template<typename T>
     void create_array();
 
-    void spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawndata &sd);
+    void spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawn &sd);
     void remove_particle(uint32_t pidx);
     void remap_particles();
 

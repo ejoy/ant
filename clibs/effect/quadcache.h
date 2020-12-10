@@ -13,6 +13,10 @@ inline uint8_t to_color_channel(float c){
     return uint8_t(std::min(255.f, c * 255.f));
 }
 
+inline float to_color_channel(uint8_t c){
+    return float(std::min(1.f, c / 255.f));
+}
+
 inline uint32_t to_color(const glm::vec4 &c){
     uint8_t rgba[4];
     for (int ii=0; ii<4; ++ii)
@@ -22,13 +26,20 @@ inline uint32_t to_color(const glm::vec4 &c){
 
 struct quaddata {
     quaddata();
+    quaddata& operator=(const quaddata &rhs){
+        memcpy(v, rhs.v, sizeof(quaddata));
+        return *this;
+    }
     quad_vertex& operator[](uint32_t ii){ return v[ii]; }
     quad_vertex v[4];
-
+    void reset();
+    
     void transform(const glm::mat4 &trans);
     void scale(const glm::vec3 &s);
     void rotate(const glm::quat &r);
     void translate(const glm::vec3 &t);
+
+    static const quaddata& default_quad();
 };
 using quadvector    = std::vector<quaddata>;
 
