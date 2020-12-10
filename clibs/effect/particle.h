@@ -257,5 +257,5 @@ private:
     struct particle_manager *mmgr;
 
     render_data mrenderdata;
-    component_array *mcomp_arrays[ID_key_count];
+    std::array<component_array *, ID_component_count> mcomp_arrays;
 };

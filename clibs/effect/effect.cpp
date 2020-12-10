@@ -65,11 +65,6 @@ leffect_create_emitter(lua_State *L){
                 }
            }
         }
-
-        if (ids.end() == std::find(ids.begin(), ids.end(), ID_spawn)){
-            particle_mgr::get().pop_back(ids);
-            luaL_error(L, "invalid emitter without 'spawn' info");
-        }
         particle_mgr::get().add(ids);
     } else {
         luaL_error(L, "invalid 'emitter'");

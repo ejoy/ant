@@ -494,22 +494,21 @@ particle_mgr::update_quad_transform(float dt){
 
 	for (int iq = 0; iq < (int)quads.size(); ++iq) {
 		quaddata* q = &quads[iq];
+
 		const auto is = particlesystem_component(mmgr, ID_quad, iq, ID_scale);
-		assert(is != PARTICLE_INVALID);
-		const auto &scale = scales[is];
-
 		const auto ir = particlesystem_component(mmgr, ID_quad, iq, ID_rotation);
-		assert(is != PARTICLE_INVALID);
-		const auto &rotation = rotations[ir];
-
 		const auto it = particlesystem_component(mmgr, ID_quad, iq, ID_translation);
-		assert(is != PARTICLE_INVALID);
-		const auto &translation = translations[it];
+		if (is == PARTICLE_INVALID && ir == PARTICLE_INVALID && it == PARTICLE_INVALID)
+			continue;
+
+		glm::mat4 m = (is != PARTICLE_INVALID) ? glm::scale(scales[is]) : glm::mat4(1.f);
+		if (ir != PARTICLE_INVALID)
+			m = glm::mat4(rotations[ir]) * m;
+	
+		if (it != PARTICLE_INVALID)
+			m = glm::translate(translations[it]) * m;
 
 		*q = quaddata::default_quad();
-		glm::mat4 m = glm::scale(scale);
-		m = glm::mat4(rotation) * m;
-		m = glm::translate(translation) * m;
 		q->transform(m);
 	}
 }
