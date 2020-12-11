@@ -6,6 +6,7 @@
 struct quad_vertex{
     glm::vec3   p;
     glm::vec2   uv;
+    glm::vec2   uv1;
     uint32_t    color;
 };
 
@@ -25,7 +26,7 @@ inline uint32_t to_color(const glm::vec4 &c){
 }
 
 struct quaddata {
-    quaddata();
+    quaddata() = default;
     quaddata& operator=(const quaddata &rhs){
         memcpy(v, rhs.v, sizeof(quaddata));
         return *this;
