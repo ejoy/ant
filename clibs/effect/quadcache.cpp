@@ -72,7 +72,7 @@ void quad_buffer::submit(const quadvector &quads){
 
     const uint32_t num = (uint32_t)quads.size();
     const uint32_t indices_num = num * 6;
-    BGFX(set_index_buffer)(ib, 0, num);
+    BGFX(set_index_buffer)(ib, 0, indices_num);
 
     bgfx_transient_vertex_buffer_t tvb;
     const uint32_t bufsize = num * sizeof(quad_vertex) * 4;
