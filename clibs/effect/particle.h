@@ -239,7 +239,7 @@ private:
     template<typename T>
     void create_array();
 
-    void spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawn &sd);
+    void spawn_particles(uint32_t spawnnum, const particles::spawn &sd);
     void remove_particle(uint32_t pidx);
     void remap_particles();
 

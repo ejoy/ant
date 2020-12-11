@@ -193,6 +193,12 @@ std::vector<T>& particle_mgr::data(){
 	return static_cast<component_arrayT<T>*>(mcomp_arrays[T::ID()])->mdata;
 }
 
+template<typename T>
+T* particle_mgr::sibling_component(component_id id, int ii){
+	const auto idx = particlesystem_component(mmgr, id, ii, T::ID());
+	return (idx != PARTICLE_INVALID) ? &(data<T>()[idx]) : nullptr;
+}
+
 static void
 check_add_id(comp_ids &ids, component_id id){
 	assert(std::find(ids.begin(), ids.end(), id) == ids.end());
@@ -310,7 +316,7 @@ std::unordered_map<component_id, std::function<void (const particles::spawn&, ra
 };
 
 void
-particle_mgr::spawn_particles(uint32_t spawnnum, uint32_t spawnidx, const particles::spawn &sd){
+particle_mgr::spawn_particles(uint32_t spawnnum, const particles::spawn &sd){
 	debug_print("spawn:", spawnnum);
 	if (spawnnum == 0 || spawnnum > sd.count){
 		return ;
@@ -375,68 +381,45 @@ void
 particle_mgr::update_particle_spawn(float dt){
 	const int n = particlesystem_count(mmgr, ID_TAG_emitter);
 	const auto &spawns = data<particles::spawn>();
-	const auto &lifes = data<particles::life>();
 
 	const uint32_t deltatick = particles::lifedata::time2tick(dt);
 	for (int ii=0; ii<n; ++ii){
 		const auto &sp = spawns[ii];
 		const uint32_t tick_prerate = particles::lifedata::time2tick(sp.rate);
-		
-		const auto idx = particlesystem_component(mmgr, ID_TAG_emitter, ii, ID_spawn);
-		const auto lidx = particlesystem_component(mmgr, ID_TAG_emitter, ii, ID_life);
-
-		const auto& l = lifes[lidx];
 		const uint32_t spawnnum = uint32_t((deltatick / float(tick_prerate)) * sp.count);
-		spawn_particles(spawnnum, idx, sp);
+		spawn_particles(spawnnum, sp);
 	}
 }
 
 void
 particle_mgr::update_velocity(float dt){
 	const auto &acc = data<particles::acceleration>();
-	auto &vel = data<particles::velocity>();
-	for (size_t aidx=0; aidx<acc.size(); ++aidx){
+	for (int aidx=0; aidx<(int)acc.size(); ++aidx){
 		const auto &a = acc[aidx];
-		auto vidx = particlesystem_component(mmgr, ID_acceleration, (particle_index)aidx, ID_velocity);
-		assert(vidx < vel.size());
-		auto &v = vel[vidx];
-		v += a * dt;
+		auto v = sibling_component<particles::velocity>(ID_acceleration, aidx);
+		*v += a * dt;
 	}
 }
 
 void
 particle_mgr::update_translation(float dt){
 	const auto &vel = data<particles::velocity>();
-	auto &translations = data<particles::translation>();
-
-	for (size_t vidx=0; vidx<vel.size(); ++vidx){
+	for (int vidx=0; vidx<(int)vel.size(); ++vidx){
 		const auto &v = vel[vidx];
-		auto tidx = particlesystem_component(mmgr, ID_velocity, (particle_index)vidx, ID_translation);
-		if (tidx != PARTICLE_INVALID){
-			auto &t = translations[vidx];
-			t += v * dt;
-		}
+		auto t = sibling_component<particles::translation>(ID_velocity, vidx);
+		if (t)
+			*t += v * dt;
 	}
 }
 
 void
 particle_mgr::update_lifetime_scale(float dt){
 	const auto &scale_interpolators = data<particles::scale_interpolator>();
-	const auto &lifes = data<particles::life>();
-	auto &scales = data<particles::scale>();
-
 	for (int ii=0; ii<(int)scale_interpolators.size(); ++ii){
-		// transform
-		const auto ilife = particlesystem_component(mmgr, ID_scale_interpolator, ii, ID_life);
-		assert(ilife != PARTICLE_INVALID);
-		const auto& life = lifes[ilife];
-
-		const auto iscale = particlesystem_component(mmgr, ID_scale_interpolator, ii, ID_scale);
-		assert(iscale != PARTICLE_INVALID);
-		auto& scale = scales[iscale];
-
+		const auto life = sibling_component<particles::life>(ID_scale_interpolator, ii);
+		auto scale = sibling_component<particles::scale>(ID_scale_interpolator, ii);
 		auto &si = scale_interpolators[ii];
-		scale = si.get(scale, life.delta_process(dt));
+		*scale = si.get(*scale, life->delta_process(dt));
 	}
 }
 
@@ -447,25 +430,17 @@ particle_mgr::update_lifetime_rotation(float dt){
 
 void
 particle_mgr::update_lifetime_color(float dt){
-	const auto &lifes = data<particles::life>();
 	const auto &color_interpolators = data<particles::color_interpolator>();
-	auto &quads = data<particles::quad>();
-
 	for(int ii=0; ii<(int)color_interpolators.size(); ++ii){
-		const auto quad_idx = particlesystem_component(mmgr, ID_color_interpolator, ii, ID_quad);
-		assert(quad_idx != PARTICLE_INVALID);
-		auto& q = quads[quad_idx];
-
-		const auto ilife	= particlesystem_component(mmgr, ID_color_interpolator, ii, ID_life);
-		assert(quad_idx != PARTICLE_INVALID);
-		const auto& life = lifes[ilife];
+		auto q = sibling_component<particles::quad>(ID_color_interpolator, ii);
+		const auto life = sibling_component<particles::life>(ID_color_interpolator, ii);
 
 		const auto& ci = color_interpolators[ii];
 		for (int iv = 0; iv < 4; ++iv) {
-			uint8_t* rgba = (uint8_t*)(&q[iv].color);
+			uint8_t* rgba = (uint8_t*)(&(((*q)[iv]).color));
 			for (int ii = 0; ii < 4; ++ii) {
 				const auto& c = ci.rgba[ii];
-				rgba[ii] = to_color_channel(c.get(to_color_channel(rgba[ii]), life.delta_process(dt)));
+				rgba[ii] = to_color_channel(c.get(to_color_channel(rgba[ii]), life->delta_process(dt)));
 			}
 		}
 	}
@@ -474,13 +449,8 @@ particle_mgr::update_lifetime_color(float dt){
 void
 particle_mgr::update_uv_motion(float dt){
 	const auto &uvmotions = data<particles::uv_motion>();
-	auto &quads = data<particles::quad>();
-
 	for (int ii=0; ii<(int)uvmotions.size(); ++ii){
-		const auto qidx = particlesystem_component(mmgr, ID_uv_motion, ii, ID_quad);
-		assert(qidx != PARTICLE_INVALID);
-		auto &q = quads[qidx];
-
+		auto& q = *sibling_component<particles::quad>(ID_uv_motion, ii);
 		const auto &uvm = uvmotions[ii];
 		for (int ii=0; ii<4; ++ii){
 			q[ii].uv = dt * uvm;
@@ -491,25 +461,22 @@ particle_mgr::update_uv_motion(float dt){
 void
 particle_mgr::update_quad_transform(float dt){
 	auto& quads = data<particles::quad>();
-	const auto& scales = data<particles::scale>();
-	const auto& rotations = data<particles::rotation>();
-	const auto& translations = data<particles::translation>();
 
 	for (int iq = 0; iq < (int)quads.size(); ++iq) {
 		quaddata* q = &quads[iq];
 
-		const auto is = particlesystem_component(mmgr, ID_quad, iq, ID_scale);
-		const auto ir = particlesystem_component(mmgr, ID_quad, iq, ID_rotation);
-		const auto it = particlesystem_component(mmgr, ID_quad, iq, ID_translation);
-		if (is == PARTICLE_INVALID && ir == PARTICLE_INVALID && it == PARTICLE_INVALID)
+		const auto scale = sibling_component<particles::scale>(ID_quad, iq);
+		const auto rotation = sibling_component<particles::rotation>(ID_quad, iq);
+		const auto translation = sibling_component<particles::translation>(ID_quad, iq);
+		if (scale == nullptr && rotation == nullptr && translation == nullptr)
 			continue;
 
-		glm::mat4 m = (is != PARTICLE_INVALID) ? glm::scale(scales[is]) : glm::mat4(1.f);
-		if (ir != PARTICLE_INVALID)
-			m = glm::mat4(rotations[ir]) * m;
+		glm::mat4 m = scale ? glm::scale(*scale) : glm::mat4(1.f);
+		if (rotation)
+			m = glm::mat4(*rotation) * m;
 	
-		if (it != PARTICLE_INVALID)
-			m = glm::translate(translations[it]) * m;
+		if (translation)
+			m = glm::translate(*translation) * m;
 
 		*q = quaddata::default_quad();
 		q->transform(m);
