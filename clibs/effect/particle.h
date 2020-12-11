@@ -16,7 +16,7 @@ enum component_id : uint32_t {
 
     ID_key_count,
 
-    ID_interpolator_start,
+    ID_interpolator_start = ID_key_count,
     ID_velocity_interpolator = ID_interpolator_start,
     ID_acceleration_interpolator,
     ID_scale_interpolator,
@@ -28,7 +28,7 @@ enum component_id : uint32_t {
 
     ID_component_count,
 
-    ID_TAG_emitter,
+    ID_TAG_emitter = ID_component_count,
     ID_TAG_render_quad,
     ID_TAG_material,
     ID_count,
@@ -257,7 +257,8 @@ private:
     void update_uv_motion(float dt);
     void update_quad_transform(float dt);
 
-
+    template<typename T>
+    T* sibling_component(component_id id, int ii);
     void print_particles_status();
 
 private:

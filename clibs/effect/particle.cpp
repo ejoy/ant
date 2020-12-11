@@ -23,8 +23,6 @@ const char* g_component_names[ID_count] = {
 	"ID_quad",
 	"ID_material",
 
-	"ID_key_count",
-
 	"ID_velocity_interpolator",
 	"ID_acceleration_interpolator",
 	"ID_scale_interpolator",
@@ -32,8 +30,6 @@ const char* g_component_names[ID_count] = {
 	"ID_translation_interpolator",
 	"ID_uv_motion_interpolator",
 	"ID_color_interpolator",
-
-	"ID_component_count",
 
 	"ID_TAG_emitter",
 	"ID_TAG_render_quad",
@@ -67,6 +63,7 @@ debug_print(Args... args){
 
 #define PARTICLE_COMPONENT		ID_count
 #define PARTICLE_KEY_COMPONENT	ID_key_count
+#define PARTICLE_TAGS			(ID_count - ID_component_count)
 #define printf debug_print
 #include "psystem_manager.h"
 #undef printf
@@ -175,13 +172,10 @@ int component_array_baseT<T>::remap(struct particle_remap *map, int n) {
 		if (map[i].component_id != map[0].component_id)
 			return i;
 
-		debug_print(g_component_names[map[i].component_id]);
 		auto self = static_cast<component_arrayT<T>*>(this);
 		if (map[i].to_id != PARTICLE_INVALID) {
-			debug_print("move:", map[i].from_id, map[i].to_id);
 			self->move(map[i].from_id, map[i].to_id);
 		} else {
-			debug_print("resize:", map[i].from_id);
 			self->shrink(map[i].from_id);
 		}
 	}
@@ -371,9 +365,7 @@ particle_mgr::update_lifetime(float dt){
 	for (size_t ii=0; ii<lifes.size(); ++ii){
 		auto &c = lifes[ii];
 		c.current += dt;
-		debug_print("life:", ii, c.current, c.process, c.tick);
 		if (c.update_process()){
-			debug_print("remove:", ii);
 			remove_particle((uint32_t)ii);
 		}
     }
@@ -557,11 +549,7 @@ particle_mgr::remap_particles(){
 		int i = 0;
 		while (i < n) {
 			int id = remap[i].component_id;
-			if (id < ID_key_count) {
-				i += mcomp_arrays[id]->remap(remap + i, n - i);
-			} else {
-				++i;
-			}
+			i += mcomp_arrays[id]->remap(remap + i, n - i);
 		}
 	} while (n == cap);
 }

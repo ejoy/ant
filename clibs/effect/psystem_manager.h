@@ -5,11 +5,15 @@
 #define PARTICLE_INVALID PARTICLE_MAX
 
 #ifndef PARTICLE_COMPONENT
-#define PARTICLE_COMPONENT 7
+#define PARTICLE_COMPONENT 11
 #endif
 
+#ifndef PARTICLE_TAGS
+#define PARTICLE_TAGS	0
+#endif 
+
 #ifndef PARTICLE_KEY_COMPONENT
-#define PARTICLE_KEY_COMPONENT PARTICLE_COMPONENT
+#define PARTICLE_KEY_COMPONENT (PARTICLE_COMPONENT-PARTICLE_TAGS)
 #endif
 
 typedef unsigned short particle_index;
@@ -281,6 +285,18 @@ next_removed_component_(struct particle_manager *P, struct particle_arrange_cont
 }
 
 static inline int
+generate_remap_(struct particle_remap remap[], int index, int component_id, int from_id, int to_id){
+	// is not tag
+	if (component_id < (PARTICLE_COMPONENT-PARTICLE_TAGS)){
+		remap[index].component_id = component_id;
+		remap[index].from_id = from_id;
+		remap[index].to_id = to_id;
+		return ++index;
+	}
+	return index;
+}
+
+static inline int
 arrange_component_(struct particle_manager *P, int cap, struct particle_remap remap[], struct particle_arrange_context *ctx) {
 	int ret_index = 0;
 	struct particle_ids *c = &P->c[ctx->component];
@@ -294,22 +310,16 @@ arrange_component_(struct particle_manager *P, int cap, struct particle_remap re
 			if (ctx->component < PARTICLE_KEY_COMPONENT) {
 				P->p[newid].c[ctx->component] = index;
 			}
-			
-			// remap
-			remap[ret_index].component_id = ctx->component;
-			remap[ret_index].from_id = ctx->end;
-			remap[ret_index].to_id = index;
-			if (++ret_index >= cap) {
+
+			ret_index = generate_remap_(remap, ret_index, ctx->component, ctx->end, index);
+			if (ret_index >= cap) {
 				return ret_index;
 			}
 		}
 		if (c->n != ctx->end) {
 			// resize
 			c->n = ctx->end;
-			remap[ret_index].component_id = ctx->component;
-			remap[ret_index].from_id = ctx->end;
-			remap[ret_index].to_id = PARTICLE_INVALID;
-			++ret_index;
+			ret_index = generate_remap_(remap, ret_index, ctx->component, ctx->end, PARTICLE_INVALID);
 		}
 		c = &P->c[++ctx->component];
 		ctx->begin = 0;
