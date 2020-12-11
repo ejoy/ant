@@ -18,23 +18,26 @@ data:
     emitter:
         emitter_lifetime:
             interp_type: linear
-            minv: 1.1
-            maxv: 4
+            minv: 30
+            maxv: 40
         spawn:
-            count:  16
+            count:  10
             rate:   1.0
         init_lifetime:
             interp_type: linear
-            minv: 5
-            maxv: 20
+            minv: 2
+            maxv: 2
         init_scale:
             interp_type: linear
-            minv:{1.15, 1.15, 1.15}
+            minv:{0.15, 0.15, 0.15}
             maxv:{1.28, 1.28, 1.28}
+        init_translation:
+            interp_type: const
+            value:{0.0, 0.0, 0.0}
         scale_over_life:
             interp_type: linear
-            minv: {0.5, 1.0, 1.0}
-            maxv: {3.0, 1.0, 1.0}
+            minv: {0.5, 0.5, 0.5}
+            maxv: {3.0, 3.0, 3.0}
         init_color:
             RGBA:
                 interp_type: linear
@@ -53,8 +56,7 @@ data:
             minv: {1.0, 0.0, 0.0}
             maxv: {0.0, 1.0, 1.0}
         uv_motion:
-            scale:   1
-            u_speed: 0.2
-            v_speed: 0.3
+            interp_type: const
+            value: {0.2, 0.3}
 action:
     attach_particle_system: 1
