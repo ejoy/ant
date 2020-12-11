@@ -25,7 +25,7 @@ data:
             rate:   1.0
         init_lifetime:
             interp_type: linear
-            minv: 2
+            minv: 1
             maxv: 2
         init_scale:
             interp_type: linear
@@ -55,6 +55,12 @@ data:
             interp_type: linear
             minv: {1.0, 0.0, 0.0}
             maxv: {0.0, 1.0, 1.0}
+        subuv:
+            dimension: {8, 8}
+        subuv_index_over_life:
+            interp_type: linear
+            minv: 0
+            maxv: 63
         uv_motion:
             interp_type: const
             value: {0.2, 0.3}

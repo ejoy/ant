@@ -21,8 +21,8 @@ extern bgfx_interface_vtbl_t* ibgfx();
 static const quad_vertex s_default_quad[] = {
     {glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), 0xffffffff},
     {glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), 0xffffffff},
-    {glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), 0xffffffff},
-    {glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), 0xffffffff},
+    {glm::vec3( 0.5f, -0.5f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), 0xffffffff},
+    {glm::vec3( 0.5f,  0.5f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), 0xffffffff},
 };
 
 static_assert(sizeof(quaddata) == sizeof(s_default_quad));

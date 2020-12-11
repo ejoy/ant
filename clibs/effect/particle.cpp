@@ -78,6 +78,7 @@ particle_mgr::particle_mgr()
 	create_array<particles::scale>();
 	create_array<particles::rotation>();
 	create_array<particles::translation>();
+	create_array<particles::subuv>();
 	create_array<particles::uv_motion>();
 	create_array<particles::quad>();
 	create_array<particles::material>();
@@ -87,6 +88,7 @@ particle_mgr::particle_mgr()
 	create_array<particles::scale_interpolator>();
 	//create_array<particles::rotation_interpolator>();
 	create_array<particles::translation_interpolator>();
+	create_array<particles::subuv_index_interpolator>();
 	create_array<particles::color_interpolator>();
 }
 
@@ -296,12 +298,23 @@ std::unordered_map<component_id, std::function<void (const particles::spawn&, ra
 			particles::translation_interpolator(spawn.interp.translation)
 		));
 	}),
-		std::make_pair(ID_uv_motion_interpolator, [](const particles::spawn& spawn, randomobj &ro, comp_ids &ids){
+	std::make_pair(ID_uv_motion_interpolator, [](const particles::spawn& spawn, randomobj &ro, comp_ids &ids){
 		if (std::find(ids.begin(), ids.end(), ID_uv_motion) == ids.end()){
 			check_add_id(ids, particle_mgr::get().add_component(particles::uv_motion(0.f)));
 		}
 		check_add_id(ids, particle_mgr::get().add_component(
 			particles::uv_motion_interpolator(spawn.interp.uv_motion)
+		));
+	}),
+	std::make_pair(ID_subuv, [](const particles::spawn& spawn, randomobj &ro, comp_ids &ids){
+		check_add_id(ids, particle_mgr::get().add_component(
+			particles::subuv(spawn.init.subuv)
+		));
+	}),
+	std::make_pair(ID_subuv_index_interpolator, [](const particles::spawn& spawn, randomobj &ro, comp_ids &ids){
+		assert(std::find(ids.begin(), ids.end(), ID_subuv) != ids.end());
+		check_add_id(ids, particle_mgr::get().add_component(
+			particles::subuv_index_interpolator(spawn.interp.subuv_index)
 		));
 	}),
 	std::make_pair(ID_color_interpolator, [](const particles::spawn& spawn, randomobj &ro, comp_ids &ids){
@@ -316,7 +329,6 @@ std::unordered_map<component_id, std::function<void (const particles::spawn&, ra
 
 void
 particle_mgr::spawn_particles(uint32_t spawnnum, const particles::spawn &sd){
-	debug_print("spawn:", spawnnum);
 	if (spawnnum == 0 || spawnnum > sd.count){
 		return ;
 	}
@@ -334,15 +346,23 @@ particle_mgr::spawn_particles(uint32_t spawnnum, const particles::spawn &sd){
 	}
 }
 
-bool particle_mgr::add(const comp_ids &ids){
-	#ifdef _DEBUG
+#ifdef _DEBUG
+static inline bool
+check_dup_id(const comp_ids &ids){
 	int checkids[ID_count] = {0};
 	for (auto id:ids){
 		++checkids[id];
 		if (checkids[id] > 1){
-			assert(false && "dup id");
+			return false;
 		}
 	}
+	return true;
+}
+#endif //_DEBUG
+
+bool particle_mgr::add(const comp_ids &ids){
+	#ifdef _DEBUG
+	assert(check_dup_id(ids) && "find dup id");
 	#endif //_DEBUG
 
 	const bool valid = 0 != particlesystem_add(mmgr, (int)ids.size(), (const int*)(&ids.front()));
@@ -360,7 +380,6 @@ particle_mgr::pop_back(const comp_ids &ids){
 
 void
 particle_mgr::remove_particle(uint32_t pidx){
-	debug_print("remove:", pidx);
 	particlesystem_remove(mmgr, ID_life, (particle_index)pidx);
 }
 
@@ -379,14 +398,13 @@ particle_mgr::update_lifetime(float dt){
 void
 particle_mgr::update_particle_spawn(float dt){
 	const int n = particlesystem_count(mmgr, ID_TAG_emitter);
-	const auto &spawns = data<particles::spawn>();
 
 	const uint32_t deltatick = particles::lifedata::time2tick(dt);
 	for (int ii=0; ii<n; ++ii){
-		const auto &sp = spawns[ii];
-		const uint32_t tick_prerate = particles::lifedata::time2tick(sp.rate);
-		const uint32_t spawnnum = uint32_t((deltatick / float(tick_prerate)) * sp.count);
-		spawn_particles(spawnnum, sp);
+		const auto sp = sibling_component<particles::spawn>(ID_TAG_emitter, ii);
+		const uint32_t tick_prerate = particles::lifedata::time2tick(sp->rate);
+		const uint32_t spawnnum = uint32_t((deltatick / float(tick_prerate)) * sp->count);
+		spawn_particles(spawnnum, *sp);
 	}
 }
 
@@ -406,8 +424,7 @@ particle_mgr::update_translation(float dt){
 	for (int vidx=0; vidx<(int)vel.size(); ++vidx){
 		const auto &v = vel[vidx];
 		auto t = sibling_component<particles::translation>(ID_velocity, vidx);
-		if (t)
-			*t += v * dt;
+		*t += v * dt;
 	}
 }
 
@@ -441,6 +458,30 @@ particle_mgr::update_lifetime_color(float dt){
 				const auto& c = ci.rgba[ii];
 				rgba[ii] = to_color_channel(c.get(to_color_channel(rgba[ii]), life->delta_process(dt)));
 			}
+		}
+	}
+}
+
+void
+particle_mgr::update_lifetime_subuv_index(float dt){
+	const auto &subuv_index_interpolators = data<particles::subuv_index_interpolator>();
+	for (int ii=0; ii<(int)subuv_index_interpolators.size(); ++ii){
+		const auto &subuv_index = subuv_index_interpolators[ii];
+		const auto subuv = sibling_component<particles::subuv>(ID_subuv_index_interpolator, ii);
+		const auto life = sibling_component<particles::life>(ID_subuv_index_interpolator, ii);
+		subuv->index = subuv_index.get(subuv->index, life->delta_process(dt));
+		const auto maxindices = subuv->dimension.x * subuv->dimension.y;
+		if (subuv->index < maxindices){
+			glm::vec2 idx(
+				float(subuv->index / subuv->dimension.x),
+				float(subuv->index % subuv->dimension.x));
+
+			const auto step = glm::vec2(1.f) / glm::vec2(subuv->dimension);
+			auto q = sibling_component<particles::quad>(ID_subuv_index_interpolator, ii);
+			q->v[0].uv1 = idx * step;
+			q->v[1].uv1 = (glm::vec2(0.f, 1.f) + idx) * step;
+			q->v[2].uv1 = (glm::vec2(1.f, 0.f) + idx) * step;
+			q->v[3].uv1 = (glm::vec2(1.f, 1.f) + idx) * step;
 		}
 	}
 }

@@ -12,6 +12,7 @@ enum component_id : uint32_t {
     ID_translation,
     ID_uv_motion,
     ID_quad,
+    ID_subuv,
     ID_material,
 
     ID_key_count,
@@ -24,10 +25,10 @@ enum component_id : uint32_t {
     ID_translation_interpolator,
     ID_uv_motion_interpolator,
     ID_color_interpolator,
-    ID_interpolator_end = ID_color_interpolator,
+    ID_subuv_index_interpolator,
+    ID_interpolator_end,
 
-    ID_component_count,
-
+    ID_component_count = ID_interpolator_end,
     ID_TAG_emitter = ID_component_count,
     ID_TAG_render_quad,
     ID_TAG_material,
@@ -97,6 +98,10 @@ struct particles{
         uint8_t idx;
     };
 
+    struct subuvdata{
+        glm::ivec2 dimension;
+        uint16_t index;
+    };
     struct spawndata {
         uint32_t    count;
         float       rate;
@@ -123,7 +128,7 @@ struct particles{
             uint8_t interp_type;
 
             void from_init_value(const init_valueT<T>& iv) {
-                scale = (iv.maxv - iv.minv) / float(particles::life::MAX_PROCESS);
+                scale = T((iv.maxv - iv.minv) / float(particles::life::MAX_PROCESS));
                 interp_type = iv.interp_type;
             }
 
@@ -131,7 +136,7 @@ struct particles{
                 if (interp_type == 0)
                     return scale;
                 if (interp_type == 1)
-                    return ((float)delta * scale + value);
+                    return (T(float(delta) * scale) + value);
                 assert(false && "not implement");
                 return scale;
             }
@@ -151,6 +156,7 @@ struct particles{
             init_valueT<glm::vec3>                  rotation;
             init_valueT<glm::vec2>                  uv_motion;
             color_attributeT<init_valueT<float>>    color;
+            subuvdata                               subuv;
             materialdata                            material;
             comp_ids components;
         };
@@ -162,6 +168,7 @@ struct particles{
             interp_valueT<glm::vec3>                  translation;
             interp_valueT<glm::vec3>                  rotation;
             interp_valueT<glm::vec2>                  uv_motion;
+            interp_valueT<uint16_t>                   subuv_index;
             color_attributeT<interp_valueT<float>>    color;
             comp_ids components;
         };
@@ -179,6 +186,7 @@ struct particles{
     using translation                = componentT<glm::vec3,      ID_translation>;
     using uv_motion                  = componentT<glm::vec2,      ID_uv_motion>;
     using quad                       = componentT<quaddata,       ID_quad>; // make pos/uv/color in one component for render purpose
+    using subuv                      = componentT<subuvdata,      ID_subuv>;
     using material                   = componentT<materialdata,   ID_material>;
 
     using f3_interpolator           = spawndata::interp_valueT<glm::vec3>;
@@ -189,6 +197,7 @@ struct particles{
     //using rotation_interpolator     = componentT<glm::quat,       ID_rotation_interpolator>;
     using translation_interpolator  = componentT<f3_interpolator, ID_translation_interpolator>;
     using uv_motion_interpolator    = componentT<f2_interpolator, ID_uv_motion>;
+    using subuv_index_interpolator  = componentT<spawndata::interp_valueT<uint16_t>, ID_subuv_index_interpolator>;
     using color_interpolator        = componentT<spawndata::color_attributeT<spawndata::interp_valueT<float>>,    ID_color_interpolator>;
 };
 
@@ -254,6 +263,7 @@ private:
     void update_lifetime_scale(float dt);
     void update_lifetime_rotation(float dt);
     void update_lifetime_color(float dt);
+    void update_lifetime_subuv_index(float dt);
     void update_uv_motion(float dt);
     void update_quad_transform(float dt);
 

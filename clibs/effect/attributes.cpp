@@ -9,6 +9,7 @@ LUA2STRUCT(struct render_data, viewid, progid, qb, textures);
 LUA2STRUCT(struct render_data::texture, stage, uniformid, texid);
 
 LUA2STRUCT(struct particles::spawn, count, rate);
+LUA2STRUCT(struct particles::subuvdata, dimension);
 
 using p_color_attrib = particles::spawn::color_attributeT<particles::spawn::init_valueT<float>>;
 namespace lua_struct {
@@ -115,11 +116,12 @@ namespace lua_struct {
     }
 
     DEF_INTERP_VALUE_UNPACK(particles::spawn::init_valueT<float>);
+    DEF_INTERP_VALUE_UNPACK(particles::spawn::init_valueT<uint16_t>);
     DEF_INTERP_VALUE_UNPACK(particles::spawn::init_valueT<glm::vec2>);
     DEF_INTERP_VALUE_UNPACK(particles::spawn::init_valueT<glm::vec3>);
 
-    template <int NUM>
-    void unpack_vec(lua_State* L, int idx, glm::vec<NUM, float, glm::defaultp>& v) {
+    template <int NUM, typename ELEMTYPE>
+    void unpack_vec(lua_State* L, int idx, glm::vec<NUM, ELEMTYPE, glm::defaultp>& v) {
         luaL_checktype(L, idx, LUA_TTABLE);
         const int len = (int)luaL_len(L, idx);
         if (len < NUM) {
@@ -127,7 +129,7 @@ namespace lua_struct {
         }
         for (int ii = 0; ii < NUM; ++ii) {
             lua_geti(L, idx, ii + 1);
-            v[ii] = (float)lua_tonumber(L, -1);
+            v[ii] = (ELEMTYPE)lua_tonumber(L, -1);
             lua_pop(L, 1);
         }
     }
@@ -135,8 +137,11 @@ namespace lua_struct {
 #define DEF_VEC_UNPACK(_VECTYPE) template<>\
     void unpack(lua_State* L, int index, _VECTYPE &v, void*) {\
         unpack_vec(L, index, v);\
-    }
+    }\
+    template<>\
+    void pack(lua_State* L, const _VECTYPE &v, void*) {}
 
+    DEF_VEC_UNPACK(glm::ivec2);
     DEF_VEC_UNPACK(glm::vec2);
     DEF_VEC_UNPACK(glm::vec3);
     DEF_VEC_UNPACK(glm::vec4);
@@ -247,11 +252,21 @@ std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)
         sp.init.components.push_back(particles::uv_motion::ID());
         lua_struct::unpack(L, index, sp.init.uv_motion);
     }),
+    std::make_pair("subuv", [](lua_State *L, int index, comp_ids& ids){
+        auto& sp = particle_mgr::get().component_value<particles::spawn>();
+        sp.init.components.push_back(particles::subuv::ID());
+        lua_struct::unpack(L, index, sp.init.subuv);
+    }),
+    std::make_pair("subuv_index_over_life", [](lua_State *L, int index, comp_ids& ids){
+        auto& sp = particle_mgr::get().component_value<particles::spawn>();
+        sp.interp.components.push_back(particles::subuv_index_interpolator::ID());
+        particles::spawn::init_valueT<uint16_t>  iv;
+        lua_struct::unpack(L, index, iv);
+        sp.interp.subuv_index.from_init_value(iv);
+    }),
 };
 
-static void default_reader(lua_State *, int, comp_ids&){
-    
-}
+static void default_reader(lua_State *, int, comp_ids&){}
 
 std::function<void (lua_State *, int, comp_ids&)> find_attrib_reader(const std::string &name){
     auto it = g_attrib_map.find(name);
