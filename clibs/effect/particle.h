@@ -259,7 +259,6 @@ private:
 
     template<typename T>
     T* sibling_component(component_id id, int ii);
-    void print_particles_status();
 
 private:
     particles mparticles;

@@ -1,16 +1,15 @@
 #include "pch.h"
 #include "particle.h"
-#include "transforms.h"
 #include "quadcache.h"
 
 #include "random.h"
-#include <sstream>
-#include <Windows.h>
 
 extern bgfx_interface_vtbl_t* ibgfx();
 #define BGFX(_API) ibgfx()->_API
 
 #ifdef _DEBUG
+#include <sstream>
+#include <Windows.h>
 const char* g_component_names[ID_count] = {
 	"ID_life",
 	"ID_spawn",
@@ -492,8 +491,6 @@ void particle_mgr::submit_buffer(){
 
 void
 particle_mgr::submit_render(){
-	//mqc->update();
-	//mqc->submit(0, (uint32_t)data<particles::transform>().size()); 
 	BGFX(set_state(uint64_t(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA), 0));
 	submit_buffer();
 
@@ -521,44 +518,10 @@ particle_mgr::remap_particles(){
 	} while (n == cap);
 }
 
-void 
-particle_mgr::print_particles_status(){
-	// return;
-	// const auto &lifes = data<particles::life>();
-	// struct particle_info {
-	// 	struct pair{
-	// 		component_id id;
-	// 		int pidx;
-	// 	};
-	// 	std::vector<pair>	comps;
-	// };
-	// using particles_info_vector = std::vector<particle_info>;
-	// particles_info_vector pis;
-	// for (int ii=0; ii<lifes.size(); ++ii){
-	// 	particle_info pi;
-	// 	for (int idx=0; idx<ID_key_count; ++idx){
-	// 		const component_id id = (component_id)idx;
-	// 		const auto pidx = particlesystem_component(mmgr, ID_life, ii, id);
-	// 		if (pidx != PARTICLE_INVALID){
-	// 			pi.comps.push_back({id, pidx});
-	// 		}
-	// 	}
-	// }
-
-	// for (int ii=0; ii<pis.size(); ++ii){
-	// 	debug_print("particle:", ii);
-	// 	const auto &pi = pis[ii];
-	// 	for (int id=0; id<pi.comps.size(); ++ii){
-	// 		debug_print("\tcomponent:", g_component_names[id], "\tisdead:", lifes[ii].isdead());
-	// 	}
-	// }
-	particlesystem_debug(mmgr, g_component_names);
-}
-
 void
 particle_mgr::update(float dt){
 	update_particle_spawn(dt);
-	//print_particles_status();
+
 	update_velocity(dt);
 	update_translation(dt);
 	update_uv_motion(dt);
@@ -569,7 +532,6 @@ particle_mgr::update(float dt){
 	update_lifetime(dt);	// should be last update
 	remap_particles();
 	assert(0 == particlesystem_verify(mmgr));
-	//print_particles_status();
-	//TODO: we can fully control render in lua level, only need vertex buffer in quad_cache
+
 	submit_render();
 }

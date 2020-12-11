@@ -1,7 +1,6 @@
 #include "pch.h"
 #define LUA_LIB
 #include "particle.h"
-#include "transforms.h"
 #include "random.h"
 
 #include "attributes.h"
