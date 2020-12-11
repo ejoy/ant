@@ -30,10 +30,29 @@ local function do_animation(poseresult, task, delta_time)
 		poseresult:do_blend("blend", #task, task.weight)
 	else
 		local ani = task.animation
-		local delta = delta_time / ani._duration
-		local current_ratio = task.ratio + delta
-		task.ratio = current_ratio <= ani._max_ratio and current_ratio or ani._max_ratio
-		poseresult:do_sample(ani._sampling_cache, ani._handle, task.ratio % 1, task.weight)
+		-- local delta = delta_time / ani._duration
+		-- local current_ratio = task.ratio + delta
+		-- task.ratio = current_ratio <= ani._max_ratio and current_ratio or ani._max_ratio
+		-- poseresult:do_sample(ani._sampling_cache, ani._handle, task.ratio % 1, task.weight)
+		local current_time = ani._handle:get_time()
+		local event_state = task.event_state
+		if event_state.keyframe_events then
+			local current_events = event_state.keyframe_events[event_state.next_index]
+			if current_events then
+				while math.abs(current_time - current_events.time) < 0.01 do
+					for _, event in ipairs(current_events.events) do
+						print("event trigger : ", current_time, event.name, event.event_type)
+					end
+					event_state.next_index = event_state.next_index + 1
+					if event_state.next_index > #event_state.keyframe_events then
+						event_state.next_index = 1
+						break
+					end
+					current_events = event_state.keyframe_events[event_state.next_index]
+				end
+			end
+		end
+		poseresult:do_sample(ani._sampling_cache, ani._handle, delta_time, task.weight)
 	end
 end
 

@@ -468,9 +468,9 @@ function m:save_prefab(path)
     filename = filename or prefab_filename
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     local current_templ = hierarchy:update_prefab_template()
-    if self.prefab then
-        self.prefab.__class = current_templ
-    end
+    -- if self.prefab then
+    --     self.prefab.__class = current_templ
+    -- end
     self.entities.__class = current_templ
     
     local path_list = split(prefab_filename)

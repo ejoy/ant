@@ -2,6 +2,7 @@
 #include <lua.hpp>
 
 #include "hierarchy.h"
+#include "playbackcontroller.h"
 //#include "meshbase/meshbase.h"
 
 #include <ozz/animation/runtime/animation.h>
@@ -28,7 +29,6 @@
 #include <ozz/base/maths/math_ex.h>
 
 #include <../samples/framework/mesh.h>
-
 // glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -286,10 +286,13 @@ REGISTER_LUA_CLASS(ozzSamplingCache)
 
 struct ozzAnimation : public luaClass<ozzAnimation> {
 	ozz::animation::Animation* v;
+	sample::PlaybackController* c;
 	ozzAnimation()
-	: v(ozz::New<ozz::animation::Animation>())
-	{ }
+		: v(ozz::New<ozz::animation::Animation>())
+		, c(ozz::New<sample::PlaybackController>()) {
+	}
 	~ozzAnimation() {
+		ozz::Delete(c);
 		ozz::Delete(v);
 	}
 
@@ -311,7 +314,57 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 		lua_pushstring(L, base_type::get(L, 1)->v->name());
 		return 1;
 	}
-	
+
+	// PlaybackController interface
+	static int lset_time(lua_State* L) {
+		auto ani = base_type::get(L, 1);
+		float ratio = (float)luaL_checknumber(L, 2) / ani->v->duration();
+		ani->c->set_time_ratio(ratio);
+		return 0;
+	}
+	static int lget_time(lua_State* L) {
+		auto ani = base_type::get(L, 1);
+		lua_pushnumber(L, ani->c->time_ratio() * ani->v->duration());
+		return 1;
+	}
+	static int lset_speed(lua_State* L) {
+		float speed = (float)luaL_checknumber(L, 2);
+		base_type::get(L, 1)->c->set_playback_speed(speed);
+		return 0;
+	}
+	static int lget_speed(lua_State* L) {
+		lua_pushnumber(L, base_type::get(L, 1)->c->playback_speed());
+		return 1;
+	}
+	static int lset_loop(lua_State* L) {
+		bool loop = false;
+		if (lua_isboolean(L, 2)) {
+			loop = lua_toboolean(L, 2);
+		}
+		base_type::get(L, 1)->c->set_loop(loop);
+		return 0;
+	}
+	static int lget_loop(lua_State* L) {
+		lua_pushboolean(L, base_type::get(L, 1)->c->loop());
+		return 1;
+	}
+	static int lpause(lua_State* L) {
+		bool pause = false;
+		if (lua_isboolean(L, 2)) {
+			pause = lua_toboolean(L, 2);
+		}
+		base_type::get(L, 1)->c->pause(pause);
+		return 0;
+	}
+	static int lis_playing(lua_State* L) {
+		lua_pushboolean(L, base_type::get(L, 1)->c->is_playing());
+		return 1;
+	}
+	float update(float dt) {
+		c->update(*v, dt);
+		return c->time_ratio();
+	}
+
 	static int create(lua_State* L) {
 		const char* path = luaL_checkstring(L, 1);
 		ozzAnimation* self = base_type::constructor(L);
@@ -320,6 +373,13 @@ struct ozzAnimation : public luaClass<ozzAnimation> {
 			{"num_tracks", lnum_tracks},
 			{"name", lname},
 			{"size", lsize},
+			{"set_time", lset_time},
+			{"get_time", lget_time},
+			{"set_speed", lset_speed},
+			{"set_loop", lset_loop},
+			{"get_loop", lget_loop},
+			{"pause", lpause},
+			{"is_playing", lis_playing},
 			{nullptr, nullptr},
 		};
 		base_type::set_method(L, l);
@@ -395,7 +455,7 @@ private:
 	int do_sample(lua_State* L) {
 		ozzSamplingCache* sampling = ozzSamplingCache::get(L, 2);
 		ozzAnimation* animation = ozzAnimation::get(L, 3);
-		float ratio = (float)luaL_checknumber(L, 4);
+		float ratio = animation->update((float)luaL_checknumber(L, 4) * 0.001f); // millisecond to second
 		float weight = (float)luaL_optnumber(L, 5, 1.0f);
 
 		bindpose_soa bp_soa(m_ske->num_soa_joints());

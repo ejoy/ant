@@ -49,7 +49,7 @@ function render_sys:init()
 		frustum = default_comp.frustum(vr.w/vr.h),
         name = "default_camera",
 	}
-	irender.create_pre_depth_queue(vr, camera_eid)
+	--irender.create_pre_depth_queue(vr, camera_eid)
 	irender.create_main_queue(vr, camera_eid)
 end
 

@@ -1,7 +1,9 @@
 local ecs = ...
 local world = ecs.world
 local timer = world:interface "ant.timer|timer"
-local fs = require "filesystem"
+local fs 	= require "filesystem"
+local lfs	= require "filesystem.local"
+local datalist  = require "datalist"
 
 local function get_transmit_merge(e, tt_duration)
 	local timepassed = 0
@@ -50,12 +52,20 @@ local function play_animation(e, name, duration)
 			type = "blend",
 			{
 				animation = current_pose.animation,
+				event_state = {
+					next_index = 1,
+					keyframe_events = current_pose.event_state
+				},
 				weight = 1,
 				init_weight = 1,
 				ratio = current_pose.ratio,
 			},
 			{
 				animation = e.animation[name],
+				event_state = {
+					next_index = 1,
+					keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
+				},
 				weight = 0,
 				init_weight = 0,
 				ratio = 0,
@@ -64,6 +74,10 @@ local function play_animation(e, name, duration)
 	else
 		e._animation._current = {
 			animation = e.animation[name],
+			event_state = {
+				next_index = 1,
+				keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
+			},
             ratio = 0,
 		}
 		return
@@ -132,7 +146,8 @@ function iani.set_state(e, name)
 	end
 end
 
-function iani.play(e, name, time)
+function iani.play(eid, name, time)
+	local e = world[eid]
 	if e.animation and e.animation[name]  then
 		if e.state_machine then
 			e.state_machine._current = nil
@@ -140,10 +155,67 @@ function iani.play(e, name, time)
 		else
 			e._animation._current = {
 				animation = e.animation[name],
+				event_state = {
+					next_index = 1,
+					keyframe_events = e.keyframe_events and e.keyframe_events[name] or {}
+				},
 				ratio = 0,
 			}
 		end
 		return true
+	end
+end
+
+function iani.get_duration(eid)
+	local e = world[eid]
+	return e._animation._current.animation._handle:duration()
+end
+
+function iani.set_time(eid, mstime)
+	local e = world[eid]
+	e._animation._current.animation._handle:set_time(mstime)
+end
+
+function iani.set_speed(eid, speed)
+	local e = world[eid]
+	e._animation._current.animation._handle:set_speed(speed)
+end
+
+function iani.set_loop(eid, loop)
+	local e = world[eid]
+	e._animation._current.animation._handle:set_loop(loop)
+end
+
+function iani.pause(eid, pause)
+	local e = world[eid]
+	e._animation._current.animation._handle:pause(pause)
+end
+
+function iani.is_playing(eid)
+	local e = world[eid]
+	return e._animation._current.animation._handle:is_playing()
+end
+
+local function do_set_event(eid, anim, events)
+	local e = world[eid]
+	if not e.keyframe_events then
+		e.keyframe_events = {}
+	end
+	e.keyframe_events[anim] = events
+	if e._animation._current.animation == e.animation[anim] then
+		e._animation._current.event_state.keyframe_events = e.keyframe_events[anim]
+	end
+end
+
+function iani.set_event(eid, anim, events)
+	if type(events) == "table" then
+		do_set_event(eid, anim, events)
+	elseif type(events) == "string" then
+		local path = fs.path(events):localpath()
+		local f = assert(lfs.open(path))
+		local data = f:read "a"
+		f:close()
+		do_set_event(eid, anim, datalist.parse(data))
 	end
 end
 
