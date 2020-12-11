@@ -66,9 +66,17 @@ struct particles{
             return uint32_t(t_in_second / FREQUENCY + 0.5 / FREQUENCY);
         }
 
+        inline uint32_t which_process(float t_in_second) const {
+            return uint32_t((time2tick(t_in_second) / float(tick)) * MAX_PROCESS);
+        }
+
+        inline uint32_t delta_process(float dt) const {
+            return which_process(current+dt) - process;
+        }
+
         inline bool isdead() const{ return process >= tick; }
         inline bool update_process() {
-            process = uint32_t((time2tick(current) / float(tick)) * MAX_PROCESS);
+            process = which_process(current);
             return isdead();
         }
 
@@ -119,11 +127,11 @@ struct particles{
                 interp_type = iv.interp_type;
             }
 
-            T get(const T&value, uint32_t process) const {
+            T get(const T&value, uint32_t delta) const {
                 if (interp_type == 0)
                     return scale;
                 if (interp_type == 1)
-                    return ((float)process * scale + value);
+                    return ((float)delta * scale + value);
                 assert(false && "not implement");
                 return scale;
             }

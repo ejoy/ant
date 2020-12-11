@@ -175,10 +175,13 @@ int component_array_baseT<T>::remap(struct particle_remap *map, int n) {
 		if (map[i].component_id != map[0].component_id)
 			return i;
 
+		debug_print(g_component_names[map[i].component_id]);
 		auto self = static_cast<component_arrayT<T>*>(this);
 		if (map[i].to_id != PARTICLE_INVALID) {
+			debug_print("move:", map[i].from_id, map[i].to_id);
 			self->move(map[i].from_id, map[i].to_id);
 		} else {
+			debug_print("resize:", map[i].from_id);
 			self->shrink(map[i].from_id);
 		}
 	}
@@ -441,8 +444,7 @@ particle_mgr::update_lifetime_scale(float dt){
 		auto& scale = scales[iscale];
 
 		auto &si = scale_interpolators[ii];
-
-		scale = si.get(scale, life.process);
+		scale = si.get(scale, life.delta_process(dt));
 	}
 }
 
@@ -471,7 +473,7 @@ particle_mgr::update_lifetime_color(float dt){
 			uint8_t* rgba = (uint8_t*)(&q[iv].color);
 			for (int ii = 0; ii < 4; ++ii) {
 				const auto& c = ci.rgba[ii];
-				rgba[ii] = to_color_channel(c.get(to_color_channel(rgba[ii]), life.process));
+				rgba[ii] = to_color_channel(c.get(to_color_channel(rgba[ii]), life.delta_process(dt)));
 			}
 		}
 	}
