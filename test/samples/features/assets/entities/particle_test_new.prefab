@@ -20,6 +20,10 @@ data:
             interp_type: linear
             minv: 30
             maxv: 40
+        emitter_transform:
+            s: 1
+            r: {0, 0, 0, 1}
+            t: {5, 0, 0}
         spawn:
             count:  10
             rate:   1.0

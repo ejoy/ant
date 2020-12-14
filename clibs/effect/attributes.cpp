@@ -192,6 +192,48 @@ std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)
         randomobj ro;
         check_add_id(particle_mgr::get().add_component(particles::life(iv.get(ro()))), ids);
     }),
+    std::make_pair("emitter_transform", [](lua_State *L, int index, comp_ids& ids){
+        auto& sp = particle_mgr::get().component_value<particles::spawn>();
+        auto &srt = sp.init.srt;
+        glm::mat4 &m = sp.init.srt;
+        const int stype = lua_getfield(L, index, "s");
+        if (stype == LUA_TTABLE){
+            glm::vec3 s;
+            lua_struct::unpack(L, -1, s);
+            m = glm::scale(s);
+        } else if (stype == LUA_TNUMBER){
+            glm::vec3 s(float(lua_tonumber(L, -1)));
+            m = glm::scale(s);
+        } else {
+            m = glm::mat4(1.f);
+        }
+        lua_pop(L, 1);
+
+        const int rtype = lua_getfield(L, index, "r");
+        if (rtype == LUA_TTABLE){
+            const int n = (int)lua_rawlen(L, -1);
+            if (n != 4){
+                luaL_error(L, "invalid 'r', need quaternion:%d", n);
+            }
+            glm::quat r;
+            for (int ii=0; ii<4; ++ii){
+                lua_geti(L, -1, ii+1);
+                r[ii] = float(lua_tonumber(L, -1));
+                lua_pop(L, 1);
+            }
+
+            m = m * glm::mat4(r);
+        }
+        lua_pop(L, 1);
+
+        const int ttype = lua_getfield(L, index, "t");
+        if (ttype == LUA_TTABLE){
+            glm::vec3 t;
+            lua_struct::unpack(L, index, t);
+            m = m * glm::translate(t);
+        }
+        lua_pop(L, 1);
+    }),
     std::make_pair("spawn", [](lua_State *L, int index, comp_ids& ids){
         particles::spawn sd;
         lua_struct::unpack(L, index, sd);
@@ -224,7 +266,7 @@ std::unordered_map<std::string, std::function<void (lua_State *, int, comp_ids&)
     }),
     std::make_pair("init_color", [](lua_State *L, int index, comp_ids& ids){
         auto& sp = particle_mgr::get().component_value<particles::spawn>();
-        sp.init.components.push_back(particles::quad::ID());
+        sp.init.components.push_back(particles::color::ID());
         lua_struct::unpack(L, index, sp.init.color);
     }),
     std::make_pair("color_over_life", [](lua_State *L, int index, comp_ids& ids){

@@ -10,8 +10,10 @@ enum component_id : uint32_t {
     ID_scale,
     ID_rotation,
     ID_translation,
+    ID_location,
+    ID_color,
+    ID_uv,
     ID_uv_motion,
-    ID_quad,
     ID_subuv,
     ID_material,
 
@@ -158,6 +160,7 @@ struct particles{
             color_attributeT<init_valueT<float>>    color;
             subuvdata                               subuv;
             materialdata                            material;
+            glm::mat4                               srt;
             comp_ids components;
         };
 
@@ -177,6 +180,14 @@ struct particles{
         interp_attributes   interp;
     };
 
+    struct quad_location {
+        glm::vec3 v[4];
+    };
+
+    struct quad_uv {
+        glm::vec2 uv[4];
+    };
+
     using life                       = componentT<lifedata,       ID_life>;
     using spawn                      = componentT<spawndata,      ID_spawn>;
     using velocity                   = componentT<glm::vec3,      ID_velocity>;
@@ -184,8 +195,10 @@ struct particles{
     using scale                      = componentT<glm::vec3,      ID_scale>;
     using rotation                   = componentT<glm::quat,      ID_rotation>;
     using translation                = componentT<glm::vec3,      ID_translation>;
+    using location                   = componentT<quad_location,  ID_location>;
+    using color                      = componentT<glm::u8vec4,    ID_color>;
+    using uv                         = componentT<quad_uv,        ID_uv>;
     using uv_motion                  = componentT<glm::vec2,      ID_uv_motion>;
-    using quad                       = componentT<quaddata,       ID_quad>; // make pos/uv/color in one component for render purpose
     using subuv                      = componentT<subuvdata,      ID_subuv>;
     using material                   = componentT<materialdata,   ID_material>;
 
@@ -253,6 +266,8 @@ private:
     void remap_particles();
 
 private:
+    struct vertex_buffer;
+    vertex_buffer* alloc_quad_vertex_buffer();
     void submit_render();
     void submit_buffer();
 private:

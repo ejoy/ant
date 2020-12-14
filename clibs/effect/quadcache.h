@@ -32,6 +32,7 @@ struct quaddata {
         return *this;
     }
     quad_vertex& operator[](uint32_t ii){ return v[ii]; }
+    const quad_vertex& operator[](uint32_t ii) const { return v[ii]; }
     quad_vertex v[4];
     void reset();
     
@@ -46,7 +47,8 @@ using quadvector    = std::vector<quaddata>;
 
 class quad_buffer{
 public:
-    void submit(const quadvector &quads);
+    void alloc(uint32_t numquad, bgfx_transient_vertex_buffer_t &tvb);
+    void submit(const bgfx_transient_vertex_buffer_t &tvb);
     const bgfx_vertex_layout_t *layout;
     bgfx_index_buffer_handle_t ib;
 };

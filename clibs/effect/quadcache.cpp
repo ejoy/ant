@@ -60,21 +60,20 @@ void quaddata::translate(const glm::vec3 &t){
     }
 }
 
+void quad_buffer::alloc(uint32_t numquad, bgfx_transient_vertex_buffer_t &tvb){
+    const uint32_t bufsize = numquad * sizeof(quad_vertex) * 4;
+    BGFX(alloc_transient_vertex_buffer)(&tvb, bufsize, layout);
+}
 
-
-void quad_buffer::submit(const quadvector &quads){
-    if (layout == nullptr || quads.empty())
+void quad_buffer::submit(const bgfx_transient_vertex_buffer_t &tvb){
+    if (layout == nullptr || tvb.size == 0)
         return ;
 
-    const uint32_t num = (uint32_t)quads.size();
-    const uint32_t indices_num = num * 6;
+    const uint32_t quadnum = tvb.size / (tvb.stride * 4);
+    const uint32_t indices_num = quadnum * 6;
     BGFX(set_index_buffer)(ib, 0, indices_num);
 
-    bgfx_transient_vertex_buffer_t tvb;
-    const uint32_t bufsize = num * sizeof(quad_vertex) * 4;
-    BGFX(alloc_transient_vertex_buffer)(&tvb, bufsize, layout);
-    memcpy(tvb.data, quads.data(), bufsize);
-    BGFX(set_transient_vertex_buffer)(0, &tvb, 0, num *4);
+    BGFX(set_transient_vertex_buffer)(0, &tvb, 0, quadnum *4);
 }
 
 ////////////////////////////////////////////////////////////////
